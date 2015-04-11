@@ -769,28 +769,34 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   useVideoMeta = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
 
-  guint idx;
-  if (gst_query_find_allocation_meta (query,
-        GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {
-    GstGLContext *context;
-    const GstStructure *upload_meta_params;
+  /* determine whether we can pass GL textures to downstream element */
+  GstCapsFeatures *features = gst_caps_get_features (caps, 0);
+  if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+    GstGLContext *glContext = NULL;
 
-    gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
-    if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
-          GST_GL_TYPE_CONTEXT, &context, NULL) && context) {
-      GstCaps *query_caps;
-      GstCapsFeatures *features;
-
-      gst_query_parse_allocation (query, &query_caps, NULL);
-      features = gst_caps_get_features (query_caps, 0);
-      if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
-        textureCache = gst_core_video_texture_cache_new (context);
-        gst_core_video_texture_cache_set_format (textureCache,
-            "NV12", query_caps);
+    /* get GL context from downstream element */
+    GstQuery *query = gst_query_new_context ("gst.gl.local_context");
+    if (gst_pad_peer_query (GST_BASE_SRC_PAD (element), query)) {
+      GstContext *context;
+      gst_query_parse_context (query, &context);
+      if (context) {
+        const GstStructure *s = gst_context_get_structure (context);
+        gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &glContext,
+            NULL);
       }
-      gst_object_unref (context);
     }
-  }
+    gst_query_unref (query);
+
+    if (glContext) {
+      GST_INFO_OBJECT (element, "pushing textures. GL context %p", glContext);
+      textureCache = gst_core_video_texture_cache_new (glContext);
+      gst_core_video_texture_cache_set_format (textureCache,
+          "NV12", caps);
+      gst_object_unref (glContext);
+    } else {
+      GST_WARNING_OBJECT (element, "got memory:GLMemory caps but not GL context from downstream element");
+    }
+  } 
 
   return YES;
 }
