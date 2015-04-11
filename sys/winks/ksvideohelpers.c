@@ -182,7 +182,7 @@ ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
   if (!structure) {
     GST_DEBUG ("Unknown DirectShow Video GUID "
         "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-        subtype_guid.Data1, subtype_guid.Data2, subtype_guid.Data3,
+        (guint) subtype_guid.Data1, subtype_guid.Data2, subtype_guid.Data3,
         subtype_guid.Data4[0], subtype_guid.Data4[1], subtype_guid.Data4[2],
         subtype_guid.Data4[3], subtype_guid.Data4[4], subtype_guid.Data4[5],
         subtype_guid.Data4[6], subtype_guid.Data4[7]);
