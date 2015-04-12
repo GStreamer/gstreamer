@@ -900,7 +900,8 @@ gst_ks_video_src_timestamp_buffer (GstKsVideoSrc * self, GstBuffer * buf,
 
   GST_BUFFER_OFFSET (buf) = priv->offset;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf) + 1;
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_PTS (buf) = timestamp;
+  GST_BUFFER_DTS (buf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buf) = duration;
 
   return TRUE;
