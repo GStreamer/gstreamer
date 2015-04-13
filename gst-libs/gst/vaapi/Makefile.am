@@ -55,6 +55,7 @@ libgstvaapi_source_c =				\
 	gstvaapidecoder.c			\
 	gstvaapidecoder_dpb.c			\
 	gstvaapidecoder_h264.c			\
+	gstvaapidecoder_h265.c			\
 	gstvaapidecoder_mpeg2.c			\
 	gstvaapidecoder_mpeg4.c			\
 	gstvaapidecoder_objects.c		\
@@ -91,6 +92,7 @@ libgstvaapi_source_h =				\
 	gstvaapibufferproxy.h			\
 	gstvaapidecoder.h			\
 	gstvaapidecoder_h264.h			\
+	gstvaapidecoder_h265.h			\
 	gstvaapidecoder_mpeg2.h			\
 	gstvaapidecoder_mpeg4.h			\
 	gstvaapidecoder_vc1.h			\
