@@ -47,9 +47,11 @@ static guint changed_id = 0;
 static guint schanged_id = 0;
 
 #define SOURCE "filesrc"
-#define ASINK "alsasink"
+#define ASINK   "autoaudiosink"
+//#define ASINK "alsasink"
 //#define ASINK "osssink"
-#define VSINK "xvimagesink"
+#define VSINK   "autovideosink"
+//#define VSINK "xvimagesink"
 //#define VSINK "ximagesink"
 //#define VSINK "aasink"
 //#define VSINK "cacasink"
@@ -85,34 +87,6 @@ gst_element_factory_make_or_warn (const gchar * type, const gchar * name)
   return element;
 }
 
-static void
-dynamic_link (GstPadTemplate * templ, GstPad * newpad, gpointer data)
-{
-  dyn_link *connect = (dyn_link *) data;
-
-  if (connect->padname == NULL ||
-      !strcmp (gst_pad_get_name (newpad), connect->padname)) {
-    if (connect->bin)
-      gst_bin_add (GST_BIN (pipeline), connect->bin);
-    gst_pad_link (newpad, connect->target);
-  }
-}
-
-static void
-setup_dynamic_link (GstElement * element, const gchar * padname,
-    GstPad * target, GstElement * bin)
-{
-  dyn_link *connect;
-
-  connect = g_new0 (dyn_link, 1);
-  connect->padname = g_strdup (padname);
-  connect->target = target;
-  connect->bin = bin;
-
-  g_signal_connect (G_OBJECT (element), "pad-added", G_CALLBACK (dynamic_link),
-      connect);
-}
-
 static GstElement *
 make_wav_pipeline (const gchar * location)
 {
@@ -127,14 +101,8 @@ make_wav_pipeline (const gchar * location)
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
-  gst_bin_add (GST_BIN (pipeline), src);
-  gst_bin_add (GST_BIN (pipeline), decoder);
-  gst_bin_add (GST_BIN (pipeline), audiosink);
-
-  gst_element_link (src, decoder);
-
-  setup_dynamic_link (decoder, "src", gst_element_get_static_pad (audiosink,
-          "sink"), NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src, decoder, audiosink, NULL);
+  gst_element_link_many (src, decoder, audiosink, NULL);
 
   return pipeline;
 }
