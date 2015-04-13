@@ -66,6 +66,7 @@ static const GstVaapiCodecMap gst_vaapi_codecs[] = {
     { GST_VAAPI_CODEC_VC1,      "vc1"   },
     { GST_VAAPI_CODEC_JPEG,     "jpeg"  },
     { GST_VAAPI_CODEC_VP8,      "vp8"   },
+    { GST_VAAPI_CODEC_H265,     "h265"  },
     { 0, }
 };
 
@@ -137,6 +138,14 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
 #if VA_CHECK_VERSION(0,35,0)
     { GST_VAAPI_PROFILE_VP8, VAProfileVP8Version0_3,
       "video/x-vp8", NULL
+    },
+#endif
+#if VA_CHECK_VERSION(0,37,0)
+    { GST_VAAPI_PROFILE_H265_MAIN, VAProfileHEVCMain,
+      "video/x-h265", "main"
+    },
+    { GST_VAAPI_PROFILE_H265_MAIN10, VAProfileHEVCMain10,
+      "video/x-h265", "main10"
     },
 #endif
     { 0, }
@@ -293,6 +302,29 @@ gst_vaapi_profile_from_codec_data_h264(GstBuffer *buffer)
 }
 
 static GstVaapiProfile
+gst_vaapi_profile_from_codec_data_h265(GstBuffer *buffer)
+{
+   /* ISO/IEC 14496-15:  HEVC file format */
+    guchar buf[3];
+
+    if (gst_buffer_extract(buffer, 0, buf, sizeof(buf)) != sizeof(buf))
+        return 0;
+
+    if (buf[0] != 1)    /* configurationVersion = 1 */
+        return 0;
+
+    if (buf[1] & 0xc0)  /* general_profile_space = 0 */
+        return 0;
+
+    switch (buf[1] & 0x1f) {   /* HEVCProfileIndication */
+    case 1:   return GST_VAAPI_PROFILE_H265_MAIN;
+    case 2:   return GST_VAAPI_PROFILE_H265_MAIN10;
+    case 3:   return GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE;
+    }
+    return 0;
+}
+
+static GstVaapiProfile
 gst_vaapi_profile_from_codec_data(GstVaapiCodec codec, GstBuffer *buffer)
 {
     GstVaapiProfile profile;
@@ -303,6 +335,9 @@ gst_vaapi_profile_from_codec_data(GstVaapiCodec codec, GstBuffer *buffer)
     switch (codec) {
     case GST_VAAPI_CODEC_H264:
         profile = gst_vaapi_profile_from_codec_data_h264(buffer);
+        break;
+    case GST_VAAPI_CODEC_H265:
+        profile = gst_vaapi_profile_from_codec_data_h265(buffer);
         break;
     default:
         profile = 0;

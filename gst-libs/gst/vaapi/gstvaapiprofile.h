@@ -39,6 +39,7 @@ G_BEGIN_DECLS
  * @GST_VAAPI_CODEC_WMV3: Windows Media Video 9. VC-1 Simple or Main profile (SMPTE 421M)
  * @GST_VAAPI_CODEC_VC1: VC-1 Advanced profile (SMPTE 421M)
  * @GST_VAAPI_CODEC_JPEG: JPEG (ITU-T 81)
+ * @GST_VAAPI_CODEC_H265: H.265 aka MPEG-H Part 2 (ITU-T H.265)
  *
  * The set of all codecs for #GstVaapiCodec.
  */
@@ -52,6 +53,7 @@ typedef enum {
     GST_VAAPI_CODEC_VC1         = GST_MAKE_FOURCC('V','C','1',0),
     GST_VAAPI_CODEC_JPEG        = GST_MAKE_FOURCC('J','P','G',0),
     GST_VAAPI_CODEC_VP8         = GST_MAKE_FOURCC('V','P','8',0),
+    GST_VAAPI_CODEC_H265        = GST_MAKE_FOURCC('2','6','5',0),
 } GstVaapiCodec;
 
 /**
@@ -121,6 +123,12 @@ typedef enum {
  *   VC-1 advanced profile
  * @GST_VAAPI_PROFILE_JPEG_BASELINE:
  *   JPEG baseline profile
+ * @GST_VAAPI_PROFILE_H265_MAIN:
+ *   H.265 main profile [A.3.2]
+ * @GST_VAAPI_PROFILE_H265_MAIN10:
+ *   H.265 main 10 profile [A.3.3]
+ * @GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE:
+ *   H.265 main still picture profile [A.3.4]
  *
  * The set of all profiles for #GstVaapiProfile.
  */
@@ -153,6 +161,10 @@ typedef enum {
     GST_VAAPI_PROFILE_VC1_ADVANCED          = GST_VAAPI_MAKE_PROFILE(VC1,3),
     GST_VAAPI_PROFILE_JPEG_BASELINE         = GST_VAAPI_MAKE_PROFILE(JPEG,1),
     GST_VAAPI_PROFILE_VP8                   = GST_VAAPI_MAKE_PROFILE(VP8,1),
+    GST_VAAPI_PROFILE_H265_MAIN             = GST_VAAPI_MAKE_PROFILE(H265,1),
+    GST_VAAPI_PROFILE_H265_MAIN10           = GST_VAAPI_MAKE_PROFILE(H265,2),
+    GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE =
+                                               GST_VAAPI_MAKE_PROFILE(H265,3),
 } GstVaapiProfile;
 
 /**
