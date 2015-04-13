@@ -445,7 +445,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
   /* need resync, lock on to time and gstrtptime if we can, otherwise we
    * do with the previous values */
   if (G_UNLIKELY (jbuf->need_resync && time != -1)) {
-    GST_WARNING ("resync to time %" GST_TIME_FORMAT ", rtptime %"
+    GST_INFO ("resync to time %" GST_TIME_FORMAT ", rtptime %"
         GST_TIME_FORMAT, GST_TIME_ARGS (time), GST_TIME_ARGS (gstrtptime));
     rtp_jitter_buffer_resync (jbuf, time, gstrtptime, ext_rtptime, FALSE);
     send_diff = 0;
