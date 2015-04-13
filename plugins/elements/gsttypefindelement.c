@@ -504,7 +504,7 @@ gst_type_find_element_src_event (GstPad * pad, GstObject * parent,
 
   if (typefind->mode != MODE_NORMAL) {
     /* need to do more? */
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (event));
+    gst_event_unref (event);
     return FALSE;
   }
 
@@ -512,7 +512,7 @@ gst_type_find_element_src_event (GstPad * pad, GstObject * parent,
   if (typefind->segment.format != GST_FORMAT_UNDEFINED &&
       GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
     result = gst_type_find_element_seek (typefind, event);
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (event));
+    gst_event_unref (event);
     return result;
   } else {
     return gst_pad_push_event (typefind->sink, event);
