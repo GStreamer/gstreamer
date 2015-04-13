@@ -211,12 +211,16 @@ gst_amc_jni_object_ref (JNIEnv * env, jobject object)
 void
 gst_amc_jni_object_unref (JNIEnv * env, jobject object)
 {
+  g_return_if_fail (object != NULL);
+
   (*env)->DeleteGlobalRef (env, object);
 }
 
 void
 gst_amc_jni_object_local_unref (JNIEnv * env, jobject object)
 {
+  g_return_if_fail (object != NULL);
+
   (*env)->DeleteLocalRef (env, object);
 }
 
