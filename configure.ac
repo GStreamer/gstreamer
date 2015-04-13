@@ -780,6 +780,38 @@ AC_CACHE_CHECK([for VP8 decoding API],
     LIBS="$saved_LIBS"
 ])
 
+dnl Check for va_dec_hevc.h header
+saved_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+AC_CHECK_HEADERS([va/va_dec_hevc.h], [], [], [#include <va/va.h>])
+CPPFLAGS="$saved_CPPFLAGS"
+
+dnl Check for HEVC decoding API (0.38+)
+USE_HEVC_DECODER=0
+AC_CACHE_CHECK([for HEVC decoding API],
+    ac_cv_have_hevc_decoding_api, [
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $LIBVA_LIBS"
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <va/va.h>
+              #ifdef HAVE_VA_VA_DEC_HEVC_H
+              #include <va/va_dec_hevc.h>
+              #endif
+            ]],
+            [[VAPictureParameterBufferHEVC pic_param;
+              VASliceParameterBufferHEVC slice_param;
+              VAIQMatrixBufferHEVC iq_matrix;
+              slice_param.slice_data_offset = 0;
+              slice_param.slice_data_flag = 0;]])],
+        [ac_cv_have_hevc_decoding_api="yes" USE_HEVC_DECODER=1],
+        [ac_cv_have_hevc_decoding_api="no"]
+    )
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+])
 
 dnl Check for vpp (video post-processing) support
 USE_VA_VPP=0
