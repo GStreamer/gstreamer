@@ -111,11 +111,12 @@ static GstElement *
 make_playerbin_pipeline (const gchar * location)
 {
   GstElement *player;
+  const gchar *uri = g_filename_to_uri (location, NULL, NULL);
 
   player = gst_element_factory_make ("playbin", "player");
   g_assert (player);
 
-  g_object_set (G_OBJECT (player), "uri", location, NULL);
+  g_object_set (G_OBJECT (player), "uri", uri, NULL);
 
   return player;
 }
