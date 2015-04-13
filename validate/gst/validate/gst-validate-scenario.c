@@ -1863,6 +1863,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
     {
       GstValidateAction *stop_action;
       GstValidateActionType *stop_action_type;
+      GstStructure *s;
 
       if (!is_error) {
         priv->got_eos = TRUE;
@@ -1928,9 +1929,11 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
       stop_action_type = _find_action_type ("stop");
       stop_action = gst_validate_action_new (scenario, stop_action_type);
-      _fill_action (scenario, stop_action,
-          gst_structure_from_string ("stop;", NULL), FALSE);
+      s = gst_structure_from_string ("stop;", NULL);
+      _fill_action (scenario, stop_action, s, FALSE);
+      gst_structure_free (s);
       gst_validate_execute_action (stop_action_type, stop_action);
+      gst_mini_object_unref (GST_MINI_OBJECT (stop_action));
 
       break;
     }
