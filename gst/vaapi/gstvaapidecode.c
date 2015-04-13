@@ -857,7 +857,11 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "VA-API decoder",
       "Codec/Decoder/Video",
-      GST_PLUGIN_DESC, "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
+      GST_PLUGIN_DESC,
+      "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, "
+      "Halley Zhao <halley.zhao@intel.com>, "
+      "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, "
+      "Wind Yuan <feng.yuan@intel.com>");
 
   /* sink pad */
   pad_template = gst_static_pad_template_get (&gst_vaapidecode_sink_factory);
