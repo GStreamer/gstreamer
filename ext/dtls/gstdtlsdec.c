@@ -152,7 +152,7 @@ gst_dtls_dec_class_init (GstDtlsDecClass * klass)
   properties[PROP_DECODER_KEY] =
       g_param_spec_boxed ("decoder-key",
       "Decoder key",
-      "SRTP key that should be used by the decider",
+      "SRTP key that should be used by the decoder",
       GST_TYPE_CAPS, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_SRTP_CIPHER] =
