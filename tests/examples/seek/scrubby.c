@@ -324,8 +324,6 @@ play_cb (GtkButton * button, gpointer data)
   gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
   if (state != GST_STATE_PLAYING) {
     g_print ("PLAY pipeline\n");
-    gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     update_id =
         g_timeout_add (UPDATE_INTERVAL, (GSourceFunc) update_scale, pipeline);
