@@ -269,6 +269,7 @@ if test "$enable_builtin_codecparsers" = "yes"; then
     ac_cv_have_gst_h264_parser="no"
     ac_cv_have_gst_jpeg_parser="no"
     ac_cv_have_gst_vp8_parser="no"
+    ac_cv_have_gst_h265_parser="no"
 else
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
     [gstreamer-codecparsers-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
@@ -370,6 +371,31 @@ AC_CACHE_CHECK([for VP8 parser],
 AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_VP8],
     [test "$ac_cv_have_gst_vp8_parser" != "yes"])
 AM_CONDITIONAL([USE_BUILTIN_LIBVPX], [test "$enable_builtin_libvpx" = "yes"])
+
+dnl ... H.265 parser, with the required extensions
+AC_CACHE_CHECK([for H.265 parser],
+    ac_cv_have_gst_h265_parser, [
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <gst/codecparsers/gsth265parser.h>]],
+            [[GstH265SliceHdr slice_hdr;
+              GstH265VUIParams vui_params;
+              GstH265Profile profile = GST_H265_PROFILE_MAIN_STILL_PICTURE;
+              slice_hdr.n_emulation_prevention_bytes = 0;
+              vui_params.par_n = 0;
+              vui_params.par_d = 0;]])],
+        [ac_cv_have_gst_h265_parser="yes"],
+        [ac_cv_have_gst_h265_parser="no"]
+    )
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+])
+AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_H265],
+    [test "$ac_cv_have_gst_h265_parser" != "yes"])
 
 dnl ... video parsers
 AM_CONDITIONAL([USE_LOCAL_VIDEO_PARSERS],

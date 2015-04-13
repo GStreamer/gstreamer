@@ -17,6 +17,7 @@ codecparsers_source_c = \
 	nalutils.c		\
 	parserutils.c		\
 	vp8utils.c		\
+	gsth265parser.c         \
 	$(NULL)
 
 EXTRA_DIST += $(codecparsers_source_c:%.c=$(codecparsers_srcdir)/%.c)
@@ -33,6 +34,7 @@ codecparsers_source_h = \
 	nalutils.h		\
 	parserutils.h		\
 	vp8utils.h		\
+	gsth265parser.h         \
 	$(NULL)
 
 EXTRA_DIST += $(codecparsers_source_h:%.h=$(codecparsers_srcdir)/%.h)
