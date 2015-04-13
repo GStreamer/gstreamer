@@ -504,6 +504,7 @@ gst_type_find_element_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (parent);
+  gboolean result;
 
   if (typefind->mode != MODE_NORMAL) {
     /* need to do more? */
@@ -514,7 +515,9 @@ gst_type_find_element_src_event (GstPad * pad, GstObject * parent,
   /* Only handle seeks here if driving the pipeline */
   if (typefind->segment.format != GST_FORMAT_UNDEFINED &&
       GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
-    return gst_type_find_element_seek (typefind, event);
+    result = gst_type_find_element_seek (typefind, event);
+    gst_event_unref (event);
+    return result;
   } else {
     return gst_pad_push_event (typefind->sink, event);
   }
