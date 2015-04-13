@@ -939,7 +939,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                duration:(GstClockTime *)outDuration
 {
   CMSampleTimingInfo time_info;
-  GstClockTime timestamp, duration, inputClockNow, running_time;
+  GstClockTime timestamp, duration, input_clock_now, input_clock_diff, running_time;
   CMItemCount num_timings;
   GstClock *clock;
   CMTime now;
@@ -955,13 +955,27 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
           time_info.duration.value, time_info.duration.timescale);
 
     now = CMClockGetTime(inputClock);
-    inputClockNow = gst_util_uint64_scale (GST_SECOND,
+    input_clock_now = gst_util_uint64_scale (GST_SECOND,
         now.value, now.timescale);
+    input_clock_diff = input_clock_now - timestamp;
 
     GST_OBJECT_LOCK (element);
     clock = GST_ELEMENT_CLOCK (element);
-    running_time = gst_clock_get_time (clock) - element->base_time;
-    timestamp = running_time + (inputClockNow - timestamp);
+    if (clock) {
+      running_time = gst_clock_get_time (clock) - element->base_time;
+      /* We use presentationTimeStamp to determine how much time it took
+       * between capturing and receiving the frame in our delegate
+       * (e.g. how long it spent in AVF queues), then we subtract that time
+       * from our running time to get the actual timestamp.
+       */
+      if (running_time >= input_clock_diff)
+        timestamp = running_time - input_clock_diff;
+      else
+        timestamp = running_time;
+    } else {
+      /* no clock, can't set timestamps */
+      timestamp = GST_CLOCK_TIME_NONE;
+    }
     GST_OBJECT_UNLOCK (element);
   }
 
