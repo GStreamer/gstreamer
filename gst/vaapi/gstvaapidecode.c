@@ -48,6 +48,7 @@
 #include <gst/vaapi/gstvaapidecoder_mpeg4.h>
 #include <gst/vaapi/gstvaapidecoder_vc1.h>
 #include <gst/vaapi/gstvaapidecoder_vp8.h>
+#include <gst/vaapi/gstvaapidecoder_h265.h>
 
 #define GST_PLUGIN_NAME "vaapidecode"
 #define GST_PLUGIN_DESC "A VA-API based video decoder"
@@ -68,6 +69,7 @@ static const char gst_vaapidecode_sink_caps_str[] =
     GST_CAPS_CODEC("video/x-xvid")
     GST_CAPS_CODEC("video/x-h263")
     GST_CAPS_CODEC("video/x-h264")
+    GST_CAPS_CODEC("video/x-h265")
     GST_CAPS_CODEC("video/x-wmv")
     GST_CAPS_CODEC("video/x-vp8")
     GST_CAPS_CODEC("image/jpeg")
@@ -580,6 +582,27 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
           else
             alignment = GST_VAAPI_STREAM_ALIGN_H264_NONE;
           gst_vaapi_decoder_h264_set_alignment (GST_VAAPI_DECODER_H264
+              (decode->decoder), alignment);
+        }
+      }
+      break;
+    case GST_VAAPI_CODEC_H265:
+      decode->decoder = gst_vaapi_decoder_h265_new (dpy, caps);
+
+      /* Set the stream buffer alignment for better optimizations */
+      if (decode->decoder && caps) {
+        GstStructure *const structure = gst_caps_get_structure (caps, 0);
+        const gchar *str = NULL;
+
+        if ((str = gst_structure_get_string (structure, "alignment"))) {
+          GstVaapiStreamAlignH265 alignment;
+          if (g_strcmp0 (str, "au") == 0)
+            alignment = GST_VAAPI_STREAM_ALIGN_H265_AU;
+          else if (g_strcmp0 (str, "nal") == 0)
+            alignment = GST_VAAPI_STREAM_ALIGN_H265_NALU;
+          else
+            alignment = GST_VAAPI_STREAM_ALIGN_H265_NONE;
+          gst_vaapi_decoder_h265_set_alignment (GST_VAAPI_DECODER_H265
               (decode->decoder), alignment);
         }
       }
