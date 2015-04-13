@@ -726,6 +726,9 @@ request_key_with_signal (GstSrtpDec * filter, guint32 ssrc, gint signal)
     else
       GST_WARNING_OBJECT (filter, "Could not set stream with SSRC %u", ssrc);
     gst_caps_unref (caps);
+  } else {
+    GST_WARNING_OBJECT (filter, "Could not get caps for stream with SSRC %u",
+        ssrc);
   }
 
   return stream;
