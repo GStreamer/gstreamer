@@ -3874,6 +3874,11 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
           GST_TIME_ARGS (sess->next_rtcp_check_time));
       ret = TRUE;
     } else {
+      GST_LOG_OBJECT (sess,
+          "can't allow early feedback, next scheduled time is too late %"
+          GST_TIME_FORMAT " + %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (current_time), GST_TIME_ARGS (max_delay),
+          GST_TIME_ARGS (sess->next_rtcp_check_time));
       ret = FALSE;
     }
     goto end;
@@ -3912,7 +3917,11 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
           GST_TIME_ARGS (sess->next_rtcp_check_time));
       ret = TRUE;
     } else {
-      GST_LOG_OBJECT (sess, "can't allow early feedback");
+      GST_LOG_OBJECT (sess,
+          "can't allow early feedback, next scheduled time is too late %"
+          GST_TIME_FORMAT " + %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (current_time), GST_TIME_ARGS (max_delay),
+          GST_TIME_ARGS (sess->next_rtcp_check_time));
       ret = FALSE;
     }
     goto end;
