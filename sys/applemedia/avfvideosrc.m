@@ -939,7 +939,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                duration:(GstClockTime *)outDuration
 {
   CMSampleTimingInfo time_info;
-  GstClockTime timestamp, duration, input_clock_now, input_clock_diff, running_time;
+  GstClockTime timestamp, avf_timestamp, duration, input_clock_now, input_clock_diff, running_time;
   CMItemCount num_timings;
   GstClock *clock;
   CMTime now;
@@ -947,7 +947,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   timestamp = GST_CLOCK_TIME_NONE;
   duration = GST_CLOCK_TIME_NONE;
   if (CMSampleBufferGetOutputSampleTimingInfoArray(sbuf, 1, &time_info, &num_timings) == noErr) {
-    timestamp = gst_util_uint64_scale (GST_SECOND,
+    avf_timestamp = gst_util_uint64_scale (GST_SECOND,
             time_info.presentationTimeStamp.value, time_info.presentationTimeStamp.timescale);
 
     if (CMTIME_IS_VALID (time_info.duration) && time_info.duration.timescale != 0)
@@ -957,7 +957,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     now = CMClockGetTime(inputClock);
     input_clock_now = gst_util_uint64_scale (GST_SECOND,
         now.value, now.timescale);
-    input_clock_diff = input_clock_now - timestamp;
+    input_clock_diff = input_clock_now - avf_timestamp;
 
     GST_OBJECT_LOCK (element);
     clock = GST_ELEMENT_CLOCK (element);
@@ -972,6 +972,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         timestamp = running_time - input_clock_diff;
       else
         timestamp = running_time;
+
+      GST_DEBUG_OBJECT (element, "AVF clock: %"GST_TIME_FORMAT ", AVF PTS: %"GST_TIME_FORMAT
+          ", AVF clock diff: %"GST_TIME_FORMAT
+          ", running time: %"GST_TIME_FORMAT ", out PTS: %"GST_TIME_FORMAT,
+          GST_TIME_ARGS (input_clock_now), GST_TIME_ARGS (avf_timestamp),
+          GST_TIME_ARGS (input_clock_diff),
+          GST_TIME_ARGS (running_time), GST_TIME_ARGS (timestamp));
     } else {
       /* no clock, can't set timestamps */
       timestamp = GST_CLOCK_TIME_NONE;
