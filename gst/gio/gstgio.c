@@ -231,6 +231,11 @@ gst_gio_uri_handler_do_init (GType type)
   g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &uri_handler_info);
 }
 
+#define GIO_GVFS_MOUNTS_DIR GIO_PREFIX \
+    G_DIR_SEPARATOR_S "share" \
+    G_DIR_SEPARATOR_S "gvfs" \
+    G_DIR_SEPARATOR_S "mounts"
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -240,8 +245,8 @@ plugin_init (GstPlugin * plugin)
 
   gst_plugin_add_dependency_simple (plugin, NULL, GIO_MODULE_DIR, NULL,
       GST_PLUGIN_DEPENDENCY_FLAG_NONE);
-  gst_plugin_add_dependency_simple (plugin, "LD_LIBRARY_PATH", GIO_LIBDIR,
-      "gvfsd", GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+  gst_plugin_add_dependency_simple (plugin, NULL, GIO_GVFS_MOUNTS_DIR, NULL,
+      GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
   /* FIXME: Rank is MARGINAL for now, should be at least SECONDARY+1 in the future
    * to replace gnomevfssink/src. For testing purposes PRIMARY+1 one makes sense
