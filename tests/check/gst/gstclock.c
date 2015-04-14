@@ -78,7 +78,7 @@ GST_START_TEST (test_set_master_refcount)
 
   /* create master and slave */
   master = g_object_new (TYPE_TEST_CLOCK, "name", "TestClockMaster", NULL);
-  slave = g_object_new (TYPE_TEST_CLOCK, "name", "TestClockMaster", NULL);
+  slave = g_object_new (TYPE_TEST_CLOCK, "name", "TestClockSlave", NULL);
   GST_OBJECT_FLAG_SET (slave, GST_CLOCK_FLAG_CAN_SET_MASTER);
 
   fail_unless_equals_int (GST_OBJECT_REFCOUNT (master), 1);
