@@ -382,6 +382,7 @@ gst_vaapi_display_drm_new (const gchar * device_path)
   GstVaapiDisplay *display;
   guint types[2], i, num_types = 0;
 
+  g_mutex_lock (&g_drm_device_type_lock);
   if (device_path)
     types[num_types++] = 0;
   else if (g_drm_device_type)
@@ -391,7 +392,6 @@ gst_vaapi_display_drm_new (const gchar * device_path)
     types[num_types++] = DRM_DEVICE_LEGACY;
   }
 
-  g_mutex_lock (&g_drm_device_type_lock);
   for (i = 0; i < num_types; i++) {
     g_drm_device_type = types[i];
     display = gst_vaapi_display_new (gst_vaapi_display_drm_class (),
