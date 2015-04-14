@@ -430,6 +430,9 @@ gst_rtp_rtx_buffer_new (GstRtpRtxSend * rtx, GstBuffer * buffer)
   gst_rtp_buffer_set_padding (&new_rtp, FALSE);
   gst_rtp_buffer_unmap (&new_rtp);
 
+  /* Copy over timestamps */
+  gst_buffer_copy_into (new_buffer, buffer, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+
   return new_buffer;
 }
 
