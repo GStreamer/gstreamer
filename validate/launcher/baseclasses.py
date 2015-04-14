@@ -455,6 +455,10 @@ class GstValidateTest(Test):
         if self.options.no_color:
             subproc_env["GST_DEBUG_NO_COLOR"] = '1'
 
+        # Ensure XInitThreads is called, see bgo#731525
+        subproc_env['GST_GL_XINITTHREADS'] = '1'
+        self.add_env_variable('GST_GL_XINITTHREADS', '1')
+
         return subproc_env
 
     def clean(self):
