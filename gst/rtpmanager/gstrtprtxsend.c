@@ -460,11 +460,11 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         guint ssrc = 0;
         GstBuffer *rtx_buf = NULL;
 
-        /* retrieve seqnum of the packet that need to be restransmisted */
+        /* retrieve seqnum of the packet that need to be retransmitted */
         if (!gst_structure_get_uint (s, "seqnum", &seqnum))
           seqnum = -1;
 
-        /* retrieve ssrc of the packet that need to be restransmisted */
+        /* retrieve ssrc of the packet that need to be retransmitted */
         if (!gst_structure_get_uint (s, "ssrc", &ssrc))
           ssrc = -1;
 
