@@ -55,7 +55,6 @@ libgstvaapi_source_c =				\
 	gstvaapidecoder.c			\
 	gstvaapidecoder_dpb.c			\
 	gstvaapidecoder_h264.c			\
-	gstvaapidecoder_h265.c			\
 	gstvaapidecoder_mpeg2.c			\
 	gstvaapidecoder_mpeg4.c			\
 	gstvaapidecoder_objects.c		\
@@ -81,7 +80,6 @@ libgstvaapi_source_c =				\
 	gstvaapiutils_core.c			\
 	gstvaapiutils_h264.c			\
 	gstvaapiutils_mpeg2.c			\
-	gstvaapiutils_h265.c			\
 	gstvaapivalue.c				\
 	gstvaapivideopool.c			\
 	gstvaapiwindow.c			\
@@ -112,7 +110,6 @@ libgstvaapi_source_h =				\
 	gstvaapitypes.h				\
 	gstvaapiutils_h264.h			\
 	gstvaapiutils_mpeg2.h			\
-	gstvaapiutils_h265.h			\
 	gstvaapivalue.h				\
 	gstvaapivideopool.h			\
 	gstvaapiwindow.h			\
@@ -146,7 +143,6 @@ libgstvaapi_source_priv_h =			\
 	gstvaapiutils_core.h			\
 	gstvaapiutils_h264_priv.h		\
 	gstvaapiutils_mpeg2_priv.h		\
-	gstvaapiutils_h265_priv.h		\
 	gstvaapiversion.h			\
 	gstvaapivideopool_priv.h		\
 	gstvaapiwindow_priv.h			\
@@ -167,6 +163,17 @@ libgstvaapi_vp8dec_source_h = gstvaapidecoder_vp8.h
 if USE_VP8_DECODER
 libgstvaapi_source_c += $(libgstvaapi_vp8dec_source_c)
 libgstvaapi_source_h += $(libgstvaapi_vp8dec_source_h)
+endif
+
+libgstvaapi_hevcdec_source_c = 			\
+	gstvaapidecoder_h265.c			\
+	gstvaapiutils_h265.c
+libgstvaapi_hevcdec_source_h = gstvaapiutils_h265.h
+libgstvaapi_hevcdec_source_priv_h = gstvaapiutils_h265_priv.h
+if USE_HEVC_DECODER
+libgstvaapi_source_c += $(libgstvaapi_hevcdec_source_c)
+libgstvaapi_source_h += $(libgstvaapi_hevcdec_source_h)
+libgstvaapi_source_priv_h += $(libgstvaapi_hevcdec_source_priv_h)
 endif
 
 libgstvaapi_enc_source_c =			\
@@ -576,6 +583,9 @@ EXTRA_DIST += \
 	$(libgstvaapi_jpegdec_source_h)		\
 	$(libgstvaapi_vp8dec_source_c)		\
 	$(libgstvaapi_vp8dec_source_h)		\
+	$(libgstvaapi_hevcdec_source_c)		\
+	$(libgstvaapi_hevcdec_source_h)		\
+	$(libgstvaapi_hevcdec_source_priv_h)	\
 	$(libgstvaapi_jpegenc_source_h)		\
 	$(libgstvaapi_jpegenc_source_c)		\
 	$(libgstvaapi_vp8enc_source_h)		\
