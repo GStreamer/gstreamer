@@ -1177,7 +1177,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
 
   mq_stream_ctx_ref (ctx);
   ctx->sink_pad_block_id =
-      gst_pad_add_probe (res, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+      gst_pad_add_probe (mq_sink, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
       (GstPadProbeCallback) handle_mq_input, ctx, (GDestroyNotify)
       _pad_block_destroy_sink_notify);
 
