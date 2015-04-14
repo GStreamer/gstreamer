@@ -1246,7 +1246,7 @@ error:
 drop_frame:
   priv->decoder_state = 0;
   priv->pic_structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-  return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+  return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
 }
 
 static GstVaapiDecoderStatus
@@ -1496,7 +1496,6 @@ init_picture_poc (GstVaapiDecoderH265 * decoder,
     priv->prev_tid0pic_poc_msb = 0;
   }
 
-done:
   picture->base.poc = picture->poc;
   GST_DEBUG ("PicOrderCntVal %d", picture->base.poc);
 
@@ -1865,6 +1864,8 @@ is_new_access_unit (GstVaapiParserInfoH265 * pi,
 {
   if (!prev_pi)
     return TRUE;
+
+  return FALSE;
 }
 
 static gboolean
@@ -2039,7 +2040,7 @@ decode_ref_pic_set (GstVaapiDecoderH265 * decoder,
     priv->NumPocStCurrBefore = priv->NumPocStCurrAfter = priv->NumPocStFoll = 0;
     priv->NumPocLtCurr = priv->NumPocLtFoll = 0;
   } else {
-    GstH265ShortTermRefPicSet *stRefPic;
+    GstH265ShortTermRefPicSet *stRefPic = NULL;
     gint32 num_lt_pics, pocLt, PocLsbLt[16] = { 0, }
     , UsedByCurrPicLt[16] = {
     0,};
@@ -2053,6 +2054,7 @@ decode_ref_pic_set (GstVaapiDecoderH265 * decoder,
       stRefPic =
           &sps->short_term_ref_pic_set[slice_hdr->short_term_ref_pic_set_idx];
 
+    g_assert (stRefPic != NULL);
 
     for (i = 0, j = 0, k = 0; i < stRefPic->NumNegativePics; i++) {
       if (stRefPic->UsedByCurrPicS0[i]) {
