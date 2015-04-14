@@ -861,6 +861,11 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   [self getSampleBuffer:sampleBuffer timestamp:&timestamp duration:&duration];
 
+  if (timestamp == GST_CLOCK_TIME_NONE) {
+    [bufQueueLock unlock];
+    return;
+  }
+
   if ([bufQueue count] == BUFFER_QUEUE_SIZE)
     [bufQueue removeLastObject];
 
