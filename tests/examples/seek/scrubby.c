@@ -186,7 +186,7 @@ seek_cb (GtkWidget * widget)
     GST_DEBUG ("seek because of slider move");
 
     if (do_seek (widget, TRUE, TRUE)) {
-      g_source_remove (changed_id);
+      g_signal_handler_disconnect (hscale, changed_id);
       changed_id = 0;
     }
   }
@@ -308,7 +308,7 @@ stop_seek (GtkWidget * widget, gpointer user_data)
   GST_DEBUG ("stop seek");
 
   if (changed_id) {
-    g_source_remove (changed_id);
+    g_signal_handler_disconnect (hscale, changed_id);
     changed_id = 0;
   }
 
