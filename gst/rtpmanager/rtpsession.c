@@ -3901,8 +3901,12 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
 
   /*  RFC 4585 section 3.5.2 step 3 */
   if (current_time + T_dither_max > sess->next_rtcp_check_time) {
-    GST_LOG_OBJECT (sess, "don't send because of dither");
-    ret = FALSE;
+    GST_LOG_OBJECT (sess,
+        "don't send because of dither, next scheduled time is soon %"
+        GST_TIME_FORMAT " + %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (current_time), GST_TIME_ARGS (T_dither_max),
+        GST_TIME_ARGS (sess->next_rtcp_check_time));
+    ret = TRUE;
     goto end;
   }
 
@@ -3945,8 +3949,10 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
   sess->next_rtcp_check_time = sess->last_rtcp_send_time + 2 * T_rr;
   sess->last_rtcp_send_time += T_rr;
 
-  GST_LOG_OBJECT (sess, "next early RTCP time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (sess->next_early_rtcp_time));
+  GST_LOG_OBJECT (sess, "next early RTCP time %" GST_TIME_FORMAT
+      ", next regular RTCP time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (sess->next_early_rtcp_time),
+      GST_TIME_ARGS (sess->next_rtcp_check_time));
   RTP_SESSION_UNLOCK (sess);
 
   /* notify app of need to send packet early
