@@ -177,7 +177,9 @@ gst_vaapi_video_pool_get_object_unlocked (GstVaapiVideoPool * pool)
 
   object = g_queue_pop_head (&pool->free_objects);
   if (!object) {
+    g_mutex_unlock (&pool->mutex);
     object = gst_vaapi_video_pool_alloc_object (pool);
+    g_mutex_lock (&pool->mutex);
     if (!object)
       return NULL;
   }
@@ -354,7 +356,11 @@ gst_vaapi_video_pool_reserve_unlocked (GstVaapiVideoPool * pool, guint n)
     n = pool->capacity;
 
   for (i = num_allocated; i < n; i++) {
-    gpointer const object = gst_vaapi_video_pool_alloc_object (pool);
+    gpointer object;
+
+    g_mutex_unlock (&pool->mutex);
+    object = gst_vaapi_video_pool_alloc_object (pool);
+    g_mutex_lock (&pool->mutex);
     if (!object)
       return FALSE;
     g_queue_push_tail (&pool->free_objects, object);
