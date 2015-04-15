@@ -224,6 +224,9 @@ gst_vaapipostproc_ensure_filter (GstVaapiPostproc * postproc)
   if (!gst_vaapipostproc_ensure_display (postproc))
     return FALSE;
 
+  gst_caps_replace (&postproc->allowed_srcpad_caps, NULL);
+  gst_caps_replace (&postproc->allowed_sinkpad_caps, NULL);
+
   postproc->filter =
       gst_vaapi_filter_new (GST_VAAPI_PLUGIN_BASE_DISPLAY (postproc));
   if (!postproc->filter)
@@ -297,7 +300,7 @@ gst_vaapipostproc_start (GstBaseTransform * trans)
   ds_reset (&postproc->deinterlace_state);
   if (!gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (postproc)))
     return FALSE;
-  if (!gst_vaapipostproc_ensure_display (postproc))
+  if (!gst_vaapipostproc_ensure_filter (postproc))
     return FALSE;
   return TRUE;
 }
@@ -936,10 +939,8 @@ expand_allowed_srcpad_caps (GstVaapiPostproc * postproc, GstCaps * caps)
 {
   GValue value = G_VALUE_INIT, v_format = G_VALUE_INIT;
   guint i, num_structures;
-  gboolean had_filter;
 
-  had_filter = postproc->filter != NULL;
-  if (!had_filter && !gst_vaapipostproc_ensure_filter (postproc))
+  if (postproc->filter == NULL)
     goto cleanup;
   if (!gst_vaapipostproc_ensure_filter_caps (postproc))
     goto cleanup;
@@ -967,8 +968,6 @@ expand_allowed_srcpad_caps (GstVaapiPostproc * postproc, GstCaps * caps)
   g_value_unset (&value);
 
 cleanup:
-  if (!had_filter)
-    gst_vaapipostproc_destroy_filter (postproc);
   return caps;
 }
 
