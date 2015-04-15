@@ -1295,7 +1295,7 @@ create_elements (GstSplitMuxSink * splitmux)
               create_element (splitmux, "mp4mux", "muxer")) == NULL)
         goto fail;
     } else {
-      if (!gst_bin_add (GST_BIN (splitmux), splitmux->provided_muxer)) {
+      if (!gst_bin_add (GST_BIN (splitmux), provided_muxer)) {
         g_warning ("Could not add muxer element - splitmuxsink will not work");
         gst_object_unref (provided_muxer);
         goto fail;
