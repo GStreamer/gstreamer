@@ -152,5 +152,6 @@ AC_OUTPUT([
   common/m4/Makefile
   gi/Makefile
   plugin/Makefile
+  testsuite/Makefile
   gi/overrides/Makefile
 ])

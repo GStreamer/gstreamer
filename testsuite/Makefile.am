@@ -1,90 +1,24 @@
-# This is a hack to make sure a shared library is built
-tests =  \
-	test_adapter.py \
-	test_audio.py \
-	test_bin.py \
-	test_buffer.py \
-        test_caps.py \
-	test_element.py \
-	test_event.py \
-	test_ghostpad.py \
-        test_interface.py \
-	test_message.py \
-	test_pad.py \
-        test_pipeline.py \
-        test_registry.py \
-        test_struct.py \
-	test_segment.py \
-	test_taglist.py \
-	test_xml.py \
-	test_pbutils.py	\
+# Don't try to use wildcards to replace the list of tests below.
+# http://www.gnu.org/software/automake/manual/automake.html#Wildcards
+# Keep this list sorted!
+tests =	\
 	test_gst.py
 
-EXTRA_DIST = $(tests) common.py cleanup.py runtests.py test-object.h python.supp gstpython.supp
+EXTRA_DIST = \
+	__init__.py \
+	common.py \
+	runtests.py \
+	overrides_hack.py \
+	$(tests)
 
-if HAVE_VALGRIND
-check-valgrind:
-	$(PYTHON) cleanup.py
-	make valgrind
-else
-check-valgrind:
-	@true
-endif
+clean-local:
+	rm -rf *.pyc *.pyo
 
-GSTSUPP = $(top_srcdir)/common/gst.supp
-PYTHONSUPP = $(top_srcdir)/testsuite/python.supp
-GSTPYTHONSUPP = $(top_srcdir)/testsuite/gstpython.supp
-TESTS_ENVIRONMENT = LC_ALL=C
-
-# gdb any given test_x.py by running make test_x.py.gdb
-%.gdb: %
-	$(TESTS_ENVIRONMENT)                                    \
-	gdb --args 						\
-	$(PYTHON) 						\
-	$*
-
-# valgrind any given test_x.py by running make test_x.py.valgrind
-%.valgrind: %
-	$(TESTS_ENVIRONMENT)                                    \
-	G_DEBUG=gc-friendly G_SLICE=always-malloc					\
-	$(VALGRIND_PATH) -q					\
-	--suppressions=$(GSTSUPP)				\
-	--suppressions=$(PYTHONSUPP)				\
-	--suppressions=$(GSTPYTHONSUPP)				\
-	--tool=memcheck --leak-check=full --trace-children=yes  \
-	--leak-resolution=high --num-callers=50		\
-	$(PYTHON)						\
-	$* 2>&1 | tee valgrind.log
-	@if grep "tely lost" valgrind.log; then                 \
-	    rm valgrind.log;                                    \
-	    exit 1;                                             \
-	fi
-	@rm valgrind.log
-
-# valgrind any given test_x.py by running make test_x.py.valgrind
-%.gen-suppressions: %
-	$(TESTS_ENVIRONMENT)                                    \
-	G_DEBUG=gc-friendly G_SLICE=always-malloc					\
-	$(VALGRIND_PATH) -q					\
-	--suppressions=$(GSTSUPP)				\
-	--suppressions=$(PYTHONSUPP)				\
-	--suppressions=$(GSTPYTHONSUPP)				\
-	--tool=memcheck --leak-check=full --trace-children=yes  \
-	--leak-resolution=high --num-callers=50			\
-	--gen-suppressions=all					\
-	$(PYTHON)						\
-	$* 2>&1 | tee valgrind.log
-	@if grep "tely lost" valgrind.log; then                 \
-	    rm valgrind.log;                                    \
-	    exit 1;                                             \
-	fi
-	@rm valgrind.log
+check-local:
+	$(PYTHON) $(srcdir)/runtests.py $(tests)
 
 %.check: %
-	$(PYTHON) $(srcdir)/cleanup.py
 	$(PYTHON) $(srcdir)/runtests.py $*
-	@rm -fr *.pyc
-
 %.forever: %
 	$(srcdir)/cleanup.py
 	@while true; do \

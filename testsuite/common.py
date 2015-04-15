@@ -1,204 +1,138 @@
-# -*- Mode: Python -*-
-# vi:si:et:sw=4:sts=4:ts=4
+# -*- Mode: Python; py-indent-offset: 4 -*-
+# vim: tabstop=4 shiftwidth=4 expandtab
 #
-# gst-python - Python bindings for GStreamer
-# Copyright (C) 2002 David I. Lehn
-# Copyright (C) 2004 Johan Dahlin
-# Copyright (C) 2005 Edward Hervey
+# Copyright (C) 2015 Thibault Saunier <thibault.saunier@collabora.com>
 #
-# This library is free software; you can redistribute it and/or
+# This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
 #
-# This library is distributed in the hope that it will be useful,
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+# License along with this program; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301, USA.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3, or (at your option)
+# any later version.
+"""
+A collection of objects to use for testing
 
-try:
-    from dl import RTLD_LAZY, RTLD_GLOBAL
-except ImportError:
-    # dl doesn't seem to be available on 64bit systems
-    try:
-        from DLFCN import RTLD_LAZY, RTLD_GLOBAL
-    except ImportError:
-        pass
+Copyied from pitivi
+"""
+
 import os
-import sys
 import gc
 import unittest
+import gi.overrides
+gi.overrides
 
-import pygtk
-pygtk.require('2.0')
+from gi.repository import Gst
 
-import gobject
-try:
-    gobject.threads_init()
-except:
-    print "WARNING: gobject doesn't have threads_init, no threadsafety"
 
-# Detect the version of pygobject
-# In pygobject >= 2.13.0 the refcounting of objects has changed.
-pgmaj,pgmin,pgmac = gobject.pygobject_version
-if pgmaj >= 2 and pgmin >= 13:
-    pygobject_2_13 = True
-else:
-    pygobject_2_13 = False
+detect_leaks = os.environ.get("TEST_DETECT_LEAKS", "1") not in ("0", "")
 
-# Don't insert before .
-# sys.path.insert(1, os.path.join('..'))
-
-# Load GST and make sure we load it from the current build
-sys.setdlopenflags(RTLD_LAZY | RTLD_GLOBAL)
-
-topbuilddir = os.path.abspath(os.path.join('..'))
-topsrcdir = os.path.abspath(os.path.join('..'))
-if topsrcdir.endswith('_build'):
-    topsrcdir = os.path.dirname(topsrcdir)
-
-# gst's __init__.py is in topbuilddir/gst
-path = os.path.abspath(os.path.join(topbuilddir, 'gst'))
-import gst
-file = gst.__file__
-assert file.startswith(path), 'bad gst path: %s' % file
-
-# gst's interfaces is in topbuilddir/gst
-path = os.path.abspath(os.path.join(topbuilddir, 'gst'))
-try:
-   import gst.interfaces
-except ImportError:
-   # hack: we import it from our builddir/gst/.libs instead; ugly
-   import interfaces
-   gst.interfaces = interfaces
-file = gst.interfaces.__file__
-assert file.startswith(path), 'bad gst.interfaces path: %s' % file
-
-# gst's tags is in topbuilddir/gst
-path = os.path.abspath(os.path.join(topbuilddir, 'gst'))
-try:
-   import gst.tag
-except ImportError:
-   # hack: we import it from our builddir/gst/.libs instead; ugly
-   import tag
-   gst.tag = tag
-file = gst.tag.__file__
-assert file.startswith(path), 'bad gst.tag path: %s' % file
-
-# gst's pbutils is in topbuilddir/gst
-path = os.path.abspath(os.path.join(topbuilddir, 'gst'))
-try:
-   import gst.pbutils
-except ImportError:
-   # hack: we import it from our builddir/gst/.libs instead; ugly
-   import pbutils
-   gst.pbutils = pbutils
-file = gst.pbutils.__file__
-assert file.startswith(path), 'bad gst.pbutils path: %s' % file
-
-# testhelper needs gstlibtoolimporter
-import gstlibtoolimporter
-gstlibtoolimporter.install()
-import testhelper
-gstlibtoolimporter.uninstall()
-
-_stderr = None
-
-def disable_stderr():
-    global _stderr
-    _stderr = file('/tmp/stderr', 'w+')
-    sys.stderr = os.fdopen(os.dup(2), 'w')
-    os.close(2)
-    os.dup(_stderr.fileno())
-
-def enable_stderr():
-    global _stderr
-    
-    os.close(2)
-    os.dup(sys.stderr.fileno())
-    _stderr.seek(0, 0)
-    data = _stderr.read()
-    _stderr.close()
-    os.remove('/tmp/stderr')
-    return data
-
-def run_silent(function, *args, **kwargs):
-   disable_stderr()
-
-   try:
-      function(*args, **kwargs)
-   except Exception, exc:
-      enable_stderr()
-      raise exc
-   
-   output = enable_stderr()
-
-   return output
 
 class TestCase(unittest.TestCase):
+    _tracked_types = (Gst.MiniObject, Gst.Element, Gst.Pad, Gst.Caps)
 
-    _types = [gst.Object, gst.MiniObject]
+    def gctrack(self):
+        self.gccollect()
+        self._tracked = []
+        for obj in gc.get_objects():
+            if not isinstance(obj, self._tracked_types):
+                continue
+
+            self._tracked.append(obj)
 
     def gccollect(self):
-        # run the garbage collector
         ret = 0
-        gst.debug('garbage collecting')
         while True:
             c = gc.collect()
             ret += c
-            if c == 0: break
-        gst.debug('done garbage collecting, %d objects' % ret)
+            if c == 0:
+                break
         return ret
 
-    def gctrack(self):
-        # store all gst objects in the gc in a tracking dict
-        # call before doing any allocation in your test, from setUp
-        gst.debug('tracking gc GstObjects for types %r' % self._types)
-        self.gccollect()
-        self._tracked = {}
-        for c in self._types:
-            self._tracked[c] = [o for o in gc.get_objects() if isinstance(o, c)]
-
     def gcverify(self):
-        # verify no new gst objects got added to the gc
-        # call after doing all cleanup in your test, from tearDown
-        gst.debug('verifying gc GstObjects for types %r' % self._types)
-        new = []
-        for c in self._types:
-            objs = [o for o in gc.get_objects() if isinstance(o, c)]
-            new.extend([o for o in objs if o not in self._tracked[c]])
+        leaked = []
+        for obj in gc.get_objects():
+            if not isinstance(obj, self._tracked_types) or \
+                    obj in self._tracked:
+                continue
 
-        self.failIf(new, new)
-        #self.failIf(new, ["%r:%d" % (type(o), id(o)) for o in new])
+            leaked.append(obj)
+
+        # we collect again here to get rid of temporary objects created in the
+        # above loop
+        self.gccollect()
+
+        for elt in leaked:
+            print(elt)
+            for i in gc.get_referrers(elt):
+                print("   ", i)
+
+        self.assertFalse(leaked, leaked)
         del self._tracked
 
     def setUp(self):
-        """
-        Override me by chaining up to me at the start of your setUp.
-        """
-        # Using private variables is BAD ! this variable changed name in
-        # python 2.5
-        try:
-            methodName = self.__testMethodName
-        except:
-            methodName = self._testMethodName
-        gst.debug('%s.%s' % (self.__class__.__name__, methodName))
-        self.gctrack()
+        self._num_failures = len(getattr(self._result, 'failures', []))
+        self._num_errors = len(getattr(self._result, 'errors', []))
+        if detect_leaks:
+            self.gctrack()
 
     def tearDown(self):
-        """
-        Override me by chaining up to me at the end of your tearDown.
-        """
-        # Using private variables is BAD ! this variable changed name in
-        # python 2.5
-        try:
-            methodName = self.__testMethodName
-        except:
-            methodName = self._testMethodName
-        gst.debug('%s.%s' % (self.__class__.__name__, methodName))
-        self.gccollect()
-        self.gcverify()
+        # don't barf gc info all over the console if we have already failed a
+        # test case
+        if (self._num_failures < len(getattr(self._result, 'failures', []))
+           or self._num_errors < len(getattr(self._result, 'failures', []))):
+            return
+        if detect_leaks:
+            self.gccollect()
+            self.gcverify()
+
+    # override run() to save a reference to the test result object
+    def run(self, result=None):
+        if not result:
+            result = self.defaultTestResult()
+        self._result = result
+        unittest.TestCase.run(self, result)
+
+
+class SignalMonitor(object):
+
+    def __init__(self, obj, *signals):
+        self.signals = signals
+        self.connectToObj(obj)
+
+    def connectToObj(self, obj):
+        self.obj = obj
+        for signal in self.signals:
+            obj.connect(signal, self._signalCb, signal)
+            setattr(self, self._getSignalCounterName(signal), 0)
+            setattr(self, self._getSignalCollectName(signal), [])
+
+    def disconnectFromObj(self, obj):
+        obj.disconnect_by_func(self._signalCb)
+        del self.obj
+
+    def _getSignalCounterName(self, signal):
+        field = '%s_count' % signal.replace('-', '_')
+        return field
+
+    def _getSignalCollectName(self, signal):
+        field = '%s_collect' % signal.replace('-', '_')
+        return field
+
+    def _signalCb(self, obj, *args):
+        name = args[-1]
+        field = self._getSignalCounterName(name)
+        setattr(self, field, getattr(self, field, 0) + 1)
+        field = self._getSignalCollectName(name)
+        setattr(self, field, getattr(self, field, []) + [args[:-1]])

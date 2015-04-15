@@ -17,20 +17,53 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
-from common import gst, TestCase, unittest
+import overrides_hack
+overrides_hack
+from common import TestCase, unittest
+
+from gi.repository import Gst
 
 class TimeArgsTest(TestCase):
     def testNoneTime(self):
-        self.assertRaises(TypeError, gst.TIME_ARGS, None)
+        self.assertRaises(TypeError, Gst.TIME_ARGS, None)
 
     def testStringTime(self):
-        self.assertRaises(TypeError, gst.TIME_ARGS, "String")
+        self.assertRaises(TypeError, Gst.TIME_ARGS, "String")
 
     def testClockTimeNone(self):
-        self.assertEquals(gst.TIME_ARGS(gst.CLOCK_TIME_NONE), 'CLOCK_TIME_NONE')
+        self.assertEquals(Gst.TIME_ARGS(Gst.CLOCK_TIME_NONE), 'CLOCK_TIME_NONE')
 
     def testOneSecond(self):
-        self.assertEquals(gst.TIME_ARGS(gst.SECOND), '0:00:01.000000000')
+        self.assertEquals(Gst.TIME_ARGS(Gst.SECOND), '0:00:01.000000000')
+
+class TestNotInitialized(TestCase):
+    def testNotInitialized(self):
+        with self.assertRaises(Gst.NotInitalized):
+            Gst.Caps.from_string("audio/x-raw")
+
+        with self.assertRaises(Gst.NotInitalized):
+            Gst.Structure.from_string("audio/x-raw")
+
+        with self.assertRaises(Gst.NotInitalized):
+            Gst.ElementFactory.make("identity", None)
+
+    def testNotDeinitialized(self):
+        Gst.init(None)
+
+        assert(Gst.Caps.from_string("audio/x-raw"))
+        assert(Gst.Structure.from_string("audio/x-raw"))
+        assert(Gst.ElementFactory.make("identity", None))
+
+        Gst.deinit()
+        with self.assertRaises(Gst.NotInitalized):
+            Gst.Caps.from_string("audio/x-raw")
+
+        with self.assertRaises(Gst.NotInitalized):
+            Gst.Structure.from_string("audio/x-raw")
+
+        with self.assertRaises(Gst.NotInitalized):
+            Gst.ElementFactory.make("identity", None)
+
 
 if __name__ == "__main__":
     unittest.main()

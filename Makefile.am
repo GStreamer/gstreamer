@@ -1,4 +1,4 @@
-SUBDIRS = common gi plugin
+SUBDIRS = common gi plugin testsuite
 
 # Examples and testsuite need to be ported to 1.0
 #examples testsuite
