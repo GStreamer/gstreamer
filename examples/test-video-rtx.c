@@ -64,7 +64,7 @@ main (int argc, char *argv[])
       "videotestsrc ! video/x-raw,width=352,height=288,framerate=15/1 ! "
       "x264enc ! rtph264pay name=pay0 pt=96 "
       "audiotestsrc ! audio/x-raw,rate=8000 ! "
-      "alawenc ! rtppcmapay name=pay1 pt=97 " ")");
+      "alawenc ! rtppcmapay name=pay1 pt=8 " ")");
 
   /* store up to 0.4 seconds of retransmission data */
   gst_rtsp_media_factory_set_retransmission_time (factory, 400 * GST_MSECOND);
