@@ -225,7 +225,8 @@ _create_timeline (GESLauncher * self, const gchar * serialized_timeline,
       GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &error));
 
   if (error) {
-    g_error ("Could not create timeline, error: %s", error->message);
+    g_printerr ("\nERROR: Could not create timeline because: %s\n\n",
+        error->message);
 
     return FALSE;
   }
@@ -772,10 +773,14 @@ _startup (GApplication * application)
     goto failure;
 
 done:
-  return G_APPLICATION_CLASS (ges_launcher_parent_class)->startup (application);
+  G_APPLICATION_CLASS (ges_launcher_parent_class)->startup (application);
+
+  return;
 
 failure:
   self->priv->seenerrors = TRUE;
+
+  goto done;
 }
 
 static void
