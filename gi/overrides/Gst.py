@@ -28,6 +28,8 @@ import sys
 from inspect import signature
 from ..overrides import override
 from ..importer import modules
+from inspect import getmembers
+
 
 if sys.version_info >= (3, 0):
     _basestring = str
@@ -335,3 +337,60 @@ Gst.warning = _gi_gst.warning
 Gst.error = _gi_gst.error
 Gst.fixme = _gi_gst.fixme
 Gst.memdump = _gi_gst.memdump
+
+# Make sure PyGst is not usable if GStreamer has not been initialized
+class NotInitalized(Exception):
+    pass
+__all__.append('NotInitalized')
+
+def fake_method(*args):
+    raise NotInitalized("Please call Gst.init(argv) before using GStreamer")
+
+
+real_functions = [o for o in getmembers(Gst) if isinstance(o[1], type(Gst.init))]
+
+class_methods = []
+for cname_klass in [o for o in getmembers(Gst) if isinstance(o[1], type(Gst.Element)) or isinstance(o[1], type(Gst.Caps))]:
+    class_methods.append((cname_klass,
+                         [(o, cname_klass[1].__dict__[o])
+                          for o in cname_klass[1].__dict__
+                          if isinstance(cname_klass[1].__dict__[o], type(Gst.init))]))
+
+def init_pygst():
+    for fname, function in real_functions:
+        if fname not in ["init", "init_check", "deinit"]:
+            setattr(Gst, fname, function)
+
+    for cname_class, methods in class_methods:
+        for mname, method in methods:
+            setattr(cname_class[1], mname, method)
+
+
+def deinit_pygst():
+    for fname, func in real_functions:
+        if fname not in ["init", "init_check", "deinit"]:
+            setattr(Gst, fname, fake_method)
+    for cname_class, methods in class_methods:
+        for mname, method in methods:
+            setattr(cname_class[1], mname, fake_method)
+
+real_init = Gst.init
+def init(argv):
+    init_pygst()
+    return real_init(argv)
+Gst.init = init
+
+real_init_check = Gst.init_check
+def init_check(argv):
+    init_pygst()
+    return real_init_check(argv)
+Gst.init_check = init_check
+
+real_deinit = Gst.deinit
+def deinit():
+    deinit_pygst()
+    return real_deinit()
+
+Gst.deinit = deinit
+
+deinit_pygst()
