@@ -137,7 +137,7 @@ static void
 gst_vaapisink_set_event_handling (GstVaapiSink * sink, gboolean handle_events);
 
 static GstFlowReturn
-gst_vaapisink_show_frame (GstBaseSink * base_sink, GstBuffer * buffer);
+gst_vaapisink_show_frame (GstVideoSink * video_sink, GstBuffer * buffer);
 
 static gboolean
 gst_vaapisink_ensure_render_rect (GstVaapiSink * sink, guint width,
@@ -563,7 +563,7 @@ gst_vaapisink_video_overlay_expose (GstVideoOverlay * overlay)
 
   if (sink->video_buffer) {
     gst_vaapisink_reconfigure_window (sink);
-    gst_vaapisink_show_frame (GST_BASE_SINK_CAST (sink), sink->video_buffer);
+    gst_vaapisink_show_frame (GST_VIDEO_SINK_CAST (sink), sink->video_buffer);
   }
 }
 
@@ -1406,9 +1406,9 @@ error:
 }
 
 static GstFlowReturn
-gst_vaapisink_show_frame (GstBaseSink * base_sink, GstBuffer * src_buffer)
+gst_vaapisink_show_frame (GstVideoSink * video_sink, GstBuffer * src_buffer)
 {
-  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (video_sink);
   GstFlowReturn ret;
 
   /* We need at least to protect the gst_vaapi_aplpy_composition()
@@ -1571,6 +1571,7 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstBaseSinkClass *const basesink_class = GST_BASE_SINK_CLASS (klass);
+  GstVideoSinkClass *const videosink_class = GST_VIDEO_SINK_CLASS (klass);
   GstVaapiPluginBaseClass *const base_plugin_class =
       GST_VAAPI_PLUGIN_BASE_CLASS (klass);
   GstPadTemplate *pad_template;
@@ -1590,10 +1591,10 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
   basesink_class->stop = gst_vaapisink_stop;
   basesink_class->get_caps = gst_vaapisink_get_caps;
   basesink_class->set_caps = gst_vaapisink_set_caps;
-  basesink_class->preroll = gst_vaapisink_show_frame;
-  basesink_class->render = gst_vaapisink_show_frame;
-  basesink_class->query = gst_vaapisink_query;
+  basesink_class->query = GST_DEBUG_FUNCPTR (gst_vaapisink_query);
   basesink_class->propose_allocation = gst_vaapisink_propose_allocation;
+
+  videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_vaapisink_show_frame);
 
   element_class->set_bus = gst_vaapisink_set_bus;
   gst_element_class_set_static_metadata (element_class,
