@@ -560,6 +560,15 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
               /* use number of packets and of previous frame */
               cd = diff / rtpmp4gdepay->prev_AU_num;
               GST_DEBUG_OBJECT (depayload, "guessing constantDuration %d", cd);
+              if (!GST_BUFFER_IS_DISCONT (rtp->buffer)) {
+                /* rfc3640 - 3.2.3.2
+                 * if we see two consecutive packets with AU_index of 0 and
+                 * there has been no discontinuity, we must conclude that this
+                 * value of constantDuration is correct from now on. */
+                GST_DEBUG_OBJECT (depayload,
+                    "constantDuration of %d detected", cd);
+                rtpmp4gdepay->constantDuration = cd;
+              }
             } else {
               /* assume this frame has the same number of packets as the
                * previous one */
@@ -668,9 +677,16 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           GST_BUFFER_PTS (outbuf) = timestamp;
           GST_BUFFER_OFFSET (outbuf) = AU_index;
 
-          /* make sure we don't use the timestamp again for other AUs in this
-           * RTP packet. */
-          timestamp = -1;
+          if (rtpmp4gdepay->constantDuration != 0) {
+            /* if we have constantDuration, calculate timestamp for next AU
+             * in this RTP packet. */
+            timestamp += (rtpmp4gdepay->constantDuration * GST_SECOND) /
+                depayload->clock_rate;
+          } else {
+            /* otherwise, make sure we don't use the timestamp again for other
+             * AUs. */
+            timestamp = GST_CLOCK_TIME_NONE;
+          }
 
           GST_DEBUG_OBJECT (depayload,
               "pushing buffer of size %" G_GSIZE_FORMAT,
