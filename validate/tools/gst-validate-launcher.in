@@ -30,7 +30,7 @@ def _get_git_first_hash(path):
     try:
         os.chdir(path)
         res = subprocess.check_output(['git', 'rev-list', '--max-parents=0', 'HEAD']).rstrip('\n')
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, OSError):
         res = ''
     finally:
         os.chdir(cdir)
