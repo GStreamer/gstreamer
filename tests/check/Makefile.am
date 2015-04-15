@@ -75,6 +75,7 @@ REGISTRY_CHECKS =				\
 	gst/gstghostpad				\
 	gst/gstplugin				\
 	gst/gstpreset				\
+	gst/gstprotection			\
 	gst/gstquery				\
 	gst/gstregistry				\
 	gst/gsturi  				\
@@ -131,6 +132,7 @@ check_PROGRAMS =				\
 	gst/gstparamspecs			\
 	gst/gstpipeline				\
 	gst/gstpoll     			\
+	gst/gstprotection     			\
 	$(PRINTF_CHECKS)			\
 	gst/gstsegment				\
 	gst/gstsystemclock			\

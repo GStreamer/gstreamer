@@ -2306,6 +2306,19 @@ gst_preset_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstprotection</FILE>
+<INCLUDE>gst/gstprotection.h</INCLUDE>
+GstProtectionMeta
+gst_buffer_add_protection_meta
+gst_buffer_get_protection_meta
+gst_protection_select_system
+<SUBSECTION Standard>
+GST_PROTECTION_META_API_TYPE
+GST_PROTECTION_META_INFO
+gst_protection_meta_get_info
+</SECTION>
+
+<SECTION>
 <FILE>gstquery</FILE>
 <TITLE>GstQuery</TITLE>
 GstQuery

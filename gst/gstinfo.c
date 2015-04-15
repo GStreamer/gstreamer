@@ -176,6 +176,7 @@ GstDebugCategory *_priv_GST_CAT_POLL = NULL;
 GstDebugCategory *GST_CAT_META = NULL;
 GstDebugCategory *GST_CAT_LOCKING = NULL;
 GstDebugCategory *GST_CAT_CONTEXT = NULL;
+GstDebugCategory *_priv_GST_CAT_PROTECTION = NULL;
 
 
 #endif /* !defined(GST_DISABLE_GST_DEBUG) || !defined(GST_REMOVE_DISABLED) */
@@ -390,6 +391,8 @@ _priv_gst_debug_init (void)
   GST_CAT_META = _gst_debug_category_new ("GST_META", 0, "meta");
   GST_CAT_LOCKING = _gst_debug_category_new ("GST_LOCKING", 0, "locking");
   GST_CAT_CONTEXT = _gst_debug_category_new ("GST_CONTEXT", 0, NULL);
+  _priv_GST_CAT_PROTECTION =
+      _gst_debug_category_new ("GST_PROTECTION", 0, "protection");
 
   /* print out the valgrind message if we're in valgrind */
   _priv_gst_in_valgrind ();

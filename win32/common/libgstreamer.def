@@ -112,6 +112,7 @@ EXPORTS
 	gst_bin_sync_children_states
 	gst_bitmask_get_type
 	gst_buffer_add_meta
+	gst_buffer_add_protection_meta
 	gst_buffer_append
 	gst_buffer_append_memory
 	gst_buffer_append_region
@@ -990,6 +991,9 @@ EXPORTS
 	gst_preset_set_app_dir
 	gst_preset_set_meta
 	gst_progress_type_get_type
+	gst_protection_meta_api_get_type
+	gst_protection_meta_get_info
+	gst_protection_select_system
 	gst_proxy_pad_chain_default
 	gst_proxy_pad_chain_list_default
 	gst_proxy_pad_get_internal

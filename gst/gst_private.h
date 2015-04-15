@@ -254,6 +254,9 @@ GST_EXPORT GstDebugCategory *GST_CAT_CONTEXT;
 #define GST_CAT_POLL _priv_GST_CAT_POLL
 extern GstDebugCategory *_priv_GST_CAT_POLL;
 
+#define GST_CAT_PROTECTION _priv_GST_CAT_PROTECTION
+extern GstDebugCategory *_priv_GST_CAT_PROTECTION;
+
 extern GstClockTime _priv_gst_info_start_time;
 
 #else
@@ -293,6 +296,7 @@ extern GstClockTime _priv_gst_info_start_time;
 #define GST_CAT_META             NULL
 #define GST_CAT_LOCKING          NULL
 #define GST_CAT_CONTEXT          NULL
+#define GST_CAT_PROTECTION       NULL
 
 #endif
 

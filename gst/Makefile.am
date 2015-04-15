@@ -99,6 +99,7 @@ libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 	gstpluginloader.c	\
 	gstpoll.c		\
 	gstpreset.c             \
+	gstprotection.c         \
 	gstquark.c		\
 	gstquery.c		\
 	gstregistry.c		\
@@ -204,6 +205,7 @@ gst_headers =			\
 	gstpluginfeature.h	\
 	gstpoll.h		\
 	gstpreset.h             \
+	gstprotection.h         \
 	gstquery.h		\
 	gstsample.h		\
 	gstsegment.h		\
