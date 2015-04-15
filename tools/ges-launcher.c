@@ -211,7 +211,7 @@ _create_timeline (GESLauncher * self, const gchar * serialized_timeline,
   if (proj_uri != NULL) {
     project = ges_project_new (proj_uri);
   } else if (scenario == NULL) {
-    GST_ERROR ("serialized timeline is %s", serialized_timeline);
+    GST_INFO ("serialized timeline is %s", serialized_timeline);
     project = ges_project_new (serialized_timeline);
   } else {
     project = ges_project_new (NULL);
