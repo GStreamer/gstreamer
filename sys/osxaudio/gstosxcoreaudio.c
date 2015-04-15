@@ -566,7 +566,10 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
   /* Collect info about the HW capabilites and preferences */
   spdif_allowed =
       gst_core_audio_audio_device_is_spdif_avail (core_audio->device_id);
-  layout = gst_core_audio_get_channel_layout (core_audio, TRUE);
+  if (!core_audio->is_src)
+    layout = gst_core_audio_get_channel_layout (core_audio, TRUE);
+  else
+    layout = NULL;              /* no supported for sources */
 
   GST_DEBUG_OBJECT (core_audio, "Selected device ID: %u SPDIF allowed: %d",
       (unsigned) core_audio->device_id, spdif_allowed);
