@@ -62,6 +62,21 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_GL_COLOR_CONVERT_VIDEO_CAPS));
 
+static gboolean
+gst_gl_color_convert_element_stop (GstBaseTransform * bt)
+{
+  GstGLColorConvertElement *convert = GST_GL_COLOR_CONVERT_ELEMENT (bt);
+
+  if (convert->convert) {
+    gst_object_unref (convert->convert);
+    convert->convert = NULL;
+  }
+
+  return
+      GST_BASE_TRANSFORM_CLASS (gst_gl_color_convert_element_parent_class)->stop
+      (bt);
+}
+
 static void
 gst_gl_color_convert_element_class_init (GstGLColorConvertElementClass * klass)
 {
@@ -75,6 +90,7 @@ gst_gl_color_convert_element_class_init (GstGLColorConvertElementClass * klass)
   bt_class->prepare_output_buffer =
       gst_gl_color_convert_element_prepare_output_buffer;
   bt_class->transform = gst_gl_color_convert_element_transform;
+  bt_class->stop = gst_gl_color_convert_element_stop;
 
   bt_class->passthrough_on_same_caps = TRUE;
 
