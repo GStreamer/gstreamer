@@ -8,7 +8,7 @@ gst_completion_helper_@GST_API_VERSION@_LDADD = $(GST_OBJ_LIBS)
 bashhelpersdir = $(BASH_HELPERS_DIR)
 dist_bashhelpers_DATA = gst
 
-install-data-hook:
+install-exec-hook:
 	cd $(DESTDIR)$(bindir) && \
 	mv `echo "gst-completion-helper-" | sed '$(transform)'`@GST_API_VERSION@$(EXEEXT) \
 	$(DESTDIR)$(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT)
