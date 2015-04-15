@@ -205,6 +205,66 @@ GST_START_TEST (test_state_changes_down_seq)
 
 GST_END_TEST;
 
+static gboolean
+element_state_is (GstElement * e, GstState s)
+{
+  GstStateChangeReturn ret;
+  GstState state;
+
+  ret = gst_element_get_state (e, &state, NULL, GST_CLOCK_TIME_NONE);
+  return (ret == GST_STATE_CHANGE_SUCCESS && state == s);
+}
+
+GST_START_TEST (test_state_changes_up_failure)
+{
+  GstElement *bin;
+  GstElement *mid[3];
+  int n;
+
+  /* we want at least one before and one after */
+  g_assert (G_N_ELEMENTS (mid) >= 3);
+
+  /* make a bin */
+  bin = gst_element_factory_make ("bin", NULL);
+
+  /* add children */
+  for (n = 0; n < G_N_ELEMENTS (mid); ++n) {
+    const char *element = n != 1 ? "identity" : "fakesink";
+    mid[n] = gst_element_factory_make (element, NULL);
+    gst_bin_add (GST_BIN (bin), mid[n]);
+    if (n == 1)
+      g_object_set (mid[n], "async", FALSE, NULL);
+  }
+
+  /* This one should work */
+  for (n = 0; n < G_N_ELEMENTS (mid); ++n)
+    fail_unless (element_state_is (mid[n], GST_STATE_NULL));
+  gst_element_set_state (bin, GST_STATE_READY);
+  for (n = 0; n < G_N_ELEMENTS (mid); ++n)
+    fail_unless (element_state_is (mid[n], GST_STATE_READY));
+  gst_element_set_state (bin, GST_STATE_NULL);
+  for (n = 0; n < G_N_ELEMENTS (mid); ++n)
+    fail_unless (element_state_is (mid[n], GST_STATE_NULL));
+
+  /* make the middle element fail to switch up */
+  g_object_set (mid[1], "state-error", 1 /* null-to-ready */ , NULL);
+
+  /* This one should not */
+  for (n = 0; n < G_N_ELEMENTS (mid); ++n)
+    fail_unless (element_state_is (mid[n], GST_STATE_NULL));
+  gst_element_set_state (bin, GST_STATE_READY);
+  for (n = 0; n < G_N_ELEMENTS (mid); ++n)
+    fail_unless (element_state_is (mid[n], GST_STATE_NULL));
+  gst_element_set_state (bin, GST_STATE_NULL);
+  for (n = 0; n < G_N_ELEMENTS (mid); ++n)
+    fail_unless (element_state_is (mid[n], GST_STATE_NULL));
+
+  /* cleanup */
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 states_suite (void)
@@ -217,6 +277,7 @@ states_suite (void)
   tcase_add_test (tc_chain, test_state_changes_up_and_down_seq);
   tcase_add_test (tc_chain, test_state_changes_up_seq);
   tcase_add_test (tc_chain, test_state_changes_down_seq);
+  tcase_add_test (tc_chain, test_state_changes_up_failure);
 
   return s;
 }

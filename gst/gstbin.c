@@ -2540,6 +2540,17 @@ gst_bin_post_message (GstElement * element, GstMessage * msg)
   return ret;
 }
 
+static void
+reset_state (const GValue * data, gpointer user_data)
+{
+  GstElement *e = g_value_get_object (data);
+  GstState state = GPOINTER_TO_INT (user_data);
+
+  if (gst_element_set_state (e, state) == GST_STATE_CHANGE_FAILURE)
+    GST_WARNING_OBJECT (e, "Failed to switch back down to %s",
+        gst_element_state_get_name (state));
+}
+
 static GstStateChangeReturn
 gst_bin_change_state_func (GstElement * element, GstStateChange transition)
 {
@@ -2696,7 +2707,7 @@ restart:
             if (parent == GST_OBJECT_CAST (element)) {
               /* element is still in bin, really error now */
               gst_object_unref (parent);
-              goto done;
+              goto undo;
             }
             /* child removed from bin, let the resync code redo the state
              * change */
@@ -2808,6 +2819,24 @@ activate_failure:
     GST_CAT_WARNING_OBJECT (GST_CAT_STATES, element,
         "failure (de)activating src pads");
     return GST_STATE_CHANGE_FAILURE;
+  }
+
+undo:
+  {
+    if (current < next) {
+      GstIterator *it = gst_bin_iterate_sorted (GST_BIN (element));
+      GstIteratorResult ret;
+
+      GST_DEBUG_OBJECT (element,
+          "Bin failed to change state, switching children back to %s",
+          gst_element_state_get_name (current));
+      do {
+        ret =
+            gst_iterator_foreach (it, &reset_state, GINT_TO_POINTER (current));
+      } while (ret == GST_ITERATOR_RESYNC);
+      gst_iterator_free (it);
+    }
+    goto done;
   }
 }
 
