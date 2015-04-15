@@ -110,6 +110,7 @@ struct _GstVaapiSink
   guint use_overlay : 1;
   guint use_rotation : 1;
   guint keep_aspect : 1;
+  guint signal_handoffs : 1;
 };
 
 struct _GstVaapiSinkClass

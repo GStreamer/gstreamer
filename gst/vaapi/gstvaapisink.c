@@ -96,6 +96,14 @@ G_DEFINE_TYPE_WITH_CODE (GstVaapiSink,
 
 enum
 {
+  HANDOFF_SIGNAL,
+  LAST_SIGNAL
+};
+
+static guint gst_vaapisink_signals[LAST_SIGNAL] = { 0 };
+
+enum
+{
   PROP_0,
 
   PROP_DISPLAY_TYPE,
@@ -108,12 +116,14 @@ enum
   PROP_SATURATION,
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
+  PROP_SIGNAL_HANDOFFS,
 
   N_PROPERTIES
 };
 
 #define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_ANY
 #define DEFAULT_ROTATION                GST_VAAPI_ROTATION_0
+#define DEFAULT_SIGNAL_HANDOFFS         FALSE
 
 static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
 
@@ -1381,9 +1391,13 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
   if (!sink->backend->render_surface (sink, surface, surface_rect, flags))
     goto error;
 
+  if (sink->signal_handoffs)
+    g_signal_emit (sink, gst_vaapisink_signals[HANDOFF_SIGNAL], 0, buffer);
+
   /* Retain VA surface until the next one is displayed */
   gst_buffer_replace (&sink->video_buffer, buffer);
   gst_buffer_unref (buffer);
+
   return GST_FLOW_OK;
 
 error:
@@ -1403,6 +1417,7 @@ gst_vaapisink_show_frame (GstBaseSink * base_sink, GstBuffer * src_buffer)
   gst_vaapi_display_lock (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
   ret = gst_vaapisink_show_frame_unlocked (sink, src_buffer);
   gst_vaapi_display_unlock (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
+
   return ret;
 }
 
@@ -1481,6 +1496,9 @@ gst_vaapisink_set_property (GObject * object,
     case PROP_FORCE_ASPECT_RATIO:
       sink->keep_aspect = g_value_get_boolean (value);
       break;
+    case PROP_SIGNAL_HANDOFFS:
+      sink->signal_handoffs = g_value_get_boolean (value);
+      break;
     case PROP_HUE:
     case PROP_SATURATION:
     case PROP_BRIGHTNESS:
@@ -1517,6 +1535,9 @@ gst_vaapisink_get_property (GObject * object,
       break;
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, sink->keep_aspect);
+      break;
+    case PROP_SIGNAL_HANDOFFS:
+      g_value_set_boolean (value, sink->signal_handoffs);
       break;
     case PROP_HUE:
     case PROP_SATURATION:
@@ -1640,6 +1661,16 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
       TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
+   * GstVaapiSink:signal-handoffs:
+   *
+   * Send a signal after rendering the buffer.
+   */
+  g_properties[PROP_SIGNAL_HANDOFFS] =
+      g_param_spec_boolean ("signal-handoffs", "Signal handoffs",
+      "Send a signal after rendering the buffer", DEFAULT_SIGNAL_HANDOFFS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
    * GstVaapiSink:view-id:
    *
    * When not set to -1, the displayed frame will always be the one
@@ -1701,6 +1732,18 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   g_object_class_install_properties (object_class, N_PROPERTIES, g_properties);
+
+  /**
+   * GstVaapiSink::handoff:
+   * @object: the #GstVaapiSink instance
+   * @buffer: the buffer that was rendered
+   *
+   * This signal gets emitted after rendering the frame.
+   */
+  gst_vaapisink_signals[HANDOFF_SIGNAL] =
+    g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass),
+    G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+    G_TYPE_NONE, 1, GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 }
 
 static void
@@ -1719,6 +1762,7 @@ gst_vaapisink_init (GstVaapiSink * sink)
   sink->rotation = DEFAULT_ROTATION;
   sink->rotation_req = DEFAULT_ROTATION;
   sink->keep_aspect = TRUE;
+  sink->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
   gst_video_info_init (&sink->video_info);
 
   for (i = 0; i < G_N_ELEMENTS (sink->cb_values); i++)
