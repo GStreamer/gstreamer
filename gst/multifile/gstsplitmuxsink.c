@@ -80,6 +80,14 @@ enum
 #define DEFAULT_MUXER "mp4mux"
 #define DEFAULT_SINK "filesink"
 
+enum
+{
+  SIGNAL_FORMAT_LOCATION,
+  SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST];
+
 static GstStaticPadTemplate video_sink_template =
 GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SINK,
@@ -202,6 +210,17 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
       g_param_spec_object ("sink", "Sink",
           "The sink element (or element chain) to use (NULL = default filesink)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSplitMuxSink::format-location:
+   * @splitmux: the #GstSplitMuxSink
+   * @fragment_id: the sequence number of the file to be created
+   *
+   * Returns: the location to be used for the next output file
+   */
+  signals[SIGNAL_FORMAT_LOCATION] =
+      g_signal_new ("format-location", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_STRING, 1, G_TYPE_UINT);
 }
 
 static void
@@ -1416,10 +1435,16 @@ fail:
 static void
 set_next_filename (GstSplitMuxSink * splitmux)
 {
-  if (splitmux->location) {
-    gchar *fname;
+  gchar *fname = NULL;
 
-    fname = g_strdup_printf (splitmux->location, splitmux->fragment_id);
+  g_signal_emit (splitmux, signals[SIGNAL_FORMAT_LOCATION], 0,
+      splitmux->fragment_id, &fname);
+
+  if (!fname)
+    fname = splitmux->location ?
+        g_strdup_printf (splitmux->location, splitmux->fragment_id) : NULL;
+
+  if (fname) {
     GST_INFO_OBJECT (splitmux, "Setting file to %s", fname);
     g_object_set (splitmux->sink, "location", fname, NULL);
     g_free (fname);
