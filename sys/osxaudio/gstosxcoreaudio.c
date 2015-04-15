@@ -624,6 +624,21 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
         gst_structure_remove_field (out_s, "channel-mask");
       }
 
+#ifndef HAVE_IOS
+      if (core_audio->is_src && got_outer_asbd
+          && outer_asbd.mSampleRate != kAudioStreamAnyRate) {
+        /* According to Core Audio engineer, AUHAL does not support sample rate conversion.
+         * on sources. Therefore, we fixate the sample rate.
+         *
+         * "You definitely cannot do rate conversion as part of getting input from AUHAL.
+         *  That's the most common cause of those "cannot do in current context" errors."
+         * http://lists.apple.com/archives/coreaudio-api/2006/Sep/msg00088.html
+         */
+        gst_structure_set (out_s, "rate", G_TYPE_INT,
+            (gint) outer_asbd.mSampleRate, NULL);
+      }
+#endif
+
       /* Special cases for upmixing and downmixing.
        * Other than that, the AUs don't upmix or downmix multi-channel audio,
        * e.g. if you push 5.1-surround audio to a stereo configuration,
