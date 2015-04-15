@@ -607,10 +607,10 @@ gst_channel_mix_setup_matrix_int (AudioConvertCtx * this)
   gfloat tmp;
   gfloat factor = (1 << INT_MATRIX_FACTOR_EXPONENT);
 
-  this->matrix_int = g_new0 (gint32 *, this->in.channels);
+  this->matrix_int = g_new0 (gint *, this->in.channels);
 
   for (i = 0; i < this->in.channels; i++) {
-    this->matrix_int[i] = g_new (gint32, this->out.channels);
+    this->matrix_int[i] = g_new (gint, this->out.channels);
 
     for (j = 0; j < this->out.channels; j++) {
       tmp = this->matrix[i][j] * factor;
