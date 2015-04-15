@@ -745,9 +745,9 @@ gst_gl_mixer_start (GstAggregator * agg)
   GstElement *element = GST_ELEMENT (agg);
 
   GST_OBJECT_LOCK (mix);
-  mix->array_buffers = g_ptr_array_new_full (element->numsinkpads,
+  mix->array_buffers = g_ptr_array_new_full (element->numsinkpads, NULL);
+  mix->frames = g_ptr_array_new_full (element->numsinkpads,
       (GDestroyNotify) _free_glmixer_frame_data);
-  mix->frames = g_ptr_array_new_full (element->numsinkpads, NULL);
 
   g_ptr_array_set_size (mix->array_buffers, element->numsinkpads);
   g_ptr_array_set_size (mix->frames, element->numsinkpads);
