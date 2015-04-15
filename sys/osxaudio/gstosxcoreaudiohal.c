@@ -341,7 +341,7 @@ gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id,
   status = AudioObjectGetPropertyDataSize (device_id,
       &channelLayoutAddress, 0, NULL, &propertySize);
   if (status != noErr) {
-    GST_ERROR ("failed to get prefered layout: %d", (int) status);
+    GST_ERROR ("failed to get preferred layout: %d", (int) status);
     goto beach;
   }
 
@@ -350,7 +350,7 @@ gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id,
   status = AudioObjectGetPropertyData (device_id,
       &channelLayoutAddress, 0, NULL, &propertySize, layout);
   if (status != noErr) {
-    GST_ERROR ("failed to get prefered layout: %d", (int) status);
+    GST_ERROR ("failed to get preferred layout: %d", (int) status);
     goto failed;
   }
 
