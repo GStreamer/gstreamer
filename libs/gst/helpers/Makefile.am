@@ -10,9 +10,9 @@ dist_bashhelpers_DATA = gst
 
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && \
-	mv `echo "gst-completion-helper-" | sed '$(transform)'`@GST_API_VERSION@$(EXEEXT) \
-	$(DESTDIR)$(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT)
-	chmod 755 $(DESTDIR)$(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT)
+	$(INSTALL) `echo "gst-completion-helper-" | sed '$(transform)'`@GST_API_VERSION@$(EXEEXT) \
+	-D $(DESTDIR)$(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT) && \
+	rm `echo "gst-completion-helper-" | sed '$(transform)'`@GST_API_VERSION@$(EXEEXT)
 
 uninstall-hook:
 	rm -f $(DESTDIR)$(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT)
