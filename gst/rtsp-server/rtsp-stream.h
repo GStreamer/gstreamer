@@ -163,7 +163,7 @@ void              gst_rtsp_stream_set_retransmission_pt       (GstRTSPStream * s
                                                                guint rtx_pt);
 
 void              gst_rtsp_stream_set_pt_map                 (GstRTSPStream * stream, guint pt, GstCaps * caps);
-
+GstElement *      gst_rtsp_stream_request_aux_sender         (GstRTSPStream * stream, guint sessid);
 /**
  * GstRTSPStreamTransportFilterFunc:
  * @stream: a #GstRTSPStream object

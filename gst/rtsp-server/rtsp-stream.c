@@ -1817,8 +1817,8 @@ request_rtp_rtcp_decoder (GstElement * rtpbin, guint session,
   return gst_object_ref (priv->srtpdec);
 }
 
-static GstElement *
-request_aux_sender (GstElement * rtpbin, guint sessid, GstRTSPStream * stream)
+GstElement *
+gst_rtsp_stream_request_aux_sender (GstRTSPStream * stream, guint sessid)
 {
   GstElement *bin;
   GstPad *pad;
@@ -1826,6 +1826,8 @@ request_aux_sender (GstElement * rtpbin, guint sessid, GstRTSPStream * stream)
   gchar *name;
   guint pt, rtx_pt;
   gchar *pt_s;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
 
   pt = gst_rtsp_stream_get_pt (stream);
   pt_s = g_strdup_printf ("%u", pt);
@@ -2012,11 +2014,6 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
         (GCallback) request_rtp_rtcp_decoder, stream);
   }
 
-  if (priv->rtx_time > 0 && priv->srcpad) {
-    /* enable retransmission by setting rtprtxsend as the "aux" element of rtpbin */
-    g_signal_connect (rtpbin, "request-aux-sender",
-        (GCallback) request_aux_sender, stream);
-  }
   if (priv->sinkpad) {
     g_signal_connect (rtpbin, "request-pt-map",
         (GCallback) request_pt_map, stream);

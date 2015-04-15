@@ -2440,6 +2440,25 @@ preroll_failed:
   }
 }
 
+static GstElement *
+request_aux_sender (GstElement * rtpbin, guint sessid, GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  GstRTSPStream *stream = NULL;
+  guint i;
+
+  g_mutex_lock (&priv->lock);
+  for (i = 0; i < priv->streams->len; i++) {
+    stream = g_ptr_array_index (priv->streams, i);
+
+    if (sessid == gst_rtsp_stream_get_index (stream))
+      break;
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return gst_rtsp_stream_request_aux_sender (stream, sessid);
+}
+
 static gboolean
 start_prepare (GstRTSPMedia * media)
 {
@@ -2453,6 +2472,12 @@ start_prepare (GstRTSPMedia * media)
     GstRTSPStream *stream;
 
     stream = g_ptr_array_index (priv->streams, i);
+
+    if (priv->rtx_time > 0) {
+      /* enable retransmission by setting rtprtxsend as the "aux" element of rtpbin */
+      g_signal_connect (priv->rtpbin, "request-aux-sender",
+          (GCallback) request_aux_sender, media);
+    }
 
     if (!gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
             priv->rtpbin, GST_STATE_NULL)) {
