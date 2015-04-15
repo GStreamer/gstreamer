@@ -213,27 +213,27 @@ gst_gl_mixer_pad_sink_getcaps (GstPad * pad, GstGLMixer * mix, GstCaps * filter)
   GstCaps *template_caps;
   GstCaps *filtered_caps;
   GstCaps *returned_caps;
-  gboolean had_current_caps = TRUE;
 
   template_caps = gst_pad_get_pad_template_caps (pad);
 
   sinkcaps = gst_pad_get_current_caps (pad);
   if (sinkcaps == NULL) {
-    had_current_caps = FALSE;
-    sinkcaps = template_caps;
+    sinkcaps = gst_caps_ref (template_caps);
   } else {
-    sinkcaps = gst_caps_merge (sinkcaps, template_caps);
+    sinkcaps = gst_caps_merge (sinkcaps, gst_caps_ref (template_caps));
   }
 
-  filtered_caps = sinkcaps;
-  if (filter)
+  if (filter) {
     filtered_caps = gst_caps_intersect (sinkcaps, filter);
+    gst_caps_unref (sinkcaps);
+  } else {
+    filtered_caps = sinkcaps;   /* pass ownership */
+  }
+
   returned_caps = gst_caps_intersect (filtered_caps, template_caps);
 
-  if (filter)
-    gst_caps_unref (filtered_caps);
-  if (had_current_caps)
-    gst_caps_unref (template_caps);
+  gst_caps_unref (template_caps);
+  gst_caps_unref (filtered_caps);
 
   GST_DEBUG_OBJECT (pad, "returning %" GST_PTR_FORMAT, returned_caps);
 
