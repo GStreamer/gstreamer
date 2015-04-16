@@ -459,6 +459,16 @@ class GstValidateTest(Test):
         subproc_env['GST_GL_XINITTHREADS'] = '1'
         self.add_env_variable('GST_GL_XINITTHREADS', '1')
 
+        if self.scenario is not None:
+            subproc_env["GST_VALIDATE_SCENARIO"] = self.scenario.get_execution_name()
+            self.add_env_variable("GST_VALIDATE_SCENARIO",
+                                  subproc_env["GST_VALIDATE_SCENARIO"])
+        else:
+            try:
+                del subproc_env["GST_VALIDATE_SCENARIO"]
+            except KeyError:
+                pass
+
         return subproc_env
 
     def clean(self):
@@ -473,10 +483,6 @@ class GstValidateTest(Test):
         if "GST_VALIDATE_SCENARIOS_PATH" in os.environ:
             self.add_env_variable("GST_VALIDATE_SCENARIOS_PATH",
                                   os.environ["GST_VALIDATE_SCENARIOS_PATH"])
-        if self.scenario is not None:
-            os.environ["GST_VALIDATE_SCENARIO"] = self.scenario.get_execution_name()
-            self.add_env_variable("GST_VALIDATE_SCENARIO",
-                                  os.environ["GST_VALIDATE_SCENARIO"])
 
         self.add_env_variable("GST_VALIDATE_CONFIG")
         self.add_env_variable("GST_VALIDATE_OVERRIDE")
