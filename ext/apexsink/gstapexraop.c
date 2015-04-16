@@ -252,7 +252,7 @@ gst_apexraop_connect (GstApExRAOP * con)
   {
     struct asvals
     {
-      gulong url_key;
+      guint32 url_key;
       guint64 conn_id;
       guchar challenge[16];
     } v;
@@ -284,7 +284,7 @@ gst_apexraop_connect (GstApExRAOP * con)
     return GST_RTSP_STS_DESTINATION_UNREACHABLE;
 
   RAND_bytes (randbuf.buf, sizeof (randbuf));
-  sprintf ((gchar *) conn->url_abspath, "%lu", randbuf.v.url_key);
+  sprintf ((gchar *) conn->url_abspath, "%u", randbuf.v.url_key);
   sprintf ((char *) conn->cid, "%16" G_GINT64_MODIFIER "x", randbuf.v.conn_id);
 
   RAND_bytes (conn->aes_ky, AES_BLOCK_SIZE);
