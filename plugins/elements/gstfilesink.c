@@ -673,6 +673,7 @@ gst_file_sink_render_list (GstBaseSink * bsink, GstBufferList * buffer_list)
   guint8 *mem_nums;
   guint total_mems;
   guint i, num_buffers;
+  gboolean sync_after = FALSE;
 
   sink = GST_FILE_SINK_CAST (bsink);
 
@@ -687,11 +688,22 @@ gst_file_sink_render_list (GstBaseSink * bsink, GstBufferList * buffer_list)
     buffers[i] = gst_buffer_list_get (buffer_list, i);
     mem_nums[i] = gst_buffer_n_memory (buffers[i]);
     total_mems += mem_nums[i];
+    if (GST_BUFFER_FLAG_IS_SET (buffers[i], GST_BUFFER_FLAG_SYNC_AFTER))
+      sync_after = TRUE;
   }
 
   flow =
       gst_file_sink_render_buffers (sink, buffers, num_buffers, mem_nums,
       total_mems);
+
+  if (flow == GST_FLOW_OK && sync_after) {
+    if (fflush (sink->file) || fsync (fileno (sink->file))) {
+      GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
+          (_("Error while writing to file \"%s\"."), sink->filename),
+          ("%s", g_strerror (errno)));
+      flow = GST_FLOW_ERROR;
+    }
+  }
 
   return flow;
 
@@ -717,6 +729,16 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
     flow = gst_file_sink_render_buffers (filesink, &buffer, 1, &n_mem, n_mem);
   else
     flow = GST_FLOW_OK;
+
+  if (flow == GST_FLOW_OK &&
+      GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_SYNC_AFTER)) {
+    if (fflush (filesink->file) || fsync (fileno (filesink->file))) {
+      GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
+          (_("Error while writing to file \"%s\"."), filesink->filename),
+          ("%s", g_strerror (errno)));
+      flow = GST_FLOW_ERROR;
+    }
+  }
 
   return flow;
 }

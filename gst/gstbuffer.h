@@ -194,6 +194,9 @@ typedef struct _GstBufferPool GstBufferPool;
  * @GST_BUFFER_FLAG_DELTA_UNIT:  this unit cannot be decoded independently.
  * @GST_BUFFER_FLAG_TAG_MEMORY:  this flag is set when memory of the buffer
  *                               is added/removed
+ * @GST_BUFFER_FLAG_SYNC_AFTER:  Elements which write to disk or permanent
+ * 				 storage should ensure the data is synced after
+ * 				 writing the contents of this buffer. (Since: 1.6)
  * @GST_BUFFER_FLAG_LAST:        additional media specific flags can be added starting from
  *                               this flag.
  *
@@ -211,6 +214,7 @@ typedef enum {
   GST_BUFFER_FLAG_DROPPABLE   = (GST_MINI_OBJECT_FLAG_LAST << 8),
   GST_BUFFER_FLAG_DELTA_UNIT  = (GST_MINI_OBJECT_FLAG_LAST << 9),
   GST_BUFFER_FLAG_TAG_MEMORY  = (GST_MINI_OBJECT_FLAG_LAST << 10),
+  GST_BUFFER_FLAG_SYNC_AFTER  = (GST_MINI_OBJECT_FLAG_LAST << 11),
 
   GST_BUFFER_FLAG_LAST        = (GST_MINI_OBJECT_FLAG_LAST << 16)
 } GstBufferFlags;
