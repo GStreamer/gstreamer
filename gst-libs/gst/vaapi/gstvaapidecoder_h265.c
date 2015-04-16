@@ -27,6 +27,7 @@
 
 #include "sysdeps.h"
 #include <string.h>
+#include <math.h>
 #include <gst/base/gstadapter.h>
 #include <gst/codecparsers/gsth265parser.h>
 #include "gstvaapidecoder_h265.h"
@@ -1310,6 +1311,23 @@ parse_sps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
+static void
+get_pic_width_height_in_ctbs (GstH265PPS * pps,
+    guint * PicWidthInCtbsY, guint * PicHeightInCtbsY)
+{
+  gint MinCbLog2SizeY, CtbLog2SizeY, MinCbSizeY, CtbSizeY;
+  GstH265SPS *sps = pps->sps;
+
+  MinCbLog2SizeY = sps->log2_min_luma_coding_block_size_minus3 + 3;
+  CtbLog2SizeY = MinCbLog2SizeY + sps->log2_diff_max_min_luma_coding_block_size;
+  MinCbSizeY = 1 << MinCbLog2SizeY;
+  CtbSizeY = 1 << CtbLog2SizeY;
+
+  *PicWidthInCtbsY =
+      ceil ((double) sps->pic_width_in_luma_samples / (double) CtbSizeY);
+  *PicHeightInCtbsY =
+      ceil ((double) sps->pic_height_in_luma_samples / (double) CtbSizeY);
+}
 
 static GstVaapiDecoderStatus
 parse_pps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
@@ -1318,15 +1336,59 @@ parse_pps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
   GstVaapiParserInfoH265 *const pi = unit->parsed_info;
   GstH265PPS *const pps = &pi->data.pps;
   GstH265ParserResult result;
-
+  guint col_width[19], row_height[21];
   GST_DEBUG ("parse PPS");
   priv->parser_state &= GST_H265_VIDEO_STATE_GOT_SPS;
+
+  memset (col_width, 0, sizeof (col_width));
+  memset (row_height, 0, sizeof (row_height));
 
   memset (pps, 0, sizeof (GstH265PPS));
 
   result = gst_h265_parser_parse_pps (priv->parser, &pi->nalu, pps);
   if (result != GST_H265_PARSER_OK)
     return get_status (result);
+
+  if (pps->tiles_enabled_flag) {
+    guint i;
+    guint PicWidthInCtbsY, PicHeightInCtbsY;
+
+    get_pic_width_height_in_ctbs (pps, &PicWidthInCtbsY, &PicHeightInCtbsY);
+    GST_DEBUG ("PicWidthInCtbsY %d PicHeightInCtbsY %d", PicWidthInCtbsY,
+        PicHeightInCtbsY);
+
+    /* Tile Scanning Conversion 6-3 and 6-4 */
+    if (pps->uniform_spacing_flag) {
+
+      for (i = 0; i <= pps->num_tile_columns_minus1; i++)
+        col_width[i] =
+            ((i + 1) * PicWidthInCtbsY) / (pps->num_tile_columns_minus1 + 1) -
+            (i * PicWidthInCtbsY) / (pps->num_tile_columns_minus1 + 1);
+
+      for (i = 0; i <= pps->num_tile_rows_minus1; i++)
+        row_height[i] =
+            ((i + 1) * PicHeightInCtbsY) / (pps->num_tile_rows_minus1 + 1) -
+            (i * PicHeightInCtbsY) / (pps->num_tile_rows_minus1 + 1);
+
+    } else {
+
+      col_width[pps->num_tile_columns_minus1] = PicWidthInCtbsY;
+      for (i = 0; i < pps->num_tile_columns_minus1; i++) {
+        col_width[i] = pps->column_width_minus1[i] + 1;
+        col_width[pps->num_tile_columns_minus1] -= col_width[i];
+      }
+
+      row_height[pps->num_tile_rows_minus1] = PicHeightInCtbsY;
+      for (i = 0; i < pps->num_tile_rows_minus1; i++) {
+        row_height[i] = pps->row_height_minus1[i] + 1;
+        row_height[pps->num_tile_rows_minus1] -= row_height[i];
+      }
+    }
+    for (i = 0; i <= pps->num_tile_columns_minus1; i++)
+      pps->column_width_minus1[i] = col_width[i] - 1;
+    for (i = 0; i <= pps->num_tile_rows_minus1; i++)
+      pps->row_height_minus1[i] = row_height[i] - 1;
+  }
 
   priv->parser_state |= GST_H265_VIDEO_STATE_GOT_PPS;
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -1812,10 +1874,14 @@ fill_picture (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture)
   COPY_FIELD (pps, log2_parallel_merge_level_minus2);
   COPY_FIELD (pps, num_tile_columns_minus1);
   COPY_FIELD (pps, num_tile_rows_minus1);
-  for (i = 0; i < 19; i++)
+  for (i = 0; i <= pps->num_tile_columns_minus1; i++)
     pic_param->column_width_minus1[i] = pps->column_width_minus1[i];
-  for (i = 0; i < 21; i++)
+  for (; i < 19; i++)
+    pic_param->column_width_minus1[i] = 0;
+  for (i = 0; i <= pps->num_tile_rows_minus1; i++)
     pic_param->row_height_minus1[i] = pps->row_height_minus1[i];
+  for (; i < 21; i++)
+    pic_param->row_height_minus1[i] = 0;
 
   COPY_BFM (slice_parsing_fields, pps, lists_modification_present_flag);
   COPY_BFM (slice_parsing_fields, sps, long_term_ref_pics_present_flag);
