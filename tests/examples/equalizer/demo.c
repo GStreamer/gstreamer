@@ -152,7 +152,7 @@ main (int argc, char *argv[])
   GstElement *src, *capsfilter, *equalizer, *spectrum, *audioconvert, *sink;
   GstCaps *caps;
   GstBus *bus;
-  GtkWidget *appwindow, *vbox, *hbox, *widget;
+  GtkWidget *appwindow, *vbox, *hbox, *scale;
   int i;
 
   gst_init (&argc, &argv);
@@ -195,6 +195,7 @@ main (int argc, char *argv[])
   gst_object_unref (bus);
 
   appwindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title (GTK_WINDOW (appwindow), "Equalizer Demo");
   g_signal_connect (G_OBJECT (appwindow), "destroy",
       G_CALLBACK (on_window_destroy), NULL);
   vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
@@ -227,35 +228,38 @@ main (int argc, char *argv[])
 
     scales_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
 
-    widget = gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL,
+    /* Create gain scale */
+    scale = gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL,
         -24.0, 12.0, 0.5);
-    gtk_scale_set_draw_value (GTK_SCALE (widget), TRUE);
-    gtk_scale_set_value_pos (GTK_SCALE (widget), GTK_POS_TOP);
-    gtk_range_set_value (GTK_RANGE (widget), gain);
-    gtk_widget_set_size_request (widget, 25, 150);
-    g_signal_connect (G_OBJECT (widget), "value-changed",
+    gtk_scale_set_draw_value (GTK_SCALE (scale), TRUE);
+    gtk_scale_set_value_pos (GTK_SCALE (scale), GTK_POS_TOP);
+    gtk_range_set_value (GTK_RANGE (scale), gain);
+    gtk_widget_set_size_request (scale, 35, 150);
+    g_signal_connect (G_OBJECT (scale), "value-changed",
         G_CALLBACK (on_gain_changed), (gpointer) band);
-    gtk_box_pack_start (GTK_BOX (scales_hbox), widget, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (scales_hbox), scale, FALSE, FALSE, 0);
 
-    widget = gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL,
+    /* Create bandwidth scale */
+    scale = gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL,
         0.0, 20000.0, 5.0);
-    gtk_scale_set_draw_value (GTK_SCALE (widget), TRUE);
-    gtk_scale_set_value_pos (GTK_SCALE (widget), GTK_POS_TOP);
-    gtk_range_set_value (GTK_RANGE (widget), bw);
-    gtk_widget_set_size_request (widget, 25, 150);
-    g_signal_connect (G_OBJECT (widget), "value-changed",
+    gtk_scale_set_draw_value (GTK_SCALE (scale), TRUE);
+    gtk_scale_set_value_pos (GTK_SCALE (scale), GTK_POS_TOP);
+    gtk_range_set_value (GTK_RANGE (scale), bw);
+    gtk_widget_set_size_request (scale, 45, 150);
+    g_signal_connect (G_OBJECT (scale), "value-changed",
         G_CALLBACK (on_bandwidth_changed), (gpointer) band);
-    gtk_box_pack_start (GTK_BOX (scales_hbox), widget, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (scales_hbox), scale, TRUE, TRUE, 0);
 
-    widget = gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL,
+    /* Create frequency scale */
+    scale = gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL,
         20.0, 20000.0, 5.0);
-    gtk_scale_set_draw_value (GTK_SCALE (widget), TRUE);
-    gtk_scale_set_value_pos (GTK_SCALE (widget), GTK_POS_TOP);
-    gtk_range_set_value (GTK_RANGE (widget), freq);
-    gtk_widget_set_size_request (widget, 25, 150);
-    g_signal_connect (G_OBJECT (widget), "value-changed",
+    gtk_scale_set_draw_value (GTK_SCALE (scale), TRUE);
+    gtk_scale_set_value_pos (GTK_SCALE (scale), GTK_POS_TOP);
+    gtk_range_set_value (GTK_RANGE (scale), freq);
+    gtk_widget_set_size_request (scale, 45, 150);
+    g_signal_connect (G_OBJECT (scale), "value-changed",
         G_CALLBACK (on_freq_changed), (gpointer) band);
-    gtk_box_pack_start (GTK_BOX (scales_hbox), widget, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (scales_hbox), scale, TRUE, TRUE, 0);
 
     gtk_container_add (GTK_CONTAINER (frame), scales_hbox);
 
