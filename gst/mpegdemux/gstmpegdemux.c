@@ -306,6 +306,8 @@ gst_ps_demux_reset (GstPsDemux * demux)
       if (stream->pad && GST_PAD_PARENT (stream->pad)) {
         gst_flow_combiner_remove_pad (demux->flowcombiner, stream->pad);
         gst_element_remove_pad (GST_ELEMENT_CAST (demux), stream->pad);
+      } else {
+        gst_object_unref (stream->pad);
       }
 
       if (stream->pending_tags)
@@ -532,6 +534,7 @@ gst_ps_demux_get_stream (GstPsDemux * demux, gint id, gint type)
        * add a whole new set of pads, drop old and no-more-pads again */
       GST_DEBUG_OBJECT (demux,
           "but already signalled no-more-pads; not adding");
+      gst_object_ref_sink (stream->pad);
     }
 
     demux->streams[id] = stream;
