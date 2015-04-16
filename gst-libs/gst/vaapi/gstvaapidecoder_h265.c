@@ -411,6 +411,9 @@ struct _GstVaapiDecoderH265Private
   guint is_hvcC:1;
   guint has_context:1;
   guint progressive_sequence:1;
+  guint new_bitstream:1;
+  guint prev_nal_is_eos:1;      /*previous nal type is EOS */
+  guint associated_irap_NoRaslOutputFlag:1;
 };
 
 /**
@@ -463,6 +466,14 @@ nal_is_bla (guint8 nal_type)
 {
   if ((nal_type >= GST_H265_NAL_SLICE_BLA_W_LP) &&
       (nal_type <= GST_H265_NAL_SLICE_BLA_N_LP))
+    return TRUE;
+  return FALSE;
+}
+
+static gboolean
+nal_is_cra (guint8 nal_type)
+{
+  if (nal_type == GST_H265_NAL_SLICE_CRA_NUT)
     return TRUE;
   return FALSE;
 }
@@ -829,24 +840,30 @@ dpb_add (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture)
 }
 
 
+/* C.5.2.2 */
 static gboolean
 dpb_init (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture,
     GstVaapiParserInfoH265 * pi)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
+  GstH265SliceHdr *const slice_hdr = &pi->data.slice_hdr;
   GstH265SPS *const sps = get_sps (decoder);
 
-  /* Fixme: Not required?? */
-  if (nal_is_idr (pi->nalu.type))
-    while (dpb_bump (decoder, picture));
+  if (nal_is_irap (pi->nalu.type)
+      && picture->NoRaslOutputFlag && !priv->new_bitstream) {
 
-  /* C.5.2.2 */
-  if (picture->IntraPicFlag &&
-      picture->NoRaslOutputFlag /*&& Fixme: Not picture0 */ ) {
+    if (pi->nalu.type == GST_H265_NAL_SLICE_CRA_NUT)
+      picture->NoOutputOfPriorPicsFlag = 1;
+    else
+      picture->NoOutputOfPriorPicsFlag =
+          slice_hdr->no_output_of_prior_pics_flag;
+
     if (picture->NoOutputOfPriorPicsFlag)
       dpb_clear (decoder, TRUE);
-    else
+    else {
       dpb_clear (decoder, FALSE);
+      while (dpb_bump (decoder, NULL));
+    }
   } else {
     dpb_clear (decoder, FALSE);
     while ((dpb_get_num_need_output (decoder) >
@@ -961,6 +978,8 @@ gst_vaapi_decoder_h265_create (GstVaapiDecoder * base_decoder)
   priv->entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
   priv->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
   priv->progressive_sequence = TRUE;
+  priv->new_bitstream = TRUE;
+  priv->prev_nal_is_eos = FALSE;
   return TRUE;
 }
 
@@ -1457,7 +1476,7 @@ init_picture_poc (GstVaapiDecoderH265 * decoder,
   priv->prev_poc_lsb = priv->poc_lsb;
   priv->prev_poc_msb = priv->poc_msb;
 
-  if (!nal_is_irap (nal_type) && picture->NoRaslOutputFlag) {
+  if (!(nal_is_irap (nal_type) && picture->NoRaslOutputFlag)) {
     priv->prev_poc_lsb = priv->prev_tid0pic_poc_lsb;
     priv->prev_poc_msb = priv->prev_tid0pic_poc_msb;
   }
@@ -1597,6 +1616,7 @@ static gboolean
 init_picture (GstVaapiDecoderH265 * decoder,
     GstVaapiPictureH265 * picture, GstVaapiParserInfoH265 * pi)
 {
+  GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiPicture *const base_picture = &picture->base;
   GstH265SliceHdr *const slice_hdr = &pi->data.slice_hdr;
 
@@ -1607,9 +1627,6 @@ init_picture (GstVaapiDecoderH265 * decoder,
     GST_DEBUG ("<IDR>");
     GST_VAAPI_PICTURE_FLAG_SET (picture, GST_VAAPI_PICTURE_FLAG_IDR);
   }
-
-  if (nal_is_irap (pi->nalu.type))
-    picture->IntraPicFlag = TRUE;
 
   if (pi->nalu.type >= GST_H265_NAL_SLICE_BLA_W_LP &&
       pi->nalu.type <= GST_H265_NAL_SLICE_CRA_NUT)
@@ -1622,33 +1639,27 @@ init_picture (GstVaapiDecoderH265 * decoder,
   /*NoRaslOutputFlag ==1 if the current picture is
      1) an IDR picture
      2) a BLA picture
-     3) a CRA picture that is the first access unit in the bitstream (Fixme: Not yet added)
-     4) first picture that follows an end of sequence NAL unit in decoding order (Fixme: Not yet added)
-     5) has HandleCraAsBlaFlag == 1 (Fixme: Not yet added)
+     3) a CRA picture that is the first access unit in the bitstream
+     4) first picture that follows an end of sequence NAL unit in decoding order
+     5) has HandleCraAsBlaFlag == 1 (set by external means, so not considering )
    */
   if (nal_is_idr (pi->nalu.type) || nal_is_bla (pi->nalu.type) ||
-      pi->nalu.type == GST_H265_NAL_SLICE_CRA_NUT) {
+      (nal_is_cra (pi->nalu.type) && priv->new_bitstream)
+      || priv->prev_nal_is_eos) {
     picture->NoRaslOutputFlag = 1;
   }
 
-  if (nal_is_rasl (pi->
-          nalu.type) /* Fixme: || NoRaslOutPutFlag of asso irap=1 */ )
+  if (nal_is_irap (pi->nalu.type)) {
+    picture->IntraPicFlag = TRUE;
+    priv->associated_irap_NoRaslOutputFlag = picture->NoRaslOutputFlag;
+  }
+
+  if (nal_is_rasl (pi->nalu.type) && priv->associated_irap_NoRaslOutputFlag)
     picture->output_flag = FALSE;
   else
     picture->output_flag = slice_hdr->pic_output_flag;
 
   init_picture_poc (decoder, picture, pi);
-
-  /* C.3.2 */
-  if (nal_is_irap (pi->nalu.type)
-      && picture->NoRaslOutputFlag && picture->poc /*&& Fixme: Not picture0 */ ) {
-
-    if (pi->nalu.type == GST_H265_NAL_SLICE_CRA_NUT)
-      picture->NoOutputOfPriorPicsFlag = 1;
-    else
-      picture->NoOutputOfPriorPicsFlag =
-          slice_hdr->no_output_of_prior_pics_flag;
-  }
 
   return TRUE;
 }
@@ -1878,7 +1889,7 @@ has_entry_in_rps (GstVaapiPictureH265 * dpb_pic,
     return FALSE;
 
   for (i = 0; i < rps_list_length; i++) {
-    if (rps_list[i]->poc == dpb_pic->poc)
+    if (rps_list[i] && rps_list[i]->poc == dpb_pic->poc)
       return TRUE;
   }
   return FALSE;
@@ -2006,6 +2017,7 @@ derive_and_mark_rps (GstVaapiDecoderH265 * decoder,
             priv->NumPocStFoll))
       gst_vaapi_picture_h265_set_reference (dpb_pic, 0);
   }
+
 }
 
 /* Decoding process for reference picture set (8.3.2) */
@@ -2170,12 +2182,15 @@ decode_picture (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
   if (!init_picture (decoder, picture, pi))
     return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
+  /* Drop all RASL pictures having NoRaslOutputFlag is TRUE for the
+   * associated IRAP picture */
+  if (nal_is_rasl (pi->nalu.type) && priv->associated_irap_NoRaslOutputFlag) {
+    gst_vaapi_picture_replace (&priv->current_picture, NULL);
+    return (GstVaapiDecoderStatus)GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+  }
+
   if (!decode_ref_pic_set (decoder, picture, pi))
     return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-
-  /* Fixme: if pic is BLA or CRA,and have NoRaslOutputFlag == 1,
-     invoke 8.3.3 as described in specification  for generating
-     unavailable reference pictures */
 
   if (!dpb_init (decoder, picture, pi))
     return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
@@ -2523,10 +2538,22 @@ decode_unit (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
     case GST_H265_NAL_SLICE_IDR_W_RADL:
     case GST_H265_NAL_SLICE_IDR_N_LP:
     case GST_H265_NAL_SLICE_CRA_NUT:
+      /* slice decoding will get started only after completing all the
+         initialization routines for each picture which is hanlding in
+         start_frame() call back, so the new_bitstream and prev_nal_is_eos
+         flags will have effects starting from the next frame onwards */
+      priv->new_bitstream = FALSE;
+      priv->prev_nal_is_eos = FALSE;
       status = decode_slice (decoder, unit);
       break;
-    case GST_H265_NAL_EOS:
     case GST_H265_NAL_EOB:
+      priv->new_bitstream = TRUE;
+      GST_DEBUG
+          ("Next AU(if there is any) will be the begining of new bitstream");
+      status = decode_sequence_end (decoder);
+      break;
+    case GST_H265_NAL_EOS:
+      priv->prev_nal_is_eos = TRUE;
       status = decode_sequence_end (decoder);
       break;
     case GST_H265_NAL_SUFFIX_SEI:
@@ -2772,6 +2799,7 @@ gst_vaapi_decoder_h265_parse (GstVaapiDecoder * base_decoder,
     flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END |
         GST_VAAPI_DECODER_UNIT_FLAG_AU_END;
   }
+
   switch (pi->nalu.type) {
     case GST_H265_NAL_AUD:
       flags |= GST_VAAPI_DECODER_UNIT_FLAG_AU_START;
