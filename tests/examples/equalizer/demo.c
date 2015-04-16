@@ -119,6 +119,15 @@ draw_spectrum (gfloat * data)
   gdk_window_end_paint (gtk_widget_get_window (drawingarea));
 }
 
+static void
+dynamic_link (GstPadTemplate * templ, GstPad * newpad, gpointer user_data)
+{
+  GstPad *target = GST_PAD (user_data);
+
+  gst_pad_link (newpad, target);
+  gst_object_unref (target);
+}
+
 /* receive spectral data from element message */
 static gboolean
 message_handler (GstBus * bus, GstMessage * message, gpointer data)
@@ -149,22 +158,29 @@ int
 main (int argc, char *argv[])
 {
   GstElement *bin;
-  GstElement *src, *capsfilter, *equalizer, *spectrum, *audioconvert, *sink;
+  GstElement *decodebin, *decconvert;
+  GstElement *capsfilter, *equalizer, *spectrum, *sinkconvert, *sink;
   GstCaps *caps;
   GstBus *bus;
   GtkWidget *appwindow, *vbox, *hbox, *scale;
   int i;
+
+  if (argc < 2) {
+    g_print ("Usage: %s <uri to play>\n", argv[0]);
+    exit (-1);
+  }
 
   gst_init (&argc, &argv);
   gtk_init (&argc, &argv);
 
   bin = gst_pipeline_new ("bin");
 
-  /* White noise */
-  src = gst_element_factory_make ("audiotestsrc", "src");
-  g_object_set (G_OBJECT (src), "wave", 5, "volume", 0.8, NULL);
+  /* Uri decoding */
+  decodebin = gst_element_factory_make ("uridecodebin", "decoder");
+  g_object_set (G_OBJECT (decodebin), "uri", argv[1], NULL);
 
   /* Force float32 samples */
+  decconvert = gst_element_factory_make ("audioconvert", "decconvert");
   capsfilter = gst_element_factory_make ("capsfilter", "capsfilter");
   caps =
       gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING, "F32LE",
@@ -178,17 +194,22 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (spectrum), "bands", spect_bands, "threshold", -80,
       "post-messages", TRUE, "interval", 500 * GST_MSECOND, NULL);
 
-  audioconvert = gst_element_factory_make ("audioconvert", "audioconvert");
+  sinkconvert = gst_element_factory_make ("audioconvert", "sinkconvert");
 
   sink = gst_element_factory_make ("autoaudiosink", "sink");
 
-  gst_bin_add_many (GST_BIN (bin), src, capsfilter, equalizer, spectrum,
-      audioconvert, sink, NULL);
-  if (!gst_element_link_many (src, capsfilter, equalizer, spectrum,
-          audioconvert, sink, NULL)) {
+  gst_bin_add_many (GST_BIN (bin), decodebin, decconvert, capsfilter, equalizer,
+      spectrum, sinkconvert, sink, NULL);
+  if (!gst_element_link_many (decconvert, capsfilter, equalizer, spectrum,
+          sinkconvert, sink, NULL)) {
     fprintf (stderr, "can't link elements\n");
     exit (1);
   }
+
+  /* Handle dynamic pads */
+  g_signal_connect (G_OBJECT (decodebin), "pad-added",
+      G_CALLBACK (dynamic_link), gst_element_get_static_pad (decconvert,
+          "sink"));
 
   bus = gst_element_get_bus (bin);
   gst_bus_add_watch (bus, message_handler, NULL);
