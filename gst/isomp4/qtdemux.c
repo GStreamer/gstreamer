@@ -6391,10 +6391,13 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     if (stream->pending_tags)
       gst_tag_list_unref (stream->pending_tags);
     stream->pending_tags = list;
+    list = NULL;
     /* global tags go on each pad anyway */
     stream->send_global_tags = TRUE;
   }
 done:
+  if (list)
+    gst_tag_list_unref (list);
   return TRUE;
 }
 
