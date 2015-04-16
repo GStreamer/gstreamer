@@ -206,6 +206,7 @@ typedef enum
  * @distance_from_sync: Distance in frames from the last synchronization point.
  * @input_buffer: the input #GstBuffer that created this frame. The buffer is owned
  *           by the frame and references to the frame instead of the buffer should
+ *           be kept.
  * @output_buffer: the output #GstBuffer. Implementations should set this either
  *           directly, or by using the
  *           @gst_video_decoder_allocate_output_frame() or
