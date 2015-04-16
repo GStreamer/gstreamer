@@ -927,6 +927,9 @@ file_path_contains_relatives (const gchar * path)
  * will be canonicalised so that it doesn't contain any './' or '../' segments.
  *
  * On Windows #filename should be in UTF-8 encoding.
+ *
+ * Returns: newly-allocated URI string, or NULL on error. The caller must
+ *   free the URI string with g_free() when no longer needed.
  */
 gchar *
 gst_filename_to_uri (const gchar * filename, GError ** error)
