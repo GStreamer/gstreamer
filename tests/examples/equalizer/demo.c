@@ -163,10 +163,29 @@ main (int argc, char *argv[])
   GstCaps *caps;
   GstBus *bus;
   GtkWidget *appwindow, *vbox, *hbox, *scale;
-  int i;
+  int i, num_bands = NBANDS;
+
+  GOptionEntry options[] = {
+    {"bands", 'b', 0, G_OPTION_ARG_INT, &num_bands,
+        "Number of bands", NULL},
+    {NULL}
+  };
+  GOptionContext *ctx;
+  GError *err = NULL;
+
+  ctx = g_option_context_new ("- demo of audio equalizer");
+  g_option_context_add_main_entries (ctx, options, NULL);
+  g_option_context_add_group (ctx, gst_init_get_option_group ());
+  g_option_context_add_group (ctx, gtk_get_option_group (TRUE));
+
+  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+    g_print ("Error initializing: %s\n", err->message);
+    exit (1);
+  }
 
   if (argc < 2) {
     g_print ("Usage: %s <uri to play>\n", argv[0]);
+    g_print ("    For optional arguments: --help\n");
     exit (-1);
   }
 
@@ -188,7 +207,7 @@ main (int argc, char *argv[])
   g_object_set (capsfilter, "caps", caps, NULL);
 
   equalizer = gst_element_factory_make ("equalizer-nbands", "equalizer");
-  g_object_set (G_OBJECT (equalizer), "num-bands", NBANDS, NULL);
+  g_object_set (G_OBJECT (equalizer), "num-bands", num_bands, NULL);
 
   spectrum = gst_element_factory_make ("spectrum", "spectrum");
   g_object_set (G_OBJECT (spectrum), "bands", spect_bands, "threshold", -80,
@@ -229,7 +248,7 @@ main (int argc, char *argv[])
 
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 20);
 
-  for (i = 0; i < NBANDS; i++) {
+  for (i = 0; i < num_bands; i++) {
     GObject *band;
     gdouble freq;
     gdouble bw;
