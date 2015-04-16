@@ -404,6 +404,9 @@ gst_gl_mixer_finalize (GObject * object)
   GstGLMixer *mix = GST_GL_MIXER (object);
   GstGLMixerPrivate *priv = mix->priv;
 
+  if (mix->out_caps)
+    gst_caps_unref (mix->out_caps);
+
   g_mutex_clear (&priv->gl_resource_lock);
   g_cond_clear (&priv->gl_resource_cond);
   G_OBJECT_CLASS (parent_class)->finalize (object);
