@@ -9271,7 +9271,7 @@ skip_track:
   {
     GST_INFO_OBJECT (qtdemux, "skip disabled track");
     if (new_stream)
-      g_free (stream);
+      gst_qtdemux_stream_free (qtdemux, stream);
     return TRUE;
   }
 corrupt_file:
@@ -9279,14 +9279,14 @@ corrupt_file:
     GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")), (NULL));
     if (new_stream)
-      g_free (stream);
+      gst_qtdemux_stream_free (qtdemux, stream);
     return FALSE;
   }
 error_encrypted:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DECRYPT, (NULL), (NULL));
     if (new_stream)
-      g_free (stream);
+      gst_qtdemux_stream_free (qtdemux, stream);
     return FALSE;
   }
 samples_failed:
@@ -9296,7 +9296,7 @@ segments_failed:
     /* free stbl sub-atoms */
     gst_qtdemux_stbl_free (stream);
     if (new_stream)
-      g_free (stream);
+      gst_qtdemux_stream_free (qtdemux, stream);
     return FALSE;
   }
 existing_stream:
@@ -9304,7 +9304,7 @@ existing_stream:
     GST_INFO_OBJECT (qtdemux, "stream with track id %i already exists",
         track_id);
     if (new_stream)
-      g_free (stream);
+      gst_qtdemux_stream_free (qtdemux, stream);
     return TRUE;
   }
 unknown_stream:
@@ -9312,7 +9312,7 @@ unknown_stream:
     GST_INFO_OBJECT (qtdemux, "unknown subtype %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (stream->subtype));
     if (new_stream)
-      g_free (stream);
+      gst_qtdemux_stream_free (qtdemux, stream);
     return TRUE;
   }
 too_many_streams:
