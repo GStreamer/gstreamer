@@ -162,11 +162,13 @@ serialize_filenode (GstMediaDescriptorWriter * writer)
   STR_APPEND1 ("</streams>");
 
   tagsnode = filenode->tags;
-  STR_APPEND1 (tagsnode->str_open);
-  for (tmp2 = tagsnode->tags; tmp2; tmp2 = tmp2->next) {
-    STR_APPEND2 (((TagNode *) tmp2->data)->str_open);
+  if (tagsnode) {
+    STR_APPEND1 (tagsnode->str_open);
+    for (tmp2 = tagsnode->tags; tmp2; tmp2 = tmp2->next) {
+      STR_APPEND2 (((TagNode *) tmp2->data)->str_open);
+    }
+    STR_APPEND1 (tagsnode->str_close);
   }
-  STR_APPEND1 (tagsnode->str_close);
 
   g_string_append (res, filenode->str_close);
 
@@ -467,8 +469,8 @@ _run_frame_analisis (GstMediaDescriptorWriter * writer,
   writer->priv->pipeline = gst_pipeline_new ("frame-analisis");
 
   monitor =
-      gst_validate_monitor_factory_create (GST_OBJECT_CAST (writer->priv->
-          pipeline), runner, NULL);
+      gst_validate_monitor_factory_create (GST_OBJECT_CAST (writer->
+          priv->pipeline), runner, NULL);
   gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
 
   g_object_set (uridecodebin, "uri", uri, "caps", writer->priv->raw_caps, NULL);

@@ -215,10 +215,48 @@ compare_tags (GstMediaDescriptor * ref, StreamNode * rstream,
   TagsNode *rtags, *ctags;
 
   rtags = rstream->tags;
-  if (rtags == NULL)
-    return 1;
-
   ctags = cstream->tags;
+  if (rtags == NULL && ctags)
+    return 1;
+  else if (!rtags && ctags) {
+    GList *taglist;
+    GString *all_tags = g_string_new (NULL);
+
+    for (taglist = ctags->tags; taglist; taglist = taglist->next) {
+      gchar *stags =
+          gst_tag_list_to_string (((TagNode *) taglist->data)->taglist);
+
+      g_string_append_printf (all_tags, "%s\n", stags);
+      g_free (stags);
+    }
+
+    GST_VALIDATE_REPORT (ref, FILE_TAG_DETECTION_INCORRECT,
+        "Reference descriptor for stream %s has NO tags"
+        " but tags found: %s", all_tags->str);
+
+    g_string_free (all_tags, TRUE);
+
+    return 0;
+  } else if (rtags && !ctags) {
+    GList *taglist;
+    GString *all_tags = g_string_new (NULL);
+
+    for (taglist = rtags->tags; taglist; taglist = taglist->next) {
+      gchar *stags =
+          gst_tag_list_to_string (((TagNode *) taglist->data)->taglist);
+
+      g_string_append_printf (all_tags, "%s\n", stags);
+      g_free (stags);
+    }
+
+    GST_VALIDATE_REPORT (ref, FILE_TAG_DETECTION_INCORRECT,
+        "Reference descriptor for stream %s has tags:\n %s\n"
+        " but NO tags found on the stream");
+
+    g_string_free (all_tags, TRUE);
+    return 0;
+  }
+
   for (rtag_list = rtags->tags; rtag_list; rtag_list = rtag_list->next) {
     rtag = rtag_list->data;
     found = FALSE;
