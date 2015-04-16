@@ -530,6 +530,13 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
           eglCreateWindowSurface (egl->egl_display, egl->egl_config, handle,
           NULL);
       egl->window_handle = handle;
+
+      if (egl->egl_surface == EGL_NO_SURFACE) {
+        GST_ERROR_OBJECT (context, "Failed to create window surface: %s",
+            gst_gl_context_egl_get_error_string ());
+        result = FALSE;
+        goto done;
+      }
     }
     result = eglMakeCurrent (egl->egl_display, egl->egl_surface,
         egl->egl_surface, egl->egl_context);
@@ -537,6 +544,13 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
     result = eglMakeCurrent (egl->egl_display, EGL_NO_SURFACE,
         EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
+  if (!result) {
+    GST_ERROR_OBJECT (context,
+        "Failed to bind context to the current rendering thread: %s",
+        gst_gl_context_egl_get_error_string ());
+  }
+
+done:
   return result;
 }
 
