@@ -774,7 +774,8 @@ decode_sequence_end(GstVaapiDecoderMpeg2 *decoder)
 {
     GstVaapiDecoderMpeg2Private * const priv = &decoder->priv;
 
-    gst_vaapi_dpb_flush(priv->dpb);
+    if (priv->dpb)
+        gst_vaapi_dpb_flush(priv->dpb);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 

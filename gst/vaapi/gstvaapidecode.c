@@ -633,6 +633,19 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
 static void
 gst_vaapidecode_destroy (GstVaapiDecode * decode)
 {
+  GstVideoCodecFrame *out_frame = NULL;
+
+  if (decode->decoder) {
+    gst_vaapi_decoder_flush (decode->decoder);
+
+    /* Purge all decoded frames as we don't need them (e.g. seek) */
+    while (gst_vaapi_decoder_get_frame_with_timeout (decode->decoder,
+            &out_frame, 0) == GST_VAAPI_DECODER_STATUS_SUCCESS) {
+      gst_video_decoder_release_frame (GST_VIDEO_DECODER (decode), out_frame);
+      gst_video_codec_frame_unref (out_frame);
+      out_frame = NULL;
+    }
+  }
   gst_vaapi_decoder_replace (&decode->decoder, NULL);
   gst_caps_replace (&decode->decoder_caps, NULL);
 
@@ -652,24 +665,7 @@ gst_vaapidecode_reset_full (GstVaapiDecode * decode, GstCaps * caps,
   /* Reset tracked frame size */
   decode->current_frame_size = 0;
 
-  /* Reset timers if hard reset was requested (e.g. seek) */
-  if (hard) {
-    GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
-    GstVideoCodecFrame *out_frame = NULL;
-
-    gst_vaapi_decoder_flush (decode->decoder);
-
-    /* Purge all decoded frames as we don't need them (e.g. seek) */
-    while (gst_vaapi_decoder_get_frame_with_timeout (decode->decoder,
-            &out_frame, 0) == GST_VAAPI_DECODER_STATUS_SUCCESS) {
-      gst_video_decoder_drop_frame (vdec, out_frame);
-      gst_video_codec_frame_unref (out_frame);
-      out_frame = NULL;
-    }
-  }
-
-  /* Only reset decoder if codec type changed */
-  else if (decode->decoder && decode->decoder_caps) {
+  if (!hard && decode->decoder && decode->decoder_caps) {
     if (gst_caps_is_always_compatible (caps, decode->decoder_caps))
       return TRUE;
     codec = gst_vaapi_codec_from_caps (caps);
