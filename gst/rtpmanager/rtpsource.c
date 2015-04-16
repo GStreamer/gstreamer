@@ -748,6 +748,7 @@ rtp_source_update_caps (RTPSource * src, GstCaps * caps)
   GstStructure *s;
   guint val;
   gint ival;
+  gboolean rtx;
 
   /* nothing changed, return */
   if (caps == NULL || src->caps == caps)
@@ -755,11 +756,14 @@ rtp_source_update_caps (RTPSource * src, GstCaps * caps)
 
   s = gst_caps_get_structure (caps, 0);
 
-  if (gst_structure_get_int (s, "payload", &ival))
+  rtx = (gst_structure_get_uint (s, "rtx-ssrc", &val) && val == src->ssrc);
+
+  if (gst_structure_get_int (s, rtx ? "rtx-payload" : "payload", &ival))
     src->payload = ival;
   else
     src->payload = -1;
-  GST_DEBUG ("got payload %d", src->payload);
+
+  GST_DEBUG ("got %spayload %d", rtx ? "rtx " : "", src->payload);
 
   if (gst_structure_get_int (s, "clock-rate", &ival))
     src->clock_rate = ival;
@@ -768,12 +772,14 @@ rtp_source_update_caps (RTPSource * src, GstCaps * caps)
 
   GST_DEBUG ("got clock-rate %d", src->clock_rate);
 
-  if (gst_structure_get_uint (s, "seqnum-offset", &val))
+  if (gst_structure_get_uint (s, rtx ? "rtx-seqnum-offset" : "seqnum-offset",
+          &val))
     src->seqnum_offset = val;
   else
     src->seqnum_offset = -1;
 
-  GST_DEBUG ("got seqnum-offset %" G_GINT32_FORMAT, src->seqnum_offset);
+  GST_DEBUG ("got %sseqnum-offset %" G_GINT32_FORMAT, rtx ? "rtx " : "",
+      src->seqnum_offset);
 
   gst_caps_replace (&src->caps, caps);
 }

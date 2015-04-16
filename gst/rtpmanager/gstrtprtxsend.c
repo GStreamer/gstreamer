@@ -121,7 +121,7 @@ buffer_queue_item_free (BufferQueueItem * item)
 typedef struct
 {
   guint32 rtx_ssrc;
-  guint16 next_seqnum;
+  guint16 seqnum_base, next_seqnum;
   gint clock_rate;
 
   /* history of rtp packets */
@@ -134,7 +134,7 @@ ssrc_rtx_data_new (guint32 rtx_ssrc)
   SSRCRtxData *data = g_slice_new0 (SSRCRtxData);
 
   data->rtx_ssrc = rtx_ssrc;
-  data->next_seqnum = g_random_int_range (0, G_MAXUINT16);
+  data->next_seqnum = data->seqnum_base = g_random_int_range (0, G_MAXUINT16);
   data->queue = g_sequence_new ((GDestroyNotify) buffer_queue_item_free);
 
   return data;
@@ -593,22 +593,44 @@ gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
       GstStructure *s;
       guint ssrc;
+      gint payload;
+      gpointer rtx_payload;
       SSRCRtxData *data;
 
       gst_event_parse_caps (event, &caps);
-      g_assert (gst_caps_is_fixed (caps));
 
       s = gst_caps_get_structure (caps, 0);
       if (!gst_structure_get_uint (s, "ssrc", &ssrc))
         ssrc = -1;
+      if (!gst_structure_get_int (s, "payload", &payload))
+        payload = -1;
+
+      if (payload == -1)
+        GST_WARNING_OBJECT (rtx, "No payload in caps");
 
       GST_OBJECT_LOCK (rtx);
       data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
+      if (!g_hash_table_lookup_extended (rtx->rtx_pt_map,
+              GUINT_TO_POINTER (payload), NULL, &rtx_payload))
+        rtx_payload = GINT_TO_POINTER (-1);
+
+      if (GPOINTER_TO_INT (rtx_payload) == -1 && payload != -1)
+        GST_WARNING_OBJECT (rtx, "Payload %d not in rtx-pt-map", payload);
+
+      GST_DEBUG_OBJECT (rtx,
+          "got caps for payload: %d->%d, ssrc: %u->%d: %" GST_PTR_FORMAT,
+          payload, GPOINTER_TO_INT (rtx_payload), ssrc, data->rtx_ssrc, caps);
+
       gst_structure_get_int (s, "clock-rate", &data->clock_rate);
 
       /* The session might need to know the RTX ssrc */
       caps = gst_caps_copy (caps);
-      gst_caps_set_simple (caps, "rtx-ssrc", G_TYPE_UINT, data->rtx_ssrc, NULL);
+      gst_caps_set_simple (caps, "rtx-ssrc", G_TYPE_UINT, data->rtx_ssrc,
+          "rtx-seqnum-offset", G_TYPE_UINT, data->seqnum_base, NULL);
+
+      if (GPOINTER_TO_INT (rtx_payload) != -1)
+        gst_caps_set_simple (caps, "rtx-payload", G_TYPE_INT,
+            GPOINTER_TO_INT (rtx_payload), NULL);
 
       GST_DEBUG_OBJECT (rtx, "got clock-rate from caps: %d for ssrc: %u",
           data->clock_rate, ssrc);
