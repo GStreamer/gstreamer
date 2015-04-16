@@ -1543,7 +1543,7 @@ fail:
  */
 static GstFlowReturn
 gst_qt_mux_send_mdat_header (GstQTMux * qtmux, guint64 * off, guint64 size,
-    gboolean extended)
+    gboolean extended, gboolean fsync_after)
 {
   GstBuffer *buf;
   GstMapInfo map;
@@ -1587,6 +1587,9 @@ gst_qt_mux_send_mdat_header (GstQTMux * qtmux, guint64 * off, guint64 size,
   }
 
   GST_LOG_OBJECT (qtmux, "Pushing mdat header");
+  if (fsync_after)
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_SYNC_AFTER);
+
   return gst_qt_mux_send_buffer (qtmux, buf, off, FALSE);
 
 }
@@ -1597,7 +1600,7 @@ gst_qt_mux_send_mdat_header (GstQTMux * qtmux, guint64 * off, guint64 size,
  */
 static GstFlowReturn
 gst_qt_mux_update_mdat_size (GstQTMux * qtmux, guint64 mdat_pos,
-    guint64 mdat_size, guint64 * offset)
+    guint64 mdat_size, guint64 * offset, gboolean fsync_after)
 {
   GstSegment segment;
 
@@ -1609,7 +1612,8 @@ gst_qt_mux_update_mdat_size (GstQTMux * qtmux, guint64 mdat_pos,
   segment.start = mdat_pos;
   gst_pad_push_event (qtmux->srcpad, gst_event_new_segment (&segment));
 
-  return gst_qt_mux_send_mdat_header (qtmux, offset, mdat_size, TRUE);
+  return gst_qt_mux_send_mdat_header (qtmux, offset, mdat_size, TRUE,
+      fsync_after);
 }
 
 static GstFlowReturn
@@ -1721,7 +1725,8 @@ gst_qt_mux_set_header_on_caps (GstQTMux * mux, GstBuffer * buf)
  * size, but a smaller buffer is sent
  */
 static GstFlowReturn
-gst_qt_mux_send_free_atom (GstQTMux * qtmux, guint64 * off, guint32 size)
+gst_qt_mux_send_free_atom (GstQTMux * qtmux, guint64 * off, guint32 size,
+    gboolean fsync_after)
 {
   Atom *node_header;
   GstBuffer *buf;
@@ -1745,6 +1750,9 @@ gst_qt_mux_send_free_atom (GstQTMux * qtmux, guint64 * off, guint32 size)
 
   buf = _gst_buffer_new_take_data (data, offset);
   g_free (node_header);
+
+  if (fsync_after)
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_SYNC_AFTER);
 
   GST_LOG_OBJECT (qtmux, "Pushing free atom");
   ret = gst_qt_mux_send_buffer (qtmux, buf, off, FALSE);
@@ -1804,7 +1812,7 @@ gst_qt_mux_configure_moov (GstQTMux * qtmux)
 
 static GstFlowReturn
 gst_qt_mux_send_moov (GstQTMux * qtmux, guint64 * _offset,
-    guint64 padded_moov_size, gboolean mind_fast)
+    guint64 padded_moov_size, gboolean mind_fast, gboolean fsync_after)
 {
   guint64 offset = 0, size = 0;
   guint8 *data;
@@ -1829,13 +1837,18 @@ gst_qt_mux_send_moov (GstQTMux * qtmux, guint64 * _offset,
    * (apparently used by a flumotion util) */
   if (qtmux->state == GST_QT_MUX_STATE_EOS)
     gst_qt_mux_set_header_on_caps (qtmux, buf);
+
+  if (fsync_after)
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_SYNC_AFTER);
   ret = gst_qt_mux_send_buffer (qtmux, buf, _offset, mind_fast);
 
   /* Write out a free atom if needed */
   if (ret == GST_FLOW_OK && offset < padded_moov_size) {
     GST_LOG_OBJECT (qtmux, "Writing out free atom of size %u",
         (guint32) (padded_moov_size - offset));
-    ret = gst_qt_mux_send_free_atom (qtmux, _offset, padded_moov_size - offset);
+    ret =
+        gst_qt_mux_send_free_atom (qtmux, _offset, padded_moov_size - offset,
+        fsync_after);
   }
 
   return ret;
@@ -2077,7 +2090,9 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       qtmux->mdat_pos = qtmux->header_size;
       /* extended atom in case we go over 4GB while writing and need
        * the full 64-bit atom */
-      ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE);
+      ret =
+          gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE,
+          FALSE);
       break;
     case GST_QT_MUX_MODE_ROBUST_RECORDING:
 
@@ -2094,7 +2109,9 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
         /* Extra 8 bytes for the padding free atom header */
         guint padding = (guint) (16 - (qtmux->header_size % 8));
         GST_LOG_OBJECT (qtmux, "Rounding ftyp by %u bytes", padding);
-        ret = gst_qt_mux_send_free_atom (qtmux, &qtmux->header_size, padding);
+        ret =
+            gst_qt_mux_send_free_atom (qtmux, &qtmux->header_size, padding,
+            FALSE);
         if (ret != GST_FLOW_OK)
           return ret;
       }
@@ -2109,11 +2126,11 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       gst_qt_mux_configure_moov (qtmux);
       gst_qt_mux_setup_metadata (qtmux);
       /* Empty free atom to begin, starting on an 8-byte boundary */
-      ret = gst_qt_mux_send_free_atom (qtmux, &qtmux->header_size, 8);
+      ret = gst_qt_mux_send_free_atom (qtmux, &qtmux->header_size, 8, FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
       /* Moov header, not padded yet */
-      ret = gst_qt_mux_send_moov (qtmux, &qtmux->header_size, 0, FALSE);
+      ret = gst_qt_mux_send_moov (qtmux, &qtmux->header_size, 0, FALSE, FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
       /* The moov we just sent contains the 'base' size of the moov, before
@@ -2148,14 +2165,14 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       /* Now that we know how much reserved space is targetted,
        * output a free atom to fill the extra reserved */
       ret = gst_qt_mux_send_free_atom (qtmux, &qtmux->header_size,
-          qtmux->reserved_moov_size - qtmux->base_moov_size);
+          qtmux->reserved_moov_size - qtmux->base_moov_size, FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
 
       /* Then a free atom containing 'pong' buffer, with an
        * extra 8 bytes to account for the free atom header itself */
       ret = gst_qt_mux_send_free_atom (qtmux, &qtmux->header_size,
-          qtmux->reserved_moov_size + 8);
+          qtmux->reserved_moov_size + 8, FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
 
@@ -2168,7 +2185,9 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       qtmux->mdat_pos = qtmux->header_size;
       /* extended atom in case we go over 4GB while writing and need
        * the full 64-bit atom */
-      ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE);
+      ret =
+          gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE,
+          FALSE);
       break;
     case GST_QT_MUX_MODE_FAST_START:
       GST_OBJECT_LOCK (qtmux);
@@ -2195,7 +2214,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       /* prepare moov and/or tags */
       gst_qt_mux_configure_moov (qtmux);
       gst_qt_mux_setup_metadata (qtmux);
-      ret = gst_qt_mux_send_moov (qtmux, &qtmux->header_size, 0, FALSE);
+      ret = gst_qt_mux_send_moov (qtmux, &qtmux->header_size, 0, FALSE, FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
       /* extra atoms */
@@ -2432,7 +2451,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       segment.start = qtmux->moov_pos;
       gst_pad_push_event (qtmux->srcpad, gst_event_new_segment (&segment));
       /* no need to seek back */
-      return gst_qt_mux_send_moov (qtmux, NULL, 0, FALSE);
+      return gst_qt_mux_send_moov (qtmux, NULL, 0, FALSE, FALSE);
     }
     case GST_QT_MUX_MODE_ROBUST_RECORDING:{
       ret = gst_qt_mux_robust_recording_rewrite_moov (qtmux);
@@ -2442,7 +2461,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
        * it's been 0, which means 'rest of the file'
        * No need to seek back after this, we won't write any more */
       return gst_qt_mux_update_mdat_size (qtmux, qtmux->mdat_pos,
-          qtmux->mdat_size, NULL);
+          qtmux->mdat_size, NULL, TRUE);
     }
     default:
       break;
@@ -2494,7 +2513,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   /* write out moov and extra atoms */
   /* note: as of this point, we no longer care about tracking written data size,
    * since there is no more use for it anyway */
-  ret = gst_qt_mux_send_moov (qtmux, NULL, 0, FALSE);
+  ret = gst_qt_mux_send_moov (qtmux, NULL, 0, FALSE, FALSE);
   if (ret != GST_FLOW_OK)
     return ret;
 
@@ -2509,7 +2528,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       /* mdat needs update iff not using faststart */
       GST_DEBUG_OBJECT (qtmux, "updating mdat size");
       ret = gst_qt_mux_update_mdat_size (qtmux, qtmux->mdat_pos,
-          qtmux->mdat_size, NULL);
+          qtmux->mdat_size, NULL, FALSE);
       /* note; no seeking back to the end of file is done,
        * since we no longer write anything anyway */
       break;
@@ -2519,7 +2538,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       /* send mdat atom and move buffered data into it */
       /* mdat_size = accumulated (buffered data) */
       ret = gst_qt_mux_send_mdat_header (qtmux, NULL, qtmux->mdat_size,
-          large_file);
+          large_file, FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
       ret = gst_qt_mux_send_buffered_data (qtmux, NULL);
@@ -2594,7 +2613,7 @@ flush:
         atom_array_get_len (&pad->fragment_buffers), total_size);
     if (ret == GST_FLOW_OK)
       ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, total_size,
-          FALSE);
+          FALSE, FALSE);
     for (i = 0; i < atom_array_get_len (&pad->fragment_buffers); i++) {
       if (G_LIKELY (ret == GST_FLOW_OK))
         ret = gst_qt_mux_send_buffer (qtmux,
@@ -2709,7 +2728,9 @@ gst_qt_mux_robust_recording_rewrite_moov (GstQTMux * qtmux)
   segment.start = new_moov_offset;
   gst_pad_push_event (qtmux->srcpad, gst_event_new_segment (&segment));
 
-  ret = gst_qt_mux_send_moov (qtmux, NULL, qtmux->reserved_moov_size, FALSE);
+  ret =
+      gst_qt_mux_send_moov (qtmux, NULL, qtmux->reserved_moov_size, FALSE,
+      TRUE);
   if (ret != GST_FLOW_OK)
     return ret;
 
@@ -2753,7 +2774,7 @@ gst_qt_mux_robust_recording_rewrite_moov (GstQTMux * qtmux)
   segment.start = freeA_offset;
   gst_pad_push_event (qtmux->srcpad, gst_event_new_segment (&segment));
 
-  ret = gst_qt_mux_send_free_atom (qtmux, NULL, new_freeA_size);
+  ret = gst_qt_mux_send_free_atom (qtmux, NULL, new_freeA_size, TRUE);
 
   return ret;
 }
