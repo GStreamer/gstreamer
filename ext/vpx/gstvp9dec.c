@@ -387,12 +387,18 @@ gst_vp9_dec_image_to_buffer (GstVP9Dec * dec, const vpx_image_t * img,
     deststride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, comp);
     srcstride = img->stride[comp];
 
-    /* FIXME (Edward) : Do a plane memcpy is srcstride == deststride instead
-     * of copying line by line */
-    for (line = 0; line < height; line++) {
-      memcpy (dest, src, width);
-      dest += deststride;
-      src += srcstride;
+    if (srcstride == deststride) {
+      GST_TRACE_OBJECT (dec, "Stride matches. Comp %d: %d, copying full plane",
+          comp, srcstride);
+      memcpy (dest, src, srcstride * height);
+    } else {
+      GST_TRACE_OBJECT (dec, "Stride mismatch. Comp %d: %d != %d, copying "
+          "line by line.", comp, srcstride, deststride);
+      for (line = 0; line < height; line++) {
+        memcpy (dest, src, width);
+        dest += deststride;
+        src += srcstride;
+      }
     }
   }
 
