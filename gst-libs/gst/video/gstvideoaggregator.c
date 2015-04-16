@@ -734,10 +734,11 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
 
       gst_caps_unref (caps);
       gst_caps_unref (peercaps);
-      caps = tmp;
+      caps = tmp;               /* pass ownership */
       if (gst_caps_is_empty (caps)) {
         GST_DEBUG_OBJECT (vagg, "empty caps");
         ret = FALSE;
+        gst_caps_unref (caps);
         goto done;
       }
 
