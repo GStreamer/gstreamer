@@ -1269,7 +1269,7 @@ gst_h265_parser_identify_nalu (GstH265Parser * parser,
       gst_h265_parser_identify_nalu_unchecked (parser, data, offset, size,
       nalu);
 
-  if (res != GST_H265_PARSER_OK || nalu->size == 0)
+  if (res != GST_H265_PARSER_OK || nalu->size == 2)
     goto beach;
 
   off2 = scan_for_start_codes (data + nalu->offset, size - nalu->offset);
@@ -1286,7 +1286,7 @@ gst_h265_parser_identify_nalu (GstH265Parser * parser,
     off2--;
 
   nalu->size = off2;
-  if (nalu->size < 2)
+  if (nalu->size < 3)
     return GST_H265_PARSER_BROKEN_DATA;
 
   GST_DEBUG ("Complete nal found. Off: %d, Size: %d", nalu->offset, nalu->size);
