@@ -478,7 +478,8 @@ gst_ac3_parse_frame_header (GstAc3Parse * parse, GstBuffer * buf, gint skip,
     goto cleanup;
   } else {
     GST_DEBUG_OBJECT (parse, "unexpected bsid %d", bsid);
-    return FALSE;
+    ret = FALSE;
+    goto cleanup;
   }
 
   GST_DEBUG_OBJECT (parse, "unexpected bsid %d", bsid);
