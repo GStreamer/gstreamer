@@ -41,9 +41,6 @@
 #include "mpegtsbase.h"
 #include "gstmpegdesc.h"
 
-/* latency in mseconds */
-#define TS_LATENCY 700
-
 #define RUNNING_STATUS_RUNNING 4
 
 GST_DEBUG_CATEGORY_STATIC (mpegts_base_debug);
@@ -199,9 +196,6 @@ mpegts_base_reset (MpegTSBase * base)
   base->mode = BASE_MODE_STREAMING;
   base->seen_pat = FALSE;
   base->seek_offset = -1;
-
-  base->upstream_live = FALSE;
-  base->queried_latency = FALSE;
 
   g_hash_table_foreach_remove (base->programs, (GHRFunc) remove_each_program,
       base);
@@ -1089,22 +1083,6 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return res;
 }
 
-static void
-query_upstream_latency (MpegTSBase * base)
-{
-  GstQuery *query;
-
-  query = gst_query_new_latency ();
-  if (gst_pad_peer_query (base->sinkpad, query)) {
-    gst_query_parse_latency (query, &base->upstream_live, NULL, NULL);
-    GST_DEBUG_OBJECT (base, "Upstream is %s",
-        base->upstream_live ? "LIVE" : "NOT LIVE");
-  } else
-    GST_WARNING_OBJECT (base, "Failed to query upstream latency");
-  gst_query_unref (query);
-  base->queried_latency = TRUE;
-}
-
 static GstFlowReturn
 mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
@@ -1119,10 +1097,6 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   klass = GST_MPEGTS_BASE_GET_CLASS (base);
 
   packetizer = base->packetizer;
-
-  if (G_UNLIKELY (base->queried_latency == FALSE)) {
-    query_upstream_latency (base);
-  }
 
   if (klass->input_done)
     gst_buffer_ref (buf);
