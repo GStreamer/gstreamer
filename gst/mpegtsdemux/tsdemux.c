@@ -66,6 +66,9 @@
 
 #define GST_FLOW_REWINDING GST_FLOW_CUSTOM_ERROR
 
+/* latency in nsecs */
+#define TS_LATENCY (700 * GST_MSECOND)
+
 GST_DEBUG_CATEGORY_STATIC (ts_demux_debug);
 #define GST_CAT_DEFAULT ts_demux_debug
 
@@ -507,7 +510,7 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
     {
       GST_DEBUG ("query latency");
       res = gst_pad_peer_query (base->sinkpad, query);
-      if (res && base->upstream_live) {
+      if (res) {
         GstClockTime min_lat, max_lat;
         gboolean live;
 
@@ -519,10 +522,10 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
            PTS/DTS. We therefore allow a latency of 700ms for that.
          */
         gst_query_parse_latency (query, &live, &min_lat, &max_lat);
-        if (min_lat != -1)
-          min_lat += 700 * GST_MSECOND;
-        if (max_lat != -1)
-          max_lat += 700 * GST_MSECOND;
+        if (min_lat)
+          min_lat += TS_LATENCY;
+        if (GST_CLOCK_TIME_IS_VALID (max_lat))
+          max_lat += TS_LATENCY;
         gst_query_set_latency (query, live, min_lat, max_lat);
       }
       break;
