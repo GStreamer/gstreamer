@@ -1101,7 +1101,7 @@ GST_START_TEST (rtp_base_depayload_clock_base_test)
 
   push_rtp_buffer (state,
       "pts", 1 * GST_SECOND,
-      "rtptime", 1234 + DEFAULT_CLOCK_RATE,
+      "rtptime", G_GUINT64_CONSTANT (1234) + 1 * DEFAULT_CLOCK_RATE,
       "seq", 0x4242 + 1, NULL);
 
   set_state (state, GST_STATE_NULL);
