@@ -470,6 +470,26 @@ _pad_block_destroy_src_notify (MqStreamCtx * ctx)
   mq_stream_ctx_unref (ctx);
 }
 
+static void
+send_fragment_opened_closed_msg (GstSplitMuxSink * splitmux, gboolean opened)
+{
+  gchar *location = NULL;
+  GstMessage *msg;
+  const gchar *msg_name = opened ?
+      "splitmuxsink-fragment-opened" : "splitmuxsink-fragment-closed";
+
+  g_object_get (splitmux->sink, "location", &location, NULL);
+
+  msg = gst_message_new_element (GST_OBJECT (splitmux),
+      gst_structure_new (msg_name,
+          "location", G_TYPE_STRING, location,
+          "running-time", GST_TYPE_CLOCK_TIME,
+          splitmux->reference_ctx->out_running_time, NULL));
+  gst_element_post_message (GST_ELEMENT_CAST (splitmux), msg);
+
+  g_free (location);
+}
+
 /* Called with lock held, drops the lock to send EOS to the
  * pad
  */
@@ -632,6 +652,11 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
       " size %" G_GSIZE_FORMAT,
       pad, GST_TIME_ARGS (ctx->out_running_time), buf_info->buf_size);
 
+  if (splitmux->opening_first_fragment) {
+    send_fragment_opened_closed_msg (splitmux, TRUE);
+    splitmux->opening_first_fragment = FALSE;
+  }
+
   complete_or_wait_on_out (splitmux, ctx);
 
   if (splitmux->muxed_out_time == GST_CLOCK_TIME_NONE ||
@@ -718,6 +743,8 @@ start_next_fragment (GstSplitMuxSink * splitmux)
       "Restarting flow for new fragment. New running time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (splitmux->max_out_running_time));
 
+  send_fragment_opened_closed_msg (splitmux, TRUE);
+
   GST_SPLITMUX_BROADCAST (splitmux);
 }
 
@@ -730,6 +757,9 @@ bus_handler (GstBin * bin, GstMessage * message)
     case GST_MESSAGE_EOS:
       /* If the state is draining out the current file, drop this EOS */
       GST_SPLITMUX_LOCK (splitmux);
+
+      send_fragment_opened_closed_msg (splitmux, FALSE);
+
       if (splitmux->state == SPLITMUX_STATE_ENDING_FILE &&
           splitmux->max_out_running_time != GST_CLOCK_TIME_NONE) {
         GST_DEBUG_OBJECT (splitmux, "Caught EOS at end of fragment, dropping");
@@ -1498,6 +1528,7 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
       splitmux->max_in_running_time = 0;
       splitmux->muxed_out_time = splitmux->mux_start_time = 0;
       splitmux->muxed_out_bytes = splitmux->mux_start_bytes = 0;
+      splitmux->opening_first_fragment = TRUE;
       GST_SPLITMUX_UNLOCK (splitmux);
       break;
     }
