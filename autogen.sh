@@ -21,7 +21,7 @@ if test -z "$GIT"; then
     exit 1
 else
     submodule_init="no"
-    for ext_module in codecparsers videoutils; do
+    for ext_module in codecparsers; do
         if test ! -f ext/${ext_module}/autogen.sh; then
             submodule_init="yes"
         fi
