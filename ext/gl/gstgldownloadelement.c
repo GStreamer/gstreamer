@@ -81,7 +81,7 @@ gst_gl_download_element_class_init (GstGLDownloadElementClass * klass)
 
   gst_element_class_set_metadata (element_class,
       "OpenGL uploader", "Filter/Video",
-      "Uploads data into OpenGL", "Matthew Waters <matthew@centricular.com>");
+      "Downloads data into OpenGL", "Matthew Waters <matthew@centricular.com>");
 }
 
 static void
