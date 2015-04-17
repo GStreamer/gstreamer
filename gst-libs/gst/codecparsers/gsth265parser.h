@@ -1035,7 +1035,7 @@ GstH265ParserResult gst_h265_parser_parse_pps       (GstH265Parser   * parser,
 
 GstH265ParserResult gst_h265_parser_parse_sei       (GstH265Parser   * parser,
                                                      GstH265NalUnit  * nalu,
-                                                     GstH265SEIMessage * sei);
+                                                     GArray **messages);
 
 void                gst_h265_parser_free            (GstH265Parser  * parser);
 
