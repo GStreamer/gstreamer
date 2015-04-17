@@ -646,7 +646,15 @@ _action_sets_state (GstValidateAction * action)
 static gboolean
 _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
 {
+  GstValidateScenarioPrivate *priv = scenario->priv;
   GstBus *bus = gst_element_get_bus (scenario->pipeline);
+
+  SCENARIO_LOCK (scenario);
+  if (priv->get_pos_id) {
+    g_source_remove (priv->get_pos_id);
+    priv->get_pos_id = 0;
+  }
+  SCENARIO_UNLOCK (scenario);
 
   gst_bus_post (bus,
       gst_message_new_request_state (GST_OBJECT_CAST (scenario),
@@ -3026,7 +3034,10 @@ init_scenarios (void)
       "Sets the pipeline state to PLAYING", GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("stop", _execute_stop, NULL,
-      "Sets the pipeline state to NULL",
+      "Stops the execution of the scenario. It will post a 'request-state'"
+      " message on the bus with NULL as a requested state "
+      " and the application is responsible for stopping itself."
+      " if you override that action type, make sure to link up.",
       GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL);
 
   REGISTER_ACTION_TYPE ("eos", _execute_eos, NULL,
