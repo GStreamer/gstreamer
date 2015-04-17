@@ -167,13 +167,29 @@ libgstvaapi_parse_gen_source_h = \
 	gsth264parse.h		\
 	$(NULL)
 
+libgstvaapi_1_4p_parse_gen_source_c = \
+	gsth265parse.c \
+	$(NULL)
+
+libgstvaapi_1_4p_parse_gen_source_h = \
+	gsth265parse.h \
+	$(NULL)
+
 libgstvaapi_parse_gen_sources = \
 	$(libgstvaapi_parse_gen_source_c) \
 	$(libgstvaapi_parse_gen_source_h) \
 	$(NUL)
 
+libgstvaapi_parse_gen_sources += $(libgstvaapi_1_4p_parse_gen_source_c)
+libgstvaapi_parse_gen_sources += $(libgstvaapi_1_4p_parse_gen_source_h)
+
 libgstvaapi_parse_source_c = gstvaapiparse.c $(libgstvaapi_parse_gen_source_c)
 libgstvaapi_parse_source_h = gstvaapiparse.h $(libgstvaapi_parse_gen_source_h)
+
+if USE_GST_API_1_4p
+libgstvaapi_parse_source_c += $(libgstvaapi_1_4p_parse_gen_source_c)
+libgstvaapi_parse_source_h += $(libgstvaapi_1_4p_parse_gen_source_h)
+endif
 
 libgstvaapi_parse_la_SOURCES		= $(libgstvaapi_parse_source_c)
 noinst_HEADERS			       += $(libgstvaapi_parse_source_h)
@@ -234,6 +250,8 @@ EXTRA_DIST = \
 	$(libgstvaapi_1_2p_source_h)	 \
 	$(libgstvaapi_parse_source_c)	 \
 	$(libgstvaapi_parse_source_h)	 \
+        $(libgstvaapi_1_4p_parse_gen_source_c) \
+        $(libgstvaapi_1_4p_parse_gen_source_h) \
 	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*

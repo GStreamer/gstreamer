@@ -44,12 +44,14 @@ videoparsers_srcdir = \
 
 videoparsers_source_c = \
 	gsth264parse.c		\
+	gsth265parse.c		\
 	$(NULL)
 
 EXTRA_DIST += $(videoparsers_source_c:%.c=$(videoparsers_srcdir)/%.c)
 
 videoparsers_source_h = \
 	gsth264parse.h		\
+	gsth265parse.h		\
 	$(NULL)
 
 EXTRA_DIST += $(videoparsers_source_h:%.h=$(videoparsers_srcdir)/%.h)

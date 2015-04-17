@@ -33,4 +33,15 @@
 #define gst_h264_parse_parent_class     gst_vaapi_h264_parse_parent_class
 #define gst_h264_parse_get_type         gst_vaapi_h264_parse_get_type
 
+/* vaapiparse_h265 */
+#define _GstH265Parse                   _GstVaapiH265Parse
+#define GstH265Parse                    GstVaapiH265Parse
+#define _GstH265ParseClass              _GstVaapiH265ParseClass
+#define GstH265ParseClass               GstVaapiH265ParseClass
+#define gst_h265_parse                  gst_vaapi_h265_parse
+#define gst_h265_parse_init             gst_vaapi_h265_parse_init
+#define gst_h265_parse_class_init       gst_vaapi_h265_parse_class_init
+#define gst_h265_parse_parent_class     gst_vaapi_h265_parse_parent_class
+#define gst_h265_parse_get_type         gst_vaapi_h265_parse_get_type
+
 #endif /* GST_VAAPI_PARSE_H */
