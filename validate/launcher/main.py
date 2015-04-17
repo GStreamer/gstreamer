@@ -275,6 +275,14 @@ class LauncherConfig(Loggable):
                 self.testsuites_dir == DEFAULT_TESTSUITES_DIR:
             self.testsuites_dir = os.path.join(self.main_dir, self.clone_dir,
                                                "testsuites")
+        if self.valgrind:
+            try:
+                subprocess.check_output("valgrind --help", shell=True)
+            except subprocess.CalledProcessError:
+                printc("Want to use valgrind, but not avalaible on the system",
+                       Colors.FAIL)
+                return False
+
         return True
 
     def set_http_server_dir(self, path):
