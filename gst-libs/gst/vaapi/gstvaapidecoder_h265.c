@@ -50,7 +50,8 @@ typedef struct _GstVaapiFrameStoreClass GstVaapiFrameStoreClass;
 typedef struct _GstVaapiParserInfoH265 GstVaapiParserInfoH265;
 typedef struct _GstVaapiPictureH265 GstVaapiPictureH265;
 
-static gboolean nal_is_slice (guint8 nal_type);
+static gboolean
+nal_is_slice (guint8 nal_type);
 
 /* ------------------------------------------------------------------------- */
 /* --- H.265 Parser Info                                                 --- */
@@ -84,7 +85,7 @@ struct _GstVaapiParserInfoH265
     GstH265VPS vps;
     GstH265SPS sps;
     GstH265PPS pps;
-    /* Fix SEI parsing in codecparser, have to use GArry like h264parser */
+    /* Fix SEI parsing in codecparser, have to use GArray like h264parser */
     GstH265SEIMessage sei;
     GstH265SliceHdr slice_hdr;
   } data;
@@ -275,7 +276,7 @@ gst_vaapi_picture_h265_set_reference (GstVaapiPictureH265 * picture,
 
 struct _GstVaapiFrameStore
 {
-  /*< private > */
+  /*< private >*/
   GstVaapiMiniObject parent_instance;
 
   GstVaapiPictureH265 *buffer;
@@ -424,7 +425,7 @@ struct _GstVaapiDecoderH265Private
  */
 struct _GstVaapiDecoderH265
 {
-  /*< private > */
+  /*< private >*/
   GstVaapiDecoder parent_instance;
   GstVaapiDecoderH265Private priv;
 };
@@ -436,7 +437,7 @@ struct _GstVaapiDecoderH265
  */
 struct _GstVaapiDecoderH265Class
 {
-  /*< private > */
+  /*< private >*/
   GstVaapiDecoderClass parent_class;
 };
 
@@ -534,6 +535,7 @@ ensure_pps (GstVaapiDecoderH265 * decoder, GstH265PPS * pps)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiParserInfoH265 *const pi = priv->pps[pps->id];
+
   gst_vaapi_parser_info_h265_replace (&priv->active_pps, pi);
   return pi ? &pi->data.pps : NULL;
 }
@@ -543,6 +545,7 @@ static inline GstH265PPS *
 get_pps (GstVaapiDecoderH265 * decoder)
 {
   GstVaapiParserInfoH265 *const pi = decoder->priv.active_pps;
+
   return pi ? &pi->data.pps : NULL;
 }
 
@@ -552,6 +555,7 @@ ensure_sps (GstVaapiDecoderH265 * decoder, GstH265SPS * sps)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiParserInfoH265 *const pi = priv->sps[sps->id];
+
   gst_vaapi_parser_info_h265_replace (&priv->active_sps, pi);
   return pi ? &pi->data.sps : NULL;
 }
@@ -561,6 +565,7 @@ static inline GstH265SPS *
 get_sps (GstVaapiDecoderH265 * decoder)
 {
   GstVaapiParserInfoH265 *const pi = decoder->priv.active_sps;
+
   return pi ? &pi->data.sps : NULL;
 }
 
@@ -570,6 +575,7 @@ ensure_vps (GstVaapiDecoderH265 * decoder, GstH265VPS * vps)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiParserInfoH265 *const pi = priv->vps[vps->id];
+
   gst_vaapi_parser_info_h265_replace (&priv->active_vps, pi);
   return pi ? &pi->data.vps : NULL;
 }
@@ -589,6 +595,7 @@ get_max_dec_frame_buffering (GstH265SPS * sps)
   guint max_dec_frame_buffering;
   GstVaapiLevelH265 level;
   const GstVaapiH265LevelLimits *level_limits;
+
   level = gst_vaapi_utils_h265_get_level (sps->profile_tier_level.level_idc);
   level_limits = gst_vaapi_utils_h265_get_level_limits (level);
   if (G_UNLIKELY (!level_limits)) {
@@ -605,6 +612,7 @@ dpb_remove_index (GstVaapiDecoderH265 * decoder, gint index)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   guint i, num_frames = --priv->dpb_count;
+
   if (USE_STRICT_DPB_ORDERING) {
     for (i = index; i < num_frames; i++)
       gst_vaapi_frame_store_replace (&priv->dpb[i], priv->dpb[i + 1]);
@@ -617,6 +625,7 @@ static gboolean
 dpb_output (GstVaapiDecoderH265 * decoder, GstVaapiFrameStore * fs)
 {
   GstVaapiPictureH265 *picture;
+
   g_return_val_if_fail (fs != NULL, FALSE);
 
   picture = fs->buffer;
@@ -631,12 +640,10 @@ static GstVaapiPictureH265 *
 dpb_get_picture (GstVaapiDecoderH265 * decoder, gint poc, gboolean match_lsb)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
-  GstVaapiPictureH265 *picture = NULL;
-  gint i;
+  guint i;
 
   for (i = 0; i < priv->dpb_count; i++) {
-    GstVaapiFrameStore *const fs = priv->dpb[i];
-    picture = fs->buffer;
+    GstVaapiPictureH265 *const picture = priv->dpb[i]->buffer;
 
     if (picture && GST_VAAPI_PICTURE_FLAG_IS_SET (picture,
             GST_VAAPI_PICTURE_FLAGS_REFERENCE)) {
@@ -657,17 +664,14 @@ static GstVaapiPictureH265 *
 dpb_get_ref_picture (GstVaapiDecoderH265 * decoder, gint poc, gboolean is_short)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
-  GstVaapiPictureH265 *picture = NULL;
-  gint i;
+  guint i;
 
   for (i = 0; i < priv->dpb_count; i++) {
-    GstVaapiFrameStore *const fs = priv->dpb[i];
-    picture = fs->buffer;
+    GstVaapiPictureH265 *const picture = priv->dpb[i]->buffer;
 
     if (picture && picture->poc == poc) {
       if (is_short && GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE (picture))
         return picture;
-
       else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE (picture))
         return picture;
     }
@@ -683,22 +687,14 @@ dpb_find_lowest_poc (GstVaapiDecoderH265 * decoder,
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiPictureH265 *found_picture = NULL;
-  GstVaapiPictureH265 *tmp_picture = NULL;
   guint i, found_index;
 
   for (i = 0; i < priv->dpb_count; i++) {
-    GstVaapiFrameStore *const fs = priv->dpb[i];
-    tmp_picture = fs->buffer;
-    if (tmp_picture && !tmp_picture->output_needed)
+    GstVaapiPictureH265 *const picture = priv->dpb[i]->buffer;
+    if (picture && !picture->output_needed)
       continue;
-    if (!found_picture) {
-      found_picture = tmp_picture;
-      found_index = i;
-    }
-    if (found_picture->poc > tmp_picture->poc) {
-      found_picture = tmp_picture;
-      found_index = i;
-    }
+    if (!found_picture || found_picture->poc > picture->poc)
+      found_picture = picture, found_index = i;
   }
 
   if (found_picture_ptr)
@@ -778,9 +774,9 @@ dpb_get_num_need_output (GstVaapiDecoderH265 * decoder)
 static gboolean
 check_latency_cnt (GstVaapiDecoderH265 * decoder)
 {
+  GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiPictureH265 *tmp_pic;
   guint i = 0;
-  GstVaapiDecoderH265Private *const priv = &decoder->priv;
 
   while (i < priv->dpb_count) {
     GstVaapiFrameStore *const fs = priv->dpb[i];
@@ -798,11 +794,11 @@ check_latency_cnt (GstVaapiDecoderH265 * decoder)
 static gboolean
 dpb_add (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture)
 {
+  GstVaapiDecoderH265Private *const priv = &decoder->priv;
+  GstH265SPS *const sps = get_sps (decoder);
   GstVaapiFrameStore *fs;
   GstVaapiPictureH265 *tmp_pic;
   guint i = 0;
-  GstVaapiDecoderH265Private *const priv = &decoder->priv;
-  GstH265SPS *const sps = get_sps (decoder);
 
   /* C.5.2.3 */
   while (i < priv->dpb_count) {
@@ -885,6 +881,7 @@ static gboolean
 dpb_reset (GstVaapiDecoderH265 * decoder, guint dpb_size)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
+
   if (dpb_size > priv->dpb_size_max) {
     priv->dpb = g_try_realloc_n (priv->dpb, dpb_size, sizeof (*priv->dpb));
     if (!priv->dpb)
@@ -902,6 +899,7 @@ static GstVaapiDecoderStatus
 get_status (GstH265ParserResult result)
 {
   GstVaapiDecoderStatus status;
+
   switch (result) {
     case GST_H265_PARSER_OK:
       status = GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -923,6 +921,7 @@ static void
 gst_vaapi_decoder_h265_close (GstVaapiDecoderH265 * decoder)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
+
   gst_vaapi_picture_replace (&priv->current_picture, NULL);
   gst_vaapi_parser_info_h265_replace (&priv->prev_slice_pi, NULL);
   gst_vaapi_parser_info_h265_replace (&priv->prev_independent_slice_pi, NULL);
@@ -940,6 +939,7 @@ static gboolean
 gst_vaapi_decoder_h265_open (GstVaapiDecoderH265 * decoder)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
+
   gst_vaapi_decoder_h265_close (decoder);
   priv->parser = gst_h265_parser_new ();
   if (!priv->parser)
@@ -954,6 +954,7 @@ gst_vaapi_decoder_h265_destroy (GstVaapiDecoder * base_decoder)
       GST_VAAPI_DECODER_H265_CAST (base_decoder);
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   guint i;
+
   gst_vaapi_decoder_h265_close (decoder);
   g_free (priv->dpb);
   priv->dpb = NULL;
@@ -975,6 +976,7 @@ gst_vaapi_decoder_h265_create (GstVaapiDecoder * base_decoder)
   GstVaapiDecoderH265 *const decoder =
       GST_VAAPI_DECODER_H265_CAST (base_decoder);
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
+
   priv->profile = GST_VAAPI_PROFILE_UNKNOWN;
   priv->entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
   priv->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
@@ -990,6 +992,7 @@ fill_profiles (GstVaapiProfile profiles[16], guint * n_profiles_ptr,
     GstVaapiProfile profile)
 {
   guint n_profiles = *n_profiles_ptr;
+
   profiles[n_profiles++] = profile;
   switch (profile) {
     case GST_VAAPI_PROFILE_H265_MAIN:
@@ -1012,6 +1015,7 @@ get_profile (GstVaapiDecoderH265 * decoder, GstH265SPS * sps, guint dpb_size)
   GstVaapiDisplay *const display = GST_VAAPI_DECODER_DISPLAY (decoder);
   GstVaapiProfile profile, profiles[3];
   guint i, n_profiles = 0;
+
   profile =
       gst_vaapi_utils_h265_get_profile (sps->profile_tier_level.profile_idc);
   if (!profile)
@@ -1119,6 +1123,7 @@ fill_iq_matrix_4x4 (VAIQMatrixBufferHEVC * iq_matrix,
     GstH265ScalingList * scaling_list)
 {
   guint i;
+
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList4x4) == 6);
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList4x4[0]) == 16);
   for (i = 0; i < G_N_ELEMENTS (iq_matrix->ScalingList4x4); i++) {
@@ -1132,6 +1137,7 @@ fill_iq_matrix_8x8 (VAIQMatrixBufferHEVC * iq_matrix,
     GstH265ScalingList * scaling_list)
 {
   guint i;
+
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList8x8) == 6);
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList8x8[0]) == 64);
   for (i = 0; i < G_N_ELEMENTS (iq_matrix->ScalingList8x8); i++) {
@@ -1145,6 +1151,7 @@ fill_iq_matrix_16x16 (VAIQMatrixBufferHEVC * iq_matrix,
     GstH265ScalingList * scaling_list)
 {
   guint i;
+
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList16x16) == 6);
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList16x16[0]) == 64);
   for (i = 0; i < G_N_ELEMENTS (iq_matrix->ScalingList16x16); i++) {
@@ -1158,6 +1165,7 @@ fill_iq_matrix_32x32 (VAIQMatrixBufferHEVC * iq_matrix,
     GstH265ScalingList * scaling_list)
 {
   guint i;
+
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList32x32) == 2);
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList32x32[0]) == 64);
   for (i = 0; i < G_N_ELEMENTS (iq_matrix->ScalingList32x32); i++) {
@@ -1171,6 +1179,7 @@ fill_iq_matrix_dc_16x16 (VAIQMatrixBufferHEVC * iq_matrix,
     GstH265ScalingList * scaling_list)
 {
   guint i;
+
   for (i = 0; i < 6; i++)
     iq_matrix->ScalingListDC16x16[i] =
         scaling_list->scaling_list_dc_coef_minus8_16x16[i] + 8;
@@ -1181,6 +1190,7 @@ fill_iq_matrix_dc_32x32 (VAIQMatrixBufferHEVC * iq_matrix,
     GstH265ScalingList * scaling_list)
 {
   guint i;
+
   for (i = 0; i < 2; i++)
     iq_matrix->ScalingListDC32x32[i] =
         scaling_list->scaling_list_dc_coef_minus8_32x32[i] + 8;
@@ -1337,6 +1347,7 @@ parse_pps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
   GstH265PPS *const pps = &pi->data.pps;
   GstH265ParserResult result;
   guint col_width[19], row_height[21];
+
   GST_DEBUG ("parse PPS");
   priv->parser_state &= GST_H265_VIDEO_STATE_GOT_SPS;
 
@@ -1512,10 +1523,13 @@ static GstVaapiDecoderStatus
 decode_sequence_end (GstVaapiDecoderH265 * decoder)
 {
   GstVaapiDecoderStatus status;
+
   GST_DEBUG ("decode sequence-end");
+
   status = decode_current_picture (decoder);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
     return status;
+
   dpb_flush (decoder);
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -1967,9 +1981,9 @@ derive_and_mark_rps (GstVaapiDecoderH265 * decoder,
     GstVaapiPictureH265 * picture, GstVaapiParserInfoH265 * pi,
     gint32 * CurrDeltaPocMsbPresentFlag, gint32 * FollDeltaPocMsbPresentFlag)
 {
-  guint i;
-  GstVaapiPictureH265 *dpb_pic = NULL;
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
+  GstVaapiPictureH265 *dpb_pic = NULL;
+  guint i;
 
   memset (priv->RefPicSetLtCurr, 0, sizeof (GstVaapiPictureH265 *) * 16);
   memset (priv->RefPicSetLtFoll, 0, sizeof (GstVaapiPictureH265 *) * 16);
@@ -2252,7 +2266,7 @@ decode_picture (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
    * associated IRAP picture */
   if (nal_is_rasl (pi->nalu.type) && priv->associated_irap_NoRaslOutputFlag) {
     gst_vaapi_picture_replace (&priv->current_picture, NULL);
-    return (GstVaapiDecoderStatus)GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+    return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
   }
 
   if (!decode_ref_pic_set (decoder, picture, pi))
@@ -2272,6 +2286,7 @@ static inline guint
 get_slice_data_byte_offset (GstH265SliceHdr * slice_hdr, guint nal_header_bytes)
 {
   guint epb_count;
+
   epb_count = slice_hdr->n_emulation_prevention_bytes;
   return nal_header_bytes + (slice_hdr->header_size + 7) / 8 - epb_count;
 }
@@ -2647,6 +2662,7 @@ gst_vaapi_decoder_h265_decode_codec_data (GstVaapiDecoder *
   GstH265ParserResult result;
   guint num_nal_arrays, num_nals;
   guint i, j, ofs;
+
   unit.parsed_info = NULL;
   if (buf_size < 23)
     return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
@@ -2715,6 +2731,7 @@ ensure_decoder (GstVaapiDecoderH265 * decoder)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiDecoderStatus status;
+
   if (!priv->is_opened) {
     priv->is_opened = gst_vaapi_decoder_h265_open (decoder);
     if (!priv->is_opened)
@@ -2743,9 +2760,11 @@ gst_vaapi_decoder_h265_parse (GstVaapiDecoder * base_decoder,
   guint32 start_code;
   gint ofs, ofs2;
   gboolean at_au_end = FALSE;
+
   status = ensure_decoder (decoder);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
     return status;
+
   switch (priv->stream_alignment) {
     case GST_VAAPI_STREAM_ALIGN_H265_NALU:
     case GST_VAAPI_STREAM_ALIGN_H265_AU:
@@ -2941,6 +2960,7 @@ gst_vaapi_decoder_h265_decode (GstVaapiDecoder * base_decoder,
   GstVaapiDecoderH265 *const decoder =
       GST_VAAPI_DECODER_H265_CAST (base_decoder);
   GstVaapiDecoderStatus status;
+
   status = ensure_decoder (decoder);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
     return status;
@@ -2953,6 +2973,7 @@ gst_vaapi_decoder_h265_start_frame (GstVaapiDecoder * base_decoder,
 {
   GstVaapiDecoderH265 *const decoder =
       GST_VAAPI_DECODER_H265_CAST (base_decoder);
+
   return decode_picture (decoder, unit);
 }
 
@@ -2970,6 +2991,7 @@ gst_vaapi_decoder_h265_flush (GstVaapiDecoder * base_decoder)
 {
   GstVaapiDecoderH265 *const decoder =
       GST_VAAPI_DECODER_H265_CAST (base_decoder);
+
   dpb_flush (decoder);
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -2980,6 +3002,7 @@ gst_vaapi_decoder_h265_class_init (GstVaapiDecoderH265Class * klass)
   GstVaapiMiniObjectClass *const object_class =
       GST_VAAPI_MINI_OBJECT_CLASS (klass);
   GstVaapiDecoderClass *const decoder_class = GST_VAAPI_DECODER_CLASS (klass);
+
   object_class->size = sizeof (GstVaapiDecoderH265);
   object_class->finalize = (GDestroyNotify) gst_vaapi_decoder_finalize;
   decoder_class->create = gst_vaapi_decoder_h265_create;
@@ -2997,6 +3020,7 @@ gst_vaapi_decoder_h265_class (void)
 {
   static GstVaapiDecoderH265Class g_class;
   static gsize g_class_init = FALSE;
+
   if (g_once_init_enter (&g_class_init)) {
     gst_vaapi_decoder_h265_class_init (&g_class);
     g_once_init_leave (&g_class_init, TRUE);
