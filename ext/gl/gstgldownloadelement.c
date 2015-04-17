@@ -34,7 +34,6 @@ G_DEFINE_TYPE_WITH_CODE (GstGLDownloadElement, gst_gl_download_element,
     GST_DEBUG_CATEGORY_INIT (gst_gl_download_element_debug, "gldownloadelement",
         0, "download element");
     );
-static void gst_gl_download_element_finalize (GObject * object);
 
 static gboolean gst_gl_download_element_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
@@ -83,8 +82,6 @@ gst_gl_download_element_class_init (GstGLDownloadElementClass * klass)
   gst_element_class_set_metadata (element_class,
       "OpenGL uploader", "Filter/Video",
       "Uploads data into OpenGL", "Matthew Waters <matthew@centricular.com>");
-
-  G_OBJECT_CLASS (klass)->finalize = gst_gl_download_element_finalize;
 }
 
 static void
@@ -92,12 +89,6 @@ gst_gl_download_element_init (GstGLDownloadElement * download)
 {
   gst_base_transform_set_prefer_passthrough (GST_BASE_TRANSFORM (download),
       TRUE);
-}
-
-static void
-gst_gl_download_element_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (gst_gl_download_element_parent_class)->finalize (object);
 }
 
 static gboolean
