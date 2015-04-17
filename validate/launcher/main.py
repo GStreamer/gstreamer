@@ -29,6 +29,7 @@ import subprocess
 
 from loggable import Loggable
 from httpserver import HTTPServer
+from vfb_server import get_virual_frame_buffer_server
 from baseclasses import _TestsLauncher, ScenarioManager
 from utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors, Protocols, which
 
@@ -189,6 +190,7 @@ class LauncherConfig(Loggable):
         self.long_limit = utils.LONG_TEST
         self.config = None
         self.valgrind = False
+        self.no_display = False
         self.xunit_file = None
         self.main_dir = utils.DEFAULT_MAIN_DIR
         self.output_dir = None
@@ -396,6 +398,13 @@ Note that all testsuite should be inside python modules, so the directory should
     parser.add_argument("-vg", "--valgrind", dest="valgrind",
                         action="store_true",
                         help="Run the tests inside Valgrind")
+    parser.add_argument("-nd", "--no-display", dest="no_display",
+                        action="store_true",
+                        help="Run the tests without outputing graphics"
+                             " on any display. It tries to run all graphical operation"
+                             " in a virtual framebuffer."
+                             " Note that it is currently implemented only"
+                             " for the X  server thanks to Xvfb (which is requeried in that case)")
     dir_group = parser.add_argument_group(
         "Directories and files to be used by the launcher")
     parser.add_argument('--xunit-file', action='store',
@@ -492,6 +501,15 @@ Note that all testsuite should be inside python modules, so the directory should
     if tests_launcher.needs_http_server() or options.httponly is True:
         httpsrv.start()
 
+    vfb_server = get_virual_frame_buffer_server(options)
+    if options.no_display:
+        res = vfb_server.start()
+        if res[0] is False:
+            printc("Could not start virtual frame server: %s" % res[1],
+                   Colors.FAIL)
+            exit(1)
+        os.environ["DISPLAY"] = vfb_server.display_id
+
     if options.httponly is True:
         print "Running HTTP server only"
         return
@@ -504,6 +522,7 @@ Note that all testsuite should be inside python modules, so the directory should
     finally:
         tests_launcher.final_report()
         httpsrv.stop()
+        vfb_server.stop()
         if e is not None:
             raise
 

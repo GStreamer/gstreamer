@@ -12,6 +12,7 @@ launcher_PYTHON = \
 	httpserver.py  \
 	RangeHTTPServer.py  \
 	utils.py  \
+	vfb_server.py \
 	config.py
 
 clean-local:
