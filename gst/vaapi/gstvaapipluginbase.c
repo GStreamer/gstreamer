@@ -670,13 +670,15 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-    size = MAX (size, vi.size);
-    update_pool = TRUE;
+    if (pool) {
+      size = MAX (size, vi.size);
+      update_pool = TRUE;
 
-    /* Check whether downstream element proposed a bufferpool but did
-       not provide a correct propose_allocation() implementation */
-    has_video_alignment = gst_buffer_pool_has_option (pool,
-        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+      /* Check whether downstream element proposed a bufferpool but did
+         not provide a correct propose_allocation() implementation */
+      has_video_alignment = gst_buffer_pool_has_option (pool,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    }
   } else {
     pool = NULL;
     size = vi.size;
