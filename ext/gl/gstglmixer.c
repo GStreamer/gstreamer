@@ -42,7 +42,6 @@ static void gst_gl_mixer_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_mixer_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_gl_mixer_pad_finalize (GObject * object);
 
 enum
 {
@@ -73,17 +72,9 @@ gst_gl_mixer_pad_class_init (GstGLMixerPadClass * klass)
   gobject_class->set_property = gst_gl_mixer_pad_set_property;
   gobject_class->get_property = gst_gl_mixer_pad_get_property;
 
-  gobject_class->finalize = gst_gl_mixer_pad_finalize;
-
   vaggpad_class->set_info = NULL;
   vaggpad_class->prepare_frame = NULL;
   vaggpad_class->clean_frame = NULL;
-}
-
-static void
-gst_gl_mixer_pad_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (gst_gl_mixer_pad_parent_class)->finalize (object);
 }
 
 static void
