@@ -455,6 +455,25 @@ gst_ts_demux_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
+gst_ts_demux_get_duration (GstTSDemux * demux, GstClockTime * dur)
+{
+  MpegTSBase *base = (MpegTSBase *) demux;
+  gboolean res = FALSE;
+  gint64 val;
+
+  /* Get total size in bytes */
+  if (gst_pad_peer_query_duration (base->sinkpad, GST_FORMAT_BYTES, &val)) {
+    /* Convert it to duration */
+    *dur =
+        mpegts_packetizer_offset_to_ts (base->packetizer, val,
+        demux->program->pcr_pid);
+    if (GST_CLOCK_TIME_IS_VALID (*dur))
+      res = TRUE;
+  }
+  return res;
+}
+
+static gboolean
 gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
@@ -472,20 +491,11 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_parse_duration (query, &format, NULL);
       if (format == GST_FORMAT_TIME) {
         if (!gst_pad_peer_query (base->sinkpad, query)) {
-          gint64 val;
-
-          format = GST_FORMAT_BYTES;
-          if (!gst_pad_peer_query_duration (base->sinkpad, format, &val))
+          GstClockTime dur;
+          if (gst_ts_demux_get_duration (demux, &dur))
+            gst_query_set_duration (query, GST_FORMAT_TIME, dur);
+          else
             res = FALSE;
-          else {
-            GstClockTime dur =
-                mpegts_packetizer_offset_to_ts (base->packetizer, val,
-                demux->program->pcr_pid);
-            if (GST_CLOCK_TIME_IS_VALID (dur))
-              gst_query_set_duration (query, GST_FORMAT_TIME, dur);
-            else
-              res = FALSE;
-          }
         }
       } else {
         GST_DEBUG_OBJECT (demux, "only query duration on TIME is supported");
@@ -521,6 +531,7 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
     {
       GST_DEBUG ("query seeking");
       gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      GST_DEBUG ("asked for format %s", gst_format_get_name (format));
       if (format == GST_FORMAT_TIME) {
         gboolean seekable = FALSE;
 
@@ -529,9 +540,13 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
         /* If upstream is not seekable in TIME format we use
          * our own values here */
-        if (!seekable)
-          gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0,
-              demux->segment.duration);
+        if (!seekable) {
+          GstClockTime dur;
+          if (gst_ts_demux_get_duration (demux, &dur)) {
+            gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, dur);
+            GST_DEBUG ("Gave duration: %" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
+          }
+        }
       } else {
         GST_DEBUG_OBJECT (demux, "only TIME is supported for query seeking");
         res = FALSE;
