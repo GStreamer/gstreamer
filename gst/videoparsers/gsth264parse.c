@@ -655,6 +655,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       if (!GST_H264_PARSE_STATE_VALID (h264parse, GST_H264_PARSE_STATE_GOT_SPS))
         return FALSE;
 
+      h264parse->header |= TRUE;
       gst_h264_parse_process_sei (h264parse, nalu);
       /* mark SEI pos */
       if (h264parse->sei_pos == -1) {
