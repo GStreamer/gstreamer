@@ -523,8 +523,13 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
           "Handle changed (have:%p, now:%p), switching surface",
           (void *) egl->window_handle, (void *) handle);
       if (egl->egl_surface) {
-        eglDestroySurface (egl->egl_display, egl->egl_surface);
+        result = eglDestroySurface (egl->egl_display, egl->egl_surface);
         egl->egl_surface = EGL_NO_SURFACE;
+        if (!result) {
+          GST_ERROR_OBJECT (context, "Failed to destroy old window surface: %s",
+              gst_gl_context_egl_get_error_string ());
+          goto done;
+        }
       }
       egl->egl_surface =
           eglCreateWindowSurface (egl->egl_display, egl->egl_config, handle,
