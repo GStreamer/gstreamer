@@ -83,6 +83,7 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
   AVCaptureInput *input;
   AVCaptureVideoDataOutput *output;
   AVCaptureDevice *device;
+  AVCaptureConnection *connection;
   CMClockRef inputClock;
 
   dispatch_queue_t mainQueue;
@@ -296,6 +297,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     [session addInput:input];
     [session addOutput:output];
 
+    /* retained by session */
+    connection = [[output connections] firstObject];
+    inputClock = ((AVCaptureInputPort *)connection.inputPorts[0]).clock;
+
     *successPtr = YES;
   });
 
@@ -310,6 +315,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   dispatch_sync (mainQueue, ^{
     g_assert (![session isRunning]);
+
+    connection = nil;
+    inputClock = nil;
 
     [session removeInput:input];
     [session removeOutput:output];
@@ -710,7 +718,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   offset = 0;
   latency = GST_CLOCK_TIME_NONE;
-  inputClock = nil;
 
   lastSampling = GST_CLOCK_TIME_NONE;
   count = 0;
@@ -728,7 +735,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   bufQueueLock = nil;
   [bufQueue release];
   bufQueue = nil;
-  inputClock = nil;
 
   if (textureCache)
       gst_core_video_texture_cache_free (textureCache);
@@ -834,7 +840,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
-       fromConnection:(AVCaptureConnection *)connection
+       fromConnection:(AVCaptureConnection *)aConnection
 {
   GstClockTime timestamp, duration;
 
@@ -845,8 +851,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     return;
   }
 
-  if (inputClock == nil)
-    inputClock = ((AVCaptureInputPort *)connection.inputPorts[0]).clock;
   [self getSampleBuffer:sampleBuffer timestamp:&timestamp duration:&duration];
 
   if ([bufQueue count] == BUFFER_QUEUE_SIZE)
