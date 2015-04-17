@@ -551,6 +551,7 @@ gst_icydemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   if (icydemux->meta_interval == 0) {
     ret = gst_icydemux_typefind_or_forward (icydemux, buf);
+    buf = NULL;
     goto done;
   }
 
