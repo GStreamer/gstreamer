@@ -29,8 +29,8 @@
  * <title>Example launch line</title>
  * |[
  * gst-launch-1.0 audiotestsrc wave=saw ! audioamplify amplification=1.5 ! alsasink
- * gst-launch-1.0 filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audioamplify amplification=1.5 method=wrap-negative ! alsasink
- * gst-launch-1.0 audiotestsrc wave=saw ! audioconvert ! audioamplify amplification=1.5 method=wrap-positive ! audioconvert ! alsasink
+ * gst-launch-1.0 filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audioamplify amplification=1.5 clipping-method=wrap-negative ! alsasink
+ * gst-launch-1.0 audiotestsrc wave=saw ! audioconvert ! audioamplify amplification=1.5 clipping-method=wrap-positive ! audioconvert ! alsasink
  * ]|
  * </refsect2>
  */
