@@ -28,6 +28,8 @@ G_BEGIN_DECLS
 typedef struct _GstFdAllocator GstFdAllocator;
 typedef struct _GstFdAllocatorClass GstFdAllocatorClass;
 
+#define GST_ALLOCATOR_FD "fd"
+
 #define GST_TYPE_FD_ALLOCATOR              (gst_fd_allocator_get_type())
 #define GST_IS_FD_ALLOCATOR(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_FD_ALLOCATOR))
 #define GST_IS_FD_ALLOCATOR_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FD_ALLOCATOR))
@@ -68,16 +70,16 @@ struct _GstFdAllocator
 struct _GstFdAllocatorClass
 {
   GstAllocatorClass parent_class;
-
-  /*< protected >*/
-  GstMemory * (*alloc)  (GstFdAllocator *alloc, gint fd,
-                         gsize size, GstFdMemoryFlags flags);
 };
 
 GType gst_fd_allocator_get_type (void);
 
-gboolean     gst_is_fd_memory                    (GstMemory *mem);
-gint         gst_fd_memory_get_fd                (GstMemory *mem);
+GstAllocator *  gst_fd_allocator_new    (void);
+GstMemory *     gst_fd_allocator_alloc  (GstAllocator * allocator, gint fd,
+                                         gsize size, GstFdMemoryFlags flags);
+
+gboolean        gst_is_fd_memory        (GstMemory *mem);
+gint            gst_fd_memory_get_fd    (GstMemory *mem);
 
 G_END_DECLS
 

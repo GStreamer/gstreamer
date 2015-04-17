@@ -106,16 +106,9 @@ gst_dmabuf_allocator_new (void)
 GstMemory *
 gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
 {
-  GstFdAllocator *alloc = GST_FD_ALLOCATOR_CAST (allocator);
-  GstFdAllocatorClass *klass = GST_FD_ALLOCATOR_GET_CLASS (alloc);
+  g_return_val_if_fail (GST_IS_DMABUF_ALLOCATOR (allocator), NULL);
 
-  if (!GST_IS_DMABUF_ALLOCATOR (allocator)) {
-    GST_WARNING ("it isn't the correct allocator for dmabuf");
-    return NULL;
-  }
-
-  GST_DEBUG ("alloc from allocator %p", allocator);
-  return klass->alloc (alloc, fd, size, GST_FD_MEMORY_FLAG_NONE);
+  return gst_fd_allocator_alloc (allocator, fd, size, GST_FD_MEMORY_FLAG_NONE);
 }
 
 /**

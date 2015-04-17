@@ -177,12 +177,74 @@ gst_fd_mem_share (GstMemory * gmem, gssize offset, gssize size)
 #endif
 }
 
-static GstMemory *
-gst_fd_allocator_alloc (GstFdAllocator * allocator, gint fd, gsize size,
+G_DEFINE_TYPE (GstFdAllocator, gst_fd_allocator, GST_TYPE_ALLOCATOR);
+
+static void
+gst_fd_allocator_class_init (GstFdAllocatorClass * klass)
+{
+  GstAllocatorClass *allocator_class;
+
+  allocator_class = (GstAllocatorClass *) klass;
+
+  allocator_class->alloc = NULL;
+  allocator_class->free = gst_fd_mem_free;
+
+}
+
+static void
+gst_fd_allocator_init (GstFdAllocator * allocator)
+{
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+
+  alloc->mem_type = GST_ALLOCATOR_FD;
+
+  alloc->mem_map = gst_fd_mem_map;
+  alloc->mem_unmap = gst_fd_mem_unmap;
+  alloc->mem_share = gst_fd_mem_share;
+
+  GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
+}
+
+/**
+ * gst_fd_allocator_new:
+ *
+ * Return a new fd allocator.
+ *
+ * Returns: (transfer full): a new fd allocator, or NULL if the allocator
+ *    isn't available. Use gst_object_unref() to release the allocator after
+ *    usage
+ *
+ * Since: 1.6
+ */
+GstAllocator *
+gst_fd_allocator_new (void)
+{
+  return g_object_new (GST_TYPE_FD_ALLOCATOR, NULL);
+}
+
+/**
+ * gst_fd_allocator_alloc:
+ * @allocator: (allow-none): allocator to be used for this memory
+ * @fd: file descriptor
+ * @size: memory size
+ * @flags: extra #GstFdMemoryFlags
+ *
+ * Return a %GstMemory that wraps a generic file descriptor.
+ *
+ * Returns: (transfer full): a GstMemory based on @allocator.
+ * When the buffer will be released the allocator will close the @fd.
+ * The memory is only mmapped on gst_buffer_mmap() request.
+ *
+ * Since: 1.6
+ */
+GstMemory *
+gst_fd_allocator_alloc (GstAllocator * allocator, gint fd, gsize size,
     GstFdMemoryFlags flags)
 {
 #ifdef HAVE_MMAP
   GstFdMemory *mem;
+
+  g_return_val_if_fail (GST_IS_FD_ALLOCATOR (allocator), NULL);
 
   mem = g_slice_new0 (GstFdMemory);
   gst_memory_init (GST_MEMORY_CAST (mem), 0, GST_ALLOCATOR_CAST (allocator),
@@ -199,33 +261,6 @@ gst_fd_allocator_alloc (GstFdAllocator * allocator, gint fd, gsize size,
 #else /* !HAVE_MMAP */
   return NULL;
 #endif
-}
-
-G_DEFINE_ABSTRACT_TYPE (GstFdAllocator, gst_fd_allocator, GST_TYPE_ALLOCATOR);
-
-static void
-gst_fd_allocator_class_init (GstFdAllocatorClass * klass)
-{
-  GstAllocatorClass *allocator_class;
-
-  allocator_class = (GstAllocatorClass *) klass;
-
-  allocator_class->alloc = NULL;
-  allocator_class->free = gst_fd_mem_free;
-
-  klass->alloc = gst_fd_allocator_alloc;
-}
-
-static void
-gst_fd_allocator_init (GstFdAllocator * allocator)
-{
-  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
-
-  alloc->mem_map = gst_fd_mem_map;
-  alloc->mem_unmap = gst_fd_mem_unmap;
-  alloc->mem_share = gst_fd_mem_share;
-
-  GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
 /**
