@@ -152,6 +152,7 @@ struct MpegTsMux {
   GList *streamheader;
   gboolean streamheader_sent;
   gboolean is_delta;
+  gboolean is_header;
   GstClockTime last_ts;
 
   /* m2ts specific */

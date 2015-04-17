@@ -1090,7 +1090,7 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
   TsMuxProgram *prog;
   gint64 pts = -1;
   guint64 dts = -1;
-  gboolean delta = TRUE;
+  gboolean delta = TRUE, header = FALSE;
   StreamData *stream_data;
 
   GST_DEBUG_OBJECT (mux, "Pads collected");
@@ -1189,6 +1189,7 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
 
   if (best->stream->is_video_stream) {
     delta = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    header = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER);
 #if 0
     GST_OBJECT_LOCK (mux);
     if (mux->element_index && !delta && best->element_index_writer_id != -1) {
@@ -1215,6 +1216,7 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
   }
 
   mux->is_delta = delta;
+  mux->is_header = header;
   while (tsmux_stream_bytes_in_buffer (best->stream) > 0) {
     if (!tsmux_write_stream_packet (mux->tsmux, best->stream)) {
       /* Failed writing data for some reason. Set appropriate error */
@@ -1344,6 +1346,10 @@ new_packet_common_init (MpegTsMux * mux, GstBuffer * buf, guint8 * data,
   }
 
   if (buf) {
+    if (mux->is_header) {
+      GST_LOG_OBJECT (mux, "marking as header buffer");
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
+    }
     if (mux->is_delta) {
       GST_LOG_OBJECT (mux, "marking as delta unit");
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
