@@ -347,24 +347,25 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
   if ((packet->scram_afc_cc & 0x30) == 0x20) {
     /* no payload, adaptation field of 183 bytes */
     if (length > 183) {
-      GST_WARNING ("PID %d afc == 0x%02x and length %d > 183",
+      GST_WARNING ("PID 0x%04x afc == 0x%02x and length %d > 183",
           packet->pid, packet->scram_afc_cc & 0x30, length);
       return FALSE;
     }
     if (length != 183) {
-      GST_WARNING ("PID %d afc == 0x%02x and length %d != 183",
+      GST_WARNING ("PID 0x%04x afc == 0x%02x and length %d != 183",
           packet->pid, packet->scram_afc_cc & 0x30, length);
       GST_MEMDUMP ("Unknown payload", packet->data + length,
           packet->data_end - packet->data - length);
     }
   } else if (length > 182) {
-    GST_WARNING ("PID %d afc == 0x%02x and length %d > 182",
+    GST_WARNING ("PID 0x%04x afc == 0x%02x and length %d > 182",
         packet->pid, packet->scram_afc_cc & 0x30, length);
     return FALSE;
   }
 
   if (packet->data + length > packet->data_end) {
-    GST_DEBUG ("PID %d afc length %d overflows the buffer current %d max %d",
+    GST_DEBUG
+        ("PID 0x%04x afc length %d overflows the buffer current %d max %d",
         packet->pid, length, (gint) (packet->data - packet->data_start),
         (gint) (packet->data_end - packet->data_start));
     return FALSE;
@@ -638,7 +639,7 @@ mpegts_packetizer_remove_stream (MpegTSPacketizer2 * packetizer, gint16 pid)
 {
   MpegTSPacketizerStream *stream = packetizer->streams[pid];
   if (stream) {
-    GST_INFO ("Removing stream for PID %d", pid);
+    GST_INFO ("Removing stream for PID 0x%04x", pid);
     mpegts_packetizer_stream_free (stream);
     packetizer->streams[pid] = NULL;
   }
