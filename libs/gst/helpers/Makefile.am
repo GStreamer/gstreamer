@@ -9,8 +9,8 @@ bashhelpersdir = $(BASH_HELPERS_DIR)
 dist_bashhelpers_DATA = gst
 
 install-exec-hook:
-	cd $(DESTDIR)$(bindir) && \
 	$(MKDIR_P) $(DESTDIR)$(BASH_HELPERS_DIR) && \
+	cd $(DESTDIR)$(bindir) && \
 	$(INSTALL) `echo "gst-completion-helper-" | sed '$(transform)'`@GST_API_VERSION@$(EXEEXT) \
         $(DESTDIR)$(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT) && \
 	rm `echo "gst-completion-helper-" | sed '$(transform)'`@GST_API_VERSION@$(EXEEXT)
