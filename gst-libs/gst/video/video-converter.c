@@ -3987,7 +3987,7 @@ setup_scale (GstVideoConverter * convert)
 {
   int i, n_planes;
   gint method, cr_method, stride, in_width, in_height, out_width, out_height;
-  guint taps, max_taps = 0;
+  guint taps;
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *in_finfo, *out_finfo;
   GstVideoFormat in_format, out_format;
@@ -4087,7 +4087,6 @@ setup_scale (GstVideoConverter * convert)
       convert->fv_scaler[0] =
           gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
           in_height, out_height, convert->config);
-      gst_video_scaler_get_coeff (convert->fv_scaler[0], 0, NULL, &max_taps);
     } else {
       convert->fv_scaler[0] = NULL;
     }
@@ -4101,7 +4100,6 @@ setup_scale (GstVideoConverter * convert)
     convert->fsplane[0] = 0;
   } else {
     for (i = 0; i < n_planes; i++) {
-      guint n_taps = 0;
       gint comp, n_comp, j, iw, ih, ow, oh, pstride;
       gboolean need_v_scaler, need_h_scaler;
       GstStructure *config;
@@ -4235,12 +4233,10 @@ setup_scale (GstVideoConverter * convert)
       if (need_v_scaler && ih != 0 && oh != 0) {
         convert->fv_scaler[i] = gst_video_scaler_new (resample_method,
             GST_VIDEO_SCALER_FLAG_NONE, taps, ih, oh, config);
-        gst_video_scaler_get_coeff (convert->fv_scaler[i], 0, NULL, &n_taps);
       } else
         convert->fv_scaler[i] = NULL;
 
       gst_structure_free (config);
-      max_taps = MAX (max_taps, n_taps);
       convert->fformat[i] = get_scale_format (in_format, i);
     }
   }
