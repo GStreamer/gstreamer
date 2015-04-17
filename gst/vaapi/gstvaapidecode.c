@@ -347,9 +347,9 @@ gst_vaapidecode_push_all_decoded_frames (GstVaapiDecode * decode)
       case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
         return GST_FLOW_OK;
       default:
-        GST_ELEMENT_ERROR (vdec, STREAM, DECODE, ("Decoding failed"),
-            ("Unknown decoding error"));
-        return GST_FLOW_ERROR;
+        GST_VIDEO_DECODER_ERROR (vdec, 1, STREAM, DECODE, ("Decoding failed"),
+            ("Unknown decoding error"), ret);
+        return ret;
     }
   }
   g_assert_not_reached ();
@@ -429,9 +429,8 @@ error_decode:
         ret = GST_FLOW_NOT_SUPPORTED;
         break;
       default:
-        GST_ELEMENT_ERROR (vdec, STREAM, DECODE, ("Decoding error"),
-            ("Decode error %d", status));
-        ret = GST_FLOW_ERROR;
+        GST_VIDEO_DECODER_ERROR (vdec, 1, STREAM, DECODE, ("Decoding error"),
+            ("Decode error %d", status), ret);
         break;
     }
     gst_video_decoder_drop_frame (vdec, frame);
