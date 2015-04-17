@@ -30,7 +30,6 @@
 GST_DEBUG_CATEGORY (gst_debug_gl_sink_bin);
 #define GST_CAT_DEFAULT gst_debug_gl_sink_bin
 
-static void gst_gl_sink_bin_finalize (GObject * object);
 static void gst_gl_sink_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * param_spec);
 static void gst_gl_sink_bin_get_property (GObject * object, guint prop_id,
@@ -88,7 +87,6 @@ gst_gl_sink_bin_class_init (GstGLSinkBinClass * klass)
 
   gobject_class->set_property = gst_gl_sink_bin_set_property;
   gobject_class->get_property = gst_gl_sink_bin_get_property;
-  gobject_class->finalize = gst_gl_sink_bin_finalize;
 
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio",
@@ -123,12 +121,6 @@ gst_gl_sink_bin_class_init (GstGLSinkBinClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_sink_bin_template));
-}
-
-static void
-gst_gl_sink_bin_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
