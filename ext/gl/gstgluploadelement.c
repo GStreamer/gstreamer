@@ -46,7 +46,6 @@ G_DEFINE_TYPE_WITH_CODE (GstGLUploadElement, gst_gl_upload_element,
     GST_DEBUG_CATEGORY_INIT (gst_gl_upload_element_debug, "gluploadelement", 0,
         "glupload Element");
     );
-static void gst_gl_upload_element_finalize (GObject * object);
 
 static gboolean gst_gl_upload_element_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
@@ -65,6 +64,7 @@ gst_gl_upload_element_prepare_output_buffer (GstBaseTransform * bt,
     GstBuffer * buffer, GstBuffer ** outbuf);
 static GstFlowReturn gst_gl_upload_element_transform (GstBaseTransform * bt,
     GstBuffer * buffer, GstBuffer * outbuf);
+static gboolean gst_gl_upload_element_stop (GstBaseTransform * bt);
 
 static GstStaticPadTemplate gst_gl_upload_element_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -92,6 +92,7 @@ gst_gl_upload_element_class_init (GstGLUploadElementClass * klass)
   bt_class->get_unit_size = gst_gl_upload_element_get_unit_size;
   bt_class->prepare_output_buffer = gst_gl_upload_element_prepare_output_buffer;
   bt_class->transform = gst_gl_upload_element_transform;
+  bt_class->stop = gst_gl_upload_element_stop;
 
   bt_class->passthrough_on_same_caps = TRUE;
 
@@ -103,8 +104,6 @@ gst_gl_upload_element_class_init (GstGLUploadElementClass * klass)
   gst_element_class_set_metadata (element_class,
       "OpenGL uploader", "Filter/Video",
       "Uploads data into OpenGL", "Matthew Waters <matthew@centricular.com>");
-
-  G_OBJECT_CLASS (klass)->finalize = gst_gl_upload_element_finalize;
 }
 
 static void
@@ -113,10 +112,10 @@ gst_gl_upload_element_init (GstGLUploadElement * upload)
   gst_base_transform_set_prefer_passthrough (GST_BASE_TRANSFORM (upload), TRUE);
 }
 
-static void
-gst_gl_upload_element_finalize (GObject * object)
+static gboolean
+gst_gl_upload_element_stop (GstBaseTransform * bt)
 {
-  GstGLUploadElement *upload = GST_GL_UPLOAD_ELEMENT (object);
+  GstGLUploadElement *upload = GST_GL_UPLOAD_ELEMENT (bt);
 
   if (upload->upload) {
     gst_object_unref (upload->upload);
@@ -126,7 +125,7 @@ gst_gl_upload_element_finalize (GObject * object)
   gst_caps_replace (&upload->in_caps, NULL);
   gst_caps_replace (&upload->out_caps, NULL);
 
-  G_OBJECT_CLASS (gst_gl_upload_element_parent_class)->finalize (object);
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (bt);
 }
 
 static gboolean
