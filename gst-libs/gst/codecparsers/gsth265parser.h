@@ -763,6 +763,8 @@ struct _GstH265SPS
   /* calculated values */
   guint8 chroma_array_type;
   gint width, height;
+  gint crop_rect_width, crop_rect_height;
+  gint crop_rect_x, crop_rect_y;
   gint fps_num, fps_den;
   gboolean valid;
 };

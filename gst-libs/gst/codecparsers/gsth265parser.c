@@ -1564,6 +1564,8 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
   GstH265VPS *vps;
   guint8 vps_id;
   guint i;
+  guint subwc[] = { 1, 2, 2, 1, 1 };
+  guint subhc[] = { 1, 2, 1, 1, 1 };
   GstH265VUIParams *vui = NULL;
 
   INITIALIZE_DEBUG_CATEGORY;
@@ -1713,7 +1715,20 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
     goto error;
   }
 
-  /* ToDo: Add crop_rectangle dimensions */
+  if (sps->conformance_window_flag) {
+    const guint crop_unit_x = subwc[sps->chroma_format_idc];
+    const guint crop_unit_y = subhc[sps->chroma_format_idc];
+
+    sps->crop_rect_width = sps->width -
+        (sps->conf_win_left_offset + sps->conf_win_right_offset) * crop_unit_x;
+    sps->crop_rect_height = sps->height -
+        (sps->conf_win_top_offset + sps->conf_win_bottom_offset) * crop_unit_y;
+    sps->crop_rect_x = sps->conf_win_left_offset * crop_unit_x;
+    sps->crop_rect_y = sps->conf_win_top_offset * crop_unit_y;
+
+    GST_LOG ("crop_rectangle x=%u y=%u width=%u, height=%u", sps->crop_rect_x,
+        sps->crop_rect_y, sps->crop_rect_width, sps->crop_rect_height);
+  }
 
   sps->fps_num = 0;
   sps->fps_den = 1;
