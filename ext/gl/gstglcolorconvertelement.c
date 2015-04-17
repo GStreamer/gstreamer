@@ -35,7 +35,6 @@ G_DEFINE_TYPE_WITH_CODE (GstGLColorConvertElement, gst_gl_color_convert_element,
         "glconvertelement", 0, "convert");
     );
 
-static void gst_gl_color_convert_element_finalize (GObject * object);
 static gboolean gst_gl_color_convert_element_set_caps (GstBaseTransform * bt,
     GstCaps * in_caps, GstCaps * out_caps);
 static GstCaps *gst_gl_color_convert_element_transform_caps (GstBaseTransform *
@@ -72,6 +71,9 @@ gst_gl_color_convert_element_stop (GstBaseTransform * bt)
     convert->convert = NULL;
   }
 
+  gst_caps_replace (&convert->in_caps, NULL);
+  gst_caps_replace (&convert->out_caps, NULL);
+
   return
       GST_BASE_TRANSFORM_CLASS (gst_gl_color_convert_element_parent_class)->stop
       (bt);
@@ -105,8 +107,6 @@ gst_gl_color_convert_element_class_init (GstGLColorConvertElementClass * klass)
       "OpenGL color converter", "Filter/Converter/Video",
       "Converts between color spaces using OpenGL shaders",
       "Matthew Waters <matthew@centricular.com>");
-
-  G_OBJECT_CLASS (klass)->finalize = gst_gl_color_convert_element_finalize;
 }
 
 static void
@@ -114,17 +114,6 @@ gst_gl_color_convert_element_init (GstGLColorConvertElement * convert)
 {
   gst_base_transform_set_prefer_passthrough (GST_BASE_TRANSFORM (convert),
       TRUE);
-}
-
-static void
-gst_gl_color_convert_element_finalize (GObject * object)
-{
-  GstGLColorConvertElement *convert = GST_GL_COLOR_CONVERT_ELEMENT (object);
-
-  gst_caps_replace (&convert->in_caps, NULL);
-  gst_caps_replace (&convert->out_caps, NULL);
-
-  G_OBJECT_CLASS (gst_gl_color_convert_element_parent_class)->finalize (object);
 }
 
 static gboolean
