@@ -133,6 +133,26 @@ gst_openh264enc_slice_mode_get_type (void)
   return (GType) id;
 }
 
+#define GST_TYPE_OPENH264ENC_COMPLEXITY (gst_openh264enc_complexity_get_type ())
+static GType
+gst_openh264enc_complexity_get_type (void)
+{
+  static const GEnumValue types[] = {
+    {LOW_COMPLEXITY, "Low complexity / high speed encoding", "low"},
+    {MEDIUM_COMPLEXITY, "Medium complexity / medium speed encoding", "medium"},
+    {HIGH_COMPLEXITY, "High complexity / low speed encoding", "high"},
+    {0, NULL, NULL},
+  };
+  static gsize id = 0;
+
+  if (g_once_init_enter (& id)) {
+    GType _id = g_enum_register_static ("GstOpenh264encComplexity", types);
+    g_once_init_leave (& id, _id);
+  }
+
+  return (GType) id;
+}
+
 /* prototypes */
 
 static void gst_openh264enc_set_property (GObject * object,
@@ -171,6 +191,7 @@ static void gst_openh264enc_set_rate_control (GstOpenh264Enc * openh264enc,
 #define DEFAULT_SCENE_CHANGE_DETECTION TRUE
 #define DEFAULT_SLICE_MODE      SM_FIXEDSLCNUM_SLICE
 #define DEFAULT_NUM_SLICES      1
+#define DEFAULT_COMPLEXITY      MEDIUM_COMPLEXITY
 
 enum
 {
@@ -189,6 +210,7 @@ enum
   PROP_SCENE_CHANGE_DETECTION,
   PROP_SLICE_MODE,
   PROP_NUM_SLICES,
+  PROP_COMPLEXITY,
   N_PROPERTIES
 };
 
@@ -215,6 +237,7 @@ struct _GstOpenh264EncPrivate
   gboolean scene_change_detection;
   SliceModeEnum slice_mode;
   guint num_slices;
+  ECOMPLEXITY_MODE complexity;
 };
 
 /* pad templates */
@@ -353,6 +376,11 @@ gst_openh264enc_class_init (GstOpenh264EncClass * klass)
           "The number of slices (needs slice-mode=n-slices)",
           0, G_MAXUINT, DEFAULT_NUM_SLICES,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COMPLEXITY,
+      g_param_spec_enum ("complexity", "Complexity / quality / speed tradeoff", "Complexity",
+          GST_TYPE_OPENH264ENC_COMPLEXITY, DEFAULT_COMPLEXITY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void
@@ -380,6 +408,7 @@ gst_openh264enc_init (GstOpenh264Enc * openh264enc)
   openh264enc->priv->slice_mode = DEFAULT_SLICE_MODE;
   openh264enc->priv->num_slices = DEFAULT_NUM_SLICES;
   openh264enc->priv->encoder = NULL;
+  openh264enc->priv->complexity = DEFAULT_COMPLEXITY;
   gst_openh264enc_set_usage_type (openh264enc, CAMERA_VIDEO_REAL_TIME);
   gst_openh264enc_set_rate_control (openh264enc, RC_QUALITY_MODE);
 }
@@ -486,6 +515,10 @@ gst_openh264enc_set_property (GObject * object, guint property_id,
       openh264enc->priv->num_slices = g_value_get_uint (value);
       break;
 
+    case PROP_COMPLEXITY:
+      openh264enc->priv->complexity = (ECOMPLEXITY_MODE) g_value_get_enum (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -555,6 +588,10 @@ gst_openh264enc_get_property (GObject * object, guint property_id,
 
     case PROP_NUM_SLICES:
       g_value_set_uint (value, openh264enc->priv->num_slices);
+      break;
+
+    case PROP_COMPLEXITY:
+      g_value_set_enum (value, openh264enc->priv->complexity);
       break;
 
     default:
@@ -675,6 +712,7 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.iLtrMarkPeriod = 30;
   enc_params.iMultipleThreadIdc = openh264enc->priv->multi_thread;
   enc_params.bEnableDenoise = openh264enc->priv->enable_denoise;
+  enc_params.iComplexityMode = priv->complexity;
   enc_params.uiIntraPeriod = priv->gop_size;
   enc_params.bEnableBackgroundDetection =
       openh264enc->priv->background_detection;
