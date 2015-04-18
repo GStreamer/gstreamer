@@ -86,7 +86,7 @@ plugin_init (GstPlugin * plugin)
 
 #ifdef HAVE_VIDEOTOOLBOX
   /* Check if the framework actually exists at runtime */
-  if (VTCompressionSessionCreate != NULL) {
+  if (&VTCompressionSessionCreate != NULL) {
     gst_vtdec_register_elements (plugin);
     gst_vtenc_register_elements (plugin);
   }
