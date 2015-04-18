@@ -703,6 +703,7 @@ restart:
       GST_TEE_PAD_CAST (pad)->pushed = TRUE;
       GST_TEE_PAD_CAST (pad)->result = ret;
       gst_object_unref (pad);
+      pad = NULL;
     } else {
       /* already pushed, use previous return value */
       ret = GST_TEE_PAD_CAST (pad)->result;
@@ -714,7 +715,7 @@ restart:
      * the same. It could be possible that the pad we just pushed was removed
      * and the return value it not valid anymore */
     if (G_UNLIKELY (GST_ELEMENT_CAST (tee)->pads_cookie != cookie)) {
-      GST_LOG_OBJECT (pad, "pad list changed");
+      GST_LOG_OBJECT (tee, "pad list changed");
       /* the list of pads changed, restart iteration. Pads that we already
        * pushed on and are still in the new list, will not be pushed on
        * again. */
@@ -727,7 +728,7 @@ restart:
 
     /* keep all other return values, overwriting the previous one. */
     if (G_LIKELY (ret != GST_FLOW_NOT_LINKED)) {
-      GST_LOG_OBJECT (pad, "Replacing ret val %d with %d", cret, ret);
+      GST_LOG_OBJECT (tee, "Replacing ret val %d with %d", cret, ret);
       cret = ret;
     }
     pads = g_list_next (pads);
