@@ -64,6 +64,7 @@
 #include <gst/gstplugin.h>
 #include <gst/gstpoll.h>
 #include <gst/gstpreset.h>
+#include <gst/gstprotection.h>
 #include <gst/gstquery.h>
 #include <gst/gstregistry.h>
 #include <gst/gstsample.h>
