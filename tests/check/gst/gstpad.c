@@ -1153,6 +1153,7 @@ idletest_sink_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   if (idle_probe_running)
     fail ("Should not be reached");
+  gst_buffer_unref (buf);
   return GST_FLOW_OK;
 }
 
