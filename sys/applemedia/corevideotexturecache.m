@@ -75,7 +75,7 @@ gst_core_video_texture_cache_free (GstCoreVideoTextureCache * cache)
 #if !HAVE_IOS
   CVOpenGLTextureCacheRelease (cache->cache);
 #else
-  /* FIXME: how do we release ->cache ? */
+  CFRelease (cache->cache); /* iOS has no "CVOpenGLESTextureCacheRelease" */
 #endif
   gst_object_unref (cache->convert);
   gst_object_unref (cache->ctx);
