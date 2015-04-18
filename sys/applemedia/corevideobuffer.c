@@ -20,10 +20,38 @@
 #include "corevideobuffer.h"
 #include "corevideomemory.h"
 
+static const GstMetaInfo *gst_core_video_meta_get_info (void);
+
+static void
+gst_core_video_meta_add (GstBuffer * buffer, CVBufferRef cvbuf)
+{
+  GstCoreVideoMeta *meta;
+
+  meta = (GstCoreVideoMeta *) gst_buffer_add_meta (buffer,
+      gst_core_video_meta_get_info (), NULL);
+  meta->cvbuf = CVBufferRetain (cvbuf);
+  meta->pixbuf = (CVPixelBufferRef) cvbuf;
+}
+
 static void
 gst_core_video_meta_free (GstCoreVideoMeta * meta, GstBuffer * buf)
 {
   CVBufferRelease (meta->cvbuf);
+}
+
+static gboolean
+gst_core_video_meta_transform (GstBuffer * transbuf, GstCoreVideoMeta * meta,
+    GstBuffer * buffer, GQuark type, GstMetaTransformCopy * data)
+{
+  if (!data->region) {
+    /* only copy if the complete data is copied as well */
+    gst_core_video_meta_add (transbuf, meta->cvbuf);
+  } else {
+    GST_WARNING_OBJECT (transbuf,
+        "dropping Core Video metadata due to partial buffer");
+  }
+
+  return TRUE;                  /* retval unused */
 }
 
 GType
@@ -49,7 +77,7 @@ gst_core_video_meta_get_info (void)
         "GstCoreVideoMeta", sizeof (GstCoreVideoMeta),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_core_video_meta_free,
-        (GstMetaTransformFunction) NULL);
+        (GstMetaTransformFunction) gst_core_video_meta_transform);
     g_once_init_leave (&core_video_meta_info, meta);
   }
   return core_video_meta_info;
@@ -140,7 +168,7 @@ gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo,
 
   buf = gst_buffer_new ();
 
-  /* add the corevideo meta to free the underlying corevideo buffer */
+  /* add the corevideo meta to pass the underlying corevideo buffer */
   meta = (GstCoreVideoMeta *) gst_buffer_add_meta (buf,
       gst_core_video_meta_get_info (), NULL);
   meta->cvbuf = CVBufferRetain (cvbuf);
