@@ -39,7 +39,7 @@ printf_extension_log_func (GstDebugCategory * category,
   dbg_msg = gst_debug_message_get (message);
   fail_unless (dbg_msg != NULL);
 
-  if (save_messages)
+  if (save_messages && g_str_equal (category->name, "check"))
     messages = g_list_append (messages, g_strdup (dbg_msg));
 
   /* g_print ("%s\n", dbg_msg); */
