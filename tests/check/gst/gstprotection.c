@@ -202,6 +202,8 @@ GST_START_TEST (test_decryptor_element_class)
 
   selected_id = gst_protection_select_system (&sys_ids[3]);
   fail_unless (selected_id == NULL);
+
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
