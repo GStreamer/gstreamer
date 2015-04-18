@@ -534,11 +534,10 @@ GstEvent*      gst_event_new_toc                (GstToc *toc, gboolean updated);
 void           gst_event_parse_toc              (GstEvent *event, GstToc **toc, gboolean *updated);
 
 /* Protection event */
-     GstEvent *gst_event_new_protection (const gchar * system_id,
-    GstBuffer * data, const gchar * origin);
+GstEvent *     gst_event_new_protection         (const gchar * system_id, GstBuffer * data, const gchar * origin);
 
-     void gst_event_parse_protection (GstEvent * event,
-    const gchar ** system_id, GstBuffer ** data, const gchar ** origin);
+void           gst_event_parse_protection       (GstEvent * event, const gchar ** system_id,
+                                                 GstBuffer ** data, const gchar ** origin);
 
 /* buffer */
 GstEvent *      gst_event_new_buffer_size       (GstFormat format, gint64 minsize, gint64 maxsize,
