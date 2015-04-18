@@ -358,8 +358,8 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
 
   /* The only thing that can change here is the width
    * and height, otherwise set_info would've been called */
-  if (cpad->conversion_info.width != width ||
-      cpad->conversion_info.height != height) {
+  if (GST_VIDEO_INFO_WIDTH (&cpad->conversion_info) != width ||
+      GST_VIDEO_INFO_HEIGHT (&cpad->conversion_info) != height) {
     gchar *colorimetry, *wanted_colorimetry;
     const gchar *chroma, *wanted_chroma;
 
@@ -413,8 +413,8 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
         return FALSE;
       }
     } else {
-      cpad->conversion_info.width = width;
-      cpad->conversion_info.height = height;
+      GST_VIDEO_INFO_WIDTH (&cpad->conversion_info) = width;
+      GST_VIDEO_INFO_HEIGHT (&cpad->conversion_info) = height;
     }
 
     g_free (colorimetry);
@@ -486,7 +486,7 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     converted_frame = g_slice_new0 (GstVideoFrame);
 
     /* We wait until here to set the conversion infos, in case vagg->info changed */
-    converted_size = cpad->conversion_info.size;
+    converted_size = GST_VIDEO_INFO_SIZE (&cpad->conversion_info);
     outsize = GST_VIDEO_INFO_SIZE (&vagg->info);
     converted_size = converted_size > outsize ? converted_size : outsize;
     converted_buf = gst_buffer_new_allocate (NULL, converted_size, &params);
