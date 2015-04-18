@@ -791,7 +791,9 @@ buffer_compare (GstBuffer * buf, const gchar * str, gsize size)
 
   fail_unless (gst_buffer_map (buf, &info, GST_MAP_READ));
   res = memcmp (info.data, str, size) == 0;
-  GST_DEBUG ("%s <-> %s: %d", (gchar *) info.data, str, res);
+  GST_MEMDUMP ("buffer  data", info.data, size);
+  GST_MEMDUMP ("compare data", (guint8 *) str, size);
+  GST_DEBUG ("buffers match: %s", res ? "yes" : "no");
   gst_buffer_unmap (buf, &info);
 
   return res;
