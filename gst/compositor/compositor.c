@@ -296,6 +296,17 @@ gst_compositor_pad_set_info (GstVideoAggregatorPad * pad,
   return TRUE;
 }
 
+/* Test whether rectangle2 contains rectangle 1 (geometrically) */
+static gboolean
+is_rectangle_contained (GstVideoRectangle rect1, GstVideoRectangle rect2)
+{
+  if ((rect2.x <= rect1.x) && (rect2.y <= rect1.y) &&
+      ((rect2.x + rect2.w) >= (rect1.x + rect1.w)) &&
+      ((rect2.y + rect2.h) >= (rect1.y + rect1.h)))
+    return TRUE;
+  return FALSE;
+}
+
 static gboolean
 gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     GstVideoAggregator * vagg)
@@ -307,6 +318,11 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
   GstVideoFrame *frame;
   static GstAllocationParams params = { 0, 15, 0, 0, };
   gint width, height;
+  gboolean frame_obscured = FALSE;
+  GList *l;
+  /* The rectangle representing this frame, clamped to the video's boundaries.
+   * Due to the clamping, this is different from the frame width/height above. */
+  GstVideoRectangle frame_rect;
 
   if (!pad->buffer)
     return TRUE;
@@ -319,6 +335,17 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     return FALSE;
   }
 
+  /* There's three types of width/height here:
+   * 1. GST_VIDEO_FRAME_WIDTH/HEIGHT:
+   *     The frame width/height (same as pad->buffer_vinfo.height/width;
+   *     see gst_video_frame_map())
+   * 2. cpad->width/height:
+   *     The optional pad property for scaling the frame (if zero, the video is
+   *     left unscaled)
+   * 3. conversion_info.width/height:
+   *     Equal to cpad->width/height if it's set, otherwise it's the frame
+   *     width/height. See ->set_info()
+   * */
   if (cpad->width > 0)
     width = cpad->width;
   else
@@ -394,6 +421,60 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     g_free (wanted_colorimetry);
   }
 
+  /* Clamp the x/y coordinates of this frame to the video boundaries to cover
+   * the case where (say, with negative xpos/ypos) the non-obscured portion of
+   * the frame could be outside the bounds of the video itself and hence not
+   * visible at all */
+  frame_rect.x = CLAMP (cpad->xpos, 0,
+      GST_VIDEO_INFO_WIDTH (&pad->buffer_vinfo));
+  frame_rect.y = CLAMP (cpad->ypos, 0,
+      GST_VIDEO_INFO_HEIGHT (&pad->buffer_vinfo));
+  /* Clamp the width/height to the frame boundaries as well */
+  frame_rect.w = MIN (GST_VIDEO_INFO_WIDTH (&cpad->conversion_info),
+      GST_VIDEO_INFO_WIDTH (&pad->buffer_vinfo) - cpad->xpos);
+  frame_rect.h = MIN (GST_VIDEO_INFO_HEIGHT (&cpad->conversion_info),
+      GST_VIDEO_INFO_HEIGHT (&pad->buffer_vinfo) - cpad->ypos);
+
+  GST_OBJECT_LOCK (vagg);
+  /* Check if this frame is obscured by a higher-zorder frame
+   * TODO: Also skip a frame if it's obscured by a combination of
+   * higher-zorder frames */
+  for (l = g_list_find (GST_ELEMENT (vagg)->sinkpads, pad)->next; l;
+      l = l->next) {
+    GstVideoRectangle frame2_rect;
+    GstVideoAggregatorPad *pad2 = l->data;
+    GstCompositorPad *cpad2 = GST_COMPOSITOR_PAD (pad2);
+
+    /* We don't need to clamp the coords of the second rectangle */
+    frame2_rect.x = cpad2->xpos;
+    frame2_rect.y = cpad2->ypos;
+    /* This is effectively what set_info and the above conversion
+     * code do to calculate the desired width/height */
+    frame2_rect.w = cpad2->width ? cpad2->width :
+        GST_VIDEO_INFO_WIDTH (&cpad2->conversion_info);
+    frame2_rect.h = cpad2->height ? cpad2->height :
+        GST_VIDEO_INFO_HEIGHT (&cpad2->conversion_info);
+
+    /* Check if there's a buffer to be aggregated, ensure it can't have an alpha
+     * channel, then check opacity and frame boundaries */
+    if (pad2->buffer && cpad2->alpha == 1.0 &&
+        !GST_VIDEO_INFO_HAS_ALPHA (&pad2->info) &&
+        is_rectangle_contained (frame_rect, frame2_rect)) {
+      frame_obscured = TRUE;
+      GST_DEBUG_OBJECT (pad, "Obscured by %s, skipping frame",
+          GST_PAD_NAME (pad2));
+      break;
+    }
+  }
+  GST_OBJECT_UNLOCK (vagg);
+
+  if (frame_obscured) {
+    converted_frame = NULL;
+    gst_video_frame_unmap (frame);
+    g_slice_free (GstVideoFrame, frame);
+    goto done;
+  }
+
   if (cpad->alpha == 0.0) {
     GST_DEBUG_OBJECT (vagg, "Pad has alpha 0.0, not converting frame");
     converted_frame = NULL;
@@ -428,6 +509,7 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     converted_frame = frame;
   }
 
+done:
   pad->aggregated_frame = converted_frame;
 
   return TRUE;
@@ -808,6 +890,8 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   outframe = &out_frame;
   /* default to blending */
   composite = self->blend;
+  /* TODO: If the frames to be composited completely obscure the background,
+   * don't bother drawing the background at all. */
   switch (self->background) {
     case COMPOSITOR_BACKGROUND_CHECKER:
       self->fill_checker (outframe);
