@@ -44,7 +44,7 @@ class Xvfb(VirtualFrameBufferServer):
         self.display_id = ":27"
         self._process = None
         self._logsfile = None
-        self._command = "Xvfb %s -screen 0 1024x768x24" % self.display_id
+        self._command = "Xvfb %s -screen 0 1920x1080x24" % self.display_id
 
     def _check_is_up(self, timeout=60):
         """ Check if the xvfb is up, running a simple test based on wget. """
