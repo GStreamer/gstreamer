@@ -319,9 +319,8 @@ error_get_meta:
   }
 error_commit_buffer:
   {
-    if (ret != GST_FLOW_FLUSHING)
-      GST_ERROR ("video sink rejected the video buffer (error: %s [%d])",
-          gst_flow_get_name (ret), ret);
+    GST_INFO_OBJECT (decode, "downstream element rejected the frame (%s [%d])",
+        gst_flow_get_name (ret), ret);
     gst_video_codec_frame_unref (out_frame);
     return ret;
   }
@@ -407,10 +406,7 @@ gst_vaapidecode_handle_frame (GstVideoDecoder * vdec,
   /* Note that gst_vaapi_decoder_decode cannot return success without
      completing the decode and pushing all decoded frames into the output
      queue */
-  ret = gst_vaapidecode_push_all_decoded_frames (decode);
-  if (ret != GST_FLOW_OK && ret != GST_FLOW_FLUSHING)
-    GST_ERROR ("push loop error after decoding %d", ret);
-  return ret;
+  return gst_vaapidecode_push_all_decoded_frames (decode);
 
   /* ERRORS */
 error_push_all_decoded_frames:
