@@ -464,7 +464,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
           gdouble max_frame_rate;
 
           [[rate valueForKey:@"maxFrameRate"] getValue:&max_frame_rate];
-          if (abs (framerate - max_frame_rate) < 0.00001) {
+          if (fabs (framerate - max_frame_rate) < 0.00001) {
             NSValue *min_frame_duration, *max_frame_duration;
 
             found_framerate = TRUE;
