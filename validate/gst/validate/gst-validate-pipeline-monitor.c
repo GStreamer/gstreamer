@@ -47,29 +47,9 @@ G_DEFINE_TYPE (GstValidatePipelineMonitor, gst_validate_pipeline_monitor,
     GST_TYPE_VALIDATE_BIN_MONITOR);
 
 static void
-gst_validate_pipeline_monitor_dispose (GObject * object)
-{
-  GstValidatePipelineMonitor *monitor =
-      GST_VALIDATE_PIPELINE_MONITOR_CAST (object);
-
-  if (monitor->print_pos_srcid) {
-    if (g_source_remove (monitor->print_pos_srcid))
-      monitor->print_pos_srcid = 0;
-  }
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-
-static void
 gst_validate_pipeline_monitor_class_init (GstValidatePipelineMonitorClass *
     klass)
 {
-  GObjectClass *gobject_class;
-
-  gobject_class = G_OBJECT_CLASS (klass);
-
-  gobject_class->dispose = gst_validate_pipeline_monitor_dispose;
 }
 
 static void
@@ -143,6 +123,28 @@ _bus_handler (GstBus * bus, GstMessage * message,
       g_error_free (err);
       g_free (debug);
       break;
+    case GST_MESSAGE_STATE_CHANGED:
+    {
+      if (GST_MESSAGE_SRC (message) == GST_VALIDATE_MONITOR (monitor)->target) {
+        GstState oldstate, newstate, pending;
+
+        gst_message_parse_state_changed (message, &oldstate, &newstate,
+            &pending);
+
+        if (oldstate == GST_STATE_READY && newstate == GST_STATE_PAUSED) {
+          monitor->print_pos_srcid =
+              g_timeout_add (PRINT_POSITION_TIMEOUT,
+              (GSourceFunc) print_position, monitor);
+        } else if (oldstate == GST_STATE_PAUSED && newstate == GST_STATE_READY) {
+          if (monitor->print_pos_srcid
+              && g_source_remove (monitor->print_pos_srcid))
+            monitor->print_pos_srcid = 0;
+
+        }
+      }
+
+      break;
+    }
     case GST_MESSAGE_BUFFERING:
     {
       GstBufferingMode mode;
@@ -224,11 +226,6 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
 
   gst_validate_pipeline_monitor_create_scenarios (GST_VALIDATE_BIN_MONITOR
       (monitor));
-
-
-  monitor->print_pos_srcid =
-      g_timeout_add (PRINT_POSITION_TIMEOUT, (GSourceFunc) print_position,
-      monitor);
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   gst_bus_enable_sync_message_emission (bus);
