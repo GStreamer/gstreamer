@@ -2091,7 +2091,7 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
     lfilename =
         g_strdup_printf ("%s" GST_VALIDATE_SCENARIO_SUFFIX, scenarios[i]);
 
-    tldir = g_build_filename ("data/", lfilename, NULL);
+    tldir = g_build_filename ("data", "scenarios", lfilename, NULL);
 
     if ((ret = _load_scenario_file (scenario, tldir, &is_config)))
       goto check_scenario;
@@ -2566,7 +2566,7 @@ gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
   }
 
   /* Hack to make it work uninstalled */
-  dir = g_file_new_for_path ("data/");
+  dir = g_file_new_for_path ("data/scenarios");
   _list_scenarios_in_dir (dir, kf);
   g_object_unref (dir);
 

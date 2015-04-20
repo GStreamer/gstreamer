@@ -289,6 +289,7 @@ Makefile
 common/Makefile
 common/m4/Makefile
 data/Makefile
+data/scenarios/Makefile
 gst/Makefile
 gst/validate/Makefile
 gst/preload/Makefile
