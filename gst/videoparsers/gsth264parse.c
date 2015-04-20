@@ -2237,11 +2237,6 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     h264parse->packetized = FALSE;
     /* we have 4 sync bytes */
     h264parse->nal_length_size = 4;
-
-    if (format == GST_H264_PARSE_FORMAT_NONE) {
-      format = GST_H264_PARSE_FORMAT_BYTE;
-      align = GST_H264_PARSE_ALIGN_AU;
-    }
   } else {
     /* probably AVC3 without codec_data field, anything to do here? */
   }
