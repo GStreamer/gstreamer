@@ -498,8 +498,12 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         copy_data.offset = offset;
         copy_data.size = size;
 
-        info->transform_func (dest, meta, src,
-            _gst_meta_transform_copy, &copy_data);
+        if (!info->transform_func (dest, meta, src,
+                _gst_meta_transform_copy, &copy_data)) {
+          GST_CAT_ERROR (GST_CAT_BUFFER,
+              "failed to copy meta %p of API type %s", meta,
+              g_type_name (info->api));
+        }
       }
     }
   }
