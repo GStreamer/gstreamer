@@ -631,21 +631,37 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
 }
 
 static void
+gst_vaapidecode_purge (GstVaapiDecode * decode)
+{
+  GstVaapiDecoderStatus status;
+
+  if (!decode->decoder)
+    return;
+
+  status = gst_vaapi_decoder_flush (decode->decoder);
+  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+    GST_INFO_OBJECT (decode, "decoder flush failed");
+
+  /* Purge all decoded frames as we don't need them (e.g. flush and close)
+   * Releasing the frames is important, otherwise the frames are not
+   * freed. */
+  do {
+    GstVideoCodecFrame *frame = NULL;
+
+    status =
+      gst_vaapi_decoder_get_frame_with_timeout (decode->decoder, &frame, 0);
+    if (frame) {
+      gst_video_decoder_release_frame (GST_VIDEO_DECODER (decode), frame);
+      gst_video_codec_frame_unref (frame);
+    }
+  } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
+}
+
+static void
 gst_vaapidecode_destroy (GstVaapiDecode * decode)
 {
-  GstVideoCodecFrame *out_frame = NULL;
+  gst_vaapidecode_purge (decode);
 
-  if (decode->decoder) {
-    gst_vaapi_decoder_flush (decode->decoder);
-
-    /* Purge all decoded frames as we don't need them (e.g. seek) */
-    while (gst_vaapi_decoder_get_frame_with_timeout (decode->decoder,
-            &out_frame, 0) == GST_VAAPI_DECODER_STATUS_SUCCESS) {
-      gst_video_decoder_release_frame (GST_VIDEO_DECODER (decode), out_frame);
-      gst_video_codec_frame_unref (out_frame);
-      out_frame = NULL;
-    }
-  }
   gst_vaapi_decoder_replace (&decode->decoder, NULL);
   gst_caps_replace (&decode->decoder_caps, NULL);
 
