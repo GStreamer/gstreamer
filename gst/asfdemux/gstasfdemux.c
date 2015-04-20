@@ -592,7 +592,7 @@ gst_asf_demux_handle_seek_push (GstASFDemux * demux, GstEvent * event)
 
   GST_DEBUG_OBJECT (demux, "seeking to packet %d", packet);
 
-  cur = demux->data_offset + (packet * demux->packet_size);
+  cur = demux->data_offset + ((guint64) packet * demux->packet_size);
 
   GST_DEBUG_OBJECT (demux, "Pushing BYTE seek rate %g, "
       "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT, rate, cur, stop);
