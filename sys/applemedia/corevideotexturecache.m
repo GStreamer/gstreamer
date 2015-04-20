@@ -84,7 +84,7 @@ gst_core_video_texture_cache_free (GstCoreVideoTextureCache * cache)
 
 void
 gst_core_video_texture_cache_set_format (GstCoreVideoTextureCache * cache,
-    const gchar * input_format, GstCaps * out_caps)
+    GstVideoFormat in_format, GstCaps * out_caps)
 {
   GstCaps *in_caps;
   GstCapsFeatures *features;
@@ -97,7 +97,8 @@ gst_core_video_texture_cache_set_format (GstCoreVideoTextureCache * cache,
   gst_video_info_from_caps (&cache->output_info, out_caps); 
   
   in_caps = gst_caps_copy (out_caps);
-  gst_caps_set_simple (in_caps, "format", G_TYPE_STRING, input_format, NULL);
+  gst_caps_set_simple (in_caps, "format",
+          G_TYPE_STRING, gst_video_format_to_string (in_format), NULL);
   features = gst_caps_get_features (in_caps, 0);
   gst_caps_features_add (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   gst_video_info_from_caps (&cache->input_info, in_caps);
@@ -127,6 +128,7 @@ static gboolean
 gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
         GstBuffer * buffer, GstMemory **mem1, GstMemory **mem2)
 {
+  gboolean ret = TRUE;
 #if !HAVE_IOS
   CVOpenGLTextureRef texture = NULL;
 #else
@@ -139,49 +141,78 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
 
 #if !HAVE_IOS
   CVOpenGLTextureCacheFlush (cache->cache, 0);
-
-  if (CVOpenGLTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
-      cache->cache, pixel_buf, NULL, &texture) != kCVReturnSuccess)
-    goto error;
-
-  *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
-      CVOpenGLTextureGetName (texture), CVOpenGLTextureGetTarget (texture),
-      &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
 #else
   CVOpenGLESTextureCacheFlush (cache->cache, 0);
-
-  if (CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
-      cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, GL_LUMINANCE,
-      GST_VIDEO_INFO_WIDTH (&cache->input_info),
-      GST_VIDEO_INFO_HEIGHT (&cache->input_info),
-      GL_LUMINANCE, GL_UNSIGNED_BYTE, 0, &texture) != kCVReturnSuccess)
-    goto error;
-
-  *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
-      CVOpenGLESTextureGetName (texture), CVOpenGLESTextureGetTarget (texture),
-      &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
-
-  if (CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
-      cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, GL_LUMINANCE_ALPHA,
-      GST_VIDEO_INFO_WIDTH (&cache->input_info) / 2,
-      GST_VIDEO_INFO_HEIGHT (&cache->input_info) / 2,
-      GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, 1, &texture) != kCVReturnSuccess)
-    goto error;
-
-  *mem2 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
-      CVOpenGLESTextureGetName (texture), CVOpenGLESTextureGetTarget (texture),
-      &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
 #endif
 
-  return TRUE;
+  switch (GST_VIDEO_INFO_FORMAT (&cache->input_info)) {
+#if !HAVE_IOS
+      case GST_VIDEO_FORMAT_UYVY:
+        /* both avfvideosrc and vtdec on OSX when doing GLMemory negotiate UYVY
+         * under the hood, which means a single output texture. */
+        if (CVOpenGLTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
+              cache->cache, pixel_buf, NULL, &texture) != kCVReturnSuccess)
+          goto error;
+
+        *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
+            CVOpenGLTextureGetName (texture), CVOpenGLTextureGetTarget (texture),
+            &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
+        break;
+#else
+      case GST_VIDEO_FORMAT_BGRA:
+        /* avfvideosrc does BGRA on iOS when doing GLMemory */
+        if (CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
+              cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, GL_RGBA,
+              GST_VIDEO_INFO_WIDTH (&cache->input_info),
+              GST_VIDEO_INFO_HEIGHT (&cache->input_info),
+              GL_RGBA, GL_UNSIGNED_BYTE, 0, &texture) != kCVReturnSuccess)
+          goto error;
+
+        *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
+            CVOpenGLESTextureGetName (texture), CVOpenGLESTextureGetTarget (texture),
+            &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
+        break;
+      case GST_VIDEO_FORMAT_NV12:
+        /* vtdec does NV12 on iOS when doing GLMemory */
+        if (CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
+              cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, GL_LUMINANCE,
+              GST_VIDEO_INFO_WIDTH (&cache->input_info),
+              GST_VIDEO_INFO_HEIGHT (&cache->input_info),
+              GL_LUMINANCE, GL_UNSIGNED_BYTE, 0, &texture) != kCVReturnSuccess)
+          goto error;
+
+        *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
+            CVOpenGLESTextureGetName (texture), CVOpenGLESTextureGetTarget (texture),
+            &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
+
+        if (CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
+              cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, GL_LUMINANCE_ALPHA,
+              GST_VIDEO_INFO_WIDTH (&cache->input_info) / 2,
+              GST_VIDEO_INFO_HEIGHT (&cache->input_info) / 2,
+              GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, 1, &texture) != kCVReturnSuccess)
+          goto error;
+
+        *mem2 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
+            CVOpenGLESTextureGetName (texture), CVOpenGLESTextureGetTarget (texture),
+            &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
+        break;
+#endif
+      default:
+        g_warn_if_reached ();
+        ret = FALSE;
+    }
+
+  return ret;
 
 error:
+  ret = FALSE;
+
   if (*mem1)
       gst_memory_unref (*mem1);
   if (*mem2)
       gst_memory_unref (*mem2);
 
-  return FALSE;
+  return ret;
 }
 
 static void

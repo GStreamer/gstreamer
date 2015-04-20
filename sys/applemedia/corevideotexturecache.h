@@ -42,7 +42,7 @@ typedef struct _GstCoreVideoTextureCache
 GstCoreVideoTextureCache *gst_core_video_texture_cache_new (GstGLContext * ctx);
 void gst_core_video_texture_cache_free (GstCoreVideoTextureCache * cache);
 void gst_core_video_texture_cache_set_format (GstCoreVideoTextureCache * cache,
-    const gchar * input_format, GstCaps * out_caps);
+    GstVideoFormat in_format, GstCaps * out_caps);
 gboolean gst_core_video_texture_cache_upload (GstVideoGLTextureUploadMeta * meta, guint texture_id[4]);
 GstBuffer * gst_core_video_texture_cache_get_gl_buffer (GstCoreVideoTextureCache * cache,
         GstBuffer * cv_buffer);

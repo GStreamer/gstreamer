@@ -313,7 +313,6 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   vtdec->format_description = format_description;
 
   output_format = gst_vtdec_negotiate_output_format (vtdec);
-
   if (!gst_vtdec_create_session (vtdec, output_format))
     return FALSE;
 
@@ -710,10 +709,17 @@ gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
   if (gst_pad_check_reconfigure (decoder->srcpad)) {
     gst_video_decoder_negotiate (decoder);
     if (vtdec->texture_cache) {
+      GstVideoFormat internal_format;
       GstVideoCodecState *output_state =
           gst_video_decoder_get_output_state (decoder);
+
+#ifdef HAVE_IOS
+      internal_format = GST_VIDEO_FORMAT_NV12;
+#else
+      internal_format = GST_VIDEO_FORMAT_UYVY;
+#endif
       gst_core_video_texture_cache_set_format (vtdec->texture_cache,
-          GST_VTDEC_VIDEO_FORMAT_STR, output_state->caps);
+          internal_format, output_state->caps);
       gst_video_codec_state_unref (output_state);
     }
   }

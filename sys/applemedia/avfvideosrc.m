@@ -93,6 +93,7 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
   BOOL stopRequest;
 
   GstCaps *caps;
+  GstVideoFormat internalFormat;
   GstVideoFormat format;
   gint width, height;
   GstClockTime latency;
@@ -625,6 +626,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   width = info.width;
   height = info.height;
   format = info.finfo->format;
+  internalFormat = GST_VIDEO_FORMAT_UNKNOWN;
   latency = gst_util_uint64_scale (GST_SECOND, info.fps_d, info.fps_n);
 
   dispatch_sync (mainQueue, ^{
@@ -664,22 +666,28 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       }
     }
 
+    internalFormat = format;
     switch (format) {
       case GST_VIDEO_FORMAT_NV12:
         newformat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
         break;
       case GST_VIDEO_FORMAT_UYVY:
-         newformat = kCVPixelFormatType_422YpCbCr8;
+        newformat = kCVPixelFormatType_422YpCbCr8;
         break;
       case GST_VIDEO_FORMAT_YUY2:
-         newformat = kCVPixelFormatType_422YpCbCr8_yuvs;
+        newformat = kCVPixelFormatType_422YpCbCr8_yuvs;
         break;
       case GST_VIDEO_FORMAT_RGBA:
-        /* In order to do RGBA, we negotiate BGRA (since RGBA is not supported
-         * if not in textures) and then we get RGBA textures via
-         * CVOpenGL*TextureCacheCreateTextureFromImage. Computers. */
+#if !HAVE_IOS
+        newformat = kCVPixelFormatType_422YpCbCr8;
+        internalFormat = GST_VIDEO_FORMAT_UYVY;
+#else
+        newformat = kCVPixelFormatType_32BGRA;
+        internalFormat = GST_VIDEO_FORMAT_BGRA;
+#endif
+        break;
       case GST_VIDEO_FORMAT_BGRA:
-         newformat = kCVPixelFormatType_32BGRA;
+        newformat = kCVPixelFormatType_32BGRA;
         break;
       default:
         *successPtr = NO;
@@ -688,10 +696,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         return;
     }
 
-    GST_DEBUG_OBJECT(element,
-       "Width: %d Height: %d Format: %" GST_FOURCC_FORMAT,
-       width, height,
-       GST_FOURCC_ARGS (gst_video_format_to_fourcc (format)));
+    GST_INFO_OBJECT(element,
+        "width: %d height: %d format: %s internalFormat: %s", width, height,
+        gst_video_format_to_string (format),
+        gst_video_format_to_string (internalFormat));
 
     output.videoSettings = [NSDictionary
         dictionaryWithObject:[NSNumber numberWithInt:newformat]
@@ -790,10 +798,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     gst_query_unref (query);
 
     if (glContext) {
-      GST_INFO_OBJECT (element, "pushing textures. GL context %p", glContext);
+      GST_INFO_OBJECT (element, "pushing textures. Internal format %s, context %p",
+          gst_video_format_to_string (internalFormat), glContext);
       textureCache = gst_core_video_texture_cache_new (glContext);
-      gst_core_video_texture_cache_set_format (textureCache,
-          "NV12", caps);
+      gst_core_video_texture_cache_set_format (textureCache, internalFormat, caps);
       gst_object_unref (glContext);
     } else {
       GST_WARNING_OBJECT (element, "got memory:GLMemory caps but not GL context from downstream element");
