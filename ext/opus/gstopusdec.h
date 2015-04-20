@@ -71,6 +71,8 @@ struct _GstOpusDec {
   gboolean use_inband_fec;
   GstBuffer *last_buffer;
   gboolean primed;
+
+  guint64 leftover_plc_duration;
 };
 
 struct _GstOpusDecClass {
