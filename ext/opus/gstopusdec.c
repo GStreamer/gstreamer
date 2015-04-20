@@ -157,6 +157,7 @@ gst_opus_dec_reset (GstOpusDec * dec)
   dec->r128_gain = 0;
   dec->sample_rate = 0;
   dec->n_channels = 0;
+  dec->leftover_plc_duration = 0;
 }
 
 static void
@@ -446,9 +447,53 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     size = 0;
   }
 
-  /* use maximum size (120 ms) as the number of returned samples is
-     not constant over the stream. */
-  samples = 120 * dec->sample_rate / 1000;
+  if (gst_buffer_get_size (buffer) == 0) {
+    GstClockTime const opus_plc_alignment = 2500 * GST_USECOND;
+    GstClockTime aligned_missing_duration;
+    GstClockTime missing_duration = GST_BUFFER_DURATION (buffer);
+
+    GST_DEBUG_OBJECT (dec,
+        "missing buffer, doing PLC duration %" GST_TIME_FORMAT
+        " plus leftover %" GST_TIME_FORMAT, GST_TIME_ARGS (missing_duration),
+        GST_TIME_ARGS (dec->leftover_plc_duration));
+
+    /* add the leftover PLC duration to that of the buffer */
+    missing_duration += dec->leftover_plc_duration;
+
+    /* align the combined buffer and leftover PLC duration to multiples
+     * of 2.5ms, always rounding down, and store excess duration for later */
+    aligned_missing_duration =
+        (missing_duration / opus_plc_alignment) * opus_plc_alignment;
+    dec->leftover_plc_duration = missing_duration - aligned_missing_duration;
+
+    /* Opus' PLC cannot operate with less than 2.5ms; skip PLC
+     * and accumulate the missing duration in the leftover_plc_duration
+     * for the next PLC attempt */
+    if (aligned_missing_duration < opus_plc_alignment) {
+      GST_DEBUG_OBJECT (dec,
+          "current duration %" GST_TIME_FORMAT
+          " of missing data not enough for PLC (minimum needed: %"
+          GST_TIME_FORMAT ") - skipping", GST_TIME_ARGS (missing_duration),
+          GST_TIME_ARGS (opus_plc_alignment));
+      goto done;
+    }
+
+    /* convert the duration (in nanoseconds) to sample count */
+    samples =
+        gst_util_uint64_scale_int (aligned_missing_duration, dec->sample_rate,
+        GST_SECOND);
+
+    GST_DEBUG_OBJECT (dec,
+        "calculated PLC frame length: %" GST_TIME_FORMAT
+        " num frame samples: %d new leftover: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (aligned_missing_duration), samples,
+        GST_TIME_ARGS (dec->leftover_plc_duration));
+  } else {
+    /* use maximum size (120 ms) as the number of returned samples is
+       not constant over the stream. */
+    samples = 120 * dec->sample_rate / 1000;
+  }
+
   packet_size = samples * dec->n_channels * 2;
 
   outbuf =
@@ -462,7 +507,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   out_data = (gint16 *) omap.data;
 
   if (dec->use_inband_fec) {
-    if (dec->last_buffer) {
+    if (gst_buffer_get_size (dec->last_buffer) > 0) {
       /* normal delayed decode */
       GST_LOG_OBJECT (dec, "FEC enabled, decoding last delayed buffer");
       n = opus_multistream_decode (dec->state, data, size, out_data, samples,
