@@ -53,6 +53,7 @@ struct _GstAmcCodecType {
 struct _GstAmcCodecInfo {
   gchar *name;
   gboolean is_encoder;
+  gboolean gl_output_only;
   GstAmcCodecType *supported_types;
   gint n_supported_types;
 };

@@ -230,7 +230,11 @@ gst_amc_video_dec_base_init (gpointer g_class)
       gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
       (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "RGBA"));
 
-  gst_caps_append (all_src_caps, src_caps);
+  if (codec_info->gl_output_only) {
+    gst_caps_unref (src_caps);
+  } else {
+    gst_caps_append (all_src_caps, src_caps);
+  }
 
   /* Add pad templates */
   templ =
@@ -1224,6 +1228,7 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state)
 {
   GstAmcVideoDec *self;
+  GstAmcVideoDecClass *klass;
   GstAmcFormat *format;
   const gchar *mime;
   gboolean is_format_change = FALSE;
@@ -1235,6 +1240,7 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
   jobject jsurface = NULL;
 
   self = GST_AMC_VIDEO_DEC (decoder);
+  klass = GST_AMC_VIDEO_DEC_GET_CLASS (self);
 
   GST_DEBUG_OBJECT (self, "Setting new caps %" GST_PTR_FORMAT, state->caps);
 
@@ -1413,6 +1419,12 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
 
   GST_INFO_OBJECT (self, "GL output: %s",
       self->downstream_supports_gl ? "enabled" : "disabled");
+
+  if (klass->codec_info->gl_output_only && !self->downstream_supports_gl) {
+    GST_ERROR_OBJECT (self,
+        "Codec only supports GL output but downstream does not");
+    return FALSE;
+  }
 
   if (self->downstream_supports_gl && self->surface) {
     jsurface = self->surface->jobject;

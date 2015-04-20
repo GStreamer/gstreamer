@@ -1567,6 +1567,7 @@ scan_codecs (GstPlugin * plugin)
       goto next_codec;
     }
     gst_codec_info->is_encoder = is_encoder;
+    gst_codec_info->gl_output_only = FALSE;
 
     supported_types =
         (*env)->CallObjectMethod (env, codec_info, get_supported_types_id);
@@ -1710,12 +1711,13 @@ scan_codecs (GstPlugin * plugin)
           goto next_supported_type;
         }
 
-        if (!ignore_unknown_color_formats
-            && !accepted_color_formats (gst_codec_type, is_encoder)) {
-          GST_ERROR ("%s %s has unknown color formats, ignoring",
-              gst_codec_type->mime, is_encoder ? "encoder" : "decoder");
-          valid_codec = FALSE;
-          goto next_supported_type;
+        if (!accepted_color_formats (gst_codec_type, is_encoder)) {
+          if (!ignore_unknown_color_formats) {
+            gst_codec_info->gl_output_only = TRUE;
+            GST_WARNING
+                ("%s %s has unknown color formats, only direct rendering will be supported",
+                gst_codec_type->mime, is_encoder ? "encoder" : "decoder");
+          }
         }
       }
 
