@@ -291,7 +291,7 @@ class Test(Loggable):
             self.queue.put(None)
 
     def get_valgrind_suppressions(self):
-        return None
+        return [self.get_valgrind_suppression_file('data', 'gstvalidate.supp')]
 
     def use_valgrind(self):
         vglogsfile = self.logfile + '.valgrind'
@@ -307,9 +307,8 @@ class Test(Loggable):
             ('error-exitcode', str(VALGRIND_ERROR_CODE)),
         ]
 
-        supps = self.get_valgrind_suppressions()
-        if supps:
-            vg_args.append(('suppressions', supps))
+        for supp in self.get_valgrind_suppressions():
+            vg_args.append(('suppressions', supp))
 
         self.command = "valgrind %s %s" % (' '.join(map(lambda x: '--%s=%s' % (x[0], x[1]), vg_args)),
                                            self.command)
@@ -619,21 +618,23 @@ class GstValidateTest(Test):
 
         return position
 
-    def get_valgrind_suppressions(self):
+    def get_valgrind_suppression_file(self, subdir, name):
         # Are we running from sources?
         root_dir = os.path.abspath(os.path.dirname(os.path.join(os.path.dirname(os.path.abspath(__file__)))))
-        p = os.path.join(root_dir, 'common', 'gst.supp')
+        p = os.path.join(root_dir, subdir, name)
         if os.path.exists(p):
             return p
 
         # Look in system data dirs
-        p = os.path.join(config.DATADIR, 'gstreamer-1.0', 'validate', 'gst.supp')
+        p = os.path.join(config.DATADIR, 'gstreamer-1.0', 'validate', name)
         if os.path.exists(p):
             return p
 
-        self.error("Could not find any gst.sup file")
+        self.error("Could not find any %s file" % name)
 
-        return None
+    def get_valgrind_suppressions(self):
+        result = super(GstValidateTest, self).get_valgrind_suppressions()
+        return result + [self.get_valgrind_suppression_file('common', 'gst.supp')]
 
 
 class GstValidateEncodingTestInterface(object):

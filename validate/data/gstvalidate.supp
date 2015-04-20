@@ -1,0 +1,34 @@
+### This file contains either validate specific suppressions or bugs that we
+### can't easily address because they are lower in the stack.
+### All the other suppressions should be added ton common/gst.supp
+
+{
+   Leak in mesa fixed with http://lists.freedesktop.org/archives/mesa-dev/2015-April/082101.html
+   Memcheck:Leak
+   fun:malloc
+   fun:read_packet
+   fun:_xcb_in_read
+   fun:_xcb_conn_wait
+   fun:wait_for_reply
+   fun:xcb_wait_for_reply
+   fun:dri3_open
+   fun:dri3_create_screen
+   fun:AllocAndFetchScreenConfigs
+   fun:__glXInitialize
+   fun:glXQueryVersion
+}
+
+{
+   Leak in mesa fixed with http://lists.freedesktop.org/archives/mesa-dev/2015-April/082100.html
+   Memcheck:Leak
+   fun:malloc
+   fun:realloc
+   fun:udev_list_entry_add
+   fun:udev_enumerate_add_match_subsystem
+   fun:get_render_node_from_id_path_tag
+   fun:loader_get_user_preferred_fd
+   fun:dri3_create_screen
+   fun:AllocAndFetchScreenConfigs
+   fun:__glXInitialize
+   fun:glXQueryVersion
+}
