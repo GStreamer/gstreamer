@@ -669,13 +669,15 @@ sp_client_recv (ShmPipe * self, char **buf)
       assert (cb.payload.new_shm_area.path_size > 0);
       assert (cb.payload.new_shm_area.size > 0);
 
-      area_name = malloc (cb.payload.new_shm_area.path_size);
+      area_name = malloc (cb.payload.new_shm_area.path_size + 1);
       retval = recv (self->main_socket, area_name,
           cb.payload.new_shm_area.path_size, 0);
       if (retval != cb.payload.new_shm_area.path_size) {
         free (area_name);
         return -3;
       }
+      /* Ensure area_name is NULL terminated */
+      area_name[retval] = 0;
 
       newarea = sp_open_shm (area_name, cb.area_id, 0,
           cb.payload.new_shm_area.size);
