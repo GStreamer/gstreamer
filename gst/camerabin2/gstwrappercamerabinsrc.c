@@ -269,9 +269,14 @@ gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstPadProbeInfo * info,
     gst_sample_unref (sample);
 
     if (self->image_capture_count == 0) {
+      GstCaps *anycaps = gst_caps_new_any ();
+
       /* Get back to viewfinder */
+      gst_wrapper_camera_bin_reset_video_src_caps (self, anycaps);
       gst_wrapper_camera_bin_src_set_output (self, self->imgsrc, self->vfsrc);
       gst_base_camera_src_finish_capture (camerasrc);
+
+      gst_caps_unref (anycaps);
     }
   }
   g_mutex_unlock (&camerasrc->capturing_mutex);
