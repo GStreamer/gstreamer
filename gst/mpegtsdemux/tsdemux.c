@@ -1993,7 +1993,7 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
       demux->segment = base->segment;
     } else {
       /* Start from the first ts/pts */
-      GstClockTime base = base = demux->segment.position - demux->segment.start;
+      GstClockTime base = demux->segment.position - demux->segment.start;
       gst_segment_init (&demux->segment, GST_FORMAT_TIME);
       demux->segment.start = firstts;
       demux->segment.stop = GST_CLOCK_TIME_NONE;
