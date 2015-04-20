@@ -502,7 +502,8 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstIdentity *identity = GST_IDENTITY (trans);
-  GstClockTime runtimestamp = G_GINT64_CONSTANT (0);
+  GstClockTime rundts = GST_CLOCK_TIME_NONE;
+  GstClockTime runpts = GST_CLOCK_TIME_NONE;
   GstClockTime ts, duration;
   gsize size;
 
@@ -553,9 +554,12 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   if (identity->signal_handoffs)
     g_signal_emit (identity, gst_identity_signals[SIGNAL_HANDOFF], 0, buf);
 
-  if (trans->segment.format == GST_FORMAT_TIME)
-    runtimestamp = gst_segment_to_running_time (&trans->segment,
-        GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf));
+  if (trans->segment.format == GST_FORMAT_TIME) {
+    rundts = gst_segment_to_running_time (&trans->segment,
+        GST_FORMAT_TIME, GST_BUFFER_DTS (buf));
+    runpts = gst_segment_to_running_time (&trans->segment,
+        GST_FORMAT_TIME, GST_BUFFER_PTS (buf));
+  }
 
   if ((identity->sync) && (trans->segment.format == GST_FORMAT_TIME)) {
     GstClock *clock;
@@ -565,7 +569,12 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       GstClockReturn cret;
       GstClockTime timestamp;
 
-      timestamp = runtimestamp + GST_ELEMENT (identity)->base_time;
+      if (GST_CLOCK_TIME_IS_VALID (rundts))
+        timestamp = rundts + GST_ELEMENT (identity)->base_time;
+      else if (GST_CLOCK_TIME_IS_VALID (runpts))
+        timestamp = runpts + GST_ELEMENT (identity)->base_time;
+      else
+        timestamp = 0;
 
       /* save id if we need to unlock */
       identity->clock_id = gst_clock_new_single_shot_id (clock, timestamp);
@@ -591,7 +600,8 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   if (identity->single_segment && (trans->segment.format == GST_FORMAT_TIME)
       && (ret == GST_FLOW_OK)) {
-    GST_BUFFER_PTS (buf) = GST_BUFFER_DTS (buf) = runtimestamp;
+    GST_BUFFER_DTS (buf) = rundts;
+    GST_BUFFER_PTS (buf) = runpts;
     GST_BUFFER_OFFSET (buf) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_OFFSET_END (buf) = GST_CLOCK_TIME_NONE;
   }
