@@ -857,13 +857,20 @@ static void update_annotation_data(RASPIVID_STATE *state)
             config->intraperiod,
             raspicli_unmap_xref(config->profile, profile_map, profile_map_size));
 
-      raspicamcontrol_set_annotate(state->camera_component, config->camera_parameters.enable_annotate, text);
+      raspicamcontrol_set_annotate(state->camera_component, config->camera_parameters.enable_annotate, text,
+                       config->camera_parameters.annotate_text_size,
+                       config->camera_parameters.annotate_text_colour,
+                       config->camera_parameters.annotate_bg_colour);
 
       free(text);
    }
    else
    {
-      raspicamcontrol_set_annotate(state->camera_component, config->camera_parameters.enable_annotate, config->camera_parameters.annotate_string);
+      raspicamcontrol_set_annotate(state->camera_component, config->camera_parameters.enable_annotate,
+                       config->camera_parameters.annotate_string,
+                       config->camera_parameters.annotate_text_size,
+                       config->camera_parameters.annotate_text_colour,
+                       config->camera_parameters.annotate_bg_colour);
    }
 }
 
