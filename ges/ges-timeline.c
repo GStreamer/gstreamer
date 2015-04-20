@@ -3308,6 +3308,20 @@ ges_timeline_get_element (GESTimeline * timeline, const gchar * name)
   if (ret)
     return gst_object_ref (ret);
 
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    GList *element_names, *tmp;
+    element_names = g_hash_table_get_keys (timeline->priv->all_elements);
+
+    GST_INFO_OBJECT (timeline, "Does not contain element %s", name);
+
+    for (tmp = element_names; tmp; tmp = tmp->next) {
+      GST_DEBUG_OBJECT (timeline, "Containes: %s", (gchar *) tmp->data);
+    }
+    g_list_free (element_names);
+  }
+#endif
+
   return NULL;
 }
 
