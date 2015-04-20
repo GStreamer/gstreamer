@@ -112,6 +112,8 @@ static GstStateChangeReturn gst_identity_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_identity_accept_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps);
+static gboolean gst_identity_query (GstBaseTransform * base,
+    GstPadDirection direction, GstQuery * query);
 
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
@@ -239,6 +241,7 @@ gst_identity_class_init (GstIdentityClass * klass)
   gstbasetrans_class->stop = GST_DEBUG_FUNCPTR (gst_identity_stop);
   gstbasetrans_class->accept_caps =
       GST_DEBUG_FUNCPTR (gst_identity_accept_caps);
+  gstbasetrans_class->query = gst_identity_query;
 }
 
 static void
@@ -576,6 +579,8 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       else
         timestamp = 0;
 
+      timestamp += identity->upstream_latency;
+
       /* save id if we need to unlock */
       identity->clock_id = gst_clock_new_single_shot_id (clock, timestamp);
       GST_OBJECT_UNLOCK (identity);
@@ -789,6 +794,47 @@ gst_identity_accept_caps (GstBaseTransform * base,
   return ret;
 }
 
+static gboolean
+gst_identity_query (GstBaseTransform * base, GstPadDirection direction,
+    GstQuery * query)
+{
+  GstIdentity *identity;
+  gboolean ret;
+
+  identity = GST_IDENTITY (base);
+
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->query (base, direction, query);
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY) {
+    gboolean live = FALSE;
+    GstClockTime min = 0, max = 0;
+
+    if (ret) {
+      gst_query_parse_latency (query, &live, &min, &max);
+
+      if (identity->sync && max < min) {
+        GST_ELEMENT_WARNING (base, CORE, CLOCK, (NULL),
+            ("Impossible to configure latency before identity sync=true:"
+                " max %" GST_TIME_FORMAT " < min %"
+                GST_TIME_FORMAT ". Add queues or other buffering elements.",
+                GST_TIME_ARGS (max), GST_TIME_ARGS (min)));
+      }
+    }
+
+    /* Ignore the upstream latency if it is not live */
+    GST_OBJECT_LOCK (identity);
+    if (live)
+      identity->upstream_latency = min;
+    else
+      identity->upstream_latency = 0;
+    GST_OBJECT_UNLOCK (identity);
+
+    gst_query_set_latency (query, live || identity->sync, min, max);
+    ret = TRUE;
+  }
+  return ret;
+}
+
 static GstStateChangeReturn
 gst_identity_change_state (GstElement * element, GstStateChange transition)
 {
@@ -820,6 +866,9 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      GST_OBJECT_LOCK (identity);
+      identity->upstream_latency = 0;
+      GST_OBJECT_UNLOCK (identity);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;

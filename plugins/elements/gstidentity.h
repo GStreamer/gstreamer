@@ -72,6 +72,7 @@ struct _GstIdentity {
   gchar 	*last_message;
   guint64        offset;
   gboolean       signal_handoffs;
+  GstClockTime   upstream_latency;
 };
 
 struct _GstIdentityClass {
