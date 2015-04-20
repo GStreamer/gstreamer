@@ -707,7 +707,8 @@ wait_for_idle_state (void)
   fail_unless (idle);
 }
 
-GST_START_TEST (test_single_image_capture)
+static void
+run_single_image_capture_test (GstCaps * viewfinder_caps, GstCaps * image_caps)
 {
   gboolean idle;
   GstMessage *msg;
@@ -716,6 +717,11 @@ GST_START_TEST (test_single_image_capture)
 
   /* set still image mode */
   g_object_set (camera, "mode", 1, "location", image_filename, NULL);
+
+  if (viewfinder_caps)
+    g_object_set (camera, "viewfinder-caps", viewfinder_caps, NULL);
+  if (image_caps)
+    g_object_set (camera, "image-capture-caps", image_caps, NULL);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -741,6 +747,27 @@ GST_START_TEST (test_single_image_capture)
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
   check_file_validity (image_filename, 0, NULL, 0, 0, NO_AUDIO);
   remove_file (image_filename, 0);
+}
+
+GST_START_TEST (test_single_image_capture)
+{
+  run_single_image_capture_test (NULL, NULL);
+}
+
+GST_END_TEST;
+
+
+/* Verify that incompatible caps can be used in viewfinder and image capture
+ * at the same time */
+GST_START_TEST (test_single_image_capture_with_different_caps)
+{
+  GstCaps *vf_caps =
+      gst_caps_from_string ("video/x-raw, width=480, height=320");
+  GstCaps *img_caps =
+      gst_caps_from_string ("video/x-raw, width=800, height=600");
+  run_single_image_capture_test (vf_caps, img_caps);
+  gst_caps_unref (vf_caps);
+  gst_caps_unref (img_caps);
 }
 
 GST_END_TEST;
@@ -1604,6 +1631,7 @@ camerabin_suite (void)
     tcase_add_checked_fixture (tc_basic, tests[i].setup_func, teardown);
 
     tcase_add_test (tc_basic, test_single_image_capture);
+    tcase_add_test (tc_basic, test_single_image_capture_with_different_caps);
     tcase_add_test (tc_basic, test_single_video_recording);
     tcase_add_test (tc_basic, test_image_video_cycle);
     if (gst_plugin_feature_check_version ((GstPluginFeature *) jpegenc_factory,
