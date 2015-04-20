@@ -136,6 +136,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_multi_file_sink_debug);
 #define DEFAULT_NEXT_FILE GST_MULTI_FILE_SINK_NEXT_BUFFER
 #define DEFAULT_MAX_FILES 0
 #define DEFAULT_MAX_FILE_SIZE G_GUINT64_CONSTANT(2*1024*1024*1024)
+#define DEFAULT_MAX_FILE_DURATION GST_CLOCK_TIME_NONE
 #define DEFAULT_AGGREGATE_GOPS FALSE
 
 enum
@@ -147,6 +148,7 @@ enum
   PROP_NEXT_FILE,
   PROP_MAX_FILES,
   PROP_MAX_FILE_SIZE,
+  PROP_MAX_FILE_DURATION,
   PROP_AGGREGATE_GOPS
 };
 
@@ -190,6 +192,10 @@ gst_multi_file_sink_next_get_type (void)
     {GST_MULTI_FILE_SINK_NEXT_MAX_SIZE, "New file when the configured maximum "
           "file size would be exceeded with the next buffer or buffer list",
         "max-size"},
+    {GST_MULTI_FILE_SINK_NEXT_MAX_DURATION,
+          "New file when the configured maximum "
+          "file duration would be exceeded with the next buffer or buffer list",
+        "max-duration"},
     {0, NULL, NULL}
   };
 
@@ -271,6 +277,17 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstMultiFileSink:max-file-duration:
+   *
+   * Maximum file size before starting a new file in max-size mode.
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_FILE_DURATION,
+      g_param_spec_uint64 ("max-file-duration", "Maximum File Duration",
+          "Maximum file duration before starting a new file in max-size mode",
+          0, G_MAXUINT64, DEFAULT_MAX_FILE_DURATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstMultiFileSink:aggregate-gops:
    *
    * Whether to aggregate complete GOPs before doing any processing. Set this
@@ -317,6 +334,7 @@ gst_multi_file_sink_init (GstMultiFileSink * multifilesink)
   multifilesink->post_messages = DEFAULT_POST_MESSAGES;
   multifilesink->max_files = DEFAULT_MAX_FILES;
   multifilesink->max_file_size = DEFAULT_MAX_FILE_SIZE;
+  multifilesink->max_file_duration = DEFAULT_MAX_FILE_DURATION;
   multifilesink->files = NULL;
   multifilesink->n_files = 0;
 
@@ -377,6 +395,9 @@ gst_multi_file_sink_set_property (GObject * object, guint prop_id,
     case PROP_MAX_FILE_SIZE:
       sink->max_file_size = g_value_get_uint64 (value);
       break;
+    case PROP_MAX_FILE_DURATION:
+      sink->max_file_duration = g_value_get_uint64 (value);
+      break;
     case PROP_AGGREGATE_GOPS:
       sink->aggregate_gops = g_value_get_boolean (value);
       break;
@@ -411,6 +432,9 @@ gst_multi_file_sink_get_property (GObject * object, guint prop_id,
     case PROP_MAX_FILE_SIZE:
       g_value_set_uint64 (value, sink->max_file_size);
       break;
+    case PROP_MAX_FILE_DURATION:
+      g_value_set_uint64 (value, sink->max_file_duration);
+      break;
     case PROP_AGGREGATE_GOPS:
       g_value_set_boolean (value, sink->aggregate_gops);
       break;
@@ -428,6 +452,7 @@ gst_multi_file_sink_start (GstBaseSink * bsink)
   if (sink->aggregate_gops)
     sink->gop_adapter = gst_adapter_new ();
   sink->potential_next_gop = NULL;
+  sink->file_pts = GST_CLOCK_TIME_NONE;
 
   return TRUE;
 }
@@ -704,6 +729,46 @@ gst_multi_file_sink_write_buffer (GstMultiFileSink * multifilesink,
       multifilesink->cur_file_size += map.size;
       break;
     }
+    case GST_MULTI_FILE_SINK_NEXT_MAX_DURATION:{
+      GstClockTime new_duration = 0;
+
+      if (GST_BUFFER_PTS_IS_VALID (buffer)
+          && GST_CLOCK_TIME_IS_VALID (multifilesink->file_pts)) {
+        /* The new duration will extend to this new buffer pts ... */
+        new_duration = GST_BUFFER_PTS (buffer) - multifilesink->file_pts;
+        /* ... and duration (if it has one) */
+        if (GST_BUFFER_DURATION_IS_VALID (buffer))
+          new_duration += GST_BUFFER_DURATION (buffer);
+      }
+
+      if (new_duration > multifilesink->max_file_duration) {
+
+        GST_INFO_OBJECT (multifilesink,
+            "new_duration: %" G_GUINT64_FORMAT ", max. duration %"
+            G_GUINT64_FORMAT, new_duration, multifilesink->max_file_duration);
+
+        if (multifilesink->file != NULL) {
+          first_file = FALSE;
+          gst_multi_file_sink_close_file (multifilesink, buffer);
+        }
+      }
+
+      if (multifilesink->file == NULL) {
+        if (!gst_multi_file_sink_open_next_file (multifilesink))
+          goto stdio_write_error;
+
+        multifilesink->file_pts = GST_BUFFER_PTS (buffer);
+        if (!first_file)
+          gst_multi_file_sink_write_stream_headers (multifilesink);
+      }
+
+      ret = fwrite (map.data, map.size, 1, multifilesink->file);
+
+      if (ret != 1)
+        goto stdio_write_error;
+
+      break;
+    }
     default:
       g_assert_not_reached ();
   }
@@ -753,8 +818,13 @@ gst_multi_file_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
           g_list_append (sink->potential_next_gop, gst_buffer_ref (buffer));
     } else {
       if (key_unit && avail > 0) {
+        GstClockTime pts, dts;
         GST_LOG_OBJECT (sink, "Grabbing pending completed GOP");
+        pts = gst_adapter_prev_pts_at_offset (sink->gop_adapter, 0, NULL);
+        dts = gst_adapter_prev_dts_at_offset (sink->gop_adapter, 0, NULL);
         gop_buffer = gst_adapter_take_buffer (sink->gop_adapter, avail);
+        GST_BUFFER_PTS (gop_buffer) = pts;
+        GST_BUFFER_DTS (gop_buffer) = dts;
       }
 
       /* just accumulate the buffer */
@@ -775,6 +845,12 @@ gst_multi_file_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
       if (gop_buffer != NULL) {
         GST_DEBUG_OBJECT (sink, "writing out pending GOP, %u bytes", avail);
+        GST_DEBUG_OBJECT (sink,
+            "gop buffer pts:%" GST_TIME_FORMAT " dts:%" GST_TIME_FORMAT
+            " duration:%" GST_TIME_FORMAT,
+            GST_TIME_ARGS (GST_BUFFER_PTS (gop_buffer)),
+            GST_TIME_ARGS (GST_BUFFER_DTS (gop_buffer)),
+            GST_TIME_ARGS (GST_BUFFER_DURATION (gop_buffer)));
         flow = gst_multi_file_sink_write_buffer (sink, gop_buffer);
         gst_buffer_unref (gop_buffer);
       }

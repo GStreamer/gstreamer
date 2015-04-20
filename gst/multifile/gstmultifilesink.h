@@ -62,6 +62,8 @@ typedef struct _GstMultiFileSinkClass GstMultiFileSinkClass;
  *  event
  * @GST_MULTI_FILE_SINK_NEXT_MAX_SIZE: New file when the configured maximum file
  *  size would be exceeded with the next buffer or buffer list
+ * @GST_MULTI_FILE_SINK_NEXT_MAX_DURATION: New file when the configured maximum duration
+ *  would be exceeded with the next buffer or buffer list
  *
  * File splitting modes.
  */
@@ -70,7 +72,8 @@ typedef enum {
   GST_MULTI_FILE_SINK_NEXT_DISCONT,
   GST_MULTI_FILE_SINK_NEXT_KEY_FRAME,
   GST_MULTI_FILE_SINK_NEXT_KEY_UNIT_EVENT,
-  GST_MULTI_FILE_SINK_NEXT_MAX_SIZE
+  GST_MULTI_FILE_SINK_NEXT_MAX_SIZE,
+  GST_MULTI_FILE_SINK_NEXT_MAX_DURATION
 } GstMultiFileSinkNext;
 
 struct _GstMultiFileSink
@@ -94,6 +97,9 @@ struct _GstMultiFileSink
 
   guint64 cur_file_size;
   guint64 max_file_size;
+
+  GstClockTime file_pts;
+  GstClockTime max_file_duration;
 
   gboolean aggregate_gops;
   GstAdapter *gop_adapter;  /* to aggregate GOPs */
