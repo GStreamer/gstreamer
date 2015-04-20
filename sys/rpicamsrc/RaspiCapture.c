@@ -1441,6 +1441,13 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
    if (config->intra_refresh_type != -1)
    {
       MMAL_PARAMETER_VIDEO_INTRA_REFRESH_T  param;
+
+      /* Need to memset, apparently mmal_port_parameter_get()
+       * doesn't retrieve all parameters, causing random failures
+       * when we set it
+       */
+      memset (&param, 0, sizeof (MMAL_PARAMETER_VIDEO_INTRA_REFRESH_T));
+
       param.hdr.id = MMAL_PARAMETER_VIDEO_INTRA_REFRESH;
       param.hdr.size = sizeof(param);
 
