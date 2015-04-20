@@ -1667,6 +1667,7 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
   GstVideoInfo *in_info = &convert->in_info;
   gboolean res = TRUE;
   gint views, v;
+  GstVideoOverlayCompositionMeta *composition_meta;
 
   convert->outbuf = NULL;
 
@@ -1703,6 +1704,14 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
 
     if (sync_meta)
       gst_gl_sync_meta_set_sync_point (sync_meta, convert->context);
+  }
+
+  composition_meta =
+      gst_buffer_get_video_overlay_composition_meta (convert->inbuf);
+  if (composition_meta) {
+    GST_DEBUG ("found video overlay composition meta, appliying on output.");
+    gst_buffer_add_video_overlay_composition_meta
+        (convert->outbuf, composition_meta->overlay);
   }
 
   convert->priv->result = res;
