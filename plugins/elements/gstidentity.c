@@ -127,6 +127,7 @@ gst_identity_finalize (GObject * object)
   identity = GST_IDENTITY (object);
 
   g_free (identity->last_message);
+  g_cond_clear (&identity->blocked_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -259,6 +260,7 @@ gst_identity_init (GstIdentity * identity)
   identity->dump = DEFAULT_DUMP;
   identity->last_message = NULL;
   identity->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
+  g_cond_init (&identity->blocked_cond);
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM_CAST (identity), TRUE);
 }
@@ -568,6 +570,11 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GstClock *clock;
 
     GST_OBJECT_LOCK (identity);
+
+    while (identity->blocked)
+      g_cond_wait (&identity->blocked_cond, GST_OBJECT_GET_LOCK (identity));
+
+
     if ((clock = GST_ELEMENT (identity)->clock)) {
       GstClockReturn cret;
       GstClockTime timestamp;
@@ -840,13 +847,23 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   GstIdentity *identity = GST_IDENTITY (element);
+  gboolean no_preroll = FALSE;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_OBJECT_LOCK (identity);
+      identity->blocked = TRUE;
+      GST_OBJECT_UNLOCK (identity);
+      if (identity->sync)
+        no_preroll = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      GST_OBJECT_LOCK (identity);
+      identity->blocked = FALSE;
+      g_cond_broadcast (&identity->blocked_cond);
+      GST_OBJECT_UNLOCK (identity);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_OBJECT_LOCK (identity);
@@ -856,6 +873,8 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
         gst_clock_id_unref (identity->clock_id);
         identity->clock_id = NULL;
       }
+      identity->blocked = FALSE;
+      g_cond_broadcast (&identity->blocked_cond);
       GST_OBJECT_UNLOCK (identity);
       break;
     default:
@@ -868,7 +887,10 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       GST_OBJECT_LOCK (identity);
       identity->upstream_latency = 0;
+      identity->blocked = TRUE;
       GST_OBJECT_UNLOCK (identity);
+      if (identity->sync)
+        no_preroll = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
@@ -877,6 +899,9 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
+
+  if (no_preroll && ret == GST_STATE_CHANGE_SUCCESS)
+    ret = GST_STATE_CHANGE_NO_PREROLL;
 
   return ret;
 }

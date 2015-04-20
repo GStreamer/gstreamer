@@ -73,6 +73,8 @@ struct _GstIdentity {
   guint64        offset;
   gboolean       signal_handoffs;
   GstClockTime   upstream_latency;
+  GCond          blocked_cond;
+  gboolean       blocked;
 };
 
 struct _GstIdentityClass {
