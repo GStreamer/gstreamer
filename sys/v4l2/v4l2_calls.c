@@ -842,7 +842,7 @@ gst_v4l2_set_frequency (GstV4l2Object * v4l2object,
 
   freq.tuner = tunernum;
   /* fill in type - ignore error */
-  v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_FREQUENCY, &freq);
+  (void) v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_FREQUENCY, &freq);
   freq.frequency = frequency / channel->freq_multiplicator;
 
   if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_S_FREQUENCY, &freq) < 0)
