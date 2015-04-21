@@ -334,6 +334,7 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
   _find_local_gl_context (filter);
 
   if (!filter->context) {
+    GST_OBJECT_LOCK (filter->display);
     do {
       if (filter->context)
         gst_object_unref (filter->context);
@@ -350,6 +351,7 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
           goto context_error;
       }
     } while (!gst_gl_display_add_context (filter->display, filter->context));
+    GST_OBJECT_UNLOCK (filter->display);
   }
 
   gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_start,
