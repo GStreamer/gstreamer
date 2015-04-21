@@ -397,6 +397,14 @@ class GstValidateTest(Test):
             else:
                 hard_timeout = None
 
+        # If we are running from source, use the -debug version of the
+        # application which is using rpath instead of libtool's wrappers. It's
+        # slightly faster to start and will not confuse valgrind.
+        debug = '%s-debug' % application_name
+        p = self.look_for_file_in_source_dir('tools', debug)
+        if p:
+            application_name = p
+
         super(GstValidateTest, self).__init__(application_name, classname,
                                               options, reporter,
                                               duration=duration,
@@ -618,11 +626,16 @@ class GstValidateTest(Test):
 
         return position
 
-    def get_valgrind_suppression_file(self, subdir, name):
-        # Are we running from sources?
+    def look_for_file_in_source_dir(self, subdir, name):
         root_dir = os.path.abspath(os.path.dirname(os.path.join(os.path.dirname(os.path.abspath(__file__)))))
         p = os.path.join(root_dir, subdir, name)
         if os.path.exists(p):
+            return p
+
+    def get_valgrind_suppression_file(self, subdir, name):
+        # Are we running from sources?
+        p = self.look_for_file_in_source_dir(subdir, name)
+        if p:
             return p
 
         # Look in system data dirs
