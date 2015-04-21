@@ -307,7 +307,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   GstSeekType start_type, stop_type;
   gint64 start, stop;
   gdouble rate;
-  GList *walk;
+  GList *walk, *current_file = NULL;
   GstClockTime current_pos, target_pos;
   gint64 current_sequence;
   GstM3U8MediaFile *file;
@@ -376,6 +376,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     file = walk->data;
 
     current_sequence = file->sequence;
+    current_file = walk;
     if (current_pos <= target_pos && target_pos < current_pos + file->duration) {
       break;
     }
@@ -390,6 +391,8 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   GST_DEBUG_OBJECT (demux, "seeking to sequence %u", (guint) current_sequence);
   hlsdemux->reset_pts = TRUE;
   hlsdemux->client->sequence = current_sequence;
+  hlsdemux->client->current_file =
+      current_file ? current_file : hlsdemux->client->current->files;
   hlsdemux->client->sequence_position = current_pos;
   GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 
