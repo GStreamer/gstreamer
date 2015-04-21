@@ -176,6 +176,15 @@ PKG_CHECK_MODULES(GIO, gio-2.0, HAVE_GIO=yes, HAVE_GIO=no)
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
 
+PKG_CHECK_MODULES(GTK, gtk+-3.0, HAVE_GTK=yes, HAVE_GTK=no)
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
+
+PKG_CHECK_MODULES(GDK, gdk-3.0, HAVE_GDK=yes, HAVE_GDK=no)
+AC_SUBST(GDK_CFLAGS)
+AC_SUBST(GDK_LIBS)
+
 dnl checks for gstreamer
 
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
@@ -297,6 +306,7 @@ gst/overrides/Makefile
 gst/plugins/Makefile
 gst/plugins/fault_injection/Makefile
 gst/plugins/gapplication/Makefile
+gst/plugins/gtk/Makefile
 tests/Makefile
 tests/check/Makefile
 pkgconfig/Makefile
