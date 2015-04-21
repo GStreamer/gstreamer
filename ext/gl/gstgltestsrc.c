@@ -816,6 +816,7 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   _find_local_gl_context (src);
 
   if (!src->context) {
+    GST_OBJECT_LOCK (src->display);
     do {
       if (src->context)
         gst_object_unref (src->context);
@@ -828,6 +829,7 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
           goto context_error;
       }
     } while (!gst_gl_display_add_context (src->display, src->context));
+    GST_OBJECT_UNLOCK (src->display);
   }
 
   out_width = GST_VIDEO_INFO_WIDTH (&src->out_info);

@@ -698,6 +698,7 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
   GST_DEBUG_OBJECT (gl_sink, "Ensuring setup");
 
   if (!gl_sink->context) {
+    GST_OBJECT_LOCK (gl_sink->display);
     do {
       GstGLContext *other_context;
       GstGLWindow *window;
@@ -770,6 +771,7 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
         gst_object_unref (other_context);
       gst_object_unref (window);
     } while (!gst_gl_display_add_context (gl_sink->display, gl_sink->context));
+    GST_OBJECT_UNLOCK (gl_sink->display);
   } else
     GST_DEBUG_OBJECT (gl_sink, "Already have a context");
 
@@ -908,6 +910,9 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       gst_gl_display_filter_gl_api (glimage_sink->display, SUPPORTED_GL_APIS);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (!_ensure_gl_setup (glimage_sink))
+        return GST_STATE_CHANGE_FAILURE;
+
       g_atomic_int_set (&glimage_sink->to_quit, 0);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:

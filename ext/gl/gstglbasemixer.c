@@ -484,6 +484,7 @@ gst_gl_base_mixer_decide_allocation (GstGLBaseMixer * mix, GstQuery * query)
   _find_local_gl_context (mix);
 
   if (!mix->context) {
+    GST_OBJECT_LOCK (mix->display);
     do {
       if (mix->context)
         gst_object_unref (mix->context);
@@ -497,6 +498,7 @@ gst_gl_base_mixer_decide_allocation (GstGLBaseMixer * mix, GstQuery * query)
           goto context_error;
       }
     } while (!gst_gl_display_add_context (mix->display, mix->context));
+    GST_OBJECT_UNLOCK (mix->display);
   }
 
   if (mix_class->decide_allocation)

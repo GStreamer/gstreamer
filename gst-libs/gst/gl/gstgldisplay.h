@@ -86,6 +86,7 @@ GstGLDisplayType gst_gl_display_get_handle_type        (GstGLDisplay * display);
 void             gst_gl_display_filter_gl_api          (GstGLDisplay * display,
                                                         GstGLAPI api);
 GstGLAPI         gst_gl_display_get_gl_api             (GstGLDisplay * display);
+GstGLAPI         gst_gl_display_get_gl_api_unlocked    (GstGLDisplay * display);
 
 #define GST_GL_DISPLAY_CONTEXT_TYPE "gst.gl.GLDisplay"
 void     gst_context_set_gl_display (GstContext * context, GstGLDisplay * display);
