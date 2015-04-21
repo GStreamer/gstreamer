@@ -2267,7 +2267,8 @@ gst_adaptive_demux_updates_loop (GstAdaptiveDemux * demux)
             g_get_monotonic_time () +
             klass->get_manifest_update_interval (demux);
       } else {
-        GST_ERROR_OBJECT (demux, "Could not update playlist");
+        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+            (_("Internal data stream error.")), ("Could not update playlist"));
         goto error;
       }
     } else {
@@ -2291,7 +2292,7 @@ quit:
 error:
   {
     GST_DEBUG_OBJECT (demux, "Stopped updates task because of error");
-    gst_adaptive_demux_stop_tasks (demux);
+    gst_task_stop (demux->priv->updates_task);
   }
 }
 
