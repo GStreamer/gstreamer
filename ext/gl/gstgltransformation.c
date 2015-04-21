@@ -404,6 +404,8 @@ gst_gl_transformation_reset_gl (GstGLFilter * filter)
     gl->DeleteBuffers (1, &transformation->vertex_buffer);
     transformation->vertex_buffer = 0;
   }
+
+  gst_object_unref (transformation->shader);
 }
 
 static void
