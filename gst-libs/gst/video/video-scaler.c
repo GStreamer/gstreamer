@@ -1488,7 +1488,8 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
         vx = (hscale->inc * x) >> 16;
         vx = MIN (vx, hscale->resampler.offset[x]);
         vw = (hscale->inc * (x + width)) >> 16;
-        vw = MAX (vw, hscale->resampler.offset[x + width - 1] + h_taps);
+        vw = MAX (vw,
+            hscale->resampler.offset[x + width - 1] + (mult * h_taps));
         vw += 1;
 
         if (vscale->tmpwidth < vw)
