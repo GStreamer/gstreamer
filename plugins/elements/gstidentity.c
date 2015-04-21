@@ -271,6 +271,48 @@ gst_identity_notify_last_message (GstIdentity * identity)
   g_object_notify_by_pspec ((GObject *) identity, pspec_last_message);
 }
 
+static GstFlowReturn
+gst_identity_do_sync (GstIdentity * identity, GstClockTime running_time)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (identity->sync &&
+      GST_BASE_TRANSFORM_CAST (identity)->segment.format == GST_FORMAT_TIME) {
+    GstClock *clock;
+
+    GST_OBJECT_LOCK (identity);
+
+    while (identity->blocked)
+      g_cond_wait (&identity->blocked_cond, GST_OBJECT_GET_LOCK (identity));
+
+
+    if ((clock = GST_ELEMENT (identity)->clock)) {
+      GstClockReturn cret;
+      GstClockTime timestamp;
+
+      timestamp = running_time + GST_ELEMENT (identity)->base_time +
+          identity->upstream_latency;
+
+      /* save id if we need to unlock */
+      identity->clock_id = gst_clock_new_single_shot_id (clock, timestamp);
+      GST_OBJECT_UNLOCK (identity);
+
+      cret = gst_clock_id_wait (identity->clock_id, NULL);
+
+      GST_OBJECT_LOCK (identity);
+      if (identity->clock_id) {
+        gst_clock_id_unref (identity->clock_id);
+        identity->clock_id = NULL;
+      }
+      if (cret == GST_CLOCK_UNSCHEDULED)
+        ret = GST_FLOW_EOS;
+    }
+    GST_OBJECT_UNLOCK (identity);
+  }
+
+  return ret;
+}
+
 static gboolean
 gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
@@ -323,8 +365,7 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
     }
   }
 
-  /* also transform GAP timestamp similar to buffer timestamps */
-  if (identity->single_segment && (GST_EVENT_TYPE (event) == GST_EVENT_GAP) &&
+  if (GST_EVENT_TYPE (event) == GST_EVENT_GAP &&
       trans->have_segment && trans->segment.format == GST_FORMAT_TIME) {
     GstClockTime start, dur;
 
@@ -332,8 +373,14 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
     if (GST_CLOCK_TIME_IS_VALID (start)) {
       start = gst_segment_to_running_time (&trans->segment,
           GST_FORMAT_TIME, start);
-      gst_event_unref (event);
-      event = gst_event_new_gap (start, dur);
+
+      gst_identity_do_sync (identity, start);
+
+      /* also transform GAP timestamp similar to buffer timestamps */
+      if (identity->single_segment) {
+        gst_event_unref (event);
+        event = gst_event_new_gap (start, dur);
+      }
     }
   }
 
@@ -509,7 +556,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GstIdentity *identity = GST_IDENTITY (trans);
   GstClockTime rundts = GST_CLOCK_TIME_NONE;
   GstClockTime runpts = GST_CLOCK_TIME_NONE;
-  GstClockTime ts, duration;
+  GstClockTime ts, duration, runtimestamp;
   gsize size;
 
   size = gst_buffer_get_size (buf);
@@ -566,44 +613,13 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         GST_FORMAT_TIME, GST_BUFFER_PTS (buf));
   }
 
-  if ((identity->sync) && (trans->segment.format == GST_FORMAT_TIME)) {
-    GstClock *clock;
-
-    GST_OBJECT_LOCK (identity);
-
-    while (identity->blocked)
-      g_cond_wait (&identity->blocked_cond, GST_OBJECT_GET_LOCK (identity));
-
-
-    if ((clock = GST_ELEMENT (identity)->clock)) {
-      GstClockReturn cret;
-      GstClockTime timestamp;
-
-      if (GST_CLOCK_TIME_IS_VALID (rundts))
-        timestamp = rundts + GST_ELEMENT (identity)->base_time;
-      else if (GST_CLOCK_TIME_IS_VALID (runpts))
-        timestamp = runpts + GST_ELEMENT (identity)->base_time;
-      else
-        timestamp = 0;
-
-      timestamp += identity->upstream_latency;
-
-      /* save id if we need to unlock */
-      identity->clock_id = gst_clock_new_single_shot_id (clock, timestamp);
-      GST_OBJECT_UNLOCK (identity);
-
-      cret = gst_clock_id_wait (identity->clock_id, NULL);
-
-      GST_OBJECT_LOCK (identity);
-      if (identity->clock_id) {
-        gst_clock_id_unref (identity->clock_id);
-        identity->clock_id = NULL;
-      }
-      if (cret == GST_CLOCK_UNSCHEDULED)
-        ret = GST_FLOW_EOS;
-    }
-    GST_OBJECT_UNLOCK (identity);
-  }
+  if (GST_CLOCK_TIME_IS_VALID (rundts))
+    runtimestamp = rundts;
+  else if (GST_CLOCK_TIME_IS_VALID (runpts))
+    runtimestamp = runpts;
+  else
+    runtimestamp = 0;
+  ret = gst_identity_do_sync (identity, runtimestamp);
 
   identity->offset += size;
 
