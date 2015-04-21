@@ -21,10 +21,7 @@
 {
    Leak in mesa fixed with http://lists.freedesktop.org/archives/mesa-dev/2015-April/082100.html
    Memcheck:Leak
-   fun:malloc
-   fun:realloc
-   fun:udev_list_entry_add
-   fun:udev_enumerate_add_match_subsystem
+   ...
    fun:get_render_node_from_id_path_tag
    fun:loader_get_user_preferred_fd
    fun:dri3_create_screen
