@@ -184,6 +184,9 @@ create_parser_context (GESBaseXmlFormatter * self, const gchar * uri,
           &err) == FALSE)
     goto failed;
 
+  if (!g_markup_parse_context_end_parse (parsecontext, &err))
+    goto failed;
+
 done:
   if (xmlcontent)
     g_free (xmlcontent);
@@ -446,7 +449,8 @@ _add_all_groups (GESFormatter * self)
       GST_DEBUG_OBJECT (tmp->data, "Adding %s child %" GST_PTR_FORMAT " %s",
           (const gchar *) lchild->data, child,
           GES_TIMELINE_ELEMENT_NAME (child));
-      ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (pgroup->group), self->timeline);
+      ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (pgroup->group),
+          self->timeline);
       ges_container_add (GES_CONTAINER (pgroup->group), child);
     }
   }
