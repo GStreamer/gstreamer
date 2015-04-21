@@ -435,6 +435,7 @@ AG_GST_CHECK_PLUGIN(accurip)
 AG_GST_CHECK_PLUGIN(adpcmdec)
 AG_GST_CHECK_PLUGIN(adpcmenc)
 AG_GST_CHECK_PLUGIN(aiff)
+AG_GST_CHECK_PLUGIN(videoframe_audiolevel)
 AG_GST_CHECK_PLUGIN(asfmux)
 AG_GST_CHECK_PLUGIN(audiofxbad)
 AG_GST_CHECK_PLUGIN(audiomixer)
@@ -3415,6 +3416,7 @@ gst/accurip/Makefile
 gst/adpcmdec/Makefile
 gst/adpcmenc/Makefile
 gst/aiff/Makefile
+gst/videoframe_audiolevel/Makefile
 gst/asfmux/Makefile
 gst/audiofxbad/Makefile
 gst/audiomixer/Makefile

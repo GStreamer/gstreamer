@@ -247,6 +247,7 @@ check_PROGRAMS = \
 	$(check_curl) \
 	$(check_shm) \
 	elements/aiffparse \
+	elements/videoframe-audiolevel \
 	elements/autoconvert \
 	elements/autovideoconvert \
 	elements/audiointerleave \
@@ -372,6 +373,13 @@ libs_vp8parser_LDADD = \
 	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
+elements_videoframe_audiolevel_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+elements_videoframe_audiolevel_LDADD = \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
+	-lgstaudio-@GST_API_VERSION@
 
 elements_faad_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
