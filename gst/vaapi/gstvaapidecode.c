@@ -471,32 +471,29 @@ gst_vaapidecode_internal_flush (GstVideoDecoder * vdec)
   }
 
   status = gst_vaapi_decoder_flush (decode->decoder);
-  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-    goto error_flush;
-  return TRUE;
-
-  /* ERRORS */
-error_flush:
-  {
-    GST_ERROR ("failed to flush decoder (status %d)", status);
+  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
+    GST_WARNING_OBJECT (decode, "failed to flush decoder (status %d)", status);
     return FALSE;
   }
+
+  return TRUE;
 }
 
 static GstFlowReturn
 gst_vaapidecode_finish (GstVideoDecoder * vdec)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
+  gboolean flushed;
+  GstFlowReturn ret;
 
   if (!decode->decoder)
     return GST_FLOW_OK;
 
-  if (!gst_vaapidecode_internal_flush (vdec)) {
-    gst_vaapidecode_push_all_decoded_frames (decode);
+  flushed = gst_vaapidecode_internal_flush (vdec);
+  ret = gst_vaapidecode_push_all_decoded_frames (decode);
+  if (!flushed)
     return GST_FLOW_ERROR;
-  }
-
-  return gst_vaapidecode_push_all_decoded_frames (decode);
+  return ret;
 }
 
 static gboolean
@@ -640,7 +637,7 @@ gst_vaapidecode_purge (GstVaapiDecode * decode)
 
   status = gst_vaapi_decoder_flush (decode->decoder);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-    GST_INFO_OBJECT (decode, "decoder flush failed");
+    GST_INFO_OBJECT (decode, "failed to flush decoder (status %d)", status);
 
   /* Purge all decoded frames as we don't need them (e.g. flush and close)
    * Releasing the frames is important, otherwise the frames are not
