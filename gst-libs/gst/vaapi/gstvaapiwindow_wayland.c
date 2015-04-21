@@ -163,14 +163,12 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
 
-  if (priv->frame_pending) {
+  while (priv->frame_pending) {
     struct wl_display *const wl_display =
         GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
 
-    do {
-      if (wl_display_dispatch_queue (wl_display, priv->event_queue) < 0)
-        return FALSE;
-    } while (priv->frame_pending);
+    if (wl_display_dispatch_queue (wl_display, priv->event_queue) < 0)
+      return FALSE;
   }
   return TRUE;
 }
@@ -324,7 +322,7 @@ gst_vaapi_window_wayland_resize (GstVaapiWindow * window,
 }
 
 static void
-frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
+frame_done_callback (void *data, struct wl_callback *callback, uint32_t time)
 {
   FrameState *const frame = data;
   GstVaapiWindowWaylandPrivate *const priv =
@@ -335,7 +333,7 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
 }
 
 static const struct wl_callback_listener frame_callback_listener = {
-  frame_redraw_callback
+  frame_done_callback
 };
 
 static void
