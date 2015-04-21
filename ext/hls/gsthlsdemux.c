@@ -381,14 +381,12 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     }
     current_pos += file->duration;
   }
-  GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 
   if (walk == NULL) {
     GST_DEBUG_OBJECT (demux, "seeking further than track duration");
     current_sequence++;
   }
 
-  GST_M3U8_CLIENT_LOCK (hlsdemux->client);
   GST_DEBUG_OBJECT (demux, "seeking to sequence %u", (guint) current_sequence);
   hlsdemux->reset_pts = TRUE;
   hlsdemux->client->sequence = current_sequence;
