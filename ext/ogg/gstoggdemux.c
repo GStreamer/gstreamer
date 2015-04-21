@@ -1525,6 +1525,7 @@ gst_ogg_demux_seek_back_after_push_duration_check_unlock (GstOggDemux * ogg)
         GST_SEEK_TYPE_SET, 1, GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
   }
   gst_event_replace (&ogg->seek_event, event);
+  gst_event_unref (event);
   GST_PUSH_UNLOCK (ogg);
   g_mutex_lock (&ogg->seek_event_mutex);
   g_cond_broadcast (&ogg->seek_event_cond);
@@ -1855,6 +1856,7 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
       gst_event_set_seqnum (sevent, ogg->seqnum);
 
       gst_event_replace (&ogg->seek_event, sevent);
+      gst_event_unref (sevent);
       GST_PUSH_UNLOCK (ogg);
       g_mutex_lock (&ogg->seek_event_mutex);
       g_cond_broadcast (&ogg->seek_event_cond);
@@ -3646,6 +3648,7 @@ gst_ogg_demux_get_duration_push (GstOggDemux * ogg, int flags)
   sevent = gst_event_new_seek (1.0, GST_FORMAT_BYTES, flags, GST_SEEK_TYPE_SET,
       position, GST_SEEK_TYPE_SET, ogg->push_byte_length - 1);
   gst_event_replace (&ogg->seek_event, sevent);
+  gst_event_unref (sevent);
   g_mutex_lock (&ogg->seek_event_mutex);
   g_cond_broadcast (&ogg->seek_event_cond);
   g_mutex_unlock (&ogg->seek_event_mutex);
@@ -3856,6 +3859,7 @@ gst_ogg_demux_perform_seek_push (GstOggDemux * ogg, GstEvent * event)
   gst_event_set_seqnum (sevent, gst_event_get_seqnum (event));
 
   gst_event_replace (&ogg->seek_event, sevent);
+  gst_event_unref (sevent);
   GST_PUSH_UNLOCK (ogg);
   g_mutex_lock (&ogg->seek_event_mutex);
   g_cond_broadcast (&ogg->seek_event_cond);
