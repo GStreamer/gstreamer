@@ -300,12 +300,28 @@ _set_window_handle_cb (GstSetWindowHandleCb * data)
 {
   GstGLContext *context = gst_gl_window_get_context (data->window);
   GstGLWindowClass *window_class = GST_GL_WINDOW_GET_CLASS (data->window);
+  GThread *thread = NULL;
 
-  gst_gl_context_activate (context, FALSE);
+  /* deactivate if necessary */
+  if (context) {
+    thread = gst_gl_context_get_thread (context);
+    if (thread) {
+      /* This is only thread safe iff the context thread == g_thread_self() */
+      g_assert (thread == g_thread_self ());
+      gst_gl_context_activate (context, FALSE);
+    }
+  }
+
   window_class->set_window_handle (data->window, data->handle);
-  gst_gl_context_activate (context, TRUE);
 
-  gst_object_unref (context);
+  /* reactivate */
+  if (context && thread)
+    gst_gl_context_activate (context, TRUE);
+
+  if (context)
+    gst_object_unref (context);
+  if (thread)
+    g_thread_unref (thread);
 }
 
 static void
