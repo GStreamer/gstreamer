@@ -406,6 +406,7 @@ gst_gl_transformation_reset_gl (GstGLFilter * filter)
   }
 
   gst_object_unref (transformation->shader);
+  transformation->shader = NULL;
 }
 
 static void
@@ -424,6 +425,11 @@ static gboolean
 gst_gl_transformation_init_shader (GstGLFilter * filter)
 {
   GstGLTransformation *transformation = GST_GL_TRANSFORMATION (filter);
+
+  if (transformation->shader) {
+    gst_object_unref (transformation->shader);
+    transformation->shader = NULL;
+  }
 
   if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context)) {
     /* blocking call, wait until the opengl thread has compiled the shader */
