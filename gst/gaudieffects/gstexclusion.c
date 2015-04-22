@@ -280,12 +280,6 @@ transform (guint32 * src, guint32 * dest, gint video_area, gint factor)
     green = (in >> 8) & 0xff;
     blue = (in) & 0xff;
 
-    if (factor == 0) {
-      red = 0;
-      green = 0;
-      blue = 0;
-    }
-
     red = factor -
         (((factor - red) * (factor - red) / factor) + ((green * red) / factor));
     green = factor -
