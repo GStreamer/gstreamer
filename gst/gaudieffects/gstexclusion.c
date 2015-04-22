@@ -270,12 +270,21 @@ transform (guint32 * src, guint32 * dest, gint video_area, gint factor)
   guint32 in;
   gint x, red, green, blue;
 
+  if (G_UNLIKELY (factor == 0))
+    return;
+
   for (x = 0; x < video_area; x++) {
     in = *src++;
 
     red = (in >> 16) & 0xff;
     green = (in >> 8) & 0xff;
     blue = (in) & 0xff;
+
+    if (factor == 0) {
+      red = 0;
+      green = 0;
+      blue = 0;
+    }
 
     red = factor -
         (((factor - red) * (factor - red) / factor) + ((green * red) / factor));
