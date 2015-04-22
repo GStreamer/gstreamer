@@ -8,7 +8,7 @@
 #
 # ----------------------------------------------------------------------------
 #
-# Copyright (C) 2011-2012 Tim-Philipp Muller <tim centricular net>
+# Copyright (C) 2011-2015 Tim-Philipp Müller <tim centricular net>
 #
 # This script is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
@@ -40,13 +40,7 @@ GIT_ACCESS="anongit"
 REUSE_EXISTING_MASTER_CHECKOUT="true"
 
 # git modules to clone
-MODULES="gstreamer gst-plugins-base gst-plugins-good gst-plugins-ugly gst-plugins-bad"
-
-if test "$BRANCH" != "0.10"; then
-  MODULES="$MODULES gst-libav"
-else
-  MODULES="$MODULES gst-ffmpeg"
-fi
+MODULES="gstreamer gst-plugins-base gst-plugins-good gst-plugins-ugly gst-plugins-bad gst-libav"
 
 # note: we use ~/gst because that's what the gst-uninstalled script
 # uses by default, so don't just change that to something else
@@ -83,17 +77,22 @@ echo "==========================================================================
 echo ""
 echo "  Some very basic build tools or dependencies are missing."
 echo ""
-echo "  Please visit"
+echo "  Please install the following tools: pkg-config, bison, flex"
 echo ""
-echo "      http://gstreamer.freedesktop.org/wiki/BuildDependenciesDebianUbuntu"
-echo ""
+echo "  and the following libraries: GLib (libglib2.0-dev or glib2-devel)"
+echo "                           and Orc  (liborc-0.4-dev or orc-devel)"
+#echo "  Please visit"
+#echo ""
+#echo "      http://gstreamer.freedesktop.org/wiki/BuildDependenciesDebianUbuntu"
+#echo ""
 #echo "         or"
 #echo ""
 #echo "      http://gstreamer.freedesktop.org/wiki/Fedora"
 #echo ""
-echo "  for instructions how to install them on Debian/Ubuntu-based systems."
+#echo "  for instructions how to install them on Debian/Ubuntu-based systems."
 echo ""
 echo "==========================================================================================="
+exit 1
 fi
 
 
@@ -118,6 +117,7 @@ do
   if test "$BRANCH" != "master"; then
     git checkout -b $BRANCH origin/$BRANCH
   fi
+  git submodule init && git submodule update
   cd ..
 done
 
