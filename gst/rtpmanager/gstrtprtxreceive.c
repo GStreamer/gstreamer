@@ -389,17 +389,19 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
           retransmit:
             /* the request has not been already considered
              * insert it for the first time */
-            GST_DEBUG_OBJECT (rtx,
-                "packet number %" G_GUINT32_FORMAT " of master stream %"
-                G_GUINT32_FORMAT " needs to be retransmited", seqnum, ssrc);
             g_hash_table_insert (rtx->seqnum_ssrc1_map,
                 GUINT_TO_POINTER (seqnum),
                 ssrc_assoc_new (ssrc, rtx->last_time));
           }
         }
 
+        GST_DEBUG_OBJECT (rtx,
+            "packet number %" G_GUINT32_FORMAT " of master stream %"
+            G_GUINT32_FORMAT " needs to be retransmitted", seqnum, ssrc);
+
         GST_OBJECT_UNLOCK (rtx);
       }
+
       /* Transfer event upstream so that the request can acutally by translated
        * through gstrtpsession through the network */
       res = gst_pad_event_default (pad, parent, event);
