@@ -350,7 +350,7 @@ gst_decklink_mode_get_template_caps (void)
   GstStructure *s;
 
   caps = gst_caps_new_empty ();
-  for (i = 0; i < (int) G_N_ELEMENTS (modes); i++) {
+  for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
     s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i);
     gst_caps_append_structure (caps, s);
   }
