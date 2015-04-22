@@ -1507,6 +1507,8 @@ gst_debug_unset_threshold_for_name (const gchar * name)
       g_slice_free (LevelNameEntry, entry);
       g_slist_free_1 (walk);
       walk = __level_name;
+    } else {
+      walk = g_slist_next (walk);
     }
   }
   g_mutex_unlock (&__level_name_mutex);
