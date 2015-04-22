@@ -563,7 +563,7 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
   if (stream->last_ret == GST_FLOW_OK) {
     if (hlsdemux->pending_buffer) {
       GstMapInfo info;
-      gsize unpadded_size;
+      gssize unpadded_size;
 
       /* Handle pkcs7 unpadding here */
       gst_buffer_map (hlsdemux->pending_buffer, &info, GST_MAP_READ);
