@@ -1,6 +1,7 @@
 plugin_LTLIBRARIES = libgstcamerabin2.la
 
 libgstcamerabin2_la_SOURCES = gstviewfinderbin.c \
+				gstdigitalzoom.c \
 				camerabingeneral.c \
 				gstwrappercamerabinsrc.c \
 				gstcamerabin2.c \
@@ -23,5 +24,6 @@ libgstcamerabin2_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstviewfinderbin.h \
 		camerabingeneral.h \
+		gstdigitalzoom.h \
 		gstwrappercamerabinsrc.h \
 		gstcamerabin2.h
