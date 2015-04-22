@@ -88,7 +88,6 @@ enum
 enum
 {
   PROP_0,
-  PROP_SILENT
 };
 
 /* Initializations */
@@ -145,10 +144,6 @@ gst_dodge_class_init (GstDodgeClass * klass)
   gobject_class->get_property = gst_dodge_get_property;
   gobject_class->finalize = gst_dodge_finalize;
 
-  g_object_class_install_property (gobject_class, PROP_SILENT,
-      g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   vfilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_dodge_transform_frame);
 }
@@ -161,19 +156,13 @@ gst_dodge_class_init (GstDodgeClass * klass)
 static void
 gst_dodge_init (GstDodge * filter)
 {
-  filter->silent = FALSE;
 }
 
 static void
 gst_dodge_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstDodge *filter = GST_DODGE (object);
-
   switch (prop_id) {
-    case PROP_SILENT:
-      filter->silent = g_value_get_boolean (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -184,18 +173,11 @@ static void
 gst_dodge_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstDodge *filter = GST_DODGE (object);
-
-  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
-    case PROP_SILENT:
-      g_value_set_boolean (value, filter->silent);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (filter);
 }
 
 static void

@@ -73,7 +73,6 @@ struct _GstExclusion
 
   /* < private > */
   gint factor;
-  gboolean silent;
 };
 
 struct _GstExclusionClass

@@ -71,7 +71,6 @@ struct GstChromium
 
   /* < private > */
   gint edge_a, edge_b;
-  gboolean silent;
 };
 
 struct GstChromiumClass

@@ -73,7 +73,6 @@ struct _GstSolarize
 
   /* < private > */
   gint threshold, start, end;
-  gboolean silent;
 };
 
 struct _GstSolarizeClass

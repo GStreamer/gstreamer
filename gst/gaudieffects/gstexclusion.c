@@ -88,7 +88,6 @@ enum
 {
   PROP_0 = 0,
   PROP_FACTOR,
-  PROP_SILENT
 };
 
 /* Initializations */
@@ -155,10 +154,6 @@ gst_exclusion_class_init (GstExclusionClass * klass)
           "Exclusion factor parameter", 0, 175, DEFAULT_FACTOR,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
-  g_object_class_install_property (gobject_class, PROP_SILENT,
-      g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   vfilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_exclusion_transform_frame);
 }
@@ -172,7 +167,6 @@ static void
 gst_exclusion_init (GstExclusion * filter)
 {
   filter->factor = DEFAULT_FACTOR;
-  filter->silent = FALSE;
 }
 
 static void
@@ -182,9 +176,6 @@ gst_exclusion_set_property (GObject * object, guint prop_id,
   GstExclusion *filter = GST_EXCLUSION (object);
 
   switch (prop_id) {
-    case PROP_SILENT:
-      filter->silent = g_value_get_boolean (value);
-      break;
     case PROP_FACTOR:
       filter->factor = g_value_get_uint (value);
       break;
@@ -202,9 +193,6 @@ gst_exclusion_get_property (GObject * object, guint prop_id,
 
   GST_OBJECT_LOCK (filter);
   switch (prop_id) {
-    case PROP_SILENT:
-      g_value_set_boolean (value, filter->silent);
-      break;
     case PROP_FACTOR:
       g_value_set_uint (value, filter->factor);
       break;

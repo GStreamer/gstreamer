@@ -70,9 +70,6 @@ typedef struct _GstDodgeClass GstDodgeClass;
 struct _GstDodge
 {
   GstVideoFilter videofilter;
-
-  /* < private > */
-  gboolean silent;
 };
 
 struct _GstDodgeClass

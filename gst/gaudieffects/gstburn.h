@@ -73,7 +73,6 @@ struct _GstBurn
 
   /* < private > */
   gint adjustment;
-  gboolean silent;
 };
 
 struct _GstBurnClass
