@@ -303,10 +303,7 @@ transform (guint32 * src, guint32 * dest, gint video_area,
   gint period = 1, up_length = 1, down_length = 1;
   gint x, c;
   gint param;
-  static const guint floor = 0;
   static const guint ceiling = 255;
-
-
 
   if (end != start)
     period = end - start;
@@ -335,12 +332,10 @@ transform (guint32 * src, guint32 * dest, gint video_area,
       if (param < up_length) {
         color[c] = param * ceiling;
         color[c] /= up_length;
-        color[c] += floor;
       } else {
         color[c] = down_length - (param - up_length);
         color[c] *= ceiling;
         color[c] /= down_length;
-        color[c] += floor;
       }
     }
 
