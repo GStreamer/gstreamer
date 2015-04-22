@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		19A17EFC8D41A75E8D3DB72E /* OnlineMedia.plist in Resources */ = {isa = PBXBuildFile; fileRef = 19A176455D27298FE4041DC3 /* OnlineMedia.plist */; };
 		AD2B881F198D631B0070367B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B881E198D631B0070367B /* Foundation.framework */; };
 		AD2B8821198D631B0070367B /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B8820198D631B0070367B /* CoreGraphics.framework */; };
 		AD2B8823198D631B0070367B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B8822198D631B0070367B /* UIKit.framework */; };
@@ -26,6 +27,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		19A176455D27298FE4041DC3 /* OnlineMedia.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = OnlineMedia.plist; sourceTree = "<group>"; };
 		AD2B881B198D631B0070367B /* GstPlay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GstPlay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD2B881E198D631B0070367B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		AD2B8820198D631B0070367B /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -113,6 +115,7 @@
 				AD2B885F198D65780070367B /* VideoViewController.h */,
 				AD2B8860198D65780070367B /* VideoViewController.m */,
 				AD2B8827198D631B0070367B /* Supporting Files */,
+				19A176455D27298FE4041DC3 /* OnlineMedia.plist */,
 			);
 			path = GstPlay;
 			sourceTree = "<group>";
@@ -206,6 +209,7 @@
 				AD2B8835198D631B0070367B /* Ubuntu-R.ttf in Resources */,
 				AD2B8833198D631B0070367B /* fonts.conf in Resources */,
 				AD2B882B198D631B0070367B /* InfoPlist.strings in Resources */,
+				19A17EFC8D41A75E8D3DB72E /* OnlineMedia.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
