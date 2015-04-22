@@ -29,14 +29,15 @@ _sanitize_argument (gchar * arg)
 {
   char *equal_index = strstr (arg, "=");
   char *space_index = strstr (arg, " ");
-  gchar *new_string = g_malloc (sizeof (gchar) * (strlen (arg) + 3));
-  gchar *tmp_string = new_string;
+  gchar *new_string, *tmp_string;
 
   if (!space_index)
     return g_strdup (arg);
 
   if (!equal_index || equal_index > space_index)
     return g_strdup_printf ("\"%s\"", arg);
+
+  tmp_string = new_string = g_malloc (sizeof (gchar) * (strlen (arg) + 3));
 
   for (; *arg != '\0'; arg++) {
     *tmp_string = *arg;
