@@ -265,9 +265,13 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
     GST_DEBUG_OBJECT (self, "Pad already has caps %" GST_PTR_FORMAT, caps);
 
     if (!gst_caps_is_equal (caps, current_caps)) {
-      GST_ERROR_OBJECT (self, "New caps are not equal to old caps");
+      GST_DEBUG_OBJECT (self, "New caps, reconfiguring");
       gst_caps_unref (current_caps);
-      return FALSE;
+      if (self->mode == GST_DECKLINK_MODE_AUTO) {
+        return TRUE;
+      } else {
+        return FALSE;
+      }
     } else {
       gst_caps_unref (current_caps);
       return TRUE;
@@ -514,9 +518,6 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
         f->mode);
     self->caps_mode = f->mode;
     g_mutex_unlock (&self->lock);
-    g_mutex_lock (&self->input->lock);
-    self->input->mode = gst_decklink_get_mode (f->mode);
-    g_mutex_unlock (&self->input->lock);
     caps = gst_decklink_mode_get_caps (f->mode);
     gst_video_info_from_caps (&self->info, caps);
     gst_base_src_set_caps (GST_BASE_SRC_CAST (bsrc), caps);
