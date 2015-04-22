@@ -76,6 +76,11 @@ gst_digital_zoom_update_crop (GstDigitalZoom * self, GstCaps * caps)
   gfloat zoom;
   GstStructure *structure;
 
+  if (caps == NULL || gst_caps_is_any (caps)) {
+    g_object_set (self->capsfilter, "caps", NULL, NULL);
+    return;
+  }
+
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get (structure, "width", G_TYPE_INT, &width, "height",
       G_TYPE_INT, &height, NULL);
