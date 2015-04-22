@@ -110,6 +110,224 @@ buffering_cb (GstPlayer * player, gint percent, GstPlay * play)
   g_print ("Buffering: %d\n", percent);
 }
 
+static void
+print_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
+{
+  gint i, num;
+
+  num = gst_tag_list_get_tag_size (list, tag);
+  for (i = 0; i < num; ++i) {
+    const GValue *val;
+
+    val = gst_tag_list_get_value_index (list, tag, i);
+    if (G_VALUE_HOLDS_STRING (val)) {
+      g_print ("    %s : %s \n", tag, g_value_get_string (val));
+    } else if (G_VALUE_HOLDS_UINT (val)) {
+      g_print ("    %s : %u \n", tag, g_value_get_uint (val));
+    } else if (G_VALUE_HOLDS_DOUBLE (val)) {
+      g_print ("    %s : %g \n", tag, g_value_get_double (val));
+    } else if (G_VALUE_HOLDS_BOOLEAN (val)) {
+      g_print ("    %s : %s \n", tag,
+          g_value_get_boolean (val) ? "true" : "false");
+    } else if (GST_VALUE_HOLDS_DATE_TIME (val)) {
+      GstDateTime *dt = g_value_get_boxed (val);
+      gchar *dt_str = gst_date_time_to_iso8601_string (dt);
+
+      g_print ("    %s : %s \n", tag, dt_str);
+      g_free (dt_str);
+    } else {
+      g_print ("    %s : tag of type '%s' \n", tag, G_VALUE_TYPE_NAME (val));
+    }
+  }
+}
+
+static void
+print_video_info (GstPlayerVideoInfo * info)
+{
+  gint fps_n, fps_d;
+  guint par_n, par_d;
+
+  if (info == NULL)
+    return;
+
+  g_print ("  width : %d\n", gst_player_video_info_get_width (info));
+  g_print ("  height : %d\n", gst_player_video_info_get_height (info));
+  g_print ("  max_bitrate : %d\n",
+      gst_player_video_info_get_max_bitrate (info));
+  g_print ("  bitrate : %d\n", gst_player_video_info_get_bitrate (info));
+  gst_player_video_info_get_framerate (info, &fps_n, &fps_d);
+  g_print ("  frameate : %.2f\n", (gdouble) fps_n / fps_d);
+  gst_player_video_info_get_pixel_aspect_ratio (info, &par_n, &par_d);
+  g_print ("  pixel-aspect-ratio  %u:%u\n", par_n, par_d);
+}
+
+static void
+print_audio_info (GstPlayerAudioInfo * info)
+{
+  if (info == NULL)
+    return;
+
+  g_print ("  sample rate : %d\n",
+      gst_player_audio_info_get_sample_rate (info));
+  g_print ("  channels : %d\n", gst_player_audio_info_get_channels (info));
+  g_print ("  max_bitrate : %d\n",
+      gst_player_audio_info_get_max_bitrate (info));
+  g_print ("  bitrate : %d\n", gst_player_audio_info_get_bitrate (info));
+  g_print ("  language : %s\n", gst_player_audio_info_get_language (info));
+}
+
+static void
+print_subtitle_info (GstPlayerSubtitleInfo * info)
+{
+  if (info == NULL)
+    return;
+
+  g_print ("  language : %s\n", gst_player_subtitle_get_language (info));
+}
+
+static void
+print_all_stream_info (GstPlayerMediaInfo * media_info)
+{
+  guint count = 0;
+  GList *l, *list;
+
+  list = gst_player_media_info_get_stream_list (media_info);
+  g_print ("URI : %s\n", gst_player_media_info_get_uri (media_info));
+  g_print ("Duration: %" GST_TIME_FORMAT "\n",
+      GST_TIME_ARGS (gst_player_media_info_get_duration (media_info)));
+  for (l = list; l != NULL; l = l->next) {
+    GstTagList *tags = NULL;
+    GstPlayerStreamInfo *stream = (GstPlayerStreamInfo *) l->data;
+
+    g_print (" Stream # %u \n", count++);
+    g_print ("  type : %s_%u\n",
+        gst_player_stream_info_get_stream_type_nick (stream),
+        gst_player_stream_info_get_stream_index (stream));
+    tags = gst_player_stream_info_get_stream_tags (stream);
+    g_print ("  taglist : \n");
+    if (tags) {
+      gst_tag_list_foreach (tags, print_one_tag, NULL);
+    }
+
+    if (GST_IS_PLAYER_VIDEO_INFO (stream))
+      print_video_info ((GstPlayerVideoInfo *) stream);
+    else if (GST_IS_PLAYER_AUDIO_INFO (stream))
+      print_audio_info ((GstPlayerAudioInfo *) stream);
+    else
+      print_subtitle_info ((GstPlayerSubtitleInfo *) stream);
+  }
+}
+
+static void
+print_all_video_stream (GstPlayerMediaInfo * media_info)
+{
+  GList *list = NULL, *l;
+
+  list = gst_player_get_video_streams (media_info);
+  if (!list)
+    return;
+
+  g_print ("All video streams\n");
+  for (l = list; l != NULL; l = l->next) {
+    GstPlayerVideoInfo *info = (GstPlayerVideoInfo *) l->data;
+    GstPlayerStreamInfo *sinfo = (GstPlayerStreamInfo *) info;
+    g_print (" %s_%d #\n", gst_player_stream_info_get_stream_type_nick (sinfo),
+        gst_player_stream_info_get_stream_index (sinfo));
+    print_video_info (info);
+  }
+}
+
+static void
+print_all_subtitle_stream (GstPlayerMediaInfo * media_info)
+{
+  GList *list = NULL, *l;
+
+  list = gst_player_get_subtitle_streams (media_info);
+  if (!list)
+    return;
+
+  g_print ("All subtitle streams:\n");
+  for (l = list; l != NULL; l = l->next) {
+    GstPlayerSubtitleInfo *info = (GstPlayerSubtitleInfo *) l->data;
+    GstPlayerStreamInfo *sinfo = (GstPlayerStreamInfo *) info;
+    g_print (" %s_%d #\n", gst_player_stream_info_get_stream_type_nick (sinfo),
+        gst_player_stream_info_get_stream_index (sinfo));
+    print_subtitle_info (info);
+  }
+}
+
+static void
+print_all_audio_stream (GstPlayerMediaInfo * media_info)
+{
+  GList *list = NULL, *l;
+
+  list = gst_player_get_audio_streams (media_info);
+  if (!list)
+    return;
+
+  g_print ("All audio streams: \n");
+  for (l = list; l != NULL; l = l->next) {
+    GstPlayerAudioInfo *info = (GstPlayerAudioInfo *) l->data;
+    GstPlayerStreamInfo *sinfo = (GstPlayerStreamInfo *) info;
+    g_print (" %s_%d #\n", gst_player_stream_info_get_stream_type_nick (sinfo),
+        gst_player_stream_info_get_stream_index (sinfo));
+    print_audio_info (info);
+  }
+}
+
+static void
+print_current_tracks (GstPlay * play)
+{
+  GstPlayerAudioInfo *audio = NULL;
+  GstPlayerVideoInfo *video = NULL;
+  GstPlayerSubtitleInfo *subtitle = NULL;
+
+  g_print ("Current video track: \n");
+  video = gst_player_get_current_video_track (play->player);
+  print_video_info (video);
+
+  g_print ("Current audio track: \n");
+  audio = gst_player_get_current_audio_track (play->player);
+  print_audio_info (audio);
+
+  g_print ("Current subtitle track: \n");
+  subtitle = gst_player_get_current_subtitle_track (play->player);
+  print_subtitle_info (subtitle);
+
+  if (audio)
+    g_object_unref (audio);
+
+  if (video)
+    g_object_unref (video);
+
+  if (subtitle)
+    g_object_unref (subtitle);
+}
+
+static void
+print_media_info (GstPlayerMediaInfo * media_info)
+{
+  print_all_stream_info (media_info);
+  g_print ("\n");
+  print_all_video_stream (media_info);
+  g_print ("\n");
+  print_all_audio_stream (media_info);
+  g_print ("\n");
+  print_all_subtitle_stream (media_info);
+}
+
+static void
+media_info_cb (GstPlayer * player, GstPlayerMediaInfo * info, GstPlay * play)
+{
+  static int once = 0;
+
+  if (!once) {
+    print_media_info (info);
+    print_current_tracks (play);
+    once = 1;
+  }
+}
+
 static GstPlay *
 play_new (gchar ** uris, gdouble initial_volume)
 {
@@ -128,11 +346,13 @@ play_new (gchar ** uris, gdouble initial_volume)
       G_CALLBACK (position_updated_cb), play);
   g_signal_connect (play->player, "state-changed",
       G_CALLBACK (state_changed_cb), play);
-  g_signal_connect (play->player, "buffering",
-      G_CALLBACK (buffering_cb), play);
+  g_signal_connect (play->player, "buffering", G_CALLBACK (buffering_cb), play);
   g_signal_connect (play->player, "end-of-stream",
       G_CALLBACK (end_of_stream_cb), play);
   g_signal_connect (play->player, "error", G_CALLBACK (error_cb), play);
+
+  g_signal_connect (play->player, "media-info-updated",
+      G_CALLBACK (media_info_cb), play);
 
   play->loop = g_main_loop_new (NULL, FALSE);
   play->desired_state = GST_STATE_PLAYING;
@@ -347,6 +567,16 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
   GstPlay *play = (GstPlay *) user_data;
 
   switch (g_ascii_tolower (key_input[0])) {
+    case 'i':
+    {
+      GstPlayerMediaInfo *media_info = gst_player_get_media_info (play->player);
+      if (media_info) {
+        print_media_info (media_info);
+        g_object_unref (media_info);
+        print_current_tracks (play);
+      }
+      break;
+    }
     case ' ':
       toggle_paused (play);
       break;
