@@ -174,7 +174,24 @@ gst_digital_zoom_sink_query (GstPad * sink, GstObject * parent,
     case GST_QUERY_CAPS:
     case GST_QUERY_ACCEPT_CAPS:
       if (self->elements_created)
-        return gst_pad_query (self->capsfilter_sinkpad, query);
+        return gst_pad_peer_query (self->srcpad, query);
+      /* fall through */
+    default:
+      return gst_pad_query_default (sink, parent, query);
+  }
+}
+
+static gboolean
+gst_digital_zoom_src_query (GstPad * sink, GstObject * parent, GstQuery * query)
+{
+  GstDigitalZoom *self = GST_DIGITAL_ZOOM_CAST (parent);
+  switch (GST_QUERY_TYPE (query)) {
+      /* for caps related queries we want to skip videocrop ! videoscale
+       * as the digital zoom preserves input dimensions */
+    case GST_QUERY_CAPS:
+    case GST_QUERY_ACCEPT_CAPS:
+      if (self->elements_created)
+        return gst_pad_peer_query (self->sinkpad, query);
       /* fall through */
     default:
       return gst_pad_query_default (sink, parent, query);
@@ -249,6 +266,9 @@ gst_digital_zoom_init (GstDigitalZoom * self)
       GST_DEBUG_FUNCPTR (gst_digital_zoom_sink_event));
   gst_pad_set_query_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_digital_zoom_sink_query));
+
+  gst_pad_set_query_function (self->srcpad,
+      GST_DEBUG_FUNCPTR (gst_digital_zoom_src_query));
 
   self->zoom = 1;
 }
