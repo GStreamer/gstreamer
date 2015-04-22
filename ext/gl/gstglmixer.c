@@ -502,7 +502,6 @@ gst_gl_mixer_decide_allocation (GstGLBaseMixer * base_mix, GstQuery * query)
   GstCaps *caps;
   guint min, max, size;
   gboolean update_pool;
-  GError *error = NULL;
   guint out_width, out_height;
 
   out_width = GST_VIDEO_INFO_WIDTH (&vagg->info);
@@ -566,8 +565,7 @@ gst_gl_mixer_decide_allocation (GstGLBaseMixer * base_mix, GstQuery * query)
 
 context_error:
   {
-    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s", error->message),
-        (NULL));
+    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("Context error"), (NULL));
     return FALSE;
   }
 }
