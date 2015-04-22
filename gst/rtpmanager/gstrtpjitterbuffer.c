@@ -2027,9 +2027,28 @@ calculate_packet_spacing (GstRtpJitterBuffer * jitterbuffer, guint32 rtptime,
   if (priv->ips_rtptime != rtptime) {
     /* rtptime changed, check dts diff */
     if (priv->ips_dts != -1 && dts != -1 && dts > priv->ips_dts) {
-      priv->packet_spacing = dts - priv->ips_dts;
+      GstClockTime new_packet_spacing = dts - priv->ips_dts;
+      GstClockTime old_packet_spacing = priv->packet_spacing;
+
+      /* Biased towards bigger packet spacings to prevent
+       * too many unneeded retransmission requests for next
+       * packets that just arrive a little later than we would
+       * expect */
+      if (old_packet_spacing > new_packet_spacing)
+        priv->packet_spacing =
+            (new_packet_spacing + 3 * old_packet_spacing) / 4;
+      else if (old_packet_spacing > 0)
+        priv->packet_spacing =
+            (3 * new_packet_spacing + old_packet_spacing) / 4;
+      else
+        priv->packet_spacing = new_packet_spacing;
+
       GST_DEBUG_OBJECT (jitterbuffer,
-          "new packet spacing %" GST_TIME_FORMAT,
+          "new packet spacing %" GST_TIME_FORMAT
+          " old packet spacing %" GST_TIME_FORMAT
+          " combined to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (new_packet_spacing),
+          GST_TIME_ARGS (old_packet_spacing),
           GST_TIME_ARGS (priv->packet_spacing));
     }
     priv->ips_rtptime = rtptime;
