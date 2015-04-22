@@ -508,6 +508,48 @@ GST_START_TEST (test_map_resize)
 
 GST_END_TEST;
 
+GST_START_TEST (test_alloc_params)
+{
+  GstMemory *mem;
+  GstMapInfo info;
+  gsize size, offset, maxalloc;
+  GstAllocationParams params;
+  guint8 arr[10];
+
+  memset (arr, 0, 10);
+
+  gst_allocation_params_init (&params);
+  params.padding = 10;
+  params.prefix = 10;
+  params.flags = GST_MEMORY_FLAG_ZERO_PREFIXED | GST_MEMORY_FLAG_ZERO_PADDED;
+  mem = gst_allocator_alloc (NULL, 100, &params);
+
+  /*Checking size and offset */
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 100);
+  fail_unless (offset == 10);
+  fail_unless (maxalloc >= 120);
+
+  fail_unless (GST_MEMORY_FLAG_IS_SET (mem, GST_MEMORY_FLAG_ZERO_PREFIXED));
+  fail_unless (GST_MEMORY_FLAG_IS_SET (mem, GST_MEMORY_FLAG_ZERO_PADDED));
+
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+  fail_unless (info.data != NULL);
+  fail_unless (info.size == 100);
+
+  /*Checking prefix */
+  fail_unless (memcmp (info.data - 10, arr, 10) == 0);
+
+  /*Checking padding */
+  fail_unless (memcmp (info.data + 100, arr, 10) == 0);
+
+
+  gst_memory_unmap (mem, &info);
+  gst_memory_unref (mem);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 gst_memory_suite (void)
@@ -526,6 +568,7 @@ gst_memory_suite (void)
   tcase_add_test (tc_chain, test_map);
   tcase_add_test (tc_chain, test_map_nested);
   tcase_add_test (tc_chain, test_map_resize);
+  tcase_add_test (tc_chain, test_alloc_params);
 
   return s;
 }
