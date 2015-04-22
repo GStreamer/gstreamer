@@ -545,10 +545,71 @@ key_failed:
 }
 
 static GstFlowReturn
+gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream, GstBuffer * buffer, gboolean force)
+{
+  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+
+  if (G_UNLIKELY (hlsdemux->do_typefind && buffer != NULL)) {
+    GstCaps *caps = NULL;
+    GstMapInfo info;
+    guint buffer_size;
+    GstTypeFindProbability prob = GST_TYPE_FIND_NONE;
+
+    gst_buffer_map (buffer, &info, GST_MAP_READ);
+    buffer_size = info.size;
+
+    /* Typefind could miss if buffer is too small. In this case we
+     * will retry later */
+    if (buffer_size >= (2 * 1024)) {
+      caps =
+          gst_type_find_helper_for_data (GST_OBJECT_CAST (hlsdemux), info.data,
+          info.size, &prob);
+    }
+    gst_buffer_unmap (buffer, &info);
+
+    if (G_UNLIKELY (!caps)) {
+      /* Only fail typefinding if we already a good amount of data
+       * and we still don't know the type */
+      if (buffer_size > (2 * 1024 * 1024) || force) {
+        GST_ELEMENT_ERROR (hlsdemux, STREAM, TYPE_NOT_FOUND,
+            ("Could not determine type of stream"), (NULL));
+        gst_buffer_unref (buffer);
+        return GST_FLOW_NOT_NEGOTIATED;
+      } else {
+        if (hlsdemux->pending_buffer)
+          hlsdemux->pending_buffer =
+              gst_buffer_append (buffer, hlsdemux->pending_buffer);
+        else
+          hlsdemux->pending_buffer = buffer;
+        return GST_FLOW_OK;
+      }
+    }
+
+    GST_DEBUG_OBJECT (hlsdemux, "Typefind result: %" GST_PTR_FORMAT " prob:%d",
+        caps, prob);
+
+    if (!hlsdemux->input_caps
+        || !gst_caps_is_equal (caps, hlsdemux->input_caps)) {
+      gst_caps_replace (&hlsdemux->input_caps, caps);
+      GST_INFO_OBJECT (demux, "Input source caps: %" GST_PTR_FORMAT,
+          hlsdemux->input_caps);
+    }
+    gst_adaptive_demux_stream_set_caps (stream, caps);
+    hlsdemux->do_typefind = FALSE;
+  }
+
+  if (buffer)
+    return gst_adaptive_demux_stream_push_buffer (stream, buffer);
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
 gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream)
 {
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (hlsdemux->current_key)
     gst_hls_demux_decrypt_end (hlsdemux);
@@ -559,20 +620,24 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
       ": %" G_GSIZE_FORMAT, gst_adapter_available (stream->adapter));
   gst_adapter_clear (stream->adapter);
 
-  /* pending buffer is only used for encrypted streams */
   if (stream->last_ret == GST_FLOW_OK) {
     if (hlsdemux->pending_buffer) {
-      GstMapInfo info;
-      gssize unpadded_size;
+      if (hlsdemux->current_key) {
+        GstMapInfo info;
+        gssize unpadded_size;
 
-      /* Handle pkcs7 unpadding here */
-      gst_buffer_map (hlsdemux->pending_buffer, &info, GST_MAP_READ);
-      unpadded_size = info.size - info.data[info.size - 1];
-      gst_buffer_unmap (hlsdemux->pending_buffer, &info);
+        /* Handle pkcs7 unpadding here */
+        gst_buffer_map (hlsdemux->pending_buffer, &info, GST_MAP_READ);
+        unpadded_size = info.size - info.data[info.size - 1];
+        gst_buffer_unmap (hlsdemux->pending_buffer, &info);
 
-      gst_buffer_resize (hlsdemux->pending_buffer, 0, unpadded_size);
+        gst_buffer_resize (hlsdemux->pending_buffer, 0, unpadded_size);
+      }
 
-      gst_adaptive_demux_stream_push_buffer (stream, hlsdemux->pending_buffer);
+      ret =
+          gst_hls_demux_handle_buffer (demux, stream, hlsdemux->pending_buffer,
+          TRUE);
+      hlsdemux->pending_buffer = NULL;
     }
   } else {
     if (hlsdemux->pending_buffer)
@@ -580,8 +645,10 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
     hlsdemux->pending_buffer = NULL;
   }
 
-  return gst_adaptive_demux_stream_advance_fragment (demux, stream,
-      stream->fragment.duration);
+  if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED)
+    return gst_adaptive_demux_stream_advance_fragment (demux, stream,
+        stream->fragment.duration);
+  return ret;
 }
 
 static GstFlowReturn
@@ -626,59 +693,7 @@ gst_hls_demux_data_received (GstAdaptiveDemux * demux,
     }
   }
 
-  if (G_UNLIKELY (hlsdemux->do_typefind && buffer != NULL)) {
-    GstCaps *caps = NULL;
-    GstMapInfo info;
-    guint buffer_size;
-    GstTypeFindProbability prob = GST_TYPE_FIND_NONE;
-
-    gst_buffer_map (buffer, &info, GST_MAP_READ);
-    buffer_size = info.size;
-
-    /* Typefind could miss if buffer is too small. In this case we
-     * will retry later */
-    if (buffer_size >= (2 * 1024)) {
-      caps =
-          gst_type_find_helper_for_data (GST_OBJECT_CAST (hlsdemux), info.data,
-          info.size, &prob);
-    }
-    gst_buffer_unmap (buffer, &info);
-
-    if (G_UNLIKELY (!caps)) {
-      /* Only fail typefinding if we already a good amount of data
-       * and we still don't know the type */
-      if (buffer_size > (2 * 1024 * 1024)) {
-        GST_ELEMENT_ERROR (hlsdemux, STREAM, TYPE_NOT_FOUND,
-            ("Could not determine type of stream"), (NULL));
-        gst_buffer_unref (buffer);
-        return GST_FLOW_NOT_NEGOTIATED;
-      } else {
-        if (hlsdemux->pending_buffer)
-          hlsdemux->pending_buffer =
-              gst_buffer_append (buffer, hlsdemux->pending_buffer);
-        else
-          hlsdemux->pending_buffer = buffer;
-        return GST_FLOW_OK;
-      }
-    }
-
-    GST_DEBUG_OBJECT (hlsdemux, "Typefind result: %" GST_PTR_FORMAT " prob:%d",
-        caps, prob);
-
-    if (!hlsdemux->input_caps
-        || !gst_caps_is_equal (caps, hlsdemux->input_caps)) {
-      gst_caps_replace (&hlsdemux->input_caps, caps);
-      GST_INFO_OBJECT (demux, "Input source caps: %" GST_PTR_FORMAT,
-          hlsdemux->input_caps);
-    }
-    gst_adaptive_demux_stream_set_caps (stream, caps);
-    hlsdemux->do_typefind = FALSE;
-  }
-
-  if (buffer) {
-    return gst_adaptive_demux_stream_push_buffer (stream, buffer);
-  }
-  return GST_FLOW_OK;
+  return gst_hls_demux_handle_buffer (demux, stream, buffer, FALSE);
 }
 
 static gboolean
