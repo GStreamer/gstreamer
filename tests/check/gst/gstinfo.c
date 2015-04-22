@@ -330,6 +330,60 @@ GST_START_TEST (info_register_same_debug_category_twice)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (info_set_and_unset_single)
+{
+  GstDebugLevel orig = gst_debug_get_default_threshold ();
+  GstDebugLevel cat1, cat2;
+  GstDebugCategory *states;
+
+  GST_DEBUG_CATEGORY_GET (states, "GST_STATES");
+  fail_unless (states != NULL);
+
+  gst_debug_set_default_threshold (GST_LEVEL_WARNING);
+
+  gst_debug_set_threshold_for_name ("GST_STATES", GST_LEVEL_DEBUG);
+  cat1 = gst_debug_category_get_threshold (states);
+  gst_debug_unset_threshold_for_name ("GST_STATES");
+  cat2 = gst_debug_category_get_threshold (states);
+
+  gst_debug_set_default_threshold (orig);
+  fail_unless (cat1 = GST_LEVEL_DEBUG);
+  fail_unless (cat2 = GST_LEVEL_WARNING);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (info_set_and_unset_multiple)
+{
+  GstDebugLevel orig = gst_debug_get_default_threshold ();
+  GstDebugLevel cat1, cat2, cat3;
+  GstDebugCategory *states;
+  GstDebugCategory *caps;
+
+  GST_DEBUG_CATEGORY_GET (states, "GST_STATES");
+  GST_DEBUG_CATEGORY_GET (caps, "GST_CAPS");
+  fail_unless (states != NULL);
+  fail_unless (caps != NULL);
+
+  gst_debug_set_default_threshold (GST_LEVEL_WARNING);
+
+  gst_debug_set_threshold_for_name ("GST_STATES", GST_LEVEL_DEBUG);
+  gst_debug_set_threshold_for_name ("GST_CAPS", GST_LEVEL_DEBUG);
+  cat1 = gst_debug_category_get_threshold (states);
+  gst_debug_unset_threshold_for_name ("GST_STATES");
+  gst_debug_unset_threshold_for_name ("GST_CAPS");
+  cat2 = gst_debug_category_get_threshold (states);
+  cat3 = gst_debug_category_get_threshold (caps);
+
+  gst_debug_set_default_threshold (orig);
+
+  fail_unless (cat1 = GST_LEVEL_DEBUG);
+  fail_unless (cat2 = GST_LEVEL_WARNING);
+  fail_unless (cat3 = GST_LEVEL_WARNING);
+}
+
+GST_END_TEST;
 #endif
 
 GST_START_TEST (info_fourcc)
@@ -367,6 +421,8 @@ gst_info_suite (void)
   tcase_add_test (tc_chain, info_fixme);
   tcase_add_test (tc_chain, info_old_printf_extensions);
   tcase_add_test (tc_chain, info_register_same_debug_category_twice);
+  tcase_add_test (tc_chain, info_set_and_unset_single);
+  tcase_add_test (tc_chain, info_set_and_unset_multiple);
 #endif
 
   return s;
