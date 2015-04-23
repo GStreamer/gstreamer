@@ -960,15 +960,13 @@ static gboolean
 analyzer_create_dirs ()
 {
   const gchar *user_cache_dir;
-  gchar *xml_files_path;
-  gchar *hex_files_path;
+  gchar *xml_files_path = NULL;
+  gchar *hex_files_path = NULL;
   gboolean ret = TRUE;
 
   user_cache_dir = g_get_user_cache_dir ();
-  if (!user_cache_dir) {
-    ret = FALSE;
-    goto done;
-  }
+  if (!user_cache_dir)
+    return FALSE;
 
   ui->analyzer_home = g_build_filename (user_cache_dir, "codecanalyzer", NULL);
 
