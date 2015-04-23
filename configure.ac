@@ -1,4 +1,4 @@
-AC_PREREQ([2.68])
+AC_PREREQ([2.69])
 
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
@@ -8,7 +8,7 @@ AC_INIT([GStreamer Bad Plug-ins],[1.5.0.1],[http://bugzilla.gnome.org/enter_bug.
 AG_GST_INIT
 
 dnl initialize automake
-AM_INIT_AUTOMAKE([-Wno-portability 1.11 no-dist-gzip dist-xz tar-ustar subdir-objects])
+AM_INIT_AUTOMAKE([-Wno-portability 1.14 no-dist-gzip dist-xz tar-ustar subdir-objects])
 
 dnl define PACKAGE_VERSION_* variables
 AS_VERSION
