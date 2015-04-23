@@ -4642,6 +4642,8 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
               gst_pad_send_event (ostream->channelpad[1],
                   gst_event_new_caps (caps));
           }
+
+          gst_caps_unref (caps);
         }
       }
     }
