@@ -23,14 +23,14 @@
 
 #define TIMEOUT 2
 
-static gboolean timeout_1 (GMainLoop * loop, gboolean ignored);
+static gboolean timeout_1 (GMainLoop * loop);
 
 static guint id;
 static gint rounds = 3;
 static GstRTSPServer *server;
 
 static gboolean
-timeout_2 (GMainLoop * loop, gboolean ignored)
+timeout_2 (GMainLoop * loop)
 {
   rounds--;
   if (rounds > 0) {
@@ -44,7 +44,7 @@ timeout_2 (GMainLoop * loop, gboolean ignored)
 }
 
 static gboolean
-timeout_1 (GMainLoop * loop, gboolean ignored)
+timeout_1 (GMainLoop * loop)
 {
   g_source_remove (id);
   g_print ("have removed\n");

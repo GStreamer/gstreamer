@@ -25,7 +25,7 @@
  * pool. This needs to be run explicitly currently but might be done
  * automatically as part of the mainloop. */
 static gboolean
-timeout (GstRTSPServer * server, gboolean ignored)
+timeout (GstRTSPServer * server)
 {
   GstRTSPSessionPool *pool;
 

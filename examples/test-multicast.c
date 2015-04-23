@@ -23,7 +23,7 @@
 
 
 static gboolean
-timeout (GstRTSPServer * server, gboolean ignored)
+timeout (GstRTSPServer * server)
 {
   GstRTSPSessionPool *pool;
 

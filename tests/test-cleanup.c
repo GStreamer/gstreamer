@@ -22,7 +22,7 @@
 #include <gst/rtsp-server/rtsp-server.h>
 
 static gboolean
-timeout (GMainLoop * loop, gboolean ignored)
+timeout (GMainLoop * loop)
 {
   g_main_loop_quit (loop);
   return FALSE;
