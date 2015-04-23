@@ -166,7 +166,7 @@ rtp_stats_calculate_rtcp_interval (RTPSessionStats * stats, gboolean we_send,
 
   /* no bandwidth for RTCP, return NONE to signal that we don't want to send
    * RTCP packets */
-  if (rtcp_bw <= 0.00001)
+  if (rtcp_bw <= 0.0001)
     return GST_CLOCK_TIME_NONE;
 
   avg_rtcp_size = stats->avg_rtcp_packet_size;
