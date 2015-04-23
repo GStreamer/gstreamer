@@ -129,11 +129,6 @@ gst_hls_demux_dispose (GObject * obj)
 {
   GstHLSDemux *demux = GST_HLS_DEMUX (obj);
 
-  if (demux->downloader != NULL) {
-    g_object_unref (demux->downloader);
-    demux->downloader = NULL;
-  }
-
   gst_hls_demux_reset (GST_ADAPTIVE_DEMUX_CAST (demux));
   gst_m3u8_client_free (demux->client);
 
@@ -206,11 +201,7 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
 static void
 gst_hls_demux_init (GstHLSDemux * demux)
 {
-  /* Downloader */
-  demux->downloader = gst_uri_downloader_new ();
-
   demux->do_typefind = TRUE;
-
 }
 
 static void
@@ -249,7 +240,6 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_hls_demux_reset (GST_ADAPTIVE_DEMUX_CAST (demux));
-      gst_uri_downloader_reset (demux->downloader);
       break;
     default:
       break;
@@ -334,7 +324,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
     gst_m3u8_client_set_current (hlsdemux->client,
         hlsdemux->client->main->iframe_lists->data);
-    gst_uri_downloader_reset (hlsdemux->downloader);
+    gst_uri_downloader_reset (demux->downloader);
     if (!gst_hls_demux_update_playlist (hlsdemux, FALSE, &err)) {
       GST_ELEMENT_ERROR_FROM_ERROR (hlsdemux, "Could not switch playlist", err);
       return FALSE;
@@ -353,7 +343,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
     gst_m3u8_client_set_current (hlsdemux->client,
         hlsdemux->client->main->lists->data);
-    gst_uri_downloader_reset (hlsdemux->downloader);
+    gst_uri_downloader_reset (demux->downloader);
     if (!gst_hls_demux_update_playlist (hlsdemux, FALSE, &err)) {
       GST_ELEMENT_ERROR_FROM_ERROR (hlsdemux, "Could not switch playlist", err);
       return FALSE;
@@ -514,7 +504,7 @@ gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
 
       GST_INFO_OBJECT (demux, "Fetching key %s", hlsdemux->current_key);
       key_fragment =
-          gst_uri_downloader_fetch_uri (hlsdemux->downloader,
+          gst_uri_downloader_fetch_uri (demux->downloader,
           hlsdemux->current_key, hlsdemux->client->main ?
           hlsdemux->client->main->uri : NULL, FALSE, FALSE,
           hlsdemux->client->current ? hlsdemux->client->current->
@@ -867,6 +857,7 @@ static gboolean
 gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
     GError ** err)
 {
+  GstAdaptiveDemux *adaptive_demux = GST_ADAPTIVE_DEMUX (demux);
   GstFragment *download;
   GstBuffer *buf;
   gchar *playlist;
@@ -877,7 +868,7 @@ retry:
   uri = gst_m3u8_client_get_current_uri (demux->client);
   main_uri = gst_m3u8_client_get_uri (demux->client);
   download =
-      gst_uri_downloader_fetch_uri (demux->downloader, uri, main_uri,
+      gst_uri_downloader_fetch_uri (adaptive_demux->downloader, uri, main_uri,
       TRUE, TRUE, TRUE, err);
   g_free (main_uri);
   if (download == NULL) {
@@ -890,7 +881,7 @@ retry:
           "Updating playlist %s failed, attempt to refresh variant playlist %s",
           uri, main_uri);
       download =
-          gst_uri_downloader_fetch_uri (demux->downloader,
+          gst_uri_downloader_fetch_uri (adaptive_demux->downloader,
           main_uri, NULL, TRUE, TRUE, TRUE, &err2);
       g_free (main_uri);
       g_clear_error (&err2);

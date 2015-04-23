@@ -27,7 +27,6 @@
 #include <gst/gst.h>
 #include "m3u8.h"
 #include "gstfragmented.h"
-#include <gst/uridownloader/gsturidownloader.h>
 #include <gst/adaptivedemux/gstadaptivedemux.h>
 #if defined(HAVE_OPENSSL)
 #include <openssl/evp.h>
@@ -68,7 +67,6 @@ struct _GstHLSDemux
   gint srcpad_counter;
 
   GstCaps *input_caps;
-  GstUriDownloader *downloader;
   gchar *uri;                   /* Original playlist URI */
   GstM3U8Client *client;        /* M3U8 client */
   gboolean do_typefind;         /* Whether we need to typefind the next buffer */
