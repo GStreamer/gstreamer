@@ -100,8 +100,7 @@ static gint64 gst_hls_demux_get_manifest_update_interval (GstAdaptiveDemux *
     demux);
 static gboolean gst_hls_demux_process_manifest (GstAdaptiveDemux * demux,
     GstBuffer * buf);
-static GstFlowReturn gst_hls_demux_update_manifest_data (GstAdaptiveDemux *
-    demux, GstBuffer * buf);
+static GstFlowReturn gst_hls_demux_update_manifest (GstAdaptiveDemux * demux);
 static gboolean gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek);
 static gboolean
 gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
@@ -186,8 +185,7 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
   adaptivedemux_class->get_manifest_update_interval =
       gst_hls_demux_get_manifest_update_interval;
   adaptivedemux_class->process_manifest = gst_hls_demux_process_manifest;
-  adaptivedemux_class->update_manifest_data =
-      gst_hls_demux_update_manifest_data;
+  adaptivedemux_class->update_manifest = gst_hls_demux_update_manifest;
   adaptivedemux_class->reset = gst_hls_demux_reset;
   adaptivedemux_class->seek = gst_hls_demux_seek;
   adaptivedemux_class->stream_has_next_fragment =
@@ -401,7 +399,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
 }
 
 static GstFlowReturn
-gst_hls_demux_update_manifest_data (GstAdaptiveDemux * demux, GstBuffer * buf)
+gst_hls_demux_update_manifest (GstAdaptiveDemux * demux)
 {
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   if (!gst_hls_demux_update_playlist (hlsdemux, TRUE, NULL))
