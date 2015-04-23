@@ -35,6 +35,14 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
 
+/docs/plugins/gst-libav-plugins-sections.txt
+/docs/plugins/gst-libav-plugins-undeclared.txt
+
+/test-driver
+/tests/check/*/*.log
+/tests/check/*/*.trs
+/tests/check/test-suite.log
+
 Build
 *.user
 *.suo
