@@ -168,7 +168,7 @@ static GstFlowReturn gst_level_transform_ip (GstBaseTransform * trans,
 static void gst_level_post_message (GstLevel * filter);
 static gboolean gst_level_sink_event (GstBaseTransform * trans,
     GstEvent * event);
-
+static void gst_level_recalc_interval_frames (GstLevel * level);
 
 static void
 gst_level_class_init (GstLevelClass * klass)
@@ -299,10 +299,10 @@ gst_level_set_property (GObject * object, guint prop_id,
       break;
     case PROP_INTERVAL:
       filter->interval = g_value_get_uint64 (value);
+      /* Not exactly thread-safe, but property does not advertise that it
+       * can be changed at runtime anyway */
       if (GST_AUDIO_INFO_RATE (&filter->info)) {
-        filter->interval_frames =
-            GST_CLOCK_TIME_TO_FRAMES (filter->interval,
-            GST_AUDIO_INFO_RATE (&filter->info));
+        gst_level_recalc_interval_frames (filter);
       }
       break;
     case PROP_PEAK_TTL:
@@ -431,13 +431,36 @@ gst_level_calculate_gdouble (gpointer data, guint num, guint channels,
 }
 */
 
+static void
+gst_level_recalc_interval_frames (GstLevel * level)
+{
+  GstClockTime interval = level->interval;
+  guint sample_rate = GST_AUDIO_INFO_RATE (&level->info);
+  guint interval_frames;
+
+  interval_frames = GST_CLOCK_TIME_TO_FRAMES (interval, sample_rate);
+
+  if (interval_frames == 0) {
+    GST_WARNING_OBJECT (level, "interval %" GST_TIME_FORMAT " is too small, "
+        "should be at least %" GST_TIME_FORMAT " for sample rate %u",
+        GST_TIME_ARGS (interval),
+        GST_TIME_ARGS (GST_FRAMES_TO_CLOCK_TIME (1, sample_rate)), sample_rate);
+    interval_frames = 1;
+  }
+
+  level->interval_frames = interval_frames;
+
+  GST_INFO_OBJECT (level, "interval_frames now %u for interval "
+      "%" GST_TIME_FORMAT " and sample rate %u", interval_frames,
+      GST_TIME_ARGS (interval), sample_rate);
+}
 
 static gboolean
 gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
   GstLevel *filter = GST_LEVEL (trans);
   GstAudioInfo info;
-  gint i, channels, rate;
+  gint i, channels;
 
   if (!gst_audio_info_from_caps (&info, in))
     return FALSE;
@@ -466,7 +489,6 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   filter->info = info;
 
   channels = GST_AUDIO_INFO_CHANNELS (&info);
-  rate = GST_AUDIO_INFO_RATE (&info);
 
   /* allocate channel variable arrays */
   g_free (filter->CS);
@@ -489,7 +511,7 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
     filter->decay_peak_age[i] = G_GUINT64_CONSTANT (0);
   }
 
-  filter->interval_frames = GST_CLOCK_TIME_TO_FRAMES (filter->interval, rate);
+  gst_level_recalc_interval_frames (filter);
 
   return TRUE;
 }
