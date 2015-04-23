@@ -116,6 +116,18 @@ gst_check_message_error (msg, GST_MESSAGE_ERROR,                \
   GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code)
 #define assert_message_error(m, d, c) fail_unless_message_error(m, d, c)
 
+#ifdef GST_CHECK_TEST_ENVIRONMENT_BEACON
+#define GST_DO_CHECK_TEST_ENVIRONMENT \
+G_STMT_START {                        \
+  if (g_getenv (GST_CHECK_TEST_ENVIRONMENT_BEACON) == NULL) \
+    fail ("Test environment not set up correctly! Expected environment " \
+       "variable '%s' to be set.", GST_CHECK_TEST_ENVIRONMENT_BEACON); \
+} G_STMT_END
+
+#else
+#define GST_DO_CHECK_TEST_ENVIRONMENT /* nothing to check */
+#endif
+
 /**
  * GST_START_TEST:
  * @__testname: test function name
@@ -131,6 +143,7 @@ gst_check_message_error (msg, GST_MESSAGE_ERROR,                \
 static void __testname (int __i__)\
 {\
   GST_DEBUG ("test start"); \
+  GST_DO_CHECK_TEST_ENVIRONMENT; \
   tcase_fn_start (""# __testname, __FILE__, __LINE__);
 
 #define GST_END_TEST GST_LOG ("cleaning up tasks"); \
