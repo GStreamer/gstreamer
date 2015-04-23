@@ -163,7 +163,9 @@ fill_tree_store (gpointer data, gpointer user_data)
   if (!node->is_matrix)
     gtk_tree_store_set (treestore, &toplevel, COLUMN_VALUE, node->value, -1);
   else {
-    buf = g_strdup_printf ("[%s][%s] :click description", node->rows, node->columns);
+    buf =
+        g_strdup_printf ("[%s][%s] :click description", node->rows,
+        node->columns);
     gtk_tree_store_set (treestore, &toplevel, COLUMN_VALUE, buf, -1);
     g_free (buf);
   }
@@ -389,18 +391,18 @@ callback_frame_thumbnail_press (GtkWidget * event_box,
 
   frame_num = (gint) user_data;
 
-  name = g_strdup_printf ("%s-%d.xml",ui->codec_name, frame_num);
+  name = g_strdup_printf ("%s-%d.xml", ui->codec_name, frame_num);
   file_name = g_build_filename (ui->analyzer_home, "xml", name, NULL);
   if (ui->current_xml)
     g_free (ui->current_xml);
   g_free (name);
   ui->current_xml = file_name;
 
-  name = g_strdup_printf ("%s-%d.hex",ui->codec_name, frame_num);
+  name = g_strdup_printf ("%s-%d.hex", ui->codec_name, frame_num);
   file_name = g_build_filename (ui->analyzer_home, "hex", name, NULL);
   if (ui->current_hex)
     g_free (ui->current_hex);
-  g_free(name);
+  g_free (name);
   ui->current_hex = file_name;
 
   g_signal_connect (G_OBJECT (ui->header_button), "button-press-event",
@@ -449,7 +451,7 @@ create_image (int frame_num)
   gtk_container_add (GTK_CONTAINER (event_box), image);
 
   g_signal_connect (G_OBJECT (event_box), "button_press_event",
-      G_CALLBACK (callback_frame_thumbnail_press), (gpointer)frame_num);
+      G_CALLBACK (callback_frame_thumbnail_press), (gpointer) frame_num);
   return event_box;
 }
 
@@ -962,7 +964,7 @@ analyzer_create_dirs ()
   gchar *hex_files_path;
   gboolean ret = TRUE;
 
-  user_cache_dir = g_get_user_cache_dir();
+  user_cache_dir = g_get_user_cache_dir ();
   if (!user_cache_dir) {
     ret = FALSE;
     goto done;
@@ -971,7 +973,7 @@ analyzer_create_dirs ()
   ui->analyzer_home = g_build_filename (user_cache_dir, "codecanalyzer", NULL);
 
   xml_files_path = g_build_filename (ui->analyzer_home, "xml", NULL);
-  if (g_mkdir_with_parents (xml_files_path, 0777) < 0){
+  if (g_mkdir_with_parents (xml_files_path, 0777) < 0) {
     ret = FALSE;
     goto done;
   }
