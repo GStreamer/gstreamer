@@ -159,7 +159,9 @@
 static void video_dimensions_changed (GstPlayer * unused, gint width, gint height, VideoViewController * self)
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self videoDimensionsChanged:width height:height];
+        if (width > 0 && height > 0) {
+            [self videoDimensionsChanged:width height:height];
+        }
     });
 }
 
