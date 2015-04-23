@@ -298,7 +298,7 @@ struct _GstLineCache
   gpointer need_line_data;
   GDestroyNotify need_line_notify;
 
-  gboolean n_lines;
+  guint n_lines;
   guint stride;
   GstLineCacheAllocLineFunc alloc_line;
   gpointer alloc_line_data;
