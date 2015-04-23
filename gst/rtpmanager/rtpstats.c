@@ -169,7 +169,7 @@ rtp_stats_calculate_rtcp_interval (RTPSessionStats * stats, gboolean we_send,
   if (rtcp_bw <= 0.0001)
     return GST_CLOCK_TIME_NONE;
 
-  avg_rtcp_size = stats->avg_rtcp_packet_size;
+  avg_rtcp_size = 8.0 * stats->avg_rtcp_packet_size;
   /*
    * The effective number of sites times the average packet size is
    * the total number of octets sent when each site sends a report.
@@ -249,7 +249,7 @@ rtp_stats_calculate_bye_interval (RTPSessionStats * stats)
   if (rtcp_bw <= 0.0001)
     return GST_CLOCK_TIME_NONE;
 
-  avg_rtcp_size = stats->avg_rtcp_packet_size;
+  avg_rtcp_size = 8.0 * stats->avg_rtcp_packet_size;
   /*
    * The effective number of sites times the average packet size is
    * the total number of octets sent when each site sends a report.
