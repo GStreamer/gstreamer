@@ -925,15 +925,16 @@ gst_m3u8_client_update_variant_playlist (GstM3U8Client * self, gchar * data,
     }
 
     if (unmatched_lists != NULL) {
-      g_list_free (unmatched_lists);
+      GST_WARNING ("Unable to match all playlists");
 
-      /* We should attempt to handle the case where playlists are dropped/replaced,
-       * and possibly switch over to a comparable (not neccessarily identical)
-       * playlist.
-       */
-      GST_FIXME
-          ("Cannot update variant playlist, unable to match all playlists");
-      goto out;
+      for (list_entry = unmatched_lists; list_entry;
+          list_entry = list_entry->next) {
+        if (list_entry->data == self->current) {
+          GST_WARNING ("Unable to match current playlist");
+        }
+      }
+
+      g_list_free (unmatched_lists);
     }
 
     /* Switch out the variant playlist */
