@@ -249,7 +249,8 @@ gst_gaussianblur_transform_frame (GstVideoFilter * vfilter,
   src = GST_VIDEO_FRAME_COMP_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_COMP_DATA (out_frame, 0);
   gst_video_frame_copy (out_frame, in_frame);
-  gaussian_smooth (filter, src, dest);
+  if (filter->sigma != 0.0)
+    gaussian_smooth (filter, src, dest);
 
   return GST_FLOW_OK;
 }
