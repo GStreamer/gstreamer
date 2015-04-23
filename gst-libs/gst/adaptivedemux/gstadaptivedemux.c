@@ -75,7 +75,6 @@
 #include "gstadaptivedemux.h"
 #include "gst/gst-i18n-plugin.h"
 #include <gst/base/gstadapter.h>
-#include <gst/uridownloader/gsturidownloader.h>
 
 GST_DEBUG_CATEGORY (adaptivedemux_debug);
 #define GST_CAT_DEFAULT adaptivedemux_debug
@@ -328,7 +327,7 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
 
   demux->priv = GST_ADAPTIVE_DEMUX_GET_PRIVATE (demux);
   demux->priv->input_adapter = gst_adapter_new ();
-  demux->priv->downloader = gst_uri_downloader_new ();
+  demux->downloader = gst_uri_downloader_new ();
   demux->stream_struct_size = sizeof (GstAdaptiveDemuxStream);
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
@@ -372,7 +371,7 @@ gst_adaptive_demux_finalize (GObject * object)
   GST_DEBUG_OBJECT (object, "finalize");
 
   g_object_unref (priv->input_adapter);
-  g_object_unref (priv->downloader);
+  g_object_unref (demux->downloader);
 
   g_mutex_clear (&priv->updates_timed_lock);
   g_cond_clear (&priv->updates_timed_cond);
@@ -553,7 +552,7 @@ gst_adaptive_demux_reset (GstAdaptiveDemux * demux)
   GList *iter;
 
   gst_adaptive_demux_stop_tasks (demux);
-  gst_uri_downloader_reset (demux->priv->downloader);
+  gst_uri_downloader_reset (demux->downloader);
 
   if (klass->reset)
     klass->reset (demux);
@@ -1212,7 +1211,7 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
   g_cond_broadcast (&demux->manifest_cond);
   GST_MANIFEST_UNLOCK (demux);
 
-  gst_uri_downloader_cancel (demux->priv->downloader);
+  gst_uri_downloader_cancel (demux->downloader);
   for (iter = demux->streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemuxStream *stream = iter->data;
 
@@ -2478,10 +2477,9 @@ gst_adaptive_demux_update_manifest (GstAdaptiveDemux * demux)
   GstBuffer *buffer;
   GstFlowReturn ret;
 
-  download = gst_uri_downloader_fetch_uri (demux->priv->downloader,
+  download = gst_uri_downloader_fetch_uri (demux->downloader,
       demux->manifest_uri, NULL, TRUE, TRUE, TRUE, NULL);
   if (download) {
-
     GST_MANIFEST_LOCK (demux);
     g_free (demux->manifest_uri);
     g_free (demux->manifest_base_uri);

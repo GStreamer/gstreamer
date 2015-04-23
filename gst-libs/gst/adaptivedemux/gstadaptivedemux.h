@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/uridownloader/gsturidownloader.h>
 
 G_BEGIN_DECLS
 
@@ -176,7 +177,7 @@ struct _GstAdaptiveDemux
   /*< protected >*/
   GstPad         *sinkpad;
 
-  GstAdaptiveDemuxPrivate *priv;
+  GstUriDownloader *downloader;
 
   GList *streams;
   GList *next_streams;
@@ -198,6 +199,9 @@ struct _GstAdaptiveDemux
 
   gboolean have_group_id;
   guint group_id;
+
+  /* < private > */
+  GstAdaptiveDemuxPrivate *priv;
 };
 
 /**
