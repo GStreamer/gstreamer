@@ -1119,13 +1119,7 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
       break;
     }
     case GST_QUERY_LATENCY:{
-      gboolean live = FALSE;
-
-      GST_MANIFEST_LOCK (demux);
-      live = demux->priv->have_manifest && gst_adaptive_demux_is_live (demux);
-      GST_MANIFEST_UNLOCK (demux);
-
-      gst_query_set_latency (query, live, 0, -1);
+      gst_query_set_latency (query, FALSE, 0, -1);
       ret = TRUE;
       break;
     }
