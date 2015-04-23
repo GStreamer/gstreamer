@@ -135,7 +135,8 @@ static gboolean gst_mss_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek);
 static gint64
 gst_mss_demux_get_manifest_update_interval (GstAdaptiveDemux * demux);
 static GstFlowReturn
-gst_mss_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buffer);
+gst_mss_demux_update_manifest_data (GstAdaptiveDemux * demux,
+    GstBuffer * buffer);
 
 static void
 gst_mss_demux_class_init (GstMssDemuxClass * klass)
@@ -188,7 +189,8 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
       gst_mss_demux_stream_select_bitrate;
   gstadaptivedemux_class->stream_update_fragment_info =
       gst_mss_demux_stream_update_fragment_info;
-  gstadaptivedemux_class->update_manifest = gst_mss_demux_update_manifest;
+  gstadaptivedemux_class->update_manifest_data =
+      gst_mss_demux_update_manifest_data;
 
   GST_DEBUG_CATEGORY_INIT (mssdemux_debug, "mssdemux", 0, "mssdemux plugin");
 }
@@ -546,7 +548,8 @@ gst_mss_demux_get_manifest_update_interval (GstAdaptiveDemux * demux)
 }
 
 static GstFlowReturn
-gst_mss_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buffer)
+gst_mss_demux_update_manifest_data (GstAdaptiveDemux * demux,
+    GstBuffer * buffer)
 {
   GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (demux);
 

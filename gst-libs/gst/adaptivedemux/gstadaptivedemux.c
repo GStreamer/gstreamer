@@ -106,7 +106,7 @@ enum GstAdaptiveDemuxFlowReturn
 struct _GstAdaptiveDemuxPrivate
 {
   GstAdapter *input_adapter;
-  GstBuffer *manifest_buffer;
+  gboolean have_manifest;
 
   GstUriDownloader *downloader;
 
@@ -167,6 +167,8 @@ gst_adaptive_demux_stream_get_fragment_waiting_time (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream);
 static GstFlowReturn gst_adaptive_demux_update_manifest (GstAdaptiveDemux *
     demux);
+static GstFlowReturn
+gst_adaptive_demux_update_manifest_default (GstAdaptiveDemux * demux);
 static gboolean gst_adaptive_demux_has_next_period (GstAdaptiveDemux * demux);
 static void gst_adaptive_demux_advance_period (GstAdaptiveDemux * demux);
 
@@ -314,6 +316,7 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
 
   klass->data_received = gst_adaptive_demux_stream_data_received_default;
   klass->finish_fragment = gst_adaptive_demux_stream_finish_fragment_default;
+  klass->update_manifest = gst_adaptive_demux_update_manifest_default;
 }
 
 static void
@@ -419,6 +422,7 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
       gboolean query_res;
       gboolean ret = TRUE;
       gsize available;
+      GstBuffer *manifest_buffer;
 
       demux_class = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
       available = gst_adapter_available (demux->priv->input_adapter);
@@ -460,16 +464,19 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
       gst_query_unref (query);
 
       /* Let the subclass parse the manifest */
-      demux->priv->manifest_buffer =
+      manifest_buffer =
           gst_adapter_take_buffer (demux->priv->input_adapter, available);
-      if (!demux_class->process_manifest (demux, demux->priv->manifest_buffer)) {
+      if (!demux_class->process_manifest (demux, manifest_buffer)) {
         /* In most cases, this will happen if we set a wrong url in the
          * source element and we have received the 404 HTML response instead of
          * the manifest */
         GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Invalid manifest."),
             (NULL));
         ret = FALSE;
+      } else {
+        demux->priv->have_manifest = TRUE;
       }
+      gst_buffer_unref (manifest_buffer);
 
       gst_element_post_message (GST_ELEMENT_CAST (demux),
           gst_message_new_element (GST_OBJECT_CAST (demux),
@@ -578,10 +585,7 @@ gst_adaptive_demux_reset (GstAdaptiveDemux * demux)
   demux->manifest_base_uri = NULL;
 
   gst_adapter_clear (demux->priv->input_adapter);
-  if (demux->priv->manifest_buffer) {
-    gst_buffer_unref (demux->priv->manifest_buffer);
-    demux->priv->manifest_buffer = NULL;
-  }
+  demux->priv->have_manifest = FALSE;
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 
@@ -1101,7 +1105,7 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
 
       GST_MANIFEST_LOCK (demux);
       gst_query_parse_duration (query, &fmt, NULL);
-      if (fmt == GST_FORMAT_TIME && demux->priv->manifest_buffer != NULL) {
+      if (fmt == GST_FORMAT_TIME && demux->priv->have_manifest) {
         duration = demux_class->get_duration (demux);
 
         if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0) {
@@ -1118,7 +1122,7 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
       gboolean live = FALSE;
 
       GST_MANIFEST_LOCK (demux);
-      live = demux->priv->manifest_buffer && gst_adaptive_demux_is_live (demux);
+      live = demux->priv->have_manifest && gst_adaptive_demux_is_live (demux);
       GST_MANIFEST_UNLOCK (demux);
 
       gst_query_set_latency (query, live, 0, -1);
@@ -1131,7 +1135,7 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
       gint64 start = 0;
 
       GST_MANIFEST_LOCK (demux);
-      if (demux->priv->manifest_buffer == NULL) {
+      if (demux->priv->have_manifest) {
         GST_MANIFEST_UNLOCK (demux);
         return FALSE;           /* can't answer without manifest */
       }
@@ -2470,7 +2474,7 @@ gst_adaptive_demux_stream_get_fragment_waiting_time (GstAdaptiveDemux *
 }
 
 static GstFlowReturn
-gst_adaptive_demux_update_manifest (GstAdaptiveDemux * demux)
+gst_adaptive_demux_update_manifest_default (GstAdaptiveDemux * demux)
 {
   GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
   GstFragment *download;
@@ -2493,33 +2497,42 @@ gst_adaptive_demux_update_manifest (GstAdaptiveDemux * demux)
 
     buffer = gst_fragment_get_buffer (download);
     g_object_unref (download);
-    ret = klass->update_manifest (demux, buffer);
-    if (ret == GST_FLOW_OK) {
-      GstClockTime duration;
-      gst_buffer_unref (demux->priv->manifest_buffer);
-      demux->priv->manifest_buffer = buffer;
-
-      /* Send an updated duration message */
-      duration = klass->get_duration (demux);
-
-      GST_MANIFEST_UNLOCK (demux);
-      if (duration != GST_CLOCK_TIME_NONE) {
-        GST_DEBUG_OBJECT (demux,
-            "Sending duration message : %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (duration));
-        gst_element_post_message (GST_ELEMENT (demux),
-            gst_message_new_duration_changed (GST_OBJECT (demux)));
-      } else {
-        GST_DEBUG_OBJECT (demux,
-            "Duration unknown, can not send the duration message");
-      }
-    } else {
-      GST_MANIFEST_UNLOCK (demux);
-      gst_buffer_unref (buffer);
-      /* Should the manifest uri vars be reverted to original values? */
-    }
+    ret = klass->update_manifest_data (demux, buffer);
+    gst_buffer_unref (buffer);
+    GST_MANIFEST_UNLOCK (demux);
+    /* FIXME: Should the manifest uri vars be reverted to original
+     * values if updating fails? */
   } else {
     ret = GST_FLOW_NOT_LINKED;
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_adaptive_demux_update_manifest (GstAdaptiveDemux * demux)
+{
+  GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
+  GstFlowReturn ret;
+
+  ret = klass->update_manifest (demux);
+
+  if (ret == GST_FLOW_OK) {
+    GstClockTime duration;
+    GST_MANIFEST_LOCK (demux);
+    /* Send an updated duration message */
+    duration = klass->get_duration (demux);
+    GST_MANIFEST_UNLOCK (demux);
+    if (duration != GST_CLOCK_TIME_NONE) {
+      GST_DEBUG_OBJECT (demux,
+          "Sending duration message : %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (duration));
+      gst_element_post_message (GST_ELEMENT (demux),
+          gst_message_new_duration_changed (GST_OBJECT (demux)));
+    } else {
+      GST_DEBUG_OBJECT (demux,
+          "Duration unknown, can not send the duration message");
+    }
   }
 
   return ret;

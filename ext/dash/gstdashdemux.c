@@ -214,7 +214,7 @@ static gboolean gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream *
 static gint64
 gst_dash_demux_get_manifest_update_interval (GstAdaptiveDemux * demux);
 static GstFlowReturn
-gst_dash_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buf);
+gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux, GstBuffer * buf);
 static gint64
 gst_dash_demux_stream_get_fragment_waiting_time (GstAdaptiveDemuxStream *
     stream);
@@ -354,7 +354,8 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
   gstadaptivedemux_class->seek = gst_dash_demux_seek;
 
   gstadaptivedemux_class->process_manifest = gst_dash_demux_process_manifest;
-  gstadaptivedemux_class->update_manifest = gst_dash_demux_update_manifest;
+  gstadaptivedemux_class->update_manifest_data =
+      gst_dash_demux_update_manifest_data;
   gstadaptivedemux_class->get_manifest_update_interval =
       gst_dash_demux_get_manifest_update_interval;
 
@@ -1145,7 +1146,8 @@ gst_dash_demux_get_manifest_update_interval (GstAdaptiveDemux * demux)
 }
 
 static GstFlowReturn
-gst_dash_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buffer)
+gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
+    GstBuffer * buffer)
 {
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstMpdClient *new_client = NULL;

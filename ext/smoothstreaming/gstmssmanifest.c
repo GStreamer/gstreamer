@@ -724,7 +724,8 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
     gst_structure_set (structure, "rate", G_TYPE_INT, rate, NULL);
 
   if (q->bitrate)
-    gst_structure_set (structure, "bitrate", G_TYPE_INT, (int) q->bitrate, NULL);
+    gst_structure_set (structure, "bitrate", G_TYPE_INT, (int) q->bitrate,
+        NULL);
 
   if (codec_data)
     gst_structure_set (structure, "codec_data", GST_TYPE_BUFFER, codec_data,
