@@ -194,8 +194,10 @@ _gst_gl_upload_element_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
   gst_caps_replace (&upload->in_caps, in_caps);
   gst_caps_replace (&upload->out_caps, out_caps);
 
-  if (upload->upload)
+  if (upload->upload) {
+    gst_gl_upload_release_buffer (upload->upload);
     return gst_gl_upload_set_caps (upload->upload, in_caps, out_caps);
+  }
 
   return TRUE;
 }
