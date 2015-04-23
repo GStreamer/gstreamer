@@ -180,7 +180,7 @@ fill_tree_store (gpointer data, gpointer user_data)
 }
 
 static GtkWidget *
-create_tree_view ()
+create_tree_view (void)
 {
   GtkTreeViewColumn *col;
   GtkCellRenderer *renderer;
@@ -456,7 +456,7 @@ create_image (int frame_num)
 }
 
 static void
-analyzer_create_thumbnails ()
+analyzer_create_thumbnails (void)
 {
   GtkWidget *image;
   guint i;
@@ -478,7 +478,7 @@ analyzer_create_thumbnails ()
 }
 
 static void
-analyzer_ui_destroy ()
+analyzer_ui_destroy (void)
 {
   gtk_widget_destroy (ui->main_window);
 
@@ -625,7 +625,7 @@ analyzer_display_general_stream_info (GstAnalyzerVideoInfo * analyzer_vinfo)
 }
 
 static void
-reset_analyzer_ui ()
+reset_analyzer_ui (void)
 {
 
   if (ui->hbox1_in_vbox2) {
@@ -797,13 +797,13 @@ callback_stream_chooser_new_stream (GtkFileChooserButton * widget,
 }
 
 static void
-menu_quit_callback ()
+menu_quit_callback (void)
 {
   gtk_widget_destroy (ui->main_window);
 }
 
 static void
-menu_about_callback ()
+menu_about_callback (void)
 {
   GFile *license_file;
   GdkPixbuf *logo;
@@ -847,7 +847,7 @@ menu_about_callback ()
 }
 
 static void
-menu_help_callback ()
+menu_help_callback (void)
 {
   GtkWidget *dialog;
   dialog = gtk_message_dialog_new (GTK_WINDOW (ui->main_window),
@@ -880,7 +880,7 @@ static GtkActionEntry entries_actiongroup[] = {
 };
 
 static gboolean
-analyzer_ui_init ()
+analyzer_ui_init (void)
 {
   GtkActionGroup *action_group;
   char *path;
@@ -957,7 +957,7 @@ analyzer_ui_init ()
 }
 
 static gboolean
-analyzer_create_dirs ()
+analyzer_create_dirs (void)
 {
   const gchar *user_cache_dir;
   gchar *xml_files_path = NULL;
