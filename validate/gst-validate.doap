@@ -1,0 +1,71 @@
+<Project
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns="http://usefulinc.com/ns/doap#"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/"
+  xmlns:admin="http://webns.net/mvcb/">
+
+ <name>GStreamer</name>
+ <shortname>gstreamer</shortname>
+ <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gstreamer.html" />
+ <created>1999-10-31</created>
+ <shortdesc xml:lang="en">
+ GstValidate is a testing framework aiming at providing GStreamer developers
+ tools that check the GstElements they write behave the way they are supposed to.
+</shortdesc>
+ <description xml:lang="en">
+ GstValidate is a tool that allows GStreamer developers to check that the
+ GstElements they write behave the way they are supposed to. It was first
+ started to provide plug-ins developers with a tool to check that they use the
+ framework the proper way.
+
+ GstValidate implements a monitoring logic that allows the system to check that
+ the elements of a GstPipeline respect some rules GStreamer components have to
+ follow so that elements can properly interact together. For example, a
+ GstValidatePadMonitor will make sure that if we receive a GstSegment from
+ upstream, an equivalent segment is sent downstream before any buffer gets out.
+
+ Then GstValidate implements a reporting system that allows users to get
+ detailed informations about what was not properly handle in elements. The
+ reports are order by level of importance from "issue" to "critical".
+
+ Some tools have been implemented to help the developer validate and test their
+ GstElement, you can have a look at the command line tools section to find more
+ information
+
+ On top of those tools, the notion of scenario has been implemented so that
+ developers can easily execute a set of actions on pipelines and thus test real
+ world interactive cases and reproduce existing issues in a convenient way.
+ </description>
+ <category></category>
+ <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-devtools" />
+ <screenshots></screenshots>
+ <mailing-list rdf:resource="http://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
+ <programming-language>C</programming-language>
+ <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl" />
+ <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
+
+ <repository>
+   <GitRepository>
+     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-devtools"/>
+     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-devtools/"/>
+   </GitRepository>
+ </repository> 
+
+ <release>
+  <Version>
+   <revision>1.4.0</revision>
+   <branch>1.4</branch>
+   <name></name>
+   <created>2014-09-29</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.4.0.tar.xz" />
+  </Version>
+ </release>
+
+ <maintainer>
+  <foaf:Person>
+     <foaf:name>Thibault Saunier</foaf:name>
+  </foaf:Person>
+ </maintainer>
+
+</Project>
