@@ -21,6 +21,8 @@ log
 .libs
 .dirstamp
 
+/INSTALL
+
 /aclocal.m4
 /autom4te.cache
 /autoregen.sh
@@ -50,6 +52,9 @@ log
 
 /bindings/python/ges.c
 
+/ges/lex.priv_ges_parse_yy.c
+/ges/parse_lex.h
+
 /m4
 
 /test-driver
@@ -75,8 +80,6 @@ log
 /tests/check/nle/nlesource
 
 /tools/ges-launch-1.0
-tools/lex.priv_ges_parse_yy.c
-tools/parse_lex.h
 /tests/check/ges/project
 /tests/examples/assets
 
