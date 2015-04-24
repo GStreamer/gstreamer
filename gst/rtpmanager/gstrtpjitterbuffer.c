@@ -666,10 +666,36 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    * Various jitterbuffer statistics. This property returns a GstStructure
    * with name application/x-rtp-jitterbuffer-stats with the following fields:
    *
-   *  "rtx-count"         G_TYPE_UINT64 The number of retransmissions requested
-   *  "rtx-success-count" G_TYPE_UINT64 The number of successful retransmissions
-   *  "rtx-per-packet"    G_TYPE_DOUBLE Average number of RTX per packet
-   *  "rtx-rtt"           G_TYPE_UINT64 Average round trip time per RTX
+   * <itemizedlist>
+   * <listitem>
+   *   <para>
+   *   #guint64
+   *   <classname>&quot;rtx-count&quot;</classname>:
+   *   the number of retransmissions requested.
+   *   </para>
+   * </listitem>
+   * <listitem>
+   *   <para>
+   *   #guint64
+   *   <classname>&quot;rtx-success-count&quot;</classname>:
+   *   the number of successful retransmissions.
+   *   </para>
+   * </listitem>
+   * <listitem>
+   *   <para>
+   *   #gdouble
+   *   <classname>&quot;rtx-per-packet&quot;</classname>:
+   *   average number of RTX per packet.
+   *   </para>
+   * </listitem>
+   * <listitem>
+   *   <para>
+   *   #guint64
+   *   <classname>&quot;rtx-rtt&quot;</classname>:
+   *   average round trip time per RTX.
+   *   </para>
+   * </listitem>
+   * </itemizedlist>
    *
    * Since: 1.4
    */
