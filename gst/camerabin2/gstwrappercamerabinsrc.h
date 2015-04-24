@@ -103,12 +103,9 @@ struct _GstWrapperCameraBinSrc
   /* Caps that videosrc supports */
   GstCaps *allowed_caps;
 
-  /* Optional base crop for frames. Used to crop frames e.g.
-     due to wrong aspect ratio, before the crop related to zooming. */
-  gint base_crop_top;
-  gint base_crop_bottom;
-  gint base_crop_left;
-  gint base_crop_right;
+  /* Optional crop for frames. Used to crop frames e.g.
+     due to wrong aspect ratio. Done before the crop related to zooming. */
+  GstElement *src_crop;
 
   /* Caps applied to capsfilters when in view finder mode */
   GstCaps *view_finder_caps;

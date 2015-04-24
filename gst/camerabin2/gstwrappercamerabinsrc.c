@@ -176,6 +176,15 @@ gst_wrapper_camera_bin_src_get_property (GObject * object,
 }
 
 static void
+gst_wrapper_camera_bin_src_reset_src_zoom (GstWrapperCameraBinSrc * self)
+{
+  if (self->src_crop) {
+    g_object_set (self->src_crop, "top", 0, "left", 0, "bottom", 0, "right", 0,
+        NULL);
+  }
+}
+
+static void
 gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
     GstCaps * new_filter_caps)
 {
@@ -272,6 +281,7 @@ gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstPadProbeInfo * info,
       GstCaps *anycaps = gst_caps_new_any ();
 
       /* Get back to viewfinder */
+      gst_wrapper_camera_bin_src_reset_src_zoom (self);
       gst_wrapper_camera_bin_reset_video_src_caps (self, anycaps);
       gst_wrapper_camera_bin_src_set_output (self, self->imgsrc, self->vfsrc);
       gst_base_camera_src_finish_capture (camerasrc);
@@ -548,6 +558,11 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
 
     GST_DEBUG_OBJECT (self, "constructing pipeline");
 
+    if (!(self->src_crop =
+            gst_camerabin_create_and_add_element (cbin, "videocrop",
+                "src-crop")))
+      goto done;
+
     if (!gst_camerabin_create_and_add_element (cbin, "videoconvert",
             "src-videoconvert"))
       goto done;
@@ -681,11 +696,9 @@ copy_missing_fields (GQuark field_id, const GValue * value, gpointer user_data)
 static void
 adapt_image_capture (GstWrapperCameraBinSrc * self, GstCaps * in_caps)
 {
-  GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
   GstStructure *in_st, *new_st, *req_st;
   gint in_width = 0, in_height = 0, req_width = 0, req_height = 0, crop = 0;
   gdouble ratio_w, ratio_h;
-  GstCaps *filter_caps = NULL;
 
   GST_LOG_OBJECT (self, "in caps: %" GST_PTR_FORMAT, in_caps);
   GST_LOG_OBJECT (self, "requested caps: %" GST_PTR_FORMAT,
@@ -712,53 +725,33 @@ adapt_image_capture (GstWrapperCameraBinSrc * self, GstCaps * in_caps)
   GST_LOG_OBJECT (self, "new image capture caps: %" GST_PTR_FORMAT, new_st);
 
   /* Crop if requested aspect ratio differs from incoming frame aspect ratio */
-  if (self->src_zoom_crop) {
+  if (self->src_crop) {
+    gint base_crop_top = 0, base_crop_bottom = 0;
+    gint base_crop_left = 0, base_crop_right = 0;
 
     ratio_w = (gdouble) in_width / req_width;
     ratio_h = (gdouble) in_height / req_height;
 
     if (ratio_w < ratio_h) {
       crop = in_height - (req_height * ratio_w);
-      self->base_crop_top = crop / 2;
-      self->base_crop_bottom = crop / 2;
+      base_crop_top = crop / 2;
+      base_crop_bottom = crop / 2;
     } else {
       crop = in_width - (req_width * ratio_h);
-      self->base_crop_left = crop / 2;
-      self->base_crop_right += crop / 2;
+      base_crop_left = crop / 2;
+      base_crop_right += crop / 2;
     }
 
     GST_INFO_OBJECT (self,
         "setting base crop: left:%d, right:%d, top:%d, bottom:%d",
-        self->base_crop_left, self->base_crop_right, self->base_crop_top,
-        self->base_crop_bottom);
-    g_object_set (G_OBJECT (self->src_zoom_crop),
-        "top", self->base_crop_top,
-        "bottom", self->base_crop_bottom,
-        "left", self->base_crop_left, "right", self->base_crop_right, NULL);
+        base_crop_left, base_crop_right, base_crop_top, base_crop_bottom);
+    g_object_set (G_OBJECT (self->src_crop),
+        "top", base_crop_top, "bottom", base_crop_bottom,
+        "left", base_crop_left, "right", base_crop_right, NULL);
   }
 
   /* Update capsfilters */
-  if (self->image_capture_caps) {
-    gst_caps_unref (self->image_capture_caps);
-  }
-  self->image_capture_caps = gst_caps_new_full (new_st, NULL);
   set_capsfilter_caps (self, self->image_capture_caps);
-
-  /* Adjust the capsfilter before crop and videoscale elements if necessary */
-  if (in_width == bcamsrc->width && in_height == bcamsrc->height) {
-    GST_DEBUG_OBJECT (self, "no adaptation with resolution needed");
-  } else {
-    GST_DEBUG_OBJECT (self,
-        "changing %" GST_PTR_FORMAT " from %dx%d to %dx%d", self->src_filter,
-        bcamsrc->width, bcamsrc->height, in_width, in_height);
-    /* Apply the width and height to filter caps */
-    g_object_get (G_OBJECT (self->src_filter), "caps", &filter_caps, NULL);
-    filter_caps = gst_caps_make_writable (filter_caps);
-    gst_caps_set_simple (filter_caps, "width", G_TYPE_INT, in_width, "height",
-        G_TYPE_INT, in_height, NULL);
-    g_object_set (G_OBJECT (self->src_filter), "caps", filter_caps, NULL);
-    gst_caps_unref (filter_caps);
-  }
 }
 
 /**
@@ -932,10 +925,7 @@ set_element_zoom (GstWrapperCameraBinSrc * self, gfloat zoom)
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
   gint w2_crop = 0, h2_crop = 0;
   GstPad *pad_zoom_sink = NULL;
-  gint left = self->base_crop_left;
-  gint right = self->base_crop_right;
-  gint top = self->base_crop_top;
-  gint bottom = self->base_crop_bottom;
+  gint left = 0, right = 0, top = 0, bottom = 0;
 
   if (self->src_zoom_crop) {
     /* Update capsfilters to apply the zoom */
