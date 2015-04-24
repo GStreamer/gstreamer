@@ -799,9 +799,6 @@ start_image_capture (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
    * the buffer to pass */
   gst_wrapper_camera_bin_src_set_output (self, self->vfsrc, self->imgsrc);
 
-  /* V4L2 source will not close the device until all buffers have came
-   * back. Draining the pipeline, will ensure it's properly closed, and that
-   * setting it back to PLAYING will work. */
   if (self->image_renegotiate) {
     self->image_renegotiate = FALSE;
 
