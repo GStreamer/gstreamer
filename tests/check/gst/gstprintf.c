@@ -118,6 +118,18 @@ GST_START_TEST (printf_I32_I64)
 
 GST_END_TEST;
 
+GST_START_TEST (printf_percent)
+{
+  gchar *str;
+
+  /* standard int/uint */
+  str = test_printf ("%u%%", 99);
+  fail_unless_equals_string (str, "99%");
+  g_free (str);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_printf_suite (void)
 {
@@ -128,6 +140,7 @@ gst_printf_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, printf_I32_I64);
+  tcase_add_test (tc_chain, printf_percent);
 
   return s;
 }
