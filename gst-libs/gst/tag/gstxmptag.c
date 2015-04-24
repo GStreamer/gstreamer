@@ -1237,7 +1237,6 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
   if (len < max_ft_len)
     goto missing_footer;
 
-  GST_DEBUG ("checking footer: [%s]", &xps[len - max_ft_len]);
   xp2 = g_strstr_len (&xps[len - max_ft_len], max_ft_len, "<?xpacket ");
   if (!xp2)
     goto missing_footer;
