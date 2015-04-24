@@ -186,7 +186,7 @@ gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
     gboolean ret = FALSE;
 
     /* After pipe was negotiated src_filter do not have any filter caps.
-     * In this situation we should compare neogotiated caps on capsfilter pad
+     * In this situation we should compare negotiated caps on capsfilter pad
      * with requested range of caps. If one of this caps intersect,
      * then we can avoid reseting.
      */
