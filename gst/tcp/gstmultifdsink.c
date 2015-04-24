@@ -153,8 +153,7 @@ enum
 enum
 {
   PROP_0,
-  PROP_HANDLE_READ,
-  PROP_LAST
+  PROP_HANDLE_READ
 };
 
 static void gst_multi_fd_sink_stop_pre (GstMultiHandleSink * mhsink);

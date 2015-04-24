@@ -197,9 +197,7 @@ enum
 
   PROP_RESEND_STREAMHEADER,
 
-  PROP_NUM_OUTPUTS,
-
-  PROP_LAST
+  PROP_NUM_OUTPUTS
 };
 
 #define GST_TYPE_RECOVER_POLICY (gst_multi_output_sink_recover_policy_get_type())

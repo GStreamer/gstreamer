@@ -197,8 +197,7 @@ enum
   PROP_DOWNLOAD,
   PROP_USE_BUFFERING,
   PROP_EXPOSE_ALL_STREAMS,
-  PROP_RING_BUFFER_MAX_SIZE,
-  PROP_LAST
+  PROP_RING_BUFFER_MAX_SIZE
 };
 
 static guint gst_uri_decode_bin_signals[LAST_SIGNAL] = { 0 };
