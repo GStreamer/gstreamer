@@ -84,8 +84,7 @@ enum
   PROP_DEBUG,
   PROP_TIMEOUT,
   PROP_LATENCY,
-  PROP_REDIRECT,
-  PROP_LAST
+  PROP_REDIRECT
 };
 
 static void gst_sdp_demux_finalize (GObject * object);

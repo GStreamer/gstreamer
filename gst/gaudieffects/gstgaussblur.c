@@ -111,8 +111,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 enum
 {
   PROP_0,
-  PROP_SIGMA,
-  PROP_LAST
+  PROP_SIGMA
 };
 
 static gboolean make_gaussian_kernel (GstGaussianBlur * gb, float sigma);

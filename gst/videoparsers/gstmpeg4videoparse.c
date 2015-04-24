@@ -66,8 +66,7 @@ enum
 {
   PROP_0,
   PROP_DROP,
-  PROP_CONFIG_INTERVAL,
-  PROP_LAST
+  PROP_CONFIG_INTERVAL
 };
 
 #define gst_mpeg4vparse_parent_class parent_class

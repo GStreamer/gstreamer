@@ -41,8 +41,7 @@ GST_DEBUG_CATEGORY (h264_parse_debug);
 enum
 {
   PROP_0,
-  PROP_CONFIG_INTERVAL,
-  PROP_LAST
+  PROP_CONFIG_INTERVAL
 };
 
 enum

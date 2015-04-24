@@ -59,8 +59,7 @@ enum
 {
   PROP_0,
   PROP_DROP,
-  PROP_GOP_SPLIT,
-  PROP_LAST
+  PROP_GOP_SPLIT
 };
 
 #define parent_class gst_mpegv_parse_parent_class

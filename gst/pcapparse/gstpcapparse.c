@@ -64,8 +64,7 @@ enum
   PROP_SRC_PORT,
   PROP_DST_PORT,
   PROP_CAPS,
-  PROP_TS_OFFSET,
-  PROP_LAST
+  PROP_TS_OFFSET
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_pcap_parse_debug);

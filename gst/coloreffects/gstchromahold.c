@@ -59,8 +59,7 @@ enum
   PROP_TARGET_R,
   PROP_TARGET_G,
   PROP_TARGET_B,
-  PROP_TOLERANCE,
-  PROP_LAST
+  PROP_TOLERANCE
 };
 
 static GstStaticPadTemplate gst_chroma_hold_src_template =
