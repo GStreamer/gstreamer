@@ -94,8 +94,7 @@ enum
   PROP_BORDER,
   PROP_DEPTH,
   PROP_POSITION,
-  PROP_INVERT,
-  PROP_LAST,
+  PROP_INVERT
 };
 
 #define AYUV_SIZE(w,h)     ((w) * (h) * 4)

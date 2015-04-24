@@ -94,8 +94,7 @@ enum
   PROP_BORDER,
   PROP_DEPTH,
   PROP_DURATION,
-  PROP_INVERT,
-  PROP_LAST,
+  PROP_INVERT
 };
 
 /* FIXME: should use video meta etc. */

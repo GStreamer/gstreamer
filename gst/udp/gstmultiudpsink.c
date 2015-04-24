@@ -112,8 +112,7 @@ enum
   PROP_SEND_DUPLICATES,
   PROP_BUFFER_SIZE,
   PROP_BIND_ADDRESS,
-  PROP_BIND_PORT,
-  PROP_LAST
+  PROP_BIND_PORT
 };
 
 static void gst_multiudpsink_finalize (GObject * object);

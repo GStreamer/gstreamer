@@ -50,8 +50,7 @@ enum
   PROP_IS_SENDER,
   PROP_SDES,
   PROP_STATS,
-  PROP_PROBATION,
-  PROP_LAST
+  PROP_PROBATION
 };
 
 /* GObject vmethods */

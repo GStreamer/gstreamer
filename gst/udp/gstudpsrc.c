@@ -173,9 +173,7 @@ enum
   PROP_USED_SOCKET,
   PROP_AUTO_MULTICAST,
   PROP_REUSE,
-  PROP_ADDRESS,
-
-  PROP_LAST
+  PROP_ADDRESS
 };
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);

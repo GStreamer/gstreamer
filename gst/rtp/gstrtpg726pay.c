@@ -38,8 +38,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpg726pay_debug);
 enum
 {
   PROP_0,
-  PROP_FORCE_AAL2,
-  PROP_LAST
+  PROP_FORCE_AAL2
 };
 
 static GstStaticPadTemplate gst_rtp_g726_pay_sink_template =

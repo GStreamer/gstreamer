@@ -50,8 +50,7 @@ enum
 enum
 {
   PROP_0,
-  PROP_FORCE_AAL2,
-  PROP_LAST
+  PROP_FORCE_AAL2
 };
 
 static GstStaticPadTemplate gst_rtp_g726_depay_sink_template =

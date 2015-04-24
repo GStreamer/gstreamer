@@ -114,8 +114,7 @@ enum
 {
   PROP_0,
   PROP_JPEG_QUALITY,
-  PROP_JPEG_TYPE,
-  PROP_LAST
+  PROP_JPEG_TYPE
 };
 
 enum

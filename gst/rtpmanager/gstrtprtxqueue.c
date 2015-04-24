@@ -44,8 +44,7 @@ enum
 {
   PROP_0,
   PROP_MAX_SIZE_TIME,
-  PROP_MAX_SIZE_PACKETS,
-  PROP_LAST
+  PROP_MAX_SIZE_PACKETS
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",

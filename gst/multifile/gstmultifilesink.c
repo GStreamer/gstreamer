@@ -144,8 +144,7 @@ enum
   PROP_POST_MESSAGES,
   PROP_NEXT_FILE,
   PROP_MAX_FILES,
-  PROP_MAX_FILE_SIZE,
-  PROP_LAST
+  PROP_MAX_FILE_SIZE
 };
 
 static void gst_multi_file_sink_finalize (GObject * object);
