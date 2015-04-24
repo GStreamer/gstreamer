@@ -776,7 +776,7 @@ img_capture_prepared (gpointer data, GstCaps * caps)
   GST_INFO_OBJECT (self, "image capture prepared");
 
   /* It is possible we are about to get something else that we requested */
-  if (!gst_caps_is_equal (self->image_capture_caps, caps)) {
+  if (!gst_caps_can_intersect (self->image_capture_caps, caps)) {
     adapt_image_capture (self, caps);
   } else {
     set_capsfilter_caps (self, self->image_capture_caps);
