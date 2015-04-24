@@ -968,14 +968,13 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         gst_object_unref (glimage_sink->context);
         glimage_sink->context = NULL;
       }
-
+      break;
+    }
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (glimage_sink->display) {
         gst_object_unref (glimage_sink->display);
         glimage_sink->display = NULL;
       }
-      break;
-    }
-    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
