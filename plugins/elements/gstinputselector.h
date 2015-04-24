@@ -77,6 +77,7 @@ struct _GstInputSelector {
   GMutex lock;
   GCond cond;
   gboolean eos;
+  gboolean eos_sent;
   gboolean flushing;
 };
 
