@@ -2,7 +2,8 @@
 # http://www.gnu.org/software/automake/manual/automake.html#Wildcards
 # Keep this list sorted!
 tests =	\
-	test_gst.py
+	test_gst.py \
+	test_fraction.py
 
 EXTRA_DIST = \
 	__init__.py \
