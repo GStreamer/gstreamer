@@ -25,10 +25,9 @@
 # any later version.
 
 import sys
-from inspect import signature
+import inspect
 from ..overrides import override
 from ..importer import modules
-from inspect import getmembers
 
 
 if sys.version_info >= (3, 0):
@@ -112,14 +111,14 @@ class Pad(Gst.Pad):
 
     def _query_override(self, pad, parent, query):
         query.mini_object.refcount -= 1
-        n_params = len(signature(self._real_query_func).parameters)
-        if n_params == 2:
+        try:
             res = self._real_query_func(pad, query)
-        elif n_params == 3:
-            res = self._real_query_func(pad, parent, query)
-        else:
-            raise TypeError("Invalid query method %s, 2 or 3 arguments requiered"
-                            % self._real_query_func)
+        except TypeError:
+            try:
+                res = self._real_query_func(pad, parent, query)
+            except TypeError:
+                raise TypeError("Invalid query method %s, 2 or 3 arguments requiered"
+                                % self._real_query_func)
         query.mini_object.refcount += 1
 
         return res
@@ -347,10 +346,10 @@ def fake_method(*args):
     raise NotInitalized("Please call Gst.init(argv) before using GStreamer")
 
 
-real_functions = [o for o in getmembers(Gst) if isinstance(o[1], type(Gst.init))]
+real_functions = [o for o in inspect.getmembers(Gst) if isinstance(o[1], type(Gst.init))]
 
 class_methods = []
-for cname_klass in [o for o in getmembers(Gst) if isinstance(o[1], type(Gst.Element)) or isinstance(o[1], type(Gst.Caps))]:
+for cname_klass in [o for o in inspect.getmembers(Gst) if isinstance(o[1], type(Gst.Element)) or isinstance(o[1], type(Gst.Caps))]:
     class_methods.append((cname_klass,
                          [(o, cname_klass[1].__dict__[o])
                           for o in cname_klass[1].__dict__
