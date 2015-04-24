@@ -108,8 +108,7 @@ enum
 {
   PROP_0,
   PROP_SPROP_PARAMETER_SETS,
-  PROP_CONFIG_INTERVAL,
-  PROP_LAST
+  PROP_CONFIG_INTERVAL
 };
 
 #define IS_ACCESS_UNIT(x) (((x) > 0x00) && ((x) < 0x06))
