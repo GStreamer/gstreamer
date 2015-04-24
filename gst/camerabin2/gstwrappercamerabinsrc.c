@@ -824,13 +824,16 @@ start_image_capture (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
   }
 
   if (photography) {
-    gst_element_set_state (self->src_vid_src, GST_STATE_PLAYING);
     GST_DEBUG_OBJECT (self, "prepare image capture caps %" GST_PTR_FORMAT,
         self->image_capture_caps);
     if (!gst_photography_prepare_for_capture (photography,
             (GstPhotographyCapturePrepared) img_capture_prepared,
-            self->image_capture_caps, self))
-      self->image_capture_count = 0;    /* TODO post an error */
+            self->image_capture_caps, self)) {
+      GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+          ("Failed to prepare image capture"),
+          ("Prepare capture call didn't succeed for the given caps"));
+      self->image_capture_count = 0;
+    }
     gst_object_unref (photography);
   } else {
     gst_wrapper_camera_bin_reset_video_src_caps (self,
