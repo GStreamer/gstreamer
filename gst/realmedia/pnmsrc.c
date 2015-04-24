@@ -40,8 +40,7 @@ enum
 enum
 {
   PROP_0,
-  PROP_LOCATION,
-  PROP_LAST
+  PROP_LOCATION
 };
 
 static GstStaticPadTemplate gst_pnm_src_template =
