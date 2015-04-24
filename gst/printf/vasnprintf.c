@@ -239,6 +239,11 @@ printf_postprocess_args (char_directives * directives, arguments * arguments)
     argument *a;
 
     dp = &directives->dir[i];
+
+    /* %% has no arguments, for example */
+    if (dp->arg_index < 0)
+      continue;
+
     a = &arguments->arg[dp->arg_index];
 
     if (a->type == TYPE_POINTER_EXT) {
