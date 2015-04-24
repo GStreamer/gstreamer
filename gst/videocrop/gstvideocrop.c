@@ -759,9 +759,9 @@ gst_video_crop_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_LOG_OBJECT (video_crop, "l=%d,r=%d,b=%d,t=%d",
-      video_crop->crop_left, video_crop->crop_right, video_crop->crop_bottom,
-      video_crop->crop_top);
+  GST_LOG_OBJECT (video_crop, "l=%d,r=%d,b=%d,t=%d, need_update:%d",
+      video_crop->prop_left, video_crop->prop_right, video_crop->prop_bottom,
+      video_crop->prop_top, video_crop->need_update);
 
   GST_OBJECT_UNLOCK (video_crop);
 
