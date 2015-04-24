@@ -856,6 +856,7 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
   if (old_program->active) {
     old_program = mpegts_base_steal_program (base, program_number);
     program = mpegts_base_new_program (base, program_number, section->pid);
+    program->patcount = old_program->patcount;
     g_hash_table_insert (base->programs,
         GINT_TO_POINTER (program_number), program);
 
