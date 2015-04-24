@@ -338,12 +338,12 @@ Gst.fixme = _gi_gst.fixme
 Gst.memdump = _gi_gst.memdump
 
 # Make sure PyGst is not usable if GStreamer has not been initialized
-class NotInitalized(Exception):
+class NotInitialized(Exception):
     pass
-__all__.append('NotInitalized')
+__all__.append('NotInitialized')
 
 def fake_method(*args):
-    raise NotInitalized("Please call Gst.init(argv) before using GStreamer")
+    raise NotInitialized("Please call Gst.init(argv) before using GStreamer")
 
 
 real_functions = [o for o in inspect.getmembers(Gst) if isinstance(o[1], type(Gst.init))]

@@ -17,6 +17,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
+import sys
 import overrides_hack
 overrides_hack
 from common import TestCase, unittest
@@ -38,13 +39,18 @@ class TimeArgsTest(TestCase):
 
 class TestNotInitialized(TestCase):
     def testNotInitialized(self):
-        with self.assertRaises(Gst.NotInitalized):
+        if sys.version_info >= (3, 0):
+            assert_type = Gst.NotInitialized
+        else:
+            assert_type = TypeError
+
+        with self.assertRaises(assert_type):
             Gst.Caps.from_string("audio/x-raw")
 
-        with self.assertRaises(Gst.NotInitalized):
+        with self.assertRaises(assert_type):
             Gst.Structure.from_string("audio/x-raw")
 
-        with self.assertRaises(Gst.NotInitalized):
+        with self.assertRaises(assert_type):
             Gst.ElementFactory.make("identity", None)
 
     def testNotDeinitialized(self):
@@ -55,13 +61,18 @@ class TestNotInitialized(TestCase):
         assert(Gst.ElementFactory.make("identity", None))
 
         Gst.deinit()
-        with self.assertRaises(Gst.NotInitalized):
+        if sys.version_info >= (3, 0):
+            assert_type = Gst.NotInitialized
+        else:
+            assert_type = TypeError
+
+        with self.assertRaises(assert_type):
             Gst.Caps.from_string("audio/x-raw")
 
-        with self.assertRaises(Gst.NotInitalized):
+        with self.assertRaises(assert_type):
             Gst.Structure.from_string("audio/x-raw")
 
-        with self.assertRaises(Gst.NotInitalized):
+        with self.assertRaises(assert_type):
             Gst.ElementFactory.make("identity", None)
 
 
