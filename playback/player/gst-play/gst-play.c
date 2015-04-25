@@ -86,7 +86,7 @@ position_updated_cb (GstPlayer * player, GstClockTime pos, GstPlay * play)
 
   memset (status, ' ', sizeof (status) - 1);
 
-  if (pos >= 0 && dur > 0) {
+  if (pos != -1 && dur > 0 && dur != -1) {
     gchar dstr[32], pstr[32];
 
     /* FIXME: pretty print in nicer format */
