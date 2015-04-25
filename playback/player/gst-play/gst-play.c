@@ -157,7 +157,7 @@ print_video_info (GstPlayerVideoInfo * info)
       gst_player_video_info_get_max_bitrate (info));
   g_print ("  bitrate : %d\n", gst_player_video_info_get_bitrate (info));
   gst_player_video_info_get_framerate (info, &fps_n, &fps_d);
-  g_print ("  frameate : %.2f\n", (gdouble) fps_n / fps_d);
+  g_print ("  framerate : %.2f\n", (gdouble) fps_n / fps_d);
   gst_player_video_info_get_pixel_aspect_ratio (info, &par_n, &par_d);
   g_print ("  pixel-aspect-ratio  %u:%u\n", par_n, par_d);
 }
@@ -183,7 +183,7 @@ print_subtitle_info (GstPlayerSubtitleInfo * info)
   if (info == NULL)
     return;
 
-  g_print ("  language : %s\n", gst_player_subtitle_get_language (info));
+  g_print ("  language : %s\n", gst_player_subtitle_info_get_language (info));
 }
 
 static void
