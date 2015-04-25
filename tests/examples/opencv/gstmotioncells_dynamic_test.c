@@ -22,88 +22,11 @@
  */
 #include <gst/gst.h>
 #include <glib.h>
-#include <glib/gprintf.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <locale.h>
 #include "gstmotioncells_dynamic_test.h"
 #include "gst_element_print_properties.h"
-
-const guint c2w = 21;           // column 2 width
-const guint c3w = 19;           // column 3 width
-const guint c4w = 23;           // column 4 width
-
-void
-setProperty (GstElement * mcells, char *property, char *prop_value, GType type,
-    GValue * value)
-{
-
-  switch (type) {
-    case G_TYPE_STRING:
-    {
-      g_object_set (G_OBJECT (mcells), property, prop_value, NULL);
-      break;
-    }
-    case G_TYPE_BOOLEAN:
-    {
-      gboolean flag = (g_strcmp0 (prop_value, "true") == 0) ? TRUE : FALSE;
-      g_object_set (G_OBJECT (mcells), property, flag, NULL);
-      break;
-    }
-    case G_TYPE_ULONG:
-    {
-      unsigned long ulongval = strtoul (prop_value, NULL, 0);
-      g_object_set (G_OBJECT (mcells), property, ulongval, NULL);
-      break;
-    }
-    case G_TYPE_LONG:
-    {
-      long longval = atol (prop_value);
-      g_object_set (G_OBJECT (mcells), property, longval, NULL);
-      break;
-    }
-    case G_TYPE_UINT:
-    {
-      unsigned int uintval = atoi (prop_value);
-      g_object_set (G_OBJECT (mcells), property, uintval, NULL);
-      break;
-    }
-    case G_TYPE_INT:
-    {
-      int intval = atoi (prop_value);
-      g_object_set (G_OBJECT (mcells), property, intval, NULL);
-      break;
-    }
-    case G_TYPE_UINT64:
-    {
-      guint64 guint64val = atoi (prop_value);
-      g_object_set (G_OBJECT (mcells), property, guint64val, NULL);
-      break;
-    }
-    case G_TYPE_INT64:
-    {
-      gint64 gint64val = atoi (prop_value);
-      g_object_set (G_OBJECT (mcells), property, gint64val, NULL);
-      break;
-    }
-    case G_TYPE_FLOAT:
-    {
-      float floatval = atof (prop_value);
-      g_object_set (G_OBJECT (mcells), property, floatval, NULL);
-      break;
-    }
-    case G_TYPE_DOUBLE:
-    {
-      double doubleval = strtod (prop_value, NULL);
-      g_object_set (G_OBJECT (mcells), property, doubleval, NULL);
-      break;
-    }
-    default:
-      fprintf (stderr, "You gave me something wrong type of data !!! \n");
-      break;
-  }
-}
 
 int
 main (int argc, char *argv[])
@@ -111,10 +34,6 @@ main (int argc, char *argv[])
   GstElement *pipeline, *source, *videor, *capsf;
   GstElement *colorsp0, *colorsp1, *mcells, *sink;
   GstCaps *caps;
-  GParamSpec **property_specs;
-  guint num_properties, i;
-  GValue value = { 0, };
-  gboolean found_property = FALSE;
 
   gst_init (&argc, &argv);
 
@@ -158,15 +77,10 @@ main (int argc, char *argv[])
   g_print ("Change properties like this: propertyname=value\n");
   g_print ("Quit with 'q'\n");
 
-  /* Get all properties */
-  property_specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (mcells),
-      &num_properties);
+  /* Read command line input */
   while (TRUE) {
     gchar *prop_name, *prop_value;
     gchar input_buf[1024];
-
-    found_property = FALSE;
-    i = 0;
 
     memset (input_buf, 0, sizeof (input_buf));
     if (fgets (input_buf, sizeof (input_buf), stdin) == NULL)
@@ -186,24 +100,7 @@ main (int argc, char *argv[])
     *prop_value++ = '\0';
     prop_name = input_buf;
 
-    printf ("property: %s -> value: %s \n", prop_name, prop_value);
-    for (i = 0; i < num_properties; i++) {
-      GParamSpec *param = property_specs[i];
-      g_value_init (&value, param->value_type);
-      g_object_get_property (G_OBJECT (mcells), param->name, &value);
-      if ((g_strcmp0 (prop_name, param->name) == 0) && !found_property &&
-          (g_strcmp0 (prop_value, "") != 0)
-          && (g_strcmp0 (prop_value, "\"") != 0)
-          && (g_strcmp0 (prop_value, "\'") != 0)) {
-        GType type;
-        found_property = TRUE;
-        type = param->value_type;
-        setProperty (mcells, prop_name, prop_value, type, &value);
-      }
-      g_value_unset (&value);
-      if (found_property)
-        break;
-    }
+    gst_util_set_object_arg (G_OBJECT (mcells), prop_name, prop_value);
   }
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
