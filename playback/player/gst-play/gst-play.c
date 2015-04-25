@@ -202,9 +202,9 @@ print_all_stream_info (GstPlayerMediaInfo * media_info)
 
     g_print (" Stream # %u \n", count++);
     g_print ("  type : %s_%u\n",
-        gst_player_stream_info_get_stream_type_nick (stream),
-        gst_player_stream_info_get_stream_index (stream));
-    tags = gst_player_stream_info_get_stream_tags (stream);
+        gst_player_stream_info_get_stream_type (stream),
+        gst_player_stream_info_get_index (stream));
+    tags = gst_player_stream_info_get_tags (stream);
     g_print ("  taglist : \n");
     if (tags) {
       gst_tag_list_foreach (tags, print_one_tag, NULL);
@@ -232,8 +232,8 @@ print_all_video_stream (GstPlayerMediaInfo * media_info)
   for (l = list; l != NULL; l = l->next) {
     GstPlayerVideoInfo *info = (GstPlayerVideoInfo *) l->data;
     GstPlayerStreamInfo *sinfo = (GstPlayerStreamInfo *) info;
-    g_print (" %s_%d #\n", gst_player_stream_info_get_stream_type_nick (sinfo),
-        gst_player_stream_info_get_stream_index (sinfo));
+    g_print (" %s_%d #\n", gst_player_stream_info_get_stream_type (sinfo),
+        gst_player_stream_info_get_index (sinfo));
     print_video_info (info);
   }
 }
@@ -251,8 +251,8 @@ print_all_subtitle_stream (GstPlayerMediaInfo * media_info)
   for (l = list; l != NULL; l = l->next) {
     GstPlayerSubtitleInfo *info = (GstPlayerSubtitleInfo *) l->data;
     GstPlayerStreamInfo *sinfo = (GstPlayerStreamInfo *) info;
-    g_print (" %s_%d #\n", gst_player_stream_info_get_stream_type_nick (sinfo),
-        gst_player_stream_info_get_stream_index (sinfo));
+    g_print (" %s_%d #\n", gst_player_stream_info_get_stream_type (sinfo),
+        gst_player_stream_info_get_index (sinfo));
     print_subtitle_info (info);
   }
 }
@@ -270,8 +270,8 @@ print_all_audio_stream (GstPlayerMediaInfo * media_info)
   for (l = list; l != NULL; l = l->next) {
     GstPlayerAudioInfo *info = (GstPlayerAudioInfo *) l->data;
     GstPlayerStreamInfo *sinfo = (GstPlayerStreamInfo *) info;
-    g_print (" %s_%d #\n", gst_player_stream_info_get_stream_type_nick (sinfo),
-        gst_player_stream_info_get_stream_index (sinfo));
+    g_print (" %s_%d #\n", gst_player_stream_info_get_stream_type (sinfo),
+        gst_player_stream_info_get_index (sinfo));
     print_audio_info (info);
   }
 }
