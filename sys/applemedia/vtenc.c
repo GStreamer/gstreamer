@@ -83,6 +83,7 @@ static void gst_vtenc_get_property (GObject * obj, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_vtenc_set_property (GObject * obj, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+static void gst_vtenc_finalize (GObject * obj);
 
 static gboolean gst_vtenc_start (GstVideoEncoder * enc);
 static gboolean gst_vtenc_stop (GstVideoEncoder * enc);
@@ -193,6 +194,7 @@ gst_vtenc_class_init (GstVTEncClass * klass)
 
   gobject_class->get_property = gst_vtenc_get_property;
   gobject_class->set_property = gst_vtenc_set_property;
+  gobject_class->finalize = gst_vtenc_finalize;
 
   gstvideoencoder_class->start = gst_vtenc_start;
   gstvideoencoder_class->stop = gst_vtenc_stop;
@@ -243,6 +245,8 @@ static void
 gst_vtenc_init (GstVTEnc * self)
 {
   GstVTEncClass *klass = (GstVTEncClass *) G_OBJECT_GET_CLASS (self);
+  CFStringRef keyframe_props_keys[] = { kVTEncodeFrameOptionKey_ForceKeyFrame };
+  CFBooleanRef keyframe_props_values[] = { kCFBooleanTrue };
 
   self->details = GST_VTENC_CLASS_GET_CODEC_DETAILS (klass);
 
@@ -252,6 +256,21 @@ gst_vtenc_init (GstVTEnc * self)
   self->latency_frames = -1;
   self->session = NULL;
   self->profile_level = NULL;
+
+  self->keyframe_props =
+      CFDictionaryCreate (NULL, (const void **) keyframe_props_keys,
+      (const void **) keyframe_props_values, G_N_ELEMENTS (keyframe_props_keys),
+      &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+}
+
+static void
+gst_vtenc_finalize (GObject * obj)
+{
+  GstVTEnc *self = GST_VTENC_CAST (obj);
+
+  CFRelease (self->keyframe_props);
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static guint
@@ -486,11 +505,6 @@ gst_vtenc_stop (GstVideoEncoder * enc)
   if (self->profile_level)
     CFRelease (self->profile_level);
 
-  if (self->options != NULL) {
-    CFRelease (self->options);
-    self->options = NULL;
-  }
-
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
   self->input_state = NULL;
@@ -620,11 +634,6 @@ gst_vtenc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   GST_OBJECT_LOCK (self);
   self->session = session;
   GST_OBJECT_UNLOCK (self);
-
-  if (self->options != NULL)
-    CFRelease (self->options);
-  self->options = CFDictionaryCreateMutable (NULL, 0,
-      &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
   return TRUE;
 }
@@ -1043,18 +1052,11 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   OSStatus vt_status;
   GstFlowReturn ret = GST_FLOW_OK;
   guint i;
-  gboolean forced_keyframe = FALSE;
+  CFDictionaryRef frame_props = NULL;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
-    if (self->options != NULL) {
-      GST_INFO_OBJECT (self, "received force-keyframe-event, will force intra");
-      CFDictionaryAddValue (self->options,
-          kVTEncodeFrameOptionKey_ForceKeyFrame, kCFBooleanTrue);
-      forced_keyframe = TRUE;
-    } else {
-      GST_INFO_OBJECT (self,
-          "received force-keyframe-event but encode not yet started, ignoring");
-    }
+    GST_INFO_OBJECT (self, "received force-keyframe-event, will force intra");
+    frame_props = self->keyframe_props;
   }
 
   ts = CMTimeMake (frame->pts, GST_SECOND);
@@ -1189,15 +1191,9 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
    * lock from another thread and then deadlock */
   GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
   vt_status = VTCompressionSessionEncodeFrame (self->session,
-      pbuf, ts, duration, self->options,
+      pbuf, ts, duration, frame_props,
       GINT_TO_POINTER (frame->system_frame_number), NULL);
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
-
-  /* Only force one keyframe */
-  if (forced_keyframe) {
-    CFDictionaryRemoveValue (self->options,
-        kVTEncodeFrameOptionKey_ForceKeyFrame);
-  }
 
   if (vt_status != noErr) {
     GST_WARNING_OBJECT (self, "VTCompressionSessionEncodeFrame returned %d",

@@ -76,7 +76,7 @@ struct _GstVTEnc
   GstVideoCodecState *input_state;
   GstVideoInfo video_info;
   VTCompressionSessionRef session;
-  CFMutableDictionaryRef options;
+  CFDictionaryRef keyframe_props;
 
   GAsyncQueue * cur_outframes;
 };
