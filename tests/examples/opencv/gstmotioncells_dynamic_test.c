@@ -21,12 +21,61 @@
  *
  */
 #include <gst/gst.h>
-#include <glib.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "gstmotioncells_dynamic_test.h"
-#include "gst_element_print_properties.h"
+
+static void
+print_element_properties (GstElement * element)
+{
+  GParamSpec **pspecs, *pspec;
+  guint num, i;
+
+  g_print ("\tProperty : value (type)\n");
+
+  pspecs = g_object_class_list_properties (G_OBJECT_GET_CLASS (element), &num);
+  for (i = 0; i < num; ++i) {
+    GValue val = G_VALUE_INIT;
+    const gchar *type_name;
+    gchar *s;
+
+    pspec = pspecs[i];
+
+    /* only care about properties we can read and write */
+    if ((pspec->flags & G_PARAM_READWRITE) != G_PARAM_READWRITE)
+      continue;
+    /* and which can be changed after construction */
+    if ((pspec->flags & G_PARAM_CONSTRUCT_ONLY))
+      continue;
+    /* ignore some GstObject properties which are not interesting */
+    if (!strcmp (pspec->name, "name") || !strcmp (pspec->name, "parent"))
+      continue;
+    /* ignore properties we can't change in a meaningful way */
+    if (G_IS_PARAM_SPEC_BOXED (pspec) || G_IS_PARAM_SPEC_OBJECT (pspec)
+        || G_IS_PARAM_SPEC_POINTER (pspec))
+      continue;
+
+    g_value_init (&val, G_PARAM_SPEC_VALUE_TYPE (pspec));
+    g_object_get_property (G_OBJECT (element), pspec->name, &val);
+    s = gst_value_serialize (&val);
+
+    if (G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_STRING) {
+      type_name = "string";
+      g_free (s);
+      g_object_get (G_OBJECT (element), pspec->name, &s, NULL);
+      if (s == NULL)
+        s = g_strdup ("(null)");
+    } else {
+      type_name = g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec));
+    }
+
+    g_print ("\t%s: %s (%s)\n", pspec->name, s, type_name);
+    g_free (s);
+    g_value_unset (&val);
+  }
+
+  g_free (pspecs);
+}
 
 int
 main (int argc, char *argv[])
@@ -71,9 +120,12 @@ main (int argc, char *argv[])
 
   g_print ("Going to playing..\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  g_print ("You can use these properties: \n");
-  gst_element_print_properties (mcells);
-  g_print ("See 'gst-inspect-1.0 motioncells' for all the details.\n");
+
+  g_print ("You can use these properties: \n\n");
+
+  print_element_properties (mcells);
+
+  g_print ("\nSee 'gst-inspect-1.0 motioncells' for all the details.\n");
   g_print ("Change properties like this: propertyname=value\n");
   g_print ("Quit with 'q'\n");
 
