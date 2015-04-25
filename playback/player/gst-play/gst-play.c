@@ -3,6 +3,7 @@
  * Copyright (C) 2013-2014 Tim-Philipp Müller <tim centricular net>
  * Copyright (C) 2013 Collabora Ltd.
  * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
+ * Copyright (C) 2015 Brijesh Singh <brijesh.ksingh@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
