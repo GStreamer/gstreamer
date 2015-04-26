@@ -42,6 +42,9 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef G_OS_WIN32
+#include <windows.h>
+#endif
 
 #include "libde265-dec.h"
 
@@ -378,6 +381,30 @@ gst_libde265_dec_start (GstVideoDecoder * decoder)
     threads = sysconf (_SC_NPROC_ONLN);
 #elif defined(_SC_NPROCESSORS_ONLN)
     threads = sysconf (_SC_NPROCESSORS_ONLN);
+#elif defined(G_OS_WIN32)
+    /* FIXME 2.0, use g_get_num_processors() */
+    SYSTEM_INFO sysinfo;
+    DWORD_PTR process_cpus;
+    DWORD_PTR system_cpus;
+
+    /* This *never* fails, but doesn't take CPU affinity into account */
+    GetSystemInfo (&sysinfo);
+    threads = (int) sysinfo.dwNumberOfProcessors;
+
+    /* This *can* fail, but produces correct results if affinity mask is used,
+     * unlike the simpler code above.
+     */
+    if (GetProcessAffinityMask (GetCurrentProcess (),
+            &process_cpus, &system_cpus)) {
+      unsigned int count;
+
+      for (count = 0; process_cpus != 0; process_cpus >>= 1)
+        if (process_cpus & 1)
+          count++;
+
+      if (count > 0)
+        threads = (int) count;
+    }
 #else
 #warning "Don't know how to get number of CPU cores, will use the default thread count"
     threads = DEFAULT_THREAD_COUNT;
