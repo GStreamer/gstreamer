@@ -3555,63 +3555,83 @@ swf_type_find (GstTypeFind * tf, gpointer unused)
 
 /*** application/vnd.ms-sstr+xml ***/
 
+static void
+mss_manifest_load_utf16 (gunichar2 * utf16_ne, const guint8 * utf16_data,
+    gsize data_size, guint data_endianness)
+{
+  memcpy (utf16_ne, utf16_data, data_size);
+  if (data_endianness != G_BYTE_ORDER) {
+    guint i;
+
+    for (i = 0; i < data_size / 2; ++i)
+      utf16_ne[i] = GUINT16_SWAP_LE_BE (utf16_ne[i]);
+  }
+}
+
 static GstStaticCaps mss_manifest_caps =
 GST_STATIC_CAPS ("application/vnd.ms-sstr+xml");
 #define MSS_MANIFEST_CAPS (gst_static_caps_get(&mss_manifest_caps))
 static void
 mss_manifest_type_find (GstTypeFind * tf, gpointer unused)
 {
+  gunichar2 utf16_ne[512];
+  const guint8 *data;
+  guint data_endianness = 0;
+  glong n_read = 0, size = 0;
+  guint length;
+  gchar *utf8;
+
   if (xml_check_first_element (tf, "SmoothStreamingMedia", 20, TRUE)) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MSS_MANIFEST_CAPS);
-  } else {
-    const guint8 *data;
-    gboolean utf16_le, utf16_be;
-    const gchar *convert_from = NULL;
-    guint8 *converted_data;
-
-    /* try detecting the charset */
-    data = gst_type_find_peek (tf, 0, 2);
-
-    if (data == NULL)
-      return;
-
-    /* look for a possible BOM */
-    utf16_le = data[0] == 0xFF && data[1] == 0xFE;
-    utf16_be = data[0] == 0xFE && data[1] == 0xFF;
-    if (utf16_le) {
-      convert_from = "UTF-16LE";
-    } else if (utf16_be) {
-      convert_from = "UTF-16BE";
-    }
-
-    if (convert_from) {
-      gsize new_size = 0;
-      guint length = gst_type_find_get_length (tf);
-
-      /* try a default that should be enough */
-      if (length == 0)
-        length = 512;
-      data = gst_type_find_peek (tf, 0, length);
-
-      if (data) {
-        /* skip the BOM */
-        data += 2;
-        length -= 2;
-
-        converted_data =
-            (guint8 *) g_convert ((gchar *) data, length, "UTF-8", convert_from,
-            NULL, &new_size, NULL);
-        if (converted_data) {
-          if (xml_check_first_element_from_data (converted_data, new_size,
-                  "SmoothStreamingMedia", 20, TRUE))
-            gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
-                MSS_MANIFEST_CAPS);
-
-          g_free (converted_data);
-        }
-      }
-    }
+    return;
   }
+
+  length = gst_type_find_get_length (tf);
+
+  /* try detecting the charset */
+  data = gst_type_find_peek (tf, 0, 2);
+
+  if (data == NULL)
+    return;
+
+  /* look for a possible BOM */
+  if (data[0] == 0xFF && data[1] == 0xFE)
+    data_endianness = G_LITTLE_ENDIAN;
+  else if (data[0] == 0xFE && data[1] == 0xFF)
+    data_endianness = G_BIG_ENDIAN;
+  else
+    return;
+
+  /* try a default that should be enough */
+  if (length == 0)
+    length = 512;
+  else if (length < 64)
+    return;
+
+  /* FIXME: we probably don't need or want the entire thing.. */
+  data = gst_type_find_peek (tf, 0, length);
+
+  if (data == NULL)
+    return;
+
+  /* skip the BOM */
+  data += 2;
+  length -= 2;
+
+  length = GST_ROUND_DOWN_2 (length);
+
+  /* convert to native endian UTF-16 */
+  mss_manifest_load_utf16 (utf16_ne, data, length, data_endianness);
+
+  /* and now convert to UTF-8 */
+  utf8 = g_utf16_to_utf8 (utf16_ne, length / 2, &n_read, &size, NULL);
+  if (utf8 != NULL && n_read > 0) {
+    if (xml_check_first_element_from_data ((const guint8 *) utf8, size,
+            "SmoothStreamingMedia", 20, TRUE))
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MSS_MANIFEST_CAPS);
+  }
+
+  g_free (utf8);
 }
 
 /*** image/jpeg ***/
