@@ -1,6 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2014-2015 Sebastian Dröge <sebastian@centricular.com>
+ * Copyright (C) 2015 Brijesh Singh <brijesh.ksingh@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -51,9 +52,36 @@ typedef struct
   GtkWidget *seekbar;
   GtkWidget *video_area;
   GtkWidget *volume_button;
+  GtkWidget *media_info;
   gulong seekbar_value_changed_signal_id;
   gboolean playing;
 } GtkPlay;
+
+enum {
+  COL_TEXT = 0,
+  COL_NUM
+};
+
+enum {
+  VIDEO_INFO_START,
+  VIDEO_INFO_RESOLUTION,
+  VIDEO_INFO_FPS,
+  VIDEO_INFO_PAR,
+  VIDEO_INFO_CODEC,
+  VIDEO_INFO_MAX_BITRATE,
+  VIDEO_INFO_END,
+  AUDIO_INFO_START,
+  AUDIO_INFO_CHANNELS,
+  AUDIO_INFO_RATE,
+  AUDIO_INFO_LANGUAGE,
+  AUDIO_INFO_CODEC,
+  AUDIO_INFO_MAX_BITRATE,
+  AUDIO_INFO_END,
+  SUBTITLE_INFO_START,
+  SUBTITLE_INFO_LANGUAGE,
+  SUBTITLE_INFO_CODEC,
+  SUBTITLE_INFO_END,
+};
 
 static void
 set_title (GtkPlay * play, const gchar * title)
@@ -133,6 +161,7 @@ skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
   g_return_if_fail (prev != NULL);
 
   gtk_widget_set_sensitive (play->next_button, TRUE);
+  gtk_widget_set_sensitive (play->media_info, FALSE);
   gst_player_set_uri (play->player, prev->data);
   gst_player_play (play->player);
   set_title (play, prev->data);
@@ -153,10 +182,316 @@ skip_next_clicked_cb (GtkButton * button, GtkPlay * play)
   g_return_if_fail (next != NULL);
 
   gtk_widget_set_sensitive (play->prev_button, TRUE);
+  gtk_widget_set_sensitive (play->media_info, FALSE);
   gst_player_set_uri (play->player, next->data);
   gst_player_play (play->player);
   set_title (play, next->data);
   gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
+}
+
+static gchar*
+stream_info_get_string (GstPlayerStreamInfo *stream, gint type,
+    gboolean label)
+{
+  switch (type) {
+    case AUDIO_INFO_RATE:
+    {
+      gchar *buffer;
+      GstPlayerAudioInfo *audio = (GstPlayerAudioInfo*)stream;
+      buffer = g_strdup_printf ("%s%d", label ? "Sample rate : " : "",
+                gst_player_audio_info_get_sample_rate (audio));
+      return buffer;
+    }
+    case AUDIO_INFO_LANGUAGE:
+    {
+      gchar *buffer;
+      GstPlayerAudioInfo *audio = (GstPlayerAudioInfo*)stream;
+      buffer = g_strdup_printf ("%s%s", label ? "Language : " : "",
+                gst_player_audio_info_get_language (audio));
+      return buffer;
+    }
+    case AUDIO_INFO_CHANNELS:
+    {
+      gchar *buffer;
+      GstPlayerAudioInfo *audio = (GstPlayerAudioInfo*)stream;
+      buffer = g_strdup_printf ("%s%d", label ? "Channels : " : "",
+                gst_player_audio_info_get_channels (audio));
+      return buffer;
+    }
+    case SUBTITLE_INFO_CODEC:
+    case VIDEO_INFO_CODEC:
+    case AUDIO_INFO_CODEC:
+    {
+      gchar *buffer;
+      buffer = g_strdup_printf ("%s%s", label ? "Codec : " : "",
+                gst_player_stream_info_get_codec (stream));
+      return buffer;
+    }
+    case AUDIO_INFO_MAX_BITRATE:
+    {
+      gchar *buffer = NULL;
+      GstPlayerAudioInfo *audio = (GstPlayerAudioInfo*)stream;
+      gint bitrate = gst_player_audio_info_get_max_bitrate (audio);
+
+      if (bitrate > 0)
+        buffer = g_strdup_printf ("%s%d", label ? "Max bitrate : " : "",
+            bitrate);
+      return buffer;
+    }
+    case VIDEO_INFO_MAX_BITRATE:
+    {
+      gchar *buffer = NULL;
+      GstPlayerVideoInfo *video = (GstPlayerVideoInfo*)stream;
+      gint bitrate = gst_player_video_info_get_max_bitrate (video);
+
+      if (bitrate > 0)
+        buffer = g_strdup_printf ("%s%d", label ? "Max bitrate : " : "",
+            bitrate);
+      return buffer;
+    }
+    case VIDEO_INFO_PAR:
+    {
+      gint par_d, par_n;
+      gchar *buffer;
+      GstPlayerVideoInfo *video = (GstPlayerVideoInfo*)stream;
+
+      gst_player_video_info_get_pixel_aspect_ratio (video, &par_n, &par_d);
+      buffer = g_strdup_printf ("%s%d:%d", label ? "pixel-aspect-ratio : " :
+          "", par_n, par_d);
+      return buffer;
+    }
+    case VIDEO_INFO_FPS:
+    {
+      gint fps_d, fps_n;
+      gchar *buffer;
+      GstPlayerVideoInfo *video = (GstPlayerVideoInfo*)stream;
+
+      gst_player_video_info_get_framerate (video, &fps_n, &fps_d);
+      buffer = g_strdup_printf ("%s%.2f", label ? "Framerate : " : "",
+                (gdouble)fps_n/fps_d);
+      return buffer;
+    }
+    case VIDEO_INFO_RESOLUTION:
+    {
+      gchar *buffer;
+      GstPlayerVideoInfo *video = (GstPlayerVideoInfo*)stream;
+      buffer = g_strdup_printf ("%s%dx%d", label ? "Resolution : " : "",
+                gst_player_video_info_get_width (video),
+                gst_player_video_info_get_height (video));
+      return buffer;
+    }
+    case SUBTITLE_INFO_LANGUAGE:
+    {
+      gchar *buffer;
+      GstPlayerSubtitleInfo *sub = (GstPlayerSubtitleInfo*)stream;
+      buffer = g_strdup_printf ("%s%s", label ? "Language : " : "",
+                gst_player_subtitle_info_get_language (sub));
+      return buffer;
+    }
+    default:
+    {
+      return NULL;
+    }
+  }
+}
+
+static gboolean
+is_current_stream (GtkPlay *play, GstPlayerStreamInfo *stream)
+{
+  gboolean ret = FALSE;
+  GstPlayerStreamInfo *s;
+  GstPlayerVideoInfo *video = gst_player_get_current_video_track(play->player);
+  GstPlayerAudioInfo *audio = gst_player_get_current_audio_track(play->player);
+  GstPlayerSubtitleInfo *sub = gst_player_get_current_subtitle_track(play->player);
+  
+  if (GST_IS_PLAYER_VIDEO_INFO(stream))
+    s = (GstPlayerStreamInfo*) video;
+  else if (GST_IS_PLAYER_AUDIO_INFO(stream))
+    s = (GstPlayerStreamInfo*) audio;
+  else
+    s = (GstPlayerStreamInfo*) sub;
+
+  if (s)
+    if (gst_player_stream_info_get_index (stream) ==
+        gst_player_stream_info_get_index (s))
+      ret = TRUE;
+
+  if (audio)
+    g_object_unref (audio);
+
+  if (video)
+    g_object_unref (video);
+
+  if (sub)
+    g_object_unref (sub);
+
+  return ret;
+}
+
+static GtkTreeModel*
+create_and_fill_model (GtkPlay *play, GstPlayerMediaInfo *info)
+{
+  GList *l;
+  guint count;
+  GtkTreeStore *tree;
+  GtkTreeIter child, parent;
+
+  count = 0;
+  tree = gtk_tree_store_new (COL_NUM, G_TYPE_STRING);
+
+  for (l = gst_player_media_info_get_stream_list(info);
+        l != NULL; l = l->next) {
+    gchar *buffer;
+    gint i, start, end;
+    GstPlayerStreamInfo *stream = (GstPlayerStreamInfo*) l->data;
+
+    /* define the field range based on stream type */
+    if (GST_IS_PLAYER_VIDEO_INFO(stream)) {
+      start = VIDEO_INFO_START + 1;
+      end = VIDEO_INFO_END;
+    } else if (GST_IS_PLAYER_AUDIO_INFO(stream)) {
+      start = AUDIO_INFO_START + 1;
+      end = AUDIO_INFO_END;
+    } else {
+      start = SUBTITLE_INFO_START + 1;
+      end = SUBTITLE_INFO_END;
+    }
+
+    buffer = g_strdup_printf ("Stream %u %s", count++,
+        is_current_stream (play, stream) ? "(current)" : "");
+    gtk_tree_store_append (tree, &parent, NULL);
+    gtk_tree_store_set (tree, &parent, COL_TEXT, buffer, -1);
+    g_free (buffer);
+
+    buffer = g_strdup_printf ("Type : %s",
+              gst_player_stream_info_get_stream_type (stream));
+    gtk_tree_store_append (tree, &child, &parent );
+    gtk_tree_store_set (tree, &child, COL_TEXT, buffer, -1);
+    g_free (buffer);
+
+    for (i = start; i < end; i++) {
+      buffer = stream_info_get_string (stream, i, TRUE);
+      if (buffer) {
+        gtk_tree_store_append (tree, &child, &parent);
+        gtk_tree_store_set (tree, &child, COL_TEXT, buffer, -1);
+        g_free (buffer);
+      }
+    }
+  }
+
+  return GTK_TREE_MODEL(tree);
+}
+
+static GtkWidget*
+create_view_and_model (GtkPlay *play, GstPlayerMediaInfo *info)
+{
+  GtkWidget *view;
+  GtkTreeModel *model;
+  GtkTreeViewColumn *col;
+  GtkCellRenderer *renderer;
+
+  view = gtk_tree_view_new ();
+  col = gtk_tree_view_column_new ();
+  gtk_tree_view_append_column (GTK_TREE_VIEW(view), col);
+  gtk_tree_view_set_headers_visible (GTK_TREE_VIEW(view), FALSE);
+
+  renderer = gtk_cell_renderer_text_new ();
+  gtk_tree_view_column_pack_start (col, renderer, TRUE);
+  gtk_tree_view_column_add_attribute (col, renderer, "text", COL_TEXT);
+
+  model = create_and_fill_model (play, info);
+  gtk_tree_view_set_model (GTK_TREE_VIEW(view), model);
+  g_object_unref (model);
+
+  return view;
+}
+
+static void
+delete_media_info_window (GtkWidget *button, GtkWindow *window)
+{
+  gtk_window_close (window);
+}
+
+static void
+create_media_info_window (GtkPlay *play, GstPlayerMediaInfo *info)
+{
+  GtkWidget *sw;
+  GtkWidget *vbox;
+  GtkWidget *label;
+  GtkWidget *view;
+  GtkWidget *hbox;
+  GtkWidget *uri;
+  GtkWidget *loc;
+  GtkTextIter iter;
+  GtkWidget *window;
+  GtkTextBuffer *buffer;
+  GtkWidget *hbox_close;
+  GtkWidget *button_close;
+
+  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title (GTK_WINDOW(window), "Media information");
+  gtk_window_set_default_size (GTK_WINDOW(window), 550, 450);
+  gtk_window_set_position (GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+  gtk_container_set_border_width (GTK_CONTAINER(window), 10);
+
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 8);
+  gtk_container_add (GTK_CONTAINER(window), vbox);
+
+  label = gtk_label_new (NULL);
+  gtk_label_set_markup (GTK_LABEL(label),
+    "Information about all the streams contains in your media. \n"
+    "Current selected streams are marked as (current).");
+  gtk_label_set_justify (GTK_LABEL(label), GTK_JUSTIFY_LEFT);
+  gtk_misc_set_alignment (GTK_MISC(label), 0.0, 0.5);
+  gtk_box_pack_start (GTK_BOX(vbox), label, FALSE, FALSE, 2);
+
+  sw = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW(sw),
+      GTK_SHADOW_ETCHED_IN);
+  gtk_box_pack_start (GTK_BOX(vbox), sw, TRUE, TRUE, 0);
+
+  view = create_view_and_model (play, info);
+  gtk_container_add (GTK_CONTAINER(sw), view);
+  g_signal_connect (view, "realize",
+      G_CALLBACK(gtk_tree_view_expand_all), NULL);
+
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
+  gtk_box_pack_start (GTK_BOX(vbox), hbox, FALSE, FALSE, 2);
+
+  loc = gtk_label_new ("Location : ");
+  gtk_box_pack_start (GTK_BOX(hbox), loc, FALSE, FALSE, 2);
+
+  buffer = gtk_text_buffer_new (NULL);
+  gtk_text_buffer_get_start_iter (buffer, &iter);
+  gtk_text_buffer_insert (buffer, &iter,
+      gst_player_media_info_get_uri (info), -1);
+  uri = gtk_text_view_new_with_buffer (buffer);
+  gtk_box_pack_start (GTK_BOX(hbox), uri, FALSE, FALSE, 2);
+  gtk_text_view_set_editable (GTK_TEXT_VIEW(uri), FALSE);
+  g_object_unref (buffer);
+
+  hbox_close = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
+  gtk_box_pack_start (GTK_BOX(vbox), hbox_close, FALSE, FALSE, 2);
+  button_close = gtk_button_new_with_label (" Close ");
+  g_signal_connect (button_close, "clicked",
+      G_CALLBACK(delete_media_info_window), window);
+  gtk_box_pack_end (GTK_BOX(hbox_close), button_close, FALSE, FALSE, 3);
+
+  gtk_widget_show_all (window);
+}
+
+static void
+media_info_clicked_cb (GtkButton *button, GtkPlay *play)
+{
+  GstPlayerMediaInfo  *info;
+
+  info = gst_player_get_media_info (play->player);
+  if (!info)
+    return;
+
+  create_media_info_window (play, info);
+
+  g_object_unref (info);
 }
 
 static void
@@ -224,13 +559,21 @@ create_ui (GtkPlay * play)
   g_signal_connect (G_OBJECT (play->volume_button), "value-changed",
       G_CALLBACK (volume_changed_cb), play);
 
+  /* media information button */
+  play->media_info = gtk_button_new_from_icon_name ("dialog-information",
+          GTK_ICON_SIZE_BUTTON);
+  g_signal_connect (G_OBJECT (play->media_info), "clicked",
+      G_CALLBACK (media_info_clicked_cb), play);
+  gtk_widget_set_sensitive (play->media_info, FALSE);
+
   controls = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start (GTK_BOX (controls), play->prev_button, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (controls), play->play_pause_button, FALSE, FALSE,
-      2);
+  gtk_box_pack_start (GTK_BOX (controls), play->play_pause_button, FALSE,
+      FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->next_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->seekbar, TRUE, TRUE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->volume_button, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (controls), play->media_info, FALSE, FALSE, 2);
 
   main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start (GTK_BOX (main_hbox), play->video_area, TRUE, TRUE, 0);
@@ -300,6 +643,8 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
         gtk_widget_set_sensitive (play->prev_button, TRUE);
       gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
 
+      gtk_widget_set_sensitive (play->media_info, FALSE);
+
       gst_player_set_uri (play->player, next->data);
       gst_player_play (play->player);
       set_title (play, next->data);
@@ -314,6 +659,14 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
       play->playing = FALSE;
     }
   }
+}
+
+static void
+media_info_updated_cb (GstPlayer *player, GstPlayerMediaInfo *media_info,
+    GtkPlay *play)
+{
+  if (!gtk_widget_is_sensitive (play->media_info))
+    gtk_widget_set_sensitive (play->media_info, TRUE);
 }
 
 int
@@ -403,6 +756,8 @@ main (gint argc, gchar ** argv)
   g_signal_connect (play.player, "video-dimensions-changed",
       G_CALLBACK (video_dimensions_changed_cb), &play);
   g_signal_connect (play.player, "end-of-stream", G_CALLBACK (eos_cb), &play);
+  g_signal_connect (play.player, "media-info-updated",
+      G_CALLBACK (media_info_updated_cb), &play);
 
   /* We have file(s) that need playing. */
   set_title (&play, g_list_first (play.uris)->data);
