@@ -23,17 +23,3 @@ libgstrtpbad_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 noinst_HEADERS =			\
 	gstrtph265depay.h \
 	gstrtph265pay.h
-
-Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer \
-	-:PROJECT libgstrtpbad -:SHARED libgstrtpbad \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstrtpbad_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstrtpbad_la_CFLAGS) \
-	 -:LDFLAGS $(libgstrtpbad_la_LDFLAGS) \
-	  $(libgstrtpbad_la_LIBADD) \
-	  -ldl \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	      LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
-	> $@

@@ -28,17 +28,3 @@ noinst_HEADERS = \
 	mpegtsparse.h \
 	tsdemux.h	\
 	pesparse.h
-
-Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer \
-	-:PROJECT libgstmpegtsdemux -:SHARED libgstmpegtsdemux \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstmpegtsdemux_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstmpegtsdemux_la_CFLAGS) \
-	 -:LDFLAGS $(libgstmpegtsdemux_la_LDFLAGS) \
-	           $(libgstmpegtsdemux_la_LIBADD) \
-	           -ldl \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
-	> $@

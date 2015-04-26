@@ -73,19 +73,3 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
-
-Android.mk:  $(BUILT_SOURCES) Makefile.am
-	androgenizer -:PROJECT libgstinsertbin -:STATIC libgstinsertbin-@GST_API_VERSION@ \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstinsertbin_@GST_API_VERSION@_la_SOURCES) \
-         $(built_sources) \
-	 -:CFLAGS $(DEFS) $(libgstinsertbin_@GST_API_VERSION@_la_CFLAGS) \
-	 -:LDFLAGS $(libgstinsertbin_@GST_API_VERSION@_la_LDFLAGS) \
-	           $(libgstinsertbin@GST_API_VERSION@_la_LIBADD) \
-	           -ldl \
-	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/insertbin \
-	 -:HEADERS $(libgstinsertbininclude_HEADERS) \
-         $(built_headers) \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	> $@

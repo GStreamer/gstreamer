@@ -40,17 +40,3 @@ noinst_HEADERS = \
         gstsolarize.h
 
 EXTRA_SCRIPTS = blur-example.py  burn-example.py
-
-Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer \
-	-:PROJECT libgstgaudieffects -:SHARED libgstgaudieffects \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstgaudieffects_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstgaudieffects_la_CFLAGS) \
-	 -:LDFLAGS $(libgstgaudieffects_la_LDFLAGS) \
-	           $(libgstgaudieffects_la_LIBADD) \
-	           -ldl \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
-	> $@

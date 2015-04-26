@@ -35,19 +35,3 @@ libgstcodecparsers_@GST_API_VERSION@_la_LDFLAGS = \
 	$(GST_LT_LDFLAGS)
 
 EXTRA_DIST = dboolhuff.LICENSE dboolhuff.PATENTS dboolhuff.AUTHORS
-
-Android.mk:  $(BUILT_SOURCES) Makefile.am
-	androgenizer -:PROJECT libgstcodecparsers -:STATIC libgstcodecparsers-@GST_API_VERSION@ \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstcodecparsers_@GST_API_VERSION@_la_SOURCES) \
-         $(built_sources) \
-	 -:CFLAGS $(DEFS) $(libgstcodecparsers_@GST_API_VERSION@_la_CFLAGS) \
-	 -:LDFLAGS $(libgstcodecparsers_@GST_API_VERSION@_la_LDFLAGS) \
-	           $(libgstcodecparsers@GST_API_VERSION@_la_LIBADD) \
-	           -ldl \
-	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/codecparsers \
-	 -:HEADERS $(libgstcodecparsersinclude_HEADERS) \
-         $(built_headers) \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	> $@

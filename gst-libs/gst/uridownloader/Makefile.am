@@ -22,19 +22,3 @@ libgsturidownloader_@GST_API_VERSION@_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \
 	$(GST_ALL_LDFLAGS) \
 	$(GST_LT_LDFLAGS)
-
-Android.mk:  $(BUILT_SOURCES) Makefile.am
-	androgenizer -:PROJECT libgsturidownloader -:STATIC libgsturidownloader-@GST_API_VERSION@ \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgsturidownloader_@GST_API_VERSION@_la_SOURCES) \
-         $(built_sources) \
-	 -:CFLAGS $(DEFS) $(libgsturidownloader_@GST_API_VERSION@_la_CFLAGS) \
-	 -:LDFLAGS $(libgsturidownloader_@GST_API_VERSION@_la_LDFLAGS) \
-	           $(libgsturidownloader@GST_API_VERSION@_la_LIBADD) \
-	           -ldl \
-	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/uridownloader \
-	 -:HEADERS $(libgsturidownloaderinclude_HEADERS) \
-         $(built_headers) \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	> $@

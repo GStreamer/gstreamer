@@ -20,17 +20,3 @@ libgstadaptivedemux_@GST_API_VERSION@_la_LIBADD = \
 	-lgstapp-$(GST_API_VERSION) $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS)
 
 libgstadaptivedemux_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
-
-Android.mk: Makefile.am
-	androgenizer -:PROJECT libgstadaptivedemux -:STATIC libgstadaptivedemux-@GST_API_VERSION@ \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstadaptivedemux_@GST_API_VERSION@_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(libgstadaptivedemux_@GST_API_VERSION@_la_CFLAGS) \
-	 -:LDFLAGS $(libgstadaptivedemux_@GST_API_VERSION@_la_LDFLAGS) \
-	           $(libgstadaptivedemux_@GST_API_VERSION@_la_LIBADD) \
-	           -ldl \
-	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/adaptivedemux \
-	 -:HEADERS $(libgstadaptivedemuxinclude_HEADERS) \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	> $@

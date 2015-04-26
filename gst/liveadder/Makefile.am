@@ -9,17 +9,3 @@ libgstliveadder_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstliveadder_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = liveadder.h
-
-Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer \
-	-:PROJECT libgstliveadder -:SHARED libgstliveadder \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstliveadder_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstliveadder_la_CFLAGS) \
-	 -:LDFLAGS $(libgstliveadder_la_LDFLAGS) \
-	           $(libgstliveadder_la_LIBADD) \
-	           -ldl \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
-	> $@
