@@ -61,7 +61,7 @@ enum
 
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_colorscale_debug, "glcolorscale", 0, "glcolorscale element");
-
+#define gst_gl_colorscale_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLColorscale, gst_gl_colorscale,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
@@ -71,7 +71,7 @@ static void gst_gl_colorscale_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_gl_colorscale_gen_gl_resources (GstGLFilter * filter);
-static void gst_gl_colorscale_del_gl_resources (GstGLFilter * filter);
+static gboolean gst_gl_colorscale_del_gl_resources (GstBaseTransform * trans);
 
 static gboolean gst_gl_colorscale_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
@@ -99,10 +99,11 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
 
   filter_class->onInitFBO =
       GST_DEBUG_FUNCPTR (gst_gl_colorscale_gen_gl_resources);
-  filter_class->onStop = GST_DEBUG_FUNCPTR (gst_gl_colorscale_del_gl_resources);
 
   filter_class->filter_texture = gst_gl_colorscale_filter_texture;
 
+  basetransform_class->stop =
+      GST_DEBUG_FUNCPTR (gst_gl_colorscale_del_gl_resources);
   basetransform_class->passthrough_on_same_caps = TRUE;
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
@@ -173,16 +174,18 @@ gst_gl_colorscale_gen_gl_resources (GstGLFilter * filter)
   return TRUE;
 }
 
-static void
-gst_gl_colorscale_del_gl_resources (GstGLFilter * filter)
+static gboolean
+gst_gl_colorscale_del_gl_resources (GstBaseTransform * trans)
 {
-  GstGLColorscale *colorscale = GST_GL_COLORSCALE (filter);
+  GstGLColorscale *colorscale = GST_GL_COLORSCALE (trans);
 
   if (colorscale->shader) {
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (trans)->context,
         colorscale->shader);
     colorscale->shader = NULL;
   }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
 }
 
 static gboolean

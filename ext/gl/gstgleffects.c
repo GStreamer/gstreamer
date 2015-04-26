@@ -53,6 +53,7 @@ enum
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_effects_debug, "gleffects", 0, "gleffects element");
 
+#define gst_gl_effects_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLEffects, gst_gl_effects, GST_TYPE_GL_FILTER,
     DEBUG_INIT);
 
@@ -61,8 +62,8 @@ static void gst_gl_effects_set_property (GObject * object, guint prop_id,
 static void gst_gl_effects_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_gl_effects_init_resources (GstGLFilter * filter);
-static void gst_gl_effects_reset_resources (GstGLFilter * filter);
+static gboolean gst_gl_effects_init_resources (GstBaseTransform * trans);
+static gboolean gst_gl_effects_reset_resources (GstBaseTransform * trans);
 
 static gboolean gst_gl_effects_on_init_gl_context (GstGLFilter * filter);
 
@@ -318,13 +319,14 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
+  GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_effects_init_resources;
+  GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_effects_reset_resources;
+
   GST_GL_FILTER_CLASS (klass)->filter_texture = gst_gl_effects_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
       gst_gl_effects_init_gl_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
       gst_gl_effects_reset_gl_resources;
-  GST_GL_FILTER_CLASS (klass)->onStart = gst_gl_effects_init_resources;
-  GST_GL_FILTER_CLASS (klass)->onStop = gst_gl_effects_reset_resources;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_effects_on_init_gl_context;
 
   klass->filter_descriptor = NULL;
@@ -423,20 +425,22 @@ gst_gl_effects_ghash_func_clean (gpointer key, gpointer value, gpointer data)
   value = NULL;
 }
 
-static void
-gst_gl_effects_reset_resources (GstGLFilter * filter)
+static gboolean
+gst_gl_effects_reset_resources (GstBaseTransform * trans)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (filter);
+  GstGLEffects *effects = GST_GL_EFFECTS (trans);
 
   /* release shaders in the gl thread */
   g_hash_table_foreach (effects->shaderstable, gst_gl_effects_ghash_func_clean,
-      filter);
+      effects);
 
   /* clean the htable without calling values destructors
    * because shaders have been released in the glthread
    * through the foreach func */
   g_hash_table_unref (effects->shaderstable);
   effects->shaderstable = NULL;
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
 }
 
 static void
@@ -483,10 +487,10 @@ gst_gl_effects_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-gst_gl_effects_init_resources (GstGLFilter * filter)
+static gboolean
+gst_gl_effects_init_resources (GstBaseTransform * trans)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (filter);
+  GstGLEffects *effects = GST_GL_EFFECTS (trans);
   gint i;
 
   effects->shaderstable = g_hash_table_new (g_str_hash, g_str_equal);
@@ -497,6 +501,8 @@ gst_gl_effects_init_resources (GstGLFilter * filter)
   for (i = 0; i < GST_GL_EFFECTS_N_CURVES; i++) {
     effects->curve[i] = 0;
   }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->start (trans);
 }
 
 static gboolean

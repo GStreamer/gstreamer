@@ -75,7 +75,6 @@ static GstCaps *gst_gl_filter_transform_caps (GstBaseTransform * bt,
 static GstCaps *gst_gl_filter_fixate_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static void gst_gl_filter_reset (GstGLFilter * filter);
-static gboolean gst_gl_filter_start (GstBaseTransform * bt);
 static gboolean gst_gl_filter_stop (GstBaseTransform * bt);
 static gboolean gst_gl_filter_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
@@ -106,7 +105,6 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
       gst_gl_filter_transform_caps;
   GST_BASE_TRANSFORM_CLASS (klass)->fixate_caps = gst_gl_filter_fixate_caps;
   GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_filter_transform;
-  GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_filter_start;
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_stop;
   GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_filter_set_caps;
   GST_BASE_TRANSFORM_CLASS (klass)->propose_allocation =
@@ -165,25 +163,9 @@ gst_gl_filter_reset (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_filter_start (GstBaseTransform * bt)
-{
-  GstGLFilter *filter = GST_GL_FILTER (bt);
-  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
-
-  if (filter_class->onStart)
-    filter_class->onStart (filter);
-
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->start (bt);
-}
-
-static gboolean
 gst_gl_filter_stop (GstBaseTransform * bt)
 {
   GstGLFilter *filter = GST_GL_FILTER (bt);
-  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
-
-  if (filter_class->onStop)
-    filter_class->onStop (filter);
 
   gst_gl_filter_reset (filter);
 

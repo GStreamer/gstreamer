@@ -53,7 +53,7 @@ enum
 
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filter_glass_debug, "glfilterglass", 0, "glfilterglass element");
-
+#define gst_gl_filter_glass_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLFilterGlass, gst_gl_filter_glass,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
@@ -62,7 +62,8 @@ static void gst_gl_filter_glass_set_property (GObject * object, guint prop_id,
 static void gst_gl_filter_glass_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_gl_filter_glass_reset (GstGLFilter * filter);
+static gboolean gst_gl_filter_glass_reset (GstBaseTransform * trans);
+
 static gboolean gst_gl_filter_glass_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filter_glass_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
@@ -161,7 +162,7 @@ gst_gl_filter_glass_class_init (GstGLFilterGlassClass * klass)
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_filter_glass_filter_texture;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_glass_init_shader;
-  GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_glass_reset;
+  GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_glass_reset;
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }
@@ -173,20 +174,22 @@ gst_gl_filter_glass_init (GstGLFilterGlass * filter)
   filter->timestamp = 0;
 }
 
-static void
-gst_gl_filter_glass_reset (GstGLFilter * filter)
+static gboolean
+gst_gl_filter_glass_reset (GstBaseTransform * trans)
 {
-  GstGLFilterGlass *glass_filter = GST_GL_FILTER_GLASS (filter);
+  GstGLFilterGlass *glass_filter = GST_GL_FILTER_GLASS (trans);
 
   //blocking call, wait the opengl thread has destroyed the shader
   if (glass_filter->shader)
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (trans)->context,
         glass_filter->shader);
   glass_filter->shader = NULL;
   if (glass_filter->passthrough_shader)
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (trans)->context,
         glass_filter->passthrough_shader);
   glass_filter->passthrough_shader = NULL;
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
 }
 
 static void
