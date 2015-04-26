@@ -14,18 +14,3 @@ libgstvideoconvert_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideoconvert_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstvideoconvert.h
-
-Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer \
-	-:PROJECT libgstvideoconvert -:SHARED libgstvideoconvert \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstvideoconvert_la_SOURCES) \
-	           $(nodist_libgstvideoconvert_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstvideoconvert_la_CFLAGS) \
-	 -:LDFLAGS $(libgstvideoconvert_la_LDFLAGS) \
-	           $(libgstvideoconvert_la_LIBADD) \
-	           -ldl \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
-	> $@

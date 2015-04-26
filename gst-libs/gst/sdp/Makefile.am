@@ -57,17 +57,3 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
-
-Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer -:PROJECT libgstsdp -:SHARED libgstsdp-@GST_API_VERSION@ \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstsdp_@GST_API_VERSION@_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstsdp_@GST_API_VERSION@_la_CFLAGS) \
-	 -:LDFLAGS $(libgstsdp_@GST_API_VERSION@_la_LDFLAGS) \
-	           $(libgstsdp_@GST_API_VERSION@_la_LIBADD) \
-	           -ldl \
-	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/sdp \
-	 -:HEADERS $(libgstsdpinclude_HEADERS) \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	> $@

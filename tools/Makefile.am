@@ -28,14 +28,3 @@ LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la 
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 
 AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
-
-Android.mk: Makefile.am
-	androgenizer -:PROJECT gst-discoverer-@GST_API_VERSION@ \
-	 -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:EXECUTABLE gst-discoverer-@GST_API_VERSION@ -:TAGS eng debug \
-	 -:SOURCES $(gst_discoverer_@GST_API_VERSION@_SOURCES) \
-	 -:CFLAGS $(DEFS) $(AM_CFLAGS) \
-	 -:LDFLAGS -lgstpbutils-@GST_API_VERSION@ -lgstvideo-@GST_API_VERSION@ \
-	 	   $(GST_BASE_LIBS) $(GST_LIBS) \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	> $@

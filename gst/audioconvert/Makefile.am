@@ -25,18 +25,3 @@ noinst_HEADERS = \
 	gstaudioquantize.h \
 	gstfastrandom.h \
 	plugin.h
-
-Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer \
-	-:PROJECT libgstaudioconvert -:SHARED libgstaudioconvert \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstaudioconvert_la_SOURCES) \
-	 	   $(nodist_libgstaudioconvert_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstaudioconvert_la_CFLAGS) \
-	 -:LDFLAGS $(libgstaudioconvert_la_LDFLAGS) \
-	           $(libgstaudioconvert_la_LIBADD) \
-	           -ldl \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
-	> $@

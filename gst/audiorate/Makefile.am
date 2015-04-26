@@ -9,17 +9,3 @@ libgstaudiorate_la_LIBADD = $(GST_LIBS) \
         $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la
 
 libgstaudiorate_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
-
-Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer \
-	-:PROJECT libgstaudiorate -:SHARED libgstaudiorate \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstaudiorate_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstaudiorate_la_CFLAGS) \
-	 -:LDFLAGS $(libgstaudiorate_la_LDFLAGS) \
-	           $(libgstaudiorate_la_LIBADD) \
-	           -ldl \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
-	> $@

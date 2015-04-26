@@ -140,19 +140,3 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
-
-Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer -:PROJECT libgstvideo -:SHARED libgstvideo-@GST_API_VERSION@ \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstvideo_@GST_API_VERSION@_la_SOURCES) \
-	           $(nodist_libgstvideo_@GST_API_VERSION@_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstvideo_@GST_API_VERSION@_la_CFLAGS) \
-	 -:LDFLAGS $(libgstvideo_@GST_API_VERSION@_la_LDFLAGS) \
-	           $(libgstvideo_@GST_API_VERSION@_la_LIBADD) \
-	           -ldl \
-	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/tag \
-	 -:HEADERS $(libgstvideo_@GST_API_VERSION@include_HEADERS) \
-	           $(nodist_libgstvideo_@GST_API_VERSION@include_HEADERS) \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	> $@

@@ -105,17 +105,3 @@ update-licenses: mklicensestables
 licensetransdir = $(pkgdatadir)/@GST_API_VERSION@
 licensetrans_DATA = $(srcdir)/license-translations.dict
 #endif
-
-Android.mk: Makefile.am
-	androgenizer -:PROJECT libgsttag -:SHARED libgsttag-@GST_API_VERSION@ \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgsttag_@GST_API_VERSION@_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgsttag_@GST_API_VERSION@_la_CFLAGS) \
-	 -:LDFLAGS $(libgsttag_@GST_API_VERSION@_la_LDFLAGS) \
-	           $(libgsttag_@GST_API_VERSION@_la_LIBADD) \
-	           -ldl \
-	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/tag \
-	 -:HEADERS $(libgsttaginclude_HEADERS) \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	> $@
