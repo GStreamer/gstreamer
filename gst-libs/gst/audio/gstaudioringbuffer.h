@@ -220,7 +220,7 @@ struct _GstAudioRingBuffer {
  * @pause: pause processing of samples
  * @resume: resume processing of samples after pause
  * @stop: stop processing of samples
- * @delay: get number of samples queued in device
+ * @delay: get number of frames queued in device
  * @activate: activate the thread that starts pulling and monitoring the
  * consumed segments in the device.
  * @commit: write samples into the ringbuffer

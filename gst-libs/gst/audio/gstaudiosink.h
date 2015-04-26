@@ -66,7 +66,7 @@ struct _GstAudioSink {
  * @unprepare: Undo operations done in prepare.
  * @close: Close the device.
  * @write: Write data to the device.
- * @delay: Return how many samples are still in the device. This is used to
+ * @delay: Return how many frames are still in the device. This is used to
  *         drive the synchronisation.
  * @reset: Returns as quickly as possible from a write and flush any pending
  *         samples from the device.
