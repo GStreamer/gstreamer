@@ -1848,10 +1848,13 @@ raspi_capture_update_config (RASPIVID_STATE *state, RASPIVID_CONFIG *config)
     MMAL_COMPONENT_T *encoder = state->encoder_component;
     MMAL_PORT_T *encoder_output = encoder->output[0];
 
+#if 0 /* not dynamically change-able */
     encoder_output->format->bitrate = config->bitrate;
     status = mmal_port_format_commit(encoder_output);
-    if (status != MMAL_SUCCESS)
-      vcos_log_warn("Unable to change bitrate dynamically");
+    if (status != MMAL_SUCCESS) {
+      vcos_log_warn("Cannot change bitrate dynamically");
+    }
+#endif
 
     {
       MMAL_PARAMETER_UINT32_T param = {{ MMAL_PARAMETER_INTRAPERIOD, sizeof(param)}, config->intraperiod};
@@ -1860,6 +1863,7 @@ raspi_capture_update_config (RASPIVID_STATE *state, RASPIVID_CONFIG *config)
         vcos_log_warn("Unable to change intraperiod dynamically");
     }
 
+#if 0 /* not dynamically change-able */
     {
       MMAL_PARAMETER_UINT32_T param = {{ MMAL_PARAMETER_VIDEO_ENCODE_INITIAL_QUANT, sizeof(param)}, config->quantisationParameter};
       status = mmal_port_parameter_set(encoder_output, &param.hdr);
@@ -1898,6 +1902,7 @@ raspi_capture_update_config (RASPIVID_STATE *state, RASPIVID_CONFIG *config)
       if (status != MMAL_SUCCESS)
          vcos_log_warn("Unable to set H264 intra-refresh values dynamically");
     }
+#endif
   }
   if (config->change_flags & PROP_CHANGE_PREVIEW) {
     /* Preview settings or fullscreen */
