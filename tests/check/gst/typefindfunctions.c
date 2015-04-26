@@ -25,6 +25,28 @@
 #include <gst/check/gstcheck.h>
 #include <gst/base/gsttypefindhelper.h>
 
+static GstCaps *
+typefind_data (const guint8 * data, gsize data_size,
+    GstTypeFindProbability * prob)
+{
+  GstBuffer *buf;
+  GstCaps *caps;
+
+  GST_MEMDUMP ("typefind data", data, data_size);
+  buf = gst_buffer_new ();
+  gst_buffer_append_memory (buf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          (guint8 *) data, data_size, 0, data_size, NULL, NULL));
+  GST_BUFFER_OFFSET (buf) = 0;
+
+  caps = gst_type_find_helper_for_buffer (NULL, buf, prob);
+  GST_INFO ("caps: %" GST_PTR_FORMAT ", probability=%u", caps, *prob);
+
+  gst_buffer_unref (buf);
+
+  return caps;
+}
+
 GST_START_TEST (test_quicktime_mpeg4video)
 {
   /* quicktime redirect file which starts with what could also be interpreted
@@ -387,6 +409,73 @@ GST_START_TEST (test_hls_m3u8)
 
 GST_END_TEST;
 
+static const gchar MANIFEST[] =
+    "<?xml version=\"1.0\" encoding=\"utf-16\"?>\n"
+    "<!--Created with Expression Encoder version 2.1.1216.0-->\n"
+    "<SmoothStreamingMedia\n"
+    "  MajorVersion=\"1\"\n"
+    "  MinorVersion=\"0\"\n"
+    "  Duration=\"5965419999\">\n"
+    "  <StreamIndex\n"
+    "    Type=\"video\"\n"
+    "    Subtype=\"WVC1\"\n"
+    "    Chunks=\"299\"\n"
+    "    Url=\"QualityLevels({bitrate})/Fragments(video={start time})\">\n"
+    "    <QualityLevel\n"
+    "      Bitrate=\"2750000\"\n"
+    "      FourCC=\"WVC1\"\n" "      Width=\"1280\"\n" "      Height=\"720\"\n";
+
+static guint8 *
+generate_utf16 (guint off_lo, guint off_hi)
+{
+  guint8 *utf16;
+  gsize len, i;
+
+  len = strlen (MANIFEST);
+  /* BOM + UTF-16 string */
+  utf16 = g_malloc (2 + len * 2);
+  utf16[off_lo] = 0xff;
+  utf16[off_hi] = 0xfe;
+  for (i = 0; i < len; ++i) {
+    utf16[2 + (2 * i) + off_lo] = MANIFEST[i];
+    utf16[2 + (2 * i) + off_hi] = 0x00;
+  }
+
+  return utf16;
+}
+
+/* Test that we can typefind UTF16-LE and UTF16-BE variants
+ * of smooth streaming manifests (even without iconv) */
+GST_START_TEST (test_manifest_typefinding)
+{
+  GstTypeFindProbability prob;
+  const gchar *media_type;
+  GstCaps *caps;
+  guint8 *utf16;
+
+  utf16 = generate_utf16 (0, 1);
+  prob = 0;
+  caps = typefind_data (utf16, 2 + strlen (MANIFEST) * 2, &prob);
+  fail_unless (caps != NULL);
+  media_type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  fail_unless_equals_string (media_type, "application/vnd.ms-sstr+xml");
+  fail_unless_equals_int (prob, GST_TYPE_FIND_MAXIMUM);
+  gst_caps_unref (caps);
+  g_free (utf16);
+
+  utf16 = generate_utf16 (1, 0);
+  prob = 0;
+  caps = typefind_data (utf16, 2 + strlen (MANIFEST) * 2, &prob);
+  fail_unless (caps != NULL);
+  media_type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  fail_unless_equals_string (media_type, "application/vnd.ms-sstr+xml");
+  fail_unless_equals_int (prob, GST_TYPE_FIND_MAXIMUM);
+  gst_caps_unref (caps);
+  g_free (utf16);
+}
+
+GST_END_TEST;
+
 static Suite *
 typefindfunctions_suite (void)
 {
@@ -403,6 +492,7 @@ typefindfunctions_suite (void)
   tcase_add_test (tc_chain, test_eac3);
   tcase_add_test (tc_chain, test_random_data);
   tcase_add_test (tc_chain, test_hls_m3u8);
+  tcase_add_test (tc_chain, test_manifest_typefinding);
 
   return s;
 }
