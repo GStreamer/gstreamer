@@ -68,8 +68,6 @@ static void gst_gl_overlay_set_property (GObject * object, guint prop_id,
 static void gst_gl_overlay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_gl_overlay_reset_resources (GstGLFilter * filter);
-
 static void gst_gl_overlay_before_transform (GstBaseTransform * trans,
     GstBuffer * outbuf);
 static gboolean gst_gl_overlay_filter_texture (GstGLFilter * filter,
@@ -187,7 +185,6 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
   GST_GL_FILTER_CLASS (klass)->filter_texture = gst_gl_overlay_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
       gst_gl_overlay_reset_gl_resources;
-  GST_GL_FILTER_CLASS (klass)->onStop = gst_gl_overlay_reset_resources;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_overlay_init_gl_resources;
 
   GST_BASE_TRANSFORM_CLASS (klass)->before_transform =
@@ -264,11 +261,6 @@ gst_gl_overlay_init (GstGLOverlay * overlay)
   overlay->overlay_height = 0;
 
   overlay->alpha = 1.0;
-}
-
-static void
-gst_gl_overlay_reset_resources (GstGLFilter * filter)
-{
 }
 
 static void

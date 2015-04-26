@@ -48,7 +48,7 @@ enum
 
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_deinterlace_debug, "gldeinterlace", 0, "gldeinterlace element");
-
+#define gst_gl_deinterlace_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLDeinterlace, gst_gl_deinterlace,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
@@ -57,7 +57,7 @@ static void gst_gl_deinterlace_set_property (GObject * object,
 static void gst_gl_deinterlace_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static void gst_gl_deinterlace_reset (GstGLFilter * filter);
+static gboolean gst_gl_deinterlace_reset (GstBaseTransform * trans);
 static gboolean gst_gl_deinterlace_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_deinterlace_filter (GstGLFilter * filter,
     GstBuffer * inbuf, GstBuffer * outbuf);
@@ -163,11 +163,12 @@ gst_gl_deinterlace_class_init (GstGLDeinterlaceClass * klass)
       "Deinterlacing based on fragment shaders",
       "Julien Isorce <julien.isorce@mail.com>");
 
+  GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_deinterlace_reset;
+
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_deinterlace_filter;
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_deinterlace_filter_texture;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_deinterlace_init_shader;
-  GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_deinterlace_reset;
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }
@@ -180,18 +181,20 @@ gst_gl_deinterlace_init (GstGLDeinterlace * filter)
   filter->prev_tex = 0;
 }
 
-static void
-gst_gl_deinterlace_reset (GstGLFilter * filter)
+static gboolean
+gst_gl_deinterlace_reset (GstBaseTransform * trans)
 {
-  GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (filter);
+  GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (trans);
 
   gst_buffer_replace (&deinterlace_filter->prev_buffer, NULL);
 
   //blocking call, wait the opengl thread has destroyed the shader
   if (deinterlace_filter->shader)
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (trans)->context,
         deinterlace_filter->shader);
   deinterlace_filter->shader = NULL;
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
 }
 
 static void

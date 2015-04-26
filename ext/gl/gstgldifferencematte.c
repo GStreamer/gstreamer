@@ -61,9 +61,6 @@ static void gst_gl_differencematte_set_property (GObject * object,
 static void gst_gl_differencematte_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static void gst_gl_differencematte_init_resources (GstGLFilter * filter);
-static void gst_gl_differencematte_reset_resources (GstGLFilter * filter);
-
 static gboolean gst_gl_differencematte_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
 
@@ -180,8 +177,6 @@ gst_gl_differencematte_class_init (GstGLDifferenceMatteClass * klass)
       gst_gl_differencematte_init_gl_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
       gst_gl_differencematte_reset_gl_resources;
-  GST_GL_FILTER_CLASS (klass)->onStart = gst_gl_differencematte_init_resources;
-  GST_GL_FILTER_CLASS (klass)->onStop = gst_gl_differencematte_reset_resources;
 
   g_object_class_install_property (gobject_class,
       PROP_LOCATION,
@@ -212,12 +207,6 @@ gst_gl_differencematte_init (GstGLDifferenceMatte * differencematte)
   differencematte->bg_has_changed = FALSE;
 
   fill_gaussian_kernel (differencematte->kernel, 7, 30.0);
-}
-
-static void
-gst_gl_differencematte_reset_resources (GstGLFilter * filter)
-{
-//  GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE(filter);
 }
 
 static void
@@ -253,12 +242,6 @@ gst_gl_differencematte_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static void
-gst_gl_differencematte_init_resources (GstGLFilter * filter)
-{
-//  GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (filter);
 }
 
 static void

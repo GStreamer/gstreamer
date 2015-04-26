@@ -91,8 +91,6 @@ struct _GstGLFilter
  * @filter_texture: given @in_tex, transform it into @out_tex.  Not used
  *                  if @filter exists
  * @onInitFBO: perform initialization when the Framebuffer object is created
- * @onStart: called when element activates see also #GstBaseTransform
- * @onStop: called when the element deactivates e also #GstBaseTransform
  * @onReset: called on inizialation and after @onStop
  * @display_init_cb: execute arbitrary gl code on start
  * @display_reset_cb: execute arbitrary gl code at stop
@@ -105,10 +103,6 @@ struct _GstGLFilterClass
   gboolean (*filter)            (GstGLFilter *filter, GstBuffer *inbuf, GstBuffer *outbuf);
   gboolean (*filter_texture)    (GstGLFilter *filter, guint in_tex, guint out_tex);
   gboolean (*onInitFBO)         (GstGLFilter *filter);
-
-  void (*onStart)               (GstGLFilter *filter);
-  void (*onStop)                (GstGLFilter *filter);
-  void (*onReset)               (GstGLFilter *filter);
 
   /* useful to init and cleanup custom gl resources */
   void (*display_init_cb)       (GstGLFilter *filter);
