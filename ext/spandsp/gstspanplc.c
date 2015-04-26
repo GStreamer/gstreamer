@@ -188,8 +188,7 @@ gst_span_plc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstSpanPlc *plc = GST_SPAN_PLC (parent);
   GstMapInfo map;
 
-  if (plc->plc_state->missing_samples != 0)
-    buffer = gst_buffer_make_writable (buffer);
+  buffer = gst_buffer_make_writable (buffer);
   gst_buffer_map (buffer, &map, GST_MAP_READWRITE);
   plc_rx (plc->plc_state, (int16_t *) map.data, map.size / 2);
   gst_buffer_unmap (buffer, &map);
