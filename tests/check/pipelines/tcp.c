@@ -158,8 +158,7 @@ setup_multisocketsink_and_socketsrc (SymmetryTest * st)
   st->src = gst_check_setup_element ("socketsrc");
 
   fail_unless (g_socketpair (G_SOCKET_FAMILY_UNIX,
-          G_SOCKET_TYPE_STREAM | SOCK_CLOEXEC, G_SOCKET_PROTOCOL_DEFAULT,
-          sockets, &err));
+          G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_DEFAULT, sockets, &err));
 
   g_object_set (st->src, "socket", sockets[0], NULL);
   g_object_unref (sockets[0]);
@@ -236,15 +235,13 @@ GST_START_TEST (test_that_we_can_provide_new_socketsrc_sockets_during_signal)
   socketsrc = gst_check_setup_element ("socketsrc");
 
   fail_unless (g_socketpair (G_SOCKET_FAMILY_UNIX,
-          G_SOCKET_TYPE_STREAM | SOCK_CLOEXEC, G_SOCKET_PROTOCOL_DEFAULT,
-          &sockets[0], NULL));
+          G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_DEFAULT, &sockets[0], NULL));
 
   fail_unless (g_socket_send (sockets[0], "hello", 5, NULL, NULL) == 5);
   fail_unless (g_socket_shutdown (sockets[0], FALSE, TRUE, NULL));
 
   fail_unless (g_socketpair (G_SOCKET_FAMILY_UNIX,
-          G_SOCKET_TYPE_STREAM | SOCK_CLOEXEC, G_SOCKET_PROTOCOL_DEFAULT,
-          &sockets[2], NULL));
+          G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_DEFAULT, &sockets[2], NULL));
   fail_unless (g_socket_send (sockets[2], "goodbye", 7, NULL, NULL) == 7);
   fail_unless (g_socket_shutdown (sockets[2], FALSE, TRUE, NULL));
 
@@ -280,7 +277,6 @@ GST_START_TEST (test_that_we_can_provide_new_socketsrc_sockets_during_signal)
 }
 
 GST_END_TEST
-
 #ifdef HAVE_GIO_UNIX_2_0
 static GSocketControlMessage *
 get_control_message_meta (GstBuffer * buf)
