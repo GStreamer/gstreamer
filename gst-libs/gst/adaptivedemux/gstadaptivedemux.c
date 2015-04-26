@@ -1105,7 +1105,8 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
 
       GST_MANIFEST_LOCK (demux);
       gst_query_parse_duration (query, &fmt, NULL);
-      if (fmt == GST_FORMAT_TIME && demux->priv->have_manifest) {
+      if (fmt == GST_FORMAT_TIME && demux->priv->have_manifest
+          && !gst_adaptive_demux_is_live (demux)) {
         duration = demux_class->get_duration (demux);
 
         if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0) {
