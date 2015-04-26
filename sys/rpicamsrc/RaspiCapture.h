@@ -61,6 +61,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_rpi_cam_src_debug);
 #define fprintf(f,...) GST_LOG(__VA_ARGS__)
 #undef vcos_log_error
 #define vcos_log_error GST_ERROR
+#undef vcos_log_warn
+#define vcos_log_warn GST_WARNING
 
 G_BEGIN_DECLS
 
