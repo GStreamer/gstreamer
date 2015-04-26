@@ -50,18 +50,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 typedef struct
 {
+  MMAL_COMPONENT_T *preview_component;   /// Pointer to the created preview display component
+   int havePreview;                      /// component is preview, else null sink
+} RASPIPREVIEW_STATE;
+
+typedef struct
+{
    int wantPreview;                       /// Display a preview
    int wantFullScreenPreview;             /// 0 is use previewRect, non-zero to use full screen
    int opacity;                           /// Opacity of window - 0 = transparent, 255 = opaque
    MMAL_RECT_T previewWindow;             /// Destination rectangle for the preview window.
-   MMAL_COMPONENT_T *preview_component;   /// Pointer to the created preview display component
 } RASPIPREVIEW_PARAMETERS;
 
-MMAL_STATUS_T raspipreview_create(RASPIPREVIEW_PARAMETERS *state);
-void raspipreview_destroy(RASPIPREVIEW_PARAMETERS *state);
-void raspipreview_set_defaults(RASPIPREVIEW_PARAMETERS *state);
-void raspipreview_dump_parameters(RASPIPREVIEW_PARAMETERS *state);
-int raspipreview_parse_cmdline(RASPIPREVIEW_PARAMETERS *params, const char *arg1, const char *arg2);
+MMAL_STATUS_T raspipreview_create(RASPIPREVIEW_STATE *state,
+    RASPIPREVIEW_PARAMETERS *config);
+void raspipreview_destroy(RASPIPREVIEW_STATE *state);
+void raspipreview_set_defaults(RASPIPREVIEW_PARAMETERS *config);
+void raspipreview_dump_parameters(RASPIPREVIEW_PARAMETERS *config);
+int raspipreview_parse_cmdline(RASPIPREVIEW_PARAMETERS *config, const char *arg1, const char *arg2);
 void raspipreview_display_help();
+MMAL_STATUS_T raspipreview_update_config (RASPIPREVIEW_STATE *state,
+  RASPIPREVIEW_PARAMETERS *config);
 
 #endif /* RASPIPREVIEW_H_ */

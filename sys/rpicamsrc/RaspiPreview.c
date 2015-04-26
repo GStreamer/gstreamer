@@ -72,13 +72,15 @@ static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_com
  * @return MMAL_SUCCESS if all OK, something else otherwise
  *
  */
-MMAL_STATUS_T raspipreview_create(RASPIPREVIEW_PARAMETERS *state)
+MMAL_STATUS_T raspipreview_create(RASPIPREVIEW_STATE *state,
+    RASPIPREVIEW_PARAMETERS *config)
 {
    MMAL_COMPONENT_T *preview = 0;
-   MMAL_PORT_T *preview_port = NULL;
    MMAL_STATUS_T status;
 
-   if (!state->wantPreview)
+   state->havePreview = config->wantPreview;
+
+   if (!config->wantPreview)
    {
       // No preview required, so create a null sink component to take its place
       status = mmal_component_create("vc.null_sink", &preview);
@@ -88,12 +90,13 @@ MMAL_STATUS_T raspipreview_create(RASPIPREVIEW_PARAMETERS *state)
          vcos_log_error("Unable to create null sink component");
          goto error;
       }
+
+      state->preview_component = preview;
    }
    else
    {
       status = mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_RENDERER,
             &preview);
-
       if (status != MMAL_SUCCESS)
       {
          vcos_log_error("Unable to create preview component");
@@ -107,32 +110,9 @@ MMAL_STATUS_T raspipreview_create(RASPIPREVIEW_PARAMETERS *state)
          goto error;
       }
 
-      preview_port = preview->input[0];
+      state->preview_component = preview;
 
-      MMAL_DISPLAYREGION_T param;
-      param.hdr.id = MMAL_PARAMETER_DISPLAYREGION;
-      param.hdr.size = sizeof(MMAL_DISPLAYREGION_T);
-
-      param.set = MMAL_DISPLAY_SET_LAYER;
-      param.layer = PREVIEW_LAYER;
-
-      param.set |= MMAL_DISPLAY_SET_ALPHA;
-      param.alpha = state->opacity;
-
-      if (state->wantFullScreenPreview)
-      {
-         param.set |= MMAL_DISPLAY_SET_FULLSCREEN;
-         param.fullscreen = 1;
-      }
-      else
-      {
-         param.set |= (MMAL_DISPLAY_SET_DEST_RECT | MMAL_DISPLAY_SET_FULLSCREEN);
-         param.fullscreen = 0;
-         param.dest_rect = state->previewWindow;
-      }
-
-      status = mmal_port_parameter_set(preview_port, &param.hdr);
-
+      raspipreview_update_config (state, config);
       if (status != MMAL_SUCCESS && status != MMAL_ENOSYS)
       {
          vcos_log_error("unable to set preview port parameters (%u)", status);
@@ -142,25 +122,65 @@ MMAL_STATUS_T raspipreview_create(RASPIPREVIEW_PARAMETERS *state)
 
    /* Enable component */
    status = mmal_component_enable(preview);
-
    if (status != MMAL_SUCCESS)
    {
       vcos_log_error("Unable to enable preview/null sink component (%u)", status);
       goto error;
    }
 
-   state->preview_component = preview;
-
    return status;
 
 error:
-
-   if (preview)
-      mmal_component_destroy(preview);
+  if (preview) {
+    mmal_component_destroy(preview);
+    state->preview_component = NULL;
+  }
 
    return status;
 }
 
+MMAL_STATUS_T
+raspipreview_update_config (RASPIPREVIEW_STATE *state,
+  RASPIPREVIEW_PARAMETERS *config)
+{
+  MMAL_COMPONENT_T *preview = state->preview_component;
+  MMAL_PORT_T *preview_port = NULL;
+  MMAL_DISPLAYREGION_T param;
+  MMAL_STATUS_T status;
+
+  /* Can't update props on the null preview component */
+  if (state->havePreview == 0)
+    return MMAL_SUCCESS;
+
+  preview_port = preview->input[0];
+
+  param.hdr.id = MMAL_PARAMETER_DISPLAYREGION;
+  param.hdr.size = sizeof(MMAL_DISPLAYREGION_T);
+
+  param.set = MMAL_DISPLAY_SET_LAYER;
+  param.layer = PREVIEW_LAYER;
+
+  param.set |= MMAL_DISPLAY_SET_ALPHA;
+  param.alpha = config->opacity;
+
+  if (config->wantFullScreenPreview)
+  {
+     param.set |= MMAL_DISPLAY_SET_FULLSCREEN;
+     param.fullscreen = 1;
+  }
+  else
+  {
+     param.set |= (MMAL_DISPLAY_SET_DEST_RECT | MMAL_DISPLAY_SET_FULLSCREEN);
+     param.fullscreen = 0;
+     param.dest_rect = config->previewWindow;
+  }
+
+  status = mmal_port_parameter_set(preview_port, &param.hdr);
+  if (status == MMAL_ENOSYS)
+    status = MMAL_SUCCESS;
+
+  return status;
+}
 
 /**
  * Destroy the preview component
@@ -168,7 +188,7 @@ error:
  * @param state Pointer to state control struct
  *
  */
-void raspipreview_destroy(RASPIPREVIEW_PARAMETERS *state)
+void raspipreview_destroy(RASPIPREVIEW_STATE *state)
 {
    if (state->preview_component)
    {
@@ -183,16 +203,15 @@ void raspipreview_destroy(RASPIPREVIEW_PARAMETERS *state)
  * @param state Pointer to parameter block
  *
  */
-void raspipreview_set_defaults(RASPIPREVIEW_PARAMETERS *state)
+void raspipreview_set_defaults(RASPIPREVIEW_PARAMETERS *config)
 {
-   state->wantPreview = 1;
-   state->wantFullScreenPreview = 1;
-   state->opacity = 255;
-   state->previewWindow.x = 0;
-   state->previewWindow.y = 0;
-   state->previewWindow.width = 1024;
-   state->previewWindow.height = 768;
-   state->preview_component = NULL;
+   config->wantPreview = 1;
+   config->wantFullScreenPreview = 1;
+   config->opacity = 255;
+   config->previewWindow.x = 0;
+   config->previewWindow.y = 0;
+   config->previewWindow.width = 1024;
+   config->previewWindow.height = 768;
 }
 
 /**
@@ -201,14 +220,14 @@ void raspipreview_set_defaults(RASPIPREVIEW_PARAMETERS *state)
  * @param state Pointer to parameter block
  *
  */
-void raspipreview_dump_parameters(RASPIPREVIEW_PARAMETERS *state)
+void raspipreview_dump_parameters(RASPIPREVIEW_PARAMETERS *config)
 {
-   fprintf(stderr, "Preview %s, Full screen %s\n", state->wantPreview ? "Yes" : "No",
-      state->wantFullScreenPreview ? "Yes" : "No");
+   fprintf(stderr, "Preview %s, Full screen %s\n", config->wantPreview ? "Yes" : "No",
+      config->wantFullScreenPreview ? "Yes" : "No");
 
-   fprintf(stderr, "Preview window %d,%d,%d,%d\nOpacity %d\n", state->previewWindow.x,
-      state->previewWindow.y, state->previewWindow.width,
-      state->previewWindow.height, state->opacity);
+   fprintf(stderr, "Preview window %d,%d,%d,%d\nOpacity %d\n", config->previewWindow.x,
+      config->previewWindow.y, config->previewWindow.width,
+      config->previewWindow.height, config->opacity);
 };
 
 #if 0
