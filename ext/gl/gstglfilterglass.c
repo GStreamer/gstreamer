@@ -161,7 +161,7 @@ gst_gl_filter_glass_class_init (GstGLFilterGlassClass * klass)
 
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_filter_glass_filter_texture;
-  GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_glass_init_shader;
+  GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_filter_glass_init_shader;
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_glass_reset;
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;

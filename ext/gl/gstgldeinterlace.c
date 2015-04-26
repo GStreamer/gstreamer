@@ -168,7 +168,7 @@ gst_gl_deinterlace_class_init (GstGLDeinterlaceClass * klass)
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_deinterlace_filter;
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_deinterlace_filter_texture;
-  GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_deinterlace_init_shader;
+  GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_deinterlace_init_shader;
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }

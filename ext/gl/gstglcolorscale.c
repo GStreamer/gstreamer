@@ -97,7 +97,7 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
       "Filter/Effect/Video", "Colorspace converter and video scaler",
       "Julien Isorce <julien.isorce@gmail.com>");
 
-  filter_class->onInitFBO =
+  filter_class->init_fbo =
       GST_DEBUG_FUNCPTR (gst_gl_colorscale_gen_gl_resources);
 
   filter_class->filter_texture = gst_gl_colorscale_filter_texture;

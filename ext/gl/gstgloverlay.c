@@ -185,7 +185,7 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
   GST_GL_FILTER_CLASS (klass)->filter_texture = gst_gl_overlay_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
       gst_gl_overlay_reset_gl_resources;
-  GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_overlay_init_gl_resources;
+  GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_overlay_init_gl_resources;
 
   GST_BASE_TRANSFORM_CLASS (klass)->before_transform =
       GST_DEBUG_FUNCPTR (gst_gl_overlay_before_transform);

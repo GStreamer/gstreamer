@@ -197,8 +197,8 @@ gst_gl_filter_gl_start (GstGLBaseFilter * base_filter)
   if (filter_class->display_init_cb)
     filter_class->display_init_cb (filter);
 
-  if (filter_class->onInitFBO) {
-    if (!filter_class->onInitFBO (filter))
+  if (filter_class->init_fbo) {
+    if (!filter_class->init_fbo (filter))
       goto error;
   }
 
