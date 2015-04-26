@@ -12,18 +12,3 @@ libgstmad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmad_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstmad.h
-
-Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer \
-	-:PROJECT libgstmad -:SHARED libgstmad \
-	 -:TAGS eng debug \
-         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstmad_la_SOURCES) \
-	 -:CPPFLAGS $(CPPFLAGS) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstmad_la_CFLAGS) \
-	 -:LDFLAGS $(libgstmad_la_LDFLAGS) \
-	           $(libgstmad_la_LIBADD) \
-	           -ldl \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
-	> $@
