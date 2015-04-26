@@ -141,7 +141,7 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
 
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_cube_stop;
 
-  GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_cube_init_shader;
+  GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_filter_cube_init_shader;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_filter_cube_reset_gl;
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_filter_cube_set_caps;
   GST_GL_FILTER_CLASS (klass)->filter_texture =

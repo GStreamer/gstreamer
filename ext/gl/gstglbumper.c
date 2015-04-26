@@ -283,7 +283,7 @@ gst_gl_bumper_class_init (GstGLBumperClass * klass)
   GST_GL_FILTER_CLASS (klass)->filter_texture = gst_gl_bumper_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_init_cb = gst_gl_bumper_init_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_bumper_reset_resources;
-  GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_bumper_init_shader;
+  GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_bumper_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_bumper_reset;
 
   g_object_class_install_property (gobject_class,

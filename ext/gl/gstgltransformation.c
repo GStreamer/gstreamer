@@ -128,7 +128,7 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
   gobject_class->set_property = gst_gl_transformation_set_property;
   gobject_class->get_property = gst_gl_transformation_get_property;
 
-  GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_transformation_init_shader;
+  GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_transformation_init_shader;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
       gst_gl_transformation_reset_gl;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_transformation_reset;

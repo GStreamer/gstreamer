@@ -149,7 +149,7 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
       gst_gl_filtershader_init_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
       gst_gl_filtershader_reset_resources;
-  GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filtershader_init_shader;
+  GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_filtershader_init_shader;
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3;
