@@ -3607,8 +3607,9 @@ mss_manifest_type_find (GstTypeFind * tf, gpointer unused)
     length = 512;
   else if (length < 64)
     return;
+  else                          /* the first few bytes should be enough */
+    length = MIN (1024, length);
 
-  /* FIXME: we probably don't need or want the entire thing.. */
   data = gst_type_find_peek (tf, 0, length);
 
   if (data == NULL)
