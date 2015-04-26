@@ -227,8 +227,6 @@ gst_gl_color_convert_element_fixate_caps (GstBaseTransform *
       caps, othercaps);
 
   if (direction == GST_PAD_SINK) {
-    GstStructure *in_structure = gst_caps_get_structure (caps, 0);
-
     if (gst_caps_is_subset (caps, ret)) {
       gst_caps_replace (&ret, caps);
     }
