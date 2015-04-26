@@ -19,21 +19,6 @@ gst_launch_@GST_API_VERSION@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_launch_@GST_API_VERSION@_LDADD = $(GST_OBJ_LIBS)
 endif
 
-Android.mk: Makefile.am
-	androgenizer -:PROJECT gstreamer \
-	 -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:EXECUTABLE gst-inspect-@GST_API_VERSION@ -:TAGS eng debug \
-	 -:SOURCES $(gst_inspect_@GST_API_VERSION@_SOURCES) \
-	 -:CFLAGS $(DEFS) $(gst_inspect_@GST_API_VERSION@_CFLAGS) \
-	 -:LDFLAGS $(gst_inspect_@GST_API_VERSION@_LDADD) \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	 -:EXECUTABLE gst-launch-@GST_API_VERSION@ -:TAGS eng debug \
-	 -:SOURCES $(gst_launch_@GST_API_VERSION@_SOURCES) \
-	 -:CFLAGS $(DEFS) $(gst_launch_@GST_API_VERSION@_CFLAGS) \
-	 -:LDFLAGS $(gst_launch_@GST_API_VERSION@_LDADD) \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	> $@
-
 manpages = \
 	gst-inspect-@GST_API_VERSION@.1 \
 	gst-typefind-@GST_API_VERSION@.1

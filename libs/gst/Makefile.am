@@ -14,9 +14,3 @@ SUBDIRS_ALWAYS = base controller net
 
 SUBDIRS = $(SUBDIRS_ALWAYS) $(SUBDIRS_CHECK) $(SUBDIRS_HELPERS)
 DIST_SUBDIRS = $(SUBDIRS_ALWAYS) check helpers
-
-Android.mk: Makefile.am
-	echo $(PWD)
-	androgenizer -:PROJECT gstreamer \
-	 -:SUBDIR $(patsubst %, libs/gst/%, $(SUBDIRS)) \
-	> $@
