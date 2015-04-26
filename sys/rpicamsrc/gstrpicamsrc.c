@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2013-2014 Jan Schmidt <jan@centricular.com>
+ * Copyright (C) 2013-2015 Jan Schmidt <jan@centricular.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -186,6 +186,8 @@ static GstStaticPadTemplate video_src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_rpi_cam_src_parent_class parent_class
 G_DEFINE_TYPE (GstRpiCamSrc, gst_rpi_cam_src, GST_TYPE_PUSH_SRC);
 
+static void gst_rpi_cam_src_finalize (GObject *object);
+
 static void gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
@@ -249,6 +251,8 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   gstelement_class = (GstElementClass *) klass;
   basesrc_class = (GstBaseSrcClass *) klass;
   pushsrc_class = (GstPushSrcClass *) klass;
+
+  gobject_class->finalize = gst_rpi_cam_src_finalize;
   gobject_class->set_property = gst_rpi_cam_src_set_property;
   gobject_class->get_property = gst_rpi_cam_src_get_property;
   g_object_class_install_property (gobject_class, PROP_CAMERA_NUMBER,
@@ -435,9 +439,21 @@ gst_rpi_cam_src_init (GstRpiCamSrc * src)
   raspicapture_default_config (&src->capture_config);
   src->capture_config.intraperiod = KEYFRAME_INTERVAL_DEFAULT;
   src->capture_config.verbose = 1;
+
+  g_mutex_init (&src->config_lock);
+
   /* Don't let basesrc set timestamps, we'll do it using
    * buffer PTS and system times */
   gst_base_src_set_do_timestamp (GST_BASE_SRC (src), FALSE);
+}
+
+static void
+gst_rpi_cam_src_finalize (GObject *object)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC (object);
+  g_mutex_clear (&src->config_lock);
+
+  G_OBJECT_CLASS (gst_rpi_cam_src_parent_class)->finalize (object);
 }
 
 static void
@@ -445,101 +461,130 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (object);
+
+  g_mutex_lock (&src->config_lock);
+
   switch (prop_id) {
     case PROP_CAMERA_NUMBER:
       src->capture_config.cameraNum = g_value_get_int (value);
       break;
     case PROP_BITRATE:
       src->capture_config.bitrate = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ENCODING;
       break;
     case PROP_KEYFRAME_INTERVAL:
       src->capture_config.intraperiod = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ENCODING;
       break;
     case PROP_PREVIEW:
       src->capture_config.preview_parameters.wantPreview =
           g_value_get_boolean (value);
+      src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
       break;
     case PROP_PREVIEW_ENCODED:
       src->capture_config.immutableInput = g_value_get_boolean (value);
+      src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
       break;
     case PROP_FULLSCREEN:
       src->capture_config.preview_parameters.wantFullScreenPreview =
           g_value_get_boolean (value);
+      src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
       break;
     case PROP_PREVIEW_OPACITY:
       src->capture_config.preview_parameters.opacity = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
       break;
     case PROP_SHARPNESS:
       src->capture_config.camera_parameters.sharpness = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_COLOURBALANCE;
       break;
     case PROP_CONTRAST:
       src->capture_config.camera_parameters.contrast = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_COLOURBALANCE;
       break;
     case PROP_BRIGHTNESS:
       src->capture_config.camera_parameters.brightness =
           g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_COLOURBALANCE;
       break;
     case PROP_SATURATION:
       src->capture_config.camera_parameters.saturation =
           g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_COLOURBALANCE;
       break;
     case PROP_ISO:
       src->capture_config.camera_parameters.ISO = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_SENSOR_SETTINGS;
       break;
     case PROP_VIDEO_STABILISATION:
       src->capture_config.camera_parameters.videoStabilisation =
           g_value_get_boolean (value);
+      src->capture_config.change_flags |= PROP_CHANGE_VIDEO_STABILISATION;
       break;
     case PROP_EXPOSURE_COMPENSATION:
       src->capture_config.camera_parameters.exposureCompensation =
           g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_SENSOR_SETTINGS;
       break;
     case PROP_EXPOSURE_MODE:
       src->capture_config.camera_parameters.exposureMode =
           g_value_get_enum (value);
+      src->capture_config.change_flags |= PROP_CHANGE_SENSOR_SETTINGS;
       break;
     case PROP_EXPOSURE_METERING_MODE:
       src->capture_config.camera_parameters.exposureMeterMode =
           g_value_get_enum (value);
+      src->capture_config.change_flags |= PROP_CHANGE_SENSOR_SETTINGS;
       break;
     case PROP_ROTATION:
       src->capture_config.camera_parameters.rotation = g_value_get_int (value);
       break;
     case PROP_AWB_MODE:
       src->capture_config.camera_parameters.awbMode = g_value_get_enum (value);
+      src->capture_config.change_flags |= PROP_CHANGE_AWB;
       break;
     case PROP_AWB_GAIN_RED:
       src->capture_config.camera_parameters.awb_gains_r =
           g_value_get_float (value);
+      src->capture_config.change_flags |= PROP_CHANGE_AWB;
       break;
     case PROP_AWB_GAIN_BLUE:
       src->capture_config.camera_parameters.awb_gains_b =
           g_value_get_float (value);
+      src->capture_config.change_flags |= PROP_CHANGE_AWB;
       break;
     case PROP_IMAGE_EFFECT:
       src->capture_config.camera_parameters.imageEffect =
           g_value_get_enum (value);
+      src->capture_config.change_flags |= PROP_CHANGE_IMAGE_COLOUR_EFFECT;
       break;
     case PROP_HFLIP:
       src->capture_config.camera_parameters.hflip = g_value_get_boolean (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
       break;
     case PROP_VFLIP:
       src->capture_config.camera_parameters.vflip = g_value_get_boolean (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
       break;
     case PROP_ROI_X:
       src->capture_config.camera_parameters.roi.x = g_value_get_float (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ROI;
       break;
     case PROP_ROI_Y:
       src->capture_config.camera_parameters.roi.y = g_value_get_float (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ROI;
       break;
     case PROP_ROI_W:
       src->capture_config.camera_parameters.roi.w = g_value_get_float (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ROI;
       break;
     case PROP_ROI_H:
       src->capture_config.camera_parameters.roi.h = g_value_get_float (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ROI;
       break;
     case PROP_QUANTISATION_PARAMETER:
       src->capture_config.quantisationParameter = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ENCODING;
       break;
     case PROP_INLINE_HEADERS:
       src->capture_config.bInlineHeaders = g_value_get_boolean (value);
@@ -547,17 +592,21 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     case PROP_SHUTTER_SPEED:
       src->capture_config.camera_parameters.shutter_speed =
           g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_SENSOR_SETTINGS;
       break;
     case PROP_DRC:
       src->capture_config.camera_parameters.drc_level =
           g_value_get_enum (value);
+      src->capture_config.change_flags |= PROP_CHANGE_SENSOR_SETTINGS;
       break;
     case PROP_SENSOR_MODE:
       src->capture_config.sensor_mode = g_value_get_enum (value);
+      src->capture_config.change_flags |= PROP_CHANGE_SENSOR_SETTINGS;
       break;
     case PROP_ANNOTATION_MODE:
       src->capture_config.camera_parameters.enable_annotate =
           g_value_get_flags (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ANNOTATION;
       break;
     case PROP_ANNOTATION_TEXT:
       strncpy (src->capture_config.camera_parameters.annotate_string,
@@ -565,14 +614,18 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.
           camera_parameters.annotate_string[MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2
           - 1] = '\0';
+      src->capture_config.change_flags |= PROP_CHANGE_ANNOTATION;
       break;
     case PROP_INTRA_REFRESH_TYPE:
       src->capture_config.intra_refresh_type = g_value_get_enum (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ENCODING;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  g_mutex_unlock (&src->config_lock);
 }
 
 static void
@@ -580,6 +633,8 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (object);
+
+  g_mutex_lock (&src->config_lock);
   switch (prop_id) {
     case PROP_CAMERA_NUMBER:
       g_value_set_int (value, src->capture_config.cameraNum);
@@ -704,6 +759,7 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  g_mutex_unlock (&src->config_lock);
 }
 
 static gboolean
@@ -711,7 +767,9 @@ gst_rpi_cam_src_start (GstBaseSrc * parent)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (parent);
   GST_LOG_OBJECT (src, "In src_start()");
+  g_mutex_lock (&src->config_lock);
   src->capture_state = raspi_capture_setup (&src->capture_config);
+  g_mutex_unlock (&src->config_lock);
   if (src->capture_state == NULL)
     return FALSE;
   return TRUE;
@@ -877,6 +935,13 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
     gst_object_ref (clock);
   base_time = GST_ELEMENT_CAST (src)->base_time;
   GST_OBJECT_UNLOCK (src);
+
+  g_mutex_lock (&src->config_lock);
+  if (src->capture_config.change_flags) {
+    raspi_capture_update_config (src->capture_state, &src->capture_config);
+    src->capture_config.change_flags = 0;
+  }
+  g_mutex_unlock (&src->config_lock);
 
   /* FIXME: Use custom allocator */
   ret = raspi_capture_fill_buffer (src->capture_state, buf, clock, base_time);

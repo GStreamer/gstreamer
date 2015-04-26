@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2013 Jan Schmidt <jan@centricular.com>
+ * Copyright (C) 2013-2015 Jan Schmidt <jan@centricular.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -64,10 +64,26 @@ GST_DEBUG_CATEGORY_EXTERN (gst_rpi_cam_src_debug);
 
 G_BEGIN_DECLS
 
+typedef enum
+{
+  PROP_CHANGE_ENCODING          = (1 << 0), /* BITRATE or QUANT or KEY Interval, intra refresh */
+  PROP_CHANGE_PREVIEW           = (1 << 1), /* Preview opacity or fullscreen */
+  PROP_CHANGE_COLOURBALANCE     = (1 << 2),
+  PROP_CHANGE_SENSOR_SETTINGS   = (1 << 3), /* ISO, EXPOSURE, SHUTTER, DRC, Sensor Mode */
+  PROP_CHANGE_VIDEO_STABILISATION = (1 << 4),
+  PROP_CHANGE_AWB               = (1 << 5),
+  PROP_CHANGE_IMAGE_COLOUR_EFFECT = (1 << 6),
+  PROP_CHANGE_ORIENTATION       = (1 << 7),
+  PROP_CHANGE_ROI               = (1 << 8),
+  PROP_CHANGE_ANNOTATION        = (1 << 9)
+} RpiPropChangeFlags;
+
 /** Structure containing all state information for the current run
  */
 typedef struct
 {
+   RpiPropChangeFlags change_flags;
+
    int verbose; /// !0 if want detailed run information
 
    int timeout;                        /// Time taken before frame is grabbed and app then shuts down. Units are milliseconds
@@ -101,6 +117,7 @@ void raspicapture_init();
 void raspicapture_default_config(RASPIVID_CONFIG *config);
 RASPIVID_STATE *raspi_capture_setup(RASPIVID_CONFIG *config);
 gboolean raspi_capture_start(RASPIVID_STATE *state);
+void raspi_capture_update_config (RASPIVID_STATE *state, RASPIVID_CONFIG *config);
 GstFlowReturn raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **buf,
     GstClock *clock, GstClockTime base_time);
 void raspi_capture_stop(RASPIVID_STATE *state);

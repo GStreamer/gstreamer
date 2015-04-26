@@ -72,6 +72,8 @@ struct _GstRpiCamSrc
   RASPIVID_CONFIG capture_config;
   RASPIVID_STATE *capture_state;
   gboolean started;
+
+  GMutex config_lock;
 };
 
 struct _GstRpiCamSrcClass
