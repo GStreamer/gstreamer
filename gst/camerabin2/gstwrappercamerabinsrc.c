@@ -32,8 +32,10 @@
 #endif
 
 #include <gst/interfaces/photography.h>
+#include <gst/gst-i18n-plugin.h>
 
 #include "gstwrappercamerabinsrc.h"
+#include "gstdigitalzoom.h"
 #include "camerabingeneral.h"
 
 enum
@@ -398,20 +400,6 @@ gst_wrapper_camera_bin_src_caps_cb (GstPad * pad, GParamSpec * pspec,
   /* Update zoom */
   gst_base_camera_src_setup_zoom (bcamsrc);
 
-  /* Update post-zoom capsfilter */
-  if (self->src_zoom_filter) {
-    GstCaps *filtercaps;
-
-    g_object_get (G_OBJECT (self->src_zoom_filter), "caps", &filtercaps, NULL);
-
-    if (caps != filtercaps && (caps == NULL || filtercaps == NULL ||
-            !gst_caps_is_equal (filtercaps, caps)))
-      g_object_set (G_OBJECT (self->src_zoom_filter), "caps", caps, NULL);
-
-    if (filtercaps)
-      gst_caps_unref (filtercaps);
-  }
-
   if (caps)
     gst_caps_unref (caps);
 };
@@ -589,17 +577,14 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     g_signal_connect (self->srcfilter_pad, "notify::caps",
         G_CALLBACK (gst_wrapper_camera_bin_src_caps_cb), self);
 
-    if (!(self->src_zoom_crop =
-            gst_camerabin_create_and_add_element (cbin, "videocrop",
-                "zoom-crop")))
+    if (!(self->digitalzoom = g_object_new (GST_TYPE_DIGITAL_ZOOM, NULL))) {
+      GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN,
+          (_("Digitalzoom element cound't be created")), (NULL));
+
       goto done;
-    if (!(self->src_zoom_scale =
-            gst_camerabin_create_and_add_element (cbin, "videoscale",
-                "zoom-scale")))
-      goto done;
-    if (!(self->src_zoom_filter =
-            gst_camerabin_create_and_add_element (cbin, "capsfilter",
-                "zoom-capsfilter")))
+    }
+    if (!gst_camerabin_add_element_full (GST_BIN_CAST (self), NULL,
+            self->digitalzoom, "sink"))
       goto done;
 
     /* keep a 'tee' element that has 2 source pads, one is linked to the
@@ -616,7 +601,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     gst_object_unref (tee_pad);
 
     /* viewfinder pad */
-    self->src_pad = gst_element_get_static_pad (self->src_zoom_filter, "src");
+    self->src_pad = gst_element_get_static_pad (self->digitalzoom, "src");
     gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), self->src_pad);
 
     gst_pad_set_active (self->vfsrc, TRUE);
@@ -797,16 +782,10 @@ start_image_capture (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
 
     /* clean capsfilter caps so they don't interfere here */
     g_object_set (self->src_filter, "caps", NULL, NULL);
-    if (self->src_zoom_filter)
-      g_object_set (self->src_zoom_filter, "caps", NULL, NULL);
 
     caps = gst_pad_get_allowed_caps (self->imgsrc);
     gst_caps_replace (&self->image_capture_caps, caps);
     gst_caps_unref (caps);
-
-    /* FIXME - do we need to update basecamerasrc width/height somehow here?
-     * if not, i think we need to do something about _when_ they get updated
-     * to be sure that set_element_zoom doesn't use the wrong values */
 
     /* We caught this event in the src pad event handler and now we want to
      * actually push it upstream */
@@ -849,8 +828,6 @@ start_video_capture (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
 
     /* clean capsfilter caps so they don't interfere here */
     g_object_set (self->src_filter, "caps", NULL, NULL);
-    if (self->src_zoom_filter)
-      g_object_set (self->src_zoom_filter, "caps", NULL, NULL);
   }
 
   /* unlink from the viewfinder, link to the imagesrc pad, wait for
@@ -918,51 +895,6 @@ set_videosrc_zoom (GstWrapperCameraBinSrc * self, gfloat zoom)
   return ret;
 }
 
-static gboolean
-set_element_zoom (GstWrapperCameraBinSrc * self, gfloat zoom)
-{
-  gboolean ret = FALSE;
-  GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
-  gint w2_crop = 0, h2_crop = 0;
-  GstPad *pad_zoom_sink = NULL;
-  gint left = 0, right = 0, top = 0, bottom = 0;
-
-  if (self->src_zoom_crop) {
-    /* Update capsfilters to apply the zoom */
-    GST_INFO_OBJECT (self, "zoom: %f, orig size: %dx%d", zoom,
-        bcamsrc->width, bcamsrc->height);
-
-    if (zoom != ZOOM_1X) {
-      w2_crop = (bcamsrc->width - (gint) (bcamsrc->width * ZOOM_1X / zoom)) / 2;
-      h2_crop =
-          (bcamsrc->height - (gint) (bcamsrc->height * ZOOM_1X / zoom)) / 2;
-
-      left += w2_crop;
-      right += w2_crop;
-      top += h2_crop;
-      bottom += h2_crop;
-
-      /* force number of pixels cropped from left to be even, to avoid slow code
-       * path on videoscale */
-      left &= 0xFFFE;
-    }
-
-    pad_zoom_sink = gst_element_get_static_pad (self->src_zoom_crop, "sink");
-
-    GST_INFO_OBJECT (self,
-        "sw cropping: left:%d, right:%d, top:%d, bottom:%d", left, right, top,
-        bottom);
-
-    GST_PAD_STREAM_LOCK (pad_zoom_sink);
-    g_object_set (self->src_zoom_crop, "left", left, "right", right, "top",
-        top, "bottom", bottom, NULL);
-    GST_PAD_STREAM_UNLOCK (pad_zoom_sink);
-    gst_object_unref (pad_zoom_sink);
-    ret = TRUE;
-  }
-  return ret;
-}
-
 static void
 gst_wrapper_camera_bin_src_set_zoom (GstBaseCameraSrc * bcamsrc, gfloat zoom)
 {
@@ -971,12 +903,11 @@ gst_wrapper_camera_bin_src_set_zoom (GstBaseCameraSrc * bcamsrc, gfloat zoom)
   GST_INFO_OBJECT (self, "setting zoom %f", zoom);
 
   if (set_videosrc_zoom (self, zoom)) {
-    set_element_zoom (self, ZOOM_1X);
+    g_object_set (self->digitalzoom, "zoom", (gfloat) 1.0, NULL);
     GST_INFO_OBJECT (self, "zoom set using videosrc");
-  } else if (set_element_zoom (self, zoom)) {
-    GST_INFO_OBJECT (self, "zoom set using gst elements");
   } else {
-    GST_INFO_OBJECT (self, "setting zoom failed");
+    GST_INFO_OBJECT (self, "zoom set using digitalzoom");
+    g_object_set (self->digitalzoom, "zoom", zoom, NULL);
   }
 }
 
@@ -1087,8 +1018,6 @@ set_capsfilter_caps (GstWrapperCameraBinSrc * self, GstCaps * new_caps)
 
   /* Update capsfilters */
   g_object_set (G_OBJECT (self->src_filter), "caps", new_caps, NULL);
-  if (self->src_zoom_filter)
-    g_object_set (G_OBJECT (self->src_zoom_filter), "caps", new_caps, NULL);
   update_aspect_filter (self, new_caps);
   GST_INFO_OBJECT (self, "updated");
 }

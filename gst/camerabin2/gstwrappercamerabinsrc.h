@@ -78,9 +78,7 @@ struct _GstWrapperCameraBinSrc
   GstElement *src_vid_src;
   GstElement *video_filter;
   GstElement *src_filter;
-  GstElement *src_zoom_crop;
-  GstElement *src_zoom_scale;
-  GstElement *src_zoom_filter;
+  GstElement *digitalzoom;
 
   /* Pad from our last element that is linked
    * with the output pads */
