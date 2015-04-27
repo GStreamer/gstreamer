@@ -203,6 +203,13 @@ on_formatComboBox_changed (GtkWidget * widget, gpointer data)
   }
 }
 
+void
+on_zoomScale_value_changed (GtkWidget * widget, gpointer data)
+{
+  g_object_set (camera, "zoom",
+      (gfloat) gtk_range_get_value (GTK_RANGE (widget)), NULL);
+}
+
 static GstBusSyncReply
 bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
