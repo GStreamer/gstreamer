@@ -1019,12 +1019,13 @@ GST_START_TEST (test_rtx_expected_next)
   gst_clock_id_unref (id);
 
   /* put second buffer, the jitterbuffer should now know that the packet spacing
-   * is 20ms and should ask for retransmission of seqnum 2 in 20ms */
+   * is 20ms and should ask for retransmission of seqnum 2 in 20ms+10ms because
+   * 2*jitter==0 and 0.5*packet_spacing==10ms */
   in_buf = generate_test_buffer (20 * GST_MSECOND, TRUE, 1, 160);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 60 * GST_MSECOND);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 50 * GST_MSECOND);
   tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (tid == id);
   gst_clock_id_unref (tid);
@@ -1032,11 +1033,12 @@ GST_START_TEST (test_rtx_expected_next)
 
   out_event = g_async_queue_pop (data.src_event_queue);
   g_assert (out_event != NULL);
-  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 20, 20 * GST_MSECOND);
+  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 10, 20 * GST_MSECOND);
 
-  /* now we wait for the next timeout */
+  /* now we wait for the next timeout, all following timeouts 40ms in the
+   * future because this is rtx-retry-timeout */
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 100 * GST_MSECOND);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 90 * GST_MSECOND);
   tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (id == tid);
   gst_clock_id_unref (tid);
@@ -1044,10 +1046,10 @@ GST_START_TEST (test_rtx_expected_next)
 
   out_event = g_async_queue_pop (data.src_event_queue);
   g_assert (out_event != NULL);
-  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 60, 20 * GST_MSECOND);
+  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 50, 20 * GST_MSECOND);
 
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 140 * GST_MSECOND);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 130 * GST_MSECOND);
   tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (id == tid);
   gst_clock_id_unref (tid);
@@ -1055,7 +1057,7 @@ GST_START_TEST (test_rtx_expected_next)
 
   out_event = g_async_queue_pop (data.src_event_queue);
   g_assert (out_event != NULL);
-  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 100, 20 * GST_MSECOND);
+  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 90, 20 * GST_MSECOND);
 
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 200 * GST_MSECOND);
@@ -1070,7 +1072,7 @@ GST_START_TEST (test_rtx_expected_next)
 
 
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 260 * GST_MSECOND);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 240 * GST_MSECOND);
   tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (tid == id);
   gst_clock_id_unref (tid);
@@ -1112,7 +1114,8 @@ GST_START_TEST (test_rtx_two_missing)
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 20 * GST_MSECOND);
 
   /* put second buffer, the jitterbuffer should now know that the packet spacing
-   * is 20ms and should ask for retransmission of seqnum 2 at 60ms */
+   * is 20ms and should ask for retransmission of seqnum 2 in 20ms+10ms because
+   * 2*jitter==0 and 0.5*packet_spacing==10ms */
   in_buf = generate_test_buffer (20 * GST_MSECOND, TRUE, 1, 160);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
@@ -1122,23 +1125,45 @@ GST_START_TEST (test_rtx_two_missing)
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   /* wait for first retransmission request */
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 60 * GST_MSECOND);
-  do {
-    gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
-    tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
-    gst_clock_id_unref (id);
-    gst_clock_id_unref (tid);
-  } while (id != tid);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 50 * GST_MSECOND);
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  g_assert (id == tid);
+  gst_clock_id_unref (id);
+  gst_clock_id_unref (tid);
 
-  /* we should have 2 events now, one for 2 and another for 3 */
+  /* First event for 2 */
   out_event = g_async_queue_pop (data.src_event_queue);
   g_assert (out_event != NULL);
-  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 20, 20 * GST_MSECOND);
+  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 10, 20 * GST_MSECOND);
+
+  /* wait for second retransmission request */
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 60 * GST_MSECOND);
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  g_assert (id == tid);
+  gst_clock_id_unref (id);
+  gst_clock_id_unref (tid);
+
+  /* Second event for 3 */
   out_event = g_async_queue_pop (data.src_event_queue);
   g_assert (out_event != NULL);
   verify_rtx_event (out_event, 3, 60 * GST_MSECOND, 0, 20 * GST_MSECOND);
 
-  /* now we wait for the next timeout */
+  /* now we wait for the next timeout for 2 */
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 90 * GST_MSECOND);
+  tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  g_assert (id == tid);
+  gst_clock_id_unref (id);
+  gst_clock_id_unref (tid);
+
+  /* First event for 2 */
+  out_event = g_async_queue_pop (data.src_event_queue);
+  g_assert (out_event != NULL);
+  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 50, 20 * GST_MSECOND);
+
+  /* now we wait for the next timeout for 3 */
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 100 * GST_MSECOND);
   tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
@@ -1146,10 +1171,7 @@ GST_START_TEST (test_rtx_two_missing)
   gst_clock_id_unref (id);
   gst_clock_id_unref (tid);
 
-  /* we should have 2 events now, one for 2 and another for 3 */
-  out_event = g_async_queue_pop (data.src_event_queue);
-  g_assert (out_event != NULL);
-  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 60, 20 * GST_MSECOND);
+  /* Second event for 3 */
   out_event = g_async_queue_pop (data.src_event_queue);
   g_assert (out_event != NULL);
   verify_rtx_event (out_event, 3, 60 * GST_MSECOND, 40, 20 * GST_MSECOND);
@@ -1165,7 +1187,7 @@ GST_START_TEST (test_rtx_two_missing)
   }
 
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 140 * GST_MSECOND);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 130 * GST_MSECOND);
   tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (id == tid);
   gst_clock_id_unref (id);
@@ -1174,7 +1196,7 @@ GST_START_TEST (test_rtx_two_missing)
   /* now we only get requests for 2 */
   out_event = g_async_queue_pop (data.src_event_queue);
   g_assert (out_event != NULL);
-  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 100, 20 * GST_MSECOND);
+  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 90, 20 * GST_MSECOND);
 
   /* this is when buffer 0 deadline expires */
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
@@ -1260,7 +1282,8 @@ GST_START_TEST (test_rtx_packet_delay)
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 20 * GST_MSECOND);
 
   /* put second buffer, the jitterbuffer should now know that the packet spacing
-   * is 20ms and should ask for retransmission of seqnum 2 at 60ms */
+   * is 20ms and should ask for retransmission of seqnum 2 in 20ms+10ms because
+   * 2*jitter==0 and 0.5*packet_spacing==10ms */
   in_buf = generate_test_buffer (20 * GST_MSECOND, TRUE, 1, 160);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
@@ -1275,7 +1298,7 @@ GST_START_TEST (test_rtx_packet_delay)
   /* we should now receive retransmission requests for 2 -> 5 */
   out_event = g_async_queue_pop (data.src_event_queue);
   g_assert (out_event != NULL);
-  verify_rtx_event (out_event, 2, 20 * GST_MSECOND, 40, 20 * GST_MSECOND);
+  verify_rtx_event (out_event, 2, 20 * GST_MSECOND, 30, 20 * GST_MSECOND);
 
   for (i = 3; i < 5; i++) {
     GST_DEBUG ("popping %d", i);
