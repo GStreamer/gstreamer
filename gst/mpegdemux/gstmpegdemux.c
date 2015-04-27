@@ -90,7 +90,6 @@ enum
 enum
 {
   PROP_0,
-  PROP_SYNC,
   /* FILL ME */
 };
 
