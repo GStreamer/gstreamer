@@ -52,6 +52,8 @@
 #define GST_CAT_DEFAULT gst_gl_transformation_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+#define gst_gl_transformation_parent_class parent_class
+
 enum
 {
   PROP_0,
@@ -83,7 +85,7 @@ static gboolean gst_gl_transformation_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
 
 static void gst_gl_transformation_reset_gl (GstGLFilter * filter);
-static void gst_gl_transformation_reset (GstGLFilter * filter);
+static gboolean gst_gl_transformation_stop (GstBaseTransform * trans);
 static gboolean gst_gl_transformation_init_shader (GstGLFilter * filter);
 static void gst_gl_transformation_callback (gpointer stuff);
 static void gst_gl_transformation_build_mvp (GstGLTransformation *
@@ -131,10 +133,10 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
   GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_transformation_init_shader;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
       gst_gl_transformation_reset_gl;
-  GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_transformation_reset;
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_transformation_set_caps;
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_transformation_filter_texture;
+  GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_transformation_stop;
 
   g_object_class_install_property (gobject_class, PROP_FOV,
       g_param_spec_float ("fov", "Fov", "Field of view angle in degrees",
@@ -405,20 +407,25 @@ gst_gl_transformation_reset_gl (GstGLFilter * filter)
     transformation->vertex_buffer = 0;
   }
 
-  gst_object_unref (transformation->shader);
-  transformation->shader = NULL;
+  if (transformation->shader) {
+    gst_object_unref (transformation->shader);
+    transformation->shader = NULL;
+  }
 }
 
-static void
-gst_gl_transformation_reset (GstGLFilter * filter)
+static gboolean
+gst_gl_transformation_stop (GstBaseTransform * trans)
 {
-  GstGLTransformation *transformation = GST_GL_TRANSFORMATION (filter);
+  GstGLBaseFilter *basefilter = GST_GL_BASE_FILTER (trans);
+  GstGLTransformation *transformation = GST_GL_TRANSFORMATION (trans);
 
   /* blocking call, wait until the opengl thread has destroyed the shader */
-  if (transformation->shader)
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
-        transformation->shader);
-  transformation->shader = NULL;
+  if (basefilter->context && transformation->shader) {
+    gst_gl_context_del_shader (basefilter->context, transformation->shader);
+    transformation->shader = NULL;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
 }
 
 static gboolean
