@@ -79,3 +79,13 @@
    fun:aac_decode_frame_int
    fun:aac_decode_frame
 }
+
+# PENDING: https://bugs.freedesktop.org/show_bug.cgi?id=90194
+{
+   https://bugs.freedesktop.org/show_bug.cgi?id=90194
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   fun:drmIoctl
+   fun:drmPrimeHandleToFD
+}
