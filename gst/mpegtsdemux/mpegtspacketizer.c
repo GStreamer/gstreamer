@@ -148,7 +148,7 @@ find_subtable (GSList * subtables, guint8 table_id, guint16 subtable_extension)
       return sub;
   }
 
-  return FALSE;
+  return NULL;
 }
 
 static gboolean
