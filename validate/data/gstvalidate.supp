@@ -57,3 +57,16 @@
    fun:_cairo_gstate_show_text_glyphs
    fun:cairo_show_glyphs
 }
+
+# PENDING: https://bugzilla.gnome.org/show_bug.cgi?id=748417
+{
+   Ignore all the invalid memory errors from libvpx
+   Memcheck:Cond
+   obj:/usr/lib64/libvpx.so*
+}
+
+{
+   Ignore all the invalid memory errors from libvpx
+   Memcheck:Value8
+   obj:/usr/lib64/libvpx.so*
+}
