@@ -184,16 +184,19 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl,
   else
     config_attrib[i++] = EGL_OPENGL_BIT;
 #if defined(USE_EGL_RPI) && GST_GL_HAVE_WINDOW_WAYLAND
-  /* The configurations r=5 g=6 b=5 seems to be buggy whereas
+  /* The configurations with a=0 seems to be buggy whereas
    * it works when using dispmanx directly */
-  config_attrib[i++] = EGL_BUFFER_SIZE;
-  config_attrib[i++] = 24;
-  /* same with a=0 */
   config_attrib[i++] = EGL_ALPHA_SIZE;
   config_attrib[i++] = 1;
 #endif
   config_attrib[i++] = EGL_DEPTH_SIZE;
   config_attrib[i++] = 16;
+  config_attrib[i++] = EGL_RED_SIZE;
+  config_attrib[i++] = 1;
+  config_attrib[i++] = EGL_GREEN_SIZE;
+  config_attrib[i++] = 1;
+  config_attrib[i++] = EGL_BLUE_SIZE;
+  config_attrib[i++] = 1;
   config_attrib[i++] = EGL_NONE;
 
   if (eglChooseConfig (egl->egl_display, config_attrib,
