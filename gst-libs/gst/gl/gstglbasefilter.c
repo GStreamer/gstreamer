@@ -56,7 +56,6 @@ static void gst_gl_base_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_base_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_gl_base_filter_finalize (GObject * object);
 
 static void gst_gl_base_filter_set_context (GstElement * element,
     GstContext * context);
@@ -89,7 +88,6 @@ gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
 
   gobject_class->set_property = gst_gl_base_filter_set_property;
   gobject_class->get_property = gst_gl_base_filter_get_property;
-  gobject_class->finalize = gst_gl_base_filter_finalize;
 
   GST_BASE_TRANSFORM_CLASS (klass)->query = gst_gl_base_filter_query;
   GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_base_filter_start;
@@ -115,19 +113,6 @@ static void
 gst_gl_base_filter_init (GstGLBaseFilter * filter)
 {
   filter->priv = GST_GL_BASE_FILTER_GET_PRIVATE (filter);
-}
-
-static void
-gst_gl_base_filter_finalize (GObject * object)
-{
-  GstGLBaseFilter *filter = GST_GL_BASE_FILTER (object);
-
-  if (filter->priv->other_context) {
-    gst_object_unref (filter->priv->other_context);
-    filter->priv->other_context = NULL;
-  }
-
-  G_OBJECT_CLASS (gst_gl_base_filter_parent_class)->finalize (object);
 }
 
 static void
@@ -424,6 +409,11 @@ gst_gl_base_filter_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
+      if (filter->priv->other_context) {
+        gst_object_unref (filter->priv->other_context);
+        filter->priv->other_context = NULL;
+      }
+
       if (filter->display) {
         gst_object_unref (filter->display);
         filter->display = NULL;

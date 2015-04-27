@@ -624,11 +624,6 @@ gst_glimage_sink_finalize (GObject * object)
 
   g_mutex_clear (&glimage_sink->drawing_lock);
 
-  if (glimage_sink->other_context) {
-    gst_object_unref (glimage_sink->other_context);
-    glimage_sink->other_context = NULL;
-  }
-
   g_free (glimage_sink->display_name);
 
   GST_DEBUG ("finalized");
@@ -971,6 +966,11 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     }
     case GST_STATE_CHANGE_READY_TO_NULL:
+      if (glimage_sink->other_context) {
+        gst_object_unref (glimage_sink->other_context);
+        glimage_sink->other_context = NULL;
+      }
+
       if (glimage_sink->display) {
         gst_object_unref (glimage_sink->display);
         glimage_sink->display = NULL;

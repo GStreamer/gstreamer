@@ -80,7 +80,6 @@ static void gst_gl_test_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_test_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_gl_test_src_dispose (GObject * object);
 
 static gboolean gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
 static GstCaps *gst_gl_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter);
@@ -156,7 +155,6 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
 
   gobject_class->set_property = gst_gl_test_src_set_property;
   gobject_class->get_property = gst_gl_test_src_get_property;
-  gobject_class->dispose = gst_gl_test_src_dispose;
 
   g_object_class_install_property (gobject_class, PROP_PATTERN,
       g_param_spec_enum ("pattern", "Pattern",
@@ -384,18 +382,6 @@ gst_gl_test_src_set_pattern (GstGLTestSrc * gltestsrc, gint pattern_type)
     default:
       g_assert_not_reached ();
   }
-}
-
-static void
-gst_gl_test_src_dispose (GObject * object)
-{
-  GstGLTestSrc *src = GST_GL_TEST_SRC (object);
-
-  if (src->other_context)
-    gst_object_unref (src->other_context);
-  src->other_context = NULL;
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -749,11 +735,6 @@ gst_gl_test_src_stop (GstBaseSrc * basesrc)
     src->context = NULL;
   }
 
-  if (src->display) {
-    gst_object_unref (src->display);
-    src->display = NULL;
-  }
-
   return TRUE;
 }
 
@@ -934,6 +915,17 @@ gst_gl_test_src_change_state (GstElement * element, GstStateChange transition)
     return ret;
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (src->other_context) {
+        gst_object_unref (src->other_context);
+        src->other_context = NULL;
+      }
+
+      if (src->display) {
+        gst_object_unref (src->display);
+        src->display = NULL;
+      }
+      break;
     default:
       break;
   }
