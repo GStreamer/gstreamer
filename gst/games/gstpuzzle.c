@@ -72,9 +72,9 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_COLUMNS,
-  ARG_ROWS
+  PROP_0,
+  PROP_COLUMNS,
+  PROP_ROWS
       /* FILL ME */
 };
 
@@ -165,11 +165,11 @@ gst_puzzle_class_init (gpointer g_class, gpointer class_data)
   gobject_class->get_property = gst_puzzle_get_property;
   gobject_class->finalize = gst_puzzle_finalize;
 
-  g_object_class_install_property (gobject_class, ARG_ROWS,
+  g_object_class_install_property (gobject_class, PROP_ROWS,
       g_param_spec_uint ("rows", "rows", "number of rows in puzzle",
           1, G_MAXUINT, 4,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_COLUMNS,
+  g_object_class_install_property (gobject_class, PROP_COLUMNS,
       g_param_spec_uint ("columns", "columns", "number of columns in puzzle",
           1, G_MAXUINT, 4,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
@@ -450,11 +450,11 @@ gst_puzzle_set_property (GObject * object, guint prop_id,
 
   GST_DEBUG ("gst_puzzle_set_property");
   switch (prop_id) {
-    case ARG_COLUMNS:
+    case PROP_COLUMNS:
       src->columns = g_value_get_uint (value);
       gst_puzzle_create (src);
       break;
-    case ARG_ROWS:
+    case PROP_ROWS:
       src->rows = g_value_get_uint (value);
       gst_puzzle_create (src);
       break;
@@ -474,10 +474,10 @@ gst_puzzle_get_property (GObject * object, guint prop_id, GValue * value,
   src = GST_PUZZLE (object);
 
   switch (prop_id) {
-    case ARG_COLUMNS:
+    case PROP_COLUMNS:
       g_value_set_uint (value, src->columns);
       break;
-    case ARG_ROWS:
+    case PROP_ROWS:
       g_value_set_uint (value, src->rows);
       break;
     default:

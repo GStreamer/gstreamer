@@ -76,12 +76,12 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_GRPSIZE,
-  ARG_OUTSIZE,
-  ARG_SINKPADS,
-  ARG_SRCPADS,
-  ARG_MATRIXPTR
+  PROP_0,
+  PROP_GRPSIZE,
+  PROP_OUTSIZE,
+  PROP_SINKPADS,
+  PROP_SRCPADS,
+  PROP_MATRIXPTR
 };
 
 static GstStaticPadTemplate mixmatrix_sink_template =
@@ -176,16 +176,16 @@ gst_mixmatrix_class_init (GstMixMatrixClass * klass)
       G_STRUCT_OFFSET (GstMixMatrixClass, resize),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SINKPADS,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SINKPADS,
       g_param_spec_int ("sinkpads", "Sink Pads",
           "Number of sink pads in matrix", 0, G_MAXINT, 8,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SRCPADS,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SRCPADS,
       g_param_spec_int ("srcpads", "Src Pads", "Number of src pads in matrix",
           0, G_MAXINT, 8, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MATRIXPTR,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MATRIXPTR,
       g_param_spec_pointer ("matrixptr", "Matrix Pointer",
           "Pointer to gfloat mix matrix",
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
@@ -501,13 +501,13 @@ gst_mixmatrix_get_property (GObject * object, guint prop_id, GValue * value,
   mix = GST_MIXMATRIX (object);
 
   switch (prop_id) {
-    case ARG_SINKPADS:
+    case PROP_SINKPADS:
       g_value_set_int (value, mix->sinkpadalloc);
       break;
-    case ARG_SRCPADS:
+    case PROP_SRCPADS:
       g_value_set_int (value, mix->srcpadalloc);
       break;
-    case ARG_MATRIXPTR:
+    case PROP_MATRIXPTR:
       g_value_set_pointer (value, mix->matrix);
       break;
     default:

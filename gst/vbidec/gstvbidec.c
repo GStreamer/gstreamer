@@ -71,10 +71,10 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_VERBOSE,
-  ARG_CAPTION_TYPE,
-  ARG_DVD_INPUT
+  PROP_0,
+  PROP_VERBOSE,
+  PROP_CAPTION_TYPE,
+  PROP_DVD_INPUT
 };
 
 static GstStaticPadTemplate gst_vbidec_sink_template =
@@ -186,14 +186,14 @@ gst_vbidec_class_init (GstVBIDecClass * klass)
   gobject_class->set_property = gst_vbidec_set_property;
   gobject_class->get_property = gst_vbidec_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VERBOSE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VERBOSE,
       g_param_spec_boolean ("verbose", "verbose", "verbose",
           FALSE, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CAPTION_TYPE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CAPTION_TYPE,
       g_param_spec_enum ("caption-type", "caption type", "Closed Caption Type",
           GST_TYPE_VBIDEC_CAPTION_TYPE_TYPE, CAPTURE_OFF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DVD_INPUT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DVD_INPUT,
       g_param_spec_boolean ("dvd-input", "dvd input",
           "VBI is encapsulated in MPEG2 GOP user_data field (as on DVDs)",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -330,14 +330,14 @@ gst_vbidec_set_property (GObject * object, guint prop_id, const GValue * value,
   vbidec = GST_VBIDEC (object);
 
   switch (prop_id) {
-    case ARG_VERBOSE:
+    case PROP_VERBOSE:
       vbidata_set_verbose (vbidec->vbidata, g_value_get_boolean (value));
       vbiscreen_set_verbose (vbidec->vbiscreen, g_value_get_boolean (value));
       break;
-    case ARG_DVD_INPUT:
+    case PROP_DVD_INPUT:
       vbidec->dvd_input = g_value_get_boolean (value);
       break;
-    case ARG_CAPTION_TYPE:
+    case PROP_CAPTION_TYPE:
       vbidec->caption_type = g_value_get_enum (value);
       vbidata_capture_mode (vbidec->vbidata, vbidec->caption_type);
       break;
@@ -356,10 +356,10 @@ gst_vbidec_get_property (GObject * object, guint prop_id, GValue * value,
   vbidec = GST_VBIDEC (object);
 
   switch (prop_id) {
-    case ARG_DVD_INPUT:
+    case PROP_DVD_INPUT:
       g_value_set_boolean (value, vbidec->dvd_input);
       break;
-    case ARG_CAPTION_TYPE:
+    case PROP_CAPTION_TYPE:
       g_value_set_enum (value, vbidec->caption_type);
       break;
     default:

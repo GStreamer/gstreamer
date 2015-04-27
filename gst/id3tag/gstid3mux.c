@@ -61,10 +61,10 @@ GST_DEBUG_CATEGORY (gst_id3_mux_debug);
 
 enum
 {
-  ARG_0,
-  ARG_WRITE_V1,
-  ARG_WRITE_V2,
-  ARG_V2_MAJOR_VERSION
+  PROP_0,
+  PROP_WRITE_V1,
+  PROP_WRITE_V2,
+  PROP_V2_MAJOR_VERSION
 };
 
 #define DEFAULT_WRITE_V1 FALSE
@@ -102,17 +102,17 @@ gst_id3_mux_class_init (GstId3MuxClass * klass)
   gobject_class->set_property = gst_id3_mux_set_property;
   gobject_class->get_property = gst_id3_mux_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_WRITE_V1,
+  g_object_class_install_property (gobject_class, PROP_WRITE_V1,
       g_param_spec_boolean ("write-v1", "Write id3v1 tag",
           "Write an id3v1 tag at the end of the file", DEFAULT_WRITE_V1,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_WRITE_V2,
+  g_object_class_install_property (gobject_class, PROP_WRITE_V2,
       g_param_spec_boolean ("write-v2", "Write id3v2 tag",
           "Write an id3v2 tag at the start of the file", DEFAULT_WRITE_V2,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_V2_MAJOR_VERSION,
+  g_object_class_install_property (gobject_class, PROP_V2_MAJOR_VERSION,
       g_param_spec_int ("v2-version", "Version (3 or 4) of id3v2 tag",
           "Set version (3 for id3v2.3, 4 for id3v2.4) of id3v2 tags",
           3, 4, DEFAULT_V2_MAJOR_VERSION,
@@ -152,13 +152,13 @@ gst_id3_mux_set_property (GObject * object, guint prop_id,
   GstId3Mux *mux = GST_ID3_MUX (object);
 
   switch (prop_id) {
-    case ARG_WRITE_V1:
+    case PROP_WRITE_V1:
       mux->write_v1 = g_value_get_boolean (value);
       break;
-    case ARG_WRITE_V2:
+    case PROP_WRITE_V2:
       mux->write_v2 = g_value_get_boolean (value);
       break;
-    case ARG_V2_MAJOR_VERSION:
+    case PROP_V2_MAJOR_VERSION:
       mux->v2_major_version = g_value_get_int (value);
       break;
     default:
@@ -174,13 +174,13 @@ gst_id3_mux_get_property (GObject * object, guint prop_id,
   GstId3Mux *mux = GST_ID3_MUX (object);
 
   switch (prop_id) {
-    case ARG_WRITE_V1:
+    case PROP_WRITE_V1:
       g_value_set_boolean (value, mux->write_v1);
       break;
-    case ARG_WRITE_V2:
+    case PROP_WRITE_V2:
       g_value_set_boolean (value, mux->write_v2);
       break;
-    case ARG_V2_MAJOR_VERSION:
+    case PROP_V2_MAJOR_VERSION:
       g_value_set_int (value, mux->v2_major_version);
       break;
     default:

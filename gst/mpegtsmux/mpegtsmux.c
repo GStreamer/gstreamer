@@ -102,13 +102,13 @@ GST_DEBUG_CATEGORY (mpegtsmux_debug);
 
 enum
 {
-  ARG_0,
-  ARG_PROG_MAP,
-  ARG_M2TS_MODE,
-  ARG_PAT_INTERVAL,
-  ARG_PMT_INTERVAL,
-  ARG_ALIGNMENT,
-  ARG_SI_INTERVAL
+  PROP_0,
+  PROP_PROG_MAP,
+  PROP_M2TS_MODE,
+  PROP_PAT_INTERVAL,
+  PROP_PMT_INTERVAL,
+  PROP_ALIGNMENT,
+  PROP_SI_INTERVAL
 };
 
 #define MPEGTSMUX_DEFAULT_ALIGNMENT    -1
@@ -254,37 +254,37 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (mpegtsmux_get_index);
 #endif
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROG_MAP,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PROG_MAP,
       g_param_spec_boxed ("prog-map", "Program map",
           "A GstStructure specifies the mapping from elementary streams to programs",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_M2TS_MODE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_M2TS_MODE,
       g_param_spec_boolean ("m2ts-mode", "M2TS(192 bytes) Mode",
           "Set to TRUE to output Blu-Ray disc format with 192 byte packets. "
           "FALSE for standard TS format with 188 byte packets.",
           MPEGTSMUX_DEFAULT_M2TS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PAT_INTERVAL,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PAT_INTERVAL,
       g_param_spec_uint ("pat-interval", "PAT interval",
           "Set the interval (in ticks of the 90kHz clock) for writing out the PAT table",
           1, G_MAXUINT, TSMUX_DEFAULT_PAT_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PMT_INTERVAL,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PMT_INTERVAL,
       g_param_spec_uint ("pmt-interval", "PMT interval",
           "Set the interval (in ticks of the 90kHz clock) for writing out the PMT table",
           1, G_MAXUINT, TSMUX_DEFAULT_PMT_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALIGNMENT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ALIGNMENT,
       g_param_spec_int ("alignment", "packet alignment",
           "Number of packets per buffer (padded with dummy packets on EOS) "
           "(-1 = auto, 0 = all available packets, 7 for UDP streaming)",
           -1, G_MAXINT, MPEGTSMUX_DEFAULT_ALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SI_INTERVAL,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SI_INTERVAL,
       g_param_spec_uint ("si-interval", "SI interval",
           "Set the interval (in ticks of the 90kHz clock) for writing out the Service"
           "Information tables", 1, G_MAXUINT, TSMUX_DEFAULT_SI_INTERVAL,
@@ -456,11 +456,11 @@ gst_mpegtsmux_set_property (GObject * object, guint prop_id,
   GSList *walk;
 
   switch (prop_id) {
-    case ARG_M2TS_MODE:
+    case PROP_M2TS_MODE:
       /*set incase if the output stream need to be of 192 bytes */
       mux->m2ts_mode = g_value_get_boolean (value);
       break;
-    case ARG_PROG_MAP:
+    case PROP_PROG_MAP:
     {
       const GstStructure *s = gst_value_get_structure (value);
       if (mux->prog_map) {
@@ -472,12 +472,12 @@ gst_mpegtsmux_set_property (GObject * object, guint prop_id,
         mux->prog_map = NULL;
       break;
     }
-    case ARG_PAT_INTERVAL:
+    case PROP_PAT_INTERVAL:
       mux->pat_interval = g_value_get_uint (value);
       if (mux->tsmux)
         tsmux_set_pat_interval (mux->tsmux, mux->pat_interval);
       break;
-    case ARG_PMT_INTERVAL:
+    case PROP_PMT_INTERVAL:
       walk = mux->collect->data;
       mux->pmt_interval = g_value_get_uint (value);
 
@@ -488,10 +488,10 @@ gst_mpegtsmux_set_property (GObject * object, guint prop_id,
         walk = g_slist_next (walk);
       }
       break;
-    case ARG_ALIGNMENT:
+    case PROP_ALIGNMENT:
       mux->alignment = g_value_get_int (value);
       break;
-    case ARG_SI_INTERVAL:
+    case PROP_SI_INTERVAL:
       mux->si_interval = g_value_get_uint (value);
       tsmux_set_si_interval (mux->tsmux, mux->si_interval);
       break;
@@ -508,22 +508,22 @@ gst_mpegtsmux_get_property (GObject * object, guint prop_id,
   MpegTsMux *mux = GST_MPEG_TSMUX (object);
 
   switch (prop_id) {
-    case ARG_M2TS_MODE:
+    case PROP_M2TS_MODE:
       g_value_set_boolean (value, mux->m2ts_mode);
       break;
-    case ARG_PROG_MAP:
+    case PROP_PROG_MAP:
       gst_value_set_structure (value, mux->prog_map);
       break;
-    case ARG_PAT_INTERVAL:
+    case PROP_PAT_INTERVAL:
       g_value_set_uint (value, mux->pat_interval);
       break;
-    case ARG_PMT_INTERVAL:
+    case PROP_PMT_INTERVAL:
       g_value_set_uint (value, mux->pmt_interval);
       break;
-    case ARG_ALIGNMENT:
+    case PROP_ALIGNMENT:
       g_value_set_int (value, mux->alignment);
       break;
-    case ARG_SI_INTERVAL:
+    case PROP_SI_INTERVAL:
       g_value_set_uint (value, mux->si_interval);
       break;
     default:

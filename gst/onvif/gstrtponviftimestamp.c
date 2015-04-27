@@ -58,7 +58,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 enum
 {
-  ARG_0,
+  PROP_0,
   PROP_NTP_OFFSET,
   PROP_CSEQ,
   PROP_SET_E_BIT,

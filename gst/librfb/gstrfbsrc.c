@@ -36,19 +36,19 @@
 
 enum
 {
-  ARG_0,
-  ARG_HOST,
-  ARG_PORT,
-  ARG_VERSION,
-  ARG_PASSWORD,
-  ARG_OFFSET_X,
-  ARG_OFFSET_Y,
-  ARG_WIDTH,
-  ARG_HEIGHT,
-  ARG_INCREMENTAL,
-  ARG_USE_COPYRECT,
-  ARG_SHARED,
-  ARG_VIEWONLY
+  PROP_0,
+  PROP_HOST,
+  PROP_PORT,
+  PROP_VERSION,
+  PROP_PASSWORD,
+  PROP_OFFSET_X,
+  PROP_OFFSET_Y,
+  PROP_WIDTH,
+  PROP_HEIGHT,
+  PROP_INCREMENTAL,
+  PROP_USE_COPYRECT,
+  PROP_SHARED,
+  PROP_VIEWONLY
 };
 
 GST_DEBUG_CATEGORY_STATIC (rfbsrc_debug);
@@ -102,47 +102,47 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   gobject_class->set_property = gst_rfb_src_set_property;
   gobject_class->get_property = gst_rfb_src_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_HOST,
+  g_object_class_install_property (gobject_class, PROP_HOST,
       g_param_spec_string ("host", "Host to connect to", "Host to connect to",
           "127.0.0.1", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_PORT,
+  g_object_class_install_property (gobject_class, PROP_PORT,
       g_param_spec_int ("port", "Port", "Port",
           1, 65535, 5900, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_VERSION,
+  g_object_class_install_property (gobject_class, PROP_VERSION,
       g_param_spec_string ("version", "RFB protocol version",
           "RFB protocol version", "3.3",
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_PASSWORD,
+  g_object_class_install_property (gobject_class, PROP_PASSWORD,
       g_param_spec_string ("password", "Password for authentication",
           "Password for authentication", "",
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_OFFSET_X,
+  g_object_class_install_property (gobject_class, PROP_OFFSET_X,
       g_param_spec_int ("offset-x", "x offset for screen scrapping",
           "x offset for screen scrapping", 0, 65535, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_OFFSET_Y,
+  g_object_class_install_property (gobject_class, PROP_OFFSET_Y,
       g_param_spec_int ("offset-y", "y offset for screen scrapping",
           "y offset for screen scrapping", 0, 65535, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_WIDTH,
+  g_object_class_install_property (gobject_class, PROP_WIDTH,
       g_param_spec_int ("width", "width of screen", "width of screen", 0, 65535,
           0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_HEIGHT,
+  g_object_class_install_property (gobject_class, PROP_HEIGHT,
       g_param_spec_int ("height", "height of screen", "height of screen", 0,
           65535, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_INCREMENTAL,
+  g_object_class_install_property (gobject_class, PROP_INCREMENTAL,
       g_param_spec_boolean ("incremental", "Incremental updates",
           "Incremental updates", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_USE_COPYRECT,
+  g_object_class_install_property (gobject_class, PROP_USE_COPYRECT,
       g_param_spec_boolean ("use-copyrect", "Use copyrect encoding",
           "Use copyrect encoding", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_SHARED,
+  g_object_class_install_property (gobject_class, PROP_SHARED,
       g_param_spec_boolean ("shared", "Share desktop with other clients",
           "Share desktop with other clients", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_VIEWONLY,
+  g_object_class_install_property (gobject_class, PROP_VIEWONLY,
       g_param_spec_boolean ("view-only", "Only view the desktop",
           "only view the desktop", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -249,41 +249,41 @@ gst_rfb_src_set_property (GObject * object, guint prop_id,
   GstRfbSrc *src = GST_RFB_SRC (object);
 
   switch (prop_id) {
-    case ARG_HOST:
+    case PROP_HOST:
       src->host = g_strdup (g_value_get_string (value));
       break;
-    case ARG_PORT:
+    case PROP_PORT:
       src->port = g_value_get_int (value);
       break;
-    case ARG_VERSION:
+    case PROP_VERSION:
       gst_rfb_property_set_version (src, g_strdup (g_value_get_string (value)));
       break;
-    case ARG_PASSWORD:
+    case PROP_PASSWORD:
       g_free (src->decoder->password);
       src->decoder->password = g_strdup (g_value_get_string (value));
       break;
-    case ARG_OFFSET_X:
+    case PROP_OFFSET_X:
       src->decoder->offset_x = g_value_get_int (value);
       break;
-    case ARG_OFFSET_Y:
+    case PROP_OFFSET_Y:
       src->decoder->offset_y = g_value_get_int (value);
       break;
-    case ARG_WIDTH:
+    case PROP_WIDTH:
       src->decoder->rect_width = g_value_get_int (value);
       break;
-    case ARG_HEIGHT:
+    case PROP_HEIGHT:
       src->decoder->rect_height = g_value_get_int (value);
       break;
-    case ARG_INCREMENTAL:
+    case PROP_INCREMENTAL:
       src->incremental_update = g_value_get_boolean (value);
       break;
-    case ARG_USE_COPYRECT:
+    case PROP_USE_COPYRECT:
       src->decoder->use_copyrect = g_value_get_boolean (value);
       break;
-    case ARG_SHARED:
+    case PROP_SHARED:
       src->decoder->shared_flag = g_value_get_boolean (value);
       break;
-    case ARG_VIEWONLY:
+    case PROP_VIEWONLY:
       src->view_only = g_value_get_boolean (value);
       break;
     default:
@@ -299,39 +299,39 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
   gchar *version;
 
   switch (prop_id) {
-    case ARG_HOST:
+    case PROP_HOST:
       g_value_set_string (value, src->host);
       break;
-    case ARG_PORT:
+    case PROP_PORT:
       g_value_set_int (value, src->port);
       break;
-    case ARG_VERSION:
+    case PROP_VERSION:
       version = gst_rfb_property_get_version (src);
       g_value_set_string (value, version);
       g_free (version);
       break;
-    case ARG_OFFSET_X:
+    case PROP_OFFSET_X:
       g_value_set_int (value, src->decoder->offset_x);
       break;
-    case ARG_OFFSET_Y:
+    case PROP_OFFSET_Y:
       g_value_set_int (value, src->decoder->offset_y);
       break;
-    case ARG_WIDTH:
+    case PROP_WIDTH:
       g_value_set_int (value, src->decoder->rect_width);
       break;
-    case ARG_HEIGHT:
+    case PROP_HEIGHT:
       g_value_set_int (value, src->decoder->rect_height);
       break;
-    case ARG_INCREMENTAL:
+    case PROP_INCREMENTAL:
       g_value_set_boolean (value, src->incremental_update);
       break;
-    case ARG_USE_COPYRECT:
+    case PROP_USE_COPYRECT:
       g_value_set_boolean (value, src->decoder->use_copyrect);
       break;
-    case ARG_SHARED:
+    case PROP_SHARED:
       g_value_set_boolean (value, src->decoder->shared_flag);
       break;
-    case ARG_VIEWONLY:
+    case PROP_VIEWONLY:
       g_value_set_boolean (value, src->view_only);
       break;
     default:

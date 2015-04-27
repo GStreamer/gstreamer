@@ -52,8 +52,8 @@ GST_DEBUG_CATEGORY_STATIC (speed_debug);
 
 enum
 {
-  ARG_0,
-  ARG_SPEED
+  PROP_0,
+  PROP_SPEED
 };
 
 /* assumption here: sizeof (gfloat) = 4 */
@@ -388,7 +388,7 @@ gst_speed_class_init (GstSpeedClass * klass)
   gobject_class->get_property = speed_get_property;
   gstelement_class->change_state = speed_change_state;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SPEED,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SPEED,
       g_param_spec_float ("speed", "speed", "speed",
           0.1, 40.0, 1.0,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
@@ -641,7 +641,7 @@ speed_set_property (GObject * object, guint prop_id, const GValue * value,
   GstSpeed *filter = GST_SPEED (object);
 
   switch (prop_id) {
-    case ARG_SPEED:
+    case PROP_SPEED:
       filter->speed = g_value_get_float (value);
       break;
     default:
@@ -658,7 +658,7 @@ speed_get_property (GObject * object, guint prop_id, GValue * value,
   GstSpeed *filter = GST_SPEED (object);
 
   switch (prop_id) {
-    case ARG_SPEED:
+    case PROP_SPEED:
       g_value_set_float (value, filter->speed);
       break;
     default:

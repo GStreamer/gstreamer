@@ -51,7 +51,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 enum
 {
-  ARG_0,
+  PROP_0,
 };
 
 enum

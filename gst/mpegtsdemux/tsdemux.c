@@ -261,7 +261,7 @@ GST_STATIC_PAD_TEMPLATE ("private_%04x",
 
 enum
 {
-  ARG_0,
+  PROP_0,
   PROP_PROGRAM_NUMBER,
   PROP_EMIT_STATS,
   /* FILL ME */

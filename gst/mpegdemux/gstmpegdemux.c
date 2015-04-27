@@ -89,8 +89,8 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_SYNC,
+  PROP_0,
+  PROP_SYNC,
   /* FILL ME */
 };
 

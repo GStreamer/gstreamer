@@ -142,7 +142,7 @@ enum
 
 enum
 {
-  ARG_0
+  PROP_0
       /* FILL ME */
 };
 

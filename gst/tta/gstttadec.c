@@ -70,7 +70,7 @@ enum
 
 enum
 {
-  ARG_0
+  PROP_0
 };
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
