@@ -325,8 +325,6 @@ static void gst_glimage_sink_set_property (GObject * object, guint prop_id,
 static void gst_glimage_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * param_spec);
 
-static gboolean gst_glimage_sink_stop (GstBaseSink * bsink);
-
 static gboolean gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query);
 static void gst_glimage_sink_set_context (GstElement * element,
     GstContext * context);
@@ -547,7 +545,6 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gstbasesink_class->get_times = gst_glimage_sink_get_times;
   gstbasesink_class->prepare = gst_glimage_sink_prepare;
   gstbasesink_class->propose_allocation = gst_glimage_sink_propose_allocation;
-  gstbasesink_class->stop = gst_glimage_sink_stop;
 
   gstvideosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_glimage_sink_show_frame);
@@ -857,14 +854,6 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
   }
 
   return res;
-}
-
-static gboolean
-gst_glimage_sink_stop (GstBaseSink * bsink)
-{
-  GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (bsink);
-
-  return TRUE;
 }
 
 static void
