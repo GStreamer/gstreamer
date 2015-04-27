@@ -2502,7 +2502,8 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
         if (clock_rate) {
           GstStructure *s = gst_caps_get_structure (caps, 0);
 
-          gst_structure_get_uint (s, "clock-rate", clock_rate);
+          gst_structure_get_int (s, "clock-rate", (gint *) clock_rate);
+
           if (*clock_rate == 0 && running_time)
             *running_time = GST_CLOCK_TIME_NONE;
         }
