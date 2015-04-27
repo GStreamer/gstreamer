@@ -70,3 +70,12 @@
    Memcheck:Value8
    obj:/usr/lib64/libvpx.so*
 }
+
+# PENDING: https://bugzilla.gnome.org/show_bug.cgi?id=747110
+{
+   https://bugzilla.gnome.org/show_bug.cgi?id=747110
+   Memcheck:Addr4
+   ...
+   fun:aac_decode_frame_int
+   fun:aac_decode_frame
+}
