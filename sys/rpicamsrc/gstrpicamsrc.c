@@ -769,6 +769,8 @@ gst_rpi_cam_src_start (GstBaseSrc * parent)
   GST_LOG_OBJECT (src, "In src_start()");
   g_mutex_lock (&src->config_lock);
   src->capture_state = raspi_capture_setup (&src->capture_config);
+  /* Clear all capture flags */
+  src->capture_config.change_flags = 0;
   g_mutex_unlock (&src->config_lock);
   if (src->capture_state == NULL)
     return FALSE;
@@ -925,6 +927,11 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
   GstClockTime base_time;
 
   if (!src->started) {
+    g_mutex_lock (&src->config_lock);
+    raspi_capture_update_config (src->capture_state, &src->capture_config, FALSE);
+    src->capture_config.change_flags = 0;
+    g_mutex_unlock (&src->config_lock);
+    
     if (!raspi_capture_start (src->capture_state))
       return GST_FLOW_ERROR;
     src->started = TRUE;
@@ -938,7 +945,7 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
 
   g_mutex_lock (&src->config_lock);
   if (src->capture_config.change_flags) {
-    raspi_capture_update_config (src->capture_state, &src->capture_config);
+    raspi_capture_update_config (src->capture_state, &src->capture_config, TRUE);
     src->capture_config.change_flags = 0;
   }
   g_mutex_unlock (&src->config_lock);

@@ -1834,7 +1834,7 @@ raspi_capture_free(RASPIVID_STATE *state)
 }
 
 void
-raspi_capture_update_config (RASPIVID_STATE *state, RASPIVID_CONFIG *config)
+raspi_capture_update_config (RASPIVID_STATE *state, RASPIVID_CONFIG *config, gboolean dynamic)
 {
   MMAL_STATUS_T status;
   RASPICAM_CAMERA_PARAMETERS *params = &config->camera_parameters;
@@ -1842,6 +1842,8 @@ raspi_capture_update_config (RASPIVID_STATE *state, RASPIVID_CONFIG *config)
 
   /* Store the new config */
   state->config = *config;
+  if (!dynamic)
+    return;
 
   if (config->change_flags & PROP_CHANGE_ENCODING) {
     /* BITRATE or QUANT or KEY Interval, intra refresh */
