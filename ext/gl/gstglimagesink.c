@@ -864,11 +864,6 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
 {
   GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  if (glimage_sink->pool) {
-    gst_object_unref (glimage_sink->pool);
-    glimage_sink->pool = NULL;
-  }
-
   return TRUE;
 }
 
@@ -942,6 +937,13 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 
       GST_VIDEO_SINK_WIDTH (glimage_sink) = 1;
       GST_VIDEO_SINK_HEIGHT (glimage_sink) = 1;
+
+      /* we're losing the context, this pool is no use anymore */
+      if (glimage_sink->pool) {
+        gst_object_unref (glimage_sink->pool);
+        glimage_sink->pool = NULL;
+      }
+
       if (glimage_sink->context) {
         GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
 
