@@ -152,18 +152,23 @@ gst_core_media_buffer_wrap_block_buffer (GstBuffer * buf,
 {
   OSStatus status;
   gchar *data = NULL;
-  UInt32 size;
+  size_t offset = 0, length_at_offset, total_length;
 
-  status = CMBlockBufferGetDataPointer (block_buf, 0, 0, 0, &data);
-  if (status != noErr) {
-    return FALSE;
-  }
+  /* CMBlockBuffer can contain multiple non-continuous memory blocks */
+  do {
+    status =
+        CMBlockBufferGetDataPointer (block_buf, offset, &length_at_offset,
+        &total_length, &data);
+    if (status != kCMBlockBufferNoErr) {
+      return FALSE;
+    }
 
-  size = CMBlockBufferGetDataLength (block_buf);
+    gst_buffer_append_memory (buf,
+        gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
+            length_at_offset, 0, length_at_offset, NULL, NULL));
 
-  gst_buffer_append_memory (buf,
-      gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
-          size, 0, size, NULL, NULL));
+    offset += length_at_offset;
+  } while (offset < total_length);
 
   return TRUE;
 }
