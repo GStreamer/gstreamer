@@ -163,9 +163,10 @@ gst_core_media_buffer_wrap_block_buffer (GstBuffer * buf,
       return FALSE;
     }
 
+    /* retaining the CMBlockBuffer so it won't go away for the lifetime of the GstMemory */
     gst_buffer_append_memory (buf,
-        gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
-            length_at_offset, 0, length_at_offset, NULL, NULL));
+        gst_memory_new_wrapped (0, data, length_at_offset, 0, length_at_offset,
+            (gpointer) CFRetain (block_buf), (GDestroyNotify) CFRelease));
 
     offset += length_at_offset;
   } while (offset < total_length);
