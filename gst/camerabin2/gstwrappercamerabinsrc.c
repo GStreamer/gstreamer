@@ -655,19 +655,6 @@ done:
   return ret;
 }
 
-static gboolean
-copy_missing_fields (GQuark field_id, const GValue * value, gpointer user_data)
-{
-  GstStructure *st = (GstStructure *) user_data;
-  const GValue *val = gst_structure_id_get_value (st, field_id);
-
-  if (G_UNLIKELY (val == NULL)) {
-    gst_structure_id_set_value (st, field_id, value);
-  }
-
-  return TRUE;
-}
-
 /**
  * adapt_image_capture:
  * @self: camerasrc object
@@ -681,7 +668,7 @@ copy_missing_fields (GQuark field_id, const GValue * value, gpointer user_data)
 static void
 adapt_image_capture (GstWrapperCameraBinSrc * self, GstCaps * in_caps)
 {
-  GstStructure *in_st, *new_st, *req_st;
+  GstStructure *in_st, *req_st;
   gint in_width = 0, in_height = 0, req_width = 0, req_height = 0, crop = 0;
   gdouble ratio_w, ratio_h;
 
@@ -699,15 +686,6 @@ adapt_image_capture (GstWrapperCameraBinSrc * self, GstCaps * in_caps)
 
   GST_INFO_OBJECT (self, "we requested %dx%d, and got %dx%d", req_width,
       req_height, in_width, in_height);
-
-  new_st = gst_structure_copy (req_st);
-  /* If new fields have been added, we need to copy them */
-  gst_structure_foreach (in_st, copy_missing_fields, new_st);
-
-  gst_structure_set (new_st, "width", G_TYPE_INT, in_width, "height",
-      G_TYPE_INT, in_height, NULL);
-
-  GST_LOG_OBJECT (self, "new image capture caps: %" GST_PTR_FORMAT, new_st);
 
   /* Crop if requested aspect ratio differs from incoming frame aspect ratio */
   if (self->src_crop) {
