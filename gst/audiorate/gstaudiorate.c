@@ -82,14 +82,14 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_IN,
-  ARG_OUT,
-  ARG_ADD,
-  ARG_DROP,
-  ARG_SILENT,
-  ARG_TOLERANCE,
-  ARG_SKIP_TO_FIRST
+  PROP_0,
+  PROP_IN,
+  PROP_OUT,
+  PROP_ADD,
+  PROP_DROP,
+  PROP_SILENT,
+  PROP_TOLERANCE,
+  PROP_SKIP_TO_FIRST
 };
 
 static GstStaticPadTemplate gst_audio_rate_src_template =
@@ -140,20 +140,20 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
   object_class->set_property = gst_audio_rate_set_property;
   object_class->get_property = gst_audio_rate_get_property;
 
-  g_object_class_install_property (object_class, ARG_IN,
+  g_object_class_install_property (object_class, PROP_IN,
       g_param_spec_uint64 ("in", "In",
           "Number of input samples", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (object_class, ARG_OUT,
+  g_object_class_install_property (object_class, PROP_OUT,
       g_param_spec_uint64 ("out", "Out", "Number of output samples", 0,
           G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   pspec_add = g_param_spec_uint64 ("add", "Add", "Number of added samples",
       0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
-  g_object_class_install_property (object_class, ARG_ADD, pspec_add);
+  g_object_class_install_property (object_class, PROP_ADD, pspec_add);
   pspec_drop = g_param_spec_uint64 ("drop", "Drop", "Number of dropped samples",
       0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
-  g_object_class_install_property (object_class, ARG_DROP, pspec_drop);
-  g_object_class_install_property (object_class, ARG_SILENT,
+  g_object_class_install_property (object_class, PROP_DROP, pspec_drop);
+  g_object_class_install_property (object_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "silent",
           "Don't emit notify for dropped and duplicated frames", DEFAULT_SILENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -163,7 +163,7 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
    * The difference between incoming timestamp and next timestamp must exceed
    * the given value for audiorate to add or drop samples.
    */
-  g_object_class_install_property (object_class, ARG_TOLERANCE,
+  g_object_class_install_property (object_class, PROP_TOLERANCE,
       g_param_spec_uint64 ("tolerance", "tolerance",
           "Only act if timestamp jitter/imperfection exceeds indicated tolerance (ns)",
           0, G_MAXUINT64, DEFAULT_TOLERANCE,
@@ -174,7 +174,7 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
    *
    * Don't produce buffers before the first one we receive.
    */
-  g_object_class_install_property (object_class, ARG_SKIP_TO_FIRST,
+  g_object_class_install_property (object_class, PROP_SKIP_TO_FIRST,
       g_param_spec_boolean ("skip-to-first", "Skip to first buffer",
           "Don't produce buffers before the first one we receive",
           DEFAULT_SKIP_TO_FIRST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -686,13 +686,13 @@ gst_audio_rate_set_property (GObject * object,
   GstAudioRate *audiorate = GST_AUDIO_RATE (object);
 
   switch (prop_id) {
-    case ARG_SILENT:
+    case PROP_SILENT:
       audiorate->silent = g_value_get_boolean (value);
       break;
-    case ARG_TOLERANCE:
+    case PROP_TOLERANCE:
       audiorate->tolerance = g_value_get_uint64 (value);
       break;
-    case ARG_SKIP_TO_FIRST:
+    case PROP_SKIP_TO_FIRST:
       audiorate->skip_to_first = g_value_get_boolean (value);
       break;
     default:
@@ -708,25 +708,25 @@ gst_audio_rate_get_property (GObject * object,
   GstAudioRate *audiorate = GST_AUDIO_RATE (object);
 
   switch (prop_id) {
-    case ARG_IN:
+    case PROP_IN:
       g_value_set_uint64 (value, audiorate->in);
       break;
-    case ARG_OUT:
+    case PROP_OUT:
       g_value_set_uint64 (value, audiorate->out);
       break;
-    case ARG_ADD:
+    case PROP_ADD:
       g_value_set_uint64 (value, audiorate->add);
       break;
-    case ARG_DROP:
+    case PROP_DROP:
       g_value_set_uint64 (value, audiorate->drop);
       break;
-    case ARG_SILENT:
+    case PROP_SILENT:
       g_value_set_boolean (value, audiorate->silent);
       break;
-    case ARG_TOLERANCE:
+    case PROP_TOLERANCE:
       g_value_set_uint64 (value, audiorate->tolerance);
       break;
-    case ARG_SKIP_TO_FIRST:
+    case PROP_SKIP_TO_FIRST:
       g_value_set_boolean (value, audiorate->skip_to_first);
       break;
     default:

@@ -97,9 +97,9 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_DITHERING,
-  ARG_NOISE_SHAPING,
+  PROP_0,
+  PROP_DITHERING,
+  PROP_NOISE_SHAPING,
 };
 
 #define DEBUG_INIT \
@@ -183,13 +183,13 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
   gobject_class->set_property = gst_audio_convert_set_property;
   gobject_class->get_property = gst_audio_convert_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_DITHERING,
+  g_object_class_install_property (gobject_class, PROP_DITHERING,
       g_param_spec_enum ("dithering", "Dithering",
           "Selects between different dithering methods.",
           GST_TYPE_AUDIO_CONVERT_DITHERING, DITHER_TPDF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_NOISE_SHAPING,
+  g_object_class_install_property (gobject_class, PROP_NOISE_SHAPING,
       g_param_spec_enum ("noise-shaping", "Noise shaping",
           "Selects between different noise shaping methods.",
           GST_TYPE_AUDIO_CONVERT_NOISE_SHAPING, NOISE_SHAPING_NONE,
@@ -867,10 +867,10 @@ gst_audio_convert_set_property (GObject * object, guint prop_id,
   GstAudioConvert *this = GST_AUDIO_CONVERT (object);
 
   switch (prop_id) {
-    case ARG_DITHERING:
+    case PROP_DITHERING:
       this->dither = g_value_get_enum (value);
       break;
-    case ARG_NOISE_SHAPING:
+    case PROP_NOISE_SHAPING:
       this->ns = g_value_get_enum (value);
       break;
     default:
@@ -886,10 +886,10 @@ gst_audio_convert_get_property (GObject * object, guint prop_id,
   GstAudioConvert *this = GST_AUDIO_CONVERT (object);
 
   switch (prop_id) {
-    case ARG_DITHERING:
+    case PROP_DITHERING:
       g_value_set_enum (value, this->dither);
       break;
-    case ARG_NOISE_SHAPING:
+    case PROP_NOISE_SHAPING:
       g_value_set_enum (value, this->ns);
       break;
     default:
