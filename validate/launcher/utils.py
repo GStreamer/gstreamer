@@ -18,6 +18,7 @@
 # Boston, MA 02110-1301, USA.
 """ Some utilies. """
 
+import config
 import os
 import re
 import sys
@@ -180,6 +181,29 @@ def TIME_ARGS(time):
                                   (time / (GST_SECOND * 60)) % 60,
                                   (time / GST_SECOND) % 60,
                                   time % GST_SECOND)
+
+
+def look_for_file_in_source_dir(subdir, name):
+    root_dir = os.path.abspath(os.path.dirname(os.path.join(os.path.dirname(os.path.abspath(__file__)))))
+    p = os.path.join(root_dir, subdir, name)
+    if os.path.exists(p):
+        return p
+
+    return None
+
+
+def get_valgrind_suppression_file(subdir, name):
+    # Are we running from sources?
+    p = look_for_file_in_source_dir(subdir, name)
+    if p:
+        return p
+
+    # Look in system data dirs
+    p = os.path.join(config.DATADIR, 'gstreamer-1.0', 'validate', name)
+    if os.path.exists(p):
+        return p
+
+    return None
 
 #
 # Some utilities to parse gst-validate output   #

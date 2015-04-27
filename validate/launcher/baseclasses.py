@@ -25,7 +25,6 @@ import re
 import time
 import utils
 import signal
-import config
 import urlparse
 import subprocess
 import threading
@@ -37,7 +36,7 @@ from loggable import Loggable
 import xml.etree.cElementTree as ET
 
 from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
-    Protocols
+    Protocols, look_for_file_in_source_dir, get_valgrind_suppression_file
 
 # The factor by which we increase the hard timeout when running inside
 # Valgrind
@@ -401,7 +400,7 @@ class GstValidateTest(Test):
         # application which is using rpath instead of libtool's wrappers. It's
         # slightly faster to start and will not confuse valgrind.
         debug = '%s-debug' % application_name
-        p = self.look_for_file_in_source_dir('tools', debug)
+        p = look_for_file_in_source_dir('tools', debug)
         if p:
             application_name = p
 
@@ -626,21 +625,9 @@ class GstValidateTest(Test):
 
         return position
 
-    def look_for_file_in_source_dir(self, subdir, name):
-        root_dir = os.path.abspath(os.path.dirname(os.path.join(os.path.dirname(os.path.abspath(__file__)))))
-        p = os.path.join(root_dir, subdir, name)
-        if os.path.exists(p):
-            return p
-
     def get_valgrind_suppression_file(self, subdir, name):
-        # Are we running from sources?
-        p = self.look_for_file_in_source_dir(subdir, name)
+        p = get_valgrind_suppression_file(subdir, name)
         if p:
-            return p
-
-        # Look in system data dirs
-        p = os.path.join(config.DATADIR, 'gstreamer-1.0', 'validate', name)
-        if os.path.exists(p):
             return p
 
         self.error("Could not find any %s file" % name)
