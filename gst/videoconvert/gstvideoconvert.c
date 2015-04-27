@@ -339,6 +339,12 @@ gst_video_convert_fixate_caps (GstBaseTransform * trans,
   /* fixate remaining fields */
   result = gst_caps_fixate (result);
 
+  if (direction == GST_PAD_SINK) {
+    if (gst_caps_is_subset (caps, result)) {
+      gst_caps_replace (&result, caps);
+    }
+  }
+
   return result;
 }
 
