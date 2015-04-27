@@ -607,7 +607,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   GstStructure *config;
   GstVideoInfo vi;
   guint size, min, max;
-  gboolean need_pool, update_pool;
+  gboolean need_pool, update_pool = FALSE;
   gboolean has_video_meta = FALSE;
   gboolean has_video_alignment = FALSE;
 #if (USE_GLX || USE_EGL)
@@ -670,9 +670,9 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    update_pool = (pool != NULL);
     if (pool) {
       size = MAX (size, vi.size);
-      update_pool = TRUE;
 
       /* Check whether downstream element proposed a bufferpool but did
          not provide a correct propose_allocation() implementation */
@@ -683,7 +683,6 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     pool = NULL;
     size = vi.size;
     min = max = 0;
-    update_pool = FALSE;
   }
 
   /* GstVaapiVideoMeta is mandatory, and this implies VA surface memory */
