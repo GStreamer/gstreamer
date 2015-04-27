@@ -170,9 +170,7 @@ on_videoRButton_toggled (GtkToggleButton * button, gpointer user_data)
 void
 on_viewfinderArea_realize (GtkWidget * widget, gpointer data)
 {
-#if GTK_CHECK_VERSION (2, 18, 0)
   gdk_window_ensure_native (gtk_widget_get_window (widget));
-#endif
 }
 
 void
@@ -219,11 +217,7 @@ bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
   /* FIXME: make sure to get XID in main thread */
   ui_drawing = GTK_WIDGET (gtk_builder_get_object (builder, "viewfinderArea"));
   gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (message->src),
-#if GTK_CHECK_VERSION (2, 91, 6)
       GDK_WINDOW_XID (gtk_widget_get_window (ui_drawing)));
-#else
-      GDK_WINDOW_XWINDOW (gtk_widget_get_window (ui_drawing)));
-#endif
 
   gst_message_unref (message);
   return GST_BUS_DROP;
@@ -276,7 +270,6 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 static gboolean
 init_gtkwidgets_data (void)
 {
-#if GTK_CHECK_VERSION(2,24,0)
   gint i;
   GtkComboBoxText *combobox =
       GTK_COMBO_BOX_TEXT (gtk_builder_get_object (builder, "formatComboBox"));
@@ -291,10 +284,6 @@ init_gtkwidgets_data (void)
   /* default to the first one -> ogg */
   gtk_combo_box_set_active (GTK_COMBO_BOX (combobox), 0);
   return TRUE;
-#else
-  g_warning ("This needs a newer version of GTK (2.24 at least)");
-  return FALSE;
-#endif
 }
 
 int
