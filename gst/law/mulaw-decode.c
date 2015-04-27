@@ -47,7 +47,7 @@ enum
 
 enum
 {
-  ARG_0
+  PROP_0
 };
 
 #define gst_mulawdec_parent_class parent_class

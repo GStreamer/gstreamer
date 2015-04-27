@@ -31,7 +31,7 @@
 
 enum
 {
-  ARG_0,
+  PROP_0,
 };
 
 GstStaticPadTemplate cpu_report_src_template = GST_STATIC_PAD_TEMPLATE ("src",

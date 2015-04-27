@@ -70,8 +70,8 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_RESOLVER
+  PROP_0,
+  PROP_RESOLVER
       /* FILL ME */
 };
 
@@ -178,7 +178,7 @@ gst_index_class_init (GstIndexClass * klass)
   gobject_class->get_property = gst_index_get_property;
   gobject_class->finalize = gst_index_finalize;
 
-  g_object_class_install_property (gobject_class, ARG_RESOLVER,
+  g_object_class_install_property (gobject_class, PROP_RESOLVER,
       g_param_spec_enum ("resolver", "Resolver",
           "Select a predefined object to string mapper",
           GST_TYPE_INDEX_RESOLVER, GST_INDEX_RESOLVER_PATH,
@@ -250,7 +250,7 @@ gst_index_set_property (GObject * object, guint prop_id,
   index = GST_INDEX (object);
 
   switch (prop_id) {
-    case ARG_RESOLVER:
+    case PROP_RESOLVER:
       index->method = (GstIndexResolverMethod) g_value_get_enum (value);
       index->resolver = resolvers[index->method].resolver;
       index->resolver_user_data = resolvers[index->method].user_data;
@@ -270,7 +270,7 @@ gst_index_get_property (GObject * object, guint prop_id,
   index = GST_INDEX (object);
 
   switch (prop_id) {
-    case ARG_RESOLVER:
+    case PROP_RESOLVER:
       g_value_set_enum (value, index->method);
       break;
     default:

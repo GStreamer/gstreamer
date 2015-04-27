@@ -44,7 +44,7 @@ enum
 
 enum
 {
-  ARG_0
+  PROP_0
 };
 
 static GstStaticPadTemplate gst_rtp_celt_depay_sink_template =

@@ -64,11 +64,11 @@ GST_DEBUG_CATEGORY_STATIC (matroskamux_debug);
 
 enum
 {
-  ARG_0,
-  ARG_WRITING_APP,
-  ARG_DOCTYPE_VERSION,
-  ARG_MIN_INDEX_INTERVAL,
-  ARG_STREAMABLE
+  PROP_0,
+  PROP_WRITING_APP,
+  PROP_DOCTYPE_VERSION,
+  PROP_MIN_INDEX_INTERVAL,
+  PROP_STREAMABLE
 };
 
 #define  DEFAULT_DOCTYPE_VERSION         2
@@ -311,21 +311,21 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
   gobject_class->get_property = gst_matroska_mux_get_property;
   gobject_class->set_property = gst_matroska_mux_set_property;
 
-  g_object_class_install_property (gobject_class, ARG_WRITING_APP,
+  g_object_class_install_property (gobject_class, PROP_WRITING_APP,
       g_param_spec_string ("writing-app", "Writing application.",
           "The name the application that creates the matroska file.",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_DOCTYPE_VERSION,
+  g_object_class_install_property (gobject_class, PROP_DOCTYPE_VERSION,
       g_param_spec_int ("version", "DocType version",
           "This parameter determines what Matroska features can be used.",
           1, 2, DEFAULT_DOCTYPE_VERSION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_MIN_INDEX_INTERVAL,
+  g_object_class_install_property (gobject_class, PROP_MIN_INDEX_INTERVAL,
       g_param_spec_int64 ("min-index-interval", "Minimum time between index "
           "entries", "An index entry is created every so many nanoseconds.",
           0, G_MAXINT64, DEFAULT_MIN_INDEX_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_STREAMABLE,
+  g_object_class_install_property (gobject_class, PROP_STREAMABLE,
       g_param_spec_boolean ("streamable", "Determines whether output should "
           "be streamable", "If set to true, the output should be as if it is "
           "to be streamed and hence no indexes written or duration written.",
@@ -3724,7 +3724,7 @@ gst_matroska_mux_set_property (GObject * object,
   mux = GST_MATROSKA_MUX (object);
 
   switch (prop_id) {
-    case ARG_WRITING_APP:
+    case PROP_WRITING_APP:
       if (!g_value_get_string (value)) {
         GST_WARNING_OBJECT (mux, "writing-app property can not be NULL");
         break;
@@ -3732,13 +3732,13 @@ gst_matroska_mux_set_property (GObject * object,
       g_free (mux->writing_app);
       mux->writing_app = g_value_dup_string (value);
       break;
-    case ARG_DOCTYPE_VERSION:
+    case PROP_DOCTYPE_VERSION:
       mux->doctype_version = g_value_get_int (value);
       break;
-    case ARG_MIN_INDEX_INTERVAL:
+    case PROP_MIN_INDEX_INTERVAL:
       mux->min_index_interval = g_value_get_int64 (value);
       break;
-    case ARG_STREAMABLE:
+    case PROP_STREAMABLE:
       mux->streamable = g_value_get_boolean (value);
       break;
     default:
@@ -3757,16 +3757,16 @@ gst_matroska_mux_get_property (GObject * object,
   mux = GST_MATROSKA_MUX (object);
 
   switch (prop_id) {
-    case ARG_WRITING_APP:
+    case PROP_WRITING_APP:
       g_value_set_string (value, mux->writing_app);
       break;
-    case ARG_DOCTYPE_VERSION:
+    case PROP_DOCTYPE_VERSION:
       g_value_set_int (value, mux->doctype_version);
       break;
-    case ARG_MIN_INDEX_INTERVAL:
+    case PROP_MIN_INDEX_INTERVAL:
       g_value_set_int64 (value, mux->min_index_interval);
       break;
-    case ARG_STREAMABLE:
+    case PROP_STREAMABLE:
       g_value_set_boolean (value, mux->streamable);
       break;
     default:

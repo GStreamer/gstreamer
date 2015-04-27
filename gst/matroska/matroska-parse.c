@@ -79,9 +79,9 @@ GST_DEBUG_CATEGORY_STATIC (matroskaparse_debug);
 
 enum
 {
-  ARG_0,
-  ARG_METADATA,
-  ARG_STREAMINFO
+  PROP_0,
+  PROP_METADATA,
+  PROP_STREAMINFO
 };
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",

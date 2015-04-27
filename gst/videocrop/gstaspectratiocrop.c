@@ -50,8 +50,8 @@ GST_DEBUG_CATEGORY_STATIC (aspect_ratio_crop_debug);
 
 enum
 {
-  ARG_0,
-  ARG_ASPECT_RATIO_CROP,
+  PROP_0,
+  PROP_ASPECT_RATIO_CROP,
 };
 
 /* we support the same caps as videocrop (sync changes) */
@@ -183,7 +183,7 @@ gst_aspect_ratio_crop_class_init (GstAspectRatioCropClass * klass)
   gobject_class->get_property = gst_aspect_ratio_crop_get_property;
   gobject_class->finalize = gst_aspect_ratio_crop_finalize;
 
-  g_object_class_install_property (gobject_class, ARG_ASPECT_RATIO_CROP,
+  g_object_class_install_property (gobject_class, PROP_ASPECT_RATIO_CROP,
       gst_param_spec_fraction ("aspect-ratio", "aspect-ratio",
           "Target aspect-ratio of video", 0, 1, G_MAXINT, 1, 0, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -448,7 +448,7 @@ gst_aspect_ratio_crop_set_property (GObject * object, guint prop_id,
 
   GST_OBJECT_LOCK (aspect_ratio_crop);
   switch (prop_id) {
-    case ARG_ASPECT_RATIO_CROP:
+    case PROP_ASPECT_RATIO_CROP:
       if (GST_VALUE_HOLDS_FRACTION (value)) {
         aspect_ratio_crop->ar_num = gst_value_get_fraction_numerator (value);
         aspect_ratio_crop->ar_denom =
@@ -479,7 +479,7 @@ gst_aspect_ratio_crop_get_property (GObject * object, guint prop_id,
 
   GST_OBJECT_LOCK (aspect_ratio_crop);
   switch (prop_id) {
-    case ARG_ASPECT_RATIO_CROP:
+    case PROP_ASPECT_RATIO_CROP:
       gst_value_set_fraction (value, aspect_ratio_crop->ar_num,
           aspect_ratio_crop->ar_denom);
       break;

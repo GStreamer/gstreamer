@@ -58,8 +58,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 enum
 {
-  ARG_0,
-  ARG_CONFIG_INTERVAL
+  PROP_0,
+  PROP_CONFIG_INTERVAL
 };
 
 
@@ -103,7 +103,7 @@ G_DEFINE_TYPE (GstRtpMP4VPay, gst_rtp_mp4v_pay, GST_TYPE_RTP_BASE_PAYLOAD)
       "Payload MPEG-4 video as RTP packets (RFC 3016)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CONFIG_INTERVAL,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CONFIG_INTERVAL,
       g_param_spec_uint ("config-interval", "Config Send Interval",
           "Send Config Insertion Interval in seconds (configuration headers "
           "will be multiplexed in the data stream when detected.) (0 = disabled)",
@@ -584,7 +584,7 @@ gst_rtp_mp4v_pay_set_property (GObject * object, guint prop_id,
   rtpmp4vpay = GST_RTP_MP4V_PAY (object);
 
   switch (prop_id) {
-    case ARG_CONFIG_INTERVAL:
+    case PROP_CONFIG_INTERVAL:
       rtpmp4vpay->config_interval = g_value_get_uint (value);
       break;
     default:
@@ -601,7 +601,7 @@ gst_rtp_mp4v_pay_get_property (GObject * object, guint prop_id,
   rtpmp4vpay = GST_RTP_MP4V_PAY (object);
 
   switch (prop_id) {
-    case ARG_CONFIG_INTERVAL:
+    case PROP_CONFIG_INTERVAL:
       g_value_set_uint (value, rtpmp4vpay->config_interval);
       break;
     default:

@@ -70,11 +70,11 @@ GST_DEBUG_CATEGORY_STATIC (videocrop_debug);
 
 enum
 {
-  ARG_0,
-  ARG_LEFT,
-  ARG_RIGHT,
-  ARG_TOP,
-  ARG_BOTTOM
+  PROP_0,
+  PROP_LEFT,
+  PROP_RIGHT,
+  PROP_TOP,
+  PROP_BOTTOM
 };
 
 /* we support the same caps as aspectratiocrop (sync changes) */
@@ -177,19 +177,19 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
   gobject_class->set_property = gst_video_crop_set_property;
   gobject_class->get_property = gst_video_crop_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_LEFT,
+  g_object_class_install_property (gobject_class, PROP_LEFT,
       g_param_spec_int ("left", "Left",
           "Pixels to crop at left (-1 to auto-crop)", -1, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_RIGHT,
+  g_object_class_install_property (gobject_class, PROP_RIGHT,
       g_param_spec_int ("right", "Right",
           "Pixels to crop at right (-1 to auto-crop)", -1, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_TOP,
+  g_object_class_install_property (gobject_class, PROP_TOP,
       g_param_spec_int ("top", "Top",
           "Pixels to crop at top (-1 to auto-crop)", -1, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_BOTTOM,
+  g_object_class_install_property (gobject_class, PROP_BOTTOM,
       g_param_spec_int ("bottom", "Bottom",
           "Pixels to crop at bottom (-1 to auto-crop)", -1, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -739,19 +739,19 @@ gst_video_crop_set_property (GObject * object, guint prop_id,
 
   GST_OBJECT_LOCK (video_crop);
   switch (prop_id) {
-    case ARG_LEFT:
+    case PROP_LEFT:
       gst_video_crop_set_crop (video_crop, g_value_get_int (value),
           &video_crop->prop_left);
       break;
-    case ARG_RIGHT:
+    case PROP_RIGHT:
       gst_video_crop_set_crop (video_crop, g_value_get_int (value),
           &video_crop->prop_right);
       break;
-    case ARG_TOP:
+    case PROP_TOP:
       gst_video_crop_set_crop (video_crop, g_value_get_int (value),
           &video_crop->prop_top);
       break;
-    case ARG_BOTTOM:
+    case PROP_BOTTOM:
       gst_video_crop_set_crop (video_crop, g_value_get_int (value),
           &video_crop->prop_bottom);
       break;
@@ -778,16 +778,16 @@ gst_video_crop_get_property (GObject * object, guint prop_id, GValue * value,
 
   GST_OBJECT_LOCK (video_crop);
   switch (prop_id) {
-    case ARG_LEFT:
+    case PROP_LEFT:
       g_value_set_int (value, video_crop->prop_left);
       break;
-    case ARG_RIGHT:
+    case PROP_RIGHT:
       g_value_set_int (value, video_crop->prop_right);
       break;
-    case ARG_TOP:
+    case PROP_TOP:
       g_value_set_int (value, video_crop->prop_top);
       break;
-    case ARG_BOTTOM:
+    case PROP_BOTTOM:
       g_value_set_int (value, video_crop->prop_bottom);
       break;
     default:

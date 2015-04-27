@@ -61,7 +61,7 @@ enum
 
 enum
 {
-  ARG_0
+  PROP_0
 };
 
 /* input is an RTP packet
@@ -74,8 +74,7 @@ static GstStaticPadTemplate gst_rtp_amr_depay_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
-        "clock-rate = (int) 8000, "
-        "encoding-name = (string) \"AMR\", "
+        "clock-rate = (int) 8000, " "encoding-name = (string) \"AMR\", "
         /* This is the default, so the peer doesn't have to specify it
          * "encoding-params = (string) \"1\", " */
         /* NOTE that all values must be strings in orde to be able to do SDP <->
@@ -94,8 +93,7 @@ static GstStaticPadTemplate gst_rtp_amr_depay_sink_template =
          */
         "application/x-rtp, "
         "media = (string) \"audio\", "
-        "clock-rate = (int) 16000, "
-        "encoding-name = (string) \"AMR-WB\", "
+        "clock-rate = (int) 16000, " "encoding-name = (string) \"AMR-WB\", "
         /* This is the default, so the peer doesn't have to specify it
          * "encoding-params = (string) \"1\", " */
         /* NOTE that all values must be strings in orde to be able to do SDP <->

@@ -72,13 +72,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_multi_file_src_debug);
 
 enum
 {
-  ARG_0,
-  ARG_LOCATION,
-  ARG_INDEX,
-  ARG_START_INDEX,
-  ARG_STOP_INDEX,
-  ARG_CAPS,
-  ARG_LOOP
+  PROP_0,
+  PROP_LOCATION,
+  PROP_INDEX,
+  PROP_START_INDEX,
+  PROP_STOP_INDEX,
+  PROP_CAPS,
+  PROP_LOOP
 };
 
 #define DEFAULT_LOCATION "%05d"
@@ -143,35 +143,35 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
   gobject_class->set_property = gst_multi_file_src_set_property;
   gobject_class->get_property = gst_multi_file_src_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_LOCATION,
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "File Location",
           "Pattern to create file names of input files.  File names are "
           "created by calling sprintf() with the pattern and the current "
           "index.", DEFAULT_LOCATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_INDEX,
+  g_object_class_install_property (gobject_class, PROP_INDEX,
       g_param_spec_int ("index", "File Index",
           "Index to use with location property to create file names.  The "
           "index is incremented by one for each buffer read.",
           0, INT_MAX, DEFAULT_INDEX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_START_INDEX,
+  g_object_class_install_property (gobject_class, PROP_START_INDEX,
       g_param_spec_int ("start-index", "Start Index",
           "Start value of index.  The initial value of index can be set "
           "either by setting index or start-index.  When the end of the loop "
           "is reached, the index will be set to the value start-index.",
           0, INT_MAX, DEFAULT_INDEX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_STOP_INDEX,
+  g_object_class_install_property (gobject_class, PROP_STOP_INDEX,
       g_param_spec_int ("stop-index", "Stop Index",
           "Stop value of index.  The special value -1 means no stop.",
           -1, INT_MAX, DEFAULT_INDEX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_CAPS,
+  g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps",
           "Caps describing the format of the data.",
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_LOOP,
+  g_object_class_install_property (gobject_class, PROP_LOOP,
       g_param_spec_boolean ("loop", "Loop",
           "Whether to repeat from the beginning when all files have been read.",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -295,19 +295,19 @@ gst_multi_file_src_set_property (GObject * object, guint prop_id,
   GstMultiFileSrc *src = GST_MULTI_FILE_SRC (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:
+    case PROP_LOCATION:
       gst_multi_file_src_set_location (src, g_value_get_string (value));
       break;
-    case ARG_INDEX:
+    case PROP_INDEX:
       src->index = g_value_get_int (value);
       break;
-    case ARG_START_INDEX:
+    case PROP_START_INDEX:
       src->start_index = g_value_get_int (value);
       break;
-    case ARG_STOP_INDEX:
+    case PROP_STOP_INDEX:
       src->stop_index = g_value_get_int (value);
       break;
-    case ARG_CAPS:
+    case PROP_CAPS:
     {
       GstStructure *st = NULL;
       const GstCaps *caps = gst_value_get_caps (value);
@@ -333,7 +333,7 @@ gst_multi_file_src_set_property (GObject * object, guint prop_id,
       }
     }
       break;
-    case ARG_LOOP:
+    case PROP_LOOP:
       src->loop = g_value_get_boolean (value);
       break;
     default:
@@ -349,22 +349,22 @@ gst_multi_file_src_get_property (GObject * object, guint prop_id,
   GstMultiFileSrc *src = GST_MULTI_FILE_SRC (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:
+    case PROP_LOCATION:
       g_value_set_string (value, src->filename);
       break;
-    case ARG_INDEX:
+    case PROP_INDEX:
       g_value_set_int (value, src->index);
       break;
-    case ARG_START_INDEX:
+    case PROP_START_INDEX:
       g_value_set_int (value, src->start_index);
       break;
-    case ARG_STOP_INDEX:
+    case PROP_STOP_INDEX:
       g_value_set_int (value, src->stop_index);
       break;
-    case ARG_CAPS:
+    case PROP_CAPS:
       gst_value_set_caps (value, src->caps);
       break;
-    case ARG_LOOP:
+    case PROP_LOOP:
       g_value_set_boolean (value, src->loop);
       break;
     default:

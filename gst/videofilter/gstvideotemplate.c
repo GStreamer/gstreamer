@@ -68,7 +68,7 @@ enum
 
 enum
 {
-  ARG_0
+  PROP_0
       /* FILL ME */
 };
 
@@ -145,7 +145,7 @@ gst_videotemplate_class_init (gpointer g_class, gpointer class_data)
   videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
 #if 0
-  g_object_class_install_property (gobject_class, ARG_METHOD,
+  g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method", "method", "method",
           GST_TYPE_VIDEOTEMPLATE_METHOD, GST_VIDEOTEMPLATE_METHOD_1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -182,7 +182,7 @@ gst_videotemplate_set_property (GObject * object, guint prop_id,
   GST_DEBUG ("gst_videotemplate_set_property");
   switch (prop_id) {
 #if 0
-    case ARG_METHOD:
+    case PROP_METHOD:
       src->method = g_value_get_enum (value);
       break;
 #endif
@@ -202,7 +202,7 @@ gst_videotemplate_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
 #if 0
-    case ARG_METHOD:
+    case PROP_METHOD:
       g_value_set_enum (value, src->method);
       break;
 #endif

@@ -56,7 +56,7 @@ enum
 
 enum
 {
-  ARG_0
+  PROP_0
 };
 
 static GstStaticPadTemplate y4mencode_src_factory =

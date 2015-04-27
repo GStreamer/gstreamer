@@ -43,7 +43,7 @@ enum
 
 enum
 {
-  ARG_0
+  PROP_0
 };
 
 /* input is an RTP packet

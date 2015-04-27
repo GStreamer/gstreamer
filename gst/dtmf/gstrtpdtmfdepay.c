@@ -158,8 +158,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_dtmf_depay_debug);
 
 enum
 {
-
-
   /* FILL ME */
   LAST_SIGNAL
 };
@@ -169,11 +167,6 @@ enum
   PROP_0,
   PROP_UNIT_TIME,
   PROP_MAX_DURATION
-};
-
-enum
-{
-  ARG_0
 };
 
 static GstStaticPadTemplate gst_rtp_dtmf_depay_src_template =

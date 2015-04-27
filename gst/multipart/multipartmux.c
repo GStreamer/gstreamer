@@ -47,8 +47,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_multipart_mux_debug);
 
 enum
 {
-  ARG_0,
-  ARG_BOUNDARY
+  PROP_0,
+  PROP_BOUNDARY
       /* FILL ME */
 };
 
@@ -114,7 +114,7 @@ gst_multipart_mux_class_init (GstMultipartMuxClass * klass)
   gobject_class->get_property = gst_multipart_mux_get_property;
   gobject_class->set_property = gst_multipart_mux_set_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BOUNDARY,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BOUNDARY,
       g_param_spec_string ("boundary", "Boundary", "Boundary string",
           DEFAULT_BOUNDARY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -153,8 +153,8 @@ gst_multipart_mux_init (GstMultipartMux * multipart_mux)
 
   multipart_mux->collect = gst_collect_pads_new ();
   gst_collect_pads_set_event_function (multipart_mux->collect,
-      (GstCollectPadsEventFunction) GST_DEBUG_FUNCPTR (gst_multipart_mux_sink_event),
-      multipart_mux);
+      (GstCollectPadsEventFunction)
+      GST_DEBUG_FUNCPTR (gst_multipart_mux_sink_event), multipart_mux);
   gst_collect_pads_set_function (multipart_mux->collect,
       (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_multipart_mux_collected),
       multipart_mux);
@@ -600,7 +600,7 @@ gst_multipart_mux_get_property (GObject * object,
   mux = GST_MULTIPART_MUX (object);
 
   switch (prop_id) {
-    case ARG_BOUNDARY:
+    case PROP_BOUNDARY:
       g_value_set_string (value, mux->boundary);
       break;
     default:
@@ -618,7 +618,7 @@ gst_multipart_mux_set_property (GObject * object,
   mux = GST_MULTIPART_MUX (object);
 
   switch (prop_id) {
-    case ARG_BOUNDARY:
+    case PROP_BOUNDARY:
       g_free (mux->boundary);
       mux->boundary = g_strdup (g_value_get_string (value));
       break;

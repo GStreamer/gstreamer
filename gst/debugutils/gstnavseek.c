@@ -33,8 +33,8 @@
 
 enum
 {
-  ARG_0,
-  ARG_SEEKOFFSET
+  PROP_0,
+  PROP_SEEKOFFSET
 };
 
 GstStaticPadTemplate navseek_src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -80,7 +80,7 @@ gst_navseek_class_init (GstNavSeekClass * klass)
   gobject_class->get_property = gst_navseek_get_property;
 
   g_object_class_install_property (gobject_class,
-      ARG_SEEKOFFSET, g_param_spec_double ("seek-offset", "Seek Offset",
+      PROP_SEEKOFFSET, g_param_spec_double ("seek-offset", "Seek Offset",
           "Time in seconds to seek by", 0.0, G_MAXDOUBLE, 5.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -302,7 +302,7 @@ gst_navseek_set_property (GObject * object, guint prop_id,
   GstNavSeek *navseek = GST_NAVSEEK (object);
 
   switch (prop_id) {
-    case ARG_SEEKOFFSET:
+    case PROP_SEEKOFFSET:
       GST_OBJECT_LOCK (navseek);
       navseek->seek_offset = g_value_get_double (value);
       GST_OBJECT_UNLOCK (navseek);
@@ -320,7 +320,7 @@ gst_navseek_get_property (GObject * object, guint prop_id,
   GstNavSeek *navseek = GST_NAVSEEK (object);
 
   switch (prop_id) {
-    case ARG_SEEKOFFSET:
+    case PROP_SEEKOFFSET:
       GST_OBJECT_LOCK (navseek);
       g_value_set_double (value, navseek->seek_offset);
       GST_OBJECT_UNLOCK (navseek);

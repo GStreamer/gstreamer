@@ -49,11 +49,11 @@ GType gst_break_my_data_get_type (void);
 
 enum
 {
-  ARG_0,
-  ARG_SEED,
-  ARG_SET_TO,
-  ARG_SKIP,
-  ARG_PROBABILITY
+  PROP_0,
+  PROP_SEED,
+  PROP_SET_TO,
+  PROP_SKIP,
+  PROP_PROBABILITY
 };
 
 typedef struct _GstBreakMyData GstBreakMyData;
@@ -118,22 +118,22 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
   gobject_class->set_property = gst_break_my_data_set_property;
   gobject_class->get_property = gst_break_my_data_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_SEED,
+  g_object_class_install_property (gobject_class, PROP_SEED,
       g_param_spec_uint ("seed", "seed",
           "seed for randomness (initialized when going from READY to PAUSED)",
           0, G_MAXUINT32, 0,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_SET_TO,
+  g_object_class_install_property (gobject_class, PROP_SET_TO,
       g_param_spec_int ("set-to", "set-to",
           "set changed bytes to this value (-1 means random value",
           -1, G_MAXUINT8, -1,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_SKIP,
+  g_object_class_install_property (gobject_class, PROP_SKIP,
       g_param_spec_uint ("skip", "skip",
           "amount of bytes skipped at the beginning of stream",
           0, G_MAXUINT, 0,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_PROBABILITY,
+  g_object_class_install_property (gobject_class, PROP_PROBABILITY,
       g_param_spec_double ("probability", "probability",
           "probability for each byte in the buffer to be changed", 0.0, 1.0,
           0.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
@@ -168,16 +168,16 @@ gst_break_my_data_set_property (GObject * object, guint prop_id,
   GST_OBJECT_LOCK (bmd);
 
   switch (prop_id) {
-    case ARG_SEED:
+    case PROP_SEED:
       bmd->seed = g_value_get_uint (value);
       break;
-    case ARG_SET_TO:
+    case PROP_SET_TO:
       bmd->set = g_value_get_int (value);
       break;
-    case ARG_SKIP:
+    case PROP_SKIP:
       bmd->skip = g_value_get_uint (value);
       break;
-    case ARG_PROBABILITY:
+    case PROP_PROBABILITY:
       bmd->probability = g_value_get_double (value);
       break;
     default:
@@ -197,16 +197,16 @@ gst_break_my_data_get_property (GObject * object, guint prop_id, GValue * value,
   GST_OBJECT_LOCK (bmd);
 
   switch (prop_id) {
-    case ARG_SEED:
+    case PROP_SEED:
       g_value_set_uint (value, bmd->seed);
       break;
-    case ARG_SET_TO:
+    case PROP_SET_TO:
       g_value_set_int (value, bmd->set);
       break;
-    case ARG_SKIP:
+    case PROP_SKIP:
       g_value_set_uint (value, bmd->skip);
       break;
-    case ARG_PROBABILITY:
+    case PROP_PROBABILITY:
       g_value_set_double (value, bmd->probability);
       break;
     default:

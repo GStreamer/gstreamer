@@ -80,10 +80,10 @@ GST_DEBUG_CATEGORY_STATIC (matroskademux_debug);
 
 enum
 {
-  ARG_0,
-  ARG_METADATA,
-  ARG_STREAMINFO,
-  ARG_MAX_GAP_TIME
+  PROP_0,
+  PROP_METADATA,
+  PROP_STREAMINFO,
+  PROP_MAX_GAP_TIME
 };
 
 #define  DEFAULT_MAX_GAP_TIME      (2 * GST_SECOND)
@@ -208,7 +208,7 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
   gobject_class->get_property = gst_matroska_demux_get_property;
   gobject_class->set_property = gst_matroska_demux_set_property;
 
-  g_object_class_install_property (gobject_class, ARG_MAX_GAP_TIME,
+  g_object_class_install_property (gobject_class, PROP_MAX_GAP_TIME,
       g_param_spec_uint64 ("max-gap-time", "Maximum gap time",
           "The demuxer sends out segment events for skipping "
           "gaps longer than this (0 = disabled).", 0, G_MAXUINT64,
@@ -5719,7 +5719,7 @@ gst_matroska_demux_set_property (GObject * object,
   demux = GST_MATROSKA_DEMUX (object);
 
   switch (prop_id) {
-    case ARG_MAX_GAP_TIME:
+    case PROP_MAX_GAP_TIME:
       GST_OBJECT_LOCK (demux);
       demux->max_gap_time = g_value_get_uint64 (value);
       GST_OBJECT_UNLOCK (demux);
@@ -5740,7 +5740,7 @@ gst_matroska_demux_get_property (GObject * object,
   demux = GST_MATROSKA_DEMUX (object);
 
   switch (prop_id) {
-    case ARG_MAX_GAP_TIME:
+    case PROP_MAX_GAP_TIME:
       GST_OBJECT_LOCK (demux);
       g_value_set_uint64 (value, demux->max_gap_time);
       GST_OBJECT_UNLOCK (demux);

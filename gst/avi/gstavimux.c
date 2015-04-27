@@ -76,8 +76,8 @@ GST_DEBUG_CATEGORY_STATIC (avimux_debug);
 
 enum
 {
-  ARG_0,
-  ARG_BIGFILE
+  PROP_0,
+  PROP_BIGFILE
 };
 
 #define DEFAULT_BIGFILE TRUE
@@ -242,7 +242,7 @@ gst_avi_mux_class_init (GstAviMuxClass * klass)
   gobject_class->set_property = gst_avi_mux_set_property;
   gobject_class->finalize = gst_avi_mux_finalize;
 
-  g_object_class_install_property (gobject_class, ARG_BIGFILE,
+  g_object_class_install_property (gobject_class, PROP_BIGFILE,
       g_param_spec_boolean ("bigfile", "Bigfile Support (>2GB)",
           "Support for openDML-2.0 (big) AVI files", DEFAULT_BIGFILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -2217,7 +2217,7 @@ gst_avi_mux_get_property (GObject * object,
   avimux = GST_AVI_MUX (object);
 
   switch (prop_id) {
-    case ARG_BIGFILE:
+    case PROP_BIGFILE:
       g_value_set_boolean (value, avimux->enable_large_avi);
       break;
     default:
@@ -2235,7 +2235,7 @@ gst_avi_mux_set_property (GObject * object,
   avimux = GST_AVI_MUX (object);
 
   switch (prop_id) {
-    case ARG_BIGFILE:
+    case PROP_BIGFILE:
       avimux->enable_large_avi = g_value_get_boolean (value);
       break;
     default:
