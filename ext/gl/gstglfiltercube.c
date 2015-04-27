@@ -292,6 +292,12 @@ gst_gl_filter_cube_reset_gl (GstGLFilter * filter)
     gl->DeleteBuffers (1, &cube_filter->vertex_buffer);
     cube_filter->vertex_buffer = 0;
   }
+
+  if (cube_filter->shader) {
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+        cube_filter->shader);
+    cube_filter->shader = NULL;
+  }
 }
 
 static gboolean
@@ -312,6 +318,11 @@ static gboolean
 gst_gl_filter_cube_init_shader (GstGLFilter * filter)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
+
+  if (cube_filter->shader) {
+    gst_object_unref (cube_filter->shader);
+    cube_filter->shader = NULL;
+  }
 
   /* blocking call, wait the opengl thread has compiled the shader */
   return gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context,
