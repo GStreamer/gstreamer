@@ -30,7 +30,7 @@ from launcher.baseclasses import GstValidateTest, Test, \
     GstValidateBaseTestManager, MediaDescriptor, MediaFormatCombination
 
 from launcher.utils import path2url, DEFAULT_TIMEOUT, which, \
-    GST_SECOND, Result, Protocols, mkdir, printc, Colors
+    GST_SECOND, Result, Protocols, mkdir, printc, Colors, get_valgrind_suppression_file
 
 #
 # Private global variables     #
@@ -537,6 +537,23 @@ class GstValidateTestManager(GstValidateBaseTestManager):
 not been tested and explicitely activated if you set use --wanted-tests ALL""")
         group.add_argument("--validate-check-uri", dest="validate_uris",
                            action="append", help="defines the uris to run default tests on")
+
+    def print_valgrind_bugs(self):
+        # Look for all the 'pending' bugs in our supp file
+        bugs = []
+        p = get_valgrind_suppression_file('data', 'gstvalidate.supp')
+        with open(p) as f:
+            for l in f.readlines():
+                l = l.strip()
+                if l.startswith('# PENDING:'):
+                    tmp = l.split(' ')
+                    bugs.append(tmp[2])
+
+        if bugs:
+            msg = "Ignored valgrind bugs:\n"
+            for b in bugs:
+                msg += "  + %s\n" % b
+            printc(msg, Colors.FAIL, True)
 
     def populate_testsuite(self):
 

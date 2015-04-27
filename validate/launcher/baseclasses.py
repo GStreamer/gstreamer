@@ -860,6 +860,10 @@ class TestsManager(Loggable):
         self.reporter = reporter
 
         self.populate_testsuite()
+
+        if self.options.valgrind:
+            self.print_valgrind_bugs()
+
         if options.wanted_tests:
             for patterns in options.wanted_tests:
                 for pattern in patterns.split(","):
@@ -969,6 +973,9 @@ class TestsManager(Loggable):
 
     def needs_http_server(self):
         return False
+
+    def print_valgrind_bugs(self):
+        pass
 
 
 class TestsGenerator(Loggable):

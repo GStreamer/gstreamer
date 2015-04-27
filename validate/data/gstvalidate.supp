@@ -2,6 +2,14 @@
 ### can't easily address because they are lower in the stack.
 ### All the other suppressions should be added ton common/gst.supp
 
+### Each set of suppression rules should be prefixed by either:
+###   - FIXED: if the bug/leak has been fixed upstream but we keep the rule
+###     because the fix may not be deployed yet (because it's lower in the
+###     stack and not in gst itself).
+###   - PENDING: if the bug/leak hasn't been fixed yet. In this case, please
+###     add an url to the bug report.
+
+# PENDING: https://bugs.freedesktop.org/show_bug.cgi?id=90073
 {
    Leak in mesa fixed with http://lists.freedesktop.org/archives/mesa-dev/2015-April/082101.html
    Memcheck:Leak
@@ -30,6 +38,7 @@
    fun:glXQueryVersion
 }
 
+# FIXED
 {
    Fixed in pixman master
    Memcheck:Leak
