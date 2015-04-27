@@ -88,7 +88,7 @@ struct _GstAudioSinkClass {
   gboolean (*close)     (GstAudioSink *sink);
   /* write samples to the device */
   gint     (*write)     (GstAudioSink *sink, gpointer data, guint length);
-  /* get number of samples queued in the device */
+  /* get number of frames queued in the device */
   guint    (*delay)     (GstAudioSink *sink);
   /* reset the audio device, unblock from a write */
   void     (*reset)     (GstAudioSink *sink);
