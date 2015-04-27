@@ -39,7 +39,7 @@ enum
 
 enum
 {
-  ARG_0,
+  PROP_0,
 };
 
 static GstStaticPadTemplate gst_rdt_depay_src_template =
