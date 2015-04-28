@@ -72,17 +72,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw(ANY)"));
 
-static GstStaticPadTemplate gst_gl_upload_element_sink_pad_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw(ANY)"));
-
 static void
 gst_gl_upload_element_class_init (GstGLUploadElementClass * klass)
 {
   GstBaseTransformClass *bt_class = GST_BASE_TRANSFORM_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstCaps *upload_caps;
 
   bt_class->query = gst_gl_upload_element_query;
   bt_class->transform_caps = _gst_gl_upload_element_transform_caps;
@@ -98,8 +93,11 @@ gst_gl_upload_element_class_init (GstGLUploadElementClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_upload_element_src_pad_template));
+
+  upload_caps = gst_gl_upload_get_input_template_caps ();
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gl_upload_element_sink_pad_template));
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, upload_caps));
+  gst_caps_unref (upload_caps);
 
   gst_element_class_set_metadata (element_class,
       "OpenGL uploader", "Filter/Video",
