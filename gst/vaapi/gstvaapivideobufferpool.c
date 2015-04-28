@@ -64,10 +64,10 @@ gst_vaapi_video_buffer_pool_finalize (GObject * object)
   GstVaapiVideoBufferPoolPrivate *const priv =
       GST_VAAPI_VIDEO_BUFFER_POOL (object)->priv;
 
-  G_OBJECT_CLASS (gst_vaapi_video_buffer_pool_parent_class)->finalize (object);
-
   gst_vaapi_display_replace (&priv->display, NULL);
   g_clear_object (&priv->allocator);
+
+  G_OBJECT_CLASS (gst_vaapi_video_buffer_pool_parent_class)->finalize (object);
 }
 
 static void
