@@ -1492,6 +1492,11 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
 
   gst_ts_demux_stream_flush (stream, GST_TS_DEMUX_CAST (base), TRUE);
 
+  if (stream->taglist != NULL) {
+    gst_tag_list_unref (stream->taglist);
+    stream->taglist = NULL;
+  }
+
   tsdemux_h264_parsing_info_clear (&stream->h264infos);
 }
 
