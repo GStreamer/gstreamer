@@ -153,8 +153,18 @@ static const gchar *interlace_mode[] = {
   "fields"
 };
 
-static const gchar *
-gst_interlace_mode_to_string (GstVideoInterlaceMode mode)
+/**
+ * gst_video_interlace_mode_to_string:
+ * @mode: a #GstVideoInterlaceMode
+ *
+ * Convert @mode to its string representation.
+ *
+ * Returns: @mode as a string or NULL if @mode in invalid.
+ *
+ * Since: 1.6
+ */
+const gchar *
+gst_video_interlace_mode_to_string (GstVideoInterlaceMode mode)
 {
   if (((guint) mode) >= G_N_ELEMENTS (interlace_mode))
     return NULL;
@@ -162,8 +172,20 @@ gst_interlace_mode_to_string (GstVideoInterlaceMode mode)
   return interlace_mode[mode];
 }
 
-static GstVideoInterlaceMode
-gst_interlace_mode_from_string (const gchar * mode)
+/**
+ * gst_video_interlace_mode_from_string:
+ * @mode: a mode
+ *
+ * Convert @mode to a #GstVideoInterlaceMode
+ *
+ * Returns: the #GstVideoInterlaceMode of @mode or
+ *    #GST_VIDEO_INTERLACE_MODE_PROGRESSIVE when @mode is not a valid
+ *    string representation for a #GstVideoInterlaceMode.
+ *
+ * Since: 1.6
+ */
+GstVideoInterlaceMode
+gst_video_interlace_mode_from_string (const gchar * mode)
 {
   gint i;
   for (i = 0; i < G_N_ELEMENTS (interlace_mode); i++) {
@@ -245,7 +267,7 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   }
 
   if ((s = gst_structure_get_string (structure, "interlace-mode")))
-    info->interlace_mode = gst_interlace_mode_from_string (s);
+    info->interlace_mode = gst_video_interlace_mode_from_string (s);
   else
     info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
@@ -388,7 +410,7 @@ gst_video_info_to_caps (GstVideoInfo * info)
       "pixel-aspect-ratio", GST_TYPE_FRACTION, info->par_n, info->par_d, NULL);
 
   gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
-      gst_interlace_mode_to_string (info->interlace_mode), NULL);
+      gst_video_interlace_mode_to_string (info->interlace_mode), NULL);
 
   if (info->chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN)
     gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING,

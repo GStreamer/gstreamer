@@ -55,6 +55,9 @@ typedef enum {
   GST_VIDEO_INTERLACE_MODE_FIELDS
 } GstVideoInterlaceMode;
 
+const gchar *          gst_video_interlace_mode_to_string    (GstVideoInterlaceMode mode);
+GstVideoInterlaceMode  gst_video_interlace_mode_from_string  (const gchar * mode);
+
 /**
  * GstVideoFlags:
  * @GST_VIDEO_FLAG_NONE: no flags

@@ -177,7 +177,9 @@ EXPORTS
 	gst_video_info_is_equal
 	gst_video_info_set_format
 	gst_video_info_to_caps
+	gst_video_interlace_mode_from_string
 	gst_video_interlace_mode_get_type
+	gst_video_interlace_mode_to_string
 	gst_video_meta_api_get_type
 	gst_video_meta_get_info
 	gst_video_meta_map
