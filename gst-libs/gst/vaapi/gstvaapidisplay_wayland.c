@@ -246,6 +246,11 @@ gst_vaapi_display_wayland_close_display (GstVaapiDisplay * display)
     priv->compositor = NULL;
   }
 
+  if (priv->registry) {
+    wl_registry_destroy (priv->registry);
+    priv->registry = NULL;
+  }
+
   if (priv->wl_display) {
     if (!priv->use_foreign_display)
       wl_display_disconnect (priv->wl_display);
