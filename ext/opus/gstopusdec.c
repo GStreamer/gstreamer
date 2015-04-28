@@ -431,7 +431,9 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   samples = 120 * dec->sample_rate / 1000;
   packet_size = samples * dec->n_channels * 2;
 
-  outbuf = gst_buffer_new_and_alloc (packet_size);
+  outbuf =
+      gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER (dec),
+      packet_size);
   if (!outbuf) {
     goto buffer_failed;
   }
