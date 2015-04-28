@@ -45,6 +45,7 @@
 #include "gstksvideodevice.h"
 #include "kshelpers.h"
 #include "ksvideohelpers.h"
+#include "ksdeviceprovider.h"
 
 #define DEFAULT_DEVICE_PATH     NULL
 #define DEFAULT_DEVICE_NAME     NULL
@@ -222,9 +223,6 @@ gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
       g_param_spec_boolean ("enable-quirks", "Enable quirks",
           "Enable driver-specific quirks", DEFAULT_ENABLE_QUIRKS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  GST_DEBUG_CATEGORY_INIT (gst_ks_debug, "ksvideosrc",
-      0, "Kernel streaming video source");
 }
 
 static void
@@ -394,7 +392,7 @@ gst_ks_video_src_get_device_name_values (GstKsVideoSrc * self)
   GList *devices, *cur;
   GArray *array = g_array_new (TRUE, TRUE, sizeof (GValue));
 
-  devices = ks_enumerate_devices (&KSCATEGORY_VIDEO);
+  devices = ks_enumerate_devices (&KSCATEGORY_VIDEO, &KSCATEGORY_CAPTURE);
   if (devices == NULL)
     return array;
 
@@ -425,7 +423,7 @@ gst_ks_video_src_open_device (GstKsVideoSrc * self)
 
   g_assert (priv->device == NULL);
 
-  devices = ks_enumerate_devices (&KSCATEGORY_VIDEO);
+  devices = ks_enumerate_devices (&KSCATEGORY_VIDEO, &KSCATEGORY_CAPTURE);
   if (devices == NULL)
     goto error_no_devices;
 
@@ -438,10 +436,14 @@ gst_ks_video_src_open_device (GstKsVideoSrc * self)
         entry->index, entry->name, entry->path);
   }
 
-  for (cur = devices; cur != NULL && device == NULL; cur = cur->next) {
+  for (cur = devices; cur != NULL; cur = cur->next) {
     KsDeviceEntry *entry = cur->data;
     gboolean match;
 
+    if (device != NULL) {
+      ks_device_entry_free (entry);
+      continue;
+    }
     if (priv->device_path != NULL) {
       match = g_ascii_strcasecmp (entry->path, priv->device_path) == 0;
     } else if (priv->device_name != NULL) {
@@ -1069,8 +1071,18 @@ error_alloc_buffer:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "ksvideosrc",
-      GST_RANK_NONE, GST_TYPE_KS_VIDEO_SRC);
+  GST_DEBUG_CATEGORY_INIT (gst_ks_debug, "ksvideosrc",
+      0, "Kernel streaming video source");
+
+  if (!gst_element_register (plugin, "ksvideosrc",
+          GST_RANK_NONE, GST_TYPE_KS_VIDEO_SRC))
+    return FALSE;
+
+  if (!gst_device_provider_register (plugin, "ksdeviceprovider",
+          GST_RANK_PRIMARY, GST_TYPE_KS_DEVICE_PROVIDER))
+    return FALSE;
+
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

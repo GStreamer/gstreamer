@@ -3,6 +3,7 @@ plugin_LTLIBRARIES = libgstwinks.la
 libgstwinks_la_SOURCES = gstksclock.c \
 	gstksvideodevice.c \
 	gstksvideosrc.c \
+	ksdeviceprovider.c ksdeviceprovider.h \
 	kshelpers.c kshelpers.h \
 	ksvideohelpers.c 
 libgstwinks_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \

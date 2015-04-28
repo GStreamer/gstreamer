@@ -40,13 +40,13 @@ ks_is_valid_handle (HANDLE h)
 }
 
 GList *
-ks_enumerate_devices (const GUID * category)
+ks_enumerate_devices (const GUID * devtype, const GUID * direction_category)
 {
   GList *result = NULL;
   HDEVINFO devinfo;
   gint i;
 
-  devinfo = SetupDiGetClassDevsW (category, NULL, NULL,
+  devinfo = SetupDiGetClassDevsW (devtype, NULL, NULL,
       DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
   if (!ks_is_valid_handle (devinfo))
     return NULL;                /* no devices */
@@ -54,7 +54,7 @@ ks_enumerate_devices (const GUID * category)
   for (i = 0;; i++) {
     BOOL success;
     SP_DEVICE_INTERFACE_DATA if_data = { 0, };
-    SP_DEVICE_INTERFACE_DATA if_alias_data = { 0,};
+    SP_DEVICE_INTERFACE_DATA if_alias_data = { 0, };
     SP_DEVICE_INTERFACE_DETAIL_DATA_W *if_detail_data;
     DWORD if_detail_data_size;
     SP_DEVINFO_DATA devinfo_data = { 0, };
@@ -62,14 +62,13 @@ ks_enumerate_devices (const GUID * category)
 
     if_data.cbSize = sizeof (SP_DEVICE_INTERFACE_DATA);
 
-    success = SetupDiEnumDeviceInterfaces (devinfo, NULL, category, i,
-        &if_data);
+    success = SetupDiEnumDeviceInterfaces (devinfo, NULL, devtype, i, &if_data);
     if (!success)               /* all devices enumerated? */
       break;
 
-    /* Enumerate only capture devices */
     if_alias_data.cbSize = sizeof (SP_DEVICE_INTERFACE_DATA);
-    success = SetupDiGetDeviceInterfaceAlias (devinfo, &if_data, &KSCATEGORY_CAPTURE,
+    success =
+        SetupDiGetDeviceInterfaceAlias (devinfo, &if_data, direction_category,
         &if_alias_data);
     if (!success)
       continue;

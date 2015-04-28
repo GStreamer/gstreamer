@@ -133,7 +133,7 @@ gst_ks_clock_open (GstKsClock * self)
 
   priv->state = KSSTATE_STOP;
 
-  devices = ks_enumerate_devices (&KSCATEGORY_CLOCK);
+  devices = ks_enumerate_devices (&KSCATEGORY_CLOCK, &KSCATEGORY_CAPTURE);
   if (devices == NULL)
     goto error;
 
