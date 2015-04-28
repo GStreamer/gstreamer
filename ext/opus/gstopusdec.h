@@ -24,7 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/gstaudiodecoder.h>
-#include <opus/opus_multistream.h>
+#include <opus_multistream.h>
 
 G_BEGIN_DECLS
 

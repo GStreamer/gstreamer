@@ -39,7 +39,7 @@
 #endif
 
 #include <string.h>
-#include <opus/opus.h>
+#include <opus.h>
 #include "gstopusheader.h"
 #include "gstopusparse.h"
 

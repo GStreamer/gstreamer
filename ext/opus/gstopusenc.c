@@ -44,7 +44,7 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
-#include <opus/opus.h>
+#include <opus.h>
 
 #include <gst/gsttagsetter.h>
 #include <gst/audio/audio.h>
