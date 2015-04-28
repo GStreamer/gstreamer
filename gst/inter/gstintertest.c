@@ -80,11 +80,6 @@ main (int argc, char *argv[])
   GstInterTest *intertest2;
   GMainLoop *main_loop;
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-#endif
-
   context = g_option_context_new ("- Internal src/sink test");
   g_option_context_add_main_entries (context, entries, GETTEXT_PACKAGE);
   g_option_context_add_group (context, gst_init_get_option_group ());

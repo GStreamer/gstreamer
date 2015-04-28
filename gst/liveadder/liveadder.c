@@ -1354,11 +1354,7 @@ gst_live_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   adder = GST_LIVE_ADDER (element);
 
   /* increment pad counter */
-#if GLIB_CHECK_VERSION(2,29,5)
   padcount = g_atomic_int_add (&adder->padcount, 1);
-#else
-  padcount = g_atomic_int_exchange_and_add (&adder->padcount, 1);
-#endif
 
   name = g_strdup_printf ("sink_%u", padcount);
   newpad = gst_pad_new_from_template (templ, name);

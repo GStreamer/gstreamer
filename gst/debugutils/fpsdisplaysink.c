@@ -435,11 +435,7 @@ display_current_fps (gpointer data)
     g_free (self->last_message);
     self->last_message = g_strdup (fps_message);
     GST_OBJECT_UNLOCK (self);
-#if !GLIB_CHECK_VERSION(2,26,0)
-    g_object_notify ((GObject *) self, "last-message");
-#else
     g_object_notify_by_pspec ((GObject *) self, pspec_last_message);
-#endif
   }
 
   self->last_frames_rendered = frames_rendered;
@@ -521,11 +517,7 @@ fps_display_sink_stop (GstFPSDisplaySink * self)
     g_free (self->last_message);
     self->last_message = str;
     GST_OBJECT_UNLOCK (self);
-#if !GLIB_CHECK_VERSION(2,26,0)
-    g_object_notify ((GObject *) self, "last-message");
-#else
     g_object_notify_by_pspec ((GObject *) self, pspec_last_message);
-#endif
   }
 
   GST_OBJECT_LOCK (self);
