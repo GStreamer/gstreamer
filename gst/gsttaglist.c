@@ -673,7 +673,7 @@ gst_tag_is_fixed (const gchar * tag)
 
 /* takes ownership of the structure */
 static GstTagList *
-gst_tag_list_new_internal (GstStructure * s)
+gst_tag_list_new_internal (GstStructure * s, GstTagScope scope)
 {
   GstTagList *tag_list;
 
@@ -686,7 +686,7 @@ gst_tag_list_new_internal (GstStructure * s)
       (GstMiniObjectFreeFunction) __gst_tag_list_free);
 
   GST_TAG_LIST_STRUCTURE (tag_list) = s;
-  GST_TAG_LIST_SCOPE (tag_list) = GST_TAG_SCOPE_STREAM;
+  GST_TAG_LIST_SCOPE (tag_list) = scope;
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_TRACE (GST_CAT_TAGS, "created taglist %p", tag_list);
@@ -717,7 +717,8 @@ __gst_tag_list_copy (const GstTagList * list)
   g_return_val_if_fail (GST_IS_TAG_LIST (list), NULL);
 
   s = GST_TAG_LIST_STRUCTURE (list);
-  return gst_tag_list_new_internal (gst_structure_copy (s));
+  return gst_tag_list_new_internal (gst_structure_copy (s),
+      GST_TAG_LIST_SCOPE (list));
 }
 
 /**
@@ -736,7 +737,7 @@ gst_tag_list_new_empty (void)
   GstTagList *tag_list;
 
   s = gst_structure_new_id_empty (GST_QUARK (TAGLIST));
-  tag_list = gst_tag_list_new_internal (s);
+  tag_list = gst_tag_list_new_internal (s, GST_TAG_SCOPE_STREAM);
   return tag_list;
 }
 
@@ -878,7 +879,7 @@ gst_tag_list_new_from_string (const gchar * str)
   if (s == NULL)
     return NULL;
 
-  tag_list = gst_tag_list_new_internal (s);
+  tag_list = gst_tag_list_new_internal (s, GST_TAG_SCOPE_STREAM);
 
   return tag_list;
 }
