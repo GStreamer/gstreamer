@@ -61,17 +61,12 @@ static GstStaticPadTemplate _src_pad_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw(ANY)"));
 
-static GstStaticPadTemplate _sink_pad_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw(ANY)"));
-
 static void
 gst_gl_filter_bin_class_init (GstGLFilterBinClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstCaps *upload_caps;
 
   element_class->change_state = gst_gl_filter_bin_change_state;
 
@@ -80,8 +75,11 @@ gst_gl_filter_bin_class_init (GstGLFilterBinClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&_src_pad_template));
+
+  upload_caps = gst_gl_upload_get_input_template_caps ();
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&_sink_pad_template));
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, upload_caps));
+  gst_caps_unref (upload_caps);
 
   g_object_class_install_property (gobject_class, PROP_FILTER,
       g_param_spec_object ("filter",

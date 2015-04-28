@@ -97,6 +97,8 @@ struct _UploadMethod
   const gchar *name;
   GstGLUploadMethodFlags flags;
 
+  GstStaticCaps input_template_caps;
+
     gpointer (*new) (GstGLUpload * upload);
   GstCaps *(*transform_caps) (GstGLContext * context,
       GstPadDirection direction, GstCaps * caps);
@@ -277,6 +279,8 @@ _gl_memory_upload_free (gpointer impl)
 static const UploadMethod _gl_memory_upload = {
   "GLMemory",
   METHOD_FLAG_CAN_SHARE_CONTEXT,
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_GL_MEMORY_VIDEO_FORMATS_STR)),
   &_gl_memory_upload_new,
   &_gl_memory_upload_transform_caps,
   &_gl_memory_upload_accept,
@@ -445,6 +449,8 @@ _egl_image_upload_free (gpointer impl)
 static const UploadMethod _egl_image_upload = {
   "EGLImage",
   0,
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+      (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE, "RGBA")),
   &_egl_image_upload_new,
   &_egl_image_upload_transform_caps,
   &_egl_image_upload_accept,
@@ -651,6 +657,8 @@ _upload_meta_upload_free (gpointer impl)
 static const UploadMethod _upload_meta_upload = {
   "UploadMeta",
   METHOD_FLAG_CAN_SHARE_CONTEXT,
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+      (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "RGBA")),
   &_upload_meta_upload_new,
   &_upload_meta_upload_transform_caps,
   &_upload_meta_upload_accept,
@@ -780,6 +788,7 @@ _raw_data_upload_free (gpointer impl)
 static const UploadMethod _raw_data_upload = {
   "Raw Data",
   0,
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_GL_MEMORY_VIDEO_FORMATS_STR)),
   &_raw_data_upload_new,
   &_raw_data_upload_transform_caps,
   &_raw_data_upload_accept,
@@ -795,6 +804,31 @@ static const UploadMethod *upload_methods[] = { &_gl_memory_upload,
 #endif
   &_upload_meta_upload, &_raw_data_upload
 };
+
+static GMutex upload_global_lock;
+
+GstCaps *
+gst_gl_upload_get_input_template_caps (void)
+{
+  GstCaps *ret = NULL;
+  gint i;
+
+  g_mutex_lock (&upload_global_lock);
+
+  /* FIXME: cache this and invalidate on changes to upload_methods */
+  for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
+    GstCaps *template =
+        gst_static_caps_get ((GstStaticCaps *) &
+        upload_methods[i]->input_template_caps);
+    ret = ret == NULL ? template : gst_caps_merge (ret, template);
+  }
+
+  ret = gst_caps_simplify (ret);
+
+  g_mutex_unlock (&upload_global_lock);
+
+  return ret;
+}
 
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_upload_debug, "glupload", 0, "upload");

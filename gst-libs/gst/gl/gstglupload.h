@@ -78,6 +78,8 @@ struct _GstGLUploadClass
   GstObjectClass object_class;
 };
 
+GstCaps *     gst_gl_upload_get_input_template_caps (void);
+
 GstGLUpload * gst_gl_upload_new                    (GstGLContext * context);
 
 GstCaps *     gst_gl_upload_transform_caps         (GstGLContext * context,

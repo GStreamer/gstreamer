@@ -110,12 +110,6 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
-    GST_PAD_SINK,
-    GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("video/x-raw(ANY)")
-    );
-
 static void gst_gl_mixer_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_mixer_bin_get_property (GObject * object, guint prop_id,
@@ -133,6 +127,7 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstCaps *upload_caps;
 
   g_type_class_add_private (klass, sizeof (GstGLMixerBinPrivate));
 
@@ -178,8 +173,12 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
+
+  upload_caps = gst_gl_upload_get_input_template_caps ();
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+      gst_pad_template_new ("sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
+          upload_caps));
+  gst_caps_unref (upload_caps);
 }
 
 static void
