@@ -926,6 +926,11 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 
       GST_VIDEO_SINK_WIDTH (glimage_sink) = 1;
       GST_VIDEO_SINK_HEIGHT (glimage_sink) = 1;
+      /* Clear cached caps */
+      if (glimage_sink->caps) {
+        gst_caps_unref (glimage_sink->caps);
+        glimage_sink->caps = NULL;
+      }
 
       /* we're losing the context, this pool is no use anymore */
       if (glimage_sink->pool) {
@@ -1087,6 +1092,8 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
       GST_VIDEO_SINK_HEIGHT (glimage_sink));
 
   glimage_sink->info = vinfo;
+  glimage_sink->caps = gst_caps_ref (caps);
+
   if (!_ensure_gl_setup (glimage_sink))
     return FALSE;
 
@@ -1475,7 +1482,6 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
   gboolean do_redisplay = FALSE;
   GstGLSyncMeta *sync_meta = NULL;
   GstSample *sample = NULL;
-  GstCaps *caps = NULL;
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (gl_sink));
 
@@ -1518,15 +1524,12 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
-  caps = gst_video_info_to_caps (&gl_sink->info);
-
   sample = gst_sample_new (gl_sink->stored_buffer,
-      caps, &GST_BASE_SINK (gl_sink)->segment, NULL);
+      gl_sink->caps, &GST_BASE_SINK (gl_sink)->segment, NULL);
 
   g_signal_emit (gl_sink, gst_glimage_sink_signals[CLIENT_DRAW_SIGNAL], 0,
       gl_sink->context, sample, &do_redisplay);
 
-  gst_caps_unref (caps);
   gst_sample_unref (sample);
 
   if (!do_redisplay) {
