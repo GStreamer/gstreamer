@@ -212,21 +212,19 @@ gst_digital_zoom_sink_event (GstPad * sink, GstObject * parent,
 
   if (is_caps) {
     gst_event_parse_caps (event, &caps);
-    gst_caps_ref (caps);
     g_object_get (self->capsfilter, "caps", &old_caps, NULL);
     g_object_set (self->capsfilter, "caps", caps, NULL);
+    gst_digital_zoom_update_crop (self, caps);
   }
 
   ret = gst_pad_event_default (sink, parent, event);
 
   if (is_caps) {
-    if (ret)
-      gst_digital_zoom_update_crop (self, caps);
-    else
+    if (!ret) {
+      gst_digital_zoom_update_crop (self, old_caps);
       g_object_set (self->capsfilter, "caps", old_caps, NULL);
+    }
 
-    if (caps)
-      gst_caps_unref (caps);
     if (old_caps)
       gst_caps_unref (old_caps);
   }
