@@ -4377,8 +4377,11 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
 
             g_assert (event);
             /* unlikely to fail, since we managed to seek to this point */
-            if (!gst_matroska_demux_handle_seek_event (demux, NULL, event))
+            if (!gst_matroska_demux_handle_seek_event (demux, NULL, event)) {
+              gst_event_unref (event);
               goto seek_failed;
+            }
+            gst_event_unref (event);
             /* resume data handling, main thread clear to seek again */
             GST_OBJECT_LOCK (demux);
             demux->common.state = GST_MATROSKA_READ_STATE_DATA;
