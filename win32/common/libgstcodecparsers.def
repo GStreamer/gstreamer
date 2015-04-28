@@ -38,6 +38,10 @@ EXPORTS
 	gst_h265_parser_parse_slice_hdr
 	gst_h265_parser_parse_sps
 	gst_h265_parser_parse_vps
+	gst_h265_quant_matrix_4x4_get_raster_from_zigzag
+	gst_h265_quant_matrix_4x4_get_zigzag_from_raster
+	gst_h265_quant_matrix_8x8_get_raster_from_zigzag
+	gst_h265_quant_matrix_8x8_get_zigzag_from_raster
 	gst_h265_sei_copy
 	gst_h265_sei_free
 	gst_h265_slice_hdr_copy
