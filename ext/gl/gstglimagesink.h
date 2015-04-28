@@ -61,6 +61,7 @@ struct _GstGLImageSink
 
     //caps
     GstVideoInfo info;
+    GstCaps *caps;
 
     GstGLDisplay *display;
     GstGLContext *context;
