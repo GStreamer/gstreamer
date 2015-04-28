@@ -1510,7 +1510,7 @@ class MediaDescriptor(Loggable):
         if not self.can_play_reverse() and scenario.does_reverse_playback():
             return False
 
-        if self.get_duration() / GST_SECOND < scenario.get_min_media_duration():
+        if self.get_duration() and self.get_duration() / GST_SECOND < scenario.get_min_media_duration():
             self.debug(
                 "Do not run %s as %s is too short (%i < min media duation : %i",
                 scenario, self.get_uri(),
