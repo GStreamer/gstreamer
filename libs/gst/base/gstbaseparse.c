@@ -760,11 +760,8 @@ gst_base_parse_frame_new (GstBuffer * buffer, GstBaseParseFrameFlags flags,
 }
 
 static inline void
-gst_base_parse_frame_update (GstBaseParse * parse, GstBaseParseFrame * frame,
-    GstBuffer * buf)
+gst_base_parse_update_flags (GstBaseParse * parse)
 {
-  gst_buffer_replace (&frame->buffer, buf);
-
   parse->flags = 0;
 
   /* set flags one by one for clarity */
@@ -774,6 +771,22 @@ gst_base_parse_frame_update (GstBaseParse * parse, GstBaseParseFrame * frame,
   /* losing sync is pretty much a discont (and vice versa), no ? */
   if (G_UNLIKELY (parse->priv->discont))
     parse->flags |= GST_BASE_PARSE_FLAG_LOST_SYNC;
+}
+
+static inline void
+gst_base_parse_update_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  if (G_UNLIKELY (parse->priv->discont)) {
+    GST_DEBUG_OBJECT (parse, "marking DISCONT");
+    GST_BUFFER_FLAG_SET (frame->buffer, GST_BUFFER_FLAG_DISCONT);
+  }
+
+  if (parse->priv->prev_offset != parse->priv->offset || parse->priv->new_frame) {
+    GST_LOG_OBJECT (parse, "marking as new frame");
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME;
+  }
+
+  frame->offset = parse->priv->prev_offset = parse->priv->offset;
 }
 
 static void
@@ -1920,27 +1933,17 @@ gst_base_parse_prepare_frame (GstBaseParse * parse, GstBuffer * buffer)
       GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET (buffer),
       gst_buffer_get_size (buffer));
 
-  if (parse->priv->discont) {
-    GST_DEBUG_OBJECT (parse, "marking DISCONT");
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-    parse->priv->discont = FALSE;
-  }
-
   GST_BUFFER_OFFSET (buffer) = parse->priv->offset;
 
+  gst_base_parse_update_flags (parse);
+
   frame = gst_base_parse_frame_new (buffer, 0, 0);
-
-  /* also ensure to update state flags */
-  gst_base_parse_frame_update (parse, frame, buffer);
   gst_buffer_unref (buffer);
+  gst_base_parse_update_frame (parse, frame);
 
-  if (parse->priv->prev_offset != parse->priv->offset || parse->priv->new_frame) {
-    GST_LOG_OBJECT (parse, "marking as new frame");
-    parse->priv->new_frame = FALSE;
-    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME;
-  }
-
-  frame->offset = parse->priv->prev_offset = parse->priv->offset;
+  /* clear flags for next frame */
+  parse->priv->discont = FALSE;
+  parse->priv->new_frame = FALSE;
 
   /* use default handler to provide initial (upstream) metadata */
   gst_base_parse_parse_frame (parse, frame);
