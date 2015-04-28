@@ -1003,7 +1003,7 @@ gst_glimage_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   GstCaps *tmp = NULL;
   GstCaps *result = NULL;
 
-  tmp = gst_caps_from_string ("video/x-raw(memory:GLMemory),format=RGBA");
+  tmp = gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD (bsink));
 
   if (filter) {
     result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
