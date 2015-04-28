@@ -1069,7 +1069,6 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
 
     if (dest == NULL) {
       GST_WARNING ("Could not copy GL Memory");
-      gst_memory_unref ((GstMemory *) dest);
       goto done;
     }
 
