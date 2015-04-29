@@ -607,7 +607,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   GstStructure *config;
   GstVideoInfo vi;
   guint size, min, max;
-  gboolean need_pool, update_pool = FALSE;
+  gboolean update_pool = FALSE;
   gboolean has_video_meta = FALSE;
   gboolean has_video_alignment = FALSE;
 #if (USE_GLX || USE_EGL)
@@ -617,7 +617,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
   g_return_val_if_fail (plugin->display != NULL, FALSE);
 
-  gst_query_parse_allocation (query, &caps, &need_pool);
+  gst_query_parse_allocation (query, &caps, NULL);
 
   /* We don't need any GL context beyond this point if not requested
      so explicitly through GstVideoGLTextureUploadMeta */
