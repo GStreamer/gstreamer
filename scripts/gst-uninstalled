@@ -225,6 +225,7 @@ export PKG_CONFIG_PATH=$GST/gst-devtools/validate/pkgconfig:$PKG_CONFIG_PATH
 export GST_VALIDATE_SCENARIOS_PATH=$GST/gst-devtools/validate/data/scenarios:$GST_VALIDATE_SCENARIOS_PATH
 export GST_VALIDATE_APPS_DIR=$GST_VALIDATE_APPS_DIR:$GST/gst-editing-services/tests/validate/
 export GST_VALIDATE_PLUGIN_PATH=$GST_VALIDATE_PLUGIN_PATH:$GST/gst-devtools/validate/plugins/
+export GIO_EXTRA_MODULES=$GST/prefix/lib/gio/modules:$GIO_EXTRA_MODULES
 
 if [ -d "$GST/gst-libav" -a -d "$GST/gst-ffmpeg" ]; then
   echo
