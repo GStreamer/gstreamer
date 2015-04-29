@@ -61,7 +61,7 @@ typedef struct _MqStreamCtx
   guint sink_pad_block_id;
   guint src_pad_block_id;
 
-  gboolean is_video;
+  gboolean is_reference;
 
   gboolean flushing;
   gboolean in_eos;
@@ -111,7 +111,7 @@ struct _GstSplitMuxSink {
 
   GList *contexts;
 
-  MqStreamCtx *video_ctx;
+  MqStreamCtx *reference_ctx;
   guint queued_gops;
   GstClockTime max_in_running_time;
   GstClockTime max_out_running_time;
