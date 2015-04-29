@@ -514,6 +514,14 @@ typedef enum
  * @GST_PAD_PROBE_REMOVE: remove this probe.
  * @GST_PAD_PROBE_PASS: pass the data item in the block probe and block on the
  *        next item.
+ * @GST_PAD_PROBE_HANDLED: Data has been handled in the probe and will not be
+ *        forwarded further. For events and buffers this is the same behaviour as
+ *        @GST_PAD_PROBE_DROP (except that in this case you need to unref the buffer
+ *        or event yourself). For queries it will also return %TRUE to the caller.
+ *        The probe can also modify the #GstFlowReturn value by using the
+ *        #GST_PAD_PROBE_INFO_FLOW_RETURN() accessor.
+ *        Note that the resulting query must contain valid entries.
+ *        Since: 1.6
  *
  * Different return values for the #GstPadProbeCallback.
  */
@@ -523,6 +531,7 @@ typedef enum
   GST_PAD_PROBE_OK,
   GST_PAD_PROBE_REMOVE,
   GST_PAD_PROBE_PASS,
+  GST_PAD_PROBE_HANDLED
 } GstPadProbeReturn;
 
 
@@ -548,12 +557,18 @@ struct _GstPadProbeInfo
   guint size;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    gpointer _gst_reserved[GST_PADDING];
+    struct {
+      GstFlowReturn flow_ret;
+    } abi;
+  } ABI;
 };
 
 #define GST_PAD_PROBE_INFO_TYPE(d)         ((d)->type)
 #define GST_PAD_PROBE_INFO_ID(d)           ((d)->id)
 #define GST_PAD_PROBE_INFO_DATA(d)         ((d)->data)
+#define GST_PAD_PROBE_INFO_FLOW_RETURN(d)  ((d)->ABI.abi.flow_ret)
 
 #define GST_PAD_PROBE_INFO_BUFFER(d)       GST_BUFFER_CAST(GST_PAD_PROBE_INFO_DATA(d))
 #define GST_PAD_PROBE_INFO_BUFFER_LIST(d)  GST_BUFFER_LIST_CAST(GST_PAD_PROBE_INFO_DATA(d))
