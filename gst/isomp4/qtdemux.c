@@ -10634,32 +10634,44 @@ qtdemux_parse_redirects (GstQTDemux * qtdemux)
       if (rdrf) {
         guint32 ref_type;
         guint8 *ref_data;
+        guint ref_len;
 
-        ref_type = QT_FOURCC ((guint8 *) rdrf->data + 12);
-        ref_data = (guint8 *) rdrf->data + 20;
-        if (ref_type == FOURCC_alis) {
-          guint record_len, record_version, fn_len;
+        ref_len = QT_UINT32 ((guint8 *) rdrf->data);
+        if (ref_len > 20) {
+          ref_type = QT_FOURCC ((guint8 *) rdrf->data + 12);
+          ref_data = (guint8 *) rdrf->data + 20;
+          if (ref_type == FOURCC_alis) {
+            guint record_len, record_version, fn_len;
 
-          /* MacOSX alias record, google for alias-layout.txt */
-          record_len = QT_UINT16 (ref_data + 4);
-          record_version = QT_UINT16 (ref_data + 4 + 2);
-          fn_len = QT_UINT8 (ref_data + 50);
-          if (record_len > 50 && record_version == 2 && fn_len > 0) {
-            ref.location = g_strndup ((gchar *) ref_data + 51, fn_len);
+            if (ref_len > 70) {
+              /* MacOSX alias record, google for alias-layout.txt */
+              record_len = QT_UINT16 (ref_data + 4);
+              record_version = QT_UINT16 (ref_data + 4 + 2);
+              fn_len = QT_UINT8 (ref_data + 50);
+              if (record_len > 50 && record_version == 2 && fn_len > 0) {
+                ref.location = g_strndup ((gchar *) ref_data + 51, fn_len);
+              }
+            } else {
+              GST_WARNING_OBJECT (qtdemux, "Invalid rdrf/alis size (%u < 70)",
+                  ref_len);
+            }
+          } else if (ref_type == FOURCC_url_) {
+            ref.location = g_strndup ((gchar *) ref_data, ref_len - 8);
+          } else {
+            GST_DEBUG_OBJECT (qtdemux,
+                "unknown rdrf reference type %" GST_FOURCC_FORMAT,
+                GST_FOURCC_ARGS (ref_type));
           }
-        } else if (ref_type == FOURCC_url_) {
-          ref.location = g_strdup ((gchar *) ref_data);
+          if (ref.location != NULL) {
+            GST_INFO_OBJECT (qtdemux, "New location: %s", ref.location);
+            redirects =
+                g_list_prepend (redirects, g_memdup (&ref, sizeof (ref)));
+          } else {
+            GST_WARNING_OBJECT (qtdemux,
+                "Failed to extract redirect location from rdrf atom");
+          }
         } else {
-          GST_DEBUG_OBJECT (qtdemux,
-              "unknown rdrf reference type %" GST_FOURCC_FORMAT,
-              GST_FOURCC_ARGS (ref_type));
-        }
-        if (ref.location != NULL) {
-          GST_INFO_OBJECT (qtdemux, "New location: %s", ref.location);
-          redirects = g_list_prepend (redirects, g_memdup (&ref, sizeof (ref)));
-        } else {
-          GST_WARNING_OBJECT (qtdemux,
-              "Failed to extract redirect location from rdrf atom");
+          GST_WARNING_OBJECT (qtdemux, "Invalid rdrf size (%u < 20)", ref_len);
         }
       }
 
