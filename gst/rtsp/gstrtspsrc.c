@@ -3200,6 +3200,7 @@ add_retransmission (GstRTSPSrc * src, GstRTSPTransport * transport)
 {
   GList *walk;
   guint signal_id;
+  gboolean do_retransmission = FALSE;
 
   if (transport->trans != GST_RTSP_TRANS_RTP)
     return;
@@ -3218,6 +3219,7 @@ add_retransmission (GstRTSPSrc * src, GstRTSPTransport * transport)
   /* build the retransmission payload type map */
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+    gboolean do_retransmission_stream = FALSE;
     int i;
 
     if (stream->rtx_pt_map)
@@ -3241,21 +3243,37 @@ add_retransmission (GstRTSPSrc * src, GstRTSPTransport * transport)
           if (rtx_pt != 0) {
             gst_structure_set (stream->rtx_pt_map, stream_pt_s, G_TYPE_UINT,
                 rtx_pt, NULL);
+            do_retransmission_stream = TRUE;
           }
         }
       }
     }
 
-    GST_DEBUG_OBJECT (src, "built retransmission payload map for stream "
-        "id %i: %" GST_PTR_FORMAT, stream->id, stream->rtx_pt_map);
+    if (do_retransmission_stream) {
+      GST_DEBUG_OBJECT (src, "built retransmission payload map for stream "
+          "id %i: %" GST_PTR_FORMAT, stream->id, stream->rtx_pt_map);
+      do_retransmission = TRUE;
+    } else {
+      GST_DEBUG_OBJECT (src, "no retransmission payload map for stream "
+          "id %i", stream->id);
+      gst_structure_free (stream->rtx_pt_map);
+      stream->rtx_pt_map = NULL;
+    }
   }
 
-  g_object_set (src->manager, "do-retransmission", TRUE, NULL);
+  if (do_retransmission) {
+    GST_DEBUG_OBJECT (src, "Enabling retransmissions");
 
-  /* enable RFC4588 retransmission handling by setting rtprtxreceive
-   * as the "aux" element of rtpbin */
-  g_signal_connect (src->manager, "request-aux-receiver",
-      (GCallback) request_aux_receiver, src);
+    g_object_set (src->manager, "do-retransmission", TRUE, NULL);
+
+    /* enable RFC4588 retransmission handling by setting rtprtxreceive
+     * as the "aux" element of rtpbin */
+    g_signal_connect (src->manager, "request-aux-receiver",
+        (GCallback) request_aux_receiver, src);
+  } else {
+    GST_DEBUG_OBJECT (src,
+        "Not enabling retransmissions as no stream had a retransmission payload map");
+  }
 }
 
 /* try to get and configure a manager */
