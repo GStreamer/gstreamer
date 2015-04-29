@@ -2853,6 +2853,81 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
   EXPOSE_UNLOCK (dbin);
 }
 
+static GstPadProbeReturn
+sink_pad_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstDecodeGroup *group = (GstDecodeGroup *) user_data;
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+  GstPad *peer = gst_pad_get_peer (pad);
+  GstPadProbeReturn proberet = GST_PAD_PROBE_OK;
+
+  GST_DEBUG_OBJECT (pad, "Got upstream event %s", GST_EVENT_TYPE_NAME (event));
+
+  if (peer == NULL) {
+    GST_DEBUG_OBJECT (pad, "We are unlinked !");
+    if (group->parent && group->parent->next_groups) {
+      GstDecodeGroup *last_group =
+          g_list_last (group->parent->next_groups)->data;
+      GST_DEBUG_OBJECT (pad, "We could send the event to another group (%p)",
+          last_group);
+      /* Grab another sinkpad for that last group through which we will forward this event */
+      if (last_group->reqpads) {
+        GstPad *sinkpad = (GstPad *) last_group->reqpads->data;
+        GstPad *otherpeer = gst_pad_get_peer (sinkpad);
+        if (otherpeer) {
+          GST_DEBUG_OBJECT (otherpeer, "Attempting to forward event");
+          if (gst_pad_send_event (otherpeer, gst_event_ref (event))) {
+            proberet = GST_PAD_PROBE_HANDLED;
+          }
+          gst_object_unref (otherpeer);
+        }
+      } else
+        GST_DEBUG_OBJECT (pad, "No request pads, can't forward event");
+    }
+  } else
+    gst_object_unref (peer);
+
+  return proberet;
+}
+
+static GstPadProbeReturn
+sink_pad_query_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstDecodeGroup *group = (GstDecodeGroup *) user_data;
+  GstPad *peer = gst_pad_get_peer (pad);
+  GstQuery *query = GST_PAD_PROBE_INFO_QUERY (info);
+  GstPadProbeReturn proberet = GST_PAD_PROBE_OK;
+
+  GST_DEBUG_OBJECT (pad, "Got upstream query %s", GST_QUERY_TYPE_NAME (query));
+
+  if (peer == NULL) {
+    GST_DEBUG_OBJECT (pad, "We are unlinked !");
+    if (group->parent && group->parent->next_groups) {
+      GstDecodeGroup *last_group =
+          g_list_last (group->parent->next_groups)->data;
+      GST_DEBUG_OBJECT (pad, "We could send the query to another group");
+      /* Grab another sinkpad for that last group through which we will forward this event */
+      if (last_group->reqpads) {
+        GstPad *sinkpad = (GstPad *) last_group->reqpads->data;
+        GstPad *otherpeer = gst_pad_get_peer (sinkpad);
+        if (otherpeer) {
+          GST_DEBUG_OBJECT (otherpeer, "Attempting to forward query");
+          if (gst_pad_query (otherpeer, query)) {
+            proberet = GST_PAD_PROBE_HANDLED;
+          } else
+            GST_DEBUG ("FAILURE");
+          gst_object_unref (otherpeer);
+        } else
+          GST_DEBUG_OBJECT (sinkpad, "request pad not connected ??");
+      } else
+        GST_DEBUG_OBJECT (pad, "No request pads ???");
+    }
+  } else
+    gst_object_unref (peer);
+
+  return proberet;
+}
+
 static void
 pad_removed_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
 {
@@ -3675,6 +3750,11 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
         sinkpad);
     goto error;
   }
+  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
+      sink_pad_event_probe, group, NULL);
+  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
+      sink_pad_query_probe, group, NULL);
+
   CHAIN_MUTEX_LOCK (group->parent);
   group->reqpads = g_list_prepend (group->reqpads, gst_object_ref (sinkpad));
   CHAIN_MUTEX_UNLOCK (group->parent);
