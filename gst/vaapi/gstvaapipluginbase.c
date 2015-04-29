@@ -700,7 +700,8 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
-    gst_buffer_pool_set_config (pool, config);
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
   }
 
   /* Check whether GstVideoMeta, or GstVideoAlignment, is needed (raw video) */
@@ -708,12 +709,14 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
-    gst_buffer_pool_set_config (pool, config);
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
   } else if (has_video_alignment) {
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-    gst_buffer_pool_set_config (pool, config);
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
   }
 
   /* GstVideoGLTextureUploadMeta (OpenGL) */
@@ -722,7 +725,8 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
-    gst_buffer_pool_set_config (pool, config);
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
   }
 #endif
 
@@ -750,6 +754,15 @@ error_ensure_display:
 error_create_pool:
   {
     GST_ERROR_OBJECT (plugin, "failed to create buffer pool");
+    return FALSE;
+  }
+config_failed:
+  {
+    if (pool)
+      gst_object_unref (pool);
+    GST_ELEMENT_ERROR (plugin, RESOURCE, SETTINGS,
+        ("Failed to configure the buffer pool"),
+        ("Configuration is most likely invalid, please report this issue."));
     return FALSE;
   }
 }
