@@ -872,7 +872,7 @@ check_queue_length (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         splitmux->queued_gops <= 1) {
       allow_grow = TRUE;
     } else if (splitmux->state == SPLITMUX_STATE_COLLECTING_GOP_START &&
-        ctx->is_video) {
+        ctx->is_video && splitmux->queued_gops <= 1) {
       allow_grow = TRUE;
     }
 
