@@ -376,17 +376,30 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       GstNavigationMessageType mtype = gst_navigation_message_get_type (msg);
       if (mtype == GST_NAVIGATION_MESSAGE_EVENT) {
         GstEvent *ev;
+
         if (gst_navigation_message_parse_event (msg, &ev)) {
           GstNavigationEventType e_type = gst_navigation_event_get_type (ev);
           switch (e_type) {
             case GST_NAVIGATION_EVENT_KEY_PRESS:
             {
               const gchar *key;
+
               if (gst_navigation_event_parse_key_event (ev, &key)) {
+                GST_INFO ("Key press: %s", key);
+
                 if (strcmp (key, "Left") == 0)
                   key = GST_PLAY_KB_ARROW_LEFT;
                 else if (strcmp (key, "Right") == 0)
                   key = GST_PLAY_KB_ARROW_RIGHT;
+                else if (strcmp (key, "Up") == 0)
+                  key = GST_PLAY_KB_ARROW_UP;
+                else if (strcmp (key, "Down") == 0)
+                  key = GST_PLAY_KB_ARROW_DOWN;
+                else if (strcmp (key, "space") == 0)
+                  key = " ";
+                else if (strlen (key) > 1)
+                  break;
+
                 keyboard_cb (key, user_data);
               }
               break;
