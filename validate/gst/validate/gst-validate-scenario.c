@@ -594,19 +594,19 @@ _execute_set_state (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  gdouble duration = 0;
+  GstClockTime duration = 0;
   GstStateChangeReturn ret;
 
-  gst_structure_get_double (action->structure, "duration", &duration);
+  gst_structure_get_uint64 (action->structure, "duration", &duration);
   gst_structure_set (action->structure, "state", G_TYPE_STRING, "paused", NULL);
 
-  GST_DEBUG ("Pausing for %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (duration * GST_SECOND));
+  GST_INFO_OBJECT (scenario, "Pausing for %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (duration));
 
   ret = _execute_set_state (scenario, action);
 
   if (ret && duration)
-    g_timeout_add (duration * 1000,
+    g_timeout_add (GST_TIME_AS_MSECONDS (duration),
         (GSourceFunc) _pause_action_restore_playing, scenario);
 
   return ret;
