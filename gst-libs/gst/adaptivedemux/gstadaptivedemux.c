@@ -1130,8 +1130,10 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
       gint64 start = 0;
 
       GST_MANIFEST_LOCK (demux);
-      if (demux->priv->have_manifest) {
+      if (!demux->priv->have_manifest) {
         GST_MANIFEST_UNLOCK (demux);
+        GST_INFO_OBJECT (demux,
+            "Don't have manifest yet, can't answer seeking query");
         return FALSE;           /* can't answer without manifest */
       }
 
