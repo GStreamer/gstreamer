@@ -183,10 +183,11 @@ static GstStaticPadTemplate video_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ( /*RAW_AND_JPEG_CAPS "; " */ H264_CAPS)
     );
 
-#define gst_rpi_cam_src_parent_class parent_class
-G_DEFINE_TYPE (GstRpiCamSrc, gst_rpi_cam_src, GST_TYPE_PUSH_SRC);
 
 static void gst_rpi_cam_src_finalize (GObject *object);
+
+static void gst_rpi_cam_src_colorbalance_init (GstColorBalanceInterface *
+    iface);
 
 static void gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -204,6 +205,12 @@ static GstCaps *gst_rpi_cam_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 static gboolean gst_rpi_cam_src_event (GstBaseSrc * src, GstEvent * event);
 static gboolean gst_rpi_cam_src_send_event (GstElement * element,
     GstEvent * event);
+
+#define gst_rpi_cam_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstRpiCamSrc, gst_rpi_cam_src,
+    GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_rpi_cam_src_colorbalance_init));
 
 #define C_ENUM(v) ((gint) v)
 
@@ -434,6 +441,8 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
 static void
 gst_rpi_cam_src_init (GstRpiCamSrc * src)
 {
+  GstColorBalanceChannel *channel;
+
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
   raspicapture_default_config (&src->capture_config);
@@ -445,15 +454,129 @@ gst_rpi_cam_src_init (GstRpiCamSrc * src)
   /* Don't let basesrc set timestamps, we'll do it using
    * buffer PTS and system times */
   gst_base_src_set_do_timestamp (GST_BASE_SRC (src), FALSE);
+
+  /* Generate the channels list */
+  channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
+  channel->label = g_strdup ("CONTRAST");
+  channel->min_value = -100;
+  channel->max_value = 100;
+  src->channels = g_list_append (src->channels, channel);
+
+  channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
+  channel->label = g_strdup ("BRIGHTNESS");
+  channel->min_value = 0;
+  channel->max_value = 100;
+  src->channels = g_list_append (src->channels, channel);
+
+  channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
+  channel->label = g_strdup ("SATURATION");
+  channel->min_value = -100;
+  channel->max_value = 100;
+  src->channels = g_list_append (src->channels, channel);
 }
 
 static void
 gst_rpi_cam_src_finalize (GObject *object)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (object);
+  GList *channels = NULL;
   g_mutex_clear (&src->config_lock);
 
+  channels = src->channels;
+  while (channels) {
+    GstColorBalanceChannel *channel = channels->data;
+
+    g_object_unref (channel);
+    channels->data = NULL;
+    channels = g_list_next (channels);
+  }
+
+  if (src->channels)
+    g_list_free (src->channels);
+
   G_OBJECT_CLASS (gst_rpi_cam_src_parent_class)->finalize (object);
+}
+
+static const GList *
+gst_rpi_cam_src_colorbalance_list_channels (GstColorBalance * balance)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC (balance);
+
+  g_return_val_if_fail (src != NULL, NULL);
+  g_return_val_if_fail (GST_IS_RPICAMSRC (src), NULL);
+
+  return src->channels;
+}
+
+static void
+gst_rpi_cam_src_colorbalance_set_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC (balance);
+  gboolean changed = FALSE;
+
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (GST_IS_RPICAMSRC (src));
+  g_return_if_fail (channel->label != NULL);
+
+  GST_OBJECT_LOCK (src);
+  if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
+    changed = value != src->capture_config.camera_parameters.saturation;
+    src->capture_config.camera_parameters.saturation = value;
+  } else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS")) {
+    changed = value != src->capture_config.camera_parameters.brightness;
+    src->capture_config.camera_parameters.brightness = value;
+  } else if (!g_ascii_strcasecmp (channel->label, "CONTRAST")) {
+    changed = value != src->capture_config.camera_parameters.contrast;
+    src->capture_config.camera_parameters.contrast = value;
+  }
+
+  if (changed)
+    src->capture_config.change_flags |= PROP_CHANGE_COLOURBALANCE;
+
+  GST_OBJECT_UNLOCK (src);
+
+  if (changed) {
+    gst_color_balance_value_changed (balance, channel,
+        gst_color_balance_get_value (balance, channel));
+  }
+}
+
+static gint
+gst_rpi_cam_src_colorbalance_get_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC (balance);
+  gint value = 0;
+
+  g_return_val_if_fail (src != NULL, 0);
+  g_return_val_if_fail (GST_IS_RPICAMSRC (src), 0);
+  g_return_val_if_fail (channel->label != NULL, 0);
+
+  if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
+    value = src->capture_config.camera_parameters.saturation;
+  } else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS")) {
+    value = src->capture_config.camera_parameters.brightness;
+  } else if (!g_ascii_strcasecmp (channel->label, "CONTRAST")) {
+    value = src->capture_config.camera_parameters.contrast;
+  }
+
+  return value;
+}
+
+static GstColorBalanceType
+gst_rpi_cam_src_colorbalance_get_balance_type (GstColorBalance * balance)
+{
+  return GST_COLOR_BALANCE_HARDWARE;
+}
+
+static void
+gst_rpi_cam_src_colorbalance_init (GstColorBalanceInterface * iface)
+{
+  iface->list_channels = gst_rpi_cam_src_colorbalance_list_channels;
+  iface->set_value = gst_rpi_cam_src_colorbalance_set_value;
+  iface->get_value = gst_rpi_cam_src_colorbalance_get_value;
+  iface->get_balance_type = gst_rpi_cam_src_colorbalance_get_balance_type;
 }
 
 static void

@@ -74,6 +74,9 @@ struct _GstRpiCamSrc
   gboolean started;
 
   GMutex config_lock;
+
+  /* channels for interface */
+  GList *channels;
 };
 
 struct _GstRpiCamSrcClass
