@@ -123,7 +123,6 @@ enum
 {
   PROP_BIN_0,
   PROP_BIN_FORCE_ASPECT_RATIO,
-  PROP_BIN_PIXEL_ASPECT_RATIO,
   PROP_BIN_HANDLE_EVENTS,
   PROP_BIN_CONTEXT,
   PROP_BIN_SHOW_PREROLL_FRAME,
@@ -222,13 +221,10 @@ gst_gl_image_sink_bin_class_init (GstGLImageSinkBinClass * klass)
       g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",
           "When enabled, alpha will be ignored and converted to black",
           DEFAULT_HANDLE_EVENTS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_BIN_CONTEXT,
       g_param_spec_object ("context", "OpenGL context", "Get OpenGL context",
           GST_GL_TYPE_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BIN_PIXEL_ASPECT_RATIO,
-      gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
-          "The pixel aspect ratio of the device", 0, 1, G_MAXINT, 1, 1, 1,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* video sink */
   g_object_class_install_property (gobject_class, PROP_BIN_SHOW_PREROLL_FRAME,
