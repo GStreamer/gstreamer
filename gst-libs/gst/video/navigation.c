@@ -564,6 +564,8 @@ gst_navigation_message_parse_mouse_over (GstMessage * message,
  * #GST_NAVIGATION_MESSAGE_EVENT.
  *
  * Returns: The new #GstMessage.
+ *
+ * Since: 1.6
  */
 GstMessage *
 gst_navigation_message_new_event (GstObject * src, GstEvent * event)
@@ -582,14 +584,16 @@ gst_navigation_message_new_event (GstObject * src, GstEvent * event)
 /**
  * gst_navigation_message_parse_event:
  * @message: A #GstMessage to inspect.
- * @event: (transfer full): a pointer to a #GstEvent to receive the contained
- * navigation event.
+ * @event: (out) (transfer full): a pointer to a #GstEvent to receive the
+ *     contained navigation event.
  *
  * Parse a #GstNavigation message of type #GST_NAVIGATION_MESSAGE_EVENT
  * and extract contained #GstEvent. The caller must unref the @event when done
  * with it.
  *
  * Returns: %TRUE if the message could be successfully parsed. %FALSE if not.
+ *
+ * Since: 1.6
  */
 gboolean
 gst_navigation_message_parse_event (GstMessage * message, GstEvent ** event)

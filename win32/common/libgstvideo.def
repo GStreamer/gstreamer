@@ -30,8 +30,10 @@ EXPORTS
 	gst_navigation_message_get_type
 	gst_navigation_message_new_angles_changed
 	gst_navigation_message_new_commands_changed
+	gst_navigation_message_new_event
 	gst_navigation_message_new_mouse_over
 	gst_navigation_message_parse_angles_changed
+	gst_navigation_message_parse_event
 	gst_navigation_message_parse_mouse_over
 	gst_navigation_message_type_get_type
 	gst_navigation_query_get_type
