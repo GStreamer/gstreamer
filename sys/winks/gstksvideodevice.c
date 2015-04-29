@@ -83,6 +83,7 @@ struct _GstKsVideoDevicePrivate
   guint fps_n;
   guint fps_d;
   guint8 *rgb_swap_buf;
+  gboolean is_muxed;
 
   HANDLE pin_handle;
 
@@ -752,6 +753,11 @@ gst_ks_video_device_set_caps (GstKsVideoDevice * self, GstCaps * caps)
   if (!gst_structure_get_int (s, "width", &width) ||
       !gst_structure_get_int (s, "height", &height) ||
       !gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)) {
+    gst_structure_get_boolean (s, "systemstream", &priv->is_muxed);
+    if (!priv->is_muxed) {
+      GST_ERROR ("Failed to get width/height/fps");
+      goto error;
+    }
   } else {
     if (!ks_video_fixate_media_type (media_type->range,
             media_type->format, width, height, fps_n, fps_d))
@@ -965,7 +971,10 @@ gst_ks_video_device_request_frame (GstKsVideoDevice * self, ReadRequest * req,
   if (!gst_buffer_map (req->buf, &info, GST_MAP_WRITE))
     goto map_failed;
 
-  params->header.Size = sizeof (KSSTREAM_HEADER) + sizeof (KS_FRAME_INFO);
+  params->header.Size = sizeof (KSSTREAM_HEADER);
+  if (!priv->is_muxed) {
+    params->header.Size += sizeof (KS_FRAME_INFO);
+  }
   params->header.PresentationTime.Numerator = 1;
   params->header.PresentationTime.Denominator = 1;
   params->header.FrameExtent = gst_ks_video_device_get_frame_size (self);
