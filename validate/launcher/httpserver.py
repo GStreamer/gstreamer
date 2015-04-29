@@ -103,4 +103,4 @@ class HTTPServer(loggable.Loggable):
         if self._process:
             self._process.terminate()
             self._process = None
-            self.debug("Server stoped")
+            self.debug("Server stopped")

@@ -102,7 +102,7 @@ class Xvfb(VirtualFrameBufferServer):
         if self._process:
             self._process.terminate()
             self._process = None
-            self.debug("xvfb stoped")
+            self.debug("xvfb stopped")
 
 
 def get_virual_frame_buffer_server(options):
