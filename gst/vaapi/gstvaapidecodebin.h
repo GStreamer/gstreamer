@@ -23,6 +23,8 @@
 #ifndef GST_VAAPI_DECODE_BIN_H
 #define GST_VAAPI_DECODE_BIN_H
 
+#include <gst/vaapi/gstvaapifilter.h>
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_VAAPI_DECODE_BIN (gst_vaapi_decode_bin_get_type ())
@@ -49,6 +51,7 @@ typedef struct _GstVaapiDecodeBin {
   guint   max_size_buffers;
   guint   max_size_bytes;
   guint64 max_size_time;
+  GstVaapiDeinterlaceMethod deinterlace_method;
 
 } GstVaapiDecodeBin;
 

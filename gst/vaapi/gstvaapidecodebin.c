@@ -37,13 +37,15 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapi_decode_bin);
 #define DEFAULT_QUEUE_MAX_SIZE_BUFFERS 0
 #define DEFAULT_QUEUE_MAX_SIZE_BYTES   0
 #define DEFAULT_QUEUE_MAX_SIZE_TIME    0
+#define DEFAULT_DEINTERLACE_METHOD     GST_VAAPI_DEINTERLACE_METHOD_BOB
 
 enum
 {
   PROP_0,
   PROP_MAX_SIZE_BUFFERS,
   PROP_MAX_SIZE_BYTES,
-  PROP_MAX_SIZE_TIME
+  PROP_MAX_SIZE_TIME,
+  PROP_DEINTERLACE_METHOD
 };
 
 #define GST_VAAPI_DECODE_BIN_SURFACE_CAPS \
@@ -120,6 +122,11 @@ gst_vaapi_decode_bin_set_property (GObject * object,
       g_object_set (G_OBJECT (vaapidecbin->queue), "max-size-time",
           vaapidecbin->max_size_time, NULL);
       break;
+    case PROP_DEINTERLACE_METHOD:
+      vaapidecbin->deinterlace_method = g_value_get_enum (value);
+      g_object_set (G_OBJECT (vaapidecbin->postproc), "deinterlace-method",
+          vaapidecbin->deinterlace_method, NULL);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -141,6 +148,9 @@ gst_vaapi_decode_bin_get_property (GObject * object,
       break;
     case PROP_MAX_SIZE_TIME:
       g_value_set_uint64 (value, vaapidecbin->max_size_time);
+      break;
+    case PROP_DEINTERLACE_METHOD:
+      g_value_set_enum (value, vaapidecbin->deinterlace_method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -180,6 +190,11 @@ gst_vaapi_decode_bin_class_init (GstVaapiDecodeBinClass * klass)
       g_param_spec_uint64 ("max-size-time", "Max. size (ns)",
           "Max. amount of data in the queue (in ns, 0=disable)", 0, G_MAXUINT64,
           DEFAULT_QUEUE_MAX_SIZE_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DEINTERLACE_METHOD,
+      g_param_spec_enum ("deinterlace-method", "Deinterlace method",
+          "Deinterlace method to use", GST_VAAPI_TYPE_DEINTERLACE_METHOD,
+          DEFAULT_DEINTERLACE_METHOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
@@ -222,6 +237,9 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
       "max-size-bytes", vaapidecbin->max_size_bytes,
       "max-size-buffers", vaapidecbin->max_size_buffers,
       "max-size-time", vaapidecbin->max_size_time, NULL);
+
+  g_object_set (G_OBJECT (vaapidecbin->postproc),
+      "deinterlace-method", vaapidecbin->deinterlace_method, NULL);
 
   gst_bin_add_many (GST_BIN (vaapidecbin),
       vaapidecbin->decoder, vaapidecbin->queue, vaapidecbin->postproc, NULL);
