@@ -1974,37 +1974,26 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
     GST_DEBUG_OBJECT (stream->pad,
         "Activating stream due to reconfigure event");
 
-    cur = stream->segment.position;
+    cur = ts = stream->segment.position;
 
     if (gst_pad_peer_query_position (stream->pad, GST_FORMAT_TIME, &pos)) {
       ts = (GstClockTime) pos;
       GST_DEBUG_OBJECT (demux, "Downstream position: %"
           GST_TIME_FORMAT, GST_TIME_ARGS (ts));
     } else {
-      gboolean have_pos = FALSE;
-
       /* query other pads as some faulty element in the pad's branch might
        * reject position queries. This should be better than using the
        * demux segment position that can be much ahead */
       for (GList * iter = demux->streams; iter != NULL;
           iter = g_list_next (iter)) {
-        GstAdaptiveDemuxStream *cur_stream = iter->data;
+        GstAdaptiveDemuxStream *cur_stream = (GstAdaptiveDemuxStream *)iter->data;
 
-        have_pos =
-            gst_pad_peer_query_position (cur_stream->pad, GST_FORMAT_TIME,
-            &pos);
-        if (have_pos) {
+        if (gst_pad_peer_query_position (cur_stream->pad, GST_FORMAT_TIME, &pos)) {
           ts = (GstClockTime) pos;
           GST_DEBUG_OBJECT (stream->pad, "Downstream position: %"
               GST_TIME_FORMAT, GST_TIME_ARGS (ts));
           break;
         }
-      }
-
-      if (!have_pos) {
-        ts = stream->segment.position;
-        GST_DEBUG_OBJECT (stream->pad, "Downstream position query failed, "
-            "failling back to looking at other pads");
       }
     }
 
