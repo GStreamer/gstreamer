@@ -688,8 +688,8 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   /* GstVaapiVideoMeta is mandatory, and this implies VA surface memory */
   if (!pool || !gst_buffer_pool_has_option (pool,
           GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META)) {
-    GST_INFO_OBJECT (plugin, "no pool or doesn't support GstVaapiVideoMeta, "
-        "making new pool");
+    GST_INFO_OBJECT (plugin, "%s. Making a new pool", pool == NULL ? "No pool" :
+        "Pool hasn't GstVaapiVideoMeta");
     if (pool)
       gst_object_unref (pool);
     pool = gst_vaapi_video_buffer_pool_new (plugin->display);
