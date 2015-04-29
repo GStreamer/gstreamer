@@ -1,5 +1,7 @@
 plugin_LTLIBRARIES = libgstaiff.la
 
+noinst_HEADERS = aiffmux.h aiffparse.h
+
 libgstaiff_la_SOURCES = aiff.c aiffmux.c aiffparse.c
 libgstaiff_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
