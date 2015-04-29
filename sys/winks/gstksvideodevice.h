@@ -81,6 +81,8 @@ gboolean gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self, GstBuff
 void gst_ks_video_device_cancel (GstKsVideoDevice * self);
 void gst_ks_video_device_cancel_stop (GstKsVideoDevice * self);
 
+gboolean gst_ks_video_device_stream_is_muxed (GstKsVideoDevice * self);
+
 G_END_DECLS
 
 #endif /* __GST_KS_VIDEO_DEVICE_H__ */

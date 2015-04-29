@@ -1224,3 +1224,11 @@ gst_ks_video_device_cancel_stop (GstKsVideoDevice * self)
 
   ResetEvent (priv->cancel_event);
 }
+
+gboolean
+gst_ks_video_device_stream_is_muxed (GstKsVideoDevice * self)
+{
+  GstKsVideoDevicePrivate *priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
+
+  return priv->is_muxed;
+}
