@@ -339,9 +339,11 @@ gst_amc_video_dec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       self->flushing = TRUE;
-      gst_amc_codec_flush (self->codec, &err);
-      if (err)
-        GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+      if (self->started) {
+        gst_amc_codec_flush (self->codec, &err);
+        if (err)
+          GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+      }
       g_mutex_lock (&self->drain_lock);
       self->draining = FALSE;
       g_cond_broadcast (&self->drain_cond);
