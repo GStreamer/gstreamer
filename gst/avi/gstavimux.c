@@ -1785,6 +1785,10 @@ gst_avi_mux_stop_file (GstAviMux * avimux)
   GSList *node;
   GstSegment segment;
 
+  /* Do not write index and header, if the index has no data */
+  if (avimux->idx == NULL)
+    return GST_FLOW_OK;
+
   /* if bigfile, rewrite header, else write indexes */
   /* don't bail out at once if error, still try to re-write header */
   if (avimux->video_pads > 0) {
