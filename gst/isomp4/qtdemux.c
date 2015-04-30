@@ -5345,7 +5345,6 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         break;
       }
       case QTDEMUX_STATE_MOVIE:{
-        GstBuffer *outbuf;
         QtDemuxStream *stream = NULL;
         QtDemuxSample *sample;
         int i = -1;
@@ -5440,11 +5439,8 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         sample = &stream->samples[stream->sample_index];
 
         if (G_LIKELY (!(STREAM_IS_EOS (stream)))) {
-          outbuf = gst_adapter_take_buffer (demux->adapter, demux->neededbytes);
           GST_DEBUG_OBJECT (demux, "stream : %" GST_FOURCC_FORMAT,
               GST_FOURCC_ARGS (stream->fourcc));
-
-          g_return_val_if_fail (outbuf != NULL, GST_FLOW_ERROR);
 
           dts = QTSAMPLE_DTS (stream, sample);
           pts = QTSAMPLE_PTS (stream, sample);
@@ -5456,6 +5452,9 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
                   && demux->segment.stop <= pts && stream->on_keyframe)) {
             GST_DEBUG_OBJECT (demux, "we reached the end of our segment.");
             stream->time_position = GST_CLOCK_TIME_NONE;        /* this means EOS */
+
+            /* skip this data, stream is EOS */
+            gst_adapter_flush (demux->adapter, demux->neededbytes);
 
             /* check if all streams are eos */
             ret = GST_FLOW_EOS;
@@ -5471,6 +5470,14 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
               goto eos;
             }
           } else {
+            GstBuffer *outbuf;
+
+            outbuf =
+                gst_adapter_take_buffer (demux->adapter, demux->neededbytes);
+
+            /* FIXME: should either be an assert or a plain check */
+            g_return_val_if_fail (outbuf != NULL, GST_FLOW_ERROR);
+
             ret = gst_qtdemux_decorate_and_push_buffer (demux, stream, outbuf,
                 dts, pts, duration, keyframe, dts, demux->offset);
           }
