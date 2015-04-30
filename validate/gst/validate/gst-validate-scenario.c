@@ -2310,6 +2310,45 @@ gst_validate_scenario_finalize (GObject * object)
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->finalize (object);
 }
 
+static void _element_added_cb (GstBin * bin, GstElement * element,
+    GstValidateScenario * scenario);
+
+static void
+iterate_children (GstValidateScenario * scenario, GstBin * bin)
+{
+  GstIterator *it;
+  GValue v = G_VALUE_INIT;
+  gboolean done = FALSE;
+  GHashTable *called;           /* set of GstElement on which we already called _element_added_cb() */
+
+  called = g_hash_table_new (NULL, NULL);
+  it = gst_bin_iterate_elements (bin);
+
+  while (!done) {
+    switch (gst_iterator_next (it, &v)) {
+      case GST_ITERATOR_OK:{
+        GstElement *child = g_value_get_object (&v);
+
+        if (g_hash_table_lookup (called, child) == NULL) {
+          _element_added_cb (bin, child, scenario);
+          g_hash_table_add (called, child);
+        }
+        g_value_reset (&v);
+      }
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        break;
+      case GST_ITERATOR_ERROR:
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+    }
+  }
+  g_value_reset (&v);
+  gst_iterator_free (it);
+  g_hash_table_unref (called);
+}
+
 static void
 _element_added_cb (GstBin * bin, GstElement * element,
     GstValidateScenario * scenario)
@@ -2356,6 +2395,7 @@ _element_added_cb (GstBin * bin, GstElement * element,
   if (GST_IS_BIN (element)) {
     g_signal_connect (element, "element-added", (GCallback) _element_added_cb,
         scenario);
+    iterate_children (scenario, GST_BIN (element));
   }
 }
 
@@ -2390,6 +2430,8 @@ gst_validate_scenario_factory_create (GstValidateRunner *
 
   g_signal_connect (pipeline, "element-added", (GCallback) _element_added_cb,
       scenario);
+
+  iterate_children (scenario, GST_BIN (pipeline));
 
   scenario->priv->bus = gst_element_get_bus (pipeline);
   gst_bus_add_signal_watch (scenario->priv->bus);
