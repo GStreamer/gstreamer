@@ -1329,9 +1329,24 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
   if (G_UNLIKELY (!sps)) {
     caps = gst_caps_copy (sink_caps);
   } else {
-    h265parse->width = sps->width;
-    h265parse->height = sps->height;
-    modified = TRUE;
+    gint crop_width, crop_height;
+
+    if (sps->conformance_window_flag) {
+      crop_width = sps->crop_rect_width;
+      crop_height = sps->crop_rect_height;
+    } else {
+      crop_width = sps->width;
+      crop_height = sps->height;
+    }
+
+    if (G_UNLIKELY (h265parse->width != crop_width ||
+            h265parse->height != crop_height)) {
+      GST_INFO_OBJECT (h265parse, "resolution changed %dx%d",
+          crop_width, crop_height);
+      h265parse->width = crop_width;
+      h265parse->height = crop_height;
+      modified = TRUE;
+    }
 
     /* 0/1 is set as the default in the codec parser */
     if (sps->vui_params.timing_info_present_flag &&
