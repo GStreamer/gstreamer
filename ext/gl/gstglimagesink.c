@@ -156,22 +156,6 @@ static void
 gst_glimage_sink_handle_events (GstVideoOverlay * overlay,
     gboolean handle_events);
 
-static GstStaticPadTemplate gst_glimage_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA") "; "
-#if GST_GL_HAVE_PLATFORM_EGL
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE, "RGBA") "; "
-#endif
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
-            "RGBA") "; " GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS))
-    );
-
 enum
 {
   ARG_0,
@@ -262,6 +246,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   GstBaseSinkClass *gstbasesink_class;
   GstVideoSinkClass *gstvideosink_class;
   GstElementClass *element_class;
+  GstCaps *upload_caps, *elem_caps, *templ;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -343,8 +328,14 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_BOOLEAN, 3, GST_GL_TYPE_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
 
+  elem_caps = gst_caps_from_string ("video/x-raw(ANY),format=RGBA");
+  upload_caps = gst_gl_upload_get_input_template_caps ();
+  templ = gst_caps_intersect (elem_caps, upload_caps);
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_glimage_sink_template));
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, templ));
+  gst_caps_unref (upload_caps);
+  gst_caps_unref (elem_caps);
+  gst_caps_unref (templ);
 
   gobject_class->finalize = gst_glimage_sink_finalize;
 
@@ -640,19 +631,6 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
   return res;
 }
 
-static gboolean
-gst_glimage_sink_stop (GstBaseSink * bsink)
-{
-  GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (bsink);
-
-  if (glimage_sink->pool) {
-    gst_object_unref (glimage_sink->pool);
-    glimage_sink->pool = NULL;
-  }
-
-  return TRUE;
-}
-
 static void
 gst_glimage_sink_set_context (GstElement * element, GstContext * context)
 {
@@ -721,11 +699,6 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       if (glimage_sink->upload) {
         gst_object_unref (glimage_sink->upload);
         glimage_sink->upload = NULL;
-      }
-
-      if (glimage_sink->convert) {
-        gst_object_unref (glimage_sink->convert);
-        glimage_sink->convert = NULL;
       }
 
       glimage_sink->window_id = 0;
@@ -819,13 +792,6 @@ gst_glimage_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   tmp = gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD (bsink));
 
   result =
-      gst_gl_color_convert_transform_caps (gl_sink->context, GST_PAD_SRC, tmp,
-      NULL);
-  gst_caps_unref (tmp);
-  tmp = result;
-  GST_DEBUG_OBJECT (bsink, "convert returned caps %" GST_PTR_FORMAT, tmp);
-
-  result =
       gst_gl_upload_transform_caps (gl_sink->context, GST_PAD_SRC, tmp, NULL);
   gst_caps_unref (tmp);
   tmp = result;
@@ -854,8 +820,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gint display_par_n, display_par_d;
   guint display_ratio_num, display_ratio_den;
   GstVideoInfo vinfo;
-  GstCapsFeatures *gl_features;
-  GstCaps *uploaded_caps;
 
   GST_DEBUG_OBJECT (bsink, "set caps with %" GST_PTR_FORMAT, caps);
 
@@ -923,33 +887,17 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     gst_object_unref (glimage_sink->upload);
   glimage_sink->upload = gst_gl_upload_new (glimage_sink->context);
 
-  gl_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-
-  uploaded_caps = gst_caps_copy (caps);
-  gst_caps_set_features (uploaded_caps, 0,
-      gst_caps_features_copy (gl_features));
-  gst_gl_upload_set_caps (glimage_sink->upload, caps, uploaded_caps);
-
   if (glimage_sink->gl_caps)
     gst_caps_unref (glimage_sink->gl_caps);
   glimage_sink->gl_caps = gst_caps_copy (caps);
   gst_caps_set_simple (glimage_sink->gl_caps, "format", G_TYPE_STRING, "RGBA",
       NULL);
   gst_caps_set_features (glimage_sink->gl_caps, 0,
-      gst_caps_features_copy (gl_features));
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
 
-  if (glimage_sink->convert)
-    gst_object_unref (glimage_sink->convert);
-  glimage_sink->convert = gst_gl_color_convert_new (glimage_sink->context);
-  if (!gst_gl_color_convert_set_caps (glimage_sink->convert, uploaded_caps,
-          glimage_sink->gl_caps)) {
-    gst_caps_unref (uploaded_caps);
-    gst_caps_features_free (gl_features);
+  if (!gst_gl_upload_set_caps (glimage_sink->upload, caps,
+          glimage_sink->gl_caps))
     return FALSE;
-  }
-  gst_caps_unref (uploaded_caps);
-  gst_caps_features_free (gl_features);
 
   glimage_sink->caps_change = TRUE;
 
@@ -960,7 +908,7 @@ static GstFlowReturn
 gst_glimage_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
-  GstBuffer *uploaded_buffer, *next_buffer = NULL;
+  GstBuffer *next_buffer = NULL;
   GstVideoFrame gl_frame;
   GstVideoInfo gl_info;
 
@@ -977,25 +925,16 @@ gst_glimage_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
     return GST_FLOW_NOT_NEGOTIATED;
 
   if (gst_gl_upload_perform_with_buffer (glimage_sink->upload, buf,
-          &uploaded_buffer) != GST_GL_UPLOAD_DONE)
+          &next_buffer) != GST_GL_UPLOAD_DONE)
     goto upload_failed;
-
-  if (!(next_buffer =
-          gst_gl_color_convert_perform (glimage_sink->convert,
-              uploaded_buffer))) {
-    gst_buffer_unref (uploaded_buffer);
-    goto upload_failed;
-  }
 
   gst_video_info_from_caps (&gl_info, glimage_sink->gl_caps);
 
   if (!gst_video_frame_map (&gl_frame, &gl_info, next_buffer,
           GST_MAP_READ | GST_MAP_GL)) {
-    gst_buffer_unref (uploaded_buffer);
     gst_buffer_unref (next_buffer);
     goto upload_failed;
   }
-  gst_buffer_unref (uploaded_buffer);
 
   glimage_sink->next_tex = *(guint *) gl_frame.data[0];
 
@@ -1487,9 +1426,8 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
     return FALSE;
 
   if (gst_gl_window_is_running (window)) {
-    gulong handler_id =
-        g_signal_handler_find (GST_ELEMENT_PARENT (gl_sink), G_SIGNAL_MATCH_ID,
-        gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_DRAW], 0,
+    gulong handler_id = g_signal_handler_find (gl_sink, G_SIGNAL_MATCH_ID,
+        gst_glimage_sink_signals[CLIENT_DRAW_SIGNAL], 0,
         NULL, NULL, NULL);
 
     if (G_UNLIKELY (!gl_sink->redisplay_shader) && (!handler_id

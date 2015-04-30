@@ -66,6 +66,8 @@ struct _GstGLFilter
   GstCaps           *out_caps;
 
   /* <private> */
+  GstGLUpload       *upload;
+
   GLuint             fbo;
   GLuint             depthbuffer;
 
