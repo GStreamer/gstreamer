@@ -33,7 +33,6 @@ enum
 enum
 {
   PROP_0,
-  PROP_QUALITY
 };
 
 
