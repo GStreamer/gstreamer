@@ -676,23 +676,21 @@ gst_gl_color_convert_caps_remove_format_info (GstCaps * caps)
 }
 
 GstCaps *
-gst_gl_color_convert_transform_caps (GstGLContext * convert,
+gst_gl_color_convert_transform_caps (GstGLContext * context,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstCaps *templ, *result;
+  GstCaps *templ, *tmp, *result;
 
   templ =
       gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
       (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_GL_COLOR_CONVERT_FORMATS));
 
-  caps = gst_gl_color_convert_caps_remove_format_info (caps);
-  result = gst_caps_intersect (caps, templ);
-  gst_caps_unref (caps);
+  tmp = gst_gl_color_convert_caps_remove_format_info (caps);
+  result = gst_caps_intersect (tmp, templ);
+  gst_caps_unref (tmp);
   gst_caps_unref (templ);
 
   if (filter) {
-    GstCaps *tmp;
-
     tmp = gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (result);
     result = tmp;

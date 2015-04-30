@@ -68,7 +68,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA"))
+            "RGBA") ";" GST_VIDEO_CAPS_MAKE ("RGBA"))
     );
 
 #define gst_gl_test_src_parent_class parent_class
@@ -455,8 +455,7 @@ static GstCaps *
 gst_gl_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 {
   GstCaps *tmp = NULL;
-  GstCaps *result =
-      gst_caps_from_string ("video/x-raw(memory:GLMemory),format=RGBA");
+  GstCaps *result = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
 
   if (filter) {
     tmp = gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
