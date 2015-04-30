@@ -466,7 +466,13 @@ class GstValidateTest(Test):
         self.add_env_variable('GST_GL_XINITTHREADS', '1')
 
         if self.scenario is not None:
-            subproc_env["GST_VALIDATE_SCENARIO"] = self.scenario.get_execution_name()
+            scenario = self.scenario.get_execution_name()
+            if self.options.valgrind:
+                # Increase sink's max-lateness property when running inside
+                # Valgrind as it slows down everything quiet a lot.
+                scenario = "setup_sink_props_max_lateness:%s" % scenario
+
+            subproc_env["GST_VALIDATE_SCENARIO"] = scenario
             self.add_env_variable("GST_VALIDATE_SCENARIO",
                                   subproc_env["GST_VALIDATE_SCENARIO"])
         else:
