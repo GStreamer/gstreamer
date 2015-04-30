@@ -587,6 +587,22 @@ error_pool_config:
   }
 }
 
+/* XXXX: GStreamer 1.2 doesn't check, in gst_buffer_pool_set_config()
+   if the config option is already set */
+static inline gboolean
+gst_vaapi_plugin_base_set_pool_config (GstBufferPool * pool,
+    const gchar * option)
+{
+  GstStructure *config;
+
+  config = gst_buffer_pool_get_config (pool);
+  if (!gst_buffer_pool_config_has_option (config, option)) {
+    gst_buffer_pool_config_add_option (config, option);
+    return gst_buffer_pool_set_config (pool, config);
+  }
+  return TRUE;
+}
+
 /**
  * gst_vaapi_plugin_base_decide_allocation:
  * @plugin: a #GstVaapiPluginBase
@@ -706,26 +722,20 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
   /* Check whether GstVideoMeta, or GstVideoAlignment, is needed (raw video) */
   if (has_video_meta) {
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-    if (!gst_buffer_pool_set_config (pool, config))
+    if (!gst_vaapi_plugin_base_set_pool_config (pool,
+            GST_BUFFER_POOL_OPTION_VIDEO_META))
       goto config_failed;
   } else if (has_video_alignment) {
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-    if (!gst_buffer_pool_set_config (pool, config))
+    if (!gst_vaapi_plugin_base_set_pool_config (pool,
+            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT))
       goto config_failed;
   }
 
   /* GstVideoGLTextureUploadMeta (OpenGL) */
 #if (USE_GLX || USE_EGL)
   if (has_texture_upload_meta) {
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
-    if (!gst_buffer_pool_set_config (pool, config))
+    if (!gst_vaapi_plugin_base_set_pool_config (pool,
+            GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META))
       goto config_failed;
   }
 #endif
