@@ -196,6 +196,12 @@ print_all_stream_info (GstPlayerMediaInfo * media_info)
   g_print ("URI : %s\n", gst_player_media_info_get_uri (media_info));
   g_print ("Duration: %" GST_TIME_FORMAT "\n",
       GST_TIME_ARGS (gst_player_media_info_get_duration (media_info)));
+  g_print ("Global taglist:\n");
+  if (gst_player_media_info_get_tags (media_info))
+    gst_tag_list_foreach (gst_player_media_info_get_tags (media_info),
+      print_one_tag, NULL);
+  else
+    g_print ("  (nil) \n");
   for (l = list; l != NULL; l = l->next) {
     GstTagList *tags = NULL;
     GstPlayerStreamInfo *stream = (GstPlayerStreamInfo *) l->data;
