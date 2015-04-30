@@ -1628,14 +1628,128 @@ _get_target_element (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 static gboolean
+strv_contains (GStrv strv, const gchar * str)
+{
+  guint i;
+
+  for (i = 0; strv[i] != NULL; i++)
+    if (g_strcmp0 (strv[i], str) == 0)
+      return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
+element_has_klass (GstElement * element, const gchar * klass)
+{
+  const gchar *tmp;
+  gchar **a, **b;
+  gboolean result = FALSE;
+  guint i;
+
+  tmp = gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (element),
+      GST_ELEMENT_METADATA_KLASS);
+
+  a = g_strsplit (klass, "/", -1);
+  b = g_strsplit (tmp, "/", -1);
+
+  /* All the elements in 'a' have to be in 'b' */
+  for (i = 0; a[i] != NULL; i++)
+    if (!strv_contains (b, a[i]))
+      goto done;
+  result = TRUE;
+
+done:
+  g_strfreev (a);
+  g_strfreev (b);
+  return result;
+}
+
+static gint
+cmp_klass_name (gconstpointer a, gconstpointer b)
+{
+  const GValue *v = a;
+  const GValue *param = b;
+  GstElement *element = g_value_get_object (v);
+  const gchar *klass = g_value_get_string (param);
+
+  if (element_has_klass (element, klass))
+    return 0;
+
+  return 1;
+}
+
+/**
+ * _get_target_elements_by_klass:
+ * @scenario: a #GstValidateScenario
+ * @action: a #GstValidateAction
+ *
+ * Returns all the elements in the pipeline whose the GST_ELEMENT_METADATA_KLASS
+ * matches the 'target-element-klass' of @action.
+ *
+ * Returns: (transfer full) (element-type GstElement): a list of #GstElement
+ */
+static GList *
+_get_target_elements_by_klass (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GList *result = NULL;
+  GstIterator *it, *filtered;
+  const gchar *klass;
+  GValue v = G_VALUE_INIT, param = G_VALUE_INIT;
+  gboolean done = FALSE;
+
+  klass = gst_structure_get_string (action->structure, "target-element-klass");
+  if (klass == NULL)
+    return NULL;
+
+  if (element_has_klass (scenario->pipeline, klass))
+    result = g_list_prepend (result, gst_object_ref (scenario->pipeline));
+
+  it = gst_bin_iterate_recurse (GST_BIN (scenario->pipeline));
+
+  g_value_init (&param, G_TYPE_STRING);
+  g_value_set_string (&param, klass);
+
+  filtered = gst_iterator_filter (it, cmp_klass_name, &param);
+
+  while (!done) {
+    switch (gst_iterator_next (filtered, &v)) {
+      case GST_ITERATOR_OK:{
+        GstElement *child = g_value_get_object (&v);
+
+        if (g_list_find (result, child) == NULL)
+          result = g_list_prepend (result, gst_object_ref (child));
+        g_value_reset (&v);
+      }
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        break;
+      case GST_ITERATOR_ERROR:
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+    }
+  }
+
+  g_value_reset (&v);
+  g_value_reset (&param);
+  gst_iterator_free (filtered);
+
+  return result;
+}
+
+static gboolean
 _object_set_property (GObject * object, const gchar * property,
-    const GValue * value)
+    const GValue * value, gboolean optional)
 {
   GObjectClass *klass = G_OBJECT_GET_CLASS (object);
   GParamSpec *paramspec;
 
   paramspec = g_object_class_find_property (klass, property);
   if (paramspec == NULL) {
+    if (optional)
+      return TRUE;
     GST_ERROR ("Target doesn't have property %s", property);
     return FALSE;
   }
@@ -1650,22 +1764,39 @@ _execute_set_property (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
   GstElement *target;
+  GList *targets = NULL, *l;
   const gchar *property;
   const GValue *property_value;
-  gboolean ret;
+  gboolean ret = TRUE;
 
-  target = _get_target_element (scenario, action);
-  if (target == NULL) {
-    return FALSE;
+  /* set-property can be applied on either:
+   * - a single element having target-element-name as name
+   * - all the elements having target-element-klass as klass
+   */
+  if (gst_structure_get_string (action->structure, "target-element-name")) {
+    target = _get_target_element (scenario, action);
+    if (target == NULL) {
+      return FALSE;
+    }
+    targets = g_list_append (targets, target);
+  } else if (gst_structure_get_string (action->structure,
+          "target-element-klass")) {
+    targets = _get_target_elements_by_klass (scenario, action);
+  } else {
+    g_assert_not_reached ();
   }
 
   property = gst_structure_get_string (action->structure, "property-name");
   property_value = gst_structure_get_value (action->structure,
       "property-value");
 
-  ret = _object_set_property (G_OBJECT (target), property, property_value);
+  for (l = targets; l != NULL; l = g_list_next (l)) {
+    if (!_object_set_property (G_OBJECT (l->data), property, property_value,
+            action->priv->optional))
+      ret = FALSE;
+  }
 
-  gst_object_unref (target);
+  g_list_free_full (targets, gst_object_unref);
   return ret;
 }
 
@@ -2385,6 +2516,22 @@ iterate_children (GstValidateScenario * scenario, GstBin * bin)
   g_hash_table_unref (called);
 }
 
+static gboolean
+should_execute_action (GstElement * element, GstValidateAction * action)
+{
+  const gchar *tmp;
+
+  tmp = gst_structure_get_string (action->structure, "target-element-name");
+  if (tmp != NULL && !strcmp (tmp, GST_ELEMENT_NAME (element)))
+    return TRUE;
+
+  tmp = gst_structure_get_string (action->structure, "target-element-klass");
+  if (tmp != NULL && element_has_klass (element, tmp))
+    return TRUE;
+
+  return FALSE;
+}
+
 static void
 _element_added_cb (GstBin * bin, GstElement * element,
     GstValidateScenario * scenario)
@@ -2398,7 +2545,6 @@ _element_added_cb (GstBin * bin, GstElement * element,
   tmp = priv->on_addition_actions;
   while (tmp) {
     GstValidateAction *action = (GstValidateAction *) tmp->data;
-    const gchar *name;
 
     if (action->playback_time != GST_CLOCK_TIME_NONE)
       break;
@@ -2407,8 +2553,7 @@ _element_added_cb (GstBin * bin, GstElement * element,
 
     GST_DEBUG_OBJECT (bin, "Checking action #%d %p (%s)", action->action_number,
         action, action->type);
-    name = gst_structure_get_string (action->structure, "target-element-name");
-    if (!strcmp (name, GST_ELEMENT_NAME (element))) {
+    if (should_execute_action (element, action)) {
       GstValidateActionType *action_type;
       action_type = _find_action_type (action->type);
       GST_DEBUG_OBJECT (element, "Executing set-property action");
@@ -3227,12 +3372,22 @@ init_scenarios (void)
 
   REGISTER_ACTION_TYPE ("set-property", _execute_set_property,
       ((GstValidateActionParameter []) {
+        /* Either 'target-element-name' or 'target-element-klass' needs to be
+         * defined */
         {
           .name = "target-element-name",
           .description = "The name of the GstElement to set a property on",
-          .mandatory = TRUE,
+          .mandatory = FALSE,
           .types = "string",
-          NULL},
+          NULL
+        },
+        {
+          .name = "target-element-klass",
+          .description = "The klass of the GstElements to set a property on",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
         {
           .name = "property-name",
           .description = "The name of the property to set on @target-element-name",
@@ -3250,7 +3405,8 @@ init_scenarios (void)
         {NULL}
       }),
       "Sets a property of any element in the pipeline",
-      GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION);
+      GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION |
+          GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL);
 
   REGISTER_ACTION_TYPE ("set-debug-threshold",
       _execute_set_debug_threshold,
