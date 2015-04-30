@@ -21,6 +21,7 @@ srcfile=gst-validate.doap
 if test ! -f common/gst-autogen.sh;
 then
   echo "+ Setting up common submodule"
+  cd ../
   git submodule init
 fi
 git submodule update
