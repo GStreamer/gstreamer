@@ -100,6 +100,9 @@ enum
   COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka = 0x7fa30c03,
   /* NV12 but with stride and plane heights aligned to 32 */
   COLOR_QCOM_FormatYVU420SemiPlanar32m = 0x7fa30c04,
+  /* NV12 but with stride and plane heights aligned to 32, Stores two images,
+   * one after the other in top-bottom layout */
+  COLOR_QCOM_FormatYVU420SemiPlanar32mMultiView = 0x7fa30c05,
   /* From hardware/ti/omap4xxx/domx/omx_core/inc/OMX_TI_IVCommon.h */
   COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced = 0x7f000001,
   COLOR_FormatYUV420Flexible = 0x7f420888,
