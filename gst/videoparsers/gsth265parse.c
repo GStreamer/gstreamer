@@ -1198,6 +1198,81 @@ gst_h265_parse_get_par (GstH265Parse * h265parse, gint * num, gint * den)
   }
 }
 
+static const gchar *
+digit_to_string (guint digit)
+{
+  static const char itoa[][2] = {
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+  };
+
+  if (G_LIKELY (digit < 10))
+    return itoa[digit];
+  else
+    return NULL;
+}
+
+static const gchar *
+get_profile_string (guint8 profile_idc)
+{
+  const gchar *profile = NULL;
+
+  if (profile_idc == 1)
+    profile = "main";
+  else if (profile_idc == 2)
+    profile = "main-10";
+  else if (profile_idc == 3)
+    profile = "main-still-picture";
+
+  return profile;
+}
+
+static const gchar *
+get_tier_string (guint8 tier_flag)
+{
+  const gchar *tier = NULL;
+
+  if (tier_flag)
+    tier = "high";
+  else
+    tier = "main";
+
+  return tier;
+}
+
+static const gchar *
+get_level_string (guint8 level_idc)
+{
+  if (level_idc % 30 == 0)
+    return digit_to_string (level_idc / 30);
+  else {
+    switch (level_idc) {
+      case 63:
+        return "2.1";
+        break;
+      case 93:
+        return "3.1";
+        break;
+      case 123:
+        return "4.1";
+        break;
+      case 153:
+        return "5.1";
+        break;
+      case 156:
+        return "5.2";
+        break;
+      case 183:
+        return "6.1";
+        break;
+      case 186:
+        return "6.2";
+        break;
+      default:
+        return NULL;
+    }
+  }
+}
+
 static void
 gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 {
@@ -1342,15 +1417,19 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 
     /* set profile and level in caps */
     if (sps) {
-      GstMapInfo map;
-      GstBuffer *sps_buf = h265parse->sps_nals[sps->id];
+      const gchar *profile, *tier, *level;
 
-      if (sps_buf) {
-        gst_buffer_map (sps_buf, &map, GST_MAP_READ);
-        gst_codec_utils_h265_caps_set_level_tier_and_profile (caps,
-            map.data + 1, map.size - 1);
-        gst_buffer_unmap (sps_buf, &map);
-      }
+      profile = get_profile_string (sps->profile_tier_level.profile_idc);
+      if (profile != NULL)
+        gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
+
+      tier = get_tier_string (sps->profile_tier_level.tier_flag);
+      if (tier != NULL)
+        gst_caps_set_simple (caps, "tier", G_TYPE_STRING, tier, NULL);
+
+      level = get_level_string (sps->profile_tier_level.level_idc);
+      if (level != NULL)
+        gst_caps_set_simple (caps, "level", G_TYPE_STRING, level, NULL);
     }
 
     src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h265parse));
