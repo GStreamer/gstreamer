@@ -3705,8 +3705,6 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
   }
 }
 
-#define GET_TMP_LINE(fl,idx) &fl->data[fl->stride * ((idx) % fl->n_lines)]
-
 static void
 convert_plane_fill (GstVideoConverter * convert,
     const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
