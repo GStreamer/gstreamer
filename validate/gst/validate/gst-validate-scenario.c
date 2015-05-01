@@ -180,6 +180,7 @@ struct _GstValidateActionPrivate
   GstValidateExecuteActionReturn state; /* Actually ActionState */
   gboolean printed;
   gboolean executing_last_subaction;
+  gboolean optional;
 };
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
@@ -369,12 +370,29 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
   return FALSE;
 }
 
+/* Check that @list doesn't contain any non-optional actions */
+static gboolean
+actions_list_is_done (GList * list)
+{
+  GList *l;
+
+  for (l = list; l != NULL; l = g_list_next (l)) {
+    GstValidateAction *action = l->data;
+
+    if (!action->priv->optional)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 static void
 _check_scenario_is_done (GstValidateScenario * scenario)
 {
   SCENARIO_LOCK (scenario);
-  if (!scenario->priv->actions && !scenario->priv->interlaced_actions
-      && !scenario->priv->on_addition_actions) {
+  if (actions_list_is_done (scenario->priv->actions) &&
+      actions_list_is_done (scenario->priv->interlaced_actions) &&
+      actions_list_is_done (scenario->priv->on_addition_actions)) {
     SCENARIO_UNLOCK (scenario);
 
     g_signal_emit (scenario, scenario_signals[DONE], 0);
@@ -1077,6 +1095,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   const gchar *str_playback_time = NULL;
   GstValidateScenarioPrivate *priv = scenario->priv;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  gboolean optional;
 
   action->type = gst_structure_get_name (structure);
   action_type = _find_action_type (action->type);
@@ -1112,6 +1131,15 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
 
   if (!action->priv->main_structure)
     action->priv->main_structure = gst_structure_copy (structure);
+
+  if (gst_structure_get_boolean (structure, "optional", &optional)) {
+    if ((action_type->flags & GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL) == 0) {
+      GST_ERROR_OBJECT (scenario, "Action type %s can't be optional",
+          gst_structure_get_name (structure));
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    }
+    action->priv->optional = optional;
+  }
 
   if (IS_CONFIG_ACTION_TYPE (action_type->flags) ||
       (gst_structure_get_boolean (action->structure, "as-config",
@@ -1900,7 +1928,8 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
           tmpconcat = actions;
 
           if (type->flags & GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL ||
-              action->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK) {
+              action->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK ||
+              action->priv->optional) {
             gst_validate_action_unref (action);
 
             continue;
@@ -1918,6 +1947,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         g_list_free (all_actions);
         scenario->priv->actions = NULL;
         scenario->priv->interlaced_actions = NULL;
+        scenario->priv->on_addition_actions = NULL;
 
         if (nb_actions > 0)
           GST_VALIDATE_REPORT (scenario, SCENARIO_NOT_ENDED,
@@ -2304,6 +2334,12 @@ static void
 gst_validate_scenario_finalize (GObject * object)
 {
   GstValidateScenarioPrivate *priv = GST_VALIDATE_SCENARIO (object)->priv;
+
+  g_list_free_full (priv->actions, (GDestroyNotify) gst_mini_object_unref);
+  g_list_free_full (priv->interlaced_actions,
+      (GDestroyNotify) gst_mini_object_unref);
+  g_list_free_full (priv->on_addition_actions,
+      (GDestroyNotify) gst_mini_object_unref);
 
   g_mutex_clear (&priv->lock);
 

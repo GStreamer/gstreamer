@@ -683,6 +683,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
       gint i;
       gchar *desc, *tmp;
+      gboolean has_parameters = FALSE;
 
       GstValidateActionParameter playback_time_param = {
         .name = "playback-time",
@@ -708,6 +709,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
             "\n    Is config action (meaning it will be executing right "
             "at the begining of the execution of the pipeline)");
 
+
       tmp = g_strdup_printf ("\n    ");
       desc =
           g_regex_replace (newline_regex, type->description, -1, 0, tmp, 0,
@@ -720,15 +722,27 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
         print_action_parametter (string, type, &playback_time_param);
 
       if (type->parameters) {
+        has_parameters = TRUE;
         g_string_append_printf (string, "\n\n  Parametters:");
         for (i = 0; type->parameters[i].name; i++) {
           print_action_parametter (string, type, &type->parameters[i]);
         }
 
-      } else {
-        g_string_append_printf (string, "\n\n  No Parameters");
-
       }
+
+      if ((type->flags & GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL)) {
+        has_parameters = TRUE;
+        g_string_append_printf (string, "\n     %-26s : %s", "optional",
+            "Don't raise an error if this action hasn't been executed of failed");
+        g_string_append_printf (string, "\n     %-28s %s", "",
+            "Possible types:");
+        g_string_append_printf (string, "\n     %-31s %s", "", "boolean");
+        g_string_append_printf (string, "\n     %-28s %s", "",
+            "Default: false");
+      }
+
+      if (!has_parameters)
+        g_string_append_printf (string, "\n\n  No Parameters");
     } else if (GST_IS_OBJECT (source)) {
       g_string_printf (string, "\n%s --> ", GST_OBJECT_NAME (source));
     } else if (G_IS_OBJECT (source)) {

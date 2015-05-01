@@ -132,6 +132,9 @@ GType gst_validate_action_get_type (void);
  *                                        for that action type to be used.
  * @GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL: Do not concider the non execution of the action
  *                                                   as a fatal error.
+ * @GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL: The action can use the 'optional' keyword. Such action
+ *                                            instances will have the #GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL
+ *                                            flag set and won't be considered as fatal if they fail.
  */
 typedef enum
 {
@@ -142,6 +145,7 @@ typedef enum
     GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION = 1 << 4,
     GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK = 1 << 5,
     GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL = 1 << 6,
+    GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL = 1 << 7,
 } GstValidateActionTypeFlags;
 
 /**
