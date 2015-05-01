@@ -54,6 +54,7 @@ struct _GstGLFilterCube
 
     guint              in_tex;
     GLuint             vao;
+    GLuint             vbo_indices;
     GLuint             vertex_buffer;
     GLint              attr_position;
     GLint              attr_texture;

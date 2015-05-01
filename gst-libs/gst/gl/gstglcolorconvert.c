@@ -1219,6 +1219,7 @@ _bind_buffer (GstGLColorConvert * convert)
 {
   const GstGLFuncs *gl = convert->context->gl_vtable;
 
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, convert->priv->vbo_indices);
   gl->BindBuffer (GL_ARRAY_BUFFER, convert->priv->vertex_buffer);
 
   /* Load the vertex position */
@@ -1238,6 +1239,7 @@ _unbind_buffer (GstGLColorConvert * convert)
 {
   const GstGLFuncs *gl = convert->context->gl_vtable;
 
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 
   gl->DisableVertexAttribArray (convert->priv->attr_position);
@@ -1378,22 +1380,19 @@ _init_convert (GstGLColorConvert * convert)
     gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), vertices,
         GL_STATIC_DRAW);
 
+    gl->GenBuffers (1, &convert->priv->vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, convert->priv->vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+        GL_STATIC_DRAW);
+
     if (gl->GenVertexArrays) {
       _bind_buffer (convert);
       gl->BindVertexArray (0);
     }
 
     gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   }
-
-  if (!convert->priv->vbo_indices) {
-    gl->GenBuffers (1, &convert->priv->vbo_indices);
-    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, convert->priv->vbo_indices);
-    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
-        GL_STATIC_DRAW);
-    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
-  }
-
 
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
@@ -1737,7 +1736,6 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
     g_free (scale_name);
   }
 
-  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, convert->priv->vbo_indices);
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
   if (gl->BindVertexArray)
@@ -1747,8 +1745,6 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   if (gl->DrawBuffer)
     gl->DrawBuffer (GL_NONE);
-
-  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
 
   /* we are done with the shader */
   gst_gl_context_clear_shader (context);

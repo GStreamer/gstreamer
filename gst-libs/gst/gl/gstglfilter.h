@@ -75,6 +75,7 @@ struct _GstGLFilter
   GstGLShader       *default_shader;
 
   GLuint             vao;
+  GLuint             vbo_indices;
   GLuint             vertex_buffer;
   GLint              draw_attr_position_loc;
   GLint              draw_attr_texture_loc;

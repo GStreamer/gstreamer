@@ -158,6 +158,11 @@ gst_gl_overlay_reset_gl_resources (GstGLFilter * filter)
     overlay->vbo = 0;
   }
 
+  if (overlay->vbo_indices) {
+    gl->DeleteBuffers (1, &overlay->vbo_indices);
+    overlay->vbo_indices = 0;
+  }
+
   if (overlay->overlay_vao) {
     gl->DeleteVertexArrays (1, &overlay->overlay_vao);
     overlay->overlay_vao = 0;
@@ -369,6 +374,7 @@ _unbind_buffer (GstGLOverlay * overlay)
 {
   const GstGLFuncs *gl = GST_GL_BASE_FILTER (overlay)->context->gl_vtable;
 
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 
   gl->DisableVertexAttribArray (overlay->attr_position);
@@ -380,6 +386,7 @@ _bind_buffer (GstGLOverlay * overlay, GLuint vbo)
 {
   const GstGLFuncs *gl = GST_GL_BASE_FILTER (overlay)->context->gl_vtable;
 
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, overlay->vbo_indices);
   gl->BindBuffer (GL_ARRAY_BUFFER, vbo);
 
   gl->EnableVertexAttribArray (overlay->attr_position);
@@ -399,6 +406,8 @@ float v_vertices[] = {
    1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
   -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
 };
+
+static const GLushort indices[] = { 0, 1, 2, 0, 2, 3, };
 /* *INDENT-ON* */
 
 static void
@@ -410,11 +419,6 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
   guint image_tex;
   gboolean memory_mapped = FALSE;
   const GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
-
-  GLushort indices[] = {
-    0, 1, 2,
-    0, 2, 3,
-  };
 
 #if GST_GL_HAVE_OPENGL
   if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
@@ -453,8 +457,18 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
     gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), v_vertices,
         GL_STATIC_DRAW);
 
-    if (gl->GenVertexArrays)
+    gl->GenBuffers (1, &overlay->vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, overlay->vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+        GL_STATIC_DRAW);
+
+    if (gl->GenVertexArrays) {
       _bind_buffer (overlay, overlay->vbo);
+      gl->BindVertexArray (0);
+    }
+
+    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   }
 
   if (gl->GenVertexArrays)
@@ -462,7 +476,7 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
   else
     _bind_buffer (overlay, overlay->vbo);
 
-  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
   if (!overlay->image_memory)
     goto out;
@@ -482,7 +496,12 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
 
     gl->GenBuffers (1, &overlay->overlay_vbo);
     gl->BindBuffer (GL_ARRAY_BUFFER, overlay->overlay_vbo);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, overlay->vbo_indices);
     overlay->geometry_change = TRUE;
+  }
+
+  if (gl->GenVertexArrays) {
+    gl->BindVertexArray (overlay->overlay_vao);
   }
 
   if (overlay->geometry_change) {
@@ -524,19 +543,20 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
         GL_STATIC_DRAW);
   }
 
-  if (gl->GenVertexArrays) {
-    if (overlay->geometry_change)
-      _bind_buffer (overlay, overlay->overlay_vbo);
-    gl->BindVertexArray (overlay->overlay_vao);
-    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
-  } else {
+  if (!gl->GenVertexArrays || overlay->geometry_change) {
     _bind_buffer (overlay, overlay->overlay_vbo);
   }
 
   gl->BindTexture (GL_TEXTURE_2D, image_tex);
   gst_gl_shader_set_uniform_1f (overlay->shader, "alpha", overlay->alpha);
 
-  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+  gl->Enable (GL_BLEND);
+  gl->BlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  gl->BlendEquation (GL_FUNC_ADD);
+
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+
+  gl->Disable (GL_BLEND);
 
 out:
   if (gl->GenVertexArrays) {

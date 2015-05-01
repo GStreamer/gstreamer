@@ -293,6 +293,11 @@ gst_gl_filter_cube_reset_gl (GstGLFilter * filter)
     cube_filter->vertex_buffer = 0;
   }
 
+  if (cube_filter->vbo_indices) {
+    gl->DeleteBuffers (1, &cube_filter->vbo_indices);
+    cube_filter->vbo_indices = 0;
+  }
+
   if (cube_filter->shader) {
     gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
         cube_filter->shader);
@@ -380,6 +385,21 @@ static const GLfloat vertices[] = {
     -1.0,  1.0, -1.0, 0.0, 1.0,
     -1.0,  1.0,  1.0, 0.0, 0.0
 };
+
+static const GLushort indices[] = {
+    0, 1, 2,
+    0, 2, 3,
+    4, 5, 6,
+    4, 6, 7,
+    8, 9, 10,
+    8, 10, 11,
+    12, 13, 14,
+    12, 14, 15,
+    16, 17, 18,
+    16, 18, 19,
+    20, 21, 22,
+    20, 22, 23
+};
 /* *INDENT-ON* */
 
 static void
@@ -387,6 +407,7 @@ _bind_buffer (GstGLFilterCube * cube_filter)
 {
   const GstGLFuncs *gl = GST_GL_BASE_FILTER (cube_filter)->context->gl_vtable;
 
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, cube_filter->vbo_indices);
   gl->BindBuffer (GL_ARRAY_BUFFER, cube_filter->vertex_buffer);
 
   cube_filter->attr_position =
@@ -412,6 +433,7 @@ _unbind_buffer (GstGLFilterCube * cube_filter)
 {
   const GstGLFuncs *gl = GST_GL_BASE_FILTER (cube_filter)->context->gl_vtable;
 
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 
   gl->DisableVertexAttribArray (cube_filter->attr_position);
@@ -428,21 +450,6 @@ _callback (gpointer stuff)
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;
   static GLfloat zrot = 0;
-
-  GLushort indices[] = {
-    0, 1, 2,
-    0, 2, 3,
-    4, 5, 6,
-    4, 6, 7,
-    8, 9, 10,
-    8, 10, 11,
-    12, 13, 14,
-    12, 14, 15,
-    16, 17, 18,
-    16, 18, 19,
-    20, 21, 22,
-    20, 22, 23
-  };
 
   const GLfloat matrix[] = {
     0.5f, 0.0f, 0.0f, 0.0f,
@@ -478,10 +485,18 @@ _callback (gpointer stuff)
     gl->BufferData (GL_ARRAY_BUFFER, 6 * 4 * 5 * sizeof (GLfloat), vertices,
         GL_STATIC_DRAW);
 
+    gl->GenBuffers (1, &cube_filter->vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, cube_filter->vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+        GL_STATIC_DRAW);
+
     if (gl->GenVertexArrays) {
       _bind_buffer (cube_filter);
-      gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+      gl->BindVertexArray (0);
     }
+
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
   }
 
   if (gl->GenVertexArrays)
@@ -489,7 +504,7 @@ _callback (gpointer stuff)
   else
     _bind_buffer (cube_filter);
 
-  gl->DrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);
+  gl->DrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);

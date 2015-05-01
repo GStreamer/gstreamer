@@ -407,6 +407,11 @@ gst_gl_transformation_reset_gl (GstGLFilter * filter)
     transformation->vertex_buffer = 0;
   }
 
+  if (transformation->vbo_indices) {
+    gl->DeleteBuffers (1, &transformation->vbo_indices);
+    transformation->vbo_indices = 0;
+  }
+
   if (transformation->shader) {
     gst_object_unref (transformation->shader);
     transformation->shader = NULL;
@@ -464,6 +469,7 @@ gst_gl_transformation_filter_texture (GstGLFilter * filter, guint in_tex,
   return TRUE;
 }
 
+static const GLushort indices[] = { 0, 1, 2, 3, 0 };
 
 static void
 _upload_vertices (GstGLTransformation * transformation)
@@ -492,6 +498,7 @@ _bind_buffer (GstGLTransformation * transformation)
   const GstGLFuncs *gl =
       GST_GL_BASE_FILTER (transformation)->context->gl_vtable;
 
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, transformation->vbo_indices);
   gl->BindBuffer (GL_ARRAY_BUFFER, transformation->vertex_buffer);
 
   /* Load the vertex position */
@@ -512,6 +519,7 @@ _unbind_buffer (GstGLTransformation * transformation)
   const GstGLFuncs *gl =
       GST_GL_BASE_FILTER (transformation)->context->gl_vtable;
 
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 
   gl->DisableVertexAttribArray (transformation->attr_position);
@@ -524,8 +532,6 @@ gst_gl_transformation_callback (gpointer stuff)
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLTransformation *transformation = GST_GL_TRANSFORMATION (filter);
   GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
-
-  GLushort indices[] = { 0, 1, 2, 3, 0 };
 
   GLfloat temp_matrix[16];
 
@@ -559,6 +565,12 @@ gst_gl_transformation_callback (gpointer stuff)
     }
 
     gl->GenBuffers (1, &transformation->vertex_buffer);
+
+    gl->GenBuffers (1, &transformation->vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, transformation->vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+        GL_STATIC_DRAW);
+
     transformation->caps_change = TRUE;
   }
 
@@ -569,8 +581,11 @@ gst_gl_transformation_callback (gpointer stuff)
     _upload_vertices (transformation);
     _bind_buffer (transformation);
 
-    if (gl->GenVertexArrays)
+    if (gl->GenVertexArrays) {
+      gl->BindVertexArray (0);
+      gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
       gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+    }
   } else if (!gl->GenVertexArrays) {
     _bind_buffer (transformation);
   }

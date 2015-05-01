@@ -42,6 +42,7 @@ struct _GstGLTransformation
 
     GstGLShader *shader;
     GLuint       vao;
+    GLuint       vbo_indices;
     GLuint       vertex_buffer;
     GLint        attr_position;
     GLint        attr_texture;
