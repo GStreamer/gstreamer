@@ -181,7 +181,6 @@ typedef enum {
 #include <gst/gststructure.h>
 #include <gst/gsttaglist.h>
 #include <gst/gstsegment.h>
-#include <gst/gstsegment.h>
 #include <gst/gstmessage.h>
 #include <gst/gstcontext.h>
 
