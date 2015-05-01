@@ -487,18 +487,18 @@ check_and_replace_src (GstWrapperCameraBinSrc * self)
               self->app_vid_src, "autovideosrc", DEFAULT_VIDEOSRC,
               "camerasrc-real-src"))) {
     self->src_vid_src = NULL;
-    return FALSE;
+    goto fail;
   }
 
   if (!gst_bin_add (cbin, self->src_vid_src)) {
-    return FALSE;
+    goto fail;
   }
 
   /* check if we already have the next element to link to */
   if (self->src_crop) {
     if (!gst_element_link_pads (self->src_vid_src, "src", self->src_crop,
             "sink")) {
-      return FALSE;
+      goto fail;
     }
   }
 
@@ -511,6 +511,11 @@ check_and_replace_src (GstWrapperCameraBinSrc * self)
   }
 
   return TRUE;
+
+fail:
+  if (self->src_vid_src)
+    gst_element_set_state (self->src_vid_src, GST_STATE_NULL);
+  return FALSE;
 }
 
 /**
