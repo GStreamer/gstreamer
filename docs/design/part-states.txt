@@ -17,7 +17,7 @@ State definitions
  - PAUSED:  The element should be ready to accept and process data. Sink
             elements however only accept one buffer and then block.
  - PLAYING: The same as PAUSED except for live sources and sinks. Sinks accept
-            and rendering data. Live sources produce data.
+            and render data. Live sources produce data.
 
 We call the sequence NULL->PLAYING an upwards state change and PLAYING->NULL
 a downwards state change.
@@ -30,7 +30,7 @@ the following state changes are possible:
 
  NULL -> READY
    - The element must check if the resources it needs are available.
-     Device sinks and -sources typically try to probe the device to constrain
+     Device sinks and sources typically try to probe the device to constrain
      their caps.
    - The element opens the device, this is needed if the previous step requires
      the device to be opened.
@@ -162,7 +162,7 @@ function returns a GstElementStateReturn.
    the pending state value. The function returns GST_STATE_NO_PREROLL.
 
  - If the element returned FAILURE to the previous _set_state() call, this 
-   funciton will return FAILURE with the state set to the current state of
+   function will return FAILURE with the state set to the current state of
    the element and the pending state set to the value used in the last call
    of _set_state().
 
@@ -298,7 +298,7 @@ Bin:
 Locking overview (element)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Element commiting SUCCESS
+* Element committing SUCCESS
 
  - STATE_LOCK is taken in set_state
  - change state is called if SUCCESS, commit state is called
