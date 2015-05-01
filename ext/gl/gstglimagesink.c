@@ -1348,6 +1348,8 @@ static const GLfloat vertices[] = {
     -1.0f, -1.0f, 0.0f, 0.0f, 1.0f,
      1.0f, -1.0f, 0.0f, 1.0f, 1.0f
 };
+
+static const GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 /* *INDENT-ON* */
 
 static void
@@ -1355,9 +1357,8 @@ _bind_buffer (GstGLImageSink * gl_sink)
 {
   const GstGLFuncs *gl = gl_sink->context->gl_vtable;
 
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, gl_sink->vbo_indices);
   gl->BindBuffer (GL_ARRAY_BUFFER, gl_sink->vertex_buffer);
-  gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), vertices,
-      GL_STATIC_DRAW);
 
   /* Load the vertex position */
   gl->VertexAttribPointer (gl_sink->attr_position, 3, GL_FLOAT, GL_FALSE,
@@ -1376,6 +1377,7 @@ _unbind_buffer (GstGLImageSink * gl_sink)
 {
   const GstGLFuncs *gl = gl_sink->context->gl_vtable;
 
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 
   gl->DisableVertexAttribArray (gl_sink->attr_position);
@@ -1400,15 +1402,27 @@ gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
     gl->BindVertexArray (gl_sink->vao);
   }
 
-  gl->GenBuffers (1, &gl_sink->vertex_buffer);
-  _bind_buffer (gl_sink);
+  if (!gl_sink->vertex_buffer) {
+    gl->GenBuffers (1, &gl_sink->vertex_buffer);
+    gl->BindBuffer (GL_ARRAY_BUFFER, gl_sink->vertex_buffer);
+    gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), vertices,
+        GL_STATIC_DRAW);
+  }
+
+  if (!gl_sink->vbo_indices) {
+    gl->GenBuffers (1, &gl_sink->vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, gl_sink->vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+        GL_STATIC_DRAW);
+  }
 
   if (gl->GenVertexArrays) {
+    _bind_buffer (gl_sink);
     gl->BindVertexArray (0);
-    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
-  } else {
-    _unbind_buffer (gl_sink);
   }
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 }
 
 static void
@@ -1424,6 +1438,11 @@ gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
   if (gl_sink->vao) {
     gl->DeleteVertexArrays (1, &gl_sink->vao);
     gl_sink->vao = 0;
+  }
+
+  if (gl_sink->vbo_indices) {
+    gl->DeleteVertexArrays (1, &gl_sink->vbo_indices);
+    gl_sink->vbo_indices = 0;
   }
 }
 
@@ -1537,7 +1556,6 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   if (!do_redisplay) {
     gfloat alpha = gl_sink->ignore_alpha ? 1.0f : 0.0f;
-    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
     gl->ClearColor (0.0, 0.0, 0.0, alpha);
     gl->Clear (GL_COLOR_BUFFER_BIT);
@@ -1560,7 +1578,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
     gl->BindTexture (GL_TEXTURE_2D, gl_sink->redisplay_texture);
     gst_gl_shader_set_uniform_1i (gl_sink->redisplay_shader, "tex", 0);
 
-    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
     gst_gl_context_clear_shader (gl_sink->context);
 

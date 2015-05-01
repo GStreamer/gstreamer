@@ -64,6 +64,7 @@ struct _GstGLVideoMixer
     GPtrArray *input_frames;
 
     GLuint vao;
+    GLuint vbo_indices;
     GLuint checker_vbo;
 };
 

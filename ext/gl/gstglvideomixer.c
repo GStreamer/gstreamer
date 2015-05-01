@@ -733,6 +733,11 @@ _reset_gl (GstGLContext * context, GstGLVideoMixer * video_mixer)
     video_mixer->vao = 0;
   }
 
+  if (video_mixer->vbo_indices) {
+    gl->DeleteBuffers (1, &video_mixer->vbo_indices);
+    video_mixer->vbo_indices = 0;
+  }
+
   gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (video_mixer), _reset_pad_gl,
       NULL);
 }
@@ -790,6 +795,21 @@ gst_gl_video_mixer_process_textures (GstGLMixer * mix, GPtrArray * frames,
   return TRUE;
 }
 
+static const GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+
+static void
+_init_vbo_indices (GstGLVideoMixer * mixer)
+{
+  const GstGLFuncs *gl = GST_GL_BASE_MIXER (mixer)->context->gl_vtable;
+
+  if (!mixer->vbo_indices) {
+    gl->GenBuffers (1, &mixer->vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, mixer->vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+        GL_STATIC_DRAW);
+  }
+}
+
 static gboolean
 _draw_checker_background (GstGLVideoMixer * video_mixer)
 {
@@ -797,10 +817,6 @@ _draw_checker_background (GstGLVideoMixer * video_mixer)
   const GstGLFuncs *gl = GST_GL_BASE_MIXER (mixer)->context->gl_vtable;
   gint attr_position_loc = 0;
 
-  const GLushort indices[] = {
-    0, 1, 2,
-    0, 2, 3
-  };
   /* *INDENT-OFF* */
   gfloat v_vertices[] = {
     -1.0,-1.0,-1.0f,
@@ -820,12 +836,15 @@ _draw_checker_background (GstGLVideoMixer * video_mixer)
   attr_position_loc =
       gst_gl_shader_get_attribute_location (video_mixer->checker, "a_position");
 
+  _init_vbo_indices (video_mixer);
+
   if (!video_mixer->checker_vbo) {
     gl->GenBuffers (1, &video_mixer->checker_vbo);
     gl->BindBuffer (GL_ARRAY_BUFFER, video_mixer->checker_vbo);
     gl->BufferData (GL_ARRAY_BUFFER, 4 * 3 * sizeof (GLfloat), v_vertices,
         GL_STATIC_DRAW);
   } else {
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, video_mixer->vbo_indices);
     gl->BindBuffer (GL_ARRAY_BUFFER, video_mixer->checker_vbo);
   }
 
@@ -834,9 +853,10 @@ _draw_checker_background (GstGLVideoMixer * video_mixer)
 
   gl->EnableVertexAttribArray (attr_position_loc);
 
-  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
   gl->DisableVertexAttribArray (attr_position_loc);
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 
   return TRUE;
@@ -883,11 +903,6 @@ gst_gl_video_mixer_callback (gpointer stuff)
   GLint attr_position_loc = 0;
   GLint attr_texture_loc = 0;
   guint out_width, out_height;
-
-  const GLushort indices[] = {
-    0, 1, 2,
-    0, 2, 3
-  };
 
   guint count = 0;
 
@@ -958,6 +973,8 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
     in_tex = frame->texture;
 
+    _init_vbo_indices (video_mixer);
+
     if (pad->geometry_change || !pad->vertex_buffer) {
       gint pad_width, pad_height;
       gfloat w, h;
@@ -993,6 +1010,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
     } else {
       gl->BindBuffer (GL_ARRAY_BUFFER, pad->vertex_buffer);
     }
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, video_mixer->vbo_indices);
 
     gl->BlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     gl->BlendEquation (GL_FUNC_ADD);
@@ -1011,7 +1029,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
     gl->VertexAttribPointer (attr_texture_loc, 2, GL_FLOAT,
         GL_FALSE, 5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
 
-    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
     ++count;
   }
@@ -1022,6 +1040,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
 
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
   gl->BindTexture (GL_TEXTURE_2D, 0);
 

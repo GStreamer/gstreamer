@@ -67,6 +67,7 @@ struct _GstGLOverlay
   GLuint        overlay_vao;
   GLuint        vbo;
   GLuint        overlay_vbo;
+  GLuint        vbo_indices;
   GLuint        attr_position;
   GLuint        attr_texture;
 };
