@@ -53,6 +53,7 @@ struct _GstZBar
 
   /* properties */
   gboolean message;
+  gboolean attach_frame;
   gboolean cache;
 
   /* internals */
