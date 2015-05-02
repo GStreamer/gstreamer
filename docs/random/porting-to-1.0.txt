@@ -504,9 +504,11 @@ CHANGES
     gst-plugins-base, as the interfaces library no longer exists.
 
 * GstPropertyProbe interface
-    Removed - no replacement yet, but a more featureful replacement
-    for device discovery and feature querying is planned, see
-    https://bugzilla.gnome.org/show_bug.cgi?id=678402
+    Removed - no replacement in 1.0.x and 1.2.x, but since 1.4 there is
+    a more featureful replacement for device discovery and feature querying,
+    provided by GstDeviceMonitor, GstDevice, and friends. See the
+    "GStreamer Device Discovery and Device Probing" documentation at
+    http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/gstreamer-device-probing.html
 
 * GstURIHandler
     gst_uri_handler_get_uri() and the get_uri vfunc now return a copy of
