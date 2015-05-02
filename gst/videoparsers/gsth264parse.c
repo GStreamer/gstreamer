@@ -1395,6 +1395,121 @@ ensure_caps_profile (GstH264Parse * h264parse, GstCaps * caps, GstH264SPS * sps)
   gst_caps_unref (filter_caps);
 }
 
+static const gchar *
+digit_to_string (guint digit)
+{
+  static const char itoa[][2] = {
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+  };
+
+  if (G_LIKELY (digit < 10))
+    return itoa[digit];
+  else
+    return NULL;
+}
+
+static const gchar *
+get_profile_string (GstH264SPS * sps)
+{
+  const gchar *profile = NULL;
+
+  switch (sps->profile_idc) {
+    case 66:
+      if (sps->constraint_set1_flag)
+        profile = "constrained-baseline";
+      else
+        profile = "baseline";
+      break;
+    case 77:
+      profile = "main";
+      break;
+    case 88:
+      profile = "extended";
+      break;
+    case 100:
+      profile = "high";
+      break;
+    case 110:
+      if (sps->constraint_set3_flag)
+        profile = "high-10-intra";
+      else
+        profile = "high-10";
+      break;
+    case 122:
+      if (sps->constraint_set3_flag)
+        profile = "high-4:2:2-intra";
+      else
+        profile = "high-4:2:2";
+      break;
+    case 244:
+      if (sps->constraint_set3_flag)
+        profile = "high-4:4:4-intra";
+      else
+        profile = "high-4:4:4";
+      break;
+    case 44:
+      profile = "cavlc-4:4:4-intra";
+      break;
+    case 118:
+      profile = "multiview-high";
+      break;
+    case 128:
+      profile = "stereo-high";
+      break;
+    case 83:
+      if (sps->constraint_set5_flag)
+        profile = "scalable-constrained-baseline";
+      else
+        profile = "scalable-baseline";
+      break;
+    case 86:
+      profile = "scalable-high";
+      break;
+    default:
+      return NULL;
+  }
+
+  return profile;
+}
+
+static const gchar *
+get_level_string (GstH264SPS * sps)
+{
+  if ((sps->level_idc == 11 && sps->constraint_set3_flag)
+      || sps->level_idc == 9)
+    return "1b";
+  else if (sps->level_idc % 10 == 0)
+    return digit_to_string (sps->level_idc / 10);
+  else {
+    switch (sps->level_idc) {
+      case 11:
+        return "1.1";
+      case 12:
+        return "1.2";
+      case 13:
+        return "1.3";
+      case 21:
+        return "2.1";
+      case 22:
+        return "2.2";
+      case 31:
+        return "3.1";
+      case 32:
+        return "3.2";
+      case 41:
+        return "4.1";
+      case 42:
+        return "4.2";
+      case 51:
+        return "5.1";
+      case 52:
+        return "5.2";
+      default:
+        return NULL;
+    }
+  }
+}
+
 static void
 gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 {
@@ -1554,17 +1669,18 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 
     /* set profile and level in caps */
     if (sps) {
-      GstMapInfo map;
-      GstBuffer *sps_buf = h264parse->sps_nals[sps->id];
+      const gchar *profile, *level;
 
-      if (sps_buf) {
-        gst_buffer_map (sps_buf, &map, GST_MAP_READ);
-        gst_codec_utils_h264_caps_set_level_and_profile (caps,
-            map.data + 1, map.size - 1);
-        gst_buffer_unmap (sps_buf, &map);
-        /* relax the profile constraint to find a suitable decoder */
-        ensure_caps_profile (h264parse, caps, sps);
-      }
+      profile = get_profile_string (sps);
+      if (profile != NULL)
+        gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
+
+      level = get_level_string (sps);
+      if (level != NULL)
+        gst_caps_set_simple (caps, "level", G_TYPE_STRING, level, NULL);
+
+      /* relax the profile constraint to find a suitable decoder */
+      ensure_caps_profile (h264parse, caps, sps);
     }
 
     src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
