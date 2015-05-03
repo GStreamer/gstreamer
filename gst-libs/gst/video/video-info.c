@@ -370,6 +370,11 @@ gst_video_info_is_equal (const GstVideoInfo * info, const GstVideoInfo * other)
     return FALSE;
   if (GST_VIDEO_INFO_FPS_D (info) != GST_VIDEO_INFO_FPS_D (other))
     return FALSE;
+  if (!gst_video_colorimetry_is_equal (&GST_VIDEO_INFO_COLORIMETRY (info),
+          &GST_VIDEO_INFO_COLORIMETRY (other)))
+    return FALSE;
+  if (GST_VIDEO_INFO_CHROMA_SITE (info) != GST_VIDEO_INFO_CHROMA_SITE (other))
+    return FALSE;
 
   for (i = 0; i < info->finfo->n_planes; i++) {
     if (info->stride[i] != other->stride[i])

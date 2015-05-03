@@ -144,6 +144,9 @@ struct _GstVideoInfo {
 #define GST_VIDEO_INFO_FPS_N(i)          ((i)->fps_n)
 #define GST_VIDEO_INFO_FPS_D(i)          ((i)->fps_d)
 
+#define GST_VIDEO_INFO_COLORIMETRY(i) ((i)->colorimetry)
+#define GST_VIDEO_INFO_CHROMA_SITE(i) ((i)->chroma_site)
+
 /* dealing with GstVideoInfo flags */
 #define GST_VIDEO_INFO_FLAG_IS_SET(i,flag) ((GST_VIDEO_INFO_FLAGS(i) & (flag)) == (flag))
 #define GST_VIDEO_INFO_FLAG_SET(i,flag)    (GST_VIDEO_INFO_FLAGS(i) |= (flag))
