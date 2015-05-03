@@ -2892,6 +2892,7 @@ gst_discoverer_discover_uri_async
 <SUBSECTION>
 GstDiscovererInfo
 GstDiscovererResult
+GstDiscovererSerializeFlags
 gst_discoverer_info_get_duration
 gst_discoverer_info_get_misc
 gst_discoverer_info_get_result
@@ -2903,6 +2904,8 @@ gst_discoverer_info_get_uri
 gst_discoverer_info_get_seekable
 gst_discoverer_info_ref
 gst_discoverer_info_unref
+gst_discoverer_info_to_variant
+gst_discoverer_info_from_variant
 <SUBSECTION>
 GstDiscovererStreamInfo
 GstDiscovererContainerInfo

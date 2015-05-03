@@ -45,6 +45,8 @@ EXPORTS
 	gst_discoverer_info_get_type
 	gst_discoverer_info_get_uri
 	gst_discoverer_info_get_video_streams
+	gst_discoverer_info_to_variant
+	gst_discoverer_info_from_variant
 	gst_discoverer_new
 	gst_discoverer_result_get_type
 	gst_discoverer_start

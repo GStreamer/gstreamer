@@ -173,6 +173,28 @@ typedef enum {
   GST_DISCOVERER_MISSING_PLUGINS  = 5
 } GstDiscovererResult;
 
+/**
+ * GstDiscovererSerializeFlags:
+ * @GST_DISCOVERER_SERIALIZE_BASIC: Serialize only basic information, excluding
+ * caps, tags and miscellaneous information
+ * @GST_DISCOVERER_SERIALIZE_CAPS: Serialize the caps for each stream
+ * @GST_DISCOVERER_SERIALIZE_TAGS: Serialize the tags for each stream
+ * @GST_DISCOVERER_SERIALIZE_MISC: Serialize miscellaneous information for each stream
+ * @GST_DISCOVERER_SERIALIZE_ALL: Serialize all the available info, including
+ * caps, tags and miscellaneous information
+ *
+ * You can use these flags to control what is serialized by
+ * gst_discoverer_info_to_variant()
+ *
+ */
+
+typedef enum {
+  GST_DISCOVERER_SERIALIZE_BASIC = 0,
+  GST_DISCOVERER_SERIALIZE_CAPS  = 1 << 0,
+  GST_DISCOVERER_SERIALIZE_TAGS  = 1 << 1,
+  GST_DISCOVERER_SERIALIZE_MISC  = 1 << 2,
+  GST_DISCOVERER_SERIALIZE_ALL   = GST_DISCOVERER_SERIALIZE_CAPS | GST_DISCOVERER_SERIALIZE_TAGS | GST_DISCOVERER_SERIALIZE_MISC
+} GstDiscovererSerializeFlags;
 
 /**
  * GstDiscovererInfo:
@@ -212,6 +234,10 @@ GList *                   gst_discoverer_info_get_audio_streams (GstDiscovererIn
 GList *                   gst_discoverer_info_get_video_streams (GstDiscovererInfo *info);
 GList *                   gst_discoverer_info_get_subtitle_streams (GstDiscovererInfo *info);
 GList *                   gst_discoverer_info_get_container_streams (GstDiscovererInfo *info);
+
+GVariant *                gst_discoverer_info_to_variant (GstDiscovererInfo *info,
+                                                          GstDiscovererSerializeFlags flags);
+GstDiscovererInfo *       gst_discoverer_info_from_variant (GVariant *variant);
 
 void                      gst_discoverer_stream_info_list_free (GList *infos);
 
