@@ -53,6 +53,7 @@ struct _GstGLColorConvert
   GstVideoInfo     out_info;
 
   gboolean         initted;
+  gboolean         passthrough;
 
   GstBuffer *    inbuf;
   GstBuffer *    outbuf;

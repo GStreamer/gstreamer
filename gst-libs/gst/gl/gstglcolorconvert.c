@@ -575,6 +575,35 @@ gst_gl_color_convert_reset (GstGLColorConvert * convert)
 }
 
 static gboolean
+_gst_gl_color_convert_can_passthrough (GstVideoInfo * in, GstVideoInfo * out)
+{
+  gint i;
+
+  if (GST_VIDEO_INFO_FORMAT (in) != GST_VIDEO_INFO_FORMAT (out))
+    return FALSE;
+  if (GST_VIDEO_INFO_WIDTH (in) != GST_VIDEO_INFO_WIDTH (out))
+    return FALSE;
+  if (GST_VIDEO_INFO_HEIGHT (in) != GST_VIDEO_INFO_HEIGHT (out))
+    return FALSE;
+  if (GST_VIDEO_INFO_SIZE (in) != GST_VIDEO_INFO_SIZE (out))
+    return FALSE;
+
+  for (i = 0; i < in->finfo->n_planes; i++) {
+    if (in->stride[i] != out->stride[i])
+      return FALSE;
+    if (in->offset[i] != out->offset[i])
+      return FALSE;
+  }
+
+  if (!gst_video_colorimetry_is_equal (&in->colorimetry, &out->colorimetry))
+    return FALSE;
+  if (in->chroma_site != out->chroma_site)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 _gst_gl_color_convert_set_caps_unlocked (GstGLColorConvert * convert,
     GstCaps * in_caps, GstCaps * out_caps)
 {
@@ -618,6 +647,19 @@ _gst_gl_color_convert_set_caps_unlocked (GstGLColorConvert * convert,
   convert->in_info = in_info;
   convert->out_info = out_info;
   convert->initted = FALSE;
+
+  /* If input and output are identical, pass through directly */
+  convert->passthrough =
+      _gst_gl_color_convert_can_passthrough (&in_info, &out_info);
+#ifndef GST_DISABLE_GST_DEBUG
+  if (G_UNLIKELY (convert->passthrough))
+    GST_DEBUG_OBJECT (convert,
+        "Configuring passthrough mode for same in/out caps");
+  else {
+    GST_DEBUG_OBJECT (convert, "Color converting %" GST_PTR_FORMAT
+        " to %" GST_PTR_FORMAT, in_caps, out_caps);
+  }
+#endif
 
   return TRUE;
 }
@@ -730,7 +772,7 @@ _gst_gl_color_convert_perform_unlocked (GstGLColorConvert * convert,
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (inbuf, FALSE);
 
-  if (gst_video_info_is_equal (&convert->in_info, &convert->out_info))
+  if (G_UNLIKELY (convert->passthrough))
     return gst_buffer_ref (inbuf);
 
   convert->inbuf = inbuf;
