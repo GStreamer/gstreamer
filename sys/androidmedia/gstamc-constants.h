@@ -111,7 +111,9 @@ enum
    * we shouldn't find incompatible usage and crash horribly... right?
    * FIXME: Not actually implemented in the video decoder, it will just error out
    * The format seems to be equiv to V4L2_PIX_FMT_NV12MT_16X16 */
-  COLOR_OMX_SEC_FormatNV12Tiled = 0x7fc00002
+  COLOR_OMX_SEC_FormatNV12Tiled = 0x7fc00002,
+  /* YV12: http://developer.android.com/reference/android/graphics/ImageFormat.html#YV12 */
+  COLOR_FormatYV12 = 0x32315659,
 };
 
 enum

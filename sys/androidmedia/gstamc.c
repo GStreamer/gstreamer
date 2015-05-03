@@ -1785,7 +1785,8 @@ static const struct
   COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka, GST_VIDEO_FORMAT_NV12}, {
   COLOR_QCOM_FormatYVU420SemiPlanar32m, GST_VIDEO_FORMAT_NV12}, {
   COLOR_OMX_SEC_FormatNV12Tiled, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_FormatYCbYCr, GST_VIDEO_FORMAT_YUY2}
+  COLOR_FormatYCbYCr, GST_VIDEO_FORMAT_YUY2}, {
+  COLOR_FormatYV12, GST_VIDEO_FORMAT_YV12}
 };
 
 static gboolean
@@ -1971,6 +1972,7 @@ gst_amc_color_format_info_set (GstAmcColorFormatInfo * color_format_info,
   switch (color_format) {
     case COLOR_FormatYUV420Planar:
     case COLOR_FormatYUV420Flexible:{
+    case COLOR_FormatYV12:
       if (stride == 0 || slice_height == 0) {
         GST_ERROR ("Stride or slice height is 0");
         return FALSE;
