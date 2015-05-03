@@ -82,6 +82,7 @@ EXPORTS
 	gst_video_color_transfer_decode
 	gst_video_color_transfer_encode
 	gst_video_colorimetry_from_string
+	gst_video_colorimetry_is_equal
 	gst_video_colorimetry_matches
 	gst_video_colorimetry_to_string
 	gst_video_convert_sample

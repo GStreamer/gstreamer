@@ -70,10 +70,12 @@ gst_video_get_colorimetry (const gchar * s)
   return NULL;
 }
 
-#define IS_EQUAL(ci,i) (((ci)->color.range == (i)->range) && \
-                        ((ci)->color.matrix == (i)->matrix) && \
-                        ((ci)->color.transfer == (i)->transfer) && \
-                        ((ci)->color.primaries == (i)->primaries))
+#define CI_IS_EQUAL(ci,i) (((ci)->range == (i)->range) && \
+                        ((ci)->matrix == (i)->matrix) && \
+                        ((ci)->transfer == (i)->transfer) && \
+                        ((ci)->primaries == (i)->primaries))
+
+#define IS_EQUAL(ci,i) CI_IS_EQUAL(&(ci)->color, (i))
 
 #define IS_UNKNOWN(ci) (IS_EQUAL (&colorimetry[DEFAULT_UNKNOWN], ci))
 
@@ -221,6 +223,26 @@ gst_video_color_range_offsets (GstVideoColorRange range,
   GST_DEBUG ("offset: %d %d %d %d", offset[0], offset[1], offset[2], offset[3]);
 }
 
+/**
+ * gst_video_colorimetry_is_equal:
+ * @cinfo: a #GstVideoColorimetry
+ * @other: another #GstVideoColorimetry
+ *
+ * Compare the 2 colorimetry sets for equality
+ *
+ * Returns: #TRUE if @cinfo and @other are equal.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_video_colorimetry_is_equal (const GstVideoColorimetry * cinfo,
+    const GstVideoColorimetry * other)
+{
+  g_return_val_if_fail (cinfo != NULL, FALSE);
+  g_return_val_if_fail (other != NULL, FALSE);
+
+  return CI_IS_EQUAL (cinfo, other);
+}
 
 #define WP_C    0.31006, 0.31616
 #define WP_D65  0.31271, 0.32902
