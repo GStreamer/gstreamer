@@ -2307,6 +2307,7 @@ gst_video_color_transfer_encode
 
 GstVideoColorimetry
 gst_video_colorimetry_matches
+gst_video_colorimetry_is_equal
 gst_video_colorimetry_from_string
 gst_video_colorimetry_to_string
 <SUBSECTION Standard>
@@ -2357,6 +2358,8 @@ GST_VIDEO_INFO_COMP_HEIGHT
 GST_VIDEO_INFO_COMP_PLANE
 GST_VIDEO_INFO_COMP_PSTRIDE
 GST_VIDEO_INFO_COMP_POFFSET
+GST_VIDEO_INFO_CHROMA_SITE
+GST_VIDEO_INFO_COLORIMETRY
 gst_video_info_init
 gst_video_info_set_format
 gst_video_info_from_caps
