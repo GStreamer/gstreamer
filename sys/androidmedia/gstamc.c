@@ -1960,7 +1960,7 @@ gst_amc_color_format_info_set (GstAmcColorFormatInfo * color_format_info,
   if (slice_height == 0) {
     /* NVidia Tegra 3 on Nexus 7 does not set this */
     if (g_str_has_prefix (codec_info->name, "OMX.Nvidia."))
-      slice_height = GST_ROUND_UP_32 (height);
+      slice_height = GST_ROUND_UP_16 (height);
   }
 
   if (width == 0 || height == 0) {
