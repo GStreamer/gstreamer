@@ -66,6 +66,8 @@ main (int argc, char *argv[])
       "audiotestsrc ! audio/x-raw,rate=8000 ! "
       "alawenc ! rtppcmapay name=pay1 pt=8 " ")");
 
+  gst_rtsp_media_factory_set_profiles (factory, GST_RTSP_PROFILE_AVPF);
+
   /* store up to 0.4 seconds of retransmission data */
   gst_rtsp_media_factory_set_retransmission_time (factory, 400 * GST_MSECOND);
 
