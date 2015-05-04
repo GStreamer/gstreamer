@@ -115,6 +115,8 @@ gst_navigation_send_event (GstNavigation * navigation, GstStructure * structure)
 
   if (iface->send_event) {
     iface->send_event (navigation, structure);
+  } else {
+    gst_structure_free (structure);
   }
 }
 
