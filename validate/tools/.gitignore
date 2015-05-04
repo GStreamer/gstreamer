@@ -1,3 +1,6 @@
 gst-validate-1.0
 gst-validate-transcoding-1.0
 gst-validate-media-check-1.0
+gst-validate-1.0-debug
+gst-validate-media-check-1.0-debug
+gst-validate-transcoding-1.0-debug

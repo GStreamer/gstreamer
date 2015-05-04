@@ -31,8 +31,10 @@ install-sh
 libtool
 ltmain.sh
 missing
+py-compile
 stamp-h1
 tags
+test-driver
 stamp-h.in
 .dirstamp
 *.gir
@@ -45,3 +47,5 @@ stamp-h.in
 /po
 *docs/launcher/html
 *tools/gst-validate-launcher
+
+/launcher/config.py
