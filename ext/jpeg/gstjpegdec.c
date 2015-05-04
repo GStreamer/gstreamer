@@ -994,6 +994,7 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
   guint code, hdr_ok;
   gboolean need_unmap = TRUE;
   GstVideoCodecState *state = NULL;
+  gboolean release_frame = TRUE;
 
   dec->current_frame = frame;
   gst_buffer_map (frame->input_buffer, &dec->current_frame_map, GST_MAP_READ);
@@ -1141,6 +1142,7 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
 
   gst_buffer_unmap (frame->input_buffer, &dec->current_frame_map);
   ret = gst_video_decoder_finish_frame (bdec, frame);
+  release_frame = FALSE;
   need_unmap = FALSE;
 
 done:
@@ -1149,6 +1151,9 @@ exit:
 
   if (need_unmap)
     gst_buffer_unmap (frame->input_buffer, &dec->current_frame_map);
+
+  if (release_frame)
+    gst_video_decoder_release_frame (bdec, frame);
 
   if (state)
     gst_video_codec_state_unref (state);
@@ -1183,6 +1188,7 @@ decode_error:
 
     gst_buffer_unmap (frame->input_buffer, &dec->current_frame_map);
     gst_video_decoder_drop_frame (bdec, frame);
+    release_frame = FALSE;
     need_unmap = FALSE;
     jpeg_abort_decompress (&dec->cinfo);
 
