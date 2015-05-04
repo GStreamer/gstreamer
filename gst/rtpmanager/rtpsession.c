@@ -3462,7 +3462,7 @@ session_sdes (RTPSession * sess, ReportData * data)
     type = gst_rtcp_sdes_name_to_type (field);
 
     /* Early packets are minimal and only include the CNAME */
-    if (data->is_early && type != GST_RTCP_SDES_CNAME)
+    if (data->may_suppress && type != GST_RTCP_SDES_CNAME)
       continue;
 
     if (type > GST_RTCP_SDES_END && type < GST_RTCP_SDES_PRIV) {
@@ -3666,7 +3666,7 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
     /* send BYE */
     make_source_bye (sess, source, data);
     is_bye = TRUE;
-  } else if (!data->is_early) {
+  } else if (!data->may_suppress) {
     /* loop over all known sources and add report blocks. If we are early, we
      * just make a minimal RTCP packet and skip this step */
     g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
@@ -3744,6 +3744,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   ReportData data = { GST_RTCP_BUFFER_INIT };
   GHashTable *table_copy;
   ReportOutput *output;
+  gboolean must_not_suppress;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
 
@@ -3802,8 +3803,12 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   if (!is_rtcp_time (sess, current_time, &data))
     goto done;
 
-  GST_DEBUG ("doing RTCP generation %u for %u sources, early %d",
-      sess->generation, data.num_to_report, data.is_early);
+  /* We need to send a full RTCP packet */
+  must_not_suppress = !data.is_early && !data.may_suppress;
+
+  GST_DEBUG
+      ("doing RTCP generation %u for %u sources, early %d, may suppress %d",
+      sess->generation, data.num_to_report, data.is_early, data.may_suppress);
 
   /* generate RTCP for all internal sources */
   g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
@@ -3815,8 +3820,9 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
   /* we keep track of the last report time in order to timeout inactive
    * receivers or senders */
-  if (!data.is_early && !data.may_suppress)
+  if (must_not_suppress)
     sess->last_rtcp_send_time = data.current_time;
+
   sess->last_rtcp_check_time = data.current_time;
   sess->first_rtcp = FALSE;
   sess->next_early_rtcp_time = GST_CLOCK_TIME_NONE;
