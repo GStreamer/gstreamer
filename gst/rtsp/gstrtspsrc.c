@@ -3204,6 +3204,9 @@ add_retransmission (GstRTSPSrc * src, GstRTSPTransport * transport)
 
   if (transport->trans != GST_RTSP_TRANS_RTP)
     return;
+  if (transport->profile != GST_RTSP_PROFILE_AVP &&
+      transport->profile != GST_RTSP_PROFILE_AVPF)
+    return;
 
   signal_id = g_signal_lookup ("request-aux-receiver",
       G_OBJECT_TYPE (src->manager));
