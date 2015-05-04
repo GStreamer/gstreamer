@@ -1198,6 +1198,10 @@ gst_videoaggregator_do_aggregate (GstVideoAggregator * vagg,
         gst_flow_get_name (ret));
     return ret;
   }
+  if (*outbuf == NULL) {
+    /* sub-class doesn't want to generate output right now */
+    return GST_FLOW_OK;
+  }
 
   GST_BUFFER_TIMESTAMP (*outbuf) = output_start_time;
   GST_BUFFER_DURATION (*outbuf) = output_end_time - output_start_time;
@@ -1369,6 +1373,8 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
   if (jitter <= 0) {
     ret = gst_videoaggregator_do_aggregate (vagg, output_start_time,
         output_end_time, &outbuf);
+    if (ret != GST_FLOW_OK)
+      goto done;
     vagg->priv->qos_processed++;
   } else {
     GstMessage *msg;
@@ -1405,6 +1411,8 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
   goto done_unlocked;
 
 done:
+  if (outbuf)
+    gst_buffer_unref (outbuf);
   GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
 
 done_unlocked:
