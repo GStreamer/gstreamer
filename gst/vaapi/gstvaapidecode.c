@@ -69,10 +69,16 @@ static const char gst_vaapidecode_sink_caps_str[] =
     GST_CAPS_CODEC("video/x-xvid")
     GST_CAPS_CODEC("video/x-h263")
     GST_CAPS_CODEC("video/x-h264")
+#if USE_HEVC_DECODER
     GST_CAPS_CODEC("video/x-h265")
+#endif
     GST_CAPS_CODEC("video/x-wmv")
+#if USE_VP8_DECODER
     GST_CAPS_CODEC("video/x-vp8")
+#endif
+#if USE_JPEG_DECODER
     GST_CAPS_CODEC("image/jpeg")
+#endif
     ;
 
 static const char gst_vaapidecode_src_caps_str[] =
@@ -578,6 +584,7 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
         }
       }
       break;
+#if USE_HEVC_DECODER
     case GST_VAAPI_CODEC_H265:
       decode->decoder = gst_vaapi_decoder_h265_new (dpy, caps);
 
@@ -599,6 +606,7 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
         }
       }
       break;
+#endif
     case GST_VAAPI_CODEC_WMV3:
     case GST_VAAPI_CODEC_VC1:
       decode->decoder = gst_vaapi_decoder_vc1_new (dpy, caps);
