@@ -196,7 +196,12 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
   multistream = n_streams > 1;
   *caps = gst_caps_new_simple ("audio/x-opus",
       "multistream", G_TYPE_BOOLEAN, multistream,
-      "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL);
+      "channels", G_TYPE_INT, channels, NULL);
+
+  if (rate > 0) {
+    gst_caps_set_simple (*caps, "rate", G_TYPE_INT, rate, NULL);
+  }
+
   *caps = _gst_caps_set_buffer_array (*caps, "streamheader", buf1, buf2, NULL);
 
   if (headers) {
