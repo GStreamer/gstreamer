@@ -90,7 +90,7 @@
 #include <gst/net/gstnet.h>
 #include <gst/sdp/gstsdpmessage.h>
 #include <gst/sdp/gstmikey.h>
-#include <gst/rtp/gstrtppayloads.h>
+#include <gst/rtp/rtp.h>
 
 #include "gst/gst-i18n-plugin.h"
 
@@ -3401,6 +3401,8 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       g_signal_emit_by_name (src->manager, "get-internal-session", stream->id,
           &rtpsession);
       if (rtpsession) {
+        GstRTPProfile rtp_profile;
+
         GST_INFO_OBJECT (src, "configure bandwidth in session %p", rtpsession);
 
         stream->session = rtpsession;
@@ -3421,6 +3423,24 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
           g_object_set (rtpsession, "rtcp-rs-bandwidth", stream->rs_bandwidth,
               NULL);
         }
+
+        switch (stream->profile) {
+          case GST_RTSP_PROFILE_AVPF:
+            rtp_profile = GST_RTP_PROFILE_AVPF;
+            break;
+          case GST_RTSP_PROFILE_SAVP:
+            rtp_profile = GST_RTP_PROFILE_SAVP;
+            break;
+          case GST_RTSP_PROFILE_SAVPF:
+            rtp_profile = GST_RTP_PROFILE_SAVPF;
+            break;
+          case GST_RTSP_PROFILE_AVP:
+          default:
+            rtp_profile = GST_RTP_PROFILE_AVP;
+            break;
+        }
+
+        g_object_set (rtpsession, "rtp-profile", rtp_profile, NULL);
 
         g_object_set (rtpsession, "probation", src->probation, NULL);
 
