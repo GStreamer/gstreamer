@@ -46,7 +46,7 @@ static GstStaticPadTemplate gst_rtp_opus_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-opus")
+    GST_STATIC_CAPS ("audio/x-opus, multistream = (boolean) FALSE")
     );
 
 static GstBuffer *gst_rtp_opus_depay_process (GstRTPBaseDepayload * depayload,
@@ -96,7 +96,9 @@ gst_rtp_opus_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   gboolean ret;
   const gchar *sprop_stereo, *sprop_maxcapturerate;
 
-  srccaps = gst_caps_new_empty_simple ("audio/x-opus");
+  srccaps =
+      gst_caps_new_simple ("audio/x-opus", "multistream", G_TYPE_BOOLEAN, FALSE,
+      NULL);
 
   s = gst_caps_get_structure (caps, 0);
   if ((sprop_stereo = gst_structure_get_string (s, "sprop-stereo"))) {
