@@ -239,8 +239,9 @@ struct _RTPSession {
   guint         total_sources;
 
   guint16       generation;
-  GstClockTime  next_rtcp_check_time;
-  GstClockTime  last_rtcp_send_time;
+  GstClockTime  next_rtcp_check_time; /* tn */
+  GstClockTime  last_rtcp_check_time; /* tp */
+  GstClockTime  last_rtcp_send_time;  /* t_rr_last */
   GstClockTime  start_time;
   gboolean      first_rtcp;
   gboolean      allow_early;

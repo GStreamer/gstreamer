@@ -572,6 +572,7 @@ rtp_session_init (RTPSession * sess)
 
   sess->first_rtcp = TRUE;
   sess->next_rtcp_check_time = GST_CLOCK_TIME_NONE;
+  sess->last_rtcp_check_time = GST_CLOCK_TIME_NONE;
   sess->last_rtcp_send_time = GST_CLOCK_TIME_NONE;
 
   sess->allow_early = TRUE;
@@ -2908,6 +2909,7 @@ rtp_session_schedule_bye_locked (RTPSession * sess, GstClockTime current_time)
 
   /* reschedule transmission */
   sess->last_rtcp_send_time = current_time;
+  sess->last_rtcp_check_time = current_time;
   interval = calculate_rtcp_interval (sess, FALSE, TRUE);
 
   if (interval != GST_CLOCK_TIME_NONE)
@@ -3553,19 +3555,19 @@ early:
   if (interval != GST_CLOCK_TIME_NONE)
     interval = rtp_stats_add_rtcp_jitter (stats, interval);
 
-  if (sess->last_rtcp_send_time != GST_CLOCK_TIME_NONE) {
+  if (sess->last_rtcp_check_time != GST_CLOCK_TIME_NONE) {
     /* perform forward reconsideration */
     if (interval != GST_CLOCK_TIME_NONE) {
       GstClockTime elapsed;
 
       /* get elapsed time since we last reported */
-      elapsed = current_time - sess->last_rtcp_send_time;
+      elapsed = current_time - sess->last_rtcp_check_time;
 
       GST_DEBUG ("forward reconsideration %" GST_TIME_FORMAT ", elapsed %"
           GST_TIME_FORMAT, GST_TIME_ARGS (interval), GST_TIME_ARGS (elapsed));
-      new_send_time = interval + sess->last_rtcp_send_time;
+      new_send_time = interval + sess->last_rtcp_check_time;
     } else {
-      new_send_time = sess->last_rtcp_send_time;
+      new_send_time = sess->last_rtcp_check_time;
     }
   } else {
     /* If this is the first RTCP packet, we can reconsider anything based
@@ -3586,11 +3588,13 @@ early:
       return FALSE;
     }
     sess->next_rtcp_check_time = current_time + interval;
-  } else if (interval != GST_CLOCK_TIME_NONE) {
+  }
+
+  if ((sess->rtp_profile == GST_RTP_PROFILE_AVPF
+          || sess->rtp_profile == GST_RTP_PROFILE_SAVPF)
+      && interval != GST_CLOCK_TIME_NONE) {
     /* Apply the rules from RFC 4585 section 3.5.3 */
-    if ((sess->rtp_profile == GST_RTP_PROFILE_AVPF
-            || sess->rtp_profile == GST_RTP_PROFILE_SAVPF)
-        && stats->min_interval != 0 && !sess->first_rtcp) {
+    if (stats->min_interval != 0 && !sess->first_rtcp) {
       GstClockTime T_rr_current_interval =
           g_random_double_range (0.5, 1.5) * stats->min_interval * GST_SECOND;
 
@@ -3813,6 +3817,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
    * receivers or senders */
   if (!data.is_early && !data.may_suppress)
     sess->last_rtcp_send_time = data.current_time;
+  sess->last_rtcp_check_time = data.current_time;
   sess->first_rtcp = FALSE;
   sess->next_early_rtcp_time = GST_CLOCK_TIME_NONE;
   sess->scheduled_bye = FALSE;
@@ -3925,7 +3930,7 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
     goto end;
   }
 
-  T_rr = sess->next_rtcp_check_time - sess->last_rtcp_send_time;
+  T_rr = sess->next_rtcp_check_time - sess->last_rtcp_check_time;
 
   /*  RFC 4585 section 3.5.2 step 2b */
   /* If the total sources is <=2, then there is only us and one peer */
@@ -3987,8 +3992,8 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
   /* Delay next regular RTCP packet to not exceed the short-term
    * RTCP bandwidth when using early feedback as compared to
    * without */
-  sess->next_rtcp_check_time = sess->last_rtcp_send_time + 2 * T_rr;
-  sess->last_rtcp_send_time += T_rr;
+  sess->next_rtcp_check_time = sess->last_rtcp_check_time + 2 * T_rr;
+  sess->last_rtcp_check_time += T_rr;
 
   GST_LOG_OBJECT (sess, "next early RTCP time %" GST_TIME_FORMAT
       ", next regular RTCP time %" GST_TIME_FORMAT,
