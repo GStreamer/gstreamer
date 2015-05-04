@@ -3855,7 +3855,7 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
   /*  RFC 4585 section 3.5.2 step 2 */
   if (GST_CLOCK_TIME_IS_VALID (sess->next_early_rtcp_time)) {
     GST_LOG_OBJECT (sess, "already have next early rtcp time");
-    ret = TRUE;
+    ret = (current_time + max_delay > sess->next_early_rtcp_time);
     goto end;
   }
 
