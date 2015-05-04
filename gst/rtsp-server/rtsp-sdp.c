@@ -384,7 +384,8 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
 
   update_sdp_from_tags (stream, smedia);
 
-  if ((rtx_time = gst_rtsp_stream_get_retransmission_time (stream))) {
+  if ((profile == GST_RTSP_PROFILE_AVPF || profile == GST_RTSP_PROFILE_SAVPF)
+      && (rtx_time = gst_rtsp_stream_get_retransmission_time (stream))) {
     /* ssrc multiplexed retransmit functionality */
     guint rtx_pt = gst_rtsp_stream_get_retransmission_pt (stream);
 
