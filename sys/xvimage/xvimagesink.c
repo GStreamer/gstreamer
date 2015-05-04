@@ -1137,8 +1137,6 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
     gdouble x, y, xscale = 1.0, yscale = 1.0;
     GstXWindow *xwindow;
 
-    event = gst_event_new_navigation (structure);
-
     /* We take the flow_lock while we look at the window */
     g_mutex_lock (&xvimagesink->flow_lock);
 
@@ -1183,6 +1181,7 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
           (gdouble) y * yscale, NULL);
     }
 
+    event = gst_event_new_navigation (structure);
     gst_event_ref (event);
     handled = gst_pad_send_event (peer, event);
     gst_object_unref (peer);
