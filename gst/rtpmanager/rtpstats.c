@@ -120,6 +120,8 @@ rtp_stats_set_bandwidths (RTPSessionStats * stats, guint rtp_bw,
  * rtp_stats_calculate_rtcp_interval:
  * @stats: an #RTPSessionStats struct
  * @sender: if we are a sender
+ * @profile: RTP profile of this session
+ * @ptp: if this session is a point-to-point session
  * @first: if this is the first time
  *
  * Calculate the RTCP interval. The result of this function is the amount of
@@ -129,22 +131,31 @@ rtp_stats_set_bandwidths (RTPSessionStats * stats, guint rtp_bw,
  */
 GstClockTime
 rtp_stats_calculate_rtcp_interval (RTPSessionStats * stats, gboolean we_send,
-    gboolean first)
+    GstRTPProfile profile, gboolean ptp, gboolean first)
 {
   gdouble members, senders, n;
   gdouble avg_rtcp_size, rtcp_bw;
   gdouble interval;
   gdouble rtcp_min_time;
 
-  /* Very first call at application start-up uses half the min
-   * delay for quicker notification while still allowing some time
-   * before reporting for randomization and to learn about other
-   * sources so the report interval will converge to the correct
-   * interval more quickly.
-   */
-  rtcp_min_time = stats->min_interval;
-  if (first)
-    rtcp_min_time /= 2.0;
+  if (profile == GST_RTP_PROFILE_AVPF || profile == GST_RTP_PROFILE_SAVPF) {
+    /* RFC 4585 3.4d), 3.5.1 */
+
+    if (first && !ptp)
+      rtcp_min_time = 1.0;
+    else
+      rtcp_min_time = 0.0;
+  } else {
+    /* Very first call at application start-up uses half the min
+     * delay for quicker notification while still allowing some time
+     * before reporting for randomization and to learn about other
+     * sources so the report interval will converge to the correct
+     * interval more quickly.
+     */
+    rtcp_min_time = stats->min_interval;
+    if (first)
+      rtcp_min_time /= 2.0;
+  }
 
   /* Dedicate a fraction of the RTCP bandwidth to senders unless
    * the number of senders is large enough that their share is

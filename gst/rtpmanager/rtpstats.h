@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/net/gstnetaddressmeta.h>
+#include <gst/rtp/rtp.h>
 #include <gio/gio.h>
 
 /**
@@ -222,7 +223,7 @@ void           rtp_stats_set_bandwidths             (RTPSessionStats *stats,
                                                      gdouble rtcp_bw,
                                                      guint rs, guint rr);
 
-GstClockTime   rtp_stats_calculate_rtcp_interval    (RTPSessionStats *stats, gboolean sender, gboolean first);
+GstClockTime   rtp_stats_calculate_rtcp_interval    (RTPSessionStats *stats, gboolean sender, GstRTPProfile profile, gboolean ptp, gboolean first);
 GstClockTime   rtp_stats_add_rtcp_jitter            (RTPSessionStats *stats, GstClockTime interval);
 GstClockTime   rtp_stats_calculate_bye_interval     (RTPSessionStats *stats);
 gint64         rtp_stats_get_packets_lost           (const RTPSourceStats *stats);

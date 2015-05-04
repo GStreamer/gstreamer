@@ -21,7 +21,7 @@
 #define __RTP_SOURCE_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstrtcpbuffer.h>
+#include <gst/rtp/rtp.h>
 #include <gst/net/gstnetaddressmeta.h>
 #include <gio/gio.h>
 

@@ -220,6 +220,8 @@ struct _RTPSession {
 
   guint         probation;
 
+  GstRTPProfile rtp_profile;
+
   /* bandwidths */
   gboolean     recalc_bandwidth;
   guint        bandwidth;
