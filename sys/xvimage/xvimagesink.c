@@ -1185,8 +1185,6 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
 
     gst_event_ref (event);
     handled = gst_pad_send_event (peer, event);
-    if (handled)
-      gst_event_unref (event);
     gst_object_unref (peer);
   }
 
@@ -1194,6 +1192,9 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
     gst_element_post_message ((GstElement *) xvimagesink,
         gst_navigation_message_new_event ((GstObject *) xvimagesink, event));
   }
+
+  if (event)
+    gst_event_unref (event);
 }
 
 static void
