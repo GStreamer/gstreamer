@@ -3562,7 +3562,7 @@ early:
     /* Apply the rules from RFC 4585 section 3.5.3 */
     if (stats->min_interval != 0 && !sess->first_rtcp) {
       GstClockTime T_rr_current_interval =
-          g_random_double_range (0.5, 1.5) * stats->min_interval;
+          g_random_double_range (0.5, 1.5) * stats->min_interval * GST_SECOND;
 
       /* This will caused the RTCP to be suppressed if no FB packets are added */
       if (sess->last_rtcp_send_time + T_rr_current_interval > new_send_time) {
