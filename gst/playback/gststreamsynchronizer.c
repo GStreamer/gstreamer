@@ -65,7 +65,6 @@ typedef struct
   GstSegment segment;
 
   gboolean wait;                /* TRUE if waiting/blocking */
-  gboolean new_stream;
   gboolean is_eos;              /* TRUE if EOS was received */
   gboolean eos_sent;            /* when EOS was sent downstream */
   gboolean flushing;            /* set after flush-start and before flush-stop */
@@ -325,7 +324,6 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
                 "Stream %d belongs to running stream %d, no waiting",
                 stream->stream_number, ostream->stream_number);
             stream->wait = FALSE;
-            stream->new_stream = FALSE;
 
             GST_STREAM_SYNCHRONIZER_UNLOCK (self);
             break;
@@ -340,7 +338,6 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (pad, "Stream %d changed", stream->stream_number);
 
         stream->wait = TRUE;
-        stream->new_stream = TRUE;
 
         for (l = self->streams; l; l = l->next) {
           GstStream *ostream = l->data;
@@ -377,13 +374,19 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
               position_running_time =
                   gst_segment_to_running_time (&ostream->segment,
                   GST_FORMAT_TIME, ostream->segment.position);
-              position =
-                  MAX (position, MAX (stop_running_time,
-                      position_running_time));
+
+              position_running_time =
+                  MAX (position_running_time, stop_running_time);
+              position_running_time -=
+                  gst_segment_to_running_time (&ostream->segment,
+                  GST_FORMAT_TIME, ostream->segment.start);
+              position_running_time = MAX (0, position_running_time);
+
+              position = MAX (position, position_running_time);
             }
           }
-          position = MAX (0, position);
-          self->group_start_time = MAX (self->group_start_time, position);
+
+          self->group_start_time += position;
 
           GST_DEBUG_OBJECT (self, "New group start time: %" GST_TIME_FORMAT,
               GST_TIME_ARGS (self->group_start_time));
@@ -417,10 +420,11 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
 
       stream = gst_pad_get_element_private (pad);
       if (stream && segment.format == GST_FORMAT_TIME) {
-        if (stream->new_stream) {
-          stream->new_stream = FALSE;
-          segment.base = self->group_start_time;
-        }
+        GST_DEBUG_OBJECT (pad,
+            "New stream, updating base from %" GST_TIME_FORMAT " to %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (segment.base),
+            GST_TIME_ARGS (segment.base + self->group_start_time));
+        segment.base += self->group_start_time;
 
         GST_DEBUG_OBJECT (pad, "Segment was: %" GST_SEGMENT_FORMAT,
             &stream->segment);
@@ -475,7 +479,6 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         stream->eos_sent = FALSE;
         stream->flushing = FALSE;
         stream->wait = FALSE;
-        stream->new_stream = FALSE;
         g_cond_broadcast (&stream->stream_finish_cond);
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
@@ -809,28 +812,6 @@ gst_stream_synchronizer_release_stream (GstStreamSynchronizer * self,
   gst_pad_set_active (stream->sinkpad, FALSE);
   gst_element_remove_pad (GST_ELEMENT_CAST (self), stream->sinkpad);
 
-  if (stream->segment.format == GST_FORMAT_TIME) {
-    gint64 stop_running_time;
-    gint64 position_running_time;
-
-    stop_running_time =
-        gst_segment_to_running_time (&stream->segment, GST_FORMAT_TIME,
-        stream->segment.stop);
-    position_running_time =
-        gst_segment_to_running_time (&stream->segment, GST_FORMAT_TIME,
-        stream->segment.position);
-    stop_running_time = MAX (stop_running_time, position_running_time);
-
-    if (stop_running_time > self->group_start_time) {
-      GST_DEBUG_OBJECT (stream->sinkpad,
-          "Updating global start running time from %" GST_TIME_FORMAT " to %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (self->group_start_time),
-          GST_TIME_ARGS (stop_running_time));
-
-      self->group_start_time = stop_running_time;
-    }
-  }
-
   g_cond_clear (&stream->stream_finish_cond);
   g_slice_free (GstStream, stream);
 
@@ -943,7 +924,6 @@ gst_stream_synchronizer_change_state (GstElement * element,
         gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
         stream->gap_duration = GST_CLOCK_TIME_NONE;
         stream->wait = FALSE;
-        stream->new_stream = FALSE;
         stream->is_eos = FALSE;
         stream->eos_sent = FALSE;
         stream->flushing = FALSE;
