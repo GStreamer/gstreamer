@@ -1250,7 +1250,7 @@ execute_next_action (GstValidateScenario * scenario)
   GstQuery *query;
   gdouble rate = 1.0;
   GstValidateAction *act = NULL;
-  gint64 position, duration;
+  gint64 position = GST_CLOCK_TIME_NONE, duration;
   gboolean has_pos, has_dur;
   GstValidateActionType *type;
 
