@@ -3662,6 +3662,7 @@ default_suspend (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
   GstStateChangeReturn ret;
+  gboolean unblock = FALSE;
 
   switch (priv->suspend_mode) {
     case GST_RTSP_SUSPEND_MODE_NONE:
@@ -3672,6 +3673,7 @@ default_suspend (GstRTSPMedia * media)
       ret = set_target_state (media, GST_STATE_PAUSED, TRUE);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
+      unblock = TRUE;
       break;
     case GST_RTSP_SUSPEND_MODE_RESET:
       GST_DEBUG ("media %p suspend to NULL", media);
@@ -3684,13 +3686,15 @@ default_suspend (GstRTSPMedia * media)
        * is actually from NULL to PLAY will create a new sequence
        * number. */
       g_ptr_array_foreach (priv->streams, (GFunc) do_set_seqnum, NULL);
+      unblock = TRUE;
       break;
     default:
       break;
   }
 
   /* let the streams do the state changes freely, if any */
-  media_streams_set_blocked (media, FALSE);
+  if (unblock)
+    media_streams_set_blocked (media, FALSE);
 
   return TRUE;
 
