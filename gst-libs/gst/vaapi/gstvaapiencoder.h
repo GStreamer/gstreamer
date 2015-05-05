@@ -37,9 +37,9 @@ typedef struct _GstVaapiEncoder GstVaapiEncoder;
 /**
  * GstVaapiEncoderStatus:
  * @GST_VAAPI_ENCODER_STATUS_SUCCESS: Success.
- * @GST_VAAPI_ENCODER_STATUS_ERROR_NO_SURFACE: No surface left to encode.
- * @GST_VAAPI_ENCODER_STATUS_ERROR_NO_BUFFER: No coded buffer left to
- *   hold the encoded picture.
+ * @GST_VAAPI_ENCODER_STATUS_NO_SURFACE: No surface left to encode.
+ * @GST_VAAPI_ENCODER_STATUS_NO_BUFFER: No coded buffer left to hold
+ *   the encoded picture.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN: Unknown error.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED: No memory left.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED: The requested
