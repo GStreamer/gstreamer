@@ -1,2 +1,2 @@
 description, seek=true, reverse-playback=true
-seek, name=Revserse-seek, playback-time=0.0, rate=-1.0, start=0.0, stop=duration, flags=accurate+flush
+seek, name=Reverse-seek, playback-time=0.0, rate=-1.0, start=0.0, stop=duration, flags=accurate+flush
