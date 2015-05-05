@@ -3,4 +3,7 @@
     <string name="app_name">GStreamer Play</string>
     <string name="button_play">Play</string>
     <string name="button_pause">Pause</string>
+
+    <string name="action_about">About</string>
+    <string name="sort">Sort</string>
 </resources>

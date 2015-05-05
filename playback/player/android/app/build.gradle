@@ -1,0 +1,68 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 22
+    buildToolsVersion "22.0.1"
+
+    defaultConfig {
+        applicationId "org.freedesktop.gstreamer.play"
+        minSdkVersion 9
+        targetSdkVersion 22
+
+        ndk {
+            moduleName "gstplayer"
+        }
+    }
+
+    sourceSets {
+        main {
+            // GStreamer will generate these files.
+            java {
+                srcDir 'src/main/jni/src'
+            }
+            assets {
+                srcDir 'src/main/jni/assets'
+            }
+
+            //Tell Gradle where to put the compiled shared library
+            jniLibs.srcDir 'src/main/libs'
+
+            //disable automatic ndk-build call
+            jni.srcDirs = [];
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+
+    // Thank you http://stackoverflow.com/q/28878689/375209
+    tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn ndkBuild
+    }
+
+    task ndkBuild(type: Exec) {
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file('local.properties').newDataInputStream())
+        def ndkDir = properties.getProperty('ndk.dir')
+        environment GSTREAMER_ROOT_ARM: properties.getProperty('gstreamer.arm.dir')
+        environment GSTREAMER_ROOT_ARMV7: properties.getProperty('gstreamer.armv7.dir')
+        environment GSTREAMER_ROOT_X86: properties.getProperty('gstreamer.x86.dir')
+
+        def ndkExtraPath = properties.getProperty('ndk.extraPath')
+        if (! "".equalsIgnoreCase(ndkExtraPath)) {
+            environment PATH: "${System.getenv("PATH")}${File.pathSeparator}${ndkExtraPath}"
+        }
+
+        commandLine "${ndkDir}/ndk-build", '-C', file('src/main/jni').absolutePath //, 'V=1' // Enable V=1 for debugging messages.
+    }
+}
+
+dependencies {
+    compile 'com.android.support:appcompat-v7:22.1.1'
+    compile "com.android.support:recyclerview-v7:22.1.1"
+    compile "com.android.support:support-annotations:22.1.1"
+}
