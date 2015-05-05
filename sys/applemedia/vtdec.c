@@ -674,8 +674,6 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
       vtdec->texture_cache == NULL);
   gst_video_codec_state_unref (state);
 
-  gst_buffer_copy_into (buf, frame->input_buffer,
-      GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_FLAGS, 0, -1);
   GST_BUFFER_PTS (buf) = pts.value;
   GST_BUFFER_DURATION (buf) = duration.value;
   frame->output_buffer = buf;
