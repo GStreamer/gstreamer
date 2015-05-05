@@ -450,6 +450,8 @@ typedef enum {
     GST_H264_VIDEO_STATE_GOT_SPS        = 1 << 0,
     GST_H264_VIDEO_STATE_GOT_PPS        = 1 << 1,
     GST_H264_VIDEO_STATE_GOT_SLICE      = 1 << 2,
+    GST_H264_VIDEO_STATE_GOT_I_FRAME    = 1 << 3, // persistent across SPS
+    GST_H264_VIDEO_STATE_GOT_P_SLICE    = 1 << 4, // predictive (all non-intra)
 
     GST_H264_VIDEO_STATE_VALID_PICTURE_HEADERS = (
         GST_H264_VIDEO_STATE_GOT_SPS |
@@ -1208,6 +1210,12 @@ ensure_sps(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstVaapiParserInfoH264 * const pi = priv->sps[sps->id];
 
+    /* Propagate "got I-frame" state to the next SPS unit if the
+       current sequence was not ended */
+    if (pi && priv->active_sps)
+        pi->state |= (priv->active_sps->state &
+            GST_H264_VIDEO_STATE_GOT_I_FRAME);
+
     gst_vaapi_parser_info_h264_replace(&priv->active_sps, pi);
     return pi ? &pi->data.sps : NULL;
 }
@@ -1489,10 +1497,20 @@ static GstVaapiDecoderStatus
 decode_current_picture(GstVaapiDecoderH264 *decoder)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiParserInfoH264 * const sps_pi = decoder->priv.active_sps;
     GstVaapiPictureH264 * const picture = priv->current_picture;
 
-    if (!is_valid_state(priv->decoder_state, GST_H264_VIDEO_STATE_VALID_PICTURE))
+    if (!is_valid_state(priv->decoder_state,
+            GST_H264_VIDEO_STATE_VALID_PICTURE))
         goto drop_frame;
+
+    priv->decoder_state |= sps_pi->state;
+    if (!(priv->decoder_state & GST_H264_VIDEO_STATE_GOT_I_FRAME)) {
+        if (priv->decoder_state & GST_H264_VIDEO_STATE_GOT_P_SLICE)
+            goto drop_frame;
+        sps_pi->state |= GST_H264_VIDEO_STATE_GOT_I_FRAME;
+    }
+
     priv->decoder_state = 0;
     priv->pic_structure = GST_H264_SEI_PIC_STRUCT_FRAME;
 
@@ -1669,6 +1687,8 @@ parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     pi->voc = get_view_order_index(sps, pi->view_id);
 
     priv->parser_state |= GST_H264_VIDEO_STATE_GOT_SLICE;
+    if (!GST_H264_IS_I_SLICE(slice_hdr))
+        priv->parser_state |= GST_H264_VIDEO_STATE_GOT_P_SLICE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -1743,8 +1763,14 @@ static GstVaapiDecoderStatus
 decode_sequence_end(GstVaapiDecoderH264 *decoder)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiParserInfoH264 * const sps_pi = decoder->priv.active_sps;
 
     GST_DEBUG("decode sequence-end");
+
+    /* Sequence ended, don't try to propagate "got I-frame" state
+       beyond this point */
+    if (sps_pi)
+        sps_pi->state &= ~GST_H264_VIDEO_STATE_GOT_I_FRAME;
 
     dpb_flush(decoder, NULL);
 
@@ -3782,7 +3808,6 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 
     gst_vaapi_picture_add_slice(GST_VAAPI_PICTURE_CAST(picture), slice);
     picture->last_slice_hdr = slice_hdr;
-    priv->decoder_state |= GST_H264_VIDEO_STATE_GOT_SLICE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
