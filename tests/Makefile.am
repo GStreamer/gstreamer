@@ -6,6 +6,7 @@ noinst_PROGRAMS = \
 	test-surfaces			\
 	test-windows			\
 	test-subpicture			\
+	simple-encoder			\
 	$(NULL)
 
 if USE_GLX
@@ -121,6 +122,12 @@ simple_decoder_source_h	=
 simple_decoder_SOURCES	= $(simple_decoder_source_c)
 simple_decoder_CFLAGS	= $(TEST_CFLAGS) $(GST_VIDEO_CFLAGS)
 simple_decoder_LDADD	= libutils.la $(TEST_LIBS) $(GST_VIDEO_LIBS)
+
+simple_encoder_source_c = simple-encoder.c y4mreader.c
+simple_encoder_source_h = y4mreader.h
+simple_encoder_SOURCES  = $(simple_encoder_source_c)
+simple_encoder_CFLAGS   = $(TEST_CFLAGS) $(GST_VIDEO_CFLAGS)
+simple_encoder_LDADD    = libutils.la $(TEST_LIBS) $(GST_VIDEO_LIBS)
 
 EXTRA_DIST = \
 	test-subpicture-data.h		\
