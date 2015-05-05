@@ -195,7 +195,7 @@ gst_gl_sync_meta_get_info (void)
   if (g_once_init_enter (&meta_info)) {
     const GstMetaInfo *meta =
         gst_meta_register (GST_GL_SYNC_META_API_TYPE, "GstGLSyncMeta",
-        sizeof (GstVideoMeta), (GstMetaInitFunction) _gst_gl_sync_meta_init,
+        sizeof (GstGLSyncMeta), (GstMetaInitFunction) _gst_gl_sync_meta_init,
         (GstMetaFreeFunction) _gst_gl_sync_meta_free,
         _gst_gl_sync_meta_transform);
     g_once_init_leave (&meta_info, meta);
