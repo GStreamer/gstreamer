@@ -1867,6 +1867,9 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_DECKLINK, true)
 AG_GST_CHECK_FEATURE(DECKLINK, [decklink], decklink, [
    HAVE_DECKLINK=no
    case "$host" in
+     *android*)
+       HAVE_DECKLINK=no
+       ;;
      *-*linux*)
        if test "x$HAVE_PTHREAD_H" = "xyes"; then
          AC_CHECK_LIB(dl, dlopen,
@@ -1884,7 +1887,7 @@ AG_GST_CHECK_FEATURE(DECKLINK, [decklink], decklink, [
             HAVE_DECKLINK=yes
             DECKLINK_CXXFLAGS=
             DECKLINK_LIBS="-lpthread -ldl"
-	    HAVE_DECKLINK_OSX=yes
+            HAVE_DECKLINK_OSX=yes
            ])
        fi
        ;;
