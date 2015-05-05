@@ -589,7 +589,7 @@ create_segment_event (GstRTPBaseDepayload * filter, guint rtptime,
 
   priv = filter->priv;
 
-  /* determin the start of the segment */
+  /* determining the start of the segment */
   start = 0;
   if (priv->clock_base != -1 && position != -1) {
     GstClockTime exttime, gap;
@@ -600,11 +600,17 @@ create_segment_event (GstRTPBaseDepayload * filter, guint rtptime,
         filter->clock_rate, GST_SECOND);
 
     /* account for lost packets */
-    if (position > gap)
+    if (position > gap) {
+      GST_DEBUG_OBJECT (filter,
+          "Found gap of %" GST_TIME_FORMAT ", adjusting start: %"
+          GST_TIME_FORMAT " = %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (gap), GST_TIME_ARGS (position - gap),
+          GST_TIME_ARGS (position), GST_TIME_ARGS (gap));
       start = position - gap;
+    }
   }
 
-  /* determin the stop of the segment */
+  /* determining the stop of the segment */
   stop = -1;
   if (priv->npt_stop != -1)
     stop = start + (priv->npt_stop - priv->npt_start);
@@ -624,6 +630,8 @@ create_segment_event (GstRTPBaseDepayload * filter, guint rtptime,
   segment.position = position;
   segment.base = running_time;
 
+  GST_DEBUG_OBJECT (filter, "Creating segment event %" GST_SEGMENT_FORMAT,
+      &segment);
   event = gst_event_new_segment (&segment);
 
   return event;
