@@ -2272,6 +2272,9 @@ gst_ogg_demux_finalize (GObject * object)
 
   gst_flow_combiner_free (ogg->flowcombiner);
 
+  if (ogg->building_chain)
+    gst_ogg_chain_free (ogg->building_chain);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
