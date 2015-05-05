@@ -54,6 +54,10 @@ remove_client (Client * client)
 {
   g_print ("Removing connection %s\n", client->name);
 
+  G_LOCK (clients);
+  clients = g_list_remove (clients, client);
+  G_UNLOCK (clients);
+
   g_free (client->name);
 
   if (client->isource) {
@@ -66,10 +70,6 @@ remove_client (Client * client)
   }
   g_object_unref (client->connection);
   g_byte_array_unref (client->current_message);
-
-  G_LOCK (clients);
-  clients = g_list_remove (clients, client);
-  G_UNLOCK (clients);
 
   g_slice_free (Client, client);
 }
