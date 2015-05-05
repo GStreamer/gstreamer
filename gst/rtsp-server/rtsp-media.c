@@ -3657,7 +3657,7 @@ do_set_seqnum (GstRTSPStream * stream)
 }
 
 /* call with state_lock */
-gboolean
+static gboolean
 default_suspend (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
@@ -3765,7 +3765,7 @@ suspend_failed:
 }
 
 /* call with state_lock */
-gboolean
+static gboolean
 default_unsuspend (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
