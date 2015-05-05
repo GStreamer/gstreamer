@@ -45,17 +45,6 @@
    fun:memalign
    fun:allocate_and_init
    fun:tls_get_addr_tail
-   fun:_pixman_implementation_lookup_composite
-   fun:pixman_image_composite32
-   fun:pixman_glyph_cache_insert
-   fun:composite_glyphs
-   fun:clip_and_composite
-   fun:_cairo_traps_compositor_glyphs
-   fun:_cairo_compositor_glyphs
-   fun:_cairo_image_surface_glyphs
-   fun:_cairo_surface_show_text_glyphs
-   fun:_cairo_gstate_show_text_glyphs
-   fun:cairo_show_glyphs
 }
 
 # PENDING: https://bugzilla.gnome.org/show_bug.cgi?id=748417
