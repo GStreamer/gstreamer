@@ -53,7 +53,7 @@ typedef struct
   GtkWidget *seekbar;
   GtkWidget *video_area;
   GtkWidget *volume_button;
-  GtkWidget *media_info;
+  GtkWidget *media_info_button;
   gulong seekbar_value_changed_signal_id;
   gboolean playing;
 } GtkPlay;
@@ -160,7 +160,7 @@ skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
   g_return_if_fail (prev != NULL);
 
   gtk_widget_set_sensitive (play->next_button, TRUE);
-  gtk_widget_set_sensitive (play->media_info, FALSE);
+  gtk_widget_set_sensitive (play->media_info_button, FALSE);
   gst_player_set_uri (play->player, prev->data);
   play->current_uri = prev;
   gst_player_play (play->player);
@@ -178,7 +178,7 @@ skip_next_clicked_cb (GtkButton * button, GtkPlay * play)
   g_return_if_fail (next != NULL);
 
   gtk_widget_set_sensitive (play->prev_button, TRUE);
-  gtk_widget_set_sensitive (play->media_info, FALSE);
+  gtk_widget_set_sensitive (play->media_info_button, FALSE);
   gst_player_set_uri (play->player, next->data);
   play->current_uri = next;
   gst_player_play (play->player);
@@ -554,11 +554,11 @@ create_ui (GtkPlay * play)
       G_CALLBACK (volume_changed_cb), play);
 
   /* media information button */
-  play->media_info = gtk_button_new_from_icon_name ("dialog-information",
+  play->media_info_button = gtk_button_new_from_icon_name ("dialog-information",
       GTK_ICON_SIZE_BUTTON);
-  g_signal_connect (G_OBJECT (play->media_info), "clicked",
+  g_signal_connect (G_OBJECT (play->media_info_button), "clicked",
       G_CALLBACK (media_info_clicked_cb), play);
-  gtk_widget_set_sensitive (play->media_info, FALSE);
+  gtk_widget_set_sensitive (play->media_info_button, FALSE);
 
   controls = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start (GTK_BOX (controls), play->prev_button, FALSE, FALSE, 2);
@@ -567,7 +567,8 @@ create_ui (GtkPlay * play)
   gtk_box_pack_start (GTK_BOX (controls), play->next_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->seekbar, TRUE, TRUE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->volume_button, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (controls), play->media_info, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (controls), play->media_info_button,
+      FALSE, FALSE, 2);
 
   main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start (GTK_BOX (main_hbox), play->video_area, TRUE, TRUE, 0);
@@ -632,7 +633,7 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
         gtk_widget_set_sensitive (play->prev_button, TRUE);
       gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
 
-      gtk_widget_set_sensitive (play->media_info, FALSE);
+      gtk_widget_set_sensitive (play->media_info_button, FALSE);
 
       gst_player_set_uri (play->player, next->data);
       play->current_uri = next;
@@ -655,14 +656,14 @@ static void
 media_info_updated_cb (GstPlayer * player, GstPlayerMediaInfo * media_info,
     GtkPlay * play)
 {
-  if (!gtk_widget_is_sensitive (play->media_info)) {
+  if (!gtk_widget_is_sensitive (play->media_info_button)) {
     const gchar *title;
 
     title = gst_player_media_info_get_title (media_info);
     if (title)
       set_title (play, title);
 
-    gtk_widget_set_sensitive (play->media_info, TRUE);
+    gtk_widget_set_sensitive (play->media_info_button, TRUE);
   }
 }
 
