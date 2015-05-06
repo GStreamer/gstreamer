@@ -1281,18 +1281,13 @@ gst_videoaggregator_get_next_time (GstAggregator * agg)
 }
 
 static GstFlowReturn
-gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
+gst_videoaggregator_check_reconfigure (GstVideoAggregator * vagg,
+    gboolean timeout)
 {
-  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
-  GstClockTime output_start_time, output_end_time;
-  GstBuffer *outbuf = NULL;
-  GstFlowReturn flow_ret;
-  gint64 jitter;
-
-  GST_VIDEO_AGGREGATOR_LOCK (vagg);
+  GstAggregator *agg = (GstAggregator *) vagg;
 
   if (GST_VIDEO_INFO_FORMAT (&vagg->info) == GST_VIDEO_FORMAT_UNKNOWN
-      || gst_pad_check_reconfigure (agg->srcpad)) {
+      || gst_pad_check_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg))) {
     gboolean ret;
 
     ret = gst_videoaggregator_update_converters (vagg);
@@ -1300,7 +1295,7 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
       ret = gst_videoaggregator_update_src_caps (vagg);
 
     if (!ret) {
-      if (timeout && gst_pad_needs_reconfigure (agg->srcpad)) {
+      if (timeout && gst_pad_needs_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg))) {
         guint64 frame_duration;
         gint fps_d, fps_n;
 
@@ -1328,13 +1323,34 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
         else
           agg->segment.position = 0;
         vagg->priv->nframes++;
-        GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
-        return GST_FLOW_OK;
+        return GST_FLOW_NEEDS_DATA;
       } else {
-        GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
         return GST_FLOW_NOT_NEGOTIATED;
       }
     }
+  }
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
+{
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
+  GstClockTime output_start_time, output_end_time;
+  GstBuffer *outbuf = NULL;
+  GstFlowReturn flow_ret;
+  gint64 jitter;
+
+  GST_VIDEO_AGGREGATOR_LOCK (vagg);
+
+  flow_ret = gst_videoaggregator_check_reconfigure (vagg, timeout);
+  if (flow_ret == GST_FLOW_NEEDS_DATA) {
+    GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
+    return GST_FLOW_OK;
+  } else if (flow_ret != GST_FLOW_OK) {
+    GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
+    return flow_ret;
   }
 
   output_start_time = gst_videoaggregator_get_next_time (agg);
