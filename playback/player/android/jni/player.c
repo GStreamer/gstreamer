@@ -40,7 +40,6 @@ typedef struct _Player
   ANativeWindow *native_window;
 } Player;
 
-static pthread_t gst_app_thread;
 static pthread_key_t current_jni_env;
 static JavaVM *java_vm;
 static jfieldID native_player_field_id;
