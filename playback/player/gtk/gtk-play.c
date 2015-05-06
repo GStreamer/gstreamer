@@ -45,6 +45,7 @@ typedef struct
   gchar *uri;
 
   GList *uris;
+  GList *current_uri;
 
   GtkWidget *window;
   GtkWidget *play_pause_button;
@@ -155,16 +156,13 @@ skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
   GList *prev;
   gchar *cur_uri;
 
-  prev = g_list_find_custom (play->uris,
-      gst_player_get_uri (play->player), (GCompareFunc) strcmp);
-
-  g_return_if_fail (prev != NULL);
-  prev = g_list_previous (prev);
+  prev = g_list_previous (play->current_uri);
   g_return_if_fail (prev != NULL);
 
   gtk_widget_set_sensitive (play->next_button, TRUE);
   gtk_widget_set_sensitive (play->media_info, FALSE);
   gst_player_set_uri (play->player, prev->data);
+  play->current_uri = prev;
   gst_player_play (play->player);
   set_title (play, prev->data);
   gtk_widget_set_sensitive (play->prev_button, g_list_previous (prev) != NULL);
@@ -176,16 +174,13 @@ skip_next_clicked_cb (GtkButton * button, GtkPlay * play)
   GList *next, *l;
   gchar *cur_uri;
 
-  next = g_list_find_custom (play->uris,
-      gst_player_get_uri (play->player), (GCompareFunc) strcmp);
-
-  g_return_if_fail (next != NULL);
-  next = g_list_next (next);
+  next = g_list_next (play->current_uri);
   g_return_if_fail (next != NULL);
 
   gtk_widget_set_sensitive (play->prev_button, TRUE);
   gtk_widget_set_sensitive (play->media_info, FALSE);
   gst_player_set_uri (play->player, next->data);
+  play->current_uri = next;
   gst_player_play (play->player);
   set_title (play, next->data);
   gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
@@ -631,12 +626,7 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
     GList *next = NULL;
     gchar *uri;
 
-    next = g_list_find_custom (play->uris,
-        gst_player_get_uri (play->player), (GCompareFunc) strcmp);
-
-    g_return_if_fail (next != NULL);
-
-    next = g_list_next (next);
+    next = g_list_next (play->current_uri);
     if (next) {
       if (!gtk_widget_is_sensitive (play->prev_button))
         gtk_widget_set_sensitive (play->prev_button, TRUE);
@@ -645,6 +635,7 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
       gtk_widget_set_sensitive (play->media_info, FALSE);
 
       gst_player_set_uri (play->player, next->data);
+      play->current_uri = next;
       gst_player_play (play->player);
       set_title (play, next->data);
     } else {
@@ -768,6 +759,7 @@ main (gint argc, gchar ** argv)
   /* We have file(s) that need playing. */
   set_title (&play, g_list_first (play.uris)->data);
   gst_player_play (play.player);
+  play.current_uri = g_list_first (play.uris);
 
   gtk_main ();
 
