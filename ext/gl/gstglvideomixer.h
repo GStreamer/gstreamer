@@ -73,6 +73,7 @@ struct _GstGLVideoMixerClass
 };
 
 GType gst_gl_video_mixer_get_type (void);
+GType gst_gl_video_mixer_bin_get_type (void);
 
 G_END_DECLS
 
