@@ -816,7 +816,7 @@ gst_videoaggregator_pad_sink_setcaps (GstPad * pad, GstObject * parent,
   }
 
   vaggpad->info = info;
-  gst_pad_mark_reconfigure (vagg->aggregator.srcpad);
+  gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg));
   ret = TRUE;
 
   GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
@@ -1795,7 +1795,7 @@ gst_videoaggregator_release_pad (GstElement * element, GstPad * pad)
   GST_ELEMENT_CLASS (gst_videoaggregator_parent_class)->release_pad (GST_ELEMENT
       (vagg), pad);
 
-  gst_pad_mark_reconfigure (vagg->aggregator.srcpad);
+  gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg));
 
   GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
   return;
