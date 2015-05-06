@@ -798,10 +798,10 @@ gst_srtp_dec_sink_event_rtp (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_SEGMENT:
       /* Make sure to send a caps event downstream before the segment event,
        * even if upstream didn't */
-      if (!gst_pad_has_current_caps (pad)) {
+      if (!gst_pad_has_current_caps (filter->rtp_srcpad)) {
         GstCaps *caps = gst_caps_new_empty_simple ("application/x-rtp");
 
-        gst_pad_event_default (pad, parent, gst_event_new_caps (caps));
+        gst_pad_set_caps (filter->rtp_srcpad, caps);
         gst_caps_unref (caps);
       }
       filter->rtp_has_segment = TRUE;
@@ -833,10 +833,10 @@ gst_srtp_dec_sink_event_rtcp (GstPad * pad, GstObject * parent,
     case GST_EVENT_SEGMENT:
       /* Make sure to send a caps event downstream before the segment event,
        * even if upstream didn't */
-      if (!gst_pad_has_current_caps (pad)) {
+      if (!gst_pad_has_current_caps (filter->rtcp_srcpad)) {
         GstCaps *caps = gst_caps_new_empty_simple ("application/x-rtcp");
 
-        gst_pad_event_default (pad, parent, gst_event_new_caps (caps));
+        gst_pad_set_caps (filter->rtcp_srcpad, caps);
         gst_caps_unref (caps);
       }
       filter->rtcp_has_segment = TRUE;
