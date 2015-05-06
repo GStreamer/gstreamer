@@ -1283,17 +1283,18 @@ gst_videoaggregator_get_next_time (GstAggregator * agg)
 static GstFlowReturn
 gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
 {
-  GstFlowReturn ret;
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
   GstClockTime output_start_time, output_end_time;
   GstBuffer *outbuf = NULL;
-  gint res;
+  GstFlowReturn flow_ret;
   gint64 jitter;
 
   GST_VIDEO_AGGREGATOR_LOCK (vagg);
 
   if (GST_VIDEO_INFO_FORMAT (&vagg->info) == GST_VIDEO_FORMAT_UNKNOWN
       || gst_pad_check_reconfigure (agg->srcpad)) {
+    gboolean ret;
+
     ret = gst_videoaggregator_update_converters (vagg);
     if (ret)
       ret = gst_videoaggregator_update_src_caps (vagg);
@@ -1351,33 +1352,31 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
     output_end_time = MIN (output_end_time, agg->segment.stop);
 
   if (output_end_time == output_start_time) {
-    res = GST_FLOW_EOS;
+    flow_ret = GST_FLOW_EOS;
   } else {
-    res =
+    flow_ret =
         gst_videoaggregator_fill_queues (vagg, output_start_time,
         output_end_time);
   }
 
-  if (res == GST_FLOW_NEEDS_DATA && !timeout) {
+  if (flow_ret == GST_FLOW_NEEDS_DATA && !timeout) {
     GST_DEBUG_OBJECT (vagg, "Need more data for decisions");
-    ret = GST_FLOW_OK;
+    flow_ret = GST_FLOW_OK;
     goto done;
-  } else if (res == GST_FLOW_EOS) {
+  } else if (flow_ret == GST_FLOW_EOS) {
     GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
     GST_DEBUG_OBJECT (vagg, "All sinkpads are EOS -- forwarding");
-    ret = GST_FLOW_EOS;
     goto done_unlocked;
-  } else if (res == GST_FLOW_ERROR) {
+  } else if (flow_ret == GST_FLOW_ERROR) {
     GST_WARNING_OBJECT (vagg, "Error collecting buffers");
-    ret = GST_FLOW_ERROR;
     goto done;
   }
 
   jitter = gst_videoaggregator_do_qos (vagg, output_start_time);
   if (jitter <= 0) {
-    ret = gst_videoaggregator_do_aggregate (vagg, output_start_time,
+    flow_ret = gst_videoaggregator_do_aggregate (vagg, output_start_time,
         output_end_time, &outbuf);
-    if (ret != GST_FLOW_OK)
+    if (flow_ret != GST_FLOW_OK)
       goto done;
     vagg->priv->qos_processed++;
   } else {
@@ -1397,7 +1396,7 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
         vagg->priv->qos_processed, vagg->priv->qos_dropped);
     gst_element_post_message (GST_ELEMENT_CAST (vagg), msg);
 
-    ret = GST_FLOW_OK;
+    flow_ret = GST_FLOW_OK;
   }
 
   agg->segment.position = output_end_time;
@@ -1410,7 +1409,7 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
         GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
-    ret = gst_aggregator_finish_buffer (agg, outbuf);
+    flow_ret = gst_aggregator_finish_buffer (agg, outbuf);
   }
   goto done_unlocked;
 
@@ -1420,7 +1419,7 @@ done:
   GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
 
 done_unlocked:
-  return ret;
+  return flow_ret;
 }
 
 /* FIXME, the duration query should reflect how long you will produce
