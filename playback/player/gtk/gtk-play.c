@@ -664,8 +664,15 @@ static void
 media_info_updated_cb (GstPlayer * player, GstPlayerMediaInfo * media_info,
     GtkPlay * play)
 {
-  if (!gtk_widget_is_sensitive (play->media_info))
+  if (!gtk_widget_is_sensitive (play->media_info)) {
+    const gchar *title;
+
+    title = gst_player_media_info_get_title (media_info);
+    if (title)
+      set_title (play, title);
+
     gtk_widget_set_sensitive (play->media_info, TRUE);
+  }
 }
 
 int
