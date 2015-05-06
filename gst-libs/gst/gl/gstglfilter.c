@@ -37,12 +37,21 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 
 static GstStaticPadTemplate gst_gl_filter_src_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA") ";" GST_VIDEO_CAPS_MAKE ("RGBA"))
+            "RGBA"))
+    );
+
+static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+            "RGBA"))
     );
 
 /* Properties */
@@ -54,8 +63,7 @@ enum
 #define gst_gl_filter_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLFilter, gst_gl_filter, GST_TYPE_GL_BASE_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_gl_filter_debug, "glfilter", 0,
-        "glfilter element");
-    );
+        "glfilter element"););
 
 static void gst_gl_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -86,7 +94,6 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
-  GstCaps *upload_caps, *elem_caps, *templ;
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
@@ -111,15 +118,8 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_filter_src_pad_template));
-
-  elem_caps = gst_caps_from_string ("video/x-raw(ANY),format=RGBA");
-  upload_caps = gst_gl_upload_get_input_template_caps ();
-  templ = gst_caps_intersect (elem_caps, upload_caps);
   gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, templ));
-  gst_caps_unref (upload_caps);
-  gst_caps_unref (elem_caps);
-  gst_caps_unref (templ);
+      gst_static_pad_template_get (&gst_gl_filter_sink_pad_template));
 }
 
 static void
@@ -155,11 +155,6 @@ static void
 gst_gl_filter_reset (GstGLFilter * filter)
 {
   gst_caps_replace (&filter->out_caps, NULL);
-
-  if (filter->upload) {
-    gst_object_unref (filter->upload);
-    filter->upload = NULL;
-  }
 
   if (filter->pool) {
     gst_object_unref (filter->pool);
@@ -610,7 +605,8 @@ gst_gl_filter_caps_remove_size (GstCaps * caps)
 }
 
 static GstCaps *
-gst_gl_filter_set_caps_features (GstCaps * caps, const gchar * feature_name)
+gst_gl_filter_set_caps_features (const GstCaps * caps,
+    const gchar * feature_name)
 {
   GstCaps *ret = gst_gl_caps_replace_all_caps_features (caps, feature_name);
   gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
@@ -621,48 +617,23 @@ static GstCaps *
 gst_gl_filter_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
 {
-  GstGLContext *context = GST_GL_BASE_FILTER (bt)->context;
   GstCaps *tmp = NULL;
   GstCaps *result = NULL;
 
-  if (direction == GST_PAD_SINK) {
-    result = gst_gl_upload_transform_caps (context, direction, caps, NULL);
-  } else {
-    tmp =
-        gst_gl_caps_replace_all_caps_features (caps,
-        GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-    result = gst_caps_merge (gst_caps_ref (caps), tmp);
-  }
+  result = gst_gl_filter_caps_remove_size (caps);
+  tmp = result;
+  GST_DEBUG_OBJECT (bt, "size removal returned caps %" GST_PTR_FORMAT, tmp);
 
-  GST_DEBUG_OBJECT (bt, "transfer returned %" GST_PTR_FORMAT, result);
-
-  tmp = gst_gl_filter_caps_remove_size (result);
-  gst_caps_unref (result);
-  result = tmp;
-  GST_DEBUG_OBJECT (bt, "size removal returned caps %" GST_PTR_FORMAT, result);
-
-  tmp =
-      gst_gl_filter_set_caps_features (result,
-      GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-  gst_caps_unref (result);
-  result = tmp;
-
-  if (direction == GST_PAD_SRC) {
-    tmp = gst_gl_upload_transform_caps (context, direction, result, NULL);
-    gst_caps_unref (result);
-    result = tmp;
-  } else {
-    tmp =
-        gst_gl_caps_replace_all_caps_features (result,
-        GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
-    result = gst_caps_merge (result, tmp);
-  }
-  GST_DEBUG_OBJECT (bt, "transfer returned %" GST_PTR_FORMAT, result);
+  result =
+      gst_gl_filter_set_caps_features (tmp, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  gst_caps_unref (tmp);
+  tmp = result;
 
   if (filter_caps) {
-    tmp =
-        gst_caps_intersect_full (filter_caps, result, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (result);
+    result =
+        gst_caps_intersect_full (filter_caps, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+  } else {
     result = tmp;
   }
 
@@ -806,11 +777,10 @@ config_failed:
 static gboolean
 gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
-  GstGLFilter *filter = GST_GL_FILTER (trans);
   GstGLContext *context;
   GstBufferPool *pool = NULL;
   GstStructure *config;
-  GstCaps *caps, *upload_caps;
+  GstCaps *caps;
   guint min, max, size;
   gboolean update_pool;
 
@@ -862,18 +832,6 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 
   gst_object_unref (pool);
 
-  if (!filter->upload)
-    filter->upload = gst_gl_upload_new (context);
-
-  upload_caps = gst_caps_copy (caps);
-  gst_caps_set_features (upload_caps, 0,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
-  if (!gst_gl_upload_set_caps (filter->upload, caps, upload_caps)) {
-    gst_caps_unref (upload_caps);
-    return FALSE;
-  }
-  gst_caps_unref (upload_caps);
-
   return TRUE;
 }
 
@@ -895,18 +853,11 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
   GstGLFilterClass *filter_class;
   guint in_tex, out_tex;
   GstVideoFrame gl_frame, out_frame;
-  GstBuffer *gl_buffer;
   gboolean ret;
 
   filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-  if (GST_GL_UPLOAD_DONE != gst_gl_upload_perform_with_buffer (filter->upload,
-          inbuf, &gl_buffer) || !gl_buffer) {
-    ret = FALSE;
-    goto gl_buf_error;
-  }
-
-  if (!gst_video_frame_map (&gl_frame, &filter->in_info, gl_buffer,
+  if (!gst_video_frame_map (&gl_frame, &filter->in_info, inbuf,
           GST_MAP_READ | GST_MAP_GL)) {
     ret = FALSE;
     goto inbuf_error;
@@ -932,8 +883,6 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
 unmap_out_error:
   gst_video_frame_unmap (&gl_frame);
 inbuf_error:
-  gst_buffer_unref (gl_buffer);
-gl_buf_error:
 
   return ret;
 }

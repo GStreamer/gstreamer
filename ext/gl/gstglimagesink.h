@@ -70,6 +70,7 @@ struct _GstGLImageSink
     gboolean ignore_alpha;
 
     GstGLUpload *upload;
+    GstGLColorConvert *convert;
     guint      next_tex;
     GstBuffer *next_buffer;
 
