@@ -13,9 +13,15 @@
     <xi:include href="xml/gstvaapidisplay.xml"/>
     <xi:include href="xml/gstvaapidisplay_x11.xml"/>
     <xi:include href="xml/gstvaapidisplay_glx.xml"/>
+    <xi:include href="xml/gstvaapidisplay_egl.xml"/>
+    <xi:include href="xml/gstvaapidisplay_drm.xml"/>
+    <xi:include href="xml/gstvaapidisplay_wayland.xml"/>
     <xi:include href="xml/gstvaapiwindow.xml"/>
     <xi:include href="xml/gstvaapiwindow_x11.xml"/>
     <xi:include href="xml/gstvaapiwindow_glx.xml"/>
+    <xi:include href="xml/gstvaapiwindow_egl.xml"/>
+    <xi:include href="xml/gstvaapiwindow_drm.xml"/>
+    <xi:include href="xml/gstvaapiwindow_wayland.xml"/>
     <xi:include href="xml/gstvaapipixmap.xml"/>
     <xi:include href="xml/gstvaapipixmap_x11.xml"/>
     <xi:include href="xml/gstvaapiobject.xml"/>
@@ -23,6 +29,8 @@
     <xi:include href="xml/gstvaapiimage.xml"/>
     <xi:include href="xml/gstvaapisubpicture.xml"/>
     <xi:include href="xml/gstvaapitexture.xml"/>
+    <xi:include href="xml/gstvaapitexture_egl.xml"/>
+    <xi:include href="xml/gstvaapitexture_glx.xml"/>
     <xi:include href="xml/gstvaapiprofile.xml"/>
     <xi:include href="xml/gstvaapivideopool.xml"/>
     <xi:include href="xml/gstvaapisurfacepool.xml"/>
@@ -33,8 +41,14 @@
     <xi:include href="xml/gstvaapidecoder_mpeg4.xml"/>
     <xi:include href="xml/gstvaapidecoder_h264.xml"/>
     <xi:include href="xml/gstvaapidecoder_vc1.xml"/>
+    <xi:include href="xml/gstvaapidecoder_vp8.xml"/>
+    <xi:include href="xml/gstvaapidecoder_h265.xml"/>
+    <xi:include href="xml/gstvaapidecoder_unit.xml"/>
     <xi:include href="xml/gstvaapisurfaceproxy.xml"/>
     <xi:include href="xml/gstvaapifilter.xml"/>
+    <xi:include href="xml/gstvaapivalue.xml"/>
+    <xi:include href="xml/gstvaapiparser_frame.xml"/>
+    <xi:include href="xml/gstvaapicontext.xml"/>
   </chapter>
 
   <chapter id="object-tree">
