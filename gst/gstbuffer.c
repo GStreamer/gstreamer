@@ -104,6 +104,16 @@
  * the refcount drops to 0, any memory and metadata pointed to by the buffer is
  * unreffed as well. Buffers allocated from a #GstBufferPool will be returned to
  * the pool when the refcount drops to 0.
+ *
+ * The #GstParentBufferMeta is a meta which can be attached to a #GstBuffer
+ * to hold a reference to another buffer that is only released when the child
+ * #GstBuffer is released.
+ *
+ * Typically, #GstParentBufferMeta is used when the child buffer is directly
+ * using the #GstMemory of the parent buffer, and wants to prevent the parent
+ * buffer from being returned to a buffer pool until the #GstMemory is available
+ * for re-use. (Since: 1.6)
+ *
  */
 #include "gst_private.h"
 
@@ -1901,7 +1911,7 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
  * gst_buffer_copy_region:
  * @parent: a #GstBuffer.
  * @flags: the #GstBufferCopyFlags
- * @offset: the offset into parent #GstBuffer at which the new sub-buffer 
+ * @offset: the offset into parent #GstBuffer at which the new sub-buffer
  *          begins.
  * @size: the size of the new #GstBuffer sub-buffer, in bytes. If -1, all
  *        data is copied.
@@ -1909,7 +1919,7 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
  * Creates a sub-buffer from @parent at @offset and @size.
  * This sub-buffer uses the actual memory space of the parent buffer.
  * This function will copy the offset and timestamp fields when the
- * offset is 0. If not, they will be set to #GST_CLOCK_TIME_NONE and 
+ * offset is 0. If not, they will be set to #GST_CLOCK_TIME_NONE and
  * #GST_BUFFER_OFFSET_NONE.
  * If @offset equals 0 and @size equals the total size of @buffer, the
  * duration and offset end fields are also copied. If not they will be set
@@ -2256,4 +2266,129 @@ gst_buffer_extract_dup (GstBuffer * buffer, gsize offset, gsize size,
   *dest = g_malloc (MIN (real_size - offset, size));
 
   *dest_size = gst_buffer_extract (buffer, offset, *dest, size);
+}
+
+GST_DEBUG_CATEGORY (gst_parent_buffer_meta_debug);
+
+/**
+ * gst_buffer_add_parent_buffer_meta:
+ * @buffer: (transfer none): a #GstBuffer
+ * @ref: (transfer none): a #GstBuffer to ref
+ *
+ * Add a #GstParentBufferMeta to @buffer that holds a reference on
+ * @ref until the buffer is freed.
+ *
+ * Returns: (transfer none): The #GstParentBufferMeta that was added to the buffer
+ *
+ * Since: 1.6
+ */
+GstParentBufferMeta *
+gst_buffer_add_parent_buffer_meta (GstBuffer * buffer, GstBuffer * ref)
+{
+  GstParentBufferMeta *meta;
+
+  g_return_val_if_fail (GST_IS_BUFFER (ref), NULL);
+
+  meta =
+      (GstParentBufferMeta *) gst_buffer_add_meta (buffer,
+      GST_PARENT_BUFFER_META_INFO, NULL);
+
+  if (!meta)
+    return NULL;
+
+  meta->buffer = gst_buffer_ref (ref);
+
+  return meta;
+}
+
+static gboolean
+_gst_parent_buffer_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstParentBufferMeta *dmeta, *smeta;
+
+  smeta = (GstParentBufferMeta *) meta;
+
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    /* copy over the reference to the parent buffer.
+     * Usually, this meta means we need to keep the parent buffer
+     * alive because one of the child memories is in use, which
+     * might not be the case if memory is deep copied or sub-regioned,
+     * but we can't tell, so keep the meta */
+    dmeta = gst_buffer_add_parent_buffer_meta (dest, smeta->buffer);
+    if (!dmeta)
+      return FALSE;
+
+    GST_CAT_DEBUG (gst_parent_buffer_meta_debug,
+        "copy buffer reference metadata");
+  }
+  return TRUE;
+}
+
+static void
+_gst_parent_buffer_meta_free (GstParentBufferMeta * parent_meta,
+    GstBuffer * buffer)
+{
+  GST_CAT_DEBUG (gst_parent_buffer_meta_debug,
+      "Dropping reference on buffer %p", parent_meta->buffer);
+  gst_buffer_unref (parent_meta->buffer);
+}
+
+static gboolean
+_gst_parent_buffer_meta_init (GstParentBufferMeta * parent_meta,
+    gpointer params, GstBuffer * buffer)
+{
+  static volatile gsize _init;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (gst_parent_buffer_meta_debug, "glbufferrefmeta", 0,
+        "glbufferrefmeta");
+    g_once_init_leave (&_init, 1);
+  }
+
+  parent_meta->buffer = NULL;
+
+  return TRUE;
+}
+
+GType
+gst_parent_buffer_meta_api_get_type (void)
+{
+  static volatile GType type = 0;
+  static const gchar *tags[] = { NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstParentBufferMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+
+  return type;
+}
+
+/**
+ * gst_parent_buffer_meta_get_info:
+ *
+ * Get the global #GstMetaInfo describing  the #GstParentBufferMeta meta.
+ *
+ * Returns: (transfer none): The #GstMetaInfo
+ *
+ * Since: 1.6
+ */
+const GstMetaInfo *
+gst_parent_buffer_meta_get_info (void)
+{
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (g_once_init_enter (&meta_info)) {
+    const GstMetaInfo *meta =
+        gst_meta_register (gst_parent_buffer_meta_api_get_type (),
+        "GstParentBufferMeta",
+        sizeof (GstParentBufferMeta),
+        (GstMetaInitFunction) _gst_parent_buffer_meta_init,
+        (GstMetaFreeFunction) _gst_parent_buffer_meta_free,
+        _gst_parent_buffer_meta_transform);
+    g_once_init_leave (&meta_info, meta);
+  }
+
+  return meta_info;
 }

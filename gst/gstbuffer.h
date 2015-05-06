@@ -561,6 +561,52 @@ gboolean        gst_buffer_foreach_meta         (GstBuffer *buffer,
  */
 #define         gst_value_get_buffer(v)         GST_BUFFER_CAST (g_value_get_boxed(v))
 
+typedef struct _GstParentBufferMeta GstParentBufferMeta;
+
+/**
+ * GstParentBufferMeta:
+ * @parent: the parent #GstMeta structure
+ * @buffer: the #GstBuffer on which a reference is being held.
+ *
+ * The #GstParentBufferMeta is a #GstMeta which can be attached to a #GstBuffer
+ * to hold a reference to another buffer that is only released when the child
+ * #GstBuffer is released.
+ *
+ * Typically, #GstParentBufferMeta is used when the child buffer is directly
+ * using the #GstMemory of the parent buffer, and wants to prevent the parent
+ * buffer from being returned to a buffer pool until the #GstMemory is available
+ * for re-use.
+ *
+ * (Since: 1.6)
+ */
+struct _GstParentBufferMeta
+{
+  GstMeta parent;
+
+  /*< public >*/
+  GstBuffer *buffer;
+};
+
+GType gst_parent_buffer_meta_api_get_type (void);
+#define GST_TYPE_PARENT_BUFFER_META_API_TYPE (gst_parent_buffer_meta_api_get_type())
+
+/**
+ * gst_buffer_get_parent_buffer_meta:
+ * @b: a #GstBuffer
+ *
+ * Find and return a #GstParentBufferMeta if one exists on the
+ * buffer
+ */
+#define gst_buffer_get_parent_buffer_meta(b) \
+  ((GstParentBufferMeta*)gst_buffer_get_meta((b),GST_PARENT_BUFFER_META_API_TYPE))
+
+const GstMetaInfo *gst_parent_buffer_meta_get_info (void);
+#define GST_PARENT_BUFFER_META_INFO (gst_parent_buffer_meta_get_info())
+
+/* implementation */
+GstParentBufferMeta *gst_buffer_add_parent_buffer_meta (GstBuffer *buffer,
+    GstBuffer *ref);
+
 G_END_DECLS
 
 #endif /* __GST_BUFFER_H__ */

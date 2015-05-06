@@ -113,6 +113,7 @@ EXPORTS
 	gst_bin_sync_children_states
 	gst_bitmask_get_type
 	gst_buffer_add_meta
+	gst_buffer_add_parent_buffer_meta
 	gst_buffer_add_protection_meta
 	gst_buffer_append
 	gst_buffer_append_memory
@@ -903,6 +904,9 @@ EXPORTS
 	gst_pad_use_fixed_caps
 	gst_param_spec_fraction
 	gst_param_spec_fraction_get_type
+	gst_parent_buffer_meta_api_get_type
+	gst_parent_buffer_meta_debug DATA
+	gst_parent_buffer_meta_get_info
 	gst_parse_bin_from_description
 	gst_parse_bin_from_description_full
 	gst_parse_context_free

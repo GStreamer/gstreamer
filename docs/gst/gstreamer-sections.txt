@@ -255,6 +255,10 @@ gst_buffer_iterate_meta
 GstBufferForeachMetaFunc
 gst_buffer_foreach_meta
 
+GstParentBufferMeta
+gst_buffer_add_parent_buffer_meta
+gst_buffer_get_parent_buffer_meta
+
 <SUBSECTION Standard>
 GstBufferClass
 GST_BUFFER
@@ -263,10 +267,14 @@ GST_TYPE_BUFFER
 GST_TYPE_BUFFER_FLAGS
 GST_TYPE_BUFFER_COPY_FLAGS
 GST_BUFFER_CAST
+GST_PARENT_BUFFER_META_INFO
+GST_TYPE_PARENT_BUFFER_META_API_TYPE
+gst_parent_buffer_meta_get_info
 <SUBSECTION Private>
 gst_buffer_get_type
 gst_buffer_flags_get_type
 gst_buffer_copy_flags_get_type
+gst_parent_buffer_meta_api_get_type
 GST_BUFFER_TIMESTAMP
 GST_BUFFER_TIMESTAMP_IS_VALID
 </SECTION>
