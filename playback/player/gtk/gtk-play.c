@@ -186,6 +186,18 @@ skip_next_clicked_cb (GtkButton * button, GtkPlay * play)
   gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
 }
 
+static const gchar *
+audio_channels_string (gint num)
+{
+  if (num == 1)
+    return "mono";
+  else if (num == 2)
+    return "stereo";
+  else if (num > 2)
+    return "surround";
+  else
+    return "unknown";
+}
 static gchar *
 stream_info_get_string (GstPlayerStreamInfo * stream, gint type, gboolean label)
 {
@@ -202,6 +214,8 @@ stream_info_get_string (GstPlayerStreamInfo * stream, gint type, gboolean label)
     {
       gchar *buffer;
       GstPlayerAudioInfo *audio = (GstPlayerAudioInfo *) stream;
+      if (!gst_player_audio_info_get_language (audio))
+        return NULL;
       buffer = g_strdup_printf ("%s%s", label ? "Language : " : "",
           gst_player_audio_info_get_language (audio));
       return buffer;
@@ -210,8 +224,8 @@ stream_info_get_string (GstPlayerStreamInfo * stream, gint type, gboolean label)
     {
       gchar *buffer;
       GstPlayerAudioInfo *audio = (GstPlayerAudioInfo *) stream;
-      buffer = g_strdup_printf ("%s%d", label ? "Channels : " : "",
-          gst_player_audio_info_get_channels (audio));
+      buffer = g_strdup_printf ("%s%s", label ? "Channels : " : "",
+          audio_channels_string (gst_player_audio_info_get_channels (audio)));
       return buffer;
     }
     case SUBTITLE_INFO_CODEC:
@@ -502,6 +516,240 @@ volume_changed_cb (GtkScaleButton * button, gdouble value, GtkPlay * play)
   gst_player_set_volume (play->player, value);
 }
 
+static gint
+_get_current_track_index (GtkPlay * play, void * (*func) (GstPlayer * player))
+{
+  void *obj;
+  gint index = -1;
+
+  obj = func (play->player);
+  if (obj) {
+    index = gst_player_stream_info_get_index ((GstPlayerStreamInfo*) obj);
+    g_object_unref (obj);
+  }
+
+  return index;
+}
+
+static gint
+get_current_track_index (GtkPlay * play, GType type)
+{
+  if (type == GST_TYPE_PLAYER_VIDEO_INFO)
+    return _get_current_track_index (play,
+        (void*) gst_player_get_current_video_track);
+  else if (type == GST_TYPE_PLAYER_AUDIO_INFO)
+    return _get_current_track_index (play,
+        (void*) gst_player_get_current_audio_track);
+  else
+    return _get_current_track_index (play,
+        (void*) gst_player_get_current_subtitle_track);
+}
+
+static gchar *
+get_menu_label (GstPlayerStreamInfo *stream, GType type)
+{
+  if (type == GST_TYPE_PLAYER_AUDIO_INFO) {
+    gchar *label = NULL;
+    gchar *lang, *codec, *channels;
+
+    /* label format: <codec_name> <channel> [language] */
+    lang = stream_info_get_string (stream, AUDIO_INFO_LANGUAGE, FALSE);
+    codec = stream_info_get_string (stream, AUDIO_INFO_CODEC, FALSE);
+    channels = stream_info_get_string (stream, AUDIO_INFO_CHANNELS, FALSE);
+
+    if (lang) {
+      label = g_strdup_printf ("%s %s [%s]", codec ? codec : "",
+        channels ? channels : "", lang);
+      g_free (lang);
+    }
+    else
+      label = g_strdup_printf ("%s %s", codec ? codec : "",
+        channels ? channels : "");
+
+    g_free (codec);
+    g_free (channels);
+    return label;
+  } else if (type == GST_TYPE_PLAYER_VIDEO_INFO) {
+    /* label format: <codec_name> */
+    return stream_info_get_string (stream, VIDEO_INFO_CODEC, FALSE);
+  } else {
+    /* label format: <langauge> */
+    return stream_info_get_string (stream, SUBTITLE_INFO_LANGUAGE, FALSE);
+  }
+
+  return NULL;
+}
+
+static void
+disable_track (GtkPlay * play, GType type)
+{
+  if (type == GST_TYPE_PLAYER_VIDEO_INFO)
+    gst_player_set_video_track_enabled (play->player, FALSE);
+  else if (type == GST_TYPE_PLAYER_AUDIO_INFO)
+    gst_player_set_audio_track_enabled (play->player, FALSE);
+  else
+    gst_player_set_subtitle_track_enabled (play->player, FALSE);
+}
+
+static void
+change_track (GtkPlay * play, gint index, GType type)
+{
+  if (type == GST_TYPE_PLAYER_VIDEO_INFO) {
+    gst_player_set_video_track (play->player, index);
+    gst_player_set_video_track_enabled (play->player, TRUE);
+  } else if (type == GST_TYPE_PLAYER_AUDIO_INFO) {
+    gst_player_set_audio_track (play->player, index);
+    gst_player_set_audio_track_enabled (play->player, TRUE);
+  } else {
+    gst_player_set_subtitle_track (play->player, index);
+    gst_player_set_subtitle_track_enabled (play->player, TRUE);
+  }
+}
+
+static void
+track_changed_cb (GtkWidget * widget, GtkPlay * play)
+{
+  GType type;
+  gint index;
+
+  /* check if button is toggled */
+  if (!gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM(widget)))
+    return;
+
+  index = GPOINTER_TO_INT (g_object_get_data(G_OBJECT(widget), "index"));
+  type = GPOINTER_TO_SIZE (g_object_get_data(G_OBJECT(widget), "type"));
+
+  if (index == -1)
+    disable_track (play, type);
+  else
+    change_track (play, index, type);
+}
+
+static GtkWidget *
+create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info,
+    GType type)
+{
+  GtkWidget *menu;
+  GtkWidget *item;
+  GList *list, *l;
+  gint current_index;
+  GSList *group = NULL;
+
+  current_index = get_current_track_index (play, type);
+
+  if (type == GST_TYPE_PLAYER_VIDEO_INFO)
+    list = gst_player_get_video_streams (media_info);
+  else if (type == GST_TYPE_PLAYER_AUDIO_INFO)
+    list = gst_player_get_audio_streams (media_info);
+  else
+    list = gst_player_get_subtitle_streams (media_info);
+
+  menu = gtk_menu_new ();
+
+  for (l = list; l != NULL; l = l->next) {
+    gint index;
+    gchar *buffer;
+    GstPlayerStreamInfo *s = (GstPlayerStreamInfo*) l->data;
+
+    buffer = get_menu_label (s, type);
+    item = gtk_radio_menu_item_new_with_label (group, buffer);
+    group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM(item));
+    index = gst_player_stream_info_get_index (s);
+    g_object_set_data (G_OBJECT(item), "index", GINT_TO_POINTER (index));
+    g_object_set_data (G_OBJECT(item), "type", GSIZE_TO_POINTER (type));
+    if (current_index == index)
+      gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), True);
+    g_free (buffer);
+    g_signal_connect (G_OBJECT(item), "toggled",
+        G_CALLBACK (track_changed_cb), play);
+    gtk_menu_shell_append (GTK_MENU_SHELL(menu), item);
+  }
+  item = gtk_radio_menu_item_new_with_label (group, "Disable");
+  group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM(item));
+  g_object_set_data (G_OBJECT(item), "index", GINT_TO_POINTER (-1));
+  g_object_set_data (G_OBJECT(item), "type", GSIZE_TO_POINTER (type));
+  if (current_index == -1)
+      gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), True);
+  g_signal_connect (G_OBJECT(item), "toggled",
+      G_CALLBACK (track_changed_cb), play);
+  gtk_menu_shell_append (GTK_MENU_SHELL(menu), item);
+  return menu;
+}
+
+static void
+gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
+{
+  GtkWidget *menu;
+  GtkWidget *info;
+  GtkWidget *audio;
+  GtkWidget *video;
+  GtkWidget *sub;
+  GtkWidget *submenu;
+
+  GstPlayerMediaInfo *media_info;
+
+  media_info = gst_player_get_media_info (play->player);
+  if (!media_info)
+    return;
+
+  menu = gtk_menu_new ();
+  info = gtk_menu_item_new_with_label ("Media Information");
+  audio = gtk_menu_item_new_with_label ("Audio");
+  video = gtk_menu_item_new_with_label ("Video");
+  sub = gtk_menu_item_new_with_label ("Subtitle");
+
+  if (!gst_player_get_video_streams (media_info))
+    gtk_widget_set_sensitive (video, FALSE);
+  else {
+    submenu = create_tracks_menu (play, media_info, GST_TYPE_PLAYER_VIDEO_INFO);
+    if (submenu)
+      gtk_menu_item_set_submenu (GTK_MENU_ITEM(video), submenu);
+  }
+
+  if (!gst_player_get_audio_streams (media_info))
+    gtk_widget_set_sensitive (audio, FALSE);
+  else {
+    submenu = create_tracks_menu (play, media_info, GST_TYPE_PLAYER_AUDIO_INFO);
+    if (submenu)
+      gtk_menu_item_set_submenu (GTK_MENU_ITEM(audio), submenu);
+  }
+
+  if (!gst_player_get_subtitle_streams (media_info))
+    gtk_widget_set_sensitive (sub, FALSE);
+  else {
+    submenu = create_tracks_menu (play, media_info,
+        GST_TYPE_PLAYER_SUBTITLE_INFO);
+    if (submenu)
+      gtk_menu_item_set_submenu (GTK_MENU_ITEM(sub), submenu);
+  }
+
+  g_signal_connect (G_OBJECT (info), "activate",
+      G_CALLBACK (media_info_clicked_cb), play);
+
+  gtk_menu_shell_append (GTK_MENU_SHELL(menu), video);
+  gtk_menu_shell_append (GTK_MENU_SHELL(menu), audio);
+  gtk_menu_shell_append (GTK_MENU_SHELL(menu), sub);
+  gtk_menu_shell_append (GTK_MENU_SHELL(menu), info);
+
+  gtk_widget_show_all (menu);
+  gtk_menu_popup (GTK_MENU(menu), NULL, NULL, NULL, NULL,
+    (event != NULL) ? event->button : 0,
+    gdk_event_get_time((GdkEvent*)event));
+
+  g_object_unref (media_info);
+}
+
+static void
+mouse_button_pressed_cb (GtkWidget * unused, GdkEventButton * event,
+    GtkPlay *play)
+{
+  /* we only care about right button pressed event */
+  if (event->button != 3)
+    return;
+
+  gtk_player_popup_menu_create (play, event);
+}
+
 static void
 create_ui (GtkPlay * play)
 {
@@ -515,6 +763,13 @@ create_ui (GtkPlay * play)
   play->video_area = gtk_drawing_area_new ();
   g_signal_connect (play->video_area, "realize",
       G_CALLBACK (video_area_realize_cb), play);
+  g_signal_connect (play->video_area, "button-press-event",
+      G_CALLBACK (mouse_button_pressed_cb), play);
+  gtk_widget_set_events (play->video_area, GDK_EXPOSURE_MASK
+        | GDK_LEAVE_NOTIFY_MASK
+        | GDK_BUTTON_PRESS_MASK
+        | GDK_POINTER_MOTION_MASK
+        | GDK_POINTER_MOTION_HINT_MASK);
 
   /* Unified play/pause button */
   play->play_pause_button =
@@ -581,8 +836,6 @@ create_ui (GtkPlay * play)
   gtk_widget_realize (play->video_area);
 
   gtk_widget_show_all (play->window);
-
-  gtk_widget_hide (play->video_area);
 }
 
 static void
@@ -608,16 +861,6 @@ position_updated_cb (GstPlayer * unused, GstClockTime position, GtkPlay * play)
       (gdouble) position / GST_SECOND);
   g_signal_handler_unblock (play->seekbar,
       play->seekbar_value_changed_signal_id);
-}
-
-static void
-video_dimensions_changed_cb (GstPlayer * unused, gint width, gint height,
-    GtkPlay * play)
-{
-  if (width > 0 && height > 0)
-    gtk_widget_show (play->video_area);
-  else
-    gtk_widget_hide (play->video_area);
 }
 
 static void
@@ -751,8 +994,6 @@ main (gint argc, gchar ** argv)
       G_CALLBACK (position_updated_cb), &play);
   g_signal_connect (play.player, "duration-changed",
       G_CALLBACK (duration_changed_cb), &play);
-  g_signal_connect (play.player, "video-dimensions-changed",
-      G_CALLBACK (video_dimensions_changed_cb), &play);
   g_signal_connect (play.player, "end-of-stream", G_CALLBACK (eos_cb), &play);
   g_signal_connect (play.player, "media-info-updated",
       G_CALLBACK (media_info_updated_cb), &play);
