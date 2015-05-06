@@ -443,7 +443,6 @@ create_media_info_window (GtkPlay * play, GstPlayerMediaInfo * info)
       "Information about all the streams contains in your media. \n"
       "Current selected streams are marked as (current).");
   gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
-  gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
   gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 2);
 
   sw = gtk_scrolled_window_new (NULL, NULL);
@@ -519,7 +518,6 @@ create_ui (GtkPlay * play)
   set_title (play, APP_NAME);
 
   play->video_area = gtk_drawing_area_new ();
-  gtk_widget_set_double_buffered (play->video_area, FALSE);
   g_signal_connect (play->video_area, "realize",
       G_CALLBACK (video_area_realize_cb), play);
 
