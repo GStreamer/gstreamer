@@ -4,6 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := gstplayer
 LOCAL_SRC_FILES := player.c ../../lib/gst/player/gstplayer.c ../../lib/gst/player/gstplayer-media-info.c
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../lib
 LOCAL_SHARED_LIBRARIES := gstreamer_android
 LOCAL_LDLIBS := -llog -landroid
 include $(BUILD_SHARED_LIBRARY)
