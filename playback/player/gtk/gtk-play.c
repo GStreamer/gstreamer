@@ -262,12 +262,12 @@ stream_info_get_string (GstPlayerStreamInfo * stream, gint type, gboolean label)
     }
     case VIDEO_INFO_PAR:
     {
-      gint par_d, par_n;
+      guint par_d, par_n;
       gchar *buffer;
       GstPlayerVideoInfo *video = (GstPlayerVideoInfo *) stream;
 
       gst_player_video_info_get_pixel_aspect_ratio (video, &par_n, &par_d);
-      buffer = g_strdup_printf ("%s%d:%d", label ? "pixel-aspect-ratio : " :
+      buffer = g_strdup_printf ("%s%u:%u", label ? "pixel-aspect-ratio : " :
           "", par_n, par_d);
       return buffer;
     }
