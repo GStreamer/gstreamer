@@ -38,7 +38,7 @@ m4_define([gst16_plugins_base_version], [1.5.0])
 m4_define([gst16_plugins_bad_version],  [1.5.0])
 
 # Wayland minimum version number
-m4_define([wayland_api_version], [1.0.0])
+m4_define([wayland_api_version], [1.0.2])
 
 # VA-API minimum version number
 m4_define([va_api_version],     [0.30.4])

@@ -159,10 +159,23 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
       GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
 
   while (g_atomic_int_get (&priv->num_frames_pending) > 0) {
-    if (wl_display_dispatch_queue (wl_display, priv->event_queue) < 0)
-      return FALSE;
+    while (wl_display_prepare_read_queue (wl_display, priv->event_queue) < 0) {
+      if (wl_display_dispatch_queue_pending (wl_display, priv->event_queue) < 0)
+        goto error;
+    }
+
+    if (wl_display_flush (wl_display) < 0)
+      goto error;
+    if (wl_display_read_events (wl_display) < 0)
+      goto error;
+    if (wl_display_dispatch_queue_pending (wl_display, priv->event_queue) < 0)
+      goto error;
   }
   return TRUE;
+
+error:
+  GST_ERROR ("Error on dispatching events: %s", g_strerror (errno));
+  return FALSE;
 }
 
 static void
