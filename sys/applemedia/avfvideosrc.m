@@ -824,7 +824,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
   [bufQueueLock lock];
   stopRequest = NO;
-  [bufQueueLock unlock];
+  [bufQueueLock unlockWithCondition:([bufQueue count] == 0) ? NO_BUFFERS : HAS_BUFFER_OR_STOP_REQUEST];
 
   return YES;
 }
@@ -862,7 +862,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   [self getSampleBuffer:sampleBuffer timestamp:&timestamp duration:&duration];
 
   if (timestamp == GST_CLOCK_TIME_NONE) {
-    [bufQueueLock unlock];
+    [bufQueueLock unlockWithCondition:([bufQueue count] == 0) ? NO_BUFFERS : HAS_BUFFER_OR_STOP_REQUEST];
     return;
   }
 
