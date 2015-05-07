@@ -1550,6 +1550,28 @@ gst_vaapisink_get_property (GObject * object,
   }
 }
 
+static gboolean
+gst_vaapisink_unlock (GstBaseSink * base_sink)
+{
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
+
+  if (sink->window)
+    return gst_vaapi_window_unblock (sink->window);
+
+  return TRUE;
+}
+
+static gboolean
+gst_vaapisink_unlock_stop (GstBaseSink * base_sink)
+{
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
+
+  if (sink->window)
+    return gst_vaapi_window_unblock_cancel (sink->window);
+
+  return TRUE;
+}
+
 static void
 gst_vaapisink_set_bus (GstElement * element, GstBus * bus)
 {
@@ -1591,6 +1613,8 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
   basesink_class->set_caps = gst_vaapisink_set_caps;
   basesink_class->query = GST_DEBUG_FUNCPTR (gst_vaapisink_query);
   basesink_class->propose_allocation = gst_vaapisink_propose_allocation;
+  basesink_class->unlock = gst_vaapisink_unlock;
+  basesink_class->unlock_stop = gst_vaapisink_unlock_stop;
 
   videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_vaapisink_show_frame);
 

@@ -99,6 +99,12 @@ gst_vaapi_window_put_pixmap (GstVaapiWindow * window, GstVaapiPixmap * pixmap,
 void
 gst_vaapi_window_reconfigure (GstVaapiWindow * window);
 
+gboolean
+gst_vaapi_window_unblock (GstVaapiWindow * window);
+
+gboolean
+gst_vaapi_window_unblock_cancel (GstVaapiWindow * window);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_WINDOW_H */

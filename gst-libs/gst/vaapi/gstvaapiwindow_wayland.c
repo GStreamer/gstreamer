@@ -104,6 +104,8 @@ struct _GstVaapiWindowWaylandPrivate
   GstVideoFormat surface_format;
   GstVaapiVideoPool *surface_pool;
   GstVaapiFilter *filter;
+  GstPoll *poll;
+  GstPollFD pollfd;
   guint is_shown:1;
   guint fullscreen_on_show:1;
   guint use_vpp:1;
@@ -158,6 +160,12 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
   struct wl_display *const wl_display =
       GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
 
+  if (priv->pollfd.fd < 0) {
+    priv->pollfd.fd = wl_display_get_fd (wl_display);
+    gst_poll_add_fd (priv->poll, &priv->pollfd);
+    gst_poll_fd_ctl_read (priv->poll, &priv->pollfd, TRUE);
+  }
+
   while (g_atomic_int_get (&priv->num_frames_pending) > 0) {
     while (wl_display_prepare_read_queue (wl_display, priv->event_queue) < 0) {
       if (wl_display_dispatch_queue_pending (wl_display, priv->event_queue) < 0)
@@ -166,6 +174,19 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
 
     if (wl_display_flush (wl_display) < 0)
       goto error;
+
+  again:
+    if (gst_poll_wait (priv->poll, GST_CLOCK_TIME_NONE) < 0) {
+      int saved_errno = errno;
+      if (saved_errno == EAGAIN || saved_errno == EINTR)
+        goto again;
+      if (saved_errno == EBUSY) {       /* closing */
+        wl_display_cancel_read (wl_display);
+        break;
+      }
+      goto error;
+    }
+
     if (wl_display_read_events (wl_display) < 0)
       goto error;
     if (wl_display_dispatch_queue_pending (wl_display, priv->event_queue) < 0)
@@ -264,6 +285,9 @@ gst_vaapi_window_wayland_create (GstVaapiWindow * window,
       &shell_surface_listener, priv);
   wl_shell_surface_set_toplevel (priv->shell_surface);
 
+  priv->poll = gst_poll_new (TRUE);
+  gst_poll_fd_init (&priv->pollfd);
+
   if (priv->fullscreen_on_show)
     gst_vaapi_window_wayland_set_fullscreen (window, TRUE);
 
@@ -302,6 +326,8 @@ gst_vaapi_window_wayland_destroy (GstVaapiWindow * window)
 
   gst_vaapi_filter_replace (&priv->filter, NULL);
   gst_vaapi_video_pool_replace (&priv->surface_pool, NULL);
+
+  gst_poll_free (priv->poll);
 }
 
 static gboolean
@@ -521,6 +547,28 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   return TRUE;
 }
 
+static gboolean
+gst_vaapi_window_wayland_unblock (GstVaapiWindow * window)
+{
+  GstVaapiWindowWaylandPrivate *const priv =
+      GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
+
+  gst_poll_set_flushing (priv->poll, TRUE);
+
+  return TRUE;
+}
+
+static gboolean
+gst_vaapi_window_wayland_unblock_cancel (GstVaapiWindow * window)
+{
+  GstVaapiWindowWaylandPrivate *const priv =
+      GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
+
+  gst_poll_set_flushing (priv->poll, FALSE);
+
+  return TRUE;
+}
+
 static void
 gst_vaapi_window_wayland_class_init (GstVaapiWindowWaylandClass * klass)
 {
@@ -536,6 +584,8 @@ gst_vaapi_window_wayland_class_init (GstVaapiWindowWaylandClass * klass)
   window_class->render = gst_vaapi_window_wayland_render;
   window_class->resize = gst_vaapi_window_wayland_resize;
   window_class->set_fullscreen = gst_vaapi_window_wayland_set_fullscreen;
+  window_class->unblock = gst_vaapi_window_wayland_unblock;
+  window_class->unblock_cancel = gst_vaapi_window_wayland_unblock_cancel;
 }
 
 #define gst_vaapi_window_wayland_finalize \

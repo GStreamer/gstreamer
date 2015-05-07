@@ -54,6 +54,8 @@ typedef gboolean (*GstVaapiWindowRenderPixmapFunc) (GstVaapiWindow * window,
     const GstVaapiRectangle * dst_rect);
 typedef guintptr (*GstVaapiWindowGetVisualIdFunc) (GstVaapiWindow * window);
 typedef guintptr (*GstVaapiWindowGetColormapFunc) (GstVaapiWindow * window);
+typedef gboolean (*GstVaapiWindowSetUnblockFunc) (GstVaapiWindow * window);
+typedef gboolean (*GstVaapiWindowSetUnblockCancelFunc) (GstVaapiWindow * window);
 
 /**
  * GstVaapiWindow:
@@ -88,6 +90,9 @@ struct _GstVaapiWindow
  *   create the window
  * @get_colormap: virtual function to get the desired colormap used to
  *   create the window, or the currently allocated one
+ * @unblock: virtual function to unblock a rendering surface operation
+ * @unblock_cancel: virtual function to cancel the previous unblock
+ *   request.
  *
  * Base class for system-dependent windows.
  */
@@ -107,6 +112,8 @@ struct _GstVaapiWindowClass
   GstVaapiWindowRenderPixmapFunc render_pixmap;
   GstVaapiWindowGetVisualIdFunc get_visual_id;
   GstVaapiWindowGetColormapFunc get_colormap;
+  GstVaapiWindowSetUnblockFunc unblock;
+  GstVaapiWindowSetUnblockCancelFunc unblock_cancel;
 };
 
 GstVaapiWindow *

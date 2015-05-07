@@ -509,3 +509,45 @@ gst_vaapi_window_reconfigure (GstVaapiWindow * window)
   window->check_geometry = TRUE;
   gst_vaapi_window_ensure_size (window);
 }
+
+/**
+ * gst_vaapi_window_unblock:
+ * @window: a #GstVaapiWindow
+ *
+ * Unblocks a rendering surface operation.
+ */
+gboolean
+gst_vaapi_window_unblock (GstVaapiWindow * window)
+{
+  const GstVaapiWindowClass *klass;
+
+  g_return_val_if_fail (window != NULL, FALSE);
+
+  klass = GST_VAAPI_WINDOW_GET_CLASS (window);
+
+  if (klass->unblock)
+    return klass->unblock (window);
+
+  return TRUE;
+}
+
+/**
+ * gst_vaapi_window_unblock_cancel:
+ * @window: a #GstVaapiWindow
+ *
+ * Cancels the previous unblock request.
+ */
+gboolean
+gst_vaapi_window_unblock_cancel (GstVaapiWindow * window)
+{
+  const GstVaapiWindowClass *klass;
+
+  g_return_val_if_fail (window != NULL, FALSE);
+
+  klass = GST_VAAPI_WINDOW_GET_CLASS (window);
+
+  if (klass->unblock_cancel)
+    return klass->unblock_cancel (window);
+
+  return TRUE;
+}
