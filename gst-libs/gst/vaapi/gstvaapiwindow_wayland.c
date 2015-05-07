@@ -107,7 +107,7 @@ struct _GstVaapiWindowWaylandPrivate
   guint is_shown:1;
   guint fullscreen_on_show:1;
   guint use_vpp:1;
-  guint frame_pending:1;
+  volatile guint num_frames_pending;
 };
 
 /**
@@ -158,7 +158,7 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
   struct wl_display *const wl_display =
       GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
 
-  while (priv->frame_pending) {
+  while (g_atomic_int_get (&priv->num_frames_pending) > 0) {
     if (wl_display_dispatch_queue (wl_display, priv->event_queue) < 0)
       return FALSE;
   }
@@ -321,10 +321,10 @@ frame_done_callback (void *data, struct wl_callback *callback, uint32_t time)
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (frame->window);
 
   if (priv->frame == frame) {
-    priv->frame_pending = FALSE;
-    frame_state_free (frame);
     priv->frame = NULL;
   }
+  frame_state_free (frame);
+  g_atomic_int_dec_and_test (&priv->num_frames_pending);
 }
 
 static const struct wl_callback_listener frame_callback_listener = {
@@ -477,7 +477,7 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   if (!frame)
     return FALSE;
   priv->frame = frame;
-  priv->frame_pending = TRUE;
+  g_atomic_int_inc (&priv->num_frames_pending);
 
   if (need_vpp && priv->use_vpp) {
     frame->surface = surface;
