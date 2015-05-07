@@ -22,7 +22,9 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#include <gst/tag/tag.h>
 #include <gst/video/videooverlay.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <gdk/gdk.h>
 #if defined (GDK_WINDOWING_X11)
@@ -52,9 +54,11 @@ typedef struct
   GtkWidget *prev_button, *next_button;
   GtkWidget *seekbar;
   GtkWidget *video_area;
+  GtkWidget *image_area;
   GtkWidget *volume_button;
   GtkWidget *media_info_button;
   gulong seekbar_value_changed_signal_id;
+  GdkPixbuf *image_pixbuf;
   gboolean playing;
 } GtkPlay;
 
@@ -85,6 +89,8 @@ enum
   SUBTITLE_INFO_CODEC,
   SUBTITLE_INFO_END,
 };
+
+static void display_cover_art (GtkPlay * play, GstPlayerMediaInfo * media_info);
 
 static void
 set_title (GtkPlay * play, const gchar * title)
@@ -159,6 +165,9 @@ skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
   prev = g_list_previous (play->current_uri);
   g_return_if_fail (prev != NULL);
 
+  if (play->image_pixbuf)
+    g_object_unref (play->image_pixbuf);
+  play->image_pixbuf = NULL;
   gtk_widget_set_sensitive (play->next_button, TRUE);
   gtk_widget_set_sensitive (play->media_info_button, FALSE);
   gst_player_set_uri (play->player, prev->data);
@@ -177,6 +186,9 @@ skip_next_clicked_cb (GtkButton * button, GtkPlay * play)
   next = g_list_next (play->current_uri);
   g_return_if_fail (next != NULL);
 
+  if (play->image_pixbuf)
+    g_object_unref (play->image_pixbuf);
+  play->image_pixbuf = NULL;
   gtk_widget_set_sensitive (play->prev_button, TRUE);
   gtk_widget_set_sensitive (play->media_info_button, FALSE);
   gst_player_set_uri (play->player, next->data);
@@ -583,8 +595,10 @@ get_menu_label (GstPlayerStreamInfo * stream, GType type)
 static void
 disable_track (GtkPlay * play, GType type)
 {
-  if (type == GST_TYPE_PLAYER_VIDEO_INFO)
+  if (type == GST_TYPE_PLAYER_VIDEO_INFO) {
     gst_player_set_video_track_enabled (play->player, FALSE);
+    display_cover_art (play, NULL);  /* display cover art */
+  }
   else if (type == GST_TYPE_PLAYER_AUDIO_INFO)
     gst_player_set_audio_track_enabled (play->player, FALSE);
   else
@@ -597,6 +611,11 @@ change_track (GtkPlay * play, gint index, GType type)
   if (type == GST_TYPE_PLAYER_VIDEO_INFO) {
     gst_player_set_video_track (play->player, index);
     gst_player_set_video_track_enabled (play->player, TRUE);
+    /* if video area widget is not visible then make it visible */
+    if (!gtk_widget_is_visible (play->video_area)) {
+      gtk_widget_hide (play->image_area);
+      gtk_widget_show (play->video_area);
+    }
   } else if (type == GST_TYPE_PLAYER_AUDIO_INFO) {
     gst_player_set_audio_track (play->player, index);
     gst_player_set_audio_track_enabled (play->player, TRUE);
@@ -749,6 +768,50 @@ mouse_button_pressed_cb (GtkWidget * unused, GdkEventButton * event,
   gtk_player_popup_menu_create (play, event);
 }
 
+static gboolean
+image_area_draw_cb (GtkWidget * widget, cairo_t * cr, GtkPlay * play)
+{
+  if (play->image_pixbuf) {
+    gint width, height;
+    gint pix_width, pix_height;
+    gint x = 0, y = 0;
+    gdouble scalex = 0.0, scaley = 0.0;
+
+    width = gtk_widget_get_allocated_width (widget);
+    height = gtk_widget_get_allocated_height (widget);
+    pix_width = gdk_pixbuf_get_width (play->image_pixbuf);
+    pix_height = gdk_pixbuf_get_height (play->image_pixbuf);
+
+    /* if image is bigger than widget then scale down otherwise center it. */
+    if (width <= pix_width)
+      scalex = (gdouble)width / (gdouble)pix_width;
+    else
+      x = (width - pix_width) / 2;
+    if (height <= pix_height)
+      scaley = (gdouble)height / (gdouble)pix_height;
+    else
+      y = (height - pix_height) / 2;
+
+    /* fill background with black */
+    cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+    cairo_rectangle (cr, 0, 0, width, height);
+    cairo_fill (cr);
+
+    if (scalex > 0.0 && scaley > 0.0)
+       cairo_scale (cr, scalex, scaley);
+
+    gdk_cairo_set_source_pixbuf(cr, play->image_pixbuf, x, y);
+    cairo_paint (cr);
+  } else {
+    /* fill background with black */
+    cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+    cairo_paint (cr);
+  }
+
+  return FALSE;
+}
+
+
 static void
 create_ui (GtkPlay * play)
 {
@@ -768,6 +831,17 @@ create_ui (GtkPlay * play)
       | GDK_LEAVE_NOTIFY_MASK
       | GDK_BUTTON_PRESS_MASK
       | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK);
+
+  play->image_area = gtk_drawing_area_new ();
+  g_signal_connect (play->image_area, "button-press-event",
+      G_CALLBACK (mouse_button_pressed_cb), play);
+  g_signal_connect (play->image_area, "draw",
+      G_CALLBACK (image_area_draw_cb), play);
+  gtk_widget_set_events (play->image_area, GDK_EXPOSURE_MASK
+        | GDK_LEAVE_NOTIFY_MASK
+        | GDK_BUTTON_PRESS_MASK
+        | GDK_POINTER_MOTION_MASK
+        | GDK_POINTER_MOTION_HINT_MASK);
 
   /* Unified play/pause button */
   play->play_pause_button =
@@ -825,6 +899,7 @@ create_ui (GtkPlay * play)
 
   main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start (GTK_BOX (main_hbox), play->video_area, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (main_hbox), play->image_area, TRUE, TRUE, 0);
 
   main_vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start (GTK_BOX (main_vbox), main_hbox, TRUE, TRUE, 0);
@@ -832,6 +907,7 @@ create_ui (GtkPlay * play)
   gtk_container_add (GTK_CONTAINER (play->window), main_vbox);
 
   gtk_widget_realize (play->video_area);
+  gtk_widget_hide (play->video_area);
 
   gtk_widget_show_all (play->window);
 }
@@ -873,6 +949,9 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
       if (!gtk_widget_is_sensitive (play->prev_button))
         gtk_widget_set_sensitive (play->prev_button, TRUE);
       gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
+      if (play->image_pixbuf)
+        g_object_unref (play->image_pixbuf);
+      play->image_pixbuf = NULL;
 
       gtk_widget_set_sensitive (play->media_info_button, FALSE);
 
@@ -893,6 +972,116 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
   }
 }
 
+static gboolean
+_has_active_stream (GtkPlay * play, void * (*func) (GstPlayer * player))
+{
+  void *obj;
+
+  obj = func (play->player);
+  if (obj) {
+    g_object_unref (obj);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static GdkPixbuf *
+gst_sample_to_pixbuf (GtkPlay * play, GstSample * sample)
+{
+  GdkPixbufLoader *loader;
+  GdkPixbuf *pixbuf = NULL;
+  GError *err = NULL;
+  GstMapInfo info;
+  GstBuffer *buffer;
+  const GstStructure *caps_struct;
+  GstTagImageType type = GST_TAG_IMAGE_TYPE_UNDEFINED;
+
+  buffer = gst_sample_get_buffer (sample);
+  caps_struct = gst_sample_get_info (sample);
+
+  /* if sample is retrieved from preview-image tag then caps struct
+   * will not be defined. */
+  if (caps_struct)
+    gst_structure_get_enum (caps_struct, "image-type",
+        GST_TYPE_TAG_IMAGE_TYPE, &type);
+
+  /* FIXME: Should we check more type ?? */
+  if ((type != GST_TAG_IMAGE_TYPE_FRONT_COVER) &&
+      (type != GST_TAG_IMAGE_TYPE_UNDEFINED) &&
+      (type != GST_TAG_IMAGE_TYPE_NONE)) {
+    g_print ("unsupport type ... %d \n", type);
+    return NULL;
+  }
+
+  if (!gst_buffer_map (buffer, &info, GST_MAP_READ)) {
+    g_print ("failed to map gst buffer \n");
+    return NULL;
+  }
+
+  loader = gdk_pixbuf_loader_new ();
+  if (gdk_pixbuf_loader_write (loader, info.data, info.size, &err) &&
+      gdk_pixbuf_loader_close (loader, &err)) {
+    pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+    if (pixbuf) {
+      g_object_ref (pixbuf);
+    }
+    else {
+      g_print ("failed to convert gst buffer to pixbuf %s \n", err->message);
+      g_error_free (err);
+    }
+  }
+
+  g_object_unref (loader);
+  gst_buffer_unmap (buffer, &info);
+
+  return pixbuf;
+}
+
+static void
+display_cover_art (GtkPlay * play, GstPlayerMediaInfo * media_info)
+{
+  GstSample *sample;
+  GstPlayerMediaInfo *temp_media_info = NULL;
+
+  /* hide the video widget and show image widget */
+  gtk_widget_hide (play->video_area);
+  gtk_widget_show (play->image_area);
+
+  /* if media information is not passed then get it from player */
+  if (!media_info)
+    temp_media_info = media_info = gst_player_get_media_info (play->player);
+
+  sample = gst_player_media_info_get_image_sample (media_info);
+  if (!sample)
+    goto cleanup;
+
+  if (play->image_pixbuf)
+    g_object_unref (play->image_pixbuf);
+
+  play->image_pixbuf = gst_sample_to_pixbuf (play, sample);
+
+cleanup:
+  gtk_widget_queue_draw (play->image_area); /* send expose event to widget */
+
+  if (temp_media_info)
+    g_object_unref (temp_media_info);
+}
+
+static gboolean
+has_active_stream (GtkPlay * play, GType type)
+{
+  if (type == GST_TYPE_PLAYER_VIDEO_INFO)
+    return _has_active_stream (play,
+        (void *) gst_player_get_current_video_track);
+  else if (type == GST_TYPE_PLAYER_AUDIO_INFO)
+    return _has_active_stream (play,
+        (void *) gst_player_get_current_audio_track);
+  else
+    return _has_active_stream (play,
+        (void *) gst_player_get_current_subtitle_track);
+}
+
 static void
 media_info_updated_cb (GstPlayer * player, GstPlayerMediaInfo * media_info,
     GtkPlay * play)
@@ -905,6 +1094,16 @@ media_info_updated_cb (GstPlayer * player, GstPlayerMediaInfo * media_info,
       set_title (play, title);
 
     gtk_widget_set_sensitive (play->media_info_button, TRUE);
+
+    /* if we have active video stream then hide image widget
+     * and show video widget otherwise show the cover art.
+     */
+    if (has_active_stream (play, GST_TYPE_PLAYER_VIDEO_INFO)) {
+      gtk_widget_hide (play->image_area);
+      gtk_widget_show (play->video_area);
+    } else {
+      display_cover_art (play, media_info);
+    }
   }
 }
 
