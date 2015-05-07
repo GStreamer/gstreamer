@@ -2699,9 +2699,6 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
     if (source) {
       rtp_source_update_caps (source, caps);
       g_object_unref (source);
-
-      if (created)
-        on_new_ssrc (sess, source);
     }
 
     if (gst_structure_get_uint (s, "rtx-ssrc", &ssrc)) {
@@ -2751,9 +2748,6 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
     goto invalid_packet;
 
   source = obtain_internal_source (sess, pinfo.ssrc, &created, current_time);
-
-  if (created)
-    on_new_ssrc (sess, source);
 
   prevsender = RTP_SOURCE_IS_SENDER (source);
   oldrate = source->bitrate;
@@ -3745,9 +3739,6 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
     source = obtain_internal_source (sess, sess->suggested_ssrc, &created,
         current_time);
-
-    if (created)
-      on_new_ssrc (sess, source);
     g_object_unref (source);
   }
 
@@ -3826,10 +3817,6 @@ done:
           sess->callbacks.send_rtcp (sess, source, buffer, output->is_bye,
           sess->send_rtcp_user_data);
       sess->stats.nacks_sent += data.nacked_seqnums;
-
-      RTP_SESSION_LOCK (sess);
-      on_ssrc_active (sess, source);
-      RTP_SESSION_UNLOCK (sess);
     } else {
       GST_DEBUG ("freeing packet callback: %p"
           " do_not_suppress: %d may_suppress: %d",
