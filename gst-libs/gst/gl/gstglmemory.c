@@ -320,7 +320,7 @@ _sized_gl_format_from_gl_format_type (GstGLContext * context, GLenum format,
     case GL_RG:
       switch (type) {
         case GL_UNSIGNED_BYTE:
-          if (ext_texture_rg)
+          if (!USING_GLES3 (context) && USING_GLES2 (context) && ext_texture_rg)
             return GL_RG;
           return GL_RG8;
           break;
@@ -329,7 +329,7 @@ _sized_gl_format_from_gl_format_type (GstGLContext * context, GLenum format,
     case GL_RED:
       switch (type) {
         case GL_UNSIGNED_BYTE:
-          if (ext_texture_rg)
+          if (!USING_GLES3 (context) && USING_GLES2 (context) && ext_texture_rg)
             return GL_RED;
           return GL_R8;
           break;
