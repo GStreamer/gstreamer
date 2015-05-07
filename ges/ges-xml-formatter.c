@@ -157,7 +157,7 @@ _parse_encoding_profile (GMarkupParseContext * context,
 
   ges_base_xml_formatter_add_encoding_profile (GES_BASE_XML_FORMATTER (self),
       type, NULL, name, description, capsformat, preset, preset_name, 0, 0,
-      NULL, 0, FALSE, NULL, error);
+      NULL, 0, FALSE, NULL, TRUE, error);
 }
 
 static inline void
@@ -165,12 +165,13 @@ _parse_stream_profile (GMarkupParseContext * context,
     const gchar * element_name, const gchar ** attribute_names,
     const gchar ** attribute_values, GESXmlFormatter * self, GError ** error)
 {
-  gboolean variableframerate = FALSE;
+  gboolean variableframerate = FALSE, enabled = TRUE;
   guint id = 0, presence = 0, pass = 0;
   GstCaps *format_caps = NULL, *restriction_caps = NULL;
   const gchar *parent, *strid, *type, *strpresence, *format = NULL,
       *name = NULL, *description = NULL, *preset, *preset_name =
-      NULL, *restriction = NULL, *strpass = NULL, *strvariableframerate = NULL;
+      NULL, *restriction = NULL, *strpass = NULL, *strvariableframerate = NULL,
+      *strenabled = NULL;
 
   /* FIXME Looks like there is a bug in that function, if we put the parent
    * at the beginning it set %NULL and not the real value... :/ */
@@ -187,6 +188,7 @@ _parse_stream_profile (GMarkupParseContext * context,
           COLLECT_STR_OPT, "restriction", &restriction,
           COLLECT_STR_OPT, "pass", &strpass,
           COLLECT_STR_OPT, "variableframerate", &strvariableframerate,
+          COLLECT_STR_OPT, "enabled", &strenabled,
           G_MARKUP_COLLECT_STRING, "parent", &parent, G_MARKUP_COLLECT_INVALID))
     return;
 
@@ -213,6 +215,12 @@ _parse_stream_profile (GMarkupParseContext * context,
       goto convertion_failed;
   }
 
+  if (strenabled) {
+    enabled = g_ascii_strtoll (strenabled, NULL, 10);
+    if (errno)
+      goto convertion_failed;
+  }
+
   if (format)
     format_caps = gst_caps_from_string (format);
 
@@ -221,7 +229,8 @@ _parse_stream_profile (GMarkupParseContext * context,
 
   ges_base_xml_formatter_add_encoding_profile (GES_BASE_XML_FORMATTER (self),
       type, parent, name, description, format_caps, preset, preset_name, id,
-      presence, restriction_caps, pass, variableframerate, NULL, error);
+      presence, restriction_caps, pass, variableframerate, NULL, enabled,
+      error);
 
   return;
 
@@ -1273,9 +1282,10 @@ _save_stream_profiles (GString * str, GstEncodingProfile * sprof,
   append_escaped (str,
       g_markup_printf_escaped
       ("        <stream-profile parent='%s' id='%d' type='%s' "
-          "presence='%d' ", profilename, id,
+          "presence='%d' enabled='%d' ", profilename, id,
           gst_encoding_profile_get_type_nick (sprof),
-          gst_encoding_profile_get_presence (sprof)));
+          gst_encoding_profile_get_presence (sprof),
+          gst_encoding_profile_is_enabled (sprof)));
 
   tmpcaps = gst_encoding_profile_get_format (sprof);
   if (tmpcaps) {

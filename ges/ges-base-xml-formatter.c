@@ -770,7 +770,7 @@ _create_profile (GESBaseXmlFormatter * self,
     const gchar * type, const gchar * parent, const gchar * name,
     const gchar * description, GstCaps * format, const gchar * preset,
     const gchar * preset_name, gint id, guint presence, GstCaps * restriction,
-    guint pass, gboolean variableframerate)
+    guint pass, gboolean variableframerate, gboolean enabled)
 {
   GstEncodingProfile *profile = NULL;
 
@@ -798,6 +798,7 @@ _create_profile (GESBaseXmlFormatter * self,
   }
 
   gst_encoding_profile_set_name (profile, name);
+  gst_encoding_profile_set_enabled (profile, enabled);
   gst_encoding_profile_set_description (profile, description);
   gst_encoding_profile_set_preset_name (profile, preset_name);
 
@@ -1210,7 +1211,7 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
     const gchar * description, GstCaps * format, const gchar * preset,
     const gchar * preset_name, guint id, guint presence, GstCaps * restriction,
     guint pass, gboolean variableframerate, GstStructure * properties,
-    GError ** error)
+    gboolean enabled, GError ** error)
 {
   const GList *tmp;
   GstEncodingProfile *profile;
@@ -1223,7 +1224,8 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
   if (parent == NULL) {
     profile =
         _create_profile (self, type, parent, name, description, format, preset,
-        preset_name, id, presence, restriction, pass, variableframerate);
+        preset_name, id, presence, restriction, pass, variableframerate,
+        enabled);
     ges_project_add_encoding_profile (GES_FORMATTER (self)->project, profile);
     gst_object_unref (profile);
 
@@ -1256,7 +1258,7 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
 
   profile =
       _create_profile (self, type, parent, name, description, format, preset,
-      preset_name, id, presence, restriction, pass, variableframerate);
+      preset_name, id, presence, restriction, pass, variableframerate, enabled);
 
   if (profile == NULL)
     goto done;

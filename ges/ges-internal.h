@@ -236,6 +236,7 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_encoding_profile(GESBaseXmlForma
                                                                  guint pass,
                                                                  gboolean variableframerate,
                                                                  GstStructure * properties,
+                                                                 gboolean enabled,
                                                                  GError ** error);
 G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_element   (GESBaseXmlFormatter *self,
                                                                  GType effect_type,
