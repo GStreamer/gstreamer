@@ -100,7 +100,7 @@ struct _GstVaapiWindowWaylandPrivate
   struct wl_surface *surface;
   struct wl_region *opaque_region;
   struct wl_event_queue *event_queue;
-  FrameState *frame;
+  FrameState *last_frame;
   GstVideoFormat surface_format;
   GstVaapiVideoPool *surface_pool;
   GstVaapiFilter *filter;
@@ -267,9 +267,9 @@ gst_vaapi_window_wayland_destroy (GstVaapiWindow * window)
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
 
-  if (priv->frame) {
-    frame_state_free (priv->frame);
-    priv->frame = NULL;
+  if (priv->last_frame) {
+    frame_state_free (priv->last_frame);
+    priv->last_frame = NULL;
   }
 
   if (priv->shell_surface) {
@@ -320,9 +320,7 @@ frame_done_callback (void *data, struct wl_callback *callback, uint32_t time)
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (frame->window);
 
-  if (priv->frame == frame) {
-    priv->frame = NULL;
-  }
+  g_atomic_pointer_compare_and_exchange (&priv->last_frame, frame, NULL);
   frame_state_free (frame);
   g_atomic_int_dec_and_test (&priv->num_frames_pending);
 }
@@ -476,7 +474,7 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   frame = frame_state_new (window);
   if (!frame)
     return FALSE;
-  priv->frame = frame;
+  g_atomic_pointer_set (&priv->last_frame, frame);
   g_atomic_int_inc (&priv->num_frames_pending);
 
   if (need_vpp && priv->use_vpp) {
