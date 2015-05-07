@@ -160,6 +160,9 @@ gst_vaapi_parser_info_h264_new(void)
  *   access unit (AU)
  * @GST_VAAPI_PICTURE_FLAG_AU_END: flag that marks the end of an
  *   access unit (AU)
+ * @GST_VAAPI_PICTURE_FLAG_GHOST: flag that specifies a "non-existing"
+ *   picture, without any viable GstVideoCodecFrame associated to it.
+ *   i.e. a dummy picture with some valid contents
  * @GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE: flag that specifies
  *     "used for short-term reference"
  * @GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE: flag that specifies
@@ -174,6 +177,7 @@ enum {
     GST_VAAPI_PICTURE_FLAG_ANCHOR       = (GST_VAAPI_PICTURE_FLAG_LAST << 3),
     GST_VAAPI_PICTURE_FLAG_AU_START     = (GST_VAAPI_PICTURE_FLAG_LAST << 4),
     GST_VAAPI_PICTURE_FLAG_AU_END       = (GST_VAAPI_PICTURE_FLAG_LAST << 5),
+    GST_VAAPI_PICTURE_FLAG_GHOST        = (GST_VAAPI_PICTURE_FLAG_LAST << 6),
 
     GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE = (
         GST_VAAPI_PICTURE_FLAG_REFERENCE),
@@ -705,24 +709,25 @@ dpb_remove_index(GstVaapiDecoderH264 *decoder, guint index)
 static gboolean
 dpb_output(GstVaapiDecoderH264 *decoder, GstVaapiFrameStore *fs)
 {
-    GstVaapiPictureH264 *picture;
+    GstVaapiPictureH264 *picture = NULL;
+    guint i;
 
     g_return_val_if_fail(fs != NULL, FALSE);
 
     if (!gst_vaapi_frame_store_is_complete(fs))
         return TRUE;
 
-    picture = fs->buffers[0];
-    g_return_val_if_fail(picture != NULL, FALSE);
-    picture->output_needed = FALSE;
-
-    if (fs->num_buffers > 1) {
-        picture = fs->buffers[1];
-        g_return_val_if_fail(picture != NULL, FALSE);
-        picture->output_needed = FALSE;
+    for (i = 0; i < fs->num_buffers; i++) {
+        GstVaapiPictureH264 * const pic = fs->buffers[i];
+        g_return_val_if_fail(pic != NULL, FALSE);
+        pic->output_needed = FALSE;
+        if (!GST_VAAPI_PICTURE_FLAG_IS_SET(pic, GST_VAAPI_PICTURE_FLAG_GHOST))
+            picture = pic;
     }
 
     fs->output_needed = 0;
+    if (!picture)
+        return TRUE;
     return gst_vaapi_picture_output(GST_VAAPI_PICTURE_CAST(picture));
 }
 
@@ -751,6 +756,41 @@ dpb_find_picture(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         }
     }
     return -1;
+}
+
+/* Finds the picture with the nearest previous POC and same structure */
+static gint
+dpb_find_nearest_prev_poc(GstVaapiDecoderH264 *decoder,
+    GstVaapiPictureH264 *picture, guint picture_structure,
+    GstVaapiPictureH264 **found_picture_ptr)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiPictureH264 *found_picture = NULL;
+    guint i, j, found_index;
+
+    g_return_val_if_fail(picture != NULL, -1);
+
+    if (!picture_structure)
+        picture_structure = picture->base.structure;
+
+    for (i = 0; i < priv->dpb_count; i++) {
+        GstVaapiFrameStore * const fs = priv->dpb[i];
+        if (picture->base.view_id != fs->view_id)
+            continue;
+        for (j = 0; j < fs->num_buffers; j++) {
+            GstVaapiPictureH264 * const pic = fs->buffers[j];
+            if (pic->base.structure != picture_structure)
+                continue;
+            if (pic->base.poc >= picture->base.poc)
+                continue;
+            if (!found_picture || found_picture->base.poc < pic->base.poc)
+                found_picture = pic, found_index = i;
+        }
+    }
+
+    if (found_picture_ptr)
+        *found_picture_ptr = found_picture;
+    return found_picture ? found_index : -1;
 }
 
 /* Finds the picture with the lowest POC that needs to be output */
@@ -2899,6 +2939,63 @@ init_picture_refs(
     }
 }
 
+static GstVaapiPictureH264 *
+fill_picture_other_field_gap(GstVaapiDecoderH264 *decoder,
+    GstVaapiPictureH264 *f0)
+{
+    GstVaapiPictureH264 *prev_picture, *f1;
+    gint prev_picture_index;
+    guint picture_structure;
+
+    picture_structure = f0->base.structure;
+    switch (picture_structure) {
+    case GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD:
+        picture_structure = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
+        break;
+    case GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD:
+        picture_structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
+        break;
+    default:
+        g_assert(0 && "unexpected picture structure");
+        return NULL;
+    }
+    GST_VAAPI_PICTURE_FLAG_SET(f0, GST_VAAPI_PICTURE_FLAG_ONEFIELD);
+
+    prev_picture_index = dpb_find_nearest_prev_poc(decoder, f0,
+        picture_structure, &prev_picture);
+    if (prev_picture_index < 0)
+        return NULL;
+
+    f1 = gst_vaapi_picture_h264_new_field(f0);
+    if (!f1)
+        goto error_allocate_field;
+
+    gst_vaapi_surface_proxy_replace(&f1->base.proxy, prev_picture->base.proxy);
+    f1->base.surface = GST_VAAPI_SURFACE_PROXY_SURFACE(f1->base.proxy);
+    f1->base.surface_id = GST_VAAPI_SURFACE_PROXY_SURFACE_ID(f1->base.proxy);
+    f1->base.poc++;
+    f1->structure = f1->base.structure;
+
+    /* XXX: clone other H.264 picture specific flags */
+    GST_VAAPI_PICTURE_FLAG_SET(f1,
+        (GST_VAAPI_PICTURE_FLAG_SKIPPED |
+         GST_VAAPI_PICTURE_FLAG_GHOST));
+
+    if (!dpb_add(decoder, f1))
+        goto error_append_field;
+    gst_vaapi_picture_unref(f1);
+    return f1;
+
+    /* ERRORS */
+error_allocate_field:
+    GST_ERROR("failed to allocate missing field for previous frame store");
+    return NULL;
+error_append_field:
+    GST_ERROR("failed to add missing field into previous frame store");
+    gst_vaapi_picture_unref(f1);
+    return NULL;
+}
+
 static gboolean
 init_picture(
     GstVaapiDecoderH264 *decoder,
@@ -3519,24 +3616,60 @@ is_new_access_unit(GstVaapiParserInfoH264 *pi, GstVaapiParserInfoH264 *prev_pi)
     return pi->voc < prev_pi->voc;
 }
 
+/* Determines whether the supplied picture has the same field parity
+   than a picture specified through the other slice header */
+static inline gboolean
+same_field_parity(GstVaapiPictureH264 *field, GstH264SliceHdr *slice_hdr)
+{
+    g_return_val_if_fail(GST_VAAPI_PICTURE_IS_INTERLACED(field), FALSE);
+
+    return ((field->base.structure == GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD) ^
+         slice_hdr->bottom_field_flag) == 0;
+}
+
 /* Finds the first field picture corresponding to the supplied picture */
 static GstVaapiPictureH264 *
-find_first_field(GstVaapiDecoderH264 *decoder, GstVaapiParserInfoH264 *pi)
+find_first_field(GstVaapiDecoderH264 *decoder, GstVaapiParserInfoH264 *pi,
+    gboolean fill_gaps)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
     GstVaapiFrameStore *fs;
-
-    if (!slice_hdr->field_pic_flag)
-        return NULL;
+    GstVaapiPictureH264 *f0, *f1;
 
     fs = priv->prev_frames[pi->voc];
-    if (!fs || gst_vaapi_frame_store_has_frame(fs))
+    if (!fs)
         return NULL;
 
-    if (fs->buffers[0]->frame_num == slice_hdr->frame_num)
-        return fs->buffers[0];
-    return NULL;
+    f0 = fs->buffers[0];
+    if (!slice_hdr->field_pic_flag) {
+        if (fill_gaps && !gst_vaapi_frame_store_has_frame(fs))
+            fill_picture_other_field_gap(decoder, f0);
+        return NULL;
+    }
+
+    /* At this point, the current frame is known to be interlaced */
+    if (gst_vaapi_frame_store_has_frame(fs)) {
+        f1 = NULL;
+        return f1;
+    }
+
+    /* At this point, the previous frame is interlaced and contains a
+       single field */
+    if (f0->frame_num == slice_hdr->frame_num) {
+        f1 = f0;
+        if (fill_gaps && same_field_parity(f0, slice_hdr)) {
+            fill_picture_other_field_gap(decoder, f0);
+            f1 = NULL;
+        }
+        return f1;
+    }
+
+    f1 = NULL;
+    if (fill_gaps) {
+        fill_picture_other_field_gap(decoder, f0);
+    }
+    return f1;
 }
 
 static GstVaapiDecoderStatus
@@ -3566,7 +3699,7 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 
     priv->decoder_state = 0;
 
-    first_field = find_first_field(decoder, pi);
+    first_field = find_first_field(decoder, pi, TRUE);
     if (first_field) {
         /* Re-use current picture where the first field was decoded */
         picture = gst_vaapi_picture_h264_new_field(first_field);
