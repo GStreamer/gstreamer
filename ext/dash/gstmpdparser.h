@@ -414,8 +414,10 @@ struct _GstMediaSegment
 {
   GstSegmentURLNode *SegmentURL;              /* this is NULL when using a SegmentTemplate */
   guint number;                               /* segment number */
-  guint64 start;                                /* segment start time in timescale units */
-  GstClockTime start_time;                    /* segment start time */
+  gint repeat;                                /* number of extra repetitions (0 = played only once) */
+  gint64 scale_start;                         /* start time in timescale units */
+  gint64 scale_duration;                      /* duration in timescale units */
+  GstClockTime start;                         /* segment start time */
   GstClockTime duration;                      /* segment duration */
 };
 
