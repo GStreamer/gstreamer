@@ -659,7 +659,14 @@ next_unused_stream_profile (GstEncodeBin * ebin, GType ptype,
 
         if (profilename && !strcmp (name, profilename)) {
           guint presence = gst_encoding_profile_get_presence (sprof);
+
           GST_DEBUG ("Found profile matching the requested name");
+
+          if (!gst_encoding_profile_is_enabled (sprof)) {
+            GST_INFO_OBJECT (ebin, "%p is disabled, not using it", sprof);
+
+            return NULL;
+          }
 
           if (presence == 0
               || presence > stream_profile_used_count (ebin, sprof))
@@ -686,7 +693,9 @@ next_unused_stream_profile (GstEncodeBin * ebin, GType ptype,
       if (G_TYPE_FROM_INSTANCE (sprof) == ptype) {
         guint presence = gst_encoding_profile_get_presence (sprof);
         GST_DEBUG ("Found a stream profile with the same type");
-        if (presence == 0
+        if (!gst_encoding_profile_is_enabled (sprof)) {
+          GST_INFO_OBJECT (ebin, "%p is disabled, not using it", sprof);
+        } else if (presence == 0
             || (presence > stream_profile_used_count (ebin, sprof)))
           return sprof;
       } else if (caps && ptype == G_TYPE_NONE) {
@@ -1873,7 +1882,8 @@ create_elements_and_pads (GstEncodeBin * ebin)
       GST_DEBUG ("Trying stream profile with presence %d",
           gst_encoding_profile_get_presence (sprof));
 
-      if (gst_encoding_profile_get_presence (sprof) != 0) {
+      if (gst_encoding_profile_get_presence (sprof) != 0 &&
+          gst_encoding_profile_is_enabled (sprof)) {
         if (G_UNLIKELY (_create_stream_group (ebin, sprof, NULL, NULL) == NULL))
           goto stream_error;
       }

@@ -189,6 +189,7 @@ struct _GstEncodingProfile
   guint presence;
   GstCaps *restriction;
   gboolean allow_dynamic_output;
+  gboolean enabled;
 };
 
 struct _GstEncodingProfileClass
@@ -401,6 +402,20 @@ gst_encoding_profile_get_presence (GstEncodingProfile * profile)
 }
 
 /**
+ * gst_encoding_profile_get_enabled:
+ * @profile: a #GstEncodingProfile
+ *
+ * Returns: Whther @profile is enabled or not
+ */
+gboolean
+gst_encoding_profile_is_enabled (GstEncodingProfile * profile)
+{
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), FALSE);
+
+  return profile->enabled;
+}
+
+/**
  * gst_encoding_profile_get_restriction:
  * @profile: a #GstEncodingProfile
  *
@@ -540,6 +555,22 @@ void
 gst_encoding_profile_set_presence (GstEncodingProfile * profile, guint presence)
 {
   profile->presence = presence;
+}
+
+/**
+ * gst_encoding_profile_set_enabled:
+ * @profile: a #GstEncodingProfile
+ * @enabled: %FALSE to disable #profile, %TRUE to enable it
+ *
+ * Set whether the profile should be used or not.
+ */
+void
+gst_encoding_profile_set_enabled (GstEncodingProfile * profile,
+    gboolean enabled)
+{
+  g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
+
+  profile->enabled = enabled;
 }
 
 /**
@@ -868,6 +899,7 @@ common_creation (GType objtype, GstCaps * format, const gchar * preset,
   prof->presence = presence;
   prof->preset_name = NULL;
   prof->allow_dynamic_output = TRUE;
+  prof->enabled = TRUE;
 
   return prof;
 }

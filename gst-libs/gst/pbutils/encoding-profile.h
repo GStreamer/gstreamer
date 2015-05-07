@@ -152,6 +152,9 @@ GstEncodingProfile * gst_encoding_profile_find (const gchar *targetname,
                                                 const gchar *profilename,
                                                 const gchar *category);
 
+gboolean        gst_encoding_profile_is_enabled        (GstEncodingProfile *profile);
+void            gst_encoding_profile_set_enabled       (GstEncodingProfile *profile,
+                                                         gboolean enabled);
 /* GstEncodingContainerProfile API */
 gboolean        gst_encoding_container_profile_add_profile       (GstEncodingContainerProfile *container,
                                                                   GstEncodingProfile *profile);
