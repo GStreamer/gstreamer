@@ -305,6 +305,10 @@ gst_flac_parse_finalize (GObject * object)
     gst_toc_unref (flacparse->toc);
     flacparse->toc = NULL;
   }
+  if (flacparse->seektable) {
+    gst_buffer_unref (flacparse->seektable);
+    flacparse->seektable = NULL;
+  }
 
   g_list_foreach (flacparse->headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (flacparse->headers);
@@ -1163,6 +1167,8 @@ gst_flac_parse_handle_seektable (GstFlacParse * flacparse, GstBuffer * buffer)
   GST_DEBUG_OBJECT (flacparse, "storing seektable");
   /* only store for now;
    * offset of the first frame is needed to get real info */
+  if (flacparse->seektable)
+    gst_buffer_unref (flacparse->seektable);
   flacparse->seektable = gst_buffer_ref (buffer);
 
   return TRUE;
