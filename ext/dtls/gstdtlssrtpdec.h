@@ -46,7 +46,6 @@ struct _GstDtlsSrtpDec {
 
     GstElement *dtls_srtp_demux;
     GstElement *srtp_dec;
-    GstElement *funnel;
 };
 
 struct _GstDtlsSrtpDecClass {
