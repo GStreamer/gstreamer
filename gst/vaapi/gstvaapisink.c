@@ -1356,19 +1356,19 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
 
   proxy = gst_vaapi_video_meta_get_surface_proxy (meta);
   if (!proxy)
-    goto error;
+    goto no_surface;
 
   surface = gst_vaapi_video_meta_get_surface (meta);
   if (!surface)
-    goto error;
+    goto no_surface;
 
   /* Validate view component to display */
   view_id = GST_VAAPI_SURFACE_PROXY_VIEW_ID (proxy);
   if (G_UNLIKELY (sink->view_id == -1))
     sink->view_id = view_id;
   else if (sink->view_id != view_id) {
-    gst_buffer_unref (buffer);
-    return GST_FLOW_OK;
+    ret = GST_FLOW_OK;
+    goto done;
   }
 
   gst_vaapisink_ensure_colorbalance (sink);
@@ -1404,13 +1404,24 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
 
   /* Retain VA surface until the next one is displayed */
   gst_buffer_replace (&sink->video_buffer, buffer);
-  gst_buffer_unref (buffer);
 
-  return GST_FLOW_OK;
+  ret = GST_FLOW_OK;
+
+done:
+  gst_buffer_unref (buffer);
+  return ret;
 
 error:
-  gst_buffer_unref (buffer);
-  return GST_FLOW_EOS;
+  GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
+      ("Internal error: could not render surface"), (NULL));
+  ret = GST_FLOW_ERROR;
+  goto done;
+
+no_surface:
+  /* No surface or surface proxy. That's very bad! */
+  GST_WARNING_OBJECT (sink, "could not get surface");
+  ret = GST_FLOW_ERROR;
+  goto done;
 }
 
 static GstFlowReturn
