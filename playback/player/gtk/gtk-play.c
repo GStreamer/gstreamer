@@ -141,17 +141,11 @@ play_pause_clicked_cb (GtkButton * button, GtkPlay * play)
     gtk_button_set_image (GTK_BUTTON (play->play_pause_button), image);
     play->playing = FALSE;
   } else {
-    gchar *title;
-
     gst_player_play (play->player);
     image =
         gtk_image_new_from_icon_name ("media-playback-pause",
         GTK_ICON_SIZE_BUTTON);
     gtk_button_set_image (GTK_BUTTON (play->play_pause_button), image);
-
-    title = gst_player_get_uri (play->player);
-    set_title (play, title);
-    g_free (title);
     play->playing = TRUE;
   }
 }
