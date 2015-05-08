@@ -505,7 +505,6 @@ gboolean gst_mpd_client_is_live (GstMpdClient * client);
 gboolean gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream, GstClockTime ts);
 gboolean gst_mpd_client_seek_to_time (GstMpdClient * client, GDateTime * time);
 GstDateTime *gst_mpd_client_add_time_difference (GstDateTime * t1, gint64 usecs);
-gint gst_mpd_client_get_segment_index_at_time (GstMpdClient *client, GstActiveStream * stream, const GstDateTime *time);
 gint gst_mpd_client_check_time_position (GstMpdClient * client, GstActiveStream * stream, GstClockTime ts, gint64 * diff);
 GstClockTime gst_mpd_parser_get_stream_presentation_offset (GstMpdClient *client, guint stream_idx);
 

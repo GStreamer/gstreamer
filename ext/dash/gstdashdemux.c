@@ -591,30 +591,13 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
   /* If stream is live, try to find the segment that
    * is closest to current time */
   if (gst_mpd_client_is_live (dashdemux->client)) {
-    GList *iter;
-    gint seg_idx;
+    GDateTime *gnow;
 
     GST_DEBUG_OBJECT (demux, "Seeking to current time of day for live stream ");
-    for (iter = demux->next_streams; iter; iter = g_list_next (iter)) {
-      GstDashDemuxStream *stream = iter->data;
-      GstActiveStream *active_stream = stream->active_stream;
 
-      /* Get segment index corresponding to current time. */
-      seg_idx =
-          gst_mpd_client_get_segment_index_at_time (dashdemux->client,
-          active_stream, now);
-      if (seg_idx < 0) {
-        GST_WARNING_OBJECT (demux,
-            "Failed to find a segment that is available "
-            "at this point in time for stream %d.", stream->index);
-        seg_idx = 0;
-      }
-      GST_INFO_OBJECT (demux,
-          "Segment index corresponding to current time for stream "
-          "%d is %d.", stream->index, seg_idx);
-      gst_mpd_client_set_segment_index (active_stream, seg_idx);
-    }
-
+    gnow = gst_date_time_to_g_date_time (now);
+    gst_mpd_client_seek_to_time (dashdemux->client, gnow);
+    g_date_time_unref (gnow);
   } else {
     GST_DEBUG_OBJECT (demux, "Seeking to first segment for on-demand stream ");
 

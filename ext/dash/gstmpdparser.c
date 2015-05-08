@@ -3527,42 +3527,6 @@ gst_mpd_client_add_time_difference (GstDateTime * t1, gint64 usecs)
   return rv;
 }
 
-gint
-gst_mpd_client_get_segment_index_at_time (GstMpdClient * client,
-    GstActiveStream * stream, const GstDateTime * time)
-{
-  GstClockTime seg_duration;
-  gint64 diff;
-  GstDateTime *avail_start =
-      gst_mpd_client_get_availability_start_time (client);
-  GstStreamPeriod *stream_period = gst_mpdparser_get_stream_period (client);
-
-  if (avail_start == NULL)
-    return -1;
-
-  if (stream_period && stream_period->period) {
-    GstDateTime *t;
-
-    t = gst_mpd_client_add_time_difference (avail_start,
-        stream_period->period->start * 1000);
-    gst_date_time_unref (avail_start);
-    avail_start = t;
-  }
-  diff = gst_mpd_client_calculate_time_difference (avail_start, time);
-  gst_date_time_unref (avail_start);
-
-  if (diff < 0)
-    return -2;
-  if (diff > gst_mpd_client_get_media_presentation_duration (client))
-    return -3;
-
-  /* TODO: Assumes all fragments are roughly the same duration */
-  seg_duration = gst_mpd_client_get_next_fragment_duration (client, stream);
-  if (seg_duration == 0)
-    return -1;
-  return diff / seg_duration;
-}
-
 static GstDateTime *
 gst_mpd_client_get_availability_start_time (GstMpdClient * client)
 {
