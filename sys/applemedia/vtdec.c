@@ -704,6 +704,9 @@ gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (vtdec);
 
+  /* FIXME: Instead of this, implement GstVideoDecoder::negotiate() and
+   * just call gst_video_decoder_negotiate()
+   */
   /* negotiate now so that we know whether we need to use the GL upload meta or
    * not */
   if (gst_pad_check_reconfigure (decoder->srcpad)) {
