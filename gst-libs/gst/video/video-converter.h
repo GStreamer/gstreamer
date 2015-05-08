@@ -133,20 +133,31 @@ G_BEGIN_DECLS
  */
 #define GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE   "GstVideoConverter.alpha-value"
 /**
+ * GstVideoAlphaMode:
+ * @GST_VIDEO_ALPHA_MODE_COPY: When input and output have alpha, it will be copied.
+ *         When the input has no alpha, alpha will be set to
+ *         #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE
+ * @GST_VIDEO_ALPHA_MODE_SET: set all alpha to
+ *	   #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE
+ * @GST_VIDEO_ALPHA_MODE_MULT:  multiply all alpha with
+ *         #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE.
+ *         When the input format has no alpha but the output format has, the
+ *         alpha value will be set to #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE
+ *
+ * Different alpha modes.
+ *
+ * Since: 1.6
+ */
+typedef enum {
+  GST_VIDEO_ALPHA_MODE_COPY,
+  GST_VIDEO_ALPHA_MODE_SET,
+  GST_VIDEO_ALPHA_MODE_MULT
+} GstVideoAlphaMode;
+/**
  * GST_VIDEO_CONVERTER_OPT_ALPHA_MODE:
  *
- * #G_TYPE_STRING, the alpha mode to use.
- *
- * "copy": When input and output have alpha, it will be copied.
- *         When the input has no alpha, alpha will be set to
- *         GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE
- * "set": set all alpha to #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE
- * "mult": multiply all alpha with #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE.
- *         When the input format has no alpha but the output format has,
- *         the alpha value will be set to
- *         #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE
- *
- * Default to "none".
+ * #GST_TYPE_VIDEO_ALPHA_MODE, the alpha mode to use.
+ * Default is #GST_VIDEO_ALPHA_MODE_COPY.
  */
 #define GST_VIDEO_CONVERTER_OPT_ALPHA_MODE   "GstVideoConverter.alpha-mode"
 /**
@@ -157,55 +168,100 @@ G_BEGIN_DECLS
  * Default 0xff000000
  */
 #define GST_VIDEO_CONVERTER_OPT_BORDER_ARGB   "GstVideoConverter.border-argb"
+
+/**
+ * GstVideoChromaMode:
+ * @GST_VIDEO_CHROMA_MODE_FULL: do full chroma up and down sampling
+ * @GST_VIDEO_CHROMA_MODE_UPSAMPLE_ONLY: only perform chroma upsampling
+ * @GST_VIDEO_CHROMA_MODE_DOWNSAMPLE_ONLY: only perform chroma downsampling
+ * @GST_VIDEO_CHROMA_MODE_NONE: disable chroma resampling
+ *
+ * Different chroma downsampling and upsampling modes
+ *
+ * Since: 1.6
+ */
+typedef enum {
+  GST_VIDEO_CHROMA_MODE_FULL,
+  GST_VIDEO_CHROMA_MODE_UPSAMPLE_ONLY,
+  GST_VIDEO_CHROMA_MODE_DOWNSAMPLE_ONLY,
+  GST_VIDEO_CHROMA_MODE_NONE
+} GstVideoChromaMode;
+
 /**
  * GST_VIDEO_CONVERTER_OPT_CHROMA_MODE:
  *
- * #G_TYPE_STRING, set the chroma resample mode subsampled formats.
- *
- * "full": do full chroma up and down sampling
- * "upsample-only": only perform chroma upsampling
- * "downsample-only": only perform chroma downsampling
- * "none": disable chroma resampling
- *
- * Default "full"
+ * #GST_TYPE_VIDEO_CHROMA_MODE, set the chroma resample mode subsampled
+ * formats. Default is #GST_VIDEO_CHROMA_MODE_FULL.
  */
 #define GST_VIDEO_CONVERTER_OPT_CHROMA_MODE   "GstVideoConverter.chroma-mode"
+
+/**
+ *GstVideoMatrixMode:
+ * @GST_VIDEO_MATRIX_MODE_FULL: do conversion between color matrices
+ * @GST_VIDEO_MATRIX_MODE_INPUT_ONLY:  use the input color matrix to convert
+ *	  to and from R'G'B
+ * @GST_VIDEO_MATRIX_MODE_OUTPUT_ONLY: use the output color matrix to convert
+ *	  to and from R'G'B
+ * @GST_VIDEO_MATRIX_MODE_NONE: disable color matrix conversion.
+ *
+ * Different color matrix conversion modes
+ *
+ * Since: 1.6
+ */
+typedef enum {
+  GST_VIDEO_MATRIX_MODE_FULL,
+  GST_VIDEO_MATRIX_MODE_INPUT_ONLY,
+  GST_VIDEO_MATRIX_MODE_OUTPUT_ONLY,
+  GST_VIDEO_MATRIX_MODE_NONE
+} GstVideoMatrixMode;
 /**
  * GST_VIDEO_CONVERTER_OPT_MATRIX_MODE:
  *
- * #G_TYPE_STRING, set the color matrix conversion mode for converting
- *     between Y'PbPr and non-linear RGB (R'G'B').
- *
- * "full": do conversion between color matrices
- * "input-only": use the input color matrix to convert to and from R'G'B
- * "output-only": use the output color matrix to convert to and from R'G'B
- * "none": disable color matrix conversion.
- *
- * Default "full"
+ * #GST_TYPE_VIDEO_MATRIX_MODE, set the color matrix conversion mode for
+ *	converting between Y'PbPr and non-linear RGB (R'G'B').
+ * Default is #GST_VIDEO_MATRIX_MODE_FULL.
  */
 #define GST_VIDEO_CONVERTER_OPT_MATRIX_MODE   "GstVideoConverter.matrix-mode"
 /**
+ * GstVideoGammaMode:
+ * @GST_VIDEO_GAMMA_MODE_NONE: disable gamma handling
+ * @GST_VIDEO_GAMMA_MODE_REMAP: convert between input and output gamma
+ * Different gamma conversion modes
+ *
+ * Since: 1.6
+ */
+typedef enum {
+  GST_VIDEO_GAMMA_MODE_NONE,
+  GST_VIDEO_GAMMA_MODE_REMAP
+} GstVideoGammaMode;
+/**
  * GST_VIDEO_CONVERTER_OPT_GAMMA_MODE:
  *
- * #G_TYPE_STRING, set the gamma mode.
- *
- * "none": disable gamma handling
- * "remap": convert between input and output gamma
- *
- * Default "none"
+ * #GST_TYPE_VIDEO_GAMMA_MODE, set the gamma mode.
+ * Default is #GST_VIDEO_GAMMA_MODE_NONE.
  */
 #define GST_VIDEO_CONVERTER_OPT_GAMMA_MODE   "GstVideoConverter.gamma-mode"
 /**
+ * GstVideoPrimariesMode:
+ * @GST_VIDEO_PRIMARIES_MODE_NONE: disable conversion between primaries
+ * @GST_VIDEO_PRIMARIES_MODE_MERGE_ONLY: do conversion between primaries only
+ *	  when it can be merged with color matrix conversion.
+ * @GST_VIDEO_PRIMARIES_MODE_FAST: fast conversion between primaries
+ *
+ * Different primaries conversion modes
+ *
+ * Since: 1.6
+ */
+typedef enum {
+  GST_VIDEO_PRIMARIES_MODE_NONE,
+  GST_VIDEO_PRIMARIES_MODE_MERGE_ONLY,
+  GST_VIDEO_PRIMARIES_MODE_FAST
+} GstVideoPrimariesMode;
+/**
  * GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE:
  *
- * #G_TYPE_STRING, set the primaries conversion mode.
- *
- * "none": disable conversion between primaries
- * "merge-only": do conversion between primaries only when it can be merged
- *               with color matrix conversion.
- * "fast": fast conversion between primaries
- *
- * Default "none"
+ * #GST_TYPE_VIDEO_PRIMARIES_MODE, set the primaries conversion mode.
+ * Default is #GST_VIDEO_PRIMARIES_MODE_NONE.
  */
 #define GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE   "GstVideoConverter.primaries-mode"
 
