@@ -3453,6 +3453,7 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
     GstClockTime ts)
 {
   gint index = 0;
+  gint repeat_index = 0;
   GstMediaSegment *selectedChunk = NULL;
 
   g_return_val_if_fail (stream != NULL, 0);
@@ -3465,7 +3466,7 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
       if (segment->start <= ts
           && ts < segment->start + (segment->repeat + 1) * segment->duration) {
         selectedChunk = segment;
-        index = segment->number + (ts - segment->start) / segment->duration;
+        repeat_index = (ts - segment->start) / segment->duration;
         break;
       }
     }
@@ -3484,7 +3485,8 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
     index = ts / duration;
   }
 
-  gst_mpd_client_set_segment_index (stream, index);
+  stream->segment_repeat_index = repeat_index;
+  stream->segment_index = index;
 
   return TRUE;
 }
@@ -3566,17 +3568,14 @@ gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client,
     guint stream_idx, GstClockTime * ts)
 {
   GstActiveStream *stream;
-  gint segment_idx;
   GstMediaSegment *currentChunk;
 
   GST_DEBUG ("Stream index: %i", stream_idx);
   stream = g_list_nth_data (client->active_streams, stream_idx);
   g_return_val_if_fail (stream != NULL, 0);
 
-  segment_idx = gst_mpd_client_get_segment_index (stream);
-  GST_DEBUG ("Looking for fragment sequence chunk %d", segment_idx);
-
-  currentChunk = g_ptr_array_index (stream->segments, segment_idx);
+  GST_DEBUG ("Looking for fragment sequence chunk %d", stream->segment_index);
+  currentChunk = g_ptr_array_index (stream->segments, stream->segment_index);
 
   *ts =
       currentChunk->start +
@@ -3608,7 +3607,6 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   gchar *mediaURL = NULL;
   gchar *indexURL = NULL;
   GstUri *base_url, *frag_url;
-  guint segment_idx;
 
   /* select stream */
   g_return_val_if_fail (client != NULL, FALSE);
@@ -3617,10 +3615,8 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   g_return_val_if_fail (stream != NULL, FALSE);
   g_return_val_if_fail (stream->cur_representation != NULL, FALSE);
 
-  segment_idx = gst_mpd_client_get_segment_index (stream);
-  GST_DEBUG ("Looking for fragment sequence chunk %d", segment_idx);
-
-  currentChunk = g_ptr_array_index (stream->segments, segment_idx);
+  GST_DEBUG ("Looking for fragment sequence chunk %d", stream->segment_index);
+  currentChunk = g_ptr_array_index (stream->segments, stream->segment_index);
 
   GST_DEBUG ("currentChunk->SegmentURL = %p", currentChunk->SegmentURL);
   if (currentChunk->SegmentURL != NULL) {
@@ -3851,7 +3847,7 @@ gst_mpd_client_get_next_fragment_duration (GstMpdClient * client,
 
   g_return_val_if_fail (stream != NULL, 0);
 
-  seg_idx = gst_mpd_client_get_segment_index (stream);
+  seg_idx = stream->segment_index;
 
   if (stream->segments) {
     if (seg_idx < stream->segments->len)
@@ -3980,42 +3976,6 @@ gst_mpd_client_has_next_period (GstMpdClient * client)
   next_stream_period =
       g_list_nth_data (client->periods, client->period_idx + 1);
   return next_stream_period != NULL;
-}
-
-void
-gst_mpd_client_set_segment_index_for_all_streams (GstMpdClient * client,
-    guint segment_idx)
-{
-  GList *list;
-
-  g_return_if_fail (client != NULL);
-  g_return_if_fail (client->active_streams != NULL);
-
-  for (list = g_list_first (client->active_streams); list;
-      list = g_list_next (list)) {
-    GstActiveStream *stream = (GstActiveStream *) list->data;
-    if (stream) {
-      stream->segment_index = segment_idx;
-      stream->segment_repeat_index = 0;
-    }
-  }
-}
-
-void
-gst_mpd_client_set_segment_index (GstActiveStream * stream, guint segment_idx)
-{
-  g_return_if_fail (stream != NULL);
-
-  stream->segment_index = segment_idx;
-  stream->segment_repeat_index = 0;
-}
-
-guint
-gst_mpd_client_get_segment_index (GstActiveStream * stream)
-{
-  g_return_val_if_fail (stream != NULL, 0);
-
-  return stream->segment_index;
 }
 
 void
@@ -4246,7 +4206,7 @@ gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client,
 
   stream_period = gst_mpdparser_get_stream_period (client);
 
-  seg_idx = gst_mpd_client_get_segment_index (stream);
+  seg_idx = stream->segment_index;
   seg_duration = gst_mpd_client_get_segment_duration (client, stream, NULL);
   if (seg_duration == 0)
     return NULL;
