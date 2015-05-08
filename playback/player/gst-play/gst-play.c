@@ -46,6 +46,8 @@ typedef struct
   GstPlayer *player;
   GstState desired_state;
 
+  gboolean repeat;
+
   GMainLoop *loop;
 } GstPlay;
 
@@ -69,6 +71,9 @@ static void
 error_cb (GstPlayer * player, GError * err, GstPlay * play)
 {
   g_printerr ("ERROR %s for %s\n", err->message, play->uris[play->cur_idx]);
+
+  /* if looping is enabled, then disable it else will keep looping forever */
+  play->repeat = FALSE;
 
   /* try next item in list then */
   if (!play_next (play)) {
@@ -438,8 +443,14 @@ play_uri (GstPlay * play, const gchar * next_uri)
 static gboolean
 play_next (GstPlay * play)
 {
-  if ((play->cur_idx + 1) >= play->num_uris)
+  if ((play->cur_idx + 1) >= play->num_uris) {
+    if (play->repeat) {
+      g_print ("Looping playlist \n");
+      play->cur_idx = -1;
+    }
+    else
     return FALSE;
+  }
 
   play_uri (play, play->uris[++play->cur_idx]);
   return TRUE;
@@ -632,6 +643,7 @@ main (int argc, char **argv)
   gboolean print_version = FALSE;
   gboolean interactive = FALSE; /* FIXME: maybe enable by default? */
   gboolean shuffle = FALSE;
+  gboolean repeat = FALSE;
   gdouble volume = 1.0;
   gchar **filenames = NULL;
   gchar **uris;
@@ -650,6 +662,7 @@ main (int argc, char **argv)
         "Volume", NULL},
     {"playlist", 0, 0, G_OPTION_ARG_FILENAME, &playlist_file,
         "Playlist file containing input media files", NULL},
+    {"loop", 0, 0, G_OPTION_ARG_NONE, &repeat, "Repeat all", NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
     {NULL}
   };
@@ -738,6 +751,7 @@ main (int argc, char **argv)
 
   /* prepare */
   play = play_new (uris, volume);
+  play->repeat = repeat;
 
   if (interactive) {
     if (gst_play_kb_set_key_handler (keyboard_cb, play)) {
