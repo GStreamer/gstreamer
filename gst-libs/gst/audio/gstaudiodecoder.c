@@ -1966,12 +1966,6 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
       "Chose default caps %" GST_PTR_FORMAT " for initial gap", caps);
   gst_caps_unref (caps);
 
-  if (!gst_audio_decoder_negotiate_unlocked (dec)) {
-    GST_INFO_OBJECT (dec, "Failed to negotiate default caps for initial gap");
-    gst_pad_mark_reconfigure (dec->srcpad);
-    return FALSE;
-  }
-
   return TRUE;
 
 caps_error:
@@ -1987,6 +1981,7 @@ gst_audio_decoder_handle_gap (GstAudioDecoder * dec, GstEvent * event)
 {
   gboolean ret;
   GstClockTime timestamp, duration;
+  gboolean needs_reconfigure = FALSE;
 
   /* Ensure we have caps first */
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
@@ -1996,6 +1991,15 @@ gst_audio_decoder_handle_gap (GstAudioDecoder * dec, GstEvent * event)
       GST_ELEMENT_ERROR (dec, STREAM, FORMAT, (NULL),
           ("Decoder output not negotiated before GAP event."));
       return FALSE;
+    }
+    needs_reconfigure = TRUE;
+  }
+  needs_reconfigure = gst_pad_check_reconfigure (dec->srcpad)
+      || needs_reconfigure;
+  if (G_UNLIKELY (dec->priv->ctx.output_format_changed || needs_reconfigure)) {
+    if (!gst_audio_decoder_negotiate_unlocked (dec)) {
+      GST_WARNING_OBJECT (dec, "Failed to negotiate with downstream");
+      gst_pad_mark_reconfigure (dec->srcpad);
     }
   }
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
