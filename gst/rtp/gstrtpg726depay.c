@@ -35,6 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpg726depay_debug);
 #define GST_CAT_DEFAULT (rtpg726depay_debug)
 
 #define DEFAULT_BIT_RATE 32000
+#define DEFAULT_BLOCK_ALIGN 4
 #define SAMPLE_RATE 8000
 #define LAYOUT_G726 "g726"
 
@@ -72,7 +73,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "channels = (int) 1, "
         "rate = (int) 8000, "
         "bitrate = (int) { 16000, 24000, 32000, 40000 }, "
-        "layout = (string) \"g726\"")
+        "block_align = (int) { 2, 3, 4, 5 }, " "layout = (string) \"g726\"")
     );
 
 static void gst_rtp_g726_depay_get_property (GObject * object, guint prop_id,
@@ -159,6 +160,7 @@ gst_rtp_g726_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   encoding_name = gst_structure_get_string (structure, "encoding-name");
   if (encoding_name == NULL || g_ascii_strcasecmp (encoding_name, "G726") == 0) {
     depay->bitrate = DEFAULT_BIT_RATE;
+    depay->block_align = DEFAULT_BLOCK_ALIGN;
   } else {
     if (g_str_has_prefix (encoding_name, "AAL2-")) {
       depay->aal2 = TRUE;
@@ -166,12 +168,16 @@ gst_rtp_g726_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     }
     if (g_ascii_strcasecmp (encoding_name, "G726-16") == 0) {
       depay->bitrate = 16000;
+      depay->block_align = 2;
     } else if (g_ascii_strcasecmp (encoding_name, "G726-24") == 0) {
       depay->bitrate = 24000;
+      depay->block_align = 3;
     } else if (g_ascii_strcasecmp (encoding_name, "G726-32") == 0) {
       depay->bitrate = 32000;
+      depay->block_align = 4;
     } else if (g_ascii_strcasecmp (encoding_name, "G726-40") == 0) {
       depay->bitrate = 40000;
+      depay->block_align = 5;
     } else
       goto unknown_encoding;
   }
@@ -182,6 +188,7 @@ gst_rtp_g726_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
       "channels", G_TYPE_INT, 1,
       "rate", G_TYPE_INT, clock_rate,
       "bitrate", G_TYPE_INT, depay->bitrate,
+      "block_align", G_TYPE_INT, depay->block_align,
       "layout", G_TYPE_STRING, LAYOUT_G726, NULL);
 
   ret = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);

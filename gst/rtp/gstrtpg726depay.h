@@ -42,6 +42,7 @@ struct _GstRtpG726Depay
   gboolean aal2;
   gboolean force_aal2;
   gint bitrate;
+  guint block_align;
 };
 
 struct _GstRtpG726DepayClass
