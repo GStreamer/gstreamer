@@ -3536,10 +3536,12 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
 
   /* vorbis/theora headers are retrieved from caps and put in CodecPrivate */
   if (collect_pad->track->xiph_headers_to_skip > 0) {
-    GST_LOG_OBJECT (collect_pad->collect.pad, "dropping streamheader buffer");
-    gst_buffer_unref (buf);
     --collect_pad->track->xiph_headers_to_skip;
-    return GST_FLOW_OK;
+    if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER)) {
+      GST_LOG_OBJECT (collect_pad->collect.pad, "dropping streamheader buffer");
+      gst_buffer_unref (buf);
+      return GST_FLOW_OK;
+    }
   }
 
   /* for dirac we have to queue up everything up to a picture unit */
