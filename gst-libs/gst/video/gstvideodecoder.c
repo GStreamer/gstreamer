@@ -1105,13 +1105,6 @@ gst_video_decoder_negotiate_default_caps (GstVideoDecoder * decoder)
   gst_video_codec_state_unref (state);
   gst_caps_unref (caps);
 
-  if (!gst_video_decoder_negotiate (decoder)) {
-    GST_INFO_OBJECT (decoder,
-        "Failed to negotiate default caps for initial gap");
-    gst_pad_mark_reconfigure (decoder->srcpad);
-    return FALSE;
-  }
-
   return TRUE;
 
 caps_error:
@@ -1213,6 +1206,7 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     case GST_EVENT_GAP:
     {
       GstFlowReturn flow_ret = GST_FLOW_OK;
+      gboolean needs_reconfigure = FALSE;
 
       flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
       ret = (flow_ret == GST_FLOW_OK);
@@ -1226,6 +1220,16 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
               ("Decoder output not negotiated before GAP event."));
           forward_immediate = TRUE;
           break;
+        }
+        needs_reconfigure = TRUE;
+      }
+
+      needs_reconfigure = gst_pad_check_reconfigure (decoder->srcpad)
+          || needs_reconfigure;
+      if (decoder->priv->output_state_changed || needs_reconfigure) {
+        if (!gst_video_decoder_negotiate_unlocked (decoder)) {
+          GST_WARNING_OBJECT (decoder, "Failed to negotiate with downstream");
+          gst_pad_mark_reconfigure (decoder->srcpad);
         }
       }
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
