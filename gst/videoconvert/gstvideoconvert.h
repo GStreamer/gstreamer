@@ -49,6 +49,13 @@ struct _GstVideoConvert {
   GstVideoConverter *convert;
   GstVideoDitherMethod dither;
   guint dither_quantization;
+  GstVideoResamplerMethod chroma_resampler;
+  GstVideoAlphaMode alpha_mode;
+  GstVideoChromaMode chroma_mode;
+  GstVideoMatrixMode matrix_mode;
+  GstVideoGammaMode gamma_mode;
+  GstVideoPrimariesMode primaries_mode;
+  gdouble alpha_value;
 };
 
 struct _GstVideoConvertClass
