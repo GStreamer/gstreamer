@@ -61,7 +61,7 @@
  * Client (receiver)
  * |[
  * gst-launch udpsrc port=3333 ! "caps_from_rtpasfpay_at_sender" \
- * ! rtpasfdepay ! decodebin2 name=d ! queue \
+ * ! rtpasfdepay ! decodebin name=d ! queue \
  * ! videoconvert ! autovideosink \
  * d. ! queue ! audioconvert ! autoaudiosink
  * ]|

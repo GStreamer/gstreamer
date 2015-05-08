@@ -360,7 +360,7 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
   caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
   GST_DEBUG_OBJECT (h264parse, "allowed caps: %" GST_PTR_FORMAT, caps);
 
-  /* concentrate on leading structure, since decodebin2 parser
+  /* concentrate on leading structure, since decodebin parser
    * capsfilter always includes parser template caps */
   if (caps) {
     caps = gst_caps_truncate (caps);

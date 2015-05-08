@@ -25,7 +25,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v filesrc location=/path/to/audio ! decodebin2 ! queue ! mxfmux name=m ! filesink location=file.mxf   filesrc location=/path/to/video ! decodebin2 ! queue ! m.
+ * gst-launch -v filesrc location=/path/to/audio ! decodebin ! queue ! mxfmux name=m ! filesink location=file.mxf   filesrc location=/path/to/video ! decodebin ! queue ! m.
  * ]| This pipeline muxes an audio and video file into a single MXF file.
  * </refsect2>
  */

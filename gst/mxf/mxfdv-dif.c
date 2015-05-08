@@ -23,7 +23,7 @@
 
 /* TODO:
  *  - playbin hangs on a lot of MXF/DV-DIF files (bug #563827)
- *  - decodebin2 creates loops inside the linking graph (bug #563828)
+ *  - decodebin creates loops inside the linking graph (bug #563828)
  *  - track descriptor might be multiple descriptor, one for sound, one for video
  *  - there might be 2 tracks for one essence, i.e. one audio/one video track
  */
