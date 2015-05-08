@@ -93,7 +93,6 @@ static void gst_remove_silence_get_property (GObject * object, guint prop_id,
 static GstFlowReturn gst_remove_silence_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 static void gst_remove_silence_finalize (GObject * obj);
-static void gst_remove_silence_reset (GstRemoveSilence * filter);
 
 /* GObject vmethod implementations */
 
@@ -153,18 +152,6 @@ gst_remove_silence_init (GstRemoveSilence * filter)
     GST_DEBUG ("Error initializing VAD !!");
     return;
   }
-
-  gst_remove_silence_reset (filter);
-}
-
-static void
-gst_remove_silence_reset (GstRemoveSilence * filter)
-{
-  GST_DEBUG ("Reseting VAD");
-  if (filter->vad) {
-    vad_reset (filter->vad);
-  }
-  GST_DEBUG ("VAD Reseted");
 }
 
 static void
@@ -231,7 +218,6 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
   gst_buffer_unmap (inbuf, &map);
 
   if (frame_type == VAD_SILENCE) {
-
     GST_DEBUG ("Silence detected");
 
     if (filter->remove) {
