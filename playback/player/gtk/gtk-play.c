@@ -58,10 +58,12 @@ typedef struct
   GtkWidget *volume_button;
   GtkWidget *media_info_button;
   GtkWidget *repeat_button;
+  GtkWidget *fullscreen_button;
   gulong seekbar_value_changed_signal_id;
   GdkPixbuf *image_pixbuf;
   gboolean playing;
   gboolean loop;
+  gboolean fullscreen;
 } GtkPlay;
 
 enum
@@ -515,6 +517,25 @@ media_info_clicked_cb (GtkButton * button, GtkPlay * play)
 }
 
 static void
+fullscreen_toggle_cb (GtkToggleButton * widget, GtkPlay * play)
+{
+  GtkWidget *image;
+
+  if (gtk_toggle_button_get_active (widget)) {
+    image = gtk_image_new_from_icon_name ("view-restore",
+        GTK_ICON_SIZE_BUTTON);
+    gtk_window_fullscreen (GTK_WINDOW(play->window));
+    gtk_button_set_image (GTK_BUTTON (play->fullscreen_button), image);
+  }
+  else {
+    image = gtk_image_new_from_icon_name ("view-fullscreen",
+        GTK_ICON_SIZE_BUTTON);
+    gtk_window_unfullscreen (GTK_WINDOW(play->window));
+    gtk_button_set_image (GTK_BUTTON (play->fullscreen_button), image);
+  }
+}
+
+static void
 seekbar_value_changed_cb (GtkRange * range, GtkPlay * play)
 {
   gdouble value = gtk_range_get_value (GTK_RANGE (play->seekbar));
@@ -896,6 +917,17 @@ create_ui (GtkPlay * play)
       G_CALLBACK (media_info_clicked_cb), play);
   gtk_widget_set_sensitive (play->media_info_button, FALSE);
 
+  /* Full screen button */
+  play->fullscreen_button = gtk_toggle_button_new ();
+  image = gtk_image_new_from_icon_name ("view-fullscreen",
+      GTK_ICON_SIZE_BUTTON);
+  gtk_button_set_image (GTK_BUTTON (play->fullscreen_button), image);
+  g_signal_connect (G_OBJECT (play->fullscreen_button), "toggled",
+      G_CALLBACK (fullscreen_toggle_cb), play);
+  if (play->fullscreen)
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (play->fullscreen_button),
+        TRUE);
+
   controls = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start (GTK_BOX (controls), play->prev_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->play_pause_button, FALSE,
@@ -906,6 +938,8 @@ create_ui (GtkPlay * play)
   gtk_box_pack_start (GTK_BOX (controls), play->seekbar, TRUE, TRUE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->volume_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->media_info_button,
+      FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (controls), play->fullscreen_button,
       FALSE, FALSE, 2);
 
   main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
@@ -1133,6 +1167,8 @@ main (gint argc, gchar ** argv)
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &file_names,
         "Files to play"},
     {"loop", 'l', 0, G_OPTION_ARG_NONE, &play.loop, "Repeat all"},
+    {"fullscreen", 'f', 0, G_OPTION_ARG_NONE, &play.fullscreen,
+      "Show the player in fullscreen"},
     {NULL}
   };
   guint list_length = 0;
