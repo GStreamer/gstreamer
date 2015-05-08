@@ -57,9 +57,11 @@ typedef struct
   GtkWidget *image_area;
   GtkWidget *volume_button;
   GtkWidget *media_info_button;
+  GtkWidget *repeat_button;
   gulong seekbar_value_changed_signal_id;
   GdkPixbuf *image_pixbuf;
   gboolean playing;
+  gboolean loop;
 } GtkPlay;
 
 enum
@@ -164,6 +166,7 @@ skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
   play->image_pixbuf = NULL;
   gtk_widget_set_sensitive (play->next_button, TRUE);
   gtk_widget_set_sensitive (play->media_info_button, FALSE);
+  gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
   gst_player_set_uri (play->player, prev->data);
   play->current_uri = prev;
   gst_player_play (play->player);
@@ -185,6 +188,7 @@ skip_next_clicked_cb (GtkButton * button, GtkPlay * play)
   play->image_pixbuf = NULL;
   gtk_widget_set_sensitive (play->prev_button, TRUE);
   gtk_widget_set_sensitive (play->media_info_button, FALSE);
+  gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
   gst_player_set_uri (play->player, next->data);
   play->current_uri = next;
   gst_player_play (play->player);
@@ -809,6 +813,7 @@ image_area_draw_cb (GtkWidget * widget, cairo_t * cr, GtkPlay * play)
 static void
 create_ui (GtkPlay * play)
 {
+  GtkWidget *image;
   GtkWidget *controls, *main_hbox, *main_vbox;
 
   play->window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -847,6 +852,7 @@ create_ui (GtkPlay * play)
   play->seekbar =
       gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 100, 1);
   gtk_scale_set_draw_value (GTK_SCALE (play->seekbar), 0);
+  gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
   play->seekbar_value_changed_signal_id =
       g_signal_connect (G_OBJECT (play->seekbar), "value-changed",
       G_CALLBACK (seekbar_value_changed_cb), play);
@@ -867,6 +873,15 @@ create_ui (GtkPlay * play)
       G_CALLBACK (skip_next_clicked_cb), play);
   gtk_widget_set_sensitive (play->next_button, FALSE);
 
+  /* Playlist repeat button */
+  play->repeat_button = gtk_toggle_button_new ();
+  image = gtk_image_new_from_icon_name ("media-playlist-repeat",
+            GTK_ICON_SIZE_BUTTON);
+  gtk_button_set_image (GTK_BUTTON (play->repeat_button), image);
+  if (play->loop)
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (play->repeat_button),
+        TRUE);
+
   /* Volume control button */
   play->volume_button = gtk_volume_button_new ();
   gtk_scale_button_set_value (GTK_SCALE_BUTTON (play->volume_button),
@@ -886,6 +901,8 @@ create_ui (GtkPlay * play)
   gtk_box_pack_start (GTK_BOX (controls), play->play_pause_button, FALSE,
       FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->next_button, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (controls), play->repeat_button,
+      FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->seekbar, TRUE, TRUE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->volume_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->media_info_button,
@@ -939,6 +956,10 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
     gchar *uri;
 
     next = g_list_next (play->current_uri);
+    if (!next && gtk_toggle_button_get_active
+          (GTK_TOGGLE_BUTTON(play->repeat_button)))
+      next = g_list_first (play->uris);
+
     if (next) {
       if (!gtk_widget_is_sensitive (play->prev_button))
         gtk_widget_set_sensitive (play->prev_button, TRUE);
@@ -948,6 +969,7 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
       play->image_pixbuf = NULL;
 
       gtk_widget_set_sensitive (play->media_info_button, FALSE);
+      gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
 
       gst_player_set_uri (play->player, next->data);
       play->current_uri = next;
@@ -1110,6 +1132,7 @@ main (gint argc, gchar ** argv)
   GOptionEntry options[] = {
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &file_names,
         "Files to play"},
+    {"loop", 'l', 0, G_OPTION_ARG_NONE, &play.loop, "Repeat all"},
     {NULL}
   };
   guint list_length = 0;
