@@ -27,7 +27,7 @@
  * @short_description: Get a pipeline from a text pipeline description
  *
  * These function allow to create a pipeline based on the syntax used in the
- * gst-launch utility (see man-page for syntax documentation).
+ * gst-launch-1.0 utility (see man-page for syntax documentation).
  *
  * Please note that these functions take several measures to create
  * somewhat dynamic pipelines. Due to that such pipelines are not always

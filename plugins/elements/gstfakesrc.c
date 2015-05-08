@@ -32,7 +32,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v fakesrc num-buffers=5 ! fakesink
+ * gst-launch-1.0 -v fakesrc num-buffers=5 ! fakesink
  * ]| This pipeline will push 5 empty buffers to the fakesink element and then
  * sends an EOS.
  * </refsect2>

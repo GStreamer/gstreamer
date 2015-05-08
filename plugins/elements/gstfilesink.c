@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch v4l2src num-buffers=1 ! jpegenc ! filesink location=capture1.jpeg
+ * gst-launch-1.0 v4l2src num-buffers=1 ! jpegenc ! filesink location=capture1.jpeg
  * ]| Capture one frame from a v4l2 camera and save as jpeg image.
  * </refsect2>
  */

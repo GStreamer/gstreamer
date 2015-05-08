@@ -37,9 +37,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=song.ogg ! decodebin ! tee name=t ! queue ! autoaudiosink t. ! queue ! audioconvert ! goom ! videoconvert ! autovideosink
- * ]| Play a song.ogg from local dir and render visualisations using the goom
- * element.
+ * gst-launch-1.0 filesrc location=song.ogg ! decodebin ! tee name=t ! queue ! audioconvert ! audioresample ! autoaudiosink t. ! queue ! audioconvert ! goom ! videoconvert ! autovideosink
+ * ]| Play song.ogg audio file which must be in the current working directory
+ * and render visualisations using the goom element (this can be easier done
+ * using the playbin element, this is just an example pipeline).
  * </refsect2>
  */
 

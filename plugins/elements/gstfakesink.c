@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc num-buffers=1000 ! fakesink sync=false
+ * gst-launch-1.0 audiotestsrc num-buffers=1000 ! fakesink sync=false
  * ]| Render 1000 audio buffers (of default size) as fast as possible.
  * </refsect2>
  */
