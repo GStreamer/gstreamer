@@ -2087,6 +2087,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       }
       SCENARIO_UNLOCK (scenario);
 
+      GST_DEBUG_OBJECT (scenario, "Got EOS; generate 'stop' action");
 
       stop_action_type = _find_action_type ("stop");
       stop_action = gst_validate_action_new (scenario, stop_action_type);
