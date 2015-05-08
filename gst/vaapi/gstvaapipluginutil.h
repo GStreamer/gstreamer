@@ -31,7 +31,7 @@
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_ensure_display (gpointer element, GstVaapiDisplayType type);
+gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type);
 
 G_GNUC_INTERNAL
 gboolean

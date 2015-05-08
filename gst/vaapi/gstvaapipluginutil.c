@@ -247,18 +247,14 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
 }
 
 gboolean
-gst_vaapi_ensure_display (gpointer element, GstVaapiDisplayType type)
+gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type)
 {
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element);
   GstVaapiDisplay *display;
-  GstVideoContext *context;
 
-  g_return_val_if_fail (GST_IS_VIDEO_CONTEXT (element), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  context = GST_VIDEO_CONTEXT (element);
-  g_return_val_if_fail (context != NULL, FALSE);
-
-  gst_vaapi_video_context_prepare (context, display_types);
+  gst_vaapi_video_context_prepare (element, display_types);
 
   /* Neighbour found and it updated the display */
   if (gst_vaapi_plugin_base_has_display_type (plugin, type))
@@ -272,7 +268,7 @@ gst_vaapi_ensure_display (gpointer element, GstVaapiDisplayType type)
   if (!display)
     return FALSE;
 
-  gst_vaapi_video_context_propagate (context, display);
+  gst_vaapi_video_context_propagate (element, display);
   GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE (plugin, display);
   gst_vaapi_display_unref (display);
   return TRUE;

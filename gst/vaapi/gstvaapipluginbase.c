@@ -333,7 +333,8 @@ gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin)
     return TRUE;
   gst_vaapi_display_replace (&plugin->display, NULL);
 
-  if (!gst_vaapi_ensure_display (plugin, plugin->display_type_req))
+  if (!gst_vaapi_ensure_display (GST_ELEMENT (plugin),
+          plugin->display_type_req))
     return FALSE;
   plugin->display_type = gst_vaapi_display_get_display_type (plugin->display);
 

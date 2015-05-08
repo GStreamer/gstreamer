@@ -31,12 +31,6 @@
 
 #define GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME "gst.vaapi.Display"
 
-/* Fake GstVideoContext symbols */
-#define GST_VIDEO_CONTEXT(obj)          (GST_ELEMENT (obj))
-#define GST_IS_VIDEO_CONTEXT(obj)       (GST_IS_ELEMENT (obj))
-#define GstVideoContext                 GstElement
-#define gst_video_context_prepare       gst_vaapi_video_context_prepare
-
 G_GNUC_INTERNAL
 GstContext *
 gst_vaapi_video_context_new_with_display (GstVaapiDisplay * display,
