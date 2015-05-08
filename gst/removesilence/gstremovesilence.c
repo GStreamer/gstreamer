@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m filesrc location="audiofile" ! decodebin2 ! removesilence remove=true ! wavenc ! filesink location=without_audio.wav 
+ * gst-launch -v -m filesrc location="audiofile" ! decodebin ! removesilence remove=true ! wavenc ! filesink location=without_audio.wav
  * ]|
  * </refsect2>
  */
