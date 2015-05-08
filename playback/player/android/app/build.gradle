@@ -1,3 +1,5 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
 apply plugin: 'com.android.application'
 
 android {
@@ -57,7 +59,12 @@ android {
             environment PATH: "${System.getenv("PATH")}${File.pathSeparator}${ndkExtraPath}"
         }
 
-        commandLine "${ndkDir}/ndk-build", '-C', file('src/main/jni').absolutePath //, 'V=1' // Enable V=1 for debugging messages.
+        // Enable V=1 for debugging messages.
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            commandLine "${ndkDir}/ndk-build.cmd", '-C', file('src/main/jni').absolutePath //, 'V=1'
+        } else {
+            commandLine "${ndkDir}/ndk-build", '-C', file('src/main/jni').absolutePath //, 'V=1'
+        }
     }
 }
 
