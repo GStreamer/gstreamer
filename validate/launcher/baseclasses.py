@@ -323,6 +323,16 @@ class Test(Loggable):
             self.hard_timeout *= VALGRIND_TIMEOUT_FACTOR
         self.timeout *= VALGRIND_TIMEOUT_FACTOR
 
+        # Enable 'valgrind.config'
+        vg_config = get_data_file('data', 'valgrind.config')
+
+        if self.proc_env.get('GST_VALIDATE_CONFIG'):
+            self.proc_env['GST_VALIDATE_CONFIG'] = '%s%s%s' % (self.proc_env['GST_VALIDATE_CONFIG'], os.pathsep, vg_config)
+        else:
+            self.proc_env['GST_VALIDATE_CONFIG'] = vg_config
+
+        self.add_env_variable('GST_VALIDATE_CONFIG', self.proc_env['GST_VALIDATE_CONFIG'])
+
     def test_start(self, queue):
         self.open_logfile()
 

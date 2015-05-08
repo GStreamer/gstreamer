@@ -29,6 +29,8 @@
 #include "gst-validate-element-monitor.h"
 #include "gst-validate-pad-monitor.h"
 #include "gst-validate-monitor-factory.h"
+#include "gst-validate-utils.h"
+#include "validate.h"
 #include <string.h>
 
 /**
@@ -186,6 +188,39 @@ gst_validate_element_monitor_inspect (GstValidateElementMonitor * monitor)
     GST_ERROR_OBJECT (element, "no klassname");
 }
 
+static void
+set_config_properties (GstValidateMonitor * monitor, GstElement * element)
+{
+  GList *config, *l;
+
+  config = gst_validate_plugin_get_config (NULL);
+  for (l = config; l != NULL; l = g_list_next (l)) {
+    GstStructure *s = l->data;
+    const gchar *klass;
+    const gchar *prop_name;
+    const GValue *prop_value;
+
+    if (g_strcmp0 (gst_structure_get_string (s, "action"), "set-property") != 0)
+      continue;
+
+    klass = gst_structure_get_string (s, "target-element-klass");
+    if (klass && !gst_validate_element_has_klass (element, klass))
+      continue;
+
+    prop_name = gst_structure_get_string (s, "property-name");
+    if (!prop_name
+        || !g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+            prop_name))
+      continue;
+
+    prop_value = gst_structure_get_value (s, "property-value");
+    if (!prop_value)
+      continue;
+
+    g_object_set_property (G_OBJECT (element), prop_name, prop_value);
+  }
+}
+
 static gboolean
 gst_validate_element_monitor_do_setup (GstValidateMonitor * monitor)
 {
@@ -244,6 +279,9 @@ gst_validate_element_monitor_do_setup (GstValidateMonitor * monitor)
     }
   }
   gst_iterator_free (iterator);
+
+  set_config_properties (monitor, element);
+
   return TRUE;
 }
 
