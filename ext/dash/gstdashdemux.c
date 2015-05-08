@@ -619,7 +619,7 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
     GST_DEBUG_OBJECT (demux, "Seeking to first segment for on-demand stream ");
 
     /* start playing from the first segment */
-    gst_mpd_client_set_segment_index_for_all_streams (dashdemux->client, 0);
+    gst_mpd_client_seek_to_first_segment (dashdemux->client);
   }
 
 done:
@@ -1301,7 +1301,7 @@ gst_dash_demux_advance_period (GstAdaptiveDemux * demux)
   }
 
   gst_dash_demux_setup_all_streams (dashdemux);
-  gst_mpd_client_set_segment_index_for_all_streams (dashdemux->client, 0);
+  gst_mpd_client_seek_to_first_segment (dashdemux->client);
 }
 
 static GstBuffer *

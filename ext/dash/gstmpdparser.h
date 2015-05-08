@@ -456,7 +456,8 @@ struct _GstActiveStream
   GstSegmentBaseType *cur_segment_base;       /* active segment base */
   GstSegmentListNode *cur_segment_list;       /* active segment list */
   GstSegmentTemplateNode *cur_seg_template;   /* active segment template */
-  guint segment_idx;                          /* index of next sequence chunk */
+  guint segment_index;                        /* index of next sequence chunk */
+  guint segment_repeat_index;                 /* index of the repeat count of a segment */
   GPtrArray *segments;                        /* array of GstMediaSegment */
   GstClockTime presentationTimeOffset;        /* presentation time offset of the current segment */
 };
@@ -538,6 +539,7 @@ void gst_mpd_client_set_segment_index_for_all_streams (GstMpdClient * client, gu
 guint gst_mpd_client_get_segment_index (GstActiveStream * stream);
 void gst_mpd_client_set_segment_index (GstActiveStream * stream, guint segment_idx);
 GstFlowReturn gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream, gboolean forward);
+void gst_mpd_client_seek_to_first_segment (GstMpdClient * client);
 
 /* Get audio/video stream parameters (mimeType, width, height, rate, number of channels) */
 const gchar *gst_mpd_client_get_stream_mimeType (GstActiveStream * stream);
