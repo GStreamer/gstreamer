@@ -13,8 +13,9 @@
     </releaseinfo>
   </bookinfo>
 
-  <chapter>
+  <chapter id="overview">
     <title>Overview and usage</title>
+    <sect1>
     <para>
       GstValidate is a tool that allows GStreamer developers to check
       that the GstElements they write behave the way they are supposed to.
@@ -25,27 +26,33 @@
     <para>
       GstValidate implements a monitoring logic that allows the system to check
       that the elements of a GstPipeline respect some rules GStreamer components
-      have to follow so that elements can properly interact together.
+      have to follow to make them properly interact together.
       For example, a GstValidatePadMonitor will make sure that if we receive a GstSegment
       from upstream, an equivalent segment is sent downstream before any buffer gets out.
     </para>
     <para>
       Then GstValidate implements a reporting system that allows users to
-      get detailed informations about what was not properly handle in elements.
-      The reports are order by level of importance from "issue" to "critical".
+      get detailed informations about what was not properly handled by the elements.
+      The generated reports are ordered by level of importance from "issue" to "critical".
     </para>
     <para>
-      Some tools have been implemented to help the developer validate and test
-      their GstElement, you can have a look at the command line tools section to find more information
+      Some tools have been implemented to help developers validate and test
+      their GstElement, you can have a look at the <link linkend="command-line-tools">command line tools section</link>
+      to find more information.
     </para>
     <para>
-      On top of those tools, the notion of
-      scenario has been implemented so that developers can easily execute a set
-      of actions on pipelines and thus test real world interactive cases and reproduce existing
+      On top of that, the notion of a <link linkend="scenarios">validation
+      scenario</link> has been implemented so that developers can easily execute a set
+      of actions on pipelines to test real world interactive cases and reproduce existing
       issues in a convenient way.
     </para>
+    </sect1>
 
-    <xi:include href="command-line-tools.xml"/>
+    <xi:include href="gst-validate.xml"/>
+    <xi:include href="gst-validate-transcoding.xml"/>
+    <xi:include href="gst-validate-media-check.xml"/>
+    <xi:include href="gst-validate-launcher.xml"/>
+
     <xi:include href="scenarios.xml"/>
     <xi:include href="envvariables.xml"/>
   </chapter>

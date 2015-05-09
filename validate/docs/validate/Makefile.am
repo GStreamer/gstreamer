@@ -77,7 +77,7 @@ IGNORE_CFILES = \
 # HTML_IMAGES = gdp-header.png
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
-content_files = scenarios.xml command-line-tools.xml envvariables.xml
+content_files = gst-validate.xml gst-validate-transcoding.xml gst-validate-media-check.xml gst-validate-launcher.xml envvariables.xml scenarios.xml
 
 # Other files to distribute.
 extra_files =

@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+<refentry id="gst-validate-media-check">
+  <refentryinfo>
+    <author>
+      <othername>The GstValidate team</othername>
+      <personblurb>see http://cgit.freedesktop.org/gstreamer/gst-devtools/</personblurb>
+    </author>
+    <productname>gst-validate</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>gst-validate-media-check</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="source">GstValidate</refmiscinfo>
+    <refmiscinfo class="version">&GST_API_VERSION;</refmiscinfo>
+    <refmiscinfo class="manual">GstValidate Manual Pages</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>gst-validate-media-check</refname>
+    <refpurpose>Tool to test GStreamer media types discovery</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>gst-validate-media-check</command>
+      <arg choice="opt" rep="repeat">options</arg>
+      <arg choice="opt">URI</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <command>gst-validate-media-check</command> is command line tool checking that media files discovering works
+      properly with <command>gst-discoverer</command> over multiple runs. It needs a reference text file containing
+      valid information about a media file (which can be generated with the same tool) and then it will be able to check
+      that the reference matches what will be reported by <command>gst-discoverer</command> in the following runs.
+    </para>
+    <para>
+      For example, given that we have a valid <filename>reference.media_info</filename> file, we can run:
+    </para>
+    <informalexample>
+      <programlisting>gst-validate-media-check-&GST_API_VERSION; file:///./file.ogv --expected-results reference.media_info</programlisting>
+    </informalexample>
+    <para>
+      It will then output any error encountered and return an exit code different from 0 if any error is found.
+    </para>
+  </refsect1>
+
+  <refsect1><title>Invocation</title>
+    <para>
+      <command>gst-validate-media-check</command> takes an URI to analyze
+      and some extra options to control the output.
+    </para>
+
+    <refsect2 id="gst-validate-media-check.options"><title>Options</title>
+      <variablelist>
+
+        <varlistentry>
+          <term><option>-o</option>, <option>--output-file</option></term>
+          <listitem><para>
+              The output file to store the results.
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-f</option>, <option>--full</option></term>
+          <listitem><para>
+              Fully analize the file frame by frame.
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-e</option>, <option>--expected-results</option></term>
+          <listitem><para>
+              Path to file containing the expected results (or the last results found) for comparison with new results.
+          </para></listitem>
+        </varlistentry>
+
+      </variablelist>
+    </refsect2>
+  </refsect1>
+</refentry>

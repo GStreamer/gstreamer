@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+<refentry id="gst-validate">
+  <refentryinfo>
+    <author>
+      <othername>The GstValidate team</othername>
+      <personblurb>see http://cgit.freedesktop.org/gstreamer/gst-devtools/</personblurb>
+    </author>
+    <productname>gst-validate</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>gst-validate</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="source">GstValidate</refmiscinfo>
+    <refmiscinfo class="version">&GST_API_VERSION;</refmiscinfo>
+    <refmiscinfo class="manual">GstValidate Manual Pages</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>gst-validate</refname>
+    <refpurpose>Tool to test GStreamer components</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>gst-validate</command>
+      <arg choice="opt" rep="repeat">options</arg>
+      <arg choice="plain">PIPELINE-DESCRIPTION</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <command>gst-validate</command> is the simplest <command>gst-launch</command>-like pipeline launcher
+      running inside GstValidate monitoring infrastructure.  Monitors are added to it to identify issues in the
+      used elements. At the end it will print a report with some information
+      about all the issues encountered during its run.  To view issues as they are detected, set the environment
+      variable <code language="shell">GST_DEBUG=validate:2</code> and they will get printed in the GStreamer debug log.
+      You can basically run any <link linkend="GstPipeline"><type>GstPipeline</type></link> pipeline using this tool.
+      If you are not familiar with <command>gst-launch</command> syntax, please refer to
+      <command>gst-launch</command>'s documentation.
+    </para>
+    <para>
+      Simple playback pipeline:
+    </para>
+    <informalexample>
+      <programlisting>gst-validate-1.0 playbin uri=file:///path/to/some/media/file</programlisting>
+    </informalexample>
+    <para>
+      Transcoding pipeline:
+    </para>
+    <informalexample>
+      <programlisting>gst-validate-1.0 filesrc location=/media/file/location ! qtdemux name=d ! queue \
+        ! x264enc ! h264parse ! mpegtsmux name=m ! progressreport \
+        ! filesink location=/root/test.ts d. ! queue ! faac ! m.</programlisting>
+    </informalexample>
+    <para>
+      It will list each issue that has been encountered during the execution of the specified pipeline in a human readable report like:
+    </para>
+    <informalexample>
+      <literallayout><computeroutput>issue : buffer is out of the segment range Detected on theoradec0.srcpad at 0:00:00.096556426
+
+Details : buffer is out of segment and shouldn't be pushed. Timestamp: 0:00:25.000 - duration: 0:00:00.040 Range: 0:00:00.000 - 0:00:04.520
+Description : buffer being pushed is out of the current segment's start-stop  range. Meaning it is going to be discarded downstream without any use</computeroutput></literallayout>
+    </informalexample>
+    <para>
+      The return code of the process will be 18 in case a <literal>CRITICAL</literal> issue has been found.
+    </para>
+  </refsect1>
+
+  <refsect1><title>Invocation</title>
+    <para>
+      <command>gst-validate</command> takes a mandatory description of the
+      pipeline to launch, similar to <command>gst-launch</command>, and
+      some extra options.
+    </para>
+
+    <refsect2 id="gst-validate.options"><title>Options</title>
+      <variablelist>
+
+        <varlistentry>
+          <term><option>--set-scenario</option></term>
+          <listitem><para>
+               Let you set a scenario, it can be a full path to a scenario file
+               or the name of the scenario (name of the file without the
+               <filename>.scenario</filename> extension).
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-l</option>, <option>--list-scenarios</option></term>
+          <listitem><para>
+              List the avalaible scenarios that can be run.
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>--scenarios-defs-output-file</option></term>
+          <listitem><para>
+              The output file to store scenarios details. Implies <option>--list-scenario</option>.
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-t</option>, <option>--inspect-action-type</option></term>
+          <listitem><para>
+              Inspect the avalaible action types with which to write scenarios
+              if no parameter passed, it will list all avalaible action types
+              otherwize will print the full description of the wanted types.
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>--set-media-info</option></term>
+          <listitem><para>
+              Set a media_info XML file descriptor to share information about the media file that will be reproduced.
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>--set-configs</option></term>
+          <listitem><para>
+              Let you set a config scenario. The scenario needs to be set as
+              <literal>config</literal>. You can specify a list of scenarios
+              separated by "<literal>:</literal>". It will override the
+              <envar>GST_VALIDATE_SCENARIO</envar> environment variable.
+          </para></listitem>
+        </varlistentry>
+
+      </variablelist>
+    </refsect2>
+  </refsect1>
+</refentry>

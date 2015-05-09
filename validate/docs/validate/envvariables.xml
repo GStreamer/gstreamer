@@ -4,21 +4,12 @@
 <!ENTITY % version-entities SYSTEM "version.entities">
 %version-entities;
 ]>
-<refentry id="envvariables" revision="4 Sept 2014">
-  <refmeta>
-    <refentrytitle>GstValidate environment variables</refentrytitle>
-    <manvolnum>1</manvolnum>
-    <refmiscinfo>GstValidate</refmiscinfo>
-  </refmeta>
-  <refnamediv>
-    <refname>GstValidate environment variables</refname>
-    <refpurpose>The environment variable variable influencing the run of GstValidate</refpurpose>
-  </refnamediv>
+<sect1 id="envvariables" revision="20 Apr 2015">
+  <title>GstValidate Environment Variables</title>
 
-  <refsect1>
-    <para>
-       The runtime behaviour of GstValidate applications can be influenced by a number of environment variables. 
-    </para>
+  <para>
+     The runtime behaviour of GstValidate applications can be influenced by a number of environment variables.
+  </para>
 
 <formalpara id="GST-VALIDATE:CAPS">
   <title><envar>GST_VALIDATE</envar></title>
@@ -72,7 +63,7 @@
   </para>
 
   <para>
-    You can use the special names "stdout" and "stderr" to use those output.
+    You can use the special names <literal>stdout</literal> and <literal>stderr</literal> to use those output.
   </para>
 </formalpara>
 
@@ -84,7 +75,8 @@
     scan these paths for GstValidate scenario files.
 
     By default GstValidate will look for scenarios in the user data directory as
-    specified in the XDG standard: <filename>.local/share/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
+    specified in the <ulink url="http://www.freedesktop.org/wiki/Software/xdg-user-dirs/">XDG standard</ulink>:
+    <filename>.local/share/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
     and the system wide user data directory: <filename>/usr/lib/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
   </para>
 </formalpara>
@@ -93,11 +85,12 @@
   <title><envar>GST_VALIDATE_OVERRIDE</envar></title>
 
   <para>
-    Set this variable to a to a colon-separated list of dynamically linkable files. GstValidate will
-    scan these paths for GstValidate overrides
+    Set this variable to a colon-separated list of dynamically linkable files that GstValidate will
+    scan looking for overrides.
 
     By default GstValidate will look for scenarios in the user data directory as
-    specified in the XDG standard: <filename>.local/share/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
+    specified in the <ulink url="http://www.freedesktop.org/wiki/Software/xdg-user-dirs/">XDG standard</ulink>:
+    <filename>.local/share/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
     and the system wide user data directory: <filename>/usr/lib/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
   </para>
 </formalpara>
@@ -107,7 +100,7 @@
 
   <para>
       A decimal number to set as a multiplier for the wait actions. For example if you set
-      GST_VALIDATE_SCENARIO_WAIT_MULITPLIER=0.5, for a wait action that has a duration of 2.0
+      <literal>GST_VALIDATE_SCENARIO_WAIT_MULITPLIER=0.5</literal>, for a wait action that has a duration of 2.0
       the waiting time will only be of 1.0 second. If set to 0, wait action will be ignored.
   </para>
 </formalpara>
@@ -116,9 +109,9 @@
   <title><envar>GST_VALIDATE_REPORTING_DETAILS</envar></title>
 
   <para>
-      The reporting level can be set through the "GST_VALIDATE_REPORTING_DETAILS"
-      environment variable, as  a comma-separated list of (optional) object categories / names
-      and levels. No object category / name sets the global level.
+    The reporting level can be set through the <envar>GST_VALIDATE_REPORTING_DETAILS</envar>
+      environment variable, as a comma-separated list of (optional) object categories / names
+      and levels. Omit the object category / name to set the global level.
 
     <informalexample>
       Examples:
@@ -153,7 +146,7 @@
         <listitem>
           <para>
             If set as the default level, similar issues can be reported multiple times for
-            different subchains.  If set as the level for a particular object (my_object:subchain),
+            different subchains.  If set as the level for a particular object (<literal>my_object:subchain</literal>),
             validate will report the issues where the object is the first to report an issue for
             a subchain.
           </para>
@@ -181,16 +174,15 @@
         <listitem>
           <para>
              All the issues will be reported, even those
-             that repeat themselves inside the same object. This can be *very* verbose if
+             that repeat themselves inside the same object. This can be <emphasis role="bold">very</emphasis> verbose if
              set globally.
           </para>
         </listitem>
       </varlistentry>
     </variablelist>
    Setting the reporting level allows to control the way issues are reported
-   when calling #gst_validate_runner_printf.
+   when calling <function>gst_validate_runner_printf()</function>.
   </para>
 </formalpara>
 
-  </refsect1>
-</refentry>
+</sect1>
