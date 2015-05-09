@@ -36,9 +36,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! audio/x-raw, rate=8000 ! alsasink
- * ]| Decode an Ogg/Vorbis downsample to 8Khz and play sound through alsa.
+ * gst-launch-1.0 -v uridecodebin uri=file:///path/to/audio.ogg ! audioconvert ! audioresample ! audio/x-raw, rate=8000 ! autoaudiosink
+ * ]| Decode an audio file and downsample it to 8Khz and play sound.
  * To create the Ogg/Vorbis file refer to the documentation of vorbisenc.
+ * This assumes there is an audio sink that will accept/handle 8kHz audio.
  * </refsect2>
  */
 

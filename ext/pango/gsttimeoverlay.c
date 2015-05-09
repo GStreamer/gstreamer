@@ -30,11 +30,10 @@
  *
  * <refsect2>
  * |[
- * gst-launch -v videotestsrc ! timeoverlay ! xvimagesink
- * ]| Display the time stamps in the top left
- * corner of the video picture.
+ * gst-launch-1.0 -v videotestsrc ! timeoverlay ! autovideosink
+ * ]| Display the time stamps in the top left corner of the video picture.
  * |[
- * gst-launch -v videotestsrc ! timeoverlay halign=right valign=bottom text="Stream time:" shaded-background=true ! xvimagesink
+ * gst-launch-1.0 -v videotestsrc ! timeoverlay halignment=right valignment=bottom text="Stream time:" shaded-background=true font-desc="Sans, 24" ! autovideosink
  * ]| Another pipeline that displays the time stamps with some leading
  * text in the bottom right corner of the video picture, with the background
  * of the text being shaded in order to make it more legible on top of a

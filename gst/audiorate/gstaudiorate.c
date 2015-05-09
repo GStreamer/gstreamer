@@ -51,9 +51,15 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v alsasrc ! audiorate ! wavenc ! filesink location=alsa.wav
- * ]| Capture audio from an ALSA device, and turn it into a perfect stream
+ * gst-launch-1.0 -v autoaudiosrc ! audiorate ! audioconvert ! wavenc ! filesink location=alsa.wav
+ * ]| Capture audio from the sound card and turn it into a perfect stream
  * for saving in a raw audio file.
+ * |[
+ * gst-launch-1.0 -v uridecodebin uri=file:///path/to/audio.file ! audiorate ! audioconvert ! wavenc ! filesink location=alsa.wav
+ * ]| Decodes an audio file and transforms it into a perfect stream for saving
+ * in a raw audio WAV file. Without the audio rate, the timing might not be
+ * preserved correctly in the WAV file in case the decoded stream is jittery
+ * or there are samples missing.
  * </refsect2>
  */
 

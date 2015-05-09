@@ -48,15 +48,15 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=input.xyz ! giosink location=file:///home/joe/out.xyz
+ * gst-launch-1.0 -v filesrc location=input.xyz ! giosink location=file:///home/joe/out.xyz
  * ]| The above pipeline will simply copy a local file. Instead of giosink,
  * we could just as well have used the filesink element here.
  * |[
- * gst-launch -v filesrc location=foo.mp3 ! mad ! flacenc ! giosink location=smb://othercomputer/foo.flac
- * ]| The above pipeline will re-encode an mp3 file into FLAC format and store
+ * gst-launch-1.0 -v uridecodebin uri=file:///path/to/audio.file ! audioconvert ! flacenc ! giosink location=smb://othercomputer/foo.flac
+ * ]| The above pipeline will re-encode an audio file into FLAC format and store
  * it on a remote host using the Samba protocol.
  * |[
- * gst-launch -v audiotestsrc num-buffers=100 ! vorbisenc ! oggmux ! giosink location=file:///home/foo/bar.ogg
+ * gst-launch-1.0 -v audiotestsrc num-buffers=100 ! vorbisenc ! oggmux ! giosink location=file:///home/foo/bar.ogg
  * ]| The above pipeline will encode a 440Hz sine wave to Ogg Vorbis and stores
  * it in the home directory of user foo.
  * </refsect2>
@@ -65,7 +65,7 @@
 /* FIXME: We would like to mount the enclosing volume of an URL
  *        if it isn't mounted yet but this is possible async-only.
  *        Unfortunately this requires a running main loop from the
- *        default context and we can't guarantuee this!
+ *        default context and we can't guarantee this!
  *
  *        We would also like to do authentication while mounting.
  */

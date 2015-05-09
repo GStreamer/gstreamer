@@ -45,7 +45,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v videotestsrc num-buffers=1000 ! theoraenc ! oggmux ! filesink location=videotestsrc.ogg
+ * gst-launch-1.0 -v videotestsrc num-buffers=500 ! video/x-raw,width=1280,height=720 ! queue ! progressreport ! theoraenc ! oggmux ! filesink location=videotestsrc.ogg
  * ]| This example pipeline will encode a test video source to theora muxed in an
  * ogg container. Refer to the theoradec documentation to decode the create
  * stream.

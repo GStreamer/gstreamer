@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m audiotestsrc ! volume volume=0.5 ! level ! fakesink silent=TRUE
+ * gst-launch-1.0 -v -m audiotestsrc ! volume volume=0.5 ! level ! fakesink silent=TRUE
  * ]| This pipeline shows that the level of audiotestsrc has been halved
  * (peak values are around -6 dB and RMS around -9 dB) compared to
  * the same pipeline without the volume element.

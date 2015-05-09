@@ -40,11 +40,11 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch -v videotestsrc ! textoverlay text="Room A" valign=top halign=left ! xvimagesink
+ * gst-launch-1.0 -v gst-launch-1.0 videotestsrc ! textoverlay text="Room A" valignment=top halignment=left font-desc="Sans, 72" ! autovideosink
  * ]| Here is a simple pipeline that displays a static text in the top left
  * corner of the video picture
  * |[
- * gst-launch -v filesrc location=subtitles.srt ! subparse ! txt.   videotestsrc ! timeoverlay ! textoverlay name=txt shaded-background=yes ! xvimagesink
+ * gst-launch-1.0 -v filesrc location=subtitles.srt ! subparse ! txt.   videotestsrc ! timeoverlay ! textoverlay name=txt shaded-background=yes ! autovideosink
  * ]| Here is another pipeline that displays subtitles from an .srt subtitle
  * file, centered at the bottom of the picture and with a rectangular shading
  * around the text in the background:
@@ -66,15 +66,6 @@
  * Uh? What are you talking about?
  * I don&apos;t understand  (18-62s)
  * ]|
- * One can also feed arbitrary live text into the element:
- * |[
- * gst-launch fdsrc fd=0 ! text/x-raw,format=utf8 ! txt. videotestsrc ! \
- * textoverlay  name=txt shaded-background=yes font-desc="Serif 40" wait-text=false ! \
- * xvimagesink
- * ]| This shows new text as entered on the terminal (stdin). This is not suited
- * for subtitles as the test overlay is not timed. Subtitles should use
- * timestamped formats. For the above use case one can also read the text from
- * the application as set the #GstTextOverlay:text property.
  * </para>
  * </refsect2>
  */

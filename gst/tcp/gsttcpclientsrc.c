@@ -30,7 +30,7 @@
  * # server:
  * nc -l -p 3000
  * # client:
- * gst-launch tcpclientsrc port=3000 ! fdsink fd=2
+ * gst-launch-1.0 tcpclientsrc port=3000 ! fdsink fd=2
  * ]| everything you type in the server is shown on the client
  * </refsect2>
  */

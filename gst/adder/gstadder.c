@@ -29,10 +29,14 @@
  * The adder currently mixes all data received on the sinkpads as soon as
  * possible without trying to synchronize the streams.
  *
+ * Check out the audiomixer element in gst-plugins-bad for a better-behaving
+ * audio mixing element: It will sync input streams correctly and also handle
+ * live inputs properly.
+ *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc freq=100 ! adder name=mix ! audioconvert ! alsasink audiotestsrc freq=500 ! mix.
+ * gst-launch-1.0 audiotestsrc freq=100 ! adder name=mix ! audioconvert ! autoaudiosink audiotestsrc freq=500 ! mix.
  * ]| This pipeline produces two sine waves mixed together.
  * </refsect2>
  */

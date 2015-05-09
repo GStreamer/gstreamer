@@ -34,15 +34,14 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoconvert ! videoscale ! ximagesink
- * ]| Decode an Ogg/Theora and display the video using ximagesink. Since
- * ximagesink cannot perform scaling, the video scaling will be performed by
- * videoscale when you resize the video window.
+ * gst-launch-1.0 -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoconvert ! videoscale ! autovideosink
+ * ]| Decode an Ogg/Theora and display the video. If the video sink chosen
+ * cannot perform scaling, the video scaling will be performed by videoscale
+ * when you resize the video window.
  * To create the test Ogg/Theora file refer to the documentation of theoraenc.
  * |[
- * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoscale ! video/x-raw, width=50 ! xvimagesink
- * ]| Decode an Ogg/Theora and display the video using xvimagesink with a width
- * of 50.
+ * gst-launch-1.0 -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoconvert ! videoscale ! video/x-raw,width=100 ! autovideosink
+ * ]| Decode an Ogg/Theora and display the video with a width of 100.
  * </refsect2>
  */
 

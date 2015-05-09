@@ -43,11 +43,11 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=video.ogg ! oggdemux ! theoraparse ! fakesink
+ * gst-launch-1.0 -v filesrc location=video.ogg ! oggdemux ! theoraparse ! fakesink
  * ]| This pipeline shows that the streamheader is set in the caps, and that each
  * buffer has the timestamp, duration, offset, and offset_end set.
  * |[
- * gst-launch filesrc location=video.ogg ! oggdemux ! theoraparse \
+ * gst-launch-1.0 filesrc location=video.ogg ! oggdemux ! theoraparse \
  *            ! oggmux ! filesink location=video-remuxed.ogg
  * ]| This pipeline shows remuxing. video-remuxed.ogg might not be exactly the same
  * as video.ogg, but they should produce exactly the same decoded data.

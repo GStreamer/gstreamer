@@ -28,8 +28,8 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=test.ogg ! oggdemux ! vorbisdec ! audioconvert ! alsasink
- * ]| Decodes the vorbis audio stored inside an ogg container.
+ * gst-launch-1.0 -v filesrc location=test.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! autoaudiosink
+ * ]| Decodes a vorbis audio stream stored inside an ogg container and plays it.
  * </refsect2>
  */
 

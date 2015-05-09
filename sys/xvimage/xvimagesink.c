@@ -73,17 +73,20 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v videotestsrc ! xvimagesink
+ * gst-launch-1.0 -v videotestsrc ! xvimagesink
  * ]| A pipeline to test hardware scaling.
  * When the test video signal appears you can resize the window and see that
- * video frames are scaled through hardware (no extra CPU cost).
+ * video frames are scaled through hardware (no extra CPU cost). By default
+ * the image will never be distorted when scaled, instead black borders will
+ * be added if needed.
  * |[
- * gst-launch -v videotestsrc ! xvimagesink force-aspect-ratio=true
- * ]| Same pipeline with #GstXvImageSink:force-aspect-ratio property set to true
- * You can observe the borders drawn around the scaled image respecting aspect
- * ratio.
+ * gst-launch-1.0 -v videotestsrc ! xvimagesink force-aspect-ratio=false
+ * ]| Same pipeline with #GstXvImageSink:force-aspect-ratio property set to
+ * false. You can observe that no borders are drawn around the scaled image
+ * now and it will be distorted to fill the entire frame instead of respecting
+ * the aspect ratio.
  * |[
- * gst-launch -v videotestsrc ! navigationtest ! xvimagesink
+ * gst-launch-1.0 -v videotestsrc ! navigationtest ! xvimagesink
  * ]| A pipeline to test navigation events.
  * While moving the mouse pointer over the test signal you will see a black box
  * following the mouse pointer. If you press the mouse button somewhere on the
@@ -95,15 +98,14 @@
  * position. This also handles borders correctly, limiting coordinates to the
  * image area
  * |[
- * gst-launch -v videotestsrc ! video/x-raw, pixel-aspect-ratio=(fraction)4/3 ! xvimagesink
+ * gst-launch-1.0 -v videotestsrc ! video/x-raw, pixel-aspect-ratio=4/3 ! xvimagesink
  * ]| This is faking a 4/3 pixel aspect ratio caps on video frames produced by
  * videotestsrc, in most cases the pixel aspect ratio of the display will be
  * 1/1. This means that XvImageSink will have to do the scaling to convert
  * incoming frames to a size that will match the display pixel aspect ratio
- * (from 320x240 to 320x180 in this case). Note that you might have to escape
- * some characters for your shell like '\(fraction\)'.
+ * (from 320x240 to 320x180 in this case).
  * |[
- * gst-launch -v videotestsrc ! xvimagesink hue=100 saturation=-100 brightness=100
+ * gst-launch-1.0 -v videotestsrc ! xvimagesink hue=100 saturation=-100 brightness=100
  * ]| Demonstrates how to use the colorbalance interface.
  * </refsect2>
  */

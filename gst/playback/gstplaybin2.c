@@ -199,18 +199,18 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v playbin uri=file:///path/to/somefile.avi
+ * gst-launch-1.0 -v playbin uri=file:///path/to/somefile.mp4
  * ]| This will play back the given AVI video file, given that the video and
  * audio decoders required to decode the content are installed. Since no
- * special audio sink or video sink is supplied (not possible via gst-launch),
- * playbin will try to find a suitable audio and video sink automatically
- * using the autoaudiosink and autovideosink elements.
+ * special audio sink or video sink is supplied (via playbin's audio-sink or
+ * video-sink properties) playbin will try to find a suitable audio and
+ * video sink automatically using the autoaudiosink and autovideosink elements.
  * |[
- * gst-launch -v playbin uri=cdda://4
+ * gst-launch-1.0 -v playbin uri=cdda://4
  * ]| This will play back track 4 on an audio CD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
  * |[
- * gst-launch -v playbin uri=dvd://
+ * gst-launch-1.0 -v playbin uri=dvd://
  * ]| This will play back the DVD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
  * </refsect2>

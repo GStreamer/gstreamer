@@ -74,14 +74,14 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v videotestsrc ! queue ! ximagesink
+ * gst-launch-1.0 -v videotestsrc ! queue ! ximagesink
  * ]| A pipeline to test reverse negotiation. When the test video signal appears
  * you can resize the window and see that scaled buffers of the desired size are
  * going to arrive with a short delay. This illustrates how buffers of desired
  * size are allocated along the way. If you take away the queue, scaling will
  * happen almost immediately.
  * |[
- * gst-launch -v videotestsrc ! navigationtest ! videoconvert ! ximagesink
+ * gst-launch-1.0 -v videotestsrc ! navigationtest ! videoconvert ! ximagesink
  * ]| A pipeline to test navigation events.
  * While moving the mouse pointer over the test signal you will see a black box
  * following the mouse pointer. If you press the mouse button somewhere on the 
@@ -89,7 +89,7 @@
  * the button and a red one where you released it. (The navigationtest element
  * is part of gst-plugins-good.)
  * |[
- * gst-launch -v videotestsrc ! video/x-raw, pixel-aspect-ratio=(fraction)4/3 ! videoscale ! ximagesink
+ * gst-launch-1.0 -v videotestsrc ! video/x-raw, pixel-aspect-ratio=(fraction)4/3 ! videoscale ! ximagesink
  * ]| This is faking a 4/3 pixel aspect ratio caps on video frames produced by
  * videotestsrc, in most cases the pixel aspect ratio of the display will be
  * 1/1. This means that videoscale will have to do the scaling to convert 

@@ -28,8 +28,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! video/x-raw,format=\(string\)YUY2 ! videoconvert ! ximagesink
- * ]|
+ * gst-launch-1.0 -v videotestsrc ! video/x-raw,format=YUY2 ! videoconvert ! autovideosink
+ * ]| This will output a test video (generated in YUY2 format) in a video
+ * window. If the video sink selected does not support YUY2 videoconvert will
+ * automatically convert the video to a format understood by the video sink.
  * </refsect2>
  */
 

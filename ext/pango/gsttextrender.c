@@ -34,7 +34,7 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch -v filesrc location=subtitles.srt ! subparse ! textrender ! xvimagesink
+ * gst-launch-1.0 -v filesrc location=subtitles.srt ! subparse ! textrender ! videoconvert ! autovideosink
  * ]|
  * </refsect2>
  */

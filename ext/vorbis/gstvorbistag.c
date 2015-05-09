@@ -37,8 +37,8 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=foo.ogg ! oggdemux ! vorbistag ! oggmux ! filesink location=bar.ogg
- * ]| This element is not useful with gst-launch, because it does not support
+ * gst-launch-1.0 -v filesrc location=foo.ogg ! oggdemux ! vorbistag ! oggmux ! filesink location=bar.ogg
+ * ]| This element is not useful with gst-launch-1.0, because it does not support
  * setting the tags on a #GstTagSetter interface. Conceptually, the element
  * will usually be used in this order though.
  * </refsect2>

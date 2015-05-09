@@ -32,9 +32,9 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! xvimagesink
- * ]| This example pipeline will decode an ogg stream and decodes the theora video. Refer to
- * the theoraenc example to create the ogg file.
+ * gst-launch-1.0 -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoconvert ! videoscale ! autovideosink
+ * ]| This example pipeline will decode an ogg stream and decodes the theora video in it.
+ * Refer to the theoraenc example to create the ogg file.
  * </refsect2>
  */
 
