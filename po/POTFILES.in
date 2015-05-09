@@ -10,6 +10,7 @@ gst/audioparsers/gstwavpackparse.c
 gst/avi/gstavidemux.c
 gst/avi/gstavimux.c
 gst/isomp4/qtdemux.c
+gst/multifile/gstsplitmuxsrc.c
 gst/rtsp/gstrtspsrc.c
 gst/wavparse/gstwavparse.c
 sys/oss4/oss4-sink.c
