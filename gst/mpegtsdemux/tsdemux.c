@@ -1651,6 +1651,8 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     stream->nb_out_buffers = 0;
     stream->gap_ref_buffers = 0;
     stream->gap_ref_pts = GST_CLOCK_TIME_NONE;
+    /* Only wait for a valid timestamp if we have a PCR_PID */
+    stream->pending_ts = program->pcr_pid < 0x1fff;
     stream->continuity_counter = CONTINUITY_UNSET;
   }
 }
