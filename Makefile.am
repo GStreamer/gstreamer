@@ -205,6 +205,10 @@ CRUFT_FILES = \
 
 CRUFT_DIRS = \
 	$(top_builddir)/tests/examples/xml \
+	$(top_builddir)/tests/examples/launch \
+	$(top_builddir)/tests/examples/metadata \
+	$(top_builddir)/tests/examples/queue \
+	$(top_builddir)/tests/examples/typefind \
 	$(top_builddir)/gst/tmp-introspect* \
 	$(top_builddir)/libs/gst/*/tmp-introspect*
 
