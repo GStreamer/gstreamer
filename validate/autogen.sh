@@ -23,9 +23,9 @@ then
   echo "+ Setting up common submodule"
   cd ../
   git submodule init
+  cd validate/
 fi
 git submodule update
-cd validate/
 
 # source helper functions
 if test ! -f common/gst-autogen.sh;
