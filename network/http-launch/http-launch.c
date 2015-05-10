@@ -34,6 +34,7 @@ typedef struct
   GSource *isource, *tosource;
   GByteArray *current_message;
   gchar *http_version;
+  gboolean waiting_200_ok;
 } Client;
 
 static const char *known_mimetypes[] = {
@@ -49,6 +50,8 @@ static GstElement *pipeline = NULL;
 static GstElement *multisocketsink = NULL;
 static gboolean started = FALSE;
 static gchar *content_type;
+G_LOCK_DEFINE_STATIC (caps);
+static gboolean caps_resolved = FALSE;
 
 static void
 remove_client (Client * client)
@@ -126,6 +129,7 @@ client_message (Client * client, const gchar * data, guint len)
 
   if (g_str_has_prefix (lines[0], "HEAD")) {
     gchar **parts = g_strsplit (lines[0], " ", -1);
+    gboolean ok = FALSE;
 
     g_free (client->http_version);
 
@@ -135,11 +139,27 @@ client_message (Client * client, const gchar * data, guint len)
       client->http_version = g_strdup ("HTTP/1.0");
 
     if (parts[1] && strcmp (parts[1], "/") == 0) {
-      send_response_200_ok (client);
+      G_LOCK (caps);
+      if (caps_resolved)
+        send_response_200_ok (client);
+      else
+        client->waiting_200_ok = TRUE;
+      G_UNLOCK (caps);
+      ok = TRUE;
     } else {
       send_response_404_not_found (client);
     }
     g_strfreev (parts);
+
+    if (ok && !started) {
+      g_print ("Starting pipeline\n");
+      if (gst_element_set_state (pipeline,
+              GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+        g_print ("Failed to start pipeline\n");
+        g_main_loop_quit (loop);
+      }
+      started = TRUE;
+    }
   } else if (g_str_has_prefix (lines[0], "GET")) {
     gchar **parts = g_strsplit (lines[0], " ", -1);
     gboolean ok = FALSE;
@@ -152,7 +172,12 @@ client_message (Client * client, const gchar * data, guint len)
       client->http_version = g_strdup ("HTTP/1.0");
 
     if (parts[1] && strcmp (parts[1], "/") == 0) {
-      send_response_200_ok (client);
+      G_LOCK (caps);
+      if (caps_resolved)
+        send_response_200_ok (client);
+      else
+        client->waiting_200_ok = TRUE;
+      G_UNLOCK (caps);
       ok = TRUE;
     } else {
       send_response_404_not_found (client);
@@ -284,6 +309,7 @@ on_new_connection (GSocketService * service, GSocketConnection * connection,
 
   g_print ("New connection %s\n", client->name);
 
+  client->waiting_200_ok = FALSE;
   client->http_version = g_strdup ("");
   client->connection = g_object_ref (connection);
   client->socket = g_socket_connection_get_socket (connection);
@@ -375,6 +401,7 @@ static void on_stream_caps_changed (GObject *obj, GParamSpec *pspec,
   GstPad *src_pad;
   GstCaps *src_caps;
   GstStructure *gstrc;
+  GList *l;
 
   src_pad = (GstPad *) obj;
   src_caps = gst_pad_get_current_caps (src_pad);
@@ -412,6 +439,24 @@ static void on_stream_caps_changed (GObject *obj, GParamSpec *pspec,
   }
 
   gst_caps_unref (src_caps);
+
+  /* Send 200 OK to those clients waiting for it */
+  G_LOCK (caps);
+
+  caps_resolved = TRUE;
+
+  G_LOCK (clients);
+  for (l = clients; l; l = l->next) {
+    Client *cl = l->data;
+    if (cl->waiting_200_ok) {
+      send_response_200_ok (cl);
+      cl->waiting_200_ok = FALSE;
+      break;
+    }
+  }
+  G_UNLOCK (clients);
+
+  G_UNLOCK (caps);
 }
 
 int
