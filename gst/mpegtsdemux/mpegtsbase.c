@@ -1326,7 +1326,7 @@ no_initial_pcr:
   mpegts_packetizer_clear (base->packetizer);
   GST_WARNING_OBJECT (base, "Couldn't find any PCR within the first %d bytes",
       10 * 65536);
-  return GST_FLOW_ERROR;
+  return GST_FLOW_OK;
 }
 
 
