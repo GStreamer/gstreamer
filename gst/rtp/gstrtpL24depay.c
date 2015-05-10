@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch udpsrc caps='application/x-rtp, media=(string)audio, clock-rate=(int)44100, encoding-name=(string)L24, encoding-params=(string)1, channels=(int)1, payload=(int)96' ! rtpL24depay ! pulsesink
+ * gst-launch-1.0 udpsrc caps='application/x-rtp, media=(string)audio, clock-rate=(int)44100, encoding-name=(string)L24, encoding-params=(string)1, channels=(int)1, payload=(int)96' ! rtpL24depay ! pulsesink
  * ]| This example pipeline will depayload an RTP raw audio stream. Refer to
  * the rtpL24pay example to create the RTP stream.
  * </refsect2>

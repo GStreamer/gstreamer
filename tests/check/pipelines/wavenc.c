@@ -58,7 +58,7 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
 }
 
 /*
- * gst-launch \
+ * gst-launch-1.0 \
  * audiotestsrc freq=440 num-buffers=100 ! interleave name=i ! audioconvert ! wavenc ! filesink location=/tmp/mc.wav \
  * audiotestsrc freq=880 num-buffers=100 ! i.
  * ...

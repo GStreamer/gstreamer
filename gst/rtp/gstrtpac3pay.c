@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v audiotestsrc ! avenc_ac3 ! rtpac3pay ! udpsink
+ * gst-launch-1.0 -v audiotestsrc ! avenc_ac3 ! rtpac3pay ! udpsink
  * ]| This example pipeline will encode and payload AC3 stream. Refer to
  * the rtpac3depay example to depayload and decode the RTP stream.
  * </refsect2>

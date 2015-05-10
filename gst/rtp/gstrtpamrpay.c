@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v audiotestsrc ! amrnbenc ! rtpamrpay ! udpsink
+ * gst-launch-1.0 -v audiotestsrc ! amrnbenc ! rtpamrpay ! udpsink
  * ]| This example pipeline will encode and payload an AMR stream. Refer to
  * the rtpamrdepay example to depayload and decode the RTP stream.
  * </refsect2>

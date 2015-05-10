@@ -32,7 +32,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v filesrc location=videotestsrc.webm ! matroskademux ! vp9dec ! xvimagesink
+ * gst-launch-1.0 -v filesrc location=videotestsrc.webm ! matroskademux ! vp9dec ! videoconvert ! videoscale ! autovideosink
  * ]| This example pipeline will decode a WebM stream and decodes the VP9 video.
  * </refsect2>
  */

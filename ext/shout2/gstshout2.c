@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch uridecodebin uri=file:///path/to/audiofile ! audioconvert ! vorbisenc ! oggmux ! shout2send mount=/stream.ogg port=8000 username=source password=somepassword ip=server_IP_address_or_hostname
+ * gst-launch-1.0 uridecodebin uri=file:///path/to/audiofile ! audioconvert ! vorbisenc ! oggmux ! shout2send mount=/stream.ogg port=8000 username=source password=somepassword ip=server_IP_address_or_hostname
  * ]| This pipeline demuxes, decodes, re-encodes and re-muxes an audio
  * media file into oggvorbis and sends the resulting stream to an Icecast
  * server. Properties mount, port, username and password are all server-config

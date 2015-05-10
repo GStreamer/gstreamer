@@ -40,7 +40,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v videotestsrc num-buffers=1000 ! vp9enc ! webmmux ! filesink location=videotestsrc.webm
+ * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! vp9enc ! webmmux ! filesink location=videotestsrc.webm
  * ]| This example pipeline will encode a test video source to VP9 muxed in an
  * WebM container.
  * </refsect2>

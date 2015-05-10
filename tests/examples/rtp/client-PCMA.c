@@ -116,9 +116,9 @@ pad_added_cb (GstElement * rtpbin, GstPad * new_pad, GstElement * depay)
 
 /* build a pipeline equivalent to:
  *
- * gst-launch -v rtpbin name=rtpbin                                                \
+ * gst-launch-1.0 -v rtpbin name=rtpbin                                                \
  *      udpsrc caps=$AUDIO_CAPS port=5002 ! rtpbin.recv_rtp_sink_0              \
- *        rtpbin. ! rtppcmadepay ! alawdec ! audioconvert ! audioresample ! alsasink \
+ *        rtpbin. ! rtppcmadepay ! alawdec ! audioconvert ! audioresample ! autoaudiosink \
  *      udpsrc port=5003 ! rtpbin.recv_rtcp_sink_0                              \
  *        rtpbin.send_rtcp_src_0 ! udpsink port=5007 host=$DEST sync=false async=false
  */

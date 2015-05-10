@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v audiotestsrc ! audioconvert ! rtpL16pay ! udpsink
+ * gst-launch-1.0 -v audiotestsrc ! audioconvert ! rtpL16pay ! udpsink
  * ]| This example pipeline will payload raw audio. Refer to
  * the rtpL16depay example to depayload and play the RTP stream.
  * </refsect2>
