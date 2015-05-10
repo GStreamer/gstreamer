@@ -557,8 +557,8 @@ gst_splitmux_pad_loop (GstPad * pad)
 
 error:
   /* Fall through */
-  GST_ELEMENT_ERROR (splitmux, RESOURCE, OPEN_READ,
-      ("Error reading part file %s", GST_STR_NULL (reader->path)), (NULL));
+  GST_ELEMENT_ERROR (splitmux, RESOURCE, OPEN_READ, (NULL),
+      ("Error reading part file %s", GST_STR_NULL (reader->path)));
 flushing:
   gst_pad_pause_task (pad);
   gst_object_unref (splitmux);
