@@ -116,6 +116,9 @@ GST_START_TEST (test_parsing_valid_frames)
   /* should decode the buffer without problems */
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
 
+  /* inform of no further data */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
   num_buffers = g_list_length (buffers);
   /* should get 2 buffers, each one complete wavpack frame */
   fail_unless_equals_int (num_buffers, 2);
@@ -176,6 +179,9 @@ GST_START_TEST (test_parsing_invalid_first_header)
 
   /* should decode the buffer without problems */
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
+
+  /* inform of no further data */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
 
   num_buffers = g_list_length (buffers);
 
