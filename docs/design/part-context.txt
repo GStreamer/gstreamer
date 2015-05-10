@@ -14,7 +14,7 @@ queries, messages and functions to set a context on a complete pipeline.
 
 Context types
 ~~~~~~~~~~~~~
-Context type names should be unique and be put in appropiate namespaces,
+Context type names should be unique and be put in appropriate namespaces,
 to prevent name conflicts, e.g. "gst.egl.EGLDisplay". Only one specific
 type is allowed per context type name.
 
@@ -25,7 +25,7 @@ Elements that need a specific context for their operation would
 do the following steps until one succeeds:
 
  1) Check if the element already has a context of the specific type,
-    i.e. it was previoulsy set via gst_element_set_context().
+    i.e. it was previously set via gst_element_set_context().
 
  2) Query downstream with GST_QUERY_CONTEXT for the context and check if
     downstream already has a context of the specific type
