@@ -17,7 +17,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
- 
+
 #ifndef __GST_VIDEO_AGGREGATOR_H__
 #define __GST_VIDEO_AGGREGATOR_H__
 
@@ -86,6 +86,9 @@ struct _GstVideoAggregator
  *                            Notifies subclasses what caps format has been negotiated
  * @find_best_format:         Optional.
  *                            Lets subclasses decide of the best common format to use.
+ * @preserve_update_caps_result: Sub-classes should set this to true if the return result
+ *                               of the update_caps() method should not be further modified
+ *                               by GstVideoAggregator by removing fields.
  **/
 struct _GstVideoAggregatorClass
 {
@@ -105,6 +108,9 @@ struct _GstVideoAggregatorClass
                                                    GstCaps            *  downstream_caps,
                                                    GstVideoInfo       *  best_info,
                                                    gboolean           *  at_least_one_alpha);
+
+  gboolean           preserve_update_caps_result;
+
   /* < private > */
   gpointer            _gst_reserved[GST_PADDING_LARGE];
 };
