@@ -2,7 +2,7 @@ Documentation conventions
 -------------------------
 
 Due to the potential for exponential growth, several abbreviating conventions will be used throughout this 
-documentation.  These conventions have grown primarily from extremely in-depth discussions of the architecure in IRC.  
+documentation.  These conventions have grown primarily from extremely in-depth discussions of the architecture in IRC.
 This has verified the safety of these conventions, if used properly.  There are no known namespace conflicts as long as 
 context is rigorously observed.
 
@@ -33,7 +33,7 @@ _FLAGS_ in the middle.
 Drawing conventions
 ~~~~~~~~~~~~~~~~~~~
 
-When drawing pictures the folowing conventions apply:
+When drawing pictures the following conventions apply:
 
 objects
 ^^^^^^^
