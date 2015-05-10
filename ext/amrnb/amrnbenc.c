@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=abc.wav ! wavparse ! audioresample ! audioconvert ! amrnbenc ! filesink location=abc.amr
+ * gst-launch-1.0 filesrc location=abc.wav ! wavparse ! audioconvert ! audioresample ! amrnbenc ! filesink location=abc.amr
  * ]|
  * Please note that the above stream misses the header, that is needed to play
  * the stream.

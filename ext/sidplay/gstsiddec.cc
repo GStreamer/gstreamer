@@ -33,8 +33,8 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=Hawkeye.sid ! siddec ! audioconvert ! alsasink
- * ]| Decode a sid file and play back the audio using alsasink.
+ * gst-launch-1.0 -v filesrc location=Hawkeye.sid ! siddec ! audioconvert ! audioresample ! autoaudiosink
+ * ]| Decode a sid file and play it back.
  * </refsect2>
  */
 

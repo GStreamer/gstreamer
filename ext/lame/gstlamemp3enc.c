@@ -41,19 +41,19 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! lamemp3enc ! filesink location=sine.mp3
+ * gst-launch-1.0 -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! lamemp3enc ! filesink location=sine.mp3
  * ]| Encode a test sine signal to MP3.
  * |[
- * gst-launch -v alsasrc ! audioconvert ! lamemp3enc target=bitrate bitrate=192 ! filesink location=alsasrc.mp3
+ * gst-launch-1.0 -v autoaudiosrc ! audioconvert ! lamemp3enc target=bitrate bitrate=192 ! filesink location=alsasrc.mp3
  * ]| Record from a sound card using ALSA and encode to MP3 with an average bitrate of 192kbps
  * |[
- * gst-launch -v filesrc location=music.wav ! decodebin ! audioconvert ! audioresample ! lamemp3enc target=quality quality=0 ! id3v2mux ! filesink location=music.mp3
+ * gst-launch-1.0 -v filesrc location=music.wav ! decodebin ! audioconvert ! audioresample ! lamemp3enc target=quality quality=0 ! id3v2mux ! filesink location=music.mp3
  * ]| Transcode from a .wav file to MP3 (the id3v2mux element is optional) with best VBR quality
  * |[
- * gst-launch -v cdda://5 ! audioconvert ! lamemp3enc target=bitrate cbr=true bitrate=192 ! filesink location=track5.mp3
+ * gst-launch-1.0 -v cdda://5 ! audioconvert ! lamemp3enc target=bitrate cbr=true bitrate=192 ! filesink location=track5.mp3
  * ]| Encode Audio CD track 5 to MP3 with a constant bitrate of 192kbps
  * |[
- * gst-launch -v audiotestsrc num-buffers=10 ! audio/x-raw,rate=44100,channels=1 ! lamemp3enc target=bitrate cbr=true bitrate=48 ! filesink location=test.mp3
+ * gst-launch-1.0 -v audiotestsrc num-buffers=10 ! audio/x-raw,rate=44100,channels=1 ! lamemp3enc target=bitrate cbr=true bitrate=48 ! filesink location=test.mp3
  * ]| Encode to a fixed sample rate
  * </refsect2>
  *

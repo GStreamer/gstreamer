@@ -33,9 +33,9 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc num-buffers=1000 ! audioconvert ! lamemp3enc ! xingmux ! filesink location=test.mp3
- * gst-launch filesrc location=test.mp3 ! xingmux ! filesink location=test2.mp3
- * gst-launch filesrc location=test.mp3 ! mp3parse ! xingmux ! filesink location=test2.mp3
+ * gst-launch-1.0 audiotestsrc num-buffers=1000 ! audioconvert ! lamemp3enc ! xingmux ! filesink location=test.mp3
+ * gst-launch-1.0 filesrc location=test.mp3 ! xingmux ! filesink location=test2.mp3
+ * gst-launch-1.0 filesrc location=test.mp3 ! mp3parse ! xingmux ! filesink location=test2.mp3
  * ]|
  * </refsect2>
  */

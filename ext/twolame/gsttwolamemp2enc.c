@@ -33,16 +33,16 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! twolame ! filesink location=sine.mp2
+ * gst-launch-1.0 -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! twolame ! filesink location=sine.mp2
  * ]| Encode a test sine signal to MP2.
  * |[
- * gst-launch -v alsasrc ! audioconvert ! twolame bitrate=192 ! filesink location=alsasrc.mp2
+ * gst-launch-1.0 -v alsasrc ! audioconvert ! twolame bitrate=192 ! filesink location=alsasrc.mp2
  * ]| Record from a sound card using ALSA and encode to MP2
  * |[
- * gst-launch -v filesrc location=music.wav ! decodebin ! audioconvert ! audioresample ! twolame bitrate=192 ! id3v2mux ! filesink location=music.mp2
+ * gst-launch-1.0 -v filesrc location=music.wav ! decodebin ! audioconvert ! audioresample ! twolame bitrate=192 ! id3v2mux ! filesink location=music.mp2
  * ]| Transcode from a .wav file to MP2 (the id3v2mux element is optional)
  * |[
- * gst-launch -v cdda://5 ! audioconvert ! twolame bitrate=192 ! filesink location=track5.mp2
+ * gst-launch-1.0 -v cdda://5 ! audioconvert ! twolame bitrate=192 ! filesink location=track5.mp2
  * ]| Encode Audio CD track 5 to MP2
  * </refsect2>
  *

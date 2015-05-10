@@ -56,31 +56,35 @@
  * non-x264enc streams/branches filling up and blocking upstream. They can
  * be fixed by relaxing the default time/size/buffer limits on the queue
  * elements in the non-x264 branches, or using a (single) multiqueue element
- * for all branches. Also see the last example below.
+ * for all branches. Also see the last example below. You can also work around
+ * this problem by setting the tune=zerolatency property, but this will affect
+ * overall encoding quality so may not be appropriate for your use case.
  * </note>
  *
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v videotestsrc num-buffers=1000 ! x264enc qp-min=18 ! \
+ * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! x264enc qp-min=18 ! \
  *   avimux ! filesink location=videotestsrc.avi
  * ]| This example pipeline will encode a test video source to H264 muxed in an
  * AVI container, while ensuring a sane minimum quantization factor to avoid
- * some (excessive) waste.
+ * some (excessive) waste. You should ideally never put H264 into an AVI
+ * container (or really anything else, for that matter) - use Matroska or
+ * MP4/QuickTime or MPEG-TS instead.
  * |[
- * gst-launch -v videotestsrc num-buffers=1000 ! x264enc pass=quant ! \
- *   matroskamux ! filesink location=videotestsrc.avi
+ * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! x264enc pass=quant ! \
+ *   matroskamux ! filesink location=videotestsrc.mkv
  * ]| This example pipeline will encode a test video source to H264 using fixed
  * quantization, and muxes it in a Matroska container.
  * |[
- * gst-launch -v videotestsrc num-buffers=1000 ! x264enc pass=5 quantizer=25 speed-preset=6 ! video/x-h264, profile=baseline ! \
+ * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! x264enc pass=5 quantizer=25 speed-preset=6 ! video/x-h264, profile=baseline ! \
  *   qtmux ! filesink location=videotestsrc.mov
  * ]| This example pipeline will encode a test video source to H264 using
  * constant quality at around Q25 using the 'medium' speed/quality preset and
  * restricting the options used so that the output is H.264 Baseline Profile
  * compliant and finally multiplexing the output in Quicktime mov format.
  * |[
- * gst-launch -v videotestsrc num-buffers=1000 ! tee name=t ! queue ! xvimagesink \
+ * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! tee name=t ! queue ! videoconvert ! autovideosink \
  *   t. ! queue ! x264enc rc-lookahead=5 ! fakesink
  * ]| This example pipeline will encode a test video source to H264 while
  * displaying the input material at the same time.  As mentioned above,

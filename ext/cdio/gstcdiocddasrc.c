@@ -62,7 +62,7 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch cdiocddasrc track=5 device=/dev/cdrom ! audioconvert ! vorbisenc ! oggmux ! filesink location=track5.ogg
+ * gst-launch-1.0 cdiocddasrc track=5 device=/dev/cdrom ! audioconvert ! vorbisenc ! oggmux ! filesink location=track5.ogg
  * </programlisting>
  * This pipeline extracts track 5 of the audio CD and encodes it into an
  * Ogg/Vorbis file.
