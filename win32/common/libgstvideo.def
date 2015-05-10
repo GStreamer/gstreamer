@@ -51,6 +51,7 @@ EXPORTS
 	gst_navigation_send_key_event
 	gst_navigation_send_mouse_event
 	gst_video_alignment_reset
+	gst_video_alpha_mode_get_type
 	gst_video_blend
 	gst_video_blend_scale_linear_RGBA
 	gst_video_buffer_pool_get_type
@@ -59,6 +60,7 @@ EXPORTS
 	gst_video_chroma_flags_get_type
 	gst_video_chroma_from_string
 	gst_video_chroma_method_get_type
+	gst_video_chroma_mode_get_type
 	gst_video_chroma_resample
 	gst_video_chroma_resample_free
 	gst_video_chroma_resample_get_info
@@ -169,6 +171,7 @@ EXPORTS
 	gst_video_frame_map
 	gst_video_frame_map_id
 	gst_video_frame_unmap
+	gst_video_gamma_mode_get_type
 	gst_video_gl_texture_upload_meta_api_get_type
 	gst_video_gl_texture_upload_meta_get_info
 	gst_video_gl_texture_upload_meta_upload
@@ -183,6 +186,7 @@ EXPORTS
 	gst_video_interlace_mode_from_string
 	gst_video_interlace_mode_get_type
 	gst_video_interlace_mode_to_string
+	gst_video_matrix_mode_get_type
 	gst_video_meta_api_get_type
 	gst_video_meta_get_info
 	gst_video_meta_map
@@ -231,6 +235,7 @@ EXPORTS
 	gst_video_overlay_set_render_rectangle
 	gst_video_overlay_set_window_handle
 	gst_video_pack_flags_get_type
+	gst_video_primaries_mode_get_type
 	gst_video_region_of_interest_meta_api_get_type
 	gst_video_region_of_interest_meta_get_info
 	gst_video_resampler_clear
