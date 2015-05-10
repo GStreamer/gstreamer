@@ -78,7 +78,7 @@ Clock implementations
 The GStreamer core provides a GstSystemClock based on the system time. 
 Asynchronous callbacks are scheduled from an internal thread.
 
-Clock implementors are encouraged to subclass this systemclock as it
+Clock implementers are encouraged to subclass this systemclock as it
 implements the async notification.
 
 Subclasses can however override all of the important methods for sync and
