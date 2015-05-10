@@ -59,11 +59,14 @@ typedef struct
   GtkWidget *media_info_button;
   GtkWidget *repeat_button;
   GtkWidget *fullscreen_button;
+  GtkWidget *toolbar;
+  GdkCursor *default_cursor;
   gulong seekbar_value_changed_signal_id;
   GdkPixbuf *image_pixbuf;
   gboolean playing;
   gboolean loop;
   gboolean fullscreen;
+  gint toolbar_hide_timeout;
 } GtkPlay;
 
 enum
@@ -516,6 +519,24 @@ media_info_clicked_cb (GtkButton * button, GtkPlay * play)
   g_object_unref (info);
 }
 
+static gboolean
+toolbar_hide_func (GtkPlay * play)
+{
+  GdkCursor *cursor;
+
+  /* TODO: add some animation while hiding the toolbar. */
+  gtk_widget_hide (play->toolbar);
+
+  /* hide the mouse pointer */
+  cursor = gdk_cursor_new_for_display (
+      gtk_widget_get_display (play->window), GDK_BLANK_CURSOR);
+  gdk_window_set_cursor (gtk_widget_get_window (play->window), cursor);
+  g_object_unref (cursor);
+
+  play->toolbar_hide_timeout = 0;
+  return FALSE;
+}
+
 static void
 fullscreen_toggle_cb (GtkToggleButton * widget, GtkPlay * play)
 {
@@ -526,8 +547,20 @@ fullscreen_toggle_cb (GtkToggleButton * widget, GtkPlay * play)
         GTK_ICON_SIZE_BUTTON);
     gtk_window_fullscreen (GTK_WINDOW(play->window));
     gtk_button_set_image (GTK_BUTTON (play->fullscreen_button), image);
+
+    /* start timer to hide toolbar */
+    if (play->toolbar_hide_timeout)
+      g_source_remove (play->toolbar_hide_timeout);
+    play->toolbar_hide_timeout = g_timeout_add_seconds (5,
+        (GSourceFunc) toolbar_hide_func, play);
   }
   else {
+    /* if toolbar hide timer is running then kill it */
+    if (play->toolbar_hide_timeout) {
+      g_source_remove (play->toolbar_hide_timeout);
+      play->toolbar_hide_timeout = 0;
+    }
+
     image = gtk_image_new_from_icon_name ("view-fullscreen",
         GTK_ICON_SIZE_BUTTON);
     gtk_window_unfullscreen (GTK_WINDOW(play->window));
@@ -780,11 +813,19 @@ static void
 mouse_button_pressed_cb (GtkWidget * unused, GdkEventButton * event,
     GtkPlay * play)
 {
-  /* we only care about right button pressed event */
-  if (event->button != 3)
-    return;
-
-  gtk_player_popup_menu_create (play, event);
+  if (event->type == GDK_2BUTTON_PRESS) {
+    /* toggle fullscreen on double button click */
+    if (gtk_toggle_button_get_active
+        (GTK_TOGGLE_BUTTON (play->fullscreen_button)))
+      gtk_toggle_button_set_active
+        (GTK_TOGGLE_BUTTON (play->fullscreen_button), FALSE);
+    else
+      gtk_toggle_button_set_active
+        (GTK_TOGGLE_BUTTON (play->fullscreen_button), TRUE);
+  } else if ((event->type == GDK_BUTTON_PRESS) && (event->button == 3)) {
+    /* popup menu on right button click */
+    gtk_player_popup_menu_create (play, event);
+  }
 }
 
 static gboolean
@@ -830,6 +871,31 @@ image_area_draw_cb (GtkWidget * widget, cairo_t * cr, GtkPlay * play)
   return FALSE;
 }
 
+static gboolean
+gtk_show_toolbar_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
+{
+  if (gtk_toggle_button_get_active
+      (GTK_TOGGLE_BUTTON (play->fullscreen_button))) {
+
+    GdkCursor *cursor;
+
+    /* if timer is running then kill it */
+    if (play->toolbar_hide_timeout) {
+      g_source_remove (play->toolbar_hide_timeout);
+      play->toolbar_hide_timeout = 0;
+    }
+
+    /* show mouse pointer */
+    gdk_window_set_cursor (gtk_widget_get_window (play->window),
+        play->default_cursor);
+
+    gtk_widget_show (play->toolbar);
+    play->toolbar_hide_timeout = g_timeout_add_seconds (5,
+        (GSourceFunc) toolbar_hide_func, play);
+  }
+
+  return TRUE;
+}
 
 static void
 create_ui (GtkPlay * play)
@@ -847,21 +913,32 @@ create_ui (GtkPlay * play)
       G_CALLBACK (video_area_realize_cb), play);
   g_signal_connect (play->video_area, "button-press-event",
       G_CALLBACK (mouse_button_pressed_cb), play);
+  g_signal_connect (play->video_area, "motion-notify-event",
+      G_CALLBACK (gtk_show_toolbar_cb), play);
+  g_signal_connect (play->video_area, "scroll-event",
+      G_CALLBACK (gtk_show_toolbar_cb), play);
   gtk_widget_set_events (play->video_area, GDK_EXPOSURE_MASK
       | GDK_LEAVE_NOTIFY_MASK
       | GDK_BUTTON_PRESS_MASK
-      | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK);
+      | GDK_POINTER_MOTION_MASK
+      | GDK_POINTER_MOTION_HINT_MASK
+      | GDK_ENTER_NOTIFY_MASK);
 
   play->image_area = gtk_drawing_area_new ();
   g_signal_connect (play->image_area, "button-press-event",
       G_CALLBACK (mouse_button_pressed_cb), play);
   g_signal_connect (play->image_area, "draw",
       G_CALLBACK (image_area_draw_cb), play);
+  g_signal_connect (play->image_area, "motion-notify-event",
+      G_CALLBACK (gtk_show_toolbar_cb), play);
+  g_signal_connect (play->image_area, "scroll-event",
+      G_CALLBACK (gtk_show_toolbar_cb), play);
   gtk_widget_set_events (play->image_area, GDK_EXPOSURE_MASK
         | GDK_LEAVE_NOTIFY_MASK
         | GDK_BUTTON_PRESS_MASK
         | GDK_POINTER_MOTION_MASK
-        | GDK_POINTER_MOTION_HINT_MASK);
+        | GDK_POINTER_MOTION_HINT_MASK
+        | GDK_ENTER_NOTIFY_MASK);
 
   /* Unified play/pause button */
   play->play_pause_button =
@@ -928,7 +1005,7 @@ create_ui (GtkPlay * play)
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (play->fullscreen_button),
         TRUE);
 
-  controls = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  play->toolbar = controls = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start (GTK_BOX (controls), play->prev_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->play_pause_button, FALSE,
       FALSE, 2);
@@ -955,6 +1032,9 @@ create_ui (GtkPlay * play)
   gtk_widget_hide (play->video_area);
 
   gtk_widget_show_all (play->window);
+
+  play->default_cursor = gdk_window_get_cursor
+    (gtk_widget_get_window (play->toolbar));
 }
 
 static void
