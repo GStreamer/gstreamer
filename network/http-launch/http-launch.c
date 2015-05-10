@@ -125,42 +125,16 @@ send_response_404_not_found (Client * client)
 static void
 client_message (Client * client, const gchar * data, guint len)
 {
+  gboolean http_head_request = FALSE;
+  gboolean http_get_request = FALSE;
   gchar **lines = g_strsplit_set (data, "\r\n", -1);
 
-  if (g_str_has_prefix (lines[0], "HEAD")) {
-    gchar **parts = g_strsplit (lines[0], " ", -1);
-    gboolean ok = FALSE;
+  if (g_str_has_prefix (lines[0], "HEAD"))
+    http_head_request = TRUE;
+  else if (g_str_has_prefix (lines[0], "GET"))
+    http_get_request = TRUE;
 
-    g_free (client->http_version);
-
-    if (parts[1] && parts[2] && *parts[2] != '\0')
-      client->http_version = g_strdup (parts[2]);
-    else
-      client->http_version = g_strdup ("HTTP/1.0");
-
-    if (parts[1] && strcmp (parts[1], "/") == 0) {
-      G_LOCK (caps);
-      if (caps_resolved)
-        send_response_200_ok (client);
-      else
-        client->waiting_200_ok = TRUE;
-      G_UNLOCK (caps);
-      ok = TRUE;
-    } else {
-      send_response_404_not_found (client);
-    }
-    g_strfreev (parts);
-
-    if (ok && !started) {
-      g_print ("Starting pipeline\n");
-      if (gst_element_set_state (pipeline,
-              GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-        g_print ("Failed to start pipeline\n");
-        g_main_loop_quit (loop);
-      }
-      started = TRUE;
-    }
-  } else if (g_str_has_prefix (lines[0], "GET")) {
+  if (http_head_request || http_get_request) {
     gchar **parts = g_strsplit (lines[0], " ", -1);
     gboolean ok = FALSE;
 
@@ -185,14 +159,17 @@ client_message (Client * client, const gchar * data, guint len)
     g_strfreev (parts);
 
     if (ok) {
-      g_source_destroy (client->isource);
-      g_source_unref (client->isource);
-      client->isource = NULL;
-      g_source_destroy (client->tosource);
-      g_source_unref (client->tosource);
-      client->tosource = NULL;
-      g_print ("Starting to stream to %s\n", client->name);
-      g_signal_emit_by_name (multisocketsink, "add", client->socket);
+      if (http_get_request) {
+        /* Start streaming to client socket */
+        g_source_destroy (client->isource);
+        g_source_unref (client->isource);
+        client->isource = NULL;
+        g_source_destroy (client->tosource);
+        g_source_unref (client->tosource);
+        client->tosource = NULL;
+        g_print ("Starting to stream to %s\n", client->name);
+        g_signal_emit_by_name (multisocketsink, "add", client->socket);
+      }
 
       if (!started) {
         g_print ("Starting pipeline\n");
