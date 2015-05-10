@@ -33,6 +33,7 @@ typedef struct
   GOutputStream *ostream;
   GSource *isource, *tosource;
   GByteArray *current_message;
+  gchar *http_version;
 } Client;
 
 static const char *known_mimetypes[] = {
@@ -59,6 +60,7 @@ remove_client (Client * client)
   G_UNLOCK (clients);
 
   g_free (client->name);
+  g_free (client->http_version);
 
   if (client->isource) {
     g_source_destroy (client->isource);
@@ -99,49 +101,62 @@ write_bytes (Client * client, const gchar * data, guint len)
 }
 
 static void
+send_response_200_ok (Client * client)
+{
+  gchar *response;
+  response = g_strdup_printf ("%s 200 OK\r\n%s\r\n", client->http_version,
+        content_type);
+  write_bytes (client, response, strlen (response));
+  g_free (response);
+}
+
+static void
+send_response_404_not_found (Client * client)
+{
+  gchar *response;
+  response = g_strdup_printf ("%s 404 Not Found\r\n\r\n", client->http_version);
+  write_bytes (client, response, strlen (response));
+  g_free (response);
+}
+
+static void
 client_message (Client * client, const gchar * data, guint len)
 {
   gchar **lines = g_strsplit_set (data, "\r\n", -1);
 
   if (g_str_has_prefix (lines[0], "HEAD")) {
     gchar **parts = g_strsplit (lines[0], " ", -1);
-    gchar *response;
-    const gchar *http_version;
+
+    g_free (client->http_version);
 
     if (parts[1] && parts[2] && *parts[2] != '\0')
-      http_version = parts[2];
+      client->http_version = g_strdup (parts[2]);
     else
-      http_version = "HTTP/1.0";
+      client->http_version = g_strdup ("HTTP/1.0");
 
     if (parts[1] && strcmp (parts[1], "/") == 0) {
-      response = g_strdup_printf ("%s 200 OK\r\n%s\r\n", http_version,
-        content_type);
+      send_response_200_ok (client);
     } else {
-      response = g_strdup_printf ("%s 404 Not Found\r\n\r\n", http_version);
+      send_response_404_not_found (client);
     }
-    write_bytes (client, response, strlen (response));
-    g_free (response);
     g_strfreev (parts);
   } else if (g_str_has_prefix (lines[0], "GET")) {
     gchar **parts = g_strsplit (lines[0], " ", -1);
-    gchar *response;
-    const gchar *http_version;
     gboolean ok = FALSE;
 
+    g_free (client->http_version);
+
     if (parts[1] && parts[2] && *parts[2] != '\0')
-      http_version = parts[2];
+      client->http_version = g_strdup (parts[2]);
     else
-      http_version = "HTTP/1.0";
+      client->http_version = g_strdup ("HTTP/1.0");
 
     if (parts[1] && strcmp (parts[1], "/") == 0) {
-      response = g_strdup_printf ("%s 200 OK\r\n%s\r\n", http_version,
-        content_type);
+      send_response_200_ok (client);
       ok = TRUE;
     } else {
-      response = g_strdup_printf ("%s 404 Not Found\r\n\r\n", http_version);
+      send_response_404_not_found (client);
     }
-    write_bytes (client, response, strlen (response));
-    g_free (response);
     g_strfreev (parts);
 
     if (ok) {
@@ -269,6 +284,7 @@ on_new_connection (GSocketService * service, GSocketConnection * connection,
 
   g_print ("New connection %s\n", client->name);
 
+  client->http_version = g_strdup ("");
   client->connection = g_object_ref (connection);
   client->socket = g_socket_connection_get_socket (connection);
   client->istream =
