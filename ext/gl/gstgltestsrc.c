@@ -82,7 +82,6 @@ static void gst_gl_test_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
-static GstCaps *gst_gl_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter);
 static GstCaps *gst_gl_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 static gboolean gst_gl_test_src_is_seekable (GstBaseSrc * psrc);
@@ -181,7 +180,6 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
   element_class->change_state = gst_gl_test_src_change_state;
 
   gstbasesrc_class->set_caps = gst_gl_test_src_setcaps;
-  gstbasesrc_class->get_caps = gst_gl_test_src_getcaps;
   gstbasesrc_class->is_seekable = gst_gl_test_src_is_seekable;
   gstbasesrc_class->do_seek = gst_gl_test_src_do_seek;
   gstbasesrc_class->query = gst_gl_test_src_query;
@@ -449,24 +447,6 @@ wrong_caps:
     GST_WARNING ("wrong caps");
     return FALSE;
   }
-}
-
-static GstCaps *
-gst_gl_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
-{
-  GstCaps *tmp = NULL;
-  GstCaps *result =
-      gst_caps_from_string ("video/x-raw(memory:GLMemory),format=RGBA");
-
-  if (filter) {
-    tmp = gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (result);
-    result = tmp;
-  }
-
-  GST_DEBUG_OBJECT (bsrc, "returning caps: %" GST_PTR_FORMAT, result);
-
-  return result;
 }
 
 static void
