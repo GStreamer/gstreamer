@@ -188,6 +188,7 @@ static void gst_rpi_cam_src_finalize (GObject *object);
 
 static void gst_rpi_cam_src_colorbalance_init (GstColorBalanceInterface *
     iface);
+static void gst_rpi_cam_src_orientation_init (GstVideoOrientationInterface * iface);
 
 static void gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -210,7 +211,9 @@ static gboolean gst_rpi_cam_src_send_event (GstElement * element,
 G_DEFINE_TYPE_WITH_CODE (GstRpiCamSrc, gst_rpi_cam_src,
     GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
-        gst_rpi_cam_src_colorbalance_init));
+        gst_rpi_cam_src_colorbalance_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_ORIENTATION,
+        gst_rpi_cam_src_orientation_init));
 
 #define C_ENUM(v) ((gint) v)
 
@@ -581,6 +584,79 @@ gst_rpi_cam_src_colorbalance_init (GstColorBalanceInterface * iface)
   iface->set_value = gst_rpi_cam_src_colorbalance_set_value;
   iface->get_value = gst_rpi_cam_src_colorbalance_get_value;
   iface->get_balance_type = gst_rpi_cam_src_colorbalance_get_balance_type;
+}
+
+static gboolean
+gst_rpi_cam_src_orientation_get_hflip (GstVideoOrientation * orientation, gboolean * flip)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC (orientation);
+
+  g_return_val_if_fail (src != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RPICAMSRC (src), FALSE);
+
+  g_mutex_lock (&src->config_lock);
+  *flip = src->capture_config.camera_parameters.hflip;
+  g_mutex_unlock (&src->config_lock);
+
+  return TRUE;
+}
+
+static gboolean
+gst_rpi_cam_src_orientation_get_vflip (GstVideoOrientation * orientation, gboolean * flip)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC (orientation);
+
+  g_return_val_if_fail (src != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RPICAMSRC (src), FALSE);
+
+  g_mutex_lock (&src->config_lock);
+  *flip = src->capture_config.camera_parameters.vflip;
+  g_mutex_unlock (&src->config_lock);
+
+  return TRUE;
+}
+
+static gboolean
+gst_rpi_cam_src_orientation_set_hflip (GstVideoOrientation * orientation, gboolean flip)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC (orientation);
+
+  g_return_val_if_fail (src != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RPICAMSRC (src), FALSE);
+
+  g_mutex_lock (&src->config_lock);
+  src->capture_config.camera_parameters.hflip = flip;
+  src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
+  g_mutex_unlock (&src->config_lock);
+
+  return TRUE;
+}
+
+static gboolean
+gst_rpi_cam_src_orientation_set_vflip (GstVideoOrientation * orientation, gboolean flip)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC (orientation);
+
+  g_return_val_if_fail (src != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RPICAMSRC (src), FALSE);
+
+  g_mutex_lock (&src->config_lock);
+  src->capture_config.camera_parameters.vflip = flip;
+  src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
+  g_mutex_unlock (&src->config_lock);
+
+  return TRUE;
+}
+
+static void
+gst_rpi_cam_src_orientation_init (GstVideoOrientationInterface * iface)
+{
+  iface->get_hflip = gst_rpi_cam_src_orientation_get_hflip;
+  iface->set_hflip = gst_rpi_cam_src_orientation_set_hflip;
+  iface->get_vflip = gst_rpi_cam_src_orientation_get_vflip;
+  iface->set_vflip = gst_rpi_cam_src_orientation_set_vflip;
+
+  /* TODO: hcenter / vcenter support */
 }
 
 static void
