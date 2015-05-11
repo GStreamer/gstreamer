@@ -3462,7 +3462,8 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
     for (index = 0; index < stream->segments->len; index++) {
       GstMediaSegment *segment = g_ptr_array_index (stream->segments, index);
 
-      GST_DEBUG ("Looking at fragment sequence chunk %d", index);
+      GST_DEBUG ("Looking at fragment sequence chunk %d / %d", index,
+          stream->segments->len);
       if (segment->start <= ts
           && ts < segment->start + (segment->repeat + 1) * segment->duration) {
         selectedChunk = segment;
@@ -3472,6 +3473,9 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
     }
 
     if (selectedChunk == NULL) {
+      stream->segment_index = stream->segments->len;
+      stream->segment_repeat_index = 0;
+      GST_DEBUG ("Seek to after last segment");
       return FALSE;
     }
   } else {
@@ -3574,7 +3578,10 @@ gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client,
   stream = g_list_nth_data (client->active_streams, stream_idx);
   g_return_val_if_fail (stream != NULL, 0);
 
-  GST_DEBUG ("Looking for fragment sequence chunk %d", stream->segment_index);
+  GST_DEBUG ("Looking for fragment sequence chunk %d / %d",
+      stream->segment_index, stream->segments->len);
+  if (stream->segment_index >= stream->segments->len)
+    return FALSE;
   currentChunk = g_ptr_array_index (stream->segments, stream->segment_index);
 
   *ts =
@@ -3615,7 +3622,10 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   g_return_val_if_fail (stream != NULL, FALSE);
   g_return_val_if_fail (stream->cur_representation != NULL, FALSE);
 
-  GST_DEBUG ("Looking for fragment sequence chunk %d", stream->segment_index);
+  GST_DEBUG ("Looking for fragment sequence chunk %d / %d",
+      stream->segment_index, stream->segments->len);
+  if (stream->segment_index >= stream->segments->len)
+    return FALSE;
   currentChunk = g_ptr_array_index (stream->segments, stream->segment_index);
 
   GST_DEBUG ("currentChunk->SegmentURL = %p", currentChunk->SegmentURL);
@@ -3714,25 +3724,49 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
 {
   GstMediaSegment *segment;
 
-  if (stream->segment_index >= stream->segments->len)
-    return GST_FLOW_EOS;
+  GST_DEBUG ("Advancing segment. Current: %d / %d r:%d", stream->segment_index,
+      stream->segments->len, stream->segment_repeat_index);
 
+  /* handle special cases first */
+  if (forward) {
+    if (stream->segment_index >= stream->segments->len)
+      return GST_FLOW_EOS;
+
+    /* special case for when playback direction is reverted right at *
+     * the end of the segment list */
+    if (stream->segment_index < 0) {
+      stream->segment_index = 0;
+      return GST_FLOW_OK;
+    }
+  } else {
+    if (stream->segment_index < 0)
+      return GST_FLOW_EOS;
+
+    /* special case for when playback direction is reverted right at *
+     * the end of the segment list */
+    if (stream->segment_index >= stream->segments->len) {
+      stream->segment_index = stream->segments->len - 1;
+      segment = g_ptr_array_index (stream->segments, stream->segment_index);
+      stream->segment_repeat_index = segment->repeat;
+      return GST_FLOW_OK;
+    }
+  }
+
+  /* for the normal cases we can get the segment safely here */
   segment = g_ptr_array_index (stream->segments, stream->segment_index);
   if (forward) {
     if (stream->segment_repeat_index >= segment->repeat) {
       stream->segment_repeat_index = 0;
       stream->segment_index++;
-
-      if (stream->segment_index >= stream->segments->len)
-        return GST_FLOW_EOS;
     } else {
       stream->segment_repeat_index++;
     }
   } else {
     if (stream->segment_repeat_index == 0) {
       stream->segment_index--;
-      if (stream->segment_index < 0)
-        return GST_FLOW_EOS;
+      if (stream->segment_index < 0) {
+        goto done;
+      }
 
       segment = g_ptr_array_index (stream->segments, stream->segment_index);
       stream->segment_repeat_index = segment->repeat;
@@ -3740,6 +3774,10 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
       stream->segment_repeat_index--;
     }
   }
+
+done:
+  GST_DEBUG ("Advanced to segment: %d / %d r:%d", stream->segment_index,
+      stream->segments->len, stream->segment_repeat_index);
   return GST_FLOW_OK;
 }
 
@@ -3850,7 +3888,7 @@ gst_mpd_client_get_next_fragment_duration (GstMpdClient * client,
   seg_idx = stream->segment_index;
 
   if (stream->segments) {
-    if (seg_idx < stream->segments->len)
+    if (seg_idx < stream->segments->len && seg_idx >= 0)
       media_segment = g_ptr_array_index (stream->segments, seg_idx);
 
     return media_segment == NULL ? 0 : media_segment->duration;
