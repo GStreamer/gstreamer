@@ -1202,6 +1202,10 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
         (int) vt_status);
   }
 
+  /* VTCompressionSessionEncodeFrame retained pbuf
+   * and we want to free input_buffer ASAP */
+  gst_buffer_replace (&frame->input_buffer, NULL);
+
   gst_video_codec_frame_unref (frame);
 
   CVPixelBufferRelease (pbuf);
