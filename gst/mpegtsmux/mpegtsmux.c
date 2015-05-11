@@ -887,7 +887,7 @@ out:
 static gboolean
 mpegtsmux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  MpegTsMux *mux = GST_MPEG_TSMUX (gst_pad_get_parent (pad));
+  MpegTsMux *mux = GST_MPEG_TSMUX (parent);
   gboolean res = TRUE, forward = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -959,7 +959,6 @@ mpegtsmux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   else
     gst_event_unref (event);
 
-  gst_object_unref (mux);
   return res;
 }
 
