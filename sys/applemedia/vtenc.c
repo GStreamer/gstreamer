@@ -740,6 +740,7 @@ static GstFlowReturn
 gst_vtenc_finish (GstVideoEncoder * enc)
 {
   GstVTEnc *self = GST_VTENC_CAST (enc);
+  GstVideoCodecFrame *outframe;
   GstFlowReturn ret = GST_FLOW_OK;
   OSStatus vt_status;
 
@@ -757,9 +758,7 @@ gst_vtenc_finish (GstVideoEncoder * enc)
         (int) vt_status);
   }
 
-  while (g_async_queue_length (self->cur_outframes) > 0) {
-    GstVideoCodecFrame *outframe = g_async_queue_try_pop (self->cur_outframes);
-
+  while ((outframe = g_async_queue_try_pop (self->cur_outframes))) {
     ret =
         gst_video_encoder_finish_frame (GST_VIDEO_ENCODER_CAST (self),
         outframe);
@@ -1049,6 +1048,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   CMTime ts, duration;
   GstCoreMediaMeta *meta;
   CVPixelBufferRef pbuf = NULL;
+  GstVideoCodecFrame *outframe;
   OSStatus vt_status;
   GstFlowReturn ret = GST_FLOW_OK;
   guint i;
@@ -1205,9 +1205,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   CVPixelBufferRelease (pbuf);
 
   i = 0;
-  while (g_async_queue_length (self->cur_outframes) > 0) {
-    GstVideoCodecFrame *outframe = g_async_queue_try_pop (self->cur_outframes);
-
+  while ((outframe = g_async_queue_try_pop (self->cur_outframes))) {
     /* Try to renegotiate once */
     if (i == 0) {
       meta = gst_buffer_get_core_media_meta (outframe->output_buffer);
