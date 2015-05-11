@@ -88,23 +88,38 @@ _free_plugin_config (gpointer data)
   g_list_free_full (data, (GDestroyNotify) gst_structure_free);
 }
 
+static GList *
+create_config (const gchar * path, const gchar * suffix)
+{
+  GList *structures = NULL, *tmp, *result = NULL;
+
+  if (!suffix)
+    return NULL;
+
+  structures = gst_validate_utils_structs_parse_from_filename (path);
+
+  for (tmp = structures; tmp; tmp = tmp->next) {
+    if (gst_structure_has_name (tmp->data, suffix))
+      result = g_list_append (result, tmp->data);
+  }
+
+  return result;
+}
+
 GList *
 gst_validate_plugin_get_config (GstPlugin * plugin)
 {
-  GList *structures = NULL, *tmp, *plugin_conf = NULL;
-  const gchar *config = g_getenv ("GST_VALIDATE_CONFIG");
+  GList *plugin_conf;
+  const gchar *suffix;
 
   if ((plugin_conf =
           g_object_get_data (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG)))
     return plugin_conf;
 
-  if (config)
-    structures = gst_validate_utils_structs_parse_from_filename (config);
+  suffix = gst_plugin_get_name (plugin);
 
-  for (tmp = structures; tmp; tmp = tmp->next) {
-    if (gst_structure_has_name (tmp->data, gst_plugin_get_name (plugin)))
-      plugin_conf = g_list_append (plugin_conf, tmp->data);
-  }
+  plugin_conf = create_config (g_getenv ("GST_VALIDATE_CONFIG"), suffix);
+
   g_object_set_data_full (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG,
       plugin_conf, _free_plugin_config);
 
