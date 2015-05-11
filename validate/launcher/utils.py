@@ -192,7 +192,9 @@ def look_for_file_in_source_dir(subdir, name):
     return None
 
 
-def get_valgrind_suppression_file(subdir, name):
+# Returns the path $top_src_dir/@subdir/@name if running from source, or
+# $DATADIR/gstreamer-1.0/validate/@name if not
+def get_data_file(subdir, name):
     # Are we running from sources?
     p = look_for_file_in_source_dir(subdir, name)
     if p:

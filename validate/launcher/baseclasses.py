@@ -36,7 +36,7 @@ from loggable import Loggable
 import xml.etree.cElementTree as ET
 
 from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
-    Protocols, look_for_file_in_source_dir, get_valgrind_suppression_file
+    Protocols, look_for_file_in_source_dir, get_data_file
 
 # The factor by which we increase the hard timeout when running inside
 # Valgrind
@@ -632,7 +632,7 @@ class GstValidateTest(Test):
         return position
 
     def get_valgrind_suppression_file(self, subdir, name):
-        p = get_valgrind_suppression_file(subdir, name)
+        p = get_data_file(subdir, name)
         if p:
             return p
 

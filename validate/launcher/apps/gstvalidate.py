@@ -30,7 +30,7 @@ from launcher.baseclasses import GstValidateTest, Test, \
     GstValidateBaseTestManager, MediaDescriptor, MediaFormatCombination
 
 from launcher.utils import path2url, DEFAULT_TIMEOUT, which, \
-    GST_SECOND, Result, Protocols, mkdir, printc, Colors, get_valgrind_suppression_file
+    GST_SECOND, Result, Protocols, mkdir, printc, Colors, get_data_file
 
 #
 # Private global variables     #
@@ -541,7 +541,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
     def print_valgrind_bugs(self):
         # Look for all the 'pending' bugs in our supp file
         bugs = []
-        p = get_valgrind_suppression_file('data', 'gstvalidate.supp')
+        p = get_data_file('data', 'gstvalidate.supp')
         with open(p) as f:
             for l in f.readlines():
                 l = l.strip()
