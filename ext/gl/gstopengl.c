@@ -116,6 +116,11 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 
+  if (!gst_element_register (plugin, "glimagesinkelement",
+          GST_RANK_NONE, gst_glimage_sink_get_type ())) {
+    return FALSE;
+  }
+
   if (!gst_element_register (plugin, "glupload",
           GST_RANK_SECONDARY, GST_TYPE_GL_UPLOAD_ELEMENT)) {
     return FALSE;
