@@ -179,6 +179,61 @@ skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
   gtk_widget_set_sensitive (play->prev_button, g_list_previous (prev) != NULL);
 }
 
+static GList *
+open_file_dialog (GtkPlay *play)
+{
+  int res;
+  GList *uris = NULL;
+  GtkWidget *chooser;
+  GtkWidget *parent;
+
+  parent = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  chooser = gtk_file_chooser_dialog_new ("Select files to play", NULL,
+      GTK_FILE_CHOOSER_ACTION_OPEN,
+      "_Cancel", GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
+  g_object_set (chooser, "local-only", FALSE, "select-multiple", TRUE, NULL);
+  gtk_window_set_transient_for (GTK_WINDOW (chooser), GTK_WINDOW (parent));
+
+  res = gtk_dialog_run (GTK_DIALOG (chooser));
+  if (res == GTK_RESPONSE_ACCEPT) {
+    GSList *l;
+
+    l = gtk_file_chooser_get_uris (GTK_FILE_CHOOSER (chooser));
+    while (l) {
+      uris = g_list_append (uris, l->data);
+      l = g_slist_delete_link (l, l);
+    }
+  }
+
+  gtk_widget_destroy (chooser);
+  return uris;
+}
+
+static void
+open_file_clicked_cb (GtkWidget * unused, GtkPlay *play)
+{
+  GList * uris, *current;
+
+  uris = open_file_dialog (play);
+  if (uris) {
+    g_list_free_full (play->uris, g_free);
+    play->uris = uris;
+    current = g_list_first (play->uris);
+
+    if (play->image_pixbuf)
+      g_object_unref (play->image_pixbuf);
+    play->image_pixbuf = NULL;
+    gtk_widget_set_sensitive (play->prev_button, FALSE);
+    gtk_widget_set_sensitive (play->media_info_button, FALSE);
+    gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
+    gst_player_set_uri (play->player, current->data);
+    play->current_uri = current;
+    gst_player_play (play->player);
+    set_title (play, current->data);
+    gtk_widget_set_sensitive (play->next_button, g_list_next (current) != NULL);
+  }
+}
+
 static void
 skip_next_clicked_cb (GtkButton * button, GtkPlay * play)
 {
@@ -705,6 +760,9 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
   gint current_index;
   GSList *group = NULL;
 
+  if (!media_info)
+    return NULL;
+
   current_index = get_current_track_index (play, type);
 
   if (type == GST_TYPE_PLAYER_VIDEO_INFO)
@@ -747,6 +805,13 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
 }
 
 static void
+player_quit_clicked_cb (GtkButton * button, GtkPlay * play)
+{
+  gst_player_stop (play->player);
+  gtk_main_quit ();
+}
+
+static void
 gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
 {
   GtkWidget *menu;
@@ -754,59 +819,90 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   GtkWidget *audio;
   GtkWidget *video;
   GtkWidget *sub;
+  GtkWidget *quit;
+  GtkWidget *next;
+  GtkWidget *prev;
+  GtkWidget *open;
+  GtkWidget *image;
   GtkWidget *submenu;
-
   GstPlayerMediaInfo *media_info;
-
-  media_info = gst_player_get_media_info (play->player);
-  if (!media_info)
-    return;
 
   menu = gtk_menu_new ();
   info = gtk_menu_item_new_with_label ("Media Information");
   audio = gtk_menu_item_new_with_label ("Audio");
   video = gtk_menu_item_new_with_label ("Video");
   sub = gtk_menu_item_new_with_label ("Subtitle");
+  open = gtk_menu_item_new_with_label ("Open");
+  next = gtk_menu_item_new_with_label ("Next");
+  prev = gtk_menu_item_new_with_label ("Prev");
+  quit = gtk_menu_item_new_with_label ("Quit");
 
-  if (!gst_player_get_video_streams (media_info))
+  media_info = gst_player_get_media_info (play->player);
+
+  if (media_info && !gst_player_get_video_streams (media_info))
     gtk_widget_set_sensitive (video, FALSE);
   else {
     submenu = create_tracks_menu (play, media_info, GST_TYPE_PLAYER_VIDEO_INFO);
     if (submenu)
       gtk_menu_item_set_submenu (GTK_MENU_ITEM (video), submenu);
+    else
+      gtk_widget_set_sensitive (video, FALSE);
   }
 
-  if (!gst_player_get_audio_streams (media_info))
+  if (media_info && !gst_player_get_audio_streams (media_info))
     gtk_widget_set_sensitive (audio, FALSE);
   else {
     submenu = create_tracks_menu (play, media_info, GST_TYPE_PLAYER_AUDIO_INFO);
     if (submenu)
       gtk_menu_item_set_submenu (GTK_MENU_ITEM (audio), submenu);
+    else
+      gtk_widget_set_sensitive (audio, FALSE);
   }
 
-  if (!gst_player_get_subtitle_streams (media_info))
+  if (media_info && !gst_player_get_subtitle_streams (media_info))
     gtk_widget_set_sensitive (sub, FALSE);
   else {
     submenu = create_tracks_menu (play, media_info,
         GST_TYPE_PLAYER_SUBTITLE_INFO);
     if (submenu)
       gtk_menu_item_set_submenu (GTK_MENU_ITEM (sub), submenu);
+    else
+      gtk_widget_set_sensitive (sub, FALSE);
   }
 
+  gtk_widget_set_sensitive (next, g_list_next
+      (play->current_uri) ? TRUE : FALSE);
+  gtk_widget_set_sensitive (prev, g_list_previous
+      (play->current_uri) ? TRUE : FALSE);
+  gtk_widget_set_sensitive (info, media_info ? TRUE : FALSE);
+
+  g_signal_connect (G_OBJECT (open), "activate",
+      G_CALLBACK (open_file_clicked_cb), play);
+  g_signal_connect (G_OBJECT (next), "activate",
+      G_CALLBACK (skip_next_clicked_cb), play);
+  g_signal_connect (G_OBJECT (prev), "activate",
+      G_CALLBACK (skip_prev_clicked_cb), play);
   g_signal_connect (G_OBJECT (info), "activate",
       G_CALLBACK (media_info_clicked_cb), play);
+  g_signal_connect (G_OBJECT (quit), "activate",
+      G_CALLBACK (player_quit_clicked_cb), play);
 
+  gtk_menu_shell_append (GTK_MENU_SHELL (menu), open);
+  gtk_menu_shell_append (GTK_MENU_SHELL (menu), next);
+  gtk_menu_shell_append (GTK_MENU_SHELL (menu), prev);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), video);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), audio);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), sub);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), info);
+  gtk_menu_shell_append (GTK_MENU_SHELL (menu), quit);
 
   gtk_widget_show_all (menu);
   gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL, NULL,
       (event != NULL) ? event->button : 0,
       gdk_event_get_time ((GdkEvent *) event));
 
-  g_object_unref (media_info);
+  if (media_info)
+    g_object_unref (media_info);
 }
 
 static void
@@ -1272,27 +1368,9 @@ main (gint argc, gchar ** argv)
   // FIXME: Add support for playlists and stuff
   /* Parse the list of the file names we have to play. */
   if (!file_names) {
-    GtkWidget *chooser;
-    int res;
-
-    chooser = gtk_file_chooser_dialog_new ("Select files to play", NULL,
-        GTK_FILE_CHOOSER_ACTION_OPEN,
-        "_Cancel", GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
-    g_object_set (chooser, "local-only", FALSE, "select-multiple", TRUE, NULL);
-
-    res = gtk_dialog_run (GTK_DIALOG (chooser));
-    if (res == GTK_RESPONSE_ACCEPT) {
-      GSList *l;
-
-      l = gtk_file_chooser_get_uris (GTK_FILE_CHOOSER (chooser));
-      while (l) {
-        play.uris = g_list_append (play.uris, l->data);
-        l = g_slist_delete_link (l, l);
-      }
-    } else {
+    play.uris = open_file_dialog (&play);
+    if (!play.uris)
       return 0;
-    }
-    gtk_widget_destroy (chooser);
   } else {
     guint i;
 
