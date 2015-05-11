@@ -1627,44 +1627,6 @@ _get_target_element (GstValidateScenario * scenario, GstValidateAction * action)
   return target;
 }
 
-static gboolean
-strv_contains (GStrv strv, const gchar * str)
-{
-  guint i;
-
-  for (i = 0; strv[i] != NULL; i++)
-    if (g_strcmp0 (strv[i], str) == 0)
-      return TRUE;
-
-  return FALSE;
-}
-
-static gboolean
-element_has_klass (GstElement * element, const gchar * klass)
-{
-  const gchar *tmp;
-  gchar **a, **b;
-  gboolean result = FALSE;
-  guint i;
-
-  tmp = gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (element),
-      GST_ELEMENT_METADATA_KLASS);
-
-  a = g_strsplit (klass, "/", -1);
-  b = g_strsplit (tmp, "/", -1);
-
-  /* All the elements in 'a' have to be in 'b' */
-  for (i = 0; a[i] != NULL; i++)
-    if (!strv_contains (b, a[i]))
-      goto done;
-  result = TRUE;
-
-done:
-  g_strfreev (a);
-  g_strfreev (b);
-  return result;
-}
-
 static gint
 cmp_klass_name (gconstpointer a, gconstpointer b)
 {
@@ -1673,7 +1635,7 @@ cmp_klass_name (gconstpointer a, gconstpointer b)
   GstElement *element = g_value_get_object (v);
   const gchar *klass = g_value_get_string (param);
 
-  if (element_has_klass (element, klass))
+  if (gst_validate_element_has_klass (element, klass))
     return 0;
 
   return 1;
@@ -1703,7 +1665,7 @@ _get_target_elements_by_klass (GstValidateScenario * scenario,
   if (klass == NULL)
     return NULL;
 
-  if (element_has_klass (scenario->pipeline, klass))
+  if (gst_validate_element_has_klass (scenario->pipeline, klass))
     result = g_list_prepend (result, gst_object_ref (scenario->pipeline));
 
   it = gst_bin_iterate_recurse (GST_BIN (scenario->pipeline));
@@ -2527,7 +2489,7 @@ should_execute_action (GstElement * element, GstValidateAction * action)
     return TRUE;
 
   tmp = gst_structure_get_string (action->structure, "target-element-klass");
-  if (tmp != NULL && element_has_klass (element, tmp))
+  if (tmp != NULL && gst_validate_element_has_klass (element, tmp))
     return TRUE;
 
   return FALSE;

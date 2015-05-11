@@ -659,3 +659,41 @@ structs_parse_from_gfile (GFile * scenario_file)
 
   return _lines_get_strutures (lines);
 }
+
+static gboolean
+strv_contains (GStrv strv, const gchar * str)
+{
+  guint i;
+
+  for (i = 0; strv[i] != NULL; i++)
+    if (g_strcmp0 (strv[i], str) == 0)
+      return TRUE;
+
+  return FALSE;
+}
+
+gboolean
+gst_validate_element_has_klass (GstElement * element, const gchar * klass)
+{
+  const gchar *tmp;
+  gchar **a, **b;
+  gboolean result = FALSE;
+  guint i;
+
+  tmp = gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (element),
+      GST_ELEMENT_METADATA_KLASS);
+
+  a = g_strsplit (klass, "/", -1);
+  b = g_strsplit (tmp, "/", -1);
+
+  /* All the elements in 'a' have to be in 'b' */
+  for (i = 0; a[i] != NULL; i++)
+    if (!strv_contains (b, a[i]))
+      goto done;
+  result = TRUE;
+
+done:
+  g_strfreev (a);
+  g_strfreev (b);
+  return result;
+}
