@@ -343,12 +343,11 @@ gst_sparse_file_read (GstSparseFile * file, gsize offset, gpointer data,
         goto error;
     }
     res = fread (data, 1, count, file->file);
+    if (G_UNLIKELY (res < count))
+      goto error;
   }
 
   file->current_pos = offset + res;
-
-  if (G_UNLIKELY (res < count))
-    goto error;
 
   if (remaining)
     *remaining = range->stop - file->current_pos;
