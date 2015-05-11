@@ -158,25 +158,33 @@ play_pause_clicked_cb (GtkButton * button, GtkPlay * play)
 }
 
 static void
+play_current_uri (GtkPlay * play, GList * uri)
+{
+  /* reset the button/widget state to default */
+  if (play->image_pixbuf)
+    g_object_unref (play->image_pixbuf);
+  play->image_pixbuf = NULL;
+  gtk_widget_set_sensitive (play->media_info_button, FALSE);
+  gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
+  gtk_widget_set_sensitive (play->prev_button, g_list_previous (uri) != NULL);
+  gtk_widget_set_sensitive (play->next_button, g_list_next (uri) != NULL);
+
+  /* play uri */
+  gst_player_set_uri (play->player, uri->data);
+  play->current_uri = uri;
+  gst_player_play (play->player);
+  set_title (play, uri->data);
+}
+
+static void
 skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
 {
   GList *prev;
-  gchar *cur_uri;
 
   prev = g_list_previous (play->current_uri);
   g_return_if_fail (prev != NULL);
 
-  if (play->image_pixbuf)
-    g_object_unref (play->image_pixbuf);
-  play->image_pixbuf = NULL;
-  gtk_widget_set_sensitive (play->next_button, TRUE);
-  gtk_widget_set_sensitive (play->media_info_button, FALSE);
-  gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
-  gst_player_set_uri (play->player, prev->data);
-  play->current_uri = prev;
-  gst_player_play (play->player);
-  set_title (play, prev->data);
-  gtk_widget_set_sensitive (play->prev_button, g_list_previous (prev) != NULL);
+  play_current_uri (play, prev);
 }
 
 static GList *
@@ -216,44 +224,23 @@ open_file_clicked_cb (GtkWidget * unused, GtkPlay *play)
 
   uris = open_file_dialog (play);
   if (uris) {
+    /* free existing playlist */
     g_list_free_full (play->uris, g_free);
-    play->uris = uris;
-    current = g_list_first (play->uris);
 
-    if (play->image_pixbuf)
-      g_object_unref (play->image_pixbuf);
-    play->image_pixbuf = NULL;
-    gtk_widget_set_sensitive (play->prev_button, FALSE);
-    gtk_widget_set_sensitive (play->media_info_button, FALSE);
-    gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
-    gst_player_set_uri (play->player, current->data);
-    play->current_uri = current;
-    gst_player_play (play->player);
-    set_title (play, current->data);
-    gtk_widget_set_sensitive (play->next_button, g_list_next (current) != NULL);
+    play->uris = uris;
+    play_current_uri (play, g_list_first (play->uris));
   }
 }
 
 static void
 skip_next_clicked_cb (GtkButton * button, GtkPlay * play)
 {
-  GList *next, *l;
-  gchar *cur_uri;
+  GList *next;
 
   next = g_list_next (play->current_uri);
   g_return_if_fail (next != NULL);
 
-  if (play->image_pixbuf)
-    g_object_unref (play->image_pixbuf);
-  play->image_pixbuf = NULL;
-  gtk_widget_set_sensitive (play->prev_button, TRUE);
-  gtk_widget_set_sensitive (play->media_info_button, FALSE);
-  gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
-  gst_player_set_uri (play->player, next->data);
-  play->current_uri = next;
-  gst_player_play (play->player);
-  set_title (play, next->data);
-  gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
+  play_current_uri (play, next);
 }
 
 static const gchar *
@@ -1171,20 +1158,7 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
       next = g_list_first (play->uris);
 
     if (next) {
-      if (!gtk_widget_is_sensitive (play->prev_button))
-        gtk_widget_set_sensitive (play->prev_button, TRUE);
-      gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
-      if (play->image_pixbuf)
-        g_object_unref (play->image_pixbuf);
-      play->image_pixbuf = NULL;
-
-      gtk_widget_set_sensitive (play->media_info_button, FALSE);
-      gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
-
-      gst_player_set_uri (play->player, next->data);
-      play->current_uri = next;
-      gst_player_play (play->player);
-      set_title (play, next->data);
+      play_current_uri (play, next);
     } else {
       GtkWidget *image;
 
@@ -1391,12 +1365,9 @@ main (gint argc, gchar ** argv)
 
   g_object_set (play.player, "dispatch-to-main-context", TRUE, NULL);
 
-  gst_player_set_uri (play.player, g_list_first (play.uris)->data);
-
   create_ui (&play);
 
-  if (list_length > 1)
-    gtk_widget_set_sensitive (play.next_button, TRUE);
+  play_current_uri (&play, g_list_first (play.uris));
 
   g_signal_connect (play.player, "position-updated",
       G_CALLBACK (position_updated_cb), &play);
