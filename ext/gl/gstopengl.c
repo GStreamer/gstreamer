@@ -181,6 +181,11 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 
+  if (!gst_element_register (plugin, "glvideomixerelement",
+          GST_RANK_NONE, gst_gl_video_mixer_get_type ())) {
+    return FALSE;
+  }
+
   if (!gst_element_register (plugin, "glshader",
           GST_RANK_NONE, gst_gl_filtershader_get_type ())) {
     return FALSE;
