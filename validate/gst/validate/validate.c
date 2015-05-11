@@ -99,10 +99,15 @@ create_config (const gchar * path, const gchar * suffix)
   structures = gst_validate_utils_structs_parse_from_filename (path);
 
   for (tmp = structures; tmp; tmp = tmp->next) {
-    if (gst_structure_has_name (tmp->data, suffix))
-      result = g_list_append (result, tmp->data);
+    GstStructure *structure = tmp->data;
+
+    if (gst_structure_has_name (structure, suffix))
+      result = g_list_append (result, structure);
+    else
+      gst_structure_free (structure);
   }
 
+  g_list_free (structures);
   return result;
 }
 
