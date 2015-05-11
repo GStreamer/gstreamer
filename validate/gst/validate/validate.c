@@ -125,8 +125,11 @@ create_config (const gchar * path, const gchar * suffix)
 GList *
 gst_validate_plugin_get_config (GstPlugin * plugin)
 {
-  GList *plugin_conf;
+  GList *plugin_conf = NULL;
   const gchar *suffix;
+  const gchar *config;
+  GStrv tmp;
+  guint i;
 
   if (plugin) {
     if ((plugin_conf =
@@ -141,7 +144,19 @@ gst_validate_plugin_get_config (GstPlugin * plugin)
     suffix = "core";
   }
 
-  plugin_conf = create_config (g_getenv ("GST_VALIDATE_CONFIG"), suffix);
+  config = g_getenv ("GST_VALIDATE_CONFIG");
+  if (!config)
+    return NULL;
+
+  tmp = g_strsplit (config, G_SEARCHPATH_SEPARATOR_S, -1);
+  for (i = 0; tmp[i] != NULL; i++) {
+    GList *l;
+
+    l = create_config (tmp[i], suffix);
+    if (l)
+      plugin_conf = g_list_concat (plugin_conf, l);
+  }
+  g_strfreev (tmp);
 
   if (plugin)
     g_object_set_data_full (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG,
