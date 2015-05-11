@@ -30,9 +30,9 @@
  * The above mentioned pipeline should dump data packets to the console.
  *
  * If the #GstFdSrc:timeout property is set to a value bigger than 0, fdsrc will
- * generate an element message named
- * <classname>&quot;GstFdSrcTimeout&quot;</classname>
+ * generate an element message named <classname>&quot;GstFdSrcTimeout&quot;</classname>
  * if no data was received in the given timeout.
+ *
  * The message's structure contains one field:
  * <itemizedlist>
  * <listitem>
@@ -47,7 +47,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * echo "Hello GStreamer" | gst-launch -v fdsrc ! fakesink dump=true
+ * echo "Hello GStreamer" | gst-launch-1.0 -v fdsrc ! fakesink dump=true
  * ]| A simple pipeline to read from the standard input and dump the data
  * with a fakesink as hex ascii block.
  * </refsect2>
