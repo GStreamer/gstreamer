@@ -1164,6 +1164,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
           pixel_format_type = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
           break;
         default:
+          gst_vtenc_frame_free (vframe);
           goto cv_error;
       }
 
