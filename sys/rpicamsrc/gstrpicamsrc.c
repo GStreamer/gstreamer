@@ -519,7 +519,7 @@ gst_rpi_cam_src_colorbalance_set_value (GstColorBalance * balance,
   g_return_if_fail (GST_IS_RPICAMSRC (src));
   g_return_if_fail (channel->label != NULL);
 
-  GST_OBJECT_LOCK (src);
+  g_mutex_lock (&src->config_lock);
   if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
     changed = value != src->capture_config.camera_parameters.saturation;
     src->capture_config.camera_parameters.saturation = value;
@@ -534,7 +534,7 @@ gst_rpi_cam_src_colorbalance_set_value (GstColorBalance * balance,
   if (changed)
     src->capture_config.change_flags |= PROP_CHANGE_COLOURBALANCE;
 
-  GST_OBJECT_UNLOCK (src);
+  g_mutex_unlock (&src->config_lock);
 
   if (changed) {
     gst_color_balance_value_changed (balance, channel,
@@ -553,6 +553,8 @@ gst_rpi_cam_src_colorbalance_get_value (GstColorBalance * balance,
   g_return_val_if_fail (GST_IS_RPICAMSRC (src), 0);
   g_return_val_if_fail (channel->label != NULL, 0);
 
+  g_mutex_lock (&src->config_lock);
+
   if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
     value = src->capture_config.camera_parameters.saturation;
   } else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS")) {
@@ -560,6 +562,8 @@ gst_rpi_cam_src_colorbalance_get_value (GstColorBalance * balance,
   } else if (!g_ascii_strcasecmp (channel->label, "CONTRAST")) {
     value = src->capture_config.camera_parameters.contrast;
   }
+
+  g_mutex_unlock (&src->config_lock);
 
   return value;
 }
