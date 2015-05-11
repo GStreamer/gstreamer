@@ -114,6 +114,26 @@ _negotiated_caps (GstVideoAggregator * vagg, GstCaps * caps)
   return ret;
 }
 
+static void
+_find_best_format (GstVideoAggregator * vagg, GstCaps * downstream_caps,
+    GstVideoInfo * best_info, gboolean * at_least_one_alpha)
+{
+  GstVideoInfo tmp_info;
+
+  GST_VIDEO_AGGREGATOR_CLASS (parent_class)->find_best_format (vagg,
+      downstream_caps, best_info, at_least_one_alpha);
+
+  gst_video_info_set_format (&tmp_info, GST_VIDEO_FORMAT_RGBA,
+      best_info->width, best_info->height);
+  tmp_info.par_n = best_info->par_n;
+  tmp_info.par_d = best_info->par_d;
+  tmp_info.fps_n = best_info->fps_n;
+  tmp_info.fps_d = best_info->fps_d;
+  tmp_info.flags = best_info->flags;
+  tmp_info.interlace_mode = best_info->interlace_mode;
+  *best_info = tmp_info;
+}
+
 static gboolean
 gst_gl_mixer_propose_allocation (GstGLBaseMixer * base_mix,
     GstGLBaseMixerPad * base_pad, GstQuery * decide_query, GstQuery * query)
@@ -366,7 +386,7 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   videoaggregator_class->get_output_buffer = gst_gl_mixer_get_output_buffer;
   videoaggregator_class->negotiated_caps = _negotiated_caps;
   videoaggregator_class->update_caps = _update_caps;
-  videoaggregator_class->find_best_format = NULL;
+  videoaggregator_class->find_best_format = _find_best_format;
 
   mix_class->propose_allocation = gst_gl_mixer_propose_allocation;
   mix_class->decide_allocation = gst_gl_mixer_decide_allocation;
