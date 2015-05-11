@@ -1196,14 +1196,24 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
       }
 
       if (gst_mpd_client_get_next_fragment_timestamp (dashdemux->client,
+              demux_stream->index, &ts)
+          || gst_mpd_client_get_last_fragment_timestamp_end (dashdemux->client,
               demux_stream->index, &ts)) {
+
+        /* Due to rounding when doing the timescale conversions it might happen
+         * that the ts falls back to a previous segment, leading the same data
+         * to be downloaded twice. We try to work around this by always adding
+         * 10 microseconds to get back to the correct segment. The errors are
+         * usually on the order of nanoseconds so it should be enough.
+         */
+        GST_DEBUG_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (demux_stream),
+            "Current position: %" GST_TIME_FORMAT ", updating to %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (ts),
+            GST_TIME_ARGS (ts + (10 * GST_USECOND)));
+        ts += 10 * GST_USECOND;
         gst_mpd_client_stream_seek (new_client, new_stream, ts);
-      } else
-          if (gst_mpd_client_get_last_fragment_timestamp (dashdemux->client,
-              demux_stream->index, &ts)) {
-        /* try to set to the old timestamp + 1 */
-        gst_mpd_client_stream_seek (new_client, new_stream, ts + 1);
       }
+
       demux_stream->active_stream = new_stream;
     }
 

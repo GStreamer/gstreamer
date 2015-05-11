@@ -496,7 +496,7 @@ gboolean gst_mpd_client_setup_representation (GstMpdClient *client, GstActiveStr
 GList * gst_mpd_client_get_adaptation_sets (GstMpdClient * client);
 GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client, GstActiveStream * stream);
 GstClockTime gst_mpd_client_get_media_presentation_duration (GstMpdClient *client);
-gboolean gst_mpd_client_get_last_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
+gboolean gst_mpd_client_get_last_fragment_timestamp_end (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
 gboolean gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
 gboolean gst_mpd_client_get_next_fragment (GstMpdClient *client, guint indexStream, GstMediaFragmentInfo * fragment);
 gboolean gst_mpd_client_get_next_header (GstMpdClient *client, gchar **uri, guint stream_idx, gint64 * range_start, gint64 * range_end);

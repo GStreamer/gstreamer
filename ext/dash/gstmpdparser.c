@@ -3548,7 +3548,7 @@ gst_mpd_client_get_availability_start_time (GstMpdClient * client)
 }
 
 gboolean
-gst_mpd_client_get_last_fragment_timestamp (GstMpdClient * client,
+gst_mpd_client_get_last_fragment_timestamp_end (GstMpdClient * client,
     guint stream_idx, GstClockTime * ts)
 {
   GstActiveStream *stream;
@@ -3562,7 +3562,9 @@ gst_mpd_client_get_last_fragment_timestamp (GstMpdClient * client,
   segment_idx = gst_mpd_client_get_segments_counts (stream) - 1;
   currentChunk = g_ptr_array_index (stream->segments, segment_idx);
 
-  *ts = currentChunk->start + (currentChunk->duration * currentChunk->repeat);
+  *ts =
+      currentChunk->start + (currentChunk->duration * (1 +
+          currentChunk->repeat));
 
   return TRUE;
 }
