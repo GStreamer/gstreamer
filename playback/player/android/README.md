@@ -9,9 +9,15 @@ Prerequisites
 3. If you have a different special directory for pkg-config or other tools (e.g. on OSX when using Homebrew), then also set this path using the `ndk.extraPath` variable in **local.properties**
 4. Download the GStreamer android ports http://gstreamer.freedesktop.org/data/pkg/android/ and set `gstreamer.$ABI.dir` properties in **local.properties**:
 
+Sample local.properties:
+
+    sdk.dir=/path/to/android-sdk/
+    ndk.dir=/path/to/android-ndk/
+    ndk.extraPath=/usr/local/bin
     gstreamer.arm.dir=/path/to/gstreamer-1.0-android-arm-release-1.4.5/
     gstreamer.armv7.dir=/path/to/gstreamer-1.0-android-armv7-release-1.4.5/
     gstreamer.x86.dir=/path/to/gstreamer-1.0-android-x86-release-1.4.5/
+
 
 Compiling the sample
 --------------------
