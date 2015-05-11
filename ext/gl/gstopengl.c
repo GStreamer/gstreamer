@@ -122,17 +122,17 @@ plugin_init (GstPlugin * plugin)
   }
 
   if (!gst_element_register (plugin, "glupload",
-          GST_RANK_SECONDARY, GST_TYPE_GL_UPLOAD_ELEMENT)) {
+          GST_RANK_NONE, GST_TYPE_GL_UPLOAD_ELEMENT)) {
     return FALSE;
   }
 
   if (!gst_element_register (plugin, "gldownload",
-          GST_RANK_SECONDARY, GST_TYPE_GL_DOWNLOAD_ELEMENT)) {
+          GST_RANK_NONE, GST_TYPE_GL_DOWNLOAD_ELEMENT)) {
     return FALSE;
   }
 
   if (!gst_element_register (plugin, "glcolorconvert",
-          GST_RANK_SECONDARY, GST_TYPE_GL_COLOR_CONVERT_ELEMENT)) {
+          GST_RANK_NONE, GST_TYPE_GL_COLOR_CONVERT_ELEMENT)) {
     return FALSE;
   }
 
