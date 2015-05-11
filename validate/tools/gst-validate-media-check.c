@@ -142,6 +142,7 @@ out:
   if (runner)
     gst_object_unref (runner);
   gst_deinit ();
+  gst_validate_deinit ();
 
   return ret;
 }

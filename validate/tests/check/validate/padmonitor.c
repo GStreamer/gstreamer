@@ -993,6 +993,7 @@ gst_validate_suite (void)
   tcase_add_test (tc_chain, eos_without_segment);
   tcase_add_test (tc_chain, caps_events);
 
+  gst_validate_deinit ();
   return s;
 }
 

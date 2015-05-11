@@ -308,6 +308,7 @@ gst_validate_suite (void)
   tcase_add_test (tc_chain, test_global_levels);
   tcase_add_test (tc_chain, test_specific_levels);
 
+  gst_validate_deinit ();
   return s;
 }
 

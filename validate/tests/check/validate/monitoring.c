@@ -104,6 +104,7 @@ gst_validate_suite (void)
   tcase_add_test (tc_chain, monitors_added);
   tcase_add_test (tc_chain, monitors_cleanup);
 
+  gst_validate_deinit ();
   return s;
 }
 

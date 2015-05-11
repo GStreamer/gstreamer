@@ -629,5 +629,7 @@ exit:
 
   g_print ("\n=======> Test %s (Return value: %i)\n\n",
       ret == 0 ? "PASSED" : "FAILED", ret);
+
+  gst_validate_deinit ();
   return ret;
 }

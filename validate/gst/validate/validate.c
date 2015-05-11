@@ -219,3 +219,8 @@ gst_validate_init (void)
 
   gst_validate_init_plugins ();
 }
+
+void
+gst_validate_deinit (void)
+{
+}

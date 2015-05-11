@@ -102,6 +102,7 @@ gst_validate_suite (void)
 
   tcase_add_test (tc_chain, check_text_overrides);
 
+  gst_validate_deinit ();
   return s;
 }
 
