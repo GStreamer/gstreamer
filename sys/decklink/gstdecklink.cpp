@@ -178,7 +178,7 @@ static const GstDecklinkMode modes[] = {
   {bmdMode4K2160p25, 3840, 2160, 25, 1, false, UHD},
   {bmdMode4K2160p2997, 3840, 2160, 30000, 1001, false, UHD},
   {bmdMode4K2160p30, 3840, 2160, 30, 1, false, UHD},
-  {bmdMode4K2160p50, 3840, 2160, 55, 1, false, UHD},
+  {bmdMode4K2160p50, 3840, 2160, 50, 1, false, UHD},
   {bmdMode4K2160p5994, 3840, 2160, 60000, 1001, false, UHD},
   {bmdMode4K2160p60, 3840, 2160, 60, 1, false, UHD}
 };
