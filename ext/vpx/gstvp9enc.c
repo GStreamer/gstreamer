@@ -1513,22 +1513,12 @@ gst_vp9_enc_set_format (GstVideoEncoder * video_encoder,
     GST_DEBUG_OBJECT (video_encoder, "Using timebase configuration");
     encoder->cfg.g_timebase.num = encoder->timebase_n;
     encoder->cfg.g_timebase.den = encoder->timebase_d;
-  } else if (GST_VIDEO_INFO_FPS_D (info) != 0
-      && GST_VIDEO_INFO_FPS_N (info) != 0) {
-    /* GstVideoInfo holds either the framerate or max-framerate (if framerate
-     * is 0) in FPS so this will be used if max-framerate or framerate
-     * is set */
-    GST_DEBUG_OBJECT (video_encoder, "Setting timebase from framerate");
-    encoder->cfg.g_timebase.num = GST_VIDEO_INFO_FPS_D (info);
-    encoder->cfg.g_timebase.den = GST_VIDEO_INFO_FPS_N (info);
   } else {
     /* Zero framerate and max-framerate but still need to setup the timebase to avoid
      * a divide by zero error. Presuming the lowest common denominator will be RTP -
      * VP9 payload draft states clock rate of 90000 which should work for anyone where
      * FPS < 90000 (shouldn't be too many cases where it's higher) though wouldn't be optimal. RTP specification
      * http://tools.ietf.org/html/draft-ietf-payload-vp9-01 section 6.3.1 */
-    GST_WARNING_OBJECT (encoder,
-        "No timebase and zero framerate setting timebase to 1/90000");
     encoder->cfg.g_timebase.num = 1;
     encoder->cfg.g_timebase.den = 90000;
   }
