@@ -224,6 +224,7 @@ native_free (JNIEnv * env, jobject thiz)
   if (!player)
     return;
 
+  g_object_unref (player->player);
   (*env)->DeleteGlobalRef (env, player->java_player);
   g_free (player);
   SET_CUSTOM_DATA (env, thiz, native_player_field_id, NULL);
