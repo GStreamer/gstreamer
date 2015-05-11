@@ -51,6 +51,8 @@ GST_DEBUG_CATEGORY (gstvalidate_debug);
 static GMutex _gst_validate_registry_mutex;
 static GstRegistry *_gst_validate_registry_default = NULL;
 
+static GList *core_config = NULL;
+
 #ifdef G_OS_WIN32
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 BOOL WINAPI
@@ -111,22 +113,41 @@ create_config (const gchar * path, const gchar * suffix)
   return result;
 }
 
+/**
+ * gst_validate_plugin_get_config:
+ * @plugin, a #GstPlugin, or #NULL
+ *
+ * Return the configuration specific to @plugin, or the "core" one if @plugin
+ * is #NULL
+ *
+ * Returns: (transfer none) (element-type GstStructure): a list of #GstStructure
+ */
 GList *
 gst_validate_plugin_get_config (GstPlugin * plugin)
 {
   GList *plugin_conf;
   const gchar *suffix;
 
-  if ((plugin_conf =
-          g_object_get_data (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG)))
-    return plugin_conf;
+  if (plugin) {
+    if ((plugin_conf =
+            g_object_get_data (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG)))
+      return plugin_conf;
 
-  suffix = gst_plugin_get_name (plugin);
+    suffix = gst_plugin_get_name (plugin);
+  } else {
+    if (core_config)
+      return core_config;
+
+    suffix = "core";
+  }
 
   plugin_conf = create_config (g_getenv ("GST_VALIDATE_CONFIG"), suffix);
 
-  g_object_set_data_full (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG,
-      plugin_conf, _free_plugin_config);
+  if (plugin)
+    g_object_set_data_full (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG,
+        plugin_conf, _free_plugin_config);
+  else
+    core_config = plugin_conf;
 
   return plugin_conf;
 }
@@ -223,4 +244,6 @@ gst_validate_init (void)
 void
 gst_validate_deinit (void)
 {
+  _free_plugin_config (core_config);
+  core_config = NULL;
 }
