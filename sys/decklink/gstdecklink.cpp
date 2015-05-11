@@ -64,9 +64,9 @@ gst_decklink_mode_get_type (void)
     {GST_DECKLINK_MODE_720p5994, "720p5994", "HD720 59.94p"},
     {GST_DECKLINK_MODE_720p60, "720p60", "HD720 60p"},
 
-    {GST_DECKLINK_MODE_2048p2398, "2048p2398", "2k 23.98p"},
-    {GST_DECKLINK_MODE_2048p24, "2048p24", "2k 24p"},
-    {GST_DECKLINK_MODE_2048p25, "2048p25", "2k 25p"},
+    {GST_DECKLINK_MODE_1556p2398, "1556p2398", "2k 23.98p"},
+    {GST_DECKLINK_MODE_1556p24, "1556p24", "2k 24p"},
+    {GST_DECKLINK_MODE_1556p25, "1556p25", "2k 25p"},
 
     {GST_DECKLINK_MODE_2160p2398, "2160p2398", "4k 23.98p"},
     {GST_DECKLINK_MODE_2160p24, "2160p24", "4k 24p"},
@@ -254,13 +254,13 @@ gst_decklink_get_mode_enum_from_bmd (BMDDisplayMode mode)
       displayMode = GST_DECKLINK_MODE_720p60;
       break;
     case bmdMode2k2398:
-      displayMode = GST_DECKLINK_MODE_2048p2398;
+      displayMode = GST_DECKLINK_MODE_1556p2398;
       break;
     case bmdMode2k24:
-      displayMode = GST_DECKLINK_MODE_2048p24;
+      displayMode = GST_DECKLINK_MODE_1556p24;
       break;
     case bmdMode2k25:
-      displayMode = GST_DECKLINK_MODE_2048p25;
+      displayMode = GST_DECKLINK_MODE_1556p25;
       break;
     case bmdMode4K2160p2398:
       displayMode = GST_DECKLINK_MODE_2160p2398;
