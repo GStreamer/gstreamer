@@ -115,6 +115,7 @@ gst_dvd_read_src_init (GstDvdReadSrc * src)
   src->dvd_title = NULL;
 
   src->location = g_strdup ("/dev/dvd");
+  src->first_seek = TRUE;
   src->new_seek = TRUE;
   src->new_cell = TRUE;
   src->change_cell = FALSE;
@@ -1238,6 +1239,13 @@ gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
 
   GST_DEBUG_OBJECT (src, "Seeking to %s: %12" G_GINT64_FORMAT,
       gst_format_get_name (s->format), s->position);
+
+  /* Ignore the first seek to 0, as it breaks starting playback
+   * from another chapter by seeking back to sector 0 */
+  if (src->first_seek && s->format == GST_FORMAT_BYTES && s->start == 0) {
+    src->first_seek = FALSE;
+    return TRUE;
+  }
 
   if (s->format == sector_format || s->format == GST_FORMAT_BYTES
       || s->format == GST_FORMAT_TIME) {
