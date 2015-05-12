@@ -220,6 +220,8 @@ gst_dvd_read_src_start (GstBaseSrc * basesrc)
   src->new_seek = FALSE;
   src->change_cell = TRUE;
 
+  src->first_seek = TRUE;
+
   return TRUE;
 
   /* ERRORS */
