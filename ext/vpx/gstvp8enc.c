@@ -1886,8 +1886,8 @@ gst_vp8_enc_drain (GstVideoEncoder * video_encoder)
 
   pts =
       gst_util_uint64_scale (encoder->last_pts,
-      encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND,
-      encoder->cfg.g_timebase.den);
+      encoder->cfg.g_timebase.den,
+      encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND);
 
   status = vpx_codec_encode (&encoder->encoder, NULL, pts, 0, flags, deadline);
   g_mutex_unlock (&encoder->encoder_lock);
@@ -2011,15 +2011,14 @@ gst_vp8_enc_handle_frame (GstVideoEncoder * video_encoder,
   g_mutex_lock (&encoder->encoder_lock);
   pts =
       gst_util_uint64_scale (frame->pts,
-      encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND,
-      encoder->cfg.g_timebase.den);
+      encoder->cfg.g_timebase.den,
+      encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND);
   encoder->last_pts = frame->pts;
 
   if (frame->duration != GST_CLOCK_TIME_NONE) {
     duration =
-        gst_util_uint64_scale (frame->duration,
-        encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND,
-        encoder->cfg.g_timebase.den);
+        gst_util_uint64_scale (frame->duration, encoder->cfg.g_timebase.den,
+        encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND);
     encoder->last_pts += frame->duration;
   } else {
     duration = 1;
