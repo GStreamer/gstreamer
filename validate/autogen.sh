@@ -18,14 +18,14 @@ package=gst-validate
 srcfile=gst-validate.doap
 
 # Make sure we have common
-if test ! -f common/gst-autogen.sh;
+cd ../
+if test ! -f validate/common/gst-autogen.sh;
 then
   echo "+ Setting up common submodule"
-  cd ../
   git submodule init
-  cd validate/
 fi
 git submodule update
+cd validate/
 
 # source helper functions
 if test ! -f common/gst-autogen.sh;
