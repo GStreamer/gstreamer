@@ -3720,6 +3720,21 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   return TRUE;
 }
 
+gboolean
+gst_mpd_client_has_next_segment (GstMpdClient * client,
+    GstActiveStream * stream, gboolean forward)
+{
+  if (forward) {
+    if (stream->segment_index >= stream->segments->len)
+      return FALSE;
+  } else {
+    if (stream->segment_index < 0)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 GstFlowReturn
 gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
     gboolean forward)

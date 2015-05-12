@@ -534,6 +534,7 @@ GstActiveStream *gst_mpdparser_get_active_stream_by_index (GstMpdClient *client,
 guint gst_mpdparser_get_nb_adaptationSet (GstMpdClient *client);
 
 /* Segment */
+gboolean gst_mpd_client_has_next_segment (GstMpdClient * client, GstActiveStream * stream, gboolean forward);
 GstFlowReturn gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream, gboolean forward);
 void gst_mpd_client_seek_to_first_segment (GstMpdClient * client);
 

@@ -205,6 +205,8 @@ static GstFlowReturn
 gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream);
 static GstFlowReturn gst_dash_demux_stream_seek (GstAdaptiveDemuxStream *
     stream, GstClockTime ts);
+static gboolean
+gst_dash_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream);
 static GstFlowReturn
 gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream);
 static gboolean
@@ -361,6 +363,8 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
 
   gstadaptivedemux_class->has_next_period = gst_dash_demux_has_next_period;
   gstadaptivedemux_class->advance_period = gst_dash_demux_advance_period;
+  gstadaptivedemux_class->stream_has_next_fragment =
+      gst_dash_demux_stream_has_next_fragment;
   gstadaptivedemux_class->stream_advance_fragment =
       gst_dash_demux_stream_advance_fragment;
   gstadaptivedemux_class->stream_get_fragment_waiting_time =
@@ -967,6 +971,16 @@ gst_dash_demux_stream_advance_subfragment (GstAdaptiveDemuxStream * stream)
     dashstream->sidx_current_remaining = sidx->entries[sidx->entry_index].size;
   }
   return !fragment_finished;
+}
+
+static gboolean
+gst_dash_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream)
+{
+  GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
+  GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
+
+  return gst_mpd_client_has_next_segment (dashdemux->client,
+      dashstream->active_stream, stream->demux->segment.rate > 0.0);
 }
 
 static GstFlowReturn
