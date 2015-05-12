@@ -27,16 +27,6 @@
 #include <gst/gl/gl.h>
 #include "gstgluploadelement.h"
 
-#if GST_GL_HAVE_PLATFORM_EGL
-#include <gst/gl/egl/gsteglimagememory.h>
-#endif
-
-#define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
-#define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))
-#define USING_GLES(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES, 1, 0))
-#define USING_GLES2(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0))
-#define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
-
 GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_element_debug);
 #define GST_CAT_DEFAULT gst_gl_upload_element_debug
 
