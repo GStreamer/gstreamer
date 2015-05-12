@@ -428,6 +428,11 @@ gst_asf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       demux->need_newsegment = TRUE;
       demux->segment_seqnum = gst_event_get_seqnum (event);
       gst_asf_demux_reset_stream_state_after_discont (demux);
+      /* if we seek back after reaching EOS, go back to packet reading state */
+      if (demux->data_offset > 0 && segment->start >= demux->data_offset
+          && demux->state == GST_ASF_DEMUX_STATE_INDEX) {
+        demux->state = GST_ASF_DEMUX_STATE_DATA;
+      }
       GST_OBJECT_UNLOCK (demux);
 
       gst_event_unref (event);
