@@ -615,7 +615,8 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
   GstClockTime duration = 0;
   GstStateChangeReturn ret;
 
-  gst_structure_get_uint64 (action->structure, "duration", &duration);
+  gst_structure_get (action->structure, "duration", G_TYPE_UINT64, &duration,
+      NULL);
   gst_structure_set (action->structure, "state", G_TYPE_STRING, "paused", NULL);
 
   GST_INFO_OBJECT (scenario, "Pausing for %" GST_TIME_FORMAT,
