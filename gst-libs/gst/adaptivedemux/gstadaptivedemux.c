@@ -1986,9 +1986,11 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
        * demux segment position that can be much ahead */
       for (GList * iter = demux->streams; iter != NULL;
           iter = g_list_next (iter)) {
-        GstAdaptiveDemuxStream *cur_stream = (GstAdaptiveDemuxStream *)iter->data;
+        GstAdaptiveDemuxStream *cur_stream =
+            (GstAdaptiveDemuxStream *) iter->data;
 
-        if (gst_pad_peer_query_position (cur_stream->pad, GST_FORMAT_TIME, &pos)) {
+        if (gst_pad_peer_query_position (cur_stream->pad, GST_FORMAT_TIME,
+                &pos)) {
           ts = (GstClockTime) pos;
           GST_DEBUG_OBJECT (stream->pad, "Downstream position: %"
               GST_TIME_FORMAT, GST_TIME_ARGS (ts));
