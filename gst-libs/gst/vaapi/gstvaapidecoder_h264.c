@@ -1743,13 +1743,8 @@ static GstVaapiDecoderStatus
 decode_sequence_end(GstVaapiDecoderH264 *decoder)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
-    GstVaapiDecoderStatus status;
 
     GST_DEBUG("decode sequence-end");
-
-    status = decode_current_picture(decoder);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-        return status;
 
     dpb_flush(decoder, NULL);
 
