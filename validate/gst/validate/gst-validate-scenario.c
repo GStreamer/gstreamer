@@ -137,6 +137,8 @@ struct _GstValidateScenarioPrivate
   GstState target_state;
 
   GList *overrides;
+
+  GstStructure *description;
 };
 
 typedef struct KeyFileGroupName
@@ -2138,6 +2140,9 @@ _load_scenario_file (GstValidateScenario * scenario,
       gst_structure_get_boolean (structure, "is-config", is_config);
       gst_structure_get_boolean (structure, "handles-states",
           &priv->handles_state);
+
+      priv->description = gst_structure_copy (structure);
+
       continue;
     } else if (!(action_type = _find_action_type (type))) {
       if (gst_structure_has_field (structure, "optional-action-type")) {
@@ -2435,7 +2440,8 @@ gst_validate_scenario_finalize (GObject * object)
       (GDestroyNotify) gst_mini_object_unref);
   g_list_free_full (priv->on_addition_actions,
       (GDestroyNotify) gst_mini_object_unref);
-
+  if (priv->description)
+    gst_structure_free (priv->description);
   g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->finalize (object);
@@ -2565,6 +2571,22 @@ gst_validate_scenario_factory_create (GstValidateRunner *
     g_object_unref (scenario);
 
     return NULL;
+  }
+
+  if (scenario->priv->description) {
+    const gchar *pipeline_name =
+        gst_structure_get_string (scenario->priv->description,
+        "pipeline-name");
+
+    if (pipeline_name && !g_pattern_match_simple (pipeline_name,
+            GST_OBJECT_NAME (pipeline))) {
+      GST_INFO ("Scenario %s only applies on pipeline %s not %s",
+          scenario_name, pipeline_name, GST_OBJECT_NAME (pipeline));
+
+      gst_object_unref (scenario);
+
+      return NULL;
+    }
   }
 
   scenario->pipeline = pipeline;
@@ -3140,6 +3162,15 @@ init_scenarios (void)
         .types = "double, int",
         .possible_variables = NULL,
         .def = "infinite (GST_CLOCK_TIME_NONE)"
+      },
+      {
+        .name = "pipeline-name",
+        .description = "The name of the GstPipeline on which the scenario should be executed.\n"
+          "It has the same effect as setting the pipeline using pipeline_name->scenario_name.",
+        .mandatory = FALSE,
+        .types = "string",
+        .possible_variables = NULL,
+        .def = "NULL"
       },
       {NULL}
       }),
