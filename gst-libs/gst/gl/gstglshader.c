@@ -47,27 +47,6 @@ static const gchar *simple_fragment_shader_str_gles2 =
       "{\n"
       "  gl_FragColor = texture2D(tex, v_texcoord);\n"
       "}";
-
-static const gchar *simple_vertex_shader_str_gl3 =
-      "#version 130\n"
-      "in vec4 a_position;\n"
-      "in vec2 a_texcoord;\n"
-      "out vec2 v_texcoord;\n"
-      "void main()\n"
-      "{\n"
-      "   gl_Position = a_position;\n"
-      "   v_texcoord = a_texcoord;\n"
-      "}\n";
-
-static const gchar *simple_fragment_shader_str_gl3 =
-      "#version 130\n"
-      "in vec2 v_texcoord;\n"
-      "out vec4 frag_color;\n"
-      "uniform sampler2D tex;\n"
-      "void main()\n"
-      "{\n"
-      "  frag_color = texture(tex, v_texcoord);\n"
-      "}\n";
 /* *INDENT-ON* */
 
 #ifndef GL_COMPILE_STATUS
@@ -663,12 +642,8 @@ gst_gl_shader_compile_with_default_f_and_check (GstGLShader * shader,
     const gchar * v_src, const gint n_attribs, const gchar * attrib_names[],
     GLint attrib_locs[])
 {
-  if (gst_gl_context_get_gl_api (shader->context) & GST_GL_API_OPENGL3)
-    return gst_gl_shader_compile_all_with_attribs_and_check (shader, v_src,
-        simple_fragment_shader_str_gl3, n_attribs, attrib_names, attrib_locs);
-  else
-    return gst_gl_shader_compile_all_with_attribs_and_check (shader, v_src,
-        simple_fragment_shader_str_gles2, n_attribs, attrib_names, attrib_locs);
+  return gst_gl_shader_compile_all_with_attribs_and_check (shader, v_src,
+      simple_fragment_shader_str_gles2, n_attribs, attrib_names, attrib_locs);
 }
 
 gboolean
@@ -679,14 +654,8 @@ gst_gl_shader_compile_with_default_v_and_check (GstGLShader * shader,
   GLint attrib_locs[2] = { 0 };
   gboolean ret = TRUE;
 
-  if (gst_gl_context_get_gl_api (shader->context) & GST_GL_API_OPENGL3)
-    ret =
-        gst_gl_shader_compile_all_with_attribs_and_check (shader,
-        simple_vertex_shader_str_gl3, f_src, 2, attrib_names, attrib_locs);
-  else
-    ret =
-        gst_gl_shader_compile_all_with_attribs_and_check (shader,
-        simple_vertex_shader_str_gles2, f_src, 2, attrib_names, attrib_locs);
+  ret = gst_gl_shader_compile_all_with_attribs_and_check (shader,
+      simple_vertex_shader_str_gles2, f_src, 2, attrib_names, attrib_locs);
 
   if (ret) {
     *pos_loc = attrib_locs[0];
@@ -700,12 +669,8 @@ gboolean
 gst_gl_shader_compile_with_default_vf_and_check (GstGLShader * shader,
     GLint * pos_loc, GLint * tex_loc)
 {
-  if (gst_gl_context_get_gl_api (shader->context) & GST_GL_API_OPENGL3)
-    return gst_gl_shader_compile_with_default_v_and_check (shader,
-        simple_fragment_shader_str_gl3, pos_loc, tex_loc);
-  else
-    return gst_gl_shader_compile_with_default_v_and_check (shader,
-        simple_fragment_shader_str_gles2, pos_loc, tex_loc);
+  return gst_gl_shader_compile_with_default_v_and_check (shader,
+      simple_fragment_shader_str_gles2, pos_loc, tex_loc);
 }
 
 void
