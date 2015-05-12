@@ -271,29 +271,46 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
     }
 
     if (ufep == 1) {
-      guint32 cpfmt = 0;
+      if (params->format == 6) {
+        /* A fixed length codeword of 23 bits that is present only if the use of
+         * a custom picture format is signalled in PLUSPTYPE and UFEP is 001 */
+        guint32 cpfmt = 0;
 
-      /* 5.1.5 CPFMT : Custom Picture Format (23 bits) */
-      if (!gst_bit_reader_get_bits_uint32 (&br, &cpfmt, 23))
-        goto more;
-      if (!(cpfmt & 0x200)) {
-        GST_WARNING ("Corrupted CPFMT (0x%x)", cpfmt);
-        goto beach;
-      }
-      temp8 = cpfmt >> 19;
-      params->width = (((cpfmt >> 10) & 0x1f) + 1) * 4;
-      params->height = ((cpfmt & 0x1f) + 1) * 4;
-
-      if (temp8 == 0xf) {
-        guint32 epar = 0;
-        /* 5.1.6 EPAR : Extended Pixel Aspect Ratio (16bits) */
-        if (!gst_bit_reader_get_bits_uint32 (&br, &epar, 16))
+        /* 5.1.5 CPFMT : Custom Picture Format (23 bits) */
+        if (!gst_bit_reader_get_bits_uint32 (&br, &cpfmt, 23))
           goto more;
-        params->parnum = epar >> 8;
-        params->pardenom = epar & 0xf;
+        if (!(cpfmt & 0x200)) {
+          GST_WARNING ("Corrupted CPFMT (0x%x)", cpfmt);
+          goto beach;
+        }
+        temp8 = cpfmt >> 19;
+        /* Bits 5-13: Picture Width Indication: Range [0, ... , 511];
+         * Number of pixels per line = (PWI + 1) * 4 */
+        params->width = (((cpfmt >> 10) & 0x1ff) + 1) * 4;
+        /* Bits 15-23  Picture Height Indication: Range [1, ... , 288];
+         * Number of lines = PHI * 4 */
+        params->height = (cpfmt & 0x1ff) * 4;
+
+        if (temp8 == 0xf) {
+          guint32 epar = 0;
+          /* 5.1.6 EPAR : Extended Pixel Aspect Ratio (16bits) */
+          if (!gst_bit_reader_get_bits_uint32 (&br, &epar, 16))
+            goto more;
+          params->parnum = epar >> 8;
+          params->pardenom = epar & 0xf;
+        } else {
+          params->parnum = partable[temp8][0];
+          params->pardenom = partable[temp8][1];
+        }
       } else {
-        params->parnum = partable[temp8][0];
-        params->pardenom = partable[temp8][1];
+        /* Fill in width/height based on format */
+        params->width = sizetable[params->format][0];
+        params->height = sizetable[params->format][1];
+        GST_DEBUG (" Picture width x height: %d x %d",
+            params->width, params->height);
+        /* Fill in default Pixel aspect ratios */
+        params->parnum = 12;
+        params->pardenom = 11;
       }
 
       if (params->custompcfpresent) {
