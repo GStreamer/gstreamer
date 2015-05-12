@@ -208,18 +208,18 @@ allocate_buffer (GstVaapiCodedBuffer * vbuf)
 
   size = gst_vaapi_coded_buffer_get_size (vbuf);
   if (size <= 0) {
-    g_warning ("Invalid VAAPI buffer size (%d)", size);
+    g_warning ("Invalid VA buffer size (%zd)", size);
     return NULL;
   }
 
   buf = gst_buffer_new_and_alloc (size);
   if (!buf) {
-    g_warning ("Failed to create output buffer of size %d", size);
+    g_warning ("Failed to create output buffer of size %zd", size);
     return NULL;
   }
 
   if (!gst_vaapi_coded_buffer_copy_into (buf, vbuf)) {
-    g_warning ("Failed to copy VAAPI buffer data");
+    g_warning ("Failed to copy VA buffer data");
     gst_buffer_unref (buf);
     return NULL;
   }
