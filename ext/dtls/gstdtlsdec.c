@@ -246,6 +246,8 @@ gst_dtls_dec_dispose (GObject * object)
     g_object_unref (self->connection);
     self->connection = NULL;
   }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
