@@ -703,8 +703,10 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
           gl_sink->display);
 
       gl_sink->context = gst_gl_context_new (gl_sink->display);
-      if (!gl_sink->context)
+      if (!gl_sink->context) {
+        GST_OBJECT_UNLOCK (gl_sink->display);
         goto context_creation_error;
+      }
 
       window = gst_gl_context_get_window (gl_sink->context);
 
@@ -738,6 +740,7 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
         if (other_context)
           gst_object_unref (other_context);
         gst_object_unref (window);
+        GST_OBJECT_UNLOCK (gl_sink->display);
         goto context_error;
       }
 
