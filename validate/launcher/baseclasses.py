@@ -1566,6 +1566,8 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         self.media_xml.attrib["duration"]
         self.media_xml.attrib["seekable"]
 
+        self.set_protocol(urlparse.urlparse(urlparse.urlparse(self.get_uri()).scheme).scheme)
+
     @staticmethod
     def new_from_uri(uri, verbose=False, full=False):
         media_path = utils.url2path(uri)
