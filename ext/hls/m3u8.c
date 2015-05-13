@@ -1257,6 +1257,11 @@ gst_m3u8_client_get_playlist_for_bitrate (GstM3U8Client * client, guint bitrate)
   GST_M3U8_CLIENT_LOCK (client);
   current_variant = client->main->current_variant;
 
+  if (bitrate == 0) {
+    GST_M3U8_CLIENT_UNLOCK (client);
+    return current_variant;
+  }
+
   /*  Go to the highest possible bandwidth allowed */
   while (GST_M3U8 (current_variant->data)->bandwidth <= bitrate) {
     list = g_list_next (current_variant);
