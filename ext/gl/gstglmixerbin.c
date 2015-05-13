@@ -424,7 +424,6 @@ gst_gl_mixer_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   mixer_pad =
       gst_element_request_pad (self->mixer, mixer_templ, req_name, NULL);
-  gst_object_unref (mixer_templ);
   g_return_val_if_fail (mixer_pad, NULL);
 
   if (!_create_input_chain (self, chain, mixer_pad)) {
