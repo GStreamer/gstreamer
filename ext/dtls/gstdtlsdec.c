@@ -443,6 +443,10 @@ on_peer_certificate_received (GstDtlsConnection * connection, gchar * pem,
 
   GST_DEBUG_OBJECT (self, "Received peer certificate PEM: \n%s", pem);
 
+  if (self->peer_pem != NULL) {
+    g_free (self->peer_pem);
+    self->peer_pem = NULL;
+  }
   self->peer_pem = g_strdup (pem);
 
   ref = g_new (GWeakRef, 1);
