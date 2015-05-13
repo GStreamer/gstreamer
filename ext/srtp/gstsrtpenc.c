@@ -428,7 +428,7 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
       GST_ELEMENT_ERROR (filter, LIBRARY, SETTINGS,
           ("Cipher is not NULL, key must be set"),
           ("Cipher is not NULL, key must be set"));
-      return FALSE;
+      return err_status_fail;
     }
 
     expected = max_cipher_key_size (filter);
@@ -439,7 +439,7 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
           ("Master key size is wrong"),
           ("Expected master key of %d bytes, but received %" G_GSIZE_FORMAT
               " bytes", expected, keysize));
-      return FALSE;
+      return err_status_fail;
     }
   }
 
