@@ -132,6 +132,7 @@ simple_encoder_LDADD    = libutils.la $(TEST_LIBS) $(GST_VIDEO_LIBS)
 EXTRA_DIST = \
 	test-subpicture-data.h		\
 	$(simple_decoder_source_h)	\
+	$(simple_encoder_source_h)	\
 	$(test_utils_dec_source_h)	\
 	$(test_utils_source_h)		\
 	$(NULL)

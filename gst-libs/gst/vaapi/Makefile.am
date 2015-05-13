@@ -118,7 +118,6 @@ libgstvaapi_source_h =				\
 
 libgstvaapi_source_priv_h =			\
 	glibcompat.h				\
-	gstcompat.h				\
 	gstvaapibufferproxy_priv.h		\
 	gstvaapicodec_objects.h			\
 	gstvaapicompat.h			\
@@ -574,6 +573,7 @@ $(PKG_VERSION_FILE): $(NEW_VERSION_FILE)
 
 BUILT_SOURCES	= gstvaapiversion.h
 EXTRA_DIST	= gstvaapiversion.h.in $(PKG_VERSION_FILE)
+DISTCLEANFILES	= $(BUILT_SOURCES)
 
 EXTRA_DIST += \
 	$(libgstvaapi_enc_source_c)		\

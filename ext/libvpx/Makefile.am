@@ -69,10 +69,20 @@ vpx.build: vpx.configure.stamp
 vpx.clean:
 	@[ -d $(vpx_builddir) ] && \
 	$(MAKE) -C $(vpx_builddir) clean || :
-	rm -f vpx.build.stamp vpx.configure.stamp
+	rm -f vpx.configure.stamp
 
 vpx.maintainer.clean: vpx.clean
 	rm -rf $(vpx_builddir)
+
+DISTCLEANFILES = \
+	$(vpx_builddir)/config.mk			\
+	$(vpx_builddir)/config.log			\
+	$(vpx_builddir)/libs-x86_64-linux-gcc.mk	\
+	$(vpx_builddir)/Makefile			\
+	$(vpx_builddir)/vpx_config.c			\
+	$(vpx_builddir)/vpx_config.h			\
+	$(vpx_builddir)/vpx_config.asm			\
+	$(NULL)
 
 vpx.configure.stamp:
 	@[ -d $(vpx_builddir) ] || mkdir $(vpx_builddir);		 \
@@ -97,7 +107,7 @@ vpx.configure.stamp:
 
 $(gst_vpx_source_c): vpx.build
 
-CLEANFILES = vpx.build.stamp
+CLEANFILES = vpx.configure.stamp
 
 # Files for packaging
 include $(srcdir)/sources.frag
