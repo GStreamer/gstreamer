@@ -114,7 +114,7 @@
     if (!dragging_slider) return;
     // If this is a local file, allow scrub seeking, this is, seek as soon as the slider is moved.
     if (is_local_media)
-        gst_player_seek (player, ((long)time_slider.value) * 1000000);
+        gst_player_seek (player, time_slider.value * 1000000);
     [self updateTimeWidget];
 }
 
