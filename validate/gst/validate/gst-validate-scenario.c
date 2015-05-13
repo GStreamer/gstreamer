@@ -123,7 +123,7 @@ struct _GstValidateScenarioPrivate
 
   gboolean handles_state;
 
-  guint get_pos_id;             /* MT safe. Protect with SCENARIO_LOCK */
+  guint execute_actions_source_id;      /* MT safe. Protect with SCENARIO_LOCK */
   guint wait_id;
   guint signal_handler_id;
 
@@ -671,9 +671,9 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
   GstBus *bus = gst_element_get_bus (scenario->pipeline);
 
   SCENARIO_LOCK (scenario);
-  if (priv->get_pos_id) {
-    g_source_remove (priv->get_pos_id);
-    priv->get_pos_id = 0;
+  if (priv->execute_actions_source_id) {
+    g_source_remove (priv->execute_actions_source_id);
+    priv->execute_actions_source_id = 0;
   }
   SCENARIO_UNLOCK (scenario);
 
@@ -941,9 +941,10 @@ _add_execute_actions_gsource (GstValidateScenario * scenario)
   GstValidateScenarioPrivate *priv = scenario->priv;
 
   SCENARIO_LOCK (scenario);
-  if (priv->get_pos_id == 0 && priv->wait_id == 0
+  if (priv->execute_actions_source_id == 0 && priv->wait_id == 0
       && priv->signal_handler_id == 0 && priv->message_type == NULL) {
-    priv->get_pos_id = g_idle_add ((GSourceFunc) execute_next_action, scenario);
+    priv->execute_actions_source_id =
+        g_idle_add ((GSourceFunc) execute_next_action, scenario);
     SCENARIO_UNLOCK (scenario);
 
     GST_DEBUG_OBJECT (scenario, "Start checking position again");
@@ -1419,7 +1420,7 @@ execute_next_action (GstValidateScenario * scenario)
         " to be done.");
 
     SCENARIO_LOCK (scenario);
-    priv->get_pos_id = 0;
+    priv->execute_actions_source_id = 0;
     SCENARIO_UNLOCK (scenario);
 
     return G_SOURCE_CONTINUE;
@@ -1501,9 +1502,9 @@ _execute_timed_wait (GstValidateScenario * scenario, GstValidateAction * action)
   duration *= wait_multiplier;
 
   SCENARIO_LOCK (scenario);
-  if (priv->get_pos_id) {
-    g_source_remove (priv->get_pos_id);
-    priv->get_pos_id = 0;
+  if (priv->execute_actions_source_id) {
+    g_source_remove (priv->execute_actions_source_id);
+    priv->execute_actions_source_id = 0;
   }
   SCENARIO_UNLOCK (scenario);
 
@@ -1536,9 +1537,9 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
 
   gst_validate_printf (action, "Waiting for '%s' signal\n", signal_name);
 
-  if (priv->get_pos_id) {
-    g_source_remove (priv->get_pos_id);
-    priv->get_pos_id = 0;
+  if (priv->execute_actions_source_id) {
+    g_source_remove (priv->execute_actions_source_id);
+    priv->execute_actions_source_id = 0;
   }
 
   priv->signal_handler_id =
@@ -1560,9 +1561,9 @@ _execute_wait_for_message (GstValidateScenario * scenario,
 
   gst_validate_printf (action, "Waiting for '%s' message\n", message_type);
 
-  if (priv->get_pos_id) {
-    g_source_remove (priv->get_pos_id);
-    priv->get_pos_id = 0;
+  if (priv->execute_actions_source_id) {
+    g_source_remove (priv->execute_actions_source_id);
+    priv->execute_actions_source_id = 0;
   }
 
   priv->message_type = g_strdup (message_type);
@@ -2097,9 +2098,9 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
   GstValidateScenarioPrivate *priv = scenario->priv;
 
   SCENARIO_LOCK (scenario);
-  if (priv->get_pos_id) {
-    g_source_remove (priv->get_pos_id);
-    priv->get_pos_id = 0;
+  if (priv->execute_actions_source_id) {
+    g_source_remove (priv->execute_actions_source_id);
+    priv->execute_actions_source_id = 0;
   }
 
   if (priv->wait_id) {
