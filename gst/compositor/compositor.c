@@ -417,15 +417,13 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
    * the case where (say, with negative xpos/ypos) the non-obscured portion of
    * the frame could be outside the bounds of the video itself and hence not
    * visible at all */
-  frame_rect.x = CLAMP (cpad->xpos, 0,
-      GST_VIDEO_INFO_WIDTH (&pad->buffer_vinfo));
-  frame_rect.y = CLAMP (cpad->ypos, 0,
-      GST_VIDEO_INFO_HEIGHT (&pad->buffer_vinfo));
+  frame_rect.x = CLAMP (cpad->xpos, 0, GST_VIDEO_INFO_WIDTH (&vagg->info));
+  frame_rect.y = CLAMP (cpad->ypos, 0, GST_VIDEO_INFO_HEIGHT (&vagg->info));
   /* Clamp the width/height to the frame boundaries as well */
-  frame_rect.w = MIN (GST_VIDEO_INFO_WIDTH (&cpad->conversion_info),
-      GST_VIDEO_INFO_WIDTH (&pad->buffer_vinfo) - cpad->xpos);
-  frame_rect.h = MIN (GST_VIDEO_INFO_HEIGHT (&cpad->conversion_info),
-      GST_VIDEO_INFO_HEIGHT (&pad->buffer_vinfo) - cpad->ypos);
+  frame_rect.w =
+      MAX (GST_VIDEO_INFO_WIDTH (&cpad->conversion_info) - frame_rect.x, 0);
+  frame_rect.h =
+      MAX (GST_VIDEO_INFO_HEIGHT (&cpad->conversion_info) - frame_rect.y, 0);
 
   GST_OBJECT_LOCK (vagg);
   /* Check if this frame is obscured by a higher-zorder frame
