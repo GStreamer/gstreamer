@@ -954,6 +954,8 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
       gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), v_vertices,
           GL_STATIC_DRAW);
+
+      pad->geometry_change = FALSE;
     } else {
       gl->BindBuffer (GL_ARRAY_BUFFER, pad->vertex_buffer);
     }
