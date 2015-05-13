@@ -454,6 +454,10 @@ gst_dtls_connection_set_send_callback (GstDtlsConnection * self,
   g_mutex_lock (&self->priv->mutex);
   GST_TRACE_OBJECT (self, "locked @ set_send_callback");
 
+  if (self->priv->send_closure) {
+    g_closure_unref (self->priv->send_closure);
+    self->priv->send_closure = NULL;
+  }
   self->priv->send_closure = closure;
 
   if (closure && G_CLOSURE_NEEDS_MARSHAL (closure)) {
