@@ -2008,9 +2008,9 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
       AC_MSG_CHECKING([Checking FAAD2 version in $faad_hdr])
       for minor in 10 9 8 7 6 5 0; do
         if test x$faad2_minor_version = "x"; then
-          AC_EGREP_CPP([GST_CHECK_FAAD_VERSION \"2\.$minor\"], [
+          AC_EGREP_CPP([\"2\.$minor\"$], [
               #include <$faad_hdr>
-              GST_CHECK_FAAD_VERSION FAAD2_VERSION
+              FAAD2_VERSION
             ], [
               faad2_minor_version=$minor
             ])
