@@ -956,18 +956,77 @@ _add_execute_actions_gsource (GstValidateScenario * scenario)
   return FALSE;
 }
 
-static void
-_check_position (GstValidateScenario * scenario, gdouble rate,
-    GstClockTime position)
+static gboolean
+_get_position (GstValidateScenario * scenario,
+    GstValidateAction * act, GstClockTime * position)
 {
-  gint64 start_with_tolerance, stop_with_tolerance;
+  gboolean has_pos = FALSE, has_dur = FALSE;
+  GstClockTime duration = -1;
+
   GstValidateScenarioPrivate *priv = scenario->priv;
+  GstElement *pipeline = scenario->pipeline;
+
+  has_pos = gst_element_query_position (pipeline, GST_FORMAT_TIME,
+      (gint64 *) position)
+      && GST_CLOCK_TIME_IS_VALID (*position);
+  has_dur =
+      gst_element_query_duration (pipeline, GST_FORMAT_TIME,
+      (gint64 *) & duration)
+      && GST_CLOCK_TIME_IS_VALID (duration);
+
+  if (!has_pos && GST_STATE (pipeline) >= GST_STATE_PAUSED &&
+      act && GST_CLOCK_TIME_IS_VALID (act->playback_time)) {
+    GST_INFO_OBJECT (scenario, "Unknown position: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (*position));
+
+    return FALSE;
+  }
+
+  if (has_pos && has_dur && !priv->got_eos) {
+    if (*position > duration) {
+      _add_execute_actions_gsource (scenario);
+
+      GST_VALIDATE_REPORT (scenario,
+          QUERY_POSITION_SUPERIOR_DURATION,
+          "Reported position %" GST_TIME_FORMAT " > reported duration %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (*position), GST_TIME_ARGS (duration));
+
+      return TRUE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_check_position (GstValidateScenario * scenario, GstValidateAction * act)
+{
+  GstQuery *query;
+  gdouble rate;
+
+  GstClockTime start_with_tolerance, stop_with_tolerance;
+  GstClockTime position = GST_CLOCK_TIME_NONE;
+  GstValidateScenarioPrivate *priv = scenario->priv;
+
+  if (scenario->pipeline == NULL) {
+    GST_INFO_OBJECT (scenario, "No pipeline set anymore");
+
+    return TRUE;
+  }
+
+  if (!_get_position (scenario, act, &position))
+    return FALSE;
+
+  GST_DEBUG_OBJECT (scenario, "Current position: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (position));
 
   /* Check if playback is within seek segment */
   start_with_tolerance =
       MAX (0, (gint64) (priv->segment_start - priv->seek_pos_tol));
   stop_with_tolerance =
-      priv->segment_stop != -1 ? priv->segment_stop + priv->seek_pos_tol : -1;
+      GST_CLOCK_TIME_IS_VALID (priv->segment_stop) ? priv->segment_stop +
+      priv->seek_pos_tol : -1;
+
   if ((GST_CLOCK_TIME_IS_VALID (stop_with_tolerance)
           && position > stop_with_tolerance)
       || (priv->seek_flags & GST_SEEK_FLAG_ACCURATE
@@ -979,6 +1038,11 @@ _check_position (GstValidateScenario * scenario, gdouble rate,
         GST_TIME_ARGS (start_with_tolerance),
         GST_TIME_ARGS (stop_with_tolerance));
   }
+
+  query = gst_query_new_segment (GST_FORMAT_DEFAULT);
+  if (gst_element_query (GST_ELEMENT (scenario->pipeline), query))
+    gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
+  gst_query_unref (query);
 
   if (priv->seeked_in_pause && priv->seek_flags & GST_SEEK_FLAG_ACCURATE) {
     if ((rate > 0 && (position >= priv->segment_start + priv->seek_pos_tol ||
@@ -994,6 +1058,7 @@ _check_position (GstValidateScenario * scenario, gdouble rate,
     }
   }
 
+  return TRUE;
 }
 
 static gboolean
@@ -1251,15 +1316,12 @@ static gboolean
 execute_next_action (GstValidateScenario * scenario)
 {
   GList *tmp;
-  GstQuery *query;
   gdouble rate = 1.0;
+  gint64 position = -1;
   GstValidateAction *act = NULL;
-  gint64 position = GST_CLOCK_TIME_NONE, duration;
-  gboolean has_pos, has_dur;
   GstValidateActionType *type;
 
   GstValidateScenarioPrivate *priv = scenario->priv;
-  GstElement *pipeline = scenario->pipeline;
 
   if (priv->buffering) {
     GST_DEBUG_OBJECT (scenario, "Buffering not executing any action");
@@ -1306,41 +1368,8 @@ execute_next_action (GstValidateScenario * scenario)
     }
   }
 
-  query = gst_query_new_segment (GST_FORMAT_DEFAULT);
-  if (gst_element_query (GST_ELEMENT (scenario->pipeline), query))
-    gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
-
-  gst_query_unref (query);
-
-  has_pos = gst_element_query_position (pipeline, GST_FORMAT_TIME, &position)
-      && GST_CLOCK_TIME_IS_VALID (position);
-  has_dur = gst_element_query_duration (pipeline, GST_FORMAT_TIME, &duration)
-      && GST_CLOCK_TIME_IS_VALID (duration);
-
-  if (!has_pos && GST_STATE (pipeline) >= GST_STATE_PAUSED &&
-      act && GST_CLOCK_TIME_IS_VALID (act->playback_time)) {
-    GST_INFO_OBJECT (scenario, "Unknown position: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (position));
+  if (!_check_position (scenario, act))
     return G_SOURCE_CONTINUE;
-  }
-
-  if (has_pos && has_dur && !priv->got_eos) {
-    if (position > duration) {
-      _add_execute_actions_gsource (scenario);
-
-      GST_VALIDATE_REPORT (scenario,
-          QUERY_POSITION_SUPERIOR_DURATION,
-          "Reported position %" GST_TIME_FORMAT " > reported duration %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
-
-      return G_SOURCE_CONTINUE;
-    }
-  }
-
-  GST_DEBUG_OBJECT (scenario, "Current position: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (position));
-
-  _check_position (scenario, rate, position);
 
   if (!_should_execute_action (scenario, act, position, rate)) {
     _add_execute_actions_gsource (scenario);
