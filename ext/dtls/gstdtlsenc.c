@@ -230,6 +230,10 @@ gst_dtls_enc_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_CONNECTION_ID:
+      if (self->connection_id != NULL) {
+        g_free (self->connection_id);
+        self->connection_id = NULL;
+      }
       self->connection_id = g_value_dup_string (value);
       break;
     case PROP_IS_CLIENT:
