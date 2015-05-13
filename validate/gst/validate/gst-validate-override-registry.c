@@ -29,8 +29,11 @@
 
 #include <gmodule.h>
 
+#include "gst-validate-report.h"
 #include "gst-validate-utils.h"
+#include "gst-validate-monitor.h"
 #include "gst-validate-internal.h"
+#include "gst-validate-override.h"
 #include "gst-validate-override-registry.h"
 
 typedef struct
@@ -135,7 +138,9 @@ static void
   name = gst_validate_monitor_get_element_name (monitor);
   for (iter = registry->name_overrides.head; iter; iter = g_list_next (iter)) {
     entry = iter->data;
-    if (g_strcmp0 (name, entry->name) == 0) {
+    if (g_regex_match_simple (entry->name, name, 0, 0)) {
+      GST_INFO_OBJECT (registry, "Adding override %s to %s", entry->name, name);
+
       gst_validate_monitor_attach_override (monitor, entry->override);
     }
   }
@@ -344,7 +349,7 @@ gst_validate_override_registry_preload (void)
     return 0;
   }
 
-  modlist = g_strsplit (sos, ",", 0);
+  modlist = g_strsplit (sos, G_SEARCHPATH_SEPARATOR_S, 0);
   for (modname = modlist; *modname; ++modname) {
     GST_INFO ("Loading overrides from %s", *modname);
     module = g_module_open (*modname, G_MODULE_BIND_LAZY);
