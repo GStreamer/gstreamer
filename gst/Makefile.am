@@ -69,6 +69,7 @@ libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 	gstdevicemonitor.c 	\
 	gstdeviceprovider.c	\
 	gstdeviceproviderfactory.c \
+	gstdynamictypefactory.c \
 	gstelement.c		\
 	gstelementfactory.c	\
 	gsterror.c		\

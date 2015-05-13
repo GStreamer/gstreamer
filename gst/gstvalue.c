@@ -6432,11 +6432,16 @@ try_as_flags_string:
     if (end != NULL) {
       gchar *class_name = g_strndup (set_class, end - set_class);
       GType flags_type = g_type_from_name (class_name);
+      if (flags_type == 0) {
+        GST_TRACE ("Looking for dynamic type %s", class_name);
+        gst_dynamic_type_factory_load (class_name);
+      }
 
-      g_free (class_name);
-
-      if (flags_type != 0)
+      if (flags_type != 0) {
         flags_klass = g_type_class_ref (flags_type);
+        GST_TRACE ("Going to parse %s as %s", s, class_name);
+      }
+      g_free (class_name);
     }
 
     if (flags_klass) {

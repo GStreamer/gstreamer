@@ -479,6 +479,9 @@ EXPORTS
 	gst_device_provider_unhide_provider
 	gst_device_reconfigure_element
 	gst_double_range_get_type
+	gst_dynamic_type_factory_get_type
+	gst_dynamic_type_factory_load
+	gst_dynamic_type_register
 	gst_element_abort_state
 	gst_element_add_pad
 	gst_element_add_property_deep_notify_watch

@@ -1841,6 +1841,7 @@ gst_structure_gtype_from_abbr (const char *type_name)
   int i;
   GstStructureAbbreviation *abbrs;
   gint n_abbrs;
+  GType ret;
 
   g_return_val_if_fail (type_name != NULL, G_TYPE_INVALID);
 
@@ -1853,7 +1854,11 @@ gst_structure_gtype_from_abbr (const char *type_name)
   }
 
   /* this is the fallback */
-  return g_type_from_name (type_name);
+  ret = g_type_from_name (type_name);
+  /* If not found, try it as a dynamic type */
+  if (G_UNLIKELY (ret == 0))
+    ret = gst_dynamic_type_factory_load (type_name);
+  return ret;
 }
 
 static const char *

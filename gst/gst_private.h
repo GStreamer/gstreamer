@@ -484,6 +484,16 @@ struct _GstDeviceProviderFactoryClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+struct _GstDynamicTypeFactory {
+  GstPluginFeature           feature;
+
+  GType                      type; /* GType of the type, when loaded. 0 if not */
+};
+
+struct _GstDynamicTypeFactoryClass {
+  GstPluginFeatureClass      parent;
+};
+
 /* privat flag used by GstBus / GstMessage */
 #define GST_MESSAGE_FLAG_ASYNC_DELIVERY (GST_MINI_OBJECT_FLAG_LAST << 0)
 

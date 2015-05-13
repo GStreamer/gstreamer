@@ -35,6 +35,7 @@
 #include <gst/gsttypefind.h>
 #include <gst/gsttypefindfactory.h>
 #include <gst/gstdeviceproviderfactory.h>
+#include <gst/gstdynamictypefactory.h>
 #include <gst/gsturi.h>
 #include <gst/gstinfo.h>
 #include <gst/gstenumtypes.h>
@@ -348,6 +349,14 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     pf = g_slice_new0 (GstRegistryChunkPluginFeature);
     pf_size = sizeof (GstRegistryChunkPluginFeature);
     chk = gst_registry_chunks_make_data (pf, pf_size);
+  } else if (GST_IS_DYNAMIC_TYPE_FACTORY (feature)) {
+    GstRegistryChunkDynamicTypeFactory *tmp;
+
+    tmp = g_slice_new0 (GstRegistryChunkDynamicTypeFactory);
+    chk =
+        gst_registry_chunks_make_data (tmp,
+        sizeof (GstRegistryChunkDynamicTypeFactory));
+    pf = (GstRegistryChunkPluginFeature *) tmp;
   } else {
     GST_WARNING_OBJECT (feature, "unhandled feature type '%s'", type_name);
   }
@@ -697,6 +706,12 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
         ("Reading/casting for GstRegistryChunkPluginFeature at address %p",
         *in);
     unpack_element (*in, pf, GstRegistryChunkPluginFeature, end, fail);
+  } else if (GST_IS_DYNAMIC_TYPE_FACTORY (feature)) {
+    GstRegistryChunkDynamicTypeFactory *tmp;
+
+    unpack_element (*in, tmp, GstRegistryChunkDynamicTypeFactory, end, fail);
+
+    pf = (GstRegistryChunkPluginFeature *) tmp;
   } else {
     GST_WARNING ("unhandled factory type : %s", G_OBJECT_TYPE_NAME (feature));
     goto fail;
