@@ -137,5 +137,4 @@ EXTRA_DIST = \
 	$(test_utils_source_h)		\
 	$(NULL)
 
-# Extra clean files so that maintainer-clean removes *everything*
-MAINTAINERCLEANFILES = Makefile.in
+-include $(top_srcdir)/git.mk

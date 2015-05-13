@@ -29,5 +29,4 @@ EXTRA_DIST = $(all_pcfiles_in)
 
 DISTCLEANFILES = $(all_pcfiles)
 
-# Extra clean files so that maintainer-clean removes *everything*
-MAINTAINERCLEANFILES = Makefile.in
+-include $(top_srcdir)/git.mk

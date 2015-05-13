@@ -6,9 +6,11 @@ SUBDIRS = debian.upstream ext gst-libs gst pkgconfig tests docs patches
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = \
-	aclocal.m4 compile config.guess config.sub \
-	configure depcomp install-sh ltmain.sh     \
-	Makefile.in missing config.h.in gtk-doc.make
+	$(GITIGNORE_MAINTAINERCLEANFILES_TOPLEVEL)	\
+	$(GITIGNORE_MAINTAINERCLEANFILES_MAKEFILE_IN)	\
+	$(GITIGNORE_MAINTAINERCLEANFILES_M4_LIBTOOL)	\
+	$(srcdir)/gtk-doc.make $(srcdir)/m4/gtk-doc.m4	\
+	$(NULL)
 
 DEB_BUILDDIR = debian.build
 
@@ -23,3 +25,5 @@ deb.upstream: dist-bzip2
 	cd $(PACKAGE)-$(VERSION)			&& \
 	$(LN_S) debian.upstream debian			&& \
 	$(MAKE) deb -f Makefile.am
+
+-include $(top_srcdir)/git.mk

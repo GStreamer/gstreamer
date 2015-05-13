@@ -123,5 +123,4 @@ EXTRA_DIST += \
 	libs-docs.xml.in \
 	$(NULL)
 
-# Extra clean files so that maintainer-clean removes *everything*
-MAINTAINERCLEANFILES = Makefile.in lib-docs.xml
+-include $(top_srcdir)/git.mk

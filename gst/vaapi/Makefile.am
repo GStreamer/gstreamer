@@ -255,5 +255,4 @@ EXTRA_DIST = \
         $(libgstvaapi_1_4p_parse_gen_source_h) \
 	$(NULL)
 
-# Extra clean files so that maintainer-clean removes *everything*
-MAINTAINERCLEANFILES = Makefile.in
+-include $(top_srcdir)/git.mk

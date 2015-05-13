@@ -1,4 +1,3 @@
 SUBDIRS = vaapi
 
-# Extra clean files so that maintainer-clean removes *everything*
-MAINTAINERCLEANFILES = Makefile.in
+-include $(top_srcdir)/git.mk

@@ -56,5 +56,4 @@ videoparsers_source_h = \
 
 EXTRA_DIST += $(videoparsers_source_h:%.h=$(videoparsers_srcdir)/%.h)
 
-# Extra clean files so that maintainer-clean removes *everything*
-MAINTAINERCLEANFILES = Makefile.in
+-include $(top_srcdir)/git.mk

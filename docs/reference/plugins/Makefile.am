@@ -104,5 +104,4 @@ EXTRA_DIST += \
 	$(DOC_MODULE)-docs.xml.in \
 	$(NULL)
 
-# Extra clean files so that maintainer-clean removes *everything*
-MAINTAINERCLEANFILES = Makefile.in $(DOC_MODULE)-docs.xml
+-include $(top_srcdir)/git.mk

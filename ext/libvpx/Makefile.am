@@ -148,5 +148,4 @@ dist-hook:
 	  cp -fpR $(vpx_srcdir)/$$f $(distdir)/$(vpx_upstream)/$$f;	\
 	done
 
-# Extra clean files so that maintainer-clean removes *everything*
-MAINTAINERCLEANFILES = Makefile.in vpx.configure.stamp
+-include $(top_srcdir)/git.mk
