@@ -51,7 +51,7 @@ class Test(Loggable):
 
     def __init__(self, application_name, classname, options,
                  reporter, duration=0, timeout=DEFAULT_TIMEOUT,
-                 hard_timeout=None):
+                 hard_timeout=None, extra_env_variables={}):
         """
         @timeout: The timeout during which the value return by get_current_value
                   keeps being exactly equal
@@ -70,6 +70,8 @@ class Test(Loggable):
         self.thread = None
         self.queue = None
         self.duration = duration
+
+        self.extra_env_variables = extra_env_variables
 
         self.clean()
 
@@ -342,6 +344,10 @@ class Test(Loggable):
         self.build_arguments()
         self.proc_env = self.get_subproc_env()
 
+        for var, value in self.extra_env_variables.items():
+            self.proc_env[var] = self.proc_env.get(var, '') + os.pathsep + value
+            self.add_env_variable(var, self.proc_env[var])
+
         if self.options.valgrind:
             self.use_valgrind()
 
@@ -396,7 +402,8 @@ class GstValidateTest(Test):
 
     def __init__(self, application_name, classname,
                  options, reporter, duration=0,
-                 timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None):
+                 timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None,
+                 extra_env_variables=[]):
 
         if not hard_timeout and self.HARD_TIMEOUT_FACTOR:
             if timeout:
@@ -418,7 +425,8 @@ class GstValidateTest(Test):
                                               options, reporter,
                                               duration=duration,
                                               timeout=timeout,
-                                              hard_timeout=hard_timeout)
+                                              hard_timeout=hard_timeout,
+                                              extra_env_variables=extra_env_variables)
 
         # defines how much the process can be outside of the configured
         # segment / seek

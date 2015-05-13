@@ -364,7 +364,8 @@ class GstValidateLaunchTest(GstValidateTest):
 
     def __init__(self, classname, options, reporter, pipeline_desc,
                  timeout=DEFAULT_TIMEOUT, scenario=None,
-                 media_descriptor=None, duration=0, hard_timeout=None):
+                 media_descriptor=None, duration=0, hard_timeout=None,
+                 extra_env_variables={}):
         try:
             timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[
                 media_descriptor.get_protocol()]
@@ -384,7 +385,8 @@ class GstValidateLaunchTest(GstValidateTest):
                                                   duration=duration,
                                                   scenario=scenario,
                                                   timeout=timeout,
-                                                  hard_timeout=hard_timeout)
+                                                  hard_timeout=hard_timeout,
+                                                  extra_env_variables=extra_env_variables)
 
         self.pipeline_desc = pipeline_desc
         self.media_descriptor = media_descriptor
@@ -400,11 +402,12 @@ class GstValidateLaunchTest(GstValidateTest):
 class GstValidateMediaCheckTest(GstValidateTest):
 
     def __init__(self, classname, options, reporter, media_descriptor,
-                 uri, minfo_path, timeout=DEFAULT_TIMEOUT):
+                 uri, minfo_path, timeout=DEFAULT_TIMEOUT, extra_env_variables={}):
         super(
             GstValidateMediaCheckTest, self).__init__(G_V_DISCOVERER_COMMAND, classname,
                                                       options, reporter,
-                                                      timeout=timeout)
+                                                      timeout=timeout,
+                                                      extra_env_variables=extra_env_variables)
         self._uri = uri
         self.media_descriptor = media_descriptor
         self._media_info_path = minfo_path
@@ -421,7 +424,7 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
     def __init__(self, classname, options, reporter,
                  combination, uri, media_descriptor,
                  timeout=DEFAULT_TIMEOUT,
-                 scenario=None):
+                 scenario=None, extra_env_variables={}):
 
         Loggable.__init__(self)
 
@@ -446,7 +449,8 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
                                                        reporter,
                                                        duration=duration,
                                                        timeout=timeout,
-                                                       scenario=scenario)
+                                                       scenario=scenario,
+                                                       extra_env_variables=extra_env_variables)
 
         GstValidateEncodingTestInterface.__init__(
             self, combination, media_descriptor)
