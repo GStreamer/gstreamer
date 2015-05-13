@@ -621,9 +621,49 @@ gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
   }
 }
 
+static void
+_mixer_pad_get_output_size (GstGLVideoMixer * mix,
+    GstGLVideoMixerPad * mix_pad, gint * width, gint * height)
+{
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mix);
+  GstVideoAggregatorPad *vagg_pad = GST_VIDEO_AGGREGATOR_PAD (mix_pad);
+  gint pad_width, pad_height;
+  gint dar_n, dar_d;
+
+  pad_width =
+      mix_pad->width <=
+      0 ? GST_VIDEO_INFO_WIDTH (&vagg_pad->info) : mix_pad->width;
+  pad_height =
+      mix_pad->height <=
+      0 ? GST_VIDEO_INFO_HEIGHT (&vagg_pad->info) : mix_pad->height;
+
+  gst_util_fraction_multiply (GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
+      GST_VIDEO_INFO_PAR_D (&vagg_pad->info),
+      GST_VIDEO_INFO_PAR_D (&vagg->info), GST_VIDEO_INFO_PAR_N (&vagg->info),
+      &dar_n, &dar_d);
+  GST_LOG_OBJECT (mix_pad, "scaling %ux%u by %u/%u (%u/%u / %u/%u)", pad_width,
+      pad_height, dar_n, dar_d, GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
+      GST_VIDEO_INFO_PAR_D (&vagg_pad->info),
+      GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info));
+
+  if (pad_height % dar_n == 0) {
+    pad_height = gst_util_uint64_scale_int (pad_width, dar_n, dar_d);
+  } else if (pad_width % dar_d == 0) {
+    pad_width = gst_util_uint64_scale_int (pad_height, dar_d, dar_n);
+  } else {
+    pad_height = gst_util_uint64_scale_int (pad_width, dar_n, dar_d);
+  }
+
+  if (width)
+    *width = pad_width;
+  if (height)
+    *height = pad_height;
+}
+
 static GstCaps *
 _update_caps (GstVideoAggregator * vagg, GstCaps * caps)
 {
+  GstGLVideoMixer *mix = GST_GL_VIDEO_MIXER (vagg);
   GList *l;
   gint best_width = -1, best_height = -1;
   GstVideoInfo info;
@@ -640,15 +680,7 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps)
     gint this_width, this_height;
     gint width, height;
 
-    if (mixer_pad->width > 0)
-      width = mixer_pad->width;
-    else
-      width = GST_VIDEO_INFO_WIDTH (&vaggpad->info);
-
-    if (mixer_pad->height > 0)
-      height = mixer_pad->height;
-    else
-      height = GST_VIDEO_INFO_HEIGHT (&vaggpad->info);
+    _mixer_pad_get_output_size (mix, mixer_pad, &width, &height);
 
     if (width == 0 || height == 0)
       continue;
@@ -844,6 +876,7 @@ static void
 gst_gl_video_mixer_callback (gpointer stuff)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (stuff);
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (stuff);
   GstGLMixer *mixer = GST_GL_MIXER (video_mixer);
   GstGLFuncs *gl = GST_GL_BASE_MIXER (mixer)->context->gl_vtable;
 
@@ -858,8 +891,8 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
   guint count = 0;
 
-  out_width = GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR (stuff)->info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR (stuff)->info);
+  out_width = GST_VIDEO_INFO_WIDTH (&vagg->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&vagg->info);
 
   gst_gl_context_clear_shader (GST_GL_BASE_MIXER (mixer)->context);
   gl->BindTexture (GL_TEXTURE_2D, 0);
@@ -891,6 +924,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
   while (count < video_mixer->input_frames->len) {
     GstGLMixerFrameData *frame;
     GstGLVideoMixerPad *pad;
+    GstVideoInfo *v_info;
     guint in_tex;
     guint in_width, in_height;
 
@@ -910,8 +944,9 @@ gst_gl_video_mixer_callback (gpointer stuff)
       continue;
     }
     pad = (GstGLVideoMixerPad *) frame->pad;
-    in_width = GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
-    in_height = GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
+    v_info = &GST_VIDEO_AGGREGATOR_PAD (pad)->info;
+    in_width = GST_VIDEO_INFO_WIDTH (v_info);
+    in_height = GST_VIDEO_INFO_HEIGHT (v_info);
 
     if (!frame->texture || in_width <= 0 || in_height <= 0
         || pad->alpha == 0.0f) {
@@ -924,11 +959,10 @@ gst_gl_video_mixer_callback (gpointer stuff)
     in_tex = frame->texture;
 
     if (pad->geometry_change || !pad->vertex_buffer) {
-      guint pad_width, pad_height;
+      gint pad_width, pad_height;
       gfloat w, h;
 
-      pad_width = pad->width <= 0 ? in_width : pad->width;
-      pad_height = pad->height <= 0 ? in_height : pad->height;
+      _mixer_pad_get_output_size (video_mixer, pad, &pad_width, &pad_height);
 
       w = ((gfloat) pad_width / (gfloat) out_width);
       h = ((gfloat) pad_height / (gfloat) out_height);
