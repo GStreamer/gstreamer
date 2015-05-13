@@ -1138,9 +1138,10 @@ test_obscured_pad_probe_cb (GstPad * srcpad, GstPadProbeInfo * info,
 static void
 _test_obscured (const gchar * caps_str, gint xpos0, gint ypos0, gint width0,
     gint height0, gdouble alpha0, gint xpos1, gint ypos1, gint width1,
-    gint height1, gdouble alpha1)
+    gint height1, gdouble alpha1, gint out_width, gint out_height)
 {
   GstElement *pipeline, *sink, *mix, *src0, *cfilter0, *src1, *cfilter1;
+  GstElement *out_cfilter;
   GstPad *srcpad, *sinkpad;
   GstSample *last_sample = NULL;
   GstSample *sample;
@@ -1164,12 +1165,22 @@ _test_obscured (const gchar * caps_str, gint xpos0, gint ypos0, gint width0,
   gst_caps_unref (caps);
 
   mix = gst_element_factory_make ("compositor", "compositor");
+  out_cfilter = gst_element_factory_make ("capsfilter", "out_capsfilter");
+  caps = gst_caps_from_string (caps_str);
+  if (out_width > 0)
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, out_width, NULL);
+  if (out_height > 0)
+    gst_caps_set_simple (caps, "height", G_TYPE_INT, out_height, NULL);
+  g_object_set (out_cfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
   sink = gst_element_factory_make ("appsink", "sink");
+
   gst_bin_add_many (GST_BIN (pipeline), src0, cfilter0, src1, cfilter1, mix,
-      sink, NULL);
+      out_cfilter, sink, NULL);
   fail_unless (gst_element_link (src0, cfilter0));
   fail_unless (gst_element_link (src1, cfilter1));
-  fail_unless (gst_element_link (mix, sink));
+  fail_unless (gst_element_link (mix, out_cfilter));
+  fail_unless (gst_element_link (out_cfilter, sink));
 
   srcpad = gst_element_get_static_pad (cfilter0, "src");
   sinkpad = gst_element_get_request_pad (mix, "sink_0");
@@ -1214,6 +1225,7 @@ GST_START_TEST (test_obscured_skipped)
   gint ypos0, ypos1;
   gint width0, width1;
   gint height0, height1;
+  gint out_width, out_height;
   gdouble alpha0, alpha1;
   const gchar *caps_str;
 
@@ -1223,20 +1235,21 @@ GST_START_TEST (test_obscured_skipped)
   alpha0 = alpha1 = 1.0;
   xpos0 = xpos1 = ypos0 = ypos1 = 0;
   width0 = width1 = height0 = height1 = 0;
+  out_width = out_height = 0;
 
   GST_INFO ("testing defaults");
   /* With everything at defaults, sink_1 will obscure sink_0, so buffers from
    * sink_0 will never get mapped by compositor. To verify, run with
    * GST_DEBUG=compositor:6 and look for "Obscured by" messages */
   _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
-      width1, height1, alpha1);
+      width1, height1, alpha1, out_width, out_height);
   fail_unless (buffer_mapped == FALSE);
   buffer_mapped = FALSE;
 
   caps_str = "video/x-raw,format=ARGB";
   GST_INFO ("testing video with alpha channel");
   _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
-      width1, height1, alpha1);
+      width1, height1, alpha1, out_width, out_height);
   fail_unless (buffer_mapped == TRUE);
   caps_str = "video/x-raw";
   buffer_mapped = FALSE;
@@ -1244,7 +1257,7 @@ GST_START_TEST (test_obscured_skipped)
   alpha1 = 0.0;
   GST_INFO ("testing alpha1 = %.2g", alpha1);
   _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
-      width1, height1, alpha1);
+      width1, height1, alpha1, out_width, out_height);
   fail_unless (buffer_mapped == TRUE);
   alpha1 = 1.0;
   buffer_mapped = FALSE;
@@ -1253,7 +1266,7 @@ GST_START_TEST (test_obscured_skipped)
   for (alpha1 = 1; alpha1 < 10; alpha1 += 1) {
     GST_INFO ("testing alpha1 = %.2g", alpha1 / 10);
     _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1,
-        ypos1, width1, height1, alpha1 / 10);
+        ypos1, width1, height1, alpha1 / 10, out_width, out_height);
     fail_unless (buffer_mapped == TRUE);
   }
   alpha1 = 1.0;
@@ -1262,7 +1275,7 @@ GST_START_TEST (test_obscured_skipped)
   width1 = height1 = 10;
   GST_INFO ("testing smaller sink_1");
   _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
-      width1, height1, alpha1);
+      width1, height1, alpha1, out_width, out_height);
   fail_unless (buffer_mapped == TRUE);
   width1 = height1 = 0;
   buffer_mapped = FALSE;
@@ -1270,7 +1283,7 @@ GST_START_TEST (test_obscured_skipped)
   width0 = height0 = width1 = height1 = 10;
   GST_INFO ("testing smaller sink_1 and sink0 (same sizes)");
   _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
-      width1, height1, alpha1);
+      width1, height1, alpha1, out_width, out_height);
   fail_unless (buffer_mapped == FALSE);
   width0 = height0 = width1 = height1 = 0;
   buffer_mapped = FALSE;
@@ -1279,7 +1292,7 @@ GST_START_TEST (test_obscured_skipped)
   width1 = height1 = 10;
   GST_INFO ("testing smaller sink_1 and sink0 (sink_0 > sink_1)");
   _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
-      width1, height1, alpha1);
+      width1, height1, alpha1, out_width, out_height);
   fail_unless (buffer_mapped == TRUE);
   width0 = height0 = width1 = height1 = 0;
   buffer_mapped = FALSE;
@@ -1288,17 +1301,28 @@ GST_START_TEST (test_obscured_skipped)
   width1 = height1 = 20;
   GST_INFO ("testing smaller sink_1 and sink0 (sink_0 < sink_1)");
   _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
-      width1, height1, alpha1);
+      width1, height1, alpha1, out_width, out_height);
   fail_unless (buffer_mapped == FALSE);
   width0 = height0 = width1 = height1 = 0;
   buffer_mapped = FALSE;
 
+  xpos0 = ypos0 = 10;
+  xpos1 = ypos1 = 20;
+  GST_INFO ("testing offset");
+  _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
+      width1, height1, alpha1, out_width, out_height);
+  fail_unless (buffer_mapped == TRUE);
+  xpos0 = ypos0 = xpos1 = ypos1 = 0;
+  buffer_mapped = FALSE;
+
   xpos0 = ypos0 = 10000;
+  out_width = 320;
+  out_height = 240;
   GST_INFO ("testing sink_0 outside the frame");
   _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
-      width1, height1, alpha1);
+      width1, height1, alpha1, out_width, out_height);
   fail_unless (buffer_mapped == FALSE);
-  xpos0 = ypos0 = 0;
+  xpos0 = ypos0 = out_width = out_height = 0;
   buffer_mapped = FALSE;
 }
 
