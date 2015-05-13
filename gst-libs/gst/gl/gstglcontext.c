@@ -1313,7 +1313,10 @@ gst_gl_context_create_thread (GstGLContext * context)
   g_free (display_api_s);
 
   GST_DEBUG_OBJECT (context, "Filling info");
-  gst_gl_context_fill_info (context, error);
+  if (!gst_gl_context_fill_info (context, error)) {
+    g_assert (error == NULL || *error != NULL);
+    goto failure;
+  }
 
   context->priv->alive = TRUE;
 
