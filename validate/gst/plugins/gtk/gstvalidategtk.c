@@ -505,7 +505,8 @@ gst_validate_gtk_init (GstPlugin * plugin)
             {NULL}
           }),
       "Put a GdkEvent on the event list using gdk_put_event",
-      GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL);
+      GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL |
+      GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE);
 /*  *INDENT-ON* */
 
   return TRUE;

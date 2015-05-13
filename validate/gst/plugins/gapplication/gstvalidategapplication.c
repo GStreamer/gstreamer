@@ -66,7 +66,8 @@ gst_validate_gapplication_init (GstPlugin * plugin)
   gst_validate_register_action_type_dynamic (plugin, "stop",
       GST_RANK_PRIMARY, _execute_stop, NULL,
       "Sets the pipeline state to NULL",
-      GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL);
+      GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL |
+      GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE);
 
   return TRUE;
 }

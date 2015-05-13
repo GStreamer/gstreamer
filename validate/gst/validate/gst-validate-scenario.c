@@ -1070,6 +1070,30 @@ _should_execute_action (GstValidateScenario * scenario, GstValidateAction * act,
     GST_DEBUG_OBJECT (scenario, "No action to execute");
 
     return FALSE;
+  } else if (scenario->pipeline == NULL) {
+
+    if (!(GST_VALIDATE_ACTION_GET_TYPE (act)->flags &
+            GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE)) {
+      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+          "Trying to execute an %s action after the pipeline has been destroyed"
+          " but the type has not been marked as "
+          "GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE", act->type);
+
+      return FALSE;
+    } else if (GST_CLOCK_TIME_IS_VALID (act->playback_time)) {
+      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+          "Trying to execute action %s with playback time %" GST_TIME_FORMAT
+          " after the pipeline has been destroyed. It is impossible"
+          " to execute an action with a playback time specified "
+          " after the pipeline has been destroyed",
+          act->type, GST_TIME_ARGS (act->playback_time));
+
+      return FALSE;
+    }
+
+    GST_DEBUG_OBJECT (scenario, "No pipeline, go and execute action!");
+
+    return TRUE;
   } else if (scenario->priv->got_eos) {
     GST_DEBUG_OBJECT (scenario, "Just got EOS go and execute next action!");
     scenario->priv->got_eos = FALSE;
@@ -1495,7 +1519,7 @@ stop_waiting_signal (GstBin * bin, GstElement * element,
   _add_execute_actions_gsource (scenario);
 }
 
-static gboolean
+static GstValidateExecuteActionReturn
 _execute_timed_wait (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
@@ -1545,7 +1569,7 @@ _execute_timed_wait (GstValidateScenario * scenario, GstValidateAction * action)
   return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
 
-static gboolean
+static GstValidateExecuteActionReturn
 _execute_wait_for_signal (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
@@ -1556,7 +1580,15 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
 
   if (signal_name == NULL) {
     GST_ERROR ("No signal-name given for wait action");
-    return FALSE;
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  }
+
+  if (scenario->pipeline == NULL) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Can't execute a 'wait for signal' action after the pipeline "
+        " has been destroyed.");
+
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
 
   target = _get_target_element (scenario, action);
@@ -1588,6 +1620,14 @@ _execute_wait_for_message (GstValidateScenario * scenario,
   const gchar *message_type = gst_structure_get_string
       (action->structure, "message-type");
 
+  if (scenario->pipeline == NULL) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Can't execute a 'wait for message' action after the pipeline "
+        " has been destroyed.");
+
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
   gst_validate_printf (action, "Waiting for '%s' message\n", message_type);
 
   if (priv->execute_actions_source_id) {
@@ -1600,7 +1640,7 @@ _execute_wait_for_message (GstValidateScenario * scenario,
   return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
 
-static gboolean
+static GstValidateExecuteActionReturn
 _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
 {
   if (gst_structure_has_field (action->structure, "signal-name")) {
@@ -2124,20 +2164,6 @@ static void
 _pipeline_freed_cb (GstValidateScenario * scenario,
     GObject * where_the_object_was)
 {
-  GstValidateScenarioPrivate *priv = scenario->priv;
-
-  SCENARIO_LOCK (scenario);
-  if (priv->execute_actions_source_id) {
-    g_source_remove (priv->execute_actions_source_id);
-    priv->execute_actions_source_id = 0;
-  }
-
-  if (priv->wait_id) {
-    g_source_remove (priv->wait_id);
-    priv->wait_id = 0;
-  }
-  SCENARIO_UNLOCK (scenario);
-
   scenario->pipeline = NULL;
 
   GST_DEBUG_OBJECT (scenario, "pipeline was freed");
@@ -3353,7 +3379,7 @@ init_scenarios (void)
         {NULL}
       }),
       "Waits for signal 'signal-name', message 'message-type', or during 'duration' seconds",
-      GST_VALIDATE_ACTION_TYPE_NONE);
+      GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE);
 
   REGISTER_ACTION_TYPE ("dot-pipeline", _execute_dot_pipeline, NULL,
       "Dots the pipeline (the 'name' property will be used in the dot filename).\n"
