@@ -135,7 +135,7 @@ _bus_handler (GstBus * bus, GstMessage * message,
           monitor->print_pos_srcid =
               g_timeout_add (PRINT_POSITION_TIMEOUT,
               (GSourceFunc) print_position, monitor);
-        } else if (oldstate == GST_STATE_PAUSED && newstate == GST_STATE_READY) {
+        } else if (oldstate >= GST_STATE_PAUSED && newstate <= GST_STATE_READY) {
           if (monitor->print_pos_srcid
               && g_source_remove (monitor->print_pos_srcid))
             monitor->print_pos_srcid = 0;
