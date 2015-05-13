@@ -477,8 +477,10 @@ gst_gl_base_mixer_decide_allocation (GstGLBaseMixer * mix, GstQuery * query)
       if (!mix->context) {
         mix->context = gst_gl_context_new (mix->display);
         if (!gst_gl_context_create (mix->context, mix->priv->other_context,
-                &error))
+                &error)) {
+          GST_OBJECT_UNLOCK (mix->display);
           goto context_error;
+        }
       }
     } while (!gst_gl_display_add_context (mix->display, mix->context));
     GST_OBJECT_UNLOCK (mix->display);

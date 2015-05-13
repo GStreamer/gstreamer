@@ -333,12 +333,16 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
           gst_gl_display_get_gl_context_for_thread (filter->display, NULL);
       if (!filter->context) {
         filter->context = gst_gl_context_new (filter->display);
-        if (!filter->context)
+        if (!filter->context) {
+          GST_OBJECT_UNLOCK (filter->display);
           goto context_null_error;
+        }
 
         if (!gst_gl_context_create (filter->context,
-                filter->priv->other_context, &error))
+                filter->priv->other_context, &error)) {
+          GST_OBJECT_UNLOCK (filter->display);
           goto context_error;
+        }
       }
     } while (!gst_gl_display_add_context (filter->display, filter->context));
     GST_OBJECT_UNLOCK (filter->display);
