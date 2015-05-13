@@ -12,7 +12,7 @@ flexible.
 Basic rules
 ~~~~~~~~~~~
 
-The simple rules must be followed:
+These simple rules must be followed:
 
  1) downstream suggests formats
  2) upstream decides on format
@@ -249,7 +249,7 @@ In contrast, pull mode has other typical use cases:
  * Playback from a lossy source, such as RTP, in which more knowledge
    about the latency of the pipeline can increase quality; or
 
- * Audio synthesis, in which audio APIs are tuned to producing only the
+ * Audio synthesis, in which audio APIs are tuned to produce only the
    necessary number of samples, typically driven by a hardware interrupt
    to fill a DMA buffer or a Jack[0] port buffer.
 
@@ -268,7 +268,7 @@ means that before pulling, the sink must initiate negotation to decide
 on a format.
 
 Recalling the principles of capsnego, whereby information must flow from
-those that have it to those that do not, we see that the two named use
+those that have it to those that do not, we see that the three named use
 cases have different negotiation requirements:
 
  * RTP and low-latency playback are both like the normal playback case,
@@ -319,7 +319,7 @@ possible.
 
 When negotiation succeeded, the sinkpad and all upstream internally linked pads
 are activated in pull mode. Typically, this operation will trigger negotiation
-on the downstream elements, which will now be forced to negotiation to the
+on the downstream elements, which will now be forced to negotiate to the
 final fixed desired caps of the sinkpad.
 
 After these steps, the sink element returns ASYNC from the state change
