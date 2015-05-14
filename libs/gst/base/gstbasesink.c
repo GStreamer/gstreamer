@@ -3369,10 +3369,28 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     if (G_UNLIKELY (stepped))
       goto dropped;
 
-    if (syncable && do_sync)
-      late =
-          gst_base_sink_is_too_late (basesink, obj, rstart, rstop,
-          GST_CLOCK_EARLY, 0, FALSE);
+    if (syncable && do_sync) {
+      GstClock *clock;
+
+      GST_OBJECT_LOCK (basesink);
+      clock = GST_ELEMENT_CLOCK (basesink);
+      if (clock && GST_STATE (basesink) == GST_STATE_PLAYING) {
+        GstClockTime base_time;
+        GstClockTime stime;
+        GstClockTime now;
+
+        base_time = GST_ELEMENT_CAST (basesink)->base_time;
+        stime = base_time + gst_base_sink_adjust_time (basesink, rstart);
+        now = gst_clock_get_time (clock);
+        GST_OBJECT_UNLOCK (basesink);
+
+        late =
+            gst_base_sink_is_too_late (basesink, obj, rstart, rstop,
+            GST_CLOCK_EARLY, GST_CLOCK_DIFF (stime, now), FALSE);
+      } else {
+        GST_OBJECT_UNLOCK (basesink);
+      }
+    }
 
     if (G_UNLIKELY (late))
       goto dropped;
