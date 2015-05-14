@@ -545,7 +545,10 @@ _validate_action_execute (GstValidateScenario * scenario,
 
   if (!func (timeline, action->structure, &err)) {
     GST_VALIDATE_REPORT (scenario,
-        g_quark_from_string ("scenario::execution-error"), err->message);
+        g_quark_from_string ("scenario::execution-error"),
+        "Could not execute %s (error: %s)",
+        gst_structure_get_name (action->structure),
+        err ? err->message : "None");
 
     g_clear_error (&err);
 

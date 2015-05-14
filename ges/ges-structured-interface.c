@@ -232,6 +232,13 @@ _ges_get_asset_from_timeline (GESTimeline * timeline, GType type,
   if (err)
     g_propagate_error (error, err);
   if (!asset || (error && *error)) {
+
+    if (error && !*error) {
+      *error = g_error_new (GES_ERROR, 0,
+          "There was an error requesting the asset with id %s and type %s (%s)",
+          id, g_type_name (type), error ? (*error)->message : "unknown");
+    }
+
     GST_ERROR
         ("There was an error requesting the asset with id %s and type %s (%s)",
         id, g_type_name (type), error ? (*error)->message : "unknown");
@@ -356,7 +363,8 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   }
 
   if (!layer) {
-    g_error_new (GES_ERROR, 0, "No layer with priority %d", layer_priority);
+    *error =
+        g_error_new (GES_ERROR, 0, "No layer with priority %d", layer_priority);
     goto beach;
   }
 
