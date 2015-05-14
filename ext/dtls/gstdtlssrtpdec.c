@@ -381,6 +381,8 @@ on_decoder_request_key (GstElement * srtp_decoder,
         break;
     }
 
+    gst_buffer_unref (key_buffer);
+
     return key_caps;
   } else {
     GST_WARNING_OBJECT (bin, "no srtp key available yet");

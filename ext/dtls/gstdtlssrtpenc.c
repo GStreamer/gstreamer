@@ -399,6 +399,8 @@ on_key_received (GObject * encoder, GstDtlsSrtpEnc * self)
         "rtp-auth", auth,
         "rtcp-auth", auth, "key", buffer, "random-key", FALSE, NULL);
 
+    gst_buffer_unref (buffer);
+
     g_signal_emit (self, signals[SIGNAL_ON_KEY_SET], 0);
   } else {
     GST_DEBUG_OBJECT (self,

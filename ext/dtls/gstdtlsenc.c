@@ -509,6 +509,12 @@ on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
   self->srtp_auth = auth;
 
   key_dup = g_memdup (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
+
+  if (self->encoder_key) {
+    gst_buffer_unref (self->encoder_key);
+    self->encoder_key = NULL;
+  }
+
   self->encoder_key =
       gst_buffer_new_wrapped (key_dup, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
 
