@@ -127,11 +127,9 @@ enum
 
 static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
 
-static void
-gst_vaapisink_video_overlay_expose (GstVideoOverlay * overlay);
+static void gst_vaapisink_video_overlay_expose (GstVideoOverlay * overlay);
 
-static gboolean
-gst_vaapisink_reconfigure_window (GstVaapiSink * sink);
+static gboolean gst_vaapisink_reconfigure_window (GstVaapiSink * sink);
 
 static void
 gst_vaapisink_set_event_handling (GstVaapiSink * sink, gboolean handle_events);
@@ -1742,9 +1740,9 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
    * This signal gets emitted after rendering the frame.
    */
   gst_vaapisink_signals[HANDOFF_SIGNAL] =
-    g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass),
-    G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-    G_TYPE_NONE, 1, GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
+      g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 1, GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 }
 
 static void
