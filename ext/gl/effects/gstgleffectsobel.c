@@ -48,9 +48,7 @@ gst_gl_effects_sobel_callback_desaturate (gint width, gint height,
     gst_gl_shader_use (shader);
 
     gl->ActiveTexture (GL_TEXTURE0);
-    gl->Enable (GL_TEXTURE_2D);
     gl->BindTexture (GL_TEXTURE_2D, texture);
-    gl->Disable (GL_TEXTURE_2D);
 
     gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
@@ -81,9 +79,7 @@ gst_gl_effects_sobel_callback_hconv (gint width, gint height, guint texture,
     gst_gl_shader_use (shader);
 
     gl->ActiveTexture (GL_TEXTURE0);
-    gl->Enable (GL_TEXTURE_2D);
     gl->BindTexture (GL_TEXTURE_2D, texture);
-    gl->Disable (GL_TEXTURE_2D);
 
     gst_gl_shader_set_uniform_1i (shader, "tex", 0);
     gst_gl_shader_set_uniform_1f (shader, "width", width);
@@ -115,9 +111,7 @@ gst_gl_effects_sobel_callback_vconv (gint width, gint height, guint texture,
     gst_gl_shader_use (shader);
 
     gl->ActiveTexture (GL_TEXTURE0);
-    gl->Enable (GL_TEXTURE_2D);
     gl->BindTexture (GL_TEXTURE_2D, texture);
-    gl->Disable (GL_TEXTURE_2D);
 
     gst_gl_shader_set_uniform_1i (shader, "tex", 0);
     gst_gl_shader_set_uniform_1f (shader, "height", height);
@@ -149,9 +143,7 @@ gst_gl_effects_sobel_callback_length (gint width, gint height, guint texture,
     gst_gl_shader_use (shader);
 
     gl->ActiveTexture (GL_TEXTURE0);
-    gl->Enable (GL_TEXTURE_2D);
     gl->BindTexture (GL_TEXTURE_2D, texture);
-    gl->Disable (GL_TEXTURE_2D);
 
     gst_gl_shader_set_uniform_1i (shader, "tex", 0);
     gst_gl_shader_set_uniform_1i (shader, "invert", effects->invert);

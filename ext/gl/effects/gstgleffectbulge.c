@@ -49,7 +49,6 @@ gst_gl_effects_bulge_callback (gint width, gint height, guint texture,
   gst_gl_shader_use (shader);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);

@@ -56,7 +56,6 @@ gst_gl_effects_luma_to_curve (GstGLEffects * effects,
 
 #if GST_GL_HAVE_OPENGL
     if (USING_OPENGL (context)) {
-      gl->Enable (GL_TEXTURE_1D);
       gl->BindTexture (GL_TEXTURE_1D, effects->curve[curve_index]);
       gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -65,12 +64,9 @@ gst_gl_effects_luma_to_curve (GstGLEffects * effects,
 
       gl->TexImage1D (GL_TEXTURE_1D, 0, curve->bytes_per_pixel,
           curve->width, 0, GL_RGB, GL_UNSIGNED_BYTE, curve->pixel_data);
-
-      gl->Disable (GL_TEXTURE_1D);
     }
 #endif
     if (USING_GLES2 (context) || USING_OPENGL3 (context)) {
-      gl->Enable (GL_TEXTURE_2D);
       gl->BindTexture (GL_TEXTURE_2D, effects->curve[curve_index]);
       gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -79,37 +75,27 @@ gst_gl_effects_luma_to_curve (GstGLEffects * effects,
 
       gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGB,
           curve->width, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, curve->pixel_data);
-      gl->Disable (GL_TEXTURE_2D);
     }
   }
 
   gl->ActiveTexture (GL_TEXTURE2);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 2);
 
-  gl->Disable (GL_TEXTURE_2D);
-
 #if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (context)) {
     gl->ActiveTexture (GL_TEXTURE1);
-    gl->Enable (GL_TEXTURE_1D);
     gl->BindTexture (GL_TEXTURE_1D, effects->curve[curve_index]);
 
     gst_gl_shader_set_uniform_1i (shader, "curve", 1);
-
-    gl->Disable (GL_TEXTURE_1D);
   }
 #endif
   if (USING_GLES2 (context) || USING_OPENGL3 (context)) {
     gl->ActiveTexture (GL_TEXTURE1);
-    gl->Enable (GL_TEXTURE_2D);
     gl->BindTexture (GL_TEXTURE_2D, effects->curve[curve_index]);
 
     gst_gl_shader_set_uniform_1i (shader, "curve", 1);
-
-    gl->Disable (GL_TEXTURE_2D);
   }
 
   gst_gl_filter_draw_texture (filter, texture, width, height);

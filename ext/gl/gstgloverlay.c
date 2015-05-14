@@ -429,10 +429,6 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
   }
 #endif
 
-  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
-      GST_GL_API_OPENGL)
-    gl->Enable (GL_TEXTURE_2D);
-
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (GL_TEXTURE_2D, texture);
 

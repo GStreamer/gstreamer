@@ -242,7 +242,6 @@ gst_gl_mosaic_callback (gpointer stuff)
 
   gst_gl_context_clear_shader (GST_GL_BASE_MIXER (mixer)->context);
   gl->BindTexture (GL_TEXTURE_2D, 0);
-  gl->Disable (GL_TEXTURE_2D);
 
   gl->Enable (GL_DEPTH_TEST);
 

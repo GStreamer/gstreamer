@@ -168,20 +168,20 @@ draw_render (gpointer data)
     gl->MatrixMode (GL_PROJECTION);
     gl->LoadIdentity ();
 
-    gl->Enable (GL_TEXTURE_2D);
+    gl->ActiveTexture (GL_TEXTURE_2D);
     gl->BindTexture (GL_TEXTURE_2D, tex_id);
 
     gl->EnableClientState (GL_VERTEX_ARRAY);
-    gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
     gl->VertexPointer (2, GL_FLOAT, 0, &verts);
+
+    gl->ClientActiveTexture (GL_TEXTURE0);
+    gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
     gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
 
     gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
 
     gl->DisableClientState (GL_VERTEX_ARRAY);
     gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
-
-    gl->Disable (GL_TEXTURE_2D);
   }
 #endif
 #if GST_GL_HAVE_GLES2
