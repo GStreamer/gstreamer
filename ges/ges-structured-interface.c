@@ -25,6 +25,52 @@
 #define LAST_CONTAINER_QDATA g_quark_from_string("ges-structured-last-container")
 #define LAST_CHILD_QDATA g_quark_from_string("ges-structured-last-child")
 
+static gboolean
+_get_clocktime (GstStructure * structure, const gchar * name, gpointer var)
+{
+  gboolean found = FALSE;
+  GstClockTime *val = (GstClockTime *) var;
+
+  const GValue *gvalue = gst_structure_get_value (structure, name);
+
+  if (gvalue) {
+    if (G_VALUE_TYPE (gvalue) == GST_TYPE_CLOCK_TIME) {
+      *val = (GstClockTime) g_value_get_uint64 (gvalue);
+      found = TRUE;
+    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_DOUBLE) {
+      *val = (GstClockTime) g_value_get_double (gvalue) * GST_SECOND;
+      found = TRUE;
+    }
+  }
+
+  return found;
+}
+
+#define GET_AND_CHECK(name,type,var,label) G_STMT_START {\
+  gboolean found = FALSE; \
+\
+  if (type == GST_TYPE_CLOCK_TIME) {\
+    found = _get_clocktime(structure,name,var);\
+  }\
+  else { \
+    found = gst_structure_get (structure, name, type, var, NULL); \
+  }\
+  if (!found) {\
+    gchar *struct_str = gst_structure_to_string (structure); \
+    *error = g_error_new (GES_ERROR, 0, \
+        "Could not get the mandatory field '%s'" \
+        " fields in %s", name, struct_str); \
+    g_free (struct_str); \
+    goto label;\
+  } \
+} G_STMT_END
+
+#define TRY_GET(name,type,var,def) G_STMT_START {\
+  if (!gst_structure_get (structure, name, type, var, NULL)) {\
+    *var = def; \
+  } \
+} G_STMT_END
+
 typedef struct
 {
   const gchar **fields;
@@ -107,16 +153,10 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
   if (!_check_fields (structure, fields_error, error))
     return FALSE;
 
-  if (!gst_structure_get (structure,
-          "element-name", G_TYPE_STRING, &element_name,
-          "property-name", G_TYPE_STRING, &property_name,
-          "value", G_TYPE_DOUBLE, &value,
-          "timestamp", GST_TYPE_CLOCK_TIME, &timestamp, NULL)) {
-    *error = g_error_new (GES_ERROR, 0, "Could not get one of the mandatory"
-        " fields in %s", gst_structure_get_name (structure));
-
-    goto done;
-  }
+  GET_AND_CHECK ("element-name", G_TYPE_STRING, &element_name, done);
+  GET_AND_CHECK ("property-name", G_TYPE_STRING, &property_name, done);
+  GET_AND_CHECK ("value", G_TYPE_DOUBLE, &value, done);
+  GET_AND_CHECK ("timestamp", GST_TYPE_CLOCK_TIME, &timestamp, done);
 
   element =
       GES_TRACK_ELEMENT (ges_timeline_get_element (timeline, element_name));
@@ -235,20 +275,6 @@ done:
   return layer;
 }
 
-#define GET_AND_CHECK(name,type,var) G_STMT_START {\
-  if (!gst_structure_get (structure, name, type, var, NULL)) {\
-    *error = g_error_new (GES_ERROR, 0, "Could not get mandatory field: %s in %s",\
-        name,  gst_structure_get_name (structure)); \
-    goto beach;\
-  } \
-} G_STMT_END
-
-#define TRY_GET(name,type,var,def) G_STMT_START {\
-  if (!gst_structure_get (structure, name, type, var, NULL)) {\
-    *var = def; \
-  } \
-} G_STMT_END
-
 static gchar *
 ensure_uri (gchar * location)
 {
@@ -286,7 +312,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   if (!_check_fields (structure, fields_error, error))
     return FALSE;
 
-  GET_AND_CHECK ("asset-id", G_TYPE_STRING, &asset_id);
+  GET_AND_CHECK ("asset-id", G_TYPE_STRING, &asset_id, beach);
 
   TRY_GET ("pattern", G_TYPE_STRING, &pattern, NULL);
   TRY_GET ("name", G_TYPE_STRING, &name, NULL);
@@ -379,9 +405,6 @@ beach:
   g_free (asset_id);
   return res;
 }
-
-#undef GET_AND_CHECK
-#undef TRY_GET
 
 gboolean
 _ges_container_add_child_from_struct (GESTimeline * timeline,
@@ -540,3 +563,6 @@ _ges_set_child_property_from_struct (GESTimeline * timeline,
 
   return TRUE;
 }
+
+#undef GET_AND_CHECK
+#undef TRY_GET
