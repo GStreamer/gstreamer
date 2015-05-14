@@ -113,6 +113,7 @@ GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 #define DEFAULT_MAX_BITRATE         0
 #define DEFAULT_HANDLE_EVENTS       TRUE
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
+#define DEFAULT_IGNORE_ALPHA        TRUE
 
 typedef GstGLSinkBin GstGLImageSinkBin;
 typedef GstGLSinkBinClass GstGLImageSinkBinClass;
@@ -221,7 +222,7 @@ gst_gl_image_sink_bin_class_init (GstGLImageSinkBinClass * klass)
   g_object_class_install_property (gobject_class, PROP_BIN_HANDLE_EVENTS,
       g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",
           "When enabled, alpha will be ignored and converted to black",
-          DEFAULT_HANDLE_EVENTS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_IGNORE_ALPHA, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BIN_CONTEXT,
       g_param_spec_object ("context", "OpenGL context", "Get OpenGL context",
           GST_GL_TYPE_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
@@ -463,10 +464,6 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gobject_class->set_property = gst_glimage_sink_set_property;
   gobject_class->get_property = gst_glimage_sink_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_DISPLAY,
-      g_param_spec_string ("display", "Display", "Display name",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio", "Force aspect ratio",
           "When enabled, scaling will respect original aspect ratio",
@@ -484,13 +481,13 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_HANDLE_EVENTS,
       g_param_spec_boolean ("handle-events", "Handle XEvents",
-          "When enabled, XEvents will be selected and handled", TRUE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "When enabled, XEvents will be selected and handled",
+          DEFAULT_HANDLE_EVENTS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_IGNORE_ALPHA,
       g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",
-          "When enabled, alpha will be ignored and converted to black", TRUE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "When enabled, alpha will be ignored and converted to black",
+          DEFAULT_IGNORE_ALPHA, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class, "OpenGL video sink",
       "Sink/Video", "A videosink based on OpenGL",
@@ -553,7 +550,6 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
 static void
 gst_glimage_sink_init (GstGLImageSink * glimage_sink)
 {
-  glimage_sink->display_name = NULL;
   glimage_sink->window_id = 0;
   glimage_sink->new_window_id = 0;
   glimage_sink->display = NULL;
@@ -580,12 +576,6 @@ gst_glimage_sink_set_property (GObject * object, guint prop_id,
   glimage_sink = GST_GLIMAGE_SINK (object);
 
   switch (prop_id) {
-    case ARG_DISPLAY:
-    {
-      g_free (glimage_sink->display_name);
-      glimage_sink->display_name = g_strdup (g_value_get_string (value));
-      break;
-    }
     case PROP_FORCE_ASPECT_RATIO:
     {
       glimage_sink->keep_aspect_ratio = g_value_get_boolean (value);
@@ -621,8 +611,6 @@ gst_glimage_sink_finalize (GObject * object)
 
   g_mutex_clear (&glimage_sink->drawing_lock);
 
-  g_free (glimage_sink->display_name);
-
   GST_DEBUG ("finalized");
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -638,9 +626,6 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
   glimage_sink = GST_GLIMAGE_SINK (object);
 
   switch (prop_id) {
-    case ARG_DISPLAY:
-      g_value_set_string (value, glimage_sink->display_name);
-      break;
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, glimage_sink->keep_aspect_ratio);
       break;
