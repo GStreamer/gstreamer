@@ -258,6 +258,105 @@ if test "x$USE_POISONING" = xyes; then
     [Define if we should poison deallocated memory])
 fi
 
+dnl PTP support parts
+AC_MSG_CHECKING([whether PTP support can be enabled])
+case "$host_os" in
+  *android*)
+    dnl Can't run on Android because of permissions
+    HAVE_PTP=no
+    ;;
+  mingw*|pw32*|cygwin*)
+    dnl Not ported to Windows yet
+    HAVE_PTP=no
+    ;;
+  darwin*)
+    dnl Can't run on iOS because of permissions
+    AC_CHECK_HEADER(MobileCoreServices/MobileCoreServices.h, HAVE_PTP="no", HAVE_PTP="yes", [-])
+    ;;
+  linux*|darwin*|solaris*|netbsd*|freebsd*|openbsd*|kfreebsd*|dragonfly*|gnu*)
+    HAVE_PTP=yes
+    ;;
+  *)
+    HAVE_PTP=no
+    ;;
+esac
+AC_MSG_RESULT([$HAVE_PTP])
+
+dnl user/group to change to in gst-ptp-helper
+AC_ARG_WITH([ptp-helper-setuid-user],
+  AS_HELP_STRING([--with-ptp-helper-setuid-user],[User to switch to when installing gst-ptp-helper setuid root]),
+  [
+    if test "x$withval" != "x"
+    then
+      AC_DEFINE_UNQUOTED(HAVE_PTP_HELPER_SETUID_USER, "$withval", [PTP helper setuid user])
+    fi
+  ], []
+)
+
+dnl group/group to change to in gst-ptp-helper
+AC_ARG_WITH([ptp-helper-setuid-group],
+  AS_HELP_STRING([--with-ptp-helper-setuid-group],[Group to switch to when installing gst-ptp-helper setuid root]),
+  [
+    if test "x$withval" != "x"
+    then
+      AC_DEFINE_UNQUOTED(HAVE_PTP_HELPER_SETUID_GROUP, "$withval", [PTP helper setuid group])
+    fi
+  ], []
+)
+
+AC_ARG_WITH(
+  ptp-helper-permissions,
+  AC_HELP_STRING(
+    [--with-ptp-helper-permissions],
+    [how to gain PTP permissions (none, setuid-root, capabilities, auto)]),
+    [],
+    [with_ptp_helper_permissions=auto])
+
+gst_ptp_have_cap=no
+AG_GST_CHECK_LIBHEADER(CAP, cap,
+                       cap_init, ,
+                       sys/capability.h,
+                       CAP_LIBS="-lcap"
+                       AC_SUBST(CAP_LIBS)
+                       gst_ptp_have_cap=yes)
+
+AC_PATH_PROG([SETCAP], [setcap], [no], [$PATH:/usr/bin:/bin:/usr/sbin:/sbin])
+
+if test "x$HAVE_PTP" = "xyes"; then
+AC_DEFINE(HAVE_PTP, 1, [PTP support available])
+
+AC_MSG_CHECKING([how to install gst-ptp-helper])
+if test "x$with_ptp_helper_permissions" = "xauto"; then
+    if test "x$gst_ptp_have_cap" = "xyes" -a "x$SETCAP" != "xno"; then
+        with_ptp_helper_permissions="capabilities"
+    else
+        with_ptp_helper_permissions="setuid-root"
+    fi
+fi
+AC_MSG_RESULT([$with_ptp_helper_permissions])
+
+case "$with_ptp_helper_permissions" in
+  none)
+    ;;
+  setuid-root)
+     AC_DEFINE(HAVE_PTP_HELPER_SETUID, 1,
+        [Use setuid-root for permissions in PTP helper])
+    ;;
+  capabilities)
+     AC_DEFINE(HAVE_PTP_HELPER_CAPABILITIES, 1,
+        [Use capabilities for permissions in PTP helper])
+    ;;
+  *)
+    AC_MSG_ERROR(Invalid parameter [$with_ptp_helper_permissions])
+    ;;
+esac
+
+fi
+
+AM_CONDITIONAL(HAVE_PTP, test "x$HAVE_PTP" = "xyes")
+AM_CONDITIONAL(HAVE_PTP_HELPER_SETUID, test "x$with_ptp_helper_permissions" = "xsetuid-root")
+AM_CONDITIONAL(HAVE_PTP_HELPER_CAPABILITIES, test "x$with_ptp_helper_permissions" = "xcapabilities")
+
 dnl *** checks for platform ***
 
 dnl * hardware/architecture *
@@ -806,6 +905,12 @@ AC_DEFINE_UNQUOTED(GST_PLUGIN_SCANNER_INSTALLED,
     "$GST_PLUGIN_SCANNER_INSTALLED", [location of the installed gst-plugin-scanner])
 AC_SUBST(GST_PLUGIN_SCANNER_INSTALLED)
 
+dnl ptp helper locations
+AS_AC_EXPAND(GST_PTP_HELPER_INSTALLED,${libexecdir}/gstreamer-$GST_API_VERSION/gst-ptp-helper)
+AC_DEFINE_UNQUOTED(GST_PTP_HELPER_INSTALLED,
+    "$GST_PTP_HELPER_INSTALLED", [location of the installed gst-ptp-helper])
+AC_SUBST(GST_PTP_HELPER_INSTALLED)
+
 dnl things for our internal libcheck (must be called even if building
 dnl libcheck is disabled because it defines conditionals)
 AG_GST_CHECK_CHECKS()
@@ -842,6 +947,7 @@ tests/examples/helloworld/Makefile
 tests/examples/manual/Makefile
 tests/examples/memory/Makefile
 tests/examples/netclock/Makefile
+tests/examples/ptp/Makefile
 tests/examples/streamiddemux/Makefile
 tests/examples/streams/Makefile
 tools/Makefile
@@ -945,6 +1051,7 @@ Configuration
 	Plugin support	           : ${enable_plugin}
 	Static plugins             : ${enable_static_plugins}
 	Unit testing support       : ${BUILD_CHECK}
+	PTP clock support          : ${HAVE_PTP}
 
 	Debug                      : ${USE_DEBUG}
 	Profiling                  : ${USE_PROFILING}

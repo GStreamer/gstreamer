@@ -8,18 +8,35 @@ libgstnet_@GST_API_VERSION@_include_HEADERS = \
     gstnetclientclock.h \
     gstnetcontrolmessagemeta.h \
     gstnettimepacket.h \
-    gstnettimeprovider.h
+    gstnettimeprovider.h \
+    gstptpclock.h
 
 libgstnet_@GST_API_VERSION@_la_SOURCES = \
     gstnetaddressmeta.c \
     gstnetclientclock.c \
     gstnetcontrolmessagemeta.c \
     gstnettimepacket.c \
-    gstnettimeprovider.c
+    gstnettimeprovider.c \
+    gstptpclock.c
+
+noinst_HEADERS = gstptp_private.h
 
 libgstnet_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) $(GIO_CFLAGS)
-libgstnet_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS) $(GIO_LIBS)
+libgstnet_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS) $(GIO_LIBS) \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_API_VERSION@.la
 libgstnet_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+
+# try to prevent packaging errors
+check-libexecdir-consistency:
+	@if test "${GST_PTP_HELPER_INSTALLED}" != "${libexecdir}/gstreamer-$(GST_API_VERSION)/gst-ptp-helper"; then \
+	  echo "*** Inconsistent libexecdir! Please use ./configure --libexecdir=/foo/bar"; \
+	  echo "*** to set the libexecdir and not make libexecdir=/foo/bar or the like."; \
+	  echo "*** The same goes for prefix, libdir etc."; \
+	  echo "*** ${GST_PTP_HELPER_INSTALLED} != ${libexecdir}/gstreamer-$(GST_API_VERSION)/gst-ptp-helper"; \
+	  exit 1; \
+	fi
+
+all-local: check-libexecdir-consistency
 
 CLEANFILES = *.gcno *.gcda *.gcov
 

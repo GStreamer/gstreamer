@@ -16,3 +16,11 @@ EXPORTS
 	gst_net_time_packet_serialize
 	gst_net_time_provider_get_type
 	gst_net_time_provider_new
+	gst_ptp_clock_get_type
+	gst_ptp_clock_new
+	gst_ptp_deinit
+	gst_ptp_init
+	gst_ptp_is_initialized
+	gst_ptp_is_supported
+	gst_ptp_statistics_callback_add
+	gst_ptp_statistics_callback_remove

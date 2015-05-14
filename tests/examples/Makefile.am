@@ -11,6 +11,7 @@ always_dirs = \
 	manual     \
 	memory   \
 	netclock \
+	ptp \
 	stepping \
 	streamiddemux \
 	streams

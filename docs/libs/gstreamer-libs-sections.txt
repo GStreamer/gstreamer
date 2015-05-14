@@ -942,6 +942,32 @@ gst_net_time_provider_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstptpclock</FILE>
+<TITLE>GstPtpClock</TITLE>
+<INCLUDE>gst/net/net.h</INCLUDE>
+gst_ptp_init
+gst_ptp_deinit
+gst_ptp_is_initialized
+gst_ptp_is_supported
+
+GstPtpClock
+gst_ptp_clock_new
+
+gst_ptp_statistics_callback_add
+gst_ptp_statistics_callback_remove
+<SUBSECTION Standard>
+GstPtpClockClass
+GstPtpClockPrivate
+GST_PTP_CLOCK
+GST_IS_PTP_CLOCK
+GST_TYPE_PTP_CLOCK
+GST_PTP_CLOCK_CLASS
+GST_IS_PTP_CLOCK_CLASS
+<SUBSECTION Private>
+gst_ptp_clock_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstcheck</FILE>
 <TITLE>GstCheck</TITLE>
 <INCLUDE>gst/check/gstcheck.h</INCLUDE>
