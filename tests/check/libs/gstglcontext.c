@@ -174,7 +174,7 @@ draw_render (gpointer data)
     gl->LoadIdentity ();
 
     gl->ActiveTexture (GL_TEXTURE_2D);
-    gl->BindTexture (GL_TEXTURE_2D, tex_id);
+    gl->BindTexture (GL_TEXTURE_2D, tex);
 
     gl->EnableClientState (GL_VERTEX_ARRAY);
     gl->VertexPointer (2, GL_FLOAT, 0, &verts);
