@@ -358,6 +358,9 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
       layer = _ges_get_layer_by_priority (timeline, 0);
     else
       layer = ges_clip_get_layer (GES_CLIP (container));
+
+    if (!layer)
+      layer = _ges_get_layer_by_priority (timeline, 0);
   } else {
     layer = _ges_get_layer_by_priority (timeline, layer_priority);
   }
