@@ -51,9 +51,6 @@ struct _GstGLImageSink
 {
     GstVideoSink video_sink;
 
-    //properties
-    gchar *display_name;
-
     guintptr window_id;
     guintptr new_window_id;
     gulong mouse_sig_id;
