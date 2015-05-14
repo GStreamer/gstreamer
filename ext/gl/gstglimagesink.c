@@ -1425,8 +1425,13 @@ gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
     gl_sink->vao = 0;
   }
 
+  if (gl_sink->vertex_buffer) {
+    gl->DeleteBuffers (1, &gl_sink->vertex_buffer);
+    gl_sink->vertex_buffer = 0;
+  }
+
   if (gl_sink->vbo_indices) {
-    gl->DeleteVertexArrays (1, &gl_sink->vbo_indices);
+    gl->DeleteBuffers (1, &gl_sink->vbo_indices);
     gl_sink->vbo_indices = 0;
   }
 }
