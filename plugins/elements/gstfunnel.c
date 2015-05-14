@@ -76,6 +76,14 @@ struct _GstFunnelPadClass
 
 G_DEFINE_TYPE (GstFunnelPad, gst_funnel_pad, GST_TYPE_PAD);
 
+#define DEFAULT_FORWARD_STICKY_EVENTS	TRUE
+
+enum
+{
+  PROP_0,
+  PROP_FORWARD_STICKY_EVENTS
+};
+
 static void
 gst_funnel_pad_class_init (GstFunnelPadClass * klass)
 {
@@ -118,6 +126,38 @@ static gboolean gst_funnel_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
 static void
+gst_funnel_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstFunnel *funnel = GST_FUNNEL (object);
+
+  switch (prop_id) {
+    case PROP_FORWARD_STICKY_EVENTS:
+      funnel->forward_sticky_events = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_funnel_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstFunnel *funnel = GST_FUNNEL (object);
+
+  switch (prop_id) {
+    case PROP_FORWARD_STICKY_EVENTS:
+      g_value_set_boolean (value, funnel->forward_sticky_events);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_funnel_dispose (GObject * object)
 {
   GstFunnel *funnel = GST_FUNNEL (object);
@@ -144,7 +184,16 @@ gst_funnel_class_init (GstFunnelClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
+  gobject_class->set_property = gst_funnel_set_property;
+  gobject_class->get_property = gst_funnel_get_property;
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_funnel_dispose);
+
+  g_object_class_install_property (gobject_class, PROP_FORWARD_STICKY_EVENTS,
+      g_param_spec_boolean ("forward-sticky-events", "Forward sticky events",
+          "Forward sticky events on stream changes",
+          DEFAULT_FORWARD_STICKY_EVENTS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Funnel pipe fitting", "Generic", "N-to-1 pipe fitting",
@@ -169,6 +218,8 @@ gst_funnel_init (GstFunnel * funnel)
   gst_pad_use_fixed_caps (funnel->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (funnel), funnel->srcpad);
+
+  funnel->forward_sticky_events = DEFAULT_FORWARD_STICKY_EVENTS;
 }
 
 static GstPad *
@@ -277,10 +328,12 @@ gst_funnel_sink_chain_object (GstPad * pad, GstFunnel * funnel,
 
   GST_PAD_STREAM_LOCK (funnel->srcpad);
 
-  if (funnel->last_sinkpad != pad) {
+  if ((funnel->last_sinkpad == NULL) || (funnel->forward_sticky_events
+          && (funnel->last_sinkpad != pad))) {
     gst_object_replace ((GstObject **) & funnel->last_sinkpad,
         GST_OBJECT (pad));
 
+    GST_DEBUG_OBJECT (pad, "Forwarding sticky events");
     gst_pad_sticky_events_foreach (pad, forward_events, funnel->srcpad);
   }
 
