@@ -556,13 +556,15 @@ gst_gl_effects_get_fragment_shader (GstGLEffects * effects,
       }
     }
 #if GST_GL_HAVE_OPENGL
-    if (!gst_gl_shader_compile_and_check (shader,
-            shader_source_opengl, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-      gst_gl_context_set_error (context, "Failed to initialize %s shader",
-          shader_name);
-      GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND, ("%s",
-              gst_gl_context_get_error ()), (NULL));
-      return NULL;
+    if (USING_OPENGL (context)) {
+      if (!gst_gl_shader_compile_and_check (shader,
+              shader_source_opengl, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+        gst_gl_context_set_error (context, "Failed to initialize %s shader",
+            shader_name);
+        GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND, ("%s",
+                gst_gl_context_get_error ()), (NULL));
+        return NULL;
+      }
     }
 #endif
   }
