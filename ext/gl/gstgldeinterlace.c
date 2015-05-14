@@ -290,8 +290,6 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
 
   gst_gl_shader_use (deinterlace_filter->shader);
 
-  gl->Enable (GL_TEXTURE_2D);
-
   if (G_UNLIKELY (deinterlace_filter->prev_tex == 0)) {
     gst_gl_context_gen_texture (GST_GL_BASE_FILTER (filter)->context,
         &deinterlace_filter->prev_tex,
@@ -306,7 +304,6 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
 
   gl->ActiveTexture (GL_TEXTURE0);
   gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "tex", 0);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "max_comb",
       5.0f / 255.0f);
@@ -339,8 +336,6 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
 
   gl->ClientActiveTexture (GL_TEXTURE0);
   gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
-
-  gl->Disable (GL_TEXTURE_2D);
 
   if (texture == filter->in_tex_id) {
     temp = filter->in_tex_id;

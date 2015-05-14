@@ -911,9 +911,6 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
   gst_gl_context_clear_shader (GST_GL_BASE_MIXER (mixer)->context);
   gl->BindTexture (GL_TEXTURE_2D, 0);
-  if (gst_gl_context_get_gl_api (GST_GL_BASE_MIXER (mixer)->context) &
-      GST_GL_API_OPENGL)
-    gl->Disable (GL_TEXTURE_2D);
 
   gl->Disable (GL_DEPTH_TEST);
   gl->Disable (GL_CULL_FACE);

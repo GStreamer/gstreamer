@@ -92,7 +92,6 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glDisable (GL_CULL_FACE);
-    glDisable (GL_TEXTURE_2D);
 
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
@@ -229,7 +228,6 @@ gst_gl_test_src_shader (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 
     gst_gl_context_clear_shader (v->context);
     gl->BindTexture (GL_TEXTURE_2D, 0);
-    gl->Disable (GL_TEXTURE_2D);
 
     gst_gl_shader_use (v->shader);
 
@@ -322,7 +320,6 @@ gst_gl_test_src_checkers (GstGLTestSrc * v, gint checker_width)
 
     gst_gl_context_clear_shader (v->context);
     gl->BindTexture (GL_TEXTURE_2D, 0);
-    gl->Disable (GL_TEXTURE_2D);
 
     gst_gl_shader_use (v->shader);
 

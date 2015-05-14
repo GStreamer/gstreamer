@@ -329,9 +329,7 @@ gst_gl_filter_glass_draw_video_plane (GstGLFilter * filter,
   };
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, texture);
-  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (glass_filter->shader, "tex", 0);
   gst_gl_shader_set_uniform_1f (glass_filter->shader, "yrot", rotation);
@@ -408,6 +406,5 @@ gst_gl_filter_glass_callback (gpointer stuff)
 
   gst_gl_context_clear_shader (GST_GL_BASE_FILTER (filter)->context);
 
-  gl->Disable (GL_TEXTURE_2D);
   gl->Disable (GL_BLEND);
 }

@@ -303,16 +303,12 @@ gst_gl_differencematte_diff (gint width, gint height, guint texture,
   gst_gl_shader_use (differencematte->shader[0]);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, texture);
-  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[0], "current", 0);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, differencematte->savedbgtexture);
-  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[0], "saved", 1);
 
@@ -333,9 +329,7 @@ gst_gl_differencematte_hblur (gint width, gint height, guint texture,
   gst_gl_shader_use (differencematte->shader[1]);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, texture);
-  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[1], "tex", 0);
 
@@ -360,9 +354,7 @@ gst_gl_differencematte_vblur (gint width, gint height, guint texture,
   gst_gl_shader_use (differencematte->shader[2]);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, texture);
-  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[2], "tex", 0);
 
@@ -387,23 +379,17 @@ gst_gl_differencematte_interp (gint width, gint height, guint texture,
   gst_gl_shader_use (differencematte->shader[3]);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, texture);
-  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "blend", 0);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, differencematte->newbgtexture);
-  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "base", 1);
 
   gl->ActiveTexture (GL_TEXTURE2);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, differencematte->midtexture[2]);
-  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "alpha", 2);
 
