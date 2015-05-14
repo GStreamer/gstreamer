@@ -403,7 +403,7 @@ class GstValidateTest(Test):
     def __init__(self, application_name, classname,
                  options, reporter, duration=0,
                  timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None,
-                 extra_env_variables=[]):
+                 extra_env_variables={}):
 
         if not hard_timeout and self.HARD_TIMEOUT_FACTOR:
             if timeout:
