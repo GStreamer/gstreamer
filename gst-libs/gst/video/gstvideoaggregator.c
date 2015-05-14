@@ -748,6 +748,8 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
       gst_structure_fixate_field_nearest_int (s, "height", best_height);
       gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
           best_fps_d);
+      gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1,
+          1);
 
       /* fixate the the rest of the fields */
       caps = gst_caps_fixate (caps);
@@ -848,9 +850,6 @@ gst_videoaggregator_pad_sink_getcaps (GstPad * pad, GstVideoAggregator * vagg,
     gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-    if (!gst_structure_has_field (s, "pixel-aspect-ratio"))
-      gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-          NULL);
 
     gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
         NULL);
@@ -1842,9 +1841,6 @@ gst_videoaggregator_pad_sink_acceptcaps (GstPad * pad,
     gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-    if (!gst_structure_has_field (s, "pixel-aspect-ratio"))
-      gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-          NULL);
 
     gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
         NULL);
