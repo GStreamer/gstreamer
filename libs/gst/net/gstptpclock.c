@@ -73,6 +73,33 @@ GST_DEBUG_CATEGORY_STATIC (ptp_debug);
 /* IEEE 1588 7.7.3.1 */
 #define PTP_ANNOUNCE_RECEIPT_TIMEOUT 4
 
+/* Use a running average for calculating the mean path delay instead
+ * of just using the last measurement. Enabling this helps in unreliable
+ * networks, like wifi, with often changing delays
+ *
+ * Undef for following IEEE1588-2008 by the letter
+ */
+#define USE_RUNNING_AVERAGE_DELAY 1
+
+/* Filter out any measurements that are above a certain threshold compared to
+ * previous measurements. Enabling this helps filtering out outliers that
+ * happen fairly often in unreliable networks, like wifi.
+ *
+ * Undef for following IEEE1588-2008 by the letter
+ */
+#define USE_MEASUREMENT_FILTERING 1
+
+/* Select the first clock from which we capture a SYNC message as the master
+ * clock of the domain until we are ready to run the best master clock
+ * algorithm. This allows faster syncing but might mean a change of the master
+ * clock in the beginning. As all clocks in a domain are supposed to use the
+ * same time, this shouldn't be much of a problem.
+ *
+ * Undef for following IEEE1588-2008 by the letter
+ */
+#define USE_OPPORTUNISTIC_CLOCK_SELECTION 1
+
+/* How many updates should be skipped at maximum when using USE_MEASUREMENT_FILTERING */
 #define MAX_SKIPPED_UPDATES 5
 
 typedef enum
@@ -988,14 +1015,18 @@ static void
 update_ptp_time (PtpDomainData * domain, PtpPendingSync * sync)
 {
   GstClockTime internal_time, external_time, rate_num, rate_den;
+  GstClockTime corrected_ptp_time, corrected_local_time;
+  gdouble r_squared = 0.0;
+  gboolean synced;
+  GstClockTimeDiff discont = 0;
+  GstClockTime estimated_ptp_time = GST_CLOCK_TIME_NONE;
+
+#ifdef USE_MEASUREMENT_FILTERING
   GstClockTime orig_internal_time, orig_external_time, orig_rate_num,
       orig_rate_den;
-  GstClockTime corrected_ptp_time, corrected_local_time;
+  GstClockTime new_estimated_ptp_time;
   GstClockTime max_discont, estimated_ptp_time_min, estimated_ptp_time_max;
-  gdouble r_squared;
-  gboolean synced, now_synced;
-  GstClockTimeDiff discont = 0;
-  GstClockTime estimated_ptp_time = GST_CLOCK_TIME_NONE, new_estimated_ptp_time;
+  gboolean now_synced;
 
   /* We check this here and when updating the mean path delay, because
    * we can get here without a delay response too */
@@ -1008,6 +1039,7 @@ update_ptp_time (PtpDomainData * domain, PtpPendingSync * sync)
         GST_TIME_ARGS (domain->mean_path_delay));
     goto out;
   }
+#endif
 
   /* IEEE 1588 11.2 */
   corrected_ptp_time =
@@ -1020,6 +1052,7 @@ update_ptp_time (PtpDomainData * domain, PtpPendingSync * sync)
     gst_clock_set_calibration (domain->domain_clock, corrected_local_time,
         corrected_ptp_time, 1, 1);
 
+#ifdef USE_MEASUREMENT_FILTERING
   /* Check if the corrected PTP time is +/- 3/4 RTT around what we would
    * estimate with our present knowledge about the clock
    */
@@ -1135,8 +1168,34 @@ update_ptp_time (PtpDomainData * domain, PtpPendingSync * sync)
     domain->last_local_time = corrected_local_time;
   }
 
-out:
+#else
+  GST_DEBUG ("Adding observation for domain %u: %" GST_TIME_FORMAT " - %"
+      GST_TIME_FORMAT, domain->domain,
+      GST_TIME_ARGS (corrected_ptp_time), GST_TIME_ARGS (corrected_local_time));
 
+  gst_clock_get_calibration (GST_CLOCK_CAST (domain->domain_clock),
+      &internal_time, &external_time, &rate_num, &rate_den);
+
+  estimated_ptp_time = corrected_local_time;
+  estimated_ptp_time =
+      gst_clock_adjust_with_calibration (GST_CLOCK_CAST
+      (domain->domain_clock), estimated_ptp_time, internal_time,
+      external_time, rate_num, rate_den);
+
+  gst_clock_add_observation (domain->domain_clock,
+      corrected_local_time, corrected_ptp_time, &r_squared);
+
+  gst_clock_get_calibration (GST_CLOCK_CAST (domain->domain_clock),
+      &internal_time, &external_time, &rate_num, &rate_den);
+
+  synced = TRUE;
+  domain->last_ptp_time = corrected_ptp_time;
+  domain->last_local_time = corrected_local_time;
+#endif
+
+#ifdef USE_MEASUREMENT_FILTERING
+out:
+#endif
   if (g_atomic_int_get (&domain_stats_n_hooks)) {
     GstStructure *stats = gst_structure_new (GST_PTP_STATISTICS_TIME_UPDATED,
         "domain", G_TYPE_UINT, domain->domain,
@@ -1172,6 +1231,7 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
       (sync->correction_field_sync + sync->correction_field_delay +
           32768) / 65536) / 2;
 
+#ifdef USE_RUNNING_AVERAGE_DELAY
   /* Track an average round trip time, for a bit of smoothing */
   /* Always update before discarding a sample, so genuine changes in
    * the network get picked up, eventually */
@@ -1183,7 +1243,11 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
   else
     domain->mean_path_delay =
         (15 * domain->mean_path_delay + mean_path_delay) / 16;
+#else
+  domain->mean_path_delay = mean_path_delay;
+#endif
 
+#ifdef USE_MEASUREMENT_FILTERING
   if (sync->follow_up_recv_time_local != GST_CLOCK_TIME_NONE &&
       domain->mean_path_delay != 0
       && sync->follow_up_recv_time_local >
@@ -1204,9 +1268,12 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
     ret = FALSE;
     goto out;
   }
+#endif
 
   delay_req_delay =
       sync->delay_resp_recv_time_local - sync->delay_req_send_time_local;
+
+#ifdef USE_MEASUREMENT_FILTERING
   /* delay_req_delay is a RTT, so 2 times the path delay */
   if (delay_req_delay > 4 * domain->mean_path_delay) {
     GST_WARNING ("Delay-request-response delay for domain %u too big: %"
@@ -1216,6 +1283,7 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
     ret = FALSE;
     goto out;
   }
+#endif
 
   ret = TRUE;
 
@@ -1225,7 +1293,9 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
   GST_DEBUG ("Delay request delay for domain %u: %" GST_TIME_FORMAT,
       domain->domain, GST_TIME_ARGS (delay_req_delay));
 
+#ifdef USE_MEASUREMENT_FILTERING
 out:
+#endif
   if (g_atomic_int_get (&domain_stats_n_hooks)) {
     GstStructure *stats =
         gst_structure_new (GST_PTP_STATISTICS_PATH_DELAY_MEASURED,
@@ -1282,10 +1352,15 @@ handle_sync_message (PtpMessage * msg, GstClockTime receive_time)
           &msg->source_port_identity) != 0)
     return;
 
+#ifdef USE_OPPORTUNISTIC_CLOCK_SELECTION
   /* Opportunistic selection of master clock */
   if (!domain->have_master_clock)
     memcpy (&domain->master_clock_identity, &msg->source_port_identity,
         sizeof (PtpClockIdentity));
+#else
+  if (!domain->have_master_clock)
+    return;
+#endif
 
   domain->sync_interval = log2_to_clock_time (msg->log_message_interval);
 
