@@ -54,6 +54,8 @@ rtp_sources = [
   'gstrtpj2kpay.c',
   'gstrtpjpegdepay.c',
   'gstrtpjpegpay.c',
+  'gstrtpL8depay.c',
+  'gstrtpL8pay.c',
   'gstrtpL16depay.c',
   'gstrtpL16pay.c',
   'gstrtpL24depay.c',

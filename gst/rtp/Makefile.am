@@ -54,6 +54,8 @@ libgstrtp_la_SOURCES = \
 	gstrtpjpegpay.c \
 	gstrtpklvdepay.c \
 	gstrtpklvpay.c \
+	gstrtpL8depay.c \
+	gstrtpL8pay.c \
 	gstrtpL16depay.c \
 	gstrtpL16pay.c \
 	gstrtpL24depay.c \
@@ -112,6 +114,8 @@ noinst_HEADERS =			\
 	dboolhuff.h \
 	fnv1hash.h \
 	gstrtpchannels.h \
+	gstrtpL8depay.h \
+	gstrtpL8pay.h \
 	gstrtpL16depay.h \
 	gstrtpL16pay.h \
 	gstrtpL24depay.h \
