@@ -104,7 +104,26 @@
 
 {
    <insert_a_suppression_name_here>
+   Memcheck:Value8
+   ...
+   fun:x264_lookahead_thread
+}
+
+{
+   <insert_a_suppression_name_here>
    Memcheck:Cond
    ...
    fun:x264_threadpool_thread
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   obj:/usr/lib64/libx264.so.*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib64/libx264.so.*
 }
