@@ -127,3 +127,26 @@
    Memcheck:Cond
    obj:/usr/lib64/libx264.so.*
 }
+
+# PENDING: https://bugzilla.gnome.org/show_bug.cgi?id=749428
+# Theora encoder
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   ...
+   fun:theora_enc_handle_frame
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   ...
+   fun:theora_enc_handle_frame
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:oc_enc_tokenize_ac
+}
