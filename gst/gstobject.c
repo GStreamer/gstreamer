@@ -779,7 +779,7 @@ gst_object_unparent (GstObject * object)
 }
 
 /**
- * gst_object_has_parent:
+ * gst_object_has_as_parent:
  * @object: a #GstObject to check
  * @parent: a #GstObject to check as parent
  *
@@ -793,7 +793,7 @@ gst_object_unparent (GstObject * object)
  * Since: 1.6
  */
 gboolean
-gst_object_has_parent (GstObject * object, GstObject * parent)
+gst_object_has_as_parent (GstObject * object, GstObject * parent)
 {
   gboolean result = FALSE;
 

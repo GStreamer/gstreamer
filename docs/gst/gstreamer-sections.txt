@@ -1707,7 +1707,7 @@ gst_object_set_name
 gst_object_get_name
 gst_object_set_parent
 gst_object_get_parent
-gst_object_has_parent
+gst_object_has_as_parent
 gst_object_unparent
 gst_object_default_deep_notify
 gst_object_default_error

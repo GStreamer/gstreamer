@@ -361,9 +361,9 @@ GST_START_TEST (test_fake_object_parentage)
   fail_if (result, "GstFakeObject accepted itself as parent");
 
   /* _has_parent always returns FALSE if there is no parent */
-  fail_if (gst_object_has_parent (object1, NULL));
-  fail_if (gst_object_has_parent (NULL, object1));
-  fail_if (gst_object_has_parent (object1, object1));
+  fail_if (gst_object_has_as_parent (object1, NULL));
+  fail_if (gst_object_has_as_parent (NULL, object1));
+  fail_if (gst_object_has_as_parent (object1, object1));
 
   /* should still be floating */
   fail_unless (g_object_is_floating (object1),
@@ -378,7 +378,7 @@ GST_START_TEST (test_fake_object_parentage)
   fail_unless (g_object_is_floating (object1),
       "GstFakeObject instance is not floating");
 
-  result = gst_object_has_parent (object1, object2);
+  result = gst_object_has_as_parent (object1, object2);
   fail_if (result, "GstFakeObject has a parent");
 
   /* try to set other object as parent */
@@ -393,16 +393,16 @@ GST_START_TEST (test_fake_object_parentage)
       "GstFakeObject instance is not floating");
 
   /* check the parent */
-  fail_unless (gst_object_has_parent (object1, object2));
+  fail_unless (gst_object_has_as_parent (object1, object2));
 
   /* any other combination is invalid */
-  fail_if (gst_object_has_parent (object2, object1));
-  fail_if (gst_object_has_parent (object1, NULL));
-  fail_if (gst_object_has_parent (object2, NULL));
-  fail_if (gst_object_has_parent (NULL, object1));
-  fail_if (gst_object_has_parent (NULL, object2));
-  fail_if (gst_object_has_parent (object1, object1));
-  fail_if (gst_object_has_parent (object2, object2));
+  fail_if (gst_object_has_as_parent (object2, object1));
+  fail_if (gst_object_has_as_parent (object1, NULL));
+  fail_if (gst_object_has_as_parent (object2, NULL));
+  fail_if (gst_object_has_as_parent (NULL, object1));
+  fail_if (gst_object_has_as_parent (NULL, object2));
+  fail_if (gst_object_has_as_parent (object1, object1));
+  fail_if (gst_object_has_as_parent (object2, object2));
 
   /* try to set other object as parent again */
   result = gst_object_set_parent (object1, object2);
@@ -489,40 +489,40 @@ GST_START_TEST (test_fake_object_has_ancestor)
    */
 
   /* An object isn't its own parent, but it is its own ancestor */
-  fail_if (gst_object_has_parent (object1, object1));
+  fail_if (gst_object_has_as_parent (object1, object1));
   fail_unless (gst_object_has_ancestor (object1, object1));
 
-  fail_if (gst_object_has_parent (object4, object4));
+  fail_if (gst_object_has_as_parent (object4, object4));
   fail_unless (gst_object_has_ancestor (object4, object4));
 
   /* direct parents */
-  fail_unless (gst_object_has_parent (object1, object3));
+  fail_unless (gst_object_has_as_parent (object1, object3));
   fail_unless (gst_object_has_ancestor (object1, object3));
 
-  fail_unless (gst_object_has_parent (object2, object3));
+  fail_unless (gst_object_has_as_parent (object2, object3));
   fail_unless (gst_object_has_ancestor (object2, object3));
 
-  fail_unless (gst_object_has_parent (object3, object4));
+  fail_unless (gst_object_has_as_parent (object3, object4));
   fail_unless (gst_object_has_ancestor (object3, object4));
 
   /* grandparents */
-  fail_if (gst_object_has_parent (object1, object4));
+  fail_if (gst_object_has_as_parent (object1, object4));
   fail_unless (gst_object_has_ancestor (object1, object4));
 
-  fail_if (gst_object_has_parent (object2, object4));
+  fail_if (gst_object_has_as_parent (object2, object4));
   fail_unless (gst_object_has_ancestor (object2, object4));
 
   /* not ancestors */
-  fail_if (gst_object_has_parent (object1, object2));
+  fail_if (gst_object_has_as_parent (object1, object2));
   fail_if (gst_object_has_ancestor (object1, object2));
 
-  fail_if (gst_object_has_parent (object3, object1));
+  fail_if (gst_object_has_as_parent (object3, object1));
   fail_if (gst_object_has_ancestor (object3, object1));
 
-  fail_if (gst_object_has_parent (object4, object1));
+  fail_if (gst_object_has_as_parent (object4, object1));
   fail_if (gst_object_has_ancestor (object4, object1));
 
-  fail_if (gst_object_has_parent (object4, object3));
+  fail_if (gst_object_has_as_parent (object4, object3));
   fail_if (gst_object_has_ancestor (object4, object3));
 
   /* unparent everything */
