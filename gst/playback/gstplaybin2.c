@@ -2859,7 +2859,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
      * them into warnings and disable the subtitles */
     group = playbin->curr_group;
     if (group && group->suburidecodebin) {
-      if (G_UNLIKELY (gst_object_has_ancestor (msg->src, GST_OBJECT_CAST
+      if (G_UNLIKELY (gst_object_has_as_ancestor (msg->src, GST_OBJECT_CAST
                   (group->suburidecodebin)))) {
         GError *err;
         gchar *debug = NULL;
@@ -4259,15 +4259,15 @@ activate_sink_bus_handler (GstBus * bus, GstMessage * msg, GstPlayBin * playbin)
     /* Only proxy errors from a fixed sink. If that fails we can just error out
      * early as stuff will fail later anyway */
     if (playbin->audio_sink
-        && gst_object_has_ancestor (GST_MESSAGE_SRC (msg),
+        && gst_object_has_as_ancestor (GST_MESSAGE_SRC (msg),
             GST_OBJECT_CAST (playbin->audio_sink)))
       gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
     else if (playbin->video_sink
-        && gst_object_has_ancestor (GST_MESSAGE_SRC (msg),
+        && gst_object_has_as_ancestor (GST_MESSAGE_SRC (msg),
             GST_OBJECT_CAST (playbin->video_sink)))
       gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
     else if (playbin->text_sink
-        && gst_object_has_ancestor (GST_MESSAGE_SRC (msg),
+        && gst_object_has_as_ancestor (GST_MESSAGE_SRC (msg),
             GST_OBJECT_CAST (playbin->text_sink)))
       gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
     else
@@ -4397,7 +4397,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   /* If this is from the subtitle uridecodebin we don't need to
    * check the audio and video sink */
   if (group->suburidecodebin
-      && gst_object_has_ancestor (GST_OBJECT_CAST (element),
+      && gst_object_has_as_ancestor (GST_OBJECT_CAST (element),
           GST_OBJECT_CAST (group->suburidecodebin)))
     goto done;
 
@@ -4783,7 +4783,7 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
     /* If this is from the subtitle uridecodebin we don't need to
      * check the audio and video sink */
     if (group->suburidecodebin
-        && gst_object_has_ancestor (GST_OBJECT_CAST (pad),
+        && gst_object_has_as_ancestor (GST_OBJECT_CAST (pad),
             GST_OBJECT_CAST (group->suburidecodebin))) {
       goto done;
     }
@@ -4813,7 +4813,7 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
     /* If this is from the subtitle uridecodebin we don't need to
      * check the audio and video sink */
     if (group->suburidecodebin
-        && gst_object_has_ancestor (GST_OBJECT_CAST (pad),
+        && gst_object_has_as_ancestor (GST_OBJECT_CAST (pad),
             GST_OBJECT_CAST (group->suburidecodebin))) {
       goto done;
     }
@@ -4954,7 +4954,7 @@ autoplug_query_context (GstElement * uridecodebin, GstPad * pad,
     /* If this is from the subtitle uridecodebin we don't need to
      * check the audio and video sink */
     if (group->suburidecodebin
-        && gst_object_has_ancestor (GST_OBJECT_CAST (pad),
+        && gst_object_has_as_ancestor (GST_OBJECT_CAST (pad),
             GST_OBJECT_CAST (group->suburidecodebin))) {
       goto done;
     }
@@ -4971,7 +4971,7 @@ autoplug_query_context (GstElement * uridecodebin, GstPad * pad,
     /* If this is from the subtitle uridecodebin we don't need to
      * check the audio and video sink */
     if (group->suburidecodebin
-        && gst_object_has_ancestor (GST_OBJECT_CAST (pad),
+        && gst_object_has_as_ancestor (GST_OBJECT_CAST (pad),
             GST_OBJECT_CAST (group->suburidecodebin))) {
       goto done;
     }
@@ -5409,7 +5409,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
   /* delete any custom sinks we might have.
    * conditionally set them to null if they aren't inside playsink yet */
   if (group->audio_sink) {
-    if (!gst_object_has_ancestor (GST_OBJECT_CAST (group->audio_sink),
+    if (!gst_object_has_as_ancestor (GST_OBJECT_CAST (group->audio_sink),
             GST_OBJECT_CAST (playbin->playsink))) {
       gst_element_set_state (group->audio_sink, GST_STATE_NULL);
     }
@@ -5417,7 +5417,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
   }
   group->audio_sink = NULL;
   if (group->video_sink) {
-    if (!gst_object_has_ancestor (GST_OBJECT_CAST (group->video_sink),
+    if (!gst_object_has_as_ancestor (GST_OBJECT_CAST (group->video_sink),
             GST_OBJECT_CAST (playbin->playsink))) {
       gst_element_set_state (group->video_sink, GST_STATE_NULL);
     }
@@ -5425,7 +5425,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
   }
   group->video_sink = NULL;
   if (group->text_sink) {
-    if (!gst_object_has_ancestor (GST_OBJECT_CAST (group->text_sink),
+    if (!gst_object_has_as_ancestor (GST_OBJECT_CAST (group->text_sink),
             GST_OBJECT_CAST (playbin->playsink))) {
       gst_element_set_state (group->text_sink, GST_STATE_NULL);
     }

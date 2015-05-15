@@ -1405,11 +1405,11 @@ gst_subtitle_overlay_handle_message (GstBin * bin, GstMessage * message)
      * warnings and switch to passthrough mode */
     if (src && (
             (self->overlay
-                && gst_object_has_ancestor (src,
+                && gst_object_has_as_ancestor (src,
                     GST_OBJECT_CAST (self->overlay))) || (self->parser
-                && gst_object_has_ancestor (src,
+                && gst_object_has_as_ancestor (src,
                     GST_OBJECT_CAST (self->parser))) || (self->renderer
-                && gst_object_has_ancestor (src,
+                && gst_object_has_as_ancestor (src,
                     GST_OBJECT_CAST (self->renderer))))) {
       GError *err = NULL;
       gchar *debug = NULL;
