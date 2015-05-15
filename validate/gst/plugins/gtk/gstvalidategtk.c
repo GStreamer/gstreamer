@@ -421,12 +421,11 @@ _process_event (GdkEvent * event, gpointer data)
         ((GList *) gst_mini_object_get_qdata (GST_MINI_OBJECT (tmp_action),
             ACTION_GDKEVENTS_QUARK))->data;
 
-    if (gdk_event_get_event_type (awaited_event) ==
-        gdk_event_get_event_type (event)
+    if (awaited_event->type == event->type
         && ((GdkEventAny *) event)->window ==
         ((GdkEventAny *) awaited_event)->window) {
 
-      switch (gdk_event_get_event_type (awaited_event)) {
+      switch (awaited_event->type) {
         case GDK_KEY_PRESS:
         case GDK_KEY_RELEASE:
           if (event->key.keyval == awaited_event->key.keyval) {
