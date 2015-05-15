@@ -807,7 +807,7 @@ gst_object_has_as_parent (GstObject * object, GstObject * parent)
 }
 
 /**
- * gst_object_has_ancestor:
+ * gst_object_has_as_ancestor:
  * @object: a #GstObject to check
  * @ancestor: a #GstObject to check as ancestor
  *
@@ -819,7 +819,7 @@ gst_object_has_as_parent (GstObject * object, GstObject * parent)
  * MT safe. Grabs and releases @object's locks.
  */
 gboolean
-gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
+gst_object_has_as_ancestor (GstObject * object, GstObject * ancestor)
 {
   GstObject *parent, *tmp;
 
@@ -840,6 +840,32 @@ gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
 
   return FALSE;
 }
+
+/**
+ * gst_object_has_ancestor:
+ * @object: a #GstObject to check
+ * @ancestor: a #GstObject to check as ancestor
+ *
+ * Check if @object has an ancestor @ancestor somewhere up in
+ * the hierarchy. One can e.g. check if a #GstElement is inside a #GstPipeline.
+ *
+ * Returns: %TRUE if @ancestor is an ancestor of @object.
+ *
+ * Deprecated: Use gst_object_has_as_ancestor() instead.
+ *
+ * MT safe. Grabs and releases @object's locks.
+ */
+/* FIXME 2.0: remove */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean gst_object_has_ancestor (GstObject * object, GstObject * ancestor);
+#endif
+gboolean
+gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
+{
+  return gst_object_has_as_ancestor (object, ancestor);
+}
+#endif
 
 /**
  * gst_object_check_uniqueness:

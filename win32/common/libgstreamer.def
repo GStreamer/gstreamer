@@ -781,6 +781,7 @@ EXPORTS
 	gst_object_get_value_array
 	gst_object_has_active_control_bindings
 	gst_object_has_ancestor
+	gst_object_has_as_ancestor
 	gst_object_has_as_parent
 	gst_object_ref
 	gst_object_ref_sink

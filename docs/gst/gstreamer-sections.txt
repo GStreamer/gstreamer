@@ -1712,6 +1712,7 @@ gst_object_unparent
 gst_object_default_deep_notify
 gst_object_default_error
 gst_object_check_uniqueness
+gst_object_has_as_ancestor
 gst_object_has_ancestor
 gst_object_ref
 gst_object_unref

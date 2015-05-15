@@ -456,7 +456,7 @@ GST_START_TEST (test_fake_object_parentage_dispose)
 
 GST_END_TEST;
 
-GST_START_TEST (test_fake_object_has_ancestor)
+GST_START_TEST (test_fake_object_has_as_ancestor)
 {
   GstObject *object1, *object2, *object3, *object4;
   gboolean result;
@@ -490,40 +490,40 @@ GST_START_TEST (test_fake_object_has_ancestor)
 
   /* An object isn't its own parent, but it is its own ancestor */
   fail_if (gst_object_has_as_parent (object1, object1));
-  fail_unless (gst_object_has_ancestor (object1, object1));
+  fail_unless (gst_object_has_as_ancestor (object1, object1));
 
   fail_if (gst_object_has_as_parent (object4, object4));
-  fail_unless (gst_object_has_ancestor (object4, object4));
+  fail_unless (gst_object_has_as_ancestor (object4, object4));
 
   /* direct parents */
   fail_unless (gst_object_has_as_parent (object1, object3));
-  fail_unless (gst_object_has_ancestor (object1, object3));
+  fail_unless (gst_object_has_as_ancestor (object1, object3));
 
   fail_unless (gst_object_has_as_parent (object2, object3));
-  fail_unless (gst_object_has_ancestor (object2, object3));
+  fail_unless (gst_object_has_as_ancestor (object2, object3));
 
   fail_unless (gst_object_has_as_parent (object3, object4));
-  fail_unless (gst_object_has_ancestor (object3, object4));
+  fail_unless (gst_object_has_as_ancestor (object3, object4));
 
   /* grandparents */
   fail_if (gst_object_has_as_parent (object1, object4));
-  fail_unless (gst_object_has_ancestor (object1, object4));
+  fail_unless (gst_object_has_as_ancestor (object1, object4));
 
   fail_if (gst_object_has_as_parent (object2, object4));
-  fail_unless (gst_object_has_ancestor (object2, object4));
+  fail_unless (gst_object_has_as_ancestor (object2, object4));
 
   /* not ancestors */
   fail_if (gst_object_has_as_parent (object1, object2));
-  fail_if (gst_object_has_ancestor (object1, object2));
+  fail_if (gst_object_has_as_ancestor (object1, object2));
 
   fail_if (gst_object_has_as_parent (object3, object1));
-  fail_if (gst_object_has_ancestor (object3, object1));
+  fail_if (gst_object_has_as_ancestor (object3, object1));
 
   fail_if (gst_object_has_as_parent (object4, object1));
-  fail_if (gst_object_has_ancestor (object4, object1));
+  fail_if (gst_object_has_as_ancestor (object4, object1));
 
   fail_if (gst_object_has_as_parent (object4, object3));
-  fail_if (gst_object_has_ancestor (object4, object3));
+  fail_if (gst_object_has_as_ancestor (object4, object3));
 
   /* unparent everything */
   gst_object_unparent (object3);
@@ -558,7 +558,7 @@ gst_object_suite (void)
   tcase_add_test (tc_chain, test_fake_object_parentage);
   tcase_add_test (tc_chain, test_fake_object_parentage_dispose);
 
-  tcase_add_test (tc_chain, test_fake_object_has_ancestor);
+  tcase_add_test (tc_chain, test_fake_object_has_as_ancestor);
   //tcase_add_checked_fixture (tc_chain, setup, teardown);
 
   return s;
