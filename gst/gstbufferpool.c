@@ -187,7 +187,7 @@ gst_buffer_pool_finalize (GObject * object)
   pool = GST_BUFFER_POOL_CAST (object);
   priv = pool->priv;
 
-  GST_DEBUG_OBJECT (pool, "finalize");
+  GST_DEBUG_OBJECT (pool, "%p finalize", pool);
 
   gst_buffer_pool_set_active (pool, FALSE);
   gst_atomic_queue_unref (priv->queue);

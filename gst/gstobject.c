@@ -366,7 +366,7 @@ gst_object_dispose (GObject * object)
   GstObject *self = (GstObject *) object;
   GstObject *parent;
 
-  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
+  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "%p dispose", object);
 
   GST_OBJECT_LOCK (object);
   if ((parent = GST_OBJECT_PARENT (object)))
@@ -408,7 +408,7 @@ gst_object_finalize (GObject * object)
 {
   GstObject *gstobject = GST_OBJECT_CAST (object);
 
-  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "finalize");
+  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "%p finalize", object);
 
   g_signal_handlers_destroy (object);
 

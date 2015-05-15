@@ -2944,7 +2944,7 @@ gst_element_dispose (GObject * object)
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose");
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "%p dispose", element);
 
   if (GST_STATE (element) != GST_STATE_NULL)
     goto not_null;
@@ -2989,7 +2989,8 @@ gst_element_dispose (GObject * object)
   g_list_free_full (element->contexts, (GDestroyNotify) gst_context_unref);
   GST_OBJECT_UNLOCK (element);
 
-  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "parent class dispose");
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "%p parent class dispose",
+      element);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
@@ -3020,12 +3021,13 @@ gst_element_finalize (GObject * object)
 {
   GstElement *element = GST_ELEMENT_CAST (object);
 
-  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize");
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "%p finalize", element);
 
   g_cond_clear (&element->state_cond);
   g_rec_mutex_clear (&element->state_lock);
 
-  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize parent");
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "%p finalize parent",
+      element);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

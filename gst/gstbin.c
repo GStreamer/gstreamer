@@ -514,7 +514,7 @@ gst_bin_dispose (GObject * object)
   GstClock **provided_clock_p = &bin->provided_clock;
   GstElement **clock_provider_p = &bin->clock_provider;
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "%p dispose", object);
 
   GST_OBJECT_LOCK (object);
   gst_object_replace ((GstObject **) child_bus_p, NULL);

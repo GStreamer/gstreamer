@@ -243,7 +243,7 @@ gst_pipeline_dispose (GObject * object)
   GstPipeline *pipeline = GST_PIPELINE (object);
   GstClock **clock_p = &pipeline->fixed_clock;
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, pipeline, "dispose");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, pipeline, "%p dispose", pipeline);
 
   /* clear and unref any fixed clock */
   gst_object_replace ((GstObject **) clock_p, NULL);

@@ -699,7 +699,7 @@ gst_pad_dispose (GObject * object)
   GstPad *pad = GST_PAD_CAST (object);
   GstPad *peer;
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, pad, "dispose");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, pad, "%p dispose", pad);
 
   /* unlink the peer pad */
   if ((peer = gst_pad_get_peer (pad))) {
