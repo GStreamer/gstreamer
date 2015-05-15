@@ -183,7 +183,7 @@ gst_fake_src_filltype_get_type (void)
   static const GEnumValue fakesrc_filltype[] = {
     {FAKE_SRC_FILLTYPE_NOTHING, "Leave data as malloced", "nothing"},
     {FAKE_SRC_FILLTYPE_ZERO, "Fill buffers with zeros", "zero"},
-    {FAKE_SRC_FILLTYPE_RANDOM, "Fill buffers with random crap", "random"},
+    {FAKE_SRC_FILLTYPE_RANDOM, "Fill buffers with random data", "random"},
     {FAKE_SRC_FILLTYPE_PATTERN, "Fill buffers with pattern 0x00 -> 0xff",
         "pattern"},
     {FAKE_SRC_FILLTYPE_PATTERN_CONT,
