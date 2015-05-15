@@ -4031,13 +4031,13 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
     if (G_UNLIKELY ((chainfunc = GST_PAD_CHAINFUNC (pad)) == NULL))
       goto no_function;
 
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
         "calling chainfunction &%s with buffer %" GST_PTR_FORMAT,
         GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_BUFFER (data));
 
     ret = chainfunc (pad, parent, GST_BUFFER_CAST (data));
 
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
         "called chainfunction &%s with buffer %p, returned %s",
         GST_DEBUG_FUNCPTR_NAME (chainfunc), data, gst_flow_get_name (ret));
   } else {
@@ -4046,13 +4046,13 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
     if (G_UNLIKELY ((chainlistfunc = GST_PAD_CHAINLISTFUNC (pad)) == NULL))
       goto no_function;
 
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
         "calling chainlistfunction &%s",
         GST_DEBUG_FUNCPTR_NAME (chainlistfunc));
 
     ret = chainlistfunc (pad, parent, GST_BUFFER_LIST_CAST (data));
 
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
         "called chainlistfunction &%s, returned %s",
         GST_DEBUG_FUNCPTR_NAME (chainlistfunc), gst_flow_get_name (ret));
   }
