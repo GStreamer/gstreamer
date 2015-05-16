@@ -182,21 +182,24 @@ gst_timed_value_control_source_set_internal (GstTimedValueControlSource *
     iter =
         g_sequence_search (self->values, &timestamp,
         (GCompareDataFunc) gst_control_point_find, NULL);
-    if (iter && !g_sequence_iter_is_end (iter)) {
+    if (iter) {
       GSequenceIter *prev = g_sequence_iter_prev (iter);
-      GstControlPoint *cp = g_sequence_get (prev);
 
-      /* If the timestamp is the same just update the control point value */
-      if (cp->timestamp == timestamp) {
+      if (!g_sequence_iter_is_end (prev)) {
+        GstControlPoint *cp = g_sequence_get (prev);
 
-        /* update control point */
-        cp->value = value;
-        g_mutex_unlock (&self->lock);
+        /* If the timestamp is the same just update the control point value */
+        if (cp->timestamp == timestamp) {
 
-        g_signal_emit (self,
-            gst_timed_value_control_source_signals[VALUE_CHANGED_SIGNAL], 0,
-            cp);
-        goto done;
+          /* update control point */
+          cp->value = value;
+          g_mutex_unlock (&self->lock);
+
+          g_signal_emit (self,
+              gst_timed_value_control_source_signals[VALUE_CHANGED_SIGNAL], 0,
+              cp);
+          goto done;
+        }
       }
     }
   } else {
