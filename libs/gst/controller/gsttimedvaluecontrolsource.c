@@ -182,7 +182,7 @@ gst_timed_value_control_source_set_internal (GstTimedValueControlSource *
     iter =
         g_sequence_search (self->values, &timestamp,
         (GCompareDataFunc) gst_control_point_find, NULL);
-    if (iter) {
+    if (iter && !g_sequence_iter_is_end (iter)) {
       GSequenceIter *prev = g_sequence_iter_prev (iter);
       GstControlPoint *cp = g_sequence_get (prev);
 
