@@ -61,6 +61,7 @@
  * </listitem>
  * </itemizedlist>
  *
+ * <para>
  * <refsect2>
  * <title>Sample pipelines</title>
  * |[
@@ -104,6 +105,7 @@
  *   timeoverlay ! queue2 ! comp.
  * ]| A pipeline to demonstrate synchronized compositing (the second stream starts after 3 seconds)
  * </refsect2>
+ * </para>
  */
 
 #ifdef HAVE_CONFIG_H
