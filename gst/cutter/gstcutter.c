@@ -42,12 +42,14 @@
  * </listitem>
  * </itemizedlist>
  *
+ * <para>
  * <refsect2>
  * <title>Example launch line</title>
  * |[
  * gst-launch-1.0 -m filesrc location=foo.ogg ! decodebin ! audioconvert ! cutter ! autoaudiosink
  * ]| Show cut messages.
  * </refsect2>
+ * </para>
  */
 
 #ifdef HAVE_CONFIG_H

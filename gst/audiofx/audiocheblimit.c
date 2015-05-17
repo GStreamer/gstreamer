@@ -52,6 +52,7 @@
  * a cutoff frequency at a quarter of the sampling rate.
  * </para></note>
  *
+ * <para>
  * <refsect2>
  * <title>Example launch line</title>
  * |[
@@ -60,6 +61,7 @@
  * gst-launch-1.0 audiotestsrc wave=white-noise ! audioconvert ! audiocheblimit mode=low-pass cutoff=800 type=2 ! audioconvert ! alsasink
  * ]|
  * </refsect2>
+ * </para>
  */
 
 #ifdef HAVE_CONFIG_H
