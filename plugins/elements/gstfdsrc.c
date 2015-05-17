@@ -44,6 +44,7 @@
  * </listitem>
  * </itemizedlist>
  *
+ * <para>
  * <refsect2>
  * <title>Example launch line</title>
  * |[
@@ -51,6 +52,7 @@
  * ]| A simple pipeline to read from the standard input and dump the data
  * with a fakesink as hex ascii block.
  * </refsect2>
+ * </para>
  */
 
 #ifdef HAVE_CONFIG_H
