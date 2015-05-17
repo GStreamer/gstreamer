@@ -197,6 +197,7 @@
  * </para>
  * </refsect2>
  * <refsect2>
+ * <para>
  * <title>Examples</title>
  * |[
  * gst-launch-1.0 -v playbin uri=file:///path/to/somefile.mp4
@@ -213,6 +214,7 @@
  * gst-launch-1.0 -v playbin uri=dvd://
  * ]| This will play back the DVD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
+ * </para>
  * </refsect2>
  */
 
