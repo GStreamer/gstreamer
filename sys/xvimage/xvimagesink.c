@@ -828,6 +828,7 @@ no_display_size:
 config_failed:
   {
     GST_ERROR_OBJECT (xvimagesink, "failed to set config.");
+    gst_object_unref (newpool);
     g_mutex_unlock (&xvimagesink->flow_lock);
     return FALSE;
   }
