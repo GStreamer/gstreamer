@@ -1013,14 +1013,13 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
     src->curr_probation = src->probation;
   }
 
-  delta = gst_rtp_buffer_compare_seqnum (stats->max_seq, seqnr);
+  expected = src->stats.max_seq + 1;
+  delta = gst_rtp_buffer_compare_seqnum (expected, seqnr);
 
   /* if we are still on probation, check seqnum */
   if (src->curr_probation) {
-    expected = (src->stats.max_seq + 1) & (RTP_SEQ_MOD - 1);
-
     /* when in probation, we require consecutive seqnums */
-    if (seqnr == expected) {
+    if (delta == 0) {
       /* expected packet */
       GST_DEBUG ("probation: seqnr %d == expected %d", seqnr, expected);
       src->curr_probation--;
@@ -1051,7 +1050,7 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
       /* unexpected seqnum in probation */
       goto probation_seqnum;
     }
-  } else if (delta > 0 && delta < RTP_MAX_DROPOUT) {
+  } else if (delta >= 0 && delta < RTP_MAX_DROPOUT) {
     /* in order, with permissible gap */
     if (seqnr < stats->max_seq) {
       /* sequence number wrapped - count another 64K cycle. */
@@ -1070,10 +1069,10 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
       stats->bad_seq = (seqnr + 1) & (RTP_SEQ_MOD - 1);
       goto bad_sequence;
     }
-  } else {                      /* delta <= 0 && delta >= -RTP_MAX_MISORDER */
+  } else {                      /* delta < 0 && delta >= -RTP_MAX_MISORDER */
     /* duplicate or reordered packet, will be filtered by jitterbuffer. */
-    GST_WARNING ("duplicate or reordered packet (seqnr %d, max seq %d)", seqnr,
-        stats->max_seq);
+    GST_WARNING ("duplicate or reordered packet (seqnr %u, expected %u)", seqnr,
+        expected);
   }
 
   src->stats.octets_received += pinfo->payload_len;
@@ -1082,7 +1081,7 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
   /* for the bitrate estimation */
   src->bytes_received += pinfo->payload_len;
 
-  GST_LOG ("seq %d, PC: %" G_GUINT64_FORMAT ", OC: %" G_GUINT64_FORMAT,
+  GST_LOG ("seq %u, PC: %" G_GUINT64_FORMAT ", OC: %" G_GUINT64_FORMAT,
       seqnr, src->stats.packets_received, src->stats.octets_received);
 
   return TRUE;
