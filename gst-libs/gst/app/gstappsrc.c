@@ -1239,6 +1239,9 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
     GstCaps *new_caps;
     new_caps = caps ? gst_caps_copy (caps) : NULL;
     GST_DEBUG_OBJECT (appsrc, "setting caps to %" GST_PTR_FORMAT, caps);
+    if (priv->queue->tail != NULL && GST_IS_CAPS (priv->queue->tail->data)) {
+      gst_caps_unref (g_queue_pop_tail (priv->queue));
+    }
     g_queue_push_tail (priv->queue, new_caps);
     gst_caps_replace (&priv->last_caps, new_caps);
   }
