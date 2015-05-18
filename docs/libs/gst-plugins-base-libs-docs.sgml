@@ -29,6 +29,7 @@
         <filename>-lgstallocators-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstdmabuf.xml" />
+      <xi:include href="xml/gstfdmemory.xml" />
     </chapter>
 
     <chapter id="gstreamer-app">

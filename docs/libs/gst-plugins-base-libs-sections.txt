@@ -4,11 +4,35 @@
 <FILE>gstdmabuf</FILE>
 <TITLE>dmabuf</TITLE>
 <INCLUDE>gst/allocators/gstdmabuf.h</INCLUDE>
+gst_dmabuf_allocator_new
 gst_dmabuf_allocator_alloc
 gst_dmabuf_memory_get_fd
 gst_is_dmabuf_memory
 <SUBSECTION Standard>
 GST_ALLOCATOR_DMABUF
+<SUBSECTION Private>
+</SECTION>
+
+<SECTION>
+<FILE>gstfdmemory</FILE>
+<TITLE>fdmemory</TITLE>
+<INCLUDE>gst/allocators/gstfdmemory.h</INCLUDE>
+GstFdMemoryFlags
+gst_fd_allocator_alloc
+gst_fd_allocator_get_type
+gst_fd_allocator_new
+gst_fd_memory_get_fd
+gst_is_fd_memory
+<SUBSECTION Standard>
+GstFdAllocator
+GstFdAllocatorClass
+GST_ALLOCATOR_FD
+GST_FD_ALLOCATOR
+GST_FD_ALLOCATOR_CAST
+GST_FD_ALLOCATOR_CLASS
+GST_FD_ALLOCATOR_GET_CLASS
+GST_IS_FD_ALLOCATOR
+GST_IS_FD_ALLOCATOR_CLASS
 <SUBSECTION Private>
 </SECTION>
 

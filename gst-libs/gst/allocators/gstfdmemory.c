@@ -18,6 +18,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstfdmemory
+ * @short_description: Memory wrapper for fd backed memory
+ * @see_also: #GstMemory
+ *
+ * Since: 1.4
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

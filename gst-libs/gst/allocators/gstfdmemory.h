@@ -40,7 +40,6 @@ typedef struct _GstFdAllocatorClass GstFdAllocatorClass;
 
 /**
  * GstFdMemoryFlags:
- *
  * @GST_FD_MEMORY_FLAG_NONE: no flag
  * @GST_FD_MEMORY_FLAG_KEEP_MAPPED: once the memory is mapped,
  *        keep it mapped until the memory is destroyed.
