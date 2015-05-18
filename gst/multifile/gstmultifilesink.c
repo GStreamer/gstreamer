@@ -104,7 +104,6 @@
  * </listitem>
  * </itemizedlist>
  *
- * <para>
  * <refsect2>
  * <title>Example launch line</title>
  * |[
@@ -112,7 +111,6 @@
  * gst-launch-1.0 videotestsrc ! multifilesink post-messages=true filename="frame%d"
  * ]|
  * </refsect2>
- * </para>
  */
 
 #ifdef HAVE_CONFIG_H
