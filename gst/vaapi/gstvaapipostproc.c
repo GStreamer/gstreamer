@@ -1266,8 +1266,6 @@ gst_vaapipostproc_query (GstBaseTransform * trans, GstPadDirection direction,
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
 
-  GST_DEBUG_OBJECT (trans, "query type `%s'", GST_QUERY_TYPE_NAME (query));
-
   if (gst_vaapi_reply_to_query (query,
           GST_VAAPI_PLUGIN_BASE_DISPLAY (postproc))) {
     GST_DEBUG_OBJECT (postproc, "sharing display %p",
