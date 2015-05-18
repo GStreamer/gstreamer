@@ -997,9 +997,9 @@ do_bitrate_estimation (RTPSource * src, GstClockTime running_time,
 static gboolean
 update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
 {
-  guint16 seqnr, udelta;
+  guint16 seqnr, expected;
   RTPSourceStats *stats;
-  guint16 expected;
+  gint16 delta;
 
   stats = &src->stats;
 
@@ -1013,7 +1013,7 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
     src->curr_probation = src->probation;
   }
 
-  udelta = seqnr - stats->max_seq;
+  delta = gst_rtp_buffer_compare_seqnum (stats->max_seq, seqnr);
 
   /* if we are still on probation, check seqnum */
   if (src->curr_probation) {
@@ -1046,14 +1046,14 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
       /* unexpected seqnum in probation */
       goto probation_seqnum;
     }
-  } else if (udelta < RTP_MAX_DROPOUT) {
+  } else if (delta > 0 && delta < RTP_MAX_DROPOUT) {
     /* in order, with permissible gap */
     if (seqnr < stats->max_seq) {
       /* sequence number wrapped - count another 64K cycle. */
       stats->cycles += RTP_SEQ_MOD;
     }
     stats->max_seq = seqnr;
-  } else if (udelta <= RTP_SEQ_MOD - RTP_MAX_MISORDER) {
+  } else if (delta < -RTP_MAX_MISORDER || delta >= RTP_MAX_DROPOUT) {
     /* the sequence number made a very large jump */
     if (seqnr == stats->bad_seq) {
       /* two sequential packets -- assume that the other side
@@ -1065,9 +1065,10 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
       stats->bad_seq = (seqnr + 1) & (RTP_SEQ_MOD - 1);
       goto bad_sequence;
     }
-  } else {
+  } else {                      /* delta <= 0 && delta >= -RTP_MAX_MISORDER */
     /* duplicate or reordered packet, will be filtered by jitterbuffer. */
-    GST_WARNING ("duplicate or reordered packet (seqnr %d)", seqnr);
+    GST_WARNING ("duplicate or reordered packet (seqnr %d, max seq %d)", seqnr,
+        stats->max_seq);
   }
 
   src->stats.octets_received += pinfo->payload_len;
