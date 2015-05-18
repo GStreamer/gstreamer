@@ -42,14 +42,13 @@
  * </listitem>
  * </itemizedlist>
  *
- * <para>
  * <refsect2>
  * <title>Example launch line</title>
  * |[
  * gst-launch audiotestsrc freq=100 ! audiomixer name=mix ! audioconvert ! alsasink audiotestsrc freq=500 ! mix.
  * ]| This pipeline produces two sine waves mixed together.
  * </refsect2>
- * </para>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
