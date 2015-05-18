@@ -280,12 +280,10 @@ static void
 rtp_source_finalize (GObject * object)
 {
   RTPSource *src;
-  GstBuffer *buffer;
 
   src = RTP_SOURCE_CAST (object);
 
-  while ((buffer = g_queue_pop_head (src->packets)))
-    gst_buffer_unref (buffer);
+  g_queue_foreach (src->packets, (GFunc) gst_buffer_unref, NULL);
   g_queue_free (src->packets);
 
   gst_structure_free (src->sdes);
@@ -296,8 +294,7 @@ rtp_source_finalize (GObject * object)
 
   g_list_free_full (src->conflicting_addresses,
       (GDestroyNotify) rtp_conflicting_address_free);
-  while ((buffer = g_queue_pop_head (src->retained_feedback)))
-    gst_buffer_unref (buffer);
+  g_queue_foreach (src->retained_feedback, (GFunc) gst_buffer_unref, NULL);
   g_queue_free (src->retained_feedback);
 
   g_array_free (src->nacks, TRUE);
