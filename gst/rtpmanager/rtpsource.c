@@ -1017,14 +1017,19 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
 
   /* if we are still on probation, check seqnum */
   if (src->curr_probation) {
-    expected = src->stats.max_seq + 1;
+    expected = (src->stats.max_seq + 1) & (RTP_SEQ_MOD - 1);
 
     /* when in probation, we require consecutive seqnums */
     if (seqnr == expected) {
       /* expected packet */
       GST_DEBUG ("probation: seqnr %d == expected %d", seqnr, expected);
       src->curr_probation--;
+      if (seqnr < stats->max_seq) {
+        /* sequence number wrapped - count another 64K cycle. */
+        stats->cycles += RTP_SEQ_MOD;
+      }
       src->stats.max_seq = seqnr;
+
       if (src->curr_probation == 0) {
         GST_DEBUG ("probation done!");
         init_seq (src, seqnr);
