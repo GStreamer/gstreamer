@@ -150,14 +150,14 @@ GType gst_mikey_payload_get_type(void);
  * GstMIKEYPayload:
  * @type: the payload type
  * @len: length of the payload
- * @clear_func: function to clear the payload
- * @copy_func: function to copy the payload
  *
  * Hold the common fields for all payloads
  */
 struct _GstMIKEYPayload {
+  /* < private > */
   GstMiniObject mini_object;
 
+  /* < public > */
   GstMIKEYPayloadType type;
   guint len;
 };
@@ -213,7 +213,7 @@ gst_mikey_payload_unref (GstMIKEYPayload * payload)
  * Since: 1.4
  */
 #ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstMIKEYPayload * gst_mikey_payload_copy (const GstMIKEYPayload * buf);
+G_INLINE_FUNC GstMIKEYPayload * gst_mikey_payload_copy (const GstMIKEYPayload * payload);
 #endif
 
 static inline GstMIKEYPayload *
@@ -255,7 +255,7 @@ typedef enum
  * @pt: the common #GstMIKEYPayload
  * @enc_alg: the #GstMIKEYEncAlg
  * @mac_alg: the #GstMIKEYMacAlg
- * @subpayload: the subpayloads
+ * @subpayloads: the subpayloads
  *
  * A structure holding the KEMAC payload
  */
@@ -537,8 +537,10 @@ gboolean   gst_mikey_payload_key_data_set_interval (GstMIKEYPayload *payload,
  */
 struct _GstMIKEYMessage
 {
+  /* < private > */
   GstMiniObject mini_object;
 
+  /* < public > */
   guint8 version;
   GstMIKEYType type;
   gboolean V;
@@ -606,7 +608,7 @@ gst_mikey_message_unref (GstMIKEYMessage * message)
  * Since: 1.4
  */
 #ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstMIKEYMessage * gst_mikey_message_copy (const GstMIKEYMessage * buf);
+G_INLINE_FUNC GstMIKEYMessage * gst_mikey_message_copy (const GstMIKEYMessage * message);
 #endif
 
 static inline GstMIKEYMessage *
