@@ -33,6 +33,7 @@ GST_FD_ALLOCATOR_CLASS
 GST_FD_ALLOCATOR_GET_CLASS
 GST_IS_FD_ALLOCATOR
 GST_IS_FD_ALLOCATOR_CLASS
+GST_TYPE_FD_ALLOCATOR
 <SUBSECTION Private>
 </SECTION>
 
@@ -258,6 +259,7 @@ GstAudioCdSrcTrack
 GstAudioCdSrcMode
 gst_audio_cd_src_add_track
 <SUBSECTION Standard>
+GstAudioCdSrcPrivate
 GST_TYPE_AUDIO_CD_SRC_MODE
 gst_audio_cd_src_mode_get_type
 GST_AUDIO_CD_SRC
@@ -306,6 +308,7 @@ gst_audio_decoder_set_plc
 gst_audio_decoder_set_plc_aware
 gst_audio_decoder_set_tolerance
 gst_audio_decoder_merge_tags
+gst_audio_decoder_proxy_getcaps
 <SUBSECTION Standard>
 GST_AUDIO_DECODER
 GST_IS_AUDIO_DECODER
@@ -423,6 +426,7 @@ gst_audio_src_get_type
 GST_AUDIO_SRC_CLASS
 GST_IS_AUDIO_SRC_CLASS
 GST_AUDIO_SRC_GET_CLASS
+GST_AUDIO_BASE_SRC_CAST
 </SECTION>
 
 <SECTION>
@@ -453,6 +457,7 @@ gst_audio_base_sink_get_type
 GST_AUDIO_BASE_SINK_CLASS
 GST_IS_AUDIO_BASE_SINK_CLASS
 GST_AUDIO_BASE_SINK_GET_CLASS
+GST_AUDIO_BASE_SINK_CAST
 GstAudioBaseSinkPrivate
 gst_audio_base_sink_slave_method_get_type
 GST_TYPE_AUDIO_BASE_SINK_SLAVE_METHOD
@@ -706,7 +711,7 @@ gst_color_balance_value_changed
 gst_color_balance_get_balance_type
 <SUBSECTION Standard>
 GST_COLOR_BALANCE
-GST_COLOR_BALANCE_GET_INTERACE
+GST_COLOR_BALANCE_GET_INTERFACE
 GST_COLOR_BALANCE_TYPE
 GST_IS_COLOR_BALANCE
 GST_TYPE_COLOR_BALANCE
@@ -751,9 +756,11 @@ gst_navigation_event_parse_mouse_move_event
 gst_navigation_message_get_type
 gst_navigation_message_new_angles_changed
 gst_navigation_message_new_commands_changed
+gst_navigation_message_new_event
 gst_navigation_message_new_mouse_over
-gst_navigation_message_parse_mouse_over
 gst_navigation_message_parse_angles_changed
+gst_navigation_message_parse_event
+gst_navigation_message_parse_mouse_over
 gst_navigation_query_new_angles
 gst_navigation_query_get_type
 gst_navigation_query_new_commands
@@ -929,6 +936,7 @@ GST_RIFF_H263
 GST_RIFF_I420
 GST_RIFF_IDIT
 GST_RIFF_IJPG
+GST_RIFF_INFO_IAAR
 GST_RIFF_INFO_IARL
 GST_RIFF_INFO_IART
 GST_RIFF_INFO_ICMS
@@ -952,6 +960,7 @@ GST_RIFF_INFO_ISHP
 GST_RIFF_INFO_ISRC
 GST_RIFF_INFO_ISRF
 GST_RIFF_INFO_ITCH
+GST_RIFF_INFO_ITRK
 GST_RIFF_ISBJ
 GST_RIFF_ISFT
 GST_RIFF_IV31
@@ -966,6 +975,8 @@ GST_RIFF_LIST_INFO
 GST_RIFF_LIST_adtl
 GST_RIFF_LIST_hdrl
 GST_RIFF_LIST_movi
+GST_RIFF_LIST_ncdt
+GST_RIFF_LIST_nctg
 GST_RIFF_LIST_odml
 GST_RIFF_LIST_strl
 GST_RIFF_M263
@@ -984,14 +995,18 @@ GST_RIFF_RLE4
 GST_RIFF_RLE8
 GST_RIFF_RT21
 GST_RIFF_SFMC
-GST_RIFF_TAG_acid
 GST_RIFF_TAG_AVF0
 GST_RIFF_TAG_BEXT
+GST_RIFF_TAG_FLLR
+GST_RIFF_TAG_ID32
+GST_RIFF_TAG_IDVX
 GST_RIFF_TAG_JUNK
 GST_RIFF_TAG_JUNQ
 GST_RIFF_TAG_LIST
+GST_RIFF_TAG_RF64
 GST_RIFF_TAG_RIFF
 GST_RIFF_TAG_RIFX
+GST_RIFF_TAG_acid
 GST_RIFF_TAG_avih
 GST_RIFF_TAG_bext
 GST_RIFF_TAG_cue
@@ -999,9 +1014,13 @@ GST_RIFF_TAG_data
 GST_RIFF_TAG_dmlh
 GST_RIFF_TAG_fact
 GST_RIFF_TAG_fmt
+GST_RIFF_TAG_id3
 GST_RIFF_TAG_idx1
+GST_RIFF_TAG_inst
+GST_RIFF_TAG_labl
 GST_RIFF_TAG_note
 GST_RIFF_TAG_plst
+GST_RIFF_TAG_smpl
 GST_RIFF_TAG_strd
 GST_RIFF_TAG_strf
 GST_RIFF_TAG_strh
@@ -1338,6 +1357,7 @@ gst_rtp_buffer_pad_to
 gst_rtp_buffer_get_extension
 gst_rtp_buffer_set_extension
 gst_rtp_buffer_get_extension_data
+gst_rtp_buffer_get_extension_bytes
 
 gst_rtp_buffer_get_ssrc
 gst_rtp_buffer_set_ssrc
@@ -1361,6 +1381,7 @@ gst_rtp_buffer_set_timestamp
 gst_rtp_buffer_get_payload_buffer
 gst_rtp_buffer_get_payload_subbuffer
 gst_rtp_buffer_get_payload_len
+gst_rtp_buffer_get_payload_bytes
 gst_rtp_buffer_get_payload
 
 gst_rtp_buffer_default_clock_rate
@@ -1448,6 +1469,7 @@ gst_rtsp_transport_get_manager
 gst_rtsp_transport_free
 <SUBSECTION Standard>
 gst_rtsp_lower_trans_get_type
+gst_rtsp_transport_get_media_type
 </SECTION>
 
 <SECTION>
@@ -1510,6 +1532,7 @@ gst_rtsp_watch_send_message
 gst_rtsp_watch_write_data
 gst_rtsp_watch_get_send_backlog
 gst_rtsp_watch_set_send_backlog
+gst_rtsp_watch_set_flushing
 gst_rtsp_watch_wait_backlog
 </SECTION>
 
@@ -1641,6 +1664,7 @@ GstSDPMedia
 GstSDPMessage
 
 gst_sdp_message_new
+gst_sdp_message_copy
 gst_sdp_message_init
 gst_sdp_message_uninit
 gst_sdp_message_free
@@ -1711,6 +1735,7 @@ gst_sdp_message_add_media
 gst_sdp_message_dump
 
 gst_sdp_media_new
+gst_sdp_media_copy
 gst_sdp_media_init
 gst_sdp_media_uninit
 gst_sdp_media_free
@@ -1752,6 +1777,8 @@ gst_sdp_media_insert_attribute
 gst_sdp_media_replace_attribute
 gst_sdp_media_remove_attribute
 gst_sdp_media_add_attribute
+<SUBSECTION Standard>
+gst_sdp_message_get_type
 </SECTION>
 
 <SECTION>
@@ -1888,9 +1915,11 @@ GST_TAG_CAPTURING_EXPOSURE_COMPENSATION
 GST_TAG_IMAGE_HORIZONTAL_PPI
 GST_TAG_IMAGE_VERTICAL_PPI
 GST_TAG_ID3V2_HEADER_SIZE
+GST_TAG_MUSICAL_KEY
 gst_tag_register_musicbrainz_tags
 gst_tag_freeform_string_to_utf8
 gst_tag_parse_extended_comment
+gst_tag_image_data_to_image_sample
 GstTagImageType
 <SUBSECTION Standard>
 GST_TYPE_TAG_IMAGE_TYPE
@@ -2447,6 +2476,9 @@ GST_VIDEO_TILE_MODE_IS_INDEXED
 GST_VIDEO_TILE_MAKE_STRIDE
 GST_VIDEO_TILE_X_TILES
 GST_VIDEO_TILE_Y_TILES
+<SUBSECTION Standard>
+gst_video_tile_mode_get_type
+gst_video_tile_type_get_type
 
 #video-blend.h
 <SUBSECTION>
@@ -2685,6 +2717,7 @@ gst_video_decoder_set_packetized
 gst_video_decoder_get_needs_format
 gst_video_decoder_set_needs_format
 gst_video_decoder_merge_tags
+gst_video_decoder_proxy_getcaps
 <SUBSECTION Standard>
 GST_IS_VIDEO_DECODER
 GST_IS_VIDEO_DECODER_CLASS

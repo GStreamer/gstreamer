@@ -1072,7 +1072,8 @@ get_y_offset (GstVideoFormat format)
  * gst_video_scaler_combine_packed_YUV:
  * @y_scale: a scaler for the Y component
  * @uv_scale: a scaler for the U and V components
- * @out_format: the video format
+ * @in_format: the input video format
+ * @out_format: the output video format
  *
  * Combine a scaler for Y and UV into one scaler for the packed @format.
  *
