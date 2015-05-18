@@ -1048,6 +1048,11 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
       goto probation_seqnum;
     }
   } else if (delta >= 0 && delta < RTP_MAX_DROPOUT) {
+    /* Clear bad packets */
+    stats->bad_seq = RTP_SEQ_MOD + 1;   /* so seq == bad_seq is false */
+    g_queue_foreach (src->packets, (GFunc) gst_buffer_unref, NULL);
+    g_queue_clear (src->packets);
+
     /* in order, with permissible gap */
     if (seqnr < stats->max_seq) {
       /* sequence number wrapped - count another 64K cycle. */
@@ -1056,7 +1061,7 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
     stats->max_seq = seqnr;
   } else if (delta < -RTP_MAX_MISORDER || delta >= RTP_MAX_DROPOUT) {
     /* the sequence number made a very large jump */
-    if (seqnr == stats->bad_seq) {
+    if (seqnr == stats->bad_seq && src->packets->head) {
       /* two sequential packets -- assume that the other side
        * restarted without telling us so just re-sync
        * (i.e., pretend this was the first packet).  */
@@ -1064,9 +1069,18 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo)
     } else {
       /* unacceptable jump */
       stats->bad_seq = (seqnr + 1) & (RTP_SEQ_MOD - 1);
+      g_queue_foreach (src->packets, (GFunc) gst_buffer_unref, NULL);
+      g_queue_clear (src->packets);
+      g_queue_push_tail (src->packets, pinfo->data);
+      pinfo->data = NULL;
       goto bad_sequence;
     }
   } else {                      /* delta < 0 && delta >= -RTP_MAX_MISORDER */
+    /* Clear bad packets */
+    stats->bad_seq = RTP_SEQ_MOD + 1;   /* so seq == bad_seq is false */
+    g_queue_foreach (src->packets, (GFunc) gst_buffer_unref, NULL);
+    g_queue_clear (src->packets);
+
     /* duplicate or reordered packet, will be filtered by jitterbuffer. */
     GST_WARNING ("duplicate or reordered packet (seqnr %u, expected %u)", seqnr,
         expected);
