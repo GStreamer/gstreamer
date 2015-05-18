@@ -71,10 +71,10 @@ struct _GstCvSmooth
 
   gint type;
 
-  gint param1;
-  gint param2;
-  gdouble param3;
-  gdouble param4;
+  gint width;
+  gint height;
+  gdouble colorsigma;
+  gdouble spatialsigma;
 };
 
 struct _GstCvSmoothClass 

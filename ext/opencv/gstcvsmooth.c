@@ -64,10 +64,10 @@ enum
 {
   PROP_0,
   PROP_SMOOTH_TYPE,
-  PROP_PARAM1,
-  PROP_PARAM2,
-  PROP_PARAM3,
-  PROP_PARAM4
+  PROP_WIDTH,
+  PROP_HEIGHT,
+  PROP_COLORSIGMA,
+  PROP_SPATIALSIGMA
 };
 
 /* blur-no-scale only handle: gray 8bits -> gray 16bits
@@ -102,10 +102,10 @@ gst_cv_smooth_type_get_type (void)
 }
 
 #define DEFAULT_CV_SMOOTH_TYPE CV_GAUSSIAN
-#define DEFAULT_PARAM1 3
-#define DEFAULT_PARAM2 0
-#define DEFAULT_PARAM3 0.0
-#define DEFAULT_PARAM4 0.0
+#define DEFAULT_WIDTH 3
+#define DEFAULT_HEIGHT 0
+#define DEFAULT_COLORSIGMA 0.0
+#define DEFAULT_SPATIALSIGMA 0.0
 
 G_DEFINE_TYPE (GstCvSmooth, gst_cv_smooth, GST_TYPE_OPENCV_VIDEO_FILTER);
 
@@ -145,35 +145,35 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
           GST_TYPE_CV_SMOOTH_TYPE,
           DEFAULT_CV_SMOOTH_TYPE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
-  g_object_class_install_property (gobject_class, PROP_PARAM1,
-      g_param_spec_int ("param1", "param1 (aperture width)",
+  g_object_class_install_property (gobject_class, PROP_WIDTH,
+      g_param_spec_int ("width", "width (aperture width)",
           "The aperture width (Must be positive and odd)."
           "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
           "/documentation/image_filtering.html#cvSmooth", 1, G_MAXINT,
-          DEFAULT_PARAM1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_PARAM2,
-      g_param_spec_int ("param2", "param2 (aperture height)",
+          DEFAULT_WIDTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_HEIGHT,
+      g_param_spec_int ("height", "height (aperture height)",
           "The aperture height, if zero, the width is used."
           "(Must be positive and odd or zero, unuset in median and bilateral "
           "types). Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
           "/documentation/image_filtering.html#cvSmooth", 0, G_MAXINT,
-          DEFAULT_PARAM2, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_PARAM3,
-      g_param_spec_double ("param3", "param3 (gaussian standard deviation or "
+          DEFAULT_HEIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_COLORSIGMA,
+      g_param_spec_double ("color", "color (gaussian standard deviation or "
           "color sigma",
           "If type is gaussian, this means the standard deviation."
           "If type is bilateral, this means the color-sigma. If zero, "
           "Default values are used."
           "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
           "/documentation/image_filtering.html#cvSmooth",
-          0, G_MAXDOUBLE, DEFAULT_PARAM3,
+          0, G_MAXDOUBLE, DEFAULT_COLORSIGMA,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_PARAM4,
-      g_param_spec_double ("param4", "param4 (spatial sigma, bilateral only)",
+  g_object_class_install_property (gobject_class, PROP_SPATIALSIGMA,
+      g_param_spec_double ("spatial", "spatial (spatial sigma, bilateral only)",
           "Only used in bilateral type, means the spatial-sigma."
           "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
           "/documentation/image_filtering.html#cvSmooth",
-          0, G_MAXDOUBLE, DEFAULT_PARAM4,
+          0, G_MAXDOUBLE, DEFAULT_SPATIALSIGMA,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
@@ -201,10 +201,10 @@ static void
 gst_cv_smooth_init (GstCvSmooth * filter)
 {
   filter->type = DEFAULT_CV_SMOOTH_TYPE;
-  filter->param1 = DEFAULT_PARAM1;
-  filter->param2 = DEFAULT_PARAM2;
-  filter->param3 = DEFAULT_PARAM3;
-  filter->param4 = DEFAULT_PARAM4;
+  filter->width = DEFAULT_WIDTH;
+  filter->height = DEFAULT_HEIGHT;
+  filter->colorsigma = DEFAULT_COLORSIGMA;
+  filter->spatialsigma = DEFAULT_SPATIALSIGMA;
 
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), FALSE);
 }
@@ -238,33 +238,33 @@ gst_cv_smooth_set_property (GObject * object, guint prop_id,
     case PROP_SMOOTH_TYPE:
       gst_cv_smooth_change_type (filter, g_value_get_enum (value));
       break;
-    case PROP_PARAM1:{
+    case PROP_WIDTH:{
       gint prop = g_value_get_int (value);
 
       if (prop % 2 == 1) {
-        filter->param1 = prop;
+        filter->width = prop;
       } else {
-        GST_WARNING_OBJECT (filter, "Ignoring value for param1, not odd"
+        GST_WARNING_OBJECT (filter, "Ignoring value for width, not odd"
             "(%d)", prop);
       }
     }
       break;
-    case PROP_PARAM2:{
+    case PROP_HEIGHT:{
       gint prop = g_value_get_int (value);
 
       if (prop % 2 == 1 || prop == 0) {
-        filter->param2 = prop;
+        filter->height = prop;
       } else {
-        GST_WARNING_OBJECT (filter, "Ignoring value for param2, not odd"
+        GST_WARNING_OBJECT (filter, "Ignoring value for height, not odd"
             " nor zero (%d)", prop);
       }
     }
       break;
-    case PROP_PARAM3:
-      filter->param3 = g_value_get_double (value);
+    case PROP_COLORSIGMA:
+      filter->colorsigma = g_value_get_double (value);
       break;
-    case PROP_PARAM4:
-      filter->param4 = g_value_get_double (value);
+    case PROP_SPATIALSIGMA:
+      filter->spatialsigma = g_value_get_double (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -282,17 +282,17 @@ gst_cv_smooth_get_property (GObject * object, guint prop_id,
     case PROP_SMOOTH_TYPE:
       g_value_set_enum (value, filter->type);
       break;
-    case PROP_PARAM1:
-      g_value_set_int (value, filter->param1);
+    case PROP_WIDTH:
+      g_value_set_int (value, filter->width);
       break;
-    case PROP_PARAM2:
-      g_value_set_int (value, filter->param2);
+    case PROP_HEIGHT:
+      g_value_set_int (value, filter->height);
       break;
-    case PROP_PARAM3:
-      g_value_set_double (value, filter->param3);
+    case PROP_COLORSIGMA:
+      g_value_set_double (value, filter->colorsigma);
       break;
-    case PROP_PARAM4:
-      g_value_set_double (value, filter->param4);
+    case PROP_SPATIALSIGMA:
+      g_value_set_double (value, filter->spatialsigma);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -306,8 +306,8 @@ gst_cv_smooth_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
 {
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
 
-  cvSmooth (img, outimg, filter->type, filter->param1, filter->param2,
-      filter->param3, filter->param4);
+  cvSmooth (img, outimg, filter->type, filter->width, filter->height,
+      filter->colorsigma, filter->spatialsigma);
 
   return GST_FLOW_OK;
 }
@@ -318,8 +318,8 @@ gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
 {
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
 
-  cvSmooth (img, img, filter->type, filter->param1, filter->param2,
-      filter->param3, filter->param4);
+  cvSmooth (img, img, filter->type, filter->width, filter->height,
+      filter->colorsigma, filter->spatialsigma);
 
   return GST_FLOW_OK;
 }
