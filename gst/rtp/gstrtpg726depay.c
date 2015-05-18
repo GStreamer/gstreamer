@@ -334,6 +334,8 @@ gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     gst_buffer_unmap (outbuf, &map);
   }
 
+  gst_rtp_buffer_unmap (&rtp);
+
   if (marker) {
     /* mark start of talkspurt with RESYNC */
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
@@ -342,7 +344,11 @@ gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   return outbuf;
 
 bad_len:
-  return NULL;
+  {
+    gst_rtp_buffer_unmap (&rtp);
+    return NULL;
+  }
+
 }
 
 static void
