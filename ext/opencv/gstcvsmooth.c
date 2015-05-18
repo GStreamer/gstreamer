@@ -103,7 +103,7 @@ gst_cv_smooth_type_get_type (void)
 
 #define DEFAULT_CV_SMOOTH_TYPE CV_GAUSSIAN
 #define DEFAULT_PARAM1 3
-#define DEFAULT_PARAM2 0.0
+#define DEFAULT_PARAM2 0
 #define DEFAULT_PARAM3 0.0
 #define DEFAULT_PARAM4 0.0
 
@@ -253,7 +253,7 @@ gst_cv_smooth_set_property (GObject * object, guint prop_id,
       gint prop = g_value_get_int (value);
 
       if (prop % 2 == 1 || prop == 0) {
-        filter->param1 = prop;
+        filter->param2 = prop;
       } else {
         GST_WARNING_OBJECT (filter, "Ignoring value for param2, not odd"
             " nor zero (%d)", prop);
