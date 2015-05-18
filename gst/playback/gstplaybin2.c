@@ -1659,8 +1659,13 @@ gst_play_bin_set_suburi (GstPlayBin * playbin, const gchar * suburi)
 static void
 gst_play_bin_set_flags (GstPlayBin * playbin, GstPlayFlags flags)
 {
-  gst_play_sink_set_flags (playbin->playsink, flags);
-  gst_play_sink_reconfigure (playbin->playsink);
+  GstPlayFlags old_flags;
+  old_flags = gst_play_sink_get_flags (playbin->playsink);
+
+  if (flags != old_flags) {
+    gst_play_sink_set_flags (playbin->playsink, flags);
+    gst_play_sink_reconfigure (playbin->playsink);
+  }
 }
 
 static GstPlayFlags
