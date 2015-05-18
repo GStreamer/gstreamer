@@ -39,6 +39,8 @@ typedef struct _GstFdAllocatorClass GstFdAllocatorClass;
 #define GST_FD_ALLOCATOR_CAST(obj)         ((GstFdAllocator *)(obj))
 
 /**
+ * GstFdMemoryFlags:
+ *
  * @GST_FD_MEMORY_FLAG_NONE: no flag
  * @GST_FD_MEMORY_FLAG_KEEP_MAPPED: once the memory is mapped,
  *        keep it mapped until the memory is destroyed.

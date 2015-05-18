@@ -5,10 +5,10 @@
 <TITLE>dmabuf</TITLE>
 <INCLUDE>gst/allocators/gstdmabuf.h</INCLUDE>
 gst_dmabuf_allocator_alloc
-gst_dmabuf_allocator_obtain
 gst_dmabuf_memory_get_fd
 gst_is_dmabuf_memory
 <SUBSECTION Standard>
+GST_ALLOCATOR_DMABUF
 <SUBSECTION Private>
 </SECTION>
 
@@ -141,7 +141,6 @@ GST_AUDIO_INFO_CHANNELS
 GST_AUDIO_INFO_DEPTH
 GST_AUDIO_INFO_FLAGS
 GST_AUDIO_INFO_FORMAT
-GST_AUDIO_INFO_HAS_DEFAULT_POSITIONS
 GST_AUDIO_INFO_NAME
 GST_AUDIO_INFO_POSITION
 GST_AUDIO_INFO_RATE
@@ -300,7 +299,6 @@ GST_AUDIO_DECODER_CAST
 <INCLUDE>gst/audio/gstaudioencoder.h</INCLUDE>
 GstAudioEncoder
 GstAudioEncoderClass
-GST_AUDIO_ENCODER_SEGMENT
 GST_AUDIO_ENCODER_SINK_NAME
 GST_AUDIO_ENCODER_SINK_PAD
 GST_AUDIO_ENCODER_SRC_NAME
@@ -1433,7 +1431,6 @@ gst_rtsp_lower_trans_get_type
 <INCLUDE>gst/rtsp/gstrtspconnection.h</INCLUDE>
 GstRTSPConnection
 gst_rtsp_connection_create
-gst_rtsp_connection_create_from_fd
 gst_rtsp_connection_create_from_socket
 gst_rtsp_connection_accept
 gst_rtsp_connection_connect
@@ -1469,8 +1466,6 @@ gst_rtsp_connection_is_tunneled
 gst_rtsp_connection_get_tunnelid
 gst_rtsp_connection_do_tunnel
 
-gst_rtsp_connection_get_readfd
-gst_rtsp_connection_get_writefd
 gst_rtsp_connection_set_http_mode
 gst_rtsp_connection_set_proxy
 
@@ -1845,7 +1840,6 @@ GST_TAG_CDDA_CDDB_DISCID
 GST_TAG_CDDA_CDDB_DISCID_FULL
 GST_TAG_CDDA_MUSICBRAINZ_DISCID
 GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL
-GST_TAG_CDDA_TRACK_TAGS
 GST_TAG_CMML_CLIP
 GST_TAG_CMML_HEAD
 GST_TAG_CMML_STREAM
@@ -2131,7 +2125,6 @@ gst_encoding_profile_from_discoverer
 gst_encoding_profile_get_name
 gst_encoding_profile_get_description
 gst_encoding_profile_get_format
-gst_encoding_profile_get_allow_renegotiation
 gst_encoding_profile_get_preset
 gst_encoding_profile_get_preset_name
 gst_encoding_profile_get_presence
@@ -2140,7 +2133,6 @@ gst_encoding_profile_get_file_extension
 gst_encoding_profile_set_name
 gst_encoding_profile_set_description
 gst_encoding_profile_set_format
-gst_encoding_profile_set_allow_renegotiation
 gst_encoding_profile_set_preset
 gst_encoding_profile_set_preset_name
 gst_encoding_profile_set_restriction
@@ -2711,7 +2703,6 @@ gst_video_encoder_set_output_state
 gst_video_encoder_get_output_state
 gst_video_encoder_proxy_getcaps
 gst_video_encoder_merge_tags
-gst_video_encoder_get_allocator
 <SUBSECTION Standard>
 GST_IS_VIDEO_ENCODER
 GST_IS_VIDEO_ENCODER_CLASS
