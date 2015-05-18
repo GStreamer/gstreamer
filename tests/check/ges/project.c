@@ -484,63 +484,77 @@ GST_END_TEST;
 GST_START_TEST (test_project_load_xges)
 {
   gboolean saved;
-  GESProject *project;
+  GESProject *loaded_project, *saved_project;
   GESTimeline *timeline;
   GESAsset *formatter_asset;
   gchar *uri = ges_test_file_uri ("test-project.xges");
 
-  project = ges_project_new (uri);
+  loaded_project = ges_project_new (uri);
   mainloop = g_main_loop_new (NULL, FALSE);
-  fail_unless (GES_IS_PROJECT (project));
+  fail_unless (GES_IS_PROJECT (loaded_project));
 
   /* Connect the signals */
-  g_signal_connect (project, "asset-added", (GCallback) asset_added_cb, NULL);
-  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, mainloop);
+  g_signal_connect (loaded_project, "asset-added", (GCallback) asset_added_cb,
+      NULL);
+  g_signal_connect (loaded_project, "loaded", (GCallback) project_loaded_cb,
+      mainloop);
 
   /* Make sure we update the project's dummy URL to some actual URL */
-  g_signal_connect (project, "missing-uri", (GCallback) _set_new_uri, NULL);
+  g_signal_connect (loaded_project, "missing-uri", (GCallback) _set_new_uri,
+      NULL);
 
   /* Now extract a timeline from it */
   GST_LOG ("Loading project");
-  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+  timeline =
+      GES_TIMELINE (ges_asset_extract (GES_ASSET (loaded_project), NULL));
   fail_unless (GES_IS_TIMELINE (timeline));
-  assert_equals_int (g_list_length (ges_project_get_loading_assets (project)),
-      1);
+  assert_equals_int (g_list_length (ges_project_get_loading_assets
+          (loaded_project)), 1);
 
   g_main_loop_run (mainloop);
   GST_LOG ("Test first loading");
-  _test_project (project, timeline);
+  _test_project (loaded_project, timeline);
   g_free (uri);
 
   uri = ges_test_get_tmp_uri ("test-project_TMP.xges");
   formatter_asset = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
   saved =
-      ges_project_save (project, timeline, uri, formatter_asset, TRUE, NULL);
+      ges_project_save (loaded_project, timeline, uri, formatter_asset, TRUE,
+      NULL);
   fail_unless (saved);
   gst_object_unref (timeline);
-  gst_object_unref (project);
 
-  project = ges_project_new (uri);
-  ASSERT_OBJECT_REFCOUNT (project, "Our + cache", 2);
-  g_signal_connect (project, "asset-added", (GCallback) asset_added_cb, NULL);
-  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, mainloop);
+  saved_project = ges_project_new (uri);
+  ASSERT_OBJECT_REFCOUNT (saved_project, "Our + cache", 2);
+  g_signal_connect (saved_project, "asset-added", (GCallback) asset_added_cb,
+      NULL);
+  g_signal_connect (saved_project, "loaded", (GCallback) project_loaded_cb,
+      mainloop);
 
   GST_LOG ("Loading saved project");
-  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (saved_project), NULL));
   fail_unless (GES_IS_TIMELINE (timeline));
   g_main_loop_run (mainloop);
-  _test_project (project, timeline);
+  _test_project (saved_project, timeline);
+
+  fail_unless (ges_meta_container_get_string (GES_META_CONTAINER
+          (loaded_project), GES_META_FORMAT_VERSION));
+  fail_unless_equals_string (ges_meta_container_get_string (GES_META_CONTAINER
+          (loaded_project), GES_META_FORMAT_VERSION),
+      ges_meta_container_get_string (GES_META_CONTAINER (loaded_project),
+          GES_META_FORMAT_VERSION));
   gst_object_unref (timeline);
-  gst_object_unref (project);
+  gst_object_unref (saved_project);
+  gst_object_unref (loaded_project);
   g_free (uri);
 
-  ASSERT_OBJECT_REFCOUNT (project, "Still 1 ref for asset cache", 1);
+  ASSERT_OBJECT_REFCOUNT (saved_project, "Still 1 ref for asset cache", 1);
 
   g_main_loop_unref (mainloop);
-  g_signal_handlers_disconnect_by_func (project, (GCallback) project_loaded_cb,
-      mainloop);
-  g_signal_handlers_disconnect_by_func (project, (GCallback) asset_added_cb,
-      NULL);
+  g_signal_handlers_disconnect_by_func (saved_project,
+      (GCallback) project_loaded_cb, mainloop);
+  g_signal_handlers_disconnect_by_func (saved_project,
+      (GCallback) asset_added_cb, NULL);
 }
 
 GST_END_TEST;

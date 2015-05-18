@@ -102,6 +102,13 @@ G_BEGIN_DECLS
  */
 #define GES_META_VOLUME_DEFAULT                       1.0
 
+/**
+ * GES_META_FORMAT_VERSION:
+ *
+ * The version of the format in which a project is serialized
+ */
+#define GES_META_FORMAT_VERSION                       "format-version"
+
 typedef struct _GESMetaContainer          GESMetaContainer;
 typedef struct _GESMetaContainerInterface GESMetaContainerInterface;
 

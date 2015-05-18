@@ -283,8 +283,7 @@ ges_test_get_tmp_uri (const gchar * filename)
 {
   gchar *location, *uri;
 
-  location = g_build_filename (g_get_tmp_dir (),
-      "test-keyframes-save.xges", NULL);
+  location = g_build_filename (g_get_tmp_dir (), filename, NULL);
 
   uri = g_strconcat ("file://", location, NULL);
   g_free (location);

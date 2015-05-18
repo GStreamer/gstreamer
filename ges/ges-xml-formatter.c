@@ -32,8 +32,8 @@
 G_DEFINE_TYPE (GESXmlFormatter, ges_xml_formatter, GES_TYPE_BASE_XML_FORMATTER);
 
 #define API_VERSION 0
-#define MINOR_VERSION 1
-#define VERSION 0.1
+#define MINOR_VERSION 2
+#define VERSION 0.2
 
 #define COLLECT_STR_OPT (G_MARKUP_COLLECT_STRING | G_MARKUP_COLLECT_OPTIONAL)
 
@@ -49,6 +49,8 @@ struct _GESXmlFormatterPrivate
   GHashTable *element_id;
 
   guint nbelements;
+
+  guint min_version;
 };
 
 static inline void
@@ -56,8 +58,8 @@ _parse_ges_element (GMarkupParseContext * context, const gchar * element_name,
     const gchar ** attribute_names, const gchar ** attribute_values,
     GESXmlFormatter * self, GError ** error)
 {
+  guint api_version;
   const gchar *version, *properties;
-  guint api_version, min_version;
 
   gchar **split_version = NULL;
 
@@ -84,8 +86,8 @@ _parse_ges_element (GMarkupParseContext * context, const gchar * element_name,
   if (errno || api_version != API_VERSION)
     goto stroull_failed;
 
-  min_version = g_ascii_strtoull (split_version[1], NULL, 10);
-  if (min_version > MINOR_VERSION)
+  self->priv->min_version = g_ascii_strtoull (split_version[1], NULL, 10);
+  if (self->priv->min_version > MINOR_VERSION)
     goto failed;
 
   _GET_PRIV (self)->ges_opened = TRUE;
@@ -780,6 +782,15 @@ _parse_element_end (GMarkupParseContext * context,
     const gchar * element_name, gpointer self, GError ** error)
 {
   /*GESXmlFormatterPrivate *priv = _GET_PRIV (self); */
+  if (g_strcmp0 (element_name, "ges") == 0 && GES_FORMATTER (self)->project) {
+    gchar *version = g_strdup_printf ("%d.%d",
+        API_VERSION, GES_XML_FORMATTER (self)->priv->min_version);
+
+    ges_meta_container_set_string (GES_META_CONTAINER (GES_FORMATTER
+            (self)->project), GES_META_FORMAT_VERSION, version);
+
+    g_free (version);
+  }
 }
 
 static void
@@ -1272,8 +1283,8 @@ _save_timeline (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
 }
 
 static void
-_save_stream_profiles (GString * str, GstEncodingProfile * sprof,
-    const gchar * profilename, guint id)
+_save_stream_profiles (GESXmlFormatter * self, GString * str,
+    GstEncodingProfile * sprof, const gchar * profilename, guint id)
 {
   gchar *tmpc;
   GstCaps *tmpcaps;
@@ -1282,10 +1293,15 @@ _save_stream_profiles (GString * str, GstEncodingProfile * sprof,
   append_escaped (str,
       g_markup_printf_escaped
       ("        <stream-profile parent='%s' id='%d' type='%s' "
-          "presence='%d' enabled='%d' ", profilename, id,
+          "presence='%d' ", profilename, id,
           gst_encoding_profile_get_type_nick (sprof),
-          gst_encoding_profile_get_presence (sprof),
-          gst_encoding_profile_is_enabled (sprof)));
+          gst_encoding_profile_get_presence (sprof)));
+
+  if (!gst_encoding_profile_is_enabled (sprof)) {
+    append_escaped (str, g_strdup ("enabled='0' "));
+
+    self->priv->min_version = MAX (self->priv->min_version, 2);
+  }
 
   tmpcaps = gst_encoding_profile_get_format (sprof);
   if (tmpcaps) {
@@ -1334,7 +1350,8 @@ _save_stream_profiles (GString * str, GstEncodingProfile * sprof,
 }
 
 static inline void
-_save_encoding_profiles (GString * str, GESProject * project)
+_save_encoding_profiles (GESXmlFormatter * self, GString * str,
+    GESProject * project)
 {
   GstCaps *profformat;
   const gchar *profname, *profdesc, *profpreset, *proftype, *profpresetname;
@@ -1382,7 +1399,7 @@ _save_encoding_profiles (GString * str, GESProject * project)
       for (tmp2 = gst_encoding_container_profile_get_profiles (container_prof);
           tmp2; tmp2 = tmp2->next, i++) {
         GstEncodingProfile *sprof = (GstEncodingProfile *) tmp2->data;
-        _save_stream_profiles (str, sprof, profname, i);
+        _save_stream_profiles (self, str, sprof, profname, i);
       }
     }
     append_escaped (str,
@@ -1396,16 +1413,17 @@ _save (GESFormatter * formatter, GESTimeline * timeline, GError ** error)
   GString *str;
   GESProject *project;
 
+  gchar *projstr = NULL, *version;
   gchar *properties = NULL, *metas = NULL;
   GESXmlFormatterPrivate *priv;
 
 
   priv = _GET_PRIV (formatter);
+
+  priv->min_version = 1;
   project = formatter->project;
   str = priv->str = g_string_new (NULL);
 
-  g_string_append_printf (str, "<ges version='%i.%i'>\n", API_VERSION,
-      MINOR_VERSION);
   properties = _serialize_properties (G_OBJECT (project), NULL);
   metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (project));
   append_escaped (str,
@@ -1415,7 +1433,7 @@ _save (GESFormatter * formatter, GESTimeline * timeline, GError ** error)
   g_free (metas);
 
   g_string_append (str, "    <encoding-profiles>\n");
-  _save_encoding_profiles (str, project);
+  _save_encoding_profiles (GES_XML_FORMATTER (formatter), str, project);
   g_string_append (str, "    </encoding-profiles>\n");
 
   g_string_append (str, "    <ressources>\n");
@@ -1424,6 +1442,22 @@ _save (GESFormatter * formatter, GESTimeline * timeline, GError ** error)
 
   _save_timeline (GES_XML_FORMATTER (formatter), str, timeline);
   g_string_append (str, "</project>\n</ges>");
+
+  projstr = g_strdup_printf ("<ges version='%i.%i'>\n", API_VERSION,
+      priv->min_version);
+  g_string_prepend (str, projstr);
+  g_free (projstr);
+
+  ges_meta_container_set_int (GES_META_CONTAINER (project),
+      GES_META_FORMAT_VERSION, priv->min_version);
+
+  version = g_strdup_printf ("%d.%d", API_VERSION,
+      GES_XML_FORMATTER (formatter)->priv->min_version);
+
+  ges_meta_container_set_string (GES_META_CONTAINER (project),
+      GES_META_FORMAT_VERSION, version);
+
+  g_free (version);
 
   priv->str = NULL;
 
@@ -1457,6 +1491,7 @@ ges_xml_formatter_init (GESXmlFormatter * self)
   priv->element_id = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   self->priv = priv;
+  self->priv->min_version = 1;
 }
 
 static void

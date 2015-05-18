@@ -92,6 +92,8 @@ _register_metas (GESExtractableInterface * iface, GObjectClass * class,
       GES_META_FORMATTER_VERSION, fclass->version);
   ges_meta_container_register_meta_uint (container, GES_META_READABLE,
       GES_META_FORMATTER_RANK, fclass->rank);
+  ges_meta_container_register_meta_string (container, GES_META_READ_WRITE,
+      GES_META_FORMAT_VERSION, NULL);
 
   return TRUE;
 }
