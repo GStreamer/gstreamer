@@ -158,7 +158,7 @@ gst_pyramid_segment_class_init (GstPyramidSegmentClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LEVEL,
       g_param_spec_int ("level", "Level",
-          "Maximum level of the pyramid segmentation", 0, 4, 4,
+          "Maximum level of the pyramid segmentation", 1, 4, 4,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
