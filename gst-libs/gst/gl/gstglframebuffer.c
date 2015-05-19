@@ -201,9 +201,6 @@ gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_width,
           GST_GL_API_OPENGL3))
     gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
 
-  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
-  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
   /* the opengl scene */
   cb (stuff);
 
