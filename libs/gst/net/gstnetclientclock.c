@@ -94,6 +94,7 @@ struct _GstNetClientClockPrivate
   GSocket *socket;
   GSocketAddress *servaddr;
   GCancellable *cancel;
+  gboolean made_cancel_fd;
 
   GstClockTime timeout_expiration;
   GstClockTime roundtrip_limit;
@@ -612,6 +613,7 @@ gst_net_client_clock_start (GstNetClientClock * self)
   GSocket *socket;
   GError *error = NULL;
   GSocketFamily family;
+  GPollFD dummy_pollfd;
 
   g_return_val_if_fail (self->priv->address != NULL, FALSE);
   g_return_val_if_fail (self->priv->servaddr == NULL, FALSE);
@@ -659,6 +661,9 @@ gst_net_client_clock_start (GstNetClientClock * self)
   g_object_unref (myaddr);
 
   self->priv->cancel = g_cancellable_new ();
+  self->priv->made_cancel_fd =
+      g_cancellable_make_pollfd (self->priv->cancel, &dummy_pollfd);
+
   self->priv->socket = socket;
   self->priv->servaddr = G_SOCKET_ADDRESS (servaddr);
 
@@ -720,6 +725,9 @@ gst_net_client_clock_stop (GstNetClientClock * self)
 
   g_thread_join (self->priv->thread);
   self->priv->thread = NULL;
+
+  if (self->priv->made_cancel_fd)
+    g_cancellable_release_fd (self->priv->cancel);
 
   g_object_unref (self->priv->cancel);
   self->priv->cancel = NULL;

@@ -73,6 +73,7 @@ struct _GstNetTimeProviderPrivate
 
   GSocket *socket;
   GCancellable *cancel;
+  gboolean made_cancel_fd;
 };
 
 static gboolean gst_net_time_provider_start (GstNetTimeProvider * bself);
@@ -274,6 +275,7 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
 {
   GSocketAddress *socket_addr, *bound_addr;
   GInetAddress *inet_addr;
+  GPollFD dummy_pollfd;
   GSocket *socket;
   GError *err = NULL;
   int port;
@@ -328,6 +330,8 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
 
   self->priv->socket = socket;
   self->priv->cancel = g_cancellable_new ();
+  self->priv->made_cancel_fd =
+      g_cancellable_make_pollfd (self->priv->cancel, &dummy_pollfd);
 
   self->priv->thread = g_thread_try_new ("GstNetTimeProvider",
       gst_net_time_provider_thread, self, &err);
@@ -379,6 +383,9 @@ gst_net_time_provider_stop (GstNetTimeProvider * self)
 
   g_thread_join (self->priv->thread);
   self->priv->thread = NULL;
+
+  if (self->priv->made_cancel_fd)
+    g_cancellable_release_fd (self->priv->cancel);
 
   g_object_unref (self->priv->cancel);
   self->priv->cancel = NULL;
