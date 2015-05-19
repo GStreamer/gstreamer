@@ -876,6 +876,8 @@ gst_vaapipostproc_update_sink_caps (GstVaapiPostproc * postproc, GstCaps * caps,
   GstVideoInfo vi;
   gboolean deinterlace;
 
+  GST_INFO_OBJECT (postproc, "new sink caps = %" GST_PTR_FORMAT, caps);
+
   if (!gst_video_info_from_caps (&vi, caps))
     return FALSE;
 
@@ -898,6 +900,8 @@ gst_vaapipostproc_update_src_caps (GstVaapiPostproc * postproc, GstCaps * caps,
     gboolean * caps_changed_ptr)
 {
   GstVideoInfo vi;
+
+  GST_INFO_OBJECT (postproc, "new src caps = %" GST_PTR_FORMAT, caps);
 
   if (!gst_video_info_from_caps (&vi, caps))
     return FALSE;
