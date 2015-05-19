@@ -32,6 +32,9 @@
   if (self->draw_notify)
     self->draw_notify (self->draw_data);
 
+  if (self->draw_context)
+    gst_object_unref (self->draw_context);
+
   GST_TRACE ("dealloc GstGLCAOpenGLLayer %p context %p", self, self->gst_gl_context);
 
   [super dealloc];
@@ -86,8 +89,10 @@ _context_ready (gpointer data)
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
+  GstGLDisplay *display;
   CGLContextObj external_context = NULL;
   CGLError ret;
+  GError *error = NULL;
 
   if (self->gst_gl_context)
     external_context = (CGLContextObj) gst_gl_context_get_gl_context (GST_GL_CONTEXT (self->gst_gl_context));
@@ -98,7 +103,34 @@ _context_ready (gpointer data)
   ret = CGLCreateContext (pixelFormat, external_context, &self->gl_context);
   if (ret != kCGLNoError) {
     GST_ERROR ("failed to create CGL context in CAOpenGLLayer with share context %p: %s", external_context, CGLErrorString(ret));
+    return NULL;
   }
+
+  if (self->draw_context)
+    gst_object_unref (self->draw_context);
+
+  display = gst_gl_context_get_display (GST_GL_CONTEXT (self->gst_gl_context));
+  self->draw_context = gst_gl_context_new_wrapped (display,
+      (guintptr) self->gl_context, GST_GL_PLATFORM_CGL,
+      gst_gl_display_get_gl_api (display));
+  gst_object_unref (display);
+
+  if (!self->draw_context) {
+    GST_ERROR ("failed to create wrapped context");
+    return NULL;
+  }
+
+  if (kCGLNoError != CGLSetCurrentContext (self->gl_context)) {
+    GST_ERROR ("failed set cgl context %p current", self->gl_context);
+    return NULL;
+  }
+
+  gst_gl_context_activate (self->draw_context, TRUE);
+  if (!gst_gl_context_fill_info (self->draw_context, &error)) {
+    GST_ERROR ("failed to fill wrapped context information: %s", error->message);
+    return NULL;
+  }
+  gst_gl_context_activate (self->draw_context, FALSE);
 
   return self->gl_context;
 }
@@ -151,6 +183,7 @@ _context_ready (gpointer data)
    * the CA viewport set up on entry to this function */
   gl->GetIntegerv (GL_VIEWPORT, ca_viewport);
 
+  gst_gl_context_activate (self->draw_context, TRUE);
   if (self->last_bounds.size.width != self.bounds.size.width
       || self->last_bounds.size.height != self.bounds.size.height) {
     if (self->resize_cb) {
@@ -185,6 +218,7 @@ _context_ready (gpointer data)
 
   if (self->draw_cb)
     self->draw_cb (self->draw_data);
+  gst_gl_context_activate (self->draw_context, FALSE);
 
   /* flushes the buffer */
   [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:interval displayTime:timeStamp];
