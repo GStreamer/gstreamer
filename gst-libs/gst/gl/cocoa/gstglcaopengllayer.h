@@ -35,6 +35,7 @@ G_BEGIN_DECLS
   CGLContextObj gl_context;
 
 @private
+  GstGLContext *draw_context;
   CGRect last_bounds;
   gint expected_dims[4];
 
