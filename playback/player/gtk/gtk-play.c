@@ -158,7 +158,7 @@ play_pause_clicked_cb (GtkButton * button, GtkPlay * play)
 }
 
 static void
-play_current_uri (GtkPlay * play, GList * uri)
+play_current_uri (GtkPlay * play, GList * uri, const gchar *ext_suburi)
 {
   /* reset the button/widget state to default */
   if (play->image_pixbuf)
@@ -169,8 +169,11 @@ play_current_uri (GtkPlay * play, GList * uri)
   gtk_widget_set_sensitive (play->prev_button, g_list_previous (uri) != NULL);
   gtk_widget_set_sensitive (play->next_button, g_list_next (uri) != NULL);
 
-  /* play uri */
-  gst_player_set_uri (play->player, uri->data);
+  /* set uri or suburi */
+  if (ext_suburi)
+    gst_player_set_subtitle_uri (play->player, ext_suburi);
+  else
+    gst_player_set_uri (play->player, uri->data);
   play->current_uri = uri;
   gst_player_play (play->player);
   set_title (play, uri->data);
@@ -184,11 +187,11 @@ skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
   prev = g_list_previous (play->current_uri);
   g_return_if_fail (prev != NULL);
 
-  play_current_uri (play, prev);
+  play_current_uri (play, prev, NULL);
 }
 
 static GList *
-open_file_dialog (GtkPlay *play)
+open_file_dialog (GtkPlay *play, gboolean multi)
 {
   int res;
   GList *uris = NULL;
@@ -199,7 +202,7 @@ open_file_dialog (GtkPlay *play)
   chooser = gtk_file_chooser_dialog_new ("Select files to play", NULL,
       GTK_FILE_CHOOSER_ACTION_OPEN,
       "_Cancel", GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
-  g_object_set (chooser, "local-only", FALSE, "select-multiple", TRUE, NULL);
+  g_object_set (chooser, "local-only", FALSE, "select-multiple", multi, NULL);
   gtk_window_set_transient_for (GTK_WINDOW (chooser), GTK_WINDOW (parent));
 
   res = gtk_dialog_run (GTK_DIALOG (chooser));
@@ -222,13 +225,13 @@ open_file_clicked_cb (GtkWidget * unused, GtkPlay *play)
 {
   GList * uris, *current;
 
-  uris = open_file_dialog (play);
+  uris = open_file_dialog (play, TRUE);
   if (uris) {
     /* free existing playlist */
     g_list_free_full (play->uris, g_free);
 
     play->uris = uris;
-    play_current_uri (play, g_list_first (play->uris));
+    play_current_uri (play, g_list_first (play->uris), NULL);
   }
 }
 
@@ -240,7 +243,7 @@ skip_next_clicked_cb (GtkButton * button, GtkPlay * play)
   next = g_list_next (play->current_uri);
   g_return_if_fail (next != NULL);
 
-  play_current_uri (play, next);
+  play_current_uri (play, next, NULL);
 }
 
 static const gchar *
@@ -687,6 +690,18 @@ get_menu_label (GstPlayerStreamInfo * stream, GType type)
 }
 
 static void
+new_subtitle_clicked_cb (GtkWidget * unused, GtkPlay *play)
+{
+  GList * uri;
+
+  uri = open_file_dialog (play, FALSE);
+  if (uri) {
+    play_current_uri (play, play->current_uri, uri->data);
+    g_list_free_full (uri, g_free);
+  }
+}
+
+static void
 disable_track (GtkPlay * play, GType type)
 {
   if (type == GST_TYPE_PLAYER_VIDEO_INFO) {
@@ -743,6 +758,7 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
 {
   GtkWidget *menu;
   GtkWidget *item;
+  GtkWidget *sep;
   GList *list, *l;
   gint current_index;
   GSList *group = NULL;
@@ -760,6 +776,16 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
     list = gst_player_get_subtitle_streams (media_info);
 
   menu = gtk_menu_new ();
+
+  if (type == GST_TYPE_PLAYER_SUBTITLE_INFO) {
+    GtkWidget *ext_subtitle;
+    ext_subtitle = gtk_menu_item_new_with_label ("New File");
+    sep = gtk_separator_menu_item_new ();
+    g_signal_connect (G_OBJECT (ext_subtitle), "activate",
+        G_CALLBACK (new_subtitle_clicked_cb), play);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menu), ext_subtitle);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menu), sep);
+  }
 
   for (l = list; l != NULL; l = l->next) {
     gint index;
@@ -779,6 +805,8 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
         G_CALLBACK (track_changed_cb), play);
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
   }
+
+  sep = gtk_separator_menu_item_new ();
   item = gtk_radio_menu_item_new_with_label (group, "Disable");
   group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (item));
   g_object_set_data (G_OBJECT (item), "index", GINT_TO_POINTER (-1));
@@ -787,7 +815,9 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
     gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), True);
   g_signal_connect (G_OBJECT (item), "toggled",
       G_CALLBACK (track_changed_cb), play);
+  gtk_menu_shell_append (GTK_MENU_SHELL (menu), sep);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
+
   return menu;
 }
 
@@ -846,15 +876,12 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
       gtk_widget_set_sensitive (audio, FALSE);
   }
 
-  if (media_info && !gst_player_get_subtitle_streams (media_info))
-    gtk_widget_set_sensitive (sub, FALSE);
-  else {
+  if (media_info) {
     submenu = create_tracks_menu (play, media_info,
         GST_TYPE_PLAYER_SUBTITLE_INFO);
-    if (submenu)
-      gtk_menu_item_set_submenu (GTK_MENU_ITEM (sub), submenu);
-    else
-      gtk_widget_set_sensitive (sub, FALSE);
+    gtk_menu_item_set_submenu (GTK_MENU_ITEM (sub), submenu);
+  } else {
+    gtk_widget_set_sensitive (sub, FALSE);
   }
 
   gtk_widget_set_sensitive (next, g_list_next
@@ -1158,7 +1185,7 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
       next = g_list_first (play->uris);
 
     if (next) {
-      play_current_uri (play, next);
+      play_current_uri (play, next, NULL);
     } else {
       GtkWidget *image;
 
@@ -1342,7 +1369,7 @@ main (gint argc, gchar ** argv)
   // FIXME: Add support for playlists and stuff
   /* Parse the list of the file names we have to play. */
   if (!file_names) {
-    play.uris = open_file_dialog (&play);
+    play.uris = open_file_dialog (&play, TRUE);
     if (!play.uris)
       return 0;
   } else {
@@ -1367,7 +1394,7 @@ main (gint argc, gchar ** argv)
 
   create_ui (&play);
 
-  play_current_uri (&play, g_list_first (play.uris));
+  play_current_uri (&play, g_list_first (play.uris), NULL);
 
   g_signal_connect (play.player, "position-updated",
       G_CALLBACK (position_updated_cb), &play);
