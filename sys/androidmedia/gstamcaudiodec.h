@@ -59,6 +59,9 @@ struct _GstAmcAudioDec
   gboolean input_caps_changed;
   gint spf;
 
+  /* For collecting complete frames for the output */
+  GstAdapter *output_adapter;
+
   /* Output format of the codec */
   GstAudioInfo info;
   /* AMC positions, might need reordering */

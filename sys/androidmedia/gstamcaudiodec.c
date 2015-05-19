@@ -228,6 +228,7 @@ gst_amc_audio_dec_init (GstAmcAudioDec * self)
 
   g_mutex_init (&self->drain_lock);
   g_cond_init (&self->drain_cond);
+  self->output_adapter = gst_adapter_new ();
 }
 
 static gboolean
@@ -282,6 +283,10 @@ static void
 gst_amc_audio_dec_finalize (GObject * object)
 {
   GstAmcAudioDec *self = GST_AMC_AUDIO_DEC (object);
+
+  if (self->output_adapter)
+    gst_object_unref (self->output_adapter);
+  self->output_adapter = NULL;
 
   g_mutex_clear (&self->drain_lock);
   g_cond_clear (&self->drain_cond);
@@ -505,7 +510,6 @@ retry:
     GstBuffer *outbuf;
     GstAmcBuffer *buf;
     GstMapInfo minfo;
-    gint nframes;
 
     /* This sometimes happens at EOS or if the input is not properly framed,
      * let's handle it gracefully by allocating a new buffer for the current
@@ -545,18 +549,39 @@ retry:
     }
     gst_buffer_unmap (outbuf, &minfo);
 
-    nframes = 1;
     if (self->spf != -1) {
-      nframes = buffer_info.size / self->info.bpf;
-      if (nframes % self->spf != 0)
-        GST_WARNING_OBJECT (self, "Output buffer does not contain an integer "
-            "number of input frames (frames: %d, spf: %d)", nframes, self->spf);
-      nframes = (nframes + self->spf - 1) / self->spf;
+      gst_adapter_push (self->output_adapter, outbuf);
+    } else {
+      flow_ret =
+          gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (self), outbuf, 1);
     }
+  }
 
-    flow_ret =
-        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (self), outbuf,
-        nframes);
+  if (self->spf != -1) {
+    GstBuffer *outbuf;
+    guint avail = gst_adapter_available (self->output_adapter);
+    guint nframes;
+
+    /* On EOS we take the complete adapter content, no matter
+     * if it is a multiple of the codec frame size or not.
+     * Otherwise we take a multiple of codec frames and push
+     * them downstream
+     */
+    avail /= self->info.bpf;
+    if (!is_eos) {
+      nframes = avail / self->spf;
+      avail = nframes * self->spf;
+    } else {
+      nframes = (avail + self->spf - 1) / self->spf;
+    }
+    avail *= self->info.bpf;
+
+    if (avail > 0) {
+      outbuf = gst_adapter_take_buffer (self->output_adapter, avail);
+      flow_ret =
+          gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (self), outbuf,
+          nframes);
+    }
   }
 
   if (!gst_amc_codec_release_output_buffer (self->codec, idx, &err)) {
@@ -781,6 +806,9 @@ gst_amc_audio_dec_stop (GstAudioDecoder * decoder)
   gst_pad_stop_task (GST_AUDIO_DECODER_SRC_PAD (decoder));
 
   memset (self->positions, 0, sizeof (self->positions));
+
+  gst_adapter_flush (self->output_adapter,
+      gst_adapter_available (self->output_adapter));
 
   g_list_foreach (self->codec_datas, (GFunc) g_free, NULL);
   g_list_free (self->codec_datas);
@@ -1014,6 +1042,8 @@ gst_amc_audio_dec_flush (GstAudioDecoder * decoder, gboolean hard)
   gst_amc_codec_flush (self->codec, &err);
   if (err)
     GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+  gst_adapter_flush (self->output_adapter,
+      gst_adapter_available (self->output_adapter));
   self->flushing = FALSE;
 
   /* Start the srcpad loop again */
@@ -1294,6 +1324,9 @@ gst_amc_audio_dec_drain (GstAmcAudioDec * self)
       GST_ELEMENT_WARNING_FROM_ERROR (self, err);
     ret = GST_FLOW_ERROR;
   }
+
+  gst_adapter_flush (self->output_adapter,
+      gst_adapter_available (self->output_adapter));
 
   return ret;
 }
