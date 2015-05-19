@@ -3898,7 +3898,7 @@ gst_mpd_client_get_next_fragment_duration (GstMpdClient * client,
     GstActiveStream * stream)
 {
   GstMediaSegment *media_segment = NULL;
-  guint seg_idx;
+  gint seg_idx;
 
   g_return_val_if_fail (stream != NULL, 0);
 
@@ -4251,7 +4251,7 @@ gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client,
     GstActiveStream * stream)
 {
   GstDateTime *availability_start_time, *rv;
-  guint seg_idx;
+  gint seg_idx;
   GstClockTime seg_duration;
   gint64 offset;
   GstStreamPeriod *stream_period;

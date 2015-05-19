@@ -456,7 +456,7 @@ struct _GstActiveStream
   GstSegmentBaseType *cur_segment_base;       /* active segment base */
   GstSegmentListNode *cur_segment_list;       /* active segment list */
   GstSegmentTemplateNode *cur_seg_template;   /* active segment template */
-  guint segment_index;                        /* index of next sequence chunk */
+  gint segment_index;                        /* index of next sequence chunk */
   guint segment_repeat_index;                 /* index of the repeat count of a segment */
   GPtrArray *segments;                        /* array of GstMediaSegment */
   GstClockTime presentationTimeOffset;        /* presentation time offset of the current segment */
