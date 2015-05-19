@@ -59,6 +59,7 @@ struct _GstCAOpenGLLayerSink
 
     guint      next_tex;
     GstBuffer *next_buffer;
+    GstBuffer *next_sync;
 
     GstGLCAOpenGLLayer *layer;
 
@@ -70,6 +71,7 @@ struct _GstCAOpenGLLayerSink
     /* avoid replacing the stored_buffer while drawing */
     GMutex drawing_lock;
     GstBuffer *stored_buffer;
+    GstBuffer *stored_sync;
     GLuint redisplay_texture;
 
     gboolean caps_change;

@@ -448,6 +448,7 @@ gst_ca_opengl_layer_sink_query (GstBaseSink * bsink, GstQuery * query)
         gst_buffer_unref (buf);
 
       gst_buffer_replace (&ca_sink->next_buffer, NULL);
+      gst_buffer_replace (&ca_sink->next_sync, NULL);
 
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
@@ -528,12 +529,16 @@ gst_ca_opengl_layer_sink_change_state (GstElement * element, GstStateChange tran
        */
       GST_CA_OPENGL_LAYER_SINK_LOCK (ca_sink);
       ca_sink->redisplay_texture = 0;
+
+      gst_buffer_replace (&ca_sink->stored_sync, NULL);
+
       if (ca_sink->stored_buffer) {
         gst_buffer_unref (ca_sink->stored_buffer);
         ca_sink->stored_buffer = NULL;
       }
-      GST_CA_OPENGL_LAYER_SINK_UNLOCK (ca_sink);
       gst_buffer_replace (&ca_sink->next_buffer, NULL);
+      gst_buffer_replace (&ca_sink->next_sync, NULL);
+      GST_CA_OPENGL_LAYER_SINK_UNLOCK (ca_sink);
 
       if (ca_sink->pool) {
         gst_buffer_pool_set_active (ca_sink->pool, FALSE);
@@ -662,7 +667,9 @@ static GstFlowReturn
 gst_ca_opengl_layer_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstCAOpenGLLayerSink *ca_sink;
+  GstBuffer *next_sync, *old_sync, *old_buffer;
   GstVideoFrame gl_frame;
+  GstGLSyncMeta *sync_meta;
 
   ca_sink = GST_CA_OPENGL_LAYER_SINK (bsink);
 
@@ -683,7 +690,24 @@ gst_ca_opengl_layer_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
 
   ca_sink->next_tex = *(guint *) gl_frame.data[0];
 
-  gst_buffer_replace (&ca_sink->next_buffer, buf);
+  next_sync = gst_buffer_new ();
+  sync_meta = gst_buffer_add_gl_sync_meta (ca_sink->context, next_sync);
+  gst_gl_sync_meta_set_sync_point (sync_meta, ca_sink->context);
+
+  GST_CA_OPENGL_LAYER_SINK_LOCK (ca_sink);
+  ca_sink->next_tex = *(guint *) gl_frame.data[0];
+
+  old_buffer = ca_sink->next_buffer;
+  ca_sink->next_buffer = gst_buffer_ref (buf);
+
+  old_sync = ca_sink->next_sync;
+  ca_sink->next_sync = next_sync;
+  GST_CA_OPENGL_LAYER_SINK_UNLOCK (ca_sink);
+
+  if (old_buffer)
+    gst_buffer_unref (old_buffer);
+  if (old_sync)
+    gst_buffer_unref (old_sync);
 
   gst_video_frame_unmap (&gl_frame);
 
@@ -701,7 +725,7 @@ static GstFlowReturn
 gst_ca_opengl_layer_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstCAOpenGLLayerSink *ca_sink;
-  GstBuffer *stored_buffer;
+  GstBuffer *stored_buffer, *old_sync;
 
   GST_TRACE ("rendering buffer:%p", buf);
 
@@ -716,8 +740,12 @@ gst_ca_opengl_layer_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   /* Avoid to release the texture while drawing */
   GST_CA_OPENGL_LAYER_SINK_LOCK (ca_sink);
   ca_sink->redisplay_texture = ca_sink->next_tex;
+
   stored_buffer = ca_sink->stored_buffer;
   ca_sink->stored_buffer = gst_buffer_ref (ca_sink->next_buffer);
+
+  old_sync = ca_sink->stored_sync;
+  ca_sink->stored_sync = gst_buffer_ref (ca_sink->next_sync);
   GST_CA_OPENGL_LAYER_SINK_UNLOCK (ca_sink);
 
   /* The layer will automatically call the draw callback to draw the new
@@ -730,6 +758,8 @@ gst_ca_opengl_layer_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   if (stored_buffer)
     gst_buffer_unref (stored_buffer);
+  if (old_sync)
+    gst_buffer_unref (old_sync);
 
   if (g_atomic_int_get (&ca_sink->to_quit) != 0) {
     GST_ELEMENT_ERROR (ca_sink, RESOURCE, NOT_FOUND,
@@ -978,6 +1008,7 @@ gst_ca_opengl_layer_sink_on_draw (GstCAOpenGLLayerSink * ca_sink)
    */
 
   const GstGLFuncs *gl = NULL;
+  GstGLSyncMeta *sync_meta;
 
   g_return_if_fail (GST_IS_CA_OPENGL_LAYER_SINK (ca_sink));
 
@@ -1008,10 +1039,9 @@ gst_ca_opengl_layer_sink_on_draw (GstCAOpenGLLayerSink * ca_sink)
     ca_sink->caps_change = TRUE;
   }
 
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (ca_sink->context))
-    gl->Disable (GL_TEXTURE_2D);
-#endif
+  sync_meta = gst_buffer_get_gl_sync_meta (ca_sink->stored_sync);
+  if (sync_meta)
+    gst_gl_sync_meta_wait (sync_meta, gst_gl_context_get_current ());
 
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
