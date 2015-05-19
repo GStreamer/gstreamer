@@ -859,7 +859,7 @@ static const GLfloat vertices[] = {
      1.0f, -1.0f, 0.0f, 1.0f, 1.0f
 };
 
-GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+static const GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 /* *INDENT-ON* */
 
 static void
