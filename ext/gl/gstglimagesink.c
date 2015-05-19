@@ -832,6 +832,7 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
         gst_buffer_unref (buf);
 
       gst_buffer_replace (&glimage_sink->next_buffer, NULL);
+      gst_buffer_replace (&glimage_sink->next_sync, NULL);
 
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
@@ -901,13 +902,18 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
        * to avoid drawing
        */
       GST_GLIMAGE_SINK_LOCK (glimage_sink);
+      if (glimage_sink->stored_sync)
+        gst_buffer_unref (glimage_sink->stored_sync);
+      glimage_sink->stored_sync = NULL;
+
       glimage_sink->redisplay_texture = 0;
       if (glimage_sink->stored_buffer) {
         gst_buffer_unref (glimage_sink->stored_buffer);
         glimage_sink->stored_buffer = NULL;
       }
-      GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
       gst_buffer_replace (&glimage_sink->next_buffer, NULL);
+      gst_buffer_replace (&glimage_sink->next_sync, NULL);
+      GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
 
       glimage_sink->window_id = 0;
       /* but do not reset glimage_sink->new_window_id */
@@ -1095,6 +1101,8 @@ gst_glimage_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
   GstVideoFrame gl_frame;
+  GstBuffer *next_sync, *old_sync, *old_buffer;
+  GstGLSyncMeta *sync_meta;
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
@@ -1113,9 +1121,24 @@ gst_glimage_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
     goto upload_failed;
   }
 
+  next_sync = gst_buffer_new ();
+  sync_meta = gst_buffer_add_gl_sync_meta (glimage_sink->context, next_sync);
+  gst_gl_sync_meta_set_sync_point (sync_meta, glimage_sink->context);
+
+  GST_GLIMAGE_SINK_LOCK (glimage_sink);
   glimage_sink->next_tex = *(guint *) gl_frame.data[0];
 
-  gst_buffer_replace (&glimage_sink->next_buffer, buf);
+  old_buffer = glimage_sink->next_buffer;
+  glimage_sink->next_buffer = gst_buffer_ref (buf);
+
+  old_sync = glimage_sink->next_sync;
+  glimage_sink->next_sync = next_sync;
+  GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
+
+  if (old_buffer)
+    gst_buffer_unref (old_buffer);
+  if (old_sync)
+    gst_buffer_unref (old_sync);
 
   gst_video_frame_unmap (&gl_frame);
 
@@ -1142,7 +1165,7 @@ static GstFlowReturn
 gst_glimage_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
-  GstBuffer *stored_buffer;
+  GstBuffer *stored_buffer, *old_sync;
 
   GST_TRACE ("rendering buffer:%p", buf);
 
@@ -1159,6 +1182,10 @@ gst_glimage_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   glimage_sink->redisplay_texture = glimage_sink->next_tex;
   stored_buffer = glimage_sink->stored_buffer;
   glimage_sink->stored_buffer = gst_buffer_ref (glimage_sink->next_buffer);
+
+  old_sync = glimage_sink->stored_sync;
+  glimage_sink->stored_sync = gst_buffer_ref (glimage_sink->next_sync);
+
   GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
 
   /* Ask the underlying window to redraw its content */
@@ -1169,6 +1196,8 @@ gst_glimage_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   if (stored_buffer)
     gst_buffer_unref (stored_buffer);
+  if (old_sync)
+    gst_buffer_unref (old_sync);
 
   if (g_atomic_int_get (&glimage_sink->to_quit) != 0) {
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
@@ -1522,9 +1551,9 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
     gl_sink->caps_change = FALSE;
   }
 
-  sync_meta = gst_buffer_get_gl_sync_meta (gl_sink->stored_buffer);
+  sync_meta = gst_buffer_get_gl_sync_meta (gl_sink->stored_sync);
   if (sync_meta)
-    gst_gl_sync_meta_wait (sync_meta, gl_sink->context);
+    gst_gl_sync_meta_wait (sync_meta, gst_gl_context_get_current ());
 
   /* make sure that the environnement is clean */
   gst_gl_context_clear_shader (gl_sink->context);
