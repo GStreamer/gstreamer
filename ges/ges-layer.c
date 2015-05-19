@@ -161,6 +161,9 @@ ges_layer_class_init (GESLayerClass * klass)
    * priority. Conceptually, a #GESTimeline is a stack of GESLayers,
    * and the priority of the layer represents its position in the stack. Two
    * layers should not have the same priority within a given GESTimeline.
+   *
+   * Note that the timeline needs to be commited (with #ges_timeline_commit)
+   * for the change to be taken into account.
    */
   g_object_class_install_property (object_class, PROP_PRIORITY,
       g_param_spec_uint ("priority", "Priority",
