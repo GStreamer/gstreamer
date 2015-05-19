@@ -753,6 +753,85 @@ track_changed_cb (GtkWidget * widget, GtkPlay * play)
     change_track (play, index, type);
 }
 
+static void
+visualization_changed_cb (GtkWidget * widget, GtkPlay * play)
+{
+  gchar *name;
+
+  if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (widget))) {
+
+    /* video_area is window-id is shared with playbin hence
+     * video_area widget will be used by visualization elements to
+     * render the visuals. If visualization is enabled then hide
+     * image widget and show video widget and similiarly when visualization
+     * is disabled then hide video widget and show imag widget.
+     */
+    name = g_object_get_data (G_OBJECT (widget), "name");
+    if (g_strcmp0 (name, "disable") == 0) {
+      gst_player_set_visualization_enabled (play->player, FALSE);
+      gtk_widget_hide (play->video_area);
+      gtk_widget_show (play->image_area);
+    }
+    else {
+      const gchar *vis_name;
+
+      gst_player_set_visualization (play->player, name);
+      /* if visualization is not enabled then enable it */
+      if (!(vis_name = gst_player_get_current_visualization (play->player))) {
+        gst_player_set_visualization_enabled (play->player, TRUE);
+      }
+      gtk_widget_hide (play->image_area);
+      gtk_widget_show (play->video_area);
+    }
+  }
+}
+
+static GtkWidget *
+create_visualization_menu (GtkPlay * play)
+{
+  gint i;
+  GtkWidget *menu;
+  GtkWidget *item;
+  GtkWidget *sep;
+  const GList *list;
+  GSList *group = NULL;
+  const gchar *cur_vis;
+  gchar **vis_names;
+
+  menu = gtk_menu_new ();
+  cur_vis = gst_player_get_current_visualization (play->player);
+  vis_names = gst_player_get_visualization_elements_name ();
+
+  for (i = 0; vis_names[i] != NULL; i++) {
+    gchar *label = (gchar *) vis_names[i];
+
+    item = gtk_radio_menu_item_new_with_label (group, label);
+    group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (item));
+    if (g_strcmp0 (label, cur_vis) == 0)
+      gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), True);
+    g_object_set_data (G_OBJECT (item), "name", label);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
+    g_signal_connect (G_OBJECT (item), "toggled",
+        G_CALLBACK (visualization_changed_cb), play);
+  }
+
+  sep = gtk_separator_menu_item_new ();
+  item = gtk_radio_menu_item_new_with_label (group, "Disable");
+  group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (item));
+  g_object_set_data (G_OBJECT (item), "name", "disable");
+  if (cur_vis == NULL)
+    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), True);
+  g_signal_connect (G_OBJECT (item), "toggled",
+      G_CALLBACK (visualization_changed_cb), play);
+  gtk_menu_shell_append (GTK_MENU_SHELL (menu), sep);
+  gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
+
+  if (vis_names)
+    g_free (vis_names);
+
+  return menu;
+}
+
 static GtkWidget *
 create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
 {
@@ -842,6 +921,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   GtkWidget *open;
   GtkWidget *image;
   GtkWidget *submenu;
+  GtkWidget *vis;
   GstPlayerMediaInfo *media_info;
 
   menu = gtk_menu_new ();
@@ -853,6 +933,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   next = gtk_menu_item_new_with_label ("Next");
   prev = gtk_menu_item_new_with_label ("Prev");
   quit = gtk_menu_item_new_with_label ("Quit");
+  vis = gtk_menu_item_new_with_label ("Visualization");
 
   media_info = gst_player_get_media_info (play->player);
 
@@ -876,7 +957,17 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
       gtk_widget_set_sensitive (audio, FALSE);
   }
 
-  if (media_info) {
+  /* enable visualization menu for audio stream */
+  if (media_info &&
+      gst_player_get_audio_streams (media_info) &&
+      !gst_player_get_video_streams (media_info)) {
+    submenu = create_visualization_menu (play);
+    gtk_menu_item_set_submenu (GTK_MENU_ITEM (vis), submenu);
+  } else {
+      gtk_widget_set_sensitive (vis, FALSE);
+  }
+
+  if (media_info && gst_player_get_video_streams (media_info)) {
     submenu = create_tracks_menu (play, media_info,
         GST_TYPE_PLAYER_SUBTITLE_INFO);
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (sub), submenu);
@@ -906,6 +997,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), prev);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), video);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), audio);
+  gtk_menu_shell_append (GTK_MENU_SHELL (menu), vis);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), sub);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), info);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), quit);
@@ -1315,6 +1407,7 @@ media_info_updated_cb (GstPlayer * player, GstPlayerMediaInfo * media_info,
 {
   if (!gtk_widget_is_sensitive (play->media_info_button)) {
     const gchar *title;
+    const gchar *vis;
 
     title = gst_player_media_info_get_title (media_info);
     if (title)
@@ -1331,6 +1424,16 @@ media_info_updated_cb (GstPlayer * player, GstPlayerMediaInfo * media_info,
     } else {
       display_cover_art (play, media_info);
     }
+
+    /* if we have audio only stream and visualization is enabled
+     * then show video widget.
+     */
+    vis = gst_player_get_current_visualization (play->player);
+    if (!has_active_stream (play, GST_TYPE_PLAYER_VIDEO_INFO) &&
+        has_active_stream (play, GST_TYPE_PLAYER_AUDIO_INFO) && vis) {
+      gtk_widget_show (play->video_area);
+      gtk_widget_hide (play->image_area);
+    }
   }
 }
 
@@ -1340,12 +1443,15 @@ main (gint argc, gchar ** argv)
   GtkPlay play;
   gchar **file_names = NULL;
   GOptionContext *ctx;
+  gboolean vis = FALSE;
   GOptionEntry options[] = {
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &file_names,
         "Files to play"},
     {"loop", 'l', 0, G_OPTION_ARG_NONE, &play.loop, "Repeat all"},
     {"fullscreen", 'f', 0, G_OPTION_ARG_NONE, &play.fullscreen,
       "Show the player in fullscreen"},
+    {"visual", 'v', 0, G_OPTION_ARG_NONE, &vis,
+      "Show visualization when there is no video stream"},
     {NULL}
   };
   guint list_length = 0;
@@ -1393,6 +1499,18 @@ main (gint argc, gchar ** argv)
   g_object_set (play.player, "dispatch-to-main-context", TRUE, NULL);
 
   create_ui (&play);
+
+  /* if visualization is enabled then use the first element */
+  if (vis) {
+    gchar **vis_names;
+    vis_names = gst_player_get_visualization_elements_name ();
+
+    if (vis_names) {
+      gst_player_set_visualization (play.player, vis_names[0]);
+      gst_player_set_visualization_enabled (play.player, TRUE);
+      g_free (vis_names);
+    }
+  }
 
   play_current_uri (&play, g_list_first (play.uris), NULL);
 
