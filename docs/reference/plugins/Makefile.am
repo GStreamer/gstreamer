@@ -87,9 +87,18 @@ INCLUDES = \
 	$(GST_CFLAGS) \
 	$(NULL)
 
-GTKDOC_LIBS = \
+gtkdoc_vaapi_libs = \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_API_VERSION).la \
+	$(NULL)
+
+if USE_X11
+gtkdoc_vaapi_libs += \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_API_VERSION).la \
+	$(NULL)
+endif
+
+GTKDOC_LIBS = \
+	$(gtkdoc_vaapi_libs) \
 	$(top_builddir)/gst/vaapi/libgstvaapi.la \
 	$(GLIB_LIBS) \
 	$(GST_LIBS) \
