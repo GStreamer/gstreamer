@@ -84,6 +84,28 @@ gst_protection_meta_free (GstMeta * meta, GstBuffer * buffer)
     gst_structure_free (protection_meta->info);
 }
 
+static gboolean
+gst_protection_meta_transform (GstBuffer * transbuf, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstProtectionMeta *protection_meta = (GstProtectionMeta *) meta;
+
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    GstMetaTransformCopy *copy = data;
+    if (!copy->region) {
+      /* only copy if the complete data is copied as well */
+      gst_buffer_add_protection_meta (transbuf,
+          gst_structure_copy (protection_meta->info));
+    } else {
+      return FALSE;
+    }
+  } else {
+    /* transform type not supported */
+    return FALSE;
+  }
+  return TRUE;
+}
+
 const GstMetaInfo *
 gst_protection_meta_get_info (void)
 {
@@ -93,8 +115,7 @@ gst_protection_meta_get_info (void)
     const GstMetaInfo *meta =
         gst_meta_register (GST_PROTECTION_META_API_TYPE, "GstProtectionMeta",
         sizeof (GstProtectionMeta), gst_protection_meta_init,
-        gst_protection_meta_free,
-        (GstMetaTransformFunction) NULL);
+        gst_protection_meta_free, gst_protection_meta_transform);
 
     g_once_init_leave (&protection_meta_info, meta);
   }
