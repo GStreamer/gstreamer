@@ -186,6 +186,7 @@ typedef enum {
  * You can use these flags to control what is serialized by
  * gst_discoverer_info_to_variant()
  *
+ * Since: 1.6
  */
 
 typedef enum {
