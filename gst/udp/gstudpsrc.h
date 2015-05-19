@@ -66,9 +66,11 @@ struct _GstUDPSrc {
 
   /* our sockets */
   GSocket   *used_socket;
-  GCancellable *cancellable;
   GInetSocketAddress *addr;
   gboolean   external_socket;
+
+  gboolean   made_cancel_fd;
+  GCancellable *cancellable;
 
   /* memory management */
   GstAllocator *allocator;

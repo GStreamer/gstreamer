@@ -323,8 +323,6 @@ gst_udpsrc_init (GstUDPSrc * udpsrc)
   udpsrc->used_socket = UDP_DEFAULT_USED_SOCKET;
   udpsrc->reuse = UDP_DEFAULT_REUSE;
 
-  udpsrc->cancellable = g_cancellable_new ();
-
   /* configure basesrc to be a live source */
   gst_base_src_set_live (GST_BASE_SRC (udpsrc), TRUE);
   /* make basesrc output a segment in time */
@@ -361,10 +359,6 @@ gst_udpsrc_finalize (GObject * object)
   if (udpsrc->used_socket)
     g_object_unref (udpsrc->used_socket);
   udpsrc->used_socket = NULL;
-
-  if (udpsrc->cancellable)
-    g_object_unref (udpsrc->cancellable);
-  udpsrc->cancellable = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -499,6 +493,26 @@ gst_udpsrc_ensure_mem (GstUDPSrc * src)
   }
 
   return TRUE;
+}
+
+static void
+gst_udpsrc_create_cancellable (GstUDPSrc * src)
+{
+  GPollFD pollfd;
+
+  src->cancellable = g_cancellable_new ();
+  src->made_cancel_fd = g_cancellable_make_pollfd (src->cancellable, &pollfd);
+}
+
+static void
+gst_udpsrc_free_cancellable (GstUDPSrc * src)
+{
+  if (src->made_cancel_fd) {
+    g_cancellable_release_fd (src->cancellable);
+    src->made_cancel_fd = FALSE;
+  }
+  g_object_unref (src->cancellable);
+  src->cancellable = NULL;
 }
 
 static GstFlowReturn
@@ -898,6 +912,8 @@ gst_udpsrc_open (GstUDPSrc * src)
   GSocketAddress *bind_saddr;
   GError *err = NULL;
 
+  gst_udpsrc_create_cancellable (src);
+
   if (src->socket == NULL) {
     /* need to allocate a socket */
     GST_DEBUG_OBJECT (src, "allocating socket for %s:%d", src->address,
@@ -1139,8 +1155,9 @@ gst_udpsrc_unlock_stop (GstBaseSrc * bsrc)
   src = GST_UDPSRC (bsrc);
 
   GST_LOG_OBJECT (src, "No longer flushing");
-  g_object_unref (src->cancellable);
-  src->cancellable = g_cancellable_new ();
+
+  gst_udpsrc_free_cancellable (src);
+  gst_udpsrc_create_cancellable (src);
 
   return TRUE;
 }
@@ -1183,6 +1200,8 @@ gst_udpsrc_close (GstUDPSrc * src)
   }
 
   gst_udpsrc_reset_memory_allocator (src);
+
+  gst_udpsrc_free_cancellable (src);
 
   return TRUE;
 }
