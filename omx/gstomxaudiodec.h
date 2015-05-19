@@ -76,6 +76,8 @@ struct _GstOMXAudioDec
   /* TRUE if EOS buffers shouldn't be forwarded */
   gboolean draining;
 
+  GstAdapter *output_adapter;
+
   GstFlowReturn downstream_flow_ret;
 };
 
