@@ -37,6 +37,7 @@ struct _GstGLBaseFilterPrivate
   GstGLContext *other_context;
 
   gboolean gl_result;
+  gboolean gl_started;
 };
 
 /* Properties */
@@ -302,6 +303,8 @@ gst_gl_base_filter_gl_start (GstGLContext * context, gpointer data)
   } else {
     filter->priv->gl_result = TRUE;
   }
+
+  filter->priv->gl_started |= filter->priv->gl_result;
 }
 
 static void
@@ -310,8 +313,12 @@ gst_gl_base_filter_gl_stop (GstGLContext * context, gpointer data)
   GstGLBaseFilter *filter = GST_GL_BASE_FILTER (data);
   GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
 
-  if (filter_class->gl_stop)
-    filter_class->gl_stop (filter);
+  if (filter->priv->gl_started) {
+    if (filter_class->gl_stop)
+      filter_class->gl_stop (filter);
+  }
+
+  filter->priv->gl_started = FALSE;
 }
 
 static gboolean
@@ -347,6 +354,10 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
     } while (!gst_gl_display_add_context (filter->display, filter->context));
     GST_OBJECT_UNLOCK (filter->display);
   }
+
+  if (filter->priv->gl_started)
+    gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_stop,
+        filter);
 
   gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_start,
       filter);
