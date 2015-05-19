@@ -68,6 +68,7 @@ struct _GstGLImageSink
 
     guint      next_tex;
     GstBuffer *next_buffer;
+    GstBuffer *next_sync;
 
     volatile gint to_quit;
     gboolean keep_aspect_ratio;
@@ -78,6 +79,7 @@ struct _GstGLImageSink
     /* avoid replacing the stored_buffer while drawing */
     GMutex drawing_lock;
     GstBuffer *stored_buffer;
+    GstBuffer *stored_sync;
     GLuint redisplay_texture;
 
     gboolean caps_change;
