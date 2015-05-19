@@ -80,6 +80,7 @@ struct _GstCAOpenGLLayerSink
     GstGLShader *redisplay_shader;
     GLuint vao;
     GLuint vertex_buffer;
+    GLuint vbo_indices;
     GLint  attr_position;
     GLint  attr_texture;
 };
