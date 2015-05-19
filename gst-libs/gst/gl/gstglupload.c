@@ -681,7 +681,6 @@ static const UploadMethod _upload_meta_upload = {
 struct RawUpload
 {
   GstGLUpload *upload;
-  GstGLMemory *in_tex[GST_VIDEO_MAX_PLANES];
   GstVideoFrame in_frame;
 };
 
@@ -751,24 +750,24 @@ static GstGLUploadReturn
 _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
     GstBuffer ** outbuf)
 {
+  GstGLMemory *in_tex[GST_VIDEO_MAX_PLANES] = { 0, };
   struct RawUpload *raw = impl;
   int i;
 
-  if (!raw->in_tex[0])
-    gst_gl_memory_setup_wrapped (raw->upload->context,
-        &raw->upload->priv->in_info, NULL, raw->in_frame.data, raw->in_tex);
+  gst_gl_memory_setup_wrapped (raw->upload->context,
+      &raw->upload->priv->in_info, NULL, raw->in_frame.data, in_tex);
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (raw->in_tex[i]) {
-      raw->in_tex[i]->data = raw->in_frame.data[i];
-      GST_GL_MEMORY_FLAG_SET (raw->in_tex[i], GST_GL_MEMORY_FLAG_NEED_UPLOAD);
+    if (in_tex[i]) {
+      in_tex[i]->data = raw->in_frame.data[i];
+      GST_GL_MEMORY_FLAG_SET (in_tex[i], GST_GL_MEMORY_FLAG_NEED_UPLOAD);
     }
   }
 
   *outbuf = gst_buffer_new ();
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->upload->priv->in_info); i++) {
     gst_buffer_append_memory (*outbuf,
-        gst_memory_ref ((GstMemory *) raw->in_tex[i]));
+        gst_memory_ref ((GstMemory *) in_tex[i]));
   }
 
   return GST_GL_UPLOAD_DONE;
@@ -786,12 +785,7 @@ static void
 _raw_data_upload_free (gpointer impl)
 {
   struct RawUpload *raw = impl;
-  int i;
 
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (raw->in_tex[i])
-      gst_memory_unref ((GstMemory *) raw->in_tex[i]);
-  }
   g_free (raw);
 }
 
