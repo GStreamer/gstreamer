@@ -35,6 +35,8 @@
 #include <gst/check/gstconsistencychecker.h>
 #include <gst/audio/audio.h>
 #include <gst/base/gstbasesrc.h>
+#include <gst/controller/gstdirectcontrolbinding.h>
+#include <gst/controller/gstinterpolationcontrolsource.h>
 
 static GMainLoop *main_loop;
 
@@ -1835,6 +1837,79 @@ GST_START_TEST (test_segment_base_handling)
 
 GST_END_TEST;
 
+static void
+set_pad_volume_fade (GstPad * pad, GstClockTime start, gdouble start_value,
+    GstClockTime end, gdouble end_value)
+{
+  GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
+
+  cs = gst_interpolation_control_source_new ();
+  fail_unless (gst_object_add_control_binding (GST_OBJECT_CAST (pad),
+          gst_direct_control_binding_new_absolute (GST_OBJECT_CAST (pad),
+              "volume", cs)));
+
+  /* set volume interpolation mode */
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+
+  tvcs = (GstTimedValueControlSource *) cs;
+  fail_unless (gst_timed_value_control_source_set (tvcs, start, start_value));
+  fail_unless (gst_timed_value_control_source_set (tvcs, end, end_value));
+  gst_object_unref (cs);
+}
+
+GST_START_TEST (test_sinkpad_property_controller)
+{
+  GstBus *bus;
+  GstMessage *msg;
+  GstElement *pipeline, *sink, *mix, *src1;
+  GstPad *srcpad, *sinkpad;
+  GError *error = NULL;
+  gchar *debug;
+
+  pipeline = gst_pipeline_new ("pipeline");
+  mix = gst_element_factory_make ("audiomixer", "audiomixer");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  src1 = gst_element_factory_make ("audiotestsrc", "src1");
+  g_object_set (src1, "num-buffers", 100, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src1, mix, sink, NULL);
+  fail_unless (gst_element_link (mix, sink));
+
+  srcpad = gst_element_get_static_pad (src1, "src");
+  sinkpad = gst_element_get_request_pad (mix, "sink_0");
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+  set_pad_volume_fade (sinkpad, 0, 0, 1.0, 2.0);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_ERROR:
+      gst_message_parse_error (msg, &error, &debug);
+      g_printerr ("ERROR from element %s: %s\n",
+          GST_OBJECT_NAME (msg->src), error->message);
+      g_printerr ("Debug info: %s\n", debug);
+      g_error_free (error);
+      g_free (debug);
+      break;
+    case GST_MESSAGE_EOS:
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+  gst_message_unref (msg);
+  g_object_unref (bus);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 audiomixer_suite (void)
 {
@@ -1859,6 +1934,7 @@ audiomixer_suite (void)
   tcase_add_test (tc_chain, test_sync_discont);
   tcase_add_test (tc_chain, test_sync_unaligned);
   tcase_add_test (tc_chain, test_segment_base_handling);
+  tcase_add_test (tc_chain, test_sinkpad_property_controller);
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
