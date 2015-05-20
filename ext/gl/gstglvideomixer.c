@@ -628,7 +628,7 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mix);
   GstVideoAggregatorPad *vagg_pad = GST_VIDEO_AGGREGATOR_PAD (mix_pad);
   gint pad_width, pad_height;
-  gint dar_n, dar_d;
+  guint dar_n, dar_d;
 
   pad_width =
       mix_pad->width <=
@@ -637,21 +637,22 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
       mix_pad->height <=
       0 ? GST_VIDEO_INFO_HEIGHT (&vagg_pad->info) : mix_pad->height;
 
-  gst_util_fraction_multiply (GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
+  gst_video_calculate_display_ratio (&dar_n, &dar_d, pad_width, pad_height,
+      GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
       GST_VIDEO_INFO_PAR_D (&vagg_pad->info),
-      GST_VIDEO_INFO_PAR_D (&vagg->info), GST_VIDEO_INFO_PAR_N (&vagg->info),
-      &dar_n, &dar_d);
+      GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info)
+      );
   GST_LOG_OBJECT (mix_pad, "scaling %ux%u by %u/%u (%u/%u / %u/%u)", pad_width,
       pad_height, dar_n, dar_d, GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
       GST_VIDEO_INFO_PAR_D (&vagg_pad->info),
       GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info));
 
   if (pad_height % dar_n == 0) {
-    pad_height = gst_util_uint64_scale_int (pad_width, dar_n, dar_d);
+    pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
   } else if (pad_width % dar_d == 0) {
-    pad_width = gst_util_uint64_scale_int (pad_height, dar_d, dar_n);
+    pad_height = gst_util_uint64_scale_int (pad_width, dar_d, dar_n);
   } else {
-    pad_height = gst_util_uint64_scale_int (pad_width, dar_n, dar_d);
+    pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
   }
 
   if (width)
