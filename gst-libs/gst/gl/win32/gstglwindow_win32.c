@@ -26,8 +26,6 @@
 #include "gstglwindow_win32.h"
 #include "win32_message_source.h"
 
-#define WM_GST_GL_WINDOW_QUIT (WM_APP+1)
-
 LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
 LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
@@ -71,6 +69,7 @@ static void gst_gl_window_win32_send_message_async (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 gboolean gst_gl_window_win32_open (GstGLWindow * window, GError ** error);
 void gst_gl_window_win32_close (GstGLWindow * window);
+static void release_parent_win_id (GstGLWindowWin32 * window_win32);
 
 static void
 gst_gl_window_win32_finalize (GObject * object)
@@ -161,9 +160,21 @@ gst_gl_window_win32_close (GstGLWindow * window)
 {
   GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
 
+  release_parent_win_id (window_win32);
+
+  if (window_win32->internal_win_id) {
+    RemoveProp (window_win32->internal_win_id, "gl_window");
+    if (!DestroyWindow (window_win32->internal_win_id))
+      GST_WARNING ("failed to destroy window %" G_GUINTPTR_FORMAT
+          ", 0x%x", (guintptr) window_win32->internal_win_id,
+          (unsigned int) GetLastError ());
+  }
+
   g_source_destroy (window_win32->msg_source);
   g_source_unref (window_win32->msg_source);
   window_win32->msg_source = NULL;
+
+  window_win32->is_closed = TRUE;
 }
 
 static void
@@ -204,6 +215,28 @@ set_parent_win_id (GstGLWindowWin32 * window_win32)
       SWP_FRAMECHANGED | SWP_NOACTIVATE);
   MoveWindow (window_win32->internal_win_id, rect.left, rect.top, rect.right,
       rect.bottom, FALSE);
+}
+
+static void
+release_parent_win_id (GstGLWindowWin32 * window_win32)
+{
+  WNDPROC parent_proc;
+
+  if (!window_win32->parent_win_id)
+    return;
+
+  parent_proc = GetProp (window_win32->parent_win_id, "gl_window_parent_proc");
+  if (!parent_proc)
+    return;
+
+  GST_DEBUG ("release parent %" G_GUINTPTR_FORMAT,
+      (guintptr) window_win32->parent_win_id);
+
+  SetWindowLongPtr (window_win32->parent_win_id, GWLP_WNDPROC,
+      (LONG_PTR) parent_proc);
+  SetParent (window_win32->internal_win_id, NULL);
+
+  RemoveProp (window_win32->parent_win_id, "gl_window_parent_proc");
 }
 
 gboolean
@@ -304,7 +337,6 @@ static void
 gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
 {
   GstGLWindowWin32 *window_win32;
-  HWND parent_id;
 
   window_win32 = GST_GL_WINDOW_WIN32 (window);
 
@@ -313,27 +345,12 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
     return;
   }
 
-  /* retrieve parent if previously set */
-  parent_id = window_win32->parent_win_id;
-
   if (window_win32->visible) {
     ShowWindow (window_win32->internal_win_id, SW_HIDE);
     window_win32->visible = FALSE;
   }
 
-  if (parent_id) {
-    WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
-
-    GST_DEBUG ("release parent %" G_GUINTPTR_FORMAT, (guintptr) parent_id);
-
-    g_return_if_fail (parent_proc);
-
-    SetWindowLongPtr (parent_id, GWLP_WNDPROC, (LONG_PTR) parent_proc);
-    SetParent (window_win32->internal_win_id, NULL);
-
-    RemoveProp (parent_id, "gl_window_parent_proc");
-  }
-
+  release_parent_win_id (window_win32);
   window_win32->parent_win_id = (HWND) id;
   set_parent_win_id (window_win32);
 }
@@ -398,18 +415,11 @@ gst_gl_window_win32_run (GstGLWindow * window)
 static void
 gst_gl_window_win32_quit (GstGLWindow * window)
 {
-  GstGLWindowWin32 *window_win32;
+  GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
 
-  window_win32 = GST_GL_WINDOW_WIN32 (window);
+
   window_win32->priv->thread = NULL;
-
-  if (window_win32 && window_win32->internal_win_id) {
-    LRESULT res =
-        PostMessage (window_win32->internal_win_id, WM_GST_GL_WINDOW_QUIT,
-        (WPARAM) 0, (LPARAM) 0);
-    GST_DEBUG ("end loop requested");
-    g_return_if_fail (SUCCEEDED (res));
-  }
+  g_main_loop_quit (window_win32->loop);
 }
 
 typedef struct _GstGLMessage
@@ -513,42 +523,6 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         if (window->close)
           window->close (window->close_data);
-        break;
-      }
-      case WM_GST_GL_WINDOW_QUIT:
-      {
-        HWND parent_id = 0;
-
-        GST_TRACE ("WM_GST_GL_WINDOW_QUIT");
-
-        parent_id = window_win32->parent_win_id;
-        if (parent_id) {
-          WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
-
-          g_assert (parent_proc);
-
-          SetWindowLongPtr (parent_id, GWLP_WNDPROC, (LONG_PTR) parent_proc);
-          SetParent (hWnd, NULL);
-
-          RemoveProp (parent_id, "gl_window_parent_proc");
-        }
-
-        window_win32->is_closed = TRUE;
-        RemoveProp (hWnd, "gl_window");
-
-        if (window_win32->internal_win_id) {
-          if (!DestroyWindow (window_win32->internal_win_id))
-            GST_WARNING ("failed to destroy window %" G_GUINTPTR_FORMAT
-                ", 0x%x", (guintptr) hWnd, (unsigned int) GetLastError ());
-        }
-
-        PostQuitMessage (0);
-        break;
-      }
-      case WM_QUIT:
-      {
-        if (window_win32->loop)
-          g_main_loop_quit (window_win32->loop);
         break;
       }
       case WM_CAPTURECHANGED:
