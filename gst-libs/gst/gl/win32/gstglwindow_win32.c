@@ -166,6 +166,46 @@ gst_gl_window_win32_close (GstGLWindow * window)
   window_win32->msg_source = NULL;
 }
 
+static void
+set_parent_win_id (GstGLWindowWin32 * window_win32)
+{
+  WNDPROC window_parent_proc;
+  RECT rect;
+
+  if (!window_win32->parent_win_id) {
+    /* no parent so the internal window needs borders and system menu */
+    SetWindowLongPtr (window_win32->internal_win_id, GWL_STYLE,
+        WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW);
+    return;
+  }
+
+  window_parent_proc =
+      (WNDPROC) GetWindowLongPtr (window_win32->parent_win_id, GWLP_WNDPROC);
+
+  GST_DEBUG ("set parent %" G_GUINTPTR_FORMAT,
+      (guintptr) window_win32->parent_win_id);
+
+  SetProp (window_win32->parent_win_id, "gl_window_id",
+      window_win32->internal_win_id);
+  SetProp (window_win32->parent_win_id, "gl_window_parent_proc",
+      (WNDPROC) window_parent_proc);
+  SetWindowLongPtr (window_win32->parent_win_id, GWLP_WNDPROC,
+      (LONG_PTR) sub_class_proc);
+
+  SetWindowLongPtr (window_win32->internal_win_id, GWL_STYLE,
+      WS_CHILD | WS_MAXIMIZE);
+  SetParent (window_win32->internal_win_id, window_win32->parent_win_id);
+
+  /* take changes into account: SWP_FRAMECHANGED */
+  GetClientRect (window_win32->parent_win_id, &rect);
+  SetWindowPos (window_win32->internal_win_id, HWND_TOP, rect.left, rect.top,
+      rect.right, rect.bottom,
+      SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+      SWP_FRAMECHANGED | SWP_NOACTIVATE);
+  MoveWindow (window_win32->internal_win_id, rect.left, rect.top, rect.right,
+      rect.bottom, FALSE);
+}
+
 gboolean
 gst_gl_window_win32_create_window (GstGLWindowWin32 * window_win32,
     GError ** error)
@@ -241,6 +281,9 @@ gst_gl_window_win32_create_window (GstGLWindowWin32 * window_win32,
   ShowCursor (TRUE);
 
   GST_LOG ("Created a win32 window");
+
+  set_parent_win_id (window_win32);
+
   return TRUE;
 
 failure:
@@ -290,36 +333,9 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
 
     RemoveProp (parent_id, "gl_window_parent_proc");
   }
-  //not 0
-  if (id) {
-    WNDPROC window_parent_proc =
-        (WNDPROC) GetWindowLongPtr ((HWND) id, GWLP_WNDPROC);
-    RECT rect;
 
-    GST_DEBUG ("set parent %" G_GUINTPTR_FORMAT, id);
-
-    SetProp ((HWND) id, "gl_window_id", window_win32->internal_win_id);
-    SetProp ((HWND) id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
-    SetWindowLongPtr ((HWND) id, GWLP_WNDPROC, (LONG_PTR) sub_class_proc);
-
-    SetWindowLongPtr (window_win32->internal_win_id, GWL_STYLE,
-        WS_CHILD | WS_MAXIMIZE);
-    SetParent (window_win32->internal_win_id, (HWND) id);
-
-    /* take changes into account: SWP_FRAMECHANGED */
-    GetClientRect ((HWND) id, &rect);
-    SetWindowPos (window_win32->internal_win_id, HWND_TOP, rect.left, rect.top,
-        rect.right, rect.bottom,
-        SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
-        SWP_FRAMECHANGED | SWP_NOACTIVATE);
-    MoveWindow (window_win32->internal_win_id, rect.left, rect.top, rect.right,
-        rect.bottom, FALSE);
-  } else {
-    /* no parent so the internal window needs borders and system menu */
-    SetWindowLongPtr (window_win32->internal_win_id, GWL_STYLE,
-        WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW);
-  }
   window_win32->parent_win_id = (HWND) id;
+  set_parent_win_id (window_win32);
 }
 
 static void
