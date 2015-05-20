@@ -6,6 +6,11 @@
     <title>GStreamer VA-API Plugins @GST_API_VERSION@ Library Reference Manual</title>
   </bookinfo>
 
+  <para>
+    To ease the creation of plugins, a Gstreamer-oriented library was created,
+    which wraps <ulink rule="online-location" url="https://wiki.freedesktop.org/www/Software/vaapi/">VA-API</ulink>.
+  </para>
+
   <chapter>
     <title>gst-plugins-vaapi Library</title>
     <xi:include href="xml/videoformat.xml"/>
