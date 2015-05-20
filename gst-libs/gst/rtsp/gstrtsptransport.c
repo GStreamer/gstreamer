@@ -52,6 +52,7 @@
 #include <stdlib.h>
 
 #include "gstrtsptransport.h"
+#include "gstrtsp-enumtypes.h"
 
 #define MAX_MANAGERS	2
 
@@ -118,26 +119,6 @@ static const RTSPProfileMap profiles[] = {
   {NULL, GST_RTSP_PROFILE_UNKNOWN}
 };
 
-GType
-gst_rtsp_profile_get_type (void)
-{
-  static volatile gsize rtsp_profile_type = 0;
-  static const GFlagsValue rtsp_profile[] = {
-    {GST_RTSP_PROFILE_AVP, "GST_RTSP_PROFILE_AVP", "avp"},
-    {GST_RTSP_PROFILE_SAVP, "GST_RTSP_PROFILE_SAVP", "savp"},
-    {GST_RTSP_PROFILE_AVPF, "GST_RTSP_PROFILE_AVPF", "avpf"},
-    {GST_RTSP_PROFILE_SAVPF, "GST_RTSP_PROFILE_SAVPF", "savpf"},
-    {0, NULL, NULL},
-  };
-
-  if (g_once_init_enter (&rtsp_profile_type)) {
-    GType tmp = g_flags_register_static ("GstRTSPProfile", rtsp_profile);
-    g_once_init_leave (&rtsp_profile_type, tmp);
-  }
-
-  return (GType) rtsp_profile_type;
-}
-
 typedef struct
 {
   const gchar *name;
@@ -150,28 +131,6 @@ static const RTSPLTransMap ltrans[] = {
   {"tcp", GST_RTSP_LOWER_TRANS_TCP},
   {NULL, GST_RTSP_LOWER_TRANS_UNKNOWN}
 };
-
-GType
-gst_rtsp_lower_trans_get_type (void)
-{
-  static volatile gsize rtsp_lower_trans_type = 0;
-  static const GFlagsValue rtsp_lower_trans[] = {
-    {GST_RTSP_LOWER_TRANS_UDP, "GST_RTSP_LOWER_TRANS_UDP", "udp-unicast"},
-    {GST_RTSP_LOWER_TRANS_UDP_MCAST, "GST_RTSP_LOWER_TRANS_UDP_MCAST",
-        "udp-multicast"},
-    {GST_RTSP_LOWER_TRANS_TCP, "GST_RTSP_LOWER_TRANS_TCP", "tcp"},
-    {GST_RTSP_LOWER_TRANS_HTTP, "GST_RTSP_LOWER_TRANS_HTTP", "http"},
-    {GST_RTSP_LOWER_TRANS_TLS, "GST_RTSP_LOWER_TRANS_TLS", "tls"},
-    {0, NULL, NULL},
-  };
-
-  if (g_once_init_enter (&rtsp_lower_trans_type)) {
-    GType tmp = g_flags_register_static ("GstRTSPLowerTrans", rtsp_lower_trans);
-    g_once_init_leave (&rtsp_lower_trans_type, tmp);
-  }
-
-  return (GType) rtsp_lower_trans_type;
-}
 
 #define RTSP_TRANSPORT_PARAMETER_IS_UNIQUE(param) \
 G_STMT_START {                                    \

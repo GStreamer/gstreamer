@@ -80,9 +80,6 @@ typedef enum {
   GST_RTSP_PROFILE_SAVPF   = (1 << 3),
 } GstRTSPProfile;
 
-#define GST_TYPE_RTSP_PROFILE (gst_rtsp_profile_get_type())
-GType gst_rtsp_profile_get_type (void);
-
 /**
  * GstRTSPLowerTrans:
  * @GST_RTSP_LOWER_TRANS_UNKNOWN: invalid transport flag
@@ -102,9 +99,6 @@ typedef enum {
   GST_RTSP_LOWER_TRANS_HTTP      = (1 << 4),
   GST_RTSP_LOWER_TRANS_TLS       = (1 << 5)
 } GstRTSPLowerTrans;
-
-#define GST_TYPE_RTSP_LOWER_TRANS (gst_rtsp_lower_trans_get_type())
-GType gst_rtsp_lower_trans_get_type (void);
 
 typedef struct _GstRTSPRange GstRTSPRange;
 typedef struct _GstRTSPTransport GstRTSPTransport;
