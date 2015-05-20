@@ -1667,6 +1667,24 @@ _serialize_common_stream_info (GstDiscovererStreamInfo * sinfo,
 }
 
 static GVariant *
+_serialize_info (GstDiscovererInfo * info, GstDiscovererSerializeFlags flags)
+{
+  gchar *tags_str = NULL;
+  GVariant *ret;
+
+  if (info->tags && (flags & GST_DISCOVERER_SERIALIZE_TAGS))
+    tags_str = gst_tag_list_to_string (info->tags);
+
+  ret =
+      g_variant_new ("(mstbms)", info->uri, info->duration, info->seekable,
+      tags_str);
+
+  g_free (tags_str);
+
+  return ret;
+}
+
+static GVariant *
 _serialize_audio_stream_info (GstDiscovererAudioInfo * ainfo)
 {
   return g_variant_new ("(uuuuums)",
@@ -1768,6 +1786,23 @@ _maybe_get_string_from_tuple (GVariant * tuple, guint index)
   }
 
   return ret;
+}
+
+static void
+_parse_info (GstDiscovererInfo * info, GVariant * info_variant)
+{
+  const gchar *str;
+
+  str = _maybe_get_string_from_tuple (info_variant, 0);
+  if (str)
+    info->uri = g_strdup (str);
+
+  GET_FROM_TUPLE (info_variant, uint64, 1, &info->duration);
+  GET_FROM_TUPLE (info_variant, boolean, 2, &info->seekable);
+
+  str = _maybe_get_string_from_tuple (info_variant, 3);
+  if (str)
+    info->tags = gst_tag_list_new_from_string (str);
 }
 
 static void
@@ -2151,11 +2186,15 @@ gst_discoverer_info_to_variant (GstDiscovererInfo * info,
     GstDiscovererSerializeFlags flags)
 {
   /* FIXME: implement TOC support */
+  GVariant *stream_variant;
   GVariant *variant;
   GstDiscovererStreamInfo *sinfo = gst_discoverer_info_get_stream_info (info);
   GVariant *wrapper;
 
-  variant = gst_discoverer_info_to_variant_recurse (sinfo, flags);
+  stream_variant = gst_discoverer_info_to_variant_recurse (sinfo, flags);
+  variant =
+      g_variant_new ("(vv)", _serialize_info (info, flags), stream_variant);
+
   /* Returning a wrapper implies some small overhead, but simplifies 
    * deserializing from bytes */
   wrapper = g_variant_new_variant (variant);
@@ -2179,9 +2218,17 @@ GstDiscovererInfo *
 gst_discoverer_info_from_variant (GVariant * variant)
 {
   GstDiscovererInfo *info = g_object_new (GST_TYPE_DISCOVERER_INFO, NULL);
-  GVariant *wrapped = g_variant_get_variant (variant);
+  GVariant *info_variant = g_variant_get_variant (variant);
+  GVariant *info_specific_variant;
+  GVariant *wrapped;
 
+  GET_FROM_TUPLE (info_variant, variant, 0, &info_specific_variant);
+  GET_FROM_TUPLE (info_variant, variant, 1, &wrapped);
+
+  _parse_info (info, info_specific_variant);
   _parse_discovery (wrapped, info);
+  g_variant_unref (info_specific_variant);
+  g_variant_unref (info_variant);
 
   return info;
 }
