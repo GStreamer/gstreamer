@@ -45,7 +45,9 @@ if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstRtp-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstrtpinclude_HEADERS))
+gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstrtpinclude_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstrtp_@GST_API_VERSION@_la_SOURCES))
+gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstrtp_@GST_API_VERSION@_la_SOURCES))
 
 GstRtp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtp-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" GI_SCANNER_DISABLE_CACHE=yes\
@@ -55,6 +57,7 @@ GstRtp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtp-@GST_API_VERSIO
 		--strip-prefix=Gst \
 		--warn-all \
 		--c-include "gst/rtp/rtp.h" \
+		-I$(top_builddir)/gst-libs \
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
