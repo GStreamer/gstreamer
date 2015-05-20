@@ -2086,6 +2086,18 @@ gst_value_deserialize_structure (GValue * dest, const gchar * s)
   return FALSE;
 }
 
+static gboolean
+gst_value_compare_structure (const GValue * value1, const GValue * value2)
+{
+  GstStructure *structure1 = GST_STRUCTURE (g_value_get_boxed (value1));
+  GstStructure *structure2 = GST_STRUCTURE (g_value_get_boxed (value2));
+
+  if (gst_structure_is_equal (structure1, structure2))
+    return GST_VALUE_EQUAL;
+
+  return GST_VALUE_UNORDERED;
+}
+
 /*******************
  * GstCapsFeatures *
  *******************/
@@ -6189,9 +6201,9 @@ _priv_gst_value_initialize (void)
   REGISTER_SERIALIZATION (G_TYPE_DATE, date);
   REGISTER_SERIALIZATION (gst_date_time_get_type (), date_time);
   REGISTER_SERIALIZATION (gst_bitmask_get_type (), bitmask);
+  REGISTER_SERIALIZATION (gst_structure_get_type (), structure);
 
   REGISTER_SERIALIZATION_NO_COMPARE (gst_segment_get_type (), segment);
-  REGISTER_SERIALIZATION_NO_COMPARE (gst_structure_get_type (), structure);
   REGISTER_SERIALIZATION_NO_COMPARE (gst_caps_features_get_type (),
       caps_features);
 
