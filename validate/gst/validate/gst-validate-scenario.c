@@ -999,13 +999,13 @@ _get_position (GstValidateScenario * scenario,
 }
 
 static gboolean
-_check_position (GstValidateScenario * scenario, GstValidateAction * act)
+_check_position (GstValidateScenario * scenario, GstValidateAction * act,
+    GstClockTime * position)
 {
   GstQuery *query;
   gdouble rate;
 
   GstClockTime start_with_tolerance, stop_with_tolerance;
-  GstClockTime position = GST_CLOCK_TIME_NONE;
   GstValidateScenarioPrivate *priv = scenario->priv;
 
   if (scenario->pipeline == NULL) {
@@ -1014,11 +1014,11 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act)
     return TRUE;
   }
 
-  if (!_get_position (scenario, act, &position))
+  if (!_get_position (scenario, act, position))
     return FALSE;
 
   GST_DEBUG_OBJECT (scenario, "Current position: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (position));
+      GST_TIME_ARGS (*position));
 
   /* Check if playback is within seek segment */
   start_with_tolerance =
@@ -1028,13 +1028,13 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act)
       priv->seek_pos_tol : -1;
 
   if ((GST_CLOCK_TIME_IS_VALID (stop_with_tolerance)
-          && position > stop_with_tolerance)
+          && *position > stop_with_tolerance)
       || (priv->seek_flags & GST_SEEK_FLAG_ACCURATE
-          && position < start_with_tolerance)) {
+          && *position < start_with_tolerance)) {
 
     GST_VALIDATE_REPORT (scenario, QUERY_POSITION_OUT_OF_SEGMENT,
         "Current position %" GST_TIME_FORMAT " not in the expected range [%"
-        GST_TIME_FORMAT " -- %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
+        GST_TIME_FORMAT " -- %" GST_TIME_FORMAT, GST_TIME_ARGS (*position),
         GST_TIME_ARGS (start_with_tolerance),
         GST_TIME_ARGS (stop_with_tolerance));
   }
@@ -1045,16 +1045,16 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act)
   gst_query_unref (query);
 
   if (priv->seeked_in_pause && priv->seek_flags & GST_SEEK_FLAG_ACCURATE) {
-    if ((rate > 0 && (position >= priv->segment_start + priv->seek_pos_tol ||
-                position < MIN (0,
+    if ((rate > 0 && (*position >= priv->segment_start + priv->seek_pos_tol ||
+                *position < MIN (0,
                     ((gint64) priv->segment_start - priv->seek_pos_tol))))
-        || (rate < 0 && (position > priv->segment_start + priv->seek_pos_tol
-                || position < MIN (0,
+        || (rate < 0 && (*position > priv->segment_start + priv->seek_pos_tol
+                || *position < MIN (0,
                     (gint64) priv->segment_start - priv->seek_pos_tol)))) {
       GST_VALIDATE_REPORT (scenario, EVENT_SEEK_RESULT_POSITION_WRONG,
           "Reported position after accurate seek in PAUSED state should be exactlty"
           " what the user asked for %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (position), GST_TIME_ARGS (priv->segment_start));
+          GST_TIME_ARGS (*position), GST_TIME_ARGS (priv->segment_start));
     }
   }
 
@@ -1341,7 +1341,7 @@ execute_next_action (GstValidateScenario * scenario)
 {
   GList *tmp;
   gdouble rate = 1.0;
-  gint64 position = -1;
+  GstClockTime position = -1;
   GstValidateAction *act = NULL;
   GstValidateActionType *type;
 
@@ -1392,7 +1392,7 @@ execute_next_action (GstValidateScenario * scenario)
     }
   }
 
-  if (!_check_position (scenario, act))
+  if (!_check_position (scenario, act, &position))
     return G_SOURCE_CONTINUE;
 
   if (!_should_execute_action (scenario, act, position, rate)) {
