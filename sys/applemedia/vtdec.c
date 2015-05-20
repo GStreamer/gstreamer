@@ -87,7 +87,8 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, stream-format=avc, alignment=au;"
+    GST_STATIC_CAPS ("video/x-h264, stream-format=avc, alignment=au,"
+        " width=(int)[1, MAX], height=(int)[1, MAX];"
         "video/mpeg, mpegversion=2;" "image/jpeg")
     );
 
