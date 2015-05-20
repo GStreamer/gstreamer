@@ -458,6 +458,8 @@ LRESULT CALLBACK
 window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   GstGLWindowWin32 *window_win32;
+  LRESULT ret = 0;
+
   if (uMsg == WM_CREATE) {
     window_win32 =
         GST_GL_WINDOW_WIN32 (((LPCREATESTRUCT) lParam)->lpCreateParams);
@@ -471,7 +473,6 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     ReleaseDC (hWnd, window_win32->device);
 
     SetProp (hWnd, "gl_window", window_win32);
-    return 0;
   } else if (GetProp (hWnd, "gl_window")) {
     GstGLWindow *window;
     GstGLContext *context;
@@ -558,23 +559,26 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
       }
       case WM_ERASEBKGND:
-        return TRUE;
+      {
+        ret = TRUE;
+        break;
+      }
       default:
       {
         /* transmit messages to the parrent (ex: mouse/keyboard input) */
         HWND parent_id = window_win32->parent_win_id;
         if (parent_id)
           PostMessage (parent_id, uMsg, wParam, lParam);
-        return DefWindowProc (hWnd, uMsg, wParam, lParam);
+        ret = DefWindowProc (hWnd, uMsg, wParam, lParam);
       }
     }
 
     gst_object_unref (context);
-
-    return 0;
   } else {
-    return DefWindowProc (hWnd, uMsg, wParam, lParam);
+    ret = DefWindowProc (hWnd, uMsg, wParam, lParam);
   }
+
+  return ret;
 }
 
 LRESULT FAR PASCAL
