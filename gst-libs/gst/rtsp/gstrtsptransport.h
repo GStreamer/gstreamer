@@ -72,6 +72,8 @@ typedef enum {
  *
  * The transfer profile to use.
  */
+/* FIXME 2.0: This should probably be an enum, not flags and maybe be replaced
+ * by GstRTPTransport */
 typedef enum {
   GST_RTSP_PROFILE_UNKNOWN =  0,
   GST_RTSP_PROFILE_AVP     = (1 << 0),
