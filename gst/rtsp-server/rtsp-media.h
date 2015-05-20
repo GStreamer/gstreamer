@@ -18,8 +18,7 @@
  */
 
 #include <gst/gst.h>
-#include <gst/rtsp/gstrtsprange.h>
-#include <gst/rtsp/gstrtspurl.h>
+#include <gst/rtsp/rtsp.h>
 #include <gst/net/gstnet.h>
 
 #ifndef __GST_RTSP_MEDIA_H__
