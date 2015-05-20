@@ -2,6 +2,7 @@ libgstrtpincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/rtp
 
 libgstrtpinclude_HEADERS = \
 			   rtp.h \
+			   gstrtpdefs.h \
 			   gstrtpbuffer.h \
 			   gstrtcpbuffer.h \
 			   gstrtppayloads.h \
@@ -20,9 +21,25 @@ libgstrtp_@GST_API_VERSION@_la_SOURCES = gstrtpbuffer.c \
 				gstrtpbasepayload.c \
 				gstrtpbasedepayload.c
 
+built_sources = gstrtp-enumtypes.c
+built_headers = gstrtp-enumtypes.h
+
 libgstrtp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtp_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
 libgstrtp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+
+nodist_libgstrtp_@GST_API_VERSION@_la_SOURCES = $(built_sources)
+nodist_libgstrtpinclude_HEADERS = gstrtp-enumtypes.h
+
+BUILT_SOURCES = $(built_headers) $(built_sources)
+CLEANFILES = $(BUILT_SOURCES)
+
+glib_gen_prefix = __gst_rtp
+glib_enum_define = gst_rtp
+glib_enum_headers = $(libgstrtpinclude_HEADERS)
+glib_gen_basename = gstrtp
+
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstRtp-@GST_API_VERSION@.gir
