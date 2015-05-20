@@ -616,7 +616,7 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
 
   if (x265_param_default_preset (&encoder->x265param,
           x265_preset_names[encoder->speed_preset - 1],
-          x265_tune_names[encoder->tune]) < 0) {
+          x265_tune_names[encoder->tune - 1]) < 0) {
     GST_DEBUG_OBJECT (encoder, "preset or tune unrecognized");
     GST_OBJECT_UNLOCK (encoder);
     return FALSE;
@@ -858,7 +858,7 @@ gst_x265_enc_set_latency (GstX265Enc * encoder)
 
   /* FIXME get a real value from the encoder, this is currently not exposed */
   if (encoder->tune > 0 && encoder->tune <= G_N_ELEMENTS (x265_tune_names) &&
-      strcmp (x265_tune_names[encoder->tune + 1], "zerolatency") == 0)
+      strcmp (x265_tune_names[encoder->tune - 1], "zerolatency") == 0)
     max_delayed_frames = 0;
   else
     max_delayed_frames = 5;
