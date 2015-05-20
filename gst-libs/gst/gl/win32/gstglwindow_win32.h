@@ -50,6 +50,10 @@ struct _GstGLWindowWin32 {
   gboolean is_closed;
   gboolean visible;
 
+  GSource *msg_source;
+  GMainContext *main_context;
+  GMainLoop *loop;
+
   /*< private >*/
   GstGLWindowWin32Private *priv;
 
