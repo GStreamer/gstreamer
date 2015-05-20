@@ -52,7 +52,10 @@ EXPORTS
 	gst_rtcp_packet_sr_set_sender_info
 	gst_rtcp_sdes_name_to_type
 	gst_rtcp_sdes_type_to_name
+	gst_rtcp_type_get_type
 	gst_rtcp_unix_to_ntp
+	gst_rtcpfb_type_get_type
+	gst_rtcpsdes_type_get_type
 	gst_rtp_base_audio_payload_flush
 	gst_rtp_base_audio_payload_get_adapter
 	gst_rtp_base_audio_payload_get_type
@@ -123,5 +126,7 @@ EXPORTS
 	gst_rtp_hdrext_get_ntp_64
 	gst_rtp_hdrext_set_ntp_56
 	gst_rtp_hdrext_set_ntp_64
+	gst_rtp_payload_get_type
 	gst_rtp_payload_info_for_name
 	gst_rtp_payload_info_for_pt
+	gst_rtp_profile_get_type
