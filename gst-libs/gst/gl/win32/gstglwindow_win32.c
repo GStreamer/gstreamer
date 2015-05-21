@@ -182,6 +182,7 @@ set_parent_win_id (GstGLWindowWin32 * window_win32)
     /* no parent so the internal window needs borders and system menu */
     SetWindowLongPtr (window_win32->internal_win_id, GWL_STYLE,
         WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW);
+    SetParent (window_win32->internal_win_id, NULL);
     return;
   }
 
@@ -229,7 +230,6 @@ release_parent_win_id (GstGLWindowWin32 * window_win32)
 
   SetWindowLongPtr (window_win32->parent_win_id, GWLP_WNDPROC,
       (LONG_PTR) parent_proc);
-  SetParent (window_win32->internal_win_id, NULL);
 
   RemoveProp (window_win32->parent_win_id, "gl_window_parent_proc");
 }
