@@ -252,11 +252,6 @@ _mixer_pad_get_output_size (GstCompositor * comp,
     *width = pad_width;
   if (height)
     *height = pad_height;
-
-  if (width)
-    *width = pad_width;
-  if (height)
-    *height = pad_height;
 }
 
 static gboolean
