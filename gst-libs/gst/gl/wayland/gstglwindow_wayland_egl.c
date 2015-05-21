@@ -32,6 +32,7 @@
 #include "../gstgl_fwd.h"
 #include <gst/gl/gstglcontext.h>
 
+#include "gstgldisplay_wayland.h"
 #include "gstglwindow_wayland_egl.h"
 
 const gchar *WlEGLErrorString ();
@@ -57,6 +58,7 @@ static gboolean gst_gl_window_wayland_egl_open (GstGLWindow * window,
     GError ** error);
 static guintptr gst_gl_window_wayland_egl_get_display (GstGLWindow * window);
 
+#if 0
 static void
 pointer_handle_enter (void *data, struct wl_pointer *pointer, uint32_t serial,
     struct wl_surface *surface, wl_fixed_t sx_w, wl_fixed_t sy_w)
@@ -188,7 +190,7 @@ seat_handle_capabilities (void *data, struct wl_seat *seat,
 static const struct wl_seat_listener seat_listener = {
   seat_handle_capabilities,
 };
-
+#endif
 static void
 handle_ping (void *data, struct wl_shell_surface *shell_surface,
     uint32_t serial)
@@ -229,11 +231,13 @@ static const struct wl_shell_surface_listener shell_surface_listener = {
 static gboolean
 create_surface (GstGLWindowWaylandEGL * window_egl)
 {
+  GstGLDisplayWayland *display =
+      GST_GL_DISPLAY_WAYLAND (GST_GL_WINDOW (window_egl)->display);
+
   window_egl->window.surface =
-      wl_compositor_create_surface (window_egl->display.compositor);
+      wl_compositor_create_surface (display->compositor);
   window_egl->window.shell_surface =
-      wl_shell_get_shell_surface (window_egl->display.shell,
-      window_egl->window.surface);
+      wl_shell_get_shell_surface (display->shell, window_egl->window.surface);
 
   wl_shell_surface_add_listener (window_egl->window.shell_surface,
       &shell_surface_listener, window_egl);
@@ -270,36 +274,6 @@ destroy_surface (GstGLWindowWaylandEGL * window_egl)
   if (window_egl->window.callback)
     wl_callback_destroy (window_egl->window.callback);
 }
-
-static void
-registry_handle_global (void *data, struct wl_registry *registry,
-    uint32_t name, const char *interface, uint32_t version)
-{
-  GstGLWindowWaylandEGL *window_egl = data;
-  struct display *d = &window_egl->display;
-
-  GST_TRACE_OBJECT (window_egl, "registry_handle_global with registry %p, "
-      "interface %s, version %u", registry, interface, version);
-
-  if (g_strcmp0 (interface, "wl_compositor") == 0) {
-    d->compositor =
-        wl_registry_bind (registry, name, &wl_compositor_interface, 1);
-  } else if (g_strcmp0 (interface, "wl_shell") == 0) {
-    d->shell = wl_registry_bind (registry, name, &wl_shell_interface, 1);
-  } else if (g_strcmp0 (interface, "wl_seat") == 0) {
-    d->seat = wl_registry_bind (registry, name, &wl_seat_interface, 1);
-    wl_seat_add_listener (d->seat, &seat_listener, window_egl);
-  } else if (g_strcmp0 (interface, "wl_shm") == 0) {
-    d->shm = wl_registry_bind (registry, name, &wl_shm_interface, 1);
-    d->cursor_theme = wl_cursor_theme_load (NULL, 32, d->shm);
-    d->default_cursor =
-        wl_cursor_theme_get_cursor (d->cursor_theme, "left_ptr");
-  }
-}
-
-static const struct wl_registry_listener registry_listener = {
-  registry_handle_global
-};
 
 static void
 gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
@@ -366,23 +340,6 @@ gst_gl_window_wayland_egl_close (GstGLWindow * window)
 
   destroy_surface (window_egl);
 
-  if (window_egl->display.cursor_surface)
-    wl_surface_destroy (window_egl->display.cursor_surface);
-
-  if (window_egl->display.cursor_theme)
-    wl_cursor_theme_destroy (window_egl->display.cursor_theme);
-
-  if (window_egl->display.shell)
-    wl_shell_destroy (window_egl->display.shell);
-
-  if (window_egl->display.compositor)
-    wl_compositor_destroy (window_egl->display.compositor);
-
-  if (window_egl->display.display) {
-    wl_display_flush (window_egl->display.display);
-    wl_display_disconnect (window_egl->display.display);
-  }
-
   g_source_destroy (window_egl->wl_source);
   g_source_unref (window_egl->wl_source);
   window_egl->wl_source = NULL;
@@ -391,37 +348,25 @@ gst_gl_window_wayland_egl_close (GstGLWindow * window)
 static gboolean
 gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
 {
+  GstGLDisplayWayland *display = GST_GL_DISPLAY_WAYLAND (window->display);
   GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
 
-  window_egl->display.display = wl_display_connect (NULL);
-  if (!window_egl->display.display) {
+  if (!display->display) {
     g_set_error (error, GST_GL_WINDOW_ERROR,
         GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
-        "Failed to connect to Wayland display server");
-    goto error;
+        "Failed to retreive Wayland display");
+    return FALSE;
   }
 
-  window_egl->display.registry =
-      wl_display_get_registry (window_egl->display.display);
-  wl_registry_add_listener (window_egl->display.registry, &registry_listener,
-      window_egl);
-
-  wl_display_dispatch (window_egl->display.display);
+  wl_display_roundtrip (display->display);
 
   create_surface (window_egl);
 
-  window_egl->display.cursor_surface =
-      wl_compositor_create_surface (window_egl->display.compositor);
-
-  window_egl->wl_source =
-      wayland_event_source_new (window_egl->display.display);
+  window_egl->wl_source = wayland_event_source_new (display->display);
 
   g_source_attach (window_egl->wl_source, window_egl->main_context);
 
   return TRUE;
-
-error:
-  return FALSE;
 }
 
 static void
@@ -546,9 +491,7 @@ gst_gl_window_wayland_egl_draw (GstGLWindow * window)
 static guintptr
 gst_gl_window_wayland_egl_get_display (GstGLWindow * window)
 {
-  GstGLWindowWaylandEGL *window_egl;
+  GstGLDisplayWayland *display = GST_GL_DISPLAY_WAYLAND (window->display);
 
-  window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-
-  return (guintptr) window_egl->display.display;
+  return (guintptr) display->display;
 }
