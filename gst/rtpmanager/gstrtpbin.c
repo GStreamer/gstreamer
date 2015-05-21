@@ -288,6 +288,7 @@ enum
 #define DEFAULT_RTCP_SYNC_INTERVAL   0
 #define DEFAULT_DO_SYNC_EVENT        FALSE
 #define DEFAULT_DO_RETRANSMISSION    FALSE
+#define DEFAULT_RTP_PROFILE          GST_RTP_PROFILE_AVPF
 
 enum
 {
@@ -304,7 +305,8 @@ enum
   PROP_BUFFER_MODE,
   PROP_USE_PIPELINE_CLOCK,
   PROP_DO_SYNC_EVENT,
-  PROP_DO_RETRANSMISSION
+  PROP_DO_RETRANSMISSION,
+  PROP_RTP_PROFILE
 };
 
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
@@ -621,7 +623,7 @@ create_session (GstRtpBin * rtpbin, gint id)
   /* configure SDES items */
   GST_OBJECT_LOCK (rtpbin);
   g_object_set (session, "sdes", rtpbin->sdes, "use-pipeline-clock",
-      rtpbin->use_pipeline_clock, NULL);
+      rtpbin->use_pipeline_clock, "rtp-profile", rtpbin->rtp_profile, NULL);
   GST_OBJECT_UNLOCK (rtpbin);
 
   /* provide clock_rate to the session manager when needed */
@@ -2125,6 +2127,18 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           DEFAULT_DO_RETRANSMISSION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpBin:rtp-profile:
+   *
+   * Sets the default RTP profile of newly created RTP sessions. The
+   * profile can be changed afterwards on a per-session basis.
+   */
+  g_object_class_install_property (gobject_class, PROP_RTP_PROFILE,
+      g_param_spec_enum ("rtp-profile", "RTP Profile",
+          "Default RTP profile of newly created sessions",
+          GST_TYPE_RTP_PROFILE, DEFAULT_RTP_PROFILE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -2187,6 +2201,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
   rtpbin->send_sync_event = DEFAULT_DO_SYNC_EVENT;
   rtpbin->do_retransmission = DEFAULT_DO_RETRANSMISSION;
+  rtpbin->rtp_profile = DEFAULT_RTP_PROFILE;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -2347,6 +2362,9 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin,
           "do-retransmission", value);
       break;
+    case PROP_RTP_PROFILE:
+      rtpbin->rtp_profile = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2408,6 +2426,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       GST_RTP_BIN_LOCK (rtpbin);
       g_value_set_boolean (value, rtpbin->do_retransmission);
       GST_RTP_BIN_UNLOCK (rtpbin);
+      break;
+    case PROP_RTP_PROFILE:
+      g_value_set_enum (value, rtpbin->rtp_profile);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
