@@ -62,6 +62,9 @@
 #if GST_GL_HAVE_WINDOW_X11
 #include <gst/gl/x11/gstgldisplay_x11.h>
 #endif
+#if GST_GL_HAVE_WINDOW_WAYLAND
+#include <gst/gl/wayland/gstgldisplay_wayland.h>
+#endif
 #if GST_GL_HAVE_PLATFORM_EGL
 #include <gst/gl/egl/gstgldisplay_egl.h>
 #include <gst/gl/egl/gsteglimagememory.h>
@@ -174,7 +177,7 @@ gst_gl_display_new (void)
 #endif
 #if GST_GL_HAVE_WINDOW_WAYLAND
   if (!display && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
-    display = g_object_new (GST_TYPE_GL_DISPLAY, NULL);
+    display = GST_GL_DISPLAY (gst_gl_display_wayland_new (NULL));
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL
   if (!display && (!platform_choice

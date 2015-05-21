@@ -3,10 +3,12 @@
 noinst_LTLIBRARIES = libgstgl-wayland.la
 
 libgstgl_wayland_la_SOURCES = \
+	gstgldisplay_wayland.c \
 	gstglwindow_wayland_egl.c \
 	wayland_event_source.c
 
 noinst_HEADERS = \
+	gstgldisplay_wayland.h \
 	gstglwindow_wayland_egl.h \
 	wayland_event_source.h
 
