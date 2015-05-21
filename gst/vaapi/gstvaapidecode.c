@@ -226,6 +226,22 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
     gst_caps_set_features (state->caps, 0, features);
   gst_caps_replace (&decode->srcpad_caps, state->caps);
   gst_video_codec_state_unref (state);
+
+  gint fps_n = GST_VIDEO_INFO_FPS_N (vi);
+  gint fps_d = GST_VIDEO_INFO_FPS_D (vi);
+  if (fps_n <= 0 || fps_d <= 0) {
+    GST_DEBUG_OBJECT (decode, "forcing 25/1 framerate for latency calculation");
+    fps_n = 1;
+    fps_d = 25;
+  }
+
+  /* For parsing/preparation purposes we'd need at least 1 frame
+   * latency in general, with perfectly known unit boundaries (NALU,
+   * AU), and up to 2 frames when we need to wait for the second frame
+   * start to determine the first frame is complete */
+  GstClockTime latency = gst_util_uint64_scale (2 * GST_SECOND, fps_d, fps_n);
+  gst_video_decoder_set_latency (vdec, latency, latency);
+
   return TRUE;
 }
 
