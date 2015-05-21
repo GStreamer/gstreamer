@@ -18,6 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 #include <gst/gst.h>
+#include <gst/rtp/rtp.h>
 
 /*
  * An RTP server
@@ -272,6 +273,7 @@ main (int argc, char **argv)
   gst_object_unref (bus);
 
   rtpBin = gst_element_factory_make ("rtpbin", NULL);
+  g_object_set (rtpBin, "rtp-profile", GST_RTP_PROFILE_AVPF, NULL);
 
   gst_bin_add (GST_BIN (pipe), rtpBin);
 

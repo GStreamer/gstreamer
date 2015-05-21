@@ -18,6 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 #include <gst/gst.h>
+#include <gst/rtp/rtp.h>
 #include <stdlib.h>
 
 /*
@@ -352,7 +353,8 @@ main (int argc, char **argv)
 
   rtpBin = gst_element_factory_make ("rtpbin", NULL);
   gst_bin_add (GST_BIN (pipe), rtpBin);
-  g_object_set (rtpBin, "latency", 200, "do-retransmission", TRUE, NULL);
+  g_object_set (rtpBin, "latency", 200, "do-retransmission", TRUE,
+      "rtp-profile", GST_RTP_PROFILE_AVPF, NULL);
 
   videoSession = make_video_session (0);
   audioSession = make_audio_session (1);

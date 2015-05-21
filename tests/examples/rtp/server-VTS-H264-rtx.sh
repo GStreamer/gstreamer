@@ -40,7 +40,7 @@ VRTPSINK="udpsink port=5000 host=$DEST ts-offset=$VOFFSET name=vrtpsink"
 VRTCPSINK="udpsink port=5001 host=$DEST sync=false async=false name=vrtcpsink"
 VRTCPSRC="udpsrc port=5005 name=vrtpsrc"
 
-gst-launch-1.0 -v rtpbin name=rtpbin \
+gst-launch-1.0 -v rtpbin name=rtpbin rtp-profile=avpf \
     $VSOURCE ! $VENC ! rtprtxqueue ! rtpbin.send_rtp_sink_0                               \
         rtpbin.send_rtp_src_0 ! identity drop-probability=0.1 ! $VRTPSINK                 \
         rtpbin.send_rtcp_src_0 ! $VRTCPSINK                                               \

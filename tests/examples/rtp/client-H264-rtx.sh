@@ -35,7 +35,7 @@ DEST=127.0.0.1
 
 LATENCY=200
 
-gst-launch-1.0 -v rtpbin name=rtpbin latency=$LATENCY do-retransmission=1           \
+gst-launch-1.0 -v rtpbin name=rtpbin rtp-profile=avpf latency=$LATENCY do-retransmission=1 \
     udpsrc caps=$VIDEO_CAPS port=5000 ! rtpbin.recv_rtp_sink_0                      \
       rtpbin. ! $VIDEO_DEC ! $VIDEO_SINK                                            \
     udpsrc port=5001 ! rtpbin.recv_rtcp_sink_0                                      \
