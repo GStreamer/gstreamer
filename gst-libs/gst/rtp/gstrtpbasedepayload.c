@@ -78,6 +78,8 @@ static void gst_rtp_base_depayload_get_property (GObject * object,
 
 static GstFlowReturn gst_rtp_base_depayload_chain (GstPad * pad,
     GstObject * parent, GstBuffer * in);
+static GstFlowReturn gst_rtp_base_depayload_chain_list (GstPad * pad,
+    GstObject * parent, GstBufferList * list);
 static gboolean gst_rtp_base_depayload_handle_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 
@@ -227,6 +229,8 @@ gst_rtp_base_depayload_init (GstRTPBaseDepayload * filter,
   g_return_if_fail (pad_template != NULL);
   filter->sinkpad = gst_pad_new_from_template (pad_template, "sink");
   gst_pad_set_chain_function (filter->sinkpad, gst_rtp_base_depayload_chain);
+  gst_pad_set_chain_list_function (filter->sinkpad,
+      gst_rtp_base_depayload_chain_list);
   gst_pad_set_event_function (filter->sinkpad,
       gst_rtp_base_depayload_handle_sink_event);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
@@ -342,11 +346,10 @@ caps_not_changed:
 }
 
 static GstFlowReturn
-gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
+gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
+    GstRTPBaseDepayloadClass * bclass, GstBuffer * in)
 {
-  GstRTPBaseDepayload *filter;
   GstRTPBaseDepayloadPrivate *priv;
-  GstRTPBaseDepayloadClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
   GstClockTime pts, dts;
@@ -356,7 +359,6 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   gint gap;
   GstRTPBuffer rtp = { NULL };
 
-  filter = GST_RTP_BASE_DEPAYLOAD (parent);
   priv = filter->priv;
 
   /* we must have a setcaps first */
@@ -440,8 +442,6 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
     filter->need_newsegment = FALSE;
   }
 
-  bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (filter);
-
   if (G_UNLIKELY (bclass->process == NULL))
     goto no_process;
 
@@ -450,7 +450,6 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   if (out_buf) {
     ret = gst_rtp_base_depayload_push (filter, out_buf);
   }
-  gst_buffer_unref (in);
 
   return ret;
 
@@ -466,7 +465,6 @@ not_negotiated:
             "element before the depayloader and setting the 'caps' property "
             "on that. Also see http://cgit.freedesktop.org/gstreamer/"
             "gst-plugins-good/tree/gst/rtp/README"));
-    gst_buffer_unref (in);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 invalid_buffer:
@@ -474,13 +472,11 @@ invalid_buffer:
     /* this is not fatal but should be filtered earlier */
     GST_ELEMENT_WARNING (filter, STREAM, DECODE, (NULL),
         ("Received invalid RTP payload, dropping"));
-    gst_buffer_unref (in);
     return GST_FLOW_OK;
   }
 dropping:
   {
     GST_WARNING_OBJECT (filter, "%d <= 100, dropping old packet", gap);
-    gst_buffer_unref (in);
     return GST_FLOW_OK;
   }
 no_process:
@@ -488,9 +484,66 @@ no_process:
     /* this is not fatal but should be filtered earlier */
     GST_ELEMENT_ERROR (filter, STREAM, NOT_IMPLEMENTED, (NULL),
         ("The subclass does not have a process method"));
-    gst_buffer_unref (in);
     return GST_FLOW_ERROR;
   }
+}
+
+static GstFlowReturn
+gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
+{
+  GstRTPBaseDepayloadClass *bclass;
+  GstRTPBaseDepayload *basedepay;
+  GstFlowReturn flow_ret;
+
+  basedepay = GST_RTP_BASE_DEPAYLOAD_CAST (parent);
+
+  bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (basedepay);
+
+  flow_ret = gst_rtp_base_depayload_handle_buffer (basedepay, bclass, in);
+
+  gst_buffer_unref (in);
+
+  return flow_ret;
+}
+
+static GstFlowReturn
+gst_rtp_base_depayload_chain_list (GstPad * pad, GstObject * parent,
+    GstBufferList * list)
+{
+  GstRTPBaseDepayloadClass *bclass;
+  GstRTPBaseDepayload *basedepay;
+  GstFlowReturn flow_ret;
+  GstBuffer *buffer;
+  guint i, len;
+
+  basedepay = GST_RTP_BASE_DEPAYLOAD_CAST (parent);
+
+  bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (basedepay);
+
+  flow_ret = GST_FLOW_OK;
+
+  /* chain each buffer in list individually */
+  len = gst_buffer_list_length (list);
+
+  if (len == 0)
+    goto done;
+
+  for (i = 0; i < len; i++) {
+    buffer = gst_buffer_list_get (list, i);
+
+    /* Should we fix up any missing timestamps for list buffers here
+     * (e.g. set to first or previous timestamp in list) or just assume
+     * the's a jitterbuffer that will have done that for us? */
+    flow_ret = gst_rtp_base_depayload_handle_buffer (basedepay, bclass, buffer);
+    if (flow_ret != GST_FLOW_OK)
+      break;
+  }
+
+done:
+
+  gst_buffer_list_unref (list);
+
+  return flow_ret;
 }
 
 static gboolean

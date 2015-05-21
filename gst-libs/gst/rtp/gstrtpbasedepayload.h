@@ -36,9 +36,10 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_BASE_DEPAYLOAD))
 #define GST_IS_RTP_BASE_DEPAYLOAD_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_BASE_DEPAYLOAD))
+#define GST_RTP_BASE_DEPAYLOAD_CAST(obj) ((GstRTPBaseDepayload *)(obj))
 
-#define GST_RTP_BASE_DEPAYLOAD_SINKPAD(depayload) (GST_RTP_BASE_DEPAYLOAD (depayload)->sinkpad)
-#define GST_RTP_BASE_DEPAYLOAD_SRCPAD(depayload)  (GST_RTP_BASE_DEPAYLOAD (depayload)->srcpad)
+#define GST_RTP_BASE_DEPAYLOAD_SINKPAD(depayload) (GST_RTP_BASE_DEPAYLOAD_CAST (depayload)->sinkpad)
+#define GST_RTP_BASE_DEPAYLOAD_SRCPAD(depayload)  (GST_RTP_BASE_DEPAYLOAD_CAST (depayload)->srcpad)
 
 typedef struct _GstRTPBaseDepayload      GstRTPBaseDepayload;
 typedef struct _GstRTPBaseDepayloadClass GstRTPBaseDepayloadClass;
