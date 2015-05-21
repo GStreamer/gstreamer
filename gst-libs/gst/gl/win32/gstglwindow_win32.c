@@ -41,8 +41,6 @@ enum
 
 struct _GstGLWindowWin32Private
 {
-  GThread *thread;
-
   gint preferred_width;
   gint preferred_height;
 };
@@ -119,7 +117,6 @@ static void
 gst_gl_window_win32_init (GstGLWindowWin32 * window)
 {
   window->priv = GST_GL_WINDOW_WIN32_GET_PRIVATE (window);
-  window->priv->thread = NULL;
 
   window->main_context = g_main_context_new ();
   window->loop = g_main_loop_new (window->main_context, FALSE);
@@ -173,8 +170,6 @@ gst_gl_window_win32_close (GstGLWindow * window)
   g_source_destroy (window_win32->msg_source);
   g_source_unref (window_win32->msg_source);
   window_win32->msg_source = NULL;
-
-  window_win32->is_closed = TRUE;
 }
 
 static void
@@ -286,7 +281,6 @@ gst_gl_window_win32_create_window (GstGLWindowWin32 * window_win32,
 
   window_win32->internal_win_id = 0;
   window_win32->device = 0;
-  window_win32->is_closed = FALSE;
   window_win32->visible = FALSE;
 
   window_win32->internal_win_id = CreateWindowEx (0,
@@ -417,8 +411,6 @@ gst_gl_window_win32_quit (GstGLWindow * window)
 {
   GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
 
-
-  window_win32->priv->thread = NULL;
   g_main_loop_quit (window_win32->loop);
 }
 
