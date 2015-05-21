@@ -413,7 +413,7 @@ if test $HAVE_GSTGL -eq 1; then
     AC_CACHE_CHECK([for GStreamer OpenGL helper libraries],
         [ac_cv_have_gst_gl_helpers], [
         saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $GST_GL_CFLAGS"
+        CPPFLAGS="$CPPFLAGS $GST_GL_CFLAGS $GST_VIDEO_CFLAGS"
         saved_LIBS="$LIBS"
         LIBS="$saved_LIBS"
         AC_CHECK_HEADERS([gst/gl/gl.h], [:], [HAVE_GSTGL=0])
