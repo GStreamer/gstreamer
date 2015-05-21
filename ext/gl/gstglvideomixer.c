@@ -630,6 +630,15 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
   gint pad_width, pad_height;
   guint dar_n, dar_d;
 
+  /* FIXME: Anything better we can do here? */
+  if (!vagg_pad->info.finfo
+      || vagg_pad->info.finfo->format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_DEBUG_OBJECT (mix_pad, "Have no caps yet");
+    *width = 0;
+    *height = 0;
+    return;
+  }
+
   pad_width =
       mix_pad->width <=
       0 ? GST_VIDEO_INFO_WIDTH (&vagg_pad->info) : mix_pad->width;
