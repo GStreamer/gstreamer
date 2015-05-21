@@ -909,7 +909,7 @@ main (int argc, char **argv)
   GstPlay *play;
   GPtrArray *playlist;
   gboolean print_version = FALSE;
-  gboolean interactive = FALSE; /* FIXME: maybe enable by default? */
+  gboolean interactive = TRUE;
   gboolean gapless = FALSE;
   gboolean shuffle = FALSE;
   gdouble volume = -1;
@@ -932,8 +932,9 @@ main (int argc, char **argv)
         N_("Enable gapless playback"), NULL},
     {"shuffle", 0, 0, G_OPTION_ARG_NONE, &shuffle,
         N_("Shuffle playlist"), NULL},
-    {"interactive", 0, 0, G_OPTION_ARG_NONE, &interactive,
-        N_("Interactive control via keyboard"), NULL},
+    {"no-interactive", 0, G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,
+          &interactive,
+        N_("Disable interactive control via the keyboard"), NULL},
     {"volume", 0, 0, G_OPTION_ARG_DOUBLE, &volume,
         N_("Volume"), NULL},
     {"playlist", 0, 0, G_OPTION_ARG_FILENAME, &playlist_file,
