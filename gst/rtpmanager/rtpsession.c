@@ -2390,8 +2390,6 @@ rtp_session_process_pli (RTPSession * sess, guint32 sender_ssrc,
     return;
 
   rtp_session_request_local_key_unit (sess, src, FALSE, current_time);
-
-  src->stats.recv_pli_count++;
 }
 
 static void
@@ -2448,7 +2446,6 @@ rtp_session_process_fir (RTPSession * sess, guint32 sender_ssrc,
     return;
 
   rtp_session_request_local_key_unit (sess, src, TRUE, current_time);
-  src->stats.recv_fir_count++;
 }
 
 static void
@@ -2531,10 +2528,12 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
       case GST_RTCP_TYPE_PSFB:
         switch (fbtype) {
           case GST_RTCP_PSFB_TYPE_PLI:
+            src->stats.recv_pli_count++;
             rtp_session_process_pli (sess, sender_ssrc, media_ssrc,
                 current_time);
             break;
           case GST_RTCP_PSFB_TYPE_FIR:
+            src->stats.recv_fir_count++;
             rtp_session_process_fir (sess, sender_ssrc, fci_data, fci_length,
                 current_time);
             break;
