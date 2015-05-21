@@ -766,8 +766,7 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
 
   *outbuf = gst_buffer_new ();
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->upload->priv->in_info); i++) {
-    gst_buffer_append_memory (*outbuf,
-        gst_memory_ref ((GstMemory *) in_tex[i]));
+    gst_buffer_append_memory (*outbuf, (GstMemory *) in_tex[i]);
   }
 
   return GST_GL_UPLOAD_DONE;
