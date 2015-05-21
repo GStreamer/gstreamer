@@ -244,7 +244,7 @@ static GstPad *gst_dash_demux_create_pad (GstDashDemux * demux,
 #define gst_dash_demux_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstDashDemux, gst_dash_demux, GST_TYPE_ADAPTIVE_DEMUX,
     GST_DEBUG_CATEGORY_INIT (gst_dash_demux_debug, "dashdemux", 0,
-        "dashdemux element");
+        "dashdemux element")
     );
 
 static void
