@@ -368,24 +368,37 @@ gst_split_file_src_stop (GstBaseSrc * basesrc)
   return TRUE;
 }
 
+static gint
+gst_split_file_src_part_search (GstFilePart * part, guint64 * offset,
+    gpointer user_data)
+{
+  if (*offset > part->stop)
+    return -1;                  /* The target is after this part */
+  else if (*offset < part->start)
+    return 1;                   /* The target is before this part */
+  else
+    return 0;                   /* This is the target part */
+}
+
 static gboolean
 gst_split_file_src_find_part_for_offset (GstSplitFileSrc * src, guint64 offset,
     guint * part_number)
 {
+  gboolean res = TRUE;
   GstFilePart *part;
-  guint i;
 
-  /* TODO: could use gst_util_array_binary_search() here */
-  part = src->parts;
-  for (i = 0; i < src->num_parts; ++i) {
-    if (offset >= part->start && offset <= part->stop) {
-      *part_number = i;
-      return TRUE;
-    }
-    ++part;
-  }
+  part =
+      gst_util_array_binary_search (src->parts, src->num_parts,
+      sizeof (GstFilePart),
+      (GCompareDataFunc) gst_split_file_src_part_search,
+      GST_SEARCH_MODE_AFTER, &offset, NULL);
 
-  return FALSE;
+  if (part)
+    *part_number = part - src->parts;
+  else
+    res = FALSE;
+
+  return res;
 }
 
 static GstFlowReturn
