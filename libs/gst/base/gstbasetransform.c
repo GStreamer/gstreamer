@@ -26,7 +26,14 @@
  * @short_description: Base class for simple transform filters
  * @see_also: #GstBaseSrc, #GstBaseSink
  *
- * This base class is for filter elements that process data.
+ * This base class is for filter elements that process data. Elements
+ * that are suitable for implementation using #GstBaseTransform are ones
+ * where the size and caps of the output is known entirely from the input
+ * caps and buffer sizes. These include elements that directly transform
+ * one buffer into another, modify the contents of a buffer in-place, as
+ * well as elements that collate multiple input buffers into one output buffer,
+ * or that expand one input buffer into multiple output buffers. See below
+ * for more concrete use cases.
  *
  * It provides for:
  * <itemizedlist>
@@ -275,6 +282,10 @@ static GstElementClass *parent_class = NULL;
 static void gst_base_transform_class_init (GstBaseTransformClass * klass);
 static void gst_base_transform_init (GstBaseTransform * trans,
     GstBaseTransformClass * klass);
+static GstFlowReturn default_submit_input_buffer (GstBaseTransform * trans,
+    gboolean is_discont, GstBuffer * input);
+static GstFlowReturn default_generate_output (GstBaseTransform * trans,
+    GstBuffer ** outbuf);
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -418,6 +429,8 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   klass->prepare_output_buffer =
       GST_DEBUG_FUNCPTR (default_prepare_output_buffer);
   klass->copy_metadata = GST_DEBUG_FUNCPTR (default_copy_metadata);
+  klass->submit_input_buffer = GST_DEBUG_FUNCPTR (default_submit_input_buffer);
+  klass->generate_output = GST_DEBUG_FUNCPTR (default_generate_output);
 }
 
 static void
@@ -1977,24 +1990,17 @@ gst_base_transform_src_eventfunc (GstBaseTransform * trans, GstEvent * event)
   return ret;
 }
 
-/* perform a transform on @inbuf and put the result in @outbuf.
- *
- * This function is common to the push and pull-based operations.
- *
- * This function takes ownership of @inbuf */
+/* Takes the input buffer */
 static GstFlowReturn
-gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
-    GstBuffer ** outbuf)
+default_submit_input_buffer (GstBaseTransform * trans, gboolean is_discont,
+    GstBuffer * inbuf)
 {
-  GstBaseTransformClass *bclass;
+  GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   GstBaseTransformPrivate *priv = trans->priv;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean want_in_place;
+  gboolean reconfigure;
   GstClockTime running_time;
   GstClockTime timestamp;
-  gboolean reconfigure;
-
-  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   reconfigure = gst_pad_check_reconfigure (trans->srcpad);
 
@@ -2033,12 +2039,6 @@ no_reconfigure:
    */
   if (!priv->negotiated && !priv->passthrough && (bclass->set_caps != NULL))
     goto not_negotiated;
-
-  /* Set discont flag so we can mark the outgoing buffer */
-  if (GST_BUFFER_IS_DISCONT (inbuf)) {
-    GST_DEBUG_OBJECT (trans, "got DISCONT buffer %p", inbuf);
-    priv->discont = TRUE;
-  }
 
   /* can only do QoS if the segment is in TIME */
   if (trans->segment.format != GST_FORMAT_TIME)
@@ -2093,11 +2093,49 @@ no_reconfigure:
 
       /* mark discont for next buffer */
       priv->discont = TRUE;
+      ret = GST_BASE_TRANSFORM_FLOW_DROPPED;
       goto skip;
     }
   }
 
 no_qos:
+  /* Stash input buffer where the default generate_output
+   * function can find it */
+  if (trans->queued_buf)
+    gst_buffer_unref (trans->queued_buf);
+  trans->queued_buf = inbuf;
+  return ret;
+skip:
+  gst_buffer_unref (inbuf);
+  return ret;
+
+not_negotiated:
+  {
+    gst_buffer_unref (inbuf);
+    GST_ELEMENT_WARNING (trans, STREAM, FORMAT,
+        ("not negotiated"), ("not negotiated"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+}
+
+static GstFlowReturn
+default_generate_output (GstBaseTransform * trans, GstBuffer ** outbuf)
+{
+  GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+  GstBaseTransformPrivate *priv = trans->priv;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *inbuf;
+  gboolean want_in_place;
+
+  /* Retrieve stashed input buffer, if the default submit_input_buffer
+   * was run. Takes ownership back from there */
+  inbuf = trans->queued_buf;
+  trans->queued_buf = NULL;
+
+  /* This default processing method needs one input buffer to feed to
+   * the transform functions, we can't do anything without it */
+  if (inbuf == NULL)
+    return GST_FLOW_OK;
 
   /* first try to allocate an output buffer based on the currently negotiated
    * format. outbuf will contain a buffer suitable for doing the configured
@@ -2141,7 +2179,6 @@ no_qos:
     }
   }
 
-skip:
   /* only unref input buffer if we allocated a new outbuf buffer. If we reused
    * the input buffer, no refcount is changed to keep the input buffer writable
    * when needed. */
@@ -2151,14 +2188,6 @@ skip:
   return ret;
 
   /* ERRORS */
-not_negotiated:
-  {
-    gst_buffer_unref (inbuf);
-    *outbuf = NULL;
-    GST_ELEMENT_WARNING (trans, STREAM, FORMAT,
-        ("not negotiated"), ("not negotiated"));
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
 no_prepare:
   {
     gst_buffer_unref (inbuf);
@@ -2174,6 +2203,8 @@ no_buffer:
         gst_flow_get_name (ret));
     return ret;
   }
+
+  return GST_FLOW_OK;
 }
 
 /* FIXME, getrange is broken, need to pull range from the other
@@ -2183,23 +2214,65 @@ static GstFlowReturn
 gst_base_transform_getrange (GstPad * pad, GstObject * parent, guint64 offset,
     guint length, GstBuffer ** buffer)
 {
-  GstBaseTransform *trans;
-  GstBaseTransformClass *klass;
+  GstBaseTransformClass *klass = GST_BASE_TRANSFORM_GET_CLASS (parent);
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (parent);
+  GstBaseTransformPrivate *priv = trans->priv;
   GstFlowReturn ret;
   GstBuffer *inbuf = NULL;
+  GstBuffer *outbuf = NULL;
 
-  trans = GST_BASE_TRANSFORM (parent);
+  /* Try and generate a buffer, if the sub-class wants more data,
+   * pull some and repeat until a buffer (or error) is produced */
+  do {
+    ret = klass->generate_output (trans, &outbuf);
 
-  ret = gst_pad_pull_range (trans->sinkpad, offset, length, &inbuf);
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
-    goto pull_error;
+    /* Consume the DROPPED return value and go get more data */
+    if (ret == GST_BASE_TRANSFORM_FLOW_DROPPED)
+      ret = GST_FLOW_OK;
 
-  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
-  if (klass->before_transform)
-    klass->before_transform (trans, inbuf);
+    if (ret != GST_FLOW_OK || outbuf != NULL)
+      break;
 
-  ret = gst_base_transform_handle_buffer (trans, inbuf, buffer);
+    /* No buffer generated, try and pull data */
+    ret = gst_pad_pull_range (trans->sinkpad, offset, length, &inbuf);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto pull_error;
 
+    if (klass->before_transform)
+      klass->before_transform (trans, inbuf);
+
+    /* Set discont flag so we can mark the next outgoing buffer */
+    if (GST_BUFFER_IS_DISCONT (inbuf)) {
+      GST_DEBUG_OBJECT (trans, "got DISCONT buffer %p", inbuf);
+      priv->discont = TRUE;
+    }
+
+    /* FIXME: Input offsets and lengths need to be translated, as per
+     * the FIXME above. For now, just advance somewhat */
+    offset += gst_buffer_get_size (inbuf);
+
+    ret = klass->submit_input_buffer (trans, priv->discont, inbuf);
+    if (ret != GST_FLOW_OK) {
+      if (ret == GST_BASE_TRANSFORM_FLOW_DROPPED)
+        ret = GST_FLOW_OK;
+      goto done;
+    }
+  } while (ret == GST_FLOW_OK && outbuf == NULL);
+
+  *buffer = outbuf;
+  if (outbuf) {
+    /* apply DISCONT flag if the buffer is not yet marked as such */
+    if (priv->discont) {
+      GST_DEBUG_OBJECT (trans, "we have a pending DISCONT");
+      if (!GST_BUFFER_IS_DISCONT (outbuf)) {
+        GST_DEBUG_OBJECT (trans, "marking DISCONT on output buffer");
+        outbuf = gst_buffer_make_writable (outbuf);
+        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      }
+      priv->discont = FALSE;
+    }
+    priv->processed++;
+  }
 done:
   return ret;
 
@@ -2212,19 +2285,20 @@ pull_error:
   }
 }
 
+/* The flow of the chain function is the reverse of the
+ * getrange() function - we have data, feed it to the sub-class
+ * and then iterate, pushing buffers it generates until it either
+ * wants more data or returns an error */
 static GstFlowReturn
 gst_base_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstBaseTransform *trans;
-  GstBaseTransformClass *klass;
-  GstBaseTransformPrivate *priv;
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (parent);
+  GstBaseTransformClass *klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+  GstBaseTransformPrivate *priv = trans->priv;
   GstFlowReturn ret;
   GstClockTime position = GST_CLOCK_TIME_NONE;
   GstClockTime timestamp, duration;
   GstBuffer *outbuf = NULL;
-
-  trans = GST_BASE_TRANSFORM (parent);
-  priv = trans->priv;
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
@@ -2237,54 +2311,68 @@ gst_base_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       position = timestamp;
   }
 
-  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   if (klass->before_transform)
     klass->before_transform (trans, buffer);
 
-  /* protect transform method and concurrent buffer alloc */
-  ret = gst_base_transform_handle_buffer (trans, buffer, &outbuf);
-
-  /* outbuf can be NULL, this means a dropped buffer, if we have a buffer but
-   * GST_BASE_TRANSFORM_FLOW_DROPPED we will not push either. */
-  if (outbuf != NULL) {
-    if (ret == GST_FLOW_OK) {
-      GstClockTime position_out = GST_CLOCK_TIME_NONE;
-
-      /* Remember last stop position */
-      if (position != GST_CLOCK_TIME_NONE &&
-          trans->segment.format == GST_FORMAT_TIME)
-        trans->segment.position = position;
-
-      if (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf)) {
-        position_out = GST_BUFFER_TIMESTAMP (outbuf);
-        if (GST_BUFFER_DURATION_IS_VALID (outbuf))
-          position_out += GST_BUFFER_DURATION (outbuf);
-      } else if (position != GST_CLOCK_TIME_NONE) {
-        position_out = position;
-      }
-      if (position_out != GST_CLOCK_TIME_NONE
-          && trans->segment.format == GST_FORMAT_TIME)
-        priv->position_out = position_out;
-
-      /* apply DISCONT flag if the buffer is not yet marked as such */
-      if (trans->priv->discont) {
-        GST_DEBUG_OBJECT (trans, "we have a pending DISCONT");
-        if (!GST_BUFFER_IS_DISCONT (outbuf)) {
-          GST_DEBUG_OBJECT (trans, "marking DISCONT on output buffer");
-          outbuf = gst_buffer_make_writable (outbuf);
-          GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-        }
-        priv->discont = FALSE;
-      }
-      priv->processed++;
-
-      ret = gst_pad_push (trans->srcpad, outbuf);
-    } else {
-      GST_DEBUG_OBJECT (trans, "we got return %s", gst_flow_get_name (ret));
-      gst_buffer_unref (outbuf);
-    }
+  /* Set discont flag so we can mark the outgoing buffer */
+  if (GST_BUFFER_IS_DISCONT (buffer)) {
+    GST_DEBUG_OBJECT (trans, "got DISCONT buffer %p", buffer);
+    priv->discont = TRUE;
   }
 
+  /* Takes ownership of input buffer */
+  ret = klass->submit_input_buffer (trans, priv->discont, buffer);
+  if (ret != GST_FLOW_OK)
+    goto done;
+
+  do {
+    outbuf = NULL;
+
+    ret = klass->generate_output (trans, &outbuf);
+
+    /* outbuf can be NULL, this means a dropped buffer, if we have a buffer but
+     * GST_BASE_TRANSFORM_FLOW_DROPPED we will not push either. */
+    if (outbuf != NULL) {
+      if (ret == GST_FLOW_OK) {
+        GstClockTime position_out = GST_CLOCK_TIME_NONE;
+
+        /* Remember last stop position */
+        if (position != GST_CLOCK_TIME_NONE &&
+            trans->segment.format == GST_FORMAT_TIME)
+          trans->segment.position = position;
+
+        if (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf)) {
+          position_out = GST_BUFFER_TIMESTAMP (outbuf);
+          if (GST_BUFFER_DURATION_IS_VALID (outbuf))
+            position_out += GST_BUFFER_DURATION (outbuf);
+        } else if (position != GST_CLOCK_TIME_NONE) {
+          position_out = position;
+        }
+        if (position_out != GST_CLOCK_TIME_NONE
+            && trans->segment.format == GST_FORMAT_TIME)
+          priv->position_out = position_out;
+
+        /* apply DISCONT flag if the buffer is not yet marked as such */
+        if (trans->priv->discont) {
+          GST_DEBUG_OBJECT (trans, "we have a pending DISCONT");
+          if (!GST_BUFFER_IS_DISCONT (outbuf)) {
+            GST_DEBUG_OBJECT (trans, "marking DISCONT on output buffer");
+            outbuf = gst_buffer_make_writable (outbuf);
+            GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+          }
+          priv->discont = FALSE;
+        }
+        priv->processed++;
+
+        ret = gst_pad_push (trans->srcpad, outbuf);
+      } else {
+        GST_DEBUG_OBJECT (trans, "we got return %s", gst_flow_get_name (ret));
+        gst_buffer_unref (outbuf);
+      }
+    }
+  } while (ret == GST_FLOW_OK && outbuf != NULL);
+
+done:
   /* convert internal flow to OK and mark discont for the next buffer. */
   if (ret == GST_BASE_TRANSFORM_FLOW_DROPPED) {
     GST_DEBUG_OBJECT (trans, "dropped a buffer, marking DISCONT");
@@ -2386,6 +2474,9 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
     }
     gst_caps_replace (&priv->cache_caps1, NULL);
     gst_caps_replace (&priv->cache_caps2, NULL);
+
+    /* Make sure any left over buffer is freed */
+    gst_buffer_replace (&trans->queued_buf, NULL);
 
     if (priv->pad_mode != GST_PAD_MODE_NONE && bclass->stop)
       result &= bclass->stop (trans);

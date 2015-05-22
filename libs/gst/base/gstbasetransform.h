@@ -90,11 +90,14 @@ struct _GstBaseTransform {
   /* MT-protected (with STREAM_LOCK) */
   gboolean       have_segment;
   GstSegment     segment;
+  /* Default submit_input_buffer places the buffer here,
+   * for consumption by the generate_output method: */
+  GstBuffer      *queued_buf;
 
   /*< private >*/
   GstBaseTransformPrivate *priv;
 
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-1];
 };
 
 /**
@@ -190,6 +193,23 @@ struct _GstBaseTransform {
  * @transform_ip:   Required if the element operates in-place.
  *                  Transform the incoming buffer in-place.
  *
+ * @submit_input_buffer: Function which accepts a new input buffer and pre-processes it.
+ *                  The default implementation performs caps (re)negotiation, then
+ *                  QoS if needed, and places the input buffer into the @queued_buf
+ *                  member variable. If the buffer is dropped due to QoS, it returns
+ *                  GST_BASE_TRANSFORM_FLOW_DROPPED. If this input buffer is not
+ *                  contiguous with any previous input buffer, then @is_discont
+ *                  is set to #TRUE.
+ * @generate_output: Called after each new input buffer is submitted repeatedly
+ *                   until it either generates an error or fails to generate an output
+ *                   buffer. The default implementation takes the contents of the
+ *                   @queued_buf variable, generates an output buffer if needed
+ *                   by calling the class @prepare_output_buffer, and then
+ *                   calls either @transform or @transform_ip. Elements that don't
+ *                   do 1-to-1 transformations on input to output buffers can either
+ *                   return GST_BASE_TRANSFORM_FLOW_DROPPED or simply not generate
+ *                   an output buffer until they are ready to do so.
+ *                   
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum either @transform or @transform_ip need to be overridden.
  * If the element can overwrite the input data with the results (data is of the
@@ -258,8 +278,11 @@ struct _GstBaseTransformClass {
                                  GstBuffer *outbuf);
   GstFlowReturn (*transform_ip) (GstBaseTransform *trans, GstBuffer *buf);
 
+  GstFlowReturn (*submit_input_buffer) (GstBaseTransform *trans, gboolean is_discont, GstBuffer *input);
+  GstFlowReturn (*generate_output) (GstBaseTransform *trans, GstBuffer **outbuf);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
 };
 
 GType           gst_base_transform_get_type         (void);

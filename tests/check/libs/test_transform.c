@@ -69,6 +69,10 @@ static gboolean (*klass_transform_size) (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, gsize size, GstCaps * othercaps,
     gsize * othersize) = NULL;
 static gboolean klass_passthrough_on_same_caps = FALSE;
+GstFlowReturn (*klass_submit_input_buffer) (GstBaseTransform * trans,
+    gboolean is_discont, GstBuffer * input) = NULL;
+GstFlowReturn (*klass_generate_output) (GstBaseTransform * trans,
+    GstBuffer ** outbuf) = NULL;
 
 static GstStaticPadTemplate *sink_template = &gst_test_trans_sink_template;
 static GstStaticPadTemplate *src_template = &gst_test_trans_src_template;
@@ -101,6 +105,10 @@ gst_test_trans_class_init (GstTestTransClass * klass)
     trans_class->transform_size = klass_transform_size;
   if (klass_set_caps != NULL)
     trans_class->set_caps = klass_set_caps;
+  if (klass_submit_input_buffer != NULL)
+    trans_class->submit_input_buffer = klass_submit_input_buffer;
+  if (klass_generate_output)
+    trans_class->generate_output = klass_generate_output;
 }
 
 static void

@@ -20,6 +20,7 @@ gsttestclock
 libsabi
 sparsefile
 transform1
+transform2
 typefindhelper
 queuearray
 *.check.xml

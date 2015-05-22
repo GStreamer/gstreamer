@@ -162,6 +162,7 @@ check_PROGRAMS =				\
 	libs/gstnettimeprovider			\
 	libs/gsttestclock			\
 	libs/transform1				\
+	libs/transform2				\
 	tools/gstinspect
 
 # failing tests
