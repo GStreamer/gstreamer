@@ -50,7 +50,6 @@ static gboolean
 wayland_event_source_prepare (GSource * base, gint * timeout)
 {
   WaylandEventSource *source = (WaylandEventSource *) base;
-  gboolean retval;
 
   *timeout = -1;
 
@@ -59,9 +58,7 @@ wayland_event_source_prepare (GSource * base, gint * timeout)
    * writes on idle */
   wl_display_flush (source->display);
 
-  retval = FALSE;               //clutter_events_pending ();
-
-  return retval;
+  return FALSE;
 }
 
 static gboolean
@@ -70,7 +67,7 @@ wayland_event_source_check (GSource * base)
   WaylandEventSource *source = (WaylandEventSource *) base;
   gboolean retval;
 
-  retval = source->pfd.revents; // || clutter_events_pending();
+  retval = source->pfd.revents;
 
   return retval;
 }
@@ -80,7 +77,6 @@ wayland_event_source_dispatch (GSource * base,
     GSourceFunc callback, gpointer data)
 {
   WaylandEventSource *source = (WaylandEventSource *) base;
-//  ClutterEvent *event;
 
   if (source->pfd.revents) {
     wl_display_roundtrip (source->display);
@@ -90,15 +86,6 @@ wayland_event_source_dispatch (GSource * base,
   if (callback)
     callback (data);
 
-#if 0
-  event = clutter_event_get ();
-
-  if (event) {
-    /* forward the event into clutter for emission etc. */
-    clutter_do_event (event);
-    clutter_event_free (event);
-  }
-#endif
   return TRUE;
 }
 
