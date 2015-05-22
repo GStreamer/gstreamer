@@ -109,19 +109,19 @@ _context_ready (gpointer data)
   if (self->draw_context)
     gst_object_unref (self->draw_context);
 
+  if (kCGLNoError != CGLSetCurrentContext (self->gl_context)) {
+    GST_ERROR ("failed set cgl context %p current", self->gl_context);
+    return NULL;
+  }
+
   display = gst_gl_context_get_display (GST_GL_CONTEXT (self->gst_gl_context));
   self->draw_context = gst_gl_context_new_wrapped (display,
       (guintptr) self->gl_context, GST_GL_PLATFORM_CGL,
-      gst_gl_display_get_gl_api (display));
+      gst_gl_context_get_current_gl_api (NULL, NULL));
   gst_object_unref (display);
 
   if (!self->draw_context) {
     GST_ERROR ("failed to create wrapped context");
-    return NULL;
-  }
-
-  if (kCGLNoError != CGLSetCurrentContext (self->gl_context)) {
-    GST_ERROR ("failed set cgl context %p current", self->gl_context);
     return NULL;
   }
 
