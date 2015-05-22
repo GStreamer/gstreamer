@@ -286,6 +286,14 @@ gst_vaapi_picture_h264_new_field(GstVaapiPictureH264 *picture)
     return (GstVaapiPictureH264 *)gst_vaapi_picture_new_field(&picture->base);
 }
 
+static inline GstVaapiPictureH264 *
+gst_vaapi_picture_h264_new_clone(GstVaapiPictureH264 *picture)
+{
+    g_return_val_if_fail(picture, NULL);
+
+    return (GstVaapiPictureH264 *)gst_vaapi_picture_new_clone(&picture->base);
+}
+
 /* ------------------------------------------------------------------------- */
 /* --- Frame Buffers (DPB)                                               --- */
 /* ------------------------------------------------------------------------- */
@@ -471,6 +479,7 @@ struct _GstVaapiDecoderH264Private {
     guint                       decoder_state;
     GstVaapiStreamAlignH264     stream_alignment;
     GstVaapiPictureH264        *current_picture;
+    GstVaapiPictureH264        *missing_picture;
     GstVaapiParserInfoH264     *sps[GST_H264_MAX_SPS_COUNT];
     GstVaapiParserInfoH264     *active_sps;
     GstVaapiParserInfoH264     *pps[GST_H264_MAX_PPS_COUNT];
@@ -540,6 +549,9 @@ struct _GstVaapiDecoderH264Class {
 
 static gboolean
 exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture);
+
+static gboolean
+exec_ref_pic_marking_sliding_window(GstVaapiDecoderH264 *decoder);
 
 static gboolean
 is_inter_view_reference_for_next_pictures(GstVaapiDecoderH264 *decoder,
@@ -1153,6 +1165,7 @@ gst_vaapi_decoder_h264_close(GstVaapiDecoderH264 *decoder)
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
 
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
+    gst_vaapi_picture_replace(&priv->missing_picture, NULL);
     gst_vaapi_parser_info_h264_replace(&priv->prev_slice_pi, NULL);
     gst_vaapi_parser_info_h264_replace(&priv->prev_pi, NULL);
 
@@ -2940,6 +2953,80 @@ init_picture_refs(
 }
 
 static GstVaapiPictureH264 *
+fill_picture_first_field_gap(GstVaapiDecoderH264 *decoder,
+    GstVaapiPictureH264 *f0)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiPictureH264 *f1;
+
+    f1 = gst_vaapi_picture_h264_new_clone(f0);
+    if (!f1)
+        goto error_allocate_field;
+
+    gst_vaapi_picture_replace(&priv->missing_picture, f1);
+    gst_vaapi_picture_unref(f1);
+
+    GST_VAAPI_PICTURE_FLAG_SET(f1,
+        (GST_VAAPI_PICTURE_FLAG_ONEFIELD |
+         GST_VAAPI_PICTURE_FLAG_SKIPPED |
+         GST_VAAPI_PICTURE_FLAG_GHOST));
+
+    gst_vaapi_picture_h264_set_reference(f1, 0, FALSE);
+    return f1;
+
+    /* ERRORS */
+error_allocate_field:
+    GST_ERROR("failed to allocate missing field for current frame store");
+    return NULL;
+}
+
+static gboolean
+fill_picture_first_field_gap_done(GstVaapiDecoderH264 *decoder,
+    GstH264SliceHdr *slice_hdr)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiPictureH264 * const lost_field = priv->missing_picture;
+    GstH264SliceHdr lost_slice_hdr;
+    gboolean success = FALSE;
+
+    g_return_val_if_fail(priv->current_picture != NULL, FALSE);
+
+    if (!lost_field)
+        return TRUE;
+
+    lost_field->frame_num       = slice_hdr->frame_num;
+    lost_field->frame_num_wrap  = slice_hdr->frame_num;
+
+    gst_vaapi_picture_h264_set_reference(lost_field,
+        (GST_VAAPI_PICTURE_FLAGS(priv->current_picture) &
+         GST_VAAPI_PICTURE_FLAGS_REFERENCE), FALSE);
+
+    lost_slice_hdr = *slice_hdr;
+    lost_slice_hdr.bottom_field_flag = !lost_slice_hdr.bottom_field_flag;
+
+    init_picture_poc(decoder, lost_field, &lost_slice_hdr);
+    init_picture_ref_lists(decoder, lost_field);
+    init_picture_refs_pic_num(decoder, lost_field, &lost_slice_hdr);
+    if (!exec_ref_pic_marking_sliding_window(decoder))
+        goto error_exec_ref_pic_marking;
+    if (!dpb_add(decoder, lost_field))
+        goto error_dpb_add;
+    success = TRUE;
+
+cleanup:
+    gst_vaapi_picture_replace(&priv->missing_picture, NULL);
+    return success;
+
+    /* ERRORS */
+error_exec_ref_pic_marking:
+    GST_ERROR("failed to execute reference picture marking process");
+    goto cleanup;
+error_dpb_add:
+    GST_ERROR("failed to store lost picture into the DPB");
+    goto cleanup;
+}
+
+static GstVaapiPictureH264 *
 fill_picture_other_field_gap(GstVaapiDecoderH264 *decoder,
     GstVaapiPictureH264 *f0)
 {
@@ -3089,6 +3176,7 @@ init_picture(
                 GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE);
     }
 
+    fill_picture_first_field_gap_done(decoder, slice_hdr);
     init_picture_poc(decoder, picture, slice_hdr);
     return TRUE;
 }
@@ -3651,6 +3739,8 @@ find_first_field(GstVaapiDecoderH264 *decoder, GstVaapiParserInfoH264 *pi,
     /* At this point, the current frame is known to be interlaced */
     if (gst_vaapi_frame_store_has_frame(fs)) {
         f1 = NULL;
+        if (fill_gaps && !same_field_parity(f0, slice_hdr))
+            f1 = fill_picture_first_field_gap(decoder, f0);
         return f1;
     }
 
@@ -3668,6 +3758,8 @@ find_first_field(GstVaapiDecoderH264 *decoder, GstVaapiParserInfoH264 *pi,
     f1 = NULL;
     if (fill_gaps) {
         fill_picture_other_field_gap(decoder, f0);
+        if (!same_field_parity(f0, slice_hdr))
+            f1 = fill_picture_first_field_gap(decoder, f0);
     }
     return f1;
 }
@@ -3698,6 +3790,7 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
         return status;
 
     priv->decoder_state = 0;
+    gst_vaapi_picture_replace(&priv->missing_picture, NULL);
 
     first_field = find_first_field(decoder, pi, TRUE);
     if (first_field) {
