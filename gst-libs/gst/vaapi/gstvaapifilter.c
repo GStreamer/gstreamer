@@ -278,6 +278,7 @@ enum
   PROP_CONTRAST = GST_VAAPI_FILTER_OP_CONTRAST,
   PROP_DEINTERLACING = GST_VAAPI_FILTER_OP_DEINTERLACING,
   PROP_SCALING = GST_VAAPI_FILTER_OP_SCALING,
+  PROP_SKINTONE = GST_VAAPI_FILTER_OP_SKINTONE,
 
   N_PROPERTIES
 };
@@ -399,6 +400,16 @@ init_properties (void)
       "Scaling method to use",
       GST_VAAPI_TYPE_SCALE_METHOD,
       DEFAULT_SCALING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiFilter:skin-tone-enhancement:
+   *
+   * Apply the skin tone enhancement algorithm.
+   */
+  g_properties[PROP_SKINTONE] = g_param_spec_boolean ("skin-tone-enhancement",
+      "Skin tone enhancement",
+      "Apply the skin tone enhancement algorithm",
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 }
 
 static void
@@ -445,6 +456,10 @@ op_data_new (GstVaapiFilterOp op, GParamSpec * pspec)
     case GST_VAAPI_FILTER_OP_SHARPEN:
       op_data->va_type = VAProcFilterSharpening;
       op_data->va_cap_size = sizeof (VAProcFilterCap);
+      op_data->va_buffer_size = sizeof (VAProcFilterParameterBuffer);
+      break;
+    case GST_VAAPI_FILTER_OP_SKINTONE:
+      op_data->va_type = VAProcFilterSkinToneEnhancement;
       op_data->va_buffer_size = sizeof (VAProcFilterParameterBuffer);
       break;
     case GST_VAAPI_FILTER_OP_HUE:
@@ -627,6 +642,11 @@ get_operations_ordered (GstVaapiFilter * filter, GPtrArray * default_ops)
       GstVaapiFilterOpData *const op_data = g_ptr_array_index (default_ops, j);
       if (op_data->va_type != va_type)
         continue;
+
+      if (op_data->va_cap_size == 0) { /* no caps, like skintone */
+        g_ptr_array_add (ops, op_data_ref (op_data));
+        continue;
+      }
 
       if (!filter_caps) {
         filter_caps = vpp_get_filter_caps (filter, va_type,
@@ -877,6 +897,46 @@ op_set_deinterlace (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
 #endif
   return success;
 }
+
+/* Update skin tone enhancement */
+#if USE_VA_VPP
+gboolean
+op_set_skintone_unlocked (GstVaapiFilter * filter,
+   GstVaapiFilterOpData * op_data, gboolean value)
+{
+  VAProcFilterParameterBuffer *buf;
+
+  if (!op_data || !op_ensure_buffer (filter, op_data))
+    return FALSE;
+
+  op_data->is_enabled = value;
+  if (!op_data->is_enabled)
+    return TRUE;
+
+  buf = vaapi_map_buffer (filter->va_display, op_data->va_buffer);
+  if (!buf)
+    return FALSE;
+  buf->type = op_data->va_type;
+  buf->value = 0;
+  vaapi_unmap_buffer (filter->va_display, op_data->va_buffer, NULL);
+  return TRUE;
+}
+#endif
+
+static inline gboolean
+op_set_skintone (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
+   gboolean enhance)
+{
+  gboolean success = FALSE;
+
+#if USE_VA_VPP
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  success = op_set_skintone_unlocked (filter, op_data, enhance);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
+#endif
+  return success;
+}
+
 
 static gboolean
 deint_refs_set (GArray * refs, GstVaapiSurface ** surfaces, guint num_surfaces)
@@ -1300,6 +1360,10 @@ gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
     case GST_VAAPI_FILTER_OP_SCALING:
       return gst_vaapi_filter_set_scaling (filter, value ?
           g_value_get_enum (value) : DEFAULT_SCALING);
+    case GST_VAAPI_FILTER_OP_SKINTONE:
+      return op_set_skintone (filter, op_data,
+          (value ? g_value_get_boolean (value) :
+              G_PARAM_SPEC_BOOLEAN (op_data->pspec)->default_value));
     default:
       break;
   }
@@ -1788,4 +1852,24 @@ gst_vaapi_filter_set_scaling (GstVaapiFilter * filter,
 
   filter->scale_method = method;
   return TRUE;
+}
+
+/**
+ * gst_vaapi_filter_set_skintone:
+ * @filter: a #GstVaapiFilter
+ * @enhance: %TRUE if enable the skin tone enhancement algorithm
+ *
+ * Applies the skin tone enhancement algorithm.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE
+ * otherwise.
+  **/
+gboolean
+gst_vaapi_filter_set_skintone (GstVaapiFilter * filter,
+    gboolean enhance)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return op_set_skintone (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_SKINTONE), enhance);
 }

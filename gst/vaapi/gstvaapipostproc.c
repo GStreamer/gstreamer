@@ -104,6 +104,7 @@ enum
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
   PROP_SCALE_METHOD,
+  PROP_SKIN_TONE_ENHANCEMENT,
 };
 
 #define DEFAULT_FORMAT                  GST_VIDEO_FORMAT_ENCODED
@@ -520,6 +521,11 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
 
   if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SCALE) &&
       !gst_vaapi_filter_set_scaling (postproc->filter, postproc->scale_method))
+    return GST_FLOW_NOT_SUPPORTED;
+
+  if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SKINTONE) &&
+      !gst_vaapi_filter_set_skintone (postproc->filter,
+           postproc->skintone_enhance))
     return GST_FLOW_NOT_SUPPORTED;
 
   inbuf_meta = gst_buffer_get_vaapi_video_meta (inbuf);
@@ -1352,6 +1358,10 @@ gst_vaapipostproc_set_property (GObject * object,
       postproc->scale_method = g_value_get_enum (value);
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SCALE;
       break;
+    case PROP_SKIN_TONE_ENHANCEMENT:
+      postproc->skintone_enhance = g_value_get_boolean (value);
+      postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SKINTONE;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1403,6 +1413,9 @@ gst_vaapipostproc_get_property (GObject * object,
       break;
     case PROP_SCALE_METHOD:
       g_value_set_enum (value, postproc->scale_method);
+      break;
+    case PROP_SKIN_TONE_ENHANCEMENT:
+      g_value_set_boolean (value, postproc->skintone_enhance);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1618,6 +1631,16 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   if (filter_op)
     g_object_class_install_property (object_class,
         PROP_SCALE_METHOD, filter_op->pspec);
+
+  /**
+   * GstVaapiPostproc:skin-tone-enhancement:
+   *
+   * Apply the skin tone enhancement algorithm.
+   */
+  filter_op = find_filter_op (filter_ops, GST_VAAPI_FILTER_OP_SKINTONE);
+  if (filter_op)
+    g_object_class_install_property (object_class,
+        PROP_SKIN_TONE_ENHANCEMENT, filter_op->pspec);
 
   g_ptr_array_unref (filter_ops);
 }

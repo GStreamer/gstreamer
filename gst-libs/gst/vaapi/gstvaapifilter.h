@@ -41,6 +41,7 @@ typedef struct _GstVaapiFilterOpInfo            GstVaapiFilterOpInfo;
  * @GST_VAAPI_FILTER_OP_BRIGHTNESS: Change brightness (float).
  * @GST_VAAPI_FILTER_OP_CONTRAST: Change contrast (float).
  * @GST_VAAPI_FILTER_OP_SCALING: Change scaling method (#GstVaapiScaleMethod).
+ * @GST_VAAPI_FILTER_OP_SKINTONE: Skin tone enhancement (bool).
  *
  * The set of operations that could be applied to the filter.
  */
@@ -55,6 +56,7 @@ typedef enum {
   GST_VAAPI_FILTER_OP_CONTRAST,
   GST_VAAPI_FILTER_OP_DEINTERLACING,
   GST_VAAPI_FILTER_OP_SCALING,
+  GST_VAAPI_FILTER_OP_SKINTONE,
 } GstVaapiFilterOp;
 
 /**
@@ -239,5 +241,9 @@ gst_vaapi_filter_set_deinterlacing_references (GstVaapiFilter * filter,
 gboolean
 gst_vaapi_filter_set_scaling (GstVaapiFilter * filter,
     GstVaapiScaleMethod method);
+
+gboolean
+gst_vaapi_filter_set_skintone (GstVaapiFilter * filter,
+    gboolean enhance);
 
 #endif /* GST_VAAPI_FILTER_H */
