@@ -832,11 +832,33 @@ play_switch_trick_mode (GstPlay * play)
 }
 
 static void
+print_keyboard_help (void)
+{
+  g_print ("\n\nInteractive mode - keyboard control:\n");
+  g_print ("space    : pause/unpause\n");
+  g_print ("q or ESC : quit\n");
+  g_print (">        : play next\n");
+  g_print ("<        : play previous\n");
+  g_print ("left     : seek forward\n");
+  g_print ("right    : seek backward\n");
+  g_print ("up       : volume up\n");
+  g_print ("down     : volume down\n");
+  g_print ("+        : increase playback rate\n");
+  g_print ("-        : decrease playback rate\n");
+  g_print ("d        : change playback direction\n");
+  g_print ("t        : enable/disable trick modes\n");
+  g_print ("k        : show keyboard shortcuts\n\n");
+}
+
+static void
 keyboard_cb (const gchar * key_input, gpointer user_data)
 {
   GstPlay *play = (GstPlay *) user_data;
 
   switch (g_ascii_tolower (key_input[0])) {
+    case 'k':
+      print_keyboard_help ();
+      break;
     case ' ':
       toggle_paused (play);
       break;
@@ -1046,6 +1068,7 @@ main (int argc, char **argv)
 
   if (interactive) {
     if (gst_play_kb_set_key_handler (keyboard_cb, play)) {
+      g_print ("Press 'k' to see a list of keyboard shortcuts.\n");
       atexit (restore_terminal);
     } else {
       g_print ("Interactive keyboard handling in terminal not available.\n");
