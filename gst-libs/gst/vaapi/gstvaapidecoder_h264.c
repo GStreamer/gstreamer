@@ -363,14 +363,14 @@ gst_vaapi_frame_store_add(GstVaapiFrameStore *fs, GstVaapiPictureH264 *picture)
 }
 
 static gboolean
-gst_vaapi_frame_store_split_fields(GstVaapiFrameStore *fs)
+gst_vaapi_frame_store_split_fields(GstVaapiFrameStore *fs, gboolean tff)
 {
     GstVaapiPictureH264 * const first_field = fs->buffers[0];
     GstVaapiPictureH264 *second_field;
 
     g_return_val_if_fail(fs->num_buffers == 1, FALSE);
 
-    first_field->base.structure = GST_VAAPI_PICTURE_IS_TFF(first_field) ?
+    first_field->base.structure = tff ?
         GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD :
         GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
     GST_VAAPI_PICTURE_FLAG_SET(first_field, GST_VAAPI_PICTURE_FLAG_INTERLACED);
@@ -510,6 +510,7 @@ struct _GstVaapiDecoderH264Private {
     guint                       is_avcC                 : 1;
     guint                       has_context             : 1;
     guint                       progressive_sequence    : 1;
+    guint                       top_field_first         : 1;
 };
 
 /**
@@ -989,7 +990,7 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     gst_vaapi_frame_store_unref(fs);
 
     if (!priv->progressive_sequence && gst_vaapi_frame_store_has_frame(fs)) {
-        if (!gst_vaapi_frame_store_split_fields(fs))
+        if (!gst_vaapi_frame_store_split_fields(fs, priv->top_field_first))
             return FALSE;
     }
 
@@ -1180,6 +1181,7 @@ gst_vaapi_decoder_h264_create(GstVaapiDecoder *base_decoder)
     priv->chroma_type           = GST_VAAPI_CHROMA_TYPE_YUV420;
     priv->prev_pic_structure    = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
     priv->progressive_sequence  = TRUE;
+    priv->top_field_first       = FALSE;
     return TRUE;
 }
 
@@ -1392,8 +1394,13 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
         priv->mb_height = mb_height;
     }
 
-    priv->progressive_sequence = sps->frame_mbs_only_flag;
-    gst_vaapi_decoder_set_interlaced(base_decoder, !priv->progressive_sequence);
+    if (priv->progressive_sequence != sps->frame_mbs_only_flag) {
+        GST_DEBUG("interlacing-mode changed");
+        priv->progressive_sequence = sps->frame_mbs_only_flag;
+        gst_vaapi_decoder_set_interlaced(base_decoder,
+            !priv->progressive_sequence);
+        priv->top_field_first = FALSE;
+    }
 
     gst_vaapi_decoder_set_pixel_aspect_ratio(
         base_decoder,
@@ -2947,7 +2954,7 @@ init_picture(
     case GST_H264_SEI_PIC_STRUCT_TOP_FIELD:
         base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
         if (GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture))
-            GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_TFF);
+            priv->top_field_first = TRUE;
         break;
     case GST_H264_SEI_PIC_STRUCT_BOTTOM_FIELD:
         base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
@@ -2957,13 +2964,19 @@ init_picture(
         // fall-through
     case GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM:
         if (GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture))
-            GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_TFF);
+            priv->top_field_first = TRUE;
         break;
     case GST_H264_SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM:
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_RFF);
         break;
+    case GST_H264_SEI_PIC_STRUCT_FRAME:
+        if (!priv->progressive_sequence && priv->dpb_count == 0)
+            priv->top_field_first = TRUE;
+        break;
     }
     picture->structure = base_picture->structure;
+    if (priv->top_field_first)
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_TFF);
 
     /* Initialize reference flags */
     if (pi->nalu.ref_idc) {
