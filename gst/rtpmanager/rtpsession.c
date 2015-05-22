@@ -3536,19 +3536,13 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
     GST_DEBUG ("early feedback %" GST_TIME_FORMAT " < now %"
         GST_TIME_FORMAT, GST_TIME_ARGS (sess->next_early_rtcp_time),
         GST_TIME_ARGS (current_time));
-    goto early;
-  }
-
-  /* no need to check yet */
-  if (sess->next_rtcp_check_time == GST_CLOCK_TIME_NONE ||
+  } else if (sess->next_rtcp_check_time == GST_CLOCK_TIME_NONE ||
       sess->next_rtcp_check_time > current_time) {
     GST_DEBUG ("no check time yet, next %" GST_TIME_FORMAT " > now %"
         GST_TIME_FORMAT, GST_TIME_ARGS (sess->next_rtcp_check_time),
         GST_TIME_ARGS (current_time));
     return FALSE;
   }
-
-early:
 
   /* take interval and add jitter */
   interval = data->interval;
