@@ -236,8 +236,13 @@ create_surface (GstGLWindowWaylandEGL * window_egl)
 
   window_egl->window.surface =
       wl_compositor_create_surface (display->compositor);
+  wl_proxy_set_queue ((struct wl_proxy *) window_egl->window.surface,
+      window_egl->window.queue);
+
   window_egl->window.shell_surface =
       wl_shell_get_shell_surface (display->shell, window_egl->window.surface);
+  wl_proxy_set_queue ((struct wl_proxy *) window_egl->window.shell_surface,
+      window_egl->window.queue);
 
   wl_shell_surface_add_listener (window_egl->window.shell_surface,
       &shell_surface_listener, window_egl);
@@ -358,11 +363,14 @@ gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
     return FALSE;
   }
 
+  window_egl->window.queue = wl_display_create_queue (display->display);
+
   wl_display_roundtrip (display->display);
 
   create_surface (window_egl);
 
-  window_egl->wl_source = wayland_event_source_new (display->display);
+  window_egl->wl_source = wayland_event_source_new (display->display,
+      window_egl->window.queue);
 
   g_source_attach (window_egl->wl_source, window_egl->main_context);
 
