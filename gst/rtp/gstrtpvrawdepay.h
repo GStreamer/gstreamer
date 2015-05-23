@@ -49,9 +49,9 @@ struct _GstRtpVRawDepay
   GstBufferPool *pool;
   GstVideoInfo vinfo;
 
+  GstVideoFrame frame;
   GstBuffer *outbuf;
   guint32 timestamp;
-  guint outsize;
 
   gint pgroup;
   gint xinc, yinc;
