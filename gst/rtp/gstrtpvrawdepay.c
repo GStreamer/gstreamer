@@ -336,7 +336,7 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   timestamp = gst_rtp_buffer_get_timestamp (&rtp);
 
   if (timestamp != rtpvrawdepay->timestamp || rtpvrawdepay->outbuf == NULL) {
-    GstBuffer *outbuf;
+    GstBuffer *new_buffer;
     GstFlowReturn ret;
 
     GST_LOG_OBJECT (depayload, "new frame with timestamp %u", timestamp);
@@ -357,18 +357,22 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       gst_caps_unref (caps);
     }
 
-    ret = gst_buffer_pool_acquire_buffer (rtpvrawdepay->pool, &outbuf, NULL);
+    ret =
+        gst_buffer_pool_acquire_buffer (rtpvrawdepay->pool, &new_buffer, NULL);
+
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto alloc_failed;
 
     /* clear timestamp from alloc... */
-    GST_BUFFER_TIMESTAMP (outbuf) = -1;
+    GST_BUFFER_TIMESTAMP (new_buffer) = -1;
 
     if (!gst_video_frame_map (&rtpvrawdepay->frame, &rtpvrawdepay->vinfo,
-            outbuf, GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
+            new_buffer, GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
+      gst_buffer_unref (new_buffer);
       goto invalid_frame;
+    }
 
-    rtpvrawdepay->outbuf = outbuf;
+    rtpvrawdepay->outbuf = new_buffer;
     rtpvrawdepay->timestamp = timestamp;
   }
 
@@ -585,7 +589,6 @@ alloc_failed:
 invalid_frame:
   {
     GST_ERROR_OBJECT (depayload, "could not map video frame");
-    gst_buffer_unref (outbuf);
     return NULL;
   }
 wrong_length:
