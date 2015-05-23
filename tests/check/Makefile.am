@@ -232,6 +232,7 @@ check_PROGRAMS = \
 	$(check_typefind) \
 	$(check_videoconvert) \
 	$(check_videorate) \
+	$(check_videoscale) \
 	$(check_videotestsrc) \
 	$(check_volume) \
 	$(check_vorbis) \
