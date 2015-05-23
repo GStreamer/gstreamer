@@ -2150,6 +2150,28 @@ gst_qtdemux_stbl_free (QtDemuxStream * stream)
 }
 
 static void
+gst_qtdemux_stream_flush_samples_data (GstQTDemux * qtdemux,
+    QtDemuxStream * stream)
+{
+  g_free (stream->samples);
+  stream->samples = NULL;
+  g_free (stream->segments);
+  stream->segments = NULL;
+  gst_qtdemux_stbl_free (stream);
+
+  /* fragments */
+  g_free (stream->ra_entries);
+  stream->ra_entries = NULL;
+  stream->n_ra_entries = 0;
+
+  stream->sample_index = -1;
+  stream->stbl_index = -1;
+  stream->n_samples = 0;
+  stream->time_position = 0;
+  stream->segment_index = -1;
+}
+
+static void
 gst_qtdemux_stream_clear (GstQTDemux * qtdemux, QtDemuxStream * stream)
 {
   if (stream->allocator)
@@ -2162,29 +2184,16 @@ gst_qtdemux_stream_clear (GstQTDemux * qtdemux, QtDemuxStream * stream)
     gst_memory_unref (stream->rgb8_palette);
     stream->rgb8_palette = NULL;
   }
-  g_free (stream->samples);
-  stream->samples = NULL;
-  g_free (stream->segments);
-  stream->segments = NULL;
+
   if (stream->pending_tags)
     gst_tag_list_unref (stream->pending_tags);
   stream->pending_tags = NULL;
   g_free (stream->redirect_uri);
   stream->redirect_uri = NULL;
-  /* free stbl sub-atoms */
-  gst_qtdemux_stbl_free (stream);
-  /* fragments */
-  g_free (stream->ra_entries);
-  stream->ra_entries = NULL;
-  stream->n_ra_entries = 0;
-
   stream->sent_eos = FALSE;
-  stream->segment_index = -1;
-  stream->time_position = 0;
-  stream->sample_index = -1;
-  stream->stbl_index = -1;
-  stream->n_samples = 0;
   stream->sparse = FALSE;
+
+  gst_qtdemux_stream_flush_samples_data (qtdemux, stream);
 }
 
 static void
@@ -5009,6 +5018,18 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
 
     for (i = 0; i < demux->n_streams; i++) {
       demux->streams[i]->discont = TRUE;
+    }
+
+    /* Reverse fragmented playback, need to flush all we have before
+     * consuming a new fragment.
+     * The samples array have the timestamps calculated by accumulating the
+     * durations but this won't work for reverse playback of fragments as
+     * the timestamps of a subsequent fragment should be smaller than the
+     * previously received one. */
+    if (demux->fragmented && demux->segment.rate < 0) {
+      gst_qtdemux_process_adapter (demux, TRUE);
+      for (i = 0; i < demux->n_streams; i++)
+        gst_qtdemux_stream_flush_samples_data (demux, demux->streams[i]);
     }
   }
 
