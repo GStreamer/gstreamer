@@ -91,6 +91,8 @@ static gboolean play_timeout (gpointer user_data);
 static void play_about_to_finish (GstElement * playbin, gpointer user_data);
 static void play_reset (GstPlay * play);
 static void play_set_relative_volume (GstPlay * play, gdouble volume_step);
+static gboolean play_do_seek (GstPlay * play, gint64 pos, gdouble rate,
+    GstPlayTrickMode mode);
 
 /* *INDENT-OFF* */
 static void gst_play_printf (const gchar * format, ...) G_GNUC_PRINTF (1, 2);
@@ -694,9 +696,8 @@ relative_seek (GstPlay * play, gdouble percent)
   } else {
     if (pos < 0)
       pos = 0;
-    if (!gst_element_seek_simple (play->playbin, GST_FORMAT_TIME,
-            GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, pos))
-      goto seek_failed;
+
+    play_do_seek (play, pos, play->rate, play->trick_mode);
   }
 
   return;
@@ -711,16 +712,23 @@ static gboolean
 play_set_rate_and_trick_mode (GstPlay * play, gdouble rate,
     GstPlayTrickMode mode)
 {
-  GstSeekFlags seek_flags;
-  GstQuery *query;
-  GstEvent *seek;
-  gboolean seekable = FALSE;
   gint64 pos = -1;
 
   g_return_val_if_fail (rate != 0, FALSE);
 
   if (!gst_element_query_position (play->playbin, GST_FORMAT_TIME, &pos))
     return FALSE;
+
+  return play_do_seek (play, pos, rate, mode);
+}
+
+static gboolean
+play_do_seek (GstPlay * play, gint64 pos, gdouble rate, GstPlayTrickMode mode)
+{
+  GstSeekFlags seek_flags;
+  GstQuery *query;
+  GstEvent *seek;
+  gboolean seekable = FALSE;
 
   query = gst_query_new_seeking (GST_FORMAT_TIME);
   if (!gst_element_query (play->playbin, query)) {
