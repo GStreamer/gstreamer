@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:23+0200\n"
+"POT-Creation-Date: 2015-05-24 18:47+0100\n"
 "PO-Revision-Date: 2014-01-22 17:42+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -79,12 +79,6 @@ msgstr "Intern feil i datastrøm."
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Mangler elementet «%s» - kontroller GStreamer-installasjonen."
-
-#, c-format
-msgid "A %s plugin is required to play this stream, but not installed."
-msgstr ""
-"Et %s-tillegg kreves for å spille av denne strømmen, men det er ikke "
-"installert."
 
 msgid "Could not determine type of stream"
 msgstr "Kunne ikke bestemme type strøm."
@@ -518,10 +512,81 @@ msgid ""
 "added/removed."
 msgstr ""
 
+#, c-format
+msgid "Volume: %.0f%%"
+msgstr ""
+
 msgid "Buffering..."
 msgstr "Bufrer ..."
 
 msgid "Clock lost, selecting a new one\n"
+msgstr ""
+
+msgid "Reached end of play list."
+msgstr ""
+
+#, c-format
+msgid "Now playing %s"
+msgstr ""
+
+#, c-format
+msgid "About to finish, preparing next title: %s"
+msgstr ""
+
+#, c-format
+msgid "Playback rate: %.2f"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not change playback rate to %.2f"
+msgstr "Kunne ikke åpne enheten for avspilling i stereo-modus."
+
+msgid "space"
+msgstr ""
+
+msgid "pause/unpause"
+msgstr ""
+
+msgid "q or ESC"
+msgstr ""
+
+msgid "quit"
+msgstr ""
+
+msgid "play next"
+msgstr ""
+
+msgid "play previous"
+msgstr ""
+
+msgid "seek forward"
+msgstr ""
+
+msgid "seek backward"
+msgstr ""
+
+msgid "volume up"
+msgstr ""
+
+msgid "volume down"
+msgstr ""
+
+msgid "increase playback rate"
+msgstr ""
+
+msgid "decrease playback rate"
+msgstr ""
+
+msgid "change playback direction"
+msgstr ""
+
+msgid "enable/disable trick modes"
+msgstr ""
+
+msgid "show keyboard shortcuts"
+msgstr ""
+
+msgid "Interactive mode - keyboard controls:"
 msgstr ""
 
 msgid "Video sink to use (default is autovideosink)"
@@ -536,7 +601,7 @@ msgstr "Aktiver sømløs avspilling"
 msgid "Shuffle playlist"
 msgstr ""
 
-msgid "Interactive control via keyboard"
+msgid "Disable interactive control via the keyboard"
 msgstr ""
 
 msgid "Volume"
@@ -545,12 +610,23 @@ msgstr ""
 msgid "Playlist file containing input media files"
 msgstr ""
 
+msgid "Do not print any output (apart from errors)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Bruk: %s FIL1|URI1 [FILE|URI2] [FILE|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
 msgstr "Du må ha med minst ett filnavn eller nettadresse å spille."
+
+msgid "Press 'k' to see a list of keyboard shortcuts.\n"
+msgstr ""
+
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr ""
+#~ "Et %s-tillegg kreves for å spille av denne strømmen, men det er ikke "
+#~ "installert."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "Ukomprimert %s YUV %s"

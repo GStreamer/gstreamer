@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:23+0200\n"
+"POT-Creation-Date: 2015-05-24 18:47+0100\n"
 "PO-Revision-Date: 2011-06-04 21:11+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -78,10 +78,6 @@ msgstr "Interna datumflu-eraro."
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
-
-#, c-format
-msgid "A %s plugin is required to play this stream, but not installed."
-msgstr "%s-kromprogramo bezonatas, sed tia ne estas instalite."
 
 msgid "Could not determine type of stream"
 msgstr "Ne eblis rekoni la tipon de la fluo"
@@ -515,10 +511,81 @@ msgid ""
 "added/removed."
 msgstr ""
 
+#, c-format
+msgid "Volume: %.0f%%"
+msgstr ""
+
 msgid "Buffering..."
 msgstr ""
 
 msgid "Clock lost, selecting a new one\n"
+msgstr ""
+
+msgid "Reached end of play list."
+msgstr ""
+
+#, c-format
+msgid "Now playing %s"
+msgstr ""
+
+#, c-format
+msgid "About to finish, preparing next title: %s"
+msgstr ""
+
+#, c-format
+msgid "Playback rate: %.2f"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not change playback rate to %.2f"
+msgstr "Ne eblis malfermi aparaton por reproduktado per dukanala reĝimo."
+
+msgid "space"
+msgstr ""
+
+msgid "pause/unpause"
+msgstr ""
+
+msgid "q or ESC"
+msgstr ""
+
+msgid "quit"
+msgstr ""
+
+msgid "play next"
+msgstr ""
+
+msgid "play previous"
+msgstr ""
+
+msgid "seek forward"
+msgstr ""
+
+msgid "seek backward"
+msgstr ""
+
+msgid "volume up"
+msgstr ""
+
+msgid "volume down"
+msgstr ""
+
+msgid "increase playback rate"
+msgstr ""
+
+msgid "decrease playback rate"
+msgstr ""
+
+msgid "change playback direction"
+msgstr ""
+
+msgid "enable/disable trick modes"
+msgstr ""
+
+msgid "show keyboard shortcuts"
+msgstr ""
+
+msgid "Interactive mode - keyboard controls:"
 msgstr ""
 
 msgid "Video sink to use (default is autovideosink)"
@@ -533,7 +600,7 @@ msgstr ""
 msgid "Shuffle playlist"
 msgstr ""
 
-msgid "Interactive control via keyboard"
+msgid "Disable interactive control via the keyboard"
 msgstr ""
 
 msgid "Volume"
@@ -542,12 +609,21 @@ msgstr ""
 msgid "Playlist file containing input media files"
 msgstr ""
 
+msgid "Do not print any output (apart from errors)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
 
 msgid "You must provide at least one filename or URI to play."
 msgstr ""
+
+msgid "Press 'k' to see a list of keyboard shortcuts.\n"
+msgstr ""
+
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr "%s-kromprogramo bezonatas, sed tia ne estas instalite."
 
 #~ msgid "Master"
 #~ msgstr "Ĉefa regilo"

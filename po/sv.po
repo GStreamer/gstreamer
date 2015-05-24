@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:23+0200\n"
+"POT-Creation-Date: 2015-05-24 18:47+0100\n"
 "PO-Revision-Date: 2014-07-11 02:52+0200\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -79,12 +79,6 @@ msgstr "Internt dataströmningsfel."
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Saknar elementet \"%s\" - kontrollera din GStreamer-installation."
-
-#, c-format
-msgid "A %s plugin is required to play this stream, but not installed."
-msgstr ""
-"En %s-insticksmodul krävs för att spela upp den här strömmen men är inte "
-"installerad."
 
 msgid "Could not determine type of stream"
 msgstr "Kunde inte fastställa typ av ström"
@@ -517,11 +511,84 @@ msgid ""
 "added/removed."
 msgstr ""
 
+#, fuzzy, c-format
+msgid "Volume: %.0f%%"
+msgstr "Volym"
+
 msgid "Buffering..."
 msgstr "Buffrar..."
 
 msgid "Clock lost, selecting a new one\n"
 msgstr "Klocka förlorad, väljer en ny\n"
+
+msgid "Reached end of play list."
+msgstr ""
+
+#, c-format
+msgid "Now playing %s"
+msgstr ""
+
+#, c-format
+msgid "About to finish, preparing next title: %s"
+msgstr ""
+
+#, c-format
+msgid "Playback rate: %.2f"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not change playback rate to %.2f"
+msgstr "Kunde inte öppna enheten för uppspelning i stereoläge."
+
+msgid "space"
+msgstr ""
+
+msgid "pause/unpause"
+msgstr ""
+
+msgid "q or ESC"
+msgstr ""
+
+msgid "quit"
+msgstr ""
+
+msgid "play next"
+msgstr ""
+
+msgid "play previous"
+msgstr ""
+
+msgid "seek forward"
+msgstr ""
+
+msgid "seek backward"
+msgstr ""
+
+#, fuzzy
+msgid "volume up"
+msgstr "Volym"
+
+msgid "volume down"
+msgstr ""
+
+msgid "increase playback rate"
+msgstr ""
+
+msgid "decrease playback rate"
+msgstr ""
+
+msgid "change playback direction"
+msgstr ""
+
+msgid "enable/disable trick modes"
+msgstr ""
+
+msgid "show keyboard shortcuts"
+msgstr ""
+
+#, fuzzy
+msgid "Interactive mode - keyboard controls:"
+msgstr "Interaktiv styrning via tangentbord"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Videoutgång som ska användas (standard är autovideosink)"
@@ -535,7 +602,8 @@ msgstr "Aktivera mellanrumslös uppspelning"
 msgid "Shuffle playlist"
 msgstr "Blanda spellista"
 
-msgid "Interactive control via keyboard"
+#, fuzzy
+msgid "Disable interactive control via the keyboard"
 msgstr "Interaktiv styrning via tangentbord"
 
 msgid "Volume"
@@ -544,9 +612,20 @@ msgstr "Volym"
 msgid "Playlist file containing input media files"
 msgstr "Fil med spellista innehållandes inkommande mediafiler"
 
+msgid "Do not print any output (apart from errors)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Användning: %s FIL1|URI1 [FIL2|URI2] [FIL3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
 msgstr "Du måste ange åtminstone ett filnamn eller en URI att spela."
+
+msgid "Press 'k' to see a list of keyboard shortcuts.\n"
+msgstr ""
+
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr ""
+#~ "En %s-insticksmodul krävs för att spela upp den här strömmen men är inte "
+#~ "installerad."

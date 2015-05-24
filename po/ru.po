@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:23+0200\n"
+"POT-Creation-Date: 2015-05-24 18:47+0100\n"
 "PO-Revision-Date: 2014-05-22 20:01+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -82,11 +82,6 @@ msgstr "Внутренняя ошибка потока данных."
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Отсутствует элемент «%s» — проверьте правильность установки GStreamer."
-
-#, c-format
-msgid "A %s plugin is required to play this stream, but not installed."
-msgstr ""
-"Для воспроизведения этого потока требуется модуль %s, но он не установлен."
 
 msgid "Could not determine type of stream"
 msgstr "Не удалось определить тип потока"
@@ -522,11 +517,84 @@ msgid ""
 "added/removed."
 msgstr ""
 
+#, fuzzy, c-format
+msgid "Volume: %.0f%%"
+msgstr "Громкость"
+
 msgid "Buffering..."
 msgstr "Буферизация…"
 
 msgid "Clock lost, selecting a new one\n"
 msgstr "Часы потеряны, выбираем новые\n"
+
+msgid "Reached end of play list."
+msgstr ""
+
+#, c-format
+msgid "Now playing %s"
+msgstr ""
+
+#, c-format
+msgid "About to finish, preparing next title: %s"
+msgstr ""
+
+#, c-format
+msgid "Playback rate: %.2f"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not change playback rate to %.2f"
+msgstr "Не удалось открыть устройство для воспроизведения в режиме стерео."
+
+msgid "space"
+msgstr ""
+
+msgid "pause/unpause"
+msgstr ""
+
+msgid "q or ESC"
+msgstr ""
+
+msgid "quit"
+msgstr ""
+
+msgid "play next"
+msgstr ""
+
+msgid "play previous"
+msgstr ""
+
+msgid "seek forward"
+msgstr ""
+
+msgid "seek backward"
+msgstr ""
+
+#, fuzzy
+msgid "volume up"
+msgstr "Громкость"
+
+msgid "volume down"
+msgstr ""
+
+msgid "increase playback rate"
+msgstr ""
+
+msgid "decrease playback rate"
+msgstr ""
+
+msgid "change playback direction"
+msgstr ""
+
+msgid "enable/disable trick modes"
+msgstr ""
+
+msgid "show keyboard shortcuts"
+msgstr ""
+
+#, fuzzy
+msgid "Interactive mode - keyboard controls:"
+msgstr "Интерактивное управление с клавиатуры"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Используемый приёмник видео (по умолчанию autovideosink)"
@@ -540,7 +608,8 @@ msgstr "Включить непрерывное воспроизведение"
 msgid "Shuffle playlist"
 msgstr "Перемешать список воспроизведения"
 
-msgid "Interactive control via keyboard"
+#, fuzzy
+msgid "Disable interactive control via the keyboard"
 msgstr "Интерактивное управление с клавиатуры"
 
 msgid "Volume"
@@ -549,12 +618,22 @@ msgstr "Громкость"
 msgid "Playlist file containing input media files"
 msgstr "Файл списка воспроизведения с входными медиа-файлами"
 
+msgid "Do not print any output (apart from errors)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Использование: %s ФАЙЛ1|URI1 [ФАЙЛ2|URI2] [ФАЙЛ3|URI3] …"
 
 msgid "You must provide at least one filename or URI to play."
 msgstr "Вы должны указать не менее одного имени файла или URI."
+
+msgid "Press 'k' to see a list of keyboard shortcuts.\n"
+msgstr ""
+
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr ""
+#~ "Для воспроизведения этого потока требуется модуль %s, но он не установлен."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "Несжатый %s YUV %s"

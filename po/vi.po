@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:23+0200\n"
+"POT-Creation-Date: 2015-05-24 18:47+0100\n"
 "PO-Revision-Date: 2014-06-30 09:27+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -84,10 +84,6 @@ msgstr "Lỗi luồng dữ liệu nội bộ."
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Thiếu phần tử “%s” — hãy kiểm tra lại phần cài đặt GStreamer."
-
-#, c-format
-msgid "A %s plugin is required to play this stream, but not installed."
-msgstr "Cần phần bổ sung %s để phát luồng này nhưng chưa cài đặt."
 
 msgid "Could not determine type of stream"
 msgstr "Không thể xác định kiểu của luồng dữ liệu"
@@ -528,11 +524,84 @@ msgid ""
 "added/removed."
 msgstr ""
 
+#, fuzzy, c-format
+msgid "Volume: %.0f%%"
+msgstr "Âm lượng"
+
 msgid "Buffering..."
 msgstr "Đang đệm..."
 
 msgid "Clock lost, selecting a new one\n"
 msgstr "Mất đồng hồ, chọn một cái mới\n"
+
+msgid "Reached end of play list."
+msgstr ""
+
+#, c-format
+msgid "Now playing %s"
+msgstr ""
+
+#, c-format
+msgid "About to finish, preparing next title: %s"
+msgstr ""
+
+#, c-format
+msgid "Playback rate: %.2f"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not change playback rate to %.2f"
+msgstr "Không thể mở thiết bị để phát lại trong chế độ âm lập thể."
+
+msgid "space"
+msgstr ""
+
+msgid "pause/unpause"
+msgstr ""
+
+msgid "q or ESC"
+msgstr ""
+
+msgid "quit"
+msgstr ""
+
+msgid "play next"
+msgstr ""
+
+msgid "play previous"
+msgstr ""
+
+msgid "seek forward"
+msgstr ""
+
+msgid "seek backward"
+msgstr ""
+
+#, fuzzy
+msgid "volume up"
+msgstr "Âm lượng"
+
+msgid "volume down"
+msgstr ""
+
+msgid "increase playback rate"
+msgstr ""
+
+msgid "decrease playback rate"
+msgstr ""
+
+msgid "change playback direction"
+msgstr ""
+
+msgid "enable/disable trick modes"
+msgstr ""
+
+msgid "show keyboard shortcuts"
+msgstr ""
+
+#, fuzzy
+msgid "Interactive mode - keyboard controls:"
+msgstr "Điều khiển tương tác thông qua bàn phím"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Bộ chứa video được dùng (mặc định là autovideosink)"
@@ -546,7 +615,8 @@ msgstr "Bật phát lại không khe"
 msgid "Shuffle playlist"
 msgstr "Xáo trộn danh sách phát"
 
-msgid "Interactive control via keyboard"
+#, fuzzy
+msgid "Disable interactive control via the keyboard"
 msgstr "Điều khiển tương tác thông qua bàn phím"
 
 msgid "Volume"
@@ -555,12 +625,21 @@ msgstr "Âm lượng"
 msgid "Playlist file containing input media files"
 msgstr "Tập tin danh sách phát có chứa các tập tin đa phương tiện đầu vào"
 
+msgid "Do not print any output (apart from errors)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Cách dùng: %s TẬP-TIN1|URI1 [TẬP-TIN2|URI2] [TẬP-TIN3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
 msgstr "Bạn phải cung cấp ít nhất là một tên tập tin hay URI để phát."
+
+msgid "Press 'k' to see a list of keyboard shortcuts.\n"
+msgstr ""
+
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr "Cần phần bổ sung %s để phát luồng này nhưng chưa cài đặt."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "%s YUV %s không nén"
