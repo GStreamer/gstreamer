@@ -29,7 +29,7 @@
 #endif
 
 #include <gst/gst.h>
-#include "../../validate/gst-validate-scenario.h"
+#include "../../gst/validate/gst-validate-scenario.h"
 
 #if defined(__gnu_linux__) && !defined(__ANDROID__) && !defined (ANDROID)
 

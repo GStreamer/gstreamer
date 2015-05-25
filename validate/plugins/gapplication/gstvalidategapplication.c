@@ -30,9 +30,9 @@
 #include <gst/gst.h>
 #include <gio/gio.h>
 
-#include "../../validate/validate.h"
-#include "../../validate/gst-validate-scenario.h"
-#include "../../validate/gst-validate-utils.h"
+#include "../../gst/validate/validate.h"
+#include "../../gst/validate/gst-validate-scenario.h"
+#include "../../gst/validate/gst-validate-utils.h"
 
 
 static gboolean

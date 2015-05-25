@@ -31,11 +31,11 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
-#include "../../validate/gst-validate-report.h"
-#include "../../validate/gst-validate-reporter.h"
-#include "../../validate/validate.h"
-#include "../../validate/gst-validate-scenario.h"
-#include "../../validate/gst-validate-utils.h"
+#include "../../gst/validate/gst-validate-report.h"
+#include "../../gst/validate/gst-validate-reporter.h"
+#include "../../gst/validate/validate.h"
+#include "../../gst/validate/gst-validate-scenario.h"
+#include "../../gst/validate/gst-validate-utils.h"
 
 #define ACTION_GDKEVENTS_QUARK g_quark_from_static_string("ACTION_GDKEVENTS_QUARK")
 static GList *awaited_actions = NULL;   /* A list of GstValidateAction to be executed */

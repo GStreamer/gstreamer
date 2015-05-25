@@ -303,10 +303,10 @@ gst/Makefile
 gst/validate/Makefile
 gst/preload/Makefile
 gst/overrides/Makefile
-gst/plugins/Makefile
-gst/plugins/fault_injection/Makefile
-gst/plugins/gapplication/Makefile
-gst/plugins/gtk/Makefile
+plugins/Makefile
+plugins/fault_injection/Makefile
+plugins/gapplication/Makefile
+plugins/gtk/Makefile
 tests/Makefile
 tests/check/Makefile
 pkgconfig/Makefile
