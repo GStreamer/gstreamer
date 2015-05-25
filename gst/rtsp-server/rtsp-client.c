@@ -839,16 +839,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST],
       0, ctx);
 
-  /* make sure we unblock the backlog and don't accept new messages
-   * on the watch */
-  if (priv->watch != NULL)
-    gst_rtsp_watch_set_flushing (priv->watch, TRUE);
-
   gst_rtsp_session_media_set_state (sessmedia, GST_STATE_NULL);
-
-  /* allow messages again so that we can send the reply */
-  if (priv->watch != NULL)
-    gst_rtsp_watch_set_flushing (priv->watch, FALSE);
 
   /* unmanage the media in the session, returns false if all media session
    * are torn down. */
