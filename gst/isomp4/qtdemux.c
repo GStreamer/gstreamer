@@ -5003,7 +5003,6 @@ gst_qtdemux_drop_data (GstQTDemux * demux, gint bytes)
   demux->todrop -= bytes;
 }
 
-/* FIXME, unverified after edit list updates */
 static GstFlowReturn
 gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
 {
