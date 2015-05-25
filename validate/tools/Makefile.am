@@ -34,4 +34,18 @@ gst_validate_media_check_@GST_API_VERSION@_SOURCES = gst-validate-media-check.c
 gst_validate_media_check_@GST_API_VERSION@_debug_SOURCES = gst-validate-media-check.c
 gst_validate_media_check_@GST_API_VERSION@_debug_LDFLAGS = -no-install
 
+if HAVE_CAIRO
+bin_PROGRAMS += gst-validate-images-check-@GST_API_VERSION@
+noinst_PROGRAMS += gst-validate-images-check-@GST_API_VERSION@-debug
+
+gst_validate_images_check_@GST_API_VERSION@_SOURCES = gst-validate-images-check.c
+gst_validate_images_check_@GST_API_VERSION@_CFLAGS = $(AM_CFLAGS) -I$(top_builddir)/gst-libs/gst/video/
+gst_validate_images_check_@GST_API_VERSION@_LDADD = $(LDADD) $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la
+
+gst_validate_images_check_@GST_API_VERSION@_debug_SOURCES = gst-validate-images-check.c
+gst_validate_images_check_@GST_API_VERSION@_debug_CFLAGS = $(AM_CFLAGS) -I$(top_builddir)/gst-libs/gst/video/
+gst_validate_images_check_@GST_API_VERSION@_debug_LDADD = $(LDADD) $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la
+gst_validate_images_check_@GST_API_VERSION@_debug_LDFLAGS = -no-install
+endif
+
 CLEANFILES = $(bin_SCRIPTS)

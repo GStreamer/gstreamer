@@ -185,6 +185,14 @@ PKG_CHECK_MODULES(GDK, gdk-3.0, HAVE_GDK=yes, HAVE_GDK=no)
 AC_SUBST(GDK_CFLAGS)
 AC_SUBST(GDK_LIBS)
 
+PKG_CHECK_MODULES(CAIRO, "cairo", HAVE_CAIRO=yes, HAVE_CAIRO=no)
+AC_SUBST(CAIRO_CFLAGS)
+AC_SUBST(CAIRO_LIBS)
+AM_CONDITIONAL(HAVE_CAIRO, test ! "x$HAVE_CAIRO" = "xno")
+if test "x$HAVE_CAIRO" != "xyes"; then
+  AC_MSG_NOTICE([Cairo is needed for the gst-validate-images-tool])
+fi
+
 dnl checks for gstreamer
 
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
@@ -307,6 +315,9 @@ plugins/Makefile
 plugins/fault_injection/Makefile
 plugins/gapplication/Makefile
 plugins/gtk/Makefile
+gst-libs/Makefile
+gst-libs/gst/Makefile
+gst-libs/gst/video/Makefile
 tests/Makefile
 tests/check/Makefile
 pkgconfig/Makefile

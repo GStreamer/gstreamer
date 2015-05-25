@@ -5,6 +5,7 @@ SUBDIRS = 	\
 	data	\
 	gst 	\
 	plugins	\
+	gst-libs	\
 	launcher \
 	tools 	\
 	pkgconfig 	\
