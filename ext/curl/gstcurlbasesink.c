@@ -449,6 +449,8 @@ gst_curl_base_sink_start (GstBaseSink * bsink)
     return FALSE;
   }
 
+  gst_poll_fd_init (&sink->fd);
+
   return TRUE;
 }
 
@@ -972,6 +974,18 @@ handle_transfer (GstCurlBaseSink * sink)
 
   gst_curl_base_sink_got_response_notify (sink);
 
+  GST_OBJECT_LOCK (sink);
+  if (sink->socket_type == CURLSOCKTYPE_ACCEPT) {
+    if (!gst_poll_remove_fd (sink->fdset, &sink->fd)) {
+      sink->error = g_strdup_printf ("failed to remove fd");
+      retval = GST_FLOW_ERROR;
+      GST_OBJECT_UNLOCK (sink);
+      goto fail;
+    }
+    sink->fd.fd = -1;
+  }
+  GST_OBJECT_UNLOCK (sink);
+
   return;
 
 fail:
@@ -1041,7 +1055,7 @@ gst_curl_base_sink_debug_cb (CURL * handle, curl_infotype type, char *data,
  * the connect() call. */
 static int
 gst_curl_base_sink_transfer_socket_cb (void *clientp, curl_socket_t curlfd,
-    curlsocktype G_GNUC_UNUSED purpose)
+    curlsocktype socket_type)
 {
   GstCurlBaseSink *sink;
   gboolean ret = TRUE;
@@ -1058,14 +1072,19 @@ gst_curl_base_sink_transfer_socket_cb (void *clientp, curl_socket_t curlfd,
     return 1;
   }
 
-  gst_poll_fd_init (&sink->fd);
-  sink->fd.fd = curlfd;
-
-  ret &= gst_poll_add_fd (sink->fdset, &sink->fd);
-  ret &= gst_poll_fd_ctl_write (sink->fdset, &sink->fd, TRUE);
-  ret &= gst_poll_fd_ctl_read (sink->fdset, &sink->fd, TRUE);
-  GST_DEBUG_OBJECT (sink, "fd: %d", sink->fd.fd);
   GST_OBJECT_LOCK (sink);
+  sink->socket_type = socket_type;
+
+  if (sink->fd.fd != curlfd) {
+    if (sink->fd.fd > 0 && sink->socket_type != CURLSOCKTYPE_ACCEPT) {
+      ret &= gst_poll_remove_fd (sink->fdset, &sink->fd);
+    }
+    sink->fd.fd = curlfd;
+    ret &= gst_poll_add_fd (sink->fdset, &sink->fd);
+    ret &= gst_poll_fd_ctl_write (sink->fdset, &sink->fd, TRUE);
+    ret &= gst_poll_fd_ctl_read (sink->fdset, &sink->fd, TRUE);
+  }
+  GST_DEBUG_OBJECT (sink, "fd: %d", sink->fd.fd);
   gst_curl_base_sink_setup_dscp_unlocked (sink);
   GST_OBJECT_UNLOCK (sink);
 

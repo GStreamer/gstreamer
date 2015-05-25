@@ -67,6 +67,7 @@ struct _GstCurlBaseSink
   CURL *curl;
   GstPollFD fd;
   GstPoll *fdset;
+  curlsocktype socket_type;
   GThread *transfer_thread;
   gchar *error;
   GstFlowReturn flow_ret;
