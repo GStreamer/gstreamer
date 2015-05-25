@@ -53,6 +53,7 @@ EXPORTS
 	_gst_double_range_type DATA
 	_gst_element_error_printf
 	_gst_event_type DATA
+	_gst_flagset_type DATA
 	_gst_fraction_range_type DATA
 	_gst_fraction_type DATA
 	_gst_int64_range_type DATA
@@ -601,6 +602,8 @@ EXPORTS
 	gst_event_type_to_quark
 	gst_event_writable_structure
 	gst_filename_to_uri
+	gst_flagset_get_type
+	gst_flagset_register
 	gst_flow_get_name
 	gst_flow_return_get_type
 	gst_flow_to_quark
@@ -1175,6 +1178,7 @@ EXPORTS
 	gst_structure_get_double
 	gst_structure_get_enum
 	gst_structure_get_field_type
+	gst_structure_get_flagset
 	gst_structure_get_fraction
 	gst_structure_get_int
 	gst_structure_get_int64
@@ -1465,6 +1469,8 @@ EXPORTS
 	gst_value_get_caps_features
 	gst_value_get_double_range_max
 	gst_value_get_double_range_min
+	gst_value_get_flagset_flags
+	gst_value_get_flagset_mask
 	gst_value_get_fraction_denominator
 	gst_value_get_fraction_numerator
 	gst_value_get_fraction_range_max
@@ -1494,6 +1500,7 @@ EXPORTS
 	gst_value_set_caps
 	gst_value_set_caps_features
 	gst_value_set_double_range
+	gst_value_set_flagset
 	gst_value_set_fraction
 	gst_value_set_fraction_range
 	gst_value_set_fraction_range_full

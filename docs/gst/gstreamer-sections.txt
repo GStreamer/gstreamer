@@ -3285,6 +3285,15 @@ GST_TYPE_BITMASK
 gst_value_set_bitmask
 gst_value_get_bitmask
 
+<SUBSECTION flagset>
+GST_VALUE_HOLDS_FLAG_SET
+GST_TYPE_FLAG_SET
+gst_structure_get_flagset
+gst_value_get_flagset_flags
+gst_value_get_flagset_mask
+gst_value_set_flagset
+GST_FLAG_SET_MASK_EXACT
+
 <SUBSECTION int64range>
 GST_VALUE_HOLDS_INT64_RANGE
 GST_TYPE_INT64_RANGE
@@ -3408,6 +3417,7 @@ gst_int64_range_get_type
 gst_value_array_get_type
 gst_value_list_get_type
 gst_bitmask_get_type
+gst_flagset_get_type
 </SECTION>
 
 <SECTION>

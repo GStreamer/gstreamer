@@ -749,6 +749,30 @@ GST_START_TEST (test_filter_and_map_in_place)
 
 GST_END_TEST;
 
+GST_START_TEST (test_flagset)
+{
+  GstStructure *s;
+  GType test_flagset_type;
+  guint test_flags =
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SKIP | GST_SEEK_FLAG_SNAP_AFTER;
+  guint test_mask = GST_FLAG_SET_MASK_EXACT;
+  guint out_flags, out_mask;
+
+  test_flagset_type = gst_flagset_register (GST_TYPE_SEEK_FLAGS);
+  fail_unless (g_type_is_a (test_flagset_type, GST_TYPE_FLAG_SET));
+
+  /* Check that we can retrieve a non-standard flagset from the structure */
+  s = gst_structure_new ("test-struct", "test-flagset", test_flagset_type,
+      test_flags, test_mask, NULL);
+  fail_unless (gst_structure_get_flagset (s, "test-flagset", &out_flags,
+          &out_mask));
+
+  fail_unless (out_flags == test_flags);
+  fail_unless (out_mask == test_mask);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_structure_suite (void)
 {
@@ -774,6 +798,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_foreach);
   tcase_add_test (tc_chain, test_map_in_place);
   tcase_add_test (tc_chain, test_filter_and_map_in_place);
+  tcase_add_test (tc_chain, test_flagset);
   return s;
 }
 

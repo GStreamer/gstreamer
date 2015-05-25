@@ -200,6 +200,26 @@ G_BEGIN_DECLS
  */
 #define GST_VALUE_HOLDS_BITMASK(x)      ((x) != NULL && G_VALUE_TYPE(x) == _gst_bitmask_type)
 
+/**
+ * GST_VALUE_HOLDS_FLAG_SET:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_FLAG_SET value.
+ *
+ * Since: 1.6
+ */
+#define GST_VALUE_HOLDS_FLAG_SET(x)     (G_TYPE_CHECK_VALUE_TYPE ((x), GST_TYPE_FLAG_SET))
+
+/*
+ * GST_FLAG_SET_MASK_EXACT:
+ * A mask value with all bits set, for use as a
+ * #GstFlagSet mask where all flag bits must match
+ * exactly
+ *
+ * Since: 1.6
+ */
+#define GST_FLAG_SET_MASK_EXACT ((guint)(-1))
+
 GST_EXPORT GType _gst_int_range_type;
 
 /**
@@ -299,6 +319,21 @@ GST_EXPORT GType _gst_bitmask_type;
  */
 
 #define GST_TYPE_BITMASK                 (_gst_bitmask_type)
+
+GST_EXPORT GType _gst_flagset_type;
+
+/**
+ * GST_TYPE_FLAG_SET:
+ *
+ * a #GValue type that represents a 32-bit flag bitfield, with 32-bit
+ * mask indicating which of the bits in the field are explicitly set.
+ * Useful for negotiation.
+ *
+ * Returns: the #GType of GstFlags (which is not explicitly typed)
+ *
+ * Since: 1.6
+ */
+#define GST_TYPE_FLAG_SET                   (_gst_flagset_type)
 
 /**
  * GST_TYPE_G_THREAD:
@@ -407,6 +442,7 @@ GType gst_fraction_get_type (void);
 GType gst_value_list_get_type (void);
 GType gst_value_array_get_type (void);
 GType gst_bitmask_get_type (void);
+GType gst_flagset_get_type (void);
 
 /* Hide this compatibility type from introspection */
 #ifndef __GI_SCANNER__
@@ -526,6 +562,10 @@ const GValue    *gst_value_get_fraction_range_max (const GValue *value);
 guint64         gst_value_get_bitmask           (const GValue   *value);
 void            gst_value_set_bitmask           (GValue         *value,
                                                  guint64         bitmask);
+/* flagset */
+void            gst_value_set_flagset (GValue * value, guint flags, guint mask);
+guint           gst_value_get_flagset_flags (const GValue * value);
+guint           gst_value_get_flagset_mask (const GValue * value);
 
 /* compare */
 gint            gst_value_compare               (const GValue   *value1,
@@ -560,6 +600,9 @@ gboolean        gst_value_can_subtract          (const GValue   *minuend,
 gboolean        gst_value_is_fixed              (const GValue   *value);
 gboolean        gst_value_fixate                (GValue         *dest,
                                                  const GValue   *src);
+
+/* Flagset registration wrapper */
+GType		gst_flagset_register (GType flags_type);
 
 G_END_DECLS
 

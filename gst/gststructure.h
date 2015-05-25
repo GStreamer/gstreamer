@@ -288,6 +288,11 @@ gboolean              gst_structure_get_fraction         (const GstStructure  * 
                                                           gint                * value_numerator,
                                                           gint                * value_denominator);
 
+gboolean              gst_structure_get_flagset          (const GstStructure  * structure,
+                                                          const gchar         * fieldname,
+                                                          guint               * value_flags,
+                                                          guint               * value_mask);
+
 gchar *               gst_structure_to_string    (const GstStructure * structure) G_GNUC_MALLOC;
 
 GstStructure *        gst_structure_from_string  (const gchar * string,

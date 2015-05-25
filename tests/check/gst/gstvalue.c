@@ -497,6 +497,180 @@ GST_START_TEST (test_deserialize_bitmask)
 
 GST_END_TEST;
 
+static void
+check_flagset_mask_serialisation (GValue * value, guint test_flags,
+    guint test_mask)
+{
+  gchar *string;
+  gst_value_set_flagset (value, test_flags, test_mask);
+
+  /* Normalise our test flags against the mask now for easier testing,
+   * as that's what we expect to get back from the flagset after it
+   * normalises internally */
+  test_flags &= test_mask;
+
+  /* Check the values got stored correctly */
+  fail_unless (gst_value_get_flagset_flags (value) == test_flags,
+      "resulting flags value is 0x%u, not 0x%x",
+      gst_value_get_flagset_flags (value), test_flags);
+  fail_unless (gst_value_get_flagset_mask (value) == test_mask,
+      "resulting mask is 0x%u, not 0x%x",
+      gst_value_get_flagset_mask (value), test_mask);
+
+  string = gst_value_serialize (value);
+  fail_if (string == NULL, "could not serialize flagset");
+
+  GST_DEBUG ("Serialized flagset to: %s", string);
+
+  fail_unless (gst_value_deserialize (value, string),
+      "could not deserialize %s", string);
+
+  fail_unless (gst_value_get_flagset_flags (value) == test_flags,
+      "resulting flags value is 0x%u, not 0x%x, for string %s",
+      gst_value_get_flagset_flags (value), test_flags, string);
+
+  fail_unless (gst_value_get_flagset_mask (value) == test_mask,
+      "resulting mask is 0x%u, not 0x%x, for string %s",
+      gst_value_get_flagset_mask (value), test_mask, string);
+
+  g_free (string);
+}
+
+GST_START_TEST (test_flagset)
+{
+  GValue value = G_VALUE_INIT;
+  GValue value2 = G_VALUE_INIT;
+  GValue dest = G_VALUE_INIT;
+  gchar *string;
+  GType test_flagset_type;
+  guint test_flags, test_mask;
+
+  /* Test serialisation of abstract type */
+  g_value_init (&value, GST_TYPE_FLAG_SET);
+
+  test_flags = 0xf1f1;
+  test_mask = 0xffff;
+
+  gst_value_set_flagset (&value, test_flags, test_mask);
+  string = gst_value_serialize (&value);
+  fail_if (string == NULL, "could not serialize flagset");
+
+  fail_unless (gst_value_deserialize (&value, string),
+      "could not deserialize %s", string);
+
+  fail_unless (gst_value_get_flagset_flags (&value) == test_flags,
+      "resulting value is 0x%u, not 0x%x, for string %s",
+      gst_value_get_flagset_flags (&value), test_flags, string);
+
+  fail_unless (gst_value_get_flagset_mask (&value) == test_mask,
+      "resulting value is 0x%u, not 0x%x, for string %s",
+      gst_value_get_flagset_mask (&value), test_mask, string);
+
+  g_free (string);
+  g_value_unset (&value);
+
+  /* Check we can't wrap a random non-flags type */
+  ASSERT_CRITICAL (gst_flagset_register (GST_TYPE_OBJECT));
+
+  test_flagset_type = gst_flagset_register (GST_TYPE_SEEK_FLAGS);
+
+  fail_unless (g_type_is_a (test_flagset_type, GST_TYPE_FLAG_SET));
+
+  g_value_init (&value, test_flagset_type);
+
+  test_flags =
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_TRICKMODE |
+      GST_SEEK_FLAG_TRICKMODE_KEY_UNITS;
+  test_mask =
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_TRICKMODE |
+      GST_SEEK_FLAG_TRICKMODE_NO_AUDIO;
+
+  check_flagset_mask_serialisation (&value, test_flags, test_mask);
+  /* Check serialisation works with the generic 'exact' flag */
+  check_flagset_mask_serialisation (&value, test_flags,
+      GST_FLAG_SET_MASK_EXACT);
+
+  /* Check deserialisation of flagset in 'flags' form, without
+   * the hex strings at the start */
+  test_flags = GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_TRICKMODE;
+  test_mask = GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_TRICKMODE |
+      GST_SEEK_FLAG_TRICKMODE_NO_AUDIO;
+  string = g_strdup ("+flush+trickmode/trickmode-no-audio");
+
+  fail_unless (gst_value_deserialize (&value, string),
+      "could not deserialize %s", string);
+
+  GST_DEBUG ("Deserialized %s to 0x%x:0x%x", string,
+      gst_value_get_flagset_flags (&value),
+      gst_value_get_flagset_mask (&value));
+
+  fail_unless (gst_value_get_flagset_flags (&value) == test_flags,
+      "resulting flags value is 0x%u, not 0x%x, for string %s",
+      gst_value_get_flagset_flags (&value), (test_flags & test_mask), string);
+
+  fail_unless (gst_value_get_flagset_mask (&value) == test_mask,
+      "resulting mask is 0x%u, not 0x%x, for string %s",
+      gst_value_get_flagset_mask (&value), test_mask, string);
+
+  g_free (string);
+  g_value_unset (&value);
+
+  /* Test that fixating don't-care fields works, using our
+   * sub-type flagset for good measure  */
+  g_value_init (&value, test_flagset_type);
+  gst_value_set_flagset (&value, test_flags, test_mask);
+
+  fail_unless (gst_value_fixate (&dest, &value));
+  fail_unless (gst_value_get_flagset_flags (&dest) == test_flags);
+  fail_unless (gst_value_get_flagset_mask (&dest) == GST_FLAG_SET_MASK_EXACT);
+
+  g_value_unset (&value);
+
+  /* Intersection tests */
+  g_value_init (&value, GST_TYPE_FLAG_SET);
+  g_value_init (&value2, test_flagset_type);
+
+  /* We want Accurate, but not Snap-Before */
+  gst_value_set_flagset (&value, GST_SEEK_FLAG_ACCURATE,
+      GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_SNAP_BEFORE);
+
+  /* This only cares that things are flushing */
+  gst_value_set_flagset (&value2, GST_SEEK_FLAG_FLUSH, GST_SEEK_FLAG_FLUSH);
+
+  test_flags = GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH;
+  test_mask =
+      GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_BEFORE;
+
+  /* GstFlagSet should always intersect with itself */
+  g_value_unset (&dest);
+  fail_unless (gst_value_intersect (&dest, &value, &value));
+
+  /* GstFlagSet subtype should intersect with itself */
+  g_value_unset (&dest);
+  fail_unless (gst_value_intersect (&dest, &value2, &value2));
+
+  /* Check we can intersect custom flagset subtype with flagset */
+  g_value_unset (&dest);
+  fail_unless (gst_value_intersect (&dest, &value2, &value));
+
+  g_value_unset (&dest);
+  fail_unless (gst_value_intersect (&dest, &value, &value2));
+
+  fail_unless (gst_value_get_flagset_flags (&dest) == test_flags,
+      "resulting flags value is 0x%u, not 0x%x",
+      gst_value_get_flagset_flags (&dest), test_flags);
+
+  fail_unless (gst_value_get_flagset_mask (&dest) == test_mask,
+      "resulting mask is 0x%u, not 0x%x",
+      gst_value_get_flagset_mask (&dest), test_mask);
+
+  g_value_unset (&dest);
+  g_value_unset (&value);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_string)
 {
   const gchar *try[] = {
@@ -2904,6 +3078,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_stepped_range_collection);
   tcase_add_test (tc_chain, test_stepped_int_range_parsing);
   tcase_add_test (tc_chain, test_stepped_int_range_ops);
+  tcase_add_test (tc_chain, test_flagset);
 
   return s;
 }

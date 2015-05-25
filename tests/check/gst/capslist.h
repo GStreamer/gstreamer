@@ -26,7 +26,9 @@ static const gchar *caps_list[] = {
   /* Test lists of fractions and fraction ranges */
   "test/gst-fraction-range, fraction = (fraction) { [ 1/4, 1/3 ], 1/8 }",
   "test/gst-fraction-range, fraction = (fraction) { [ 1/4, 1/3 ], [ 1/8, 2/8 ] }",
-
+  /* FlagSet */
+  "test/gst-flags,thingy=1f394:00ff8ff",
+  "test/gst-flags,thingy=101ffff1f394:fff00ff00ff8ff",
   /* Some random checks */
   "video/x-raw, format = (string) { I420, Y42B, Y444 }, framerate = (fraction) [1/MAX, MAX], width = (int) [ 1, MAX ], height = (int) [ 1, MAX ]",
 

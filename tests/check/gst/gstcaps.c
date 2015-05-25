@@ -39,7 +39,7 @@ GST_START_TEST (test_from_string)
     to_str = gst_caps_to_string (caps);
     fail_if (to_str == NULL,
         "Could not convert caps back to string %s\n", caps_list[i]);
-    caps2 = gst_caps_from_string (caps_list[i]);
+    caps2 = gst_caps_from_string (to_str);
     fail_if (caps2 == NULL, "Could not create caps from string %s\n", to_str);
 
     fail_unless (gst_caps_is_equal (caps, caps));
@@ -934,6 +934,104 @@ GST_START_TEST (test_intersect_duplication)
 
 GST_END_TEST;
 
+GST_START_TEST (test_intersect_flagset)
+{
+  GstCaps *c1, *c2, *test;
+  GType test_flagset_type;
+  GstSeekFlags test_flags, test_mask;
+  gchar *test_string;
+
+  /* Test that matching bits inside the mask intersect,
+   * and bits outside the mask don't matter */
+  c1 = gst_caps_from_string ("test/x-caps,field=ffd81d:fffff0");
+  c2 = gst_caps_from_string ("test/x-caps,field=0fd81f:0ffff0");
+
+  test = gst_caps_intersect_full (c1, c2, GST_CAPS_INTERSECT_FIRST);
+  fail_unless_equals_int (gst_caps_get_size (test), 1);
+  fail_unless (gst_caps_is_equal (c1, test));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+  gst_caps_unref (test);
+
+  /* Test that non-matching bits in the mask don't intersect */
+  c1 = gst_caps_from_string ("test/x-caps,field=ff001d:0ffff0");
+  c2 = gst_caps_from_string ("test/x-caps,field=0fd81f:0ffff0");
+
+  test = gst_caps_intersect_full (c1, c2, GST_CAPS_INTERSECT_FIRST);
+  fail_unless (gst_caps_is_empty (test));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+  gst_caps_unref (test);
+
+  /* Check custom flags type serialisation and de-serialisation */
+  test_flagset_type = gst_flagset_register (GST_TYPE_SEEK_FLAGS);
+  fail_unless (g_type_is_a (test_flagset_type, GST_TYPE_FLAG_SET));
+
+  test_flags =
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_TRICKMODE |
+      GST_SEEK_FLAG_TRICKMODE_KEY_UNITS;
+  test_mask =
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_TRICKMODE |
+      GST_SEEK_FLAG_TRICKMODE_NO_AUDIO;
+
+  c1 = gst_caps_new_simple ("test/x-caps", "field", test_flagset_type,
+      (guint64) (test_flags), (guint64) (test_mask), NULL);
+
+  test_string = gst_caps_to_string (c1);
+  fail_if (test_string == NULL);
+
+  GST_DEBUG ("Serialised caps to %s", test_string);
+  c2 = gst_caps_from_string (test_string);
+
+  fail_unless (gst_caps_is_equal (c1, c2));
+
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_union)
+{
+  GstCaps *c1, *c2, *test, *expect;
+
+  /* Test that matching bits inside the masks union OK, */
+  c1 = gst_caps_from_string ("test/x-caps,field=ffd81d:0ffff0");
+  c2 = gst_caps_from_string ("test/x-caps,field=0fd81f:0ffff0");
+
+  test = gst_caps_merge (c1, c2);
+  test = gst_caps_simplify (test);
+  /* c1, c2 now invalid */
+  fail_unless_equals_int (gst_caps_get_size (test), 1);
+  gst_caps_unref (test);
+
+  /* Test that non-intersecting sets of masked bits are OK */
+  c1 = gst_caps_from_string ("test/x-caps,field=ff001d:0ffff0");
+  c2 = gst_caps_from_string ("test/x-caps,field=4fd81f:f00000");
+  expect = gst_caps_from_string ("test/x-caps,field=4f001d:fffff0");
+  test = gst_caps_simplify (gst_caps_merge (c1, c2));
+  /* c1, c2 now invalid */
+  GST_LOG ("Expected caps %" GST_PTR_FORMAT " got %" GST_PTR_FORMAT "\n",
+      expect, test);
+  fail_unless (gst_caps_is_equal (test, expect));
+  gst_caps_unref (test);
+  gst_caps_unref (expect);
+
+  /* Test that partially-intersecting sets of masked bits that match are OK */
+  c1 = gst_caps_from_string ("test/x-caps,field=ff001d:0ffff0");
+  c2 = gst_caps_from_string ("test/x-caps,field=4fd81f:ff0000");
+  expect = gst_caps_from_string ("test/x-caps,field=4f001d:fffff0");
+  test = gst_caps_simplify (gst_caps_merge (c1, c2));
+  /* c1, c2 now invalid */
+  GST_LOG ("Expected caps %" GST_PTR_FORMAT " got %" GST_PTR_FORMAT "\n",
+      expect, test);
+  fail_unless (gst_caps_is_equal (test, expect));
+  gst_caps_unref (test);
+  gst_caps_unref (expect);
+}
+
+GST_END_TEST;
+
 static gboolean
 _caps_is_fixed_foreach (GQuark field_id, const GValue * value, gpointer unused)
 {
@@ -1311,6 +1409,8 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_intersect_first);
   tcase_add_test (tc_chain, test_intersect_first2);
   tcase_add_test (tc_chain, test_intersect_duplication);
+  tcase_add_test (tc_chain, test_intersect_flagset);
+  tcase_add_test (tc_chain, test_union);
   tcase_add_test (tc_chain, test_normalize);
   tcase_add_test (tc_chain, test_broken);
   tcase_add_test (tc_chain, test_features);
