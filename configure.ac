@@ -842,6 +842,7 @@ dnl Check for encoding support
 USE_ENCODERS=0
 USE_JPEG_ENCODER=0
 USE_VP8_ENCODER=0
+USE_H265_ENCODER=0
 if test "$enable_encoders" = "yes"; then
     PKG_CHECK_MODULES([LIBVA], [libva >= va_api_enc_version],
         [HAVE_VA_ENC=1], [HAVE_VA_ENC=0])
@@ -910,6 +911,36 @@ if test "$enable_encoders" = "yes"; then
             LIBS="$saved_LIBS"
         ])
         CPPFLAGS="$saved_CPPFLAGS"
+
+        dnl Check for H265/HEVC Encoding API
+        AC_CHECK_HEADERS([va/va_enc_hevc.h],
+            [USE_H265_ENCODER=1], [],
+            [#include <va/va.h>
+            ])
+        AC_CACHE_CHECK([for HEVC encoding API],
+            ac_cv_have_hevc_encoding_api, [
+            saved_CPPFLAGS="$CPPFLAGS"
+            CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+            saved_LIBS="$LIBS"
+            LIBS="$LIBS $LIBVA_LIBS"
+            AC_COMPILE_IFELSE(
+                [AC_LANG_PROGRAM(
+                    [[#include <va/va.h>
+                      #ifdef HAVE_VA_VA_ENC_HEVC_H
+                      #include <va/va_enc_hevc.h>
+                      #endif
+                    ]],
+                    [[VAEncSequenceParameterBufferHEVC seq_param;
+                      VAEncPictureParameterBufferHEVC pic_param;
+                      VAEncSliceParameterBufferHEVC;
+                      VAQMatrixBufferHEVC q_matrix;]])],
+                [ac_cv_have_hevc_encoding_api="yes" USE_H265_ENCODER=1],
+                [ac_cv_have_hevc_encoding_api="no" USE_H265_ENCODER=0]
+            )
+            CPPFLAGS="$saved_CPPFLAGS"
+            LIBS="$saved_LIBS"
+        ])
+        CPPFLAGS="$saved_CPPFLAGS"
     fi
 fi
 
@@ -942,6 +973,10 @@ AM_CONDITIONAL(USE_JPEG_ENCODER, test $USE_JPEG_ENCODER -eq 1)
 AC_DEFINE_UNQUOTED(USE_VP8_ENCODER, $USE_VP8_ENCODER,
     [Defined to 1 if VP8 encoder is used])
 AM_CONDITIONAL(USE_VP8_ENCODER, test $USE_VP8_ENCODER -eq 1)
+
+AC_DEFINE_UNQUOTED(USE_H265_ENCODER, $USE_H265_ENCODER,
+    [Defined to 1 if H265 encoder is used])
+AM_CONDITIONAL(USE_H265_ENCODER, test $USE_H265_ENCODER -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_VA_VPP, $USE_VA_VPP,
     [Defined to 1 if video post-processing is used])
