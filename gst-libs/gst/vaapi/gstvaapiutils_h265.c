@@ -40,6 +40,15 @@ static const struct map gst_vaapi_h265_profile_map[] = {
 /* *INDENT-ON* */
 };
 
+/* Tier string map */
+static const struct map gst_vaapi_h265_tier_map[] = {
+/* *INDENT-OFF* */
+  { GST_VAAPI_TIER_H265_MAIN,    "main" },
+  { GST_VAAPI_TIER_H265_HIGH,    "high"},
+  { GST_VAAPI_TIER_H265_UNKNOWN, "unknown"}
+/* *INDENT-ON* */
+};
+
 /* Level string map */
 static const struct map gst_vaapi_h265_level_map[] = {
 /* *INDENT-OFF* */
@@ -322,4 +331,23 @@ gst_vaapi_utils_h265_get_chroma_format_idc (GstVaapiChromaType chroma_type)
       break;
   }
   return chroma_format_idc;
+}
+
+/** Returns GstVaapiTierH265 from a string representation */
+GstVaapiTierH265
+gst_vaapi_utils_h265_get_tier_from_string (const gchar * str)
+{
+  const struct map *const m = map_lookup_name (gst_vaapi_h265_tier_map, str);
+
+  return m ? (GstVaapiTierH265) m->value : GST_VAAPI_TIER_H265_UNKNOWN;
+}
+
+/** Returns a string representation for the supplied H.265 tier */
+const gchar *
+gst_vaapi_utils_h265_get_tier_string (GstVaapiTierH265 tier)
+{
+  const struct map *const m =
+      map_lookup_value (gst_vaapi_h265_tier_map, tier);
+
+  return m ? m->name : NULL;
 }

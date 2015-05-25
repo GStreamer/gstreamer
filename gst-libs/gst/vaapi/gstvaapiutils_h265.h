@@ -63,6 +63,20 @@ typedef enum {
   GST_VAAPI_LEVEL_H265_L6_2,
 } GstVaapiLevelH265;
 
+/**
+ * GstVaapiTierH265:
+ * GST_VAAPI_TIER_H265_MAIN: H265 Tier 0
+ * GST_VAAPI_TIER_H265_HIGH: H265 Tier 1
+ * GST_VAAPI_TIER_H265_UNKNOWN: Unknown Tier
+ *
+ * The set of all Tier for #GstVaapiTierH265.
+ */
+typedef enum {
+  GST_VAAPI_TIER_H265_MAIN,
+  GST_VAAPI_TIER_H265_HIGH,
+  GST_VAAPI_TIER_H265_UNKNOWN = -1
+} GstVaapiTierH265;
+
 /* Returns a relative score for the supplied GstVaapiProfile */
 guint
 gst_vaapi_utils_h265_get_profile_score (GstVaapiProfile profile);
@@ -82,6 +96,14 @@ gst_vaapi_utils_h265_get_level_from_string (const gchar * str);
 /* Returns a string representation for the supplied H.265 level */
 const gchar *
 gst_vaapi_utils_h265_get_level_string (GstVaapiLevelH265 level);
+
+/* Returns GstVaapiTierH265 from a string representation */
+GstVaapiTierH265
+gst_vaapi_utils_h265_get_tier_from_string (const gchar * str);
+
+/* Returns a string representation for the supplied H.265 Tier */
+const gchar *
+gst_vaapi_utils_h265_get_tier_string (GstVaapiTierH265 tier);
 
 G_END_DECLS
 
