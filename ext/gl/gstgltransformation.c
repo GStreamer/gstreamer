@@ -590,7 +590,7 @@ gst_gl_transformation_callback (gpointer stuff)
     _bind_buffer (transformation);
   }
 
-  gl->DrawElements (GL_TRIANGLE_STRIP, 5, GL_UNSIGNED_SHORT, indices);
+  gl->DrawElements (GL_TRIANGLE_STRIP, 5, GL_UNSIGNED_SHORT, 0);
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
