@@ -953,16 +953,16 @@ static const gchar utf16leenc[] = "UTF-16LE";
 static const gchar utf16beenc[] = "UTF-16BE";
 
 static gboolean
-find_utf16_bom (gchar * data, const gchar ** p_in_encoding)
+find_utf16_bom (gchar * data, gint * p_data_endianness)
 {
   guint16 marker = (GST_READ_UINT8 (data) << 8) | GST_READ_UINT8 (data + 1);
 
   switch (marker) {
     case 0xFFFE:
-      *p_in_encoding = utf16leenc;
+      *p_data_endianness = G_LITTLE_ENDIAN;
       return TRUE;
     case 0xFEFF:
-      *p_in_encoding = utf16beenc;
+      *p_data_endianness = G_BIG_ENDIAN;
       return TRUE;
     default:
       break;
@@ -1047,32 +1047,69 @@ parse_insert_string_field (guint8 encoding, gchar * data, gint data_size,
     case ID3V2_ENCODING_UTF16:
     case ID3V2_ENCODING_UTF16BE:
     {
-      const gchar *in_encode;
+      gunichar2 *utf16;
+      gint data_endianness;
+      glong n_read = 0, size = 0;
+      guint len, i;
 
       if (encoding == ID3V2_ENCODING_UTF16)
-        in_encode = utf16enc;
+        data_endianness = G_BYTE_ORDER;
       else
-        in_encode = utf16beenc;
+        data_endianness = G_BIG_ENDIAN;
 
       /* Sometimes we see strings with multiple BOM markers at the start.
        * In that case, we assume the innermost one is correct. If that fails
        * to produce valid UTF-8, we try the other endianness anyway */
-      while (data_size > 2 && find_utf16_bom (data, &in_encode)) {
+      while (data_size > 2 && find_utf16_bom (data, &data_endianness)) {
         data += 2;              /* skip BOM */
         data_size -= 2;
       }
 
-      field = g_convert (data, data_size, "UTF-8", in_encode, NULL, NULL, NULL);
+      /* alloc needed to ensure correct alignment which is required by GLib */
+      len = data_size / 2;
+      utf16 = g_try_new (gunichar2, len + 1);
+      if (utf16 == NULL)
+        break;
 
-      if (field == NULL || !g_utf8_validate (field, -1, NULL)) {
-        /* As a fallback, try interpreting UTF-16 in the other endianness */
-        if (in_encode == utf16beenc)
-          field = g_convert (data, data_size, "UTF-8", utf16leenc,
-              NULL, NULL, NULL);
+      memcpy (utf16, data, 2 * len);
+
+      GST_LOG ("Trying interpreting data as UTF-16-%s first",
+          (data_endianness == G_LITTLE_ENDIAN) ? "LE" : "BE");
+
+      if (data_endianness != G_BYTE_ORDER) {
+        /* convert to native endian UTF-16 */
+        for (i = 0; i < len; ++i)
+          utf16[i] = GUINT16_SWAP_LE_BE (utf16[i]);
       }
-    }
 
+      /* convert to UTF-8 */
+      field = g_utf16_to_utf8 (utf16, len, &n_read, &size, NULL);
+      if (field != NULL && n_read > 0 && g_utf8_validate (field, -1, NULL)) {
+        g_free (utf16);
+        break;
+      }
+
+      GST_DEBUG ("Trying interpreting data as UTF-16-%s now as fallback",
+          (data_endianness == G_LITTLE_ENDIAN) ? "BE" : "LE");
+
+      for (i = 0; i < len; ++i)
+        utf16[i] = GUINT16_SWAP_LE_BE (utf16[i]);
+
+      g_free (field);
+      n_read = size = 0;
+
+      /* try again */
+      field = g_utf16_to_utf8 (utf16, len, &n_read, &size, NULL);
+      g_free (utf16);
+
+      if (field != NULL && n_read > 0 && g_utf8_validate (field, -1, NULL))
+        break;
+
+      GST_DEBUG ("Could not convert UTF-16 string to UTF-8");
+      g_free (field);
+      field = NULL;
       break;
+    }
     case ID3V2_ENCODING_ISO8859:
       if (g_utf8_validate (data, data_size, NULL))
         field = g_strndup (data, data_size);
