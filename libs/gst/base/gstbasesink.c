@@ -1380,7 +1380,7 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int64 (value, gst_base_sink_get_ts_offset (sink));
       break;
     case PROP_LAST_SAMPLE:
-      gst_value_take_buffer (value, gst_base_sink_get_last_sample (sink));
+      gst_value_take_sample (value, gst_base_sink_get_last_sample (sink));
       break;
     case PROP_ENABLE_LAST_SAMPLE:
       g_value_set_boolean (value, gst_base_sink_is_last_sample_enabled (sink));
