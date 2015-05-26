@@ -151,7 +151,7 @@ gst_exclusion_class_init (GstExclusionClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FACTOR,
       g_param_spec_uint ("factor", "Factor",
-          "Exclusion factor parameter", 0, 175, DEFAULT_FACTOR,
+          "Exclusion factor parameter", 1, 175, DEFAULT_FACTOR,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   vfilter_class->transform_frame =
@@ -269,9 +269,6 @@ transform (guint32 * src, guint32 * dest, gint video_area, gint factor)
 {
   guint32 in;
   gint x, red, green, blue;
-
-  if (G_UNLIKELY (factor == 0))
-    return;
 
   for (x = 0; x < video_area; x++) {
     in = *src++;
