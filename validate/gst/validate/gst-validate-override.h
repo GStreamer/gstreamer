@@ -51,6 +51,10 @@ struct _GstValidateOverrideClass
 {
   /*<private>*/
   GObjectClass parent_class;
+
+  gboolean (*can_attach)(GstValidateOverride * override,
+      GstValidateMonitor * monitor);
+
 };
 
 struct _GstValidateOverride
@@ -97,6 +101,7 @@ void               gst_validate_override_set_query_handler (GstValidateOverride 
 void               gst_validate_override_set_buffer_probe_handler (GstValidateOverride * override, GstValidateOverrideBufferHandler handler);
 void               gst_validate_override_set_getcaps_handler (GstValidateOverride * override, GstValidateOverrideGetCapsHandler handler);
 void               gst_validate_override_set_setcaps_handler (GstValidateOverride * override, GstValidateOverrideSetCapsHandler handler);
+gboolean           gst_validate_override_can_attach (GstValidateOverride * override, GstValidateMonitor *monitor);
 
 G_END_DECLS
 

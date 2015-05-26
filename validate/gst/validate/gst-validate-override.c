@@ -251,3 +251,15 @@ gst_validate_override_setcaps_handler (GstValidateOverride * override,
   if (override->setcaps_handler)
     override->setcaps_handler (override, monitor, caps);
 }
+
+gboolean
+gst_validate_override_can_attach (GstValidateOverride * override,
+    GstValidateMonitor * monitor)
+{
+  GstValidateOverrideClass *klass = GST_VALIDATE_OVERRIDE_GET_CLASS (override);
+
+  if (klass->can_attach)
+    return klass->can_attach (override, monitor);
+
+  return TRUE;
+}
