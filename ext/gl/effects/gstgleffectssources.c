@@ -843,6 +843,7 @@ const gchar *conv9_fragment_source_gles2 =
   "uniform sampler2D tex;"
   "uniform float kernel[9];"
   "uniform float width, height;"
+  "uniform bool invert;"
   "void main () {"
   "  float w = 1.0 / width;"
   "  float h = 1.0 / height;"
