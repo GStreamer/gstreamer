@@ -50,8 +50,7 @@ typedef struct _GstVaapiFrameStoreClass GstVaapiFrameStoreClass;
 typedef struct _GstVaapiParserInfoH265 GstVaapiParserInfoH265;
 typedef struct _GstVaapiPictureH265 GstVaapiPictureH265;
 
-static gboolean
-nal_is_slice (guint8 nal_type);
+static gboolean nal_is_slice (guint8 nal_type);
 
 /* ------------------------------------------------------------------------- */
 /* --- H.265 Parser Info                                                 --- */
@@ -276,7 +275,7 @@ gst_vaapi_picture_h265_set_reference (GstVaapiPictureH265 * picture,
 
 struct _GstVaapiFrameStore
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiMiniObject parent_instance;
 
   GstVaapiPictureH265 *buffer;
@@ -425,7 +424,7 @@ struct _GstVaapiDecoderH265Private
  */
 struct _GstVaapiDecoderH265
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiDecoder parent_instance;
   GstVaapiDecoderH265Private priv;
 };
@@ -437,7 +436,7 @@ struct _GstVaapiDecoderH265
  */
 struct _GstVaapiDecoderH265Class
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiDecoderClass parent_class;
 };
 
@@ -2251,7 +2250,14 @@ decode_picture (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
   gst_vaapi_picture_unref (picture);
 
   /* Update cropping rectangle */
-  /* Fixme: Add cropping rectangle, fix needed in codecparser */
+  if (sps->conformance_window_flag) {
+    GstVaapiRectangle crop_rect;
+    crop_rect.x = sps->crop_rect_x;
+    crop_rect.y = sps->crop_rect_y;
+    crop_rect.width = sps->crop_rect_width;
+    crop_rect.height = sps->crop_rect_height;
+    gst_vaapi_picture_set_crop_rect (&picture->base, &crop_rect);
+  }
 
   status = ensure_quant_matrix (decoder, picture);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
