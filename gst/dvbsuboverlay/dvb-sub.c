@@ -1168,7 +1168,6 @@ _dvb_sub_parse_display_definition_segment (DvbSub * dvb_sub, guint8 * buf,
     buf += 2;
     dvb_sub->display_def.window_height =
         GST_READ_UINT16_BE (buf) - dvb_sub->display_def.window_y + 1;
-    buf += 2;
   }
 
   return 0;
