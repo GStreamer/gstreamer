@@ -52,6 +52,7 @@ static GMutex _gst_validate_registry_mutex;
 static GstRegistry *_gst_validate_registry_default = NULL;
 
 static GList *core_config = NULL;
+static gboolean validate_initialized = FALSE;
 
 #ifdef G_OS_WIN32
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
@@ -241,6 +242,10 @@ gst_validate_init_plugins (void)
 void
 gst_validate_init (void)
 {
+  if (validate_initialized) {
+    return;
+  }
+
   GST_DEBUG_CATEGORY_INIT (gstvalidate_debug, "validate", 0,
       "Validation library");
 
@@ -253,6 +258,8 @@ gst_validate_init (void)
   /* Ensure we load overrides before any use of a monitor */
   gst_validate_override_registry_preload ();
 
+  validate_initialized = TRUE;
+
   gst_validate_init_plugins ();
 }
 
@@ -261,4 +268,11 @@ gst_validate_deinit (void)
 {
   _free_plugin_config (core_config);
   core_config = NULL;
+  validate_initialized = FALSE;
+}
+
+gboolean
+gst_validate_is_initialized (void)
+{
+  return validate_initialized;
 }

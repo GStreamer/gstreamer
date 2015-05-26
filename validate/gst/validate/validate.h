@@ -18,5 +18,6 @@
 void gst_validate_init (void);
 void gst_validate_deinit (void);
 GList * gst_validate_plugin_get_config (GstPlugin * plugin);
+gboolean gst_validate_is_initialized (void);
 
 #endif /* _GST_VALIDATE_H */
