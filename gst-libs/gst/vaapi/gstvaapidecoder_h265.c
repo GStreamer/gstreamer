@@ -2297,16 +2297,6 @@ get_slice_data_byte_offset (GstH265SliceHdr * slice_hdr, guint nal_header_bytes)
   return nal_header_bytes + (slice_hdr->header_size + 7) / 8 - epb_count;
 }
 
-static gint
-clip3 (gint x, gint y, gint z)
-{
-  if (z < x)
-    return x;
-  if (z > y)
-    return y;
-  return z;
-}
-
 static gboolean
 fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
     GstVaapiSlice * slice, GstH265SliceHdr * slice_hdr)
@@ -2346,9 +2336,10 @@ fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
           chroma_weight =
               (1 << chroma_log2_weight_denom) + w->delta_chroma_weight_l0[i][j];
           /* 7-44 */
-          slice_param->ChromaOffsetL0[i][j] = clip3 (-128, 127,
+          slice_param->ChromaOffsetL0[i][j] = CLAMP (
               (w->delta_chroma_offset_l0[i][j] -
-                  ((128 * chroma_weight) >> chroma_log2_weight_denom)));
+                  ((128 * chroma_weight) >> chroma_log2_weight_denom)), -128,
+              127);
         }
       }
     }
@@ -2368,9 +2359,9 @@ fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
                 (1 << chroma_log2_weight_denom) +
                 w->delta_chroma_weight_l1[i][j];
             slice_param->ChromaOffsetL1[i][j] =
-                clip3 (-128, 127,
-                (w->delta_chroma_offset_l1[i][j] -
-                    ((128 * chroma_weight) >> chroma_log2_weight_denom)));
+                CLAMP ((w->delta_chroma_offset_l1[i][j] -
+                    ((128 * chroma_weight) >> chroma_log2_weight_denom)), -128,
+                127);
           }
         }
       }
