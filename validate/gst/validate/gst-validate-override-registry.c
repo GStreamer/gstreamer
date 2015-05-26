@@ -31,8 +31,8 @@
 
 #include "gst-validate-report.h"
 #include "gst-validate-utils.h"
-#include "gst-validate-monitor.h"
 #include "gst-validate-internal.h"
+#include "gst-validate-monitor.h"
 #include "gst-validate-override.h"
 #include "gst-validate-override-registry.h"
 
@@ -49,7 +49,7 @@ typedef struct
 } GstValidateOverrideRegistryGTypeEntry;
 
 static GMutex _gst_validate_override_registry_mutex;
-static GstValidateOverrideRegistry *_registry_default;
+static GstValidateOverrideRegistry *_registry_default = NULL;
 
 #define GST_VALIDATE_OVERRIDE_REGISTRY_LOCK(r) g_mutex_lock (&r->mutex)
 #define GST_VALIDATE_OVERRIDE_REGISTRY_UNLOCK(r) g_mutex_unlock (&r->mutex)
@@ -173,23 +173,16 @@ static void
   GstValidateOverrideRegistryNameEntry *entry;
   GList *iter;
   GstElement *element;
-  GstElementClass *klass;
-  const gchar *klassname;
 
   element = gst_validate_monitor_get_element (monitor);
   if (!element)
     return;
 
-  klass = GST_ELEMENT_GET_CLASS (element);
-  klassname =
-      gst_element_class_get_metadata (klass, GST_ELEMENT_METADATA_KLASS);
-
-  for (iter = registry->name_overrides.head; iter; iter = g_list_next (iter)) {
+  for (iter = registry->klass_overrides.head; iter; iter = g_list_next (iter)) {
 
     entry = iter->data;
 
-    /* TODO It would be more correct to split it before comparing */
-    if (strstr (klassname, entry->name) != NULL) {
+    if (gst_validate_element_has_klass (element, entry->name)) {
       gst_validate_monitor_attach_override (monitor, entry->override);
     }
   }
