@@ -534,17 +534,15 @@ gst_gl_effects_get_fragment_shader (GstGLEffects * effects,
     const gchar * shader_name, const gchar * shader_source_gles2,
     const gchar * shader_source_opengl)
 {
-  GstGLShader *shader;
+  GstGLShader *shader = NULL;
   GstGLFilter *filter = GST_GL_FILTER (effects);
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
 
   shader = g_hash_table_lookup (effects->shaderstable, shader_name);
 
   if (!shader) {
-    shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, (gchar *) shader_name, shader);
-
-    if (USING_GLES2 (context) || USING_OPENGL3 (context)) {
+    if (!shader && (USING_GLES2 (context) || USING_OPENGL3 (context))) {
+      shader = gst_gl_shader_new (context);
       if (!gst_gl_shader_compile_with_default_v_and_check (shader,
               shader_source_gles2, &filter->draw_attr_position_loc,
               &filter->draw_attr_texture_loc)) {
@@ -552,21 +550,29 @@ gst_gl_effects_get_fragment_shader (GstGLEffects * effects,
         GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
             ("Failed to initialize %s shader, %s",
                 shader_name, gst_gl_context_get_error ()), (NULL));
-        return NULL;
+        gst_object_unref (shader);
+        shader = NULL;
       }
     }
 #if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (context)) {
+    if (!shader && USING_OPENGL (context)) {
+      shader = gst_gl_shader_new (context);
       if (!gst_gl_shader_compile_and_check (shader,
               shader_source_opengl, GST_GL_SHADER_FRAGMENT_SOURCE)) {
         gst_gl_context_set_error (context, "Failed to initialize %s shader",
             shader_name);
         GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND, ("%s",
                 gst_gl_context_get_error ()), (NULL));
-        return NULL;
+        gst_object_unref (shader);
+        shader = NULL;
       }
     }
 #endif
+
+    if (!shader)
+      return NULL;
+
+    g_hash_table_insert (effects->shaderstable, (gchar *) shader_name, shader);
   }
 
   return shader;
