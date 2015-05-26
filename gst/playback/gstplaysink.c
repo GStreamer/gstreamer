@@ -212,6 +212,8 @@ struct _GstPlaySink
   gboolean audio_pad_blocked;
   GstPad *audio_srcpad_stream_synchronizer;
   GstPad *audio_sinkpad_stream_synchronizer;
+  GstElement *audio_ssync_queue;
+  GstPad *audio_ssync_queue_sinkpad;
   gulong audio_block_id;
   gulong audio_notify_caps_id;
   /* audio tee */
@@ -740,6 +742,18 @@ free_chain (GstPlayChain * chain)
     if (chain->bin)
       gst_object_unref (chain->bin);
     g_free (chain);
+  }
+}
+
+static void
+gst_play_sink_remove_audio_ssync_queue (GstPlaySink * playsink)
+{
+  if (playsink->audio_ssync_queue) {
+    gst_element_set_state (playsink->audio_ssync_queue, GST_STATE_NULL);
+    gst_object_unref (playsink->audio_ssync_queue_sinkpad);
+    gst_bin_remove (GST_BIN_CAST (playsink), playsink->audio_ssync_queue);
+    playsink->audio_ssync_queue = NULL;
+    playsink->audio_ssync_queue_sinkpad = NULL;
   }
 }
 
@@ -3469,6 +3483,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
           playsink->audio_sinkpad_stream_synchronizer = NULL;
           gst_object_unref (playsink->audio_srcpad_stream_synchronizer);
           playsink->audio_srcpad_stream_synchronizer = NULL;
+
+          gst_play_sink_remove_audio_ssync_queue (playsink);
         }
 
         add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
@@ -3504,6 +3520,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       goto no_chain;
 
     if (!playsink->audio_sinkpad_stream_synchronizer) {
+      GstPad *audio_queue_srcpad;
       GValue item = { 0, };
       GstIterator *it;
 
@@ -3518,18 +3535,49 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       g_value_unset (&item);
       g_assert (playsink->audio_srcpad_stream_synchronizer);
       gst_iterator_free (it);
+
+      if (need_vis) {
+        GST_DEBUG_OBJECT (playsink, "adding audio stream synchronizer queue");
+        playsink->audio_ssync_queue =
+            gst_element_factory_make ("queue", "audiossyncqueue");
+        if (playsink->audio_ssync_queue == NULL) {
+          post_missing_element_message (playsink, "queue");
+          GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+              (_("Missing element '%s' - check your GStreamer installation."),
+                  "queue"),
+              ("audio playback and visualizations might not work"));
+        }
+        g_object_set (playsink->audio_ssync_queue, "max-size-buffers",
+            (guint) 1, NULL);
+        gst_bin_add (GST_BIN_CAST (playsink), playsink->audio_ssync_queue);
+        playsink->audio_ssync_queue_sinkpad =
+            gst_element_get_static_pad (playsink->audio_ssync_queue, "sink");
+        audio_queue_srcpad =
+            gst_element_get_static_pad (playsink->audio_ssync_queue, "src");
+        gst_element_sync_state_with_parent (playsink->audio_ssync_queue);
+        gst_pad_link_full (audio_queue_srcpad,
+            playsink->audio_sinkpad_stream_synchronizer,
+            GST_PAD_LINK_CHECK_NOTHING);
+        gst_object_unref (audio_queue_srcpad);
+      }
     }
 
     if (playsink->audiochain) {
+      GstPad *sinkpad;
+
       GST_DEBUG_OBJECT (playsink, "adding audio chain");
       if (playsink->audio_tee_asrc == NULL) {
         playsink->audio_tee_asrc =
             gst_element_get_request_pad (playsink->audio_tee, "src_%u");
       }
+
+      sinkpad = playsink->audio_ssync_queue_sinkpad;
+      if (!sinkpad)
+        sinkpad = playsink->audio_sinkpad_stream_synchronizer;
+
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), TRUE);
-      gst_pad_link_full (playsink->audio_tee_asrc,
-          playsink->audio_sinkpad_stream_synchronizer,
+      gst_pad_link_full (playsink->audio_tee_asrc, sinkpad,
           GST_PAD_LINK_CHECK_NOTHING);
       gst_pad_link_full (playsink->audio_srcpad_stream_synchronizer,
           playsink->audiochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
@@ -3555,6 +3603,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
         playsink->audio_sinkpad_stream_synchronizer = NULL;
         gst_object_unref (playsink->audio_srcpad_stream_synchronizer);
         playsink->audio_srcpad_stream_synchronizer = NULL;
+
+        gst_play_sink_remove_audio_ssync_queue (playsink);
       }
 
       if (playsink->audiochain->sink_volume) {
@@ -4847,6 +4897,8 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         playsink->audio_sinkpad_stream_synchronizer = NULL;
         gst_object_unref (playsink->audio_srcpad_stream_synchronizer);
         playsink->audio_srcpad_stream_synchronizer = NULL;
+
+        gst_play_sink_remove_audio_ssync_queue (playsink);
       }
       if (playsink->text_sinkpad_stream_synchronizer) {
         gst_element_release_request_pad (GST_ELEMENT_CAST
