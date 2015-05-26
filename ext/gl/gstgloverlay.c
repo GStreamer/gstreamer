@@ -36,6 +36,7 @@
 #include "config.h"
 #endif
 
+#include <gst/base/gsttypefindhelper.h>
 #include <gst/gl/gstglconfig.h>
 
 #include "gstgloverlay.h"
@@ -73,8 +74,8 @@ static void gst_gl_overlay_before_transform (GstBaseTransform * trans,
 static gboolean gst_gl_overlay_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
 
-static gboolean gst_gl_overlay_load_png (GstGLFilter * filter);
-static gboolean gst_gl_overlay_load_jpeg (GstGLFilter * filter);
+static gboolean gst_gl_overlay_load_png (GstGLOverlay * overlay, FILE * fp);
+static gboolean gst_gl_overlay_load_jpeg (GstGLOverlay * overlay, FILE * fp);
 
 enum
 {
@@ -570,6 +571,60 @@ out:
 }
 
 static gboolean
+load_file (GstGLOverlay * overlay)
+{
+  FILE *fp;
+  guint8 buff[16];
+  gsize n_read;
+  GstCaps *caps;
+  GstStructure *structure;
+  gboolean success = FALSE;
+
+  if (overlay->location == NULL)
+    return TRUE;
+
+  if ((fp = fopen (overlay->location, "rb")) == NULL) {
+    GST_ELEMENT_ERROR (overlay, RESOURCE, NOT_FOUND, ("Can't open file"),
+        ("File: %s", overlay->location));
+    return FALSE;
+  }
+
+  n_read = fread (buff, 1, sizeof (buff), fp);
+  if (n_read != sizeof (buff)) {
+    GST_ELEMENT_ERROR (overlay, STREAM, DECODE, ("Can't read file header"),
+        ("File: %s", overlay->location));
+    goto out;
+  }
+
+  caps = gst_type_find_helper_for_data (GST_OBJECT (overlay), buff,
+      sizeof (buff), NULL);
+
+  if (caps == NULL) {
+    GST_ELEMENT_ERROR (overlay, STREAM, DECODE, ("Can't find file type"),
+        ("File: %s", overlay->location));
+    goto out;
+  }
+
+  fseek (fp, 0, SEEK_SET);
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (gst_structure_has_name (structure, "image/jpeg")) {
+    success = gst_gl_overlay_load_jpeg (overlay, fp);
+  } else if (gst_structure_has_name (structure, "image/png")) {
+    success = gst_gl_overlay_load_png (overlay, fp);
+  } else {
+    GST_ELEMENT_ERROR (overlay, STREAM, DECODE, ("Image type not supported"),
+        ("File: %s", overlay->location));
+  }
+
+out:
+  fclose (fp);
+  gst_caps_replace (&caps, NULL);
+
+  return success;
+}
+
+static gboolean
 gst_gl_overlay_filter_texture (GstGLFilter * filter, guint in_tex,
     guint out_tex)
 {
@@ -580,13 +635,9 @@ gst_gl_overlay_filter_texture (GstGLFilter * filter, guint in_tex,
       gst_memory_unref ((GstMemory *) overlay->image_memory);
       overlay->image_memory = NULL;
     }
-    if (overlay->location != NULL) {
-      if (!gst_gl_overlay_load_png (filter)) {
-        if (!gst_gl_overlay_load_jpeg (filter)) {
-          return FALSE;
-        }
-      }
-    }
+
+    if (!load_file (overlay))
+      return FALSE;
 
     overlay->location_has_changed = FALSE;
   }
@@ -615,26 +666,17 @@ user_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
   g_warning ("%s\n", warning_msg);
 }
 
-#define LOAD_ERROR(msg) { GST_WARNING ("unable to load %s: %s", overlay->location, msg); return FALSE; }
-
 static gboolean
-gst_gl_overlay_load_jpeg (GstGLFilter * filter)
+gst_gl_overlay_load_jpeg (GstGLOverlay * overlay, FILE * fp)
 {
-  GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
   GstVideoInfo v_info;
   GstVideoAlignment v_align;
   GstMapInfo map_info;
-  FILE *fp = NULL;
   struct jpeg_decompress_struct cinfo;
   struct jpeg_error_mgr jerr;
   JSAMPROW j;
   int i;
 
-  fp = fopen (overlay->location, "rb");
-  if (!fp) {
-    g_error ("error: couldn't open file!\n");
-    return FALSE;
-  }
   jpeg_create_decompress (&cinfo);
   cinfo.err = jpeg_std_error (&jerr);
   jpeg_stdio_src (&cinfo, fp);
@@ -654,13 +696,15 @@ gst_gl_overlay_load_jpeg (GstGLFilter * filter)
   v_align.stride_align[0] = 32 - 1;
   gst_video_info_align (&v_info, &v_align);
 
-  overlay->image_memory =
-      (GstGLMemory *) gst_gl_memory_alloc (GST_GL_BASE_FILTER (filter)->context,
+  overlay->image_memory = (GstGLMemory *)
+      gst_gl_memory_alloc (GST_GL_BASE_FILTER (overlay)->context,
       NULL, &v_info, 0, &v_align);
 
   if (!gst_memory_map ((GstMemory *) overlay->image_memory, &map_info,
           GST_MAP_WRITE)) {
-    LOAD_ERROR ("failed to map memory");
+    GST_ELEMENT_ERROR (overlay, STREAM, DECODE, ("failed to map memory"),
+        ("File: %s", overlay->location));
+    return FALSE;
   }
 
   for (i = 0; i < overlay->image_height; ++i) {
@@ -670,14 +714,13 @@ gst_gl_overlay_load_jpeg (GstGLFilter * filter)
   jpeg_finish_decompress (&cinfo);
   jpeg_destroy_decompress (&cinfo);
   gst_memory_unmap ((GstMemory *) overlay->image_memory, &map_info);
-  fclose (fp);
+
   return TRUE;
 }
 
 static gboolean
-gst_gl_overlay_load_png (GstGLFilter * filter)
+gst_gl_overlay_load_png (GstGLOverlay * overlay, FILE * fp)
 {
-  GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
   GstVideoInfo v_info;
   GstMapInfo map_info;
 
@@ -688,46 +731,48 @@ gst_gl_overlay_load_png (GstGLFilter * filter)
   gint bit_depth = 0;
   gint color_type = 0;
   gint interlace_type = 0;
-  png_FILE_p fp = NULL;
   guint y = 0;
   guchar **rows = NULL;
   gint filler;
   png_byte magic[8];
   gint n_read;
 
-  if (!GST_GL_BASE_FILTER (filter)->context)
+  if (!GST_GL_BASE_FILTER (overlay)->context)
     return FALSE;
-
-  if ((fp = fopen (overlay->location, "rb")) == NULL)
-    LOAD_ERROR ("file not found");
 
   /* Read magic number */
   n_read = fread (magic, 1, sizeof (magic), fp);
   if (n_read != sizeof (magic)) {
-    fclose (fp);
-    LOAD_ERROR ("can't read PNG magic number");
+    GST_ELEMENT_ERROR (overlay, STREAM, DECODE,
+        ("can't read PNG magic number"), ("File: %s", overlay->location));
+    return FALSE;
   }
 
   /* Check for valid magic number */
   if (png_sig_cmp (magic, 0, sizeof (magic))) {
-    fclose (fp);
-    LOAD_ERROR ("not a valid PNG image");
+    GST_ELEMENT_ERROR (overlay, STREAM, DECODE,
+        ("not a valid PNG image"), ("File: %s", overlay->location));
+    return FALSE;
   }
 
   png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
   if (png_ptr == NULL) {
-    fclose (fp);
-    LOAD_ERROR ("failed to initialize the png_struct");
+    GST_ELEMENT_ERROR (overlay, STREAM, DECODE,
+        ("failed to initialize the png_struct"), ("File: %s",
+            overlay->location));
+    return FALSE;
   }
 
   png_set_error_fn (png_ptr, NULL, NULL, user_warning_fn);
 
   info_ptr = png_create_info_struct (png_ptr);
   if (info_ptr == NULL) {
-    fclose (fp);
     png_destroy_read_struct (&png_ptr, png_infopp_NULL, png_infopp_NULL);
-    LOAD_ERROR ("failed to initialize the memory for image information");
+    GST_ELEMENT_ERROR (overlay, STREAM, DECODE,
+        ("failed to initialize the memory for image information"),
+        ("File: %s", overlay->location));
+    return FALSE;
   }
 
   png_init_io (png_ptr, fp);
@@ -746,22 +791,25 @@ gst_gl_overlay_load_png (GstGLFilter * filter)
   }
 
   if (color_type != PNG_COLOR_TYPE_RGB_ALPHA) {
-    fclose (fp);
     png_destroy_read_struct (&png_ptr, png_infopp_NULL, png_infopp_NULL);
-    LOAD_ERROR ("color type is not rgb");
+    GST_ELEMENT_ERROR (overlay, STREAM, DECODE,
+        ("color type is not rgb"), ("File: %s", overlay->location));
+    return FALSE;
   }
 
   overlay->image_width = width;
   overlay->image_height = height;
 
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, width, height);
-  overlay->image_memory =
-      (GstGLMemory *) gst_gl_memory_alloc (GST_GL_BASE_FILTER (filter)->context,
+  overlay->image_memory = (GstGLMemory *)
+      gst_gl_memory_alloc (GST_GL_BASE_FILTER (overlay)->context,
       NULL, &v_info, 0, NULL);
 
   if (!gst_memory_map ((GstMemory *) overlay->image_memory, &map_info,
           GST_MAP_WRITE)) {
-    LOAD_ERROR ("failed to map memory");
+    GST_ELEMENT_ERROR (overlay, STREAM, DECODE,
+        ("failed to map memory"), ("File: %s", overlay->location));
+    return FALSE;
   }
   rows = (guchar **) malloc (sizeof (guchar *) * height);
 
@@ -775,7 +823,6 @@ gst_gl_overlay_load_png (GstGLFilter * filter)
 
   png_read_end (png_ptr, info_ptr);
   png_destroy_read_struct (&png_ptr, &info_ptr, png_infopp_NULL);
-  fclose (fp);
 
   return TRUE;
 }
