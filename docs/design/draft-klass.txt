@@ -151,7 +151,7 @@ for wild (application specific) customisation.
 
  5) open issues:
 
-   - how to differencial physical devices from logical ones?
+   - how to differentiate physical devices from logical ones?
      autoaudiosink    : Sink/Audio/Device
      alsasink         : Sink/Audio/Device
 
