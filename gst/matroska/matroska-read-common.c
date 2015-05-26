@@ -2416,8 +2416,6 @@ gst_matroska_read_common_parse_metadata (GstMatroskaReadCommon * common,
   GList *l;
   guint64 curpos;
 
-  curpos = gst_ebml_read_get_pos (ebml);
-
   /* Make sure we don't parse a tags element twice and
    * post it's tags twice */
   curpos = gst_ebml_read_get_pos (ebml);
