@@ -73,8 +73,8 @@ static void gst_gl_overlay_before_transform (GstBaseTransform * trans,
 static gboolean gst_gl_overlay_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
 
-static gint gst_gl_overlay_load_png (GstGLFilter * filter);
-static gint gst_gl_overlay_load_jpeg (GstGLFilter * filter);
+static gboolean gst_gl_overlay_load_png (GstGLFilter * filter);
+static gboolean gst_gl_overlay_load_jpeg (GstGLFilter * filter);
 
 enum
 {
@@ -581,8 +581,8 @@ gst_gl_overlay_filter_texture (GstGLFilter * filter, guint in_tex,
       overlay->image_memory = NULL;
     }
     if (overlay->location != NULL) {
-      if ((overlay->type_file = gst_gl_overlay_load_png (filter)) == 0) {
-        if ((overlay->type_file = gst_gl_overlay_load_jpeg (filter)) == 0) {
+      if (!gst_gl_overlay_load_png (filter)) {
+        if (!gst_gl_overlay_load_jpeg (filter)) {
           return FALSE;
         }
       }
@@ -617,7 +617,7 @@ user_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 
 #define LOAD_ERROR(msg) { GST_WARNING ("unable to load %s: %s", overlay->location, msg); return FALSE; }
 
-static gint
+static gboolean
 gst_gl_overlay_load_jpeg (GstGLFilter * filter)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
@@ -633,7 +633,7 @@ gst_gl_overlay_load_jpeg (GstGLFilter * filter)
   fp = fopen (overlay->location, "rb");
   if (!fp) {
     g_error ("error: couldn't open file!\n");
-    return 0;
+    return FALSE;
   }
   jpeg_create_decompress (&cinfo);
   cinfo.err = jpeg_std_error (&jerr);
@@ -671,10 +671,10 @@ gst_gl_overlay_load_jpeg (GstGLFilter * filter)
   jpeg_destroy_decompress (&cinfo);
   gst_memory_unmap ((GstMemory *) overlay->image_memory, &map_info);
   fclose (fp);
-  return 2;
+  return TRUE;
 }
 
-static gint
+static gboolean
 gst_gl_overlay_load_png (GstGLFilter * filter)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
@@ -696,7 +696,7 @@ gst_gl_overlay_load_png (GstGLFilter * filter)
   gint n_read;
 
   if (!GST_GL_BASE_FILTER (filter)->context)
-    return 1;
+    return FALSE;
 
   if ((fp = fopen (overlay->location, "rb")) == NULL)
     LOAD_ERROR ("file not found");
@@ -777,5 +777,5 @@ gst_gl_overlay_load_png (GstGLFilter * filter)
   png_destroy_read_struct (&png_ptr, &info_ptr, png_infopp_NULL);
   fclose (fp);
 
-  return 1;
+  return TRUE;
 }
