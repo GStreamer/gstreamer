@@ -1983,8 +1983,9 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
       /* query other pads as some faulty element in the pad's branch might
        * reject position queries. This should be better than using the
        * demux segment position that can be much ahead */
-      for (GList * iter = demux->streams; iter != NULL;
-          iter = g_list_next (iter)) {
+      GList *iter;
+
+      for (iter = demux->streams; iter != NULL; iter = g_list_next (iter)) {
         GstAdaptiveDemuxStream *cur_stream =
             (GstAdaptiveDemuxStream *) iter->data;
 
