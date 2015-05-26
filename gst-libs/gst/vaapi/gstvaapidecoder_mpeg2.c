@@ -128,11 +128,16 @@ pts_eval(PTSGenerator *tsg, GstClockTime pic_pts, guint pic_tsn)
     GstClockTime pts;
 
     if (!GST_CLOCK_TIME_IS_VALID(tsg->gop_pts))
-        tsg->gop_pts = 0;
+        tsg->gop_pts = pts_get_duration(tsg, pic_tsn);
 
     pts = pic_pts;
     if (!GST_CLOCK_TIME_IS_VALID (pts))
        pts = tsg->gop_pts + pts_get_duration(tsg, tsg->ovl_tsn * 1024 + pic_tsn);
+    else if (pts == tsg->gop_pts) {
+        /* The picture following the GOP header shall be an I-frame.
+           So we can compensate for the GOP start time from here */
+        tsg->gop_pts -= pts_get_duration(tsg, pic_tsn);
+    }
 
     if (!GST_CLOCK_TIME_IS_VALID(tsg->max_pts) || tsg->max_pts < pts)
         tsg->max_pts = pts;
