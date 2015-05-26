@@ -1,6 +1,6 @@
-From 134793f35f1a219c79b32b2d23df73ceff0b5e32 Mon Sep 17 00:00:00 2001
+From 7650c8681ecf1304a59e7cc4c0bc9eba4f753ffa Mon Sep 17 00:00:00 2001
 From: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
-Date: Tue, 24 Jun 2014 17:27:12 +0200
+Date: Tue, 26 May 2015 09:33:57 +0300
 Subject: [PATCH 3/3] h264parse: default to byte-stream/nalu format (Annex B).
 
 Always default to stream-format=byte-stream,alignment=nalu if avcC
@@ -11,15 +11,16 @@ usual start code.
 https://bugzilla.gnome.org/show_bug.cgi?id=732167
 
 Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
 ---
- gst/vaapi/gsth264parse.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ gst/vaapi/gsth264parse.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
-index fceec68..f15b1b0 100644
+index 76f7686..b28d449 100644
 --- a/gst/vaapi/gsth264parse.c
 +++ b/gst/vaapi/gsth264parse.c
-@@ -393,7 +393,8 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
+@@ -388,7 +388,8 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
    if (!format)
      format = GST_H264_PARSE_FORMAT_BYTE;
    if (!align)
@@ -29,15 +30,15 @@ index fceec68..f15b1b0 100644
  
    GST_DEBUG_OBJECT (h264parse, "selected format %s, alignment %s",
        gst_h264_parse_get_string (h264parse, TRUE, format),
-@@ -2204,7 +2205,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
+@@ -2260,6 +2261,8 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
  
-     if (format == GST_H264_PARSE_FORMAT_NONE) {
-       format = GST_H264_PARSE_FORMAT_BYTE;
--      align = GST_H264_PARSE_ALIGN_AU;
+   /* bytestream caps sanity checks */
+   if (format == GST_H264_PARSE_FORMAT_BYTE) {
++    if (align == GST_H264_PARSE_ALIGN_NONE)
 +      align = GST_H264_PARSE_ALIGN_NAL;
-     }
-   }
- 
+     /* should have SPS/PSS in-band (and/or oob in streamheader field) */
+     if (codec_data_value != NULL)
+       goto bytestream_caps_with_codec_data;
 -- 
 2.1.4
 
