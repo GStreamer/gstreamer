@@ -807,6 +807,7 @@ gst_gl_overlay_load_png (GstGLOverlay * overlay, FILE * fp)
 
   if (!gst_memory_map ((GstMemory *) overlay->image_memory, &map_info,
           GST_MAP_WRITE)) {
+    png_destroy_read_struct (&png_ptr, &info_ptr, png_infopp_NULL);
     GST_ELEMENT_ERROR (overlay, STREAM, DECODE,
         ("failed to map memory"), ("File: %s", overlay->location));
     return FALSE;
