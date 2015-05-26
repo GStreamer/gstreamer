@@ -43,5 +43,6 @@ void init_scenarios (void);
  * and this is done by the scenario itself now */
 GST_EXPORT gboolean _action_check_and_set_printed (GstValidateAction *action);
 GST_EXPORT gboolean gst_validate_action_is_subaction (GstValidateAction *action);
+void _priv_validate_override_registry_deinit (void);
 
 #endif

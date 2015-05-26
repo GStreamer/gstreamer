@@ -57,6 +57,25 @@ static GstValidateOverrideRegistry *_registry_default = NULL;
 #define GST_VALIDATE_OVERRIDE_INIT_SYMBOL "gst_validate_create_overrides"
 typedef int (*GstValidateCreateOverride) (void);
 
+static void
+    gst_validate_override_registry_name_entry_free
+    (GstValidateOverrideRegistryNameEntry * entry)
+{
+  g_free (entry->name);
+  gst_object_unref (entry->override);
+
+  g_slice_free (GstValidateOverrideRegistryNameEntry, entry);
+}
+
+static void
+    gst_validate_override_registry_type_entry_free
+    (GstValidateOverrideRegistryGTypeEntry * entry)
+{
+  gst_object_unref (entry->override);
+
+  g_slice_free (GstValidateOverrideRegistryGTypeEntry, entry);
+}
+
 static GstValidateOverrideRegistry *
 gst_validate_override_registry_new (void)
 {
@@ -68,6 +87,25 @@ gst_validate_override_registry_new (void)
   g_queue_init (&reg->klass_overrides);
 
   return reg;
+}
+
+static void
+gst_validate_overide_registery_free (GstValidateOverrideRegistry * reg)
+{
+  g_queue_foreach (&reg->klass_overrides,
+      (GFunc) gst_validate_override_registry_name_entry_free, NULL);
+
+  g_queue_foreach (&reg->name_overrides,
+      (GFunc) gst_validate_override_registry_name_entry_free, NULL);
+
+  g_queue_foreach (&reg->gtype_overrides,
+      (GFunc) gst_validate_override_registry_type_entry_free, NULL);
+
+  g_queue_clear (&reg->name_overrides);
+  g_queue_clear (&reg->gtype_overrides);
+  g_queue_clear (&reg->klass_overrides);
+
+  g_slice_free (GstValidateOverrideRegistry, reg);
 }
 
 GstValidateOverrideRegistry *
@@ -406,4 +444,20 @@ GList *gst_validate_override_registry_get_override_for_names
   }
 
   return ret;
+}
+
+void
+_priv_validate_override_registry_deinit (void)
+{
+  GstValidateOverrideRegistry *reg = NULL;
+
+  g_mutex_lock (&_gst_validate_override_registry_mutex);
+  if (G_UNLIKELY (_registry_default)) {
+    reg = _registry_default;
+    _registry_default = NULL;
+  }
+  g_mutex_unlock (&_gst_validate_override_registry_mutex);
+
+  if (reg)
+    gst_validate_overide_registery_free (reg);
 }

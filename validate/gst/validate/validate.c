@@ -267,6 +267,8 @@ void
 gst_validate_deinit (void)
 {
   _free_plugin_config (core_config);
+  gst_object_unref (_gst_validate_registry_default);
+  _priv_validate_override_registry_deinit ();
   core_config = NULL;
   validate_initialized = FALSE;
 }
