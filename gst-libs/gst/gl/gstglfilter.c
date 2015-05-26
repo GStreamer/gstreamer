@@ -901,6 +901,7 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   GstGLDisplay *display = GST_GL_BASE_FILTER (bt)->display;
   GstGLContext *context = GST_GL_BASE_FILTER (bt)->context;
   GstGLSyncMeta *out_sync_meta, *in_sync_meta;
+  gboolean ret;
 
   if (!display)
     return GST_FLOW_NOT_NEGOTIATED;
@@ -912,15 +913,15 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     gst_gl_sync_meta_wait (in_sync_meta, context);
 
   if (filter_class->filter)
-    filter_class->filter (filter, inbuf, outbuf);
-  else if (filter_class->filter_texture)
-    gst_gl_filter_filter_texture (filter, inbuf, outbuf);
+    ret = filter_class->filter (filter, inbuf, outbuf);
+  else
+    ret = gst_gl_filter_filter_texture (filter, inbuf, outbuf);
 
   out_sync_meta = gst_buffer_get_gl_sync_meta (outbuf);
   if (out_sync_meta)
     gst_gl_sync_meta_set_sync_point (out_sync_meta, context);
 
-  return GST_FLOW_OK;
+  return ret ? GST_FLOW_OK : GST_FLOW_ERROR;
 }
 
 struct glcb2
