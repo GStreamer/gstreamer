@@ -315,7 +315,17 @@ void
 gst_validate_monitor_attach_override (GstValidateMonitor * monitor,
     GstValidateOverride * override)
 {
+  GstValidateRunner *runner;
+
+  runner = gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (override));
+
   GST_VALIDATE_MONITOR_OVERRIDES_LOCK (monitor);
+  if (runner)
+    g_assert (runner ==
+        gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor)));
+  else
+    gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (override),
+        gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor)));
   g_queue_push_tail (&monitor->overrides, override);
   GST_VALIDATE_MONITOR_OVERRIDES_UNLOCK (monitor);
 }

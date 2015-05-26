@@ -43,19 +43,43 @@ typedef void (*GstValidateOverrideGetCapsHandler)(GstValidateOverride * override
 typedef void (*GstValidateOverrideSetCapsHandler)(GstValidateOverride * override,
     GstValidateMonitor * pad_monitor, GstCaps * caps);
 
-struct _GstValidateOverride {
-  GHashTable *level_override;
+typedef struct _GstValidateOverride GstValidateOverride;
+typedef struct _GstValidateOverrideClass GstValidateOverrideClass;
+typedef struct _GstValidateOverridePriv GstValidateOverridePriv;
 
-  /* Pad handlers */
+struct _GstValidateOverrideClass
+{
+  /*<private>*/
+  GObjectClass parent_class;
+};
+
+struct _GstValidateOverride
+{
+  GObject parent;
+
   GstValidateOverrideBufferHandler buffer_handler;
   GstValidateOverrideEventHandler event_handler;
   GstValidateOverrideQueryHandler query_handler;
   GstValidateOverrideBufferHandler buffer_probe_handler;
   GstValidateOverrideGetCapsHandler getcaps_handler;
   GstValidateOverrideSetCapsHandler setcaps_handler;
+
+  /*<private>*/
+  GstValidateOverridePriv *priv;
 };
 
+GType gst_validate_override_get_type (void) G_GNUC_CONST;
+
+/* TYPE MACROS */
+#define GST_TYPE_VALIDATE_OVERRIDE (gst_validate_override_get_type ())
+#define GST_VALIDATE_OVERRIDE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VALIDATE_OVERRIDE, GstValidateOverride))
+#define GST_VALIDATE_OVERRIDE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VALIDATE_OVERRIDE, GstValidateOverrideClass))
+#define GST_IS_VALIDATE_OVERRIDE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VALIDATE_OVERRIDE))
+#define GST_IS_VALIDATE_OVERRIDE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VALIDATE_OVERRIDE))
+#define GST_VALIDATE_OVERRIDE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VALIDATE_OVERRIDE, GstValidateOverrideClass))
+
 GstValidateOverride *    gst_validate_override_new (void);
+
 void               gst_validate_override_free (GstValidateOverride * override);
 void               gst_validate_override_change_severity (GstValidateOverride * override, GstValidateIssueId issue_id, GstValidateReportLevel new_level);
 GstValidateReportLevel   gst_validate_override_get_severity (GstValidateOverride * override, GstValidateIssueId issue_id, GstValidateReportLevel default_level);
@@ -76,5 +100,4 @@ void               gst_validate_override_set_setcaps_handler (GstValidateOverrid
 
 G_END_DECLS
 
-#endif /* __GST_VALIDATE_OVERRIDE_H__ */
-
+#endif /* #ifndef __GST_VALIDATE_OVERRIDE_H__*/

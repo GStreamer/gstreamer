@@ -160,6 +160,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   issue = gst_validate_issue_from_id (issue_id);
 
   g_return_if_fail (issue != NULL);
+  g_return_if_fail (GST_IS_VALIDATE_REPORTER (reporter));
 
   G_VA_COPY (vacopy, var_args);
   message = g_strdup_vprintf (format, vacopy);

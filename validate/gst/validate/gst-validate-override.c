@@ -2,6 +2,8 @@
  *
  * Copyright (C) 2013 Collabora Ltd.
  *  Author: Thiago Sousa Santos <thiago.sousa.santos@collabora.com>
+ * Copyright (C) 2015 Raspberry Pi Foundation
+ *  Author: Thibault Saunier <thibault.saunier@collabora.com>
  *
  * gst-validate-override.c - Validate Override that allows customizing Validate behavior
  *
@@ -20,6 +22,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION: gst-validate-override
+ * @title: GstValidateOverride
+ * @short_description: TODO
+ *
+ * TODO
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -30,28 +39,107 @@
 #include "gst-validate-internal.h"
 #include "gst-validate-override.h"
 
+/*  *INDENT-OFF* */
+
+G_DEFINE_TYPE_WITH_CODE (GstValidateOverride, gst_validate_override,
+    G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL))
+
+struct _GstValidateOverridePriv
+{
+  GHashTable *level_override;
+};
+
+enum
+{
+  PROP_FIRST_PROP = 1,
+  PROP_RUNNER,
+  PROP_LAST
+};
+
+/*  *INDENT-ON* */
+
+static void
+_get_property (GObject * object,
+    guint property_id, GValue * value, GParamSpec * pspec)
+{
+  switch (property_id) {
+    case PROP_RUNNER:
+      g_value_set_object (value,
+          gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (object)));
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+_set_property (GObject * object,
+    guint property_id, const GValue * value, GParamSpec * pspec)
+{
+  switch (property_id) {
+    case PROP_RUNNER:
+      /* we assume the runner is valid as long as this scenario is,
+       * no ref taken */
+      gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (object),
+          g_value_get_object (value));
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+gst_validate_override_finalize (GObject * object)
+{
+  GstValidateOverride *self = GST_VALIDATE_OVERRIDE (object);
+
+  void (*chain_up) (GObject *) =
+      ((GObjectClass *) gst_validate_override_parent_class)->finalize;
+
+  g_hash_table_unref (self->priv->level_override);
+
+  chain_up (object);
+}
+
+static void
+gst_validate_override_class_init (GstValidateOverrideClass * klass)
+{
+  GObjectClass *oclass = G_OBJECT_CLASS (klass);
+
+  oclass->finalize = gst_validate_override_finalize;
+
+  g_type_class_add_private (klass, sizeof (GstValidateOverridePriv));
+
+  oclass->get_property = _get_property;
+  oclass->set_property = _set_property;
+
+  g_object_class_install_property (oclass, PROP_RUNNER,
+      g_param_spec_object ("validate-runner", "VALIDATE Runner",
+          "The Validate runner to " "report errors to",
+          GST_TYPE_VALIDATE_RUNNER,
+          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+}
+
+static void
+gst_validate_override_init (GstValidateOverride * self)
+{
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GST_TYPE_VALIDATE_OVERRIDE, GstValidateOverridePriv);
+
+  self->priv->level_override = g_hash_table_new (g_direct_hash, g_direct_equal);
+}
+
 GstValidateOverride *
 gst_validate_override_new (void)
 {
-  GstValidateOverride *override = g_slice_new0 (GstValidateOverride);
-
-  override->level_override = g_hash_table_new (g_direct_hash, g_direct_equal);
-
-  return override;
-}
-
-void
-gst_validate_override_free (GstValidateOverride * override)
-{
-  g_hash_table_unref (override->level_override);
-  g_slice_free (GstValidateOverride, override);
+  return g_object_new (GST_TYPE_VALIDATE_OVERRIDE, NULL);
 }
 
 void
 gst_validate_override_change_severity (GstValidateOverride * override,
     GstValidateIssueId issue_id, GstValidateReportLevel new_level)
 {
-  g_hash_table_insert (override->level_override, (gpointer) issue_id,
+  g_hash_table_insert (override->priv->level_override, (gpointer) issue_id,
       (gpointer) new_level);
 }
 
@@ -66,7 +154,7 @@ gst_validate_override_get_severity (GstValidateOverride * override,
 {
   GstValidateReportLevel *level = NULL;
 
-  if (g_hash_table_lookup_extended (override->level_override,
+  if (g_hash_table_lookup_extended (override->priv->level_override,
           (gpointer) issue_id, NULL, (gpointer) & level)) {
 
     return GPOINTER_TO_INT (level);
