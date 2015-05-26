@@ -763,7 +763,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_THREADS,
       g_param_spec_uint ("threads", "Threads",
           "Number of threads used by the codec (0 for automatic)",
-          0, 4, ARG_THREADS_DEFAULT,
+          0, G_MAXINT, ARG_THREADS_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* NOTE: this first string append doesn't require the ':' delimiter but the
    * rest do */
