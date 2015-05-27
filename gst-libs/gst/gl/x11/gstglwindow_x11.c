@@ -74,10 +74,6 @@ static void gst_gl_window_x11_set_preferred_size (GstGLWindow * window,
 void gst_gl_window_x11_show (GstGLWindow * window);
 void gst_gl_window_x11_draw_unlocked (GstGLWindow * window);
 void gst_gl_window_x11_draw (GstGLWindow * window);
-void gst_gl_window_x11_run (GstGLWindow * window);
-void gst_gl_window_x11_quit (GstGLWindow * window);
-void gst_gl_window_x11_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 gboolean gst_gl_window_x11_create_context (GstGLWindow * window,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
 gboolean gst_gl_window_x11_open (GstGLWindow * window, GError ** error);
@@ -90,17 +86,6 @@ void gst_gl_window_x11_handle_events (GstGLWindow * window,
 static void
 gst_gl_window_x11_finalize (GObject * object)
 {
-  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (object);
-
-  if (window_x11->loop) {
-    g_main_loop_unref (window_x11->loop);
-    window_x11->loop = NULL;
-  }
-  if (window_x11->main_context) {
-    g_main_context_unref (window_x11->main_context);
-    window_x11->main_context = NULL;
-  }
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -122,10 +107,6 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
   window_class->draw_unlocked =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_draw_unlocked);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_x11_draw);
-  window_class->run = GST_DEBUG_FUNCPTR (gst_gl_window_x11_run);
-  window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_x11_quit);
-  window_class->send_message_async =
-      GST_DEBUG_FUNCPTR (gst_gl_window_x11_send_message_async);
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_x11_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_x11_close);
   window_class->get_surface_dimensions =
@@ -141,9 +122,6 @@ static void
 gst_gl_window_x11_init (GstGLWindowX11 * window)
 {
   window->priv = GST_GL_WINDOW_X11_GET_PRIVATE (window);
-
-  window->main_context = g_main_context_new ();
-  window->loop = g_main_loop_new (window->main_context, FALSE);
 }
 
 /* Must be called in the gl thread */
@@ -200,7 +178,11 @@ gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
 
   window_x11->x11_source = x11_event_source_new (window_x11);
 
-  g_source_attach (window_x11->x11_source, window_x11->main_context);
+  if (!GST_GL_WINDOW_CLASS (parent_class)->open (window, error))
+    return FALSE;
+
+  g_source_attach (window_x11->x11_source,
+      g_main_context_get_thread_default ());
 
   window_x11->allow_extra_expose_events = TRUE;
 
@@ -319,6 +301,8 @@ gst_gl_window_x11_close (GstGLWindow * window)
   window_x11->x11_source = NULL;
 
   window_x11->running = FALSE;
+
+  GST_GL_WINDOW_CLASS (parent_class)->close (window);
 }
 
 /* called by the gl thread */
@@ -398,11 +382,9 @@ gst_gl_window_x11_show (GstGLWindow * window)
 void
 gst_gl_window_x11_draw_unlocked (GstGLWindow * window)
 {
-  GstGLWindowX11 *window_x11;
+  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
 
-  window_x11 = GST_GL_WINDOW_X11 (window);
-
-  if (g_main_loop_is_running (window_x11->loop)
+  if (gst_gl_window_is_running (GST_GL_WINDOW (window_x11))
       && window_x11->allow_extra_expose_events) {
     if (window->draw) {
       GstGLContext *context = gst_gl_window_get_context (window);
@@ -421,7 +403,7 @@ draw_cb (gpointer data)
 {
   GstGLWindowX11 *window_x11 = data;
 
-  if (g_main_loop_is_running (window_x11->loop)) {
+  if (gst_gl_window_is_running (GST_GL_WINDOW (window_x11))) {
     XWindowAttributes attr;
 
     XGetWindowAttributes (window_x11->device, window_x11->internal_win_id,
@@ -454,16 +436,6 @@ void
 gst_gl_window_x11_draw (GstGLWindow * window)
 {
   gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
-}
-
-void
-gst_gl_window_x11_run (GstGLWindow * window)
-{
-  GstGLWindowX11 *window_x11;
-
-  window_x11 = GST_GL_WINDOW_X11 (window);
-
-  g_main_loop_run (window_x11->loop);
 }
 
 static inline const gchar *
@@ -542,7 +514,7 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
 
   window = GST_GL_WINDOW (window_x11);
 
-  if (g_main_loop_is_running (window_x11->loop)
+  if (gst_gl_window_is_running (window)
       && XPending (window_x11->device)) {
     XEvent event;
 
@@ -667,61 +639,6 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
   }                             // while running
 
   return ret;
-}
-
-/* Not called by the gl thread */
-void
-gst_gl_window_x11_quit (GstGLWindow * window)
-{
-  GstGLWindowX11 *window_x11;
-
-  window_x11 = GST_GL_WINDOW_X11 (window);
-
-  GST_LOG ("sending quit");
-
-  if (window_x11->loop)
-    g_main_loop_quit (window_x11->loop);
-
-  GST_LOG ("quit sent");
-}
-
-typedef struct _GstGLMessage
-{
-  GstGLWindowCB callback;
-  gpointer data;
-  GDestroyNotify destroy;
-} GstGLMessage;
-
-static gboolean
-_run_message (GstGLMessage * message)
-{
-  if (message->callback)
-    message->callback (message->data);
-
-  if (message->destroy)
-    message->destroy (message->data);
-
-  g_slice_free (GstGLMessage, message);
-
-  return FALSE;
-}
-
-void
-gst_gl_window_x11_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
-{
-  GstGLWindowX11 *window_x11;
-  GstGLMessage *message;
-
-  window_x11 = GST_GL_WINDOW_X11 (window);
-  message = g_slice_new (GstGLMessage);
-
-  message->callback = callback;
-  message->data = data;
-  message->destroy = destroy;
-
-  g_main_context_invoke (window_x11->main_context, (GSourceFunc) _run_message,
-      message);
 }
 
 static int

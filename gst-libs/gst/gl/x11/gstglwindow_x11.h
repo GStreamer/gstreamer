@@ -74,8 +74,6 @@ struct _GstGLWindowX11
   Window        internal_win_id;
 
   GSource *x11_source;
-  GMainContext *main_context;
-  GMainLoop *loop;
 
   /*< private >*/
   GstGLWindowX11Private *priv;
