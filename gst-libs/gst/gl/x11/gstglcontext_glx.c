@@ -107,9 +107,9 @@ gst_gl_context_glx_init (GstGLContextGLX * context)
 GstGLContextGLX *
 gst_gl_context_glx_new (void)
 {
-  GstGLContextGLX *window = g_object_new (GST_GL_TYPE_CONTEXT_GLX, NULL);
+  GstGLContextGLX *context = g_object_new (GST_GL_TYPE_CONTEXT_GLX, NULL);
 
-  return window;
+  return context;
 }
 
 static inline void
