@@ -27,6 +27,7 @@
 G_BEGIN_DECLS
 
 void gst_video_overlay_set_gtk_window (GstVideoOverlay *videooverlay, GtkWidget *window);
+gboolean gst_gtk_handle_need_context (GstBus *bus, GstMessage *msg, gpointer data);
 
 G_END_DECLS
 

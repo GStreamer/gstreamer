@@ -30,10 +30,55 @@
 #if GST_GL_HAVE_WINDOW_X11 && defined(GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
 #endif
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined(GDK_WINDOWING_WAYLAND)
+#include <gdk/gdkwayland.h>
+#endif
 #if GST_GL_HAVE_WINDOW_COCOA && defined(GDK_WINDOWING_QUARTZ)
 #include <gdk/gdkquartz.h>
 #endif
 
+gboolean
+gst_gtk_handle_need_context (GstBus * bus, GstMessage * msg, gpointer data)
+{
+  gboolean ret = FALSE;
+
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_NEED_CONTEXT:
+    {
+      const gchar *context_type;
+      GstContext *context = NULL;
+
+      gst_message_parse_context_type (msg, &context_type);
+      g_print ("got need context %s\n", context_type);
+
+      if (g_strcmp0 (context_type, "GstWaylandDisplayHandleContextType") == 0) {
+        GdkDisplay *gdk_display = gdk_display_get_default ();
+        if (GDK_IS_WAYLAND_DISPLAY (gdk_display)) {
+          struct wl_display *wayland_display =
+              gdk_wayland_display_get_wl_display (gdk_display);
+          if (wayland_display) {
+            GstStructure *s;
+
+            context =
+                gst_context_new ("GstWaylandDisplayHandleContextType", TRUE);
+
+            s = gst_context_writable_structure (context);
+            gst_structure_set (s, "display", G_TYPE_POINTER, wayland_display,
+                NULL);
+
+            gst_element_set_context (GST_ELEMENT (msg->src), context);
+
+            ret = TRUE;
+          }
+        }
+      }
+    }
+    default:
+      break;
+  }
+
+  return ret;
+}
 
 void
 gst_video_overlay_set_gtk_window (GstVideoOverlay * videooverlay,
@@ -64,6 +109,13 @@ gst_video_overlay_set_gtk_window (GstVideoOverlay * videooverlay,
   if (GDK_IS_X11_DISPLAY (display) && (!user_choice
           || g_strcmp0 (user_choice, "x11") == 0)) {
     gst_video_overlay_set_window_handle (videooverlay, GDK_WINDOW_XID (window));
+  } else
+#endif
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined(GDK_WINDOWING_WAYLAND)
+  if (GDK_IS_WAYLAND_DISPLAY (display) && (!user_choice
+          || g_strcmp0 (user_choice, "wayland") == 0)) {
+    gst_video_overlay_set_window_handle (videooverlay,
+        (guintptr) gdk_wayland_window_get_wl_surface (window));
   } else
 #endif
     g_error ("Unsupported Gtk+ backend");
