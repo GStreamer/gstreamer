@@ -572,12 +572,6 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
     GST_DEBUG_OBJECT (hlsdemux, "Typefind result: %" GST_PTR_FORMAT " prob:%d",
         caps, prob);
 
-    if (!hlsdemux->input_caps
-        || !gst_caps_is_equal (caps, hlsdemux->input_caps)) {
-      gst_caps_replace (&hlsdemux->input_caps, caps);
-      GST_INFO_OBJECT (demux, "Input source caps: %" GST_PTR_FORMAT,
-          hlsdemux->input_caps);
-    }
     gst_adaptive_demux_stream_set_caps (stream, caps);
     hlsdemux->do_typefind = FALSE;
   }
@@ -781,11 +775,6 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
   if (demux->key_fragment)
     g_object_unref (demux->key_fragment);
   demux->key_fragment = NULL;
-
-  if (demux->input_caps) {
-    gst_caps_unref (demux->input_caps);
-    demux->input_caps = NULL;
-  }
 
   if (demux->client) {
     gst_m3u8_client_free (demux->client);

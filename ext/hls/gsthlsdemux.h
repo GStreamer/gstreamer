@@ -66,7 +66,6 @@ struct _GstHLSDemux
 
   gint srcpad_counter;
 
-  GstCaps *input_caps;
   gchar *uri;                   /* Original playlist URI */
   GstM3U8Client *client;        /* M3U8 client */
   gboolean do_typefind;         /* Whether we need to typefind the next buffer */
