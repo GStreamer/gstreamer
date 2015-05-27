@@ -34,6 +34,9 @@
 #include "../x11/gstglwindow_x11.h"
 #include <gst/gl/x11/gstgldisplay_x11.h>
 #endif
+#if GST_GL_HAVE_WINDOW_WAYLAND
+#include "../wayland/gstglwindow_wayland_egl.h"
+#endif
 #if GST_GL_HAVE_WINDOW_WIN32
 #include "../win32/gstglwindow_win32.h"
 #endif
@@ -391,6 +394,12 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 #if GST_GL_HAVE_WINDOW_X11
     if (GST_GL_IS_WINDOW_X11 (context->window)) {
       gst_gl_window_x11_create_window ((GstGLWindowX11 *) context->window);
+    }
+#endif
+#if GST_GL_HAVE_WINDOW_WAYLAND
+    if (GST_GL_IS_WINDOW_WAYLAND_EGL (context->window)) {
+      gst_gl_window_wayland_egl_create_window ((GstGLWindowWaylandEGL *)
+          context->window);
     }
 #endif
 #if GST_GL_HAVE_WINDOW_WIN32
