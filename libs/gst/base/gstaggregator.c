@@ -681,7 +681,7 @@ gst_aggregator_aggregate_func (GstAggregator * self)
     }
     GST_OBJECT_UNLOCK (self);
 
-    if (flow_return == GST_FLOW_EOS) {
+    if (flow_return == GST_FLOW_EOS || flow_return == GST_FLOW_ERROR) {
       gst_aggregator_push_eos (self);
     }
 
