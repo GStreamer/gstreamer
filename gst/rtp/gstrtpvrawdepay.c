@@ -61,8 +61,8 @@ G_DEFINE_TYPE (GstRtpVRawDepay, gst_rtp_vraw_depay,
 
 static gboolean gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+static GstBuffer *gst_rtp_vraw_depay_process_packet (GstRTPBaseDepayload *
+    depay, GstRTPBuffer * rtp);
 
 static GstStateChangeReturn gst_rtp_vraw_depay_change_state (GstElement *
     element, GstStateChange transition);
@@ -82,7 +82,8 @@ gst_rtp_vraw_depay_class_init (GstRtpVRawDepayClass * klass)
   gstelement_class->change_state = gst_rtp_vraw_depay_change_state;
 
   gstrtpbasedepayload_class->set_caps = gst_rtp_vraw_depay_setcaps;
-  gstrtpbasedepayload_class->process = gst_rtp_vraw_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet =
+      gst_rtp_vraw_depay_process_packet;
   gstrtpbasedepayload_class->handle_event = gst_rtp_vraw_depay_handle_event;
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -317,23 +318,21 @@ no_bufferpool:
 }
 
 static GstBuffer *
-gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_vraw_depay_process_packet (GstRTPBaseDepayload * depayload,
+    GstRTPBuffer * rtp)
 {
   GstRtpVRawDepay *rtpvrawdepay;
   guint8 *payload, *p0, *yp, *up, *vp, *headers;
   guint32 timestamp;
   guint cont, ystride, uvstride, pgroup, payload_len;
   gint width, height, xinc, yinc;
-  GstRTPBuffer rtp = { NULL };
   GstVideoFrame *frame;
   gboolean marker;
   GstBuffer *outbuf = NULL;
 
   rtpvrawdepay = GST_RTP_VRAW_DEPAY (depayload);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  timestamp = gst_rtp_buffer_get_timestamp (&rtp);
+  timestamp = gst_rtp_buffer_get_timestamp (rtp);
 
   if (timestamp != rtpvrawdepay->timestamp || rtpvrawdepay->outbuf == NULL) {
     GstBuffer *new_buffer;
@@ -395,8 +394,8 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   xinc = rtpvrawdepay->xinc;
   yinc = rtpvrawdepay->yinc;
 
-  payload = gst_rtp_buffer_get_payload (&rtp);
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload = gst_rtp_buffer_get_payload (rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
   if (payload_len < 3)
     goto short_packet;
@@ -560,8 +559,7 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     payload_len -= length;
   }
 
-  marker = gst_rtp_buffer_get_marker (&rtp);
-  gst_rtp_buffer_unmap (&rtp);
+  marker = gst_rtp_buffer_get_marker (rtp);
 
   if (marker) {
     GST_LOG_OBJECT (depayload, "marker, flushing frame");
@@ -577,13 +575,11 @@ unknown_sampling:
   {
     GST_ELEMENT_ERROR (depayload, STREAM, FORMAT,
         (NULL), ("unimplemented sampling"));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 alloc_failed:
   {
     GST_WARNING_OBJECT (depayload, "failed to alloc output buffer");
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 invalid_frame:
@@ -594,13 +590,11 @@ invalid_frame:
 wrong_length:
   {
     GST_WARNING_OBJECT (depayload, "length not multiple of pgroup");
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 short_packet:
   {
     GST_WARNING_OBJECT (depayload, "short packet");
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }
