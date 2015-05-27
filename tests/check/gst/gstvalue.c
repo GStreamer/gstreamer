@@ -664,8 +664,18 @@ GST_START_TEST (test_flagset)
       "resulting mask is 0x%u, not 0x%x",
       gst_value_get_flagset_mask (&dest), test_mask);
 
+  gst_value_set_flagset (&value,
+      GST_SEEK_FLAG_ACCURATE, GST_SEEK_FLAG_ACCURATE);
+  gst_value_set_flagset (&value2, GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
+      GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_SNAP_BEFORE | GST_SEEK_FLAG_FLUSH);
+  /* Check that accurate alone is a subset of accurate+!snap_before+flush,
+   * but not vice-versa */
+  fail_unless (gst_value_is_subset (&value, &value2));
+  fail_if (gst_value_is_subset (&value2, &value));
+
   g_value_unset (&dest);
   g_value_unset (&value);
+  g_value_unset (&value2);
 }
 
 GST_END_TEST;

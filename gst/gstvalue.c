@@ -3387,6 +3387,31 @@ gst_value_is_subset_int64_range_int64_range (const GValue * value1,
   return TRUE;
 }
 
+/* A flag set is a subset of another if the superset allows the
+ * flags of the subset */
+static gboolean
+gst_value_is_subset_flagset_flagset (const GValue * value1,
+    const GValue * value2)
+{
+  guint f1, f2;
+  guint m1, m2;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_FLAG_SET (value1), FALSE);
+  g_return_val_if_fail (GST_VALUE_HOLDS_FLAG_SET (value2), FALSE);
+
+  f1 = value1->data[0].v_uint;
+  f2 = value2->data[0].v_uint;
+
+  m1 = value1->data[1].v_uint;
+  m2 = value2->data[1].v_uint;
+
+  /* Not a subset if masked bits of superset disagree */
+  if ((f1 & m1) != (f2 & (m1 & m2)))
+    return FALSE;
+
+  return TRUE;
+}
+
 /**
  * gst_value_is_subset:
  * @value1: a #GValue
@@ -3408,6 +3433,9 @@ gst_value_is_subset (const GValue * value1, const GValue * value2)
   } else if (GST_VALUE_HOLDS_INT64_RANGE (value1)
       && GST_VALUE_HOLDS_INT64_RANGE (value2)) {
     return gst_value_is_subset_int64_range_int64_range (value1, value2);
+  } else if (GST_VALUE_HOLDS_FLAG_SET (value1) &&
+      GST_VALUE_HOLDS_FLAG_SET (value2)) {
+    return gst_value_is_subset_flagset_flagset (value1, value2);
   }
 
   /*
