@@ -332,6 +332,8 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
      where O is the output, H is a gaussian 2d filter and I is the input image
      sum_i means summatory on var i with i in [0..scales) and wi are the weights */
   else if (METHOD_MULTISCALE == retinex->method) {
+    int i;
+
     /* allocate or reallocate the weights and sigmas according to scales */
     if (retinex->current_scales != retinex->scales || !retinex->sigmas) {
       retinex->weights =
@@ -340,7 +342,7 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
       retinex->sigmas =
           (double *) g_realloc (retinex->sigmas,
           sizeof (double) * retinex->scales);
-      for (int i = 0; i < retinex->scales; i++) {
+      for (i = 0; i < retinex->scales; i++) {
         retinex->weights[i] = 1.0 / (double) retinex->scales;
         retinex->sigmas[i] = 10.0 + 4.0 * (double) retinex->scales;
       }
@@ -352,7 +354,7 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
     cvLog (retinex->cvA, retinex->cvB);
 
     /*  Filter at each scale */
-    for (int i = 0; i < retinex->scales; i++) {
+    for (i = 0; i < retinex->scales; i++) {
       filter_size = (int) floor (retinex->sigmas[i] * 6) / 2;
       filter_size = filter_size * 2 + 1;
 
