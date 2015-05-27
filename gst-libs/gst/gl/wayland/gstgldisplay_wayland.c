@@ -45,6 +45,9 @@ registry_handle_global (void *data, struct wl_registry *registry,
   if (g_strcmp0 (interface, "wl_compositor") == 0) {
     display->compositor =
         wl_registry_bind (registry, name, &wl_compositor_interface, 1);
+  } else if (g_strcmp0 (interface, "wl_subcompositor") == 0) {
+    display->subcompositor =
+        wl_registry_bind (registry, name, &wl_subcompositor_interface, 1);
   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
     display->shell = wl_registry_bind (registry, name, &wl_shell_interface, 1);
   }

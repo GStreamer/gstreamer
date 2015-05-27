@@ -55,6 +55,7 @@ struct _GstGLDisplayWayland
   struct wl_display       *display;
   struct wl_registry      *registry;
   struct wl_compositor    *compositor;
+  struct wl_subcompositor *subcompositor;
   struct wl_shell         *shell;
 
   /* <private> */
