@@ -65,6 +65,9 @@ struct _GstAmcFormat {
 struct _GstAmcCodec {
   /* < private > */
   jobject object; /* global reference */
+
+  GstAmcBuffer *input_buffers, *output_buffers;
+  gsize n_input_buffers, n_output_buffers;
 };
 
 struct _GstAmcBufferInfo {
@@ -87,9 +90,8 @@ gboolean gst_amc_codec_stop (GstAmcCodec * codec, GError **err);
 gboolean gst_amc_codec_flush (GstAmcCodec * codec, GError **err);
 gboolean gst_amc_codec_release (GstAmcCodec * codec, GError **err);
 
-GstAmcBuffer * gst_amc_codec_get_output_buffers (GstAmcCodec * codec, gsize * n_buffers, GError **err);
-GstAmcBuffer * gst_amc_codec_get_input_buffers (GstAmcCodec * codec, gsize * n_buffers, GError **err);
-void gst_amc_codec_free_buffers (GstAmcBuffer * buffers, gsize n_buffers);
+GstAmcBuffer * gst_amc_codec_get_output_buffer (GstAmcCodec * codec, gint index, GError **err);
+GstAmcBuffer * gst_amc_codec_get_input_buffer (GstAmcCodec * codec, gint index, GError **err);
 
 gint gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs, GError **err);
 gint gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec, GstAmcBufferInfo *info, gint64 timeoutUs, GError **err);

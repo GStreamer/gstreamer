@@ -72,7 +72,9 @@ static struct
   jmethodID dequeue_output_buffer;
   jmethodID flush;
   jmethodID get_input_buffers;
+  jmethodID get_input_buffer;
   jmethodID get_output_buffers;
+  jmethodID get_output_buffer;
   jmethodID get_output_format;
   jmethodID queue_input_buffer;
   jmethodID release;
@@ -105,6 +107,11 @@ static struct
   jmethodID get_byte_buffer;
   jmethodID set_byte_buffer;
 } media_format;
+
+static GstAmcBuffer *gst_amc_codec_get_input_buffers (GstAmcCodec * codec,
+    gsize * n_buffers, GError ** err);
+static GstAmcBuffer *gst_amc_codec_get_output_buffers (GstAmcCodec * codec,
+    gsize * n_buffers, GError ** err);
 
 GstAmcCodec *
 gst_amc_codec_new (const gchar * name, GError ** err)
@@ -160,6 +167,19 @@ gst_amc_codec_free (GstAmcCodec * codec)
   g_return_if_fail (codec != NULL);
 
   env = gst_amc_jni_get_env ();
+
+  if (codec->input_buffers)
+    gst_amc_jni_free_buffer_array (env, codec->input_buffers,
+        codec->n_input_buffers);
+  codec->input_buffers = NULL;
+  codec->n_input_buffers = 0;
+
+  if (codec->output_buffers)
+    gst_amc_jni_free_buffer_array (env, codec->output_buffers,
+        codec->n_output_buffers);
+  codec->output_buffers = NULL;
+  codec->n_output_buffers = 0;
+
   gst_amc_jni_object_unref (env, codec->object);
   g_slice_free (GstAmcCodec, codec);
 }
@@ -212,12 +232,29 @@ gboolean
 gst_amc_codec_start (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
+  gboolean ret;
 
   g_return_val_if_fail (codec != NULL, FALSE);
 
   env = gst_amc_jni_get_env ();
-  return gst_amc_jni_call_void_method (env, err, codec->object,
+  ret = gst_amc_jni_call_void_method (env, err, codec->object,
       media_codec.start);
+  if (!ret)
+    return ret;
+
+  if (!media_codec.get_input_buffer) {
+    if (codec->input_buffers)
+      gst_amc_jni_free_buffer_array (env, codec->input_buffers,
+          codec->n_input_buffers);
+    codec->input_buffers =
+        gst_amc_codec_get_input_buffers (codec, &codec->n_input_buffers, err);
+    if (!codec->input_buffers) {
+      gst_amc_codec_stop (codec, NULL);
+      return FALSE;
+    }
+  }
+
+  return ret;
 }
 
 gboolean
@@ -228,6 +265,19 @@ gst_amc_codec_stop (GstAmcCodec * codec, GError ** err)
   g_return_val_if_fail (codec != NULL, FALSE);
 
   env = gst_amc_jni_get_env ();
+
+  if (codec->input_buffers)
+    gst_amc_jni_free_buffer_array (env, codec->input_buffers,
+        codec->n_input_buffers);
+  codec->input_buffers = NULL;
+  codec->n_input_buffers = 0;
+
+  if (codec->output_buffers)
+    gst_amc_jni_free_buffer_array (env, codec->output_buffers,
+        codec->n_output_buffers);
+  codec->output_buffers = NULL;
+  codec->n_output_buffers = 0;
+
   return gst_amc_jni_call_void_method (env, err, codec->object,
       media_codec.stop);
 }
@@ -252,11 +302,24 @@ gst_amc_codec_release (GstAmcCodec * codec, GError ** err)
   g_return_val_if_fail (codec != NULL, FALSE);
 
   env = gst_amc_jni_get_env ();
+
+  if (codec->input_buffers)
+    gst_amc_jni_free_buffer_array (env, codec->input_buffers,
+        codec->n_input_buffers);
+  codec->input_buffers = NULL;
+  codec->n_input_buffers = 0;
+
+  if (codec->output_buffers)
+    gst_amc_jni_free_buffer_array (env, codec->output_buffers,
+        codec->n_output_buffers);
+  codec->output_buffers = NULL;
+  codec->n_output_buffers = 0;
+
   return gst_amc_jni_call_void_method (env, err, codec->object,
       media_codec.release);
 }
 
-GstAmcBuffer *
+static GstAmcBuffer *
 gst_amc_codec_get_output_buffers (GstAmcCodec * codec, gsize * n_buffers,
     GError ** err)
 {
@@ -284,6 +347,55 @@ done:
 }
 
 GstAmcBuffer *
+gst_amc_codec_get_output_buffer (GstAmcCodec * codec, gint index, GError ** err)
+{
+  JNIEnv *env;
+  jobject buffer = NULL;
+  GstAmcBuffer *ret = NULL;
+
+  g_return_val_if_fail (codec != NULL, NULL);
+  g_return_val_if_fail (index >= 0, NULL);
+
+  env = gst_amc_jni_get_env ();
+
+  if (!media_codec.get_output_buffer) {
+    g_return_val_if_fail (index < codec->n_output_buffers && index >= 0, NULL);
+    return gst_amc_buffer_copy (&codec->output_buffers[index]);
+  }
+
+  if (!gst_amc_jni_call_object_method (env, err, codec->object,
+          media_codec.get_output_buffer, &buffer, index))
+    goto done;
+
+  ret = g_new0 (GstAmcBuffer, 1);
+  ret->object = gst_amc_jni_object_make_global (env, buffer);
+  if (!ret->object) {
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to create global buffer reference");
+    goto error;
+  }
+
+  ret->data = (*env)->GetDirectBufferAddress (env, ret->object);
+  if (!ret->data) {
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to get buffer address");
+    goto error;
+  }
+  ret->size = (*env)->GetDirectBufferCapacity (env, ret->object);
+
+done:
+
+  return ret;
+
+error:
+  if (ret->object)
+    gst_amc_jni_object_unref (env, ret->object);
+  g_free (ret);
+
+  return NULL;
+}
+
+static GstAmcBuffer *
 gst_amc_codec_get_input_buffers (GstAmcCodec * codec, gsize * n_buffers,
     GError ** err)
 {
@@ -310,13 +422,53 @@ done:
   return ret;
 }
 
-void
-gst_amc_codec_free_buffers (GstAmcBuffer * buffers, gsize n_buffers)
+GstAmcBuffer *
+gst_amc_codec_get_input_buffer (GstAmcCodec * codec, gint index, GError ** err)
 {
   JNIEnv *env;
+  jobject buffer = NULL;
+  GstAmcBuffer *ret = NULL;
+
+  g_return_val_if_fail (codec != NULL, NULL);
+  g_return_val_if_fail (index >= 0, NULL);
 
   env = gst_amc_jni_get_env ();
-  gst_amc_jni_free_buffer_array (env, buffers, n_buffers);
+
+  if (!media_codec.get_input_buffer) {
+    g_return_val_if_fail (index < codec->n_input_buffers && index >= 0, NULL);
+    return gst_amc_buffer_copy (&codec->input_buffers[index]);
+  }
+
+  if (!gst_amc_jni_call_object_method (env, err, codec->object,
+          media_codec.get_input_buffer, &buffer, index))
+    goto done;
+
+  ret = g_new0 (GstAmcBuffer, 1);
+  ret->object = gst_amc_jni_object_make_global (env, buffer);
+  if (!ret->object) {
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to create global buffer reference");
+    goto error;
+  }
+
+  ret->data = (*env)->GetDirectBufferAddress (env, ret->object);
+  if (!ret->data) {
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to get buffer address");
+    goto error;
+  }
+  ret->size = (*env)->GetDirectBufferCapacity (env, ret->object);
+
+done:
+
+  return ret;
+
+error:
+  if (ret->object)
+    gst_amc_jni_object_unref (env, ret->object);
+  g_free (ret);
+
+  return NULL;
 }
 
 gint
@@ -386,7 +538,30 @@ gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
     goto done;
   }
 
-  if (!gst_amc_codec_fill_buffer_info (env, info_o, info, err)) {
+  if (ret == INFO_OUTPUT_BUFFERS_CHANGED || ret == INFO_OUTPUT_FORMAT_CHANGED
+      || (ret >= 0 && !codec->output_buffers
+          && !media_codec.get_output_buffer)) {
+    if (!media_codec.get_output_buffer) {
+      if (codec->output_buffers)
+        gst_amc_jni_free_buffer_array (env, codec->output_buffers,
+            codec->n_output_buffers);
+      codec->output_buffers =
+          gst_amc_codec_get_output_buffers (codec,
+          &codec->n_output_buffers, err);
+      if (!codec->output_buffers) {
+        ret = G_MININT;
+        goto done;
+      }
+    }
+    if (ret == INFO_OUTPUT_BUFFERS_CHANGED) {
+      gst_amc_jni_object_local_unref (env, info_o);
+      return gst_amc_codec_dequeue_output_buffer (codec, info, timeoutUs, err);
+    }
+  } else if (ret < 0) {
+    goto done;
+  }
+
+  if (ret >= 0 && !gst_amc_codec_fill_buffer_info (env, info_o, info, err)) {
     ret = G_MININT;
     goto done;
   }
@@ -766,6 +941,8 @@ gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
   gboolean ret = FALSE;
   jstring key_str = NULL;
   jobject v = NULL;
+  GstAmcBuffer buf = { 0, };
+  gint position = 0, limit = 0;
 
   g_return_val_if_fail (format != NULL, FALSE);
   g_return_val_if_fail (key != NULL, FALSE);
@@ -791,7 +968,14 @@ gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
     goto done;
   }
   *size = (*env)->GetDirectBufferCapacity (env, v);
-  *data = g_memdup (*data, *size);
+
+  buf.object = v;
+  buf.data = *data;
+  buf.size = *size;
+  gst_amc_buffer_get_position_and_limit (&buf, NULL, &position, &limit);
+  *size = limit;
+
+  *data = g_memdup (*data + position, limit);
 
   ret = TRUE;
 
@@ -812,6 +996,7 @@ gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
   jstring key_str = NULL;
   jobject v = NULL;
   gboolean ret = FALSE;
+  GstAmcBuffer buf = { 0, };
 
   g_return_val_if_fail (format != NULL, FALSE);
   g_return_val_if_fail (key != NULL, FALSE);
@@ -830,6 +1015,12 @@ gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
         GST_LIBRARY_ERROR_FAILED, "Failed create Java byte buffer");
     goto done;
   }
+
+  buf.object = v;
+  buf.data = data;
+  buf.size = size;
+
+  gst_amc_buffer_set_position_and_limit (&buf, NULL, 0, size);
 
   if (!gst_amc_jni_call_void_method (env, err, format->object,
           media_format.set_byte_buffer, key_str, v))
@@ -971,6 +1162,20 @@ get_java_classes (void)
     }
     goto done;
   }
+
+  /* Android >= 21 */
+  media_codec.get_output_buffer =
+      (*env)->GetMethodID (env, media_codec.klass, "getOutputBuffer",
+      "(I)Ljava/nio/ByteBuffer;");
+  if ((*env)->ExceptionCheck (env))
+    (*env)->ExceptionClear (env);
+
+  /* Android >= 21 */
+  media_codec.get_input_buffer =
+      (*env)->GetMethodID (env, media_codec.klass, "getInputBuffer",
+      "(I)Ljava/nio/ByteBuffer;");
+  if ((*env)->ExceptionCheck (env))
+    (*env)->ExceptionClear (env);
 
   tmp = (*env)->FindClass (env, "android/media/MediaCodec$BufferInfo");
   if (!tmp) {

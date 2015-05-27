@@ -6,6 +6,7 @@
  * Copyright (C) 2014, Sebastian Dröge <sebastian@centricular.com>
  * Copyright (C) 2014, Collabora Ltd.
  *   Author: Matthieu Bouron <matthieu.bouron@collabora.com>
+ * Copyright (C) 2015, Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,6 +41,14 @@ static jint (*create_java_vm) (JavaVM ** p_vm, JNIEnv ** p_env, void *vm_args);
 static JavaVM *java_vm;
 static gboolean started_java_vm = FALSE;
 static pthread_key_t current_jni_env;
+
+static struct
+{
+  jclass klass;
+  jmethodID get_limit, get_position;
+  jmethodID set_limit, set_position;
+  jmethodID clear;
+} java_nio_buffer;
 
 jclass
 gst_amc_jni_get_class (JNIEnv * env, GError ** err, const gchar * name)
@@ -548,6 +557,69 @@ symbol_error:
 }
 
 static gboolean
+initialize_classes (void)
+{
+  JNIEnv *env;
+  GError *err = NULL;
+
+  env = gst_amc_jni_get_env ();
+
+  java_nio_buffer.klass = gst_amc_jni_get_class (env, &err, "java/nio/Buffer");
+  if (!java_nio_buffer.klass) {
+    GST_ERROR ("Failed to get java.nio.Buffer class: %s", err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  java_nio_buffer.get_limit =
+      gst_amc_jni_get_method_id (env, &err, java_nio_buffer.klass, "limit",
+      "()I");
+  if (!java_nio_buffer.get_limit) {
+    GST_ERROR ("Failed to get java.nio.Buffer limit(): %s", err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  java_nio_buffer.get_position =
+      gst_amc_jni_get_method_id (env, &err, java_nio_buffer.klass, "position",
+      "()I");
+  if (!java_nio_buffer.get_position) {
+    GST_ERROR ("Failed to get java.nio.Buffer position(): %s", err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  java_nio_buffer.set_limit =
+      gst_amc_jni_get_method_id (env, &err, java_nio_buffer.klass, "limit",
+      "(I)Ljava/nio/Buffer;");
+  if (!java_nio_buffer.set_limit) {
+    GST_ERROR ("Failed to get java.nio.Buffer limit(): %s", err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  java_nio_buffer.set_position =
+      gst_amc_jni_get_method_id (env, &err, java_nio_buffer.klass, "position",
+      "(I)Ljava/nio/Buffer;");
+  if (!java_nio_buffer.set_position) {
+    GST_ERROR ("Failed to get java.nio.Buffer position(): %s", err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  java_nio_buffer.clear =
+      gst_amc_jni_get_method_id (env, &err, java_nio_buffer.klass, "clear",
+      "()Ljava/nio/Buffer;");
+  if (!java_nio_buffer.clear) {
+    GST_ERROR ("Failed to get java.nio.Buffer clear(): %s", err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_amc_jni_initialize_java_vm (void)
 {
   jsize n_vms;
@@ -599,7 +671,10 @@ gst_amc_jni_initialize_java_vm (void)
     started_java_vm = TRUE;
   }
 
-  return java_vm != NULL;
+  if (java_vm == NULL)
+    return FALSE;
+
+  return initialize_classes ();
 
 get_created_failed:
   {
@@ -901,4 +976,106 @@ gst_amc_jni_free_buffer_array (JNIEnv * env, GstAmcBuffer * buffers,
       gst_amc_jni_object_unref (env, buffers[i].object);
   }
   g_free (buffers);
+}
+
+void
+gst_amc_buffer_free (GstAmcBuffer * buffer)
+{
+  JNIEnv *env;
+
+  g_return_if_fail (buffer != NULL);
+
+  env = gst_amc_jni_get_env ();
+
+  if (buffer->object)
+    gst_amc_jni_object_unref (env, buffer->object);
+  g_free (buffer);
+}
+
+GstAmcBuffer *
+gst_amc_buffer_copy (GstAmcBuffer * buffer)
+{
+  JNIEnv *env;
+  GstAmcBuffer *ret;
+
+  g_return_val_if_fail (buffer != NULL, NULL);
+
+  env = gst_amc_jni_get_env ();
+
+  ret = g_new0 (GstAmcBuffer, 1);
+
+  ret->object = gst_amc_jni_object_ref (env, buffer->object);
+  ret->data = buffer->data;
+  ret->size = buffer->size;
+
+  return ret;
+}
+
+gboolean
+gst_amc_buffer_get_position_and_limit (GstAmcBuffer * buffer, GError ** err,
+    gint * position, gint * limit)
+{
+  JNIEnv *env;
+
+  g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_val_if_fail (buffer->object != NULL, FALSE);
+
+  env = gst_amc_jni_get_env ();
+
+  if (!gst_amc_jni_call_int_method (env, err, buffer->object,
+          java_nio_buffer.get_position, position))
+    return FALSE;
+
+  if (!gst_amc_jni_call_int_method (env, err, buffer->object,
+          java_nio_buffer.get_limit, limit))
+    return FALSE;
+
+  return TRUE;
+}
+
+gboolean
+gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer, GError ** err,
+    gint position, gint limit)
+{
+  JNIEnv *env;
+  jobject tmp;
+
+  g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_val_if_fail (buffer->object != NULL, FALSE);
+
+  env = gst_amc_jni_get_env ();
+
+  if (!gst_amc_jni_call_object_method (env, err, buffer->object,
+          java_nio_buffer.set_limit, &tmp, limit))
+    return FALSE;
+
+  gst_amc_jni_object_local_unref (env, tmp);
+
+  if (!gst_amc_jni_call_object_method (env, err, buffer->object,
+          java_nio_buffer.set_position, &tmp, position))
+    return FALSE;
+
+  gst_amc_jni_object_local_unref (env, tmp);
+
+  return TRUE;
+}
+
+gboolean
+gst_amc_buffer_clear (GstAmcBuffer * buffer, GError ** err)
+{
+  JNIEnv *env;
+  jobject tmp;
+
+  g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_val_if_fail (buffer->object != NULL, FALSE);
+
+  env = gst_amc_jni_get_env ();
+
+  if (!gst_amc_jni_call_object_method (env, err, buffer->object,
+          java_nio_buffer.clear, &tmp))
+    return FALSE;
+
+  gst_amc_jni_object_local_unref (env, tmp);
+
+  return TRUE;
 }

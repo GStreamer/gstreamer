@@ -51,8 +51,6 @@ struct _GstAmcAudioDec
 
   /* < private > */
   GstAmcCodec *codec;
-  GstAmcBuffer *input_buffers, *output_buffers;
-  gsize n_input_buffers, n_output_buffers;
 
   GstCaps *input_caps;
   GList *codec_datas;

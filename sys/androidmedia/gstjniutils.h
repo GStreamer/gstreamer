@@ -175,6 +175,12 @@ struct _GstAmcBuffer {
   gsize size;
 };
 
+gboolean gst_amc_buffer_get_position_and_limit (GstAmcBuffer * buffer, GError ** err, gint * position, gint * limit);
+gboolean gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer, GError ** err, gint position, gint limit);
+gboolean gst_amc_buffer_clear (GstAmcBuffer * buffer, GError ** err);
+GstAmcBuffer * gst_amc_buffer_copy (GstAmcBuffer * buffer);
+void     gst_amc_buffer_free (GstAmcBuffer * buffer);
+
 gboolean gst_amc_jni_get_buffer_array (JNIEnv * env, GError ** err, jobject array, GstAmcBuffer ** buffers, gsize * n_buffers);
 void gst_amc_jni_free_buffer_array (JNIEnv * env, GstAmcBuffer * buffers, gsize n_buffers);
 

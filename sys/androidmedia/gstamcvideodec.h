@@ -51,8 +51,6 @@ struct _GstAmcVideoDec
 
   /* < private > */
   GstAmcCodec *codec;
-  GstAmcBuffer *input_buffers, *output_buffers;
-  gsize n_input_buffers, n_output_buffers;
 
   GstVideoCodecState *input_state;
   gboolean input_state_changed;
