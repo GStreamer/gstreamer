@@ -330,7 +330,6 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
       return FALSE;
     }
     //hlsdemux->discont = TRUE;
-    hlsdemux->new_playlist = TRUE;
     hlsdemux->do_typefind = TRUE;
 
     gst_hls_demux_change_playlist (hlsdemux, bitrate / ABS (rate), NULL);
@@ -349,7 +348,6 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
       return FALSE;
     }
     //hlsdemux->discont = TRUE;
-    hlsdemux->new_playlist = TRUE;
     hlsdemux->do_typefind = TRUE;
     /* TODO why not continue using the same? that was being used up to now? */
     gst_hls_demux_change_playlist (hlsdemux, bitrate, NULL);
@@ -1048,7 +1046,6 @@ retry_failover_protection:
   GST_INFO_OBJECT (demux, "Client was on %dbps, max allowed is %dbps, switching"
       " to bitrate %dbps", old_bandwidth, max_bitrate, new_bandwidth);
   stream->discont = TRUE;
-  demux->new_playlist = TRUE;
 
   if (gst_hls_demux_update_playlist (demux, FALSE, NULL)) {
     gchar *uri;
