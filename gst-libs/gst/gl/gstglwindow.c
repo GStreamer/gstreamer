@@ -165,6 +165,18 @@ gst_gl_window_default_close (GstGLWindow * window)
 }
 
 static void
+_init_debug (void)
+{
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (gst_gl_window_debug, "glwindow", 0,
+        "glwindow element");
+    g_once_init_leave (&_init, 1);
+  }
+}
+
+static void
 gst_gl_window_init (GstGLWindow * window)
 {
   window->priv = GST_GL_WINDOW_GET_PRIVATE (window);
@@ -228,6 +240,8 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
       g_signal_new ("key-event", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
+
+  _init_debug ();
 }
 
 /**
@@ -243,15 +257,10 @@ gst_gl_window_new (GstGLDisplay * display)
 {
   GstGLWindow *window = NULL;
   const gchar *user_choice;
-  static volatile gsize _init = 0;
 
   g_return_val_if_fail (display != NULL, NULL);
 
-  if (g_once_init_enter (&_init)) {
-    GST_DEBUG_CATEGORY_INIT (gst_gl_window_debug, "glwindow", 0,
-        "glwindow element");
-    g_once_init_leave (&_init, 1);
-  }
+  _init_debug ();
 
   user_choice = g_getenv ("GST_GL_WINDOW");
   GST_INFO ("creating a window, user choice:%s", user_choice);
