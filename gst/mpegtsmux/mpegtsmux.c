@@ -898,7 +898,7 @@ mpegtsmux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstPad *sinkpad;
       GValue sinkpad_value = G_VALUE_INIT;
       GstClockTime running_time;
-      gboolean all_headers, done;
+      gboolean all_headers, done, res = FALSE;
       guint count;
 
       if (!gst_video_event_is_force_key_unit (event))
@@ -923,7 +923,8 @@ mpegtsmux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       iter = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (mux));
       done = FALSE;
       while (!done) {
-        gboolean res = FALSE, tmp;
+        gboolean tmp;
+
         iter_ret = gst_iterator_next (iter, &sinkpad_value);
         sinkpad = g_value_get_object (&sinkpad_value);
 
@@ -1063,7 +1064,7 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
         GST_WARNING_OBJECT (cdata->pad, "ignoring DTS going backward");
         time = pad_data->min_dts;
       }
-      buf = *outbuf = gst_buffer_make_writable (buf);
+      *outbuf = gst_buffer_make_writable (buf);
       GST_BUFFER_DTS (*outbuf) = time;
     }
   }
