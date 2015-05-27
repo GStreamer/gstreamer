@@ -349,6 +349,9 @@ static GstFlowReturn
 gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
     GstRTPBaseDepayloadClass * bclass, GstBuffer * in)
 {
+  GstBuffer *(*process_rtp_packet_func) (GstRTPBaseDepayload * base,
+      GstRTPBuffer * rtp_buffer);
+  GstBuffer *(*process_func) (GstRTPBaseDepayload * base, GstBuffer * in);
   GstRTPBaseDepayloadPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
@@ -360,6 +363,9 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
   GstRTPBuffer rtp = { NULL };
 
   priv = filter->priv;
+
+  process_func = bclass->process;
+  process_rtp_packet_func = bclass->process_rtp_packet;
 
   /* we must have a setcaps first */
   if (G_UNLIKELY (!priv->negotiated))
@@ -382,7 +388,6 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
 
   seqnum = gst_rtp_buffer_get_seq (&rtp);
   rtptime = gst_rtp_buffer_get_timestamp (&rtp);
-  gst_rtp_buffer_unmap (&rtp);
 
   priv->last_seqnum = seqnum;
   priv->last_rtptime = rtptime;
@@ -442,11 +447,17 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
     filter->need_newsegment = FALSE;
   }
 
-  if (G_UNLIKELY (bclass->process == NULL))
+  if (process_rtp_packet_func != NULL) {
+    out_buf = process_rtp_packet_func (filter, &rtp);
+    gst_rtp_buffer_unmap (&rtp);
+  } else if (process_func != NULL) {
+    gst_rtp_buffer_unmap (&rtp);
+    out_buf = process_func (filter, in);
+  } else {
     goto no_process;
+  }
 
   /* let's send it out to processing */
-  out_buf = bclass->process (filter, in);
   if (out_buf) {
     ret = gst_rtp_base_depayload_push (filter, out_buf);
   }
@@ -483,7 +494,7 @@ no_process:
   {
     /* this is not fatal but should be filtered earlier */
     GST_ELEMENT_ERROR (filter, STREAM, NOT_IMPLEMENTED, (NULL),
-        ("The subclass does not have a process method"));
+        ("The subclass does not have a process or process_rtp_packet method"));
     return GST_FLOW_ERROR;
   }
 }
