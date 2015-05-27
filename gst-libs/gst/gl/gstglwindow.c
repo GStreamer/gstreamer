@@ -842,7 +842,8 @@ gboolean
 gst_gl_window_is_running (GstGLWindow * window)
 {
   GstGLWindowPrivate *priv = window->priv;
-  return priv->alive && (!priv->loop || g_main_loop_is_running (priv->loop));
+  return priv->alive && (!priv->loop
+      || g_main_loop_is_running (window->priv->loop));
 }
 
 /**
