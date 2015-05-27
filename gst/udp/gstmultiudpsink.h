@@ -81,7 +81,9 @@ struct _GstMultiUDPSink {
   GstBaseSink parent;
 
   GSocket       *used_socket, *used_socket_v6;
+
   GCancellable  *cancellable;
+  gboolean       made_cancel_fd;
 
   /* client management */
   GMutex         client_lock;

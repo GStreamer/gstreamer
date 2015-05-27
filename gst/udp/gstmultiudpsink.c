@@ -374,6 +374,26 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
 }
 
 static void
+gst_multiudpsink_create_cancellable (GstMultiUDPSink * sink)
+{
+  GPollFD pollfd;
+
+  sink->cancellable = g_cancellable_new ();
+  sink->made_cancel_fd = g_cancellable_make_pollfd (sink->cancellable, &pollfd);
+}
+
+static void
+gst_multiudpsink_free_cancellable (GstMultiUDPSink * sink)
+{
+  if (sink->made_cancel_fd) {
+    g_cancellable_release_fd (sink->cancellable);
+    sink->made_cancel_fd = FALSE;
+  }
+  g_object_unref (sink->cancellable);
+  sink->cancellable = NULL;
+}
+
+static void
 gst_multiudpsink_init (GstMultiUDPSink * sink)
 {
   guint max_mem;
@@ -400,7 +420,7 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   sink->send_duplicates = DEFAULT_SEND_DUPLICATES;
   sink->multi_iface = g_strdup (DEFAULT_MULTICAST_IFACE);
 
-  sink->cancellable = g_cancellable_new ();
+  gst_multiudpsink_create_cancellable (sink);
 
   /* pre-allocate OutputVector, MapInfo and OutputMessage arrays
    * for use in the render and render_list functions */
@@ -522,9 +542,7 @@ gst_multiudpsink_finalize (GObject * object)
     g_object_unref (sink->used_socket_v6);
   sink->used_socket_v6 = NULL;
 
-  if (sink->cancellable)
-    g_object_unref (sink->cancellable);
-  sink->cancellable = NULL;
+  gst_multiudpsink_free_cancellable (sink);
 
   g_free (sink->multi_iface);
   sink->multi_iface = NULL;
@@ -1845,8 +1863,8 @@ gst_multiudpsink_unlock_stop (GstBaseSink * bsink)
 
   sink = GST_MULTIUDPSINK (bsink);
 
-  g_object_unref (sink->cancellable);
-  sink->cancellable = g_cancellable_new ();
+  gst_multiudpsink_free_cancellable (sink);
+  gst_multiudpsink_create_cancellable (sink);
 
   return TRUE;
 }
