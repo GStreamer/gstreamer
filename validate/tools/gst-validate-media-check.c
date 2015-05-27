@@ -124,7 +124,7 @@ main (int argc, gchar ** argv)
     g_free (output);
   }
 
-  ret = gst_validate_runner_printf (runner);
+  ret = gst_validate_runner_exit (runner, TRUE);
   if (ret && expected_file) {
     output = gst_media_descriptor_writer_serialize (writer);
     g_print ("Media info:\n%s\n", output);

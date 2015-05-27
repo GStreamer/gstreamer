@@ -39,7 +39,7 @@ static void
 exit_report_printer (void)
 {
   if (runner)
-    gst_validate_runner_printf (runner);
+    gst_validate_runner_exit (runner, TRUE);
 }
 
 /*

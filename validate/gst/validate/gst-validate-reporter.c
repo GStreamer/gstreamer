@@ -316,6 +316,8 @@ gst_validate_reporter_set_runner (GstValidateReporter * reporter,
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
 
   priv->runner = runner;
+
+  g_object_notify (G_OBJECT (reporter), "validate-runner");
 }
 
 /**

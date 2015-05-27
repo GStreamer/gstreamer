@@ -98,6 +98,7 @@ G_DEFINE_TYPE (GstValidateRunner, gst_validate_runner, G_TYPE_OBJECT);
 enum
 {
   REPORT_ADDED_SIGNAL,
+  STOPPING_SIGNAL,
   /* add more above */
   LAST_SIGNAL
 };
@@ -262,6 +263,10 @@ gst_validate_runner_class_init (GstValidateRunnerClass * klass)
       g_signal_new ("report-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1,
       GST_TYPE_VALIDATE_REPORT);
+
+  _signals[STOPPING_SIGNAL] =
+      g_signal_new ("stopping", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0,
+      NULL, NULL, NULL, G_TYPE_NONE, 0);
 }
 
 static void
@@ -499,5 +504,28 @@ gst_validate_runner_printf (GstValidateRunner * runner)
   g_list_free (criticals);
   gst_validate_printf (NULL, "Issues found: %u\n",
       gst_validate_runner_get_reports_count (runner));
+  return ret;
+}
+
+int
+gst_validate_runner_exit (GstValidateRunner * runner, gboolean print_result)
+{
+  gint ret = 0;
+
+  g_signal_emit (runner, _signals[STOPPING_SIGNAL], 0);
+
+  if (print_result) {
+    ret = gst_validate_runner_printf (runner);
+  } else {
+    GList *tmp;
+
+    for (tmp = runner->priv->reports; tmp; tmp = tmp->next) {
+      GstValidateReport *report = tmp->data;
+
+      if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
+        ret = 18;
+    }
+  }
+
   return ret;
 }

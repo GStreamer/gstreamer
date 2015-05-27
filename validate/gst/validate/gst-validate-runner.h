@@ -76,9 +76,10 @@ GstValidateRunner *   gst_validate_runner_new               (void);
 void            gst_validate_runner_add_report  (GstValidateRunner * runner, GstValidateReport * report);
 
 guint           gst_validate_runner_get_reports_count (GstValidateRunner * runner);
-GList *        gst_validate_runner_get_reports (GstValidateRunner * runner);
+GList *         gst_validate_runner_get_reports (GstValidateRunner * runner);
 
 int             gst_validate_runner_printf (GstValidateRunner * runner);
+int             gst_validate_runner_exit (GstValidateRunner * runner, gboolean print_result);
 
 GstValidateReportingDetails gst_validate_runner_get_default_reporting_level (GstValidateRunner *runner);
 GstValidateReportingDetails gst_validate_runner_get_reporting_level_for_name (GstValidateRunner *runner,

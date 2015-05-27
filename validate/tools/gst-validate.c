@@ -609,7 +609,7 @@ main (int argc, gchar ** argv)
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
 
-  rep_err = gst_validate_runner_printf (runner);
+  rep_err = gst_validate_runner_exit (runner, TRUE);
   if (ret == 0) {
     ret = rep_err;
     if (rep_err != 0)

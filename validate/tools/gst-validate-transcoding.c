@@ -940,7 +940,7 @@ main (int argc, gchar ** argv)
 
   g_main_loop_run (mainloop);
 
-  rep_err = gst_validate_runner_printf (runner);
+  rep_err = gst_validate_runner_exit (runner, TRUE);
   if (ret == 0)
     ret = rep_err;
 
