@@ -81,14 +81,12 @@ libgstvaapi_enc_source_c =	\
 	gstvaapiencode.c	\
 	gstvaapiencode_h264.c	\
 	gstvaapiencode_mpeg2.c	\
-	gstvaapiencode_h265.c	\
 	$(NULL)
 
 libgstvaapi_enc_source_h =	\
 	gstvaapiencode.h	\
 	gstvaapiencode_h264.h	\
 	gstvaapiencode_mpeg2.h	\
-	gstvaapiencode_h265.h	\
 	$(NULL)
 
 if USE_ENCODERS
@@ -109,6 +107,16 @@ if USE_VP8_ENCODER
 libgstvaapi_source_c += $(libgstvaapi_vp8enc_source_c)
 libgstvaapi_source_h += $(libgstvaapi_vp8enc_source_h)
 endif
+
+
+libgstvaapi_h265enc_source_c = gstvaapiencode_h265.c
+libgstvaapi_h265enc_source_h = gstvaapiencode_h265.h
+if USE_H265_ENCODER
+libgstvaapi_source_c += $(libgstvaapi_h265enc_source_c)
+libgstvaapi_source_h += $(libgstvaapi_h265enc_source_h)
+endif
+
+
 
 libgstvaapi_egl_source_c =
 libgstvaapi_egl_source_h =
@@ -247,6 +255,8 @@ EXTRA_DIST = \
 	$(libgstvaapi_jpegenc_source_h)  \
 	$(libgstvaapi_vp8enc_source_c)   \
 	$(libgstvaapi_vp8enc_source_h)   \
+	$(libgstvaapi_h265enc_source_c)  \
+	$(libgstvaapi_h265enc_source_h)  \
 	$(libgstvaapi_egl_source_c)	\
 	$(libgstvaapi_egl_source_h)	\
 	$(libgstvaapi_1_2p_source_c)	 \
