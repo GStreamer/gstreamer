@@ -52,6 +52,7 @@ struct _GstDynUDPSink {
   /* the socket in use */
   GSocket *used_socket, *used_socket_v6;
   gboolean external_socket;
+  gboolean made_cancel_fd;
   GCancellable *cancellable;
 };
 
