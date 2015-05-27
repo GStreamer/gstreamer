@@ -31,6 +31,9 @@
 #if GST_GL_HAVE_WINDOW_X11
 #include <gst/gl/x11/gstgldisplay_x11.h>
 #endif
+#if GST_GL_HAVE_WINDOW_WAYLAND
+#include <gst/gl/wayland/gstgldisplay_wayland.h>
+#endif
 
 #ifndef GL_FRAMEBUFFER_UNDEFINED
 #define GL_FRAMEBUFFER_UNDEFINED          0x8219
@@ -618,6 +621,30 @@ gst_gl_display_context_query (GstElement * element, GstGLDisplay ** display_ptr)
     goto out;
 #endif
 
+#if GST_GL_HAVE_WINDOW_WAYLAND
+  gst_query_unref (query);
+  query =
+      _gst_context_query (element, display_ptr,
+      "GstWaylandDisplayHandleContextType");
+  gst_query_parse_context (query, &ctxt);
+  if (ctxt
+      && gst_context_has_context_type (ctxt,
+          "GstWaylandDisplayHandleContextType")) {
+    const GstStructure *s;
+    struct wl_display *display;
+
+    s = gst_context_get_structure (ctxt);
+    if (gst_structure_get (s, "display", G_TYPE_POINTER, &display, NULL)
+        && display) {
+      *display_ptr =
+          (GstGLDisplay *) gst_gl_display_wayland_new_with_display (display);
+    }
+  }
+
+  if (*display_ptr)
+    goto out;
+#endif
+
 out:
   gst_query_unref (query);
 }
@@ -742,6 +769,17 @@ gst_gl_handle_set_context (GstElement * element, GstContext * context,
           (GstGLDisplay *) gst_gl_display_x11_new_with_display (display);
   }
 #endif
+#if GST_GL_HAVE_WINDOW_WAYLAND
+  else if (g_strcmp0 (context_type, "GstWaylandDisplayHandleContextType") == 0) {
+    const GstStructure *s;
+    struct wl_display *display;
+
+    s = gst_context_get_structure (context);
+    if (gst_structure_get (s, "display", G_TYPE_POINTER, &display, NULL))
+      display_replacement =
+          (GstGLDisplay *) gst_gl_display_wayland_new_with_display (display);
+  }
+#endif
   else if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
     const GstStructure *s = gst_context_get_structure (context);
     GstGLDisplay *context_display;
@@ -837,6 +875,33 @@ gst_gl_handle_context_query (GstElement * element, GstQuery * query,
     gst_context_unref (context);
 
     res = x11_display != NULL;
+  }
+#endif
+#if GST_GL_HAVE_WINDOW_WAYLAND
+  else if (g_strcmp0 (context_type, "GstWaylandDisplayHandleContextType") == 0) {
+    GstStructure *s;
+    struct wl_display *wayland_display = NULL;
+
+    gst_query_parse_context (query, &old_context);
+
+    if (old_context)
+      context = gst_context_copy (old_context);
+    else
+      context = gst_context_new ("GstWaylandDisplayHandleContextType", TRUE);
+
+    if (*display
+        && ((*display)->type & GST_GL_DISPLAY_TYPE_WAYLAND) ==
+        GST_GL_DISPLAY_TYPE_WAYLAND)
+      wayland_display =
+          (struct wl_display *) gst_gl_display_get_handle (*display);
+
+    s = gst_context_writable_structure (context);
+    gst_structure_set (s, "display", G_TYPE_POINTER, wayland_display, NULL);
+
+    gst_query_set_context (query, context);
+    gst_context_unref (context);
+
+    res = wayland_display != NULL;
   }
 #endif
   else if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
