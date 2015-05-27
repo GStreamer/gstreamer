@@ -1463,8 +1463,9 @@ _init_convert_fbo (GstGLColorConvert * convert)
   /* a fake texture is attached to the convert FBO (cannot init without it) */
   gl->GenTextures (1, &fake_texture);
   gl->BindTexture (GL_TEXTURE_2D, fake_texture);
-  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, out_width, out_height,
-      0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  gl->TexImage2D (GL_TEXTURE_2D, 0,
+      gst_gl_internal_format_rgba (convert->context), out_width, out_height, 0,
+      GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

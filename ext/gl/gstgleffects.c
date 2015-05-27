@@ -285,10 +285,11 @@ gst_gl_effects_init_gl_resources (GstGLFilter * filter)
 
     gl->GenTextures (1, &effects->midtexture[i]);
     gl->BindTexture (GL_TEXTURE_2D, effects->midtexture[i]);
-    gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
+    gl->TexImage2D (GL_TEXTURE_2D, 0,
+        gst_gl_internal_format_rgba (GST_GL_BASE_FILTER (filter)->context),
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
-        GST_VIDEO_INFO_HEIGHT (&filter->out_info),
-        0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        GST_VIDEO_INFO_HEIGHT (&filter->out_info), 0, GL_RGBA, GL_UNSIGNED_BYTE,
+        NULL);
     gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
