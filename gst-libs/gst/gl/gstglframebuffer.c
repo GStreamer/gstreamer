@@ -125,8 +125,9 @@ gst_gl_framebuffer_generate (GstGLFramebuffer * frame, gint width, gint height,
   /* setup a texture to render to */
   gl->GenTextures (1, &fake_texture);
   gl->BindTexture (GL_TEXTURE_2D, fake_texture);
-  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
-      width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  gl->TexImage2D (GL_TEXTURE_2D, 0,
+      gst_gl_internal_format_rgba (frame->context), width, height, 0, GL_RGBA,
+      GL_UNSIGNED_BYTE, NULL);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

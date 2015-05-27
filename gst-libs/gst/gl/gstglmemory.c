@@ -303,7 +303,7 @@ _sized_gl_format_from_gl_format_type (GstGLContext * context, GLenum format,
     case GL_RGBA:
       switch (type) {
         case GL_UNSIGNED_BYTE:
-          return GL_RGBA8;
+          return gst_gl_internal_format_rgba (context);
           break;
       }
       break;

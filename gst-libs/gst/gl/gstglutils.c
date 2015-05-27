@@ -113,8 +113,8 @@ _gen_texture (GstGLContext * context, GenTexture * data)
   gl->BindTexture (GL_TEXTURE_2D, data->result);
 
   if (data->width > 0 && data->height > 0)
-    gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, data->width,
-        data->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    gl->TexImage2D (GL_TEXTURE_2D, 0, gst_gl_internal_format_rgba (context),
+        data->width, data->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -193,7 +193,7 @@ _gen_texture_full (GstGLContext * context, GenTextureFull * data)
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_AYUV:
     {
-      glinternalformat = GL_RGBA8;
+      glinternalformat = gst_gl_internal_format_rgba (context);
       glformat = GL_RGBA;
       gltype = GL_UNSIGNED_BYTE;
       break;
@@ -903,4 +903,16 @@ gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
   }
 
   return tmp;
+}
+
+GLint
+gst_gl_internal_format_rgba (GstGLContext * context)
+{
+#if GST_GL_HAVE_GLES2 && (GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3)
+  return USING_GLES2 (context) ? GL_RGBA : GL_RGBA8;
+#elif GST_GL_HAVE_OPENGL || GST_GL_HAVE_GLES3
+  return GL_RGBA8;
+#else
+  return GL_RGBA;
+#endif
 }
