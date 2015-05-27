@@ -152,6 +152,9 @@ gst_gl_platform_to_string (GstGLPlatform platform)
   if (platform & GST_GL_PLATFORM_CGL) {
     str = g_string_append (str, "cgl ");
   }
+  if (platform & GST_GL_PLATFORM_GPU_PROCESS) {
+    str = g_string_append (str, "gpu_process ");
+  }
 
 out:
   if (!str)
@@ -193,6 +196,9 @@ gst_gl_platform_from_string (const gchar * platform_s)
       } else if (g_strstr_len (platform, 3, "cgl")) {
         ret |= GST_GL_PLATFORM_CGL;
         platform = &platform[3];
+      } else if (g_strstr_len (platform, 11, "gpu_process")) {
+        ret |= GST_GL_PLATFORM_GPU_PROCESS;
+        platform = &platform[11];
       } else {
         GST_ERROR ("Error parsing \'%s\'", platform);
         break;

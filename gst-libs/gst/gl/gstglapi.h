@@ -116,6 +116,7 @@ typedef enum
   GST_GL_PLATFORM_WGL = (1 << 2),
   GST_GL_PLATFORM_CGL = (1 << 3),
   GST_GL_PLATFORM_EAGL = (1 << 4),
+  GST_GL_PLATFORM_GPU_PROCESS = (1 << 5),
 
   GST_GL_PLATFORM_ANY = G_MAXUINT32
 } GstGLPlatform;
