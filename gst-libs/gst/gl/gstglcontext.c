@@ -142,6 +142,8 @@ G_DEFINE_ABSTRACT_TYPE (GstGLContext, gst_gl_context, GST_TYPE_OBJECT);
 #define GST_GL_CONTEXT_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_CONTEXT, GstGLContextPrivate))
 
+static void _init_debug (void);
+
 static gpointer gst_gl_context_create_thread (GstGLContext * context);
 static gpointer _default_get_proc_address (GstGLContext * context,
     const gchar * name);
@@ -242,6 +244,8 @@ gst_gl_context_class_init (GstGLContextClass * klass)
   klass->get_proc_address = GST_DEBUG_FUNCPTR (_default_get_proc_address);
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_context_finalize;
+
+  _init_debug ();
 }
 
 static void
