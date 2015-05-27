@@ -1391,8 +1391,6 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
 
     /* marker:1==1 ! mux_rate:22 ! marker:1==1 */
     new_rate = (scr2 & 0x007ffffe) >> 1;
-
-    data += 8;
   }
   new_rate *= MPEG_MUX_RATE_MULT;
 
