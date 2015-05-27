@@ -92,6 +92,7 @@
 
 #include "gstglimagesink.h"
 #include "gstglsinkbin.h"
+#include <gst/gl/gpuprocess/gstglcontext_gpu_process.h>
 
 #if GST_GL_HAVE_PLATFORM_EGL
 #include <gst/gl/egl/gsteglimagememory.h>
@@ -675,6 +676,19 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
   GST_DEBUG_OBJECT (gl_sink, "Ensuring setup");
 
   if (!gl_sink->context) {
+    if (GST_GL_IS_CONTEXT_GPU_PROCESS (gl_sink->other_context)) {
+      GstGLWindow *window = gst_gl_context_get_window (gl_sink->other_context);
+      gst_gl_window_set_draw_callback (window,
+          GST_GL_WINDOW_CB (gst_glimage_sink_on_draw),
+          gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
+      gst_object_unref (window);
+
+      gl_sink->context = gl_sink->other_context;
+      gl_sink->other_context = NULL;
+
+      return TRUE;
+    }
+
     GST_OBJECT_LOCK (gl_sink->display);
     do {
       GstGLContext *other_context;
