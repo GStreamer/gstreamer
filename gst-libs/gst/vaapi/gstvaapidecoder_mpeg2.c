@@ -1141,8 +1141,6 @@ decode_slice(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnit *unit)
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
     GstMapInfo map_info;
 
-    GST_DEBUG("slice %d (%u bytes)", slice_hdr->mb_row, unit->size);
-
     if (!is_valid_state(decoder, GST_MPEG_VIDEO_STATE_VALID_PIC_HEADERS))
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
@@ -1150,6 +1148,8 @@ decode_slice(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnit *unit)
         GST_ERROR("failed to map buffer");
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     }
+
+    GST_DEBUG("slice %d (%u bytes)", slice_hdr->mb_row, unit->size);
 
     slice = GST_VAAPI_SLICE_NEW(MPEG2, decoder,
         (map_info.data + unit->offset), unit->size);
