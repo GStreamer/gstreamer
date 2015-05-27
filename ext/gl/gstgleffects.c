@@ -603,23 +603,24 @@ gst_gl_effects_filters_descriptors (void)
 {
   static GstGLEffectsFilterDescriptor *descriptors = NULL;
   if (!descriptors) {
+    const GEnumValue *e;
     const GEnumValue *effect = gst_gl_effects_get_effects ();
-    guint n_filters = 0;
-    for (const GEnumValue * e = effect; NULL != e->value_nick; ++e, ++n_filters) {
+    const GstGLEffectsFilterDescriptor *defined;
+    guint n_filters = 0, i;
+
+    for (e = effect; NULL != e->value_nick; ++e, ++n_filters) {
     }
 
     descriptors = g_new0 (GstGLEffectsFilterDescriptor, n_filters + 1);
-    for (guint i = 0; i < n_filters; ++i, ++effect) {
+    for (i = 0; i < n_filters; ++i, ++effect) {
       descriptors[i].effect = effect->value;
       descriptors[i].filter_name = effect->value_nick;
     }
 
-    for (const GstGLEffectsFilterDescriptor * defined =
-        gst_gl_effects_filters_supported_properties ();
+    for (defined = gst_gl_effects_filters_supported_properties ();
         0 != defined->supported_properties; ++defined) {
 
-      guint i = 0;
-      for (; i < n_filters; ++i) {
+      for (i = 0; i < n_filters; ++i) {
         if (descriptors[i].effect == defined->effect) {
           descriptors[i].supported_properties = defined->supported_properties;
           break;
@@ -656,9 +657,9 @@ gst_gl_effects_register_filters (GstPlugin * plugin, GstRank rank)
         &info, 0);
 
     if (gst_element_register (plugin, "gleffects", rank, generic_type)) {
-      for (const GstGLEffectsFilterDescriptor * filters =
-          gst_gl_effects_filters_descriptors (); NULL != filters->filter_name;
-          ++filters) {
+      const GstGLEffectsFilterDescriptor *filters;
+      for (filters = gst_gl_effects_filters_descriptors ();
+          NULL != filters->filter_name; ++filters) {
         gchar *name = g_strdup_printf ("gleffects_%s", filters->filter_name);
         GTypeInfo info = {
           sizeof (GstGLEffectsClass),
