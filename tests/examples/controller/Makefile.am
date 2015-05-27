@@ -1,4 +1,4 @@
-noinst_PROGRAMS = audio-example control-sources text-color-example
+noinst_PROGRAMS = audio-example control-sources text-color-example absolute-example
 
 AM_CFLAGS  = $(GST_OBJ_CFLAGS) -I$(top_builddir)/libs
 

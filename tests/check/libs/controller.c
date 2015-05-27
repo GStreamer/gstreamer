@@ -598,6 +598,72 @@ GST_START_TEST (controller_interpolation_unset_all)
 GST_END_TEST;
 
 /* test retrieval of an array of values with get_value_array() */
+GST_START_TEST (controller_interpolation_linear_absolute_value_array)
+{
+  GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
+  GstElement *elem;
+  gdouble *raw_values;
+  GValue *g_values;
+  gint *values;
+
+  elem = gst_element_factory_make ("testobj", NULL);
+
+  /* new interpolation control source */
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
+
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
+          gst_direct_control_binding_new_absolute (GST_OBJECT (elem), "int",
+              cs)));
+
+  /* set interpolation mode */
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+
+  /* set control values */
+  fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0));
+  fail_unless (gst_timed_value_control_source_set (tvcs, 1 * GST_SECOND, 100));
+
+  /* now pull in raw-values for some timestamps */
+  raw_values = g_new (gdouble, 3);
+
+  fail_unless (gst_control_source_get_value_array (cs,
+          0, GST_SECOND / 2, 3, raw_values));
+  fail_unless_equals_float ((raw_values)[0], 0);
+  fail_unless_equals_float ((raw_values)[1], 50);
+  fail_unless_equals_float ((raw_values)[2], 100);
+
+  g_free (raw_values);
+
+  /* now pull in mapped GValues for some timestamps */
+  g_values = g_new0 (GValue, 3);
+
+  fail_unless (gst_object_get_g_value_array (GST_OBJECT (elem), "int",
+          0, GST_SECOND / 2, 3, g_values));
+  fail_unless_equals_int (g_value_get_int (&g_values[0]), 0);
+  fail_unless_equals_int (g_value_get_int (&g_values[1]), 50);
+  fail_unless_equals_int (g_value_get_int (&g_values[2]), 100);
+
+  g_free (g_values);
+
+  /* now pull in mapped values for some timestamps */
+  values = g_new0 (gint, 3);
+
+  fail_unless (gst_object_get_value_array (GST_OBJECT (elem), "int",
+          0, GST_SECOND / 2, 3, values));
+  fail_unless_equals_int (values[0], 0);
+  fail_unless_equals_int (values[1], 50);
+  fail_unless_equals_int (values[2], 100);
+
+  g_free (values);
+
+  gst_object_unref (cs);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* test retrieval of an array of values with get_value_array() */
 GST_START_TEST (controller_interpolation_linear_value_array)
 {
   GstControlSource *cs;
@@ -1477,6 +1543,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_interpolation_cubic_too_few_cp);
   tcase_add_test (tc, controller_interpolation_unset);
   tcase_add_test (tc, controller_interpolation_unset_all);
+  tcase_add_test (tc, controller_interpolation_linear_absolute_value_array);
   tcase_add_test (tc, controller_interpolation_linear_value_array);
   tcase_add_test (tc, controller_interpolation_linear_invalid_values);
   tcase_add_test (tc, controller_interpolation_linear_default_values);
