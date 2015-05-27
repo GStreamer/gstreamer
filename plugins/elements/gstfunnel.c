@@ -197,6 +197,9 @@ gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   gst_element_add_pad (element, sinkpad);
 
+  GST_DEBUG_OBJECT (element, "requested pad %s:%s",
+      GST_DEBUG_PAD_NAME (sinkpad));
+
   return sinkpad;
 }
 
@@ -233,7 +236,7 @@ gst_funnel_release_pad (GstElement * element, GstPad * pad)
   gboolean got_eos;
   gboolean send_eos = FALSE;
 
-  GST_DEBUG_OBJECT (funnel, "releasing pad");
+  GST_DEBUG_OBJECT (funnel, "releasing pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   gst_pad_set_active (pad, FALSE);
 
@@ -270,8 +273,7 @@ gst_funnel_sink_chain_object (GstPad * pad, GstFunnel * funnel,
 {
   GstFlowReturn res;
 
-  GST_DEBUG_OBJECT (funnel, "received buffer%s %p", (is_list ? "list" : ""),
-      obj);
+  GST_DEBUG_OBJECT (pad, "received buffer%s %p", (is_list ? "list" : ""), obj);
 
   GST_PAD_STREAM_LOCK (funnel->srcpad);
 
@@ -289,7 +291,7 @@ gst_funnel_sink_chain_object (GstPad * pad, GstFunnel * funnel,
 
   GST_PAD_STREAM_UNLOCK (funnel->srcpad);
 
-  GST_LOG_OBJECT (funnel, "handled buffer%s %s", (is_list ? "list" : ""),
+  GST_LOG_OBJECT (pad, "handled buffer%s %s", (is_list ? "list" : ""),
       gst_flow_get_name (res));
 
   return res;
@@ -322,6 +324,8 @@ gst_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   gboolean forward = TRUE;
   gboolean res = TRUE;
   gboolean unlock = FALSE;
+
+  GST_DEBUG_OBJECT (pad, "received event %" GST_PTR_FORMAT, event);
 
   if (GST_EVENT_IS_STICKY (event)) {
     unlock = TRUE;
