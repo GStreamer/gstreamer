@@ -42,4 +42,8 @@
 # include <va/va_compat.h>
 #endif
 
+#ifdef HAVE_VA_VA_DEC_HEVC_H
+# include <va/va_dec_hevc.h>
+#endif
+
 #endif /* GST_VAAPI_COMPAT_H */

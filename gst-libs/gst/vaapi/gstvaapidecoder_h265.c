@@ -30,6 +30,7 @@
 #include <math.h>
 #include <gst/base/gstadapter.h>
 #include <gst/codecparsers/gsth265parser.h>
+#include "gstvaapicompat.h"
 #include "gstvaapidecoder_h265.h"
 #include "gstvaapidecoder_objects.h"
 #include "gstvaapidecoder_priv.h"
