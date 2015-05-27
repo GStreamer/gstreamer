@@ -461,8 +461,10 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
 
   if (val == -1.0)
     *retval = GST_CLOCK_TIME_NONE;
-  else
+  else {
     *retval = val * GST_SECOND;
+    *retval = GST_ROUND_UP_4 (*retval);
+  }
 
   return TRUE;
 }
