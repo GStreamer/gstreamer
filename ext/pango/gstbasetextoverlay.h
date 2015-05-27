@@ -173,6 +173,9 @@ struct _GstBaseTextOverlay {
     gboolean                 auto_adjust_size;
     gboolean                 need_render;
 
+    gboolean                 draw_shadow;
+    gboolean                 draw_outline;
+
     gint                     shading_value;  /* for timeoverlay subclass */
 
     gboolean                 have_pango_markup;

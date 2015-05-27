@@ -62,6 +62,8 @@ GST_DEBUG_CATEGORY (pango_debug);
 #define DEFAULT_PROP_WAIT_TEXT	TRUE
 #define DEFAULT_PROP_AUTO_ADJUST_SIZE TRUE
 #define DEFAULT_PROP_VERTICAL_RENDER  FALSE
+#define DEFAULT_PROP_DRAW_SHADOW TRUE
+#define DEFAULT_PROP_DRAW_OUTLINE TRUE
 #define DEFAULT_PROP_COLOR      0xffffffff
 #define DEFAULT_PROP_OUTLINE_COLOR 0xff000000
 #define DEFAULT_PROP_SHADING_VALUE    80
@@ -91,7 +93,8 @@ enum
   PROP_AUTO_ADJUST_SIZE,
   PROP_VERTICAL_RENDER,
   PROP_COLOR,
-  PROP_SHADOW,
+  PROP_DRAW_SHADOW,
+  PROP_DRAW_OUTLINE,
   PROP_OUTLINE_COLOR,
   PROP_LAST
 };
@@ -458,6 +461,30 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
           DEFAULT_PROP_SILENT,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   /**
+   * GstBaseTextOverlay:draw-shadow:
+   *
+   * If set, a text shadow is drawn.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DRAW_SHADOW,
+      g_param_spec_boolean ("draw-shadow", "draw-shadow",
+          "Whether to draw shadow",
+          DEFAULT_PROP_DRAW_SHADOW,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstBaseTextOverlay:draw-outline:
+   *
+   * If set, an outline is drawn.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DRAW_OUTLINE,
+      g_param_spec_boolean ("draw-outline", "draw-outline",
+          "Whether to draw outline",
+          DEFAULT_PROP_DRAW_OUTLINE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
    * GstBaseTextOverlay:wait-text:
    *
    * If set, the video will block until a subtitle is received on the text pad.
@@ -588,6 +615,8 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   overlay->want_shading = DEFAULT_PROP_SHADING;
   overlay->shading_value = DEFAULT_PROP_SHADING_VALUE;
   overlay->silent = DEFAULT_PROP_SILENT;
+  overlay->draw_shadow = DEFAULT_PROP_DRAW_SHADOW;
+  overlay->draw_outline = DEFAULT_PROP_DRAW_OUTLINE;
   overlay->wait_text = DEFAULT_PROP_WAIT_TEXT;
   overlay->auto_adjust_size = DEFAULT_PROP_AUTO_ADJUST_SIZE;
 
@@ -909,6 +938,12 @@ gst_base_text_overlay_set_property (GObject * object, guint prop_id,
     case PROP_SILENT:
       overlay->silent = g_value_get_boolean (value);
       break;
+    case PROP_DRAW_SHADOW:
+      overlay->draw_shadow = g_value_get_boolean (value);
+      break;
+    case PROP_DRAW_OUTLINE:
+      overlay->draw_outline = g_value_get_boolean (value);
+      break;
     case PROP_LINE_ALIGNMENT:
       overlay->line_align = g_value_get_enum (value);
       g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
@@ -985,6 +1020,12 @@ gst_base_text_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SILENT:
       g_value_set_boolean (value, overlay->silent);
+      break;
+    case PROP_DRAW_SHADOW:
+      g_value_set_boolean (value, overlay->draw_shadow);
+      break;
+    case PROP_DRAW_OUTLINE:
+      g_value_set_boolean (value, overlay->draw_outline);
       break;
     case PROP_LINE_ALIGNMENT:
       g_value_set_enum (value, overlay->line_align);
@@ -1513,7 +1554,7 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
    */
 
   /* draw shadow text */
-  {
+  if (overlay->draw_shadow) {
     PangoAttrList *origin_attr, *filtered_attr, *temp_attr;
 
     /* Store a ref on the original attributes for later restoration */
@@ -1538,18 +1579,20 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
     cairo_restore (cr);
   }
 
-  a = (overlay->outline_color >> 24) & 0xff;
-  r = (overlay->outline_color >> 16) & 0xff;
-  g = (overlay->outline_color >> 8) & 0xff;
-  b = (overlay->outline_color >> 0) & 0xff;
-
   /* draw outline text */
-  cairo_save (cr);
-  cairo_set_source_rgba (cr, r / 255.0, g / 255.0, b / 255.0, a / 255.0);
-  cairo_set_line_width (cr, overlay->outline_offset);
-  pango_cairo_layout_path (cr, overlay->layout);
-  cairo_stroke (cr);
-  cairo_restore (cr);
+  if (overlay->draw_outline) {
+    a = (overlay->outline_color >> 24) & 0xff;
+    r = (overlay->outline_color >> 16) & 0xff;
+    g = (overlay->outline_color >> 8) & 0xff;
+    b = (overlay->outline_color >> 0) & 0xff;
+
+    cairo_save (cr);
+    cairo_set_source_rgba (cr, r / 255.0, g / 255.0, b / 255.0, a / 255.0);
+    cairo_set_line_width (cr, overlay->outline_offset);
+    pango_cairo_layout_path (cr, overlay->layout);
+    cairo_stroke (cr);
+    cairo_restore (cr);
+  }
 
   a = (overlay->color >> 24) & 0xff;
   r = (overlay->color >> 16) & 0xff;
