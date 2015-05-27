@@ -678,3 +678,59 @@ done:
   g_strfreev (b);
   return result;
 }
+
+gboolean
+gst_validate_utils_get_clocktime (GstStructure * structure, const gchar * name,
+    GstClockTime * retval)
+{
+  gdouble val;
+  const GValue *gvalue = gst_structure_get_value (structure, name);
+
+  *retval = GST_CLOCK_TIME_NONE;
+  if (gvalue == NULL) {
+    return FALSE;
+  }
+
+  if (G_VALUE_TYPE (gvalue) == GST_TYPE_CLOCK_TIME) {
+    *retval = g_value_get_uint64 (gvalue);
+
+    return TRUE;
+  }
+
+  if (G_VALUE_TYPE (gvalue) == G_TYPE_UINT64) {
+    *retval = g_value_get_uint64 (gvalue);
+
+    return TRUE;
+  }
+
+  if (G_VALUE_TYPE (gvalue) == G_TYPE_UINT) {
+    *retval = (GstClockTime) g_value_get_uint (gvalue);
+
+    return TRUE;
+  }
+
+  if (G_VALUE_TYPE (gvalue) == G_TYPE_INT) {
+    *retval = (GstClockTime) g_value_get_int (gvalue);
+
+    return TRUE;
+  }
+
+  if (G_VALUE_TYPE (gvalue) == G_TYPE_INT64) {
+    *retval = (GstClockTime) g_value_get_int64 (gvalue);
+
+    return TRUE;
+  }
+
+  if (!gst_structure_get_double (structure, name, &val)) {
+    return FALSE;
+  }
+
+  if (val == -1.0)
+    *retval = GST_CLOCK_TIME_NONE;
+  else {
+    *retval = val * GST_SECOND;
+    *retval = GST_ROUND_UP_4 (*retval);
+  }
+
+  return TRUE;
+}

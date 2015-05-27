@@ -45,5 +45,7 @@ GList * gst_validate_utils_structs_parse_from_filename         (const gchar * sc
 GList * structs_parse_from_gfile            (GFile * scenario_file);
 
 gboolean gst_validate_element_has_klass (GstElement * element, const gchar * klass);
+gboolean gst_validate_utils_get_clocktime (GstStructure *structure, const gchar * name,
+        GstClockTime * retval);
 
 #endif

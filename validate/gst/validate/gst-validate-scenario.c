@@ -426,29 +426,17 @@ gboolean
 gst_validate_action_get_clocktime (GstValidateScenario * scenario,
     GstValidateAction * action, const gchar * name, GstClockTime * retval)
 {
-  gdouble val;
-  const gchar *strval;
-  const GValue *gvalue = gst_structure_get_value (action->structure, name);
-
-  if (gvalue == NULL) {
-    return -1;
-  }
-
-  if (G_VALUE_TYPE (gvalue) == GST_TYPE_CLOCK_TIME) {
-    *retval = g_value_get_uint64 (gvalue);
-
-    return TRUE;
-  }
-
-  if (!gst_structure_get_double (action->structure, name, &val)) {
+  if (!gst_validate_utils_get_clocktime (action->structure, name, retval)) {
+    gdouble val;
     gchar *error = NULL;
+    const gchar *strval;
 
     if (!(strval = gst_structure_get_string (action->structure, name))) {
       GST_INFO_OBJECT (scenario, "Could not find %s", name);
       return -1;
     }
-    val =
-        gst_validate_utils_parse_expression (strval, _set_variable_func,
+
+    val = gst_validate_utils_parse_expression (strval, _set_variable_func,
         scenario, &error);
 
     if (error) {
@@ -456,14 +444,14 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
       g_free (error);
 
       return FALSE;
+    } else if (val == -1.0) {
+      *retval = GST_CLOCK_TIME_NONE;
+    } else {
+      *retval = val * GST_SECOND;
+      *retval = GST_ROUND_UP_4 (*retval);
     }
-  }
 
-  if (val == -1.0)
-    *retval = GST_CLOCK_TIME_NONE;
-  else {
-    *retval = val * GST_SECOND;
-    *retval = GST_ROUND_UP_4 (*retval);
+    return TRUE;
   }
 
   return TRUE;
