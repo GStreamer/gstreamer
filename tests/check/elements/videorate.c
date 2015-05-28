@@ -1137,6 +1137,31 @@ GST_START_TEST (test_fixed_framerate)
 
 GST_END_TEST;
 
+GST_START_TEST (test_variable_framerate_renegotiation)
+{
+  GstElement *videorate;
+  GstCaps *caps;
+  GstCaps *allowed;
+
+  videorate = setup_videorate_full (&srctemplate, &sinktemplate);
+  ASSERT_SET_STATE (videorate, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+  caps = gst_caps_from_string ("video/x-raw,framerate=0/1");
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  videorate_send_buffers (videorate, "video/x-raw,framerate=0/1",
+      "video/x-raw,framerate=25/1");
+
+  /* framerate=0/1 must still be allowed to be configured on
+   * the upstream side of videorate */
+  allowed = gst_pad_get_allowed_caps (mysrcpad);
+  fail_unless (gst_caps_is_subset (caps, allowed) == TRUE);
+
+  gst_caps_unref (allowed);
+  gst_caps_unref (caps);
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 videorate_suite (void)
@@ -1157,6 +1182,7 @@ videorate_suite (void)
   tcase_add_loop_test (tc_chain, test_caps_negotiation,
       0, G_N_ELEMENTS (caps_negotiation_tests));
   tcase_add_test (tc_chain, test_fixed_framerate);
+  tcase_add_test (tc_chain, test_variable_framerate_renegotiation);
 
   return s;
 }
