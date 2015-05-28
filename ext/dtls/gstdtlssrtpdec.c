@@ -84,6 +84,8 @@ static void gst_dtls_srtp_dec_get_property (GObject *, guint prop_id,
 
 static GstPad *gst_dtls_srtp_dec_request_new_pad (GstElement *,
     GstPadTemplate *, const gchar * name, const GstCaps *);
+static void gst_dtls_srtp_dec_release_pad (GstElement *, GstPad *);
+
 static GstCaps *on_decoder_request_key (GstElement * srtp_decoder, guint ssrc,
     GstDtlsSrtpBin *);
 static void on_peer_pem (GstElement * srtp_decoder, GParamSpec * pspec,
@@ -111,6 +113,8 @@ gst_dtls_srtp_dec_class_init (GstDtlsSrtpDecClass * klass)
 
   element_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_dtls_srtp_dec_request_new_pad);
+  element_class->release_pad =
+      GST_DEBUG_FUNCPTR (gst_dtls_srtp_dec_release_pad);
 
   dtls_srtp_bin_class->remove_dtls_element =
       GST_DEBUG_FUNCPTR (gst_dtls_srtp_dec_remove_dtls_element);
@@ -312,6 +316,31 @@ gst_dtls_srtp_dec_request_new_pad (GstElement * element,
   }
 
   g_return_val_if_reached (NULL);
+}
+
+static void
+gst_dtls_srtp_dec_release_pad (GstElement * element, GstPad * pad)
+{
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+  GstDtlsSrtpDec *self = GST_DTLS_SRTP_DEC (element);
+
+  if (GST_PAD_PAD_TEMPLATE (pad) ==
+      gst_element_class_get_pad_template (klass, "data_src")) {
+    GstGhostPad *ghost_pad;
+    GstPad *target_pad;
+
+    ghost_pad = GST_GHOST_PAD (pad);
+    target_pad = gst_ghost_pad_get_target (ghost_pad);
+
+    if (target_pad != NULL) {
+      gst_element_release_request_pad (self->bin.dtls_element, target_pad);
+
+      gst_object_unref (target_pad);
+      gst_ghost_pad_set_target (GST_GHOST_PAD (pad), NULL);
+    }
+  }
+
+  gst_element_remove_pad (element, pad);
 }
 
 static GstCaps *
