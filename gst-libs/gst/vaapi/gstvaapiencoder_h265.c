@@ -2274,9 +2274,9 @@ set_context_info (GstVaapiEncoder * base_encoder)
   base_encoder->num_ref_frames =
       ((encoder->num_bframes ? 2 : 1) + DEFAULT_SURFACES_COUNT);
 
-  /* Take an approximation of 6 times compression ratio */
-  base_encoder->codedbuf_size = ((GST_ROUND_UP_32 (vip->width) *
-          GST_ROUND_UP_32 (vip->height) * 12 / 6)) / 8;
+  /* Only YUV 4:2:0 formats are supported for now. */
+  base_encoder->codedbuf_size += GST_ROUND_UP_32 (vip->width) *
+          GST_ROUND_UP_32 (vip->height) * 3 / 2;
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
