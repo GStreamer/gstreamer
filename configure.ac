@@ -875,12 +875,13 @@ gst/adder/Makefile
 gst/app/Makefile
 gst/audioconvert/Makefile
 gst/audiorate/Makefile
+gst/audioresample/Makefile
 gst/audiotestsrc/Makefile
 gst/encoding/Makefile
 gst/videoconvert/Makefile
 gst/gio/Makefile
+gst/pbtypes/Makefile
 gst/playback/Makefile
-gst/audioresample/Makefile
 gst/subparse/Makefile
 gst/tcp/Makefile
 gst/typefind/Makefile
