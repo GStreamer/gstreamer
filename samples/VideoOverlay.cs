@@ -16,7 +16,7 @@ namespace Gstreameroverlay
 {
 	public class MainWindow : Gtk.Window {
 		DrawingArea _da;
-		ulong _xWindowId;
+		IntPtr _xWindowId;
 		Element _playbin;
 		HScale _scale;
 		Label _lbl;
@@ -40,7 +40,7 @@ namespace Gstreameroverlay
 				case PlatformID.Win32S:
 				case PlatformID.Win32Windows:
 				case PlatformID.WinCE:
-				window._xWindowId = (ulong) gdk_win32_drawable_get_handle (window._da.GdkWindow.Handle);
+				window._xWindowId = gdk_win32_drawable_get_handle (window._da.GdkWindow.Handle);
 				break;
 			}
 
@@ -263,7 +263,7 @@ namespace Gstreameroverlay
 		}
 
 		[DllImport ("libgdk-3.so.0") ]
-		static extern uint gdk_x11_window_get_xid (IntPtr handle);
+		static extern IntPtr gdk_x11_window_get_xid (IntPtr handle);
 
 		[DllImport ("libgdk-win32-3.0-0.dll") ]
 		static extern IntPtr gdk_win32_drawable_get_handle (IntPtr handle);

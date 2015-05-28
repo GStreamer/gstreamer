@@ -50,7 +50,7 @@ namespace GstreamerSharp
 		{
 			var widget = (Widget)sender;
 			var window = widget.Window;
-			ulong windowID = 0;
+			IntPtr windowID = IntPtr.Zero;
 
 			// Retrieve window handler from GDK
 			switch (System.Environment.OSVersion.Platform) {
@@ -61,7 +61,7 @@ namespace GstreamerSharp
 			case PlatformID.Win32S:
 			case PlatformID.Win32Windows:
 			case PlatformID.WinCE:
-				windowID = (ulong) gdk_win32_drawable_get_handle (window.Handle);
+				windowID = gdk_win32_drawable_get_handle (window.Handle);
 				break;
 			}
 
@@ -356,7 +356,7 @@ namespace GstreamerSharp
 		}
 
 		[DllImport ("libgdk-3.so.0") ]
-		static extern uint gdk_x11_window_get_xid (IntPtr handle);
+		static extern IntPtr gdk_x11_window_get_xid (IntPtr handle);
 
 		[DllImport ("libgdk-win32-3.0-0.dll") ]
 		static extern IntPtr gdk_win32_drawable_get_handle (IntPtr handle);

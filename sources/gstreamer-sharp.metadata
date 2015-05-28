@@ -132,6 +132,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/struct[@cname='GstByteReader']" name="opaque">1</attr>
 	<remove-node path="/api/namespace//struct[@cname='GstByteReader']//method"/>
 	<attr path="//struct[@name='VideoGLTextureUploadMeta']//field[@cname='user_data_copy' or @cname='user_data_free']" name="hidden">true</attr>
+	<attr path="//interface[@cname='GstVideoOverlay']//parameter[@type='guintptr']" name="type">gpointer</attr>
 
 	<!-- FIXME: remove when https://bugzilla.gnome.org/show_bug.cgi?id=709938 is fixed -->
 	<attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_parse_commands_length']/parameters/parameter[@name='n_cmds']" name="pass_as">out</attr>
