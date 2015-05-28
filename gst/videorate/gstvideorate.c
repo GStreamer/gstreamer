@@ -375,7 +375,7 @@ gst_video_rate_transform_caps (GstBaseTransform * trans,
 
     s1 = gst_structure_copy (s);
 
-    if (videorate->updating_caps) {
+    if (videorate->updating_caps && direction == GST_PAD_SINK) {
       GST_INFO_OBJECT (trans,
           "Only updating caps %" GST_PTR_FORMAT " with framerate" " %d/%d",
           caps, videorate->to_rate_numerator, videorate->to_rate_denominator);
