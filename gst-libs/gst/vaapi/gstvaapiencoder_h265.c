@@ -1588,6 +1588,7 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   GstVaapiEncSlice *slice;
   guint slice_of_ctus, slice_mod_ctus, cur_slice_ctus;
   guint ctu_size;
+  guint ctu_width_round_factor;
   guint last_ctu_index;
   guint i_slice, i_ref;
 
@@ -1599,12 +1600,23 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   slice_of_ctus = ctu_size / encoder->num_slices;
   slice_mod_ctus = ctu_size % encoder->num_slices;
   last_ctu_index = 0;
-  for (i_slice = 0; i_slice < encoder->num_slices; ++i_slice) {
+
+  for (i_slice = 0;
+      i_slice < encoder->num_slices && (last_ctu_index < ctu_size); ++i_slice) {
     cur_slice_ctus = slice_of_ctus;
     if (slice_mod_ctus) {
       ++cur_slice_ctus;
       --slice_mod_ctus;
     }
+
+    /* Work-around for satisfying the VA-Intel driver.
+     * The driver only support multi slice begin from row start address */
+    ctu_width_round_factor =
+        encoder->ctu_width - (cur_slice_ctus % encoder->ctu_width);
+    cur_slice_ctus += ctu_width_round_factor;
+    if ((last_ctu_index + cur_slice_ctus) > ctu_size)
+      cur_slice_ctus = ctu_size - last_ctu_index;
+
     slice = GST_VAAPI_ENC_SLICE_NEW (HEVC, encoder);
     g_assert (slice && slice->param_id != VA_INVALID_ID);
     slice_param = slice->param;
@@ -1664,13 +1676,15 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     slice_param->slice_qp_delta = encoder->init_qp - encoder->min_qp;
 
     slice_param->slice_fields.value = 0;
-    if (i_slice == encoder->num_slices - 1)
-      slice_param->slice_fields.bits.last_slice_of_pic_flag = 1;
 
     slice_param->slice_fields.
         bits.slice_loop_filter_across_slices_enabled_flag = TRUE;
+
     /* set calculation for next slice */
     last_ctu_index += cur_slice_ctus;
+
+    if ((i_slice == encoder->num_slices - 1) || (last_ctu_index == ctu_size))
+      slice_param->slice_fields.bits.last_slice_of_pic_flag = 1;
 
     if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
             VAEncPackedHeaderHEVC_Slice)
@@ -1680,7 +1694,12 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     gst_vaapi_enc_picture_add_slice (picture, slice);
     gst_vaapi_codec_object_replace (&slice, NULL);
   }
+  if (i_slice < encoder->num_slices)
+    GST_WARNING
+        ("Using less number of slices than requested, Number of slices per pictures is %d",
+        i_slice);
   g_assert (last_ctu_index == ctu_size);
+
   return TRUE;
 
 error_create_packed_slice_hdr:
@@ -2387,8 +2406,6 @@ gst_vaapi_encoder_h265_set_property (GstVaapiEncoder * base_encoder,
       break;
     case GST_VAAPI_ENCODER_H265_PROP_NUM_SLICES:
       encoder->num_slices = g_value_get_uint (value);
-      if (encoder->num_slices > 1)
-        GST_ERROR ("Mulit-slice encoding is not yet functional!");
       break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
