@@ -358,7 +358,7 @@ gst_dtls_dec_request_new_pad (GstElement * element,
   }
 
   self->src = pad = gst_pad_new_from_template (tmpl, name);
-  gst_object_ref (pad);
+
   g_mutex_unlock (&self->src_mutex);
 
   gst_pad_set_active (pad, TRUE);
@@ -367,7 +367,6 @@ gst_dtls_dec_request_new_pad (GstElement * element,
     gst_pad_set_caps (pad, (GstCaps *) caps);
 
   gst_element_add_pad (element, pad);
-  gst_object_unref (pad);
 
   return pad;
 }
