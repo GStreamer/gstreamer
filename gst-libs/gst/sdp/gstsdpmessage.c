@@ -2962,21 +2962,33 @@ gst_sdp_message_parse_buffer (const guint8 * data, guint size,
   c.msg = msg;
   c.media = NULL;
 
+#define SIZE_CHECK_GUARD \
+  G_STMT_START { \
+    if (p - (gchar *) data >= size) \
+      goto out; \
+  } G_STMT_END
+
   p = (gchar *) data;
   while (TRUE) {
-    while (g_ascii_isspace (*p))
+    while (p - (gchar *) data < size && g_ascii_isspace (*p))
       p++;
+
+    SIZE_CHECK_GUARD;
 
     type = *p++;
     if (type == '\0')
       break;
 
+    SIZE_CHECK_GUARD;
+
     if (*p != '=')
       goto line_done;
     p++;
 
+    SIZE_CHECK_GUARD;
+
     s = p;
-    while (*p != '\n' && *p != '\r' && *p != '\0')
+    while (p - (gchar *) data < size && *p != '\n' && *p != '\r' && *p != '\0')
       p++;
 
     len = p - s;
@@ -2989,13 +3001,21 @@ gst_sdp_message_parse_buffer (const guint8 * data, guint size,
 
     gst_sdp_parse_line (&c, type, buffer);
 
+    SIZE_CHECK_GUARD;
+
   line_done:
-    while (*p != '\n' && *p != '\0')
+    while (p - (gchar *) data < size && *p != '\n' && *p != '\0')
       p++;
+
+    SIZE_CHECK_GUARD;
+
     if (*p == '\n')
       p++;
   }
 
+#undef SIZE_CHECK_GUARD
+
+out:
   if (buffer)
     g_free (buffer);
 
