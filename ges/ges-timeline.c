@@ -170,10 +170,7 @@ struct _GESTimelinePrivate
    * probably through a ges_layer_get_track_elements () method */
   GHashTable *by_layer;         /* {layer: GSequence of TrackElement by start/priorities} */
 
-  /* The set of auto_transitions we control, currently the key is
-   * pointerToPreviousiTrackObjAdresspointerToNextTrackObjAdress as a string,
-   * ... not really optimal but it works */
-  GHashTable *auto_transitions;
+  GList *auto_transitions;
 
   MoveContext movecontext;
 
@@ -358,7 +355,7 @@ ges_timeline_dispose (GObject * object)
   g_list_free (priv->movecontext.moving_trackelements);
   g_hash_table_unref (priv->movecontext.toplevel_containers);
 
-  g_hash_table_unref (priv->auto_transitions);
+  g_list_free_full (priv->auto_transitions, gst_object_unref);
 
   g_hash_table_unref (priv->all_elements);
 
@@ -638,8 +635,6 @@ ges_timeline_init (GESTimeline * self)
   priv->starts_ends = g_sequence_new (g_free);
   priv->tracksources = g_sequence_new (gst_object_unref);
 
-  priv->auto_transitions =
-      g_hash_table_new_full (g_str_hash, g_str_equal, NULL, gst_object_unref);
   priv->needs_transitions_update = TRUE;
 
   priv->all_elements =
@@ -794,9 +789,10 @@ _destroy_auto_transition_cb (GESAutoTransition * auto_transition,
   g_signal_handlers_disconnect_by_func (auto_transition,
       _destroy_auto_transition_cb, timeline);
 
-  if (!g_hash_table_remove (priv->auto_transitions, auto_transition->key))
-    GST_WARNING_OBJECT (timeline, "Could not remove auto_transition %"
-        GST_PTR_FORMAT, auto_transition->key);
+
+  priv->auto_transitions =
+      g_list_remove (priv->auto_transitions, auto_transition);
+  gst_object_unref (auto_transition);
 }
 
 static GESAutoTransition *
@@ -826,8 +822,8 @@ create_transition (GESTimeline * timeline, GESTrackElement * previous,
   g_signal_connect (auto_transition, "destroy-me",
       G_CALLBACK (_destroy_auto_transition_cb), timeline);
 
-  g_hash_table_insert (timeline->priv->auto_transitions,
-      auto_transition->key, auto_transition);
+  timeline->priv->auto_transitions =
+      g_list_prepend (timeline->priv->auto_transitions, auto_transition);
 
   return auto_transition;
 }
@@ -841,11 +837,17 @@ _find_transition_from_auto_transitions (GESTimeline * timeline,
     GESLayer * layer, GESTrack * track, GESTrackElement * prev,
     GESTrackElement * next, GstClockTime transition_duration)
 {
-  GESAutoTransition *auto_transition;
+  GList *tmp;
+  GESAutoTransition *auto_transition = NULL;
 
   gchar *key = g_strdup_printf ("%p%p", prev, next);
 
-  auto_transition = g_hash_table_lookup (timeline->priv->auto_transitions, key);
+  for (tmp = timeline->priv->auto_transitions; tmp; tmp = tmp->next) {
+    if (!g_strcmp0 (GES_AUTO_TRANSITION (tmp->data)->key, key)) {
+      auto_transition = tmp->data;
+      break;
+    }
+  }
   g_free (key);
 
   return auto_transition;
