@@ -601,7 +601,14 @@ gst_gl_filter_caps_remove_size (GstCaps * caps)
       continue;
 
     st = gst_structure_copy (st);
-    gst_structure_remove_fields (st, "width", "height", NULL);
+    gst_structure_set (st, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+
+    /* if pixel aspect ratio, make a range of it */
+    if (gst_structure_has_field (st, "pixel-aspect-ratio")) {
+      gst_structure_set (st, "pixel-aspect-ratio",
+          GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+    }
 
     gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
   }
