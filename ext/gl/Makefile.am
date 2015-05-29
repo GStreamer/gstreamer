@@ -61,6 +61,9 @@ if USE_OPENGL
 libgstopengl_la_SOURCES += \
 	gstglfilterglass.c \
 	gstgldeinterlace.c \
+	gstglviewconvert.c \
+	gstglstereosplit.c \
+	gstglstereomix.c \
 	gltestsrc.c \
 	gstgltestsrc.c \
 	gstglmosaic.c
@@ -68,6 +71,9 @@ libgstopengl_la_SOURCES += \
 noinst_HEADERS += \
 	gstglfilterglass.h \
 	gstgldeinterlace.h \
+	gstglstereosplit.h \
+	gstglstereomix.h \
+	gstglviewconvert.h \
 	gltestsrc.h \
 	gstgltestsrc.h \
 	gstglmosaic.h \

@@ -58,6 +58,9 @@
 #include "gstglvideomixer.h"
 #include "gstglfiltershader.h"
 #include "gstglfilterapp.h"
+#include "gstglstereosplit.h"
+#include "gstglstereomix.h"
+
 #if HAVE_GRAPHENE
 #include "gstgltransformation.h"
 #endif
@@ -72,6 +75,7 @@
 #include "gstglfilterglass.h"
 /* #include "gstglfilterreflectedscreen.h" */
 #include "gstgldeinterlace.h"
+#include "gstglviewconvert.h"
 #include "gstglmosaic.h"
 #if HAVE_PNG
 #include "gstgldifferencematte.h"
@@ -203,6 +207,14 @@ plugin_init (GstPlugin * plugin)
   }
 #endif /* HAVE_PNG */
 #endif /* HAVE_JPEG */
+  if (!gst_element_register (plugin, "glstereosplit",
+          GST_RANK_NONE, GST_TYPE_GL_STEREOSPLIT)) {
+    return FALSE;
+  }
+  if (!gst_element_register (plugin, "glstereomix",
+          GST_RANK_NONE, GST_TYPE_GL_STEREO_MIX)) {
+    return FALSE;
+  }
 #if GST_GL_HAVE_OPENGL
   if (!gst_element_register (plugin, "gltestsrc",
           GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
@@ -221,6 +233,11 @@ plugin_init (GstPlugin * plugin)
 #endif
   if (!gst_element_register (plugin, "gldeinterlace",
           GST_RANK_NONE, GST_TYPE_GL_DEINTERLACE)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glviewconvert",
+          GST_RANK_NONE, GST_TYPE_GL_VIEW_CONVERT_ELEMENT)) {
     return FALSE;
   }
 
