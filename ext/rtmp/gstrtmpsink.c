@@ -75,6 +75,7 @@ static void gst_rtmp_sink_get_property (GObject * object, guint prop_id,
 static void gst_rtmp_sink_finalize (GObject * object);
 static gboolean gst_rtmp_sink_stop (GstBaseSink * sink);
 static gboolean gst_rtmp_sink_start (GstBaseSink * sink);
+static gboolean gst_rtmp_sink_event (GstBaseSink * sink, GstEvent * event);
 static GstFlowReturn gst_rtmp_sink_render (GstBaseSink * sink, GstBuffer * buf);
 
 #define gst_rtmp_sink_parent_class parent_class
@@ -113,6 +114,7 @@ gst_rtmp_sink_class_init (GstRTMPSinkClass * klass)
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_rtmp_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_rtmp_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_rtmp_sink_render);
+  gstbasesink_class->event = gst_rtmp_sink_event;
 
   GST_DEBUG_CATEGORY_INIT (gst_rtmp_sink_debug, "rtmpsink", 0,
       "RTMP server element");
@@ -177,6 +179,7 @@ gst_rtmp_sink_start (GstBaseSink * basesink)
   RTMP_EnableWrite (sink->rtmp);
 
   sink->first = TRUE;
+  sink->have_write_error = FALSE;
 
   return TRUE;
 }
@@ -208,6 +211,12 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstBuffer *reffed_buf = NULL;
   GstMapInfo map;
 
+  if (sink->rtmp == NULL) {
+    /* Do not crash */
+    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL), ("Failed to write data"));
+    return GST_FLOW_ERROR;
+  }
+
   if (sink->first) {
     /* open the connection */
     if (!RTMP_IsConnected (sink->rtmp)) {
@@ -219,6 +228,7 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
         sink->rtmp = NULL;
         g_free (sink->rtmp_uri);
         sink->rtmp_uri = NULL;
+        sink->have_write_error = TRUE;
         return GST_FLOW_ERROR;
       }
       GST_DEBUG_OBJECT (sink, "Opened connection to %s", sink->rtmp_uri);
@@ -241,6 +251,9 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     sink->cache = NULL;
   }
 
+  if (sink->have_write_error)
+    goto write_failed;
+
   GST_LOG_OBJECT (sink, "Sending %" G_GSIZE_FORMAT " bytes to RTMP server",
       gst_buffer_get_size (buf));
 
@@ -262,6 +275,7 @@ write_failed:
     gst_buffer_unmap (buf, &map);
     if (reffed_buf)
       gst_buffer_unref (reffed_buf);
+    sink->have_write_error = TRUE;
     return GST_FLOW_ERROR;
   }
 }
@@ -330,8 +344,10 @@ gst_rtmp_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri,
       free (playpath.av_val);
   }
 
-  if (ret)
+  if (ret) {
+    sink->have_write_error = FALSE;
     GST_DEBUG_OBJECT (sink, "Changed URI to %s", GST_STR_NULL (uri));
+  }
 
   return ret;
 }
@@ -362,6 +378,22 @@ gst_rtmp_sink_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_rtmp_sink_event (GstBaseSink * sink, GstEvent * event)
+{
+  GstRTMPSink *rtmpsink = GST_RTMP_SINK (sink);
+
+  switch (event->type) {
+    case GST_EVENT_FLUSH_STOP:
+      rtmpsink->have_write_error = FALSE;
+      break;
+    default:
+      break;
+  }
+
+  return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 }
 
 static void

@@ -55,6 +55,7 @@ struct _GstRTMPSink {
 
   GstBuffer *cache; /* Cached buffer */
   gboolean first;
+  gboolean have_write_error;
 };
 
 struct _GstRTMPSinkClass {
