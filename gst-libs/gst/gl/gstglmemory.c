@@ -1422,22 +1422,31 @@ gst_gl_memory_setup_buffer (GstGLContext * context,
     GstVideoAlignment * valign, GstBuffer * buffer)
 {
   GstGLMemory *gl_mem[GST_VIDEO_MAX_PLANES] = { NULL, };
-  guint n_mem, i;
+  guint n_mem, i, v, views;
 
   n_mem = GST_VIDEO_INFO_N_PLANES (info);
 
-  for (i = 0; i < n_mem; i++) {
-    gl_mem[i] =
-        (GstGLMemory *) gst_gl_memory_alloc (context, params, info, i, valign);
-    if (gl_mem[i] == NULL)
-      return FALSE;
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (info) ==
+      GST_VIDEO_MULTIVIEW_MODE_SEPARATED)
+    views = info->views;
+  else
+    views = 1;
 
-    gst_buffer_append_memory (buffer, (GstMemory *) gl_mem[i]);
+  for (v = 0; v < views; v++) {
+    for (i = 0; i < n_mem; i++) {
+      gl_mem[i] =
+          (GstGLMemory *) gst_gl_memory_alloc (context, params, info, i,
+          valign);
+      if (gl_mem[i] == NULL)
+        return FALSE;
+
+      gst_buffer_append_memory (buffer, (GstMemory *) gl_mem[i]);
+    }
+
+    gst_buffer_add_video_meta_full (buffer, v,
+        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+        GST_VIDEO_INFO_HEIGHT (info), n_mem, info->offset, info->stride);
   }
-
-  gst_buffer_add_video_meta_full (buffer, 0,
-      GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
-      GST_VIDEO_INFO_HEIGHT (info), n_mem, info->offset, info->stride);
 
   return TRUE;
 }

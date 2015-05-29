@@ -614,6 +614,9 @@ _gst_gl_color_convert_set_caps_unlocked (GstGLColorConvert * convert,
   g_return_val_if_fail (in_caps, FALSE);
   g_return_val_if_fail (out_caps, FALSE);
 
+  GST_LOG_OBJECT (convert, "Setting caps in %" GST_PTR_FORMAT
+      " out %" GST_PTR_FORMAT, in_caps, out_caps);
+
   if (!gst_video_info_from_caps (&in_info, in_caps))
     g_assert_not_reached ();
 
@@ -1507,38 +1510,27 @@ _init_convert_fbo (GstGLColorConvert * convert)
   return TRUE;
 }
 
-/* Called by the idle function in the gl thread */
-void
-_do_convert (GstGLContext * context, GstGLColorConvert * convert)
+static gboolean
+_do_convert_one_view (GstGLContext * context, GstGLColorConvert * convert,
+    guint view_num)
 {
   guint in_width, in_height, out_width, out_height;
   struct ConvertInfo *c_info = &convert->priv->convert_info;
   GstMapInfo out_info[GST_VIDEO_MAX_PLANES], in_info[GST_VIDEO_MAX_PLANES];
   gboolean res = TRUE;
   gint i, j = 0;
+  const gint in_plane_offset = view_num * c_info->in_n_textures;
+  const gint out_plane_offset = view_num * c_info->out_n_textures;
 
   out_width = GST_VIDEO_INFO_WIDTH (&convert->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&convert->out_info);
   in_width = GST_VIDEO_INFO_WIDTH (&convert->in_info);
   in_height = GST_VIDEO_INFO_HEIGHT (&convert->in_info);
 
-  convert->outbuf = NULL;
-
-  if (!_init_convert (convert)) {
-    convert->priv->result = FALSE;
-    return;
-  }
-
-  convert->outbuf = gst_buffer_new ();
-  if (!gst_gl_memory_setup_buffer (convert->context, NULL, &convert->out_info,
-          NULL, convert->outbuf)) {
-    convert->priv->result = FALSE;
-    return;
-  }
-
   for (i = 0; i < c_info->in_n_textures; i++) {
     convert->priv->in_tex[i] =
-        (GstGLMemory *) gst_buffer_peek_memory (convert->inbuf, i);
+        (GstGLMemory *) gst_buffer_peek_memory (convert->inbuf,
+        i + in_plane_offset);
     if (!gst_is_gl_memory ((GstMemory *) convert->priv->in_tex[i])) {
       GST_ERROR_OBJECT (convert, "input must be GstGLMemory");
       res = FALSE;
@@ -1555,7 +1547,8 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
 
   for (j = 0; j < c_info->out_n_textures; j++) {
     GstGLMemory *out_tex =
-        (GstGLMemory *) gst_buffer_peek_memory (convert->outbuf, j);
+        (GstGLMemory *) gst_buffer_peek_memory (convert->outbuf,
+        j + out_plane_offset);
     gint mem_width, mem_height;
 
     if (!gst_is_gl_memory ((GstMemory *) out_tex)) {
@@ -1608,7 +1601,8 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
 out:
   for (j--; j >= 0; j--) {
     GstGLMemory *out_tex =
-        (GstGLMemory *) gst_buffer_peek_memory (convert->outbuf, j);
+        (GstGLMemory *) gst_buffer_peek_memory (convert->outbuf,
+        j + out_plane_offset);
     gint mem_width, mem_height;
 
     gst_memory_unmap ((GstMemory *) convert->priv->out_tex[j], &out_info[j]);
@@ -1647,16 +1641,53 @@ out:
 
   /* YV12 the same as I420 except planes 1+2 swapped */
   if (GST_VIDEO_INFO_FORMAT (&convert->out_info) == GST_VIDEO_FORMAT_YV12) {
-    GstMemory *mem1 = gst_buffer_get_memory (convert->outbuf, 1);
-    GstMemory *mem2 = gst_buffer_get_memory (convert->outbuf, 2);
+    GstMemory *mem1 =
+        gst_buffer_get_memory (convert->outbuf, 1 + out_plane_offset);
+    GstMemory *mem2 =
+        gst_buffer_get_memory (convert->outbuf, 2 + out_plane_offset);
 
-    gst_buffer_replace_memory (convert->outbuf, 1, mem2);
-    gst_buffer_replace_memory (convert->outbuf, 2, mem1);
+    gst_buffer_replace_memory (convert->outbuf, 1 + out_plane_offset, mem2);
+    gst_buffer_replace_memory (convert->outbuf, 2 + out_plane_offset, mem1);
   }
 
   for (i--; i >= 0; i--) {
     gst_memory_unmap ((GstMemory *) convert->priv->in_tex[i], &in_info[i]);
   }
+
+  return res;
+}
+
+/* Called by the idle function in the gl thread */
+void
+_do_convert (GstGLContext * context, GstGLColorConvert * convert)
+{
+  GstVideoInfo *in_info = &convert->in_info;
+  gboolean res = TRUE;
+  gint views, v;
+
+  convert->outbuf = NULL;
+
+  if (!_init_convert (convert)) {
+    convert->priv->result = FALSE;
+    return;
+  }
+
+  convert->outbuf = gst_buffer_new ();
+  if (!gst_gl_memory_setup_buffer (convert->context, NULL, &convert->out_info,
+          NULL, convert->outbuf)) {
+    convert->priv->result = FALSE;
+    return;
+  }
+
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) ==
+      GST_VIDEO_MULTIVIEW_MODE_SEPARATED)
+    views = GST_VIDEO_INFO_VIEWS (in_info);
+  else
+    views = 1;
+
+  /* Handle all views on input and output one at a time */
+  for (v = 0; res && v < views; v++)
+    res = _do_convert_one_view (context, convert, v);
 
   if (!res) {
     gst_buffer_unref (convert->outbuf);
