@@ -21,7 +21,8 @@ libgstdebugutilsbad_la_SOURCES = \
         gstchecksumsink.c \
 	gstchopmydata.c \
 	gstcompare.c \
-	gstwatchdog.c
+	gstwatchdog.c \
+	gsterrorignore.c
 
 nodist_libgstdebugutilsbad_la_SOURCES = $(BUILT_SOURCES)
 libgstdebugutilsbad_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
@@ -36,4 +37,5 @@ noinst_HEADERS = fpsdisplaysink.h \
 	gstchopmydata.h \
 	gstcompare.h \
 	gstdebugspy.h \
-	gstwatchdog.h
+	gstwatchdog.h \
+	gsterrorignore.h

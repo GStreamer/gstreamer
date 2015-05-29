@@ -28,6 +28,7 @@ GType fps_display_sink_get_type (void);
 GType gst_chop_my_data_get_type (void);
 GType gst_compare_get_type (void);
 GType gst_debug_spy_get_type (void);
+GType gst_error_ignore_get_type (void);
 GType gst_watchdog_get_type (void);
 
 static gboolean
@@ -45,6 +46,8 @@ plugin_init (GstPlugin * plugin)
       gst_debug_spy_get_type ());
   gst_element_register (plugin, "watchdog", GST_RANK_NONE,
       gst_watchdog_get_type ());
+  gst_element_register (plugin, "errorignore", GST_RANK_NONE,
+      gst_error_ignore_get_type ());
 
   return TRUE;
 }
