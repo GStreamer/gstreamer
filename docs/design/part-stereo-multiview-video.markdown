@@ -37,7 +37,7 @@ encoded video for decoders to apply onto the raw video buffers they decode.
 *If there ever is a need to transport multiview info for encoded data the
 same system below for raw video or some variation should work*
 
-### Encoded Video: Parameters to transmit in caps
+### Encoded Video: Properties that need to be encoded into caps
 1. multiview-mode (called "Channel Layout" in bug 611157)
     * Whether a stream is mono, for a single eye, stereo, mixed-mono-stereo
       (switches between mono and stereo - mp4 can do this)
@@ -85,10 +85,10 @@ same system below for raw video or some variation should work*
 Buffer representation for raw video
 -----------------------------------
 * Transported as normal video buffers with extra metadata
-* The caps define the overall buffer width/height, with GstVideoMeta to extract the individual views.
+* The caps define the overall buffer width/height, with helper functions to
+  extract the individual views for packed formats
 * pixel-aspect-ratio adjusted if needed to double the overall width/height
-* video sinks that don't know about multiview extensions yet should show the '0th' GstVideoMeta and
-  therefore the 'primary' view in a backwards compatible way for simple frame-packed transports.
+* video sinks that don't know about multiview extensions yet will show the packed view as-is
   For frame-sequence outputs, things might look weird, but just adding multiview-mode to the sink caps
   can disallow those transports.
 * _row-interleaved_ packing is actually just side-by-side memory layout with half frame width, twice
@@ -129,6 +129,24 @@ not all are wanted.
 * Logical labels/names and mapping to GstVideoMeta numbers
 * Standard view labels LEFT/RIGHT, and non-standard ones (strings)
 
+        GST_VIDEO_MULTIVIEW_VIEW_LEFT = 1
+        GST_VIDEO_MULTIVIEW_VIEW_RIGHT = 2
+
+        struct GstVideoMultiviewViewInfo {
+            guint view_label;
+            guint meta_id; // id of the GstVideoMeta for this view
+
+            padding;
+        }
+
+        struct GstVideoMultiviewMeta {
+            guint n_views;
+            GstVideoMultiviewViewInfo *view_info;
+        }
+
+The meta is optional, and probably only useful later for MVC
+
+
 Outputting stereo content
 -------------------------
 The initial implementation for output will be stereo content in glimagesink
@@ -143,11 +161,14 @@ The initial implementation for output will be stereo content in glimagesink
 
 ## Other elements for handling multiview content
 * videooverlay interface extensions
+    * __Q__: Should this be a new interface?
     * Element message to communicate the presence of stereoscopic information to the app
+    * App needs to be able to override the input interpretation - ie, set multiview-mode and multiview-flags
+        * Most videos I've seen are side-by-side or top-bottom with no frame-packing metadata
     * New API for the app to set rendering options for stereo/multiview content
-        * This might be best implemented as a **multiview-disposition GstContext**, so that
-        the pipeline can share app preferences for (in particular) downmixing
-        to mono for output, or in the sink
+    * This might be best implemented as a **multiview GstContext**, so that
+      the pipeline can share app preferences for content interpretation and downmixing
+      to mono for output, or in the sink and have those down as far upstream/downstream as possible.
 * Converter element
     * convert different view layouts
     * Render to anaglyphs of different types (magenta/green, red/blue, etc) and output as mono
@@ -168,8 +189,90 @@ Things to do to implement MVC handling
 4. generating SEI in H.264 encoder
 5. Support for MPEG2 MVC extensions
 
-### Relevant bugs
+## Relevant bugs
 [bug 685215](https://bugzilla.gnome.org/show_bug.cgi?id=685215) - codecparser h264: Add initial MVC parser
 [bug 696135](https://bugzilla.gnome.org/show_bug.cgi?id=696135) - h264parse: Add mvc stream parsing support
 [bug 732267](https://bugzilla.gnome.org/show_bug.cgi?id=732267) - h264parse: extract base stream from MVC or SVC encoded streams
 
+## Other Information
+[Matroska 3D support notes](http://www.matroska.org/technical/specs/notes.html#3D)
+
+## Open Questions
+
+### Background
+
+### Representation for GstGL
+When uploading raw video frames to GL textures, the goal is to implement:
+
+2. Split packed frames into separate GL textures when uploading, and
+attach multiple GstGLMemory's to the GstBuffer. The multiview-mode and
+multiview-flags fields in the caps should change to reflect the conversion
+from one incoming GstMemory to multiple GstGLMemory, and change the
+width/height in the output info as needed.
+
+This is (currently) targetted as 2 render passes - upload as normal
+to a single stereo-packed RGBA texture, and then unpack into 2
+smaller textures, output with GST_VIDEO_MULTIVIEW_MODE_SEPARATED, as
+2 GstGLMemory attached to one buffer. We can optimise the upload later
+to go directly to 2 textures for common input formats.
+
+Separat output textures have a few advantages:
+
+* Filter elements can more easily apply filters in several passes to each
+texture without fundamental changes to our filters to avoid mixing pixels
+from separate views.
+* Centralises the sampling of input video frame packings in the upload code,
+which makes adding new packings in the future easier.
+* Sampling multiple textures to generate various output frame-packings
+for display is conceptually simpler than converting from any input packing
+to any output packing.
+* In implementations that support quad buffers, having separate textures
+makes it trivial to do GL_LEFT/GL_RIGHT output
+
+For either option, we'll need new glsink output API to pass more
+information to applications about multiple views for the draw signal/callback.
+
+I don't know if it's desirable to support *both* methods of representing
+views. If so, that should be signalled in the caps too. That could be a
+new multiview-mode for passing views in separate GstMemory objects
+attached to a GstBuffer, which would not be GL specific.
+
+### Overriding frame packing interpretation
+Most sample videos available are frame packed, with no metadata
+to say so. How should we override that interpretation?
+
+* Simple answer: Use capssetter + new properties on playbin to
+  override the multiview fields
+  *Basically implemented in playbin, using a pad probe. Needs more work for completeness*
+
+### Adding extra GstVideoMeta to buffers
+There should be one GstVideoMeta for the entire video frame in packed
+layouts, and one GstVideoMeta per GstGLMemory when views are attached
+to a GstBuffer separately. This should be done by the buffer pool,
+which knows from the caps.
+
+### videooverlay interface extensions
+GstVideoOverlay needs:
+
+* A way to announce the presence of multiview content when it is
+  detected/signalled in a stream.
+* A way to tell applications which output methods are supported/available
+* A way to tell the sink which output method it should use
+* Possibly a way to tell the sink to override the input frame
+  interpretation / caps - depends on the answer to the question
+  above about how to model overriding input interpretation.
+
+### What's implemented
+* Caps handling
+* gst-plugins-base libsgstvideo pieces
+* playbin caps overriding
+* conversion elements - glstereomix, gl3dconvert (needs a rename),
+  glstereosplit.
+
+### Possible future enhancements
+* Make GLupload split to separate textures at upload time?
+    * Needs new API to extract multiple textures from the upload. Currently only outputs 1 result RGBA texture.
+* Make GLdownload able to take 2 input textures, pack them and colorconvert / download as needed.
+  - current done by packing then downloading which isn't OK overhead for RGBA download
+* Think about how we integrate GLstereo - do we need to do anything special,
+  or can the app just render to stereo/quad buffers if they're available?
