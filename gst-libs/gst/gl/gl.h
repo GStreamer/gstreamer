@@ -44,6 +44,7 @@
 #include <gst/gl/gstglbufferpool.h>
 #include <gst/gl/gstglframebuffer.h>
 #include <gst/gl/gstglbasefilter.h>
+#include <gst/gl/gstglviewconvert.h>
 #include <gst/gl/gstglfilter.h>
 #include <gst/gl/gstglshadervariables.h>
 #include <gst/gl/gstglsyncmeta.h>

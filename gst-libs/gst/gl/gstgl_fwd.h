@@ -74,6 +74,10 @@ typedef struct _GstGLBaseFilterPrivate GstGLBaseFilterPrivate;
 typedef struct _GstGLFilter GstGLFilter;
 typedef struct _GstGLFilterClass GstGLFilterClass;
 
+typedef struct _GstGLViewConvert GstGLViewConvert;
+typedef struct _GstGLViewConvertClass GstGLViewConvertClass;
+typedef struct _GstGLViewConvertPrivate GstGLViewConvertPrivate;
+
 G_END_DECLS
 
 #endif /* __GST_GL_FWD_H__ */
