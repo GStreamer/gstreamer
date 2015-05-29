@@ -323,12 +323,14 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
   guint size;
   gsize bufsize, skip;
   guint idx, length;
+  guint n_mem;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (rtp != NULL, FALSE);
   g_return_val_if_fail (rtp->buffer == NULL, FALSE);
 
-  if (gst_buffer_n_memory (buffer) < 1)
+  n_mem = gst_buffer_n_memory (buffer);
+  if (n_mem < 1)
     goto no_memory;
 
   /* map first memory, this should be the header */
@@ -423,10 +425,19 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
     goto wrong_padding;
 
   rtp->buffer = buffer;
-  /* we have not yet mapped the payload */
-  rtp->data[2] = NULL;
-  rtp->size[2] = 0;
-  rtp->state = 0;
+
+  if (n_mem == 1) {
+    /* we have mapped the buffer already, so might just as well fill in the
+     * payload pointer and size and avoid another buffer map/unmap later */
+    rtp->data[2] = rtp->map[0].data + header_len;
+    rtp->size[2] = bufsize - header_len - padding;
+  } else {
+    /* we have not yet mapped the payload */
+    rtp->data[2] = NULL;
+    rtp->size[2] = 0;
+  }
+
+  /* rtp->state = 0; *//* unused */
 
   return TRUE;
 
@@ -469,7 +480,7 @@ dump_packet:
     GST_MEMDUMP ("buffer", data, size);
 
     for (i = 0; i < G_N_ELEMENTS (rtp->map); ++i) {
-      if (rtp->data[i] != NULL)
+      if (rtp->map[i].memory != NULL)
         gst_buffer_unmap (buffer, &rtp->map[i]);
     }
     return FALSE;
@@ -491,8 +502,12 @@ gst_rtp_buffer_unmap (GstRTPBuffer * rtp)
   g_return_if_fail (rtp->buffer != NULL);
 
   for (i = 0; i < 4; i++) {
-    if (rtp->data[i])
+    if (rtp->map[i].memory != NULL) {
       gst_buffer_unmap (rtp->buffer, &rtp->map[i]);
+      rtp->map[i].memory = NULL;
+    }
+    rtp->data[i] = NULL;
+    rtp->size[i] = 0;
   }
   rtp->buffer = NULL;
 }
