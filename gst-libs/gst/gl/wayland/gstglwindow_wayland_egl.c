@@ -58,6 +58,8 @@ static void gst_gl_window_wayland_egl_close (GstGLWindow * window);
 static gboolean gst_gl_window_wayland_egl_open (GstGLWindow * window,
     GError ** error);
 static guintptr gst_gl_window_wayland_egl_get_display (GstGLWindow * window);
+static gboolean gst_gl_window_wayland_egl_set_render_rectangle (GstGLWindow *
+    window, gint x, gint y, gint width, gint height);
 
 #if 0
 static void
@@ -282,12 +284,6 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
           window_egl->window.queue);
   }
 
-  if (gst_gl_wl_display_roundtrip_queue (display->display,
-          window_egl->window.queue) < 0) {
-    GST_ERROR_OBJECT (window_egl,
-        "Failed to perform a roundtrip on our wl_event_queue");
-  }
-
   if (window_egl->window.foreign_surface) {
     /* (re)parent */
     if (!display->subcompositor) {
@@ -316,8 +312,8 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
           wl_shell_get_shell_surface (display->shell,
           window_egl->window.surface);
       if (window_egl->window.queue)
-        wl_proxy_set_queue ((struct wl_proxy *) window_egl->window.
-            shell_surface, window_egl->window.queue);
+        wl_proxy_set_queue ((struct wl_proxy *) window_egl->
+            window.shell_surface, window_egl->window.queue);
 
       wl_shell_surface_add_listener (window_egl->window.shell_surface,
           &shell_surface_listener, window_egl);
@@ -371,6 +367,8 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_open);
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_display);
+  window_class->set_render_rectangle =
+      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_set_render_rectangle);
 
   gobject_class->finalize = gst_gl_window_wayland_egl_finalize;
 }
@@ -434,10 +432,6 @@ gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
   }
 
   window_egl->window.queue = wl_display_create_queue (display->display);
-
-  wl_display_roundtrip (display->display);
-
-  create_surfaces (window_egl);
 
   window_egl->wl_source = wayland_event_source_new (display->display,
       window_egl->window.queue);
@@ -585,6 +579,9 @@ draw_cb (gpointer data)
 
   create_surfaces (window_egl);
 
+  if (window_egl->window.subsurface)
+    wl_subsurface_set_desync (window_egl->window.subsurface);
+
   if (window->draw)
     window->draw (window->draw_data);
 
@@ -600,6 +597,62 @@ static void
 gst_gl_window_wayland_egl_draw (GstGLWindow * window)
 {
   gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
+}
+
+struct SetRenderRectangle
+{
+  GstGLWindowWaylandEGL *window_egl;
+  GstVideoRectangle rect;
+};
+
+static void
+_free_set_render_rectangle (struct SetRenderRectangle *render)
+{
+  if (render) {
+    if (render->window_egl)
+      gst_object_unref (render->window_egl);
+    g_free (render);
+  }
+}
+
+static void
+_set_render_rectangle (gpointer data)
+{
+  struct SetRenderRectangle *render = data;
+
+  GST_LOG_OBJECT (render->window_egl, "setting render rectangle %i,%i+%ix%i",
+      render->rect.x, render->rect.y, render->rect.w, render->rect.h);
+
+  if (render->window_egl->window.subsurface) {
+    wl_subsurface_set_sync (render->window_egl->window.subsurface);
+    wl_subsurface_set_position (render->window_egl->window.subsurface,
+        render->rect.x, render->rect.y);
+    render->window_egl->window.window_x = render->rect.x;
+    render->window_egl->window.window_y = render->rect.y;
+  }
+
+  window_resize (render->window_egl, render->rect.w, render->rect.h);
+}
+
+static gboolean
+gst_gl_window_wayland_egl_set_render_rectangle (GstGLWindow * window,
+    gint x, gint y, gint width, gint height)
+{
+  GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
+  struct SetRenderRectangle *render;
+
+  render = g_new0 (struct SetRenderRectangle, 1);
+  render->window_egl = gst_object_ref (window_egl);
+  render->rect.x = x;
+  render->rect.y = y;
+  render->rect.w = width;
+  render->rect.h = height;
+
+  gst_gl_window_send_message_async (window,
+      (GstGLWindowCB) _set_render_rectangle, render,
+      (GDestroyNotify) _free_set_render_rectangle);
+
+  return TRUE;
 }
 
 static guintptr
