@@ -532,11 +532,15 @@ _file_get_lines (GFile * file)
   gchar *content = NULL, *escaped_content = NULL, **lines = NULL;
 
   /* TODO Handle GCancellable */
-  if (!g_file_load_contents (file, NULL, &content, &size, NULL, &err))
-    goto failed;
-
-  if (g_strcmp0 (content, "") == 0)
-    goto failed;
+  if (!g_file_load_contents (file, NULL, &content, &size, NULL, &err)) {
+    GST_WARNING ("Failed to load contents: %d %s", err->code, err->message);
+    g_error_free (err);
+    return NULL;
+  }
+  if (g_strcmp0 (content, "") == 0) {
+    g_free (content);
+    return NULL;
+  }
 
   if (_clean_structs_lines == NULL)
     _clean_structs_lines =
@@ -549,29 +553,7 @@ _file_get_lines (GFile * file)
   lines = g_strsplit (escaped_content, "\n", 0);
   g_free (escaped_content);
 
-done:
-
   return lines;
-
-failed:
-  if (err) {
-    GST_WARNING ("Failed to load contents: %d %s", err->code, err->message);
-    g_error_free (err);
-  }
-
-  if (content)
-    g_free (content);
-  content = NULL;
-
-  if (escaped_content)
-    g_free (escaped_content);
-  escaped_content = NULL;
-
-  if (lines)
-    g_strfreev (lines);
-  lines = NULL;
-
-  goto done;
 }
 
 static gchar **
