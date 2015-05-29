@@ -98,7 +98,7 @@ main (int argc, gchar ** argv)
       gst_media_descriptor_writer_new_discover (runner, argv[1], full, TRUE,
       &err);
   if (writer == NULL) {
-    g_print ("Could not discover file: %s", argv[1]);
+    g_print ("Could not discover file: %s\n", argv[1]);
     ret = 1;
     goto out;
   }
@@ -110,7 +110,7 @@ main (int argc, gchar ** argv)
     reference = gst_media_descriptor_parser_new (runner, expected_file, &err);
 
     if (reference == NULL) {
-      g_print ("Could not parse file: %s", expected_file);
+      g_print ("Could not parse file: %s\n", expected_file);
       ret = 1;
       goto out;
     }
