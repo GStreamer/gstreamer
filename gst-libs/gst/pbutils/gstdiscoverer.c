@@ -1875,7 +1875,8 @@ _parse_discovery (GVariant * variant, GstDiscovererInfo * info)
           g_variant_get_child_value (specific, 0));
       break;
     default:
-      break;
+      GST_WARNING ("Unexpected discoverer info type %d", type);
+      goto out;
   }
 
   _parse_common_stream_info (sinfo, g_variant_get_child_value (common, 0));
@@ -1895,12 +1896,16 @@ _parse_discovery (GVariant * variant, GstDiscovererInfo * info)
     while ((child = g_variant_iter_next_value (&iter))) {
       GstDiscovererStreamInfo *child_info;
       child_info = _parse_discovery (g_variant_get_variant (child), info);
-      cinfo->streams =
-          g_list_append (cinfo->streams,
-          gst_discoverer_stream_info_ref (child_info));
+      if (child_info != NULL) {
+        cinfo->streams =
+            g_list_append (cinfo->streams,
+            gst_discoverer_stream_info_ref (child_info));
+      }
       g_variant_unref (child);
     }
   }
+
+out:
 
   g_variant_unref (common);
   g_variant_unref (specific);
