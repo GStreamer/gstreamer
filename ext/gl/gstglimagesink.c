@@ -351,9 +351,9 @@ static void gst_glimage_sink_video_overlay_init (GstVideoOverlayInterface *
 static void gst_glimage_sink_set_window_handle (GstVideoOverlay * overlay,
     guintptr id);
 static void gst_glimage_sink_expose (GstVideoOverlay * overlay);
-
-static void
-gst_glimage_sink_handle_events (GstVideoOverlay * overlay,
+static void gst_glimage_sink_set_render_rectangle (GstVideoOverlay * overlay,
+    gint x, gint y, gint width, gint height);
+static void gst_glimage_sink_handle_events (GstVideoOverlay * overlay,
     gboolean handle_events);
 
 static GstStaticPadTemplate gst_glimage_sink_template =
@@ -760,6 +760,12 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
       gl_sink->mouse_sig_id =
           g_signal_connect (window, "mouse-event",
           G_CALLBACK (gst_glimage_sink_mouse_event_cb), gl_sink);
+
+      if (gl_sink->x >= 0 && gl_sink->y >= 0 && gl_sink->width > 0 &&
+          gl_sink->height > 0) {
+        gst_gl_window_set_render_rectangle (window, gl_sink->x, gl_sink->y,
+            gl_sink->width, gl_sink->height);
+      }
 
       if (other_context)
         gst_object_unref (other_context);
@@ -1234,6 +1240,7 @@ static void
 gst_glimage_sink_video_overlay_init (GstVideoOverlayInterface * iface)
 {
   iface->set_window_handle = gst_glimage_sink_set_window_handle;
+  iface->set_render_rectangle = gst_glimage_sink_set_render_rectangle;
   iface->handle_events = gst_glimage_sink_handle_events;
   iface->expose = gst_glimage_sink_expose;
 }
@@ -1286,6 +1293,25 @@ gst_glimage_sink_handle_events (GstVideoOverlay * overlay,
     gst_gl_window_handle_events (window, handle_events);
     gst_object_unref (window);
   }
+}
+
+static void
+gst_glimage_sink_set_render_rectangle (GstVideoOverlay * overlay,
+    gint x, gint y, gint width, gint height)
+{
+  GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
+
+  if (G_LIKELY (glimage_sink->context)) {
+    GstGLWindow *window;
+    window = gst_gl_context_get_window (glimage_sink->context);
+    gst_gl_window_set_render_rectangle (window, x, y, width, height);
+    gst_object_unref (window);
+  }
+
+  glimage_sink->x = x;
+  glimage_sink->y = y;
+  glimage_sink->width = width;
+  glimage_sink->height = height;
 }
 
 static gboolean
