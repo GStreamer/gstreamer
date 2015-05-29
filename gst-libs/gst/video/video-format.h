@@ -293,7 +293,7 @@ typedef void (*GstVideoFormatUnpack)         (const GstVideoFormatInfo *info,
  * Because this function does not have a x coordinate, it is not possible to
  * pack pixels starting from an unaligned position. For tiled images this
  * means that packing should start from a tile coordinate. For subsampled
- * formats this means that a complete pixel need to be packed.
+ * formats this means that a complete pixel needs to be packed.
  */
 /* FIXME(2.0): remove the chroma_site, it is unused and is not relevant for
  * packing, chroma subsampling based on chroma-site should be done in a separate
