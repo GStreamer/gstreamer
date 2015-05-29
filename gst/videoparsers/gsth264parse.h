@@ -28,6 +28,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbaseparse.h>
 #include <gst/codecparsers/gsth264parser.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -121,6 +122,11 @@ struct _GstH264Parse
 
   GstClockTime pending_key_unit_ts;
   GstEvent *force_key_unit_event;
+
+  /* Stereo / multiview info */
+  GstVideoMultiviewMode multiview_mode;
+  GstVideoMultiviewFlags multiview_flags;
+  gboolean first_in_bundle;
 };
 
 struct _GstH264ParseClass

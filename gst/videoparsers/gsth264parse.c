@@ -112,6 +112,8 @@ static GstCaps *gst_h264_parse_get_caps (GstBaseParse * parse,
 static gboolean gst_h264_parse_event (GstBaseParse * parse, GstEvent * event);
 static gboolean gst_h264_parse_src_event (GstBaseParse * parse,
     GstEvent * event);
+static void gst_h264_parse_update_src_caps (GstH264Parse * h264parse,
+    GstCaps * caps);
 
 static void
 gst_h264_parse_class_init (GstH264ParseClass * klass)
@@ -208,6 +210,10 @@ gst_h264_parse_reset_stream_info (GstH264Parse * h264parse)
   h264parse->parsed_par_d = 0;
   h264parse->have_pps = FALSE;
   h264parse->have_sps = FALSE;
+
+  h264parse->multiview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+  h264parse->multiview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+  h264parse->first_in_bundle = TRUE;
 
   h264parse->align = GST_H264_PARSE_ALIGN_NONE;
   h264parse->format = GST_H264_PARSE_FORMAT_NONE;
@@ -550,13 +556,131 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
         /* Additional messages that are not innerly useful to the
          * element but for debugging purposes */
-      case GST_H264_SEI_STEREO_VIDEO_INFO:
-        GST_LOG_OBJECT (h264parse, "stereo video information message");
+      case GST_H264_SEI_STEREO_VIDEO_INFO:{
+        GstVideoMultiviewMode mview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+        GstVideoMultiviewFlags mview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+
+        GST_LOG_OBJECT (h264parse, "Stereo video information %u %u %u %u %u %u",
+            sei.payload.stereo_video_info.field_views_flag,
+            sei.payload.stereo_video_info.top_field_is_left_view_flag,
+            sei.payload.stereo_video_info.current_frame_is_left_view_flag,
+            sei.payload.stereo_video_info.next_frame_is_second_view_flag,
+            sei.payload.stereo_video_info.left_view_self_contained_flag,
+            sei.payload.stereo_video_info.right_view_self_contained_flag);
+
+        if (sei.payload.stereo_video_info.field_views_flag) {
+          mview_mode = GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED;
+          if (!sei.payload.stereo_video_info.top_field_is_left_view_flag)
+            mview_mode |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+        } else {
+          mview_mode = GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME;
+          if (sei.payload.stereo_video_info.next_frame_is_second_view_flag) {
+            /* Mark current frame as first in bundle */
+            h264parse->first_in_bundle = TRUE;
+            if (!sei.payload.stereo_video_info.current_frame_is_left_view_flag)
+              mview_flags |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+          }
+        }
+        if (mview_mode != h264parse->multiview_mode ||
+            mview_flags != h264parse->multiview_flags) {
+          h264parse->multiview_mode = mview_mode;
+          h264parse->multiview_flags = mview_flags;
+          /* output caps need to be changed */
+          gst_h264_parse_update_src_caps (h264parse, NULL);
+        }
         break;
-      case GST_H264_SEI_FRAME_PACKING:
-        GST_LOG_OBJECT (h264parse, "frame packing arrangement message: type %d",
-            sei.payload.frame_packing.frame_packing_type);
+      }
+      case GST_H264_SEI_FRAME_PACKING:{
+        GstVideoMultiviewMode mview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+        GstVideoMultiviewFlags mview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+
+        GST_LOG_OBJECT (h264parse,
+            "frame packing arrangement message: id %u cancelled %u "
+            "type %u quincunx %u content_interpretation %d flip %u "
+            "right_first %u field_views %u is_frame0 %u",
+            sei.payload.frame_packing.frame_packing_id,
+            sei.payload.frame_packing.frame_packing_cancel_flag,
+            sei.payload.frame_packing.frame_packing_type,
+            sei.payload.frame_packing.quincunx_sampling_flag,
+            sei.payload.frame_packing.content_interpretation_type,
+            sei.payload.frame_packing.spatial_flipping_flag,
+            sei.payload.frame_packing.frame0_flipped_flag,
+            sei.payload.frame_packing.field_views_flag,
+            sei.payload.frame_packing.current_frame_is_frame0_flag);
+
+        /* Only IDs from 0->255 and 512->2^31-1 are valid. Ignore others */
+        if ((sei.payload.frame_packing.frame_packing_id >= 256 &&
+                sei.payload.frame_packing.frame_packing_id < 512) ||
+            (sei.payload.frame_packing.frame_packing_id >= (1U << 31)))
+          break;                /* ignore */
+
+        if (!sei.payload.frame_packing.frame_packing_cancel_flag) {
+          /* Cancel flag sets things back to no-info */
+
+          if (sei.payload.frame_packing.content_interpretation_type == 2)
+            mview_flags |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+
+          switch (sei.payload.frame_packing.frame_packing_type) {
+            case 0:
+              mview_mode = GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD;
+              break;
+            case 1:
+              mview_mode = GST_VIDEO_MULTIVIEW_MODE_COLUMN_INTERLEAVED;
+              break;
+            case 2:
+              mview_mode = GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED;
+              break;
+            case 3:
+              if (sei.payload.frame_packing.quincunx_sampling_flag)
+                mview_mode = GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE_QUINCUNX;
+              else
+                mview_mode = GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE;
+              if (sei.payload.frame_packing.spatial_flipping_flag) {
+                /* One of the views is flopped. */
+                if (sei.payload.frame_packing.frame0_flipped_flag !=
+                    ! !(mview_flags &
+                        GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST))
+                  /* the left view is flopped */
+                  mview_flags |= GST_VIDEO_MULTIVIEW_FLAGS_LEFT_FLOPPED;
+                else
+                  mview_flags |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_FLOPPED;
+              }
+              break;
+            case 4:
+              mview_mode = GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM;
+              if (sei.payload.frame_packing.spatial_flipping_flag) {
+                /* One of the views is flipped, */
+                if (sei.payload.frame_packing.frame0_flipped_flag !=
+                    ! !(mview_flags &
+                        GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST))
+                  /* the left view is flipped */
+                  mview_flags |= GST_VIDEO_MULTIVIEW_FLAGS_LEFT_FLIPPED;
+                else
+                  mview_flags |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_FLIPPED;
+              }
+              break;
+            case 5:
+              if (sei.payload.frame_packing.content_interpretation_type == 0)
+                mview_mode = GST_VIDEO_MULTIVIEW_MODE_MULTIVIEW_FRAME_BY_FRAME;
+              else
+                mview_mode = GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME;
+              break;
+            default:
+              GST_DEBUG_OBJECT (h264parse, "Invalid frame packing type %u",
+                  sei.payload.frame_packing.frame_packing_type);
+              break;
+          }
+        }
+
+        if (mview_mode != h264parse->multiview_mode ||
+            mview_flags != h264parse->multiview_flags) {
+          h264parse->multiview_mode = mview_mode;
+          h264parse->multiview_flags = mview_flags;
+          /* output caps need to be changed */
+          gst_h264_parse_update_src_caps (h264parse, NULL);
+        }
         break;
+      }
     }
   }
   g_array_free (messages, TRUE);
@@ -1616,6 +1740,10 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       gint width, height;
       GstClockTime latency;
 
+      const gchar *caps_mview_mode = NULL;
+      GstVideoMultiviewMode mview_mode = h264parse->multiview_mode;
+      GstVideoMultiviewFlags mview_flags = h264parse->multiview_flags;
+
       fps_num = h264parse->fps_num;
       fps_den = h264parse->fps_den;
 
@@ -1631,6 +1759,21 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
         gst_structure_get_int (s, "height", &height);
       else
         height = h264parse->height;
+
+      /* Pass through or set output stereo/multiview config */
+      if (s && gst_structure_has_field (s, "multiview-mode")) {
+        caps_mview_mode = gst_structure_get_string (s, "multiview-mode");
+        mview_mode =
+            gst_video_multiview_mode_from_caps_string (caps_mview_mode);
+        gst_structure_get_flagset (s, "multiview-flags", &mview_flags, NULL);
+      }
+      if (mview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+        caps_mview_mode = gst_video_multiview_mode_to_caps_string (mview_mode);
+        gst_caps_set_simple (caps, "multiview-mode", G_TYPE_STRING,
+            caps_mview_mode, "multiview-flags",
+            GST_TYPE_VIDEO_MULTIVIEW_FLAGSET, mview_flags,
+            GST_FLAG_SET_MASK_EXACT, NULL);
+      }
 
       gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
           "height", G_TYPE_INT, height, NULL);
