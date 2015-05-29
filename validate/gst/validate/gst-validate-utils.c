@@ -344,7 +344,7 @@ _read_argument (MathParser * parser)
 static gdouble
 _read_builtin (MathParser * parser)
 {
-  gdouble v0 = 0.0, v1 = 0.0;
+  gdouble v0;
   gchar c, token[PARSER_MAX_TOKEN_SIZE];
   gint pos = 0;
 
@@ -358,26 +358,24 @@ _read_builtin (MathParser * parser)
 
     if (_peek (parser) == '(') {
       _next (parser);
-      if (g_strcmp0 (token, "min") == 0) {
-        v0 = _read_argument (parser);
-        v1 = _read_argument (parser);
-        v0 = MIN (v0, v1);
-      } else if (g_strcmp0 (token, "max") == 0) {
-        v0 = _read_argument (parser);
-        v1 = _read_argument (parser);
-        v0 = MAX (v0, v1);
-      } else {
+      v0 = _read_argument (parser);
+
+      if (g_strcmp0 (token, "min") == 0)
+        v0 = MIN (v0, _read_argument (parser));
+      else if (g_strcmp0 (token, "max") == 0)
+        v0 = MAX (v0, _read_argument (parser));
+      else {
         _error (parser, "Tried to call unknown built-in function!");
+        return 0.0;
       }
 
       if (_next (parser) != ')')
         _error (parser, "Expected ')' in built-in call!");
     } else {
-      if (parser->variable_func != NULL
-          && parser->variable_func (token, &v1, parser->user_data)) {
-        v0 = v1;
-      } else {
+      if (parser->variable_func == NULL
+          || !parser->variable_func (token, &v0, parser->user_data)) {
         _error (parser, "Could not look up value for variable %s!");
+        return 0.0;
       }
     }
   } else {
