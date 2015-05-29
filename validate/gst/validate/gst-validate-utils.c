@@ -322,10 +322,9 @@ _parse (MathParser * parser)
           "Failed to reach end of input expression, likely malformed input");
     } else
       return result;
-  } else {
-    return sqrt (-1.0);
   }
-  return sqrt (-1.0);
+
+  return -1.0;
 }
 
 static gdouble
