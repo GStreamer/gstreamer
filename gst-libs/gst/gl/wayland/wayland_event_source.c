@@ -120,9 +120,9 @@ wayland_event_source_dispatch (GSource * base,
 
   if (source->pfd.revents) {
     if (source->queue)
-      wl_display_roundtrip_queue (source->display, source->queue);
+      wl_display_dispatch_queue_pending (source->display, source->queue);
     else
-      wl_display_roundtrip (source->display);
+      wl_display_dispatch_pending (source->display);
     source->pfd.revents = 0;
   }
 
