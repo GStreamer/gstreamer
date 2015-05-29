@@ -1316,7 +1316,7 @@ _gst_buffer_split (GstBuffer * buffer, gint offset, gsize size)
 {
   GstBuffer *newbuf = gst_buffer_copy_region (buffer,
       GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_META
-      | GST_BUFFER_COPY_MEMORY, offset, size - offset);
+      | GST_BUFFER_COPY_MEMORY, offset, size == -1 ? size : size - offset);
 
   gst_buffer_resize (buffer, 0, offset);
 
