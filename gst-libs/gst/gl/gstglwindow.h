@@ -142,6 +142,7 @@ struct _GstGLWindowClass {
   void     (*handle_events)      (GstGLWindow *window, gboolean handle_events);
   void     (*set_preferred_size) (GstGLWindow *window, gint width, gint height);
   void     (*show)               (GstGLWindow *window);
+  gboolean (*set_render_rectangle)(GstGLWindow *window, gint x, gint y, gint width, gint height);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
@@ -221,6 +222,11 @@ void     gst_gl_window_set_preferred_size   (GstGLWindow * window,
 void     gst_gl_window_get_surface_dimensions (GstGLWindow * window,
                                                guint * width,
                                                guint * height);
+gboolean gst_gl_window_set_render_rectangle   (GstGLWindow * window,
+                                               gint x,
+                                               gint y,
+                                               gint width,
+                                               gint height);
 
 GstGLContext * gst_gl_window_get_context    (GstGLWindow *window);
 guintptr       gst_gl_window_get_display    (GstGLWindow *window);

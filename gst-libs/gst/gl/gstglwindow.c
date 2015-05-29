@@ -1094,3 +1094,35 @@ gst_gl_window_handle_events (GstGLWindow * window, gboolean handle_events)
   if (window_class->handle_events)
     window_class->handle_events (window, handle_events);
 }
+
+/**
+ * gst_gl_window_set_render_rectangle:
+ * @window: a #GstGLWindow
+ * @x: x position
+ * @y: y position
+ * @width: width
+ * @height: height
+ *
+ * Tell a @window that it should render into a specific region of the window
+ * according to the #GstVideoOverlay interface.
+ *
+ * Returns: whether the specified region could be set
+ */
+gboolean
+gst_gl_window_set_render_rectangle (GstGLWindow * window, gint x, gint y,
+    gint width, gint height)
+{
+  GstGLWindowClass *window_class;
+  gboolean ret = FALSE;
+
+  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+
+  if (x < 0 || y < 0 || width <= 0 || height <= 0)
+    return FALSE;
+
+  if (window_class->set_render_rectangle)
+    ret = window_class->set_render_rectangle (window, x, y, width, height);
+
+  return ret;
+}

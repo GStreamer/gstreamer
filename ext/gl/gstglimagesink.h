@@ -56,6 +56,12 @@ struct _GstGLImageSink
     gulong mouse_sig_id;
     gulong key_sig_id;
 
+    /* GstVideoOverlay::set_render_rectangle() cache */
+    gint x;
+    gint y;
+    gint width;
+    gint height;
+
     //caps
     GstVideoInfo info;
     GstCaps *caps;
