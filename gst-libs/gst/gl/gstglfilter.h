@@ -94,6 +94,8 @@ struct _GstGLFilter
  * @init_fbo: perform initialization when the Framebuffer object is created
  * @display_init_cb: execute arbitrary gl code on start
  * @display_reset_cb: execute arbitrary gl code at stop
+ * @transform_internal_caps: Perform sub-class specific modifications of the
+ *   caps to be processed between upload on input and before download for output.
  */
 struct _GstGLFilterClass
 {
@@ -103,6 +105,9 @@ struct _GstGLFilterClass
   gboolean (*filter)            (GstGLFilter *filter, GstBuffer *inbuf, GstBuffer *outbuf);
   gboolean (*filter_texture)    (GstGLFilter *filter, guint in_tex, guint out_tex);
   gboolean (*init_fbo)          (GstGLFilter *filter);
+
+  GstCaps *(*transform_internal_caps) (GstGLFilter *filter,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps);
 
   /* useful to init and cleanup custom gl resources */
   void (*display_init_cb)       (GstGLFilter *filter);

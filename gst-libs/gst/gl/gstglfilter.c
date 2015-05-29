@@ -72,6 +72,8 @@ static void gst_gl_filter_get_property (GObject * object, guint prop_id,
 
 static GstCaps *gst_gl_filter_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
+static GstCaps *default_transform_internal_caps (GstGLFilter * filter,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps);
 static GstCaps *gst_gl_filter_fixate_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static void gst_gl_filter_reset (GstGLFilter * filter);
@@ -115,6 +117,8 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
 
   GST_GL_BASE_FILTER_CLASS (klass)->gl_start = gst_gl_filter_gl_start;
   GST_GL_BASE_FILTER_CLASS (klass)->gl_stop = gst_gl_filter_gl_stop;
+
+  klass->transform_internal_caps = default_transform_internal_caps;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_filter_src_pad_template));
@@ -626,15 +630,25 @@ gst_gl_filter_set_caps_features (const GstCaps * caps,
 }
 
 static GstCaps *
+default_transform_internal_caps (GstGLFilter * filter,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
+{
+  GstCaps *tmp = gst_gl_filter_caps_remove_size (caps);
+
+  GST_DEBUG_OBJECT (filter, "size removal returned caps %" GST_PTR_FORMAT, tmp);
+  return tmp;
+}
+
+static GstCaps *
 gst_gl_filter_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
 {
+  GstGLFilter *filter = GST_GL_FILTER (bt);
   GstCaps *tmp = NULL;
   GstCaps *result = NULL;
 
-  result = gst_gl_filter_caps_remove_size (caps);
-  tmp = result;
-  GST_DEBUG_OBJECT (bt, "size removal returned caps %" GST_PTR_FORMAT, tmp);
+  tmp = GST_GL_FILTER_GET_CLASS (filter)->transform_internal_caps (filter,
+      direction, caps, NULL);
 
   result =
       gst_gl_filter_set_caps_features (tmp, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
@@ -690,8 +704,10 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   gst_caps_replace (&filter->out_caps, outcaps);
 
-  GST_DEBUG ("set_caps %dx%d", GST_VIDEO_INFO_WIDTH (&filter->out_info),
-      GST_VIDEO_INFO_HEIGHT (&filter->out_info));
+  GST_DEBUG_OBJECT (filter, "set_caps %dx%d in %" GST_PTR_FORMAT
+      " out %" GST_PTR_FORMAT,
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info), incaps, outcaps);
 
   return TRUE;
 
