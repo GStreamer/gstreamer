@@ -62,9 +62,12 @@ struct _GstGLImageSink
     gint width;
     gint height;
 
-    //caps
-    GstVideoInfo info;
-    GstCaps *caps;
+    /* Input info before 3d stereo output conversion, if any */
+    GstVideoInfo in_info;
+
+    /* format/caps we actually hand off to the app */
+    GstVideoInfo out_info;
+    GstCaps *out_caps;
 
     GstGLDisplay *display;
     GstGLContext *context;
@@ -72,8 +75,17 @@ struct _GstGLImageSink
     gboolean handle_events;
     gboolean ignore_alpha;
 
+    GstGLViewConvert *convert_views;
+
+    /* Original input RGBA buffer, ready for display,
+     * or possible reconversion through the views filter */
+    GstBuffer *input_buffer;
+    /* Secondary view buffer - when operating in frame-by-frame mode */
+    GstBuffer *input_buffer2;
+
     guint      next_tex;
     GstBuffer *next_buffer;
+    GstBuffer *next_buffer2; /* frame-by-frame 2nd view */
     GstBuffer *next_sync;
 
     volatile gint to_quit;
@@ -82,13 +94,16 @@ struct _GstGLImageSink
 
     /* avoid replacing the stored_buffer while drawing */
     GMutex drawing_lock;
-    GstBuffer *stored_buffer;
+    GstBuffer *stored_buffer[2];
     GstBuffer *stored_sync;
     GLuint redisplay_texture;
 
     gboolean caps_change;
     guint window_width;
     guint window_height;
+    gboolean update_viewport;
+
+    GstVideoRectangle display_rect;
 
     GstGLShader *redisplay_shader;
     GLuint vao;
@@ -96,6 +111,11 @@ struct _GstGLImageSink
     GLuint vertex_buffer;
     GLint  attr_position;
     GLint  attr_texture;
+
+    GstVideoMultiviewMode mview_output_mode;
+    GstVideoMultiviewFlags mview_output_flags;
+    gboolean output_mode_changed;
+    GstGLStereoDownmix mview_downmix_mode;
 };
 
 struct _GstGLImageSinkClass
