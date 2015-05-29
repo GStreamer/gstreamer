@@ -81,6 +81,8 @@ GstCaps * gst_gl_download_transform_caps       (GstGLContext * convert,
 gboolean gst_gl_download_perform_with_data          (GstGLDownload * download,
                                                      GLuint texture_id, GLuint texture_target,
                                                      gpointer data[GST_VIDEO_MAX_PLANES]);
+gboolean gst_gl_download_perform (GstGLDownload * download,
+                                  GstBuffer *inbuf, GstBuffer *outbuf);
 
 G_END_DECLS
 

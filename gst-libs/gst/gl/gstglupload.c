@@ -50,6 +50,9 @@
 GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
 #define GST_CAT_DEFAULT gst_gl_upload_debug
 
+/* Define the maximum number of planes we can upload - handle 2 views per buffer */
+#define GST_GL_UPLOAD_MAX_PLANES (GST_VIDEO_MAX_PLANES * 2)
+
 typedef struct _UploadMethod UploadMethod;
 
 struct _GstGLUploadPrivate
@@ -162,12 +165,18 @@ _gl_memory_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     return FALSE;
 
   if (buffer) {
-    if (gst_buffer_n_memory (buffer) !=
-        GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info))
+    GstVideoInfo *in_info = &upload->upload->priv->in_info;
+    guint expected_memories = GST_VIDEO_INFO_N_PLANES (in_info);
+
+    /* Support stereo views for separated multiview mode */
+    if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) ==
+        GST_VIDEO_MULTIVIEW_MODE_SEPARATED)
+      expected_memories *= GST_VIDEO_INFO_VIEWS (in_info);
+
+    if (gst_buffer_n_memory (buffer) != expected_memories)
       return FALSE;
 
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info);
-        i++) {
+    for (i = 0; i < expected_memories; i++) {
       GstMemory *mem = gst_buffer_peek_memory (buffer, i);
 
       if (!gst_is_gl_memory (mem))
@@ -250,9 +259,10 @@ _gl_memory_upload_perform (gpointer impl, GstBuffer * buffer,
 {
   struct GLMemoryUpload *upload = impl;
   GstGLMemory *gl_mem;
-  int i;
+  int i, n;
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info); i++) {
+  n = gst_buffer_n_memory (buffer);
+  for (i = 0; i < n; i++) {
     GstMemory *mem = gst_buffer_peek_memory (buffer, i);
 
     gl_mem = (GstGLMemory *) mem;
@@ -357,12 +367,18 @@ _egl_image_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     return FALSE;
 
   if (buffer) {
-    if (gst_buffer_n_memory (buffer) !=
-        GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info))
+    GstVideoInfo *in_info = &image->upload->priv->in_info;
+    guint expected_memories = GST_VIDEO_INFO_N_PLANES (in_info);
+
+    /* Support stereo views for separated multiview mode */
+    if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) ==
+        GST_VIDEO_MULTIVIEW_MODE_SEPARATED)
+      expected_memories *= GST_VIDEO_INFO_VIEWS (in_info);
+
+    if (gst_buffer_n_memory (buffer) != expected_memories)
       return FALSE;
 
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info);
-        i++) {
+    for (i = 0; i < expected_memories; i++) {
       GstMemory *mem = gst_buffer_peek_memory (buffer, i);
 
       if (!gst_is_egl_image_memory (mem))
@@ -395,14 +411,15 @@ static void
 _egl_image_upload_perform_gl_thread (GstGLContext * context,
     struct EGLImageUpload *image)
 {
-  guint i;
+  guint i, n;
 
   /* FIXME: buffer pool */
   *image->outbuf = gst_buffer_new ();
   gst_gl_memory_setup_buffer (image->upload->context,
       NULL, &image->upload->priv->out_info, NULL, *image->outbuf);
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info); i++) {
+  n = gst_buffer_n_memory (image->buffer);
+  for (i = 0; i < n; i++) {
     GstMemory *mem = gst_buffer_peek_memory (image->buffer, i);
     GstGLMemory *out_gl_mem =
         (GstGLMemory *) gst_buffer_peek_memory (*image->outbuf, i);
@@ -474,7 +491,7 @@ struct GLUploadMeta
 
   gboolean result;
   GstVideoGLTextureUploadMeta *meta;
-  guint texture_ids[GST_VIDEO_MAX_PLANES];
+  guint texture_ids[GST_GL_UPLOAD_MAX_PLANES];
 };
 
 static gpointer
@@ -606,6 +623,13 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
 {
   struct GLUploadMeta *upload = impl;
   int i;
+  GstVideoInfo *in_info = &upload->upload->priv->in_info;
+  guint max_planes = GST_VIDEO_INFO_N_PLANES (in_info);
+
+  /* Support stereo views for separated multiview mode */
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) ==
+      GST_VIDEO_MULTIVIEW_MODE_SEPARATED)
+    max_planes *= GST_VIDEO_INFO_VIEWS (in_info);
 
   GST_LOG_OBJECT (upload, "Attempting upload with GstVideoGLTextureUploadMeta");
 
@@ -616,10 +640,10 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
   gst_gl_memory_setup_buffer (upload->upload->context,
       NULL, &upload->upload->priv->in_info, NULL, *outbuf);
 
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+  for (i = 0; i < GST_GL_UPLOAD_MAX_PLANES; i++) {
     guint tex_id = 0;
 
-    if (i < GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info)) {
+    if (i < max_planes) {
       GstMemory *mem = gst_buffer_peek_memory (*outbuf, i);
       tex_id = ((GstGLMemory *) mem)->tex_id;
     }
@@ -627,9 +651,12 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
     upload->texture_ids[i] = tex_id;
   }
 
-  GST_LOG ("Uploading with GLTextureUploadMeta with textures %i,%i,%i,%i",
-      upload->texture_ids[0], upload->texture_ids[1], upload->texture_ids[2],
-      upload->texture_ids[3]);
+  GST_LOG ("Uploading with GLTextureUploadMeta with textures "
+      "%i,%i,%i,%i / %i,%i,%i,%i",
+      upload->texture_ids[0], upload->texture_ids[1],
+      upload->texture_ids[2], upload->texture_ids[3],
+      upload->texture_ids[4], upload->texture_ids[5],
+      upload->texture_ids[6], upload->texture_ids[7]);
 
   gst_gl_context_thread_add (upload->upload->context,
       (GstGLContextThreadFunc) _do_upload_with_meta, upload);
@@ -653,7 +680,7 @@ _upload_meta_upload_free (gpointer impl)
 
   g_return_if_fail (impl != NULL);
 
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+  for (i = 0; i < GST_GL_UPLOAD_MAX_PLANES; i++) {
     if (upload->texture_ids[i])
       gst_gl_context_del_texture (upload->upload->context,
           &upload->texture_ids[i]);
@@ -750,14 +777,21 @@ static GstGLUploadReturn
 _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
     GstBuffer ** outbuf)
 {
-  GstGLMemory *in_tex[GST_VIDEO_MAX_PLANES] = { 0, };
+  GstGLMemory *in_tex[GST_GL_UPLOAD_MAX_PLANES] = { 0, };
   struct RawUpload *raw = impl;
   int i;
+  GstVideoInfo *in_info = &raw->upload->priv->in_info;
+  guint max_planes = GST_VIDEO_INFO_N_PLANES (in_info);
+
+  /* Support stereo views for separated multiview mode */
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) ==
+      GST_VIDEO_MULTIVIEW_MODE_SEPARATED)
+    max_planes *= GST_VIDEO_INFO_VIEWS (in_info);
 
   gst_gl_memory_setup_wrapped (raw->upload->context,
       &raw->upload->priv->in_info, NULL, raw->in_frame.data, in_tex);
 
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+  for (i = 0; i < GST_GL_UPLOAD_MAX_PLANES; i++) {
     if (in_tex[i]) {
       in_tex[i]->data = raw->in_frame.data[i];
       GST_GL_MEMORY_FLAG_SET (in_tex[i], GST_GL_MEMORY_FLAG_NEED_UPLOAD);
@@ -765,7 +799,7 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
   }
 
   *outbuf = gst_buffer_new ();
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->upload->priv->in_info); i++) {
+  for (i = 0; i < max_planes; i++) {
     gst_buffer_append_memory (*outbuf, (GstMemory *) in_tex[i]);
   }
 
