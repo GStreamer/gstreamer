@@ -948,10 +948,6 @@ id3v2_genre_fields_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
   return result;
 }
 
-static const gchar utf16enc[] = "UTF-16";
-static const gchar utf16leenc[] = "UTF-16LE";
-static const gchar utf16beenc[] = "UTF-16BE";
-
 static gboolean
 find_utf16_bom (gchar * data, gint * p_data_endianness)
 {
