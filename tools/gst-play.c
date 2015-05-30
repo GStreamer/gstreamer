@@ -496,21 +496,18 @@ play_uri_get_display_name (GstPlay * play, const gchar * uri)
 static void
 play_uri (GstPlay * play, const gchar * next_uri)
 {
-  GstStateChangeReturn sret;
   gchar *loc;
 
   gst_element_set_state (play->playbin, GST_STATE_READY);
   play_reset (play);
 
   loc = play_uri_get_display_name (play, next_uri);
-  g_print (_("Now playing %s"), loc);
-  g_print ("\n");
+  g_print (_("Now playing %s\n"), loc);
   g_free (loc);
 
   g_object_set (play->playbin, "uri", next_uri, NULL);
 
-  sret = gst_element_set_state (play->playbin, GST_STATE_PAUSED);
-  switch (sret) {
+  switch (gst_element_set_state (play->playbin, GST_STATE_PAUSED)) {
     case GST_STATE_CHANGE_FAILURE:
       /* ignore, we should get an error message posted on the bus */
       break;
@@ -524,8 +521,9 @@ play_uri (GstPlay * play, const gchar * next_uri)
     default:
       break;
   }
+
   if (play->desired_state != GST_STATE_PAUSED)
-    sret = gst_element_set_state (play->playbin, play->desired_state);
+    gst_element_set_state (play->playbin, play->desired_state);
 }
 
 /* returns FALSE if we have reached the end of the playlist */
