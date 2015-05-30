@@ -135,6 +135,14 @@ error_failed_map_input_buffer:
   return GST_FLOW_ERROR;
 }
 
+static gboolean
+gst_mulawdec_start (GstAudioDecoder * dec)
+{
+  gst_audio_decoder_set_estimate_rate (dec, TRUE);
+
+  return TRUE;
+}
+
 static void
 gst_mulawdec_class_init (GstMuLawDecClass * klass)
 {
@@ -147,6 +155,7 @@ gst_mulawdec_class_init (GstMuLawDecClass * klass)
       gst_static_pad_template_get (&mulaw_dec_sink_factory));
 
 
+  audiodec_class->start = GST_DEBUG_FUNCPTR (gst_mulawdec_start);
   audiodec_class->set_format = GST_DEBUG_FUNCPTR (gst_mulawdec_set_format);
   audiodec_class->handle_frame = GST_DEBUG_FUNCPTR (gst_mulawdec_handle_frame);
 
