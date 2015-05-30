@@ -860,6 +860,11 @@ gst_queue_array_push_tail
 gst_queue_array_is_empty
 gst_queue_array_drop_element
 gst_queue_array_find
+gst_queue_array_new_for_struct
+gst_queue_array_push_tail_struct
+gst_queue_array_peek_head_struct
+gst_queue_array_pop_head_struct
+gst_queue_array_drop_struct
 </SECTION>
 
 # net

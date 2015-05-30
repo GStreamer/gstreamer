@@ -50,4 +50,20 @@ guint           gst_queue_array_find (GstQueueArray * array,
 
 guint           gst_queue_array_get_length (GstQueueArray * array);
 
+/* Functions for use with structures */
+
+GstQueueArray * gst_queue_array_new_for_struct (gsize struct_size,
+                                                guint initial_size);
+
+void            gst_queue_array_push_tail_struct (GstQueueArray * array,
+                                                  gpointer        p_struct);
+
+gpointer        gst_queue_array_pop_head_struct  (GstQueueArray * array);
+
+gpointer        gst_queue_array_peek_head_struct (GstQueueArray * array);
+
+gboolean        gst_queue_array_drop_struct      (GstQueueArray * array,
+                                                  guint           idx,
+                                                  gpointer        p_struct);
+
 #endif
