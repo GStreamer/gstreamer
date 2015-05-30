@@ -269,7 +269,6 @@ gst_queue_array_drop_element (GstQueueArray * array, guint idx)
   }
 
   if (idx > first_item_index) {
-    element = array->array[idx];
     /* idx is after first_item_index, move data to higher indices */
     memmove (&array->array[first_item_index + 1],
         &array->array[first_item_index],
