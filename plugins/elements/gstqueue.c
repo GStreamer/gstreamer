@@ -223,9 +223,9 @@ static gboolean gst_queue_is_filled (GstQueue * queue);
 
 typedef struct
 {
-  gboolean is_query;
   GstMiniObject *item;
   gsize size;
+  gboolean is_query;
 } GstQueueItem;
 
 #define GST_TYPE_QUEUE_LEAKY (queue_leaky_get_type ())
@@ -463,7 +463,9 @@ gst_queue_init (GstQueue * queue)
   g_cond_init (&queue->item_del);
   g_cond_init (&queue->query_handled);
 
-  queue->queue = gst_queue_array_new (DEFAULT_MAX_SIZE_BUFFERS * 3 / 2);
+  queue->queue =
+      gst_queue_array_new_for_struct (sizeof (GstQueueItem),
+      DEFAULT_MAX_SIZE_BUFFERS * 3 / 2);
 
   queue->sinktime = GST_CLOCK_TIME_NONE;
   queue->srctime = GST_CLOCK_TIME_NONE;
@@ -482,15 +484,14 @@ static void
 gst_queue_finalize (GObject * object)
 {
   GstQueue *queue = GST_QUEUE (object);
+  GstQueueItem *qitem;
 
   GST_DEBUG_OBJECT (queue, "finalizing queue");
 
-  while (!gst_queue_array_is_empty (queue->queue)) {
-    GstQueueItem *qitem = gst_queue_array_pop_head (queue->queue);
+  while ((qitem = gst_queue_array_pop_head_struct (queue->queue))) {
     /* FIXME: if it's a query, shouldn't we unref that too? */
     if (!qitem->is_query)
       gst_mini_object_unref (qitem->item);
-    g_slice_free (GstQueueItem, qitem);
   }
   gst_queue_array_free (queue->queue);
 
@@ -676,9 +677,9 @@ apply_buffer_list (GstQueue * queue, GstBufferList * buffer_list,
 static void
 gst_queue_locked_flush (GstQueue * queue, gboolean full)
 {
-  while (!gst_queue_array_is_empty (queue->queue)) {
-    GstQueueItem *qitem = gst_queue_array_pop_head (queue->queue);
+  GstQueueItem *qitem;
 
+  while ((qitem = gst_queue_array_pop_head_struct (queue->queue))) {
     /* Then lose another reference because we are supposed to destroy that
        data when flushing */
     if (!full && !qitem->is_query && GST_IS_EVENT (qitem->item)
@@ -689,7 +690,7 @@ gst_queue_locked_flush (GstQueue * queue, gboolean full)
     }
     if (!qitem->is_query)
       gst_mini_object_unref (qitem->item);
-    g_slice_free (GstQueueItem, qitem);
+    memset (qitem, 0, sizeof (GstQueueItem));
   }
   queue->last_query = FALSE;
   g_cond_signal (&queue->query_handled);
@@ -712,7 +713,7 @@ gst_queue_locked_flush (GstQueue * queue, gboolean full)
 static inline void
 gst_queue_locked_enqueue_buffer (GstQueue * queue, gpointer item)
 {
-  GstQueueItem *qitem;
+  GstQueueItem qitem;
   GstBuffer *buffer = GST_BUFFER_CAST (item);
   gsize bsize = gst_buffer_get_size (buffer);
 
@@ -721,11 +722,10 @@ gst_queue_locked_enqueue_buffer (GstQueue * queue, gpointer item)
   queue->cur_level.bytes += bsize;
   apply_buffer (queue, buffer, &queue->sink_segment, TRUE);
 
-  qitem = g_slice_new (GstQueueItem);
-  qitem->item = item;
-  qitem->is_query = FALSE;
-  qitem->size = bsize;
-  gst_queue_array_push_tail (queue->queue, qitem);
+  qitem.item = item;
+  qitem.is_query = FALSE;
+  qitem.size = bsize;
+  gst_queue_array_push_tail_struct (queue->queue, &qitem);
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
@@ -744,7 +744,7 @@ buffer_list_calc_size (GstBuffer ** buf, guint idx, gpointer data)
 static inline void
 gst_queue_locked_enqueue_buffer_list (GstQueue * queue, gpointer item)
 {
-  GstQueueItem *qitem;
+  GstQueueItem qitem;
   GstBufferList *buffer_list = GST_BUFFER_LIST_CAST (item);
   gsize bsize = 0;
 
@@ -755,18 +755,17 @@ gst_queue_locked_enqueue_buffer_list (GstQueue * queue, gpointer item)
   queue->cur_level.bytes += bsize;
   apply_buffer_list (queue, buffer_list, &queue->sink_segment, TRUE);
 
-  qitem = g_slice_new (GstQueueItem);
-  qitem->item = item;
-  qitem->is_query = FALSE;
-  qitem->size = bsize;
-  gst_queue_array_push_tail (queue->queue, qitem);
+  qitem.item = item;
+  qitem.is_query = FALSE;
+  qitem.size = bsize;
+  gst_queue_array_push_tail_struct (queue->queue, &qitem);
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
 static inline void
 gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
 {
-  GstQueueItem *qitem;
+  GstQueueItem qitem;
   GstEvent *event = GST_EVENT_CAST (item);
 
   switch (GST_EVENT_TYPE (event)) {
@@ -800,10 +799,10 @@ gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
       break;
   }
 
-  qitem = g_slice_new (GstQueueItem);
-  qitem->item = item;
-  qitem->is_query = FALSE;
-  gst_queue_array_push_tail (queue->queue, qitem);
+  qitem.item = item;
+  qitem.is_query = FALSE;
+  qitem.size = 0;
+  gst_queue_array_push_tail_struct (queue->queue, &qitem);
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
@@ -815,13 +814,12 @@ gst_queue_locked_dequeue (GstQueue * queue)
   GstMiniObject *item;
   gsize bufsize;
 
-  qitem = gst_queue_array_pop_head (queue->queue);
+  qitem = gst_queue_array_pop_head_struct (queue->queue);
   if (qitem == NULL)
     goto no_item;
 
   item = qitem->item;
   bufsize = qitem->size;
-  g_slice_free (GstQueueItem, qitem);
 
   if (GST_IS_BUFFER (item)) {
     GstBuffer *buffer = GST_BUFFER_CAST (item);
@@ -1014,15 +1012,15 @@ gst_queue_handle_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     default:
       if (G_UNLIKELY (GST_QUERY_IS_SERIALIZED (query))) {
-        GstQueueItem *qitem;
+        GstQueueItem qitem;
 
         GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
         GST_LOG_OBJECT (queue, "queuing query %p (%s)", query,
             GST_QUERY_TYPE_NAME (query));
-        qitem = g_slice_new (GstQueueItem);
-        qitem->item = GST_MINI_OBJECT_CAST (query);
-        qitem->is_query = TRUE;
-        gst_queue_array_push_tail (queue->queue, qitem);
+        qitem.item = GST_MINI_OBJECT_CAST (query);
+        qitem.is_query = TRUE;
+        qitem.size = 0;
+        gst_queue_array_push_tail_struct (queue->queue, &qitem);
         GST_QUEUE_SIGNAL_ADD (queue);
         g_cond_wait (&queue->query_handled, &queue->qlock);
         if (queue->srcresult != GST_FLOW_OK)
@@ -1050,14 +1048,15 @@ gst_queue_is_empty (GstQueue * queue)
 {
   GstQueueItem *head;
 
-  if (gst_queue_array_is_empty (queue->queue))
+  head = gst_queue_array_peek_head_struct (queue->queue);
+
+  if (head == NULL)
     return TRUE;
 
   /* Only consider the queue empty if the minimum thresholds
    * are not reached and data is at the queue head. Otherwise
    * we would block forever on serialized queries.
    */
-  head = gst_queue_array_peek_head (queue->queue);
   if (!GST_IS_BUFFER (head->item) && !GST_IS_BUFFER_LIST (head->item))
     return FALSE;
 
