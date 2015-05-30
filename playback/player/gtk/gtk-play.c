@@ -158,7 +158,7 @@ play_pause_clicked_cb (GtkButton * button, GtkPlay * play)
 }
 
 static void
-play_current_uri (GtkPlay * play, GList * uri, const gchar *ext_suburi)
+play_current_uri (GtkPlay * play, GList * uri, const gchar * ext_suburi)
 {
   /* reset the button/widget state to default */
   if (play->image_pixbuf)
@@ -191,14 +191,14 @@ skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
 }
 
 static GList *
-open_file_dialog (GtkPlay *play, gboolean multi)
+open_file_dialog (GtkPlay * play, gboolean multi)
 {
   int res;
   GList *uris = NULL;
   GtkWidget *chooser;
   GtkWidget *parent;
 
-  parent = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  parent = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   chooser = gtk_file_chooser_dialog_new ("Select files to play", NULL,
       GTK_FILE_CHOOSER_ACTION_OPEN,
       "_Cancel", GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
@@ -221,9 +221,9 @@ open_file_dialog (GtkPlay *play, gboolean multi)
 }
 
 static void
-open_file_clicked_cb (GtkWidget * unused, GtkPlay *play)
+open_file_clicked_cb (GtkWidget * unused, GtkPlay * play)
 {
-  GList * uris, *current;
+  GList *uris, *current;
 
   uris = open_file_dialog (play, TRUE);
   if (uris) {
@@ -573,8 +573,9 @@ toolbar_hide_func (GtkPlay * play)
   gtk_widget_hide (play->toolbar);
 
   /* hide the mouse pointer */
-  cursor = gdk_cursor_new_for_display (
-      gtk_widget_get_display (play->window), GDK_BLANK_CURSOR);
+  cursor =
+      gdk_cursor_new_for_display (gtk_widget_get_display (play->window),
+      GDK_BLANK_CURSOR);
   gdk_window_set_cursor (gtk_widget_get_window (play->window), cursor);
   g_object_unref (cursor);
 
@@ -588,9 +589,8 @@ fullscreen_toggle_cb (GtkToggleButton * widget, GtkPlay * play)
   GtkWidget *image;
 
   if (gtk_toggle_button_get_active (widget)) {
-    image = gtk_image_new_from_icon_name ("view-restore",
-        GTK_ICON_SIZE_BUTTON);
-    gtk_window_fullscreen (GTK_WINDOW(play->window));
+    image = gtk_image_new_from_icon_name ("view-restore", GTK_ICON_SIZE_BUTTON);
+    gtk_window_fullscreen (GTK_WINDOW (play->window));
     gtk_button_set_image (GTK_BUTTON (play->fullscreen_button), image);
 
     /* start timer to hide toolbar */
@@ -598,8 +598,7 @@ fullscreen_toggle_cb (GtkToggleButton * widget, GtkPlay * play)
       g_source_remove (play->toolbar_hide_timeout);
     play->toolbar_hide_timeout = g_timeout_add_seconds (5,
         (GSourceFunc) toolbar_hide_func, play);
-  }
-  else {
+  } else {
     /* if toolbar hide timer is running then kill it */
     if (play->toolbar_hide_timeout) {
       g_source_remove (play->toolbar_hide_timeout);
@@ -608,7 +607,7 @@ fullscreen_toggle_cb (GtkToggleButton * widget, GtkPlay * play)
 
     image = gtk_image_new_from_icon_name ("view-fullscreen",
         GTK_ICON_SIZE_BUTTON);
-    gtk_window_unfullscreen (GTK_WINDOW(play->window));
+    gtk_window_unfullscreen (GTK_WINDOW (play->window));
     gtk_button_set_image (GTK_BUTTON (play->fullscreen_button), image);
   }
 }
@@ -690,9 +689,9 @@ get_menu_label (GstPlayerStreamInfo * stream, GType type)
 }
 
 static void
-new_subtitle_clicked_cb (GtkWidget * unused, GtkPlay *play)
+new_subtitle_clicked_cb (GtkWidget * unused, GtkPlay * play)
 {
-  GList * uri;
+  GList *uri;
 
   uri = open_file_dialog (play, FALSE);
   if (uri) {
@@ -706,9 +705,8 @@ disable_track (GtkPlay * play, GType type)
 {
   if (type == GST_TYPE_PLAYER_VIDEO_INFO) {
     gst_player_set_video_track_enabled (play->player, FALSE);
-    display_cover_art (play, NULL);  /* display cover art */
-  }
-  else if (type == GST_TYPE_PLAYER_AUDIO_INFO)
+    display_cover_art (play, NULL);     /* display cover art */
+  } else if (type == GST_TYPE_PLAYER_AUDIO_INFO)
     gst_player_set_audio_track_enabled (play->player, FALSE);
   else
     gst_player_set_subtitle_track_enabled (play->player, FALSE);
@@ -771,8 +769,7 @@ visualization_changed_cb (GtkWidget * widget, GtkPlay * play)
       gst_player_set_visualization_enabled (play->player, FALSE);
       gtk_widget_hide (play->video_area);
       gtk_widget_show (play->image_area);
-    }
-    else {
+    } else {
       const gchar *vis_name;
 
       gst_player_set_visualization (play->player, name);
@@ -964,7 +961,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
     submenu = create_visualization_menu (play);
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (vis), submenu);
   } else {
-      gtk_widget_set_sensitive (vis, FALSE);
+    gtk_widget_set_sensitive (vis, FALSE);
   }
 
   if (media_info && gst_player_get_video_streams (media_info)) {
@@ -1020,10 +1017,10 @@ mouse_button_pressed_cb (GtkWidget * unused, GdkEventButton * event,
     if (gtk_toggle_button_get_active
         (GTK_TOGGLE_BUTTON (play->fullscreen_button)))
       gtk_toggle_button_set_active
-        (GTK_TOGGLE_BUTTON (play->fullscreen_button), FALSE);
+          (GTK_TOGGLE_BUTTON (play->fullscreen_button), FALSE);
     else
       gtk_toggle_button_set_active
-        (GTK_TOGGLE_BUTTON (play->fullscreen_button), TRUE);
+          (GTK_TOGGLE_BUTTON (play->fullscreen_button), TRUE);
   } else if ((event->type == GDK_BUTTON_PRESS) && (event->button == 3)) {
     /* popup menu on right button click */
     gtk_player_popup_menu_create (play, event);
@@ -1046,11 +1043,11 @@ image_area_draw_cb (GtkWidget * widget, cairo_t * cr, GtkPlay * play)
 
     /* if image is bigger than widget then scale down otherwise center it. */
     if (width <= pix_width)
-      scalex = (gdouble)width / (gdouble)pix_width;
+      scalex = (gdouble) width / (gdouble) pix_width;
     else
       x = (width - pix_width) / 2;
     if (height <= pix_height)
-      scaley = (gdouble)height / (gdouble)pix_height;
+      scaley = (gdouble) height / (gdouble) pix_height;
     else
       y = (height - pix_height) / 2;
 
@@ -1060,9 +1057,9 @@ image_area_draw_cb (GtkWidget * widget, cairo_t * cr, GtkPlay * play)
     cairo_fill (cr);
 
     if (scalex > 0.0 && scaley > 0.0)
-       cairo_scale (cr, scalex, scaley);
+      cairo_scale (cr, scalex, scaley);
 
-    gdk_cairo_set_source_pixbuf(cr, play->image_pixbuf, x, y);
+    gdk_cairo_set_source_pixbuf (cr, play->image_pixbuf, x, y);
     cairo_paint (cr);
   } else {
     /* fill background with black */
@@ -1123,8 +1120,7 @@ create_ui (GtkPlay * play)
       | GDK_LEAVE_NOTIFY_MASK
       | GDK_BUTTON_PRESS_MASK
       | GDK_POINTER_MOTION_MASK
-      | GDK_POINTER_MOTION_HINT_MASK
-      | GDK_ENTER_NOTIFY_MASK);
+      | GDK_POINTER_MOTION_HINT_MASK | GDK_ENTER_NOTIFY_MASK);
 
   play->image_area = gtk_drawing_area_new ();
   g_signal_connect (play->image_area, "button-press-event",
@@ -1136,11 +1132,10 @@ create_ui (GtkPlay * play)
   g_signal_connect (play->image_area, "scroll-event",
       G_CALLBACK (gtk_show_toolbar_cb), play);
   gtk_widget_set_events (play->image_area, GDK_EXPOSURE_MASK
-        | GDK_LEAVE_NOTIFY_MASK
-        | GDK_BUTTON_PRESS_MASK
-        | GDK_POINTER_MOTION_MASK
-        | GDK_POINTER_MOTION_HINT_MASK
-        | GDK_ENTER_NOTIFY_MASK);
+      | GDK_LEAVE_NOTIFY_MASK
+      | GDK_BUTTON_PRESS_MASK
+      | GDK_POINTER_MOTION_MASK
+      | GDK_POINTER_MOTION_HINT_MASK | GDK_ENTER_NOTIFY_MASK);
 
   /* Unified play/pause button */
   play->play_pause_button =
@@ -1176,7 +1171,7 @@ create_ui (GtkPlay * play)
   /* Playlist repeat button */
   play->repeat_button = gtk_toggle_button_new ();
   image = gtk_image_new_from_icon_name ("media-playlist-repeat",
-            GTK_ICON_SIZE_BUTTON);
+      GTK_ICON_SIZE_BUTTON);
   gtk_button_set_image (GTK_BUTTON (play->repeat_button), image);
   if (play->loop)
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (play->repeat_button),
@@ -1212,8 +1207,7 @@ create_ui (GtkPlay * play)
   gtk_box_pack_start (GTK_BOX (controls), play->play_pause_button, FALSE,
       FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->next_button, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (controls), play->repeat_button,
-      FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (controls), play->repeat_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->seekbar, TRUE, TRUE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->volume_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->media_info_button,
@@ -1236,7 +1230,7 @@ create_ui (GtkPlay * play)
   gtk_widget_show_all (play->window);
 
   play->default_cursor = gdk_window_get_cursor
-    (gtk_widget_get_window (play->toolbar));
+      (gtk_widget_get_window (play->toolbar));
 }
 
 static void
@@ -1273,7 +1267,7 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
 
     next = g_list_next (play->current_uri);
     if (!next && gtk_toggle_button_get_active
-          (GTK_TOGGLE_BUTTON(play->repeat_button)))
+        (GTK_TOGGLE_BUTTON (play->repeat_button)))
       next = g_list_first (play->uris);
 
     if (next) {
@@ -1292,7 +1286,7 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
 }
 
 static gboolean
-_has_active_stream (GtkPlay * play, void * (*func) (GstPlayer * player))
+_has_active_stream (GtkPlay * play, void *(*func) (GstPlayer * player))
 {
   void *obj;
 
@@ -1344,8 +1338,7 @@ gst_sample_to_pixbuf (GtkPlay * play, GstSample * sample)
     pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
     if (pixbuf) {
       g_object_ref (pixbuf);
-    }
-    else {
+    } else {
       g_print ("failed to convert gst buffer to pixbuf %s \n", err->message);
       g_error_free (err);
     }
@@ -1381,7 +1374,7 @@ display_cover_art (GtkPlay * play, GstPlayerMediaInfo * media_info)
   play->image_pixbuf = gst_sample_to_pixbuf (play, sample);
 
 cleanup:
-  gtk_widget_queue_draw (play->image_area); /* send expose event to widget */
+  gtk_widget_queue_draw (play->image_area);     /* send expose event to widget */
 
   if (temp_media_info)
     g_object_unref (temp_media_info);
@@ -1449,9 +1442,9 @@ main (gint argc, gchar ** argv)
         "Files to play"},
     {"loop", 'l', 0, G_OPTION_ARG_NONE, &play.loop, "Repeat all"},
     {"fullscreen", 'f', 0, G_OPTION_ARG_NONE, &play.fullscreen,
-      "Show the player in fullscreen"},
+        "Show the player in fullscreen"},
     {"visual", 'v', 0, G_OPTION_ARG_NONE, &vis,
-      "Show visualization when there is no video stream"},
+        "Show visualization when there is no video stream"},
     {NULL}
   };
   guint list_length = 0;
