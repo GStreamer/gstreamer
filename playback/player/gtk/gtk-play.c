@@ -790,27 +790,30 @@ create_visualization_menu (GtkPlay * play)
   GtkWidget *menu;
   GtkWidget *item;
   GtkWidget *sep;
-  const GList *list;
   GSList *group = NULL;
   const gchar *cur_vis;
-  gchar **vis_names;
+  GstPlayerVisualization **viss, **p;
 
   menu = gtk_menu_new ();
   cur_vis = gst_player_get_current_visualization (play->player);
-  vis_names = gst_player_get_visualization_elements_name ();
+  viss = gst_player_visualizations_get ();
 
-  for (i = 0; vis_names[i] != NULL; i++) {
-    gchar *label = (gchar *) vis_names[i];
+  p = viss;
+  while (*p) {
+    gchar *label = g_strdup ((*p)->name);
 
     item = gtk_radio_menu_item_new_with_label (group, label);
     group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (item));
     if (g_strcmp0 (label, cur_vis) == 0)
       gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), True);
-    g_object_set_data (G_OBJECT (item), "name", label);
+    g_object_set_data_full (G_OBJECT (item), "name", label,
+        (GDestroyNotify) g_free);
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
     g_signal_connect (G_OBJECT (item), "toggled",
         G_CALLBACK (visualization_changed_cb), play);
+    p++;
   }
+  gst_player_visualizations_free (viss);
 
   sep = gtk_separator_menu_item_new ();
   item = gtk_radio_menu_item_new_with_label (group, "Disable");
@@ -822,9 +825,6 @@ create_visualization_menu (GtkPlay * play)
       G_CALLBACK (visualization_changed_cb), play);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), sep);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-
-  if (vis_names)
-    g_free (vis_names);
 
   return menu;
 }
@@ -1495,14 +1495,15 @@ main (gint argc, gchar ** argv)
 
   /* if visualization is enabled then use the first element */
   if (vis) {
-    gchar **vis_names;
-    vis_names = gst_player_get_visualization_elements_name ();
+    GstPlayerVisualization **viss;
+    viss = gst_player_visualizations_get ();
 
-    if (vis_names) {
-      gst_player_set_visualization (play.player, vis_names[0]);
+    if (viss && *viss) {
+      gst_player_set_visualization (play.player, (*viss)->name);
       gst_player_set_visualization_enabled (play.player, TRUE);
-      g_free (vis_names);
     }
+    if (viss)
+      gst_player_visualizations_free (viss);
   }
 
   play_current_uri (&play, g_list_first (play.uris), NULL);
