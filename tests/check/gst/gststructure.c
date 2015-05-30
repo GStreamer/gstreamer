@@ -769,6 +769,7 @@ GST_START_TEST (test_flagset)
 
   fail_unless (out_flags == test_flags);
   fail_unless (out_mask == test_mask);
+  gst_structure_free (s);
 }
 
 GST_END_TEST;

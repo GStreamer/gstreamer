@@ -982,6 +982,7 @@ GST_START_TEST (test_intersect_flagset)
 
   GST_DEBUG ("Serialised caps to %s", test_string);
   c2 = gst_caps_from_string (test_string);
+  g_free (test_string);
 
   fail_unless (gst_caps_is_equal (c1, c2));
 
