@@ -1115,7 +1115,7 @@ gst_gl_window_set_render_rectangle (GstGLWindow * window, gint x, gint y,
   GstGLWindowClass *window_class;
   gboolean ret = FALSE;
 
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_val_if_fail (GST_GL_IS_WINDOW (window), FALSE);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
 
   if (x < 0 || y < 0 || width <= 0 || height <= 0)
