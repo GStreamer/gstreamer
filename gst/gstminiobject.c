@@ -193,11 +193,13 @@ gst_mini_object_lock (GstMiniObject * object, GstLockFlags flags)
       access_mode &= ~GST_LOCK_FLAG_EXCLUSIVE;
     }
 
-    if (access_mode) {
-      /* shared counter > 1 and write access is not allowed */
-      if (access_mode & GST_LOCK_FLAG_WRITE && IS_SHARED (state))
-        goto lock_failed;
+    /* shared counter > 1 and write access is not allowed */
+    if (((state & GST_LOCK_FLAG_WRITE) != 0
+            || (access_mode & GST_LOCK_FLAG_WRITE) != 0)
+        && IS_SHARED (newstate))
+      goto lock_failed;
 
+    if (access_mode) {
       if ((state & LOCK_FLAG_MASK) == 0) {
         /* nothing mapped, set access_mode */
         newstate |= access_mode;
