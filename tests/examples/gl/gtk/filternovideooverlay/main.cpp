@@ -130,7 +130,7 @@ gint main (gint argc, gchar *argv[])
     gtk_widget_show (window_control);
 
     GstElement* videosrc = gst_element_factory_make ("videotestsrc", "videotestsrc");
-    GstElement* glfilterlaplacian = gst_element_factory_make ("glfilterblur", "glfilterblur");
+    GstElement* upload = gst_element_factory_make ("glupload", "glupload");
     GstElement* glfiltercube = gst_element_factory_make ("glfiltercube", "glfiltercube");
     GstElement* videosink = gst_element_factory_make ("glimagesink", "glimagesink");
 
@@ -138,12 +138,12 @@ gint main (gint argc, gchar *argv[])
                                         "width", G_TYPE_INT, 640,
                                         "height", G_TYPE_INT, 480,
                                         "framerate", GST_TYPE_FRACTION, 25, 1,
-                                        "format", G_TYPE_STRING, "YV12",
+                                        "format", G_TYPE_STRING, "RGBA",
                                         NULL) ;
 
-    gst_bin_add_many (GST_BIN (pipeline), videosrc, glfiltercube, glfilterlaplacian, videosink, NULL);
+    gst_bin_add_many (GST_BIN (pipeline), videosrc, upload, glfiltercube, videosink, NULL);
 
-    gboolean link_ok = gst_element_link_filtered(videosrc, glfiltercube, caps) ;
+    gboolean link_ok = gst_element_link_filtered(videosrc, upload, caps) ;
     gst_caps_unref(caps) ;
     if(!link_ok)
     {
@@ -151,7 +151,7 @@ gint main (gint argc, gchar *argv[])
         return -1;
     }
 
-    if(!gst_element_link_many(glfiltercube, glfilterlaplacian, videosink, NULL))
+    if(!gst_element_link_many(upload, glfiltercube, videosink, NULL))
     {
         g_warning("Failed to link glfiltercube to videosink!\n") ;
         return -1;
