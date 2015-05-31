@@ -619,7 +619,8 @@ gst_structure_set_valist_internal (GstStructure * structure,
  * @fieldname: the name of the field to set
  * @...: variable arguments
  *
- * Parses the variable arguments and sets fields accordingly.
+ * Parses the variable arguments and sets fields accordingly. Fields that
+ * weren't already part of the structure are added as needed.
  * Variable arguments should be in the form field name, field type
  * (as a GType), value(s).  The last variable argument should be %NULL.
  */
