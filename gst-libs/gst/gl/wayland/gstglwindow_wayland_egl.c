@@ -232,23 +232,6 @@ static const struct wl_shell_surface_listener shell_surface_listener = {
 };
 
 static void
-surface_handle_enter (void *data, struct wl_surface *wl_surface,
-    struct wl_output *output)
-{
-}
-
-static void
-surface_handle_leave (void *data, struct wl_surface *wl_surface,
-    struct wl_output *output)
-{
-}
-
-static const struct wl_surface_listener surface_listener = {
-  surface_handle_enter,
-  surface_handle_leave
-};
-
-static void
 destroy_surfaces (GstGLWindowWaylandEGL * window_egl)
 {
   if (window_egl->window.subsurface) {
