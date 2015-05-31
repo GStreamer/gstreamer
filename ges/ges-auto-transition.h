@@ -61,6 +61,7 @@ struct _GESAutoTransition
   GESClip *previous_clip;
   GESClip *next_clip;
   GESClip *transition_clip;
+  gboolean positioning;
 
   gchar *key;
 

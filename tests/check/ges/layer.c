@@ -725,6 +725,45 @@ GST_START_TEST (test_single_layer_automatic_transition)
   fail_unless (current->data == src2);
   g_list_free_full (objects, gst_object_unref);
 
+  /*
+   *        500___________src1________1250
+   *                       1000___________src2________2000
+   *                       ^____trans____^
+   */
+  ges_layer_remove_clip (layer, GES_CLIP (src));
+  assert_equals_uint64 (_START (src1), 500);
+  assert_equals_uint64 (_DURATION (src1), 1250 - 500);
+  assert_equals_uint64 (_START (src2), 1000);
+  assert_equals_uint64 (_DURATION (src2), 1000);
+
+  current = objects = ges_layer_get_clips (layer);
+  current = objects;
+  assert_equals_int (g_list_length (objects), 4);
+  assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
+  transition = objects->next->data;
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
+  fail_unless (current->data == src1);
+  g_list_free_full (objects, gst_object_unref);
+
+  /*
+   *        500___________src1________1250
+   *                       ^____trans____^
+   *                       1100___________src2________2000
+   */
+  ges_container_edit (GES_CONTAINER (transition),
+      NULL, -1, GES_EDIT_MODE_TRIM, GES_EDGE_START, 1100);
+  assert_equals_uint64 (_START (src1), 500);
+  assert_equals_uint64 (_DURATION (src1), 1250 - 500);
+  assert_equals_uint64 (_START (src2), 1100);
+  assert_equals_uint64 (_DURATION (src2), 2000 - 1100);
+
+  current = objects = ges_layer_get_clips (layer);
+  current = objects;
+  assert_equals_int (g_list_length (objects), 4);
+  assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
+  fail_unless (current->data == src1);
+  g_list_free_full (objects, gst_object_unref);
+
   gst_object_unref (timeline);
 }
 

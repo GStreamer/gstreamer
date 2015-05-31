@@ -590,7 +590,7 @@ _edit (GESContainer * container, GList * layers,
   }
 
   for (tmp = GES_CONTAINER_CHILDREN (container); tmp; tmp = g_list_next (tmp)) {
-    if (GES_IS_SOURCE (tmp->data)) {
+    if (GES_IS_SOURCE (tmp->data) || GES_IS_TRANSITION (tmp->data)) {
       ret &= ges_track_element_edit (tmp->data, layers, mode, edge, position);
       break;
     }

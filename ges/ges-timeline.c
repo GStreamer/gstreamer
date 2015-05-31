@@ -1435,6 +1435,45 @@ ges_timeline_set_moving_context (GESTimeline * timeline, GESTrackElement * obj,
   return TRUE;
 }
 
+static gboolean
+_trim_transition (GESTimeline * timeline, GESLayer * layer,
+    GESTrackElement * element, GESEdge edge, GstClockTime position)
+{
+
+  GList *tmp;
+
+  if (!ges_layer_get_auto_transition (layer))
+    goto fail;
+
+  gst_object_unref (layer);
+  for (tmp = timeline->priv->auto_transitions; tmp; tmp = tmp->next) {
+    GESAutoTransition *auto_transition = tmp->data;
+
+    if (auto_transition->transition == GES_TRACK_ELEMENT (element)) {
+      /* Trimming an auto transition mean trimming its neighboors */
+      if (!auto_transition->positioning) {
+        if (edge == GES_EDGE_END) {
+          ges_container_edit (GES_CONTAINER (auto_transition->previous_clip),
+              NULL, -1, GES_EDIT_MODE_TRIM, GES_EDGE_END, position);
+        } else {
+          ges_container_edit (GES_CONTAINER (auto_transition->next_clip),
+              NULL, -1, GES_EDIT_MODE_TRIM, GES_EDGE_START, position);
+        }
+
+        return TRUE;
+      }
+
+      return FALSE;
+    }
+  }
+
+  return FALSE;
+
+fail:
+  gst_object_unref (layer);
+  return FALSE;
+}
+
 gboolean
 ges_timeline_trim_object_simple (GESTimeline * timeline,
     GESTimelineElement * element, GList * layers, GESEdge edge,
@@ -1445,9 +1484,13 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
   gint64 real_dur;
   GESTrackElement *track_element;
 
-  /* We only work with GESSource-s */
-  if (GES_IS_SOURCE (element) == FALSE)
+  if (GES_IS_TRANSITION (element)) {
+    return _trim_transition (timeline,
+        ges_clip_get_layer (GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (element))),
+        GES_TRACK_ELEMENT (element), edge, position);
+  } else if (GES_IS_SOURCE (element) == FALSE) {
     return FALSE;
+  }
 
   track_element = GES_TRACK_ELEMENT (element);
   GST_DEBUG_OBJECT (track_element, "Trimming to %" GST_TIME_FORMAT

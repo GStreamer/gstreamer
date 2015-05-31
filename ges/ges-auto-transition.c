@@ -61,9 +61,11 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
     return;
   }
 
+  self->positioning = TRUE;
   _set_start0 (GES_TIMELINE_ELEMENT (self->transition_clip),
       _START (self->next_source));
   _set_duration0 (GES_TIMELINE_ELEMENT (self->transition_clip), new_duration);
+  self->positioning = FALSE;
 }
 
 static void
@@ -72,9 +74,11 @@ _height_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
 {
   /* FIXME This is really not smart and we should properly implement clip
    * priority management at the Layer level */
+  self->positioning = TRUE;
   _set_priority0 (GES_TIMELINE_ELEMENT (self->next_clip),
       _PRIORITY (self->previous_clip) +
       GES_CONTAINER_HEIGHT (self->previous_clip));
+  self->positioning = FALSE;
 }
 
 static void
