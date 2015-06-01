@@ -236,7 +236,7 @@ _ges_get_asset_from_timeline (GESTimeline * timeline, GType type,
     if (error && !*error) {
       *error = g_error_new (GES_ERROR, 0,
           "There was an error requesting the asset with id %s and type %s (%s)",
-          id, g_type_name (type), error ? (*error)->message : "unknown");
+          id, g_type_name (type), "unknown");
     }
 
     GST_ERROR
