@@ -209,7 +209,7 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstRTMPSink *sink = GST_RTMP_SINK (bsink);
   GstBuffer *reffed_buf = NULL;
-  GstMapInfo map;
+  GstMapInfo map = GST_MAP_INFO_INIT;
 
   if (sink->rtmp == NULL) {
     /* Do not crash */
