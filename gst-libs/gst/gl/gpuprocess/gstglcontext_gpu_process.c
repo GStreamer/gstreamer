@@ -30,6 +30,7 @@
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
 
+#define gst_gl_context_gpu_process_parent_class parent_class
 G_DEFINE_TYPE (GstGLContextGPUProcess, gst_gl_context_gpu_process,
     GST_GL_TYPE_CONTEXT);
 
@@ -63,11 +64,24 @@ gst_gl_context_gpu_process_activate (GstGLContext * context, gboolean activate)
 }
 
 static void
+gst_gl_context_gpu_process_finalize (GObject * object)
+{
+  GstGLContext *context = GST_GL_CONTEXT (object);
+
+  GST_GL_WINDOW_GET_CLASS (context->window)->close (context->window);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_gl_context_gpu_process_class_init (GstGLContextGPUProcessClass * klass)
 {
+  GObjectClass *obj_class = G_OBJECT_CLASS (klass);
   GstGLContextClass *context_class = (GstGLContextClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstGLContextGPUProcessPrivate));
+
+  obj_class->finalize = gst_gl_context_gpu_process_finalize;
 
   context_class->get_gl_context =
       GST_DEBUG_FUNCPTR (gst_gl_context_gpu_process_get_gl_context);
@@ -123,7 +137,7 @@ gst_gl_context_gpu_process_new (GstGLDisplay * display,
 
   window = GST_GL_WINDOW (gst_gl_window_gpu_process_new (display));
   gst_gl_context_set_window (context, window);
-  GST_GL_WINDOW_GET_CLASS (window)->open (context->window, NULL);
+  GST_GL_WINDOW_GET_CLASS (window)->open (window, NULL);
   gst_object_unref (window);
 
   return context;
