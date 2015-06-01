@@ -137,13 +137,15 @@ gst_gl_window_default_open (GstGLWindow * window, GError ** error)
   GstGLWindowPrivate *priv = window->priv;
 
   if (g_main_context_get_thread_default ()) {
+    if (priv->main_context)
+      g_main_context_unref (priv->main_context);
+    if (priv->loop)
+      g_main_loop_unref (priv->loop);
     priv->main_context = g_main_context_ref_thread_default ();
     priv->loop = NULL;
     priv->alive = TRUE;
   } else {
-    priv->main_context = g_main_context_new ();
     g_main_context_push_thread_default (priv->main_context);
-    priv->loop = g_main_loop_new (priv->main_context, FALSE);
   }
 
   return TRUE;
@@ -154,14 +156,13 @@ gst_gl_window_default_close (GstGLWindow * window)
 {
   GstGLWindowPrivate *priv = window->priv;
 
-  if (priv->loop)
-    g_main_loop_unref (priv->loop);
-  else
+  if (!priv->loop) {
     priv->alive = FALSE;
-
-  g_main_context_pop_thread_default (priv->main_context);
-
-  g_main_context_unref (priv->main_context);
+    g_main_context_unref (priv->main_context);
+    priv->main_context = NULL;
+  } else {
+    g_main_context_pop_thread_default (priv->main_context);
+  }
 }
 
 static void
@@ -179,7 +180,8 @@ _init_debug (void)
 static void
 gst_gl_window_init (GstGLWindow * window)
 {
-  window->priv = GST_GL_WINDOW_GET_PRIVATE (window);
+  GstGLWindowPrivate *priv = GST_GL_WINDOW_GET_PRIVATE (window);
+  window->priv = priv;
 
   g_mutex_init (&window->lock);
   g_mutex_init (&window->nav_lock);
@@ -190,6 +192,9 @@ gst_gl_window_init (GstGLWindow * window)
   window->is_drawing = FALSE;
 
   g_weak_ref_init (&window->context_ref, NULL);
+
+  priv->main_context = g_main_context_new ();
+  priv->loop = g_main_loop_new (priv->main_context, FALSE);
 }
 
 static void
@@ -321,6 +326,7 @@ static void
 gst_gl_window_finalize (GObject * object)
 {
   GstGLWindow *window = GST_GL_WINDOW (object);
+  GstGLWindowPrivate *priv = window->priv;
 
   if (window->nav_alive) {
     g_mutex_lock (&window->nav_lock);
@@ -331,6 +337,12 @@ gst_gl_window_finalize (GObject * object)
     }
     g_mutex_unlock (&window->nav_lock);
   }
+
+  if (priv->loop)
+    g_main_loop_unref (priv->loop);
+
+  if (priv->main_context)
+    g_main_context_unref (priv->main_context);
 
   g_weak_ref_clear (&window->context_ref);
 
