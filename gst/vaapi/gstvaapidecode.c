@@ -214,8 +214,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   }
 
   state = gst_video_decoder_set_output_state (vdec, format,
-      ref_state->info.width, ref_state->info.height,
-      (GstVideoCodecState *) ref_state);
+      ref_state->info.width, ref_state->info.height, ref_state);
   if (!state || state->info.width == 0 || state->info.height == 0)
     return FALSE;
 
@@ -670,7 +669,7 @@ gst_vaapidecode_purge (GstVaapiDecode * decode)
     GstVideoCodecFrame *frame = NULL;
 
     status =
-      gst_vaapi_decoder_get_frame_with_timeout (decode->decoder, &frame, 0);
+        gst_vaapi_decoder_get_frame_with_timeout (decode->decoder, &frame, 0);
     if (frame) {
       gst_video_decoder_release_frame (GST_VIDEO_DECODER (decode), frame);
       gst_video_codec_frame_unref (frame);
