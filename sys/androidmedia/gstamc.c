@@ -3130,12 +3130,25 @@ register_codecs (GstPlugin * plugin)
 
       /* Give the Google software codec a secondary rank,
        * everything else is likely a hardware codec, except
-       * OMX.SEC.*.sw.dec (as seen in Galaxy S4) */
+       * OMX.SEC.*.sw.dec (as seen in Galaxy S4).
+       *
+       * Also on some devices there are codecs that don't start
+       * with OMX., while there are also some that do. And on
+       * some of these devices the ones that don't start with
+       * OMX. just crash during initialization while the others
+       * work. To make things even more complicated other devices
+       * have codecs with the same name that work and no alternatives.
+       * So just give a lower rank to these non-OMX codecs and hope
+       * that there's an alternative with a higher rank.
+       */
       if (g_str_has_prefix (codec_info->name, "OMX.google") ||
-          g_str_has_suffix (codec_info->name, ".sw.dec"))
+          g_str_has_suffix (codec_info->name, ".sw.dec")) {
         rank = GST_RANK_SECONDARY;
-      else
+      } else if (g_str_has_prefix (codec_info->name, "OMX.")) {
         rank = GST_RANK_PRIMARY;
+      } else {
+        rank = GST_RANK_MARGINAL;
+      }
 
       ret |= gst_element_register (plugin, element_name, rank, subtype);
       g_free (element_name);
