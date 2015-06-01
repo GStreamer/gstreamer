@@ -669,7 +669,6 @@ gst_audio_interleave_set_property (GObject * object, guint prop_id,
 
       self->channel_positions = g_value_dup_boxed (value);
       self->channel_positions_from_input = FALSE;
-      self->channels = self->channel_positions->n_values;
       break;
     case PROP_CHANNEL_POSITIONS_FROM_INPUT:
       self->channel_positions_from_input = g_value_get_boolean (value);
@@ -727,16 +726,15 @@ gst_audio_interleave_request_new_pad (GstElement * element,
   GstAudioInterleave *self = GST_AUDIO_INTERLEAVE (element);
   GstAudioInterleavePad *newpad;
   gchar *pad_name;
-  gint channels, padnumber;
+  gint channel, padnumber;
   GValue val = { 0, };
 
   /* FIXME: We ignore req_name, this is evil! */
 
   padnumber = g_atomic_int_add (&self->padcounter, 1);
-  if (self->channel_positions_from_input)
-    channels = g_atomic_int_add (&self->channels, 1);
-  else
-    channels = padnumber;
+  channel = g_atomic_int_add (&self->channels, 1);
+  if (!self->channel_positions_from_input)
+    channel = padnumber;
 
   pad_name = g_strdup_printf ("sink_%u", padnumber);
   newpad = (GstAudioInterleavePad *)
@@ -746,7 +744,7 @@ gst_audio_interleave_request_new_pad (GstElement * element,
   if (newpad == NULL)
     goto could_not_create;
 
-  newpad->channel = channels;
+  newpad->channel = channel;
   gst_pad_use_fixed_caps (GST_PAD (newpad));
 
   gst_child_proxy_child_added (GST_CHILD_PROXY (element), G_OBJECT (newpad),
