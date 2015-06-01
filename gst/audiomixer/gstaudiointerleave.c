@@ -822,24 +822,25 @@ gst_audio_interleave_aggregate_one_buffer (GstAudioAggregator * aagg,
   GstAudioInterleavePad *pad = GST_AUDIO_INTERLEAVE_PAD (aaggpad);
   GstMapInfo inmap;
   GstMapInfo outmap;
-  gint out_width, in_bpf, out_bpf;
+  gint out_width, in_bpf, out_bpf, out_channels;
   guint8 *outdata;
 
   out_width = GST_AUDIO_INFO_WIDTH (&aagg->info) / 8;
   in_bpf = GST_AUDIO_INFO_BPF (&aaggpad->info);
   out_bpf = GST_AUDIO_INFO_BPF (&aagg->info);
+  out_channels = GST_AUDIO_INFO_CHANNELS (&aagg->info);
 
   gst_buffer_map (outbuf, &outmap, GST_MAP_READWRITE);
   gst_buffer_map (inbuf, &inmap, GST_MAP_READ);
   GST_LOG_OBJECT (pad, "interleaves %u frames on channel %d/%d at offset %u"
-      " from offset %u", num_frames, pad->channel, self->channels,
+      " from offset %u", num_frames, pad->channel, out_channels,
       out_offset * out_bpf, in_offset * in_bpf);
 
   outdata = outmap.data + (out_offset * out_bpf) +
       (out_width * self->default_channels_ordering_map[pad->channel]);
 
 
-  self->func (outdata, inmap.data + (in_offset * in_bpf), self->channels,
+  self->func (outdata, inmap.data + (in_offset * in_bpf), out_channels,
       num_frames);
 
 
