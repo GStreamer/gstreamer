@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2011> Stefan Kost <ensonic@users.sf.net>
+ * Copyright (C) <2015> Luis de Bethencourt <luis@debethencourt.com>
  *
  * gstaudiovisualizer.c: base class for audio visualisation elements
  *
@@ -76,36 +77,13 @@ struct _GstAudioVisualizer
 {
   GstElement parent;
 
-  /* pads */
-  GstPad *srcpad, *sinkpad;
-
-  GstAdapter *adapter;
-  GstBuffer *inbuf;
-  GstBuffer *tempbuf;
-  GstVideoFrame tempframe;
-
-  GstAudioVisualizerShader shader_type;
-  GstAudioVisualizerShaderFunc shader;
-  guint32 shade_amount;
-
-  guint spf;                    /* samples per video frame */
   guint req_spf;                /* min samples per frame wanted by the subclass */
 
   /* video state */
   GstVideoInfo vinfo;
-  guint64 frame_duration;
 
   /* audio state */
   GstAudioInfo ainfo;
-
-  /* configuration mutex */
-  GMutex config_lock;
-
-  /* QoS stuff *//* with LOCK */
-  gdouble proportion;
-  GstClockTime earliest_time;
-
-  GstSegment segment;
 
   /* <private> */
   GstAudioVisualizerPrivate *priv;
