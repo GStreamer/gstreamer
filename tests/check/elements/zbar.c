@@ -25,6 +25,7 @@ GST_START_TEST (test_still_image)
   GstMessage *zbar_msg = NULL;
   const GstStructure *s;
   GstElement *pipeline, *src, *dec, *csp, *zbar, *sink;
+  GstSample *sample;
   const gchar *type, *symbol;
   gchar *path;
   int qual;
@@ -36,6 +37,8 @@ GST_START_TEST (test_still_image)
   csp = gst_element_factory_make ("videoconvert", NULL);
   zbar = gst_element_factory_make ("zbar", NULL);
   sink = gst_element_factory_make ("fakesink", NULL);
+
+  g_object_set (zbar, "attach-frame", TRUE, NULL);
 
   path = g_build_filename (GST_TEST_FILES_PATH, "barcode.png", NULL);
   GST_LOG ("reading file '%s'", path);
@@ -79,12 +82,18 @@ GST_START_TEST (test_still_image)
   fail_unless (gst_structure_has_field (s, "type"));
   fail_unless (gst_structure_has_field (s, "symbol"));
   fail_unless (gst_structure_has_field (s, "quality"));
+  fail_unless (gst_structure_has_field (s, "frame"));
   fail_unless (gst_structure_get_int (s, "quality", &qual));
   fail_unless (qual >= 90);
   type = gst_structure_get_string (s, "type");
   fail_unless_equals_string (type, "EAN-13");
   symbol = gst_structure_get_string (s, "symbol");
   fail_unless_equals_string (symbol, "9876543210128");
+
+  fail_unless (gst_structure_get (s, "frame", GST_TYPE_SAMPLE, &sample, NULL));
+  fail_unless (gst_sample_get_buffer (sample));
+  fail_unless (gst_sample_get_caps (sample));
+  gst_sample_unref (sample);
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
