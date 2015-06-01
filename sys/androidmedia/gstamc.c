@@ -3144,6 +3144,16 @@ register_codecs (GstPlugin * plugin)
       if (g_str_has_prefix (codec_info->name, "OMX.google") ||
           g_str_has_suffix (codec_info->name, ".sw.dec")) {
         rank = GST_RANK_SECONDARY;
+      } else if (g_str_has_prefix (codec_info->name, "OMX.Exynos.")) {
+        /* OMX.Exynos. codecs are existing on some devices like the
+         * Galaxy S5 mini, and cause random crashes (of the device,
+         * not the app!) and generally misbehave. That specific device
+         * has other codecs that work with a different name, but let's
+         * just give them marginal rank in case there are devices that
+         * have no other codecs and these are actually the only working
+         * ones
+         */
+        rank = GST_RANK_MARGINAL;
       } else if (g_str_has_prefix (codec_info->name, "OMX.")) {
         rank = GST_RANK_PRIMARY;
       } else {
