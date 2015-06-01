@@ -37,6 +37,7 @@ G_DEFINE_TYPE (GstGLWindowGPUProcess, gst_gl_window_gpu_process,
 
 struct _GstGLWindowGPUProcessPrivate
 {
+  int empty;
 };
 
 static void
