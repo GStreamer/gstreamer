@@ -284,13 +284,40 @@ _replace_memory (GstBuffer * buffer, guint len, guint idx, guint length,
   GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
 }
 
+/* transfer full for return and transfer none for @mem */
+static inline GstMemory *
+_memory_get_exclusive_reference (GstMemory * mem)
+{
+  GstMemory *ret = NULL;
+
+  if (gst_memory_lock (mem, GST_LOCK_FLAG_EXCLUSIVE)) {
+    ret = gst_memory_ref (mem);
+  } else {
+    /* we cannot take another exclusive lock as the memory is already
+     * locked WRITE + EXCLUSIVE according to part-miniobject.txt */
+    ret = gst_memory_copy (mem, 0, -1);
+
+    if (ret) {
+      if (!gst_memory_lock (ret, GST_LOCK_FLAG_EXCLUSIVE)) {
+        gst_memory_unref (ret);
+        ret = NULL;
+      }
+    }
+  }
+
+  if (!ret)
+    GST_CAT_WARNING (GST_CAT_BUFFER, "Failed to acquire an exclusive lock for "
+        "memory %p", mem);
+
+  return ret;
+}
+
 static inline void
-_memory_add (GstBuffer * buffer, gint idx, GstMemory * mem, gboolean lock)
+_memory_add (GstBuffer * buffer, gint idx, GstMemory * mem)
 {
   guint i, len = GST_BUFFER_MEM_LEN (buffer);
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "buffer %p, idx %d, mem %p, lock %d", buffer,
-      idx, mem, lock);
+  GST_CAT_LOG (GST_CAT_BUFFER, "buffer %p, idx %d, mem %p", buffer, idx, mem);
 
   if (G_UNLIKELY (len >= GST_BUFFER_MEM_MAX)) {
     /* too many buffer, span them. */
@@ -312,8 +339,6 @@ _memory_add (GstBuffer * buffer, gint idx, GstMemory * mem, gboolean lock)
     GST_BUFFER_MEM_PTR (buffer, i) = GST_BUFFER_MEM_PTR (buffer, i - 1);
   }
   /* and insert the new buffer */
-  if (lock)
-    gst_memory_lock (mem, GST_LOCK_FLAG_EXCLUSIVE);
   GST_BUFFER_MEM_PTR (buffer, idx) = mem;
   GST_BUFFER_MEM_LEN (buffer) = len + 1;
 
@@ -451,17 +476,22 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         if (tocopy < bsize && !deep && !GST_MEMORY_IS_NO_SHARE (mem)) {
           /* we need to clip something */
           newmem = gst_memory_share (mem, skip, tocopy);
-          if (newmem)
+          if (newmem) {
+            gst_memory_lock (newmem, GST_LOCK_FLAG_EXCLUSIVE);
             skip = 0;
+          }
         }
 
         if (deep || GST_MEMORY_IS_NO_SHARE (mem) || (!newmem && tocopy < bsize)) {
           /* deep copy or we're not allowed to share this memory
            * between buffers, always copy then */
           newmem = gst_memory_copy (mem, skip, tocopy);
-          skip = 0;
+          if (newmem) {
+            gst_memory_lock (newmem, GST_LOCK_FLAG_EXCLUSIVE);
+            skip = 0;
+          }
         } else if (!newmem) {
-          newmem = gst_memory_ref (mem);
+          newmem = _memory_get_exclusive_reference (mem);
         }
 
         if (!newmem) {
@@ -469,7 +499,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
           return FALSE;
         }
 
-        _memory_add (dest, -1, newmem, TRUE);
+        _memory_add (dest, -1, newmem);
         left -= tocopy;
       }
     }
@@ -709,8 +739,10 @@ gst_buffer_new_allocate (GstAllocator * allocator, gsize size,
 
   newbuf = gst_buffer_new ();
 
-  if (mem != NULL)
-    _memory_add (newbuf, -1, mem, TRUE);
+  if (mem != NULL) {
+    gst_memory_lock (mem, GST_LOCK_FLAG_EXCLUSIVE);
+    _memory_add (newbuf, -1, mem);
+  }
 
   GST_CAT_LOG (GST_CAT_BUFFER,
       "new buffer %p of size %" G_GSIZE_FORMAT " from allocator %p", newbuf,
@@ -804,7 +836,8 @@ gst_buffer_new_wrapped_full (GstMemoryFlags flags, gpointer data,
   mem =
       gst_memory_new_wrapped (flags, data, maxsize, offset, size, user_data,
       notify);
-  _memory_add (newbuf, -1, mem, TRUE);
+  gst_memory_lock (mem, GST_LOCK_FLAG_EXCLUSIVE);
+  _memory_add (newbuf, -1, mem);
   GST_BUFFER_FLAG_UNSET (newbuf, GST_BUFFER_FLAG_TAG_MEMORY);
 
   return newbuf;
@@ -895,13 +928,18 @@ gst_buffer_append_memory (GstBuffer * buffer, GstMemory * mem)
 void
 gst_buffer_insert_memory (GstBuffer * buffer, gint idx, GstMemory * mem)
 {
+  GstMemory *tmp;
+
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
   g_return_if_fail (mem != NULL);
   g_return_if_fail (idx == -1 ||
       (idx >= 0 && idx <= GST_BUFFER_MEM_LEN (buffer)));
 
-  _memory_add (buffer, idx, mem, TRUE);
+  tmp = _memory_get_exclusive_reference (mem);
+  g_return_if_fail (tmp != NULL);
+  gst_memory_unref (mem);
+  _memory_add (buffer, idx, tmp);
 }
 
 static GstMemory *
@@ -1951,7 +1989,7 @@ gst_buffer_append_region (GstBuffer * buf1, GstBuffer * buf2, gssize offset,
 
     mem = GST_BUFFER_MEM_PTR (buf2, i);
     GST_BUFFER_MEM_PTR (buf2, i) = NULL;
-    _memory_add (buf1, -1, mem, FALSE);
+    _memory_add (buf1, -1, mem);
   }
 
   GST_BUFFER_MEM_LEN (buf2) = 0;
