@@ -46,12 +46,13 @@ gst_gtk_handle_need_context (GstBus * bus, GstMessage * msg, gpointer data)
     case GST_MESSAGE_NEED_CONTEXT:
     {
       const gchar *context_type;
-      GstContext *context = NULL;
 
       gst_message_parse_context_type (msg, &context_type);
       g_print ("got need context %s\n", context_type);
 
       if (g_strcmp0 (context_type, "GstWaylandDisplayHandleContextType") == 0) {
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined(GDK_WINDOWING_WAYLAND)
+        GstContext *context = NULL;
         GdkDisplay *gdk_display = gdk_display_get_default ();
         if (GDK_IS_WAYLAND_DISPLAY (gdk_display)) {
           struct wl_display *wayland_display =
@@ -71,6 +72,10 @@ gst_gtk_handle_need_context (GstBus * bus, GstMessage * msg, gpointer data)
             ret = TRUE;
           }
         }
+#else
+        GST_ERROR
+            ("Asked for wayland display context, but compiled without wayland support");
+#endif
       }
     }
     default:
