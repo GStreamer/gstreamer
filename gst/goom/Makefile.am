@@ -35,10 +35,11 @@ libgstgoom_la_SOURCES =						\
 	goom.h goom_typedefs.h goom_graphic.h			\
 	goom_config_param.h goom_visual_fx.h goom_filters.h	\
 	goom_tools.h goom_tools.h goom_config.h			\
+	gstaudiovisualizer.c gstaudiovisualizer.h \
 	$(ARCH_FILES)
 
 libgstgoom_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GOOM_FILTER_CFLAGS) $(ARCH_CFLAGS) $(ORC_CFLAGS)
-libgstgoom_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(ORC_LIBS)
+libgstgoom_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) -lgstvideo-$(GST_API_VERSION) -lgstaudio-$(GST_API_VERSION) $(LIBM) $(ORC_LIBS)
 libgstgoom_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstgoom_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
