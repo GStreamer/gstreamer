@@ -67,6 +67,7 @@ struct _GstVaapiEncoderJpeg
   GstVaapiProfile profile;
   guint quality;
   GstJpegQuantTables quant_tables;
+  GstJpegQuantTables scaled_quant_tables;
   gboolean has_quant_tables;
   GstJpegHuffmanTables huff_tables;
   gboolean has_huff_tables;
@@ -243,6 +244,34 @@ ensure_picture (GstVaapiEncoderJpeg * encoder, GstVaapiEncPicture * picture,
   return TRUE;
 }
 
+/* This is a work-around: Normalize the quality factor and scale QM
+ * values similar to what VA-Intel driver is doing. Otherwise the
+ * generated packed headers will be wrong, since the driver itself
+ * is scaling the QM values using the normalized quality factor */
+static void
+generate_scaled_qm (GstJpegQuantTables * quant_tables,
+    GstJpegQuantTables * scaled_quant_tables, guint quality)
+{
+  guint qt_val, nm_quality, i;
+  nm_quality = quality == 0 ? 1 : quality;
+  nm_quality =
+      (nm_quality < 50) ? (5000 / nm_quality) : (200 - (nm_quality * 2));
+
+  g_assert (quant_tables != NULL);
+  g_assert (scaled_quant_tables != NULL);
+
+  for (i = 0; i < GST_JPEG_MAX_QUANT_ELEMENTS; i++) {
+    /* Luma QM */
+    qt_val = (quant_tables->quant_tables[0].quant_table[i] * nm_quality) / 100;
+    scaled_quant_tables->quant_tables[0].quant_table[i] =
+        CLAMP (qt_val, 1, 255);
+    /* Chroma QM */
+    qt_val = (quant_tables->quant_tables[1].quant_table[i] * nm_quality) / 100;
+    scaled_quant_tables->quant_tables[1].quant_table[i] =
+        CLAMP (qt_val, 1, 255);
+  }
+}
+
 static gboolean
 fill_quantization_table (GstVaapiEncoderJpeg * encoder,
     GstVaapiEncPicture * picture)
@@ -262,6 +291,8 @@ fill_quantization_table (GstVaapiEncoderJpeg * encoder,
   if (!encoder->has_quant_tables) {
     gst_jpeg_get_default_quantization_tables (&encoder->quant_tables);
     encoder->has_quant_tables = TRUE;
+    generate_scaled_qm (&encoder->quant_tables, &encoder->scaled_quant_tables,
+        encoder->quality);
   }
   q_matrix->load_lum_quantiser_matrix = 1;
   for (i = 0; i < GST_JPEG_MAX_QUANT_ELEMENTS; i++) {
@@ -472,8 +503,11 @@ bs_write_jpeg_header (GstBitWriter * bs, GstVaapiEncoderJpeg * encoder,
   /* Add  quantization table */
   if (!encoder->has_quant_tables) {
     gst_jpeg_get_default_quantization_tables (&encoder->quant_tables);
+    generate_scaled_qm (&encoder->quant_tables, &encoder->scaled_quant_tables,
+        encoder->quality);
     encoder->has_quant_tables = TRUE;
   }
+
   gst_bit_writer_put_bits_uint8 (bs, 0xFF, 8);
   gst_bit_writer_put_bits_uint8 (bs, GST_JPEG_MARKER_DQT, 8);
   gst_bit_writer_put_bits_uint16 (bs, 3 + GST_JPEG_MAX_QUANT_ELEMENTS, 16);     //Lq
@@ -481,7 +515,7 @@ bs_write_jpeg_header (GstBitWriter * bs, GstVaapiEncoderJpeg * encoder,
   gst_bit_writer_put_bits_uint8 (bs, 0, 4);     //Tq
   for (i = 0; i < GST_JPEG_MAX_QUANT_ELEMENTS; i++) {
     gst_bit_writer_put_bits_uint16 (bs,
-        encoder->quant_tables.quant_tables[0].quant_table[i], 8);
+        encoder->scaled_quant_tables.quant_tables[0].quant_table[i], 8);
   }
   gst_bit_writer_put_bits_uint8 (bs, 0xFF, 8);
   gst_bit_writer_put_bits_uint8 (bs, GST_JPEG_MARKER_DQT, 8);
@@ -490,7 +524,7 @@ bs_write_jpeg_header (GstBitWriter * bs, GstVaapiEncoderJpeg * encoder,
   gst_bit_writer_put_bits_uint8 (bs, 1, 4);     //Tq
   for (i = 0; i < GST_JPEG_MAX_QUANT_ELEMENTS; i++) {
     gst_bit_writer_put_bits_uint16 (bs,
-        encoder->quant_tables.quant_tables[1].quant_table[i], 8);
+        encoder->scaled_quant_tables.quant_tables[1].quant_table[i], 8);
   }
 
   /*Add frame header */
@@ -713,6 +747,8 @@ gst_vaapi_encoder_jpeg_init (GstVaapiEncoder * base_encoder)
 
   encoder->has_quant_tables = FALSE;
   memset (&encoder->quant_tables, 0, sizeof (encoder->quant_tables));
+  memset (&encoder->scaled_quant_tables, 0,
+      sizeof (encoder->scaled_quant_tables));
   encoder->has_huff_tables = FALSE;
   memset (&encoder->huff_tables, 0, sizeof (encoder->huff_tables));
 
