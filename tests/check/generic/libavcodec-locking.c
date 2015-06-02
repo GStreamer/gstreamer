@@ -158,21 +158,4 @@ simple_launch_lines_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  SRunner *sr;
-  Suite *s;
-  int nf;
-
-  gst_check_init (&argc, &argv);
-
-  s = simple_launch_lines_suite ();
-  sr = srunner_create (s);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (simple_launch_lines);
