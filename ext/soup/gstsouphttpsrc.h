@@ -90,6 +90,7 @@ struct _GstSoupHTTPSrc {
   gboolean ssl_strict;
   gchar *ssl_ca_file;
   gboolean ssl_use_system_ca_file;
+  GTlsDatabase *tls_database;
 
   /* Shoutcast/icecast metadata extraction handling. */
   gboolean iradio_mode;

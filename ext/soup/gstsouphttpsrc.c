@@ -122,6 +122,7 @@ enum
   PROP_SSL_STRICT,
   PROP_SSL_CA_FILE,
   PROP_SSL_USE_SYSTEM_CA_FILE,
+  PROP_TLS_DATABASE,
   PROP_RETRIES
 };
 
@@ -133,6 +134,7 @@ enum
 #define DEFAULT_SSL_STRICT           TRUE
 #define DEFAULT_SSL_CA_FILE          NULL
 #define DEFAULT_SSL_USE_SYSTEM_CA_FILE TRUE
+#define DEFAULT_TLS_DATABASE         NULL
 #define DEFAULT_TIMEOUT              15
 #define DEFAULT_RETRIES              3
 
@@ -335,6 +337,10 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
    * A SSL anchor CA file that should be used for checking certificates
    * instead of the system CA file.
    *
+   * If this property is non-%NULL, #GstSoupHTTPSrc::ssl-use-system-ca-file
+   * value will be ignored.
+   *
+   * Deprecated: Use #GstSoupHTTPSrc::tls-database property instead.
    * Since: 1.4
    */
   g_object_class_install_property (gobject_class, PROP_SSL_CA_FILE,
@@ -346,7 +352,8 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
    * GstSoupHTTPSrc::ssl-use-system-ca-file:
    *
    * If set to %TRUE, souphttpsrc will use the system's CA file for
-   * checking certificates.
+   * checking certificates, unless #GstSoupHTTPSrc::ssl-ca-file or
+   * #GstSoupHTTPSrc::tls-database are non-%NULL.
    *
    * Since: 1.4
    */
@@ -354,6 +361,22 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
       g_param_spec_boolean ("ssl-use-system-ca-file", "Use System CA File",
           "Use system CA file", DEFAULT_SSL_USE_SYSTEM_CA_FILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSoupHTTPSrc::tls-database:
+   *
+   * TLS database with anchor certificate authorities used to validate
+   * the server certificate.
+   *
+   * If this property is non-%NULL, #GstSoupHTTPSrc::ssl-use-system-ca-file
+   * and #GstSoupHTTPSrc::ssl-ca-file values will be ignored.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_TLS_DATABASE,
+      g_param_spec_object ("tls-database", "TLS database",
+          "TLS database with anchor certificate authorities used to validate the server certificate",
+          G_TYPE_TLS_DATABASE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
  /**
    * GstSoupHTTPSrc::retries:
@@ -446,6 +469,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->log_level = DEFAULT_SOUP_LOG_LEVEL;
   src->ssl_strict = DEFAULT_SSL_STRICT;
   src->ssl_use_system_ca_file = DEFAULT_SSL_USE_SYSTEM_CA_FILE;
+  src->tls_database = DEFAULT_TLS_DATABASE;
   src->max_retries = DEFAULT_RETRIES;
   proxy = g_getenv ("http_proxy");
   if (proxy && !gst_soup_http_src_set_proxy (src, proxy)) {
@@ -500,6 +524,9 @@ gst_soup_http_src_finalize (GObject * gobject)
   }
 
   g_free (src->ssl_ca_file);
+
+  if (src->tls_database)
+    g_object_unref (src->tls_database);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -613,6 +640,10 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
     case PROP_SSL_USE_SYSTEM_CA_FILE:
       src->ssl_use_system_ca_file = g_value_get_boolean (value);
       break;
+    case PROP_TLS_DATABASE:
+      g_clear_object (&src->tls_database);
+      src->tls_database = g_value_dup_object (value);
+      break;
     case PROP_RETRIES:
       src->max_retries = g_value_get_int (value);
       break;
@@ -694,6 +725,9 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SSL_USE_SYSTEM_CA_FILE:
       g_value_set_boolean (value, src->ssl_use_system_ca_file);
+      break;
+    case PROP_TLS_DATABASE:
+      g_value_set_object (value, src->tls_database);
       break;
     case PROP_RETRIES:
       g_value_set_int (value, src->max_retries);
@@ -903,7 +937,9 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
 
     /* Set up logging */
     gst_soup_util_log_setup (src->session, src->log_level, GST_ELEMENT (src));
-    if (src->ssl_ca_file)
+    if (src->tls_database)
+      g_object_set (src->session, "tls-database", src->tls_database, NULL);
+    else if (src->ssl_ca_file)
       g_object_set (src->session, "ssl-ca-file", src->ssl_ca_file, NULL);
     else
       g_object_set (src->session, "ssl-use-system-ca-file",
