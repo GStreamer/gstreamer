@@ -4285,6 +4285,9 @@ gst_vaapi_decoder_h264_decode_codec_data(GstVaapiDecoder *base_decoder,
             goto cleanup;
         ofs = pi->nalu.offset + pi->nalu.size;
 
+        pi->state = priv->parser_state;
+        pi->flags = 0;
+
         status = decode_sps(decoder, &unit);
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             goto cleanup;
@@ -4314,6 +4317,9 @@ gst_vaapi_decoder_h264_decode_codec_data(GstVaapiDecoder *base_decoder,
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             goto cleanup;
         ofs = pi->nalu.offset + pi->nalu.size;
+
+        pi->state = priv->parser_state;
+        pi->flags = 0;
 
         status = decode_pps(decoder, &unit);
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
