@@ -180,8 +180,21 @@ _gl_format_type_n_bytes (guint format, guint type)
       _gl_type_n_bytes (type);
 }
 
-static inline GLenum
-_gst_gl_format_from_gl_texture_type (GstVideoGLTextureType tex_format)
+static inline guint
+_gl_texture_type_n_bytes (GstVideoGLTextureType tex_format)
+{
+  guint format, type;
+
+  format = gst_gl_format_from_gl_texture_type (tex_format);
+  type = GL_UNSIGNED_BYTE;
+  if (tex_format == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
+    type = GL_UNSIGNED_SHORT_5_6_5;
+
+  return _gl_format_type_n_bytes (format, type);
+}
+
+guint
+gst_gl_format_from_gl_texture_type (GstVideoGLTextureType tex_format)
 {
   switch (tex_format) {
     case GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA:
@@ -200,19 +213,6 @@ _gst_gl_format_from_gl_texture_type (GstVideoGLTextureType tex_format)
     default:
       return GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
   }
-}
-
-static inline guint
-_gl_texture_type_n_bytes (GstVideoGLTextureType tex_format)
-{
-  guint format, type;
-
-  format = _gst_gl_format_from_gl_texture_type (tex_format);
-  type = GL_UNSIGNED_BYTE;
-  if (tex_format == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
-    type = GL_UNSIGNED_SHORT_5_6_5;
-
-  return _gl_format_type_n_bytes (format, type);
 }
 
 GstVideoGLTextureType
@@ -292,9 +292,9 @@ gst_gl_texture_type_from_format (GstGLContext * context,
   return GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
 }
 
-static inline GLenum
-_sized_gl_format_from_gl_format_type (GstGLContext * context, GLenum format,
-    GLenum type)
+guint
+gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
+    guint format, guint type)
 {
   gboolean ext_texture_rg =
       gst_gl_context_check_feature (context, "GL_EXT_texture_rg");
@@ -303,7 +303,8 @@ _sized_gl_format_from_gl_format_type (GstGLContext * context, GLenum format,
     case GL_RGBA:
       switch (type) {
         case GL_UNSIGNED_BYTE:
-          return gst_gl_internal_format_rgba (context);
+          return USING_GLES2 (context)
+              && !USING_GLES3 (context) ? GL_RGBA : GL_RGBA8;
           break;
       }
       break;
@@ -395,7 +396,7 @@ _generate_texture (GstGLContext * context, GenTexture * data)
       data->gl_format, data->gl_type, data->width, data->height);
 
   internal_format =
-      _sized_gl_format_from_gl_format_type (context, data->gl_format,
+      gst_gl_sized_gl_format_from_gl_format_type (context, data->gl_format,
       data->gl_type);
 
   gl->GenTextures (1, &data->result);
@@ -449,7 +450,7 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
   if (gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
     gl_type = GL_UNSIGNED_SHORT_5_6_5;
 
-  gl_format = _gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
+  gl_format = gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
   gl_target = gl_mem->tex_target;
 
   if (USING_OPENGL (context) || USING_GLES3 (context)
@@ -595,7 +596,7 @@ _transfer_download (GstGLContext * context, GstGLMemory * gl_mem)
   size = gst_gl_get_plane_data_size (&gl_mem->info, &gl_mem->valign,
       gl_mem->plane);
   plane_start = _find_plane_frame_start (gl_mem);
-  format = _gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
+  format = gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
   type = GL_UNSIGNED_BYTE;
   if (gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
     type = GL_UNSIGNED_SHORT_5_6_5;
@@ -634,7 +635,7 @@ _download_memory (GstGLContext * context, GstGLMemory * gl_mem)
   GLuint fboId;
 
   gl = context->gl_vtable;
-  format = _gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
+  format = gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
   type = GL_UNSIGNED_BYTE;
   if (gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
     type = GL_UNSIGNED_SHORT_5_6_5;
@@ -772,7 +773,7 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
 
   data.width = mem->tex_width;
   data.height = GL_MEM_HEIGHT (mem);
-  data.gl_format = _gst_gl_format_from_gl_texture_type (mem->tex_type);
+  data.gl_format = gst_gl_format_from_gl_texture_type (mem->tex_type);
   data.gl_type = GL_UNSIGNED_BYTE;
   data.gl_target = mem->tex_target;
   if (mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
@@ -920,11 +921,11 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   out_stride = copy_params->out_stride;
 
   gl = src->context->gl_vtable;
-  out_gl_format = _gst_gl_format_from_gl_texture_type (copy_params->out_format);
+  out_gl_format = gst_gl_format_from_gl_texture_type (copy_params->out_format);
   out_gl_type = GL_UNSIGNED_BYTE;
   if (copy_params->out_format == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
     out_gl_type = GL_UNSIGNED_SHORT_5_6_5;
-  in_gl_format = _gst_gl_format_from_gl_texture_type (src->tex_type);
+  in_gl_format = gst_gl_format_from_gl_texture_type (src->tex_type);
   in_gl_type = GL_UNSIGNED_BYTE;
   if (src->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
     in_gl_type = GL_UNSIGNED_SHORT_5_6_5;

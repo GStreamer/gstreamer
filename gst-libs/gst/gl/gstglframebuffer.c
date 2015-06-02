@@ -90,6 +90,7 @@ gst_gl_framebuffer_generate (GstGLFramebuffer * frame, gint width, gint height,
 {
   GLuint fake_texture = 0;
   const GstGLFuncs *gl;
+  GLenum internal_format;
 
   g_return_val_if_fail (GST_IS_GL_FRAMEBUFFER (frame), FALSE);
   g_return_val_if_fail (fbo != NULL && depth != NULL, FALSE);
@@ -125,8 +126,10 @@ gst_gl_framebuffer_generate (GstGLFramebuffer * frame, gint width, gint height,
   /* setup a texture to render to */
   gl->GenTextures (1, &fake_texture);
   gl->BindTexture (GL_TEXTURE_2D, fake_texture);
-  gl->TexImage2D (GL_TEXTURE_2D, 0,
-      gst_gl_internal_format_rgba (frame->context), width, height, 0, GL_RGBA,
+  internal_format =
+      gst_gl_sized_gl_format_from_gl_format_type (frame->context, GL_RGBA,
+      GL_UNSIGNED_BYTE);
+  gl->TexImage2D (GL_TEXTURE_2D, 0, internal_format, width, height, 0, GL_RGBA,
       GL_UNSIGNED_BYTE, NULL);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

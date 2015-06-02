@@ -182,7 +182,13 @@ gboolean      gst_gl_memory_setup_wrapped (GstGLContext * context, GstVideoInfo 
 gint          gst_gl_memory_get_texture_width  (GstGLMemory * gl_mem);
 gint          gst_gl_memory_get_texture_height (GstGLMemory * gl_mem);
 
-GstVideoGLTextureType gst_gl_texture_type_from_format (GstGLContext *context, GstVideoFormat v_format, guint plane);
+GstVideoGLTextureType gst_gl_texture_type_from_format (GstGLContext *context,
+                                                       GstVideoFormat v_format,
+                                                       guint plane);
+guint                 gst_gl_format_from_gl_texture_type (GstVideoGLTextureType tex_format);
+guint                 gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
+                                                                  guint format,
+                                                                  guint type);
 
 void gst_gl_memory_download_transfer (GstGLMemory * gl_mem);
 

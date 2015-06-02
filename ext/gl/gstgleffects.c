@@ -273,7 +273,9 @@ static void
 gst_gl_effects_init_gl_resources (GstGLFilter * filter)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
-  GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
+  GstGLFuncs *gl = context->gl_vtable;
+  guint internal_format;
   gint i = 0;
 
   for (i = 0; i < NEEDED_TEXTURES; i++) {
@@ -285,8 +287,10 @@ gst_gl_effects_init_gl_resources (GstGLFilter * filter)
 
     gl->GenTextures (1, &effects->midtexture[i]);
     gl->BindTexture (GL_TEXTURE_2D, effects->midtexture[i]);
-    gl->TexImage2D (GL_TEXTURE_2D, 0,
-        gst_gl_internal_format_rgba (GST_GL_BASE_FILTER (filter)->context),
+    internal_format =
+        gst_gl_sized_gl_format_from_gl_format_type (context, GL_RGBA,
+        GL_UNSIGNED_BYTE);
+    gl->TexImage2D (GL_TEXTURE_2D, 0, internal_format,
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
         GST_VIDEO_INFO_HEIGHT (&filter->out_info), 0, GL_RGBA, GL_UNSIGNED_BYTE,
         NULL);

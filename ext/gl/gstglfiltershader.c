@@ -93,8 +93,13 @@ static void gst_gl_filtershader_hcallback (gint width, gint height,
 static void
 gst_gl_filtershader_init_resources (GstGLFilter * filter)
 {
-  glTexImage2D (GL_TEXTURE_2D, 0,
-      gst_gl_internal_format_rgba (GST_GL_BASE_FILTER (filter)->context),
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
+  guint internal_format;
+
+  internal_format =
+      gst_gl_sized_gl_format_from_gl_format_type (context, GL_RGBA,
+      GL_UNSIGNED_BYTE);
+  glTexImage2D (GL_TEXTURE_2D, 0, internal_format,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info), 0, GL_RGBA, GL_UNSIGNED_BYTE,
       NULL);
