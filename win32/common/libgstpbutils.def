@@ -99,9 +99,11 @@ EXPORTS
 	gst_encoding_profile_get_restriction
 	gst_encoding_profile_get_type
 	gst_encoding_profile_get_type_nick
+	gst_encoding_profile_is_enabled
 	gst_encoding_profile_is_equal
 	gst_encoding_profile_set_allow_dynamic_output
 	gst_encoding_profile_set_description
+	gst_encoding_profile_set_enabled
 	gst_encoding_profile_set_format
 	gst_encoding_profile_set_name
 	gst_encoding_profile_set_presence
