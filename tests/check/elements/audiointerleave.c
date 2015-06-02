@@ -847,6 +847,92 @@ GST_START_TEST (test_audiointerleave_2ch_pipeline_custom_chanpos)
 
 GST_END_TEST;
 
+GST_START_TEST (test_audiointerleave_2ch_pipeline_no_chanpos)
+{
+  GstElement *pipeline, *queue, *src1, *src2, *interleave, *sink;
+  GstPad *sinkpad0, *sinkpad1, *tmp, *tmp2;
+  GstMessage *msg;
+
+  have_data = 0;
+
+  pipeline = (GstElement *) gst_pipeline_new ("pipeline");
+  fail_unless (pipeline != NULL);
+
+  src1 = gst_element_factory_make ("fakesrc", "src1");
+  fail_unless (src1 != NULL);
+  g_object_set (src1, "num-buffers", 4, NULL);
+  g_object_set (src1, "signal-handoffs", TRUE, NULL);
+  g_object_set (src1, "format", GST_FORMAT_TIME, NULL);
+  g_signal_connect (src1, "handoff",
+      G_CALLBACK (src_handoff_float32_audiointerleaved), GINT_TO_POINTER (0));
+  gst_bin_add (GST_BIN (pipeline), src1);
+
+  src2 = gst_element_factory_make ("fakesrc", "src2");
+  fail_unless (src2 != NULL);
+  g_object_set (src2, "num-buffers", 4, NULL);
+  g_object_set (src2, "signal-handoffs", TRUE, NULL);
+  g_object_set (src2, "format", GST_FORMAT_TIME, NULL);
+  g_signal_connect (src2, "handoff",
+      G_CALLBACK (src_handoff_float32_audiointerleaved), GINT_TO_POINTER (1));
+  gst_bin_add (GST_BIN (pipeline), src2);
+
+  queue = gst_element_factory_make ("queue", "queue");
+  fail_unless (queue != NULL);
+  gst_bin_add (GST_BIN (pipeline), queue);
+
+  interleave = gst_element_factory_make ("audiointerleave", "audiointerleave");
+  fail_unless (interleave != NULL);
+  g_object_set (interleave, "channel-positions-from-input", FALSE, NULL);
+  gst_bin_add (GST_BIN (pipeline), gst_object_ref (interleave));
+
+  sinkpad0 = gst_element_get_request_pad (interleave, "sink_%u");
+  fail_unless (sinkpad0 != NULL);
+  tmp = gst_element_get_static_pad (src1, "src");
+  fail_unless (gst_pad_link (tmp, sinkpad0) == GST_PAD_LINK_OK);
+  gst_object_unref (tmp);
+
+  sinkpad1 = gst_element_get_request_pad (interleave, "sink_%u");
+  fail_unless (sinkpad1 != NULL);
+  tmp = gst_element_get_static_pad (src2, "src");
+  tmp2 = gst_element_get_static_pad (queue, "sink");
+  fail_unless (gst_pad_link (tmp, tmp2) == GST_PAD_LINK_OK);
+  gst_object_unref (tmp);
+  gst_object_unref (tmp2);
+  tmp = gst_element_get_static_pad (queue, "src");
+  fail_unless (gst_pad_link (tmp, sinkpad1) == GST_PAD_LINK_OK);
+  gst_object_unref (tmp);
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  fail_unless (sink != NULL);
+  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (sink, "handoff", G_CALLBACK (sink_handoff_float32),
+      GINT_TO_POINTER (0));
+  gst_bin_add (GST_BIN (pipeline), sink);
+  tmp = gst_element_get_static_pad (interleave, "src");
+  tmp2 = gst_element_get_static_pad (sink, "sink");
+  fail_unless (gst_pad_link (tmp, tmp2) == GST_PAD_LINK_OK);
+  gst_object_unref (tmp);
+  gst_object_unref (tmp2);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  msg = gst_bus_poll (GST_ELEMENT_BUS (pipeline), GST_MESSAGE_EOS, -1);
+  gst_message_unref (msg);
+
+  /* 48000 samples per buffer * 2 sources * 4 buffers */
+  fail_unless (have_data == 48000 * 2 * 4 * sizeof (gfloat));
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_element_release_request_pad (interleave, sinkpad0);
+  gst_object_unref (sinkpad0);
+  gst_element_release_request_pad (interleave, sinkpad1);
+  gst_object_unref (sinkpad1);
+  gst_object_unref (interleave);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 audiointerleave_suite (void)
 {
@@ -864,6 +950,7 @@ audiointerleave_suite (void)
       test_audiointerleave_2ch_pipeline_non_audiointerleaved);
   tcase_add_test (tc_chain, test_audiointerleave_2ch_pipeline_input_chanpos);
   tcase_add_test (tc_chain, test_audiointerleave_2ch_pipeline_custom_chanpos);
+  tcase_add_test (tc_chain, test_audiointerleave_2ch_pipeline_no_chanpos);
 
   return s;
 }
