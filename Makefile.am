@@ -16,18 +16,24 @@ ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
 include $(top_srcdir)/common/release.mak
 
+if HAVE_GST_CHECK
 check-valgrind:
-	@true
+	$(MAKE) -C tests/check check-valgrind
 
 check-torture:
-	@true
+	$(MAKE) -C tests/check torture
 
-if HAVE_GST_CHECK
 build-checks:
-	cd tests/check && make build-checks
+	$(MAKE) -C tests/check build-checks
 else
+check-valgrind:
+	echo "'check' library not installed, skipping"
+
+check-torture:
+	echo "'check' library not installed, skipping"
+
 build-checks:
-	true
+	echo "'check' library not installed, skipping"
 endif
 
 CRUFT_FILES = \
