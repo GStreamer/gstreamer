@@ -67,6 +67,9 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 static GstAllocator *_gl_allocator;
 
 /* compatability definitions... */
+#ifndef GL_RGBA8
+#define GL_RGBA8 0x8058
+#endif
 #ifndef GL_RED
 #define GL_RED 0x1903
 #endif
