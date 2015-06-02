@@ -240,6 +240,11 @@ aacparse_suite (void)
   Suite *s = suite_create ("aacparse");
   TCase *tc_chain = tcase_create ("general");
 
+  /* init test context */
+  ctx_factory = "aacparse";
+  ctx_sink_template = &sinktemplate;
+  ctx_src_template = &srctemplate;
+
   suite_add_tcase (s, tc_chain);
   /* ADIF tests */
   tcase_add_test (tc_chain, test_parse_adif_normal);
@@ -267,25 +272,4 @@ aacparse_suite (void)
  *   - Both push- and pull-modes need to be tested
  *      * Pull-mode & EOS
  */
-
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = aacparse_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  /* init test context */
-  ctx_factory = "aacparse";
-  ctx_sink_template = &sinktemplate;
-  ctx_src_template = &srctemplate;
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (aacparse);
