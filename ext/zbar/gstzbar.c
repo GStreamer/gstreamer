@@ -299,6 +299,10 @@ gst_zbar_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
 
   /* scan the image for barcodes */
   n = zbar_scan_image (zbar->scanner, image);
+  if (G_UNLIKELY (n == -1)) {
+    GST_WARNING_OBJECT (zbar, "Error trying to scan frame. Skipping");
+    goto out;
+  }
   if (n == 0)
     goto out;
 
