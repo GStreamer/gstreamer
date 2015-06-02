@@ -194,6 +194,7 @@ static const FormatInfo formats[] = {
   {"video/x-apple-video", "Apple video", FLAG_VIDEO, ""},
   {"video/x-aasc", "Autodesk Animator", FLAG_VIDEO, ""},
   {"video/x-camtasia", "TechSmith Camtasia", FLAG_VIDEO, ""},
+  {"video/x-cavs", "Chinese AVS (CAVS)", FLAG_VIDEO, ""},
   {"video/x-cdxa", "RIFF/CDXA (VCD)", AV_CONTAINER, ""},
   {"video/x-cinepak", "Cinepak Video", FLAG_VIDEO, ""},
   {"video/x-cirrus-logic-accupak", "Cirrus Logipak AccuPak", FLAG_VIDEO, ""},
