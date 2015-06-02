@@ -89,6 +89,13 @@ GST_START_TEST (test_submemory)
   gst_memory_unref (sub);
 
   gst_memory_unmap (memory, &info);
+
+  /* test write map + share failure */
+  fail_unless (gst_memory_map (memory, &info, GST_MAP_WRITE));
+  sub = gst_memory_share (memory, 0, 4);
+  fail_unless (sub == NULL, "share with a write map succeeded");
+
+  gst_memory_unmap (memory, &info);
   gst_memory_unref (memory);
 }
 
