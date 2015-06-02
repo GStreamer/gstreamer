@@ -590,6 +590,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
   }
 
 beach:
+  av_frame_unref (&frame);
   GST_DEBUG_OBJECT (ffmpegdec, "return flow %d, out %p, len %d",
       *ret, *outbuf, len);
   return len;
