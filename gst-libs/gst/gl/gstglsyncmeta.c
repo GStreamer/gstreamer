@@ -128,7 +128,9 @@ _gst_gl_sync_meta_transform (GstBuffer * dest, GstMeta * meta,
       GST_LOG ("copy sync object %p from meta %p to %p", smeta->glsync,
           smeta, dmeta);
 
-      dmeta->glsync = smeta->glsync;
+      /* Setting a sync point here relies on GstBuffer copying
+       * metas after data */
+      gst_gl_sync_meta_set_sync_point (dmeta, smeta->context);
     }
   }
   return TRUE;
