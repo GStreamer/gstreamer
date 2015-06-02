@@ -487,6 +487,9 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   }
 
   if (flags & GST_BUFFER_COPY_META) {
+    /* NOTE: GstGLSyncMeta copying relies on the meta
+     *       being copied now, after the buffer data,
+     *       so this has to happen last */
     for (walk = GST_BUFFER_META (src); walk; walk = walk->next) {
       GstMeta *meta = &walk->meta;
       const GstMetaInfo *info = meta->info;
