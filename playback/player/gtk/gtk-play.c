@@ -224,7 +224,7 @@ open_file_dialog (GtkPlay * play, gboolean multi)
 static void
 open_file_clicked_cb (GtkWidget * unused, GtkPlay * play)
 {
-  GList *uris, *current;
+  GList *uris;
 
   uris = open_file_dialog (play, TRUE);
   if (uris) {
@@ -787,7 +787,6 @@ visualization_changed_cb (GtkWidget * widget, GtkPlay * play)
 static GtkWidget *
 create_visualization_menu (GtkPlay * play)
 {
-  gint i;
   GtkWidget *menu;
   GtkWidget *item;
   GtkWidget *sep;
@@ -917,7 +916,6 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   GtkWidget *next;
   GtkWidget *prev;
   GtkWidget *open;
-  GtkWidget *image;
   GtkWidget *submenu;
   GtkWidget *vis;
   GstPlayerMediaInfo *media_info;
@@ -1076,8 +1074,6 @@ gtk_show_toolbar_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
 {
   if (gtk_toggle_button_get_active
       (GTK_TOGGLE_BUTTON (play->fullscreen_button))) {
-
-    GdkCursor *cursor;
 
     /* if timer is running then kill it */
     if (play->toolbar_hide_timeout) {
@@ -1264,7 +1260,6 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
 {
   if (play->playing) {
     GList *next = NULL;
-    gchar *uri;
 
     next = g_list_next (play->current_uri);
     if (!next && gtk_toggle_button_get_active
@@ -1450,7 +1445,6 @@ main (gint argc, gchar ** argv)
   };
   guint list_length = 0;
   GError *err = NULL;
-  GList *l;
 
   memset (&play, 0, sizeof (play));
 
