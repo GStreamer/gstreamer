@@ -491,8 +491,8 @@ src_handoff_float32_audiointerleaved (GstElement * element, GstBuffer * buffer,
 }
 
 static void
-src_handoff_float32_non_audiointerleaved (GstElement * element, GstBuffer * buffer,
-    GstPad * pad, gpointer user_data)
+src_handoff_float32_non_audiointerleaved (GstElement * element,
+    GstBuffer * buffer, GstPad * pad, gpointer user_data)
 {
   src_handoff_float32 (element, buffer, pad, FALSE, user_data);
 }
@@ -860,7 +860,8 @@ audiointerleave_suite (void)
   tcase_add_test (tc_chain, test_audiointerleave_2ch);
   tcase_add_test (tc_chain, test_audiointerleave_2ch_1eos);
   tcase_add_test (tc_chain, test_audiointerleave_2ch_pipeline_audiointerleaved);
-  tcase_add_test (tc_chain, test_audiointerleave_2ch_pipeline_non_audiointerleaved);
+  tcase_add_test (tc_chain,
+      test_audiointerleave_2ch_pipeline_non_audiointerleaved);
   tcase_add_test (tc_chain, test_audiointerleave_2ch_pipeline_input_chanpos);
   tcase_add_test (tc_chain, test_audiointerleave_2ch_pipeline_custom_chanpos);
 
