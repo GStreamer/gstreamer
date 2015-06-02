@@ -99,6 +99,13 @@ GST_DEBUG_CATEGORY_STATIC (ptp_debug);
  */
 #define USE_OPPORTUNISTIC_CLOCK_SELECTION 1
 
+/* Only consider SYNC messages for which we are allowed to send a DELAY_REQ
+ * afterwards. This allows better synchronization in networks with varying
+ * delays, as for every other SYNC message we would have to assume that it's
+ * the average of what we saw before. But that might be completely off
+ */
+#define USE_ONLY_SYNC_WITH_DELAY 1
+
 /* How many updates should be skipped at maximum when using USE_MEASUREMENT_FILTERING */
 #define MAX_SKIPPED_UPDATES 5
 
@@ -1020,6 +1027,11 @@ update_ptp_time (PtpDomainData * domain, PtpPendingSync * sync)
   gboolean synced;
   GstClockTimeDiff discont = 0;
   GstClockTime estimated_ptp_time = GST_CLOCK_TIME_NONE;
+
+#ifdef USE_ONLY_SYNC_WITH_DELAY
+  if (sync->delay_req_send_time_local == GST_CLOCK_TIME_NONE)
+    return;
+#endif
 
 #ifdef USE_MEASUREMENT_FILTERING
   GstClockTime orig_internal_time, orig_external_time, orig_rate_num,
