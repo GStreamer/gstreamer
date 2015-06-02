@@ -1307,6 +1307,9 @@ hlsdemux_suite (void)
   Suite *s = suite_create ("hlsdemux_m3u8");
   TCase *tc_m3u8 = tcase_create ("m3u8client");
 
+  GST_DEBUG_CATEGORY_INIT (fragmented_debug, "hlsdemux_m3u", 0,
+      "hlsdemux m3u test");
+
   suite_add_tcase (s, tc_m3u8);
   tcase_add_test (tc_m3u8, test_load_main_playlist_invalid);
   tcase_add_test (tc_m3u8, test_load_main_playlist_rendition);
@@ -1342,22 +1345,4 @@ hlsdemux_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = hlsdemux_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  GST_DEBUG_CATEGORY_INIT (fragmented_debug, "hlsdemux_m3u", 0,
-      "hlsdemux m3u test");
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (hlsdemux);

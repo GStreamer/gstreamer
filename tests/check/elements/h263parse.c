@@ -134,6 +134,13 @@ h263parse_suite (void)
   Suite *s = suite_create ("h263parse");
   TCase *tc_chain = tcase_create ("general");
 
+  /* init test context */
+  ctx_factory = "h263parse";
+  ctx_sink_template = &sinktemplate;
+  ctx_src_template = &srctemplate;
+  /* no timing info to parse */
+  ctx_no_metadata = TRUE;
+
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_parse_normal);
   tcase_add_test (tc_chain, test_parse_drain_single);
@@ -149,27 +156,4 @@ h263parse_suite (void)
  *   - Both push- and pull-modes need to be tested
  *      * Pull-mode & EOS
  */
-
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = h263parse_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  /* init test context */
-  ctx_factory = "h263parse";
-  ctx_sink_template = &sinktemplate;
-  ctx_src_template = &srctemplate;
-  /* no timing info to parse */
-  ctx_no_metadata = TRUE;
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (h263parse);

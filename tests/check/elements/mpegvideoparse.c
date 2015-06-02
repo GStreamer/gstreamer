@@ -240,6 +240,16 @@ mpegvideoparse_suite (void)
   Suite *s = suite_create ("mpegvideoparse");
   TCase *tc_chain = tcase_create ("general");
 
+  /* init test context */
+  ctx_factory = "mpegvideoparse";
+  ctx_sink_template = &sinktemplate;
+  ctx_src_template = &srctemplate;
+  ctx_headers[0].data = mpeg2_seq;
+  ctx_headers[0].size = sizeof (mpeg2_seq);
+  ctx_verify_buffer = verify_buffer;
+  ctx_setup = setup_element;
+
+
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_parse_normal);
   tcase_add_test (tc_chain, test_parse_drain_single);
@@ -257,29 +267,4 @@ mpegvideoparse_suite (void)
  *   - Both push- and pull-modes need to be tested
  *      * Pull-mode & EOS
  */
-
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = mpegvideoparse_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  /* init test context */
-  ctx_factory = "mpegvideoparse";
-  ctx_sink_template = &sinktemplate;
-  ctx_src_template = &srctemplate;
-  ctx_headers[0].data = mpeg2_seq;
-  ctx_headers[0].size = sizeof (mpeg2_seq);
-  ctx_verify_buffer = verify_buffer;
-  ctx_setup = setup_element;
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (mpegvideoparse);
