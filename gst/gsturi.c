@@ -639,11 +639,11 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
  * Returns: the #GstURIType of the URI handler.
  * Returns #GST_URI_UNKNOWN if the @handler isn't implemented correctly.
  */
-guint
+GstURIType
 gst_uri_handler_get_uri_type (GstURIHandler * handler)
 {
   GstURIHandlerInterface *iface;
-  guint ret;
+  GstURIType ret;
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), GST_URI_UNKNOWN);
 
