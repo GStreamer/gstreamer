@@ -120,11 +120,7 @@ gst_goom_init (GstGoom * goom)
 {
   goom->width = DEFAULT_WIDTH;
   goom->height = DEFAULT_HEIGHT;
-  goom->fps_n = DEFAULT_FPS_N;  /* desired frame rate */
-  goom->fps_d = DEFAULT_FPS_D;  /* desired frame rate */
   goom->channels = 0;
-  goom->rate = 0;
-  goom->duration = 0;
 
   goom_init (&(goom->goomdata), goom->width, goom->height);
 }
@@ -158,6 +154,7 @@ gst_goom_render (GstAudioVisualizer * base, GstBuffer * audio,
 {
   GstGoom *goom = GST_GOOM (base);
   GstMapInfo amap;
+  gint16 datain[2][GOOM_SAMPLES];
   gint16 *adata;
   gint i;
 
@@ -167,17 +164,17 @@ gst_goom_render (GstAudioVisualizer * base, GstBuffer * audio,
 
   if (goom->channels == 2) {
     for (i = 0; i < GOOM_SAMPLES; i++) {
-      goom->datain[0][i] = *adata++;
-      goom->datain[1][i] = *adata++;
+      datain[0][i] = *adata++;
+      datain[1][i] = *adata++;
     }
   } else {
     for (i = 0; i < GOOM_SAMPLES; i++) {
-      goom->datain[0][i] = *adata;
-      goom->datain[1][i] = *adata++;
+      datain[0][i] = *adata;
+      datain[1][i] = *adata++;
     }
   }
 
-  video->data[0] = goom_update (&(goom->goomdata), goom->datain);
+  video->data[0] = goom_update (&(goom->goomdata), datain);
   gst_buffer_unmap (audio, &amap);
 
   return TRUE;

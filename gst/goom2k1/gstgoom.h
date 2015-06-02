@@ -43,29 +43,14 @@ struct _GstGoom
   GstAudioVisualizer parent;
 
   /* input tracking */
-  gint rate;
   gint channels;
-  guint bps;
 
   /* video state */
-  gint fps_n;
-  gint fps_d;
   gint width;
   gint height;
-  GstClockTime duration;
-  guint outsize;
-  GstBufferPool *pool;
-
-  guint dropped;        /* frames dropped / not dropped */
-  guint processed;
 
   /* goom stuff */
-  gint16 datain[2][GOOM_SAMPLES];
   GoomData goomdata;
-
-  /* QoS stuff *//* with LOCK */
-  gdouble proportion;
-  GstClockTime earliest_time;
 };
 
 struct _GstGoomClass
