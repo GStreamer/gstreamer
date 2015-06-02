@@ -67,10 +67,13 @@ typedef void (*GLCB) (gint, gint, guint, gpointer stuff);
  */
 typedef void (*GLCB_V2) (gpointer stuff);
 
+/* deprecated. replaced by GstGLMemory */
 void gst_gl_context_gen_texture (GstGLContext * context, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height);
+/* deprecated. replaced by GstGLMemory */
 void gst_gl_context_del_texture (GstGLContext * context, GLuint * pTexture);
 
+/* deprecated. replaced by GstGLMemory */
 void gst_gl_generate_texture_full (GstGLContext * context, const GstVideoInfo * info,
     const guint comp, gint stride[], gsize offset[], gsize size[], GLuint * pTexture);
 
@@ -105,7 +108,6 @@ gsize gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align
     guint plane);
 GstCaps * gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
     const gchar * feature_name);
-GLint gst_gl_internal_format_rgba (GstGLContext * context);
 
 G_END_DECLS
 
