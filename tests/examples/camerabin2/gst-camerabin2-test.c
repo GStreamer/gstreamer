@@ -723,8 +723,7 @@ setup_pipeline (void)
     if (ipp) {
       g_object_set (camerabin, "image-filter", ipp, NULL);
       g_object_unref (ipp);
-    }
-    else
+    } else
       GST_WARNING ("Could not create ipp elements");
   }
 
@@ -1076,6 +1075,9 @@ print_performance_data (void)
     last_start = t->start_capture;
     i++;
   }
+
+  if (i == 0)
+    return;
 
   if (i > 1)
     shot_to_shot = avg.shot_to_shot / (i - 1);
