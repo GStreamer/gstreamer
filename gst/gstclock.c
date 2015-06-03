@@ -128,12 +128,20 @@ enum
   PROP_TIMEOUT
 };
 
+enum
+{
+  SIGNAL_SYNCED,
+  SIGNAL_LAST
+};
+
 #define GST_CLOCK_SLAVE_LOCK(clock)     g_mutex_lock (&GST_CLOCK_CAST (clock)->priv->slave_lock)
 #define GST_CLOCK_SLAVE_UNLOCK(clock)   g_mutex_unlock (&GST_CLOCK_CAST (clock)->priv->slave_lock)
 
 struct _GstClockPrivate
 {
   GMutex slave_lock;            /* order: SLAVE_LOCK, OBJECT_LOCK */
+
+  GCond sync_cond;
 
   /* with LOCK */
   GstClockTime internal_calibration;
@@ -159,6 +167,8 @@ struct _GstClockPrivate
 
   gint pre_count;
   gint post_count;
+
+  gboolean synced;
 };
 
 /* seqlocks */
@@ -227,7 +237,7 @@ static void gst_clock_set_property (GObject * object, guint prop_id,
 static void gst_clock_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-/* static guint gst_clock_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_clock_signals[SIGNAL_LAST] = { 0 };
 
 static GstClockID
 gst_clock_entry_new (GstClock * clock, GstClockTime time,
@@ -694,6 +704,25 @@ gst_clock_class_init (GstClockClass * klass)
           0, G_MAXUINT64, DEFAULT_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstClock::synced:
+   * @clock: the clock
+   * @synced: if the clock is synced now
+   *
+   * Signaled on clocks with GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC set once
+   * the clock is synchronized, or when it completely lost synchronization.
+   * This signal will not be emitted on clocks without the flag.
+   *
+   * This signal will be emitted from an arbitrary thread, most likely not
+   * the application's main thread.
+   *
+   * Since: 1.6
+   */
+  gst_clock_signals[SIGNAL_SYNCED] =
+      g_signal_new ("synced", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      0, NULL, NULL,
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
+
   g_type_class_add_private (klass, sizeof (GstClockPrivate));
 }
 
@@ -713,6 +742,7 @@ gst_clock_init (GstClock * clock)
   priv->rate_denominator = 1;
 
   g_mutex_init (&priv->slave_lock);
+  g_cond_init (&priv->sync_cond);
   priv->window_size = DEFAULT_WINDOW_SIZE;
   priv->window_threshold = DEFAULT_WINDOW_THRESHOLD;
   priv->filling = TRUE;
@@ -754,6 +784,7 @@ gst_clock_finalize (GObject * object)
   GST_CLOCK_SLAVE_UNLOCK (clock);
 
   g_mutex_clear (&clock->priv->slave_lock);
+  g_cond_clear (&clock->priv->sync_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -971,6 +1002,11 @@ gst_clock_get_internal_time (GstClock * clock)
   GstClockClass *cclass;
 
   g_return_val_if_fail (GST_IS_CLOCK (clock), GST_CLOCK_TIME_NONE);
+
+  if (G_UNLIKELY (GST_OBJECT_FLAG_IS_SET (clock,
+              GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC) && !clock->priv->synced))
+    GST_CAT_WARNING_OBJECT (GST_CAT_CLOCK, clock,
+        "clocked is not synchronized yet");
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
@@ -1490,5 +1526,111 @@ gst_clock_get_property (GObject * object, guint prop_id,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
+  }
+}
+
+
+/**
+ * gst_clock_wait_for_sync:
+ * @clock: a GstClock
+ * @timeout: timeout for waiting or %GST_CLOCK_TIME_NONE
+ *
+ * Waits until @clock is synced for reporting the current time. If @timeout
+ * is %GST_CLOCK_TIME_NONE it will wait forever, otherwise it will time out
+ * after @timeout nanoseconds.
+ *
+ * For asynchronous waiting, the GstClock::synced signal can be used.
+ *
+ *
+ * This returns immediately with TRUE if GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC
+ * is not set on the clock, or if the clock is already synced.
+ *
+ * Returns: %TRUE if waiting was successful, or %FALSE on timeout
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_clock_wait_for_sync (GstClock * clock, GstClockTime timeout)
+{
+  gboolean timed_out = FALSE;
+
+  g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
+
+  GST_OBJECT_LOCK (clock);
+  if (!GST_OBJECT_FLAG_IS_SET (clock, GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC)
+      || clock->priv->synced) {
+    GST_OBJECT_UNLOCK (clock);
+    return TRUE;
+  }
+
+  if (timeout != GST_CLOCK_TIME_NONE) {
+    gint64 end_time = g_get_monotonic_time () + gst_util_uint64_scale (timeout,
+        G_TIME_SPAN_SECOND, GST_SECOND);
+
+    while (!clock->priv->synced && !timed_out) {
+      timed_out =
+          !g_cond_wait_until (&clock->priv->sync_cond,
+          GST_OBJECT_GET_LOCK (clock), end_time);
+    }
+  } else {
+    timed_out = FALSE;
+    while (!clock->priv->synced) {
+      g_cond_wait (&clock->priv->sync_cond, GST_OBJECT_GET_LOCK (clock));
+    }
+  }
+  GST_OBJECT_UNLOCK (clock);
+
+  return !timed_out;
+}
+
+/**
+ * gst_clock_is_synced:
+ * @clock: a GstClock
+ *
+ * Checks if the clock is currently synced.
+ *
+ * This returns if GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC is not set on the clock.
+ *
+ * Returns: %TRUE if the clock is currently synced
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_clock_is_synced (GstClock * clock)
+{
+  g_return_val_if_fail (GST_IS_CLOCK (clock), TRUE);
+
+  return !GST_OBJECT_FLAG_IS_SET (clock, GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC)
+      || clock->priv->synced;
+}
+
+/**
+ * gst_clock_set_synced:
+ * @clock: a GstClock
+ * @synced: if the clock is synced
+ *
+ * Sets @clock to synced and emits the GstClock::synced signal, and wakes up any
+ * thread waiting in gst_clock_wait_synced().
+ *
+ * This function must only be called if GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC
+ * is set on the clock, and is intended to be called by subclasses only.
+ *
+ * Since: 1.6
+ */
+void
+gst_clock_set_synced (GstClock * clock, gboolean synced)
+{
+  g_return_if_fail (GST_IS_CLOCK (clock));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (clock,
+          GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC));
+
+  GST_OBJECT_LOCK (clock);
+  if (clock->priv->synced != ! !synced) {
+    clock->priv->synced = ! !synced;
+    g_cond_signal (&clock->priv->sync_cond);
+    GST_OBJECT_UNLOCK (clock);
+    g_signal_emit (clock, gst_clock_signals[SIGNAL_SYNCED], 0, ! !synced);
+  } else {
+    GST_OBJECT_UNLOCK (clock);
   }
 }

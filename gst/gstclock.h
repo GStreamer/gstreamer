@@ -375,6 +375,8 @@ struct _GstClockEntry {
  * @GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC: clock can do async periodic timeout callbacks
  * @GST_CLOCK_FLAG_CAN_SET_RESOLUTION: clock's resolution can be changed
  * @GST_CLOCK_FLAG_CAN_SET_MASTER: clock can be slaved to a master clock
+ * @GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC: clock needs to be synced before it can be used
+ *     Since: 1.6
  * @GST_CLOCK_FLAG_LAST: subclasses can add additional flags starting from this flag
  *
  * The capabilities of this clock
@@ -386,6 +388,7 @@ typedef enum {
   GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC  = (GST_OBJECT_FLAG_LAST << 3),
   GST_CLOCK_FLAG_CAN_SET_RESOLUTION     = (GST_OBJECT_FLAG_LAST << 4),
   GST_CLOCK_FLAG_CAN_SET_MASTER         = (GST_OBJECT_FLAG_LAST << 5),
+  GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC     = (GST_OBJECT_FLAG_LAST << 6),
   /* padding */
   GST_CLOCK_FLAG_LAST                   = (GST_OBJECT_FLAG_LAST << 8)
 } GstClockFlags;
@@ -496,6 +499,12 @@ GstClockTime            gst_clock_adjust_with_calibration (GstClock *clock,
                                                          GstClockTime cdenom);
 GstClockTime            gst_clock_unadjust_unlocked     (GstClock * clock, GstClockTime external);
 
+/* waiting for, signalling and checking for synchronization */
+gboolean                gst_clock_wait_for_sync         (GstClock * clock, GstClockTime timeout);
+gboolean                gst_clock_is_synced             (GstClock * clock);
+
+/* to be used by subclasses only */
+void                    gst_clock_set_synced            (GstClock * clock, gboolean synced);
 
 /* creating IDs that can be used to get notifications */
 GstClockID              gst_clock_new_single_shot_id    (GstClock *clock,
