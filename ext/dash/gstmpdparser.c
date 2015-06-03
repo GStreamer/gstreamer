@@ -3712,13 +3712,17 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
       mediaURL =
           gst_mpdparser_build_URL_from_template (stream->
           cur_seg_template->media, stream->cur_representation->id,
-          stream->segment_index, stream->cur_representation->bandwidth,
+          stream->segment_index +
+          stream->cur_seg_template->MultSegBaseType->startNumber,
+          stream->cur_representation->bandwidth,
           stream->segment_index * fragment->duration);
       if (stream->cur_seg_template->index) {
         indexURL =
             gst_mpdparser_build_URL_from_template (stream->
             cur_seg_template->index, stream->cur_representation->id,
-            stream->segment_index, stream->cur_representation->bandwidth,
+            stream->segment_index +
+            stream->cur_seg_template->MultSegBaseType->startNumber,
+            stream->cur_representation->bandwidth,
             stream->segment_index * fragment->duration);
       }
     } else {
