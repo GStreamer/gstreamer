@@ -270,8 +270,13 @@ setup_sockets (void)
 
   /* Get a clock id from the MAC address if none was given */
   if (clock_id == (guint64) - 1) {
-    struct ifreq ifr;
     gboolean success = FALSE;
+
+    /* FIXME: On Apple platforms use IOKit APIs to iterate
+     * network interfaces and get MAC addresses. Think different!
+     */
+#ifndef __APPLE__
+    struct ifreq ifr;
 
     if (ifaces) {
       gchar **ptr = ifaces;
@@ -329,6 +334,7 @@ setup_sockets (void)
         }
       }
     }
+#endif
 
     if (!success) {
       g_warning ("can't get any MAC address, using random clock id");
