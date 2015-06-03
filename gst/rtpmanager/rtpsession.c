@@ -2624,7 +2624,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  if (!gst_rtcp_buffer_validate (buffer))
+  if (!gst_rtcp_buffer_validate_reduced (buffer))
     goto invalid_packet;
 
   GST_DEBUG ("received RTCP packet");
