@@ -1,16 +1,17 @@
 #!/bin/sh
 
-version=`gnuindent --version 2>/dev/null`
-if test "x$version" = "x"; then
-  version=`indent --version 2>/dev/null`
-  if test "x$version" = "x"; then
-    echo "GStreamer git pre-commit hook:"
-    echo "Did not find GNU indent, please install it before continuing."
-    exit 1
+for execname in gnuindent gindent indent; do
+  version=`$execname --version 2>/dev/null`
+  if test "x$version" != "x"; then
+    INDENT=$execname
+    break
   fi
-  INDENT=indent
-else
-  INDENT=gnuindent
+done
+
+if test -z $INDENT; then
+  echo "GStreamer git pre-commit hook:"
+  echo "Did not find GNU indent, please install it before continuing."
+  exit 1
 fi
 
 case `$INDENT --version` in
