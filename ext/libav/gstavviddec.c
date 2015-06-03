@@ -1490,7 +1490,8 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
       GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->duration));
 
   if (!gst_buffer_map (frame->input_buffer, &minfo, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (ffmpegdec, "Failed to map buffer");
+    GST_ELEMENT_ERROR (ffmpegdec, STREAM, DECODE, ("Decoding problem"),
+        ("Failed to map buffer for reading"));
     return GST_FLOW_ERROR;
   }
 
