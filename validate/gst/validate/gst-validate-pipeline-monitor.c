@@ -113,6 +113,9 @@ _bus_handler (GstBus * bus, GstMessage * message,
         GST_VALIDATE_REPORT (monitor, ERROR_ON_BUS,
             "Got error: %s -- Debug message: %s", err->message, debug);
       }
+      GST_VALIDATE_MONITOR_LOCK (monitor);
+      monitor->got_error = TRUE;
+      GST_VALIDATE_MONITOR_UNLOCK (monitor);
       g_error_free (err);
       g_free (debug);
       break;
@@ -139,7 +142,7 @@ _bus_handler (GstBus * bus, GstMessage * message,
           if (monitor->print_pos_srcid
               && g_source_remove (monitor->print_pos_srcid))
             monitor->print_pos_srcid = 0;
-
+          monitor->got_error = FALSE;
         }
       }
 

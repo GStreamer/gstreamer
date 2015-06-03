@@ -28,6 +28,7 @@
 #include "gst-validate-internal.h"
 #include "gst-validate-pad-monitor.h"
 #include "gst-validate-element-monitor.h"
+#include "gst-validate-pipeline-monitor.h"
 #include "gst-validate-reporter.h"
 #include <string.h>
 #include <stdarg.h>
@@ -1985,6 +1986,34 @@ gst_validate_pad_monitor_check_right_buffer (GstValidatePadMonitor *
   return ret;
 }
 
+static void
+gst_validate_pad_monitor_check_return (GstValidatePadMonitor * pad_monitor,
+    GstFlowReturn ret)
+{
+  GstValidateMonitor *parent = GST_VALIDATE_MONITOR (pad_monitor);
+
+  if (ret != GST_FLOW_ERROR)
+    return;
+
+  while (GST_VALIDATE_MONITOR_GET_PARENT (parent))
+    parent = GST_VALIDATE_MONITOR_GET_PARENT (parent);
+
+  if (GST_IS_VALIDATE_PIPELINE_MONITOR (parent)) {
+    GstValidatePipelineMonitor *m = GST_VALIDATE_PIPELINE_MONITOR (parent);
+
+    GST_VALIDATE_MONITOR_LOCK (m);
+    if (m->got_error == FALSE) {
+      GST_VALIDATE_REPORT (pad_monitor, FLOW_ERROR_WITHOUT_ERROR_MESSAGE,
+          "Pad return GST_FLOW_ERROR but no GST_MESSAGE_ERROR was received on"
+          " the bus");
+
+      /* Only report it the first time */
+      m->got_error = TRUE;
+    }
+    GST_VALIDATE_MONITOR_UNLOCK (m);
+  }
+}
+
 static GstFlowReturn
 gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -2007,6 +2036,8 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
   gst_validate_pad_monitor_buffer_overrides (pad_monitor, buffer);
 
   ret = pad_monitor->chain_func (pad, parent, buffer);
+
+  gst_validate_pad_monitor_check_return (pad_monitor, ret);
 
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);

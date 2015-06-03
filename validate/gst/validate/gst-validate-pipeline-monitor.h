@@ -57,6 +57,7 @@ struct _GstValidatePipelineMonitor {
   gulong element_added_id;
   guint print_pos_srcid;
   gboolean buffering;
+  gboolean got_error;
 };
 
 /**

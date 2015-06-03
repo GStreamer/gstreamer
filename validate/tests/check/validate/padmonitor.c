@@ -17,6 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <gio/gio.h>
 #include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-pad-monitor.h>
 #include <gst/validate/media-descriptor-parser.h>
@@ -975,6 +976,99 @@ GST_START_TEST (buffer_timestamp_out_of_received_range)
 
 GST_END_TEST;
 
+
+GST_START_TEST (flow_error_without_message)
+{
+  GstElement *decoder = fake_decoder_new ();
+  GstElement *src = gst_element_factory_make ("fakesrc", NULL);
+  GstElement *sink = gst_element_factory_make ("fakesink", NULL);
+  GstBin *pipeline = GST_BIN (gst_pipeline_new ("validate-pipeline"));
+  GList *reports;
+  GstValidateRunner *runner;
+  GstValidateReport *report;
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
+  runner = _start_monitoring_bin (pipeline);
+
+  gst_bin_add_many (pipeline, src, decoder, sink, NULL);
+  fail_unless (gst_element_link_many (src, decoder, sink, NULL));
+
+
+  FAKE_DECODER (decoder)->return_value = GST_FLOW_ERROR;
+  ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_PLAYING,
+      GST_STATE_CHANGE_ASYNC);
+
+  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+
+  reports = gst_validate_runner_get_reports (runner);
+
+  fail_unless (g_list_length (reports) >= 1);
+  report = reports->data;
+  fail_unless_equals_int (report->level, GST_VALIDATE_REPORT_LEVEL_WARNING);
+  fail_unless_equals_int (report->issue->issue_id,
+      FLOW_ERROR_WITHOUT_ERROR_MESSAGE);
+  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+
+  _stop_monitoring_bin (pipeline, runner);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (flow_error_with_message)
+{
+  GstElement *decoder = fake_decoder_new ();
+  GstElement *src = gst_element_factory_make ("fakesrc", NULL);
+  GstElement *sink = gst_element_factory_make ("fakesink", NULL);
+  GstBin *pipeline = GST_BIN (gst_pipeline_new ("validate-pipeline"));
+  GList *reports;
+  GstValidateRunner *runner;
+  GstValidateReport *report;
+  const GError gerror =
+      { G_IO_ERROR, G_IO_ERROR_FAILED, (gchar *) "fake error" };
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
+  runner = _start_monitoring_bin (pipeline);
+
+  gst_bin_add_many (pipeline, src, decoder, sink, NULL);
+  fail_unless (gst_element_link_many (src, decoder, sink, NULL));
+
+  g_object_set (src, "is-live", TRUE, NULL);
+
+  FAKE_DECODER (decoder)->return_value = GST_FLOW_ERROR;
+
+  ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_PAUSED,
+      GST_STATE_CHANGE_NO_PREROLL);
+
+  gst_element_post_message (decoder,
+      gst_message_new_error (GST_OBJECT (decoder),
+          (GError *) & gerror, "This is a fake error"));
+
+  ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_PLAYING,
+      GST_STATE_CHANGE_ASYNC);
+
+  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+
+  reports = gst_validate_runner_get_reports (runner);
+
+  assert_equals_int (g_list_length (reports), 1);
+  report = reports->data;
+  fail_unless_equals_int (report->issue->issue_id, ERROR_ON_BUS);
+  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+
+  _stop_monitoring_bin (pipeline, runner);
+}
+
+GST_END_TEST;
+
+
+
 static Suite *
 gst_validate_suite (void)
 {
@@ -992,6 +1086,8 @@ gst_validate_suite (void)
   tcase_add_test (tc_chain, check_media_info);
   tcase_add_test (tc_chain, eos_without_segment);
   tcase_add_test (tc_chain, caps_events);
+  tcase_add_test (tc_chain, flow_error_without_message);
+  tcase_add_test (tc_chain, flow_error_with_message);
 
   gst_validate_deinit ();
   return s;

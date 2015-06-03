@@ -195,6 +195,10 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (ISSUE, BUFFER_AFTER_EOS,
       _("buffer was received after EOS"),
       _("a pad shouldn't receive any more buffers after it gets EOS"));
+  REGISTER_VALIDATE_ISSUE (WARNING, FLOW_ERROR_WITHOUT_ERROR_MESSAGE,
+      _("GST_FLOW_ERROR returned without posting an ERROR on the bus"),
+      _("Element MUST post a GST_MESSAGE_ERROR with GST_ELEMENT_ERROR before"
+          " returning GST_FLOW_ERROR"));
 
   REGISTER_VALIDATE_ISSUE (ISSUE, CAPS_IS_MISSING_FIELD,
       _("caps is missing a required field for its type"),
