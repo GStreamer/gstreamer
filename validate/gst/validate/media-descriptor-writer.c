@@ -493,7 +493,7 @@ _run_frame_analisis (GstMediaDescriptorWriter * writer,
   }
 
   g_main_loop_run (writer->priv->loop);
-  sret = gst_element_set_state (writer->priv->pipeline, GST_STATE_NULL);
+  gst_element_set_state (writer->priv->pipeline, GST_STATE_NULL);
   gst_object_unref (writer->priv->pipeline);
   writer->priv->pipeline = NULL;
   g_main_loop_unref (writer->priv->loop);
