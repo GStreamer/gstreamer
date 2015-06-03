@@ -1987,6 +1987,8 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
   g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
   g_return_val_if_fail (GST_PAD_IS_SINK (sinkpad), FALSE);
 
+  GST_TRACER_PAD_UNLINK_PRE (srcpad, sinkpad);
+
   GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "unlinking %s:%s(%p) and %s:%s(%p)",
       GST_DEBUG_PAD_NAME (srcpad), srcpad,
       GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
@@ -2054,6 +2056,7 @@ done:
             GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK, parent, FALSE));
     gst_object_unref (parent);
   }
+  GST_TRACER_PAD_UNLINK_POST (srcpad, sinkpad, result);
   return result;
 
   /* ERRORS */
@@ -2495,7 +2498,13 @@ link_failed:
 GstPadLinkReturn
 gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
 {
-  return gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_DEFAULT);
+  GstPadLinkReturn ret;
+
+  GST_TRACER_PAD_LINK_PRE (srcpad, sinkpad);
+  ret = gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_DEFAULT);
+  GST_TRACER_PAD_LINK_POST (srcpad, sinkpad, ret);
+
+  return ret;
 }
 
 static void

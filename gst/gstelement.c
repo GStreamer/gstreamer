@@ -696,7 +696,7 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
 
   /* emit the PAD_ADDED signal */
   g_signal_emit (element, gst_element_signals[PAD_ADDED], 0, pad);
-
+  GST_TRACER_ELEMENT_ADD_PAD (element, pad);
   return TRUE;
 
   /* ERROR cases */
@@ -808,7 +808,7 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
 
   /* emit the PAD_REMOVED signal before unparenting and losing the last ref. */
   g_signal_emit (element, gst_element_signals[PAD_REMOVED], 0, pad);
-
+  GST_TRACER_ELEMENT_REMOVE_PAD (element, pad);
   gst_object_unparent (GST_OBJECT_CAST (pad));
 
   return TRUE;

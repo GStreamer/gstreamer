@@ -88,18 +88,19 @@ we can create them ad-hoc and avoid the GST_TRACE_TIMERS var.
 
 Hooks (* already implemented)
 -----
-- gst_bin_add
-- gst_bin_remove
-- gst_element_add_pad
+* gst_bin_add
+* gst_bin_remove
+* gst_element_add_pad
 * gst_element_post_message
 * gst_element_query
-- gst_element_remove_pad
-- gst_pad_link
+* gst_element_remove_pad
+* gst_element_factory_make
+* gst_pad_link
 * gst_pad_pull_range
 * gst_pad_push
 * gst_pad_push_list
 * gst_pad_push_event
-- gst_pad_unlink
+* gst_pad_unlink
 
 Tracer api
 ----------

@@ -448,6 +448,9 @@ gst_element_factory_make (const gchar * factoryname, const gchar * name)
     goto create_failed;
 
   gst_object_unref (factory);
+
+  GST_TRACER_ELEMENT_NEW (element);
+
   return element;
 
   /* ERRORS */

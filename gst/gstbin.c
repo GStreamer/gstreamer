@@ -1370,7 +1370,9 @@ gst_bin_add (GstBin * bin, GstElement * element)
       GST_STR_NULL (GST_ELEMENT_NAME (element)),
       GST_STR_NULL (GST_ELEMENT_NAME (bin)));
 
+  GST_TRACER_BIN_ADD_PRE (bin, element);
   result = bclass->add_element (bin, element);
+  GST_TRACER_BIN_ADD_POST (bin, element, result);
 
   return result;
 
@@ -1694,7 +1696,9 @@ gst_bin_remove (GstBin * bin, GstElement * element)
   GST_CAT_DEBUG (GST_CAT_PARENTAGE, "removing element %s from bin %s",
       GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
 
+  GST_TRACER_BIN_REMOVE_PRE (bin, element);
   result = bclass->remove_element (bin, element);
+  GST_TRACER_BIN_REMOVE_POST (bin, result);
 
   return result;
 
