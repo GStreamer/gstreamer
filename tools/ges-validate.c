@@ -87,7 +87,7 @@ ges_validate_clean (GstPipeline * pipeline)
       g_object_get_data (G_OBJECT (pipeline), RUNNER_ON_PIPELINE);
 
   if (runner)
-    res = gst_validate_runner_printf (runner);
+    res = gst_validate_runner_exit (runner, TRUE);
 
   gst_object_unref (pipeline);
   if (runner) {
@@ -111,7 +111,7 @@ ges_validate_handle_request_state_change (GstMessage * message,
       && state == GST_STATE_NULL) {
     gst_validate_printf (GST_MESSAGE_SRC (message),
         "State change request NULL, " "quiting application\n");
-    g_application_release (application);
+    g_application_quit (application);
   }
 }
 

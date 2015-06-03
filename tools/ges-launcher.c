@@ -159,7 +159,7 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
       g_error ("couldn't create uri for '%s", opts->save_path);
 
       self->priv->seenerrors = TRUE;
-      g_application_release (G_APPLICATION (self));
+      g_application_quit (G_APPLICATION (self));
     }
 
     g_print ("\nSaving project to %s\n", uri);
@@ -169,7 +169,7 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
     g_assert_no_error (error);
     if (error) {
       self->priv->seenerrors = TRUE;
-      g_application_release (G_APPLICATION (self));
+      g_application_quit (G_APPLICATION (self));
     }
   }
 
@@ -180,7 +180,7 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
           opts->scenario, &opts->needs_set_state) == FALSE) {
     g_error ("Could not activate scenario %s", opts->scenario);
     self->priv->seenerrors = TRUE;
-    g_application_release (G_APPLICATION (self));
+    g_application_quit (G_APPLICATION (self));
   }
 
   if (opts->needs_set_state
@@ -197,7 +197,7 @@ _error_loading_asset_cb (GESProject * project, GError * error,
   g_printerr ("Error loading asset %s: %s\n", failed_id, error->message);
   self->priv->seenerrors = TRUE;
 
-  g_application_release (G_APPLICATION (self));
+  g_application_quit (G_APPLICATION (self));
 }
 
 static gboolean
@@ -288,12 +288,12 @@ bus_message_cb (GstBus * bus, GstMessage * message, GESLauncher * self)
       g_error_free (err);
       g_free (dbg_info);
       self->priv->seenerrors = TRUE;
-      g_application_release (G_APPLICATION (self));
+      g_application_quit (G_APPLICATION (self));
       break;
     }
     case GST_MESSAGE_EOS:
       g_printerr ("\nDone\n");
-      g_application_release (G_APPLICATION (self));
+      g_application_quit (G_APPLICATION (self));
       break;
     case GST_MESSAGE_STATE_CHANGED:
       if (GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (self->priv->pipeline)) {
@@ -331,7 +331,7 @@ intr_handler (GESLauncher * self)
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (self->priv->pipeline),
       GST_DEBUG_GRAPH_SHOW_ALL, "ges-launch.interupted");
 
-  g_application_release (G_APPLICATION (self));
+  g_application_quit (G_APPLICATION (self));
 
   /* remove signal handler */
   return TRUE;
