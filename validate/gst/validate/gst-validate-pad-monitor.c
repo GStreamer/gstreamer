@@ -1721,7 +1721,7 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
               if ((exp_segment->rate * exp_segment->applied_rate !=
                       segment->rate * segment->applied_rate))
                 GST_VALIDATE_REPORT (pad_monitor, EVENT_NEW_SEGMENT_MISMATCH,
-                    "Rate * applied_rate %d != expected %d",
+                    "Rate * applied_rate %f != expected %f",
                     segment->rate * segment->applied_rate,
                     exp_segment->rate * exp_segment->applied_rate);
               if (exp_segment->start != segment->start)
@@ -1928,9 +1928,10 @@ gst_validate_pad_monitor_check_right_buffer (GstValidatePadMonitor *
       GST_BUFFER_PTS (wanted_buf) != GST_BUFFER_PTS (buffer)) {
 
     GST_VALIDATE_REPORT (pad_monitor, WRONG_BUFFER,
-        "buffer %" GST_PTR_FORMAT " PTS %ld"
-        " different than expected: %ld", buffer,
-        GST_BUFFER_PTS (buffer), GST_BUFFER_PTS (wanted_buf));
+        "buffer %" GST_PTR_FORMAT " PTS %" GST_TIME_FORMAT
+        " different than expected: %" GST_TIME_FORMAT, buffer,
+        GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
+        GST_TIME_ARGS (GST_BUFFER_PTS (wanted_buf)));
 
     ret = FALSE;
   }

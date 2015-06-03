@@ -232,7 +232,7 @@ compare_tags (GstMediaDescriptor * ref, StreamNode * rstream,
 
     GST_VALIDATE_REPORT (ref, FILE_TAG_DETECTION_INCORRECT,
         "Reference descriptor for stream %s has NO tags"
-        " but tags found: %s", all_tags->str);
+        " but tags found: %s", rstream->id, all_tags->str);
 
     g_string_free (all_tags, TRUE);
 
@@ -251,7 +251,7 @@ compare_tags (GstMediaDescriptor * ref, StreamNode * rstream,
 
     GST_VALIDATE_REPORT (ref, FILE_TAG_DETECTION_INCORRECT,
         "Reference descriptor for stream %s has tags:\n %s\n"
-        " but NO tags found on the stream");
+        " but NO tags found on the stream", rstream->id, all_tags->str);
 
     g_string_free (all_tags, TRUE);
     return 0;

@@ -100,7 +100,7 @@ const gchar * gst_validate_reporter_get_name            (GstValidateReporter * r
 GstValidateRunner * gst_validate_reporter_get_runner (GstValidateReporter *reporter);
 void gst_validate_reporter_init                (GstValidateReporter * reporter, const gchar *name);
 void gst_validate_report                       (GstValidateReporter * reporter, GstValidateIssueId issue_id,
-                                          const gchar * format, ...);
+                                          const gchar * format, ...) G_GNUC_PRINTF (3, 4) G_GNUC_NO_INSTRUMENT;
 void gst_validate_report_valist                (GstValidateReporter * reporter, GstValidateIssueId issue_id,
                                           const gchar * format, va_list var_args);
 void

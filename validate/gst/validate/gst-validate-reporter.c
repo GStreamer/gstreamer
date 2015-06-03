@@ -239,11 +239,11 @@ gst_validate_reporter_g_log_func (const gchar * log_domain,
     GstValidateReporter * reporter)
 {
   if (log_level & G_LOG_LEVEL_CRITICAL)
-    GST_VALIDATE_REPORT (reporter, G_LOG_CRITICAL, message);
+    GST_VALIDATE_REPORT (reporter, G_LOG_CRITICAL, "%s", message);
   else if (log_level & G_LOG_LEVEL_WARNING)
-    GST_VALIDATE_REPORT (reporter, G_LOG_WARNING, message);
+    GST_VALIDATE_REPORT (reporter, G_LOG_WARNING, "%s", message);
   else
-    GST_VALIDATE_REPORT (reporter, G_LOG_ISSUE, message);
+    GST_VALIDATE_REPORT (reporter, G_LOG_ISSUE, "%s", message);
 }
 
 /**
@@ -273,7 +273,7 @@ void
 gst_validate_reporter_report_simple (GstValidateReporter * reporter,
     GstValidateIssueId issue_id, const gchar * message)
 {
-  gst_validate_report (reporter, issue_id, message);
+  gst_validate_report (reporter, issue_id, "%s", message);
 }
 
 /**
