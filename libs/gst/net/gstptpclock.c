@@ -1329,7 +1329,8 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
       sync->sync_recv_time_local + 2 * domain->mean_path_delay) {
     GST_WARNING ("Sync-follow-up delay for domain %u too big: %" GST_TIME_FORMAT
         " > 2 * %" GST_TIME_FORMAT, domain->domain,
-        GST_TIME_ARGS (sync->follow_up_recv_time_local),
+        GST_TIME_ARGS (sync->follow_up_recv_time_local -
+            sync->sync_recv_time_local),
         GST_TIME_ARGS (domain->mean_path_delay));
     ret = FALSE;
     goto out;
