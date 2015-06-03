@@ -106,6 +106,13 @@ GST_DEBUG_CATEGORY_STATIC (ptp_debug);
  */
 #define USE_ONLY_SYNC_WITH_DELAY 1
 
+/* Filter out delay measurements that are too far away from the median of the
+ * last delay measurements, currently those that are more than 2 times as big.
+ * This increases accuracy a lot on wifi.
+ */
+#define USE_MEDIAN_PRE_FILTERING 1
+#define MEDIAN_PRE_FILTERING_WINDOW 9
+
 /* How many updates should be skipped at maximum when using USE_MEASUREMENT_FILTERING */
 #define MAX_SKIPPED_UPDATES 5
 
@@ -305,6 +312,9 @@ typedef struct
   GstClockTime mean_path_delay;
   GstClockTime last_delay_req, min_delay_req_interval;
   guint16 last_delay_req_seqnum;
+
+  GstClockTime last_path_delays[MEDIAN_PRE_FILTERING_WINDOW];
+  gint last_path_delays_missing;
 
   GQueue pending_syncs;
 
@@ -770,6 +780,7 @@ select_best_master_clock (PtpDomainData * domain, GstClockTime now)
           sizeof (PtpClockIdentity));
       domain->mean_path_delay = 0;
       domain->last_delay_req = 0;
+      domain->last_path_delays_missing = 9;
       domain->min_delay_req_interval = 0;
       domain->sync_interval = 0;
       domain->last_ptp_sync_time = 0;
@@ -834,6 +845,7 @@ handle_announce_message (PtpMessage * msg, GstClockTime receive_time)
         g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", clock_name, NULL);
     g_free (clock_name);
     g_queue_init (&domain->pending_syncs);
+    domain->last_path_delays_missing = 9;
     domain_data = g_list_prepend (domain_data, domain);
 
     g_mutex_lock (&domain_clocks_lock);
@@ -1230,9 +1242,27 @@ out:
 
 }
 
+#ifdef USE_MEDIAN_PRE_FILTERING
+static gint
+compare_clock_time (const GstClockTime * a, const GstClockTime * b)
+{
+  if (*a < *b)
+    return -1;
+  else if (*a > *b)
+    return 1;
+  return 0;
+}
+#endif
+
 static gboolean
 update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
 {
+#ifdef USE_MEDIAN_PRE_FILTERING
+  GstClockTime last_path_delays[G_N_ELEMENTS (domain->last_path_delays)];
+  GstClockTime median;
+  gint i;
+#endif
+
   GstClockTime mean_path_delay, delay_req_delay;
   gboolean ret;
 
@@ -1242,6 +1272,37 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
       sync->sync_recv_time_local - sync->delay_req_send_time_local -
       (sync->correction_field_sync + sync->correction_field_delay +
           32768) / 65536) / 2;
+
+#ifdef USE_MEDIAN_PRE_FILTERING
+  for (i = 1; i < G_N_ELEMENTS (domain->last_path_delays); i++)
+    domain->last_path_delays[i - 1] = domain->last_path_delays[i];
+  domain->last_path_delays[i - 1] = mean_path_delay;
+
+  if (domain->last_path_delays_missing) {
+    domain->last_path_delays_missing--;
+  } else {
+    memcpy (&last_path_delays, &domain->last_path_delays,
+        sizeof (last_path_delays));
+    g_qsort_with_data (&last_path_delays,
+        G_N_ELEMENTS (domain->last_path_delays), sizeof (GstClockTime),
+        (GCompareDataFunc) compare_clock_time, NULL);
+
+    median = last_path_delays[G_N_ELEMENTS (last_path_delays) / 2];
+
+    /* FIXME: We might want to use something else here, like only allowing
+     * things in the interquartile range, or also filtering away delays that
+     * are too small compared to the median. This here worked well enough
+     * in tests so far.
+     */
+    if (mean_path_delay > 2 * median) {
+      GST_WARNING ("Path delay for domain %u too big compared to median: %"
+          GST_TIME_FORMAT " > 2 * %" GST_TIME_FORMAT, domain->domain,
+          GST_TIME_ARGS (mean_path_delay), GST_TIME_ARGS (median));
+      ret = FALSE;
+      goto out;
+    }
+  }
+#endif
 
 #ifdef USE_RUNNING_AVERAGE_DELAY
   /* Track an average round trip time, for a bit of smoothing */
@@ -1344,6 +1405,7 @@ handle_sync_message (PtpMessage * msg, GstClockTime receive_time)
 
   if (!domain) {
     gchar *clock_name;
+
     domain = g_new0 (PtpDomainData, 1);
     domain->domain = msg->domain_number;
     clock_name = g_strdup_printf ("ptp-clock-%u", domain->domain);
@@ -1351,6 +1413,7 @@ handle_sync_message (PtpMessage * msg, GstClockTime receive_time)
         g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", clock_name, NULL);
     g_free (clock_name);
     g_queue_init (&domain->pending_syncs);
+    domain->last_path_delays_missing = 9;
     domain_data = g_list_prepend (domain_data, domain);
 
     g_mutex_lock (&domain_clocks_lock);
