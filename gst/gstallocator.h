@@ -97,6 +97,8 @@ typedef enum {
  * @mem_copy: the implementation of the GstMemoryCopyFunction
  * @mem_share: the implementation of the GstMemoryShareFunction
  * @mem_is_span: the implementation of the GstMemoryIsSpanFunction
+ * @mem_unmap_full: the implementation of the GstMemoryUnmapFullFunction.
+ *      Will be used instead of @mem_unmap if present. Since 1.6
  *
  * The #GstAllocator is used to create new memory.
  */
@@ -104,18 +106,20 @@ struct _GstAllocator
 {
   GstObject  object;
 
-  const gchar              *mem_type;
+  const gchar               *mem_type;
 
   /*< public >*/
-  GstMemoryMapFunction      mem_map;
-  GstMemoryUnmapFunction    mem_unmap;
+  GstMemoryMapFunction       mem_map;
+  GstMemoryUnmapFunction     mem_unmap;
 
-  GstMemoryCopyFunction     mem_copy;
-  GstMemoryShareFunction    mem_share;
-  GstMemoryIsSpanFunction   mem_is_span;
+  GstMemoryCopyFunction      mem_copy;
+  GstMemoryShareFunction     mem_share;
+  GstMemoryIsSpanFunction    mem_is_span;
+
+  GstMemoryUnmapFullFunction mem_unmap_full;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 
   GstAllocatorPrivate *priv;
 };

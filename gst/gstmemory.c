@@ -338,7 +338,10 @@ gst_memory_unmap (GstMemory * mem, GstMapInfo * info)
   g_return_if_fail (info != NULL);
   g_return_if_fail (info->memory == mem);
 
-  mem->allocator->mem_unmap (mem);
+  if (mem->allocator->mem_unmap_full)
+    mem->allocator->mem_unmap_full (mem, info->flags);
+  else
+    mem->allocator->mem_unmap (mem);
   gst_memory_unlock (mem, (GstLockFlags) info->flags);
 }
 

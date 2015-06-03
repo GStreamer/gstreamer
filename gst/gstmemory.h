@@ -237,10 +237,17 @@ typedef gpointer    (*GstMemoryMapFunction)       (GstMemory *mem, gsize maxsize
  * @mem: a #GstMemory
  *
  * Return the pointer previously retrieved with gst_memory_map().
- *
- * Returns: %TRUE on success.
  */
 typedef void        (*GstMemoryUnmapFunction)     (GstMemory *mem);
+
+/**
+ * GstMemoryUnmapFullFunction:
+ * @mem: a #GstMemory
+ * @flags: a #GstMapFlags
+ *
+ * Return the pointer previously retrieved with gst_memory_map() with @flags.
+ */
+typedef void        (*GstMemoryUnmapFullFunction)     (GstMemory *mem, GstMapFlags flags);
 
 /**
  * GstMemoryCopyFunction:
