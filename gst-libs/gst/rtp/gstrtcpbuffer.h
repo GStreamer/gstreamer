@@ -168,6 +168,15 @@ typedef enum
  * Mask for version, padding bit and packet type pair
  */
 #define GST_RTCP_VALID_MASK (0xc000 | 0x2000 | 0xfe)
+
+/**
+ * GST_RTCP_REDUCED_SIZE_VALID_MASK:
+ *
+ * Mask for version, padding bit and packet type pair allowing reduced size
+ * packets, basically it accepts other types than RR and SR
+ */
+#define GST_RTCP_REDUCED_SIZE_VALID_MASK (0xc000 | 0x2000 | 0xf8)
+
 /**
  * GST_RTCP_VALID_VALUE:
  *
@@ -217,6 +226,10 @@ GstBuffer*      gst_rtcp_buffer_new_copy_data     (gpointer data, guint len);
 
 gboolean        gst_rtcp_buffer_validate_data     (guint8 *data, guint len);
 gboolean        gst_rtcp_buffer_validate          (GstBuffer *buffer);
+
+gboolean        gst_rtcp_buffer_validate_data_reduced   (guint8 *data, guint len);
+gboolean        gst_rtcp_buffer_validate_reduced        (GstBuffer *buffer);
+
 
 GstBuffer*      gst_rtcp_buffer_new               (guint mtu);
 

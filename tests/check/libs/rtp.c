@@ -757,6 +757,40 @@ GST_START_TEST (test_rtcp_buffer)
   /* close and validate */
   gst_rtcp_buffer_unmap (&rtcp);
   fail_unless (gst_rtcp_buffer_validate (buf) == TRUE);
+  fail_unless (gst_rtcp_buffer_validate_reduced (buf) == TRUE);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtcp_reduced_buffer)
+{
+  GstBuffer *buf;
+  GstRTCPPacket packet;
+  GstRTCPBuffer rtcp = { NULL, };
+  gsize offset;
+  gsize maxsize;
+
+  buf = gst_rtcp_buffer_new (1400);
+  fail_unless (buf != NULL);
+  fail_unless_equals_int (gst_buffer_get_sizes (buf, &offset, &maxsize), 0);
+  fail_unless_equals_int (offset, 0);
+  fail_unless_equals_int (maxsize, 1400);
+
+  gst_rtcp_buffer_map (buf, GST_MAP_READWRITE, &rtcp);
+
+  fail_unless (gst_rtcp_buffer_validate (buf) == FALSE);
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet) == FALSE);
+  fail_unless (gst_rtcp_buffer_get_packet_count (&rtcp) == 0);
+
+  /* add an SR packet */
+  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_PSFB,
+          &packet) == TRUE);
+
+  /* close and validate */
+  gst_rtcp_buffer_unmap (&rtcp);
+  fail_unless (gst_rtcp_buffer_validate (buf) == FALSE);
+  fail_unless (gst_rtcp_buffer_validate_reduced (buf) == TRUE);
   gst_buffer_unref (buf);
 }
 
@@ -992,6 +1026,7 @@ rtp_suite (void)
   tcase_add_test (tc_chain, test_rtp_seqnum_compare);
 
   tcase_add_test (tc_chain, test_rtcp_buffer);
+  tcase_add_test (tc_chain, test_rtcp_reduced_buffer);
   tcase_add_test (tc_chain, test_rtp_ntp64_extension);
   tcase_add_test (tc_chain, test_rtp_ntp56_extension);
 
