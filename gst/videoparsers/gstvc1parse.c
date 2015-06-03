@@ -1309,8 +1309,6 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
       /* frame-layer */
       gst_base_parse_set_min_frame_size (GST_BASE_PARSE (vc1parse), 8);
     }
-
-    ret = GST_FLOW_OK;
   } else if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU ||
       vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU_FRAME ||
       (vc1parse->seq_layer_buffer
@@ -1346,8 +1344,6 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
       ret = GST_FLOW_ERROR;
       goto done;
     }
-
-    ret = GST_FLOW_OK;
   } else if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_ASF ||
       (vc1parse->seq_layer_buffer
           && vc1parse->input_stream_format ==
@@ -1418,7 +1414,6 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
       else
         GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }
-    ret = GST_FLOW_OK;
   } else {
     GstVC1ParserResult pres;
     GstVC1FrameLayer flayer;
@@ -1493,8 +1488,6 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
         goto done;
       }
     }
-
-    ret = GST_FLOW_OK;
   }
 
   /* Need sequence header or sequence layer here, above code
@@ -1516,7 +1509,6 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
         || vc1parse->input_stream_format ==
         VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME) {
       frame->flags |= GST_BASE_PARSE_FRAME_FLAG_QUEUE;
-      ret = GST_FLOW_OK;
     } else {
       GST_ERROR_OBJECT (vc1parse, "Need entrypoint for the advanced profile");
       ret = GST_FLOW_ERROR;
