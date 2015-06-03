@@ -26,11 +26,11 @@ endif
 install-exec-hook: install-helpersPROGRAMS
 if HAVE_PTP
 if HAVE_PTP_HELPER_SETUID
-	chown root $(DESTDIR)$(helpersdir)/gst-ptp-helper
-	chmod u+s $(DESTDIR)$(helpersdir)/gst-ptp-helper
+	- chown root $(DESTDIR)$(helpersdir)/gst-ptp-helper
+	- chmod u+s $(DESTDIR)$(helpersdir)/gst-ptp-helper
 endif
 if HAVE_PTP_HELPER_CAPABILITIES
-	$(SETCAP) cap_net_bind_service,cap_net_admin+ep $(DESTDIR)$(helpersdir)/gst-ptp-helper
+	- $(SETCAP) cap_net_bind_service,cap_net_admin+ep $(DESTDIR)$(helpersdir)/gst-ptp-helper
 endif
 endif
 if ENABLE_BASH_COMPLETION
