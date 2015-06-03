@@ -226,5 +226,5 @@ gboolean
 gst_asteriskh263_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "asteriskh263",
-      GST_RANK_SECONDARY, GST_TYPE_ASTERISK_H263);
+      GST_RANK_NONE, GST_TYPE_ASTERISK_H263);
 }
