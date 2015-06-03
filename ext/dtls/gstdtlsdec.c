@@ -187,7 +187,6 @@ gst_dtls_dec_class_init (GstDtlsDecClass * klass)
 static void
 gst_dtls_dec_init (GstDtlsDec * self)
 {
-  GstPad *sink;
   self->agent = get_agent_by_pem (NULL);
   self->connection_id = NULL;
   self->connection = NULL;
@@ -200,13 +199,14 @@ gst_dtls_dec_init (GstDtlsDec * self)
   g_mutex_init (&self->src_mutex);
 
   self->src = NULL;
-  sink = gst_pad_new_from_static_template (&sink_template, "sink");
-  g_return_if_fail (sink);
+  self->sink = gst_pad_new_from_static_template (&sink_template, "sink");
+  g_return_if_fail (self->sink);
 
-  gst_pad_set_chain_function (sink, GST_DEBUG_FUNCPTR (sink_chain));
-  gst_pad_set_chain_list_function (sink, GST_DEBUG_FUNCPTR (sink_chain_list));
+  gst_pad_set_chain_function (self->sink, GST_DEBUG_FUNCPTR (sink_chain));
+  gst_pad_set_chain_list_function (self->sink,
+      GST_DEBUG_FUNCPTR (sink_chain_list));
 
-  gst_element_add_pad (GST_ELEMENT (self), sink);
+  gst_element_add_pad (GST_ELEMENT (self), self->sink);
 }
 
 static void
@@ -337,6 +337,21 @@ gst_dtls_dec_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
+static gboolean
+forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstPad *srcpad = GST_PAD_CAST (user_data);
+  GstFlowReturn ret;
+
+  ret = gst_pad_store_sticky_event (srcpad, *event);
+  if (ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (srcpad, "storing sticky event %p (%s) failed: %s", *event,
+        GST_EVENT_TYPE_NAME (*event), gst_flow_get_name (ret));
+  }
+
+  return TRUE;
+}
+
 static GstPad *
 gst_dtls_dec_request_new_pad (GstElement * element,
     GstPadTemplate * tmpl, const gchar * name, const GstCaps * caps)
@@ -365,6 +380,9 @@ gst_dtls_dec_request_new_pad (GstElement * element,
 
   if (caps)
     gst_pad_set_caps (pad, (GstCaps *) caps);
+
+  /* Forward sticky events to the new srcpad */
+  gst_pad_sticky_events_foreach (self->sink, forward_sticky_events, self->src);
 
   gst_element_add_pad (element, pad);
 

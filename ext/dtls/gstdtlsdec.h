@@ -51,6 +51,7 @@ struct _GstDtlsDec {
     GstElement element;
 
     GstPad *src;
+    GstPad *sink;
     GMutex src_mutex;
 
     GstDtlsAgent *agent;
