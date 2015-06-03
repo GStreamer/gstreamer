@@ -233,6 +233,21 @@ typedef struct {
 typedef gpointer    (*GstMemoryMapFunction)       (GstMemory *mem, gsize maxsize, GstMapFlags flags);
 
 /**
+ * GstMemoryMapFullFunction:
+ * @mem: a #GstMemory
+ * @info: the #GstMapInfo to map with
+ * @maxsize: size to map
+ *
+ * Get the memory of @mem that can be accessed according to the mode specified
+ * in @info's flags. The function should return a pointer that contains at least
+ * @maxsize bytes.
+ *
+ * Returns: a pointer to memory of which at least @maxsize bytes can be
+ * accessed according to the access pattern in @info's flags.
+ */
+typedef gpointer    (*GstMemoryMapFullFunction)       (GstMemory *mem, GstMapInfo * info, gsize maxsize);
+
+/**
  * GstMemoryUnmapFunction:
  * @mem: a #GstMemory
  *
@@ -243,11 +258,11 @@ typedef void        (*GstMemoryUnmapFunction)     (GstMemory *mem);
 /**
  * GstMemoryUnmapFullFunction:
  * @mem: a #GstMemory
- * @flags: a #GstMapFlags
+ * @info: a #GstMapInfo
  *
- * Return the pointer previously retrieved with gst_memory_map() with @flags.
+ * Return the pointer previously retrieved with gst_memory_map() with @info.
  */
-typedef void        (*GstMemoryUnmapFullFunction)     (GstMemory *mem, GstMapFlags flags);
+typedef void        (*GstMemoryUnmapFullFunction)     (GstMemory *mem, GstMapInfo * info);
 
 /**
  * GstMemoryCopyFunction:

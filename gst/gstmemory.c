@@ -294,15 +294,19 @@ gst_memory_map (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
   if (!gst_memory_lock (mem, (GstLockFlags) flags))
     goto lock_failed;
 
-  info->data = mem->allocator->mem_map (mem, mem->maxsize, flags);
+  info->flags = flags;
+  info->memory = mem;
+  info->size = mem->size;
+  info->maxsize = mem->maxsize - mem->offset;
+
+  if (mem->allocator->mem_map_full)
+    info->data = mem->allocator->mem_map_full (mem, info, mem->maxsize);
+  else
+    info->data = mem->allocator->mem_map (mem, mem->maxsize, flags);
 
   if (G_UNLIKELY (info->data == NULL))
     goto error;
 
-  info->memory = mem;
-  info->flags = flags;
-  info->size = mem->size;
-  info->maxsize = mem->maxsize - mem->offset;
   info->data = info->data + mem->offset;
 
   return TRUE;
@@ -339,7 +343,7 @@ gst_memory_unmap (GstMemory * mem, GstMapInfo * info)
   g_return_if_fail (info->memory == mem);
 
   if (mem->allocator->mem_unmap_full)
-    mem->allocator->mem_unmap_full (mem, info->flags);
+    mem->allocator->mem_unmap_full (mem, info);
   else
     mem->allocator->mem_unmap (mem);
   gst_memory_unlock (mem, (GstLockFlags) info->flags);

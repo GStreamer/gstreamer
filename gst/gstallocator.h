@@ -97,6 +97,8 @@ typedef enum {
  * @mem_copy: the implementation of the GstMemoryCopyFunction
  * @mem_share: the implementation of the GstMemoryShareFunction
  * @mem_is_span: the implementation of the GstMemoryIsSpanFunction
+ * @mem_map_full: the implementation of the GstMemoryMapFullFunction.
+ *      Will be used instead of @mem_map if present. Since 1.6
  * @mem_unmap_full: the implementation of the GstMemoryUnmapFullFunction.
  *      Will be used instead of @mem_unmap if present. Since 1.6
  *
@@ -116,10 +118,11 @@ struct _GstAllocator
   GstMemoryShareFunction     mem_share;
   GstMemoryIsSpanFunction    mem_is_span;
 
+  GstMemoryMapFullFunction   mem_map_full;
   GstMemoryUnmapFullFunction mem_unmap_full;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING - 2];
 
   GstAllocatorPrivate *priv;
 };

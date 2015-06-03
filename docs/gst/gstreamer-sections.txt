@@ -1456,7 +1456,9 @@ GstMapInfo
 GST_MAP_INFO_INIT
 
 GstMemoryMapFunction
+GstMemoryMapFullFunction
 GstMemoryUnmapFunction
+GstMemoryUnmapFullFunction
 GstMemoryCopyFunction
 GstMemoryShareFunction
 GstMemoryIsSpanFunction
