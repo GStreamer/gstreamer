@@ -23,7 +23,7 @@ gst_ptp_helper_CFLAGS = $(GST_OBJ_CFLAGS) $(GIO_CFLAGS)
 gst_ptp_helper_LDADD = $(GST_OBJ_LIBS) $(GIO_LIBS) $(CAP_LIBS)
 endif
 
-install-exec-hook:
+install-exec-hook: install-helpersPROGRAMS
 if HAVE_PTP
 if HAVE_PTP_HELPER_SETUID
 	chown root $(DESTDIR)$(helpersdir)/gst-ptp-helper
