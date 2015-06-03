@@ -73,10 +73,6 @@ static guintptr gst_gl_window_cocoa_get_window_handle (GstGLWindow * window);
 static void gst_gl_window_cocoa_set_window_handle (GstGLWindow * window,
     guintptr handle);
 static void gst_gl_window_cocoa_draw (GstGLWindow * window);
-static void gst_gl_window_cocoa_run (GstGLWindow * window);
-static void gst_gl_window_cocoa_quit (GstGLWindow * window);
-static void gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 static void gst_gl_window_cocoa_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 static void gst_gl_window_cocoa_show (GstGLWindow * window);
@@ -86,8 +82,6 @@ struct _GstGLWindowCocoaPrivate
   GstGLNSWindow *internal_win_id;
   NSView *external_view;
   gboolean visible;
-  GMainContext *main_context;
-  GMainLoop *loop;
   gint preferred_width;
   gint preferred_height;
 
@@ -113,10 +107,6 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_window_handle);
   window_class->draw_unlocked = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_draw);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_draw);
-  window_class->run = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_run);
-  window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_quit);
-  window_class->send_message_async =
-      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_send_message_async);
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_preferred_size);
   window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_show);
@@ -131,19 +121,11 @@ gst_gl_window_cocoa_init (GstGLWindowCocoa * window)
 
   window->priv->preferred_width = 320;
   window->priv->preferred_height = 240;
-
-  window->priv->main_context = g_main_context_new ();
-  window->priv->loop =g_main_loop_new (window->priv->main_context, FALSE);
 }
 
 static void
 gst_gl_window_cocoa_finalize (GObject * object)
 {
-  GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (object);
-
-  g_main_loop_unref (window_cocoa->priv->loop);
-  g_main_context_unref (window_cocoa->priv->main_context);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -316,74 +298,12 @@ gst_gl_window_cocoa_set_preferred_size (GstGLWindow * window, gint width,
 }
 
 static void
-gst_gl_window_cocoa_run (GstGLWindow * window)
-{
-  GstGLWindowCocoa *window_cocoa;
-
-  window_cocoa = GST_GL_WINDOW_COCOA (window);
-
-  GST_LOG ("starting main loop");
-  g_main_loop_run (window_cocoa->priv->loop);
-  GST_LOG ("exiting main loop");
-}
-
-/* Thread safe */
-static void
-gst_gl_window_cocoa_quit (GstGLWindow * window)
-{
-  GstGLWindowCocoa *window_cocoa;
-
-  window_cocoa = GST_GL_WINDOW_COCOA (window);
-
-  g_main_loop_quit (window_cocoa->priv->loop);
-}
-
-/* Thread safe */
-typedef struct _GstGLMessage
-{
-  GstGLWindowCB callback;
-  gpointer data;
-  GDestroyNotify destroy;
-} GstGLMessage;
-
-static gboolean
-_run_message (GstGLMessage * message)
-{
-  if (message->callback)
-    message->callback (message->data);
-
-  if (message->destroy)
-    message->destroy (message->data);
-
-  g_slice_free (GstGLMessage, message);
-
-  return FALSE;
-}
-
-static void
-gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
-{
-  GstGLWindowCocoa *window_cocoa;
-  GstGLMessage *message;
-
-  window_cocoa = GST_GL_WINDOW_COCOA (window);
-  message = g_slice_new (GstGLMessage);
-
-  message->callback = callback;
-  message->data = data;
-  message->destroy = destroy;
-
-  g_main_context_invoke (window_cocoa->priv->main_context,
-      (GSourceFunc) _run_message, message);
-}
-
-static void
 gst_gl_cocoa_draw_cb (GstGLWindowCocoa *window_cocoa)
 {
   GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
+  GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
 
-  if (g_main_loop_is_running (priv->loop)) {
+  if (gst_gl_window_is_running (window)) {
     if (![priv->internal_win_id isClosed]) {
      GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
 
@@ -402,7 +322,7 @@ gst_gl_cocoa_resize_cb (GstGLNSView * view, guint width, guint height)
   GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
   GstGLContext *context = gst_gl_window_get_context (window);
 
-  if (g_main_loop_is_running (window_cocoa->priv->loop) && ![window_cocoa->priv->internal_win_id isClosed]) {
+  if (gst_gl_window_is_running (window) && ![window_cocoa->priv->internal_win_id isClosed]) {
     const GstGLFuncs *gl;
     NSRect bounds = [view bounds];
     NSRect visibleRect = [view visibleRect];
