@@ -1514,11 +1514,6 @@ main (gint argc, gchar ** argv)
   g_signal_connect (play.player, "media-info-updated",
       G_CALLBACK (media_info_updated_cb), &play);
 
-  /* We have file(s) that need playing. */
-  set_title (&play, g_list_first (play.uris)->data);
-  gst_player_play (play.player);
-  play.current_uri = g_list_first (play.uris);
-
   play_current_uri (&play, g_list_first (play.uris), NULL);
 
   gtk_main ();
