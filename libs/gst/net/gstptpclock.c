@@ -1039,19 +1039,26 @@ update_ptp_time (PtpDomainData * domain, PtpPendingSync * sync)
   gboolean synced;
   GstClockTimeDiff discont = 0;
   GstClockTime estimated_ptp_time = GST_CLOCK_TIME_NONE;
-
-#ifdef USE_ONLY_SYNC_WITH_DELAY
-  if (sync->delay_req_send_time_local == GST_CLOCK_TIME_NONE)
-    return;
-#endif
-
 #ifdef USE_MEASUREMENT_FILTERING
   GstClockTime orig_internal_time, orig_external_time, orig_rate_num,
       orig_rate_den;
   GstClockTime new_estimated_ptp_time;
   GstClockTime max_discont, estimated_ptp_time_min, estimated_ptp_time_max;
   gboolean now_synced;
+#endif
 
+#ifdef USE_ONLY_SYNC_WITH_DELAY
+  if (sync->delay_req_send_time_local == GST_CLOCK_TIME_NONE)
+    return;
+#endif
+
+  /* IEEE 1588 11.2 */
+  corrected_ptp_time =
+      sync->sync_send_time_remote +
+      (sync->correction_field_sync + 32768) / 65536;
+  corrected_local_time = sync->sync_recv_time_local - domain->mean_path_delay;
+
+#ifdef USE_MEASUREMENT_FILTERING
   /* We check this here and when updating the mean path delay, because
    * we can get here without a delay response too */
   if (sync->follow_up_recv_time_local != GST_CLOCK_TIME_NONE
@@ -1061,15 +1068,10 @@ update_ptp_time (PtpDomainData * domain, PtpPendingSync * sync)
         " > 2 * %" GST_TIME_FORMAT, domain->domain,
         GST_TIME_ARGS (sync->follow_up_recv_time_local),
         GST_TIME_ARGS (domain->mean_path_delay));
+    synced = FALSE;
     goto out;
   }
 #endif
-
-  /* IEEE 1588 11.2 */
-  corrected_ptp_time =
-      sync->sync_send_time_remote +
-      (sync->correction_field_sync + 32768) / 65536;
-  corrected_local_time = sync->sync_recv_time_local - domain->mean_path_delay;
 
   /* Set an initial local-remote relation */
   if (domain->last_ptp_time == 0)
@@ -1263,7 +1265,7 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
   gint i;
 #endif
 
-  GstClockTime mean_path_delay, delay_req_delay;
+  GstClockTime mean_path_delay, delay_req_delay = 0;
   gboolean ret;
 
   /* IEEE 1588 11.3 */
