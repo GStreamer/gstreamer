@@ -53,7 +53,6 @@ static void gst_gl_window_dispmanx_egl_set_window_handle (GstGLWindow * window,
 static void gst_gl_window_dispmanx_egl_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 static void gst_gl_window_dispmanx_egl_show (GstGLWindow * window);
-static void gst_gl_window_dispmanx_egl_draw (GstGLWindow * window);
 static void gst_gl_window_dispmanx_egl_close (GstGLWindow * window);
 static gboolean gst_gl_window_dispmanx_egl_open (GstGLWindow * window,
     GError ** error);
