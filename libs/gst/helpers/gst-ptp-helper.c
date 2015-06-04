@@ -41,6 +41,11 @@
 #include <netinet/in.h>
 #include <string.h>
 
+#ifdef __APPLE__
+#include <ifaddrs.h>
+#include <net/if_dl.h>
+#endif
+
 #ifdef HAVE_PTP_HELPER_SETUID
 #include <grp.h>
 #include <pwd.h>
@@ -235,6 +240,7 @@ setup_sockets (void)
 
   /* Probe all non-loopback interfaces */
   if (!ifaces) {
+#ifndef __APPLE__
     struct ifreq ifr;
     struct ifconf ifc;
     gchar buf[8192];
@@ -242,39 +248,56 @@ setup_sockets (void)
     ifc.ifc_len = sizeof (buf);
     ifc.ifc_buf = buf;
     if (ioctl (g_socket_get_fd (socket_event), SIOCGIFCONF, &ifc) != -1) {
-      struct ifreq *it = ifc.ifc_req;
-      const struct ifreq *const end =
-          it + (ifc.ifc_len / sizeof (struct ifreq));
-      guint idx = 0;
+      guint i, idx = 0;
 
       probed_ifaces = g_new0 (gchar *, ifc.ifc_len + 1);
 
-      for (; it != end; ++it) {
-        strcpy (ifr.ifr_name, it->ifr_name);
+      for (i = 0; i < ifc.ifc_len / sizeof (struct ifreq); i++) {
+        strcpy (ifr.ifr_name, ifc.ifc_req[i].ifr_name);
         if (ioctl (g_socket_get_fd (socket_event), SIOCGIFFLAGS, &ifr) == 0) {
           if ((ifr.ifr_flags & IFF_LOOPBACK))
             continue;
-          probed_ifaces[idx] = g_strdup (it->ifr_name);
+          probed_ifaces[idx] = g_strdup (ifc.ifc_req[i].ifr_name);
           idx++;
         } else {
-          g_warning ("can't get flags of interface '%s'", it->ifr_name);
-          probed_ifaces[idx] = g_strdup (it->ifr_name);
+          g_warning ("can't get flags of interface '%s'",
+              ifc.ifc_req[i].ifr_name);
+          probed_ifaces[idx] = g_strdup (ifc.ifc_req[i].ifr_name);
           idx++;
         }
+        if (idx != 0)
+          ifaces = probed_ifaces;
       }
-
-      if (idx != 0)
-        ifaces = probed_ifaces;
     }
+#else
+    struct ifaddrs *ifaddr, *ifa;
+
+    if (getifaddrs (&ifaddr) != -1) {
+      GPtrArray *arr;
+
+      arr = g_ptr_array_new ();
+
+      for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
+        if ((ifa->ifa_flags & IFF_LOOPBACK))
+          continue;
+
+        if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_LINK)
+          continue;
+
+        g_ptr_array_add (arr, g_strdup (ifa->ifa_name));
+      }
+      freeifaddrs (ifaddr);
+
+      g_ptr_array_add (arr, NULL);
+      ifaces = probed_ifaces = (gchar **) g_ptr_array_free (arr, FALSE);
+    }
+#endif
   }
 
   /* Get a clock id from the MAC address if none was given */
   if (clock_id == (guint64) - 1) {
     gboolean success = FALSE;
 
-    /* FIXME: On Apple platforms use IOKit APIs to iterate
-     * network interfaces and get MAC addresses. Think different!
-     */
 #ifndef __APPLE__
     struct ifreq ifr;
 
@@ -305,12 +328,10 @@ setup_sockets (void)
       ifc.ifc_len = sizeof (buf);
       ifc.ifc_buf = buf;
       if (ioctl (g_socket_get_fd (socket_event), SIOCGIFCONF, &ifc) != -1) {
-        struct ifreq *it = ifc.ifc_req;
-        const struct ifreq *const end =
-            it + (ifc.ifc_len / sizeof (struct ifreq));
+        guint i;
 
-        for (; it != end; ++it) {
-          strcpy (ifr.ifr_name, it->ifr_name);
+        for (i = 0; i < ifc.ifc_len / sizeof (struct ifreq); i++) {
+          strcpy (ifr.ifr_name, ifc.ifc_req[i].ifr_name);
           if (ioctl (g_socket_get_fd (socket_event), SIOCGIFFLAGS, &ifr) == 0) {
             if ((ifr.ifr_flags & IFF_LOOPBACK))
               continue;
@@ -329,10 +350,60 @@ setup_sockets (void)
               break;
             }
           } else {
-            g_warning ("can't get flags of interface '%s'", it->ifr_name);
+            g_warning ("can't get flags of interface '%s'",
+                ifc.ifc_req[i].ifr_name);
           }
         }
       }
+    }
+#else
+    struct ifaddrs *ifaddr, *ifa;
+
+    if (getifaddrs (&ifaddr) != -1) {
+      for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
+        struct sockaddr_dl *sdl = (struct sockaddr_dl *) ifa->ifa_addr;
+        guint8 mac_addr[6];
+
+        if ((ifa->ifa_flags & IFF_LOOPBACK))
+          continue;
+
+        if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_LINK)
+          continue;
+
+        if (ifaces) {
+          gchar **p = ifaces;
+          gboolean found = FALSE;
+
+          while (*p) {
+            if (strcmp (*p, ifa->ifa_name) == 0) {
+              found = TRUE;
+              break;
+            }
+            p++;
+          }
+
+          if (!found)
+            continue;
+        }
+
+        if (sdl->sdl_alen != 6)
+          continue;
+
+        memcpy (mac_addr, LLADDR (sdl), sdl->sdl_alen);
+
+        clock_id_array[0] = mac_addr[0];
+        clock_id_array[1] = mac_addr[1];
+        clock_id_array[2] = mac_addr[2];
+        clock_id_array[3] = 0xff;
+        clock_id_array[4] = 0xfe;
+        clock_id_array[5] = mac_addr[3];
+        clock_id_array[6] = mac_addr[4];
+        clock_id_array[7] = mac_addr[5];
+        success = TRUE;
+        break;
+      }
+
+      freeifaddrs (ifaddr);
     }
 #endif
 
@@ -356,18 +427,22 @@ setup_sockets (void)
     while (*ptr) {
       gint c = 0;
       if (!g_socket_join_multicast_group (socket_event, mcast_addr, FALSE, *ptr,
-              &err))
-        g_warning ("Couldn't join multicast group on interface '%s': %s",
-            *ptr, err->message);
+              &err)
+          && !g_error_matches (err, G_IO_ERROR, G_IO_ERROR_ADDRESS_IN_USE))
+        g_warning ("Couldn't join multicast group on interface '%s': %s", *ptr,
+            err->message);
       else
         c++;
+      g_clear_error (&err);
 
       if (!g_socket_join_multicast_group (socket_general, mcast_addr, FALSE,
-              *ptr, &err))
-        g_warning ("Couldn't join multicast group on interface '%s': %s",
-            *ptr, err->message);
+              *ptr, &err)
+          && !g_error_matches (err, G_IO_ERROR, G_IO_ERROR_ADDRESS_IN_USE))
+        g_warning ("Couldn't join multicast group on interface '%s': %s", *ptr,
+            err->message);
       else
         c++;
+      g_clear_error (&err);
 
       if (c == 2)
         success = TRUE;
