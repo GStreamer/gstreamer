@@ -436,15 +436,27 @@ gst_video_detect_calc_brightness (GstSimpleVideoMarkDetect *
   return sum / (255.0 * width * height);
 }
 
+static gint
+calculate_pw (gint pw, gint x, gint width)
+{
+  if (x < 0)
+    pw += x;
+  else if ((x + pw) > width)
+    pw = width - x;
+
+  return pw;
+}
+
 static void
 gst_video_detect_yuv (GstSimpleVideoMarkDetect * simplevideomarkdetect,
     GstVideoFrame * frame)
 {
   gdouble brightness;
   gint i, pw, ph, row_stride, pixel_stride;
-  gint width, height, req_width, req_height;
+  gint width, height, offset_calc, x, y;
   guint8 *d;
   guint64 pattern_data;
+  gint total_pattern;
 
   width = frame->info.width;
   height = frame->info.height;
@@ -454,22 +466,44 @@ gst_video_detect_yuv (GstSimpleVideoMarkDetect * simplevideomarkdetect,
   row_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
   pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 0);
 
-  req_width =
-      (simplevideomarkdetect->pattern_count +
-      simplevideomarkdetect->pattern_data_count) * pw +
-      simplevideomarkdetect->left_offset;
-  req_height = simplevideomarkdetect->bottom_offset + ph;
-  if (req_width > width || req_height > height) {
-    goto no_pattern;
-  }
-
   d = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
   /* move to start of bottom left, adjust for offsets */
-  d += row_stride * (height - ph - simplevideomarkdetect->bottom_offset) +
+  offset_calc =
+      row_stride * (height - ph - simplevideomarkdetect->bottom_offset) +
       pixel_stride * simplevideomarkdetect->left_offset;
+  x = simplevideomarkdetect->left_offset;
+  y = height - ph - simplevideomarkdetect->bottom_offset;
 
-  /* analyse the bottom left pixels */
+  total_pattern =
+      simplevideomarkdetect->pattern_count +
+      simplevideomarkdetect->pattern_data_count;
+  /* If x and y offset values are outside the video, no need to analyze */
+  if ((x + (pw * total_pattern)) < 0 || x > width || (y + height) < 0
+      || y > height) {
+    GST_ERROR_OBJECT (simplevideomarkdetect,
+        "simplevideomarkdetect pattern is outside the video. Not Analyzing.");
+    return;
+  }
+
+  /* Offset calculation less than 0, then reset to 0 */
+  if (offset_calc < 0)
+    offset_calc = 0;
+  /* Y position of mark is negative or pattern exceeds the video height,
+     then recalculate pattern height for partial display */
+  if (y < 0)
+    ph += y;
+  else if ((y + ph) > height)
+    ph = height - y;
+  /* If pattern height is less than 0, need not analyze anything */
+  if (ph < 0)
+    return;
+
+  /* move to start of bottom left */
+  d += offset_calc;
+
+  /* analyze the bottom left pixels */
   for (i = 0; i < simplevideomarkdetect->pattern_count; i++) {
+    gint draw_pw;
     /* calc brightness of width * height box */
     brightness =
         gst_video_detect_calc_brightness (simplevideomarkdetect, d, pw, ph,
@@ -493,8 +527,19 @@ gst_video_detect_yuv (GstSimpleVideoMarkDetect * simplevideomarkdetect,
         goto no_pattern;
     }
 
+    /* X position of mark is negative or pattern exceeds the video width,
+       then recalculate pattern width for partial display */
+    draw_pw = calculate_pw (pw, x, width);
+    /* If pattern width is less than 0, continue with the next pattern */
+    if (draw_pw < 0)
+      continue;
+
     /* move to i-th pattern */
-    d += pixel_stride * pw;
+    d += pixel_stride * draw_pw;
+    x += draw_pw;
+
+    if ((x + (pw * (total_pattern - i - 1))) < 0 || x >= width)
+      break;
   }
   GST_DEBUG_OBJECT (simplevideomarkdetect, "found pattern");
 
@@ -502,6 +547,7 @@ gst_video_detect_yuv (GstSimpleVideoMarkDetect * simplevideomarkdetect,
 
   /* get the data of the pattern */
   for (i = 0; i < simplevideomarkdetect->pattern_data_count; i++) {
+    gint draw_pw;
     /* calc brightness of width * height box */
     brightness =
         gst_video_detect_calc_brightness (simplevideomarkdetect, d, pw, ph,
@@ -510,8 +556,21 @@ gst_video_detect_yuv (GstSimpleVideoMarkDetect * simplevideomarkdetect,
     pattern_data <<= 1;
     if (brightness > simplevideomarkdetect->pattern_center)
       pattern_data |= 1;
+
+    /* X position of mark is negative or pattern exceeds the video width,
+       then recalculate pattern width for partial display */
+    draw_pw = calculate_pw (pw, x, width);
+    /* If pattern width is less than 0, continue with the next pattern */
+    if (draw_pw < 0)
+      continue;
+
     /* move to i-th pattern data */
-    d += pixel_stride * pw;
+    d += pixel_stride * draw_pw;
+    x += draw_pw;
+
+    if ((x + (pw * (simplevideomarkdetect->pattern_data_count - i - 1))) < 0
+        || x >= width)
+      break;
   }
 
   GST_DEBUG_OBJECT (simplevideomarkdetect, "have data %" G_GUINT64_FORMAT,
