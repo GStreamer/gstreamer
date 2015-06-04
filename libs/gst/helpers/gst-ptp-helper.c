@@ -612,12 +612,34 @@ write_clock_id (void)
   }
 }
 
+#ifdef __APPLE__
+static gint
+dummy_poll (GPollFD * fds, guint nfds, gint timeout)
+{
+  return g_poll (fds, nfds, timeout);
+}
+#endif
+
 gint
 main (gint argc, gchar ** argv)
 {
   GOptionContext *opt_ctx;
   GMainLoop *loop;
   GError *err = NULL;
+
+  /* FIXME: Work around some side effects of the changes from
+   * https://bugzilla.gnome.org/show_bug.cgi?id=741054
+   *
+   * The modified poll function somehow calls setugid(), which
+   * then abort()s the application. Make sure that we use g_poll()
+   * here!
+   */
+#ifdef __APPLE__
+  {
+    GMainContext *context = g_main_context_default ();
+    g_main_context_set_poll_func (context, dummy_poll);
+  }
+#endif
 
 #ifdef HAVE_PTP_HELPER_SETUID
   if (setuid (0) < 0)
