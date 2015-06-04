@@ -86,6 +86,8 @@ static gboolean gst_audio_convert_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_audio_convert_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_audio_convert_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 static void gst_audio_convert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_audio_convert_get_property (GObject * object, guint prop_id,
@@ -216,6 +218,8 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_convert_set_caps);
   basetransform_class->transform =
       GST_DEBUG_FUNCPTR (gst_audio_convert_transform);
+  basetransform_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_audio_convert_transform_meta);
 
   basetransform_class->passthrough_on_same_caps = TRUE;
 }
@@ -861,6 +865,23 @@ convert_error:
     ret = GST_FLOW_ERROR;
     goto done;
   }
+}
+
+static gboolean
+gst_audio_convert_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
+    GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  if (tags && g_strv_length ((gchar **) tags) == 1
+      && gst_meta_api_type_has_tag (info->api,
+          g_quark_from_string (GST_META_TAG_AUDIO_STR)))
+    return TRUE;
+
+  return FALSE;
 }
 
 static void
