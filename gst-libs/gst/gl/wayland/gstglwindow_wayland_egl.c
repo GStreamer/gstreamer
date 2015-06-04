@@ -42,7 +42,6 @@ const gchar *WlEGLErrorString ();
 #define gst_gl_window_wayland_egl_parent_class parent_class
 G_DEFINE_TYPE (GstGLWindowWaylandEGL, gst_gl_window_wayland_egl,
     GST_GL_TYPE_WINDOW);
-static void gst_gl_window_wayland_egl_finalize (GObject * object);
 
 static guintptr gst_gl_window_wayland_egl_get_window_handle (GstGLWindow *
     window);
@@ -50,10 +49,6 @@ static void gst_gl_window_wayland_egl_set_window_handle (GstGLWindow * window,
     guintptr handle);
 static void gst_gl_window_wayland_egl_show (GstGLWindow * window);
 static void gst_gl_window_wayland_egl_draw (GstGLWindow * window);
-static void gst_gl_window_wayland_egl_run (GstGLWindow * window);
-static void gst_gl_window_wayland_egl_quit (GstGLWindow * window);
-static void gst_gl_window_wayland_egl_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 static void gst_gl_window_wayland_egl_close (GstGLWindow * window);
 static gboolean gst_gl_window_wayland_egl_open (GstGLWindow * window,
     GError ** error);
@@ -332,7 +327,6 @@ static void
 gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
-  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   window_class->get_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_window_handle);
@@ -342,36 +336,17 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_draw);
   window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_show);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_draw);
-  window_class->run = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_run);
-  window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_quit);
-  window_class->send_message_async =
-      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_send_message_async);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_close);
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_open);
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_display);
   window_class->set_render_rectangle =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_set_render_rectangle);
-
-  gobject_class->finalize = gst_gl_window_wayland_egl_finalize;
 }
 
 static void
 gst_gl_window_wayland_egl_init (GstGLWindowWaylandEGL * window)
 {
-  window->main_context = g_main_context_new ();
-  window->loop = g_main_loop_new (window->main_context, FALSE);
-}
-
-static void
-gst_gl_window_wayland_egl_finalize (GObject * object)
-{
-  GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (object);
-
-  g_main_loop_unref (window_egl->loop);
-  g_main_context_unref (window_egl->main_context);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /* Must be called in the gl thread */
@@ -399,6 +374,8 @@ gst_gl_window_wayland_egl_close (GstGLWindow * window)
   g_source_destroy (window_egl->wl_source);
   g_source_unref (window_egl->wl_source);
   window_egl->wl_source = NULL;
+
+  GST_GL_WINDOW_CLASS (parent_class)->close (window);
 }
 
 static gboolean
@@ -419,74 +396,12 @@ gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
   window_egl->wl_source = wayland_event_source_new (display->display,
       window_egl->window.queue);
 
-  g_source_attach (window_egl->wl_source, window_egl->main_context);
+  if (!GST_GL_WINDOW_CLASS (parent_class)->open (window, error))
+    return FALSE;
+
+  g_source_attach (window_egl->wl_source, g_main_context_get_thread_default ());
 
   return TRUE;
-}
-
-static void
-gst_gl_window_wayland_egl_run (GstGLWindow * window)
-{
-  GstGLWindowWaylandEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-
-  GST_LOG ("starting main loop");
-  g_main_loop_run (window_egl->loop);
-  GST_LOG ("exiting main loop");
-}
-
-static void
-gst_gl_window_wayland_egl_quit (GstGLWindow * window)
-{
-  GstGLWindowWaylandEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-
-  GST_LOG ("sending quit");
-
-  g_main_loop_quit (window_egl->loop);
-
-  GST_LOG ("quit sent");
-}
-
-typedef struct _GstGLMessage
-{
-  GstGLWindowCB callback;
-  gpointer data;
-  GDestroyNotify destroy;
-} GstGLMessage;
-
-static gboolean
-_run_message (GstGLMessage * message)
-{
-  if (message->callback)
-    message->callback (message->data);
-
-  if (message->destroy)
-    message->destroy (message->data);
-
-  g_slice_free (GstGLMessage, message);
-
-  return FALSE;
-}
-
-static void
-gst_gl_window_wayland_egl_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
-{
-  GstGLWindowWaylandEGL *window_egl;
-  GstGLMessage *message;
-
-  window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-  message = g_slice_new (GstGLMessage);
-
-  message->callback = callback;
-  message->data = data;
-  message->destroy = destroy;
-
-  g_main_context_invoke (window_egl->main_context, (GSourceFunc) _run_message,
-      message);
 }
 
 void

@@ -61,49 +61,21 @@ static void gst_gl_window_win32_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 static void gst_gl_window_win32_show (GstGLWindow * window);
 static void gst_gl_window_win32_draw (GstGLWindow * window);
-static void gst_gl_window_win32_run (GstGLWindow * window);
-static void gst_gl_window_win32_quit (GstGLWindow * window);
-static void gst_gl_window_win32_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 gboolean gst_gl_window_win32_open (GstGLWindow * window, GError ** error);
 void gst_gl_window_win32_close (GstGLWindow * window);
 static void release_parent_win_id (GstGLWindowWin32 * window_win32);
 
 static void
-gst_gl_window_win32_finalize (GObject * object)
-{
-  GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (object);
-
-  if (window_win32->loop) {
-    g_main_loop_unref (window_win32->loop);
-    window_win32->loop = NULL;
-  }
-  if (window_win32->main_context) {
-    g_main_context_unref (window_win32->main_context);
-    window_win32->main_context = NULL;
-  }
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
 gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
 {
-  GObjectClass *obj_class = G_OBJECT_CLASS (klass);
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstGLWindowWin32Private));
-
-  obj_class->finalize = gst_gl_window_win32_finalize;
 
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_set_window_handle);
   window_class->draw_unlocked = GST_DEBUG_FUNCPTR (gst_gl_window_win32_draw);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_win32_draw);
-  window_class->run = GST_DEBUG_FUNCPTR (gst_gl_window_win32_run);
-  window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_win32_quit);
-  window_class->send_message_async =
-      GST_DEBUG_FUNCPTR (gst_gl_window_win32_send_message_async);
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_get_display);
   window_class->set_preferred_size =
@@ -117,12 +89,8 @@ static void
 gst_gl_window_win32_init (GstGLWindowWin32 * window)
 {
   window->priv = GST_GL_WINDOW_WIN32_GET_PRIVATE (window);
-
-  window->main_context = g_main_context_new ();
-  window->loop = g_main_loop_new (window->main_context, FALSE);
 }
 
-/* Must be called in the gl thread */
 GstGLWindowWin32 *
 gst_gl_window_win32_new (void)
 {
@@ -144,10 +112,14 @@ gst_gl_window_win32_open (GstGLWindow * window, GError ** error)
 {
   GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
 
+  if (!GST_GL_WINDOW_CLASS (parent_class)->open (window, error))
+    return FALSE;
+
   window_win32->msg_source = win32_message_source_new (window_win32);
   g_source_set_callback (window_win32->msg_source, (GSourceFunc) msg_cb,
       NULL, NULL);
-  g_source_attach (window_win32->msg_source, window_win32->main_context);
+  g_source_attach (window_win32->msg_source,
+      g_main_context_get_thread_default ());
 
   return TRUE;
 }
@@ -170,6 +142,8 @@ gst_gl_window_win32_close (GstGLWindow * window)
   g_source_destroy (window_win32->msg_source);
   g_source_unref (window_win32->msg_source);
   window_win32->msg_source = NULL;
+
+  GST_GL_WINDOW_CLASS (parent_class)->close (window);
 }
 
 static void
@@ -395,63 +369,6 @@ gst_gl_window_win32_draw (GstGLWindow * window)
 
   RedrawWindow (window_win32->internal_win_id, NULL, NULL,
       RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
-}
-
-static void
-gst_gl_window_win32_run (GstGLWindow * window)
-{
-  GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
-
-  g_main_loop_run (window_win32->loop);
-}
-
-/* Thread safe */
-static void
-gst_gl_window_win32_quit (GstGLWindow * window)
-{
-  GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
-
-  g_main_loop_quit (window_win32->loop);
-}
-
-typedef struct _GstGLMessage
-{
-  GstGLWindowCB callback;
-  gpointer data;
-  GDestroyNotify destroy;
-} GstGLMessage;
-
-static gboolean
-_run_message (GstGLMessage * message)
-{
-  if (message->callback)
-    message->callback (message->data);
-
-  if (message->destroy)
-    message->destroy (message->data);
-
-  g_slice_free (GstGLMessage, message);
-
-  return FALSE;
-}
-
-/* Thread safe */
-static void
-gst_gl_window_win32_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
-{
-  GstGLWindowWin32 *window_win32;
-  GstGLMessage *message;
-
-  window_win32 = GST_GL_WINDOW_WIN32 (window);
-  message = g_slice_new (GstGLMessage);
-
-  message->callback = callback;
-  message->data = data;
-  message->destroy = destroy;
-
-  g_main_context_invoke (window_win32->main_context, (GSourceFunc) _run_message,
-      message);
 }
 
 /* PRIVATE */

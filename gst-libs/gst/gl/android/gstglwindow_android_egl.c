@@ -38,7 +38,6 @@
 #define gst_gl_window_android_egl_parent_class parent_class
 G_DEFINE_TYPE (GstGLWindowAndroidEGL, gst_gl_window_android_egl,
     GST_GL_TYPE_WINDOW);
-static void gst_gl_window_android_egl_finalize (GObject * object);
 
 static guintptr gst_gl_window_android_egl_get_display (GstGLWindow * window);
 static guintptr gst_gl_window_android_egl_get_window_handle (GstGLWindow *
@@ -46,19 +45,11 @@ static guintptr gst_gl_window_android_egl_get_window_handle (GstGLWindow *
 static void gst_gl_window_android_egl_set_window_handle (GstGLWindow * window,
     guintptr handle);
 static void gst_gl_window_android_egl_draw (GstGLWindow * window);
-static void gst_gl_window_android_egl_run (GstGLWindow * window);
-static void gst_gl_window_android_egl_quit (GstGLWindow * window);
-static void gst_gl_window_android_egl_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
-static gboolean gst_gl_window_android_egl_open (GstGLWindow * window,
-    GError ** error);
-static void gst_gl_window_android_egl_close (GstGLWindow * window);
 
 static void
 gst_gl_window_android_egl_class_init (GstGLWindowAndroidEGLClass * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
-  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_get_display);
@@ -69,32 +60,11 @@ gst_gl_window_android_egl_class_init (GstGLWindowAndroidEGLClass * klass)
   window_class->draw_unlocked =
       GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_draw);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_draw);
-  window_class->run = GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_run);
-  window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_quit);
-  window_class->send_message_async =
-      GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_send_message_async);
-  window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_open);
-  window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_close);
-
-  gobject_class->finalize = gst_gl_window_android_egl_finalize;
 }
 
 static void
 gst_gl_window_android_egl_init (GstGLWindowAndroidEGL * window)
 {
-  window->main_context = g_main_context_new ();
-  window->loop = g_main_loop_new (window->main_context, FALSE);
-}
-
-static void
-gst_gl_window_android_egl_finalize (GObject * object)
-{
-  GstGLWindowAndroidEGL *window_egl = GST_GL_WINDOW_ANDROID_EGL (object);
-
-  g_main_loop_unref (window_egl->loop);
-  g_main_context_unref (window_egl->main_context);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /* Must be called in the gl thread */
@@ -108,82 +78,6 @@ gst_gl_window_android_egl_new (void)
   window = g_object_new (GST_GL_TYPE_WINDOW_ANDROID_EGL, NULL);
 
   return window;
-}
-
-static gboolean
-gst_gl_window_android_egl_open (GstGLWindow * window, GError ** error)
-{
-  return TRUE;
-}
-
-static void
-gst_gl_window_android_egl_close (GstGLWindow * window)
-{
-}
-
-static void
-gst_gl_window_android_egl_run (GstGLWindow * window)
-{
-  GstGLWindowAndroidEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  GST_LOG ("starting main loop");
-  g_main_loop_run (window_egl->loop);
-  GST_LOG ("exiting main loop");
-}
-
-static void
-gst_gl_window_android_egl_quit (GstGLWindow * window)
-{
-  GstGLWindowAndroidEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  GST_LOG ("sending quit");
-
-  g_main_loop_quit (window_egl->loop);
-
-  GST_LOG ("quit sent");
-}
-
-typedef struct _GstGLMessage
-{
-  GstGLWindowCB callback;
-  gpointer data;
-  GDestroyNotify destroy;
-} GstGLMessage;
-
-static gboolean
-_run_message (GstGLMessage * message)
-{
-  if (message->callback)
-    message->callback (message->data);
-
-  if (message->destroy)
-    message->destroy (message->data);
-
-  g_slice_free (GstGLMessage, message);
-
-  return FALSE;
-}
-
-static void
-gst_gl_window_android_egl_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
-{
-  GstGLWindowAndroidEGL *window_egl;
-  GstGLMessage *message;
-
-  window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-  message = g_slice_new (GstGLMessage);
-
-  message->callback = callback;
-  message->data = data;
-  message->destroy = destroy;
-
-  g_main_context_invoke (window_egl->main_context, (GSourceFunc) _run_message,
-      message);
 }
 
 static void
