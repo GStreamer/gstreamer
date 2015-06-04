@@ -2576,6 +2576,43 @@ validate_format (const gchar * format)
 }
 
 static gchar *
+promote_format_to_uint64 (const gchar * format)
+{
+  gchar *p;
+  gchar *promoted_format;
+
+  /* Must be called with a validated format! */
+  g_return_val_if_fail (validate_format (format), NULL);
+
+  /* Check if there is a % at all */
+  p = strchr (format, '%');
+  if (!p)
+    return g_strdup (format);
+  p++;
+
+  /* Following the % must be a 0, or any of d, x or u.
+   * x and u are not part of the spec, but don't hurt us
+   */
+  if (p[0] == '0') {
+    p++;
+
+    while (g_ascii_isdigit (*p))
+      p++;
+  }
+
+  /* After any 0 and alphanumeric values, there must be
+   * an d, x or u. Otherwise validation would have failed
+   */
+  g_assert (p[0] == 'd' || p[0] == 'x' || p[0] != 'u');
+
+  promoted_format =
+      g_strdup_printf ("%.*s" G_GINT64_MODIFIER "%s", (gint) (p - format),
+      format, p);
+
+  return promoted_format;
+}
+
+static gchar *
 gst_mpdparser_build_URL_from_template (const gchar * url_template,
     const gchar * id, guint number, guint bandwidth, guint64 time)
 {
@@ -2622,15 +2659,17 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
       g_free (token);
       last_token_par = TRUE;
     } else if (!strncmp (token, "Time", 4)) {
+      gchar *promoted_format;
+
       if (strlen (token) > 4) {
         format = token + 4;     /* format tag */
-      } else {
-        format = "%" G_GUINT64_FORMAT;
       }
       if (!validate_format (format))
         goto invalid_format;
 
-      tokens[i] = g_strdup_printf (format, time);
+      promoted_format = promote_format_to_uint64 (format);
+      tokens[i] = g_strdup_printf (promoted_format, time);
+      g_free (promoted_format);
       g_free (token);
       last_token_par = TRUE;
     } else if (!g_strcmp0 (token, "")) {
