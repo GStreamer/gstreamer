@@ -3965,7 +3965,7 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
 
 done:
   GST_DEBUG ("Advanced to segment: %d / %d r:%d (ret: %s)",
-      stream->segment_index, stream->segments->len,
+      stream->segment_index, (stream->segments ? stream->segments->len : -1),
       stream->segment_repeat_index, gst_flow_get_name (ret));
   return ret;
 }
