@@ -258,10 +258,17 @@ gst_codec_utils_aac_get_level (const guint8 * audio_config, guint len)
       num_cpe = 2;
       break;
     case 7:
+    case 12:
+    case 14:
       /* front left, right, center and LFE; outside front left and right;
        * rear left and right surround */
       num_sce = 1;
       num_cpe = 3;
+      num_lfe = 1;
+      break;
+    case 11:
+      num_sce = 2;
+      num_cpe = 2;
       num_lfe = 1;
       break;
     default:
@@ -320,6 +327,10 @@ gst_codec_utils_aac_get_level (const guint8 * audio_config, guint len)
       ret = 4;
     else if (num_channels <= 5 && rate <= 96000 && pcu <= 38 && rcu <= 15)
       ret = 5;
+    else if (num_channels <= 7 && rate <= 48000 && pcu <= 25 && rcu <= 19)
+      ret = 6;
+    else if (num_channels <= 7 && rate <= 96000 && pcu <= 50 && rcu <= 19)
+      ret = 7;
   } else {
     /* Return the level as per the 'Main Profile' */
     if (pcu < 40 && rcu < 20)
