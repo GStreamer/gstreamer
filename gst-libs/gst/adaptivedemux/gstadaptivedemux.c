@@ -2040,11 +2040,12 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
     if (live) {
       gint64 wait_time =
           gst_adaptive_demux_stream_get_fragment_waiting_time (demux, stream);
+      GST_MANIFEST_UNLOCK (demux);
       if (wait_time > 0)
         gst_adaptive_demux_stream_download_wait (stream, wait_time);
+    } else {
+      GST_MANIFEST_UNLOCK (demux);
     }
-
-    GST_MANIFEST_UNLOCK (demux);
 
     GST_OBJECT_LOCK (demux);
     if (demux->cancelled) {
