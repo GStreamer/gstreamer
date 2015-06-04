@@ -453,7 +453,6 @@ gst_interleave_set_property (GObject * object, guint prop_id,
 
       self->channel_positions = g_value_dup_boxed (value);
       self->channel_positions_from_input = FALSE;
-      self->channels = self->channel_positions->n_values;
       break;
     case PROP_CHANNEL_POSITIONS_FROM_INPUT:
       self->channel_positions_from_input = g_value_get_boolean (value);
@@ -497,23 +496,23 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GstInterleave *self = GST_INTERLEAVE (element);
   GstPad *new_pad;
   gchar *pad_name;
-  gint channels, padnumber;
+  gint channel, padnumber;
   GValue val = { 0, };
 
   if (templ->direction != GST_PAD_SINK)
     goto not_sink_pad;
 
   padnumber = g_atomic_int_add (&self->padcounter, 1);
-  if (self->channel_positions_from_input)
-    channels = g_atomic_int_add (&self->channels, 1);
-  else
-    channels = padnumber;
+
+  channel = g_atomic_int_add (&self->channels, 1);
+  if (!self->channel_positions_from_input)
+    channel = padnumber;
 
   pad_name = g_strdup_printf ("sink_%u", padnumber);
   new_pad = GST_PAD_CAST (g_object_new (GST_TYPE_INTERLEAVE_PAD,
           "name", pad_name, "direction", templ->direction,
           "template", templ, NULL));
-  GST_INTERLEAVE_PAD_CAST (new_pad)->channel = channels;
+  GST_INTERLEAVE_PAD_CAST (new_pad)->channel = channel;
   GST_DEBUG_OBJECT (self, "requested new pad %s", pad_name);
   g_free (pad_name);
 
