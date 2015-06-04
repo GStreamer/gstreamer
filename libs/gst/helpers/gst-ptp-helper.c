@@ -619,6 +619,11 @@ main (gint argc, gchar ** argv)
   GMainLoop *loop;
   GError *err = NULL;
 
+#ifdef HAVE_PTP_HELPER_SETUID
+  if (setuid (0) < 0)
+    g_error ("not running with superuser privileges");
+#endif
+
   opt_ctx = g_option_context_new ("- GStreamer PTP helper process");
   g_option_context_add_main_entries (opt_ctx, opt_entries, NULL);
   if (!g_option_context_parse (opt_ctx, &argc, &argv, &err))
