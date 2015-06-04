@@ -2536,6 +2536,45 @@ gst_mpdparser_get_initializationURL (GstActiveStream * stream,
   return url_prefix;
 }
 
+/* ISO/IEC 23009-1:2004 5.3.9.4.4 */
+static gboolean
+validate_format (const gchar * format)
+{
+  gchar *p;
+
+  /* Check if there is a % at all */
+  p = strchr (format, '%');
+  if (!p)
+    return TRUE;
+  p++;
+
+  /* Following the % must be a 0, or any of d, x or u.
+   * x and u are not part of the spec, but don't hurt us
+   */
+  if (p[0] == '0') {
+    p++;
+
+    while (g_ascii_isdigit (*p))
+      p++;
+  }
+
+  /* After any 0 and alphanumeric values, there must be
+   * an d, x or u.
+   */
+  if (p[0] != 'd' && p[0] != 'x' && p[0] != 'u')
+    return FALSE;
+  p++;
+
+  /* And then potentially more characters without any
+   * further %, even if the spec does not mention this
+   */
+  p = strchr (p, '%');
+  if (p)
+    return FALSE;
+
+  return TRUE;
+}
+
 static gchar *
 gst_mpdparser_build_URL_from_template (const gchar * url_template,
     const gchar * id, guint number, guint bandwidth, guint64 time)
@@ -2566,6 +2605,9 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
       if (strlen (token) > 6) {
         format = token + 6;     /* format tag */
       }
+      if (!validate_format (format))
+        goto invalid_format;
+
       tokens[i] = g_strdup_printf (format, number);
       g_free (token);
       last_token_par = TRUE;
@@ -2573,6 +2615,9 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
       if (strlen (token) > 9) {
         format = token + 9;     /* format tag */
       }
+      if (!validate_format (format))
+        goto invalid_format;
+
       tokens[i] = g_strdup_printf (format, bandwidth);
       g_free (token);
       last_token_par = TRUE;
@@ -2582,6 +2627,9 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
       } else {
         format = "%" G_GUINT64_FORMAT;
       }
+      if (!validate_format (format))
+        goto invalid_format;
+
       tokens[i] = g_strdup_printf (format, time);
       g_free (token);
       last_token_par = TRUE;
@@ -2597,9 +2645,19 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
   }
 
   ret = g_strjoinv (NULL, tokens);
+
   g_strfreev (tokens);
 
   return ret;
+
+invalid_format:
+  {
+    GST_ERROR ("Invalid format '%s' in '%s'", format, token);
+
+    g_strfreev (tokens);
+
+    return NULL;
+  }
 }
 
 guint
