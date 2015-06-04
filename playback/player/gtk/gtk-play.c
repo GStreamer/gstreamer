@@ -20,6 +20,7 @@
  */
 
 #include <string.h>
+#include <math.h>
 
 #include <gst/gst.h>
 #include <gst/tag/tag.h>
@@ -1530,6 +1531,25 @@ media_info_updated_cb (GstPlayer * player, GstPlayerMediaInfo * media_info,
   }
 }
 
+static void
+player_volume_changed_cb (GstPlayer * player, GtkPlay * play)
+{
+  gdouble new_val, cur_val;
+
+  cur_val = gtk_scale_button_get_value
+    (GTK_SCALE_BUTTON (play->volume_button));
+  new_val = gst_player_get_volume (play->player);
+
+  if (fabs (cur_val - new_val) > 0.001) {
+    g_signal_handlers_block_by_func (play->volume_button,
+        volume_changed_cb, play);
+    gtk_scale_button_set_value (GTK_SCALE_BUTTON (play->volume_button),
+        new_val);
+    g_signal_handlers_unblock_by_func (play->volume_button,
+        volume_changed_cb, play);
+  }
+}
+
 int
 main (gint argc, gchar ** argv)
 {
@@ -1612,6 +1632,8 @@ main (gint argc, gchar ** argv)
   g_signal_connect (play.player, "end-of-stream", G_CALLBACK (eos_cb), &play);
   g_signal_connect (play.player, "media-info-updated",
       G_CALLBACK (media_info_updated_cb), &play);
+  g_signal_connect (play.player, "volume-changed",
+      G_CALLBACK (player_volume_changed_cb), &play);
 
   play.playing = TRUE;
   play_current_uri (&play, g_list_first (play.uris), NULL);
