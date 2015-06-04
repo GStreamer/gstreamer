@@ -815,8 +815,8 @@ gst_ks_video_src_timestamp_buffer (GstKsVideoSrc * self, GstBuffer * buf,
   GstClock *clock;
   GstClockTime timestamp;
 
-  /* Don't timestamp muxed strams */
-  if (!gst_ks_video_device_stream_is_muxed (priv->device)) {
+  /* Don't timestamp muxed streams */
+  if (gst_ks_video_device_stream_is_muxed (priv->device)) {
     duration = timestamp = GST_CLOCK_TIME_NONE;
     priv->offset++;
     goto timestamp;
