@@ -51,9 +51,6 @@ struct _GstGLWindowDispmanxEGL {
   gint preferred_width;
   gint preferred_height;
 
-  GMainContext *main_context;
-  GMainLoop *loop;
-
   gboolean visible;
 
   gpointer _reserved[GST_PADDING];

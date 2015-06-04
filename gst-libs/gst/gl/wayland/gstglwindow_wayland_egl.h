@@ -83,8 +83,6 @@ struct _GstGLWindowWaylandEGL {
   struct window  window;
 
   GSource *wl_source;
-  GMainContext *main_context;
-  GMainLoop *loop;
 
   gpointer _reserved[GST_PADDING];
 };

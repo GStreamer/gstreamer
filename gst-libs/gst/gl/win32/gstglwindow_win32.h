@@ -51,8 +51,6 @@ struct _GstGLWindowWin32 {
   gboolean visible;
 
   GSource *msg_source;
-  GMainContext *main_context;
-  GMainLoop *loop;
 
   /*< private >*/
   GstGLWindowWin32Private *priv;

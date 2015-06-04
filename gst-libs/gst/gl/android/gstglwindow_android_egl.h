@@ -44,9 +44,6 @@ struct _GstGLWindowAndroidEGL {
   EGLNativeWindowType native_window;
   gint window_width, window_height;
 
-  GMainContext *main_context;
-  GMainLoop *loop;
-
   gpointer _reserved[GST_PADDING];
 };
 

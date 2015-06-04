@@ -46,7 +46,6 @@
 G_DEFINE_TYPE (GstGLWindowDispmanxEGL, gst_gl_window_dispmanx_egl,
     GST_GL_TYPE_WINDOW);
 
-static void gst_gl_window_dispmanx_egl_finalize (GObject * object);
 static guintptr gst_gl_window_dispmanx_egl_get_window_handle (GstGLWindow *
     window);
 static void gst_gl_window_dispmanx_egl_set_window_handle (GstGLWindow * window,
@@ -55,10 +54,6 @@ static void gst_gl_window_dispmanx_egl_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 static void gst_gl_window_dispmanx_egl_show (GstGLWindow * window);
 static void gst_gl_window_dispmanx_egl_draw (GstGLWindow * window);
-static void gst_gl_window_dispmanx_egl_run (GstGLWindow * window);
-static void gst_gl_window_dispmanx_egl_quit (GstGLWindow * window);
-static void gst_gl_window_dispmanx_egl_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 static void gst_gl_window_dispmanx_egl_close (GstGLWindow * window);
 static gboolean gst_gl_window_dispmanx_egl_open (GstGLWindow * window,
     GError ** error);
@@ -72,46 +67,23 @@ static void
 gst_gl_window_dispmanx_egl_class_init (GstGLWindowDispmanxEGLClass * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
-  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   window_class->get_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_get_window_handle);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_set_window_handle);
   window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_show);
-  window_class->draw_unlocked =
-      GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_draw);
-  window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_draw);
-  window_class->run = GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_run);
-  window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_quit);
-  window_class->send_message_async =
-      GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_send_message_async);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_close);
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_open);
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_get_display);
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_set_preferred_size);
-
-  gobject_class->finalize = gst_gl_window_dispmanx_egl_finalize;
 }
 
 static void
 gst_gl_window_dispmanx_egl_init (GstGLWindowDispmanxEGL * window_egl)
 {
-  window_egl->main_context = g_main_context_new ();
-  window_egl->loop = g_main_loop_new (window_egl->main_context, FALSE);
-}
-
-static void
-gst_gl_window_dispmanx_egl_finalize (GObject * object)
-{
-  GstGLWindowDispmanxEGL *window_egl = GST_GL_WINDOW_DISPMANX_EGL (object);
-
-  g_main_loop_unref (window_egl->loop);
-  g_main_context_unref (window_egl->main_context);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /* Must be called in the gl thread */
@@ -152,10 +124,7 @@ gst_gl_window_dispmanx_egl_close (GstGLWindow * window)
   }
   vc_dispmanx_display_close (window_egl->display);
 
-  g_main_loop_unref (window_egl->loop);
-  window_egl->loop = NULL;
-  g_main_context_unref (window_egl->main_context);
-  window_egl->main_context = NULL;
+  GST_GL_WINDOW_CLASS (parent_class)->close (window);
 }
 
 static gboolean
@@ -165,7 +134,8 @@ gst_gl_window_dispmanx_egl_open (GstGLWindow * window, GError ** error)
   gint ret = graphics_get_display_size (0, &window_egl->dp_width,
       &window_egl->dp_height);
   if (ret < 0) {
-    GST_ERROR ("Can't open display");
+    g_set_error (GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+        "Can't open display");
     return FALSE;
   }
   GST_DEBUG ("Got display size: %dx%d\n", window_egl->dp_width,
@@ -173,7 +143,7 @@ gst_gl_window_dispmanx_egl_open (GstGLWindow * window, GError ** error)
 
   window_egl->native.element = 0;
 
-  return TRUE;
+  return GST_GL_WINDOW_CLASS (parent_class)->open (window, error);
 }
 
 gboolean
@@ -184,71 +154,6 @@ gst_gl_window_dispmanx_egl_create_window (GstGLWindowDispmanxEGL * window_egl)
   window_egl->display = vc_dispmanx_display_open (0);
   window_resize (window_egl, 16, 16, FALSE);
   return TRUE;
-}
-
-static void
-gst_gl_window_dispmanx_egl_run (GstGLWindow * window)
-{
-  GstGLWindowDispmanxEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_DISPMANX_EGL (window);
-
-  GST_LOG ("starting main loop");
-  g_main_loop_run (window_egl->loop);
-  GST_LOG ("exiting main loop");
-}
-
-static void
-gst_gl_window_dispmanx_egl_quit (GstGLWindow * window)
-{
-  GstGLWindowDispmanxEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_DISPMANX_EGL (window);
-
-  GST_LOG ("sending quit");
-
-  g_main_loop_quit (window_egl->loop);
-
-  GST_LOG ("quit sent");
-}
-
-typedef struct _GstGLMessage
-{
-  GstGLWindowCB callback;
-  gpointer data;
-  GDestroyNotify destroy;
-} GstGLMessage;
-
-static gboolean
-_run_message (GstGLMessage * message)
-{
-  if (message->callback)
-    message->callback (message->data);
-
-  if (message->destroy)
-    message->destroy (message->data);
-
-  g_slice_free (GstGLMessage, message);
-
-  return FALSE;
-}
-
-static void
-gst_gl_window_dispmanx_egl_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
-{
-  GstGLWindowDispmanxEGL *window_egl;
-  GstGLMessage *message;
-
-  window_egl = GST_GL_WINDOW_DISPMANX_EGL (window);
-  message = g_slice_new (GstGLMessage);
-
-  message->callback = callback;
-  message->data = data;
-  message->destroy = destroy;
-
-  g_main_context_invoke (window_egl->main_context, (GSourceFunc) _run_message,
-      message);
 }
 
 static guintptr
@@ -332,8 +237,8 @@ window_resize (GstGLWindowDispmanxEGL * window_egl, guint width, guint height,
     vc_dispmanx_update_submit_sync (dispman_update);
 
     if (GST_GL_WINDOW (window_egl)->resize)
-      GST_GL_WINDOW (window_egl)->
-          resize (GST_GL_WINDOW (window_egl)->resize_data, width, height);
+      GST_GL_WINDOW (window_egl)->resize (GST_GL_WINDOW (window_egl)->
+          resize_data, width, height);
   }
 
   window_egl->native.width = width;
@@ -346,31 +251,10 @@ gst_gl_window_dispmanx_egl_show (GstGLWindow * window)
   GstGLWindowDispmanxEGL *window_egl = GST_GL_WINDOW_DISPMANX_EGL (window);
 
   if (!window_egl->visible) {
-    window_resize (window_egl, window_egl->preferred_width, window_egl->preferred_height, TRUE);
+    window_resize (window_egl, window_egl->preferred_width,
+        window_egl->preferred_height, TRUE);
     window_egl->visible = TRUE;
   }
-}
-
-static void
-draw_cb (gpointer data)
-{
-  GstGLWindowDispmanxEGL *window_egl = data;
-  GstGLWindow *window = GST_GL_WINDOW (window_egl);
-  GstGLContext *context = gst_gl_window_get_context (window);
-  GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
-
-  if (window->draw)
-    window->draw (window->draw_data);
-
-  context_class->swap_buffers (context);
-
-  gst_object_unref (context);
-}
-
-static void
-gst_gl_window_dispmanx_egl_draw (GstGLWindow * window)
-{
-  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
 }
 
 static guintptr
