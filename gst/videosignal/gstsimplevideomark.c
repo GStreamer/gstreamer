@@ -371,8 +371,11 @@ gst_video_mark_yuv (GstSimpleVideoMark * simplevideomark, GstVideoFrame * frame)
       simplevideomark->pattern_count + simplevideomark->pattern_data_count;
   /* If x and y offset values are outside the video, no need to draw */
   if ((x + (pw * total_pattern)) < 0 || x > width || (y + height) < 0
-      || y > height)
+      || y > height) {
+    GST_ERROR_OBJECT (simplevideomark,
+        "simplevideomark pattern is outside the video. Not drawing.");
     return GST_FLOW_OK;
+  }
 
   /* Offset calculation less than 0, then reset to 0 */
   if (offset_calc < 0)
