@@ -82,7 +82,7 @@ static const gint loas_sample_rate_table[32] = {
 
 static const gint loas_channels_table[32] = {
   0, 1, 2, 3, 4, 5, 6, 8,
-  0, 0, 0, 0, 0, 0, 0, 0
+  0, 0, 0, 7, 8, 0, 8, 0
 };
 
 static gboolean gst_aac_parse_start (GstBaseParse * parse);
@@ -308,6 +308,12 @@ gst_aac_parse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
       aacparse->sample_rate =
           gst_codec_utils_aac_get_sample_rate_from_index (sr_idx);
       aacparse->channels = (map.data[1] & 0x78) >> 3;
+      if (aacparse->channels == 7)
+        aacparse->channels = 8;
+      else if (aacparse->channels == 11)
+        aacparse->channels = 7;
+      else if (aacparse->channels == 12 || aacparse->channels == 14)
+        aacparse->channels = 8;
       aacparse->header_type = DSPAAC_HEADER_NONE;
       aacparse->mpegversion = 4;
       aacparse->frame_samples = (map.data[1] & 4) ? 960 : 1024;
@@ -759,8 +765,11 @@ gst_aac_parse_parse_adts_header (GstAacParse * aacparse, const guint8 * data,
 
     *rate = gst_codec_utils_aac_get_sample_rate_from_index (sr_idx);
   }
-  if (channels)
+  if (channels) {
     *channels = ((data[2] & 0x01) << 2) | ((data[3] & 0xc0) >> 6);
+    if (*channels == 7)
+      *channels = 8;
+  }
 
   if (version)
     *version = (data[1] & 0x08) ? 2 : 4;
@@ -1046,6 +1055,10 @@ gst_aac_parse_get_audio_channel_configuration (gint num_channels)
     return (guint8) 7U;
   else
     return G_MAXUINT8;
+
+  /* FIXME: Add support for configurations 11, 12 and 14 from
+   * ISO/IEC 14496-3:2009/PDAM 4 based on the actual channel layout
+   */
 }
 
 /**
