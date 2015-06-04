@@ -133,6 +133,8 @@ static gboolean gst_audio_resample_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_audio_resample_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_audio_resample_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 static gboolean gst_audio_resample_sink_event (GstBaseTransform * base,
     GstEvent * event);
 static gboolean gst_audio_resample_start (GstBaseTransform * base);
@@ -201,6 +203,8 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_resample_transform);
   GST_BASE_TRANSFORM_CLASS (klass)->sink_event =
       GST_DEBUG_FUNCPTR (gst_audio_resample_sink_event);
+  GST_BASE_TRANSFORM_CLASS (klass)->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_audio_resample_transform_meta);
 
   GST_BASE_TRANSFORM_CLASS (klass)->passthrough_on_same_caps = TRUE;
 }
@@ -1244,6 +1248,23 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
       GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf));
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_audio_resample_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
+    GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  if (tags && g_strv_length ((gchar **) tags) == 1
+      && gst_meta_api_type_has_tag (info->api,
+          g_quark_from_string (GST_META_TAG_AUDIO_STR)))
+    return TRUE;
+
+  return FALSE;
 }
 
 static gboolean
