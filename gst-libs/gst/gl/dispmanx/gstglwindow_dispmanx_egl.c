@@ -133,7 +133,7 @@ gst_gl_window_dispmanx_egl_open (GstGLWindow * window, GError ** error)
   gint ret = graphics_get_display_size (0, &window_egl->dp_width,
       &window_egl->dp_height);
   if (ret < 0) {
-    g_set_error (GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
         "Can't open display");
     return FALSE;
   }
