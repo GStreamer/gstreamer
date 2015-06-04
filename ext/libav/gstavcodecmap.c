@@ -2607,15 +2607,34 @@ gst_ffmpeg_pixfmt_to_videoformat (enum PixelFormat pixfmt)
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
-enum PixelFormat
-gst_ffmpeg_videoformat_to_pixfmt (GstVideoFormat format)
+static enum PixelFormat
+gst_ffmpeg_videoformat_to_pixfmt_for_codec (GstVideoFormat format,
+    const AVCodec * codec)
 {
   guint i;
 
-  for (i = 0; i < G_N_ELEMENTS (pixtofmttable); i++)
-    if (pixtofmttable[i].format == format)
-      return pixtofmttable[i].pixfmt;
+  for (i = 0; i < G_N_ELEMENTS (pixtofmttable); i++) {
+    if (pixtofmttable[i].format == format) {
+      gint j;
+
+      if (codec && codec->pix_fmts) {
+        for (j = 0; codec->pix_fmts[j] != -1; j++) {
+          if (pixtofmttable[i].pixfmt == codec->pix_fmts[j])
+            return pixtofmttable[i].pixfmt;
+        }
+      } else {
+        return pixtofmttable[i].pixfmt;
+      }
+    }
+  }
+
   return AV_PIX_FMT_NONE;
+}
+
+enum PixelFormat
+gst_ffmpeg_videoformat_to_pixfmt (GstVideoFormat format)
+{
+  return gst_ffmpeg_videoformat_to_pixfmt_for_codec (format, NULL);
 }
 
 void
@@ -2643,7 +2662,8 @@ gst_ffmpeg_videoinfo_to_context (GstVideoInfo * info, AVCodecContext * context)
   context->sample_aspect_ratio.den = GST_VIDEO_INFO_PAR_D (info);
 
   context->pix_fmt =
-      gst_ffmpeg_videoformat_to_pixfmt (GST_VIDEO_INFO_FORMAT (info));
+      gst_ffmpeg_videoformat_to_pixfmt_for_codec (GST_VIDEO_INFO_FORMAT (info),
+      context->codec);
 }
 
 void
