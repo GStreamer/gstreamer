@@ -3892,6 +3892,7 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
     gboolean forward)
 {
   GstMediaSegment *segment;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint segments_count = gst_mpd_client_get_segments_counts (stream);
 
   GST_DEBUG ("Advancing segment. Current: %d / %d r:%d", stream->segment_index,
@@ -3904,27 +3905,30 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
         stream->segment_index = 0;
       else
         stream->segment_index++;
-      return GST_FLOW_OK;
+      goto done;
     }
 
-    if (stream->segment_index >= segments_count)
-      return GST_FLOW_EOS;
+    if (stream->segment_index >= segments_count) {
+      ret = GST_FLOW_EOS;
+      goto done;
+    }
 
     /* special case for when playback direction is reverted right at *
      * the end of the segment list */
     if (stream->segment_index < 0) {
       stream->segment_index = 0;
-      return GST_FLOW_OK;
+      goto done;
     }
   } else {
     if (stream->segments == NULL)
       stream->segment_index--;
     if (stream->segment_index < 0) {
       stream->segment_index = -1;
-      return GST_FLOW_EOS;
+      ret = GST_FLOW_EOS;
+      goto done;
     }
     if (stream->segments == NULL)
-      return GST_FLOW_OK;
+      goto done;
 
     /* special case for when playback direction is reverted right at *
      * the end of the segment list */
@@ -3932,7 +3936,7 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
       stream->segment_index = segments_count - 1;
       segment = g_ptr_array_index (stream->segments, stream->segment_index);
       stream->segment_repeat_index = segment->repeat;
-      return GST_FLOW_OK;
+      goto done;
     }
   }
 
@@ -3960,9 +3964,10 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
   }
 
 done:
-  GST_DEBUG ("Advanced to segment: %d / %d r:%d", stream->segment_index,
-      stream->segments->len, stream->segment_repeat_index);
-  return GST_FLOW_OK;
+  GST_DEBUG ("Advanced to segment: %d / %d r:%d (ret: %s)",
+      stream->segment_index, stream->segments->len,
+      stream->segment_repeat_index, gst_flow_get_name (ret));
+  return ret;
 }
 
 gboolean
