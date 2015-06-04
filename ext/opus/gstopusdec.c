@@ -240,6 +240,17 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
     gst_caps_unref (caps);
   }
 
+  if (dec->n_channels == 0) {
+    GST_DEBUG_OBJECT (dec, "Using a default of 2 channels");
+    dec->n_channels = 2;
+    pos = NULL;
+  }
+
+  if (dec->sample_rate == 0) {
+    GST_DEBUG_OBJECT (dec, "Using a default of 48kHz sample rate");
+    dec->sample_rate = 48000;
+  }
+
   GST_INFO_OBJECT (dec, "Negotiated %d channels, %d Hz", dec->n_channels,
       dec->sample_rate);
 
