@@ -1,4 +1,4 @@
-From 7650c8681ecf1304a59e7cc4c0bc9eba4f753ffa Mon Sep 17 00:00:00 2001
+From 652357e0da6528b0ff8a8e01782c84c032c9f342 Mon Sep 17 00:00:00 2001
 From: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 Date: Tue, 26 May 2015 09:33:57 +0300
 Subject: [PATCH 3/3] h264parse: default to byte-stream/nalu format (Annex B).
@@ -17,10 +17,10 @@ Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
-index 76f7686..b28d449 100644
+index 4060145..b5d2955 100644
 --- a/gst/vaapi/gsth264parse.c
 +++ b/gst/vaapi/gsth264parse.c
-@@ -388,7 +388,8 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
+@@ -392,7 +392,8 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
    if (!format)
      format = GST_H264_PARSE_FORMAT_BYTE;
    if (!align)
@@ -30,7 +30,7 @@ index 76f7686..b28d449 100644
  
    GST_DEBUG_OBJECT (h264parse, "selected format %s, alignment %s",
        gst_h264_parse_get_string (h264parse, TRUE, format),
-@@ -2260,6 +2261,8 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
+@@ -2264,6 +2265,8 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
  
    /* bytestream caps sanity checks */
    if (format == GST_H264_PARSE_FORMAT_BYTE) {

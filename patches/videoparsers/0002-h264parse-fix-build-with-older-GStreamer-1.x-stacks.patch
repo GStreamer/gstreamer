@@ -1,4 +1,4 @@
-From df5b8e09df21d96aaace4376318d5790d7c51cdc Mon Sep 17 00:00:00 2001
+From cfc25cf07e6547c9b9b6bd0ee7e337df0ba842d2 Mon Sep 17 00:00:00 2001
 From: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 Date: Mon, 28 Apr 2014 17:17:04 +0200
 Subject: [PATCH 2/3] h264parse: fix build with older GStreamer 1.x stacks.
@@ -9,7 +9,7 @@ Subject: [PATCH 2/3] h264parse: fix build with older GStreamer 1.x stacks.
  2 files changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
-index 078ca83..fceec68 100644
+index 9d588e2..4060145 100644
 --- a/gst/vaapi/gsth264parse.c
 +++ b/gst/vaapi/gsth264parse.c
 @@ -27,7 +27,7 @@
@@ -21,7 +21,7 @@ index 078ca83..fceec68 100644
  #include <gst/pbutils/pbutils.h>
  #include <gst/video/video.h>
  #include "gsth264parse.h"
-@@ -164,7 +164,9 @@ gst_h264_parse_init (GstH264Parse * h264parse)
+@@ -163,7 +163,9 @@ gst_h264_parse_init (GstH264Parse * h264parse)
  {
    h264parse->frame_out = gst_adapter_new ();
    gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (h264parse), FALSE);
