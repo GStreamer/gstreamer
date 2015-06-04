@@ -224,10 +224,19 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
     caps = gst_caps_truncate (caps);
     caps = gst_caps_make_writable (caps);
     s = gst_caps_get_structure (caps, 0);
-    gst_structure_fixate_field_nearest_int (s, "rate", dec->sample_rate);
+
+    if (gst_structure_has_field (s, "rate"))
+      gst_structure_fixate_field_nearest_int (s, "rate", dec->sample_rate);
+    else
+      gst_structure_set (s, "rate", G_TYPE_INT, dec->sample_rate, NULL);
     gst_structure_get_int (s, "rate", &dec->sample_rate);
-    gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
+
+    if (gst_structure_has_field (s, "channels"))
+      gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
+    else
+      gst_structure_set (s, "channels", G_TYPE_INT, dec->n_channels, NULL);
     gst_structure_get_int (s, "channels", &dec->n_channels);
+
     gst_caps_unref (caps);
   }
 
