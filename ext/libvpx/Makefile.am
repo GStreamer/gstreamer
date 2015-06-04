@@ -149,3 +149,7 @@ dist-hook:
 	done
 
 -include $(top_srcdir)/git.mk
+
+# Tell version 3.79 and up of GNU make to not build goals in this
+# directory in parallel.
+.NOTPARALLEL:
