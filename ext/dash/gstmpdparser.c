@@ -4534,6 +4534,10 @@ gst_mpd_client_seek_to_time (GstMpdClient * client, GDateTime * time)
   ts_microseconds = g_date_time_difference (time, start);
   g_date_time_unref (start);
 
+  /* Clamp to availability start time, otherwise calculations wrap around */
+  if (ts_microseconds < 0)
+    ts_microseconds = 0;
+
   ts = ts_microseconds * GST_USECOND;
   for (stream = client->active_streams; stream; stream = g_list_next (stream)) {
     ret = ret & gst_mpd_client_stream_seek (client, stream->data, ts);
