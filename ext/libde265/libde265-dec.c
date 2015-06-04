@@ -175,8 +175,8 @@ gst_libde265_dec_class_init (GstLibde265DecClass * klass)
       gst_static_pad_template_get (&src_template));
 
   gst_element_class_set_static_metadata (gstelement_class,
-      "HEVC/H.265 parser",
-      "Codec/Parser/Converter/Video",
+      "HEVC/H.265 decoder",
+      "Codec/Decoder/Video",
       "Decodes HEVC/H.265 video streams using libde265",
       "struktur AG <opensource@struktur.de>");
 }
