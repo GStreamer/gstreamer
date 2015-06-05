@@ -808,7 +808,7 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
     GstCaps *temp;
     GstStructure *s, *d;
     const GValue *value;
-    gboolean have_pt = FALSE, have_ssrc = FALSE;
+    gboolean have_pt = FALSE;
     gboolean have_ts_offset = FALSE;
     gboolean have_seqnum_offset = FALSE;
     guint max_ptime, ptime;
@@ -824,11 +824,19 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
       return FALSE;
     }
 
-    /* We prefer the pt, ssrc, timestamp-offset, seqnum-offset from the
+    /* We prefer the pt, timestamp-offset, seqnum-offset from the
      * property (if set), or any previously configured value over what
      * downstream prefers. Only if downstream can't accept that, or the
      * properties were not set, we fall back to choosing downstream's
      * preferred value
+     *
+     * For ssrc we prefer any value downstream suggests, otherwise
+     * the property value or as a last resort a random value.
+     * This difference for ssrc is implemented for retaining backwards
+     * compatibility with changing rtpsession's internal-ssrc property.
+     *
+     * FIXME 2.0: All these properties should go away and be negotiated
+     * via caps only!
      */
 
     /* try to use the previously set pt, or the one from the property */
@@ -883,49 +891,23 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
       s = NULL;
     }
 
-    /* try to select the previously used ssrc, or the one from the property */
-    if (!payload->priv->ssrc_random
-        || gst_pad_has_current_caps (payload->srcpad)) {
-      GstCaps *probe_caps = gst_caps_copy (templ);
-      GstCaps *intersection;
-
-      gst_caps_set_simple (probe_caps, "ssrc", G_TYPE_UINT,
-          payload->current_ssrc, NULL);
-      intersection = gst_caps_intersect (probe_caps, temp);
-
-      if (!gst_caps_is_empty (intersection)) {
-        GST_LOG_OBJECT (payload, "Using selected ssrc %08x",
-            payload->current_ssrc);
-        gst_caps_unref (temp);
-        temp = intersection;
-        have_ssrc = TRUE;
-      } else {
-        GST_WARNING_OBJECT (payload, "Can't use selected ssrc %08x",
-            payload->current_ssrc);
-        gst_caps_unref (intersection);
-      }
-      gst_caps_unref (probe_caps);
-    }
-
     /* If we got no ssrc above, select one now */
-    if (!have_ssrc) {
-      /* get first structure */
-      s = gst_caps_get_structure (temp, 0);
+    /* get first structure */
+    s = gst_caps_get_structure (temp, 0);
 
-      if (gst_structure_has_field_typed (s, "ssrc", G_TYPE_UINT)) {
-        value = gst_structure_get_value (s, "ssrc");
-        payload->current_ssrc = g_value_get_uint (value);
-        GST_LOG_OBJECT (payload, "using peer ssrc %08x", payload->current_ssrc);
-      } else {
-        /* FIXME, fixate_nearest_uint would be even better but we
-         * don't support uint ranges so how likely is it that anybody
-         * uses a list of possible ssrcs */
-        gst_structure_set (s, "ssrc", G_TYPE_UINT, payload->current_ssrc, NULL);
-        GST_LOG_OBJECT (payload, "using internal ssrc %08x",
-            payload->current_ssrc);
-      }
-      s = NULL;
+    if (gst_structure_has_field_typed (s, "ssrc", G_TYPE_UINT)) {
+      value = gst_structure_get_value (s, "ssrc");
+      payload->current_ssrc = g_value_get_uint (value);
+      GST_LOG_OBJECT (payload, "using peer ssrc %08x", payload->current_ssrc);
+    } else {
+      /* FIXME, fixate_nearest_uint would be even better but we
+       * don't support uint ranges so how likely is it that anybody
+       * uses a list of possible ssrcs */
+      gst_structure_set (s, "ssrc", G_TYPE_UINT, payload->current_ssrc, NULL);
+      GST_LOG_OBJECT (payload, "using internal ssrc %08x",
+          payload->current_ssrc);
     }
+    s = NULL;
 
     /* try to select the previously used timestamp-offset, or the one from the property */
     if (!payload->priv->ts_offset_random
