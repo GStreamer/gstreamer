@@ -378,6 +378,7 @@ gst_ximagesink_xwindow_set_title (GstXImageSink * ximagesink,
     /* we have a window */
     if (xwindow->internal) {
       XTextProperty xproperty;
+      XClassHint *hint = XAllocClassHint ();
       const gchar *app_name;
       const gchar *title = NULL;
       gchar *title_mem = NULL;
@@ -403,6 +404,13 @@ gst_ximagesink_xwindow_set_title (GstXImageSink * ximagesink,
 
         g_free (title_mem);
       }
+
+      if (hint) {
+        hint->res_name = g_strdup (app_name);
+        hint->res_class = g_strdup ("GStreamer");
+        XSetClassHint (ximagesink->xcontext->disp, xwindow->win, hint);
+      }
+      XFree (hint);
     }
   }
 }
