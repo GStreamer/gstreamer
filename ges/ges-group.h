@@ -22,7 +22,8 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-container.h>
+#include "ges-clip.h"
+#include "ges-container.h"
 
 G_BEGIN_DECLS
 

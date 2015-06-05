@@ -41,6 +41,7 @@
 G_DEFINE_TYPE (GESGroup, ges_group, GES_TYPE_CONTAINER);
 
 #define GES_CHILDREN_INIBIT_SIGNAL_EMISSION (GES_CHILDREN_LAST + 1)
+#define GES_GROUP_SIGNALS_IDS_DATA_KEY_FORMAT "ges-group-signals-ids-%p"
 
 struct _GESGroupPrivate
 {
@@ -52,6 +53,14 @@ struct _GESGroupPrivate
    * in this case the value should always be kept */
   gboolean setting_value;
 };
+
+typedef struct
+{
+  GESLayer *layer;
+  gulong child_clip_changed_layer_sid;
+  gulong child_priority_changed_sid;
+  gulong child_group_priority_changed_sid;
+} ChildSignalIds;
 
 enum
 {
@@ -138,22 +147,32 @@ static void
 _child_clip_changed_layer_cb (GESTimelineElement * clip,
     GParamSpec * arg G_GNUC_UNUSED, GESGroup * group)
 {
+  ChildSignalIds *sigids;
+  gchar *signals_ids_key;
   GESLayer *old_layer, *new_layer;
   gint offset, layer_prio = ges_clip_get_layer_priority (GES_CLIP (clip));
   GESContainer *container = GES_CONTAINER (group);
 
   offset = _ges_container_get_priority_offset (container, clip);
-  old_layer = g_list_nth_data (GES_TIMELINE_ELEMENT_TIMELINE (group)->layers,
-      _PRIORITY (group) - offset);
-
-  if (old_layer)
-    g_signal_handlers_disconnect_by_func (old_layer, _child_priority_changed_cb,
-        clip);
+  signals_ids_key =
+      g_strdup_printf (GES_GROUP_SIGNALS_IDS_DATA_KEY_FORMAT, clip);
+  sigids = g_object_get_data (G_OBJECT (group), signals_ids_key);
+  g_free (signals_ids_key);
+  old_layer = sigids->layer;
 
   new_layer = ges_clip_get_layer (GES_CLIP (clip));
-  if (new_layer)
-    g_signal_connect (new_layer, "notify::priority",
+
+  if (sigids->child_priority_changed_sid) {
+    g_signal_handler_disconnect (old_layer, sigids->child_priority_changed_sid);
+    sigids->child_priority_changed_sid = 0;
+  }
+
+  if (new_layer) {
+    sigids->child_priority_changed_sid =
+        g_signal_connect (new_layer, "notify::priority",
         (GCallback) _child_priority_changed_cb, clip);
+  }
+  sigids->layer = new_layer;
 
   if (container->children_control_mode != GES_CHILDREN_UPDATE) {
     if (container->children_control_mode == GES_CHILDREN_INIBIT_SIGNAL_EMISSION) {
@@ -163,10 +182,10 @@ _child_clip_changed_layer_cb (GESTimelineElement * clip,
     return;
   }
 
-  if (layer_prio + offset < 0 ||
-      (GES_TIMELINE_ELEMENT_TIMELINE (group) &&
-          layer_prio + offset + GES_CONTAINER_HEIGHT (group) - 1 >
-          g_list_length (GES_TIMELINE_ELEMENT_TIMELINE (group)->layers))) {
+  if (new_layer && (layer_prio + offset < 0 ||
+          (GES_TIMELINE_ELEMENT_TIMELINE (group) &&
+              layer_prio + offset + GES_CONTAINER_HEIGHT (group) - 1 >
+              g_list_length (GES_TIMELINE_ELEMENT_TIMELINE (group)->layers)))) {
 
     GST_INFO_OBJECT (container, "Trying to move to a layer outside of"
         "the timeline layers, moving back to old layer (prio %i)",
@@ -414,6 +433,8 @@ static void
 _child_added (GESContainer * group, GESTimelineElement * child)
 {
   GList *children, *tmp;
+  gchar *signals_ids_key;
+  ChildSignalIds *signals_ids;
 
   GESGroupPrivate *priv = GES_GROUP (group)->priv;
   GstClockTime last_child_end = 0, first_child_start = G_MAXUINT64;
@@ -446,37 +467,73 @@ _child_added (GESContainer * group, GESTimelineElement * child)
   group->children_control_mode = GES_CHILDREN_UPDATE;
   _update_our_values (GES_GROUP (group));
 
+  signals_ids_key =
+      g_strdup_printf (GES_GROUP_SIGNALS_IDS_DATA_KEY_FORMAT, child);
+  signals_ids = g_malloc0 (sizeof (ChildSignalIds));
+  g_object_set_data_full (G_OBJECT (group), signals_ids_key,
+      signals_ids, g_free);
+  g_free (signals_ids_key);
   if (GES_IS_CLIP (child)) {
-    g_signal_connect (child, "notify::layer",
+    GESLayer *layer = ges_clip_get_layer (GES_CLIP (child));
+
+    signals_ids->child_clip_changed_layer_sid =
+        g_signal_connect (child, "notify::layer",
         (GCallback) _child_clip_changed_layer_cb, group);
-    g_signal_connect (ges_clip_get_layer (GES_CLIP (child)),
-        "notify::priority", (GCallback) _child_priority_changed_cb, child);
+
+    if (layer) {
+      signals_ids->child_priority_changed_sid = g_signal_connect (layer,
+          "notify::priority", (GCallback) _child_priority_changed_cb, child);
+    }
+    signals_ids->layer = layer;
+
   } else if (GES_IS_GROUP (child), group) {
-    g_signal_connect (child, "notify::priority",
+    signals_ids->child_group_priority_changed_sid =
+        g_signal_connect (child, "notify::priority",
         (GCallback) _child_group_priority_changed, group);
   }
 }
+
+static void
+_disconnect_signals (GESGroup * group, GESTimelineElement * child,
+    ChildSignalIds * sigids)
+{
+  if (sigids->child_group_priority_changed_sid) {
+    g_signal_handler_disconnect (child,
+        sigids->child_group_priority_changed_sid);
+    sigids->child_group_priority_changed_sid = 0;
+  }
+
+  if (sigids->child_clip_changed_layer_sid) {
+    g_signal_handler_disconnect (child, sigids->child_clip_changed_layer_sid);
+    sigids->child_clip_changed_layer_sid = 0;
+  }
+
+  if (sigids->child_priority_changed_sid) {
+    g_signal_handler_disconnect (sigids->layer,
+        sigids->child_priority_changed_sid);
+    sigids->child_priority_changed_sid = 0;
+  }
+}
+
 
 static void
 _child_removed (GESContainer * group, GESTimelineElement * child)
 {
   GList *children;
   GstClockTime first_child_start;
+  gchar *signals_ids_key;
+  ChildSignalIds *sigids;
   GESGroupPrivate *priv = GES_GROUP (group)->priv;
 
   _ges_container_sort_children (group);
 
   children = GES_CONTAINER_CHILDREN (group);
 
-  if (GES_IS_CLIP (child)) {
-    g_signal_handlers_disconnect_by_func (ges_clip_get_layer (GES_CLIP (child)),
-        _child_priority_changed_cb, child);
-    g_signal_handlers_disconnect_by_func (child, _child_clip_changed_layer_cb,
-        group);
-  } else if (GES_IS_GROUP (child), group)
-    g_signal_handlers_disconnect_by_func (child, _child_group_priority_changed,
-        group);
-
+  signals_ids_key =
+      g_strdup_printf (GES_GROUP_SIGNALS_IDS_DATA_KEY_FORMAT, child);
+  sigids = g_object_get_data (G_OBJECT (group), signals_ids_key);
+  _disconnect_signals (GES_GROUP (group), child, sigids);
+  g_free (signals_ids_key);
   if (children == NULL) {
     GST_FIXME_OBJECT (group, "Auto destroy myself?");
     timeline_remove_group (GES_TIMELINE_ELEMENT_TIMELINE (group),
