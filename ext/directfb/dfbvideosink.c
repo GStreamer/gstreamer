@@ -1818,7 +1818,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
       src.h = dfbvideosink->video_height;
     }
     gst_caps_unref (caps);
-    res = surface->GetSize (surface, &dst.w, &dst.h);
+    surface->GetSize (surface, &dst.w, &dst.h);
 
     /* Center / Clip */
     gst_video_sink_center_rect (src, dst, &result, FALSE);
@@ -1910,15 +1910,15 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
     gst_video_frame_unmap (&src_frame);
 
-    res = dest->Unlock (dest);
+    dest->Unlock (dest);
 
     dest->Release (dest);
 
     if (dfbvideosink->backbuffer) {
       if (dfbvideosink->vsync) {
-        res = surface->Flip (surface, NULL, DSFLIP_ONSYNC);
+        surface->Flip (surface, NULL, DSFLIP_ONSYNC);
       } else {
-        res = surface->Flip (surface, NULL, DSFLIP_NONE);
+        surface->Flip (surface, NULL, DSFLIP_NONE);
       }
     }
   } else {
