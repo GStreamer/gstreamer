@@ -160,7 +160,7 @@ static gboolean gst_type_find_element_activate_src_mode (GstPad * pad,
     GstObject * parent, GstPadMode mode, gboolean active);
 static GstFlowReturn
 gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
-    gboolean check_avail);
+    gboolean check_avail, gboolean at_eos);
 static void gst_type_find_element_send_cached_events (GstTypeFindElement *
     typefind);
 
@@ -643,7 +643,7 @@ gst_type_find_element_sink_event (GstPad * pad, GstObject * parent,
         case GST_EVENT_EOS:
         {
           GST_INFO_OBJECT (typefind, "Got EOS and no type found yet");
-          gst_type_find_element_chain_do_typefinding (typefind, FALSE);
+          gst_type_find_element_chain_do_typefinding (typefind, FALSE, TRUE);
 
           res = gst_pad_push_event (typefind->src, event);
           break;
@@ -849,7 +849,7 @@ gst_type_find_element_chain (GstPad * pad, GstObject * parent,
       gst_adapter_push (typefind->adapter, buffer);
       GST_OBJECT_UNLOCK (typefind);
 
-      res = gst_type_find_element_chain_do_typefinding (typefind, TRUE);
+      res = gst_type_find_element_chain_do_typefinding (typefind, TRUE, FALSE);
 
       if (typefind->mode == MODE_ERROR)
         res = GST_FLOW_ERROR;
@@ -866,7 +866,7 @@ gst_type_find_element_chain (GstPad * pad, GstObject * parent,
 
 static GstFlowReturn
 gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
-    gboolean check_avail)
+    gboolean check_avail, gboolean at_eos)
 {
   GstTypeFindProbability probability;
   GstCaps *caps = NULL;
@@ -925,10 +925,17 @@ gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
 
 not_enough_data:
   {
-    GST_DEBUG_OBJECT (typefind, "not enough data for typefinding yet "
-        "(%" G_GSIZE_FORMAT " bytes)", avail);
     GST_OBJECT_UNLOCK (typefind);
-    return GST_FLOW_OK;
+
+    if (at_eos) {
+      GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
+          (_("Stream contains not enough data.")), ("Can't typefind stream"));
+      return GST_FLOW_ERROR;
+    } else {
+      GST_DEBUG_OBJECT (typefind, "not enough data for typefinding yet "
+          "(%" G_GSIZE_FORMAT " bytes)", avail);
+      return GST_FLOW_OK;
+    }
   }
 no_type_found:
   {
@@ -939,11 +946,18 @@ no_type_found:
   }
 wait_for_data:
   {
-    GST_DEBUG_OBJECT (typefind,
-        "no caps found with %" G_GSIZE_FORMAT " bytes of data, "
-        "waiting for more data", avail);
     GST_OBJECT_UNLOCK (typefind);
-    return GST_FLOW_OK;
+
+    if (at_eos) {
+      GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
+          (_("Stream contains not enough data.")), ("Can't typefind stream"));
+      return GST_FLOW_ERROR;
+    } else {
+      GST_DEBUG_OBJECT (typefind,
+          "no caps found with %" G_GSIZE_FORMAT " bytes of data, "
+          "waiting for more data", avail);
+      return GST_FLOW_OK;
+    }
   }
 low_probability:
   {
