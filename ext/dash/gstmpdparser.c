@@ -4241,8 +4241,7 @@ gst_mpd_client_is_live (GstMpdClient * client)
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->mpd_node != NULL, FALSE);
 
-  return client->mpd_node->type == GST_MPD_FILE_TYPE_DYNAMIC &&
-      client->mpd_node->mediaPresentationDuration != -1;
+  return client->mpd_node->type == GST_MPD_FILE_TYPE_DYNAMIC;
 }
 
 guint
