@@ -224,6 +224,8 @@ struct _RTPSession {
 
   GstRTPProfile rtp_profile;
 
+  gboolean      reduced_size_rtcp;
+
   /* bandwidths */
   gboolean     recalc_bandwidth;
   guint        bandwidth;
