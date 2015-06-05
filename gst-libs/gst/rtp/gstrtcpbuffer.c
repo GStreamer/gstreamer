@@ -178,15 +178,17 @@ wrong_padding:
  * @data: (array length=len): the data to validate
  * @len: the length of @data to validate
  *
- * Check if the @data and @size point to the data of a valid RTCP
- * packet.
+ * Check if the @data and @size point to the data of a valid RTCP packet.
  * Use this function to validate a packet before using the other functions in
  * this module.
  *
  * This function is updated to support reduced size rtcp packets according to
- * RFC 5506
+ * RFC 5506 and will validate full compound RTCP packets as well as reduced
+ * size RTCP packets.
  *
  * Returns: TRUE if the data points to a valid RTCP packet.
+ *
+ * Since: 1.6
  */
 gboolean
 gst_rtcp_buffer_validate_data_reduced (guint8 * data, guint len)
@@ -200,11 +202,10 @@ gst_rtcp_buffer_validate_data_reduced (guint8 * data, guint len)
  * @data: (array length=len): the data to validate
  * @len: the length of @data to validate
  *
- * Check if the @data and @size point to the data of a valid RTCP (compound)
- * packet.
+ * Check if the @data and @size point to the data of a valid compound,
+ * non-reduced size RTCP packet.
  * Use this function to validate a packet before using the other functions in
  * this module.
- *
  *
  * Returns: TRUE if the data points to a valid RTCP packet.
  */
@@ -223,6 +224,8 @@ gst_rtcp_buffer_validate_data (guint8 * data, guint len)
  * gst_rtcp_buffer_validate_reduced().
  *
  * Returns: TRUE if @buffer is a valid RTCP packet.
+ *
+ * Since: 1.6
  */
 gboolean
 gst_rtcp_buffer_validate_reduced (GstBuffer * buffer)

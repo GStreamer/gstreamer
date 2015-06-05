@@ -1197,6 +1197,8 @@ GstRTCPFBType
 gst_rtcp_buffer_new_take_data
 gst_rtcp_buffer_new_copy_data
 
+gst_rtcp_buffer_validate_data_reduced
+gst_rtcp_buffer_validate_reduced
 gst_rtcp_buffer_validate_data
 gst_rtcp_buffer_validate
 

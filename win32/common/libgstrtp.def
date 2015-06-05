@@ -9,6 +9,8 @@ EXPORTS
 	gst_rtcp_buffer_unmap
 	gst_rtcp_buffer_validate
 	gst_rtcp_buffer_validate_data
+	gst_rtcp_buffer_validate_data_reduced
+	gst_rtcp_buffer_validate_reduced
 	gst_rtcp_ntp_to_unix
 	gst_rtcp_packet_add_rb
 	gst_rtcp_packet_bye_add_ssrc
