@@ -15,6 +15,7 @@ curlftpsink
 curlsftpsink
 curlhttpsink
 curlsmtpsink
+dash_mpd
 dataurisrc
 faac
 faad
