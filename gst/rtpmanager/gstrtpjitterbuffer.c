@@ -3539,7 +3539,7 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
 
-  if (G_UNLIKELY (!gst_rtcp_buffer_validate (buffer)))
+  if (G_UNLIKELY (!gst_rtcp_buffer_validate_reduced (buffer)))
     goto invalid_buffer;
 
   priv = jitterbuffer->priv;
