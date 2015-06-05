@@ -4104,8 +4104,8 @@ gst_mpd_client_get_next_fragment_duration (GstMpdClient * client,
     g_return_val_if_fail (stream->cur_seg_template->MultSegBaseType->
         SegmentTimeline == NULL, 0);
 
-    if (GST_CLOCK_TIME_IS_VALID (duration) || (segments_count > 0
-            && seg_idx >= segments_count))
+    if (GST_CLOCK_TIME_IS_VALID (duration) || segments_count == 0
+        || seg_idx < segments_count)
       return duration;
     return 0;
   }
