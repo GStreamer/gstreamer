@@ -230,6 +230,7 @@ struct _RTPSession {
   guint        rtcp_rs_bandwidth;
 
   guint32       suggested_ssrc;
+  gboolean      internal_ssrc_set;
 
   /* for sender/receiver counting */
   guint32       key;
@@ -347,7 +348,7 @@ GstStructure *  rtp_session_get_sdes_struct        (RTPSession *sess);
 void            rtp_session_set_sdes_struct        (RTPSession *sess, const GstStructure *sdes);
 
 /* handling sources */
-guint32         rtp_session_suggest_ssrc           (RTPSession *sess);
+guint32         rtp_session_suggest_ssrc           (RTPSession *sess, gboolean *is_random);
 
 gboolean        rtp_session_add_source             (RTPSession *sess, RTPSource *src);
 guint           rtp_session_get_num_sources        (RTPSession *sess);

@@ -344,7 +344,7 @@ on_ssrc_collision (RTPSession * session, RTPSource * src, GstRtpSession * sess)
 
     /* if there is no source using the suggested ssrc, most probably because
      * this ssrc has just collided, suggest upstream to use it */
-    suggested_ssrc = rtp_session_suggest_ssrc (session);
+    suggested_ssrc = rtp_session_suggest_ssrc (session, NULL);
     internal_src = rtp_session_get_source_by_ssrc (session, suggested_ssrc);
     if (!internal_src)
       gst_structure_set (structure, "suggested-ssrc", G_TYPE_UINT,
@@ -2007,18 +2007,26 @@ gst_rtp_session_getcaps_send_rtp (GstPad * pad, GstRtpSession * rtpsession,
   GstCaps *result;
   GstStructure *s1, *s2;
   guint ssrc;
+  gboolean is_random;
 
   priv = rtpsession->priv;
 
-  ssrc = rtp_session_suggest_ssrc (priv->session);
+  ssrc = rtp_session_suggest_ssrc (priv->session, &is_random);
 
   /* we can basically accept anything but we prefer to receive packets with our
    * internal SSRC so that we don't have to patch it. Create a structure with
-   * the SSRC and another one without. */
-  s1 = gst_structure_new ("application/x-rtp", "ssrc", G_TYPE_UINT, ssrc, NULL);
-  s2 = gst_structure_new_empty ("application/x-rtp");
+   * the SSRC and another one without.
+   * Only do this if the session actually decided on an ssrc already,
+   * otherwise we give upstream the opportunity to select an ssrc itself */
+  if (!is_random) {
+    s1 = gst_structure_new ("application/x-rtp", "ssrc", G_TYPE_UINT, ssrc,
+        NULL);
+    s2 = gst_structure_new_empty ("application/x-rtp");
 
-  result = gst_caps_new_full (s1, s2, NULL);
+    result = gst_caps_new_full (s1, s2, NULL);
+  } else {
+    result = gst_caps_new_empty_simple ("application/x-rtp");
+  }
 
   if (filter) {
     GstCaps *caps = result;

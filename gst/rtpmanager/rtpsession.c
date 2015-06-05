@@ -569,6 +569,7 @@ rtp_session_init (RTPSession * sess)
 
   /* this is the SSRC we suggest */
   sess->suggested_ssrc = rtp_session_create_new_ssrc (sess);
+  sess->internal_ssrc_set = FALSE;
 
   sess->first_rtcp = TRUE;
   sess->next_rtcp_check_time = GST_CLOCK_TIME_NONE;
@@ -666,6 +667,7 @@ rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_INTERNAL_SSRC:
       RTP_SESSION_LOCK (sess);
       sess->suggested_ssrc = g_value_get_uint (value);
+      sess->internal_ssrc_set = TRUE;
       RTP_SESSION_UNLOCK (sess);
       if (sess->callbacks.reconfigure)
         sess->callbacks.reconfigure (sess, sess->reconfigure_user_data);
@@ -744,7 +746,7 @@ rtp_session_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_INTERNAL_SSRC:
-      g_value_set_uint (value, rtp_session_suggest_ssrc (sess));
+      g_value_set_uint (value, rtp_session_suggest_ssrc (sess, NULL));
       break;
     case PROP_INTERNAL_SOURCE:
       /* FIXME, return a random source */
@@ -1413,8 +1415,10 @@ check_collision (RTPSession * sess, RTPSource * source,
       /* mark the source BYE */
       rtp_source_mark_bye (source, "SSRC Collision");
       /* if we were suggesting this SSRC, change to something else */
-      if (sess->suggested_ssrc == ssrc)
+      if (sess->suggested_ssrc == ssrc) {
         sess->suggested_ssrc = rtp_session_create_new_ssrc (sess);
+        sess->internal_ssrc_set = TRUE;
+      }
 
       on_ssrc_collision (sess, source);
 
@@ -1522,8 +1526,6 @@ add_source (RTPSession * sess, RTPSource * src)
     sess->stats.active_sources++;
   if (src->internal) {
     sess->stats.internal_sources++;
-    if (sess->suggested_ssrc != src->ssrc)
-      sess->suggested_ssrc = src->ssrc;
   }
 
   /* update point-to-point status */
@@ -1633,13 +1635,14 @@ obtain_internal_source (RTPSession * sess, guint32 ssrc, gboolean * created,
 /**
  * rtp_session_suggest_ssrc:
  * @sess: a #RTPSession
+ * @is_random: if the suggested ssrc is random
  *
  * Suggest an unused SSRC in @sess.
  *
  * Returns: a free unused SSRC
  */
 guint32
-rtp_session_suggest_ssrc (RTPSession * sess)
+rtp_session_suggest_ssrc (RTPSession * sess, gboolean * is_random)
 {
   guint32 result;
 
@@ -1647,6 +1650,8 @@ rtp_session_suggest_ssrc (RTPSession * sess)
 
   RTP_SESSION_LOCK (sess);
   result = sess->suggested_ssrc;
+  if (is_random)
+    *is_random = !sess->internal_ssrc_set;
   RTP_SESSION_UNLOCK (sess);
 
   return result;
@@ -2738,6 +2743,8 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
 
     RTP_SESSION_LOCK (sess);
     source = obtain_internal_source (sess, ssrc, &created, GST_CLOCK_TIME_NONE);
+    sess->suggested_ssrc = ssrc;
+    sess->internal_ssrc_set = TRUE;
     if (source) {
       rtp_source_update_caps (source, caps);
       g_object_unref (source);
@@ -3800,6 +3807,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
     source = obtain_internal_source (sess, sess->suggested_ssrc, &created,
         current_time);
+    sess->internal_ssrc_set = TRUE;
     g_object_unref (source);
   }
 
