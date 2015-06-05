@@ -22,7 +22,7 @@
  * SECTION:element-caopengllayersink
  *
  * caopengllayersink renders incoming video frames to CAOpenGLLayer that
- * can be retreived through the layer property and placed in the Core
+ * can be retrieved through the layer property and placed in the Core
  * Animation render tree.
  */
 

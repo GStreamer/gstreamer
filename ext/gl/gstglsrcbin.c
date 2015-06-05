@@ -241,7 +241,7 @@ gst_gl_src_bin_change_state (GstElement * element, GstStateChange transition)
               gst_gl_src_bin_signals[SIGNAL_CREATE_ELEMENT], 0, &self->src);
 
         if (!self->src) {
-          GST_ERROR_OBJECT (element, "Failed to retreive element");
+          GST_ERROR_OBJECT (element, "Failed to retrieve element");
           return GST_STATE_CHANGE_FAILURE;
         }
         if (!_connect_src_element (self))

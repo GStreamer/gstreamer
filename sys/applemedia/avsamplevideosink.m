@@ -632,7 +632,7 @@ _enqueue_sample (GstAVSampleVideoSink * av_sink, GstBuffer *buf)
 
   if (0 != CMVideoFormatDescriptionCreateForImageBuffer (kCFAllocatorDefault,
         pbuf, &v_format_desc)) {
-    GST_ERROR_OBJECT (av_sink, "Failed to retreive video format from "
+    GST_ERROR_OBJECT (av_sink, "Failed to retrieve video format from "
         "pixel buffer");
     CFRelease (pbuf);
     return FALSE;
