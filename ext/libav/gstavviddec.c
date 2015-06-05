@@ -1259,8 +1259,15 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     GST_DEBUG_OBJECT (ffmpegdec, "copy pal %p %p", &packet, pal);
   }
 
+  /* This might call into get_buffer() from another thread,
+   * which would cause a deadlock. Release the lock here
+   * and taking it again later seems safe
+   * See https://bugzilla.gnome.org/show_bug.cgi?id=726020
+   */
+  GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
   len = avcodec_decode_video2 (ffmpegdec->context,
       ffmpegdec->picture, have_data, &packet);
+  GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
 
   GST_DEBUG_OBJECT (ffmpegdec, "after decode: len %d, have_data %d",
       len, *have_data);
