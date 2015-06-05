@@ -723,20 +723,19 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
 static void
 gst_v4l2_get_driver_min_buffers (GstV4l2Object * v4l2object)
 {
-  int min;
-  gboolean ret = FALSE;
+  struct v4l2_control control = { 0, };
 
-  /* Certain driver may expose a minimum number of buffers through controls. */
-  /* If the ioctl is not supported by the driver, min_buffers remains zero.  */
-  ret = gst_v4l2_get_attribute (v4l2object,
-      V4L2_TYPE_IS_OUTPUT (v4l2object->type)
-      ? V4L2_CID_MIN_BUFFERS_FOR_OUTPUT : V4L2_CID_MIN_BUFFERS_FOR_CAPTURE,
-      &min);
+  g_return_if_fail (GST_V4L2_IS_OPEN (v4l2object));
 
-  if (ret) {
+  if (V4L2_TYPE_IS_OUTPUT (v4l2object->type))
+    control.id = V4L2_CID_MIN_BUFFERS_FOR_OUTPUT;
+  else
+    control.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
+
+  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_CTRL, &control) == 0) {
     GST_DEBUG_OBJECT (v4l2object->element,
-        "driver requires a minimum of %d buffers", min);
-    v4l2object->min_buffers = min;
+        "driver requires a minimum of %d buffers", control.value);
+    v4l2object->min_buffers = control.value;
   } else {
     v4l2object->min_buffers = 0;
   }
