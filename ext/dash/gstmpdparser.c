@@ -157,7 +157,8 @@ static GstSegmentListNode *gst_mpdparser_get_segment_list (GstPeriodNode *
     GstRepresentationNode * Representation);
 
 /* Segments */
-static guint gst_mpd_client_get_segments_counts (GstActiveStream * stream);
+static guint gst_mpd_client_get_segments_counts (GstMpdClient * client,
+    GstActiveStream * stream);
 
 /* Memory management */
 static GstSegmentTimelineNode *gst_mpdparser_segment_timeline_node_new (void);
@@ -3578,12 +3579,20 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
   } else {
     GstClockTime duration =
         gst_mpd_client_get_segment_duration (client, stream, NULL);
+    guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
+
     g_return_val_if_fail (stream->cur_seg_template->
         MultSegBaseType->SegmentTimeline == NULL, FALSE);
     if (!GST_CLOCK_TIME_IS_VALID (duration)) {
       return FALSE;
     }
     index = ts / duration;
+    if (segments_count > 0 && index >= segments_count) {
+      stream->segment_index = segments_count;
+      stream->segment_repeat_index = 0;
+      GST_DEBUG ("Seek to after last segment");
+      return FALSE;
+    }
   }
 
   stream->segment_repeat_index = repeat_index;
@@ -3656,7 +3665,7 @@ gst_mpd_client_get_last_fragment_timestamp_end (GstMpdClient * client,
   stream = g_list_nth_data (client->active_streams, stream_idx);
   g_return_val_if_fail (stream != NULL, 0);
 
-  segment_idx = gst_mpd_client_get_segments_counts (stream) - 1;
+  segment_idx = gst_mpd_client_get_segments_counts (client, stream) - 1;
   currentChunk = g_ptr_array_index (stream->segments, segment_idx);
 
   *ts =
@@ -3690,9 +3699,12 @@ gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client,
   } else {
     GstClockTime duration =
         gst_mpd_client_get_segment_duration (client, stream, NULL);
+    guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
+
     g_return_val_if_fail (stream->cur_seg_template->
         MultSegBaseType->SegmentTimeline == NULL, FALSE);
-    if (!GST_CLOCK_TIME_IS_VALID (duration)) {
+    if (!GST_CLOCK_TIME_IS_VALID (duration) || (segments_count > 0
+            && stream->segment_index >= segments_count)) {
       return FALSE;
     }
     *ts = stream->segment_index * duration;
@@ -3740,9 +3752,12 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   } else {
     GstClockTime duration = gst_mpd_client_get_segment_duration (client,
         stream, NULL);
+    guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
+
     g_return_val_if_fail (stream->cur_seg_template->
         MultSegBaseType->SegmentTimeline == NULL, FALSE);
-    if (!GST_CLOCK_TIME_IS_VALID (duration)) {
+    if (!GST_CLOCK_TIME_IS_VALID (duration) || (segments_count > 0
+            && stream->segment_index >= segments_count)) {
       return FALSE;
     }
     fragment->duration = duration;
@@ -3875,9 +3890,9 @@ gst_mpd_client_has_next_segment (GstMpdClient * client,
     GstActiveStream * stream, gboolean forward)
 {
   if (forward) {
-    if (stream->segments == NULL)
-      return TRUE;
-    if (stream->segment_index >= stream->segments->len)
+    guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
+
+    if (segments_count > 0 && stream->segment_index >= segments_count)
       return FALSE;
   } else {
     if (stream->segment_index < 0)
@@ -3893,23 +3908,23 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
 {
   GstMediaSegment *segment;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint segments_count = gst_mpd_client_get_segments_counts (stream);
+  guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
 
   GST_DEBUG ("Advancing segment. Current: %d / %d r:%d", stream->segment_index,
       segments_count, stream->segment_repeat_index);
 
   /* handle special cases first */
   if (forward) {
+    if (segments_count > 0 && stream->segment_index >= segments_count) {
+      ret = GST_FLOW_EOS;
+      goto done;
+    }
+
     if (stream->segments == NULL) {
       if (stream->segment_index < 0)
         stream->segment_index = 0;
       else
         stream->segment_index++;
-      goto done;
-    }
-
-    if (stream->segment_index >= segments_count) {
-      ret = GST_FLOW_EOS;
       goto done;
     }
 
@@ -3965,7 +3980,7 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
 
 done:
   GST_DEBUG ("Advanced to segment: %d / %d r:%d (ret: %s)",
-      stream->segment_index, (stream->segments ? stream->segments->len : -1),
+      stream->segment_index, segments_count,
       stream->segment_repeat_index, gst_flow_get_name (ret));
   return ret;
 }
@@ -4084,10 +4099,13 @@ gst_mpd_client_get_next_fragment_duration (GstMpdClient * client,
   } else {
     GstClockTime duration =
         gst_mpd_client_get_segment_duration (client, stream, NULL);
+    guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
+
     g_return_val_if_fail (stream->cur_seg_template->MultSegBaseType->
         SegmentTimeline == NULL, 0);
 
-    if (GST_CLOCK_TIME_IS_VALID (duration))
+    if (GST_CLOCK_TIME_IS_VALID (duration) || (segments_count > 0
+            && seg_idx >= segments_count))
       return duration;
     return 0;
   }
@@ -4224,14 +4242,23 @@ gst_mpd_client_seek_to_first_segment (GstMpdClient * client)
 }
 
 static guint
-gst_mpd_client_get_segments_counts (GstActiveStream * stream)
+gst_mpd_client_get_segments_counts (GstMpdClient * client,
+    GstActiveStream * stream)
 {
+  GstStreamPeriod *stream_period;
+
   g_return_val_if_fail (stream != NULL, 0);
 
   if (stream->segments)
     return stream->segments->len;
   g_return_val_if_fail (stream->cur_seg_template->MultSegBaseType->
       SegmentTimeline == NULL, 0);
+
+  stream_period = gst_mpdparser_get_stream_period (client);
+  if (stream_period->duration != -1)
+    return gst_util_uint64_scale_ceil (stream_period->duration, 1,
+        gst_mpd_client_get_segment_duration (client, stream, NULL));
+
   return 0;
 }
 
