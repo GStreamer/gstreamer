@@ -1896,9 +1896,11 @@ gst_adaptive_demux_stream_download_fragment (GstAdaptiveDemuxStream * stream)
     if (ret != GST_FLOW_OK) {
       /* TODO check if we are truly stoping */
       if (ret != GST_FLOW_ERROR && gst_adaptive_demux_is_live (demux)) {
-        /* looks like there is no way of knowing when a live stream has ended
-         * Have to assume we are falling behind and cause a manifest reload */
-        return GST_FLOW_EOS;
+        if (++stream->download_error_count <= MAX_DOWNLOAD_ERROR_COUNT) {
+          /* looks like there is no way of knowing when a live stream has ended
+           * Have to assume we are falling behind and cause a manifest reload */
+          return GST_FLOW_EOS;
+        }
       }
     }
   }
