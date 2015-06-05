@@ -411,7 +411,7 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
 
 /**
  * gst_gl_context_get_current_gl_context:
- * @context_type: a #GstGLPlatform specifying the type of context to retreive
+ * @context_type: a #GstGLPlatform specifying the type of context to retrieve
  *
  * Returns: The OpenGL context handle current in the calling thread or %NULL
  *
@@ -446,7 +446,7 @@ gst_gl_context_get_current_gl_context (GstGLPlatform context_type)
 #endif
 
   if (!handle)
-    GST_WARNING ("Could not retreive current context");
+    GST_WARNING ("Could not retrieve current context");
 
   return handle;
 }
@@ -711,7 +711,7 @@ _default_get_proc_address (GstGLContext * context, const gchar * name)
  * specific function does not exist, NULL is returned instead.
  *
  * Platform specfic functions (names starting 'egl', 'glX', 'wgl', etc) can also
- * be retreived using this method.
+ * be retrieved using this method.
  *
  * Returns: a function pointer or NULL
  *

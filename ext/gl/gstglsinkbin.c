@@ -261,7 +261,7 @@ gst_gl_sink_bin_change_state (GstElement * element, GstStateChange transition)
               gst_gl_sink_bin_signals[SIGNAL_CREATE_ELEMENT], 0, &self->sink);
 
         if (!self->sink) {
-          GST_ERROR_OBJECT (element, "Failed to retreive element");
+          GST_ERROR_OBJECT (element, "Failed to retrieve element");
           return GST_STATE_CHANGE_FAILURE;
         }
         if (!_connect_sink_element (self))

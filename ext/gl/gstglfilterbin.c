@@ -251,7 +251,7 @@ gst_gl_filter_bin_change_state (GstElement * element, GstStateChange transition)
               &self->filter);
 
         if (!self->filter) {
-          GST_ERROR_OBJECT (element, "Failed to retreive element");
+          GST_ERROR_OBJECT (element, "Failed to retrieve element");
           return GST_STATE_CHANGE_FAILURE;
         }
         if (!_connect_filter_element (self))

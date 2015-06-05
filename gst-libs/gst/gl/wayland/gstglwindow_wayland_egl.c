@@ -387,7 +387,7 @@ gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
   if (!display->display) {
     g_set_error (error, GST_GL_WINDOW_ERROR,
         GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
-        "Failed to retreive Wayland display");
+        "Failed to retrieve Wayland display");
     return FALSE;
   }
 

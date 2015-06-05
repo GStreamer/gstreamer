@@ -126,7 +126,7 @@ GST_START_TEST (test_query_drain)
   caps = gst_pad_get_current_caps (srcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
-  /* Let's retreive the GstGLBufferPool to change its min
+  /* Let's retrieve the GstGLBufferPool to change its min
    * and max nb buffers. For that just send an allocation
    * query and change the pool config. */
   query = gst_query_new_allocation (caps, TRUE);
