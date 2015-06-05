@@ -829,7 +829,6 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
       goto done;
     }
   } else {
-    start_offset = GST_CLOCK_TIME_NONE;
     for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
       TSDemuxStream *stream = tmp->data;
 
