@@ -963,6 +963,9 @@ _create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
           == toplevel)
         continue;
 
+      if (g_list_find (priv->movecontext.moving_trackelements, next))
+        continue;
+
       transition_duration = (_START (prev) + _DURATION (prev)) - _START (next);
       if (transition_duration > 0 && transition_duration < _DURATION (prev) &&
           transition_duration < _DURATION (next)) {
