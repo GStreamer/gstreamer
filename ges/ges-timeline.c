@@ -1239,6 +1239,11 @@ ges_timeline_snap_position (GESTimeline * timeline,
   if (ret == NULL)
     off = G_MAXUINT64;
 
+  if (priv->movecontext.moving_trackelements) {
+    GST_INFO_OBJECT (timeline, "Rippling, no way we snap end");
+    goto done;
+  }
+
   prev_iter = g_sequence_iter_prev (iter);
   while (!g_sequence_iter_is_begin (prev_iter)) {
     prev_tc = g_sequence_get (prev_iter);
