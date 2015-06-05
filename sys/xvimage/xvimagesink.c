@@ -659,19 +659,42 @@ gst_xvimagesink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   return caps;
 }
 
+static GstBufferPool *
+gst_xvimagesink_create_pool (GstXvImageSink * xvimagesink, GstCaps * caps,
+    gsize size, gint min)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+
+  pool = gst_xvimage_buffer_pool_new (xvimagesink->allocator);
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, size, min, 0);
+
+  if (!gst_buffer_pool_set_config (pool, config))
+    goto config_failed;
+
+  return pool;
+
+config_failed:
+  {
+    GST_ERROR_OBJECT (xvimagesink, "failed to set config.");
+    gst_object_unref (pool);
+    return NULL;
+  }
+}
+
 static gboolean
 gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstXvImageSink *xvimagesink;
   GstXvContext *context;
-  GstStructure *structure;
   GstBufferPool *newpool, *oldpool;
   GstVideoInfo info;
   guint32 im_format = 0;
   gint video_par_n, video_par_d;        /* video's PAR */
   gint display_par_n, display_par_d;    /* display's PAR */
   guint num, den;
-  gint size;
 
   xvimagesink = GST_XVIMAGESINK (bsink);
   context = xvimagesink->context;
@@ -697,8 +720,6 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     goto invalid_format;
 
   gst_xvcontext_set_colorimetry (context, &info.colorimetry);
-
-  size = info.size;
 
   /* get aspect ratio from caps if it's present, and
    * convert video width and height to a display width and height
@@ -778,24 +799,16 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   xvimagesink->redraw_border = TRUE;
 
   /* create a new pool for the new configuration */
-  newpool = gst_xvimage_buffer_pool_new (xvimagesink->allocator);
+  newpool = gst_xvimagesink_create_pool (xvimagesink, caps, info.size, 2);
 
-  structure = gst_buffer_pool_get_config (newpool);
-  gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
-  if (!gst_buffer_pool_set_config (newpool, structure))
-    goto config_failed;
-
+  /* we don't activate the internal pool yet as it may not be needed */
   oldpool = xvimagesink->pool;
-  /* we don't activate the pool yet, this will be done by downstream after it
-   * has configured the pool. If downstream does not want our pool we will
-   * activate it when we render into it */
   xvimagesink->pool = newpool;
   g_mutex_unlock (&xvimagesink->flow_lock);
 
-  /* unref the old sink */
+  /* deactivate and unref the old internal pool */
   if (oldpool) {
-    /* we don't deactivate, some elements might still be using it, it will
-     * be deactivated when the last ref is gone */
+    gst_buffer_pool_set_active (oldpool, FALSE);
     gst_object_unref (oldpool);
   }
 
@@ -823,13 +836,6 @@ no_display_size:
   {
     GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
         ("Error calculating the output display ratio of the video."));
-    return FALSE;
-  }
-config_failed:
-  {
-    GST_ERROR_OBJECT (xvimagesink, "failed to set config.");
-    gst_object_unref (newpool);
-    g_mutex_unlock (&xvimagesink->flow_lock);
     return FALSE;
   }
 }
@@ -1043,8 +1049,7 @@ static gboolean
 gst_xvimagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (bsink);
-  GstBufferPool *pool;
-  GstStructure *config;
+  GstBufferPool *pool = NULL;
   GstCaps *caps;
   guint size;
   gboolean need_pool;
@@ -1054,44 +1059,22 @@ gst_xvimagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (caps == NULL)
     goto no_caps;
 
-  g_mutex_lock (&xvimagesink->flow_lock);
-  if ((pool = xvimagesink->pool))
-    gst_object_ref (pool);
-  g_mutex_unlock (&xvimagesink->flow_lock);
-
-  if (pool != NULL) {
-    GstCaps *pcaps;
-
-    /* we had a pool, check caps */
-    GST_DEBUG_OBJECT (xvimagesink, "check existing pool caps");
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
-
-    if (!gst_caps_is_equal (caps, pcaps)) {
-      GST_DEBUG_OBJECT (xvimagesink, "pool has different caps");
-      /* different caps, we can't use this pool */
-      gst_object_unref (pool);
-      pool = NULL;
-    }
-    gst_structure_free (config);
-  }
-  if (pool == NULL && need_pool) {
+  if (need_pool) {
     GstVideoInfo info;
 
     if (!gst_video_info_from_caps (&info, caps))
       goto invalid_caps;
 
     GST_DEBUG_OBJECT (xvimagesink, "create new pool");
-    pool = gst_xvimage_buffer_pool_new (xvimagesink->allocator);
+    pool = gst_xvimagesink_create_pool (xvimagesink, caps, info.size, 0);
 
     /* the normal size of a frame */
     size = info.size;
 
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-    if (!gst_buffer_pool_set_config (pool, config))
-      goto config_failed;
+    if (pool == NULL)
+      goto no_pool;
   }
+
   if (pool) {
     /* we need at least 2 buffer because we hold on to the last one */
     gst_query_add_allocation_pool (query, pool, size, 2, 0);
@@ -1115,10 +1098,9 @@ invalid_caps:
     GST_DEBUG_OBJECT (bsink, "invalid caps specified");
     return FALSE;
   }
-config_failed:
+no_pool:
   {
-    GST_DEBUG_OBJECT (bsink, "failed setting config");
-    gst_object_unref (pool);
+    /* Already warned in create_pool */
     return FALSE;
   }
 }
