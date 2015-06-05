@@ -483,7 +483,7 @@ gst_gl_mixer_bin_change_state (GstElement * element, GstStateChange transition)
               gst_gl_mixer_bin_signals[SIGNAL_CREATE_ELEMENT], 0, &self->mixer);
 
         if (!self->mixer) {
-          GST_ERROR_OBJECT (element, "Failed to retreive element");
+          GST_ERROR_OBJECT (element, "Failed to retrieve element");
           GST_OBJECT_UNLOCK (element);
           return GST_STATE_CHANGE_FAILURE;
         }
