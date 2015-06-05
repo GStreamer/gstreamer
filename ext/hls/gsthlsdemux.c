@@ -437,7 +437,6 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
     GstM3U8 *child = NULL;
     GError *err = NULL;
 
-    /* TODO seems like something that could be simplified */
     if (demux->connection_speed == 0) {
       GST_M3U8_CLIENT_LOCK (hlsdemux->client);
       child = hlsdemux->client->main->current_variant->data;
