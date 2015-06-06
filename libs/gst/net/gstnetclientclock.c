@@ -3,6 +3,7 @@
  *                    2005 Wim Taymans <wim@fluendo.com>
  *                    2005 Andy Wingo <wingo@pobox.com>
  * Copyright (C) 2012 Collabora Ltd. <tim.muller@collabora.co.uk>
+ * Copyright (C) 2015 Sebastian Dröge <sebastian@centricular.com>
  *
  * gstnetclientclock.h: clock that synchronizes itself to a time provider over
  * the network
