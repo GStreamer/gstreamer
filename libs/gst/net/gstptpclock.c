@@ -37,10 +37,8 @@
  * gst_ptp_clock_new() then allows to create a GstClock that provides the PTP
  * time from a master clock inside a specific PTP domain. This clock will only
  * return valid timestamps once the timestamps in the PTP domain are known. To
- * check this, the GstPtpClock::internal-clock property and the related
- * notify::clock signal can be used. Once the internal clock is not NULL, the
- * PTP domain's time is known. Alternatively you can wait for this with
- * gst_ptp_clock_wait_ready().
+ * check this, you can use gst_clock_wait_for_sync(), the GstClock::synced
+ * signal and gst_clock_is_synced().
  *
  *
  * To gather statistics about the PTP clock synchronization,
@@ -2421,9 +2419,9 @@ gst_ptp_clock_get_internal_time (GstClock * clock)
  *
  * This clock only returns valid timestamps after it received the first
  * times from the PTP master clock on the network. Once this happens the
- * GstPtpClock::internal-clock property will become non-NULL. You can connect
- * to the notify::internal-clock signal to get notified about this, or
- * alternatively use gst_ptp_clock_wait_ready() to wait for this to happen.
+ * GstPtpClock::internal-clock property will become non-NULL. You can
+ * check this with gst_clock_wait_for_sync(), the GstClock::synced signal and
+ * gst_clock_is_synced().
  *
  * Since: 1.6
  */
@@ -2560,12 +2558,6 @@ GstClock *
 gst_ptp_clock_new (const gchar * name, guint domain)
 {
   return NULL;
-}
-
-gboolean
-gst_ptp_clock_wait_ready (GstPtpClock * self, GstClockTime timeout)
-{
-  return FALSE;
 }
 
 gulong
