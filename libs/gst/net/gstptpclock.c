@@ -1260,7 +1260,7 @@ static gboolean
 update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
 {
 #ifdef USE_MEDIAN_PRE_FILTERING
-  GstClockTime last_path_delays[G_N_ELEMENTS (domain->last_path_delays)];
+  GstClockTime last_path_delays[MEDIAN_PRE_FILTERING_WINDOW];
   GstClockTime median;
   gint i;
 #endif
@@ -1276,7 +1276,7 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
           32768) / 65536) / 2;
 
 #ifdef USE_MEDIAN_PRE_FILTERING
-  for (i = 1; i < G_N_ELEMENTS (domain->last_path_delays); i++)
+  for (i = 1; i < MEDIAN_PRE_FILTERING_WINDOW; i++)
     domain->last_path_delays[i - 1] = domain->last_path_delays[i];
   domain->last_path_delays[i - 1] = mean_path_delay;
 
@@ -1286,10 +1286,10 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
     memcpy (&last_path_delays, &domain->last_path_delays,
         sizeof (last_path_delays));
     g_qsort_with_data (&last_path_delays,
-        G_N_ELEMENTS (domain->last_path_delays), sizeof (GstClockTime),
+        MEDIAN_PRE_FILTERING_WINDOW, sizeof (GstClockTime),
         (GCompareDataFunc) compare_clock_time, NULL);
 
-    median = last_path_delays[G_N_ELEMENTS (last_path_delays) / 2];
+    median = last_path_delays[MEDIAN_PRE_FILTERING_WINDOW / 2];
 
     /* FIXME: We might want to use something else here, like only allowing
      * things in the interquartile range, or also filtering away delays that
