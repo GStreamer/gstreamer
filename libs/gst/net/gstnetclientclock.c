@@ -384,11 +384,12 @@ compare_clock_time (const GstClockTime * a, const GstClockTime * b)
 
 static void
 gst_net_client_clock_observe_times (GstNetClientClock * self,
-    GstClockTime local_1, GstClockTime remote, GstClockTime local_2)
+    GstClockTime local_1, GstClockTime remote_1, GstClockTime remote_2,
+    GstClockTime local_2)
 {
   GstNetClientClockPrivate *priv = self->priv;
   GstClockTime current_timeout = 0;
-  GstClockTime local_avg;
+  GstClockTime local_avg, remote_avg;
   gdouble r_squared;
   GstClock *clock;
   GstClockTime rtt, rtt_limit, min_update_interval;
@@ -420,7 +421,19 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
     goto bogus_observation;
   }
 
-  rtt = GST_CLOCK_DIFF (local_1, local_2);
+  if (remote_2 < remote_1) {
+    GST_LOG_OBJECT (self,
+        "Dropping observation: remote receive time %" GST_TIME_FORMAT
+        " < send time %" GST_TIME_FORMAT, GST_TIME_ARGS (remote_1),
+        GST_TIME_ARGS (remote_2));
+    goto bogus_observation;
+  }
+
+  /* The round trip time is (assuming symmetric path delays)
+   * delta = (local_2 - local_1) - (remote_2 - remote_1)
+   */
+
+  rtt = GST_CLOCK_DIFF (local_1, local_2) - GST_CLOCK_DIFF (remote_1, remote_2);
 
   if ((rtt_limit > 0) && (rtt > rtt_limit)) {
     GST_LOG_OBJECT (self,
@@ -473,11 +486,46 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
     goto bogus_observation;
   }
 
-  local_avg = (local_2 + local_1) / 2;
+  /* The difference between the local and remote clock (again assuming
+   * symmetric path delays):
+   *
+   * local_1 + delta / 2 - remote_1 = theta
+   * or
+   * local_2 - delta / 2 - remote_2 = theta
+   *
+   * which gives after some simple algebraic transformations:
+   *
+   *         (remote_1 - local_1) + (remote_2 - local_2)
+   * theta = -------------------------------------------
+   *                              2
+   *
+   *
+   * Thus remote time at local_avg is equal to:
+   *
+   * local_avg + theta =
+   *
+   * local_1 + local_2   (remote_1 - local_1) + (remote_2 - local_2)
+   * ----------------- + -------------------------------------------
+   *         2                                2
+   *
+   * =
+   *
+   * remote_1 + remote_2
+   * ------------------- = remote_avg
+   *          2
+   *
+   * We use this for our clock estimation, i.e. local_avg at remote clock
+   * being the same as remote_avg.
+   */
 
-  GST_LOG_OBJECT (self, "local1 %" G_GUINT64_FORMAT " remote %" G_GUINT64_FORMAT
-      " localavg %" G_GUINT64_FORMAT " local2 %" G_GUINT64_FORMAT,
-      local_1, remote, local_avg, local_2);
+  local_avg = (local_2 + local_1) / 2;
+  remote_avg = (remote_2 + remote_1) / 2;
+
+  GST_LOG_OBJECT (self,
+      "local1 %" G_GUINT64_FORMAT " remote1 %" G_GUINT64_FORMAT " remote2 %"
+      G_GUINT64_FORMAT " remoteavg %" G_GUINT64_FORMAT " localavg %"
+      G_GUINT64_FORMAT " local2 %" G_GUINT64_FORMAT, local_1, remote_1,
+      remote_2, remote_avg, local_avg, local_2);
 
   clock = GST_CLOCK_CAST (self);
 
@@ -502,12 +550,13 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
 
   /* If the remote observation was within a max_discont window around our min/max estimates, we're synched */
   synched =
-      (GST_CLOCK_DIFF (remote, min_guess) < (GstClockTimeDiff) (max_discont)
+      (GST_CLOCK_DIFF (remote_avg, min_guess) < (GstClockTimeDiff) (max_discont)
       && GST_CLOCK_DIFF (time_before,
-          remote) < (GstClockTimeDiff) (max_discont));
+          remote_avg) < (GstClockTimeDiff) (max_discont));
 
-  if (gst_clock_add_observation_unapplied (GST_CLOCK (self), local_avg, remote,
-          &r_squared, &internal_time, &external_time, &rate_num, &rate_den)) {
+  if (gst_clock_add_observation_unapplied (GST_CLOCK (self), local_avg,
+          remote_avg, &r_squared, &internal_time, &external_time, &rate_num,
+          &rate_den)) {
 
     /* Now compare the difference (discont) in the clock
      * after this observation */
@@ -539,13 +588,13 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
 
     /* Check if the new clock params would have made our observation within range */
     now_synched =
-        (GST_CLOCK_DIFF (remote,
+        (GST_CLOCK_DIFF (remote_avg,
             gst_clock_adjust_with_calibration (GST_CLOCK (self), local_1,
                 internal_time, external_time, rate_num,
                 rate_den)) < (GstClockTimeDiff) (max_discont))
         && (GST_CLOCK_DIFF (gst_clock_adjust_with_calibration (GST_CLOCK (self),
                 local_2, internal_time, external_time, rate_num, rate_den),
-            remote) < (GstClockTimeDiff) (max_discont));
+            remote_avg) < (GstClockTimeDiff) (max_discont));
 
     /* Only update the clock if we had synch or just gained it */
     if (synched || now_synched || priv->skipped_updates > MAX_SKIPPED_UPDATES) {
@@ -580,23 +629,20 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
         "rtt", G_TYPE_UINT64, rtt,
         "rtt-average", G_TYPE_UINT64, priv->rtt_avg,
         "local", G_TYPE_UINT64, local_avg,
-        "remote", G_TYPE_UINT64, remote,
+        "remote", G_TYPE_UINT64, remote_avg,
         "discontinuity", G_TYPE_INT64, time_discont,
         "remote-min-estimate", G_TYPE_UINT64, min_guess,
         "remote-max-estimate", G_TYPE_UINT64, time_before,
-        "remote-min-error", G_TYPE_INT64, GST_CLOCK_DIFF (remote, min_guess),
-        "remote-max-error", G_TYPE_INT64, GST_CLOCK_DIFF (remote, time_before),
-        "request-send", G_TYPE_UINT64, local_1,
-        "request-receive", G_TYPE_UINT64, local_2,
-        "r-squared", G_TYPE_DOUBLE, r_squared,
-        "timeout", G_TYPE_UINT64, current_timeout,
-        "internal-time", G_TYPE_UINT64, internal_time,
-        "external-time", G_TYPE_UINT64, external_time,
-        "rate-num", G_TYPE_UINT64, rate_num,
-        "rate-den", G_TYPE_UINT64, rate_den,
-        "rate", G_TYPE_DOUBLE, (gdouble) (rate_num) / rate_den,
-        "local-clock-offset", G_TYPE_INT64, GST_CLOCK_DIFF (internal_time,
-            external_time), NULL);
+        "remote-min-error", G_TYPE_INT64, GST_CLOCK_DIFF (remote_avg,
+            min_guess), "remote-max-error", G_TYPE_INT64,
+        GST_CLOCK_DIFF (remote_avg, time_before), "request-send", G_TYPE_UINT64,
+        local_1, "request-receive", G_TYPE_UINT64, local_2, "r-squared",
+        G_TYPE_DOUBLE, r_squared, "timeout", G_TYPE_UINT64, current_timeout,
+        "internal-time", G_TYPE_UINT64, internal_time, "external-time",
+        G_TYPE_UINT64, external_time, "rate-num", G_TYPE_UINT64, rate_num,
+        "rate-den", G_TYPE_UINT64, rate_den, "rate", G_TYPE_DOUBLE,
+        (gdouble) (rate_num) / rate_den, "local-clock-offset", G_TYPE_INT64,
+        GST_CLOCK_DIFF (internal_time, external_time), NULL);
     msg = gst_message_new_element (GST_OBJECT (self), s);
     gst_bus_post (bus, msg);
   }
@@ -695,7 +741,7 @@ gst_net_client_clock_thread (gpointer data)
 
         /* observe_times will reset the timeout */
         gst_net_client_clock_observe_times (self, packet->local_time,
-            packet->remote_time, new_local);
+            packet->remote_time, packet->remote_time, new_local);
 
         g_free (packet);
       } else if (err != NULL) {
