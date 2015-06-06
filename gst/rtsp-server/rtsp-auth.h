@@ -72,8 +72,12 @@ struct _GstRTSPAuthClass {
   gboolean           (*authenticate) (GstRTSPAuth *auth, GstRTSPContext *ctx);
   gboolean           (*check)        (GstRTSPAuth *auth, GstRTSPContext *ctx,
                                       const gchar *check);
+  gboolean           (*accept_certificate) (GstRTSPAuth *auth,
+                                            GTlsConnection *connection,
+                                            GTlsCertificate *peer_cert,
+                                            GTlsCertificateFlags errors);
   /*< private >*/
-  gpointer            _gst_reserved[GST_PADDING];
+  gpointer            _gst_reserved[GST_PADDING - 1];
 };
 
 GType               gst_rtsp_auth_get_type          (void);
@@ -82,6 +86,12 @@ GstRTSPAuth *       gst_rtsp_auth_new               (void);
 
 void                gst_rtsp_auth_set_tls_certificate (GstRTSPAuth *auth, GTlsCertificate *cert);
 GTlsCertificate *   gst_rtsp_auth_get_tls_certificate (GstRTSPAuth *auth);
+
+void                gst_rtsp_auth_set_tls_database (GstRTSPAuth *auth, GTlsDatabase *database);
+GTlsDatabase *      gst_rtsp_auth_get_tls_database (GstRTSPAuth *auth);
+
+void                gst_rtsp_auth_set_tls_authentication_mode (GstRTSPAuth *auth, GTlsAuthenticationMode mode);
+GTlsAuthenticationMode gst_rtsp_auth_get_tls_authentication_mode (GstRTSPAuth *auth);
 
 void                gst_rtsp_auth_set_default_token (GstRTSPAuth *auth, GstRTSPToken *token);
 GstRTSPToken *      gst_rtsp_auth_get_default_token (GstRTSPAuth *auth);

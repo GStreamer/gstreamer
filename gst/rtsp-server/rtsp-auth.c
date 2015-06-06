@@ -59,6 +59,8 @@ struct _GstRTSPAuthPrivate
 
   /* the TLS certificate */
   GTlsCertificate *certificate;
+  GTlsDatabase *database;
+  GTlsAuthenticationMode mode;
   GHashTable *basic;            /* protected by lock */
   GstRTSPToken *default_token;
   GstRTSPMethod methods;
@@ -69,6 +71,14 @@ enum
   PROP_0,
   PROP_LAST
 };
+
+enum
+{
+  SIGNAL_ACCEPT_CERTIFICATE,
+  SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST] = { 0 };
 
 GST_DEBUG_CATEGORY_STATIC (rtsp_auth_debug);
 #define GST_CAT_DEFAULT rtsp_auth_debug
@@ -102,6 +112,31 @@ gst_rtsp_auth_class_init (GstRTSPAuthClass * klass)
   klass->check = default_check;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_auth_debug, "rtspauth", 0, "GstRTSPAuth");
+
+  /**
+   * GstRTSPAuth::accept-certificate:
+   * @auth: a #GstRTSPAuth
+   * @connection: a #GTlsConnection
+   * @peer_cert: the peer's #GTlsCertificate
+   * @errors: the problems with @peer_cert.
+   *
+   * Emitted during the TLS handshake after the client certificate has
+   * been received. See also gst_rtsp_auth_set_tls_authentication_mode().
+   *
+   * Returns: %TRUE to accept @peer_cert (which will also
+   * immediately end the signal emission). %FALSE to allow the signal
+   * emission to continue, which will cause the handshake to fail if
+   * no one else overrides it.
+   *
+   * Since: 1.6
+   */
+  signals[SIGNAL_ACCEPT_CERTIFICATE] = g_signal_new ("accept-certificate",
+      G_TYPE_FROM_CLASS (gobject_class),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstRTSPAuthClass, accept_certificate),
+      g_signal_accumulator_true_handled, NULL, g_cclosure_marshal_generic,
+      G_TYPE_BOOLEAN, 3, G_TYPE_TLS_CONNECTION, G_TYPE_TLS_CERTIFICATE,
+      G_TYPE_TLS_CERTIFICATE_FLAGS);
 }
 
 static void
@@ -130,6 +165,8 @@ gst_rtsp_auth_finalize (GObject * obj)
 
   if (priv->certificate)
     g_object_unref (priv->certificate);
+  if (priv->database)
+    g_object_unref (priv->database);
   g_hash_table_unref (priv->basic);
   g_mutex_clear (&priv->lock);
 
@@ -225,6 +262,118 @@ gst_rtsp_auth_get_tls_certificate (GstRTSPAuth * auth)
   g_mutex_lock (&priv->lock);
   if ((result = priv->certificate))
     g_object_ref (result);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_auth_set_tls_database:
+ * @auth: a #GstRTSPAuth
+ * @database: (transfer none) (allow-none): a #GTlsDatabase
+ *
+ * Sets the certificate database that is used to verify peer certificates.
+ * If set to %NULL (the default), then peer certificate validation will always
+ * set the %G_TLS_CERTIFICATE_UNKNOWN_CA error.
+ *
+ * Since 1.6
+ */
+void
+gst_rtsp_auth_set_tls_database (GstRTSPAuth * auth, GTlsDatabase * database)
+{
+  GstRTSPAuthPrivate *priv;
+  GTlsDatabase *old;
+
+  g_return_if_fail (GST_IS_RTSP_AUTH (auth));
+
+  priv = auth->priv;
+
+  if (database)
+    g_object_ref (database);
+
+  g_mutex_lock (&priv->lock);
+  old = priv->database;
+  priv->database = database;
+  g_mutex_unlock (&priv->lock);
+
+  if (old)
+    g_object_unref (old);
+}
+
+/**
+ * gst_rtsp_auth_get_tls_database:
+ * @auth: a #GstRTSPAuth
+ *
+ * Get the #GTlsDatabase used for verifying client certificate.
+ *
+ * Returns: (transfer full): the #GTlsDatabase of @auth. g_object_unref() after
+ * usage.
+ * Since: 1.6
+ */
+GTlsDatabase *
+gst_rtsp_auth_get_tls_database (GstRTSPAuth * auth)
+{
+  GstRTSPAuthPrivate *priv;
+  GTlsDatabase *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), NULL);
+
+  priv = auth->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->database))
+    g_object_ref (result);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_auth_set_tls_authentication_mode:
+ * @auth: a #GstRTSPAuth
+ * @mode: (transfer none) (allow-none): a #GTlsAuthenticationMode
+ *
+ * The #GTlsAuthenticationMode to set on the underlying GTlsServerConnection.
+ * When set to another value than %G_TLS_AUTHENTICATION_NONE,
+ * #GstRTSPAuth::accept-certificate signal will be emitted and must be handled.
+ *
+ * Since: 1.6
+ */
+void
+gst_rtsp_auth_set_tls_authentication_mode (GstRTSPAuth * auth,
+    GTlsAuthenticationMode mode)
+{
+  GstRTSPAuthPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_AUTH (auth));
+
+  priv = auth->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->mode = mode;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_auth_get_tls_authentication_mode:
+ * @auth: a #GstRTSPAuth
+ *
+ * Get the #GTlsAuthenticationMode.
+ *
+ * Returns: (transfer full): the #GTlsAuthenticationMode.
+ */
+GTlsAuthenticationMode
+gst_rtsp_auth_get_tls_authentication_mode (GstRTSPAuth * auth)
+{
+  GstRTSPAuthPrivate *priv;
+  GTlsAuthenticationMode result;
+
+  g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), G_TLS_AUTHENTICATION_NONE);
+
+  priv = auth->priv;
+
+  g_mutex_lock (&priv->lock);
+  result = priv->mode;
   g_mutex_unlock (&priv->lock);
 
   return result;
@@ -431,19 +580,40 @@ no_auth:
   }
 }
 
+static gboolean
+accept_certificate_cb (GTlsConnection * conn, GTlsCertificate * peer_cert,
+    GTlsCertificateFlags errors, GstRTSPAuth * auth)
+{
+  gboolean ret = FALSE;
+
+  g_signal_emit (auth, signals[SIGNAL_ACCEPT_CERTIFICATE], 0,
+      conn, peer_cert, errors, &ret);
+
+  return ret;
+}
+
 /* new connection */
 static gboolean
 check_connect (GstRTSPAuth * auth, GstRTSPContext * ctx, const gchar * check)
 {
   GstRTSPAuthPrivate *priv = auth->priv;
+  GTlsConnection *tls;
+
+  /* configure the connection */
 
   if (priv->certificate) {
-    GTlsConnection *tls;
-
-    /* configure the connection */
     tls = gst_rtsp_connection_get_tls (ctx->conn, NULL);
     g_tls_connection_set_certificate (tls, priv->certificate);
   }
+
+  if (priv->mode != G_TLS_AUTHENTICATION_NONE) {
+    tls = gst_rtsp_connection_get_tls (ctx->conn, NULL);
+    g_tls_connection_set_database (tls, priv->database);
+    g_object_set (tls, "authentication-mode", priv->mode, NULL);
+    g_signal_connect (tls, "accept-certificate",
+        G_CALLBACK (accept_certificate_cb), auth);
+  }
+
   return TRUE;
 }
 
