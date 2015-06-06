@@ -72,6 +72,7 @@ GST_DEBUG_CATEGORY_STATIC (ncc_debug);
 /* Minimum timeout will be immediately (ie, as fast as one RTT), but no
  * more often than 1/20th second (arbitrarily, to spread observations a little) */
 #define DEFAULT_MINIMUM_UPDATE_INTERVAL (GST_SECOND / 20)
+#define DEFAULT_BASE_TIME       0
 
 /* Maximum number of clock updates we can skip before updating */
 #define MAX_SKIPPED_UPDATES 5
@@ -85,7 +86,8 @@ enum
   PROP_PORT,
   PROP_ROUNDTRIP_LIMIT,
   PROP_MINIMUM_UPDATE_INTERVAL,
-  PROP_BUS
+  PROP_BUS,
+  PROP_BASE_TIME
 };
 
 #define GST_NET_CLIENT_CLOCK_GET_PRIVATE(obj)  \
@@ -108,6 +110,8 @@ struct _GstNetClientClockPrivate
   GstClockTime last_rtts[MEDIAN_PRE_FILTERING_WINDOW];
   gint last_rtts_missing;
 
+  GstClockTime base_time;
+
   gchar *address;
   gint port;
 
@@ -125,7 +129,9 @@ static void gst_net_client_clock_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_net_client_clock_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_net_client_clock_constructed (GObject * object);
 
+static gboolean gst_net_client_clock_start (GstNetClientClock * self);
 static void gst_net_client_clock_stop (GstNetClientClock * self);
 
 static void
@@ -140,15 +146,18 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
   gobject_class->finalize = gst_net_client_clock_finalize;
   gobject_class->get_property = gst_net_client_clock_get_property;
   gobject_class->set_property = gst_net_client_clock_set_property;
+  gobject_class->constructed = gst_net_client_clock_constructed;
 
   g_object_class_install_property (gobject_class, PROP_ADDRESS,
       g_param_spec_string ("address", "address",
           "The IP address of the machine providing a time server",
-          DEFAULT_ADDRESS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_ADDRESS,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PORT,
       g_param_spec_int ("port", "port",
           "The port on which the remote server is listening", 0, G_MAXUINT16,
-          DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PORT,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BUS,
       g_param_spec_object ("bus", "bus",
           "A GstBus on which to send clock status information", GST_TYPE_BUS,
@@ -179,6 +188,12 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
           "Minimum polling interval for packets, in nanoseconds"
           "(0 = no limit)", 0, G_MAXUINT64, DEFAULT_MINIMUM_UPDATE_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_BASE_TIME,
+      g_param_spec_uint64 ("base-time", "Base Time",
+          "Initial time that is reported before synchronization", 0,
+          G_MAXUINT64, DEFAULT_BASE_TIME,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -202,6 +217,7 @@ gst_net_client_clock_init (GstNetClientClock * self)
   priv->minimum_update_interval = DEFAULT_MINIMUM_UPDATE_INTERVAL;
   priv->skipped_updates = 0;
   priv->last_rtts_missing = MEDIAN_PRE_FILTERING_WINDOW;
+  priv->base_time = DEFAULT_BASE_TIME;
 }
 
 static void
@@ -272,6 +288,9 @@ gst_net_client_clock_set_property (GObject * object, guint prop_id,
       self->priv->bus = g_value_dup_object (value);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_BASE_TIME:
+      self->priv->base_time = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -308,10 +327,49 @@ gst_net_client_clock_get_property (GObject * object, guint prop_id,
       g_value_set_object (value, self->priv->bus);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_BASE_TIME:
+      g_value_set_uint64 (value, self->priv->base_time);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_net_client_clock_constructed (GObject * object)
+{
+  GstNetClientClock *self = GST_NET_CLIENT_CLOCK (object);
+  GstClockTime internal;
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+
+  /* gst_clock_get_time() values are guaranteed to be increasing. because no one
+   * has called get_time on this clock yet we are free to adjust to any value
+   * without worrying about worrying about MAX() issues with the clock's
+   * internal time.
+   */
+
+  /* update our internal time so get_time() give something around base_time.
+     assume that the rate is 1 in the beginning. */
+  internal = gst_clock_get_internal_time (GST_CLOCK (self));
+  gst_clock_set_calibration (GST_CLOCK (self), internal, self->priv->base_time,
+      1, 1);
+
+  {
+    GstClockTime now = gst_clock_get_time (GST_CLOCK (self));
+
+    if (GST_CLOCK_DIFF (now, self->priv->base_time) > 0 ||
+        GST_CLOCK_DIFF (now, self->priv->base_time + GST_SECOND) < 0) {
+      g_warning ("unable to set the base time, expect sync problems!");
+    }
+  }
+
+  if (!gst_net_client_clock_start (self)) {
+    g_warning ("failed to start clock '%s'", GST_OBJECT_NAME (self));
+  }
+
+  /* all systems go, cap'n */
 }
 
 static gint
@@ -702,7 +760,7 @@ gst_net_client_clock_start (GstNetClientClock * self)
   if (myaddr == NULL)
     goto getsockname_error;
 
-  GST_DEBUG_OBJECT (self, "socket opened on UDP port %hd",
+  GST_DEBUG_OBJECT (self, "socket opened on UDP port %d",
       g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (myaddr)));
 
   g_object_unref (myaddr);
@@ -806,9 +864,7 @@ GstClock *
 gst_net_client_clock_new (const gchar * name, const gchar * remote_address,
     gint remote_port, GstClockTime base_time)
 {
-  /* FIXME: gst_net_client_clock_new() should be a thin wrapper for g_object_new() */
   GstNetClientClock *ret;
-  GstClockTime internal;
 
   g_return_val_if_fail (remote_address != NULL, NULL);
   g_return_val_if_fail (remote_port > 0, NULL);
@@ -816,18 +872,10 @@ gst_net_client_clock_new (const gchar * name, const gchar * remote_address,
   g_return_val_if_fail (base_time != GST_CLOCK_TIME_NONE, NULL);
 
   ret = g_object_new (GST_TYPE_NET_CLIENT_CLOCK, "address", remote_address,
-      "port", remote_port, NULL);
+      "port", remote_port, "base-time", base_time, NULL);
 
-  /* gst_clock_get_time() values are guaranteed to be increasing. because no one
-   * has called get_time on this clock yet we are free to adjust to any value
-   * without worrying about worrying about MAX() issues with the clock's
-   * internal time.
-   */
-
-  /* update our internal time so get_time() give something around base_time.
-     assume that the rate is 1 in the beginning. */
-  internal = gst_clock_get_internal_time (GST_CLOCK (ret));
-  gst_clock_set_calibration (GST_CLOCK (ret), internal, base_time, 1, 1);
+  return (GstClock *) ret;
+}
 
   {
     GstClockTime now = gst_clock_get_time (GST_CLOCK (ret));
