@@ -1328,6 +1328,103 @@ GST_START_TEST (test_obscured_skipped)
 
 GST_END_TEST;
 
+static gint buffers_sent = 0;
+
+static void
+_pipeline_eos (GstBus * bus, GstMessage * message, GstPipeline * bin)
+{
+  GST_INFO ("pipeline EOS");
+  g_main_loop_quit (main_loop);
+}
+
+static GstFlowReturn
+_buffer_recvd (GstElement * appsink, gint * buffers_recvd)
+{
+  GstSample *sample;
+
+  g_signal_emit_by_name (appsink, "pull-sample", &sample);
+  ck_assert_msg (sample != NULL, "NULL sample received!");
+
+  (*buffers_recvd)++;
+  GST_INFO ("buffer recvd");
+  gst_sample_unref (sample);
+
+  if (*buffers_recvd > buffers_sent)
+    g_main_loop_quit (main_loop);
+
+  return GST_FLOW_OK;
+}
+
+GST_START_TEST (test_ignore_eos)
+{
+  gboolean res;
+  gint buffers_recvd;
+  GstPadLinkReturn link_res;
+  GstStateChangeReturn state_res;
+  GstElement *bin, *src, *compositor, *appsink;
+  GstPad *srcpad, *sinkpad;
+  GstBus *bus;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  buffers_sent = 5;
+  src = gst_element_factory_make ("videotestsrc", NULL);
+  g_object_set (src, "num-buffers", buffers_sent, NULL);
+  compositor = gst_element_factory_make ("compositor", NULL);
+  appsink = gst_element_factory_make ("appsink", NULL);
+  g_object_set (appsink, "emit-signals", TRUE, NULL);
+  gst_bin_add_many (GST_BIN (bin), src, compositor, appsink, NULL);
+
+  res = gst_element_link (compositor, appsink);
+  ck_assert_msg (res == TRUE, "Could not link compositor with appsink");
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+  /* When "ignore-eos" is set, compositor will keep sending the last buffer even
+   * after EOS, so we will receive more buffers than we sent. */
+  g_object_set (sinkpad, "ignore-eos", TRUE, NULL);
+  link_res = gst_pad_link (srcpad, sinkpad);
+  ck_assert_msg (GST_PAD_LINK_SUCCESSFUL (link_res), "videotestsrc -> "
+      "compositor pad  link failed: %i", link_res);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+
+  GST_INFO ("pipeline built, connecting signals");
+
+  buffers_recvd = 0;
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  ck_assert_msg (state_res != GST_STATE_CHANGE_FAILURE, "Pipeline didn't play");
+
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (bus, "message::error", G_CALLBACK (message_received), bin);
+  g_signal_connect (bus, "message::warning", G_CALLBACK (message_received),
+      bin);
+  g_signal_connect (bus, "message::eos", G_CALLBACK (_pipeline_eos), bin);
+  g_signal_connect (appsink, "new-sample", G_CALLBACK (_buffer_recvd),
+      &buffers_recvd);
+
+  GST_INFO ("starting test");
+  g_main_loop_run (main_loop);
+
+  state_res = gst_element_set_state (bin, GST_STATE_NULL);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  ck_assert_msg (buffers_recvd > buffers_sent, "Did not receive more buffers"
+      " than were sent");
+
+  /* cleanup */
+  g_main_loop_unref (main_loop);
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 static Suite *
 compositor_suite (void)
 {
@@ -1348,6 +1445,7 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_flush_start_flush_stop);
   tcase_add_test (tc_chain, test_segment_base_handling);
   tcase_add_test (tc_chain, test_obscured_skipped);
+  tcase_add_test (tc_chain, test_ignore_eos);
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
