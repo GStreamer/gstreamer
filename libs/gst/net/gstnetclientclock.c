@@ -876,26 +876,3 @@ gst_net_client_clock_new (const gchar * name, const gchar * remote_address,
 
   return (GstClock *) ret;
 }
-
-  {
-    GstClockTime now = gst_clock_get_time (GST_CLOCK (ret));
-
-    if (GST_CLOCK_DIFF (now, base_time) > 0 ||
-        GST_CLOCK_DIFF (now, base_time + GST_SECOND) < 0) {
-      g_warning ("unable to set the base time, expect sync problems!");
-    }
-  }
-
-  if (!gst_net_client_clock_start (ret))
-    goto failed_start;
-
-  /* all systems go, cap'n */
-  return (GstClock *) ret;
-
-failed_start:
-  {
-    /* already printed a nice error */
-    gst_object_unref (ret);
-    return NULL;
-  }
-}
