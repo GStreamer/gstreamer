@@ -233,6 +233,7 @@ static GMainContext *main_context;
 static GMainLoop *main_loop;
 static GIOChannel *stdin_channel, *stdout_channel;
 static GRand *delay_req_rand;
+static GstClock *observation_system_clock;
 static PtpClockIdentity ptp_clock_id = { GST_PTP_CLOCK_ID_NONE, 0 };
 
 typedef struct
@@ -968,7 +969,8 @@ send_delay_req_timeout (PtpPendingSync * sync)
     return G_SOURCE_REMOVE;
   }
 
-  sync->delay_req_send_time_local = gst_util_get_timestamp ();
+  sync->delay_req_send_time_local =
+      gst_clock_get_time (observation_system_clock);
 
   status =
       g_io_channel_write_chars (stdout_channel,
@@ -997,7 +999,7 @@ send_delay_req_timeout (PtpPendingSync * sync)
 static gboolean
 send_delay_req (PtpDomainData * domain, PtpPendingSync * sync)
 {
-  GstClockTime now = gst_util_get_timestamp ();
+  GstClockTime now = gst_clock_get_time (observation_system_clock);
   guint timeout;
   GSource *timeout_source;
 
@@ -1765,7 +1767,7 @@ have_stdin_data_cb (GIOChannel * channel, GIOCondition condition,
   switch (header.type) {
     case TYPE_EVENT:
     case TYPE_GENERAL:{
-      GstClockTime receive_time = gst_util_get_timestamp ();
+      GstClockTime receive_time = gst_clock_get_time (observation_system_clock);
       PtpMessage msg;
 
       if (parse_ptp_message (&msg, (const guint8 *) buffer, header.size)) {
@@ -1801,7 +1803,7 @@ have_stdin_data_cb (GIOChannel * channel, GIOCondition condition,
 static gboolean
 cleanup_cb (gpointer data)
 {
-  GstClockTime now = gst_util_get_timestamp ();
+  GstClockTime now = gst_clock_get_time (observation_system_clock);
   GList *l, *m, *n;
 
   for (l = domain_data; l; l = l->next) {
@@ -2074,6 +2076,9 @@ gst_ptp_init (guint64 clock_id, gchar ** interfaces)
   g_io_channel_set_buffered (stdout_channel, FALSE);
 
   delay_req_rand = g_rand_new ();
+  observation_system_clock =
+      g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "ptp-observation-clock",
+      NULL);
 
   initted = TRUE;
 
@@ -2125,6 +2130,10 @@ done:
     if (delay_req_rand)
       g_rand_free (delay_req_rand);
     delay_req_rand = NULL;
+
+    if (observation_system_clock)
+      gst_object_unref (observation_system_clock);
+    observation_system_clock = NULL;
   }
 
   g_mutex_unlock (&ptp_lock);
@@ -2180,6 +2189,9 @@ gst_ptp_deinit (void)
   if (delay_req_rand)
     g_rand_free (delay_req_rand);
   delay_req_rand = NULL;
+  if (observation_system_clock)
+    gst_object_unref (observation_system_clock);
+  observation_system_clock = NULL;
 
   for (l = domain_data; l; l = l->next) {
     PtpDomainData *domain = l->data;
