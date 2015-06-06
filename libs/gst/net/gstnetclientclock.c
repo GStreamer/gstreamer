@@ -60,6 +60,8 @@
 
 #include <gio/gio.h>
 
+#include <string.h>
+
 GST_DEBUG_CATEGORY_STATIC (ncc_debug);
 #define GST_CAT_DEFAULT (ncc_debug)
 
@@ -73,6 +75,8 @@ GST_DEBUG_CATEGORY_STATIC (ncc_debug);
 
 /* Maximum number of clock updates we can skip before updating */
 #define MAX_SKIPPED_UPDATES 5
+
+#define MEDIAN_PRE_FILTERING_WINDOW 9
 
 enum
 {
@@ -101,6 +105,8 @@ struct _GstNetClientClockPrivate
   GstClockTime rtt_avg;
   GstClockTime minimum_update_interval;
   guint skipped_updates;
+  GstClockTime last_rtts[MEDIAN_PRE_FILTERING_WINDOW];
+  gint last_rtts_missing;
 
   gchar *address;
   gint port;
@@ -195,6 +201,7 @@ gst_net_client_clock_init (GstNetClientClock * self)
   priv->roundtrip_limit = DEFAULT_ROUNDTRIP_LIMIT;
   priv->minimum_update_interval = DEFAULT_MINIMUM_UPDATE_INTERVAL;
   priv->skipped_updates = 0;
+  priv->last_rtts_missing = MEDIAN_PRE_FILTERING_WINDOW;
 }
 
 static void
@@ -307,6 +314,16 @@ gst_net_client_clock_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gint
+compare_clock_time (const GstClockTime * a, const GstClockTime * b)
+{
+  if (*a < *b)
+    return -1;
+  else if (*a > *b)
+    return 1;
+  return 0;
+}
+
 static void
 gst_net_client_clock_observe_times (GstNetClientClock * self,
     GstClockTime local_1, GstClockTime remote, GstClockTime local_2)
@@ -327,6 +344,9 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
   GstClockTime orig_internal_time, orig_external_time, orig_rate_num,
       orig_rate_den;
   GstClockTime max_discont;
+  GstClockTime last_rtts[MEDIAN_PRE_FILTERING_WINDOW];
+  GstClockTime median;
+  gint i;
 
   GST_OBJECT_LOCK (self);
   rtt_limit = self->priv->roundtrip_limit;
@@ -349,6 +369,33 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
         "Dropping observation: RTT %" GST_TIME_FORMAT " > limit %"
         GST_TIME_FORMAT, GST_TIME_ARGS (rtt), GST_TIME_ARGS (rtt_limit));
     goto bogus_observation;
+  }
+
+  for (i = 1; i < MEDIAN_PRE_FILTERING_WINDOW; i++)
+    self->priv->last_rtts[i - 1] = self->priv->last_rtts[i];
+  self->priv->last_rtts[i - 1] = rtt;
+
+  if (self->priv->last_rtts_missing) {
+    self->priv->last_rtts_missing--;
+  } else {
+    memcpy (&last_rtts, &self->priv->last_rtts, sizeof (last_rtts));
+    g_qsort_with_data (&last_rtts,
+        MEDIAN_PRE_FILTERING_WINDOW, sizeof (GstClockTime),
+        (GCompareDataFunc) compare_clock_time, NULL);
+
+    median = last_rtts[MEDIAN_PRE_FILTERING_WINDOW / 2];
+
+    /* FIXME: We might want to use something else here, like only allowing
+     * things in the interquartile range, or also filtering away delays that
+     * are too small compared to the median. This here worked well enough
+     * in tests so far.
+     */
+    if (rtt > 2 * median) {
+      GST_LOG_OBJECT (self,
+          "Dropping observation, long RTT %" GST_TIME_FORMAT " > 2 * median %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (rtt), GST_TIME_ARGS (median));
+      goto bogus_observation;
+    }
   }
 
   /* Track an average round trip time, for a bit of smoothing */
