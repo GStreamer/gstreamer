@@ -890,7 +890,9 @@ gst_net_control_message_meta_api_get_type
 <TITLE>GstNetClientClock</TITLE>
 <INCLUDE>gst/net/gstnet.h</INCLUDE>
 GstNetClientClock
+GstNtpClock
 gst_net_client_clock_new
+gst_ntp_clock_new
 <SUBSECTION Standard>
 GstNetClientClockClass
 GstNetClientClockPrivate
@@ -899,8 +901,15 @@ GST_IS_NET_CLIENT_CLOCK
 GST_TYPE_NET_CLIENT_CLOCK
 GST_NET_CLIENT_CLOCK_CLASS
 GST_IS_NET_CLIENT_CLOCK_CLASS
+GstNtpClockClass
+GST_NTP_CLOCK
+GST_IS_NTP_CLOCK
+GST_TYPE_NTP_CLOCK
+GST_NTP_CLOCK_CLASS
+GST_IS_NTP_CLOCK_CLASS
 <SUBSECTION Private>
 gst_net_client_clock_get_type
+gst_ntp_clock_get_type
 </SECTION>
 
 

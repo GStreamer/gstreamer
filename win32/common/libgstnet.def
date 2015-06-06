@@ -16,6 +16,8 @@ EXPORTS
 	gst_net_time_packet_serialize
 	gst_net_time_provider_get_type
 	gst_net_time_provider_new
+	gst_ntp_clock_get_type
+	gst_ntp_clock_new
 	gst_ptp_clock_get_type
 	gst_ptp_clock_new
 	gst_ptp_deinit

@@ -28,12 +28,13 @@
  *                     provider.
  * @see_also: #GstClock, #GstNetTimeProvider, #GstPipeline
  *
- * This object implements a custom #GstClock that synchronizes its time
- * to a remote time provider such as #GstNetTimeProvider.
+ * #GstNetClientClock implements a custom #GstClock that synchronizes its time
+ * to a remote time provider such as #GstNetTimeProvider. #GstNtpClock
+ * implements a #GstClock that synchronizes its time to a remote NTPv4 server.
  *
- * A new clock is created with gst_net_client_clock_new() which takes the
- * address and port of the remote time provider along with a name and
- * an initial time.
+ * A new clock is created with gst_net_client_clock_new() or
+ * gst_ntp_clock_new(), which takes the address and port of the remote time
+ * provider along with a name and an initial time.
  *
  * This clock will poll the time provider and will update its calibration
  * parameters based on the local and remote observations.
@@ -43,7 +44,7 @@
  * Various parameters of the clock can be configured with the parent #GstClock
  * "timeout", "window-size" and "window-threshold" object properties.
  *
- * A #GstNetClientClock is typically set on a #GstPipeline with 
+ * A #GstNetClientClock and #GstNtpClock is typically set on a #GstPipeline with
  * gst_pipeline_use_clock().
  *
  * If you set a #GstBus on the clock via the "bus" object property, it will
@@ -56,6 +57,7 @@
 #endif
 
 #include "gstnettimepacket.h"
+#include "gstntppacket.h"
 #include "gstnetclientclock.h"
 
 #include <gio/gio.h>
@@ -106,6 +108,7 @@ struct _GstNetClientClockPrivate
   GstClockTime roundtrip_limit;
   GstClockTime rtt_avg;
   GstClockTime minimum_update_interval;
+  GstClockTime last_remote_poll_interval;
   guint skipped_updates;
   GstClockTime last_rtts[MEDIAN_PRE_FILTERING_WINDOW];
   gint last_rtts_missing;
@@ -116,6 +119,8 @@ struct _GstNetClientClockPrivate
   gint port;
 
   GstBus *bus;
+
+  gboolean is_ntp;
 };
 
 #define _do_init \
@@ -215,6 +220,7 @@ gst_net_client_clock_init (GstNetClientClock * self)
   priv->rtt_avg = GST_CLOCK_TIME_NONE;
   priv->roundtrip_limit = DEFAULT_ROUNDTRIP_LIMIT;
   priv->minimum_update_interval = DEFAULT_MINIMUM_UPDATE_INTERVAL;
+  priv->last_remote_poll_interval = GST_CLOCK_TIME_NONE;
   priv->skipped_updates = 0;
   priv->last_rtts_missing = MEDIAN_PRE_FILTERING_WINDOW;
   priv->base_time = DEFAULT_BASE_TIME;
@@ -409,7 +415,16 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
 
   GST_OBJECT_LOCK (self);
   rtt_limit = self->priv->roundtrip_limit;
-  min_update_interval = self->priv->minimum_update_interval;
+
+  /* If the server told us a poll interval and it's bigger than the
+   * one configured via the property, use the server's */
+  if (self->priv->last_remote_poll_interval != GST_CLOCK_TIME_NONE &&
+      self->priv->last_remote_poll_interval >
+      self->priv->minimum_update_interval)
+    min_update_interval = self->priv->last_remote_poll_interval;
+  else
+    min_update_interval = self->priv->minimum_update_interval;
+
   if (self->priv->bus)
     bus = gst_object_ref (self->priv->bus);
   GST_OBJECT_UNLOCK (self);
@@ -666,7 +681,6 @@ static gpointer
 gst_net_client_clock_thread (gpointer data)
 {
   GstNetClientClock *self = data;
-  GstNetTimePacket *packet;
   GSocket *socket = self->priv->socket;
   GError *err = NULL;
   GstClock *clock = data;
@@ -700,18 +714,38 @@ gst_net_client_clock_thread (gpointer data)
         /* timed out, let's send another packet */
         GST_DEBUG_OBJECT (self, "timed out");
 
-        packet = gst_net_time_packet_new (NULL);
+        if (self->priv->is_ntp) {
+          GstNtpPacket *packet;
 
-        packet->local_time = gst_clock_get_internal_time (GST_CLOCK (self));
+          packet = gst_ntp_packet_new (NULL, NULL);
 
-        GST_DEBUG_OBJECT (self,
-            "sending packet, local time = %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (packet->local_time));
+          packet->transmit_time =
+              gst_clock_get_internal_time (GST_CLOCK (self));
 
-        gst_net_time_packet_send (packet, self->priv->socket,
-            self->priv->servaddr, NULL);
+          GST_DEBUG_OBJECT (self,
+              "sending packet, local time = %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (packet->transmit_time));
 
-        g_free (packet);
+          gst_ntp_packet_send (packet, self->priv->socket,
+              self->priv->servaddr, NULL);
+
+          g_free (packet);
+        } else {
+          GstNetTimePacket *packet;
+
+          packet = gst_net_time_packet_new (NULL);
+
+          packet->local_time = gst_clock_get_internal_time (GST_CLOCK (self));
+
+          GST_DEBUG_OBJECT (self,
+              "sending packet, local time = %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (packet->local_time));
+
+          gst_net_time_packet_send (packet, self->priv->socket,
+              self->priv->servaddr, NULL);
+
+          g_free (packet);
+        }
 
         /* reset timeout (but are expecting a response sooner anyway) */
         self->priv->timeout_expiration =
@@ -728,25 +762,81 @@ gst_net_client_clock_thread (gpointer data)
 
       new_local = gst_clock_get_internal_time (GST_CLOCK (self));
 
-      packet = gst_net_time_packet_receive (socket, NULL, &err);
+      if (self->priv->is_ntp) {
+        GstNtpPacket *packet;
 
-      if (packet != NULL) {
-        GST_LOG_OBJECT (self, "got packet back");
-        GST_LOG_OBJECT (self, "local_1 = %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (packet->local_time));
-        GST_LOG_OBJECT (self, "remote = %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (packet->remote_time));
-        GST_LOG_OBJECT (self, "local_2 = %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (new_local));
+        packet = gst_ntp_packet_receive (socket, NULL, &err);
 
-        /* observe_times will reset the timeout */
-        gst_net_client_clock_observe_times (self, packet->local_time,
-            packet->remote_time, packet->remote_time, new_local);
+        if (packet != NULL) {
+          GST_LOG_OBJECT (self, "got packet back");
+          GST_LOG_OBJECT (self, "local_1 = %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (packet->origin_time));
+          GST_LOG_OBJECT (self, "remote_1 = %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (packet->receive_time));
+          GST_LOG_OBJECT (self, "remote_2 = %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (packet->transmit_time));
+          GST_LOG_OBJECT (self, "local_2 = %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (new_local));
+          GST_LOG_OBJECT (self, "poll_interval = %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (packet->poll_interval));
 
-        g_free (packet);
-      } else if (err != NULL) {
-        GST_WARNING_OBJECT (self, "receive error: %s", err->message);
-        g_clear_error (&err);
+          /* Remember the last poll interval we ever got from the server */
+          if (packet->poll_interval != GST_CLOCK_TIME_NONE)
+            self->priv->last_remote_poll_interval = packet->poll_interval;
+
+          /* observe_times will reset the timeout */
+          gst_net_client_clock_observe_times (self, packet->origin_time,
+              packet->receive_time, packet->transmit_time, new_local);
+
+          g_free (packet);
+        } else if (err != NULL) {
+          if (g_error_matches (err, GST_NTP_ERROR, GST_NTP_ERROR_WRONG_VERSION)
+              || g_error_matches (err, GST_NTP_ERROR, GST_NTP_ERROR_KOD_DENY)) {
+            GST_ERROR_OBJECT (self, "fatal receive error: %s", err->message);
+            break;
+          } else if (g_error_matches (err, GST_NTP_ERROR,
+                  GST_NTP_ERROR_KOD_RATE)) {
+            GST_WARNING_OBJECT (self, "need to limit rate");
+
+            /* If the server did not tell us a poll interval before, double
+             * our minimum poll interval. Otherwise we assume that the server
+             * already told us something sensible and that this error here
+             * was just a spurious error */
+            if (self->priv->last_remote_poll_interval == GST_CLOCK_TIME_NONE)
+              self->priv->minimum_update_interval *= 2;
+
+            /* And wait a bit before we send the next packet instead of
+             * sending it immediately */
+            self->priv->timeout_expiration =
+                gst_util_get_timestamp () + gst_clock_get_timeout (clock);
+          } else {
+            GST_WARNING_OBJECT (self, "receive error: %s", err->message);
+          }
+          g_clear_error (&err);
+        }
+      } else {
+        GstNetTimePacket *packet;
+
+        packet = gst_net_time_packet_receive (socket, NULL, &err);
+
+        if (packet != NULL) {
+          GST_LOG_OBJECT (self, "got packet back");
+          GST_LOG_OBJECT (self, "local_1 = %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (packet->local_time));
+          GST_LOG_OBJECT (self, "remote = %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (packet->remote_time));
+          GST_LOG_OBJECT (self, "local_2 = %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (new_local));
+
+          /* observe_times will reset the timeout */
+          gst_net_client_clock_observe_times (self, packet->local_time,
+              packet->remote_time, packet->remote_time, new_local);
+
+          g_free (packet);
+        } else if (err != NULL) {
+          GST_WARNING_OBJECT (self, "receive error: %s", err->message);
+          g_clear_error (&err);
+        }
       }
     }
   }
@@ -918,6 +1008,49 @@ gst_net_client_clock_new (const gchar * name, const gchar * remote_address,
   g_return_val_if_fail (base_time != GST_CLOCK_TIME_NONE, NULL);
 
   ret = g_object_new (GST_TYPE_NET_CLIENT_CLOCK, "address", remote_address,
+      "port", remote_port, "base-time", base_time, NULL);
+
+  return (GstClock *) ret;
+}
+
+G_DEFINE_TYPE (GstNtpClock, gst_ntp_clock, GST_TYPE_NET_CLIENT_CLOCK);
+
+static void
+gst_ntp_clock_class_init (GstNtpClockClass * klass)
+{
+}
+
+static void
+gst_ntp_clock_init (GstNtpClock * self)
+{
+  GST_NET_CLIENT_CLOCK (self)->priv->is_ntp = TRUE;
+}
+
+/**
+ * gst_ntp_clock_new:
+ * @name: a name for the clock
+ * @remote_address: the address of the remote clock provider
+ * @remote_port: the port of the remote clock provider
+ * @base_time: initial time of the clock
+ *
+ * Create a new #GstNtpClock that will report the time provided by
+ * the NTPv4 server on @remote_address and @remote_port.
+ *
+ * Returns: a new #GstClock that receives a time from the remote
+ * clock.
+ */
+GstClock *
+gst_ntp_clock_new (const gchar * name, const gchar * remote_address,
+    gint remote_port, GstClockTime base_time)
+{
+  GstNetClientClock *ret;
+
+  g_return_val_if_fail (remote_address != NULL, NULL);
+  g_return_val_if_fail (remote_port > 0, NULL);
+  g_return_val_if_fail (remote_port <= G_MAXUINT16, NULL);
+  g_return_val_if_fail (base_time != GST_CLOCK_TIME_NONE, NULL);
+
+  ret = g_object_new (GST_TYPE_NTP_CLOCK, "address", remote_address,
       "port", remote_port, "base-time", base_time, NULL);
 
   return (GstClock *) ret;

@@ -73,6 +73,24 @@ GType           gst_net_client_clock_get_type	(void);
 GstClock*	gst_net_client_clock_new	(const gchar *name, const gchar *remote_address,
                                                  gint remote_port, GstClockTime base_time);
 
+#define GST_TYPE_NTP_CLOCK \
+  (gst_ntp_clock_get_type())
+#define GST_NTP_CLOCK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_NTP_CLOCK,GstNtpClock))
+#define GST_NTP_CLOCK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_NTP_CLOCK,GstNtpClockClass))
+#define GST_IS_NTP_CLOCK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_NTP_CLOCK))
+#define GST_IS_NTP_CLOCK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_NTP_CLOCK))
+
+typedef struct _GstNetClientClock GstNtpClock;
+typedef struct _GstNetClientClockClass GstNtpClockClass;
+
+GType           gst_ntp_clock_get_type	        (void);
+GstClock*	gst_ntp_clock_new	        (const gchar *name, const gchar *remote_address,
+                                                 gint remote_port, GstClockTime base_time);
+
 G_END_DECLS
 
 #endif /* __GST_NET_CLIENT_CLOCK_H__ */
