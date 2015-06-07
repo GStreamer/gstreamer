@@ -13,7 +13,6 @@ test -n "$srcdir" || srcdir=.
 olddir=`pwd`
 cd "$srcdir"
 
-DIE=0
 package=gst-plugins-ugly
 srcfile=gst-plugins-ugly.doap
 
@@ -56,13 +55,25 @@ fi
 autogen_options $@
 
 printf "+ check for build tools"
-if test ! -z "$NOCHECK"; then echo ": skipped version checks"; else  echo; fi
-version_check "autoreconf" "autoreconf " \
-              "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 68 || DIE=1
-version_check "pkg-config" "" \
-              "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
+if test -z "$NOCHECK"; then
+  echo
 
-die_check $DIE
+  printf "  checking for autoreconf ... "
+  echo
+  which "autoreconf" 2>/dev/null || {
+    echo "not found! Please install the autoconf package."
+    exit 1
+  }
+
+  printf "  checking for pkg-config ... "
+  echo
+  which "pkg-config" 2>/dev/null || {
+    echo "not found! Please install pkg-config."
+    exit 1
+  }
+else
+  echo ": skipped version checks"
+fi
 
 # if no arguments specified then this will be printed
 if test -z "$*" && test -z "$NOCONFIGURE"; then
@@ -76,7 +87,7 @@ fi
 toplevel_check $srcfile
 
 # autopoint
-if test -d po ; then
+if test -d po && grep ^AM_GNU_GETTEXT_VERSION configure.ac >/dev/null ; then
   tool_run "autopoint" "--force"
 fi
 
