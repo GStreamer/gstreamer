@@ -1048,15 +1048,29 @@ update_ptp_time (PtpDomainData * domain, PtpPendingSync * sync)
 #endif
 
 #ifdef USE_ONLY_SYNC_WITH_DELAY
+  GstClockTime mean_path_delay;
+
   if (sync->delay_req_send_time_local == GST_CLOCK_TIME_NONE)
     return;
+
+  /* IEEE 1588 11.3 */
+  mean_path_delay =
+      (sync->delay_req_recv_time_remote - sync->sync_send_time_remote +
+      sync->sync_recv_time_local - sync->delay_req_send_time_local -
+      (sync->correction_field_sync + sync->correction_field_delay +
+          32768) / 65536) / 2;
 #endif
 
   /* IEEE 1588 11.2 */
   corrected_ptp_time =
       sync->sync_send_time_remote +
       (sync->correction_field_sync + 32768) / 65536;
+
+#ifdef USE_ONLY_SYNC_WITH_DELAY
+  corrected_local_time = sync->sync_recv_time_local - mean_path_delay;
+#else
   corrected_local_time = sync->sync_recv_time_local - domain->mean_path_delay;
+#endif
 
 #ifdef USE_MEASUREMENT_FILTERING
   /* We check this here and when updating the mean path delay, because
