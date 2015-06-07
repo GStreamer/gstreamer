@@ -62,9 +62,6 @@ GTKDOC_CFLAGS = $(LIBAV_CFLAGS) $(GST_CFLAGS) -I$(top_builddir) -I$(top_builddir
 GTKDOC_LIBS = -L$(top_builddir)/ext/libav -lgstlibav \
   $(LIBAV_LIBS) $(GST_BASE_LIBS)
 
-GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
-GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)
-
 # If you need to override some of the declarations, place them in this file
 # and uncomment this line.
 #DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
