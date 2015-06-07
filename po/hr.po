@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2012-04-16 03:04+0200\n"
 "Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -85,6 +85,9 @@ msgstr "Videozapis u ovoj datoteci se možda neće ispravno reproducirati."
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Ova datoteka sadrži previše nizova. Reproduciram samo prvih %d"
 
+msgid "Internal data flow error."
+msgstr "Greška unutarnjeg toka podataka."
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -99,9 +102,6 @@ msgid ""
 msgstr ""
 "Nisu pronađeni podržani nizovi. Morate dozvoliti više protokola prijenosa "
 "ili vam možda nedostaje odgovarajući GStreamer RTSP priključak proširenja."
-
-msgid "Internal data flow error."
-msgstr "Greška unutarnjeg toka podataka."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -224,10 +224,6 @@ msgstr "Upravljački program uređaja „%s” ne podržava poznate metode snima
 #, fuzzy, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Upravljački program uređaja „%s” ne podržava poznate metode snimanja."
-
-#, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Uređaj „%s” nije izlazni uređaj."
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -427,6 +423,10 @@ msgstr "Promjena rezolucije pri izvođenju još nije podržana."
 
 msgid "Cannot operate without a clock"
 msgstr "Ne mogu raditi bez takta"
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Uređaj „%s” nije izlazni uređaj."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Ne mogu ostvariti vezu prema poslužitelju zvuka"

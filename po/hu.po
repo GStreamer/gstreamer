@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2014-06-29 12:56+0200\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -92,6 +92,9 @@ msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "A fájl túl sok adatfolyamot tartalmaz. Csak az első %d kerül lejátszásra."
 
+msgid "Internal data flow error."
+msgstr "Belső adatfolyam-hiba."
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -106,9 +109,6 @@ msgid ""
 msgstr ""
 "Nem található támogatott adatfolyam. Lehet, hogy több átviteli protokollt "
 "kell engedélyezni, vagy hiányzik a megfelelő GStreamer RTSP bővítmény."
-
-msgid "Internal data flow error."
-msgstr "Belső adatfolyam-hiba."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -232,10 +232,6 @@ msgstr "A(z) „%s” eszköz illesztőprogramja nem támogatja a(z) %d. IO mód
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "A(z) „%s” eszköz illesztőprogramja nem támogat egyetlen ismert IO módot sem."
-
-#, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "A(z) „%s” eszköz nem támogatja a videofelvételt"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -435,6 +431,9 @@ msgstr "A felbontás módosítása futás közben még nem támogatott."
 
 msgid "Cannot operate without a clock"
 msgstr "Óra nélkül lehetetlen a működés"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "A(z) „%s” eszköz nem támogatja a videofelvételt"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nem hozható létre kapcsolat a hangkiszolgálóhoz"

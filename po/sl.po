@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2014-04-09 22:52+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -89,6 +89,9 @@ msgstr "Video zapis v tej datoteki morda ne bo predvajan pravilno."
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Datoteka vsebuje več pretokov. Predvajano bo le začetnih %d"
 
+msgid "Internal data flow error."
+msgstr "Notranja napaka pretoka podatkov."
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -104,9 +107,6 @@ msgstr ""
 "Ni mogoče najti podprtega pretoka. Najverjetneje je treba omogočiti več "
 "protokolov prenosa, oziroma manjka ustrezen vstavek GStreamer RTSP "
 "razširitve."
-
-msgid "Internal data flow error."
-msgstr "Notranja napaka pretoka podatkov."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -228,10 +228,6 @@ msgstr "Gonilnik naprave \"%s\" ne podpira nobenega načina I/O %d."
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Gonilnik naprave \"%s\" ne podpira nobenega znanega načina I/O."
-
-#, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Naprava \"%s\" ne podpira zajemanja videa."
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -436,3 +432,6 @@ msgstr "Spreminjanje ločljivosti med delovanjem še ni podprto."
 
 msgid "Cannot operate without a clock"
 msgstr "Izvajanje opravil brez ure ni mogoče"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Naprava \"%s\" ne podpira zajemanja videa."

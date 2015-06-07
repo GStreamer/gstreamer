@@ -4,14 +4,14 @@
 #
 # Miloslav Trmac <mitr@volny.cz>, 2004.
 # Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009, 2010, 2011.
-# Marek Černocký <marek@manet.cz>, 2013.
+# Marek Černocký <marek@manet.cz>, 2013, 2015.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.1.4\n"
+"Project-Id-Version: gst-plugins-good-1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
-"PO-Revision-Date: 2013-09-18 19:18+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
+"PO-Revision-Date: 2015-02-16 10:40+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -88,6 +88,9 @@ msgstr "Video v tomto souboru se nemusí přehrát správně."
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tento soubor obsahuje příliš mnoho proudů. Přehrává se pouze první %d"
 
+msgid "Internal data flow error."
+msgstr "Vnitřní chyba datového toku."
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -103,9 +106,6 @@ msgstr ""
 "Nebyl nalezen žádný podporovaný proud. Patrně bude nutné povolit více "
 "přenosových protokolů, jinak nejspíš bude scházet potřebný zásuvný modul "
 "rozšíření GStreamer RTSP."
-
-msgid "Internal data flow error."
-msgstr "Vnitřní chyba datového toku."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -230,10 +230,6 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Ovladač zařízení „%s“ nepodporuje žádnou známou V/V metodu."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Zařízení „%s“ nepodporuje zachytávání videa"
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "Zařízení „%s“ je zaneprázdněno"
 
@@ -245,9 +241,9 @@ msgstr "Zařízení „%s“ neumí zachytávat v rozměru %d × %d"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Zařízení „%s“ neumí zachytávat v tomto konkrétním formátu"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Zařízení „%s“ nepodporuje zachytávání videa"
+msgstr "Zařízení „%s“ nepodporuje nesousedící složky obrazu"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -256,30 +252,26 @@ msgstr "Nezdařilo se zjištění parametrů na zařízení „%s“"
 msgid "Video device did not accept new frame rate setting."
 msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
 
-#, fuzzy
 msgid "Video device did not provide output format."
-msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
+msgstr "Videozařízení neposkytuje výstupní formát."
 
 msgid "Video device returned invalid dimensions."
-msgstr ""
+msgstr "Videozařízení sdělilo neplatné rozměry."
 
-#, fuzzy
 msgid "Video devices uses an unsupported interlacing method."
-msgstr "Ovladač zařízení „%s“ nepodporuje V/V metodu %d"
+msgstr "Videozařízení používá nepodporovanou metodu prokládání."
 
 msgid "Video devices uses an unsupported pixel format."
-msgstr ""
+msgstr "Videozařízení používá nepodporovaný rastrový formát."
 
-#, fuzzy
 msgid "Failed to configure internal buffer pool."
-msgstr "Videozařízení se nezdařilo vytvořit společnou vyrovnávací paměť."
+msgstr "Selhalo nastavení vnitřní společné vyrovnávací paměti."
 
-#, fuzzy
 msgid "Video device did not suggest any buffer size."
-msgstr "Videozařízení se nezdařilo vytvořit společnou vyrovnávací paměť."
+msgstr "Videozařízení nedoporučuje nijakou velikost vyrovnávací paměti."
 
 msgid "No downstream pool to import from."
-msgstr ""
+msgstr "Neexistuje žádný společný proud dat, ze kterého by šlo importovat."
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -306,33 +298,32 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Selhala změna stavu zapnutí/vypnutí zvuku u zařízení „%s“."
 
 msgid "Failed to allocated required memory."
-msgstr ""
+msgstr "Selhalo přidělení požadované paměti."
 
 msgid "Failed to allocate required memory."
-msgstr ""
+msgstr "Selhalo přidělení požadované paměti."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported input format"
-msgstr "Ovladač zařízení „%s“ nepodporuje V/V metodu %d"
+msgstr "Převodník na zařízení „%s“ nepodporuje vstupní formát"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
+msgstr "Převodník na zařízení „%s“ nepodporuje výstupní formát"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
+msgstr "Kodér na zařízení „%s“ nepodporuje vstupní formát"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr "Videozařízení nepřijalo nové nastavení snímkové rychlosti."
+msgstr "Kodér na zařízení „%s“ nepodporuje výstupní formát"
 
-#, fuzzy
 msgid "Failed to start decoding thread."
-msgstr "Selhalo dekódování obrázku JPEG"
+msgstr "Selhalo spuštění vlákna dekodéru."
 
 msgid "Failed to process frame."
-msgstr ""
+msgstr "Selhalo zpracování snímku."
 
 #, c-format
 msgid ""
@@ -368,7 +359,7 @@ msgstr "Toto není zařízení „%s“."
 
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "Nezdařilo se otevřít zařízení „%s“ pro čtení a pro zápisu."
+msgstr "Nezdařilo se otevřít zařízení „%s“ pro čtení a zápis."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
@@ -378,13 +369,13 @@ msgstr "Zařízení „%s“ není zachytávacím zařízením."
 msgid "Device '%s' is not a output device."
 msgstr "Zařízení „%s“ není výstupním zařízením."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a M2M device."
-msgstr "Zařízení „%s“ není výstupním zařízením."
+msgstr "Zařízení „%s“ není zařízením M2M."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not dup device '%s' for reading and writing."
-msgstr "Nezdařilo se otevřít zařízení „%s“ pro čtení a pro zápisu."
+msgstr "Nezdařilo se duplikovat zařízení „%s“ pro čtení a zápis."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
@@ -432,3 +423,6 @@ msgstr "Změna rozlišení za běhu zatím není podporována."
 
 msgid "Cannot operate without a clock"
 msgstr "Není možné fungovat bez hodin"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Zařízení „%s“ nepodporuje zachytávání videa"

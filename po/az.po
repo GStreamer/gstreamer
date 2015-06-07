@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -87,6 +87,9 @@ msgstr ""
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 
+msgid "Internal data flow error."
+msgstr ""
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -96,9 +99,6 @@ msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
-msgstr ""
-
-msgid "Internal data flow error."
 msgstr ""
 
 msgid ""
@@ -217,10 +217,6 @@ msgstr ""
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
-
-#, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
 
 #, fuzzy, c-format
 msgid "Device '%s' is busy"
@@ -410,6 +406,10 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
 
 #, fuzzy
 #~ msgid "Failed trying to get video frames from device '%s'."

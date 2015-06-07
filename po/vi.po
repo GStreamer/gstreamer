@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2014-06-30 09:12+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -92,6 +92,9 @@ msgstr "Ảnh động trong tập tin này có thể không phát đúng."
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tập tin này chứa quá nhiều luồng nên chỉ phát %d đầu tiên"
 
+msgid "Internal data flow error."
+msgstr "Lỗi luồng dữ liệu nội bộ."
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -106,9 +109,6 @@ msgid ""
 msgstr ""
 "Không tìm thấy luồng dữ liệu được hỗ trợ. Người dùng có thể cần cho phép "
 "thêm giao thức truyền, hoặc chưa cài đặt phần bổ sung RTSP Gstreamer đúng."
-
-msgid "Internal data flow error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -231,10 +231,6 @@ msgstr "Trình điều khiển của thiết bị “%s” không hỗ trợ ph�
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "Trình điều khiển của thiết bị “%s” không hỗ trợ phương pháp VR đã biết nào."
-
-#, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Thiết bị “%s” không hỗ trợ chức năng quay video"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -435,6 +431,9 @@ msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi ch
 
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Thiết bị “%s” không hỗ trợ chức năng quay video"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Không thể thiết lập sự kết nối tới máy phục vụ âm thanh"

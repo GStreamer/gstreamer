@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -86,6 +86,9 @@ msgstr "Jista jkun illi l-vidjo ġo dan il-fajl ma jidhirx sewwa."
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Il-fajl fiħ aktar streams milli suppost. Ser indoqq l-ewwel %d"
 
+msgid "Internal data flow error."
+msgstr "Problema interna ta' data flow"
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -96,9 +99,6 @@ msgid ""
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Problema interna ta' data flow"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -221,10 +221,6 @@ msgstr ""
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "Id-driver tal-apparat '%s' ma jissapportja l-ebda capture method mifhum."
-
-#, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Device '%s' mhux capture device."
 
 #, fuzzy, c-format
 msgid "Device '%s' is busy"
@@ -435,6 +431,10 @@ msgstr "Ma tistax tibdel ir-resolution waqt runtime."
 
 msgid "Cannot operate without a clock"
 msgstr "Ma nistax nħaddem mingħajr arloġġ"
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Device '%s' mhux capture device."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "Irċivejt frame size ta' %u minflok kif kien mistenni ta' %u."

@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -90,6 +90,9 @@ msgstr "Tiedostossa olevaa videota ei ehkä voida näyttää oikein."
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tiedosto sisältää useita virtoja. Soitetaan vain ensimmäiset %d"
 
+msgid "Internal data flow error."
+msgstr "Sisäisen tietovirran virhe."
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -105,9 +108,6 @@ msgstr ""
 "Tuettua virtaa ei löytynyt. Sinun kenties tarvitsee sallia useampia "
 "siirtoprotokollia, tai vaihtoehtoisesti sinulta saattaa puuttua oikea "
 "GStreamer-RTSP-laajennusliitännäinen."
-
-msgid "Internal data flow error."
-msgstr "Sisäisen tietovirran virhe."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -230,10 +230,6 @@ msgstr "Laitteen ”%s” ajuri ei tue mitään tunnettua kaappaustapaa."
 #, fuzzy, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Laitteen ”%s” ajuri ei tue mitään tunnettua kaappaustapaa."
-
-#, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Laite ”%s” ei ole ulostulolaite."
 
 #, fuzzy, c-format
 msgid "Device '%s' is busy"
@@ -434,6 +430,10 @@ msgstr "Resoluution vaihto käytön aikana ei ole vielä mahdollista."
 
 msgid "Cannot operate without a clock"
 msgstr "Ei voitu toimia ilman kelloa"
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Laite ”%s” ei ole ulostulolaite."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "Saatiin odottamaton kehys kooltaan %u odotetun %u sijaan."

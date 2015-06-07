@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2014-06-29 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -91,6 +91,9 @@ msgstr "Videoen i denne fil afspilles måske ikke korrekt."
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Denne fil indeholder for mange strømme. Afspil først kun %d"
 
+msgid "Internal data flow error."
+msgstr "Intern datastrømsfejl."
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -106,9 +109,6 @@ msgstr ""
 "Ingen understøttet strøm blev fundet. Du mangler måske at tillade yderligere "
 "transportprotokoller eller mangler måske det korrekte udvidelsesmodul til "
 "GStreamer RTSP."
-
-msgid "Internal data flow error."
-msgstr "Intern datastrømsfejl."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -230,10 +230,6 @@ msgstr "Driveren til enhed »%s« understøtter ikke IO-metoden %d"
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Driveren til enhed »%s« understøtter ingen kendt IO-metode."
-
-#, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Enheden »%s« understøtter ikke videooptagelse"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -429,3 +425,6 @@ msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke fungere uden et ur"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Enheden »%s« understøtter ikke videooptagelse"

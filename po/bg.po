@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2011-04-26 22:35+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -86,6 +86,9 @@ msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Този файл съдържа прекалено много потоци. Изпълняват се само първите %d"
 
+msgid "Internal data flow error."
+msgstr "Вътрешна грешка в потока с данни."
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -100,9 +103,6 @@ msgid ""
 msgstr ""
 "Не е открит поддържан поток. Може би трябва да разрешите повече транспортни "
 "протоколи или ви липсва правилната приставка на GStreamer за RTSP."
-
-msgid "Internal data flow error."
-msgstr "Вътрешна грешка в потока с данни."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -223,10 +223,6 @@ msgstr "Драйверът за устройството „%s“ не подд�
 #, fuzzy, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Драйверът за устройството „%s“ не поддържа познати методи за запис."
-
-#, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Устройството „%s“ не е изходно устройство."
 
 #, fuzzy, c-format
 msgid "Device '%s' is busy"
@@ -436,6 +432,10 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Работата без часовник е невъзможна."
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Устройството „%s“ не е изходно устройство."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "Получена е рамка с размер %u вместо очаквания %u."

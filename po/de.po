@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2014-06-29 21:20+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -98,6 +98,9 @@ msgstr ""
 "Diese Datei enthält zu viele Ströme. Es werden nur die ersten %d "
 "wiedergegeben"
 
+msgid "Internal data flow error."
+msgstr "Interner Datenstromfehler."
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -113,9 +116,6 @@ msgstr ""
 "Es wurde kein unterstützter Strom gefunden. Sie müssen eventuell zusätzliche "
 "Transport-Protokolle erlauben oder es fehlt vielleicht das richtige Plugin "
 "zur RTSP-Erweiterung."
-
-msgid "Internal data flow error."
-msgstr "Interner Datenstromfehler."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -240,10 +240,6 @@ msgstr "Der Treiber von Gerät »%s« unterstützt nicht die EA-Methode %d"
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Der Treiber von Gerät »%s« unterstützt keine bekannte EA-Methode"
-
-#, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Gerät »%s« unterstützt keine Videoaufnahme"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -448,6 +444,9 @@ msgstr "Ein Wechsel der Auflösung zur Laufzeit wird noch nicht unterstützt."
 # Taktgeber klingt gut.
 msgid "Cannot operate without a clock"
 msgstr "Es kann nicht ohne einen Taktgeber gearbeitet werden."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Gerät »%s« unterstützt keine Videoaufnahme"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden"

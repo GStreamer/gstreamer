@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2009-11-13 22:20+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -86,6 +86,9 @@ msgstr "此文件中的视频可能无法正确播放。"
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "此文件包含了太多的流。只播放前面 %d 个"
 
+msgid "Internal data flow error."
+msgstr "内部数据流错误。"
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -100,9 +103,6 @@ msgid ""
 msgstr ""
 "未找到支持的流媒体。您可能需要启用更多的传送协议，或者也有可能是缺少正确的 "
 "GStreamer RTSP 扩展插件。"
-
-msgid "Internal data flow error."
-msgstr "内部数据流错误。"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -222,10 +222,6 @@ msgstr "设备‘%s’的驱动不支持任何已知的捕获方式。"
 #, fuzzy, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "设备‘%s’的驱动不支持任何已知的捕获方式。"
-
-#, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "设备‘%s’不支持视频捕获"
 
 #, c-format
 msgid "Device '%s' is busy"

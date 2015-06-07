@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
+"POT-Creation-Date: 2015-06-07 09:35+0200\n"
 "PO-Revision-Date: 2014-06-29 11:40+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -93,6 +93,9 @@ msgstr ""
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Файл містить надто багато потоків. Відтворюються лише перші %d"
 
+msgid "Internal data flow error."
+msgstr "Помилка внутрішнього перенесення даних."
+
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -107,9 +110,6 @@ msgid ""
 msgstr ""
 "Не знайдено підтримуваних потоків. Ймовірно, вам слід увімкнути додаткові "
 "протоколи передавання даних або встановити додатковий модуль RTSP GStreamer."
-
-msgid "Internal data flow error."
-msgstr "Помилка внутрішнього перенесення даних."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -234,10 +234,6 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "Драйвер пристрою «%s» не підтримує жоден відомий метод введення-виведення "
 "даних."
-
-#, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Пристрій «%s» не може захоплювати відеодані"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -443,6 +439,9 @@ msgstr "Зміна роздільної здатності при відтвор
 
 msgid "Cannot operate without a clock"
 msgstr "Робота без годинника неможлива"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Пристрій «%s» не може захоплювати відеодані"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Не вдалося встановити з'єднання із звуковим сервером."
