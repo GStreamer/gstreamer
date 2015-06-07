@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-12-16 15:36+0000\n"
+"POT-Creation-Date: 2015-06-07 09:28+0200\n"
 "PO-Revision-Date: 2014-03-09 11:07+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -1001,6 +1001,10 @@ msgstr "vynutit schopnosti"
 
 msgid "force caps without doing a typefind"
 msgstr "vynutit schopnosti bez hledání typu"
+
+#, fuzzy
+msgid "Stream contains not enough data."
+msgstr "Proud neobsahuje žádná data."
 
 msgid "Stream contains no data."
 msgstr "Proud neobsahuje žádná data."

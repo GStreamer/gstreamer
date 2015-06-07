@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-12-16 15:36+0000\n"
+"POT-Creation-Date: 2015-06-07 09:28+0200\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -986,6 +986,10 @@ msgstr "强制分析"
 
 msgid "force caps without doing a typefind"
 msgstr "不做类型查找的强制分析"
+
+#, fuzzy
+msgid "Stream contains not enough data."
+msgstr "流中不含数据"
 
 msgid "Stream contains no data."
 msgstr "流中不含数据"

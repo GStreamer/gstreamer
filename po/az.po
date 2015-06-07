@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-12-16 15:36+0000\n"
+"POT-Creation-Date: 2015-06-07 09:28+0200\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -958,6 +958,9 @@ msgid "force caps"
 msgstr ""
 
 msgid "force caps without doing a typefind"
+msgstr ""
+
+msgid "Stream contains not enough data."
 msgstr ""
 
 msgid "Stream contains no data."

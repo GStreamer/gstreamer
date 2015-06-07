@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-12-16 15:36+0000\n"
+"POT-Creation-Date: 2015-06-07 09:28+0200\n"
 "PO-Revision-Date: 2014-04-09 22:38+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -1000,6 +1000,10 @@ msgstr "vsili velike črke"
 
 msgid "force caps without doing a typefind"
 msgstr "vsili velike črke brez potrjevanja pisave"
+
+#, fuzzy
+msgid "Stream contains not enough data."
+msgstr "Pretok ne vsebuje podatkov."
 
 msgid "Stream contains no data."
 msgstr "Pretok ne vsebuje podatkov."

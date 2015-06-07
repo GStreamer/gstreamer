@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-12-16 15:36+0000\n"
+"POT-Creation-Date: 2015-06-07 09:28+0200\n"
 "PO-Revision-Date: 2014-05-22 00:46+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -1011,6 +1011,10 @@ msgstr "forceer mogelijkheden"
 
 msgid "force caps without doing a typefind"
 msgstr "forceer mogelijkheden zonder een \"typefind\" te doen"
+
+#, fuzzy
+msgid "Stream contains not enough data."
+msgstr "Stroom zonder gegevens."
 
 msgid "Stream contains no data."
 msgstr "Stroom zonder gegevens."

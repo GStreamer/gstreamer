@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-12-16 15:36+0000\n"
+"POT-Creation-Date: 2015-06-07 09:28+0200\n"
 "PO-Revision-Date: 2014-05-22 20:48+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -1027,6 +1027,10 @@ msgstr "Fähigkeiten erzwingen"
 
 msgid "force caps without doing a typefind"
 msgstr "Fähigkeiten ohne Typensuche erzwingen"
+
+#, fuzzy
+msgid "Stream contains not enough data."
+msgstr "Der Datenstrom enthält keine Daten."
 
 msgid "Stream contains no data."
 msgstr "Der Datenstrom enthält keine Daten."

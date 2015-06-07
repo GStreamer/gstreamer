@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-12-16 15:36+0000\n"
+"POT-Creation-Date: 2015-06-07 09:28+0200\n"
 "PO-Revision-Date: 2011-10-02 15:45+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -1015,6 +1015,10 @@ msgstr "forzar las capacidades"
 
 msgid "force caps without doing a typefind"
 msgstr "forzar las capacidades sin hacer un «typefind»"
+
+#, fuzzy
+msgid "Stream contains not enough data."
+msgstr "El flujo no contiene datos."
 
 msgid "Stream contains no data."
 msgstr "El flujo no contiene datos."

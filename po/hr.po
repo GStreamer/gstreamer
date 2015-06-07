@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-12-16 15:36+0000\n"
+"POT-Creation-Date: 2015-06-07 09:28+0200\n"
 "PO-Revision-Date: 2012-05-25 16:47+0200\n"
 "Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -996,6 +996,10 @@ msgstr "prisili mogućnosti"
 
 msgid "force caps without doing a typefind"
 msgstr "prisiljava mogućnosti bez traženja vrste"
+
+#, fuzzy
+msgid "Stream contains not enough data."
+msgstr "Tok podataka ne sadrži podatke."
 
 msgid "Stream contains no data."
 msgstr "Tok podataka ne sadrži podatke."
