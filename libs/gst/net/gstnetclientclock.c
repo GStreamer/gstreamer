@@ -1039,6 +1039,8 @@ gst_ntp_clock_init (GstNtpClock * self)
  *
  * Returns: a new #GstClock that receives a time from the remote
  * clock.
+ *
+ * Since: 1.6
  */
 GstClock *
 gst_ntp_clock_new (const gchar * name, const gchar * remote_address,
