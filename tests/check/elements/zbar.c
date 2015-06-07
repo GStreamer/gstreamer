@@ -20,25 +20,19 @@
 
 #include <gst/check/gstcheck.h>
 
-GST_START_TEST (test_still_image)
+static GstElement *
+setup_pipeline (void)
 {
-  GstMessage *zbar_msg = NULL;
-  const GstStructure *s;
   GstElement *pipeline, *src, *dec, *csp, *zbar, *sink;
-  GstSample *sample;
-  const gchar *type, *symbol;
   gchar *path;
-  int qual;
 
   pipeline = gst_pipeline_new ("pipeline");
 
   src = gst_element_factory_make ("filesrc", NULL);
   dec = gst_element_factory_make ("pngdec", NULL);
   csp = gst_element_factory_make ("videoconvert", NULL);
-  zbar = gst_element_factory_make ("zbar", NULL);
+  zbar = gst_element_factory_make ("zbar", "zbar");
   sink = gst_element_factory_make ("fakesink", NULL);
-
-  g_object_set (zbar, "attach-frame", TRUE, NULL);
 
   path = g_build_filename (GST_TEST_FILES_PATH, "barcode.png", NULL);
   GST_LOG ("reading file '%s'", path);
@@ -48,8 +42,13 @@ GST_START_TEST (test_still_image)
   gst_bin_add_many (GST_BIN (pipeline), src, dec, csp, zbar, sink, NULL);
   fail_unless (gst_element_link_many (src, dec, csp, zbar, sink, NULL));
 
-  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
-      GST_STATE_CHANGE_ASYNC);
+  return pipeline;
+}
+
+static GstMessage *
+get_zbar_msg_until_eos (GstElement * pipeline)
+{
+  GstMessage *zbar_msg = NULL;
 
   do {
     GstMessage *msg;
@@ -66,14 +65,33 @@ GST_START_TEST (test_still_image)
       break;
     }
 
-    if (GST_MESSAGE_SRC (msg) == GST_OBJECT_CAST (zbar) && zbar_msg == NULL) {
+    if (!g_strcmp0 (GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)), "zbar")
+        && zbar_msg == NULL) {
       zbar_msg = msg;
     } else {
       gst_message_unref (msg);
     }
   } while (1);
+  return zbar_msg;
+}
 
+
+GST_START_TEST (test_still_image)
+{
+  GstMessage *zbar_msg;
+  const GstStructure *s;
+  GstElement *pipeline;
+  const gchar *type, *symbol;
+  int qual;
+
+  pipeline = setup_pipeline ();
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  zbar_msg = get_zbar_msg_until_eos (pipeline);
   fail_unless (zbar_msg != NULL);
+
   s = gst_message_get_structure (zbar_msg);
   fail_unless (s != NULL);
 
@@ -82,13 +100,44 @@ GST_START_TEST (test_still_image)
   fail_unless (gst_structure_has_field (s, "type"));
   fail_unless (gst_structure_has_field (s, "symbol"));
   fail_unless (gst_structure_has_field (s, "quality"));
-  fail_unless (gst_structure_has_field (s, "frame"));
   fail_unless (gst_structure_get_int (s, "quality", &qual));
   fail_unless (qual >= 90);
   type = gst_structure_get_string (s, "type");
   fail_unless_equals_string (type, "EAN-13");
   symbol = gst_structure_get_string (s, "symbol");
   fail_unless_equals_string (symbol, "9876543210128");
+
+  fail_if (gst_structure_has_field (s, "frame"));
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (pipeline);
+  gst_message_unref (zbar_msg);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_still_image_with_sample)
+{
+  GstMessage *zbar_msg = NULL;
+  const GstStructure *s;
+  GstElement *pipeline;
+  GstSample *sample;
+
+  pipeline = setup_pipeline ();
+  gst_child_proxy_set ((GstChildProxy *) pipeline, "zbar::attach-frame", TRUE,
+      NULL);
+
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  zbar_msg = get_zbar_msg_until_eos (pipeline);
+  fail_unless (zbar_msg != NULL);
+
+  s = gst_message_get_structure (zbar_msg);
+  fail_unless (s != NULL);
 
   fail_unless (gst_structure_get (s, "frame", GST_TYPE_SAMPLE, &sample, NULL));
   fail_unless (gst_sample_get_buffer (sample));
@@ -117,6 +166,7 @@ zbar_suite (void)
     GST_INFO ("Skipping test, pngdec either not available or too old");
   } else {
     tcase_add_test (tc_chain, test_still_image);
+    tcase_add_test (tc_chain, test_still_image_with_sample);
   }
 
   return s;
