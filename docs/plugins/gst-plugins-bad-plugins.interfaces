@@ -6,6 +6,7 @@ GstAmrWbEnc GstPreset
 GstApExSink GstImplementsInterface GstMixer
 GstAsfMux GstTagSetter
 GstAudioEncoder GstPreset
+GstAudioInterleave GstChildProxy
 GstAudioMixer GstChildProxy
 GstAutoConvert GstChildProxy
 GstAutoVideoConvert GstChildProxy

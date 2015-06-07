@@ -205,7 +205,7 @@ fieldanalysis_orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
     /* 9: andl */
     var45.i = var43.i & var44.i;
     /* 10: accl */
-    var12.i = var12.i + var45.i;
+    var12.i = ((orc_uint32) var12.i) + ((orc_uint32) var45.i);
   }
   *a1 = var12.i;
 
@@ -258,7 +258,7 @@ _backup_fieldanalysis_orc_same_parity_sad_planar_yuv (OrcExecutor *
     /* 9: andl */
     var45.i = var43.i & var44.i;
     /* 10: accl */
-    var12.i = var12.i + var45.i;
+    var12.i = ((orc_uint32) var12.i) + ((orc_uint32) var45.i);
   }
   ex->accumulators[0] = var12.i;
 
@@ -391,7 +391,7 @@ fieldanalysis_orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
     /* 8: andl */
     var44.i = var42.i & var43.i;
     /* 9: accl */
-    var12.i = var12.i + var44.i;
+    var12.i = ((orc_uint32) var12.i) + ((orc_uint32) var44.i);
   }
   *a1 = var12.i;
 
@@ -441,7 +441,7 @@ _backup_fieldanalysis_orc_same_parity_ssd_planar_yuv (OrcExecutor *
     /* 8: andl */
     var44.i = var42.i & var43.i;
     /* 9: accl */
-    var12.i = var12.i + var44.i;
+    var12.i = ((orc_uint32) var12.i) + ((orc_uint32) var44.i);
   }
   ex->accumulators[0] = var12.i;
 
@@ -606,9 +606,9 @@ fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
     /* 11: convubw */
     var52.i = (orc_uint8) var45;
     /* 12: shlw */
-    var53.i = var48.i << 2;
+    var53.i = ((orc_uint16) var48.i) << 2;
     /* 13: shlw */
-    var54.i = var51.i << 2;
+    var54.i = ((orc_uint16) var51.i) << 2;
     /* 14: addw */
     var55.i = var47.i + var53.i;
     /* 15: addw */
@@ -628,7 +628,7 @@ fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
     /* 23: andl */
     var63.i = var61.i & var62.i;
     /* 24: accl */
-    var12.i = var12.i + var63.i;
+    var12.i = ((orc_uint32) var12.i) + ((orc_uint32) var63.i);
   }
   *a1 = var12.i;
 
@@ -709,9 +709,9 @@ _backup_fieldanalysis_orc_same_parity_3_tap_planar_yuv (OrcExecutor *
     /* 11: convubw */
     var52.i = (orc_uint8) var45;
     /* 12: shlw */
-    var53.i = var48.i << 2;
+    var53.i = ((orc_uint16) var48.i) << 2;
     /* 13: shlw */
-    var54.i = var51.i << 2;
+    var54.i = ((orc_uint16) var51.i) << 2;
     /* 14: addw */
     var55.i = var47.i + var53.i;
     /* 15: addw */
@@ -731,7 +731,7 @@ _backup_fieldanalysis_orc_same_parity_3_tap_planar_yuv (OrcExecutor *
     /* 23: andl */
     var63.i = var61.i & var62.i;
     /* 24: accl */
-    var12.i = var12.i + var63.i;
+    var12.i = ((orc_uint32) var12.i) + ((orc_uint32) var63.i);
   }
   ex->accumulators[0] = var12.i;
 
@@ -761,7 +761,7 @@ fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
         121,
         95, 51, 95, 116, 97, 112, 95, 112, 108, 97, 110, 97, 114, 95, 121, 117,
         118, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1, 1,
-        12, 1, 1, 13, 4, 14, 4, 2, 0, 0, 0, 16, 4, 20, 2, 20,
+        12, 1, 1, 13, 4, 14, 2, 2, 0, 0, 0, 16, 4, 20, 2, 20,
         2, 20, 2, 20, 2, 20, 2, 20, 2, 20, 4, 20, 4, 150, 32, 4,
         150, 33, 5, 150, 34, 6, 150, 35, 7, 150, 36, 8, 150, 37, 9, 93,
         33, 33, 16, 93, 36, 36, 16, 70, 32, 32, 33, 70, 32, 32, 34, 70,
@@ -784,7 +784,7 @@ fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
       orc_program_add_source (p, 1, "s5");
       orc_program_add_source (p, 1, "s6");
       orc_program_add_accumulator (p, 4, "a1");
-      orc_program_add_constant (p, 4, 0x00000002, "c1");
+      orc_program_add_constant (p, 2, 0x00000002, "c1");
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
@@ -884,12 +884,8 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
 #else
   orc_union16 var44;
 #endif
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_union16 var45;
-#else
-  orc_union16 var45;
-#endif
-  orc_union32 var46;
+  orc_union32 var45;
+  orc_union16 var46;
   orc_union16 var47;
   orc_union16 var48;
   orc_union16 var49;
@@ -902,10 +898,9 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
   orc_union16 var56;
   orc_union16 var57;
   orc_union16 var58;
-  orc_union16 var59;
+  orc_union32 var59;
   orc_union32 var60;
   orc_union32 var61;
-  orc_union32 var62;
 
   ptr4 = (orc_int8 *) s1;
   ptr5 = (orc_int8 *) s2;
@@ -915,56 +910,54 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
 
   /* 11: loadpw */
   var44.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
-  /* 13: loadpw */
-  var45.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
-  /* 21: loadpl */
-  var46.i = p1;
+  /* 20: loadpl */
+  var45.i = p1;
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
     var39 = ptr4[i];
     /* 1: convubw */
-    var47.i = (orc_uint8) var39;
+    var46.i = (orc_uint8) var39;
     /* 2: loadb */
     var40 = ptr5[i];
     /* 3: convubw */
-    var48.i = (orc_uint8) var40;
+    var47.i = (orc_uint8) var40;
     /* 4: loadb */
     var41 = ptr6[i];
     /* 5: convubw */
-    var49.i = (orc_uint8) var41;
+    var48.i = (orc_uint8) var41;
     /* 6: loadb */
     var42 = ptr7[i];
     /* 7: convubw */
-    var50.i = (orc_uint8) var42;
+    var49.i = (orc_uint8) var42;
     /* 8: loadb */
     var43 = ptr8[i];
     /* 9: convubw */
-    var51.i = (orc_uint8) var43;
+    var50.i = (orc_uint8) var43;
     /* 10: shlw */
-    var52.i = var49.i << 2;
+    var51.i = ((orc_uint16) var48.i) << 2;
     /* 12: mullw */
-    var53.i = (var48.i * var44.i) & 0xffff;
-    /* 14: mullw */
-    var54.i = (var50.i * var45.i) & 0xffff;
-    /* 15: subw */
-    var55.i = var47.i - var53.i;
-    /* 16: addw */
-    var56.i = var55.i + var52.i;
-    /* 17: subw */
-    var57.i = var56.i - var54.i;
-    /* 18: addw */
-    var58.i = var57.i + var51.i;
-    /* 19: absw */
-    var59.i = ORC_ABS (var58.i);
-    /* 20: convuwl */
-    var60.i = (orc_uint16) var59.i;
-    /* 22: cmpgtsl */
-    var61.i = (var60.i > var46.i) ? (~0) : 0;
-    /* 23: andl */
-    var62.i = var60.i & var61.i;
-    /* 24: accl */
-    var12.i = var12.i + var62.i;
+    var52.i = (var47.i * var44.i) & 0xffff;
+    /* 13: mullw */
+    var53.i = (var49.i * var44.i) & 0xffff;
+    /* 14: subw */
+    var54.i = var46.i - var52.i;
+    /* 15: addw */
+    var55.i = var54.i + var51.i;
+    /* 16: subw */
+    var56.i = var55.i - var53.i;
+    /* 17: addw */
+    var57.i = var56.i + var50.i;
+    /* 18: absw */
+    var58.i = ORC_ABS (var57.i);
+    /* 19: convuwl */
+    var59.i = (orc_uint16) var58.i;
+    /* 21: cmpgtsl */
+    var60.i = (var59.i > var45.i) ? (~0) : 0;
+    /* 22: andl */
+    var61.i = var59.i & var60.i;
+    /* 23: accl */
+    var12.i = ((orc_uint32) var12.i) + ((orc_uint32) var61.i);
   }
   *a1 = var12.i;
 
@@ -993,12 +986,8 @@ _backup_fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (OrcExecutor *
 #else
   orc_union16 var44;
 #endif
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_union16 var45;
-#else
-  orc_union16 var45;
-#endif
-  orc_union32 var46;
+  orc_union32 var45;
+  orc_union16 var46;
   orc_union16 var47;
   orc_union16 var48;
   orc_union16 var49;
@@ -1011,10 +1000,9 @@ _backup_fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (OrcExecutor *
   orc_union16 var56;
   orc_union16 var57;
   orc_union16 var58;
-  orc_union16 var59;
+  orc_union32 var59;
   orc_union32 var60;
   orc_union32 var61;
-  orc_union32 var62;
 
   ptr4 = (orc_int8 *) ex->arrays[4];
   ptr5 = (orc_int8 *) ex->arrays[5];
@@ -1024,56 +1012,54 @@ _backup_fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (OrcExecutor *
 
   /* 11: loadpw */
   var44.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
-  /* 13: loadpw */
-  var45.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
-  /* 21: loadpl */
-  var46.i = ex->params[24];
+  /* 20: loadpl */
+  var45.i = ex->params[24];
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
     var39 = ptr4[i];
     /* 1: convubw */
-    var47.i = (orc_uint8) var39;
+    var46.i = (orc_uint8) var39;
     /* 2: loadb */
     var40 = ptr5[i];
     /* 3: convubw */
-    var48.i = (orc_uint8) var40;
+    var47.i = (orc_uint8) var40;
     /* 4: loadb */
     var41 = ptr6[i];
     /* 5: convubw */
-    var49.i = (orc_uint8) var41;
+    var48.i = (orc_uint8) var41;
     /* 6: loadb */
     var42 = ptr7[i];
     /* 7: convubw */
-    var50.i = (orc_uint8) var42;
+    var49.i = (orc_uint8) var42;
     /* 8: loadb */
     var43 = ptr8[i];
     /* 9: convubw */
-    var51.i = (orc_uint8) var43;
+    var50.i = (orc_uint8) var43;
     /* 10: shlw */
-    var52.i = var49.i << 2;
+    var51.i = ((orc_uint16) var48.i) << 2;
     /* 12: mullw */
-    var53.i = (var48.i * var44.i) & 0xffff;
-    /* 14: mullw */
-    var54.i = (var50.i * var45.i) & 0xffff;
-    /* 15: subw */
-    var55.i = var47.i - var53.i;
-    /* 16: addw */
-    var56.i = var55.i + var52.i;
-    /* 17: subw */
-    var57.i = var56.i - var54.i;
-    /* 18: addw */
-    var58.i = var57.i + var51.i;
-    /* 19: absw */
-    var59.i = ORC_ABS (var58.i);
-    /* 20: convuwl */
-    var60.i = (orc_uint16) var59.i;
-    /* 22: cmpgtsl */
-    var61.i = (var60.i > var46.i) ? (~0) : 0;
-    /* 23: andl */
-    var62.i = var60.i & var61.i;
-    /* 24: accl */
-    var12.i = var12.i + var62.i;
+    var52.i = (var47.i * var44.i) & 0xffff;
+    /* 13: mullw */
+    var53.i = (var49.i * var44.i) & 0xffff;
+    /* 14: subw */
+    var54.i = var46.i - var52.i;
+    /* 15: addw */
+    var55.i = var54.i + var51.i;
+    /* 16: subw */
+    var56.i = var55.i - var53.i;
+    /* 17: addw */
+    var57.i = var56.i + var50.i;
+    /* 18: absw */
+    var58.i = ORC_ABS (var57.i);
+    /* 19: convuwl */
+    var59.i = (orc_uint16) var58.i;
+    /* 21: cmpgtsl */
+    var60.i = (var59.i > var45.i) ? (~0) : 0;
+    /* 22: andl */
+    var61.i = var59.i & var60.i;
+    /* 23: accl */
+    var12.i = ((orc_uint32) var12.i) + ((orc_uint32) var61.i);
   }
   ex->accumulators[0] = var12.i;
 
@@ -1102,7 +1088,7 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
         97,
         114, 105, 116, 121, 95, 53, 95, 116, 97, 112, 95, 112, 108, 97, 110, 97,
         114, 95, 121, 117, 118, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1,
-        1, 12, 1, 1, 13, 4, 14, 4, 2, 0, 0, 0, 14, 4, 3, 0,
+        1, 12, 1, 1, 13, 4, 14, 2, 2, 0, 0, 0, 14, 2, 3, 0,
         0, 0, 16, 4, 20, 2, 20, 2, 20, 2, 20, 2, 20, 2, 20, 4,
         20, 4, 150, 32, 4, 150, 33, 5, 150, 34, 6, 150, 35, 7, 150, 36,
         8, 93, 34, 34, 16, 89, 33, 33, 17, 89, 35, 35, 17, 98, 32, 32,
@@ -1125,8 +1111,8 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
       orc_program_add_source (p, 1, "s4");
       orc_program_add_source (p, 1, "s5");
       orc_program_add_accumulator (p, 4, "a1");
-      orc_program_add_constant (p, 4, 0x00000002, "c1");
-      orc_program_add_constant (p, 4, 0x00000003, "c2");
+      orc_program_add_constant (p, 2, 0x00000002, "c1");
+      orc_program_add_constant (p, 2, 0x00000003, "c2");
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");

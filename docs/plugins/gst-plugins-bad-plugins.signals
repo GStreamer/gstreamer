@@ -659,9 +659,7 @@ DvbBaseBin *dvbbasebin
 <FLAGS>l</FLAGS>
 GstGLImageSink *gstglimagesink
 GstGLContext *arg1
-guint  arg2
-guint  arg3
-guint  arg4
+GstSample *arg2
 </SIGNAL>
 
 <SIGNAL>
@@ -711,9 +709,7 @@ GstGLMixerBin *gstglmixerbin
 <FLAGS>l</FLAGS>
 GstGLImageSinkBin *gstglimagesinkbin
 GstGLContext *arg1
-guint  arg2
-guint  arg3
-guint  arg4
+GstSample *arg2
 </SIGNAL>
 
 <SIGNAL>

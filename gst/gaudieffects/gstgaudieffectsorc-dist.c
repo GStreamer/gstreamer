@@ -228,10 +228,10 @@ gaudi_orc_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
     var44.x4[2] = (orc_uint8) var43.x4[2];
     var44.x4[3] = (orc_uint8) var43.x4[3];
     /* 9: shlw */
-    var45.x4[0] = var44.x4[0] << 7;
-    var45.x4[1] = var44.x4[1] << 7;
-    var45.x4[2] = var44.x4[2] << 7;
-    var45.x4[3] = var44.x4[3] << 7;
+    var45.x4[0] = ((orc_uint16) var44.x4[0]) << 7;
+    var45.x4[1] = ((orc_uint16) var44.x4[1]) << 7;
+    var45.x4[2] = ((orc_uint16) var44.x4[2]) << 7;
+    var45.x4[3] = ((orc_uint16) var44.x4[3]) << 7;
     /* 10: divluw */
     var46.x4[0] =
         ((var42.x4[0] & 0xff) ==
@@ -349,10 +349,10 @@ _backup_gaudi_orc_burn (OrcExecutor * ORC_RESTRICT ex)
     var44.x4[2] = (orc_uint8) var43.x4[2];
     var44.x4[3] = (orc_uint8) var43.x4[3];
     /* 9: shlw */
-    var45.x4[0] = var44.x4[0] << 7;
-    var45.x4[1] = var44.x4[1] << 7;
-    var45.x4[2] = var44.x4[2] << 7;
-    var45.x4[3] = var44.x4[3] << 7;
+    var45.x4[0] = ((orc_uint16) var44.x4[0]) << 7;
+    var45.x4[1] = ((orc_uint16) var44.x4[1]) << 7;
+    var45.x4[2] = ((orc_uint16) var44.x4[2]) << 7;
+    var45.x4[3] = ((orc_uint16) var44.x4[3]) << 7;
     /* 10: divluw */
     var46.x4[0] =
         ((var42.x4[0] & 0xff) ==

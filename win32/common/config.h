@@ -86,7 +86,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2014-07-19"
+#define GST_PACKAGE_RELEASE_DATETIME "2015-06-07"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -115,6 +115,15 @@
 /* Define to enable Bluez (used by bluez). */
 #undef HAVE_BLUEZ
 
+/* Old bluez detected */
+#undef HAVE_BLUEZ4
+
+/* Current bluez detected */
+#undef HAVE_BLUEZ5
+
+/* Define to enable bs2b (used by bs2b). */
+#undef HAVE_BS2B
+
 /* Define to enable bz2 library (used by bz2). */
 #undef HAVE_BZ2
 
@@ -129,8 +138,14 @@
 /* Define to enable chromaprint (used by chromaprint). */
 #undef HAVE_CHROMAPRINT
 
+/* Define if the target CPU is AARCH64 */
+#undef HAVE_CPU_AARCH64
+
 /* Define if the target CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
+
+/* Define if the target CPU is an ARC */
+#undef HAVE_CPU_ARC
 
 /* Define if the target CPU is an ARM */
 #undef HAVE_CPU_ARM
@@ -193,9 +208,6 @@
 /* Define to enable Direct3D plug-in (used by direct3dsink). */
 #undef HAVE_DIRECT3D
 
-/* Define to enable DirectDraw plug-in (used by directdrawsink). */
-#undef HAVE_DIRECTDRAW
-
 /* Define to enable directfb (used by dfbvideosink ). */
 #undef HAVE_DIRECTFB
 
@@ -207,6 +219,9 @@
 
 /* define for working do while(0) macros */
 #undef HAVE_DOWHILE_MACROS
+
+/* Define to enable DTLS plugin (used by dtls). */
+#undef HAVE_DTLS
 
 /* Define to enable dts library (used by dtsdec). */
 #undef HAVE_DTS
@@ -265,6 +280,12 @@
 /* Define to 1 if the system has the type `GLsizeiptr'. */
 #undef HAVE_GLSIZEIPTR
 
+/* Define to 1 if the system has the type `GLsync'. */
+#undef HAVE_GLSYNC
+
+/* Define to 1 if the system has the type `GLuint64'. */
+#undef HAVE_GLUINT64
+
 /* Define to enable gme decoder (used by gme). */
 #undef HAVE_GME
 
@@ -282,9 +303,6 @@
 
 /* Define if gudev is installed */
 #undef HAVE_GUDEV
-
-/* Define to 1 if you have the <highgui.h> header file. */
-#undef HAVE_HIGHGUI_H
 
 /* Define to enable http live streaming plugin (used by hls). */
 #undef HAVE_HLS
@@ -306,6 +324,9 @@
 
 /* Define to enable ladspa (used by ladspa). */
 #undef HAVE_LADSPA
+
+/* Define to enable libde265 HEVC/H.265 decoder (used by libde265). */
+#undef HAVE_LIBDE265
 
 /* Define if libgcrypt is available */
 #undef HAVE_LIBGCRYPT
@@ -364,9 +385,6 @@
 /* Define to enable musepackdec (used by musepack). */
 #undef HAVE_MUSEPACK
 
-/* Define to enable MythTV client plugins (used by mythtvsrc). */
-#undef HAVE_MYTHTV
-
 /* Define to enable nas plug-in (used by nassink). */
 #undef HAVE_NAS
 
@@ -394,11 +412,46 @@
 /* Define to enable opencv plugins (used by opencv). */
 #undef HAVE_OPENCV
 
+/* Define to 1 if you have the <opencv2/contrib/contrib.hpp> header file. */
+#undef HAVE_OPENCV2_CONTRIB_CONTRIB_HPP
+
+/* Define to 1 if you have the <opencv2/core/core_c.h> header file. */
+#undef HAVE_OPENCV2_CORE_CORE_C_H
+
+/* Define to 1 if you have the <opencv2/core/types_c.h> header file. */
+#undef HAVE_OPENCV2_CORE_TYPES_C_H
+
+/* Define to 1 if you have the <opencv2/core/version.hpp> header file. */
+#undef HAVE_OPENCV2_CORE_VERSION_HPP
+
 /* Define to 1 if you have the <opencv2/highgui/highgui_c.h> header file. */
 #undef HAVE_OPENCV2_HIGHGUI_HIGHGUI_C_H
 
+/* Define to 1 if you have the <opencv2/imgproc/imgproc_c.h> header file. */
+#undef HAVE_OPENCV2_IMGPROC_IMGPROC_C_H
+
+/* Define to 1 if you have the <opencv2/imgproc/imgproc.hpp> header file. */
+#undef HAVE_OPENCV2_IMGPROC_IMGPROC_HPP
+
+/* Define to 1 if you have the <opencv2/legacy/compat.hpp> header file. */
+#undef HAVE_OPENCV2_LEGACY_COMPAT_HPP
+
+/* Define to 1 if you have the <opencv2/legacy/legacy.hpp> header file. */
+#undef HAVE_OPENCV2_LEGACY_LEGACY_HPP
+
+/* Define to 1 if you have the <opencv2/objdetect/objdetect.hpp> header file.
+   */
+#undef HAVE_OPENCV2_OBJDETECT_OBJDETECT_HPP
+
+/* Define to 1 if you have the <opencv2/video/background_segm.hpp> header
+   file. */
+#undef HAVE_OPENCV2_VIDEO_BACKGROUND_SEGM_HPP
+
 /* Define to enable openexr library (used by openexr). */
 #undef HAVE_OPENEXR
+
+/* Define to enable openh264 library (used by openh264). */
+#undef HAVE_OPENH264
 
 /* Define to enable openjpeg library (used by openjpeg). */
 #undef HAVE_OPENJPEG
@@ -412,6 +465,9 @@
 /* Define to enable OpenSL ES (used by opensl). */
 #undef HAVE_OPENSLES
 
+/* Define if openssl is available */
+#undef HAVE_OPENSSL
+
 /* Define to enable opus (used by opus). */
 #undef HAVE_OPUS
 
@@ -421,20 +477,20 @@
 /* Apple Mac OS X operating system detected */
 #undef HAVE_OSX
 
-/* Define to enable OSX video (used by osxvideosrc). */
-#undef HAVE_OSX_VIDEO
-
 /* Use libpng */
 #undef HAVE_PNG
+
+/* Define if you have POSIX threads libraries and header files. */
+#undef HAVE_PTHREAD
 
 /* Define to 1 if you have the <pthread.h> header file. */
 #undef HAVE_PTHREAD_H
 
+/* Have PTHREAD_PRIO_INHERIT. */
+#undef HAVE_PTHREAD_PRIO_INHERIT
+
 /* Define to enable pvrvideosink (used by pvr). */
 #undef HAVE_PVR
-
-/* Define to enable QuickTime wrapper (used by qtwrapper). */
-#undef HAVE_QUICKTIME
 
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
@@ -547,6 +603,9 @@
 /* Define if building with VideoToolbox */
 #undef HAVE_VIDEOTOOLBOX
 
+/* Define if building with VideoToolbox >= 10.9.6 */
+#undef HAVE_VIDEOTOOLBOX_10_9_6
+
 /* Define to enable vo-aacenc library (used by vo-aacenc). */
 #undef HAVE_VOAACENC
 
@@ -595,6 +654,9 @@
 /* Define if you have X11 library */
 #undef HAVE_X11
 
+/* Define to enable x265 plug-in (used by x265). */
+#undef HAVE_X265
+
 /* Define to enable xvid plugins (used by xvid). */
 #undef HAVE_XVID
 
@@ -637,7 +699,7 @@
 #define PACKAGE_NAME "GStreamer Bad Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.4.0"
+#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.5.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-bad"
@@ -646,7 +708,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.4.0"
+#define PACKAGE_VERSION "1.5.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -654,6 +716,10 @@
 #else
 #  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.11"
 #endif
+
+/* Define to necessary symbol if this constant uses a non-standard name on
+   your system. */
+#undef PTHREAD_CREATE_JOINABLE
 
 /* The size of `char', as computed by sizeof. */
 #undef SIZEOF_CHAR
@@ -686,7 +752,7 @@
 #undef USE_EGL_RPI
 
 /* Version number of package */
-#define VERSION "1.4.0"
+#define VERSION "1.5.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
@@ -699,9 +765,6 @@
 #  undef WORDS_BIGENDIAN
 # endif
 #endif
-
-/* Define to 1 if the X Window System is missing or not being used. */
-#undef X_DISPLAY_MISSING
 
 /* We need at least WinXP SP2 for __stat64 */
 #undef __MSVCRT_VERSION__

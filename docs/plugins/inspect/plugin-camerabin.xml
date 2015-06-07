@@ -3,10 +3,10 @@
   <description>Take image snapshots and record movies from camera</description>
   <filename>../../gst/camerabin2/.libs/libgstcamerabin2.so</filename>
   <basename>libgstcamerabin2.so</basename>
-  <version>1.5.0.1</version>
+  <version>1.5.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

@@ -22694,7 +22694,7 @@
 <RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>packet alignment</NICK>
-<BLURB>Number of packets per buffer (padded with dummy packets on EOS) (-1 = auto, 0 = all available packets).</BLURB>
+<BLURB>Number of packets per buffer (padded with dummy packets on EOS) (-1 = auto, 0 = all available packets, 7 for UDP streaming).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
@@ -46264,7 +46264,17 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Path to the control socket</NICK>
-<BLURB>The path to the control socket used to control the shared memory transport.</BLURB>
+<BLURB>The path to the control socket used to control the shared memory.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstShmSrc::shm-area-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Name of the shared memory area</NICK>
+<BLURB>The name of the shared memory area used to get buffers.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -46461,7 +46471,7 @@
 <ARG>
 <NAME>GstExclusion::factor</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= 175</RANGE>
+<RANGE>[1,175]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Factor</NICK>
 <BLURB>Exclusion factor parameter.</BLURB>
@@ -47641,7 +47651,7 @@
 <ARG>
 <NAME>GstFieldAnalysis::block-width</NAME>
 <TYPE>guint64</TYPE>
-<RANGE></RANGE>
+<RANGE>>= 1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Block width</NICK>
 <BLURB>Block width for windowed comb detection.</BLURB>
@@ -68008,5 +68018,265 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>GL filter element</NICK>
 <BLURB>The GL filter chain to use.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioInterleave::channel-positions</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel positions</NICK>
+<BLURB>Channel positions used on the output.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioInterleave::channel-positions-from-input</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel positions from input</NICK>
+<BLURB>Take channel positions from the input.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_xray::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_xpro::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_twirl::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_tunnel::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_stretch::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_squeeze::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_square::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_sobel::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_sobel::invert</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Invert the colors for sobel effect</NICK>
+<BLURB>Invert colors to get dark edges on bright background when using sobel effect.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_sin::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_sepia::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_mirror::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_lumaxpro::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_laplacian::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_laplacian::invert</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Invert the colors for sobel effect</NICK>
+<BLURB>Invert colors to get dark edges on bright background when using sobel effect.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_identity::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_heat::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_glow::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_fisheye::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_bulge::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>gleffects_blur::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLEffectsGeneric::effect</NAME>
+<TYPE>GstGLEffectsEffect</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Effect</NICK>
+<BLURB>Select which effect apply to GL video texture.</BLURB>
+<DEFAULT>Do nothing Effect</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLEffectsGeneric::hswap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Swap</NICK>
+<BLURB>Switch video texture left to right, useful with webcams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLEffectsGeneric::invert</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Invert the colors for sobel effect</NICK>
+<BLURB>Invert colors to get dark edges on bright background when using sobel effect.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

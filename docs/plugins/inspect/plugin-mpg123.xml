@@ -3,10 +3,10 @@
   <description>mp3 decoding based on the mpg123 library</description>
   <filename>../../ext/mpg123/.libs/libgstmpg123.so</filename>
   <basename>libgstmpg123.so</basename>
-  <version>1.5.0.1</version>
+  <version>1.5.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
