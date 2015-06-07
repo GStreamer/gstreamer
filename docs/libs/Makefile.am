@@ -96,9 +96,6 @@ GTKDOC_CFLAGS = -I$(top_srcdir) $(GST_PLUGINS_BASE_CFLAGS) \
 GTKDOC_LIBS = $(SCANOBJ_DEPS) $(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(GCOV_LIBS)
 
-GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
-GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)
-
 # If you need to override some of the declarations, place them in this file
 # and uncomment this line.
 DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
