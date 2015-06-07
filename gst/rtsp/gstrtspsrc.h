@@ -234,6 +234,7 @@ struct _GstRTSPSrc {
   GstStructure     *sdes;
   GTlsCertificateFlags tls_validation_flags;
   GTlsDatabase     *tls_database;
+  GTlsInteraction  *tls_interaction;
   gboolean          do_retransmission;
 
   /* state */

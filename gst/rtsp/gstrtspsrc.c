@@ -197,6 +197,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_USE_PIPELINE_CLOCK       FALSE
 #define DEFAULT_TLS_VALIDATION_FLAGS     G_TLS_CERTIFICATE_VALIDATE_ALL
 #define DEFAULT_TLS_DATABASE     NULL
+#define DEFAULT_TLS_INTERACTION     NULL
 #define DEFAULT_DO_RETRANSMISSION        TRUE
 
 enum
@@ -232,6 +233,7 @@ enum
   PROP_SDES,
   PROP_TLS_VALIDATION_FLAGS,
   PROP_TLS_DATABASE,
+  PROP_TLS_INTERACTION,
   PROP_DO_RETRANSMISSION
 };
 
@@ -640,6 +642,20 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_TYPE_TLS_DATABASE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRTSPSrc::tls-interaction:
+   *
+   * A #GTlsInteraction object to be used when the connection or certificate
+   * database need to interact with the user. This will be used to prompt the
+   * user for passwords where necessary.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_TLS_INTERACTION,
+      g_param_spec_object ("tls-interaction", "TLS interaction",
+          "A GTlsInteraction object to promt the user for password or certificate",
+          G_TYPE_TLS_INTERACTION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPSrc::do-retransmission:
    *
    * Attempt to ask the server to retransmit lost packets according to RFC4588.
@@ -797,6 +813,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->sdes = NULL;
   src->tls_validation_flags = DEFAULT_TLS_VALIDATION_FLAGS;
   src->tls_database = DEFAULT_TLS_DATABASE;
+  src->tls_interaction = DEFAULT_TLS_INTERACTION;
   src->do_retransmission = DEFAULT_DO_RETRANSMISSION;
 
   /* get a list of all extensions */
@@ -845,6 +862,9 @@ gst_rtspsrc_finalize (GObject * object)
 
   if (rtspsrc->tls_database)
     g_object_unref (rtspsrc->tls_database);
+
+  if (rtspsrc->tls_interaction)
+    g_object_unref (rtspsrc->tls_interaction);
 
   /* free locks */
   g_rec_mutex_clear (&rtspsrc->stream_rec_lock);
@@ -1062,6 +1082,10 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       g_clear_object (&rtspsrc->tls_database);
       rtspsrc->tls_database = g_value_dup_object (value);
       break;
+    case PROP_TLS_INTERACTION:
+      g_clear_object (&rtspsrc->tls_interaction);
+      rtspsrc->tls_interaction = g_value_dup_object (value);
+      break;
     case PROP_DO_RETRANSMISSION:
       rtspsrc->do_retransmission = g_value_get_boolean (value);
       break;
@@ -1195,6 +1219,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TLS_DATABASE:
       g_value_set_object (value, rtspsrc->tls_database);
+      break;
+    case PROP_TLS_INTERACTION:
+      g_value_set_object (value, rtspsrc->tls_interaction);
       break;
     case PROP_DO_RETRANSMISSION:
       g_value_set_boolean (value, rtspsrc->do_retransmission);
@@ -4351,6 +4378,10 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
       if (src->tls_database)
         gst_rtsp_connection_set_tls_database (info->connection,
             src->tls_database);
+
+      if (src->tls_interaction)
+        gst_rtsp_connection_set_tls_interaction (info->connection,
+            src->tls_interaction);
     }
 
     if (info->url->transports & GST_RTSP_LOWER_TRANS_HTTP)
