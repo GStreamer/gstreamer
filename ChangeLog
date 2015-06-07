@@ -1,9 +1,921 @@
-=== release 1.4.0 ===
+=== release 1.5.1 ===
 
-2014-07-19  Sebastian Dröge <slomo@coaxion.net>
+2015-06-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.0
+	  releasing 1.5.1
+
+2015-05-25 16:36:18 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: No flush during Teardown.
+	  When calling gst_rtsp_watch_write_data in gstrtspconnection.c and
+	  backlog is empty it can happen that just a part of a message will be
+	  sent and rest is in backlog queue. If then flush during teardown
+	  just a part of message will be sent.This can lead to client miss
+	  teardown response since it expect to get the last part of message.
+	  The flushing during teardown was introduced to fix a deadlock that now
+	  is fixed more generally in handle_request by temporary  setting backlog
+	  size to unlimited.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=749845
+
+2015-05-27 17:04:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/Makefile.am:
+	  tests: Use AM_TESTS_ENVIRONMENT
+	  Needed by the new automake test runner and the
+	  current version of the common submodule.
+
+2015-05-20 17:05:47 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-server: Use single-include rtsp header to make sure we get all definitions
+
+2015-05-05 16:46:57 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Mark some more functions static
+
+2015-05-05 16:46:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Only unblock the media in suspend() when actually changing the state
+	  Otherwise we're going to lose a few packets for live streams during DESCRIBE.
+
+2015-05-04 16:33:08 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-video-rtx.c:
+	  examples: Use AVPF profile for the RTX example
+
+2015-05-04 16:31:20 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  rtsp-sdp: Only add RTX to the SDP when using a feedback profile
+
+2015-04-27 19:35:53 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: get valid clock-rate from last-sample
+	  clock-rate in last-sample's caps is integer, not unsigned.
+	  To get this value properly, variable needs to be type-casted to int.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747614
+
+2015-04-26 15:00:05 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  autogen.sh: only run autopoint if gettext requested in configure.ac
+	  Not just because there happens to be a po directory.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748058
+
+2015-04-26 14:58:49 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  Revert "configure.ac: uncomment gettext version setup"
+	  This reverts commit 1545d8fef7065081079172ec264a0061039ac075.
+	  We don't need a gettext setup here and there's no po
+	  directory either, so no reason why autopoint would be
+	  run in the first place.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=748058
+
+2015-04-23 18:53:08 +0100  Alistair Buxton <a.j.buxton@gmail.com>
+
+	* examples/test-multicast.c:
+	* examples/test-multicast2.c:
+	* examples/test-sdp.c:
+	* examples/test-video-rtx.c:
+	* examples/test-video.c:
+	* tests/test-cleanup.c:
+	* tests/test-reuse.c:
+	  Fix timeout function signatures across tests and examples
+
+2015-04-23 17:27:40 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/Makefile.am:
+	  tests: define GST_CHECK_TEST_ENVIRONMENT_BEACON
+	  Make sure the test environment is set up.
+	  https://bugzilla.gnome.org//show_bug.cgi?id=747624
+
+2015-04-23 17:22:59 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: bump automake requirement to 1.14 and autoconf to 2.69
+	  This is only required for builds from git, people can still
+	  build tarballs if they only have older autotools.
+	  https://bugzilla.gnome.org//show_bug.cgi?id=747624
+
+2015-04-20 08:49:57 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: uncomment gettext version setup
+	  Fixes autogen.sh. It would run autopoint, which would complain
+	  that it could not find the gettext version in configure.ac.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748058
+
+2015-04-15 10:06:30 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
+
+	* examples/test-video-rtx.c:
+	  test-video-rtx: set exact payload type to PCMA payloader
+	  Setting wrong payload type causes failure to do retransmission through audio stream
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747839
+
+2015-04-15 09:45:23 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-stream: fix to get valid each stream data for request-aux-sender signal
+	  Because of duplicated g_signal_connect for request-aux-sender signal,
+	  wrong stream pointer is passed to the signal handler.
+	  Instead of passing each stream, pass stream array and get the relevant stream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747839
+
+2015-04-06 10:32:52 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* acinclude.m4:
+	* autogen.sh:
+	  Update autogen.sh to latest version from common
+	  Fixes build after aclocal_check etc. helpers have been removed.
+
+2015-04-03 18:58:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From bc76a8b to c8fb372
+
+2015-03-23 21:03:20 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Limit the queues to 1 buffer
+	  We only need them to be able to pre-roll, queueing up more data here
+	  is only going to harm latency and memory usage.
+
+2015-03-23 20:59:52 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Update comment and ASCII art to the latest code
+	  We have a queue in front of the udpsink too to prevent the pipeline from
+	  locking up.
+
+2015-03-21 11:04:05 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-media: Properly return first rtptime
+	  Instead we where returning first GstBuffer timestamp. This would result
+	  in clock skew and unwanted behaviour in RTSP playback.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746479
+
+2015-03-18 16:44:19 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Don't leave buffer mapped
+	  If the seq is NULL, the RTP buffer was left mapped. We should always
+	  unmap the buffer.
+
+2015-03-15 12:27:39 +0000  Sebastian Dröge <sebastian@centricular.com>
+
+	* README:
+	  Fix typo in README
+
+2015-03-10 09:39:22 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* tests/check/gst/client.c:
+	  Fix double semicolons
+
+2015-03-09 16:00:07 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Get the seqnum-base and other information from the last buffer in the sink
+	  This gives more accurate values than asking the payloader. There might be
+	  queueing happening between the payloader and the sink.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745704
+
+2015-03-09 13:00:25 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Don't seek for PLAY if the position will not change
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745704
+
+2015-03-09 10:21:49 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Don't include payload type in the caps for framesize
+	  When the sdp media attribute framesize are converted to caps
+	  the <payload> should not be included.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=725335
+	  Based on the patch for rtspsrc by Linus Svensson <linussn@axis.com>
+
+2014-02-26 22:34:06 +0100  Linus Svensson <linussn@axis.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  rtsp-sdp: add payload type to the sdp framesize attribute
+	  The sdp framesize attribute is desribed in RFC6064. It is specified
+	  for payloading of H263 and has the following form
+	  a=framesize:<payload type> <width>-<height>. The <width>-<height> part
+	  should be added to the caps in a payloader and the <payload type> should
+	  be added by the rtsp-server.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=725334
+
+2015-03-03 13:51:01 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* examples/test-uri.c:
+	  examples: test-uri: fix tainted variable
+	  Insignificant but this keeps Coverity happy.
+	  CID #1268404
+
+2015-03-03 01:49:42 +1100  Jan Schmidt <jan@centricular.com>
+
+	* examples/.gitignore:
+	* examples/Makefile.am:
+	* examples/test-netclock-client.c:
+	* examples/test-netclock.c:
+	  examples: Add a simple example of network synch for live streams.
+	  An example server and client that works for synchronising live streams
+	  only - as it can't support pause/play.
+
+2015-03-03 01:49:42 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	  rtsp-media-factory: Add functions to set/get the media gtype
+	  Allow specifying the GType of a GstRtspMedia subclass to create
+	  as a simpler way to get the factory to create a custom
+	  GstRtspMedia sub-class, without subclassing GstRtspMediaFactory.
+
+2015-02-27 17:45:42 +0100  Gregor Boirie <gregor.boirie@parrot.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: fix double unlock in _get_buffer_size()
+	  Fixes an abort when calling gst_rtsp_media_get_buffer_size()
+	  because of double g_mutex_unlock () usage.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745434
+
+2015-02-19 10:43:16 +0200  Kent-Inge Ingesson <kenti@axis.com>
+
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	  rtsp-session: Use monotonic time for RTSP session timeout
+	  Changed RTSP session timeout handling to monotonic time
+	  and deprecating the API for current system time.
+	  This fixes timeouts when the system time changes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=743346
+
+2015-02-13 12:21:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-client: Only error out in PLAY if seeking actually failed
+	  If the media was just not seekable, we continue from whatever position we are
+	  and let the client decide if that is what is wanted or not.
+	  Only if the actual seek failed, we can't really recover and should error out.
+
+2015-02-12 10:46:28 +0100  Andreas Frisch <fraxinas@opendreambox.org>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Add necessary queues between tee and multiudpsink
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744379
+
+2015-02-12 16:48:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: If seeking fails, don't wait forever for the media to preroll again
+	  Instead error out properly the same way as if the SEEKING query already
+	  failed.
+
+2015-02-11 17:24:38 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-stream: minor code formatting fix
+
+2015-02-10 16:39:58 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: fix logic for collect_streams
+	  Fix the logic of gst_rtsp_media_collect_streams() so after looping collecting
+	  all streams it knows if it got any, and can check if the transport mode is OK.
+	  CID #1268400
+
+2015-02-09 10:21:50 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Don't set the transport mode based on what elements we find
+	  Just print a warning if the one that was set before disagrees with what
+	  elements we found. It must already be set to something before as this
+	  function is called after we received the SDP from ANNOUNCE in RECORD mode,
+	  and we would reject ANNOUNCE if the RECORD flag was not set.
+
+2015-02-08 18:05:50 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: rtspserver: rename shadowed variable
+	  We have two different 'sink' variables here,
+	  rename one of them for clarity.
+
+2015-02-08 12:08:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: fix awkward if clause
+
+2015-02-06 19:34:17 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/test-uri.c:
+	  examples: test-uri: improve uri argument handling and accept file names
+	  Print an error if the argument passed is not a URI and can't
+	  be converted into one, or no arguments have been provided.
+
+2015-02-06 19:15:40 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/test-uri.c:
+	  examples: test-uri: don't remove mount point after 10 seconds
+	  It's very irritating when trying to test stuff repeatedly
+	  and serves no real purpose other than showing that it can
+	  be done.
+
+2015-01-21 17:32:21 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/.gitignore:
+	  examples: add new test-record to .gitignore
+
+2015-01-28 18:54:01 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-record.c:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* tests/check/gst/rtspserver.c:
+	  rtsp-media: Use flags to distinguish between PLAY and RECORD media
+
+2015-01-28 17:49:16 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-record.c:
+	  test-record: Set latency for playback-style example to 2s instead of 200ms
+
+2015-01-21 17:27:56 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: add some unit tests for ANNOUNCE and RECORD
+	  https://bugzilla.gnome.org/show_bug.cgi?id=743175
+
+2015-01-21 16:32:44 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: fix a couple of leaks in handle_announce
+
+2015-01-19 13:20:39 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  rtsp-media: Expose latency setting for setting the rtpbin latency
+
+2015-01-17 10:28:13 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-record.c:
+	  test-record: Use GOptionContext to parse the server port and take the pipeline from the commandline
+
+2015-01-16 20:48:42 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Put the timestamp of receival of the initial packet over TCP on the first buffer
+
+2015-01-09 12:40:47 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/Makefile.am:
+	* examples/test-record.c:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  Add initial support for RECORD
+	  We currently only support media that is RECORD or PLAY only, not both at once.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=743175
+
+2015-01-30 12:50:20 +0100  Anila Balavan <anilabn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: RTCP and RTP transport cache cookies seperated
+	  RTCP packets were not sent because the same tr_cache_cookie was used for
+	  both RTP and RTCP. So only one of the tr_cache lists were populated
+	  depending on which one was sent first. If the tr_cache list is not
+	  populated then no packets can be sent. Most often this happened to be
+	  RTCP. Now seperate RTCP and RTP transport cache cookies are added which
+	  resulted in both the tr_cache_lists to be populated regardless of which
+	  one was sent first.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=743734
+
+2015-01-21 14:57:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: fix false compiler warning
+	  rtsp-stream.c:3034: error: ‘visited’ may be used uninitialized in this function
+
+2015-01-19 20:35:15 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: log interleaved data received
+
+2015-01-19 20:18:20 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: fix unintentional fallthrough to debug warning when receiving interleaved data
+
+2015-01-19 13:09:20 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: If we have a single-stream media and SETUP contains no control, use the one and only stream
+
+2015-01-18 19:08:36 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Use a random session ID in the SDP
+	  RFC4566 Section 5.2 says that it should make the username, session id,
+	  nettype, addrtype and unicast address tuple globally unique. Always using
+	  1188340656180883 is not going to guarantee that: https://xkcd.com/221/
+	  Instead let's create a 64 bit random number, which at least brings us
+	  closer to the goal of global uniqueness.
+	  https://tools.ietf.org/html/rfc4566#section-5.2
+
+2015-01-17 10:29:36 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-launch.c:
+	* examples/test-mp4.c:
+	* examples/test-ogg.c:
+	* examples/test-uri.c:
+	  examples: Don't call gst_init() and gst_get_option_group()
+	  The latter calls the former at the appropriate time.
+
+2015-01-16 20:04:01 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Drop trailing \0 of RTSP DATA messages
+	  We add a trailing \0 in GstRTSPConnection to make parsing of
+	  string message bodies easier (e.g. the SDP from DESCRIBE) but
+	  for actual data this means we have to drop it or otherwise
+	  create invalid data.
+
+2015-01-16 11:10:20 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Have one copy of the transports cache for RTP and RTCP each
+	  Fixes crash when two threads access handle_new_sample() at the same
+	  time, one for RTP, one for RTCP.
+	  Otherwise, when iterating over the transports cache, it might be modified by
+	  another thread at the same time if the transports cookie has changed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=742954
+
+2015-01-15 19:34:20 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Set format=TIME on our app sources for TCP
+
+2015-01-13 15:29:29 +0100  Sebastian Rasmussen <sebrn@axis.com>
+
+	* gst/rtsp-server/rtsp-session-pool.c:
+	  Revert "rtsp-session-pool: Make sure session IDs are properly URI-escaped"
+	  This reverts commit 935e8f852d050b4939f1d0f44b38e9b55a2fbe36.
+	  RFC 2326 states that session IDs may consist of alphanumeric as well as
+	  the safe characters $-_.+ -- N.B. the percent character is not allowed.
+	  Previously the session ID was URI-escaped, this meant that any character
+	  which was not alphanumeric or any of the characters +-._~ would be
+	  percent encoded. While the RFC (surprisingly) mentions that linear white
+	  space in session IDs should be URI-escaped, it does not say anything
+	  about other characters. Moreover no white space is allowed in the
+	  session ID. Finally the percent character which is the result of
+	  URI-escaping is not allowed in a session ID.
+	  So there is no reason to do any URI-escaping, and now it is removed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=742869
+
+2015-01-12 16:14:12 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f2c6b95 to bc76a8b
+
+2014-12-31 13:04:57 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  Fix 'make check' from top-level directory
+
+2014-12-30 18:13:49 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* examples/test-launch.c:
+	* examples/test-mp4.c:
+	* examples/test-ogg.c:
+	* examples/test-uri.c:
+	  examples: Add command-line parsing and take a 'port' argument
+	  This allows users to run multiple servers on different ports for testing.
+	  Only done for examples that actually take arguments and hence are capable of
+	  outputting different streams for each instance on each port.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=742115
+
+2014-12-29 12:06:50 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-client: Add a send_message default signal handler
+	  This allows subclasses to easily hook into the response sending
+	  mechanism without doing everything from a signal, which seems
+	  awkward from subclasses.
+
+2014-12-18 10:56:44 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ef1ffdc to f2c6b95
+
+2014-12-17 20:02:05 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* Makefile.am:
+	* configure.ac:
+	  configure: add --disable-examples switch
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741678
+
+2014-12-01 23:42:34 +1100  Matthew Waters <matthew@centricular.com>
+
+	* examples/.gitignore:
+	* examples/Makefile.am:
+	* examples/test-video-rtx.c:
+	  examples: add a retransmisison example implementing RFC4588
+	  Currently only SSRC-multiplexed rtx streams are supported
+
+2014-12-16 16:46:15 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Fix some minor memory leaks
+
+2014-12-16 16:46:06 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Some minor cleanup
+
+2014-12-16 16:42:13 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Fix compiler warnings
+	  rtsp-stream.c:1351:3: error: non-void function 'gst_rtsp_stream_get_retransmission_time' should return a value [-Wreturn-type]
+	  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+	  ^
+	  rtsp-stream.c:1384:3: error: non-void function 'gst_rtsp_stream_get_retransmission_pt' should return a value [-Wreturn-type]
+	  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+	  ^
+
+2014-11-27 01:12:36 +1100  Matthew Waters <matthew@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  media: implement ssrc-multiplexed retransmission support
+	  based off RFC 4588 and the server-rtpaux example in -good
+
+2014-11-28 12:45:14 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp: Ref transports in hash table.
+	  Also ref streams for transports.
+	  This solves a crash when reciving a rtcp after teardown but before
+	  client finalize.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=740845
+
+2014-11-27 17:13:05 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7bb2bce to ef1ffdc
+
+2014-11-07 12:48:53 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: refactor cleanup of cached media
+
+2014-10-23 13:39:10 +0200  Linus Svensson <linussn@axis.com>
+
+	* tests/check/gst/client.c:
+	  tests: Remove FIXME
+	  The session leak is now fixed, lets remove those FIXME comments.
+
+2014-10-23 17:54:37 +0200  Linus Svensson <linussn@axis.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: Test to setup two sessions on one connection
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739112
+
+2014-10-24 12:05:27 +0200  Linus Svensson <linussn@axis.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: Test setup with tcp transport
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739112
+
+2014-10-24 12:04:54 +0200  Linus Svensson <linussn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: Configure transport after creating session media
+	  The default implementation of configure_client_transport() in
+	  rtsp-client uses the session media when it chooses channels for
+	  interleaved traffic.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739112
+
+2014-10-23 12:54:03 +0200  Linus Svensson <linussn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	  client: Stop caching media in client when doing setup
+	  If the media has been managed by a session media, it should not be
+	  cached in the client any longer. The GstRTSPSessionMedia object is now
+	  responsible for unpreparing the GstRTSPMedia object using
+	  gst_rtsp_media_unprepare(). Unprepare the media when finalizing the
+	  session media.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739112
+
+2014-10-31 23:01:53 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: unref srtp decoder when leaving bin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739481
+
+2014-10-29 21:01:39 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: mikey memory leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739383
+
+2014-10-27 18:01:35 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 84d06cd to 7bb2bce
+
+2014-10-24 17:48:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  Parallelise 'make check-valgrind'
+
+2014-10-21 13:04:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From a8c8939 to 84d06cd
+
+2014-10-21 13:00:49 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 36388a1 to a8c8939
+
+2014-10-01 07:12:30 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: deactivate media when shutting down from paused
+	  This was only done when going directly from playing.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=737829
+
+2014-10-20 15:40:59 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-context.h:
+	  rtsp-client: add stream transport to context
+	  We add the stream transport to the context so we can get the configured
+	  client stream transport in the setup request signal.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=738905
+
+2014-10-02 12:02:48 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: release lock even not all transports have been removed
+	  We don't want to keep the lock even we return FALSE because not all the
+	  transports have been removed. This could lead into a deadlock.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737797
+
+2014-10-10 18:43:00 -0400  Olivier Crête <olivier.crete@ocrete.ca>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  rtsp-sdp: Rename clock-base and seqnum-base to timestamp-offset and seqnum-offset
+	  These were renamed in GstRTPBasePayload in 1.0
+
+2014-09-30 16:36:51 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: set session media to NULL without the lock
+	  We need to set session medias to NULL without the client lock otherwise
+	  we can end up in a deadlock if another thread is waiting for the lock
+	  and media unprepare is also waiting for that thread to end.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737690
+
+2014-09-30 23:22:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Set state to UNPREPARING in all cases
+
+2014-09-30 19:17:04 +0200  Ognyan Tonchev <otonchev@gmail.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: set state to unpreparing when unprepare is initiated
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737675
+
+2014-09-30 01:35:02 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Remove backlog limit while processings requests
+	  If the backlog limit is kept two cases of deadlocks may be
+	  encountered when streaming over TCP. Without the backlog
+	  limit this deadlocks can not happen, at the expence of
+	  memory usage.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=737631
+
+2014-09-22 13:32:06 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: do not free main context before rtsp watch
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737110
+
+2014-09-19 18:29:00 +0200  Branko Subasic <branko@axis.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: Extend unit test timeout to accomodate for valgrind
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=736647
+
+2014-09-19 18:28:50 +0200  Branko Subasic <branko@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	  rtsp-*: Treat sending packets to clients as keepalive
+	  As long as gst-rtsp-server can successfully send RTP/RTCP data to
+	  clients then the client must be reading. This change makes the server
+	  timeout the connection if the client stops reading.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=736647
+
+2014-09-19 18:28:30 +0200  Branko Subasic <branko@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Allow backlog to grow while expiring session
+	  Allow the send backlog in the RTSP watch to grow to unlimited size while
+	  attempting to bring the media pipeline to NULL due to a session
+	  expiring.  Without this change the appsink element cannot change state
+	  because it is blocked while rendering data in the new_sample callback.
+	  This callback will block until it has successfully put the data into the
+	  send backlog. There is a chance that the send backlog is full at this
+	  point which means that the callback may block for a long time, possibly
+	  forever. Therefore the media pipeline may also be prevented from
+	  changing state for a long time.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=736647
+
+2014-09-22 09:30:39 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Make old compilers happy
+	  rtsp-client.c:2553:50: error: cast to pointer from integer of different size [-Werror=int-to-pointer-cast]
+	  Just in case that guint8 doesn't fit in a pointer. Just in case ...
+
+2014-09-16 11:41:52 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: raise the backlog limits before pausing
+	  We need to raise the backlog limits before pausing the pipeline or else
+	  the appsink might be blocking in the render method in wait_backlog() and
+	  we would deadlock waiting for paused.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=736322
+
+2014-09-16 11:29:38 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: make define for the WATCH_BACKLOG
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=736322
+
+2014-09-09 18:11:39 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: simplify session transport handling
+	  link/unlink of the transport in a session was done to keep track of all
+	  TCP transports and to send RTP/RTCP data to the streams. We can simplify
+	  that by putting all the TCP transports in a hashtable indexed with the
+	  channel number.
+	  We also don't need to link/unlink the transports when we pause/resume
+	  the streams. The same effect is already achieved when we pause/play the
+	  media. Indeed, when we pause the media, the transport is removed from
+	  the media and the callbacks will not be called anymore.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=736041
+
+2014-09-09 18:10:12 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	  stream-transport: make method to handle received data
+	  Make a method to handle the data received on a channel. It sends the
+	  data to the stream of the transport on the RTP or RTCP pads based on
+	  the channel number.
+
+2014-09-15 16:54:05 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* examples/test-mp4.c:
+	  test: add example of dumping RTCP reports
+
+2014-09-08 09:26:23 +0200  Srimanta Panda <srimanta@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-media: Make sure that sequence numbers are monotonic after pause
+	  The sequence number is not monotonic for RTP packets after pause. The
+	  reason is basepayloader generates a randon sequence number when the
+	  pipeline goes from ready to pause. With this fix generation of sequence
+	  number will be monotonic when going from pause to play request.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736017
+
+2014-08-28 13:35:15 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Protect saved clients watch with a mutex
+	  Fixes a crash when close() is called while merging clients
+	  in handle_tunnel(). In that case close() would destroy the
+	  watch while it is still being used in handle_tunnel().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735570
+
+2014-08-13 17:22:16 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Remove the multicast group udp sources when removing from the bin
+
+2014-08-05 16:12:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-media: Query position and stop time only on the RTP parts of the pipeline
+	  The RTCP parts, in specific the RTCP udpsinks, are not flushed when
+	  seeking and will always continue counting the time. This leads to
+	  the NPT after a backwards seek to be something completely different
+	  to the actual seek position.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732644
+
+2014-08-09 14:41:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/test-appsrc.c:
+	  examples: fix another reference leak
+	  gst_rtsp_media_get_element() returns a new ref.
+
+2014-07-17 01:34:17 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* examples/test-appsrc.c:
+	  examples: unref element after usage
+	  gst_bin_get_by_name_recurse_up() returns an element
+	  reference that must be unreffed after usage.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734546
+
+2014-07-02 22:45:07 +0530  Arun Raghavan <arun@accosted.net>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  signals: Fix copy-pasto in target-state signal offset
+
+2014-08-01 10:46:44 +0200  Edward Hervey <edward@collabora.com>
+
+	* Makefile.am:
+	* common:
+	  Makefile: Add usage of build-checks step
+	  Allows building checks without running them
+
+2014-06-25 18:23:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Listen on the multicast group for RTP/RTCP packets
+	  When a UDP multicast transport is used it is expected that the server listens
+	  for RTP and RTCP packets on the multicast group with the corresponding port.
+	  Without this we will never get RTCP packets from clients in multicast mode.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732238
+
+2014-07-19 18:04:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.4.0 ===
+
+2014-07-19 17:56:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.4.0
 
 2014-07-16 20:39:42 +0900  Hyunjun Ko <zzoonis@gmail.com>
 
