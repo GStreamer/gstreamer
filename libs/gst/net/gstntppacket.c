@@ -101,7 +101,7 @@ gst_ntp_packet_new (const guint8 * buffer, GError ** error)
   if (buffer) {
     guint8 version = (buffer[0] >> 3) & 0x7;
     guint8 stratum = buffer[1];
-    guint8 poll_interval = buffer[2];
+    gint8 poll_interval = buffer[2];
 
     if (version != 4) {
       g_set_error (error, GST_NTP_ERROR, GST_NTP_ERROR_WRONG_VERSION,
