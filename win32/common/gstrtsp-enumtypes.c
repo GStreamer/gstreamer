@@ -3,7 +3,98 @@
 
 #include "gstrtsp-enumtypes.h"
 
+#include "rtsp.h"
+#include "gstrtsp.h"
+#include "gstrtsptransport.h"
+#include "gstrtspurl.h"
+#include "gstrtspmessage.h"
+#include "gstrtspconnection.h"
 #include "gstrtspdefs.h"
+#include "gstrtspextension.h"
+#include "gstrtsprange.h"
+
+/* enumerations from "gstrtsptransport.h" */
+GType
+gst_rtsp_trans_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_RTSP_TRANS_UNKNOWN, "GST_RTSP_TRANS_UNKNOWN", "unknown"},
+      {GST_RTSP_TRANS_RTP, "GST_RTSP_TRANS_RTP", "rtp"},
+      {GST_RTSP_TRANS_RDT, "GST_RTSP_TRANS_RDT", "rdt"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstRTSPTransMode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_rtsp_profile_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_RTSP_PROFILE_UNKNOWN, "GST_RTSP_PROFILE_UNKNOWN", "unknown"},
+      {GST_RTSP_PROFILE_AVP, "GST_RTSP_PROFILE_AVP", "avp"},
+      {GST_RTSP_PROFILE_SAVP, "GST_RTSP_PROFILE_SAVP", "savp"},
+      {GST_RTSP_PROFILE_AVPF, "GST_RTSP_PROFILE_AVPF", "avpf"},
+      {GST_RTSP_PROFILE_SAVPF, "GST_RTSP_PROFILE_SAVPF", "savpf"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id = g_flags_register_static ("GstRTSPProfile", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_rtsp_lower_trans_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_RTSP_LOWER_TRANS_UNKNOWN, "GST_RTSP_LOWER_TRANS_UNKNOWN", "unknown"},
+      {GST_RTSP_LOWER_TRANS_UDP, "GST_RTSP_LOWER_TRANS_UDP", "udp"},
+      {GST_RTSP_LOWER_TRANS_UDP_MCAST, "GST_RTSP_LOWER_TRANS_UDP_MCAST",
+          "udp-mcast"},
+      {GST_RTSP_LOWER_TRANS_TCP, "GST_RTSP_LOWER_TRANS_TCP", "tcp"},
+      {GST_RTSP_LOWER_TRANS_HTTP, "GST_RTSP_LOWER_TRANS_HTTP", "http"},
+      {GST_RTSP_LOWER_TRANS_TLS, "GST_RTSP_LOWER_TRANS_TLS", "tls"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstRTSPLowerTrans", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "gstrtspmessage.h" */
+GType
+gst_rtsp_msg_type_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_RTSP_MESSAGE_INVALID, "GST_RTSP_MESSAGE_INVALID", "invalid"},
+      {GST_RTSP_MESSAGE_REQUEST, "GST_RTSP_MESSAGE_REQUEST", "request"},
+      {GST_RTSP_MESSAGE_RESPONSE, "GST_RTSP_MESSAGE_RESPONSE", "response"},
+      {GST_RTSP_MESSAGE_HTTP_REQUEST, "GST_RTSP_MESSAGE_HTTP_REQUEST",
+          "http-request"},
+      {GST_RTSP_MESSAGE_HTTP_RESPONSE, "GST_RTSP_MESSAGE_HTTP_RESPONSE",
+          "http-response"},
+      {GST_RTSP_MESSAGE_DATA, "GST_RTSP_MESSAGE_DATA", "data"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id = g_enum_register_static ("GstRTSPMsgType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
 
 /* enumerations from "gstrtspdefs.h" */
 GType
@@ -388,6 +479,47 @@ gst_rtsp_status_code_get_type (void)
     };
     GType g_define_type_id =
         g_enum_register_static ("GstRTSPStatusCode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "gstrtsprange.h" */
+GType
+gst_rtsp_range_unit_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_RTSP_RANGE_SMPTE, "GST_RTSP_RANGE_SMPTE", "smpte"},
+      {GST_RTSP_RANGE_SMPTE_30_DROP, "GST_RTSP_RANGE_SMPTE_30_DROP",
+          "smpte-30-drop"},
+      {GST_RTSP_RANGE_SMPTE_25, "GST_RTSP_RANGE_SMPTE_25", "smpte-25"},
+      {GST_RTSP_RANGE_NPT, "GST_RTSP_RANGE_NPT", "npt"},
+      {GST_RTSP_RANGE_CLOCK, "GST_RTSP_RANGE_CLOCK", "clock"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstRTSPRangeUnit", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_rtsp_time_type_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_RTSP_TIME_SECONDS, "GST_RTSP_TIME_SECONDS", "seconds"},
+      {GST_RTSP_TIME_NOW, "GST_RTSP_TIME_NOW", "now"},
+      {GST_RTSP_TIME_END, "GST_RTSP_TIME_END", "end"},
+      {GST_RTSP_TIME_FRAMES, "GST_RTSP_TIME_FRAMES", "frames"},
+      {GST_RTSP_TIME_UTC, "GST_RTSP_TIME_UTC", "utc"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id = g_enum_register_static ("GstRTSPTimeType", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;

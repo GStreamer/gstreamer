@@ -7,10 +7,13 @@
 #include "video-format.h"
 #include "video-color.h"
 #include "video-info.h"
+#include "video-dither.h"
 #include "colorbalance.h"
 #include "navigation.h"
 #include "video-chroma.h"
 #include "video-tile.h"
+#include "video-converter.h"
+#include "video-resampler.h"
 
 /* enumerations from "video-format.h" */
 GType
@@ -74,6 +77,13 @@ gst_video_format_get_type (void)
       {GST_VIDEO_FORMAT_NV24, "GST_VIDEO_FORMAT_NV24", "nv24"},
       {GST_VIDEO_FORMAT_NV12_64Z32, "GST_VIDEO_FORMAT_NV12_64Z32",
           "nv12-64z32"},
+      {GST_VIDEO_FORMAT_A420_10BE, "GST_VIDEO_FORMAT_A420_10BE", "a420-10be"},
+      {GST_VIDEO_FORMAT_A420_10LE, "GST_VIDEO_FORMAT_A420_10LE", "a420-10le"},
+      {GST_VIDEO_FORMAT_A422_10BE, "GST_VIDEO_FORMAT_A422_10BE", "a422-10be"},
+      {GST_VIDEO_FORMAT_A422_10LE, "GST_VIDEO_FORMAT_A422_10LE", "a422-10le"},
+      {GST_VIDEO_FORMAT_A444_10BE, "GST_VIDEO_FORMAT_A444_10BE", "a444-10be"},
+      {GST_VIDEO_FORMAT_A444_10LE, "GST_VIDEO_FORMAT_A444_10LE", "a444-10le"},
+      {GST_VIDEO_FORMAT_NV61, "GST_VIDEO_FORMAT_NV61", "nv61"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_enum_register_static ("GstVideoFormat", values);
@@ -162,6 +172,8 @@ gst_video_color_matrix_get_type (void)
       {GST_VIDEO_COLOR_MATRIX_BT601, "GST_VIDEO_COLOR_MATRIX_BT601", "bt601"},
       {GST_VIDEO_COLOR_MATRIX_SMPTE240M, "GST_VIDEO_COLOR_MATRIX_SMPTE240M",
           "smpte240m"},
+      {GST_VIDEO_COLOR_MATRIX_BT2020, "GST_VIDEO_COLOR_MATRIX_BT2020",
+          "bt2020"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -189,6 +201,8 @@ gst_video_transfer_function_get_type (void)
       {GST_VIDEO_TRANSFER_GAMMA28, "GST_VIDEO_TRANSFER_GAMMA28", "gamma28"},
       {GST_VIDEO_TRANSFER_LOG100, "GST_VIDEO_TRANSFER_LOG100", "log100"},
       {GST_VIDEO_TRANSFER_LOG316, "GST_VIDEO_TRANSFER_LOG316", "log316"},
+      {GST_VIDEO_TRANSFER_BT2020_12, "GST_VIDEO_TRANSFER_BT2020_12",
+          "bt2020-12"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -218,6 +232,8 @@ gst_video_color_primaries_get_type (void)
           "GST_VIDEO_COLOR_PRIMARIES_SMPTE240M", "smpte240m"},
       {GST_VIDEO_COLOR_PRIMARIES_FILM, "GST_VIDEO_COLOR_PRIMARIES_FILM",
           "film"},
+      {GST_VIDEO_COLOR_PRIMARIES_BT2020, "GST_VIDEO_COLOR_PRIMARIES_BT2020",
+          "bt2020"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -265,6 +281,49 @@ gst_video_flags_get_type (void)
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_flags_register_static ("GstVideoFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "video-dither.h" */
+GType
+gst_video_dither_method_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_DITHER_NONE, "GST_VIDEO_DITHER_NONE", "none"},
+      {GST_VIDEO_DITHER_VERTERR, "GST_VIDEO_DITHER_VERTERR", "verterr"},
+      {GST_VIDEO_DITHER_FLOYD_STEINBERG, "GST_VIDEO_DITHER_FLOYD_STEINBERG",
+          "floyd-steinberg"},
+      {GST_VIDEO_DITHER_SIERRA_LITE, "GST_VIDEO_DITHER_SIERRA_LITE",
+          "sierra-lite"},
+      {GST_VIDEO_DITHER_BAYER, "GST_VIDEO_DITHER_BAYER", "bayer"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoDitherMethod", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_dither_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_DITHER_FLAG_NONE, "GST_VIDEO_DITHER_FLAG_NONE", "none"},
+      {GST_VIDEO_DITHER_FLAG_INTERLACED, "GST_VIDEO_DITHER_FLAG_INTERLACED",
+          "interlaced"},
+      {GST_VIDEO_DITHER_FLAG_QUANTIZE, "GST_VIDEO_DITHER_FLAG_QUANTIZE",
+          "quantize"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoDitherFlags", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;
@@ -356,6 +415,7 @@ gst_navigation_message_type_get_type (void)
           "GST_NAVIGATION_MESSAGE_COMMANDS_CHANGED", "commands-changed"},
       {GST_NAVIGATION_MESSAGE_ANGLES_CHANGED,
           "GST_NAVIGATION_MESSAGE_ANGLES_CHANGED", "angles-changed"},
+      {GST_NAVIGATION_MESSAGE_EVENT, "GST_NAVIGATION_MESSAGE_EVENT", "event"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -490,6 +550,145 @@ gst_video_tile_mode_get_type (void)
     };
     GType g_define_type_id =
         g_enum_register_static ("GstVideoTileMode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "video-converter.h" */
+GType
+gst_video_alpha_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_ALPHA_MODE_COPY, "GST_VIDEO_ALPHA_MODE_COPY", "copy"},
+      {GST_VIDEO_ALPHA_MODE_SET, "GST_VIDEO_ALPHA_MODE_SET", "set"},
+      {GST_VIDEO_ALPHA_MODE_MULT, "GST_VIDEO_ALPHA_MODE_MULT", "mult"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoAlphaMode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_chroma_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_CHROMA_MODE_FULL, "GST_VIDEO_CHROMA_MODE_FULL", "full"},
+      {GST_VIDEO_CHROMA_MODE_UPSAMPLE_ONLY,
+          "GST_VIDEO_CHROMA_MODE_UPSAMPLE_ONLY", "upsample-only"},
+      {GST_VIDEO_CHROMA_MODE_DOWNSAMPLE_ONLY,
+          "GST_VIDEO_CHROMA_MODE_DOWNSAMPLE_ONLY", "downsample-only"},
+      {GST_VIDEO_CHROMA_MODE_NONE, "GST_VIDEO_CHROMA_MODE_NONE", "none"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoChromaMode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_matrix_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_MATRIX_MODE_FULL, "GST_VIDEO_MATRIX_MODE_FULL", "full"},
+      {GST_VIDEO_MATRIX_MODE_INPUT_ONLY, "GST_VIDEO_MATRIX_MODE_INPUT_ONLY",
+          "input-only"},
+      {GST_VIDEO_MATRIX_MODE_OUTPUT_ONLY, "GST_VIDEO_MATRIX_MODE_OUTPUT_ONLY",
+          "output-only"},
+      {GST_VIDEO_MATRIX_MODE_NONE, "GST_VIDEO_MATRIX_MODE_NONE", "none"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoMatrixMode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_gamma_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_GAMMA_MODE_NONE, "GST_VIDEO_GAMMA_MODE_NONE", "none"},
+      {GST_VIDEO_GAMMA_MODE_REMAP, "GST_VIDEO_GAMMA_MODE_REMAP", "remap"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoGammaMode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_primaries_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_PRIMARIES_MODE_NONE, "GST_VIDEO_PRIMARIES_MODE_NONE", "none"},
+      {GST_VIDEO_PRIMARIES_MODE_MERGE_ONLY,
+          "GST_VIDEO_PRIMARIES_MODE_MERGE_ONLY", "merge-only"},
+      {GST_VIDEO_PRIMARIES_MODE_FAST, "GST_VIDEO_PRIMARIES_MODE_FAST", "fast"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoPrimariesMode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "video-resampler.h" */
+GType
+gst_video_resampler_method_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_RESAMPLER_METHOD_NEAREST, "GST_VIDEO_RESAMPLER_METHOD_NEAREST",
+          "nearest"},
+      {GST_VIDEO_RESAMPLER_METHOD_LINEAR, "GST_VIDEO_RESAMPLER_METHOD_LINEAR",
+          "linear"},
+      {GST_VIDEO_RESAMPLER_METHOD_CUBIC, "GST_VIDEO_RESAMPLER_METHOD_CUBIC",
+          "cubic"},
+      {GST_VIDEO_RESAMPLER_METHOD_SINC, "GST_VIDEO_RESAMPLER_METHOD_SINC",
+          "sinc"},
+      {GST_VIDEO_RESAMPLER_METHOD_LANCZOS, "GST_VIDEO_RESAMPLER_METHOD_LANCZOS",
+          "lanczos"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoResamplerMethod", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_resampler_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_RESAMPLER_FLAG_NONE, "GST_VIDEO_RESAMPLER_FLAG_NONE", "none"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoResamplerFlags", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;

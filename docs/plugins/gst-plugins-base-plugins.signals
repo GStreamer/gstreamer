@@ -518,3 +518,10 @@ GstCdParanoiaSrc *gstcdparanoiasrc
 gint  arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstSocketSrc::connection-closed-by-peer</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
+GstSocketSrc *gstsocketsrc
+</SIGNAL>
+

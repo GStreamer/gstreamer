@@ -50,6 +50,9 @@
 /* The GIO modules directory. */
 #undef GIO_MODULE_DIR
 
+/* The GIO install prefix. */
+#undef GIO_PREFIX
+
 /* major/minor version */
 #define GST_API_VERSION "1.0"
 
@@ -84,7 +87,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2014-07-19"
+#define GST_PACKAGE_RELEASE_DATETIME "2015-06-07"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -106,8 +109,14 @@
    the CoreFoundation framework. */
 #undef HAVE_CFPREFERENCESCOPYAPPVALUE
 
+/* Define if the target CPU is AARCH64 */
+#undef HAVE_CPU_AARCH64
+
 /* Define if the target CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
+
+/* Define if the target CPU is an ARC */
+#undef HAVE_CPU_ARC
 
 /* Define if the target CPU is an ARM */
 #undef HAVE_CPU_ARM
@@ -175,6 +184,9 @@
 
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #undef HAVE_GETTEXT
+
+/* Define to enable glib GIO unix (used by gio-unix-2.0). */
+#undef HAVE_GIO_UNIX_2_0
 
 /* Define to 1 if you have the `gmtime_r' function. */
 #undef HAVE_GMTIME_R
@@ -325,7 +337,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 1.4.0"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 1.5.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -334,7 +346,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.4.0"
+#define PACKAGE_VERSION "1.5.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -368,7 +380,7 @@
 #undef USE_TREMOLO
 
 /* Version number of package */
-#define VERSION "1.4.0"
+#define VERSION "1.5.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
@@ -381,9 +393,6 @@
 #  undef WORDS_BIGENDIAN
 # endif
 #endif
-
-/* Define to 1 if the X Window System is missing or not being used. */
-#undef X_DISPLAY_MISSING
 
 /* Enable large inode numbers on Mac OS X 10.5.  */
 #ifndef _DARWIN_USE_64_BIT_INODE

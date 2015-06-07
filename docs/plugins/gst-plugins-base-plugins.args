@@ -45,7 +45,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>method</NICK>
 <BLURB>method.</BLURB>
-<DEFAULT>Bilinear</DEFAULT>
+<DEFAULT>Bilinear (2-tap)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -66,6 +66,16 @@
 <NICK>Sharpness</NICK>
 <BLURB>Sharpness of filter.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoScale::gamma-decode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Gamma Decode</NICK>
+<BLURB>Decode gamma before scaling.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -855,7 +865,87 @@
 <FLAGS>rw</FLAGS>
 <NICK>Dither</NICK>
 <BLURB>Apply dithering while converting.</BLURB>
-<DEFAULT>GST_VIDEO_DITHER_NONE</DEFAULT>
+<DEFAULT>GST_VIDEO_DITHER_BAYER</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoConvert::alpha-mode</NAME>
+<TYPE>GstVideoAlphaMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha Mode</NICK>
+<BLURB>Alpha Mode to use.</BLURB>
+<DEFAULT>GST_VIDEO_ALPHA_MODE_COPY</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoConvert::alpha-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha Value</NICK>
+<BLURB>Alpha Value to use.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoConvert::chroma-mode</NAME>
+<TYPE>GstVideoChromaMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Chroma Mode</NICK>
+<BLURB>Chroma Resampling Mode.</BLURB>
+<DEFAULT>GST_VIDEO_CHROMA_MODE_FULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoConvert::chroma-resampler</NAME>
+<TYPE>GstVideoResamplerMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Chroma resampler</NICK>
+<BLURB>Chroma resampler method.</BLURB>
+<DEFAULT>GST_VIDEO_RESAMPLER_METHOD_LINEAR</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoConvert::dither-quantization</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dither Quantize</NICK>
+<BLURB>Quantizer to use.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoConvert::gamma-mode</NAME>
+<TYPE>GstVideoGammaMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Gamma Mode</NICK>
+<BLURB>Gamma Conversion Mode.</BLURB>
+<DEFAULT>GST_VIDEO_GAMMA_MODE_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoConvert::matrix-mode</NAME>
+<TYPE>GstVideoMatrixMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Matrix Mode</NICK>
+<BLURB>Matrix Conversion Mode.</BLURB>
+<DEFAULT>GST_VIDEO_MATRIX_MODE_FULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoConvert::primaries-mode</NAME>
+<TYPE>GstVideoPrimariesMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Primaries Mode</NICK>
+<BLURB>Primaries Conversion Mode.</BLURB>
+<DEFAULT>GST_VIDEO_PRIMARIES_MODE_NONE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2406,5 +2496,25 @@
 <NICK>VP3 compatible</NICK>
 <BLURB>Disables non-VP3 compatible features.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSocketSrc::socket</NAME>
+<TYPE>GSocket*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Socket</NICK>
+<BLURB>The socket to receive packets from.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTimeOverlay::time-mode</NAME>
+<TYPE>GstTimeOverlayTimeLine</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Time Mode</NICK>
+<BLURB>What time to show.</BLURB>
+<DEFAULT>buffer-time</DEFAULT>
 </ARG>
 

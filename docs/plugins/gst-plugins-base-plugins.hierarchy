@@ -57,6 +57,7 @@ GObject
                 GstAlsaSrc
             GstAudioCdSrc
               GstCdParanoiaSrc
+            GstSocketSrc
             GstTCPClientSrc
             GstTCPServerSrc
             GstVideoTestSrc

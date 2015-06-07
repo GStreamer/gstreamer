@@ -68,3 +68,24 @@ gst_discoverer_result_get_type (void)
   }
   return g_define_type_id__volatile;
 }
+
+GType
+gst_discoverer_serialize_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_DISCOVERER_SERIALIZE_BASIC, "GST_DISCOVERER_SERIALIZE_BASIC",
+          "basic"},
+      {GST_DISCOVERER_SERIALIZE_CAPS, "GST_DISCOVERER_SERIALIZE_CAPS", "caps"},
+      {GST_DISCOVERER_SERIALIZE_TAGS, "GST_DISCOVERER_SERIALIZE_TAGS", "tags"},
+      {GST_DISCOVERER_SERIALIZE_MISC, "GST_DISCOVERER_SERIALIZE_MISC", "misc"},
+      {GST_DISCOVERER_SERIALIZE_ALL, "GST_DISCOVERER_SERIALIZE_ALL", "all"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstDiscovererSerializeFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
