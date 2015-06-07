@@ -1,7 +1,7 @@
 <SIGNAL>
 <NAME>GstTypeFindElement::have-type</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>f</FLAGS>
+<FLAGS>l</FLAGS>
 GstTypeFindElement *gsttypefindelement
 guint  arg1
 GstCaps *arg2

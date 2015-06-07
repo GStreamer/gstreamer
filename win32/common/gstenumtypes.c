@@ -284,6 +284,8 @@ gst_clock_flags_get_type (void)
         "GST_CLOCK_FLAG_CAN_SET_RESOLUTION", "can-set-resolution"},
     {C_FLAGS (GST_CLOCK_FLAG_CAN_SET_MASTER), "GST_CLOCK_FLAG_CAN_SET_MASTER",
         "can-set-master"},
+    {C_FLAGS (GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC),
+        "GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC", "needs-startup-sync"},
     {C_FLAGS (GST_CLOCK_FLAG_LAST), "GST_CLOCK_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -607,6 +609,7 @@ gst_event_type_get_type (void)
     {C_ENUM (GST_EVENT_SINK_MESSAGE), "GST_EVENT_SINK_MESSAGE", "sink-message"},
     {C_ENUM (GST_EVENT_EOS), "GST_EVENT_EOS", "eos"},
     {C_ENUM (GST_EVENT_TOC), "GST_EVENT_TOC", "toc"},
+    {C_ENUM (GST_EVENT_PROTECTION), "GST_EVENT_PROTECTION", "protection"},
     {C_ENUM (GST_EVENT_SEGMENT_DONE), "GST_EVENT_SEGMENT_DONE", "segment-done"},
     {C_ENUM (GST_EVENT_GAP), "GST_EVENT_GAP", "gap"},
     {C_ENUM (GST_EVENT_QOS), "GST_EVENT_QOS", "qos"},

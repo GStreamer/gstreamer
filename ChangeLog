@@ -1,9 +1,4836 @@
-=== release 1.4.0 ===
+=== release 1.5.1 ===
 
-2014-07-19  Sebastian Dröge <slomo@coaxion.net>
+2015-06-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.0
+	  releasing 1.5.1
+
+2015-06-07 09:33:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/cs.po:
+	* po/de.po:
+	* po/fr.po:
+	* po/tr.po:
+	  po: Update translations
+
+2015-06-07 09:32:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock: Add Since marker to the docs for gst_ntp_clock_new()
+
+2015-06-07 09:32:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
+
+2015-06-07 09:08:35 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/gst/gstmemory.c:
+	  memory: Fix compiler warnings in unit test
+	  gst/gstmemory.c:570:38: error: implicit conversion from enumeration type 'GstMapFlags' to different enumeration
+	  type 'GstLockFlags' [-Werror,-Wenum-conversion]
+	  fail_unless (gst_memory_lock (mem, GST_MAP_WRITE));
+	  ~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~
+
+2015-06-07 08:59:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptpclock: Use the current path delay for calculation the local/remote clock times
+	  The mean might currently be changing, and the current path delay is the
+	  closest we can get to the actual delay around the current SYNC message.
+
+2015-06-06 23:05:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock: Add some copyright stuff
+
+2015-06-06 21:43:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/net/Makefile.am:
+	* libs/gst/net/gstnetclientclock.c:
+	* libs/gst/net/gstnetclientclock.h:
+	* libs/gst/net/gstntppacket.c:
+	* libs/gst/net/gstntppacket.h:
+	* win32/common/libgstnet.def:
+	  netclientclock: Add NTPv4 support
+	  This uses all of the netclientclock code, except for the generation and
+	  parsing of packets. Unfortunately some code duplication was necessary
+	  because GstNetTimePacket is public API and couldn't be extended easily
+	  to support NTPv4 packets without breaking API/ABI.
+
+2015-06-06 20:39:47 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock: Preparation for NTPv4 support
+	  We extend our calculations to work with local send time, remote receive time,
+	  remote send time and local receive time. For the netclientclock protocol,
+	  remote receive and send time are assumed to be the same value.
+	  For the results, this modified calculation makes absolutely no difference
+	  unless the two remote times are different.
+
+2015-06-06 19:01:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock. Fix last commit
+	  Apparently I failed at git add -i.
+
+2015-06-06 18:42:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock: Make gst_net_client_clock_new() a thing wrapper around g_object_new()
+	  Bindings will like this, and also it fixes a FIXME comment.
+
+2015-06-06 14:34:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptpclock: Use #define everywhere instead of G_N_ELEMENTS()
+
+2015-06-06 14:31:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock: Filter RTTs based on the median of the last RTTs before considering them at all
+	  This improves accuracy on wifi or similar networks, where the RTT can go very
+	  high up for a single observation every now and then. Without filtering them
+	  away completely, they would still still modify the average RTT, and thus all
+	  clock estimations.
+
+2015-06-06 14:19:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptpclock: Use a system clock for the time observations instead of gst_util_get_timestamp()
+	  They don't necessarily use the same underlying clocks (e.g. on Windows), or
+	  might be configured to a different clock type (monotonic vs. real time clock).
+	  We need the values a clean system clock returns, as those are the values used
+	  by the internal clocks.
+
+2015-06-06 12:35:58 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptpclock: Fix documentation a bit
+
+2015-06-05 19:35:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/fakesink.c:
+	  tests: fakesink: test notify::last-message and deep-notify::last-message
+	  deep-notify::last-message seems to cause some problems, so disable for now.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681642
+
+2015-06-05 10:02:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Post an error if we can't typefind the data until EOS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750439
+
+2015-06-04 19:05:44 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/helpers/gst-ptp-helper.c:
+	  ptp-helper: Make sure to use g_poll() for the main context
+	  The modified main context from https://bugzilla.gnome.org/show_bug.cgi?id=741054
+	  somehow calls setugid(), which abort()s setuid root applications on OSX.
+
+2015-06-04 18:32:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/helpers/gst-ptp-helper.c:
+	  ptp-helper: Make sure that we are running setuid root if configured that way
+
+2015-06-04 18:00:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/helpers/gst-ptp-helper.c:
+	  ptp-helper: Fix interface listing and MAC retrieval on OSX
+
+2015-06-03 19:04:15 +0300  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* tools/gst-indent:
+	  gst-indent: Add support for gindent as executable name
+	  gst-indent used to support gnuindent and indent as executable names.
+	  However, on OSX one can "brew install gnu-indent" and then the
+	  executable name will be gindent. Added support for that.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750351
+
+2015-06-03 16:42:57 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* libs/gst/helpers/.gitignore:
+	  gitignore: add libs/gst/helpers/gst-ptp-helper
+
+2015-06-03 16:34:58 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  ptp: ignore permission errors in Makefile
+	  To satisfy the buildslaves ignore permission errors in chown, chmod and setcap
+
+2015-06-03 17:06:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/helpers/gst-ptp-helper.c:
+	  ptp: Don't use SIOCGIFHWADDR on Apple
+	  Just #ifdef the code for now, this should be implemented around
+	  IOKit later instead of using ioctls.
+
+2015-06-03 16:28:44 +0200  Philippe Normand <philn@igalia.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  build: make install-exec-hooks depend on install-helpersPROGRAMS
+	  To avoid race conditions where make would try to change ownership and
+	  permissions of the not-yet-installed ptp helper.
+
+2015-06-03 16:08:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptp: Fix debug output to print the difference instead of absolute values
+
+2015-06-03 15:22:31 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptpclock: fix compilation
+	  Don't put code between declarations.
+	  Fix use of uninitialized variables
+
+2015-06-03 11:04:48 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptp: Add median based pre-filtering of delays
+	  If the delay measurement is too far away from the median of the window of last
+	  delay measurements, we discard it. This increases accuracy on wifi a lot.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749391
+
+2015-06-02 15:24:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptp: Add #define to only use SYNC messages for which we can send DELAY_REQ
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749391
+
+2015-05-15 16:58:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptp: Add #defines to enable/disable improvements for unreliable networks
+	  We should do some more measurements with all these and check how much sense
+	  they make for PTP. Also enabling them means not following IEEE1588-2008 by the
+	  letter anymore.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749391
+
+2015-05-14 12:18:25 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/helpers/Makefile.am:
+	* libs/gst/helpers/gst-ptp-helper.c:
+	* libs/gst/net/Makefile.am:
+	* libs/gst/net/gstptp_private.h:
+	* libs/gst/net/gstptpclock.c:
+	* libs/gst/net/gstptpclock.h:
+	* libs/gst/net/net.h:
+	* tests/examples/Makefile.am:
+	* tests/examples/ptp/.gitignore:
+	* tests/examples/ptp/Makefile.am:
+	* tests/examples/ptp/ptp-print-times.c:
+	* win32/common/libgstnet.def:
+	  ptp: Initial implementation of a PTP clock
+	  GstPtpClock implements a PTP (IEEE1588:2008) ordinary clock in
+	  slave-only mode, that allows a GStreamer pipeline to synchronize
+	  to a PTP network clock in some specific domain.
+	  The PTP subsystem can be initialized with gst_ptp_init(), which then
+	  starts a helper process to do the actual communication via the PTP
+	  ports. This is required as PTP listens on ports < 1024 and thus
+	  requires special privileges. Once this helper process is started, the
+	  main process will synchronize to all PTP domains that are detected on
+	  the selected interfaces.
+	  gst_ptp_clock_new() then allows to create a GstClock that provides the
+	  PTP time from a master clock inside a specific PTP domain. This clock
+	  will only return valid timestamps once the timestamps in the PTP domain
+	  are known. To check this, the GstPtpClock::internal-clock property and
+	  the related notify::clock signal can be used. Once the internal clock
+	  is not NULL, the PTP domain's time is known. Alternatively you can wait
+	  for this with gst_ptp_clock_wait_ready().
+	  To gather statistics about the PTP clock synchronization,
+	  gst_ptp_statistics_callback_add() can be used. This gives the
+	  application the possibility to collect all kinds of statistics
+	  from the clock synchronization.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749391
+
+2015-06-03 13:16:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstclock.c:
+	* gst/gstclock.h:
+	* win32/common/libgstreamer.def:
+	  clock: Add GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC and related API
+	  gst_clock_wait_for_sync(), gst_clock_is_synced() and gst_clock_set_synced()
+	  plus a signal to asynchronously wait for the clock to be synced.
+	  This can be used by clocks to signal that they need initial synchronization
+	  before they can report any time, and that this synchronization can also get
+	  completely lost at some point. Network clocks, like the GStreamer
+	  netclientclock, NTP or PTP clocks are examples for clocks where this is useful
+	  to have as they can't report any time at all before they're synced.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749391
+
+2015-06-03 18:03:36 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/gstallocator.h:
+	* gst/gstmemory.c:
+	* gst/gstmemory.h:
+	  memory: provide a mem_unmap function that takes the flags to unmap
+	  There are gstmemory's available that operate in two memory domains
+	  and need to ensure consistent access between these domains.
+	  Imagine a scenario where e.g. the GLMemory is mapped twice in both
+	  the GPU and the CPU domain.  On unmap or a subsequent map, it would
+	  like to ensure that the most recent data is available in the memory
+	  domain requested.  Either by flushing the writes and/or initiating a
+	  DMA transfer.  Without knowing which domain is being unmapped, the
+	  memory does not know where the most recent data is to transfer to
+	  the other memory domain.
+	  Note: this still does not allow downgrading a memory map.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750319
+
+2015-06-02 16:14:50 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/gstmemory.c:
+	* tests/check/gst/gstmemory.c:
+	  memory: gst_memory_share may fail to exclusively lock the parent memory
+	  Now that locking exclusively dows not always succeed, we need to signal
+	  the failure case from gst_memory_init.
+	  Rather than introducing an API or funcionality change to gst_memory_init,
+	  workaround by checking exclusivity in the calling code.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750172
+
+2015-06-02 00:23:37 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/gstbuffer.c:
+	* tests/check/gst/gstbuffer.c:
+	  buffer: locking memory exclusively may fail
+	  Attempt to return a copy of the memory instead.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750172
+
+2015-05-31 21:25:23 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/gstminiobject.c:
+	* tests/check/gst/gstmemory.c:
+	  miniobject: disallow a double write/exclusive lock
+	  gst_memory_lock (mem, WRITE | EXCLUSIVE);
+	  gst_memory_lock (mem, WRITE | EXCLUSIVE);
+	  Succeeds when the part-miniobject.txt design doc suggests that this should fail:
+	  "A gst_mini_object_lock() can fail when a WRITE lock is requested and
+	  the exclusive counter is > 1. Indeed a GstMiniObject object with an
+	  exclusive counter 1 is locked EXCLUSIVELY by at least 2 objects and is
+	  therefore not writable."
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750172
+
+2015-06-02 20:32:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gsturi.c:
+	  uri: match return type of get_uri_type() implementation to declaration
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750292
+
+2015-06-03 00:12:36 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstbuffer.c:
+	  gstbuffer: Add a note about metas needing to be copied last
+
+2015-05-27 22:23:00 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstvalue.c:
+	* tests/check/gst/gstvalue.c:
+	  gstvalue: Implement gst_value_is_subset() for flagsets
+
+2015-06-02 16:33:48 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* tests/check/gst/gstprotection.c:
+	  check: Use GST_CHECK_MAIN macro
+
+2015-05-20 21:18:08 +0900  eunhae choi <eunhae1.choi@samsung.com>
+
+	* plugins/elements/gstdownloadbuffer.c:
+	  downloadbuffer: release lock before posting msg
+	  to avoid the deadlock in playbin2,
+	  send msg after release the download buffer lock.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749535
+
+2015-05-31 20:21:42 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* gst/gststructure.c:
+	  structure: add note about missing field creation on _set()
+
+2015-05-30 13:01:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstcaps.c:
+	* tests/check/gst/gststructure.c:
+	  tests: fix some leaks in new flagset checks
+
+2015-05-30 12:39:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstqueuearray.c:
+	  queuearray: remove duplicate assignment
+	  We've already done this earlier in the function,
+	  and nothing has changed since we first read it.
+
+2015-05-27 17:22:28 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/gst.c:
+	  gst/gst.c: Add a warning about DllMain to prevent misuse
+	  DllMain should not be relied on for anything except storing the DLL handle.
+	  It should also not be defined for static builds, but doing so is not
+	  straightforward and is mostly harmless, so let's just add a comment about that
+	  for now.
+
+2015-05-27 13:54:25 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstfunnel.c:
+	  funnel: Improve debug output a bit
+
+2015-05-26 14:46:16 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* docs/design/draft-klass.txt:
+	  docs: fix typo in draft-klass.txt
+
+2015-05-26 14:03:25 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* docs/code-reviews/README:
+	* docs/code-reviews/gstbin.c-1.41:
+	  code-reviews: remove obsolete code reviews
+	  This obsolete folder hasn't been touched since 2001 and has no purpose. It
+	  confuses new developers.
+
+2015-05-25 21:02:28 +1000  Matthew Waters <matthew@centricular.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: use the slightly more correct take_sample for last-sample
+	  gst_value_take_buffer() and gst_value_take_sample() both resolve to
+	  g_value_take_boxed().  Use the method with the correct name if we
+	  ever change that.
+
+2015-05-25 16:23:33 +1000  Jan Schmidt <jan@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gststructure.c:
+	* gst/gststructure.h:
+	* gst/gstvalue.c:
+	* gst/gstvalue.h:
+	* tests/check/gst/capslist.h:
+	* tests/check/gst/gstcaps.c:
+	* tests/check/gst/gststructure.c:
+	* tests/check/gst/gstvalue.c:
+	* win32/common/libgstreamer.def:
+	  gstvalue: Add GstFlagSet type
+	  GstFlagSet is a new type designed for negotiating sets
+	  of boolean capabilities flags, consisting of a 32-bit
+	  flags bitfield and 32-bit mask field. The mask field
+	  indicates which of the flags bits an element needs to have
+	  as specific values, and which it doesn't care about.
+	  This allows efficient negotiation of arrays of boolean
+	  capabilities.
+	  The standard serialisation format is FLAGS:MASK, with
+	  flags and mask fields expressed in hexadecimal, however
+	  GstFlagSet has a gst_register_flagset() function, which
+	  associates a new GstFlagSet derived type with an existing
+	  GFlags gtype. When serializing a GstFlagSet with an
+	  associated set of GFlags, it also serializes a human-readable
+	  form of the flags for easier debugging.
+	  It is possible to parse a GFlags style serialisation of a
+	  flagset, without the hex portion on the front. ie,
+	  +flag1/flag2/flag3+flag4, to indicate that
+	  flag1 & flag4 must be set, and flag2/flag3 must be unset,
+	  and any other flags are don't-care.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746373
+
+2015-05-20 20:19:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst/gstvalue.c:
+	  gstvalue: Add a comparision function for GstStructures
+
+2015-05-19 14:34:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	* libs/gst/net/gstnettimeprovider.c:
+	  net: keep GCancellable fd around instead of re-creating it constantly
+	  Just create the cancellable fd once and keep it around instead
+	  of creating/closing it for every single packet. Since we spend
+	  most time waiting for packets, an fd is alloced and in use pretty
+	  much all the time anyway.
+
+2015-05-18 12:52:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstfdsrc.c:
+	  Revert "doc: Workaround gtkdoc issue"
+	  This reverts commit 460a7bf68292d057c77e84d1ea86b8e73fc081f3.
+	  This should be fixed by the gtk-doc 1.23 release.
+	  <para> cannot contain <refsect2>:
+	  http://www.docbook.org/tdg/en/html/para.html
+	  http://www.docbook.org/tdg/en/html/refsect2.html
+
+2015-05-11 10:52:23 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* plugins/elements/gstsparsefile.c:
+	  sparsefile: small cleanup
+	  The error path unrefs file->file so make sure we only go there when
+	  there is a non-NULL file->file.
+
+2015-05-16 23:29:03 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* plugins/elements/gstfdsrc.c:
+	  doc: Workaround gtkdoc issue
+	  With gtkdoc 1.22, the XML generator fails when a itemizedlist is
+	  followed by a refsect2. Workaround the issue by wrapping the refsect2
+	  into para.
+
+2015-05-13 13:28:05 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* docs/design/part-negotiation.txt:
+	  docs/design/part-negotiation.txt: minor corrections
+
+2015-05-16 12:57:12 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* libs/gst/controller/gsttimedvaluecontrolsource.c:
+	  timedvaluecontrolsource: Check that the only iter is the end iter in the GSequence
+	  Previous patch was assuming that if the returned iter was the last iter
+	  the GSequence was empty, which is obviously wrong.
+
+2015-05-16 11:17:40 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* libs/gst/controller/gsttimedvaluecontrolsource.c:
+	  timedvaluecontrolsource: Fix removing all keyframes, and adding one back
+	  We were segfaulting because g_sequence_search was returning the iter_end,
+	  and that iterator does not contain anything and thus should not be used
+	  directly
+
+2015-05-15 20:44:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstfakesrc.c:
+	  fakesrc: fix property description
+	  We're enterprise now folks.
+
+2015-05-15 14:57:14 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: bump chain function call logs from LOG to DEBUG
+	  They're really useful compared to other LOG stuff in there, so
+	  there is value is including them and not the rest.
+
+2015-05-15 13:43:12 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstobject.c:
+	* gst/gstobject.h:
+	* tests/check/gst/gstobject.c:
+	* win32/common/libgstreamer.def:
+	  gstobject: add gst_object_has_as_ancestor and deprecate previous function
+	  The old gst_object_has_ancestor will call the new code. This establishes the
+	  symetry with the new gst_object_has_as_parent.
+	  API: gst_object_has_as_ancestor()
+
+2015-05-15 08:05:50 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstobject.c:
+	* gst/gstobject.h:
+	* tests/check/gst/gstobject.c:
+	* win32/common/libgstreamer.def:
+	  gstobject: rename gst_object_has_parent to gst_object_has_as_parent
+	  This avoid confusion with a potential punction that check if a gstobject has-a
+	  parent.
+	  API: gst_object_has_as_parent()
+
+2015-05-14 15:49:43 +0800  Jian <Jian.Li@freescale.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: Fix QoS/lateness checking if subclass implements prepare/prepare_list vfuncs
+	  In basesink functions gst_base_sink_chain_unlocked(), below code is used to
+	  checking if buffer is late before doing prepare call to save some effort:
+	  if (syncable && do_sync)
+	  late =
+	  gst_base_sink_is_too_late (basesink, obj, rstart, rstop,
+	  GST_CLOCK_EARLY, 0, FALSE);
+	  if (G_UNLIKELY (late))
+	  goto dropped;
+	  But this code has problem, it should calculate jitter based on current media
+	  clock, rather than just passing 0. I found it will drop all the frames when
+	  rewind in slow speed, such as -2X.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749258
+
+2015-05-11 17:14:50 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* plugins/elements/gstfdsrc.c:
+	  fdsrc: docs: fix and update documentation
+	  Update example to use gst-launch-1.0 and fix a paragraph.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749233
+
+2015-05-09 11:53:49 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  Add removed example directories to CRUFT_DIRS
+
+2015-05-08 14:08:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstparse.c:
+	* plugins/elements/gstcapsfilter.c:
+	* plugins/elements/gstfakesink.c:
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstfilesink.c:
+	* plugins/elements/gstfilesrc.c:
+	* plugins/elements/gsttee.c:
+	  docs: gst-launch -> gst-launch-1.0 in example pipelines
+	  And some small example pipeline fix-ups.
+
+2015-05-09 22:10:30 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* docs/design/part-conventions.txt:
+	  docs/design/part-conventions.txt: minor corrections
+
+2015-05-09 22:04:52 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* docs/design/part-context.txt:
+	  docs/design/part-context.txt: minor corrections
+
+2015-05-09 22:01:04 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* docs/design/part-clocks.txt:
+	  docs/design/part-clocks.txt: minor corrections
+
+2015-05-02 17:16:38 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/manual/appendix-porting.xml:
+	* docs/random/porting-to-1.0.txt:
+	  docs: update porting guides to mention new device probing API
+
+2015-05-01 20:37:18 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* docs/design/part-states.txt:
+	  docs/design/part-states.txt: minor corrections
+
+2015-05-01 18:32:26 +0900  Jimmy Ohn <yongjin.ohn@lge.com>
+
+	* gst/gstevent.h:
+	  event: remove duplicated include
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748739
+
+2015-04-28 19:59:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* tests/examples/Makefile.am:
+	* tests/examples/launch/.gitignore:
+	* tests/examples/launch/Makefile.am:
+	* tests/examples/launch/mp3parselaunch.c:
+	* tests/examples/metadata/.gitignore:
+	* tests/examples/metadata/Makefile.am:
+	* tests/examples/metadata/read-metadata.c:
+	* tests/examples/queue/.gitignore:
+	* tests/examples/queue/Makefile.am:
+	* tests/examples/queue/queue.c:
+	* tests/examples/typefind/.gitignore:
+	* tests/examples/typefind/Makefile.am:
+	* tests/examples/typefind/typefind.c:
+	  tests: remove some pointless ancient code examples
+
+2015-04-28 17:54:51 +0300  Ilya Konstantinov <ilya.konstantinov@gmail.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: fix GST_BASE_PARSE_FLAG_LOST_SYNC
+	  Since frame->priv->discont was cleared earlier,
+	  GST_BASE_PARSE_FLAG_LOST_SYNC was never being set.
+	  Take the chance to refactor the frame creation a bit to
+	  organize the flags setting and reset.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738237
+
+2015-03-09 19:31:36 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: respect DISCONT flag on buffers
+	  Drain the parser when a DISCONT buffer is received and then mark
+	  the next buffer to be pushed as a DISCONT one
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745927
+
+2015-04-28 15:50:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gsttaglist.c:
+	  taglist: Copy the tag scope too when copying tag lists
+
+2015-04-20 20:02:51 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* plugins/elements/gstidentity.c:
+	  identity: Also synchronize GAP events in sync=1
+	  https://bugzilla.gnome.org/show_bug.cgi?id=601853
+
+2015-04-20 19:31:37 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* plugins/elements/gstidentity.c:
+	* plugins/elements/gstidentity.h:
+	  identity: With sync=true, don't pre-roll
+	  To act like a real live element, block the streaming when paused, and
+	  return NO_PREROLL.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=601853
+
+2015-04-20 19:24:45 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* plugins/elements/gstidentity.c:
+	* plugins/elements/gstidentity.h:
+	  identity: Take upstream latency into account for sync=1
+	  https://bugzilla.gnome.org/show_bug.cgi?id=601853
+
+2015-04-20 19:07:27 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* plugins/elements/gstidentity.c:
+	  identity: Handle PTS and DTS separately
+	  https://bugzilla.gnome.org/show_bug.cgi?id=601853
+
+2015-04-26 17:05:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* Android.mk:
+	* gst/Makefile.am:
+	* gst/parse/Makefile.am:
+	* libs/Makefile.am:
+	* libs/gst/Makefile.am:
+	* libs/gst/base/Makefile.am:
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/helpers/Makefile.am:
+	* libs/gst/net/Makefile.am:
+	* plugins/Makefile.am:
+	* plugins/elements/Makefile.am:
+	* tests/examples/controller/Makefile.am:
+	* tools/Makefile.am:
+	  Remove obsolete Android build cruft
+	  This is not needed any longer.
+
+2015-04-24 16:51:24 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstinputselector.c:
+	* plugins/elements/gstinputselector.h:
+	  inputselector: Only try to push the first EOS received
+	  Subsequent EOS will push on the source pad that already received
+	  EOS and that will make the event function return FALSE. It needs
+	  only to push the first one and only return TRUE for the subsequent
+	  ones.
+
+2015-04-24 15:19:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstprintf.c:
+	  tests: printf: add unit test for %%
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748414
+
+2015-04-24 15:16:24 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/printf/vasnprintf.c:
+	  printf: fix invalid memory access in case of %%
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748414
+
+2015-04-23 15:55:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/Makefile.am:
+	  tests: define GST_CHECK_TEST_ENVIRONMENT_BEACON
+
+2015-04-23 15:54:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/check/gstcheck.h:
+	  check: optionally check env var for us to make sure test env is set up
+	  If GST_CHECK_TEST_ENVIRONMENT_BEACON is defined, check if the
+	  environment variable it is defined to is set up at the start
+	  of each test.
+	  https://bugzilla.gnome.org//show_bug.cgi?id=747624
+
+2015-04-23 09:06:42 +0900  Changbok Chea <changbok.chea@gmail.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Remove unused assignment in perform_seek()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748345
+
+2015-04-22 11:44:00 +0530  Prashant Gotarne <ps.gotarne@samsung.com>
+
+	* tests/check/gst/gstmemory.c:
+	  test: memory: Added test to verify the allocation params
+	  New test added to verify the allocation params for the memory
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748277
+
+2015-04-22 11:04:06 -0600  Jason Litzinger <jlitzinger@control4.com>
+
+	* tests/check/gst/gstinfo.c:
+	  tests: info: add test case to reproduce infinite loop
+	  gst_debug_unset_threshold_for_name() used to go into an
+	  infinite loop when there was more than one category in
+	  the list.  This test captures the problem by failing
+	  via timeout.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748321
+
+2015-04-22 12:03:33 -0600  Jason Litzinger <jlitzinger@control4.com>
+
+	* gst/gstinfo.c:
+	  gstinfo: fix infinite loop in gst_debug_unset_threshold_for_name()
+	  Ensure iterator is advanced. The current list iteration code only
+	  advances the iterator (walk) if a match is found, which results
+	  in an infinite loop when more than one entry exists in the list.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748321
+
+2015-04-22 10:14:53 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* scripts/create-uninstalled-setup.sh:
+	  scripts: create-uninstalled-setup: miscellaneous fixes
+	  Error out if required build tools (flex, bison, pkg-config)
+	  are not present, instead of printing a message and then
+	  continuing.
+	  Check out submodules when fetching the repositories, so
+	  they're already there and ready later.
+	  Remove some 0.10 cruft.
+
+2015-04-22 09:59:24 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	  Add INSTALL to .gitignore
+
+2015-04-22 09:56:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/generic/states.c:
+	  tests: error out if test environment is not actually set up properly
+	  https://bugzilla.gnome.org//show_bug.cgi?id=747624
+
+2015-04-22 09:52:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: can use AM_SILENT_RULES unconditionally now
+	  https://autotools.io/automake/silent.html
+
+2015-04-22 09:47:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: bump automake requirement to 1.14 and autoconf to 2.69
+	  This is only required for builds from git, people can still
+	  build tarballs if they only have older autotools.
+	  https://bugzilla.gnome.org//show_bug.cgi?id=747624
+
+2015-04-22 10:32:57 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* INSTALL:
+	  Remove INSTALL file
+	  autotools automatically generate this, and when using different versions
+	  for autogen.sh there will always be changes to a file tracked by git.
+
+2015-04-20 22:07:34 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* scripts/gst-uninstalled:
+	  gstreamer-uninstalled: Update path to the GstValidate scenarios
+
+2015-04-20 09:23:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbuffer.c:
+	  buffer: Check return value of meta transform function in gst_buffer_copy_into()
+	  ... by printing some debug output whenever copying a GstMeta fails.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748119
+
+2015-04-18 12:31:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstevent.h:
+	  event: fix header formatting
+
+2015-04-18 12:28:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstprotection.c:
+	  tests: protection: fix leak in unit test
+
+2015-04-18 12:27:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gst.h:
+	  gst.h: include the new gstprotection.h header
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705991
+
+2015-04-15 15:33:31 +0100  Alex Ashley <bugzilla@ashley-family.net>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/Makefile.am:
+	* gst/gst_private.h:
+	* gst/gstinfo.c:
+	* gst/gstprotection.c:
+	* gst/gstprotection.h:
+	* tests/check/Makefile.am:
+	* tests/check/gst/.gitignore:
+	* tests/check/gst/gstprotection.c:
+	* win32/common/libgstreamer.def:
+	  protection: add GstProtectionMeta to support protected content
+	  In order to support some types of protected streams (such as those
+	  protected using DASH Common Encryption) some per-buffer information
+	  needs to be passed between elements.
+	  This commit adds a GstMeta type called GstProtectionMeta that allows
+	  protection specific information to be added to a GstBuffer. An example
+	  of its usage is qtdemux providing information to each output sample
+	  that enables a downstream element to decrypt it.
+	  This commit adds a utility function to select a supported protection
+	  system from the installed Decryption elements found in the registry.
+	  The gst_protection_select_system function that takes an array of
+	  identifiers and searches the registry for a element of klass Decryptor that
+	  supports one or more of the supplied identifiers. If multiple elements
+	  are found, the one with the highest rank is selected.
+	  This commit adds a unit test for the gst_protection_select_system
+	  function that adds a fake Decryptor element to the registry and then
+	  checks that it can correctly be selected by the utility function.
+	  This commit adds a unit test for GstProtectionMeta that creates
+	  GstProtectionMeta and adds & removes it from a buffer and performs some
+	  simple reference count checks.
+	  API: gst_buffer_add_protection_meta()
+	  API: gst_buffer_get_protection_meta()
+	  API: gst_protection_select_system()
+	  API: gst_protection_meta_api_get_type()
+	  API: gst_protection_meta_get_info()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705991
+
+2015-03-16 12:35:27 +0000  Alex Ashley <bugzilla@ashley-family.net>
+
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* tests/check/gst/gstevent.c:
+	* win32/common/libgstreamer.def:
+	  event: add new GST_EVENT_PROTECTION
+	  In order for a decrypter element to decrypt media protected using a
+	  specific protection system, it first needs all the protection system
+	  specific  information necessary (E.g. information on how to acquire
+	  the decryption keys) for that stream.
+	  The GST_EVENT_PROTECTION defined in this commit enables this information
+	  to be passed from elements that extract it (e.g. qtdemux, dashdemux) to
+	  elements that use it (E.g. a decrypter element).
+	  API: GST_EVENT_PROTECTION
+	  API: gst_event_new_protection()
+	  API: gst_event_parse_protection()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705991
+
+2015-04-18 11:42:21 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gsttee.c:
+	  tee: fix use of possibly-freed pad in debug statement
+	  The gst_object_unref() in the block above may be dropping
+	  the last ref to the pad and free the pad. Set pad pointer
+	  to NULL here, so that we don't accidentally use a
+	  possibly-freed pad pointer in the debug log statements
+	  further below, and also use the tee element as log object
+	  since that's more appropriate anyway.
+	  Fixes valgrind warnings and crashes in tee test_stress
+	  unit test when debug logging is enabled.
+
+2015-04-18 12:00:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstinfo.c:
+	  tests: info: fix unit test when run with GST_DEBUG=*:9
+	  Only save the messages we're interested in and expecting.
+	  When run with *:9 we might get additional TRACE level
+	  messages from other categories and then we don't end up
+	  with the number of messages we expect.
+
+2015-04-18 11:25:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstpad.c:
+	  tests: pad: fix buffer leak in new blocking_with_probe_type_idle test
+
+2015-04-18 11:11:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstpad.c:
+	  tests: pad: fix invalid memory access in debug log message
+	  The string we put in the buffer is not NUL-terminated, so
+	  don't try to print that via %s in a debug log message.
+
+2015-04-17 15:19:07 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  helpers: on OSX, MKDIR_P is install-sh -c -d
+	  So we need to call it before cding to the bin directory.
+
+2015-04-17 13:02:12 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  helpers: install -D isn't portable, use $(MKDIR_P) instead.
+
+2015-04-14 10:47:20 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* tests/check/gst/gstpad.c:
+	  tests: pad: test that idle probe will block
+	  This tests add an idle probe on an idle pad from a separate thread
+	  so that the callback is called immediatelly. This callback will sit
+	  still and then we try to push a buffer on this same pad. It verifies
+	  that the idle probe blocks data passing
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747852
+
+2015-04-14 17:06:36 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/gstpad.c:
+	  pad: block data flow when idle probe is running
+	  When idle probe runs directly from the gst_pad_add_probe() function
+	  we need to make sure that no data flow happens as idle probe
+	  is a blocking probe. The idle probe will prevent that any
+	  buffer, bufferlist or serialized events and queries are not
+	  flowing while it is running.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747852
+
+2015-04-16 13:41:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gsturi.c:
+	  docs: clarify that return value of gst_filename_to_uri() must be freed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747104
+
+2015-04-15 11:02:54 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/gstbin.c:
+	* tests/check/generic/states.c:
+	  bin: undo upward state changes on children when a child fails
+	  When a bin changes states upwards, and a child fails to change,
+	  any child that was already switched will not be reset to its
+	  original state, leaving its state inconsistent with the bin,
+	  which does not change state due to the failure.
+	  If the state change was from NULL to READY, it means that deleting
+	  this bin will cause those children to be deleted while not in
+	  NULL state, which is a Bad Thing. For other upward changes, it
+	  is less of a problem, as a subsequent switch back to NULL will
+	  cause an actual downwards change on those inconsistent elements,
+	  albeit from the "wrong" state.
+	  We now reset state to the original one when a child fails.
+	  Includes unit test.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747610
+
+2015-04-15 14:45:21 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  helpers: use $(INSTALL) to ... install the helper.
+	  As it will create the folders and set permissions appropriately,
+	  better than doing it manually.
+
+2015-04-15 13:02:36 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  helpers: Fix Makefile.am to install the completion-helper correctly.
+	  + The program is installed at install-exec time, we thus need
+	  to move it in install-exec-hook, not install-data-hook.
+
+2015-04-15 11:38:35 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  Revert "basesrc: fix pool leak on allocation query error path"
+	  This reverts commit 84fdf50b2f98951a32fa14802b62621f1105cd35.
+	  It seems the bug was fixed independently, and the merge was
+	  automagic, yielding two extra free calls.
+
+2015-04-14 13:42:55 +0900  Suhwang Kim <suhwang.kim@lge.com>
+
+	* tests/check/gst/gstclock.c:
+	  tests: clock: fix test clock name
+	  Don't call the slave test clock "Master".
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746430
+
+2015-04-14 17:47:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstelementfactory.c:
+	* gst/gstelementfactory.h:
+	  elementfactory: add ENCRYPTOR class defines
+	  to go with DECRYPTOR.
+
+2015-03-16 13:11:59 +0000  Alex Ashley <bugzilla@ashley-family.net>
+
+	* gst/gstelementfactory.c:
+	* gst/gstelementfactory.h:
+	  elementfactory: add DECRYPTOR class defines
+	  An element that performs decryption does not naturally fit within any
+	  of the existing element factory class types. It is useful to be able
+	  to easily get a list of all elements that support decryption so that
+	  a union can be computed between the protection systems that have a
+	  supported decryptor and the allowed protection systems for a particular
+	  stream.
+	  This commit adds a new GST_ELEMENT_FACTORY_TYPE_DECRYPTOR and its
+	  associated string identifier "Decryptor". It also adds
+	  GST_ELEMENT_FACTORY_TYPE_DECRYPTOR to GST_ELEMENT_FACTORY_TYPE_DECODABLE
+	  so that uridecodebin can auto-plug a decryption element.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705991
+
+2015-04-13 17:01:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefindelement: Use gst_event_unref() instead of gst_mini_object_unref() + casting
+
+2015-04-13 14:40:22 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: fix leak in gst_type_find_element_src_event()
+	  gst_type_find_element_src_event() is supposed to consume @event but wasn't
+	  doing so when it was handling the event itself.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747775
+	  Signed-off-by: Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+2015-04-11 20:44:02 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
+
+	* gst/gstvalue.c:
+	  gstvalue: reset errno before g_ascii_strtoull call
+	  "errno" already has meaningless value before g_ascii_strtoull call.
+	  This causes invalid error check without reset.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747690
+
+2015-04-12 13:13:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Only set DTS to segment.start on the first buffer if subclass did not provide PTS
+	  Otherwise we're going to set a rather arbitrary DTS of segment.start (usually
+	  0) for live sources, which confuses synchronization if the source started
+	  capturing at a later time. And it's especially wrong for raw media, for which
+	  we should not set any DTS at all.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747731
+
+2014-09-02 17:40:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Run the default have-type handler after all application handlers
+	  Otherwise the CAPS event will already be forwarded downstream and
+	  the application has no way to intervene anymore.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735896
+
+2015-03-10 12:57:44 +1000  Duncan Palmer <dpalmer@digisoft.tv>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Don't automatically enter the buffering state when use-buffering is set.
+	  There is no reason I can see to set mq->buffering = TRUE when
+	  use_buffering is set; the code here also calls update_buffering(), which
+	  will set mq->buffering = TRUE if this is warranted because of low buffer
+	  levels.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745937
+
+2015-04-10 12:32:27 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: fix cached buffer leak in chain function
+	  gst_selector_pad_chain() was popping cached buffers out of the queue without
+	  freeing those. Make sure we don't steal the GstBuffer as the cached buffer ref
+	  has been passed to the pad chain function.
+	  This can be reproduced by running the
+	  validate.file.playback.switch_subtitle_track_while_paused.test5_mkv scenario
+	  with Valgrind.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747611
+	  Signed-off-by: Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+2015-04-08 16:04:11 +0200  Edward Hervey <edward@centricular.com>
+
+	* common:
+	* tests/check/Makefile.am:
+	* tests/examples/manual/Makefile.am:
+	  tests: Use AM_TESTS_ENVIRONMENT
+	  Needed by the new automake test runner
+
+2015-04-07 15:00:46 +0530  Prashant Gotarne <ps.gotarne@samsung.com>
+
+	* gst/gstbufferlist.c:
+	  bufferlist: make sure list is writable before adding or removing buffers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747439
+
+2015-04-07 14:34:58 +0530  Prashant Gotarne <ps.gotarne@samsung.com>
+
+	* gst/gstbufferlist.c:
+	  bufferlist: minor docs addition for gst_buffer_list_get()
+	  Return buffer remains valid as long as list is valid
+	  and buffer is not removed from list.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747438
+
+2015-04-07 11:38:31 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: fix pool leak on allocation query error path
+	  It could be triggered by:
+	  gst-launch-1.0 videotestsrc num-buffers=20 ! videcrop bottom=214748364 ! videoconvert ! autovideosink
+	  Spotted while testing:
+	  https://bugzilla.gnome.org/show_bug.cgi?id=743910
+
+2015-04-06 18:45:37 -0700  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Forward SEGMENT_DONE events immediately
+	  There might be no more data coming afterwards, and we just drained everything
+	  that was left to be pushed anyway.
+
+2015-04-06 18:56:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstinfo.c:
+	  docs: fix cross-reference to environment variables in GstInfo
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747416
+
+2015-04-06 10:18:15 +0530  Prashant Gotarne <ps.gotarne@samsung.com>
+
+	* gst/gstmemory.c:
+	  memory: add check for writablity in resize
+	  Add guard to gst_memory_resize() to make sure the
+	  memory to be resized is actually writable.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747392
+
+2015-04-05 16:47:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/multiqueue.c:
+	  tests: multiqueue: add test to make sure initial events go through without buffers
+
+2015-04-05 16:06:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/queue.c:
+	  tests: queue: check that the initial events are sent on immediately
+	  Add a check that makes sure stream-start, caps, and segment events
+	  are passed on by queue without delay, i.e. even if no buffer is
+	  sent.
+
+2015-04-04 18:33:18 -0700  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: Print debug output from gst_pad_link_full() if preparing linking failed
+	  Makes it easier to find linking failures in debug logs.
+
+2015-04-04 19:29:51 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstsegment.h:
+	  segment: small docs addition
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690564
+
+2015-04-04 18:18:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/design/part-streams.txt:
+	* docs/design/part-synchronisation.txt:
+	  docs: design: fix some 0.10-isms in GstSegment docs
+	  1) segment.accum -> segment.base
+	  2) Refer to GstSegment members as S.foo instead of
+	  NS.foo, the event is now called a segment event
+	  rather than newsegment event.
+	  3) There's no more abs_rate field in GstSegment,
+	  and there never was an abs_applied_rate field.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690564
+
+2015-04-04 04:14:50 +0300  Ilya Konstantinov <ilya.konstantinov@gmail.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: do not leak buffer pool in error case
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747321
+
+2015-04-03 19:12:48 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/gsturi.c:
+	  uri: Silence a compiler warning
+	  This is a false positive for use initialized. The variable is set and
+	  used enclosed in the safe if condition.
+
+2015-04-03 16:32:16 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	  doc: Add gst_segment_to_running_time_full
+
+2015-04-03 13:19:13 -0700  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Fix documentation, buffer pools are unreffed and not freed
+
+2015-04-03 20:43:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* INSTALL:
+	  Update INSTALL to the automake 1.14 version
+
+2015-04-03 18:57:36 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From bc76a8b to c8fb372
+
+2015-04-03 16:27:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/common/libgstreamer.def:
+	  win32: fix exports
+
+2015-03-19 10:45:56 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstsegment.c:
+	* gst/gstsegment.h:
+	* win32/common/libgstreamer.def:
+	  segment: add gst_segment_is_equal
+	  It beats memcmp due to the 'reserved' fields.
+	  API: gst_segment_is_equal()
+	  Found via, but probably not directly linked to,
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738216
+
+2015-04-03 00:36:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/common/libgstbase.def:
+	* win32/common/libgstreamer.def:
+	  win32: add new API to exports
+
+2014-08-06 10:32:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstpad.c:
+	* tests/check/gst/gstpad.c:
+	  pad: allow probes to remove the data item whilst returning PROBE_OK
+	  Use case: we want to block the source pad of a leaky queue and
+	  drop the buffer that causes the block. If we return PROBE_DROP
+	  then the buffer gets dropped, but we get called again. If we
+	  return PROBE_OK we can't easily drop the buffer. If we just
+	  replace the item into the GstPadProbeInfo structure with NULL,
+	  GStreamer will push a NULL buffer to the next element when we
+	  unblock the pad probe. This patch ensures it doesn't do that.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734342
+
+2015-02-12 19:39:44 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstelement.c:
+	  element: Document when a clock is available from gst_element_get_clock()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744442
+
+2015-02-12 19:40:06 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpipeline.c:
+	* gst/gstpipeline.h:
+	  pipeline: Add binding friendly gst_pipeline_get_pipeline_clock()
+	  Also skip gst_pipeline_get_clock() and gst_pipeline_set_clock() from the
+	  bindings as they are confused with gst_element_*_clock().
+	  API: gst_pipeline_get_pipeline_clock()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744442
+
+2015-04-02 17:32:42 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: Add Since mark for new method
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734424
+
+2015-02-20 17:50:48 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gstbasetransform.h:
+	  basetransform: Add a method to let subclasses cleanly update srcpad caps
+	  API:
+	  gst_base_transform_update_src
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734424
+
+2015-04-02 21:18:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/pwg/advanced-scheduling.xml:
+	* docs/pwg/advanced-types.xml:
+	  docs: pwg: fix missing comma and 0.10-ism in code sample
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747267
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747266
+
+2015-04-02 19:29:46 +0300  Ilya Konstantinov <ilya.konstantinov@gmail.com>
+
+	* gst/gstmemory.c:
+	  memory: improve docs for _copy() and _share()
+
+2015-04-02 11:42:20 +0530  Prashant Gotarne <ps.gotarne@samsung.com>
+
+	* tests/check/elements/filesink.c:
+	  test: filesink: add tests for buffers with multiple memory blocks
+	  Update test_seeking testcase to verify the render and render_list
+	  virtual method handle buffers and buffer list containing multiple
+	  memory blocks correctly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747223
+
+2015-04-02 09:44:33 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst/gstelement.h:
+	  element: Add a FIXME for 2.0 about request_new_pad VS request_pad naming
+
+2015-04-02 09:34:00 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst/gstelement.c:
+	  element: Fix request_new_pad introspection
+	  Marking gst_element_request_pad as the caller of the ->request_new_pad
+	  virtual method.
+
+2015-04-01 09:20:24 +0530  Prashant Gotarne <ps.gotarne@samsung.com>
+
+	* tests/check/elements/filesink.c:
+	  tests: filesink: add check for render_list virtual method
+	  GstFileSink implements the render_list virtual method to render
+	  a list of buffers. Update the test_seeking test case to also
+	  check the render_list method implementation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747100
+
+2015-04-01 12:13:17 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gst_private.h:
+	* gst/gstcaps.c:
+	* gst/gstdebugutils.c:
+	  debugutils: nicer printing of caps features
+	  Only print interesting caps features, don't
+	  append (memory:SystemMemory) to all caps,
+	  which makes them much more unwieldy and
+	  harder to read. Also use internal function
+	  to get caps features so that our printing
+	  has no side effects on the caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746809
+
+2015-03-26 13:05:57 +0100  Lubosz Sarnecki <lubosz.sarnecki@collabora.co.uk>
+
+	* gst/gstdebugutils.c:
+	  debugutils: plot caps features
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746809
+
+2015-03-31 23:48:22 +0900  Wonchul Lee <chul0812@gmail.com>
+
+	* gst/gstpad.c:
+	  pad: Fix a typo in a docstring
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747119
+
+2015-03-31 11:15:10 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/Makefile.am:
+	* libs/gst/base/Makefile.am:
+	* libs/gst/check/Makefile.am:
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/net/Makefile.am:
+	  introspection: Don't use g-ir-scanner cache at compile time
+	  It pollutes user directories and we don't need to cache it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747095
+
+2015-03-28 14:45:35 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: fix outdated debug message
+	  Buffer lists don't have groups any more in 1.0
+
+2015-03-27 18:20:37 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Flush-stop starts live task in paused
+	  The flush-stop event should not restart the task for live sources unless
+	  the element is playing. This was breaking seeks in pause with the rtpsrc.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=635701
+
+2015-03-27 16:23:40 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* tests/check/elements/filesink.c:
+	  tests: check location isn't truncated
+	  Test covering the recent commit where location='".abc' won't get truncated
+	  to '.ab' anymore
+	  https://bugzilla.gnome.org/show_bug.cgi?id=688625
+
+2015-03-26 17:01:06 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* gst/gstvalue.c:
+	* tests/check/gst/gstvalue.c:
+	  gstvalue: only unwrap string delimited with "
+	  Don't unwrap strings that start but don't finish with a double quote. If a
+	  string is delimited by two quotes we unescape them and any special characters
+	  in the middle (like \" or \\). If the first character or the last character
+	  aren't a quote we assume it's part of an unescaped string.
+	  Moved some deserialize_string unit tests because we don't try to unwrap strings
+	  missing that second quote anymore.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=688625
+
+2015-03-27 17:16:03 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* gst/parse/grammar.y:
+	  parse: check before truncating strings
+	  Don't truncate the last character of a string if it isn't necessary.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=688625
+
+2015-03-27 10:15:16 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbus.c:
+	  bus: Add guards against invalid arguments to set_flushing() and poll()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746871
+
+2015-03-25 10:49:08 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	* tests/check/libs/baseparse.c:
+	  baseparse: only post 'no valid frames' error if buffers were received
+	  Otherwise baseparse will consider empty streams to be an error while
+	  an empty stream is a valid scenario. With this patch, errors would
+	  only be emitted if the parser received data but wasn't able to
+	  produce any output from it.
+	  This change is only for push-mode operation as in pull mode an
+	  empty file can be considered an error for the one driving the
+	  pipeline
+	  Includes a unit test for it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733171
+
+2015-03-19 10:36:11 +0100  Jose Antonio Santos Cadenas <santoscadenas@gmail.com>
+
+	* plugins/elements/gsttee.c:
+	* plugins/elements/gsttee.h:
+	* tests/check/elements/tee.c:
+	  tee: Add allow-not-linked property
+	  This property avoids not linked error when all the pads are unlinked
+	  or when there are no source pads. This is useful in dynamic pipelines
+	  where it can happen that for a short time there are no pads at all or
+	  all downstream pads are not linked yet.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746436
+
+2015-03-21 17:13:18 -0500  Michael Catanzaro <mcatanzaro@gnome.org>
+
+	* docs/gst/running.xml:
+	  docs: Fix typos
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746585
+
+2015-03-21 15:46:50 -0500  Michael Catanzaro <mcatanzaro@gnome.org>
+
+	* gst/gstpluginloader.c:
+	  pluginloader: Fix typos
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746585
+
+2015-03-24 16:04:16 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstoutputselector.c:
+	  output-selector: add drain handling
+	  Release the latest buffer, if any, and then just let
+	  the drain be pushed downstream
+
+2015-03-24 19:32:49 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* Makefile.am:
+	  Revert "Fix distcheck"
+	  This reverts commit 56dd2d89c4eac460cbc37e2a51c1dd9e792999e8.
+	  Installing completions to a custom prefix is now fixed.
+
+2015-03-24 19:30:52 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  helpers: remove completion-helper on uninstall
+	  + And add it to CLEANFILES
+
+2015-03-18 19:38:15 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* data/completions/gst-inspect-1.0:
+	* data/completions/gst-launch-1.0:
+	* libs/gst/helpers/gst:
+	  completions: remove last unnamespaced symbols.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744877
+
+2015-03-18 14:44:21 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* data/completions/gst-inspect-1.0:
+	* data/completions/gst-launch-1.0:
+	  completions: remove deprecated shell syntax.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744877#c21
+
+2015-03-18 14:37:11 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* data/completions/gst-inspect-1.0:
+	* data/completions/gst-launch-1.0:
+	  completions: prefix shell functions with _gst
+	  + To make it more difficult for them to conflict in the
+	  global namespace.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744877#c21
+
+2015-03-24 13:13:29 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* configure.ac:
+	  bash-completion: Respect the prefix
+	  Don't try and install the bash helpers outside the defined prefix.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744877
+
+2014-11-19 13:08:45 +0100  Jan Alexander Steffens (heftig) <jsteffens@make.tv>
+
+	* plugins/elements/gstinputselector.c:
+	  input-selector: Rename _activate_sinkpad to _get_active_sinkpad
+	  Removes the now unused 'pad' parameter and renames the function
+	  to something more appropriate.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739620
+
+2014-11-19 13:03:21 +0100  Jan Alexander Steffens (heftig) <jsteffens@make.tv>
+
+	* plugins/elements/gstinputselector.c:
+	  input-selector: Remove pad's 'active' field
+	  This is now never read.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739620
+
+2014-11-19 12:59:12 +0100  Jan Alexander Steffens (heftig) <jsteffens@make.tv>
+
+	* plugins/elements/gstinputselector.c:
+	  input-selector: Use segment-presence for running_time check
+	  When determining whether the running_time of a pad can be
+	  calculated, check if the segment is in TIME format instead
+	  of using the 'active' field.
+	  Since the latter is set through *any* activity, it's not a
+	  reliable indicator of segment presence.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739620
+
+2015-03-23 13:20:34 +0100  Jan Alexander Steffens (heftig) <jsteffens@make.tv>
+
+	* plugins/elements/gstinputselector.c:
+	* plugins/elements/gstinputselector.h:
+	  input-selector: Remove 'blocked' flag
+	  With the disappearance of the 'block' signal, this
+	  flag cannot be set to TRUE.
+	  gst_input_selector_wait disappears as it never waits
+	  and just returns self->flushing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736891
+
+2015-03-23 12:12:51 +0100  Jan Alexander Steffens (heftig) <jsteffens@make.tv>
+
+	* plugins/elements/gstinputselector.c:
+	* plugins/elements/gstinputselector.h:
+	  input-selector: Remove obsolete 'block' signal
+	  This signal blocks the input-selector with no means of unblocking
+	  other than a state change back to READY. It seems this signal was
+	  part of an old way of synchronously switching the selector,
+	  together with the already-removed 'switch' signal.
+	  Removing the signal is safe, as attempting to use it could only
+	  end in deadlocks. Attempting to emit an unknown signal just causes
+	  g_criticals.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736891
+
+2015-03-23 13:05:30 +0100  Jan Alexander Steffens (heftig) <jsteffens@make.tv>
+
+	* plugins/elements/gstinputselector.c:
+	  input-selector: Fix waiting on EOS
+	  This apparently got broken by bc1ec4e. Since self->blocked is always
+	  FALSE, gst_input_selector_wait never actually waits.
+	  Using (!self->eos || self->blocked) && ... as the loop condition would
+	  be incorrect as well, because then the other call to the function in
+	  _chain would block until EOS, so the functions cannot be merged trivially.
+	  Since blocking is obsolete, gst_input_selector_wait will get removed anyway.
+	  As such, just inline the loop.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746518
+
+2015-03-20 07:23:53 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* tests/check/elements/selector.c:
+	  tests: input-selector: new tests for EOS handling
+	  3 new tests:
+	  1) Tests that a stream that is empty (just an EOS event)
+	  on inactive pad doesn't get through and tamper
+	  with the active pad that still has data
+	  2) Tests that a stream that is shorter than the active one
+	  (pushes EOS earlier) doesn't has its EOS pushed
+	  3) Tests that switching to an inactive stream that has received
+	  EOS will make input-selector push EOS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746518
+
+2015-03-19 12:11:19 +0000  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* tests/check/elements/selector.c:
+	  tests: selector: remove weird semicolons at the end of test functions
+	  Even though it works, it is not needed and seems more natural
+	  to not have semicolons at the end of function declarations
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746518
+
+2014-07-17 16:33:29 +0200  Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Process SEEKING query
+	  Add QUERY_SEEKING handling to queue2, so RTMP live streams become
+	  seekable when a queue2 in download or ringbuffer mode is inserted:
+	  rtmpsrc ! queue2 ! flvdemux
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733351
+
+2015-03-21 19:37:30 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/check/libcheck/check_run.c:
+	  check: Fix uninitialized variable compiler warning with gcc
+	  check_run.c: In function 'sig_handler':
+	  check_run.c:127:13: warning: 'child_sig' may be used uninitialized in this function [-Wmaybe-uninitialized]
+	  killpg(group_pid, child_sig);
+	  ^
+	  check_run.c:130:31: warning: 'idx' may be used uninitialized in this function [-Wmaybe-uninitialized]
+	  sigaction(sig_nr, &old_action[idx], NULL);
+	  ^
+
+2015-03-21 15:19:43 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/check/libcheck/check_run.c:
+	  check: Catch SIGTERM and SIGINT in the test runner and kill all currently running tests
+	  Otherwise e.g. ctrl+c in the test runner exits the test runner, while the test
+	  itself is still running in the background, uses CPU and memory and potentially
+	  never exits (e.g. if the test ran into a deadlock or infinite loop).
+	  The reason why we have to manually kill the actual tests is that after
+	  forking they will be moved to their own process group, and as such are
+	  not receiving any signals sent to the test runner anymore. This is supposed
+	  to be done to make it easier to kill a test, which it only really does if
+	  the test itself is forking off new processes.
+	  This fix is not complete though. SIGKILL can't be caught at all, and error
+	  signals like SIGSEGV, SIGFPE are currently not caught. The latter will only
+	  happen if there is a bug in the test runner itself, and as such seem less
+	  important.
+
+2015-03-19 13:51:38 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstvalve.c:
+	  valve: Don't drop non-serialized queries when the valve is dropping
+	  Otherwise we end up dropping e.g. CAPS queries, and then upstream just
+	  negotiates to whatever format it wants to. Once the valve is not-dropping
+	  anymore this can easily result in negotiation failing completely.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746448
+
+2015-03-20 09:00:47 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gst.c:
+	* gst/gstsegment.c:
+	* gst/gstsegment.h:
+	* tests/check/gst/gstsegment.c:
+	* win32/common/libgstreamer.def:
+	  segment: remove the bounds check from _to_running_time_full()
+	  Do not do any checks for the start/stop in the new
+	  gst_segment_to_running_time_full() method, we can let this be done by
+	  the more capable gst_segment_clip() method. This allows us to remove the
+	  enum of results and only return the sign of the calculated running-time.
+	  We need to put the old clipping checks in the old
+	  gst_segment_to_running_time() still because they work slightly
+	  differently than the _clip methods.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=740575
+
+2015-03-19 17:36:36 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstsegment.c:
+	* gst/gstsegment.h:
+	* tests/check/gst/gstsegment.c:
+	  segment: add option to disable clipping
+	  Add a clip argument to gst_segment_to_running_time_full() to disable
+	  the checks against the segment boundaries. This makes it possible to
+	  generate an extrapolated running-time for timestamps outside of the
+	  segment.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=740575
+
+2015-03-18 16:27:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gst.c:
+	  gst: ref/unref new enum type in gst_init/deinit()
+
+2015-03-18 14:16:48 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tests/misc/test-gstreamer-completion.sh:
+	* tools/gstreamer-completion:
+	  tools: remove outdated completion script
+	  + Remove the associated test
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744877#c21
+
+2015-03-18 11:31:51 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstsegment.c:
+	* gst/gstsegment.h:
+	* tests/check/gst/gstsegment.c:
+	* win32/common/libgstreamer.def:
+	  segment: add helper to get negative running-time
+	  Add a helper method to get a running-time with a little more features
+	  such as detecting if the value was before or after the segment and
+	  negative running-time.
+	  API: gst_segment_to_running_time_full()
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=740575
+
+2015-03-18 10:53:30 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstsegment.c:
+	* tests/check/gst/gstsegment.c:
+	  segment: fix offset handling with non 0 start
+	  The position in the segment is relative to the start but the offset
+	  isn't, so subtract the start from the position when setting the offset.
+	  Add unit test for this as well.
+
+2015-03-18 09:36:35 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstfunnel.c:
+	  funnel: Add support for buffer lists
+
+2013-11-29 16:28:41 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: remove duplicate code
+	  These are already freed by gst_base_parse_clear_queues()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=679768
+
+2015-03-17 15:41:38 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpluginloader.c:
+	  pluginloader: Fix indention
+
+2015-03-13 11:08:25 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: reset skip on segments and discontinuities
+	  Large scale skip is an optimization, and thus it is safer to
+	  stop skipping than to continue. Clear skip on segments and
+	  discontinuities, as these are points where it is possible that
+	  the original idea of "bytes to skip" changes.
+
+2015-03-15 14:19:17 +0000  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Don't grow queue infinitely if only one pad is linked
+	  This was introduced by
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719893
+	  https://bugzilla.gnome.org/show_bug.cgi?id=722891
+	  but it doesn't make any sense at all and causes huge memory leaks.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744253
+
+2015-03-14 21:07:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: handle empty buffer list more gracefully
+	  Don't abort, just ignore it. It's like a buffer
+	  without memories.
+
+2015-03-14 17:39:39 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstadapter.c:
+	  adapter: minor optimisation for gst_adapter_take_buffer_list()
+	  Try to allocate buffer list with a suitable size from the
+	  beginning to avoid having to re-alloc the buffer list array.
+
+2015-03-14 17:23:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/libs/adapter.c:
+	  tests: add unit test for gst_adapter_take_buffer_list()
+
+2015-03-14 17:20:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstadapter.c:
+	* libs/gst/base/gstadapter.h:
+	* win32/common/libgstbase.def:
+	  adapter: add gst_adapter_take_buffer_list()
+	  API: gst_adapter_take_buffer_list()
+
+2015-03-14 16:05:57 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/.gitignore:
+	* tests/check/elements/.gitignore:
+	  Add new streamiddemux binaries to .gitignore
+
+2015-03-14 16:00:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: avoid multiple calls to gst_buffer_get_size() in macro
+
+2015-03-14 15:58:00 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstadapter.c:
+	  adapter: avoid multiple calls to gst_buffer_get_size() in macro
+
+2015-03-13 18:22:01 +0000  Ramiro Polla <ramiro.polla@collabora.co.uk>
+
+	* gst/gstelement.c:
+	  element: properly escape percent sign in documentation
+
+2015-03-14 13:37:09 +0000  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbuffer.c:
+	  buffer: Use the correct enum type to fix a compiler warning
+	  gstbuffer.c:522:58: error: implicit conversion from enumeration type 'GstBufferFlags' to
+	  different enumeration type 'GstBufferCopyFlags' [-Werror,-Wenum-conversion]
+	  if (!gst_buffer_copy_into (copy, (GstBuffer *) buffer, flags, 0, -1))
+	  ~~~~~~~~~~~~~~~~~~~~                              ^~~~~
+	  gstbuffer.c:534:46: error: implicit conversion from enumeration type 'GstBufferCopyFlags' to
+	  different enumeration type 'GstBufferFlags' [-Werror,-Wenum-conversion]
+	  return gst_buffer_copy_with_flags (buffer, GST_BUFFER_COPY_ALL);
+	  ~~~~~~~~~~~~~~~~~~~~~~~~~~          ^~~~~~~~~~~~~~~~~~~
+	  ./gstbuffer.h:433:31: note: expanded from macro 'GST_BUFFER_COPY_ALL'
+	  ...((GstBufferCopyFlags)(GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_MEMORY))
+	  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+2015-03-14 14:06:09 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* win32/common/libgstnet.def:
+	  defs: update defs
+
+2014-10-30 15:39:21 +0000  William Manley <will@williammanley.net>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/net/Makefile.am:
+	* libs/gst/net/gstnetcontrolmessagemeta.c:
+	* libs/gst/net/gstnetcontrolmessagemeta.h:
+	  meta: Add `GstNetControlMessageMeta`
+	  GstNetAddress can be used to store ancillary data which was received with
+	  or is to be sent alongside the buffer data.  When used with socket sinks
+	  and sources which understand this meta it allows sending and receiving
+	  ancillary data such as unix credentials (See `GUnixCredentialsMessage`)
+	  and Unix file descriptions (See `GUnixFDMessage`).
+	  This will be useful for implementing protocols which use file-descriptor
+	  passing in payloaders/depayloaders without having to re-implement all the
+	  socket handling code already present in elements such as multisocketsink,
+	  etc.  This, in turn, will be useful for implementing zero-copy video IPC.
+	  This meta uses the platform independent `GSocketControlMessage` API
+	  provided by GLib as a part of GIO.  As a result this new meta does not
+	  require any new dependencies or any conditional compliation for
+	  portablility, although it is unlikely to do anything useful on non-UNIX
+	  platforms.
+
+2015-03-14 11:57:33 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/gstquery.c:
+	  allocation: Allow allocation pool without size
+	  This allow proposing a number of buffers required even if the size
+	  of buffer is unfixed. This is often the case for encoded formats.
+
+2015-03-01 13:15:40 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstbufferpool.c:
+	* tests/check/gst/gstbufferpool.c:
+	  bufferpool: Don't stop the pool in set_config()
+	  Don't stop the pool in set_config(). Instead, let the controlling
+	  element manage it. Most of the time, when an active pool is being
+	  configured is because the caps didn't change.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745377
+
+2015-03-13 18:53:11 +0000  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: drain on allocation query
+	  Allows buffers to be reclaimed when caps is to be renegotiated so
+	  that bufferpools can be stopped. As the allocation query is
+	  serialized all buffers have been already drained from the pipeline,
+	  except this last_sample one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=682770
+
+2015-03-13 18:35:14 +0000  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: when draining, deep copy the last buffer to unref old memory
+	  Use gst_buffer_copy_deep() to force the copy of the underlying
+	  memory instead of possibly doing a shallow copy of the buffer
+	  and just referencing the memory
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745287
+
+2015-03-13 18:35:01 +0000  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* tests/check/gst/gstbuffer.c:
+	* win32/common/libgstreamer.def:
+	  gstbuffer: add gst_buffer_copy_deep
+	  A variant of gst_buffer_copy that forces the underlying memory
+	  to be copied.
+	  This is added to avoid adding an extra reference to a GstMemory
+	  that might belong to a bufferpool that is trying to be drained.
+	  The use case is when the buffer copying is done to release the
+	  old buffer and all its resources.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745287
+
+2015-03-13 15:31:30 +0000  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbus.c:
+	  bus: Use g_list_free_full() instead of manually unreffing and freeing
+	  Also unref the messages, not the GList nodes.
+
+2015-03-13 13:42:46 +0000  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbus.c:
+	  bus: Fix another case where we hold the object lock while unreffing a message
+
+2015-03-13 15:28:42 +0200  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* gst/gstbus.c:
+	  bus: Unreferencing messages outside the lock
+	  Shouldn't take the lock while unreferencing messages, because that may cause
+	  more messages to be sent, which will try to take the lock and cause the app to
+	  hang.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=728777
+
+2015-02-23 20:27:32 +0200  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	* win32/common/libgstreamer.def:
+	  utils: Add gst_bin_sync_children_states()
+	  gst_bin_sync_children_states() will iterate over all the elements of a bin and
+	  sync their states with the state of the bin. This is useful when adding many
+	  elements to a bin and would otherwise have to call
+	  gst_element_sync_state_with_parent() on each and every one of them.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745042
+
+2015-02-03 16:12:32 +0100  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* gst/printf/vasnprintf.c:
+	  printf: handle unsigned modifier for long long
+	  Otherwise, an unsigned integer will be displayed as a signed one if we
+	  use internal print, ie HAVE_LONG_LONG_FORMAT is not defined.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746096
+
+2015-03-12 14:39:37 +0000  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gststreamiddemux.c:
+	  streamiddemux: Reset pad counter after removing all pads
+
+2014-03-04 19:40:05 +0900  HoonHee Lee <hoonhee.lee@lge.com>
+
+	* configure.ac:
+	* plugins/elements/Makefile.am:
+	* plugins/elements/gstelements.c:
+	* plugins/elements/gststreamiddemux.c:
+	* plugins/elements/gststreamiddemux.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/streamiddemux.c:
+	* tests/examples/Makefile.am:
+	* tests/examples/streamiddemux/Makefile.am:
+	* tests/examples/streamiddemux/streamiddemux-stream.c:
+	  streamiddemux: Add streamiddemux element
+	  Demultiplex a stream to multiple source pads based on the stream ids from the
+	  stream-start events. This basically reverses the behaviour of funnel.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707605
+
+2015-03-12 13:29:35 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstversion.h:
+	  win32: update
+
+2015-03-12 13:26:59 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/.gitignore:
+	* tests/check/gst/gstprintf.c:
+	  tests: add some basic unit tests for our printf stuff
+	  To test new %I32 support.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744281
+
+2015-02-10 17:40:48 +0100  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/printf/printf-parse.c:
+	  printf: add support for %I32
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744281
+
+2015-03-12 13:14:52 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstinfo.c:
+	  info: move category level threshold check into log function dispatcher
+	  Minor optimisation: check category log level earlier in the
+	  log function dispatcher and not only in the default log
+	  function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745213
+
+2015-03-12 12:59:57 +0000  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Reset segment when deactivating pull mode or not running in pull mode
+	  We use the segment format to detect if we run the streaming thread or not.
+	  Without resetting we might believe we do so, although we only did in the past
+	  and are now running in e.g. push mode.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745073
+
+2015-03-08 20:42:38 +0100  Michał Dębski <debski.mi.zd@gmail.com>
+
+	* libs/gst/check/libcheck/check_msg.c:
+	* m4/check-checks.m4:
+	  check: Use mkstemp instead of tempnam if possible
+	  Using tempnam() is deprecated, this gives warning and fails the build
+	  with -Werror.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745858
+
+2015-03-11 16:36:29 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: clean up the need_preroll variable
+	  Based on patch from Song Bing <b06498@freescale.com>
+	  Don't just set the need_preroll flag to TRUE in all cases. When we
+	  are already prerolled it needs to be set to FALSE and when we go to
+	  READY we should not touch it. We should only set it to TRUE in other
+	  cases, like what the code above does.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=736655
+
+2014-12-05 14:16:52 +0900  hoonhee.lee <hoonhee.lee@lge.com>
+
+	* plugins/elements/gstfunnel.c:
+	* tests/check/elements/funnel.c:
+	  funnel: handle GAP event to forwards sticky events into downstream
+	  If no data is coming and funnel receive GAP event, need to forwards sticky events
+	  into downstream if it needs.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738202
+
+2015-03-10 16:42:44 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* libs/gst/check/libcheck/check_run.c:
+	  check: duplicate code branches
+	  CID #1226446
+
+2015-03-10 09:21:22 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstinfo.c:
+	* tests/check/pipelines/queue-error.c:
+	  Fix double semicolons
+
+2015-02-22 10:12:01 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* win32/common/libgstbase.def:
+	  win32: update exports
+
+2015-02-21 20:13:04 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* libs/gst/base/gstflowcombiner.c:
+	* libs/gst/base/gstflowcombiner.h:
+	  flowcombiner: add a gst_flow_combiner_update_pad_flow() method
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744572
+	  API: gst_flow_combiner_update_pad_flow()
+
+2015-02-15 20:52:10 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* libs/gst/base/gstflowcombiner.c:
+	* libs/gst/base/gstflowcombiner.h:
+	  flowcombiner: add a gst_flow_combiner_reset() method
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744572
+	  API: gst_flow_combiner_reset()
+
+2015-03-06 10:59:58 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Fix typo in debug message
+
+2015-03-05 18:30:45 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstinfo.c:
+	  info: avoid malloc/free if log object is NULL
+
+2015-03-05 17:54:04 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstinfo.c:
+	  info: move __FILE__ path shortening into default log handler
+	  Instead of always shortening the __FILE__ path, even if the
+	  log message is not actually printed, which might happen if
+	  the log level is activated but the category is not, only
+	  shorten the path if we're actually going to output it and
+	  if it looks like it needs shortening. Log handlers had no
+	  guarantee that they would get a name instead of a path
+	  anyway on any architecture, so it shouldn't be a problem.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745213
+
+2015-02-27 01:16:58 +1100  Peter Urbanec <git.user@urbanec.net>
+
+	* gst/gstinfo.c:
+	  info: shorten __FILE__ on all platforms
+	  This is useful not only for MSVC, but also with gcc/Linux
+	  when doing cross-compilation builds and out-of-tree builds.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745213
+
+2015-03-04 11:02:41 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* docs/design/part-latency.txt:
+	  docs: clarify min-latency wording in part-latency.txt
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744338
+
+2015-02-26 14:43:25 +0100  Marcin Kolny <marcin.kolny@flytronic.pl>
+
+	* win32/common/gstconfig.h:
+	  win32/common/gstconfig.h: removed libxml include directive
+	  This is a leftover from 0.10 and not needed anymore.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=745210
+
+2015-03-03 12:53:13 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Signal the sinkpad thread if a flow error happened
+	  It might still be waiting for a query to be handled, or the queue to become
+	  empty again for the next item. Also if downstream returns FLUSHING, flush the
+	  queue like we do in queue and multiqueue.
+
+2015-03-03 12:48:34 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Wake up the query function on errors from the loop function
+	  Otherwise we might wait forever for serialized queries to be handled as the
+	  loop function is stopped and as such we will never ever dequeue the query and
+	  handle it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745319
+
+2015-03-02 20:31:58 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstutils.c:
+	  utils: improve warning when linking  elements without common ancestor
+	  This comes up quite a lot and it's a common mistake, so let's
+	  try to improve the warning message a little.
+
+2015-02-27 00:33:27 +0530  Arun Raghavan <git@arunraghavan.net>
+
+	* plugins/elements/gstinputselector.c:
+	  input-selector: Drop custom latency query handling
+	  The default latency query handler now implements this logic
+
+2015-02-26 15:57:20 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* scripts/gst-uninstalled:
+	  gst-unsinstalled: Add ges-launch manuals path to MANPATH.
+
+2015-02-26 13:08:48 +0530  Arun Raghavan <arun@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: Don't fail latency query on unlinked pads
+	  A single unlinked pad can make the latency query fail across the
+	  pipeline, which is probably not desirable. Instead, we return a default
+	  anything goes value.
+	  Perhaps we should also be emitting a gst_message_new_latency() when a
+	  PLAYING element has one of its pads linked.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745197
+
+2014-10-22 16:43:43 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Don't emit errors on EOS if we saw GAP events
+	  If we saw GAP events (meaning the streams is advancing) before we get
+	  EOS, we should not post an ERROR, since it is not fatal.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745143
+
+2015-02-25 08:26:19 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstvalue.h:
+	* tests/check/gst/gstinfo.c:
+	  gstvalue: Make sure GST_FOURCC_ARGS produces printable characters
+	  Some systems will crash if we use non-printable characters in print/debug
+	  statements.
+	  Make sure that GST_FOURCC_ARGS never does that
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745144
+
+2015-02-25 16:11:06 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* gst/gstutils.c:
+	  gstutils: remove incorrect Fixme comment
+	  If the checks were changed to using g_return_if_fail() the GST_DEBUG lines
+	  about the specific failure would be lost.
+
+2015-02-25 16:02:39 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* gst/gstutils.c:
+	  gstutils: remove obsolete Fixme comment
+	  gst_pad_link_filtered() is very long gone and current
+	  gst_element_link_pads_filtered() doesn't apply to this Fixme comment.
+
+2015-02-24 21:58:00 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* scripts/gst-uninstalled:
+	  gst-uninstalled: add adaptivedemux paths from -bad
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745122
+
+2015-02-24 18:14:47 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* docs/faq/developing.xml:
+	  docs: remove dead link
+	  Remove dead link to wiki page for SubmittingPatches
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730311
+
+2015-02-24 14:07:54 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  helpers: Fix install of completion-helper.
+	  By applying the supplied transformation to the program name,
+	  for example --program-prefix.
+
+2015-02-23 16:39:43 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  completion-helper: Add missing DESTDIR
+	  Otherwise doing "make install DESTDIR" will try to write to
+	  /usr/share/...
+
+2015-02-23 21:17:16 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* libs/gst/helpers/gst-completion-helper.c:
+	  completion-helper: Add filtering by klass and sink caps.
+
+2015-02-21 17:13:26 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: avoid returning downstream GST_FLOW_EOS from previous segment to current upstream segment
+
+2015-02-22 10:02:25 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* libs/gst/base/gstflowcombiner.c:
+	  flowcombiner: fix documentation comment typo
+
+2015-02-22 10:01:33 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: drain segment upon SEGMENT_DONE to ensure proper event order
+
+2015-02-22 10:01:50 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: clean up some bogus commented code
+
+2015-02-23 19:10:08 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  completion-helper: Append $(EXEEXT) to the name of the moved file.
+	  Fixes the build on Windows
+	  (https://ci.gstreamer.net/job/cerbero-cross-mingw32/1742/console)
+
+2015-02-23 17:23:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  Fix distcheck
+	  Disable bash completion during distchecking otherwise
+	  it may try to install into a system path and fail.
+
+2015-02-23 17:16:45 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  Dist new data directory
+	  Fixes 'make dist'
+
+2015-02-20 22:04:22 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* data/Makefile.am:
+	* data/completions/gst-inspect-1.0:
+	* data/completions/gst-launch-1.0:
+	* libs/gst/helpers/.gitignore:
+	* libs/gst/helpers/Makefile.am:
+	* libs/gst/helpers/gst:
+	* libs/gst/helpers/gst-completion-helper.c:
+	* pkgconfig/gstreamer-uninstalled.pc.in:
+	* pkgconfig/gstreamer.pc.in:
+	  bash-completion: Implement in a different way.
+	  + Gets installed
+	  + Uses a helper tool, gst-completion-helper, installed in
+	  bash-completions/helpers.
+	  + Adds a common script that other tools can source.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744877
+
+2015-02-23 12:08:49 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* gst/Makefile.am:
+	* gst/gst.h:
+	  GstDeviceMonitor: keep alphabetical order
+
+2015-02-20 16:22:23 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstelement.c:
+	* tests/check/gst/gstelement.c:
+	  Revert "element: set pads need-parent flag to false when removing"
+	  This reverts commit 1911554cff2c4a11772b541a8215a80c728b1097.
+	  This breaks the functionality of GST_PAD_FLAG_NEED_PARENT, the reason for this
+	  flag is that if a pad is removed from a running element, you don't want
+	  functions (such as chain or event) to be called on the pad without a parent set.
+	  This can happen if you remove a request or sometimes pad from a running element.
+	  I don't see the code that caused this in tsdemux, but if it needs to unset
+	  the flag on remove, it should do it itself and then make sure that the parent
+	  exists in any pad function.
+
+2015-02-19 12:17:15 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* libs/gst/check/gstcheck.h:
+	  check: cast element in ASSERT_SET_STATE.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744777
+
+2015-02-19 01:16:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Use a separate query for upstream pads and let it fail if one upstream query fails
+
+2015-02-19 01:12:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: If the latency query fails for one of the pads, it fails overall
+
+2015-02-18 11:05:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Remove unused boolean parameter from internal functions
+
+2015-02-17 12:11:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/elements/queue.c:
+	  queue: Add unit test for buffer list and time level handling
+
+2015-02-17 11:44:40 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Add support for buffer lists
+
+2015-02-17 11:41:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Count the number of buffers in a buffer list for updating the current levels
+	  instead of just assuming one buffer.
+
+2015-02-17 20:47:23 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstmessage.c:
+	  message: revive async delivery message before bus thread can run unref
+	  Revive message in dispose handler before we signal the bus thread,
+	  otherwise the bus thread might be woken up and unref the message
+	  before we had a chance to revive it yet.
+
+2015-02-16 23:02:40 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstbus.c:
+	  tests: bus: add unit test for async message delivery
+
+2015-02-16 22:39:42 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gst_private.h:
+	* gst/gstbus.c:
+	* gst/gstmessage.c:
+	  message, bus: fix async message delivery
+	  Async message delivery (where the posting thread gets blocked
+	  until the message has been processed and/or freed) was pretty
+	  much completely broken.
+	  For one, don't use GMutex implementation details to check
+	  whether a mutex has been initialized or not, esp. not
+	  implementation details that don't hold true any more with
+	  newer GLib versions where atomic ops and futexes are used
+	  (spotted by Josep Torras). This led to async message
+	  delivery no longer blocking with newer GLib versions on
+	  Linux.
+	  Secondly, after async delivery don't free mutex/GCond
+	  embedded inside the just-freed message structure.
+	  Use a new (private) mini object flag to signal GstMessage
+	  that the message being freed is part of an async delivery
+	  on the bus so that the dispose handler can keep the message
+	  alive and the bus can free it once it's done cleaning up
+	  stuff.
+
+2015-02-16 19:24:44 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstinfo.c:
+	  info: nicer buffer offset printing when offsets are not set
+	  Print unset offsets as 'none' instead of humongous numbers,
+	  for better readability.
+
+2015-02-16 11:35:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: Only initialize GValue to a type once, not on every retry
+	  Otherwise we'll get warnings like this:
+	  cannot initialize GValue with type 'gboolean', the value has already been initialized as 'gboolean'
+
+2015-02-14 12:15:03 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/gstutils.c:
+	  gstutils: check uri before using it in gst_pad_create_stream_id_internal
+	  If an element implements wrongly the URI query and set the uri to NULL and if
+	  the element calls gst_pad_create_stream_id at some point, it will lead to crash
+	  as the uri is not supposed to be NULL in the gst_pad_create_stream_id_internal
+	  function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744520
+
+2015-02-13 19:43:24 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* libs/gst/controller/gsttimedvaluecontrolsource.c:
+	  timedvaluecontrolsource: Do not wrongly send value-removed
+	  And avoid freeing something we do not own
+
+2015-02-04 15:06:17 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* scripts/gst-uninstalled:
+	  gst-uninstalled: Set GST_VALIDATE_PLUGIN_PATH
+
+2015-02-12 13:34:49 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: fix documentation and debug message after latency updates
+	  Changes docs and message according to latency handling fix
+
+2015-02-12 14:50:15 +0000  Frédéric Wang <fred.wang@free.fr>
+
+	* plugins/elements/gstfdsrc.c:
+	  fdsrc: use g_ascii_strtoull() to convert size string in uri
+	  sscanf() doesn't handle G_GUINT64_FORMAT well on mingw64 it
+	  appears, leading to compiler warnings.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744034
+
+2015-02-12 14:03:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: gst_pad_iterate_internal_links() can return NULL if there are none
+
+2015-02-12 14:03:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: Return NULL instead of FALSE for pointers
+
+2015-02-12 13:55:36 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: Implement more useful default handling for the LATENCY query
+	  Before we just took the values from the first pad that succeded the query,
+	  now we accumulate the results of every sinkpad properly and return that
+	  result.
+
+2015-02-12 11:26:26 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/design/part-latency.txt:
+	  design/part-latency: Minor logic fix
+	  The maximum latency will be the element's minimum latency or bigger,
+	  not bigger than the element's minimum latency or bigger.
+
+2015-02-11 13:41:56 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstquery.c:
+	* libs/gst/base/gstbaseparse.c:
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	* plugins/elements/gstqueue.c:
+	  Improve and fix LATENCY query handling
+	  This now follows the design docs everywhere.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744106
+
+2015-02-11 12:20:39 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/design/part-latency.txt:
+	  design/part-latency: Add more details about min/max latency handling
+	  These docs missed many details that were not obvious and because of that
+	  handled in a few different, incompatible ways in different elements and base
+	  classes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744106
+
+2015-02-07 05:16:23 +1100  Jan Schmidt <jan@centricular.com>
+
+	* tests/check/gst/gstclock.c:
+	  tests: Fix clock regression test
+	  Fix up the values the test is checking for now that
+	  the clock regression returns parameters starting from
+	  the end of the regression range.
+
+2015-02-07 04:22:22 +1100  Jan Schmidt <jan@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclock: Don't update the clock when it desynch
+	  Add a hold off when the clock calibration suddenly loses synch,
+	  as it may be a glitch, but also make sure we update if it stays
+	  desynched for more than a few seconds
+
+2015-02-06 06:07:43 +1100  Jan Schmidt <jan@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclock: Make the RTT average ignore large values more forcefully.
+	  Smooth larger RTTs a little harder, so excessively large values
+	  perturb the average a bit less, and therefore get filtered out
+	  more strongly
+
+2015-02-05 22:55:39 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstclock-linreg.c:
+	  clock: Make linear regression x/y base start from maximum observation.
+	  Project the results of the linear regression to the end of the
+	  regression range, so they're more directly comparable to results
+	  going forward
+
+2015-02-05 13:49:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: add "offset" property to go with gst_pad_set_offset()
+	  So we can set the offset via gst-launch.
+
+2015-02-02 08:22:47 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstplugin.c:
+	  plugin: add more detail to logging when not loading a plugin
+	  Improve the log messages and add e.g the version number we checked.
+
+2015-02-02 17:37:44 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstpad.c:
+	  gstpad: Fix a typo in a docstring.
+
+2015-02-01 14:23:26 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gsttask.c:
+	  build: Check that _MSC_VER macro is defined
+
+2015-02-01 03:39:03 +0200  Ilya Konstantinov <ilya.konstantinov@gmail.com>
+
+	* configure.ac:
+	* gst/gsttask.c:
+	  task: Add thread name support on OS X and iOS
+
+2015-01-29 16:37:07 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstclock-linreg.c:
+	  clock: Don't use invalid objects for GST_DEBUG_OBJECT()
+	  Not sure what "clock" actually is here, it must be something defined by one of
+	  the headers that are included.
+
+2015-01-29 12:10:18 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbuffer.c:
+	  buffer: Document that gst_buffer_copy_region() accepts -1 as size to copy until the end
+	  It's just a wrapper around gst_buffer_copy_into() after all.
+
+2014-12-09 16:28:56 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstsegment.c:
+	* gst/gstsegment.h:
+	  segment: Add new skip flags for clarifying trick mode playback.
+	  Add GST_SEEK_FLAG_TRICKMODE_KEY_UNITS and
+	  GST_SEEK_FLAG_TRICKMODE_NO_AUDIO, and rename GST_SEEK_FLAG_SKIP
+	  to GST_SEEK_FLAG_TRICKMODE (with backwards compat define).
+	  Do the same for the corresponding SEGMENT flags.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735666
+
+2015-01-23 08:59:27 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* libs/gst/check/gstcheck.c:
+	  check: fix another typo in the docs
+
+2015-01-22 23:10:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gsturi.c:
+	* tests/check/gst/gsturi.c:
+	  uri: Fix indention
+
+2015-01-21 14:10:02 +0000  David Waring <david.waring@rd.bbc.co.uk>
+
+	* tests/check/gst/gsturi.c:
+	  uri: Fix new URI parsing tests based on GNet's
+	  https://bugzilla.gnome.org/show_bug.cgi?id=743195
+
+2015-01-21 14:09:45 +0000  David Waring <david.waring@rd.bbc.co.uk>
+
+	* gst/gsturi.c:
+	  uri: Fix parsing issues
+	  Make host IPs in square brackets store only the IP, i.e. strip the brackets.
+	  Strip leading whitespace characters in URIs.
+	  Fail parsing when host part does not match any valid formats from RFC3986.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=743195
+
+2015-01-19 19:15:32 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/gst/gsturi.c:
+	  uri: Add parsing unit test based on GNet's
+	  Plus some new URIs to parse.
+	  https://git.gnome.org/browse/archive/gnet/plain/tests/check/gnet/gneturi.c
+	  https://bugzilla.gnome.org/show_bug.cgi?id=743195
+
+2015-01-22 11:29:18 +0100  Heinrich Fink <hfink@toolsonair.com>
+
+	* libs/gst/check/gstcheck.c:
+	  check: Fix doc of GST_CHECKS and GST_CHECKS_IGNORE
+	  https://bugzilla.gnome.org/show_bug.cgi?id=743335
+
+2015-01-21 18:07:09 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/check/Makefile.am:
+	* libs/gst/check/gstcheck.c:
+	  check: Add _fail_unless() compatibility function around _ck_assert_failed()
+	  We exported this in < 1.5 and it was automatically used by many macros
+	  from the header. Keep it exported for now.
+
+2015-01-21 14:12:22 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstpad.c:
+	  gstpad: Inline apply_pad_offset()
+	  Avoid doing a function call for something which will mostly be unused
+
+2015-01-21 14:10:06 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstpad.c:
+	  gstpad: Fix debug message
+
+2015-01-21 11:45:41 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstpad.c:
+	  gstpad: Fix PROBE_NO_DATA macro
+	  The problem was that the macro was always used with 'ret' as the defaultval
+	  argument.
+	  This would result in the macro eventually expanding to
+	  if (G_UNLIKELY (ret != ret && ret != GST_FLOW_OK))
+	  ... ret != ret will always fail, and therefore we'd never call the
+	  following line.
+	  Instead of that, store the previous value locally for comparision
+
+2015-01-21 22:44:59 +1100  Jan Schmidt <jan@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclock: Fix docs typo. Clock bus messages are GST_MESSAGE_ELEMENT
+
+2015-01-15 22:32:28 +1100  Jan Schmidt <jan@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclock: Implement rate limits for polling and fix up skew limits
+	  Add the minimum-update-interval property to the clock, with a default
+	  of 50ms and don't send polling requests faster than that. That helps to
+	  ensure we spread the initial observations out a little - startup takes
+	  a little longer, but tracking is more stable.
+	  Move the discont skew limiting code inside an if statement, so that
+	  it's only done when the linear regression succeeds and the clock
+	  parameters might actually change.
+
+2015-01-15 10:05:32 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/Makefile.am:
+	* gst/gst_private.h:
+	* gst/gstclock-linreg.c:
+	* gst/gstclock.c:
+	* tests/check/gst/gstclock.c:
+	  clock: Improve slaving regression.
+	  Add domain checks for the input values, and a variable precision
+	  calculation that loops if necessary to ensure we never overflow
+	  accumulators and then silently produce garbage results.
+	  Make the (non-public) linear regression function available for
+	  unit testing by putting it in a separate source file the test
+	  can include. Add a unit test that the new regression function
+	  produces sensible results for several inputs taken from real-world
+	  captures.
+
+2015-01-10 21:42:00 +1100  Jan Schmidt <jan@centricular.com>
+
+	* configure.ac:
+	* tests/examples/Makefile.am:
+	* tests/examples/netclock/.gitignore:
+	* tests/examples/netclock/Makefile.am:
+	* tests/examples/netclock/netclock-client.c:
+	* tests/examples/netclock/netclock-server.c:
+	  netclock: Add simple network clock server and client examples
+
+2015-01-10 21:42:00 +1100  Jan Schmidt <jan@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclock: Implement sending statistic bus messages and discont limits
+	  Allow setting a GstBus on the network clock client
+	  via a new 'bus' object property. If a bus is set, the
+	  clock will output an element message containing statistics
+	  about new clock observations and the clock correlation.
+	  When the local clock is synchronised with the remote, limit the
+	  maximum jump in the clock at any point to be one average RTT to
+	  the server. Also, publish in the bus message whether we are
+	  synched with the remote or not.
+
+2015-01-10 21:42:00 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstclock.c:
+	* gst/gstclock.h:
+	* win32/common/libgstreamer.def:
+	  clock: Add gst_clock_add_observation_unapplied()
+	  gst_clock_add_observation_unapplied() adds a new master/slave clock
+	  observation and runs the regression without activating the new
+	  calibration results.
+
+2014-12-16 22:51:22 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstclock.c:
+	* gst/gstclock.h:
+	* win32/common/libgstreamer.def:
+	  clock: Add gst_clock_adjust_with_calibration()
+	  gst_clock_adjust_with_calibration() uses directly passed calibration
+	  parameters, instead of using the clock's current calibration,
+	  allowing for calculations using pending or old calibration params
+
+2015-01-21 09:45:16 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstoutputselector.c:
+	  output-selector: Constify negotiation mode GEnumValue table
+
+2015-01-20 10:35:47 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/gstevent.c:
+	  docs: fix typo in GstEvent docs
+	  send -> sent
+
+2015-01-20 09:19:10 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* scripts/git-update.sh:
+	* scripts/gst-uninstalled:
+	  scripts: Remove gnonlin from the scripts
+	  It is not maintain anymore and its feature are now inside the GStreamer
+	  Editing Services (for the time being).
+
+2015-01-16 19:17:31 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: Pass structs we plan to modify around by pointer, not value
+	  Otherwise the struct is going to be copied, which is not very efficient. And
+	  also has the nice side effect that modifications of the struct might be
+	  done in a copy, and we later use the original struct without the changes.
+	  Caused LATENCY queries to always return the initialization values in one of my
+	  tests, instead of the actual values reported by child elements.
+
+2015-01-14 10:52:11 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* plugins/elements/gstidentity.c:
+	  identity: send gap events when dropping buffers
+
+2015-01-13 18:11:39 +0000  Phillip Wood <phillip.wood@dunelm.org.uk>
+
+	* gst/gstpreset.c:
+	  preset: fix incorrect preset version comparison
+	  Use app_version if there are no system presets, so that if the
+	  application presets are newer than the user presets they are merged.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=742877
+
+2015-01-12 16:03:02 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Don't dereference NULL pointer
+	  CID 1262286
+
+2015-01-12 15:55:47 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f2c6b95 to bc76a8b
+
+2015-01-11 23:00:29 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstpreset.c:
+	  preset: fix sorting presets
+	  The glib docs are not clear on this, but the qsort man-page is - the
+	  GCompareDataFunc does not get the strings, but pointers to them.
+
+2014-12-31 18:52:34 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: fix silly GQueue iteration code
+	  Not active by default though.
+
+2015-01-04 23:24:53 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstpreset.c:
+	  preset: don't return empty preset lists
+	  Add a shortcut for the cases where an element implements the preset iface but
+	  has no presets and return NULL instead of an empty list in that case.
+
+2015-01-04 23:08:47 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tools/gst-inspect.c:
+	  gst-inspect: only print presets line if num-presets > 0
+	  Also check for an empty strv.
+
+2015-01-04 22:51:09 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tools/gst-inspect.c:
+	  gst-inspect: fix output for -a
+	  Use n_print to ensure all lines are prefixed with the element name.
+
+2014-12-29 11:54:00 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/libs/Makefile.am:
+	  docs: ignore libcheck headers that use doxygen comments
+
+2014-12-29 11:52:22 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstinfo.h:
+	  docs: fix two gtk-doc warnings
+	  One by correcting the end-of-comment marker and one by making sure the function
+	  prototype in the header is in sync with the c file and doc-blob.
+
+2014-12-26 23:22:30 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/plugins/gstreamer-plugins-sections.txt:
+	  docs: Add missing interfaces to documentation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=742057
+
+2014-12-27 15:15:30 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/gstiterator.c:
+	  iterator: Fix outdated example code and accompanying documentation
+	  GstIterator no longer returns a refcounted gpointer
+
+2014-12-24 13:46:28 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Use the same waiting function for EOS and non-EOS waiting
+
+2014-12-24 13:44:09 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Wake up all waitings pads directly if we forward the EOS event
+	  Otherwise they might wait a bit longer unnecessarily.
+	  Also do some minor cleanup.
+
+2014-12-24 10:13:51 +0800  Song Bing <b06498@freescale.com>
+
+	* plugins/elements/gstinputselector.c:
+	* plugins/elements/gstinputselector.h:
+	  inputselector: Block when receiving an EOS event on a deactivated pad
+	  ... and only unblock when either a) the pad becomes active and the event
+	  should be forwarded or b) the active pad went EOS itself.
+	  Otherwise it can happen that we switch from a longer track that is not EOS yet
+	  to a shorter track that already is EOS, but the shorter track won't have any
+	  possibility to send its EOS event downstream anymore.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740949
+
+2014-12-23 12:54:50 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Keep a ref of the currently active sinkpad around
+	  Otherwise we can't be sure that the pointer points to a still existing
+	  pad instance after releasing the lock.
+
+2014-12-23 12:53:58 +0100  Song Bing <b06498@freescale.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Get the active sinkpad again after taking the lock when handling events
+	  It might have changed in the meantime.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741893
+
+2014-12-22 13:08:37 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: Short-circuit CAPS query handling if transform_caps returns EMPTY caps
+	  Both for the peer filter caps and the converted caps based on the peer caps.
+	  If the peer filter caps are EMPTY, the peer caps query will also return
+	  EMPTY. There's no ned to both downstream/upstream with this query.
+
+2014-12-22 11:45:13 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* MAINTAINERS:
+	  MAINTAINERS: Update my mail address
+
+2014-12-21 14:12:29 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstdebugutils.c:
+	  debugutils: use a constant for the max param length
+	  Improve readability by using a define for the max-chars. Also use the unicode
+	  ellipsis as dot files are utf-8.
+
+2014-12-15 14:03:54 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tools/gst-inspect.c:
+	  gst-inspect: print preset names
+	  If the element supports presets and ships some, print them.
+	  Fixes #741427
+
+2014-12-19 11:35:24 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstinfo.h:
+	  gstinfo: Add new maximum level debugging
+	  API: GST_LEVEL_MAX
+	  By compiling gstreamer (or plugins) with GST_LEVEL_MAX defined, only
+	  the debugging statements at or below that level will be compiled in.
+	  This allows compiling in some debugging (like errors and warnings) which
+	  helps in debugging, but without the full cpu/memory overhead of all debugging
+	  enabled.
+
+2014-12-18 12:04:22 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/check/gstcheck.c:
+	  gstcheck: fix GI annotation
+	  Add missing : to annotation
+
+2014-11-13 14:53:59 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: jump over large skips in pull mode
+	  This bypasses the dumping of buffers we still have to do in push mode.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730053
+
+2014-10-25 17:16:25 +0530  Arun Raghavan <arun@accosted.net>
+
+	* gst/gstdebugutils.c:
+	* gst/gstdebugutils.h:
+	  debugutils: Truncate parameter values that are too long
+	  This removes some information from the dumps, but improves readability.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739165
+
+2014-12-18 10:53:02 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ef1ffdc to f2c6b95
+
+2014-12-16 16:31:21 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstcaps.c:
+	* gst/gstcaps.h:
+	* gst/gststructure.c:
+	* gst/gststructure.h:
+	* tests/check/gst/gstcaps.c:
+	* tests/check/gst/gststructure.c:
+	* win32/common/libgstreamer.def:
+	  structure/caps: Add gst_{structure,caps}_filter_and_map_in_place()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739765
+
+2014-12-16 18:14:22 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/gst/gststructure.c:
+	  structure: Add simple unit test for foreach() and map_in_place()
+
+2014-11-07 11:15:09 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstcaps.c:
+	* gst/gstcaps.h:
+	* tests/check/gst/gstcaps.c:
+	  caps: Add gst_caps_foreach() and gst_caps_map_in_place()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739765
+
+2014-12-16 15:53:06 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: update for new translatable strings
+
+2014-12-14 12:54:32 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* configure.ac:
+	* libs/gst/check/Makefile.am:
+	* libs/gst/check/libcheck/Makefile.am:
+	* libs/gst/check/libcheck/check.c:
+	* libs/gst/check/libcheck/check_log.c:
+	* libs/gst/check/libcheck/check_msg.c:
+	* libs/gst/check/libcheck/check_pack.c:
+	* libs/gst/check/libcheck/check_print.c:
+	* libs/gst/check/libcheck/check_run.c:
+	* libs/gst/check/libcheck/check_str.c:
+	  check: Have autotools generate internal-check.h
+	  Previously GStreamer got access to the libcheck interface by including
+	  libs/gst/check/check.h which in turn included internal-check.h in the
+	  same directory. internal-check.h was generated by copying
+	  libs/gst/check/libcheck/check.h which in turn was generated from
+	  check.h.in in the same directory. In this case generating
+	  libs/gst/check/libcheck/check.h is unnecessary, in addition this file
+	  was accidentally distributed in generated project tarballs.
+	  Now libs/gst/check/internal-check.h is generated directly from
+	  libs/gst/check/libcheck/check.h.in by configure. This means that the
+	  libcheck source must include internal-check.h instead of the previously
+	  generated libs/gst/check/libcheck/check.h. However the unnecessary
+	  intermediate step is now skipped.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=741359
+
+2014-12-16 10:13:03 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstbufferpool.c:
+	* tests/check/gst/gstbufferpool.c:
+	  bufferpool: Don't check size in config validation
+	  Pools are allowed to change the size in order to adapt padding. So
+	  don't check the size. Normally pool will change the size without
+	  failing set_config(), but it they endup changing the size before
+	  the validate method may fail on a false positive.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741420
+
+2014-12-16 12:21:59 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstbufferpool.c:
+	  bufferpool: log reason for discarded buffers
+	  PERFORMANCE log the reason why a buffer could not be recycled in the
+	  bufferpool.
+
+2014-12-15 14:53:28 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* m4/check-checks.m4:
+	  check: Update version number of included libcheck
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=741550
+
+2014-12-12 21:02:22 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/common/libgstreamer.def:
+	  win32: update exports
+
+2014-12-12 21:54:01 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	  docs: add new preset api
+
+2014-12-12 21:38:26 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstpreset.c:
+	* gst/gstpreset.h:
+	  preset: add gst_preset_is_editable()
+	  Add a function to check if the preset iface implementation is editable and
+	  document this from the implementers perspective.
+	  API: gst_preset_is_editable()
+
+2014-12-12 14:23:19 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* win32/common/libgstreamer.def:
+	  win32: Update def file
+
+2014-12-12 13:57:39 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstdebugutils.c:
+	  debugutils: Fix compiler warning
+	  gstdebugutils.c: In function 'gst_debug_bin_to_dot_data':
+	  gstdebugutils.c:683:530: error: 'return' with no value, in function returning non-void [-Werror]
+	  g_return_if_fail (GST_IS_BIN (bin));
+
+2014-12-12 13:15:02 +0530  Arun Raghavan <git@arunraghavan.net>
+
+	* gst/gstdebugutils.c:
+	* gst/gstdebugutils.h:
+	  debugutils: Add a gst_debug_bin_to_dot_data() method
+	  This provides the dot file as a string, rather than dumping to a file.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741425
+
+2014-12-10 11:17:11 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	* plugins/elements/gsttypefindelement.h:
+	  typefind: minor cosmetic change
+	  No nee to abbrev variab nam here, nicer to read if full.
+
+2014-12-10 11:16:09 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: use GST_BUFFER_OFFSET_NONE for buffer offset
+
+2014-12-07 12:55:26 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* libs/gst/check/libcheck/check.h.in:
+	  check: Avoid requring (u)intmax_t in macros
+	  Previously embedded libcheck versions did not depend on (u)intmax_t and
+	  doing so would require projects using GStreamer's check framework to add
+	  AX_CREATE_STDINT_H to their configure.ac. A workaround is to fallback to
+	  glib types. This patch assumes that glib.h is always included before
+	  internal-check.h which is ok since everything Gstreamer would include
+	  gst/gstcheck.h instead of directly including internal-check.h.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=727826
+
+2014-12-06 19:03:04 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* libs/gst/check/libcheck/clock_gettime.c:
+	  check: Fix compilation error for iOS
+	  libcheck includes CoreServices for its compat for clock_gettime(),
+	  even though it never uses anything it declares. Let's remove it.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=727826
+
+2014-11-15 13:26:47 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* configure.ac:
+	* libs/gst/check/gstcheck.h:
+	* libs/gst/check/libcheck/Makefile.am:
+	* libs/gst/check/libcheck/check.c:
+	* libs/gst/check/libcheck/check.h.in:
+	* libs/gst/check/libcheck/check_error.c:
+	* libs/gst/check/libcheck/check_error.h:
+	* libs/gst/check/libcheck/check_list.c:
+	* libs/gst/check/libcheck/check_log.c:
+	* libs/gst/check/libcheck/check_msg.c:
+	* libs/gst/check/libcheck/check_pack.c:
+	* libs/gst/check/libcheck/check_print.c:
+	* libs/gst/check/libcheck/check_run.c:
+	* libs/gst/check/libcheck/check_str.c:
+	* libs/gst/check/libcheck/libcompat.h:
+	* m4/check-checks.m4:
+	  check: Apply GStreamer-specific patches
+	  Reintroduced patches:
+	  * Make sure that fail_if(1) actually fails
+	  from commit 9f99d056a263e71a5e6181224829def906cf0226
+	  New patches due to updated libcheck (based on 0.9.14):
+	  * Checks in m4/check-checks.m4 to cater for new dependencies
+	  * Conditional compile-time compat POSIX fallbacks for libcheck
+	  * Avoid relative paths for libcheck header files
+	  * Make timer_create() usage depend on posix timers, not librt
+	  * Rely on default AX_PTHREAD behavior to allow HAVE_PTHREAD to be used
+	  when checking for types and functions (like clock_gettime())
+	  * Avoid double declaration of clock_gettime() when availabe outside of
+	  librt by making compat clock_gettime() declaration conditional
+	  * check 0.9.9 renamed _fail_unless() and 0.9.12 later renamed it again
+	  to _ck_assert_failed(), so ASSERT_{CRITICAL,WARNING}() now calls this
+	  function
+	  * Remove libcheck fallback infrastructure for malloc(), realloc(),
+	  gettimeofday() and snprintf() since either they appear to be
+	  available or they introduce even more dependencies.
+	  The result is an embedded check in gstreamer that has been tested by
+	  running check tests in core, -base, -good, -bad, -ugly and rtsp-server
+	  on Linux, OSX and Windows.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=727826
+
+2014-11-15 12:53:32 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* libs/gst/check/libcheck/alarm.c:
+	* libs/gst/check/libcheck/check.c:
+	* libs/gst/check/libcheck/check.h.in:
+	* libs/gst/check/libcheck/check_error.c:
+	* libs/gst/check/libcheck/check_error.h:
+	* libs/gst/check/libcheck/check_impl.h:
+	* libs/gst/check/libcheck/check_list.c:
+	* libs/gst/check/libcheck/check_list.h:
+	* libs/gst/check/libcheck/check_log.c:
+	* libs/gst/check/libcheck/check_log.h:
+	* libs/gst/check/libcheck/check_msg.c:
+	* libs/gst/check/libcheck/check_msg.h:
+	* libs/gst/check/libcheck/check_pack.c:
+	* libs/gst/check/libcheck/check_pack.h:
+	* libs/gst/check/libcheck/check_print.c:
+	* libs/gst/check/libcheck/check_print.h:
+	* libs/gst/check/libcheck/check_run.c:
+	* libs/gst/check/libcheck/check_str.c:
+	* libs/gst/check/libcheck/check_str.h:
+	* libs/gst/check/libcheck/clock_gettime.c:
+	* libs/gst/check/libcheck/libcompat.c:
+	* libs/gst/check/libcheck/libcompat.h:
+	* libs/gst/check/libcheck/localtime_r.c:
+	* libs/gst/check/libcheck/strsignal.c:
+	* libs/gst/check/libcheck/timer_create.c:
+	* libs/gst/check/libcheck/timer_delete.c:
+	* libs/gst/check/libcheck/timer_settime.c:
+	  check: Import version 0.9.14
+	  This lifts the files almost verbatim (the changes being running though
+	  gst-indent and fixing the FSF address) from the upstream respository.
+	  Therefore this commit reverts some GStreamer-specific patches to check
+	  that will be reintroduced next.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=727826
+
+2014-11-04 19:11:50 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	* plugins/elements/gsttypefindelement.h:
+	  typefind: Propagate input buffer offset
+	  The initial buffers might have non-default offsets, make sure they get
+	  propagated if present.
+
+2014-10-07 16:44:45 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: clamp reported position based on direction
+	  When using a negative rate (rate being segment.rate * segment.applied_rate),
+	  we will end up reporting decreasing positions, therefore adjust the clamping
+	  against last reported value accordingly.
+	  Fixes positions getting properly reported with applied_rate < 0.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738092
+
+2014-11-28 14:17:54 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/manual/advanced-buffering.xml:
+	* gst/gstbin.c:
+	* gst/gstbus.c:
+	* gst/gstcontrolbinding.c:
+	* gst/gstdevicemonitor.c:
+	* gst/gstghostpad.c:
+	* gst/gstinfo.c:
+	* gst/gstplugin.c:
+	* gst/gststructure.c:
+	* gst/gstsystemclock.c:
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gstcollectpads.c:
+	* libs/gst/check/gstcheck.c:
+	* libs/gst/check/gstcheck.h:
+	* libs/gst/check/gsttestclock.c:
+	* plugins/elements/gstfunnel.c:
+	* plugins/elements/gstidentity.c:
+	* plugins/elements/gstinputselector.c:
+	* tools/gst-launch.c:
+	  Don't compare booleans for equality to TRUE and FALSE
+	  TRUE is 1, but every other non-zero value is also considered true. Comparing
+	  for equality with TRUE would only consider 1 but not the others.
+	  Also normalize booleans in a few places.
+
+2014-11-30 23:50:53 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstelements_private.c:
+	  plugins: fix build on windows
+	  gstelements_private.c: In function 'gst_writev_buffers':
+	  gstelements_private.c:236:51: error: 'EWOULDBLOCK' undeclared
+
+2014-11-28 15:09:16 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstfilesink.c:
+	  filesink: use writev() in ::render() to write out memories without merging them
+
+2014-11-28 15:04:27 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstfilesink.c:
+	* plugins/elements/gstfilesink.h:
+	  filesink: implement ::render_list() function that uses writev()
+
+2014-11-28 14:47:20 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstfdsink.c:
+	  fdsink: use writev() in ::render() to write out memories without merging them
+
+2014-11-28 14:39:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstfdsink.c:
+	* plugins/elements/gstfdsink.h:
+	  fdsink: implement ::render_list() using writev()
+	  Write out multiple buffers possibly containing multiple
+	  memories with one writev() call, without merging the
+	  buffer memories first, like ::render() does currently.
+
+2014-11-28 14:38:30 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* plugins/elements/gstelements_private.c:
+	* plugins/elements/gstelements_private.h:
+	  plugins: add helper function for writing buffers out with writev()
+
+2014-11-28 14:15:30 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: update the duration variable before emitting the bus
+	  Otherwise the application might still get the old value if it asks
+	  between the message and the real update.
+
+2014-11-28 16:25:02 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstelement.c:
+	  element: Fix doc and default implementation of send_event
+	  The documentation states that gst_element_send_event is to "send an event
+	  to an element".
+	  Therefore we *send* upstream events to a source pad and downstream events
+	  to a sink pad
+
+2014-11-28 11:16:00 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstelement.c:
+	  element: Figure default send_event direction handling
+	  If we get a downstream event we want to send it to a random SINK pad
+	  (and vice-versa).
+
+2014-11-27 18:00:57 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: Compare correct caps variable against NULL before comparing caps
+
+2014-11-27 17:10:19 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From f32cfcd to ef1ffdc
+
+2014-11-10 09:58:47 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* scripts/gst-uninstalled:
+	  scripts:uninstalled: Make sur the GES TestManager is registered
+	  So that whenever user work with GstValidate they can run GES tests
+	  within the gst-uninstalled environment
+
+2014-11-26 21:48:05 +0530  Arun Raghavan <git@arunraghavan.net>
+
+	* common:
+	* m4/ax_pthread.m4:
+	  build: Update ax_pthread.m4 and move it to common
+	  Has some updates for Clang support (might not work with newer Clang
+	  properly, yet), AIX support, and some misc fixes.
+
+2014-11-25 17:46:12 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/controller/gsttriggercontrolsource.c:
+	  triggercontrolsource: Fix short description for the docs
+
+2014-11-25 09:39:40 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst/running.xml:
+	  docs: add GST_GL_* environment variables to 'Running GStreamer' section
+
+2014-11-23 05:45:24 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: percentage is relative to high-percent
+	  When comparing percentage values, compare with 0-100 scale as it
+	  has already been made relative to 0-high_percent, otherwise we mark
+	  the queue as not buffering and report a 50% to the user. This leads to
+	  a buffering stall as the user assumes the queue is still buffering but
+	  it thinks it isn't.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736969
+
+2014-11-23 05:42:51 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: percentage is an absolute value
+	  multiqueue's queues stored percent value is the percentage from 0
+	  to 100 (max-size-*) and should be compared with the requested limit
+	  (high_percentage) set by the user and not with 100% to check if
+	  buffering should stop. Otherwise we are only stopping buffering when the
+	  queue gets completely full.
+
+2014-11-20 21:33:59 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: Fix caps equality check
+	  Instead of checking if our outcaps are equivalent to the previous incaps, and
+	  if that is the case not setting any caps on the pad... compare against our
+	  previous outcaps because that's what we care about.
+	  Fixes some cases where the outcaps became equivalent to the previous incaps,
+	  but the previous outcaps were different and we were then sending buffers
+	  downstream that were corresponding to the caps we forgot to set on the pad.
+	  Resulting in crashes or image corruption.
+
+2014-11-20 13:33:12 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  common: update for bison version check patch
+	  Fix configure check with bison development version.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728946
+
+2014-11-20 13:34:32 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gststructure.c:
+	* tests/check/gst/gststructure.c:
+	  structure: don't overread input when searching for "
+	  When searching for the string terminator don't read past the ending
+	  0-byte when escaping characters.
+	  Add unit test for various escaping cases.
+
+2014-11-03 17:46:57 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: fail dropped queries
+	  Previously, dropping a query from a pad probe would deem the
+	  query succeeded, and the caller might then assume the query's
+	  results are valid, and thus dereference an invalid object
+	  such as a GstCaps.
+	  We now assume dropped queries did not succeed. Dropped events
+	  and buffers are still deemed a success.
+	  Added back after previous revert, as it's been double checked.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740003
+
+2014-11-12 13:55:23 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  Revert "pad: fail dropped queries"
+	  This was pushed by mistake along with an unrelated patch.
+	  This reverts commit c7103ce4b8c1da7dcfbcf2ec83a42a376fb896e1.
+
+2014-05-13 11:18:08 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: allow skipping more data than we currently have
+	  This can be useful for skipping large unwanted data, such as
+	  large album art, when we know the size of it from a metadata
+	  header.
+
+2014-11-03 17:46:57 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: fail dropped queries
+	  Previously, dropping a query from a pad probe would deem the
+	  query succeeded, and the caller might then assume the query's
+	  results are valid, and thus dereference an invalid object
+	  such as a GstCaps.
+	  We now assume dropped queries did not succeed. Dropped events
+	  and buffers are still deemed a success.
+
+2014-11-12 11:30:51 +0100  Haakon Sporsheim <haakon.sporsheim@gmail.com>
+
+	* gst/gsttask.c:
+	* tests/check/gst/gsttask.c:
+	  task: Fix pause/stop race condition
+	  If a task thread is calling pause on it self and the
+	  controlling/"main" thread stops the task, it could end in a race
+	  where gst_task_func loops and then checks for paused after the
+	  controlling thread just changed the task state to stopped.
+	  Hence the task would actually call func again even though it was
+	  both paused and stopped.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740001
+
+2014-11-10 10:01:02 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/gst/gstobject.c:
+	  gstobject: Don't check booleans for equality in the unit test
+	  Every value other than 0/FALSE is TRUE, == TRUE will only check for 1.
+
+2014-11-05 11:50:47 +0100  Jan Alexander Steffens (heftig) <jsteffens@make.tv>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstobject.c:
+	* gst/gstobject.h:
+	* tests/check/gst/gstobject.c:
+	* win32/common/libgstreamer.def:
+	  gstobject: Add gst_object_has_parent()
+	  Adds gst_object_has_parent, which works like gst_object_has_ancestor
+	  but does not ascend further.
+	  API: gst_object_has_parent()
+
+2014-11-09 10:37:42 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: Don't bother the subclass with setting the same caps multiple times
+
+2014-11-09 10:32:18 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: Don't bother the subclass with setting the same caps multiple times
+
+2014-11-09 10:29:57 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Don't bother the subclass with setting the same caps multiple times
+
+2014-11-07 08:22:02 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gststructure.c:
+	  structure: remove conditional for G_VALUE_COLLECT_INIT
+	  This API is in glib since 2.24 and we currently require 2.32 and already use
+	  this unconditionally elsewhere.
+
+2014-11-05 19:09:39 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstpreset.c:
+	  preset: remove commented code
+	  The GQuark was never used.
+
+2014-11-07 11:34:08 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/Makefile.am:
+	* pkgconfig/gstreamer.pc.in:
+	  gstconfig: Put gstconfig.h into $(libdir)/gstreamer-1.0/include
+	  It's architecture dependent and should not be placed into the include
+	  directory as the assumption is that all those headers are architecture
+	  independent.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739767
+
+2014-11-07 10:56:42 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gsturi.c:
+	  uri: Fix gobject-introspection warnings
+	  gsturi.c:997: Error: Gst: Skipping invalid GTK-Doc comment block:
+	  /** private GstUri functions **/
+	  ^
+	  gsturi.c:1179: Error: Gst: Skipping invalid GTK-Doc comment block:
+	  /** RFC 3986 functions **/
+	  ^
+
+2014-10-24 21:25:54 +1100  Jan Schmidt <jan@centricular.com>
+
+	* libs/gst/base/gstdataqueue.c:
+	  dataqueue: Fix gst_data_queue_new() description.
+	  Reword the function docs, which haven't made any sense since
+	  gst_data_queue_new_full() was removed a few years ago.
+
+2014-11-03 18:27:21 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: Answer the query position when receiving it from upstream
+	  Currently we are just returning FALSE, but we do have the information
+	  we should just answer the query the same way as when answering through
+	  the GstElement.query vmethod default implementation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739580
+
+2014-10-22 14:07:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstcapsfilter.c:
+	* plugins/elements/gstcapsfilter.h:
+	* tests/check/elements/capsfilter.c:
+	  capsfilter: Add an optional delayed caps change mode
+	  In this mode we accept previously set filter caps until
+	  upstream renegotiates to something that is compatible
+	  to the current filter caps.
+	  This allows dynamic caps changes in the pipeline even
+	  if there is a queue between any conversion element
+	  and the capsfilter. Without this we would get not-negotiated
+	  errors if timing is bad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739002
+
+2014-11-02 20:16:53 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gsttoc.c:
+	  toc: minor code clean-up
+	  And get rid of g_list_prepend/g_list_reverse
+	  anti-pattern while we're at it.
+
+2014-11-02 18:51:08 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* gst/gst.c:
+	  gst: ensure GStreamer initialization debug message is displayed
+	  The GST_INFO ("initialized GStreamer succesfully") is currently at the end of
+	  gst_init_check which isn't guaranteed to be run since GStreamer can be
+	  initialized by using init_pre and init_post directly from GOptionContext like
+	  gst-launch does. Ensure this message is displayed by moving it to init_post.
+
+2014-11-01 19:56:41 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* gst/gstbus.c:
+	* libs/gst/base/gstadapter.c:
+	  doc: Do not use deprecated gtk-doc 'Rename to' tag
+	  GObject introspection GTK-Doc tag "Rename to" has been deprecated, changing to
+	  rename-to annotation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739514
+
+2014-11-01 22:30:30 +0100  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* tools/gst-inspect.c:
+	  gst-inspect: add G_PARAM_DEPRECATED to known flags
+	  Display 'deprecated' instead of flag value when using G_PARAM_DEPRECATED
+	  in element properties.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739518
+
+2014-10-31 16:10:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/tools/gstinspect.c:
+	  tests: refactor tools check a little
+	  Use an array of constant strings so if arguments get
+	  removed from it they are not considered leaked, and
+	  valgrind is happy. Still some stuff leaking in GLib
+	  though.
+
+2014-10-30 23:14:59 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/libs/bytereader.c:
+	  tests: fix out-of-bounds memory access in bytereader unit test
+	  Caught by -fsanitize=address / libasan.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739431
+
+2014-10-28 19:16:52 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gst.c:
+	  gst: make gst_init() thread-safe
+	  Because we can, and there isn't really any
+	  reason not to do so.
+
+2014-10-28 09:28:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/fdsrc.c:
+	  tests: fdsrc: don't ignore return value of write()
+	  Causes compiler warnings on some systems.
+
+2014-10-28 00:04:05 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/fdsrc.c:
+	  tests: fix fdsrc test corner case
+	  Make pipe socket non-blocking, so we don't
+	  end up being blocked in a write on the pipe
+	  while the src is eos and not reading data
+	  any more, and thus we never unblock and never
+	  notice that we're done. This would happen
+	  quite reliably on the rpi.
+
+2014-10-27 17:56:15 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 84d06cd to 7bb2bce
+
+2014-10-25 17:15:42 +0530  Arun Raghavan <arun@accosted.net>
+
+	* gst/gstdebugutils.c:
+	  debugutils: Trivial typo fix
+
+2014-10-24 12:51:07 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: don't unlock mutex that is not locked
+	  Fixes 'Attempt to unlock mutex that was not locked'
+	  warning with newer GLibs when sink is shut down in
+	  certain situations. Triggered by the decodebin
+	  test_reuse_without_decoders unit test in -base
+	  sometimes, esp. on slower machines.
+
+2014-10-22 18:25:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/common/libgstcontroller.def:
+	  win32: update .def for new _get_type() function for GstControlPoint
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737616
+
+2014-09-29 21:10:14 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	  timedvaluecontrolsource: Add some signals about values changes
+	  In order for user to be able to track changes in the value set in
+	  GstTimedValueControlSource the following signals have been added:
+	  * value-added
+	  * value-removed
+	  * value-changed
+	  To be able to use a GstControlPoint to be marshalled into the signals,
+	  the GstControlPoint structure is now registerd as a GBoxed type.
+	  New API:
+	  ~~~~~~~
+	  * GstTimedValueControlSource::value-added
+	  * GstTimedValueControlSource::value-removed
+	  * GstTimedValueControlSource::value-added
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737616
+
+2014-10-21 13:01:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From a8c8939 to 84d06cd
+
+2014-10-21 12:18:33 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstmessage.c:
+	  message: remove duplicate gst_message_get_type() in init
+	  Spotted by: Jan Steffens
+
+2014-10-21 12:57:45 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 6e75498 to a8c8939
+
+2014-10-20 16:39:38 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* plugins/elements/gstidentity.c:
+	  identity: include the actual delta in the message
+	  Including the actual delta in the message makes it easy to see, if the new
+	  buffer is behind or ahead and how much.
+
+2014-10-18 18:43:43 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstvalue.c:
+	  gstvalue: Tidy initialisation
+	  Use some macros to make our value functions setup a bit
+	  tidier, and micro-optimise a few reallocs by setting an
+	  initial size for the global type arrays.
+
+2014-10-18 17:27:04 +1100  Jan Schmidt <jan@centricular.com>
+
+	* tools/gst-indent:
+	  gst-indent: Run indent twice. Once is not idempotent, twice seems to be.
+
+2014-10-16 10:13:14 +0400  Andrei Sarakeev <sarakusha@gmail.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Wake up any waiting streams if the current one goes EOS
+	  Otherwise we might have unlinked streams waiting.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738198
+
+2014-10-17 12:41:04 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gsttypefind.c:
+	  typefind: simplify registration code
+	  Remove a useless assert (we just instantiated this type). Drop the free'ing of
+	  the extension array. As we just created the instance this is always NULL.
+
+2014-10-16 10:55:36 +0200  Felix Schwarz <felix.schwarz@oss.schwarz.eu>
+
+	* docs/pwg/advanced-allocation.xml:
+	* docs/pwg/advanced-clock.xml:
+	* docs/pwg/advanced-events.xml:
+	* docs/pwg/advanced-qos.xml:
+	* docs/pwg/advanced-tagging.xml:
+	  docs: pwd: fix typos
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738612
+
+2014-10-11 19:28:21 +0200  Linus Svensson <linusp.svensson@gmail.com>
+
+	* tests/check/gst/gstbus.c:
+	  tests: Add a test for removing a bus watch
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735195
+
+2014-08-19 23:28:52 +0200  Linus Svensson <linusp.svensson@gmail.com>
+
+	* gst/gstbus.c:
+	* gst/gstbus.h:
+	* tests/check/gst/gstbus.c:
+	* win32/common/libgstreamer.def:
+	  bus: Add a function to remove a bus watch
+	  If a bus watch is added to the non default main context it's not
+	  possible to remove it using g_source_remove().
+	  Fixes: https://bugzilla.gnome.org/show_bug.cgi?id=735195
+
+2014-10-08 22:51:56 +0530  Arun Raghavan <arun@accosted.net>
+
+	* gst/gstevent.h:
+	  docs: Update GstQOSType documentation a bit
+	  Correction for who is producing data too fast, and some other minor
+	  clarifications.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738166
+
+2014-10-08 16:03:20 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* docs/pwg/advanced-allocation.xml:
+	* docs/pwg/advanced-qos.xml:
+	  docs: pwg: fix two typos
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738153
+
+2014-10-08 15:37:37 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* docs/pwg/advanced-negotiation.xml:
+	  docs: pwg: fix typo in 'Dynamic negotiation' section
+	  The point of this example is to show how to set caps
+	  on the source pad once it has been set on the sink pad.
+	  So, in passthrough mode, the caps is just copied to the
+	  source pad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738153
+
+2014-10-08 09:37:41 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: don't lock multiqueue when pushing serialized queries
+	  If we are pushing a serialized query into a queue and the queue is
+	  filled, we will end in a deadlock. We need to release the lock before
+	  pushing and acquire it again afterward.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737794
+
+2014-10-08 01:33:51 +1100  Jan Schmidt <jan@centricular.com>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: Use GST_PTR_FORMAT in debug to output buffer details
+	  Use %GST_PTR_FORMAT instead of %p in debug output so all the buffer
+	  details are output
+
+2014-10-06 13:38:21 +0200  Nicolas Huet <nicolas.huet@parrot.com>
+
+	* gst/gstsystemclock.c:
+	  systemclock: fix multi-thread entry status issue
+	  Running two threads, one executing the timer and one unscheduling it, the
+	  unscheduled status set by the second thread is sometimes overwritten by the
+	  first one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737999
+
+2014-10-03 14:04:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: fix compilation
+
+2014-10-03 14:44:48 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* plugins/elements/gstinputselector.c:
+	  input-selector: extract some common code into helpers
+
+2014-10-03 14:01:59 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* plugins/elements/gstinputselector.c:
+	  input-selector: small code cleanups
+	  Rename TIMESTAMP -> PTS. Move a var down to the scope where it is used. Use
+	  g_queue_free_full().
+
+2014-10-03 13:47:42 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* plugins/elements/gstinputselector.c:
+	* plugins/elements/gstinputselector.h:
+	  inputselector: fix printf format
+	  The padcount is uint. Also add comments to the instance vars.
+
+2014-10-02 03:30:24 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: don't leak caps in gst_base_parse_process_streamheader
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737762
+
+2014-10-03 13:14:25 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* tests/check/libs/baseparse.c:
+	  tests: baseparse: set_sink_caps vfunc should't take ownership of the caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737762
+
+2014-10-03 09:57:37 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* plugins/elements/gstfakesrc.c:
+	  fakesrc: mark the pattern property as unused
+	  Revert the previous commit which removes the pattern property of fakesrc because
+	  doing so will break ABI. Bringing the property back but marking it as unused
+	  in the property string.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737683
+
+2014-10-03 09:01:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  Revert "baseparse: don't leak caps in gst_base_parse_process_streamheader"
+	  This reverts commit 5e8b4bf085180f7a4c7ae6ec0f525baeaedd4df8.
+	  This causes refcounting criticals in the baseparse unit test.
+
+2014-10-02 13:45:34 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstfakesrc.h:
+	  fakesrc: removing unused pattern option
+	  Eventhough the "pattern" property of fakesrc can be set, it is never used. The
+	  only pattern supported is the default 0x00 -> 0xff, and if a pattern is set by
+	  the user it is ignored. Removing the unused property and variable.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737683
+
+2014-10-02 14:55:22 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Add missing break in switch
+
+2014-10-02 11:00:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: update segment position on GAP events to calculate levels properly
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737498
+
+2014-10-02 10:57:43 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: update segment position on GAP events to calculate levels properly
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737498
+
+2014-09-27 20:10:34 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: update segment position on GAP events to calculate levels properly
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737498
+
+2014-10-02 03:30:24 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: don't leak caps in gst_base_parse_process_streamheader
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737762
+
+2014-10-02 10:13:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstcapsfilter.c:
+	  capsfilter: Push pending events before a buffer also if upstream never configured caps but we have srcpad caps already
+	  Otherwise we never send pending events downstream that arrive after we
+	  configured caps on the srcpad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737735
+
+2014-09-29 17:48:29 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gsturi.c:
+	  uri: Don't unconditionally use g_list_copy_deep()
+	  We don't depend on GLib 2.34 yet and just for this seems a bit useless.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737584
+
+2014-09-29 16:22:47 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* gst/gsturi.c:
+	  uri: Include our own BSD licensed copy of strcasestr() for Windows and others
+
+2014-09-29 15:54:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gsturi.c:
+	  uri: Fix compiler warnings with gcc
+	  These are actually not true.
+	  gsturi.c: In function '_gst_uri_string_to_table.constprop':
+	  gsturi.c:1316:27: error: 'pct_kv_sep' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+	  for (next_sep = strcasestr (value, pct_kv_sep); next_sep;
+	  ^
+	  gsturi.c:1283:24: error: 'pct_part_sep' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+	  next_sep = strcasestr (next_sep + 1, pct_part_sep)) {
+	  ^
+
+2014-09-29 12:19:35 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gsturi.c:
+	  uri: Fix memory leak in gst_uri_join()
+	  The merged path segments are a deep-copied list and we need to free the
+	  contained strings too instead of just the list nodes themselves.
+
+2014-07-31 22:18:53 +0100  David Waring <david.waring@rd.bbc.co.uk>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsturi.c:
+	* gst/gsturi.h:
+	* tests/check/gst/gsturi.c:
+	* win32/common/libgstreamer.def:
+	  GstUri: Add GstUri miniobject to handle URIs in an RFC 3986 compliant fashion
+	  https://bugzilla.gnome.org/show_bug.cgi?id=725221
+
+2014-09-27 13:57:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* scripts/gst-uninstalled:
+	  scripts: add gst-rpicamsrc to gst-uninstalled
+
+2014-09-25 21:21:09 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstelement.c:
+	* gst/gsterror.c:
+	* gst/gstevent.c:
+	* gst/gstregistry.c:
+	* gst/gststructure.c:
+	* gst/gsttaglist.c:
+	* gst/gstvalue.c:
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/check/gstcheck.c:
+	* plugins/elements/gstfilesrc.c:
+	* tests/check/tools/gstinspect.c:
+	* tools/gst-inspect.c:
+	  fixme: bump leftover 0.11 fixme comments
+
+2014-09-25 21:04:23 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstevent.c:
+	  event: 'newsegment' to 'segment' in the docs
+	  Brings the api-docs in sync with the 1.0 api rename.
+
+2014-09-25 20:23:31 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: move the quick return up
+	  Don't assign local vars if we skip anyway. Add logging for failure conditio
+
+2014-09-25 19:01:52 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* common:
+	  tests: parallelise 'make valgrind'
+	  Use $(MAKE) instead of 'make' inside the Makefile,
+	  otherwise the make will run as if -j1 had been
+	  specified and complain about the job server not
+	  being available, and with $(MAKE) in inherits the
+	  parent make's settings it seems.
+	  Upgrade common submodule for parallel check-valgrind.
+	  Let this settle a bit before upgrading the other modules.
+
+2014-09-25 18:57:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/common/libgstbase.def:
+	  win32: update .def file
+	  It's sorted. If it's unsorted, make check-exports fails.
+
+2014-09-25 18:55:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstinfo.c:
+	  info: remove confusing warning about running under valgrind
+	  We're not actually doing anything differently anywhere when
+	  we detect that we're running under valgrind, so let's not
+	  print that confusing message that makes people wonder how
+	  they can switch it off so they can valgrind the normal
+	  code paths. Seeing that we're not doing that nor have done
+	  so in the last 10 years we might just as well remove the
+	  entire check actually.
+
+2014-09-25 16:21:51 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/libs/baseparse.c:
+	  tests: fix caps leak in baseparse unit test
+
+2014-09-25 14:54:23 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstflowcombiner.c:
+	* libs/gst/base/gstflowcombiner.h:
+	* tests/check/libs/flowcombiner.c:
+	* win32/common/libgstbase.def:
+	  flowcombiner: add a gst_flow_combiner_clear() method
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737359
+	  API: gst_flow_combiner_clear()
+
+2014-09-24 10:11:54 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* scripts/gst-uninstalled:
+	  scripts: Handle gst-python in gst-uninstalled
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709082
+
+2014-06-03 14:23:30 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugins/elements/gstcapsfilter.c:
+	  capsfilter: Remove EOS event from pending_event list on FLUSH_STOP
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709868
+
+2014-09-22 14:27:05 +0100  William Manley <will@williammanley.net>
+
+	* gst/gstbuffer.c:
+	  docs: Fix GstBuffer typo "memory bock" -> "memory block"
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737117
+
+2014-09-22 17:27:31 +0100  William Manley <will@williammanley.net>
+
+	* gst/gstbuffer.c:
+	  docs: Improve gst_buffer_get_meta() to clear up confusion
+	  I was confused by the existence of `gst_buffer_get_meta` as it suggested
+	  to me that you should only attach one of any type of GstMeta to a buffer.
+	  It's perfectly fine to attach multiple from a single API so I'm
+	  documenting that here.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737129
+
+2014-09-22 19:05:32 +0200  Marcin Kolny <marcin.kolny@flytronic.pl>
+
+	* gst/gstdatetime.h:
+	  datetime: added missing include directives
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737133
+
+2014-09-23 14:31:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Do not forget to release the QUEUE_LOCK in the out_flow_error path
+	  Avoiding deadlocks!
+
+2014-09-23 12:53:18 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* libs/gst/base/gstbasesrc.h:
+	  docs: fix a small contradition in the docs
+	  The vmethod get_size() shall return the size in 'format' as configured by
+	  _set_format().
+
+2014-09-22 09:33:04 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Do not hold GST_QUEUE_LOCK while posting ERROR messages
+	  This might create deadlocks and we need to avoid holding element
+	  specific lock while posting messages
+	  For example a deadlock will happen if while posting the message,
+	  someone connected on the bus (sync) tries to DOT the pipeline.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737102
+
+2014-09-19 12:02:46 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstqueue2.c:
+	* plugins/elements/gstqueue2.h:
+	  queue2: do not post buffering messages holding the lock
+	  It might cause deadlocks to post messages while holding the queue2
+	  lock. To avoid this a new boolean flag is set whenever a new
+	  buffering percent is found. The message is posted after the lock
+	  is released.
+	  To make sure the buffering messages are posted in the right order, messages
+	  are posted holding another lock. This prevents 2 threads trying to post
+	  messages at the same time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736969
+
+2014-09-19 09:42:10 +0530  Ravi Kiran K N <ravi.kiran@samsung.com>
+
+	* gst/gsturi.c:
+	  gsturi: Remove unnecessary code
+	  gst_uri_handler_set_uri() function has new_uri, location and colon
+	  are not necessary, they can be removed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736877
+
+2014-09-19 00:33:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/pwg/advanced-tagging.xml:
+	* docs/pwg/intro-basics.xml:
+	  docs: pwg: fix some links to the API docs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736762
+
+2014-09-18 18:55:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstfilesrc.c:
+	  filesrc: remove FIXME
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735878
+
+2014-09-17 21:49:18 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gst.c:
+	  gst: Fix spelling error
+	  Thank to Adrian Owen for reporting this error.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736839
+
+2014-09-17 17:17:10 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefindelement: do not leak sticky events in flush_stop
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736813
+
+2014-09-12 14:42:23 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstinfo.c:
+	  info: avoid global variable for log_file
+	  Use user_data to pass the log_file handle to the logger-function.
+	  If one wants to change the log target (e.g. GST_DEBUG_FILE), simply call
+	  gst_debug_remove_log_function() and re-add the handler with the new log-target
+	  using gst_debug_add_log_function ().
+
+2014-09-16 13:48:18 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/gstevent.c:
+	  event: add annotations to gst_event_parse_toc_select()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736739
+
+2014-09-11 18:01:58 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gstmultiqueue.h:
+	  multiqueue: do not post messages holding the lock
+	  It might cause deadlocks to post messages while holding the multiqueue
+	  lock. To avoid this a new boolean flag is set whenever a new buffering percent
+	  is found. The message is posted after the lock can be released.
+	  To make sure the buffering messages are posted in the right order, messages
+	  are posted holding another lock. This prevents 2 threads trying to post
+	  messages at the same time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736295
+
+2014-09-16 16:07:40 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* docs/pwg/other-base.xml:
+	  docs: fix typo
+
+2014-09-16 12:17:48 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/gstquery.c:
+	  query: Add annotations to gst_query_add_allocation_pool()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736736
+
+2014-09-15 16:38:17 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: handle reference in set_allocation rather than in prepare_allocation
+	  Otherwise we can forget to unref objects in error cases.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736680
+
+2014-09-15 13:06:40 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/check/gstcheck.c:
+	  check: Use the name parameter of gst_check_setup_src_pad_by_name() and the sink variant
+	  This was hardcoded to "sink" / "src" by accident in previous refactoring.
+
+2014-09-13 20:12:52 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstcapsfilter.c:
+	* plugins/elements/gstdownloadbuffer.c:
+	* plugins/elements/gstfakesink.c:
+	* plugins/elements/gstinputselector.c:
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gstoutputselector.c:
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gstqueue2.c:
+	* plugins/elements/gstvalve.c:
+	  coreelements: mark properties with MUTABLE_PLAYING
+
+2014-09-11 15:52:32 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/check/Makefile.am:
+	* libs/gst/check/gstcheck.c:
+	* libs/gst/check/gstcheck.h:
+	  check: Add a function to check destruction of objects
+	  Add a method letting people to ensure that unreffing one object
+	  leads to its destruction, and possibly the destruction of more object
+	  (think destruction of a GstBin etc...).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736477
+
+2014-09-12 14:10:40 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/gst-inspect.c:
+	  tools: gst-inspect: don't list pad functions
+	  Don't print all the different pad functions, it's just
+	  confusing and no one has ever needed to know this for
+	  anything ever anyway, it's just useless information.
+	  Besides, we also label the default implementations as
+	  'custom' implementations (the code that tries to
+	  prevent that doesn't actually work it seems).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736377
+
+2014-09-12 15:22:19 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: Make sure the buffer to get/pull_range() has at least the requested size
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735861
+
+2014-09-05 18:36:02 +0000  Tiago <tiagokatcipis@gmail.com>
+
+	* libs/gst/check/gstcheck.c:
+	  check: Adding documentation to the gst_check_setup_sink_pad_by_name function
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734190
+
+2014-09-10 14:53:00 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/gstquery.c:
+	  query: add annotations to gst_query_set_nth_allocation_pool()
+	  https://bugzilla.gnome.org//show_bug.cgi?id=736424
+
+2014-09-11 09:35:17 +0200  Rémi Lefèvre <remi.lefevre@parrot.com>
+
+	* plugins/elements/gstvalve.c:
+	  valve: fix typo in description
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736455
+
+2014-09-09 20:43:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstbaseparse.h:
+	  baseparse: minor docs fix
+
+2014-09-03 17:38:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstdevicemonitor.c:
+	  devicemonitor: fix typo in sample code in docs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735975
+
+2014-08-25 11:34:48 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* tests/check/gst/gstpad.c:
+	  tests: add flush-stop on inactive pad test
+	  Check that pushing flush-stop on an inactive pad does not clear the
+	  flushing flag.
+
+2014-08-21 15:49:17 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstpad.c:
+	  pad: don't accept flush-stop on inactive pads
+	  Inactive pads should at all times have the flushing flag set. This means
+	  that when we get a flush-stop on an inactive pad we must ignore it.
+	  On sinkpads, make this more explicit. We used to not clear the flush
+	  flag but remove the events and then return an error because the flushing
+	  flag was set. Now just simply refuse the event without doing anything.
+	  On srcpads, check that we are trying to push a flush-stop event and
+	  refuse it. We would allow this and mark the srcpad as non-flushing
+	  anymore.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=735357
+
+2014-08-27 17:06:57 +0530  Ravi Kiran K N <ravi.kiran@samsung.com>
+
+	* plugins/elements/gstoutputselector.c:
+	  output-selector: Send all events to active src pad and EOS to all src pads
+	  Fixes tests/icles/output-selector-test
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729811
+
+2014-08-28 17:24:56 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  manual: fix typo in advanced-dataaccess.xml
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735609
+
+2014-08-26 20:14:40 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/gstbuffer.c:
+	  buffer: do not touch memory tag flag when copying buffer flags
+	  The tag memory flag will be set later if the memory is also copied. This
+	  patch avoids buffers being freed needlessly in bufferpools.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735574
+
+2014-07-15 16:06:49 +0200  Linus Svensson <linusp.svensson@gmail.com>
+
+	* gst/gstbus.c:
+	  bus: gst_bus_add_watch() can return 0 on error
+	  Fixes: https://bugzilla.gnome.org/show_bug.cgi?id=735195
+
+2014-08-25 13:44:30 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: handle streamheaders by prepending them to the stream
+	  Add a first_buffer boolean state flag to have baseparse do actions
+	  before pushing data. This is used to check the caps for streamheader
+	  buffers that are prepended to the stream, but only if the first buffer
+	  isn't already marked with the _HEADER flag. In this case, it is assumed
+	  that the _HEADER marked buffer is the same as the streamheader.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735070
+
+2014-08-27 11:01:01 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstconcat.c:
+	  concat: Allow seeking on the currently playing stream
+	  This is consistent with the stream time reporting.
+
+2014-08-23 12:24:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstpad.h:
+	  pad: add g-i 'transfer full' annotations to chain and chain_list functions
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735210
+
+2014-08-22 10:32:38 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/gstpad.h:
+	  pad: annotate GstPadEventFunction event with 'transfer full'
+	  The callback is supposed to take ownership of the event so
+	  best to be explicit about it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735210
+
+2014-08-20 12:55:51 +0200  Linus Svensson <linussn@axis.com>
+
+	* tests/check/elements/queue.c:
+	  tests: add test that triggers deadlock in state change of queue
+	  When receiving FLASH_STOP in a state transition to READY, a queue
+	  element can end up with an active task that will never end.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734688
+
+2014-08-21 14:02:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: fix race when flush-stop event comes in whilst shutting down
+	  Don't re-start the queue push task on the source pad when a
+	  flush-stop event comes in and we're in the process of shutting
+	  down, otherwise that task will never be stopped again.
+	  When the element is set to READY state, the pads get de-activated.
+	  The source pad gets deactivated before the queue's own activate_mode
+	  function on the source pads gets called (which will stop the thread),
+	  so checking whether the pad is active before re-starting the task on
+	  receiving flush-stop should be fine. The problem would happen when the
+	  flush-stop handler was called just after the queue's activate mode
+	  function had stopped the task.
+	  Spotted and debugged by Linus Svensson <linux.svensson@axis.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734688
+
+2014-08-06 14:01:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbytereader.c:
+	* libs/gst/base/gstbytereader.h:
+	* tests/check/libs/bytereader.c:
+	* win32/common/libgstbase.def:
+	  bytereader: add gst_byte_reader_peek_sub_reader() and _get_sub_reader()
+	  Adds API to get or peek a sub-reader of a certain size from
+	  a given byte reader. This is useful when parsing nested chunks,
+	  one can easily get a byte reader for a sub-chunk and make
+	  sure one never reads beyond the sub-chunk boundary.
+	  API: gst_byte_reader_peek_sub_reader()
+	  API: gst_byte_reader_get_sub_reader()
+
+2014-07-25 16:39:40 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  docs: make explicit that the caps passed to gst_base_src_set_caps() are 'tranfer none'
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733741
+
+2014-08-14 18:53:40 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: always proxy caps query
+	  Otherwise it would only be proxied for the active pad which can lead
+	  upstream to use an incompatible caps for the downstream element.
+	  Even if a reconfigure event is sent upstream when the pad is activated, this
+	  will save the caps reconfiguration if it is already using an acceptable caps.
+
+2014-08-14 14:37:56 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstdataqueue.h:
+	  base: and fix build with new g-i again
+
+2014-08-14 14:25:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstdataqueue.h:
+	  base: remove g-i annotation that makes older g-ir-scanner crash
+	  Just remove one skip annotation that causes this:
+	  ** (g-ir-compiler:12458): ERROR **: Caught NULL node, parent=empty
+	  with older g-i versions such as 1.32.1.
+
+2014-08-13 14:12:00 +0200  Philippe Normand <philn@igalia.com>
+
+	* gst/gstbus.c:
+	  bus: destroy signal watch from the context it was mapped to
+	  Don't rely on g_source_remove() because it operates on the main
+	  context. If a signal watch was added to a new thread-default context
+	  g_source_remove() would have no effect. So simply use
+	  g_source_destroy() to avoid this problem.
+	  Additionally the source_id was removed from GstBusPrivate because it
+	  was redundant with the signal watch GSource also stored in that
+	  structure.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734716
+
+2014-08-07 12:18:04 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Not post BUFFERING message if one of the singlequeue doesn't need it
+	  Imagine the following 'pipeline'
+	  --------------
+	  p1/| 'fullqueue'  |--- 'laggy' downstream
+	  ---------  / |              |
+	  -| demuxer |   | multiqueue   |
+	  ---------  \ |              |
+	  p2\| 'emptyqueue' |--- 'fast' downstream
+	  --------------
+	  In the case downstream of one single queue (fullqueue) has (a lot of) latency
+	  (for example for reverse playback with video), we can end up having the other
+	  SingleQueue (emptyqueue) emptied, before that fullqueue gets
+	  unblocked. In the meantime, the demuxer tries to push on fullqueue, and
+	  is blocking there.
+	  In that case the current code will post a BUFFERING message on the bus when
+	  emptyqueue gets emptied, that leads to the application setting the pipeline state to
+	  PAUSED. So now we end up in a situation where 'laggy downstream' is
+	  prerolled and will not unblock anymore because the pipeline is set to
+	  PAUSED, the fullequeue does not have a chance to be emptied and
+	  the emptyqueue can not get filled anymore so no more BUFERRING message
+	  will be posted and the pipeline is stucked in PAUSED for the eternity.
+	  Making sure that we do not try to "buffer" if one of the single queue
+	  does not need buffering, prevents this situtation from happening though it lets the
+	  oportunity for buffering in all other cases.
+	  That implements a new logic where we need all singlequeue to need
+	  buffering for the multiqueue to actually state buffering is needed,
+	  taking the maximum buffering of the single queue as the reference point.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734412
+
+2014-08-13 13:01:23 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Only handle flow returns < EOS as errors, not e.g. flushing
+
+2014-08-13 12:40:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: Use allow-none instead of nullable until we depend on a new enough GI version
+
+2014-08-13 12:39:47 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: gst_bin_new() can accept NULL as name
+
+2014-08-13 12:37:08 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstelement.c:
+	  element: Clarify docs about gst_element_get_request_pad() and remove deprecation part
+	  This function is not really pad or slow for the common case of requesting a
+	  pad with the name of the template. It is only slower if you to name your pads
+	  directly instead of letting the element handle it.
+	  Also there's no reason to deprecate it in favor of a more complicated function
+	  for the common case.
+
+2014-08-13 12:20:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Post errors if we receive EOS after downstream reported an error
+	  There will be no further data flow that would allow us to propagate the
+	  error upstream, causing nobody at all to post an error message.
+
+2014-08-13 12:15:03 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Post errors when receiving EOS after downstream returned an error
+	  There might be no further data flow that would allow us to propagate the
+	  error upstream, causing nobody to post an error at all.
+
+2014-08-13 12:10:39 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Post errors ourselves if they are received after EOS
+	  After EOS there will be no further buffer which could propagate the
+	  error upstream, so nothing is going to post an error message and
+	  the pipeline just idles around.
+
+2014-08-12 20:03:06 +0530  Arun Raghavan <arun@accosted.net>
+
+	* gst/gstpad.c:
+	  docs: Trivial pad documentation fix
+	  Presumably a copy-pasto.
+
+2014-08-08 09:54:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	* tests/check/elements/concat.c:
+	  concat: Add unit tests for concat element
+
+2014-08-08 09:13:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/plugins/gstreamer-plugins-sections.txt:
+	* docs/plugins/gstreamer-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* plugins/elements/gstconcat.c:
+	  concat: Add documentation and integrate into documentation build
+
+2014-08-07 14:42:44 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/Makefile.am:
+	* plugins/elements/gstconcat.c:
+	* plugins/elements/gstconcat.h:
+	* plugins/elements/gstelements.c:
+	  concat: Add new element that concatenates multiple streams
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734470
+
+2014-08-09 10:57:56 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* tests/check/gst/gstcaps.c:
+	  tests: caps: add check for caps with features intersection
+	  Checks that a caps without features doesn't intersect with
+	  one that has features
+
+2014-08-07 14:54:37 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/examples/controller/audio-example.c:
+	* tests/examples/controller/text-color-example.c:
+	  examples: controller: fix typo in comments
+
+2014-08-06 13:58:22 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstbytereader.h:
+	  bytereader: use unchecked inline variant for get_remaining in more places
+	  We've already done the g_return_*_if_fail (reader != NULL)
+	  dance in those places, so no need to do it again.
+
+2014-08-06 14:43:08 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstutils.c:
+	  utils: Ghostpads can be request pads too but check if the pad has a template
+	  Otherwise we dereference NULL in some cases and crash.
+
+2014-08-06 12:34:42 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* docs/manual/appendix-programs.xml:
+	* tests/check/gst/gstbin.c:
+	* tests/check/pipelines/parse-launch.c:
+	* tests/examples/launch/mp3parselaunch.c:
+	  tests: Add missing unrefs of objects after use
+	  Unreffing the objects returned by gst_bin_get_by_name() and
+	  gst_pipeline_get_use() were missing in several tests, so add these.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=734345
+
+2014-08-06 12:55:57 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/gst/gstutils.c:
+	  utils: Fix unititialized variable compiler warning
+
+2014-07-13 15:31:08 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* tests/check/gst/gstutils.c:
+	  tests: Add test verifying gst_element_link_pads_full()
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=733119
+
+2014-07-13 15:28:32 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/gstutils.c:
+	  utils: Unref/release pads in error cases when linking pads
+	  Previously gst_element_link_pads_full() forgot to unreference or release
+	  request pads in several error cases. Also comments were added mentioning
+	  why releasing is not necessary in some places.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=733119
+
+2014-08-01 17:27:39 -0300  Tiago Cesar Katcipis <tiago.katcipis@digitro.com.br>
+
+	* libs/gst/check/gstcheck.c:
+	  gstcheck: add docs for gst_check_setup_src_pad_by_name()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734142
+
+2014-07-31 18:32:03 +0200  Edward Hervey <edward@collabora.com>
+
+	* Makefile.am:
+	* common:
+	  Makefile: Add usage of build-checks step
+	  Allows building checks without running them
+
+2014-07-30 15:46:22 +0300  Mohammed Sameer <msameer@foolab.org>
+
+	* gst/gstbufferpool.c:
+	  bufferpool: Add missing error checking to default_alloc_buffer()
+	  default_alloc_buffer() calls gst_buffer_new_allocate() but does not check for
+	  failed allocation.
+	  This patch makes default_alloc_buffer() return an error (GST_FLOW_ERROR) if
+	  buffer allocation fails.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733974
+
+2014-07-29 14:21:33 -0300  Thiago Santos <ts.santos@osg.sisa.samsung.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: avoid using infinite buffers limit if finite is requested
+	  If the current max-buffers limit it infinite and a finite value is
+	  requested, switch to the MAX (requested, current-value) to set some
+	  limit but not below what we know that we've needed so far.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733637
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733837
+
+2014-07-24 22:02:58 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/parse/grammar.y:
+	  parse: Unref reference to enclosing bins
+	  Previously all reference to enclosing bins of an element were leaked
+	  when doing delaying setting a property.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=733697
+
+2014-07-27 02:37:08 +0000  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* tools/gst-launch.c:
+	  gst-launch: Support SIGINT (Ctrl+C) on W32
+	  W32 has no SIGINT, but it does have SetConsoleCtrlHandler(), which sets up
+	  a handler for Ctrl+C.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733814
+
+2014-07-27 03:06:16 +0000  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* gst/gstpoll.c:
+	  poll: Prevent false-negative from WAKE_EVENT() on W32
+	  SetEvent() seems to not call SetLastError(0) internally, so checking last
+	  error after calling SetEvent() may return the error from an earlier W32 API
+	  call. Fix this by calling SetlastError(0) explicitly.
+	  Currently WAKE_EVENT() code is cramped into a macro and doesn't look to be
+	  entirely correct. Particularly, it does not check the return value of
+	  SetEvent(), only the thread-local W32 error value. It is likely that SetEvent()
+	  actually just returns non-zero value, but the code mistakenly thinks that the
+	  call has failed, because GetLastError() seems to indicate so.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733805
+
+2014-07-26 14:42:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gst.h:
+	  gst: include atomicqueue.h again in gst.h
+	  It's a public header of gstreamer core, so #include <gst/gst.h>
+	  should make the API available.
+
+2014-07-25 11:45:56 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefindelement: remove prototype for function that no longer exists
+
+2014-07-24 14:39:11 -0300  Thiago Santos <ts.santos@osg.sisa.samsung.com>
+
+	* libs/gst/base/gstbytereader.c:
+	* libs/gst/base/gstbytereader.h:
+	* tests/check/libs/bytereader.c:
+	* win32/common/libgstbase.def:
+	  bytereader: add gst_byte_reader_masked_scan_uint32_peek
+	  Adds gst_byte_reader_masked_scan_uint32_peek just like
+	  GstAdapter has a _peek and non _peek version
+	  Upgraded tests to check that the returned value is correct in the
+	  _peek version
+	  API: gst_byte_reader_masked_scan_uint32_peek
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728356
+
+2014-06-26 14:09:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstbufferlist.c:
+	  bufferlist: pre-allocate buffer array in one go with the buffer list
+	  We can now create and free a buffer list with one slice alloc/free
+	  call in most cases, instead of one slice alloc/free for the list,
+	  one slice alloc/free for the GArray, and one malloc/free for the
+	  GArray array. In practice we know the max size of our buffer list
+	  from the start, so can avoid reallocs.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732284
+
+2014-07-23 21:27:48 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gst_private.h:
+	* gst/gstdebugutils.c:
+	  private: allow internal access to the debug base-time
+	  Moving the extern to the head lets us access this from other parts as well. This
+	  is neeed in the tracer branch.
+
+2014-07-23 00:15:17 +0530  Arun Raghavan <arun@accosted.net>
+
+	* scripts/git-update.sh:
+	  scripts: Use git pull --rebase
+	  No point introducing redundant merge commits.
+
+2014-07-21 12:41:08 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/gsttaglist.c:
+	  Revert "tests: taglist: add basic test for taglists serialization"
+	  This reverts commit 85d23d19b7de40541d63b0bc76d8b646c321af26.
+	  There was already a gsttag.c tests file, this test has been merged
+	  in it in the previous commit
+
+2014-07-21 12:40:47 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* tests/check/gst/gsttag.c:
+	  tests: tag: add the empty taglist serialization test
+	  Adds the test to the appropriate and already existing file.
+
+2014-07-14 18:46:54 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/gsttaglist.c:
+	  tests: taglist: add basic test for taglists serialization
+	  Make sure it works with empty taglists
+
+2014-07-14 18:25:50 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* tests/check/gst/gststructure.c:
+	  tests: gststructure: serialization of tag event structure
+	  Adds a test that checks that the serialization of a tag event structure
+	  works without problems
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733131
+
+2014-07-14 18:23:43 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/gstvalue.c:
+	  gstvalue: add GstTagList compare function
+	  When serializing GstStructures from events in GDP it will add a taglist
+	  as a GstStructure field, having the compare function allows comparison of
+	  GstStructures to check if the serialized/deserialized version matches the
+	  original one, among other cases.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733131
+
+2014-07-09 15:48:10 +0200  Srimanta Panda <srimanta@axis.com>
+
+	* plugins/elements/gstfunnel.c:
+	  funnel: Fix for racy EOS event handling
+	  When eos events are forwarded simultaneouly from two sinkpads on
+	  funnel, it doesnot forward the eos to sourcepad. The reason is
+	  sticky events are stored after the event callbacks are returned.
+	  Therefore while one is about to store the sticky events on the its
+	  sinkpad, other sinkpad starts checking for the eos events on all other
+	  sinkpads and assumes eos is not present yet.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732851
+
+2014-07-17 16:05:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/gst/gstpipeline.c:
+	  pipeline: Add unit test for resetting of the start time
+	  Also check if this properly affects basesink elements to not
+	  report the old start time but the real current position when
+	  setting to PAUSED again.
+
+2014-07-15 18:19:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpipeline.c:
+	  pipeline: Reset the start time when going from PAUSED to READY too
+
+2014-07-15 17:19:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpipeline.c:
+	  pipeline: Reset start time in READY->PAUSED before chaining up
+	  Otherwise bin will change the state of the child elements without
+	  distributing the new start time.
+
+2014-06-28 17:58:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstelements_private.c:
+	  elements: improve buffer flags to string utility function
+	  Avoid relocations and refactor so that we don't calculate
+	  the fixed and known at compile time maximum string size
+	  every time. Also skip the mini object flags which we are
+	  not going to print anyway.
+
+2014-07-19 18:04:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.4.0 ===
+
+2014-07-19 16:46:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.4.0
+
+2014-07-19 16:21:20 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-07-19 12:16:58 +0200  Sebastian Dröge <sebastian@centricular.com>
 

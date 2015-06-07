@@ -99,6 +99,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstTee::allow-not-linked</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Allow not linked</NICK>
+<BLURB>Return GTS_FLOW_OK even if there are not source pads or all are unlinked.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQueue2::current-level-buffers</NAME>
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
@@ -844,7 +854,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>pattern</NICK>
-<BLURB>pattern.</BLURB>
+<BLURB>Set the pattern (unused).</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -999,6 +1009,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstCapsFilter::caps-change-mode</NAME>
+<TYPE>GstCapsFilterCapsChangeMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps Change Mode</NICK>
+<BLURB>Filter caps change behaviour.</BLURB>
+<DEFAULT>Only accept the current filter caps</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDownloadBuffer::high-percent</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[0,100]</RANGE>
@@ -1066,5 +1086,15 @@
 <NICK>Temporary File Template</NICK>
 <BLURB>File template to store temporary files in, should contain directory and XXXXXX. (NULL == disabled).</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstStreamidDemux::active-pad</NAME>
+<TYPE>GstPad*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Active pad</NICK>
+<BLURB>The currently active src pad.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 

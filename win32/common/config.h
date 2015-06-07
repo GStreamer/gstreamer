@@ -56,19 +56,22 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer git"
+#define GST_PACKAGE_NAME "GStreamer source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2015-03-12T12:48Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2015-06-07"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
 
 /* location of the installed gst-plugin-scanner */
 #define GST_PLUGIN_SCANNER_INSTALLED LIBDIR "\\gst-plugin-scanner"
+
+/* location of the installed gst-ptp-helper */
+#undef GST_PTP_HELPER_INSTALLED
 
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
@@ -225,6 +228,9 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the `mkstemp' function. */
+#undef HAVE_MKSTEMP
+
 /* Define to 1 if you have a working `mmap' system call. */
 #undef HAVE_MMAP
 
@@ -266,6 +272,21 @@
 
 /* Have function pthread_setname_np(const char*) */
 #undef HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID
+
+/* PTP support available */
+#undef HAVE_PTP
+
+/* Use capabilities for permissions in PTP helper */
+#undef HAVE_PTP_HELPER_CAPABILITIES
+
+/* Use setuid-root for permissions in PTP helper */
+#undef HAVE_PTP_HELPER_SETUID
+
+/* PTP helper setuid group */
+#undef HAVE_PTP_HELPER_SETUID_GROUP
+
+/* PTP helper setuid user */
+#undef HAVE_PTP_HELPER_SETUID_USER
 
 /* Define to 1 if the system has the type `ptrdiff_t'. */
 #undef HAVE_PTRDIFF_T
@@ -424,7 +445,7 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 1.5.0.1"
+#define PACKAGE_STRING "GStreamer 1.5.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
@@ -433,7 +454,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.5.0.1"
+#define PACKAGE_VERSION "1.5.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -477,7 +498,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "1.5.0.1"
+#define VERSION "1.5.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

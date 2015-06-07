@@ -30,6 +30,7 @@ GObject
         GstOutputSelector
         GstQueue
         GstQueue2
+        GstStreamidDemux
         GstTee
         GstTypeFindElement
         GstValve
