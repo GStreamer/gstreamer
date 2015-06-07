@@ -565,30 +565,33 @@ GST_START_TEST (test_lock)
   fail_unless (mem != NULL);
 
   /* test exclusivity */
-  fail_unless (gst_memory_lock (mem, GST_MAP_WRITE | GST_LOCK_FLAG_EXCLUSIVE));
+  fail_unless (gst_memory_lock (mem,
+          GST_LOCK_FLAG_WRITE | GST_LOCK_FLAG_EXCLUSIVE));
   fail_if (gst_memory_lock (mem, GST_LOCK_FLAG_EXCLUSIVE));
-  fail_unless (gst_memory_lock (mem, GST_MAP_WRITE));
-  gst_memory_unlock (mem, GST_MAP_WRITE | GST_LOCK_FLAG_EXCLUSIVE);
-  gst_memory_unlock (mem, GST_MAP_WRITE);
-
-  /* no lock here */
-
-  fail_unless (gst_memory_lock (mem, GST_MAP_READ | GST_LOCK_FLAG_EXCLUSIVE));
-  fail_unless (gst_memory_lock (mem, GST_MAP_READ | GST_LOCK_FLAG_EXCLUSIVE));
-  gst_memory_unlock (mem, GST_MAP_READ | GST_LOCK_FLAG_EXCLUSIVE);
-  gst_memory_unlock (mem, GST_MAP_READ | GST_LOCK_FLAG_EXCLUSIVE);
+  fail_unless (gst_memory_lock (mem, GST_LOCK_FLAG_WRITE));
+  gst_memory_unlock (mem, GST_LOCK_FLAG_WRITE | GST_LOCK_FLAG_EXCLUSIVE);
+  gst_memory_unlock (mem, GST_LOCK_FLAG_WRITE);
 
   /* no lock here */
 
   fail_unless (gst_memory_lock (mem,
-          GST_MAP_READWRITE | GST_LOCK_FLAG_EXCLUSIVE));
-  fail_unless (gst_memory_lock (mem, GST_MAP_READ));
-  fail_if (gst_memory_lock (mem, GST_MAP_READ | GST_LOCK_FLAG_EXCLUSIVE));
+          GST_LOCK_FLAG_READ | GST_LOCK_FLAG_EXCLUSIVE));
+  fail_unless (gst_memory_lock (mem,
+          GST_LOCK_FLAG_READ | GST_LOCK_FLAG_EXCLUSIVE));
+  gst_memory_unlock (mem, GST_LOCK_FLAG_READ | GST_LOCK_FLAG_EXCLUSIVE);
+  gst_memory_unlock (mem, GST_LOCK_FLAG_READ | GST_LOCK_FLAG_EXCLUSIVE);
+
+  /* no lock here */
+
+  fail_unless (gst_memory_lock (mem,
+          GST_LOCK_FLAG_READWRITE | GST_LOCK_FLAG_EXCLUSIVE));
+  fail_unless (gst_memory_lock (mem, GST_LOCK_FLAG_READ));
+  fail_if (gst_memory_lock (mem, GST_LOCK_FLAG_READ | GST_LOCK_FLAG_EXCLUSIVE));
   fail_if (gst_memory_lock (mem, GST_LOCK_FLAG_EXCLUSIVE));
-  fail_unless (gst_memory_lock (mem, GST_MAP_WRITE));
-  gst_memory_unlock (mem, GST_MAP_WRITE);
-  gst_memory_unlock (mem, GST_MAP_READ);
-  gst_memory_unlock (mem, GST_MAP_READWRITE | GST_LOCK_FLAG_EXCLUSIVE);
+  fail_unless (gst_memory_lock (mem, GST_LOCK_FLAG_WRITE));
+  gst_memory_unlock (mem, GST_LOCK_FLAG_WRITE);
+  gst_memory_unlock (mem, GST_LOCK_FLAG_READ);
+  gst_memory_unlock (mem, GST_LOCK_FLAG_READWRITE | GST_LOCK_FLAG_EXCLUSIVE);
 
   gst_memory_unref (mem);
 }
