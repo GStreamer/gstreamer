@@ -2,13 +2,13 @@
 # Copyright (C) 2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011-2014.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011—2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.3.2\n"
+"Project-Id-Version: gst-plugins-base-1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-05-24 18:47+0100\n"
-"PO-Revision-Date: 2014-06-18 19:35+0200\n"
+"POT-Creation-Date: 2015-06-07 09:34+0200\n"
+"PO-Revision-Date: 2014-09-13 10:45+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -510,6 +510,8 @@ msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
+"Не излази након показивања почетног списка уређаја, већ чека да уређаји буду "
+"додати/уклоњени."
 
 #, fuzzy, c-format
 msgid "Volume: %.0f%%"
@@ -525,7 +527,7 @@ msgid "Reached end of play list."
 msgstr ""
 
 #, c-format
-msgid "Now playing %s"
+msgid "Now playing %s\n"
 msgstr ""
 
 #, c-format

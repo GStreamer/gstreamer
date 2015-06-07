@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-05-24 18:47+0100\n"
+"POT-Creation-Date: 2015-06-07 09:34+0200\n"
 "PO-Revision-Date: 2010-04-28 14:27+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -564,7 +564,7 @@ msgid "Reached end of play list."
 msgstr ""
 
 #, c-format
-msgid "Now playing %s"
+msgid "Now playing %s\n"
 msgstr ""
 
 #, c-format

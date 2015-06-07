@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.2.1\n"
+"Project-Id-Version: gst-plugins-base 1.4.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-05-24 18:47+0100\n"
-"PO-Revision-Date: 2014-01-22 17:42+0100\n"
+"POT-Creation-Date: 2015-06-07 09:34+0200\n"
+"PO-Revision-Date: 2014-07-22 12:38+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "Language: nb_NO\n"
@@ -511,22 +511,24 @@ msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
+"Ikke avslutt etter å ha vist den første enheteslisten, men vent på at "
+"enheter blir lagt til/fjernet."
 
-#, c-format
+#, fuzzy, c-format
 msgid "Volume: %.0f%%"
-msgstr ""
+msgstr "Volum"
 
 msgid "Buffering..."
 msgstr "Bufrer ..."
 
 msgid "Clock lost, selecting a new one\n"
-msgstr ""
+msgstr "Klokke tapt, velger en ny\n"
 
 msgid "Reached end of play list."
 msgstr ""
 
 #, c-format
-msgid "Now playing %s"
+msgid "Now playing %s\n"
 msgstr ""
 
 #, c-format
@@ -565,8 +567,9 @@ msgstr ""
 msgid "seek backward"
 msgstr ""
 
+#, fuzzy
 msgid "volume up"
-msgstr ""
+msgstr "Volum"
 
 msgid "volume down"
 msgstr ""
@@ -586,8 +589,9 @@ msgstr ""
 msgid "show keyboard shortcuts"
 msgstr ""
 
+#, fuzzy
 msgid "Interactive mode - keyboard controls:"
-msgstr ""
+msgstr "Interaktiv kontroll via tastatur"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Video-sink som skal brukes (standard er autovideosink)"
@@ -599,16 +603,17 @@ msgid "Enable gapless playback"
 msgstr "Aktiver sømløs avspilling"
 
 msgid "Shuffle playlist"
-msgstr ""
+msgstr "Stokke spilleliste"
 
+#, fuzzy
 msgid "Disable interactive control via the keyboard"
-msgstr ""
+msgstr "Interaktiv kontroll via tastatur"
 
 msgid "Volume"
-msgstr ""
+msgstr "Volum"
 
 msgid "Playlist file containing input media files"
-msgstr ""
+msgstr "Spillelistefil som inneholder inngangsmediefiler"
 
 msgid "Do not print any output (apart from errors)"
 msgstr ""

@@ -1,7 +1,7 @@
 # Brazilian Portuguese translation of gst-plugins-base.
-# Copyright (C) 2008-2013 Free Software Foundation, Inc.
+# Copyright (C) 2008-2015 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2013.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2015.
 #
 # PCM -> PCM
 # buffering -> preenchendo buffer
@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.2.1\n"
+"Project-Id-Version: gst-plugins-base-1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-05-24 18:47+0100\n"
-"PO-Revision-Date: 2013-12-29 17:33-0300\n"
+"POT-Creation-Date: 2015-06-07 09:34+0200\n"
+"PO-Revision-Date: 2015-02-01 19:21-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -525,22 +525,24 @@ msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
+"Não sair após exibir a lista inicial de dispositivos, mas sim, esperar por "
+"dispositivos serem adicionados ou removidos."
 
-#, c-format
+#, fuzzy, c-format
 msgid "Volume: %.0f%%"
-msgstr ""
+msgstr "Volume"
 
 msgid "Buffering..."
 msgstr "Preenchendo buffer..."
 
 msgid "Clock lost, selecting a new one\n"
-msgstr ""
+msgstr "Temporizador perdido, selecionando um novo\n"
 
 msgid "Reached end of play list."
 msgstr ""
 
 #, c-format
-msgid "Now playing %s"
+msgid "Now playing %s\n"
 msgstr ""
 
 #, c-format
@@ -579,8 +581,9 @@ msgstr ""
 msgid "seek backward"
 msgstr ""
 
+#, fuzzy
 msgid "volume up"
-msgstr ""
+msgstr "Volume"
 
 msgid "volume down"
 msgstr ""
@@ -600,8 +603,9 @@ msgstr ""
 msgid "show keyboard shortcuts"
 msgstr ""
 
+#, fuzzy
 msgid "Interactive mode - keyboard controls:"
-msgstr ""
+msgstr "Controle interativo via teclado"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr ""
@@ -615,16 +619,17 @@ msgid "Enable gapless playback"
 msgstr "Ativar reprodução sem intervalos"
 
 msgid "Shuffle playlist"
-msgstr ""
+msgstr "Embaralhar lista de reprodução"
 
+#, fuzzy
 msgid "Disable interactive control via the keyboard"
-msgstr ""
+msgstr "Controle interativo via teclado"
 
 msgid "Volume"
-msgstr ""
+msgstr "Volume"
 
 msgid "Playlist file containing input media files"
-msgstr ""
+msgstr "Arquivo de lista de reprodução que contém arquivos de mídia de entrada"
 
 msgid "Do not print any output (apart from errors)"
 msgstr ""

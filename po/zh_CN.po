@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-05-24 18:47+0100\n"
+"POT-Creation-Date: 2015-06-07 09:34+0200\n"
 "PO-Revision-Date: 2009-01-14 12:41+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -531,7 +531,7 @@ msgid "Reached end of play list."
 msgstr ""
 
 #, c-format
-msgid "Now playing %s"
+msgid "Now playing %s\n"
 msgstr ""
 
 #, c-format
@@ -628,9 +628,6 @@ msgstr ""
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
 
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr "播放此数据流需要 %s 插件，但它未安装。"
-
 #~ msgid "Master"
 #~ msgstr "主音量"
 
@@ -675,6 +672,9 @@ msgstr ""
 
 #~ msgid "Error while writing to file \"%s\"."
 #~ msgstr "写入文件“%s”时出错。"
+
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr "播放此数据流需要 %s 插件，但它未安装。"
 
 #~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 #~ msgstr "无效的字幕 URI “%s”，不使用字幕。"
