@@ -3,10 +3,10 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.5.0.1</version>
+  <version>1.5.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -425,7 +425,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-adpcm, channels=(int)1, rate=(int)8000, bitrate=(int){ 16000, 24000, 32000, 40000 }, layout=(string)g726</details>
+          <details>audio/x-adpcm, channels=(int)1, rate=(int)8000, bitrate=(int){ 16000, 24000, 32000, 40000 }, block_align=(int){ 2, 3, 4, 5 }, layout=(string)g726</details>
         </caps>
       </pads>
     </element>

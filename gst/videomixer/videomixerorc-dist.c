@@ -403,7 +403,7 @@ video_mixer_orc_blend_u8 (guint8 * ORC_RESTRICT d1, int d1_stride,
       /* 6: mullw */
       var41.i = (var40.i * var36.i) & 0xffff;
       /* 7: shlw */
-      var42.i = var38.i << 8;
+      var42.i = ((orc_uint16) var38.i) << 8;
       /* 8: addw */
       var43.i = var42.i + var41.i;
       /* 9: shruw */
@@ -460,7 +460,7 @@ _backup_video_mixer_orc_blend_u8 (OrcExecutor * ORC_RESTRICT ex)
       /* 6: mullw */
       var41.i = (var40.i * var36.i) & 0xffff;
       /* 7: shlw */
-      var42.i = var38.i << 8;
+      var42.i = ((orc_uint16) var38.i) << 8;
       /* 8: addw */
       var43.i = var42.i + var41.i;
       /* 9: shruw */
@@ -606,8 +606,9 @@ video_mixer_orc_blend_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
       var43 = var42.i;
       /* 3: splatbl */
       var44.i =
-          ((var43 & 0xff) << 24) | ((var43 & 0xff) << 16) | ((var43 & 0xff) <<
-          8) | (var43 & 0xff);
+          ((((orc_uint32) var43) & 0xff) << 24) | ((((orc_uint32) var43) & 0xff)
+          << 16) | ((((orc_uint32) var43) & 0xff) << 8) | (((orc_uint32) var43)
+          & 0xff);
       /* 4: convubw */
       var45.x4[0] = (orc_uint8) var44.x4[0];
       var45.x4[1] = (orc_uint8) var44.x4[1];
@@ -731,8 +732,9 @@ _backup_video_mixer_orc_blend_argb (OrcExecutor * ORC_RESTRICT ex)
       var43 = var42.i;
       /* 3: splatbl */
       var44.i =
-          ((var43 & 0xff) << 24) | ((var43 & 0xff) << 16) | ((var43 & 0xff) <<
-          8) | (var43 & 0xff);
+          ((((orc_uint32) var43) & 0xff) << 24) | ((((orc_uint32) var43) & 0xff)
+          << 16) | ((((orc_uint32) var43) & 0xff) << 8) | (((orc_uint32) var43)
+          & 0xff);
       /* 4: convubw */
       var45.x4[0] = (orc_uint8) var44.x4[0];
       var45.x4[1] = (orc_uint8) var44.x4[1];
@@ -820,7 +822,7 @@ video_mixer_orc_blend_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
       static const orc_uint8 bc[] = {
         1, 7, 9, 26, 118, 105, 100, 101, 111, 95, 109, 105, 120, 101, 114, 95,
         111, 114, 99, 95, 98, 108, 101, 110, 100, 95, 97, 114, 103, 98, 11, 4,
-        4, 12, 4, 4, 14, 4, 255, 0, 0, 0, 14, 4, 8, 0, 0, 0,
+        4, 12, 4, 4, 14, 4, 255, 0, 0, 0, 14, 2, 8, 0, 0, 0,
         16, 2, 20, 4, 20, 2, 20, 1, 20, 4, 20, 8, 20, 8, 20, 8,
         113, 32, 4, 163, 33, 32, 157, 34, 33, 152, 35, 34, 21, 2, 150, 38,
         35, 21, 2, 89, 38, 38, 24, 21, 2, 95, 38, 38, 17, 21, 2, 150,
@@ -838,7 +840,7 @@ video_mixer_orc_blend_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x000000ff, "c1");
-      orc_program_add_constant (p, 4, 0x00000008, "c2");
+      orc_program_add_constant (p, 2, 0x00000008, "c2");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 2, "t2");
@@ -965,8 +967,9 @@ video_mixer_orc_blend_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
       var45 = var44.i;
       /* 4: splatbl */
       var46.i =
-          ((var45 & 0xff) << 24) | ((var45 & 0xff) << 16) | ((var45 & 0xff) <<
-          8) | (var45 & 0xff);
+          ((((orc_uint32) var45) & 0xff) << 24) | ((((orc_uint32) var45) & 0xff)
+          << 16) | ((((orc_uint32) var45) & 0xff) << 8) | (((orc_uint32) var45)
+          & 0xff);
       /* 5: convubw */
       var47.x4[0] = (orc_uint8) var46.x4[0];
       var47.x4[1] = (orc_uint8) var46.x4[1];
@@ -1093,8 +1096,9 @@ _backup_video_mixer_orc_blend_bgra (OrcExecutor * ORC_RESTRICT ex)
       var45 = var44.i;
       /* 4: splatbl */
       var46.i =
-          ((var45 & 0xff) << 24) | ((var45 & 0xff) << 16) | ((var45 & 0xff) <<
-          8) | (var45 & 0xff);
+          ((((orc_uint32) var45) & 0xff) << 24) | ((((orc_uint32) var45) & 0xff)
+          << 16) | ((((orc_uint32) var45) & 0xff) << 8) | (((orc_uint32) var45)
+          & 0xff);
       /* 5: convubw */
       var47.x4[0] = (orc_uint8) var46.x4[0];
       var47.x4[1] = (orc_uint8) var46.x4[1];
@@ -1183,7 +1187,7 @@ video_mixer_orc_blend_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
         1, 7, 9, 26, 118, 105, 100, 101, 111, 95, 109, 105, 120, 101, 114, 95,
         111, 114, 99, 95, 98, 108, 101, 110, 100, 95, 98, 103, 114, 97, 11, 4,
         4, 12, 4, 4, 14, 4, 0, 0, 0, 255, 14, 4, 24, 0, 0, 0,
-        14, 4, 8, 0, 0, 0, 16, 2, 20, 4, 20, 4, 20, 2, 20, 1,
+        14, 2, 8, 0, 0, 0, 16, 2, 20, 4, 20, 4, 20, 2, 20, 1,
         20, 4, 20, 8, 20, 8, 20, 8, 113, 32, 4, 126, 33, 32, 17, 163,
         34, 33, 157, 35, 34, 152, 36, 35, 21, 2, 150, 39, 36, 21, 2, 89,
         39, 39, 24, 21, 2, 95, 39, 39, 18, 21, 2, 150, 38, 32, 113, 32,
@@ -1202,7 +1206,7 @@ video_mixer_orc_blend_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0xff000000, "c1");
       orc_program_add_constant (p, 4, 0x00000018, "c2");
-      orc_program_add_constant (p, 4, 0x00000008, "c3");
+      orc_program_add_constant (p, 2, 0x00000008, "c3");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 4, "t2");
@@ -1351,8 +1355,9 @@ video_mixer_orc_overlay_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
       var46 = var45.i;
       /* 3: splatbl */
       var47.i =
-          ((var46 & 0xff) << 24) | ((var46 & 0xff) << 16) | ((var46 & 0xff) <<
-          8) | (var46 & 0xff);
+          ((((orc_uint32) var46) & 0xff) << 24) | ((((orc_uint32) var46) & 0xff)
+          << 16) | ((((orc_uint32) var46) & 0xff) << 8) | (((orc_uint32) var46)
+          & 0xff);
       /* 4: convubw */
       var48.x4[0] = (orc_uint8) var47.x4[0];
       var48.x4[1] = (orc_uint8) var47.x4[1];
@@ -1396,8 +1401,9 @@ video_mixer_orc_overlay_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
       var58 = var57.i;
       /* 16: splatbl */
       var59.i =
-          ((var58 & 0xff) << 24) | ((var58 & 0xff) << 16) | ((var58 & 0xff) <<
-          8) | (var58 & 0xff);
+          ((((orc_uint32) var58) & 0xff) << 24) | ((((orc_uint32) var58) & 0xff)
+          << 16) | ((((orc_uint32) var58) & 0xff) << 8) | (((orc_uint32) var58)
+          & 0xff);
       /* 17: convubw */
       var60.x4[0] = (orc_uint8) var59.x4[0];
       var60.x4[1] = (orc_uint8) var59.x4[1];
@@ -1557,8 +1563,9 @@ _backup_video_mixer_orc_overlay_argb (OrcExecutor * ORC_RESTRICT ex)
       var46 = var45.i;
       /* 3: splatbl */
       var47.i =
-          ((var46 & 0xff) << 24) | ((var46 & 0xff) << 16) | ((var46 & 0xff) <<
-          8) | (var46 & 0xff);
+          ((((orc_uint32) var46) & 0xff) << 24) | ((((orc_uint32) var46) & 0xff)
+          << 16) | ((((orc_uint32) var46) & 0xff) << 8) | (((orc_uint32) var46)
+          & 0xff);
       /* 4: convubw */
       var48.x4[0] = (orc_uint8) var47.x4[0];
       var48.x4[1] = (orc_uint8) var47.x4[1];
@@ -1602,8 +1609,9 @@ _backup_video_mixer_orc_overlay_argb (OrcExecutor * ORC_RESTRICT ex)
       var58 = var57.i;
       /* 16: splatbl */
       var59.i =
-          ((var58 & 0xff) << 24) | ((var58 & 0xff) << 16) | ((var58 & 0xff) <<
-          8) | (var58 & 0xff);
+          ((((orc_uint32) var58) & 0xff) << 24) | ((((orc_uint32) var58) & 0xff)
+          << 16) | ((((orc_uint32) var58) & 0xff) << 8) | (((orc_uint32) var58)
+          & 0xff);
       /* 17: convubw */
       var60.x4[0] = (orc_uint8) var59.x4[0];
       var60.x4[1] = (orc_uint8) var59.x4[1];
@@ -1707,7 +1715,7 @@ video_mixer_orc_overlay_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
         111, 114, 99, 95, 111, 118, 101, 114, 108, 97, 121, 95, 97, 114, 103,
         98,
         11, 4, 4, 12, 4, 4, 14, 4, 255, 255, 255, 255, 14, 4, 255, 0,
-        0, 0, 14, 4, 0, 255, 255, 255, 14, 4, 8, 0, 0, 0, 16, 2,
+        0, 0, 14, 4, 0, 255, 255, 255, 14, 2, 8, 0, 0, 0, 16, 2,
         20, 4, 20, 2, 20, 1, 20, 8, 20, 8, 20, 8, 20, 4, 20, 8,
         20, 8, 113, 32, 4, 163, 33, 32, 157, 34, 33, 152, 38, 34, 21, 2,
         150, 35, 38, 21, 2, 89, 35, 35, 24, 21, 2, 95, 35, 35, 19, 21,
@@ -1731,7 +1739,7 @@ video_mixer_orc_overlay_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
       orc_program_add_constant (p, 4, 0xffffffff, "c1");
       orc_program_add_constant (p, 4, 0x000000ff, "c2");
       orc_program_add_constant (p, 4, 0xffffff00, "c3");
-      orc_program_add_constant (p, 4, 0x00000008, "c4");
+      orc_program_add_constant (p, 2, 0x00000008, "c4");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 2, "t2");
@@ -1909,8 +1917,9 @@ video_mixer_orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
       var48 = var47.i;
       /* 4: splatbl */
       var49.i =
-          ((var48 & 0xff) << 24) | ((var48 & 0xff) << 16) | ((var48 & 0xff) <<
-          8) | (var48 & 0xff);
+          ((((orc_uint32) var48) & 0xff) << 24) | ((((orc_uint32) var48) & 0xff)
+          << 16) | ((((orc_uint32) var48) & 0xff) << 8) | (((orc_uint32) var48)
+          & 0xff);
       /* 5: convubw */
       var50.x4[0] = (orc_uint8) var49.x4[0];
       var50.x4[1] = (orc_uint8) var49.x4[1];
@@ -1956,8 +1965,9 @@ video_mixer_orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
       var61 = var60.i;
       /* 18: splatbl */
       var62.i =
-          ((var61 & 0xff) << 24) | ((var61 & 0xff) << 16) | ((var61 & 0xff) <<
-          8) | (var61 & 0xff);
+          ((((orc_uint32) var61) & 0xff) << 24) | ((((orc_uint32) var61) & 0xff)
+          << 16) | ((((orc_uint32) var61) & 0xff) << 8) | (((orc_uint32) var61)
+          & 0xff);
       /* 19: convubw */
       var63.x4[0] = (orc_uint8) var62.x4[0];
       var63.x4[1] = (orc_uint8) var62.x4[1];
@@ -2121,8 +2131,9 @@ _backup_video_mixer_orc_overlay_bgra (OrcExecutor * ORC_RESTRICT ex)
       var48 = var47.i;
       /* 4: splatbl */
       var49.i =
-          ((var48 & 0xff) << 24) | ((var48 & 0xff) << 16) | ((var48 & 0xff) <<
-          8) | (var48 & 0xff);
+          ((((orc_uint32) var48) & 0xff) << 24) | ((((orc_uint32) var48) & 0xff)
+          << 16) | ((((orc_uint32) var48) & 0xff) << 8) | (((orc_uint32) var48)
+          & 0xff);
       /* 5: convubw */
       var50.x4[0] = (orc_uint8) var49.x4[0];
       var50.x4[1] = (orc_uint8) var49.x4[1];
@@ -2168,8 +2179,9 @@ _backup_video_mixer_orc_overlay_bgra (OrcExecutor * ORC_RESTRICT ex)
       var61 = var60.i;
       /* 18: splatbl */
       var62.i =
-          ((var61 & 0xff) << 24) | ((var61 & 0xff) << 16) | ((var61 & 0xff) <<
-          8) | (var61 & 0xff);
+          ((((orc_uint32) var61) & 0xff) << 24) | ((((orc_uint32) var61) & 0xff)
+          << 16) | ((((orc_uint32) var61) & 0xff) << 8) | (((orc_uint32) var61)
+          & 0xff);
       /* 19: convubw */
       var63.x4[0] = (orc_uint8) var62.x4[0];
       var63.x4[1] = (orc_uint8) var62.x4[1];
@@ -2273,7 +2285,7 @@ video_mixer_orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
         111, 114, 99, 95, 111, 118, 101, 114, 108, 97, 121, 95, 98, 103, 114,
         97,
         11, 4, 4, 12, 4, 4, 14, 4, 255, 255, 255, 255, 14, 4, 0, 0,
-        0, 255, 14, 4, 255, 255, 255, 0, 14, 4, 24, 0, 0, 0, 14, 4,
+        0, 255, 14, 4, 255, 255, 255, 0, 14, 4, 24, 0, 0, 0, 14, 2,
         8, 0, 0, 0, 16, 2, 20, 4, 20, 4, 20, 2, 20, 1, 20, 8,
         20, 8, 20, 8, 20, 4, 20, 8, 20, 8, 113, 32, 4, 126, 33, 32,
         19, 163, 34, 33, 157, 35, 34, 152, 39, 35, 21, 2, 150, 36, 39, 21,
@@ -2299,7 +2311,7 @@ video_mixer_orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
       orc_program_add_constant (p, 4, 0xff000000, "c2");
       orc_program_add_constant (p, 4, 0x00ffffff, "c3");
       orc_program_add_constant (p, 4, 0x00000018, "c4");
-      orc_program_add_constant (p, 4, 0x00000008, "c5");
+      orc_program_add_constant (p, 2, 0x00000008, "c5");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 4, "t2");

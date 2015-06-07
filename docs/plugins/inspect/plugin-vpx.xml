@@ -3,10 +3,10 @@
   <description>VP8 plugin</description>
   <filename>../../ext/vpx/.libs/libgstvpx.so</filename>
   <basename>libgstvpx.so</basename>
-  <version>1.5.0.1</version>
+  <version>1.5.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string)I420, width=(int)[ 1, 16383 ], height=(int)[ 1, 16383 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>

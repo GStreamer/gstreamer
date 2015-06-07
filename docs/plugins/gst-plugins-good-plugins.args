@@ -199,6 +199,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiFileSink::aggregate-gops</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aggregate GOPs</NICK>
+<BLURB>Whether to aggregate GOPs and process them as a whole without splitting.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFileSink::max-file-duration</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum File Duration</NICK>
+<BLURB>Maximum file duration before starting a new file in max-size mode.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstMultiFileSrc::caps</NAME>
 <TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
@@ -1151,7 +1171,7 @@
 <ARG>
 <NAME>GstQuarkTV::planes</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,64]</RANGE>
+<RANGE>[1,64]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Planes</NICK>
 <BLURB>Number of planes.</BLURB>
@@ -21359,6 +21379,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpBin::rtp-profile</NAME>
+<TYPE>GstRTPProfile</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTP Profile</NICK>
+<BLURB>Default RTP profile of newly created sessions.</BLURB>
+<DEFAULT>GST_RTP_PROFILE_AVPF</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpJitterBuffer::do-lost</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -21499,13 +21529,33 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpJitterBuffer::rtx-max-retries</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTX Max Retries</NICK>
+<BLURB>The maximum number of retries to request a retransmission. (-1 not limited).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::rtx-next-seqnum</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTX next seqnum</NICK>
+<BLURB>Estimate when the next packet should arrive and schedule a retransmission request for it.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpSession::bandwidth</NAME>
 <TYPE>gdouble</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bandwidth</NICK>
 <BLURB>The bandwidth of the session in bytes per second (0 for auto-discover).</BLURB>
-<DEFAULT>64000</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21555,7 +21605,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>RTCP Fraction</NICK>
 <BLURB>The RTCP bandwidth of the session in bytes per second (or as a real fraction of the RTP bandwidth if < 1.0).</BLURB>
-<DEFAULT>3200</DEFAULT>
+<DEFAULT>0.05</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21626,6 +21676,16 @@
 <NICK>Statistics</NICK>
 <BLURB>Various statistics.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::rtp-profile</NAME>
+<TYPE>GstRTPProfile</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTP Profile</NICK>
+<BLURB>RTP profile to use.</BLURB>
+<DEFAULT>GST_RTP_PROFILE_AVP</DEFAULT>
 </ARG>
 
 <ARG>

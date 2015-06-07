@@ -33,6 +33,10 @@ GObject
           GstMuLawEnc
           GstSpeexEnc
           GstWavpackEnc
+        GstAudioVisualizer-ExtGom
+          GstGoom
+        GstAudioVisualizer-ExtGoom2k1
+          GstGoom2k1
         GstAviDemux
         GstAviMux
         GstAviSubtitle
@@ -164,8 +168,6 @@ GObject
         GstFlvMux
         GstFlxDec
         GstGdkPixbufDec
-        GstGoom
-        GstGoom2k1
         GstICYDemux
         GstISMLMux
         GstImageFreeze
