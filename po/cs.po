@@ -3,14 +3,14 @@
 # This file is put in the public domain.
 #
 # Miloslav Trmac <mitr@volny.cz>, 2004, 2005, 2007, 2008.
-# Marek Černocký <marek@manet.cz>, 2011, 2013.
+# Marek Černocký <marek@manet.cz>, 2011, 2013, 2015.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.2.1\n"
+"Project-Id-Version: gstreamer 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2015-06-07 09:28+0200\n"
-"PO-Revision-Date: 2014-03-09 11:07+0100\n"
+"PO-Revision-Date: 2015-02-16 06:03+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -114,7 +114,7 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
-"Chyba systému GStreamer: selhala změna stavu a některý prvek selhal při "
+"Chyba systému GStreamer: selhala změna stavu a některý element selhal při "
 "posílání příslušné chybové zprávy s důvodem selhání."
 
 msgid "Internal GStreamer error: pad problem."
@@ -205,22 +205,21 @@ msgstr "Nelze získat/změnit nastavení prostředku."
 msgid "No space left on the resource."
 msgstr "V prostředku nezbývá místo."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "V prostředku nezbývá místo."
+msgstr "Není autorizováno pro přístup k prostředku."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "V systému GStreamer došlo k obecné chybě proudu."
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
-"Prvek neimplementuje obsluhu tohoto proudu. Nahlaste to prosím jako chybu."
+"Element neimplementuje obsluhu tohoto proudu. Nahlaste to prosím jako chybu."
 
 msgid "Could not determine type of stream."
 msgstr "Nelze zjistit typ proudu."
 
 msgid "The stream is of a different type than handled by this element."
-msgstr "Proud je jiného typu, než jaký tento prvek obsluhuje."
+msgstr "Proud je jiného typu, než jaký tento element obsluhuje."
 
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Není přítomen žádný kodek, který umí obsloužit typ tohoto proudu."
@@ -813,10 +812,10 @@ msgstr ""
 "Informace o lidech stojících za mixováním a dalším podobným zpracováním"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "základní nota MIDI"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Číslo noty MIDI pro zvukovou stopu."
 
 msgid ", "
 msgstr "; "
@@ -831,7 +830,7 @@ msgstr "Schéma URI „%s“ není podporováno"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr "CHYBA: od prvku %s: %s\n"
+msgstr "CHYBA: od elementu %s: %s\n"
 
 #, c-format
 msgid ""
@@ -843,35 +842,35 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "připojení nemá žádný zdroj [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "připojení nemá žádný cíl [source=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr "v prvku „%2$s“ není žádná vlastnost „%1$s“"
+msgstr "v elementu „%2$s“ není žádná vlastnost „%1$s“"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "nelze nastavit vlastnost „%s“ v prvku „%s“ na „%s“"
+msgstr "nelze nastavit vlastnost „%s“ v elementu „%s“ na „%s“"
 
 #, c-format
 msgid "could not link %s to %s"
-msgstr "nelze připojit prvek „%s“ k prvku „%s“"
+msgstr "nelze připojit element „%s“ k elementu „%s“"
 
 #, c-format
 msgid "no element \"%s\""
-msgstr "prvek „%s“ neexistuje"
+msgstr "element „%s“ neexistuje"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "neočekávaný odkaz „%s“ – ignoruje se"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "neočekávaný odkaz přípojného bodu „%s“ – ignoruje se"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -879,25 +878,25 @@ msgstr "nelze zpracovat schopnosti „%s“"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "neexistuje žádný cílový prvek pro adresu URI „%s“"
+msgstr "neexistuje žádný cílový element pro adresu URI „%s“"
 
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr "neexistuje žádný zdrojový prvek pro adresu URI „%s“"
+msgstr "neexistuje žádný zdrojový element pro adresu URI „%s“"
 
 msgid "syntax error"
-msgstr ""
+msgstr "syntaktická chyba"
 
 msgid "bin"
-msgstr ""
+msgstr "zásobník"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "zadán prázdný zásobník „%s“, to není dovoleno"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "zásobník „%s“ neexistuje, přeskakuje se"
+msgstr "zásobník „%s“ rozbaluje se element"
 
 msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
@@ -1068,7 +1067,7 @@ msgstr[1] "%d funkce"
 msgstr[2] "%d funkcí"
 
 msgid "Print all elements"
-msgstr "Vypsat všechny prvky"
+msgstr "Vypsat všechny elementy"
 
 msgid "Print list of blacklisted files"
 msgstr "Vypsat seznam souborů na černé listině"
@@ -1088,17 +1087,17 @@ msgid "List the plugin contents"
 msgstr "Vypsat obsah zásuvných modulů"
 
 msgid "Check if the specified element or plugin exists"
-msgstr "Zkontrolovat, zda zadaný prvek nebo zásuvný modul existuje"
+msgstr "Zkontrolovat, zda zadaný element nebo zásuvný modul existuje"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
-"Při kontrole existence prvku nebo zásuvného modulu rovněž zkontrolovat, zda "
-"je jeho verze stejná nebo novější než zadaná"
+"Při kontrole existence elementu nebo zásuvného modulu rovněž zkontrolovat, "
+"zda je jeho verze stejná nebo novější než zadaná"
 
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr "Vypsat podporovaná schémata URI, včetně prvků, které implementují"
+msgstr "Vypsat podporovaná schémata URI, včetně elementů, které implementují"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1106,14 +1105,14 @@ msgstr "Nelze načíst soubor se zásuvným modulem: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "Prvek nebo zásuvný modul „%s“ neexistuje\n"
+msgstr "Element nebo zásuvný modul „%s“ neexistuje\n"
 
 msgid "Index statistics"
 msgstr "Přehledové statistiky"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Obdržena zpráva čís. %u od prvku „%s“ (%s): "
+msgstr "Obdržena zpráva čís. %u od elementu „%s“ (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
@@ -1129,12 +1128,12 @@ msgstr "Obdržena zpráva čís. %u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "Obdržen konec proudu od prvku „%s“.\n"
+msgstr "Obdržen konec proudu od elementu „%s“.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr ""
-"NALEZEN ŠTÍTEK: nalezen prvkem „%s“.\n"
+"NALEZEN ŠTÍTEK: nalezen elementem „%s“.\n"
 "\n"
 
 #, c-format
@@ -1151,7 +1150,7 @@ msgstr "NALEZEN ŠTÍTEK\n"
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
 msgstr ""
-"NALEZENA TABULKA S OBSAHEM: nalezena prvkem „%s“.\n"
+"NALEZENA TABULKA S OBSAHEM: nalezena elementem „%s“.\n"
 "\n"
 
 #, c-format
@@ -1171,7 +1170,7 @@ msgstr ""
 
 #, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr "VAROVÁNÍ: od prvku %s: %s\n"
+msgstr "VAROVÁNÍ: od elementu %s: %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
@@ -1207,11 +1206,11 @@ msgstr "Průběh: (%s) %s\n"
 
 #, c-format
 msgid "Missing element: %s\n"
-msgstr "Schází prvek: %s\n"
+msgstr "Schází element: %s\n"
 
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Obdržen kontext od prvku „%s“: %s=%s\n"
+msgstr "Obdržen kontext od elementu „%s“: %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Vypsat štítky (známé také jako metadata)"
@@ -1255,7 +1254,7 @@ msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VAROVÁNÍ: chybná roura: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "CHYBA: prvek „pipeline“ nebyl nalezen.\n"
+msgstr "CHYBA: element „pipeline“ nebyl nalezen.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Nastavuje se rouru na POZASTAVENA…\n"
@@ -1317,15 +1316,3 @@ msgstr "Nastavuje se roura na PRÁZDNÁ…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Uvolňuje se roura…\n"
-
-#~ msgid "link without source element"
-#~ msgstr "propojení bez zdrojového prvku"
-
-#~ msgid "link without sink element"
-#~ msgstr "propojení bez cílového prvku"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "neexistuje žádný prvek pro připojení adresy URI „%s“"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "nelze připojit cílový prvek pro adresu URI „%s“"

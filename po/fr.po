@@ -4,14 +4,15 @@
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Claude Paroz <claude@2xlibre.net>, 2008-2012.
+# Stéphane Aulery <lkppo@free.fr>, 2015.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.0.3\n"
+"Project-Id-Version: gstreamer 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2015-06-07 09:28+0200\n"
-"PO-Revision-Date: 2012-12-05 19:31+0100\n"
-"Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
+"PO-Revision-Date: 2015-04-26 19:49+0200\n"
+"Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
@@ -28,11 +29,10 @@ msgstr "Rend tous les avertissements bloquants"
 msgid "Print available debug categories and exit"
 msgstr "Affiche les catégories de débogage disponibles et quitte"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Niveau de débogage par défaut, de 1 (erreurs uniquement) à 5 (tout) ou 0 "
+"Niveau de débogage par défaut, de 1 (erreurs uniquement) à 9 (tout) ou 0 "
 "pour aucune sortie"
 
 msgid "LEVEL"
@@ -890,18 +890,18 @@ msgid "no source element for URI \"%s\""
 msgstr "pas d'élément source pour l'URI « %s »"
 
 msgid "syntax error"
-msgstr ""
+msgstr "erreur de syntaxe"
 
 msgid "bin"
-msgstr ""
+msgstr "bin"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "conteneur « %s » vide, non autorisé"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "pas de conteneur « %s », ignoré"
+msgstr "pas de conteneur « %s », dépaquetage des éléments"
 
 msgid "empty pipeline not allowed"
 msgstr "pipeline vide non autorisé"
@@ -1173,30 +1173,29 @@ msgid "WARNING: from element %s: %s\n"
 msgstr "AVERTISSEMENT : de l'élément %s : %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr "Préparation terminée, attente de la fin de remplissage du tampon...\n"
+msgstr "Préparation terminée, attente de la fin de remplissage du tampon…\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Préparation terminée, attente de la fin de remplissage du tampon...\n"
+msgstr "Préparation terminée, attente de la fin du traitement…\n"
 
 msgid "buffering..."
-msgstr "mise en mémoire tampon..."
+msgstr "mise en mémoire tampon…"
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "Mémoire tampon pleine, définition du pipeline à PLAYING...\n"
+msgstr "Mémoire tampon pleine, définition du pipeline à PLAYING…\n"
 
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr "Remplissage du tampon, définition du pipeline à PAUSED...\n"
+msgstr "Remplissage du tampon, définition du pipeline à PAUSED…\n"
 
 msgid "Redistribute latency...\n"
-msgstr "Redistribution de latence...\n"
+msgstr "Redistribution de latence…\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr "Définition de l'état à %s comme demandé par %s...\n"
+msgstr "Définition de l'état à %s comme demandé par %s…\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr "Interruption : arrêt du pipeline...\n"
+msgstr "Interruption : arrêt du pipeline…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1229,7 +1228,7 @@ msgid "Do not output status information of TYPE"
 msgstr "N'affiche pas d'informations d'état de TYPE"
 
 msgid "TYPE1,TYPE2,..."
-msgstr "TYPE1,TYPE2,..."
+msgstr "TYPE1,TYPE2,…"
 
 msgid "Do not install a fault handler"
 msgstr "N'installe pas de gestionnaire de dysfonctionnement"
@@ -1261,19 +1260,19 @@ msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ERREUR : le pipeline refuse de se mettre en pause.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "Le pipeline est actif et n'a pas besoin de phase PREROLL...\n"
+msgstr "Le pipeline est actif et n'a pas besoin de phase PREROLL…\n"
 
 msgid "Pipeline is PREROLLING ...\n"
-msgstr "Le pipeline est en phase de PREROLL...\n"
+msgstr "Le pipeline est en phase de PREROLL…\n"
 
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ERREUR : le pipeline refuse de passer en phase de préparation.\n"
 
 msgid "Pipeline is PREROLLED ...\n"
-msgstr "Le pipeline a terminé la phase PREROLL...\n"
+msgstr "Le pipeline a terminé la phase PREROLL…\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Passage du pipeline à la phase PLAYING...\n"
+msgstr "Passage du pipeline à la phase PLAYING…\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERREUR : le pipeline refuse de passer en mode actif.\n"
@@ -1285,13 +1284,13 @@ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
 msgstr "EOS à la fermeture est activé -- attente d'EOS après erreur\n"
 
 msgid "Waiting for EOS...\n"
-msgstr "Attente d'EOS...\n"
+msgstr "Attente d'EOS.\n"
 
 msgid "EOS received - stopping pipeline...\n"
-msgstr "EOS reçu - arrêt du pipeline...\n"
+msgstr "EOS reçu - arrêt du pipeline…\n"
 
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interruption lors de l'attende d'EOS - arrêt du pipeline...\n"
+msgstr "Interruption lors de l'attende d'EOS - arrêt du pipeline…\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Une erreur s'est produite lors de l'attente de l'EOS\n"
@@ -1300,50 +1299,10 @@ msgid "Execution ended after %"
 msgstr "L'exécution s'est terminée après %"
 
 msgid "Setting pipeline to READY ...\n"
-msgstr "Définition du pipeline à READY (prêt)...\n"
+msgstr "Définition du pipeline à READY (prêt)…\n"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr "Définition du pipeline à NULL...\n"
+msgstr "Définition du pipeline à NULL…\n"
 
 msgid "Freeing pipeline ...\n"
-msgstr "Libération du pipeline...\n"
-
-#~ msgid "link without source element"
-#~ msgstr "lien sans élément source"
-
-#~ msgid "link without sink element"
-#~ msgstr "lien sans élément d'entrée (sink)"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "pas d'élément auquel relier l'URI « %s »"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "impossible de lier un élément d'entrée pour l'URI « %s »"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "ERREUR : l'analyse du fichier xml « %s » a échoué.\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr ""
-#~ "ERREUR : pas d'élément pipeline de premier niveau dans le fichier "
-#~ "« %s ».\n"
-
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr ""
-#~ "AVERTISSEMENT : actuellement, un seul élément de premier niveau est "
-#~ "géré.\n"
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr ""
-#~ "ERREUR : impossible d'analyser le paramètre numéro %d de la ligne de "
-#~ "commande : %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "AVERTISSEMENT : l'élément nommé « %s » est introuvable.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr ""
-#~ "Enregistre une représentation xml du pipeline dans FICHIER et quitte"
-
-#~ msgid "FILE"
-#~ msgstr "FICHIER"
+msgstr "Libération du pipeline…\n"
