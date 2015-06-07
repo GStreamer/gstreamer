@@ -70,9 +70,6 @@ GTKDOC_LIBS = \
 	$(top_builddir)/gst-libs/gst/riff/libgstriff-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS)
 
-GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
-GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)
-
 # If you need to override some of the declarations, place them in this file
 DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
 
