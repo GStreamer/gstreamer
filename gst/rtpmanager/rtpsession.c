@@ -668,6 +668,7 @@ rtp_session_set_property (GObject * object, guint prop_id,
       RTP_SESSION_LOCK (sess);
       sess->suggested_ssrc = g_value_get_uint (value);
       sess->internal_ssrc_set = TRUE;
+      sess->internal_ssrc_from_caps_or_property = TRUE;
       RTP_SESSION_UNLOCK (sess);
       if (sess->callbacks.reconfigure)
         sess->callbacks.reconfigure (sess, sess->reconfigure_user_data);
@@ -1526,6 +1527,11 @@ add_source (RTPSession * sess, RTPSource * src)
     sess->stats.active_sources++;
   if (src->internal) {
     sess->stats.internal_sources++;
+    if (!sess->internal_ssrc_from_caps_or_property
+        && sess->suggested_ssrc != src->ssrc) {
+      sess->suggested_ssrc = src->ssrc;
+      sess->internal_ssrc_set = TRUE;
+    }
   }
 
   /* update point-to-point status */
@@ -2745,6 +2751,7 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
     source = obtain_internal_source (sess, ssrc, &created, GST_CLOCK_TIME_NONE);
     sess->suggested_ssrc = ssrc;
     sess->internal_ssrc_set = TRUE;
+    sess->internal_ssrc_from_caps_or_property = TRUE;
     if (source) {
       rtp_source_update_caps (source, caps);
       g_object_unref (source);
@@ -2759,6 +2766,8 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
       }
     }
     RTP_SESSION_UNLOCK (sess);
+  } else {
+    sess->internal_ssrc_from_caps_or_property = FALSE;
   }
 }
 

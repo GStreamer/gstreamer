@@ -446,6 +446,7 @@ GST_START_TEST (test_internal_sources_timeout)
   GstRTCPPacket rtcp_packet;
   GstFlowReturn res;
   gint i, j;
+  GstCaps *caps;
 
   setup_testharness (&data, TRUE);
   g_object_get (data.session, "internal-session", &internal_session, NULL);
@@ -477,6 +478,12 @@ GST_START_TEST (test_internal_sources_timeout)
   gst_buffer_unref (buf);
 
   /* ok, now let's push some RTP packets */
+  caps =
+      gst_caps_new_simple ("application/x-rtp", "ssrc", G_TYPE_UINT, 0x01BADBAD,
+      NULL);
+  gst_pad_set_caps (data.src, caps);
+  gst_caps_unref (caps);
+
   for (i = 1; i < 4; i++) {
     gst_test_clock_advance_time (GST_TEST_CLOCK (data.clock),
         200 * GST_MSECOND);
