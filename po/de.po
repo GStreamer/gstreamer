@@ -1,16 +1,16 @@
-# German translation for gstreamer 1.3.2
+# German translation for gstreamer 1.4.1
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
 # Roland Illig <roland.illig@gmx.de>, 2004.
-# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2010, 2011, 2012, 2013.
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2010, 2011, 2012, 2013, 2015.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.3.2\n"
+"Project-Id-Version: gstreamer 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-12-18 12:00+0100\n"
-"PO-Revision-Date: 2014-05-22 20:48+0100\n"
+"POT-Creation-Date: 2015-06-07 12:36+0200\n"
+"PO-Revision-Date: 2015-04-18 16:41+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.5.4\n"
+"X-Generator: Poedit 1.7.5\n"
 
 msgid "Print the GStreamer version"
 msgstr "Die Version von GStreamer ausgeben"
@@ -292,13 +292,13 @@ msgid "commonly used title for sorting purposes"
 msgstr "Üblicher Titel zu Sortierzwecken"
 
 msgid "artist"
-msgstr "Interpret"
+msgstr "Künstler"
 
 msgid "person(s) responsible for the recording"
 msgstr "Für die Aufnahme verantwortliche Person(en)"
 
 msgid "artist sortname"
-msgstr "Sortiername des Interpreten"
+msgstr "Sortiername des Künstlers"
 
 msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "Für die Aufnahme verantwortliche Person(en) zu Sortierzwecken"
@@ -316,16 +316,16 @@ msgid "album containing this data for sorting purposes"
 msgstr "Album, das diese Daten enthält, zu Sortierzwecken"
 
 msgid "album artist"
-msgstr "Interpret des Albums"
+msgstr "Künstler des Albums"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr "Der Interpret des gesamten Albums, so wie er angezeigt werden soll"
+msgstr "Der Künstler des gesamten Albums, so wie er angezeigt werden soll"
 
 msgid "album artist sortname"
-msgstr "Sortiername des Albeninterpreten"
+msgstr "Sortiername des Albenkünstlers"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr "Der Interpret des gesamten Albums, so wie er einsortiert werden soll"
+msgstr "Der Künstler des gesamten Albums, so wie er einsortiert werden soll"
 
 msgid "date"
 msgstr "Datum"
@@ -396,10 +396,10 @@ msgstr ""
 "Datenstroms bereit steht)"
 
 msgid "homepage"
-msgstr "Homepage"
+msgstr "Internetseite"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr "Homepage dieses Mediums (z.B. Interpret oder Film)"
+msgstr "Internetseite dieses Mediums (z.B. Künstler oder Filmseite)"
 
 msgid "description"
 msgstr "Beschreibung"

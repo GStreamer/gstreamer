@@ -1,19 +1,22 @@
 # translation of GStreamer to Turkish
 # Copyright (C) 2004 Free Software Foundation, Inc.
-# Baris Cicek <baris@teamforce.name.tr>, 2004.
+# This file is distributed under the same license as the gstreamer package.
 #
+# Baris Cicek <baris@teamforce.name.tr>, 2004, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.8.0\n"
+"Project-Id-Version: gstreamer 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-12-18 12:00+0100\n"
-"PO-Revision-Date: 2004-04-03 03:14+0300\n"
-"Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
+"POT-Creation-Date: 2015-06-07 12:36+0200\n"
+"PO-Revision-Date: 2015-01-10 21:06+0100\n"
+"Last-Translator: Volkan Gezer <volkangezer@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Lokalize 1.5\n"
 
 msgid "Print the GStreamer version"
 msgstr "GStreamer sürünümü yazdır"
@@ -24,12 +27,11 @@ msgstr "Tüm uyarıları ölümcül yap"
 msgid "Print available debug categories and exit"
 msgstr "Geçerli hata ayıklama sınıflarını yazdır ve çık"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Öntanımlı hata ayıklama seviyesi 1'den (sadece hatalar) 5'e (her şey) kadar "
-"ya da çıktı olmaması için 0"
+"Öntanımlı hata ayıklama seviyesi 1'den (sadece hatalar) 9'a (her şey) ya da "
+"çıktı olmaması için 0"
 
 msgid "LEVEL"
 msgstr "SEVİYE"
@@ -51,6 +53,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Hata ayıklama günlüklerini renklendirme kipini değiştirir. Olası kipler: "
+"kapalı, açık, devredışı, otomatik, unix"
 
 msgid "Disable debugging"
 msgstr "Hata ayıklamayı kapat"
@@ -59,18 +63,17 @@ msgid "Enable verbose plugin loading diagnostics"
 msgstr "Ayrıntılı eklenti yükleme detaylarını etkinleştir"
 
 msgid "Colon-separated paths containing plugins"
-msgstr ""
+msgstr "Eklentileri içeren iki nokta üst üste ile ayrılmış yollar"
 
 msgid "PATHS"
 msgstr "YOLLAR"
 
-#, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
 "Çevre değişkeni GST_PLUGIN_PATH içinde saklanan listeye ek olarak önceden "
-"yüklenecek eklentilerin virgün ile ayırılmış listesi"
+"yüklenecek virgün ile ayrılmış eklenti listesi"
 
 msgid "PLUGINS"
 msgstr "EKLENTİLER"
@@ -79,81 +82,71 @@ msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Eklenti yüklenirken kesimleme hatalarını yakalamayı kapat"
 
 msgid "Disable updating the registry"
-msgstr ""
+msgstr "Kayıt defteri güncellemeyi devre dışı bırak"
 
 msgid "Disable spawning a helper process while scanning the registry"
 msgstr ""
+"Kayıt defteri taranırken yardımcı bir işlem oluşturmayı devre dışı bırak"
 
 msgid "GStreamer Options"
-msgstr ""
+msgstr "GStreamer Seçenekleri"
 
-#, fuzzy
 msgid "Show GStreamer Options"
-msgstr "GStreamer sürünümü yazdır"
+msgstr "GStreamer Seçeneklerini Göster"
 
 msgid "Unknown option"
-msgstr ""
+msgstr "Bilinmeyen seçenek"
 
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer genel temel kütüphane hatası ile karşılaştı."
 
-#, fuzzy
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
-"GStreamer geliştiricileri bu hataya hata kodu vermeyecek kadar "
-"tembelmişler.  Lütfen hata bildiriminde bulunun."
+"GStreamer geliştiricileri bu hata için bir hata kodu atamaya üşenmişler."
 
-#, fuzzy
 msgid "Internal GStreamer error: code not implemented."
-msgstr ""
-"Dahili GStreamer hatası: kod tamamlanmamış.  Hata bildiriminde bulunun."
+msgstr "İç GStreamer hatası: kod tamamlanmamış."
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"GStreamer hatası: durum değişikliği başarısız oldu ve bazı öge başarısızlık "
+"nedeni ile ilgili uygun bir hata iletisi göndermede başarısız oldu."
 
-#, fuzzy
 msgid "Internal GStreamer error: pad problem."
-msgstr "Dahili GStreamer hatası: doldurma sorunu.  Hata bildiriminde bulunun."
+msgstr "Dahili GStreamer hatası: dolgu problemi."
 
-#, fuzzy
 msgid "Internal GStreamer error: thread problem."
-msgstr "Dahili GStreamer hatası: dallanma sorunu.  Hata bildiriminde bulunun."
+msgstr "İç GStreamer hatası: iş parçacığı sorunu."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Dahili GStreamer hatası: uzlaşma sorunu.  Hata bildiriminde bulunun."
+msgstr "İç GStreamer hatası: uzlaşma sorunu."
 
-#, fuzzy
 msgid "Internal GStreamer error: event problem."
-msgstr "Dahili GStreamer hatası: olay sorunu.  Hata bildiriminde bulunun."
+msgstr "İç GStreamer hatası: olay sorunu."
 
-#, fuzzy
 msgid "Internal GStreamer error: seek problem."
-msgstr "Dahili GStreamer hatası: atlama sorunu.  Hata bildiriminde bulunun."
+msgstr "İç GStreamer hatası: arama sorunu."
 
-#, fuzzy
 msgid "Internal GStreamer error: caps problem."
-msgstr ""
-"Dahili GStreamer hatası: kabiliyetler sorunu.  Hata bildiriminde bulunun."
+msgstr "İç GStreamer hatası: kapasite sorunu."
 
-#, fuzzy
 msgid "Internal GStreamer error: tag problem."
-msgstr "Dahili GStreamer hatası: etiket sorunu.  Hata bildiriminde bulunun."
+msgstr "İç GStreamer hatası: etiket sorunu."
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr ""
+msgstr "GStreamer kurulumunuzda bir eklenti eksik."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Dahili GStreamer hatası: atlama sorunu.  Hata bildiriminde bulunun."
+msgstr "GStreamer hatası: saat sorunu."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
 msgstr ""
+"Bu uygulama devre dışı bırakılmış GStreamer işlevini kullanmayı deniyor."
 
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer genel kütüphane destekleme hatası ile karşılaştı."
@@ -164,16 +157,14 @@ msgstr "Destekleyici kütüphane başlatılamadı."
 msgid "Could not close supporting library."
 msgstr "Destekleyici kütüphane kapatılamadı."
 
-#, fuzzy
 msgid "Could not configure supporting library."
-msgstr "Destekleyici kütüphane kapatılamadı."
+msgstr "Desteklenen kütüphane yapılandırılamadı."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Kodlama hatası."
 
-#, fuzzy
 msgid "GStreamer encountered a general resource error."
-msgstr "GStreamer genel temel kütüphane hatası ile karşılaştı."
+msgstr "GStreamer genel bir kaynak hatası ile karşılaştı."
 
 msgid "Resource not found."
 msgstr "Kaynak bulunamadı."
@@ -209,15 +200,13 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Kaynağa değerler atanamadı ya da alınamadı."
 
 msgid "No space left on the resource."
-msgstr ""
+msgstr "Kaynakta boş alan kalmadı."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Kaynağa yazılamadı."
+msgstr "Kaynağa erişmek için yetkili değil."
 
-#, fuzzy
 msgid "GStreamer encountered a general stream error."
-msgstr "GStreamer genel temel kütüphane hatası ile karşılaştı."
+msgstr "GStreamer genel bir akış hatası ile karşılaştı."
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
@@ -245,17 +234,17 @@ msgstr "Akım çoklaması geriye alınamadı."
 msgid "Could not multiplex stream."
 msgstr "Akım çoklandırılamadı."
 
-#, fuzzy
 msgid "The stream is in the wrong format."
-msgstr "Akım yanlış biçimde."
+msgstr "Akış yanlış biçimdedir."
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr ""
+msgstr "Akış şifrelidir ve şifre açma desteklenmiyor."
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
 msgstr ""
+"Akış şifrelidir ve şifresi açılamaz çünkü uygun anahtar temin edilmemiştir."
 
 #, c-format
 msgid "No error message for domain %s."
@@ -266,11 +255,11 @@ msgid "No standard error message for domain %s and code %d."
 msgstr "%s etki alanı ve %d kodu için standart hata iletisi yok."
 
 msgid "Selected clock cannot be used in pipeline."
-msgstr ""
+msgstr "Seçilen saat ardışık düzende kulanılamıyor."
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "%s konumuna kayıt defteri önbelleğini yazmada hata: %s"
 
 msgid "title"
 msgstr "başlık"
@@ -279,11 +268,10 @@ msgid "commonly used title"
 msgstr "yaygın olarak kullanılan başlık"
 
 msgid "title sortname"
-msgstr ""
+msgstr "sıralamaadı başlığı"
 
-#, fuzzy
 msgid "commonly used title for sorting purposes"
-msgstr "yaygın olarak kullanılan başlık"
+msgstr "amaçları sıralamak için yaygın olarak kullanılan başlık"
 
 msgid "artist"
 msgstr "sanatçı"
@@ -292,11 +280,10 @@ msgid "person(s) responsible for the recording"
 msgstr "kayıttan sorumlu olan kişi ya da kişiler"
 
 msgid "artist sortname"
-msgstr ""
+msgstr "sanatçı sıralamadı"
 
-#, fuzzy
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr "kayıttan sorumlu olan kişi ya da kişiler"
+msgstr "sıralama amaçlı kayıttan sorumlu kişi(ler)"
 
 msgid "album"
 msgstr "albüm"
@@ -305,39 +292,34 @@ msgid "album containing this data"
 msgstr "bu bilgiyi içeren albüm"
 
 msgid "album sortname"
-msgstr ""
+msgstr "albüm sıralama adı"
 
-#, fuzzy
 msgid "album containing this data for sorting purposes"
-msgstr "bu bilgiyi içeren albüm"
+msgstr "sıralama amaçlı bu verileri içeren albüm"
 
-#, fuzzy
 msgid "album artist"
-msgstr "sanatçı"
+msgstr "albüm sanatçısı"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "Gerektiği gibi gösterilen tüm albümlerin sanatçıları"
 
 msgid "album artist sortname"
-msgstr ""
+msgstr "albüm sanatçıları sıralamaadı"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "Gerektiği gibi sıralanan tüm albümlerin sanatçıları"
 
 msgid "date"
 msgstr "tarih"
 
-#, fuzzy
 msgid "date the data was created (as a GDate structure)"
-msgstr "bu verinin oluşturulduğu tarih (Julian takvimi günleri olarak)"
+msgstr "tarih verisi oluşturuldu (bir GDate yapısı olarak)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "tarih"
+msgstr "tarihsaat"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "bu verinin oluşturulduğu tarih (Julian takvimi günleri olarak)"
+msgstr "tarih ve saat verisi oluşturuldu (bir GstDateTime yapısı olarak)"
 
 msgid "genre"
 msgstr "tür"
@@ -351,13 +333,11 @@ msgstr "yorum"
 msgid "free text commenting the data"
 msgstr "veriyi yorumlayan serbest metin"
 
-#, fuzzy
 msgid "extended comment"
-msgstr "yorum"
+msgstr "genişletilmiş yorum"
 
-#, fuzzy
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr "veriyi yorumlayan serbest metin"
+msgstr "anahtar=deger ya da anahtar[en]=yorum biçimindeki metin yorumlama"
 
 msgid "track number"
 msgstr "parça numarası"
@@ -390,12 +370,14 @@ msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
 msgstr ""
+"URI olarak ortam kaynağı (dosyanın özgün konumu ya da akışın barındırıldığı "
+"konum)"
 
 msgid "homepage"
-msgstr ""
+msgstr "anasayfa"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
+msgstr "Bu ortamın anasayfası (yani sanatçı ya da film anasayfası)"
 
 msgid "description"
 msgstr "tanım"
@@ -425,20 +407,17 @@ msgstr "telif hakkı"
 msgid "copyright notice of the data"
 msgstr "verinin telif hakkı notu"
 
-#, fuzzy
 msgid "copyright uri"
-msgstr "telif hakkı"
+msgstr "telif hakkı uri"
 
-#, fuzzy
 msgid "URI to the copyright notice of the data"
-msgstr "verinin telif hakkı notu"
+msgstr "Verinin telif hakkı bildirimi için URI"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "kodlayıcı"
+msgstr "kodlayan"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "kodlayan kişi ya da organizasyonun adı"
 
 msgid "contact"
 msgstr "iletişim"
@@ -452,13 +431,11 @@ msgstr "lisans"
 msgid "license of data"
 msgstr "verinin lisansı"
 
-#, fuzzy
 msgid "license uri"
-msgstr "lisans"
+msgstr "lisans uri"
 
-#, fuzzy
 msgid "URI to the license of the data"
-msgstr "verinin lisansı"
+msgstr "Verinin lisansı için URI"
 
 msgid "performer"
 msgstr "icra eden"
@@ -467,11 +444,10 @@ msgid "person(s) performing"
 msgstr "icra eden kişi"
 
 msgid "composer"
-msgstr ""
+msgstr "düzenleyici"
 
-#, fuzzy
 msgid "person(s) who composed the recording"
-msgstr "kayıttan sorumlu olan kişi ya da kişiler"
+msgstr "kayıt oluşturan kişi(ler)"
 
 msgid "duration"
 msgstr "süre"
@@ -497,21 +473,17 @@ msgstr "ses kodeki"
 msgid "codec the audio data is stored in"
 msgstr "ses verisinin saklandığı kodek"
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "video kodeki"
+msgstr "altyazı kodlayıcı-kod çözücüsü"
 
-#, fuzzy
 msgid "codec the subtitle data is stored in"
-msgstr "videonun saklandığı kodek"
+msgstr "altyazı verisinin saklandığı kodlayıcı-kod çözücü"
 
-#, fuzzy
 msgid "container format"
-msgstr "iletişim bilgisi"
+msgstr "kap biçimi"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "verinin saklandığı kodek"
+msgstr "verilerin saklandığı kap biçemi"
 
 msgid "bitrate"
 msgstr "örnekleme hızı"
@@ -579,274 +551,271 @@ msgstr "tekrarkazanç albüm üst sınırı"
 msgid "peak of the album"
 msgstr "albüm üst sınırı"
 
-#, fuzzy
 msgid "replaygain reference level"
-msgstr "tekrarkazanç parça üst sınırı"
+msgstr "yeniden kazanç kaynak seviyesi"
 
 msgid "reference level of track and album gain values"
-msgstr ""
+msgstr "şarkı ve albüm kazanç değerlerinin kaynak seviyesi"
 
 msgid "language code"
-msgstr ""
+msgstr "dil kodu"
 
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr ""
+msgstr "bu akış için ISO-639-1 ya da ISO-639-2 standartlarına uygun dil kodu"
 
 msgid "language name"
-msgstr ""
+msgstr "dil adı"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "bu akıştaki dilin serbest biçem adı"
 
 msgid "image"
-msgstr ""
+msgstr "görüntü"
 
-#, fuzzy
 msgid "image related to this stream"
-msgstr "bu akımı kodlarken kullanılacak kodlayıcı"
+msgstr "bu akış ile ilişkili görüntü"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
-msgstr ""
+msgstr "görüntüyü önizle"
 
 msgid "preview image related to this stream"
-msgstr ""
+msgstr "bu akış ile ilişkili görüntüyü önizle"
 
 msgid "attachment"
-msgstr ""
+msgstr "ek"
 
-#, fuzzy
 msgid "file attached to this stream"
-msgstr "bu akımı kodlarken kullanılacak kodlayıcı"
+msgstr "bu akışa dosya eklendi"
 
 msgid "beats per minute"
-msgstr ""
+msgstr "dakikadaki vuruş"
 
 msgid "number of beats per minute in audio"
-msgstr ""
+msgstr "seste dakikadaki vuruş sayısı"
 
 msgid "keywords"
-msgstr ""
+msgstr "anahtar sözcükler"
 
-#, fuzzy
 msgid "comma separated keywords describing the content"
-msgstr "verinin içeriğini tanımlayan kısa metin"
+msgstr "içeriği tanımlayan virgülle ayrılmış anahtar sözcükler"
 
-#, fuzzy
 msgid "geo location name"
-msgstr "konum"
+msgstr "coğrafi konum adı"
 
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
-msgstr ""
+msgstr "ortamın kaydedildiği ya da üretildiği okunabilir açıklayıcı konum"
 
 msgid "geo location latitude"
-msgstr ""
+msgstr "coğrafi konum enlemi"
 
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
+"WGS84 yerlem derecesinde (ekvatorda sıfır, güney enlemler için negatif "
+"değerler) üretilen ya da kaydedilen ortamın coğrafik enlem konumu"
 
 msgid "geo location longitude"
-msgstr ""
+msgstr "coğrafi konum boylamı"
 
 msgid ""
 "geo longitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
 msgstr ""
+"WGS84 yerlem derecesinde (Greenwich/UK baş meridyeninde sıfır,  batı "
+"boylamları için negatif değerler) üretilen ya da kaydedilen ortamın coğrafik "
+"boylam konumu"
 
 msgid "geo location elevation"
-msgstr ""
+msgstr "coğrafi konum yüksekliği"
 
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
+"WGS84 yerlem ölçüsünde (ortalama deniz seviyesi sıfırdır) üretilen ya da "
+"kaydedilen ortamın coğrafik yüksekliği"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "konum"
+msgstr "ülke coğrafi konumu"
 
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
+msgstr "ortamın üretildiği ya da kaydedildiği ülke (ingilizce adı)"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "konum"
+msgstr "şehir coğrafi konumu"
 
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
+msgstr "ortamın kaydedildiği ya da üretildiği şehir (ingilizce adı)"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "konum"
+msgstr "bölge coğrafi konumu"
 
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"ortamın üretildiği ya da oluşturulduğu şehirdeki bir konum (örneğin semt)"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "konum"
+msgstr "coğrafi yatay konum hatası"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "yatay konumlandırma ölçümlerinde beklenen hata (metre cinsinden)"
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "konum"
+msgstr "coğrafi konum hareket hızı"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
-msgstr ""
+msgstr "yakalama aygıtının m/s cinsinden yakalama yaparken ki hareket hızı"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "konum"
+msgstr "coğrafi konum hareket doğrultusu"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"Bir medyada yakalama yapan aygıtın haraket yönünü belirtir. Kayan noktalı "
+"sayı olarak, derece biçiminde gösterilir, 0 çoğrafik kuzeydir ve saat "
+"yönünde belirtilir"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "konum"
+msgstr "coğrafi konum yakalama açıklaması"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"Bir medya yakalanırken işaret edilen aygıtın yönünü belirtir. Kayan noktalı "
+"sayı olarak, derece biçiminde gösterilir, 0 çoğrafik kuzeydir ve saat "
+"yönünde belirtilir"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr ""
+msgstr "adı göster"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "Ortamın tv/podcast/serie den birisinin adı"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
-msgstr ""
+msgstr "sıralamaadını göster"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
-msgstr ""
+msgstr "Ortamın tv/podcast/serie den birisinin adı, sıralama için"
 
-#, fuzzy
 msgid "episode number"
-msgstr "disk numarası"
+msgstr "bölüm numarası"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "Ortamın parçası olduğu sezonun bölüm numarası"
 
-#, fuzzy
 msgid "season number"
-msgstr "disk numarası"
+msgstr "oturum numarası"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "Ortamın parçası olduğu sezon numarası"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "lisans"
+msgstr "şarkı sözleri"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "Ortamın şarkı sözleri, genellikle şarkılar için kullanılır"
 
 msgid "composer sortname"
-msgstr ""
+msgstr "besteci sıralama adı"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "kayıttan sorumlu olan kişi ya da kişiler"
+msgstr "sıralama amaçlı kayıt oluşturan kişi(ler)"
 
 msgid "grouping"
-msgstr ""
+msgstr "gruplandırma"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Grup ilgili ortam çoklu şarkılar içerir, bir konçertonun farklı parçaları "
+"gibi. Bu şarkıdan daha üst seviyedir ancak albümden alt seviyedir"
 
-#, fuzzy
 msgid "user rating"
-msgstr "süre"
+msgstr "kullanıcı değerlendirmesi"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Kullanıcı tarafından verilmiş puanlama. En yüksek puanlama, bir çok "
+"kullanıcı bu ortamı beğenmiş"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "aygıt üreticisi"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "bu akımı kodlarken kullanılan kodlayıcının sürümü"
+msgstr "Bu ortamı oluşturmak için kullanılan aygıt üreticisi"
 
 msgid "device model"
-msgstr ""
+msgstr "aygıt modeli"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "bu akımı kodlarken kullanılan kodlayıcının sürümü"
+msgstr "Bu ortamı oluşturmak için kullanılan aygıtın modeli"
 
-#, fuzzy
 msgid "application name"
-msgstr "konum"
+msgstr "uygulama adı"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "bu akımı kodlarken kullanılan kodlayıcının sürümü"
+msgstr "Bu ortamı oluşturmak için kullanılan uygulama"
 
 msgid "application data"
-msgstr ""
+msgstr "uygulama verileri"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Ortamda serileştirilecek gelişigüzel uygulama verileri"
 
 msgid "image orientation"
-msgstr ""
+msgstr "görüntü yönü"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Görüntü gösterilmeden önce nasıl döndürülmelidir ya da çevirilmelidir"
 
 msgid "publisher"
-msgstr ""
+msgstr "yayımcı"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Marka ya da yayımcının adı"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "tarafından-yorumlanmış"
 
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr ""
+msgstr "Yeniden düzenleme ve benzer yorumların arkasındaki kişi hakkında bilgi"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "midi-base-note"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Ses kaydının midi notu numarası."
 
 msgid ", "
 msgstr ", "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "%s protokolü için URI işleyicisi bulunamadı"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "URI şema '%s' desteklenmez"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -862,11 +831,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "bağlantı kaynağı yok [alıcı=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "bağlantı alış noktası yok [kaynak=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -886,11 +855,11 @@ msgstr "\"%s\" öğesi yok"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "beklenmeyen kaynak \"%s\" - yoksayılıyor"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "beklenmedik dolgu-kaynağı \"%s\" - yoksayılıyor"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -905,62 +874,63 @@ msgid "no source element for URI \"%s\""
 msgstr "\"%s\" URI'si için kaynak öğesi yok"
 
 msgid "syntax error"
-msgstr ""
+msgstr "söz dizim hatası"
 
 msgid "bin"
-msgstr ""
+msgstr "bin"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "belirtilen boş ikili \"%s\", izin verilmedi"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "\"%s\" ikilisi yok, geçiliyor"
+msgstr "\"%s\" ikilisi yok, öge açılamıyor"
 
 msgid "empty pipeline not allowed"
 msgstr "boş boruhattına izin verilmiyor"
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Tampon belleklerin bir çoğu bırakılıyor."
 
 msgid "Internal data flow problem."
-msgstr ""
+msgstr "İç veri akış sorunu."
 
 msgid "Internal data stream error."
-msgstr ""
+msgstr "İç veri akışı hatası."
 
 msgid "Internal data flow error."
-msgstr ""
+msgstr "İç veri akış hatası."
 
 msgid "Internal clock error."
-msgstr ""
+msgstr "İç saat hatası."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Tampon eşleştirme başarısız."
 
 msgid "Filter caps"
-msgstr ""
+msgstr "Büyük harfleri süz"
 
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
+"İzin verilen yetenekleri kısıtla (NULL HİÇ anlamına gelir). Bu özelliklerin "
+"ayarlanması verilen GstCaps nesnesini kaynak olarak alır."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Geçici dizin belirtilmedi."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Kaynağa değerler atanamadı ya da alınamadı."
+msgstr "Geçici dosya \"%s\" oluşturulamadı."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "\"%s\" dosyası okuma için açılamadı."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "\"%s\" dosyası yazılırken hata."
+msgstr "Dosya indirmek için yazarken hata."
 
 msgid "No file name specified for writing."
 msgstr "Yazım için hiç bir dosya adı belirtilmedi."
@@ -973,9 +943,9 @@ msgstr "\"%s\" dosyası yazım için açılamadı."
 msgid "Error closing file \"%s\"."
 msgstr "\"%s\" kapatılırken hata."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "\"%s\" dosyası yazılırken hata."
+msgstr "\"%s\" dosyasında arama yaparken hata."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
@@ -984,17 +954,17 @@ msgstr "\"%s\" dosyası yazılırken hata."
 msgid "No file name specified for reading."
 msgstr "Okuma için hiç bir dosya adı belirtilmedi."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "Kaynağa değerler atanamadı ya da alınamadı."
+msgstr "\"%s\" ögesinden bilgi alınamadı."
 
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr ""
+msgstr "\"%s\" bir dizindir."
 
-#, fuzzy, c-format
+#, c-format
 msgid "File \"%s\" is a socket."
-msgstr "\"%s\" dosyası düzenli bir dosya değil."
+msgstr "Dosya \"%s\" bir sokettir."
 
 msgid "Failed after iterations as requested."
 msgstr "İstenildiği gibi tekrarlama başarısız oldu."
@@ -1009,74 +979,70 @@ msgid "minimum"
 msgstr "asgari"
 
 msgid "force caps"
-msgstr ""
+msgstr "kapasiteyi zorla"
 
 msgid "force caps without doing a typefind"
-msgstr ""
+msgstr "bir tür tanımlaması yapmadan kapasiteyi zorla"
 
-#, fuzzy
 msgid "Stream contains no data."
-msgstr "bu bilgiyi içeren albüm"
+msgstr "Akış hiçbir veri içermiyor."
 
 msgid "Implemented Interfaces:\n"
-msgstr ""
+msgstr "Gerçeklenmiş Arayüzler:\n"
 
 msgid "readable"
-msgstr ""
+msgstr "okunabilir"
 
-#, fuzzy
 msgid "writable"
-msgstr "başlık"
+msgstr "yazılabilir"
 
 msgid "controllable"
-msgstr ""
+msgstr "yöneltilebilir"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "BOŞ, HAZIR, DURDURULMUŞ ya da YÜRÜTÜLÜYOR durumlarına değiştirilebilir"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "sadece NULL, READY ya da PAUSED olarak değiştirilebilir"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "sadece NULL ya da READY olarak değiştirilebilir"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Kara listeye alınan dosyalar:"
 
-#, fuzzy
 msgid "Total count: "
-msgstr "parça sayısı"
+msgstr "Toplam sayı: "
 
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d kara listeye alınan dosya"
+msgstr[1] "%d kara listeye alınan dosya"
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d eklentisi"
+msgstr[1] "%d eklentisi"
 
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d kara liste girdisi"
+msgstr[1] "%d kara liste girdisi"
 
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d özelliği"
+msgstr[1] "%d özelliği"
 
-#, fuzzy
 msgid "Print all elements"
-msgstr "\"%s\" öğesi yok"
+msgstr "Bütün ögeleri yazdır"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Kara listeye alınmış dosyaların listesini yazdır"
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
@@ -1084,140 +1050,149 @@ msgid ""
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
+"Belirtilen eklenti ya da sağlanan bütün eklentilerin özelliklerinin makine-"
+"çözümlenebilir bir listesini yazdır.\n"
+"                                       Harici otomatik eklenti kurulum "
+"tekniği ile bağlantıda faydalı"
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "Eklenti içeriklerini listele"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Belirtilen öge ya da eklentinin var olup olmadığını kontrol et"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Bir öge ya da eklentinin var olup olmadığını kontrol ettiğinizde ayrıca "
+"onların belirtilen en son versiyonda olup olmadıklarını da kontrol edin"
 
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr ""
+msgstr "Desteklenen URI şemalarını onlara uygulanan ögelerle yazdır"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "\"%s\" dosyası yazım için açılamadı."
+msgstr "Eklenti dosyası yüklenemedi: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "\"%s\" URI'si için kaynak öğesi yok"
+msgstr "Böyle bir öge ya da '%s' eklentisi yok\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Dizin istatistikleri"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr ""
+msgstr "#%u iletisi \"%s\" ögesinden alındı (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr ""
+msgstr "#%u iletisi dolgu \"%s:%s\" (%s) üzerinden alındı: "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr ""
+msgstr "#%u iletisi \"%s\" nesnesinden alındı (%s): "
 
 #, c-format
 msgid "Got message #%u (%s): "
-msgstr ""
+msgstr "İleti #%u alındı (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "HATA: %s öğesinden: %s\n"
+msgstr "\"%s\" ögesinden gelen EOS.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
+msgstr "ETİKET BULUNDU      : \"%s:%s\" dolgusu tarafından bulundu.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
+msgstr "ETİKET BULUNDU      : \"%s\" nesnesi tarafından bulundu.\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "ETİKET BULUNDU\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
+msgstr "İÇİNDEKİLER BULUNDU      : \"%s\" ögesi tarafından bulundu.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
+msgstr "İÇİNDEKİLER BULUNDU      : \"%s\" nesnesi tarafından bulundu.\n"
 
 msgid "FOUND TOC\n"
-msgstr ""
+msgstr "İÇİNDEKİLER BULUNDU\n"
 
 #, c-format
 msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
+"BİLGİ:\n"
+"%s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr "HATA: %s öğesinden: %s\n"
+msgstr "UYARI: %s ögesinden: %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr ""
+msgstr "Kullanım öncesi, önbelleğe alma işleminin bitmesi bekleniyor...\n"
 
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr ""
+msgstr "Kullanım öncesi, ilerlemenin bitmesi için bekleniyor...\n"
 
 msgid "buffering..."
-msgstr ""
+msgstr "tamponlanıyor..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
+"Önbelleğe alma işlemi, YÜRÜTÜLÜYOR durumu için ardışık düzen ayarlamaları "
+"yapıldı ...\n"
 
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "Tamponlama, DURAKLAT olarak ayarlanıyor ...\n"
 
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Yeniden dağıtım gecikmesi...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "Durum %s olarak ayarlanıyor, %s tarafından istenmiş...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr ""
+msgstr "Kesme: Boru hattı durduruluyor ...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "İlerleme: (%s) %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "\"%s\" öğesi yok"
+msgstr "Eksik öge: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "HATA: %s öğesinden: %s\n"
+msgstr "Ögeden '%s' içerik alındı: %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Çıktı etiketleri (metadata olarak da bilinir)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "İçindekiler Çıktısı (bölümler ve sürümleri)"
 
 msgid "Output status information and property notifications"
 msgstr "Çıktı durum bilgisi ve özellik uyarıları"
 
-#, fuzzy
 msgid "Do not print any progress information"
-msgstr "TÜRÜN durum bilgisini gösterme"
+msgstr "Herhangi bir ilerleme bilgisi yazdırmayın"
 
 msgid "Output messages"
-msgstr ""
+msgstr "Çıktı iletileri"
 
 msgid "Do not output status information of TYPE"
 msgstr "TÜRÜN durum bilgisini gösterme"
@@ -1229,10 +1204,10 @@ msgid "Do not install a fault handler"
 msgstr "Hatalı işleticiyi kurma"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "Boru hattı kapatılmadan önce kaynaklarda EOS zorla"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Dizin istatistiklerini topla ve yazdır"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1249,105 +1224,58 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "HATA: 'pipeline' öğesi bulunamadı.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "DURDURULDU durumu için ardışık düzen ayarlamaları ...\n"
 
-#, fuzzy
 msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "HATA: boruhattı çalmak istemiyor.\n"
+msgstr "HATA: Ardışık düzen durdurmayı istemez.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr ""
+msgstr "Boru hattı çalışıyor ve PREROLL ihtiyacı yok ...\n"
 
 msgid "Pipeline is PREROLLING ...\n"
-msgstr ""
+msgstr "Boru hattı PREROLLING yapıyor ...\n"
 
-#, fuzzy
 msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "HATA: boruhattı çalmak istemiyor.\n"
+msgstr "HATA: boru hattı kullanım öncesi yapmak istemiyor.\n"
 
 msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
+msgstr "Boru hattı PREROLLED ...\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "Boru hattı PLAYING olarak ayarlanıyor ...\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "HATA: boruhattı çalmak istemiyor.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
+msgstr "Kapanmada EOS etkin - Boru hattında EOS zorlanıyor\n"
 
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
+msgstr "Kapanmada EOS etkin -- Hatadan sonra EOS için bekleniyor\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "EOS için bekleniyor...\n"
 
 msgid "EOS received - stopping pipeline...\n"
-msgstr ""
+msgstr "EOS alındı - boru hattı durduruluyor...\n"
 
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr ""
+msgstr "EOS için beklenirken kesme - boru hattı durduruluyor...\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "Akış sonu için beklerken bir hata oldu\n"
 
 msgid "Execution ended after %"
 msgstr "Çalıştırma % sonrası bitti"
 
 msgid "Setting pipeline to READY ...\n"
-msgstr ""
+msgstr "Boru hattı READY olarak ayarlanıyor ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr ""
+msgstr "Boru hattı NULL olarak ayarlanıyor ...\n"
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "BORUHATTI çalıştırılıyor ...\n"
-
-#~ msgid "link without source element"
-#~ msgstr "kaynak öğesi olmayan bağ"
-
-#~ msgid "link without sink element"
-#~ msgstr "'sink' öğesi olmayan bağ"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "\"%s\" URI'sini belirtilene bağlayacak öğe yok:"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "\"%s\" URI'si için 'sink' öğesi bağlanamadı"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "'alloc' takibini yazdır (derleme sırasında etkinleştirilmişse)"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr "Kullanım: gst-xmllaunch <dosya.xml> [ öğe.özellik=değer ... ]\n"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "HATA: xml dosyası '%s' ayrıştırması başarısız.\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr "HATA: '%s' dosyasında üst seviye öğesi bulunamadı.\n"
-
-#, fuzzy
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr "UYARI: Şu anda sadece bir tane üst seviye öğesi destekleniyor."
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "HATA: komut satırı argümanı %d ayrıştırılamadı: %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "UYARI: '%s' isimli öğe bulunamadı.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Boruhattının xml belirtimini DOSYA'ya kaydet ve çık"
-
-#~ msgid "FILE"
-#~ msgstr "DOSYA"
-
-#, fuzzy
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Hatalı işleticiyi kurma"
+msgstr "Boru hattı boşaltılıyor ...\n"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Hızlandırılmış CPU işlemlerini kapat"
@@ -1389,11 +1317,26 @@ msgstr "BORUHATTI çalıştırılıyor ...\n"
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr "Akımın %s mime türünü işleyebilecek hiç bir öğe yok."
 
+#~ msgid "maximum"
+#~ msgstr "azami"
+
 #~ msgid ""
 #~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
 #~ msgstr ""
 #~ "\"%1$s\", \"%3$s\" öğesindeki \"%2$s\" özelliğinine uyacak şekilde "
 #~ "dönüştürülemedi"
+
+#~ msgid "link without source element"
+#~ msgstr "kaynak öğesi olmayan bağ"
+
+#~ msgid "link without sink element"
+#~ msgstr "'sink' öğesi olmayan bağ"
+
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "\"%s\" URI'sini belirtilene bağlayacak öğe yok:"
+
+#~ msgid "could not link sink element for URI \"%s\""
+#~ msgstr "\"%s\" URI'si için 'sink' öğesi bağlanamadı"
 
 #~ msgid "Show plugin details"
 #~ msgstr "Eklenti detaylarını göster"
@@ -1415,6 +1358,33 @@ msgstr "BORUHATTI çalıştırılıyor ...\n"
 
 #~ msgid " ns).\n"
 #~ msgstr " ns) \n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr "Kullanım: gst-xmllaunch <dosya.xml> [ öğe.özellik=değer ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "HATA: xml dosyası '%s' ayrıştırması başarısız.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "HATA: '%s' dosyasında üst seviye öğesi bulunamadı.\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time."
+#~ msgstr "UYARI: Şu anda sadece bir tane üst seviye öğesi destekleniyor."
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "HATA: komut satırı argümanı %d ayrıştırılamadı: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "UYARI: '%s' isimli öğe bulunamadı.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Boruhattının xml belirtimini DOSYA'ya kaydet ve çık"
+
+#~ msgid "FILE"
+#~ msgstr "DOSYA"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "'alloc' takibini yazdır (derleme sırasında etkinleştirilmişse)"
 
 #~ msgid "Number of times to iterate pipeline"
 #~ msgstr "Boruhattının kaç defa tekrarlanacağı"
