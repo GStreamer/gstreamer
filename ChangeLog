@@ -1,9 +1,539 @@
-=== release 1.4.0 ===
+=== release 1.5.1 ===
 
-2014-07-19  Sebastian Dröge <slomo@coaxion.net>
+2015-06-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.0
+	  releasing 1.5.1
+
+2015-06-07 09:36:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/eo.po:
+	* po/fr.po:
+	  po: Update translations
+
+2015-06-02 16:31:10 +0200  Edward Hervey <edward@centricular.com>
+
+	* tests/check/elements/amrnbenc.c:
+	* tests/check/elements/mpeg2dec.c:
+	* tests/check/elements/x264enc.c:
+	* tests/check/elements/xingmux.c:
+	* tests/check/pipelines/lame.c:
+	  check: Use GST_CHECK_MAIN () macro everywhere
+	  Makes source code smaller, and ensures we go through common initialization
+	  path (like the one that sets up XML unit test output ...)
+
+2015-05-26 17:58:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: don't artificially limit max allowed value of "threads" property
+	  In auto mode it will happily chose much higher values anyway,
+	  and a limit of 4 seems a bit low these days.
+
+2015-05-12 22:05:02 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdread: Also reset the first_seek var in start()
+	  Make the initial chapter seek work across reuse.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=453322
+
+2015-05-12 21:52:24 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/dvdread/dvdreadsrc.c:
+	* ext/dvdread/dvdreadsrc.h:
+	  dvdread: Work around basesrc initial seek
+	  Ignore the initial seek basesrc sends, as it
+	  breaks starting from another chapter by
+	  immediately seeking back to the start of the title
+
+2015-05-10 11:34:33 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrwbdec/amrwbdec.c:
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/mad/gstmad.c:
+	* ext/sidplay/gstsiddec.cc:
+	* ext/twolame/gsttwolamemp2enc.c:
+	* ext/x264/gstx264enc.c:
+	* gst/realmedia/rademux.c:
+	* gst/xingmux/gstxingmux.c:
+	  docs: update example pipelines in element docs
+	  Mostly gst-launch -> gst-launch-1.0, but also
+	  use autoaudiosink/autovideosink in more places
+	  and update pipelines a little or flesh out
+	  descriptions.
+
+2015-04-27 10:57:12 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/realmedia/rdtdepay.c:
+	  Rename property enums from ARG_ to PROP_
+	  Property enum items should be nameed PROP_ for consistency and readability.
+
+2015-04-26 17:56:22 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Android.mk:
+	* ext/mad/Makefile.am:
+	* ext/x264/Makefile.am:
+	* gst/asfdemux/Makefile.am:
+	* gst/dvdlpcmdec/Makefile.am:
+	* gst/dvdsub/Makefile.am:
+	* gst/realmedia/Makefile.am:
+	* gst/xingmux/Makefile.am:
+	  Remove obsolete Android build cruft
+	  This is not needed any longer.
+
+2015-04-24 17:05:20 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* gst/realmedia/pnmsrc.c:
+	  realmedia: remove unused enum item PROP_LAST
+
+2015-04-23 16:23:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/Makefile.am:
+	  tests: define GST_CHECK_TEST_ENVIRONMENT_BEACON
+	  Make sure the test environment is set up.
+	  https://bugzilla.gnome.org//show_bug.cgi?id=747624
+
+2015-04-23 16:22:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: bump automake requirement to 1.14 and autoconf to 2.69
+	  This is only required for builds from git, people can still
+	  build tarballs if they only have older autotools.
+	  https://bugzilla.gnome.org//show_bug.cgi?id=747624
+
+2015-04-23 16:22:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	  Update .gitignore
+
+2015-04-22 10:37:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* LICENSE_readme:
+	  Remove LICENSE_readme
+	  It's completely outdated and just confusing, better if people are
+	  forced to look at the actual code in question than trusting this file.
+
+2015-04-22 10:37:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* INSTALL:
+	  Remove INSTALL file
+	  autotools automatically generate this, and when using different versions
+	  for autogen.sh there will always be changes to a file tracked by git.
+
+2015-04-20 14:35:30 +0900  Cliff Han <cliff.han@lge.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix a seek failure due to out-of-range in push mode
+	  A seek in push mode failed for big offsets which are beyond
+	  the range of guint32.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748162
+
+2015-04-08 16:52:06 +0200  Edward Hervey <edward@centricular.com>
+
+	* common:
+	* tests/check/Makefile.am:
+	  tests: Use AM_TESTS_ENVIRONMENT
+	  Needed by the new automake test runner
+
+2015-04-03 18:58:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From bc76a8b to c8fb372
+
+2015-04-02 17:24:05 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: fix race in liba52dec lookup table initialization
+	  a52_init initializes the IMDCT global state as well as creating
+	  a new state. When two A52 decoders are created (eg, when two AC3
+	  tracks are contained in a video), calls to a52_init may happen
+	  at the same time, and the IMDCT initialization is not reentrant.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746781
+
+2015-03-27 14:41:51 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: fix buffer leak in crop_buffer()
+	  gst_buffer_pool_acquire_buffer() gives us a new owned buffer while
+	  gst_buffer_replace() reffed it as well so we were one reference extra.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746887
+
+2015-03-28 16:58:26 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: resurrect some flow return handling
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744572
+
+2015-03-28 16:57:06 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: resurrect some flow return handling
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744572
+
+2015-03-24 12:50:43 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: fix memory leak
+	  CID #1291630
+
+2015-03-24 10:29:48 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: initialize buffer
+	  Buffer needs to be null before passing it to gst_buffer_pool_acquire_buffer()
+	  CID #1291634
+
+2015-03-13 17:00:03 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Add stride support
+	  This allow using external pools that have different strides from the
+	  default. These strides need to respect certain rules, which we check
+	  and if these are not met, we fallback to generic pool.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735379
+
+2015-03-10 16:45:01 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  mpeg2dec: Re-implement pool handling
+	  This is a rewrite of the pool negotiation and configuration. Direct
+	  to output decoding is now achieved by configuring the pool using
+	  video-alignment. This removes copies when dealing with any elements that
+	  supports VideoAlignment, and enable usage of generic video buffer pool,
+	  XVImagePool and GLPool. It drops the crop meta implementation for now.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735379
+
+2015-03-10 09:33:15 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvbsub: fix indentation
+
+2015-03-10 09:32:51 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/dvdread/dvdreadsrc.c:
+	* gst/dvdsub/gstdvdsubdec.c:
+	  Fix double semicolons
+
+2015-03-09 19:11:51 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  Revert "mpeg2dec: Fix handling of stride"
+	  This reverts commit f3e8dcb9de4d546e7d80ccc1754ed13dd4e7ac81.
+
+2015-03-09 19:11:44 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  Revert "mpeg2dec: Use propose unref method for buffer"
+	  This reverts commit 63b43d3bee832aec353d02575da543f3c73f6893.
+
+2015-03-09 18:43:43 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Use propose unref method for buffer
+
+2015-01-21 18:29:22 +0000  Simon Farnsworth <simon.farnsworth@onelan.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Fix handling of stride
+	  A pipeline like:
+	  gst-launch-1.0 filesrc location=file.ts ! tsdemux ! mpegvideoparse ! mpeg2dec  ! vaapisink
+	  would look bad when file.ts contains 704x576 video, because vaapisink would
+	  give you buffers of stride 768, but libmpeg2 was not told about this and
+	  used a stride of 704.
+	  Tell libmpeg2 about the stride from  downstream; in the process, teach it to
+	  reject buffer pools that don't meet libmpeg2's chroma stride requirements
+	  Signed-off-by: Simon Farnsworth <simon.farnsworth@onelan.co.uk>
+
+2015-02-11 13:56:48 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	* gst/asfdemux/gstasfdemux.c:
+	  Improve and fix LATENCY query handling
+	  This now follows the design docs everywhere, especially the maximum latency
+	  handling.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744106
+
+2015-02-06 19:04:32 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Don't set max latency to the same value as the encoder latency
+	  The meaning of the max latency is *not* the maximum latency this element will
+	  introduce. It is the maximum latency this element can endure without
+	  overflowing any buffers, which is infinite for x264enc.
+	  Fixes latency configuration in zero latency mode, where max latency was
+	  becoming 0... which usually won't work well if something else introduces
+	  latency as then max < min in the end, and latency configuration just fails.
+
+2015-02-02 14:13:10 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: set annexb=1 in byte stream mode when downstream has ANY caps
+	  This matches what is done when downstream caps are not ANY, and fixes
+	  prerolling in byte stream mode when typefind is downstream.
+
+2015-01-21 09:56:41 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/lame/gstlamemp3enc.c:
+	* ext/twolame/gsttwolamemp2enc.c:
+	  Constify some static arrays everywhere
+
+2015-01-18 16:53:41 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: remove non-ported plugins stuff
+	  It's not needed any longer, all plugins in -ugly
+	  have been ported.
+
+2015-01-18 11:07:43 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Don't set an allocation maximum
+	  There is no reason x264enc should enforce a maximum allocation size.
+	  The maximum is normally set by buffer pool which cannot grow, but we
+	  don't offer a buffer pool. This would lead to stall when used with
+	  element that don't implement allocation query.
+	  Related to: https://bugzilla.gnome.org/show_bug.cgi?id=738302
+
+2015-01-12 16:10:45 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f2c6b95 to bc76a8b
+
+2014-12-22 11:46:27 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* MAINTAINERS:
+	  MAINTAINERS: Update my mail address
+
+2014-12-18 10:54:30 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ef1ffdc to f2c6b95
+
+2014-11-27 17:11:30 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7bb2bce to ef1ffdc
+
+2014-06-06 13:59:57 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	  dvdlpcmdec: set channel positions using the appropriate API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731038
+
+2014-11-05 23:34:56 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix comment
+
+2014-11-05 13:45:29 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Send duration query upstream first
+	  An upstream element (like mms or some dlna source) might be able to
+	  answer the query. Try that first, else fallback to standard logic
+
+2014-11-02 17:31:05 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asf: fix up file mode
+
+2014-10-27 17:58:14 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 84d06cd to 7bb2bce
+
+2014-10-21 19:46:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  tests: parallelise 'make check-valgrind'
+
+2014-10-21 13:02:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From a8c8939 to 84d06cd
+
+2014-10-21 12:58:58 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 36388a1 to a8c8939
+
+2014-08-22 10:46:35 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: first try to delegate TIME seek events upstream
+	  We should give a chance to upstream to handle TIME seek events before trying
+	  to handle it in asfdemux.
+	  Fix a bug where fast backward seeks where discarded right away because they
+	  were not supported by asfdemux.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734471
+
+2014-09-04 16:57:02 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/asfdemux/asfheaders.c:
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: add ASF_OBJ_METADATA_LIBRARY_OBJECT
+	  We can safely ignore those but best to claim to understand this object type so
+	  we don't raise a warning.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736060
+
+2014-08-21 12:09:23 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: if video is h264, check the codec_data for bytestream data
+	  For bytestream we don't want to expose it as codec_data but rather as
+	  streamheader as it is not out-of-band data but data that should be
+	  prepended to the beginning of the stream before the other buffers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735070
+
+2014-08-10 19:13:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  docs: update for git master
+
+2014-08-06 12:07:09 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: simplify log statement
+	  Use the GST_PTR_FORMAT to print the buffer
+
+2014-08-05 19:47:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264: fix colour inversion with YV12 format
+	  It's the same as I420 but with the U/V planes swapped.
+
+2014-08-01 10:37:44 +0200  Edward Hervey <edward@collabora.com>
+
+	* Makefile.am:
+	* common:
+	  Makefile: Add usage of build-checks step
+	  Allows building checks without running them
+
+2014-07-08 16:45:45 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Request buffers in allocation query
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732288
+
+2014-06-06 20:23:15 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Shift both PTS and DTS to ensure positive timestamp
+	  Currently we only shift DTS to compensate that we don't support negative
+	  timestamp. This cause a problem that PTS is no longer >= DTS and may
+	  make muxers live much harder. Instead, shift both PTS/DTS forward. Also
+	  remove all the hack to handle this which seems the result of thinking libx264
+	  is bugged.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731351
+
+2014-07-19 18:04:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.4.0 ===
+
+2014-07-19 17:44:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.4.0
+
+2014-07-19 16:50:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2014-07-19 12:48:11 +0200  Sebastian Dröge <sebastian@centricular.com>
 

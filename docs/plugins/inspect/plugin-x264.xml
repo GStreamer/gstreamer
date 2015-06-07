@@ -3,10 +3,10 @@
   <description>libx264-based H264 plugins</description>
   <filename>../../ext/x264/.libs/libgstx264.so</filename>
   <basename>libgstx264.so</basename>
-  <version>1.5.0.1</version>
+  <version>1.5.1</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins git</package>
+  <package>GStreamer Ugly Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

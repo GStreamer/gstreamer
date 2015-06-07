@@ -1021,7 +1021,7 @@
 <ARG>
 <NAME>GstX264Enc::threads</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= 4</RANGE>
+<RANGE><= G_MAXINT</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Threads</NICK>
 <BLURB>Number of threads used by the codec (0 for automatic).</BLURB>

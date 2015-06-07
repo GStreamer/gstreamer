@@ -1,23 +1,17 @@
 
-Release notes for GStreamer Ugly Plugins 1.4.0
+Release notes for GStreamer Ugly Plugins 1.5.1
 
 
-The GStreamer team is pleased to announce the first release of
-the stable 1.4 release series. The 1.4 release series is adding new
-features on top of the 1.0 and 1.2 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the unstable
+1.5 release series. The 1.5 release series is adding new features on top of
+the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.5 release series
+will lead to the stable 1.6 release series in the next weeks, and newly added
+API can still change until that point.
 
 
-
-Binaries for Android, iOS, Mac OS X and Windows are provided together
-with this release.
-
-
-
-The stable 1.4 release series is API and ABI compatible with 1.0.x,
-1.2.x and any other 1.x release series in the future. Compared to 1.2.x
-it contains some new features and more intrusive changes that were
-considered too risky as a bugfix.
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately
+during the unstable 1.5 release series.
 
 
 
@@ -64,8 +58,23 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-There were no bugs fixed in this release
+Features of this release
     
+      * Parallel installability with 0.10.x series
+      * 
+
+Bugs fixed in this release
+     
+      * 731351 : x264enc: Shift PTS and DTS with bframes
+      * 453322 : dvdreadsrc ignores chapter specification when starting playback
+      * 734471 : asfdemux: Should pass seek events upstream first
+      * 735070 : asfdemux: ASF file with H.264 video not playing back properly
+      * 735379 : mpeg2dec: use stride information from GstVideoFrame
+      * 737516 : gst-launch-1.0 videotestsrc ! x264enc ! decodebin ! autovideosink doesn't want to preroll
+      * 746781 : a52dec: audio noise/distortions when there are multiple AC-3 streams being decoded in parallel
+      * 746887 : mpeg2dec: fix a couple of leaks
+      * 748162 : asfdemux: can't seek to the offset which is bigger than 4G bytes in push mode
+      * 732288 : x264enc: Does not request enough buffers in allocation query
 
 ==== Download ====
 
@@ -102,5 +111,17 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Cliff Han
+      * Edward Hervey
+      * Guillaume Desmottes
+      * Jan Schmidt
+      * Luis de Bethencourt
+      * Mark Nauwelaerts
+      * Nicolas Dufresne
       * Sebastian Dröge
+      * Simon Farnsworth
+      * Stefan Sauer
+      * Thiago Santos
+      * Tim-Philipp Müller
+      * Vincent Penquerc'h
  
