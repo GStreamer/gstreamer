@@ -1,9 +1,314 @@
-=== release 1.4.0 ===
+=== release 1.5.1 ===
 
-2014-07-19  Sebastian Dröge <slomo@coaxion.net>
+2015-06-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.0
+	  releasing 1.5.1
+
+2015-06-05 11:57:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Release stream lock while calling avcodec_decode_video2()
+	  It might call back into us from another thread and try to take the stream lock
+	  again, e.g. to allocate a buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726020
+
+2015-06-02 20:48:33 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Post error message before returning a flow error
+	  This is required.
+
+2015-06-02 16:32:55 +0200  Edward Hervey <edward@centricular.com>
+
+	* tests/check/generic/libavcodec-locking.c:
+	* tests/check/generic/plugin-test.c:
+	  check: Use GST_CHECK_MAIN () macro everywhere
+	  Makes source code smaller, and ensures we go through common initialization
+	  path (like the one that sets up XML unit test output ...)
+
+2015-06-02 12:32:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  Make top-level 'check-torture' and 'check-valgrind' targets functional
+
+2014-09-12 09:44:16 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Use video/x-cavs mime type instead of video/x-gst-av-cavs
+	  More generic mime-type which can be used by other decoders than libav.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727731
+
+2015-03-25 10:24:52 +0100  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* configure.ac:
+	  configure: don't disable Chinese AVS (cavs) decoder
+	  It enables GStreamer to decode Chinese AVS video streams.
+	  Also fix indentation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727731
+
+2015-06-02 09:09:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddev: Unref decoded AVFrame after we're done with it
+	  Otherwise we might leak some memory, like all compressed data when using
+	  avdec_ac3.
+
+2015-05-31 21:32:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v11.4
+
+2015-04-23 17:12:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	  Update .gitignore
+
+2015-04-23 17:09:36 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: bump automake requirement to 1.14 and autoconf to 2.69
+	  This is only required for builds from git, people can still
+	  build tarballs if they only have older autotools.
+	  https://bugzilla.gnome.org//show_bug.cgi?id=747624
+
+2015-04-03 18:58:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From bc76a8b to c8fb372
+
+2015-03-29 14:01:50 +0200  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: resurrect some flow return handling
+	  https://bugzilla.gnome.org/show_bug.cgi?id=744572
+
+2015-03-14 11:26:16 +0000  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v11.3
+
+2015-03-10 09:37:19 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: fix double semicolon
+
+2015-03-10 10:18:53 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  libav: Add support for 10 bit planar AYUV formats
+
+2015-03-10 10:17:45 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavdeinterlace.c:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavscale.c:
+	* ext/libav/gstavutils.c:
+	* ext/libav/gstavvidenc.c:
+	  libav: Change from deprecated PIX_FMT_* to AV_PIX_FMT_*
+
+2015-03-09 22:02:38 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Don't copy padding if handling a frame failed
+	  We will return an error right afterwards anyway.
+
+2015-03-09 22:02:19 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: If a flow return during draining is not OK, don't drain any further
+
+2015-03-09 22:01:43 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Error out if we try to allocate a buffer without being negotiated
+	  Otherwise we just run into assertions because we should've errored out
+	  already.
+
+2015-03-05 14:25:16 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: remove duplicate goto block
+
+2015-03-05 14:23:44 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: check AVIO Context has been allocated
+
+2015-02-08 05:35:19 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  Add drain() vfunc implementation that does the same as finish()
+	  finish() is called at EOS, drain() is called at all other times
+	  when the decoder should be drained out. gst-libav decoder behaviour
+	  is the same in both cases, so use the same implementation
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=734617
+
+2014-12-11 21:07:44 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Implement SKIP and new SKIP_KEY_UNITS_ONLY flags
+	  Respect any skip flags set in the incoming segment.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735666
+
+2015-01-17 22:13:36 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v11.2
+
+2015-01-12 16:13:15 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f2c6b95 to bc76a8b
+
+2014-12-18 10:56:03 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ef1ffdc to f2c6b95
+
+2014-12-12 09:57:35 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v11.1
+
+2014-11-27 20:44:31 +0100  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ext/libav/gstav.c:
+	  av: use GMutex instead of deprecated GStaticMutex
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740822
+
+2014-11-27 17:12:26 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7bb2bce to ef1ffdc
+
+2014-11-16 16:11:53 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* ext/libav/gstavviddec.c:
+	  videodec: Ensure update_pool is initialized
+	  This was probably not causing any issues, but we would randomly
+	  and needlessly update the pool in the query due to uninitialized
+	  variable.
+
+2014-10-27 18:00:07 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 84d06cd to 7bb2bce
+
+2014-10-21 13:03:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From a8c8939 to 84d06cd
+
+2014-10-21 12:59:52 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 36388a1 to a8c8939
+
+2014-09-22 14:00:07 -0700  Aleix Conchillo Flaqué <aconchillo@gmail.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: drain samples until libav doesn't have more data
+	  We use have_data (that comes from libav), instead of only trying 10
+	  times, to know if there are more samples available. The old code was
+	  machine dependent as different amount of samples could be decoded by
+	  different type of (more powerful) machines, and 10 times was not always
+	  sufficient.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737144
+
+2014-09-15 22:50:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v11
+
+2014-09-11 19:37:33 -0400  IBM Thinklab <oblong@wall-center.(none)>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: drain frames until libav doesn't have more data
+	  We use have_data (that comes from libav), instead of only trying 10 times,
+	  to know if there are more frames available. The old code was machine
+	  dependant as different amount of frames could be decoded by different
+	  type of (more powerful) machines, and 10 times was not always sufficient.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736515
+
+2014-08-27 12:39:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v11_beta1
+
+2014-08-12 16:17:11 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* ext/libav/gstavcfg.c:
+	  libav: Minor changes to build properly with v11alpha1
+
+2014-08-12 15:54:04 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v11alpha1
+
+2014-08-08 20:04:20 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: After draining frames, flush the libav decoder
+	  Makes sure that there's really nothing stale left in the decoder
+	  after draining.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734661
+
+2014-08-11 14:16:55 +0200  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Don't lose frames on EOS
+	  have_data is not propagated from gst_ffmpegviddec_video_frame to
+	  gst_ffmpegviddec_frame. have_data is only set to 1 in
+	  gst_ffmpegviddec_frame if a frame pointer is passed. However, this is
+	  not true while draining, which means that have_data from libav will be
+	  ignored.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734608
+
+2014-08-06 10:14:17 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Bump the rank of avdec_aac so it is used by default
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676131
+
+2014-08-04 15:06:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v10.3
+
+2014-08-01 10:41:28 +0200  Edward Hervey <edward@collabora.com>
+
+	* Makefile.am:
+	* common:
+	  Makefile: Add usage of build-checks step
+	  Allows building checks without running them
+
+2014-07-19 18:04:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.4.0 ===
+
+2014-07-19 17:49:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.4.0
 
 === release 1.3.91 ===
 

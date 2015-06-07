@@ -40,6 +40,7 @@ GObject
           avdec_adpcm_sbpro_4
           avdec_adpcm_swf
           avdec_adpcm_thp
+          avdec_adpcm_vima
           avdec_adpcm_xa
           avdec_adpcm_yamaha
           avdec_alac
@@ -82,6 +83,9 @@ GObject
           avdec_mpc7
           avdec_mpc8
           avdec_nellymoser
+          avdec_on2avc
+          avdec_opus
+          avdec_paf_audio
           avdec_pcm_lxf
           avdec_pcm_s24le_planar
           avdec_pcm_s32le_planar
@@ -131,6 +135,8 @@ GObject
           avenc_roq_dpcm
           avenc_wmav1
           avenc_wmav2
+        GstBaseTransform
+          GstFFMpegScale
         GstBin
           GstPipeline
         GstFFMpegDeinterlace
@@ -139,6 +145,7 @@ GObject
           avdec_8bps
           avdec_aasc
           avdec_aic
+          avdec_alias_pix
           avdec_amv
           avdec_anm
           avdec_ansi
@@ -152,9 +159,11 @@ GObject
           avdec_binkvideo
           avdec_bmp
           avdec_bmv_video
+          avdec_brender_pix
           avdec_c93
           avdec_camstudio
           avdec_camtasia
+          avdec_cavs
           avdec_cdgraphics
           avdec_cdxl
           avdec_cinepak
@@ -175,6 +184,7 @@ GObject
           avdec_eatqi
           avdec_escape124
           avdec_escape130
+          avdec_exr
           avdec_ffv1
           avdec_ffvhuff
           avdec_fic
@@ -225,8 +235,11 @@ GObject
           avdec_msvideo1
           avdec_mszh
           avdec_mts2
+          avdec_mvc1
+          avdec_mvc2
           avdec_mxpeg
           avdec_nuv
+          avdec_paf_video
           avdec_pam
           avdec_pbm
           avdec_pcx
@@ -248,7 +261,9 @@ GObject
           avdec_rv20
           avdec_rv30
           avdec_rv40
+          avdec_sanm
           avdec_sgi
+          avdec_sgirle
           avdec_smackvid
           avdec_smc
           avdec_sp5x
@@ -279,6 +294,7 @@ GObject
           avdec_vp6
           avdec_vp6a
           avdec_vp6f
+          avdec_vp7
           avdec_vp8
           avdec_vp9
           avdec_vqavideo
@@ -290,6 +306,7 @@ GObject
           avdec_wnv1
           avdec_xan_wc3
           avdec_xan_wc4
+          avdec_xbm
           avdec_xl
           avdec_xwd
           avdec_yop
@@ -299,6 +316,7 @@ GObject
         GstVideoEncoder
           avenc_a64multi
           avenc_a64multi5
+          avenc_alias_pix
           avenc_asv1
           avenc_asv2
           avenc_bmp
@@ -352,7 +370,6 @@ GObject
         avdemux_avs
         avdemux_daud
         avdemux_ea
-        avdemux_ffm
         avdemux_film_cpk
         avdemux_gxf
         avdemux_idcin
@@ -391,7 +408,6 @@ GObject
         avmux_dv
         avmux_dvd
         avmux_f4v
-        avmux_ffm
         avmux_filmstrip
         avmux_flv
         avmux_gxf

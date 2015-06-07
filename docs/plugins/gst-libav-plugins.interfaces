@@ -14,6 +14,7 @@ avenc_adpcm_ms GstPreset
 avenc_adpcm_swf GstPreset
 avenc_adpcm_yamaha GstPreset
 avenc_alac GstPreset
+avenc_alias_pix GstPreset
 avenc_asv1 GstPreset
 avenc_asv2 GstPreset
 avenc_bmp GstPreset
