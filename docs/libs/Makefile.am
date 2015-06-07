@@ -67,9 +67,6 @@ GTKDOC_LIBS = \
 	$(top_builddir)/libs/gst/check/libgstcheck-@GST_API_VERSION@.la \
 	$(GST_OBJ_LIBS)
 
-GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
-GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)
-
 GTKDOC_EXTRA_ENVIRONMENT= \
     GST_PLUGIN_SCANNER_1_0=$(top_builddir)/libs/gst/helpers/gst-plugin-scanner
 
