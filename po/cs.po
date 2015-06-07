@@ -5,14 +5,14 @@
 #
 # Miloslav Trmac <mitr@volny.cz>, 2004.
 # Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009.
-# Marek Černocký <marek@manet.cz>, 2013.
+# Marek Černocký <marek@manet.cz>, 2013, 2015.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.1.4\n"
+"Project-Id-Version: gst-plugins-bad 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:40+0200\n"
-"PO-Revision-Date: 2013-09-18 10:05+0200\n"
+"POT-Creation-Date: 2015-06-07 09:36+0200\n"
+"PO-Revision-Date: 2015-02-17 10:20+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -22,10 +22,118 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Gtranslator 2.91.6\n"
 
-msgid "Internal data stream error."
-msgstr "Chyba proudu vnitřních dat."
-
 msgid "format wasn't negotiated before get function"
+msgstr "formát nebyl vyjednán před získáním funkce"
+
+msgid "default GStreamer sound events audiosink"
+msgstr "výchozí zvukový cíl GStreamer pro zvukové události"
+
+#, fuzzy
+msgid ""
+"GStreamer can play audio using any number of output elements. Some possible "
+"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"GStreamer umí přehrávat zvuk pomocí mnoha výstupních prvků. Možné volby jsou "
+"osssink, pulsesink a alsasink. Zvukovým cílem může být namísto jednoho "
+"elementu i částečná roura."
+
+msgid "description for default GStreamer sound events audiosink"
+msgstr "popis výchozího zvukového cíle pro zvukové události GStreamer"
+
+msgid "Describes the selected audiosink element."
+msgstr "Popisuje vybraný element sloužící jako cíl pro zvuk."
+
+msgid "default GStreamer audiosink for Audio/Video Conferencing"
+msgstr "výchozí zvukový cíl GStreamer pro hlasové konference a videokonference"
+
+msgid ""
+"description for default GStreamer audiosink for Audio/Video Conferencing"
+msgstr ""
+"popis výchozího zvukového cíle GStreamer pro hlasové konference a "
+"videokonference"
+
+msgid "default GStreamer audiosink for Music and Movies"
+msgstr "výchozí zvukový cíl GStreamer pro hudbu a filmy"
+
+msgid "description for default GStreamer audiosink for Music and Movies"
+msgstr "popis výchozího zvukového cíle GStreamer pro hudbu a filmy"
+
+msgid "default GStreamer videosink"
+msgstr "výchozí cíl videa GStreamer"
+
+msgid ""
+"GStreamer can play video using any number of output elements. Some possible "
+"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
+"can be a partial pipeline instead of just one element."
+msgstr ""
+"GStreamer umí přehrávat video pomocí mnoha výstupních prvků. Možné volby "
+"jsou xvimagesink, ximagesink, sdlvideosink a aasink. Cílem videa může být "
+"namísto právě jednoho elementu i částečná roura."
+
+msgid "description for default GStreamer videosink"
+msgstr "popis výchozího cíle videa GStreamer"
+
+msgid "Describes the selected videosink element."
+msgstr "Popisuje vybraný element sloužící jako cíl pro video."
+
+msgid "default GStreamer audiosrc"
+msgstr "výchozí zdroj zvuku GStreamer"
+
+msgid ""
+"GStreamer can record audio using any number of input elements. Some possible "
+"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"GStreamer umí nahrávat zvuk pomocí mnoha vstupních prvků. Možné volby jsou "
+"osssrc, pulsesrc a alsasrc. Zvukovým zdrojem může být namísto právě jednoho "
+"elementu i částečná roura."
+
+msgid "description for default GStreamer audiosrc"
+msgstr "popis pro výchozí zdroj zvuku GStreamer"
+
+msgid "Describes the selected audiosrc element."
+msgstr "Popisuje vybraný element sloužící jako zdroj zvuku."
+
+msgid "default GStreamer videosrc"
+msgstr "výchozí zdroj videa GStreamer"
+
+msgid ""
+"GStreamer can record video from any number of input elements. Some possible "
+"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
+"partial pipeline instead of just one element."
+msgstr ""
+"GStreamer umí nahrávat video pomocí mnoha vstupních prvků. Možné volby jsou "
+"v4lsrc, v4l2src a videotestsrc. Zdrojem videa může být namísto právě jednoho "
+"elementu i částečná roura."
+
+msgid "description for default GStreamer videosrc"
+msgstr "popis pro výchozí zdroj videa GStreamer"
+
+msgid "Describes the selected videosrc element."
+msgstr "Popisuje vybraný element sloužící jako zdroj videa."
+
+msgid "default GStreamer visualization"
+msgstr "výchozí vizualizace GStreamer"
+
+msgid ""
+"GStreamer can put visualization plugins in a pipeline to transform audio "
+"streams in video frames. Some possible choices are goom, goom2k1 and "
+"synaesthesia. The visualization plugin can be a partial pipeline instead of "
+"just one element."
+msgstr ""
+"GStreamer umí do roury vložit vizualizační zásuvný modul, aby prováděl změny "
+"zvukových proudů ve snímcích videa. Možné volby jsou goom, goom2k1 a "
+"synaesthesia. Vizualizačním zásuvným modulem může být namísto právě jednoho "
+"elementu i částečná roura."
+
+msgid "description for default GStreamer visualization"
+msgstr "popis pro výchozí vizualizaci GStreamer"
+
+msgid "Describes the selected visualization element."
+msgstr "Popisuje vybraný vizualizační element."
+
+msgid "OpenCV failed to load template image"
 msgstr ""
 
 msgid "Could not read title information for DVD."
@@ -51,29 +159,8 @@ msgstr "Nezdařilo se čtení DVD."
 msgid "This file contains no playable streams."
 msgstr "Tento soubor neobsahuje žádný proud, který by šel přehrát."
 
-msgid "Couldn't get the Manifest's URI"
-msgstr "Nelze získat adresu URI prohlášení."
-
-msgid "Failed to get fragment URL."
-msgstr "Selhalo získání adresy URL fragmentu."
-
-msgid "Couldn't download fragments"
-msgstr "Nelze stáhnout fragmenty"
-
-#, fuzzy
 msgid "Could not open sndfile stream for reading."
-msgstr "Nezdařilo se otevření souboru „%s“ ke čtení."
-
-msgid "No file name specified for writing."
-msgstr "K zápisu nebyl zadán žádný název souboru."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Nezdařilo se otevření souboru „%s“ k zápisu."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Nezdařil se zápis do souboru „%s“."
+msgstr "Nezdařilo se otevření proudu zvukového souboru ke čtení."
 
 msgid "Could not establish connection to sndio"
 msgstr "Nelze ustanovit spojení se sndio"
@@ -104,13 +191,32 @@ msgstr ""
 "Umístění souboru je nastavené prázdné, nastavte jej prosím na platný název "
 "souboru"
 
+msgid "Digitalzoom element cound't be created"
+msgstr ""
+
 msgid "Subpicture format was not configured before data flow"
 msgstr "Formát podřízeného obrázku nebyl nastaven před datovým tokem"
+
+msgid "Failed to get fragment URL."
+msgstr "Selhalo získání adresy URL fragmentu."
+
+msgid "Internal data stream error."
+msgstr "Chyba proudu vnitřních dat."
+
+msgid "Couldn't download fragments"
+msgstr "Nelze stáhnout fragmenty"
+
+msgid "No file name specified for writing."
+msgstr "K zápisu nebyl zadán žádný název souboru."
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 "Zadaný název souboru „%s“ nelze převést do kódování místních názvů souborů."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Nezdařilo se otevření souboru „%s“ k zápisu."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -124,9 +230,10 @@ msgstr "Nezdařilo se otevření zařízení rozhraní „%s“."
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Ze zařízení rozhraní „%s“ se nezdařilo získat nastavení."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Ze zařízení rozhraní „%s“ se nezdařilo získat nastavení."
+msgstr ""
+"Ze zařízení rozhraní „%s“ se nezdařilo vytvořit seznam doručovacích systémů."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -145,3 +252,9 @@ msgstr "Soubor s nastavením kanálů DVB neobsahuje žádné kanály"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Nelze najít podrobnosti ke kanálu DVB %s"
+
+#~ msgid "Couldn't get the Manifest's URI"
+#~ msgstr "Nelze získat adresu URI prohlášení."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Nezdařil se zápis do souboru „%s“."

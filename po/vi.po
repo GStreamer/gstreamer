@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.3.90\n"
+"Project-Id-Version: gst-plugins-bad-1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:40+0200\n"
-"PO-Revision-Date: 2014-06-30 08:59+0700\n"
+"POT-Creation-Date: 2015-06-07 09:36+0200\n"
+"PO-Revision-Date: 2014-08-29 15:09+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -23,10 +23,116 @@ msgstr ""
 "X-Poedit-Language: Vietnamese\n"
 "X-Poedit-Country: VIET NAM\n"
 
-msgid "Internal data stream error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
-
 msgid "format wasn't negotiated before get function"
+msgstr "định dạng không được dàn xếp trước hàm"
+
+msgid "default GStreamer sound events audiosink"
+msgstr "các sự kiện âm thanh GStreamer mặc định cho “audiosink”"
+
+#, fuzzy
+msgid ""
+"GStreamer can play audio using any number of output elements. Some possible "
+"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"GStreamer có thể chạy nhạc với bất kỳ số lượng phần tử đầu ra nào. Một số có "
+"thể chọn lựa là osssink, pulsesink và alsasink. “audiosink” có thể là đường "
+"ống đặc biệt thay vì chỉ một phần tử."
+
+msgid "description for default GStreamer sound events audiosink"
+msgstr "mô tả cho các sự kiện âm thanh GStreamer mặc định dành cho “audiosink”"
+
+msgid "Describes the selected audiosink element."
+msgstr "Mô tả về phần tử “audiosink” đã chọn."
+
+msgid "default GStreamer audiosink for Audio/Video Conferencing"
+msgstr "“GStreamer audiosink” mặc định dành cho Hội nghị Nhạc/Phim"
+
+msgid ""
+"description for default GStreamer audiosink for Audio/Video Conferencing"
+msgstr "mô tả cho GStreamer audiosink mặc định dành cho Hội nghị Nhạc/Phim"
+
+msgid "default GStreamer audiosink for Music and Movies"
+msgstr "GStreamer audiosink mặc định dành cho Âm nhạc và Phim"
+
+msgid "description for default GStreamer audiosink for Music and Movies"
+msgstr "mô tả cho GStreamer audiosink mặc định dành cho Âm nhạc và Phim"
+
+msgid "default GStreamer videosink"
+msgstr "GStreamer videosink mặc định"
+
+msgid ""
+"GStreamer can play video using any number of output elements. Some possible "
+"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
+"can be a partial pipeline instead of just one element."
+msgstr ""
+"GStreamer có thể chạy phim với bất kỳ số lượng phần tử đầu ra nào. Một số có "
+"thể chọn lựa là xvimagesink, ximagesink, sdlvideosink và aasink. “videosink” "
+"có thể là đường ống đặc biệt thay vì chỉ một phần tử."
+
+msgid "description for default GStreamer videosink"
+msgstr "mô tả phần tử nguồn hình ảnh GStreamer mặc định"
+
+msgid "Describes the selected videosink element."
+msgstr "Mô tả phần tử videosink đã chọn."
+
+msgid "default GStreamer audiosrc"
+msgstr "nguồn âm thanh GStreamer mặc định"
+
+msgid ""
+"GStreamer can record audio using any number of input elements. Some possible "
+"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"GStreamer có thể ghi âm thanh dùng bao nhiêu phần tử đầu vào cũng được. Một "
+"số lựa chọn là osssrc, plusesrc và alsasrc. Nguồn âm thanh có thể là các "
+"đường ống cục bộ nào đó thay vì chỉ một phần tử nguồn."
+
+msgid "description for default GStreamer audiosrc"
+msgstr "mô tả phần tử nguồn âm thanh GStreamer mặc định"
+
+msgid "Describes the selected audiosrc element."
+msgstr "Mô tả phần tử nguồn âm thanh đã chọn."
+
+msgid "default GStreamer videosrc"
+msgstr "nguồn hình ảnh GStreamer mặc định"
+
+msgid ""
+"GStreamer can record video from any number of input elements. Some possible "
+"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
+"partial pipeline instead of just one element."
+msgstr ""
+"GStreamer có thể chạy phim với bất kỳ số lượng phần tử đầu vào nào. Một số "
+"có thể chọn lựa là v4lsrc, v4l2src và videotestsrc. Nguồn hình có thể là "
+"đường ống đặc biệt thay vì chỉ một phần tử."
+
+msgid "description for default GStreamer videosrc"
+msgstr "mô tả cho nguồn hình GStreamer mặc định"
+
+msgid "Describes the selected videosrc element."
+msgstr "Mô tả phần tử nguồn hình ảnh đã chọn."
+
+msgid "default GStreamer visualization"
+msgstr "hiện hình GStreamer mặc định"
+
+msgid ""
+"GStreamer can put visualization plugins in a pipeline to transform audio "
+"streams in video frames. Some possible choices are goom, goom2k1 and "
+"synaesthesia. The visualization plugin can be a partial pipeline instead of "
+"just one element."
+msgstr ""
+"GStreamer có thể đặt phần bổ xung hiện hình trong một đường ống để mà chuyển "
+"dạng luồng dữ liệu âm thanh trong khung hình phim. Một số có thể chọn lựa là "
+"goom, goom2k1 và synaesthesia. Phần bổ xung hiện hình có thể là đường ống "
+"đặc biệt thay vì chỉ một phần tử."
+
+msgid "description for default GStreamer visualization"
+msgstr "mô tả về hiện hình GStreamer mặc định"
+
+msgid "Describes the selected visualization element."
+msgstr "Mô tả về phần tử hiện hình đã chọn."
+
+msgid "OpenCV failed to load template image"
 msgstr ""
 
 msgid "Could not read title information for DVD."
@@ -52,28 +158,8 @@ msgstr "Không thể đọc DVD."
 msgid "This file contains no playable streams."
 msgstr "Tập tin này không chứa luồng dữ liệu có thể phát."
 
-msgid "Couldn't get the Manifest's URI"
-msgstr "Không thể lấy URI của Manifest"
-
-msgid "Failed to get fragment URL."
-msgstr "Gặp lỗi khi lấy URL phân mảnh."
-
-msgid "Couldn't download fragments"
-msgstr "Không thể tải về các phân mảnh"
-
 msgid "Could not open sndfile stream for reading."
 msgstr "Không thể mở luồng dữ liệu tập tin snd để đọc."
-
-msgid "No file name specified for writing."
-msgstr "Chưa chỉ định tên tập tin để ghi vào."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Không thể mở tập tin “%s” để ghi."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Không thể ghi vào tập tin “%s”."
 
 msgid "Could not establish connection to sndio"
 msgstr "Không thể thiết lập kết nối tới sndio"
@@ -96,19 +182,38 @@ msgstr ""
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Thiếu phần tử “%s” — hãy kiểm tra lại cài đặt GStreamer."
+msgstr "Thiếu phần tử “%s” — hãy kiểm tra lại phần cài đặt GStreamer."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
 "Vị trí tập tin được đặt thành “NULL”. xin hãy đặt một tên tập tin hợp lệ"
 
+msgid "Digitalzoom element cound't be created"
+msgstr ""
+
 msgid "Subpicture format was not configured before data flow"
 msgstr "Định dạng ảnh phụ chưa được cấu hình trước khi dữ liệu truyền đến"
+
+msgid "Failed to get fragment URL."
+msgstr "Gặp lỗi khi lấy URL phân mảnh."
+
+msgid "Internal data stream error."
+msgstr "Lỗi luồng dữ liệu nội bộ."
+
+msgid "Couldn't download fragments"
+msgstr "Không thể tải về các phân mảnh"
+
+msgid "No file name specified for writing."
+msgstr "Chưa chỉ định tên tập tin để ghi vào."
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 "Tên tập tin đã cho “%s” không thể chuyển đổi bảng mã tên tập tin nội bộ."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Không thể mở tập tin “%s” để ghi."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -145,6 +250,12 @@ msgstr "Tập tin cấu hình kênh DVB chẳng chứa kênh nào cả"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Không thể tìm thấy chi tiết cho kênh DVB %s"
+
+#~ msgid "Couldn't get the Manifest's URI"
+#~ msgstr "Không thể lấy URI của Manifest"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Không thể ghi vào tập tin “%s”."
 
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng."

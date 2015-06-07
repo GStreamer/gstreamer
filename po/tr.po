@@ -1,25 +1,116 @@
 # translation of gst-plugins-bad-0.10.21.2.po to Turkish
 # This file is put in the public domain.
+# This file is distributed under the same license as the gst-plugins-bad package.
 #
-# Server Acim <serveracim@gmail.com>, 2009.
+# Server Acim <serveracim@gmail.com>, 2009, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-0.10.21.2\n"
+"Project-Id-Version: gst-plugins-bad-1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:40+0200\n"
-"PO-Revision-Date: 2011-04-26 19:21+0200\n"
-"Last-Translator: Server Acim <serveracim@gmail.com>\n"
+"POT-Creation-Date: 2015-06-07 09:36+0200\n"
+"PO-Revision-Date: 2015-01-10 21:07+0100\n"
+"Last-Translator: Volkan Gezer <volkangezer@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
-
-msgid "Internal data stream error."
-msgstr "İç veri akım hatası."
+"X-Generator: Lokalize 1.5\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 msgid "format wasn't negotiated before get function"
+msgstr "get fonksiyonundan önce biçim görüşülemedi"
+
+msgid "default GStreamer sound events audiosink"
+msgstr ""
+
+msgid ""
+"GStreamer can play audio using any number of output elements. Some possible "
+"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer sound events audiosink"
+msgstr ""
+
+msgid "Describes the selected audiosink element."
+msgstr ""
+
+msgid "default GStreamer audiosink for Audio/Video Conferencing"
+msgstr ""
+
+msgid ""
+"description for default GStreamer audiosink for Audio/Video Conferencing"
+msgstr ""
+
+msgid "default GStreamer audiosink for Music and Movies"
+msgstr ""
+
+msgid "description for default GStreamer audiosink for Music and Movies"
+msgstr ""
+
+msgid "default GStreamer videosink"
+msgstr ""
+
+msgid ""
+"GStreamer can play video using any number of output elements. Some possible "
+"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
+"can be a partial pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer videosink"
+msgstr ""
+
+msgid "Describes the selected videosink element."
+msgstr ""
+
+msgid "default GStreamer audiosrc"
+msgstr ""
+
+msgid ""
+"GStreamer can record audio using any number of input elements. Some possible "
+"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer audiosrc"
+msgstr ""
+
+msgid "Describes the selected audiosrc element."
+msgstr ""
+
+msgid "default GStreamer videosrc"
+msgstr ""
+
+msgid ""
+"GStreamer can record video from any number of input elements. Some possible "
+"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
+"partial pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer videosrc"
+msgstr ""
+
+msgid "Describes the selected videosrc element."
+msgstr ""
+
+msgid "default GStreamer visualization"
+msgstr ""
+
+msgid ""
+"GStreamer can put visualization plugins in a pipeline to transform audio "
+"streams in video frames. Some possible choices are goom, goom2k1 and "
+"synaesthesia. The visualization plugin can be a partial pipeline instead of "
+"just one element."
+msgstr ""
+
+msgid "description for default GStreamer visualization"
+msgstr ""
+
+msgid "Describes the selected visualization element."
+msgstr ""
+
+msgid "OpenCV failed to load template image"
 msgstr ""
 
 msgid "Could not read title information for DVD."
@@ -43,65 +134,64 @@ msgid "Could not read DVD."
 msgstr "DVD okunamıyor."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Dosya çalınabilir akışlar içermiyor."
 
-msgid "Couldn't get the Manifest's URI"
-msgstr ""
-
-msgid "Failed to get fragment URL."
-msgstr ""
-
-msgid "Couldn't download fragments"
-msgstr ""
-
-#, fuzzy
 msgid "Could not open sndfile stream for reading."
-msgstr "Dosyayı \"%s\" okumak için açamıyor."
-
-msgid "No file name specified for writing."
-msgstr "Yazmak için dosya adı belirtilmedi."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Dosyayı \"%s\" yazmak için açamıyor."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Dosya yazılamıyor \"%s\"."
+msgstr "Sndfile akışı okumak için açamıyor."
 
 msgid "Could not establish connection to sndio"
-msgstr ""
+msgstr "Sndio ile bağlantı kurulamadı"
 
 msgid "Failed to query sndio capabilities"
-msgstr ""
+msgstr "Sndio yetenekleri sorgulanamadı"
 
-#, fuzzy
 msgid "Could not configure sndio"
-msgstr "Dosyayı \"%s\" okumak için açamıyor."
+msgstr "Sndio yapılandırılamadı"
 
-#, fuzzy
 msgid "Could not start sndio"
-msgstr "DVD okunamıyor."
+msgstr "Sndio başlatılamadı"
 
 msgid "Internal data flow error."
 msgstr "İç veri akış hatası."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
+"Oluşturlmuş dosya, akışlarının süresinden daha büyük preroll zamanına sahip"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+msgstr "Eksik öge '%s' - GStreamer kurulumunuzu kontrol ediniz."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
+"Dosya konumunuz BOŞ bir değere ayarlı, lütfen geçerli bir dosya adı için "
+"ayarlayın"
+
+msgid "Digitalzoom element cound't be created"
+msgstr ""
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "Alt resim biçimi, veri  akışından önce yapılandırılmış"
+
+msgid "Failed to get fragment URL."
+msgstr "Parça adresi alınamadı."
+
+msgid "Internal data stream error."
+msgstr "İç veri akım hatası."
+
+msgid "Couldn't download fragments"
+msgstr "Parçalar indirilemedi"
+
+msgid "No file name specified for writing."
+msgstr "Yazmak için dosya adı belirtilmedi."
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
+msgstr "Verilen dosya adı \"%s\" yerel dosya adı kodlamasına dönüştürülemiyor."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Dosyayı \"%s\" yazmak için açamıyor."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -115,28 +205,33 @@ msgstr "Aygıt açılamaz durumda \"%s\"."
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Aygıt ayarları bulunamadı \"%s\"."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Aygıt ayarları bulunamadı \"%s\"."
+msgstr "\"%s\" ön yüz aygıtından iletim sistemleri numaralandırılanamıyor"
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Dosyayı \"%s\" okumak için açamıyor."
 
-#, fuzzy
 msgid "Couldn't find DVB channel configuration file"
-msgstr "Sanal karıştırıcı kanal yapılandırması"
+msgstr "DVB kanal yapılandırma dosyası bulunamadı"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
-msgstr "Sanal karıştırıcı kanal yapılandırması"
+msgstr "DVB kanal yapılandırma dosyası yüklenemedi: %s"
 
 msgid "DVB channel configuration file doesn't contain any channels"
-msgstr ""
+msgstr "DVB kanal yapılandırma dosyası herhangi bir kanal içermiyor"
 
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
-msgstr ""
+msgstr "DVB kanalı %s için ayrıntılar bulunamadı"
+
+#~ msgid "Couldn't get the Manifest's URI"
+#~ msgstr "Manifest URI alınamadı"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Dosya yazılamıyor \"%s\"."
 
 #~ msgid "Internal clock error."
 #~ msgstr "İç saat hatası."

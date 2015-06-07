@@ -6,10 +6,10 @@
 # Yuri Chornoivan <yurchor@ukr.net>, 2011, 2013, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.3.2\n"
+"Project-Id-Version: gst-plugins-bad 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:40+0200\n"
-"PO-Revision-Date: 2014-05-22 07:31+0300\n"
+"POT-Creation-Date: 2015-06-07 09:36+0200\n"
+"PO-Revision-Date: 2014-08-29 08:35+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -20,10 +20,121 @@ msgstr ""
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Lokalize 1.5\n"
 
-msgid "Internal data stream error."
-msgstr "Помилка внутрішнього потоку даних."
-
 msgid "format wasn't negotiated before get function"
+msgstr "формат не було узгоджено до виклику функції get"
+
+msgid "default GStreamer sound events audiosink"
+msgstr "типовий приймач звукових подій GStreamer"
+
+#, fuzzy
+msgid ""
+"GStreamer can play audio using any number of output elements. Some possible "
+"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"У GStreamer передбачено можливість відтворення звукових даних за допомогою "
+"довільної кількості елементів виведення. Серед можливих варіантів osssink, "
+"pulsesink та alsasink. Звуковий приймач може бути окремим каналом з "
+"декількох обробників, а не одним елементом."
+
+msgid "description for default GStreamer sound events audiosink"
+msgstr "опис типового приймача звукових подій GStreamer"
+
+msgid "Describes the selected audiosink element."
+msgstr "Описує вибраний елемент audiosink."
+
+msgid "default GStreamer audiosink for Audio/Video Conferencing"
+msgstr "типовий звуковий приймач GStreamer для звукових та відеоконференцій"
+
+msgid ""
+"description for default GStreamer audiosink for Audio/Video Conferencing"
+msgstr ""
+"опис типового звукового приймача GStreamer для звукових та відеоконференцій"
+
+msgid "default GStreamer audiosink for Music and Movies"
+msgstr "типовий звуковий приймач GStreamer для музики і фільмів"
+
+msgid "description for default GStreamer audiosink for Music and Movies"
+msgstr "опис типового звукового приймача GStreamer для музики і фільмів"
+
+msgid "default GStreamer videosink"
+msgstr "типовий відеоприймач GStreamer"
+
+msgid ""
+"GStreamer can play video using any number of output elements. Some possible "
+"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
+"can be a partial pipeline instead of just one element."
+msgstr ""
+"У GStreamer передбачено відтворення відео за допомогою довільної кількості "
+"елементів виведення. Серед можливих варіантів xvimagesink, ximagesink, "
+"sdlvideosink та aasink. Приймач відеоданих може бути окремим каналом з "
+"декількох обробників, а не просто одним елементом."
+
+msgid "description for default GStreamer videosink"
+msgstr "опис типового відеоприймача GStreamer"
+
+msgid "Describes the selected videosink element."
+msgstr "Описує вибраний елемент videosink."
+
+msgid "default GStreamer audiosrc"
+msgstr "типове джерело звуку GStreamer"
+
+msgid ""
+"GStreamer can record audio using any number of input elements. Some possible "
+"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"У GStreamer передбачено можливість запису звукових даних за допомогою "
+"довільної кількості елементів вхідних даних. Серед можливих варіантів "
+"osssrc, pulsesrc та alsasrc. Джерелом звукових даних може бути окремий канал "
+"з декількох елементів, а не просто один елемент."
+
+msgid "description for default GStreamer audiosrc"
+msgstr "опис типового джерела звуку GStreamer"
+
+msgid "Describes the selected audiosrc element."
+msgstr "Описує вибраний елемент audiosrc."
+
+msgid "default GStreamer videosrc"
+msgstr "типове джерело відео GStreamer"
+
+msgid ""
+"GStreamer can record video from any number of input elements. Some possible "
+"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
+"partial pipeline instead of just one element."
+msgstr ""
+"У GStreamer передбачено можливість запису відеоданих за допомогою довільної "
+"кількості елементів вхідних даних. Серед можливих варіантів v4lsrc, v4l2src "
+"та videotestsrc. Джерелом відеоданих може бути окремий канал з декількох "
+"елементів, а не просто один елемент."
+
+msgid "description for default GStreamer videosrc"
+msgstr "опис типового джерела відео GStreamer"
+
+msgid "Describes the selected videosrc element."
+msgstr "Описує вибраний елемент videosrc."
+
+msgid "default GStreamer visualization"
+msgstr "типова візуалізація GStreamer"
+
+msgid ""
+"GStreamer can put visualization plugins in a pipeline to transform audio "
+"streams in video frames. Some possible choices are goom, goom2k1 and "
+"synaesthesia. The visualization plugin can be a partial pipeline instead of "
+"just one element."
+msgstr ""
+"У GStreamer передбачено додавання до каналу обробки додатків візуалізації "
+"для обробки потоків звукових даних у кадрах відео. Серед можливих варіантів "
+"goom, goom2k1 та synaesthesia. Додаток візуалізації може бути окремим "
+"каналом, а не просто одним елементом."
+
+msgid "description for default GStreamer visualization"
+msgstr "опис типової візуалізації GStreamer"
+
+msgid "Describes the selected visualization element."
+msgstr "Описує вибраний елемент візуалізації."
+
+msgid "OpenCV failed to load template image"
 msgstr ""
 
 msgid "Could not read title information for DVD."
@@ -49,28 +160,8 @@ msgstr "Не вдалося прочитати DVD."
 msgid "This file contains no playable streams."
 msgstr "Файл не містить потоків, які можна відтворити."
 
-msgid "Couldn't get the Manifest's URI"
-msgstr "Не вдалося отримати адреси Manifest"
-
-msgid "Failed to get fragment URL."
-msgstr "Не вдалося отримати адреси фрагмента."
-
-msgid "Couldn't download fragments"
-msgstr "Не вдалося отримати фрагменти"
-
 msgid "Could not open sndfile stream for reading."
 msgstr "Не вдалося відкрити потік sndfile для читання."
-
-msgid "No file name specified for writing."
-msgstr "Не вказано назви файла для запису."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Не вдалося відкрити файл «%s» для запису."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Спроба запису до файла «%s» завершилася невдало"
 
 msgid "Could not establish connection to sndio"
 msgstr "Не вдалося встановити з’єднання з sndio"
@@ -102,14 +193,33 @@ msgstr ""
 "Значенням розташування файла є NULL. Будь ласка, встановіть чинне значення "
 "назви файла."
 
+msgid "Digitalzoom element cound't be created"
+msgstr ""
+
 msgid "Subpicture format was not configured before data flow"
 msgstr "Формат підзображення не було налаштовано до створення потоку даних"
+
+msgid "Failed to get fragment URL."
+msgstr "Не вдалося отримати адреси фрагмента."
+
+msgid "Internal data stream error."
+msgstr "Помилка внутрішнього потоку даних."
+
+msgid "Couldn't download fragments"
+msgstr "Не вдалося отримати фрагменти"
+
+msgid "No file name specified for writing."
+msgstr "Не вказано назви файла для запису."
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 "Вказану назву файла, «%s», не можна перетворити у локальне кодування назв "
 "файлів."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Не вдалося відкрити файл «%s» для запису."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -146,3 +256,9 @@ msgstr "У файлі налаштувань каналів DVB не місти�
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Не вдалося знайти параметрів каналу DVB %s"
+
+#~ msgid "Couldn't get the Manifest's URI"
+#~ msgstr "Не вдалося отримати адреси Manifest"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Спроба запису до файла «%s» завершилася невдало"

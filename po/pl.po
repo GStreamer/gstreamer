@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.3.2\n"
+"Project-Id-Version: gst-plugins-bad 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:40+0200\n"
-"PO-Revision-Date: 2014-05-22 18:34+0200\n"
+"POT-Creation-Date: 2015-06-07 09:36+0200\n"
+"PO-Revision-Date: 2014-08-29 15:47+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -15,10 +15,122 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Internal data stream error."
-msgstr "Błąd wewnętrzny strumienia danych."
-
 msgid "format wasn't negotiated before get function"
+msgstr "format nie został wynegocjowany przed funkcją pobrania"
+
+msgid "default GStreamer sound events audiosink"
+msgstr "domyślny element GStreamera pochłaniający zdarzenia dźwiękowe"
+
+#, fuzzy
+msgid ""
+"GStreamer can play audio using any number of output elements. Some possible "
+"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"GStreamer może odtwarzać dźwięk przy użyciu dowolnej liczby elementów "
+"wyjściowych. Niektóre z możliwości to osssink, pulsesink oraz alsasink. "
+"Wyjście dźwięku może być częściowym potokiem zamiast pojedynczego elementu."
+
+msgid "description for default GStreamer sound events audiosink"
+msgstr ""
+"opis domyślnego elementu GStreamera pochłaniającego zdarzenia dźwiękowe"
+
+msgid "Describes the selected audiosink element."
+msgstr "Opisuje wybrany element wyjściowy dźwięku."
+
+msgid "default GStreamer audiosink for Audio/Video Conferencing"
+msgstr ""
+"domyślny element GStreamera pochłaniający dźwięk dla konferencji audio/video"
+
+msgid ""
+"description for default GStreamer audiosink for Audio/Video Conferencing"
+msgstr ""
+"opis domyślnego elementu wyjściowego dźwięku GStreamera dla konferencji "
+"audio/video"
+
+msgid "default GStreamer audiosink for Music and Movies"
+msgstr "domyślny element wyjściowy dźwięku GStreamera dla muzyki i filmów"
+
+msgid "description for default GStreamer audiosink for Music and Movies"
+msgstr ""
+"opis domyślnego elementu wyjściowego dźwięku GStreamera dla muzyki i filmów"
+
+msgid "default GStreamer videosink"
+msgstr "domyślny element GStreamera pochłaniający obraz"
+
+msgid ""
+"GStreamer can play video using any number of output elements. Some possible "
+"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
+"can be a partial pipeline instead of just one element."
+msgstr ""
+"GStreamer może odtwarzać obraz przy użyciu dowolnej liczby elementów "
+"wyjściowych. Niektóre z możliwości to xvimagesink, ximagesink, sdlvideosink "
+"oraz aasink. Wyjście obrazu może być częściowym potokiem zamiast "
+"pojedynczego elementu."
+
+msgid "description for default GStreamer videosink"
+msgstr "opis domyślnego elementu GStreamera pochłaniającego obraz"
+
+msgid "Describes the selected videosink element."
+msgstr "Opisuje wybrany element wyjściowy obrazu."
+
+msgid "default GStreamer audiosrc"
+msgstr "domyślne źródło dźwięku GStreamera"
+
+msgid ""
+"GStreamer can record audio using any number of input elements. Some possible "
+"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"GStreamer może nagrywać dźwięk z dowolnej liczby elementów wejściowych. "
+"Niektóre możliwości to osssrc, pulsesrc oraz alsasrc. Źródło dźwięku może "
+"być częściowym potokiem zamiast pojedynczego elementu."
+
+msgid "description for default GStreamer audiosrc"
+msgstr "opis domyślnego źródła dźwięku GStreamera"
+
+msgid "Describes the selected audiosrc element."
+msgstr "Opisuje wybrany element źródłowy dźwięku."
+
+msgid "default GStreamer videosrc"
+msgstr "domyślne źródło obrazu GStreamera"
+
+msgid ""
+"GStreamer can record video from any number of input elements. Some possible "
+"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
+"partial pipeline instead of just one element."
+msgstr ""
+"GStreamer może nagrywać obraz z dowolnej liczby elementów wejściowych. "
+"Niektóre możliwości to v4lsrc, v4l2src oraz videotestsrc. Źródło obrazu może "
+"być częściowym potokiem zamiast pojedynczego elementu."
+
+msgid "description for default GStreamer videosrc"
+msgstr "opis domyślnego źródła obrazu GStreamera"
+
+msgid "Describes the selected videosrc element."
+msgstr "Opisuje wybrany element źródłowy obrazu."
+
+msgid "default GStreamer visualization"
+msgstr "domyślna wizualizacja GStreamera"
+
+msgid ""
+"GStreamer can put visualization plugins in a pipeline to transform audio "
+"streams in video frames. Some possible choices are goom, goom2k1 and "
+"synaesthesia. The visualization plugin can be a partial pipeline instead of "
+"just one element."
+msgstr ""
+"GStreamer może umieszczać wtyczki wizualizujące w potoku w celu "
+"przekształcania strumieni dźwiękowych na klatki obrazu. Niektóre możliwości "
+"to goom, goom2k1 oraz synaesthesia. Wtyczka wizualizująca może być "
+"częściowym potokiem zamiast pojedynczego elementu."
+
+msgid "description for default GStreamer visualization"
+msgstr "opis domyślego elementu wizualizującego GStreamera"
+
+msgid "Describes the selected visualization element."
+msgstr "Opisuje wybrany element wizualizujący."
+
+msgid "OpenCV failed to load template image"
 msgstr ""
 
 msgid "Could not read title information for DVD."
@@ -44,28 +156,8 @@ msgstr "Nie udało się odczytać DVD."
 msgid "This file contains no playable streams."
 msgstr "Ten plik nie zawiera strumieni do odtworzenia."
 
-msgid "Couldn't get the Manifest's URI"
-msgstr "Nie udało się uzyskać URI Manifestu"
-
-msgid "Failed to get fragment URL."
-msgstr "Nie udało się uzyskać URL-a fragmentu."
-
-msgid "Couldn't download fragments"
-msgstr "Nie udało się pobrać fragmentów"
-
 msgid "Could not open sndfile stream for reading."
 msgstr "Nie udało się otworzyć strumienia sndfile do odczytu."
-
-msgid "No file name specified for writing."
-msgstr "Nie określono nazwy pliku do zapisu."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Nie udało się otworzyć pliku \"%s\" do zapisu."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Nie udało się zapisać danych do pliku \"%s\"."
 
 msgid "Could not establish connection to sndio"
 msgstr "Nie udało się ustanowić połączenia z sndio"
@@ -94,14 +186,33 @@ msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
 "Położenie pliku ustawiono na NULL, proszę ustawić na poprawną nazwę pliku"
 
+msgid "Digitalzoom element cound't be created"
+msgstr ""
+
 msgid "Subpicture format was not configured before data flow"
 msgstr "Format podobrazu nie został skonfigurowany przed przepływem danych"
+
+msgid "Failed to get fragment URL."
+msgstr "Nie udało się uzyskać URL-a fragmentu."
+
+msgid "Internal data stream error."
+msgstr "Błąd wewnętrzny strumienia danych."
+
+msgid "Couldn't download fragments"
+msgstr "Nie udało się pobrać fragmentów"
+
+msgid "No file name specified for writing."
+msgstr "Nie określono nazwy pliku do zapisu."
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 "Podanej nazwy pliku \"%s\" nie można przekształcić do lokalnego kodowania "
 "nazw plików."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Nie udało się otworzyć pliku \"%s\" do zapisu."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -137,3 +248,9 @@ msgstr "Plik konfiguracyjny kanałów DVB nie zawiera żadnych kanałów"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Nie udało się odnaleźć szczegółów dla kanału DVB %s"
+
+#~ msgid "Couldn't get the Manifest's URI"
+#~ msgstr "Nie udało się uzyskać URI Manifestu"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Nie udało się zapisać danych do pliku \"%s\"."

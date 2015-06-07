@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.3.2\n"
+"Project-Id-Version: gst-plugins-bad-1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:40+0200\n"
-"PO-Revision-Date: 2014-05-24 11:28+0200\n"
+"POT-Creation-Date: 2015-06-07 09:36+0200\n"
+"PO-Revision-Date: 2014-08-29 11:28+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -17,10 +17,116 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Internal data stream error."
-msgstr "Intern datastrømfejl."
-
 msgid "format wasn't negotiated before get function"
+msgstr "format blev ikke forhandlet før hent funktion"
+
+msgid "default GStreamer sound events audiosink"
+msgstr "standardlydkanal for GStreamers lydhændelser"
+
+#, fuzzy
+msgid ""
+"GStreamer can play audio using any number of output elements. Some possible "
+"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"GStreamer kan afspille lyd via et antal udgangselementer. Nogle mulige valg "
+"er osssink, pulsesink og alsasink. Lydudgangen kan være en delvis datakanal "
+"i stedet for bare et element."
+
+msgid "description for default GStreamer sound events audiosink"
+msgstr "beskrivelse af standardlydkanal for GStreamers lydhændelser"
+
+msgid "Describes the selected audiosink element."
+msgstr "Beskriver det valge lydkanalelement."
+
+msgid "default GStreamer audiosink for Audio/Video Conferencing"
+msgstr "standardlydkanal til GStreamers lyd/video-konference"
+
+msgid ""
+"description for default GStreamer audiosink for Audio/Video Conferencing"
+msgstr "beskrivelse for standardlydkanal til GStreamers lyd/video-konference"
+
+msgid "default GStreamer audiosink for Music and Movies"
+msgstr "standardlydkanal til GStreamers musik og film"
+
+msgid "description for default GStreamer audiosink for Music and Movies"
+msgstr "beskrivelse for standardlydkanal til GStreamers musik og film"
+
+msgid "default GStreamer videosink"
+msgstr "standardlydkanal for GStreamer"
+
+msgid ""
+"GStreamer can play video using any number of output elements. Some possible "
+"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
+"can be a partial pipeline instead of just one element."
+msgstr ""
+"GStreamer kan afspille video via et antal udgangselementer. Nogle mulige "
+"valg er xvimagesink, ximagesink, sdlvideosink og aasink. Videoudgangen kan "
+"være en delvis datakanal i stedet for bare et element."
+
+msgid "description for default GStreamer videosink"
+msgstr "beskrivelse for standardvideokanal for GStreamer"
+
+msgid "Describes the selected videosink element."
+msgstr "Beskriver den valgte videokanalselement."
+
+msgid "default GStreamer audiosrc"
+msgstr "standardlydoptagelse for GStreamer"
+
+msgid ""
+"GStreamer can record audio using any number of input elements. Some possible "
+"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"GStreamer kan optage lyd via et antal indgangselementer. Nogle mulige valg "
+"er osssrc, pulsesrc og alsasrc. Lydkilden kan være en delvis datakanal i "
+"stedet for bare et element."
+
+msgid "description for default GStreamer audiosrc"
+msgstr "beskrivelse for standardlydoptagelsen til GStreamer"
+
+msgid "Describes the selected audiosrc element."
+msgstr "Beskriver det valgte lydoptagelseselement."
+
+msgid "default GStreamer videosrc"
+msgstr "standardvideooptager for GStreamer"
+
+msgid ""
+"GStreamer can record video from any number of input elements. Some possible "
+"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
+"partial pipeline instead of just one element."
+msgstr ""
+"GStreamer kan optage video via et antal indgangselementer. Nogle mulige valg "
+"er v4lsrc, v4l2src og videotestsrc. Videokilden kan være en delvis datakanal "
+"i stedet for bare et element."
+
+msgid "description for default GStreamer videosrc"
+msgstr "beskrivelse for standardvideooptageren til GStreamer"
+
+msgid "Describes the selected videosrc element."
+msgstr "Beskriver det valgte videooptagerelement."
+
+msgid "default GStreamer visualization"
+msgstr "Standardvisualisering for GStreamer"
+
+msgid ""
+"GStreamer can put visualization plugins in a pipeline to transform audio "
+"streams in video frames. Some possible choices are goom, goom2k1 and "
+"synaesthesia. The visualization plugin can be a partial pipeline instead of "
+"just one element."
+msgstr ""
+"GStreamer kan placere visualiseringsudvidelsesmoduler i en datakanal for at "
+"transformere lydstrømme i videobilleder. Nogle mulige valg er goom, goom2k1 "
+"og synaesthesia. Visualiseringsudvidelsesmodulerne kan være en delvis "
+"datakanal i stedet for bare et element."
+
+msgid "description for default GStreamer visualization"
+msgstr "beskrivelse for standardvisualisering til GStreamer"
+
+msgid "Describes the selected visualization element."
+msgstr "Beskriver det valgte visualiseringselement."
+
+msgid "OpenCV failed to load template image"
 msgstr ""
 
 msgid "Could not read title information for DVD."
@@ -46,28 +152,8 @@ msgstr "Kunne ikke læse dvd."
 msgid "This file contains no playable streams."
 msgstr "Denne fil indeholder ingen spilbare strømme."
 
-msgid "Couldn't get the Manifest's URI"
-msgstr "Kunne ikke indhente Manifestens adresse"
-
-msgid "Failed to get fragment URL."
-msgstr "Kunne ikke indhente fragmentadresse."
-
-msgid "Couldn't download fragments"
-msgstr "Kunne ikke hente fragmenter"
-
 msgid "Could not open sndfile stream for reading."
 msgstr "Kunne ikke åbne sndfile-strøm for læsning."
-
-msgid "No file name specified for writing."
-msgstr "Intet filnavn er angivet til skrivning."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Kunne ikke åbne filen »%s« til skrivning."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Kunne ikke skrive til fil »%s«."
 
 msgid "Could not establish connection to sndio"
 msgstr "Kunne ikke etablere forbindelse til sndio"
@@ -96,13 +182,32 @@ msgstr "Manglende element »%s« - kontroller din GStreamer-installation."
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr "Filplacering er sat til NULL, sæt den venligst til et gyldigt filnavn"
 
+msgid "Digitalzoom element cound't be created"
+msgstr ""
+
 msgid "Subpicture format was not configured before data flow"
 msgstr "Format for underbillede blev ikke konfigureret før datastrøm"
+
+msgid "Failed to get fragment URL."
+msgstr "Kunne ikke indhente fragmentadresse."
+
+msgid "Internal data stream error."
+msgstr "Intern datastrømfejl."
+
+msgid "Couldn't download fragments"
+msgstr "Kunne ikke hente fragmenter"
+
+msgid "No file name specified for writing."
+msgstr "Intet filnavn er angivet til skrivning."
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 "Det angivne filnavn »%s« kan ikke konverteres til en lokal filnavnskodning."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kunne ikke åbne filen »%s« til skrivning."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -137,3 +242,9 @@ msgstr "DVB-kanalens konfigurationsfil indeholder ikke nogen kanaler"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Kunne ikke finde detaljer for DVB-kanalen %s"
+
+#~ msgid "Couldn't get the Manifest's URI"
+#~ msgstr "Kunne ikke indhente Manifestens adresse"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Kunne ikke skrive til fil »%s«."

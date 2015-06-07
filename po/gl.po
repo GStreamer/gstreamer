@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:40+0200\n"
+"POT-Creation-Date: 2015-06-07 09:36+0200\n"
 "PO-Revision-Date: 2011-09-05 12:50+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -19,10 +19,99 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
 "X-Poedit-Language: galego\n"
 
-msgid "Internal data stream error."
-msgstr "Produciuse un erro interno no fluxo de datos."
-
 msgid "format wasn't negotiated before get function"
+msgstr ""
+
+msgid "default GStreamer sound events audiosink"
+msgstr ""
+
+msgid ""
+"GStreamer can play audio using any number of output elements. Some possible "
+"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer sound events audiosink"
+msgstr ""
+
+msgid "Describes the selected audiosink element."
+msgstr ""
+
+msgid "default GStreamer audiosink for Audio/Video Conferencing"
+msgstr ""
+
+msgid ""
+"description for default GStreamer audiosink for Audio/Video Conferencing"
+msgstr ""
+
+msgid "default GStreamer audiosink for Music and Movies"
+msgstr ""
+
+msgid "description for default GStreamer audiosink for Music and Movies"
+msgstr ""
+
+msgid "default GStreamer videosink"
+msgstr ""
+
+msgid ""
+"GStreamer can play video using any number of output elements. Some possible "
+"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
+"can be a partial pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer videosink"
+msgstr ""
+
+msgid "Describes the selected videosink element."
+msgstr ""
+
+msgid "default GStreamer audiosrc"
+msgstr ""
+
+msgid ""
+"GStreamer can record audio using any number of input elements. Some possible "
+"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer audiosrc"
+msgstr ""
+
+msgid "Describes the selected audiosrc element."
+msgstr ""
+
+msgid "default GStreamer videosrc"
+msgstr ""
+
+msgid ""
+"GStreamer can record video from any number of input elements. Some possible "
+"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
+"partial pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer videosrc"
+msgstr ""
+
+msgid "Describes the selected videosrc element."
+msgstr ""
+
+msgid "default GStreamer visualization"
+msgstr ""
+
+msgid ""
+"GStreamer can put visualization plugins in a pipeline to transform audio "
+"streams in video frames. Some possible choices are goom, goom2k1 and "
+"synaesthesia. The visualization plugin can be a partial pipeline instead of "
+"just one element."
+msgstr ""
+
+msgid "description for default GStreamer visualization"
+msgstr ""
+
+msgid "Describes the selected visualization element."
+msgstr ""
+
+msgid "OpenCV failed to load template image"
 msgstr ""
 
 msgid "Could not read title information for DVD."
@@ -48,29 +137,9 @@ msgstr "Non foi posíbel ler o DVD."
 msgid "This file contains no playable streams."
 msgstr ""
 
-msgid "Couldn't get the Manifest's URI"
-msgstr ""
-
-msgid "Failed to get fragment URL."
-msgstr ""
-
-msgid "Couldn't download fragments"
-msgstr ""
-
 #, fuzzy
 msgid "Could not open sndfile stream for reading."
 msgstr "Non foi posíbel abrir o ficheiro «%s» para ler."
-
-msgid "No file name specified for writing."
-msgstr "Non se especificou ningún nome de ficheiro para a súa escritura."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Non foi posíbel abrir o ficheiro «%s» para escribir."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Non foi posíbel escribir no ficheiro «%s»."
 
 msgid "Could not establish connection to sndio"
 msgstr ""
@@ -99,12 +168,31 @@ msgstr ""
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
 
+msgid "Digitalzoom element cound't be created"
+msgstr ""
+
 msgid "Subpicture format was not configured before data flow"
 msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Internal data stream error."
+msgstr "Produciuse un erro interno no fluxo de datos."
+
+msgid "Couldn't download fragments"
+msgstr ""
+
+msgid "No file name specified for writing."
+msgstr "Non se especificou ningún nome de ficheiro para a súa escritura."
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Non foi posíbel abrir o ficheiro «%s» para escribir."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -139,6 +227,9 @@ msgstr ""
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr ""
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Non foi posíbel escribir no ficheiro «%s»."
 
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr ""

@@ -1,4 +1,4 @@
-# translation of gst-plugins-bad-1.3.2.nl.po to Dutch
+# translation of gst-plugins-bad-1.4.0.nl.po to Dutch
 # translation of gst-plugins-bad to Dutch
 # Copyright (C) 2004, 2007, 2008, 2009 Free Software Foundation, Inc.
 #
@@ -6,10 +6,10 @@
 # Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2011, 2013, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.3.2\n"
+"Project-Id-Version: gst-plugins-bad 1.4.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:40+0200\n"
-"PO-Revision-Date: 2014-05-22 00:31+0200\n"
+"POT-Creation-Date: 2015-06-07 09:36+0200\n"
+"PO-Revision-Date: 2014-07-22 10:49+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -19,10 +19,99 @@ msgstr ""
 "X-Generator: Lokalize 1.5\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-msgid "Internal data stream error."
-msgstr "Interne fout in gegevensstroom."
-
 msgid "format wasn't negotiated before get function"
+msgstr "formaat is niet onderhandeld vóór get-functie"
+
+msgid "default GStreamer sound events audiosink"
+msgstr ""
+
+msgid ""
+"GStreamer can play audio using any number of output elements. Some possible "
+"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer sound events audiosink"
+msgstr ""
+
+msgid "Describes the selected audiosink element."
+msgstr ""
+
+msgid "default GStreamer audiosink for Audio/Video Conferencing"
+msgstr ""
+
+msgid ""
+"description for default GStreamer audiosink for Audio/Video Conferencing"
+msgstr ""
+
+msgid "default GStreamer audiosink for Music and Movies"
+msgstr ""
+
+msgid "description for default GStreamer audiosink for Music and Movies"
+msgstr ""
+
+msgid "default GStreamer videosink"
+msgstr ""
+
+msgid ""
+"GStreamer can play video using any number of output elements. Some possible "
+"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
+"can be a partial pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer videosink"
+msgstr ""
+
+msgid "Describes the selected videosink element."
+msgstr ""
+
+msgid "default GStreamer audiosrc"
+msgstr ""
+
+msgid ""
+"GStreamer can record audio using any number of input elements. Some possible "
+"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer audiosrc"
+msgstr ""
+
+msgid "Describes the selected audiosrc element."
+msgstr ""
+
+msgid "default GStreamer videosrc"
+msgstr ""
+
+msgid ""
+"GStreamer can record video from any number of input elements. Some possible "
+"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
+"partial pipeline instead of just one element."
+msgstr ""
+
+msgid "description for default GStreamer videosrc"
+msgstr ""
+
+msgid "Describes the selected videosrc element."
+msgstr ""
+
+msgid "default GStreamer visualization"
+msgstr ""
+
+msgid ""
+"GStreamer can put visualization plugins in a pipeline to transform audio "
+"streams in video frames. Some possible choices are goom, goom2k1 and "
+"synaesthesia. The visualization plugin can be a partial pipeline instead of "
+"just one element."
+msgstr ""
+
+msgid "description for default GStreamer visualization"
+msgstr ""
+
+msgid "Describes the selected visualization element."
+msgstr ""
+
+msgid "OpenCV failed to load template image"
 msgstr ""
 
 msgid "Could not read title information for DVD."
@@ -48,28 +137,8 @@ msgstr "Kon de dvd niet lezen."
 msgid "This file contains no playable streams."
 msgstr "Dit bestand bevat geen af te spelen streams."
 
-msgid "Couldn't get the Manifest's URI"
-msgstr "De URI van het manifest verkrijgen lukt niet"
-
-msgid "Failed to get fragment URL."
-msgstr "Verkrijgen van de URL van het fragment is mislukt."
-
-msgid "Couldn't download fragments"
-msgstr "Kan fragmenten niet downloaden"
-
 msgid "Could not open sndfile stream for reading."
 msgstr "Kan sndfile-stream niet openen om te lezen."
-
-msgid "No file name specified for writing."
-msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Kan bestand \"%s\" niet openen voor uitvoer."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Kan niet in bestand \"%s\" schrijven."
 
 msgid "Could not establish connection to sndio"
 msgstr "Kon geen verbinding opzetten naar sndio"
@@ -99,15 +168,34 @@ msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
 "Locatie van bestand is op NUL gezet, stel het in op een geldige bestandsnaam"
 
+msgid "Digitalzoom element cound't be created"
+msgstr ""
+
 msgid "Subpicture format was not configured before data flow"
 msgstr ""
 "Het format van de subafbeelding was niet ingesteld voor de gegevensstroom"
+
+msgid "Failed to get fragment URL."
+msgstr "Verkrijgen van de URL van het fragment is mislukt."
+
+msgid "Internal data stream error."
+msgstr "Interne fout in gegevensstroom."
+
+msgid "Couldn't download fragments"
+msgstr "Kan fragmenten niet downloaden"
+
+msgid "No file name specified for writing."
+msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 "Ingegeven bestandsnaam \"%s\" kan niet geconverteerd worden naar de codering "
 "van een lokale bestandsnaam."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kan bestand \"%s\" niet openen voor uitvoer."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -142,6 +230,12 @@ msgstr "Het instellingenbestand van het DVB-kanaal bevat geen kanalen"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Kon de details voor het DVB-kanaal %s niet vinden"
+
+#~ msgid "Couldn't get the Manifest's URI"
+#~ msgstr "De URI van het manifest verkrijgen lukt niet"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Kan niet in bestand \"%s\" schrijven."
 
 #~ msgid "Internal clock error."
 #~ msgstr "Interne fout met de klok."
