@@ -1090,6 +1090,8 @@ update_ptp_time (PtpDomainData * domain, PtpPendingSync * sync)
         GST_TIME_ARGS (sync->follow_up_recv_time_local),
         GST_TIME_ARGS (domain->mean_path_delay));
     synced = FALSE;
+    gst_clock_get_calibration (GST_CLOCK_CAST (domain->domain_clock),
+        &internal_time, &external_time, &rate_num, &rate_den);
     goto out;
   }
 #endif
