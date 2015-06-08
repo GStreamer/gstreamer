@@ -2814,6 +2814,9 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   gint i = 0;
   gboolean is_mplane;
   enum v4l2_colorspace colorspace = 0;
+  enum v4l2_quantization range = 0;
+  enum v4l2_ycbcr_encoding matrix = 0;
+  enum v4l2_xfer_func transfer = 0;
 
   GST_V4L2_CHECK_OPEN (v4l2object);
   if (!try_only)
@@ -2851,14 +2854,118 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   }
 
   if (V4L2_TYPE_IS_OUTPUT (v4l2object->type)) {
-    /* We should set colorspace if we have it */
-    if (gst_video_colorimetry_matches (&info.colorimetry, "bt601")) {
-      colorspace = V4L2_COLORSPACE_SMPTE170M;
-    } else if (gst_video_colorimetry_matches (&info.colorimetry, "bt709")) {
-      colorspace = V4L2_COLORSPACE_REC709;
-    } else if (gst_video_colorimetry_matches (&info.colorimetry, "smpte240m")) {
-      colorspace = V4L2_COLORSPACE_SMPTE240M;
-    } else {
+    /* We first pick th main colorspace from the primaries */
+    switch (info.colorimetry.primaries) {
+      case GST_VIDEO_COLOR_PRIMARIES_BT709:
+        /* There is two colorspaces using these primaries, use the range to
+         * differentiate */
+        if (info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235)
+          colorspace = V4L2_COLORSPACE_REC709;
+        else
+          colorspace = V4L2_COLORSPACE_SRGB;
+        break;
+      case GST_VIDEO_COLOR_PRIMARIES_BT470M:
+        colorspace = V4L2_COLORSPACE_470_SYSTEM_M;
+        break;
+      case GST_VIDEO_COLOR_PRIMARIES_BT470BG:
+        colorspace = V4L2_COLORSPACE_470_SYSTEM_BG;
+        break;
+      case GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
+        colorspace = V4L2_COLORSPACE_SMPTE170M;
+        break;
+      case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
+        colorspace = V4L2_COLORSPACE_SMPTE240M;
+        break;
+
+      case GST_VIDEO_COLOR_PRIMARIES_FILM:
+      case GST_VIDEO_COLOR_PRIMARIES_UNKNOWN:
+        /* We don't know, we will guess */
+        break;
+
+      default:
+        GST_WARNING_OBJECT (v4l2object->element,
+            "Unknown colorimetry primaries %d", info.colorimetry.primaries);
+        break;
+    }
+
+    switch (info.colorimetry.range) {
+      case GST_VIDEO_COLOR_RANGE_0_255:
+        range = V4L2_QUANTIZATION_FULL_RANGE;
+        break;
+      case GST_VIDEO_COLOR_RANGE_16_235:
+        range = V4L2_QUANTIZATION_LIM_RANGE;
+        break;
+      case GST_VIDEO_COLOR_RANGE_UNKNOWN:
+        /* We let the driver pick a default one */
+        break;
+      default:
+        GST_WARNING_OBJECT (v4l2object->element,
+            "Unknown colorimetry range %d", info.colorimetry.range);
+        break;
+    }
+
+    switch (info.colorimetry.matrix) {
+      case GST_VIDEO_COLOR_MATRIX_RGB:
+        /* Unspecified, leave to default */
+        break;
+        /* FCC is about the same as BT601 with less digit */
+      case GST_VIDEO_COLOR_MATRIX_FCC:
+      case GST_VIDEO_COLOR_MATRIX_BT601:
+        matrix = V4L2_YCBCR_ENC_601;
+        break;
+      case GST_VIDEO_COLOR_MATRIX_BT709:
+        matrix = V4L2_YCBCR_ENC_709;
+        break;
+      case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
+        matrix = V4L2_YCBCR_ENC_SMPTE240M;
+        break;
+      case GST_VIDEO_COLOR_MATRIX_BT2020:
+        matrix = V4L2_YCBCR_ENC_BT2020;
+        break;
+      case GST_VIDEO_COLOR_MATRIX_UNKNOWN:
+        /* We let the driver pick a default one */
+        break;
+      default:
+        GST_WARNING_OBJECT (v4l2object->element,
+            "Unknown colorimetry matrix %d", info.colorimetry.matrix);
+        break;
+    }
+
+    switch (info.colorimetry.transfer) {
+      case GST_VIDEO_TRANSFER_GAMMA18:
+      case GST_VIDEO_TRANSFER_GAMMA20:
+      case GST_VIDEO_TRANSFER_GAMMA22:
+      case GST_VIDEO_TRANSFER_GAMMA28:
+        GST_WARNING_OBJECT (v4l2object->element,
+            "GAMMA 18, 20, 22, 28 transfer functions not supported");
+      case GST_VIDEO_TRANSFER_GAMMA10:
+        transfer = V4L2_XFER_FUNC_NONE;
+        break;
+      case GST_VIDEO_TRANSFER_BT709:
+        transfer = V4L2_XFER_FUNC_709;
+        break;
+      case GST_VIDEO_TRANSFER_SMPTE240M:
+        transfer = V4L2_XFER_FUNC_SMPTE240M;
+        break;
+      case GST_VIDEO_TRANSFER_SRGB:
+        transfer = V4L2_XFER_FUNC_SRGB;
+        break;
+      case GST_VIDEO_TRANSFER_LOG100:
+      case GST_VIDEO_TRANSFER_LOG316:
+        GST_WARNING_OBJECT (v4l2object->element,
+            "LOG 100, 316 transfer functions not supported");
+        /* FIXME No known sensible default, maybe AdobeRGB ? */
+        break;
+      case GST_VIDEO_TRANSFER_UNKNOWN:
+        /* We let the driver pick a default one */
+        break;
+      default:
+        GST_WARNING_OBJECT (v4l2object->element,
+            "Unknown colorimetry tranfer %d", info.colorimetry.transfer);
+        break;
+    }
+
+    if (colorspace == 0) {
       /* Try to guess colorspace according to pixelformat and size */
       if (GST_VIDEO_INFO_IS_YUV (&info)) {
         /* SD streams likely use SMPTE170M and HD streams REC709 */
@@ -2868,6 +2975,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
           colorspace = V4L2_COLORSPACE_REC709;
       } else if (GST_VIDEO_INFO_IS_RGB (&info)) {
         colorspace = V4L2_COLORSPACE_SRGB;
+        transfer = V4L2_XFER_FUNC_NONE;
       }
     }
   }
@@ -2939,13 +3047,20 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 #endif
 
   if (V4L2_TYPE_IS_OUTPUT (v4l2object->type)) {
-    if (is_mplane)
+    if (is_mplane) {
       format.fmt.pix_mp.colorspace = colorspace;
-    else
+      format.fmt.pix_mp.quantization = range;
+      format.fmt.pix_mp.ycbcr_enc = matrix;
+      format.fmt.pix_mp.xfer_func = transfer;
+    } else {
       format.fmt.pix.colorspace = colorspace;
+      format.fmt.pix.quantization = range;
+      format.fmt.pix.ycbcr_enc = matrix;
+      format.fmt.pix.xfer_func = transfer;
+    }
 
-    GST_DEBUG_OBJECT (v4l2object->element, "Desired colorspace is %d",
-        colorspace);
+    GST_DEBUG_OBJECT (v4l2object->element, "Desired colorspace is %d:%d:%d:%d",
+        colorspace, range, matrix, transfer);
   }
 
   if (try_only) {
