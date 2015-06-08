@@ -159,7 +159,7 @@ AC_SUBST(GST_PBUTILS_LIBS)
 AC_SUBST(GST_PBUTILS_CFLAGS)
 
 dnl check for gstreamer-video
-PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-$GST_API_VERSION, HAVE_GST_VIDEO="yes", HAVE_GST_VIDEO="no")
+PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-$GST_API_VERSION >= 1.4, HAVE_GST_VIDEO="yes", HAVE_GST_VIDEO="no")
 if test "x$HAVE_GST_VIDEO" != "xyes"; then
   AC_ERROR([gst-video is required])
 fi
@@ -315,6 +315,7 @@ plugins/Makefile
 plugins/fault_injection/Makefile
 plugins/gapplication/Makefile
 plugins/gtk/Makefile
+plugins/ssim/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/video/Makefile
