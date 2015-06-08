@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gstvalidatessim.h>
+#include "../gst-libs/gst/video/gstvalidatessim.h"
 
 #include <gst/gst.h>
 #include <gst/validate/validate.h>

@@ -22,7 +22,9 @@ supps_DATA = \
 
 EXTRA_DIST = \
 	ChangeLog autogen.sh depcomp \
-	COPYING
+	COPYING \
+	common/gst.supp \
+	data/gstvalidate.supp
 
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
