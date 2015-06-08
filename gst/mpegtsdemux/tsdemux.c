@@ -1197,7 +1197,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
               "alignment", G_TYPE_STRING, "nal", NULL);
           break;
       }
-      if (template)
+      if (caps)
         break;
 
       /* hack for itv hd (sid 10510, video pid 3401 */
