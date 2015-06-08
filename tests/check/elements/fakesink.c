@@ -1002,7 +1002,7 @@ last_message_cb (GObject * obj, GParamSpec * pspec, gpointer user_data)
   fail_unless (last_msg != NULL);
 
   if (!strstr (last_msg, "chain"))
-    return;
+    goto skip;
 
   GST_LOG_OBJECT (obj, "%s", last_msg);
 
@@ -1020,6 +1020,8 @@ last_message_cb (GObject * obj, GParamSpec * pspec, gpointer user_data)
   fail_unless_equals_int (count, offset);
 
   *p_counter = count + 1;
+
+skip:
 
   g_free (last_msg);
 }
@@ -1094,7 +1096,7 @@ deep_notify_last_message_cb (GstObject * obj, GstObject * prop_obj,
   fail_unless (last_msg != NULL);
 
   if (!strstr (last_msg, "chain"))
-    return;
+    goto skip;
 
   GST_LOG_OBJECT (prop_obj, "%s", last_msg);
 
@@ -1112,6 +1114,8 @@ deep_notify_last_message_cb (GstObject * obj, GstObject * prop_obj,
 //  fail_unless_equals_int (count, offset);
 
   *p_counter = count + 1;
+
+skip:
 
   g_free (last_msg);
 }
