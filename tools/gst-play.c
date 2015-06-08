@@ -588,6 +588,21 @@ do_play (GstPlay * play)
   g_main_loop_run (play->loop);
 }
 
+static gint
+compare (gconstpointer a, gconstpointer b)
+{
+  gchar *a1, *b1;
+  gint ret;
+
+  a1 = g_utf8_collate_key_for_filename ((gchar *) a, -1);
+  b1 = g_utf8_collate_key_for_filename ((gchar *) b, -1);
+  ret = strcmp (a1, b1);
+  g_free (a1);
+  g_free (b1);
+
+  return ret;
+}
+
 static void
 add_to_playlist (GPtrArray * playlist, const gchar * filename)
 {
@@ -601,17 +616,24 @@ add_to_playlist (GPtrArray * playlist, const gchar * filename)
 
   if ((dir = g_dir_open (filename, 0, NULL))) {
     const gchar *entry;
+    GList *l, *files = NULL;
 
-    /* FIXME: sort entries for each directory? */
     while ((entry = g_dir_read_name (dir))) {
       gchar *path;
 
       path = g_strconcat (filename, G_DIR_SEPARATOR_S, entry, NULL);
-      add_to_playlist (playlist, path);
-      g_free (path);
+      files = g_list_insert_sorted (files, path, compare);
     }
 
     g_dir_close (dir);
+
+    for (l = files; l != NULL; l = l->next) {
+      gchar *path = (gchar *) l->data;
+
+      add_to_playlist (playlist, path);
+      g_free (path);
+    }
+    g_list_free (files);
     return;
   }
 
