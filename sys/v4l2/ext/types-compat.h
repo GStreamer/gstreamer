@@ -44,4 +44,6 @@
 #define __s32 gint32
 #define __le32 guint32 __bitwise
 
+#define __user
+
 #endif /* __TYPES_COMPAT_H__ */
