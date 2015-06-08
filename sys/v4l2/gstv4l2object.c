@@ -1784,6 +1784,9 @@ gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
     case V4L2_YCBCR_ENC_BT2020:
       cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
       break;
+    case V4L2_YCBCR_ENC_SMPTE240M:
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_SMPTE240M;
+      break;
     case V4L2_YCBCR_ENC_DEFAULT:
       /* nothing, just use defaults for colorspace */
       break;
