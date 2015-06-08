@@ -90,7 +90,8 @@ enum
   PROP_ROUNDTRIP_LIMIT,
   PROP_MINIMUM_UPDATE_INTERVAL,
   PROP_BUS,
-  PROP_BASE_TIME
+  PROP_BASE_TIME,
+  PROP_INTERNAL_CLOCK
 };
 
 #define GST_NET_CLIENT_CLOCK_GET_PRIVATE(obj)  \
@@ -98,6 +99,8 @@ enum
 
 struct _GstNetClientClockPrivate
 {
+  GstClock *internal_clock;
+
   GThread *thread;
 
   GSocket *socket;
@@ -140,12 +143,16 @@ static void gst_net_client_clock_constructed (GObject * object);
 static gboolean gst_net_client_clock_start (GstNetClientClock * self);
 static void gst_net_client_clock_stop (GstNetClientClock * self);
 
+static GstClockTime gst_net_client_clock_get_internal_time (GstClock * clock);
+
 static void
 gst_net_client_clock_class_init (GstNetClientClockClass * klass)
 {
   GObjectClass *gobject_class;
+  GstClockClass *clock_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  clock_class = GST_CLOCK_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GstNetClientClockPrivate));
 
@@ -200,20 +207,30 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
           "Initial time that is reported before synchronization", 0,
           G_MAXUINT64, DEFAULT_BASE_TIME,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_INTERNAL_CLOCK,
+      g_param_spec_object ("internal-clock", "Internal Clock",
+          "Internal clock that directly slaved to the remote clock",
+          GST_TYPE_CLOCK, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  clock_class->get_internal_time = gst_net_client_clock_get_internal_time;
 }
 
 static void
 gst_net_client_clock_init (GstNetClientClock * self)
 {
-  GstClock *clock = GST_CLOCK_CAST (self);
   GstNetClientClockPrivate *priv;
 
   self->priv = priv = GST_NET_CLIENT_CLOCK_GET_PRIVATE (self);
 
+  GST_OBJECT_FLAG_SET (self, GST_CLOCK_FLAG_CAN_SET_MASTER);
+
+  priv->internal_clock = g_object_new (GST_TYPE_SYSTEM_CLOCK, NULL);
+
   priv->port = DEFAULT_PORT;
   priv->address = g_strdup (DEFAULT_ADDRESS);
 
-  gst_clock_set_timeout (clock, DEFAULT_TIMEOUT);
+  gst_clock_set_timeout (priv->internal_clock, DEFAULT_TIMEOUT);
 
   priv->thread = NULL;
 
@@ -253,6 +270,11 @@ gst_net_client_clock_finalize (GObject * object)
   if (self->priv->bus != NULL) {
     gst_object_unref (self->priv->bus);
     self->priv->bus = NULL;
+  }
+
+  if (self->priv->internal_clock != NULL) {
+    gst_object_unref (self->priv->internal_clock);
+    self->priv->internal_clock = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -337,6 +359,9 @@ gst_net_client_clock_get_property (GObject * object, guint prop_id,
     case PROP_BASE_TIME:
       g_value_set_uint64 (value, self->priv->base_time);
       break;
+    case PROP_INTERNAL_CLOCK:
+      g_value_set_object (value, self->priv->internal_clock);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -347,6 +372,7 @@ static void
 gst_net_client_clock_constructed (GObject * object)
 {
   GstNetClientClock *self = GST_NET_CLIENT_CLOCK (object);
+  GstClock *internal_clock = self->priv->internal_clock;
   GstClockTime internal;
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
@@ -359,12 +385,12 @@ gst_net_client_clock_constructed (GObject * object)
 
   /* update our internal time so get_time() give something around base_time.
      assume that the rate is 1 in the beginning. */
-  internal = gst_clock_get_internal_time (GST_CLOCK (self));
-  gst_clock_set_calibration (GST_CLOCK (self), internal, self->priv->base_time,
-      1, 1);
+  internal = gst_clock_get_internal_time (internal_clock);
+  gst_clock_set_calibration (internal_clock, internal,
+      self->priv->base_time, 1, 1);
 
   {
-    GstClockTime now = gst_clock_get_time (GST_CLOCK (self));
+    GstClockTime now = gst_clock_get_time (internal_clock);
 
     if (GST_CLOCK_DIFF (now, self->priv->base_time) > 0 ||
         GST_CLOCK_DIFF (now, self->priv->base_time + GST_SECOND) < 0) {
@@ -377,6 +403,14 @@ gst_net_client_clock_constructed (GObject * object)
   }
 
   /* all systems go, cap'n */
+}
+
+static GstClockTime
+gst_net_client_clock_get_internal_time (GstClock * clock)
+{
+  GstNetClientClock *self = GST_NET_CLIENT_CLOCK (clock);
+
+  return gst_clock_get_time (self->priv->internal_clock);
 }
 
 static gint
@@ -395,6 +429,7 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
     GstClockTime local_2)
 {
   GstNetClientClockPrivate *priv = self->priv;
+  GstClock *internal_clock = priv->internal_clock;
   GstClockTime current_timeout = 0;
   GstClockTime local_avg, remote_avg;
   gdouble r_squared;
@@ -546,7 +581,7 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
   clock = GST_CLOCK_CAST (self);
 
   /* Store what the clock produced as 'now' before this update */
-  gst_clock_get_calibration (GST_CLOCK (self), &orig_internal_time,
+  gst_clock_get_calibration (internal_clock, &orig_internal_time,
       &orig_external_time, &orig_rate_num, &orig_rate_den);
   internal_time = orig_internal_time;
   external_time = orig_external_time;
@@ -554,10 +589,10 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
   rate_den = orig_rate_den;
 
   min_guess =
-      gst_clock_adjust_with_calibration (GST_CLOCK (self), local_1,
+      gst_clock_adjust_with_calibration (internal_clock, local_1,
       internal_time, external_time, rate_num, rate_den);
   time_before =
-      gst_clock_adjust_with_calibration (GST_CLOCK (self), local_2,
+      gst_clock_adjust_with_calibration (internal_clock, local_2,
       internal_time, external_time, rate_num, rate_den);
 
   /* Maximum discontinuity, when we're synched with the master. Could make this a property,
@@ -570,14 +605,14 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
       && GST_CLOCK_DIFF (time_before,
           remote_avg) < (GstClockTimeDiff) (max_discont));
 
-  if (gst_clock_add_observation_unapplied (GST_CLOCK (self), local_avg,
-          remote_avg, &r_squared, &internal_time, &external_time, &rate_num,
-          &rate_den)) {
+  if (gst_clock_add_observation_unapplied (internal_clock,
+          local_avg, remote_avg, &r_squared, &internal_time, &external_time,
+          &rate_num, &rate_den)) {
 
     /* Now compare the difference (discont) in the clock
      * after this observation */
     time_discont = GST_CLOCK_DIFF (time_before,
-        gst_clock_adjust_with_calibration (GST_CLOCK (self), local_2,
+        gst_clock_adjust_with_calibration (internal_clock, local_2,
             internal_time, external_time, rate_num, rate_den));
 
     /* If we were in sync with the remote clock, clamp the allowed
@@ -605,20 +640,23 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
     /* Check if the new clock params would have made our observation within range */
     now_synched =
         (GST_CLOCK_DIFF (remote_avg,
-            gst_clock_adjust_with_calibration (GST_CLOCK (self), local_1,
-                internal_time, external_time, rate_num,
+            gst_clock_adjust_with_calibration (internal_clock,
+                local_1, internal_time, external_time, rate_num,
                 rate_den)) < (GstClockTimeDiff) (max_discont))
-        && (GST_CLOCK_DIFF (gst_clock_adjust_with_calibration (GST_CLOCK (self),
-                local_2, internal_time, external_time, rate_num, rate_den),
+        &&
+        (GST_CLOCK_DIFF (gst_clock_adjust_with_calibration
+            (internal_clock, local_2, internal_time, external_time,
+                rate_num, rate_den),
             remote_avg) < (GstClockTimeDiff) (max_discont));
 
     /* Only update the clock if we had synch or just gained it */
     if (synched || now_synched || priv->skipped_updates > MAX_SKIPPED_UPDATES) {
-      gst_clock_set_calibration (GST_CLOCK (self), internal_time, external_time,
-          rate_num, rate_den);
+      gst_clock_set_calibration (internal_clock, internal_time,
+          external_time, rate_num, rate_den);
       /* ghetto formula - shorter timeout for bad correlations */
       current_timeout = (1e-3 / (1 - MIN (r_squared, 0.99999))) * GST_SECOND;
-      current_timeout = MIN (current_timeout, gst_clock_get_timeout (clock));
+      current_timeout =
+          MIN (current_timeout, gst_clock_get_timeout (internal_clock));
       priv->skipped_updates = 0;
     } else {
       /* Restore original calibration vars for the report, we're not changing the clock */
@@ -682,9 +720,9 @@ static gpointer
 gst_net_client_clock_thread (gpointer data)
 {
   GstNetClientClock *self = data;
+  GstClock *internal_clock = self->priv->internal_clock;
   GSocket *socket = self->priv->socket;
   GError *err = NULL;
-  GstClock *clock = data;
 
   GST_INFO_OBJECT (self, "net client clock thread running, socket=%p", socket);
 
@@ -720,8 +758,7 @@ gst_net_client_clock_thread (gpointer data)
 
           packet = gst_ntp_packet_new (NULL, NULL);
 
-          packet->transmit_time =
-              gst_clock_get_internal_time (GST_CLOCK (self));
+          packet->transmit_time = gst_clock_get_internal_time (internal_clock);
 
           GST_DEBUG_OBJECT (self,
               "sending packet, local time = %" GST_TIME_FORMAT,
@@ -736,7 +773,7 @@ gst_net_client_clock_thread (gpointer data)
 
           packet = gst_net_time_packet_new (NULL);
 
-          packet->local_time = gst_clock_get_internal_time (GST_CLOCK (self));
+          packet->local_time = gst_clock_get_internal_time (internal_clock);
 
           GST_DEBUG_OBJECT (self,
               "sending packet, local time = %" GST_TIME_FORMAT,
@@ -750,7 +787,7 @@ gst_net_client_clock_thread (gpointer data)
 
         /* reset timeout (but are expecting a response sooner anyway) */
         self->priv->timeout_expiration =
-            gst_util_get_timestamp () + gst_clock_get_timeout (clock);
+            gst_util_get_timestamp () + gst_clock_get_timeout (internal_clock);
       } else {
         GST_DEBUG_OBJECT (self, "socket error: %s", err->message);
         g_usleep (G_USEC_PER_SEC / 10); /* throttle */
@@ -761,7 +798,7 @@ gst_net_client_clock_thread (gpointer data)
 
       /* got packet */
 
-      new_local = gst_clock_get_internal_time (GST_CLOCK (self));
+      new_local = gst_clock_get_internal_time (internal_clock);
 
       if (self->priv->is_ntp) {
         GstNtpPacket *packet;
@@ -809,7 +846,8 @@ gst_net_client_clock_thread (gpointer data)
             /* And wait a bit before we send the next packet instead of
              * sending it immediately */
             self->priv->timeout_expiration =
-                gst_util_get_timestamp () + gst_clock_get_timeout (clock);
+                gst_util_get_timestamp () +
+                gst_clock_get_timeout (internal_clock);
           } else {
             GST_WARNING_OBJECT (self, "receive error: %s", err->message);
           }
