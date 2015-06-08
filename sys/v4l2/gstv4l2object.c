@@ -1686,10 +1686,12 @@ gst_v4l2_object_get_interlace_mode (enum v4l2_field field,
 
 static gboolean
 gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
-    GstVideoColorimetry * cinfo)
+    enum v4l2_quantization range, enum v4l2_ycbcr_encoding matrix,
+    enum v4l2_xfer_func transfer, GstVideoColorimetry * cinfo)
 {
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
+  /* First step, set the defaults for each primaries */
   switch (colorspace) {
     case V4L2_COLORSPACE_SMPTE170M:
       ret = gst_video_colorimetry_from_string (cinfo,
@@ -1699,19 +1701,125 @@ gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
       ret = gst_video_colorimetry_from_string (cinfo,
           GST_VIDEO_COLORIMETRY_BT709);
       break;
+    case V4L2_COLORSPACE_SRGB:
+    case V4L2_COLORSPACE_JPEG:
+      /* This is in fact sYCC */
+      cinfo->range = GST_VIDEO_COLOR_RANGE_0_255;
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      cinfo->transfer = GST_VIDEO_TRANSFER_SRGB;
+      cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+      break;
+    case V4L2_COLORSPACE_ADOBERGB:
+      GST_FIXME ("AdobeRGB is not yet supported by GStreamer");
+      /* We are missing the primaries and the transfer function */
+      ret = FALSE;
+      break;
+    case V4L2_COLORSPACE_BT2020:
+      ret = gst_video_colorimetry_from_string (cinfo,
+          GST_VIDEO_COLORIMETRY_BT2020);
+      break;
     case V4L2_COLORSPACE_SMPTE240M:
       ret = gst_video_colorimetry_from_string (cinfo,
           GST_VIDEO_COLORIMETRY_SMPTE240M);
       break;
-    case V4L2_COLORSPACE_SRGB:
-      ret = gst_video_colorimetry_from_string (cinfo,
-          GST_VIDEO_COLORIMETRY_SRGB);
+    case V4L2_COLORSPACE_470_SYSTEM_M:
+      cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
+      cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT470M;
+      break;
+    case V4L2_COLORSPACE_470_SYSTEM_BG:
+      cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
+      cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG;
+      break;
+    case V4L2_COLORSPACE_RAW:
+      /* Explicitly unknown */
+      cinfo->range = GST_VIDEO_COLOR_RANGE_UNKNOWN;
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
+      cinfo->transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+      cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
       break;
     default:
       GST_DEBUG ("Unknown enum v4l2_colorspace %d", colorspace);
       ret = FALSE;
       break;
   }
+
+  if (!ret)
+    goto done;
+
+  /* Second step, apply any custom variation */
+  switch (range) {
+    case V4L2_QUANTIZATION_FULL_RANGE:
+      cinfo->range = GST_VIDEO_COLOR_RANGE_0_255;
+      break;
+    case V4L2_QUANTIZATION_LIM_RANGE:
+      cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+      break;
+    case V4L2_QUANTIZATION_DEFAULT:
+      /* nothing, just use defaults for colorspace */
+      break;
+    default:
+      GST_WARNING ("Unknown enum v4l2_quantization value %d", range);
+      cinfo->range = GST_VIDEO_COLOR_RANGE_UNKNOWN;
+      break;
+  }
+
+  switch (matrix) {
+    case V4L2_YCBCR_ENC_XV601:
+    case V4L2_YCBCR_ENC_SYCC:
+      GST_FIXME ("XV601 and SYCC not defined, assuming 601");
+    case V4L2_YCBCR_ENC_601:
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      break;
+    case V4L2_YCBCR_ENC_XV709:
+      GST_FIXME ("XV709 not defined, assuming 709");
+    case V4L2_YCBCR_ENC_709:
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+      break;
+    case V4L2_YCBCR_ENC_BT2020_CONST_LUM:
+      GST_FIXME ("BT2020 with constant lumma is not defined, assuming BT2020");
+    case V4L2_YCBCR_ENC_BT2020:
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+      break;
+    case V4L2_YCBCR_ENC_DEFAULT:
+      /* nothing, just use defaults for colorspace */
+      break;
+    default:
+      GST_WARNING ("Unknown enum v4l2_ycbcr_encoding value %d", matrix);
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
+      break;
+  }
+
+  switch (transfer) {
+    case V4L2_XFER_FUNC_709:
+      cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
+      break;
+    case V4L2_XFER_FUNC_SRGB:
+      cinfo->transfer = GST_VIDEO_TRANSFER_SRGB;
+      break;
+    case V4L2_XFER_FUNC_ADOBERGB:
+      GST_FIXME ("AdobeRGB is not yet supported by GStreamer");
+      cinfo->transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+      break;
+    case V4L2_XFER_FUNC_SMPTE240M:
+      cinfo->transfer = GST_VIDEO_TRANSFER_SMPTE240M;
+      break;
+    case V4L2_XFER_FUNC_NONE:
+      cinfo->transfer = GST_VIDEO_TRANSFER_GAMMA10;
+      break;
+    case V4L2_XFER_FUNC_DEFAULT:
+      /* nothing, just use defaults for colorspace */
+      break;
+    default:
+      GST_WARNING ("Unknown enum v4l2_xfer_func value %d", transfer);
+      cinfo->transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+      break;
+  }
+
+done:
   return ret;
 }
 
@@ -1823,13 +1931,24 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
 
   if (gst_v4l2_object_try_fmt (v4l2object, &fmt) == 0) {
     enum v4l2_colorspace colorspace;
+    enum v4l2_quantization range;
+    enum v4l2_ycbcr_encoding matrix;
+    enum v4l2_xfer_func transfer;
 
-    if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type))
+    if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
       colorspace = fmt.fmt.pix_mp.colorspace;
-    else
+      range = fmt.fmt.pix_mp.quantization;
+      matrix = fmt.fmt.pix_mp.ycbcr_enc;
+      transfer = fmt.fmt.pix_mp.xfer_func;
+    } else {
       colorspace = fmt.fmt.pix.colorspace;
+      range = fmt.fmt.pix.quantization;
+      matrix = fmt.fmt.pix.ycbcr_enc;
+      transfer = fmt.fmt.pix.xfer_func;
+    }
 
-    if (gst_v4l2_object_get_colorspace (colorspace, &cinfo)) {
+    if (gst_v4l2_object_get_colorspace (colorspace, range, matrix, transfer,
+            &cinfo)) {
       g_value_init (&colorimetry, G_TYPE_STRING);
       g_value_take_string (&colorimetry,
           gst_video_colorimetry_to_string (&cinfo));
