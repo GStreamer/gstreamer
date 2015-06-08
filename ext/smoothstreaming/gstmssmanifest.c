@@ -95,6 +95,9 @@ struct _GstMssManifest
 
   gboolean is_live;
 
+  GString *protection_system_id;
+  gchar *protection_data;
+
   GSList *streams;
 };
 
@@ -267,6 +270,41 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
   stream->regex_position = g_regex_new ("\\{start[ _]time\\}", 0, 0, NULL);
 }
 
+
+static void
+_gst_mss_parse_protection (GstMssManifest * manifest,
+    xmlNodePtr protection_node)
+{
+  xmlNodePtr nodeiter;
+
+  for (nodeiter = protection_node->children; nodeiter;
+      nodeiter = nodeiter->next) {
+    if (nodeiter->type == XML_ELEMENT_NODE
+        && (strcmp ((const char *) nodeiter->name, "ProtectionHeader") == 0)) {
+      xmlChar *system_id_attribute =
+          xmlGetProp (nodeiter, (xmlChar *) "SystemID");
+      gchar *value = (gchar *) system_id_attribute;
+      int id_len = strlen (value);
+      GString *system_id;
+
+      if (value[0] == '{') {
+        value++;
+        id_len--;
+      }
+
+      system_id = g_string_new (value);
+      system_id = g_string_ascii_down (system_id);
+      if (value[id_len - 1] == '}')
+        system_id = g_string_truncate (system_id, id_len - 1);
+
+      manifest->protection_system_id = system_id;
+      manifest->protection_data = (gchar *) xmlNodeGetContent (nodeiter);
+      xmlFree (system_id_attribute);
+      break;
+    }
+  }
+}
+
 GstMssManifest *
 gst_mss_manifest_new (GstBuffer * data)
 {
@@ -300,6 +338,11 @@ gst_mss_manifest_new (GstBuffer * data)
       manifest->streams = g_slist_append (manifest->streams, stream);
       _gst_mss_stream_init (stream, nodeiter);
     }
+
+    if (nodeiter->type == XML_ELEMENT_NODE
+        && (strcmp ((const char *) nodeiter->name, "Protection") == 0)) {
+      _gst_mss_parse_protection (manifest, nodeiter);
+    }
   }
 
   gst_buffer_unmap (data, &mapinfo);
@@ -327,8 +370,26 @@ gst_mss_manifest_free (GstMssManifest * manifest)
 
   g_slist_free_full (manifest->streams, (GDestroyNotify) gst_mss_stream_free);
 
+  if (manifest->protection_system_id != NULL)
+    g_string_free (manifest->protection_system_id, TRUE);
+  xmlFree (manifest->protection_data);
+
   xmlFreeDoc (manifest->xml);
   g_free (manifest);
+}
+
+const gchar *
+gst_mss_manifest_get_protection_system_id (GstMssManifest * manifest)
+{
+  if (manifest->protection_system_id != NULL)
+    return manifest->protection_system_id->str;
+  return NULL;
+}
+
+const gchar *
+gst_mss_manifest_get_protection_data (GstMssManifest * manifest)
+{
+  return manifest->protection_data;
 }
 
 GSList *

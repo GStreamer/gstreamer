@@ -52,6 +52,8 @@ gint64 gst_mss_manifest_get_dvr_window_length (GstMssManifest * manifest);
 gint gst_mss_manifest_get_look_ahead_fragments_count (GstMssManifest * manifest);
 void gst_mss_manifest_reload_fragments (GstMssManifest * manifest, GstBuffer * data);
 GstClockTime gst_mss_manifest_get_min_fragment_duration (GstMssManifest * manifest);
+const gchar * gst_mss_manifest_get_protection_system_id (GstMssManifest * manifest);
+const gchar * gst_mss_manifest_get_protection_data (GstMssManifest * manifest);
 
 GstMssStreamType gst_mss_stream_get_type (GstMssStream *stream);
 GstCaps * gst_mss_stream_get_caps (GstMssStream * stream);

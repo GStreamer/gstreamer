@@ -367,12 +367,34 @@ _create_pad (GstMssDemux * mssdemux, GstMssStream * manifeststream)
   return srcpad;
 }
 
+static void
+gst_mss_demux_apply_protection_system (GstCaps * caps,
+    const gchar * selected_system)
+{
+  GstStructure *s;
+
+  g_return_if_fail (selected_system);
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_set (s,
+      "original-media-type", G_TYPE_STRING, gst_structure_get_name (s),
+      GST_PROTECTION_SYSTEM_ID_CAPS_FIELD, G_TYPE_STRING, selected_system,
+      NULL);
+  gst_structure_set_name (s, "application/x-cenc");
+
+}
+
 static gboolean
 gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
 {
   GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (demux);
   GSList *streams = gst_mss_manifest_get_streams (mssdemux->manifest);
   GSList *iter;
+  const gchar *protection_system_id =
+      gst_mss_manifest_get_protection_system_id (mssdemux->manifest);
+  const gchar *protection_data =
+      gst_mss_manifest_get_protection_data (mssdemux->manifest);
+  gboolean protected = protection_system_id && protection_data;
+  const gchar *selected_system = NULL;
 
   if (streams == NULL) {
     GST_INFO_OBJECT (mssdemux, "No streams found in the manifest");
@@ -380,6 +402,17 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
         (_("This file contains no playable streams.")),
         ("no streams found at the Manifest"));
     return FALSE;
+  }
+
+  if (protected) {
+    const gchar *sys_ids[2] = { protection_system_id, NULL };
+
+    selected_system = gst_protection_select_system (sys_ids);
+    if (!selected_system) {
+      GST_ERROR_OBJECT (mssdemux, "stream is protected, but no "
+          "suitable decryptor element has been found");
+      return FALSE;
+    }
   }
 
   GST_INFO_OBJECT (mssdemux, "Changing max bitrate to %u",
@@ -404,7 +437,13 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
         srcpad);
     stream->manifest_stream = manifeststream;
     gst_mss_stream_set_active (manifeststream, TRUE);
+
     caps = gst_mss_stream_get_caps (stream->manifest_stream);
+
+    if (protected) {
+      gst_mss_demux_apply_protection_system (caps, selected_system);
+    }
+
     gst_adaptive_demux_stream_set_caps (GST_ADAPTIVE_DEMUX_STREAM_CAST (stream),
         create_mss_caps (stream, caps));
     gst_caps_unref (caps);
@@ -416,6 +455,22 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
       tags = gst_tag_list_new (GST_TAG_LANGUAGE_CODE, lang, NULL);
       gst_adaptive_demux_stream_set_tags (GST_ADAPTIVE_DEMUX_STREAM_CAST
           (stream), tags);
+    }
+
+    if (protected) {
+      gsize protection_data_len;
+      guchar *decoded_data =
+          g_base64_decode (protection_data, &protection_data_len);
+      GstBuffer *protection_buffer =
+          gst_buffer_new_wrapped (decoded_data, protection_data_len);
+      GstEvent *event =
+          gst_event_new_protection (protection_system_id, protection_buffer,
+          "smooth-streaming");
+
+      GST_LOG_OBJECT (stream, "Queuing Protection event on source pad");
+      gst_adaptive_demux_stream_queue_event ((GstAdaptiveDemuxStream *) stream,
+          event);
+      gst_buffer_unref (protection_buffer);
     }
   }
 
@@ -476,10 +531,31 @@ gst_mss_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
   if (gst_mss_stream_select_bitrate (mssstream->manifest_stream, bitrate)) {
     GstCaps *caps;
     GstCaps *msscaps;
+    GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (stream->demux);
+    const gchar *protection_system_id =
+        gst_mss_manifest_get_protection_system_id (mssdemux->manifest);
+    const gchar *protection_data =
+        gst_mss_manifest_get_protection_data (mssdemux->manifest);
+    gboolean protected = protection_system_id && protection_data;
+
     caps = gst_mss_stream_get_caps (mssstream->manifest_stream);
 
     GST_DEBUG_OBJECT (stream->pad,
         "Starting streams reconfiguration due to bitrate changes");
+
+    if (protected) {
+      const gchar *sys_ids[2] = { protection_system_id, NULL };
+      const gchar *selected_system = gst_protection_select_system (sys_ids);
+
+      if (!selected_system) {
+        GST_ERROR_OBJECT (mssdemux, "stream is protected, but no "
+            "suitable decryptor element has been found");
+        return FALSE;
+      }
+
+      gst_mss_demux_apply_protection_system (caps, selected_system);
+    }
+
     msscaps = create_mss_caps (mssstream, caps);
 
     GST_DEBUG_OBJECT (stream->pad,
