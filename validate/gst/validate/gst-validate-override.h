@@ -26,6 +26,9 @@
 #include <gst/gst.h>
 
 typedef struct _GstValidateOverride GstValidateOverride;
+typedef struct _GstValidateOverrideClass GstValidateOverrideClass;
+typedef struct _GstValidateOverridePriv GstValidateOverridePriv;
+
 
 #include <gst/validate/gst-validate-report.h>
 #include <gst/validate/gst-validate-monitor.h>
@@ -42,10 +45,6 @@ typedef void (*GstValidateOverrideGetCapsHandler)(GstValidateOverride * override
     GstValidateMonitor * pad_monitor, GstCaps * caps);
 typedef void (*GstValidateOverrideSetCapsHandler)(GstValidateOverride * override,
     GstValidateMonitor * pad_monitor, GstCaps * caps);
-
-typedef struct _GstValidateOverride GstValidateOverride;
-typedef struct _GstValidateOverrideClass GstValidateOverrideClass;
-typedef struct _GstValidateOverridePriv GstValidateOverridePriv;
 
 struct _GstValidateOverrideClass
 {
