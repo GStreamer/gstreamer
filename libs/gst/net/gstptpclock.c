@@ -55,11 +55,14 @@
 
 #include "gstptpclock.h"
 
-#ifdef HAVE_PTP
-
 #include "gstptp_private.h"
 
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
+#ifdef G_OS_WIN32
+#include <windows.h>
+#endif
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -226,7 +229,11 @@ typedef struct
 static GMutex ptp_lock;
 static GCond ptp_cond;
 static gboolean initted = FALSE;
+#ifdef HAVE_PTP
 static gboolean supported = TRUE;
+#else
+static gboolean supported = FALSE;
+#endif
 static GPid ptp_helper_pid;
 static GThread *ptp_helper_thread;
 static GMainContext *main_context;
@@ -2116,8 +2123,13 @@ done:
 
   if (!ret) {
     if (ptp_helper_pid) {
+#ifndef G_OS_WIN32
       kill (ptp_helper_pid, SIGKILL);
       waitpid (ptp_helper_pid, NULL, 0);
+#else
+      TerminateProcess (ptp_helper_pid, 1);
+      WaitForSingleObject (ptp_helper_pid, INFINITE);
+#endif
       g_spawn_close_pid (ptp_helper_pid);
     }
     ptp_helper_pid = 0;
@@ -2172,8 +2184,13 @@ gst_ptp_deinit (void)
   g_mutex_lock (&ptp_lock);
 
   if (ptp_helper_pid) {
+#ifndef G_OS_WIN32
     kill (ptp_helper_pid, SIGKILL);
     waitpid (ptp_helper_pid, NULL, 0);
+#else
+    TerminateProcess (ptp_helper_pid, 1);
+    WaitForSingleObject (ptp_helper_pid, INFINITE);
+#endif
     g_spawn_close_pid (ptp_helper_pid);
   }
   ptp_helper_pid = 0;
@@ -2548,55 +2565,3 @@ gst_ptp_statistics_callback_remove (gulong id)
     g_atomic_int_add (&domain_stats_n_hooks, -1);
   g_mutex_unlock (&ptp_lock);
 }
-
-#else /* HAVE_PTP */
-
-GType
-gst_ptp_clock_get_type (void)
-{
-  return G_TYPE_INVALID;
-}
-
-gboolean
-gst_ptp_is_supported (void)
-{
-  return FALSE;
-}
-
-gboolean
-gst_ptp_is_initialized (void)
-{
-  return FALSE;
-}
-
-gboolean
-gst_ptp_init (guint64 clock_id, gchar ** interfaces)
-{
-  return FALSE;
-}
-
-void
-gst_ptp_deinit (void)
-{
-}
-
-GstClock *
-gst_ptp_clock_new (const gchar * name, guint domain)
-{
-  return NULL;
-}
-
-gulong
-gst_ptp_statistics_callback_add (GstPtpStatisticsCallback callback,
-    gpointer user_data, GDestroyNotify destroy_data)
-{
-  return 0;
-}
-
-void
-gst_ptp_statistics_callback_remove (gulong id)
-{
-  return;
-}
-
-#endif
