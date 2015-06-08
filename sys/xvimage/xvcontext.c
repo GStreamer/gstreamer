@@ -1087,8 +1087,8 @@ gst_xwindow_set_title (GstXWindow * window, const gchar * title)
       XFree (xproperty.value);
 
       if (hint) {
-        hint->res_name = g_strdup (title);
-        hint->res_class = g_strdup ("GStreamer");
+        hint->res_name = (char *) title;
+        hint->res_class = (char *) "GStreamer";
         XSetClassHint (context->disp, window->win, hint);
       }
       XFree (hint);

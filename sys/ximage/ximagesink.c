@@ -406,8 +406,8 @@ gst_ximagesink_xwindow_set_title (GstXImageSink * ximagesink,
       }
 
       if (hint) {
-        hint->res_name = g_strdup (app_name);
-        hint->res_class = g_strdup ("GStreamer");
+        hint->res_name = (char *) app_name;
+        hint->res_class = (char *) "GStreamer";
         XSetClassHint (ximagesink->xcontext->disp, xwindow->win, hint);
       }
       XFree (hint);
