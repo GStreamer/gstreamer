@@ -1197,6 +1197,8 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
               "alignment", G_TYPE_STRING, "nal", NULL);
           break;
       }
+      if (template)
+        break;
 
       /* hack for itv hd (sid 10510, video pid 3401 */
       if (program->program_number == 10510 && bstream->pid == 3401) {
