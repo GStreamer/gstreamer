@@ -1,5 +1,5 @@
-SUBDIRS = validate
-DIST_SUBDIRS = validate launcher
+SUBDIRS = validate plugins
+DIST_SUBDIRS = validate launcher plugins
 
 if HAVE_SPHINHX
 SUBDIRS += launcher

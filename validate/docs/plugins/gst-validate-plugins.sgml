@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>GStreamer Validate Plugins &GST_API_VERSION; Plugins Reference Manual</title>
+    <releaseinfo>
+      for GStreamer Validate &GST_API_VERSION; (&GST_VERSION;)
+      The latest version of this documentation can be found on-line at
+      <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-validate/html/</ulink>.
+    </releaseinfo>
+  </bookinfo>
+
+  <chapter>
+    <title>gst-validate plugins</title>
+    <xi:include href="xml/ssim.xml" />
+  </chapter>
+</book>
+
+

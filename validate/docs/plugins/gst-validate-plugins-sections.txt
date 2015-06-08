@@ -1,0 +1,9 @@
+<SECTION>
+<FILE>validate-ssim</FILE>
+<TITLE>Validate SSim plugin</TITLE>
+VALIDATE_TYPE_S_SIM_OVERRIDE
+ValidateSSimOverrideClass
+validate_s_sim_override_new
+ValidateSSimOverride
+</SECTION>
+
