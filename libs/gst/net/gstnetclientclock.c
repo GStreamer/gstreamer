@@ -224,6 +224,7 @@ gst_net_client_clock_init (GstNetClientClock * self)
   self->priv = priv = GST_NET_CLIENT_CLOCK_GET_PRIVATE (self);
 
   GST_OBJECT_FLAG_SET (self, GST_CLOCK_FLAG_CAN_SET_MASTER);
+  GST_OBJECT_FLAG_SET (self, GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC);
 
   priv->internal_clock = g_object_new (GST_TYPE_SYSTEM_CLOCK, NULL);
 
@@ -658,6 +659,9 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
       current_timeout =
           MIN (current_timeout, gst_clock_get_timeout (internal_clock));
       priv->skipped_updates = 0;
+
+      /* FIXME: When do we consider the clock absolutely not synced anymore? */
+      gst_clock_set_synced (GST_CLOCK (self), TRUE);
     } else {
       /* Restore original calibration vars for the report, we're not changing the clock */
       internal_time = orig_internal_time;
