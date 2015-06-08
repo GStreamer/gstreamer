@@ -350,13 +350,12 @@ gst_rtp_vp8_offset_to_partition (GstRtpVP8Pay * self, guint offset)
 {
   int i;
 
-  for (i = 0; i < self->n_partitions; i++) {
-    if (offset >= self->partition_offset[i] &&
-        offset < self->partition_offset[i + 1])
-      return i;
+  for (i = 1; i < self->n_partitions; i++) {
+    if (offset < self->partition_offset[i])
+      return i - 1;
   }
 
-  return i;
+  return i - 1;
 }
 
 static gsize
