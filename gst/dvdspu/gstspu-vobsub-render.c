@@ -138,7 +138,7 @@ gstspu_vobsub_get_nibble (SpuState * state, guint16 * rle_offset)
   if (G_UNLIKELY (*rle_offset >= state->vobsub.max_offset))
     return 0;                   /* Overran the buffer */
 
-  gst_buffer_extract (state->vobsub.pix_buf, (*rle_offset) / 2, &ret, 1);
+  ret = state->vobsub.pix_buf_map.data[(*rle_offset) / 2];
 
   /* If the offset is even, we shift the answer down 4 bits, otherwise not */
   if (*rle_offset & 0x01)
@@ -226,7 +226,8 @@ gstspu_vobsub_render_line (SpuState * state, guint8 * planes[3],
       /* Check the top & bottom, because we might not be within the region yet */
       if (state->vobsub.cur_Y >= state->vobsub.cur_chg_col->top &&
           state->vobsub.cur_Y <= state->vobsub.cur_chg_col->bottom) {
-        return gstspu_vobsub_render_line_with_chgcol (state, planes, rle_offset);
+        return gstspu_vobsub_render_line_with_chgcol (state, planes,
+            rle_offset);
       }
     }
   }
@@ -430,6 +431,10 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
   if (G_UNLIKELY (state->vobsub.pix_buf == NULL))
     return;
 
+  if (!gst_buffer_map (state->vobsub.pix_buf, &state->vobsub.pix_buf_map,
+          GST_MAP_READ))
+    return;
+
   /* Store the start of each plane */
   planes[0] = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
   planes[1] = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
@@ -454,7 +459,7 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
   /* When reading RLE data, we track the offset in nibbles... */
   state->vobsub.cur_offsets[0] = state->vobsub.pix_data[0] * 2;
   state->vobsub.cur_offsets[1] = state->vobsub.pix_data[1] * 2;
-  state->vobsub.max_offset = gst_buffer_get_size (state->vobsub.pix_buf) * 2;
+  state->vobsub.max_offset = state->vobsub.pix_buf_map.size * 2;
 
   /* Update all the palette caches */
   gstspu_vobsub_update_palettes (dvdspu, state);
@@ -570,7 +575,9 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
 
     /* Render odd line */
     state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x + 1;
-    visible |= gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[1]);
+    visible |=
+        gstspu_vobsub_render_line (state, planes,
+        &state->vobsub.cur_offsets[1]);
 
     if (visible && !clip) {
       /* Blend the accumulated UV compositing buffers onto the output */
@@ -596,7 +603,9 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
        * after the above loop exited. */
       gstspu_vobsub_clear_comp_buffers (state);
       state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x;
-      visible |= gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[0]);
+      visible |=
+          gstspu_vobsub_render_line (state, planes,
+          &state->vobsub.cur_offsets[0]);
       if (visible)
         gstspu_vobsub_blend_comp_buffers (state, planes);
     }
@@ -611,4 +620,6 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
       && state->vobsub.hl_rect.top != -1) {
     gstspu_vobsub_draw_highlight (state, frame, &state->vobsub.hl_rect);
   }
+
+  gst_buffer_unmap (state->vobsub.pix_buf, &state->vobsub.pix_buf_map);
 }

@@ -52,6 +52,7 @@ struct SpuVobsubState {
   /* Top + Bottom field offsets in the buffer. 0 = not set */
   guint16 pix_data[2]; 
   GstBuffer *pix_buf; /* Current SPU packet the pix_data references */
+  GstMapInfo pix_buf_map; /* Mapped buffer info */
   
   SpuRect disp_rect;
   SpuRect clip_rect;
