@@ -31,6 +31,7 @@
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/tag/tag.h>
 #include <gst/math-compat.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -54,6 +55,14 @@ typedef enum
   GST_PLAY_TRICK_MODE_KEY_UNITS_NO_AUDIO,
   GST_PLAY_TRICK_MODE_LAST
 } GstPlayTrickMode;
+
+typedef enum
+{
+  GST_PLAY_TRACK_TYPE_INVALID = 0,
+  GST_PLAY_TRACK_TYPE_AUDIO,
+  GST_PLAY_TRACK_TYPE_VIDEO,
+  GST_PLAY_TRACK_TYPE_SUBTITLE
+} GstPlayTrackType;
 
 typedef struct
 {
@@ -866,6 +875,66 @@ play_switch_trick_mode (GstPlay * play)
 }
 
 static void
+play_cycle_track_selection (GstPlay * play, GstPlayTrackType track_type)
+{
+  const gchar *prop_cur, *prop_n, *prop_get, *name;
+  gint cur = -1, n = -1;
+
+  switch (track_type) {
+    case GST_PLAY_TRACK_TYPE_AUDIO:
+      prop_get = "get-audio-tags";
+      prop_cur = "current-audio";
+      prop_n = "n-audio";
+      name = "audio";
+      break;
+    case GST_PLAY_TRACK_TYPE_VIDEO:
+      prop_get = "get-video-tags";
+      prop_cur = "current-video";
+      prop_n = "n-video";
+      name = "video";
+      break;
+    case GST_PLAY_TRACK_TYPE_SUBTITLE:
+      prop_get = "get-text-tags";
+      prop_cur = "current-text";
+      prop_n = "n-text";
+      name = "subtitle";
+      break;
+    default:
+      return;
+  }
+
+  g_object_get (play->playbin, prop_cur, &cur, prop_n, &n, NULL);
+
+  if (n < 1) {
+    g_print ("No %s tracks.\n", name);
+  } else if (n == 1) {
+    g_print ("No other %s tracks to switch to.\n", name);
+  } else {
+    gchar *lcode = NULL, *lname = NULL;
+    const gchar *lang = NULL;
+    GstTagList *tags = NULL;
+
+    cur = (cur + 1) % n;
+    g_signal_emit_by_name (play->playbin, prop_get, cur, &tags);
+    if (tags != NULL) {
+      if (gst_tag_list_get_string (tags, GST_TAG_LANGUAGE_CODE, &lcode))
+        lang = gst_tag_get_language_name (lcode);
+      else if (gst_tag_list_get_string (tags, GST_TAG_LANGUAGE_NAME, &lname))
+        lang = lname;
+      gst_tag_list_unref (tags);
+    }
+    if (lang != NULL)
+      g_print ("Switching to %s track %d of %d (%s).\n", name, cur + 1, n,
+          lang);
+    else
+      g_print ("Switching to %s track %d of %d.\n", name, cur + 1, n);
+    g_object_set (play->playbin, prop_cur, cur, NULL);
+    g_free (lcode);
+    g_free (lname);
+  }
+}
+
+static void
 print_keyboard_help (void)
 {
   static struct
@@ -886,6 +955,9 @@ print_keyboard_help (void)
     "-", N_("decrease playback rate")}, {
     "d", N_("change playback direction")}, {
     "t", N_("enable/disable trick modes")}, {
+    "a", N_("change audio track")}, {
+    "v", N_("change video track")}, {
+    "s", N_("change subtitle track")}, {
   "k", N_("show keyboard shortcuts")},};
   guint i, chars_to_pad, desc_len, max_desc_len = 0;
 
@@ -910,8 +982,13 @@ static void
 keyboard_cb (const gchar * key_input, gpointer user_data)
 {
   GstPlay *play = (GstPlay *) user_data;
+  gchar key = '\0';
 
-  switch (g_ascii_tolower (key_input[0])) {
+  /* only want to switch/case on single char, not first char of string */
+  if (key_input[0] != '\0' && key_input[1] == '\0')
+    key = g_ascii_tolower (key_input[0]);
+
+  switch (key) {
     case 'k':
       print_keyboard_help ();
       break;
@@ -962,6 +1039,15 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
         g_main_loop_quit (play->loop);
         break;
       }
+    case 'a':
+      play_cycle_track_selection (play, GST_PLAY_TRACK_TYPE_AUDIO);
+      break;
+    case 'v':
+      play_cycle_track_selection (play, GST_PLAY_TRACK_TYPE_VIDEO);
+      break;
+    case 's':
+      play_cycle_track_selection (play, GST_PLAY_TRACK_TYPE_SUBTITLE);
+      break;
       /* fall through */
     default:
       if (strcmp (key_input, GST_PLAY_KB_ARROW_RIGHT) == 0) {
