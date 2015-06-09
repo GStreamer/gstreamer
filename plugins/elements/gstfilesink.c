@@ -58,10 +58,10 @@
 #define off_t guint64
 #undef ftruncate
 #define ftruncate _chsize
-#ifdef _MSC_VER                 /* Check if we are using MSVC, fileno is deprecated in favour */
-#define fileno _fileno          /* of _fileno */
 #undef fsync
 #define fsync _commit
+#ifdef _MSC_VER                 /* Check if we are using MSVC, fileno is deprecated in favour */
+#define fileno _fileno          /* of _fileno */
 #endif
 #endif
 
