@@ -41,7 +41,7 @@
 #include <netinet/in.h>
 #include <string.h>
 
-#ifdef __APPLE__
+#ifdef HAVE_GETIFADDRS_AF_LINK
 #include <ifaddrs.h>
 #include <net/if_dl.h>
 #endif
@@ -240,7 +240,7 @@ setup_sockets (void)
 
   /* Probe all non-loopback interfaces */
   if (!ifaces) {
-#ifndef __APPLE__
+#if defined(HAVE_SIOCGIFCONF_SIOCGIFFLAGS_SIOCGIFHWADDR)
     struct ifreq ifr;
     struct ifconf ifc;
     gchar buf[8192];
@@ -269,7 +269,7 @@ setup_sockets (void)
           ifaces = probed_ifaces;
       }
     }
-#else
+#elif defined(HAVE_GETIFADDRS_AF_LINK)
     struct ifaddrs *ifaddr, *ifa;
 
     if (getifaddrs (&ifaddr) != -1) {
@@ -291,6 +291,8 @@ setup_sockets (void)
       g_ptr_array_add (arr, NULL);
       ifaces = probed_ifaces = (gchar **) g_ptr_array_free (arr, FALSE);
     }
+#else
+#warning "Implement something to list all network interfaces"
 #endif
   }
 
@@ -298,7 +300,7 @@ setup_sockets (void)
   if (clock_id == (guint64) - 1) {
     gboolean success = FALSE;
 
-#ifndef __APPLE__
+#if defined(HAVE_SIOCGIFCONF_SIOCGIFFLAGS_SIOCGIFHWADDR)
     struct ifreq ifr;
 
     if (ifaces) {
@@ -356,7 +358,7 @@ setup_sockets (void)
         }
       }
     }
-#else
+#elif defined(HAVE_GETIFADDRS_AF_LINK)
     struct ifaddrs *ifaddr, *ifa;
 
     if (getifaddrs (&ifaddr) != -1) {
@@ -405,6 +407,8 @@ setup_sockets (void)
 
       freeifaddrs (ifaddr);
     }
+#else
+#warning "Implement something to get MAC addresses of network interfaces"
 #endif
 
     if (!success) {

@@ -325,6 +325,44 @@ AC_PATH_PROG([SETCAP], [setcap], [no], [$PATH:/usr/bin:/bin:/usr/sbin:/sbin])
 if test "x$HAVE_PTP" = "xyes"; then
 AC_DEFINE(HAVE_PTP, 1, [PTP support available])
 
+AC_MSG_CHECKING([for SIOCGIFCONF, SIOCGIFFLAGS and SIOCGIFHWADDR])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+    [[
+        #include <sys/ioctl.h>
+        #include <net/if.h>
+    ]],
+    [[
+        struct ifreq ifr;
+        struct ifconf ifc;
+        ioctl(0, SIOCGIFCONF, &ifc);
+        ioctl(0, SIOCGIFFLAGS, &ifr);
+        ioctl(0, SIOCGIFHWADDR, &ifr);
+        int dummy = ifr.ifr_hwaddr.sa_data[0];
+    ]])], [
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_SIOCGIFCONF_SIOCGIFFLAGS_SIOCGIFHWADDR, 1, [SIOCGIFCONF, SIOCGIFFLAGS and SIOCGIFHWADDR is available])
+    ], [
+        AC_MSG_RESULT(no)
+])
+
+AC_MSG_CHECKING([for getifaddrs() and AF_LINK])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+    [[
+        #include <ifaddrs.h>
+        #include <net/if.h>
+        #include <net/if_dl.h>
+    ]],
+    [[
+        struct ifaddrs *ifaddr;
+        getifaddrs(&ifaddr);
+        int dummy = (ifaddr->ifa_flags & IFF_LOOPBACK) && ifaddr->ifa_addr->sa_family != AF_LINK;
+    ]])], [
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_GETIFADDRS_AF_LINK, 1, [getifaddrs() and AF_LINK is available])
+    ], [
+        AC_MSG_RESULT(no)
+    ])
+
 AC_MSG_CHECKING([how to install gst-ptp-helper])
 if test "x$with_ptp_helper_permissions" = "xauto"; then
     if test "x$gst_ptp_have_cap" = "xyes" -a "x$SETCAP" != "xno"; then
