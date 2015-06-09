@@ -210,7 +210,8 @@ CRUFT_DIRS = \
 	$(top_builddir)/tests/examples/queue \
 	$(top_builddir)/tests/examples/typefind \
 	$(top_builddir)/gst/tmp-introspect* \
-	$(top_builddir)/libs/gst/*/tmp-introspect*
+	$(top_builddir)/libs/gst/*/tmp-introspect* \
+	$(top_srcdir)/docs/plugins/tmpl
 
 include $(top_srcdir)/common/cruft.mak
 
