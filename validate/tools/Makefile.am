@@ -12,7 +12,7 @@ bin_SCRIPTS = \
 	gst-validate-launcher
 
 AM_CFLAGS = $(GST_ALL_CFLAGS) $(GST_PBUTILS_CFLAGS)  $(GST_VIDEO_CFLAGS)
-LDADD = $(top_builddir)/gst/validate/libgstvalidate-@GST_API_VERSION@.la $(GST_PBUTILS_LIBS) $(GST_LIBS)  $(GST_VIDEO_LIBS) $(FAULTINJECTION_LIBS)
+LDADD = $(top_builddir)/gst/validate/libgstvalidate-@GST_API_VERSION@.la $(GST_PBUTILS_LIBS) $(GST_LIBS) $(GST_VIDEO_LIBS)
 
 # The -debug versions are used when running from sources to not confuse
 # valgrind with libtool's wrappers. Those are built with the '-no-install' and
@@ -39,12 +39,9 @@ bin_PROGRAMS += gst-validate-images-check-@GST_API_VERSION@
 noinst_PROGRAMS += gst-validate-images-check-@GST_API_VERSION@-debug
 
 gst_validate_images_check_@GST_API_VERSION@_SOURCES = gst-validate-images-check.c
-gst_validate_images_check_@GST_API_VERSION@_CFLAGS = $(AM_CFLAGS)
-gst_validate_images_check_@GST_API_VERSION@_LDADD = $(LDADD) $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la
-
+gst_validate_images_check_@GST_API_VERSION@_LDADD = $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la
 gst_validate_images_check_@GST_API_VERSION@_debug_SOURCES = gst-validate-images-check.c
-gst_validate_images_check_@GST_API_VERSION@_debug_CFLAGS = $(AM_CFLAGS)
-gst_validate_images_check_@GST_API_VERSION@_debug_LDADD = $(LDADD) $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la
+gst_validate_images_check_@GST_API_VERSION@_debug_LDADD = $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la
 gst_validate_images_check_@GST_API_VERSION@_debug_LDFLAGS = -no-install
 endif
 
