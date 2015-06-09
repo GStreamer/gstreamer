@@ -27,8 +27,7 @@
  * The audiomixer allows to mix several streams into one by adding the data.
  * Mixed data is clamped to the min/max values of the data format.
  *
- * The audiomixer currently mixes all data received on the sinkpads as soon as
- * possible without trying to synchronize the streams.
+ * Unlike the adder element audiomixer properly synchronises all input streams.
  *
  * The input pads are from a GstPad subclass and have additional
  * properties to mute each pad individually and set the volume:
