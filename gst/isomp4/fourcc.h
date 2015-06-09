@@ -319,6 +319,12 @@ G_BEGIN_DECLS
 #define MS_WAVE_FOURCC(codecid)  GST_MAKE_FOURCC( \
         'm', 's', ((codecid)>>8)&0xff, ((codecid)&0xff))
 
+/* MPEG Application Format , Stereo Video */
+#define FOURCC_ss01     GST_MAKE_FOURCC('s','s','0','1')
+#define FOURCC_ss02     GST_MAKE_FOURCC('s','s','0','2')
+#define FOURCC_svmi     GST_MAKE_FOURCC('s','v','m','i')
+#define FOURCC_scdi     GST_MAKE_FOURCC('s','c','d','i')
+
 G_END_DECLS
 
 #endif /* __FOURCC_H__ */

@@ -383,6 +383,10 @@ struct _QtDemuxStream
   guint32 def_sample_flags;
 
   gboolean disabled;
+
+  /* stereoscopic video streams */
+  GstVideoMultiviewMode multiview_mode;
+  GstVideoMultiviewFlags multiview_flags;
 };
 
 enum QtDemuxState
@@ -1744,6 +1748,8 @@ _create_stream (void)
   stream->sample_index = -1;
   stream->offset_in_sample = 0;
   stream->new_stream = TRUE;
+  stream->multiview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+  stream->multiview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
   return stream;
 }
 
@@ -7694,6 +7700,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GNode *pasp;
   GNode *tref;
   GNode *udta;
+  GNode *svmi;
 
   QtDemuxStream *stream = NULL;
   gboolean new_stream = FALSE;
@@ -7848,6 +7855,51 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   if (!(stbl = qtdemux_tree_get_child_by_type (minf, FOURCC_stbl)))
     goto corrupt_file;
+
+  /*parse svmi header if existing */
+  svmi = qtdemux_tree_get_child_by_type (stbl, FOURCC_svmi);
+  if (svmi) {
+    len = QT_UINT32 ((guint8 *) svmi->data);
+    version = QT_UINT32 ((guint8 *) svmi->data + 8);
+    if (!version) {
+      GstVideoMultiviewMode mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+      GstVideoMultiviewFlags flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+      guint8 frame_type, frame_layout;
+
+      /* MPEG-A stereo video */
+      if (qtdemux->major_brand == FOURCC_ss02)
+        flags |= GST_VIDEO_MULTIVIEW_FLAGS_MIXED_MONO;
+
+      frame_type = QT_UINT8 ((guint8 *) svmi->data + 12);
+      frame_layout = QT_UINT8 ((guint8 *) svmi->data + 13) & 0x01;
+      switch (frame_type) {
+        case 0:
+          mode = GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE;
+          break;
+        case 1:
+          mode = GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED;
+          break;
+        case 2:
+          mode = GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME;
+          break;
+        case 3:
+          /* mode 3 is primary/secondary view sequence, ie
+           * left/right views in separate tracks. See section 7.2
+           * of ISO/IEC 23000-11:2009 */
+          GST_FIXME_OBJECT (qtdemux,
+              "Implement stereo video in separate streams");
+      }
+
+      if ((frame_layout & 0x1) == 0)
+        flags |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+
+      GST_LOG_OBJECT (qtdemux,
+          "StereoVideo: composition type: %u, is_left_first: %u",
+          frame_type, frame_layout);
+      stream->multiview_mode = mode;
+      stream->multiview_flags = flags;
+    }
+  }
 
   /* parse stsd */
   if (!(stsd = qtdemux_tree_get_child_by_type (stbl, FOURCC_stsd)))
@@ -11566,11 +11618,20 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     gst_video_info_init (&info);
     gst_video_info_set_format (&info, format, stream->width, stream->height);
+    GST_VIDEO_INFO_MULTIVIEW_MODE (&info) = stream->multiview_mode;
+    GST_VIDEO_INFO_MULTIVIEW_FLAGS (&info) = stream->multiview_flags;
+
     caps = gst_video_info_to_caps (&info);
     *codec_name = gst_pb_utils_get_codec_description (caps);
 
     /* enable clipping for raw video streams */
     stream->need_clip = TRUE;
+  } else if (stream->multiview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+    gst_caps_set_simple (caps,
+        "multiview-mode", G_TYPE_STRING,
+        gst_video_multiview_mode_to_caps_string (stream->multiview_mode),
+        "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET,
+        stream->multiview_flags, GST_FLAG_SET_MASK_EXACT, NULL);
   }
 
   return caps;

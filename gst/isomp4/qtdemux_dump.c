@@ -837,6 +837,36 @@ qtdemux_dump_sdtp (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 }
 
 gboolean
+qtdemux_dump_svmi (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  guint32 version;
+  guint stereo_mono_change_count;
+  guint i;
+
+  version = GET_UINT32 (data);
+  GST_LOG ("%*s  version/flags: %08x", depth, "", version);
+
+  if (!version) {
+    /* stereoscopic visual type information */
+    GST_LOG ("%*s     stereo_composition_type: %d", depth, "",
+        GET_UINT8 (data));
+    GST_LOG ("%*s     is_left_first: %d", depth, "",
+        ((guint8) GET_UINT8 (data)) & 0x01);
+
+    /* stereo_mono_change information */
+    stereo_mono_change_count = GET_UINT32 (data);
+    GST_LOG ("%*s     stereo_mono_change_count: %d", depth, "",
+        stereo_mono_change_count);
+    for (i = 1; i <= stereo_mono_change_count; i++) {
+      GST_LOG ("%*s     sample_count: %d", depth, "", GET_UINT32 (data));
+      GST_LOG ("%*s     stereo_flag: %d", depth, "",
+          ((guint8) GET_UINT8 (data)) & 0x01);
+    }
+  }
+  return TRUE;
+}
+
+gboolean
 qtdemux_dump_unknown (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
   int len;
