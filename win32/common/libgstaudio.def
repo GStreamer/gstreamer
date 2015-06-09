@@ -7,7 +7,9 @@ EXPORTS
 	gst_audio_base_sink_get_provide_clock
 	gst_audio_base_sink_get_slave_method
 	gst_audio_base_sink_get_type
+	gst_audio_base_sink_report_device_failure
 	gst_audio_base_sink_set_alignment_threshold
+	gst_audio_base_sink_set_custom_slaving_callback
 	gst_audio_base_sink_set_discont_wait
 	gst_audio_base_sink_set_drift_tolerance
 	gst_audio_base_sink_set_provide_clock
