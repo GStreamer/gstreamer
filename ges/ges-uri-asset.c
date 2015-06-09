@@ -27,6 +27,7 @@
  * let you get information about the medias. Also, the tags found in the media file are
  * set as Metadatas of the Asser.
  */
+#include <errno.h>
 #include <gst/pbutils/pbutils.h>
 #include "ges.h"
 #include "ges-internal.h"
@@ -181,6 +182,8 @@ _asset_proxied (GESAsset * self, const gchar * new_uri)
 static void
 ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
 {
+  GstClockTime timeout;
+  const gchar *timeout_str;
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   g_type_class_add_private (klass, sizeof (GESUriClipAssetPrivate));
 
@@ -203,8 +206,18 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
   g_object_class_install_property (object_class, PROP_DURATION,
       properties[PROP_DURATION]);
 
-  klass->discoverer = gst_discoverer_new (GST_SECOND, NULL);
-  klass->sync_discoverer = gst_discoverer_new (GST_SECOND, NULL);
+  errno = 0;
+  timeout_str = g_getenv ("GES_DISCOVERY_TIMEOUT");
+  if (timeout_str)
+    timeout = g_ascii_strtod (timeout_str, NULL) * GST_SECOND;
+  else
+    errno = 10;
+
+  if (errno)
+    timeout = GST_SECOND;
+
+  klass->discoverer = gst_discoverer_new (timeout, NULL);
+  klass->sync_discoverer = gst_discoverer_new (timeout, NULL);
   g_signal_connect (klass->discoverer, "discovered",
       G_CALLBACK (discoverer_discovered_cb), NULL);
 
