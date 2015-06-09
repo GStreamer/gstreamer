@@ -514,6 +514,7 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
   GstDiscovererStreamInfo *streaminfo = NULL;
   GstMediaDescriptorWriter *writer = NULL;
   GstMediaDescriptor *media_descriptor;
+  const GstTagList *tags;
 
   discoverer = gst_discoverer_new (GST_SECOND * 60, err);
 
@@ -542,9 +543,9 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
   if (handle_g_logs)
     gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (writer));
 
-  if (gst_discoverer_info_get_tags (info))
-    gst_media_descriptor_writer_add_taglist (writer,
-        gst_discoverer_info_get_tags (info));
+  tags = gst_discoverer_info_get_tags (info);
+  if (tags)
+    gst_media_descriptor_writer_add_taglist (writer, tags);
 
   streaminfo = gst_discoverer_info_get_stream_info (info);
 
