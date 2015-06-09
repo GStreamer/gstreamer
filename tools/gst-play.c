@@ -458,7 +458,8 @@ play_timeout (gpointer user_data)
 {
   GstPlay *play = user_data;
   gint64 pos = -1, dur = -1;
-  gchar status[64] = { 0, };
+  const gchar *paused = _("Paused");
+  gchar *status;
 
   if (play->buffering)
     return TRUE;
@@ -466,10 +467,14 @@ play_timeout (gpointer user_data)
   gst_element_query_position (play->playbin, GST_FORMAT_TIME, &pos);
   gst_element_query_duration (play->playbin, GST_FORMAT_TIME, &dur);
 
-  if (play->desired_state == GST_STATE_PAUSED)
-    g_snprintf (status, sizeof (status), "Paused");
-  else
-    memset (status, ' ', sizeof (status) - 1);
+  if (play->desired_state == GST_STATE_PAUSED) {
+    status = (gchar *) paused;
+  } else {
+    gint len = g_utf8_strlen (paused, -1);
+    status = g_newa (gchar, len + 1);
+    memset (status, ' ', len);
+    status[len] = '\0';
+  }
 
   if (pos >= 0 && dur > 0) {
     gchar dstr[32], pstr[32];
