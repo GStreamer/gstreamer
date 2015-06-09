@@ -26,17 +26,61 @@
 #define PLAYBACK_DELAY_MS 40
 
 static void
-source_created (GstElement * pipe, GParamSpec * pspec)
+source_created (GstElement * pipe, GstElement * source)
 {
-  GstElement *source;
-
-  g_object_get (pipe, "source", &source, NULL);
-  g_assert (source != NULL);
-
   g_object_set (source, "latency", PLAYBACK_DELAY_MS,
       "use-pipeline-clock", TRUE, "buffer-mode", 1, NULL);
+}
 
-  gst_object_unref (source);
+static gboolean
+message (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  GMainLoop *loop = user_data;
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:{
+      GError *err = NULL;
+      gchar *name, *debug = NULL;
+
+      name = gst_object_get_path_string (message->src);
+      gst_message_parse_error (message, &err, &debug);
+
+      g_printerr ("ERROR: from element %s: %s\n", name, err->message);
+      if (debug != NULL)
+        g_printerr ("Additional debug info:\n%s\n", debug);
+
+      g_error_free (err);
+      g_free (debug);
+      g_free (name);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_WARNING:{
+      GError *err = NULL;
+      gchar *name, *debug = NULL;
+
+      name = gst_object_get_path_string (message->src);
+      gst_message_parse_warning (message, &err, &debug);
+
+      g_printerr ("ERROR: from element %s: %s\n", name, err->message);
+      if (debug != NULL)
+        g_printerr ("Additional debug info:\n%s\n", debug);
+
+      g_error_free (err);
+      g_free (debug);
+      g_free (name);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      g_print ("Got EOS\n");
+      g_main_loop_quit (loop);
+      break;
+    default:
+      break;
+  }
+
+  return TRUE;
 }
 
 int
@@ -46,7 +90,7 @@ main (int argc, char *argv[])
   gchar *server;
   gint clock_port;
   GstElement *pipe;
-  GstMessage *msg;
+  GMainLoop *loop;
 
   gst_init (&argc, &argv);
 
@@ -70,9 +114,11 @@ main (int argc, char *argv[])
   /* Wait 0.5 seconds for the clock to stabilise */
   g_usleep (G_USEC_PER_SEC / 2);
 
+  loop = g_main_loop_new (NULL, FALSE);
+
   pipe = gst_element_factory_make ("playbin", NULL);
   g_object_set (pipe, "uri", argv[1], NULL);
-  g_signal_connect (pipe, "notify::source", (GCallback) source_created, NULL);
+  g_signal_connect (pipe, "source-setup", G_CALLBACK (source_created), NULL);
 
   gst_element_set_start_time (pipe, GST_CLOCK_TIME_NONE);
   gst_element_set_base_time (pipe, 0);
@@ -84,22 +130,16 @@ main (int argc, char *argv[])
     goto exit;
   };
 
-  msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipe),
-      GST_CLOCK_TIME_NONE, GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  gst_bus_add_signal_watch (GST_ELEMENT_BUS (pipe));
+  g_signal_connect (GST_ELEMENT_BUS (pipe), "message", G_CALLBACK (message),
+      loop);
 
-  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
-    GError *err = NULL;
-    gchar *debug = NULL;
-    gst_message_parse_error (msg, &err, &debug);
-    g_print ("\nERROR: %s\n%s\n\n", err->message, debug);
-    g_error_free (err);
-    g_free (debug);
-  }
-  gst_message_unref (msg);
+  g_main_loop_run (loop);
 
 exit:
   gst_element_set_state (pipe, GST_STATE_NULL);
   gst_object_unref (pipe);
+  g_main_loop_unref (loop);
 
   return 0;
 }
