@@ -68,6 +68,7 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/videofilter/.libs/*gamma.{so,dll,DLL,dylib}
 
 CRUFT_DIRS = \
+	$(top_srcdir)/docs/plugins/tmpl \
 	$(top_srcdir)/gst/median \
 	$(top_srcdir)/gst/qtdemux \
 	$(top_srcdir)/gst/quicktime \
