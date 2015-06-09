@@ -172,6 +172,9 @@ struct _GstVaapiPostproc
   guint has_vpp:1;
   guint use_vpp:1;
   guint keep_aspect:1;
+
+  /* color balance's channel list */
+  GList *cb_channels;
 };
 
 struct _GstVaapiPostprocClass

@@ -84,8 +84,12 @@ static GstStaticPadTemplate gst_vaapipostproc_src_factory =
     GST_STATIC_CAPS (gst_vaapipostproc_src_caps_str));
 /* *INDENT-ON* */
 
+static void gst_vaapipostproc_colorbalance_init (gpointer iface, gpointer data);
+
 G_DEFINE_TYPE_WITH_CODE (GstVaapiPostproc, gst_vaapipostproc,
-    GST_TYPE_BASE_TRANSFORM, GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES);
+    GST_TYPE_BASE_TRANSFORM, GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_vaapipostproc_colorbalance_init));
 
 enum
 {
@@ -277,6 +281,10 @@ gst_vaapipostproc_destroy_filter (GstVaapiPostproc * postproc)
   if (postproc->filter_ops) {
     g_ptr_array_unref (postproc->filter_ops);
     postproc->filter_ops = NULL;
+  }
+  if (postproc->cb_channels) {
+    g_list_free_full (postproc->cb_channels, g_object_unref);
+    postproc->cb_channels = NULL;
   }
   gst_vaapi_filter_replace (&postproc->filter, NULL);
   gst_vaapi_video_pool_replace (&postproc->filter_pool, NULL);
@@ -1645,9 +1653,47 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   g_ptr_array_unref (filter_ops);
 }
 
+static float *
+find_value_ptr (GstVaapiPostproc * postproc, GstVaapiFilterOp op)
+{
+  switch (op) {
+    case GST_VAAPI_FILTER_OP_HUE:
+      return &postproc->hue;
+    case GST_VAAPI_FILTER_OP_SATURATION:
+      return &postproc->saturation;
+    case GST_VAAPI_FILTER_OP_BRIGHTNESS:
+      return &postproc->brightness;
+    case GST_VAAPI_FILTER_OP_CONTRAST:
+      return &postproc->contrast;
+    default:
+      return NULL;
+  }
+}
+
+static void
+cb_set_default_value (GstVaapiPostproc * postproc, GPtrArray * filter_ops,
+    GstVaapiFilterOp op)
+{
+  GstVaapiFilterOpInfo *filter_op;
+  GParamSpecFloat *pspec;
+  float *var;
+
+  filter_op = find_filter_op (filter_ops, op);
+  if (!filter_op)
+    return;
+  var = find_value_ptr (postproc, op);
+  if (!var)
+    return;
+  pspec = G_PARAM_SPEC_FLOAT (filter_op->pspec);
+  *var = pspec->default_value;
+}
+
 static void
 gst_vaapipostproc_init (GstVaapiPostproc * postproc)
 {
+  GPtrArray *filter_ops;
+  guint i;
+
   gst_vaapi_plugin_base_init (GST_VAAPI_PLUGIN_BASE (postproc),
       GST_CAT_DEFAULT);
 
@@ -1658,7 +1704,156 @@ gst_vaapipostproc_init (GstVaapiPostproc * postproc)
   postproc->keep_aspect = TRUE;
   postproc->get_va_surfaces = TRUE;
 
+  filter_ops = gst_vaapi_filter_get_operations (NULL);
+  if (filter_ops) {
+    for (i = GST_VAAPI_FILTER_OP_HUE; i <= GST_VAAPI_FILTER_OP_CONTRAST; i++)
+      cb_set_default_value (postproc, filter_ops, i);
+    g_ptr_array_unref (filter_ops);
+  }
+
   gst_video_info_init (&postproc->sinkpad_info);
   gst_video_info_init (&postproc->srcpad_info);
   gst_video_info_init (&postproc->filter_pool_info);
+}
+
+/* ------------------------------------------------------------------------ */
+/* --- GstColorBalance interface                                        --- */
+/* ------------------------------------------------------------------------ */
+
+#define CB_CHANNEL_FACTOR 1000.0
+
+typedef struct
+{
+  GstVaapiFilterOp op;
+  const gchar *name;
+} ColorBalanceChannel;
+
+ColorBalanceChannel cb_channels[] = {
+  {GST_VAAPI_FILTER_OP_HUE, "VA_FILTER_HUE"},
+  {GST_VAAPI_FILTER_OP_SATURATION, "VA_FILTER_SATURATION"},
+  {GST_VAAPI_FILTER_OP_BRIGHTNESS, "VA_FILTER_BRIGHTNESS"},
+  {GST_VAAPI_FILTER_OP_CONTRAST, "VA_FILTER_CONTRAST"},
+};
+
+static void
+cb_channels_init (GstVaapiPostproc * postproc)
+{
+  GPtrArray *filter_ops;
+  GstVaapiFilterOpInfo *filter_op;
+  GParamSpecFloat *pspec;
+  GstColorBalanceChannel *channel;
+  guint i;
+
+  if (postproc->cb_channels)
+    return;
+
+  if (!gst_vaapipostproc_ensure_filter (postproc))
+    return;
+
+  filter_ops = postproc->filter_ops ? g_ptr_array_ref (postproc->filter_ops)
+      : gst_vaapi_filter_get_operations (postproc->filter);
+  if (!filter_ops)
+    return;
+
+  for (i = 0; i < G_N_ELEMENTS (cb_channels); i++) {
+    filter_op = find_filter_op (filter_ops, cb_channels[i].op);
+    if (!filter_op)
+      continue;
+
+    pspec = G_PARAM_SPEC_FLOAT (filter_op->pspec);
+    channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
+    channel->label = g_strdup (cb_channels[i].name);
+    channel->min_value = pspec->minimum * CB_CHANNEL_FACTOR;
+    channel->max_value = pspec->maximum * CB_CHANNEL_FACTOR;
+
+    postproc->cb_channels = g_list_prepend (postproc->cb_channels, channel);
+  }
+
+  g_ptr_array_unref (filter_ops);
+}
+
+static const GList *
+gst_vaapipostproc_colorbalance_list_channels (GstColorBalance * balance)
+{
+  GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (balance);
+
+  cb_channels_init (postproc);
+  return postproc->cb_channels;
+}
+
+static gfloat *
+cb_get_value_ptr (GstVaapiPostproc * postproc, GstColorBalanceChannel * channel,
+    GstVaapiPostprocFlags * flags)
+{
+  guint i;
+  gfloat *ret = NULL;
+
+  for (i = 0; i < G_N_ELEMENTS (cb_channels); i++) {
+    if (g_ascii_strcasecmp (cb_channels[i].name, channel->label) == 0)
+      break;
+  }
+  if (i >= G_N_ELEMENTS (cb_channels))
+    return NULL;
+
+  ret = find_value_ptr (postproc, cb_channels[i].op);
+  if (flags)
+    *flags = 1 << cb_channels[i].op;
+  return ret;
+}
+
+static void
+gst_vaapipostproc_colorbalance_set_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value)
+{
+  GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (balance);
+  GstVaapiPostprocFlags flags;
+  gfloat new_val, *var;
+
+  value = CLAMP (value, channel->min_value, channel->max_value);
+  new_val = (gfloat) value / CB_CHANNEL_FACTOR;
+
+  var = cb_get_value_ptr (postproc, channel, &flags);
+  if (var) {
+    *var = new_val;
+    postproc->flags |= flags;
+    gst_color_balance_value_changed (balance, channel, value);
+    return;
+  }
+
+  GST_WARNING_OBJECT (postproc, "unknown channel %s", channel->label);
+}
+
+static gint
+gst_vaapipostproc_colorbalance_get_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel)
+{
+  GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (balance);
+  gfloat *var;
+  gint new_val;
+
+  var = cb_get_value_ptr (postproc, channel, NULL);
+  if (var) {
+    new_val = (gint) ((*var) * CB_CHANNEL_FACTOR);
+    new_val = CLAMP (new_val, channel->min_value, channel->max_value);
+    return new_val;
+  }
+
+  GST_WARNING_OBJECT (postproc, "unknown channel %s", channel->label);
+  return G_MININT;
+}
+
+static GstColorBalanceType
+gst_vaapipostproc_colorbalance_get_balance_type (GstColorBalance * balance)
+{
+  return GST_COLOR_BALANCE_HARDWARE;
+}
+
+static void
+gst_vaapipostproc_colorbalance_init (gpointer iface, gpointer data)
+{
+  GstColorBalanceInterface *cbface = iface;
+  cbface->list_channels = gst_vaapipostproc_colorbalance_list_channels;
+  cbface->set_value = gst_vaapipostproc_colorbalance_set_value;
+  cbface->get_value = gst_vaapipostproc_colorbalance_get_value;
+  cbface->get_balance_type = gst_vaapipostproc_colorbalance_get_balance_type;
 }
