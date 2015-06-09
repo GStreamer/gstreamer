@@ -132,7 +132,7 @@ ges_validate_print_action_types (const gchar ** types, gint num_types)
 static gboolean
 _print_position (GstElement * pipeline)
 {
-  gint64 position, duration;
+  gint64 position = 0, duration = -1;
 
   if (pipeline) {
     gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
