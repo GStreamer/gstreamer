@@ -88,6 +88,7 @@ CRUFT_FILES = \
 	$(top_builddir)/tests/icles/equalizer-test
 
 CRUFT_DIRS = \
+	$(top_srcdir)/docs/plugins/tmpl \
 	$(top_srcdir)/gst/aacparse \
 	$(top_srcdir)/gst/amrparse \
 	$(top_srcdir)/gst/camerabin \
