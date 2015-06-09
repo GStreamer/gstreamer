@@ -193,6 +193,100 @@ skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
   play_current_uri (play, prev, NULL);
 }
 
+static gboolean
+color_balance_channel_change_value_cb (GtkRange * range, GtkScrollType scroll,
+    gdouble value, GtkPlay * play)
+{
+  GstPlayerColorBalanceType type;
+
+  type = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (range), "type"));
+
+  value = CLAMP (value, 0.0, 1.0);
+  gst_player_set_color_balance (play->player, type, value);
+
+  return FALSE;
+}
+
+static gboolean
+color_balance_channel_button_press_cb (GtkWidget * widget,
+    GdkEventButton * event, GtkPlay * play)
+{
+  GstPlayerColorBalanceType type;
+
+  if (event->type != GDK_2BUTTON_PRESS)
+    return FALSE;
+
+  type = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (widget), "type"));
+  gtk_range_set_value (GTK_RANGE (widget), 0.5);
+  gst_player_set_color_balance (play->player, type, 0.5);
+
+  return FALSE;
+}
+
+static void
+color_balance_dialog (GtkPlay * play)
+{
+  GtkWidget *parent;
+  GtkWidget *dialog;
+  GtkWidget *content;
+  GtkWidget *box;
+  GtkWidget *ctlbox;
+  GtkWidget *label;
+  GtkWidget *scale;
+  gdouble value;
+  guint i;
+
+  parent = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  dialog = gtk_dialog_new_with_buttons ("Color Balance", GTK_WINDOW (parent),
+      GTK_DIALOG_MODAL, "_Close", GTK_RESPONSE_CLOSE, NULL);
+  gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (parent));
+
+  content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+  box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 2);
+  gtk_box_set_homogeneous (GTK_BOX (box), TRUE);
+  gtk_box_pack_start (GTK_BOX (content), box, TRUE, TRUE, 5);
+
+  for (i = GST_PLAYER_COLOR_BALANCE_BRIGHTNESS;
+      i <= GST_PLAYER_COLOR_BALANCE_HUE; i++) {
+    ctlbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+    label = gtk_label_new (gst_player_color_balance_type_get_name (i));
+    scale = gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL, 0, 1, 0.5);
+    gtk_widget_set_size_request (scale, 0, 200);
+    gtk_box_pack_start (GTK_BOX (ctlbox), label, FALSE, TRUE, 2);
+    gtk_box_pack_end (GTK_BOX (ctlbox), scale, TRUE, TRUE, 2);
+
+    gtk_box_pack_end (GTK_BOX (box), ctlbox, TRUE, TRUE, 2);
+
+    value = gst_player_get_color_balance (play->player, i);
+    gtk_range_set_value (GTK_RANGE (scale), value);
+    g_object_set_data (G_OBJECT (scale), "type", GUINT_TO_POINTER (i));
+
+    g_signal_connect (scale, "change-value",
+        G_CALLBACK (color_balance_channel_change_value_cb), play);
+    g_signal_connect (scale, "button-press-event",
+        G_CALLBACK (color_balance_channel_button_press_cb), play);
+  }
+
+  gtk_widget_show_all (dialog);
+
+  gtk_dialog_run (GTK_DIALOG (dialog));
+
+  gtk_widget_destroy (dialog);
+  gtk_widget_destroy (parent);
+}
+
+static void
+color_balance_clicked_cb (GtkWidget * unused, GtkPlay * play)
+{
+  if (gst_player_has_color_balance (play->player)) {
+    color_balance_dialog (play);
+    return;
+  }
+
+  g_warning ("No color balance channels available.");
+  return;
+}
+
 static GList *
 open_file_dialog (GtkPlay * play, gboolean multi)
 {
@@ -921,6 +1015,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   GtkWidget *open;
   GtkWidget *submenu;
   GtkWidget *vis;
+  GtkWidget *cb;
   GstPlayerMediaInfo *media_info;
 
   menu = gtk_menu_new ();
@@ -933,6 +1028,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   prev = gtk_menu_item_new_with_label ("Prev");
   quit = gtk_menu_item_new_with_label ("Quit");
   vis = gtk_menu_item_new_with_label ("Visualization");
+  cb = gtk_menu_item_new_with_label ("Color Balance");
 
   media_info = gst_player_get_media_info (play->player);
 
@@ -979,9 +1075,13 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   gtk_widget_set_sensitive (prev, g_list_previous
       (play->current_uri) ? TRUE : FALSE);
   gtk_widget_set_sensitive (info, media_info ? TRUE : FALSE);
+  gtk_widget_set_sensitive (cb, gst_player_has_color_balance (play->player) ?
+      TRUE : FALSE);
 
   g_signal_connect (G_OBJECT (open), "activate",
       G_CALLBACK (open_file_clicked_cb), play);
+  g_signal_connect (G_OBJECT (cb), "activate",
+      G_CALLBACK (color_balance_clicked_cb), play);
   g_signal_connect (G_OBJECT (next), "activate",
       G_CALLBACK (skip_next_clicked_cb), play);
   g_signal_connect (G_OBJECT (prev), "activate",
@@ -999,6 +1099,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), vis);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), sub);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), info);
+  gtk_menu_shell_append (GTK_MENU_SHELL (menu), cb);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), quit);
 
   gtk_widget_show_all (menu);
