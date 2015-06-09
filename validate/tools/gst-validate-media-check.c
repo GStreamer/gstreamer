@@ -111,7 +111,6 @@ main (int argc, gchar ** argv)
 
     if (reference == NULL) {
       g_print ("Could not parse file: %s", expected_file);
-      gst_object_unref (writer);
       ret = 1;
       goto out;
     }
