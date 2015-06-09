@@ -354,8 +354,14 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
   if (tags)
     gst_tag_list_foreach (tags, (GstTagForeachFunc) _set_meta_foreach, mfs);
 
-  if (err == NULL)
+  if (gst_discoverer_info_get_result (info) == GST_DISCOVERER_OK) {
     ges_uri_clip_asset_set_info (mfs, info);
+  } else if (!err) {
+    err = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Stream %s discovering failed (error code: %d)",
+        uri, gst_discoverer_info_get_result (info));
+  }
+
   ges_asset_cache_set_loaded (GES_TYPE_URI_CLIP, uri, err);
 }
 

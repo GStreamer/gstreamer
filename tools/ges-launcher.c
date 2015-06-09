@@ -183,8 +183,8 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
     g_application_quit (G_APPLICATION (self));
   }
 
-  if (opts->needs_set_state
-      && gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
+  if (!self->priv->seenerrors && opts->needs_set_state &&
+      gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
     g_error ("Failed to start the pipeline\n");
   }
