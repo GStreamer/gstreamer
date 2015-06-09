@@ -604,19 +604,15 @@ static gboolean
 gst_live_adder_query_pos_dur (GstLiveAdder * adder, GstFormat format,
     gboolean position, gint64 * outvalue)
 {
+  GValue item = { 0 };
   gint64 max = G_MININT64;
   gboolean res = TRUE;
   GstIterator *it;
   gboolean done = FALSE;
 
-
   it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (adder));
   while (!done) {
-    GstIteratorResult ires;
-    GValue item = { 0 };
-
-    ires = gst_iterator_next (it, &item);
-    switch (ires) {
+    switch (gst_iterator_next (it, &item)) {
       case GST_ITERATOR_DONE:
         done = TRUE;
         break;
@@ -647,6 +643,7 @@ gst_live_adder_query_pos_dur (GstLiveAdder * adder, GstFormat format,
             max = value;
           }
         }
+        g_value_reset (&item);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -659,6 +656,8 @@ gst_live_adder_query_pos_dur (GstLiveAdder * adder, GstFormat format,
         break;
     }
   }
+
+  g_value_unset (&item);
   gst_iterator_free (it);
 
   if (res)
