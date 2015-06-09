@@ -23,6 +23,7 @@ libgstdashdemux_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
 libgstdashdemux_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/adaptivedemux/libgstadaptivedemux-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) \
 	-lgsttag-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
