@@ -217,6 +217,7 @@ open_file_dialog (GtkPlay * play, gboolean multi)
   }
 
   gtk_widget_destroy (chooser);
+  gtk_widget_destroy (parent);
   return uris;
 }
 
