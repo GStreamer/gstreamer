@@ -106,7 +106,7 @@ typedef struct {
  *                 protocol level overhead
  * @max_seqnr: highest sequence number received
  * @transit: previous transit time used for calculating @jitter
- * @jitter: current jitter
+ * @jitter: current jitter (in clock rate units scaled by 16 for precision)
  * @prev_rtptime: previous time when an RTP packet was received
  * @prev_rtcptime: previous time when an RTCP packet was received
  * @last_rtptime: time when last RTP packet received
