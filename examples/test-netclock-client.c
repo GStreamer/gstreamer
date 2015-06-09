@@ -111,8 +111,8 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  /* Wait 0.5 seconds for the clock to stabilise */
-  g_usleep (G_USEC_PER_SEC / 2);
+  /* Wait for the clock to stabilise */
+  gst_clock_wait_for_sync (net_clock, GST_CLOCK_TIME_NONE);
 
   loop = g_main_loop_new (NULL, FALSE);
 
