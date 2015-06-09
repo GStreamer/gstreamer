@@ -174,7 +174,8 @@ gst_vtenc_base_init (GstVTEncClass * klass)
       min_fps_n, min_fps_d, max_fps_n, max_fps_d, NULL);
   if (codec_details->format_id == kCMVideoCodecType_H264) {
     gst_structure_set (gst_caps_get_structure (src_caps, 0),
-        "stream-format", G_TYPE_STRING, "avc", NULL);
+        "stream-format", G_TYPE_STRING, "avc",
+        "alignment", G_TYPE_STRING, "au", NULL);
   }
   src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
       src_caps);
