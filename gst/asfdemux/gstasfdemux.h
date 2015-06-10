@@ -45,6 +45,7 @@ GST_DEBUG_CATEGORY_EXTERN (asfdemux_dbg);
 
 typedef struct _GstASFDemux GstASFDemux;
 typedef struct _GstASFDemuxClass GstASFDemuxClass;
+typedef enum _GstASF3DMode GstASF3DMode;
 
 typedef struct {
   guint32	packet;
@@ -56,6 +57,21 @@ typedef struct {
                                      * struct gets packed into 4 bytes       */
   guint16                 len;      /* save this so we can skip unknown IDs  */
 } AsfPayloadExtension;
+
+/**
+ * 3D Types for Media play
+ */
+enum _GstASF3DMode
+{
+  GST_ASF_3D_NONE = 0x00,
+
+  //added, interim format - half
+  GST_ASF_3D_SIDE_BY_SIDE_HALF_LR = 0x01,
+  GST_ASF_3D_SIDE_BY_SIDE_HALF_RL = 0x02,
+  GST_ASF_3D_TOP_AND_BOTTOM_HALF_LR = 0x03,
+  GST_ASF_3D_TOP_AND_BOTTOM_HALF_RL = 0x04,
+  GST_ASF_3D_DUAL_STREAM = 0x0D,                  /**< Full format*/
+};
 
 typedef struct
 {
@@ -209,6 +225,9 @@ struct _GstASFDemux {
   AsfSimpleIndexEntry *sidx_entries;     /* packet number for each entry   */
   
   GSList              *other_streams;    /* remember streams that are in header but have unknown type */
+
+  /* parsing 3D */
+  GstASF3DMode asf_3D_mode;
 };
 
 struct _GstASFDemuxClass {

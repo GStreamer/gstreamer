@@ -38,6 +38,7 @@
 #include <gst/riff/riff-media.h>
 #include <gst/tag/tag.h>
 #include <gst/gst-i18n-plugin.h>
+#include <gst/video/video.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -203,6 +204,10 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
     gst_structure_free (demux->global_metadata);
     demux->global_metadata = NULL;
   }
+  if (demux->mut_ex_streams) {
+    g_slist_free (demux->mut_ex_streams);
+    demux->mut_ex_streams = NULL;
+  }
 
   demux->state = GST_ASF_DEMUX_STATE_HEADER;
   g_free (demux->objpath);
@@ -259,6 +264,8 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
   demux->sidx_entries = NULL;
 
   demux->speed_packets = 1;
+
+  demux->asf_3D_mode = GST_ASF_3D_NONE;
 
   if (chain_reset) {
     GST_LOG_OBJECT (demux, "Restarting");
@@ -2570,6 +2577,81 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
     }
   }
 
+  /* For a 3D video, set multiview information into the caps based on
+   * what was detected during object parsing */
+  if (demux->asf_3D_mode != GST_ASF_3D_NONE) {
+    GstVideoMultiviewMode mv_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+    GstVideoMultiviewFlags mv_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+    const gchar *mview_mode_str;
+
+    switch (demux->asf_3D_mode) {
+      case GST_ASF_3D_SIDE_BY_SIDE_HALF_LR:
+        mv_mode = GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE;
+        break;
+      case GST_ASF_3D_SIDE_BY_SIDE_HALF_RL:
+        mv_mode = GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE;
+        mv_flags = GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+        break;
+      case GST_ASF_3D_TOP_AND_BOTTOM_HALF_LR:
+        mv_mode = GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM;
+        break;
+      case GST_ASF_3D_TOP_AND_BOTTOM_HALF_RL:
+        mv_mode = GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM;
+        mv_flags = GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+        break;
+      case GST_ASF_3D_DUAL_STREAM:{
+        gboolean is_right_view = FALSE;
+        /* if Advanced_Mutual_Exclusion object exists, use it
+         * to figure out which is the left view (lower ID) */
+        if (demux->mut_ex_streams != NULL) {
+          guint length;
+          gint i;
+
+          length = g_slist_length (demux->mut_ex_streams);
+
+          for (i = 0; i < length; i++) {
+            gpointer v_s_id;
+
+            v_s_id = g_slist_nth_data (demux->mut_ex_streams, i);
+
+            GST_DEBUG_OBJECT (demux,
+                "has Mutual_Exclusion object. stream id in object is %d",
+                GPOINTER_TO_INT (v_s_id));
+
+            if (id > GPOINTER_TO_INT (v_s_id))
+              is_right_view = TRUE;
+          }
+        } else {
+          /* if the Advaced_Mutual_Exclusion object doesn't exist, assume the
+           * first video stream encountered has the lower ID */
+          if (demux->num_video_streams > 0) {
+            /* This is not the first video stream, assuming right eye view */
+            is_right_view = TRUE;
+          }
+        }
+        if (is_right_view)
+          mv_mode = GST_VIDEO_MULTIVIEW_MODE_RIGHT;
+        else
+          mv_mode = GST_VIDEO_MULTIVIEW_MODE_LEFT;
+        break;
+      }
+      default:
+        break;
+    }
+
+    GST_INFO_OBJECT (demux,
+        "stream_id %d, has multiview-mode %d flags 0x%x", id, mv_mode,
+        (guint) mv_flags);
+
+    mview_mode_str = gst_video_multiview_mode_to_caps_string (mv_mode);
+    if (mview_mode_str != NULL) {
+      gst_caps_set_simple (caps,
+          "multiview-mode", G_TYPE_STRING, mview_mode_str,
+          "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET, mv_flags,
+          GST_FLAG_SET_MASK_EXACT, NULL);
+    }
+  }
+
   if (codec_name) {
     tags = gst_tag_list_new (GST_TAG_VIDEO_CODEC, codec_name, NULL);
     g_free (codec_name);
@@ -2875,6 +2957,7 @@ gst_asf_demux_add_global_tags (GstASFDemux * demux, GstTagList * taglist)
 
 #define ASF_DEMUX_DATA_TYPE_UTF16LE_STRING  0
 #define ASF_DEMUX_DATA_TYPE_BYTE_ARRAY      1
+#define ASF_DEMUX_DATA_TYPE_BOOL			2
 #define ASF_DEMUX_DATA_TYPE_DWORD           3
 
 static void
@@ -2943,7 +3026,20 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
 
   GstTagList *taglist;
   guint16 blockcount, i;
+  gboolean content3D = FALSE;
 
+  struct
+  {
+    const gchar *interleave_name;
+    GstASF3DMode interleaving_type;
+  } stereoscopic_layout_map[] = {
+    {
+    "SideBySideRF", GST_ASF_3D_SIDE_BY_SIDE_HALF_RL}, {
+    "SideBySideLF", GST_ASF_3D_SIDE_BY_SIDE_HALF_LR}, {
+    "OverUnderRT", GST_ASF_3D_TOP_AND_BOTTOM_HALF_RL}, {
+    "OverUnderLT", GST_ASF_3D_TOP_AND_BOTTOM_HALF_LR}, {
+    "DualStream", GST_ASF_3D_DUAL_STREAM}
+  };
   GST_INFO_OBJECT (demux, "object is an extended content description");
 
   taglist = gst_tag_list_new_empty ();
@@ -3047,6 +3143,26 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
               GST_DEBUG ("Setting metadata");
               g_value_init (&tag_value, G_TYPE_STRING);
               g_value_set_string (&tag_value, value_utf8);
+              /* If we found a stereoscopic marker, look for StereoscopicLayout
+               * metadata */
+              if (content3D) {
+                guint i;
+                if (strncmp ("StereoscopicLayout", name_utf8,
+                        strlen (name_utf8)) == 0) {
+                  for (i = 0; i < G_N_ELEMENTS (stereoscopic_layout_map); i++) {
+                    if (g_str_equal (stereoscopic_layout_map[i].interleave_name,
+                            value_utf8)) {
+                      demux->asf_3D_mode =
+                          stereoscopic_layout_map[i].interleaving_type;
+                      GST_INFO ("find interleave type %u", demux->asf_3D_mode);
+                    }
+                  }
+                }
+                GST_INFO_OBJECT (demux, "3d type is %u", demux->asf_3D_mode);
+              } else {
+                demux->asf_3D_mode = GST_ASF_3D_NONE;
+                GST_INFO_OBJECT (demux, "None 3d type");
+              }
             }
           } else if (value_utf8 == NULL) {
             GST_WARNING ("Failed to convert string value to UTF8, skipping");
@@ -3081,6 +3197,22 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
             ++uint_val;
 
           g_value_set_uint (&tag_value, uint_val);
+          break;
+        }
+          /* Detect 3D */
+        case ASF_DEMUX_DATA_TYPE_BOOL:{
+          gboolean bool_val = GST_READ_UINT32_LE (value);
+
+          if (strncmp ("Stereoscopic", name_utf8, strlen (name_utf8)) == 0) {
+            if (bool_val) {
+              GST_INFO_OBJECT (demux, "This is 3D contents");
+              content3D = TRUE;
+            } else {
+              GST_INFO_OBJECT (demux, "This is not 3D contenst");
+              content3D = FALSE;
+            }
+          }
+
           break;
         }
         default:{
@@ -3629,7 +3761,6 @@ gst_asf_demux_process_advanced_mutual_exclusion (GstASFDemux * demux,
 {
   ASFGuid guid;
   guint16 num, i;
-  guint8 *mes;
 
   if (size < 16 + 2 + (2 * 2))
     goto not_enough_data;
@@ -3646,16 +3777,15 @@ gst_asf_demux_process_advanced_mutual_exclusion (GstASFDemux * demux,
     goto not_enough_data;
 
   /* read mutually exclusive stream numbers */
-  mes = g_new (guint8, num + 1);
   for (i = 0; i < num; ++i) {
-    mes[i] = gst_asf_demux_get_uint16 (&data, &size) & 0x7f;
-    GST_LOG_OBJECT (demux, "mutually exclusive: stream #%d", mes[i]);
+    guint8 mes;
+    mes = gst_asf_demux_get_uint16 (&data, &size) & 0x7f;
+    GST_LOG_OBJECT (demux, "mutually exclusive: stream %d", mes);
+
+    demux->mut_ex_streams =
+        g_slist_append (demux->mut_ex_streams, GINT_TO_POINTER (mes));
   }
 
-  /* add terminator so we can easily get the count or know when to stop */
-  mes[i] = (guint8) - 1;
-
-  demux->mut_ex_streams = g_slist_append (demux->mut_ex_streams, mes);
 
   return GST_FLOW_OK;
 
