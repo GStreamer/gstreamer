@@ -70,13 +70,8 @@ typedef enum
  * GstGLBaseBuffer:
  * @mem: the parent object
  * @context: the #GstGLContext to use for GL operations
- * @tex_id: the texture id for this memory
- * @v_format: the video format of this texture
- * @gl_format: the format of the texture
- * @width: width of the texture
- * @height: height of the texture
- * @download: the object used to download this texture into @v_format
- * @upload: the object used to upload this texture from @v_format
+ * @id: the buffer id for this memory
+ * @target: the GL target of this texture for binding purposes
  *
  * Represents information about a GL buffer
  */
@@ -89,16 +84,15 @@ struct _GstGLBaseBuffer
   guint                 target;
 
   /* <protected> */
-  GstMapFlags           map_flags;       /* cumulative map flags */
-
   GMutex                lock;
+
+  GstMapFlags           map_flags;       /* cumulative map flags */
   gint                  map_count;
   gint                  gl_map_count;
 
   gpointer              data;
+  /* <private> */
   gpointer              alloc_data;
-
-  gpointer impl;
 };
 
 typedef gboolean          (*GstGLBaseBufferAllocatorCreateFunction)      (GstGLBaseBuffer * buffer, GError ** error);

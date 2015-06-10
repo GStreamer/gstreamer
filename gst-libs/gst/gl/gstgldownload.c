@@ -413,17 +413,16 @@ _do_download (GstGLDownload * download, GstBuffer * inbuf)
 
   for (i = 0; i < out_planes; i++) {
     GstMemory *out_mem = gst_buffer_peek_memory (outbuf, i);
-    gpointer temp_data = ((GstGLMemory *) out_mem)->data;
-    ((GstGLMemory *) out_mem)->data = data[i];
-
-    gst_gl_memory_download_transfer ((GstGLMemory *) out_mem);
+    gpointer temp_data = ((GstGLBaseBuffer *) out_mem)->data;
+    ((GstGLBaseBuffer *) out_mem)->data = data[i];
 
     if (!gst_memory_map (out_mem, &map_info, GST_MAP_READ)) {
       GST_ERROR_OBJECT (download, "Failed to map memory");
       ret = FALSE;
     }
     gst_memory_unmap (out_mem, &map_info);
-    ((GstGLMemory *) out_mem)->data = temp_data;
+    ((GstGLBaseBuffer *) out_mem)->data = temp_data;
+    GST_MINI_OBJECT_FLAG_SET (out_mem, GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD);
   }
 
   gst_buffer_unref (outbuf);

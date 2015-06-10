@@ -214,7 +214,7 @@ gst_gl_base_buffer_cpu_access (GstGLBaseBuffer * mem,
       data = gl->MapBufferRange (mem->target, 0, size, gl_map_flags);
 
       if (data)
-        memcpy (data, mem->data, size);
+        memcpy (mem->data, data, size);
 
       gl->UnmapBuffer (mem->target);
       ret = mem->data;

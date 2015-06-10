@@ -203,6 +203,7 @@ endif
 
 if USE_GL
 check_gl=libs/gstglcontext \
+    libs/gstglbuffer \
     libs/gstglmemory \
     libs/gstglupload \
     libs/gstglcolorconvert \
@@ -485,6 +486,16 @@ libs_gstglmemory_LDADD = \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 
 libs_gstglmemory_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+
+libs_gstglbuffer_LDADD = \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
+	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
+libs_gstglbuffer_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
