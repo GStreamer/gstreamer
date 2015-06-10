@@ -275,7 +275,10 @@ generate_xing_header (GstXingMux * xing)
     header &= 0xffff0fff;
     header |= bitrate << 12;
 
-    parse_header (header, &size, &spf, &rate);
+    if (!parse_header (header, &size, &spf, &rate)) {
+      GST_ERROR ("Failed to parse header!");
+      return NULL;
+    }
     xing_offset = get_xing_offset (header);
   } while (size < (4 + xing_offset + 4 + 4 + 4 + 4 + 100) && bitrate < 0xe);
 
