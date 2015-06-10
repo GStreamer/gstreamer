@@ -39,6 +39,10 @@ typedef struct _GstGLWindow        GstGLWindow;
 typedef struct _GstGLWindowPrivate GstGLWindowPrivate;
 typedef struct _GstGLWindowClass   GstGLWindowClass;
 
+typedef struct _GstGLBaseBuffer GstGLBaseBuffer;
+typedef struct _GstGLBaseBufferAllocator GstGLBaseBufferAllocator;
+typedef struct _GstGLBaseBufferAllocatorClass GstGLBaseBufferAllocatorClass;
+
 typedef struct _GstGLMemory GstGLMemory;
 typedef struct _GstGLAllocator GstGLAllocator;
 typedef struct _GstGLAllocatorClass GstGLAllocatorClass;
