@@ -14,5 +14,6 @@ prototype_HEADERS = \
 	gstgl_gles2compat.h \
 	debug.h \
 	vao.h \
-	sync.h
+	sync.h \
+	buffers.h
 
