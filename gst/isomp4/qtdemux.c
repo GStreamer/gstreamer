@@ -1432,11 +1432,15 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
   }
   segment->position = desired_offset;
   segment->time = desired_offset;
-  segment->start = desired_offset;
+  if (segment->rate >= 0) {
+    segment->start = desired_offset;
 
-  /* we stop at the end */
-  if (segment->stop == -1)
-    segment->stop = segment->duration;
+    /* we stop at the end */
+    if (segment->stop == -1)
+      segment->stop = segment->duration;
+  } else {
+    segment->stop = desired_offset;
+  }
 
   if (qtdemux->fragmented)
     qtdemux->fragmented_seek_pending = TRUE;
