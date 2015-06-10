@@ -693,7 +693,7 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, src->ssl_ca_file);
       break;
     case PROP_SSL_USE_SYSTEM_CA_FILE:
-      g_value_set_boolean (value, src->ssl_strict);
+      g_value_set_boolean (value, src->ssl_use_system_ca_file);
       break;
     case PROP_RETRIES:
       g_value_set_int (value, src->max_retries);
