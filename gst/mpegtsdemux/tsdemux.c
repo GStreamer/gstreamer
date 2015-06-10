@@ -178,7 +178,7 @@ struct _TSDemuxStream
   gboolean discont;
 
   /* The value to use when calculating the newsegment */
-  GstClockTime first_dts;
+  GstClockTime first_pts;
 
   GstTagList *taglist;
 
@@ -869,7 +869,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
     stream->seeked_pts = GST_CLOCK_TIME_NONE;
     stream->seeked_dts = GST_CLOCK_TIME_NONE;
     stream->need_newsegment = TRUE;
-    stream->first_dts = GST_CLOCK_TIME_NONE;
+    stream->first_pts = GST_CLOCK_TIME_NONE;
   }
 
 done:
@@ -1436,7 +1436,7 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     stream->discont = TRUE;
     stream->pts = GST_CLOCK_TIME_NONE;
     stream->dts = GST_CLOCK_TIME_NONE;
-    stream->first_dts = GST_CLOCK_TIME_NONE;
+    stream->first_pts = GST_CLOCK_TIME_NONE;
     stream->raw_pts = -1;
     stream->raw_dts = -1;
     stream->pending_ts = TRUE;
@@ -1546,7 +1546,7 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream, GstTSDemux * tsdemux,
   stream->gap_ref_pts = GST_CLOCK_TIME_NONE;
   stream->continuity_counter = CONTINUITY_UNSET;
   if (hard) {
-    stream->first_dts = GST_CLOCK_TIME_NONE;
+    stream->first_pts = GST_CLOCK_TIME_NONE;
     stream->need_newsegment = TRUE;
   }
 }
@@ -1769,30 +1769,30 @@ check_pending_buffers (GstTSDemux * demux)
           GST_BUFFER_DTS (pend->buffer) =
               mpegts_packetizer_pts_to_ts (MPEG_TS_BASE_PACKETIZER (demux),
               MPEGTIME_TO_GSTTIME (pend->dts), demux->program->pcr_pid);
-        /* 4.2.2 Set first_dts to TS of lowest DTS (for segment) */
-        if (stream->first_dts == GST_CLOCK_TIME_NONE) {
-          if (GST_BUFFER_DTS (pend->buffer) != GST_CLOCK_TIME_NONE)
-            stream->first_dts = GST_BUFFER_DTS (pend->buffer);
-          else if (GST_BUFFER_PTS (pend->buffer) != GST_CLOCK_TIME_NONE)
-            stream->first_dts = GST_BUFFER_PTS (pend->buffer);
+        /* 4.2.2 Set first_pts to TS of lowest PTS (for segment) */
+        if (stream->first_pts == GST_CLOCK_TIME_NONE) {
+          if (GST_BUFFER_PTS (pend->buffer) != GST_CLOCK_TIME_NONE)
+            stream->first_pts = GST_BUFFER_PTS (pend->buffer);
+          else if (GST_BUFFER_DTS (pend->buffer) != GST_CLOCK_TIME_NONE)
+            stream->first_pts = GST_BUFFER_DTS (pend->buffer);
         }
       }
     }
     /* Recalculate PTS/DTS (in running time) for current data */
     if (stream->state != PENDING_PACKET_EMPTY) {
-      if (stream->raw_dts != -1) {
-        stream->dts =
-            mpegts_packetizer_pts_to_ts (MPEG_TS_BASE_PACKETIZER (demux),
-            MPEGTIME_TO_GSTTIME (stream->raw_dts), demux->program->pcr_pid);
-        if (stream->first_dts == GST_CLOCK_TIME_NONE)
-          stream->first_dts = stream->dts;
-      }
       if (stream->raw_pts != -1) {
         stream->pts =
             mpegts_packetizer_pts_to_ts (MPEG_TS_BASE_PACKETIZER (demux),
             MPEGTIME_TO_GSTTIME (stream->raw_pts), demux->program->pcr_pid);
-        if (stream->first_dts == GST_CLOCK_TIME_NONE)
-          stream->first_dts = stream->pts;
+        if (stream->first_pts == GST_CLOCK_TIME_NONE)
+          stream->first_pts = stream->pts;
+      }
+      if (stream->raw_dts != -1) {
+        stream->dts =
+            mpegts_packetizer_pts_to_ts (MPEG_TS_BASE_PACKETIZER (demux),
+            MPEGTIME_TO_GSTTIME (stream->raw_dts), demux->program->pcr_pid);
+        if (stream->first_pts == GST_CLOCK_TIME_NONE)
+          stream->first_pts = stream->dts;
       }
     }
   }
@@ -1831,11 +1831,11 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream,
               || stream->dts != GST_CLOCK_TIME_NONE))) {
     GST_DEBUG ("Got pts/dts update, rechecking all streams");
     check_pending_buffers (demux);
-  } else if (stream->first_dts == GST_CLOCK_TIME_NONE) {
-    if (GST_CLOCK_TIME_IS_VALID (stream->dts))
-      stream->first_dts = stream->dts;
-    else if (GST_CLOCK_TIME_IS_VALID (stream->pts))
-      stream->first_dts = stream->pts;
+  } else if (stream->first_pts == GST_CLOCK_TIME_NONE) {
+    if (GST_CLOCK_TIME_IS_VALID (stream->pts))
+      stream->first_pts = stream->pts;
+    else if (GST_CLOCK_TIME_IS_VALID (stream->dts))
+      stream->first_pts = stream->dts;
   }
 
   GST_DEBUG_OBJECT (demux,
@@ -1976,10 +1976,10 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
   for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
     TSDemuxStream *pstream = (TSDemuxStream *) tmp->data;
 
-    if (GST_CLOCK_TIME_IS_VALID (pstream->first_dts)) {
+    if (GST_CLOCK_TIME_IS_VALID (pstream->first_pts)) {
       if (!GST_CLOCK_TIME_IS_VALID (lowest_pts)
-          || pstream->first_dts < lowest_pts)
-        lowest_pts = pstream->first_dts;
+          || pstream->first_pts < lowest_pts)
+        lowest_pts = pstream->first_pts;
     }
   }
   if (GST_CLOCK_TIME_IS_VALID (lowest_pts))
