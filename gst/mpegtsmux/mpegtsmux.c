@@ -1067,14 +1067,19 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
       GST_LOG_OBJECT (cdata->pad, "buffer dts %" GST_TIME_FORMAT " -> %"
           GST_TIME_FORMAT " running time",
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_TIME_ARGS (time));
-      if (GST_CLOCK_TIME_IS_VALID (pad_data->min_dts) &&
-          time < pad_data->min_dts) {
+
+      if (!GST_CLOCK_TIME_IS_VALID (pad_data->min_dts))
+        pad_data->min_dts = time;
+
+      if (time < pad_data->min_dts) {
         /* Ignore DTS going backward */
         GST_WARNING_OBJECT (cdata->pad, "ignoring DTS going backward");
         time = pad_data->min_dts;
       }
+
       *outbuf = gst_buffer_make_writable (buf);
       GST_BUFFER_DTS (*outbuf) = time;
+      pad_data->min_dts = time;
     }
   }
 
