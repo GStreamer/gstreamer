@@ -1642,7 +1642,7 @@ gst_collect_pads_clip_time (GstCollectPads * pads, GstCollectData * data,
   if (pads->priv->clip_func) {
     in = gst_buffer_new ();
     GST_BUFFER_PTS (in) = time;
-    GST_BUFFER_DTS (in) = time;
+    GST_BUFFER_DTS (in) = GST_CLOCK_TIME_NONE;
     pads->priv->clip_func (pads, data, in, &out, pads->priv->clip_user_data);
     if (out) {
       otime = GST_BUFFER_PTS (out);
