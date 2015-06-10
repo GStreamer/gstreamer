@@ -205,7 +205,7 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   gst_adapter_flush (sbcpay->adapter, payload_length);
 
   /* FIXME: what about duration? */
-  GST_BUFFER_TIMESTAMP (outbuf) = sbcpay->timestamp;
+  GST_BUFFER_PTS (outbuf) = sbcpay->timestamp;
   GST_DEBUG_OBJECT (sbcpay, "Pushing %d bytes", payload_length);
 
   return gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (sbcpay), outbuf);
@@ -220,7 +220,7 @@ gst_rtp_sbc_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   /* FIXME check for negotiation */
 
   sbcpay = GST_RTP_SBC_PAY (payload);
-  sbcpay->timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  sbcpay->timestamp = GST_BUFFER_PTS (buffer);
 
   gst_adapter_push (sbcpay->adapter, buffer);
 

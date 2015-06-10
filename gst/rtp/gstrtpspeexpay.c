@@ -271,7 +271,7 @@ gst_rtp_speex_pay_handle_buffer (GstRTPBasePayload * basepayload,
     goto done;
   }
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
   /* FIXME, only one SPEEX frame per RTP packet for now */
@@ -282,7 +282,7 @@ gst_rtp_speex_pay_handle_buffer (GstRTPBasePayload * basepayload,
   g_assert (payload_len <= GST_RTP_BASE_PAYLOAD_MTU (rtpspeexpay));
 
   /* copy timestamp and duration */
-  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_PTS (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = duration;
 
   gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);

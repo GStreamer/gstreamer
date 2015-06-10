@@ -285,7 +285,7 @@ gst_rtp_theora_pay_init_packet (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
       (rtptheorapay), 0, 0);
   gst_rtp_theora_pay_reset_packet (rtptheorapay, TDT);
 
-  GST_BUFFER_TIMESTAMP (rtptheorapay->packet) = timestamp;
+  GST_BUFFER_PTS (rtptheorapay->packet) = timestamp;
 }
 
 static GstFlowReturn
@@ -731,7 +731,7 @@ gst_rtp_theora_pay_handle_buffer (GstRTPBasePayload * basepayload,
   data = map.data;
   size = map.size;
   duration = GST_BUFFER_DURATION (buffer);
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
 
   GST_DEBUG_OBJECT (rtptheorapay, "size %" G_GSIZE_FORMAT
       ", duration %" GST_TIME_FORMAT, size, GST_TIME_ARGS (duration));

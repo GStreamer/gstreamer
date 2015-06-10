@@ -338,7 +338,7 @@ gst_rtp_gst_pay_create_from_adapter (GstRtpGSTPay * rtpgstpay,
     /* create a new group to hold the rtp header and the payload */
     gst_buffer_append (outbuf, paybuf);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+    GST_BUFFER_PTS (outbuf) = timestamp;
 
     /* and add to list */
     gst_buffer_list_insert (list, -1, outbuf);
@@ -614,7 +614,7 @@ gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   rtpgstpay = GST_RTP_GST_PAY (basepayload);
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
 
   /* check if we need to send the caps and taglist now */
   if (rtpgstpay->config_interval > 0) {

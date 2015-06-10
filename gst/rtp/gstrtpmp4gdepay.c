@@ -433,7 +433,7 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     gst_adapter_clear (rtpmp4gdepay->adapter);
   }
 
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  timestamp = GST_BUFFER_PTS (buf);
 
   {
     gint payload_len, payload_AU;
@@ -663,7 +663,7 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
           /* copy some of the fields we calculated above on the buffer. We also
            * copy the AU_index so that we can sort the packets in our queue. */
-          GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+          GST_BUFFER_PTS (outbuf) = timestamp;
           GST_BUFFER_OFFSET (outbuf) = AU_index;
 
           /* make sure we don't use the timestamp again for other AUs in this

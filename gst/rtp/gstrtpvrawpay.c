@@ -346,9 +346,9 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
       out = gst_rtp_buffer_new_allocate (left, 0, 0);
 
       if (field == 0) {
-        GST_BUFFER_TIMESTAMP (out) = GST_BUFFER_TIMESTAMP (buffer);
+        GST_BUFFER_PTS (out) = GST_BUFFER_PTS (buffer);
       } else {
-        GST_BUFFER_TIMESTAMP (out) = GST_BUFFER_TIMESTAMP (buffer) +
+        GST_BUFFER_PTS (out) = GST_BUFFER_PTS (buffer) +
             GST_BUFFER_DURATION (buffer) / 2;
       }
 

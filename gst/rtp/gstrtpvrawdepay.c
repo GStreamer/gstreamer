@@ -364,7 +364,7 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       goto alloc_failed;
 
     /* clear timestamp from alloc... */
-    GST_BUFFER_TIMESTAMP (new_buffer) = -1;
+    GST_BUFFER_PTS (new_buffer) = -1;
 
     if (!gst_video_frame_map (&rtpvrawdepay->frame, &rtpvrawdepay->vinfo,
             new_buffer, GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {

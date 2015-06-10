@@ -280,7 +280,7 @@ gst_rtp_vorbis_pay_init_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT,
       (rtpvorbispay), 0, 0);
   gst_rtp_vorbis_pay_reset_packet (rtpvorbispay, VDT);
 
-  GST_BUFFER_TIMESTAMP (rtpvorbispay->packet) = timestamp;
+  GST_BUFFER_PTS (rtpvorbispay->packet) = timestamp;
 }
 
 static GstFlowReturn
@@ -724,7 +724,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
   data = map.data;
   size = map.size;
   duration = GST_BUFFER_DURATION (buffer);
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
 
   GST_LOG_OBJECT (rtpvorbispay, "size %" G_GSIZE_FORMAT
       ", duration %" GST_TIME_FORMAT, size, GST_TIME_ARGS (duration));

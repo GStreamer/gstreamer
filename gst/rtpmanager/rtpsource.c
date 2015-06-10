@@ -1764,7 +1764,7 @@ rtp_source_timeout (RTPSource * src, GstClockTime current_time,
 
   /* Time out AVPF packets that are older than the desired length */
   while ((pkt = g_queue_peek_tail (src->retained_feedback)) &&
-      GST_BUFFER_TIMESTAMP (pkt) < feedback_retention_window)
+      GST_BUFFER_PTS (pkt) < feedback_retention_window)
     gst_buffer_unref (g_queue_pop_tail (src->retained_feedback));
 }
 
@@ -1774,7 +1774,7 @@ compare_buffers (gconstpointer a, gconstpointer b, gpointer user_data)
   const GstBuffer *bufa = a;
   const GstBuffer *bufb = b;
 
-  return GST_BUFFER_TIMESTAMP (bufa) - GST_BUFFER_TIMESTAMP (bufb);
+  return GST_BUFFER_PTS (bufa) - GST_BUFFER_PTS (bufb);
 }
 
 void
@@ -1786,7 +1786,7 @@ rtp_source_retain_rtcp_packet (RTPSource * src, GstRTCPPacket * packet,
   buffer = gst_buffer_copy_region (packet->rtcp->buffer, GST_BUFFER_COPY_MEMORY,
       packet->offset, (gst_rtcp_packet_get_length (packet) + 1) * 4);
 
-  GST_BUFFER_TIMESTAMP (buffer) = running_time;
+  GST_BUFFER_PTS (buffer) = running_time;
 
   g_queue_insert_sorted (src->retained_feedback, buffer, compare_buffers, NULL);
 }

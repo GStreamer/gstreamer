@@ -251,7 +251,7 @@ gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       flush_data (rtpqdm2depay);
       /* And store new timestamp */
       rtpqdm2depay->ptimestamp = rtpqdm2depay->timestamp;
-      rtpqdm2depay->timestamp = GST_BUFFER_TIMESTAMP (buf);
+      rtpqdm2depay->timestamp = GST_BUFFER_PTS (buf);
       /* And that previous data will be pushed at the bottom */
     }
     rtpqdm2depay->nextseq = seq + 1;
@@ -273,7 +273,7 @@ gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
           GST_DEBUG ("Headers");
           /* Store the incoming timestamp */
           rtpqdm2depay->ptimestamp = rtpqdm2depay->timestamp;
-          rtpqdm2depay->timestamp = GST_BUFFER_TIMESTAMP (buf);
+          rtpqdm2depay->timestamp = GST_BUFFER_PTS (buf);
           /* flush the internal data if needed */
           flush_data (rtpqdm2depay);
           if (G_UNLIKELY (!rtpqdm2depay->configured)) {
@@ -356,7 +356,7 @@ gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     if (G_UNLIKELY (avail)) {
       GST_DEBUG ("Pushing out %d bytes of collected data", avail);
       outbuf = gst_adapter_take_buffer (rtpqdm2depay->adapter, avail);
-      GST_BUFFER_TIMESTAMP (outbuf) = rtpqdm2depay->ptimestamp;
+      GST_BUFFER_PTS (outbuf) = rtpqdm2depay->ptimestamp;
       GST_DEBUG ("Outgoing buffer timestamp %" GST_TIME_FORMAT,
           GST_TIME_ARGS (rtpqdm2depay->ptimestamp));
     }

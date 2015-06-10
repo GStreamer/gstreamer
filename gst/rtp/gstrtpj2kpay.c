@@ -333,7 +333,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
   mtu = GST_RTP_BASE_PAYLOAD_MTU (pay);
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
   offset = pos = end = 0;
 
   GST_LOG_OBJECT (pay,
@@ -427,7 +427,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
       /* make buffer for header */
       outbuf = gst_rtp_buffer_new_allocate (HEADER_SIZE, 0, 0);
 
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+      GST_BUFFER_PTS (outbuf) = timestamp;
 
       gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 

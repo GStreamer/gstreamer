@@ -159,7 +159,7 @@ gst_rtp_g723_pay_flush (GstRTPG723Pay * pay)
   gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
   payload = gst_rtp_buffer_get_payload (&rtp);
 
-  GST_BUFFER_TIMESTAMP (outbuf) = pay->timestamp;
+  GST_BUFFER_PTS (outbuf) = pay->timestamp;
   GST_BUFFER_DURATION (outbuf) = pay->duration;
 
   /* copy G723 data as payload */
@@ -204,7 +204,7 @@ gst_rtp_g723_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
   pay = GST_RTP_G723_PAY (payload);
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  timestamp = GST_BUFFER_PTS (buf);
 
   if (GST_BUFFER_IS_DISCONT (buf)) {
     /* flush everything on discont */

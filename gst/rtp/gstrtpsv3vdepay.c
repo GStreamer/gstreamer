@@ -157,7 +157,7 @@ gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   seq = gst_rtp_buffer_get_seq (&rtp);
 
   GST_DEBUG ("timestamp %" GST_TIME_FORMAT ", sequence number:%d",
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), seq);
+      GST_TIME_ARGS (GST_BUFFER_PTS (buf)), seq);
 
   if (seq != rtpsv3vdepay->nextseq) {
     GST_DEBUG ("Sequence discontinuity, clearing adapter");

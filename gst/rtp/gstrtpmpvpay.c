@@ -216,7 +216,7 @@ gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
     paybuf = gst_adapter_take_buffer_fast (rtpmpvpay->adapter, payload_len);
     outbuf = gst_buffer_append (outbuf, paybuf);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtpmpvpay->first_ts;
+    GST_BUFFER_PTS (outbuf) = rtpmpvpay->first_ts;
 
     ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmpvpay), outbuf);
   }
@@ -235,7 +235,7 @@ gst_rtp_mpv_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   rtpmpvpay = GST_RTP_MPV_PAY (basepayload);
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
   if (GST_BUFFER_IS_DISCONT (buffer)) {

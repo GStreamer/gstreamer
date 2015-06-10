@@ -259,7 +259,7 @@ gst_rtp_amr_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
   /* setup frame size pointer */
@@ -315,7 +315,7 @@ gst_rtp_amr_pay_handle_buffer (GstRTPBasePayload * basepayload,
   gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
   /* copy timestamp */
-  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_PTS (outbuf) = timestamp;
 
   if (duration != GST_CLOCK_TIME_NONE)
     GST_BUFFER_DURATION (outbuf) = duration;

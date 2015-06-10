@@ -210,7 +210,7 @@ gst_rtp_celt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   frame_size = rtpceltdepay->frame_size;
   framesize_ns = gst_util_uint64_scale_int (frame_size, GST_SECOND, clock_rate);
 
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  timestamp = GST_BUFFER_PTS (buf);
 
   gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
@@ -253,12 +253,12 @@ gst_rtp_celt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     offset += size;
 
     if (frame_size != -1 && clock_rate != -1) {
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp + framesize_ns * n;
+      GST_BUFFER_PTS (outbuf) = timestamp + framesize_ns * n;
       GST_BUFFER_DURATION (outbuf) = framesize_ns;
     }
     GST_LOG_OBJECT (depayload, "push timestamp=%"
         GST_TIME_FORMAT ", duration=%" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
     gst_rtp_base_depayload_push (depayload, outbuf);

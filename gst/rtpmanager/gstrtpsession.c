@@ -1742,7 +1742,7 @@ gst_rtp_session_chain_recv_rtp (GstPad * pad, GstObject * parent,
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
   /* get NTP time when this packet was captured, this depends on the timestamp. */
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     /* convert to running time using the segment values */
     running_time =
@@ -2106,11 +2106,11 @@ gst_rtp_session_chain_send_rtp_common (GstRtpSession * rtpsession,
      * So, just take it from the first group. */
     buffer = gst_buffer_list_get (GST_BUFFER_LIST_CAST (data), 0);
     if (buffer)
-      timestamp = GST_BUFFER_TIMESTAMP (buffer);
+      timestamp = GST_BUFFER_PTS (buffer);
     else
       timestamp = -1;
   } else {
-    timestamp = GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (data));
+    timestamp = GST_BUFFER_PTS (GST_BUFFER_CAST (data));
   }
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {

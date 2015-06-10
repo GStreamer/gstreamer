@@ -267,7 +267,7 @@ gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   if (payload_len < 2)
     goto too_small;
 
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  timestamp = GST_BUFFER_PTS (buf);
 
   payload = gst_rtp_buffer_get_payload (&rtp);
 
@@ -354,7 +354,7 @@ gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       outbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp, offset, frame_len);
     }
 
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+    GST_BUFFER_PTS (outbuf) = timestamp;
     GST_BUFFER_DURATION (outbuf) = FRAME_DURATION;
 
     if (!depay->interleaved || index == 0) {

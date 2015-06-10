@@ -734,7 +734,7 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     payload[0] = (fragmented && !found_gob) ? 0x00 : 0x04;
     payload[1] = 0;
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtph263ppay->first_timestamp;
+    GST_BUFFER_PTS (outbuf) = rtph263ppay->first_timestamp;
     GST_BUFFER_DURATION (outbuf) = rtph263ppay->first_duration;
     gst_rtp_buffer_unmap (&rtp);
 
@@ -759,7 +759,7 @@ gst_rtp_h263p_pay_handle_buffer (GstRTPBasePayload * payload,
 
   rtph263ppay = GST_RTP_H263P_PAY (payload);
 
-  rtph263ppay->first_timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  rtph263ppay->first_timestamp = GST_BUFFER_PTS (buffer);
   rtph263ppay->first_duration = GST_BUFFER_DURATION (buffer);
 
   /* we always encode and flush a full picture */

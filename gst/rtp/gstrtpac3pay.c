@@ -322,7 +322,7 @@ gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay)
       gst_rtp_buffer_set_marker (&rtp, TRUE);
     gst_rtp_buffer_unmap (&rtp);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtpac3pay->first_ts;
+    GST_BUFFER_PTS (outbuf) = rtpac3pay->first_ts;
     GST_BUFFER_DURATION (outbuf) = rtpac3pay->duration;
 
     ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpac3pay), outbuf);
@@ -347,7 +347,7 @@ gst_rtp_ac3_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   duration = GST_BUFFER_DURATION (buffer);
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
 
   if (GST_BUFFER_IS_DISCONT (buffer)) {
     GST_DEBUG_OBJECT (rtpac3pay, "DISCONT");

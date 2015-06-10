@@ -288,7 +288,7 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
 
     outbuf = gst_buffer_append (outbuf, outbuf_data);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4vpay->first_timestamp;
+    GST_BUFFER_PTS (outbuf) = rtpmp4vpay->first_timestamp;
 
     /* add to list */
     gst_buffer_list_insert (list, -1, outbuf);
@@ -434,7 +434,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   size = map.size;
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
   duration = GST_BUFFER_DURATION (buffer);
   avail = gst_adapter_available (rtpmp4vpay->adapter);
 
@@ -464,7 +464,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
       /* strip off header */
       subbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY, strip,
           size - strip);
-      GST_BUFFER_TIMESTAMP (subbuf) = timestamp;
+      GST_BUFFER_PTS (subbuf) = timestamp;
       gst_buffer_unref (buffer);
       buffer = subbuf;
 
@@ -513,7 +513,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
       /* insert header */
       buffer = gst_buffer_append (gst_buffer_ref (rtpmp4vpay->config), buffer);
 
-      GST_BUFFER_TIMESTAMP (buffer) = timestamp;
+      GST_BUFFER_PTS (buffer) = timestamp;
       size = gst_buffer_get_size (buffer);
 
       if (timestamp != -1) {

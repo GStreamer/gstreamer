@@ -233,7 +233,7 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
     paybuf = gst_adapter_take_buffer_fast (rtpmpapay->adapter, payload_len);
     outbuf = gst_buffer_append (outbuf, paybuf);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtpmpapay->first_ts;
+    GST_BUFFER_PTS (outbuf) = rtpmpapay->first_ts;
     GST_BUFFER_DURATION (outbuf) = rtpmpapay->duration;
 
     ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmpapay), outbuf);
@@ -256,7 +256,7 @@ gst_rtp_mpa_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   size = gst_buffer_get_size (buffer);
   duration = GST_BUFFER_DURATION (buffer);
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
 
   if (GST_BUFFER_IS_DISCONT (buffer)) {
     GST_DEBUG_OBJECT (rtpmpapay, "DISCONT");

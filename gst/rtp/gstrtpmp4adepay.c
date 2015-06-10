@@ -311,7 +311,7 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
 
   outbuf = gst_buffer_make_writable (outbuf);
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+  GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (buf);
   gst_adapter_push (rtpmp4adepay->adapter, outbuf);
 
   /* RTP marker bit indicates the last packet of the AudioMuxElement => create
@@ -372,7 +372,7 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       data += skip;
       avail -= skip;
 
-      GST_BUFFER_TIMESTAMP (tmp) = timestamp;
+      GST_BUFFER_PTS (tmp) = timestamp;
       gst_rtp_base_depayload_push (depayload, tmp);
 
       /* shift ts for next buffers */

@@ -313,7 +313,7 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
       "DV RTP payloader got buffer of %" G_GSIZE_FORMAT
       " bytes, splitting in %u byte " "payload fragments, at time %"
       GST_TIME_FORMAT, size, max_payload_size,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
 
   if (!rtpdvpay->negotiated) {
     gst_dv_pay_negotiate (rtpdvpay, data, size);
@@ -330,7 +330,7 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
     /* Allocate a new buffer, set the timestamp */
     if (outbuf == NULL) {
       outbuf = gst_rtp_buffer_new_allocate (max_payload_size, 0, 0);
-      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
+      GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (buffer);
 
       if (!gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp)) {
         gst_buffer_unref (outbuf);

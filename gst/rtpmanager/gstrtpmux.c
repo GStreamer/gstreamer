@@ -394,8 +394,8 @@ process_list_item (GstBuffer ** buffer, guint idx, gpointer user_data)
     return FALSE;
 
   if (GST_BUFFER_DURATION_IS_VALID (*buffer) &&
-      GST_BUFFER_TIMESTAMP_IS_VALID (*buffer))
-    bd->rtp_mux->last_stop = GST_BUFFER_TIMESTAMP (*buffer) +
+      GST_BUFFER_PTS_IS_VALID (*buffer))
+    bd->rtp_mux->last_stop = GST_BUFFER_PTS (*buffer) +
         GST_BUFFER_DURATION (*buffer);
   else
     bd->rtp_mux->last_stop = GST_CLOCK_TIME_NONE;
@@ -504,8 +504,8 @@ gst_rtp_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     }
 
     if (GST_BUFFER_DURATION_IS_VALID (buffer) &&
-        GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
-      rtp_mux->last_stop = GST_BUFFER_TIMESTAMP (buffer) +
+        GST_BUFFER_PTS_IS_VALID (buffer))
+      rtp_mux->last_stop = GST_BUFFER_PTS (buffer) +
           GST_BUFFER_DURATION (buffer);
     else
       rtp_mux->last_stop = GST_CLOCK_TIME_NONE;

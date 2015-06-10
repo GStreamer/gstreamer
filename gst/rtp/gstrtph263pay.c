@@ -1303,7 +1303,7 @@ gst_rtp_h263_pay_push (GstRtpH263Pay * rtph263pay,
   /*
    * timestamp the buffer
    */
-  GST_BUFFER_TIMESTAMP (package->outbuf) = rtph263pay->first_ts;
+  GST_BUFFER_PTS (package->outbuf) = rtph263pay->first_ts;
 
   gst_rtp_buffer_set_marker (&rtp, package->marker);
   if (package->marker)
@@ -1820,7 +1820,7 @@ gst_rtp_h263_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   GST_DEBUG ("-------------------- NEW FRAME ---------------");
   rtph263pay = GST_RTP_H263_PAY (payload);
 
-  rtph263pay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+  rtph263pay->first_ts = GST_BUFFER_PTS (buffer);
 
   /* we always encode and flush a full picture */
   gst_adapter_push (rtph263pay->adapter, buffer);

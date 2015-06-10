@@ -169,7 +169,7 @@ gst_asteriskh263_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     gst_buffer_unmap (outbuf, &map);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+    GST_BUFFER_PTS (outbuf) = timestamp;
     if (!gst_pad_has_current_caps (asteriskh263->srcpad)) {
       GstCaps *caps;
 

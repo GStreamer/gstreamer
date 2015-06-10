@@ -334,8 +334,8 @@ gst_rtp_celt_pay_flush_queued (GstRtpCELTPay * rtpceltpay)
     guint size;
 
     /* copy first timestamp to output */
-    if (GST_BUFFER_TIMESTAMP (outbuf) == -1)
-      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+    if (GST_BUFFER_PTS (outbuf) == -1)
+      GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (buf);
 
     /* write the size to the header */
     size = gst_buffer_get_size (buf);

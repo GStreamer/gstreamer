@@ -770,7 +770,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     }
     outbuf = gst_buffer_make_writable (outbuf);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = out_timestamp;
+    GST_BUFFER_PTS (outbuf) = out_timestamp;
 
     if (out_keyframe)
       GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -854,7 +854,7 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GstClockTime timestamp;
     gboolean marker;
 
-    timestamp = GST_BUFFER_TIMESTAMP (buf);
+    timestamp = GST_BUFFER_PTS (buf);
 
     gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 

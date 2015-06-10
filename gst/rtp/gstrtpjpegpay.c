@@ -689,7 +689,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   data = map.data;
   size = map.size;
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
   offset = 0;
   discont = GST_BUFFER_IS_DISCONT (buffer);
 
@@ -888,7 +888,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
     /* join memory parts */
     outbuf = gst_buffer_append (outbuf, paybuf);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+    GST_BUFFER_PTS (outbuf) = timestamp;
 
     if (discont) {
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);

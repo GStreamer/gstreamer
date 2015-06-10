@@ -185,7 +185,7 @@ gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay,
   frames =
       (payload_len / G729_FRAME_SIZE) + ((payload_len % G729_FRAME_SIZE) >> 1);
   duration = frames * G729_FRAME_DURATION;
-  GST_BUFFER_TIMESTAMP (outbuf) = rtpg729pay->next_ts;
+  GST_BUFFER_PTS (outbuf) = rtpg729pay->next_ts;
   GST_BUFFER_DURATION (outbuf) = duration;
   GST_BUFFER_OFFSET (outbuf) = rtpg729pay->next_rtp_time;
   rtpg729pay->next_ts += duration;
@@ -314,7 +314,7 @@ gst_rtp_g729_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
   adapter = rtpg729pay->adapter;
   available = gst_adapter_available (adapter);
 
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  timestamp = GST_BUFFER_PTS (buf);
 
   /* resync rtp time on discont or a discontinuous cn packet */
   if (GST_BUFFER_IS_DISCONT (buf)) {

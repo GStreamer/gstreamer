@@ -366,7 +366,7 @@ gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
   size = map.size;
   data = map.data;
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
 
   fragmented = FALSE;
   mtu = GST_RTP_BASE_PAYLOAD_MTU (rtpmp4apay);
@@ -431,7 +431,7 @@ gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
     gst_rtp_buffer_unmap (&rtp);
 
     /* copy incomming timestamp (if any) to outgoing buffers */
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+    GST_BUFFER_PTS (outbuf) = timestamp;
 
     ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmp4apay), outbuf);
 

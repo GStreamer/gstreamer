@@ -137,7 +137,7 @@ gst_rtp_gsm_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
   /* FIXME, only one GSM frame per RTP packet for now */
@@ -150,7 +150,7 @@ gst_rtp_gsm_pay_handle_buffer (GstRTPBasePayload * basepayload,
   outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
 
   /* copy timestamp and duration */
-  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_PTS (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = duration;
 
   /* get payload */

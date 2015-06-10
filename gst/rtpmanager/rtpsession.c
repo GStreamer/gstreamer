@@ -2557,7 +2557,7 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
       fci_buffer = gst_buffer_copy_region (packet->rtcp->buffer,
           GST_BUFFER_COPY_MEMORY, fci_data - packet->rtcp->map.data,
           fci_length);
-      GST_BUFFER_TIMESTAMP (fci_buffer) = pinfo->running_time;
+      GST_BUFFER_PTS (fci_buffer) = pinfo->running_time;
     }
 
     RTP_SESSION_UNLOCK (sess);
