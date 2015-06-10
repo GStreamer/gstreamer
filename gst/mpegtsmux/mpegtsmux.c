@@ -1175,7 +1175,7 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
     /* Take the first data stream for the PCR */
     GST_DEBUG_OBJECT (COLLECT_DATA_PAD (best),
         "Use stream (pid=%d) from pad as PCR for program (prog_id = %d)",
-        MPEG_TS_PAD_DATA (best)->pid, MPEG_TS_PAD_DATA (best)->prog_id);
+        best->pid, best->prog_id);
 
     /* Set the chosen PCR stream */
     tsmux_program_set_pcr_stream (prog, best->stream);
