@@ -3744,12 +3744,17 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
               GST_PAD_LINK_CHECK_NOTHING);
           gst_object_unref (srcpad);
         } else {
-          if (need_deinterlace)
+          if (need_deinterlace) {
+            gst_pad_unlink (playsink->videodeinterlacechain->srcpad,
+                playsink->videochain->sinkpad);
             gst_pad_link_full (playsink->videodeinterlacechain->srcpad,
                 playsink->textchain->videosinkpad, GST_PAD_LINK_CHECK_NOTHING);
-          else
+          } else {
+            gst_pad_unlink (playsink->video_srcpad_stream_synchronizer,
+                playsink->videochain->sinkpad);
             gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
                 playsink->textchain->videosinkpad, GST_PAD_LINK_CHECK_NOTHING);
+          }
         }
         gst_pad_link_full (playsink->textchain->srcpad,
             playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
