@@ -143,11 +143,11 @@ tsmux_new (void)
   mux->next_stream_pid = TSMUX_START_ES_PID;
 
   mux->pat_changed = TRUE;
-  mux->last_pat_ts = -1;
+  mux->last_pat_ts = G_MININT64;
   mux->pat_interval = TSMUX_DEFAULT_PAT_INTERVAL;
 
   mux->si_changed = TRUE;
-  mux->last_si_ts = -1;
+  mux->last_si_ts = G_MININT64;
   mux->si_interval = TSMUX_DEFAULT_SI_INTERVAL;
 
   mux->si_sections = g_hash_table_new_full (g_direct_hash, g_direct_equal,
@@ -363,7 +363,7 @@ tsmux_program_new (TsMux * mux, gint prog_id)
   program = g_slice_new0 (TsMuxProgram);
 
   program->pmt_changed = TRUE;
-  program->last_pmt_ts = -1;
+  program->last_pmt_ts = G_MININT64;
   program->pmt_interval = TSMUX_DEFAULT_PMT_INTERVAL;
 
   if (prog_id == 0) {
@@ -983,13 +983,13 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
     GList *cur;
 
     cur_pcr = 0;
-    if (cur_pts != -1) {
+    if (cur_pts != G_MININT64) {
       TS_DEBUG ("TS for PCR stream is %" G_GINT64_FORMAT, cur_pts);
     }
 
     /* FIXME: The current PCR needs more careful calculation than just
      * writing a fixed offset */
-    if (cur_pts != -1) {
+    if (cur_pts != G_MININT64) {
       /* CLOCK_BASE >= TSMUX_PCR_OFFSET */
       cur_pts += CLOCK_BASE;
       cur_pcr = (cur_pts - TSMUX_PCR_OFFSET) *
@@ -1010,7 +1010,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
     }
 
     /* check if we need to rewrite pat */
-    if (mux->last_pat_ts == -1 || mux->pat_changed)
+    if (mux->last_pat_ts == G_MININT64 || mux->pat_changed)
       write_pat = TRUE;
     else if (cur_pts >= mux->last_pat_ts + mux->pat_interval)
       write_pat = TRUE;
@@ -1024,7 +1024,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
     }
 
     /* check if we need to rewrite sit */
-    if (mux->last_si_ts == -1 || mux->si_changed)
+    if (mux->last_si_ts == G_MININT64 || mux->si_changed)
       write_si = TRUE;
     else if (cur_pts >= mux->last_si_ts + mux->si_interval)
       write_si = TRUE;
@@ -1042,7 +1042,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
       TsMuxProgram *program = (TsMuxProgram *) cur->data;
       gboolean write_pmt;
 
-      if (program->last_pmt_ts == -1 || program->pmt_changed)
+      if (program->last_pmt_ts == G_MININT64 || program->pmt_changed)
         write_pmt = TRUE;
       else if (cur_pts >= program->last_pmt_ts + program->pmt_interval)
         write_pmt = TRUE;
@@ -1060,9 +1060,9 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   pi->packet_start_unit_indicator = tsmux_stream_at_pes_start (stream);
   if (pi->packet_start_unit_indicator) {
     tsmux_stream_initialize_pes_packet (stream);
-    if (stream->dts != -1)
+    if (stream->dts != G_MININT64)
       stream->dts += CLOCK_BASE;
-    if (stream->pts != -1)
+    if (stream->pts != G_MININT64)
       stream->pts += CLOCK_BASE;
   }
   pi->stream_avail = tsmux_stream_bytes_avail (stream);

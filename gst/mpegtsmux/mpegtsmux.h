@@ -98,10 +98,9 @@ G_BEGIN_DECLS
 #define CLOCK_FREQ (CLOCK_BASE * 10000)   /* 90 kHz PTS clock */
 #define CLOCK_FREQ_SCR (CLOCK_FREQ * 300) /* 27 MHz SCR clock */
 
-#define MPEGTIME_TO_GSTTIME(time) (gst_util_uint64_scale ((time), \
-                        GST_MSECOND/10, CLOCK_BASE))
-#define GSTTIME_TO_MPEGTIME(time) (gst_util_uint64_scale ((time), \
-                        CLOCK_BASE, GST_MSECOND/10))
+#define GSTTIME_TO_MPEGTIME(time) \
+    (((time) > 0 ? (gint64) 1 : (gint64) -1) * \
+    (gint64) gst_util_uint64_scale (ABS(time), CLOCK_BASE, GST_MSECOND/10))
 
 /* 27 MHz SCR conversions: */
 #define MPEG_SYS_TIME_TO_GSTTIME(time) (gst_util_uint64_scale ((time), \
@@ -183,8 +182,11 @@ struct MpegTsPadData {
   gint pid;
   TsMuxStream *stream;
 
-  /* most recent valid TS for this stream */
-  GstClockTime min_dts;
+  /* most recent valid DTS for this stream */
+  gint64 min_dts;
+
+  /* most recent DTS */
+  gint64 dts;
 
 #if 0
   /* (optional) index writing */
