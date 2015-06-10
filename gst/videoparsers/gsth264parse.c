@@ -352,8 +352,8 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
     GstCaps * in_caps)
 {
   GstCaps *caps;
-  guint format = GST_H264_PARSE_FORMAT_NONE;
-  guint align = GST_H264_PARSE_ALIGN_NONE;
+  guint format = h264parse->format;
+  guint align = h264parse->align;
 
   g_return_if_fail ((in_caps == NULL) || gst_caps_is_fixed (in_caps));
 
@@ -368,12 +368,15 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
         caps);
   }
 
+  h264parse->can_passthrough = FALSE;
+
   if (in_caps && caps) {
     if (gst_caps_can_intersect (in_caps, caps)) {
       GST_DEBUG_OBJECT (h264parse, "downstream accepts upstream caps");
       gst_h264_parse_format_from_caps (in_caps, &format, &align);
       gst_caps_unref (caps);
       caps = NULL;
+      h264parse->can_passthrough = TRUE;
     }
   }
 
@@ -2187,6 +2190,18 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   }
 
+  /* If SPS/PPS and a keyframe have been parsed, and we're not converting,
+   * we might switch to passthrough mode now on the basis that we've seen
+   * the SEI packets and know optional caps params (such as multiview).
+   * This is an efficiency optimisation that relies on stream properties
+   * remaining uniform in practice. */
+  if (h264parse->can_passthrough) {
+    if (h264parse->keyframe && h264parse->have_sps && h264parse->have_pps) {
+      GST_LOG_OBJECT (parse, "Switching to passthrough mode");
+      gst_base_parse_set_passthrough (parse, TRUE);
+    }
+  }
+
   gst_h264_parse_reset_frame (h264parse);
 
   return GST_FLOW_OK;
@@ -2373,13 +2388,8 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   }
 
   if (format == h264parse->format && align == h264parse->align) {
-    /* do not set CAPS and passthrough mode if SPS/PPS have not been parsed */
-    if (h264parse->have_sps && h264parse->have_pps) {
-      gst_base_parse_set_passthrough (parse, TRUE);
-
-      /* we did parse codec-data and might supplement src caps */
-      gst_h264_parse_update_src_caps (h264parse, caps);
-    }
+    /* we did parse codec-data and might supplement src caps */
+    gst_h264_parse_update_src_caps (h264parse, caps);
   } else if (format == GST_H264_PARSE_FORMAT_AVC
       || format == GST_H264_PARSE_FORMAT_AVC3) {
     /* if input != output, and input is avc, must split before anything else */

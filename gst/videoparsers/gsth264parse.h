@@ -73,6 +73,8 @@ struct _GstH264Parse
   guint align;
   guint format;
   gint current_off;
+  /* True if input format and alignment match negotiated output */
+  gboolean can_passthrough;
 
   GstClockTime last_report;
   gboolean push_codec;
