@@ -169,10 +169,15 @@ find_psc (GstBuffer * buffer, guint skip)
   if (gst_byte_reader_peek_uint24_be (&br, &psc) == FALSE)
     goto out;
 
-  /* Scan for the picture start code (22 bits - 0x0020) */
+  /* Scan for the picture start code (22 bits - 0x0020)
+   * startcode  : 0000 0000 0000 0000 1000 00xx
+   * mask (bin) : 1111 1111 1111 1111 1111 1100
+   * mask (hex) :    f    f    f    f    f    c
+   * match      :    0    0    0    0    8    0
+   */
   while ((gst_byte_reader_get_remaining (&br) >= 3)) {
     if (gst_byte_reader_peek_uint24_be (&br, &psc) &&
-        ((psc & 0xffffc0) == 0x000080)) {
+        ((psc & 0xfffffc) == 0x000080)) {
       psc_pos = gst_byte_reader_get_pos (&br);
       break;
     } else if (gst_byte_reader_skip (&br, 1) == FALSE)
