@@ -14,6 +14,7 @@ EXPORTS
 	gst_rtsp_connection_get_remember_session_id
 	gst_rtsp_connection_get_tls
 	gst_rtsp_connection_get_tls_database
+	gst_rtsp_connection_get_tls_interaction
 	gst_rtsp_connection_get_tls_validation_flags
 	gst_rtsp_connection_get_tunnelid
 	gst_rtsp_connection_get_url
@@ -33,6 +34,7 @@ EXPORTS
 	gst_rtsp_connection_set_qos_dscp
 	gst_rtsp_connection_set_remember_session_id
 	gst_rtsp_connection_set_tls_database
+	gst_rtsp_connection_set_tls_interaction
 	gst_rtsp_connection_set_tls_validation_flags
 	gst_rtsp_connection_set_tunneled
 	gst_rtsp_connection_write
