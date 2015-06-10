@@ -11,6 +11,7 @@ built_sys_header_configure = gstglconfig.h
 libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstgldisplay.c \
 	gstglcontext.c \
+	gstglbasebuffer.c \
 	gstglmemory.c \
 	gstglbufferpool.c \
 	gstglfilter.c \
@@ -33,6 +34,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglwindow.h \
 	gstgldisplay.h \
 	gstglcontext.h \
+	gstglbasebuffer.h \
 	gstglmemory.h \
 	gstglbufferpool.h \
 	gstglfilter.h \
