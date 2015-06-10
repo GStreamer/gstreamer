@@ -1665,6 +1665,8 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
       GST_DEBUG_OBJECT (stream->pad, "Removing pad");
       gst_element_remove_pad (GST_ELEMENT_CAST (base), stream->pad);
       stream->active = FALSE;
+    } else {
+      gst_object_unref (stream->pad);
     }
     stream->pad = NULL;
   }
