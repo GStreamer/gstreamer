@@ -59,6 +59,9 @@ gst_matroska_track_init_video_context (GstMatroskaTrackContext ** p_context)
   video_context->fourcc = 0;
   video_context->default_fps = 0.0;
   video_context->earliest_time = GST_CLOCK_TIME_NONE;
+  video_context->multiview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+  video_context->multiview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+
   return TRUE;
 }
 

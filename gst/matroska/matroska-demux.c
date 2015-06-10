@@ -731,12 +731,61 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
               g_free (data);
               break;
             }
+            case GST_MATROSKA_ID_VIDEOSTEREOMODE:
+            {
+              guint64 num;
+
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+                break;
+
+              GST_DEBUG_OBJECT (demux, "StereoMode: %" G_GUINT64_FORMAT, num);
+
+              switch (num) {
+                case GST_MATROSKA_STEREO_MODE_SBS_RL:
+                  videocontext->multiview_flags =
+                      GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+                  /* fall through */
+                case GST_MATROSKA_STEREO_MODE_SBS_LR:
+                  videocontext->multiview_mode =
+                      GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE;
+                  break;
+                case GST_MATROSKA_STEREO_MODE_TB_RL:
+                  videocontext->multiview_flags =
+                      GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+                  /* fall through */
+                case GST_MATROSKA_STEREO_MODE_TB_LR:
+                  videocontext->multiview_mode =
+                      GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM;
+                  break;
+                case GST_MATROSKA_STEREO_MODE_CHECKER_RL:
+                  videocontext->multiview_flags =
+                      GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+                  /* fall through */
+                case GST_MATROSKA_STEREO_MODE_CHECKER_LR:
+                  videocontext->multiview_mode =
+                      GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD;
+                  break;
+                case GST_MATROSKA_STEREO_MODE_FBF_RL:
+                  videocontext->multiview_flags =
+                      GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+                  /* fall through */
+                case GST_MATROSKA_STEREO_MODE_FBF_LR:
+                  videocontext->multiview_mode =
+                      GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME;
+                  /* FIXME: In frame-by-frame mode, left/right frame buffers are
+                   * laced within one block, and we'll need to apply FIRST_IN_BUNDLE
+                   * accordingly. See http://www.matroska.org/technical/specs/index.html#StereoMode */
+                  GST_FIXME_OBJECT (demux,
+                      "Frame-by-frame stereoscopic mode not fully implemented");
+                  break;
+              }
+              break;
+            }
 
             default:
               GST_WARNING_OBJECT (demux,
                   "Unknown TrackVideo subelement 0x%x - ignoring", id);
               /* fall through */
-            case GST_MATROSKA_ID_VIDEOSTEREOMODE:
             case GST_MATROSKA_ID_VIDEODISPLAYUNIT:
             case GST_MATROSKA_ID_VIDEOPIXELCROPBOTTOM:
             case GST_MATROSKA_ID_VIDEOPIXELCROPTOP:

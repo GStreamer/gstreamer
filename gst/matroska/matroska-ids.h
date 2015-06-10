@@ -23,6 +23,7 @@
 #define __GST_MATROSKA_IDS_H__
 
 #include <gst/gst.h>
+#include <gst/video/video-info.h>
 
 #include "ebml-ids.h"
 
@@ -489,6 +490,16 @@ typedef enum {
   GST_MATROSKA_VIDEOTRACK_INTERLACED = (GST_MATROSKA_TRACK_SHIFT<<0)
 } GstMatroskaVideoTrackFlags;
 
+typedef enum {
+  GST_MATROSKA_STEREO_MODE_SBS_LR      = 0x1,
+  GST_MATROSKA_STEREO_MODE_TB_RL       = 0x2,
+  GST_MATROSKA_STEREO_MODE_TB_LR       = 0x3,
+  GST_MATROSKA_STEREO_MODE_CHECKER_RL  = 0x4,
+  GST_MATROSKA_STEREO_MODE_CHECKER_LR  = 0x5,
+  GST_MATROSKA_STEREO_MODE_SBS_RL      = 0x9,
+  GST_MATROSKA_STEREO_MODE_FBF_LR      = 0xD,
+  GST_MATROSKA_STEREO_MODE_FBF_RL      = 0xE
+} GstMatroskaStereoMode;
 
 typedef struct _GstMatroskaTrackContext GstMatroskaTrackContext;
 
@@ -570,6 +581,9 @@ typedef struct _GstMatroskaTrackVideoContext {
   gdouble       default_fps;
   GstMatroskaAspectRatioMode asr_mode;
   guint32       fourcc;
+
+  GstVideoMultiviewMode multiview_mode;
+  GstVideoMultiviewFlags multiview_flags;
 
   /* QoS */
   GstClockTime  earliest_time;

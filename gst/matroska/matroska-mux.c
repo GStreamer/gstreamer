@@ -929,7 +929,7 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstMatroskaPad *collect_pad;
   GstStructure *structure;
   const gchar *mimetype;
-  const gchar *interlace_mode;
+  const gchar *interlace_mode, *s;
   const GValue *value = NULL;
   GstBuffer *codec_buf = NULL;
   gint width, height, pixel_width, pixel_height;
@@ -1001,6 +1001,14 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
     videocontext->display_width = 0;
     videocontext->display_height = 0;
   }
+
+  /* Collect stereoscopic info, if any */
+  if ((s = gst_structure_get_string (structure, "multiview-mode")))
+    videocontext->multiview_mode =
+        gst_video_multiview_mode_from_caps_string (s);
+  gst_structure_get_flagset (structure, "multiview-flags",
+      &videocontext->multiview_flags, NULL);
+
 
 skip_details:
 
@@ -2431,6 +2439,53 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
 
         gst_ebml_write_binary (ebml, GST_MATROSKA_ID_VIDEOCOLOURSPACE,
             (gpointer) & fcc_le, 4);
+      }
+      if (videocontext->multiview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+        guint64 stereo_mode = 0;
+
+        switch (videocontext->multiview_mode) {
+          case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE:
+            if (videocontext->multiview_flags &
+                GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST)
+              stereo_mode = GST_MATROSKA_STEREO_MODE_SBS_RL;
+            else
+              stereo_mode = GST_MATROSKA_STEREO_MODE_SBS_LR;
+            break;
+          case GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM:
+            if (videocontext->multiview_flags &
+                GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST)
+              stereo_mode = GST_MATROSKA_STEREO_MODE_TB_RL;
+            else
+              stereo_mode = GST_MATROSKA_STEREO_MODE_TB_LR;
+            break;
+          case GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD:
+            if (videocontext->multiview_flags &
+                GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST)
+              stereo_mode = GST_MATROSKA_STEREO_MODE_CHECKER_RL;
+            else
+              stereo_mode = GST_MATROSKA_STEREO_MODE_CHECKER_LR;
+            break;
+          case GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME:
+            if (videocontext->multiview_flags &
+                GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST)
+              stereo_mode = GST_MATROSKA_STEREO_MODE_FBF_RL;
+            else
+              stereo_mode = GST_MATROSKA_STEREO_MODE_FBF_LR;
+            /* FIXME: In frame-by-frame mode, left/right frame buffers need to be
+             * laced within one block. See http://www.matroska.org/technical/specs/index.html#StereoMode */
+            GST_FIXME_OBJECT (mux,
+                "Frame-by-frame stereoscopic mode not fully implemented");
+            break;
+          default:
+            GST_WARNING_OBJECT (mux,
+                "Multiview mode %d not supported in Matroska/WebM",
+                videocontext->multiview_mode);
+            break;
+        }
+
+        if (stereo_mode != 0)
+          gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOSTEREOMODE,
+              stereo_mode);
       }
       gst_ebml_write_master_finish (ebml, master);
 
