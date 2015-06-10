@@ -267,7 +267,7 @@ gst_message_init (GstMessageImpl * message, GstMessageType type,
 /**
  * gst_message_new_custom:
  * @type: The #GstMessageType to distinguish messages
- * @src: The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @structure: (transfer full) (allow-none): the structure for the
  *     message. The message will take ownership of the structure.
  *
@@ -364,7 +364,7 @@ gst_message_set_seqnum (GstMessage * message, guint32 seqnum)
 
 /**
  * gst_message_new_eos:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  *
  * Create a new eos message. This message is generated and posted in
  * the sink elements of a GstBin. The bin will only forward the EOS
@@ -386,7 +386,7 @@ gst_message_new_eos (GstObject * src)
 
 /**
  * gst_message_new_error:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @error: (transfer none): The GError for this message.
  * @debug: A debugging string.
  *
@@ -415,7 +415,7 @@ gst_message_new_error (GstObject * src, GError * error, const gchar * debug)
 
 /**
  * gst_message_new_warning:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @error: (transfer none): The GError for this message.
  * @debug: A debugging string.
  *
@@ -442,7 +442,7 @@ gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
 
 /**
  * gst_message_new_info:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @error: (transfer none): The GError for this message.
  * @debug: A debugging string.
  *
@@ -469,7 +469,7 @@ gst_message_new_info (GstObject * src, GError * error, const gchar * debug)
 
 /**
  * gst_message_new_tag:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @tag_list: (transfer full): the tag list for the message.
  *
  * Create a new tag message. The message will take ownership of the tag list.
@@ -498,7 +498,7 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 
 /**
  * gst_message_new_buffering:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @percent: The buffering percent
  *
  * Create a new buffering message. This message can be posted by an element that
@@ -540,7 +540,7 @@ gst_message_new_buffering (GstObject * src, gint percent)
 
 /**
  * gst_message_new_state_changed:
- * @src: (transfer none): the object originating the message
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @oldstate: the previous state
  * @newstate: the new (current) state
  * @pending: the pending (target) state
@@ -570,7 +570,7 @@ gst_message_new_state_changed (GstObject * src,
 
 /**
  * gst_message_new_state_dirty:
- * @src: (transfer none): the object originating the message
+ * @src: (transfer none) (allow-none): The object originating the message
  *
  * Create a state dirty message. This message is posted whenever an element
  * changed its state asynchronously and is used internally to update the
@@ -592,7 +592,7 @@ gst_message_new_state_dirty (GstObject * src)
 
 /**
  * gst_message_new_clock_provide:
- * @src: (transfer none): the object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @clock: (transfer none): the clock it provides
  * @ready: %TRUE if the sender can provide a clock
  *
@@ -624,7 +624,7 @@ gst_message_new_clock_provide (GstObject * src, GstClock * clock,
 
 /**
  * gst_message_new_clock_lost:
- * @src: (transfer none): the object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @clock: (transfer none): the clock that was lost
  *
  * Create a clock lost message. This message is posted whenever the
@@ -653,7 +653,7 @@ gst_message_new_clock_lost (GstObject * src, GstClock * clock)
 
 /**
  * gst_message_new_new_clock:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @clock: (transfer none): the new selected clock
  *
  * Create a new clock message. This message is posted whenever the
@@ -678,7 +678,7 @@ gst_message_new_new_clock (GstObject * src, GstClock * clock)
 
 /**
  * gst_message_new_structure_change:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @type: The change type.
  * @owner: (transfer none): The owner element of @src.
  * @busy: Whether the structure change is busy.
@@ -717,7 +717,7 @@ gst_message_new_structure_change (GstObject * src, GstStructureChangeType type,
 
 /**
  * gst_message_new_segment_start:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @format: The format of the position being played
  * @position: The position of the segment being played
  *
@@ -747,7 +747,7 @@ gst_message_new_segment_start (GstObject * src, GstFormat format,
 
 /**
  * gst_message_new_segment_done:
- * @src: (transfer none): the object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @format: The format of the position being done
  * @position: The position of the segment being done
  *
@@ -777,7 +777,7 @@ gst_message_new_segment_done (GstObject * src, GstFormat format,
 
 /**
  * gst_message_new_application:
- * @src: (transfer none): the object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @structure: (transfer full): the structure for the message. The message
  *     will take ownership of the structure.
  *
@@ -798,7 +798,7 @@ gst_message_new_application (GstObject * src, GstStructure * structure)
 
 /**
  * gst_message_new_element:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @structure: (transfer full): The structure for the
  *     message. The message will take ownership of the structure.
  *
@@ -821,7 +821,7 @@ gst_message_new_element (GstObject * src, GstStructure * structure)
 
 /**
  * gst_message_new_duration_changed:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  *
  * Create a new duration changed message. This message is posted by elements
  * that know the duration of a stream when the duration changes. This message
@@ -848,7 +848,7 @@ gst_message_new_duration_changed (GstObject * src)
 
 /**
  * gst_message_new_async_start:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  *
  * This message is posted by elements when they start an ASYNC state change.
  *
@@ -868,7 +868,7 @@ gst_message_new_async_start (GstObject * src)
 
 /**
  * gst_message_new_async_done:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @running_time: the desired running_time
  *
  * The message is posted when elements completed an ASYNC state change.
@@ -896,7 +896,7 @@ gst_message_new_async_done (GstObject * src, GstClockTime running_time)
 
 /**
  * gst_message_new_latency:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  *
  * This message can be posted by elements when their latency requirements have
  * changed.
@@ -917,7 +917,7 @@ gst_message_new_latency (GstObject * src)
 
 /**
  * gst_message_new_request_state:
- * @src: (transfer none): the object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @state: The new requested state
  *
  * This message can be posted by elements when they want to have their state
@@ -2096,7 +2096,7 @@ gst_message_parse_toc (GstMessage * message, GstToc ** toc, gboolean * updated)
 
 /**
  * gst_message_new_reset_time:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @running_time: the requested running-time
  *
  * This message is posted when the pipeline running-time should be reset to
@@ -2146,7 +2146,7 @@ gst_message_parse_reset_time (GstMessage * message, GstClockTime * running_time)
 
 /**
  * gst_message_new_stream_start:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  *
  * Create a new stream_start message. This message is generated and posted in
  * the sink elements of a GstBin. The bin will only forward the STREAM_START
@@ -2239,7 +2239,7 @@ gst_message_parse_group_id (GstMessage * message, guint * group_id)
 
 /**
  * gst_message_new_need_context:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @context_type: The context type that is needed
  *
  * This message is posted when an element needs a specific #GstContext.
@@ -2298,7 +2298,7 @@ gst_message_parse_context_type (GstMessage * message,
 
 /**
  * gst_message_new_have_context:
- * @src: (transfer none): The object originating the message.
+ * @src: (transfer none) (allow-none): The object originating the message.
  * @context: (transfer full): the context
  *
  * This message is posted when an element has a new local #GstContext.
