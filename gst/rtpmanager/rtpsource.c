@@ -110,7 +110,7 @@ rtp_source_class_init (RTPSourceClass * klass)
    *  'tool'        G_TYPE_STRING  : The name of application or tool
    *  'note'        G_TYPE_STRING  : A notice about the source
    *
-   *  other fields may be present and these represent private items in
+   *  Other fields may be present and these represent private items in
    *  the SDES where the field name is the prefix.
    */
   g_object_class_install_property (gobject_class, PROP_SDES,
@@ -121,8 +121,20 @@ rtp_source_class_init (RTPSourceClass * klass)
   /**
    * RTPSource::stats
    *
-   * The statistics of the source. This property returns a GstStructure with
-   * name application/x-rtp-source-stats with the following fields:
+   * This property returns a GstStructure named application/x-rtp-source-stats with
+   * fields useful for statistics and diagnostics.
+   *
+   * Take note of each respective field's units:
+   *
+   * - NTP times are in the appropriate 32-bit or 64-bit fixed-point format
+   *   starting from January 1, 1970 (except for timespans).
+   * - RTP times are in clock rate units (i.e. clock rate = 1 second)
+   *   starting at a random offset.
+   * - For fields indicating packet loss, note that late packets are not considered lost,
+   *   and duplicates are not taken into account. Hence, the loss may be negative
+   *   if there are duplicates.
+   *
+   * The following fields are always present.
    *
    *  "ssrc"         G_TYPE_UINT     the SSRC of this source
    *  "internal"     G_TYPE_BOOLEAN  this source is a source of the session
@@ -133,13 +145,13 @@ rtp_source_class_init (RTPSourceClass * klass)
    *  "seqnum-base"  G_TYPE_INT      first seqnum if known
    *  "clock-rate"   G_TYPE_INT      the clock rate of the media
    *
-   * The following two fields are only present when known.
+   * The following fields are only present when known.
    *
    *  "rtp-from"     G_TYPE_STRING   where we received the last RTP packet from
    *  "rtcp-from"    G_TYPE_STRING   where we received the last RTCP packet from
    *
    * The following fields make sense for internal sources and will only increase
-   * when "is-sender" is TRUE:
+   * when "is-sender" is TRUE.
    *
    *  "octets-sent"  G_TYPE_UINT64   number of bytes we sent
    *  "packets-sent" G_TYPE_UINT64   number of packets we sent
@@ -195,9 +207,6 @@ rtp_source_class_init (RTPSourceClass * klass)
    *
    *  "rb-round-trip"    G_TYPE_UINT     the round-trip time (in NTP Short Format, 16.16 fixed point)
    *
-   * In all fields above, NTP times are in the appropriate 32-bit or 64-bit fixed-point format
-   * starting from January 1, 1970 (except for timespans), and RTP times are in clock rate units
-   * (i.e. clock rate = 1 second) starting from a random offset.
    */
   g_object_class_install_property (gobject_class, PROP_STATS,
       g_param_spec_boxed ("stats", "Stats",
@@ -1467,9 +1476,9 @@ rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
  * @exthighestseq: the extended last sequence number received
  * @jitter: the interarrival jitter (in clock rate units)
  * @lsr: the time of the last SR packet on this source
- *   in NTP Short Format (16.16 fixed point)
+ *   (in NTP Short Format, 16.16 fixed point)
  * @dlsr: the delay since the last SR packet
- *   in NTP Short Format (16.16 fixed point)
+ *   (in NTP Short Format, 16.16 fixed point)
  *
  * Get new values to put into a new report block from this source.
  *
