@@ -69,6 +69,7 @@ struct _GESPipelinePrivate
 
   GMutex dyn_mutex;
   GList *chains;
+  GList *not_rendered_tracks;
 
   GstEncodingProfile *profile;
 };
@@ -560,6 +561,14 @@ ges_pipeline_change_state (GstElement * element, GstStateChange transition)
       }
       _link_tracks (self);
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    {
+      GList *tmp;
+
+      for (tmp = self->priv->not_rendered_tracks; tmp; tmp = tmp->next)
+        gst_element_set_locked_state (tmp->data, FALSE);
+    }
+      break;
     default:
       break;
   }
@@ -816,7 +825,13 @@ _link_track (GESPipeline * self, GESTrack * track)
         gst_caps_unref (caps);
 
         if (G_UNLIKELY (sinkpad == NULL)) {
-          GST_ERROR_OBJECT (self, "Couldn't get a pad from encodebin !");
+          GST_INFO_OBJECT (self, "Couldn't get a pad from encodebin !");
+          gst_element_set_locked_state (GST_ELEMENT (track), TRUE);
+
+          self->priv->not_rendered_tracks =
+              g_list_append (self->priv->not_rendered_tracks, track);
+
+
           goto error;
         }
       }
@@ -843,10 +858,12 @@ _link_track (GESPipeline * self, GESTrack * track)
 error:
   {
     if (chain->tee) {
+      gst_element_set_state (chain->tee, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (self), chain->tee);
     }
     if (sinkpad)
       gst_object_unref (sinkpad);
+
     g_free (chain);
   }
 }
