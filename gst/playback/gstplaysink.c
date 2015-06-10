@@ -5315,7 +5315,7 @@ gst_play_sink_colorbalance_set_value (GstColorBalance * balance,
 
       channels = gst_color_balance_list_channels (balance_element);
       for (k = channels; k; k = k->next) {
-        GstColorBalanceChannel *tmp = l->data;
+        GstColorBalanceChannel *tmp = k->data;
 
         if (g_strrstr (tmp->label, proxy->label)) {
           channel = tmp;
