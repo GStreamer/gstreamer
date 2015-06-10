@@ -415,7 +415,7 @@ gst_rtp_base_audio_payload_set_meta (GstRTPBaseAudioPayload * payload,
   }
   gst_rtp_buffer_unmap (&rtp);
 
-  GST_BUFFER_TIMESTAMP (buffer) = timestamp;
+  GST_BUFFER_PTS (buffer) = timestamp;
 
   /* get the offset in RTP time */
   GST_BUFFER_OFFSET (buffer) = priv->bytes_to_rtptime (payload, priv->offset);
@@ -820,7 +820,7 @@ gst_rtp_base_audio_payload_handle_buffer (GstRTPBasePayload *
   payload = GST_RTP_BASE_AUDIO_PAYLOAD_CAST (basepayload);
   priv = payload->priv;
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
   discont = GST_BUFFER_IS_DISCONT (buffer);
   if (discont) {
 
