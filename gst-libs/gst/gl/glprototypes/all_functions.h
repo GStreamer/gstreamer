@@ -29,3 +29,4 @@
 #include "debug.h"
 #include "vao.h"
 #include "sync.h"
+#include "buffers.h"
