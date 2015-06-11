@@ -175,7 +175,10 @@ play_current_uri (GtkPlay * play, GList * uri, const gchar * ext_suburi)
   else
     gst_player_set_uri (play->player, uri->data);
   play->current_uri = uri;
-  gst_player_play (play->player);
+  if (play->playing)
+    gst_player_play (play->player);
+  else
+    gst_player_pause (play->player);
   set_title (play, uri->data);
 }
 
@@ -1509,6 +1512,7 @@ main (gint argc, gchar ** argv)
   g_signal_connect (play.player, "media-info-updated",
       G_CALLBACK (media_info_updated_cb), &play);
 
+  play.playing = TRUE;
   play_current_uri (&play, g_list_first (play.uris), NULL);
 
   gtk_main ();
