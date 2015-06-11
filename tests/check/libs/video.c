@@ -819,8 +819,8 @@ GST_START_TEST (test_parse_caps_multiview)
       gst_video_info_init (&vinfo);
       gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_I420, 320, 240);
 
-      vinfo.multiview_mode = modes[i];
-      vinfo.multiview_flags = flags[j];
+      GST_VIDEO_INFO_MULTIVIEW_MODE (&vinfo) = modes[i];
+      GST_VIDEO_INFO_MULTIVIEW_FLAGS (&vinfo) = flags[j];
 
       caps = gst_video_info_to_caps (&vinfo);
       fail_if (caps == NULL);
@@ -830,14 +830,15 @@ GST_START_TEST (test_parse_caps_multiview)
       fail_unless (gst_video_info_from_caps (&vinfo, caps));
 
       GST_LOG ("mview mode %d flags %x -> info mode %d flags %x",
-          modes[i], flags[j], vinfo.multiview_mode, vinfo.multiview_flags);
+          modes[i], flags[j], GST_VIDEO_INFO_MULTIVIEW_MODE (&vinfo),
+          GST_VIDEO_INFO_MULTIVIEW_FLAGS (&vinfo));
 
-      fail_unless (vinfo.multiview_mode == modes[i],
+      fail_unless (GST_VIDEO_INFO_MULTIVIEW_MODE (&vinfo) == modes[i],
           "Expected multiview mode %d got mode %d", modes[i],
-          vinfo.multiview_mode);
-      fail_unless (vinfo.multiview_flags == flags[j],
+          GST_VIDEO_INFO_MULTIVIEW_MODE (&vinfo));
+      fail_unless (GST_VIDEO_INFO_MULTIVIEW_FLAGS (&vinfo) == flags[j],
           "Expected multiview flags 0x%x got 0x%x", flags[j],
-          vinfo.multiview_flags);
+          GST_VIDEO_INFO_MULTIVIEW_FLAGS (&vinfo));
 
       gst_caps_unref (caps);
     }
