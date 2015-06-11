@@ -4423,13 +4423,13 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
         ret = !gst_pad_query_accept_caps (sinkpad, caps);
       gst_caps_unref (sinkcaps);
       gst_object_unref (sinkpad);
-    } else {
-      GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
-      ret = !gst_caps_is_subset (caps, subcaps);
-      gst_caps_unref (subcaps);
     }
     if (activated_sink)
       gst_element_set_state (group->text_sink, GST_STATE_NULL);
+  } else {
+    GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
+    ret = !gst_caps_is_subset (caps, subcaps);
+    gst_caps_unref (subcaps);
   }
   /* If autoplugging can stop don't do additional checks */
   if (!ret)
