@@ -484,6 +484,7 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
     case GST_EVENT_EOS:{
       gst_event_unref (event);
+
       if (!gst_concat_pad_wait (spad, self)) {
         ret = FALSE;
       } else {
@@ -505,11 +506,13 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
     case GST_EVENT_FLUSH_START:{
       gboolean forward;
+
       g_mutex_lock (&self->lock);
       spad->flushing = TRUE;
       g_cond_broadcast (&self->cond);
       forward = (self->current_sinkpad == GST_PAD_CAST (spad));
       g_mutex_unlock (&self->lock);
+
       if (forward)
         ret = gst_pad_event_default (pad, parent, event);
       else
@@ -518,13 +521,17 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
     case GST_EVENT_FLUSH_STOP:{
       gboolean forward;
+
       gst_segment_init (&spad->segment, GST_FORMAT_UNDEFINED);
       spad->flushing = FALSE;
+
       g_mutex_lock (&self->lock);
       forward = (self->current_sinkpad == GST_PAD_CAST (spad));
       g_mutex_unlock (&self->lock);
+
       if (forward) {
         gboolean reset_time;
+
         gst_event_parse_flush_stop (event, &reset_time);
         if (reset_time) {
           GST_DEBUG_OBJECT (self,
@@ -532,8 +539,9 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           self->current_start_offset = 0;
         }
         ret = gst_pad_event_default (pad, parent, event);
-      } else
+      } else {
         gst_event_unref (event);
+      }
       break;
     }
     default:{
