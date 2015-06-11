@@ -102,6 +102,9 @@ void            gst_pipeline_auto_clock         (GstPipeline *pipeline);
 void            gst_pipeline_set_delay          (GstPipeline *pipeline, GstClockTime delay);
 GstClockTime    gst_pipeline_get_delay          (GstPipeline *pipeline);
 
+void            gst_pipeline_set_latency        (GstPipeline *pipeline, GstClockTime latency);
+GstClockTime    gst_pipeline_get_latency        (GstPipeline *pipeline);
+
 void            gst_pipeline_set_auto_flush_bus (GstPipeline *pipeline, gboolean auto_flush);
 gboolean        gst_pipeline_get_auto_flush_bus (GstPipeline *pipeline);
 

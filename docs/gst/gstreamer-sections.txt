@@ -2144,6 +2144,9 @@ gst_pipeline_get_auto_flush_bus
 gst_pipeline_set_delay
 gst_pipeline_get_delay
 
+gst_pipeline_set_latency
+gst_pipeline_get_latency
+
 <SUBSECTION Standard>
 GstPipelineClass
 GST_PIPELINE
