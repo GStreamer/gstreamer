@@ -143,7 +143,7 @@ struct _GstURLType
 struct _GstSegmentBaseType
 {
   guint timescale;
-  guint presentationTimeOffset;
+  guint64 presentationTimeOffset;
   GstRange *indexRange;
   gboolean indexRangeExact;
   /* Initialization node */

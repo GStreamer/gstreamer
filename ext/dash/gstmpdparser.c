@@ -1162,6 +1162,7 @@ gst_mpdparser_parse_seg_base_type_ext (GstSegmentBaseType ** pointer,
   xmlNode *cur_node;
   GstSegmentBaseType *seg_base_type;
   guint intval;
+  guint64 int64val;
   gboolean boolval;
   GstRange *rangeval;
 
@@ -1194,9 +1195,9 @@ gst_mpdparser_parse_seg_base_type_ext (GstSegmentBaseType ** pointer,
           &intval)) {
     seg_base_type->timescale = intval;
   }
-  if (gst_mpdparser_get_xml_prop_unsigned_integer (a_node,
-          "presentationTimeOffset", 0, &intval)) {
-    seg_base_type->presentationTimeOffset = intval;
+  if (gst_mpdparser_get_xml_prop_unsigned_integer_64 (a_node,
+          "presentationTimeOffset", 0, &int64val)) {
+    seg_base_type->presentationTimeOffset = int64val;
   }
   if (gst_mpdparser_get_xml_prop_range (a_node, "indexRange", &rangeval)) {
     if (seg_base_type->indexRange) {
@@ -3283,13 +3284,17 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
 
       GST_LOG ("Building media segment list using this template: %s",
           stream->cur_seg_template->media);
-      stream->presentationTimeOffset =
-          mult_seg->SegBaseType->presentationTimeOffset * GST_SECOND;
 
-      /* Avoid dividing by zero */
-      if (mult_seg->SegBaseType->timescale)
-        stream->presentationTimeOffset /= mult_seg->SegBaseType->timescale;
-
+      /* Avoid dividing by zero and avoid overflows */
+      if (mult_seg->SegBaseType->timescale) {
+        stream->presentationTimeOffset =
+            gst_util_uint64_scale (mult_seg->
+            SegBaseType->presentationTimeOffset, GST_SECOND,
+            mult_seg->SegBaseType->timescale);
+      } else {
+        stream->presentationTimeOffset =
+            mult_seg->SegBaseType->presentationTimeOffset * GST_SECOND;
+      }
       GST_LOG ("Setting stream's presentation time offset to %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->presentationTimeOffset));
 
