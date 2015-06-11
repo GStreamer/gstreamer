@@ -120,8 +120,6 @@ main (int argc, char *argv[])
   g_object_set (pipe, "uri", argv[1], NULL);
   g_signal_connect (pipe, "source-setup", G_CALLBACK (source_created), NULL);
 
-  gst_element_set_start_time (pipe, GST_CLOCK_TIME_NONE);
-  gst_element_set_base_time (pipe, 0);
   gst_pipeline_use_clock (GST_PIPELINE (pipe), net_clock);
 
   if (gst_element_set_state (pipe,

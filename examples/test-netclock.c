@@ -96,8 +96,6 @@ create_pipeline (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
 
   pipeline = gst_pipeline_new ("media-pipeline");
   gst_pipeline_use_clock (GST_PIPELINE (pipeline), global_clock);
-  gst_element_set_base_time (pipeline, 0);
-  gst_element_set_start_time (pipeline, GST_CLOCK_TIME_NONE);
   gst_rtsp_media_take_pipeline (media, GST_PIPELINE_CAST (pipeline));
 
   return pipeline;
