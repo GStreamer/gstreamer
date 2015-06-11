@@ -1817,6 +1817,17 @@ request_rtp_rtcp_decoder (GstElement * rtpbin, guint session,
   return gst_object_ref (priv->srtpdec);
 }
 
+/**
+ * gst_rtsp_stream_request_aux_sender:
+ * @stream: a #GstRTSPStream
+ * @sessid: the session id
+ *
+ * Creating a rtxsend bin
+ *
+ * Returns: (transfer full): a #GstElement.
+ *
+ * Since: 1.6
+ */
 GstElement *
 gst_rtsp_stream_request_aux_sender (GstRTSPStream * stream, guint sessid)
 {
