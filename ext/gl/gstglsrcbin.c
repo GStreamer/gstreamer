@@ -191,8 +191,10 @@ gst_gl_src_bin_set_property (GObject * object, guint prop_id,
       if (self->src)
         gst_bin_remove (GST_BIN (self), self->src);
       self->src = src;
-      if (src)
+      if (src) {
+        gst_object_ref_sink (src);
         _connect_src_element (self);
+      }
       break;
     }
     default:

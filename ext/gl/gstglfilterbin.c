@@ -222,8 +222,10 @@ gst_gl_filter_bin_set_property (GObject * object, guint prop_id,
       if (self->filter)
         gst_bin_remove (GST_BIN (self), self->filter);
       self->filter = filter;
-      if (filter)
+      if (filter) {
+        gst_object_ref_sink (filter);
         _connect_filter_element (self);
+      }
       break;
     }
     default:
