@@ -117,7 +117,6 @@ gst_gtk_sink_class_init (GstGtkSinkClass * klass)
 static void
 gst_gtk_sink_init (GstGtkSink * gtk_sink)
 {
-  gtk_sink->widget = (GtkGstWidget *) gtk_gst_widget_new ();
 }
 
 static void
@@ -141,6 +140,28 @@ gst_gtk_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static GtkGstWidget *
+gst_gtk_sink_get_widget (GstGtkSink * gtk_sink)
+{
+  if (gtk_sink->widget != NULL)
+    return gtk_sink->widget;
+
+  /* Ensure GTK is initialized, this has no side effect if it was already
+   * initialized. Also, we do that lazylli, so the application can be first */
+  if (!gtk_init_check (NULL, NULL)) {
+    GST_ERROR_OBJECT (gtk_sink, "Could not ensure GTK initialization.");
+    return NULL;
+  }
+
+  gtk_sink->widget = (GtkGstWidget *) gtk_gst_widget_new ();
+
+  /* Take the floating ref, other wise the destruction of the container will
+   * make this widget disapear possibly before we are done. */
+  gst_object_ref_sink (gtk_sink->widget);
+
+  return gtk_sink->widget;
+}
+
 static void
 gst_gtk_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -151,7 +172,7 @@ gst_gtk_sink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_WIDGET:
-      g_value_set_object (value, gtk_sink->widget);
+      g_value_set_object (value, gst_gtk_sink_get_widget (gtk_sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -191,6 +212,8 @@ gst_gtk_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      if (gst_gtk_sink_get_widget (gtk_sink) == NULL)
+        return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
