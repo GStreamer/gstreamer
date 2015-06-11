@@ -3078,7 +3078,7 @@ notify:
 static GstCaps *
 update_video_multiview_caps (GstPlayBin * playbin, GstCaps * caps)
 {
-  GstVideoMultiviewFramePacking mv_mode;
+  GstVideoMultiviewMode mv_mode;
   GstVideoMultiviewMode cur_mv_mode;
   GstVideoMultiviewFlags mv_flags, cur_mv_flags;
   GstStructure *s;
@@ -3086,14 +3086,14 @@ update_video_multiview_caps (GstPlayBin * playbin, GstCaps * caps)
   GstCaps *out_caps;
 
   GST_OBJECT_LOCK (playbin);
-  mv_mode = playbin->multiview_mode;
+  mv_mode = (GstVideoMultiviewMode) playbin->multiview_mode;
   mv_flags = playbin->multiview_flags;
   GST_OBJECT_UNLOCK (playbin);
 
-  if (mv_mode == GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE)
+  if (mv_mode == GST_VIDEO_MULTIVIEW_MODE_NONE)
     return NULL;
 
-  cur_mv_mode = GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE;
+  cur_mv_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
   cur_mv_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
 
   s = gst_caps_get_structure (caps, 0);
