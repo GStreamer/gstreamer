@@ -105,7 +105,7 @@ gst_writev (gint fd, const struct iovec *iov, gint iovcnt, gsize total_bytes)
   gssize written;
 
 #ifdef HAVE_SYS_UIO_H
-  if (TRUE) {
+  if (iovcnt <= UIO_MAXIOV) {
     do {
       written = writev (fd, iov, iovcnt);
     } while (written < 0 && errno == EINTR);
