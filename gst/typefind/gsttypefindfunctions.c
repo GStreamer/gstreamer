@@ -3590,13 +3590,13 @@ mss_manifest_type_find (GstTypeFind * tf, gpointer unused)
   length = gst_type_find_get_length (tf);
 
   /* try detecting the charset */
-  data = gst_type_find_peek (tf, 0, 2);
+  data = gst_type_find_peek (tf, 0, 3);
 
   if (data == NULL)
     return;
 
   /* look for a possible BOM */
-  if (data[0] == 0xEF && data[1] == 0xBB)
+  if (data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF)
     utf8_bom_detected = TRUE;
   else if (data[0] == 0xFF && data[1] == 0xFE)
     data_endianness = G_LITTLE_ENDIAN;
