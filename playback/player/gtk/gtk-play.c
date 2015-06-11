@@ -57,6 +57,7 @@ typedef struct
   GList *uris;
   GList *current_uri;
 
+  guint inhibit_cookie;
 
   GtkWidget *play_pause_button;
   GtkWidget *prev_button, *next_button;
@@ -172,7 +173,19 @@ play_pause_clicked_cb (GtkButton * button, GtkPlay * play)
         GTK_ICON_SIZE_BUTTON);
     gtk_button_set_image (GTK_BUTTON (play->play_pause_button), image);
     play->playing = FALSE;
+
+    if (play->inhibit_cookie)
+      gtk_application_uninhibit (GTK_APPLICATION (g_application_get_default ()),
+          play->inhibit_cookie);
+    play->inhibit_cookie = 0;
   } else {
+    if (play->inhibit_cookie)
+      gtk_application_uninhibit (GTK_APPLICATION (g_application_get_default ()),
+          play->inhibit_cookie);
+    play->inhibit_cookie =
+        gtk_application_inhibit (GTK_APPLICATION (g_application_get_default ()),
+        GTK_WINDOW (play), GTK_APPLICATION_INHIBIT_IDLE, "Playing media");
+
     gst_player_play (play->player);
     image =
         gtk_image_new_from_icon_name ("media-playback-pause",
@@ -200,10 +213,21 @@ play_current_uri (GtkPlay * play, GList * uri, const gchar * ext_suburi)
   else
     gst_player_set_uri (play->player, uri->data);
   play->current_uri = uri;
-  if (play->playing)
+  if (play->playing) {
+    if (play->inhibit_cookie)
+      gtk_application_uninhibit (GTK_APPLICATION (g_application_get_default ()),
+          play->inhibit_cookie);
+    play->inhibit_cookie =
+        gtk_application_inhibit (GTK_APPLICATION (g_application_get_default ()),
+        GTK_WINDOW (play), GTK_APPLICATION_INHIBIT_IDLE, "Playing media");
     gst_player_play (play->player);
-  else
+  } else {
     gst_player_pause (play->player);
+    if (play->inhibit_cookie)
+      gtk_application_uninhibit (GTK_APPLICATION (g_application_get_default ()),
+          play->inhibit_cookie);
+    play->inhibit_cookie = 0;
+  }
   set_title (play, uri->data);
 }
 
@@ -1417,6 +1441,10 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
           GTK_ICON_SIZE_BUTTON);
       gtk_button_set_image (GTK_BUTTON (play->play_pause_button), image);
       play->playing = FALSE;
+      if (play->inhibit_cookie)
+        gtk_application_uninhibit (GTK_APPLICATION (g_application_get_default
+                ()), play->inhibit_cookie);
+      play->inhibit_cookie = 0;
     }
   }
 }
@@ -1634,6 +1662,13 @@ gtk_play_constructor (GType type, guint n_construct_params,
   self->player = gst_player_new ();
   self->playing = TRUE;
 
+  if (self->inhibit_cookie)
+    gtk_application_uninhibit (GTK_APPLICATION (g_application_get_default ()),
+        self->inhibit_cookie);
+  self->inhibit_cookie =
+      gtk_application_inhibit (GTK_APPLICATION (g_application_get_default ()),
+      GTK_WINDOW (self), GTK_APPLICATION_INHIBIT_IDLE, "Playing media");
+
   g_object_set (self->player, "dispatch-to-main-context", TRUE, NULL);
 
   create_ui (self);
@@ -1670,6 +1705,11 @@ static void
 gtk_play_dispose (GObject * object)
 {
   GtkPlay *self = (GtkPlay *) object;
+
+  if (self->inhibit_cookie)
+    gtk_application_uninhibit (GTK_APPLICATION (g_application_get_default ()),
+        self->inhibit_cookie);
+  self->inhibit_cookie = 0;
 
   if (self->uri)
     g_free (self->uri);
