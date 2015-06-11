@@ -2389,6 +2389,9 @@ GST_TYPE_VIDEO_COLOR_PRIMARIES
 <SUBSECTION>
 GstVideoInfo
 GstVideoInterlaceMode
+GstVideoMultiviewMode
+GstVideoMultiviewFramePacking
+GstVideoMultiviewFlags
 GstVideoFlags
 GST_VIDEO_INFO_FORMAT
 GST_VIDEO_INFO_NAME
@@ -2425,6 +2428,8 @@ GST_VIDEO_INFO_COMP_PSTRIDE
 GST_VIDEO_INFO_COMP_POFFSET
 GST_VIDEO_INFO_CHROMA_SITE
 GST_VIDEO_INFO_COLORIMETRY
+GST_VIDEO_INFO_MULTIVIEW_FLAGS
+GST_VIDEO_INFO_MULTIVIEW_MODE
 gst_video_info_init
 gst_video_info_set_format
 gst_video_info_from_caps
@@ -2437,6 +2442,13 @@ gst_video_interlace_mode_get_type
 GST_TYPE_VIDEO_INTERLACE_MODE
 gst_video_flags_get_type
 GST_TYPE_VIDEO_FLAGS
+GST_TYPE_VIDEO_MULTIVIEW_FLAGS
+GST_TYPE_VIDEO_MULTIVIEW_FLAGSET
+GST_TYPE_VIDEO_MULTIVIEW_FRAME_PACKING
+GST_TYPE_VIDEO_MULTIVIEW_MODE
+gst_video_multiview_mode_get_type
+gst_video_multiview_flagset_get_type
+gst_video_multiview_frame_packing_get_type
 
 #video-frame.h
 <SUBSECTION>
@@ -2504,6 +2516,17 @@ gst_video_converter_frame
 <SUBSECTION Standard>
 gst_video_dither_method_get_type
 GST_TYPE_VIDEO_DITHER_METHOD
+
+#video-multiview.h
+<SUBSECTION>
+gst_video_multiview_get_mono_modes
+gst_video_multiview_get_unpacked_modes
+gst_video_multiview_get_doubled_height_modes
+gst_video_multiview_get_doubled_size_modes
+gst_video_multiview_get_doubled_width_modes
+gst_video_multiview_mode_from_caps_string
+gst_video_multiview_mode_to_caps_string
+gst_video_multiview_video_info_change_mode
 
 #video-enumtypes.h
 <SUBSECTION Standard>

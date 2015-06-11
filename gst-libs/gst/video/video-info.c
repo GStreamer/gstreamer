@@ -52,6 +52,7 @@ gst_video_info_init (GstVideoInfo * info)
   info->fps_d = 1;
   info->par_n = 1;
   info->par_d = 1;
+  GST_VIDEO_INFO_MULTIVIEW_MODE (info) = GST_VIDEO_MULTIVIEW_MODE_NONE;
 }
 
 #define MAKE_COLORIMETRY(r,m,t,p) {  \
@@ -140,6 +141,7 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   info->finfo = gst_video_format_get_info (format);
   info->width = width;
   info->height = height;
+  info->views = 1;
 
   set_default_colorimetry (info);
 
@@ -210,7 +212,7 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   GstStructure *structure;
   const gchar *s;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
-  gint width = 0, height = 0, views;
+  gint width = 0, height = 0;
   gint fps_n, fps_d;
   gint par_n, par_d;
 
@@ -266,15 +268,38 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
     info->fps_d = 1;
   }
 
+  if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
+          &par_n, &par_d)) {
+    info->par_n = par_n;
+    info->par_d = par_d;
+  } else {
+    info->par_n = 1;
+    info->par_d = 1;
+  }
+
   if ((s = gst_structure_get_string (structure, "interlace-mode")))
     info->interlace_mode = gst_video_interlace_mode_from_string (s);
   else
     info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
-  if (gst_structure_get_int (structure, "views", &views))
-    info->views = views;
-  else
-    info->views = 1;
+  {
+    if ((s = gst_structure_get_string (structure, "multiview-mode")))
+      GST_VIDEO_INFO_MULTIVIEW_MODE (info) =
+          gst_video_multiview_mode_from_caps_string (s);
+    else
+      GST_VIDEO_INFO_MULTIVIEW_MODE (info) = GST_VIDEO_MULTIVIEW_MODE_NONE;
+
+    gst_structure_get_flagset (structure, "multiview-flags",
+        &GST_VIDEO_INFO_MULTIVIEW_FLAGS (info), NULL);
+
+    if (!gst_structure_get_int (structure, "views", &info->views))
+      info->views = 1;
+
+    /* At one point, I tried normalising the half-aspect flag here,
+     * but it behaves weird for GstVideoInfo operations other than
+     * directly converting to/from caps - sometimes causing the
+     * PAR to be doubled/halved too many times */
+  }
 
   if ((s = gst_structure_get_string (structure, "chroma-site")))
     info->chroma_site = gst_video_chroma_from_string (s);
@@ -294,14 +319,6 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
     set_default_colorimetry (info);
   }
 
-  if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
-          &par_n, &par_d)) {
-    info->par_n = par_n;
-    info->par_d = par_d;
-  } else {
-    info->par_n = 1;
-    info->par_d = 1;
-  }
   fill_planes (info);
 
   return TRUE;
@@ -375,6 +392,14 @@ gst_video_info_is_equal (const GstVideoInfo * info, const GstVideoInfo * other)
     return FALSE;
   if (GST_VIDEO_INFO_CHROMA_SITE (info) != GST_VIDEO_INFO_CHROMA_SITE (other))
     return FALSE;
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (info) !=
+      GST_VIDEO_INFO_MULTIVIEW_MODE (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) !=
+      GST_VIDEO_INFO_MULTIVIEW_FLAGS (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_VIEWS (info) != GST_VIDEO_INFO_VIEWS (other))
+    return FALSE;
 
   for (i = 0; i < info->finfo->n_planes; i++) {
     if (info->stride[i] != other->stride[i])
@@ -400,6 +425,7 @@ gst_video_info_to_caps (GstVideoInfo * info)
   GstCaps *caps;
   const gchar *format;
   gchar *color;
+  gint par_n, par_d;
 
   g_return_val_if_fail (info != NULL, NULL);
   g_return_val_if_fail (info->finfo != NULL, NULL);
@@ -411,11 +437,52 @@ gst_video_info_to_caps (GstVideoInfo * info)
   caps = gst_caps_new_simple ("video/x-raw",
       "format", G_TYPE_STRING, format,
       "width", G_TYPE_INT, info->width,
-      "height", G_TYPE_INT, info->height,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, info->par_n, info->par_d, NULL);
+      "height", G_TYPE_INT, info->height, NULL);
+
+  par_n = info->par_n;
+  par_d = info->par_d;
 
   gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
       gst_video_interlace_mode_to_string (info->interlace_mode), NULL);
+
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (info) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+    const gchar *caps_str = NULL;
+
+    /* If the half-aspect flag is set, applying it into the PAR of the
+     * resulting caps now seems safe, and helps with automatic behaviour
+     * in elements that aren't explicitly multiview aware */
+    if (GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) &
+        GST_VIDEO_MULTIVIEW_FLAGS_HALF_ASPECT) {
+      GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) &=
+          ~GST_VIDEO_MULTIVIEW_FLAGS_HALF_ASPECT;
+      switch (GST_VIDEO_INFO_MULTIVIEW_MODE (info)) {
+        case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE:
+        case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE_QUINCUNX:
+        case GST_VIDEO_MULTIVIEW_MODE_COLUMN_INTERLEAVED:
+        case GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD:
+          par_n *= 2;           /* double the width / half the height */
+          break;
+        case GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED:
+        case GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM:
+          par_d *= 2;           /* half the width / double the height */
+          break;
+        default:
+          break;
+      }
+    }
+
+    caps_str =
+        gst_video_multiview_mode_to_caps_string (GST_VIDEO_INFO_MULTIVIEW_MODE
+        (info));
+    if (caps_str != NULL) {
+      gst_caps_set_simple (caps, "multiview-mode", G_TYPE_STRING,
+          caps_str, "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET,
+          GST_VIDEO_INFO_MULTIVIEW_FLAGS (info), GST_FLAG_SET_MASK_EXACT, NULL);
+    }
+  }
+
+  gst_caps_set_simple (caps, "pixel-aspect-ratio",
+      GST_TYPE_FRACTION, par_n, par_d, NULL);
 
   if (info->chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN)
     gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING,

@@ -743,11 +743,15 @@ GST_START_TEST (test_parse_caps_rgb)
     GstCaps *caps, *caps2;
 
     caps = gst_caps_from_string (formats[i].tmpl_caps_string);
+    fail_unless (caps != NULL);
     gst_caps_set_simple (caps, "width", G_TYPE_INT, 2 * (i + 1), "height",
         G_TYPE_INT, i + 1, "framerate", GST_TYPE_FRACTION, 15, 1,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
         "interlace-mode", G_TYPE_STRING, "progressive",
-        "colorimetry", G_TYPE_STRING, "1:1:0:0", NULL);
+        "colorimetry", G_TYPE_STRING, "1:1:0:0",
+        "multiview-mode", G_TYPE_STRING, "mono",
+        "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET, 0,
+        GST_FLAG_SET_MASK_EXACT, NULL);
     g_assert (gst_caps_is_fixed (caps));
 
     GST_DEBUG ("testing caps: %" GST_PTR_FORMAT, caps);
@@ -760,13 +764,83 @@ GST_START_TEST (test_parse_caps_rgb)
 
     /* make sure they're serialised back correctly */
     caps2 = gst_video_info_to_caps (&vinfo);
-    fail_unless (caps != NULL);
-    fail_unless (gst_caps_is_equal (caps, caps2),
-        "caps [%" GST_PTR_FORMAT "] not equal to caps2 [%" GST_PTR_FORMAT "]",
-        caps, caps2);
+    fail_unless (caps2 != NULL);
+    if (!gst_caps_is_equal (caps, caps2)) {
+      gchar *caps1s = gst_caps_to_string (caps);
+      gchar *caps2s = gst_caps_to_string (caps2);
+      fail ("caps [%s] not equal to caps2 [%s]", caps1s, caps2s);
+      g_free (caps1s);
+      g_free (caps2s);
+    }
 
     gst_caps_unref (caps);
     gst_caps_unref (caps2);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_parse_caps_multiview)
+{
+  gint i, j;
+  GstVideoMultiviewMode modes[] = {
+    GST_VIDEO_MULTIVIEW_MODE_MONO,
+    GST_VIDEO_MULTIVIEW_MODE_LEFT,
+    GST_VIDEO_MULTIVIEW_MODE_RIGHT,
+    GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE,
+    GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE_QUINCUNX,
+    GST_VIDEO_MULTIVIEW_MODE_COLUMN_INTERLEAVED,
+    GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED,
+    GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM,
+    GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD,
+    GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME,
+    GST_VIDEO_MULTIVIEW_MODE_MULTIVIEW_FRAME_BY_FRAME,
+    GST_VIDEO_MULTIVIEW_MODE_SEPARATED,
+  };
+  GstVideoMultiviewFlags flags[] = {
+    GST_VIDEO_MULTIVIEW_FLAGS_NONE,
+    GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST,
+    GST_VIDEO_MULTIVIEW_FLAGS_LEFT_FLIPPED,
+    GST_VIDEO_MULTIVIEW_FLAGS_LEFT_FLOPPED,
+    GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_FLIPPED,
+    GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_FLOPPED,
+    GST_VIDEO_MULTIVIEW_FLAGS_MIXED_MONO,
+    GST_VIDEO_MULTIVIEW_FLAGS_MIXED_MONO |
+        GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST,
+    GST_VIDEO_MULTIVIEW_FLAGS_MIXED_MONO |
+        GST_VIDEO_MULTIVIEW_FLAGS_LEFT_FLIPPED
+  };
+
+  for (i = 0; i < G_N_ELEMENTS (modes); i++) {
+    for (j = 0; j < G_N_ELEMENTS (flags); j++) {
+      GstVideoInfo vinfo;
+      GstCaps *caps;
+
+      gst_video_info_init (&vinfo);
+      gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_I420, 320, 240);
+
+      vinfo.multiview_mode = modes[i];
+      vinfo.multiview_flags = flags[j];
+
+      caps = gst_video_info_to_caps (&vinfo);
+      fail_if (caps == NULL);
+      GST_LOG ("mview mode %d flags %x -> caps %" GST_PTR_FORMAT,
+          modes[i], flags[j], caps);
+
+      fail_unless (gst_video_info_from_caps (&vinfo, caps));
+
+      GST_LOG ("mview mode %d flags %x -> info mode %d flags %x",
+          modes[i], flags[j], vinfo.multiview_mode, vinfo.multiview_flags);
+
+      fail_unless (vinfo.multiview_mode == modes[i],
+          "Expected multiview mode %d got mode %d", modes[i],
+          vinfo.multiview_mode);
+      fail_unless (vinfo.multiview_flags == flags[j],
+          "Expected multiview flags 0x%x got 0x%x", flags[j],
+          vinfo.multiview_flags);
+
+      gst_caps_unref (caps);
+    }
   }
 }
 
@@ -2576,6 +2650,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_formats_pack_unpack);
   tcase_add_test (tc_chain, test_dar_calc);
   tcase_add_test (tc_chain, test_parse_caps_rgb);
+  tcase_add_test (tc_chain, test_parse_caps_multiview);
   tcase_add_test (tc_chain, test_events);
   tcase_add_test (tc_chain, test_convert_frame);
   tcase_add_test (tc_chain, test_convert_frame_async);

@@ -35,6 +35,10 @@ typedef struct _GstVideoFrame GstVideoFrame;
  * @GST_VIDEO_FRAME_FLAG_TFF: The video frame has the top field first
  * @GST_VIDEO_FRAME_FLAG_RFF: The video frame has the repeat flag
  * @GST_VIDEO_FRAME_FLAG_ONEFIELD: The video frame has one field
+ * @GST_VIDEO_FRAME_FLAG_MULTIPLE_VIEW: The video contains one or
+ *     more non-mono views
+ * @GST_VIDEO_FRAME_FLAG_FIRST_IN_BUNDLE: The video frame is the first
+ *     in a set of corresponding views provided as sequential frames.
  *
  * Extra video frame flags
  */
@@ -43,7 +47,9 @@ typedef enum {
   GST_VIDEO_FRAME_FLAG_INTERLACED   = (1 << 0),
   GST_VIDEO_FRAME_FLAG_TFF          = (1 << 1),
   GST_VIDEO_FRAME_FLAG_RFF          = (1 << 2),
-  GST_VIDEO_FRAME_FLAG_ONEFIELD     = (1 << 3)
+  GST_VIDEO_FRAME_FLAG_ONEFIELD     = (1 << 3),
+  GST_VIDEO_FRAME_FLAG_MULTIPLE_VIEW = (1 << 4),
+  GST_VIDEO_FRAME_FLAG_FIRST_IN_BUNDLE = (1 << 5)
 } GstVideoFrameFlags;
 
 /* circular dependency, need to include this after defining the enums */
@@ -136,15 +142,28 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
  * @GST_VIDEO_BUFFER_FLAG_ONEFIELD:    If the #GstBuffer is interlaced, then only the
  *                                     first field (as defined by the %GST_VIDEO_BUFFER_TFF
  *                                     flag setting) is to be displayed.
+ * @GST_VIDEO_BUFFER_FLAG_MULTIPLE_VIEW: The #GstBuffer contains one or more specific views,
+ *                                     such as left or right eye view. This flags is set on
+ *                                     any buffer that contains non-mono content - even for
+ *                                     streams that contain only a single viewpoint. In mixed
+ *                                     mono / non-mono streams, the absense of the flag marks
+ *                                     mono buffers.
+ * @GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE: When conveying stereo/multiview content with
+ *                                     frame-by-frame methods, this flag marks the first buffer
+ *                                      in a bundle of frames that belong together.
  * @GST_VIDEO_BUFFER_FLAG_LAST:        Offset to define more flags
  *
- * Additional video buffer flags.
+ * Additional video buffer flags. These flags can potentially be used on any
+ * buffers carrying video data - even encoded data.
  */
 typedef enum {
   GST_VIDEO_BUFFER_FLAG_INTERLACED  = (GST_BUFFER_FLAG_LAST << 0),
   GST_VIDEO_BUFFER_FLAG_TFF         = (GST_BUFFER_FLAG_LAST << 1),
   GST_VIDEO_BUFFER_FLAG_RFF         = (GST_BUFFER_FLAG_LAST << 2),
   GST_VIDEO_BUFFER_FLAG_ONEFIELD    = (GST_BUFFER_FLAG_LAST << 3),
+
+  GST_VIDEO_BUFFER_FLAG_MULTIPLE_VIEW = (GST_BUFFER_FLAG_LAST << 4),
+  GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE = (GST_BUFFER_FLAG_LAST << 5),
 
   GST_VIDEO_BUFFER_FLAG_LAST        = (GST_BUFFER_FLAG_LAST << 8)
 } GstVideoBufferFlags;
