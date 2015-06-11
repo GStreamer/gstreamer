@@ -269,6 +269,8 @@ _gl_memory_upload_perform (gpointer impl, GstBuffer * buffer,
     if (!gst_gl_context_can_share (upload->upload->context,
             gl_mem->mem.context))
       return GST_GL_UPLOAD_UNSHARED_GL_CONTEXT;
+
+    gst_gl_memory_upload_transfer (gl_mem);
   }
 
   *outbuf = gst_buffer_ref (buffer);

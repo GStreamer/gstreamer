@@ -161,7 +161,17 @@ static GstFlowReturn
 gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer ** outbuf)
 {
+  gint i, n;
+
   *outbuf = inbuf;
+
+  n = gst_buffer_n_memory (*outbuf);
+  for (i = 0; i < n; i++) {
+    GstMemory *mem = gst_buffer_peek_memory (*outbuf, i);
+
+    if (gst_is_gl_memory (mem))
+      gst_gl_memory_download_transfer ((GstGLMemory *) mem);
+  }
 
   return GST_FLOW_OK;
 }

@@ -422,9 +422,8 @@ _upload_memory (GstGLMemory * gl_mem, GstMapInfo * info, gsize maxsize)
   gpointer data;
   gsize plane_start;
 
-  if (!GST_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD)) {
+  if ((gl_mem->transfer_state & GST_GL_MEMORY_TRANSFER_NEED_UPLOAD) == 0)
     return;
-  }
 
   gl = context->gl_vtable;
 
@@ -472,7 +471,7 @@ _upload_memory (GstGLMemory * gl_mem, GstMapInfo * info, gsize maxsize)
 
   gl->BindTexture (gl_target, 0);
 
-  GST_MEMORY_FLAG_UNSET (gl_mem, GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD);
+  gl_mem->transfer_state &= ~GST_GL_MEMORY_TRANSFER_NEED_UPLOAD;
 }
 
 static inline void
@@ -672,8 +671,7 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
 }
 
 static gboolean
-_gl_mem_read_pixels (GstGLMemory * gl_mem, GstMapInfo * info,
-    gsize size, gpointer read_pointer)
+_gl_mem_read_pixels (GstGLMemory * gl_mem, gpointer read_pointer)
 {
   GstGLContext *context = gl_mem->mem.context;
   const GstGLFuncs *gl = context->gl_vtable;
@@ -685,6 +683,7 @@ _gl_mem_read_pixels (GstGLMemory * gl_mem, GstMapInfo * info,
   if (gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
     type = GL_UNSIGNED_SHORT_5_6_5;
 
+  /* FIXME: avoid creating a framebuffer every download/copy */
   gl->GenFramebuffers (1, &fbo);
   gl->BindFramebuffer (GL_FRAMEBUFFER, fbo);
 
@@ -708,43 +707,55 @@ _gl_mem_read_pixels (GstGLMemory * gl_mem, GstMapInfo * info,
   return TRUE;
 }
 
-static gpointer
-_pbo_download_transfer (GstGLMemory * gl_mem, GstMapInfo * info, gsize size)
+static gboolean
+_read_pixels_to_pbo (GstGLMemory * gl_mem)
 {
-  GstGLBaseBufferAllocatorClass *alloc_class;
-  const GstGLFuncs *gl;
-  gpointer data;
+  const GstGLFuncs *gl = gl_mem->mem.context->gl_vtable;
 
   if (!gl_mem->mem.id || !CONTEXT_SUPPORTS_PBO_DOWNLOAD (gl_mem->mem.context)
       || gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
       || gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA)
     /* unsupported */
-    return NULL;
+    return FALSE;
+
+  if (gl_mem->transfer_state & GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD) {
+    /* copy texture data into into the pbo and map that */
+    gsize plane_start = _find_plane_frame_start (gl_mem);
+
+    gl->BindBuffer (GL_PIXEL_PACK_BUFFER, gl_mem->mem.id);
+
+    if (!_gl_mem_read_pixels (gl_mem, (gpointer) plane_start)) {
+      gl->BindBuffer (GL_PIXEL_PACK_BUFFER, 0);
+      return FALSE;
+    }
+
+    gl->BindBuffer (GL_PIXEL_PACK_BUFFER, 0);
+    gl_mem->transfer_state &= ~GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD;
+  }
+
+  return TRUE;
+}
+
+static gpointer
+_pbo_download_transfer (GstGLMemory * gl_mem, GstMapInfo * info, gsize size)
+{
+  GstGLBaseBufferAllocatorClass *alloc_class;
+  gpointer data;
 
   GST_DEBUG ("downloading texture %u using pbo %u", gl_mem->tex_id,
       gl_mem->mem.id);
 
   alloc_class =
       GST_GL_BASE_BUFFER_ALLOCATOR_CLASS (gst_gl_allocator_parent_class);
-  gl = gl_mem->mem.context->gl_vtable;
 
-  if (GST_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD)
-      && info->flags & GST_MAP_READ) {
-    /* copy texture data into into the pbo and map that */
-    gsize plane_start = _find_plane_frame_start (gl_mem);
-
-    gl->BindBuffer (GL_PIXEL_PACK_BUFFER, gl_mem->mem.id);
-
-    if (!_gl_mem_read_pixels (gl_mem, info, -1, (gpointer) plane_start)) {
-      gl->BindBuffer (GL_PIXEL_PACK_BUFFER, 0);
+  /* texture -> pbo */
+  if (info->flags & GST_MAP_READ)
+    if (!_read_pixels_to_pbo (gl_mem))
       return NULL;
-    }
-
-    gl->BindBuffer (GL_PIXEL_PACK_BUFFER, 0);
-  }
 
   /* get a cpu accessible mapping from the pbo */
   gl_mem->mem.target = GL_PIXEL_PACK_BUFFER;
+  /* pbo -> data */
   data = alloc_class->map_buffer ((GstGLBaseBuffer *) gl_mem, info, size);
 
   return data;
@@ -756,7 +767,6 @@ _gl_mem_download_get_tex_image (GstGLMemory * gl_mem, GstMapInfo * info,
 {
   GstGLContext *context = gl_mem->mem.context;
   const GstGLFuncs *gl = context->gl_vtable;
-  guint format, type;
 
   if (size != -1 && size != ((GstMemory *) gl_mem)->maxsize)
     return NULL;
@@ -771,14 +781,19 @@ _gl_mem_download_get_tex_image (GstGLMemory * gl_mem, GstMapInfo * info,
 
   gst_gl_base_buffer_alloc_data ((GstGLBaseBuffer *) gl_mem);
 
-  format = gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
-  type = GL_UNSIGNED_BYTE;
-  if (gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
-    type = GL_UNSIGNED_SHORT_5_6_5;
+  if (info->flags & GST_MAP_READ
+      && gl_mem->transfer_state & GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD) {
+    guint format, type;
 
-  gl->BindTexture (gl_mem->tex_target, gl_mem->tex_id);
-  gl->GetTexImage (gl_mem->tex_target, 0, format, type, gl_mem->mem.data);
-  gl->BindTexture (gl_mem->tex_target, 0);
+    format = gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
+    type = GL_UNSIGNED_BYTE;
+    if (gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
+      type = GL_UNSIGNED_SHORT_5_6_5;
+
+    gl->BindTexture (gl_mem->tex_target, gl_mem->tex_id);
+    gl->GetTexImage (gl_mem->tex_target, 0, format, type, gl_mem->mem.data);
+    gl->BindTexture (gl_mem->tex_target, 0);
+  }
 
   return gl_mem->mem.data;
 }
@@ -792,8 +807,11 @@ _gl_mem_download_read_pixels (GstGLMemory * gl_mem, GstMapInfo * info,
 
   gst_gl_base_buffer_alloc_data ((GstGLBaseBuffer *) gl_mem);
 
-  if (!_gl_mem_read_pixels (gl_mem, info, size, gl_mem->mem.data))
-    return NULL;
+  if (info->flags & GST_MAP_READ
+      && gl_mem->transfer_state & GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD) {
+    if (!_gl_mem_read_pixels (gl_mem, gl_mem->mem.data))
+      return NULL;
+  }
 
   return gl_mem->mem.data;
 }
@@ -834,15 +852,16 @@ _gl_mem_map_buffer (GstGLMemory * gl_mem, GstMapInfo * info, gsize maxsize)
 
     if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE) {
       GST_TRACE ("mapping GL texture:%u for writing", gl_mem->tex_id);
-      GST_MINI_OBJECT_FLAG_SET (gl_mem, GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD);
+      gl_mem->transfer_state |= GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD;
     }
-    GST_MEMORY_FLAG_UNSET (gl_mem, GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD);
+    gl_mem->transfer_state &= ~GST_GL_MEMORY_TRANSFER_NEED_UPLOAD;
 
     data = &gl_mem->tex_id;
   } else {                      /* not GL */
     data = _gl_mem_map_cpu_access (gl_mem, info, maxsize);
     if (info->flags & GST_MAP_WRITE)
-      GST_MINI_OBJECT_FLAG_SET (gl_mem, GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD);
+      gl_mem->transfer_state |= GST_GL_MEMORY_TRANSFER_NEED_UPLOAD;
+    gl_mem->transfer_state &= ~GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD;
   }
 
   return data;
@@ -873,10 +892,10 @@ _gl_mem_unmap_buffer (GstGLMemory * gl_mem, GstMapInfo * info)
   if ((info->flags & GST_MAP_GL) == 0) {
     _gl_mem_unmap_cpu_access (gl_mem, info);
     if (info->flags & GST_MAP_WRITE)
-      GST_MINI_OBJECT_FLAG_SET (gl_mem, GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD);
+      gl_mem->transfer_state |= GST_GL_MEMORY_TRANSFER_NEED_UPLOAD;
   } else {
     if (info->flags & GST_MAP_WRITE)
-      GST_MINI_OBJECT_FLAG_SET (gl_mem, GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD);
+      gl_mem->transfer_state |= GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD;
   }
 }
 
@@ -1057,6 +1076,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     memcpy (dest->mem.data, (guint8 *) src->mem.data + src->mem.mem.offset,
         src->mem.mem.size);
     GST_MINI_OBJECT_FLAG_SET (dest, GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD);
+    dest->transfer_state |= GST_GL_MEMORY_TRANSFER_NEED_UPLOAD;
     ret = (GstMemory *) dest;
   } else {
     GstAllocationParams params = { 0, src->mem.mem.align, 0, 0 };
@@ -1091,6 +1111,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     dest = (GstGLMemory *) gst_gl_base_buffer_alloc_data ((GstGLBaseBuffer *)
         dest);
     GST_MINI_OBJECT_FLAG_SET (dest, GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD);
+    dest->transfer_state |= GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD;
     ret = (GstMemory *) dest;
   }
 
@@ -1250,6 +1271,7 @@ gst_gl_memory_wrapped_texture (GstGLContext * context,
 
   mem = (GstGLMemory *) gst_gl_base_buffer_alloc_data ((GstGLBaseBuffer *) mem);
   GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD);
+  mem->transfer_state |= GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD;
 
   return mem;
 }
@@ -1305,15 +1327,66 @@ gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo * info,
 
   mem = _gl_mem_new (_gl_allocator, NULL, context, NULL, info, valign, plane,
       user_data, notify);
-  mem = (GstGLMemory *) gst_gl_base_buffer_alloc_data ((GstGLBaseBuffer *) mem);
   if (!mem)
     return NULL;
 
-  memcpy (mem->mem.data, data, ((GstMemory *) mem)->maxsize);
+  mem->mem.data = data;
 
   GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD);
+  mem->transfer_state |= GST_GL_MEMORY_TRANSFER_NEED_UPLOAD;
 
   return mem;
+}
+
+static void
+_download_transfer (GstGLContext * context, GstGLMemory * gl_mem)
+{
+  GstGLBaseBuffer *mem = (GstGLBaseBuffer *) gl_mem;
+
+  g_mutex_lock (&mem->lock);
+  _read_pixels_to_pbo (gl_mem);
+  g_mutex_unlock (&mem->lock);
+}
+
+void
+gst_gl_memory_download_transfer (GstGLMemory * gl_mem)
+{
+  g_return_if_fail (gst_is_gl_memory ((GstMemory *) gl_mem));
+
+  gst_gl_context_thread_add (gl_mem->mem.context,
+      (GstGLContextThreadFunc) _download_transfer, gl_mem);
+}
+
+static void
+_upload_transfer (GstGLContext * context, GstGLMemory * gl_mem)
+{
+  GstGLBaseBufferAllocatorClass *alloc_class;
+  GstGLBaseBuffer *mem = (GstGLBaseBuffer *) gl_mem;
+  GstMapInfo info;
+
+  alloc_class =
+      GST_GL_BASE_BUFFER_ALLOCATOR_CLASS (gst_gl_allocator_parent_class);
+
+  info.flags = GST_MAP_READ | GST_MAP_GL;
+  info.memory = (GstMemory *) mem;
+  /* from gst_memory_map() */
+  info.size = mem->mem.size;
+  info.maxsize = mem->mem.maxsize - mem->mem.offset;
+
+  g_mutex_lock (&mem->lock);
+  mem->target = GL_PIXEL_UNPACK_BUFFER;
+  alloc_class->map_buffer (mem, &info, mem->mem.maxsize);
+  alloc_class->unmap_buffer (mem, &info);
+  g_mutex_unlock (&mem->lock);
+}
+
+void
+gst_gl_memory_upload_transfer (GstGLMemory * gl_mem)
+{
+  g_return_if_fail (gst_is_gl_memory ((GstMemory *) gl_mem));
+
+  gst_gl_context_thread_add (gl_mem->mem.context,
+      (GstGLContextThreadFunc) _upload_transfer, gl_mem);
 }
 
 gint
