@@ -61,6 +61,8 @@ struct _GstGLWindowX11Private
 
   gint preferred_width;
   gint preferred_height;
+
+  gboolean handle_events;
 };
 
 guintptr gst_gl_window_x11_get_display (GstGLWindow * window);
@@ -235,6 +237,9 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
       x, y, width, height, 0,
       window_x11->visual_info->depth, InputOutput,
       window_x11->visual_info->visual, mask, &win_attr);
+
+  gst_gl_window_x11_handle_events (GST_GL_WINDOW (window_x11),
+      window_x11->priv->handle_events);
 
   XSync (window_x11->device, FALSE);
 
@@ -490,13 +495,17 @@ gst_gl_window_x11_handle_events (GstGLWindow * window, gboolean handle_events)
 
   window_x11 = GST_GL_WINDOW_X11 (window);
 
-  if (handle_events) {
-    XSelectInput (window_x11->device, window_x11->internal_win_id,
-        StructureNotifyMask | ExposureMask | VisibilityChangeMask |
-        PointerMotionMask | KeyPressMask | KeyReleaseMask);
-  } else {
-    XSelectInput (window_x11->device, window_x11->internal_win_id,
-        StructureNotifyMask | ExposureMask | VisibilityChangeMask);
+  window_x11->priv->handle_events = handle_events;
+
+  if (window_x11->internal_win_id) {
+    if (handle_events) {
+      XSelectInput (window_x11->device, window_x11->internal_win_id,
+          StructureNotifyMask | ExposureMask | VisibilityChangeMask |
+          PointerMotionMask | KeyPressMask | KeyReleaseMask);
+    } else {
+      XSelectInput (window_x11->device, window_x11->internal_win_id,
+          StructureNotifyMask | ExposureMask | VisibilityChangeMask);
+    }
   }
 }
 
