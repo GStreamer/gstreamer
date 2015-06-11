@@ -626,6 +626,19 @@ gst_concat_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       break;
     }
+    case GST_EVENT_FLUSH_STOP:{
+      gboolean reset_time;
+
+      gst_event_parse_flush_stop (event, &reset_time);
+      if (reset_time) {
+        GST_DEBUG_OBJECT (self,
+            "resetting start offset to 0 after flushing with reset_time = TRUE");
+        self->current_start_offset = 0;
+      }
+
+      ret = gst_pad_event_default (pad, parent, event);
+      break;
+    }
     default:
       ret = gst_pad_event_default (pad, parent, event);
       break;
