@@ -42,15 +42,22 @@
 
 #define APP_NAME "gtk-play"
 
+typedef GtkApplication GtkPlayApp;
+typedef GtkApplicationClass GtkPlayAppClass;
+
+G_DEFINE_TYPE (GtkPlayApp, gtk_play_app, GTK_TYPE_APPLICATION);
+
 typedef struct
 {
+  GtkApplicationWindow parent;
+
   GstPlayer *player;
   gchar *uri;
 
   GList *uris;
   GList *current_uri;
 
-  GtkWidget *window;
+
   GtkWidget *play_pause_button;
   GtkWidget *prev_button, *next_button;
   GtkWidget *seekbar;
@@ -67,8 +74,26 @@ typedef struct
   gboolean playing;
   gboolean loop;
   gboolean fullscreen;
+  gboolean visual;
   gint toolbar_hide_timeout;
 } GtkPlay;
+
+typedef GtkApplicationWindowClass GtkPlayClass;
+
+G_DEFINE_TYPE (GtkPlay, gtk_play, GTK_TYPE_APPLICATION_WINDOW);
+
+enum
+{
+  PROP_0,
+  PROP_LOOP,
+  PROP_FULLSCREEN,
+  PROP_VISUAL,
+  PROP_URIS,
+
+  LAST_PROP
+};
+
+static GParamSpec *gtk_play_properties[LAST_PROP] = { NULL, };
 
 enum
 {
@@ -104,9 +129,9 @@ static void
 set_title (GtkPlay * play, const gchar * title)
 {
   if (title == NULL) {
-    gtk_window_set_title (GTK_WINDOW (play->window), APP_NAME);
+    gtk_window_set_title (GTK_WINDOW (play), APP_NAME);
   } else {
-    gtk_window_set_title (GTK_WINDOW (play->window), title);
+    gtk_window_set_title (GTK_WINDOW (play), title);
   }
 }
 
@@ -114,7 +139,6 @@ static void
 delete_event_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
 {
   gst_player_stop (play->player);
-  gtk_main_quit ();
 }
 
 static void
@@ -227,7 +251,6 @@ color_balance_channel_button_press_cb (GtkWidget * widget,
 static void
 color_balance_dialog (GtkPlay * play)
 {
-  GtkWidget *parent;
   GtkWidget *dialog;
   GtkWidget *content;
   GtkWidget *box;
@@ -237,10 +260,9 @@ color_balance_dialog (GtkPlay * play)
   gdouble value;
   guint i;
 
-  parent = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  dialog = gtk_dialog_new_with_buttons ("Color Balance", GTK_WINDOW (parent),
-      GTK_DIALOG_MODAL, "_Close", GTK_RESPONSE_CLOSE, NULL);
-  gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (parent));
+  dialog = gtk_dialog_new_with_buttons ("Color Balance", GTK_WINDOW (play),
+      GTK_DIALOG_DESTROY_WITH_PARENT, "_Close", GTK_RESPONSE_CLOSE, NULL);
+  gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (play));
 
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
   box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 2);
@@ -273,7 +295,6 @@ color_balance_dialog (GtkPlay * play)
   gtk_dialog_run (GTK_DIALOG (dialog));
 
   gtk_widget_destroy (dialog);
-  gtk_widget_destroy (parent);
 }
 
 static void
@@ -296,7 +317,14 @@ open_file_dialog (GtkPlay * play, gboolean multi)
   GtkWidget *chooser;
   GtkWidget *parent;
 
-  parent = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  if (play) {
+    parent = GTK_WIDGET (play);
+  } else {
+    parent = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+    gtk_application_add_window (GTK_APPLICATION (g_application_get_default ()),
+        GTK_WINDOW (parent));
+  }
+
   chooser = gtk_file_chooser_dialog_new ("Select files to play", NULL,
       GTK_FILE_CHOOSER_ACTION_OPEN,
       "_Cancel", GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
@@ -315,7 +343,9 @@ open_file_dialog (GtkPlay * play, gboolean multi)
   }
 
   gtk_widget_destroy (chooser);
-  gtk_widget_destroy (parent);
+  if (!play)
+    gtk_widget_destroy (parent);
+
   return uris;
 }
 
@@ -603,6 +633,7 @@ create_media_info_window (GtkPlay * play, GstPlayerMediaInfo * info)
   gtk_window_set_default_size (GTK_WINDOW (window), 550, 450);
   gtk_window_set_position (GTK_WINDOW (window), GTK_WIN_POS_CENTER);
   gtk_container_set_border_width (GTK_CONTAINER (window), 10);
+  gtk_window_set_transient_for (GTK_WINDOW (window), GTK_WINDOW (play));
 
   vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 8);
   gtk_container_add (GTK_CONTAINER (window), vbox);
@@ -673,9 +704,10 @@ toolbar_hide_func (GtkPlay * play)
 
   /* hide the mouse pointer */
   cursor =
-      gdk_cursor_new_for_display (gtk_widget_get_display (play->window),
+      gdk_cursor_new_for_display (gtk_widget_get_display (GTK_WIDGET (play)),
       GDK_BLANK_CURSOR);
-  gdk_window_set_cursor (gtk_widget_get_window (play->window), cursor);
+  gdk_window_set_cursor (gtk_widget_get_window (GTK_WIDGET (play->video_area)),
+      cursor);
   g_object_unref (cursor);
 
   play->toolbar_hide_timeout = 0;
@@ -689,7 +721,7 @@ fullscreen_toggle_cb (GtkToggleButton * widget, GtkPlay * play)
 
   if (gtk_toggle_button_get_active (widget)) {
     image = gtk_image_new_from_icon_name ("view-restore", GTK_ICON_SIZE_BUTTON);
-    gtk_window_fullscreen (GTK_WINDOW (play->window));
+    gtk_window_fullscreen (GTK_WINDOW (play));
     gtk_button_set_image (GTK_BUTTON (play->fullscreen_button), image);
 
     /* start timer to hide toolbar */
@@ -706,7 +738,7 @@ fullscreen_toggle_cb (GtkToggleButton * widget, GtkPlay * play)
 
     image = gtk_image_new_from_icon_name ("view-fullscreen",
         GTK_ICON_SIZE_BUTTON);
-    gtk_window_unfullscreen (GTK_WINDOW (play->window));
+    gtk_window_unfullscreen (GTK_WINDOW (play));
     gtk_button_set_image (GTK_BUTTON (play->fullscreen_button), image);
   }
 }
@@ -998,8 +1030,7 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
 static void
 player_quit_clicked_cb (GtkButton * button, GtkPlay * play)
 {
-  gst_player_stop (play->player);
-  gtk_main_quit ();
+  gtk_widget_destroy (GTK_WIDGET (play));
 }
 
 static void
@@ -1187,8 +1218,8 @@ gtk_show_toolbar_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
     }
 
     /* show mouse pointer */
-    gdk_window_set_cursor (gtk_widget_get_window (play->window),
-        play->default_cursor);
+    gdk_window_set_cursor (gtk_widget_get_window (GTK_WIDGET
+            (play->video_area)), play->default_cursor);
 
     gtk_widget_show (play->toolbar);
     play->toolbar_hide_timeout = g_timeout_add_seconds (5,
@@ -1205,10 +1236,13 @@ create_ui (GtkPlay * play)
   GtkWidget *controls, *main_hbox, *main_vbox;
   GstElement *playbin, *video_sink, *gl_sink;
 
-  play->window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  g_signal_connect (G_OBJECT (play->window), "delete-event",
+  gtk_window_set_default_size (GTK_WINDOW (play), 640, 480);
+
+  g_signal_connect (G_OBJECT (play), "delete-event",
       G_CALLBACK (delete_event_cb), play);
   set_title (play, APP_NAME);
+  gtk_application_add_window (GTK_APPLICATION (g_application_get_default ()),
+      GTK_WINDOW (play));
 
   gl_sink = gst_element_factory_make ("gtkglsink", NULL);
   if (gl_sink) {
@@ -1337,23 +1371,11 @@ create_ui (GtkPlay * play)
   main_vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start (GTK_BOX (main_vbox), main_hbox, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (main_vbox), controls, FALSE, FALSE, 0);
-  gtk_container_add (GTK_CONTAINER (play->window), main_vbox);
+  gtk_container_add (GTK_CONTAINER (play), main_vbox);
 
-  gtk_widget_realize (play->video_area);
+  if (!gl_sink)
+    gtk_widget_realize (play->video_area);
   gtk_widget_hide (play->video_area);
-
-  gtk_widget_show_all (play->window);
-
-  play->default_cursor = gdk_window_get_cursor
-      (gtk_widget_get_window (play->toolbar));
-}
-
-static void
-play_clear (GtkPlay * play)
-{
-  g_free (play->uri);
-  g_list_free_full (play->uris, g_free);
-  g_object_unref (play->player);
 }
 
 static void
@@ -1562,100 +1584,246 @@ player_volume_changed_cb (GstPlayer * player, GtkPlay * play)
   }
 }
 
-int
-main (gint argc, gchar ** argv)
+static void
+gtk_play_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
-  GtkPlay play;
-  gchar **file_names = NULL;
-  GOptionContext *ctx;
-  gboolean vis = FALSE;
-  GOptionEntry options[] = {
-    {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &file_names,
-        "Files to play"},
-    {"loop", 'l', 0, G_OPTION_ARG_NONE, &play.loop, "Repeat all"},
-    {"fullscreen", 'f', 0, G_OPTION_ARG_NONE, &play.fullscreen,
-        "Show the player in fullscreen"},
-    {"visual", 'v', 0, G_OPTION_ARG_NONE, &vis,
-        "Show visualization when there is no video stream"},
-    {NULL}
-  };
-  guint list_length = 0;
-  GError *err = NULL;
+  GtkPlay *self = (GtkPlay *) object;
 
-#if defined (GDK_WINDOWING_X11)
-  XInitThreads ();
-#endif
-
-  memset (&play, 0, sizeof (play));
-
-  g_set_prgname (APP_NAME);
-
-  ctx = g_option_context_new ("FILE|URI");
-  g_option_context_add_main_entries (ctx, options, NULL);
-  g_option_context_add_group (ctx, gtk_get_option_group (TRUE));
-  g_option_context_add_group (ctx, gst_init_get_option_group ());
-  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
-    g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
-    return 1;
+  switch (prop_id) {
+    case PROP_LOOP:
+      self->loop = g_value_get_boolean (value);
+      break;
+    case PROP_FULLSCREEN:
+      self->fullscreen = g_value_get_boolean (value);
+      break;
+    case PROP_VISUAL:
+      self->visual = g_value_get_boolean (value);
+      break;
+    case PROP_URIS:
+      self->uris = g_value_get_pointer (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
-  g_option_context_free (ctx);
+}
 
-  // FIXME: Add support for playlists and stuff
-  /* Parse the list of the file names we have to play. */
-  if (!file_names) {
-    play.uris = open_file_dialog (&play, TRUE);
-    if (!play.uris)
-      return 0;
-  } else {
-    guint i;
+static void
+show_cb (GtkWidget * widget, gpointer user_data)
+{
+  GtkPlay *self = (GtkPlay *) widget;
 
-    list_length = g_strv_length (file_names);
-    for (i = 0; i < list_length; i++) {
-      play.uris =
-          g_list_append (play.uris,
-          gst_uri_is_valid (file_names[i]) ?
-          g_strdup (file_names[i]) : gst_filename_to_uri (file_names[i], NULL));
-    }
+  self->default_cursor = gdk_window_get_cursor
+      (gtk_widget_get_window (GTK_WIDGET (self)));
 
-    g_strfreev (file_names);
-    file_names = NULL;
-  }
+  play_current_uri (self, g_list_first (self->uris), NULL);
+}
 
-  play.player = gst_player_new ();
-  play.playing = TRUE;
+static GObject *
+gtk_play_constructor (GType type, guint n_construct_params,
+    GObjectConstructParam * construct_params)
+{
+  GtkPlay *self;
+  gchar **p;
 
-  g_object_set (play.player, "dispatch-to-main-context", TRUE, NULL);
+  self =
+      (GtkPlay *) G_OBJECT_CLASS (gtk_play_parent_class)->constructor (type,
+      n_construct_params, construct_params);
 
-  create_ui (&play);
+  self->player = gst_player_new ();
+  self->playing = TRUE;
+
+  g_object_set (self->player, "dispatch-to-main-context", TRUE, NULL);
+
+  create_ui (self);
 
   /* if visualization is enabled then use the first element */
-  if (vis) {
+  if (self->visual) {
     GstPlayerVisualization **viss;
     viss = gst_player_visualizations_get ();
 
     if (viss && *viss) {
-      gst_player_set_visualization (play.player, (*viss)->name);
-      gst_player_set_visualization_enabled (play.player, TRUE);
+      gst_player_set_visualization (self->player, (*viss)->name);
+      gst_player_set_visualization_enabled (self->player, TRUE);
     }
     if (viss)
       gst_player_visualizations_free (viss);
   }
 
-  g_signal_connect (play.player, "position-updated",
-      G_CALLBACK (position_updated_cb), &play);
-  g_signal_connect (play.player, "duration-changed",
-      G_CALLBACK (duration_changed_cb), &play);
-  g_signal_connect (play.player, "end-of-stream", G_CALLBACK (eos_cb), &play);
-  g_signal_connect (play.player, "media-info-updated",
-      G_CALLBACK (media_info_updated_cb), &play);
-  g_signal_connect (play.player, "volume-changed",
-      G_CALLBACK (player_volume_changed_cb), &play);
+  g_signal_connect (self->player, "position-updated",
+      G_CALLBACK (position_updated_cb), self);
+  g_signal_connect (self->player, "duration-changed",
+      G_CALLBACK (duration_changed_cb), self);
+  g_signal_connect (self->player, "end-of-stream", G_CALLBACK (eos_cb), self);
+  g_signal_connect (self->player, "media-info-updated",
+      G_CALLBACK (media_info_updated_cb), self);
+  g_signal_connect (self->player, "volume-changed",
+      G_CALLBACK (player_volume_changed_cb), self);
 
-  play_current_uri (&play, g_list_first (play.uris), NULL);
+  g_signal_connect (G_OBJECT (self), "show", G_CALLBACK (show_cb), NULL);
 
-  gtk_main ();
+  return G_OBJECT (self);
+}
 
-  play_clear (&play);
+static void
+gtk_play_dispose (GObject * object)
+{
+  GtkPlay *self = (GtkPlay *) object;
 
-  return 0;
+  if (self->uri)
+    g_free (self->uri);
+  self->uri = NULL;
+
+  if (self->uris)
+    g_list_free_full (self->uris, g_free);
+  self->uris = NULL;
+  if (self->player) {
+    gst_player_stop (self->player);
+    g_object_unref (self->player);
+  }
+  self->player = NULL;
+
+  G_OBJECT_CLASS (gtk_play_parent_class)->dispose (object);
+}
+
+static void
+gtk_play_init (GtkPlay * self)
+{
+}
+
+static void
+gtk_play_class_init (GtkPlayClass * klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->constructor = gtk_play_constructor;
+  object_class->dispose = gtk_play_dispose;
+  object_class->set_property = gtk_play_set_property;
+
+  gtk_play_properties[PROP_LOOP] =
+      g_param_spec_boolean ("loop", "Loop", "Loop the playlist",
+      FALSE,
+      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+  gtk_play_properties[PROP_FULLSCREEN] =
+      g_param_spec_boolean ("fullscreen", "Fullscreen", "Fullscreen mode",
+      FALSE,
+      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+  gtk_play_properties[PROP_VISUAL] =
+      g_param_spec_boolean ("visual", "Visual", "Use Visualizations", FALSE,
+      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+  gtk_play_properties[PROP_URIS] =
+      g_param_spec_pointer ("uris", "URIs", "URIs to play",
+      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, LAST_PROP,
+      gtk_play_properties);
+}
+
+static gint
+gtk_play_app_command_line (GApplication * application,
+    GApplicationCommandLine * command_line)
+{
+  GtkPlayApp *self = (GtkPlayApp *) application;
+  GVariantDict *options;
+  GtkPlay *play;
+  GList *uris = NULL;
+  gboolean loop = FALSE, visual = FALSE, fullscreen = FALSE;
+  gchar **uris_array = NULL;
+
+  options = g_application_command_line_get_options_dict (command_line);
+
+  g_variant_dict_lookup (options, "loop", "b", &loop);
+  g_variant_dict_lookup (options, "visual", "b", &visual);
+  g_variant_dict_lookup (options, "fullscreen", "b", &fullscreen);
+  g_variant_dict_lookup (options, G_OPTION_REMAINING, "^a&ay", &uris_array);
+
+  if (uris_array) {
+    gchar **p;
+
+    p = uris_array;
+    while (*p) {
+      uris =
+          g_list_prepend (uris,
+          gst_uri_is_valid (*p) ?
+          g_strdup (*p) : gst_filename_to_uri (*p, NULL));
+      p++;
+    }
+    uris = g_list_reverse (uris);
+  } else {
+    uris = open_file_dialog (NULL, TRUE);
+  }
+
+  if (!uris)
+    return -1;
+
+  play =
+      g_object_new (gtk_play_get_type (), "loop", loop, "fullscreen",
+      fullscreen, "visual", visual, "uris", uris, NULL);
+  gtk_widget_show_all (GTK_WIDGET (play));
+
+  return
+      G_APPLICATION_CLASS (gtk_play_app_parent_class)->command_line
+      (application, command_line);
+}
+
+static void
+gtk_play_app_init (GtkPlayApp * self)
+{
+}
+
+static void
+gtk_play_app_class_init (GtkPlayAppClass * klass)
+{
+  GApplicationClass *application_class = G_APPLICATION_CLASS (klass);
+
+  application_class->command_line = gtk_play_app_command_line;
+}
+
+GtkPlayApp *
+gtk_play_app_new (void)
+{
+  GtkPlayApp *self;
+  GOptionEntry options[] = {
+    {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, NULL,
+        "Files to play"},
+    {"loop", 'l', 0, G_OPTION_ARG_NONE, NULL, "Repeat all"},
+    {"fullscreen", 'f', 0, G_OPTION_ARG_NONE, NULL,
+        "Show the player in fullscreen"},
+    {"visual", 'v', 0, G_OPTION_ARG_NONE, NULL,
+        "Show visualization when there is no video stream"},
+    {NULL}
+  };
+
+  g_set_prgname (APP_NAME);
+  g_set_application_name (APP_NAME);
+
+  self = g_object_new (gtk_play_app_get_type (),
+      "application-id", "org.freedesktop.gstreamer.GTKPlay",
+      "flags", G_APPLICATION_HANDLES_COMMAND_LINE,
+      "register-session", TRUE, NULL);
+
+  g_application_set_default (G_APPLICATION (self));
+  g_application_add_main_option_entries (G_APPLICATION (self), options);
+  g_application_add_option_group (G_APPLICATION (self),
+      gst_init_get_option_group ());
+
+  return self;
+}
+
+int
+main (gint argc, gchar ** argv)
+{
+  GtkPlayApp *app;
+  gint status;
+
+#if defined (GDK_WINDOWING_X11)
+  XInitThreads ();
+#endif
+
+  app = gtk_play_app_new ();
+  status = g_application_run (G_APPLICATION (app), argc, argv);;
+  g_object_unref (app);
+
+  return status;
 }
