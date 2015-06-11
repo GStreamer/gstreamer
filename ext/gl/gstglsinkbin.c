@@ -43,11 +43,33 @@ static void gst_gl_sink_bin_video_overlay_init (gpointer g_iface,
 static void gst_gl_sink_bin_navigation_interface_init (gpointer g_iface,
     gpointer g_iface_data);
 
+#define DEFAULT_SYNC                TRUE
+#define DEFAULT_MAX_LATENESS        -1
+#define DEFAULT_QOS                 FALSE
+#define DEFAULT_ASYNC               TRUE
+#define DEFAULT_TS_OFFSET           0
+#define DEFAULT_BLOCKSIZE           4096
+#define DEFAULT_RENDER_DELAY        0
+#define DEFAULT_ENABLE_LAST_SAMPLE  TRUE
+#define DEFAULT_THROTTLE_TIME       0
+#define DEFAULT_MAX_BITRATE         0
+
 enum
 {
   PROP_0,
   PROP_FORCE_ASPECT_RATIO,
   PROP_SINK,
+  PROP_SYNC,
+  PROP_MAX_LATENESS,
+  PROP_QOS,
+  PROP_ASYNC,
+  PROP_TS_OFFSET,
+  PROP_ENABLE_LAST_SAMPLE,
+  PROP_LAST_SAMPLE,
+  PROP_BLOCKSIZE,
+  PROP_RENDER_DELAY,
+  PROP_THROTTLE_TIME,
+  PROP_MAX_BITRATE,
 };
 
 enum
@@ -95,6 +117,54 @@ gst_gl_sink_bin_class_init (GstGLSinkBinClass * klass)
           GST_TYPE_ELEMENT,
           GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
+
+  /* base sink */
+  g_object_class_install_property (gobject_class, PROP_SYNC,
+      g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MAX_LATENESS,
+      g_param_spec_int64 ("max-lateness", "Max Lateness",
+          "Maximum number of nanoseconds that a buffer can be late before it "
+          "is dropped (-1 unlimited)", -1, G_MAXINT64, DEFAULT_MAX_LATENESS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QOS,
+      g_param_spec_boolean ("qos", "Qos",
+          "Generate Quality-of-Service events upstream", DEFAULT_QOS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ASYNC,
+      g_param_spec_boolean ("async", "Async",
+          "Go asynchronously to PAUSED", DEFAULT_ASYNC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
+      g_param_spec_int64 ("ts-offset", "TS Offset",
+          "Timestamp offset in nanoseconds", G_MININT64, G_MAXINT64,
+          DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ENABLE_LAST_SAMPLE,
+      g_param_spec_boolean ("enable-last-sample", "Enable Last Buffer",
+          "Enable the last-sample property", DEFAULT_ENABLE_LAST_SAMPLE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_LAST_SAMPLE,
+      g_param_spec_boxed ("last-sample", "Last Sample",
+          "The last sample received in the sink", GST_TYPE_SAMPLE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
+      g_param_spec_uint ("blocksize", "Block size",
+          "Size in bytes to pull per buffer (0 = default)", 0, G_MAXUINT,
+          DEFAULT_BLOCKSIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_RENDER_DELAY,
+      g_param_spec_uint64 ("render-delay", "Render Delay",
+          "Additional render delay of the sink in nanoseconds", 0, G_MAXUINT64,
+          DEFAULT_RENDER_DELAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_THROTTLE_TIME,
+      g_param_spec_uint64 ("throttle-time", "Throttle time",
+          "The time to keep between rendered buffers (0 = disabled)", 0,
+          G_MAXUINT64, DEFAULT_THROTTLE_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
+      g_param_spec_uint64 ("max-bitrate", "Max Bitrate",
+          "The maximum bits per second to render (0 = disabled)", 0,
+          G_MAXUINT64, DEFAULT_MAX_BITRATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstGLSinkBin::create-element:
@@ -211,12 +281,9 @@ gst_gl_sink_bin_set_property (GObject * object, guint prop_id,
       }
       break;
     }
-    case PROP_FORCE_ASPECT_RATIO:
+    default:
       if (self->sink)
         g_object_set_property (G_OBJECT (self->sink), pspec->name, value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -231,12 +298,9 @@ gst_gl_sink_bin_get_property (GObject * object, guint prop_id,
     case PROP_SINK:
       g_value_set_object (value, self->sink);
       break;
-    case PROP_FORCE_ASPECT_RATIO:
+    default:
       if (self->sink)
         g_object_get_property (G_OBJECT (self->sink), pspec->name, value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

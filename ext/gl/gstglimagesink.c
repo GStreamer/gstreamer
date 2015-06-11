@@ -102,16 +102,6 @@ GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 #define GST_CAT_DEFAULT gst_debug_glimage_sink
 
 #define DEFAULT_SHOW_PREROLL_FRAME  TRUE
-#define DEFAULT_SYNC                TRUE
-#define DEFAULT_MAX_LATENESS        -1
-#define DEFAULT_QOS                 FALSE
-#define DEFAULT_ASYNC               TRUE
-#define DEFAULT_TS_OFFSET           0
-#define DEFAULT_BLOCKSIZE           4096
-#define DEFAULT_RENDER_DELAY        0
-#define DEFAULT_ENABLE_LAST_SAMPLE  TRUE
-#define DEFAULT_THROTTLE_TIME       0
-#define DEFAULT_MAX_BITRATE         0
 #define DEFAULT_HANDLE_EVENTS       TRUE
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
 #define DEFAULT_IGNORE_ALPHA        TRUE
@@ -129,17 +119,6 @@ enum
   PROP_BIN_HANDLE_EVENTS,
   PROP_BIN_CONTEXT,
   PROP_BIN_SHOW_PREROLL_FRAME,
-  PROP_BIN_SYNC,
-  PROP_BIN_MAX_LATENESS,
-  PROP_BIN_QOS,
-  PROP_BIN_ASYNC,
-  PROP_BIN_TS_OFFSET,
-  PROP_BIN_ENABLE_LAST_SAMPLE,
-  PROP_BIN_LAST_SAMPLE,
-  PROP_BIN_BLOCKSIZE,
-  PROP_BIN_RENDER_DELAY,
-  PROP_BIN_THROTTLE_TIME,
-  PROP_BIN_MAX_BITRATE,
 };
 
 enum
@@ -238,54 +217,6 @@ gst_gl_image_sink_bin_class_init (GstGLImageSinkBinClass * klass)
           "Whether to render video frames during preroll",
           DEFAULT_SHOW_PREROLL_FRAME,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-
-  /* base sink */
-  g_object_class_install_property (gobject_class, PROP_BIN_SYNC,
-      g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BIN_MAX_LATENESS,
-      g_param_spec_int64 ("max-lateness", "Max Lateness",
-          "Maximum number of nanoseconds that a buffer can be late before it "
-          "is dropped (-1 unlimited)", -1, G_MAXINT64, DEFAULT_MAX_LATENESS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BIN_QOS,
-      g_param_spec_boolean ("qos", "Qos",
-          "Generate Quality-of-Service events upstream", DEFAULT_QOS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BIN_ASYNC,
-      g_param_spec_boolean ("async", "Async",
-          "Go asynchronously to PAUSED", DEFAULT_ASYNC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BIN_TS_OFFSET,
-      g_param_spec_int64 ("ts-offset", "TS Offset",
-          "Timestamp offset in nanoseconds", G_MININT64, G_MAXINT64,
-          DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BIN_ENABLE_LAST_SAMPLE,
-      g_param_spec_boolean ("enable-last-sample", "Enable Last Buffer",
-          "Enable the last-sample property", DEFAULT_ENABLE_LAST_SAMPLE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BIN_LAST_SAMPLE,
-      g_param_spec_boxed ("last-sample", "Last Sample",
-          "The last sample received in the sink", GST_TYPE_SAMPLE,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BIN_BLOCKSIZE,
-      g_param_spec_uint ("blocksize", "Block size",
-          "Size in bytes to pull per buffer (0 = default)", 0, G_MAXUINT,
-          DEFAULT_BLOCKSIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BIN_RENDER_DELAY,
-      g_param_spec_uint64 ("render-delay", "Render Delay",
-          "Additional render delay of the sink in nanoseconds", 0, G_MAXUINT64,
-          DEFAULT_RENDER_DELAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BIN_THROTTLE_TIME,
-      g_param_spec_uint64 ("throttle-time", "Throttle time",
-          "The time to keep between rendered buffers (0 = disabled)", 0,
-          G_MAXUINT64, DEFAULT_THROTTLE_TIME,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BIN_MAX_BITRATE,
-      g_param_spec_uint64 ("max-bitrate", "Max Bitrate",
-          "The maximum bits per second to render (0 = disabled)", 0,
-          G_MAXUINT64, DEFAULT_MAX_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_DRAW] =
       g_signal_new ("client-draw", G_TYPE_FROM_CLASS (klass),
