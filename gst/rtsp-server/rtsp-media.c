@@ -211,6 +211,8 @@ static gboolean default_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp);
 
 static gboolean wait_preroll (GstRTSPMedia * media);
 
+static GstElement * find_payload_element (GstElement * payloader);
+
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
 #define C_ENUM(v) ((gint) v)
@@ -1442,12 +1444,24 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
 
     name = g_strdup_printf ("pay%d", i);
     if ((elem = gst_bin_get_by_name (GST_BIN (element), name))) {
+      GstElement *pay;
       GST_INFO ("found stream %d with payloader %p", i, elem);
 
       /* take the pad of the payloader */
       pad = gst_element_get_static_pad (elem, "src");
+
+      /* find the real payload element in case elem is a GstBin */
+      pay = find_payload_element (elem);
+
       /* create the stream */
-      gst_rtsp_media_create_stream (media, elem, pad);
+      if (pay == NULL) {
+        GST_WARNING ("could not find real payloader, using bin");
+        gst_rtsp_media_create_stream (media, elem, pad);
+      } else {
+        gst_rtsp_media_create_stream (media, pay, pad);
+        gst_object_unref (pay);
+      }
+
       gst_object_unref (pad);
       gst_object_unref (elem);
 
