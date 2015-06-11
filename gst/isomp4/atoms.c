@@ -3429,6 +3429,22 @@ atom_trak_set_subtitle_commons (AtomTRAK * trak, AtomsContext * context)
 }
 
 void
+sample_table_entry_add_ext_atom (SampleTableEntry * ste, AtomInfo * ext)
+{
+  GList **list = NULL;
+  if (ste->kind == AUDIO) {
+    list = &(((SampleTableEntryMP4A *) ste)->extension_atoms);
+  } else if (ste->kind == VIDEO) {
+    list = &(((SampleTableEntryMP4V *) ste)->extension_atoms);
+  } else {
+    g_assert_not_reached ();
+    return;
+  }
+
+  *list = g_list_prepend (*list, ext);
+}
+
+SampleTableEntryMP4A *
 atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
     AudioSampleEntry * entry, guint32 scale, AtomInfo * ext, gint sample_size)
 {
@@ -3457,6 +3473,8 @@ atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
 
   /* 0 size means variable size */
   atom_trak_set_constant_size_samples (trak, sample_size);
+
+  return ste;
 }
 
 static AtomInfo *
@@ -3479,7 +3497,7 @@ build_pasp_extension (AtomTRAK * trak, gint par_width, gint par_height)
       atom_data_free);
 }
 
-void
+SampleTableEntryMP4V *
 atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
     VisualSampleEntry * entry, guint32 scale, GList * ext_atoms_list)
 {
@@ -3528,6 +3546,8 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
     ste->extension_atoms = g_list_append (ste->extension_atoms,
         build_pasp_extension (trak, par_n, par_d));
   }
+
+  return ste;
 }
 
 void
@@ -3538,7 +3558,7 @@ subtitle_sample_entry_init (SubtitleSampleEntry * entry)
   entry->foreground_color_rgba = 0xFFFFFFFF;    /* all white, opaque */
 }
 
-void
+SampleTableEntryTX3G *
 atom_trak_set_subtitle_type (AtomTRAK * trak, AtomsContext * context,
     SubtitleSampleEntry * entry)
 {
@@ -3554,6 +3574,8 @@ atom_trak_set_subtitle_type (AtomTRAK * trak, AtomsContext * context,
 
   trak->is_video = FALSE;
   trak->is_h264 = FALSE;
+
+  return tx3g;
 }
 
 static void
@@ -4694,6 +4716,41 @@ build_ima_adpcm_extension (gint channels, gint rate, gint blocksize)
 
   return build_atom_info_wrapper ((Atom *) wave, atom_wave_copy_data,
       atom_wave_free);
+}
+
+AtomInfo *
+build_ac3_extension (guint8 fscod, guint8 bsid, guint8 bsmod, guint8 acmod,
+    guint8 lfe_on, guint8 bitrate_code)
+{
+  AtomData *atom_data;
+  GstBuffer *buf;
+  guint8 *data;
+
+  data = g_malloc0 (3);
+
+  /* Bits from the spec
+   * fscod 2
+   * bsid  5
+   * bsmod 3
+   * acmod 3
+   * lfeon 1
+   * bit_rate_code 5
+   * reserved 5
+   */
+
+  /* Some bit manipulation magic. Need bitwriter */
+  data[0] = (fscod << 6) | (bsid << 1) | ((bsmod >> 2) & 1);
+  data[1] =
+      ((bsmod & 0x3) << 6) | (acmod << 3) | ((lfe_on & 1) << 2) | ((bitrate_code
+          >> 3) & 0x3);
+  data[2] = ((bitrate_code & 0x7) << 5);
+
+  buf = gst_buffer_new_wrapped (data, 3);
+  atom_data = atom_data_new_from_gst_buffer (FOURCC_dac3, buf);
+  gst_buffer_unref (buf);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
 }
 
 AtomInfo *

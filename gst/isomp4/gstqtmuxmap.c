@@ -115,6 +115,10 @@
   "stream-format = (string) raw, " \
   COMMON_AUDIO_CAPS (8, MAX)
 
+#define AC3_CAPS \
+  "audio/x-ac3, " \
+  COMMON_AUDIO_CAPS (6, MAX)
+
 #define AMR_CAPS \
   "audio/AMR, " \
   "rate = (int) 8000, " \
@@ -184,7 +188,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS ("video/quicktime, variant = (string) iso"),
         GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";"
             "video/x-mp4-part," COMMON_VIDEO_CAPS),
-        GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS " ; " ALAC_CAPS),
+        GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS " ; " AC3_CAPS " ; " ALAC_CAPS),
       GST_STATIC_CAPS (TEXT_UTF8)}
   ,
   /* Microsoft Smooth Streaming fmp4/isml */
@@ -210,7 +214,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "Gst3GPPMux",
         GST_STATIC_CAPS ("video/quicktime, variant = (string) 3gpp"),
         GST_STATIC_CAPS (H263_CAPS "; " MPEG4V_CAPS "; " H264_CAPS),
-        GST_STATIC_CAPS (AMR_CAPS "; " MP3_CAPS "; " AAC_CAPS),
+        GST_STATIC_CAPS (AMR_CAPS "; " MP3_CAPS "; " AAC_CAPS "; " AC3_CAPS),
       GST_STATIC_CAPS (TEXT_UTF8)}
   ,
   /* ISO 15444-3: Motion-JPEG-2000 (also ISO base media extension) */

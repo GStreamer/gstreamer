@@ -117,6 +117,8 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
+#include <gst/base/gstbytereader.h>
+#include <gst/base/gstbitreader.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
 #include <gst/tag/tag.h>
@@ -718,6 +720,82 @@ gst_qt_mux_prepare_tx3g_buffer (GstQTPad * qtpad, GstBuffer * buf,
   gst_buffer_unref (buf);
 
   return newbuf;
+}
+
+static void
+gst_qt_mux_pad_add_ac3_extension (GstQTMux * qtmux, GstQTPad * qtpad,
+    guint8 fscod, guint8 frmsizcod, guint8 bsid, guint8 bsmod, guint8 acmod,
+    guint8 lfe_on)
+{
+  AtomInfo *ext;
+
+  g_return_if_fail (qtpad->trak_ste);
+
+  ext = build_ac3_extension (fscod, bsid, bsmod, acmod, lfe_on, frmsizcod >> 1);        /* bitrate_code is inside frmsizcod */
+
+  sample_table_entry_add_ext_atom (qtpad->trak_ste, ext);
+}
+
+static GstBuffer *
+gst_qt_mux_prepare_parse_ac3_frame (GstQTPad * qtpad, GstBuffer * buf,
+    GstQTMux * qtmux)
+{
+  GstMapInfo map;
+  GstByteReader reader;
+  guint off;
+
+  if (!gst_buffer_map (buf, &map, GST_MAP_READ)) {
+    GST_WARNING_OBJECT (qtpad->collect.pad, "Failed to map buffer");
+    return buf;
+  }
+
+  if (G_UNLIKELY (map.size < 8))
+    goto done;
+
+  gst_byte_reader_init (&reader, map.data, map.size);
+  off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffff0000, 0x0b770000,
+      0, map.size);
+
+  if (off != -1) {
+    GstBitReader bits;
+    guint8 fscod, frmsizcod, bsid, bsmod, acmod, lfe_on;
+
+    GST_DEBUG_OBJECT (qtpad->collect.pad, "Found ac3 sync point at offset: %u",
+        off);
+
+    gst_bit_reader_init (&bits, map.data, map.size);
+
+    /* off + sync + crc */
+    gst_bit_reader_skip_unchecked (&bits, off * 8 + 16 + 16);
+
+    fscod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 2);
+    frmsizcod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 6);
+    bsid = gst_bit_reader_get_bits_uint8_unchecked (&bits, 5);
+    bsmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
+    acmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
+
+    if ((acmod & 0x1) && (acmod != 0x1))        /* 3 front channels */
+      gst_bit_reader_skip_unchecked (&bits, 2);
+    if ((acmod & 0x4))          /* if a surround channel exists */
+      gst_bit_reader_skip_unchecked (&bits, 2);
+    if (acmod == 0x2)           /* if in 2/0 mode */
+      gst_bit_reader_skip_unchecked (&bits, 2);
+
+    lfe_on = gst_bit_reader_get_bits_uint8_unchecked (&bits, 1);
+
+    gst_qt_mux_pad_add_ac3_extension (qtmux, qtpad, fscod, frmsizcod, bsid,
+        bsmod, acmod, lfe_on);
+
+    /* AC-3 spec says that those values should be constant for the
+     * whole stream when muxed in mp4. We trust the input follows it */
+    GST_DEBUG_OBJECT (qtpad->collect.pad, "Data parsed, removing "
+        "prepare buffer function");
+    qtpad->prepare_buf_func = NULL;
+  }
+
+done:
+  gst_buffer_unmap (buf, &map);
+  return buf;
 }
 
 static GstBuffer *
@@ -3497,6 +3575,18 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     entry.samples_per_packet = GST_READ_UINT32_BE (map.data + 4);
     gst_buffer_unmap (codec_config, &map);
     gst_buffer_unref (codec_config);
+  } else if (strcmp (mimetype, "audio/x-ac3") == 0) {
+    entry.fourcc = FOURCC_ac_3;
+
+    /* Fixed values according to TS 102 366 but it also mentions that
+     * they should be ignored */
+    entry.channels = 2;
+    entry.sample_size = 16;
+
+    /* AC-3 needs an extension atom but its data can only be obtained from
+     * the stream itself. Abuse the prepare_buf_func so we parse a frame
+     * and get the needed data */
+    qtpad->prepare_buf_func = gst_qt_mux_prepare_parse_ac3_frame;
   }
 
   if (!entry.fourcc)
@@ -3505,7 +3595,9 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   /* ok, set the pad info accordingly */
   qtpad->fourcc = entry.fourcc;
   qtpad->sample_size = constant_size;
-  atom_trak_set_audio_type (qtpad->trak, qtmux->context, &entry,
+  qtpad->trak_ste =
+      (SampleTableEntry *) atom_trak_set_audio_type (qtpad->trak,
+      qtmux->context, &entry,
       qtmux->trak_timescale ? qtmux->trak_timescale : entry.sample_rate,
       ext_atom, constant_size);
 
@@ -3866,8 +3958,9 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   /* ok, set the pad info accordingly */
   qtpad->fourcc = entry.fourcc;
   qtpad->sync = sync;
-  atom_trak_set_video_type (qtpad->trak, qtmux->context, &entry, rate,
-      ext_atom_list);
+  qtpad->trak_ste =
+      (SampleTableEntry *) atom_trak_set_video_type (qtpad->trak,
+      qtmux->context, &entry, rate, ext_atom_list);
 
   gst_object_unref (qtmux);
   return TRUE;
@@ -3942,7 +4035,9 @@ gst_qt_mux_subtitle_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     goto refuse_caps;
 
   qtpad->fourcc = entry.fourcc;
-  atom_trak_set_subtitle_type (qtpad->trak, qtmux->context, &entry);
+  qtpad->trak_ste =
+      (SampleTableEntry *) atom_trak_set_subtitle_type (qtpad->trak,
+      qtmux->context, &entry);
 
   gst_object_unref (qtmux);
   return TRUE;

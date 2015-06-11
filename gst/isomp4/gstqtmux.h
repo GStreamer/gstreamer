@@ -118,6 +118,7 @@ struct _GstQTPad
   /* all the atom and chunk book-keeping is delegated here
    * unowned/uncounted reference, parent MOOV owns */
   AtomTRAK *trak;
+  SampleTableEntry *trak_ste;
   /* fragmented support */
   /* meta data book-keeping delegated here */
   AtomTRAF *traf;

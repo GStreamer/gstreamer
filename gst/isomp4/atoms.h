@@ -925,15 +925,15 @@ typedef struct
 
 void subtitle_sample_entry_init (SubtitleSampleEntry * entry);
 
-void atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
+SampleTableEntryMP4A * atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
                                AudioSampleEntry * entry, guint32 scale,
                                AtomInfo * ext, gint sample_size);
 
-void atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
+SampleTableEntryMP4V * atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
                                VisualSampleEntry * entry, guint32 rate,
                                GList * ext_atoms_list);
 
-void atom_trak_set_subtitle_type (AtomTRAK * trak, AtomsContext * context,
+SampleTableEntryTX3G * atom_trak_set_subtitle_type (AtomTRAK * trak, AtomsContext * context,
                                SubtitleSampleEntry * entry);
 
 void atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
@@ -941,6 +941,8 @@ void atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
 
 void atom_trak_tx3g_update_dimension (AtomTRAK * trak, guint32 width,
                                       guint32 height);
+
+void sample_table_entry_add_ext_atom (SampleTableEntry * ste, AtomInfo * ext);
 
 AtomInfo *   build_codec_data_extension  (guint32 fourcc, const GstBuffer * codec_data);
 AtomInfo *   build_mov_aac_extension     (AtomTRAK * trak, const GstBuffer * codec_data,
@@ -958,6 +960,9 @@ AtomInfo *   build_jp2h_extension        (AtomTRAK * trak, gint width, gint heig
 
 AtomInfo *   build_jp2x_extension        (const GstBuffer * prefix);
 AtomInfo *   build_fiel_extension        (gint fields);
+AtomInfo *   build_ac3_extension         (guint8 fscod, guint8 bsid,
+                                          guint8 bsmod, guint8 acmod,
+                                          guint8 lfe_on, guint8 bitrate_code);
 AtomInfo *   build_amr_extension         (void);
 AtomInfo *   build_h263_extension        (void);
 AtomInfo *   build_gama_atom             (gdouble gamma);
