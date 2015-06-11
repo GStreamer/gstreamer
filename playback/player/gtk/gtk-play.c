@@ -1653,7 +1653,6 @@ gtk_play_constructor (GType type, guint n_construct_params,
     GObjectConstructParam * construct_params)
 {
   GtkPlay *self;
-  gchar **p;
 
   self =
       (GtkPlay *) G_OBJECT_CLASS (gtk_play_parent_class)->constructor (type,
@@ -1764,7 +1763,6 @@ static gint
 gtk_play_app_command_line (GApplication * application,
     GApplicationCommandLine * command_line)
 {
-  GtkPlayApp *self = (GtkPlayApp *) application;
   GVariantDict *options;
   GtkPlay *play;
   GList *uris = NULL;
