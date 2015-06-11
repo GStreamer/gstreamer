@@ -3898,8 +3898,6 @@ gst_qt_mux_subtitle_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   GstStructure *structure;
   SubtitleSampleEntry entry = { 0, };
 
-  qtpad->prepare_buf_func = NULL;
-
   /* does not go well to renegotiate stream mid-way, unless
    * the old caps are a subset of the new one (this means upstream
    * added more info to the caps, as both should be 'fixed' caps) */
