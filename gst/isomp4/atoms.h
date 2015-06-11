@@ -415,13 +415,6 @@ typedef struct _SampleTableEntryMP4A
   GList *extension_atoms;
 } SampleTableEntryMP4A;
 
-typedef struct _SampleTableEntryMP4S
-{
-  SampleTableEntry se;
-
-  AtomESDS es;
-} SampleTableEntryMP4S;
-
 typedef struct _SampleTableEntryTX3G
 {
   SampleTableEntry se;

@@ -1742,23 +1742,6 @@ atom_frma_copy_data (AtomFRMA * frma, guint8 ** buffer,
 }
 
 static guint64
-atom_mp4s_copy_data (SampleTableEntryMP4S * mp4s, guint8 ** buffer,
-    guint64 * size, guint64 * offset)
-{
-  guint64 original_offset = *offset;
-
-  if (!atom_sample_entry_copy_data (&mp4s->se, buffer, size, offset)) {
-    return 0;
-  }
-  if (!atom_esds_copy_data (&mp4s->es, buffer, size, offset)) {
-    return 0;
-  }
-
-  atom_write_size (buffer, size, offset, original_offset);
-  return *offset - original_offset;
-}
-
-static guint64
 atom_hint_sample_entry_copy_data (AtomHintSampleEntry * hse, guint8 ** buffer,
     guint64 * size, guint64 * offset)
 {
@@ -2057,12 +2040,6 @@ atom_stsd_copy_data (AtomSTSD * stsd, guint8 ** buffer, guint64 * size,
     switch (((Atom *) walker->data)->type) {
       case FOURCC_mp4a:
         if (!sample_entry_mp4a_copy_data ((SampleTableEntryMP4A *) walker->data,
-                buffer, size, offset)) {
-          return 0;
-        }
-        break;
-      case FOURCC_mp4s:
-        if (!atom_mp4s_copy_data ((SampleTableEntryMP4S *) walker->data,
                 buffer, size, offset)) {
           return 0;
         }
