@@ -1203,15 +1203,28 @@ create_ui (GtkPlay * play)
 {
   GtkWidget *image;
   GtkWidget *controls, *main_hbox, *main_vbox;
+  GstElement *playbin, *video_sink, *gl_sink;
 
   play->window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect (G_OBJECT (play->window), "delete-event",
       G_CALLBACK (delete_event_cb), play);
   set_title (play, APP_NAME);
 
-  play->video_area = gtk_drawing_area_new ();
-  g_signal_connect (play->video_area, "realize",
-      G_CALLBACK (video_area_realize_cb), play);
+  gl_sink = gst_element_factory_make ("gtkglsink", NULL);
+  if (gl_sink) {
+    g_object_get (gl_sink, "widget", &play->video_area, NULL);
+
+    video_sink = gst_element_factory_make ("glsinkbin", NULL);
+    g_object_set (video_sink, "sink", gl_sink, NULL);
+
+    playbin = gst_player_get_pipeline (play->player);
+    g_object_set (playbin, "video-sink", video_sink, NULL);
+    gst_object_unref (playbin);
+  } else {
+    play->video_area = gtk_drawing_area_new ();
+    g_signal_connect (play->video_area, "realize",
+        G_CALLBACK (video_area_realize_cb), play);
+  }
   g_signal_connect (play->video_area, "button-press-event",
       G_CALLBACK (mouse_button_pressed_cb), play);
   g_signal_connect (play->video_area, "motion-notify-event",
@@ -1536,8 +1549,7 @@ player_volume_changed_cb (GstPlayer * player, GtkPlay * play)
 {
   gdouble new_val, cur_val;
 
-  cur_val = gtk_scale_button_get_value
-    (GTK_SCALE_BUTTON (play->volume_button));
+  cur_val = gtk_scale_button_get_value (GTK_SCALE_BUTTON (play->volume_button));
   new_val = gst_player_get_volume (play->player);
 
   if (fabs (cur_val - new_val) > 0.001) {
@@ -1569,6 +1581,10 @@ main (gint argc, gchar ** argv)
   };
   guint list_length = 0;
   GError *err = NULL;
+
+#if defined (GDK_WINDOWING_X11)
+  XInitThreads ();
+#endif
 
   memset (&play, 0, sizeof (play));
 
