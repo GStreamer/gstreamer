@@ -178,7 +178,11 @@ gst_rtsp_media_get_buffer_size
 gst_rtsp_media_set_retransmission_time
 gst_rtsp_media_get_retransmission_time
 
+gst_rtsp_media_set_latency
+gst_rtsp_media_get_latency
+
 gst_rtsp_media_setup_sdp
+gst_rtsp_media_handle_sdp
 
 <SUBSECTION MediaPrepare>
 gst_rtsp_media_prepare
@@ -266,6 +270,12 @@ gst_rtsp_media_factory_set_suspend_mode
 
 gst_rtsp_media_factory_set_retransmission_time
 gst_rtsp_media_factory_get_retransmission_time
+
+gst_rtsp_media_factory_set_latency
+gst_rtsp_media_factory_get_latency
+
+gst_rtsp_media_factory_set_media_gtype
+gst_rtsp_media_factory_get_media_gtype
 
 gst_rtsp_media_factory_construct
 gst_rtsp_media_factory_create_element
@@ -554,6 +564,9 @@ gst_rtsp_stream_set_protocols
 gst_rtsp_stream_get_retransmission_time
 gst_rtsp_stream_set_retransmission_time
 
+gst_rtsp_stream_set_seqnum_offset
+gst_rtsp_stream_get_current_seqnum
+
 gst_rtsp_stream_is_transport_supported
 
 gst_rtsp_stream_get_address_pool
@@ -583,7 +596,13 @@ gst_rtsp_stream_get_rtcp_socket
 gst_rtsp_stream_set_blocked
 gst_rtsp_stream_is_blocking
 
+gst_rtsp_stream_query_stop
+gst_rtsp_stream_query_position
+
 gst_rtsp_stream_update_crypto
+
+gst_rtsp_stream_set_pt_map
+gst_rtsp_stream_request_aux_sender
 
 GstRTSPStreamTransportFilterFunc
 gst_rtsp_stream_transport_filter
