@@ -101,6 +101,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+enum
+{
+  PROP_0,
+  PROP_ACTIVE_PAD
+};
+
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (gst_concat_debug, "concat", 0, "concat element");
 #define gst_concat_parent_class parent_class
@@ -108,6 +114,8 @@ G_DEFINE_TYPE_WITH_CODE (GstConcat, gst_concat, GST_TYPE_ELEMENT, _do_init);
 
 static void gst_concat_dispose (GObject * object);
 static void gst_concat_finalize (GObject * object);
+static void gst_concat_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn gst_concat_change_state (GstElement * element,
     GstStateChange transition);
@@ -129,6 +137,10 @@ static gboolean gst_concat_src_query (GstPad * pad, GstObject * parent,
 
 static gboolean gst_concat_switch_pad (GstConcat * self);
 
+static void gst_concat_notify_active_pad (GstConcat * self);
+
+static GParamSpec *pspec_active_pad = NULL;
+
 static void
 gst_concat_class_init (GstConcatClass * klass)
 {
@@ -137,6 +149,14 @@ gst_concat_class_init (GstConcatClass * klass)
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_concat_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_concat_finalize);
+
+  gobject_class->get_property = gst_concat_get_property;
+
+  pspec_active_pad = g_param_spec_object ("active-pad", "Active pad",
+      "Currently active src pad", GST_TYPE_PAD, G_PARAM_READABLE |
+      G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
+      pspec_active_pad);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Concat", "Generic", "Concatenate multiple streams",
@@ -201,6 +221,25 @@ gst_concat_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_concat_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstConcat *self = GST_CONCAT (object);
+
+  switch (prop_id) {
+    case PROP_ACTIVE_PAD:{
+      g_mutex_lock (&self->lock);
+      g_value_set_object (value, self->current_sinkpad);
+      g_mutex_unlock (&self->lock);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static GstPad *
 gst_concat_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
@@ -208,6 +247,7 @@ gst_concat_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GstConcat *self = GST_CONCAT (element);
   GstPad *sinkpad;
   gchar *pad_name;
+  gboolean do_notify = FALSE;
 
   GST_DEBUG_OBJECT (element, "requesting pad");
 
@@ -234,11 +274,16 @@ gst_concat_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   g_mutex_lock (&self->lock);
   self->sinkpads = g_list_prepend (self->sinkpads, gst_object_ref (sinkpad));
-  if (!self->current_sinkpad)
+  if (!self->current_sinkpad) {
+    do_notify = TRUE;
     self->current_sinkpad = gst_object_ref (sinkpad);
+  }
   g_mutex_unlock (&self->lock);
 
   gst_element_add_pad (element, sinkpad);
+
+  if (do_notify)
+    gst_concat_notify_active_pad (self);
 
   return sinkpad;
 }
@@ -251,6 +296,7 @@ gst_concat_release_pad (GstElement * element, GstPad * pad)
   GList *l;
   gboolean current_pad_removed = FALSE;
   gboolean eos = FALSE;
+  gboolean do_notify = FALSE;
 
   GST_DEBUG_OBJECT (self, "releasing pad");
 
@@ -267,6 +313,7 @@ gst_concat_release_pad (GstElement * element, GstPad * pad)
   if (self->current_sinkpad == GST_PAD_CAST (spad)) {
     eos = ! !gst_concat_switch_pad (self);
     current_pad_removed = TRUE;
+    do_notify = TRUE;
   }
 
   for (l = self->sinkpads; l; l = l->next) {
@@ -279,6 +326,9 @@ gst_concat_release_pad (GstElement * element, GstPad * pad)
   g_mutex_unlock (&self->lock);
 
   gst_element_remove_pad (GST_ELEMENT_CAST (self), pad);
+
+  if (do_notify)
+    gst_concat_notify_active_pad (self);
 
   if (GST_STATE (self) > GST_STATE_READY) {
     if (current_pad_removed && !eos)
@@ -412,6 +462,12 @@ gst_concat_switch_pad (GstConcat * self)
   return next;
 }
 
+static void
+gst_concat_notify_active_pad (GstConcat * self)
+{
+  g_object_notify_by_pspec ((GObject *) self, pspec_active_pad);
+}
+
 static gboolean
 gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -494,6 +550,8 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         next = gst_concat_switch_pad (self);
         g_mutex_unlock (&self->lock);
         ret = TRUE;
+
+        gst_concat_notify_active_pad (self);
 
         if (!next) {
           gst_pad_push_event (self->srcpad, gst_event_new_eos ());
