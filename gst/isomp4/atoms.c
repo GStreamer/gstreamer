@@ -196,11 +196,19 @@ atom_data_new (guint32 fourcc)
 static void
 atom_data_alloc_mem (AtomData * data, guint32 size)
 {
-  if (data->data) {
-    g_free (data->data);
-  }
+  g_free (data->data);
   data->data = g_new0 (guint8, size);
   data->datalen = size;
+}
+
+static AtomData *
+atom_data_new_from_data (guint32 fourcc, const guint8 * mem, gsize size)
+{
+  AtomData *data = atom_data_new (fourcc);
+
+  atom_data_alloc_mem (data, size);
+  memcpy (data->data, mem, size);
+  return data;
 }
 
 static AtomData *
@@ -3034,7 +3042,6 @@ void
 atom_udta_add_blob_tag (AtomUDTA * udta, guint8 * data, guint size)
 {
   AtomData *data_atom;
-  GstBuffer *buf;
   guint len;
   guint32 fourcc;
 
@@ -3048,9 +3055,7 @@ atom_udta_add_blob_tag (AtomUDTA * udta, guint8 * data, guint size)
   if (len > size)
     return;
 
-  buf = _gst_buffer_new_wrapped (data + 8, len - 8, NULL);
-  data_atom = atom_data_new_from_gst_buffer (fourcc, buf);
-  gst_buffer_unref (buf);
+  data_atom = atom_data_new_from_data (fourcc, data + 8, len - 8);
 
   atom_udta_append_tag (udta,
       build_atom_info_wrapper ((Atom *) data_atom, atom_data_copy_data,
@@ -3062,18 +3067,15 @@ atom_udta_add_3gp_tag (AtomUDTA * udta, guint32 fourcc, guint8 * data,
     guint size)
 {
   AtomData *data_atom;
-  GstBuffer *buf;
-  guint8 *bdata;
+
+  data_atom = atom_data_new (fourcc);
 
   /* need full atom */
-  bdata = g_malloc (size + 4);
-  /* full atom: version and flags */
-  GST_WRITE_UINT32_BE (bdata, 0);
-  memcpy (bdata + 4, data, size);
+  atom_data_alloc_mem (data_atom, size + 4);
 
-  buf = _gst_buffer_new_wrapped (bdata, size + 4, g_free);
-  data_atom = atom_data_new_from_gst_buffer (fourcc, buf);
-  gst_buffer_unref (buf);
+  /* full atom: version and flags */
+  GST_WRITE_UINT32_BE (data_atom->data, 0);
+  memcpy (data_atom->data + 4, data, size);
 
   atom_udta_append_tag (udta,
       build_atom_info_wrapper ((Atom *) data_atom, atom_data_copy_data,
@@ -3480,18 +3482,15 @@ atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
 static AtomInfo *
 build_pasp_extension (AtomTRAK * trak, gint par_width, gint par_height)
 {
-  AtomData *atom_data;
-  GstBuffer *buf;
+  AtomData *atom_data = atom_data_new (FOURCC_pasp);
   guint8 *data;
 
-  data = g_malloc (8);
+  atom_data_alloc_mem (atom_data, 8);
+  data = atom_data->data;
+
   /* ihdr = image header box */
   GST_WRITE_UINT32_BE (data, par_width);
   GST_WRITE_UINT32_BE (data + 4, par_height);
-
-  buf = _gst_buffer_new_wrapped (data, 8, g_free);
-  atom_data = atom_data_new_from_gst_buffer (FOURCC_pasp, buf);
-  gst_buffer_unref (buf);
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);
@@ -4283,18 +4282,15 @@ AtomInfo *
 build_btrt_extension (guint32 buffer_size_db, guint32 avg_bitrate,
     guint32 max_bitrate)
 {
-  AtomData *atom_data;
-  GstBuffer *buf;
+  AtomData *atom_data = atom_data_new (FOURCC_btrt);
   guint8 *data;
 
-  data = g_malloc (12);
+  atom_data_alloc_mem (atom_data, 12);
+  data = atom_data->data;
+
   GST_WRITE_UINT32_BE (data, buffer_size_db);
   GST_WRITE_UINT32_BE (data + 4, max_bitrate);
   GST_WRITE_UINT32_BE (data + 8, avg_bitrate);
-
-  buf = _gst_buffer_new_wrapped (data, 12, g_free);
-  atom_data = atom_data_new_from_gst_buffer (FOURCC_btrt, buf);
-  gst_buffer_unref (buf);
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);
@@ -4372,17 +4368,14 @@ AtomInfo *
 build_fiel_extension (gint fields)
 {
   AtomData *atom_data;
-  GstBuffer *buf;
   guint8 f = fields;
 
   if (fields == 1) {
     return NULL;
   }
 
-  buf = _gst_buffer_new_wrapped (&f, 1, NULL);
   atom_data =
-      atom_data_new_from_gst_buffer (GST_MAKE_FOURCC ('f', 'i', 'e', 'l'), buf);
-  gst_buffer_unref (buf);
+      atom_data_new_from_data (GST_MAKE_FOURCC ('f', 'i', 'e', 'l'), &f, 1);
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);
@@ -4639,7 +4632,7 @@ build_SMI_atom (const GstBuffer * seqh)
   GST_WRITE_UINT32_LE (data, FOURCC_SEQH);
   GST_WRITE_UINT32_BE (data + 4, size + 8);
   gst_buffer_extract ((GstBuffer *) seqh, 0, data + 8, size);
-  buf = _gst_buffer_new_wrapped (data, size + 8, g_free);
+  buf = gst_buffer_new_wrapped (data, size + 8);
   res = build_codec_data_extension (FOURCC_SMI_, buf);
   gst_buffer_unref (buf);
   return res;
@@ -4648,10 +4641,9 @@ build_SMI_atom (const GstBuffer * seqh)
 static AtomInfo *
 build_ima_adpcm_atom (gint channels, gint rate, gint blocksize)
 {
+#define IMA_ADPCM_ATOM_SIZE 20
   AtomData *atom_data;
-  GstBuffer *buf;
   guint8 *data;
-  const gint ima_adpcm_atom_size = 20;
   guint32 fourcc;
   gint samplesperblock;
   gint bytespersec;
@@ -4661,7 +4653,9 @@ build_ima_adpcm_atom (gint channels, gint rate, gint blocksize)
      within the WAVE header (below), it's little endian. */
   fourcc = MS_WAVE_FOURCC (0x11);
 
-  data = g_malloc (ima_adpcm_atom_size);
+  atom_data = atom_data_new (fourcc);
+  atom_data_alloc_mem (atom_data, IMA_ADPCM_ATOM_SIZE);
+  data = atom_data->data;
 
   /* This atom's content is a WAVE header, including 2 bytes of extra data.
      Note that all of this is little-endian, unlike most stuff in qt. */
@@ -4677,10 +4671,6 @@ build_ima_adpcm_atom (gint channels, gint rate, gint blocksize)
   GST_WRITE_UINT16_LE (data + 14, 4);
   GST_WRITE_UINT16_LE (data + 16, 2);   /* Two extra bytes */
   GST_WRITE_UINT16_LE (data + 18, samplesperblock);
-
-  buf = _gst_buffer_new_wrapped (data, ima_adpcm_atom_size, g_free);
-  atom_data = atom_data_new_from_gst_buffer (fourcc, buf);
-  gst_buffer_unref (buf);
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);
@@ -4722,11 +4712,11 @@ AtomInfo *
 build_ac3_extension (guint8 fscod, guint8 bsid, guint8 bsmod, guint8 acmod,
     guint8 lfe_on, guint8 bitrate_code)
 {
-  AtomData *atom_data;
-  GstBuffer *buf;
+  AtomData *atom_data = atom_data_new (FOURCC_dac3);
   guint8 *data;
 
-  data = g_malloc0 (3);
+  atom_data_alloc_mem (atom_data, 3);
+  data = atom_data->data;
 
   /* Bits from the spec
    * fscod 2
@@ -4744,10 +4734,6 @@ build_ac3_extension (guint8 fscod, guint8 bsid, guint8 bsmod, guint8 acmod,
       ((bsmod & 0x3) << 6) | (acmod << 3) | ((lfe_on & 1) << 2) | ((bitrate_code
           >> 3) & 0x3);
   data[2] = ((bitrate_code & 0x7) << 5);
-
-  buf = gst_buffer_new_wrapped (data, 3);
-  atom_data = atom_data_new_from_gst_buffer (FOURCC_dac3, buf);
-  gst_buffer_unref (buf);
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);
