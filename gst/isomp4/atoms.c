@@ -3025,18 +3025,9 @@ atom_udta_add_uint_tag (AtomUDTA * udta, guint32 fourcc, guint32 flags,
   }
 }
 
-static GstBuffer *
-_gst_buffer_new_wrapped (gpointer mem, gsize size, GFreeFunc free_func)
-{
-  GstBuffer *buf;
-
-  buf = gst_buffer_new ();
-  gst_buffer_append_memory (buf,
-      gst_memory_new_wrapped (free_func ? 0 : GST_MEMORY_FLAG_READONLY,
-          mem, size, 0, size, mem, free_func));
-
-  return buf;
-}
+#define GST_BUFFER_NEW_READONLY(mem, size) \
+    gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, mem, size, \
+    0, size, mem, NULL)
 
 void
 atom_udta_add_blob_tag (AtomUDTA * udta, guint8 * data, guint size)
@@ -4347,7 +4338,7 @@ build_mov_aac_extension (AtomTRAK * trak, const GstBuffer * codec_data,
 
   /* Add MP4A atom to the WAVE:
    * not really in spec, but makes offset based players happy */
-  buf = _gst_buffer_new_wrapped (&tmp, 4, NULL);
+  buf = GST_BUFFER_NEW_READONLY (&tmp, 4);
   mp4a = build_codec_data_extension (FOURCC_mp4a, buf);
   gst_buffer_unref (buf);
 
@@ -4572,7 +4563,7 @@ build_amr_extension (void)
   /* frames per sample */
   GST_WRITE_UINT8 (ext + 8, 1);
 
-  buf = _gst_buffer_new_wrapped (ext, sizeof (ext), NULL);
+  buf = GST_BUFFER_NEW_READONLY (ext, sizeof (ext));
   res = build_codec_data_extension (GST_MAKE_FOURCC ('d', 'a', 'm', 'r'), buf);
   gst_buffer_unref (buf);
   return res;
@@ -4594,7 +4585,7 @@ build_h263_extension (void)
   GST_WRITE_UINT8 (ext + 5, 10);
   GST_WRITE_UINT8 (ext + 6, 0);
 
-  buf = _gst_buffer_new_wrapped (ext, sizeof (ext), NULL);
+  buf = GST_BUFFER_NEW_READONLY (ext, sizeof (ext));
   res = build_codec_data_extension (GST_MAKE_FOURCC ('d', '2', '6', '3'), buf);
   gst_buffer_unref (buf);
   return res;
@@ -4611,7 +4602,7 @@ build_gama_atom (gdouble gamma)
   gamma_fp = (guint32) 65536 *gamma;
 
   gamma_fp = GUINT32_TO_BE (gamma_fp);
-  buf = _gst_buffer_new_wrapped (&gamma_fp, 4, NULL);
+  buf = GST_BUFFER_NEW_READONLY (&gamma_fp, 4);
   res = build_codec_data_extension (FOURCC_gama, buf);
   gst_buffer_unref (buf);
   return res;
