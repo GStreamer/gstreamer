@@ -205,8 +205,10 @@ gst_gl_sink_bin_set_property (GObject * object, guint prop_id,
       if (self->sink)
         gst_bin_remove (GST_BIN (self), self->sink);
       self->sink = sink;
-      if (sink)
+      if (sink) {
+        gst_object_ref_sink (sink);
         _connect_sink_element (self);
+      }
       break;
     }
     case PROP_FORCE_ASPECT_RATIO:
