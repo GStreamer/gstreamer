@@ -13,6 +13,8 @@ noinst_PROGRAMS += gtkglsink
 
 gtkglsink_SOURCES = gtkglsink.c
 gtkglsink_CFLAGS = $(GTK3_CFLAGS) \
+	$(GST_PLUGINS_BAD_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(GL_CFLAGS)
 gtkglsink_LDADD = $(GTK3_LIBS) \
