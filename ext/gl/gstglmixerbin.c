@@ -396,8 +396,10 @@ gst_gl_mixer_bin_set_property (GObject * object,
       /* FIXME: deal with replacing a mixer */
       g_return_if_fail (!self->mixer || (self->mixer == mixer));
       self->mixer = mixer;
-      if (mixer)
+      if (mixer) {
+        gst_object_ref_sink (mixer);
         _connect_mixer_element (self);
+      }
       break;
     }
     default:
