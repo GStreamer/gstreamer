@@ -210,7 +210,7 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
 
   g_mutex_lock (&gst_widget->priv->lock);
 
-  if (!gst_widget->priv->initted)
+  if (!gst_widget->priv->initted && gst_widget->priv->context)
     gtk_gst_gl_widget_init_redisplay (gst_widget);
 
   if (gst_widget->priv->initted && gst_widget->priv->negotiated
