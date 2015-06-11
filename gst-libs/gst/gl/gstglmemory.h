@@ -41,6 +41,15 @@ GType gst_gl_allocator_get_type(void);
 #define GST_GL_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GL_ALLOCATOR, GstGLAllocatorClass))
 #define GST_GL_ALLOCATOR_CAST(obj)            ((GstGLAllocator *)(obj))
 
+typedef enum _GstGLMemoryTransfer
+{
+  /* force a transfer between the texture and the PBO (if available) */
+  GST_GL_MEMORY_TRANSFER_NEED_UPLOAD = (1 << 0),
+  GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD = (1 << 1),
+} GstGLMemoryTransfer;
+
+#define GST_GL_MEMORY_ADD_TRANSFER(mem,state) ((GstGLMemory *)mem)->transfer_state |= state
+
 /**
  * GstGLMemory:
  * @mem: the parent object
@@ -68,6 +77,7 @@ struct _GstGLMemory
   gfloat                tex_scaling[2];
 
   /* <private> */
+  GstGLMemoryTransfer   transfer_state;
   gboolean              texture_wrapped;
   GDestroyNotify        notify;
   gpointer              user_data;
@@ -111,6 +121,9 @@ GstGLMemory * gst_gl_memory_wrapped_texture (GstGLContext * context,
                                              GstVideoAlignment *valign,
                                              gpointer user_data,
                                              GDestroyNotify notify);
+
+void          gst_gl_memory_download_transfer (GstGLMemory * gl_mem);
+void          gst_gl_memory_upload_transfer   (GstGLMemory * gl_mem);
 
 gboolean      gst_gl_memory_copy_into_texture (GstGLMemory *gl_mem,
                                                guint tex_id,

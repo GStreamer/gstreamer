@@ -182,6 +182,7 @@ GST_START_TEST (test_transfer)
           ((GstGLMemory *) mem)->tex_id, GST_VIDEO_GL_TEXTURE_TYPE_RGBA, 1, 1,
           4, FALSE));
   GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD);
+  GST_GL_MEMORY_ADD_TRANSFER (mem, GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem2,
           GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
@@ -249,6 +250,51 @@ GST_START_TEST (test_transfer)
 
 GST_END_TEST;
 
+GST_START_TEST (test_separate_transfer)
+{
+  GstAllocator *gl_allocator;
+  GstVideoInfo v_info;
+  GstMemory *mem;
+  GstMapInfo info;
+
+  gl_allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
+  fail_if (gl_allocator == NULL);
+
+  gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 1, 1);
+
+  mem =
+      (GstMemory *) gst_gl_memory_wrapped (context, &v_info, 0, NULL,
+      rgba_pixel, NULL, NULL);
+  fail_if (mem == NULL);
+  fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
+          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+
+  gst_gl_memory_upload_transfer ((GstGLMemory *) mem);
+
+  fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
+          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+
+  fail_unless (((gchar *) info.data)[0] == rgba_pixel[0]);
+  fail_unless (((gchar *) info.data)[1] == rgba_pixel[1]);
+  fail_unless (((gchar *) info.data)[2] == rgba_pixel[2]);
+  fail_unless (((gchar *) info.data)[3] == rgba_pixel[3]);
+
+  gst_memory_unmap (mem, &info);
+
+  /* FIXME: add download transfer */
+
+  if (gst_gl_context_get_error ())
+    printf ("%s\n", gst_gl_context_get_error ());
+  fail_if (gst_gl_context_get_error () != NULL);
+
+  gst_memory_unref (mem);
+  gst_object_unref (gl_allocator);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_gl_memory_suite (void)
 {
@@ -259,6 +305,7 @@ gst_gl_memory_suite (void)
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_basic);
   tcase_add_test (tc_chain, test_transfer);
+  tcase_add_test (tc_chain, test_separate_transfer);
 
   return s;
 }
