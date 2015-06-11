@@ -99,6 +99,12 @@ struct iovec
 #define FDSINK_MAX_ALLOCA_SIZE (64 * 1024)      /* 64k */
 #define FDSINK_MAX_MALLOC_SIZE ( 8 * 1024 * 1024)       /*  8M */
 
+/* UIO_MAXIOV is documented in writev(2), but <sys/uio.h> only
+ * declares it on osx/ios if defined(KERNEL) */
+#ifndef UIO_MAXIOV
+#define UIO_MAXIOV 512
+#endif
+
 static gssize
 gst_writev (gint fd, const struct iovec *iov, gint iovcnt, gsize total_bytes)
 {
