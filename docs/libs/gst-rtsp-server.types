@@ -23,3 +23,30 @@ gst_rtsp_session_get_type
 
 #include <gst/rtsp-server/rtsp-client.h>
 gst_rtsp_client_get_type
+
+#include <gst/rtsp-server/rtsp-address-pool.h>
+gst_rtsp_address_pool_get_type
+
+#include <gst/rtsp-server/rtsp-context.h>
+gst_rtsp_context_get_type
+
+#include <gst/rtsp-server/rtsp-media-factory-uri.h>
+gst_rtsp_media_factory_uri_get_type
+
+#include <gst/rtsp-server/rtsp-permissions.h>
+gst_rtsp_permissions_get_type
+
+#include <gst/rtsp-server/rtsp-session-media.h>
+gst_rtsp_session_media_get_type
+
+#include <gst/rtsp-server/rtsp-stream-transport.h>
+gst_rtsp_stream_transport_get_type
+
+#include <gst/rtsp-server/rtsp-stream.h>
+gst_rtsp_stream_get_type
+
+#include <gst/rtsp-server/rtsp-thread-pool.h>
+gst_rtsp_thread_pool_get_type
+
+#include <gst/rtsp-server/rtsp-token.h>
+gst_rtsp_token_get_type
