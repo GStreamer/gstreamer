@@ -120,7 +120,6 @@ gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
 static void
 gst_gtk_gl_sink_init (GstGtkGLSink * gtk_sink)
 {
-  gtk_sink->widget = (GtkGstGLWidget *) gtk_gst_gl_widget_new ();
 }
 
 static void
@@ -165,6 +164,28 @@ gst_gtk_gl_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static GtkGstGLWidget *
+gst_gtk_gl_sink_get_widget (GstGtkGLSink * gtk_sink)
+{
+  if (gtk_sink->widget != NULL)
+    return gtk_sink->widget;
+
+  /* Ensure GTK is initialized, this has no side effect if it was already
+   * initialized. Also, we do that lazylli, so the application can be first */
+  if (!gtk_init_check (NULL, NULL)) {
+    GST_ERROR_OBJECT (gtk_sink, "Could not ensure GTK initialization.");
+    return NULL;
+  }
+
+  gtk_sink->widget = (GtkGstGLWidget *) gtk_gst_gl_widget_new ();
+
+  /* Take the floating ref, otherwise the destruction of the container will
+   * make this widget disapear possibly before we are done. */
+  gst_object_ref_sink (gtk_sink->widget);
+
+  return gtk_sink->widget;
+}
+
 static void
 gst_gtk_gl_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -175,7 +196,7 @@ gst_gtk_gl_sink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_WIDGET:
-      g_value_set_object (value, gtk_sink->widget);
+      g_value_set_object (value, gst_gtk_gl_sink_get_widget (gtk_sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -254,6 +275,17 @@ gst_gtk_gl_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      if (gst_gtk_gl_sink_get_widget (gtk_sink) == NULL)
+        return GST_STATE_CHANGE_FAILURE;
+
+      /* After this point, gtk_sink->widget will always be set */
+
+      if (!gtk_widget_get_parent (GTK_WIDGET (gtk_sink->widget))) {
+        GST_ERROR_OBJECT (gtk_sink,
+            "gtkglsink widget need to be parented to work.");
+        return GST_STATE_CHANGE_FAILURE;
+      }
+
       if (!gtk_gst_gl_widget_init_winsys (gtk_sink->widget))
         return GST_STATE_CHANGE_FAILURE;
 
