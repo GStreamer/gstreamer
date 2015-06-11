@@ -154,8 +154,6 @@ main (int argc, char *argv[])
 
   g_object_get (videosink, "widget", &area, NULL);
   gtk_container_add (GTK_CONTAINER (window), area);
-
-  gtk_widget_realize (area);
   g_object_unref (area);
 
   caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, 640,
