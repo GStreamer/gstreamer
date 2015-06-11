@@ -523,9 +523,16 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       g_mutex_lock (&self->lock);
       forward = (self->current_sinkpad == GST_PAD_CAST (spad));
       g_mutex_unlock (&self->lock);
-      if (forward)
+      if (forward) {
+        gboolean reset_time;
+        gst_event_parse_flush_stop (event, &reset_time);
+        if (reset_time) {
+          GST_DEBUG_OBJECT (self,
+              "resetting start offset to 0 after flushing with reset_time = TRUE");
+          self->current_start_offset = 0;
+        }
         ret = gst_pad_event_default (pad, parent, event);
-      else
+      } else
         gst_event_unref (event);
       break;
     }
