@@ -149,16 +149,13 @@ gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
   GstGLDisplayX11 *display_x11 = (GstGLDisplayX11 *) window->display;
 
-  window_x11->device = XOpenDisplay (display_x11->name);
-//  window_x11->device = display_x11->display;
+  window_x11->device = display_x11->display;
   if (window_x11->device == NULL) {
     g_set_error (error, GST_GL_WINDOW_ERROR,
         GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
         "Failed to connect to X display server");
     goto failure;
   }
-
-  XSynchronize (window_x11->device, FALSE);
 
   GST_LOG ("gl device id: %ld", (gulong) window_x11->device);
 
@@ -274,13 +271,8 @@ void
 gst_gl_window_x11_close (GstGLWindow * window)
 {
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
-  GstGLDisplay *display = window->display;
-  XEvent event;
 
   if (window_x11->device) {
-    /* Avoid BadDrawable Errors... */
-    if (gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_X11)
-      XSync (GST_GL_DISPLAY_X11 (display)->display, FALSE);
 
     if (window_x11->internal_win_id)
       XUnmapWindow (window_x11->device, window_x11->internal_win_id);
@@ -292,12 +284,7 @@ gst_gl_window_x11_close (GstGLWindow * window)
           window_x11->root, 0, 0);
       XDestroyWindow (window_x11->device, window_x11->internal_win_id);
     }
-    XSync (window_x11->device, FALSE);
 
-    while (XPending (window_x11->device))
-      XNextEvent (window_x11->device, &event);
-
-    XCloseDisplay (window_x11->device);
     GST_DEBUG ("display receiver closed");
   }
 
