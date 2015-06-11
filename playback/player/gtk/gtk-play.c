@@ -1651,7 +1651,6 @@ main (gint argc, gchar ** argv)
   g_signal_connect (play.player, "volume-changed",
       G_CALLBACK (player_volume_changed_cb), &play);
 
-  play.playing = TRUE;
   play_current_uri (&play, g_list_first (play.uris), NULL);
 
   gtk_main ();
