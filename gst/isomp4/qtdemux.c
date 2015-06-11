@@ -3749,10 +3749,12 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   stream->segment.base = qtdemux->segment.base;
   stream->segment.applied_rate = qtdemux->segment.applied_rate;
   stream->segment.rate = rate;
-  stream->segment.start = start;
-  stream->segment.stop = stop;
+  stream->segment.start = start +
+      QTSTREAMTIME_TO_GSTTIME (stream, stream->ctts_soffset);
+  stream->segment.stop = stop +
+      QTSTREAMTIME_TO_GSTTIME (stream, stream->ctts_soffset);
   stream->segment.time = time;
-  stream->segment.position = start;
+  stream->segment.position = stream->segment.start;
 
   /* now prepare and send the segment */
   if (stream->pad) {
