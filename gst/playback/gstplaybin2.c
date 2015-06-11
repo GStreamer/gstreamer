@@ -230,6 +230,8 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/audio/streamvolume.h>
+#include <gst/video/video-info.h>
+#include <gst/video/video-multiview.h>
 #include <gst/video/videooverlay.h>
 #include <gst/video/navigation.h>
 #include <gst/video/colorbalance.h>
@@ -425,6 +427,10 @@ struct _GstPlayBin
   guint buffer_size;            /* When buffering, the max buffer size (bytes) */
   gboolean force_aspect_ratio;
 
+  /* Multiview/stereoscopic overrides */
+  GstVideoMultiviewFramePacking multiview_mode;
+  GstVideoMultiviewFlags multiview_flags;
+
   /* our play sink */
   GstPlaySink *playsink;
 
@@ -571,7 +577,9 @@ enum
   PROP_RING_BUFFER_MAX_SIZE,
   PROP_FORCE_ASPECT_RATIO,
   PROP_AUDIO_FILTER,
-  PROP_VIDEO_FILTER
+  PROP_VIDEO_FILTER,
+  PROP_MULTIVIEW_MODE,
+  PROP_MULTIVIEW_FLAGS
 };
 
 /* signals */
@@ -984,6 +992,41 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio", "Force Aspect Ratio",
           "When enabled, scaling will respect original aspect ratio", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPlayBin::video-multiview-mode:
+   *
+   * Set the stereoscopic mode for video streams that don't contain
+   * any information in the stream, so they can be correctly played
+   * as 3D streams. If a video already has multiview information
+   * encoded, this property can override other modes in the set,
+   * but cannot be used to re-interpret MVC or mixed-mono streams.
+   *
+   * See Also: The #GstPlayBin::video-multiview-flags property
+   *
+   */
+  g_object_class_install_property (gobject_klass, PROP_MULTIVIEW_MODE,
+      g_param_spec_enum ("video-multiview-mode",
+          "Multiview Mode Override",
+          "Re-interpret a video stream as one of several frame-packed stereoscopic modes.",
+          GST_TYPE_VIDEO_MULTIVIEW_FRAME_PACKING,
+          GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPlayBin::video-multiview-flags:
+   *
+   * When overriding the multiview mode of an input stream,
+   * these flags modify details of the view layout.
+   *
+   * See Also: The #GstPlayBin::video-multiview-mode property
+   */
+  g_object_class_install_property (gobject_klass, PROP_MULTIVIEW_FLAGS,
+      g_param_spec_flags ("video-multiview-flags",
+          "Multiview Flags Override",
+          "Override details of the multiview frame layout",
+          GST_TYPE_VIDEO_MULTIVIEW_FLAGS, GST_VIDEO_MULTIVIEW_FLAGS_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -1511,6 +1554,9 @@ gst_play_bin_init (GstPlayBin * playbin)
   playbin->ring_buffer_max_size = DEFAULT_RING_BUFFER_MAX_SIZE;
 
   playbin->force_aspect_ratio = TRUE;
+
+  playbin->multiview_mode = GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE;
+  playbin->multiview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
 }
 
 static void
@@ -2426,6 +2472,16 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       g_object_set (playbin->playsink, "force-aspect-ratio",
           g_value_get_boolean (value), NULL);
       break;
+    case PROP_MULTIVIEW_MODE:
+      GST_PLAY_BIN_LOCK (playbin);
+      playbin->multiview_mode = g_value_get_enum (value);
+      GST_PLAY_BIN_UNLOCK (playbin);
+      break;
+    case PROP_MULTIVIEW_FLAGS:
+      GST_PLAY_BIN_LOCK (playbin);
+      playbin->multiview_flags = g_value_get_flags (value);
+      GST_PLAY_BIN_UNLOCK (playbin);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2670,6 +2726,16 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, v);
       break;
     }
+    case PROP_MULTIVIEW_MODE:
+      GST_OBJECT_LOCK (playbin);
+      g_value_set_enum (value, playbin->multiview_mode);
+      GST_OBJECT_UNLOCK (playbin);
+      break;
+    case PROP_MULTIVIEW_FLAGS:
+      GST_OBJECT_LOCK (playbin);
+      g_value_set_flags (value, playbin->multiview_flags);
+      GST_OBJECT_UNLOCK (playbin);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3009,6 +3075,52 @@ notify:
     g_object_notify (G_OBJECT (playbin), property);
 }
 
+static GstCaps *
+update_video_multiview_caps (GstPlayBin * playbin, GstCaps * caps)
+{
+  GstVideoMultiviewFramePacking mv_mode;
+  GstVideoMultiviewMode cur_mv_mode;
+  GstVideoMultiviewFlags mv_flags, cur_mv_flags;
+  GstStructure *s;
+  const gchar *mview_mode_str;
+  GstCaps *out_caps;
+
+  GST_OBJECT_LOCK (playbin);
+  mv_mode = playbin->multiview_mode;
+  mv_flags = playbin->multiview_flags;
+  GST_OBJECT_UNLOCK (playbin);
+
+  if (mv_mode == GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE)
+    return NULL;
+
+  cur_mv_mode = GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE;
+  cur_mv_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+
+  s = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_flagset (s, "multiview-flags", &cur_mv_flags, NULL);
+  if ((mview_mode_str = gst_structure_get_string (s, "multiview-mode")))
+    cur_mv_mode = gst_video_multiview_mode_from_caps_string (mview_mode_str);
+
+  /* We can't override an existing annotated multiview mode, except
+   * maybe (in the future) we could change some flags. */
+  if ((gint) cur_mv_mode > GST_VIDEO_MULTIVIEW_MAX_FRAME_PACKING) {
+    GST_INFO_OBJECT (playbin, "Cannot override existing multiview mode");
+    return NULL;
+  }
+
+  mview_mode_str = gst_video_multiview_mode_to_caps_string (mv_mode);
+  g_assert (mview_mode_str != NULL);
+  out_caps = gst_caps_copy (caps);
+  s = gst_caps_get_structure (out_caps, 0);
+
+  gst_structure_set (s, "multiview-mode", G_TYPE_STRING, mview_mode_str,
+      "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET, mv_flags,
+      GST_FLAG_SET_MASK_EXACT, NULL);
+
+  return out_caps;
+}
+
 static GstPadProbeReturn
 _uridecodebin_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
 {
@@ -3070,6 +3182,26 @@ _uridecodebin_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
         gst_event_unref (event);
       }
       GST_SOURCE_GROUP_UNLOCK (group);
+      break;
+    }
+    case GST_EVENT_CAPS:{
+      GstCaps *caps = NULL;
+      const GstStructure *s;
+      const gchar *name;
+
+      gst_event_parse_caps (event, &caps);
+      /* If video caps, check if we should override multiview flags */
+      s = gst_caps_get_structure (caps, 0);
+      name = gst_structure_get_name (s);
+      if (g_str_has_prefix (name, "video/")) {
+        caps = update_video_multiview_caps (group->playbin, caps);
+        if (caps) {
+          gst_event_unref (event);
+          event = gst_event_new_caps (caps);
+          GST_PAD_PROBE_INFO_DATA (info) = event;
+          gst_caps_unref (caps);
+        }
+      }
       break;
     }
     default:
