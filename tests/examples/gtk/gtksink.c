@@ -142,6 +142,7 @@ main (int argc, char *argv[])
 
   g_object_get (videosink, "widget", &area, NULL);
   gtk_container_add (GTK_CONTAINER (window), area);
+  g_object_unref (area);
 
   gtk_widget_realize (area);
 

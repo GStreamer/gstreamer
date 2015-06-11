@@ -156,6 +156,7 @@ main (int argc, char *argv[])
   gtk_container_add (GTK_CONTAINER (window), area);
 
   gtk_widget_realize (area);
+  g_object_unref (area);
 
   caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, 640,
       "height", G_TYPE_INT, 480, "format", G_TYPE_STRING, "RGBA",
