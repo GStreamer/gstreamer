@@ -487,8 +487,10 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         GST_TIME_ARGS (splitmux->max_out_running_time));
 
     if (splitmux->max_out_running_time == GST_CLOCK_TIME_NONE ||
-        ctx->out_running_time < splitmux->max_out_running_time)
+        ctx->out_running_time < splitmux->max_out_running_time) {
+      splitmux->have_muxed_something = TRUE;
       return;
+    }
 
     if (ctx->flushing || splitmux->state == SPLITMUX_STATE_STOPPED)
       return;
@@ -678,10 +680,15 @@ start_next_fragment (GstSplitMuxSink * splitmux)
 
   /* Switch state and go back to processing */
   splitmux->state = SPLITMUX_STATE_COLLECTING_GOP_START;
-  if (!splitmux->video_ctx->in_eos)
+
+  if (!splitmux->video_ctx->in_eos) {
     splitmux->max_out_running_time = splitmux->video_ctx->in_running_time;
-  else
+  } else {
     splitmux->max_out_running_time = GST_CLOCK_TIME_NONE;
+    splitmux->have_muxed_something = FALSE;
+  }
+  splitmux->have_muxed_something =
+      (splitmux->video_ctx->in_running_time > splitmux->muxed_out_time);
 
   /* Store the overflow parameters as the basis for the next fragment */
   splitmux->mux_start_time = splitmux->muxed_out_time;
@@ -759,7 +766,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
 
   /* Check for overrun - have we output at least one byte and overrun
    * either threshold? */
-  if ((splitmux->mux_start_bytes < splitmux->muxed_out_bytes) &&
+  if (splitmux->have_muxed_something &&
       ((splitmux->threshold_bytes > 0 &&
               queued_bytes >= splitmux->threshold_bytes) ||
           (splitmux->threshold_time > 0 &&
@@ -782,6 +789,8 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
 
     /* Wake everyone up to push this one GOP, then sleep */
     splitmux->state = SPLITMUX_STATE_COLLECTING_GOP_START;
+    splitmux->have_muxed_something = TRUE;
+
     if (!splitmux->video_ctx->in_eos)
       splitmux->max_out_running_time = splitmux->video_ctx->in_running_time;
     else

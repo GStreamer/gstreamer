@@ -905,7 +905,7 @@ type_found (GstElement * typefind, guint probability,
 
   gst_bin_add (GST_BIN_CAST (reader), demux);
   gst_element_link_pads (reader->typefind, "src", demux, NULL);
-  gst_element_set_state (reader->demux, GST_STATE_PLAYING);
+  gst_element_sync_state_with_parent (reader->demux);
 
   /* Connect to demux signals */
   g_signal_connect (demux,

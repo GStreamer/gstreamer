@@ -118,6 +118,7 @@ struct _GstSplitMuxSink {
 
   GstClockTime muxed_out_time;
   gsize muxed_out_bytes;
+  gboolean have_muxed_something;
 
   GstClockTime mux_start_time;
   gsize mux_start_bytes;
