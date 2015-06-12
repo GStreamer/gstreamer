@@ -284,7 +284,8 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
     glClear (GL_COLOR_BUFFER_BIT);
   }
 
-  gst_gl_context_activate (gst_widget->priv->other_context, FALSE);
+  if (gst_widget->priv->other_context)
+    gst_gl_context_activate (gst_widget->priv->other_context, FALSE);
 
   g_mutex_unlock (&gst_widget->priv->lock);
   return FALSE;
