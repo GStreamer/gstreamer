@@ -134,30 +134,9 @@ gst_gtk_gl_sink_set_property (GObject * object, guint prop_id,
 }
 
 static void
-_reset (GstGtkGLSink * gtk_sink)
-{
-  if (gtk_sink->display) {
-    gst_object_unref (gtk_sink->display);
-    gtk_sink->display = NULL;
-  }
-
-  if (gtk_sink->context) {
-    gst_object_unref (gtk_sink->context);
-    gtk_sink->context = NULL;
-  }
-
-  if (gtk_sink->gtk_context) {
-    gst_object_unref (gtk_sink->gtk_context);
-    gtk_sink->gtk_context = NULL;
-  }
-}
-
-static void
 gst_gtk_gl_sink_finalize (GObject * object)
 {
   GstGtkGLSink *gtk_sink = GST_GTK_GL_SINK (object);;
-
-  _reset (gtk_sink);
 
   g_object_unref (gtk_sink->widget);
 
@@ -316,6 +295,20 @@ gst_gtk_gl_sink_change_state (GstElement * element, GstStateChange transition)
       gtk_gst_gl_widget_set_buffer (gtk_sink->widget, NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      if (gtk_sink->display) {
+        gst_object_unref (gtk_sink->display);
+        gtk_sink->display = NULL;
+      }
+
+      if (gtk_sink->context) {
+        gst_object_unref (gtk_sink->context);
+        gtk_sink->context = NULL;
+      }
+
+      if (gtk_sink->gtk_context) {
+        gst_object_unref (gtk_sink->gtk_context);
+        gtk_sink->gtk_context = NULL;
+      }
       break;
     default:
       break;
@@ -353,8 +346,6 @@ gst_gtk_gl_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstGtkGLSink *gtk_sink = GST_GTK_GL_SINK (bsink);
 
   GST_DEBUG ("set caps with %" GST_PTR_FORMAT, caps);
-
-  _reset (gtk_sink);
 
   if (!gst_video_info_from_caps (&gtk_sink->v_info, caps))
     return FALSE;
