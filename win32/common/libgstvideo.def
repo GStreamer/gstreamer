@@ -259,6 +259,7 @@ EXPORTS
 	gst_video_scaler_combine_packed_YUV
 	gst_video_scaler_free
 	gst_video_scaler_get_coeff
+	gst_video_scaler_get_max_taps
 	gst_video_scaler_horizontal
 	gst_video_scaler_new
 	gst_video_scaler_vertical
