@@ -588,8 +588,10 @@ EXPORTS
 	gst_event_new_seek
 	gst_event_new_segment
 	gst_event_new_segment_done
+	gst_event_new_select_streams
 	gst_event_new_sink_message
 	gst_event_new_step
+	gst_event_new_stream_collection
 	gst_event_new_stream_start
 	gst_event_new_tag
 	gst_event_new_toc
@@ -605,8 +607,11 @@ EXPORTS
 	gst_event_parse_seek
 	gst_event_parse_segment
 	gst_event_parse_segment_done
+	gst_event_parse_select_streams
 	gst_event_parse_sink_message
 	gst_event_parse_step
+	gst_event_parse_stream
+	gst_event_parse_stream_collection
 	gst_event_parse_stream_flags
 	gst_event_parse_stream_start
 	gst_event_parse_tag
@@ -615,6 +620,7 @@ EXPORTS
 	gst_event_set_group_id
 	gst_event_set_running_time_offset
 	gst_event_set_seqnum
+	gst_event_set_stream
 	gst_event_set_stream_flags
 	gst_event_type_flags_get_type
 	gst_event_type_get_flags
@@ -726,8 +732,10 @@ EXPORTS
 	gst_message_new_state_dirty
 	gst_message_new_step_done
 	gst_message_new_step_start
+	gst_message_new_stream_collection
 	gst_message_new_stream_start
 	gst_message_new_stream_status
+	gst_message_new_streams_selected
 	gst_message_new_structure_change
 	gst_message_new_tag
 	gst_message_new_toc
@@ -757,7 +765,9 @@ EXPORTS
 	gst_message_parse_state_changed
 	gst_message_parse_step_done
 	gst_message_parse_step_start
+	gst_message_parse_stream_collection
 	gst_message_parse_stream_status
+	gst_message_parse_streams_selected
 	gst_message_parse_structure_change
 	gst_message_parse_tag
 	gst_message_parse_toc
@@ -768,6 +778,9 @@ EXPORTS
 	gst_message_set_qos_values
 	gst_message_set_seqnum
 	gst_message_set_stream_status_object
+	gst_message_streams_selected_add
+	gst_message_streams_selected_get_size
+	gst_message_streams_selected_get_stream
 	gst_message_type_get_name
 	gst_message_type_get_type
 	gst_message_type_to_quark
@@ -850,6 +863,7 @@ EXPORTS
 	gst_pad_get_peer
 	gst_pad_get_range
 	gst_pad_get_sticky_event
+	gst_pad_get_stream
 	gst_pad_get_stream_id
 	gst_pad_get_type
 	gst_pad_has_current_caps
@@ -1192,10 +1206,29 @@ EXPORTS
 	gst_static_pad_template_get
 	gst_static_pad_template_get_caps
 	gst_static_pad_template_get_type
+	gst_stream_collection_add_stream
+	gst_stream_collection_get_size
+	gst_stream_collection_get_stream
+	gst_stream_collection_get_type
+	gst_stream_collection_get_upstream_id
+	gst_stream_collection_new
 	gst_stream_error_get_type
 	gst_stream_error_quark
 	gst_stream_flags_get_type
+	gst_stream_get_caps
+	gst_stream_get_stream_flags
+	gst_stream_get_stream_id
+	gst_stream_get_stream_type
+	gst_stream_get_tags
+	gst_stream_get_type
+	gst_stream_new
+	gst_stream_set_caps
+	gst_stream_set_stream_flags
+	gst_stream_set_stream_type
+	gst_stream_set_tags
 	gst_stream_status_type_get_type
+	gst_stream_type_get_name
+	gst_stream_type_get_type
 	gst_structure_can_intersect
 	gst_structure_change_type_get_type
 	gst_structure_copy

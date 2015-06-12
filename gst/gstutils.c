@@ -3994,6 +3994,41 @@ gst_pad_get_stream_id (GstPad * pad)
 }
 
 /**
+ * gst_pad_get_stream:
+ * @pad: A source #GstPad
+ *
+ * Returns the current #GstStream for the @pad, or %NULL if none has been
+ * set yet, i.e. the pad has not received a stream-start event yet.
+ *
+ * This is a convenience wrapper around gst_pad_get_sticky_event() and
+ * gst_event_parse_stream().
+ *
+ * Returns: (nullable) (transfer full): the current #GstStream for @pad, or %NULL.
+ *     unref the returned stream when no longer needed.
+ *
+ * Since: 1.X
+ */
+GstStream *
+gst_pad_get_stream (GstPad * pad)
+{
+  GstStream *stream = NULL;
+  GstEvent *event;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  event = gst_pad_get_sticky_event (pad, GST_EVENT_STREAM_START, 0);
+  if (event != NULL) {
+    gst_event_parse_stream (event, &stream);
+    gst_event_unref (event);
+    GST_LOG_OBJECT (pad, "pad has stream object %p", stream);
+  } else {
+    GST_DEBUG_OBJECT (pad, "pad has not received a stream-start event yet");
+  }
+
+  return stream;
+}
+
+/**
  * gst_util_group_id_next:
  *
  * Return a constantly incrementing group id.

@@ -99,6 +99,8 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gstquery.xml" />
     <xi:include href="xml/gstregistry.xml" />
     <xi:include href="xml/gstsegment.xml" />
+    <xi:include href="xml/gststreams.xml" />
+    <xi:include href="xml/gststreamcollection.xml" />
     <xi:include href="xml/gststructure.xml" />
     <xi:include href="xml/gstsystemclock.xml" />
     <xi:include href="xml/gsttaglist.xml" />

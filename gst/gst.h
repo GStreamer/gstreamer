@@ -58,6 +58,7 @@
 #include <gst/gstmeta.h>
 #include <gst/gstminiobject.h>
 #include <gst/gstobject.h>
+#include <gst/gststreamcollection.h>
 #include <gst/gstpad.h>
 #include <gst/gstparamspecs.h>
 #include <gst/gstpipeline.h>
@@ -69,6 +70,7 @@
 #include <gst/gstregistry.h>
 #include <gst/gstsample.h>
 #include <gst/gstsegment.h>
+#include <gst/gststreams.h>
 #include <gst/gststructure.h>
 #include <gst/gstsystemclock.h>
 #include <gst/gsttaglist.h>

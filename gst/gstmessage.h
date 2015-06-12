@@ -110,6 +110,10 @@ typedef struct _GstMessage GstMessage;
  *     from a #GstDeviceProvider (Since 1.4)
  * @GST_MESSAGE_PROPERTY_NOTIFY: Message indicating a #GObject property has
  *     changed (Since 1.10)
+ * @GST_MESSAGE_STREAM_COLLECTION: Message indicating a new #GstStreamCollection
+ *     is available.
+ * @GST_MESSAGE_STREAMS_SELECTED: Message indicating the active selection of
+ *     #GstStreams has changed.
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
@@ -159,6 +163,8 @@ typedef enum
   GST_MESSAGE_DEVICE_ADDED      = GST_MESSAGE_EXTENDED + 1,
   GST_MESSAGE_DEVICE_REMOVED    = GST_MESSAGE_EXTENDED + 2,
   GST_MESSAGE_PROPERTY_NOTIFY   = GST_MESSAGE_EXTENDED + 3,
+  GST_MESSAGE_STREAM_COLLECTION = GST_MESSAGE_EXTENDED + 4,
+  GST_MESSAGE_STREAMS_SELECTED  = GST_MESSAGE_EXTENDED + 5,
   GST_MESSAGE_ANY               = (gint) (0xffffffff)
 } GstMessageType;
 
@@ -170,6 +176,7 @@ typedef enum
 #include <gst/gstquery.h>
 #include <gst/gsttoc.h>
 #include <gst/gstdevice.h>
+#include <gst/gststreamcollection.h>
 
 GST_EXPORT GType _gst_message_type;
 
@@ -598,6 +605,17 @@ void            gst_message_parse_device_removed  (GstMessage * message, GstDevi
 /* PROPERTY_NOTIFY */
 GstMessage *    gst_message_new_property_notify   (GstObject * src, const gchar * property_name, GValue * val) G_GNUC_MALLOC;
 void            gst_message_parse_property_notify (GstMessage * message, GstObject ** object, const gchar ** property_name, const GValue ** property_value);
+
+/* STREAM_COLLECTION */
+GstMessage *    gst_message_new_stream_collection   (GstObject * src, GstStreamCollection * collection) G_GNUC_MALLOC;
+void            gst_message_parse_stream_collection (GstMessage *message, GstStreamCollection **collection);
+
+/* STREAMS_SELECTED */
+GstMessage *    gst_message_new_streams_selected (GstObject *src, GstStreamCollection *collection);
+void            gst_message_streams_selected_add (GstMessage *message, GstStream *stream);
+void            gst_message_parse_streams_selected (GstMessage * message, GstStreamCollection **collection);
+guint           gst_message_streams_selected_get_size (GstMessage * message);
+GstStream      *gst_message_streams_selected_get_stream (GstMessage *message, guint idx);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMessage, gst_message_unref)

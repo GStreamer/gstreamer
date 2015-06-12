@@ -79,6 +79,7 @@ typedef enum {
  *                 from the pipeline and unblock all streaming threads.
  * @GST_EVENT_FLUSH_STOP: Stop a flush operation. This event resets the
  *                 running-time of the pipeline.
+ * @GST_EVENT_SELECT_STREAMS: A request to select one or more streams.
  * @GST_EVENT_STREAM_START: Event to mark the start of a new stream. Sent before any
  *                 other serialized event and only sent at the start of a new stream,
  *                 not after flushing seeks.
@@ -87,6 +88,7 @@ typedef enum {
  *                 segment events contains information for clipping buffers and
  *                 converting buffer timestamps to running-time and
  *                 stream-time.
+ * @GST_EVENT_STREAM_COLLECTION: A new #GstStreamCollection is available.
  * @GST_EVENT_TAG: A new set of metadata tags has been found in the stream.
  * @GST_EVENT_BUFFERSIZE: Notification of buffering requirements. Currently not
  *                 used yet.
@@ -94,7 +96,8 @@ typedef enum {
  *                          send messages that should be emitted in sync with
  *                          rendering.
  * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow
- *                 without a SEGMENT event.
+ *                 without either a STREAM_START event, or a FLUSH_STOP and a SEGMENT
+ *                 event.
  * @GST_EVENT_SEGMENT_DONE: Marks the end of a segment playback.
  * @GST_EVENT_GAP: Marks a gap in the datastream.
  * @GST_EVENT_TOC: An event which indicates that a new table of contents (TOC)
@@ -144,6 +147,7 @@ typedef enum {
   GST_EVENT_STREAM_START          = GST_EVENT_MAKE_TYPE (40, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_CAPS                  = GST_EVENT_MAKE_TYPE (50, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_SEGMENT               = GST_EVENT_MAKE_TYPE (70, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_STREAM_COLLECTION     = GST_EVENT_MAKE_TYPE (75, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_TAG                   = GST_EVENT_MAKE_TYPE (80, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (90, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (100, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
@@ -163,6 +167,7 @@ typedef enum {
   GST_EVENT_STEP                  = GST_EVENT_MAKE_TYPE (230, FLAG(UPSTREAM)),
   GST_EVENT_RECONFIGURE           = GST_EVENT_MAKE_TYPE (240, FLAG(UPSTREAM)),
   GST_EVENT_TOC_SELECT            = GST_EVENT_MAKE_TYPE (250, FLAG(UPSTREAM)),
+  GST_EVENT_SELECT_STREAMS        = GST_EVENT_MAKE_TYPE (260, FLAG(UPSTREAM)),
 
   /* custom events start here */
   GST_EVENT_CUSTOM_UPSTREAM          = GST_EVENT_MAKE_TYPE (270, FLAG(UPSTREAM)),
@@ -173,6 +178,30 @@ typedef enum {
   GST_EVENT_CUSTOM_BOTH_OOB          = GST_EVENT_MAKE_TYPE (320, FLAG(BOTH))
 } GstEventType;
 #undef FLAG
+
+/**
+ * GstStreamFlags:
+ * @GST_STREAM_FLAG_NONE: This stream has no special attributes
+ * @GST_STREAM_FLAG_SPARSE: This stream is a sparse stream (e.g. a subtitle
+ *    stream), data may flow only in irregular intervals with large gaps in
+ *    between.
+ * @GST_STREAM_FLAG_SELECT: This stream should be selected by default. This
+ *    flag may be used by demuxers to signal that a stream should be selected
+ *    by default in a playback scenario.
+ * @GST_STREAM_FLAG_UNSELECT: This stream should not be selected by default.
+ *    This flag may be used by demuxers to signal that a stream should not
+ *    be selected by default in a playback scenario, but only if explicitly
+ *    selected by the user (e.g. an audio track for the hard of hearing or
+ *    a director's commentary track).
+ *
+ * Since: 1.2
+ */
+typedef enum {
+  GST_STREAM_FLAG_NONE,
+  GST_STREAM_FLAG_SPARSE       = (1 << 0),
+  GST_STREAM_FLAG_SELECT       = (1 << 1),
+  GST_STREAM_FLAG_UNSELECT     = (1 << 2)
+} GstStreamFlags;
 
 #include <gst/gstminiobject.h>
 #include <gst/gstformat.h>
@@ -355,29 +384,6 @@ typedef enum {
   GST_QOS_TYPE_THROTTLE        = 2
 } GstQOSType;
 
-/**
- * GstStreamFlags:
- * @GST_STREAM_FLAG_NONE: This stream has no special attributes
- * @GST_STREAM_FLAG_SPARSE: This stream is a sparse stream (e.g. a subtitle
- *    stream), data may flow only in irregular intervals with large gaps in
- *    between.
- * @GST_STREAM_FLAG_SELECT: This stream should be selected by default. This
- *    flag may be used by demuxers to signal that a stream should be selected
- *    by default in a playback scenario.
- * @GST_STREAM_FLAG_UNSELECT: This stream should not be selected by default.
- *    This flag may be used by demuxers to signal that a stream should not
- *    be selected by default in a playback scenario, but only if explicitly
- *    selected by the user (e.g. an audio track for the hard of hearing or
- *    a director's commentary track).
- *
- * Since: 1.2
- */
-typedef enum {
-  GST_STREAM_FLAG_NONE,
-  GST_STREAM_FLAG_SPARSE       = (1 << 0),
-  GST_STREAM_FLAG_SELECT       = (1 << 1),
-  GST_STREAM_FLAG_UNSELECT     = (1 << 2)
-} GstStreamFlags;
 
 /**
  * GstEvent:
@@ -467,6 +473,8 @@ void            gst_event_set_running_time_offset (GstEvent *event, gint64 offse
 /* Stream start event */
 GstEvent *      gst_event_new_stream_start      (const gchar *stream_id) G_GNUC_MALLOC;
 void            gst_event_parse_stream_start    (GstEvent *event, const gchar **stream_id);
+void            gst_event_set_stream		(GstEvent *event, GstStream *stream);
+void            gst_event_parse_stream		(GstEvent *event, GstStream **stream);
 
 void            gst_event_set_stream_flags      (GstEvent *event, GstStreamFlags flags);
 void            gst_event_parse_stream_flags    (GstEvent *event, GstStreamFlags *flags);
@@ -479,6 +487,14 @@ GstEvent *      gst_event_new_flush_start       (void) G_GNUC_MALLOC;
 
 GstEvent *      gst_event_new_flush_stop        (gboolean reset_time) G_GNUC_MALLOC;
 void            gst_event_parse_flush_stop      (GstEvent *event, gboolean *reset_time);
+
+/* Stream collection event */
+GstEvent *      gst_event_new_stream_collection   (GstStreamCollection *collection) G_GNUC_MALLOC;
+void            gst_event_parse_stream_collection (GstEvent *event, GstStreamCollection **collection);
+
+/* select streams event */
+GstEvent *      gst_event_new_select_streams    (GList *streams);
+void            gst_event_parse_select_streams  (GstEvent *event, GList **streams);
 
 /* EOS event */
 GstEvent *      gst_event_new_eos               (void) G_GNUC_MALLOC;

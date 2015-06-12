@@ -52,6 +52,31 @@ GST_START_TEST (create_events)
     fail_unless (reset_time == TRUE);
     gst_event_unref (event);
   }
+  /* SELECT_STREAMS */
+  {
+    GList *streams = NULL;
+    GList *res = NULL;
+    GList *tmp;
+    streams = g_list_append (streams, (gpointer) "stream1");
+    streams = g_list_append (streams, (gpointer) "stream2");
+    event = gst_event_new_select_streams (streams);
+    fail_if (event == NULL);
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_SELECT_STREAMS);
+    fail_unless (GST_EVENT_IS_UPSTREAM (event));
+
+    gst_event_parse_select_streams (event, &res);
+    fail_if (res == NULL);
+    fail_unless_equals_int (g_list_length (res), 2);
+    tmp = res;
+    fail_unless_equals_string (tmp->data, "stream1");
+    tmp = tmp->next;
+    fail_unless_equals_string (tmp->data, "stream2");
+
+    gst_event_unref (event);
+
+    g_list_free (streams);
+    g_list_free_full (res, g_free);
+  }
   /* EOS */
   {
     event = gst_event_new_eos ();
@@ -217,6 +242,37 @@ GST_START_TEST (create_events)
     ASSERT_CRITICAL (gst_event_set_stream_flags (event, GST_STREAM_FLAG_NONE));
     gst_event_unref (event);
     gst_event_unref (event);
+  }
+
+  /* STREAM_COLLECTION */
+  {
+    GstStreamCollection *collection, *res = NULL;
+    GstStream *stream1, *stream2;
+    GstCaps *caps1, *caps2;
+
+    /* Create a collection of two streams */
+    caps1 = gst_caps_from_string ("some/caps");
+    caps2 = gst_caps_from_string ("some/other-string");
+
+    stream1 = gst_stream_new ("stream-1", caps1, GST_STREAM_TYPE_AUDIO, 0);
+    stream2 = gst_stream_new ("stream-2", caps2, GST_STREAM_TYPE_VIDEO, 0);
+
+    collection = gst_stream_collection_new ("something");
+    fail_unless (gst_stream_collection_add_stream (collection, stream1));
+    fail_unless (gst_stream_collection_add_stream (collection, stream2));
+
+    event = gst_event_new_stream_collection (collection);
+    fail_unless (event != NULL);
+
+    gst_event_parse_stream_collection (event, &res);
+    fail_unless (res != NULL);
+    fail_unless (res == collection);
+
+    gst_event_unref (event);
+    gst_object_unref (res);
+    gst_object_unref (collection);
+    gst_caps_unref (caps1);
+    gst_caps_unref (caps2);
   }
 
   /* NAVIGATION */

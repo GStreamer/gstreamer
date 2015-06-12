@@ -377,6 +377,90 @@ GST_START_TEST (test_parsing)
 
     gst_message_unref (message);
   }
+  /* GST_MESSAGE_STREAM_COLLECTION */
+  {
+    GstMessage *message;
+    GstStreamCollection *collection, *res = NULL;
+    GstStream *stream1, *stream2;
+    GstCaps *caps1, *caps2;
+
+    /* Create a collection of two streams */
+    caps1 = gst_caps_from_string ("some/caps");
+    caps2 = gst_caps_from_string ("some/other-string");
+
+    stream1 = gst_stream_new ("stream-1", caps1, GST_STREAM_TYPE_AUDIO, 0);
+    stream2 = gst_stream_new ("stream-2", caps2, GST_STREAM_TYPE_VIDEO, 0);
+
+    collection = gst_stream_collection_new ("something");
+    fail_unless (gst_stream_collection_add_stream (collection, stream1));
+    fail_unless (gst_stream_collection_add_stream (collection, stream2));
+
+    message = gst_message_new_stream_collection (NULL, collection);
+    fail_unless (message != NULL);
+
+    gst_message_parse_stream_collection (message, &res);
+    fail_unless (res != NULL);
+
+    gst_message_unref (message);
+    gst_object_unref (res);
+    gst_object_unref (collection);
+    gst_caps_unref (caps1);
+    gst_caps_unref (caps2);
+  }
+  /* GST_MESSAGE_STREAMS_SELECTED */
+  {
+    GstMessage *message;
+    GstStreamCollection *collection, *res = NULL;
+    GstStream *stream1, *stream2, *stream3;
+    GstCaps *caps1, *caps2;
+
+    /* Create a collection of two streams */
+    caps1 = gst_caps_from_string ("some/caps");
+    caps2 = gst_caps_from_string ("some/other-string");
+
+    stream1 = gst_stream_new ("stream-1", caps1, GST_STREAM_TYPE_AUDIO, 0);
+    stream2 = gst_stream_new ("stream-2", caps2, GST_STREAM_TYPE_VIDEO, 0);
+
+    collection = gst_stream_collection_new ("something");
+    fail_unless (gst_stream_collection_add_stream (collection, stream1));
+    fail_unless (gst_stream_collection_add_stream (collection, stream2));
+
+    message = gst_message_new_streams_selected (NULL, collection);
+    fail_unless (message != NULL);
+
+    gst_message_parse_streams_selected (message, &res);
+    fail_unless (res != NULL);
+
+    fail_unless (gst_message_streams_selected_get_size (message) == 0);
+    gst_object_unref (res);
+    gst_message_unref (message);
+
+    /* Once again, this time with a stream in it */
+    message = gst_message_new_streams_selected (NULL, collection);
+    fail_unless (message != NULL);
+
+    gst_message_streams_selected_add (message, stream1);
+
+    gst_message_parse_streams_selected (message, &res);
+    fail_unless (res != NULL);
+
+    /* There is only one stream ! */
+    fail_unless (gst_message_streams_selected_get_size (message) == 1);
+
+    stream3 = gst_message_streams_selected_get_stream (message, 0);
+    fail_unless (stream3 != NULL);
+    gst_object_unref (stream3);
+
+    /* Shoul fail */
+    ASSERT_CRITICAL (gst_message_streams_selected_get_stream (message, 1));
+
+    gst_object_unref (res);
+    gst_message_unref (message);
+
+    gst_object_unref (collection);
+    gst_caps_unref (caps1);
+    gst_caps_unref (caps2);
+  }
 }
 
 GST_END_TEST;

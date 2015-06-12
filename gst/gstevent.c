@@ -104,7 +104,9 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_UNKNOWN, "unknown", 0},
   {GST_EVENT_FLUSH_START, "flush-start", 0},
   {GST_EVENT_FLUSH_STOP, "flush-stop", 0},
+  {GST_EVENT_SELECT_STREAMS, "select-streams", 0},
   {GST_EVENT_STREAM_START, "stream-start", 0},
+  {GST_EVENT_STREAM_COLLECTION, "stream-collection", 0},
   {GST_EVENT_CAPS, "caps", 0},
   {GST_EVENT_SEGMENT, "segment", 0},
   {GST_EVENT_TAG, "tag", 0},
@@ -574,6 +576,77 @@ gst_event_parse_flush_stop (GstEvent * event, gboolean * reset_time)
         g_value_get_boolean (gst_structure_id_get_value (structure,
             GST_QUARK (RESET_TIME)));
 }
+
+/**
+ * gst_event_new_select_streams:
+ * @streams: (element-type gchar) (transfer none): the list of streams to
+ * activate
+ *
+ * Allocate a new select-streams event.
+ *
+ * The select-streams event requests the specified @streams to be activated.
+ *
+ * The list of @streams corresponds to the "Stream ID" of each stream to be
+ * activated. Those ID can be obtained via the #GstStream objects present
+ * in #GST_EVENT_STREAM_START, #GST_EVENT_STREAM_COLLECTION or 
+ * #GST_MESSSAGE_STREAM_COLLECTION.
+ *
+ * Returns: (transfer full): a new select-streams event.
+ */
+GstEvent *
+gst_event_new_select_streams (GList * streams)
+{
+  GstEvent *event;
+  GValue val = G_VALUE_INIT;
+  GstStructure *struc;
+  GList *tmpl;
+
+  GST_CAT_INFO (GST_CAT_EVENT, "Creating new select-streams event");
+  struc = gst_structure_new_id_empty (GST_QUARK (EVENT_SELECT_STREAMS));
+  g_value_init (&val, GST_TYPE_LIST);
+  /* Fill struc with streams */
+  for (tmpl = streams; tmpl; tmpl = tmpl->next) {
+    GValue strval = G_VALUE_INIT;
+    const gchar *str = (const gchar *) tmpl->data;
+    g_value_init (&strval, G_TYPE_STRING);
+    g_value_set_string (&strval, str);
+    gst_value_list_append_and_take_value (&val, &strval);
+  }
+  gst_structure_id_take_value (struc, GST_QUARK (STREAMS), &val);
+  event = gst_event_new_custom (GST_EVENT_SELECT_STREAMS, struc);
+
+  return event;
+}
+
+/**
+ * gst_event_parse_select_streams:
+ * @event: The event to parse
+ * @streams: (out) (element-type gchar) (transfer full): the streams
+ *
+ * Parse the SELECT_STREAMS event and retrieve the contained streams.
+ */
+void
+gst_event_parse_select_streams (GstEvent * event, GList ** streams)
+{
+  GstStructure *structure;
+  GList *res = NULL;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SELECT_STREAMS);
+
+  structure = GST_EVENT_STRUCTURE (event);
+  if (G_LIKELY (streams)) {
+    const GValue *vlist =
+        gst_structure_id_get_value (structure, GST_QUARK (STREAMS));
+    guint i, sz = gst_value_list_get_size (vlist);
+    for (i = 0; i < sz; i++) {
+      const GValue *strv = gst_value_list_get_value (vlist, i);
+      res = g_list_append (res, g_value_dup_string (strv));
+    }
+    *streams = res;
+  }
+}
+
 
 /**
  * gst_event_new_eos:
@@ -1508,6 +1581,44 @@ gst_event_parse_stream_start (GstEvent * event, const gchar ** stream_id)
 }
 
 /**
+ * gst_event_set_stream:
+ * @event: a stream-start event
+ * @stream: (transfer none): the stream object to set
+ *
+ * Set the @stream on the stream-start @event 
+ **/
+void
+gst_event_set_stream (GstEvent * event, GstStream * stream)
+{
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+  g_return_if_fail (gst_event_is_writable (event));
+
+  gst_structure_id_set (GST_EVENT_STRUCTURE (event),
+      GST_QUARK (STREAM), GST_TYPE_STREAM, stream, NULL);
+}
+
+/**
+ * gst_event_parse_stream:
+ * @event: a stream-start event
+ * @stream: (out) (transfer full): adress of variable to store the stream
+ *
+ * Parse a stream-start @event and extract the #GstStream from it.
+ **/
+void
+gst_event_parse_stream (GstEvent * event, GstStream ** stream)
+{
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+
+  if (stream) {
+    gst_structure_id_get (GST_EVENT_STRUCTURE (event),
+        GST_QUARK (STREAM), GST_TYPE_STREAM, stream, NULL);
+  }
+
+}
+
+/**
  * gst_event_set_stream_flags:
  * @event: a stream-start event
  * @flags: the stream flags to set
@@ -1593,6 +1704,52 @@ gst_event_parse_group_id (GstEvent * event, guint * group_id)
   }
 
   return TRUE;
+}
+
+/**
+ * gst_event_new_stream_collection:
+ * @collection: Active collection for this data flow
+ *
+ * Create a new STREAM_COLLECTION event. The stream collection event can only
+ * travel downstream synchronized with the buffer flow.
+ *
+ * Source elements, demuxers and other elements that manage collections
+ * of streams and post #GstStreamCollection messages on the bus also send
+ * this event downstream on each pad involved in the collection, so that
+ * activation of a new collection can be tracked through the downstream
+ * data flow.
+ *
+ * Returns: (transfer full): the new STREAM_COLLECTION event.
+ */
+GstEvent *
+gst_event_new_stream_collection (GstStreamCollection * collection)
+{
+  GstStructure *s;
+
+  g_return_val_if_fail (collection != NULL, NULL);
+  g_return_val_if_fail (GST_IS_STREAM_COLLECTION (collection), NULL);
+
+  s = gst_structure_new_id (GST_QUARK (EVENT_STREAM_COLLECTION),
+      GST_QUARK (COLLECTION), GST_TYPE_STREAM_COLLECTION, collection, NULL);
+
+  return gst_event_new_custom (GST_EVENT_STREAM_COLLECTION, s);
+}
+
+void
+gst_event_parse_stream_collection (GstEvent * event,
+    GstStreamCollection ** collection)
+{
+  const GstStructure *structure;
+
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_COLLECTION);
+
+  structure = gst_event_get_structure (event);
+
+  if (collection) {
+    gst_structure_id_get (structure,
+        GST_QUARK (COLLECTION), GST_TYPE_STREAM_COLLECTION, collection, NULL);
+  }
 }
 
 /**

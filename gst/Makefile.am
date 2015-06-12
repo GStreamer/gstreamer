@@ -106,6 +106,8 @@ libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 	gstregistrychunks.c	\
 	gstsample.c		\
 	gstsegment.c		\
+	gststreamcollection.c	\
+	gststreams.c		\
 	gststructure.c		\
 	gstsystemclock.c	\
 	gsttaglist.c		\
@@ -214,6 +216,8 @@ gst_headers =			\
 	gstquery.h		\
 	gstsample.h		\
 	gstsegment.h		\
+	gststreamcollection.h	\
+	gststreams.h		\
 	gststructure.h		\
 	gstsystemclock.h	\
 	gsttaglist.h		\

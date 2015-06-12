@@ -38,6 +38,7 @@ gstprintf
 gstprotection
 gstregistry
 gstsegment
+gststream
 gststructure
 gstsystemclock
 gsttag

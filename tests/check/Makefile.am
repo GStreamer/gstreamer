@@ -137,6 +137,7 @@ check_PROGRAMS =				\
 	gst/gstsegment				\
 	gst/gstsystemclock			\
 	gst/gstclock				\
+	gst/gststream				\
 	gst/gststructure			\
 	gst/gsttag				\
 	gst/gsttracerrecord		 		\

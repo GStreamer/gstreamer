@@ -1123,6 +1123,9 @@ gst_event_parse_stream_flags
 gst_event_set_group_id
 gst_event_parse_group_id
 
+gst_event_set_stream
+gst_event_parse_stream
+
 gst_event_new_segment
 gst_event_parse_segment
 gst_event_copy_segment
@@ -1169,6 +1172,12 @@ gst_event_parse_segment_done
 
 gst_event_new_protection
 gst_event_parse_protection
+
+gst_event_new_select_streams
+gst_event_parse_select_streams
+
+gst_event_new_stream_collection
+gst_event_parse_stream_collection
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT
@@ -1621,6 +1630,8 @@ gst_message_new_stream_start
 gst_message_set_group_id
 gst_message_parse_group_id
 
+gst_message_new_stream_collection
+gst_message_parse_stream_collection
 GstStructureChangeType
 gst_message_new_structure_change
 gst_message_parse_structure_change
@@ -1649,6 +1660,13 @@ gst_message_parse_device_removed
 
 gst_message_new_property_notify
 gst_message_parse_property_notify
+
+gst_message_new_streams_selected
+gst_message_parse_streams_selected
+gst_message_streams_selected_add
+gst_message_streams_selected_get_size
+gst_message_streams_selected_get_stream
+
 <SUBSECTION Standard>
 GstMessageClass
 GST_MESSAGE
@@ -1977,6 +1995,7 @@ gst_pad_create_stream_id_printf
 gst_pad_create_stream_id_printf_valist
 
 gst_pad_get_stream_id
+gst_pad_get_stream
 
 GstPadForwardFunction
 gst_pad_forward
@@ -2616,6 +2635,60 @@ gst_segment_flags_get_type
 <SUBSECTION Private>
 </SECTION>
 
+<SECTION>
+<FILE>gststreams</FILE>
+<TITLE>GstStream</TITLE>
+GstStream
+GstStreamClass
+GstStreamType
+gst_stream_new
+gst_stream_get_caps
+gst_stream_get_stream_flags
+gst_stream_get_stream_id
+gst_stream_get_stream_type
+gst_stream_get_tags
+gst_stream_set_caps
+gst_stream_set_stream_flags
+gst_stream_set_stream_type
+gst_stream_set_tags
+gst_stream_type_get_name
+<SUBSECTION Standard>
+GST_IS_STREAM
+GST_IS_STREAM_CLASS
+GST_STREAM
+GST_STREAM_CAST
+GST_STREAM_CLASS
+GST_STREAM_GET_CLASS
+GST_TYPE_STREAM
+GST_TYPE_STREAM_TYPE
+gst_stream_get_type
+gst_stream_type_get_type
+<SUBSECTION Private>
+GstStreamPrivate
+</SECTION>
+
+<SECTION>
+<FILE>gststreamcollection</FILE>
+<TITLE>GstStreamCollection</TITLE>
+GstStreamCollection
+GstStreamCollectionClass
+gst_stream_collection_new
+gst_stream_collection_add_stream
+gst_stream_collection_get_upstream_id
+gst_stream_collection_get_size
+gst_stream_collection_get_stream
+<SUBSECTION Standard>
+gst_stream_collection_get_type
+GST_IS_STREAM_COLLECTION
+GST_IS_STREAM_COLLECTION_CLASS
+GST_STREAM_COLLECTION
+GST_STREAM_COLLECTION_CAST
+GST_STREAM_COLLECTION_CLASS
+GST_STREAM_COLLECTION_GET_CLASS
+GST_TYPE_STREAM_COLLECTION
+<SUBSECTION Private>
+GstStreamCollectionPrivate
+</SECTION>
 
 <SECTION>
 <FILE>gststructure</FILE>

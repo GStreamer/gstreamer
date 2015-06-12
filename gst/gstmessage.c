@@ -52,6 +52,7 @@
 #include "gsttaglist.h"
 #include "gstutils.h"
 #include "gstquark.h"
+#include "gstvalue.h"
 
 
 typedef struct
@@ -106,6 +107,8 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_DEVICE_ADDED, "device-added", 0},
   {GST_MESSAGE_DEVICE_REMOVED, "device-removed", 0},
   {GST_MESSAGE_PROPERTY_NOTIFY, "property-notify", 0},
+  {GST_MESSAGE_STREAM_COLLECTION, "stream-collection", 0},
+  {GST_MESSAGE_STREAMS_SELECTED, "streams-selected", 0},
   {0, NULL, 0}
 };
 
@@ -2521,4 +2524,199 @@ gst_message_parse_property_notify (GstMessage * message, GstObject ** object,
   if (property_value)
     *property_value =
         gst_structure_id_get_value (s, GST_QUARK (PROPERTY_VALUE));
+}
+
+/**
+ * gst_message_new_stream_collection:
+ * @src: The #GstObject that created the message
+ * @collection: (transfer none): The #GstStreamCollection
+ *
+ * Creates a new stream-collection message. The message is used to announce new
+ * #GstStreamCollection
+ *
+ * Returns: a newly allocated #GstMessage
+ *
+ * Since: 1.x
+ */
+GstMessage *
+gst_message_new_stream_collection (GstObject * src,
+    GstStreamCollection * collection)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  g_return_val_if_fail (collection != NULL, NULL);
+  g_return_val_if_fail (GST_IS_STREAM_COLLECTION (collection), NULL);
+
+  structure =
+      gst_structure_new_id (GST_QUARK (MESSAGE_STREAM_COLLECTION),
+      GST_QUARK (COLLECTION), GST_TYPE_STREAM_COLLECTION, collection, NULL);
+  message =
+      gst_message_new_custom (GST_MESSAGE_STREAM_COLLECTION, src, structure);
+
+  return message;
+}
+
+/**
+ * gst_message_parse_stream_collection:
+ * @message: a #GstMessage of type %GST_MESSAGE_STREAM_COLLECTION
+ * @collection: (out) (allow-none) (transfer none): A location where to store a
+ *  pointer to the #GstStreamCollection, or %NULL
+ *
+ * Parses a stream-collection message. 
+ *
+ * Since: 1.x
+ */
+void
+gst_message_parse_stream_collection (GstMessage * message,
+    GstStreamCollection ** collection)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) ==
+      GST_MESSAGE_STREAM_COLLECTION);
+
+  if (collection)
+    gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
+        GST_QUARK (COLLECTION), GST_TYPE_STREAM_COLLECTION, collection, NULL);
+}
+
+/**
+ * gst_message_new_streams_selected:
+ * @src: The #GstObject that created the message
+ * @collection: (transfer none): The #GstStreamCollection
+ *
+ * Creates a new steams-selected message. The message is used to announce
+ * that an array of streams has been selected. This is generally in response
+ * to a #GST_EVENT_SELECT_STREAMS event, or when an element (such as decodebin3)
+ * makes an initial selection of streams.
+ *
+ * The message also contains the #GstStreamCollection to which the various streams
+ * belong to.
+ *
+ * Users of gst_message_new_streams_selected() can add the selected streams with
+ * gst_message_streams_selected_add().
+ *
+ * Returns: a newly allocated #GstMessage
+ *
+ * Since: 1.x
+ */
+GstMessage *
+gst_message_new_streams_selected (GstObject * src,
+    GstStreamCollection * collection)
+{
+  GstMessage *message;
+  GstStructure *structure;
+  GValue val = G_VALUE_INIT;
+
+  g_return_val_if_fail (collection != NULL, NULL);
+  g_return_val_if_fail (GST_IS_STREAM_COLLECTION (collection), NULL);
+
+  structure =
+      gst_structure_new_id (GST_QUARK (MESSAGE_STREAMS_SELECTED),
+      GST_QUARK (COLLECTION), GST_TYPE_STREAM_COLLECTION, collection, NULL);
+  g_value_init (&val, GST_TYPE_ARRAY);
+  gst_structure_id_take_value (structure, GST_QUARK (STREAMS), &val);
+  message =
+      gst_message_new_custom (GST_MESSAGE_STREAMS_SELECTED, src, structure);
+
+  return message;
+}
+
+/**
+ * gst_message_streams_selected_get_size:
+ * @message: a #GstMessage of type %GST_MESSAGE_STREAMS_SELECTED
+ *
+ * Returns the number of streams contained in the @message.
+ *
+ * Returns: The number of streams contained within.
+ */
+guint
+gst_message_streams_selected_get_size (GstMessage * msg)
+{
+  const GValue *val;
+
+  g_return_val_if_fail (GST_IS_MESSAGE (msg), 0);
+  g_return_val_if_fail (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAMS_SELECTED,
+      0);
+
+  val =
+      gst_structure_id_get_value (GST_MESSAGE_STRUCTURE (msg),
+      GST_QUARK (STREAMS));
+  return gst_value_array_get_size (val);
+}
+
+/**
+ * gst_message_streams_selected_add:
+ * @message: a #GstMessage of type %GST_MESSAGE_STREAMS_SELECTED
+ * @stream: (transfer none): a #GstStream to add to @message
+ *
+ * Adds the @stream to the @message.
+ */
+void
+gst_message_streams_selected_add (GstMessage * msg, GstStream * stream)
+{
+  GValue *val;
+  GValue to_add = G_VALUE_INIT;
+
+  g_return_if_fail (GST_IS_MESSAGE (msg));
+  g_return_if_fail (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAMS_SELECTED);
+  g_return_if_fail (GST_IS_STREAM (stream));
+
+  val =
+      (GValue *) gst_structure_id_get_value (GST_MESSAGE_STRUCTURE (msg),
+      GST_QUARK (STREAMS));
+  g_value_init (&to_add, GST_TYPE_STREAM);
+  g_value_set_object (&to_add, stream);
+  gst_value_array_append_and_take_value (val, &to_add);
+}
+
+/**
+ * gst_message_streams_selected_get_stream:
+ * @message: a #GstMessage of type %GST_MESSAGE_STREAMS_SELECTED
+ * @idx: Index of the stream to retrieve
+ *
+ * Retrieves the #GstStream with index @index from the @message.
+ *
+ * Returns: (transfer full): A #GstStream
+ */
+GstStream *
+gst_message_streams_selected_get_stream (GstMessage * msg, guint idx)
+{
+  const GValue *streams, *val;
+
+  g_return_val_if_fail (GST_IS_MESSAGE (msg), NULL);
+  g_return_val_if_fail (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAMS_SELECTED,
+      NULL);
+
+  streams =
+      gst_structure_id_get_value (GST_MESSAGE_STRUCTURE (msg),
+      GST_QUARK (STREAMS));
+  val = gst_value_array_get_value (streams, idx);
+  if (val) {
+    return (GstStream *) g_value_dup_object (val);
+  }
+
+  return NULL;
+}
+
+/**
+ * gst_message_parse_streams_selected:
+ * @message: a #GstMessage of type %GST_MESSAGE_STREAMS_SELECTED
+ * @collection: (out) (allow-none) (transfer none): A location where to store a
+ *  pointer to the #GstStreamCollection, or %NULL
+ *
+ * Parses a streams-selected message. 
+ *
+ * Since: 1.x
+ */
+void
+gst_message_parse_streams_selected (GstMessage * message,
+    GstStreamCollection ** collection)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAMS_SELECTED);
+
+  if (collection)
+    gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
+        GST_QUARK (COLLECTION), GST_TYPE_STREAM_COLLECTION, collection, NULL);
 }

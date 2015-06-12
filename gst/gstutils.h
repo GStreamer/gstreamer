@@ -942,6 +942,7 @@ gchar *                 gst_pad_create_stream_id_printf        (GstPad * pad, Gs
 gchar *                 gst_pad_create_stream_id_printf_valist (GstPad * pad, GstElement * parent, const gchar *stream_id, va_list var_args) G_GNUC_PRINTF (3, 0) G_GNUC_MALLOC;
 
 gchar *                 gst_pad_get_stream_id           (GstPad * pad);
+GstStream *             gst_pad_get_stream              (GstPad * pad);
 
 /* bin functions */
 void                    gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;
