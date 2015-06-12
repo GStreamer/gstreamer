@@ -40,9 +40,20 @@ G_DEFINE_TYPE (GtkGstWidget, gtk_gst_widget, GTK_TYPE_DRAWING_AREA);
 #define GTK_GST_WIDGET_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
     GTK_TYPE_GST_WIDGET, GtkGstWidgetPrivate))
 
+#define DEFAULT_FORCE_ASPECT_RATIO  TRUE
+
+enum
+{
+  PROP_0,
+  PROP_FORCE_ASPECT_RATIO,
+};
+
 struct _GtkGstWidgetPrivate
 {
   GMutex lock;
+
+  /* properties */
+  gboolean force_aspect_ratio;
 
   gboolean negotiated;
   GstBuffer *buffer;
@@ -103,6 +114,7 @@ gtk_gst_widget_draw (GtkWidget * widget, cairo_t * cr)
         (gdouble) widget_width / GST_VIDEO_INFO_WIDTH (&frame.info);
     gdouble scale_y =
         (gdouble) widget_height / GST_VIDEO_INFO_HEIGHT (&frame.info);
+    GstVideoRectangle result;
 
     gst_widget->priv->v_info = frame.info;
 
@@ -110,8 +122,32 @@ gtk_gst_widget_draw (GtkWidget * widget, cairo_t * cr)
         CAIRO_FORMAT_ARGB32, frame.info.width, frame.info.height,
         frame.info.stride[0]);
 
+    if (gst_widget->priv->force_aspect_ratio) {
+      GstVideoRectangle src, dst;
+
+      src.x = 0;
+      src.y = 0;
+      src.w = GST_VIDEO_INFO_WIDTH (&frame.info);
+      src.h = GST_VIDEO_INFO_HEIGHT (&frame.info);
+
+      dst.x = 0;
+      dst.y = 0;
+      dst.w = widget_width;
+      dst.h = widget_height;
+
+      gst_video_sink_center_rect (src, dst, &result, TRUE);
+
+      scale_x = scale_y = MIN (scale_x, scale_y);
+    } else {
+      result.x = 0;
+      result.y = 0;
+      result.w = widget_width;
+      result.h = widget_height;
+    }
+
+    cairo_translate (cr, result.x, result.y);
     cairo_scale (cr, scale_x, scale_y);
-    cairo_rectangle (cr, 0, 0, widget_width, widget_height);
+    cairo_rectangle (cr, 0, 0, result.w, result.h);
     cairo_set_source_surface (cr, surface, 0, 0);
     cairo_paint (cr);
 
@@ -144,23 +180,67 @@ gtk_gst_widget_finalize (GObject * object)
 }
 
 static void
+gtk_gst_widget_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GtkGstWidget *gtk_widget = GTK_GST_WIDGET (object);
+
+  switch (prop_id) {
+    case PROP_FORCE_ASPECT_RATIO:
+      gtk_widget->priv->force_aspect_ratio = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gtk_gst_widget_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GtkGstWidget *gtk_widget = GTK_GST_WIDGET (object);
+
+  switch (prop_id) {
+    case PROP_FORCE_ASPECT_RATIO:
+      g_value_set_boolean (value, gtk_widget->priv->force_aspect_ratio);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gtk_gst_widget_class_init (GtkGstWidgetClass * klass)
 {
+  GObjectClass *gobject_klass = (GObjectClass *) klass;
   GtkWidgetClass *widget_klass = (GtkWidgetClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GtkGstWidgetPrivate));
 
+  gobject_klass->set_property = gtk_gst_widget_set_property;
+  gobject_klass->get_property = gtk_gst_widget_get_property;
+  gobject_klass->finalize = gtk_gst_widget_finalize;
+
+  g_object_class_install_property (gobject_klass, PROP_FORCE_ASPECT_RATIO,
+      g_param_spec_boolean ("force-aspect-ratio",
+          "Force aspect ratio",
+          "When enabled, scaling will respect original aspect ratio",
+          DEFAULT_FORCE_ASPECT_RATIO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   widget_klass->draw = gtk_gst_widget_draw;
   widget_klass->get_preferred_width = gtk_gst_widget_get_preferred_width;
   widget_klass->get_preferred_height = gtk_gst_widget_get_preferred_height;
-
-  G_OBJECT_CLASS (klass)->finalize = gtk_gst_widget_finalize;
 }
 
 static void
 gtk_gst_widget_init (GtkGstWidget * widget)
 {
   widget->priv = GTK_GST_WIDGET_GET_PRIVATE (widget);
+
+  widget->priv->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
 
   g_mutex_init (&widget->priv->lock);
 }

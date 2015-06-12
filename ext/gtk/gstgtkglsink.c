@@ -32,6 +32,8 @@
 GST_DEBUG_CATEGORY (gst_debug_gtk_gl_sink);
 #define GST_CAT_DEFAULT gst_debug_gtk_gl_sink
 
+#define DEFAULT_FORCE_ASPECT_RATIO  TRUE
+
 static void gst_gtk_gl_sink_finalize (GObject * object);
 static void gst_gtk_gl_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * param_spec);
@@ -62,8 +64,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 enum
 {
-  ARG_0,
-  PROP_WIDGET
+  PROP_0,
+  PROP_WIDGET,
+  PROP_FORCE_ASPECT_RATIO,
 };
 
 enum
@@ -102,6 +105,13 @@ gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
           "The GtkWidget to place in the widget heirachy",
           GTK_TYPE_WIDGET, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
+      g_param_spec_boolean ("force-aspect-ratio",
+          "Force aspect ratio",
+          "When enabled, scaling will respect original aspect ratio",
+          DEFAULT_FORCE_ASPECT_RATIO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_gtk_gl_sink_template));
 
@@ -120,17 +130,7 @@ gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
 static void
 gst_gtk_gl_sink_init (GstGtkGLSink * gtk_sink)
 {
-}
-
-static void
-gst_gtk_gl_sink_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+  gtk_sink->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
 }
 
 static void
@@ -157,6 +157,9 @@ gst_gtk_gl_sink_get_widget (GstGtkGLSink * gtk_sink)
   }
 
   gtk_sink->widget = (GtkGstGLWidget *) gtk_gst_gl_widget_new ();
+  gtk_sink->bind_aspect_ratio =
+      g_object_bind_property (gtk_sink, "force-aspect-ratio", gtk_sink->widget,
+      "force-aspect-ratio", G_BINDING_BIDIRECTIONAL);
 
   /* Take the floating ref, otherwise the destruction of the container will
    * make this widget disapear possibly before we are done. */
@@ -176,6 +179,25 @@ gst_gtk_gl_sink_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_WIDGET:
       g_value_set_object (value, gst_gtk_gl_sink_get_widget (gtk_sink));
+      break;
+    case PROP_FORCE_ASPECT_RATIO:
+      g_value_set_boolean (value, gtk_sink->force_aspect_ratio);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_gtk_gl_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstGtkGLSink *gtk_sink = GST_GTK_GL_SINK (object);
+
+  switch (prop_id) {
+    case PROP_FORCE_ASPECT_RATIO:
+      gtk_sink->force_aspect_ratio = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
