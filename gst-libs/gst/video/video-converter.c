@@ -4040,7 +4040,8 @@ setup_scale (GstVideoConverter * convert)
                 in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
                 GST_VIDEO_COMP_Y, out_width), convert->config);
         uv_scaler =
-            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE,
+            gst_video_scaler_get_max_taps (y_scaler),
             GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_U,
                 in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
                 GST_VIDEO_COMP_U, out_width), convert->config);

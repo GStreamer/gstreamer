@@ -57,6 +57,7 @@ GstVideoScaler *      gst_video_scaler_new            (GstVideoResamplerMethod m
                                                        GstStructure * options);
 void                  gst_video_scaler_free           (GstVideoScaler *scale);
 
+guint                 gst_video_scaler_get_max_taps   (GstVideoScaler *scale);
 const gdouble *       gst_video_scaler_get_coeff      (GstVideoScaler *scale,
                                                        guint out_offset,
                                                        guint *in_offset,

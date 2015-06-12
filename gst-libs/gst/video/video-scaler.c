@@ -249,6 +249,22 @@ gst_video_scaler_free (GstVideoScaler * scale)
 }
 
 /**
+ * gst_video_scaler_get_max_taps:
+ * @scale: a #GstVideoScaler
+ *
+ * Get the maximum number of taps for @scale.
+ *
+ * Returns: the maximum number of taps
+ */
+guint
+gst_video_scaler_get_max_taps (GstVideoScaler * scale)
+{
+  g_return_val_if_fail (scale != NULL, 0);
+
+  return scale->resampler.max_taps;
+}
+
+/**
  * gst_video_scaler_get_coeff:
  * @scale: a #GstVideoScaler
  * @out_offset: an output offset
