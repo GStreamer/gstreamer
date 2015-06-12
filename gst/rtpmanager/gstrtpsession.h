@@ -76,4 +76,13 @@ struct _GstRtpSessionClass {
 
 GType gst_rtp_session_get_type (void);
 
+typedef enum {
+  GST_RTP_NTP_TIME_SOURCE_NTP,
+  GST_RTP_NTP_TIME_SOURCE_UNIX,
+  GST_RTP_NTP_TIME_SOURCE_RUNNING_TIME,
+  GST_RTP_NTP_TIME_SOURCE_CLOCK_TIME
+} GstRtpNtpTimeSource;
+
+GType gst_rtp_ntp_time_source_get_type (void);
+
 #endif /* __GST_RTP_SESSION_H__ */

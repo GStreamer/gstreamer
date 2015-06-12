@@ -122,6 +122,26 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_session_debug);
 #define GST_CAT_DEFAULT gst_rtp_session_debug
 
+GType
+gst_rtp_ntp_time_source_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue values[] = {
+    {GST_RTP_NTP_TIME_SOURCE_NTP, "NTP time based on realtime clock", "ntp"},
+    {GST_RTP_NTP_TIME_SOURCE_UNIX, "UNIX time based on realtime clock", "unix"},
+    {GST_RTP_NTP_TIME_SOURCE_RUNNING_TIME,
+          "Running time based on pipeline clock",
+        "running-time"},
+    {GST_RTP_NTP_TIME_SOURCE_CLOCK_TIME, "Pipeline clock time", "clock-time"},
+    {0, NULL, NULL},
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstRtpNtpTimeSource", values);
+  }
+  return type;
+}
+
 /* sink pads */
 static GstStaticPadTemplate rtpsession_recv_rtp_sink_template =
 GST_STATIC_PAD_TEMPLATE ("recv_rtp_sink",
@@ -202,6 +222,7 @@ enum
 #define DEFAULT_RTCP_MIN_INTERVAL    (RTP_STATS_MIN_INTERVAL * GST_SECOND)
 #define DEFAULT_PROBATION            RTP_DEFAULT_PROBATION
 #define DEFAULT_RTP_PROFILE          GST_RTP_PROFILE_AVP
+#define DEFAULT_NTP_TIME_SOURCE      GST_RTP_NTP_TIME_SOURCE_NTP
 
 enum
 {
@@ -218,7 +239,8 @@ enum
   PROP_RTCP_MIN_INTERVAL,
   PROP_PROBATION,
   PROP_STATS,
-  PROP_RTP_PROFILE
+  PROP_RTP_PROFILE,
+  PROP_NTP_TIME_SOURCE
 };
 
 #define GST_RTP_SESSION_GET_PRIVATE(obj)  \
@@ -251,6 +273,7 @@ struct _GstRtpSessionPrivate
   GstClockTime send_latency;
 
   gboolean use_pipeline_clock;
+  GstRtpNtpTimeSource ntp_time_source;
 
   guint rtx_count;
 };
@@ -611,9 +634,10 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_USE_PIPELINE_CLOCK,
       g_param_spec_boolean ("use-pipeline-clock", "Use pipeline clock",
-          "Use the pipeline running-time to set the NTP time in the RTCP SR messages",
+          "Use the pipeline running-time to set the NTP time in the RTCP SR messages "
+          "(DEPRECATED: Use ntp-source property)",
           DEFAULT_USE_PIPELINE_CLOCK,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_MIN_INTERVAL,
       g_param_spec_uint64 ("rtcp-min-interval", "Minimum RTCP interval",
@@ -650,6 +674,12 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
   g_object_class_install_property (gobject_class, PROP_RTP_PROFILE,
       g_param_spec_enum ("rtp-profile", "RTP Profile",
           "RTP profile to use", GST_TYPE_RTP_PROFILE, DEFAULT_RTP_PROFILE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_NTP_TIME_SOURCE,
+      g_param_spec_enum ("ntp-time-source", "NTP Time Source",
+          "NTP time source for RTCP packets",
+          gst_rtp_ntp_time_source_get_type (), DEFAULT_NTP_TIME_SOURCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
@@ -727,6 +757,8 @@ gst_rtp_session_init (GstRtpSession * rtpsession)
   rtpsession->priv->thread_stopped = TRUE;
 
   rtpsession->priv->rtx_count = 0;
+
+  rtpsession->priv->ntp_time_source = DEFAULT_NTP_TIME_SOURCE;
 }
 
 static void
@@ -785,6 +817,9 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
       break;
     case PROP_RTP_PROFILE:
       g_object_set_property (G_OBJECT (priv->session), "rtp-profile", value);
+      break;
+    case PROP_NTP_TIME_SOURCE:
+      priv->ntp_time_source = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -846,6 +881,9 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
     case PROP_RTP_PROFILE:
       g_object_get_property (G_OBJECT (priv->session), "rtp-profile", value);
       break;
+    case PROP_NTP_TIME_SOURCE:
+      g_value_set_enum (value, priv->ntp_time_source);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -884,16 +922,34 @@ get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
 
     if (rtpsession->priv->use_pipeline_clock) {
       ntpns = rt;
+      /* add constant to convert from 1970 based time to 1900 based time */
+      ntpns += (2208988800LL * GST_SECOND);
     } else {
-      GTimeVal current;
+      switch (rtpsession->priv->ntp_time_source) {
+        case GST_RTP_NTP_TIME_SOURCE_NTP:
+        case GST_RTP_NTP_TIME_SOURCE_UNIX:{
+          GTimeVal current;
 
-      /* get current NTP time */
-      g_get_current_time (&current);
-      ntpns = GST_TIMEVAL_TO_TIME (current);
+          /* get current NTP time */
+          g_get_current_time (&current);
+          ntpns = GST_TIMEVAL_TO_TIME (current);
+
+          /* add constant to convert from 1970 based time to 1900 based time */
+          if (rtpsession->priv->ntp_time_source == GST_RTP_NTP_TIME_SOURCE_NTP)
+            ntpns += (2208988800LL * GST_SECOND);
+          break;
+        }
+        case GST_RTP_NTP_TIME_SOURCE_RUNNING_TIME:
+          ntpns = rt;
+          break;
+        case GST_RTP_NTP_TIME_SOURCE_CLOCK_TIME:
+          ntpns = clock_time;
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
     }
-
-    /* add constant to convert from 1970 based time to 1900 based time */
-    ntpns += (2208988800LL * GST_SECOND);
 
     gst_object_unref (clock);
   } else {

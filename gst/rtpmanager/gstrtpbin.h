@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 
 #include "rtpsession.h"
+#include "gstrtpsession.h"
 #include "rtpjitterbuffer.h"
 
 #define GST_TYPE_RTP_BIN \
@@ -63,6 +64,7 @@ struct _GstRtpBin {
   RTPJitterBufferMode buffer_mode;
   gboolean        buffering;
   gboolean        use_pipeline_clock;
+  GstRtpNtpTimeSource ntp_time_source;
   gboolean        send_sync_event;
   GstClockTime    buffer_start;
   gboolean        do_retransmission;
