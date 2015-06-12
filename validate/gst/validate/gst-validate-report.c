@@ -747,6 +747,10 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
       if (!has_parameters)
         g_string_append_printf (string, "\n\n  No Parameters");
+    } else if (GST_IS_VALIDATE_REPORTER (source) &&
+        gst_validate_reporter_get_name (source)) {
+      g_string_printf (string, "\n%s --> ",
+          gst_validate_reporter_get_name (source));
     } else if (GST_IS_OBJECT (source)) {
       g_string_printf (string, "\n%s --> ", GST_OBJECT_NAME (source));
     } else if (G_IS_OBJECT (source)) {
