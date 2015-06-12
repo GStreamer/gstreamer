@@ -958,9 +958,11 @@ gst_mpdparser_get_xml_node_namespace (xmlNode * a_node, const gchar * prefix)
 
   if (prefix == NULL) {
     /* return the default namespace */
-    namespace = xmlMemStrdup ((const gchar *) a_node->ns->href);
-    if (namespace) {
-      GST_LOG (" - default namespace: %s", namespace);
+    if (a_node->ns) {
+      namespace = xmlMemStrdup ((const gchar *) a_node->ns->href);
+      if (namespace) {
+        GST_LOG (" - default namespace: %s", namespace);
+      }
     }
   } else {
     /* look for the specified prefix in the namespace list */

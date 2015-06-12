@@ -413,6 +413,27 @@ GST_START_TEST (dash_mpdparser_no_end_tag)
 GST_END_TEST;
 
 /*
+ * Test parsing an MPD with no default namespace
+ */
+GST_START_TEST (dash_mpdparser_no_default_namespace)
+{
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD profiles=\"urn:mpeg:dash:profile:isoff-main:2011\"></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, strlen (xml));
+
+  assert_equals_int (ret, TRUE);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * create a test suite containing all dash testcases
  */
 static Suite *
@@ -444,6 +465,7 @@ dash_suite (void)
   tcase_add_test (tc_negativeTests, dash_mpdparser_missing_xml);
   tcase_add_test (tc_negativeTests, dash_mpdparser_missing_mpd);
   tcase_add_test (tc_negativeTests, dash_mpdparser_no_end_tag);
+  tcase_add_test (tc_negativeTests, dash_mpdparser_no_default_namespace);
 
   suite_add_tcase (s, tc_simpleMPD);
   suite_add_tcase (s, tc_negativeTests);
