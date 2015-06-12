@@ -754,6 +754,12 @@ _new_output_state (GstVideoFormat fmt, guint width, guint height,
     tgt->par_d = ref->par_d;
     tgt->fps_n = ref->fps_n;
     tgt->fps_d = ref->fps_d;
+    tgt->views = ref->views;
+    if (GST_VIDEO_INFO_MULTIVIEW_MODE (ref) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+      GST_VIDEO_INFO_MULTIVIEW_MODE (tgt) = GST_VIDEO_INFO_MULTIVIEW_MODE (ref);
+      GST_VIDEO_INFO_MULTIVIEW_FLAGS (tgt) =
+          GST_VIDEO_INFO_MULTIVIEW_FLAGS (ref);
+    }
   }
 
   GST_DEBUG ("reference par %d/%d fps %d/%d",
