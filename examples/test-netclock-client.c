@@ -29,7 +29,7 @@ static void
 source_created (GstElement * pipe, GstElement * source)
 {
   g_object_set (source, "latency", PLAYBACK_DELAY_MS,
-      "use-pipeline-clock", TRUE, "buffer-mode", 4, "ntp-sync", TRUE, NULL);
+      "ntp-time-source", 3, "buffer-mode", 4, "ntp-sync", TRUE, NULL);
 }
 
 static gboolean

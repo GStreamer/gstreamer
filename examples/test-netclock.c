@@ -118,7 +118,7 @@ test_rtsp_media_init (TestRTSPMedia * media)
 static gboolean
 custom_setup_rtpbin (GstRTSPMedia * media, GstElement * rtpbin)
 {
-  g_object_set (rtpbin, "use-pipeline-clock", TRUE, NULL);
+  g_object_set (rtpbin, "ntp-time-source", 3, NULL);
   return TRUE;
 }
 
