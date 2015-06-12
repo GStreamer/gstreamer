@@ -263,6 +263,13 @@ void
 gst_vaapi_decoder_set_interlaced (GstVaapiDecoder * decoder,
     gboolean interlaced);
 
+#if GST_CHECK_VERSION(1,5,0)
+G_GNUC_INTERNAL
+void
+gst_vaapi_decoder_set_multiview_mode (GstVaapiDecoder * decoder,
+    gint views, GstVideoMultiviewMode mv_mode, GstVideoMultiviewFlags mv_flags);
+#endif
+
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_decoder_ensure_context (GstVaapiDecoder * decoder,

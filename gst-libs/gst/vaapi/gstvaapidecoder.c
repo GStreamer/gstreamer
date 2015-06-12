@@ -924,6 +924,35 @@ gst_vaapi_decoder_set_interlaced (GstVaapiDecoder * decoder,
           GST_VIDEO_INTERLACE_MODE_PROGRESSIVE));
 }
 
+#if GST_CHECK_VERSION(1,5,0)
+void
+gst_vaapi_decoder_set_multiview_mode (GstVaapiDecoder * decoder,
+    gint views, GstVideoMultiviewMode mv_mode, GstVideoMultiviewFlags mv_flags)
+{
+  GstVideoCodecState *const codec_state = decoder->codec_state;
+  GstVideoInfo *info = &codec_state->info;
+
+  if (GST_VIDEO_INFO_VIEWS (info) != views ||
+      GST_VIDEO_INFO_MULTIVIEW_MODE (info) != mv_mode ||
+      GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) != mv_flags) {
+    const gchar *mv_mode_str = gst_video_multiview_mode_to_caps_string (mv_mode);
+
+    GST_DEBUG ("Multiview mode changed to %s flags 0x%x views %d",
+        mv_mode_str, mv_flags, views);
+    GST_VIDEO_INFO_MULTIVIEW_MODE (info) = mv_mode;
+    GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) = mv_flags;
+    GST_VIDEO_INFO_VIEWS (info) = views;
+
+    gst_caps_set_simple (codec_state->caps, "multiview-mode",
+        G_TYPE_STRING, mv_mode_str,
+        "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET, mv_flags,
+        GST_FLAG_SET_MASK_EXACT, "views", G_TYPE_INT, views, NULL);
+
+    notify_codec_state_changed (decoder);
+  }
+}
+#endif
+
 gboolean
 gst_vaapi_decoder_ensure_context (GstVaapiDecoder * decoder,
     GstVaapiContextInfo * cip)

@@ -326,6 +326,14 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
     }
     GST_BUFFER_FLAG_SET (out_frame->output_buffer, out_flags);
 
+#if GST_CHECK_VERSION(1,5,0)
+    /* First-in-bundle flag only appeared in 1.5 dev */
+    if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_FFB) {
+      GST_BUFFER_FLAG_SET (out_frame->output_buffer,
+          GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE);
+    }
+#endif
+
     crop_rect = gst_vaapi_surface_proxy_get_crop_rect (proxy);
     if (crop_rect) {
       GstVideoCropMeta *const crop_meta =

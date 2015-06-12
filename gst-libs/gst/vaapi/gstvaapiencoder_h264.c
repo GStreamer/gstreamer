@@ -2450,7 +2450,6 @@ reset_properties (GstVaapiEncoderH264 * encoder)
   encoder->max_pic_order_cnt = (1 << encoder->log2_max_pic_order_cnt);
   encoder->idr_num = 0;
 
-  encoder->is_mvc = encoder->num_views > 1;
   for (i = 0; i < encoder->num_views; i++) {
     GstVaapiH264ViewRefPool *const ref_pool = &encoder->ref_pools[i];
     ref_pool->max_reflist0_count = 1;
@@ -2630,6 +2629,7 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
 
   /* encoding views alternatively for MVC */
   if (encoder->is_mvc) {
+    /* FIXME: Use first-in-bundle flag on buffers to reset view idx? */
     if (frame)
       encoder->view_idx = frame->system_frame_number % encoder->num_views;
     else
@@ -2779,6 +2779,7 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
 {
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   GstVaapiEncoderStatus status;
   guint mb_width, mb_height;
 
@@ -2791,6 +2792,15 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
     encoder->mb_height = mb_height;
     encoder->config_changed = TRUE;
   }
+
+#if GST_CHECK_VERSION(1,5,0)
+  /* Take number of MVC views from input caps if provided */
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (vip) == GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME ||
+      GST_VIDEO_INFO_MULTIVIEW_MODE (vip) == GST_VIDEO_MULTIVIEW_MODE_MULTIVIEW_FRAME_BY_FRAME)
+    encoder->num_views = GST_VIDEO_INFO_VIEWS (vip);
+#endif
+
+  encoder->is_mvc = encoder->num_views > 1;
 
   status = ensure_profile_and_level (encoder);
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)

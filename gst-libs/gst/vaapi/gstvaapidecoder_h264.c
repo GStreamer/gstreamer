@@ -1443,10 +1443,40 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     }
 
     if (!priv->profile || (priv->profile != profile && priv->max_views == 1)) {
-        GST_DEBUG("profile changed");
+        GST_DEBUG("profile changed to %x", profile);
         reset_context = TRUE;
         priv->profile = profile;
     }
+
+#if GST_CHECK_VERSION(1,5,0)
+    /* Multiview flags only available in >= 1.5 */
+    if (reset_context) {
+        switch (num_views) {
+          case 1:
+            /* Frame-packed mode details should be copied from the parser
+             * if we set NONE */
+            gst_vaapi_decoder_set_multiview_mode (base_decoder,
+                num_views, GST_VIDEO_MULTIVIEW_MODE_NONE,
+                GST_VIDEO_MULTIVIEW_FLAGS_NONE);
+            break;
+          case 2: /* Assume stereo */
+            if (profile == GST_VAAPI_PROFILE_H264_STEREO_HIGH) {
+              GST_DEBUG ("Stereo profile - frame-by-frame output, %d views", num_views);
+              gst_vaapi_decoder_set_multiview_mode (base_decoder,
+                  num_views, GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME,
+                  GST_VIDEO_MULTIVIEW_FLAGS_NONE);
+              break;
+            }
+            /* non-stereo 2 views. Fall through */
+          default:
+            GST_DEBUG ("Multiview profile - frame-by-frame output, %d views", num_views);
+            gst_vaapi_decoder_set_multiview_mode (base_decoder,
+                num_views, GST_VIDEO_MULTIVIEW_MODE_MULTIVIEW_FRAME_BY_FRAME,
+                GST_VIDEO_MULTIVIEW_FLAGS_NONE);
+            break;
+        }
+    }
+#endif
 
     chroma_type = gst_vaapi_utils_h264_get_chroma_type(sps->chroma_format_idc);
     if (!chroma_type) {

@@ -633,6 +633,13 @@ gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
   vip->par_d = vi.par_d;
   vip->fps_n = vi.fps_n;
   vip->fps_d = vi.fps_d;
+
+#if GST_CHECK_VERSION(1,5,0)
+  GST_VIDEO_INFO_MULTIVIEW_MODE (vip) =
+      GST_VIDEO_INFO_MULTIVIEW_MODE (&vi);
+  GST_VIDEO_INFO_MULTIVIEW_FLAGS (vip) =
+      GST_VIDEO_INFO_MULTIVIEW_FLAGS (&vi);
+#endif
 }
 
 /**
