@@ -20,6 +20,11 @@
 
 #include "openslescommon.h"
 
+#ifndef SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION
+/* This was added in Android API level 14 */
+#define SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION ((SLuint32) 0x00000004)
+#endif
+
 GType
 gst_opensles_recording_preset_get_type (void)
 {

@@ -25,6 +25,8 @@
 
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
+/* This is needed explicitly for API level < 14 */
+#include <SLES/OpenSLES_AndroidConfiguration.h>
 
 G_BEGIN_DECLS
 
