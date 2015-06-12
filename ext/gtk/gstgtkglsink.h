@@ -65,6 +65,10 @@ struct _GstGtkGLSink
   GstGLUpload          *upload;
   GstBuffer            *uploaded_buffer;
 
+  /* properties */
+  gboolean              force_aspect_ratio;
+  GBinding             *bind_aspect_ratio;
+
   GstGtkGLSinkPrivate  *priv;
 };
 

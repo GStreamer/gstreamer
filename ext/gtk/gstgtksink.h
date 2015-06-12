@@ -56,6 +56,10 @@ struct _GstGtkSink
 
   GtkGstWidget        *widget;
 
+  /* properties */
+  gboolean             force_aspect_ratio;
+  GBinding             *bind_aspect_ratio;
+
   GstGtkSinkPrivate   *priv;
 };
 
