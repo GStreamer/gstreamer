@@ -94,7 +94,7 @@ gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
   gobject_class->get_property = gst_gtk_gl_sink_get_property;
 
   gst_element_class_set_metadata (gstelement_class, "Gtk Video Sink",
-      "Sink/Video", "A video sink the renders to a GtkWidget",
+      "Sink/Video", "A video sink that renders to a GtkWidget",
       "Matthew Waters <matthew@centricular.com>");
 
   g_object_class_install_property (gobject_class, PROP_WIDGET,
@@ -150,7 +150,7 @@ gst_gtk_gl_sink_get_widget (GstGtkGLSink * gtk_sink)
     return gtk_sink->widget;
 
   /* Ensure GTK is initialized, this has no side effect if it was already
-   * initialized. Also, we do that lazylli, so the application can be first */
+   * initialized. Also, we do that lazily, so the application can be first */
   if (!gtk_init_check (NULL, NULL)) {
     GST_ERROR_OBJECT (gtk_sink, "Could not ensure GTK initialization.");
     return NULL;
@@ -261,7 +261,7 @@ gst_gtk_gl_sink_change_state (GstElement * element, GstStateChange transition)
 
       if (!gtk_widget_get_parent (GTK_WIDGET (gtk_sink->widget))) {
         GST_ERROR_OBJECT (gtk_sink,
-            "gtkglsink widget need to be parented to work.");
+            "gtkglsink widget needs to be parented to work.");
         return GST_STATE_CHANGE_FAILURE;
       }
 
