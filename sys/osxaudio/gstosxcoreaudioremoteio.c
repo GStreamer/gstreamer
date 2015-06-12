@@ -64,7 +64,7 @@ gst_core_audio_get_samples_and_latency_impl (GstCoreAudio * core_audio,
     gdouble rate, guint * samples, gdouble * latency)
 {
   OSStatus status;
-  UInt32 size;
+  UInt32 size = sizeof (double);
 
   status = AudioUnitGetProperty (core_audio->audiounit, kAudioUnitProperty_Latency, kAudioUnitScope_Global, 0,  /* N/A for global */
       latency, &size);
