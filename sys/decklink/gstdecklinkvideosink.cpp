@@ -152,6 +152,16 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element);
 G_DEFINE_TYPE (GstDecklinkVideoSink, gst_decklink_video_sink,
     GST_TYPE_BASE_SINK);
 
+static gboolean
+reset_framerate (GstCapsFeatures * features, GstStructure * structure,
+    gpointer user_data)
+{
+  gst_structure_set (structure, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+      G_MAXINT, 1, NULL);
+
+  return TRUE;
+}
+
 static void
 gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
 {
@@ -195,6 +205,9 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
               G_PARAM_CONSTRUCT)));
 
   templ_caps = gst_decklink_mode_get_template_caps ();
+  templ_caps = gst_caps_make_writable (templ_caps);
+  /* For output we support any framerate and only really care about timestamps */
+  gst_caps_map_in_place (templ_caps, reset_framerate, NULL);
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, templ_caps));
   gst_caps_unref (templ_caps);
@@ -305,6 +318,10 @@ gst_decklink_video_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   GstCaps *mode_caps, *caps;
 
   mode_caps = gst_decklink_mode_get_caps (self->mode);
+  mode_caps = gst_caps_make_writable (mode_caps);
+  /* For output we support any framerate and only really care about timestamps */
+  gst_caps_map_in_place (mode_caps, reset_framerate, NULL);
+
   if (filter) {
     caps =
         gst_caps_intersect_full (filter, mode_caps, GST_CAPS_INTERSECT_FIRST);
