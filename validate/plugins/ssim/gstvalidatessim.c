@@ -282,9 +282,6 @@ validate_ssim_override_new (GstStructure * config)
     gchar *template = g_build_filename (g_get_tmp_dir (),
         "validatessim-XXXXXX", NULL);
     self->priv->outdir = g_mkdtemp (template);
-
-    gst_validate_printf (self, "Using %s as output directory\n",
-        self->priv->outdir);
   }
 
   if (!g_file_test (self->priv->outdir, G_FILE_TEST_IS_DIR)) {
@@ -298,6 +295,8 @@ validate_ssim_override_new (GstStructure * config)
     }
   }
 
+  gst_validate_printf (self, "Using %s as output directory\n",
+      self->priv->outdir);
 
   self->priv->config = gst_structure_copy (config);
   self->priv->result_outdir =
@@ -339,8 +338,6 @@ validate_ssim_override_new (GstStructure * config)
 
   gst_validate_utils_get_clocktime (config, "check-recurrence",
       &self->priv->recurrence);
-  gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (self),
-      g_strdup ("ssim-override"));
 
   g_signal_connect (self, "notify::validate-runner", G_CALLBACK (_runner_set),
       NULL);
@@ -383,6 +380,12 @@ _can_attach (GstValidateOverride * override, GstValidateMonitor * monitor)
     structure = gst_caps_get_structure (template_caps, i);
     if (gst_structure_has_name (structure, "video/x-raw")) {
       GST_INFO_OBJECT (override, "Wrapping %" GST_PTR_FORMAT, pad);
+
+      gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (override),
+          g_strdup_printf ("ssim-override-%s",
+              gst_validate_reporter_get_name (GST_VALIDATE_REPORTER
+                  (monitor))));
+
       return TRUE;
     }
   }
