@@ -1044,15 +1044,18 @@ main (int argc, char **argv)
   gchar **f, **filenames = NULL;
   GOptionEntry options[] = {
     {"switch-after", 's', 0, G_OPTION_ARG_INT, &switch_after_ms, "Time after "
-          "which the next item will be forcibly activated", "MILLISECONDS"},
-    {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
+          "which the next file will be forcibly activated", "MILLISECONDS"},
+    {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL,
+        "FILENAME1 [FILENAME2] [FILENAME3] ..."},
     {NULL}
   };
   GOptionContext *ctx;
   PlayoutApp *app;
   GError *err = NULL;
 
-  ctx = g_option_context_new ("FILENAME1 [FILENAME2] [FILENAME3] ...");
+  ctx = g_option_context_new (NULL);
+  g_option_context_set_summary (ctx, "An example application to sequentially "
+      "and seamlessly play a list of audio-video or video-only files.");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
@@ -1063,16 +1066,17 @@ main (int argc, char **argv)
       g_printerr ("Error initializing: Unknown error!\n");
     return 1;
   }
+
+  if (filenames == NULL || *filenames == NULL) {
+    g_printerr ("%s", g_option_context_get_help (ctx, TRUE, NULL));
+    return 1;
+  }
+
   g_option_context_free (ctx);
 
   GST_DEBUG_CATEGORY_INIT (playout, "playout", 0, "Playout example app");
 
   app = playout_app_new ();
-
-  if (filenames == NULL || *filenames == NULL) {
-    g_printerr ("Usage: %s FILENAME1 FILENAME2\n", argv[0]);
-    return 1;
-  }
 
   for (f = filenames; f != NULL && *f != NULL; ++f)
     playout_app_add_item (app, *f);
