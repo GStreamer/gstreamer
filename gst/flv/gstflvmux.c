@@ -1488,7 +1488,7 @@ gst_flv_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
 {
   GstFlvMux *mux = GST_FLV_MUX (user_data);
   GstFlvPad *best;
-  gint64 best_time;
+  gint64 best_time = GST_CLOCK_STIME_NONE;
   GstFlowReturn ret;
 
   if (mux->state == GST_FLV_MUX_STATE_HEADER) {
