@@ -235,8 +235,8 @@ struct _GstRtpBinPrivate
 
   gboolean autoremove;
 
-  /* UNIX (ntp) time of last SR sync used */
-  guint64 last_unix;
+  /* NTP time in ns of last SR sync used */
+  guint64 last_ntpnstime;
 
   /* list of extra elements */
   GList *elements;
@@ -1102,12 +1102,8 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
   GstRtpBinClient *client;
   gboolean created;
   GSList *walk;
-  guint64 local_rt;
-  guint64 local_rtp;
-  GstClockTime running_time;
+  GstClockTime running_time, running_time_rtp;
   guint64 ntpnstime;
-  gint64 ntpdiff, rtdiff;
-  guint64 last_unix;
 
   /* first find or create the CNAME */
   client = get_client (bin, len, data, &created);
@@ -1149,51 +1145,56 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
    * local rtptime. The local rtp time is used to construct timestamps on the
    * buffers so we will calculate what running_time corresponds to the RTP
    * timestamp in the SR packet. */
-  local_rtp = last_extrtptime - base_rtptime;
+  running_time_rtp = last_extrtptime - base_rtptime;
 
   GST_DEBUG_OBJECT (bin,
       "base %" G_GUINT64_FORMAT ", extrtptime %" G_GUINT64_FORMAT
       ", local RTP %" G_GUINT64_FORMAT ", clock-rate %d, "
       "clock-base %" G_GINT64_FORMAT, base_rtptime,
-      last_extrtptime, local_rtp, clock_rate, rtp_clock_base);
+      last_extrtptime, running_time_rtp, clock_rate, rtp_clock_base);
 
   /* calculate local RTP time in gstreamer timestamp, we essentially perform the
    * same conversion that a jitterbuffer would use to convert an rtp timestamp
    * into a corresponding gstreamer timestamp. Note that the base_time also
    * contains the drift between sender and receiver. */
-  local_rt = gst_util_uint64_scale_int (local_rtp, GST_SECOND, clock_rate);
-  local_rt += base_time;
+  running_time =
+      gst_util_uint64_scale_int (running_time_rtp, GST_SECOND, clock_rate);
+  running_time += base_time;
 
-  /* convert ntptime to unix time since 1900 */
-  last_unix = gst_util_uint64_scale (ntptime, GST_SECOND,
+  /* convert ntptime to nanoseconds */
+  ntpnstime = gst_util_uint64_scale (ntptime, GST_SECOND,
       (G_GINT64_CONSTANT (1) << 32));
 
   stream->have_sync = TRUE;
 
   GST_DEBUG_OBJECT (bin,
-      "local UNIX %" G_GUINT64_FORMAT ", remote UNIX %" G_GUINT64_FORMAT,
-      local_rt, last_unix);
+      "SR RTP running time %" G_GUINT64_FORMAT ", SR NTP %" G_GUINT64_FORMAT,
+      running_time, ntpnstime);
 
   /* recalc inter stream playout offset, but only if there is more than one
    * stream or we're doing NTP sync. */
   if (bin->ntp_sync) {
+    gint64 ntpdiff, rtdiff;
+    guint64 local_ntpnstime;
+    GstClockTime local_running_time;
+
     /* For NTP sync we need to first get a snapshot of running_time and NTP
      * time. We know at what running_time we play a certain RTP time, we also
      * calculated when we would play the RTP time in the SR packet. Now we need
      * to know how the running_time and the NTP time relate to eachother. */
-    get_current_times (bin, &running_time, &ntpnstime);
+    get_current_times (bin, &local_running_time, &local_ntpnstime);
 
     /* see how far away the NTP time is. This is the difference between the
      * current NTP time and the NTP time in the last SR packet. */
-    ntpdiff = ntpnstime - last_unix;
+    ntpdiff = local_ntpnstime - ntpnstime;
     /* see how far away the running_time is. This is the difference between the
      * current running_time and the running_time of the RTP timestamp in the
      * last SR packet. */
-    rtdiff = running_time - local_rt;
+    rtdiff = local_running_time - running_time;
 
     GST_DEBUG_OBJECT (bin,
-        "NTP time %" G_GUINT64_FORMAT ", last unix %" G_GUINT64_FORMAT,
-        ntpnstime, last_unix);
+        "local NTP time %" G_GUINT64_FORMAT ", SR NTP time %" G_GUINT64_FORMAT,
+        local_ntpnstime, ntpnstime);
     GST_DEBUG_OBJECT (bin,
         "NTP diff %" G_GINT64_FORMAT ", RT diff %" G_GINT64_FORMAT, ntpdiff,
         rtdiff);
@@ -1207,12 +1208,12 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     gboolean all_sync, use_rtp;
     gboolean rtcp_sync = g_atomic_int_get (&bin->rtcp_sync);
 
-    /* calculate delta between server and receiver. last_unix is created by
+    /* calculate delta between server and receiver. ntpnstime is created by
      * converting the ntptime in the last SR packet to a gstreamer timestamp. This
      * delta expresses the difference to our timeline and the server timeline. The
      * difference in itself doesn't mean much but we can combine the delta of
      * multiple streams to create a stream specific offset. */
-    stream->rt_delta = last_unix - local_rt;
+    stream->rt_delta = ntpnstime - running_time;
 
     /* calculate the min of all deltas, ignoring streams that did not yet have a
      * valid rt_delta because we did not yet receive an SR packet for those
@@ -1326,14 +1327,14 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     }
 
     /* bail out if we adjusted recently enough */
-    if (all_sync && (last_unix - bin->priv->last_unix) <
+    if (all_sync && (ntpnstime - bin->priv->last_ntpnstime) <
         bin->rtcp_sync_interval * GST_MSECOND) {
       GST_DEBUG_OBJECT (bin, "discarding RTCP sender packet for sync; "
           "previous sender info too recent "
-          "(previous UNIX %" G_GUINT64_FORMAT ")", bin->priv->last_unix);
+          "(previous NTP %" G_GUINT64_FORMAT ")", bin->priv->last_ntpnstime);
       return;
     }
-    bin->priv->last_unix = last_unix;
+    bin->priv->last_ntpnstime = ntpnstime;
 
     /* calculate offsets for each stream */
     for (walk = client->streams; walk; walk = g_slist_next (walk)) {
@@ -2647,7 +2648,7 @@ gst_rtp_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      priv->last_unix = 0;
+      priv->last_ntpnstime = 0;
       GST_LOG_OBJECT (rtpbin, "clearing shutdown flag");
       g_atomic_int_set (&priv->shutdown, 0);
       break;
