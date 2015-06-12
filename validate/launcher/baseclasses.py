@@ -84,7 +84,7 @@ class Test(Loggable):
         self.logfile = None
         self.out = None
         self.extra_logfiles = []
-        self._env_variable = ''
+        self.__env_variable = []
 
     def __str__(self):
         string = self.classname
@@ -114,9 +114,19 @@ class Test(Loggable):
         if value is None:
             return
 
-        if self._env_variable:
-            self._env_variable += " "
-        self._env_variable += "%s=%s" % (variable, value)
+        self.__env_variable.append(variable)
+
+    @property
+    def _env_variable(self):
+        res = ""
+        for var in set(self.__env_variable):
+            if res:
+                res += " "
+            value = self.proc_env.get(var, None)
+            if value:
+                res += "%s=%s" % (var, value)
+
+        return res
 
     def open_logfile(self):
         path = os.path.join(self.options.logsdir,
