@@ -175,13 +175,14 @@ gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
   window_x11->device_height =
       DisplayHeight (window_x11->device, window_x11->screen_num);
 
-  window_x11->x11_source = x11_event_source_new (window_x11);
-
   if (!GST_GL_WINDOW_CLASS (parent_class)->open (window, error))
     return FALSE;
 
-  g_source_attach (window_x11->x11_source,
-      g_main_context_get_thread_default ());
+  if (!display_x11->foreign_display) {
+    window_x11->x11_source = x11_event_source_new (window_x11);
+    g_source_attach (window_x11->x11_source,
+        g_main_context_get_thread_default ());
+  }
 
   window_x11->allow_extra_expose_events = TRUE;
 
@@ -288,9 +289,11 @@ gst_gl_window_x11_close (GstGLWindow * window)
     GST_DEBUG ("display receiver closed");
   }
 
-  g_source_destroy (window_x11->x11_source);
-  g_source_unref (window_x11->x11_source);
-  window_x11->x11_source = NULL;
+  if (window_x11->x11_source) {
+    g_source_destroy (window_x11->x11_source);
+    g_source_unref (window_x11->x11_source);
+    window_x11->x11_source = NULL;
+  }
 
   window_x11->running = FALSE;
 
@@ -307,6 +310,14 @@ gst_gl_window_x11_set_window_handle (GstGLWindow * window, guintptr id)
   window_x11 = GST_GL_WINDOW_X11 (window);
 
   window_x11->parent_win = (Window) id;
+
+  /* XXX: seems to be needed for the difference between gtk videooverlay and
+   * the embedding gl into gtk directly */
+  if (id && !window_x11->x11_source) {
+    window_x11->x11_source = x11_event_source_new (window_x11);
+    g_source_attach (window_x11->x11_source,
+        g_main_context_get_thread_default ());
+  }
 
   XGetWindowAttributes (window_x11->device, window_x11->parent_win, &attr);
 
