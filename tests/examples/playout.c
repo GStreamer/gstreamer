@@ -757,8 +757,9 @@ playout_app_remove_item (PlayoutItem * item)
 
   g_mutex_lock (&app->play_queue_lock);
   g_ptr_array_remove (app->play_queue, item);
-  /* This item has been removed from the array, decrement the index */
-  app->play_queue_current--;
+  if (item->state >= PLAYOUT_ITEM_STATE_ACTIVATED)
+    /* Removed item was playing; decrement the current-play-queue index */
+    app->play_queue_current--;
   g_mutex_unlock (&app->play_queue_lock);
 
   /* Don't call this again */
