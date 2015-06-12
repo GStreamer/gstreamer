@@ -356,6 +356,8 @@ collect_addresses (GSocket * socket, gchar ** ip, guint16 * port,
  *
  * Returns: #GST_RTSP_OK when @conn contains a valid connection.
  */
+/* FIXME 2.0 We don't need the ip and port since they can be got from the
+ * GSocket */
 GstRTSPResult
 gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
     guint16 port, const gchar * initial_buffer, GstRTSPConnection ** conn)
