@@ -774,9 +774,11 @@ _check_directory (GstValidateSsim * self, const gchar * ref_dir,
       }
 
       gst_validate_printf (NULL,
-          "<position: %s avg: %f min: %f (Passed: %d failed: %d, %d not found)>\r",
-          g_file_info_get_display_name (info), *mean, *lowest,
-          nfiles, nfailures, nnotfound);
+          "<position: %s duration: %" GST_TIME_FORMAT
+          " avg: %f min: %f (Passed: %d failed: %d, %d not found)/>\r",
+          g_file_info_get_display_name (info),
+          GST_TIME_ARGS (GST_CLOCK_TIME_NONE),
+          *mean, *lowest, nfiles, nfailures, nnotfound);
 
       g_free (compared_file);
       g_free (ref_file);

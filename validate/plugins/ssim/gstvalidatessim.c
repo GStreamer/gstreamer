@@ -247,10 +247,10 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
 
     total_avg += mssim;
     gst_validate_printf (NULL,
-        "<position: %" GST_TIME_FORMAT
-        " %d / %d avg: %f min: %f (Passed: %d failed: %d)>\r",
-        GST_TIME_ARGS (frame->position), i + 1, nfiles, mssim, lowest, npassed,
-        nfailures);
+        "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
+        " %d / %d avg: %f min: %f (Passed: %d failed: %d)/>\r",
+        GST_TIME_ARGS (frame->position), GST_TIME_ARGS (GST_CLOCK_TIME_NONE),
+        i + 1, nfiles, mssim, lowest, npassed, nfailures);
 
     g_free (bname);
   }
