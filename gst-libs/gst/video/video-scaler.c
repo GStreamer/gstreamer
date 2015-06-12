@@ -1137,6 +1137,7 @@ gst_video_scaler_combine_packed_YUV (GstVideoScaler * y_scale,
 
   scale->in_y_offset = get_y_offset (in_format);
   scale->out_y_offset = get_y_offset (out_format);
+  scale->inc = y_scale->inc;
 
   for (i = 0; i < out_size; i++) {
     if ((i & 1) == scale->out_y_offset) {
@@ -1498,24 +1499,30 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
           vfunc (vscale, lines, LINE (dest, dest_stride, i), i, width, n_elems);
         }
       } else {
-        guint vx, vw, w1;
+        guint vx, vw, w1, ws;
         guint h_taps;
 
         h_taps = hscale->resampler.max_taps;
         w1 = x + width - 1;
+        ws = hscale->resampler.offset[w1];
 
+        /* we need to estimate the area that we first need to scale in the
+         * vertical direction. Scale x and width to find the lower bound and
+         * overshoot the width to find the upper bound */
         vx = (hscale->inc * x) >> 16;
         vx = MIN (vx, hscale->resampler.offset[x]);
         vw = (hscale->inc * (x + width)) >> 16;
         if (hscale->merged) {
           if ((w1 & 1) == hscale->out_y_offset)
-            vw = MAX (vw, hscale->resampler.offset[w1] + (2 * h_taps));
+            vw = MAX (vw, ws + (2 * h_taps));
           else
-            vw = MAX (vw, hscale->resampler.offset[w1] + (4 * h_taps));
+            vw = MAX (vw, ws + (4 * h_taps));
         } else {
-          vw = MAX (vw, hscale->resampler.offset[w1] + h_taps);
+          vw = MAX (vw, ws + h_taps);
         }
         vw += 1;
+        /* but clamp to max size */
+        vw = MIN (vw, hscale->resampler.in_size);
 
         if (vscale->tmpwidth < vw)
           realloc_tmplines (vscale, n_elems, vw);
