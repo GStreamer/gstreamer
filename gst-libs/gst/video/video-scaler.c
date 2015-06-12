@@ -1110,6 +1110,8 @@ gst_video_scaler_combine_packed_YUV (GstVideoScaler * y_scale,
 
   g_return_val_if_fail (y_scale != NULL, NULL);
   g_return_val_if_fail (uv_scale != NULL, NULL);
+  g_return_val_if_fail (uv_scale->resampler.max_taps ==
+      y_scale->resampler.max_taps, NULL);
 
   scale = g_slice_new0 (GstVideoScaler);
 
@@ -1120,7 +1122,7 @@ gst_video_scaler_combine_packed_YUV (GstVideoScaler * y_scale,
   resampler = &scale->resampler;
 
   out_size = y_scale->resampler.out_size * 2;
-  max_taps = MAX (y_scale->resampler.max_taps, uv_scale->resampler.max_taps);
+  max_taps = y_scale->resampler.max_taps;
   n_phases = out_size;
   offset = g_malloc (sizeof (guint32) * out_size);
   phase = g_malloc (sizeof (guint32) * n_phases);
