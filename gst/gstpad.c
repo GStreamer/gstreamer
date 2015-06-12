@@ -4823,6 +4823,14 @@ store_sticky_event (GstPad * pad, GstEvent * event)
                   || type == GST_EVENT_EOS))))
     goto flushed;
 
+  /* Unset the EOS flag when received STREAM_START event, so pad can
+   * store sticky event and then push it later */
+  if (type == GST_EVENT_STREAM_START) {
+    GST_LOG_OBJECT (pad, "Removing pending EOS events");
+    remove_event_by_type (pad, GST_EVENT_EOS);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
+  }
+
   if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
     goto eos;
 
@@ -5316,6 +5324,17 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
 
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
+
+      switch (event_type) {
+        case GST_EVENT_STREAM_START:
+          /* Remove sticky EOS events */
+          GST_LOG_OBJECT (pad, "Removing pending EOS events");
+          remove_event_by_type (pad, GST_EVENT_EOS);
+          GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
+          break;
+        default:
+          break;
+      }
 
       if (serialized) {
         if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
