@@ -424,6 +424,88 @@ gst_selector_pad_iterate_linked_pads (GstPad * pad, GstObject * parent)
 }
 
 static gboolean
+forward_sticky_events (GstPad * sinkpad, GstEvent ** event, gpointer user_data)
+{
+  GstInputSelector *sel = GST_INPUT_SELECTOR (user_data);
+
+  GST_DEBUG_OBJECT (sinkpad, "forward sticky event %" GST_PTR_FORMAT, *event);
+
+  if (GST_EVENT_TYPE (*event) == GST_EVENT_SEGMENT) {
+    GstSegment *seg = &GST_SELECTOR_PAD (sinkpad)->segment;
+    GstEvent *e;
+
+    e = gst_event_new_segment (seg);
+    gst_event_set_seqnum (e, GST_SELECTOR_PAD_CAST (sinkpad)->segment_seqnum);
+
+    gst_pad_push_event (sel->srcpad, e);
+  } else if (GST_EVENT_TYPE (*event) == GST_EVENT_STREAM_START
+      && !sel->have_group_id) {
+    GstEvent *tmp =
+        gst_pad_get_sticky_event (sel->srcpad, GST_EVENT_STREAM_START, 0);
+
+    /* Only push stream-start once if not all our streams have a stream-id */
+    if (!tmp) {
+      gst_pad_push_event (sel->srcpad, gst_event_ref (*event));
+    } else {
+      gst_event_unref (tmp);
+    }
+  } else {
+    gst_pad_push_event (sel->srcpad, gst_event_ref (*event));
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_input_selector_eos_wait (GstInputSelector * self, GstSelectorPad * pad,
+    GstEvent * eos_event)
+{
+  while (!self->eos && !self->flushing && !pad->flushing) {
+    GstPad *active_sinkpad;
+    active_sinkpad = gst_input_selector_get_active_sinkpad (self);
+    if (pad == GST_SELECTOR_PAD_CAST (active_sinkpad) && pad->eos
+        && !pad->eos_sent) {
+      GST_DEBUG_OBJECT (pad, "send EOS event");
+      GST_INPUT_SELECTOR_UNLOCK (self);
+      /* if we have a pending events, push them now */
+      if (pad->events_pending) {
+        gst_pad_sticky_events_foreach (GST_PAD_CAST (pad),
+            forward_sticky_events, self);
+        pad->events_pending = FALSE;
+      }
+
+      gst_pad_push_event (self->srcpad, gst_event_ref (eos_event));
+      GST_INPUT_SELECTOR_LOCK (self);
+      pad->eos_sent = TRUE;
+    } else {
+      /* we can be unlocked here when we are shutting down (flushing) or when we
+       * get unblocked */
+      GST_INPUT_SELECTOR_WAIT (self);
+    }
+  }
+
+  return self->flushing;
+}
+
+static gboolean
+gst_input_selector_all_eos (GstInputSelector * sel)
+{
+  GList *walk;
+
+  for (walk = GST_ELEMENT_CAST (sel)->sinkpads; walk; walk = walk->next) {
+    GstSelectorPad *selpad;
+
+    selpad = GST_SELECTOR_PAD_CAST (walk->data);
+    if (!selpad->eos) {
+      return FALSE;
+    }
+
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
@@ -509,29 +591,15 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
     case GST_EVENT_EOS:
       selpad->eos = TRUE;
-
-      if (!forward) {
-        forward = TRUE;
-        /* Wait until we're the active sink pad or we're flushing */
-        while (!sel->eos && !sel->flushing && !selpad->flushing)
-          GST_INPUT_SELECTOR_WAIT (sel);
-      } else {
-        /* Notify all waiting pads about going EOS now */
+      GST_DEBUG_OBJECT (pad, "received EOS");
+      if (gst_input_selector_all_eos (sel)) {
+        GST_DEBUG_OBJECT (pad, "All sink pad received EOS");
         sel->eos = TRUE;
         GST_INPUT_SELECTOR_BROADCAST (sel);
-      }
-
-      if (sel->eos_sent) {
-        gst_event_unref (event);
-        event = NULL;
       } else {
-        /* prevent any further EOS event being pushed */
-        sel->eos_sent = TRUE;
+        gst_input_selector_eos_wait (sel, selpad, event);
+        forward = FALSE;
       }
-
-      selpad->eos_sent = TRUE;
-
-      GST_DEBUG_OBJECT (pad, "received EOS");
       break;
     case GST_EVENT_GAP:{
       GstClockTime ts, dur;
@@ -713,8 +781,8 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
 
       /* If the active segment is configured but not to time format
        * we can't do any syncing at all */
-      if (active_seg->format != GST_FORMAT_TIME
-          && active_seg->format != GST_FORMAT_UNDEFINED) {
+      if ((active_seg->format != GST_FORMAT_TIME
+              && active_seg->format != GST_FORMAT_UNDEFINED)) {
         GST_DEBUG_OBJECT (selpad,
             "Not waiting because active segment isn't in TIME format");
         GST_INPUT_SELECTOR_UNLOCK (sel);
@@ -743,37 +811,6 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
 
   /* Return TRUE if the selector or the pad is flushing */
   return (sel->flushing || selpad->flushing);
-}
-
-static gboolean
-forward_sticky_events (GstPad * sinkpad, GstEvent ** event, gpointer user_data)
-{
-  GstInputSelector *sel = GST_INPUT_SELECTOR (user_data);
-
-  if (GST_EVENT_TYPE (*event) == GST_EVENT_SEGMENT) {
-    GstSegment *seg = &GST_SELECTOR_PAD (sinkpad)->segment;
-    GstEvent *e;
-
-    e = gst_event_new_segment (seg);
-    gst_event_set_seqnum (e, GST_SELECTOR_PAD_CAST (sinkpad)->segment_seqnum);
-
-    gst_pad_push_event (sel->srcpad, e);
-  } else if (GST_EVENT_TYPE (*event) == GST_EVENT_STREAM_START
-      && !sel->have_group_id) {
-    GstEvent *tmp =
-        gst_pad_get_sticky_event (sel->srcpad, GST_EVENT_STREAM_START, 0);
-
-    /* Only push stream-start once if not all our streams have a stream-id */
-    if (!tmp) {
-      gst_pad_push_event (sel->srcpad, gst_event_ref (*event));
-    } else {
-      gst_event_unref (tmp);
-    }
-  } else {
-    gst_pad_push_event (sel->srcpad, gst_event_ref (*event));
-  }
-
-  return TRUE;
 }
 
 #if DEBUG_CACHED_BUFFERS
@@ -941,11 +978,6 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_INPUT_SELECTOR_LOCK (sel);
 
-  if (sel->eos) {
-    GST_INPUT_SELECTOR_UNLOCK (sel);
-    goto eos;
-  }
-
   if (sel->flushing) {
     GST_INPUT_SELECTOR_UNLOCK (sel);
     goto flushing;
@@ -1013,11 +1045,6 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     /* Might have changed while waiting */
     active_sinkpad = gst_input_selector_get_active_sinkpad (sel);
-  }
-
-  if (sel->eos) {
-    GST_INPUT_SELECTOR_UNLOCK (sel);
-    goto eos;
   }
 
   /* update the segment on the srcpad */
@@ -1134,13 +1161,6 @@ flushing:
     GST_DEBUG_OBJECT (pad, "We are flushing, discard buffer %p", buf);
     gst_buffer_unref (buf);
     res = GST_FLOW_FLUSHING;
-    goto done;
-  }
-eos:
-  {
-    GST_DEBUG_OBJECT (pad, "We are eos, discard buffer %p", buf);
-    gst_buffer_unref (buf);
-    res = GST_FLOW_EOS;
     goto done;
   }
 }
@@ -1276,6 +1296,7 @@ gst_input_selector_init (GstInputSelector * sel)
   sel->active_sinkpad = NULL;
   sel->padcount = 0;
   sel->sync_streams = DEFAULT_SYNC_STREAMS;
+  sel->sync_mode = DEFAULT_SYNC_MODE;
   sel->have_group_id = TRUE;
 
   g_mutex_init (&sel->lock);
@@ -1349,8 +1370,8 @@ gst_input_selector_set_active_pad (GstInputSelector * self, GstPad * pad)
   GST_DEBUG_OBJECT (self, "New active pad is %" GST_PTR_FORMAT,
       self->active_sinkpad);
 
-  if (old != new && new && new->eos && !new->eos_sent) {
-    self->eos = TRUE;
+  if (old != new && new && new->eos) {
+    new->eos_sent = FALSE;
     GST_INPUT_SELECTOR_BROADCAST (self);
   }
 
