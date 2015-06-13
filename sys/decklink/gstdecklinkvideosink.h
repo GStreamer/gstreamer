@@ -56,7 +56,6 @@ struct _GstDecklinkVideoSink
 
   GstClockTime internal_base_time;
   GstClockTime external_base_time;
-  GstClockTime last_render_time;
 
   GstDecklinkOutput *output;
 };
