@@ -68,7 +68,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS
     ("application/x-cenc, original-media-type=(string)video/x-h264, "
-        PROTECTION_SYSTEM_ID_CAPS_FIELD "=(string)" CLEARKEY_SYSTEM_ID)
+        GST_PROTECTION_SYSTEM_ID_CAPS_FIELD "=(string)" CLEARKEY_SYSTEM_ID)
     );
 
 static void

@@ -187,10 +187,10 @@ gst_protection_factory_check (GstElementFactory * fact,
       GstStructure *st;
 
       st = gst_caps_get_structure (caps, i);
-      if (gst_structure_has_field_typed (st, PROTECTION_SYSTEM_ID_CAPS_FIELD,
-              G_TYPE_STRING)) {
+      if (gst_structure_has_field_typed (st,
+              GST_PROTECTION_SYSTEM_ID_CAPS_FIELD, G_TYPE_STRING)) {
         const gchar *sys_id =
-            gst_structure_get_string (st, PROTECTION_SYSTEM_ID_CAPS_FIELD);
+            gst_structure_get_string (st, GST_PROTECTION_SYSTEM_ID_CAPS_FIELD);
         GST_DEBUG ("Found decryptor that supports protection system %s",
             sys_id);
         for (guint j = 0; !retval && system_identifiers[j]; ++j) {
