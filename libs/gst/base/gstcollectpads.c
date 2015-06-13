@@ -320,7 +320,7 @@ gst_collect_pads_set_buffer_function_locked (GstCollectPads * pads,
 /**
  * gst_collect_pads_set_buffer_function:
  * @pads: the collectpads to use
- * @func: the function to set
+ * @func: (scope call): the function to set
  * @user_data: (closure): user data passed to the function
  *
  * Set the callback function and user data that will be called with
@@ -345,7 +345,7 @@ gst_collect_pads_set_buffer_function (GstCollectPads * pads,
 /**
  * gst_collect_pads_set_compare_function:
  * @pads: the pads to use
- * @func: the function to set
+ * @func: (scope call): the function to set
  * @user_data: (closure): user data passed to the function
  *
  * Set the timestamp comparison function.
@@ -372,7 +372,7 @@ gst_collect_pads_set_compare_function (GstCollectPads * pads,
 /**
  * gst_collect_pads_set_function:
  * @pads: the collectpads to use
- * @func: the function to set
+ * @func: (scope call): the function to set
  * @user_data: user data passed to the function
  *
  * CollectPads provides a default collection algorithm that will determine
@@ -432,7 +432,7 @@ unref_data (GstCollectData * data)
 /**
  * gst_collect_pads_set_event_function:
  * @pads: the collectpads to use
- * @func: the function to set
+ * @func: (scope call): the function to set
  * @user_data: user data passed to the function
  *
  * Set the event callback function and user data that will be called when
@@ -460,7 +460,7 @@ gst_collect_pads_set_event_function (GstCollectPads * pads,
 /**
  * gst_collect_pads_set_query_function:
  * @pads: the collectpads to use
- * @func: the function to set
+ * @func: (scope call): the function to set
  * @user_data: user data passed to the function
  *
  * Set the query callback function and user data that will be called after
@@ -554,7 +554,7 @@ gst_collect_pads_clip_running_time (GstCollectPads * pads,
 /**
  * gst_collect_pads_set_clip_function:
  * @pads: the collectpads to use
- * @clipfunc: clip function to install
+ * @clipfunc: (scope call): clip function to install
  * @user_data: user data to pass to @clip_func
  *
  * Install a clipping function that is called right after a buffer is received
@@ -574,7 +574,7 @@ gst_collect_pads_set_clip_function (GstCollectPads * pads,
 /**
  * gst_collect_pads_set_flush_function:
  * @pads: the collectpads to use
- * @func: flush function to install
+ * @func: (scope call): flush function to install
  * @user_data: user data to pass to @func
  *
  * Install a flush function that is called when the internal
