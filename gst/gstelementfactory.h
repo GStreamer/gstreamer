@@ -129,66 +129,48 @@ typedef guint64 GstElementFactoryListType;
 #define  GST_ELEMENT_FACTORY_TYPE_MEDIA_METADATA (G_GUINT64_CONSTANT (1) << 53)
 
 /**
- * GST_ELEMENT_FACTORY_TYPE_ANY:
+ * GST_ELEMENT_FACTORY_TYPE_ANY: (value 562949953421311) (type GstElementFactoryListType)
  *
  * Elements of any of the defined GST_ELEMENT_FACTORY_LIST types
- *
- * Value: 562949953421311
- * Type: GstElementFactoryListType
  */
 #define  GST_ELEMENT_FACTORY_TYPE_ANY ((G_GUINT64_CONSTANT (1) << 49) - 1)
 
 /**
- * GST_ELEMENT_FACTORY_TYPE_MEDIA_ANY:
+ * GST_ELEMENT_FACTORY_TYPE_MEDIA_ANY: (value 18446462598732840960) (type GstElementFactoryListType)
  *
  * Elements matching any of the defined GST_ELEMENT_FACTORY_TYPE_MEDIA types
  *
  * Note: Do not use this if you wish to not filter against any of the defined
  * media types. If you wish to do this, simply don't specify any
  * GST_ELEMENT_FACTORY_TYPE_MEDIA flag.
- *
- * Value: 18446462598732840960
- * Type: GstElementFactoryListType
  */
 #define GST_ELEMENT_FACTORY_TYPE_MEDIA_ANY (~G_GUINT64_CONSTANT (0) << 48)
 
 /**
- * GST_ELEMENT_FACTORY_TYPE_VIDEO_ENCODER:
+ * GST_ELEMENT_FACTORY_TYPE_VIDEO_ENCODER: (value 2814749767106562) (type GstElementFactoryListType)
  *
  * All encoders handling video or image media types
- *
- * Value: 2814749767106562
- * Type: GstElementFactoryListType
  */
 #define GST_ELEMENT_FACTORY_TYPE_VIDEO_ENCODER (GST_ELEMENT_FACTORY_TYPE_ENCODER | GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO | GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)
 
 /**
- * GST_ELEMENT_FACTORY_TYPE_AUDIO_ENCODER:
+ * GST_ELEMENT_FACTORY_TYPE_AUDIO_ENCODER: (value 1125899906842626) (type GstElementFactoryListType)
  *
  * All encoders handling audio media types
- *
- * Value: 1125899906842626
- * Type: GstElementFactoryListType
  */
 #define GST_ELEMENT_FACTORY_TYPE_AUDIO_ENCODER (GST_ELEMENT_FACTORY_TYPE_ENCODER | GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO)
 
 /**
- * GST_ELEMENT_FACTORY_TYPE_AUDIOVIDEO_SINKS:
+ * GST_ELEMENT_FACTORY_TYPE_AUDIOVIDEO_SINKS: (value 3940649673949188 (type GstElementFactoryListType)
  *
  * All sinks handling audio, video or image media types
- *
- * Value: 3940649673949188
- * Type: GstElementFactoryListType
  */
 #define GST_ELEMENT_FACTORY_TYPE_AUDIOVIDEO_SINKS (GST_ELEMENT_FACTORY_TYPE_SINK | GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO | GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO | GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)
 
 /**
- * GST_ELEMENT_FACTORY_TYPE_DECODABLE:
+ * GST_ELEMENT_FACTORY_TYPE_DECODABLE: (value 353) (type GstElementFactoryListType)
  *
  * All elements used to 'decode' streams (decoders, demuxers, parsers, depayloaders)
- *
- * Value: 353
- * Type: GstElementFactoryListType
  */
 #define GST_ELEMENT_FACTORY_TYPE_DECODABLE \
   (GST_ELEMENT_FACTORY_TYPE_DECODER | GST_ELEMENT_FACTORY_TYPE_DEMUXER | GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER | GST_ELEMENT_FACTORY_TYPE_PARSER | GST_ELEMENT_FACTORY_TYPE_DECRYPTOR)
