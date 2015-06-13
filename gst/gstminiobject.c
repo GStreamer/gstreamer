@@ -135,7 +135,7 @@ gst_mini_object_init (GstMiniObject * mini_object, guint flags, GType type,
 }
 
 /**
- * gst_mini_object_copy:
+ * gst_mini_object_copy: (skip)
  * @mini_object: the mini-object to copy
  *
  * Creates a copy of the mini-object.
@@ -299,7 +299,7 @@ gst_mini_object_is_writable (const GstMiniObject * mini_object)
 }
 
 /**
- * gst_mini_object_make_writable:
+ * gst_mini_object_make_writable: (skip)
  * @mini_object: (transfer full): the mini-object to make writable
  *
  * Checks if a mini-object is writable.  If not, a writable copy is made and
@@ -331,7 +331,7 @@ gst_mini_object_make_writable (GstMiniObject * mini_object)
 }
 
 /**
- * gst_mini_object_ref:
+ * gst_mini_object_ref: (skip)
  * @mini_object: the mini-object
  *
  * Increase the reference count of the mini-object.
@@ -423,7 +423,7 @@ call_finalize_notify (GstMiniObject * obj)
 }
 
 /**
- * gst_mini_object_unref:
+ * gst_mini_object_unref: (skip)
  * @mini_object: the mini-object
  *
  * Decreases the reference count of the mini-object, possibly freeing
@@ -516,7 +516,7 @@ gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
 }
 
 /**
- * gst_mini_object_steal:
+ * gst_mini_object_steal: (skip)
  * @olddata: (inout) (transfer full): pointer to a pointer to a mini-object to
  *     be stolen
  *
