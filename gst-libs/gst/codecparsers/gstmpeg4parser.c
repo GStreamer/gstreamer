@@ -347,7 +347,7 @@ compute_resync_marker_size (const GstMpeg4VideoObjectPlane * vop,
     }
   }
 
-  return off;
+  return off++;                 /* Take the following 1 into account */
 }
 
 /**
