@@ -53,8 +53,8 @@ const GstMetaInfo *gst_net_control_message_meta_get_info (void);
 #define GST_NET_CONTROL_MESSAGE_META_INFO \
   (gst_net_control_message_meta_get_info())
 
-GstNetControlMessageMeta * gst_buffer_add_net_control_message_meta (
-    GstBuffer *buffer, GSocketControlMessage *addr);
+GstNetControlMessageMeta * gst_buffer_add_net_control_message_meta (GstBuffer             * buffer,
+                                                                    GSocketControlMessage * message);
 
 G_END_DECLS
 

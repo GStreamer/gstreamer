@@ -192,7 +192,6 @@ struct _GstBaseTransform {
  *                  of the outgoing buffer.
  * @transform_ip:   Required if the element operates in-place.
  *                  Transform the incoming buffer in-place.
- *
  * @submit_input_buffer: Function which accepts a new input buffer and pre-processes it.
  *                  The default implementation performs caps (re)negotiation, then
  *                  QoS if needed, and places the input buffer into the @queued_buf
