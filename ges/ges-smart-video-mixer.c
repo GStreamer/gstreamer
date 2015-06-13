@@ -84,7 +84,8 @@ parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info, gpointer unused)
   }
 
   g_object_set (mixer_pad, "alpha", meta->alpha, "xpos", meta->posx, "ypos",
-      meta->posy, "zorder", meta->zorder, NULL);
+      meta->posy, "zorder", meta->zorder, "width", meta->width,
+      "height", meta->height, NULL);
 
   return GST_PAD_PROBE_OK;
 }

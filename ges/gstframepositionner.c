@@ -80,56 +80,37 @@ gst_frame_positionner_update_properties (GstFramePositionner * pos,
     gint old_track_width, gint old_track_height)
 {
   GstCaps *caps;
-  gint final_width;
-  gint final_height;
 
   if (pos->capsfilter == NULL)
     return;
 
-  if ((old_track_width && pos->width == old_track_width &&
-          old_track_width && pos->width == old_track_width) ||
-      (pos->width <= 0 && pos->height <= 0)) {
-    GST_DEBUG_OBJECT (pos, "FOLLOWING track size width old_track: %d -- pos: %d"
-        "height, old_track %d -- pos: %d",
-        old_track_width, pos->width, old_track_height, pos->height);
-
-    final_width = pos->track_width;
-    final_height = pos->track_height;
-  } else {
-    GST_DEBUG_OBJECT (pos, "Keeping previous sizes");
-    final_width = pos->width;
-    final_height = pos->height;
-  }
-
-  if (final_width == 0 && final_height == 0)
-    caps = gst_caps_new_empty_simple ("video/x-raw");
-  else if (final_width == 0)
-    caps =
-        gst_caps_new_simple ("video/x-raw", "height", G_TYPE_INT, final_height,
-        NULL);
-  else if (final_height == 0)
-    caps =
-        gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, final_width,
-        NULL);
-  else
+  if (pos->track_width && pos->track_height) {
     caps =
         gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
-        final_width, "height", G_TYPE_INT, final_height, NULL);
-
-  GST_DEBUG_OBJECT (pos, "updated size to : %d %d", final_width, final_height);
+        pos->track_width, "height", G_TYPE_INT, pos->track_height, NULL);
+  } else {
+    caps = gst_caps_new_empty_simple ("video/x-raw");
+  }
 
   if (pos->fps_n != -1)
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, pos->fps_n,
         pos->fps_d, NULL);
 
+  if (old_track_width && pos->width == old_track_width &&
+      old_track_width && pos->width == old_track_width) {
+
+    GST_DEBUG_OBJECT (pos, "FOLLOWING track size width old_track: %d -- pos: %d"
+        " || height, old_track %d -- pos: %d",
+        old_track_width, pos->width, old_track_height, pos->height);
+
+    pos->width = pos->track_width;
+    pos->height = pos->track_height;
+  }
+
   GST_DEBUG_OBJECT (pos, "setting caps : %s", gst_caps_to_string (caps));
 
   g_object_set (pos->capsfilter, "caps", caps, NULL);
 
-  g_object_notify (G_OBJECT (pos), "width");
-  g_object_notify (G_OBJECT (pos), "height");
-  pos->width = final_width;
-  pos->height = final_height;
   gst_caps_unref (caps);
 }
 
@@ -160,7 +141,7 @@ sync_properties_from_caps (GstFramePositionner * pos, GstCaps * caps)
   pos->track_width = width;
   pos->track_height = height;
 
-  GST_DEBUG_OBJECT (pos, "syncing size from caps : %d %d", width, height);
+  GST_ERROR_OBJECT (pos, "syncing size from caps : %d %d", width, height);
   GST_DEBUG_OBJECT (pos, "syncing framerate from caps : %d/%d", pos->fps_n,
       pos->fps_d);
 
@@ -319,7 +300,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_WIDTH,
       g_param_spec_int ("width", "width", "width of the source",
-          0, MAX_PIXELS, 0, G_PARAM_READWRITE));
+          0, MAX_PIXELS, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   /**
    * gesframepositionner:height:
@@ -329,7 +310,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
       g_param_spec_int ("height", "height", "height of the source",
-          0, MAX_PIXELS, 0, G_PARAM_READWRITE));
+          0, MAX_PIXELS, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "frame positionner", "Metadata",
@@ -473,6 +454,8 @@ gst_frame_positionner_meta_transform (GstBuffer * dest, GstMeta * meta,
     dmeta->alpha = smeta->alpha;
     dmeta->posx = smeta->posx;
     dmeta->posy = smeta->posy;
+    dmeta->width = smeta->width;
+    dmeta->height = smeta->height;
     dmeta->zorder = smeta->zorder;
   }
 
@@ -498,6 +481,8 @@ gst_frame_positionner_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   meta->alpha = framepositionner->alpha;
   meta->posx = framepositionner->posx;
   meta->posy = framepositionner->posy;
+  meta->width = framepositionner->width;
+  meta->height = framepositionner->height;
   meta->zorder = framepositionner->zorder;
   GST_OBJECT_UNLOCK (framepositionner);
 

@@ -70,6 +70,8 @@ struct _GstFramePositionnerMeta {
   gdouble alpha;
   gint posx;
   gint posy;
+  gint height;
+  gint width;
   guint zorder;
 };
 
