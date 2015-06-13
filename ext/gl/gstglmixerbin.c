@@ -47,19 +47,17 @@ _free_input_chain (struct input_chain *chain)
   if (!chain)
     return;
 
-  if (chain->ghost_pad)
-    gst_object_unref (chain->ghost_pad);
   chain->ghost_pad = NULL;
 
   if (chain->upload) {
+    gst_element_set_state (chain->upload, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (chain->self), chain->upload);
-    gst_object_unref (chain->upload);
     chain->upload = NULL;
   }
 
   if (chain->in_convert) {
+    gst_element_set_state (chain->in_convert, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (chain->self), chain->in_convert);
-    gst_object_unref (chain->in_convert);
     chain->in_convert = NULL;
   }
 
@@ -449,21 +447,25 @@ gst_gl_mixer_bin_release_pad (GstElement * element, GstPad * pad)
 {
   GstGLMixerBin *self = GST_GL_MIXER_BIN (element);
   GList *l = self->priv->input_chains;
+  gboolean released = FALSE;
 
   GST_OBJECT_LOCK (element);
   while (l) {
     struct input_chain *chain = l->data;
-    if (chain->mixer_pad == pad) {
-      _free_input_chain (chain);
+    if (GST_PAD (chain->ghost_pad) == pad) {
       self->priv->input_chains =
           g_list_remove_link (self->priv->input_chains, l);
+      GST_OBJECT_UNLOCK (element);
+
+      _free_input_chain (chain);
+      gst_element_remove_pad (element, pad);
+      released = TRUE;
       break;
     }
     l = l->next;
   }
-  GST_OBJECT_UNLOCK (element);
-
-  gst_element_remove_pad (element, pad);
+  if (!released)
+    GST_OBJECT_UNLOCK (element);
 }
 
 static GstStateChangeReturn
