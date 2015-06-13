@@ -106,7 +106,7 @@ typedef gpointer GstClockID;
  */
 #define GST_MSECOND (GST_SECOND / G_GINT64_CONSTANT (1000))
 /**
- * GST_USECOND: (value: 1000) (type GstClockTime)
+ * GST_USECOND: (value 1000) (type GstClockTime)
  *
  * Constant that defines one GStreamer microsecond.
  */
