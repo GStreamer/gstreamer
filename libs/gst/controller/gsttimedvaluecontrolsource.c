@@ -232,7 +232,7 @@ done:
  *
  * For use in control source implementations.
  *
- * Returns: the found #GSequenceIter or %NULL
+ * Returns: (transfer none): the found #GSequenceIter or %NULL
  */
 GSequenceIter *gst_timed_value_control_source_find_control_point_iter
     (GstTimedValueControlSource * self, GstClockTime timestamp)
