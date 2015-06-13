@@ -185,7 +185,7 @@ typedef enum {
 #define GST_MINI_OBJECT_REFCOUNT_VALUE(obj)     (g_atomic_int_get (&(GST_MINI_OBJECT_CAST(obj))->refcount))
 
 /**
- * GstMiniObject:
+ * GstMiniObject: (ref-func gst_mini_object_ref) (unref-func gst_mini_object_unref) (set-value-func g_value_set_boxed) (get-value-func g_value_get_boxed)
  * @type: the GType of the object
  * @refcount: atomic refcount
  * @lockstate: atomic state of the locks
@@ -195,10 +195,6 @@ typedef enum {
  * @free: the free function
  *
  * Base class for refcounted lightweight objects.
- * Ref Func: gst_mini_object_ref
- * Unref Func: gst_mini_object_unref
- * Set Value Func: g_value_set_boxed
- * Get Value Func: g_value_get_boxed
  */
 struct _GstMiniObject {
   GType   type;
