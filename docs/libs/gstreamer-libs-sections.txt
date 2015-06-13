@@ -954,22 +954,6 @@ gst_net_time_provider_get_type
 </SECTION>
 
 <SECTION>
-<FILE>gstntppacket</FILE>
-<TITLE>GstNtpPacket</TITLE>
-GstNtpPacket
-gst_ntp_packet_new
-gst_ntp_packet_copy
-gst_ntp_packet_free
-gst_ntp_packet_serialize
-gst_ntp_packet_receive
-gst_ntp_packet_send
-GST_NTP_ERROR
-GST_NTP_PACKET_SIZE
-<SUBSECTION Private>
-gst_ntp_packet_get_type
-</SECTION>
-
-<SECTION>
 <FILE>gstptpclock</FILE>
 <TITLE>GstPtpClock</TITLE>
 <INCLUDE>gst/net/net.h</INCLUDE>
@@ -978,7 +962,7 @@ gst_ptp_deinit
 gst_ptp_is_initialized
 gst_ptp_is_supported
 
-/GstPtpClock
+GstPtpClock
 gst_ptp_clock_new
 
 gst_ptp_statistics_callback_add
