@@ -80,8 +80,6 @@ struct _GstGLImageSink
     gboolean keep_aspect_ratio;
     gint par_n, par_d;
 
-    GstBufferPool *pool;
-
     /* avoid replacing the stored_buffer while drawing */
     GMutex drawing_lock;
     GstBuffer *stored_buffer;

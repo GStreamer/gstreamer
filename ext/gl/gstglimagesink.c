@@ -488,7 +488,6 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink)
   glimage_sink->keep_aspect_ratio = TRUE;
   glimage_sink->par_n = 0;
   glimage_sink->par_d = 1;
-  glimage_sink->pool = NULL;
   glimage_sink->stored_buffer = NULL;
   glimage_sink->redisplay_texture = 0;
   glimage_sink->handle_events = TRUE;
@@ -877,12 +876,6 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         glimage_sink->caps = NULL;
       }
 
-      /* we're losing the context, this pool is no use anymore */
-      if (glimage_sink->pool) {
-        gst_object_unref (glimage_sink->pool);
-        glimage_sink->pool = NULL;
-      }
-
       if (glimage_sink->context) {
         GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
 
@@ -1263,6 +1256,7 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     goto no_caps;
 
   if (need_pool) {
+    GstBufferPool *pool;
     GstVideoInfo info;
 
     if (!gst_video_info_from_caps (&info, caps))
@@ -1271,36 +1265,17 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     /* the normal size of a frame */
     size = info.size;
 
-    if (glimage_sink->pool) {
-      GstCaps *pcaps;
+    GST_DEBUG_OBJECT (glimage_sink, "create new pool");
 
-      /* we had a pool, check caps */
-      GST_DEBUG_OBJECT (glimage_sink, "check existing pool caps");
-      config = gst_buffer_pool_get_config (glimage_sink->pool);
-      gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
+    pool = gst_gl_buffer_pool_new (glimage_sink->context);
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
 
-      if (!gst_caps_is_equal (caps, pcaps)) {
-        GST_DEBUG_OBJECT (glimage_sink, "pool has different caps");
-        /* different caps, we can't use this pool */
-        gst_object_unref (glimage_sink->pool);
-        glimage_sink->pool = NULL;
-      }
-      gst_structure_free (config);
-    }
-
-    if (glimage_sink->pool == NULL) {
-      GST_DEBUG_OBJECT (glimage_sink, "create new pool");
-
-      glimage_sink->pool = gst_gl_buffer_pool_new (glimage_sink->context);
-      config = gst_buffer_pool_get_config (glimage_sink->pool);
-      gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-
-      if (!gst_buffer_pool_set_config (glimage_sink->pool, config))
-        goto config_failed;
-    }
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
 
     /* we need at least 2 buffer because we hold on to the last one */
-    gst_query_add_allocation_pool (query, glimage_sink->pool, size, 2, 0);
+    gst_query_add_allocation_pool (query, pool, size, 2, 0);
   }
 
   if (glimage_sink->context->gl_vtable->FenceSync)
