@@ -213,7 +213,7 @@ add_pad (GstStreamConsistency * consist, GstPad * pad)
 }
 
 /**
- * gst_consistency_checker_new:
+ * gst_consistency_checker_new: (skip)
  * @pad: The #GstPad on which the dataflow will be checked.
  *
  * Sets up a data probe on the given pad which will raise assertions if the
