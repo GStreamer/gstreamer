@@ -161,7 +161,7 @@ typedef guint64 GstElementFactoryListType;
 #define GST_ELEMENT_FACTORY_TYPE_AUDIO_ENCODER (GST_ELEMENT_FACTORY_TYPE_ENCODER | GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO)
 
 /**
- * GST_ELEMENT_FACTORY_TYPE_AUDIOVIDEO_SINKS: (value 3940649673949188 (type GstElementFactoryListType)
+ * GST_ELEMENT_FACTORY_TYPE_AUDIOVIDEO_SINKS: (value 3940649673949188) (type GstElementFactoryListType)
  *
  * All sinks handling audio, video or image media types
  */
