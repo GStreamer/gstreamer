@@ -20,7 +20,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/**
+/*
  * SECTION:gstindex
  * @short_description: Generate indexes on objects
  * @see_also: #GstIndexFactory
