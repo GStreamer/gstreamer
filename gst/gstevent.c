@@ -1692,9 +1692,18 @@ gst_event_parse_toc_select (GstEvent * event, gchar ** uid)
 }
 
 /**
- * SECTION:gstprotectionevent
- * @short_description: Functions to support the passing of
- * protection system specific information via events.
+ * gst_event_new_protection:
+ * @system_id: (transfer none): a string holding a UUID that uniquely
+ * identifies a protection system.
+ * @data: (transfer none): a #GstBuffer holding protection system specific
+ * information. The reference count of the buffer will be incremented by one.
+ * @origin: a string indicating where the protection
+ * information carried in the event was extracted from. The allowed values
+ * of this string will depend upon the protection scheme.
+ *
+ * Creates a new event containing information specific to a particular
+ * protection system (uniquely identified by @system_id), by which that
+ * protection system can acquire key(s) to decrypt a protected stream.
  *
  * In order for a decryption element to decrypt media
  * protected using a specific system, it first needs all the
@@ -1717,27 +1726,10 @@ gst_event_parse_toc_select (GstEvent * event, gchar ** uid)
  * some protection systems use different encodings depending upon where the
  * information originates.
  *
- * The events returned by #gst_event_new_protection are implemented
+ * The events returned by gst_event_new_protection() are implemented
  * in such a way as to ensure that the most recently-pushed protection info
  * event of a particular @origin and @system_id will
  * be stuck to the output pad of the sending element.
- *
- * Since: 1.6
- */
-
-/**
- * gst_event_new_protection:
- * @system_id: (transfer none): a string holding a UUID that uniquely
- * identifies a protection system.
- * @data: (transfer none): a #GstBuffer holding protection system specific
- * information. The reference count of the buffer will be incremented by one.
- * @origin: a string indicating where the protection
- * information carried in the event was extracted from. The allowed values
- * of this string will depend upon the protection scheme.
- *
- * Creates a new event containing information specific to a particular
- * protection system (uniquely identified by @system_id), by which that
- * protection system can acquire key(s) to decrypt a protected stream.
  *
  * Returns: a #GST_EVENT_PROTECTION event, if successful; %NULL
  * if unsuccessful.
