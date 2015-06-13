@@ -78,6 +78,9 @@ typedef struct _GstGLViewConvert GstGLViewConvert;
 typedef struct _GstGLViewConvertClass GstGLViewConvertClass;
 typedef struct _GstGLViewConvertPrivate GstGLViewConvertPrivate;
 
+typedef struct _GstGLCompositionOverlay GstGLCompositionOverlay;
+typedef struct _GstGLCompositionOverlayClass GstGLCompositionOverlayClass;
+
 G_END_DECLS
 
 #endif /* __GST_GL_FWD_H__ */
