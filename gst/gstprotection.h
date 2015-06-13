@@ -42,6 +42,8 @@ typedef struct _GstProtectionMeta GstProtectionMeta;
  *
  * Metadata type that holds information about a sample from a protection-protected
  * track, including the information needed to decrypt it (if it is encrypted).
+ *
+ * Since 1.6
  */
 struct _GstProtectionMeta
 {
