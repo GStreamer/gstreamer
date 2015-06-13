@@ -39,9 +39,9 @@ bin_PROGRAMS += gst-validate-images-check-@GST_API_VERSION@
 noinst_PROGRAMS += gst-validate-images-check-@GST_API_VERSION@-debug
 
 gst_validate_images_check_@GST_API_VERSION@_SOURCES = gst-validate-images-check.c
-gst_validate_images_check_@GST_API_VERSION@_LDADD = $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la
+gst_validate_images_check_@GST_API_VERSION@_LDADD = $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la $(LDADD)
 gst_validate_images_check_@GST_API_VERSION@_debug_SOURCES = gst-validate-images-check.c
-gst_validate_images_check_@GST_API_VERSION@_debug_LDADD = $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la
+gst_validate_images_check_@GST_API_VERSION@_debug_LDADD = $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la $(LDADD)
 gst_validate_images_check_@GST_API_VERSION@_debug_LDFLAGS = -no-install
 endif
 
