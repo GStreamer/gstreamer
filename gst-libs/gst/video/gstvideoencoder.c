@@ -2330,13 +2330,14 @@ gst_video_encoder_get_allocator (GstVideoEncoder * encoder,
 }
 
 /**
+ * gst_video_encoder_set_min_pts:
+ * @encoder: a #GstVideoEncoder
+ * @min_pts: minimal PTS that will be passed to handle_frame
+ *
  * Request minimal value for PTS passed to handle_frame.
  *
  * For streams with reordered frames this can be used to ensure that there
  * is enough time to accomodate first DTS, which may be less than first PTS
- *
- * @encoder: a #GstVideoEncoder
- * @min_pts: minimal PTS that will be passed to handle_frame
  *
  * Since 1.6
  */
