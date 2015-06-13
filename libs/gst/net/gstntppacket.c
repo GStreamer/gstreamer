@@ -19,11 +19,11 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-/**
+/* THIS IS A PRIVATE API
  * SECTION:gstntppacket
  * @short_description: Helper structure to construct clock packets used
  *                     by network clocks for NTPv4.
- * @see_also: #GstClock, #GstNetClientClock, #GstNtpProvider
+ * @see_also: #GstClock, #GstNetClientClock, #GstNtpClock
  *
  * Various functions for receiving, sending an serializing #GstNtpPacket
  * structures.
@@ -79,6 +79,7 @@ gst_clock_time_to_ntp_timestamp_fraction (GstClockTime gst)
 /**
  * gst_ntp_packet_new:
  * @buffer: (array): a buffer from which to construct the packet, or NULL
+ * @error: a #GError
  *
  * Creates a new #GstNtpPacket from a buffer received over the network. The
  * caller is responsible for ensuring that @buffer is at least
