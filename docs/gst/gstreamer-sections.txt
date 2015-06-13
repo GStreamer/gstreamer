@@ -1134,6 +1134,9 @@ gst_event_parse_toc_select
 
 gst_event_new_segment_done
 gst_event_parse_segment_done
+
+gst_event_new_protection
+gst_event_parse_protection
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT
