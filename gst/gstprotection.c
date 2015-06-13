@@ -111,7 +111,7 @@ gst_protection_meta_get_info (void)
  *
  * Attaches protection metadata to a #GstBuffer.
  *
- * Returns: a pointer to the added #GstProtectionMeta if successful; %NULL if
+ * Returns: (transfer none): a pointer to the added #GstProtectionMeta if successful; %NULL if
  * unsuccessful.
  *
  * Since: 1.6
