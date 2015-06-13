@@ -679,6 +679,7 @@ gst_adapter_prev_timestamp
 
 <SECTION>
 <FILE>gstconfig</FILE>
+<TITLE>GstConfig</TITLE>
 GST_DISABLE_GST_DEBUG
 GST_DISABLE_PARSE
 GST_DISABLE_TRACE
