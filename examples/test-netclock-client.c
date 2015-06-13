@@ -122,6 +122,10 @@ main (int argc, char *argv[])
 
   gst_pipeline_use_clock (GST_PIPELINE (pipe), net_clock);
 
+  /* Set this high enough so that it's higher than the minimum latency
+   * on all receivers */
+  gst_pipeline_set_latency (GST_PIPELINE (pipe), 500 * GST_MSECOND);
+
   if (gst_element_set_state (pipe,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
     g_print ("Failed to set state to PLAYING\n");
