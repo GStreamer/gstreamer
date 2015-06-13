@@ -42,7 +42,7 @@
  */
 
 /**
- * gst_byte_reader_new:
+ * gst_byte_reader_new: (skip)
  * @data: (in) (transfer none) (array length=size): data from which the
  *     #GstByteReader should read
  * @size: Size of @data in bytes

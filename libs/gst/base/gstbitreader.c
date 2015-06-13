@@ -37,7 +37,7 @@
  */
 
 /**
- * gst_bit_reader_new:
+ * gst_bit_reader_new: (skip)
  * @data: (array length=size): Data from which the #GstBitReader
  *   should read
  * @size: Size of @data in bytes
