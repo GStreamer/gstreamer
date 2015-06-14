@@ -51,6 +51,22 @@ struct _GstPushSrc {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstPushSrcClass:
+ * @parent_class: Element parent class
+ * @create: Ask the subclass to create a buffer. The subclass decides which
+ *          size this buffer should be. Other then that, refer to
+ *          #GstBaseSrc<!-- -->.create() for more details. If this method is
+ *          not implemented, @alloc followed by @fill will be called.
+ * @alloc: Ask the subclass to allocated a buffer. The subclass decides which
+ *         size this buffer should be. The default implementation will create
+ *         a new buffer from the negotiate allcoator.
+ * @fill: Ask the subclass to fill the buffer with data.
+ *
+ * Subclasses can override any of the available virtual methods or not, as
+ * needed. At the minimum, the @fill method should be overridden to produce
+ * buffers.
+ */
 struct _GstPushSrcClass {
   GstBaseSrcClass parent_class;
 
