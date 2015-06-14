@@ -1,6 +1,5 @@
 /*
- *  gstjpegparser.h - JPEG parser
- *
+ *  GStreamer JPEG parser
  *  Copyright (C) 2011-2012 Intel Corporation
  *
  *  This library is free software; you can redistribute it and/or
@@ -60,7 +59,7 @@ typedef struct _GstJpegScanComponent    GstJpegScanComponent;
 typedef struct _GstJpegScanHdr          GstJpegScanHdr;
 typedef struct _GstJpegFrameComponent   GstJpegFrameComponent;
 typedef struct _GstJpegFrameHdr         GstJpegFrameHdr;
-typedef struct _GstJpegMarkerSegment    GstJpegMarkerSegment;
+typedef struct _GstJpegSegment          GstJpegSegment;
 
 /**
  * GstJpegMarkerCode:
@@ -76,29 +75,86 @@ typedef struct _GstJpegMarkerSegment    GstJpegMarkerSegment;
  * @GST_JPEG_MARKER_DQT: Define quantization table marker code
  * @GST_JPEG_MARKER_DNL: Define number of lines marker code
  * @GST_JPEG_MARKER_DRI: Define restart interval marker code
- * @GST_JPEG_MARKER_APP_MIN: Application segment min marker code
- * @GST_JPEG_MARKER_APP_MAX: Application segment max marker code
+ * @GST_JPEG_MARKER_APP0: Application segment 0 marker code
+ * @GST_JPEG_MARKER_APP1: Application segment 1 marker code
+ * @GST_JPEG_MARKER_APP2: Application segment 2 marker code
+ * @GST_JPEG_MARKER_APP3: Application segment 3 marker code
+ * @GST_JPEG_MARKER_APP4: Application segment 4 marker code
+ * @GST_JPEG_MARKER_APP5: Application segment 5 marker code
+ * @GST_JPEG_MARKER_APP6: Application segment 6 marker code
+ * @GST_JPEG_MARKER_APP7: Application segment 7 marker code
+ * @GST_JPEG_MARKER_APP8: Application segment 8 marker code
+ * @GST_JPEG_MARKER_APP9: Application segment 9 marker code
+ * @GST_JPEG_MARKER_APP10: Application segment 10 marker code
+ * @GST_JPEG_MARKER_APP11: Application segment 11 marker code
+ * @GST_JPEG_MARKER_APP12: Application segment 12 marker code
+ * @GST_JPEG_MARKER_APP13: Application segment 13 marker code
+ * @GST_JPEG_MARKER_APP14: Application segment 14 marker code
+ * @GST_JPEG_MARKER_APP15: Application segment 15 marker code
  * @GST_JPEG_MARKER_COM: Comment marker code
  *
  * Indicates the type of JPEG segment.
  */
 typedef enum {
-  GST_JPEG_MARKER_SOF_MIN       = 0xC0,
-  GST_JPEG_MARKER_SOF_MAX       = 0xCF,
+  GST_JPEG_MARKER_SOF0          = 0xC0,
+  GST_JPEG_MARKER_SOF1          = 0xC1,
+  GST_JPEG_MARKER_SOF2          = 0xC2,
+  GST_JPEG_MARKER_SOF3          = 0xC3,
+  GST_JPEG_MARKER_SOF4          = 0xC4,
+  GST_JPEG_MARKER_SOF5          = 0xC5,
+  GST_JPEG_MARKER_SOF6          = 0xC6,
+  GST_JPEG_MARKER_SOF7          = 0xC7,
+  GST_JPEG_MARKER_SOF8          = 0xC8,
+  GST_JPEG_MARKER_SOF9          = 0xC9,
+  GST_JPEG_MARKER_SOF10         = 0xCA,
+  GST_JPEG_MARKER_SOF11         = 0xCB,
+  GST_JPEG_MARKER_SOF12         = 0xCC,
+  GST_JPEG_MARKER_SOF13         = 0xCD,
+  GST_JPEG_MARKER_SOF14         = 0xCE,
+  GST_JPEG_MARKER_SOF15         = 0xCF,
   GST_JPEG_MARKER_DHT           = 0xC4,
   GST_JPEG_MARKER_DAC           = 0xCC,
-  GST_JPEG_MARKER_RST_MIN       = 0xD0,
-  GST_JPEG_MARKER_RST_MAX       = 0xD7,
+  GST_JPEG_MARKER_RST0          = 0xD0,
+  GST_JPEG_MARKER_RST1          = 0xD1,
+  GST_JPEG_MARKER_RST2          = 0xD2,
+  GST_JPEG_MARKER_RST3          = 0xD3,
+  GST_JPEG_MARKER_RST4          = 0xD4,
+  GST_JPEG_MARKER_RST5          = 0xD5,
+  GST_JPEG_MARKER_RST6          = 0xD6,
+  GST_JPEG_MARKER_RST7          = 0xD7,
   GST_JPEG_MARKER_SOI           = 0xD8,
   GST_JPEG_MARKER_EOI           = 0xD9,
   GST_JPEG_MARKER_SOS           = 0xDA,
   GST_JPEG_MARKER_DQT           = 0xDB,
   GST_JPEG_MARKER_DNL           = 0xDC,
   GST_JPEG_MARKER_DRI           = 0xDD,
-  GST_JPEG_MARKER_APP_MIN       = 0xE0,
-  GST_JPEG_MARKER_APP_MAX       = 0xEF,
+  GST_JPEG_MARKER_APP0          = 0xE0,
+  GST_JPEG_MARKER_APP1          = 0xE1,
+  GST_JPEG_MARKER_APP2          = 0xE2,
+  GST_JPEG_MARKER_APP3          = 0xE3,
+  GST_JPEG_MARKER_APP4          = 0xE4,
+  GST_JPEG_MARKER_APP5          = 0xE5,
+  GST_JPEG_MARKER_APP6          = 0xE6,
+  GST_JPEG_MARKER_APP7          = 0xE7,
+  GST_JPEG_MARKER_APP8          = 0xE8,
+  GST_JPEG_MARKER_APP9          = 0xE9,
+  GST_JPEG_MARKER_APP10         = 0xEA,
+  GST_JPEG_MARKER_APP11         = 0xEB,
+  GST_JPEG_MARKER_APP12         = 0xEC,
+  GST_JPEG_MARKER_APP13         = 0xED,
+  GST_JPEG_MARKER_APP14         = 0xEE,
+  GST_JPEG_MARKER_APP15         = 0xEF,
   GST_JPEG_MARKER_COM           = 0xFE,
 } GstJpegMarkerCode;
+
+#define GST_JPEG_MARKER_SOF_MIN GST_JPEG_MARKER_SOF0
+#define GST_JPEG_MARKER_SOF_MAX GST_JPEG_MARKER_SOF15
+
+#define GST_JPEG_MARKER_APP_MIN GST_JPEG_MARKER_APP0
+#define GST_JPEG_MARKER_APP_MAX GST_JPEG_MARKER_APP15
+
+#define GST_JPEG_MARKER_RST_MIN GST_JPEG_MARKER_RST0
+#define GST_JPEG_MARKER_RST_MAX GST_JPEG_MARKER_RST7
 
 /**
  * GstJpegProfile:
@@ -252,7 +308,7 @@ struct _GstJpegFrameHdr
 };
 
 /**
- * GstJpegMarkerSegment:
+ * GstJpegSegment:
  * @type: The type of the segment that starts at @offset
  * @offset: The offset to the segment start in bytes. This is the
  *   exact start of the segment, no marker code included
@@ -261,7 +317,7 @@ struct _GstJpegFrameHdr
  *
  * A structure that contains the type of a segment, its offset and its size.
  */
-struct _GstJpegMarkerSegment
+struct _GstJpegSegment
 {
   guint8 marker;
   guint offset;
@@ -270,48 +326,49 @@ struct _GstJpegMarkerSegment
 
 /**
  * gst_jpeg_parse:
+ * @seg: (out): pointer to a #GstJpegSegment structure to fill in
  * @data: The data to parse
  * @size: The size of @data
  * @offset: The offset from which to start parsing
  *
  * Parses the JPEG bitstream contained in @data, and returns the
- * detected segment as a #GstJpegMarkerSegment.
+ * detected segment as a #GstJpegSegment.
  *
  * Returns: TRUE if a packet start code was found.
  */
-gboolean        gst_jpeg_parse                  (GstJpegMarkerSegment * seg,
+gboolean        gst_jpeg_parse                  (GstJpegSegment * seg,
                                                  const guint8 * data,
                                                  gsize size,
                                                  guint offset);
 
 /**
- * gst_jpeg_parse_frame_hdr:
- * @hdr: (out): The #GstJpegFrameHdr structure to fill in
+ * gst_jpeg_parse_frame_header:
+ * @frame_hdr: (out): The #GstJpegFrameHdr structure to fill in
  * @data: The data from which to parse the frame header
  * @size: The size of @data
  * @offset: The offset in bytes from which to start parsing @data
  *
- * Parses the @hdr JPEG frame header structure members from @data.
+ * Parses the @frame_hdr JPEG frame header structure members from @data.
  *
  * Returns: TRUE if the frame header was correctly parsed.
  */
-gboolean        gst_jpeg_parse_frame_hdr        (GstJpegFrameHdr * hdr,
+gboolean        gst_jpeg_parse_frame_header     (GstJpegFrameHdr * frame_hdr,
                                                  const guint8 * data,
                                                  gsize size,
                                                  guint offset);
 
 /**
- * gst_jpeg_parse_scan_hdr:
- * @hdr: (out): The #GstJpegScanHdr structure to fill in
+ * gst_jpeg_parse_scan_header:
+ * @scan_hdr: (out): The #GstJpegScanHdr structure to fill in
  * @data: The data from which to parse the scan header
  * @size: The size of @data
  * @offset: The offset in bytes from which to start parsing @data
  *
- * Parses the @hdr JPEG scan header structure members from @data.
+ * Parses the @scan_hdr JPEG scan header structure members from @data.
  *
  * Returns: TRUE if the scan header was correctly parsed
  */
-gboolean        gst_jpeg_parse_scan_hdr         (GstJpegScanHdr * hdr,
+gboolean        gst_jpeg_parse_scan_header      (GstJpegScanHdr * scan_hdr,
                                                  const guint8 * data,
                                                  gsize size,
                                                  guint offset);

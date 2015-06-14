@@ -1,6 +1,4 @@
-/*
- *  gstjpegparser.c - JPEG parser
- *
+/*  GStreamer JPEG parser
  *  Copyright (C) 2011-2012 Intel Corporation
  *
  *  This library is free software; you can redistribute it and/or
@@ -261,7 +259,7 @@ gst_jpeg_scan_for_marker_code (const guint8 * data, gsize size, guint offset)
 }
 
 gboolean
-gst_jpeg_parse_frame_hdr (GstJpegFrameHdr * frame_hdr,
+gst_jpeg_parse_frame_header (GstJpegFrameHdr * frame_hdr,
     const guint8 * data, gsize size, guint offset)
 {
   GstByteReader br;
@@ -306,7 +304,7 @@ gst_jpeg_parse_frame_hdr (GstJpegFrameHdr * frame_hdr,
 }
 
 gboolean
-gst_jpeg_parse_scan_hdr (GstJpegScanHdr * scan_hdr,
+gst_jpeg_parse_scan_header (GstJpegScanHdr * scan_hdr,
     const guint8 * data, gsize size, guint offset)
 {
   GstByteReader br;
@@ -550,7 +548,7 @@ gst_jpeg_get_default_quantization_tables (GstJpegQuantTables * quant_tables)
 }
 
 gboolean
-gst_jpeg_parse (GstJpegMarkerSegment * seg,
+gst_jpeg_parse (GstJpegSegment * seg,
     const guint8 * data, gsize size, guint offset)
 {
   GstByteReader br;
