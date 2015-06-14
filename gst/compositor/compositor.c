@@ -56,8 +56,8 @@
  * (#gdouble)
  * </listitem>
  * <listitem>
- * "zorder": The z-order position of the picture in the composition; between
- * 0 and 10000. (#guint)
+ * "zorder": The z-order position of the picture in the composition
+ * (#guint)
  * </listitem>
  * </itemizedlist>
  *
