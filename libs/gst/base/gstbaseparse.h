@@ -156,6 +156,7 @@ typedef struct _GstBaseParsePrivate GstBaseParsePrivate;
  * The opaque #GstBaseParse data structure.
  */
 struct _GstBaseParse {
+  /*< public >*/
   GstElement     element;
 
   /*< protected >*/

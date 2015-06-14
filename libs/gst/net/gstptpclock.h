@@ -43,6 +43,7 @@ typedef struct _GstPtpClockPrivate GstPtpClockPrivate;
 
 /**
  * GstPtpClock:
+ * @clock: parented to #GstSystemClock
  *
  * Opaque #GstPtpClock structure.
  */
@@ -55,6 +56,12 @@ struct _GstPtpClock {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstPtpClockClass:
+ * @parent_class: parented to #GstSystemClockClass
+ *
+ * Opaque #GstPtpClockClass structure.
+ */
 struct _GstPtpClockClass {
   GstSystemClockClass parent_class;
 

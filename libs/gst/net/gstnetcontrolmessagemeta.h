@@ -30,7 +30,7 @@ typedef struct _GstNetControlMessageMeta GstNetControlMessageMeta;
 /**
  * GstNetControlMessageMeta:
  * @meta: the parent type
- * @addr: a #GSocketControlMessage stored as metadata
+ * @message: a #GSocketControlMessage stored as metadata
  *
  * Buffer metadata for GSocket control messages, AKA ancillary data attached to
  * data sent across a socket.
