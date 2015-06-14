@@ -1610,7 +1610,7 @@ gst_clock_is_synced (GstClock * clock)
  * @synced: if the clock is synced
  *
  * Sets @clock to synced and emits the GstClock::synced signal, and wakes up any
- * thread waiting in gst_clock_wait_synced().
+ * thread waiting in gst_clock_wait_for_sync().
  *
  * This function must only be called if GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC
  * is set on the clock, and is intended to be called by subclasses only.
