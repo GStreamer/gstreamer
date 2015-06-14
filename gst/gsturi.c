@@ -1946,7 +1946,7 @@ gst_uri_make_writable (GstUri * uri)
  *
  * Convert the URI to a string.
  *
- * Returns the URI as held in this object as a gchar* %NULL terminated string.
+ * Returns the URI as held in this object as a #gchar* nul-terminated string.
  * The caller should g_free() the string once they are finished with it.
  * The string is put together as described in RFC 3986.
  *
