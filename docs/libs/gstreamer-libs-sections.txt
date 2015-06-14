@@ -765,6 +765,7 @@ gst_collect_pads_get_type
 <FILE>gstflowcombiner</FILE>
 <TITLE>GstFlowCombiner</TITLE>
 <INCLUDE>gst/base/gstflowcombiner.h</INCLUDE>
+GstFlowCombiner
 gst_flow_combiner_new
 gst_flow_combiner_free
 gst_flow_combiner_update_flow
@@ -958,6 +959,8 @@ gst_net_time_provider_get_type
 <FILE>gstptpclock</FILE>
 <TITLE>GstPtpClock</TITLE>
 <INCLUDE>gst/net/net.h</INCLUDE>
+GST_PTP_CLOCK_ID_NONE
+
 gst_ptp_init
 gst_ptp_deinit
 gst_ptp_is_initialized
@@ -966,6 +969,7 @@ gst_ptp_is_supported
 GstPtpClock
 gst_ptp_clock_new
 
+GstPtpStatisticsCallback
 gst_ptp_statistics_callback_add
 gst_ptp_statistics_callback_remove
 <SUBSECTION Standard>
