@@ -430,7 +430,7 @@ gst_device_monitor_stop (GstDeviceMonitor * monitor)
  *
  * Filters must be added before the #GstDeviceMonitor is started.
  *
- * Returns: The id of the new filter or %0 if no provider matched the filter's
+ * Returns: The id of the new filter or 0 if no provider matched the filter's
  *  classes.
  *
  * Since: 1.4

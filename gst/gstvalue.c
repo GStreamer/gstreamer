@@ -6149,7 +6149,7 @@ gst_value_lcopy_flagset (const GValue * value, guint n_collect_values,
 
 /**
  * gst_value_set_flagset:
- * @value: a GValue initialized to #GST_TYPE_FLAGS
+ * @value: a GValue initialized to %GST_TYPE_FLAG_SET
  * @flags: The value of the flags set or unset
  * @mask: The mask indicate which flags bits must match for comparisons
  *

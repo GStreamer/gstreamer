@@ -177,7 +177,7 @@ typedef struct _GstUri GstUri;
 /**
  * GST_URI_NO_PORT:
  *
- * Value for #GstUri.port to indicate no port number.
+ * Value for #GstUri<!-- -->.port to indicate no port number.
  */
 #define GST_URI_NO_PORT 0
 
