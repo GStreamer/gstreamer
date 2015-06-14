@@ -55,7 +55,7 @@ main (int argc, gchar ** argv)
           &output_file, "The output file to store the results",
         NULL},
     {"full", 'f', 0, G_OPTION_ARG_NONE,
-          &full, "Fully analize the file frame by frame",
+          &full, "Fully analyze the file frame by frame",
         NULL},
     {"expected-results", 'e', 0, G_OPTION_ARG_FILENAME,
           &expected_file, "Path to file containing the expected results "
@@ -66,7 +66,7 @@ main (int argc, gchar ** argv)
 
   g_set_prgname ("gst-validate-media-check-" GST_API_VERSION);
   ctx = g_option_context_new ("[URI]");
-  g_option_context_set_summary (ctx, "Analizes a media file and writes "
+  g_option_context_set_summary (ctx, "Analyzes a media file and writes "
       "the results to stdout or a file. Can also compare the results found "
       "with another results file for identifying regressions. The monitoring"
       " lib from gst-validate will be enabled during the tests to identify "

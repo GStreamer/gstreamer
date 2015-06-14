@@ -457,7 +457,7 @@ bus_callback (GstBus * bus, GstMessage * message,
 }
 
 static gboolean
-_run_frame_analisis (GstMediaDescriptorWriter * writer,
+_run_frame_analysis (GstMediaDescriptorWriter * writer,
     GstValidateRunner * runner, const gchar * uri)
 {
   GstBus *bus;
@@ -466,7 +466,7 @@ _run_frame_analisis (GstMediaDescriptorWriter * writer,
 
   GstElement *uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
 
-  writer->priv->pipeline = gst_pipeline_new ("frame-analisis");
+  writer->priv->pipeline = gst_pipeline_new ("frame-analysis");
 
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT_CAST (writer->
@@ -569,7 +569,7 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
 
 
   if (full == TRUE)
-    _run_frame_analisis (writer, runner, uri);
+    _run_frame_analysis (writer, runner, uri);
 
 out:
   if (info)
