@@ -30,7 +30,7 @@ G_BEGIN_DECLS
  * The field name in a GstCaps that is used to signal the UUID of the protection
  * system.
  *
- * Since 1.6
+ * Since: 1.6
  */
 #define GST_PROTECTION_SYSTEM_ID_CAPS_FIELD "protection-system"
 
@@ -43,7 +43,7 @@ typedef struct _GstProtectionMeta GstProtectionMeta;
  * Metadata type that holds information about a sample from a protection-protected
  * track, including the information needed to decrypt it (if it is encrypted).
  *
- * Since 1.6
+ * Since: 1.6
  */
 struct _GstProtectionMeta
 {

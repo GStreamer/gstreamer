@@ -88,7 +88,7 @@ typedef gpointer GstClockID;
  *
  * Tests if a given #GstClockTimeDiff of #gint64 represents a valid defined time.
  *
- * Since 1.6
+ * Since: 1.6
  */
 #define GST_CLOCK_STIME_IS_VALID(time)   (((GstClockTimeDiff)(time)) != GST_CLOCK_STIME_NONE)
 
@@ -251,7 +251,7 @@ G_STMT_START {                                                    \
  * printf("%" GST_STIME_FORMAT "\n", GST_STIME_ARGS(ts));
  * ]|
  *
- * Since 1.6
+ * Since: 1.6
  */
 #define GST_STIME_FORMAT "d:%02u:%02u.%09u"
 /**
@@ -261,7 +261,7 @@ G_STMT_START {                                                    \
  * Format @t for the #GST_STIME_FORMAT format string. Note: @t will be
  * evaluated more than once.
  *
- * Since 1.6
+ * Since: 1.6
  */
 #define GST_STIME_ARGS(t) \
         GST_CLOCK_STIME_IS_VALID (t) ? \
@@ -410,7 +410,7 @@ struct _GstClockEntry {
  * @GST_CLOCK_FLAG_CAN_SET_RESOLUTION: clock's resolution can be changed
  * @GST_CLOCK_FLAG_CAN_SET_MASTER: clock can be slaved to a master clock
  * @GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC: clock needs to be synced before it can be used
- *     Since: 1.6
+ *     (Since 1.6)
  * @GST_CLOCK_FLAG_LAST: subclasses can add additional flags starting from this flag
  *
  * The capabilities of this clock

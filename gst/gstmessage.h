@@ -197,7 +197,7 @@ GST_EXPORT GType _gst_message_type;
  * @message: a #GstMessage
  *
  * Check if the message is in the extended message group
- * (Since 1.4)
+ * Since: 1.4
  */
 #define GST_MESSAGE_TYPE_IS_EXTENDED(message)       (!!(GST_MESSAGE_CAST(message)->type & GST_MESSAGE_EXTENDED))
 

@@ -483,7 +483,7 @@ gst_timed_value_control_source_class_init (GstTimedValueControlSourceClass
    *
    * Emited right after the new value has been set on @timed_signals
    *
-   * Since 1.6
+   * Since: 1.6
    */
   gst_timed_value_control_source_signals[VALUE_CHANGED_SIGNAL] =
       g_signal_new ("value-changed", G_TYPE_FROM_CLASS (klass),
@@ -499,7 +499,7 @@ gst_timed_value_control_source_class_init (GstTimedValueControlSourceClass
    *
    * Emited right after the new value has been added to @self
    *
-   * Since 1.6
+   * Since: 1.6
    */
   gst_timed_value_control_source_signals[VALUE_ADDED_SIGNAL] =
       g_signal_new ("value-added", G_TYPE_FROM_CLASS (klass),
@@ -515,7 +515,7 @@ gst_timed_value_control_source_class_init (GstTimedValueControlSourceClass
    *
    * Emited when @timed_value is removed from @self
    *
-   * Since 1.6
+   * Since: 1.6
    */
   gst_timed_value_control_source_signals[VALUE_REMOVED_SIGNAL] =
       g_signal_new ("value-removed", G_TYPE_FROM_CLASS (klass),

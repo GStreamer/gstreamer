@@ -580,7 +580,7 @@ _gst_buffer_copy (const GstBuffer * buffer)
  *
  * Returns: (transfer full): a new copy of @buf.
  *
- * Since 1.6
+ * Since: 1.6
  */
 GstBuffer *
 gst_buffer_copy_deep (const GstBuffer * buffer)

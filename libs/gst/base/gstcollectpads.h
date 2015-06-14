@@ -114,7 +114,7 @@ typedef enum {
  * be negative. If the initial DTS was not set, this value will be
  * set to %G_MININT64.
  *
- * Since 1.6
+ * Since: 1.6
  */
 #define GST_COLLECT_PADS_DTS(data)                   (((GstCollectData *) data)->ABI.abi.dts)
 
@@ -124,7 +124,7 @@ typedef enum {
  *
  * Check if running DTS value store is valid.
  *
- * Since 1.6
+ * Since: 1.6
  */
 #define GST_COLLECT_PADS_DTS_IS_VALID(data)          (GST_CLOCK_STIME_IS_VALID (GST_COLLECT_PADS_DTS (data)))
 
@@ -135,7 +135,7 @@ typedef enum {
  * @buffer: currently queued buffer.
  * @pos: position in the buffer
  * @segment: last segment received.
- * @dts: the signed version of the DTS converted to running time. Since 1.6
+ * @dts: the signed version of the DTS converted to running time. (Since 1.6)
  *
  * Structure used by the collect_pads.
  */

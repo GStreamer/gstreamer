@@ -196,7 +196,7 @@ typedef struct _GstBufferPool GstBufferPool;
  *                               is added/removed
  * @GST_BUFFER_FLAG_SYNC_AFTER:  Elements which write to disk or permanent
  * 				 storage should ensure the data is synced after
- * 				 writing the contents of this buffer. (Since: 1.6)
+ * 				 writing the contents of this buffer. (Since 1.6)
  * @GST_BUFFER_FLAG_LAST:        additional media specific flags can be added starting from
  *                               this flag.
  *
