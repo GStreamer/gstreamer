@@ -239,6 +239,7 @@ GST_BUFFER_COPY_ALL
 gst_buffer_copy
 gst_buffer_copy_into
 gst_buffer_copy_region
+gst_buffer_copy_deep
 
 gst_buffer_is_writable
 gst_buffer_make_writable
