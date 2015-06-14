@@ -58,6 +58,7 @@ gst_direct_control_binding_get_type
 <TITLE>GstTimedValueControlSource</TITLE>
 <INCLUDE>libs/controller/gsttimedvaluecontrolsource.h</INCLUDE>
 GstTimedValueControlSource
+GstControlPoint
 gst_timed_value_control_source_find_control_point_iter
 gst_timed_value_control_source_set
 gst_timed_value_control_source_set_from_list

@@ -52,6 +52,8 @@ typedef struct _GstControlPoint GstControlPoint;
 
 /**
  * GstControlPoint:
+ * @timestamp: timestamp of the value change
+ * @value: the new value
  *
  * a internal structure for value+time and various temporary
  * values used for interpolation. This "inherits" from
@@ -60,10 +62,10 @@ typedef struct _GstControlPoint GstControlPoint;
 struct _GstControlPoint
 {
   /* fields from GstTimedValue. DO NOT CHANGE! */
-  GstClockTime timestamp;       /* timestamp of the value change */
-  gdouble value;                /* the new value */
+  GstClockTime timestamp;
+  gdouble value;
 
-  /* internal fields */
+  /*< private >*/
 
   /* Caches for the interpolators */
   /* FIXME: we should not have this here already ... */
