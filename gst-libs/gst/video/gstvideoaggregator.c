@@ -310,7 +310,7 @@ gst_videoaggregator_pad_class_init (GstVideoAggregatorPadClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_PAD_ZORDER,
       g_param_spec_uint ("zorder", "Z-Order", "Z Order of the picture",
-          0, 10000, DEFAULT_PAD_ZORDER,
+          0, G_MAXUINT, DEFAULT_PAD_ZORDER,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PAD_IGNORE_EOS,
       g_param_spec_boolean ("ignore-eos", "Ignore EOS", "Aggregate the last "
