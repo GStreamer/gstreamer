@@ -269,22 +269,6 @@ struct _GstJpegMarkerSegment
 };
 
 /**
- * gst_jpeg_scan_for_marker_code:
- * @data: The data to parse
- * @size: The size of @data
- * @offset: The offset from which to start parsing
- *
- * Scans the JPEG bitstream contained in @data for the next marker
- * code. If found, the function returns an offset to the marker code,
- * including the 0xff prefix code but excluding any extra fill bytes.
- *
- * Returns: offset to the marker code if found, or -1 if not found.
- */
-gint            gst_jpeg_scan_for_marker_code   (const guint8 * data,
-                                                 gsize size,
-                                                 guint offset);
-
-/**
  * gst_jpeg_parse:
  * @data: The data to parse
  * @size: The size of @data

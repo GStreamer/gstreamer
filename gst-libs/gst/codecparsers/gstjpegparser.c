@@ -211,6 +211,9 @@ static const GstJpegHuffmanTableEntry default_chrominance_ac_table[] = {
 };
 /* *INDENT-ON* */
 
+static gint gst_jpeg_scan_for_marker_code (const guint8 * data, gsize size,
+    guint offset);
+
 static inline gboolean
 jpeg_parse_to_next_marker (GstByteReader * br, guint8 * marker)
 {
@@ -226,7 +229,18 @@ jpeg_parse_to_next_marker (GstByteReader * br, guint8 * marker)
   return TRUE;
 }
 
-gint
+/* gst_jpeg_scan_for_marker_code:
+ * @data: The data to parse
+ * @size: The size of @data
+ * @offset: The offset from which to start parsing
+ *
+ * Scans the JPEG bitstream contained in @data for the next marker
+ * code. If found, the function returns an offset to the marker code,
+ * including the 0xff prefix code but excluding any extra fill bytes.
+ *
+ * Returns: offset to the marker code if found, or -1 if not found.
+ */
+static gint
 gst_jpeg_scan_for_marker_code (const guint8 * data, gsize size, guint offset)
 {
   guint i;
