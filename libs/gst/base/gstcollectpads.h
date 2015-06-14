@@ -135,7 +135,8 @@ typedef enum {
  * @buffer: currently queued buffer.
  * @pos: position in the buffer
  * @segment: last segment received.
- * @dts: the signed version of the DTS converted to running time. (Since 1.6)
+ * @dts: the signed version of the DTS converted to running time. To access
+ *       this memeber, use %GST_COLLECT_PADS_DTS macro. (Since 1.6)
  *
  * Structure used by the collect_pads.
  */
@@ -155,12 +156,12 @@ struct _GstCollectData
 
   GstCollectDataPrivate *priv;
 
-  /*< public >*/
   union {
     struct {
+      /*< public >*/
       gint64 dts;
+      /*< private >*/
     } abi;
-    /*< private >*/
     gpointer _gst_reserved[GST_PADDING];
   } ABI;
 };
