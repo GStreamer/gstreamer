@@ -1196,17 +1196,18 @@ gst_type_find_element_activate_sink_mode (GstPad * pad, GstObject * parent,
         typefind->offset = 0;
         res = TRUE;
       } else {
-        gst_segment_init (&typefind->segment, GST_FORMAT_UNDEFINED);
         res = gst_pad_stop_task (pad);
+        gst_segment_init (&typefind->segment, GST_FORMAT_UNDEFINED);
       }
       break;
     case GST_PAD_MODE_PUSH:
-      gst_segment_init (&typefind->segment, GST_FORMAT_UNDEFINED);
-      if (active)
+      if (active) {
+        gst_segment_init (&typefind->segment, GST_FORMAT_UNDEFINED);
         start_typefinding (typefind);
-      else
+      } else {
         stop_typefinding (typefind);
-
+        gst_segment_init (&typefind->segment, GST_FORMAT_UNDEFINED);
+      }
       res = TRUE;
       break;
     default:
