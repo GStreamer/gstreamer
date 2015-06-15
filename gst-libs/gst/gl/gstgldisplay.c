@@ -84,6 +84,15 @@ G_DEFINE_TYPE_WITH_CODE (GstGLDisplay, gst_gl_display, GST_TYPE_OBJECT,
 #define GST_GL_DISPLAY_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_DISPLAY, GstGLDisplayPrivate))
 
+enum
+{
+  SIGNAL_0,
+  CREATE_CONTEXT,
+  LAST_SIGNAL
+};
+
+static guint gst_gl_display_signals[LAST_SIGNAL] = { 0 };
+
 static void gst_gl_display_finalize (GObject * object);
 static guintptr gst_gl_display_default_get_handle (GstGLDisplay * display);
 
@@ -98,6 +107,22 @@ static void
 gst_gl_display_class_init (GstGLDisplayClass * klass)
 {
   g_type_class_add_private (klass, sizeof (GstGLDisplayPrivate));
+
+  /**
+   * GstGLDisplay::create-context:
+   * @object: the #GstGLDisplay
+   * @context: other context to share resources with.
+   *
+   * Overrides the @GstGLContext creation mechanism.
+   * It can be called in any thread and it is emitted with
+   * display's object lock held.
+   *
+   * Returns: the new context.
+   */
+  gst_gl_display_signals[CREATE_CONTEXT] =
+      g_signal_new ("create-context", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      GST_GL_TYPE_CONTEXT, 1, GST_GL_TYPE_CONTEXT);
 
   klass->get_handle = gst_gl_display_default_get_handle;
 
@@ -337,6 +362,58 @@ gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display)
 
   GST_CAT_LOG (gst_context, "got GstGLDisplay(%p) from context(%p)", *display,
       context);
+
+  return ret;
+}
+
+/**
+ * gst_gl_display_create_context:
+ * @display: a #GstGLDisplay
+ * @other_context: other #GstGLContext to share resources with.
+ * @p_context: resulting #GstGLContext
+ * @error: resulting #GError
+ *
+ * It requires the display's object lock to be held.
+ *
+ * Returns: whether a new context could be created.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_gl_display_create_context (GstGLDisplay * display,
+    GstGLContext * other_context, GstGLContext ** p_context, GError ** error)
+{
+  GstGLContext *context = NULL;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (display != NULL, FALSE);
+  g_return_val_if_fail (p_context != NULL, FALSE);
+  g_return_val_if_fail (error != NULL, FALSE);
+  g_return_val_if_fail (*error == NULL, FALSE);
+
+  g_signal_emit (display, gst_gl_display_signals[CREATE_CONTEXT], 0,
+      other_context, &context);
+
+  if (context) {
+    *p_context = context;
+    return TRUE;
+  }
+
+  context = gst_gl_context_new (display);
+  if (!context) {
+    g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
+        "Failed to create GL context");
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (display,
+      "creating context %" GST_PTR_FORMAT " from other context %"
+      GST_PTR_FORMAT, context, other_context);
+
+  ret = gst_gl_context_create (context, other_context, error);
+
+  if (ret)
+    *p_context = context;
 
   return ret;
 }
