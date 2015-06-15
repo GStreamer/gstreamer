@@ -480,13 +480,12 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
             GstBuffer *out_buf;
             guintptr offset = payload_data - data;
 
-            self->cur_packet_size -= offset;
-            self->cur_packet_size -= payload_size;
-
             gst_adapter_unmap (self->adapter);
             gst_adapter_flush (self->adapter, offset);
             out_buf = gst_adapter_take_buffer_fast (self->adapter,
                 payload_size);
+            gst_adapter_flush (self->adapter,
+                self->cur_packet_size - offset - payload_size);
 
             if (GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
               if (!GST_CLOCK_TIME_IS_VALID (self->base_ts))
