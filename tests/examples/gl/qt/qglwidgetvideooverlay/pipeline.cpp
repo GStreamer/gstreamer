@@ -19,8 +19,11 @@
  */
 
 #include <gst/video/videooverlay.h>
+#include <gst/video/video.h>
 #include <GL/gl.h>
 #include "pipeline.h"
+
+#define GST_MAP_GL (GST_MAP_FLAG_LAST << 1)
 
 Pipeline::Pipeline(const WId id, const QString videoLocation):
     m_winId(id),
@@ -28,7 +31,6 @@ Pipeline::Pipeline(const WId id, const QString videoLocation):
     m_loop(NULL),
     m_bus(NULL),
     m_pipeline(NULL),
-    m_glupload(NULL),
     m_glimagesink(NULL)
 {
     create();
@@ -56,34 +58,20 @@ void Pipeline::create()
 
     GstElement* videosrc = gst_element_factory_make ("filesrc", "filesrc0");
     GstElement* decodebin = gst_element_factory_make ("decodebin", "decodebin0");
-    m_glupload  = gst_element_factory_make ("glcolorscale", NULL);
     m_glimagesink  = gst_element_factory_make ("glimagesink", "sink0");
     
-    if (!videosrc || !decodebin || !m_glupload || !m_glimagesink )
+    if (!videosrc || !decodebin || !m_glimagesink )
     {
         qDebug ("one element could not be found");
         return;
     }
-
-    GstCaps *outcaps = gst_caps_new_simple("video/x-raw",
-                                           "width", G_TYPE_INT, 800,
-                                           "height", G_TYPE_INT, 600,
-                                           NULL) ;
 
     g_object_set(G_OBJECT(videosrc), "num-buffers", 800, NULL);
     g_object_set(G_OBJECT(videosrc), "location", m_videoLocation.toLatin1().data(), NULL);
     g_signal_connect_object (G_OBJECT(m_glimagesink), "client-reshape", (GCallback) reshapeCallback, NULL, G_CONNECT_AFTER);
     g_signal_connect_object (G_OBJECT(m_glimagesink), "client-draw", (GCallback) drawCallback, NULL, G_CONNECT_AFTER);
 
-    gst_bin_add_many (GST_BIN (m_pipeline), videosrc, decodebin, m_glupload, m_glimagesink, NULL);
-
-    gboolean link_ok = gst_element_link_filtered(m_glupload, m_glimagesink, outcaps) ;
-    gst_caps_unref(outcaps) ;
-    if(!link_ok)
-    {
-        qDebug("Failed to link glupload to glimagesink!\n") ;
-        return;
-    }
+    gst_bin_add_many (GST_BIN (m_pipeline), videosrc, decodebin, m_glimagesink, NULL);
 
     gst_element_link_pads (videosrc, "src", decodebin, "sink");
 
@@ -156,7 +144,7 @@ void Pipeline::exposeRequested()
 //-----------------------------------------------------------------------
 
 //client reshape callback
-gboolean Pipeline::reshapeCallback (void *sink, void *context, guint width, guint height, gpointer data)
+gboolean Pipeline::reshapeCallback (GstElement *sink, void *context, guint width, guint height, gpointer data)
 {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
@@ -167,7 +155,7 @@ gboolean Pipeline::reshapeCallback (void *sink, void *context, guint width, guin
 }
 
 //client draw callback
-gboolean Pipeline::drawCallback (GstElement * gl_sink, GstGLContext *context, GstSample * sample, gpointer data)
+gboolean Pipeline::drawCallback (GstElement * gl_sink, void *context, GstSample * sample, gpointer data)
 {
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;				
@@ -212,10 +200,10 @@ gboolean Pipeline::drawCallback (GstElement * gl_sink, GstGLContext *context, Gs
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 	
-    glTranslatef(0.0f,0.0f,-5.0f);
+    glScalef (0.5, 0.5, 0.5);
 
     glRotatef(xrot,1.0f,0.0f,0.0f);
     glRotatef(yrot,0.0f,1.0f,0.0f);
@@ -295,8 +283,8 @@ gboolean Pipeline::bus_call (GstBus *bus, GstMessage *msg, Pipeline* p)
 
 void Pipeline::cb_new_pad (GstElement* decodebin, GstPad* pad, Pipeline* p)
 {
-    GstElement* glupload = p->getVideoSink();
-    GstPad* glpad = gst_element_get_static_pad (glupload, "sink");
+    GstElement* sink = p->getVideoSink();
+    GstPad* glpad = gst_element_get_static_pad (sink, "sink");
     
     //only link once 
     if (GST_PAD_IS_LINKED (glpad)) 

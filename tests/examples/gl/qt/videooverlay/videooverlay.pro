@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = videooverlay
 DESTDIR = ./debug
-CONFIG += debug link_pkgconfig compile_libtool
+CONFIG += debug link_pkgconfig
 DEFINES += UNICODE QT_THREAD_SUPPORT QT_CORE_LIB QT_GUI_LIB
 QT += gui widgets
 PKGCONFIG=gstreamer-1.0 gstreamer-video-1.0

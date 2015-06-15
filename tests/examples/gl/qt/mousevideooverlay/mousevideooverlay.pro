@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET = mousevideooverlay
 DESTDIR = ./debug
 QT += gui widgets opengl
-CONFIG += debug link_pkgconfig compile_libtool
+CONFIG += debug link_pkgconfig
 DEFINES += UNICODE QT_THREAD_SUPPORT QT_CORE_LIB QT_GUI_LIB
 PKGCONFIG = gstreamer-1.0 gstreamer-video-1.0
 

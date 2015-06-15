@@ -55,7 +55,7 @@ Pipeline::configure ()
         ("videotestsrc ! "
             "video/x-raw, width=640, height=480, "
             "framerate=(fraction)30/1 ! "
-            "gleffects effect=5 ! fakesink sync=1", NULL));
+            "glupload ! gleffects effect=5 ! fakesink sync=1", NULL));
   } else {
     QByteArray ba = m_videoLocation.toLocal8Bit ();
     qDebug ("Loading video: %s", ba.data ());

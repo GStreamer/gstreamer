@@ -19,8 +19,11 @@
  */
 
 #include <gst/video/videooverlay.h>
+#include <gst/video/video.h>
 #include <GL/gl.h>
 #include "pipeline.h"
+
+#define GST_MAP_GL (GST_MAP_FLAG_LAST << 1)
 
 Pipeline::Pipeline(const WId id, const QString videoLocation):
     m_winId(id),
@@ -170,7 +173,7 @@ gboolean Pipeline::reshapeCallback (void *sink, void *context, guint width, guin
 }
 
 //client draw callback
-gboolean Pipeline::drawCallback (GstElement * gl_sink, GstGLContext *context, GstSample * sample, gpointer data)
+gboolean Pipeline::drawCallback (void * sink, void *context, GstSample * sample, gpointer data)
 {
     static GTimeVal current_time;
     static glong last_sec = current_time.tv_sec;
@@ -215,7 +218,7 @@ gboolean Pipeline::drawCallback (GstElement * gl_sink, GstGLContext *context, Gs
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 	
-    glTranslatef(0.0f,0.0f,-5.0f);
+    glScalef(0.5f,0.5f,0.5f);
 
     glRotatef(m_xrot,1.0f,0.0f,0.0f);
     glRotatef(m_yrot,0.0f,1.0f,0.0f);

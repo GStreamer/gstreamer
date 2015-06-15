@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <QtGui/QApplication>
-#include <QtGui/QFileDialog>
+#include <QApplication>
+#include <QFileDialog>
 #include "qrenderer.h"
 
 int main(int argc, char *argv[])
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     a.connect(&a, SIGNAL(lastWindowClosed()), &a, SLOT(quit()));
 
     QString videolocation = QFileDialog::getOpenFileName(0, "Select a video file", 
-        ".", "Format (*.avi *.mkv *.ogg *.asf *.mov)");
+        ".", "Format (*.avi *.mkv *.ogg *.asf *.mov *.mp4)");
 
     if (videolocation.isEmpty())
         return -1;
