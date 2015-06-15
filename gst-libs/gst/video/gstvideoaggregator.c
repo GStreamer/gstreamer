@@ -604,12 +604,11 @@ gst_videoaggregator_src_setcaps (GstVideoAggregator * vagg, GstCaps * caps)
   if (GST_VIDEO_INFO_FPS_N (&vagg->info) != GST_VIDEO_INFO_FPS_N (&info) ||
       GST_VIDEO_INFO_FPS_D (&vagg->info) != GST_VIDEO_INFO_FPS_D (&info)) {
     if (agg->segment.position != -1) {
-      vagg->priv->ts_offset = agg->segment.position - agg->segment.start;
       vagg->priv->nframes = 0;
+      /* The timestamp offset will be updated based on the
+       * segment position the next time we aggregate */
       GST_DEBUG_OBJECT (vagg,
-          "Updating timestamp offset to %" GST_TIME_FORMAT " for segment %"
-          GST_SEGMENT_FORMAT, GST_TIME_ARGS (vagg->priv->ts_offset),
-          &agg->segment);
+          "Resetting frame counter because of framerate change");
     }
     gst_videoaggregator_reset_qos (vagg);
   }
@@ -1368,6 +1367,11 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
   }
 
   output_start_time = gst_videoaggregator_get_next_time (agg);
+  if (vagg->priv->nframes == 0) {
+    vagg->priv->ts_offset = output_start_time;
+    GST_DEBUG_OBJECT (vagg, "New ts offset %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (output_start_time));
+  }
 
   if (GST_VIDEO_INFO_FPS_N (&vagg->info) == 0)
     output_end_time = -1;
@@ -1376,7 +1380,7 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
         vagg->priv->ts_offset +
         gst_util_uint64_scale_round (vagg->priv->nframes + 1,
         GST_SECOND * GST_VIDEO_INFO_FPS_D (&vagg->info),
-        GST_VIDEO_INFO_FPS_N (&vagg->info)) + agg->segment.start;
+        GST_VIDEO_INFO_FPS_N (&vagg->info));
 
   if (agg->segment.stop != -1)
     output_end_time = MIN (output_end_time, agg->segment.stop);
