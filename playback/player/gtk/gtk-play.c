@@ -1052,6 +1052,46 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
 }
 
 static void
+player_set_rate_cb (GtkSpinButton * button, GtkPlay * play)
+{
+  gst_player_set_rate (play->player, gtk_spin_button_get_value (button));
+}
+
+static void
+player_speed_clicked_cb (GtkButton * button, GtkPlay * play)
+{
+  GtkWidget *box;
+  GtkWidget *label;
+  GtkWidget *dialog;
+  GtkWidget *content;
+  GtkWidget *rate_spinbutton;
+
+  dialog = gtk_dialog_new ();
+  gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (play));
+  gtk_window_set_title (GTK_WINDOW (dialog), "Playback speed control");
+
+  content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+  box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
+  gtk_box_pack_start (GTK_BOX (content), box, TRUE, TRUE, 0);
+
+  label = gtk_label_new ("Playback rate");
+  rate_spinbutton = gtk_spin_button_new_with_range (-64, 64, 0.1);
+  gtk_spin_button_set_digits (GTK_SPIN_BUTTON (rate_spinbutton), 2);
+  gtk_spin_button_set_value (GTK_SPIN_BUTTON (rate_spinbutton),
+      gst_player_get_rate (play->player));
+
+  gtk_box_pack_start (GTK_BOX (box), label, TRUE, TRUE, 2);
+  gtk_box_pack_start (GTK_BOX (box), rate_spinbutton, TRUE, TRUE, 2);
+  g_signal_connect (rate_spinbutton, "value-changed",
+      G_CALLBACK (player_set_rate_cb), play);
+
+  gtk_widget_show_all (dialog);
+  gtk_dialog_run (GTK_DIALOG (dialog));
+
+  gtk_widget_destroy (dialog);
+}
+
+static void
 player_quit_clicked_cb (GtkButton * button, GtkPlay * play)
 {
   gtk_widget_destroy (GTK_WIDGET (play));
@@ -1072,6 +1112,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   GtkWidget *submenu;
   GtkWidget *vis;
   GtkWidget *cb;
+  GtkWidget *speed;
   GstPlayerMediaInfo *media_info;
 
   menu = gtk_menu_new ();
@@ -1085,6 +1126,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   quit = gtk_menu_item_new_with_label ("Quit");
   vis = gtk_menu_item_new_with_label ("Visualization");
   cb = gtk_menu_item_new_with_label ("Color Balance");
+  speed = gtk_menu_item_new_with_label ("Playback Speed");
 
   media_info = gst_player_get_media_info (play->player);
 
@@ -1144,6 +1186,8 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
       G_CALLBACK (skip_prev_clicked_cb), play);
   g_signal_connect (G_OBJECT (info), "activate",
       G_CALLBACK (media_info_clicked_cb), play);
+  g_signal_connect (G_OBJECT (speed), "activate",
+      G_CALLBACK (player_speed_clicked_cb), play);
   g_signal_connect (G_OBJECT (quit), "activate",
       G_CALLBACK (player_quit_clicked_cb), play);
 
@@ -1156,6 +1200,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), sub);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), info);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), cb);
+  gtk_menu_shell_append (GTK_MENU_SHELL (menu), speed);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), quit);
 
   gtk_widget_show_all (menu);
