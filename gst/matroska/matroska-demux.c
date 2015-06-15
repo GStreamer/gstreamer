@@ -5202,14 +5202,6 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
             videocontext->display_width * videocontext->pixel_height,
             videocontext->display_height * videocontext->pixel_width, NULL);
       }
-      if (videocontext->multiview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
-        gst_caps_set_simple (caps,
-            "multiview-mode", G_TYPE_STRING,
-            gst_video_multiview_mode_to_caps_string
-            (videocontext->multiview_mode), "multiview-flags",
-            GST_TYPE_VIDEO_MULTIVIEW_FLAGSET, videocontext->multiview_flags,
-            GST_FLAG_SET_MASK_EXACT, NULL);
-      }
 
       if (videocontext->default_fps > 0.0) {
         gint fps_n, fps_d;
@@ -5238,6 +5230,20 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       if (videocontext->parent.flags & GST_MATROSKA_VIDEOTRACK_INTERLACED)
         gst_structure_set (structure, "interlace-mode", G_TYPE_STRING,
             "mixed", NULL);
+    }
+    if (videocontext->multiview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+      if (gst_video_multiview_guess_half_aspect (videocontext->multiview_mode,
+              videocontext->pixel_width, videocontext->pixel_height,
+              videocontext->display_width * videocontext->pixel_height,
+              videocontext->display_height * videocontext->pixel_width)) {
+        videocontext->multiview_flags |= GST_VIDEO_MULTIVIEW_FLAGS_HALF_ASPECT;
+      }
+      gst_caps_set_simple (caps,
+          "multiview-mode", G_TYPE_STRING,
+          gst_video_multiview_mode_to_caps_string
+          (videocontext->multiview_mode), "multiview-flags",
+          GST_TYPE_VIDEO_MULTIVIEW_FLAGSET, videocontext->multiview_flags,
+          GST_FLAG_SET_MASK_EXACT, NULL);
     }
 
     caps = gst_caps_simplify (caps);
