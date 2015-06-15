@@ -1399,6 +1399,10 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
     goto unlock_and_return;
   }
 
+  GST_DEBUG_OBJECT (vagg,
+      "Producing buffer for %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (output_start_time), GST_TIME_ARGS (output_end_time));
+
   jitter = gst_videoaggregator_do_qos (vagg, output_start_time);
   if (jitter <= 0) {
     flow_ret = gst_videoaggregator_do_aggregate (vagg, output_start_time,
