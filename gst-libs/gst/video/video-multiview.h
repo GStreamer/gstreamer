@@ -38,6 +38,9 @@ const GValue *gst_video_multiview_get_doubled_size_modes(void);
 
 void gst_video_multiview_video_info_change_mode (GstVideoInfo *info,
     GstVideoMultiviewMode out_mview_mode, GstVideoMultiviewFlags out_mview_flags);
+gboolean gst_video_multiview_guess_half_aspect (GstVideoMultiviewMode mv_mode,
+    guint width, guint height, guint par_n, guint par_d);
+
 
 #if 0 /* Place-holder for later MVC support */
 #define GST_VIDEO_MULTIVIEW_META_API_TYPE (gst_video_multiview_meta_api_get_type())

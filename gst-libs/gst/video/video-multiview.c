@@ -359,6 +359,48 @@ gst_video_multiview_video_info_change_mode (GstVideoInfo * info,
       out_mview_flags);
 }
 
+/**
+ * gst_video_multiview_guess_half_aspect:
+ * @mv_mode: A #GstVideoMultiviewMode
+ * @width: Video frame width in pixels
+ * @height: Video frame height in pixels
+ * @par_n: Numerator of the video pixel-aspect-ratio
+ * @par_d: Denominator of the video pixel-aspect-ratio
+ *
+ * Returns: A boolean indicating whether the
+ *   #GST_VIDEO_MULTIVIEW_FLAG_HALF_ASPECT flag should be set.
+ *
+ * Utility function that heuristically guess whether a
+ * frame-packed stereoscopic video contains half width/height
+ * encoded views, or full-frame views by looking at the
+ * overall display aspect ratio.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_video_multiview_guess_half_aspect (GstVideoMultiviewMode mv_mode,
+    guint width, guint height, guint par_n, guint par_d)
+{
+  switch (mv_mode) {
+    case GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM:
+    case GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED:
+      /* If the video is wider than it is tall, assume half aspect */
+      if (height * par_d <= width * par_n)
+        return TRUE;
+      break;
+    case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE:
+    case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE_QUINCUNX:
+    case GST_VIDEO_MULTIVIEW_MODE_COLUMN_INTERLEAVED:
+      /* If the video DAR is less than 2.39:1, assume half-aspect */
+      if (width * par_n < 2.39 * height * par_d)
+        return TRUE;
+      break;
+    default:
+      break;
+  }
+  return FALSE;
+}
+
 #if 0                           /* Multiview meta disabled for now */
 GType
 gst_video_multiview_meta_api_get_type (void)
