@@ -1258,7 +1258,7 @@ create_ui (GtkPlay * play)
 {
   GtkWidget *image;
   GtkWidget *controls, *main_hbox, *main_vbox;
-  GstElement *playbin, *video_sink, *gl_sink;
+  GstElement *playbin, *gtk_sink;
 
   gtk_window_set_default_size (GTK_WINDOW (play), 640, 480);
 
@@ -1268,15 +1268,22 @@ create_ui (GtkPlay * play)
   gtk_application_add_window (GTK_APPLICATION (g_application_get_default ()),
       GTK_WINDOW (play));
 
-  gl_sink = gst_element_factory_make ("gtkglsink", NULL);
-  if (gl_sink) {
-    g_object_get (gl_sink, "widget", &play->video_area, NULL);
+  if ((gtk_sink = gst_element_factory_make ("gtkglsink", NULL))) {
+    GstElement *video_sink;
+
+    g_object_get (gtk_sink, "widget", &play->video_area, NULL);
 
     video_sink = gst_element_factory_make ("glsinkbin", NULL);
-    g_object_set (video_sink, "sink", gl_sink, NULL);
+    g_object_set (video_sink, "sink", gtk_sink, NULL);
 
     playbin = gst_player_get_pipeline (play->player);
     g_object_set (playbin, "video-sink", video_sink, NULL);
+    gst_object_unref (playbin);
+  } else if ((gtk_sink = gst_element_factory_make ("gtksink", NULL))) {
+    g_object_get (gtk_sink, "widget", &play->video_area, NULL);
+
+    playbin = gst_player_get_pipeline (play->player);
+    g_object_set (playbin, "video-sink", gtk_sink, NULL);
     gst_object_unref (playbin);
   } else {
     play->video_area = gtk_drawing_area_new ();
@@ -1397,7 +1404,7 @@ create_ui (GtkPlay * play)
   gtk_box_pack_start (GTK_BOX (main_vbox), controls, FALSE, FALSE, 0);
   gtk_container_add (GTK_CONTAINER (play), main_vbox);
 
-  if (!gl_sink)
+  if (!gtk_sink)
     gtk_widget_realize (play->video_area);
   gtk_widget_hide (play->video_area);
 }
