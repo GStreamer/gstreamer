@@ -206,7 +206,7 @@ static void
 _redraw_texture (GtkGstGLWidget * gst_widget, guint tex)
 {
   const GstGLFuncs *gl = gst_widget->priv->context->gl_vtable;
-  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+  const GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
   if (gst_widget->priv->force_aspect_ratio) {
     GstVideoRectangle src, dst, result;
