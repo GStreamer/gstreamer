@@ -81,6 +81,9 @@ GST_START_TEST (dash_mpdparser_mpd)
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
       " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      " schemaLocation=\"TestSchemaLocation\""
+      " xmlns:xsi=\"TestNamespaceXSI\""
+      " xmlns:ext=\"TestNamespaceEXT\""
       " id=\"testId\""
       " type=\"static\""
       " availabilityStartTime=\"2015-03-24T1:10:50\""
@@ -100,6 +103,12 @@ GST_START_TEST (dash_mpdparser_mpd)
 
   assert_equals_int (ret, TRUE);
 
+  assert_equals_string (mpdclient->mpd_node->default_namespace,
+      "urn:mpeg:dash:schema:mpd:2011");
+  assert_equals_string (mpdclient->mpd_node->namespace_xsi, "TestNamespaceXSI");
+  assert_equals_string (mpdclient->mpd_node->namespace_ext, "TestNamespaceEXT");
+  assert_equals_string (mpdclient->mpd_node->schemaLocation,
+      "TestSchemaLocation");
   assert_equals_string (mpdclient->mpd_node->id, "testId");
 
   assert_equals_int (mpdclient->mpd_node->type, GST_MPD_FILE_TYPE_STATIC);
