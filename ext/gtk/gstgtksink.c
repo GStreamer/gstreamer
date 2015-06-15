@@ -166,10 +166,10 @@ gst_gtk_sink_get_widget (GstGtkSink * gtk_sink)
   gtk_sink->widget = (GtkGstWidget *) gtk_gst_widget_new ();
   gtk_sink->bind_aspect_ratio =
       g_object_bind_property (gtk_sink, "force-aspect-ratio", gtk_sink->widget,
-      "force-aspect-ratio", G_BINDING_BIDIRECTIONAL);
+      "force-aspect-ratio", G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
   gtk_sink->bind_pixel_aspect_ratio =
       g_object_bind_property (gtk_sink, "pixel-aspect-ratio", gtk_sink->widget,
-      "pixel-aspect-ratio", G_BINDING_BIDIRECTIONAL);
+      "pixel-aspect-ratio", G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
 
   /* Take the floating ref, other wise the destruction of the container will
    * make this widget disapear possibly before we are done. */
