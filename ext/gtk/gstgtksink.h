@@ -60,6 +60,10 @@ struct _GstGtkSink
   gboolean             force_aspect_ratio;
   GBinding             *bind_aspect_ratio;
 
+  gint                  par_n;
+  gint                  par_d;
+  GBinding             *bind_pixel_aspect_ratio;
+
   GstGtkSinkPrivate   *priv;
 };
 

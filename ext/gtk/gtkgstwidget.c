@@ -41,11 +41,14 @@ G_DEFINE_TYPE (GtkGstWidget, gtk_gst_widget, GTK_TYPE_DRAWING_AREA);
     GTK_TYPE_GST_WIDGET, GtkGstWidgetPrivate))
 
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
+#define DEFAULT_PAR_N               0
+#define DEFAULT_PAR_D               1
 
 enum
 {
   PROP_0,
   PROP_FORCE_ASPECT_RATIO,
+  PROP_PIXEL_ASPECT_RATIO,
 };
 
 struct _GtkGstWidgetPrivate
@@ -54,6 +57,10 @@ struct _GtkGstWidgetPrivate
 
   /* properties */
   gboolean force_aspect_ratio;
+  gint par_n, par_d;
+
+  gint display_width;
+  gint display_height;
 
   gboolean negotiated;
   GstBuffer *buffer;
@@ -110,10 +117,9 @@ gtk_gst_widget_draw (GtkWidget * widget, cairo_t * cr)
   if (gst_widget->priv->negotiated && gst_widget->priv->buffer
       && gst_video_frame_map (&frame, &gst_widget->priv->v_info,
           gst_widget->priv->buffer, GST_MAP_READ)) {
-    gdouble scale_x =
-        (gdouble) widget_width / GST_VIDEO_INFO_WIDTH (&frame.info);
+    gdouble scale_x = (gdouble) widget_width / gst_widget->priv->display_width;
     gdouble scale_y =
-        (gdouble) widget_height / GST_VIDEO_INFO_HEIGHT (&frame.info);
+        (gdouble) widget_height / gst_widget->priv->display_height;
     GstVideoRectangle result;
 
     gst_widget->priv->v_info = frame.info;
@@ -127,8 +133,8 @@ gtk_gst_widget_draw (GtkWidget * widget, cairo_t * cr)
 
       src.x = 0;
       src.y = 0;
-      src.w = GST_VIDEO_INFO_WIDTH (&frame.info);
-      src.h = GST_VIDEO_INFO_HEIGHT (&frame.info);
+      src.w = gst_widget->priv->display_width;
+      src.h = gst_widget->priv->display_height;
 
       dst.x = 0;
       dst.y = 0;
@@ -144,6 +150,12 @@ gtk_gst_widget_draw (GtkWidget * widget, cairo_t * cr)
       result.w = widget_width;
       result.h = widget_height;
     }
+
+    scale_x *=
+        (gdouble) gst_widget->priv->display_width / (gdouble) frame.info.width;
+    scale_y *=
+        (gdouble) gst_widget->priv->display_height /
+        (gdouble) frame.info.height;
 
     cairo_translate (cr, result.x, result.y);
     cairo_scale (cr, scale_x, scale_y);
@@ -189,6 +201,10 @@ gtk_gst_widget_set_property (GObject * object, guint prop_id,
     case PROP_FORCE_ASPECT_RATIO:
       gtk_widget->priv->force_aspect_ratio = g_value_get_boolean (value);
       break;
+    case PROP_PIXEL_ASPECT_RATIO:
+      gtk_widget->priv->par_n = gst_value_get_fraction_numerator (value);
+      gtk_widget->priv->par_d = gst_value_get_fraction_denominator (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -204,6 +220,10 @@ gtk_gst_widget_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, gtk_widget->priv->force_aspect_ratio);
+      break;
+    case PROP_PIXEL_ASPECT_RATIO:
+      gst_value_set_fraction (value, gtk_widget->priv->par_n,
+          gtk_widget->priv->par_d);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -230,6 +250,11 @@ gtk_gst_widget_class_init (GtkGstWidgetClass * klass)
           DEFAULT_FORCE_ASPECT_RATIO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_klass, PROP_PIXEL_ASPECT_RATIO,
+      gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
+          "The pixel aspect ratio of the device", DEFAULT_PAR_N, DEFAULT_PAR_D,
+          G_MAXINT, 1, 1, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   widget_klass->draw = gtk_gst_widget_draw;
   widget_klass->get_preferred_width = gtk_gst_widget_get_preferred_width;
   widget_klass->get_preferred_height = gtk_gst_widget_get_preferred_height;
@@ -241,6 +266,8 @@ gtk_gst_widget_init (GtkGstWidget * widget)
   widget->priv = GTK_GST_WIDGET_GET_PRIVATE (widget);
 
   widget->priv->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
+  widget->priv->par_n = DEFAULT_PAR_N;
+  widget->priv->par_d = DEFAULT_PAR_D;
 
   g_mutex_init (&widget->priv->lock);
 }
@@ -284,6 +311,66 @@ _queue_resize (GtkGstWidget * widget)
   return G_SOURCE_REMOVE;
 }
 
+static gboolean
+_calculate_par (GtkGstWidget * widget, GstVideoInfo * info)
+{
+  gboolean ok;
+  gint width, height;
+  gint par_n, par_d;
+  gint display_par_n, display_par_d;
+  guint display_ratio_num, display_ratio_den;
+
+  width = GST_VIDEO_INFO_WIDTH (info);
+  height = GST_VIDEO_INFO_HEIGHT (info);
+
+  par_n = GST_VIDEO_INFO_PAR_N (info);
+  par_d = GST_VIDEO_INFO_PAR_D (info);
+
+  if (!par_n)
+    par_n = 1;
+
+  /* get display's PAR */
+  if (widget->priv->par_n != 0 && widget->priv->par_d != 0) {
+    display_par_n = widget->priv->par_n;
+    display_par_d = widget->priv->par_d;
+  } else {
+    display_par_n = 1;
+    display_par_d = 1;
+  }
+
+  ok = gst_video_calculate_display_ratio (&display_ratio_num,
+      &display_ratio_den, width, height, par_n, par_d, display_par_n,
+      display_par_d);
+
+  if (!ok)
+    return FALSE;
+
+  GST_LOG ("PAR: %u/%u DAR:%u/%u", par_n, par_d, display_par_n, display_par_d);
+
+  if (height % display_ratio_den == 0) {
+    GST_DEBUG ("keeping video height");
+    widget->priv->display_width = (guint)
+        gst_util_uint64_scale_int (height, display_ratio_num,
+        display_ratio_den);
+    widget->priv->display_height = height;
+  } else if (width % display_ratio_num == 0) {
+    GST_DEBUG ("keeping video width");
+    widget->priv->display_width = width;
+    widget->priv->display_height = (guint)
+        gst_util_uint64_scale_int (width, display_ratio_den, display_ratio_num);
+  } else {
+    GST_DEBUG ("approximating while keeping video height");
+    widget->priv->display_width = (guint)
+        gst_util_uint64_scale_int (height, display_ratio_num,
+        display_ratio_den);
+    widget->priv->display_height = height;
+  }
+  GST_DEBUG ("scaling to %dx%d", widget->priv->display_width,
+      widget->priv->display_height);
+
+  return TRUE;
+}
+
 gboolean
 gtk_gst_widget_set_caps (GtkGstWidget * widget, GstCaps * caps)
 {
@@ -305,6 +392,11 @@ gtk_gst_widget_set_caps (GtkGstWidget * widget, GstCaps * caps)
       GST_VIDEO_FORMAT_BGRA, FALSE);
 
   g_mutex_lock (&widget->priv->lock);
+
+  if (!_calculate_par (widget, &v_info)) {
+    g_mutex_unlock (&widget->priv->lock);
+    return FALSE;
+  }
 
   gst_caps_replace (&widget->priv->caps, caps);
   widget->priv->v_info = v_info;
