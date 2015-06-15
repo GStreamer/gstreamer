@@ -431,8 +431,13 @@ gtk_gst_widget_set_caps (GtkGstWidget * widget, GstCaps * caps)
     return FALSE;
 
   /* FIXME: support other formats */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&v_info) ==
       GST_VIDEO_FORMAT_BGRA, FALSE);
+#else
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&v_info) ==
+      GST_VIDEO_FORMAT_ARGB, FALSE);
+#endif
 
   g_mutex_lock (&widget->priv->lock);
 

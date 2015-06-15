@@ -51,11 +51,17 @@ static gboolean gst_gtk_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static GstFlowReturn gst_gtk_sink_show_frame (GstVideoSink * bsink,
     GstBuffer * buf);
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define FORMATS "BGRA"
+#else
+#define FORMATS "ARGB"
+#endif
+
 static GstStaticPadTemplate gst_gtk_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGRA"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (FORMATS))
     );
 
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
