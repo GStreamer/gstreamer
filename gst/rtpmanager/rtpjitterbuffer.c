@@ -741,7 +741,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
     case RTP_JITTER_BUFFER_MODE_NONE:
     case RTP_JITTER_BUFFER_MODE_BUFFER:
       /* send 0 as the first timestamp and -1 for the other ones. This will
-       * interpollate them from the RTP timestamps with a 0 origin. In buffering
+       * interpolate them from the RTP timestamps with a 0 origin. In buffering
        * mode we will adjust the outgoing timestamps according to the amount of
        * time we spent buffering. */
       if (jbuf->base_time == -1)
