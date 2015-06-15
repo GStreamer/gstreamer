@@ -253,7 +253,7 @@ G_STMT_START {                                                    \
  *
  * Since: 1.6
  */
-#define GST_STIME_FORMAT "d:%02u:%02u.%09u"
+#define GST_STIME_FORMAT "c%" GST_TIME_FORMAT
 /**
  * GST_STIME_ARGS:
  * @t: a #GstClockTimeDiff or #gint64
@@ -264,14 +264,7 @@ G_STMT_START {                                                    \
  * Since: 1.6
  */
 #define GST_STIME_ARGS(t) \
-        GST_CLOCK_STIME_IS_VALID (t) ? \
-        (gint) ((GstClockTimeDiff)(t) / (GST_SECOND * 60 * 60)) : -99, \
-        GST_CLOCK_STIME_IS_VALID (t) ? \
-        (guint) ((((GstClockTime)ABS(t)) / (GST_SECOND * 60)) % 60) : 99, \
-        GST_CLOCK_STIME_IS_VALID (t) ? \
-        (guint) ((((GstClockTime)ABS(t)) / GST_SECOND) % 60) : 99, \
-        GST_CLOCK_STIME_IS_VALID (t) ? \
-        (guint) (((GstClockTime)ABS(t)) % GST_SECOND) : 999999999
+          ((t) >= 0) ? ' ' : '-', GST_TIME_ARGS (ABS (t))
 
 typedef struct _GstClockEntry   GstClockEntry;
 typedef struct _GstClock        GstClock;
