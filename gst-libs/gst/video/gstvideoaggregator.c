@@ -606,6 +606,10 @@ gst_videoaggregator_src_setcaps (GstVideoAggregator * vagg, GstCaps * caps)
     if (agg->segment.position != -1) {
       vagg->priv->ts_offset = agg->segment.position - agg->segment.start;
       vagg->priv->nframes = 0;
+      GST_DEBUG_OBJECT (vagg,
+          "Updating timestamp offset to %" GST_TIME_FORMAT " for segment %"
+          GST_SEGMENT_FORMAT, GST_TIME_ARGS (vagg->priv->ts_offset),
+          &agg->segment);
     }
     gst_videoaggregator_reset_qos (vagg);
   }
