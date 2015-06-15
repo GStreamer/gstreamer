@@ -71,6 +71,33 @@
 
 #include "gstaggregator.h"
 
+typedef enum
+{
+  GST_AGGREGATOR_START_TIME_SELECTION_ZERO,
+  GST_AGGREGATOR_START_TIME_SELECTION_FIRST,
+  GST_AGGREGATOR_START_TIME_SELECTION_SET
+} GstAggregatorStartTimeSelection;
+
+static GType
+gst_aggregator_start_time_selection_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {GST_AGGREGATOR_START_TIME_SELECTION_ZERO,
+          "Start at 0 running time (default)", "zero"},
+      {GST_AGGREGATOR_START_TIME_SELECTION_FIRST,
+          "Start at first observed input running time", "first"},
+      {GST_AGGREGATOR_START_TIME_SELECTION_SET,
+          "Set start time with start-time property", "set"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstAggregatorStartTimeSelection", values);
+  }
+  return gtype;
+}
 
 /*  Might become API */
 static void gst_aggregator_merge_tags (GstAggregator * aggregator,
@@ -255,6 +282,10 @@ struct _GstAggregatorPrivate
   GMutex src_lock;
   GCond src_cond;
 
+  gboolean first_buffer;
+  GstAggregatorStartTimeSelection start_time_selection;
+  GstClockTime start_time;
+
   /* properties */
   gint64 latency;
 };
@@ -268,12 +299,16 @@ typedef struct
   gboolean one_actually_seeked;
 } EventData;
 
-#define DEFAULT_LATENCY        0
+#define DEFAULT_LATENCY              0
+#define DEFAULT_START_TIME_SELECTION GST_AGGREGATOR_START_TIME_SELECTION_FIRST
+#define DEFAULT_START_TIME           (-1)
 
 enum
 {
   PROP_0,
   PROP_LATENCY,
+  PROP_START_TIME_SELECTION,
+  PROP_START_TIME,
   PROP_LAST
 };
 
@@ -374,6 +409,14 @@ gst_aggregator_check_pads_ready (GstAggregator * self)
     pad = l->data;
 
     PAD_LOCK (pad);
+
+    /* In live mode, having a single pad with buffers is enough to
+     * generate a start time from it. In non-live mode all pads need
+     * to have a buffer
+     */
+    if (self->priv->peer_latency_live && pad->priv->buffer)
+      self->priv->first_buffer = FALSE;
+
     if (pad->priv->buffer == NULL && !pad->priv->eos) {
       PAD_UNLOCK (pad);
       goto pad_not_ready;
@@ -381,6 +424,8 @@ gst_aggregator_check_pads_ready (GstAggregator * self)
     PAD_UNLOCK (pad);
 
   }
+
+  self->priv->first_buffer = FALSE;
 
   GST_OBJECT_UNLOCK (self);
   GST_LOG_OBJECT (self, "pads are ready");
@@ -407,6 +452,7 @@ gst_aggregator_reset_flow_values (GstAggregator * self)
   self->priv->send_stream_start = TRUE;
   self->priv->send_segment = TRUE;
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
+  self->priv->first_buffer = TRUE;
   GST_OBJECT_UNLOCK (self);
 }
 
@@ -567,9 +613,19 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 
   start = gst_aggregator_get_next_time (self);
 
+  /* If we're not live, or if we use the running time
+   * of the first buffer as start time, we wait until
+   * all pads have buffers.
+   * Otherwise (i.e. if we are live!), we wait on the clock
+   * and if a pad does not have a buffer in time we ignore
+   * that pad.
+   */
   if (!GST_CLOCK_TIME_IS_VALID (latency) ||
       !GST_IS_CLOCK (GST_ELEMENT_CLOCK (self)) ||
-      !GST_CLOCK_TIME_IS_VALID (start)) {
+      !GST_CLOCK_TIME_IS_VALID (start) ||
+      (self->priv->first_buffer
+          && self->priv->start_time_selection ==
+          GST_AGGREGATOR_START_TIME_SELECTION_FIRST)) {
     /* We wake up here when something happened, and below
      * then check if we're ready now. If we return FALSE,
      * we will be directly called again.
@@ -601,7 +657,6 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
         GST_TIME_ARGS (GST_ELEMENT_CAST (self)->base_time),
         GST_TIME_ARGS (start), GST_TIME_ARGS (latency),
         GST_TIME_ARGS (gst_clock_get_time (clock)));
-
 
     self->priv->aggregate_id = gst_clock_new_single_shot_id (clock, time);
     gst_object_unref (clock);
@@ -669,7 +724,6 @@ gst_aggregator_aggregate_func (GstAggregator * self)
       continue;
 
     GST_TRACE_OBJECT (self, "Actually aggregating!");
-
     flow_return = klass->aggregate (self, timeout);
 
     GST_OBJECT_LOCK (self);
@@ -1463,6 +1517,9 @@ gst_aggregator_do_seek (GstAggregator * self, GstEvent * event)
 
   gst_segment_do_seek (&self->segment, rate, fmt, flags, start_type, start,
       stop_type, stop, NULL);
+
+  /* Seeking sets a position */
+  self->priv->first_buffer = FALSE;
   GST_OBJECT_UNLOCK (self);
 
   /* forward the seek upstream */
@@ -1680,6 +1737,12 @@ gst_aggregator_set_property (GObject * object, guint prop_id,
     case PROP_LATENCY:
       gst_aggregator_set_latency_property (agg, g_value_get_int64 (value));
       break;
+    case PROP_START_TIME_SELECTION:
+      agg->priv->start_time_selection = g_value_get_enum (value);
+      break;
+    case PROP_START_TIME:
+      agg->priv->start_time = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1695,6 +1758,12 @@ gst_aggregator_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LATENCY:
       g_value_set_int64 (value, gst_aggregator_get_latency_property (agg));
+      break;
+    case PROP_START_TIME_SELECTION:
+      g_value_set_enum (value, agg->priv->start_time_selection);
+      break;
+    case PROP_START_TIME:
+      g_value_set_uint64 (value, agg->priv->start_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1743,6 +1812,19 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
           (G_MAXLONG == G_MAXINT64) ? G_MAXINT64 : (G_MAXLONG * GST_SECOND - 1),
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_START_TIME_SELECTION,
+      g_param_spec_enum ("start-time-selection", "Start Time Selection",
+          "Decides which start time is output",
+          gst_aggregator_start_time_selection_get_type (),
+          DEFAULT_START_TIME_SELECTION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_START_TIME,
+      g_param_spec_uint64 ("start-time", "Start Time",
+          "Start time to use if start-time-selection=set", 0,
+          G_MAXUINT64,
+          DEFAULT_START_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_stop_pad);
 }
 
@@ -1785,6 +1867,8 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   self->priv->latency = DEFAULT_LATENCY;
+  self->priv->start_time_selection = DEFAULT_START_TIME_SELECTION;
+  self->priv->start_time = DEFAULT_START_TIME;
 
   g_mutex_init (&self->priv->src_lock);
   g_cond_init (&self->priv->src_cond);
@@ -1859,6 +1943,43 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
   aggpad->priv->buffer = actual_buf;
 
   flow_return = aggpad->priv->flow_return;
+
+  if (self->priv->first_buffer) {
+    GstClockTime start_time;
+
+    switch (self->priv->start_time_selection) {
+      case GST_AGGREGATOR_START_TIME_SELECTION_ZERO:
+      default:
+        start_time = 0;
+        break;
+      case GST_AGGREGATOR_START_TIME_SELECTION_FIRST:
+        start_time = GST_BUFFER_PTS (actual_buf);
+        if (start_time != -1) {
+          start_time = MAX (start_time, aggpad->segment.start);
+          start_time =
+              gst_segment_to_running_time (&aggpad->segment, GST_FORMAT_TIME,
+              start_time);
+        }
+        break;
+      case GST_AGGREGATOR_START_TIME_SELECTION_SET:
+        start_time = self->priv->start_time;
+        if (start_time == -1)
+          start_time = 0;
+        break;
+    }
+
+    if (start_time != -1) {
+      if (self->segment.position == -1)
+        self->segment.position = start_time;
+      else
+        self->segment.position = MIN (start_time, self->segment.position);
+      self->segment.start = MIN (start_time, self->segment.start);
+      self->segment.time = MIN (start_time, self->segment.time);
+
+      GST_DEBUG_OBJECT (self, "Selecting start time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (start_time));
+    }
+  }
 
   PAD_UNLOCK (aggpad);
   PAD_FLUSH_UNLOCK (aggpad);
