@@ -696,21 +696,36 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
   if (!gl_sink->context) {
     GST_OBJECT_LOCK (gl_sink->display);
     do {
-      GstGLContext *other_context;
-      GstGLWindow *window;
+      GstGLContext *other_context = NULL;
+      GstGLWindow *window = NULL;
 
-      if (gl_sink->context)
+      if (gl_sink->context) {
         gst_object_unref (gl_sink->context);
+        gl_sink->context = NULL;
+      }
 
       GST_DEBUG_OBJECT (gl_sink,
           "No current context, creating one for %" GST_PTR_FORMAT,
           gl_sink->display);
 
-      gl_sink->context = gst_gl_context_new (gl_sink->display);
-      if (!gl_sink->context) {
-        GST_OBJECT_UNLOCK (gl_sink->display);
-        goto context_creation_error;
+      if (gl_sink->other_context) {
+        other_context = gst_object_ref (gl_sink->other_context);
+      } else {
+        other_context =
+            gst_gl_display_get_gl_context_for_thread (gl_sink->display, NULL);
       }
+
+      if (!gst_gl_display_create_context (gl_sink->display,
+              other_context, &gl_sink->context, &error)) {
+        if (other_context)
+          gst_object_unref (other_context);
+        GST_OBJECT_UNLOCK (gl_sink->display);
+        goto context_error;
+      }
+
+      GST_DEBUG_OBJECT (gl_sink,
+          "created context %" GST_PTR_FORMAT " from other context %"
+          GST_PTR_FORMAT, gl_sink->context, gl_sink->other_context);
 
       window = gst_gl_context_get_window (gl_sink->context);
 
@@ -727,25 +742,6 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
         gl_sink->window_id = gl_sink->new_window_id;
         GST_DEBUG_OBJECT (gl_sink, "Setting window handle on gl window");
         gst_gl_window_set_window_handle (window, gl_sink->window_id);
-      }
-
-      if (gl_sink->other_context) {
-        other_context = gst_object_ref (gl_sink->other_context);
-      } else {
-        other_context =
-            gst_gl_display_get_gl_context_for_thread (gl_sink->display, NULL);
-      }
-
-      GST_DEBUG_OBJECT (gl_sink,
-          "creating context %" GST_PTR_FORMAT " from other context %"
-          GST_PTR_FORMAT, gl_sink->context, other_context);
-
-      if (!gst_gl_context_create (gl_sink->context, other_context, &error)) {
-        if (other_context)
-          gst_object_unref (other_context);
-        gst_object_unref (window);
-        GST_OBJECT_UNLOCK (gl_sink->display);
-        goto context_error;
       }
 
       gst_gl_window_handle_events (window, gl_sink->handle_events);
@@ -782,19 +778,21 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
 
   return TRUE;
 
-context_creation_error:
-  {
-    GST_ELEMENT_ERROR (gl_sink, RESOURCE, NOT_FOUND,
-        ("Failed to create GL context"), (NULL));
-    return FALSE;
-  }
-
 context_error:
   {
     GST_ELEMENT_ERROR (gl_sink, RESOURCE, NOT_FOUND, ("%s", error->message),
         (NULL));
-    gst_object_unref (gl_sink->context);
-    gl_sink->context = NULL;
+
+    if (gl_sink->context) {
+      gst_object_unref (gl_sink->context);
+      gl_sink->context = NULL;
+    }
+
+    if (error) {
+      g_error_free (error);
+      error = NULL;
+    }
+
     return FALSE;
   }
 }
