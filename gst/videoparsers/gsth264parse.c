@@ -1696,6 +1696,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   } else {
     gint crop_width, crop_height;
     gint fps_num, fps_den;
+    gint par_n, par_d;
 
     if (sps->frame_cropping_flag) {
       crop_width = sps->crop_rect_width;
@@ -1760,14 +1761,32 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       else
         height = h264parse->height;
 
+      if (s == NULL ||
+          !gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n,
+              &par_d)) {
+        gst_h264_parse_get_par (h264parse, &par_n, &par_d);
+        if (par_n != 0 && par_d != 0) {
+          GST_INFO_OBJECT (h264parse, "PAR %d/%d", par_n, par_d);
+          gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              par_n, par_d, NULL);
+        } else {
+          /* Assume par_n/par_d of 1/1 for calcs below, but don't set into caps */
+          par_n = par_d = 1;
+        }
+      }
+
       /* Pass through or set output stereo/multiview config */
       if (s && gst_structure_has_field (s, "multiview-mode")) {
         caps_mview_mode = gst_structure_get_string (s, "multiview-mode");
         mview_mode =
             gst_video_multiview_mode_from_caps_string (caps_mview_mode);
         gst_structure_get_flagset (s, "multiview-flags", &mview_flags, NULL);
-      }
-      if (mview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+      } else if (mview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+        if (gst_video_multiview_guess_half_aspect (mview_mode,
+                width, height, par_n, par_d)) {
+          mview_flags |= GST_VIDEO_MULTIVIEW_FLAGS_HALF_ASPECT;
+        }
+
         caps_mview_mode = gst_video_multiview_mode_to_caps_string (mview_mode);
         gst_caps_set_simple (caps, "multiview-mode", G_TYPE_STRING,
             caps_mview_mode, "multiview-flags",
@@ -1798,21 +1817,11 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   }
 
   if (caps) {
-    gint par_n, par_d;
-
     gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE,
         "stream-format", G_TYPE_STRING,
         gst_h264_parse_get_string (h264parse, TRUE, h264parse->format),
         "alignment", G_TYPE_STRING,
         gst_h264_parse_get_string (h264parse, FALSE, h264parse->align), NULL);
-
-    gst_h264_parse_get_par (h264parse, &par_n, &par_d);
-    if (par_n != 0 && par_d != 0 &&
-        (!s || !gst_structure_has_field (s, "pixel-aspect-ratio"))) {
-      GST_INFO_OBJECT (h264parse, "PAR %d/%d", par_n, par_d);
-      gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          par_n, par_d, NULL);
-    }
 
     /* set profile and level in caps */
     if (sps) {
