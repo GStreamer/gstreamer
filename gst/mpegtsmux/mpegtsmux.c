@@ -1075,7 +1075,7 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
     else
       dts = -((gint64) time);
 
-    if (GST_CLOCK_STIME_IS_VALID (pad_data))
+    if (!GST_CLOCK_TIME_IS_VALID (pad_data->min_dts))
       pad_data->min_dts = dts;
 
     if (dts < pad_data->min_dts) {
