@@ -221,6 +221,7 @@ static void gst_opus_enc_get_property (GObject * object, guint prop_id,
 static void gst_opus_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
+static void gst_opus_enc_set_tags (GstOpusEnc * enc);
 static gboolean gst_opus_enc_start (GstAudioEncoder * benc);
 static gboolean gst_opus_enc_stop (GstAudioEncoder * benc);
 static gboolean gst_opus_enc_set_format (GstAudioEncoder * benc,
@@ -235,6 +236,22 @@ static GstFlowReturn gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buffer);
 G_DEFINE_TYPE_WITH_CODE (GstOpusEnc, gst_opus_enc, GST_TYPE_AUDIO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL);
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
+
+static void
+gst_opus_enc_set_tags (GstOpusEnc * enc)
+{
+  GstTagList *taglist;
+
+  /* create a taglist and add a bitrate tag to it */
+  taglist = gst_tag_list_new_empty ();
+  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+      GST_TAG_BITRATE, enc->bitrate, NULL);
+
+  gst_audio_encoder_merge_tags (GST_AUDIO_ENCODER (enc), taglist,
+      GST_TAG_MERGE_REPLACE);
+
+  gst_tag_list_unref (taglist);
+}
 
 static void
 gst_opus_enc_class_init (GstOpusEncClass * klass)
@@ -678,6 +695,9 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
     g_mutex_unlock (&enc->property_lock);
     return FALSE;
   }
+
+  /* update the tags */
+  gst_opus_enc_set_tags (enc);
 
   enc->frame_samples = gst_opus_enc_get_frame_samples (enc);
 
