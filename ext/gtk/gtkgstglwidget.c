@@ -33,6 +33,11 @@
 #include <gst/gl/x11/gstglcontext_glx.h>
 #endif
 
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined (GDK_WINDOWING_WAYLAND)
+#include <gdk/gdkwayland.h>
+#include <gst/gl/wayland/gstgldisplay_wayland.h>
+#endif
+
 /**
  * SECTION:gtkgstglwidget
  * @short_description: a #GtkGLArea that renders GStreamer video #GstBuffers
@@ -503,6 +508,14 @@ gtk_gst_gl_widget_init (GtkGstGLWidget * widget)
         gst_gl_display_x11_new_with_display (gdk_x11_display_get_xdisplay
         (display));
 #endif
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined (GDK_WINDOWING_WAYLAND)
+  if (GDK_IS_WAYLAND_DISPLAY (display)) {
+    struct wl_display *wayland_display =
+        gdk_wayland_display_get_wl_display (display);
+    widget->priv->display = (GstGLDisplay *)
+        gst_gl_display_wayland_new_with_display (wayland_display);
+  }
+#endif
 
   if (!widget->priv->display)
     widget->priv->display = gst_gl_display_new ();
@@ -567,6 +580,17 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
 #if GST_GL_HAVE_WINDOW_X11 && defined (GDK_WINDOWING_X11)
   if (GST_IS_GL_DISPLAY_X11 (gst_widget->priv->display)) {
     platform = GST_GL_PLATFORM_GLX;
+    gl_api = gst_gl_context_get_current_gl_api (NULL, NULL);
+    gl_handle = gst_gl_context_get_current_gl_context (platform);
+    if (gl_handle)
+      gst_widget->priv->other_context =
+          gst_gl_context_new_wrapped (gst_widget->priv->display, gl_handle,
+          platform, gl_api);
+  }
+#endif
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined (GDK_WINDOWING_WAYLAND)
+  if (GST_IS_GL_DISPLAY_WAYLAND (gst_widget->priv->display)) {
+    platform = GST_GL_PLATFORM_EGL;
     gl_api = gst_gl_context_get_current_gl_api (NULL, NULL);
     gl_handle = gst_gl_context_get_current_gl_context (platform);
     if (gl_handle)
