@@ -482,8 +482,11 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
             gst_adapter_unmap (self->adapter);
             gst_adapter_flush (self->adapter, offset);
-            out_buf = gst_adapter_take_buffer_fast (self->adapter,
-                payload_size);
+            /* we don't use _take_buffer_fast() on purpose here, we need a
+             * buffer with a single memory, since the RTP depayloaders expect
+             * the complete RTP header to be in the first memory if there are
+             * multiple ones and we can't guarantee that with _fast() */
+            out_buf = gst_adapter_take_buffer (self->adapter, payload_size);
             gst_adapter_flush (self->adapter,
                 self->cur_packet_size - offset - payload_size);
 
