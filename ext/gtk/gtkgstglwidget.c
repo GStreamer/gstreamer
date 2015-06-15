@@ -59,12 +59,14 @@ G_DEFINE_TYPE_WITH_CODE (GtkGstGLWidget, gtk_gst_gl_widget, GTK_TYPE_GL_AREA,
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
 #define DEFAULT_PAR_N               0
 #define DEFAULT_PAR_D               1
+#define DEFAULT_IGNORE_ALPHA        TRUE
 
 enum
 {
   PROP_0,
   PROP_FORCE_ASPECT_RATIO,
   PROP_PIXEL_ASPECT_RATIO,
+  PROP_IGNORE_ALPHA,
 };
 
 struct _GtkGstGLWidgetPrivate
@@ -74,6 +76,7 @@ struct _GtkGstGLWidgetPrivate
   /* properties */
   gboolean force_aspect_ratio;
   gint par_n, par_d;
+  gboolean ignore_alpha;
 
   gint display_width;
   gint display_height;
@@ -452,6 +455,11 @@ gtk_gst_gl_widget_set_property (GObject * object, guint prop_id,
       gtk_widget->priv->par_n = gst_value_get_fraction_numerator (value);
       gtk_widget->priv->par_d = gst_value_get_fraction_denominator (value);
       break;
+    case PROP_IGNORE_ALPHA:
+      gtk_widget->priv->ignore_alpha = g_value_get_boolean (value);
+      gtk_gl_area_set_has_alpha ((GtkGLArea *) gtk_widget,
+          !gtk_widget->priv->ignore_alpha);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -471,6 +479,9 @@ gtk_gst_gl_widget_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_PIXEL_ASPECT_RATIO:
       gst_value_set_fraction (value, gtk_widget->priv->par_n,
           gtk_widget->priv->par_d);
+      break;
+    case PROP_IGNORE_ALPHA:
+      g_value_set_boolean (value, gtk_widget->priv->ignore_alpha);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -503,6 +514,11 @@ gtk_gst_gl_widget_class_init (GtkGstGLWidgetClass * klass)
           "The pixel aspect ratio of the device", DEFAULT_PAR_N, DEFAULT_PAR_D,
           G_MAXINT, 1, 1, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_klass, PROP_IGNORE_ALPHA,
+      g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",
+          "When enabled, alpha will be ignored and converted to black",
+          DEFAULT_IGNORE_ALPHA, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gl_widget_klass->render = gtk_gst_gl_widget_render;
 
   widget_klass->get_preferred_width = gtk_gst_gl_widget_get_preferred_width;
@@ -519,6 +535,7 @@ gtk_gst_gl_widget_init (GtkGstGLWidget * widget)
   widget->priv->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   widget->priv->par_n = DEFAULT_PAR_N;
   widget->priv->par_d = DEFAULT_PAR_D;
+  widget->priv->ignore_alpha = DEFAULT_IGNORE_ALPHA;
 
   g_mutex_init (&widget->priv->lock);
 
@@ -544,7 +561,7 @@ gtk_gst_gl_widget_init (GtkGstGLWidget * widget)
   if (!widget->priv->display)
     widget->priv->display = gst_gl_display_new ();
 
-  gtk_gl_area_set_has_alpha ((GtkGLArea *) widget, FALSE);
+  gtk_gl_area_set_has_alpha ((GtkGLArea *) widget, !widget->priv->ignore_alpha);
 }
 
 GtkWidget *
