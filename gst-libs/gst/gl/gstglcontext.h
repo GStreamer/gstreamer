@@ -72,6 +72,7 @@ struct _GstGLContext {
   /*< private >*/
   GstObject parent;
 
+  GstGLDisplay *display;
   GstGLWindow  *window;
 
   GstGLFuncs *gl_vtable;

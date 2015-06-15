@@ -151,8 +151,6 @@ static void gst_gl_context_finalize (GObject * object);
 
 struct _GstGLContextPrivate
 {
-  GstGLDisplay *display;
-
   GThread *gl_thread;
   GThread *active_thread;
 
@@ -212,7 +210,7 @@ _ensure_window (GstGLContext * context)
   if (context->window)
     return;
 
-  window = gst_gl_window_new (context->priv->display);
+  window = gst_gl_window_new (context->display);
 
   gst_gl_context_set_window (context, window);
 
@@ -312,7 +310,7 @@ gst_gl_context_new (GstGLDisplay * display)
     return NULL;
   }
 
-  context->priv->display = gst_object_ref (display);
+  context->display = gst_object_ref (display);
 
   GST_DEBUG_OBJECT (context,
       "Done creating context for display %" GST_PTR_FORMAT " (user_choice:%s)",
@@ -360,7 +358,7 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
 
   context = (GstGLContext *) context_wrap;
 
-  context->priv->display = gst_object_ref (display);
+  context->display = gst_object_ref (display);
   context_wrap->handle = handle;
   context_wrap->platform = context_type;
   context_wrap->available_apis = available_apis;
@@ -587,7 +585,7 @@ gst_gl_context_finalize (GObject * object)
     gst_object_unref (context->window);
   }
 
-  gst_object_unref (context->priv->display);
+  gst_object_unref (context->display);
 
   if (context->gl_vtable) {
     g_slice_free (GstGLFuncs, context->gl_vtable);
@@ -1221,7 +1219,7 @@ gst_gl_context_create_thread (GstGLContext * context)
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   window_class = GST_GL_WINDOW_GET_CLASS (context->window);
 
-  display_api = gst_gl_display_get_gl_api_unlocked (context->priv->display);
+  display_api = gst_gl_display_get_gl_api_unlocked (context->display);
   if (display_api == GST_GL_API_NONE) {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_WRONG_API,
         "Cannot create context with satisfying requested apis "
@@ -1563,7 +1561,7 @@ gst_gl_context_get_display (GstGLContext * context)
 {
   g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
 
-  return gst_object_ref (context->priv->display);
+  return gst_object_ref (context->display);
 }
 
 typedef struct
