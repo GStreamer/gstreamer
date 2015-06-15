@@ -124,12 +124,18 @@ gtk_gst_widget_draw (GtkWidget * widget, cairo_t * cr)
     gdouble scale_y =
         (gdouble) widget_height / gst_widget->priv->display_height;
     GstVideoRectangle result;
+    cairo_format_t format;
 
     gst_widget->priv->v_info = frame.info;
+    if (frame.info.finfo->format == GST_VIDEO_FORMAT_ARGB ||
+        frame.info.finfo->format == GST_VIDEO_FORMAT_BGRA) {
+      format = CAIRO_FORMAT_ARGB32;
+    } else {
+      format = CAIRO_FORMAT_RGB24;
+    }
 
     surface = cairo_image_surface_create_for_data (frame.data[0],
-        CAIRO_FORMAT_ARGB32, frame.info.width, frame.info.height,
-        frame.info.stride[0]);
+        format, frame.info.width, frame.info.height, frame.info.stride[0]);
 
     if (gst_widget->priv->force_aspect_ratio) {
       GstVideoRectangle src, dst;
@@ -433,10 +439,12 @@ gtk_gst_widget_set_caps (GtkGstWidget * widget, GstCaps * caps)
   /* FIXME: support other formats */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&v_info) ==
-      GST_VIDEO_FORMAT_BGRA, FALSE);
+      GST_VIDEO_FORMAT_BGRA || GST_VIDEO_INFO_FORMAT (&v_info) ==
+      GST_VIDEO_FORMAT_BGRx, FALSE);
 #else
   g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&v_info) ==
-      GST_VIDEO_FORMAT_ARGB, FALSE);
+      GST_VIDEO_FORMAT_ARGB || GST_VIDEO_INFO_FORMAT (&v_info) ==
+      GST_VIDEO_FORMAT_xRGB, FALSE);
 #endif
 
   g_mutex_lock (&widget->priv->lock);

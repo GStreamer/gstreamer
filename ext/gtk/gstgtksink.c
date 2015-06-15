@@ -52,9 +52,9 @@ static GstFlowReturn gst_gtk_sink_show_frame (GstVideoSink * bsink,
     GstBuffer * buf);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS "BGRA"
+#define FORMATS "{ BGRx, BGRA }"
 #else
-#define FORMATS "ARGB"
+#define FORMATS "{ xRGB, ARGB }"
 #endif
 
 static GstStaticPadTemplate gst_gtk_sink_template =
