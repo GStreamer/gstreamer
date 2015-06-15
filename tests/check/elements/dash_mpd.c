@@ -32,15 +32,15 @@ GST_DEBUG_CATEGORY (gst_dash_demux_debug);
  * This function must use the same conversion algorithm implemented in
  * gst_mpdparser_get_xml_prop_duration from gstmpdparser.c file.
  */
-static gint64
+static guint64
 duration_to_ms (guint year, guint month, guint day, guint hour, guint minute,
     guint second, guint millisecond)
 {
-  gint64 days = (gint64) year * 365 + month * 30 + day;
-  gint64 hours = days * 24 + hour;
-  gint64 minutes = hours * 60 + minute;
-  gint64 seconds = minutes * 60 + second;
-  gint64 ms = seconds * 1000 + millisecond;
+  guint64 days = (guint64) year * 365 + (guint64) month * 30 + day;
+  guint64 hours = days * 24 + hour;
+  guint64 minutes = hours * 60 + minute;
+  guint64 seconds = minutes * 60 + second;
+  guint64 ms = seconds * 1000 + millisecond;
   return ms;
 }
 
@@ -130,25 +130,25 @@ GST_START_TEST (dash_mpdparser_mpd)
   assert_equals_int (gst_date_time_get_second (availabilityEndTime), 50);
 
   assert_equals_int64 (mpdclient->mpd_node->mediaPresentationDuration,
-      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
   assert_equals_int64 (mpdclient->mpd_node->minimumUpdatePeriod,
-      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
   assert_equals_int64 (mpdclient->mpd_node->minBufferTime,
-      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
   assert_equals_int64 (mpdclient->mpd_node->timeShiftBufferDepth,
-      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
   assert_equals_int64 (mpdclient->mpd_node->suggestedPresentationDelay,
-      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
   assert_equals_int64 (mpdclient->mpd_node->maxSegmentDuration,
-      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
   assert_equals_int64 (mpdclient->mpd_node->maxSubsegmentDuration,
-      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
   gst_mpd_client_free (mpdclient);
 }
@@ -299,9 +299,9 @@ GST_START_TEST (dash_mpdparser_metrics_range)
   assert_equals_pointer (metricsNode->metrics, NULL);
   metricsRangeNode = (GstMetricsRangeNode *) metricsNode->MetricsRanges->data;
   assert_equals_int64 (metricsRangeNode->starttime,
-      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
   assert_equals_int64 (metricsRangeNode->duration,
-      duration_to_ms (0, 1, 2, 12, 10, 20, 123));
+      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 123));
 
   gst_mpd_client_free (mpdclient);
 }
