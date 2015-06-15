@@ -43,12 +43,14 @@ G_DEFINE_TYPE (GtkGstWidget, gtk_gst_widget, GTK_TYPE_DRAWING_AREA);
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
 #define DEFAULT_PAR_N               0
 #define DEFAULT_PAR_D               1
+#define DEFAULT_IGNORE_ALPHA        TRUE
 
 enum
 {
   PROP_0,
   PROP_FORCE_ASPECT_RATIO,
   PROP_PIXEL_ASPECT_RATIO,
+  PROP_IGNORE_ALPHA,
 };
 
 struct _GtkGstWidgetPrivate
@@ -58,6 +60,7 @@ struct _GtkGstWidgetPrivate
   /* properties */
   gboolean force_aspect_ratio;
   gint par_n, par_d;
+  gboolean ignore_alpha;
 
   gint display_width;
   gint display_height;
@@ -151,6 +154,30 @@ gtk_gst_widget_draw (GtkWidget * widget, cairo_t * cr)
       result.h = widget_height;
     }
 
+    if (gst_widget->priv->ignore_alpha) {
+      GdkRGBA color = { 0.0, 0.0, 0.0, 1.0 };
+
+      gdk_cairo_set_source_rgba (cr, &color);
+      if (result.x > 0) {
+        cairo_rectangle (cr, 0, 0, result.x, widget_height);
+        cairo_fill (cr);
+      }
+      if (result.y > 0) {
+        cairo_rectangle (cr, 0, 0, widget_width, result.y);
+        cairo_fill (cr);
+      }
+      if (result.w < widget_width) {
+        cairo_rectangle (cr, result.x + result.w, 0, widget_width - result.w,
+            widget_height);
+        cairo_fill (cr);
+      }
+      if (result.h < widget_height) {
+        cairo_rectangle (cr, 0, result.y + result.h, widget_width,
+            widget_height - result.h);
+        cairo_fill (cr);
+      }
+    }
+
     scale_x *=
         (gdouble) gst_widget->priv->display_width / (gdouble) frame.info.width;
     scale_y *=
@@ -169,8 +196,13 @@ gtk_gst_widget_draw (GtkWidget * widget, cairo_t * cr)
   } else {
     GdkRGBA color;
 
-    gtk_style_context_get_color (gtk_widget_get_style_context (widget), 0,
-        &color);
+    if (gst_widget->priv->ignore_alpha) {
+      color.red = color.blue = color.green = 0.0;
+      color.alpha = 1.0;
+    } else {
+      gtk_style_context_get_color (gtk_widget_get_style_context (widget),
+          GTK_STATE_FLAG_NORMAL, &color);
+    }
     gdk_cairo_set_source_rgba (cr, &color);
     cairo_rectangle (cr, 0, 0, widget_width, widget_height);
     cairo_fill (cr);
@@ -205,6 +237,9 @@ gtk_gst_widget_set_property (GObject * object, guint prop_id,
       gtk_widget->priv->par_n = gst_value_get_fraction_numerator (value);
       gtk_widget->priv->par_d = gst_value_get_fraction_denominator (value);
       break;
+    case PROP_IGNORE_ALPHA:
+      gtk_widget->priv->ignore_alpha = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -224,6 +259,8 @@ gtk_gst_widget_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_PIXEL_ASPECT_RATIO:
       gst_value_set_fraction (value, gtk_widget->priv->par_n,
           gtk_widget->priv->par_d);
+    case PROP_IGNORE_ALPHA:
+      g_value_set_boolean (value, gtk_widget->priv->ignore_alpha);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -255,6 +292,11 @@ gtk_gst_widget_class_init (GtkGstWidgetClass * klass)
           "The pixel aspect ratio of the device", DEFAULT_PAR_N, DEFAULT_PAR_D,
           G_MAXINT, 1, 1, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_klass, PROP_IGNORE_ALPHA,
+      g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",
+          "When enabled, alpha will be ignored and converted to black",
+          DEFAULT_IGNORE_ALPHA, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   widget_klass->draw = gtk_gst_widget_draw;
   widget_klass->get_preferred_width = gtk_gst_widget_get_preferred_width;
   widget_klass->get_preferred_height = gtk_gst_widget_get_preferred_height;
@@ -268,6 +310,7 @@ gtk_gst_widget_init (GtkGstWidget * widget)
   widget->priv->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   widget->priv->par_n = DEFAULT_PAR_N;
   widget->priv->par_d = DEFAULT_PAR_D;
+  widget->priv->ignore_alpha = DEFAULT_IGNORE_ALPHA;
 
   g_mutex_init (&widget->priv->lock);
 }

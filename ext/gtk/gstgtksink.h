@@ -64,6 +64,9 @@ struct _GstGtkSink
   gint                  par_d;
   GBinding             *bind_pixel_aspect_ratio;
 
+  gboolean              ignore_alpha;
+  GBinding             *bind_ignore_alpha;
+
   GstGtkSinkPrivate   *priv;
 };
 
