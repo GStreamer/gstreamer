@@ -51,7 +51,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 G_DEFINE_TYPE_WITH_CODE (GtkGstGLWidget, gtk_gst_gl_widget, GTK_TYPE_GL_AREA,
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gtkgstglwidget", 0,
-        "Gtk Gst GL Widget"););
+        "Gtk Gst GL Widget");
+    );
 
 #define GTK_GST_GL_WIDGET_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
     GTK_TYPE_GST_GL_WIDGET, GtkGstGLWidgetPrivate))
@@ -517,6 +518,8 @@ gtk_gst_gl_widget_init (GtkGstGLWidget * widget)
   }
 #endif
 
+  (void) display;
+
   if (!widget->priv->display)
     widget->priv->display = gst_gl_display_new ();
 
@@ -599,6 +602,10 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
           platform, gl_api);
   }
 #endif
+
+  (void) platform;
+  (void) gl_api;
+  (void) gl_handle;
 
   if (gst_widget->priv->other_context) {
     GError *error = NULL;
