@@ -210,22 +210,24 @@ _redraw_texture (GtkGstGLWidget * gst_widget, guint tex)
 
   if (gst_widget->priv->force_aspect_ratio) {
     GstVideoRectangle src, dst, result;
-    gint gtk_viewport[4];
+    gint widget_width, widget_height, widget_scale;
 
     gl->ClearColor (0.0, 0.0, 0.0, 0.0);
     gl->Clear (GL_COLOR_BUFFER_BIT);
 
-    gl->GetIntegerv (GL_VIEWPORT, gtk_viewport);
+    widget_scale = gtk_widget_get_scale_factor ((GtkWidget *) gst_widget);
+    widget_width = gtk_widget_get_allocated_width ((GtkWidget *) gst_widget);
+    widget_height = gtk_widget_get_allocated_height ((GtkWidget *) gst_widget);
 
     src.x = 0;
     src.y = 0;
     src.w = gst_widget->priv->display_width;
     src.h = gst_widget->priv->display_height;
 
-    dst.x = gtk_viewport[0];
-    dst.y = gtk_viewport[1];
-    dst.w = gtk_viewport[2];
-    dst.h = gtk_viewport[3];
+    dst.x = 0;
+    dst.y = 0;
+    dst.w = widget_width * widget_scale;
+    dst.h = widget_height * widget_scale;
 
     gst_video_sink_center_rect (src, dst, &result, TRUE);
 
