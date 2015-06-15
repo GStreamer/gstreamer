@@ -169,7 +169,7 @@ QGLRenderer::paintGL ()
 
     GstGLMemory *gl_memory = (GstGLMemory *) mem;
 
-    gst_gl_context_thread_add (gl_memory->context, flushGstreamerGL, NULL);
+    gst_gl_context_thread_add (gl_memory->mem.context, flushGstreamerGL, NULL);
 
     gst_video_info_set_format (&v_info, v_meta->format, v_meta->width,
         v_meta->height);
@@ -199,7 +199,7 @@ QGLRenderer::paintGL ()
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity ();
 
-    glTranslatef (0.0f, 0.0f, -5.0f);
+    glScalef (0.5f, 0.5f, 0.5f);
 
     glRotatef (xrot, 1.0f, 0.0f, 0.0f);
     glRotatef (yrot, 0.0f, 1.0f, 0.0f);

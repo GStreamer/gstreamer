@@ -62,7 +62,7 @@ private:
     void doRotate();
 
     static gboolean reshapeCallback (void *sink, void *context, guint width, guint height, gpointer data);
-    static gboolean drawCallback (void *sink, void *context, guint texture, guint width, guint height, gpointer data);
+    static gboolean drawCallback (void * sink, void *context, GstSample * sample, gpointer data);
     static gboolean bus_call (GstBus *bus, GstMessage *msg, Pipeline* p);
     static void cb_new_pad (GstElement* decodebin, GstPad* pad, Pipeline* p);
     static gboolean cb_expose (gpointer data);

@@ -4,7 +4,6 @@ DESTDIR = ./debug
 QT += opengl
 CONFIG += debug
 CONFIG += link_pkgconfig
-CONFIG+= compile_libtool
 DEFINES += UNICODE QT_THREAD_SUPPORT QT_CORE_LIB QT_GUI_LIB
 PKGCONFIG = gstreamer-1.0 gstreamer-video-1.0
 

@@ -5,8 +5,9 @@ QT += opengl
 # Add console to the CONFIG to see debug messages printed in 
 # the console on Windows
 # CONFIG += console
+DESTDIR = ./debug
 DEFINES += UNICODE QT_THREAD_SUPPORT QT_CORE_LIB QT_GUI_LIB
-CONFIG += link_pkgconfig compile_libtool
+CONFIG += link_pkgconfig
 PKGCONFIG=gstreamer-1.0 gstreamer-video-1.0 gstreamer-gl-1.0
 
 win32 {
@@ -71,3 +72,9 @@ SOURCES += gstthread.cpp \
     main.cpp \
     pipeline.cpp \
     qglrenderer.cpp
+
+DEPENDPATH += .
+MOC_DIR += ./GeneratedFiles/debug
+OBJECTS_DIR += debug
+UI_DIR += ./GeneratedFiles
+RCC_DIR += ./GeneratedFiles
