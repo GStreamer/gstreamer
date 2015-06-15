@@ -425,6 +425,8 @@ struct _GstVideoAggregatorPrivate
 
   /* current caps */
   GstCaps *current_caps;
+
+  gboolean live;
 };
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVideoAggregator, gst_videoaggregator,
@@ -945,6 +947,7 @@ gst_videoaggregator_reset (GstVideoAggregator * vagg)
   gst_video_info_init (&vagg->info);
   vagg->priv->ts_offset = 0;
   vagg->priv->nframes = 0;
+  vagg->priv->live = FALSE;
 
   agg->segment.position = -1;
 
@@ -1417,9 +1420,8 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
     vagg->priv->qos_dropped++;
 
-    /* TODO: live */
     msg =
-        gst_message_new_qos (GST_OBJECT_CAST (vagg), FALSE,
+        gst_message_new_qos (GST_OBJECT_CAST (vagg), vagg->priv->live,
         gst_segment_to_running_time (&agg->segment, GST_FORMAT_TIME,
             output_start_time), gst_segment_to_stream_time (&agg->segment,
             GST_FORMAT_TIME, output_start_time), output_start_time,
@@ -1568,6 +1570,15 @@ gst_videoaggregator_src_query (GstAggregator * agg, GstQuery * query)
     }
     case GST_QUERY_DURATION:
       res = gst_videoaggregator_query_duration (vagg, query);
+      break;
+    case GST_QUERY_LATENCY:
+      res =
+          GST_AGGREGATOR_CLASS (gst_videoaggregator_parent_class)->src_query
+          (agg, query);
+
+      if (res) {
+        gst_query_parse_latency (query, &vagg->priv->live, NULL, NULL);
+      }
       break;
     default:
       res =
