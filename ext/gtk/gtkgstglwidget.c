@@ -107,7 +107,7 @@ gtk_gst_gl_widget_get_preferred_width (GtkWidget * widget, gint * min,
     gint * natural)
 {
   GtkGstGLWidget *gst_widget = (GtkGstGLWidget *) widget;
-  gint video_width = GST_VIDEO_INFO_WIDTH (&gst_widget->priv->v_info);
+  gint video_width = gst_widget->priv->display_width;
 
   if (!gst_widget->priv->negotiated)
     video_width = 10;
@@ -123,7 +123,7 @@ gtk_gst_gl_widget_get_preferred_height (GtkWidget * widget, gint * min,
     gint * natural)
 {
   GtkGstGLWidget *gst_widget = (GtkGstGLWidget *) widget;
-  gint video_height = GST_VIDEO_INFO_HEIGHT (&gst_widget->priv->v_info);
+  gint video_height = gst_widget->priv->display_height;
 
   if (!gst_widget->priv->negotiated)
     video_height = 10;
