@@ -331,7 +331,6 @@ static void
 mpegtsmux_pad_reset (MpegTsPadData * pad_data)
 {
   pad_data->pid = 0;
-  pad_data->min_dts = GST_CLOCK_STIME_NONE;
   pad_data->dts = GST_CLOCK_STIME_NONE;
   pad_data->prog_id = -1;
 #if 0
@@ -1066,22 +1065,19 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
     sign = gst_segment_to_running_time_full (&cdata->segment, GST_FORMAT_TIME,
         time, &time);
 
-    GST_LOG_OBJECT (cdata->pad, "buffer dts %" GST_TIME_FORMAT " -> %"
-        GST_STIME_FORMAT " running time", GST_STIME_ARGS (GST_BUFFER_DTS (buf)),
-        GST_STIME_ARGS (time));
-
     if (sign > 0)
       dts = (gint64) time;
     else
       dts = -((gint64) time);
 
-    if (!GST_CLOCK_TIME_IS_VALID (pad_data->min_dts))
-      pad_data->min_dts = dts;
+    GST_LOG_OBJECT (cdata->pad, "buffer dts %" GST_TIME_FORMAT " -> %"
+        GST_STIME_FORMAT " running time", GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
+        GST_STIME_ARGS (dts));
 
-    if (dts < pad_data->min_dts) {
+    if (GST_CLOCK_STIME_IS_VALID (pad_data->dts) && dts < pad_data->dts) {
       /* Ignore DTS going backward */
       GST_WARNING_OBJECT (cdata->pad, "ignoring DTS going backward");
-      dts = pad_data->min_dts;
+      dts = pad_data->dts;
     }
 
     *outbuf = gst_buffer_make_writable (buf);
@@ -1090,7 +1086,7 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
     else
       GST_BUFFER_DTS (*outbuf) = GST_CLOCK_TIME_NONE;
 
-    pad_data->dts = pad_data->min_dts = dts;
+    pad_data->dts = dts;
   } else {
     pad_data->dts = GST_CLOCK_STIME_NONE;
   }

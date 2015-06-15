@@ -182,9 +182,6 @@ struct MpegTsPadData {
   gint pid;
   TsMuxStream *stream;
 
-  /* most recent valid DTS for this stream */
-  gint64 min_dts;
-
   /* most recent DTS */
   gint64 dts;
 
