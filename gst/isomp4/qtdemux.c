@@ -6285,8 +6285,12 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       GST_DEBUG_OBJECT (qtdemux,
           "video size %dx%d, target display size %dx%d", stream->width,
           stream->height, stream->display_width, stream->display_height);
-
-      if (stream->display_width > 0 && stream->display_height > 0 &&
+      /* qt file might have pasp atom */
+      if (stream->par_w > 0 && stream->par_h > 0) {
+        GST_DEBUG_OBJECT (qtdemux, "par %d:%d", stream->par_w, stream->par_h);
+        gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION, stream->par_w, stream->par_h, NULL);
+      } else if (stream->display_width > 0 && stream->display_height > 0 &&
           stream->width > 0 && stream->height > 0) {
         gint n, d;
 
@@ -6296,18 +6300,35 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
         if (n == d)
           n = d = 1;
         GST_DEBUG_OBJECT (qtdemux, "setting PAR to %d/%d", n, d);
-        gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
-            GST_TYPE_FRACTION, n, d, NULL);
-      }
-
-      /* qt file might have pasp atom */
-      if (stream->par_w > 0 && stream->par_h > 0) {
-        GST_DEBUG_OBJECT (qtdemux, "par %d:%d", stream->par_w, stream->par_h);
+        stream->par_w = n;
+        stream->par_h = d;
         gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
             GST_TYPE_FRACTION, stream->par_w, stream->par_h, NULL);
       }
+
+      if (stream->multiview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+        guint par_w = 1, par_h = 1;
+
+        if (stream->par_w > 0 && stream->par_h > 0) {
+          par_w = stream->par_w;
+          par_h = stream->par_h;
+        }
+
+        if (gst_video_multiview_guess_half_aspect (stream->multiview_mode,
+                stream->width, stream->height, par_w, par_h)) {
+          stream->multiview_flags |= GST_VIDEO_MULTIVIEW_FLAGS_HALF_ASPECT;
+        }
+
+        gst_caps_set_simple (stream->caps,
+            "multiview-mode", G_TYPE_STRING,
+            gst_video_multiview_mode_to_caps_string (stream->multiview_mode),
+            "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET,
+            stream->multiview_flags, GST_FLAG_SET_MASK_EXACT, NULL);
+      }
     }
-  } else if (stream->subtype == FOURCC_soun) {
+  }
+
+  else if (stream->subtype == FOURCC_soun) {
     if (stream->caps) {
       stream->caps = gst_caps_make_writable (stream->caps);
       if (stream->rate > 0)
@@ -11664,20 +11685,12 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     gst_video_info_init (&info);
     gst_video_info_set_format (&info, format, stream->width, stream->height);
-    GST_VIDEO_INFO_MULTIVIEW_MODE (&info) = stream->multiview_mode;
-    GST_VIDEO_INFO_MULTIVIEW_FLAGS (&info) = stream->multiview_flags;
 
     caps = gst_video_info_to_caps (&info);
     *codec_name = gst_pb_utils_get_codec_description (caps);
 
     /* enable clipping for raw video streams */
     stream->need_clip = TRUE;
-  } else if (stream->multiview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
-    gst_caps_set_simple (caps,
-        "multiview-mode", G_TYPE_STRING,
-        gst_video_multiview_mode_to_caps_string (stream->multiview_mode),
-        "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET,
-        stream->multiview_flags, GST_FLAG_SET_MASK_EXACT, NULL);
   }
 
   return caps;
