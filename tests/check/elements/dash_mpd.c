@@ -500,6 +500,90 @@ GST_START_TEST (dash_mpdparser_no_default_namespace)
 GST_END_TEST;
 
 /*
+ * Test handling wrong period duration during attempts to
+ * infer a period duration from the start time of the next period
+ */
+GST_START_TEST (dash_mpdparser_wrong_period_duration_inferred_from_next_period)
+{
+  const gchar *periodName;
+
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      " availabilityStartTime=\"2015-03-24T0:0:0\""
+      " mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
+      "<Period id=\"Period0\" duration=\"P0Y0M0DT1H1M0S\"></Period>"
+      "<Period id=\"Period1\"></Period>"
+      "<Period id=\"Period2\" start=\"P0Y0M0DT0H0M10S\"></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+
+  assert_equals_int (ret, TRUE);
+
+  /* period_idx should be 0 and we should have no active periods */
+  assert_equals_uint64 (mpdclient->period_idx, 0);
+  fail_unless (mpdclient->periods == NULL);
+
+  /* process the xml data */
+  ret = gst_mpd_client_setup_media_presentation (mpdclient);
+  assert_equals_int (ret, TRUE);
+
+  /* Period0 should be present */
+  fail_unless (mpdclient->periods != NULL);
+  periodName = gst_mpd_client_get_period_id (mpdclient);
+  assert_equals_string (periodName, "Period0");
+
+  /* Period1 should not be present due to wrong duration */
+  ret = gst_mpd_client_set_period_index (mpdclient, 1);
+  assert_equals_int (ret, FALSE);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
+ * Test handling wrong period duration during attempts to
+ * infer a period duration from the mediaPresentationDuration
+ */
+GST_START_TEST
+    (dash_mpdparser_wrong_period_duration_inferred_from_next_mediaPresentationDuration)
+{
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      " availabilityStartTime=\"2015-03-24T0:0:0\""
+      " mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
+      "<Period id=\"Period0\" start=\"P0Y0M0DT4H0M0S\"></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+
+  assert_equals_int (ret, TRUE);
+
+  /* period_idx should be 0 and we should have no active periods */
+  assert_equals_uint64 (mpdclient->period_idx, 0);
+  fail_unless (mpdclient->periods == NULL);
+
+  /* process the xml data
+   * should fail due to wrong duration in Period0 (start > mediaPresentationDuration)
+   */
+  ret = gst_mpd_client_setup_media_presentation (mpdclient);
+  assert_equals_int (ret, FALSE);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * create a test suite containing all dash testcases
  */
 static Suite *
@@ -534,6 +618,10 @@ dash_suite (void)
   tcase_add_test (tc_negativeTests, dash_mpdparser_missing_mpd);
   tcase_add_test (tc_negativeTests, dash_mpdparser_no_end_tag);
   tcase_add_test (tc_negativeTests, dash_mpdparser_no_default_namespace);
+  tcase_add_test (tc_negativeTests,
+      dash_mpdparser_wrong_period_duration_inferred_from_next_period);
+  tcase_add_test (tc_negativeTests,
+      dash_mpdparser_wrong_period_duration_inferred_from_next_mediaPresentationDuration);
 
   suite_add_tcase (s, tc_simpleMPD);
   suite_add_tcase (s, tc_complexMPD);

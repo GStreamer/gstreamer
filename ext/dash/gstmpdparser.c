@@ -3391,6 +3391,12 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
     period_node = (GstPeriodNode *) list->data;
     if (period_node->start != -1) {
       /* we have a regular period */
+      /* start cannot be smaller than previous start */
+      if (list != g_list_first (client->mpd_node->Periods)
+          && start >= period_node->start * GST_MSECOND) {
+        /* Invalid MPD file: duration would be negative or zero */
+        goto syntax_error;
+      }
       start = period_node->start * GST_MSECOND;
     } else if (duration != GST_CLOCK_TIME_NONE) {
       /* start time inferred from previous period, this is still a regular period */
@@ -3405,13 +3411,26 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
       goto early;
     }
 
-    if (period_node->duration != -1) {
-      duration = period_node->duration * GST_MSECOND;
-    } else if ((next = g_list_next (list)) != NULL) {
+    /* compute duration.
+       If there is a start time for the next period, or this is the last period
+       and mediaPresentationDuration was set, those values will take precedence
+       over a configured period duration in computing this period's duration
+
+       ISO/IEC 23009-1:2014(E), chapter 5.3.2.1
+       "The Period extends until the PeriodStart of the next Period, or until
+       the end of the Media Presentation in the case of the last Period."
+     */
+    if ((next = g_list_next (list)) != NULL) {
       /* try to infer this period duration from the start time of the next period */
       GstPeriodNode *next_period_node = next->data;
       if (next_period_node->start != -1) {
+        if (start >= next_period_node->start * GST_MSECOND) {
+          /* Invalid MPD file: duration would be negative or zero */
+          goto syntax_error;
+        }
         duration = next_period_node->start * GST_MSECOND - start;
+      } else if (period_node->duration != -1) {
+        duration = period_node->duration * GST_MSECOND;
       } else if (client->mpd_node->type == GST_MPD_FILE_TYPE_DYNAMIC) {
         /* might be a live file, ignore unspecified duration */
       } else {
@@ -3420,8 +3439,14 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
       }
     } else if (client->mpd_node->mediaPresentationDuration != -1) {
       /* last Period of the Media Presentation */
+      if (client->mpd_node->mediaPresentationDuration * GST_MSECOND <= start) {
+        /* Invalid MPD file: duration would be negative or zero */
+        goto syntax_error;
+      }
       duration =
           client->mpd_node->mediaPresentationDuration * GST_MSECOND - start;
+    } else if (period_node->duration != -1) {
+      duration = period_node->duration * GST_MSECOND;
     } else if (client->mpd_node->type == GST_MPD_FILE_TYPE_DYNAMIC) {
       /* might be a live file, ignore unspecified duration */
     } else {
