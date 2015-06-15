@@ -118,6 +118,7 @@ enum
   PROP_BIN_PIXEL_ASPECT_RATIO,
   PROP_BIN_HANDLE_EVENTS,
   PROP_BIN_CONTEXT,
+  PROP_BIN_IGNORE_ALPHA,
   PROP_BIN_SHOW_PREROLL_FRAME,
 };
 
@@ -200,6 +201,10 @@ gst_gl_image_sink_bin_class_init (GstGLImageSinkBinClass * klass)
           DEFAULT_FORCE_ASPECT_RATIO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BIN_HANDLE_EVENTS,
+      g_param_spec_boolean ("handle-events", "Handle XEvents",
+          "When enabled, XEvents will be selected and handled",
+          DEFAULT_HANDLE_EVENTS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_BIN_IGNORE_ALPHA,
       g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",
           "When enabled, alpha will be ignored and converted to black",
           DEFAULT_IGNORE_ALPHA, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
