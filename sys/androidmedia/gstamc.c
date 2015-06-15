@@ -1607,6 +1607,8 @@ scan_codecs (GstPlugin * plugin)
       jclass capabilities_class = NULL;
       jfieldID profile_levels_id, color_formats_id;
       jobject profile_levels = NULL;
+      jobject color_formats = NULL;
+      jint *color_formats_elems = NULL;
       jsize n_elems, k;
 
       gst_codec_type = &gst_codec_info->supported_types[j];
@@ -1667,9 +1669,6 @@ scan_codecs (GstPlugin * plugin)
       }
 
       if (g_str_has_prefix (gst_codec_type->mime, "video/")) {
-        jobject color_formats = NULL;
-        jint *color_formats_elems = NULL;
-
         color_formats =
             (*env)->GetObjectField (env, capabilities, color_formats_id);
         if ((*env)->ExceptionCheck (env)) {
