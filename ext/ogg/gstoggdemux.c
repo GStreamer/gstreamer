@@ -2775,6 +2775,8 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
   /* if we cannot seek back to the chain, we can destroy the chain 
    * completely */
   if (!ogg->pullmode) {
+    if (ogg->building_chain == chain)
+      ogg->building_chain = NULL;
     gst_ogg_chain_free (chain);
   }
 
