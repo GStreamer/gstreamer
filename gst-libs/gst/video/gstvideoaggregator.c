@@ -692,14 +692,6 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
     GstVideoInfo info;
     int i;
 
-    if (GST_VIDEO_INFO_FPS_N (&vagg->info) != best_fps_n ||
-        GST_VIDEO_INFO_FPS_D (&vagg->info) != best_fps_d) {
-      if (agg->segment.position != -1) {
-        vagg->priv->ts_offset = agg->segment.position - agg->segment.start;
-        vagg->priv->nframes = 0;
-      }
-    }
-
     /* Initialize the video info with our target format and
      * the best width and height and framerate. Then copy over
      * all other fields as we negotiated them before
@@ -745,7 +737,6 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
     peercaps = gst_pad_peer_query_caps (agg->srcpad, caps);
     if (peercaps) {
       GstCaps *tmp;
-
 
       tmp = gst_caps_intersect (caps, peercaps);
       GST_DEBUG_OBJECT (vagg, "intersecting %" GST_PTR_FORMAT
