@@ -59,12 +59,15 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
+#define DEFAULT_PAR_N               0
+#define DEFAULT_PAR_D               1
 
 enum
 {
   PROP_0,
   PROP_WIDGET,
   PROP_FORCE_ASPECT_RATIO,
+  PROP_PIXEL_ASPECT_RATIO,
 };
 
 enum
@@ -110,6 +113,11 @@ gst_gtk_sink_class_init (GstGtkSinkClass * klass)
           DEFAULT_FORCE_ASPECT_RATIO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_PIXEL_ASPECT_RATIO,
+      gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
+          "The pixel aspect ratio of the device", DEFAULT_PAR_N, DEFAULT_PAR_D,
+          G_MAXINT, 1, 1, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_gtk_sink_template));
 
@@ -127,6 +135,9 @@ gst_gtk_sink_class_init (GstGtkSinkClass * klass)
 static void
 gst_gtk_sink_init (GstGtkSink * gtk_sink)
 {
+  gtk_sink->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
+  gtk_sink->par_n = DEFAULT_PAR_N;
+  gtk_sink->par_d = DEFAULT_PAR_D;
 }
 
 static void
@@ -156,6 +167,9 @@ gst_gtk_sink_get_widget (GstGtkSink * gtk_sink)
   gtk_sink->bind_aspect_ratio =
       g_object_bind_property (gtk_sink, "force-aspect-ratio", gtk_sink->widget,
       "force-aspect-ratio", G_BINDING_BIDIRECTIONAL);
+  gtk_sink->bind_pixel_aspect_ratio =
+      g_object_bind_property (gtk_sink, "pixel-aspect-ratio", gtk_sink->widget,
+      "pixel-aspect-ratio", G_BINDING_BIDIRECTIONAL);
 
   /* Take the floating ref, other wise the destruction of the container will
    * make this widget disapear possibly before we are done. */
@@ -177,6 +191,9 @@ gst_gtk_sink_get_property (GObject * object, guint prop_id,
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, gtk_sink->force_aspect_ratio);
       break;
+    case PROP_PIXEL_ASPECT_RATIO:
+      gst_value_set_fraction (value, gtk_sink->par_n, gtk_sink->par_d);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -192,6 +209,10 @@ gst_gtk_sink_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_FORCE_ASPECT_RATIO:
       gtk_sink->force_aspect_ratio = g_value_get_boolean (value);
+      break;
+    case PROP_PIXEL_ASPECT_RATIO:
+      gtk_sink->par_n = gst_value_get_fraction_numerator (value);
+      gtk_sink->par_d = gst_value_get_fraction_denominator (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
