@@ -2501,6 +2501,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
   gchar *codec_name = NULL;
   gint size_left = video->size - 40;
   GstBuffer *streamheader = NULL;
+  guint par_w = 1, par_h = 1;
 
   /* Create the video pad */
   name = g_strdup_printf ("video_%u", demux->num_video_streams);
@@ -2530,9 +2531,10 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
     s = gst_asf_demux_get_metadata_for_stream (demux, id);
     if (gst_structure_get_int (s, "AspectRatioX", &ax) &&
         gst_structure_get_int (s, "AspectRatioY", &ay) && (ax > 0 && ay > 0)) {
+      par_w = ax;
+      par_h = ay;
       gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
           ax, ay, NULL);
-
     } else {
       guint ax, ay;
       /* retry with the global metadata */
@@ -2542,9 +2544,12 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
       if (gst_structure_get_uint (s, "AspectRatioX", &ax) &&
           gst_structure_get_uint (s, "AspectRatioY", &ay)) {
         GST_DEBUG ("ax:%d, ay:%d", ax, ay);
-        if (ax > 0 && ay > 0)
+        if (ax > 0 && ay > 0) {
+          par_w = ax;
+          par_h = ay;
           gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
               ax, ay, NULL);
+        }
       }
     }
     s = gst_caps_get_structure (caps, 0);
@@ -2645,6 +2650,10 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
 
     mview_mode_str = gst_video_multiview_mode_to_caps_string (mv_mode);
     if (mview_mode_str != NULL) {
+      if (gst_video_multiview_guess_half_aspect (mv_mode, video->width,
+              video->height, par_w, par_h))
+        mv_flags |= GST_VIDEO_MULTIVIEW_FLAGS_HALF_ASPECT;
+
       gst_caps_set_simple (caps,
           "multiview-mode", G_TYPE_STRING, mview_mode_str,
           "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET, mv_flags,
