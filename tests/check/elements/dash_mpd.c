@@ -159,7 +159,7 @@ GST_END_TEST;
  * Test parsing the ProgramInformation attributes
  *
  */
-GST_START_TEST (dash_mpdparser_program_information)
+GST_START_TEST (dash_mpdparser_programInformation)
 {
   GstProgramInformationNode *program;
   const gchar *xml =
@@ -195,7 +195,7 @@ GST_END_TEST;
  * Test parsing the BaseURL attributes
  *
  */
-GST_START_TEST (dash_mpdparser_base_URL)
+GST_START_TEST (dash_mpdparser_baseURL)
 {
   GstBaseURL *baseURL;
   const gchar *xml =
@@ -222,7 +222,7 @@ GST_START_TEST (dash_mpdparser_base_URL)
 GST_END_TEST;
 
 /*
- * Test parsing the location attributes
+ * Test parsing the Location attributes
  *
  */
 GST_START_TEST (dash_mpdparser_location)
@@ -249,7 +249,7 @@ GST_START_TEST (dash_mpdparser_location)
 GST_END_TEST;
 
 /*
- * Test parsing metrics attributes
+ * Test parsing Metrics attributes
  *
  */
 GST_START_TEST (dash_mpdparser_metrics)
@@ -275,7 +275,7 @@ GST_START_TEST (dash_mpdparser_metrics)
 GST_END_TEST;
 
 /*
- * Test parsing metrics range attributes
+ * Test parsing Metrics Range attributes
  *
  */
 GST_START_TEST (dash_mpdparser_metrics_range)
@@ -309,7 +309,7 @@ GST_START_TEST (dash_mpdparser_metrics_range)
 GST_END_TEST;
 
 /*
- * Test parsing metrics reporting attributes
+ * Test parsing Metrics Reporting attributes
  *
  */
 GST_START_TEST (dash_mpdparser_metrics_reporting)
@@ -2377,8 +2377,8 @@ dash_suite (void)
 
   /* tests parsing attributes from each element type */
   tcase_add_test (tc_simpleMPD, dash_mpdparser_mpd);
-  tcase_add_test (tc_simpleMPD, dash_mpdparser_program_information);
-  tcase_add_test (tc_simpleMPD, dash_mpdparser_base_URL);
+  tcase_add_test (tc_simpleMPD, dash_mpdparser_programInformation);
+  tcase_add_test (tc_simpleMPD, dash_mpdparser_baseURL);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_location);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_metrics);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_metrics_range);
