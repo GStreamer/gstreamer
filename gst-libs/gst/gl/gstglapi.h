@@ -23,31 +23,6 @@
 
 #include <gst/gl/gstglconfig.h>
 
-#if GST_GL_HAVE_PLATFORM_EGL
-
-#if defined (USE_EGL_RPI) && defined(__GNUC__)
-#ifndef __VCCOREVER__
-#define __VCCOREVER__ 0x04000000
-#endif
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#pragma GCC optimize ("gnu89-inline")
-#endif
-
-#ifndef EGL_EGLEXT_PROTOTYPES
-#define EGL_EGLEXT_PROTOTYPES 1
-#endif
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
-#if defined (USE_EGL_RPI) && defined(__GNUC__)
-#pragma GCC reset_options
-#pragma GCC diagnostic pop
-#endif
-
-#endif
-
 /* OpenGL 2.0 for Embedded Systems */
 #if GST_GL_HAVE_GLES2
 #ifndef GL_GLEXT_PROTOTYPES
