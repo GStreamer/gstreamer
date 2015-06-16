@@ -138,8 +138,12 @@ static GstPlay *
 play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
     gboolean gapless, gdouble initial_volume)
 {
-  GstElement *sink;
+  GstElement *sink, *playbin;
   GstPlay *play;
+
+  playbin = gst_element_factory_make ("playbin", "playbin");
+  if (playbin == NULL)
+    return NULL;
 
   play = g_new0 (GstPlay, 1);
 
@@ -147,7 +151,7 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
   play->num_uris = g_strv_length (uris);
   play->cur_idx = -1;
 
-  play->playbin = gst_element_factory_make ("playbin", "playbin");
+  play->playbin = playbin;
 
   if (audio_sink != NULL) {
     if (strchr (audio_sink, ' ') != NULL)
@@ -1212,6 +1216,12 @@ main (int argc, char **argv)
 
   /* prepare */
   play = play_new (uris, audio_sink, video_sink, gapless, volume);
+
+  if (play == NULL) {
+    g_printerr
+        ("Failed to create 'playbin' element. Check your GStreamer installation.\n");
+    return EXIT_FAILURE;
+  }
 
   if (interactive) {
     if (gst_play_kb_set_key_handler (keyboard_cb, play)) {
