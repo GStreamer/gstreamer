@@ -1004,11 +1004,13 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     if (GST_IS_DIRECT_CONTROL_BINDING ((GstControlBinding *) value)) {
       GstControlSource *source;
+      gboolean absolute = FALSE;
       GstDirectControlBinding *binding;
 
       binding = (GstDirectControlBinding *) value;
 
-      g_object_get (binding, "control-source", &source, NULL);
+      g_object_get (binding, "control-source", &source,
+          "absolute", &absolute, NULL);
 
       if (GST_IS_INTERPOLATION_CONTROL_SOURCE (source)) {
         GList *timed_values, *tmp;
@@ -1016,8 +1018,9 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
 
         append_escaped (str,
             g_markup_printf_escaped
-            ("            <binding type='direct' source_type='interpolation' property='%s'",
-                (gchar *) key));
+            ("            <binding type='%s' source_type='interpolation' property='%s'",
+                absolute ? "direct-absolute" : "direct", (gchar *) key));
+
         g_object_get (source, "mode", &mode, NULL);
         append_escaped (str, g_markup_printf_escaped (" mode='%d'", mode));
         append_escaped (str, g_markup_printf_escaped (" track_id='%d'", index));
@@ -1038,7 +1041,7 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
       } else
         GST_DEBUG ("control source not in [interpolation]");
     } else
-      GST_DEBUG ("Binding type not in [direct]");
+      GST_DEBUG ("Binding type not in [direct, direct-absolute]");
   }
 }
 

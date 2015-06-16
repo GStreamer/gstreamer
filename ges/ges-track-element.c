@@ -290,7 +290,7 @@ ges_track_element_init (GESTrackElement * self)
 
 static gfloat
 interpolate_values_for_position (GstTimedValue * first_value,
-    GstTimedValue * second_value, guint64 position)
+    GstTimedValue * second_value, guint64 position, gboolean absolute)
 {
   gfloat diff;
   GstClockTime interval;
@@ -308,7 +308,8 @@ interpolate_values_for_position (GstTimedValue * first_value,
         first_value->value - ((float) (first_value->timestamp -
             position) / (float) interval) * diff;
 
-  value_at_pos = CLAMP (value_at_pos, 0.0, 1.0);
+  if (!absolute)
+    value_at_pos = CLAMP (value_at_pos, 0.0, 1.0);
 
   return value_at_pos;
 }
@@ -327,6 +328,7 @@ _update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
 
   for (n = 0; n < n_specs; ++n) {
     GList *values, *tmp;
+    gboolean absolute;
     GstTimedValue *last, *first, *prev = NULL, *next = NULL;
     gfloat value_at_pos;
 
@@ -337,6 +339,7 @@ _update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
 
     g_object_get (binding, "control_source", &source, NULL);
 
+    g_object_get (binding, "absolute", &absolute, NULL);
     if (duration == 0) {
       gst_timed_value_control_source_unset_all (GST_TIMED_VALUE_CONTROL_SOURCE
           (source));
@@ -359,7 +362,8 @@ _update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
         break;
     }
 
-    value_at_pos = interpolate_values_for_position (first, next, inpoint);
+    value_at_pos =
+        interpolate_values_for_position (first, next, inpoint, absolute);
     gst_timed_value_control_source_unset (source, first->timestamp);
     gst_timed_value_control_source_set (source, inpoint, value_at_pos);
 
@@ -378,7 +382,8 @@ _update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
       }
 
       value_at_pos =
-          interpolate_values_for_position (prev, last, duration + inpoint);
+          interpolate_values_for_position (prev, last, duration + inpoint,
+          absolute);
 
       gst_timed_value_control_source_unset (source, last->timestamp);
       gst_timed_value_control_source_set (source, duration + inpoint,
@@ -1270,7 +1275,7 @@ ges_track_element_split_bindings (GESTrackElement * element,
   for (n = 0; n < n_specs; ++n) {
     GList *values, *tmp;
     GstTimedValue *last_value = NULL;
-    gboolean past_position = FALSE;
+    gboolean past_position = FALSE, absolute;
     GstInterpolationMode mode;
 
     binding = ges_track_element_get_control_binding (element, specs[n]->name);
@@ -1282,6 +1287,8 @@ ges_track_element_split_bindings (GESTrackElement * element,
     /* FIXME : this should work as well with other types of control sources */
     if (!GST_IS_TIMED_VALUE_CONTROL_SOURCE (source))
       continue;
+
+    g_object_get (binding, "absolute", &absolute, NULL);
 
     new_source =
         GST_TIMED_VALUE_CONTROL_SOURCE (gst_interpolation_control_source_new
@@ -1303,7 +1310,8 @@ ges_track_element_split_bindings (GESTrackElement * element,
          * we are looking for is between two actual keyframes which is not enough
          * in our case. bug #706621 */
         value_at_pos =
-            interpolate_values_for_position (last_value, value, position);
+            interpolate_values_for_position (last_value, value, position,
+            absolute);
 
         past_position = TRUE;
 
@@ -1320,9 +1328,13 @@ ges_track_element_split_bindings (GESTrackElement * element,
       last_value = value;
     }
 
-    /* We only manage direct bindings, see TODO in set_control_source */
-    ges_track_element_set_control_source (new_element,
-        GST_CONTROL_SOURCE (new_source), specs[n]->name, "direct");
+    /* We only manage direct (absolute) bindings, see TODO in set_control_source */
+    if (absolute)
+      ges_track_element_set_control_source (new_element,
+          GST_CONTROL_SOURCE (new_source), specs[n]->name, "direct-absolute");
+    else
+      ges_track_element_set_control_source (new_element,
+          GST_CONTROL_SOURCE (new_source), specs[n]->name, "direct");
   }
 
   g_free (specs);
@@ -1416,6 +1428,7 @@ ges_track_element_set_control_source (GESTrackElement * object,
   GstElement *element;
   GParamSpec *pspec;
   GstControlBinding *binding;
+  gboolean direct, direct_absolute;
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
   priv = GES_TRACK_ELEMENT (object)->priv;
@@ -1445,7 +1458,10 @@ ges_track_element_set_control_source (GESTrackElement * object,
   }
 
   /* TODO : update this according to new types of bindings */
-  if (!g_strcmp0 (binding_type, "direct")) {
+  direct = !g_strcmp0 (binding_type, "direct");
+  direct_absolute = !g_strcmp0 (binding_type, "direct-absolute");
+
+  if (direct || direct_absolute) {
     /* First remove existing binding */
     binding =
         (GstControlBinding *) g_hash_table_lookup (priv->bindings_hashtable,
@@ -1455,9 +1471,16 @@ ges_track_element_set_control_source (GESTrackElement * object,
           property_name);
       gst_object_remove_control_binding (GST_OBJECT (element), binding);
     }
-    binding =
-        gst_direct_control_binding_new (GST_OBJECT (element), property_name,
-        source);
+
+    if (direct_absolute)
+      binding =
+          gst_direct_control_binding_new_absolute (GST_OBJECT (element),
+          property_name, source);
+    else
+      binding =
+          gst_direct_control_binding_new (GST_OBJECT (element), property_name,
+          source);
+
     gst_object_add_control_binding (GST_OBJECT (element), binding);
     g_hash_table_insert (priv->bindings_hashtable, g_strdup (property_name),
         binding);
