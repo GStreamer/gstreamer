@@ -2837,7 +2837,7 @@ gst_rtsp_connection_set_ip (GstRTSPConnection * conn, const gchar * ip)
 }
 
 /**
- * gst_rtsp_connection_get_readfd:
+ * gst_rtsp_connection_get_read_socket:
  * @conn: a #GstRTSPConnection
  *
  * Get the file descriptor for reading.
@@ -3496,7 +3496,7 @@ static GSourceFuncs gst_rtsp_source_funcs = {
 };
 
 /**
- * gst_rtsp_watch_new:
+ * gst_rtsp_watch_new: (skip)
  * @conn: a #GstRTSPConnection
  * @funcs: watch functions
  * @user_data: user data to pass to @funcs
