@@ -54,13 +54,14 @@ struct _GESSmartMixer
   GMutex lock;
 
   GstCaps *caps;
-
-  GESTrack *track;
+  gboolean no_alpha;
 
   gpointer _ges_reserved[GES_PADDING];
 };
 
 GType         ges_smart_mixer_get_type (void) G_GNUC_CONST;
+GstPad *
+ges_smart_mixer_get_mixer_pad (GESSmartMixer *self, GstPad **mixerpad);
 GstElement*   ges_smart_mixer_new      (GESTrack *track);
 
 G_END_DECLS

@@ -67,10 +67,28 @@ destroy_pad (PadInfos * infos)
   g_slice_free (PadInfos, infos);
 }
 
+GstPad *
+ges_smart_mixer_get_mixer_pad (GESSmartMixer * self, GstPad ** mixerpad)
+{
+  PadInfos *info;
+  GstPad *sinkpad;
+
+  sinkpad = gst_element_get_request_pad (GST_ELEMENT (self), "sink_%u");
+
+  if (sinkpad == NULL)
+    return NULL;
+
+  info = g_hash_table_lookup (self->pads_infos, sinkpad);
+  *mixerpad = info->mixer_pad;
+
+  return sinkpad;
+}
+
 /* These metadata will get set by the upstream framepositionner element,
    added in the video sources' bin */
 static GstPadProbeReturn
-parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info, gpointer unused)
+parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info,
+    GESSmartMixer * self)
 {
   GstFramePositionnerMeta *meta;
 
@@ -83,7 +101,11 @@ parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info, gpointer unused)
     return GST_PAD_PROBE_OK;
   }
 
-  g_object_set (mixer_pad, "alpha", meta->alpha, "xpos", meta->posx, "ypos",
+  if (!self->no_alpha) {
+    g_object_set (mixer_pad, "alpha", meta->alpha, NULL);
+  }
+
+  g_object_set (mixer_pad, "xpos", meta->posx, "ypos",
       meta->posy, "zorder", meta->zorder, "width", meta->width,
       "height", meta->height, NULL);
 
@@ -142,7 +164,7 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   infos->probe_id =
       gst_pad_add_probe (infos->mixer_pad, GST_PAD_PROBE_TYPE_BUFFER,
-      (GstPadProbeCallback) parse_metadata, NULL, NULL);
+      (GstPadProbeCallback) parse_metadata, self, NULL);
 
   LOCK (self);
   g_hash_table_insert (self->pads_infos, ghost, infos);
@@ -245,7 +267,6 @@ GstElement *
 ges_smart_mixer_new (GESTrack * track)
 {
   GESSmartMixer *self = g_object_new (GES_TYPE_SMART_MIXER, NULL);
-  self->track = track;
 
   /* FIXME Make mixer smart and let it properly negotiate caps! */
   return GST_ELEMENT (self);

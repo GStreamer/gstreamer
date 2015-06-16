@@ -25,6 +25,7 @@
 
 #include <ges/ges.h>
 #include "ges-internal.h"
+#include "ges-smart-video-mixer.h"
 
 #include <gst/controller/gstdirectcontrolbinding.h>
 
@@ -311,9 +312,9 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, oconv, NULL);
 
-  mixer = gst_element_factory_create (ges_get_compositor_factory (), NULL);
+  mixer = ges_smart_mixer_new (NULL);
   g_assert (mixer);
-  g_object_set (G_OBJECT (mixer), "background", 1, NULL);
+  GES_SMART_MIXER (mixer)->no_alpha = TRUE;
   gst_bin_add (GST_BIN (topbin), mixer);
 
   priv->mixer_sinka =
@@ -372,7 +373,7 @@ link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
     GstElement * mixer, gint type, GstElement ** smpteref,
     GESVideoTransitionPrivate * priv)
 {
-  GstPad *srcpad, *sinkpad;
+  GstPad *srcpad, *sinkpad, *mixerpad;
   GstElement *smptealpha = gst_element_factory_make ("smptealpha", NULL);
 
   g_object_set (G_OBJECT (smptealpha),
@@ -388,11 +389,11 @@ link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
   }
 
   srcpad = gst_element_get_static_pad (smptealpha, "src");
-  sinkpad = gst_element_get_request_pad (mixer, "sink_%u");
+  sinkpad = ges_smart_mixer_get_mixer_pad (GES_SMART_MIXER (mixer), &mixerpad);
   gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
   gst_object_unref (srcpad);
 
-  return G_OBJECT (sinkpad);
+  return G_OBJECT (mixerpad);
 }
 
 static void
