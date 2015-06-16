@@ -262,6 +262,8 @@ gst_video_overlay_composition_meta_get_info (void)
  * Sets an overlay composition on a buffer. The buffer will obtain its own
  * reference to the composition, meaning this function does not take ownership
  * of @comp.
+ *
+ * Returns: (transfer none): a #GstVideoOverlayCompositionMeta
  */
 GstVideoOverlayCompositionMeta *
 gst_buffer_add_video_overlay_composition_meta (GstBuffer * buf,

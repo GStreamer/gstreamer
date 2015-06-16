@@ -105,7 +105,7 @@ gst_video_meta_get_info (void)
  * Buffers can contain multiple #GstVideoMeta metadata items when dealing with
  * multiview buffers.
  *
- * Returns: the #GstVideoMeta with lowest id (usually 0) or %NULL when there
+ * Returns: (transfer none): the #GstVideoMeta with lowest id (usually 0) or %NULL when there
  * is no such metadata on @buffer.
  */
 GstVideoMeta *
@@ -138,7 +138,7 @@ gst_buffer_get_video_meta (GstBuffer * buffer)
  * Buffers can contain multiple #GstVideoMeta metadata items when dealing with
  * multiview buffers.
  *
- * Returns: the #GstVideoMeta with @id or %NULL when there is no such metadata
+ * Returns: (transfer none): the #GstVideoMeta with @id or %NULL when there is no such metadata
  * on @buffer.
  */
 GstVideoMeta *
@@ -218,7 +218,7 @@ default_unmap (GstVideoMeta * meta, guint plane, GstMapInfo * info)
  * This function calculates the default offsets and strides and then calls
  * gst_buffer_add_video_meta_full() with them.
  *
- * Returns: the #GstVideoMeta on @buffer.
+ * Returns: (transfer none): the #GstVideoMeta on @buffer.
  */
 GstVideoMeta *
 gst_buffer_add_video_meta (GstBuffer * buffer,
@@ -249,7 +249,7 @@ gst_buffer_add_video_meta (GstBuffer * buffer,
  *
  * Attaches GstVideoMeta metadata to @buffer with the given parameters.
  *
- * Returns: the #GstVideoMeta on @buffer.
+ * Returns: (transfer none): the #GstVideoMeta on @buffer.
  */
 GstVideoMeta *
 gst_buffer_add_video_meta_full (GstBuffer * buffer,
@@ -509,15 +509,18 @@ gst_video_gl_texture_upload_meta_get_info (void)
 /**
  * gst_buffer_add_video_gl_texture_upload_meta:
  * @buffer: a #GstBuffer
- * @upload: the function to upload the buffer to a specific texture ID
+ * @texture_orientation: the #GstVideoGLTextureOrientation
+ * @n_textures: the number of textures
+ * @texture_type: array of #GstVideoGLTextureType
+ * @upload: (scope call): the function to upload the buffer to a specific texture ID
  * @user_data: user data for the implementor of @upload
- * @user_data_copy: function to copy @user_data
- * @user_data_free: function to free @user_data
+ * @user_data_copy: (scope call): function to copy @user_data
+ * @user_data_free: (scope call): function to free @user_data
  *
  * Attaches GstVideoGLTextureUploadMeta metadata to @buffer with the given
  * parameters.
  *
- * Returns: the #GstVideoGLTextureUploadMeta on @buffer.
+ * Returns: (transfer none): the #GstVideoGLTextureUploadMeta on @buffer.
  */
 GstVideoGLTextureUploadMeta *
 gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
@@ -677,7 +680,7 @@ gst_video_region_of_interest_meta_get_info (void)
  * Buffers can contain multiple #GstVideoRegionOfInterestMeta metadata items if
  * multiple regions of interests are marked on a frame.
  *
- * Returns: the #GstVideoRegionOfInterestMeta with @id or %NULL when there is
+ * Returns: (transfer none): the #GstVideoRegionOfInterestMeta with @id or %NULL when there is
  * no such metadata on @buffer.
  */
 GstVideoRegionOfInterestMeta *
@@ -710,7 +713,7 @@ gst_buffer_get_video_region_of_interest_meta_id (GstBuffer * buffer, gint id)
  * Attaches #GstVideoRegionOfInterestMeta metadata to @buffer with the given
  * parameters.
  *
- * Returns: the #GstVideoRegionOfInterestMeta on @buffer.
+ * Returns: (transfer none): the #GstVideoRegionOfInterestMeta on @buffer.
  */
 GstVideoRegionOfInterestMeta *
 gst_buffer_add_video_region_of_interest_meta (GstBuffer * buffer,
@@ -732,7 +735,7 @@ gst_buffer_add_video_region_of_interest_meta (GstBuffer * buffer,
  * Attaches #GstVideoRegionOfInterestMeta metadata to @buffer with the given
  * parameters.
  *
- * Returns: the #GstVideoRegionOfInterestMeta on @buffer.
+ * Returns: (transfer none): the #GstVideoRegionOfInterestMeta on @buffer.
  */
 GstVideoRegionOfInterestMeta *
 gst_buffer_add_video_region_of_interest_meta_id (GstBuffer * buffer,
