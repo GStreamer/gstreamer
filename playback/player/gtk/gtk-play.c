@@ -1066,9 +1066,10 @@ player_speed_clicked_cb (GtkButton * button, GtkPlay * play)
   GtkWidget *content;
   GtkWidget *rate_spinbutton;
 
-  dialog = gtk_dialog_new ();
+  dialog =
+      gtk_dialog_new_with_buttons ("Playback speed control", GTK_WINDOW (play),
+      GTK_DIALOG_DESTROY_WITH_PARENT, "_Close", GTK_RESPONSE_CLOSE, NULL);
   gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (play));
-  gtk_window_set_title (GTK_WINDOW (dialog), "Playback speed control");
 
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
   box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
