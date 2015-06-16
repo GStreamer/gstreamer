@@ -31,6 +31,12 @@
  *
  * Streams are switched in the order in which the sinkpads were requested.
  *
+ * By default, the stream segment's base values are adjusted to ensure
+ * the segment transitions between streams are continuous. In some cases,
+ * it may be desirable to turn off these adjustments (for example, because
+ * another downstream element like a streamsynchronizer adjusts the base
+ * values on its own). The adjust-value property can be used for this purpose.
+ *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
@@ -104,8 +110,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
 enum
 {
   PROP_0,
-  PROP_ACTIVE_PAD
+  PROP_ACTIVE_PAD,
+  PROP_ADJUST_BASE
 };
+
+#define DEFAULT_ADJUST_BASE TRUE
 
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (gst_concat_debug, "concat", 0, "concat element");
@@ -116,6 +125,8 @@ static void gst_concat_dispose (GObject * object);
 static void gst_concat_finalize (GObject * object);
 static void gst_concat_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
+static void gst_concat_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn gst_concat_change_state (GstElement * element,
     GstStateChange transition);
@@ -151,12 +162,17 @@ gst_concat_class_init (GstConcatClass * klass)
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_concat_finalize);
 
   gobject_class->get_property = gst_concat_get_property;
+  gobject_class->set_property = gst_concat_set_property;
 
   pspec_active_pad = g_param_spec_object ("active-pad", "Active pad",
       "Currently active src pad", GST_TYPE_PAD, G_PARAM_READABLE |
       G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
       pspec_active_pad);
+  g_object_class_install_property (gobject_class, PROP_ADJUST_BASE,
+      g_param_spec_boolean ("adjust-base", "Adjust segment base",
+          "Adjust the base value of segments to ensure they are adjacent",
+          DEFAULT_ADJUST_BASE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Concat", "Generic", "Concatenate multiple streams",
@@ -187,6 +203,8 @@ gst_concat_init (GstConcat * self)
   gst_pad_use_fixed_caps (self->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
+
+  self->adjust_base = DEFAULT_ADJUST_BASE;
 }
 
 static void
@@ -231,6 +249,31 @@ gst_concat_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_ACTIVE_PAD:{
       g_mutex_lock (&self->lock);
       g_value_set_object (value, self->current_sinkpad);
+      g_mutex_unlock (&self->lock);
+      break;
+    }
+    case PROP_ADJUST_BASE:{
+      g_mutex_lock (&self->lock);
+      g_value_set_boolean (value, self->adjust_base);
+      g_mutex_unlock (&self->lock);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_concat_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
+{
+  GstConcat *self = GST_CONCAT (object);
+
+  switch (prop_id) {
+    case PROP_ADJUST_BASE:{
+      g_mutex_lock (&self->lock);
+      self->adjust_base = g_value_get_boolean (value);
       g_mutex_unlock (&self->lock);
       break;
     }
@@ -488,11 +531,14 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     case GST_EVENT_SEGMENT:{
+      gboolean adjust_base;
+
       /* Drop segment event, we create our own one */
       gst_event_copy_segment (event, &spad->segment);
       gst_event_unref (event);
 
       g_mutex_lock (&self->lock);
+      adjust_base = self->adjust_base;
       if (self->format == GST_FORMAT_UNDEFINED) {
         if (spad->segment.format != GST_FORMAT_TIME
             && spad->segment.format != GST_FORMAT_BYTES) {
@@ -522,18 +568,21 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       } else {
         GstSegment segment = spad->segment;
 
-        /* We know no duration */
-        segment.duration = -1;
+        if (adjust_base) {
+          /* We know no duration */
+          segment.duration = -1;
 
-        /* Update segment values to be continous with last stream */
-        if (self->format == GST_FORMAT_TIME) {
-          segment.base += self->current_start_offset;
-        } else {
-          /* Shift start/stop byte position */
-          segment.start += self->current_start_offset;
-          if (segment.stop != -1)
-            segment.stop += self->current_start_offset;
+          /* Update segment values to be continous with last stream */
+          if (self->format == GST_FORMAT_TIME) {
+            segment.base += self->current_start_offset;
+          } else {
+            /* Shift start/stop byte position */
+            segment.start += self->current_start_offset;
+            if (segment.stop != -1)
+              segment.stop += self->current_start_offset;
+          }
         }
+
         gst_pad_push_event (self->srcpad, gst_event_new_segment (&segment));
       }
       break;

@@ -59,6 +59,8 @@ struct _GstConcat
   guint64 current_start_offset;
   /* Between current pad's segment start and stop */
   guint64 last_stop;
+
+  gboolean adjust_base;
 };
 
 struct _GstConcatClass
