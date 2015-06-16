@@ -100,7 +100,7 @@ GstPbutils-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_AP
 		--pkg gstreamer-video-@GST_API_VERSION@ \
 		--pkg gstreamer-audio-@GST_API_VERSION@ \
 		--pkg-export gstreamer-pbutils-@GST_API_VERSION@ \
-		--add-init-section="gst_init(NULL,NULL);" \
+		--add-init-section="$(INTROSPECTION_INIT)" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

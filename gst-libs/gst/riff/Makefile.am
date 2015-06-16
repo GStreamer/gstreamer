@@ -52,7 +52,7 @@ libgstriff_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) 
 #		--pkg gstreamer-tag-@GST_API_VERSION@ \
 #		--pkg gstreamer-audio-@GST_API_VERSION@ \
 #		--pkg-export gstreamer-riff-@GST_API_VERSION@ \
-#		--add-init-section="gst_init(NULL,NULL);" \
+#		--add-init-section="$(INTROSPECTION_INIT)" \
 #		--output $@ \
 #		$(gir_headers) \
 #		$(gir_sources)
