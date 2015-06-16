@@ -156,7 +156,7 @@ gst_gtk_gl_sink_finalize (GObject * object)
 {
   GstGtkGLSink *gtk_sink = GST_GTK_GL_SINK (object);;
 
-  g_object_unref (gtk_sink->widget);
+  g_clear_object (&gtk_sink->widget);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
