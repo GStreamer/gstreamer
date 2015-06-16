@@ -89,7 +89,7 @@ extern GType gst_ca_opengl_layer_sink_bin_get_type (void);
 #endif
 
 #ifdef USE_EGL_RPI
-#include <bcm_host.h>
+extern void bcm_host_init (void);
 #endif
 
 #if GST_GL_HAVE_WINDOW_X11

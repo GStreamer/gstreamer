@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/gl/gl.h>
+#include <gst/gl/egl/gstegl.h>
 
 G_BEGIN_DECLS
 
