@@ -135,7 +135,7 @@ typedef enum
  * @etime: external clock time
  * @itime: internal clock time
  * @requested_skew: skew amount requested by the callback
- * @discont: TRUE if there was a discontinuity in the average skew
+ * @discont_reason: TRUE if there was a discontinuity in the average skew
  * @user_data: user data
  *
  * This function is set with gst_audio_base_sink_set_custom_slaving_callback()
