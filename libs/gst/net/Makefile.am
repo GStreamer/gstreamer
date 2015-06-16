@@ -75,7 +75,7 @@ GstNet-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_API_VERSIO
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gio-2.0 \
 		--pkg-export="gstreamer-net-@GST_API_VERSION@" \
-		--add-init-section="gst_init(NULL,NULL);" \
+		--add-init-section="$(INTROSPECTION_INIT)" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
