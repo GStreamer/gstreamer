@@ -69,7 +69,7 @@ struct _GstFFTF64
 };
 
 /**
- * gst_fft_f64_new:
+ * gst_fft_f64_new: (skip)
  * @len: Length of the FFT in the time domain
  * @inverse: %TRUE if the #GstFFTF64 instance should be used for the inverse FFT
  *

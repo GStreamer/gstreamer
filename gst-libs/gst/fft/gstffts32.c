@@ -68,7 +68,7 @@ struct _GstFFTS32
 };
 
 /**
- * gst_fft_s32_new:
+ * gst_fft_s32_new: (skip)
  * @len: Length of the FFT in the time domain
  * @inverse: %TRUE if the #GstFFTS32 instance should be used for the inverse FFT
  *
