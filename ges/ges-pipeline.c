@@ -1079,7 +1079,7 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
   GList *tmp;
   g_return_val_if_fail (GES_IS_PIPELINE (pipeline), FALSE);
 
-  GST_ERROR_OBJECT (pipeline, "current mode : %d, mode : %d",
+  GST_DEBUG_OBJECT (pipeline, "current mode : %d, mode : %d",
       pipeline->priv->mode, mode);
 
   /* fast-path, nothing to change */

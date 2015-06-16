@@ -209,6 +209,9 @@ ges_track_element_add_children_props          (GESTrackElement *self,
                                                const gchar **blacklist,
                                                const gchar **whitelist);
 GHashTable *
-ges_track_element_get_all_control_bindings (GESTrackElement * trackelement);
+ges_track_element_get_all_control_bindings    (GESTrackElement * trackelement);
+gboolean
+ges_track_element_remove_control_binding      (GESTrackElement * object,
+                                               const gchar * property_name);
 G_END_DECLS
 #endif /* _GES_TRACK_ELEMENT */

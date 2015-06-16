@@ -86,6 +86,7 @@ static GParamSpec *properties[PROP_LAST];
 enum
 {
   CONTROL_BINDING_ADDED,
+  CONTROL_BINDING_REMOVED,
   LAST_SIGNAL
 };
 
@@ -258,6 +259,19 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    */
   ges_track_element_signals[CONTROL_BINDING_ADDED] =
       g_signal_new ("control-binding-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 1, GST_TYPE_CONTROL_BINDING);
+
+  /**
+   * GESTrackElement::control-binding-added:
+   * @track_element: a #GESTrackElement
+   * @control_binding: the #GstControlBinding that has been added
+   *
+   * The control-bunding-added  is emitted each time a control binding
+   * is added for a child property of @track_element
+   */
+  ges_track_element_signals[CONTROL_BINDING_REMOVED] =
+      g_signal_new ("control-binding-reomved", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GST_TYPE_CONTROL_BINDING);
 
@@ -1404,6 +1418,52 @@ ges_track_element_edit (GESTrackElement * object,
   return TRUE;
 }
 
+/**
+ * ges_track_element_remove_control_binding:
+ * @object: the #GESTrackElement on which to set a control binding
+ * @property_name: The name of the property to control.
+ * @binding_type: The type of binding to create. Only "direct" is available for now.
+ *
+ * Removes a #GstControlBinding from @object.
+ *
+ * Returns: %TRUE if the binding could be removed, %FALSE if an error
+ * occured
+ */
+gboolean
+ges_track_element_remove_control_binding (GESTrackElement * object,
+    const gchar * property_name)
+{
+  GESTrackElementPrivate *priv;
+  GstControlBinding *binding;
+  GstObject *target;
+
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+
+  priv = GES_TRACK_ELEMENT (object)->priv;
+  binding =
+      (GstControlBinding *) g_hash_table_lookup (priv->bindings_hashtable,
+      property_name);
+
+  if (binding) {
+    g_object_get (binding, "object", &target, NULL);
+    GST_DEBUG_OBJECT (object, "Removing binding %p for property %s", binding,
+        property_name);
+
+    gst_object_ref (binding);
+    gst_object_remove_control_binding (target, binding);
+
+    g_signal_emit (object, ges_track_element_signals[CONTROL_BINDING_REMOVED],
+        0, binding);
+
+    gst_object_unref (target);
+    gst_object_unref (binding);
+    g_hash_table_remove (priv->bindings_hashtable, property_name);
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
 
 /**
  * ges_track_element_set_control_source:
