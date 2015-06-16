@@ -897,7 +897,7 @@ static const VertResampler v_resamplers[] = {
 };
 
 /**
- * gst_video_chroma_resample_new:
+ * gst_video_chroma_resample_new: (skip)
  * @method: a #GstVideoChromaMethod
  * @site: a #GstVideoChromaSite
  * @flags: #GstVideoChromaFlags

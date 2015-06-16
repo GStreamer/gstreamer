@@ -2012,7 +2012,7 @@ convert_get_alpha_mode (GstVideoConverter * convert)
 }
 
 /**
- * gst_video_converter_new:
+ * gst_video_converter_new: (skip)
  * @in_info: a #GstVideoInfo
  * @out_info: a #GstVideoInfo
  * @config: (transfer full): a #GstStructure with configuration options

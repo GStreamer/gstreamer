@@ -351,7 +351,7 @@ count_power (guint v)
 }
 
 /**
- * gst_video_dither_new:
+ * gst_video_dither_new: (skip)
  * @method: a #GstVideoDitherMethod
  * @flags: a #GstVideoDitherFlags
  * @format: a #GstVideoFormat

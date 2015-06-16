@@ -163,7 +163,7 @@ scaler_dump (GstVideoScaler * scale)
 }
 
 /**
- * gst_video_scaler_new:
+ * gst_video_scaler_new: (skip)
  * @method: a #GstVideoResamplerMethod
  * @flags: #GstVideoScalerFlags
  * @n_taps: number of taps to use
@@ -1085,7 +1085,7 @@ get_y_offset (GstVideoFormat format)
 }
 
 /**
- * gst_video_scaler_combine_packed_YUV:
+ * gst_video_scaler_combine_packed_YUV: (skip)
  * @y_scale: a scaler for the Y component
  * @uv_scale: a scaler for the U and V components
  * @in_format: the input video format
