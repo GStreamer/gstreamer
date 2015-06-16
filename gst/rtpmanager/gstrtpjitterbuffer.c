@@ -2717,9 +2717,12 @@ compute_elapsed (GstRtpJitterBuffer * jitterbuffer, RTPJitterBufferItem * item)
   GST_LOG_OBJECT (jitterbuffer, "rtp %" G_GUINT32_FORMAT ", ext %"
       G_GUINT64_FORMAT, rtp_time, priv->ext_timestamp);
 
-  ext_time = gst_rtp_buffer_ext_timestamp (&priv->ext_timestamp, rtp_time);
+  ext_time = priv->ext_timestamp;
+  ext_time = gst_rtp_buffer_ext_timestamp (&ext_time, rtp_time);
   if (ext_time < priv->ext_timestamp) {
     ext_time = priv->ext_timestamp;
+  } else {
+    priv->ext_timestamp = ext_time;
   }
 
   if (ext_time > priv->clock_base)
