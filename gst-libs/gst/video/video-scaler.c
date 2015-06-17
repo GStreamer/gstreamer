@@ -1121,7 +1121,7 @@ gst_video_scaler_combine_packed_YUV (GstVideoScaler * y_scale,
 
   resampler = &scale->resampler;
 
-  out_size = y_scale->resampler.out_size * 2;
+  out_size = GST_ROUND_UP_4 (y_scale->resampler.out_size * 2);
   max_taps = y_scale->resampler.max_taps;
   n_phases = out_size;
   offset = g_malloc (sizeof (guint32) * out_size);
@@ -1142,15 +1142,18 @@ gst_video_scaler_combine_packed_YUV (GstVideoScaler * y_scale,
   scale->inc = y_scale->inc;
 
   for (i = 0; i < out_size; i++) {
+    gint ic;
+
     if ((i & 1) == scale->out_y_offset) {
-      offset[i] = y_scale->resampler.offset[i / 2] * 2 + scale->in_y_offset;
+      ic = CLAMP (i / 2, 0, y_scale->resampler.out_size - 1);
+      offset[i] = y_scale->resampler.offset[ic] * 2 + scale->in_y_offset;
       memcpy (taps + i * max_taps, y_scale->resampler.taps +
-          y_scale->resampler.phase[i / 2] * max_taps,
-          max_taps * sizeof (gdouble));
+          y_scale->resampler.phase[ic] * max_taps, max_taps * sizeof (gdouble));
     } else {
-      offset[i] = uv_scale->resampler.offset[i / 4] * 4 + (i & 3);
+      ic = CLAMP (i / 4, 0, uv_scale->resampler.out_size - 1);
+      offset[i] = uv_scale->resampler.offset[ic] * 4 + (i & 3);
       memcpy (taps + i * max_taps, uv_scale->resampler.taps +
-          uv_scale->resampler.phase[i / 4] * max_taps,
+          uv_scale->resampler.phase[ic] * max_taps,
           max_taps * sizeof (gdouble));
     }
     phase[i] = i;
@@ -1165,23 +1168,23 @@ static gboolean
 get_functions (GstVideoScaler * hscale, GstVideoScaler * vscale,
     GstVideoFormat format,
     GstVideoScalerHFunc * hfunc, GstVideoScalerVFunc * vfunc,
-    gint * n_elems, gint * width_mult)
+    gint * n_elems, guint * width)
 {
   gint bits;
-
-  *width_mult = 1;
+  gboolean mono = FALSE;
 
   switch (format) {
     case GST_VIDEO_FORMAT_GRAY8:
       bits = 8;
       *n_elems = 1;
+      mono = TRUE;
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
       bits = 8;
       *n_elems = 1;
-      *width_mult = 2;
+      *width = GST_ROUND_UP_4 (*width * 2);
       break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
@@ -1210,6 +1213,7 @@ get_functions (GstVideoScaler * hscale, GstVideoScaler * vscale,
     case GST_VIDEO_FORMAT_GRAY16_BE:
       bits = 16;
       *n_elems = 1;
+      mono = TRUE;
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV16:
@@ -1237,7 +1241,7 @@ get_functions (GstVideoScaler * hscale, GstVideoScaler * vscale,
           *hfunc = video_scale_h_near_u32;
         break;
       case 2:
-        if (*n_elems == 1 && *width_mult == 1)
+        if (*n_elems == 1 && mono)
           *hfunc = video_scale_h_2tap_1u8;
         else if (*n_elems == 4)
           *hfunc = video_scale_h_2tap_4u8;
@@ -1311,7 +1315,7 @@ void
 gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
     gpointer src, gpointer dest, guint dest_offset, guint width)
 {
-  gint n_elems, mult;
+  gint n_elems;
   GstVideoScalerHFunc func;
 
   g_return_if_fail (scale != NULL);
@@ -1319,10 +1323,8 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
   g_return_if_fail (dest != NULL);
   g_return_if_fail (dest_offset + width <= scale->resampler.out_size);
 
-  if (!get_functions (scale, NULL, format, &func, NULL, &n_elems, &mult))
+  if (!get_functions (scale, NULL, format, &func, NULL, &n_elems, &width))
     goto no_func;
-
-  width *= mult;
 
   if (scale->tmpwidth < width)
     realloc_tmplines (scale, n_elems, width);
@@ -1354,7 +1356,7 @@ void
 gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
     gpointer src_lines[], gpointer dest, guint dest_offset, guint width)
 {
-  gint n_elems, mult;
+  gint n_elems;
   GstVideoScalerVFunc func;
 
   g_return_if_fail (scale != NULL);
@@ -1362,10 +1364,8 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
   g_return_if_fail (dest != NULL);
   g_return_if_fail (dest_offset < scale->resampler.out_size);
 
-  if (!get_functions (NULL, scale, format, NULL, &func, &n_elems, &mult))
+  if (!get_functions (NULL, scale, format, NULL, &func, &n_elems, &width))
     goto no_func;
-
-  width *= mult;
 
   if (scale->tmpwidth < width)
     realloc_tmplines (scale, n_elems, width);
@@ -1409,7 +1409,7 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
     gpointer dest, gint dest_stride, guint x, guint y,
     guint width, guint height)
 {
-  gint n_elems, mult;
+  gint n_elems;
   GstVideoScalerHFunc hfunc;
   GstVideoScalerVFunc vfunc;
   gint i;
@@ -1417,10 +1417,8 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
   g_return_if_fail (src != NULL);
   g_return_if_fail (dest != NULL);
 
-  if (!get_functions (hscale, vscale, format, &hfunc, &vfunc, &n_elems, &mult))
+  if (!get_functions (hscale, vscale, format, &hfunc, &vfunc, &n_elems, &width))
     goto no_func;
-
-  width *= mult;
 
 #define LINE(s,ss,i)  ((guint8 *)(s) + ((i) * (ss)))
 #define TMP_LINE(s,i,v) ((guint8 *)(s->tmpline1) + (((i) % (v)) * (sizeof (gint32) * width * n_elems)))
