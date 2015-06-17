@@ -499,14 +499,16 @@ qtdemux_dump_stco (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 gboolean
 qtdemux_dump_ctts (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
-  guint32 ver_flags = 0, num_entries = 0, i, count, offset;
+  guint32 ver_flags = 0, num_entries = 0, i, count;
+  gint32 offset;
+
 
   if (!gst_byte_reader_get_uint32_be (data, &ver_flags) ||
       !gst_byte_reader_get_uint32_be (data, &num_entries))
     return FALSE;
 
   GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
-  GST_LOG ("%*s  n entries:     %d", depth, "", num_entries);
+  GST_LOG ("%*s  n entries:     %u", depth, "", num_entries);
 
   if (!qt_atom_parser_has_chunks (data, num_entries, 4 + 4))
     return FALSE;
