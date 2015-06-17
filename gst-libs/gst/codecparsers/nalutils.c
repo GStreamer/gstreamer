@@ -210,16 +210,13 @@ nal_reader_get_ue (NalReader * nr, guint32 * val)
   guint8 bit;
   guint32 value;
 
-  if (G_UNLIKELY (!nal_reader_get_bits_uint8 (nr, &bit, 1))) {
-
+  if (G_UNLIKELY (!nal_reader_get_bits_uint8 (nr, &bit, 1)))
     return FALSE;
-  }
 
   while (bit == 0) {
     i++;
-    if G_UNLIKELY
-      ((!nal_reader_get_bits_uint8 (nr, &bit, 1)))
-          return FALSE;
+    if (G_UNLIKELY (!nal_reader_get_bits_uint8 (nr, &bit, 1)))
+      return FALSE;
   }
 
   if (G_UNLIKELY (i > 32))
