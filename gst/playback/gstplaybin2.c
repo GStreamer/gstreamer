@@ -5313,6 +5313,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
         group->sub_pending = FALSE;
       }
       gst_element_set_state (suburidecodebin, GST_STATE_READY);
+      g_free (group->suburi);
+      group->suburi = NULL;
       GST_SOURCE_GROUP_UNLOCK (group);
     }
   }
