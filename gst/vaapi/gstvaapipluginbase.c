@@ -687,10 +687,9 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-    update_pool = (pool != NULL);
+    update_pool = TRUE;
+    size = MAX (size, vi.size);
     if (pool) {
-      size = MAX (size, vi.size);
-
       /* Check whether downstream element proposed a bufferpool but did
          not provide a correct propose_allocation() implementation */
       has_video_alignment = gst_buffer_pool_has_option (pool,
