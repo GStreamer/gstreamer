@@ -88,6 +88,9 @@ struct _GstSplitMuxSink {
 
   GMutex lock;
   GCond data_cond;
+  GCond async_cond;
+  gboolean is_async;
+  gboolean restarting;
 
   SplitMuxState state;
   gdouble mux_overhead;
