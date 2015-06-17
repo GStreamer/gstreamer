@@ -314,6 +314,7 @@ gst_gtk_gl_sink_change_state (GstElement * element, GstStateChange transition)
 {
   GstGtkGLSink *gtk_sink = GST_GTK_GL_SINK (element);
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GtkWidget *toplevel;
 
   GST_DEBUG ("changing state: %s => %s",
       gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
@@ -326,10 +327,17 @@ gst_gtk_gl_sink_change_state (GstElement * element, GstStateChange transition)
 
       /* After this point, gtk_sink->widget will always be set */
 
-      if (!gtk_widget_get_parent (GTK_WIDGET (gtk_sink->widget))) {
-        GST_ERROR_OBJECT (gtk_sink,
-            "gtkglsink widget needs to be parented to work.");
-        return GST_STATE_CHANGE_FAILURE;
+      toplevel = gtk_widget_get_toplevel (GTK_WIDGET (gtk_sink->widget));
+      if (!gtk_widget_is_toplevel (toplevel)) {
+        GtkWidget *window;
+
+        /* User did not add widget its own UI, let's popup a new GtkWindow to
+         * make gst-launch-1.0 work. */
+        window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+        gtk_window_set_default_size (GTK_WINDOW (window), 640, 480);
+        gtk_window_set_title (GTK_WINDOW (window), "Gtk+ OpenGL renderer");
+        gtk_container_add (GTK_CONTAINER (window), toplevel);
+        gtk_widget_show_all (window);
       }
 
       if (!gtk_gst_gl_widget_init_winsys (gtk_sink->widget))
