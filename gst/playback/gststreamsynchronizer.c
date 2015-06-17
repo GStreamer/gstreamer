@@ -513,6 +513,25 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
     }
+      /* unblocking EOS wait when track switch. */
+    case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:{
+      if (gst_event_has_name (event, "playsink-custom-video-flush")
+          || gst_event_has_name (event, "playsink-custom-audio-flush")
+          || gst_event_has_name (event, "playsink-custom-subtitle-flush")) {
+        GstStream *stream;
+
+        GST_STREAM_SYNCHRONIZER_LOCK (self);
+        stream = gst_pad_get_element_private (pad);
+        if (stream) {
+          stream->is_eos = FALSE;
+          stream->eos_sent = FALSE;
+          stream->wait = FALSE;
+          g_cond_broadcast (&stream->stream_finish_cond);
+        }
+        GST_STREAM_SYNCHRONIZER_UNLOCK (self);
+      }
+      break;
+    }
     case GST_EVENT_EOS:{
       GstStream *stream;
       GList *l;
