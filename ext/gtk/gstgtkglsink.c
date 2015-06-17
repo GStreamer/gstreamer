@@ -161,6 +161,12 @@ gst_gtk_gl_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+widget_destroy_cb (GtkWidget * widget, GstGtkGLSink * gtk_sink)
+{
+  g_atomic_int_set (&gtk_sink->widget_destroyed, 1);
+}
+
 static GtkGstGLWidget *
 gst_gtk_gl_sink_get_widget (GstGtkGLSink * gtk_sink)
 {
@@ -188,6 +194,8 @@ gst_gtk_gl_sink_get_widget (GstGtkGLSink * gtk_sink)
   /* Take the floating ref, otherwise the destruction of the container will
    * make this widget disapear possibly before we are done. */
   gst_object_ref_sink (gtk_sink->widget);
+  g_signal_connect (gtk_sink->widget, "destroy",
+      G_CALLBACK (widget_destroy_cb), gtk_sink);
 
   return gtk_sink->widget;
 }
@@ -425,6 +433,12 @@ gst_gtk_gl_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   gtk_sink = GST_GTK_GL_SINK (vsink);
 
   gtk_gst_gl_widget_set_buffer (gtk_sink->widget, buf);
+
+  if (g_atomic_int_get (&gtk_sink->widget_destroyed)) {
+    GST_ELEMENT_ERROR (gtk_sink, RESOURCE, NOT_FOUND,
+        ("%s", "Output widget was destroyed"), (NULL));
+    return GST_FLOW_ERROR;
+  }
 
   return GST_FLOW_OK;
 }
