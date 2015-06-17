@@ -354,7 +354,7 @@ gst_concat_release_pad (GstElement * element, GstPad * pad)
 
   g_mutex_lock (&self->lock);
   if (self->current_sinkpad == GST_PAD_CAST (spad)) {
-    eos = ! !gst_concat_switch_pad (self);
+    eos = !gst_concat_switch_pad (self);
     current_pad_removed = TRUE;
     do_notify = TRUE;
   }
