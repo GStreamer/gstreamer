@@ -102,6 +102,7 @@ G_BEGIN_DECLS
 #define FOURCC_crgn     GST_MAKE_FOURCC('c','r','g','n')
 #define FOURCC_ctab     GST_MAKE_FOURCC('c','t','a','b')
 #define FOURCC_ctts     GST_MAKE_FOURCC('c','t','t','s')
+#define FOURCC_cslg     GST_MAKE_FOURCC('c','s','l','g')
 #define FOURCC_dac3     GST_MAKE_FOURCC('d','a','c','3')
 #define FOURCC_data     GST_MAKE_FOURCC('d','a','t','a')
 #define FOURCC_dcom     GST_MAKE_FOURCC('d','c','o','m')

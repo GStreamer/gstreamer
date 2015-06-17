@@ -522,6 +522,28 @@ qtdemux_dump_ctts (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 }
 
 gboolean
+qtdemux_dump_cslg (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  guint32 ver_flags = 0, shift = 0;
+  gint32 least_offset = 0, start_time = 0, end_time = 0;
+
+  if (!gst_byte_reader_get_uint32_be (data, &ver_flags) ||
+      !gst_byte_reader_get_uint32_be (data, &shift) ||
+      !gst_byte_reader_get_int32_be (data, &least_offset) ||
+      !gst_byte_reader_get_int32_be (data, &start_time) ||
+      !gst_byte_reader_get_int32_be (data, &end_time))
+    return FALSE;
+
+  GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
+  GST_LOG ("%*s  shift:         %u", depth, "", shift);
+  GST_LOG ("%*s  least offset:  %d", depth, "", least_offset);
+  GST_LOG ("%*s  start time:    %d", depth, "", start_time);
+  GST_LOG ("%*s  end time:      %d", depth, "", end_time);
+
+  return TRUE;
+}
+
+gboolean
 qtdemux_dump_co64 (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
   guint32 ver_flags = 0, num_entries = 0, i;
