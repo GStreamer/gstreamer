@@ -690,7 +690,7 @@ gst_discoverer_stream_info_get_stream_id (GstDiscovererStreamInfo * info)
  * @info: a #GstDiscovererStreamInfo
  *
  * Deprecated: This functions is deprecated since version 1.4, use
- * gst_discoverer_stream_get_missing_elements_installer_details
+ * #gst_discoverer_info_get_missing_elements_installer_details
  *
  * Returns: (transfer none): additional information regarding the stream (for
  * example codec version, profile, etc..). If you wish to use the #GstStructure
@@ -1016,7 +1016,7 @@ DISCOVERER_INFO_ACCESSOR_CODE (seekable, gboolean, FALSE);
  * @info: a #GstDiscovererInfo
  *
  * Deprecated: This functions is deprecated since version 1.4, use
- * gst_discoverer_info_get_missing_elements_installer_details
+ * #gst_discoverer_info_get_missing_elements_installer_details
  *
  * Returns: (transfer none): Miscellaneous information stored as a #GstStructure
  * (for example: information about missing plugins). If you wish to use the
