@@ -3627,12 +3627,6 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
         GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, k,
         convert->out_maxheight);
 
-    r_border = out_x + out_width;
-    rb_width = out_maxwidth - r_border;
-    lb_width = out_x;
-
-    borders = &convert->borders[k];
-
     pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, k);
 
     switch (GST_VIDEO_FORMAT_INFO_FORMAT (out_finfo)) {
@@ -3640,11 +3634,18 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
       case GST_VIDEO_FORMAT_YVYU:
       case GST_VIDEO_FORMAT_UYVY:
         pgroup = 42;
+        out_maxwidth = GST_ROUND_UP_2 (out_maxwidth);
         break;
       default:
         pgroup = pstride;
         break;
     }
+
+    r_border = out_x + out_width;
+    rb_width = out_maxwidth - r_border;
+    lb_width = out_x;
+
+    borders = &convert->borders[k];
 
     switch (pgroup) {
       case 1:
