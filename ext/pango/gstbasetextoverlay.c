@@ -797,6 +797,9 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
 
     caps_has_meta = gst_pad_peer_query_accept_caps (overlay->srcpad,
         overlay_caps);
+
+    GST_DEBUG ("caps have overlay meta %d", caps_has_meta);
+    GST_DEBUG ("sink alloc has overlay meta %d", alloc_has_meta);
   }
 
   /* For backward compatbility, we will prefer bliting if downstream
