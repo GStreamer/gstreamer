@@ -447,7 +447,7 @@ struct _GstActiveStream
 
   guint baseURL_idx;                          /* index of the baseURL used for last request */
   gchar *baseURL;                             /* active baseURL used for last request */
-  gchar *queryURL;                            /* active baseURL used for last request */
+  gchar *queryURL;                            /* active queryURL used for last request */
   guint max_bandwidth;                        /* max bandwidth allowed for this mimeType */
 
   GstAdaptationSetNode *cur_adapt_set;        /* active adaptation set */
@@ -456,7 +456,7 @@ struct _GstActiveStream
   GstSegmentBaseType *cur_segment_base;       /* active segment base */
   GstSegmentListNode *cur_segment_list;       /* active segment list */
   GstSegmentTemplateNode *cur_seg_template;   /* active segment template */
-  gint segment_index;                        /* index of next sequence chunk */
+  gint segment_index;                         /* index of next sequence chunk */
   guint segment_repeat_index;                 /* index of the repeat count of a segment */
   GPtrArray *segments;                        /* array of GstMediaSegment */
   GstClockTime presentationTimeOffset;        /* presentation time offset of the current segment */
@@ -493,7 +493,6 @@ gboolean gst_mpd_parse (GstMpdClient *client, const gchar *data, gint size);
 gboolean gst_mpd_client_setup_media_presentation (GstMpdClient *client);
 gboolean gst_mpd_client_setup_streaming (GstMpdClient * client, GstAdaptationSetNode * adapt_set);
 gboolean gst_mpd_client_setup_representation (GstMpdClient *client, GstActiveStream *stream, GstRepresentationNode *representation);
-GList * gst_mpd_client_get_adaptation_sets (GstMpdClient * client);
 GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client, GstActiveStream * stream);
 GstClockTime gst_mpd_client_get_media_presentation_duration (GstMpdClient *client);
 gboolean gst_mpd_client_get_last_fragment_timestamp_end (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
@@ -532,6 +531,7 @@ GstActiveStream *gst_mpdparser_get_active_stream_by_index (GstMpdClient *client,
 
 /* AdaptationSet */
 guint gst_mpdparser_get_nb_adaptationSet (GstMpdClient *client);
+GList * gst_mpd_client_get_adaptation_sets (GstMpdClient * client);
 
 /* Segment */
 gboolean gst_mpd_client_has_next_segment (GstMpdClient * client, GstActiveStream * stream, gboolean forward);
