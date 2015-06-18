@@ -6,8 +6,13 @@ noinst_PROGRAMS = \
 	test-surfaces			\
 	test-windows			\
 	test-subpicture			\
+	$(NULL)
+
+if USE_ENCODERS
+noinst_PROGRAMS += \
 	simple-encoder			\
 	$(NULL)
+endif
 
 if USE_GLX
 noinst_PROGRAMS += \
