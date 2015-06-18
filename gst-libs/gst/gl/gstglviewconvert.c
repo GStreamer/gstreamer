@@ -718,8 +718,8 @@ _expand_par_for_half_aspect (GstCaps * in, gboolean vertical_half_aspect)
         features ? gst_caps_features_copy (features) : NULL);
 
     gst_structure_free (s);
-    if (features);
-    gst_caps_features_free (features);
+    if (features)
+      gst_caps_features_free (features);
   }
 
   gst_caps_unref (in);
