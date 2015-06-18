@@ -1566,25 +1566,6 @@ gst_gl_context_get_display (GstGLContext * context)
   return gst_object_ref (context->priv->display);
 }
 
-/**
- * gst_gl_context_set_display:
- * @context: a #GstGLContext:
- * @display: a #GstGLDisplay:
- *
- * Ref @display and unref previous display if exists.
- *
- * Since: 1.6
- */
-void
-gst_gl_context_set_display (GstGLContext * context, GstGLDisplay * display)
-{
-  g_return_if_fail (GST_GL_IS_CONTEXT (context));
-  g_return_if_fail (GST_IS_GL_DISPLAY (display));
-
-  gst_object_replace ((GstObject **) & context->priv->display,
-      (GstObject *) display);
-}
-
 typedef struct
 {
   GstGLContext *context;
