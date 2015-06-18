@@ -322,14 +322,18 @@ static void gst_glimage_sink_handle_events (GstVideoOverlay * overlay,
     gboolean handle_events);
 static gboolean update_output_format (GstGLImageSink * glimage_sink);
 
+#define GST_GL_SINK_CAPS \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "RGBA")
+
+#define GST_GL_SINK_OVERLAY_CAPS \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY "," \
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, "RGBA")
+
 static GstStaticPadTemplate gst_glimage_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA"))
-    );
+    GST_STATIC_CAPS (GST_GL_SINK_CAPS ";" GST_GL_SINK_OVERLAY_CAPS));
 
 enum
 {
@@ -1046,6 +1050,8 @@ gst_glimage_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   } else {
     result = tmp;
   }
+
+  result = gst_gl_overlay_compositor_add_caps (result);
 
   GST_DEBUG_OBJECT (bsink, "returning caps: %" GST_PTR_FORMAT, result);
 

@@ -731,9 +731,12 @@ gst_gl_color_convert_transform_caps (GstGLContext * convert,
       (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_GL_COLOR_CONVERT_FORMATS));
 
   caps = gst_gl_color_convert_caps_remove_format_info (caps);
+
   result = gst_caps_intersect (caps, templ);
   gst_caps_unref (caps);
   gst_caps_unref (templ);
+
+  result = gst_gl_overlay_compositor_add_caps (result);
 
   if (filter) {
     GstCaps *tmp;
