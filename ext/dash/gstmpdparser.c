@@ -3539,13 +3539,16 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
   stream->mimeType =
       gst_mpdparser_representation_get_mimetype (adapt_set, representation);
   if (stream->mimeType == GST_STREAM_UNKNOWN) {
+    GST_WARNING ("Unknown mime type in the representation, aborting...");
     g_slice_free (GstActiveStream, stream);
     return FALSE;
   }
 
   client->active_streams = g_list_append (client->active_streams, stream);
-  if (!gst_mpd_client_setup_representation (client, stream, representation))
+  if (!gst_mpd_client_setup_representation (client, stream, representation)) {
+    GST_WARNING ("Failed to setup the representation, aborting...");
     return FALSE;
+  }
 
   GST_INFO ("Successfully setup the download pipeline for mimeType %d",
       stream->mimeType);
@@ -4419,7 +4422,7 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient * client,
   GList *list;
   const gchar *this_mimeType = "audio";
   gchar *mimeType = NULL;
-  guint nb_adapatation_set = 0;
+  guint nb_adaptation_set = 0;
 
   stream_period = gst_mpdparser_get_stream_period (client);
   g_return_val_if_fail (stream_period != NULL, 0);
@@ -4441,14 +4444,14 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient * client,
 
       if (strncmp_ext (mimeType, this_mimeType) == 0) {
         if (this_lang) {
-          nb_adapatation_set++;
+          nb_adaptation_set++;
           *lang = g_list_append (*lang, this_lang);
         }
       }
     }
   }
 
-  return nb_adapatation_set;
+  return nb_adaptation_set;
 }
 
 
