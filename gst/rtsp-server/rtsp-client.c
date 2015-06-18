@@ -127,6 +127,7 @@ enum
   SIGNAL_SEND_MESSAGE,
   SIGNAL_ANNOUNCE_REQUEST,
   SIGNAL_RECORD_REQUEST,
+  SIGNAL_CHECK_REQUIREMENTS,
   SIGNAL_LAST
 };
 
@@ -284,6 +285,24 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, record_request),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GST_TYPE_RTSP_CONTEXT);
+
+  /**
+   * GstRTSPClient::check-requirements:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   * @arr: a NULL-terminated array of strings
+   *
+   * Returns: a newly allocated string with comma-separated list of
+   *          unsupported options. An empty string must be returned if
+   *          all options are supported.
+   *
+   * Since: 1.6
+   */
+  gst_rtsp_client_signals[SIGNAL_CHECK_REQUIREMENTS] =
+      g_signal_new ("check-requirements", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          check_requirements), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_STRING, 2, GST_TYPE_RTSP_CONTEXT, G_TYPE_STRV);
 
   tunnels =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
@@ -2602,25 +2621,29 @@ client_session_removed (GstRTSPSessionPool * pool, GstRTSPSession * session,
   g_mutex_unlock (&priv->lock);
 }
 
-/* Returns TRUE if there are no Require headers, otherwise returns FALSE
- * and also returns a newly-allocated string of (comma-separated) unsupported
- * options in the unsupported_reqs variable .
+/* Check for Require headers. Returns TRUE if there are no Require headers,
+ * otherwise lets the application decide which headers are supported.
+ * By default all headers are unsupported.
+ * If there are unsupported options, FALSE will be returned together with
+ * a newly-allocated string of (comma-separated) unsupported options in
+ * the unsupported_reqs variable.
  *
  * There may be multiple Require headers, but we must send one single
  * Unsupported header with all the unsupported options as response. If
  * an incoming Require header contained a comma-separated list of options
  * GstRtspConnection will already have split that list up into multiple
  * headers.
- *
- * TODO: allow the application to decide what features are supported
  */
 static gboolean
-check_request_requirements (GstRTSPMessage * msg, gchar ** unsupported_reqs)
+check_request_requirements (GstRTSPContext * ctx, gchar ** unsupported_reqs)
 {
   GstRTSPResult res;
   GPtrArray *arr = NULL;
+  GstRTSPMessage *msg = ctx->request;
   gchar *reqs = NULL;
   gint i;
+  gchar *sig_result = NULL;
+  gboolean result = TRUE;
 
   i = 0;
   do {
@@ -2643,12 +2666,28 @@ check_request_requirements (GstRTSPMessage * msg, gchar ** unsupported_reqs)
   /* otherwise we've now processed at all the Require headers */
   g_ptr_array_add (arr, NULL);
 
-  /* for now we don't commit to supporting anything, so will just report
-   * all of the required options as unsupported */
-  *unsupported_reqs = g_strjoinv (", ", (gchar **) arr->pdata);
+  g_signal_emit (ctx->client,
+      gst_rtsp_client_signals[SIGNAL_CHECK_REQUIREMENTS], 0, ctx,
+      (gchar **) arr->pdata, &sig_result);
 
+  if (sig_result == NULL) {
+    /* no supported options, just report all of the required ones as
+     * unsupported */
+    *unsupported_reqs = g_strjoinv (", ", (gchar **) arr->pdata);
+    result = FALSE;
+    goto done;
+  }
+
+  if (strlen (sig_result) == 0)
+    g_free (sig_result);
+  else {
+    *unsupported_reqs = sig_result;
+    result = FALSE;
+  }
+
+done:
   g_ptr_array_unref (arr);
-  return FALSE;
+  return result;
 }
 
 static void
@@ -2752,7 +2791,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
     goto not_authorized;
 
   /* handle any 'Require' headers */
-  if (!check_request_requirements (ctx->request, &unsupported_reqs))
+  if (!check_request_requirements (ctx, &unsupported_reqs))
     goto unsupported_requirement;
 
   /* the backlog must be unlimited while processing requests.

@@ -126,9 +126,10 @@ struct _GstRTSPClientClass {
 
   void     (*announce_request)        (GstRTSPClient *client, GstRTSPContext *ctx);
   void     (*record_request)          (GstRTSPClient *client, GstRTSPContext *ctx);
+  gchar*   (*check_requirements)      (GstRTSPClient *client, GstRTSPContext *ctx, gchar ** arr);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE-5];
+  gpointer _gst_reserved[GST_PADDING_LARGE-6];
 };
 
 GType                 gst_rtsp_client_get_type          (void);

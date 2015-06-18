@@ -24,6 +24,7 @@
 static gchar * session_id;
 static gint cseq;
 static guint expected_session_timeout = 60;
+static const gchar *expected_unsupported_header;
 
 static gboolean
 test_response_200 (GstRTSPClient * client, GstRTSPMessage * response,
@@ -109,6 +110,31 @@ test_response_454 (GstRTSPClient * client, GstRTSPMessage * response,
   return TRUE;
 }
 
+static gboolean
+test_response_551 (GstRTSPClient * client, GstRTSPMessage * response,
+    gboolean close, gpointer user_data)
+{
+  GstRTSPStatusCode code;
+  const gchar *reason;
+  GstRTSPVersion version;
+  gchar *options;
+
+  fail_unless (gst_rtsp_message_get_type (response) ==
+      GST_RTSP_MESSAGE_RESPONSE);
+
+  fail_unless (gst_rtsp_message_parse_response (response, &code, &reason,
+          &version)
+      == GST_RTSP_OK);
+  fail_unless (code == GST_RTSP_STS_OPTION_NOT_SUPPORTED);
+  fail_unless (g_str_equal (reason, "Option not supported"));
+  fail_unless (gst_rtsp_message_get_header (response, GST_RTSP_HDR_UNSUPPORTED,
+      &options, 0) == GST_RTSP_OK);
+  fail_unless (!g_strcmp0 (expected_unsupported_header, options));
+  fail_unless (version == GST_RTSP_VERSION_1_0);
+
+  return TRUE;
+}
+
 static GstRTSPClient *
 setup_client (const gchar * launch_line)
 {
@@ -150,6 +176,114 @@ teardown_client (GstRTSPClient * client)
   gst_rtsp_client_set_thread_pool (client, NULL);
   g_object_unref (client);
 }
+
+static gchar*
+check_requirements_cb (GstRTSPClient * client, GstRTSPContext * ctx,
+    gchar ** req, gpointer user_data)
+{
+  int index = 0;
+  GString *result = g_string_new ("");
+
+  while (req[index] != NULL) {
+    if (g_strcmp0 (req[index], "test-requirements")) {
+      if (result->len > 0)
+        g_string_append (result, ", ");
+      g_string_append (result, req[index]);
+    }
+    index++;
+  }
+
+  return  g_string_free (result, FALSE);
+}
+
+GST_START_TEST (test_require)
+{
+  GstRTSPClient *client;
+  GstRTSPMessage request = { 0, };
+  gchar *str;
+
+  client = gst_rtsp_client_new ();
+
+  /* require header without handler */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_OPTIONS,
+          "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("test-not-supported1");
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE, str);
+  g_free (str);
+
+  expected_unsupported_header = "test-not-supported1";
+  gst_rtsp_client_set_send_func (client, test_response_551, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  g_signal_connect (G_OBJECT (client), "check-requirements",
+      G_CALLBACK (check_requirements_cb), NULL);
+
+  /* one supported option */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_OPTIONS,
+          "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("test-requirements");
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE, str);
+  g_free (str);
+
+  gst_rtsp_client_set_send_func (client, test_response_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  /* unsupported option */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_OPTIONS,
+          "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("test-not-supported1");
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE, str);
+  g_free (str);
+
+  expected_unsupported_header = "test-not-supported1";
+  gst_rtsp_client_set_send_func (client, test_response_551, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  /* more than one unsupported options */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_OPTIONS,
+          "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("test-not-supported1");
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE, str);
+  g_free (str);
+  str = g_strdup_printf ("test-not-supported2");
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE, str);
+  g_free (str);
+
+  expected_unsupported_header = "test-not-supported1, test-not-supported2";
+  gst_rtsp_client_set_send_func (client, test_response_551, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  /* supported and unsupported together */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_OPTIONS,
+          "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("test-not-supported1");
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE, str);
+  g_free (str);
+  str = g_strdup_printf ("test-requirements");
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE, str);
+  g_free (str);
+  str = g_strdup_printf ("test-not-supported2");
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE, str);
+  g_free (str);
+
+  expected_unsupported_header = "test-not-supported1, test-not-supported2";
+  gst_rtsp_client_set_send_func (client, test_response_551, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  g_object_unref (client);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_request)
 {
@@ -907,6 +1041,7 @@ rtspclient_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_set_timeout (tc, 20);
+  tcase_add_test (tc, test_require);
   tcase_add_test (tc, test_request);
   tcase_add_test (tc, test_options);
   tcase_add_test (tc, test_describe);
