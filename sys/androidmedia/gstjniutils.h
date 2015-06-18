@@ -99,6 +99,8 @@ void gst_amc_jni_set_error                   (JNIEnv * env,
                                               gint code,
                                               const gchar * format, ...);
 
+void gst_amc_jni_set_java_vm                 (JavaVM *java_vm);
+
 gboolean gst_amc_jni_initialize              (void);
 
 gboolean gst_amc_jni_is_vm_started           (void);

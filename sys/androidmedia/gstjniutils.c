@@ -628,6 +628,11 @@ gst_amc_jni_initialize_java_vm (void)
   jsize n_vms;
   gint ret;
 
+  if (java_vm) {
+    GST_DEBUG ("Java VM already provided by the application");
+    return TRUE;
+  }
+
   /* Returns TRUE if we can safely
    * a) get the current VMs and
    * b) start a VM if none is started yet
@@ -755,6 +760,14 @@ gst_amc_jni_initialize_internal (gpointer data)
 {
   pthread_key_create (&current_jni_env, gst_amc_jni_detach_current_thread);
   return gst_amc_jni_initialize_java_vm ()? GINT_TO_POINTER (1) : NULL;
+}
+
+/* Allow the application to set the Java VM */
+void
+gst_amc_jni_set_java_vm (JavaVM * vm)
+{
+  GST_DEBUG ("Application provides Java VM %p", vm);
+  java_vm = vm;
 }
 
 gboolean
