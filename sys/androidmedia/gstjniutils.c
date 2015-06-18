@@ -488,7 +488,7 @@ gst_amc_jni_detach_current_thread (void *env)
 
   GST_DEBUG ("Detaching thread %p", g_thread_self ());
   if ((ret = (*java_vm)->DetachCurrentThread (java_vm)) != JNI_OK) {
-    GST_ERROR ("Failed to detach current thread: %d", ret);
+    GST_DEBUG ("Failed to detach current thread: %d", ret);
   }
 }
 
