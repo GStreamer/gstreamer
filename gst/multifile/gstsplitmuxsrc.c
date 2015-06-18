@@ -518,8 +518,16 @@ gst_splitmux_pad_loop (GstPad * pad)
   GstSplitMuxSrc *splitmux = (GstSplitMuxSrc *) gst_pad_get_parent (pad);
   GstDataQueueItem *item = NULL;
   GstSplitMuxPartReader *reader = splitpad->reader;
-  GstPad *part_pad = splitpad->part_pad;
+  GstPad *part_pad;
   GstFlowReturn ret;
+
+  GST_OBJECT_LOCK (splitpad);
+  if (splitpad->part_pad == NULL) {
+    GST_OBJECT_UNLOCK (splitpad);
+    return;
+  }
+  part_pad = gst_object_ref (splitpad->part_pad);
+  GST_OBJECT_UNLOCK (splitpad);
 
   GST_LOG_OBJECT (splitpad, "Popping data queue item from %" GST_PTR_FORMAT
       " pad %" GST_PTR_FORMAT, reader, part_pad);
@@ -552,6 +560,7 @@ gst_splitmux_pad_loop (GstPad * pad)
   }
   g_slice_free (GstDataQueueItem, item);
 
+  gst_object_unref (part_pad);
   gst_object_unref (splitmux);
   return;
 
@@ -561,11 +570,12 @@ error:
       ("Error reading part file %s", GST_STR_NULL (reader->path)));
 flushing:
   gst_pad_pause_task (pad);
+  gst_object_unref (part_pad);
   gst_object_unref (splitmux);
   return;
 }
 
-static void
+static gboolean
 gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part)
 {
   GList *cur;
@@ -573,8 +583,9 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part)
   GST_DEBUG_OBJECT (splitmux, "Activating part %d", part);
 
   splitmux->cur_part = part;
-  gst_splitmux_part_reader_activate (splitmux->parts[part],
-      &splitmux->play_segment);
+  if (!gst_splitmux_part_reader_activate (splitmux->parts[part],
+          &splitmux->play_segment))
+    return FALSE;
 
   SPLITMUX_SRC_PADS_LOCK (splitmux);
   for (cur = g_list_first (splitmux->pads);
@@ -582,6 +593,8 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part)
     SplitMuxSrcPad *splitpad = (SplitMuxSrcPad *) (cur->data);
     splitpad->cur_part = part;
     splitpad->reader = splitmux->parts[splitpad->cur_part];
+    if (splitpad->part_pad)
+      gst_object_unref (splitpad->part_pad);
     splitpad->part_pad =
         gst_splitmux_part_reader_lookup_pad (splitpad->reader,
         (GstPad *) (splitpad));
@@ -594,6 +607,8 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part)
         (GstTaskFunction) gst_splitmux_pad_loop, splitpad, NULL);
   }
   SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+
+  return TRUE;
 }
 
 static gboolean
@@ -623,6 +638,7 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
     goto no_files;
 
   SPLITMUX_SRC_LOCK (splitmux);
+  splitmux->pads_complete = FALSE;
   splitmux->running = TRUE;
   SPLITMUX_SRC_UNLOCK (splitmux);
 
@@ -673,9 +689,9 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
   GST_INFO_OBJECT (splitmux,
       "All parts prepared. Total duration %" GST_TIME_FORMAT
       " Activating first part", GST_TIME_ARGS (total_duration));
-  gst_splitmux_src_activate_part (splitmux, 0);
-
-  ret = TRUE;
+  ret = gst_splitmux_src_activate_part (splitmux, 0);
+  if (ret == FALSE)
+    goto failed_first_part;
 done:
   if (err != NULL)
     g_error_free (err);
@@ -699,6 +715,12 @@ failed_part:
         ("Failed to open any files for reading"));
     goto done;
   }
+failed_first_part:
+  {
+    GST_ELEMENT_ERROR (splitmux, RESOURCE, OPEN_READ, (NULL),
+        ("Failed to activate first part for playback"));
+    goto done;
+  }
 }
 
 static gboolean
@@ -706,7 +728,7 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
 {
   gboolean ret = TRUE;
   guint i;
-  GList *cur;
+  GList *cur, *pads_list;
 
   SPLITMUX_SRC_LOCK (splitmux);
   if (!splitmux->running)
@@ -724,12 +746,16 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   }
 
   SPLITMUX_SRC_PADS_LOCK (splitmux);
-  for (cur = g_list_first (splitmux->pads);
-      cur != NULL; cur = g_list_next (cur)) {
+  pads_list = splitmux->pads;
+  splitmux->pads = NULL;
+  SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+
+  for (cur = g_list_first (pads_list); cur != NULL; cur = g_list_next (cur)) {
     SplitMuxSrcPad *tmp = (SplitMuxSrcPad *) (cur->data);
     gst_pad_stop_task (GST_PAD (tmp));
+    gst_element_remove_pad (GST_ELEMENT (splitmux), GST_PAD (tmp));
   }
-  SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+  g_list_free (pads_list);
 
   g_free (splitmux->parts);
   splitmux->parts = NULL;
@@ -798,6 +824,7 @@ gst_splitmux_part_prepared (GstSplitMuxPartReader * reader,
 {
   gboolean need_no_more_pads;
 
+  GST_LOG_OBJECT (splitmux, "Part %" GST_PTR_FORMAT " prepared", reader);
   SPLITMUX_SRC_LOCK (splitmux);
   need_no_more_pads = !splitmux->pads_complete;
   splitmux->pads_complete = TRUE;
@@ -890,6 +917,8 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
         " moving to part %d", splitpad, next_part);
     splitpad->cur_part = next_part;
     splitpad->reader = splitmux->parts[splitpad->cur_part];
+    if (splitpad->part_pad)
+      gst_object_unref (splitpad->part_pad);
     splitpad->part_pad =
         gst_splitmux_part_reader_lookup_pad (splitpad->reader,
         (GstPad *) (splitpad));
@@ -908,13 +937,19 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
       GST_DEBUG_OBJECT (splitpad,
           "First pad to change part. Activating part %d with seg %"
           GST_SEGMENT_FORMAT, next_part, &tmp);
-      gst_splitmux_part_reader_activate (splitpad->reader, &tmp);
+      if (!gst_splitmux_part_reader_activate (splitpad->reader, &tmp))
+        goto error;
     }
     res = TRUE;
   }
 
   SPLITMUX_SRC_UNLOCK (splitmux);
   return res;
+error:
+  SPLITMUX_SRC_UNLOCK (splitmux);
+  GST_ELEMENT_ERROR (splitmux, RESOURCE, READ, (NULL),
+      ("Failed to activate part %d", splitmux->cur_part));
+  return FALSE;
 }
 
 G_DEFINE_TYPE (SplitMuxSrcPad, splitmux_src_pad, GST_TYPE_PAD);
@@ -931,11 +966,27 @@ splitmux_src_pad_constructed (GObject * pad)
 }
 
 static void
+gst_splitmux_src_pad_dispose (GObject * object)
+{
+  SplitMuxSrcPad *pad = (SplitMuxSrcPad *) (object);
+
+  GST_OBJECT_LOCK (pad);
+  if (pad->part_pad) {
+    gst_object_unref (pad->part_pad);
+    pad->part_pad = NULL;
+  }
+  GST_OBJECT_UNLOCK (pad);
+
+  G_OBJECT_CLASS (splitmux_src_pad_parent_class)->dispose (object);
+}
+
+static void
 splitmux_src_pad_class_init (SplitMuxSrcPadClass * klass)
 {
   GObjectClass *gobject_klass = (GObjectClass *) (klass);
 
   gobject_klass->constructed = splitmux_src_pad_constructed;
+  gobject_klass->dispose = gst_splitmux_src_pad_dispose;
 }
 
 static void
@@ -1055,9 +1106,7 @@ splitmux_src_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
           GST_TIME_FORMAT, GST_TIME_ARGS (position),
           i, GST_TIME_ARGS (position - part_start));
 
-      gst_splitmux_src_activate_part (splitmux, i);
-
-      ret = TRUE;
+      ret = gst_splitmux_src_activate_part (splitmux, i);
       SPLITMUX_SRC_UNLOCK (splitmux);
     }
     default:
