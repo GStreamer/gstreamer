@@ -98,6 +98,11 @@ struct _GstGLColorConvertClass
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, \
         GST_GL_COLOR_CONVERT_FORMATS)
 
+#define GST_GL_COLOR_CONVERT_VIDEO_OVERLAY_COMPOSITION_CAPS \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY \
+        "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
+        GST_GL_COLOR_CONVERT_FORMATS)
+
 GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context);
 
 GstCaps *   gst_gl_color_convert_transform_caps (GstGLContext * convert,

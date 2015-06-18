@@ -881,7 +881,7 @@ gst_gl_upload_get_input_template_caps (void)
   }
 
   ret = gst_caps_simplify (ret);
-
+  ret = gst_gl_overlay_compositor_add_caps (ret);
   g_mutex_unlock (&upload_global_lock);
 
   return ret;
@@ -976,12 +976,15 @@ gst_gl_upload_transform_caps (GstGLContext * context, GstPadDirection direction,
   tmp = gst_caps_new_empty ();
 
   for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
-    GstCaps *tmp2 =
-        upload_methods[i]->transform_caps (context, direction, caps);
+    GstCaps *tmp2;
+
+    tmp2 = upload_methods[i]->transform_caps (context, direction, caps);
 
     if (tmp2)
       tmp = gst_caps_merge (tmp, tmp2);
   }
+
+  tmp = gst_gl_overlay_compositor_add_caps (tmp);
 
   if (filter) {
     result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
