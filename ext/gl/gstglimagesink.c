@@ -549,6 +549,7 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink)
   glimage_sink->redisplay_texture = 0;
   glimage_sink->handle_events = TRUE;
   glimage_sink->ignore_alpha = TRUE;
+  glimage_sink->overlay_compositor = NULL;
 
   glimage_sink->mview_output_mode = DEFAULT_MULTIVIEW_MODE;
   glimage_sink->mview_output_flags = DEFAULT_MULTIVIEW_FLAGS;
@@ -618,6 +619,8 @@ gst_glimage_sink_finalize (GObject * object)
   g_return_if_fail (GST_IS_GLIMAGE_SINK (object));
 
   glimage_sink = GST_GLIMAGE_SINK (object);
+
+  gst_object_unref (glimage_sink->overlay_compositor);
 
   g_mutex_clear (&glimage_sink->drawing_lock);
 
@@ -908,6 +911,8 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       g_atomic_int_set (&glimage_sink->to_quit, 0);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      glimage_sink->overlay_compositor =
+          gst_gl_overlay_compositor_new (glimage_sink->context);
       break;
     default:
       break;
@@ -1273,6 +1278,12 @@ prepare_next_buffer (GstGLImageSink * glimage_sink)
     next_buffer = in_buffer;
     info = &glimage_sink->in_info;
   }
+
+  if (glimage_sink->overlay_compositor)
+    gst_gl_overlay_compositor_upload_overlays (glimage_sink->overlay_compositor,
+        next_buffer, glimage_sink->attr_position, glimage_sink->attr_texture,
+        glimage_sink->window_width, glimage_sink->window_height);
+
   /* in_buffer invalid now */
   if (!gst_video_frame_map (&gl_frame, info, next_buffer,
           GST_MAP_READ | GST_MAP_GL)) {
@@ -1668,6 +1679,8 @@ gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
     gl->DeleteBuffers (1, &gl_sink->vbo_indices);
     gl_sink->vbo_indices = 0;
   }
+
+  gst_gl_overlay_compositor_free_overlays (gl_sink->overlay_compositor);
 }
 
 static void
@@ -1834,6 +1847,10 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
     gst_gl_shader_set_uniform_1i (gl_sink->redisplay_shader, "tex", 0);
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+
+    if (gl_sink->overlay_compositor)
+      gst_gl_overlay_compositor_draw_overlays (gl_sink->overlay_compositor,
+          gl_sink->redisplay_shader);
 
     gst_gl_context_clear_shader (gl_sink->context);
 

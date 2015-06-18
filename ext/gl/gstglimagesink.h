@@ -116,6 +116,8 @@ struct _GstGLImageSink
     GstVideoMultiviewFlags mview_output_flags;
     gboolean output_mode_changed;
     GstGLStereoDownmix mview_downmix_mode;
+
+    GstGLOverlayCompositor *overlay_compositor;
 };
 
 struct _GstGLImageSinkClass
