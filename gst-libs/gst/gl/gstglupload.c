@@ -50,6 +50,17 @@
 GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
 #define GST_CAT_DEFAULT gst_gl_upload_debug
 
+#define DEBUG_INIT \
+  GST_DEBUG_CATEGORY_INIT (gst_gl_upload_debug, "glupload", 0, "upload");
+
+G_DEFINE_TYPE_WITH_CODE (GstGLUpload, gst_gl_upload, GST_TYPE_OBJECT,
+    DEBUG_INIT);
+static void gst_gl_upload_finalize (GObject * object);
+static void gst_gl_upload_release_buffer_unlocked (GstGLUpload * upload);
+
+#define GST_GL_UPLOAD_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
+    GST_TYPE_GL_UPLOAD, GstGLUploadPrivate))
+
 /* Define the maximum number of planes we can upload - handle 2 views per buffer */
 #define GST_GL_UPLOAD_MAX_PLANES (GST_VIDEO_MAX_PLANES * 2)
 
@@ -875,17 +886,6 @@ gst_gl_upload_get_input_template_caps (void)
 
   return ret;
 }
-
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_INIT (gst_gl_upload_debug, "glupload", 0, "upload");
-
-G_DEFINE_TYPE_WITH_CODE (GstGLUpload, gst_gl_upload, GST_TYPE_OBJECT,
-    DEBUG_INIT);
-static void gst_gl_upload_finalize (GObject * object);
-static void gst_gl_upload_release_buffer_unlocked (GstGLUpload * upload);
-
-#define GST_GL_UPLOAD_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
-    GST_TYPE_GL_UPLOAD, GstGLUploadPrivate))
 
 static void
 gst_gl_upload_class_init (GstGLUploadClass * klass)
