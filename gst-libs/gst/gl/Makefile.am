@@ -2,7 +2,7 @@
 lib_LTLIBRARIES = libgstgl-@GST_API_VERSION@.la
 
 SUBDIRS = glprototypes
-DIST_SUBDIRS = glprototypes android x11 win32 cocoa wayland dispmanx egl eagl gpuprocess
+DIST_SUBDIRS = glprototypes android x11 win32 cocoa wayland dispmanx egl eagl
 
 noinst_HEADERS =
 
@@ -102,9 +102,6 @@ if USE_EGL
 SUBDIRS += egl
 libgstgl_@GST_API_VERSION@_la_LIBADD += egl/libgstgl-egl.la
 endif
-
-SUBDIRS += gpuprocess
-libgstgl_@GST_API_VERSION@_la_LIBADD += gpuprocess/libgstgl-gpuprocess.la
 
 configexecincludedir = $(libdir)/gstreamer-@GST_API_VERSION@/include/gst/gl
 nodist_configexecinclude_HEADERS = $(built_sys_header_configure)
