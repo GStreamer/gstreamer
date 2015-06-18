@@ -577,7 +577,7 @@ typedef struct _GstParentBufferMeta GstParentBufferMeta;
  * buffer from being returned to a buffer pool until the #GstMemory is available
  * for re-use.
  *
- * (Since: 1.6)
+ * Since: 1.6
  */
 struct _GstParentBufferMeta
 {
