@@ -736,6 +736,7 @@ _check_directory (GstValidateSsim * self, const gchar * ref_dir,
   gboolean res = TRUE;
   GFileInfo *info;
   GFileEnumerator *fenum;
+  gfloat min_avg = 1.0, min_min = 1.0, total_avg = 0;
   GFile *file = g_file_new_for_path (ref_dir);
 
   if (!(fenum = g_file_enumerate_children (file,
@@ -773,6 +774,9 @@ _check_directory (GstValidateSsim * self, const gchar * ref_dir,
         }
       }
 
+      min_avg = MIN (min_avg, *mean);
+      min_min = MIN (min_min, *lowest);
+      total_avg += *mean;
       gst_validate_printf (NULL,
           "<position: %s duration: %" GST_TIME_FORMAT
           " avg: %f min: %f (Passed: %d failed: %d, %d not found)/>\r",
@@ -786,6 +790,10 @@ _check_directory (GstValidateSsim * self, const gchar * ref_dir,
 
     g_object_unref (info);
   }
+
+  gst_validate_printf (NULL,
+      "\nAverage similarity: %f, min_avg: %f, min_min: %f\n",
+      total_avg / nfiles, min_avg, min_min);
 
 done:
   gst_object_unref (file);

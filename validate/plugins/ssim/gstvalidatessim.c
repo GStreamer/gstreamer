@@ -201,7 +201,8 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
   guint i, nfiles;
   gfloat mssim = 0, lowest = 1, highest = -1, total_avg = 0;
   gint npassed = 0, nfailures = 0;
-  gdouble min_avg_similarity = 0.95, min_lowest_similarity = -1.0;
+  gdouble min_avg_similarity = 0.95, min_lowest_similarity = -1.0,
+      min_avg = 1.0, min_min = 1.0;
   const gchar *compared_files_dir =
       gst_structure_get_string (self->priv->config,
       "reference-images-dir");
@@ -245,17 +246,21 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
     else
       npassed++;
 
+    min_avg = MIN (min_avg, mssim);
+    min_min = MIN (lowest, min_min);
     total_avg += mssim;
     gst_validate_printf (NULL,
         "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
-        " %d / %d avg: %f min: %f (Passed: %d failed: %d)/>\r",
+        " %d / %d avg: %f min: %f (Passed: %d failed: %d)/>\n",
         GST_TIME_ARGS (frame->position), GST_TIME_ARGS (GST_CLOCK_TIME_NONE),
         i + 1, nfiles, mssim, lowest, npassed, nfailures);
 
     g_free (bname);
   }
 
-  gst_validate_printf (NULL, "\nAverage similarity: %f\n", total_avg / nfiles);
+  gst_validate_printf (NULL,
+      "\nAverage similarity: %f, min_avg: %f, min_min: %f\n",
+      total_avg / nfiles, min_avg, min_min);
 }
 
 static void

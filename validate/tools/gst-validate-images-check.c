@@ -94,6 +94,11 @@ main (int argc, char **argv)
   gst_validate_ssim_compare_image_files (ssim, argv[1], argv[2], &mssim,
       &lowest, &highest, outfolder);
 
+  if (!g_file_test (argv[1], G_FILE_TEST_IS_DIR)) {
+    gst_validate_printf (ssim, "Compared %s with %s, average: %f, Min %f\n",
+        argv[1], argv[2], mssim, lowest);
+  }
+
   rep_err = gst_validate_runner_exit (runner, TRUE);
   if (ret == 0) {
     ret = rep_err;
