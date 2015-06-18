@@ -42,6 +42,10 @@
 # include <va/va_compat.h>
 #endif
 
+#if VA_CHECK_VERSION(0,36,0)
+#include <va/va_drmcommon.h>
+#endif
+
 #ifdef HAVE_VA_VA_DEC_HEVC_H
 # include <va/va_dec_hevc.h>
 #endif

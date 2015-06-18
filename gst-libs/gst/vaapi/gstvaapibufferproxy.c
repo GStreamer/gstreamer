@@ -21,7 +21,6 @@
  */
 
 #include "sysdeps.h"
-#include <va/va_drmcommon.h>
 #include "gstvaapicompat.h"
 #include "gstvaapibufferproxy.h"
 #include "gstvaapibufferproxy_priv.h"
@@ -42,12 +41,14 @@ from_GstVaapiBufferMemoryType (guint type)
   guint va_type;
 
   switch (type) {
+#if VA_CHECK_VERSION(0,36,0)
     case GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF:
       va_type = VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME;
       break;
     case GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF:
       va_type = VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM;
       break;
+#endif
     default:
       va_type = 0;
       break;
@@ -61,12 +62,14 @@ to_GstVaapiBufferMemoryType (guint va_type)
   guint type;
 
   switch (va_type) {
+#if VA_CHECK_VERSION(0,36,0)
     case VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME:
       type = GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF;
       break;
     case VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM:
       type = GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF;
       break;
+#endif
     default:
       type = 0;
       break;
