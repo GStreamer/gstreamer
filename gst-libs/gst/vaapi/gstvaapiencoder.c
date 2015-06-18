@@ -452,7 +452,7 @@ check_video_info (GstVaapiEncoder * encoder, const GstVideoInfo * vip)
 {
   if (!vip->width || !vip->height)
     goto error_invalid_resolution;
-  if (!vip->fps_n || !vip->fps_d)
+  if (vip->fps_n < 0 || vip->fps_d <= 0)
     goto error_invalid_framerate;
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
