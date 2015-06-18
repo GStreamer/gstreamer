@@ -124,6 +124,25 @@ gst_gl_composition_overlay_finalize (GObject * object)
 }
 
 static void
+gst_gl_composition_overlay_bind_vertex_buffer (GstGLCompositionOverlay *
+    overlay)
+{
+  const GstGLFuncs *gl = overlay->context->gl_vtable;
+  gl->BindBuffer (GL_ARRAY_BUFFER, overlay->position_buffer);
+  gl->VertexAttribPointer (overlay->position_attrib, 4, GL_FLOAT, GL_FALSE,
+      4 * sizeof (GLfloat), NULL);
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, overlay->texcoord_buffer);
+  gl->VertexAttribPointer (overlay->texcoord_attrib, 2, GL_FLOAT, GL_FALSE,
+      2 * sizeof (GLfloat), NULL);
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, overlay->index_buffer);
+
+  gl->EnableVertexAttribArray (overlay->position_attrib);
+  gl->EnableVertexAttribArray (overlay->texcoord_attrib);
+}
+
+static void
 gst_gl_composition_overlay_init_vertex_buffer (GstGLContext * context,
     gpointer overlay_pointer)
 {
@@ -144,8 +163,10 @@ gst_gl_composition_overlay_init_vertex_buffer (GstGLContext * context,
   };
   /* *INDENT-ON* */
 
-  gl->GenVertexArrays (1, &overlay->vao);
-  gl->BindVertexArray (overlay->vao);
+  if (gl->GenVertexArrays) {
+    gl->GenVertexArrays (1, &overlay->vao);
+    gl->BindVertexArray (overlay->vao);
+  }
 
   gl->GenBuffers (1, &overlay->position_buffer);
   gl->BindBuffer (GL_ARRAY_BUFFER, overlay->position_buffer);
@@ -173,7 +194,9 @@ gst_gl_composition_overlay_init_vertex_buffer (GstGLContext * context,
   gl->EnableVertexAttribArray (overlay->position_attrib);
   gl->EnableVertexAttribArray (overlay->texcoord_attrib);
 
-  gl->BindVertexArray (0);
+  if (gl->GenVertexArrays) {
+    gl->BindVertexArray (0);
+  }
 
   gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
@@ -321,7 +344,11 @@ gst_gl_composition_overlay_draw (GstGLCompositionOverlay * overlay,
     GstGLShader * shader)
 {
   const GstGLFuncs *gl = overlay->context->gl_vtable;
-  gl->BindVertexArray (overlay->vao);
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (overlay->vao);
+  else
+    gst_gl_composition_overlay_bind_vertex_buffer (overlay);
+
   if (overlay->texture_id != -1)
     gl->BindTexture (GL_TEXTURE_2D, overlay->texture_id);
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
