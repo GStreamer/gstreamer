@@ -1254,6 +1254,8 @@ _init_view_convert_fbo (GstGLViewConvert * viewconvert)
   GstGLFuncs *gl;
   guint out_width, out_height;
   GLuint fake_texture = 0;      /* a FBO must hava texture to init */
+  GLenum internal_format;
+
   gl = viewconvert->context->gl_vtable;
   out_width = GST_VIDEO_INFO_WIDTH (&viewconvert->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&viewconvert->out_info);
@@ -1285,7 +1287,10 @@ _init_view_convert_fbo (GstGLViewConvert * viewconvert)
   /* a fake texture is attached to the convert FBO (cannot init without it) */
   gl->GenTextures (1, &fake_texture);
   gl->BindTexture (GL_TEXTURE_2D, fake_texture);
-  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, out_width, out_height,
+  internal_format =
+      gst_gl_sized_gl_format_from_gl_format_type (viewconvert->context, GL_RGBA,
+      GL_UNSIGNED_BYTE);
+  gl->TexImage2D (GL_TEXTURE_2D, 0, internal_format, out_width, out_height,
       0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
