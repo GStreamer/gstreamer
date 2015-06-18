@@ -351,6 +351,72 @@ GST_START_TEST (dash_mpdparser_type_dynamic)
 GST_END_TEST;
 
 /*
+ * Test handling Representation selection
+ *
+ */
+GST_START_TEST (dash_mpdparser_representation_selection)
+{
+  GList *adaptationSets;
+  GstAdaptationSetNode *adaptationSetNode;
+  GList *representations;
+  gint represendationIndex;
+
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "<Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
+      "<AdaptationSet id=\"1\" mimeType=\"video/mp4\">"
+      "<Representation id=\"v0\" bandwidth=\"500000\"></Representation>"
+      "<Representation id=\"v1\" bandwidth=\"250000\"></Representation>"
+      "</AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  /* process the xml data */
+  ret = gst_mpd_client_setup_media_presentation (mpdclient);
+  assert_equals_int (ret, TRUE);
+
+  adaptationSets = gst_mpd_client_get_adaptation_sets (mpdclient);
+  fail_if (adaptationSets == NULL);
+
+  adaptationSetNode = adaptationSets->data;
+  fail_if (adaptationSetNode == NULL);
+  assert_equals_int (adaptationSetNode->id, 1);
+
+  representations = adaptationSetNode->Representations;
+  fail_if (representations == NULL);
+
+  represendationIndex =
+      gst_mpdparser_get_rep_idx_with_min_bandwidth (representations);
+  assert_equals_int (represendationIndex, 1);
+
+  represendationIndex =
+      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 0);
+  assert_equals_int (represendationIndex, 1);
+
+  represendationIndex =
+      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 100000);
+  assert_equals_int (represendationIndex, -1);
+
+  represendationIndex =
+      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 300000);
+  assert_equals_int (represendationIndex, 1);
+
+  represendationIndex =
+      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 500000);
+  assert_equals_int (represendationIndex, 0);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * Test parsing empty xml string
  *
  */
@@ -441,6 +507,7 @@ dash_suite (void)
 {
   Suite *s = suite_create ("dash");
   TCase *tc_simpleMPD = tcase_create ("simpleMPD");
+  TCase *tc_complexMPD = tcase_create ("complexMPD");
   TCase *tc_negativeTests = tcase_create ("negativeTests");
 
   GST_DEBUG_CATEGORY_INIT (gst_dash_demux_debug, "gst_dash_demux_debug", 0,
@@ -461,6 +528,7 @@ dash_suite (void)
   /* tests checking other possible values for attributes */
   tcase_add_test (tc_simpleMPD, dash_mpdparser_type_dynamic);
 
+  tcase_add_test (tc_complexMPD, dash_mpdparser_representation_selection);
   /* tests checking the parsing of missing/incomplete attributes of xml */
   tcase_add_test (tc_negativeTests, dash_mpdparser_missing_xml);
   tcase_add_test (tc_negativeTests, dash_mpdparser_missing_mpd);
@@ -468,6 +536,7 @@ dash_suite (void)
   tcase_add_test (tc_negativeTests, dash_mpdparser_no_default_namespace);
 
   suite_add_tcase (s, tc_simpleMPD);
+  suite_add_tcase (s, tc_complexMPD);
   suite_add_tcase (s, tc_negativeTests);
 
   return s;

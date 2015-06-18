@@ -2072,7 +2072,7 @@ gst_mpdparser_get_rep_idx_with_max_bandwidth (GList * Representations,
     return -1;
 
   if (max_bandwidth <= 0)       /* 0 => get lowest representation available */
-    return 0;
+    return gst_mpdparser_get_rep_idx_with_min_bandwidth (Representations);
 
   for (list = g_list_first (Representations); list; list = g_list_next (list)) {
     representation = (GstRepresentationNode *) list->data;
