@@ -101,6 +101,8 @@ static void fps_display_sink_set_property (GObject * object, guint prop_id,
 static void fps_display_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void fps_display_sink_dispose (GObject * object);
+static void fps_display_sink_handle_message (GstBin * bin,
+    GstMessage * message);
 
 static gboolean display_current_fps (gpointer data);
 
@@ -113,12 +115,15 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
 {
   GObjectClass *gobject_klass = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_klass = GST_ELEMENT_CLASS (klass);
+  GstBinClass *bin_class = GST_BIN_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_klass->set_property = fps_display_sink_set_property;
   gobject_klass->get_property = fps_display_sink_get_property;
   gobject_klass->dispose = fps_display_sink_dispose;
+
+  bin_class->handle_message = fps_display_sink_handle_message;
 
   g_object_class_install_property (gobject_klass, PROP_SYNC,
       g_param_spec_boolean ("sync",
@@ -220,49 +225,24 @@ on_video_sink_data_flow (GstPad * pad, GstPadProbeInfo * info,
   GstMiniObject *mini_obj = GST_PAD_PROBE_INFO_DATA (info);
   GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (user_data);
 
-#if 0
   if (GST_IS_BUFFER (mini_obj)) {
-    GstBuffer *buf = GST_BUFFER_CAST (mini_obj);
+    GstClockTime ts;
 
-    if (GST_CLOCK_TIME_IS_VALID (self->next_ts)) {
-      if (GST_BUFFER_TIMESTAMP (buf) <= self->next_ts) {
-        self->frames_rendered++;
-      } else {
-        GST_WARNING_OBJECT (self, "dropping frame : ts %" GST_TIME_FORMAT
-            " < expected_ts %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-            GST_TIME_ARGS (self->next_ts));
-        self->frames_dropped++;
-      }
-    } else {
-      self->frames_rendered++;
+    /* assume the frame is going to be rendered. If it isnt', we'll get a qos
+     * message and reset ->frames_rendered from there.
+     */
+    g_atomic_int_inc (&self->frames_rendered);
+
+    ts = gst_util_get_timestamp ();
+    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (self->start_ts))) {
+      self->interval_ts = self->last_ts = self->start_ts = ts;
     }
-  } else
-#endif
-  if (GST_IS_EVENT (mini_obj)) {
-    GstEvent *ev = GST_EVENT_CAST (mini_obj);
-
-    if (GST_EVENT_TYPE (ev) == GST_EVENT_QOS) {
-      GstClockTimeDiff diff;
-      GstClockTime ts;
-
-      gst_event_parse_qos (ev, NULL, NULL, &diff, &ts);
-      if (diff <= 0.0) {
-        g_atomic_int_inc (&self->frames_rendered);
-      } else {
-        g_atomic_int_inc (&self->frames_dropped);
-      }
-
-      ts = gst_util_get_timestamp ();
-      if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (self->start_ts))) {
-        self->interval_ts = self->last_ts = self->start_ts = ts;
-      }
-      if (GST_CLOCK_DIFF (self->interval_ts, ts) > self->fps_update_interval) {
-        display_current_fps (self);
-        self->interval_ts = ts;
-      }
+    if (GST_CLOCK_DIFF (self->interval_ts, ts) > self->fps_update_interval) {
+      display_current_fps (self);
+      self->interval_ts = ts;
     }
   }
+
   return GST_PAD_PROBE_OK;
 }
 
@@ -696,6 +676,28 @@ fps_display_sink_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+}
+
+static void
+fps_display_sink_handle_message (GstBin * bin, GstMessage * message)
+{
+  GstFPSDisplaySink *self = (GstFPSDisplaySink *) bin;
+
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_QOS) {
+    GstFormat format;
+    guint64 rendered, dropped;
+
+    gst_message_parse_qos_stats (message, &format, &rendered, &dropped);
+    if (format != GST_FORMAT_UNDEFINED) {
+      if (rendered != -1)
+        g_atomic_int_set (&self->frames_rendered, rendered);
+
+      if (dropped != -1)
+        g_atomic_int_set (&self->frames_dropped, dropped);
+    }
+  }
+
+  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
 GType
