@@ -63,6 +63,7 @@ enum
 #define DEFAULT_DUPLICATE               1
 #define DEFAULT_ERROR_AFTER             -1
 #define DEFAULT_DROP_PROBABILITY        0.0
+#define DEFAULT_DROP_BUFFER_FLAGS       0
 #define DEFAULT_DATARATE                0
 #define DEFAULT_SILENT                  TRUE
 #define DEFAULT_SINGLE_SEGMENT          FALSE
@@ -78,6 +79,7 @@ enum
   PROP_SLEEP_TIME,
   PROP_ERROR_AFTER,
   PROP_DROP_PROBABILITY,
+  PROP_DROP_BUFFER_FLAGS,
   PROP_DATARATE,
   PROP_SILENT,
   PROP_SINGLE_SEGMENT,
@@ -158,6 +160,19 @@ gst_identity_class_init (GstIdentityClass * klass)
       g_param_spec_float ("drop-probability", "Drop Probability",
           "The Probability a buffer is dropped", 0.0, 1.0,
           DEFAULT_DROP_PROBABILITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstIdentity:drop-buffer-flags:
+   *
+   * Drop buffers with the given flags.
+   *
+   * Since: 1.8
+   **/
+  g_object_class_install_property (gobject_class, PROP_DROP_BUFFER_FLAGS,
+      g_param_spec_flags ("drop-buffer-flags", "Check flags to drop buffers",
+          "Drop buffers with the given flags",
+          GST_TYPE_BUFFER_FLAGS, DEFAULT_DROP_BUFFER_FLAGS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DATARATE,
       g_param_spec_int ("datarate", "Datarate",
@@ -251,6 +266,7 @@ gst_identity_init (GstIdentity * identity)
   identity->sleep_time = DEFAULT_SLEEP_TIME;
   identity->error_after = DEFAULT_ERROR_AFTER;
   identity->drop_probability = DEFAULT_DROP_PROBABILITY;
+  identity->drop_buffer_flags = DEFAULT_DROP_BUFFER_FLAGS;
   identity->datarate = DEFAULT_DATARATE;
   identity->silent = DEFAULT_SILENT;
   identity->single_segment = DEFAULT_SINGLE_SEGMENT;
@@ -581,6 +597,9 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       goto dropped;
   }
 
+  if (GST_BUFFER_FLAG_IS_SET (buf, identity->drop_buffer_flags))
+    goto dropped;
+
   if (identity->dump) {
     GstMapInfo info;
 
@@ -687,6 +706,9 @@ gst_identity_set_property (GObject * object, guint prop_id,
     case PROP_DROP_PROBABILITY:
       identity->drop_probability = g_value_get_float (value);
       break;
+    case PROP_DROP_BUFFER_FLAGS:
+      identity->drop_buffer_flags = g_value_get_flags (value);
+      break;
     case PROP_DATARATE:
       identity->datarate = g_value_get_int (value);
       break;
@@ -729,6 +751,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_DROP_PROBABILITY:
       g_value_set_float (value, identity->drop_probability);
+      break;
+    case PROP_DROP_BUFFER_FLAGS:
+      g_value_set_flags (value, identity->drop_buffer_flags);
       break;
     case PROP_DATARATE:
       g_value_set_int (value, identity->datarate);
