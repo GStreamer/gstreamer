@@ -127,7 +127,7 @@ struct _QtDemuxSample
 /* timestamp is the DTS */
 #define QTSAMPLE_DTS(stream,sample) (QTSTREAMTIME_TO_GSTTIME((stream), (sample)->timestamp))
 /* timestamp + offset is the PTS */
-#define QTSAMPLE_PTS(stream,sample) (QTSTREAMTIME_TO_GSTTIME((stream), (sample)->timestamp + (sample)->pts_offset))
+#define QTSAMPLE_PTS(stream,sample) (QTSTREAMTIME_TO_GSTTIME((stream), (sample)->timestamp + (stream)->cslg_shift + (sample)->pts_offset))
 /* timestamp + duration - dts is the duration */
 #define QTSAMPLE_DUR_DTS(stream, sample, dts) (QTSTREAMTIME_TO_GSTTIME ((stream), (sample)->timestamp + (sample)->duration) - (dts))
 
@@ -375,6 +375,9 @@ struct _QtDemuxStream
   guint32 ctts_sample_index;
   guint32 ctts_count;
   gint32 ctts_soffset;
+
+  /* cslg */
+  guint32 cslg_shift;
 
   /* fragmented */
   gboolean parsed_trex;
@@ -3749,10 +3752,10 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   stream->segment.base = qtdemux->segment.base;
   stream->segment.applied_rate = qtdemux->segment.applied_rate;
   stream->segment.rate = rate;
-  stream->segment.start = start +
-      QTSTREAMTIME_TO_GSTTIME (stream, stream->ctts_soffset);
-  stream->segment.stop = stop +
-      QTSTREAMTIME_TO_GSTTIME (stream, stream->ctts_soffset);
+  stream->segment.start = start + QTSTREAMTIME_TO_GSTTIME (stream,
+      stream->cslg_shift);
+  stream->segment.stop = stop + QTSTREAMTIME_TO_GSTTIME (stream,
+      stream->cslg_shift);
   stream->segment.time = time;
   stream->segment.position = stream->segment.start;
 
@@ -6740,11 +6743,12 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     return FALSE;
   }
 
-
   /* composition time-to-sample */
   if ((stream->ctts_present =
           ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
+    GstByteReader cslg = GST_BYTE_READER_INIT (NULL, 0);
+
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);
 
@@ -6758,6 +6762,46 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     if (!qt_atom_parser_has_chunks (&stream->ctts, stream->n_composition_times,
             4 + 4))
       goto corrupt_file;
+
+    /* This is optional, if missing we iterate the ctts */
+    if (qtdemux_tree_get_child_by_type_full (stbl, FOURCC_cslg, &cslg)) {
+      if (!gst_byte_reader_skip (&cslg, 1 + 3)
+          || !gst_byte_reader_get_uint32_be (&cslg, &stream->cslg_shift)) {
+        g_free ((gpointer) cslg.data);
+        goto corrupt_file;
+      }
+    } else {
+      gint32 cslg_least = 0;
+      guint num_entries, pos;
+      gint i;
+
+      pos = gst_byte_reader_get_pos (&stream->ctts);
+      num_entries = stream->n_composition_times;
+
+      stream->cslg_shift = 0;
+
+      for (i = 0; i < num_entries; i++) {
+        gint32 offset;
+
+        gst_byte_reader_skip_unchecked (&stream->ctts, 4);
+        offset = gst_byte_reader_get_int32_be_unchecked (&stream->ctts);
+
+        if (offset < cslg_least)
+          cslg_least = offset;
+      }
+
+      if (cslg_least < 0)
+        stream->cslg_shift = ABS (cslg_least);
+      else
+        stream->cslg_shift = 0;
+
+      /* reset the reader so we can generate sample table */
+      gst_byte_reader_set_pos (&stream->ctts, pos);
+    }
+  } else {
+    /* Ensure the cslg_shift value is consistent so we can use it
+     * unconditionnally to produce TS and Segment */
+    stream->cslg_shift = 0;
   }
 
   return TRUE;
