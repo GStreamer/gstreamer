@@ -153,7 +153,8 @@ _gl_memory_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     GstCaps * out_caps)
 {
   struct GLMemoryUpload *upload = impl;
-  GstCapsFeatures *features, *gl_features;
+  GstCapsFeatures *features, *gl_features, *gl_overlay_features,
+      *system_memory_overlay_features;
   gboolean ret = TRUE;
   int i;
 
@@ -164,10 +165,23 @@ _gl_memory_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   if (!gst_caps_features_is_equal (features, gl_features))
     ret = FALSE;
 
+  gl_overlay_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY ","
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+  if (gst_caps_features_is_equal (features, gl_overlay_features))
+    ret = TRUE;
+
   features = gst_caps_get_features (in_caps, 0);
+
+  system_memory_overlay_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+
   if (!gst_caps_features_is_equal (features, gl_features)
+      && !gst_caps_features_is_equal (features, gl_overlay_features)
       && !gst_caps_features_is_equal (features,
-          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
+          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
+      && !gst_caps_features_is_equal (features, system_memory_overlay_features))
     ret = FALSE;
 
   gst_caps_features_free (gl_features);
