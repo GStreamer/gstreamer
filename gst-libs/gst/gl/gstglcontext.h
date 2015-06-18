@@ -124,7 +124,6 @@ gboolean      gst_gl_context_activate         (GstGLContext *context, gboolean a
 GThread *     gst_gl_context_get_thread       (GstGLContext *context);
 GstGLContext * gst_gl_context_get_current     (void);
 
-void           gst_gl_context_set_display (GstGLContext *context, GstGLDisplay *display);
 GstGLDisplay * gst_gl_context_get_display (GstGLContext *context);
 gpointer      gst_gl_context_get_proc_address (GstGLContext *context, const gchar *name);
 GstGLPlatform gst_gl_context_get_gl_platform  (GstGLContext *context);
