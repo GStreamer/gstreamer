@@ -218,12 +218,20 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
             gst_structure_get_int (structure, "channels", &info.channels)))
       goto parse_error;
 
+    if (!(gst_audio_channel_positions_from_mask (info.channels, 0,
+                info.position)))
+      goto parse_error;
+
     spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW;
     info.bpf = info.channels;
   } else if (g_str_equal (mimetype, "audio/x-mulaw")) {
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate) &&
             gst_structure_get_int (structure, "channels", &info.channels)))
+      goto parse_error;
+
+    if (!(gst_audio_channel_positions_from_mask (info.channels, 0,
+                info.position)))
       goto parse_error;
 
     spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW;
