@@ -3143,7 +3143,9 @@ register_codecs (GstPlugin * plugin)
        */
       if (g_str_has_prefix (codec_info->name, "OMX.google") ||
           g_str_has_suffix (codec_info->name, ".sw.dec")) {
-        rank = GST_RANK_SECONDARY;
+        /* For video we prefer hardware codecs, for audio we prefer software
+         * codecs. Hardware codecs don't make much sense for audio */
+        rank = is_video ? GST_RANK_SECONDARY : GST_RANK_PRIMARY;
       } else if (g_str_has_prefix (codec_info->name, "OMX.Exynos.")
           && !is_video) {
         /* OMX.Exynos. audio codecs are existing on some devices like the
@@ -3156,7 +3158,7 @@ register_codecs (GstPlugin * plugin)
          */
         rank = GST_RANK_MARGINAL;
       } else if (g_str_has_prefix (codec_info->name, "OMX.")) {
-        rank = GST_RANK_PRIMARY;
+        rank = is_video ? GST_RANK_PRIMARY : GST_RANK_SECONDARY;
       } else {
         rank = GST_RANK_MARGINAL;
       }
