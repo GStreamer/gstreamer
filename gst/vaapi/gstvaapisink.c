@@ -65,13 +65,11 @@ static const char gst_vaapisink_sink_caps_str[] =
         GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE ","
             GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
         "{ ENCODED, NV12, I420, YV12 }") ";"
-#endif
-    GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ";"
-#if GST_CHECK_VERSION(1,3,1)
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-        GST_VIDEO_FORMATS_ALL);
+        GST_VIDEO_FORMATS_ALL) ";"
 #endif
+    GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL);
 /* *INDENT-ON* */
 
 static GstStaticPadTemplate gst_vaapisink_sink_factory =
