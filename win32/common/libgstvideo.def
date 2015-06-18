@@ -202,6 +202,7 @@ EXPORTS
 	gst_video_multiview_get_doubled_width_modes
 	gst_video_multiview_get_mono_modes
 	gst_video_multiview_get_unpacked_modes
+	gst_video_multiview_guess_half_aspect
 	gst_video_multiview_mode_from_caps_string
 	gst_video_multiview_mode_get_type
 	gst_video_multiview_mode_to_caps_string
