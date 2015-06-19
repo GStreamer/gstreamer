@@ -276,6 +276,7 @@ gst_rtp_rtx_queue_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   rtx->pending = NULL;
   g_mutex_unlock (&rtx->lock);
 
+  pending = g_list_reverse (pending);
   g_list_foreach (pending, (GFunc) do_push, rtx);
   g_list_free (pending);
 
@@ -312,6 +313,7 @@ gst_rtp_rtx_queue_chain_list (GstPad * pad, GstObject * parent,
   rtx->pending = NULL;
   g_mutex_unlock (&rtx->lock);
 
+  pending = g_list_reverse (pending);
   g_list_foreach (pending, (GFunc) do_push, rtx);
   g_list_free (pending);
 
