@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:gstrtpexthdr
+ * SECTION:gstrtphdrext
  * @short_description: Helper methods for dealing with RTP header extensions
  * @see_also: #GstRTPBasePayload, #GstRTPBaseDepayload, gstrtpbuffer
  *
