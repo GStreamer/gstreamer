@@ -559,6 +559,37 @@ get_packed_headers (GstVaapiEncoder * encoder)
   return encoder->packed_headers;
 }
 
+static inline gboolean
+is_chroma_type_supported (GstVaapiEncoder * encoder)
+{
+  GstVaapiContextInfo *const cip = &encoder->context_info;
+  const GstVideoFormat fmt =
+    GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
+  guint format = 0;
+
+  if (fmt == GST_VIDEO_FORMAT_ENCODED)
+    return TRUE;
+
+  if (cip->chroma_type != GST_VAAPI_CHROMA_TYPE_YUV420 &&
+      cip->chroma_type != GST_VAAPI_CHROMA_TYPE_YUV422)
+    goto unsupported;
+
+  if (!get_config_attribute (encoder, VAConfigAttribRTFormat, &format))
+    return FALSE;
+
+  if (!(format & from_GstVaapiChromaType (cip->chroma_type)))
+    goto unsupported;
+
+  return TRUE;
+
+unsupported:
+  {
+    GST_ERROR ("We only support YUV 4:2:0 and YUV 4:2:2 for encoding. "
+        "Please try to use vaapipostproc to convert the input format.");
+    return FALSE;
+  }
+}
+
 /* Updates video context */
 static gboolean
 set_context_info (GstVaapiEncoder * encoder)
@@ -582,16 +613,9 @@ set_context_info (GstVaapiEncoder * encoder)
   cip->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
   cip->ref_frames = encoder->num_ref_frames;
 
-  if (!cip->chroma_type  && (format != GST_VIDEO_FORMAT_ENCODED))
+  if (!is_chroma_type_supported (encoder))
     goto error_unsupported_format;
 
-  if (cip->chroma_type != GST_VAAPI_CHROMA_TYPE_YUV420 &&
-      format != GST_VIDEO_FORMAT_ENCODED) {
-    GST_ERROR ("We are only supporting YUV:4:2:0 for encoding,"
-        "please try to use vaapipostproc to convert the input format!");
-    goto error_unsupported_format;
-  }
-  
   memset (config, 0, sizeof (*config));
   config->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);
   config->packed_headers = get_packed_headers (encoder);
