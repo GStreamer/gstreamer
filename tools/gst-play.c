@@ -801,11 +801,11 @@ play_do_seek (GstPlay * play, gint64 pos, gdouble rate, GstPlayTrickMode mode)
       break;
   }
 
-  if (rate > 0)
+  if (rate >= 0)
     seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
-        seek_flags | GST_SEEK_FLAG_KEY_UNIT,
+        seek_flags | GST_SEEK_FLAG_ACCURATE,
         /* start */ GST_SEEK_TYPE_SET, pos,
-        /* stop */ GST_SEEK_TYPE_NONE, 0);
+        /* stop */ GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
   else
     seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
         seek_flags | GST_SEEK_FLAG_ACCURATE,
