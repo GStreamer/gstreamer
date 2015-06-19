@@ -1099,8 +1099,13 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
 
   /* try to create a new one */
   /* requesting is a little crazy, we need a template. Let's create one */
-  /* FIXME: why not gst_pad_get_pad_template (pad); */
   templcaps = gst_pad_query_caps (pad, NULL);
+  if (caps) {
+    GstCaps *inter = gst_caps_intersect (templcaps, caps);
+
+    gst_caps_unref (templcaps);
+    templcaps = inter;
+  }
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
       GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
   gst_caps_unref (templcaps);
