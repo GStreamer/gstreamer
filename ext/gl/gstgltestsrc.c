@@ -779,14 +779,16 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   if (!src->context) {
     GST_OBJECT_LOCK (src->display);
     do {
-      if (src->context)
+      if (src->context) {
         gst_object_unref (src->context);
+        src->context = NULL;
+      }
       /* just get a GL context.  we don't care */
       src->context =
           gst_gl_display_get_gl_context_for_thread (src->display, NULL);
       if (!src->context) {
-        src->context = gst_gl_context_new (src->display);
-        if (!gst_gl_context_create (src->context, src->other_context, &error)) {
+        if (!gst_gl_display_create_context (src->display, src->other_context,
+                &src->context, &error)) {
           GST_OBJECT_UNLOCK (src->display);
           goto context_error;
         }

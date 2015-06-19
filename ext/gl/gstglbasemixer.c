@@ -469,15 +469,16 @@ gst_gl_base_mixer_decide_allocation (GstGLBaseMixer * mix, GstQuery * query)
   if (!mix->context) {
     GST_OBJECT_LOCK (mix->display);
     do {
-      if (mix->context)
+      if (mix->context) {
         gst_object_unref (mix->context);
+        mix->context = NULL;
+      }
       /* just get a GL context.  we don't care */
       mix->context =
           gst_gl_display_get_gl_context_for_thread (mix->display, NULL);
       if (!mix->context) {
-        mix->context = gst_gl_context_new (mix->display);
-        if (!gst_gl_context_create (mix->context, mix->priv->other_context,
-                &error)) {
+        if (!gst_gl_display_create_context (mix->display,
+                mix->priv->other_context, &mix->context, &error)) {
           GST_OBJECT_UNLOCK (mix->display);
           goto context_error;
         }
