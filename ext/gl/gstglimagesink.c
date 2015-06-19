@@ -968,8 +968,6 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       gst_buffer_replace (&glimage_sink->next_buffer2, NULL);
       gst_buffer_replace (&glimage_sink->next_sync, NULL);
 
-      gst_object_replace ((GstObject **) & glimage_sink->convert_views, NULL);
-
       glimage_sink->window_id = 0;
       /* but do not reset glimage_sink->new_window_id */
 
