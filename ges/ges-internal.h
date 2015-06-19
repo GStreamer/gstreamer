@@ -52,6 +52,18 @@ GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define _set_duration0 ges_timeline_element_set_duration
 #define _set_priority0 ges_timeline_element_set_priority
 
+#define GES_TIMELINE_ELEMENT_FORMAT \
+    "s:%p" \
+    " start: %" GST_TIME_FORMAT \
+    " inpoint: %" GST_TIME_FORMAT \
+    " duration: %" GST_TIME_FORMAT
+
+#define GES_TIMELINE_ELEMENT_ARGS(element) \
+    GES_TIMELINE_ELEMENT_NAME(element), element, \
+    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_START(element)), \
+    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_INPOINT(element)), \
+    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_DURATION(element))
+
 G_GNUC_INTERNAL gboolean
 timeline_ripple_object         (GESTimeline *timeline, GESTrackElement *obj,
                                     GList * layers, GESEdge edge,

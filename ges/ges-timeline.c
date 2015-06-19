@@ -115,6 +115,9 @@ struct _MoveContext
   GESEdge edge;
   GESEditMode mode;
 
+  /* The  start of the moving context */
+  GstClockTime start;
+
   /* Ripple and Roll Objects */
   GList *moving_trackelements;
 
@@ -966,7 +969,8 @@ _create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
           == toplevel)
         continue;
 
-      if (g_list_find (priv->movecontext.moving_trackelements, next))
+      if (priv->movecontext.moving_trackelements &&
+          GES_TIMELINE_ELEMENT_START (next) > priv->movecontext.start)
         continue;
 
       transition_duration = (_START (prev) + _DURATION (prev)) - _START (next);
@@ -995,11 +999,18 @@ create_transitions (GESTimeline * timeline, GESTrackElement * track_element)
   GList *layer_node;
 
   GESTimelinePrivate *priv = timeline->priv;
+  MoveContext *mv_ctx = &timeline->priv->movecontext;
 
   if (!priv->needs_transitions_update)
     return;
 
-  GST_DEBUG_OBJECT (timeline, "Creating transitions around %p", track_element);
+  if (mv_ctx->moving_trackelements &&
+      GES_TIMELINE_ELEMENT_START (track_element) > mv_ctx->start) {
+    GST_DEBUG_OBJECT (timeline, "Not creating transition around %"
+        GES_TIMELINE_ELEMENT_FORMAT " as it is not the first rippled"
+        " element", GES_TIMELINE_ELEMENT_ARGS (track_element));
+    return;
+  }
 
   track = ges_track_element_get_track (track_element);
   layer_node = g_list_find_custom (timeline->layers,
@@ -1022,6 +1033,7 @@ init_movecontext (MoveContext * mv_ctx, gboolean first_init)
         g_hash_table_new (g_direct_hash, g_direct_equal);
 
   mv_ctx->moving_trackelements = NULL;
+  mv_ctx->start = G_MAXUINT64;
   mv_ctx->max_trim_pos = G_MAXUINT64;
   mv_ctx->min_move_layer = G_MAXUINT;
   mv_ctx->max_layer_prio = 0;
@@ -1307,6 +1319,7 @@ add_toplevel_container (MoveContext * mv_ctx, GESTrackElement * trackelement)
     } else
       g_assert_not_reached ();
 
+    mv_ctx->start = MIN (mv_ctx->start, GES_TIMELINE_ELEMENT_START (toplevel));
     g_hash_table_insert (mv_ctx->toplevel_containers, toplevel, toplevel);
 
   }
