@@ -3039,10 +3039,10 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   /* if this is the first buffer, store the timestamp */
   if (G_UNLIKELY (pad->first_ts == GST_CLOCK_TIME_NONE) && last_buf) {
-    if (GST_BUFFER_DTS_IS_VALID (last_buf)) {
-      pad->first_ts = GST_BUFFER_DTS (last_buf);
-    } else if (GST_BUFFER_PTS_IS_VALID (last_buf)) {
+    if (GST_BUFFER_PTS_IS_VALID (last_buf)) {
       pad->first_ts = GST_BUFFER_PTS (last_buf);
+    } else if (GST_BUFFER_DTS_IS_VALID (last_buf)) {
+      pad->first_ts = GST_BUFFER_DTS (last_buf);
     }
 
     if (GST_CLOCK_TIME_IS_VALID (pad->first_ts)) {
