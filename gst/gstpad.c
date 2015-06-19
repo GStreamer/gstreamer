@@ -4017,7 +4017,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
 
   PROBE_PUSH (pad, type, data, probe_stopped);
 
-  parent = GST_OBJECT_PARENT (pad);
+  ACQUIRE_PARENT (pad, parent, no_parent);
   GST_OBJECT_UNLOCK (pad);
 
   /* NOTE: we read the chainfunc unlocked.
@@ -4056,6 +4056,8 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
         "called chainlistfunction &%s, returned %s",
         GST_DEBUG_FUNCPTR_NAME (chainlistfunc), gst_flow_get_name (ret));
   }
+
+  RELEASE_PARENT (parent);
 
   GST_PAD_STREAM_UNLOCK (pad);
 
@@ -4105,8 +4107,17 @@ probe_stopped:
     }
     return ret;
   }
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "No parent when chaining %" GST_PTR_FORMAT, data);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
+    return GST_FLOW_FLUSHING;
+  }
 no_function:
   {
+    RELEASE_PARENT (parent);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     g_critical ("chain on pad %s:%s but it has no chainfunction",
         GST_DEBUG_PAD_NAME (pad));

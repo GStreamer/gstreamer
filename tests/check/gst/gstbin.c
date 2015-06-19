@@ -462,7 +462,7 @@ GST_START_TEST (test_message_state_changed_children)
 
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
-  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 2);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   /* change state to PLAYING, spawning three messages */
@@ -481,7 +481,7 @@ GST_START_TEST (test_message_state_changed_children)
    * sink might have an extra reference if it's still blocked on preroll
    * pipeline posted a new-clock message too. */
   ASSERT_OBJECT_REFCOUNT_BETWEEN (src, "src", 2, 3);
-  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 3);
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 4);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 3);
 
   pop_messages (bus, 3);
@@ -491,7 +491,7 @@ GST_START_TEST (test_message_state_changed_children)
   /* src might have an extra reference if it's still pushing */
   ASSERT_OBJECT_REFCOUNT_BETWEEN (src, "src", 1, 2);
   /* sink might have an extra reference if it's still blocked on preroll */
-  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 1, 2);
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 1, 3);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   /* go back to READY, spawning six messages */
