@@ -2451,22 +2451,37 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
   for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
     GstCollectData *cdata = (GstCollectData *) walk->data;
     GstQTPad *qtpad = (GstQTPad *) cdata;
-    guint32 lateness;
-    guint32 duration;
 
-    if (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts)
-        && qtpad->first_ts > qtmux->first_ts) {
-      lateness =
-          gst_util_uint64_scale_round (qtpad->first_ts - qtmux->first_ts,
-          qtmux->timescale, GST_SECOND);
-      duration = qtpad->trak->tkhd.duration;
+    if (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts)) {
+      guint32 lateness = 0;
+      guint32 duration = qtpad->trak->tkhd.duration;
+      gboolean has_gap;
+      gboolean has_shift;
 
-      GST_DEBUG_OBJECT (qtmux, "Pad %s is a late stream by %" GST_TIME_FORMAT,
-          GST_PAD_NAME (qtpad->collect.pad), GST_TIME_ARGS (lateness));
-      atom_trak_set_elst_entry (qtpad->trak, 0, lateness, (guint32) - 1,
-          (guint32) (1 * 65536.0));
-      atom_trak_set_elst_entry (qtpad->trak, 1, duration, 0,
-          (guint32) (1 * 65536.0));
+      has_gap = (qtpad->first_ts > (qtmux->first_ts + qtpad->dts_adjustment));
+      has_shift = (qtpad->dts_adjustment > 0);
+
+      if (has_gap) {
+        GstClockTime diff;
+
+        diff = qtpad->first_ts - (qtmux->first_ts + qtpad->dts_adjustment);
+        lateness = gst_util_uint64_scale_round (diff,
+            qtmux->timescale, GST_SECOND);
+
+        GST_DEBUG_OBJECT (qtmux, "Pad %s is a late stream by %" GST_TIME_FORMAT,
+            GST_PAD_NAME (qtpad->collect.pad), GST_TIME_ARGS (lateness));
+
+        atom_trak_set_elst_entry (qtpad->trak, 0, lateness, (guint32) - 1,
+            (guint32) (1 * 65536.0));
+      }
+
+      if (has_gap || has_shift) {
+        guint32 shift = gst_util_uint64_scale_round (qtpad->dts_adjustment,
+            atom_trak_get_timescale (qtpad->trak), GST_SECOND);
+
+        atom_trak_set_elst_entry (qtpad->trak, 1, duration, shift,
+            (guint32) (1 * 65536.0));
+      }
 
       /* need to add the empty time to the trak duration */
       duration += lateness;
