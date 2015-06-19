@@ -340,23 +340,6 @@ gst_splitmux_part_create (GstSplitMuxSrc * splitmux, char *filename)
 }
 
 static gboolean
-resend_sticky (GstPad * pad, GstEvent ** event, GstPad * target)
-{
-  switch (GST_EVENT_TYPE (*event)) {
-    case GST_EVENT_CAPS:
-      if (!gst_splitmux_check_new_caps (SPLITMUX_SRC_PAD (target), *event))
-        return TRUE;
-      return gst_pad_push_event (target, gst_event_ref (*event));
-    case GST_EVENT_STREAM_START:
-      return gst_pad_push_event (target, gst_event_ref (*event));
-    default:
-      return TRUE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
 gst_splitmux_check_new_caps (SplitMuxSrcPad * splitpad, GstEvent * event)
 {
   GstCaps *curcaps = gst_pad_get_current_caps ((GstPad *) (splitpad));
@@ -471,13 +454,6 @@ gst_splitmux_handle_event (GstSplitMuxSrc * splitmux,
     }
     default:
       break;
-  }
-
-  /* Make sure to send sticky events - from the part_pad directly */
-  if (splitpad->sent_caps == FALSE || splitpad->sent_stream_start == FALSE) {
-    gst_pad_sticky_events_foreach (GST_PAD_CAST (part_pad),
-        (GstPadStickyEventsForeachFunction) (resend_sticky), splitpad);
-    splitpad->sent_caps = splitpad->sent_stream_start = TRUE;
   }
 
   gst_pad_push_event ((GstPad *) (splitpad), event);
