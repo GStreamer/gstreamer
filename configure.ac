@@ -2134,7 +2134,7 @@ AC_SUBST(LIBMMS_LIBS)
 dnl *** libsrtp ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SRTP, true)
 AG_GST_CHECK_FEATURE(SRTP, [srtp library], srtp, [
-  PKG_CHECK_MODULES(SRTP, libsrtp, HAVE_SRTP="yes", 
+  PKG_CHECK_MODULES(SRTP, libsrtp, HAVE_SRTP="yes",
     AG_GST_CHECK_LIBHEADER(SRTP, srtp, srtp_init, , srtp/srtp.h, SRTP_LIBS="-lsrtp")
   )
   AC_SUBST(SRTP_LIBS)
