@@ -207,14 +207,6 @@ plugin_init (GstPlugin * plugin)
   }
 #endif /* HAVE_PNG */
 #endif /* HAVE_JPEG */
-  if (!gst_element_register (plugin, "glstereosplit",
-          GST_RANK_NONE, GST_TYPE_GL_STEREOSPLIT)) {
-    return FALSE;
-  }
-  if (!gst_element_register (plugin, "glstereomix",
-          GST_RANK_NONE, GST_TYPE_GL_STEREO_MIX)) {
-    return FALSE;
-  }
 #if GST_GL_HAVE_OPENGL
   if (!gst_element_register (plugin, "gltestsrc",
           GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
@@ -257,6 +249,14 @@ plugin_init (GstPlugin * plugin)
   }
 #endif
 #endif /* HAVE_PNG */
+  if (!gst_element_register (plugin, "glstereosplit",
+          GST_RANK_NONE, GST_TYPE_GL_STEREOSPLIT)) {
+    return FALSE;
+  }
+  if (!gst_element_register (plugin, "glstereomix",
+          GST_RANK_NONE, GST_TYPE_GL_STEREO_MIX)) {
+    return FALSE;
+  }
 #endif /* GST_GL_HAVE_OPENGL */
 #if GST_GL_HAVE_WINDOW_COCOA
   if (!gst_element_register (plugin, "caopengllayersink",
