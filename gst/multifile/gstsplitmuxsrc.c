@@ -769,6 +769,30 @@ out:
   return ret;
 }
 
+typedef struct
+{
+  GstSplitMuxSrc *splitmux;
+  SplitMuxSrcPad *splitpad;
+} SplitMuxAndPad;
+
+static gboolean
+handle_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  SplitMuxAndPad *splitmux_and_pad;
+  GstSplitMuxSrc *splitmux;
+  SplitMuxSrcPad *splitpad;
+
+  splitmux_and_pad = user_data;
+  splitmux = splitmux_and_pad->splitmux;
+  splitpad = splitmux_and_pad->splitpad;
+
+  GST_DEBUG_OBJECT (splitpad, "handle sticky event %" GST_PTR_FORMAT, *event);
+  gst_event_ref (*event);
+  gst_splitmux_handle_event (splitmux, splitpad, pad, *event);
+
+  return TRUE;
+}
+
 static GstPad *
 gst_splitmux_find_output_pad (GstSplitMuxPartReader * part, GstPad * pad,
     GstSplitMuxSrc * splitmux)
@@ -790,12 +814,19 @@ gst_splitmux_find_output_pad (GstSplitMuxPartReader * part, GstPad * pad,
   }
 
   if (target == NULL && !splitmux->pads_complete) {
+    SplitMuxAndPad splitmux_and_pad;
+
     /* No pad found, create one */
     target = g_object_new (SPLITMUX_TYPE_SRC_PAD,
         "name", pad_name, "direction", GST_PAD_SRC, NULL);
     splitmux->pads = g_list_prepend (splitmux->pads, target);
 
     gst_pad_set_active (target, TRUE);
+
+    splitmux_and_pad.splitmux = splitmux;
+    splitmux_and_pad.splitpad = (SplitMuxSrcPad *) target;
+    gst_pad_sticky_events_foreach (pad, handle_sticky_events,
+        &splitmux_and_pad);
     is_new_pad = TRUE;
   }
   SPLITMUX_SRC_PADS_UNLOCK (splitmux);
