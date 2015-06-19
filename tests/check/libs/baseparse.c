@@ -29,6 +29,11 @@
 static GstPad *mysrcpad, *mysinkpad;
 static GstElement *parsetest;
 static GstBus *bus;
+static GMainLoop *loop = NULL;
+static gboolean have_eos = FALSE;
+static gboolean have_data = FALSE;
+static gint buffer_count = 0;
+static gboolean caps_set = FALSE;
 
 #define TEST_VIDEO_WIDTH 640
 #define TEST_VIDEO_HEIGHT 480
@@ -76,13 +81,27 @@ static GstFlowReturn
 gst_parser_tester_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (caps_set == FALSE) {
+    GstCaps *caps;
+    /* push caps */
+    caps =
+        gst_caps_new_simple ("video/x-test-custom", "width", G_TYPE_INT,
+        TEST_VIDEO_WIDTH, "height", G_TYPE_INT, TEST_VIDEO_HEIGHT, "framerate",
+        GST_TYPE_FRACTION, TEST_VIDEO_FPS_N, TEST_VIDEO_FPS_D, NULL);
+    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
+    gst_caps_unref (caps);
+    caps_set = TRUE;
+  }
+
   while (frame->buffer && gst_buffer_get_size (frame->buffer) >= 8) {
     GST_BUFFER_DURATION (frame->buffer) =
         gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
         TEST_VIDEO_FPS_N);
-    gst_base_parse_finish_frame (parse, frame, 8);
+    ret = gst_base_parse_finish_frame (parse, frame, 8);
   }
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static void
@@ -316,6 +335,124 @@ GST_START_TEST (parser_empty_stream)
 
 GST_END_TEST;
 
+static GstFlowReturn
+_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  GstMapInfo map;
+  guint64 num;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+  num = *(guint64 *) map.data;
+
+  fail_unless (buffer_count == num);
+  fail_unless (GST_BUFFER_PTS (buffer) ==
+      gst_util_uint64_scale_round (buffer_count, GST_SECOND * TEST_VIDEO_FPS_D,
+          TEST_VIDEO_FPS_N));
+  fail_unless (GST_BUFFER_DURATION (buffer) ==
+      gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
+          TEST_VIDEO_FPS_N));
+  gst_buffer_unmap (buffer, &map);
+  buffer_count++;
+
+  have_data = TRUE;
+  return GST_FLOW_OK;
+}
+
+static gboolean
+_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GST_INFO_OBJECT (pad, "got %s event %p: %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), event, event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      if (loop) {
+        while (!g_main_loop_is_running (loop)) {
+          /* nothing */
+        };
+      }
+      have_eos = TRUE;
+      if (loop)
+        g_main_loop_quit (loop);
+      break;
+    default:
+      break;
+  }
+  gst_event_unref (event);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+_src_getrange (GstPad * pad, GstObject * parent, guint64 offset, guint length,
+    GstBuffer ** buffer)
+{
+  gboolean ret = FALSE;
+  if (offset >= 80 && have_eos == FALSE) {
+    ret = gst_element_seek (parsetest, -1.0, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
+        GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, gst_util_uint64_scale_round (5,
+            GST_SECOND * TEST_VIDEO_FPS_D, TEST_VIDEO_FPS_N));
+    fail_unless (ret == TRUE);
+    buffer_count = 0;
+  }
+
+  *buffer = create_test_buffer (offset / 8);
+
+  return GST_FLOW_OK;
+}
+
+static gboolean
+_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SCHEDULING:{
+      gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEEKABLE, 1, -1, 0);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PULL);
+      res = TRUE;
+      break;
+    }
+    default:
+      GST_DEBUG_OBJECT (pad, "unhandled %s query", GST_QUERY_TYPE_NAME (query));
+      break;
+  }
+
+  return res;
+}
+
+GST_START_TEST (parser_reverse_playback)
+{
+  have_eos = FALSE;
+  have_data = FALSE;
+  loop = g_main_loop_new (NULL, FALSE);
+
+  setup_parsertester ();
+  gst_pad_set_getrange_function (mysrcpad, _src_getrange);
+  gst_pad_set_query_function (mysrcpad, _src_query);
+  gst_pad_set_chain_function (mysinkpad, _sink_chain);
+  gst_pad_set_event_function (mysinkpad, _sink_event);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (parsetest, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  g_main_loop_run (loop);
+  fail_unless (have_eos == TRUE);
+  fail_unless (have_data == TRUE);
+
+  gst_element_set_state (parsetest, GST_STATE_NULL);
+
+  check_no_error_received ();
+  cleanup_parsertest ();
+
+  g_main_loop_unref (loop);
+  loop = NULL;
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_baseparse_suite (void)
@@ -327,6 +464,7 @@ gst_baseparse_suite (void)
   tcase_add_test (tc, parser_playback);
   tcase_add_test (tc, parser_empty_stream);
   tcase_add_test (tc, parser_reverse_playback_on_passthrough);
+  tcase_add_test (tc, parser_reverse_playback);
 
   return s;
 }
