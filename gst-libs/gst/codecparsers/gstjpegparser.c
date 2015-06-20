@@ -245,8 +245,6 @@ gst_jpeg_scan_for_marker_code (const guint8 * data, gsize size, guint offset)
 {
   guint i;
 
-  g_return_val_if_fail (data != NULL, -1);
-
   i = offset + 1;
   while (i < size) {
     const guint8 v = data[i];
@@ -279,7 +277,6 @@ gst_jpeg_segment_parse_frame_header (const GstJpegSegment * segment,
     GstJpegFrameHdr * frame_hdr)
 {
   GstByteReader br;
-  guint16 length;
   guint8 val;
   guint i;
 
@@ -290,31 +287,34 @@ gst_jpeg_segment_parse_frame_header (const GstJpegSegment * segment,
     return FALSE;
 
   gst_byte_reader_init (&br, segment->data + segment->offset, segment->size);
-  length = segment->size;
   gst_byte_reader_skip_unchecked (&br, 2);
 
   U_READ_UINT8 (&br, frame_hdr->sample_precision);
   U_READ_UINT16 (&br, frame_hdr->height);
   U_READ_UINT16 (&br, frame_hdr->width);
   U_READ_UINT8 (&br, frame_hdr->num_components);
-  g_return_val_if_fail (frame_hdr->num_components <=
-      GST_JPEG_MAX_SCAN_COMPONENTS, FALSE);
 
-  length -= 8;
-  g_return_val_if_fail (length >= 3 * frame_hdr->num_components, FALSE);
+  if (frame_hdr->num_components > GST_JPEG_MAX_SCAN_COMPONENTS)
+    return FALSE;
+
+  if (gst_byte_reader_get_remaining (&br) < 3 * frame_hdr->num_components)
+    return FALSE;
+
   for (i = 0; i < frame_hdr->num_components; i++) {
     U_READ_UINT8 (&br, frame_hdr->components[i].identifier);
     U_READ_UINT8 (&br, val);
     frame_hdr->components[i].horizontal_factor = (val >> 4) & 0x0F;
     frame_hdr->components[i].vertical_factor = (val & 0x0F);
     U_READ_UINT8 (&br, frame_hdr->components[i].quant_table_selector);
-    g_return_val_if_fail ((frame_hdr->components[i].horizontal_factor <= 4 &&
-            frame_hdr->components[i].vertical_factor <= 4 &&
-            frame_hdr->components[i].quant_table_selector < 4), FALSE);
-    length -= 3;
+    if (frame_hdr->components[i].horizontal_factor > 4
+        || frame_hdr->components[i].vertical_factor > 4
+        || frame_hdr->components[i].quant_table_selector >= 4)
+      return FALSE;
   }
 
-  g_assert (length == 0);
+  if (gst_byte_reader_get_remaining (&br) > 0)
+    GST_DEBUG ("data left at end of frame header segment");
+
   return TRUE;
 }
 
@@ -337,7 +337,6 @@ gst_jpeg_segment_parse_scan_header (const GstJpegSegment * segment,
     GstJpegScanHdr * scan_hdr)
 {
   GstByteReader br;
-  guint16 length;
   guint8 val;
   guint i;
 
@@ -345,28 +344,39 @@ gst_jpeg_segment_parse_scan_header (const GstJpegSegment * segment,
   g_return_val_if_fail (scan_hdr != NULL, FALSE);
 
   gst_byte_reader_init (&br, segment->data + segment->offset, segment->size);
-  length = segment->size;
-  g_return_val_if_fail (segment->size >= 3, FALSE);
+
+  if (segment->size < 3)
+    return FALSE;
+
   gst_byte_reader_skip_unchecked (&br, 2);
 
   U_READ_UINT8 (&br, scan_hdr->num_components);
-  g_return_val_if_fail (scan_hdr->num_components <=
-      GST_JPEG_MAX_SCAN_COMPONENTS, FALSE);
 
-  length -= 3;
-  g_return_val_if_fail (length >= 2 * scan_hdr->num_components, FALSE);
+  if (scan_hdr->num_components > GST_JPEG_MAX_SCAN_COMPONENTS)
+    return FALSE;
+
+  if (gst_byte_reader_get_remaining (&br) < 2 * scan_hdr->num_components)
+    return FALSE;
+
   for (i = 0; i < scan_hdr->num_components; i++) {
     U_READ_UINT8 (&br, scan_hdr->components[i].component_selector);
     U_READ_UINT8 (&br, val);
     scan_hdr->components[i].dc_selector = (val >> 4) & 0x0F;
     scan_hdr->components[i].ac_selector = val & 0x0F;
-    g_return_val_if_fail ((scan_hdr->components[i].dc_selector < 4 &&
-            scan_hdr->components[i].ac_selector < 4), FALSE);
-    length -= 2;
+    if (scan_hdr->components[i].dc_selector >= 4
+        || scan_hdr->components[i].ac_selector >= 4)
+      return FALSE;
   }
 
+  if (gst_byte_reader_get_remaining (&br) < 3)
+    return FALSE;
+
   /* FIXME: Ss, Se, Ah, Al */
-  g_assert (length == 3);
+  gst_byte_reader_skip_unchecked (&br, 3);
+
+  if (gst_byte_reader_get_remaining (&br) > 0)
+    GST_DEBUG ("data left at end of scan header segment");
+
   return TRUE;
 }
 
@@ -396,7 +406,6 @@ gst_jpeg_segment_parse_huffman_table (const GstJpegSegment * segment,
 {
   GstByteReader br;
   GstJpegHuffmanTable *huf_table;
-  guint16 length;
   guint8 val, table_class, table_index;
   guint32 value_count;
   guint i;
@@ -404,17 +413,19 @@ gst_jpeg_segment_parse_huffman_table (const GstJpegSegment * segment,
   g_return_val_if_fail (segment != NULL, FALSE);
   g_return_val_if_fail (huff_tables != NULL, FALSE);
 
+  if (segment->size < 2)
+    return FALSE;
+
   gst_byte_reader_init (&br, segment->data + segment->offset, segment->size);
-  g_return_val_if_fail (segment->size >= 2, FALSE);
 
-  U_READ_UINT16 (&br, length);  /* Lh */
-  g_return_val_if_fail (segment->size >= length, FALSE);
+  gst_byte_reader_skip_unchecked (&br, 2);
 
-  while (gst_byte_reader_get_remaining (&br)) {
+  while (gst_byte_reader_get_remaining (&br) > 0) {
     U_READ_UINT8 (&br, val);
     table_class = ((val >> 4) & 0x0F);
     table_index = (val & 0x0F);
-    g_return_val_if_fail (table_index < GST_JPEG_MAX_SCAN_COMPONENTS, FALSE);
+    if (table_index >= GST_JPEG_MAX_SCAN_COMPONENTS)
+      return FALSE;
     if (table_class == 0) {
       huf_table = &huff_tables->dc_tables[table_index];
     } else {
@@ -460,29 +471,33 @@ gst_jpeg_segment_parse_quantization_table (const GstJpegSegment * segment,
 {
   GstByteReader br;
   GstJpegQuantTable *quant_table;
-  guint16 length;
   guint8 val, table_index;
   guint i;
 
   g_return_val_if_fail (segment != NULL, FALSE);
   g_return_val_if_fail (quant_tables != NULL, FALSE);
 
+  if (segment->size < 2)
+    return FALSE;
+
   gst_byte_reader_init (&br, segment->data + segment->offset, segment->size);
-  g_return_val_if_fail (segment->size >= 2, FALSE);
 
-  U_READ_UINT16 (&br, length);  /* Lq */
-  g_return_val_if_fail (segment->size >= length, FALSE);
+  gst_byte_reader_skip_unchecked (&br, 2);
 
-  while (gst_byte_reader_get_remaining (&br)) {
+  while (gst_byte_reader_get_remaining (&br) > 0) {
+    guint8 element_size;
+
     U_READ_UINT8 (&br, val);
     table_index = (val & 0x0f);
-    g_return_val_if_fail (table_index < GST_JPEG_MAX_SCAN_COMPONENTS, FALSE);
+    if (table_index >= GST_JPEG_MAX_SCAN_COMPONENTS)
+      return FALSE;
     quant_table = &quant_tables->quant_tables[table_index];
     quant_table->quant_precision = ((val >> 4) & 0x0f);
 
-    g_return_val_if_fail (gst_byte_reader_get_remaining (&br) >=
-        GST_JPEG_MAX_QUANT_ELEMENTS * (1 + ! !quant_table->quant_precision),
-        FALSE);
+    element_size = (quant_table->quant_precision == 0) ? 1 : 2;
+    if (gst_byte_reader_get_remaining (&br) <
+        GST_JPEG_MAX_QUANT_ELEMENTS * element_size)
+      return FALSE;
     for (i = 0; i < GST_JPEG_MAX_QUANT_ELEMENTS; i++) {
       if (!quant_table->quant_precision) {      /* 8-bit values */
         U_READ_UINT8 (&br, val);
@@ -513,16 +528,16 @@ gst_jpeg_segment_parse_restart_interval (const GstJpegSegment * segment,
     guint * interval)
 {
   GstByteReader br;
-  guint16 length, val;
+  guint16 val;
 
   g_return_val_if_fail (segment != NULL, FALSE);
   g_return_val_if_fail (interval != NULL, FALSE);
 
-  gst_byte_reader_init (&br, segment->data + segment->offset, segment->size);
-  g_return_val_if_fail (segment->size >= 4, FALSE);
+  if (segment->size < 4)
+    return FALSE;
 
-  U_READ_UINT16 (&br, length);  /* Lr */
-  g_return_val_if_fail (segment->size >= length, FALSE);
+  gst_byte_reader_init (&br, segment->data + segment->offset, segment->size);
+  gst_byte_reader_skip_unchecked (&br, 2);
 
   U_READ_UINT16 (&br, val);
   *interval = val;
@@ -586,7 +601,7 @@ build_huffman_table (GstJpegHuffmanTable * huf_table,
 void
 gst_jpeg_get_default_huffman_tables (GstJpegHuffmanTables * huf_tables)
 {
-  g_assert (huf_tables);
+  g_return_if_fail (huf_tables != NULL);
 
   /* Build DC tables */
   build_huffman_table (&huf_tables->dc_tables[0], default_luminance_dc_table,
@@ -628,7 +643,7 @@ build_quant_table (GstJpegQuantTable * quant_table, const guint8 values[64])
 void
 gst_jpeg_get_default_quantization_tables (GstJpegQuantTables * quant_tables)
 {
-  g_assert (quant_tables);
+  g_return_if_fail (quant_tables != NULL);
 
   build_quant_table (&quant_tables->quant_tables[0],
       default_luminance_quant_table);
