@@ -1,5 +1,6 @@
 /*  GStreamer JPEG parser
  *  Copyright (C) 2011-2012 Intel Corporation
+ *  Copyright (C) 2015 Tim-Philipp Müller <tim@centricular.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
@@ -213,7 +214,7 @@ static gint gst_jpeg_scan_for_marker_code (const guint8 * data, gsize size,
     guint offset);
 
 static inline gboolean
-jpeg_parse_to_next_marker (GstByteReader * br, guint8 * marker)
+jpeg_parse_to_next_marker (GstByteReader * br, GstJpegMarker * marker)
 {
   gint ofs;
 
@@ -222,7 +223,8 @@ jpeg_parse_to_next_marker (GstByteReader * br, guint8 * marker)
     return FALSE;
 
   if (marker)
-    *marker = br->data[ofs + 1];
+    *marker = (GstJpegMarker) br->data[ofs + 1];
+
   gst_byte_reader_skip_unchecked (br, ofs - br->byte);
   return TRUE;
 }
@@ -258,25 +260,38 @@ gst_jpeg_scan_for_marker_code (const guint8 * data, gsize size, guint offset)
   return -1;
 }
 
+/**
+ * gst_jpeg_segment_parse_frame_header:
+ * @segment: the JPEG segment
+ * @frame_hdr: (out): The #GstJpegFrameHdr structure to fill in
+ *
+ * Parses the @frame_hdr JPEG frame header structure members from @segment.
+ *
+ * The caller must make sure there is enough data for the whole segment
+ * available.
+ *
+ * Returns: TRUE if the frame header was correctly parsed.
+ *
+ * Since: 1.6
+ */
 gboolean
-gst_jpeg_parse_frame_header (GstJpegFrameHdr * frame_hdr,
-    const guint8 * data, gsize size, guint offset)
+gst_jpeg_segment_parse_frame_header (const GstJpegSegment * segment,
+    GstJpegFrameHdr * frame_hdr)
 {
   GstByteReader br;
   guint16 length;
   guint8 val;
   guint i;
 
+  g_return_val_if_fail (segment != NULL, FALSE);
   g_return_val_if_fail (frame_hdr != NULL, FALSE);
-  g_return_val_if_fail (data != NULL, FALSE);
-  g_return_val_if_fail (size > offset, FALSE);
 
-  size -= offset;
-  gst_byte_reader_init (&br, &data[offset], size);
-  g_return_val_if_fail (size >= 8, FALSE);
+  if (segment->size < 8)
+    return FALSE;
 
-  U_READ_UINT16 (&br, length);  /* Lf */
-  g_return_val_if_fail (size >= length, FALSE);
+  gst_byte_reader_init (&br, segment->data + segment->offset, segment->size);
+  length = segment->size;
+  gst_byte_reader_skip_unchecked (&br, 2);
 
   U_READ_UINT8 (&br, frame_hdr->sample_precision);
   U_READ_UINT16 (&br, frame_hdr->height);
@@ -303,25 +318,36 @@ gst_jpeg_parse_frame_header (GstJpegFrameHdr * frame_hdr,
   return TRUE;
 }
 
+/**
+ * gst_jpeg_segment_parse_scan_header:
+ * @segment: the JPEG segment
+ * @scan_hdr: (out): The #GstJpegScanHdr structure to fill in
+ *
+ * Parses the @scan_hdr JPEG scan header structure members from @segment.
+ *
+ * The caller must make sure there is enough data for the whole segment
+ * available.
+ *
+ * Returns: TRUE if the scan header was correctly parsed
+ *
+ * Since: 1.6
+ */
 gboolean
-gst_jpeg_parse_scan_header (GstJpegScanHdr * scan_hdr,
-    const guint8 * data, gsize size, guint offset)
+gst_jpeg_segment_parse_scan_header (const GstJpegSegment * segment,
+    GstJpegScanHdr * scan_hdr)
 {
   GstByteReader br;
   guint16 length;
   guint8 val;
   guint i;
 
+  g_return_val_if_fail (segment != NULL, FALSE);
   g_return_val_if_fail (scan_hdr != NULL, FALSE);
-  g_return_val_if_fail (data != NULL, FALSE);
-  g_return_val_if_fail (size > offset, FALSE);
 
-  size -= offset;
-  gst_byte_reader_init (&br, &data[offset], size);
-  g_return_val_if_fail (size >= 3, FALSE);
-
-  U_READ_UINT16 (&br, length);  /* Ls */
-  g_return_val_if_fail (size >= length, FALSE);
+  gst_byte_reader_init (&br, segment->data + segment->offset, segment->size);
+  length = segment->size;
+  g_return_val_if_fail (segment->size >= 3, FALSE);
+  gst_byte_reader_skip_unchecked (&br, 2);
 
   U_READ_UINT8 (&br, scan_hdr->num_components);
   g_return_val_if_fail (scan_hdr->num_components <=
@@ -344,9 +370,29 @@ gst_jpeg_parse_scan_header (GstJpegScanHdr * scan_hdr,
   return TRUE;
 }
 
+/**
+ * gst_jpeg_segment_parse_huffman_table:
+ * @segment: the JPEG segment
+ * @huff_tables: (out): The #GstJpegHuffmanTable structure to fill in
+ *
+ * Parses the JPEG Huffman table structure members from @segment.
+ *
+ * The caller must make sure there is enough data for the whole segment
+ * available.
+ *
+ * Note: @huf_tables represents the complete set of possible Huffman
+ * tables. However, the parser will only write to the Huffman table
+ * specified by the table destination identifier (Th). While doing so,
+ * the @valid flag of the specified Huffman table will also be set to
+ * %TRUE;
+ *
+ * Returns: TRUE if the Huffman table was correctly parsed.
+ *
+ * Since: 1.6
+ */
 gboolean
-gst_jpeg_parse_huffman_table (GstJpegHuffmanTables * huf_tables,
-    const guint8 * data, gsize size, guint offset)
+gst_jpeg_segment_parse_huffman_table (const GstJpegSegment * segment,
+    GstJpegHuffmanTables * huff_tables)
 {
   GstByteReader br;
   GstJpegHuffmanTable *huf_table;
@@ -355,16 +401,14 @@ gst_jpeg_parse_huffman_table (GstJpegHuffmanTables * huf_tables,
   guint32 value_count;
   guint i;
 
-  g_return_val_if_fail (huf_tables != NULL, FALSE);
-  g_return_val_if_fail (data != NULL, FALSE);
-  g_return_val_if_fail (size > offset, FALSE);
+  g_return_val_if_fail (segment != NULL, FALSE);
+  g_return_val_if_fail (huff_tables != NULL, FALSE);
 
-  size -= offset;
-  gst_byte_reader_init (&br, &data[offset], size);
-  g_return_val_if_fail (size >= 2, FALSE);
+  gst_byte_reader_init (&br, segment->data + segment->offset, segment->size);
+  g_return_val_if_fail (segment->size >= 2, FALSE);
 
   U_READ_UINT16 (&br, length);  /* Lh */
-  g_return_val_if_fail (size >= length, FALSE);
+  g_return_val_if_fail (segment->size >= length, FALSE);
 
   while (gst_byte_reader_get_remaining (&br)) {
     U_READ_UINT8 (&br, val);
@@ -372,9 +416,9 @@ gst_jpeg_parse_huffman_table (GstJpegHuffmanTables * huf_tables,
     table_index = (val & 0x0F);
     g_return_val_if_fail (table_index < GST_JPEG_MAX_SCAN_COMPONENTS, FALSE);
     if (table_class == 0) {
-      huf_table = &huf_tables->dc_tables[table_index];
+      huf_table = &huff_tables->dc_tables[table_index];
     } else {
-      huf_table = &huf_tables->ac_tables[table_index];
+      huf_table = &huff_tables->ac_tables[table_index];
     }
     READ_BYTES (&br, huf_table->huf_bits, 16);
     value_count = 0;
@@ -389,9 +433,30 @@ failed:
   return FALSE;
 }
 
+/**
+ * gst_jpeg_segment_parse_quantization_table:
+ * @segment: the JPEG segment
+ * @quant_tables: (out): The #GstJpegQuantTable structure to fill in
+ * @num_quant_tables: The number of allocated quantization tables in @quant_tables (FIXME)
+ *
+ * Parses the JPEG quantization table structure members from @segment.
+ *
+ * The caller must make sure there is enough data for the whole segment
+ * available.
+ *
+ * Note: @quant_tables represents the complete set of possible
+ * quantization tables. However, the parser will only write to the
+ * quantization table specified by the table destination identifier
+ * (Tq). While doing so, the @valid flag of the specified quantization
+ * table will also be set to %TRUE.
+ *
+ * Returns: TRUE if the quantization table was correctly parsed.
+ *
+ * Since: 1.6
+ */
 gboolean
-gst_jpeg_parse_quant_table (GstJpegQuantTables * quant_tables,
-    const guint8 * data, gsize size, guint offset)
+gst_jpeg_segment_parse_quantization_table (const GstJpegSegment * segment,
+    GstJpegQuantTables * quant_tables)
 {
   GstByteReader br;
   GstJpegQuantTable *quant_table;
@@ -399,16 +464,14 @@ gst_jpeg_parse_quant_table (GstJpegQuantTables * quant_tables,
   guint8 val, table_index;
   guint i;
 
+  g_return_val_if_fail (segment != NULL, FALSE);
   g_return_val_if_fail (quant_tables != NULL, FALSE);
-  g_return_val_if_fail (data != NULL, FALSE);
-  g_return_val_if_fail (size > offset, FALSE);
 
-  size -= offset;
-  gst_byte_reader_init (&br, &data[offset], size);
-  g_return_val_if_fail (size >= 2, FALSE);
+  gst_byte_reader_init (&br, segment->data + segment->offset, segment->size);
+  g_return_val_if_fail (segment->size >= 2, FALSE);
 
   U_READ_UINT16 (&br, length);  /* Lq */
-  g_return_val_if_fail (size >= length, FALSE);
+  g_return_val_if_fail (segment->size >= length, FALSE);
 
   while (gst_byte_reader_get_remaining (&br)) {
     U_READ_UINT8 (&br, val);
@@ -433,23 +496,33 @@ gst_jpeg_parse_quant_table (GstJpegQuantTables * quant_tables,
   return TRUE;
 }
 
+/**
+ * gst_jpeg_segment_parse_restart_interval:
+ * @segment: the JPEG segment
+ * @interval: (out): The parsed restart interval value
+ *
+ * The caller must make sure there is enough data for the whole segment
+ * available.
+ *
+ * Returns: TRUE if the restart interval value was correctly parsed.
+ *
+ * Since: 1.6
+ */
 gboolean
-gst_jpeg_parse_restart_interval (guint * interval,
-    const guint8 * data, gsize size, guint offset)
+gst_jpeg_segment_parse_restart_interval (const GstJpegSegment * segment,
+    guint * interval)
 {
   GstByteReader br;
   guint16 length, val;
 
+  g_return_val_if_fail (segment != NULL, FALSE);
   g_return_val_if_fail (interval != NULL, FALSE);
-  g_return_val_if_fail (data != NULL, FALSE);
-  g_return_val_if_fail (size > offset, FALSE);
 
-  size -= offset;
-  gst_byte_reader_init (&br, &data[offset], size);
-  g_return_val_if_fail (size >= 4, FALSE);
+  gst_byte_reader_init (&br, segment->data + segment->offset, segment->size);
+  g_return_val_if_fail (segment->size >= 4, FALSE);
 
   U_READ_UINT16 (&br, length);  /* Lr */
-  g_return_val_if_fail (size >= length, FALSE);
+  g_return_val_if_fail (segment->size >= length, FALSE);
 
   U_READ_UINT16 (&br, val);
   *interval = val;
@@ -501,6 +574,15 @@ build_huffman_table (GstJpegHuffmanTable * huf_table,
   huf_table->valid = TRUE;
 }
 
+/**
+ * gst_jpeg_get_default_huffman_tables:
+ * @huf_tables: (out): The default DC/AC Huffman tables to fill in
+ *
+ * Fills in @huf_tables with the default AC/DC Huffman tables, as
+ * specified by the JPEG standard.
+ *
+ * Since: 1.6
+ */
 void
 gst_jpeg_get_default_huffman_tables (GstJpegHuffmanTables * huf_tables)
 {
@@ -534,6 +616,15 @@ build_quant_table (GstJpegQuantTable * quant_table, const guint8 values[64])
   quant_table->valid = TRUE;
 }
 
+/**
+ * gst_jpeg_get_default_quantization_table:
+ * @quant_tables: (out): The default luma/chroma quant-tables in zigzag mode
+ *
+ * Fills in @quant_tables with the default quantization tables, as
+ * specified by the JPEG standard.
+ *
+ * Since: 1.6
+ */
 void
 gst_jpeg_get_default_quantization_tables (GstJpegQuantTables * quant_tables)
 {
@@ -547,14 +638,34 @@ gst_jpeg_get_default_quantization_tables (GstJpegQuantTables * quant_tables)
       default_chrominance_quant_table);
 }
 
+/**
+ * gst_jpeg_parse:
+ * @segment: (out): pointer to a #GstJpegSegment structure to fill in
+ * @data: The data to parse
+ * @size: The size of @data
+ * @offset: The offset from which to start parsing
+ *
+ * Parses the JPEG bitstream contained in @data, and returns the
+ * detected segment as a #GstJpegSegment.
+ *
+ * Note that a valid segment may be returned with a length that exceeds
+ * the available data. It is up to the caller to make sure there's enough
+ * data available when parsing the segment.
+ *
+ * Returns: TRUE if a packet start code was found.
+ *
+ * Since: 1.6
+ */
 gboolean
-gst_jpeg_parse (GstJpegSegment * seg,
+gst_jpeg_parse (GstJpegSegment * segment,
     const guint8 * data, gsize size, guint offset)
 {
+  GstJpegSegment *seg = segment;
   GstByteReader br;
   guint16 length;
 
   g_return_val_if_fail (seg != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
 
   if (size <= offset) {
     GST_DEBUG ("failed to parse from offset %u, buffer is too small", offset);
@@ -617,6 +728,8 @@ gst_jpeg_parse (GstJpegSegment * seg,
       seg->size = gst_byte_reader_get_pos (&br) - seg->offset;
       break;
   }
+
+  seg->data = data;
   return TRUE;
 
 failed:
