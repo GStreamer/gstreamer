@@ -515,7 +515,7 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
   pres = gst_h264_parser_parse_sei (nalparser, nalu, &messages);
   if (pres != GST_H264_PARSER_OK)
-    GST_WARNING_OBJECT (h264parse, "failed to parse one ore more SEI message");
+    GST_WARNING_OBJECT (h264parse, "failed to parse one or more SEI message");
 
   /* Even if pres != GST_H264_PARSER_OK, some message could have been parsed and
    * stored in messages.
