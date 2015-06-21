@@ -34,6 +34,8 @@ G_BEGIN_DECLS
  * GST_JPEG_MAX_FRAME_COMPONENTS:
  *
  * Maximum number of image components in a frame (Nf).
+ *
+ * Since: 1.6
  */
 #define GST_JPEG_MAX_FRAME_COMPONENTS   256
 
@@ -41,6 +43,8 @@ G_BEGIN_DECLS
  * GST_JPEG_MAX_SCAN_COMPONENTS:
  *
  * Maximum number of image components in a scan (Ns).
+ *
+ * Since: 1.6
  */
 #define GST_JPEG_MAX_SCAN_COMPONENTS    4
 
@@ -48,6 +52,8 @@ G_BEGIN_DECLS
  * GST_JPEG_MAX_QUANT_ELEMENTS:
  *
  * Number of elements in the quantization table.
+ *
+ * Since: 1.6
  */
 #define GST_JPEG_MAX_QUANT_ELEMENTS     64
 
@@ -105,6 +111,8 @@ typedef struct _GstJpegSegment          GstJpegSegment;
  * @GST_JPEG_MARKER_COM: Comment marker code
  *
  * Indicates the type of JPEG segment.
+ *
+ * Since: 1.6
  */
 typedef enum {
   GST_JPEG_MARKER_SOF0          = 0xC0,
@@ -175,6 +183,8 @@ typedef enum {
  * @GST_JPEG_PROFILE_LOSSLESS: Lossless (sequential)
  *
  * JPEG encoding processes.
+ *
+ * Since: 1.6
  */
 typedef enum {
   GST_JPEG_PROFILE_BASELINE     = 0x00,
@@ -189,6 +199,8 @@ typedef enum {
  * @GST_JPEG_ENTROPY_CODING_ARITHMETIC: arithmetic coding
  *
  * JPEG entropy coding mode.
+ *
+ * Since: 1.6
  */
 typedef enum {
   GST_JPEG_ENTROPY_CODING_HUFFMAN       = 0x00,
@@ -203,6 +215,8 @@ typedef enum {
  *   already been parsed
  *
  * Quantization table.
+ *
+ * Since: 1.6
  */
 struct _GstJpegQuantTable
 {
@@ -217,6 +231,8 @@ struct _GstJpegQuantTable
  *
  * Helper data structure that holds all quantization tables used to
  * decode an image.
+ *
+ * Since: 1.6
  */
 struct _GstJpegQuantTables
 {
@@ -231,6 +247,8 @@ struct _GstJpegQuantTables
  *   been parsed
  *
  * Huffman table.
+ *
+ * Since: 1.6
  */
 struct _GstJpegHuffmanTable
 {
@@ -246,6 +264,8 @@ struct _GstJpegHuffmanTable
  *
  * Helper data structure that holds all AC/DC Huffman tables used to
  * decode an image.
+ *
+ * Since: 1.6
  */
 struct _GstJpegHuffmanTables
 {
@@ -260,6 +280,8 @@ struct _GstJpegHuffmanTables
  * @ac_selector: AC entropy coding table destination selector (Taj)
 
  * Component-specification parameters.
+ *
+ * Since: 1.6
  */
 struct _GstJpegScanComponent
 {
@@ -274,6 +296,8 @@ struct _GstJpegScanComponent
  * @components: Image components
  *
  * Scan header.
+ *
+ * Since: 1.6
  */
 struct _GstJpegScanHdr
 {
@@ -289,6 +313,8 @@ struct _GstJpegScanHdr
  * @quant_table_selector: Quantization table destination selector (Tqi)
  *
  * Component-specification parameters.
+ *
+ * Since: 1.6
  */
 struct _GstJpegFrameComponent
 {
@@ -308,6 +334,8 @@ struct _GstJpegFrameComponent
  * @restart_interval: Number of MCU in the restart interval (Ri)
  *
  * Frame header.
+ *
+ * Since: 1.6
  */
 struct _GstJpegFrameHdr
 {
@@ -329,6 +357,8 @@ struct _GstJpegFrameHdr
  *   marker code but including any length bytes.
  *
  * A structure that contains the type of a segment, its offset and its size.
+ *
+ * Since: 1.6
  */
 struct _GstJpegSegment
 {

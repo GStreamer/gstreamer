@@ -29,6 +29,7 @@
         <filename>-lgstcodeparsers-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gsth264parser.xml" />
+      <xi:include href="xml/gstjpegparser.xml" />
       <xi:include href="xml/gstmpegvideoparser.xml" />
       <xi:include href="xml/gstmpeg4parser.xml" />
       <xi:include href="xml/gstvc1parser.xml" />

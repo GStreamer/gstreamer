@@ -51,6 +51,42 @@ gst_h264_video_calculate_framerate
 </SECTION>
 
 <SECTION>
+<FILE>gstjpegparser</FILE>
+<TITLE>jpegparser</TITLE>
+<INCLUDE>gst/codecparsers/gstjpegparser.h</INCLUDE>
+GST_JPEG_MAX_FRAME_COMPONENTS
+GST_JPEG_MAX_SCAN_COMPONENTS
+GST_JPEG_MAX_QUANT_ELEMENTS
+GstJpegMarker;
+GST_JPEG_MARKER_SOF_MIN
+GST_JPEG_MARKER_SOF_MAX
+GST_JPEG_MARKER_APP_MIN
+GST_JPEG_MARKER_APP_MAX
+GST_JPEG_MARKER_RST_MIN
+GST_JPEG_MARKER_RST_MAX
+GstJpegEntropyCodingMode
+GstJpegProfile
+GstJpegSegment
+gst_jpeg_parse
+GstJpegFrameHdr
+GstJpegFrameComponent
+gst_jpeg_segment_parse_frame_header
+GstJpegScanHdr
+GstJpegScanComponent
+gst_jpeg_segment_parse_scan_header
+GstJpegHuffmanTables
+GstJpegHuffmanTable
+gst_jpeg_segment_parse_huffman_table
+GstJpegQuantTable
+gst_jpeg_segment_parse_quantization_table
+gst_jpeg_segment_parse_restart_interval
+gst_jpeg_get_default_quantization_tables
+gst_jpeg_get_default_huffman_tables
+<SUBSECTION Standard>
+<SUBSECTION Private>
+</SECTION>
+
+<SECTION>
 <FILE>gstvc1parser</FILE>
 <TITLE>vc1parser</TITLE>
 <INCLUDE>gst/codecparsers/gstvc1parser.h</INCLUDE>

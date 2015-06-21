@@ -18,6 +18,17 @@
  *  Boston, MA 02110-1301 USA
  */
 
+/**
+ * SECTION:gstjpegparser
+ * @short_description: Convenience library for JPEG bitstream parsing.
+ *
+ * <refsect2>
+ * <para>
+ * Provides useful functions for parsing JPEG images
+ * </para>
+ * </refsect2>
+ */
+
 #include <string.h>
 #include <stdlib.h>
 #include <gst/base/gstbytereader.h>
