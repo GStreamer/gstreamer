@@ -477,6 +477,23 @@ static void
 ges_track_constructed (GObject * object)
 {
   GESTrack *self = GES_TRACK (object);
+  gchar *componame = NULL;
+
+  if (self->type == GES_TRACK_TYPE_VIDEO) {
+    componame =
+        g_strdup_printf ("(video)%s",
+        GST_OBJECT_NAME (self->priv->composition));
+  } else if (self->type == GES_TRACK_TYPE_AUDIO) {
+    componame =
+        g_strdup_printf ("(audio)%s",
+        GST_OBJECT_NAME (self->priv->composition));
+  }
+
+  if (componame) {
+    gst_object_set_name (GST_OBJECT (self->priv->composition), componame);
+
+    g_free (componame);
+  }
 
   if (!gst_bin_add (GST_BIN (self), self->priv->composition))
     GST_ERROR ("Couldn't add composition to bin !");
