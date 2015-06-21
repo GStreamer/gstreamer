@@ -1008,7 +1008,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   guint8 *data, *bdata;
   gsize bsize;
 
-  if (GST_CLOCK_STIME_IS_VALID (cpad->dts)) {
+  if (!GST_CLOCK_STIME_IS_VALID (cpad->dts)) {
     pts = dts = cpad->last_timestamp / GST_MSECOND;
   } else {
     pts = cpad->pts / GST_MSECOND;
