@@ -52,6 +52,7 @@ gst*orc.h
 /ext/gsettings/org.freedesktop.gstreamer-0.10.default-elements.gschema.xml
 
 /tests/check/orc
+/tests/examples/codecparsers/parse-jpeg
 /tests/examples/shapewipe/shapewipe-example
 /tests/examples/jack/jack_client
 /tests/examples/opencv/gstmotioncells_dynamic_test

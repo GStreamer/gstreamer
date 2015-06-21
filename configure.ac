@@ -3273,6 +3273,7 @@ tests/files/Makefile
 tests/examples/Makefile
 tests/examples/avsamplesink/Makefile
 tests/examples/camerabin2/Makefile
+tests/examples/codecparsers/Makefile
 tests/examples/directfb/Makefile
 tests/examples/gl/Makefile
 tests/examples/gl/cocoa/Makefile
