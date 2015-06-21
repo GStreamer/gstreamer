@@ -394,7 +394,7 @@ gst_jpeg_segment_parse_scan_header (const GstJpegSegment * segment,
 /**
  * gst_jpeg_segment_parse_huffman_table:
  * @segment: the JPEG segment
- * @huff_tables: (out): The #GstJpegHuffmanTable structure to fill in
+ * @huff_tables: (out): The #GstJpegHuffmanTables structure to fill in
  *
  * Parses the JPEG Huffman table structure members from @segment.
  *
@@ -458,8 +458,7 @@ failed:
 /**
  * gst_jpeg_segment_parse_quantization_table:
  * @segment: the JPEG segment
- * @quant_tables: (out): The #GstJpegQuantTable structure to fill in
- * @num_quant_tables: The number of allocated quantization tables in @quant_tables (FIXME)
+ * @quant_tables: (out): The #GstJpegQuantTables structure to fill in
  *
  * Parses the JPEG quantization table structure members from @segment.
  *
