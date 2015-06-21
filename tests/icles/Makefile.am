@@ -11,11 +11,6 @@ else
 GST_SOUNDTOUCH_TESTS = 
 endif
 
-GST_VP8PARSER_TESTS     = vp8parser-test
-vp8parser_test_SOURCES  = vp8parser-test.c
-vp8parser_test_CFLAGS   = -I$(top_srcdir)/gst-libs $(GST_CFLAGS)
-vp8parser_test_LDADD    = $(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_API_VERSION@.la $(GST_LIBS)
-
 # needs porting
 #if HAVE_GTK
 #
@@ -30,5 +25,5 @@ vp8parser_test_LDADD    = $(top_builddir)/gst-libs/gst/codecparsers/libgstcodecp
 GST_METADATA_TESTS =
 #endif
 
-noinst_PROGRAMS = $(GST_SOUNDTOUCH_TESTS) $(GST_METADATA_TESTS) $(GST_VP8PARSER_TESTS)
+noinst_PROGRAMS = $(GST_SOUNDTOUCH_TESTS) $(GST_METADATA_TESTS)
 

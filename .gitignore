@@ -53,6 +53,9 @@ gst*orc.h
 
 /tests/check/orc
 /tests/examples/codecparsers/parse-jpeg
+/tests/examples/codecparsers/parse-vp8
+/tests/examples/gtk/gtkglsink
+/tests/examples/gtk/gtksink
 /tests/examples/shapewipe/shapewipe-example
 /tests/examples/jack/jack_client
 /tests/examples/opencv/gstmotioncells_dynamic_test
