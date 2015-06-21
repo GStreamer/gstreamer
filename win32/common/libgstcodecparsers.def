@@ -46,6 +46,14 @@ EXPORTS
 	gst_h265_sei_free
 	gst_h265_slice_hdr_copy
 	gst_h265_slice_hdr_free
+	gst_jpeg_get_default_huffman_tables
+	gst_jpeg_get_default_quantization_tables
+	gst_jpeg_parse
+	gst_jpeg_segment_parse_frame_header
+	gst_jpeg_segment_parse_huffman_table
+	gst_jpeg_segment_parse_quantization_table
+	gst_jpeg_segment_parse_restart_interval
+	gst_jpeg_segment_parse_scan_header
 	gst_mpeg4_parse
 	gst_mpeg4_parse_group_of_vop
 	gst_mpeg4_parse_video_object_layer
