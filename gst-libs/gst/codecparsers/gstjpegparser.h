@@ -303,6 +303,12 @@ struct _GstJpegScanHdr
 {
   guint8 num_components;                /* 1 .. 4       */
   GstJpegScanComponent components[GST_JPEG_MAX_SCAN_COMPONENTS];
+
+  /*< private >*/
+  guint8 _reserved1; /* Ss */
+  guint8 _reserved2; /* Se */
+  guint8 _reserved3; /* Al */
+  guint8 _reserved4; /* Ah */
 };
 
 /**
