@@ -3412,8 +3412,7 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
       JBUF_WAIT_EVENT (priv, flushing);
       result = GST_FLOW_OK;
     }
-  }
-  while (result == GST_FLOW_OK);
+  } while (result == GST_FLOW_OK);
   /* store result for upstream */
   priv->srcresult = result;
   /* if we get here we need to pause */

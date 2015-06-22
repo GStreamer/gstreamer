@@ -261,7 +261,7 @@ get_buffer_level (RTPJitterBuffer * jbuf)
   RTPJitterBufferItem *high_buf = NULL, *low_buf = NULL;
   guint64 level;
 
-  /* first first buffer with timestamp */
+  /* first buffer with timestamp */
   high_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (jbuf->packets);
   while (high_buf) {
     if (high_buf->dts != -1 || high_buf->pts != -1)
