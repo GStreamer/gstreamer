@@ -90,10 +90,12 @@ GST_READER_new (GstMikMod * mik)
   GST_READER *gst_reader;
 
   gst_reader = (GST_READER *) g_malloc (sizeof (GST_READER));
-  gst_reader->offset = 0;
-  gst_reader->eof = 0;
-  gst_reader->mik = mik;
+
   if (gst_reader) {
+    gst_reader->offset = 0;
+    gst_reader->eof = 0;
+    gst_reader->mik = mik;
+
     gst_reader->core.Eof = &GST_READER_Eof;
     gst_reader->core.Read = &GST_READER_Read;
     gst_reader->core.Get = &GST_READER_Get;
