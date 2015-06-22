@@ -467,6 +467,8 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
     }
     case GST_EVENT_FLUSH_STOP:{
       GstStream *stream;
+      GList *l;
+      GstClockTime new_group_start_time = 0;
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       stream = gst_pad_get_element_private (pad);
@@ -481,6 +483,24 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         stream->wait = FALSE;
         g_cond_broadcast (&stream->stream_finish_cond);
       }
+
+      for (l = self->streams; l; l = l->next) {
+        GstStream *ostream = l->data;
+        GstClockTime start_running_time;
+
+        if (ostream == stream)
+          continue;
+
+        if (ostream->segment.format == GST_FORMAT_TIME) {
+          start_running_time =
+              gst_segment_to_running_time (&ostream->segment,
+              GST_FORMAT_TIME, ostream->segment.start);
+
+          new_group_start_time = MAX (new_group_start_time, start_running_time);
+        }
+      }
+
+      self->group_start_time = new_group_start_time;
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
     }
