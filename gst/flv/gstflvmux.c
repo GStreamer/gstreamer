@@ -1005,8 +1005,8 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   GstMapInfo map;
   guint size;
   guint32 pts, dts, cts;
-  guint8 *data, *bdata;
-  gsize bsize;
+  guint8 *data, *bdata = NULL;
+  gsize bsize = 0;
 
   if (!GST_CLOCK_STIME_IS_VALID (cpad->dts)) {
     pts = dts = cpad->last_timestamp / GST_MSECOND;
@@ -1029,9 +1029,11 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
 
   GST_LOG_OBJECT (mux, "got pts %i dts %i cts %i\n", pts, dts, cts);
 
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
-  bdata = map.data;
-  bsize = map.size;
+  if (buffer != NULL) {
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+    bdata = map.data;
+    bsize = map.size;
+  }
 
   size = 11;
   if (cpad->video) {
@@ -1064,7 +1066,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   data[8] = data[9] = data[10] = 0;
 
   if (cpad->video) {
-    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
+    if (buffer && GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
       data[11] |= 2 << 4;
     else
       data[11] |= 1 << 4;
@@ -1074,6 +1076,10 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     if (cpad->video_codec == 7) {
       if (is_codec_data) {
         data[12] = 0;
+        GST_WRITE_UINT24_BE (data + 13, 0);
+      } else if (bsize == 0) {
+        /* AVC end of sequence */
+        data[12] = 2;
         GST_WRITE_UINT24_BE (data + 13, 0);
       } else {
         /* ACV NALU */
@@ -1099,24 +1105,29 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     }
   }
 
-  gst_buffer_unmap (buffer, &map);
+  if (buffer)
+    gst_buffer_unmap (buffer, &map);
 
   GST_WRITE_UINT32_BE (data + size - 4, size - 4);
 
   GST_BUFFER_PTS (tag) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DTS (tag) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (tag) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET (buffer);
-  GST_BUFFER_OFFSET_END (tag) = GST_BUFFER_OFFSET_END (buffer);
 
-  /* mark the buffer if it's an audio buffer and there's also video being muxed
-   * or it's a video interframe */
-  if ((mux->have_video && !cpad->video) ||
-      GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
+  if (buffer) {
+    GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET (buffer);
+    GST_BUFFER_OFFSET_END (tag) = GST_BUFFER_OFFSET_END (buffer);
+
+    /* mark the buffer if it's an audio buffer and there's also video being muxed
+     * or it's a video interframe */
+    if ((mux->have_video && !cpad->video) ||
+        GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
+      GST_BUFFER_FLAG_SET (tag, GST_BUFFER_FLAG_DELTA_UNIT);
+  } else {
     GST_BUFFER_FLAG_SET (tag, GST_BUFFER_FLAG_DELTA_UNIT);
-
-  GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET_END (tag) =
-      GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET_END (tag) =
+        GST_BUFFER_OFFSET_NONE;
+  }
 
   return tag;
 }
@@ -1133,6 +1144,12 @@ gst_flv_mux_codec_data_buffer_to_tag (GstFlvMux * mux, GstBuffer * buffer,
     GstFlvPad * cpad)
 {
   return gst_flv_mux_buffer_to_tag_internal (mux, buffer, cpad, TRUE);
+}
+
+static inline GstBuffer *
+gst_flv_mux_eos_to_tag (GstFlvMux * mux, GstFlvPad * cpad)
+{
+  return gst_flv_mux_buffer_to_tag_internal (mux, NULL, cpad, FALSE);
 }
 
 static void
@@ -1345,6 +1362,29 @@ gst_flv_mux_determine_duration (GstFlvMux * mux)
 }
 
 static GstFlowReturn
+gst_flv_mux_write_eos (GstFlvMux * mux)
+{
+  GstBuffer *tag;
+  GstFlvPad *video_pad = NULL;
+  GSList *l = mux->collect->data;
+
+  if (!mux->have_video)
+    return GST_FLOW_OK;
+
+  for (; l; l = l->next) {
+    GstFlvPad *cpad = l->data;
+    if (cpad && cpad->video) {
+      video_pad = cpad;
+      break;
+    }
+  }
+
+  tag = gst_flv_mux_eos_to_tag (mux, video_pad);
+
+  return gst_flv_mux_push (mux, tag);
+}
+
+static GstFlowReturn
 gst_flv_mux_rewrite_header (GstFlvMux * mux)
 {
   GstBuffer *rewrite, *index, *tmp;
@@ -1550,6 +1590,8 @@ gst_flv_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
   if (best) {
     return gst_flv_mux_write_buffer (mux, best, buffer);
   } else {
+    /* FIXME check return values */
+    gst_flv_mux_write_eos (mux);
     gst_flv_mux_rewrite_header (mux);
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
     return GST_FLOW_EOS;
