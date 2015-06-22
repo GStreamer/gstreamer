@@ -1125,11 +1125,13 @@ EXPORTS
 	gst_resource_error_get_type
 	gst_resource_error_quark
 	gst_sample_get_buffer
+	gst_sample_get_buffer_list
 	gst_sample_get_caps
 	gst_sample_get_info
 	gst_sample_get_segment
 	gst_sample_get_type
 	gst_sample_new
+	gst_sample_set_buffer_list
 	gst_scheduling_flags_get_type
 	gst_search_mode_get_type
 	gst_seek_flags_get_type
