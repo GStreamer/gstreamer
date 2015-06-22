@@ -843,9 +843,12 @@ _gl_mem_map_buffer (GstGLMemory * gl_mem, GstMapInfo * info, gsize maxsize)
   if ((info->flags & GST_MAP_GL) == GST_MAP_GL) {
     if ((info->flags & GST_MAP_READ) == GST_MAP_READ) {
       GST_TRACE ("mapping GL texture:%u for reading", gl_mem->tex_id);
-      gl_mem->mem.target = GL_PIXEL_UNPACK_BUFFER;
-      /* data -> pbo */
-      alloc_class->map_buffer ((GstGLBaseBuffer *) gl_mem, info, maxsize);
+
+      if (gl_mem->mem.id && CONTEXT_SUPPORTS_PBO_UPLOAD (gl_mem->mem.context)) {
+        gl_mem->mem.target = GL_PIXEL_UNPACK_BUFFER;
+        /* data -> pbo */
+        alloc_class->map_buffer ((GstGLBaseBuffer *) gl_mem, info, maxsize);
+      }
       /* pbo -> texture */
       _upload_memory (gl_mem, info, maxsize);
     }
@@ -1385,8 +1388,9 @@ gst_gl_memory_upload_transfer (GstGLMemory * gl_mem)
 {
   g_return_if_fail (gst_is_gl_memory ((GstMemory *) gl_mem));
 
-  gst_gl_context_thread_add (gl_mem->mem.context,
-      (GstGLContextThreadFunc) _upload_transfer, gl_mem);
+  if (CONTEXT_SUPPORTS_PBO_UPLOAD (gl_mem->mem.context))
+    gst_gl_context_thread_add (gl_mem->mem.context,
+        (GstGLContextThreadFunc) _upload_transfer, gl_mem);
 }
 
 gint
