@@ -1537,6 +1537,170 @@ GST_START_TEST (test_element_link)
 
 GST_END_TEST;
 
+typedef struct _GstTestPadReqSink GstTestPadReqSink;
+typedef struct _GstTestPadReqSinkClass GstTestPadReqSinkClass;
+
+struct _GstTestPadReqSink
+{
+  GstElement element;
+};
+
+struct _GstTestPadReqSinkClass
+{
+  GstElementClass parent_class;
+};
+
+G_GNUC_INTERNAL GType gst_testpadreqsink_get_type (void);
+
+static GstStaticPadTemplate testpadreqsink_video_template =
+GST_STATIC_PAD_TEMPLATE ("video_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("video/x-raw"));
+
+static GstStaticPadTemplate testpadreqsink_audio_template =
+GST_STATIC_PAD_TEMPLATE ("audio_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("audio/x-raw"));
+
+G_DEFINE_TYPE (GstTestPadReqSink, gst_testpadreqsink, GST_TYPE_ELEMENT);
+
+static GstPad *
+gst_testpadreqsink_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
+{
+  GstPad *pad;
+  pad = gst_pad_new_from_template (templ, name);
+  gst_pad_set_active (pad, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (element), pad);
+  return pad;
+}
+
+static void
+gst_testpadreqsink_release_pad (GstElement * element, GstPad * pad)
+{
+  gst_pad_set_active (pad, FALSE);
+  gst_element_remove_pad (element, pad);
+}
+
+static void
+gst_testpadreqsink_class_init (GstTestPadReqSinkClass * klass)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Test Pad Request Sink", "Sink", "Sink for unit tests with request pads",
+      "Thiago Santos <thiagoss@osg.samsung.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&testpadreqsink_video_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&testpadreqsink_audio_template));
+
+  gstelement_class->request_new_pad = gst_testpadreqsink_request_new_pad;
+  gstelement_class->release_pad = gst_testpadreqsink_release_pad;
+}
+
+static void
+gst_testpadreqsink_init (GstTestPadReqSink * testpadeqsink)
+{
+}
+
+static GstCaps *padreqsink_query_caps = NULL;
+
+static gboolean
+testpadreqsink_peer_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  gboolean res;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+      if (padreqsink_query_caps) {
+        gst_query_set_caps_result (query, padreqsink_query_caps);
+        res = TRUE;
+        break;
+      }
+    default:
+      res = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+
+  return res;
+}
+
+static void
+check_get_compatible_pad_request (GstElement * element, GstCaps * peer_caps,
+    GstCaps * filter, gboolean should_get_pad, const gchar * pad_tmpl_name)
+{
+  GstPad *peer, *requested;
+  GstPadTemplate *tmpl;
+
+  gst_caps_replace (&padreqsink_query_caps, peer_caps);
+  peer = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_query_function (peer, testpadreqsink_peer_query);
+  requested = gst_element_get_compatible_pad (element, peer, filter);
+
+  if (should_get_pad) {
+    fail_unless (requested != NULL);
+    if (pad_tmpl_name) {
+      tmpl = gst_pad_get_pad_template (requested);
+      fail_unless (strcmp (GST_PAD_TEMPLATE_NAME_TEMPLATE (tmpl),
+              pad_tmpl_name) == 0);
+      gst_object_unref (tmpl);
+    }
+    gst_element_release_request_pad (element, requested);
+    gst_object_unref (requested);
+  } else {
+    fail_unless (requested == NULL);
+  }
+
+  if (peer_caps)
+    gst_caps_unref (peer_caps);
+  if (filter)
+    gst_caps_unref (filter);
+  gst_object_unref (peer);
+}
+
+GST_START_TEST (test_element_get_compatible_pad_request)
+{
+  GstElement *element;
+
+  gst_element_register (NULL, "testpadreqsink", GST_RANK_NONE,
+      gst_testpadreqsink_get_type ());
+
+  element = gst_element_factory_make ("testpadreqsink", NULL);
+
+  /* Try with a peer pad with any caps and no filter,
+   * returning any pad is ok */
+  check_get_compatible_pad_request (element, NULL, NULL, TRUE, NULL);
+  /* Try with a peer pad with any caps and video as filter */
+  check_get_compatible_pad_request (element, NULL,
+      gst_caps_from_string ("video/x-raw"), TRUE, "video_%u");
+  /* Try with a peer pad with any caps and audio as filter */
+  check_get_compatible_pad_request (element, NULL,
+      gst_caps_from_string ("audio/x-raw"), TRUE, "audio_%u");
+  /* Try with a peer pad with any caps and fake caps as filter */
+  check_get_compatible_pad_request (element, NULL,
+      gst_caps_from_string ("foo/bar"), FALSE, NULL);
+
+  /* Try with a peer pad with video caps and no caps as filter */
+  check_get_compatible_pad_request (element,
+      gst_caps_from_string ("video/x-raw"), NULL, TRUE, "video_%u");
+  /* Try with a peer pad with audio caps and no caps as filter */
+  check_get_compatible_pad_request (element,
+      gst_caps_from_string ("audio/x-raw"), NULL, TRUE, "audio_%u");
+  /* Try with a peer pad with video caps and foo caps as filter */
+  check_get_compatible_pad_request (element,
+      gst_caps_from_string ("video/x-raw"), gst_caps_from_string ("foo/bar"),
+      FALSE, NULL);
+
+  gst_caps_replace (&padreqsink_query_caps, NULL);
+  gst_object_unref (element);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_utils_suite (void)
 {
@@ -1566,6 +1730,7 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_element_found_tags);
   tcase_add_test (tc_chain, test_element_link);
   tcase_add_test (tc_chain, test_element_unlink);
+  tcase_add_test (tc_chain, test_element_get_compatible_pad_request);
   tcase_add_test (tc_chain, test_set_value_from_string);
   tcase_add_test (tc_chain, test_binary_search);
 
