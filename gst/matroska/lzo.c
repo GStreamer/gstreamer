@@ -286,6 +286,8 @@ main (int argc, char *argv[])
     av_log (NULL, AV_LOG_ERROR, "decompression incorrect\n");
   else
     av_log (NULL, AV_LOG_ERROR, "decompression ok\n");
+
+  fclose (in);
   return 0;
 }
 #endif
