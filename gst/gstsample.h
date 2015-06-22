@@ -25,6 +25,7 @@
 #define __GST_SAMPLE_H__
 
 #include <gst/gstbuffer.h>
+#include <gst/gstbufferlist.h>
 #include <gst/gstcaps.h>
 #include <gst/gstsegment.h>
 
