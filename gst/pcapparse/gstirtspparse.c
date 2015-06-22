@@ -163,7 +163,6 @@ gst_irtsp_parse_handle_frame (GstBaseParse * parse,
   GstByteReader reader;
   gint off;
   GstMapInfo map;
-  gboolean ret = FALSE;
   guint framesize;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
@@ -191,7 +190,6 @@ gst_irtsp_parse_handle_frame (GstBaseParse * parse,
 
   framesize = GST_READ_UINT16_BE (map.data + 2) + 4;
   GST_LOG_OBJECT (parse, "got frame size %d", framesize);
-  ret = TRUE;
 
   if (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (parse))) {
     GstCaps *caps;
@@ -201,10 +199,8 @@ gst_irtsp_parse_handle_frame (GstBaseParse * parse,
     gst_caps_unref (caps);
   }
 
-exit:
-  gst_buffer_unmap (buf, &map);
-
-  if (ret && framesize <= map.size) {
+  if (framesize <= map.size) {
+    gst_buffer_unmap (buf, &map);
     /* HACK HACK skip header.
      * could also ask baseparse to skip this,
      * but that would give us a discontinuity for free
@@ -215,6 +211,8 @@ exit:
     return gst_base_parse_finish_frame (parse, frame, framesize);
   }
 
+exit:
+  gst_buffer_unmap (buf, &map);
   return GST_FLOW_OK;
 }
 
