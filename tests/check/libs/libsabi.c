@@ -82,16 +82,16 @@
 #   include "struct_i386.h"
 #   define HAVE_ABI_SIZES TRUE
 # endif
-#elif HAVE_CPU_X86_64
+#elif defined HAVE_CPU_X86_64
 # include "struct_x86_64.h"
 # define HAVE_ABI_SIZES TRUE
-#elif HAVE_CPU_ARM
+#elif defined HAVE_CPU_ARM
 # include "struct_arm.h"
 # define HAVE_ABI_SIZES FALSE
-#elif HAVE_CPU_PPC
+#elif defined HAVE_CPU_PPC
 # include "struct_ppc32.h"
 # define HAVE_ABI_SIZES TRUE
-#elif HAVE_CPU_PPC64
+#elif defined HAVE_CPU_PPC64
 # include "struct_ppc64.h"
 # define HAVE_ABI_SIZES TRUE
 #else /* in case someone wants to generate a new arch */
