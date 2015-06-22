@@ -2255,13 +2255,17 @@ gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
 
       if (GST_IS_BUFFER_LIST (obj)) {
         buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0);
+        gst_base_sink_set_last_buffer (sink, buf);
+        gst_base_sink_set_last_buffer_list (sink, GST_BUFFER_LIST_CAST (obj));
         g_assert (NULL != buf);
       } else if (GST_IS_BUFFER (obj)) {
         buf = GST_BUFFER_CAST (obj);
         /* For buffer lists do not set last buffer for now */
         gst_base_sink_set_last_buffer (sink, buf);
-      } else
+        gst_base_sink_set_last_buffer_list (sink, NULL);
+      } else {
         buf = NULL;
+      }
 
       if (buf) {
         GST_DEBUG_OBJECT (sink, "preroll buffer %" GST_TIME_FORMAT,
@@ -3503,6 +3507,7 @@ again:
   if (!is_list) {
     /* For buffer lists do not set last buffer for now. */
     gst_base_sink_set_last_buffer (basesink, GST_BUFFER_CAST (obj));
+    gst_base_sink_set_last_buffer_list (basesink, NULL);
 
     if (bclass->render)
       ret = bclass->render (basesink, GST_BUFFER_CAST (obj));
