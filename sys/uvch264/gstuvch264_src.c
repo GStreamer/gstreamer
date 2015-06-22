@@ -3071,6 +3071,7 @@ gst_uvc_h264_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_set_caps_result (query,
           gst_uvc_h264_src_getcaps (pad, parent, query));
       ret = TRUE;
+      break;
     default:
       ret = gst_pad_query_default (pad, parent, query);
       break;
