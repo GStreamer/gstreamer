@@ -324,7 +324,7 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
   gboolean parser_in_sync;
   gboolean terminator;
   guint32 sync = 0;
-  guint size, rate, chans, num_blocks, samples_per_block, depth;
+  guint size = 0, rate, chans, num_blocks, samples_per_block, depth;
   gint block_size;
   gint endianness;
   gint off = -1;
