@@ -606,7 +606,7 @@ gst_mpeg_audio_parse_handle_frame (GstBaseParse * parse,
   GstMpegAudioParse *mp3parse = GST_MPEG_AUDIO_PARSE (parse);
   GstBuffer *buf = frame->buffer;
   GstByteReader reader;
-  gint off, bpf;
+  gint off, bpf = 0;
   gboolean lost_sync, draining, valid, caps_change;
   guint32 header;
   guint bitrate, layer, rate, channels, version, mode, crc;
