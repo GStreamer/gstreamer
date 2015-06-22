@@ -238,6 +238,7 @@ struct _GstBaseSinkPrivate
   gint enable_last_sample;      /* atomic */
   GstBuffer *last_buffer;
   GstCaps *last_caps;
+  GstBufferList *last_buffer_list;
 
   /* negotiated caps */
   GstCaps *caps;
@@ -916,7 +917,16 @@ gst_base_sink_get_last_sample (GstBaseSink * sink)
   g_return_val_if_fail (GST_IS_BASE_SINK (sink), NULL);
 
   GST_OBJECT_LOCK (sink);
-  if (sink->priv->last_buffer) {
+  if (sink->priv->last_buffer_list) {
+    GstBuffer *first_buffer = NULL;
+
+    /* Set the first buffer in the list to last sample's buffer */
+    first_buffer = gst_buffer_list_get (sink->priv->last_buffer_list, 0);
+    res =
+        gst_sample_new (first_buffer, sink->priv->last_caps, &sink->segment,
+        NULL);
+    gst_sample_set_buffer_list (res, sink->priv->last_buffer_list);
+  } else if (sink->priv->last_buffer) {
     res = gst_sample_new (sink->priv->last_buffer,
         sink->priv->last_caps, &sink->segment, NULL);
   }
@@ -954,6 +964,32 @@ gst_base_sink_set_last_buffer_unlocked (GstBaseSink * sink, GstBuffer * buffer)
   }
 }
 
+/* with OBJECT_LOCK */
+static void
+gst_base_sink_set_last_buffer_list_unlocked (GstBaseSink * sink,
+    GstBufferList * buffer_list)
+{
+  GstBufferList *old;
+
+  old = sink->priv->last_buffer_list;
+  if (G_LIKELY (old != buffer_list)) {
+    GST_DEBUG_OBJECT (sink, "setting last buffer list to %p", buffer_list);
+    if (G_LIKELY (buffer_list))
+      gst_mini_object_ref (GST_MINI_OBJECT_CAST (buffer_list));
+    sink->priv->last_buffer_list = buffer_list;
+  } else {
+    old = NULL;
+  }
+
+  /* avoid unreffing with the lock because cleanup code might want to take the
+   * lock too */
+  if (G_LIKELY (old)) {
+    GST_OBJECT_UNLOCK (sink);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (old));
+    GST_OBJECT_LOCK (sink);
+  }
+}
+
 static void
 gst_base_sink_set_last_buffer (GstBaseSink * sink, GstBuffer * buffer)
 {
@@ -962,6 +998,18 @@ gst_base_sink_set_last_buffer (GstBaseSink * sink, GstBuffer * buffer)
 
   GST_OBJECT_LOCK (sink);
   gst_base_sink_set_last_buffer_unlocked (sink, buffer);
+  GST_OBJECT_UNLOCK (sink);
+}
+
+static void
+gst_base_sink_set_last_buffer_list (GstBaseSink * sink,
+    GstBufferList * buffer_list)
+{
+  if (!g_atomic_int_get (&sink->priv->enable_last_sample))
+    return;
+
+  GST_OBJECT_LOCK (sink);
+  gst_base_sink_set_last_buffer_list_unlocked (sink, buffer_list);
   GST_OBJECT_UNLOCK (sink);
 }
 
@@ -983,6 +1031,7 @@ gst_base_sink_set_last_sample_enabled (GstBaseSink * sink, gboolean enabled)
           !enabled, enabled) && !enabled) {
     GST_OBJECT_LOCK (sink);
     gst_base_sink_set_last_buffer_unlocked (sink, NULL);
+    gst_base_sink_set_last_buffer_list_unlocked (sink, NULL);
     GST_OBJECT_UNLOCK (sink);
   }
 }
@@ -2921,6 +2970,7 @@ gst_base_sink_flush_start (GstBaseSink * basesink, GstPad * pad)
     basesink->priv->have_latency = TRUE;
   }
   gst_base_sink_set_last_buffer (basesink, NULL);
+  gst_base_sink_set_last_buffer_list (basesink, NULL);
   GST_PAD_STREAM_UNLOCK (pad);
 }
 
@@ -3457,8 +3507,14 @@ again:
     if (bclass->render)
       ret = bclass->render (basesink, GST_BUFFER_CAST (obj));
   } else {
+    GstBufferList *buffer_list = GST_BUFFER_LIST_CAST (obj);
+
     if (bclass->render_list)
-      ret = bclass->render_list (basesink, GST_BUFFER_LIST_CAST (obj));
+      ret = bclass->render_list (basesink, buffer_list);
+
+    /* Set the first buffer and buffer list to be included in last sample */
+    gst_base_sink_set_last_buffer (basesink, sync_buf);
+    gst_base_sink_set_last_buffer_list (basesink, buffer_list);
   }
 
   if (do_qos)
@@ -3919,6 +3975,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
     priv->eos_rtime = GST_CLOCK_TIME_NONE;
     priv->call_preroll = TRUE;
     gst_base_sink_set_last_buffer (sink, NULL);
+    gst_base_sink_set_last_buffer_list (sink, NULL);
     gst_base_sink_reset_qos (sink);
 
     if (sink->clock_id) {
@@ -5109,6 +5166,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_UNLOCK (basesink);
 
       gst_base_sink_set_last_buffer (basesink, NULL);
+      gst_base_sink_set_last_buffer_list (basesink, NULL);
       priv->call_preroll = FALSE;
 
       if (!priv->commited) {
@@ -5136,6 +5194,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         }
       }
       gst_base_sink_set_last_buffer (basesink, NULL);
+      gst_base_sink_set_last_buffer_list (basesink, NULL);
       priv->call_preroll = FALSE;
       break;
     default:
