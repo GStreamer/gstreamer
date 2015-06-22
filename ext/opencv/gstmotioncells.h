@@ -106,7 +106,7 @@ struct _GstMotioncells
   guint64 consecutive_motion;
   gint width, height;
   //time stuff
-  struct timeval tv;
+  GTimeVal tv;
   double framerate;
 };
 

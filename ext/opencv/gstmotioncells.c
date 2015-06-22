@@ -374,7 +374,7 @@ gst_motion_cells_init (GstMotioncells * filter)
   filter->prev_buff_timestamp = 0;
   filter->cur_buff_timestamp = 0;
   filter->diff_timestamp = -1;
-  gettimeofday (&filter->tv, NULL);
+  g_get_current_time (&filter->tv);
   filter->starttime = 1000 * filter->tv.tv_sec;
   filter->previous_motion = FALSE;
   filter->changed_datafile = FALSE;
