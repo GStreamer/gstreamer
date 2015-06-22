@@ -917,12 +917,11 @@ tsmux_section_write_packet (GstMpegtsSectionType * type,
         len, section->pi.stream_avail - len);
 
     /* Push the packet without PCR */
-    if G_UNLIKELY
-      (!tsmux_packet_out (mux, packet_buffer, -1)) {
+    if (G_UNLIKELY (!tsmux_packet_out (mux, packet_buffer, -1))) {
       /* Buffer given away */
       packet_buffer = NULL;
       goto fail;
-      }
+    }
 
     packet_buffer = NULL;
     section->pi.stream_avail -= len;
