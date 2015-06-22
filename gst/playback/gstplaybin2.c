@@ -2987,6 +2987,11 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
         gst_bin_remove (bin, group->suburidecodebin);
         gst_element_set_locked_state (group->suburidecodebin, FALSE);
 
+        GST_SOURCE_GROUP_LOCK (group);
+        g_free (group->suburi);
+        group->suburi = NULL;
+        GST_SOURCE_GROUP_UNLOCK (group);
+
         if (group->sub_pending) {
           group->sub_pending = FALSE;
           no_more_pads_cb (NULL, group);
