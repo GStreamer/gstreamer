@@ -547,12 +547,12 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
   /* ERRORS */
 error_no_caps:
   {
-    GST_ERROR ("no caps specified");
+    GST_INFO_OBJECT (plugin, "no caps specified");
     return FALSE;
   }
 error_pool_config:
   {
-    GST_ERROR ("failed to reset buffer pool config");
+    GST_ERROR_OBJECT (plugin, "failed to reset buffer pool config");
     return FALSE;
   }
 }
