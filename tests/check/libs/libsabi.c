@@ -82,24 +82,21 @@
 #   include "struct_i386.h"
 #   define HAVE_ABI_SIZES TRUE
 # endif
-#else
-#ifdef HAVE_CPU_X86_64
-#include "struct_x86_64.h"
-#define HAVE_ABI_SIZES TRUE
-#else
-#ifdef HAVE_CPU_ARM
-#include "struct_arm.h"
-#define HAVE_ABI_SIZES FALSE
-#else
-#ifdef __powerpc__
-#include "struct_ppc32.h"
-#define HAVE_ABI_SIZES TRUE
+#elif HAVE_CPU_X86_64
+# include "struct_x86_64.h"
+# define HAVE_ABI_SIZES TRUE
+#elif HAVE_CPU_ARM
+# include "struct_arm.h"
+# define HAVE_ABI_SIZES FALSE
+#elif HAVE_CPU_PPC
+# include "struct_ppc32.h"
+# define HAVE_ABI_SIZES TRUE
+#elif HAVE_CPU_PPC64
+# include "struct_ppc64.h"
+# define HAVE_ABI_SIZES TRUE
 #else /* in case someone wants to generate a new arch */
-#include "struct_i386.h"
-#define HAVE_ABI_SIZES FALSE
-#endif
-#endif
-#endif
+# include "struct_i386.h"
+# define HAVE_ABI_SIZES FALSE
 #endif
 
 GST_START_TEST (test_ABI)

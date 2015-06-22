@@ -254,6 +254,7 @@ noinst_HEADERS = \
 	libs/struct_i386.h     \
 	libs/struct_i386_osx.h \
 	libs/struct_ppc32.h \
+	libs/struct_ppc64.h \
 	libs/struct_x86_64.h
 
 AM_CFLAGS = -I$(top_srcdir)/gst-libs -I$(top_builddir)/gst-libs \
