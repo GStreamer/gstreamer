@@ -940,9 +940,7 @@ gst_matroska_parse_add_stream (GstMatroskaParse * parse, GstEbmlRead * ebml)
     parse->common.num_streams--;
     g_ptr_array_remove_index (parse->common.src, parse->common.num_streams);
     g_assert (parse->common.src->len == parse->common.num_streams);
-    if (context) {
-      gst_matroska_track_free (context);
-    }
+    gst_matroska_track_free (context);
 
     return ret;
   }

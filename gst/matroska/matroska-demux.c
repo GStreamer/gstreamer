@@ -1123,9 +1123,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
     demux->common.num_streams--;
     g_ptr_array_remove_index (demux->common.src, demux->common.num_streams);
     g_assert (demux->common.src->len == demux->common.num_streams);
-    if (context) {
-      gst_matroska_track_free (context);
-    }
+    gst_matroska_track_free (context);
 
     return ret;
   }
