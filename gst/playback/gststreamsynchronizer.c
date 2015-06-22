@@ -71,6 +71,8 @@ typedef struct
   gboolean seen_data;
   GstClockTime gap_duration;
 
+  GstStreamFlags flags;
+
   GCond stream_finish_cond;
 
   /* seqnum of the previously received STREAM_START
@@ -298,6 +300,8 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         break;
       }
 
+      gst_event_parse_stream_flags (event, &stream->flags);
+
       if ((have_group_id && stream->group_id != group_id) || (!have_group_id
               && stream->stream_start_seqnum != seqnum)) {
         stream->is_eos = FALSE;
@@ -342,8 +346,9 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         for (l = self->streams; l; l = l->next) {
           GstStream *ostream = l->data;
 
-          all_wait = all_wait && ostream->wait && (!have_group_id
-              || ostream->group_id == group_id);
+          all_wait = all_wait && ((ostream->flags & GST_STREAM_FLAG_SPARSE)
+              || (ostream->wait && (!have_group_id
+                      || ostream->group_id == group_id)));
           if (!all_wait)
             break;
         }
