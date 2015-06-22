@@ -3064,14 +3064,18 @@ gst_uvc_h264_src_getcaps (GstPad * pad, GstObject * parent, GstQuery * query)
 static gboolean
 gst_uvc_h264_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  gboolean ret = FALSE;
+  gboolean ret;
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CAPS:
-      gst_query_set_caps_result (query,
-          gst_uvc_h264_src_getcaps (pad, parent, query));
+    case GST_QUERY_CAPS:{
+      GstCaps *caps;
+
+      caps = gst_uvc_h264_src_getcaps (pad, parent, query);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
       ret = TRUE;
       break;
+    }
     default:
       ret = gst_pad_query_default (pad, parent, query);
       break;
