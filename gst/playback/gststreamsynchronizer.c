@@ -500,6 +500,10 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         }
       }
 
+      GST_DEBUG_OBJECT (pad,
+          "Updating group start time from %" GST_TIME_FORMAT " to %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (self->group_start_time),
+          GST_TIME_ARGS (new_group_start_time));
       self->group_start_time = new_group_start_time;
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
