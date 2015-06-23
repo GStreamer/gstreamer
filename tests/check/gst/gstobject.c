@@ -140,7 +140,7 @@ thread_name_object (GstObject * object)
   g_usleep (100000);
 
   /* write our name repeatedly */
-  g_message ("THREAD %s: starting loop\n", thread_id);
+  g_message ("THREAD %s: starting loop", thread_id);
   while (THREAD_TEST_RUNNING ()) {
     gst_object_set_name (object, thread_id);
     /* a minimal sleep invokes a thread switch */
@@ -148,7 +148,7 @@ thread_name_object (GstObject * object)
   }
 
   /* thread is done, so let's return */
-  g_message ("THREAD %s: set name\n", thread_id);
+  g_message ("THREAD %s: set name", thread_id);
   g_free (thread_id);
 
   return NULL;
@@ -162,7 +162,7 @@ GST_START_TEST (test_fake_object_name_threaded_wrong)
   gint i;
   gboolean expected_failure = FALSE;
 
-  g_message ("\nTEST: set/get without lock\n");
+  g_message ("\nTEST: set/get without lock");
 
   object = g_object_new (gst_fake_object_get_type (), NULL);
   gst_object_set_name (object, "main");
@@ -175,7 +175,7 @@ GST_START_TEST (test_fake_object_name_threaded_wrong)
     THREAD_SWITCH ();
     name = gst_object_get_name (object);
     if (strcmp (name, "main") != 0) {
-      g_message ("MAIN: expected failure during run %d\n", i);
+      g_message ("MAIN: expected failure during run %d", i);
       expected_failure = TRUE;
       g_free (name);
       break;
@@ -202,7 +202,7 @@ GST_START_TEST (test_fake_object_name_threaded_right)
   gchar *name;
   gint i;
 
-  g_message ("\nTEST: set/get inside lock\n");
+  g_message ("\nTEST: set/get inside lock");
 
   object = g_object_new (gst_fake_object_get_type (), NULL);
   gst_object_set_name (object, "main");
@@ -248,14 +248,14 @@ thread_name_object_default (int *i)
   for (j = *i; j < num_objects; j += num_threads) {
     GstObject *o = GST_OBJECT (g_list_nth_data (object_list, j));
 
-    /* g_message ("THREAD %p: setting default name on object %d\n",
+    /* g_message ("THREAD %p: setting default name on object %d",
        g_thread_self (), j); */
     gst_object_set_name (o, NULL);
     THREAD_SWITCH ();
   }
 
   /* thread is done, so let's return */
-  g_message ("THREAD %p: set name\n", g_thread_self ());
+  g_message ("THREAD %p: set name", g_thread_self ());
   g_free (i);
 
   return NULL;
@@ -293,7 +293,7 @@ GST_START_TEST (test_fake_object_name_threaded_unique)
   gchar *name1, *name2;
   GList *l;
 
-  g_message ("\nTEST: uniqueness of default names\n");
+  g_message ("\nTEST: uniqueness of default names");
 
   for (i = 0; i < num_objects; ++i) {
     object = g_object_new (gst_fake_object_get_type (), NULL);
@@ -321,7 +321,7 @@ GST_START_TEST (test_fake_object_name_threaded_unique)
 
   name1 = gst_object_get_name (GST_OBJECT (object_list->data));
   for (l = object_list->next; l->next; l = l->next) {
-    g_message ("object with name %s\n", name1);
+    g_message ("object with name %s", name1);
     name2 = gst_object_get_name (GST_OBJECT (l->data));
     fail_if (strcmp (name1, name2) == 0, "Two objects with name %s", name2);
     g_free (name1);

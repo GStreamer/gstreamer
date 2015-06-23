@@ -66,7 +66,7 @@ static void gst_check_log_message_func
     const gchar * message, gpointer user_data)
 {
   if (_gst_check_debug) {
-    g_print ("%s", message);
+    g_print ("%s\n", message);
   }
 }
 
