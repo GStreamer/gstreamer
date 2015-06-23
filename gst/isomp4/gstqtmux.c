@@ -495,6 +495,7 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->last_dts = 0;
   qtpad->dts_adjustment = GST_CLOCK_TIME_NONE;
   qtpad->first_ts = GST_CLOCK_TIME_NONE;
+  qtpad->first_dts = GST_CLOCK_TIME_NONE;
   qtpad->prepare_buf_func = NULL;
   qtpad->create_empty_buffer = NULL;
   qtpad->avg_bitrate = 0;
@@ -2476,10 +2477,14 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
       }
 
       if (has_gap || has_shift) {
-        guint32 shift = gst_util_uint64_scale_round (qtpad->dts_adjustment,
+        GstClockTime ctts;
+        guint32 media_start;
+
+        ctts = qtpad->first_ts - qtpad->first_dts;
+        media_start = gst_util_uint64_scale_round (ctts,
             atom_trak_get_timescale (qtpad->trak), GST_SECOND);
 
-        atom_trak_set_elst_entry (qtpad->trak, 1, duration, shift,
+        atom_trak_set_elst_entry (qtpad->trak, 1, duration, media_start,
             (guint32) (1 * 65536.0));
       }
 
@@ -3046,9 +3051,9 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     }
 
     if (GST_BUFFER_DTS_IS_VALID (last_buf)) {
-      pad->last_dts = GST_BUFFER_DTS (last_buf);
+      pad->first_dts = pad->last_dts = GST_BUFFER_DTS (last_buf);
     } else if (GST_BUFFER_PTS_IS_VALID (last_buf)) {
-      pad->last_dts = GST_BUFFER_PTS (last_buf);
+      pad->first_dts = pad->last_dts = GST_BUFFER_PTS (last_buf);
     }
 
     if (GST_CLOCK_TIME_IS_VALID (pad->first_ts)) {
@@ -3056,7 +3061,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     } else {
       GST_WARNING_OBJECT (qtmux, "First buffer for pad %s has no timestamp, "
           "using 0 as first timestamp", GST_PAD_NAME (pad->collect.pad));
-      pad->first_ts = 0;
+      pad->first_ts = pad->first_dts = 0;
     }
     GST_DEBUG_OBJECT (qtmux, "Stored first timestamp for pad %s %"
         GST_TIME_FORMAT, GST_PAD_NAME (pad->collect.pad),
