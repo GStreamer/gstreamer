@@ -408,7 +408,6 @@ nle_source_send_event (GstElement * element, GstEvent * event)
     case GST_EVENT_SEEK:
       source->priv->seek_event = event;
       break;
-      /* Fall through that shit nigga */
     default:
       res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
       break;
