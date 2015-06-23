@@ -248,18 +248,10 @@ context_create (GstVaapiContext * context)
       }
 #if VA_CHECK_VERSION(0,37,0)
       if (cip->profile == GST_VAAPI_PROFILE_JPEG_BASELINE) {
-        VAConfigAttribValEncJPEG jpeg_attrib_val;
-        /* JPEG Encoding Attribute */
         attrib->type = VAConfigAttribEncJPEG;
         if (!context_get_attribute (context, attrib->type, &value))
           goto cleanup;
-        jpeg_attrib_val.value = attrib->value;
-        /* Set JPEG profile attribs */
-        jpeg_attrib_val.bits.arithmatic_coding_mode = 0;
-        jpeg_attrib_val.bits.progressive_dct_mode = 0;
-        jpeg_attrib_val.bits.non_interleaved_mode = 1;
-        jpeg_attrib_val.bits.differential_mode = 0;
-        attrib->value = jpeg_attrib_val.value;
+        attrib->value = value;
         attrib++;
       }
 #endif
