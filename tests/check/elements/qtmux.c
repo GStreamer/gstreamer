@@ -661,6 +661,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GType test_mp3_enc_get_type (void);
+static void test_input_push_segment_start (gpointer user_data,
+    GstClockTime start);
 
 G_DEFINE_TYPE (TestMp3Enc, test_mp3_enc, GST_TYPE_ELEMENT);
 
@@ -926,9 +928,9 @@ struct TestInputData
 
   /* When comparing ts, the input will be subtracted from this */
   gint64 ts_offset;
-  /* Due to DTS, the segment start might be shifted so this variable
-   * is used to vefity it */
-  gint64 expected_segment_start;
+  /* Due to DTS, the segment start might be shifted so this list
+   * is used to vefity each received segments */
+  GList *expected_segment_start;
 
   GstClockTime expected_gap_ts;
   GstClockTime expected_gap_duration;
@@ -943,7 +945,7 @@ static void
 test_input_data_init (struct TestInputData *data)
 {
   data->ts_offset = 0;
-  data->expected_segment_start = 0;
+  data->expected_segment_start = NULL;
   data->expected_gap_ts = 0;
   data->expected_gap_duration = 0;
   data->gap_received = FALSE;
@@ -951,6 +953,8 @@ test_input_data_init (struct TestInputData *data)
   data->sinkpad = NULL;
   data->input = NULL;
   data->thread = NULL;
+
+  test_input_push_segment_start (data, 0);
 }
 
 static void
@@ -990,6 +994,36 @@ test_input_push_data (gpointer user_data)
     }
   }
   return NULL;
+}
+
+static void
+test_input_push_segment_start (gpointer user_data, GstClockTime start)
+{
+  struct TestInputData *data = user_data;
+  GstClockTime *start_data = g_malloc (sizeof (GstClockTime));
+
+  *start_data = start;
+  data->expected_segment_start = g_list_append (data->expected_segment_start,
+      start_data);
+}
+
+static GstClockTime
+test_input_pop_segment_start (gpointer user_data)
+{
+  struct TestInputData *data = user_data;
+  GstClockTime start = GST_CLOCK_TIME_NONE;
+  GstClockTime *start_data;
+
+  if (data->expected_segment_start) {
+    start_data = data->expected_segment_start->data;
+    data->expected_segment_start =
+        g_list_delete_link (data->expected_segment_start,
+        data->expected_segment_start);
+    start = *start_data;
+    g_free (start_data);
+  }
+
+  return start;
 }
 
 static GstBuffer *
@@ -1074,7 +1108,7 @@ _test_sink_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       fail_unless (test_data->output_iter);
       fail_unless (GST_IS_EVENT (test_data->output_iter->data));
       gst_event_parse_segment (event, &segment);
-      fail_unless (segment->start == test_data->expected_segment_start);
+      fail_unless (segment->start == test_input_pop_segment_start (test_data));
       test_data->output_iter = g_list_next (test_data->output_iter);
       break;
     }
@@ -1445,7 +1479,8 @@ GST_START_TEST (test_muxing_dts_outside_segment)
   /* First DTS is 0, first PTS is 1s. The segment start being 1, this means
    * running time -1s and 0. So the output segment should start from 1s to keep
    * the same running time */
-  input1.expected_segment_start = GST_SECOND;
+  test_input_pop_segment_start (&input1);
+  test_input_push_segment_start (&input1, GST_SECOND);
 
   input2.input = NULL;
   input2.input =
@@ -1512,6 +1547,9 @@ GST_START_TEST (test_muxing_initial_gap)
 
   /* We expect a 1s gap at the start */
   input1.expected_gap_duration = GST_SECOND;
+  /* There will be two segments, first is 0, so leave it there, second should
+   * match the first CTTS (PTS - DTS) */
+  test_input_push_segment_start (&input1, GST_SECOND);
 
   input2.input = NULL;
   input2.input =
