@@ -79,7 +79,7 @@ ges_smart_mixer_get_mixer_pad (GESSmartMixer * self, GstPad ** mixerpad)
     return NULL;
 
   info = g_hash_table_lookup (self->pads_infos, sinkpad);
-  *mixerpad = info->mixer_pad;
+  *mixerpad = gst_object_ref (info->mixer_pad);
 
   return sinkpad;
 }
