@@ -153,6 +153,11 @@ struct _GESTimelinePrivate
 
   /* The auto-transition of the timeline */
   gboolean auto_transition;
+  /* Use to determine that a edit action should be rolled
+   * back because it leads to a wrong state of the element
+   * position (currently only happens if 3 clips overlap) */
+  gboolean needs_rollback;
+  gboolean rolling_back;
 
   /* Timeline edition modes and snapping management */
   guint64 snapping_distance;
@@ -844,19 +849,25 @@ _find_transition_from_auto_transitions (GESTimeline * timeline,
     GESTrackElement * next, GstClockTime transition_duration)
 {
   GList *tmp;
-  GESAutoTransition *auto_transition = NULL;
-
-  gchar *key = g_strdup_printf ("%p%p", prev, next);
 
   for (tmp = timeline->priv->auto_transitions; tmp; tmp = tmp->next) {
-    if (!g_strcmp0 (GES_AUTO_TRANSITION (tmp->data)->key, key)) {
-      auto_transition = tmp->data;
-      break;
+    GESAutoTransition *auto_trans = (GESAutoTransition *) tmp->data;
+
+    /* We already have a transition linked to one of the elements we want to
+     * find a transition for */
+    if (auto_trans->previous_source == prev || auto_trans->next_source == next) {
+      if (auto_trans->previous_source != prev
+          || auto_trans->next_source != next) {
+        timeline->priv->needs_rollback = TRUE;
+        GST_INFO_OBJECT (timeline, "Failed creating auto transition, "
+            " trying to have 3 clips overlapping, rolling back");
+      }
+
+      return auto_trans;
     }
   }
-  g_free (key);
 
-  return auto_transition;
+  return NULL;
 }
 
 static GESAutoTransition *
@@ -1282,7 +1293,10 @@ done:
   if (emit) {
     GstClockTime snap_time = ret ? *ret : GST_CLOCK_TIME_NONE;
 
-    ges_timeline_emit_snappig (timeline, trackelement, ret);
+    if (!timeline->priv->needs_rollback)
+      ges_timeline_emit_snappig (timeline, trackelement, ret);
+    else
+      ges_timeline_emit_snappig (timeline, trackelement, NULL);
 
     GST_DEBUG_OBJECT (timeline, "Snaping at %" GST_TIME_FORMAT,
         GST_TIME_ARGS (snap_time));
@@ -1646,7 +1660,7 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
   MoveContext *mv_ctx = &timeline->priv->movecontext;
 
   mv_ctx->ignore_needs_ctx = TRUE;
-
+  timeline->priv->needs_rollback = FALSE;
   if (!ges_timeline_set_moving_context (timeline, obj, GES_EDIT_MODE_RIPPLE,
           edge, layers))
     goto error;
@@ -1677,6 +1691,30 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
       }
       g_list_free (moved_clips);
       _set_start0 (GES_TIMELINE_ELEMENT (obj), position);
+
+      if (timeline->priv->needs_rollback && !timeline->priv->rolling_back) {
+        timeline->priv->rolling_back = TRUE;
+        for (tmp = mv_ctx->moving_trackelements; tmp; tmp = tmp->next) {
+          trackelement = GES_TRACK_ELEMENT (tmp->data);
+          new_start = _START (trackelement) - offset;
+
+          container = add_toplevel_container (mv_ctx, trackelement);
+          /* Make sure not to move 2 times the same Clip */
+          if (g_list_find (moved_clips, container) == NULL) {
+            _set_start0 (GES_TIMELINE_ELEMENT (trackelement), new_start);
+            moved_clips = g_list_prepend (moved_clips, container);
+          }
+
+        }
+        g_list_free (moved_clips);
+        _set_start0 (GES_TIMELINE_ELEMENT (obj), position - offset);
+
+        ges_timeline_emit_snappig (timeline, obj, NULL);
+        mv_ctx->needs_move_ctx = TRUE;
+        timeline->priv->rolling_back = FALSE;
+
+        goto error;
+      }
 
       break;
     case GES_EDGE_END:
@@ -1711,7 +1749,6 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
         }
         if (GES_IS_GROUP (container))
           container->children_control_mode = GES_CHILDREN_UPDATE;
-
       }
 
       g_list_free (moved_clips);
@@ -1755,16 +1792,36 @@ timeline_trim_object (GESTimeline * timeline, GESTrackElement * object,
     GList * layers, GESEdge edge, guint64 position)
 {
   gboolean ret = FALSE;
+  GstClockTime cpos;
   MoveContext *mv_ctx = &timeline->priv->movecontext;
 
   mv_ctx->ignore_needs_ctx = TRUE;
 
+  timeline->priv->needs_rollback = FALSE;
   if (!ges_timeline_set_moving_context (timeline, object, GES_EDIT_MODE_TRIM,
           edge, layers))
     goto end;
 
+  switch (edge) {
+    case GES_EDGE_START:
+      cpos = GES_TIMELINE_ELEMENT_START (object);
+      break;
+    case GES_EDGE_END:
+      cpos = GES_TIMELINE_ELEMENT_END (object);
+      break;
+    default:
+      goto end;
+  }
   ret = ges_timeline_trim_object_simple (timeline,
       GES_TIMELINE_ELEMENT (object), layers, edge, position, TRUE);
+
+  if (timeline->priv->needs_rollback && !timeline->priv->rolling_back) {
+    timeline->priv->rolling_back = TRUE;
+    ret = FALSE;
+    timeline_trim_object (timeline, object, layers, edge, cpos);
+    ges_timeline_emit_snappig (timeline, object, NULL);
+    timeline->priv->rolling_back = FALSE;
+  }
 
 end:
   mv_ctx->ignore_needs_ctx = FALSE;
@@ -1921,6 +1978,7 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
     GESTimelineElement * element, GList * layers, GESEdge edge,
     guint64 position)
 {
+  GstClockTime cpos = GES_TIMELINE_ELEMENT_START (element);
   guint64 *snap_end, *snap_st, *cur, off1, off2, end;
   GESTrackElement *track_element;
 
@@ -1930,6 +1988,7 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
       g_list_find (timeline->priv->movecontext.moving_trackelements, element))
     return FALSE;
 
+  timeline->priv->needs_rollback = FALSE;
   track_element = GES_TRACK_ELEMENT (element);
   end = position + _DURATION (get_toplevel_container (track_element));
   cur = g_hash_table_lookup (timeline->priv->by_end, track_element);
@@ -1963,9 +2022,19 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
     ges_timeline_emit_snappig (timeline, track_element, snap_st);
   } else
     ges_timeline_emit_snappig (timeline, track_element, NULL);
-
+  timeline->priv->needs_rollback = FALSE;
 
   _set_start0 (GES_TIMELINE_ELEMENT (track_element), position);
+
+  if (timeline->priv->needs_rollback && !timeline->priv->rolling_back) {
+    timeline->priv->needs_rollback = FALSE;
+    timeline->priv->rolling_back = TRUE;
+    ges_timeline_move_object_simple (timeline, element, layers, edge, cpos);
+    ges_timeline_emit_snappig (timeline, track_element, NULL);
+    timeline->priv->rolling_back = FALSE;
+
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -1975,8 +2044,6 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
 {
   gboolean ret = TRUE;
   MoveContext *mv_ctx = &timeline->priv->movecontext;
-
-
 
   /* Layer's priority is always positive */
   if (offset != 0 && (offset > 0 || mv_ctx->min_move_layer >= -offset)) {
@@ -1990,6 +2057,7 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
     GST_DEBUG ("Moving %d object, offset %d",
         g_hash_table_size (mv_ctx->toplevel_containers), offset);
 
+    timeline->priv->needs_rollback = FALSE;
     g_hash_table_iter_init (&iter, mv_ctx->toplevel_containers);
     while (g_hash_table_iter_next (&iter, (gpointer *) & key,
             (gpointer *) & value)) {
@@ -2029,6 +2097,13 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
     mv_ctx->min_move_layer = mv_ctx->min_move_layer + offset;
 
     mv_ctx->ignore_needs_ctx = FALSE;
+
+    if (timeline->priv->needs_rollback && !timeline->priv->rolling_back) {
+      ret = FALSE;
+      timeline->priv->rolling_back = TRUE;
+      timeline_context_to_layer (timeline, -offset);
+      timeline->priv->rolling_back = FALSE;
+    }
   }
 
   return ret;
@@ -2117,9 +2192,30 @@ static void
 layer_auto_transition_changed_cb (GESLayer * layer,
     GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
 {
+  timeline->priv->needs_rollback = FALSE;
   _create_transitions_on_layer (timeline, layer, NULL, NULL,
       _create_auto_transition_from_transitions);
+  if (timeline->priv->needs_rollback) {
+    GList *tmp, *trans;
 
+    ges_layer_set_auto_transition (layer, FALSE);
+    GST_ERROR_OBJECT (layer, "Has overlapping transition, "
+        " we can't handle that, setting auto_transition"
+        " to FALSE, and removing all transitions");
+    trans = g_list_copy (timeline->priv->auto_transitions);
+    for (tmp = trans; tmp; tmp = tmp->next) {
+      g_signal_emit_by_name (tmp->data, "destroy-me");
+    }
+
+    g_list_free (trans);
+
+    trans = ges_layer_get_clips (layer);
+    for (tmp = trans; tmp; tmp = tmp->next) {
+      if (GES_IS_TRANSITION_CLIP (tmp->data))
+        ges_layer_remove_clip (layer, tmp->data);
+    }
+    g_list_free_full (trans, gst_object_unref);
+  }
 }
 
 static void

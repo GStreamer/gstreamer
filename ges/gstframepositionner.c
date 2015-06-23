@@ -141,7 +141,6 @@ sync_properties_from_caps (GstFramePositionner * pos, GstCaps * caps)
   pos->track_width = width;
   pos->track_height = height;
 
-  GST_ERROR_OBJECT (pos, "syncing size from caps : %d %d", width, height);
   GST_DEBUG_OBJECT (pos, "syncing framerate from caps : %d/%d", pos->fps_n,
       pos->fps_d);
 
