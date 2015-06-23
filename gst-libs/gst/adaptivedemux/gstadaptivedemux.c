@@ -762,8 +762,13 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
 
     offset = gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
     stream->segment = demux->segment;
-    stream->segment.start = stream->segment.position =
+    stream->segment.start = stream->segment.position = stream->segment.time =
         stream->fragment.timestamp + offset;
+
+    stream->segment.base =
+        gst_segment_to_running_time (&demux->segment, GST_FORMAT_TIME,
+        stream->segment.start);
+
     stream->pending_segment = gst_event_new_segment (&stream->segment);
   }
 
@@ -1365,10 +1370,11 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
   GstAdaptiveDemux *demux = stream->demux;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean discont = FALSE;
-  GstClockTime offset =
-      gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
 
   if (stream->first_fragment_buffer) {
+    GstClockTime offset =
+        gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
+
     if (demux->segment.rate < 0)
       /* Set DISCONT flag for every first buffer in reverse playback mode
        * as each fragment for its own has to be reversed */
@@ -1376,7 +1382,13 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
 
     GST_BUFFER_PTS (buffer) = stream->fragment.timestamp;
     if (GST_BUFFER_PTS_IS_VALID (buffer))
+      GST_BUFFER_PTS (buffer) += offset;
+
+    if (GST_BUFFER_PTS_IS_VALID (buffer)) {
       stream->segment.position = GST_BUFFER_PTS (buffer);
+      if (stream->segment.position > demux->segment.position)
+        demux->segment.position = stream->segment.position;
+    }
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
   }
@@ -1395,8 +1407,6 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
 
   stream->first_fragment_buffer = FALSE;
 
-  if (GST_BUFFER_PTS (buffer) != GST_CLOCK_TIME_NONE)
-    GST_BUFFER_PTS (buffer) += offset;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
 
@@ -1460,18 +1470,26 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (stream->starting_fragment) {
+    GstClockTime offset =
+        gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
+
     stream->starting_fragment = FALSE;
     if (klass->start_fragment) {
       klass->start_fragment (demux, stream);
     }
 
     GST_BUFFER_PTS (buffer) = stream->fragment.timestamp;
+    if (GST_BUFFER_PTS_IS_VALID (buffer))
+      GST_BUFFER_PTS (buffer) += offset;
 
     GST_LOG_OBJECT (stream->pad, "set fragment pts=%" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
 
-    if (GST_BUFFER_PTS_IS_VALID (buffer))
+    if (GST_BUFFER_PTS_IS_VALID (buffer)) {
       stream->segment.position = GST_BUFFER_PTS (buffer);
+      if (stream->segment.position > demux->segment.position)
+        demux->segment.position = stream->segment.position;
+    }
 
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
@@ -2390,8 +2408,11 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
               GST_TYPE_CLOCK_TIME,
               stream->download_total_time * GST_USECOND, NULL)));
 
-  if (GST_CLOCK_TIME_IS_VALID (duration))
+  if (GST_CLOCK_TIME_IS_VALID (duration)) {
     stream->segment.position += duration;
+    if (stream->segment.position > demux->segment.position)
+      demux->segment.position = stream->segment.position;
+  }
 
   if (gst_adaptive_demux_is_live (demux)
       || gst_adaptive_demux_stream_has_next_fragment (demux, stream)) {
