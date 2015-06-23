@@ -63,9 +63,6 @@ GST_DEBUG_CATEGORY_STATIC (splitmux_debug);
 #define GST_SPLITMUX_WAIT(s) g_cond_wait (&(s)->data_cond, &(s)->lock)
 #define GST_SPLITMUX_BROADCAST(s) g_cond_broadcast (&(s)->data_cond)
 
-#define GST_SPLITMUX_WAIT_ASYNC_DONE(s) g_cond_wait (&(s)->async_cond, &(s)->lock)
-#define GST_SPLITMUX_BROADCAST_ASYNC_DONE(s) g_cond_broadcast (&(s)->async_cond)
-
 enum
 {
   PROP_0,
@@ -212,7 +209,6 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
 {
   g_mutex_init (&splitmux->lock);
   g_cond_init (&splitmux->data_cond);
-  g_cond_init (&splitmux->async_cond);
 
   splitmux->mux_overhead = DEFAULT_MUXER_OVERHEAD;
   splitmux->threshold_time = DEFAULT_MAX_SIZE_TIME;
@@ -252,7 +248,6 @@ gst_splitmux_sink_finalize (GObject * object)
 {
   GstSplitMuxSink *splitmux = GST_SPLITMUX_SINK (object);
   g_cond_clear (&splitmux->data_cond);
-  g_cond_clear (&splitmux->async_cond);
   g_mutex_clear (&splitmux->lock);
   if (splitmux->provided_sink)
     gst_object_unref (splitmux->provided_sink);
@@ -672,17 +667,7 @@ restart_context (MqStreamCtx * ctx, GstSplitMuxSink * splitmux)
 static void
 start_next_fragment (GstSplitMuxSink * splitmux)
 {
-  if (splitmux->is_async) {
-    /* Wait for async done on the sink */
-    GST_SPLITMUX_WAIT_ASYNC_DONE (splitmux);
-  }
-
   /* 1 change to new file */
-  splitmux->restarting = TRUE;
-
-  GST_SPLITMUX_UNLOCK (splitmux);
-  GST_STATE_LOCK (splitmux);
-
   gst_element_set_state (splitmux->muxer, GST_STATE_NULL);
   gst_element_set_state (splitmux->active_sink, GST_STATE_NULL);
 
@@ -691,12 +676,6 @@ start_next_fragment (GstSplitMuxSink * splitmux)
   gst_element_sync_state_with_parent (splitmux->active_sink);
   gst_element_sync_state_with_parent (splitmux->muxer);
 
-  GST_STATE_UNLOCK (splitmux);
-  GST_SPLITMUX_LOCK (splitmux);
-
-  splitmux->restarting = FALSE;
-
-  GST_LOG_OBJECT (splitmux, "Restarting contexts to push more data");
   g_list_foreach (splitmux->contexts, (GFunc) restart_context, splitmux);
 
   /* Switch state and go back to processing */
@@ -736,26 +715,11 @@ bus_handler (GstBin * bin, GstMessage * message)
         GST_DEBUG_OBJECT (splitmux, "Caught EOS at end of fragment, dropping");
         splitmux->state = SPLITMUX_STATE_START_NEXT_FRAGMENT;
         GST_SPLITMUX_BROADCAST (splitmux);
-        goto drop;
+
+        gst_message_unref (message);
+        GST_SPLITMUX_UNLOCK (splitmux);
+        return;
       }
-      GST_SPLITMUX_UNLOCK (splitmux);
-      GST_INFO_OBJECT (splitmux, "Passing EOS message");
-      break;
-    case GST_MESSAGE_ASYNC_START:
-      GST_SPLITMUX_LOCK (splitmux);
-      if (splitmux->restarting)
-        goto drop;
-      splitmux->is_async = TRUE;
-      GST_SPLITMUX_UNLOCK (splitmux);
-      break;
-    case GST_MESSAGE_ASYNC_DONE:
-      GST_SPLITMUX_LOCK (splitmux);
-      if (splitmux->is_async) {
-        GST_SPLITMUX_BROADCAST_ASYNC_DONE (splitmux);
-        splitmux->is_async = FALSE;
-      }
-      if (splitmux->restarting)
-        goto drop;
       GST_SPLITMUX_UNLOCK (splitmux);
       break;
     default:
@@ -763,11 +727,6 @@ bus_handler (GstBin * bin, GstMessage * message)
   }
 
   GST_BIN_CLASS (parent_class)->handle_message (bin, message);
-  return;
-
-drop:
-  gst_message_unref (message);
-  GST_SPLITMUX_UNLOCK (splitmux);
 }
 
 /* Called with splitmux lock held */
