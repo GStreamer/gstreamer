@@ -366,6 +366,10 @@ gst_flac_parse_stop (GstBaseParse * parse)
     gst_toc_unref (flacparse->toc);
     flacparse->toc = NULL;
   }
+  if (flacparse->seektable) {
+    gst_buffer_unref (flacparse->seektable);
+    flacparse->seektable = NULL;
+  }
 
   g_list_foreach (flacparse->headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (flacparse->headers);
