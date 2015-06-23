@@ -168,7 +168,7 @@ gst_gl_context_eagl_update_layer (GstGLContext * context)
   if (priv->eagl_layer)
     gst_gl_context_eagl_release_layer (context);
 
-  void (^create_block) (void) = ^{
+  dispatch_sync (dispatch_get_main_queue (), ^{
       eagl_layer = (CAEAGLLayer *)[window_handle layer];
       [EAGLContext setCurrentContext:priv->eagl_context];
 
@@ -194,13 +194,7 @@ gst_gl_context_eagl_update_layer (GstGLContext * context)
       glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
           GL_RENDERBUFFER, depth_renderbuffer);
       [EAGLContext setCurrentContext:nil];
-  };
-
-  if ([NSThread isMainThread]) {
-    create_block ();
-  } else {
-    dispatch_sync (dispatch_get_main_queue (), create_block);
-  }
+  });
 
   [EAGLContext setCurrentContext:priv->eagl_context];
 
@@ -230,7 +224,7 @@ gst_gl_context_eagl_create_context (GstGLContext * context, GstGLAPI gl_api,
   GstGLContextEagl *context_eagl = GST_GL_CONTEXT_EAGL (context);
   GstGLContextEaglPrivate *priv = context_eagl->priv;
 
-  void (^create_block) (void) = ^{
+  dispatch_sync (dispatch_get_main_queue (), ^{
     if (other_context) {
       EAGLContext *external_gl_context = (EAGLContext *)
           gst_gl_context_get_gl_context (other_context);
@@ -241,14 +235,8 @@ gst_gl_context_eagl_create_context (GstGLContext * context, GstGLAPI gl_api,
     } else {
       priv->eagl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     }
-  };
-
-  if ([NSThread isMainThread]) {
-    create_block ();
-  } else {
-    dispatch_sync (dispatch_get_main_queue (), create_block);
-  }
-
+  });
+  
   priv->eagl_layer = NULL;
   priv->framebuffer = 0;
   priv->color_renderbuffer = 0;
@@ -296,26 +284,17 @@ gst_gl_context_eagl_choose_format (GstGLContext * context, GError ** error)
     gst_object_unref (window);
     return TRUE;
   }
-
-  void (^create_block) (void) = ^{
+  
+  dispatch_sync (dispatch_get_main_queue (), ^{
     CAEAGLLayer *eagl_layer;
     NSDictionary * dict =[NSDictionary dictionaryWithObjectsAndKeys:
-                             [NSNumber numberWithBool:NO],
-                             kEAGLDrawablePropertyRetainedBacking,
-                             kEAGLColorFormatRGBA8,
-                             kEAGLDrawablePropertyColorFormat,
-                             nil];
+	    [NSNumber numberWithBool:NO], kEAGLDrawablePropertyRetainedBacking,
+		kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, nil];
 
     eagl_layer = (CAEAGLLayer *)[window_handle layer];
     [eagl_layer setOpaque:YES];
     [eagl_layer setDrawableProperties:dict];
-  };
-
-  if ([NSThread isMainThread]) {
-    create_block ();
-  } else {
-    dispatch_sync (dispatch_get_main_queue (), create_block);
-  }
+  });
 
   gst_object_unref (window);
 
