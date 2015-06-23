@@ -1134,21 +1134,21 @@ gst_qtdemux_find_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   gint i;
   guint32 seg_idx;
 
-  GST_LOG_OBJECT (qtdemux, "finding segment for %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (stream->pad, "finding segment for %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time_position));
 
   seg_idx = -1;
   for (i = 0; i < stream->n_segments; i++) {
     QtDemuxSegment *segment = &stream->segments[i];
 
-    GST_LOG_OBJECT (qtdemux,
+    GST_LOG_OBJECT (stream->pad,
         "looking at segment %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
         GST_TIME_ARGS (segment->time), GST_TIME_ARGS (segment->stop_time));
 
     /* For the last segment we include stop_time in the last segment */
     if (i < stream->n_segments - 1) {
       if (segment->time <= time_position && time_position < segment->stop_time) {
-        GST_LOG_OBJECT (qtdemux, "segment %d matches", i);
+        GST_LOG_OBJECT (stream->pad, "segment %d matches", i);
         seg_idx = i;
         break;
       }
@@ -3666,7 +3666,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   GstClockTime start, stop, time;
   gdouble rate;
 
-  GST_LOG_OBJECT (qtdemux, "activate segment %d, offset %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (stream->pad, "activate segment %d, offset %" GST_TIME_FORMAT,
       seg_idx, GST_TIME_ARGS (offset));
 
   /* update the current segment */
@@ -3676,7 +3676,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   segment = &stream->segments[seg_idx];
 
   if (G_UNLIKELY (offset < segment->time)) {
-    GST_WARNING_OBJECT (qtdemux, "offset < segment->time %" GST_TIME_FORMAT,
+    GST_WARNING_OBJECT (stream->pad, "offset < segment->time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (segment->time));
     return FALSE;
   }
@@ -3684,7 +3684,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* segment lies beyond total indicated duration */
   if (G_UNLIKELY (qtdemux->segment.duration != GST_CLOCK_TIME_NONE &&
           segment->time > qtdemux->segment.duration)) {
-    GST_WARNING_OBJECT (qtdemux, "file duration %" GST_TIME_FORMAT
+    GST_WARNING_OBJECT (stream->pad, "file duration %" GST_TIME_FORMAT
         " < segment->time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (qtdemux->segment.duration),
         GST_TIME_ARGS (segment->time));
@@ -3694,11 +3694,12 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* get time in this segment */
   seg_time = offset - segment->time;
 
-  GST_LOG_OBJECT (qtdemux, "seg_time %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (stream->pad, "seg_time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (seg_time));
 
   if (G_UNLIKELY (seg_time > segment->duration)) {
-    GST_LOG_OBJECT (qtdemux, "seg_time > segment->duration %" GST_TIME_FORMAT,
+    GST_LOG_OBJECT (stream->pad,
+        "seg_time > segment->duration %" GST_TIME_FORMAT,
         GST_TIME_ARGS (segment->duration));
     seg_time = segment->duration;
   }
@@ -3736,7 +3737,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     stop = MIN (segment->media_start + seg_time, stop);
   }
 
-  GST_DEBUG_OBJECT (qtdemux, "newsegment %d from %" GST_TIME_FORMAT
+  GST_DEBUG_OBJECT (stream->pad, "new segment %d from %" GST_TIME_FORMAT
       " to %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT, seg_idx,
       GST_TIME_ARGS (start), GST_TIME_ARGS (stop), GST_TIME_ARGS (time));
 
@@ -3758,6 +3759,9 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
       stream->cslg_shift);
   stream->segment.time = time;
   stream->segment.position = stream->segment.start;
+
+  GST_DEBUG_OBJECT (stream->pad, "New segment: %" GST_SEGMENT_FORMAT,
+      &stream->segment);
 
   /* now prepare and send the segment */
   if (stream->pad) {
@@ -3788,20 +3792,20 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     if (qtdemux->segment.rate >= 0) {
       index = gst_qtdemux_find_index_linear (qtdemux, stream, start);
       stream->to_sample = G_MAXUINT32;
-      GST_DEBUG_OBJECT (qtdemux,
+      GST_DEBUG_OBJECT (stream->pad,
           "moving data pointer to %" GST_TIME_FORMAT ", index: %u, pts %"
           GST_TIME_FORMAT, GST_TIME_ARGS (start), index,
           GST_TIME_ARGS (QTSAMPLE_PTS (stream, &stream->samples[index])));
     } else {
       index = gst_qtdemux_find_index_linear (qtdemux, stream, stop);
       stream->to_sample = index;
-      GST_DEBUG_OBJECT (qtdemux,
+      GST_DEBUG_OBJECT (stream->pad,
           "moving data pointer to %" GST_TIME_FORMAT ", index: %u, pts %"
           GST_TIME_FORMAT, GST_TIME_ARGS (stop), index,
           GST_TIME_ARGS (QTSAMPLE_PTS (stream, &stream->samples[index])));
     }
   } else {
-    GST_DEBUG_OBJECT (qtdemux, "No need to look for keyframe, "
+    GST_DEBUG_OBJECT (stream->pad, "No need to look for keyframe, "
         "this is an empty segment");
     return TRUE;
   }
@@ -3813,7 +3817,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   /* we're at the right spot */
   if (index == stream->sample_index) {
-    GST_DEBUG_OBJECT (qtdemux, "we are at the right index");
+    GST_DEBUG_OBJECT (stream->pad, "we are at the right index");
     return TRUE;
   }
 
@@ -3829,19 +3833,19 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if (index > stream->sample_index) {
     /* moving forwards check if we move past a keyframe */
     if (kf_index > stream->sample_index) {
-      GST_DEBUG_OBJECT (qtdemux,
+      GST_DEBUG_OBJECT (stream->pad,
 	   "moving forwards to keyframe at %u (pts %" GST_TIME_FORMAT " dts %"GST_TIME_FORMAT" )", kf_index,
 	   GST_TIME_ARGS (QTSAMPLE_PTS(stream, &stream->samples[kf_index])),
 	   GST_TIME_ARGS (QTSAMPLE_DTS(stream, &stream->samples[kf_index])));
       gst_qtdemux_move_stream (qtdemux, stream, kf_index);
     } else {
-      GST_DEBUG_OBJECT (qtdemux,
+      GST_DEBUG_OBJECT (stream->pad,
           "moving forwards, keyframe at %u (pts %" GST_TIME_FORMAT " dts %"GST_TIME_FORMAT" ) already sent", kf_index,
           GST_TIME_ARGS (QTSAMPLE_PTS (stream, &stream->samples[kf_index])),
           GST_TIME_ARGS (QTSAMPLE_DTS (stream, &stream->samples[kf_index])));
     }
   } else {
-    GST_DEBUG_OBJECT (qtdemux,
+    GST_DEBUG_OBJECT (stream->pad,
         "moving backwards to keyframe at %u (pts %" GST_TIME_FORMAT " dts %"GST_TIME_FORMAT" )", kf_index,
         GST_TIME_ARGS (QTSAMPLE_PTS(stream, &stream->samples[kf_index])),
         GST_TIME_ARGS (QTSAMPLE_DTS(stream, &stream->samples[kf_index])));
