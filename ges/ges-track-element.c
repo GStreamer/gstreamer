@@ -101,6 +101,7 @@ static gboolean _set_inpoint (GESTimelineElement * element,
 static gboolean _set_duration (GESTimelineElement * element,
     GstClockTime duration);
 static gboolean _set_priority (GESTimelineElement * element, guint32 priority);
+GESTrackType _get_track_types (GESTimelineElement * object);
 
 static GParamSpec **default_list_children_properties (GESTrackElement * object,
     guint * n_properties);
@@ -279,6 +280,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   element_class->set_duration = _set_duration;
   element_class->set_inpoint = _set_inpoint;
   element_class->set_priority = _set_priority;
+  element_class->get_track_types = _get_track_types;
   element_class->deep_copy = ges_track_element_copy_properties;
 
   klass->create_gnl_object = ges_track_element_create_gnl_object_func;
@@ -501,6 +503,12 @@ _set_priority (GESTimelineElement * element, guint32 priority)
     object->priv->pending_priority = priority;
 
   return TRUE;
+}
+
+GESTrackType
+_get_track_types (GESTimelineElement * object)
+{
+  return ges_track_element_get_track_type (GES_TRACK_ELEMENT (object));
 }
 
 /**

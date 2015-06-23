@@ -1649,3 +1649,20 @@ ges_timeline_element_remove_child_property (GESTimelineElement * self,
 {
   return g_hash_table_remove (self->priv->children_props, pspec);
 }
+
+/**
+ * ges_timeline_element_get_track_types:
+ * @self: A #GESTimelineElement
+ *
+ * Gets all the TrackTypes @self will interact with
+ *
+ * Since: 1.6.0
+ */
+GESTrackType
+ges_timeline_element_get_track_types (GESTimelineElement * self)
+{
+  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+  g_return_if_fail (GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_track_types);
+
+  return GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_track_types (self);
+}

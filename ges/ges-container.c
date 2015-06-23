@@ -265,6 +265,24 @@ _lookup_child (GESTimelineElement * self, const gchar * prop_name,
       (self, prop_name, child, pspec);
 }
 
+static GESTrackType
+_get_track_types (GESTimelineElement * object)
+{
+  GESTrackType types = GES_TRACK_TYPE_UNKNOWN;
+  GList *tmp, *children = ges_container_get_children (GES_CONTAINER (object),
+      TRUE);
+
+  for (tmp = children; tmp; tmp = tmp->next) {
+    if (GES_IS_TRACK_ELEMENT (tmp->data)) {
+      types |= ges_timeline_element_get_track_types (tmp->data);
+    }
+  }
+
+  g_list_free_full (children, gst_object_unref);
+
+  return types ^ GES_TRACK_TYPE_UNKNOWN;
+}
+
 /******************************************
  *                                        *
  * GObject virtual methods implementation *
@@ -363,6 +381,7 @@ ges_container_class_init (GESContainerClass * klass)
   element_class->set_inpoint = _set_inpoint;
   element_class->list_children_properties = _list_children_properties;
   element_class->lookup_child = _lookup_child;
+  element_class->get_track_types = _get_track_types;
 
   /* No default implementations */
   klass->remove_child = NULL;

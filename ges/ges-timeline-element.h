@@ -190,6 +190,7 @@ struct _GESTimelineElementClass
   GParamSpec** (*list_children_properties) (GESTimelineElement * self, guint *n_properties);
   gboolean (*lookup_child)                 (GESTimelineElement *self, const gchar *prop_name,
                                             GObject **child, GParamSpec **pspec);
+  GESTrackType (*get_track_types)          (GESTimelineElement * self);
 
   /*< private > */
   /* Padding for API extension */
@@ -275,6 +276,8 @@ gboolean ges_timeline_element_add_child_property   (GESTimelineElement * self,
 
 gboolean ges_timeline_element_remove_child_property(GESTimelineElement * self,
                                                     GParamSpec *pspec);
+
+GESTrackType ges_timeline_element_get_track_types  (GESTimelineElement * self);
 
 G_END_DECLS
 
