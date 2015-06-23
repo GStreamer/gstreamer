@@ -1382,7 +1382,7 @@ gst_fakereqsink_class_init (GstFakeReqSinkClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_set_static_metadata (gstelement_class,
-      "Fake Request Source", "Source", "Push empty buffers from request pads",
+      "Fake Request Sink", "Sink", "Fake sink with request pads",
       "Sebastian Rasmussen <sebras@hotmail.com>");
 
   gst_element_class_add_pad_template (gstelement_class,
