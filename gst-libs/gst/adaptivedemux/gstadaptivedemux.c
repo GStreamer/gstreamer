@@ -2068,6 +2068,8 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
     GST_OBJECT_UNLOCK (demux);
 
     GST_MANIFEST_LOCK (demux);
+  } else {
+    stream->last_ret = ret;
   }
 
   switch (ret) {
