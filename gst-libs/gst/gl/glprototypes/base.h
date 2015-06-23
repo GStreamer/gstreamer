@@ -178,6 +178,10 @@ GST_GL_EXT_FUNCTION (void, Viewport,
 GST_GL_EXT_FUNCTION (GLboolean, IsEnabled, (GLenum cap))
 GST_GL_EXT_FUNCTION (void, LineWidth, (GLfloat width))
 GST_GL_EXT_FUNCTION (void, PolygonOffset, (GLfloat factor, GLfloat units))
+GST_GL_EXT_FUNCTION (void, TexParameterf,
+                     (GLenum target,
+                      GLenum pname,
+                      GLfloat param))
 GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (texture_3d,
