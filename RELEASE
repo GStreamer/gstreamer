@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Good Plugins 1.5.1
+Release notes for GStreamer Good Plugins 1.5.2
 
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.5 release series. The 1.5 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.5 release series
@@ -58,172 +58,26 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 740130 : matroskamux: wrong duration on some files
-      * 699382 : v4l2: dmabuf handling is not complete
-      * 746747 : rtpsession: Also report internal sources in on-new-ssrc and on-ssrc-active
-      * 741783 : qtmux: crash when trying to mux ALAC
-      * 601733 : rtspsrc: Use specific error message when authentication is required
-      * 635701 : rtspsrc: seeking is broken
-      * 678124 : multifilesink: add support for time based file switching
-      * 682770 : v4l2src: should renegotiate
-      * 690646 : ximagesrc: Cursor offset with ximagesrc and xid
-      * 690719 : jackaudiosink: add new property (port-pattern) to specify which jack ports to autoconnect to
-      * 692473 : qtmux: does not store stream specific tags
-      * 708808 : qtmux: Error out when downstream is not seekable and no fast-start
-      * 711764 : osxaudiosrc: Produces broken audio for any sample rate other than 44100Hz
-      * 722567 : wavparse: loops on incorrect wav file
-      * 725335 : rtspsrc: Extract the payload type from sdp framesize attribute
-      * 726415 : rtpjpegpay/-depay: Remove incorrectly introduced framesize SDP attribute
-      * 726416 : rtph263pay/-depay: add framesize SDP attribute
-      * 730417 : rtspt: no timestamp from some rtsp source over tcp
-      * 731038 : playbin downmixes 5.0 multichannel-audio to stereo
-      * 732152 : multiudpsink: use sendmmsg() to send multiple packets to multiple recipients in one go
-      * 732866 : udpsink: client add/remove from app blocked while render function is stuck in g_socket_send_message()
-      * 732870 : jpegenc: add support for encoding from nv21
-      * 733225 : Lockup while using Cheese on 1.3.91
-      * 733444 : wavenc: does not support more than 2 channel
-      * 733539 : rtph264pay: append profile-level-id parameter to SDP if available
-      * 733556 : h264 payloader : append packetization-mode parameter for SDP
-      * 733616 : v4l2object: code cleanup
-      * 733750 : v4l2object: query minimum required buffers for output
-      * 734322 : RTP Jitterbuffer shouldn't force clock-rate on the caps
-      * 734443 : qtdemux: forward DISCONT from upstream to the output streams
-      * 734542 : speexenc: Improve annotation of internal function
-      * 734987 : udp: fix udpsrc documentation
-      * 735085 : y4mencode :  port y4m encoder to use GstVideoEncoder base class
-      * 735378 : gstrtpjitterbuffer: requests retransmission periodically when no needed
-      * 735564 : gdkpixbufdec: Error when using gdkpixbufdec with ImageFreeze element
-      * 735581 : imagefreeze: Remove impossible error condition
-      * 735626 : multipartdemux: caps are NULL in pad-added callback (regression)
-      * 735627 : wavenc/wavparse: should support RF64 files
-      * 735795 : imagefreeze: Don't call gst_caps_unref() on NULL caps
-      * 735880 : imagefreeze: replace with gst_buffer_copy
-      * 735950 : gdkpixbufdec: free query after use
-      * 735971 : qtdemux: avdec_mjpeg does not get autoplugged for mjpeg in mov container
-      * 736072 : v4l2: set min_latency for output device according to required minimum number of buffers
-      * 736122 : ximagesrc: setting the screen-num property has no effect
-      * 736133 : v4l2: query crop configuration after each call of S_CROP
-      * 736252 : gdkpixbufdec: packetized mode logic
-      * 736462 : multifile: don't bitwise OR the same flag twice
-      * 736528 : udp: getting compilation error for implicit declaration of memcmp, memset
-      * 736543 : matroska:OR and Bitwise OR of the same flag twice
-      * 736872 : libpng: Removed redundant assignment
-      * 736873 : alpha: Removed unreachable break statements
-      * 736874 : audiofx: Removed unwanted variable
-      * 736875 : audiofx: Removed unwanted buffer_length variable
-      * 736876 : audiofx: Removed unreachable breaks, unwanted variable
-      * 736878 : audioparsers: Added index check before using the index
-      * 736879 : avi: Removed redundant assignment
-      * 736880 : avi: Removed unwanted hdl variable
-      * 736881 : deinterlace: Removed unwanted res variable
-      * 736883 : dtmf: Removed unwanted structure member and assignment
-      * 736884 : flv: Removed unreachable break statements
-      * 736887 : goom: Clarified precedence between % and ?
-      * 736888 : isomp4: Removed unreachable breaks
-      * 736890 : matroska: Removed unwanted instruction
-      * 736892 : rtpmanager: Removed unwanted variable and assignment
-      * 736893 : rtpmanager: Removed unwanted assignment
-      * 736894 : rtpmanager: Removed unwanted assignment in rtpsession
-      * 736897 : videobox: duplicate assignment
-      * 736903 : rtsp: Precedence in expression is not clear
-      * 736986 : qtdemux: handle AAC audio without ESDS atom
-      * 737095 : qtmux: subtitle muxing doesn't work
-      * 737127 : interleave: interleaving does not respect the channel positions default order
-      * 737359 : matroskademux: returns FLOW_FLUSHING when trying to reuse it
-      * 737708 : pngdec: change parse logic
-      * 737868 : rtspsrc: set stream caps on internal src TCP pads
-      * 738013 : v4l2allocator: issue with import_userptr() in single-planar API when n_planes > 1
-      * 738707 : gst-plugins-good fails to build on Mac OS X 10.10 Yosemite due to deprecated NSOpenGLPFAFullScreen
-      * 738838 : videobox: critical error when element properties set as max/min
-      * 739344 : rtpjitterbuffer: ensure rtx_retry_period > = 0
-      * 739366 : imagefreeze: Handle seqnums
-      * 739549 : v4l2bufferpool: fix typos in flags
-      * 739566 : gdkpixbufoverlay: Fix relative-x/y and widen their range to support scolling images in/out of frame with GstController
-      * 739930 : Port server-alsasrc-PCMA.py to version 1.x
-      * 739975 : Seeking through some AAC file freezes my application
-      * 740403 : v4l2object: reuse caps framerate if not overwritten by v4l2 device
-      * 740505 : rtspsrc: segmentation fault when requesting srtp key
-      * 740683 : rtspsrc: add retransmission handling for rtp
-      * 740987 : Fixes to osxaudiosrc and osxaudiosink
-      * 741115 : videomixer segfault when output height is smaller than input height and ypos is negative
-      * 741134 : v4l2: CREATE_BUF support is broken
-      * 741279 : qtmux: generating corrupted file when over 4GB
-      * 741398 : rtpptdemux: errors out on invalid rtp packet, e.g. if the version check failed (0 != 2)
-      * 741993 : souphttpsrc: leaking a buffer during flushing
-      * 742098 : rtp: Fails rtpaux and rtpcollision tests
-      * 742325 : ac3parse: requests minimum frame size that is too small
-      * 742363 : v4l2object: recognize and distinguish all bayer arrangements
-      * 742572 : qtdemux: EOS emitted after 10 seconds on a audio/mp4a file [REGRESSION]
-      * 742661 : qtdemux: EOS in push mode when seeking in m4a
-      * 743013 : v4l2bufferpool: set v4l2_buffer.field when queuing buffer in an output device
-      * 743186 : v4l2object: set colorspace in caps for capture devices
-      * 743407 : qtdemux: doesn't ignore data after last sample in mdat.
-      * 743518 : qtdemux: dead code while calculating segment base ?
-      * 743578 : qtdemux: Parse 'sidx' atom (for duration and indexing in fragmented files)
-      * 743906 : quarktv: doesn't work with planes=0, fix property range accordingly
-      * 744211 : interleave: assertion 'self- > func != NULL' failed
-      * 744461 : pulsesink: Enhance code readability in pulsesink_query
-      * 745192 : matroskademux: V_MS-VFW-FOURCC streams have DTS instead of PTS
-      * 745226 : Vorbis RTP payloader metadata is slightly wrong
-      * 745276 : avidemux: remove not needed code
-      * 745339 : qtdemux: key_unit seek doesn't work
-      * 745441 : v4l2: Detect lossed frame and warn
-      * 745515 : level: infinite loop when interval is set to low values
-      * 745587 : rtp: Add PLI and FIR counters to RTPSource statistics
-      * 745599 : rtsp: tcp transport fails
-      * 745973 : matroskademux: gst_tag_list_insert: assertion 'GST_IS_TAG_LIST (into)' failed
-      * 746065 : level: outputs random values if channels==1
-      * 746242 : matroskaparse: send global tags
-      * 746274 : flvdemux: Less spam from no_more_pads warning
-      * 746390 : qtdemux: crash while playing MPEG DASH stream
-      * 746479 : rtsp: Only two second of playback with rtpsrc and test-mp4 (rtsp-server)
-      * 746543 : rtpsession: Properly implement T_rr_interval and allow sending multiple early feedback packets in a row
-      * 746810 : matroska: fix GValue leak when parsing tags
-      * 746822 : qtdemux: segment query reports wrong values after key-unit seek
-      * 746834 : v4l2sink: driver is not queried for minimum number of buffers when propose_allocation is not called
-      * 747204 : audiofirfilter creates strange noise for smaller filter kernels and even default kernel
-      * 747208 : rtpvp8depay: should have width/height in its caps so it can be fed to muxers
-      * 747358 : rtp: RTPJitterBufferMode enum missing from gtk-doc
-      * 747394 : rtpsession: Track RTX ssrc caps
-      * 747554 : suppressions: silence possible valgrind false positive
-      * 747595 : tests: Add test suite for alpha element
-      * 747597 : smpte: Remove unused fields
-      * 747863 : rtpsession: Use bandwidth calculation by default instead of some arbitrary hardcoded value
-      * 747922 : rtpjitterbuffer/rtxreceive: Don't reset the jitterbuffer if too old RTX packets arrive
-      * 748022 : audiofx: fix typos in example pipelines
-      * 748024 : icydemux: Fix segfault for 0-value metainterval
-      * 748041 : rtpjitterbuffer: Too early requested retransmission for future packets
-      * 748353 : rtspsrc: Leak of RTCP caps
-      * 748436 : rtpjitterbuffer: " stats " property docs
-      * 748584 : matroskademux: fix seek event leak in push mode
-      * 748617 : qtdemux: fix buffer leak on EOS with stop position in push mode
-      * 748627 : rtspsrc: Don't send NACKs and early RTCP in non-feedback profiles
-      * 748909 : jpegdec: fix frame leaks
-      * 749054 : qtdemux: Fix gst-launch pipeline in the documentation
-      * 749072 : flacparse: fix buffer leak
-      * 749122 : vp8enc: vp9enc: target bitrate is not working as expected
-      * 749129 : rtpg726depay: add block_align to output caps
-      * 749163 : po: update POTFILES.in
-      * 749543 : rtpg726depay: fix input buffer memleak
-      * 749544 : rtpg726pay: fix caps leak
-      * 749581 : rtpbasepayload: Try harder to reuse previously configured caps values and give more preference to anything set as properties
-      * 749669 : rtp: fix collection of statistic
-      * 749690 : splitfilesrc: Implement binary search in find_part_for_offset
-      * 749909 : matroska: overwritten value assignment
-      * 750327 : rtpssrcdemux: Add support for reduce size rtcp
-      * 750332 : rtpsession: Add support for reduced size rtcp
-      * 743925 : osxaudiosink won't reconfigure sink caps
-      * 744922 : osxaudiosrc: iOS resampling is stuttering
-      * 728353 : goom2k1: code does nothing, slowly
-      * 748068 : equalizer: not changing settings dynamically
-      * 731352 : flv: Container timestamp is DTS not PTS
-      * 732910 : v4l2src: Dectect and workaround decreasing HW timestamp
-      * 737810 : payloaders: VP8 and Opus payloader should probably suppport Google Chrome encoding-names
-      * 740787 : videocrop: No longer apply the new crop if caps have not changed
-      * 736396 : isomp4: duplicate if else branches in atoms.c
-      * 610364 : udpsrc: allocates buffers with size a lot bigger than needed
-      * 739305 : souphttpsrc: log connection events at info level
-      * 744213 : spectrum: assertion 'len > 0' failed
+      * 742917 : v4l2: Allow scaling in the v4l2*convert element
+      * 746146 : v4l2src: Seems to produce invalid or not-supported colorimetry field
+      * 750298 : souphttpsrc: add tls-database property
+      * 750471 : rtspsrc: Add support for TLS client authentication
+      * 750566 : goom: FTBFS: possible uninitialized variables compiler warning
+      * 750567 : rtpvp8depay: FTBFS because of access beyond end of array compiler warning
+      * 750653 : rtpmanager: document units of stats and arguments
+      * 750675 : qtdemux: reverse playback not working
+      * 750747 : splitmuxtest sometimes fails
+      * 750868 : osxaudio: fix latency property query on RemoteIO
+      * 750965 : rtpjitterbuffer: 1. Fix a typing error of comment, 2. Add null check in free_item function
+      * 751164 : rtspsrc does not respect the timeout value in the SETUP reply
+      * 751297 : rtprtxqueue: reverse pending list before pushing buffers
+      * 751298 : flvmux: produced files does not work well with common flash players
+      * 751306 : good plugins: fix some issues found using static analysis tool
+      * 751316 : rtpjitterbuffer : Fix a typing error of comment and the code which is wrong coding style. (trivial cleanup)
+      * 751320 : flvmux: Does not append AVC end of sequence
+      * 751361 : qtmux generates bad output timestamps
+      * 751364 : flacparse: fix possible memory leak
+      * 743338 : gstv4l2bufferpool: handle -EPIPE from DQBUF to signal EOS
 
 ==== Download ====
 
@@ -260,82 +114,22 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Alex O'Konski
-      * Ananda
-      * Andrei Sarakeev
-      * Antonio Ospite
-      * Anuj Jaiswal
       * Arun Raghavan
-      * Aurélien Zanelli
-      * Benjamin Gaignard
-      * Brad Smith
-      * Branislav Katreniak
-      * David Sansome
-      * David Schleef
+      * Chris Clayton
       * Edward Hervey
-      * George Kiagiadakis
-      * Guillaume Desmottes
-      * Gwenole Beauchesne
-      * Göran Jönsson
-      * Hans de Goede
-      * Henning Heinold
-      * Hyunjun Ko
+      * Enrico Jorns
       * Ilya Konstantinov
-      * Jan Alexander Steffens (heftig)
       * Jan Schmidt
-      * Jason Litzinger
-      * Jesper Larsen
-      * Jimmy Ohn
-      * Jonas Holmberg
       * Jose Antonio Santos Cadenas
-      * Josep Torra
-      * Julien Isorce
-      * Jurgen Slowack
-      * Krzysztof Kotlenga
-      * Linus Svensson
       * Luis de Bethencourt
-      * Mark Nauwelaerts
-      * Matej Knopp
-      * Mathieu Duponchelle
-      * Matthew Waters
-      * Michael Smith
       * Miguel París Díaz
-      * Nicola Murino
       * Nicolas Dufresne
-      * Nicolas Huet
-      * Nirbheek Chauhan
-      * Ognyan Tonchev
-      * Olivier Crête
-      * Patrick Radizi
-      * Paul Hyunil
-      * Peter G. Baum
-      * Peter Korsgaard
-      * Peter Seiderer
-      * Philippe De Muyter
-      * Philippe Normand
-      * Piotr Drąg
-      * Ramiro Polla
-      * Ravi Kiran K N
-      * Reynaldo H. Verdejo Pinochet
-      * Sanjay NM
-      * Santiago Carot-Nemesio
+      * Philipp Zabel
+      * Sangkyu Park
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Simon Farnsworth
-      * Sjoerd Simons
-      * Srimanta Panda
       * Stefan Sauer
       * Thiago Santos
-      * Thibault Saunier
-      * Tim-Philipp Müller
-      * Tobias Modschiedler
-      * Tom Greenwood
-      * Vincent Penquerc'h
       * Vineeth T M
       * Vineeth TM
-      * Víctor Manuel Jáquez Leal
-      * Wim Taymans
-      * Youness Alaoui
-      * hark
+      * Xavier Claessens
  

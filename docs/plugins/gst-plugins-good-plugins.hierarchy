@@ -33,7 +33,7 @@ GObject
           GstMuLawEnc
           GstSpeexEnc
           GstWavpackEnc
-        GstAudioVisualizer-ExtGom
+        GstAudioVisualizer-ExtGoom
           GstGoom
         GstAudioVisualizer-ExtGoom2k1
           GstGoom2k1
@@ -309,6 +309,7 @@ GObject
       GstTaskPool
   GSocket
   GTlsDatabase
+  GTlsInteraction
   GUdevClient
   GUdevDevice
   GdkPixbuf

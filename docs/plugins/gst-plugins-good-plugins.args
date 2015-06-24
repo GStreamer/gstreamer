@@ -1039,6 +1039,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::tls-interaction</NAME>
+<TYPE>GTlsInteraction*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TLS interaction</NICK>
+<BLURB>A GTlsInteraction object to promt the user for password or certificate.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -4286,6 +4296,16 @@
 <NICK>Use System CA File</NICK>
 <BLURB>Use system CA file.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::tls-database</NAME>
+<TYPE>GTlsDatabase*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TLS database</NICK>
+<BLURB>TLS database with anchor certificate authorities used to validate the server certificate.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -21324,7 +21344,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Use pipeline clock</NICK>
-<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages.</BLURB>
+<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages (DEPRECATED: Use ntp-source property).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -21385,7 +21405,17 @@
 <FLAGS>rw</FLAGS>
 <NICK>RTP Profile</NICK>
 <BLURB>Default RTP profile of newly created sessions.</BLURB>
-<DEFAULT>GST_RTP_PROFILE_AVPF</DEFAULT>
+<DEFAULT>GST_RTP_PROFILE_AVP</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::ntp-time-source</NAME>
+<TYPE>GstRtpNtpTimeSource</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>NTP Time Source</NICK>
+<BLURB>NTP time source for RTCP packets.</BLURB>
+<DEFAULT>NTP time based on realtime clock</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21644,7 +21674,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Use pipeline clock</NICK>
-<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages.</BLURB>
+<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages (DEPRECATED: Use ntp-source property).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -21686,6 +21716,16 @@
 <NICK>RTP Profile</NICK>
 <BLURB>RTP profile to use.</BLURB>
 <DEFAULT>GST_RTP_PROFILE_AVP</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::ntp-time-source</NAME>
+<TYPE>GstRtpNtpTimeSource</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>NTP Time Source</NICK>
+<BLURB>NTP time source for RTCP packets.</BLURB>
+<DEFAULT>NTP time based on realtime clock</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22469,6 +22509,46 @@
 </ARG>
 
 <ARG>
+<NAME>GstQTMux::reserved-bytes-per-sec</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 10000</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reserved MOOV bytes per second, per track</NICK>
+<BLURB>Multiplier for converting reserved-max-duration into bytes of header to reserve, per second, per track.</BLURB>
+<DEFAULT>550</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::reserved-duration-remaining</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Report the approximate amount of remaining recording space (ns)</NICK>
+<BLURB>Reports the approximate amount of remaining moov header space reserved using reserved-max-duration.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::reserved-max-duration</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reserved maximum file duration (ns)</NICK>
+<BLURB>When set to a value > 0, reserves space for index tables at the beginning of the file.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::reserved-moov-update-period</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interval at which to update index tables (ns)</NICK>
+<BLURB>When used with reserved-max-duration, periodically updates the index tables with information muxed so far.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQTMoovRecover::broken-input</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -22599,6 +22679,46 @@
 </ARG>
 
 <ARG>
+<NAME>GstMP4Mux::reserved-bytes-per-sec</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 10000</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reserved MOOV bytes per second, per track</NICK>
+<BLURB>Multiplier for converting reserved-max-duration into bytes of header to reserve, per second, per track.</BLURB>
+<DEFAULT>550</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::reserved-duration-remaining</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Report the approximate amount of remaining recording space (ns)</NICK>
+<BLURB>Reports the approximate amount of remaining moov header space reserved using reserved-max-duration.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::reserved-max-duration</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reserved maximum file duration (ns)</NICK>
+<BLURB>When set to a value > 0, reserves space for index tables at the beginning of the file.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::reserved-moov-update-period</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interval at which to update index tables (ns)</NICK>
+<BLURB>When used with reserved-max-duration, periodically updates the index tables with information muxed so far.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstMJ2Mux::dts-method</NAME>
 <TYPE>GstQTMuxDtsMethods</TYPE>
 <RANGE></RANGE>
@@ -22689,6 +22809,46 @@
 </ARG>
 
 <ARG>
+<NAME>GstMJ2Mux::reserved-bytes-per-sec</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 10000</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reserved MOOV bytes per second, per track</NICK>
+<BLURB>Multiplier for converting reserved-max-duration into bytes of header to reserve, per second, per track.</BLURB>
+<DEFAULT>550</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::reserved-duration-remaining</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Report the approximate amount of remaining recording space (ns)</NICK>
+<BLURB>Reports the approximate amount of remaining moov header space reserved using reserved-max-duration.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::reserved-max-duration</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reserved maximum file duration (ns)</NICK>
+<BLURB>When set to a value > 0, reserves space for index tables at the beginning of the file.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::reserved-moov-update-period</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interval at which to update index tables (ns)</NICK>
+<BLURB>When used with reserved-max-duration, periodically updates the index tables with information muxed so far.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstISMLMux::dts-method</NAME>
 <TYPE>GstQTMuxDtsMethods</TYPE>
 <RANGE></RANGE>
@@ -22776,6 +22936,46 @@
 <NICK>Track timescale</NICK>
 <BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::reserved-bytes-per-sec</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 10000</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reserved MOOV bytes per second, per track</NICK>
+<BLURB>Multiplier for converting reserved-max-duration into bytes of header to reserve, per second, per track.</BLURB>
+<DEFAULT>550</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::reserved-duration-remaining</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Report the approximate amount of remaining recording space (ns)</NICK>
+<BLURB>Reports the approximate amount of remaining moov header space reserved using reserved-max-duration.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::reserved-max-duration</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reserved maximum file duration (ns)</NICK>
+<BLURB>When set to a value > 0, reserves space for index tables at the beginning of the file.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::reserved-moov-update-period</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interval at which to update index tables (ns)</NICK>
+<BLURB>When used with reserved-max-duration, periodically updates the index tables with information muxed so far.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22956,6 +23156,46 @@
 <NICK>Track timescale</NICK>
 <BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Gst3GPPMux::reserved-bytes-per-sec</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 10000</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reserved MOOV bytes per second, per track</NICK>
+<BLURB>Multiplier for converting reserved-max-duration into bytes of header to reserve, per second, per track.</BLURB>
+<DEFAULT>550</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Gst3GPPMux::reserved-duration-remaining</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Report the approximate amount of remaining recording space (ns)</NICK>
+<BLURB>Reports the approximate amount of remaining moov header space reserved using reserved-max-duration.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Gst3GPPMux::reserved-max-duration</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reserved maximum file duration (ns)</NICK>
+<BLURB>When set to a value > 0, reserves space for index tables at the beginning of the file.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Gst3GPPMux::reserved-moov-update-period</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interval at which to update index tables (ns)</NICK>
+<BLURB>When used with reserved-max-duration, periodically updates the index tables with information muxed so far.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
 </ARG>
 
 <ARG>
