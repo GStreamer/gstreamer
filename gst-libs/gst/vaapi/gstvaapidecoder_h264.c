@@ -2875,6 +2875,37 @@ exec_picture_refs_modification(
         exec_picture_refs_modification_1(decoder, picture, slice_hdr, 1);
 }
 
+static gboolean
+check_picture_ref_corruption(GstVaapiDecoderH264 *decoder,
+    GstVaapiPictureH264 *RefPicList[32], guint RefPicList_count)
+{
+    const guint corrupted_flags =
+        GST_VAAPI_PICTURE_FLAG_CORRUPTED | GST_VAAPI_PICTURE_FLAG_GHOST;
+    guint i;
+
+    for (i = 0; i < RefPicList_count; i++) {
+        GstVaapiPictureH264 * const picture = RefPicList[i];
+        if (picture && (GST_VAAPI_PICTURE_FLAGS(picture) & corrupted_flags))
+            return TRUE;
+    }
+    return FALSE;
+}
+
+static void
+mark_picture_refs(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+
+    if (GST_VAAPI_PICTURE_IS_CORRUPTED(picture))
+        return;
+
+    if (check_picture_ref_corruption(decoder,
+            priv->RefPicList0, priv->RefPicList0_count) ||
+        check_picture_ref_corruption(decoder,
+            priv->RefPicList1, priv->RefPicList1_count))
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_CORRUPTED);
+}
+
 static void
 init_picture_ref_lists(GstVaapiDecoderH264 *decoder,
     GstVaapiPictureH264 *picture)
@@ -2975,6 +3006,8 @@ init_picture_refs(
     default:
         break;
     }
+
+    mark_picture_refs(decoder, picture);
 }
 
 static GstVaapiPictureH264 *
