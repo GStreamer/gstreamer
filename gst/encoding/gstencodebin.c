@@ -950,6 +950,14 @@ _get_encoder (GstEncodeBin * ebin, GstEncodingProfile * sprof)
       gst_element_factory_list_filter (ebin->encoders, format,
       GST_PAD_SRC, FALSE);
 
+  if (G_UNLIKELY (encoders == NULL) && sprof == ebin->profile) {
+    /* Special case: if the top-level profile is an encoder,
+     * it could be listed in our muxers (for example wavenc)
+     */
+    encoders = gst_element_factory_list_filter (ebin->muxers, format,
+        GST_PAD_SRC, FALSE);
+  }
+
   if (G_UNLIKELY (encoders == NULL)) {
     GST_DEBUG ("Couldn't find any compatible encoders");
     goto beach;
