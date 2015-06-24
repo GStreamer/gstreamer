@@ -1,8 +1,8 @@
 
-Release notes for GStreamer libav Plugins 1.5.1
+Release notes for GStreamer libav Plugins 1.5.2
 
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.5 release series. The 1.5 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.5 release series
@@ -40,9 +40,7 @@ contains a set of less supported plugins that haven't passed the
 
 Bugs fixed in this release
      
-      * 676131 : avdec_aac should be ranked above faad
-      * 726020 : avdec_h265: freezes when max-threads != 1
-      * 740822 : av: use GMutex instead of deprecated GStaticMutex
+      * 750398 : avenc_mjpeg fails to negotiate the source format
 
 ==== Download ====
 
@@ -79,17 +77,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Aurélien Zanelli
       * Edward Hervey
-      * IBM Thinklab
       * Jan Schmidt
-      * Luis de Bethencourt
-      * Mark Nauwelaerts
       * Nicolas Dufresne
-      * Olivier Crête
       * Sebastian Dröge
       * Stefan Sauer
-      * Thibault Saunier
-      * Tim-Philipp Müller
  

@@ -3,7 +3,7 @@
   <description>All libav codecs and formats (local snapshot)</description>
   <filename>../../ext/libav/.libs/libgstlibav.so</filename>
   <basename>libgstlibav.so</basename>
-  <version>1.5.1</version>
+  <version>1.5.2</version>
   <license>GPL</license>
   <source>gst-libav</source>
   <package>libav</package>

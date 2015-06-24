@@ -135,8 +135,6 @@ GObject
           avenc_roq_dpcm
           avenc_wmav1
           avenc_wmav2
-        GstBaseTransform
-          GstFFMpegScale
         GstBin
           GstPipeline
         GstFFMpegDeinterlace

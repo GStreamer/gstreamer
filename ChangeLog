@@ -1,9 +1,97 @@
-=== release 1.5.1 ===
+=== release 1.5.2 ===
 
-2015-06-07  Sebastian Dröge <slomo@coaxion.net>
+2015-06-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.1
+	  releasing 1.5.2
+
+2015-06-16 17:50:03 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6015d26 to f74b2df
+
+2015-06-04 19:11:02 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodec: Check against codec format list
+	  There exist few formats (deprecated though) used by mjpeg decoder
+	  and encoder that maps to the same GStreamer format. To properly
+	  pick the right format, also lookup each Codec list before accepting
+	  the format. This fixes error when trying to use mjpeg encoder.
+	  Note that this may results in faded colors. In fact, these special
+	  format are meant to specify that this is full range YUV. Colorimetry
+	  in gst-libav is not yet implemented, hence is ignored in general. So
+	  I think it's fine to first fix the issue before addressing the missing
+	  feature.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750398
+
+2014-10-07 16:33:07 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  viddec: Replicate any 3D/multiview info from input caps onto output
+
+2015-06-09 15:41:46 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* Makefile.am:
+	  cruft: add the obsolete tmpl dir to cruft-dirs
+
+2015-06-09 11:30:44 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d9a3353 to 6015d26
+
+2015-06-08 23:08:20 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From d37af32 to d9a3353
+
+2015-06-07 23:06:58 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 21ba2e5 to d37af32
+
+2015-06-07 17:32:20 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From c408583 to 21ba2e5
+
+2015-06-07 17:03:46 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	  docs: remove variables that we define in the snippet from common
+	  This is syncing our Makefile.am with upstream gtkdoc.
+
+2015-06-07 17:16:38 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From c8fb372 to c408583
+
+2015-06-07 16:44:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.5.1 ===
+
+2015-06-07 11:10:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-libav-plugins.args:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/gst-libav-plugins.interfaces:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.5.1
 
 2015-06-05 11:57:37 +0200  Sebastian Dröge <sebastian@centricular.com>
 
