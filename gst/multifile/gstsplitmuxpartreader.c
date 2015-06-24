@@ -34,6 +34,9 @@ GST_DEBUG_CATEGORY_STATIC (splitmux_part_debug);
 #define SPLITMUX_PART_WAIT(p) g_cond_wait (&(p)->inactive_cond, &(p)->lock)
 #define SPLITMUX_PART_BROADCAST(p) g_cond_broadcast (&(p)->inactive_cond)
 
+#define SPLITMUX_PART_TYPE_LOCK(p) g_mutex_lock(&(p)->type_lock)
+#define SPLITMUX_PART_TYPE_UNLOCK(p) g_mutex_unlock(&(p)->type_lock)
+
 enum
 {
   SIGNAL_PREPARED,
@@ -628,6 +631,7 @@ gst_splitmux_part_reader_init (GstSplitMuxPartReader * reader)
 
   g_cond_init (&reader->inactive_cond);
   g_mutex_init (&reader->lock);
+  g_mutex_init (&reader->type_lock);
 
   /* FIXME: Create elements on a state change */
   reader->src = gst_element_factory_make ("filesrc", NULL);
@@ -671,6 +675,9 @@ static void
 splitmux_part_reader_finalize (GObject * object)
 {
   GstSplitMuxPartReader *reader = (GstSplitMuxPartReader *) object;
+
+  g_mutex_clear (&reader->lock);
+  g_mutex_clear (&reader->type_lock);
 
   g_free (reader->path);
 
@@ -1027,11 +1034,13 @@ gst_splitmux_part_reader_change_state (GstElement * element,
       break;
     }
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
-      /* Hold the splitmux part lock until after the
+      /* Hold the splitmux type lock until after the
        * parent state change function has finished
-       * changing the states of things */
+       * changing the states of things, and type finding can continue */
       SPLITMUX_PART_LOCK (reader);
       g_object_set (reader->src, "location", reader->path, NULL);
+      SPLITMUX_PART_UNLOCK (reader);
+      SPLITMUX_PART_TYPE_LOCK (reader);
       break;
     }
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -1057,7 +1066,7 @@ gst_splitmux_part_reader_change_state (GstElement * element,
   if (ret == GST_STATE_CHANGE_FAILURE) {
     if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
       /* Make sure to release the lock we took above */
-      SPLITMUX_PART_UNLOCK (reader);
+      SPLITMUX_PART_TYPE_UNLOCK (reader);
     }
     goto beach;
   }
@@ -1065,7 +1074,11 @@ gst_splitmux_part_reader_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* Sleep and wait until all streams have been collected, then do the seeks
-       * to measure the stream lengths. This took the part lock above already... */
+       * to measure the stream lengths. This took the type lock above,
+       * but it's OK to release it now and let typefinding happen... */
+      SPLITMUX_PART_TYPE_UNLOCK (reader);
+
+      SPLITMUX_PART_LOCK (reader);
       reader->prep_state = PART_STATE_PREPARING_COLLECT_STREAMS;
       gst_splitmux_part_reader_set_flushing_locked (reader, FALSE);
       reader->running = TRUE;
