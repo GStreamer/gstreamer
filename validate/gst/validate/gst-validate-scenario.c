@@ -1041,6 +1041,7 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
         || (rate < 0 && (*position > priv->segment_start + priv->seek_pos_tol
                 || *position < MIN (0,
                     (gint64) priv->segment_start - priv->seek_pos_tol)))) {
+      priv->seeked_in_pause = FALSE;
       GST_VALIDATE_REPORT (scenario, EVENT_SEEK_RESULT_POSITION_WRONG,
           "Reported position after accurate seek in PAUSED state should be exactlty"
           " what the user asked for %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT,
@@ -1350,7 +1351,7 @@ execute_next_action (GstValidateScenario * scenario)
 
   /* TODO what about non flushing seeks? */
   if (priv->last_seek && priv->target_state > GST_STATE_READY) {
-    GST_INFO_OBJECT (scenario, "Still seeking -- not executing action");
+    GST_LOG_OBJECT (scenario, "Still seeking -- not executing action");
     return G_SOURCE_CONTINUE;
   }
 
@@ -1375,7 +1376,7 @@ execute_next_action (GstValidateScenario * scenario)
         act = NULL;
       }
     } else if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
-      GST_DEBUG_OBJECT (scenario, "Action %" GST_PTR_FORMAT " still running",
+      GST_LOG_OBJECT (scenario, "Action %" GST_PTR_FORMAT " still running",
           act->structure);
 
       return G_SOURCE_CONTINUE;
