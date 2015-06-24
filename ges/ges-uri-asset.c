@@ -214,7 +214,7 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
     errno = 10;
 
   if (errno)
-    timeout = GST_SECOND;
+    timeout = 60 * GST_SECOND;
 
   klass->discoverer = gst_discoverer_new (timeout, NULL);
   klass->sync_discoverer = gst_discoverer_new (timeout, NULL);
