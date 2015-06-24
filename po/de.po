@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.4.1\n"
+"Project-Id-Version: gstreamer 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:28+0200\n"
-"PO-Revision-Date: 2015-04-18 16:41+0100\n"
+"POT-Creation-Date: 2015-06-24 11:13+0200\n"
+"PO-Revision-Date: 2015-06-11 18:57+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -19,6 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 1.7.5\n"
+"X-Poedit-SourceCharset: UTF-8\n"
 
 msgid "Print the GStreamer version"
 msgstr "Die Version von GStreamer ausgeben"
@@ -957,10 +958,10 @@ msgstr ""
 "dieser Eigenschaft referenziert ein hinzugefügtes GstCaps-Objekt."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Änderungsmodus der Fähigkeiten"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Änderungsmodus der Filterfähigkeiten"
 
 msgid "No Temp directory specified."
 msgstr "Kein temporärer Ordner angegeben."
@@ -1028,9 +1029,8 @@ msgstr "Fähigkeiten erzwingen"
 msgid "force caps without doing a typefind"
 msgstr "Fähigkeiten ohne Typensuche erzwingen"
 
-#, fuzzy
 msgid "Stream contains not enough data."
-msgstr "Der Datenstrom enthält keine Daten."
+msgstr "Der Datenstrom enthält nicht genug Daten."
 
 msgid "Stream contains no data."
 msgstr "Der Datenstrom enthält keine Daten."
@@ -1045,7 +1045,7 @@ msgid "writable"
 msgstr "schreibbar"
 
 msgid "deprecated"
-msgstr ""
+msgstr "veraltet"
 
 msgid "controllable"
 msgstr "regelbar"

@@ -1,16 +1,16 @@
 # Vietnamese Translation for GStreamer.
 # Bản dịch tiếng Việt dành cho GStreamer.
-# Copyright © 2014 Free Software Foundation, Inc.
+# Copyright © 2015 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
-# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014, 2015.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.3.90\n"
+"Project-Id-Version: gstreamer 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:28+0200\n"
-"PO-Revision-Date: 2014-06-30 09:40+0700\n"
+"POT-Creation-Date: 2015-06-24 11:13+0200\n"
+"PO-Revision-Date: 2015-06-11 08:35+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -19,10 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Language-Team-Website: <http://translationproject.org/team/vi.html>\n"
-"X-Generator: LocFactoryEditor 1.8\n"
-"X-Poedit-SourceCharset: UTF-8\n"
-"X-Poedit-Language: Vietnamese\n"
-"X-Poedit-Country: VIET NAM\n"
+"X-Generator: Gtranslator 2.91.7\n"
 
 msgid "Print the GStreamer version"
 msgstr "Hiển thị phiên bản của GStreamer"
@@ -247,7 +244,7 @@ msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
 msgstr ""
-"Luồng dữ liệu bị mã hoá và không thể giải mã vì chưa cung cấp khoá thích hợp."
+"Luồng dữ liệu bị mã hóa và không thể giải mã vì chưa cung cấp khóa thích hợp."
 
 #, c-format
 msgid "No error message for domain %s."
@@ -341,8 +338,8 @@ msgstr "ghi chú kéo dài"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"văn bản tự do đặt ghi chú về dữ liệu dưới dạng key=value (khoá=giá trị) hay "
-"key[en]=comment (khoá[en]=ghi chú)"
+"văn bản tự do đặt ghi chú về dữ liệu dưới dạng key=value (khóa=giá trị) hay "
+"key[en]=comment (khóa[en]=ghi chú)"
 
 msgid "track number"
 msgstr "số rãnh"
@@ -420,10 +417,10 @@ msgid "URI to the copyright notice of the data"
 msgstr "địa chỉ URI đến thông báo tác quyền của dữ liệu này"
 
 msgid "encoded by"
-msgstr "má hoá bởi"
+msgstr "má hóa bởi"
 
 msgid "name of the encoding person or organization"
-msgstr "tên của người hay tổ chức đã mã hoá tập tin"
+msgstr "tên của người hay tổ chức đã mã hóa tập tin"
 
 msgid "contact"
 msgstr "liên lạc"
@@ -483,7 +480,7 @@ msgid "subtitle codec"
 msgstr "codec phụ đề"
 
 msgid "codec the subtitle data is stored in"
-msgstr "codec theo đó dữ liệu phụ đề được mã hoá"
+msgstr "codec theo đó dữ liệu phụ đề được mã hóa"
 
 msgid "container format"
 msgstr "định dạng chứa"
@@ -604,10 +601,10 @@ msgid "number of beats per minute in audio"
 msgstr "số tiếng nhịp trong mỗi phút âm thanh"
 
 msgid "keywords"
-msgstr "từ khoá"
+msgstr "từ khóa"
 
 msgid "comma separated keywords describing the content"
-msgstr "các từ khoá định giới bằng dấu phẩy, diễn tả nội dung"
+msgstr "các từ khóa định giới bằng dấu phẩy, diễn tả nội dung"
 
 msgid "geo location name"
 msgstr "tên định vị địa lý"
@@ -939,10 +936,10 @@ msgstr ""
 "cấp."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Thay đổi chế độ Caps"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Bộ lọc caps thay đổi cách ứng xử"
 
 msgid "No Temp directory specified."
 msgstr "Chưa xác định thư mục tạm thời."
@@ -1010,9 +1007,8 @@ msgstr "buộc khả năng"
 msgid "force caps without doing a typefind"
 msgstr "buộc các khả năng mà không tìm kiểu"
 
-#, fuzzy
 msgid "Stream contains not enough data."
-msgstr "Luồng không chứa dữ liệu."
+msgstr "Luồng không chứa đủ dữ liệu."
 
 msgid "Stream contains no data."
 msgstr "Luồng không chứa dữ liệu."
@@ -1027,7 +1023,7 @@ msgid "writable"
 msgstr "được ghi"
 
 msgid "deprecated"
-msgstr ""
+msgstr "đã lạc hậu"
 
 msgid "controllable"
 msgstr "điều khiển được"
@@ -1081,7 +1077,8 @@ msgid ""
 msgstr ""
 "In ra danh sách cho máy phân tích được chứa các tính năng của phần bổ sung "
 "đã ghi rõ hoặc mọi phần bổ sung.\n"
-"\t\t\t\tCó ích khi dùng cơ chế tự động bên ngoài mà cài đặt phần bổ sung."
+"                                       Có ích khi dùng cơ chế tự động bên "
+"ngoài mà cài đặt phần bổ sung."
 
 msgid "List the plugin contents"
 msgstr "Liệt kê nội dung phần bổ sung"
@@ -1169,29 +1166,29 @@ msgid "WARNING: from element %s: %s\n"
 msgstr "CẢNH BÁO: từ phần tử %s: %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr "Cuộn sẵn, đợi chuyển hoán đệm xong...\n"
+msgstr "Cuộn sẵn, đợi chuyển hoán đệm xong…\n"
 
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Cuộn sẵn, đợi tiến trình hoàn tất...\n"
+msgstr "Cuộn sẵn, đợi tiến trình hoàn tất…\n"
 
 msgid "buffering..."
-msgstr "đang chuyển hoán đệm..."
+msgstr "đang chuyển hoán đệm…"
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "Hoàn tất chuyển hoán đệm nên đặt đường ống thành ĐANG PHÁT ...\n"
+msgstr "Hoàn tất chuyển hoán đệm nên đặt đường ống thành ĐANG PHÁT …\n"
 
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr "Đang chuyển hoán đệm nên đặt đường ống thành BỊ TẠM DỪNG ...\n"
+msgstr "Đang chuyển hoán đệm nên đặt đường ống thành BỊ TẠM DỪNG …\n"
 
 msgid "Redistribute latency...\n"
-msgstr "Phân phối lại sự âm ỷ...\n"
+msgstr "Phân phối lại sự âm ỷ…\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr "Đang đặt tình trạng thành %s như yêu cầu bởi %s....\n"
+msgstr "Đang đặt tình trạng thành %s như yêu cầu bởi %s….\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr "Ngắt: đang ngừng chạy đường ống ...\n"
+msgstr "Ngắt: đang ngừng chạy đường ống …\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1224,7 +1221,7 @@ msgid "Do not output status information of TYPE"
 msgstr "Không xuất thông tin trạng thái KIỂU"
 
 msgid "TYPE1,TYPE2,..."
-msgstr "KIỂU1,KIỂU2,..."
+msgstr "KIỂU1,KIỂU2,…"
 
 msgid "Do not install a fault handler"
 msgstr "Không cài đặt bộ quản lý lỗi"
@@ -1250,25 +1247,25 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "LỖI: không tìm thấy phần tử “đường ống” (pipeline).\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "Đang đặt đường ống thành BỊ TẠM DỪNG ...\n"
+msgstr "Đang đặt đường ống thành BỊ TẠM DỪNG …\n"
 
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "LỖI: đường ống không tạm dừng được.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "Đường ống đang sống và không cần TIỀN CUỘN ...\n"
+msgstr "Đường ống đang sống và không cần TIỀN CUỘN …\n"
 
 msgid "Pipeline is PREROLLING ...\n"
-msgstr "Đường ống ĐANG TIỀN CUỘN ...\n"
+msgstr "Đường ống ĐANG TIỀN CUỘN …\n"
 
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "LỖI: đường ống không tiền cuộn được.\n"
 
 msgid "Pipeline is PREROLLED ...\n"
-msgstr "Đường ống ĐÃ TIỀN CUỘN ...\n"
+msgstr "Đường ống ĐÃ TIỀN CUỘN …\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Đang đặt đường ống thành ĐANG PHÁT ...\n"
+msgstr "Đang đặt đường ống thành ĐANG PHÁT …\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "LỖI: đường ống không phát được.\n"
@@ -1282,13 +1279,13 @@ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
 msgstr "EOS khi tắt máy được bật -- chờ sau Lỗi EOS\n"
 
 msgid "Waiting for EOS...\n"
-msgstr "Đang đợi kết thúc luồng...\n"
+msgstr "Đang đợi kết thúc luồng…\n"
 
 msgid "EOS received - stopping pipeline...\n"
-msgstr "Nhận được tín hiệu kết thúc luồng: đang ngừng chạy đường ống ...\n"
+msgstr "Nhận được tín hiệu kết thúc luồng: đang ngừng chạy đường ống …\n"
 
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Ngắt trong khi chờ EOS - đang dừng đường ống lại...\n"
+msgstr "Ngắt trong khi chờ EOS - đang dừng đường ống lại…\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Gặp lỗi trong khi đợi kết thúc luồng\n"
@@ -1297,13 +1294,13 @@ msgid "Execution ended after %"
 msgstr "Thực hiện xong sau %"
 
 msgid "Setting pipeline to READY ...\n"
-msgstr "Đang đặt đường ống thành SẴN_SÀNG ...\n"
+msgstr "Đang đặt đường ống thành SẴN_SÀNG …\n"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr "Đang đặt đường ống thành VÔ_GIÁ_TRỊ ...\n"
+msgstr "Đang đặt đường ống thành VÔ_GIÁ_TRỊ …\n"
 
 msgid "Freeing pipeline ...\n"
-msgstr "Đang giải phóng đường ống ...\n"
+msgstr "Đang giải phóng đường ống …\n"
 
 #~ msgid "link without source element"
 #~ msgstr "liên kết không có phần tử nguồn"
@@ -1325,7 +1322,7 @@ msgstr "Đang giải phóng đường ống ...\n"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
-#~ "Cách sử dụng: gst-xmllaunch <tập_tin.xml> [ yếu_tố.tài_sản=giá_trị ...]\n"
+#~ "Cách sử dụng: gst-xmllaunch <tập_tin.xml> [ yếu_tố.tài_sản=giá_trị …]\n"
 
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "LỖI: lỗi phân tách tập tin xml “%s”.\n"

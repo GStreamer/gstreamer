@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.4.1\n"
+"Project-Id-Version: gstreamer 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:28+0200\n"
-"PO-Revision-Date: 2015-02-16 06:03+0100\n"
+"POT-Creation-Date: 2015-06-24 11:13+0200\n"
+"PO-Revision-Date: 2015-06-17 16:31+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Gtranslator 2.91.6\n"
+"X-Generator: Gtranslator 2.91.7\n"
 
 msgid "Print the GStreamer version"
 msgstr "Vypsat verzi systému GStreamer"
@@ -930,10 +930,10 @@ msgstr ""
 "přebírá odkaz na zadaný objekt GstCaps."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Režim změny schopností"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Filtrovat chování změny schopností"
 
 msgid "No Temp directory specified."
 msgstr "Není určena složka pro dočasné soubory."
@@ -1001,9 +1001,8 @@ msgstr "vynutit schopnosti"
 msgid "force caps without doing a typefind"
 msgstr "vynutit schopnosti bez hledání typu"
 
-#, fuzzy
 msgid "Stream contains not enough data."
-msgstr "Proud neobsahuje žádná data."
+msgstr "Proud neobsahuje dostatek dat."
 
 msgid "Stream contains no data."
 msgstr "Proud neobsahuje žádná data."
@@ -1018,7 +1017,7 @@ msgid "writable"
 msgstr "lze zapisovat"
 
 msgid "deprecated"
-msgstr ""
+msgstr "zavržené"
 
 msgid "controllable"
 msgstr "lze ovládat"
