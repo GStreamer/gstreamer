@@ -117,6 +117,12 @@ gst_vaapi_picture_create (GstVaapiPicture * picture,
             GST_VAAPI_PICTURE_FLAG_ONEFIELD |
             GST_VAAPI_PICTURE_FLAG_RFF | GST_VAAPI_PICTURE_FLAG_MVC));
 
+    // Propagate "corrupted" flag while not presuming that the second
+    // field is itself corrupted if the first one was marked as such
+    if (GST_VAAPI_PICTURE_IS_CORRUPTED (parent_picture) &&
+        !(args->flags & GST_VAAPI_CREATE_PICTURE_FLAG_FIELD))
+      GST_VAAPI_PICTURE_FLAG_SET (picture, GST_VAAPI_PICTURE_FLAG_CORRUPTED);
+
     picture->structure = parent_picture->structure;
     if ((args->flags & GST_VAAPI_CREATE_PICTURE_FLAG_FIELD) &&
         GST_VAAPI_PICTURE_IS_INTERLACED (picture)) {
@@ -347,6 +353,9 @@ do_output (GstVaapiPicture * picture)
   if (GST_VAAPI_PICTURE_IS_SKIPPED (picture))
     GST_VIDEO_CODEC_FRAME_FLAG_SET (out_frame,
         GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
+
+  if (GST_VAAPI_PICTURE_IS_CORRUPTED (picture))
+    flags |= GST_VAAPI_SURFACE_PROXY_FLAG_CORRUPTED;
 
   if (GST_VAAPI_PICTURE_IS_MVC (picture)) {
     if (picture->voc == 0)

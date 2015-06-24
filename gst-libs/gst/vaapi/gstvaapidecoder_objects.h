@@ -68,6 +68,8 @@ typedef enum
  * @GST_VAAPI_PICTURE_FLAG_ONEFIELD: only one field is valid
  * @GST_VAAPI_PICTURE_FLAG_MVC: multiview component
  * @GST_VAAPI_PICTURE_FLAG_RFF: repeat-first-field
+ * @GST_VAAPI_PICTURE_FLAG_CORRUPTED: picture was reconstructed from
+ *   corrupted references
  * @GST_VAAPI_PICTURE_FLAG_LAST: first flag that can be used by subclasses
  *
  * Enum values used for #GstVaapiPicture flags.
@@ -83,7 +85,8 @@ typedef enum
   GST_VAAPI_PICTURE_FLAG_ONEFIELD   = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 6),
   GST_VAAPI_PICTURE_FLAG_MVC        = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 7),
   GST_VAAPI_PICTURE_FLAG_RFF        = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 8),
-  GST_VAAPI_PICTURE_FLAG_LAST       = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 9),
+  GST_VAAPI_PICTURE_FLAG_CORRUPTED  = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 9),
+  GST_VAAPI_PICTURE_FLAG_LAST       = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 10),
 } GstVaapiPictureFlags;
 
 #define GST_VAAPI_PICTURE_FLAGS         GST_VAAPI_MINI_OBJECT_FLAGS
@@ -125,6 +128,9 @@ typedef enum
 
 #define GST_VAAPI_PICTURE_IS_MVC(picture) \
   (GST_VAAPI_PICTURE_FLAG_IS_SET (picture, GST_VAAPI_PICTURE_FLAG_MVC))
+
+#define GST_VAAPI_PICTURE_IS_CORRUPTED(picture) \
+  (GST_VAAPI_PICTURE_FLAG_IS_SET (picture, GST_VAAPI_PICTURE_FLAG_CORRUPTED))
 
 /**
  * GstVaapiPicture:

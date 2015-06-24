@@ -38,6 +38,8 @@ G_BEGIN_DECLS
  * @GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD: only one field is available
  * @GST_VAAPI_SURFACE_PROXY_FLAG_FFB: first frame in bundle, e.g. the first
  *   view component of a MultiView Coded (MVC) frame
+ * @GST_VAAPI_SURFACE_PROXY_FLAG_CORRUPTED: the underlying surface is
+ *   corrupted somehow, e.g. reconstructed from invalid references
  * @GST_VAAPI_SURFACE_PROXY_FLAG_LAST: first flag that can be used by subclasses
  *
  * Flags for #GstVaapiDecoderFrame.
@@ -49,6 +51,7 @@ typedef enum
   GST_VAAPI_SURFACE_PROXY_FLAG_RFF = (1 << 2),
   GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD = (1 << 3),
   GST_VAAPI_SURFACE_PROXY_FLAG_FFB = (1 << 4),
+  GST_VAAPI_SURFACE_PROXY_FLAG_CORRUPTED = (1 << 5),
   GST_VAAPI_SURFACE_PROXY_FLAG_LAST = (1 << 8)
 } GstVaapiSurfaceProxyFlags;
 

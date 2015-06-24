@@ -264,7 +264,7 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
   GstFlowReturn ret;
   const GstVaapiRectangle *crop_rect;
   GstVaapiVideoMeta *meta;
-  guint flags;
+  guint flags, out_flags = 0;
 
   if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (out_frame)) {
     proxy = gst_video_codec_frame_get_user_data (out_frame);
@@ -282,16 +282,18 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
     gst_vaapi_video_meta_set_surface_proxy (meta, proxy);
 
     flags = gst_vaapi_surface_proxy_get_flags (proxy);
+    if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_CORRUPTED)
+      out_flags |= GST_BUFFER_FLAG_CORRUPTED;
     if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_INTERLACED) {
-      guint out_flags = GST_VIDEO_BUFFER_FLAG_INTERLACED;
+      out_flags |= GST_VIDEO_BUFFER_FLAG_INTERLACED;
       if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_TFF)
         out_flags |= GST_VIDEO_BUFFER_FLAG_TFF;
       if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_RFF)
         out_flags |= GST_VIDEO_BUFFER_FLAG_RFF;
       if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD)
         out_flags |= GST_VIDEO_BUFFER_FLAG_ONEFIELD;
-      GST_BUFFER_FLAG_SET (out_frame->output_buffer, out_flags);
     }
+    GST_BUFFER_FLAG_SET (out_frame->output_buffer, out_flags);
 
     crop_rect = gst_vaapi_surface_proxy_get_crop_rect (proxy);
     if (crop_rect) {
