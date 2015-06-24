@@ -1,9 +1,159 @@
-=== release 1.4.0 ===
+=== release 1.5.2 ===
 
-2014-10-20  Thibault Saunier <tsaunier@gnome.org>
+2015-06-24  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.4.0
+	  releasing 1.5.2
+
+2015-04-24 10:35:14 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* gi/overrides/Gst.py:
+	* testsuite/overrides_hack.py:
+	* testsuite/test_gst.py:
+	  tests: Fix tests in python2
+	  Python2 core checks that the first argument of a method is of the type
+	  of the object if it does not have any info about the method, so when
+	  using Gst not initialized it raiser a TypeError and not a
+	  Gst.NotInitialized as expected.
+	  + And fix a typo
+
+2015-04-24 09:37:24 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* testsuite/Makefile.am:
+	* testsuite/old/test_fraction.py:
+	* testsuite/test_fraction.py:
+	  tests: Add test_fraction back in the testsuite
+	  Properly porting it and adding a small test about getting fraction
+	  from a Gst.Structure
+
+2015-04-24 10:27:47 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* gi/overrides/Gst.py:
+	  overrides: Do not use inspect.signature as it is not avalaible in python2
+	  Fix regression from https://bugzilla.gnome.org/show_bug.cgi?id=746329
+
+2015-04-15 19:57:43 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* Makefile.am:
+	* configure.ac:
+	* testsuite/Makefile.am:
+	* testsuite/common.py:
+	* testsuite/old/test-object.c:
+	* testsuite/old/test-object.h:
+	* testsuite/old/test_adapter.py:
+	* testsuite/old/test_audio.py:
+	* testsuite/old/test_bin.py:
+	* testsuite/old/test_buffer.py:
+	* testsuite/old/test_bus.py:
+	* testsuite/old/test_caps.py:
+	* testsuite/old/test_element.py:
+	* testsuite/old/test_event.py:
+	* testsuite/old/test_fraction.py:
+	* testsuite/old/test_ghostpad.py:
+	* testsuite/old/test_interface.py:
+	* testsuite/old/test_iterator.py:
+	* testsuite/old/test_libtag.py:
+	* testsuite/old/test_message.py:
+	* testsuite/old/test_pad.py:
+	* testsuite/old/test_pbutils.py:
+	* testsuite/old/test_pipeline.py:
+	* testsuite/old/test_registry.py:
+	* testsuite/old/test_segment.py:
+	* testsuite/old/test_struct.py:
+	* testsuite/old/test_taglist.py:
+	* testsuite/old/test_typefind.py:
+	* testsuite/old/test_xml.py:
+	* testsuite/old/testhelpermodule.c:
+	* testsuite/overrides_hack.py:
+	* testsuite/runtests.py:
+	* testsuite/test-object.c:
+	* testsuite/test-object.h:
+	* testsuite/test_adapter.py:
+	* testsuite/test_audio.py:
+	* testsuite/test_bin.py:
+	* testsuite/test_buffer.py:
+	* testsuite/test_bus.py:
+	* testsuite/test_caps.py:
+	* testsuite/test_element.py:
+	* testsuite/test_event.py:
+	* testsuite/test_fraction.py:
+	* testsuite/test_ghostpad.py:
+	* testsuite/test_gst.py:
+	* testsuite/test_interface.py:
+	* testsuite/test_iterator.py:
+	* testsuite/test_libtag.py:
+	* testsuite/test_message.py:
+	* testsuite/test_pad.py:
+	* testsuite/test_pbutils.py:
+	* testsuite/test_pipeline.py:
+	* testsuite/test_registry.py:
+	* testsuite/test_segment.py:
+	* testsuite/test_struct.py:
+	* testsuite/test_taglist.py:
+	* testsuite/test_typefind.py:
+	* testsuite/test_xml.py:
+	* testsuite/testhelpermodule.c:
+	  test: Bring back the testsuite and test if the initialization override works
+	  Summary:
+	  Simplify the Makefile taking example on pitivi and copy several pitivi
+	  testing files, simplifying them a bit for our use case
+	  Reviewers: Mathieu_Du
+	  Differential Revision: http://phabricator.freedesktop.org/D97
+
+2015-04-15 19:55:16 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* gi/overrides/Gst.py:
+	  overrides: Disable all GStreamer APIs until Gst has been initialized
+	  Summary:
+	  And throw an exception if the user tries to call any Gst API without
+	  initializing gst.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747555
+	  Reviewers: Mathieu_Du
+	  Differential Revision: http://phabricator.freedesktop.org/D87
+
+2015-04-22 10:40:48 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* INSTALL:
+	  Remove INSTALL file
+	  autotools automatically generate this, and when using different versions
+	  for autogen.sh there will always be changes to a file tracked by git.
+
+2015-03-18 13:53:55 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gi/overrides/Gst.py:
+	  overrides: Try hard to make the query writable in the pad query function
+	  Summary:
+	  We know that the bindings will get an extra ref but we know that
+	  it is not actually needed, so we are safe to decrease the refcount
+	  by one in that particular context making sure we give PyGI its
+	  ref back when we are done.
+	  Reviewers: Mathieu_Du
+	  Differential Revision: http://phabricator.freedesktop.org/D41
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746329
+
+2015-03-06 19:25:57 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugin/Makefile.am:
+	  plugin: Name differently between python2 and python3
+	  Those are 2 different binaries and thus should have different
+	  .so names. Just use the $PYTHON_SO for that to happen.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738157
+
+2014-10-20 13:40:05 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.4.0 ===
+
+2014-10-20 11:24:58 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.4.0
 
 2014-10-19 13:34:59 +0200  Sebastian Dröge <sebastian@centricular.com>
 

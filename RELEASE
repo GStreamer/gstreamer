@@ -1,21 +1,19 @@
 
-Release notes for GStreamer Python bindings 1.4.0
+Release notes for GStreamer Python bindings 1.5.2
 
 
-The GStreamer team is proud to announce a new feature release
-in the 1.0.x stable series of the GStreamer Python Bindings.
+The GStreamer team is proud to announce a new development release
+in the 1.5.x stable series of the GstPython PyGObject overrides.
 
-
-
-This new version introduces the possibility to write GStreamer
-elements in python and get them registered in the GstRegistry.
-This means those elements will then be usable by any application
-that uses GStreamer, whatever language their are built with.
 
   
 
-There were no bugs fixed in this release
+Features of this release
     
+
+Bugs fixed in this release
+     
+      * 738157 : Same plugin name used for Python 3 and Python 2 plugins in Python
 
 ==== Download ====
 
@@ -55,4 +53,5 @@ Applications
 Contributors to this release
     
       * Sebastian Dröge
+      * Thibault Saunier
  
