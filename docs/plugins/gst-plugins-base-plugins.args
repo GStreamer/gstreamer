@@ -689,6 +689,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstPlayBin::video-multiview-flags</NAME>
+<TYPE>GstVideoMultiviewFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multiview Flags Override</NICK>
+<BLURB>Override details of the multiview frame layout.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::video-multiview-mode</NAME>
+<TYPE>GstVideoMultiviewFramePacking</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multiview Mode Override</NICK>
+<BLURB>Re-interpret a video stream as one of several frame-packed stereoscopic modes.</BLURB>
+<DEFAULT>GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecodeBin::caps</NAME>
 <TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>

@@ -29,6 +29,12 @@ GType gst_video_color_primaries_get_type (void);
 /* enumerations from "video-info.h" */
 GType gst_video_interlace_mode_get_type (void);
 #define GST_TYPE_VIDEO_INTERLACE_MODE (gst_video_interlace_mode_get_type())
+GType gst_video_multiview_mode_get_type (void);
+#define GST_TYPE_VIDEO_MULTIVIEW_MODE (gst_video_multiview_mode_get_type())
+GType gst_video_multiview_frame_packing_get_type (void);
+#define GST_TYPE_VIDEO_MULTIVIEW_FRAME_PACKING (gst_video_multiview_frame_packing_get_type())
+GType gst_video_multiview_flags_get_type (void);
+#define GST_TYPE_VIDEO_MULTIVIEW_FLAGS (gst_video_multiview_flags_get_type())
 GType gst_video_flags_get_type (void);
 #define GST_TYPE_VIDEO_FLAGS (gst_video_flags_get_type())
 

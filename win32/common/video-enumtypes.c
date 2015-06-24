@@ -268,6 +268,116 @@ gst_video_interlace_mode_get_type (void)
 }
 
 GType
+gst_video_multiview_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_MULTIVIEW_MODE_NONE, "GST_VIDEO_MULTIVIEW_MODE_NONE", "none"},
+      {GST_VIDEO_MULTIVIEW_MODE_MONO, "GST_VIDEO_MULTIVIEW_MODE_MONO", "mono"},
+      {GST_VIDEO_MULTIVIEW_MODE_LEFT, "GST_VIDEO_MULTIVIEW_MODE_LEFT", "left"},
+      {GST_VIDEO_MULTIVIEW_MODE_RIGHT, "GST_VIDEO_MULTIVIEW_MODE_RIGHT",
+          "right"},
+      {GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE,
+          "GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE", "side-by-side"},
+      {GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE_QUINCUNX,
+            "GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE_QUINCUNX",
+          "side-by-side-quincunx"},
+      {GST_VIDEO_MULTIVIEW_MODE_COLUMN_INTERLEAVED,
+            "GST_VIDEO_MULTIVIEW_MODE_COLUMN_INTERLEAVED",
+          "column-interleaved"},
+      {GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED,
+          "GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED", "row-interleaved"},
+      {GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM,
+          "GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM", "top-bottom"},
+      {GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD,
+          "GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD", "checkerboard"},
+      {GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME,
+          "GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME", "frame-by-frame"},
+      {GST_VIDEO_MULTIVIEW_MODE_MULTIVIEW_FRAME_BY_FRAME,
+            "GST_VIDEO_MULTIVIEW_MODE_MULTIVIEW_FRAME_BY_FRAME",
+          "multiview-frame-by-frame"},
+      {GST_VIDEO_MULTIVIEW_MODE_SEPARATED, "GST_VIDEO_MULTIVIEW_MODE_SEPARATED",
+          "separated"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoMultiviewMode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_multiview_frame_packing_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE,
+          "GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE", "none"},
+      {GST_VIDEO_MULTIVIEW_FRAME_PACKING_MONO,
+          "GST_VIDEO_MULTIVIEW_FRAME_PACKING_MONO", "mono"},
+      {GST_VIDEO_MULTIVIEW_FRAME_PACKING_LEFT,
+          "GST_VIDEO_MULTIVIEW_FRAME_PACKING_LEFT", "left"},
+      {GST_VIDEO_MULTIVIEW_FRAME_PACKING_RIGHT,
+          "GST_VIDEO_MULTIVIEW_FRAME_PACKING_RIGHT", "right"},
+      {GST_VIDEO_MULTIVIEW_FRAME_PACKING_SIDE_BY_SIDE,
+          "GST_VIDEO_MULTIVIEW_FRAME_PACKING_SIDE_BY_SIDE", "side-by-side"},
+      {GST_VIDEO_MULTIVIEW_FRAME_PACKING_SIDE_BY_SIDE_QUINCUNX,
+            "GST_VIDEO_MULTIVIEW_FRAME_PACKING_SIDE_BY_SIDE_QUINCUNX",
+          "side-by-side-quincunx"},
+      {GST_VIDEO_MULTIVIEW_FRAME_PACKING_COLUMN_INTERLEAVED,
+            "GST_VIDEO_MULTIVIEW_FRAME_PACKING_COLUMN_INTERLEAVED",
+          "column-interleaved"},
+      {GST_VIDEO_MULTIVIEW_FRAME_PACKING_ROW_INTERLEAVED,
+            "GST_VIDEO_MULTIVIEW_FRAME_PACKING_ROW_INTERLEAVED",
+          "row-interleaved"},
+      {GST_VIDEO_MULTIVIEW_FRAME_PACKING_TOP_BOTTOM,
+          "GST_VIDEO_MULTIVIEW_FRAME_PACKING_TOP_BOTTOM", "top-bottom"},
+      {GST_VIDEO_MULTIVIEW_FRAME_PACKING_CHECKERBOARD,
+          "GST_VIDEO_MULTIVIEW_FRAME_PACKING_CHECKERBOARD", "checkerboard"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoMultiviewFramePacking", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_multiview_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_MULTIVIEW_FLAGS_NONE, "GST_VIDEO_MULTIVIEW_FLAGS_NONE",
+          "none"},
+      {GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST,
+          "GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST", "right-view-first"},
+      {GST_VIDEO_MULTIVIEW_FLAGS_LEFT_FLIPPED,
+          "GST_VIDEO_MULTIVIEW_FLAGS_LEFT_FLIPPED", "left-flipped"},
+      {GST_VIDEO_MULTIVIEW_FLAGS_LEFT_FLOPPED,
+          "GST_VIDEO_MULTIVIEW_FLAGS_LEFT_FLOPPED", "left-flopped"},
+      {GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_FLIPPED,
+          "GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_FLIPPED", "right-flipped"},
+      {GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_FLOPPED,
+          "GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_FLOPPED", "right-flopped"},
+      {GST_VIDEO_MULTIVIEW_FLAGS_HALF_ASPECT,
+          "GST_VIDEO_MULTIVIEW_FLAGS_HALF_ASPECT", "half-aspect"},
+      {GST_VIDEO_MULTIVIEW_FLAGS_MIXED_MONO,
+          "GST_VIDEO_MULTIVIEW_FLAGS_MIXED_MONO", "mixed-mono"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoMultiviewFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
 gst_video_flags_get_type (void)
 {
   static volatile gsize g_define_type_id__volatile = 0;

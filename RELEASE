@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Base Plugins 1.5.1
+Release notes for GStreamer Base Plugins 1.5.2
 
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.5 release series. The 1.5 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.5 release series
@@ -61,154 +61,23 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 742924 : decodebin: Initial decoder negotiation will always fail
-      * 749676 : playbin: failed to get end-of-stream event when visualization flag is enabled
-      * 741355 : playbin: deadlock
-      * 650652 : encodebin: missing encoder error when trying to remux
-      * 673976 : pbutils: codec description should include profile
-      * 706066 : xvimagesink: Fails to allocate large xvimages but does not declare this limitation on the caps
-      * 722316 : playbin: flac playback broken
-      * 722442 : Internal data stream error in gstoggdemux.c
-      * 723252 : testsuite failure: libs/tag - exif tag: " Conversion from character set 'utf8' to 'latin1' is not supported " 
-      * 725383 : uridecodebin doesn't need to set the " iradio-mode " property in the source element any more
-      * 726709 : playback-test: Segment seeks do not work anymore
-      * 727409 : streamsynchronizer: Invalid memory accesses when using uncopyable memory
-      * 727955 : id3v2: ignore RVA2 tags with 0 peak bits
-      * 728379 : appsink: add push_sample() convenience function for easy appsrc - > appsink use
-      * 729198 : oggdemux: add non flushing time seeking to 0 in push mode
-      * 729314 : ogg: sample-accurate decoding/encoding is broken
-      * 729760 : appsrc: Changing caps and pushing buffers is not serialized
-      * 731047 : ximagesink, xvimagesink: configure checks pull in libSM and libICE even though they are not used
-      * 732186 : videoconvert optimization
-      * 733147 : audio/video decoder base classes needlessly delay caps events
-      * 733169 : decodebin: improve deadend pads handling
-      * 733405 : riff: wrong channel mask in wav should be ignored
-      * 733482 : discoverer: Prettify tags with samples
-      * 733495 : uridecodebin/playbin: Does not properly do async state changes
-      * 733524 : ges-launch crashes with SIGABRT when using h264 encoded assets
-      * 733615 : decodebin: Changing state of a playbin pipeline intensively segfault with several formats
-      * 733720 : videodecoder: output should not have DTS
-      * 734350 : oggdemux: Unref peer pad after use in error case
-      * 734359 : tests: Add missing unrefs of objects after use
-      * 734424 : videorate: produces bogus output when framerate=0/1
-      * 734441 : videodecoder: in reverse playback, flush the output queue after decoding each keyframe chain
-      * 734540 : audioencoder: Mark caps argument as not being transferred
-      * 734541 : vorbisenc: Improve annotation of internal function
-      * 734650 : videoscale: Does not support NV21 format
-      * 734666 : audiodecoder: Don't drain and flush on SEGMENT events.
-      * 735509 : oggdemux: should accumulate segment.base
-      * 735631 : riff: Recognize RF64 as RIFF file
-      * 735808 : oggdemux: should not set segment.base in gst_ogg_pad_submit_packet()
-      * 735879 : basetetxtoverlay: make shading_value a property
-      * 736028 : basetextoverlay: cairo transparence setting not needed
-      * 736267 : rtspconnection: Be more forgiving when parsing session header in requests
-      * 736797 : audio: correct condition for MPEG case in iec61937 / SPDIF payloader
-      * 736845 : videoscale: 4Tap resize support not present for NV format
-      * 737072 : videopool: add missing annotation for gst_video_buffer_pool_new()
-      * 737138 : audioencoder: weird error handling code path
-      * 737400 : videoscale: Lanczos resizing for NV image format
-      * 737757 : decodebin: memory leak
-      * 738018 : typefind: #define gst_type_find_peek is not needed any more
-      * 738026 : audioresample: struct GstAudioResample has unused variables
-      * 738131 : playbin: Bogus results from GST_STATE_NULL (audio-)sink
-      * 738242 : textoverlay: segfault when trying to position text outside of the video frame
-      * 738416 : decodebin: Don't plug multiple parsers one after another
-      * 738568 : videotestsrc: assertion failed error
-      * 738984 : basetextoverlay: segfault for min/max values of element properties
-      * 739346 : playback-test: correct the test apps
-      * 739433 : video: recent video-resampler addition causes build failures when building without orc
-      * 739446 : audiosink, audiosrc: fix silence for unsigned pcm formats
-      * 739536 : subtitleoverlay: return available factory caps instead of any on caps query
-      * 739545 : docs: gst_dmabuf_allocator_alloc: Improve documentation
-      * 739546 : New socketsrc element
-      * 739640 : tests : fix leaks in adder unit test
-      * 739689 : textoverlay: not rendering when x + text_width > frame_width &  & x < frame_width
-      * 740018 : videorate: Operate in a zero-latency mode if drop-only is set to TRUE
-      * 740214 : [API] encodebin: Add a way to disable caps renegotiation for output stream format
-      * 740422 : vorbisenc: Nothing encoded in some transcoding cases (regression)
-      * 740615 : alsa: warn on buffer underrun / overrun
-      * 740686 : audiodecoder: Error not handled in gst_audio_decoder_drain
-      * 740689 : decodebin/multiqueue/max-size-buffers is not set in playing state
-      * 740690 : Timeoverlay: add an option to choose between stream-time and running-time.
-      * 740693 : decodebin: Analyze source pad before setting to PAUSED for 'tag demuxers'
-      * 740694 : decodebin: Take STREAM_LOCK before sending sticky events.
-      * 740798 : videoscale: Videoscale test suite fails for 4-tap method
-      * 740834 : audiobasesink: racy clock jump when renegotiating
-      * 741015 : videoconvert: Tune quality setting to not degrade performance compared to 1.4
-      * 741030 : theoradec: Sets video-meta width/height from padded values
-      * 741097 : oggdemux: Fix seeking before the first frame.
-      * 741144 : id3demux: support UTF-16 - > UTF-8 conversion on systems with crippled iconv
-      * 741187 : [regression] ProRes files show up pink
-      * 741263 : videodecoder: implement caps query
-      * 741281 : audiorate: fill gap events
-      * 741501 : videopool: should update video alignment after change it
-      * 741640 : video-converter: support AYUV border
-      * 741879 : audio/videotestsrc: Report latency in live-mode
-      * 741987 : videoscale performance regression
-      * 742006 : discoverer: _get_missing_elements_installer_details() is documented to return a copy but doesn't
-      * 742110 : video: Add support for BT2020 colorspace (UHD)
-      * 742885 : decodebin: disable pad link checks as it has already been done
-      * 743687 : playback: gstreamer-vaapi doesn't work with Totem master
-      * 743834 : tcpserversink: fails with html5 < video > client
-      * 743900 : oggdemux gets first packet timestamp wrong - theora
-      * 743980 : decodebin2: crash in analyze_new_pad
-      * 744028 : video-converter: Converter doesn't work properly when offsets are specified
-      * 744070 : oggdemux: wrong duration for ogv file
-      * 744465 : install-plugins: add _set_desktop_id(), _set_startup_notification_id() and _set_confirm_search() API
-      * 744844 : playbin: forward template and ring buffer settings to existing decodebins
-      * 745006 : video-converter: Add frame 'alpha' property to video-converter
-      * 745073 : playbin, discoverer: criticals when switching from pull mode to push mode
-      * 745174 : gst-play: support play rate change
-      * 745207 : video-converter: sometimes crashes during ARGB - > BGRx conversion.
-      * 745337 : video: RGB15/16 pack/unpack unit test failure on big endian systems
-      * 745667 : volume: Unable to set the volume with gcc-4.9 on arm platform
-      * 745719 : video-converter: doesn't work properly with YUY2 and right border
-      * 745980 : ogg video file is unable to be seeked
-      * 746150 : multisocketsink: Map `GstMemory`s individually when sending
-      * 746457 : oggdemux: don't abuse GST_ERROR()
-      * 746466 : video: add NV61 format support
-      * 746480 : playbin: deadlock on PMT change in mpeg TS stream
-      * 746661 : audioconvert: slow dithering on architectures without 64-bit integer divide (e.g. armv7)
-      * 746865 : videoencoder: Keep sticky event when reset.
-      * 746908 : appsrc: allow sample with no caps or no buffer in push_sample()
-      * 747005 : audioconvert: avoid floating point calculations when mixing integer-formatted channels
-      * 747103 : discoverer: leak when handling toc messages
-      * 747190 : videodecoder: Sends GAP events before CAPS
-      * 747245 : navigation: Post navigation events as message on the bus
-      * 747283 : configure: playback and seek tests build error with gtk < 3.10.0
-      * 747293 : audiodecoder: Add sink and src query virtual method
-      * 747517 : appsrc: negotiates twice if caps are changed before pipeline starts
-      * 747602 : basetextoverlay: Leak in gst_base_text_overlay_text_chain
-      * 747624 : decodebin unit test fails: test environment not set up correctly with automake 1.11
-      * 747692 : check build error on osx: pipelines/tcp.c:161:34: error: use of undeclared identifier 'SOCK_CLOEXEC'
-      * 747790 : videoscale method=bilinear2 and UYVY/YUY2 distortion
-      * 747841 : gio: plugin dependencies wrong or insufficient
-      * 748021 : video-converter: unused variables n_taps max_taps
-      * 748027 : rtpbasedepayload: testcase crash
-      * 748247 : oggdemux: fix event leak
-      * 748289 : audio: " delay " virt-func mixes up samples and frames
-      * 748348 : video-converter: change data type of _GstLineCache::n_lines
-      * 748413 : xmptag: valgrind errors when printing debug output
-      * 748687 : video-converter: Remove unused macro
-      * 748814 : discoverer: add serialization/deserialization methods
-      * 748820 : oggdemux: remove unnecessary codes
-      * 748903 : fix navigation event leaks
-      * 748964 : oggdemux: fix chain leak
-      * 749104 : video-converter: Change some implicit string enums to  real enums
-      * 749105 : videoconvert: Expose some properties from the videoconverter API
-      * 749528 : playbin: need to avoid duplicated flag setting
-      * 749530 : xvimagesink: fix pool leak
-      * 749632 : FTBFS when srcdir != builddir since commit bfc13c8e
-      * 749673 : discoverer: Serialize the top level DiscovererInfo
-      * 749740 : tools: gst-play: print keyboard shortcuts help in interactive mode.
-      * 749824 : basetextoverlay: make deltax and deltay properties controllable
-      * 750032 : videorate: fails to renegotiate on streams with a variable framerate
-      * 750096 : sdp: prevent the sdp message parser from reading past the end of the buffer
-      * 750325 : rtcpbuffer: Update package validation to support reduced size rtcp packets
-      * 750406 : audioconvert: copy all metadata.
-      * 738302 : videorate: Should increase minimum buffer in allocation query
-      * 739281 : video-blend: fix blending of rectangles partially or fully outside of the video
-      * 740013 : rtspconnection: There is an warning by mismatch of parameter name in header and source files
+      * 708362 : audiobasesink: new slave-method for custom clock slaving algorithms
+      * 748908 : playsink: cannot enable text flag while playing
+      * 749039 : x11: X and XV imagesink don't need to cache the pools
+      * 749243 : textoverlay: gltestsrc ! textoverlay ! fakesink does not work
+      * 749764 : videoscaler: invalid memory access when downscaling in some cases
+      * 749823 : basetextoverlay: add properties for toggling drawing text shadow and outline
+      * 750013 : playbin: seeking halts playback with gst-play-1.0 gapless
+      * 750455 : xvimagesink, ximagesink: set WM_CLASS for the window
+      * 750585 : gst-play: sort directory entries
+      * 750691 : playsink: fix the channel of color balance element
+      * 750785 : playbin: assrender is not used anymore when available
+      * 750802 : typefind: UTF-8 MSS manifest parsing support
+      * 750823 : discoverer test racy
+      * 751000 : oggdemux: crash with validate.http.media_check.vorbis_theora_1_ogg
+      * 751118 : playbin: current-suburi does not return correct status when an invalid SUBURI is passed
+      * 751144 : audioringbuffer: Fix alaw/mulaw channel positions
+      * 751213 : tools: gst-play: fix seeking issue
 
 ==== Download ====
 
@@ -245,76 +114,28 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Alessandro Decina
-      * Andreas Frisch
-      * Andrei Sarakeev
-      * Andres Gomez
-      * Anuj Jaiswal
-      * Arnaud Vrac
       * Arun Raghavan
-      * Aurélien Zanelli
-      * Bernhard Miller
-      * Branislav Katreniak
-      * Chad
-      * Chihyoung Kim
-      * Claudiu Florin Lazar
-      * Danny Song
-      * David Schleef
-      * Duncan Palmer
+      * Brijesh Singh
+      * Carlos Rafael Giani
       * Edward Hervey
-      * Garg
-      * George Kiagiadakis
       * Guillaume Desmottes
-      * Göran Jönsson
-      * Heinrich Fink
-      * Hyunjun Ko
-      * Ilya Konstantinov
-      * Jan Alexander Steffens (heftig)
       * Jan Schmidt
-      * Jonathan Matthew
-      * Jose Antonio Santos Cadenas
-      * Kalev Lember
-      * Kipp Cannon
+      * Lazar Claudiu
       * Luis de Bethencourt
-      * Mark Nauwelaerts
+      * Lyon Wang
       * Matej Knopp
-      * Mathieu Duponchelle
-      * Matthieu Bouron
-      * Matthieu Crapet
-      * Mohammed Sameer
-      * Nicola Murino
       * Nicolas Dufresne
-      * Nirbheek Chauhan
-      * Ognyan Tonchev
-      * Olivier Crete
-      * Olivier Crête
-      * Peter G. Baum
-      * Ramiro Polla
-      * Ravi Kiran K N
-      * Rico Tzschichholz
-      * Sam Thursfield
-      * Sanjay NM
+      * Philippe Normand
       * Sebastian Dröge
-      * Sebastian Rasmussen
       * Song Bing
       * Sreerenj Balachandran
       * Stefan Sauer
-      * Thiago Santos
       * Thibault Saunier
-      * Thomas Klausner
-      * Thomas Roos
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Vineeth T M
+      * Vineeth TM
       * Vivia Nikolaidou
       * Víctor Manuel Jáquez Leal
-      * Wang Xin-yu (王昕宇)
-      * William Manley
       * Wim Taymans
-      * Wonchul Lee
-      * Young Han Lee
-      * Zaheer Abbas Merali
-      * danny song
-      * eunhae choi
+      * Xavier Claessens
  

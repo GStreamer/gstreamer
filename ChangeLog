@@ -1,9 +1,731 @@
-=== release 1.5.1 ===
+=== release 1.5.2 ===
 
-2015-06-07  Sebastian Dröge <slomo@coaxion.net>
+2015-06-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.1
+	  releasing 1.5.2
+
+2015-06-24 22:49:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
+
+2015-06-24 11:14:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: Update translations
+
+2015-06-17 18:03:09 +0800  Song Bing <b06498@freescale.com>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: Unblock EOS wait when track switching.
+	  sink_event () will blocked on EOS event. which will cause can't
+	  send event when switch EOS track to non-EOS one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750761
+
+2015-06-22 20:54:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: Don't wait for sparse streams when doing stream switches
+	  Their stream-start event might come a bit later, like just before the first
+	  buffer... and queues might run full before that happens.
+
+2015-06-22 20:29:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: Add some more debug output
+
+2015-06-22 20:17:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: Reset group start time when flushing
+	  We reset the group start time to the running time of the start of the other
+	  streams that are not flushed. This fixes seeking in gapless mode after the
+	  first track has played.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750013
+
+2015-06-22 19:51:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: Only drop everything after the ; of a session header in requests
+	  For responses it is actually allowed and used to signal the timeout to the
+	  client!
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736267
+
+2015-06-18 17:38:09 +0800  Lyon Wang <lyon.wang@freescale.com>
+
+	* gst-libs/gst/audio/gstaudioringbuffer.c:
+	  audioringbuffer: Fix alaw/mulaw channel positions
+	  For alaw/mulaw we should also try to initialize the channel positions in the
+	  ringbuffer's audio info. This allow pulsesink to directly use the channel
+	  positions instead of using the default zero-initialized ones, which doesn't
+	  work well.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751144
+
+2015-06-22 16:53:06 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* tests/check/libs/libsabi.c:
+	  tests: fix cpp directives
+
+2015-06-22 15:59:42 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/libs/libsabi.c:
+	* tests/check/libs/struct_ppc64.h:
+	  tests: add PPC64 abi struct sizes
+
+2015-06-22 14:51:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: Reset suburi also when receiving an error message from the sub uridecodebin
+	  http://bugzilla.gnome.org/show_bug.cgi?id=751118
+
+2015-06-17 10:20:54 -0500  Brijesh Singh <brijesh.ksingh@gmail.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: free group->suburi on failure
+	  If suburidecodebin is failed to negotiate (e.g file does not exist)
+	  then free internal suburi variable so that 'current-suburi' property
+	  returns correct status.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751118
+
+2015-06-15 16:08:10 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: set building_chain to NULL when deactivating chain
+	  The chain is about to be invalidated so we shouldn't keep it around.
+	  Prevent a double free crash when the demuxer is being finalized.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751000
+
+2015-06-19 19:51:25 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* tools/gst-play.c:
+	  tools: gst-play: fix seeking issue
+	  For positive seeking segment.stop value will be -1,
+	  when we change rate to -1, then the stop value will be udpated
+	  with the current position. And then again if we change rate to 1,
+	  the segment.stop value does not get updated and remains as position
+	  where we last changed rate to -1. Hence playback stops at that point.
+	  In case of positive rates, call gst_element_new_seek with correct values
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751213
+
+2015-06-18 21:02:48 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstrtphdrext.c:
+	  doc: Fix gsttrtphdrext section name
+
+2015-06-18 18:23:45 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* win32/common/libgstvideo.def:
+	  video: Add missing new symbol to win32 def file
+	  Fixes make distcheck
+
+2015-06-19 02:19:12 +1000  Jan Schmidt <jan@centricular.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	  Add gst_video_multiview_guess_half_aspect() to the docs
+
+2015-06-15 16:04:55 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/video/video-multiview.c:
+	* gst-libs/gst/video/video-multiview.h:
+	  multiview: Add gst_video_multiview_guess_half_aspect()
+	  Add a utility function that, given a video size and a
+	  packed stereoscopic mode, attempts to guess if the video
+	  is packed at half resolution per view or not, since
+	  very few videos provide the information.
+
+2015-06-17 17:09:46 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/video/video-converter.c:
+	  video-converter: make sure we draw enough border for YUY2 formats
+	  Round width up to 2 so that we draw all border pixels for YUY2 formats
+
+2015-06-17 16:43:03 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/video/video-scaler.c:
+	  video-scaler: fix scaling of odd width for YUY2 formats
+	  We need to scale groups of 4 bytes for YUY2 formats so round up to 4.
+	  It's possible that there is no Y byte for the last pixel so make sure
+	  we clamp correctly.
+
+2015-06-17 10:02:08 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst-libs/gst/pbutils/gstdiscoverer-types.c:
+	  discoverer: Fix a wrong naming in the documentation
+	  gst_discoverer_stream_get_missing_elements_installer_details does not
+	  exist, one should use gst_discoverer_info_get_missing_elements_installer_details
+
+2015-06-16 18:04:57 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst-libs/gst/app/Makefile.am:
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/pbutils/Makefile.am:
+	* gst-libs/gst/riff/Makefile.am:
+	* gst-libs/gst/rtp/Makefile.am:
+	* gst-libs/gst/rtsp/Makefile.am:
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-libs/gst/video/Makefile.am:
+	  gi: Use INTROSPECTION_INIT for --add-init-section
+	  This new define was added to common. The new init section fixed
+	  compilation warning found in the init line that was spread across
+	  all files.
+
+2015-06-16 17:47:24 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6015d26 to f74b2df
+
+2015-06-16 22:32:49 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/gst-play.c:
+	  tools: gst-play: error out instead of crashing if there's no playbin element
+
+2015-06-16 16:08:39 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/video/video-chroma.c:
+	* gst-libs/gst/video/video-converter.c:
+	* gst-libs/gst/video/video-dither.c:
+	* gst-libs/gst/video/video-scaler.c:
+	  gi: Skip Scaler, Chroma, Conveter, Dither constructor
+	  Please box these types before removing the skip mark.
+
+2015-06-16 16:07:27 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/video/gstvideometa.c:
+	* gst-libs/gst/video/video-overlay-composition.c:
+	  gi: Add (transfer none) for various video meta
+	  These method chains gst_buffer_add_meta() which is also transfer
+	  none.
+
+2015-06-16 15:50:13 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  gi: Fix warnings in GstRtsp
+	  * The custom GSource is not boxed (skip for now)
+	  * The comment block has wrong name for _read_socket()
+
+2015-06-16 15:16:33 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/riff/Makefile.am:
+	  gi: Don't produce gir and typlib for GstRiff
+	  The API does not follow the type naming convention. Re-enable
+	  only if one take the time to box and rename (see (rename-to SYMBOL)
+	  annotation) all types.
+
+2015-06-16 14:36:44 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/fft/gstfftf32.c:
+	* gst-libs/gst/fft/gstfftf64.c:
+	* gst-libs/gst/fft/gstffts16.c:
+	* gst-libs/gst/fft/gstffts32.c:
+	  gi: Skip fft constructor for now
+	  These types have never been boxed, hence cannot be used
+	  safely in interpreted languages. This fixes warnings.
+
+2015-06-16 14:34:04 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/audio/audio-info.c:
+	* gst-libs/gst/audio/gstaudiobasesink.h:
+	* gst-libs/gst/audio/gstaudiometa.c:
+	  gi: Fix warnings in libgstaudio
+	  * Duplicate section
+	  * Miss-named parameter
+	  * Missing transfer none annotation for meta
+
+2015-05-27 12:20:19 +0300  Lazar Claudiu <lazar.claudiu.florin@gmail.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	* ext/pango/gstbasetextoverlay.h:
+	  basetextoverlay: add "draw-shadow" and "draw-outline" properties
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749823
+
+2015-06-13 13:41:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: fix gtk-doc chunk for new function
+
+2015-05-12 14:12:52 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  basetextoverlay: Rewrite negotiation method
+	  This cleanup the negotiation function by properly splitting the probe
+	  and the decisions. This allow handling correctly pipeline where upstream
+	  caps have special memory type. An example pipeline is:
+	  gltestsrc ! textoverlay text=bla ! fakesink
+	  The upstream caps will be memory:GLMemory, which isn't supported by the
+	  blitter.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749243
+
+2015-06-05 14:30:12 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/xvimage/xvimagesink.c:
+	  xvimagesink: Don't share internal pool
+	  Sharing the internal pool results in situation where the pool may have
+	  two upstream owners. This creates a race upon deactivation. Instead,
+	  always offer a new pool, and keep the internal pool internal in case
+	  we absolutely need it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748344
+
+2015-06-05 14:28:41 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/ximage/ximagesink.c:
+	  ximagesink: Don't share internal pool
+	  Sharing the internal pool results in situation where the pool may have
+	  two upstream owners. This create a race upon deactivation. Instead,
+	  always offer a new pool, and keep the internal pool internal in case
+	  we absolutely need it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748344
+
+2014-11-26 21:06:57 +0100  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	* gst-libs/gst/video/gstvideoencoder.h:
+	* win32/common/libgstvideo.def:
+	  videoencoder: Add gst_video_encoder_set_min_pts()
+	  For streams with reordered frames this can be used to ensure that there
+	  is enough time to accomodate first DTS, which may be less than first PTS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740575
+
+2015-06-12 19:58:34 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/common/libgstvideo.def:
+	  Update .def file for new API
+
+2015-06-13 01:35:52 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Copy multiview-mode, flags and view count from ref info
+	  When copying info from the reference input state, duplicate
+	  all the fields of the video info. The sub-class will have the
+	  chance to override them later.
+
+2015-06-12 16:57:39 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/video/video-scaler.c:
+	  video-scaler: enforce same taps when combining scalers
+
+2015-06-12 16:52:27 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/video/video-scaler.c:
+	  video-scaler: make sure to clamp to max width
+	  When estimating the area that should first be vertically scaled, make
+	  sure we clamp to the max input size or else we get invalid reads.
+
+2015-06-12 16:47:03 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/video/video-converter.c:
+	* gst-libs/gst/video/video-scaler.c:
+	* gst-libs/gst/video/video-scaler.h:
+	  video-scaler: Enforce same taps on Y and UV scalers for merged formats
+	  Make sure we have the same number of taps for the Y and UV scalers so
+	  that the scalers can be merged correctly.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=749764
+
+2015-06-12 12:50:35 +0530  Arun Raghavan <git@arunraghavan.net>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtsp: Add a FIXME 2.0 for gst_rtsp_connection_create_from_socket()
+	  There's a couple of redundant arguments from the pre-GIO days.
+
+2015-06-11 23:32:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: check for full UTF-8 BOM in MSS typefinder
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750802
+
+2015-06-11 18:14:47 +0200  Philippe Normand <philn@igalia.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefindfunctions: UTF-8 MSS Manifest detection support
+	  Check if the first bytes of data contain an UTF-8 BOM.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750802
+
+2015-06-11 16:18:51 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: Check in autoplug_continue against the subtitle factory caps correctly
+	  6a2f017bfa9cb73c6db65eea0b84b1d5b56febb7 changed it to check the subtitle
+	  factory caps if there is a text-sink but we fail to get its sinkpad. What
+	  actually should be done here is to use the factory caps if there is no
+	  text-sink at all.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750785
+
+2015-06-11 23:01:48 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: Fix some warnings with clang around multiview enums
+	  There is the GstVideoMultiviewMode enum and the
+	  GstVideoMultiviewFramePacking, which is a subset of the
+	  multiview modes, with the same values as the corresponding
+	  types from the full enum. Do some casts and use the right
+	  times to avoid implicitly using/passing GstVideoMultiviewFramePacking
+	  when a GstVideoMultiviewMode is needed.
+
+2015-06-11 12:21:08 +1000  Jan Schmidt <jan@centricular.com>
+
+	* tests/check/libs/video.c:
+	  tests: Fix video libs test for multiview GstVideoInfo change
+	  The GstVideoInfo struct was changed late in integrating the
+	  multiview changes, and I forgot to run and fix the unit test.
+
+2015-06-11 11:12:39 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: Implement multiview frame-packing overrides
+	  Add GstVideoMultiviewFramePacking enum, and the
+	  video-multiview-mode and video-multiview-flags
+	  properties on playbin.
+	  Use a pad probe to replace the multiview information in
+	  video caps sent out from uridecodebin.
+	  This is a part implementation only - for full
+	  correctness, it should also modify caps in caps events,
+	  accept-caps and allocation queries.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=611157
+
+2015-06-11 11:12:39 +1000  Jan Schmidt <jan@centricular.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/video/Makefile.am:
+	* gst-libs/gst/video/gstvideoencoder.c:
+	* gst-libs/gst/video/video-frame.h:
+	* gst-libs/gst/video/video-info.c:
+	* gst-libs/gst/video/video-info.h:
+	* gst-libs/gst/video/video-multiview.c:
+	* gst-libs/gst/video/video-multiview.h:
+	* gst-libs/gst/video/video.h:
+	* tests/check/libs/video.c:
+	* win32/common/libgstvideo.def:
+	  video: Add multiview/stereo support
+	  Add flags and enums to support multiview signalling in
+	  GstVideoInfo and GstVideoFrame, and the caps serialisation and
+	  deserialisation.
+	  videoencoder: Copy multiview settings from reference input state
+	  Add gst_video_multiview_* support API and GstVideoMultiviewMeta meta
+	  https://bugzilla.gnome.org/show_bug.cgi?id=611157
+
+2015-06-10 14:33:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/rtp/gstrtpbaseaudiopayload.c:
+	  rtpbaseaudiopayload: Use GST_BUFFER_PTS() instead of GST_BUFFER_TIMESTAMP()
+
+2015-06-10 12:26:38 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: fix the channel of color balance element
+	  When traversing the color balance element channel list to find the one that
+	  matches with the playsink proxy, the assignation was set to iterator of the
+	  playsink proxy, not the balance element. Thus, the mapping to the values of
+	  the balance element channel was wrong.
+	  This patch fixes the assignation of the color balance element channel, so the
+	  mapping to the channel of the color balance element is fixed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750691
+
+2015-06-10 15:50:12 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: cannot enable text flag while playing
+	  when text playbin is not enabled in the beginning, then
+	  video_srcpad_stream_synchronizer gets linked to videochain->sinkpad
+	  and when we try to enable text bin during play, since it is already linked to videochain,
+	  text chain does not get linked properly. Hence unlinking the same
+	  before linking to text chain
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748908
+
+2015-06-10 09:59:49 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* win32/common/libgstrtsp.def:
+	  win32: Update defs file
+
+2015-06-05 22:04:24 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	* gst-libs/gst/rtsp/gstrtspconnection.h:
+	  GstRTSPConnection: Add GTlsInteraction support
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750471
+
+2015-06-09 21:24:07 +0300  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* tools/gst-play.c:
+	  tools: gst-play: don't print 64 whitespaces next to the time indication
+	  Printing 64 whitespaces to erase the "Paused" message (after \r) would make
+	  it wrap to the next line on shorter terminals. Instead we only print the
+	  amount of spaces needed. Also mark the "Paused" string for translation
+	  while we're at it.
+
+2015-06-09 14:31:15 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* Makefile.am:
+	  cruft: add the obsolete tmpl dir to cruft-dirs
+
+2015-06-09 22:03:37 +1000  Jan Schmidt <jan@centricular.com>
+
+	* win32/common/libgstaudio.def:
+	  Update win32 exports
+
+2013-12-09 18:46:14 +0100  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* ext/alsa/gstalsasink.c:
+	  alsa: report recoverable device failures to base class
+	  This gives custom slave methods in the base class a chance to
+	  resynchronize themselves
+	  Signed-off-by: Carlos Rafael Giani <dv@pseudoterminal.org>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708362
+
+2013-12-09 17:08:15 +0100  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* gst-libs/gst/audio/gstaudiobasesink.c:
+	* gst-libs/gst/audio/gstaudiobasesink.h:
+	  audiobasesink: added custom clock slaving method
+	  This new clock slaving method allows for installing a callback that is
+	  invoked during playback. Inside this callback, a custom slaving
+	  mechanism can be used (for example, a control loop adjusting a PLL or an
+	  asynchronous resampler). Upon request, it can skew the playout pointer
+	  just like the "skew" method. This is useful if the clocks drifted apart
+	  too much, and a quick reset is necessary.
+	  Signed-off-by: Carlos Rafael Giani <dv@pseudoterminal.org>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708362
+
+2015-06-09 11:30:15 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d9a3353 to 6015d26
+
+2015-06-09 10:16:34 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/gst-play-1.0.1:
+	* tools/gst-play.c:
+	  tools: gst-play: add shortcuts to switch audio/subtitle/video tracks
+
+2014-11-05 09:41:36 +0200  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst/playback/gstplaybackutils.c:
+	  playback: Skip 'ANY' capsfeature while finding the count of common capsfeatures
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687182
+
+2014-11-05 09:40:43 +0200  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst/playback/Makefile.am:
+	* gst/playback/gstplaybackutils.c:
+	* gst/playback/gstplaybackutils.h:
+	* gst/playback/gstplaybin2.c:
+	  playback: Add gstplaybackutils.{h,c} to deploy the common subroutines
+	  Bring some of the helper functions in gstplaybin2.c to new files
+	  gstplaybackutils.{h,c} which can be utilized by other files
+	  in gst/playback too.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687182
+
+2015-06-08 23:07:47 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From d37af32 to d9a3353
+
+2015-06-08 20:32:02 +0300  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* tools/gst-play.c:
+	  tools: gst-play: sort directory entries
+	  When adding a directory to the playlist, the order would be whatever
+	  g_dir_read_name returned. Sorting these using natural sort order.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750585
+
+2015-06-08 20:17:07 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* sys/ximage/ximagesink.c:
+	* sys/xvimage/xvcontext.c:
+	  ximagesink, xvimagesink: fix string leaks when setting class hint
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750455
+
+2015-06-08 13:01:43 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/video/video-color.c:
+	  video: Allow using bt2020 by name in colorimetry
+	  As the lookup stops at the first element in the array with a NULL
+	  name, bt2020 could not be used by name. Moving up this entry
+	  fixes the issue.
+
+2015-06-05 16:01:05 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* sys/ximage/ximagesink.c:
+	  ximagesink: set WM_CLASS of window
+	  Set WM_CLASS of the ximagesink window so window managers can apply rules
+	  based on xprop filtering.
+
+2015-06-05 15:58:39 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* sys/xvimage/xvcontext.c:
+	  xvimagesink: set WM_CLASS of window
+	  Set WM_CLASS of the xvimagesink window so window managers can apply rules
+	  based on xprop filtering.
+
+2015-06-07 23:06:08 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 21ba2e5 to d37af32
+
+2015-06-07 18:49:48 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* ext/libvisual/gstaudiovisualizer.c:
+	  libvisual: clean dereferences of private structures
+	  https://bugzilla.gnome.org/show_bug.cgi?id=742875
+
+2015-06-07 18:23:23 +0100  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* ext/libvisual/gstaudiovisualizer.c:
+	* ext/libvisual/gstaudiovisualizer.h:
+	  libvisual: make private all variable subclasses don't need
+	  https://bugzilla.gnome.org/show_bug.cgi?id=742875
+
+2015-06-07 17:31:55 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From c408583 to 21ba2e5
+
+2015-06-07 17:00:05 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/libs/Makefile.am:
+	* docs/plugins/Makefile.am:
+	  docs: remove variables that we define in the snippet from common
+	  This is syncing our Makefile.am with upstream gtkdoc.
+
+2015-06-07 17:16:13 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From 241fcb7 to c408583
+
+2015-06-07 16:44:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.5.1 ===
+
+2015-06-07 10:04:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/gst-plugins-base-plugins.signals:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	* win32/common/gstrtsp-enumtypes.c:
+	* win32/common/gstrtsp-enumtypes.h:
+	* win32/common/pbutils-enumtypes.c:
+	* win32/common/pbutils-enumtypes.h:
+	* win32/common/video-enumtypes.c:
+	* win32/common/video-enumtypes.h:
+	  Release 1.5.1
 
 2015-06-07 09:35:03 +0200  Sebastian Dröge <sebastian@centricular.com>
 
