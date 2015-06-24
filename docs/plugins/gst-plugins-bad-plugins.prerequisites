@@ -2,4 +2,5 @@ GstChildProxy GObject
 GstTagSetter GstElement
 GstTagXmpWriter GstElement
 GstWaylandVideo GstVideoOverlay
+GtkBuildable GObject
 MXFDescriptiveMetadataFrameworkInterface MXFDescriptiveMetadata

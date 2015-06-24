@@ -1369,6 +1369,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstGLImageSink::output-multiview-downmix-mode</NAME>
+<TYPE>GstGLStereoDownmix</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode for mono downmixed output</NICK>
+<BLURB>Output anaglyph type to generate when downmixing to mono.</BLURB>
+<DEFAULT>Dubois optimised Green-Magenta anaglyph</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLImageSink::output-multiview-flags</NAME>
+<TYPE>GstVideoMultiviewFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Multiview Flags</NICK>
+<BLURB>Output multiview layout modifier flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLImageSink::output-multiview-mode</NAME>
+<TYPE>GstVideoMultiviewMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Multiview Mode</NICK>
+<BLURB>Choose output mode for multiview/3D video.</BLURB>
+<DEFAULT>GST_VIDEO_MULTIVIEW_MODE_MONO</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRgAnalysis::forced</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -43699,6 +43729,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstZBar::attach-frame</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Attach frame</NICK>
+<BLURB>Attach a frame dump to each barcode message.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQTMoovRecover::broken-input</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -47086,6 +47126,46 @@
 <NICK>type</NICK>
 <BLURB>Smooth Type.</BLURB>
 <DEFAULT>CV Gaussian</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCvSmooth::color</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>color (gaussian standard deviation or color sigma</NICK>
+<BLURB>If type is gaussian, this means the standard deviation.If type is bilateral, this means the color-sigma. If zero, Default values are used.Check cvSmooth OpenCV docs: http://opencv.willowgarage.com/documentation/image_filtering.html#cvSmooth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCvSmooth::height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>height (aperture height)</NICK>
+<BLURB>The aperture height, if zero, the width is used.(Must be positive and odd or zero, unuset in median and bilateral types). Check cvSmooth OpenCV docs: http://opencv.willowgarage.com/documentation/image_filtering.html#cvSmooth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCvSmooth::spatial</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>spatial (spatial sigma, bilateral only)</NICK>
+<BLURB>Only used in bilateral type, means the spatial-sigma.Check cvSmooth OpenCV docs: http://opencv.willowgarage.com/documentation/image_filtering.html#cvSmooth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCvSmooth::width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>width (aperture width)</NICK>
+<BLURB>The aperture width (Must be positive and odd).Check cvSmooth OpenCV docs: http://opencv.willowgarage.com/documentation/image_filtering.html#cvSmooth.</BLURB>
+<DEFAULT>3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58531,7 +58611,7 @@
 <ARG>
 <NAME>GstPyramidSegment::level</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,4]</RANGE>
+<RANGE>[1,4]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Level</NICK>
 <BLURB>Maximum level of the pyramid segmentation.</BLURB>
@@ -67831,6 +67911,116 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstGLSinkBin::async</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Async</NICK>
+<BLURB>Go asynchronously to PAUSED.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLSinkBin::blocksize</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block size</NICK>
+<BLURB>Size in bytes to pull per buffer (0 = default).</BLURB>
+<DEFAULT>4096</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLSinkBin::enable-last-sample</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Enable Last Buffer</NICK>
+<BLURB>Enable the last-sample property.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLSinkBin::last-sample</NAME>
+<TYPE>GstSample*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Last Sample</NICK>
+<BLURB>The last sample received in the sink.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLSinkBin::max-bitrate</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Bitrate</NICK>
+<BLURB>The maximum bits per second to render (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLSinkBin::max-lateness</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Lateness</NICK>
+<BLURB>Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLSinkBin::qos</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Qos</NICK>
+<BLURB>Generate Quality-of-Service events upstream.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLSinkBin::render-delay</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Render Delay</NICK>
+<BLURB>Additional render delay of the sink in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLSinkBin::sync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync</NICK>
+<BLURB>Sync on the clock.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLSinkBin::throttle-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Throttle time</NICK>
+<BLURB>The time to keep between rendered buffers (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLSinkBin::ts-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TS Offset</NICK>
+<BLURB>Timestamp offset in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGLMixerBin::latency</NAME>
 <TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
@@ -68008,6 +68198,46 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>TS Offset</NICK>
 <BLURB>Timestamp offset in nanoseconds.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLImageSinkBin::handle-events</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Handle XEvents</NICK>
+<BLURB>When enabled, XEvents will be selected and handled.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLImageSinkBin::output-multiview-downmix-mode</NAME>
+<TYPE>GstGLStereoDownmix</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode for mono downmixed output</NICK>
+<BLURB>Output anaglyph type to generate when downmixing to mono.</BLURB>
+<DEFAULT>Dubois optimised Green-Magenta anaglyph</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLImageSinkBin::output-multiview-flags</NAME>
+<TYPE>GstVideoMultiviewFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Multiview Flags</NICK>
+<BLURB>Output multiview layout modifier flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLImageSinkBin::output-multiview-mode</NAME>
+<TYPE>GstVideoMultiviewMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Multiview Mode</NICK>
+<BLURB>Choose output mode for multiview/3D video.</BLURB>
+<DEFAULT>GST_VIDEO_MULTIVIEW_MODE_MONO</DEFAULT>
 </ARG>
 
 <ARG>
@@ -68278,5 +68508,385 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Invert the colors for sobel effect</NICK>
 <BLURB>Invert colors to get dark edges on bright background when using sobel effect.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstErrorIgnore::convert-to</NAME>
+<TYPE>GstFlowReturn</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GstFlowReturn to convert to</NICK>
+<BLURB>Which GstFlowReturn value we should convert to when ignoring.</BLURB>
+<DEFAULT>GST_FLOW_NOT_LINKED</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstErrorIgnore::ignore-error</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignore GST_FLOW_ERROR</NICK>
+<BLURB>Whether to ignore GST_FLOW_ERROR.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstErrorIgnore::ignore-notlinked</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignore GST_FLOW_NOT_LINKED</NICK>
+<BLURB>Whether to ignore GST_FLOW_NOT_LINKED.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstErrorIgnore::ignore-notnegotiated</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignore GST_FLOW_NOT_NEGOTIATED</NICK>
+<BLURB>Whether to ignore GST_FLOW_NOT_NEGOTIATED.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLViewConvertElement::downmix-mode</NAME>
+<TYPE>GstGLStereoDownmix</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode for mono downmixed output</NICK>
+<BLURB>Output anaglyph type to generate when downmixing to mono.</BLURB>
+<DEFAULT>Dubois optimised Green-Magenta anaglyph</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLViewConvertElement::input-flags-override</NAME>
+<TYPE>GstVideoMultiviewFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Input Multiview Flags Override</NICK>
+<BLURB>Override any input information about multiview layout flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLViewConvertElement::input-mode-override</NAME>
+<TYPE>GstVideoMultiviewFramePacking</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Input Multiview Mode Override</NICK>
+<BLURB>Override any input information about multiview layout.</BLURB>
+<DEFAULT>GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLViewConvertElement::output-flags-override</NAME>
+<TYPE>GstVideoMultiviewFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Multiview Flags Override</NICK>
+<BLURB>Override automatic negotiation for output multiview layout flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLViewConvertElement::output-mode-override</NAME>
+<TYPE>GstVideoMultiviewMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Multiview Mode Override</NICK>
+<BLURB>Override automatic output mode selection for multiview layout.</BLURB>
+<DEFAULT>GST_VIDEO_MULTIVIEW_MODE_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLStereoMix::downmix-mode</NAME>
+<TYPE>GstGLStereoDownmix</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode for mono downmixed output</NICK>
+<BLURB>Output anaglyph type to generate when downmixing to mono.</BLURB>
+<DEFAULT>Dubois optimised Green-Magenta anaglyph</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsSrtpEnc::is-client</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Is client</NICK>
+<BLURB>Set to true if the decoder should act as client and initiate the handshake.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsSrtpDec::peer-pem</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Peer PEM string</NICK>
+<BLURB>The X509 certificate received in the DTLS handshake, in PEM format.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsSrtpDec::pem</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>PEM string</NICK>
+<BLURB>A string containing a X509 certificate and RSA private key in PEM format.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsEnc::connection-id</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection id</NICK>
+<BLURB>Every encoder/decoder pair should have the same, unique, connection-id.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsEnc::encoder-key</NAME>
+<TYPE>GstBuffer*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Encoder key</NICK>
+<BLURB>Master key that should be used by the SRTP encoder.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsEnc::is-client</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Is client</NICK>
+<BLURB>Set to true if the decoder should act asclient and initiate the handshake.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsEnc::srtp-auth</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 2</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>SRTP authentication</NICK>
+<BLURB>The SRTP authentication selected in the DTLS handshake. The value will be set to an GstDtlsSrtpAuth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsEnc::srtp-cipher</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 1</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>SRTP cipher</NICK>
+<BLURB>The SRTP cipher selected in the DTLS handshake. The value will be set to an GstDtlsSrtpCipher.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsDec::connection-id</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection id</NICK>
+<BLURB>Every encoder/decoder pair should have the same, unique, connection-id.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsDec::decoder-key</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Decoder key</NICK>
+<BLURB>SRTP key that should be used by the decoder.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsDec::peer-pem</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Peer PEM string</NICK>
+<BLURB>The X509 certificate received in the DTLS handshake, in PEM format.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsDec::pem</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>PEM string</NICK>
+<BLURB>A string containing a X509 certificate and RSA private key in PEM format.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsDec::srtp-auth</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 2</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>SRTP authentication</NICK>
+<BLURB>The SRTP authentication selected in the DTLS handshake. The value will be set to an GstDtlsSrtpAuth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtlsDec::srtp-cipher</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 1</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>SRTP cipher</NICK>
+<BLURB>The SRTP cipher selected in the DTLS handshake. The value will be set to an GstDtlsSrtpCipher.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGtkSink::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force aspect ratio</NICK>
+<BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGtkSink::ignore-alpha</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignore Alpha</NICK>
+<BLURB>When enabled, alpha will be ignored and converted to black.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGtkSink::pixel-aspect-ratio</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>The pixel aspect ratio of the device.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGtkSink::widget</NAME>
+<TYPE>GtkWidget*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Gtk Widget</NICK>
+<BLURB>The GtkWidget to place in the widget heirachy.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGtkGLSink::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force aspect ratio</NICK>
+<BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGtkGLSink::ignore-alpha</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignore Alpha</NICK>
+<BLURB>When enabled, alpha will be ignored and converted to black.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGtkGLSink::pixel-aspect-ratio</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>The pixel aspect ratio of the device.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGtkGLSink::widget</NAME>
+<TYPE>GtkWidget*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Gtk Widget</NICK>
+<BLURB>The GtkWidget to place in the widget heirachy.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX265Enc::bitrate</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,102400]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate</NICK>
+<BLURB>Bitrate in kbit/sec.</BLURB>
+<DEFAULT>2048</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX265Enc::log-level</NAME>
+<TYPE>GstX265LogLevel</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>(internal) x265 log level</NICK>
+<BLURB>x265 log level.</BLURB>
+<DEFAULT>No logging</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX265Enc::option-string</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Option string</NICK>
+<BLURB>String of x264 options (overridden by element properties).</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX265Enc::qp</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,51]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantization parameter</NICK>
+<BLURB>QP for P slices in (implied) CQP mode (-1 = disabled).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX265Enc::speed-preset</NAME>
+<TYPE>GstX265SpeedPreset</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Speed preset</NICK>
+<BLURB>Preset name for speed/quality tradeoff options.</BLURB>
+<DEFAULT>medium</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX265Enc::tune</NAME>
+<TYPE>GstX265Tune</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tune options</NICK>
+<BLURB>Preset name for tuning options.</BLURB>
+<DEFAULT>ssim</DEFAULT>
 </ARG>
 

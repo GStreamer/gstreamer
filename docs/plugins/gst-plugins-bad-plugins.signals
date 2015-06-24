@@ -729,3 +729,24 @@ guint  arg3
 GstGLFilterBin *gstglfilterbin
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstDtlsSrtpEnc::on-key-set</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDtlsSrtpEnc *gstdtlssrtpenc
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDtlsEnc::on-key-received</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDtlsEnc *gstdtlsenc
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDtlsDec::on-key-received</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDtlsDec *gstdtlsdec
+</SIGNAL>
+

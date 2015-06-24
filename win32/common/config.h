@@ -46,6 +46,9 @@
 /* The GIO modules directory. */
 #undef GIO_MODULE_DIR
 
+/* The GIO install prefix. */
+#undef GIO_PREFIX
+
 /* Define if GSM header in gsm/ subdir */
 #undef GSM_HEADER_IN_SUBDIR
 
@@ -86,7 +89,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2015-06-07"
+#define GST_PACKAGE_RELEASE_DATETIME "2015-06-24"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -300,6 +303,12 @@
 
 /* Define to enable GSM library (used by gsmenc gsmdec). */
 #undef HAVE_GSM
+
+/* Define to enable Gtk+ elements (used by gtk). */
+#undef HAVE_GTK3
+
+/* Define if Gtk+ 3.0 GL is installed */
+#undef HAVE_GTK3_GL
 
 /* Define if gudev is installed */
 #undef HAVE_GUDEV
@@ -699,7 +708,7 @@
 #define PACKAGE_NAME "GStreamer Bad Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.5.1"
+#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.5.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-bad"
@@ -708,7 +717,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.5.1"
+#define PACKAGE_VERSION "1.5.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -752,7 +761,7 @@
 #undef USE_EGL_RPI
 
 /* Version number of package */
-#define VERSION "1.5.1"
+#define VERSION "1.5.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

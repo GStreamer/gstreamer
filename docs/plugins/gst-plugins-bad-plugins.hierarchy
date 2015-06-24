@@ -5,6 +5,8 @@ GObject
         GstAllocatorSysmem
         GstWlShmAllocator
       GstAudioRingBuffer
+        GstAudioSinkRingBuffer
+        GstAudioSrcRingBuffer
       GstBus
       GstClock
         GstSystemClock
@@ -21,6 +23,7 @@ GObject
             GstGLBaseMixer
               GstGLMixer
                 GstGLMosaic
+                GstGLStereoMix
                 GstGLVideoMixer
         GstAiffMux
         GstAiffParse
@@ -32,10 +35,14 @@ GObject
           GstFaad
           GstGSMDec
           GstMpg123AudioDec
+          GstOpusDec
+          GstSbcDec
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
           GstGSMEnc
+          GstOpusEnc
+          GstSbcEnc
           GstSirenEnc
           GstVoAacEnc
           GstVoAmrWbEnc
@@ -55,10 +62,13 @@ GObject
           GstJpegParse
           GstMpeg4VParse
           GstMpegvParse
+          GstOpusParse
           GstPngParse
           GstVC1Parse
         GstBaseSink
           GstAudioBaseSink
+            GstAudioSink
+              GstOpenALSink
             GstDecklinkAudioSink
           GstChecksumSink
           GstCurlBaseSink
@@ -71,11 +81,14 @@ GObject
           GstInterAudioSink
           GstInterSubSink
           GstInterVideoSink
+          GstRTMPSink
           GstShmSink
           GstVideoSink
             GstDfbVideoSink
             GstFBDEVSink
             GstGLImageSink
+            GstGtkGLSink
+            GstGtkSink
             GstWaylandSink
         GstBaseSrc
           GstDataURISrc
@@ -87,11 +100,15 @@ GObject
             ladspasrc-noise-so-noise-white
             ladspasrc-sine-so-sine-fcac
           GstPushSrc
+            GstAudioBaseSrc
+              GstAudioSrc
+                GstOpenalSrc
             GstDecklinkAudioSrc
             GstDecklinkVideoSrc
             GstDvbSrc
             GstGLTestSrc
             GstMMS
+            GstRTMPSrc
             GstRfbSrc
             GstShmSrc
             GstVCDSrc
@@ -99,6 +116,7 @@ GObject
           GstAudioFilter
             GstAccurip
             GstAudioChannelMix
+            GstBPMDetect
             GstChromaprint
             GstLADSPAFilter
               ladspa-amp-so-amp-mono
@@ -113,6 +131,7 @@ GObject
             GstStereo
           GstBayer2RGB
           GstDebugSpy
+          GstDtmfDetect
           GstFreeverb
           GstGLBaseFilter
             GstGLColorConvertElement
@@ -147,6 +166,7 @@ GObject
               GstGLFilterGlass
               GstGLFilterShader
               GstGLOverlay
+              GstGLViewConvertElement
             GstGLUploadElement
           GstIvtc
           GstRGB2Bayer
@@ -179,13 +199,30 @@ GObject
               GstPerspective
               GstRotate
               GstSquare
+            GstGrabcut
+            GstOpencvVideoFilter
+              GstCvDilateErode
+                GstCvDilate
+                GstCvErode
+              GstCvEqualizeHist
+              GstCvLaplace
+              GstCvSmooth
+              GstCvSobel
+              GstFaceBlur
+              GstFaceDetect
+              GstHanddetect
+              GstSkinDetect
+            GstRetinex
+            GstRsvgOverlay
             GstSceneChange
+            GstSegmentation
             GstSimpleVideoMark
             GstSimpleVideoMarkDetect
             GstSmooth
             GstSolarize
             GstVideoAnalyse
             GstVideoDiff
+            GstZBar
             GstZebraStripe
           GstWatchdog
           GstYadif
@@ -193,11 +230,16 @@ GObject
           DvbBaseBin
           GstAdaptiveDemux
             GstDashDemux
+            GstHLSDemux
+            GstMssDemux
           GstAutoConvert
           GstAutoVideoConvert
           GstBaseCameraSrc
             GstUvcH264Src
             GstWrapperCameraBinSrc
+          GstDtlsSrtpBin
+            GstDtlsSrtpDec
+            GstDtlsSrtpEnc
           GstFPSDisplaySink
           GstGLFilterBin
           GstGLMixerBin
@@ -205,6 +247,7 @@ GObject
           GstGLSinkBin
             GstGLImageSinkBin
           GstGLSrcBin
+          GstHlsSink
           GstPipeline
             GstCameraBin
           GstSDPDemux
@@ -216,11 +259,19 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
+        GstDisparity
+        GstDtlsDec
+        GstDtlsEnc
+        GstDtlsSrtpDemux
+        GstEdgeDetect
+        GstErrorIgnore
         GstFestival
         GstFieldAnalysis
         GstFluidDec
         GstGDPDepay
         GstGDPPay
+        GstGLStereoSplit
+        GstGmeDec
         GstInterlace
         GstJP2kDecimator
         GstJifMux
@@ -234,36 +285,56 @@ GObject
         GstMimDec
         GstMimEnc
         GstModPlug
+        GstMotioncells
+        GstMpeg2enc
         GstMpegPSDemux
         GstMplex
+        GstOpencvTextOverlay
         GstPcapParse
+        GstPitch
+        GstPyramidSegment
         GstRTPBaseDepayload
+          GstRTPOpusDepay
           GstRtpH265Depay
         GstRTPBasePayload
           GstRtpAsfPay
           GstRtpH265Pay
+          GstRtpOPUSPay
         GstRawParse
           GstAudioParse
           GstVideoParse
         GstRtpOnvifParse
         GstRtpOnvifTimestamp
+        GstSFDec
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
+        GstSpanPlc
         GstSpeed
         GstSrtEnc
+        GstSrtpDec
+        GstSrtpEnc
         GstTagMux
           GstId3Mux
+        GstTemplateMatch
         GstUvcH264MjpgDemux
         GstVideoDecoder
           GstLibde265Dec
-          GstOpenh264Dec
+          GstOpenEXRDec
+          GstOpenJPEGDec
           GstPnmdec
+          GstRsvgDec
+          GstSchroDec
           GstVMncDec
+          GstWebPDec
         GstVideoEncoder
-          GstOpenh264Enc
+          GstOpenJPEGEnc
           GstPnmenc
+          GstSchroEnc
+          GstWebpEnc
+          GstX265Enc
         GstWebvttEnc
+        GstWildmidi
         GstY4mDec
         MpegPsMux
         MpegTSBase
@@ -290,6 +361,7 @@ GObject
       GstRegistry
       GstTask
       GstTaskPool
+    GtkWidget
   GstColorBalanceChannel
   GstEncodingProfile
   MXFMetadataBase
@@ -366,6 +438,7 @@ GObject
         MXFMetadataStaticTrack
         MXFMetadataTimelineTrack
 GInterface
+  AtkImplementorIface
   GTypePlugin
   GstChildProxy
   GstColorBalance
@@ -376,4 +449,5 @@ GInterface
   GstURIHandler
   GstVideoOverlay
   GstWaylandVideo
+  GtkBuildable
   MXFDescriptiveMetadataFrameworkInterface

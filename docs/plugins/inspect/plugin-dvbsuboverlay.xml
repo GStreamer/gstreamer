@@ -3,7 +3,7 @@
   <description>DVB subtitle renderer</description>
   <filename>../../gst/dvbsuboverlay/.libs/libgstdvbsuboverlay.so</filename>
   <basename>libgstdvbsuboverlay.so</basename>
-  <version>1.5.1</version>
+  <version>1.5.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

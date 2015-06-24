@@ -3,7 +3,7 @@
   <description>High-quality MPEG/DVD/SVCD/VCD video/audio multiplexer</description>
   <filename>../../ext/mplex/.libs/libgstmplex.so</filename>
   <basename>libgstmplex.so</basename>
-  <version>1.5.1</version>
+  <version>1.5.2</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

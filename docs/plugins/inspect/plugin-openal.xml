@@ -3,10 +3,10 @@
   <description>OpenAL plugin library</description>
   <filename>../../ext/openal/.libs/libgstopenal.so</filename>
   <basename>libgstopenal.so</basename>
-  <version>1.5.0.1</version>
+  <version>1.5.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

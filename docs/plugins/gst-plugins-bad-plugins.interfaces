@@ -24,6 +24,9 @@ GstDataURISrc GstURIHandler
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 GstDfbVideoSink GstNavigation GstColorBalance
 GstDiracEnc GstPreset
+GstDtlsSrtpBin GstChildProxy
+GstDtlsSrtpDec GstChildProxy
+GstDtlsSrtpEnc GstChildProxy
 GstEglGlesSink GstVideoOverlay
 GstFPSDisplaySink GstChildProxy
 GstFaac GstPreset
@@ -39,6 +42,7 @@ GstGLMixerBin GstChildProxy
 GstGLMosaic GstChildProxy
 GstGLSinkBin GstChildProxy GstVideoOverlay GstNavigation
 GstGLSrcBin GstChildProxy
+GstGLStereoMix GstChildProxy
 GstGLVideoMixer GstChildProxy
 GstGLVideoMixerBin GstChildProxy
 GstGSMEnc GstPreset
@@ -86,7 +90,9 @@ GstVoAmrWbEnc GstPreset
 GstWaylandSink GstVideoOverlay GstWaylandVideo
 GstWebpEnc GstPreset
 GstWrapperCameraBinSrc GstChildProxy
+GstX265Enc GstPreset
 GstXvidEnc GstPreset
+GtkWidget AtkImplementorIface GtkBuildable
 MXFDMS1ClipFramework MXFDescriptiveMetadataFrameworkInterface
 MXFDMS1Framework MXFDescriptiveMetadataFrameworkInterface
 MXFDMS1ProductionClipFramework MXFDescriptiveMetadataFrameworkInterface

@@ -3,10 +3,10 @@
   <description>OPUS plugin library</description>
   <filename>../../ext/opus/.libs/libgstopus.so</filename>
   <basename>libgstopus.so</basename>
-  <version>1.5.0.1</version>
+  <version>1.5.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -89,7 +89,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-opus</details>
+          <details>audio/x-opus, multistream=(boolean)false</details>
         </caps>
       </pads>
     </element>
@@ -110,7 +110,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)48000, encoding-name=(string){ OPUS, X-GST-OPUS-DRAFT-SPITTKA-00 }</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)48000, encoding-params=(string)2, encoding-name=(string){ OPUS, X-GST-OPUS-DRAFT-SPITTKA-00 }</details>
         </caps>
       </pads>
     </element>

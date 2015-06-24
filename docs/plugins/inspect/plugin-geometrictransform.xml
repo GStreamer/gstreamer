@@ -3,7 +3,7 @@
   <description>Various geometric image transform elements</description>
   <filename>../../gst/geometrictransform/.libs/libgstgeometrictransform.so</filename>
   <basename>libgstgeometrictransform.so</basename>
-  <version>1.5.1</version>
+  <version>1.5.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
