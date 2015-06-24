@@ -389,7 +389,16 @@ gst_buffer_list_copy_deep (const GstBufferList * list)
   len = list->n_buffers;
   for (i = 0; i < len; i++) {
     GstBuffer *old = list->buffers[i];
-    gst_buffer_list_insert (result, i, gst_buffer_copy_deep (old));
+    GstBuffer *new = gst_buffer_copy_deep (old);
+
+    if (G_LIKELY (new)) {
+      gst_buffer_list_insert (result, i, new);
+    } else {
+      g_warning
+          ("Failed to deep copy buffer %p while deep "
+          "copying buffer list %p. Buffer list copy "
+          "will be incomplete", old, list);
+    }
   }
 
   return result;
