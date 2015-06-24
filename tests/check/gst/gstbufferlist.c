@@ -195,6 +195,55 @@ GST_START_TEST (test_copy)
 
 GST_END_TEST;
 
+GST_START_TEST (test_copy_deep)
+{
+  GstBufferList *list_copy;
+  GstMapInfo info, sinfo;
+  GstBuffer *buf1;
+  GstBuffer *buf2;
+  GstBuffer *buf_copy;
+
+  /* add buffers to the list */
+  buf1 = gst_buffer_new_allocate (NULL, 1, NULL);
+  gst_buffer_list_add (list, buf1);
+
+  buf2 = gst_buffer_new_allocate (NULL, 2, NULL);
+  gst_buffer_list_add (list, buf2);
+
+  /* make a copy */
+  list_copy = gst_buffer_list_copy_deep (list);
+  fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (list) == 1);
+  fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (list_copy) == 1);
+  fail_unless (list_copy != list);
+  fail_unless_equals_int (gst_buffer_list_length (list_copy), 2);
+
+  buf_copy = gst_buffer_list_get (list_copy, 0);
+  /* each buffer in the list is copied and must point to different memory */
+  fail_unless (buf_copy != buf1);
+  ASSERT_BUFFER_REFCOUNT (buf1, "buf1", 1);
+  fail_unless_equals_int (gst_buffer_get_size (buf1), 1);
+
+  buf_copy = gst_buffer_list_get (list_copy, 1);
+  fail_unless (buf_copy != buf2);
+  ASSERT_BUFFER_REFCOUNT (buf2, "buf2", 1);
+  fail_unless_equals_int (gst_buffer_get_size (buf2), 2);
+
+  fail_unless (gst_buffer_map (buf2, &info, GST_MAP_READ));
+  fail_unless (gst_buffer_map (buf_copy, &sinfo, GST_MAP_READ));
+
+  /* NOTE that data is refcounted */
+  fail_unless (info.size == sinfo.size);
+  /* copy_deep() forces new GstMemory to be used */
+  fail_unless (info.data != sinfo.data);
+
+  gst_buffer_unmap (buf_copy, &sinfo);
+  gst_buffer_unmap (buf2, &info);
+
+  gst_buffer_list_unref (list_copy);
+}
+
+GST_END_TEST;
+
 typedef struct
 {
   GstBuffer *buf[2];
@@ -390,6 +439,7 @@ gst_buffer_list_suite (void)
   tcase_add_test (tc_chain, test_remove);
   tcase_add_test (tc_chain, test_make_writable);
   tcase_add_test (tc_chain, test_copy);
+  tcase_add_test (tc_chain, test_copy_deep);
   tcase_add_test (tc_chain, test_foreach);
   tcase_add_test (tc_chain, test_expand_and_remove);
 

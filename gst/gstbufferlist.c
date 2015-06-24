@@ -364,3 +364,33 @@ gst_buffer_list_remove (GstBufferList * list, guint idx, guint length)
 
   gst_buffer_list_remove_range_internal (list, idx, length, TRUE);
 }
+
+/**
+ * gst_buffer_list_copy_deep:
+ * @list: a #GstBufferList
+ *
+ * Create a copy of the given buffer list. This will make a newly allocated
+ * copy of the buffer that the source buffer list contains.
+ *
+ * Returns: (transfer full): a new copy of @list.
+ *
+ * Since: 1.6
+ */
+GstBufferList *
+gst_buffer_list_copy_deep (const GstBufferList * list)
+{
+  guint i, len;
+  GstBufferList *result = NULL;
+
+  g_return_val_if_fail (GST_IS_BUFFER_LIST (list), NULL);
+
+  result = gst_buffer_list_new ();
+
+  len = list->n_buffers;
+  for (i = 0; i < len; i++) {
+    GstBuffer *old = list->buffers[i];
+    gst_buffer_list_insert (result, i, gst_buffer_copy_deep (old));
+  }
+
+  return result;
+}

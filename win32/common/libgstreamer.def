@@ -149,6 +149,7 @@ EXPORTS
 	gst_buffer_list_new
 	gst_buffer_list_new_sized
 	gst_buffer_list_remove
+	gst_buffer_list_copy_deep
 	gst_buffer_map
 	gst_buffer_map_range
 	gst_buffer_memcmp
