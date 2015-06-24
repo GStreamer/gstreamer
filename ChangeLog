@@ -1,9 +1,152 @@
-=== release 1.5.1 ===
+=== release 1.5.2 ===
 
-2015-06-07  Sebastian Dröge <slomo@coaxion.net>
+2015-06-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.1
+	  releasing 1.5.2
+
+2015-06-18 13:12:04 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* tests/check/gst/client.c:
+	  rtsp-client: allow application to decide what requirements are supported
+	  Add "check-requirements" signal and vfunc to allow application
+	  (and subclasses) to check the requirements.
+	  Based on patch from Hyunjun Ko <zzoon.ko@samsung.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749417
+
+2015-06-16 17:50:26 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6015d26 to f74b2df
+
+2015-06-11 17:39:00 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Always use real payloader when creating streams
+	  A bin that contains the real payloader might be used as payloader. In this
+	  case we have to get the real payloader for the various properties it provides.
+	  Example use cases for this are bins that payload some media and then have
+	  additional elements that add metadata or RTP extension headers to the stream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750800
+
+2015-06-13 17:14:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-netclock-client.c:
+	  test-netclock: Use gst_pipeline_set_latency() to set a high-enough, equal latency for all receivers
+
+2015-06-12 23:35:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-netclock-client.c:
+	* examples/test-netclock.c:
+	  test-netclock: Use new ntp-time-source property on rtpbin
+	  Select the clock time to be used as NTP time source. This allows proper
+	  synchronization between receivers, independent of sharing base times, and just
+	  requires them to use the same clock.
+
+2015-06-11 20:41:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-netclock-client.c:
+	* examples/test-netclock.c:
+	  test-netclock: Setting the same base time on sender and receiver is not necessary
+	  It's going to be fixed up by rtpbin when using ntp-sync=TRUE
+
+2015-06-11 17:38:52 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: add description for gst_rtsp_stream_request_aux_sender
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750764
+
+2015-06-11 18:10:12 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
+
+	* docs/libs/gst-rtsp-server.types:
+	  docs: add missing types
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750764
+
+2015-06-11 17:37:25 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	  docs: add missing apis
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750764
+
+2015-06-10 17:14:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-netclock-client.c:
+	  test-netclock-client: Use ntp-sync=TRUE and buffer-mode=SYNC for proper synchronization
+
+2015-06-05 22:35:39 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	  GstRTSPAuth: Add client certificate authentication support
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750471
+
+2015-06-09 13:53:47 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-netclock-client.c:
+	  test-netclock-client: Use new GstClock API to wait for clock synchronization
+
+2015-06-09 13:51:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-netclock-client.c:
+	  test-netclock-client: Use a GMainLoop and playbin's source-setup signal
+	  A mainloop is needed to get glimagesink to display something on OSX, and
+	  the source-setup signal just makes things a little bit easier.
+
+2015-06-09 11:30:54 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d9a3353 to 6015d26
+
+2015-06-08 23:08:34 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From d37af32 to d9a3353
+
+2015-06-07 23:07:31 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 21ba2e5 to d37af32
+
+2015-06-07 17:32:29 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From c408583 to 21ba2e5
+
+2015-06-07 17:06:40 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/libs/Makefile.am:
+	  docs: remove variables that we define in the snippet from common
+	  This is syncing our Makefile.am with upstream gtkdoc.
+
+2015-06-07 17:16:47 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 44a3517 to c408583
+
+2015-06-07 16:44:55 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.5.1 ===
+
+2015-06-07 11:20:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.5.1
 
 2015-05-25 16:36:18 +0200  Göran Jönsson <goranjn@axis.com>
 

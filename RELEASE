@@ -1,8 +1,8 @@
 
-Release notes for GStreamer RTSP Server Library 1.5.1
+Release notes for GStreamer RTSP Server Library 1.5.2
 
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.5 release series. The 1.5 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.5 release series
@@ -16,38 +16,11 @@ during the unstable 1.5 release series.
 
   
 
-Features of this release
-    
-
 Bugs fixed in this release
      
-      * 732238 : Listen on the multicast group for RTP/RTCP packets
-      * 734546 : tests: Unref element after usage
-      * 736041 : Protect rtsp transport data.
-      * 736647 : Tunneled RTSP sessions do not always timeout as expected
-      * 737110 : rtsp-client: race condition when closing client connection
-      * 737631 : gst-rtsp-server deadlock while sending response over TCP
-      * 737675 : media: media_unprepare() is kind of broken
-      * 737690 : rtsp-client: deadlock when setting session medias to NULL
-      * 737797 : rtsp-stream: lock not released when leaving bin and transports not removed
-      * 737829 : rtsp-server: deactivate media when shutting down from paused
-      * 738905 : rtsp-client: add stream transport to the context
-      * 739112 : rtsp-client: Can not allocate ports for interleaved traffic in setup
-      * 740752 : add retransmission support
-      * 740845 : crash when reciving a rtcp after teardown but before client finalize.
-      * 741678 : configure: add --disable-examples switch
-      * 742115 : Examples: Accept a 'port' argument for running multiple instances
-      * 742869 : Remove URI-escaping of RTSP session-id
-      * 742954 : Crash when two treads are in handle_new_sample at the same time.
-      * 743175 : Add support for RECORD
-      * 743346 : When system time is increased the ongoing RTSP sessions will time out.
-      * 743734 : RTCP packets not sent
-      * 744379 : gst-rtsp-server does not preroll when piping data into the media-pipeline
-      * 745704 : Losing the first packet
-      * 747614 : gst-rtsp-server: uninitialized clock rate causes critical warning
-      * 747839 : gst-rtsp-server: doesn't perform retransmission to both streams in test-video-rtx
-      * 748058 : autogen.sh fails due to autopoint erroring out due to missing gettext version in configure.ac
-      * 749845 : Client have problem to find the teardown response.
+      * 749417 : rtsp-client: add API to allow application to decide what requirements are supported
+      * 750764 : gst-rtsp-server: add missing apis to doc
+      * 750800 : rtsp-media: always use real payloader when creating streams
 
 ==== Download ====
 
@@ -86,30 +59,11 @@ Applications
   
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Alistair Buxton
-      * Andreas Frisch
-      * Anila Balavan
-      * Arun Raghavan
-      * Branko Subasic
       * Edward Hervey
-      * Gregor Boirie
-      * Göran Jönsson
       * Hyunjun Ko
-      * Jan Schmidt
-      * Kent-Inge Ingesson
-      * Linus Svensson
-      * Luis de Bethencourt
-      * Matthew Waters
       * Nicolas Dufresne
-      * Nirbheek Chauhan
       * Ognyan Tonchev
-      * Olivier Crête
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Srimanta Panda
       * Stefan Sauer
-      * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Wim Taymans
+      * Xavier Claessens
  
