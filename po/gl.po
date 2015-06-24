@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:34+0200\n"
+"POT-Creation-Date: 2015-06-24 11:14+0200\n"
 "PO-Revision-Date: 2012-12-15 03:40+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -531,6 +531,9 @@ msgstr ""
 msgid "Reached end of play list."
 msgstr ""
 
+msgid "Paused"
+msgstr ""
+
 #, c-format
 msgid "Now playing %s\n"
 msgstr ""
@@ -589,6 +592,17 @@ msgstr ""
 
 msgid "enable/disable trick modes"
 msgstr ""
+
+#, fuzzy
+msgid "change audio track"
+msgstr "Este CD non contén pistas de son"
+
+msgid "change video track"
+msgstr ""
+
+#, fuzzy
+msgid "change subtitle track"
+msgstr "Formato de subtítulos Kate"
 
 msgid "show keyboard shortcuts"
 msgstr ""

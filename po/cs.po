@@ -8,10 +8,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.4.1\n"
+"Project-Id-Version: gst-plugins-base-1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:34+0200\n"
-"PO-Revision-Date: 2015-02-16 10:33+0100\n"
+"POT-Creation-Date: 2015-06-24 11:14+0200\n"
+"PO-Revision-Date: 2015-06-17 17:31+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -519,9 +519,9 @@ msgstr ""
 "Po zobrazení počátečního seznamu zařízení neskončit, ale ček na přidání/"
 "odebrání zařízení."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Volume: %.0f%%"
-msgstr "Hlasitost"
+msgstr "Hlasitost: %.0f %%"
 
 msgid "Buffering..."
 msgstr "Ukládá se do vyrovnávací paměti…"
@@ -530,73 +530,85 @@ msgid "Clock lost, selecting a new one\n"
 msgstr "Bylo ztraceno časování, vybírá se nové\n"
 
 msgid "Reached end of play list."
+msgstr "Dosažen konec seznamu k přehrání"
+
+msgid "Paused"
 msgstr ""
 
 #, c-format
 msgid "Now playing %s\n"
-msgstr ""
+msgstr "Nyní se přehrává %s\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr ""
+msgstr "Blíží se konec, připravuje se následující titul: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "Rychlost přehrávání: %.2f"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "Nezdařilo se otevřít zařízení pro přehrávání v režimu stereo."
+msgstr "Nezdařilo se změnit rychlost přehrávání na %.2f"
 
 msgid "space"
-msgstr ""
+msgstr "mezerník"
 
 msgid "pause/unpause"
-msgstr ""
+msgstr "pozastavit/pokračovat"
 
 msgid "q or ESC"
-msgstr ""
+msgstr "q nebo ESC"
 
 msgid "quit"
-msgstr ""
+msgstr "ukončit"
 
 msgid "play next"
-msgstr ""
+msgstr "přehrát následující"
 
 msgid "play previous"
-msgstr ""
+msgstr "přehrát předchozí"
 
 msgid "seek forward"
-msgstr ""
+msgstr "posounout vpřed"
 
 msgid "seek backward"
-msgstr ""
+msgstr "posunout zpět"
 
-#, fuzzy
 msgid "volume up"
-msgstr "Hlasitost"
+msgstr "zvýšit hlasitost"
 
 msgid "volume down"
-msgstr ""
+msgstr "snížit hlasitost"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "zvýšit rychlost přehrávání"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "snížti rychlost přehrávání"
 
 msgid "change playback direction"
-msgstr ""
+msgstr "změnit směr přehrávání"
 
 msgid "enable/disable trick modes"
-msgstr ""
+msgstr "zapnout/vypnout trikový režim"
 
-msgid "show keyboard shortcuts"
+#, fuzzy
+msgid "change audio track"
+msgstr "Toto CD nemá žádné zvukové stopy"
+
+msgid "change video track"
 msgstr ""
 
 #, fuzzy
+msgid "change subtitle track"
+msgstr "Formát titulků Kate"
+
+msgid "show keyboard shortcuts"
+msgstr "zobrazit klávesové zkratky"
+
 msgid "Interactive mode - keyboard controls:"
-msgstr "Interaktivní ovládání přes klávesnici"
+msgstr "Interaktivní režim – ovládání klávesnicí:"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Spotřebič videa, který se má použít (výchozí je autovideosink)"
@@ -610,9 +622,8 @@ msgstr "Zapnout přehrávání bez mezer"
 msgid "Shuffle playlist"
 msgstr "Náhodně zamíchat seznam k přehrání"
 
-#, fuzzy
 msgid "Disable interactive control via the keyboard"
-msgstr "Interaktivní ovládání přes klávesnici"
+msgstr "Zakázat interaktivní ovládání klávesnicí"
 
 msgid "Volume"
 msgstr "Hlasitost"
@@ -621,7 +632,7 @@ msgid "Playlist file containing input media files"
 msgstr "Soubor se seznamem k přehrání obsahující vstupní multimediální soubory"
 
 msgid "Do not print any output (apart from errors)"
-msgstr ""
+msgstr "Nevypisovat žádný výstup (mimo chyb)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -631,9 +642,4 @@ msgid "You must provide at least one filename or URI to play."
 msgstr "Musíte zadat minimálně jeden název souboru nebo adresu URI k přehrání."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr ""
-
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "K přehrání tohoto proudu je vyžadován zásuvný modul %s, ale není "
-#~ "nainstalován."
+msgstr "Zmáčknutím „k“ si zobrazíte seznam klávesových zkratek.\n"

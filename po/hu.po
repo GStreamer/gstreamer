@@ -4,13 +4,13 @@
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
 # Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2012.
-# Balázs Úr <urbalazs@gmail.com>, 2014.
+# Balázs Úr <urbalazs@gmail.com>, 2014, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.4.0\n"
+"Project-Id-Version: gst-plugins-base 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:34+0200\n"
-"PO-Revision-Date: 2014-07-26 00:28+0200\n"
+"POT-Creation-Date: 2015-06-24 11:14+0200\n"
+"PO-Revision-Date: 2015-06-14 08:28+0200\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Rosetta-Export-Date: 2007-03-10 00:18+0000\n"
-"X-Generator: Lokalize 1.5\n"
+"X-Generator: Lokalize 1.2\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -516,9 +516,9 @@ msgstr ""
 "Ne lépjen ki a kezdeti eszközlista megjelenítése után, de várjon az eszközök "
 "hozzáadására/eltávolítására."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Volume: %.0f%%"
-msgstr "Hangerő"
+msgstr "Hangerő: %.0f%%"
 
 msgid "Buffering..."
 msgstr "Pufferelés…"
@@ -527,73 +527,85 @@ msgid "Clock lost, selecting a new one\n"
 msgstr "Óra elveszítve, egy új kiválasztása\n"
 
 msgid "Reached end of play list."
+msgstr "A lejátszólista vége elérve."
+
+msgid "Paused"
 msgstr ""
 
 #, c-format
 msgid "Now playing %s\n"
-msgstr ""
+msgstr "Most játszott: %s\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr ""
+msgstr "Hamarosan befejeződik, következő cím előkészítése: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "Lejátszási sebesség: %.2f"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "Nem lehet lejátszásra megnyitni az eszközt sztereó módban."
+msgstr "Nem lehet megváltoztatni a lejátszási sebességet erre: %.2f"
 
 msgid "space"
-msgstr ""
+msgstr "szóköz"
 
 msgid "pause/unpause"
-msgstr ""
+msgstr "szünet/folytatás"
 
 msgid "q or ESC"
-msgstr ""
+msgstr "q vagy ESC"
 
 msgid "quit"
-msgstr ""
+msgstr "kilépés"
 
 msgid "play next"
-msgstr ""
+msgstr "következő lejátszása"
 
 msgid "play previous"
-msgstr ""
+msgstr "előző lejátszása"
 
 msgid "seek forward"
-msgstr ""
+msgstr "tekerés előre"
 
 msgid "seek backward"
-msgstr ""
+msgstr "tekerés hátra"
 
-#, fuzzy
 msgid "volume up"
-msgstr "Hangerő"
+msgstr "hangerő fel"
 
 msgid "volume down"
-msgstr ""
+msgstr "hangerő le"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "lejátszási sebesség növelése"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "lejátszási sebesség csökkentése"
 
 msgid "change playback direction"
-msgstr ""
+msgstr "lejátszási irány megváltoztatása"
 
 msgid "enable/disable trick modes"
-msgstr ""
+msgstr "trükk módok engedélyezése/letiltása"
 
-msgid "show keyboard shortcuts"
+#, fuzzy
+msgid "change audio track"
+msgstr "Ez a CD nem rendelkezik hangsávokkal"
+
+msgid "change video track"
 msgstr ""
 
 #, fuzzy
+msgid "change subtitle track"
+msgstr "Kate feliratformátum"
+
+msgid "show keyboard shortcuts"
+msgstr "gyorsbillentyűk megjelenítése"
+
 msgid "Interactive mode - keyboard controls:"
-msgstr "Interaktív vezérlés billentyűzettel"
+msgstr "Interaktív mód - billentyűzetvezérlők:"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Használandó videosüllyesztés (az alapértelmezett az autovideosink)"
@@ -607,9 +619,8 @@ msgstr "Szünetmentes lejátszás bekapcsolása"
 msgid "Shuffle playlist"
 msgstr "Lejátszólista keverése"
 
-#, fuzzy
 msgid "Disable interactive control via the keyboard"
-msgstr "Interaktív vezérlés billentyűzettel"
+msgstr "Interaktív vezérlés letiltása a billentyűzeten keresztül"
 
 msgid "Volume"
 msgstr "Hangerő"
@@ -618,7 +629,7 @@ msgid "Playlist file containing input media files"
 msgstr "Bemeneti médiafájlokat tartalmazó lejátszólista fájl"
 
 msgid "Do not print any output (apart from errors)"
-msgstr ""
+msgstr "Ne írjon ki semmilyen kimenetet (a hibákon kívül)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -629,6 +640,7 @@ msgstr "Meg kell adnia legalább egy fájlnevet vagy URI-t a lejátszáshoz."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+"Nyomja meg a „k” billentyűt a gyorsbillentyűk listájának megtekintéséhez.\n"
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

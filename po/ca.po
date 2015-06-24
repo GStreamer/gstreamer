@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:34+0200\n"
+"POT-Creation-Date: 2015-06-24 11:14+0200\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -543,6 +543,9 @@ msgstr ""
 msgid "Reached end of play list."
 msgstr ""
 
+msgid "Paused"
+msgstr ""
+
 #, c-format
 msgid "Now playing %s\n"
 msgstr ""
@@ -601,6 +604,17 @@ msgstr ""
 
 msgid "enable/disable trick modes"
 msgstr ""
+
+#, fuzzy
+msgid "change audio track"
+msgstr "Aquest CD no té pistes d'àudio"
+
+msgid "change video track"
+msgstr ""
+
+#, fuzzy
+msgid "change subtitle track"
+msgstr "Format de subtítols Kate"
 
 msgid "show keyboard shortcuts"
 msgstr ""

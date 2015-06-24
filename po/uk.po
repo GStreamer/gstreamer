@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014.
+# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.4.0\n"
+"Project-Id-Version: gst-plugins-base 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:34+0200\n"
-"PO-Revision-Date: 2014-07-21 14:23+0300\n"
+"POT-Creation-Date: 2015-06-24 11:14+0200\n"
+"PO-Revision-Date: 2015-06-10 23:00+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -531,9 +531,9 @@ msgstr ""
 "Не завершувати роботу після показу початкового списку пристроїв, чекати на "
 "додавання або вилучення пристроїв."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Volume: %.0f%%"
-msgstr "Гучність"
+msgstr "Гучність: %.0f%%"
 
 msgid "Buffering..."
 msgstr "Буферизація…"
@@ -542,73 +542,85 @@ msgid "Clock lost, selecting a new one\n"
 msgstr "Доступ до годинника втрачено, вибираємо новий\n"
 
 msgid "Reached end of play list."
+msgstr "Відтворення списку завершено."
+
+msgid "Paused"
 msgstr ""
 
 #, c-format
 msgid "Now playing %s\n"
-msgstr ""
+msgstr "Відтворюється %s\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr ""
+msgstr "Майже завершили, готуємо наступну композицію: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "Частота відтворення: %.2f"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "Не вдалося відкрити пристрій відтворення у режимі стерео."
+msgstr "Не вдалося змінити частоту відтворення на %.2f"
 
 msgid "space"
-msgstr ""
+msgstr "пробіл"
 
 msgid "pause/unpause"
-msgstr ""
+msgstr "призупинити/поновити"
 
 msgid "q or ESC"
-msgstr ""
+msgstr "q або ESC"
 
 msgid "quit"
-msgstr ""
+msgstr "вийти"
 
 msgid "play next"
-msgstr ""
+msgstr "наступна"
 
 msgid "play previous"
-msgstr ""
+msgstr "попередня"
 
 msgid "seek forward"
-msgstr ""
+msgstr "до кінця"
 
 msgid "seek backward"
-msgstr ""
+msgstr "до початку"
 
-#, fuzzy
 msgid "volume up"
-msgstr "Гучність"
+msgstr "гучніше"
 
 msgid "volume down"
-msgstr ""
+msgstr "тихіше"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "збільшити частоту відтворення"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "зменшити частоту відтворення"
 
 msgid "change playback direction"
-msgstr ""
+msgstr "змінити напрям відтворення"
 
 msgid "enable/disable trick modes"
-msgstr ""
+msgstr "увімкнути або вимкнути особливі режими"
 
-msgid "show keyboard shortcuts"
+#, fuzzy
+msgid "change audio track"
+msgstr "На цьому компакт-диску немає звукових доріжок"
+
+msgid "change video track"
 msgstr ""
 
 #, fuzzy
+msgid "change subtitle track"
+msgstr "Формат субтитрів Kate"
+
+msgid "show keyboard shortcuts"
+msgstr "показати клавіатурні скорочення"
+
 msgid "Interactive mode - keyboard controls:"
-msgstr "Інтерактивне керування за допомогою клавіатури"
+msgstr "Інтерактивне керування за допомогою клавіатури:"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Приймач відеоданих, яким слід скористатися (типовим є autovideosink)"
@@ -622,9 +634,8 @@ msgstr "Увімкнути неперервне відтворення"
 msgid "Shuffle playlist"
 msgstr "Перемішати список відтворення"
 
-#, fuzzy
 msgid "Disable interactive control via the keyboard"
-msgstr "Інтерактивне керування за допомогою клавіатури"
+msgstr "Вимкнути інтерактивне керування за допомогою клавіатури"
 
 msgid "Volume"
 msgstr "Гучність"
@@ -633,7 +644,7 @@ msgid "Playlist file containing input media files"
 msgstr "Файл списку відтворення, що містить мультимедійні файли вхідних даних"
 
 msgid "Do not print any output (apart from errors)"
-msgstr ""
+msgstr "Не виводити повідомлень (окрім повідомлень щодо помилок)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -644,7 +655,7 @@ msgstr ""
 "Вам слід вказати принаймні одну назву файла або адресу для відтворення."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr ""
+msgstr "Натисніть «k», щоб переглянути список клавіатурних скорочень.\n"
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr "Для відтворення потоку потрібен модуль %s, але він не встановлений."

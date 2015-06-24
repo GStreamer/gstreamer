@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.4.0\n"
+"Project-Id-Version: gst-plugins-base 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:34+0200\n"
-"PO-Revision-Date: 2014-07-24 23:58+0100\n"
+"POT-Creation-Date: 2015-06-24 11:14+0200\n"
+"PO-Revision-Date: 2015-06-11 21:00+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.5.4\n"
+"X-Generator: Poedit 1.7.5\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Gerät konnte nicht zur Wiedergabe in Mono geöffnet werden."
@@ -522,9 +522,9 @@ msgstr ""
 "Nicht nach dem Anzeigen der anfänglichen Geräteliste beenden, sondern auf "
 "das Hinzufügen/Entfernen von Geräten warten."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Volume: %.0f%%"
-msgstr "Lautstärke"
+msgstr "Lautstärke: %.0f%%"
 
 msgid "Buffering..."
 msgstr "Zwischenspeichern …"
@@ -533,73 +533,85 @@ msgid "Clock lost, selecting a new one\n"
 msgstr "Uhrzeit verloren, es wird eine neue gewählt\n"
 
 msgid "Reached end of play list."
+msgstr "Das Ende der Wiedergabeliste wurde erreicht."
+
+msgid "Paused"
 msgstr ""
 
 #, c-format
 msgid "Now playing %s\n"
-msgstr ""
+msgstr "Momentan wird %s wiedergegeben\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr ""
+msgstr "Kurz vor dem Abschluss. Nächster Titel wird vorbereitet: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "Wiedergabegeschwindigkeit: %.2f"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "Gerät konnte nicht zur Wiedergabe in Stereo geöffnet werden."
+msgstr "Wiedergabegeschwindigkeit konnte nicht auf %.2f geändert werden"
 
 msgid "space"
-msgstr ""
+msgstr "Leertaste"
 
 msgid "pause/unpause"
-msgstr ""
+msgstr "Anhalten/Fortsetzen"
 
 msgid "q or ESC"
-msgstr ""
+msgstr "q oder ESC"
 
 msgid "quit"
-msgstr ""
+msgstr "Beenden"
 
 msgid "play next"
-msgstr ""
+msgstr "Nächsten wiedergeben"
 
 msgid "play previous"
-msgstr ""
+msgstr "Vorherigen wiedergeben"
 
 msgid "seek forward"
-msgstr ""
+msgstr "Vorspulen"
 
 msgid "seek backward"
-msgstr ""
+msgstr "Zurückspulen"
 
-#, fuzzy
 msgid "volume up"
-msgstr "Lautstärke"
+msgstr "Lauter"
 
 msgid "volume down"
-msgstr ""
+msgstr "Leiser"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "Schneller wiedergeben"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "Langsamer wiedergeben"
 
 msgid "change playback direction"
-msgstr ""
+msgstr "Wiedergaberichtung ändern"
 
 msgid "enable/disable trick modes"
-msgstr ""
+msgstr "Trickmodi einschalten/ausschalten"
 
-msgid "show keyboard shortcuts"
+#, fuzzy
+msgid "change audio track"
+msgstr "Auf dieser CD befinden sich keine Audio-Titel"
+
+msgid "change video track"
 msgstr ""
 
 #, fuzzy
+msgid "change subtitle track"
+msgstr "Untertitel-Format Kate"
+
+msgid "show keyboard shortcuts"
+msgstr "Tastenkombinationen anzeigen"
+
 msgid "Interactive mode - keyboard controls:"
-msgstr "Interaktive Steuerung via Tastatur"
+msgstr "Interaktiver Modus - Tastatursteuerung:"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Zu verwendende Video-Ziel (Voreinstellung ist »autovideosink«)"
@@ -613,9 +625,8 @@ msgstr "Lückenlose Wiedergabe einschalten"
 msgid "Shuffle playlist"
 msgstr "Wiedergabeliste mischen"
 
-#, fuzzy
 msgid "Disable interactive control via the keyboard"
-msgstr "Interaktive Steuerung via Tastatur"
+msgstr "Interaktive Steuerung via Tastatur deaktivieren"
 
 msgid "Volume"
 msgstr "Lautstärke"
@@ -624,7 +635,7 @@ msgid "Playlist file containing input media files"
 msgstr "Datei mit Wiedergabeliste enthält Eingabe-Mediendateien"
 
 msgid "Do not print any output (apart from errors)"
-msgstr ""
+msgstr "Nichts ausgeben (außer Fehlermeldungen)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -636,7 +647,7 @@ msgstr ""
 "angeben."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr ""
+msgstr "Geben Sie »k« ein, um die Liste der Tastenkombinationen zu sehen.\n"
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

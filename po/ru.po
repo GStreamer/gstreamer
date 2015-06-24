@@ -3,13 +3,13 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.4.0\n"
+"Project-Id-Version: gst-plugins-base 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:34+0200\n"
-"PO-Revision-Date: 2014-07-21 19:24+0400\n"
+"POT-Creation-Date: 2015-06-24 11:14+0200\n"
+"PO-Revision-Date: 2015-06-13 11:57+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
@@ -519,9 +519,9 @@ msgstr ""
 "Не завершать работу после показа начального списка устройств, а ждать их "
 "добавления/удаления."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Volume: %.0f%%"
-msgstr "Громкость"
+msgstr "Громкость: %.0f%%"
 
 msgid "Buffering..."
 msgstr "Буферизация…"
@@ -530,73 +530,85 @@ msgid "Clock lost, selecting a new one\n"
 msgstr "Часы потеряны, выбираем новые\n"
 
 msgid "Reached end of play list."
+msgstr "Достигнут конец списка воспроизведения."
+
+msgid "Paused"
 msgstr ""
 
 #, c-format
 msgid "Now playing %s\n"
-msgstr ""
+msgstr "Сейчас проигрывается %s\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr ""
+msgstr "Почти закончено, подготавливается следующая часть: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "Скорость воспроизведения: %.2f"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "Не удалось открыть устройство для воспроизведения в режиме стерео."
+msgstr "Не удалось изменить скорость воспроизведения на %.2f"
 
 msgid "space"
-msgstr ""
+msgstr "пробел"
 
 msgid "pause/unpause"
-msgstr ""
+msgstr "пауза/продолжение"
 
 msgid "q or ESC"
-msgstr ""
+msgstr "q или ESC"
 
 msgid "quit"
-msgstr ""
+msgstr "выход"
 
 msgid "play next"
-msgstr ""
+msgstr "воспроизвести следующее"
 
 msgid "play previous"
-msgstr ""
+msgstr "воспроизвести предыдущее"
 
 msgid "seek forward"
-msgstr ""
+msgstr "перемотать вперед"
 
 msgid "seek backward"
-msgstr ""
+msgstr "перемотать назад"
 
-#, fuzzy
 msgid "volume up"
-msgstr "Громкость"
+msgstr "увеличить громкость"
 
 msgid "volume down"
-msgstr ""
+msgstr "уменьшить громкость"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "увеличить скорость воспроизведения"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "уменьшить скорость воспроизведения"
 
 msgid "change playback direction"
-msgstr ""
+msgstr "изменить направление воспроизведения"
 
 msgid "enable/disable trick modes"
-msgstr ""
+msgstr "включить/выключить режим рекомендаций"
 
-msgid "show keyboard shortcuts"
+#, fuzzy
+msgid "change audio track"
+msgstr "На CD нет звуковых дорожек"
+
+msgid "change video track"
 msgstr ""
 
 #, fuzzy
+msgid "change subtitle track"
+msgstr "Формат субтитров Kate"
+
+msgid "show keyboard shortcuts"
+msgstr "показать клавиатурные сокращения"
+
 msgid "Interactive mode - keyboard controls:"
-msgstr "Интерактивное управление с клавиатуры"
+msgstr "Интерактивный режим — управление с клавиатуры:"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Используемый приёмник видео (по умолчанию autovideosink)"
@@ -610,9 +622,8 @@ msgstr "Включить непрерывное воспроизведение"
 msgid "Shuffle playlist"
 msgstr "Перемешать список воспроизведения"
 
-#, fuzzy
 msgid "Disable interactive control via the keyboard"
-msgstr "Интерактивное управление с клавиатуры"
+msgstr "Отключить интерактивное управление с клавиатуры"
 
 msgid "Volume"
 msgstr "Громкость"
@@ -621,7 +632,7 @@ msgid "Playlist file containing input media files"
 msgstr "Файл списка воспроизведения с входными медиа-файлами"
 
 msgid "Do not print any output (apart from errors)"
-msgstr ""
+msgstr "Не выводить ничего в поток стандартного вывода (кроме ошибок)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -631,7 +642,7 @@ msgid "You must provide at least one filename or URI to play."
 msgstr "Вы должны указать не менее одного имени файла или URI."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr ""
+msgstr "Нажмите «k» для показа списка клавиатурных комбинаций.\n"
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

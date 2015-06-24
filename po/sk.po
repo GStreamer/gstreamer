@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:34+0200\n"
+"POT-Creation-Date: 2015-06-24 11:14+0200\n"
 "PO-Revision-Date: 2014-01-30 10:57+0100\n"
 "Last-Translator: Peter Tuharsky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -526,6 +526,9 @@ msgstr ""
 msgid "Reached end of play list."
 msgstr ""
 
+msgid "Paused"
+msgstr ""
+
 #, c-format
 msgid "Now playing %s\n"
 msgstr ""
@@ -583,6 +586,17 @@ msgstr ""
 
 msgid "enable/disable trick modes"
 msgstr ""
+
+#, fuzzy
+msgid "change audio track"
+msgstr "Toto CD nemá zvukové stopy"
+
+msgid "change video track"
+msgstr ""
+
+#, fuzzy
+msgid "change subtitle track"
+msgstr "Formát titulkov Kate"
 
 msgid "show keyboard shortcuts"
 msgstr ""

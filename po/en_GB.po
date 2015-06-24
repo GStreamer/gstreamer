@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:34+0200\n"
+"POT-Creation-Date: 2015-06-24 11:14+0200\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -528,6 +528,9 @@ msgstr ""
 msgid "Reached end of play list."
 msgstr ""
 
+msgid "Paused"
+msgstr ""
+
 #, c-format
 msgid "Now playing %s\n"
 msgstr ""
@@ -585,6 +588,15 @@ msgid "change playback direction"
 msgstr ""
 
 msgid "enable/disable trick modes"
+msgstr ""
+
+msgid "change audio track"
+msgstr ""
+
+msgid "change video track"
+msgstr ""
+
+msgid "change subtitle track"
 msgstr ""
 
 msgid "show keyboard shortcuts"

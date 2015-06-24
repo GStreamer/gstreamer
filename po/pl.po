@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2014.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2015.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.4.0\n"
+"Project-Id-Version: gst-plugins-base 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:34+0200\n"
-"PO-Revision-Date: 2014-07-21 21:21+0200\n"
+"POT-Creation-Date: 2015-06-24 11:14+0200\n"
+"PO-Revision-Date: 2015-06-10 22:09+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -521,9 +521,9 @@ msgstr ""
 "Bez kończenia po wyświetleniu początkowej listy urządzeń, oczekiwanie na "
 "dodanie/usunięcie urządzeń."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Volume: %.0f%%"
-msgstr "Głośność"
+msgstr "Głośność: %.0f%%"
 
 msgid "Buffering..."
 msgstr "Buforowanie..."
@@ -532,74 +532,85 @@ msgid "Clock lost, selecting a new one\n"
 msgstr "Utracono zegar, wybieranie nowego\n"
 
 msgid "Reached end of play list."
+msgstr "Osiągnięto koniec listy odtwarzania."
+
+msgid "Paused"
 msgstr ""
 
 #, c-format
 msgid "Now playing %s\n"
-msgstr ""
+msgstr "Trwa odtwarzanie %s\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr ""
+msgstr "Blisko końca, przygotowywanie następnego tytułu: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "Tempo odtwarzania: %.2f"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr ""
-"Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania w trybie stereo."
+msgstr "Nie udało się zmienić tempa odtwarzania na %.2f"
 
 msgid "space"
-msgstr ""
+msgstr "spacja"
 
 msgid "pause/unpause"
-msgstr ""
+msgstr "pauza/wznowienie"
 
 msgid "q or ESC"
-msgstr ""
+msgstr "q lub ESC"
 
 msgid "quit"
-msgstr ""
+msgstr "wyjście"
 
 msgid "play next"
-msgstr ""
+msgstr "odtworzenie następnego"
 
 msgid "play previous"
-msgstr ""
+msgstr "odtworzenie poprzedniego"
 
 msgid "seek forward"
-msgstr ""
+msgstr "przewinięcie w przód"
 
 msgid "seek backward"
-msgstr ""
+msgstr "przewinięcie w tył"
 
-#, fuzzy
 msgid "volume up"
-msgstr "Głośność"
+msgstr "większa głośność"
 
 msgid "volume down"
-msgstr ""
+msgstr "mniejsza głośność"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "większe tempo odtwarzania"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "mniejsze tempo odtwarzania"
 
 msgid "change playback direction"
-msgstr ""
+msgstr "zmiana kierunku odtwarzania"
 
 msgid "enable/disable trick modes"
-msgstr ""
+msgstr "włączenie/wyłączenie trybów trików"
 
-msgid "show keyboard shortcuts"
+#, fuzzy
+msgid "change audio track"
+msgstr "Ta płyta CD nie ma ścieżek dźwiękowych"
+
+msgid "change video track"
 msgstr ""
 
 #, fuzzy
+msgid "change subtitle track"
+msgstr "Format podpisów Kate"
+
+msgid "show keyboard shortcuts"
+msgstr "wyświetlenie skrótów klawiatury"
+
 msgid "Interactive mode - keyboard controls:"
-msgstr "Interaktywne sterowanie z klawiatury"
+msgstr "Tryb interaktywny - sterowanie z klawiatury:"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Element pochłaniający obraz (domyślny to autovideosink)"
@@ -613,9 +624,8 @@ msgstr "Włączenie odtwarzania bez przerw"
 msgid "Shuffle playlist"
 msgstr "Przetasowanie listy odtwarzania"
 
-#, fuzzy
 msgid "Disable interactive control via the keyboard"
-msgstr "Interaktywne sterowanie z klawiatury"
+msgstr "Wyłączenie interaktywnego sterowania z klawiatury"
 
 msgid "Volume"
 msgstr "Głośność"
@@ -624,7 +634,7 @@ msgid "Playlist file containing input media files"
 msgstr "Plik listy odtwarzania zawierający wejściowe pliki multimedialne"
 
 msgid "Do not print any output (apart from errors)"
-msgstr ""
+msgstr "Bez wypisywania żadnego wyjścia (poza błędami)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -634,9 +644,4 @@ msgid "You must provide at least one filename or URI to play."
 msgstr "Trzeba podać przynajmniej jedną nazwę pliku lub URI do odtworzenia."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr ""
-
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "Wtyczka %s jest wymagana do otworzenia tego strumienia, ale nie jest "
-#~ "zainstalowana."
+msgstr "Klawisz 'k' wyświetla listę skrótów klawiatury.\n"
