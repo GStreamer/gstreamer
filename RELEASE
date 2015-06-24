@@ -1,22 +1,29 @@
 
-Release notes for GStreamer Editing Services 1.4.0
+Release notes for GStreamer Editing Services 1.5.2
 
 
-The GStreamer team is proud to announce a new feature release
-in the 1.0.x stable series of the GStreamer Editing Services.
+The GStreamer team is proud to announce a new development release
+in the 1.5.x development serie of the GStreamer Editing Services.
+
 
   
 
 Features of this release
     
-      * Add support to gst-validate, allowing us to easily write integration testsuites
-      * Add multifilesrc support
-      * Give a name/unique identifier to all GESTimelineElement in the timeline
-      * ges-launch: Cleanup and allow using encoding profiles from project files
 
 Bugs fixed in this release
      
-      * 738624 : gst-editing-services fails to build with current git gstreamer-validate via Cerbero
+      * 721602 : Pitivi renders videoless files when the projects begins with an image bigger then the project settings
+      * 727880 : Expose TitleSource children properties as any other child properties in a GESTrackElement
+      * 728634 : Expose outline-color in GES.TitleSource
+      * 728635 : Expose shaded-background in GES.TitleSource
+      * 729487 : The GESEffect.active property is deserialized from xges always as True
+      * 739527 : Loading a project the setting video track caps restriction leads to video source height to be wrong
+      * 740726 : track: [API]: ges_track_update_restriction_caps.
+      * 740727 : *source: new lines in xml break my parser.
+      * 743406 : Make sure the GESTextOverlayClip is registered on init
+      * 746354 : Malformed XGES syntax detection problems
+      * 709148 : [pitivi] Groups are not saved / serialized into formatters
 
 ==== Download ====
 
@@ -55,5 +62,13 @@ Applications
   
 Contributors to this release
     
+      * Edward Hervey
+      * Joris Valette
+      * Luis de Bethencourt
+      * Mathieu Duponchelle
+      * Nicolas Dufresne
+      * Sebastian Dröge
+      * Stefan Sauer
       * Thibault Saunier
+      * Tim-Philipp Müller
  
