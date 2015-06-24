@@ -4506,7 +4506,7 @@ gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client,
   if (stream_period && stream_period->period) {
     GstDateTime *t =
         gst_mpd_client_add_time_difference (availability_start_time,
-        stream_period->period->start * 1000);
+        stream_period->start * 1000);
     gst_date_time_unref (availability_start_time);
     availability_start_time = t;
   }
