@@ -1,9 +1,185 @@
-=== release 1.5.1 ===
+=== release 1.5.2 ===
 
-2015-06-07  Sebastian Dröge <slomo@coaxion.net>
+2015-06-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.1
+	  releasing 1.5.2
+
+2015-06-24 11:15:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/nl.po:
+	  po: Update translations
+
+2015-06-15 16:33:26 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Use gst_video_multiview_guess_half_aspect() function
+	  Use gst_video_multiview_guess_half_aspect() to guess if frame-packed
+	  stereoscopic video is full-frame per view or not.
+
+2015-06-16 17:49:05 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6015d26 to f74b2df
+
+2014-11-26 22:15:43 +0100  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Use gst_video_encoder_set_min_pts
+	  This method replace the manual adjustment of PTS and DTS to avoid
+	  negative DTS issues. Using this method will also update the segment so
+	  we don't loos sync.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740575
+
+2015-06-10 14:28:05 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/asfdemux/Makefile.am:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Add support for stereoscopic video metadata.
+	  Add parsing of stereoscopic metadata, and place into the caps to
+	  the decoder.
+	  Fix parsing of Advanced Mutual Exclustion objects.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711190
+	  Based on a patch by HyeJin Choi <meeshel78@hotmail.com>
+
+2014-10-05 00:54:59 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Add support for stereoscopic video
+	  Provide new frame-packing property to directly set
+	  x264enc frame packing, or pass through upstream settings
+	  The explicit layout from the frame-packing property is
+	  preferred over any info from the caps.
+
+2015-06-10 15:32:44 +0100  Chris Clayton <chris2553@googlemail.com>
+
+	* gst/xingmux/gstxingmux.c:
+	  xingmux: fix compiler warnings
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750596
+
+2015-06-09 15:28:46 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* Makefile.am:
+	  cruft: add the obsolete tmpl dir to cruft-dirs
+
+2015-06-09 11:30:34 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d9a3353 to 6015d26
+
+2015-06-08 23:08:11 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From d37af32 to d9a3353
+
+2015-06-07 23:06:47 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 21ba2e5 to d37af32
+
+2015-06-07 17:32:12 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From c408583 to 21ba2e5
+
+2015-06-07 17:02:31 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	  docs: remove variables that we define in the snippet from common
+	  This is syncing our Makefile.am with upstream gtkdoc.
+
+2015-06-07 17:16:30 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From d676993 to c408583
+
+2015-06-07 16:44:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.5.1 ===
+
+2015-06-07 11:05:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.5.1
+
+2015-06-07 11:05:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2015-06-07 09:36:00 +0200  Sebastian Dröge <sebastian@centricular.com>
 

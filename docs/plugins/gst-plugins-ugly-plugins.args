@@ -1159,6 +1159,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstX264Enc::frame-packing</NAME>
+<TYPE>GstX264EncFramePacking</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame Packing</NICK>
+<BLURB>Set frame packing mode for Stereoscopic content.</BLURB>
+<DEFAULT>Automatic (use incoming video information)</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstMad::half</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>

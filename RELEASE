@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.5.1
+Release notes for GStreamer Ugly Plugins 1.5.2
 
 
 The GStreamer team is pleased to announce the first release of the unstable
@@ -58,23 +58,11 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Features of this release
-    
-      * Parallel installability with 0.10.x series
-      * 
-
 Bugs fixed in this release
      
+      * 711190 : asfdemux: signal 3D video
       * 731351 : x264enc: Shift PTS and DTS with bframes
-      * 453322 : dvdreadsrc ignores chapter specification when starting playback
-      * 734471 : asfdemux: Should pass seek events upstream first
-      * 735070 : asfdemux: ASF file with H.264 video not playing back properly
-      * 735379 : mpeg2dec: use stride information from GstVideoFrame
-      * 737516 : gst-launch-1.0 videotestsrc ! x264enc ! decodebin ! autovideosink doesn't want to preroll
-      * 746781 : a52dec: audio noise/distortions when there are multiple AC-3 streams being decoded in parallel
-      * 746887 : mpeg2dec: fix a couple of leaks
-      * 748162 : asfdemux: can't seek to the offset which is bigger than 4G bytes in push mode
-      * 732288 : x264enc: Does not request enough buffers in allocation query
+      * 750596 : xingmux: FTBFS because of uninitialized variables
 
 ==== Download ====
 
@@ -111,17 +99,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Cliff Han
+      * Chris Clayton
       * Edward Hervey
-      * Guillaume Desmottes
       * Jan Schmidt
-      * Luis de Bethencourt
-      * Mark Nauwelaerts
+      * Matej Knopp
       * Nicolas Dufresne
       * Sebastian Dröge
-      * Simon Farnsworth
       * Stefan Sauer
-      * Thiago Santos
-      * Tim-Philipp Müller
-      * Vincent Penquerc'h
  
