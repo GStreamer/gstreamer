@@ -25,6 +25,9 @@
 /* The GIO modules directory. */
 #undef GIO_MODULE_DIR
 
+/* The GIO install prefix. */
+#undef GIO_PREFIX
+
 /* GStreamer API Version */
 #define GST_API_VERSION "1.0"
 
@@ -62,7 +65,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2015-06-07"
+#define GST_PACKAGE_RELEASE_DATETIME "2015-06-24"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -182,6 +185,9 @@
 /* defined if the compiler implements __FUNCTION__ */
 #undef HAVE_FUNCTION
 
+/* getifaddrs() and AF_LINK is available */
+#undef HAVE_GETIFADDRS_AF_LINK
+
 /* Define to 1 if you have the `getpagesize' function. */
 #undef HAVE_GETPAGESIZE
 
@@ -299,6 +305,9 @@
 
 /* Define to 1 if you have the `sigaction' function. */
 #undef HAVE_SIGACTION
+
+/* SIOCGIFCONF, SIOCGIFFLAGS and SIOCGIFHWADDR is available */
+#undef HAVE_SIOCGIFCONF_SIOCGIFFLAGS_SIOCGIFHWADDR
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -445,7 +454,7 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 1.5.1"
+#define PACKAGE_STRING "GStreamer 1.5.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
@@ -454,7 +463,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.5.1"
+#define PACKAGE_VERSION "1.5.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -498,7 +507,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "1.5.1"
+#define VERSION "1.5.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

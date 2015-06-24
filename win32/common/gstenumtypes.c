@@ -86,6 +86,8 @@ gst_buffer_flags_get_type (void)
         "delta-unit"},
     {C_FLAGS (GST_BUFFER_FLAG_TAG_MEMORY), "GST_BUFFER_FLAG_TAG_MEMORY",
         "tag-memory"},
+    {C_FLAGS (GST_BUFFER_FLAG_SYNC_AFTER), "GST_BUFFER_FLAG_SYNC_AFTER",
+        "sync-after"},
     {C_FLAGS (GST_BUFFER_FLAG_LAST), "GST_BUFFER_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };

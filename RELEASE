@@ -1,8 +1,8 @@
 
-Release notes for GStreamer 1.5.1
+Release notes for GStreamer 1.5.2
 
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.5 release series. The 1.5 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.5 release series
@@ -38,118 +38,23 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 736655 : basesink: preroll issue for some clips which audio is shorter than video
-      * 601853 : identity: sync=true ignores pipeline latency and does not present itself as live element
-      * 688625 : gst-launch: incorrect parsing behaviour with spaces and quotes
-      * 707605 : streamiddemux: New " reverse-funnel " element
-      * 725221 : Add GstUri object for URI handling
-      * 727826 : check: update internal libcheck copy from 0.9.8 to 0.9.12
-      * 730053 : baseparse: allow skipping more data than currently available
-      * 731176 : filesrc: fails when using fifos
-      * 732284 : bufferlist: optimisation: pre-allocate buffer array in one go with the buffer list
-      * 733119 : utils: Unref/release pads in error cases when linking pads
-      * 733131 : gstvalue: failure to deserialize gsttaglist
-      * 733171 : baseparse: handling of EOS when no output produced
-      * 733351 : queue2: Process SEEKING query
-      * 733741 : docs: document caps parameter of gst_base_src_set_caps
-      * 733814 : gst-launch: On W32 gst-launch does not finish correctly after getting SIGINT
-      * 734342 : pad: allow probes to remove the data item whilst returning PROBE_OK
-      * 734345 : tests: Add missing unrefs of objects after use
-      * 734360 : [API] bytereader: add _get_sub_reader() and _peek_sub_reader()
-      * 734470 : concat: New element for concatenating streams
-      * 734716 : bus: signal watched added in a new thread-default context can't be removed
-      * 735195 : bus: Missing API to remove a bus watch
-      * 735357 : pad: should not allow flush-stop on inactive pads
-      * 735896 : typefind: Run the default have-type handler after all application handlers
-      * 736012 : dashdemux hlsdemux mssdemux: playback failing due to pad EOS state
-      * 736377 : inspect: Says there custom functions where there arent
-      * 736455 : valve: typo in drop property description
-      * 736477 : check: Add a function to check destruction of objects
-      * 736877 : gsturi: Remove unnecessary code
-      * 736891 : input-selector: Can't unblock after emitting a " block " signal
-      * 737584 : configure.ac: require GLib 2.34
-      * 737616 : timedvaluecontrolsource: Add some signals about values changes
-      * 737762 : baseparse: leaks caps in gst_base_parse_process_streamheader
-      * 738202 : funnel: Does not forward sticky events if no data was received
-      * 738612 : several typos in Plugin Writer's Guide
-      * 739002 : capsfilter: Add an optional delayed caps change mode
-      * 739165 : debugutils: Truncate parameter values that are too long
-      * 739514 : doc: Do not use deprecated gtk-doc 'Rename to' tag
-      * 739518 : gst-inspect: add G_PARAM_DEPRECATED to known flags
-      * 739580 : basesink: Answer the query position when receiving it from upstream
-      * 739620 : input-selector: _activate_sinkpad conflates two different functions
-      * 739662 : gstobject: Add gst_object_has_parent()
-      * 739765 : caps: Add gst_caps_foreach() and gst_caps_map_in_place()
-      * 739767 : gstconfig: Put gstconfig.h into $(libdir)/gstreamer-1.0/include
-      * 740003 : pad: fail drop queries
-      * 740949 : inputselector: sticky events haven't send out when active track reach EOS.
-      * 741359 : check.h distributed unnecessarily
-      * 741425 : debugutils: Add a gst_debug_bin_to_dot_data() method
-      * 741550 : Incorrect check version advertised
-      * 741893 : inputselector: Get the active sinkpad again after taking the lock when handling events
-      * 742057 : Add missing interface documentation
-      * 742877 : Incorrect version comparison in preset_get_keyfile ()
-      * 743195 : uri: Add parsing unit test based on GNet
-      * 743335 : Fix documentation of GST_CHECKS and GST_CHECKS_IGNORE
-      * 743795 : gtask: add thread name support on OS X and iOS
-      * 744034 : fdsrc: MinGW Compilation error: unknown conversion type character 'l' in format
-      * 744253 : multiqueue: Memory leak with DASH stream
-      * 744281 : printf: Add support for %I32
-      * 744442 : Clash between gst_element_get_clock() and gst_pipeline_get_clock()
-      * 744520 : gstutils: check uri before using it in gst_pad_create_stream_id_internal
-      * 744572 : flowcombiner regressions
-      * 744777 : check: cast element in ASSERT_SET_STATE.
-      * 744877 : tools: bash completion for gst-inspect and gst-launch
-      * 745042 : utils: Add gst_bin_sync_children_states()
-      * 745122 : gst-uninstalled: add adaptivedemux paths from -bad
-      * 745143 : baseparse: Don't emit errors on EOS if we saw GAP events
-      * 745144 : gstvalue: Make sure GST_FOURCC_ARGS produces printable characters
-      * 745197 : pad: Don't fail latency query on unlinked pads
-      * 745210 : win32: Unnecessary LibXml include directive
-      * 745213 : Shorten __FILE__ in gst_debug_log output on all platforms.
-      * 745287 : basesink: drain query doesn't fully work to release v4l2 buffers
-      * 745319 : queue: can lock up the pipeline on serialized queries when downstream returns errors
-      * 745377 : v4l2src: Camera restarts when used with decodebin
-      * 745858 : check: tempnam deprecated warning
-      * 745927 : baseparse: does not preserve discont flag
-      * 746096 : printf: handle unsigned modifier for long long
-      * 746373 : New fundamental type for caps - GstFlagSet
-      * 746430 : tests: clock: Wrong testclock's name for test clock example.
-      * 746436 : tee: Add property that allows having all source pads unlinked
-      * 746518 : input-selector: eos is always forwarded, even from unselected pads
-      * 746585 : pluginloader: Fix typos
-      * 746809 : debugutils: Plot GstCapsFeatures in dot files.
-      * 746871 : bus: Segmentation fault in function gst_bus_set_flushing() when called with bus==NULL
-      * 747095 : Disable g-ir-scanner cache on build
-      * 747100 : tests: filesink: add test for GstFileSink render_list implemention
-      * 747119 : gstpad: Fix a typo in a doc string
-      * 747223 : test: filesink: add test to verify rendering buffers with multiple memory blocks
-      * 747392 : memory: add check for memory writability in resize()
-      * 747438 : doc: bufferlist: Update document for return value of gst_buffer_list_get
-      * 747439 : bufferlist: add check for writable object in insert or remove
-      * 747610 : Inconsistent bin children state when a child fails to switch from NULL to READY
-      * 747611 : inputselector: fix leak in gst_selector_pad_chain()
-      * 747690 : gstvalue: failure to deserialize bitmask
-      * 747731 : basesrc: Always setting segment.start as DTS on first buffer
-      * 747775 : typefind: leak in gst_type_find_element_src_event
-      * 747852 : pad: idle probe doesn't block pad from pushing data
-      * 748101 : tests: input selector unit test often fails under valgrind
-      * 748119 : GstMetaTransformFunction returns gboolean but its retval is discarded
-      * 748277 : test: memory: add test for allocation params
-      * 748345 : basesrc: Remove unused assignment
-      * 748414 : Invalid read when printing debug output containing '%%'
-      * 748739 : gstevent: remove duplicated header
-      * 749233 : fdsrc: docs: fix and update documentation
-      * 749258 : basesink: fix QoS/lateness checking if subclass implements prepare/prepare_list vfuncs
-      * 749391 : PTP network clock support
-      * 749904 : Remove docs/code-reviews
-      * 750172 : miniobject double WRITE | EXCLUSIVE lock succeeds despite part-miniobject.txt forbidding it
+      * 740502 : Add absolute property to GstDirectControlBinding
+      * 740575 : Fixing DTS in GStreamer
+      * 745366 : concat: Forward FLUSH_START / FLUSH_STOP events
+      * 746949 : concat: Add active-pad property
+      * 750027 : concat: Reset internal start offset to 0 after flushing seek
+      * 750033 : basetransform - allow collation/separation of buffers
+      * 750039 : Keeping buffers with shared memory alive
       * 750319 : memory: subclasses don't know map flags in unmap
-      * 750351 : gst-indent: Added support for gindent as executable name
-      * 750439 : playbin using fdsrc source hangs for with empty input
-      * 738237 : baseparse: parser is never marked as FLAG_LOST_SYNC on discont
-      * 747321 : basesrc: do not leak buffer pool in error case
-      * 737683 : fakesrc: the " pattern " property can be gotten but it is never set or used
+      * 750530 : ptp: FreeBSD, DragonFly and other BSDs don't have ifreq.ifw_hwaddr
+      * 750574 : netclientclock: Make the clock a wrapper clock around an internal clock
+      * 750761 : inputselector: Handle different duration track selection
+      * 750782 : pipeline: Add gst_pipeline_set_latency(), getter and GObject property
+      * 751026 : basesink: Properly handle buffer lists for the last-sample property
+      * 751047 : concat: Add adjust-base property
+      * 751107 : concat: when releasing pad, send EOS appropriately.
+      * 751235 : utils: get_compatible_pad does not fully respect filter caps
+      * 751420 : basesink: need to deep-copy last buffer list in drain
 
 ==== Download ====
 
@@ -186,75 +91,21 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Alex Ashley
-      * Andrei Sarakeev
-      * Arnaud Vrac
-      * Arun Raghavan
-      * Aurélien Zanelli
-      * Changbok Chea
-      * David Waring
-      * Duncan Palmer
+      * Alison Chaiken
+      * Carlos Rafael Giani
       * Edward Hervey
-      * Felix Schwarz
-      * Frédéric Wang
-      * Guillaume Desmottes
-      * Haakon Sporsheim
-      * Heinrich Fink
-      * HoonHee Lee
+      * Hyunjun
       * Hyunjun Ko
-      * Ilya Konstantinov
-      * Jan Alexander Steffens (heftig)
       * Jan Schmidt
-      * Jan Steffens
-      * Jason Litzinger
-      * Jian
-      * Jimmy Ohn
       * Jonas Holmberg
-      * Jose Antonio Santos Cadenas
-      * Linus Svensson
-      * Lubosz Sarnecki
-      * Luis de Bethencourt
-      * Marcin Kolny
-      * Mark Nauwelaerts
-      * Matej Knopp
+      * Lazar Claudiu
       * Mathieu Duponchelle
       * Matthew Waters
-      * Matthieu Bouron
-      * Michael Catanzaro
-      * Michał Dębski
-      * Mohammed Sameer
       * Nicolas Dufresne
-      * Nicolas Huet
-      * Nirbheek Chauhan
-      * Ognyan Tonchev
-      * Olivier Crête
-      * Peter Urbanec
-      * Philippe Normand
-      * Phillip Wood
-      * Prashant Gotarne
-      * Ramiro Polla
-      * Ravi Kiran K N
-      * Reynaldo H. Verdejo Pinochet
-      * Rémi Lefèvre
       * Sebastian Dröge
-      * Sebastian Rasmussen
       * Song Bing
-      * Srimanta Panda
       * Stefan Sauer
-      * Suhwang Kim
       * Thiago Santos
-      * Thibault Saunier
-      * Tiago
-      * Tiago Cesar Katcipis
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Vivia Nikolaidou
-      * Víctor Manuel Jáquez Leal
-      * William Manley
-      * Wim Taymans
-      * Wonchul Lee
-      * eunhae choi
-      * hoonhee.lee
       * Руслан Ижбулатов
  

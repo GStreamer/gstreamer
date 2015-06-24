@@ -1,9 +1,886 @@
-=== release 1.5.1 ===
+=== release 1.5.2 ===
 
-2015-06-07  Sebastian Dröge <slomo@coaxion.net>
+2015-06-24 22:49:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gstreamer-plugins.args:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstversion.h:
+	  Release 1.5.2
+
+2015-06-24 22:45:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
+
+2015-06-22 23:37:27 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* tests/check/gst/gstutils.c:
+	  tests: gstutils: fix wrong description of test element
+	  It is a fakesink with request pads, not a source
+
+2015-06-24 15:35:16 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/gstbufferpool.c:
+	  bufferpool: Fixed compiler warning
+	  The pool variable was unused when buidling with debug disabled.
+
+2015-06-24 11:13:40 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/cs.po:
+	* po/de.po:
+	* po/hu.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/uk.po:
+	* po/vi.po:
+	  po: Update translations
+
+2015-06-24 11:12:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* win32/common/libgstreamer.def:
+	  win32: Update .def file for new API
+
+2015-06-24 14:19:04 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: need to deep-copy last buffer list in drain
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751420
+
+2015-06-24 10:52:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbufferlist.c:
+	  bufferlist: Warn if copying a buffer fails in gst_buffer_list_copy_deep()
+
+2015-06-24 14:18:47 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbufferlist.c:
+	* gst/gstbufferlist.h:
+	* tests/check/gst/gstbufferlist.c:
+	* win32/common/libgstreamer.def:
+	  bufferlist: add new api gst_buffer_list_copy_deep
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751420
+
+2015-06-23 16:58:56 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* libs/gst/check/gstcheck.c:
+	* tests/check/gst/gstobject.c:
+	  gstcheck: Print newline in message handler
+	  The message handler is supposed to print a newline after the message
+	  just like the default message handler.
+
+2015-06-12 16:54:32 +0800  Song Bing <b06498@freescale.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Handle different duration track selection
+	  Support track switch from EOS track to non-EOS one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750761
+
+2015-06-12 16:52:46 +0800  Song Bing <b06498@freescale.com>
+
+	* gst/gstpad.c:
+	  pad: Clear EOS flag after received STREAM_START event
+	  Clear EOS flag after received STREAM_START event
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750761
+
+2015-06-22 14:30:49 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* tests/check/gst/gstutils.c:
+	  tests: gstutils: add tests for gst_element_get_compatible_pad
+	  Adds tests for gst_element_get_compatible_pad for when it has to
+	  request pads.
+	  Note that these tests don't cover the case when it has to request
+	  a pad that already exists.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751235
+
+2015-06-19 15:46:56 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/gstutils.c:
+	  utils: use caps when getting a compatible pad by template
+	  Do not ignore the caps argument when requesting a pad by template.
+	  This is particularly harmful when the pad caps query by default
+	  returns ANY so it will match the first template instead of the
+	  one that actually intersects with the caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751235
+
+2015-06-23 00:14:30 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstsample.h:
+	  gstsample.h: Include gstbufferlist.h now that it uses GstBufferList
+
+2015-06-17 16:12:13 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* plugins/elements/gstconcat.c:
+	  concat: when releasing pad, send EOS appropriately.
+	  Previously, concat sent an EOS if there was a next pad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751107
+
+2015-06-16 16:14:18 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstconcat.c:
+	* plugins/elements/gstconcat.h:
+	  concat: Add adjust-base property
+	  This disables the segment.base adjustments, which is useful if downstream
+	  takes care of base adjustments already (example: a combination of concat
+	  and streamsynchronizer)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751047
+
+2015-06-22 14:04:45 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: Unset the last buffer list if we only got a buffer
+	  Also remember any preroll buffer list.
+
+2015-06-22 13:33:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* win32/common/libgstreamer.def:
+	  sample: Add new API to the docs
+
+2015-06-22 20:02:55 +0900  Hyunjun <zzoon.ko@samsung.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: enable to get last sample including buffer list if needed
+	  In case of a buffer list rendering, last-sample is not updated.
+	  It needs to be updated and enable to get buffer list from last-sample.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751026
+
+2015-06-22 19:35:40 +0900  Hyunjun <zzoon.ko@samsung.com>
+
+	* gst/gstsample.c:
+	* gst/gstsample.h:
+	  sample: add gst_sample_set/get_buffer_list apis
+	  Allowed to set/get buffer list to sample if needed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751026
+
+2015-06-19 10:52:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* test.py:
+	  test.py: remove accidentally committed file
+
+2015-06-18 11:51:48 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstbuffer.c:
+	* gst/gstelementfactory.h:
+	* gst/gstsegment.h:
+	* gst/gstsystemclock.h:
+	* libs/gst/base/gstbasetransform.h:
+	  doc: Unify Since mark for attribute and enum
+	  As this show up as prose in the doc, simply make it consistent
+	  and "arguable" nicer to read.
+
+2015-06-18 11:48:50 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstbuffer.h:
+	  doc: Remove parenthesis around Since:
+	  This confuse the parser, hence it does not endup in the doc and the
+	  index properly.
+
+2015-05-06 16:44:48 +1000  Jan Schmidt <jan@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* win32/common/libgstreamer.def:
+	  Add GstParentBufferMeta
+	  A core meta which helps implement the old concept
+	  of sub-buffering in some situations, by making it
+	  possible for a buffer to keep a ref on a different
+	  parent buffer. The parent buffer is unreffed when
+	  the Meta is freed.
+	  This meta is used to ensure that a buffer whose
+	  memory is being shared to a child buffer isn't freed
+	  and returned to a buffer pool until the memory
+	  is.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750039
+
+2015-06-16 18:08:24 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/Makefile.am:
+	* libs/gst/base/Makefile.am:
+	* libs/gst/check/Makefile.am:
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/net/Makefile.am:
+	* test.py:
+	  gi: Use INTROSPECTION_INIT for --add-init-section
+	  This new define was added to common. The new init section fixed
+	  compilation warning found in the init line that was spread across
+	  all files.
+
+2015-06-16 17:46:44 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6015d26 to f74b2df
+
+2015-06-15 10:06:00 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstclock.h:
+	  clock: Fix _STIME_FORMAT macros
+	  This macro didn't work well as it relied on the sign on the last
+	  divided number (number of days). This value is most of the time
+	  zero, and zero is considered positive in printf. Instead, deal with
+	  the sign manually, and resuse the original macros for the rest. This
+	  actually simplify the macro a lot.
+
+2015-06-14 20:48:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefindelement: reset segment only once streaming has stopped
+	  Fixes the occasional criticals in the discoverer unit test.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745073
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750823
+
+2015-06-14 11:23:22 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	  doc: Add more missing symbols in lib-sections.txt
+	  These where causing broken links.
+
+2015-06-14 11:22:54 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* libs/gst/net/gstnetaddressmeta.c:
+	  doc: Fix reference to unknown type GstNetAddress
+
+2015-06-14 11:22:36 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/controller/gsttimedvaluecontrolsource.h:
+	  doc: Include and fix GstControlPoint
+
+2015-06-14 11:21:26 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	  doc: Add GstNetControlMessageMeta to the doc
+	  This is being referenced elsewhere, but results in broken links.
+	  It seems to be public API, so I think it should be in the doc.
+
+2015-06-14 10:59:51 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* libs/gst/base/gstpushsrc.h:
+	  doc: Document GstPushSrcClass
+
+2015-06-14 10:58:18 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads.h:
+	  doc: Better document new GstCollectData.ABI.abi.dts
+	  The doc generator get confused with the inline structure. So
+	  workaround by wrapping the inner of the structure with
+	  public/private mark, and document that GST_COLLECT_PADS_DTS macro
+	  shall be used to access this.
+
+2015-06-14 10:56:28 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbaseparse.h:
+	* libs/gst/net/gstnetcontrolmessagemeta.h:
+	* libs/gst/net/gstptpclock.h:
+	  doc: Various doc fixes for libgstreamer-base
+	  * Fix function name in sections.txt
+	  * Add few missing or fix miss-named
+	  * Workaround gtk-doc being confused with non typedef
+	  types (loose track of public/private
+
+2015-06-14 10:25:52 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstdevicemonitor.c:
+	* gst/gsturi.c:
+	* gst/gsturi.h:
+	* gst/gstvalue.c:
+	  doc: More doc warning fixes
+	  So from this point, the remaining warning for libgstreamer are about
+	  protected member not showing in the doc. This may need some discussion
+	  with upstream gtk-doc people.
+	  * Remove % in from of none macro
+	  * Fixed GST_TYPE_FAGS -> GST_TYPE_FAG_SET
+	  * Minor wording fix
+	  * Can't link to GstUri.port, so split the .port part
+
+2015-06-14 09:17:21 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gsturi.c:
+	  doc: In GstUri we meant nul-terminated, not %NULL
+	  %NULL refers to the pointer. I've written it this way in one
+	  word as this is what GLib uses.
+
+2015-06-13 21:02:20 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstplugin.h:
+	  doc: Cannot reference GST_PACKAGE_RELEASE_DATETIME
+	  So simply remove the % sign.
+
+2015-06-13 20:52:01 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstclock.c:
+	  doc: Fix typo in ref _clock_wait_for_sync()
+
+2015-06-13 20:37:34 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gsturi.c:
+	  doc: Fix GstUri doc typos
+	  * Use &perctn; instead of reserved character %
+	  * NULL take two L
+
+2015-06-13 20:19:59 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstallocator.h:
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* gst/gstbufferpool.h:
+	* gst/gstclock.h:
+	* gst/gsterror.h:
+	* gst/gstmemory.h:
+	* gst/gstmessage.h:
+	* gst/gstprotection.h:
+	* libs/gst/base/gstcollectpads.h:
+	* libs/gst/controller/gsttimedvaluecontrolsource.c:
+	  doc: Fix Since: marks
+	  There was few Since: mark missing their column. Also unify the way
+	  we set the Since mark on enum value and structure members. These
+	  sadly don't show up in the index.
+
+2015-06-13 20:01:27 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbuffer.c:
+	  doc: Add gst_buffer_copy_deep()
+
+2015-06-13 19:47:45 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* libs/gst/check/gstconsistencychecker.c:
+	  gi: Skip gst_consitency_checker_new
+	  This non boxed type cannot be allocated safely.
+
+2015-06-13 19:46:21 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	  doc: Add indexes of added APIs
+	  One of the nice feature in GTK doc is that it generate indexes
+	  of added APIs base on the since marker. Include that in our doc
+	  while fixing the issue of duplicate ID (produce xml contains that
+	  id it seems)
+
+2015-06-13 15:10:53 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* libs/gst/controller/gsttimedvaluecontrolsource.c:
+	  doc: Make ..._source_find_control_point_iter transfer none
+
+2015-06-13 14:40:43 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* libs/gst/net/gstntppacket.c:
+	  doc: Silence warning about unused gstntppacket section
+	  This API is internal.
+
+2015-06-13 14:37:42 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/net/gstntppacket.c:
+	  Revert "doc: Add GstNtpPacket to the doc"
+	  This reverts commit c4eb876961aba1092c4831a8feaf48d7be1e38ae.
+	  Oops, this is not a public API
+
+2015-06-13 14:21:41 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/net/gstntppacket.c:
+	  doc: Add GstNtpPacket to the doc
+
+2015-06-13 13:55:27 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* libs/gst/base/gstindex.c:
+	  doc: Remove gstindex from doc comment
+	  Moving that to normal comment to silence the generator. GstIndex
+	  is not in GStreamer library at the moment (removed from 0.10).
+
+2015-06-13 13:48:03 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads.c:
+	  gi: Set collectpads function param scope
+
+2015-06-13 13:42:58 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* libs/gst/base/gstbitreader.c:
+	* libs/gst/base/gstbytereader.c:
+	* libs/gst/base/gstbytewriter.c:
+	  gi: Skip allocator of non-boxed structure
+	  These are not usable as they are, and can easily lead to crash
+	  or leaks. This also silence warning from the scanner. If we manage to
+	  make this usable, we can then remove that mark, it will require
+	  to make this type boxed.
+
+2015-06-13 13:24:13 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	  doc: Give gstconfig a nice name
+	  As all other section do have a nice came case name, it seems
+	  more consistent.
+
+2015-06-13 13:19:21 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	  doc: Add missing gst_event_new/parse_protection
+
+2015-06-13 13:19:05 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	  doc: Give gstprotection section a nice title
+
+2015-06-13 13:14:30 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstevent.c:
+	  doc: Remove uneeded protectionevent section
+	  These functions are part of gstevent section already. Keep the doc,
+	  since it's good.
+
+2015-06-13 12:32:49 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gsttaglist.c:
+	  taglist: Add missing scope to func param
+	  This tell GI if this function is for actions (call) or is the
+	  answer of this method being asynchronous (async). In this case
+	  it's a call. This also silence warning from the GI scanner.
+
+2015-06-13 12:27:31 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstprotection.h:
+	  gstprotection: Add missing Since 1.6 mark
+
+2015-06-13 12:26:13 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstprotection.c:
+	  gstprection: _add_protection_meta() is transfer none
+	  Just like gst_buffer_add_meta() this function should also be
+	  transfer none. This also silence a gi warning about returning
+	  a copy of a non boxed bare structure.
+
+2015-06-13 12:25:19 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstprotection.c:
+	* gst/gstprotection.h:
+	* tests/check/gst/gstprotection.c:
+	  gstprotection: Add missing namespace to macro
+	  GST_PROTECTION_SYSTEM_ID_CAPS_FIELD was missing the GST_ namespace.
+	  Add it before its too late.
+
+2015-06-13 11:55:10 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstversion.h.in:
+	  doc: Keep SECTION: after the ifdef
+	  Otherwise GTK doc will see it as often as we include that files
+	  and warn about duplicated SECTION:
+
+2015-06-13 10:23:52 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstminiobject.c:
+	  gi: Skip mini object method that play with refcounting
+	  It make no sense to allow using that. Any use would lead to leak
+	  of crash. Note that GMiniObject is entirely unusable as you cannot
+	  cast from let's say GstBuffer to GstMiniObject.
+
+2015-06-13 15:05:05 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	  libs: more doc scanner fixes
+	  gstbasetransform.h:196: Warning: GstBase: "@submit_input_buffer" parameter unexpected at this location:
+	  * @submit_input_buffer: Function which accepts a new input buffer and pre-processes it.
+	  gstnetcontrolmessagemeta.c:103: Warning: GstNet: gst_buffer_add_net_control_message_meta: unknown parameter 'message' in documentation comment, should be 'addr'
+
+2015-06-13 09:37:46 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstminiobject.h:
+	  doc: Fix annoation for GstMiniObject
+	  Replacing reprecated "Ref Func:", "Unref Fun:" etc. comment block
+	  with appropriate (ref-func name) etc. annotation.
+
+2015-06-13 09:34:06 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstelementfactory.h:
+	  doc: Fix unbalanced parenthesis
+
+2015-06-13 09:30:24 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstclock.h:
+	  doc: Fix more typo
+
+2015-06-13 09:22:41 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstclock.h:
+	  doc: Fix type in previous commit
+	  Marker is (value .. not (alue.
+
+2015-06-13 09:19:27 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstclock.h:
+	* gst/gstelementfactory.h:
+	  doc: Don't use deprecated Value: and Type: comment
+	  Instead use appropriate annotation. Annotations can be added
+	  to the right of the constant name in a comment block.
+
+2015-06-12 17:07:38 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	  collectpads: Add new macro to the doc
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740575
+
+2015-06-12 17:07:26 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	  clock: Add new signed time macro to the doc
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740575
+
+2015-06-10 14:17:01 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: Don't initially send an invalid DTS
+	  Sending a possibly invalid DTS may confuse the muxers, which will
+	  then think the DTS is going backward.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740575
+
+2015-04-03 17:54:50 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* libs/gst/base/gstcollectpads.c:
+	* libs/gst/base/gstcollectpads.h:
+	* tests/check/libs/collectpads.c:
+	  collectpads: Add negative DTS support
+	  Make gst_collect_pads_clip_running_time() function also store the
+	  signed DTS in the CollectData. This signed DTS value can be used by
+	  muxers to properly handle streams where DTS can be negative initially.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740575
+
+2015-06-12 12:06:05 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/gstclock.h:
+	  clock: Add signed time utilities
+	  Add utility to print signed value of time. This is useful to
+	  trace running time values in gint64 or GstClockTimeDiff values.
+	  Additionally, define GST_CLOCK_STIME_NONE to indicate an invalid
+	  signed time value and validation macro. New macros are:
+	  GST_CLOCK_STIME_NONE
+	  GST_CLOCK_STIME_IS_VALID
+	  GST_STIME_FORMAT
+	  GST_STIME_ARGS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740575
+
+2015-06-10 20:44:26 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/gstmessage.c:
+	  message: add allow-none to gst_message_new_ function
+	  No restriction for creating messages without a source
+
+2015-06-12 13:45:33 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/common/libgstcontroller.def:
+	  win32: update .def file for new API
+
+2015-05-27 12:29:41 +0300  Lazar Claudiu <lazar.claudiu.florin@gmail.com>
+
+	* libs/gst/controller/gstdirectcontrolbinding.c:
+	* libs/gst/controller/gstdirectcontrolbinding.h:
+	* tests/check/libs/controller.c:
+	* tests/examples/controller/.gitignore:
+	* tests/examples/controller/Makefile.am:
+	* tests/examples/controller/absolute-example.c:
+	  controller: Added absolute direct control binding, example and test
+	  Fixes: 740502
+	  API: gst_direct_control_binding_new_absolute
+
+2015-06-04 00:03:16 +1000  Matthew Waters <matthew@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstallocator.h:
+	* gst/gstmemory.c:
+	* gst/gstmemory.h:
+	  memory: provide a mem_map_full that takes the GstMapInfo
+	  Follow up of 7130230ddb349d0ca7942abdba26b7558df055d1
+	  Provide the memory implementation the GstMapInfo that will be used to
+	  map/unmap the memory.  This allows the memory implementation to use
+	  some scratch space in GstMapInfo to e.g. track different map/unmap
+	  behaviour or store extra implementation defined data about the map
+	  in use.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750319
+
+2015-04-08 14:21:43 -0700  Alison Chaiken <alison_chaiken@mentor.com>
+
+	* docs/manual/basics-pads.xml:
+	  docs: manual: fix name reversal in basics-pads
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747532
+
+2015-06-11 23:06:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstelements_private.c:
+	  gst_writev: define UIO_MAXIOV on iOS/OSX
+	  Apparently it's only seton iOS/OSX if defined(KERNEL).
+
+2015-06-12 01:15:19 +1000  Jan Schmidt <jan@centricular.com>
+
+	* plugins/elements/gstelements_private.c:
+	  gst_writev: Respect UIO_MAXIOV limit for the iov array
+	  If we receive more than UIO_MAXIOV (1024 typically) buffers
+	  in a single writev call, fall back to consolidating them
+	  into one output buffer or multiple write calls.
+	  This could be made more optimal, but let's wait until it's
+	  ever a bottleneck for someone
+
+2015-06-11 12:34:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpipeline.c:
+	* gst/gstpipeline.h:
+	* win32/common/libgstreamer.def:
+	  pipeline: Add gst_pipeline_set_latency(), getter and GObject property
+	  This overrides the default latency handling and configures the specified
+	  latency instead of the minimum latency that was returned from the LATENCY
+	  query.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750782
+
+2015-06-11 11:37:30 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstconcat.c:
+	  concat: Add active-pad property
+	  https://bugzilla.gnome.org/show_bug.cgi?id=746949
+
+2015-06-11 11:05:53 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstconcat.c:
+	  concat: Also reset the current start offset when receiving a FLUSH_STOP on the srcpad
+
+2015-06-11 11:05:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstconcat.c:
+	  concat: Add some newlines to event handling code to make the code look a bit less dense
+
+2015-06-11 10:53:30 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstconcat.c:
+	  concat: Reset segment base offset after FLUSH_STOP with reset_time = TRUE
+	  If the reset_time value of a FLUSH_STOP event is set to TRUE, the pipeline
+	  will have the base_time of its elements reset. This means that the concat
+	  element's current_start_offset has to be reset to 0, since it was
+	  calculated with the old base-time in mind.
+	  Only FLUSH_STOP events coming from the active pad are looked at.
+	  Signed-off-by: Carlos Rafael Giani <dv@pseudoterminal.org>
+
+2015-03-28 16:46:32 +0100  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstconcat.c:
+	  concat: Forward FLUSH_START and FLUSH_STOP events
+	  Without this, seeking deadlocks if performed while the pipeline is paused.
+	  Only flush events coming from the active pad are forwarded.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745366
+
+2015-06-09 14:28:30 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* Makefile.am:
+	  cruft: add the obsolete tmpl dir to cruft-dirs
+
+2015-06-09 11:30:10 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d9a3353 to 6015d26
+
+2015-06-09 11:01:53 +0200  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstfilesink.c:
+	  filesink: Fix fsync/_commit usage
+	  _MSC_VER will only be defined when building *on* windows and not just
+	  *for* windows. Instead, use the G_OS_WIN32 define
+
+2015-06-09 10:59:42 +0200  Sebastian Dröge <sebastian@centricular.com>
 
 	* configure.ac:
-	  releasing 1.5.1
+	* libs/gst/helpers/gst-ptp-helper.c:
+	  ptp: Check for the actual API we use instead of just looking for __APPLE__
+	  Should fix the build on FreeBSD, DragonFly and other BSDs.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750530
+
+2015-06-08 17:10:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock: Use the new GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC flag
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750574
+
+2015-06-08 17:04:55 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock: Make the clock a wrapper clock around an internal clock
+	  The internal clock is only used for slaving against the remote clock, while
+	  the user-facing GstClock can be additionally slaved to another clock if
+	  desired. By default, if no master clock is set, this has exactly the same
+	  behaviour as before. If a master clock is set (which was not allowed before),
+	  the user-facing clock is reporting the remote clock as internal time and
+	  slaves this to the master clock.
+	  This also removes the weirdness that the internal time of the netclientclock
+	  was always the system clock time, and not the remote clock time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750574
+
+2015-06-08 23:07:40 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From d37af32 to d9a3353
+
+2015-06-08 20:00:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/fakesink.c:
+	  tests: fakesink: fix string leak in unit test
+
+2015-06-09 00:52:34 +1000  Jan Schmidt <jan@centricular.com>
+
+	* plugins/elements/gstfilesink.c:
+	  filesink: Fix Windows build by using _commit instead of fsync.
+
+2015-06-08 12:22:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptp: Make sure to always initialize the variables we put into the statistics structure later
+	  CID 1304676, 1304677, 1304678, 1304679.
+
+2015-06-08 12:02:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/helpers/gst-ptp-helper.c:
+	  ptp: Ensure that not too much is read from or written to struct ifreq.ifr_name
+
+2015-06-08 19:33:03 +1000  Jan Schmidt <jan@centricular.com>
+
+	* libs/gst/base/gstbasetransform.h:
+	  basetransform: Add Since markers for new vfuncs
+	  Add Since: 1.6 markers for the new submit_input_buffer() and
+	  generate_output() vfuncs
+
+2015-05-23 01:08:29 +1000  Jan Schmidt <jan@centricular.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gstbasetransform.h:
+	* tests/check/Makefile.am:
+	* tests/check/libs/.gitignore:
+	* tests/check/libs/test_transform.c:
+	* tests/check/libs/transform2.c:
+	  basetransform: Split input buffer processing from output generation
+	  Allow for sub-classes which want to collate incoming buffers or
+	  split them into multiple output buffers by separating the input
+	  buffer submission from output buffer generation and allowing
+	  for looping of one of the phases depending on pull or push mode
+	  operation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750033
+
+2015-04-16 10:32:02 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstbuffer.h:
+	* plugins/elements/gstfilesink.c:
+	  Add GST_BUFFER_FLAG_SYNC_AFTER flag, and implement in filesink.
+	  Makes it possible to get filesink to fsync() after rendering
+	  a buffer.
+
+2015-06-08 10:46:24 +0200  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptp: Fix build on Windows, and in general the GI build when PTP support was not available
+	  It's not going to work on Windows still, the helper process needs to be
+	  ported.
+
+2015-06-07 23:05:53 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 21ba2e5 to d37af32
+
+2015-06-07 17:31:50 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From c408583 to 21ba2e5
+
+2015-06-07 16:58:40 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	* docs/plugins/Makefile.am:
+	  docs: remove variables that we define in the snippet from common
+	  This is syncing our Makefile.am with upstream gtkdoc.
+
+2015-06-07 17:16:06 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From d676993 to c408583
+
+2015-06-07 16:44:26 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+2015-06-07 10:52:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstntppacket.c:
+	  netclientclock: The NTP poll interval is a signed int8, not unsigned
+
+=== release 1.5.1 ===
+
+2015-06-07 09:41:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gstreamer-plugins.args:
+	* docs/plugins/gstreamer-plugins.hierarchy:
+	* docs/plugins/gstreamer-plugins.signals:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstversion.h:
+	  Release 1.5.1
 
 2015-06-07 09:33:52 +0200  Sebastian Dröge <sebastian@centricular.com>
 

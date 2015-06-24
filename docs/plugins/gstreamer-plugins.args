@@ -1098,3 +1098,23 @@
 <DEFAULT></DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstConcat::active-pad</NAME>
+<TYPE>GstPad*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Active pad</NICK>
+<BLURB>Currently active src pad.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstConcat::adjust-base</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Adjust segment base</NICK>
+<BLURB>Adjust the base value of segments to ensure they are adjacent.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
