@@ -3,20 +3,20 @@
 # Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
 #
 # Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2012.
-# Balázs Úr <urbalazs@gmail.com>, 2014.
+# Balázs Úr <urbalazs@gmail.com>, 2014, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.4.1\n"
+"Project-Id-Version: gst-plugins-bad 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:36+0200\n"
-"PO-Revision-Date: 2014-08-31 11:18+0200\n"
+"POT-Creation-Date: 2015-06-24 11:15+0200\n"
+"PO-Revision-Date: 2015-06-14 08:15+0200\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.5\n"
+"X-Generator: Lokalize 1.2\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "format wasn't negotiated before get function"
@@ -25,7 +25,6 @@ msgstr "a formátum nem lett egyeztetve a függvény lekérése előtt"
 msgid "default GStreamer sound events audiosink"
 msgstr "alapértelmezett GStreamer hangesemények audiosink"
 
-#, fuzzy
 msgid ""
 "GStreamer can play audio using any number of output elements. Some possible "
 "choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
@@ -135,7 +134,7 @@ msgid "Describes the selected visualization element."
 msgstr "Leírja a kiválasztott képi megjelenítés elemet."
 
 msgid "OpenCV failed to load template image"
-msgstr ""
+msgstr "Az OpenCV-nek nem sikerült betöltenie a sablonképet"
 
 msgid "Could not read title information for DVD."
 msgstr "Nem lehet címinformációkat olvasni a DVD-ről."
@@ -193,7 +192,7 @@ msgstr ""
 "fájlnévre"
 
 msgid "Digitalzoom element cound't be created"
-msgstr ""
+msgstr "A digitális nagyítás elemet nem sikerült létrehozni"
 
 msgid "Subpicture format was not configured before data flow"
 msgstr "A részkép formátuma nem lett beállítva az adatfolyam előtt"

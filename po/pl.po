@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-bad.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2014.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2015.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.4.1\n"
+"Project-Id-Version: gst-plugins-bad 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:36+0200\n"
-"PO-Revision-Date: 2014-08-29 15:47+0200\n"
+"POT-Creation-Date: 2015-06-24 11:15+0200\n"
+"PO-Revision-Date: 2015-06-10 22:06+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -21,7 +21,6 @@ msgstr "format nie został wynegocjowany przed funkcją pobrania"
 msgid "default GStreamer sound events audiosink"
 msgstr "domyślny element GStreamera pochłaniający zdarzenia dźwiękowe"
 
-#, fuzzy
 msgid ""
 "GStreamer can play audio using any number of output elements. Some possible "
 "choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
@@ -131,7 +130,7 @@ msgid "Describes the selected visualization element."
 msgstr "Opisuje wybrany element wizualizujący."
 
 msgid "OpenCV failed to load template image"
-msgstr ""
+msgstr "Odczyt obrazu wzorca przez OpenCV nie powiódł się"
 
 msgid "Could not read title information for DVD."
 msgstr "Nie udało się odczytać informacji o tytułach dla DVD."
@@ -187,7 +186,7 @@ msgstr ""
 "Położenie pliku ustawiono na NULL, proszę ustawić na poprawną nazwę pliku"
 
 msgid "Digitalzoom element cound't be created"
-msgstr ""
+msgstr "Nie udało się utworzyć elementu Digitalzoom"
 
 msgid "Subpicture format was not configured before data flow"
 msgstr "Format podobrazu nie został skonfigurowany przed przepływem danych"
@@ -248,9 +247,3 @@ msgstr "Plik konfiguracyjny kanałów DVB nie zawiera żadnych kanałów"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Nie udało się odnaleźć szczegółów dla kanału DVB %s"
-
-#~ msgid "Couldn't get the Manifest's URI"
-#~ msgstr "Nie udało się uzyskać URI Manifestu"
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Nie udało się zapisać danych do pliku \"%s\"."

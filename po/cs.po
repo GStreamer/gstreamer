@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.4.1\n"
+"Project-Id-Version: gst-plugins-bad 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-07 09:36+0200\n"
-"PO-Revision-Date: 2015-02-17 10:20+0100\n"
+"POT-Creation-Date: 2015-06-24 11:15+0200\n"
+"PO-Revision-Date: 2015-06-17 14:19+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Gtranslator 2.91.6\n"
+"X-Generator: Gtranslator 2.91.7\n"
 
 msgid "format wasn't negotiated before get function"
 msgstr "formát nebyl vyjednán před získáním funkce"
@@ -28,7 +28,6 @@ msgstr "formát nebyl vyjednán před získáním funkce"
 msgid "default GStreamer sound events audiosink"
 msgstr "výchozí zvukový cíl GStreamer pro zvukové události"
 
-#, fuzzy
 msgid ""
 "GStreamer can play audio using any number of output elements. Some possible "
 "choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
@@ -134,7 +133,7 @@ msgid "Describes the selected visualization element."
 msgstr "Popisuje vybraný vizualizační element."
 
 msgid "OpenCV failed to load template image"
-msgstr ""
+msgstr "OpenCV selhalo při načítání obrazu šablony"
 
 msgid "Could not read title information for DVD."
 msgstr "Nezdařilo se přečtení informací o titulu DVD."
@@ -192,7 +191,7 @@ msgstr ""
 "souboru"
 
 msgid "Digitalzoom element cound't be created"
-msgstr ""
+msgstr "Nelze vytvořit prvek digitalzoom"
 
 msgid "Subpicture format was not configured before data flow"
 msgstr "Formát podřízeného obrázku nebyl nastaven před datovým tokem"
@@ -252,9 +251,3 @@ msgstr "Soubor s nastavením kanálů DVB neobsahuje žádné kanály"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Nelze najít podrobnosti ke kanálu DVB %s"
-
-#~ msgid "Couldn't get the Manifest's URI"
-#~ msgstr "Nelze získat adresu URI prohlášení."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Nezdařil se zápis do souboru „%s“."
