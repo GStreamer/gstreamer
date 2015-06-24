@@ -4900,13 +4900,20 @@ static void
 gst_base_sink_drain (GstBaseSink * basesink)
 {
   GstBuffer *old;
+  GstBufferList *old_list;
 
   GST_OBJECT_LOCK (basesink);
   if ((old = basesink->priv->last_buffer))
     basesink->priv->last_buffer = gst_buffer_copy_deep (old);
+
+  if ((old_list = basesink->priv->last_buffer_list))
+    basesink->priv->last_buffer_list = gst_buffer_list_copy_deep (old_list);
   GST_OBJECT_UNLOCK (basesink);
+
   if (old)
     gst_buffer_unref (old);
+  if (old_list)
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (old_list));
 }
 
 static gboolean
