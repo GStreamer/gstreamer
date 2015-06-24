@@ -141,6 +141,7 @@ EXPORTS
 	gst_buffer_is_all_memory_writable
 	gst_buffer_is_memory_range_writable
 	gst_buffer_iterate_meta
+	gst_buffer_list_copy_deep
 	gst_buffer_list_foreach
 	gst_buffer_list_get
 	gst_buffer_list_get_type
@@ -149,7 +150,6 @@ EXPORTS
 	gst_buffer_list_new
 	gst_buffer_list_new_sized
 	gst_buffer_list_remove
-	gst_buffer_list_copy_deep
 	gst_buffer_map
 	gst_buffer_map_range
 	gst_buffer_memcmp
