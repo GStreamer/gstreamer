@@ -4570,7 +4570,7 @@ gst_mpd_client_check_time_position (GstMpdClient * client,
     *diff = ts_microseconds - stream_now;
     return 1;
   }
-  if (client->mpd_node->timeShiftBufferDepth
+  if (client->mpd_node->timeShiftBufferDepth != -1
       && ts_microseconds <
       stream_now - client->mpd_node->timeShiftBufferDepth) {
     *diff = ts_microseconds - stream_now;
