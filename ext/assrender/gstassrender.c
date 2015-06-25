@@ -724,34 +724,40 @@ blit_bgra_premultiplied (GstAssRender * render, ASS_Image * ass_image,
     dst_x = ass_image->dst_x + x_off;
     dst_y = ass_image->dst_y + y_off;
 
-    if (dst_y >= height || dst_x >= width)
+    w = MIN (ass_image->w, width - dst_x);
+    h = MIN (ass_image->h, height - dst_y);
+    if (w <= 0 || h <= 0)
       goto next;
 
     alpha = 255 - (ass_image->color & 0xff);
+    if (!alpha)
+      goto next;
+
     r = ((ass_image->color) >> 24) & 0xff;
     g = ((ass_image->color) >> 16) & 0xff;
     b = ((ass_image->color) >> 8) & 0xff;
+
     src = ass_image->bitmap;
     dst = data + dst_y * stride + dst_x * 4;
 
-    w = MIN (ass_image->w, width - dst_x);
-    h = MIN (ass_image->h, height - dst_y);
     src_skip = ass_image->stride - w;
     dst_skip = stride - w * 4;
 
     for (y = 0; y < h; y++) {
       for (x = 0; x < w; x++) {
-        k = src[0] * alpha / 255;
-        if (dst[3] == 0) {
-          dst[3] = k;
-          dst[2] = (k * r) / 255;
-          dst[1] = (k * g) / 255;
-          dst[0] = (k * b) / 255;
-        } else {
-          dst[3] = k + (255 - k) * dst[3] / 255;
-          dst[2] = (k * r + (255 - k) * dst[2]) / 255;
-          dst[1] = (k * g + (255 - k) * dst[1]) / 255;
-          dst[0] = (k * b + (255 - k) * dst[0]) / 255;
+        if (src[0]) {
+          k = src[0] * alpha / 255;
+          if (dst[3] == 0) {
+            dst[3] = k;
+            dst[2] = (k * r) / 255;
+            dst[1] = (k * g) / 255;
+            dst[0] = (k * b) / 255;
+          } else {
+            dst[3] = k + (255 - k) * dst[3] / 255;
+            dst[2] = (k * r + (255 - k) * dst[2]) / 255;
+            dst[1] = (k * g + (255 - k) * dst[1]) / 255;
+            dst[0] = (k * b + (255 - k) * dst[0]) / 255;
+          }
         }
         src++;
         dst += 4;
