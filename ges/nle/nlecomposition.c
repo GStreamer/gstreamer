@@ -891,25 +891,6 @@ nle_composition_class_init (NleCompositionClass * klass)
   nleobject_properties[NLEOBJECT_PROP_DURATION] =
       g_object_class_find_property (gobject_class, "duration");
 
-  /**
-   * NleComposition::commit
-   * @comp: a #NleComposition
-   * @recurse: Whether to commit recursiverly into (NleComposition) children of
-   *           @object. This is used in case we have composition inside
-   *           a nlesource composition, telling it to commit the included
-   *           composition state.
-   *
-   * Action signal to commit all the pending changes of the composition and
-   * its children timing properties
-   *
-   * Returns: %TRUE if changes have been commited, %FALSE if nothing had to
-   * be commited
-   */
-  _signals[COMMIT_SIGNAL] = g_signal_new ("commit", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (NleObjectClass, commit_signal_handler), NULL, NULL, NULL,
-      G_TYPE_BOOLEAN, 1, G_TYPE_BOOLEAN);
-
   _signals[COMMITED_SIGNAL] =
       g_signal_new ("commited", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
       0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,

@@ -80,6 +80,14 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  COMMIT_SIGNAL,
+  LAST_SIGNAL
+};
+
+static guint _signals[LAST_SIGNAL] = { 0 };
+
 static GParamSpec *properties[PROP_LAST];
 
 static void nle_object_dispose (GObject * object);
@@ -236,6 +244,25 @@ nle_object_class_init (NleObjectClass * klass)
       G_PARAM_READWRITE);
   g_object_class_install_property (gobject_class, PROP_EXPANDABLE,
       properties[PROP_EXPANDABLE]);
+
+  /**
+   * NleObject::commit
+   * @object: a #NleObject
+   * @recurse: Whether to commit recursiverly into (NleComposition) children of
+   *           @object. This is used in case we have composition inside
+   *           a nlesource composition, telling it to commit the included
+   *           composition state.
+   *
+   * Action signal to commit all the pending changes of the composition and
+   * its children timing properties
+   *
+   * Returns: %TRUE if changes have been commited, %FALSE if nothing had to
+   * be commited
+   */
+  _signals[COMMIT_SIGNAL] = g_signal_new ("commit", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (NleObjectClass, commit_signal_handler), NULL, NULL, NULL,
+      G_TYPE_BOOLEAN, 1, G_TYPE_BOOLEAN);
 }
 
 static void

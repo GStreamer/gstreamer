@@ -1,5 +1,4 @@
 #include "common.h"
-#include "../../../ges/nle/nleobject.h"
 
 void
 poll_the_bus (GstBus * bus)
@@ -30,6 +29,16 @@ poll_the_bus (GstBus * bus)
       gst_mini_object_unref (GST_MINI_OBJECT (message));
     }
   }
+}
+
+static gboolean
+nle_object_commit (GstElement * nlesource, gboolean recurse)
+{
+  gboolean ret;
+
+  g_signal_emit_by_name (nlesource, "commit", recurse, &ret);
+
+  return ret;
 }
 
 GstElement *
@@ -178,7 +187,7 @@ new_nle_src (const gchar * name, guint64 start, gint64 duration, gint priority)
   g_object_set (G_OBJECT (nlesource),
       "start", start,
       "duration", duration, "inpoint", start, "priority", priority, NULL);
-  nle_object_commit (NLE_OBJECT (nlesource), FALSE);
+  nle_object_commit (nlesource, FALSE);
 
   return nlesource;
 }
@@ -370,7 +379,7 @@ commit_and_wait (GstElement * comp, gboolean * ret)
   gulong handler_id =
       g_signal_connect (comp, "commited", (GCallback) commited_cb, NULL);
   g_mutex_lock (&lock);
-  *ret = nle_object_commit (NLE_OBJECT (comp), TRUE);
+  *ret = nle_object_commit (comp, TRUE);
   g_cond_wait (&cond, &lock);
   g_mutex_unlock (&lock);
   g_signal_handler_disconnect (comp, handler_id);
