@@ -164,6 +164,37 @@ gst_rtsp_src_buffer_mode_get_type (void)
   return buffer_mode_type;
 }
 
+enum _GstRtspSrcNtpTimeSource
+{
+  NTP_TIME_SOURCE_NTP,
+  NTP_TIME_SOURCE_UNIX,
+  NTP_TIME_SOURCE_RUNNING_TIME,
+  NTP_TIME_SOURCE_CLOCK_TIME
+};
+
+#define GST_TYPE_RTSP_SRC_NTP_TIME_SOURCE (gst_rtsp_src_ntp_time_source_get_type())
+static GType
+gst_rtsp_src_ntp_time_source_get_type (void)
+{
+  static GType ntp_time_source_type = 0;
+  static const GEnumValue ntp_time_source_values[] = {
+    {NTP_TIME_SOURCE_NTP, "NTP time based on realtime clock", "ntp"},
+    {NTP_TIME_SOURCE_UNIX, "UNIX time based on realtime clock", "unix"},
+    {NTP_TIME_SOURCE_RUNNING_TIME,
+          "Running time based on pipeline clock",
+        "running-time"},
+    {NTP_TIME_SOURCE_CLOCK_TIME, "Pipeline clock time", "clock-time"},
+    {0, NULL, NULL},
+  };
+
+  if (!ntp_time_source_type) {
+    ntp_time_source_type =
+        g_enum_register_static ("GstRTSPSrcNtpTimeSource",
+        ntp_time_source_values);
+  }
+  return ntp_time_source_type;
+}
+
 #define AES_128_KEY_LEN 16
 #define AES_256_KEY_LEN 32
 
@@ -199,6 +230,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_TLS_DATABASE     NULL
 #define DEFAULT_TLS_INTERACTION     NULL
 #define DEFAULT_DO_RETRANSMISSION        TRUE
+#define DEFAULT_NTP_TIME_SOURCE  NTP_TIME_SOURCE_NTP
 
 enum
 {
@@ -234,7 +266,8 @@ enum
   PROP_TLS_VALIDATION_FLAGS,
   PROP_TLS_DATABASE,
   PROP_TLS_INTERACTION,
-  PROP_DO_RETRANSMISSION
+  PROP_DO_RETRANSMISSION,
+  PROP_NTP_TIME_SOURCE
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -605,9 +638,10 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_USE_PIPELINE_CLOCK,
       g_param_spec_boolean ("use-pipeline-clock", "Use pipeline clock",
-          "Use the pipeline running-time to set the NTP time in the RTCP SR messages",
+          "Use the pipeline running-time to set the NTP time in the RTCP SR messages"
+          "(DEPRECATED: Use ntp-time-source property)",
           DEFAULT_USE_PIPELINE_CLOCK,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
 
   g_object_class_install_property (gobject_class, PROP_SDES,
       g_param_spec_boxed ("sdes", "SDES",
@@ -668,6 +702,20 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_param_spec_boolean ("do-retransmission", "Retransmission",
           "Ask the server to retransmit lost packets",
           DEFAULT_DO_RETRANSMISSION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRTSPSrc::ntp-time-source:
+   *
+   * allows to select the time source that should be used
+   * for the NTP time in RTCP packets
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_NTP_TIME_SOURCE,
+      g_param_spec_enum ("ntp-time-source", "NTP Time Source",
+          "NTP time source for RTCP packets",
+          GST_TYPE_RTSP_SRC_NTP_TIME_SOURCE, DEFAULT_NTP_TIME_SOURCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -815,6 +863,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->tls_database = DEFAULT_TLS_DATABASE;
   src->tls_interaction = DEFAULT_TLS_INTERACTION;
   src->do_retransmission = DEFAULT_DO_RETRANSMISSION;
+  src->ntp_time_source = DEFAULT_NTP_TIME_SOURCE;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1089,6 +1138,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_DO_RETRANSMISSION:
       rtspsrc->do_retransmission = g_value_get_boolean (value);
       break;
+    case PROP_NTP_TIME_SOURCE:
+      rtspsrc->ntp_time_source = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1225,6 +1277,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_DO_RETRANSMISSION:
       g_value_set_boolean (value, rtspsrc->do_retransmission);
+      break;
+    case PROP_NTP_TIME_SOURCE:
+      g_value_set_enum (value, rtspsrc->ntp_time_source);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3354,9 +3409,15 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
         g_object_set (src->manager, "ntp-sync", src->ntp_sync, NULL);
       }
 
-      if (g_object_class_find_property (klass, "use-pipeline-clock")) {
-        g_object_set (src->manager, "use-pipeline-clock",
-            src->use_pipeline_clock, NULL);
+      if (src->use_pipeline_clock) {
+        if (g_object_class_find_property (klass, "use-pipeline-clock")) {
+          g_object_set (src->manager, "use-pipeline-clock", TRUE, NULL);
+        }
+      } else {
+        if (g_object_class_find_property (klass, "ntp-time-source")) {
+          g_object_set (src->manager, "ntp-time-source", src->ntp_time_source,
+              NULL);
+        }
       }
 
       if (src->sdes && g_object_class_find_property (klass, "sdes")) {
