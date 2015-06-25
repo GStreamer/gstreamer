@@ -30,18 +30,18 @@
 G_BEGIN_DECLS
 
 GstPad *nle_object_ghost_pad (NleObject * object,
-    const gchar * name, GstPad * target);
+    const gchar * name, GstPad * target) G_GNUC_INTERNAL;
 
 GstPad *nle_object_ghost_pad_no_target (NleObject * object,
-    const gchar * name, GstPadDirection dir, GstPadTemplate *templ);
+    const gchar * name, GstPadDirection dir, GstPadTemplate *templ) G_GNUC_INTERNAL;
 
 gboolean nle_object_ghost_pad_set_target (NleObject * object,
-    GstPad * ghost, GstPad * target);
+    GstPad * ghost, GstPad * target) G_GNUC_INTERNAL;
 
-void nle_object_remove_ghost_pad (NleObject * object, GstPad * ghost);
-GstEvent * nle_object_translate_incoming_seek (NleObject * object, GstEvent * event);
+void nle_object_remove_ghost_pad (NleObject * object, GstPad * ghost) G_GNUC_INTERNAL;
+GstEvent * nle_object_translate_incoming_seek (NleObject * object, GstEvent * event) G_GNUC_INTERNAL;
 
-void nle_init_ghostpad_category (void);
+void nle_init_ghostpad_category (void) G_GNUC_INTERNAL;
 
 G_END_DECLS
 

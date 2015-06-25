@@ -71,20 +71,20 @@ struct _NleOperationClass
   void	(*input_priority_changed) (NleOperation * operation, GstPad *pad, guint32 priority);
 };
 
-GstPad * get_unlinked_sink_ghost_pad (NleOperation * operation);
+GstPad * get_unlinked_sink_ghost_pad (NleOperation * operation) G_GNUC_INTERNAL;
 
 void
 nle_operation_signal_input_priority_changed(NleOperation * operation, GstPad *pad,
-					    guint32 priority);
+					    guint32 priority) G_GNUC_INTERNAL;
 
 void nle_operation_update_base_time (NleOperation *operation,
-                                     GstClockTime timestamp);
+                                     GstClockTime timestamp) G_GNUC_INTERNAL;
 
-void nle_operation_hard_cleanup (NleOperation *operation);
+void nle_operation_hard_cleanup (NleOperation *operation) G_GNUC_INTERNAL;
 
 
 /* normal GOperation stuff */
-GType nle_operation_get_type (void);
+GType nle_operation_get_type (void) G_GNUC_INTERNAL;
 
 G_END_DECLS
 #endif /* __NLE_OPERATION_H__ */

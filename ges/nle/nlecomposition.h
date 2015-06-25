@@ -60,7 +60,7 @@ struct _NleCompositionClass
   NleObjectClass parent_class;
 };
 
-GType nle_composition_get_type (void);
+GType nle_composition_get_type (void) G_GNUC_INTERNAL;
 
 G_END_DECLS
 #endif /* __NLE_COMPOSITION_H__ */

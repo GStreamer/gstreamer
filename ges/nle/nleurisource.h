@@ -51,7 +51,7 @@ struct _NleURISourceClass
   NleSourceClass parent_class;
 };
 
-GType nle_urisource_get_type (void);
+GType nle_urisource_get_type (void) G_GNUC_INTERNAL;
 
 G_END_DECLS
 #endif /* __NLE_URI_SOURCE_H__ */

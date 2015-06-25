@@ -141,32 +141,32 @@ struct _NleObjectClass
     gboolean (*commit) (NleObject * object, gboolean recurse);
 };
 
-GType nle_object_get_type (void);
+GType nle_object_get_type (void)G_GNUC_INTERNAL;
 
 gboolean
 nle_object_to_media_time (NleObject * object, GstClockTime otime,
-			  GstClockTime * mtime);
+			  GstClockTime * mtime) G_GNUC_INTERNAL;
 
 gboolean
 nle_media_to_object_time (NleObject * object, GstClockTime mtime,
-			  GstClockTime * otime);
+			  GstClockTime * otime) G_GNUC_INTERNAL;
 
 void
-nle_object_set_caps (NleObject * object, const GstCaps * caps);
+nle_object_set_caps (NleObject * object, const GstCaps * caps) G_GNUC_INTERNAL;
 
 void
-nle_object_set_commit_needed (NleObject *object);
+nle_object_set_commit_needed (NleObject *object) G_GNUC_INTERNAL;
 
 gboolean
-nle_object_commit (NleObject *object, gboolean recurse);
+nle_object_commit (NleObject *object, gboolean recurse) G_GNUC_INTERNAL;
 
 void
-nle_object_reset (NleObject *object);
+nle_object_reset (NleObject *object) G_GNUC_INTERNAL;
 
 GstStateChangeReturn
-nle_object_cleanup (NleObject * object);
+nle_object_cleanup (NleObject * object) G_GNUC_INTERNAL;
 
-void nle_object_seek_all_children (NleObject *object, GstEvent *seek_event);
+void nle_object_seek_all_children (NleObject *object, GstEvent *seek_event) G_GNUC_INTERNAL;
 
 G_END_DECLS
 #endif /* __NLE_OBJECT_H__ */

@@ -60,7 +60,7 @@ struct _NleSourceClass
     gboolean (*control_element) (NleSource * source, GstElement * element);
 };
 
-GType nle_source_get_type (void);
+GType nle_source_get_type (void) G_GNUC_INTERNAL;
 
 G_END_DECLS
 #endif /* __NLE_SOURCE_H__ */

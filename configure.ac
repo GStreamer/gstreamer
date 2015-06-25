@@ -392,7 +392,7 @@ AC_SUBST(GST_ALL_LDFLAGS)
 dnl GST_LIB_LDFLAGS
 dnl linker flags shared by all libraries
 dnl LDFLAGS modifier defining exported symbols from built libraries
-GST_LIB_LDFLAGS=" -export-symbols-regex \^_*\(nle\|ges_\|GES_\).*"
+GST_LIB_LDFLAGS=" -export-symbols-regex \^_*\(ges_\|GES_\).*"
 AC_SUBST(GST_LIB_LDFLAGS)
 
 dnl *** output files ***
