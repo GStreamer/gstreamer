@@ -1082,6 +1082,7 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   GstStreamPeriod *period;
   GList *iter;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
+  gboolean switched_period = FALSE;
 
   gst_event_parse_seek (seek, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
@@ -1120,10 +1121,12 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     if (!gst_mpd_client_set_period_index (dashdemux->client, current_period)
         || !gst_dash_demux_setup_all_streams (dashdemux))
       return FALSE;
+    switched_period = TRUE;
   }
 
   /* Update the current sequence on all streams */
-  for (iter = demux->streams; iter; iter = g_list_next (iter)) {
+  for (iter = (switched_period ? demux->next_streams : demux->streams); iter;
+      iter = g_list_next (iter)) {
     GstDashDemuxStream *dashstream = iter->data;
 
     if (flags & GST_SEEK_FLAG_FLUSH) {
