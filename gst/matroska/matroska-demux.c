@@ -4602,7 +4602,7 @@ pause:
       /* perform EOS logic */
 
       /* If we were in the headers, make sure we send no-more-pads.
-         This will ensure decodebin2 does not get stuck thinking
+         This will ensure decodebin does not get stuck thinking
          the chain is not complete yet, and waiting indefinitely. */
       if (G_UNLIKELY (demux->common.state == GST_MATROSKA_READ_STATE_HEADER)) {
         if (demux->common.src->len == 0) {
