@@ -1500,9 +1500,7 @@ gst_deinterlace_output_frame (GstDeinterlace * self, gboolean flushing)
 
 restart:
   ret = GST_FLOW_OK;
-  fields_required = 0;
   hl_no_lock = FALSE;
-  same_buffer = FALSE;
   flush_one = FALSE;
   self->need_more = FALSE;
   phase = self->pattern_phase;
