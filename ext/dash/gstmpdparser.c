@@ -3761,13 +3761,17 @@ gst_mpd_parser_get_stream_presentation_offset (GstMpdClient * client,
     guint stream_idx)
 {
   GstActiveStream *stream = NULL;
+  GstStreamPeriod *stream_period = gst_mpdparser_get_stream_period (client);
 
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->active_streams != NULL, FALSE);
   stream = g_list_nth_data (client->active_streams, stream_idx);
   g_return_val_if_fail (stream != NULL, FALSE);
 
-  return stream->presentationTimeOffset;
+  if (stream->presentationTimeOffset > stream_period->start)
+    return stream->presentationTimeOffset - stream_period->start;
+  else
+    return 0;
 }
 
 gboolean
