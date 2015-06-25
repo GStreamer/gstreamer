@@ -284,7 +284,7 @@ G_GNUC_INTERNAL gint element_end_compare                  (GESTimelineElement * 
 G_GNUC_INTERNAL GstElementFactory *
 ges_get_compositor_factory                                (void);
 
-void
+G_GNUC_INTERNAL void
 ges_base_xml_formatter_set_timeline_properties(GESBaseXmlFormatter * self,
 					       GESTimeline *timeline,
 					       const gchar *properties,
@@ -294,7 +294,7 @@ ges_base_xml_formatter_set_timeline_properties(GESBaseXmlFormatter * self,
 /****************************************************
  *        GESCommandLineFormatter                   *
  ****************************************************/
-GOptionGroup *
+G_GNUC_INTERNAL GOptionGroup *
 _ges_command_line_formatter_get_option_group (void);
 
 /****************************************************
@@ -306,12 +306,12 @@ G_GNUC_INTERNAL void _ges_container_sort_children_by_end  (GESContainer *contain
 /****************************************************
  *                  GESClip                         *
  ****************************************************/
-void              ges_clip_set_layer              (GESClip *clip, GESLayer  *layer);
-gboolean          ges_clip_is_moving_from_layer   (GESClip *clip);
-guint32           ges_clip_get_layer_priority     (GESClip *clip);
-void              ges_clip_set_moving_from_layer  (GESClip *clip, gboolean is_moving);
-GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);
-GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType type);
+G_GNUC_INTERNAL void              ges_clip_set_layer              (GESClip *clip, GESLayer  *layer);
+G_GNUC_INTERNAL gboolean          ges_clip_is_moving_from_layer   (GESClip *clip);
+G_GNUC_INTERNAL guint32           ges_clip_get_layer_priority     (GESClip *clip);
+G_GNUC_INTERNAL void              ges_clip_set_moving_from_layer  (GESClip *clip, gboolean is_moving);
+G_GNUC_INTERNAL GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);
+G_GNUC_INTERNAL GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType type);
 
 
 /****************************************************

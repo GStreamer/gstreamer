@@ -73,11 +73,11 @@ struct _GstFramePositionnerMeta {
   guint zorder;
 };
 
-void ges_frame_positionner_set_source_and_filter (GstFramePositionner *pos,
+G_GNUC_INTERNAL void ges_frame_positionner_set_source_and_filter (GstFramePositionner *pos,
 						  GESTrackElement *trksrc,
 						  GstElement *capsfilter);
-GType gst_frame_positionner_get_type (void);
-GType
+G_GNUC_INTERNAL GType gst_frame_positionner_get_type (void);
+G_GNUC_INTERNAL GType
 gst_frame_positionner_meta_api_get_type (void);
 
 G_END_DECLS

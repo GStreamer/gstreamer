@@ -48,17 +48,17 @@ struct _GESStructureParserClass
   GObjectClass parent_class;
 };
 
-GType ges_structure_parser_get_type (void) G_GNUC_CONST;
+G_GNUC_INTERNAL GType ges_structure_parser_get_type (void) G_GNUC_CONST;
 
-GError * ges_structure_parser_get_error (GESStructureParser *self);
-void ges_structure_parser_parse_string (GESStructureParser *self, const gchar *string, gboolean is_symbol);
-void ges_structure_parser_parse_default (GESStructureParser *self, const gchar *text);
-void ges_structure_parser_parse_whitespace (GESStructureParser *self);
-void ges_structure_parser_parse_symbol (GESStructureParser *self, const gchar *symbol);
-void ges_structure_parser_parse_setter (GESStructureParser *self, const gchar *setter);
-void ges_structure_parser_end_of_file (GESStructureParser *self);
+G_GNUC_INTERNAL GError * ges_structure_parser_get_error (GESStructureParser *self);
+G_GNUC_INTERNAL void ges_structure_parser_parse_string (GESStructureParser *self, const gchar *string, gboolean is_symbol);
+G_GNUC_INTERNAL void ges_structure_parser_parse_default (GESStructureParser *self, const gchar *text);
+G_GNUC_INTERNAL void ges_structure_parser_parse_whitespace (GESStructureParser *self);
+G_GNUC_INTERNAL void ges_structure_parser_parse_symbol (GESStructureParser *self, const gchar *symbol);
+G_GNUC_INTERNAL void ges_structure_parser_parse_setter (GESStructureParser *self, const gchar *setter);
+G_GNUC_INTERNAL void ges_structure_parser_end_of_file (GESStructureParser *self);
 
-GESStructureParser *ges_structure_parser_new(void);
+G_GNUC_INTERNAL GESStructureParser *ges_structure_parser_new(void);
 G_END_DECLS
 
 #endif  /* _GES_STRUCTURE_PARSER_H */

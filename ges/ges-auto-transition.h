@@ -69,9 +69,9 @@ struct _GESAutoTransition
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_auto_transition_get_type (void) G_GNUC_CONST;
+G_GNUC_INTERNAL GType ges_auto_transition_get_type (void) G_GNUC_CONST;
 
-GESAutoTransition * ges_auto_transition_new (GESTrackElement * transition,
+G_GNUC_INTERNAL GESAutoTransition * ges_auto_transition_new (GESTrackElement * transition,
                                              GESTrackElement * previous_source,
                                              GESTrackElement * next_source);
 
