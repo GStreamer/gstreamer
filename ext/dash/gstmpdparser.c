@@ -3614,6 +3614,7 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
   } else {
     GstClockTime duration =
         gst_mpd_client_get_segment_duration (client, stream, NULL);
+    GstStreamPeriod *stream_period = gst_mpdparser_get_stream_period (client);
     guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
 
     g_return_val_if_fail (stream->cur_seg_template->
@@ -3621,6 +3622,12 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
     if (!GST_CLOCK_TIME_IS_VALID (duration)) {
       return FALSE;
     }
+
+    if (ts > stream_period->start)
+      ts -= stream_period->start;
+    else
+      ts = 0;
+
     index = ts / duration;
     if (segments_count > 0 && index >= segments_count) {
       stream->segment_index = segments_count;
