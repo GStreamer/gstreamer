@@ -1033,11 +1033,11 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
       if (demux->next_streams) {
         gst_adaptive_demux_expose_streams (demux, FALSE);
       } else {
-        GstEvent *seg_evt;
         GList *iter;
 
         for (iter = demux->streams; iter; iter = g_list_next (iter)) {
           GstAdaptiveDemuxStream *stream = iter->data;
+          GstEvent *seg_evt;
           GstClockTime offset;
 
           stream->segment = demux->segment;
@@ -1047,8 +1047,8 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
           seg_evt = gst_event_new_segment (&stream->segment);
           gst_event_set_seqnum (seg_evt, demux->priv->segment_seqnum);
           gst_event_replace (&stream->pending_segment, seg_evt);
+          gst_event_unref (seg_evt);
         }
-        gst_event_unref (seg_evt);
       }
 
       /* Restart the demux */
