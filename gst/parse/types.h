@@ -15,6 +15,7 @@ typedef struct {
   reference_t src;
   reference_t sink;
   GstCaps *caps;
+  gboolean all_pads;
 } link_t;
 
 typedef struct {

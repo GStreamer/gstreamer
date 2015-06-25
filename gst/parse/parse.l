@@ -50,7 +50,7 @@ PRINT (const char *format, ...)
 
 %}
 
-_operator [(){}.!,;=]
+_operator [(){}.!:,;=]
 _identifier [[:alnum:]_][[:alnum:]\-_%:]*
 
 _char ("\\".)|([^[:space:]])
@@ -75,7 +75,7 @@ _mimetype {_mimechar}+"/"{_mimechar}+
 _capschar ("\\".)|([^\;!])
 _capsstring {_capschar}+
 _caps {_mimetype}(","[^!]|{_capsstring})*
-_link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)*"!")|("!")
+_link ([!:][[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)*[!:])|([!:])
 
 %x value
 %option noyywrap
@@ -128,21 +128,33 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)
 
 {_link} {
     gchar *c = yytext;
+    gchar op;
+    gboolean link_all;
+
     PRINT ("LINK: %s", yytext);
+    /* First char is a link operator */
+    link_all = (*c == ':');
     c++;
     if (*c) {
       while (g_ascii_isspace (*c)) c++;
       c = yylval->ss = gst_parse_strdup (c);
       while (*c) c++;
-      if (*--c != '!')
+      /* Last non-space char is a link operator */
+      op = *--c;
+      if (op != '!' && op != ':')
 	g_assert_not_reached ();
+      if (op == ':')
+        link_all = TRUE;
+
+      /* Walk backward past whitespaces - what remains
+       * is a filter caps string, or empty */
       while (g_ascii_isspace (*--c));
       *++c = '\0';
     } else {
       yylval->ss = NULL;
     }
     BEGIN (INITIAL);
-    return LINK;
+    return link_all ? LINK_ALL : LINK;
 }
 {_url} {
   PRINT ("URL: %s", yytext);

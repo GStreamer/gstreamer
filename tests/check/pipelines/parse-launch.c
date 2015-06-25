@@ -108,6 +108,10 @@ static const gchar *test_lines[] = {
 /*  "(name=mabin fakesrc) mabin. ! fakesink", FIXME: linking to named bin does not work yet */
 /*  "(name=mabin name=yoyo fakesrc) yoyo. ! fakesink", FIXME: linking to named bin does not work yet  */
   "deepsrc. ! fakesink fakesrc  ! ( identity ! ( identity ! (  identity name=deepsrc ) ) )",    /* deep name resolution, multilevel ghostpad creation */
+  "fakesrc : fakesink",         /* linking all matching pads */
+  "fakesrc : video/x-all : fakesink",   /* linking all matching pads with filter */
+  "fakesrc ! video/x-all : fakesink",   /* linking all matching pads with filter */
+  "fakesrc : video/x-all ! fakesink",   /* linking all matching pads with filter */
   NULL
 };
 

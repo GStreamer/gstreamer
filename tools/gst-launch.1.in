@@ -165,6 +165,8 @@ partial pipelines instead of a full-fledged top-level pipeline.
 
 \fI[[SRCELEMENT].[PAD1,...]]\fR ! \fI[[SINKELEMENT].[PAD1,...]]\fR
 \fI[[SRCELEMENT].[PAD1,...]]\fR ! CAPS ! \fI[[SINKELEMENT].[PAD1,...]]\fR
+\fI[[SRCELEMENT].[PAD1,...]]\fR : \fI[[SINKELEMENT].[PAD1,...]]\fR
+\fI[[SRCELEMENT].[PAD1,...]]\fR : CAPS : \fI[[SINKELEMENT].[PAD1,...]]\fR
 
 Links the element with name SRCELEMENT to the element with name SINKELEMENT,
 using the caps specified in CAPS as a filter.
@@ -177,6 +179,9 @@ specified and multiple links are done in the given order.
 .br
 So the simplest link is a simple exclamation mark, that links the element to
 the left of it to the element right of it.
+.br
+Linking using the : operator attempts to link all possible pads between
+the elements
 .br
 
 .B Caps
