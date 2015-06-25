@@ -52,12 +52,6 @@ else
 LIBPNG_DIR =
 endif
 
-# if USE_MIKMOD
-# MIKMOD_DIR = mikmod
-# else
-MIKMOD_DIR =
-# endif
-
 if USE_DV1394
 DV1394_DIR = raw1394
 else
@@ -119,7 +113,6 @@ SUBDIRS = \
 	$(LIBDV_DIR) \
 	$(LIBMNG_DIR) \
 	$(LIBPNG_DIR) \
-	$(MIKMOD_DIR) \
 	$(PULSE_DIR) \
 	$(SHOUT2_DIR) \
 	$(SOUP_DIR) \

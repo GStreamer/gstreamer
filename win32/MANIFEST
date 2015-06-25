@@ -68,7 +68,6 @@ win32/vs8/libgstjpeg.vcproj
 win32/vs8/libgstladspa.vcproj
 win32/vs8/libgstlevel.vcproj
 win32/vs8/libgstmatroska.vcproj
-win32/vs8/libgstmikmod.vcproj
 win32/vs8/libgstmng.vcproj
 win32/vs8/libgstmonoscope.vcproj
 win32/vs8/libgstmulaw.vcproj
