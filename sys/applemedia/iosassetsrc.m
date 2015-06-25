@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch iosassetsrc uri=assets-library://asset/asset.M4V?id=11&ext=M4V ! decodebin2 ! autoaudiosink
+ * gst-launch iosassetsrc uri=assets-library://asset/asset.M4V?id=11&ext=M4V ! decodebin ! autoaudiosink
  * ]| Plays asset with id a song.ogg from local dir.
  * </refsect2>
  */

@@ -58,7 +58,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-1.0 autovideosrc ! decodebin2 ! colorspace ! facedetect ! videoconvert ! xvimagesink
+ * gst-launch-1.0 autovideosrc ! decodebin ! colorspace ! facedetect ! videoconvert ! xvimagesink
  * ]| Detect and show faces
  * |[
  * gst-launch-1.0 autovideosrc ! video/x-raw,width=320,height=240 ! videoconvert ! facedetect min-size-width=60 min-size-height=60 ! colorspace ! xvimagesink
