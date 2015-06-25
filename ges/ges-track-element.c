@@ -91,7 +91,7 @@ enum
 
 static guint ges_track_element_signals[LAST_SIGNAL] = { 0 };
 
-static GstElement *ges_track_element_create_nle_object_func (GESTrackElement *
+static GstElement *ges_track_element_create_gnl_object_func (GESTrackElement *
     object);
 
 static gboolean _set_start (GESTimelineElement * element, GstClockTime start);
@@ -267,7 +267,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   element_class->set_priority = _set_priority;
   element_class->deep_copy = ges_track_element_copy_properties;
 
-  klass->create_nle_object = ges_track_element_create_nle_object_func;
+  klass->create_gnl_object = ges_track_element_create_gnl_object_func;
   klass->list_children_properties = default_list_children_properties;
   klass->lookup_child = _lookup_child;
 }
@@ -537,9 +537,9 @@ ges_track_element_get_track_type (GESTrackElement * object)
   return object->priv->track_type;
 }
 
-/* default 'create_nle_object' virtual method implementation */
+/* default 'create_gnl_object' virtual method implementation */
 static GstElement *
-ges_track_element_create_nle_object_func (GESTrackElement * self)
+ges_track_element_create_gnl_object_func (GESTrackElement * self)
 {
   GESTrackElementClass *klass = NULL;
   GstElement *child = NULL;
@@ -632,8 +632,8 @@ ensure_nle_object (GESTrackElement * object)
 
   class = GES_TRACK_ELEMENT_GET_CLASS (object);
 
-  if (G_UNLIKELY (class->create_nle_object == NULL)) {
-    GST_ERROR ("No 'create_nle_object' implementation !");
+  if (G_UNLIKELY (class->create_gnl_object == NULL)) {
+    GST_ERROR ("No 'create_gnl_object' implementation !");
     goto done;
   }
 
@@ -642,12 +642,12 @@ ensure_nle_object (GESTrackElement * object)
   /* 2. Fill in the NleObject */
   if (object->priv->nleobject == NULL) {
 
-    /* call the create_nle_object virtual method */
-    nleobject = class->create_nle_object (object);
+    /* call the create_gnl_object virtual method */
+    nleobject = class->create_gnl_object (object);
 
     if (G_UNLIKELY (nleobject == NULL)) {
       GST_ERROR
-          ("'create_nle_object' implementation returned TRUE but no NleObject is available");
+          ("'create_gnl_object' implementation returned TRUE but no NleObject is available");
       goto done;
     }
 
@@ -907,12 +907,32 @@ ges_track_element_get_track (GESTrackElement * object)
 }
 
 /**
+ * ges_track_element_get_gnlobject:
+ * @object: a #GESTrackElement
+ *
+ * Get the NleObject object this object is controlling.
+ *
+ * Returns: (transfer none): the NleObject object this object is controlling.
+ *
+ * Deprecated: use #ges_track_element_get_nleobject instead.
+ */
+GstElement *
+ges_track_element_get_gnlobject (GESTrackElement * object)
+{
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
+
+  return object->priv->nleobject;
+}
+
+/**
  * ges_track_element_get_nleobject:
  * @object: a #GESTrackElement
  *
  * Get the GNonLin object this object is controlling.
  *
  * Returns: (transfer none): the GNonLin object this object is controlling.
+ *
+ * Since: 1.6
  */
 GstElement *
 ges_track_element_get_nleobject (GESTrackElement * object)

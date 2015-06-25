@@ -131,10 +131,10 @@ Methods
 
     * Set the track field of the TrackObject
     * if no NleObject is available yet:
-        * Call the 'create_nle_object' virtual method
+        * Call the 'create_gnl_object' virtual method
 
 
-* Virtual-method for GESTrackObject::create_nle_object
+* Virtual-method for GESTrackObject::create_gnl_object
 
     * Create a NleObject of the proper type
       Ex : nleobject = gst_element_factory_make("nlesource", NULL);

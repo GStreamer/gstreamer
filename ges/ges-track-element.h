@@ -72,7 +72,7 @@ struct _GESTrackElement {
 /**
  * GESTrackElementClass:
  * @nleobject_factorytype: name of the GNonLin GStElementFactory type to use.
- * @create_nle_object: method to create the GNonLin container object.
+ * @create_gnl_object: method to create the GNonLin container object.
  * @create_element: method to return the GstElement to put in the nleobject.
  * @active_changed: active property of nleobject has changed
  * @list_children_properties: method to get children properties that user could
@@ -93,7 +93,7 @@ struct _GESTrackElement {
  *                understandable.
  *                Deprecated: use GESTimelineElement.lookup_child instead
  *
- * Subclasses can override the @create_nle_object method to override what type
+ * Subclasses can override the @create_gnl_object method to override what type
  * of GNonLin object will be created.
  */
 struct _GESTrackElementClass {
@@ -103,7 +103,7 @@ struct _GESTrackElementClass {
   /*< public >*/
   /* virtual methods for subclasses */
   const gchar  *nleobject_factorytype;
-  GstElement*  (*create_nle_object)        (GESTrackElement * object);
+  GstElement*  (*create_gnl_object)        (GESTrackElement * object);
   GstElement*  (*create_element)           (GESTrackElement * object);
 
   void (*active_changed)       (GESTrackElement *object, gboolean active);
@@ -134,6 +134,7 @@ void ges_track_element_set_track_type          (GESTrackElement * object,
                                                GESTrackType     type);
 
 GstElement * ges_track_element_get_nleobject   (GESTrackElement * object);
+GstElement * ges_track_element_get_gnlobject   (GESTrackElement * object);
 
 GstElement * ges_track_element_get_element     (GESTrackElement * object);
 
