@@ -2467,25 +2467,6 @@ update_start_stop_duration (NleComposition * comp)
       GST_TIME_ARGS (cobj->stop), GST_TIME_ARGS (cobj->duration));
 }
 
-static inline gboolean
-_parent_or_priority_changed (NleObject * obj, GNode * oldnode,
-    NleObject * newparent, GNode * node)
-{
-  NleObject *oldparent = NULL;
-
-  if (oldnode)
-    oldparent =
-        G_NODE_IS_ROOT (oldnode) ? NULL : (NleObject *) oldnode->parent->data;
-
-  if (oldparent != newparent)
-    return TRUE;
-
-  if (oldparent == NULL || newparent == NULL)
-    return FALSE;
-
-  return (g_node_child_index (node, obj) != g_node_child_index (oldnode, obj));
-}
-
 static void
 _link_to_parent (NleComposition * comp, NleObject * newobj,
     NleObject * newparent)
