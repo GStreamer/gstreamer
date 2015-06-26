@@ -42,3 +42,10 @@ me=umh
 subme=6
 ref=3
 threads=0
+
+[Profile YouTube]
+_meta/comment=YouTube recommended settings (https://support.google.com/youtube/answer/1722171)
+pass=qual
+cabac=true
+dct8x8=true
+bframes=2
