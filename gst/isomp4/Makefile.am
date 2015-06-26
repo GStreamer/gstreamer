@@ -18,6 +18,9 @@ libgstisomp4_la_SOURCES = isomp4-plugin.c gstrtpxqtdepay.c \
 	properties.c gstqtmuxmap.c gstisoff.c
 libgstisomp4_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
+presetdir = $(datadir)/gstreamer-$(GST_API_VERSION)/presets
+preset_DATA = GstQTMux.prs
+
 noinst_HEADERS = \
 	qtatomparser.h   \
 	qtdemux.h        \
@@ -38,4 +41,5 @@ noinst_HEADERS = \
 
 EXTRA_DIST = \
 	gstqtmux-doc.c \
-	gstqtmux-doc.h
+	gstqtmux-doc.h \
+	$(preset_DATA)

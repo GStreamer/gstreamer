@@ -4737,6 +4737,9 @@ gst_qt_mux_register (GstPlugin * plugin)
   static const GInterfaceInfo tag_xmp_writer_info = {
     NULL, NULL, NULL
   };
+  static const GInterfaceInfo preset_info = {
+    NULL, NULL, NULL
+  };
   GType type;
   GstQTMuxFormat format;
   GstQTMuxClassParams *params;
@@ -4775,6 +4778,7 @@ gst_qt_mux_register (GstPlugin * plugin)
     g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
     g_type_add_interface_static (type, GST_TYPE_TAG_XMP_WRITER,
         &tag_xmp_writer_info);
+    g_type_add_interface_static (type, GST_TYPE_PRESET, &preset_info);
 
     if (!gst_element_register (plugin, prop->name, prop->rank, type))
       return FALSE;
