@@ -769,7 +769,8 @@ fallback:
         if (picture->buf[c]) {
           dframe->avbuffer = picture->buf[c];
           picture->buf[c] =
-              av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
+              av_buffer_create (picture->buf[c]->data, picture->buf[c]->size,
+              dummy_free_buffer, dframe, 0);
         } else {
           picture->buf[c] =
               av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
