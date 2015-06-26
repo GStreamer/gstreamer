@@ -566,6 +566,7 @@ typedef struct
   gboolean mapped;
   GstVideoFrame vframe;
   GstBuffer *buffer;
+  AVBufferRef *avbuffer;
 } GstFFMpegVidDecVideoFrame;
 
 static GstFFMpegVidDecVideoFrame *
@@ -593,6 +594,9 @@ gst_ffmpegviddec_video_frame_free (GstFFMpegVidDec * ffmpegdec,
     gst_video_frame_unmap (&frame->vframe);
   gst_video_decoder_release_frame (GST_VIDEO_DECODER (ffmpegdec), frame->frame);
   gst_buffer_replace (&frame->buffer, NULL);
+  if (frame->avbuffer) {
+    av_buffer_unref (&frame->avbuffer);
+  }
   g_slice_free (GstFFMpegVidDecVideoFrame, frame);
 }
 
@@ -658,7 +662,7 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
               FALSE)))
     goto negotiate_failed;
 
-  if (!ffmpegdec->current_dr)
+  if (TRUE || !ffmpegdec->current_dr)
     goto no_dr;
 
   ret =
@@ -752,16 +756,24 @@ invalid_frame:
 fallback:
   {
     int c;
-    gboolean first = TRUE;
     int ret = avcodec_default_get_buffer (context, picture);
 
     for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
       ffmpegdec->stride[c] = picture->linesize[c];
 
-      if (picture->buf[c] == NULL && first) {
-        picture->buf[c] =
-            av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
-        first = FALSE;
+      /* Wrap our buffer around the default one to be able to have a callback
+       * when our data can be freed. Just putting our data into the first free
+       * buffer might not work if there are too many allocated already
+       */
+      if (c == 0) {
+        if (picture->buf[c]) {
+          dframe->avbuffer = picture->buf[c];
+          picture->buf[c] =
+              av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
+        } else {
+          picture->buf[c] =
+              av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
+        }
       }
     }
 
