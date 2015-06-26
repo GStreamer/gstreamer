@@ -1293,6 +1293,12 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           NULL);
       break;
 
+    case AV_CODEC_ID_VP9:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-vp9",
+          NULL);
+      break;
+
     case AV_CODEC_ID_THEORA:
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode,
@@ -3742,6 +3748,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-vp8")) {
     id = AV_CODEC_ID_VP8;
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-vp9")) {
+    id = AV_CODEC_ID_VP9;
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-flash-screen")) {
     id = AV_CODEC_ID_FLASHSV;
