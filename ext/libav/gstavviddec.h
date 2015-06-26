@@ -40,16 +40,17 @@ struct _GstFFMpegVidDec
   gint stride[AV_NUM_DATA_POINTERS];
   gboolean opened;
 
+  /* current output pictures */
+  enum PixelFormat pic_pix_fmt;
+  gint pic_width;
+  gint pic_height;
+  gint pic_par_n;
+  gint pic_par_d;
+  gint pic_interlaced;
   /* current context */
-  enum PixelFormat ctx_pix_fmt;
-  gint ctx_width;
-  gint ctx_height;
-  gint ctx_par_n;
-  gint ctx_par_d;
   gint ctx_ticks;
   gint ctx_time_d;
   gint ctx_time_n;
-  gint ctx_interlaced;
   GstBuffer *palette;
 
   guint8 *padded;

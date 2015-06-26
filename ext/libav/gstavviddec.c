@@ -85,7 +85,7 @@ static void gst_ffmpegviddec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
-    AVCodecContext * context, gboolean force);
+    AVCodecContext * context, AVFrame * picture, gboolean force);
 
 /* some sort of bufferpool handling, but different */
 static int gst_ffmpegviddec_get_buffer (AVCodecContext * context,
@@ -97,6 +97,11 @@ static void gst_ffmpegviddec_release_buffer (AVCodecContext * context,
 
 static GstFlowReturn gst_ffmpegviddec_finish (GstVideoDecoder * decoder);
 static void gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec);
+
+static gboolean picture_changed (GstFFMpegVidDec * ffmpegdec,
+    AVFrame * picture);
+static gboolean context_changed (GstFFMpegVidDec * ffmpegdec,
+    AVCodecContext * context);
 
 #define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("avdec-params")
 
@@ -437,6 +442,14 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
       GST_OBJECT_UNLOCK (ffmpegdec);
       return FALSE;
     }
+    ffmpegdec->pic_pix_fmt = 0;
+    ffmpegdec->pic_width = 0;
+    ffmpegdec->pic_height = 0;
+    ffmpegdec->pic_par_n = 0;
+    ffmpegdec->pic_par_d = 0;
+    ffmpegdec->ctx_ticks = 0;
+    ffmpegdec->ctx_time_n = 0;
+    ffmpegdec->ctx_time_d = 0;
   }
 
   gst_caps_replace (&ffmpegdec->last_caps, state->caps);
@@ -634,10 +647,16 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
   GST_DEBUG_OBJECT (ffmpegdec, "storing opaque %p", dframe);
 
-  ffmpegdec->context->pix_fmt = context->pix_fmt;
+  /* If the picture format changed but we already negotiated before,
+   * we will have to do fallback allocation until output and input
+   * formats are in sync again. We will renegotiate on the output
+   */
+  if (ffmpegdec->pic_width != 0 && picture_changed (ffmpegdec, picture))
+    goto fallback;
 
   /* see if we need renegotiation */
-  if (G_UNLIKELY (!gst_ffmpegviddec_negotiate (ffmpegdec, context, FALSE)))
+  if (G_UNLIKELY (!gst_ffmpegviddec_negotiate (ffmpegdec, context, picture,
+              FALSE)))
     goto negotiate_failed;
 
   if (!ffmpegdec->current_dr)
@@ -846,37 +865,52 @@ gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
 }
 
 static gboolean
-update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
-    gboolean force)
+picture_changed (GstFFMpegVidDec * ffmpegdec, AVFrame * picture)
 {
-  if (!force && ffmpegdec->ctx_width == context->width
-      && ffmpegdec->ctx_height == context->height
-      && ffmpegdec->ctx_ticks == context->ticks_per_frame
+  return !(ffmpegdec->pic_width == picture->width
+      && ffmpegdec->pic_height == picture->height
+      && ffmpegdec->pic_pix_fmt == picture->format
+      && ffmpegdec->pic_par_n == picture->sample_aspect_ratio.num
+      && ffmpegdec->pic_par_d == picture->sample_aspect_ratio.den
+      && ffmpegdec->pic_interlaced == picture->interlaced_frame);
+}
+
+static gboolean
+context_changed (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context)
+{
+  return !(ffmpegdec->ctx_ticks == context->ticks_per_frame
       && ffmpegdec->ctx_time_n == context->time_base.num
-      && ffmpegdec->ctx_time_d == context->time_base.den
-      && ffmpegdec->ctx_pix_fmt == context->pix_fmt
-      && ffmpegdec->ctx_par_n == context->sample_aspect_ratio.num
-      && ffmpegdec->ctx_par_d == context->sample_aspect_ratio.den)
+      && ffmpegdec->ctx_time_d == context->time_base.den);
+}
+
+static gboolean
+update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
+    AVFrame * picture, gboolean force)
+{
+  if (!force && !picture_changed (ffmpegdec, picture)
+      && !context_changed (ffmpegdec, context))
     return FALSE;
 
   GST_DEBUG_OBJECT (ffmpegdec,
-      "Renegotiating video from %dx%d@ %d:%d PAR %d/%d fps to %dx%d@ %d:%d PAR %d/%d fps pixfmt %d",
-      ffmpegdec->ctx_width, ffmpegdec->ctx_height,
-      ffmpegdec->ctx_par_n, ffmpegdec->ctx_par_d,
+      "Renegotiating video from %dx%d@ %d:%d PAR %d/%d fps pixfmt %d to %dx%d@ %d:%d PAR %d/%d fps pixfmt %d",
+      ffmpegdec->pic_width, ffmpegdec->pic_height,
+      ffmpegdec->pic_par_n, ffmpegdec->pic_par_d,
       ffmpegdec->ctx_time_n, ffmpegdec->ctx_time_d,
-      context->width, context->height,
-      context->sample_aspect_ratio.num,
-      context->sample_aspect_ratio.den,
-      context->time_base.num, context->time_base.den, context->pix_fmt);
+      ffmpegdec->pic_pix_fmt,
+      picture->width, picture->height,
+      picture->sample_aspect_ratio.num,
+      picture->sample_aspect_ratio.den,
+      context->time_base.num, context->time_base.den, picture->format);
 
-  ffmpegdec->ctx_width = context->width;
-  ffmpegdec->ctx_height = context->height;
+  ffmpegdec->pic_pix_fmt = picture->format;
+  ffmpegdec->pic_width = picture->width;
+  ffmpegdec->pic_height = picture->height;
+  ffmpegdec->pic_par_n = picture->sample_aspect_ratio.num;
+  ffmpegdec->pic_par_d = picture->sample_aspect_ratio.den;
+  ffmpegdec->pic_interlaced = picture->interlaced_frame;
   ffmpegdec->ctx_ticks = context->ticks_per_frame;
   ffmpegdec->ctx_time_n = context->time_base.num;
   ffmpegdec->ctx_time_d = context->time_base.den;
-  ffmpegdec->ctx_pix_fmt = context->pix_fmt;
-  ffmpegdec->ctx_par_n = context->sample_aspect_ratio.num;
-  ffmpegdec->ctx_par_d = context->sample_aspect_ratio.den;
 
   return TRUE;
 }
@@ -898,9 +932,9 @@ gst_ffmpegviddec_update_par (GstFFMpegVidDec * ffmpegdec,
         demuxer_denom);
   }
 
-  if (ffmpegdec->ctx_par_n && ffmpegdec->ctx_par_d) {
-    decoder_num = ffmpegdec->ctx_par_n;
-    decoder_denom = ffmpegdec->ctx_par_d;
+  if (ffmpegdec->pic_par_n && ffmpegdec->pic_par_d) {
+    decoder_num = ffmpegdec->pic_par_n;
+    decoder_denom = ffmpegdec->pic_par_d;
     decoder_par_set = TRUE;
     GST_DEBUG_OBJECT (ffmpegdec, "Decoder PAR: %d:%d", decoder_num,
         decoder_denom);
@@ -957,23 +991,23 @@ no_par:
 
 static gboolean
 gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
-    AVCodecContext * context, gboolean force)
+    AVCodecContext * context, AVFrame * picture, gboolean force)
 {
   GstVideoFormat fmt;
   GstVideoInfo *in_info, *out_info;
   GstVideoCodecState *output_state;
   gint fps_n, fps_d;
 
-  if (!update_video_context (ffmpegdec, context, force))
+  if (!update_video_context (ffmpegdec, context, picture, force))
     return TRUE;
 
-  fmt = gst_ffmpeg_pixfmt_to_videoformat (ffmpegdec->ctx_pix_fmt);
+  fmt = gst_ffmpeg_pixfmt_to_videoformat (ffmpegdec->pic_pix_fmt);
   if (G_UNLIKELY (fmt == GST_VIDEO_FORMAT_UNKNOWN))
     goto unknown_format;
 
   output_state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (ffmpegdec), fmt,
-      ffmpegdec->ctx_width, ffmpegdec->ctx_height, ffmpegdec->input_state);
+      ffmpegdec->pic_width, ffmpegdec->pic_height, ffmpegdec->input_state);
   if (ffmpegdec->output_state)
     gst_video_codec_state_unref (ffmpegdec->output_state);
   ffmpegdec->output_state = output_state;
@@ -982,7 +1016,7 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   out_info = &ffmpegdec->output_state->info;
 
   /* set the interlaced flag */
-  if (ffmpegdec->ctx_interlaced)
+  if (ffmpegdec->pic_interlaced)
     out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
   else
     out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
@@ -1057,14 +1091,14 @@ unknown_format:
 negotiate_failed:
   {
     /* Reset so we try again next time even if force==FALSE */
-    ffmpegdec->ctx_width = 0;
-    ffmpegdec->ctx_height = 0;
+    ffmpegdec->pic_pix_fmt = 0;
+    ffmpegdec->pic_width = 0;
+    ffmpegdec->pic_height = 0;
+    ffmpegdec->pic_par_n = 0;
+    ffmpegdec->pic_par_d = 0;
     ffmpegdec->ctx_ticks = 0;
     ffmpegdec->ctx_time_n = 0;
     ffmpegdec->ctx_time_d = 0;
-    ffmpegdec->ctx_pix_fmt = 0;
-    ffmpegdec->ctx_par_n = 0;
-    ffmpegdec->ctx_par_d = 0;
 
     GST_ERROR_OBJECT (ffmpegdec, "negotiation failed");
     return FALSE;
@@ -1315,19 +1349,12 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       (guint64) ffmpegdec->picture->reordered_opaque);
   GST_DEBUG_OBJECT (ffmpegdec, "repeat_pict:%d",
       ffmpegdec->picture->repeat_pict);
-  GST_DEBUG_OBJECT (ffmpegdec, "interlaced_frame:%d (current:%d)",
-      ffmpegdec->picture->interlaced_frame, ffmpegdec->ctx_interlaced);
   GST_DEBUG_OBJECT (ffmpegdec, "corrupted frame: %d",
       ! !(ffmpegdec->picture->flags & AV_FRAME_FLAG_CORRUPT));
 
-  if (G_UNLIKELY (ffmpegdec->picture->interlaced_frame !=
-          ffmpegdec->ctx_interlaced)) {
-    GST_WARNING ("Change in interlacing ! picture:%d, recorded:%d",
-        ffmpegdec->picture->interlaced_frame, ffmpegdec->ctx_interlaced);
-    ffmpegdec->ctx_interlaced = ffmpegdec->picture->interlaced_frame;
-    if (!gst_ffmpegviddec_negotiate (ffmpegdec, ffmpegdec->context, TRUE))
-      goto negotiation_error;
-  }
+  if (!gst_ffmpegviddec_negotiate (ffmpegdec, ffmpegdec->context,
+          ffmpegdec->picture, FALSE))
+    goto negotiation_error;
 
   if (G_UNLIKELY (out_frame->output_buffer == NULL))
     *ret = get_output_buffer (ffmpegdec, out_frame);
@@ -1339,7 +1366,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   if (ffmpegdec->picture->flags & AV_FRAME_FLAG_CORRUPT)
     GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_BUFFER_FLAG_CORRUPTED);
 
-  if (ffmpegdec->ctx_interlaced) {
+  if (ffmpegdec->pic_interlaced) {
     /* set interlaced flags */
     if (ffmpegdec->picture->repeat_pict)
       GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
@@ -1645,14 +1672,14 @@ gst_ffmpegviddec_stop (GstVideoDecoder * decoder)
     gst_video_codec_state_unref (ffmpegdec->output_state);
   ffmpegdec->output_state = NULL;
 
-  ffmpegdec->ctx_width = 0;
-  ffmpegdec->ctx_height = 0;
+  ffmpegdec->pic_pix_fmt = 0;
+  ffmpegdec->pic_width = 0;
+  ffmpegdec->pic_height = 0;
+  ffmpegdec->pic_par_n = 0;
+  ffmpegdec->pic_par_d = 0;
   ffmpegdec->ctx_ticks = 0;
   ffmpegdec->ctx_time_n = 0;
   ffmpegdec->ctx_time_d = 0;
-  ffmpegdec->ctx_pix_fmt = 0;
-  ffmpegdec->ctx_par_n = 0;
-  ffmpegdec->ctx_par_d = 0;
 
   return TRUE;
 }
