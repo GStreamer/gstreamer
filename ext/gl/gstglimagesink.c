@@ -1530,11 +1530,14 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
 
-    if (!gst_buffer_pool_set_config (pool, config))
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      g_object_unref (pool);
       goto config_failed;
+    }
 
     /* we need at least 2 buffer because we hold on to the last one */
     gst_query_add_allocation_pool (query, pool, size, 2, 0);
+    g_object_unref (pool);
   }
 
   if (glimage_sink->context->gl_vtable->FenceSync)
