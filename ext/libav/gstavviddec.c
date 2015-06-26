@@ -88,12 +88,8 @@ static gboolean gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
     AVCodecContext * context, AVFrame * picture, gboolean force);
 
 /* some sort of bufferpool handling, but different */
-static int gst_ffmpegviddec_get_buffer (AVCodecContext * context,
-    AVFrame * picture);
-static int gst_ffmpegviddec_reget_buffer (AVCodecContext * context,
-    AVFrame * picture);
-static void gst_ffmpegviddec_release_buffer (AVCodecContext * context,
-    AVFrame * picture);
+static int gst_ffmpegviddec_get_buffer2 (AVCodecContext * context,
+    AVFrame * picture, int flags);
 
 static GstFlowReturn gst_ffmpegviddec_finish (GstVideoDecoder * decoder);
 static void gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec);
@@ -455,9 +451,10 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   gst_caps_replace (&ffmpegdec->last_caps, state->caps);
 
   /* set buffer functions */
-  ffmpegdec->context->get_buffer = gst_ffmpegviddec_get_buffer;
-  ffmpegdec->context->reget_buffer = gst_ffmpegviddec_reget_buffer;
-  ffmpegdec->context->release_buffer = gst_ffmpegviddec_release_buffer;
+  ffmpegdec->context->get_buffer2 = gst_ffmpegviddec_get_buffer2;
+  ffmpegdec->context->get_buffer = NULL;
+  ffmpegdec->context->reget_buffer = NULL;
+  ffmpegdec->context->release_buffer = NULL;
   ffmpegdec->context->draw_horiz_band = NULL;
 
   /* reset coded_width/_height to prevent it being reused from last time when
@@ -611,7 +608,8 @@ dummy_free_buffer (void *opaque, uint8_t * data)
 /* called when ffmpeg wants us to allocate a buffer to write the decoded frame
  * into. We try to give it memory from our pool */
 static int
-gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
+gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
+    int flags)
 {
   GstVideoCodecFrame *frame;
   GstFFMpegVidDecVideoFrame *dframe;
@@ -645,8 +643,13 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
     goto duplicate_frame;
 
   /* GstFFMpegVidDecVideoFrame receives the frame ref */
-  picture->opaque = dframe =
-      gst_ffmpegviddec_video_frame_new (ffmpegdec, frame);
+  if (picture->opaque) {
+    dframe = picture->opaque;
+    dframe->frame = frame;
+  } else {
+    picture->opaque = dframe =
+        gst_ffmpegviddec_video_frame_new (ffmpegdec, frame);
+  }
 
   GST_DEBUG_OBJECT (ffmpegdec, "storing opaque %p", dframe);
 
@@ -690,6 +693,11 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
       picture->data[c] = GST_VIDEO_FRAME_PLANE_DATA (&dframe->vframe, c);
       picture->linesize[c] = GST_VIDEO_FRAME_PLANE_STRIDE (&dframe->vframe, c);
 
+      if (c == 0) {
+        picture->buf[c] =
+            av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
+      }
+
       /* libav does not allow stride changes currently, fall back to
        * non-direct rendering here:
        * https://bugzilla.gnome.org/show_bug.cgi?id=704769
@@ -705,6 +713,7 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
         for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
           picture->data[c] = NULL;
           picture->linesize[c] = 0;
+          av_buffer_unref (&picture->buf[c]);
         }
         gst_video_frame_unmap (&dframe->vframe);
         dframe->mapped = FALSE;
@@ -756,7 +765,7 @@ invalid_frame:
 fallback:
   {
     int c;
-    int ret = avcodec_default_get_buffer (context, picture);
+    int ret = avcodec_default_get_buffer2 (context, picture, flags);
 
     for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
       ffmpegdec->stride[c] = picture->linesize[c];
@@ -790,87 +799,6 @@ no_frame:
   {
     GST_WARNING_OBJECT (ffmpegdec, "Couldn't get codec frame !");
     return -1;
-  }
-}
-
-/* this should havesame effect as _get_buffer wrt opaque metadata,
- * but preserving current content, if any */
-static int
-gst_ffmpegviddec_reget_buffer (AVCodecContext * context, AVFrame * picture)
-{
-  GstVideoCodecFrame *frame;
-  GstFFMpegVidDecVideoFrame *dframe;
-  GstFFMpegVidDec *ffmpegdec;
-
-  ffmpegdec = (GstFFMpegVidDec *) context->opaque;
-
-  GST_DEBUG_OBJECT (ffmpegdec, "regetting buffer picture %p", picture);
-
-  /* if there is no opaque, we didn't yet attach any frame to it. What usually
-   * happens is that avcodec_default_reget_buffer will call the getbuffer
-   * function. */
-  dframe = picture->opaque;
-  if (dframe == NULL)
-    goto done;
-
-  frame =
-      gst_video_decoder_get_frame (GST_VIDEO_DECODER (ffmpegdec),
-      picture->reordered_opaque);
-  if (G_UNLIKELY (frame == NULL))
-    goto no_frame;
-
-  if (G_UNLIKELY (frame->output_buffer != NULL))
-    goto duplicate_frame;
-
-  /* replace the frame, this one contains the pts/dts for the correspoding input
-   * buffer, which we need after decoding. */
-  gst_video_codec_frame_unref (dframe->frame);
-  dframe->frame = frame;
-
-done:
-  return avcodec_default_reget_buffer (context, picture);
-
-  /* ERRORS */
-no_frame:
-  {
-    GST_WARNING_OBJECT (ffmpegdec, "Couldn't get codec frame !");
-    return -1;
-  }
-duplicate_frame:
-  {
-    GST_WARNING_OBJECT (ffmpegdec, "already alloc'ed output buffer for frame");
-    return -1;
-  }
-}
-
-/* called when ffmpeg is done with our buffer */
-static void
-gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
-{
-  gint i;
-  GstFFMpegVidDecVideoFrame *frame;
-  GstFFMpegVidDec *ffmpegdec;
-
-  ffmpegdec = (GstFFMpegVidDec *) context->opaque;
-  frame = (GstFFMpegVidDecVideoFrame *) picture->opaque;
-  GST_DEBUG_OBJECT (ffmpegdec, "release frame SN %d",
-      frame->frame->system_frame_number);
-
-  /* check if it was our buffer */
-  if (picture->type != FF_BUFFER_TYPE_USER) {
-    GST_DEBUG_OBJECT (ffmpegdec, "default release buffer");
-    avcodec_default_release_buffer (context, picture);
-  }
-
-  /* we remove the opaque data now */
-  picture->opaque = NULL;
-
-  gst_ffmpegviddec_video_frame_free (ffmpegdec, frame);
-
-  /* zero out the reference in ffmpeg */
-  for (i = 0; i < 4; i++) {
-    picture->data[i] = NULL;
-    picture->linesize[i] = 0;
   }
 }
 
@@ -1421,6 +1349,10 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     }
     g_list_free (ol);
   }
+
+  /* FIXME: Ideally we would remap the buffer read-only now before pushing but
+   * libav might still have a reference to it!
+   */
 
   *ret =
       gst_video_decoder_finish_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
