@@ -165,13 +165,14 @@ gst_gl_mixer_propose_allocation (GstGLBaseMixer * base_mix,
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-    if (!gst_buffer_pool_set_config (pool, config))
-      goto config_failed;
-  }
 
-  if (pool) {
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      g_object_unref (pool);
+      goto config_failed;
+    }
+
     gst_query_add_allocation_pool (query, pool, size, 1, 0);
-    gst_object_unref (pool);
+    g_object_unref (pool);
   }
 
   /* we also support various metadata */
