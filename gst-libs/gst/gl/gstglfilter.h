@@ -58,8 +58,6 @@ struct _GstGLFilter
 {
   GstGLBaseFilter    parent;
 
-  GstBufferPool     *pool;
-
   GstVideoInfo       in_info;
   GstVideoInfo       out_info;
 
