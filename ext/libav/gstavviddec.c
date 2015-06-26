@@ -623,7 +623,6 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   /* apply the last info we have seen to this picture, when we get the
    * picture back from ffmpeg we can use this to correctly timestamp the output
    * buffer */
-  picture->reordered_opaque = context->reordered_opaque;
   GST_DEBUG_OBJECT (ffmpegdec, "opaque value SN %d",
       (gint32) picture->reordered_opaque);
 
@@ -793,8 +792,6 @@ gst_ffmpegviddec_reget_buffer (AVCodecContext * context, AVFrame * picture)
   ffmpegdec = (GstFFMpegVidDec *) context->opaque;
 
   GST_DEBUG_OBJECT (ffmpegdec, "regetting buffer picture %p", picture);
-
-  picture->reordered_opaque = context->reordered_opaque;
 
   /* if there is no opaque, we didn't yet attach any frame to it. What usually
    * happens is that avcodec_default_reget_buffer will call the getbuffer
