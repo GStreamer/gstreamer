@@ -100,6 +100,8 @@ static FLAC__StreamDecoderWriteStatus
 gst_flac_dec_write_stream (const FLAC__StreamDecoder * decoder,
     const FLAC__Frame * frame,
     const FLAC__int32 * const buffer[], void *client_data);
+static gboolean
+gst_flac_dec_handle_decoder_error (GstFlacDec * dec, gboolean msg);
 static void gst_flac_dec_metadata_cb (const FLAC__StreamDecoder *
     decoder, const FLAC__StreamMetadata * metadata, void *client_data);
 static void gst_flac_dec_error_cb (const FLAC__StreamDecoder *
@@ -275,6 +277,14 @@ gst_flac_dec_set_format (GstAudioDecoder * dec, GstCaps * caps)
   GST_DEBUG_OBJECT (dec, "Processing headers and metadata");
   if (!FLAC__stream_decoder_process_until_end_of_metadata (flacdec->decoder)) {
     GST_WARNING_OBJECT (dec, "process_until_end_of_metadata failed");
+    if (FLAC__stream_decoder_get_state (flacdec->decoder) ==
+        FLAC__STREAM_DECODER_ABORTED) {
+      GST_WARNING_OBJECT (flacdec, "Read callback caused internal abort");
+      /* allow recovery */
+      gst_adapter_clear (flacdec->adapter);
+      FLAC__stream_decoder_flush (flacdec->decoder);
+      gst_flac_dec_handle_decoder_error (flacdec, TRUE);
+    }
   }
   GST_INFO_OBJECT (dec, "headers and metadata are now processed");
   return TRUE;
@@ -781,6 +791,14 @@ gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
 
   if (!FLAC__stream_decoder_process_single (dec->decoder)) {
     GST_INFO_OBJECT (dec, "process_single failed");
+    if (FLAC__stream_decoder_get_state (dec->decoder) ==
+        FLAC__STREAM_DECODER_ABORTED) {
+      GST_WARNING_OBJECT (dec, "Read callback caused internal abort");
+      /* allow recovery */
+      gst_adapter_clear (dec->adapter);
+      FLAC__stream_decoder_flush (dec->decoder);
+      gst_flac_dec_handle_decoder_error (dec, TRUE);
+    }
   }
 
   return dec->last_flow;
