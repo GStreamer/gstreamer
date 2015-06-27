@@ -35,6 +35,8 @@ struct _GstFFMpegAudDec
   AVCodecContext *context;
   gboolean opened;
 
+  AVFrame *frame;
+
   /* prevent reopening the decoder on GST_EVENT_CAPS when caps are same as last time. */
   GstCaps *last_caps;
 

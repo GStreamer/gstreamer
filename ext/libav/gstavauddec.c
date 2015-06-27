@@ -142,6 +142,8 @@ gst_ffmpegauddec_init (GstFFMpegAudDec * ffmpegdec)
   ffmpegdec->context->opaque = ffmpegdec;
   ffmpegdec->opened = FALSE;
 
+  ffmpegdec->frame = av_frame_alloc ();
+
   gst_audio_decoder_set_drainable (GST_AUDIO_DECODER (ffmpegdec), TRUE);
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (ffmpegdec), TRUE);
 }
@@ -150,6 +152,8 @@ static void
 gst_ffmpegauddec_finalize (GObject * object)
 {
   GstFFMpegAudDec *ffmpegdec = (GstFFMpegAudDec *) object;
+
+  av_frame_free (&ffmpegdec->frame);
 
   if (ffmpegdec->context != NULL) {
     gst_ffmpeg_avcodec_close (ffmpegdec->context);
@@ -483,25 +487,24 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 {
   gint len = -1;
   AVPacket packet;
-  AVFrame frame;
 
   GST_DEBUG_OBJECT (ffmpegdec, "size: %d", size);
 
   gst_avpacket_init (&packet, data, size);
-  memset (&frame, 0, sizeof (frame));
-  avcodec_get_frame_defaults (&frame);
-  len = avcodec_decode_audio4 (ffmpegdec->context, &frame, have_data, &packet);
+  len =
+      avcodec_decode_audio4 (ffmpegdec->context, ffmpegdec->frame, have_data,
+      &packet);
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "Decode audio: len=%d, have_data=%d", len, *have_data);
 
   if (len >= 0 && *have_data) {
-    BufferInfo *buffer_info = frame.opaque;
+    BufferInfo *buffer_info = ffmpegdec->frame->opaque;
     gint nsamples, channels, byte_per_sample;
     gsize output_size;
 
-    if (!gst_ffmpegauddec_negotiate (ffmpegdec, ffmpegdec->context, &frame,
-            FALSE)) {
+    if (!gst_ffmpegauddec_negotiate (ffmpegdec, ffmpegdec->context,
+            ffmpegdec->frame, FALSE)) {
       *outbuf = NULL;
       *ret = GST_FLOW_NOT_NEGOTIATED;
       len = -1;
@@ -509,10 +512,10 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     }
 
     channels = ffmpegdec->info.channels;
-    nsamples = frame.nb_samples;
+    nsamples = ffmpegdec->frame->nb_samples;
     byte_per_sample = ffmpegdec->info.finfo->width / 8;
 
-    /* frame.linesize[0] might contain padding, allocate only what's needed */
+    /* ffmpegdec->frame->linesize[0] might contain padding, allocate only what's needed */
     output_size = nsamples * byte_per_sample * channels;
 
     GST_DEBUG_OBJECT (ffmpegdec, "Creating output buffer");
@@ -520,7 +523,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
       *outbuf = buffer_info->buffer;
       gst_buffer_unmap (buffer_info->buffer, &buffer_info->map);
       g_slice_free (BufferInfo, buffer_info);
-      frame.opaque = NULL;
+      ffmpegdec->frame->opaque = NULL;
     } else if (av_sample_fmt_is_planar (ffmpegdec->context->sample_fmt)
         && channels > 1) {
       gint i, j;
@@ -539,7 +542,8 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              odata[j] = ((const guint8 *) frame.extended_data[j])[i];
+              odata[j] =
+                  ((const guint8 *) ffmpegdec->frame->extended_data[j])[i];
             }
             odata += channels;
           }
@@ -550,7 +554,8 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              odata[j] = ((const guint16 *) frame.extended_data[j])[i];
+              odata[j] =
+                  ((const guint16 *) ffmpegdec->frame->extended_data[j])[i];
             }
             odata += channels;
           }
@@ -561,7 +566,8 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              odata[j] = ((const guint32 *) frame.extended_data[j])[i];
+              odata[j] =
+                  ((const guint32 *) ffmpegdec->frame->extended_data[j])[i];
             }
             odata += channels;
           }
@@ -572,7 +578,8 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              odata[j] = ((const guint64 *) frame.extended_data[j])[i];
+              odata[j] =
+                  ((const guint64 *) ffmpegdec->frame->extended_data[j])[i];
             }
             odata += channels;
           }
@@ -587,7 +594,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
       *outbuf =
           gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER
           (ffmpegdec), output_size);
-      gst_buffer_fill (*outbuf, 0, frame.data[0], output_size);
+      gst_buffer_fill (*outbuf, 0, ffmpegdec->frame->data[0], output_size);
     }
 
     GST_DEBUG_OBJECT (ffmpegdec, "Buffer created. Size: %" G_GSIZE_FORMAT,
@@ -602,14 +609,14 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     }
 
     /* Mark corrupted frames as corrupted */
-    if (frame.flags & AV_FRAME_FLAG_CORRUPT)
+    if (ffmpegdec->frame->flags & AV_FRAME_FLAG_CORRUPT)
       GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_CORRUPTED);
   } else {
     *outbuf = NULL;
   }
 
 beach:
-  av_frame_unref (&frame);
+  av_frame_unref (ffmpegdec->frame);
   GST_DEBUG_OBJECT (ffmpegdec, "return flow %d, out %p, len %d",
       *ret, *outbuf, len);
   return len;
