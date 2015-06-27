@@ -261,7 +261,7 @@ gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
   /* some ffmpeg data */
   ffmpegdec->context = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegdec->context->opaque = ffmpegdec;
-  ffmpegdec->picture = avcodec_alloc_frame ();
+  ffmpegdec->picture = av_frame_alloc ();
   ffmpegdec->opened = FALSE;
   ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
@@ -283,7 +283,7 @@ gst_ffmpegviddec_finalize (GObject * object)
     ffmpegdec->context = NULL;
   }
 
-  avcodec_free_frame (&ffmpegdec->picture);
+  av_frame_free (&ffmpegdec->picture);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1349,6 +1349,8 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     }
     g_list_free (ol);
   }
+
+  av_frame_unref (ffmpegdec->picture);
 
   /* FIXME: Ideally we would remap the buffer read-only now before pushing but
    * libav might still have a reference to it!
