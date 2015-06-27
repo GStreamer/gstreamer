@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include <libavcodec/avcodec.h>
+#include <libavutil/channel_layout.h>
 
 #include <gst/gst.h>
 
@@ -52,7 +53,7 @@ static GstFlowReturn gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder,
     GstBuffer * inbuf);
 
 static gboolean gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
-    gboolean force);
+    AVCodecContext * context, AVFrame * frame, gboolean force);
 
 static void gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec);
 
@@ -273,12 +274,17 @@ gst_ffmpegauddec_get_buffer (AVCodecContext * context, AVFrame * frame)
   BufferInfo *buffer_info;
 
   ffmpegdec = (GstFFMpegAudDec *) context->opaque;
-  if (G_UNLIKELY (!gst_ffmpegauddec_negotiate (ffmpegdec, FALSE)))
+
+  if (ffmpegdec->info.finfo && settings_changed (ffmpegdec, context, frame))
+    goto fallback;
+
+  if (G_UNLIKELY (!gst_ffmpegauddec_negotiate (ffmpegdec, context, frame,
+              FALSE)))
     goto negotiate_failed;
 
   /* Always use the default allocator for planar audio formats because
    * we will have to copy and deinterleave later anyway */
-  if (av_sample_fmt_is_planar (ffmpegdec->context->sample_fmt))
+  if (av_sample_fmt_is_planar (frame->format))
     goto fallback;
 
   info = gst_audio_decoder_get_audio_info (GST_AUDIO_DECODER (ffmpegdec));
@@ -372,45 +378,57 @@ open_failed:
 }
 
 static gboolean
-gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec, gboolean force)
+settings_changed (GstFFMpegAudDec * ffmpegdec, AVFrame * frame)
+{
+  GstAudioFormat format;
+  gint channels = av_get_channel_layout_nb_channels (frame->channel_layout);
+
+  format = gst_ffmpeg_smpfmt_to_audioformat (frame->format);
+  if (format == GST_AUDIO_FORMAT_UNKNOWN)
+    return TRUE;
+
+  return !(ffmpegdec->info.rate ==
+      frame->sample_rate &&
+      ffmpegdec->info.channels == channels &&
+      ffmpegdec->info.finfo->format == format);
+}
+
+static gboolean
+gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
+    AVCodecContext * context, AVFrame * frame, gboolean force)
 {
   GstFFMpegAudDecClass *oclass;
-  gint depth;
   GstAudioFormat format;
+  gint channels;
   GstAudioChannelPosition pos[64] = { 0, };
 
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
-  depth = av_smp_format_depth (ffmpegdec->context->sample_fmt) * 8;
-  format = gst_ffmpeg_smpfmt_to_audioformat (ffmpegdec->context->sample_fmt);
+  format = gst_ffmpeg_smpfmt_to_audioformat (frame->format);
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
     goto no_caps;
+  channels = av_get_channel_layout_nb_channels (frame->channel_layout);
+  if (channels == 0)
+    goto no_caps;
 
-  if (!force && ffmpegdec->info.rate ==
-      ffmpegdec->context->sample_rate &&
-      ffmpegdec->info.channels == ffmpegdec->context->channels &&
-      ffmpegdec->info.finfo->depth == depth)
+  if (!force && !settings_changed (ffmpegdec, frame))
     return TRUE;
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "Renegotiating audio from %dHz@%dchannels (%d) to %dHz@%dchannels (%d)",
       ffmpegdec->info.rate, ffmpegdec->info.channels,
-      ffmpegdec->info.finfo->depth,
-      ffmpegdec->context->sample_rate, ffmpegdec->context->channels, depth);
+      ffmpegdec->info.finfo->format, frame->sample_rate, channels, format);
 
-  gst_ffmpeg_channel_layout_to_gst (ffmpegdec->context->channel_layout,
-      ffmpegdec->context->channels, pos);
+  gst_ffmpeg_channel_layout_to_gst (frame->channel_layout, channels, pos);
   memcpy (ffmpegdec->ffmpeg_layout, pos,
-      sizeof (GstAudioChannelPosition) * ffmpegdec->context->channels);
+      sizeof (GstAudioChannelPosition) * channels);
 
   /* Get GStreamer channel layout */
-  gst_audio_channel_positions_to_valid_order (pos,
-      ffmpegdec->context->channels);
+  gst_audio_channel_positions_to_valid_order (pos, channels);
   ffmpegdec->needs_reorder =
-      memcmp (pos, ffmpegdec->ffmpeg_layout,
-      sizeof (pos[0]) * ffmpegdec->context->channels) != 0;
+      memcmp (pos, ffmpegdec->ffmpeg_layout, sizeof (pos[0]) * channels) != 0;
   gst_audio_info_set_format (&ffmpegdec->info, format,
-      ffmpegdec->context->sample_rate, ffmpegdec->context->channels, pos);
+      frame->sample_rate, channels, pos);
 
   if (!gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (ffmpegdec),
           &ffmpegdec->info))
@@ -482,7 +500,8 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     gint nsamples, channels, byte_per_sample;
     gsize output_size;
 
-    if (!gst_ffmpegauddec_negotiate (ffmpegdec, FALSE)) {
+    if (!gst_ffmpegauddec_negotiate (ffmpegdec, ffmpegdec->context, &frame,
+            FALSE)) {
       *outbuf = NULL;
       *ret = GST_FLOW_NOT_NEGOTIATED;
       len = -1;
