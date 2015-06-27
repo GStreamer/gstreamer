@@ -42,6 +42,12 @@
 
 #define APP_NAME "gtk-play"
 
+#define TOOLBAR_GET_OBJECT(x) \
+  (GtkWidget *)gtk_builder_get_object (play->toolbar_ui, #x)
+
+#define TOOLBAR_GET_LABEL(x) \
+  (GtkLabel *) gtk_builder_get_object (play->toolbar_ui, #x)
+
 typedef GtkApplication GtkPlayApp;
 typedef GtkApplicationClass GtkPlayAppClass;
 
@@ -63,20 +69,22 @@ typedef struct
   GtkWidget *prev_button, *next_button;
   GtkWidget *seekbar;
   GtkWidget *video_area;
-  GtkWidget *image_area;
   GtkWidget *volume_button;
-  GtkWidget *media_info_button;
-  GtkWidget *repeat_button;
   GtkWidget *fullscreen_button;
   GtkWidget *toolbar;
+  GtkWidget *toolbar_overlay;
+  GtkWidget *media_info_dialog;
+  GtkLabel  *title_label;
+  GtkLabel  *elapshed_label;
+  GtkLabel  *remain_label;
+  GtkLabel  *rate_label;
   GdkCursor *default_cursor;
-  gulong seekbar_value_changed_signal_id;
-  GdkPixbuf *image_pixbuf;
   gboolean playing;
   gboolean loop;
   gboolean fullscreen;
-  gboolean visual;
   gint toolbar_hide_timeout;
+
+  GtkBuilder *toolbar_ui;
 } GtkPlay;
 
 typedef GtkApplicationWindowClass GtkPlayClass;
@@ -88,7 +96,6 @@ enum
   PROP_0,
   PROP_LOOP,
   PROP_FULLSCREEN,
-  PROP_VISUAL,
   PROP_URIS,
 
   LAST_PROP
@@ -124,8 +131,6 @@ enum
   SUBTITLE_INFO_END,
 };
 
-static void display_cover_art (GtkPlay * play, GstPlayerMediaInfo * media_info);
-
 static void
 set_title (GtkPlay * play, const gchar * title)
 {
@@ -135,6 +140,25 @@ set_title (GtkPlay * play, const gchar * title)
     gtk_window_set_title (GTK_WINDOW (play), title);
   }
 }
+
+static GtkBuilder *
+load_from_builder (const gchar * filename, gboolean register_sig_handler,
+    GtkPlay * play)
+{
+  GtkBuilder *builder;
+
+  builder = gtk_builder_new_from_resource (filename);
+  if (builder == NULL) {
+    g_print ("ERROR: failed to load %s \n", filename);
+    return NULL;
+  }
+
+  if (register_sig_handler)
+    gtk_builder_connect_signals (builder, play);
+
+  return builder;
+}
+
 
 static void
 delete_event_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
@@ -162,15 +186,47 @@ video_area_realize_cb (GtkWidget * widget, GtkPlay * play)
 }
 
 static void
-play_pause_clicked_cb (GtkButton * button, GtkPlay * play)
+gtk_play_set_rate (GtkPlay * play, gdouble step)
+{
+  gdouble val;
+
+  val = gst_player_get_rate (play->player);
+  val += step;
+  if (val == 0.0)
+    val = step;
+  gst_player_set_rate (play->player, val);
+
+  if (val == 1.0)
+    gtk_label_set_label (play->rate_label, NULL);
+  else {
+    gchar *data;
+
+    data = g_strdup_printf ("%.2fx", val);
+    gtk_label_set_label (play->rate_label, data);
+    g_free (data);
+  }
+}
+
+G_MODULE_EXPORT void
+rewind_button_clicked_cb (GtkButton * button, GtkPlay * play)
+{
+  gtk_play_set_rate (play, -0.5);
+}
+
+G_MODULE_EXPORT void
+forward_button_clicked_cb (GtkButton * button, GtkPlay * play)
+{
+  gtk_play_set_rate (play, 0.5);
+}
+
+G_MODULE_EXPORT void
+play_pause_button_clicked_cb (GtkButton * button, GtkPlay * play)
 {
   GtkWidget *image;
 
   if (play->playing) {
     gst_player_pause (play->player);
-    image =
-        gtk_image_new_from_icon_name ("media-playback-start",
-        GTK_ICON_SIZE_BUTTON);
+    image = TOOLBAR_GET_OBJECT (play_image);
     gtk_button_set_image (GTK_BUTTON (play->play_pause_button), image);
     play->playing = FALSE;
 
@@ -187,9 +243,7 @@ play_pause_clicked_cb (GtkButton * button, GtkPlay * play)
         GTK_WINDOW (play), GTK_APPLICATION_INHIBIT_IDLE, "Playing media");
 
     gst_player_play (play->player);
-    image =
-        gtk_image_new_from_icon_name ("media-playback-pause",
-        GTK_ICON_SIZE_BUTTON);
+    image = TOOLBAR_GET_OBJECT (pause_image);
     gtk_button_set_image (GTK_BUTTON (play->play_pause_button), image);
     play->playing = TRUE;
   }
@@ -199,13 +253,10 @@ static void
 play_current_uri (GtkPlay * play, GList * uri, const gchar * ext_suburi)
 {
   /* reset the button/widget state to default */
-  if (play->image_pixbuf)
-    g_object_unref (play->image_pixbuf);
-  play->image_pixbuf = NULL;
-  gtk_widget_set_sensitive (play->media_info_button, FALSE);
   gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
   gtk_widget_set_sensitive (play->prev_button, g_list_previous (uri) != NULL);
   gtk_widget_set_sensitive (play->next_button, g_list_next (uri) != NULL);
+  gtk_label_set_label (play->rate_label, NULL);
 
   /* set uri or suburi */
   if (ext_suburi)
@@ -231,8 +282,8 @@ play_current_uri (GtkPlay * play, GList * uri, const gchar * ext_suburi)
   set_title (play, uri->data);
 }
 
-static void
-skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
+G_MODULE_EXPORT void
+prev_button_clicked_cb (GtkButton * button, GtkPlay * play)
 {
   GList *prev;
 
@@ -388,8 +439,8 @@ open_file_clicked_cb (GtkWidget * unused, GtkPlay * play)
   }
 }
 
-static void
-skip_next_clicked_cb (GtkButton * button, GtkPlay * play)
+G_MODULE_EXPORT void
+next_button_clicked_cb (GtkButton * button, GtkPlay * play)
 {
   GList *next;
 
@@ -519,51 +570,14 @@ stream_info_get_string (GstPlayerStreamInfo * stream, gint type, gboolean label)
   }
 }
 
-static gboolean
-is_current_stream (GtkPlay * play, GstPlayerStreamInfo * stream)
-{
-  gboolean ret = FALSE;
-  GstPlayerStreamInfo *s;
-  GstPlayerVideoInfo *video = gst_player_get_current_video_track (play->player);
-  GstPlayerAudioInfo *audio = gst_player_get_current_audio_track (play->player);
-  GstPlayerSubtitleInfo *sub =
-      gst_player_get_current_subtitle_track (play->player);
-
-  if (GST_IS_PLAYER_VIDEO_INFO (stream))
-    s = (GstPlayerStreamInfo *) video;
-  else if (GST_IS_PLAYER_AUDIO_INFO (stream))
-    s = (GstPlayerStreamInfo *) audio;
-  else
-    s = (GstPlayerStreamInfo *) sub;
-
-  if (s)
-    if (gst_player_stream_info_get_index (stream) ==
-        gst_player_stream_info_get_index (s))
-      ret = TRUE;
-
-  if (audio)
-    g_object_unref (audio);
-
-  if (video)
-    g_object_unref (video);
-
-  if (sub)
-    g_object_unref (sub);
-
-  return ret;
-}
-
-static GtkTreeModel *
-create_and_fill_model (GtkPlay * play, GstPlayerMediaInfo * info)
+static void
+fill_tree_model (GtkTreeStore * tree, GtkPlay * play, GstPlayerMediaInfo * info)
 {
   GList *l;
   guint count;
-  GtkTreeStore *tree;
   GtkTreeIter child, parent;
 
   count = 0;
-  tree = gtk_tree_store_new (COL_NUM, G_TYPE_STRING);
-
   for (l = gst_player_media_info_get_stream_list (info); l != NULL; l = l->next) {
     gchar *buffer;
     gint i, start, end;
@@ -581,8 +595,7 @@ create_and_fill_model (GtkPlay * play, GstPlayerMediaInfo * info)
       end = SUBTITLE_INFO_END;
     }
 
-    buffer = g_strdup_printf ("Stream %u %s", count++,
-        is_current_stream (play, stream) ? "(current)" : "");
+    buffer = g_strdup_printf ("Stream %u", count++);
     gtk_tree_store_append (tree, &parent, NULL);
     gtk_tree_store_set (tree, &parent, COL_TEXT, buffer, -1);
     g_free (buffer);
@@ -602,131 +615,74 @@ create_and_fill_model (GtkPlay * play, GstPlayerMediaInfo * info)
       }
     }
   }
-
-  return GTK_TREE_MODEL (tree);
 }
 
-static GtkWidget *
-create_view_and_model (GtkPlay * play, GstPlayerMediaInfo * info)
+G_MODULE_EXPORT void
+media_info_dialog_button_clicked_cb (GtkButton * button, GtkPlay * play)
 {
+  gtk_widget_destroy (GTK_WIDGET (play->media_info_dialog));
+  play->media_info_dialog = NULL;
+}
+
+static void
+media_info_dialog (GtkPlay * play, GstPlayerMediaInfo * media_info)
+{
+  GtkBuilder *dialog_ui;
   GtkWidget *view;
+  GtkTreeStore *tree;
   GtkTreeModel *model;
   GtkTreeViewColumn *col;
   GtkCellRenderer *renderer;
 
-  view = gtk_tree_view_new ();
-  col = gtk_tree_view_column_new ();
-  gtk_tree_view_append_column (GTK_TREE_VIEW (view), col);
-  gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (view), FALSE);
+  dialog_ui = load_from_builder ("/ui/media_info_dialog.ui", TRUE, play);
+  if (!dialog_ui)
+    return;
 
+  play->media_info_dialog =
+    (GtkWidget *) gtk_builder_get_object (dialog_ui, "media_info_dialog");
+  gtk_window_set_transient_for (GTK_WINDOW (play->media_info_dialog),
+      GTK_WINDOW (play));
+
+  view = (GtkWidget *) gtk_builder_get_object (dialog_ui, "view");
+  col = (GtkTreeViewColumn *) gtk_builder_get_object (dialog_ui, "col");
+
+  /* TODO: use glade cell renderer (not working for me) */
   renderer = gtk_cell_renderer_text_new ();
   gtk_tree_view_column_pack_start (col, renderer, TRUE);
   gtk_tree_view_column_add_attribute (col, renderer, "text", COL_TEXT);
 
-  model = create_and_fill_model (play, info);
-  gtk_tree_view_set_model (GTK_TREE_VIEW (view), model);
-  g_object_unref (model);
+  tree = (GtkTreeStore *) gtk_builder_get_object (dialog_ui, "tree");
+  fill_tree_model (tree, play, media_info);
 
-  return view;
-}
-
-static void
-delete_media_info_window (GtkWidget * button, GtkWindow * window)
-{
-  gtk_window_close (window);
-}
-
-static void
-create_media_info_window (GtkPlay * play, GstPlayerMediaInfo * info)
-{
-  GtkWidget *sw;
-  GtkWidget *vbox;
-  GtkWidget *label;
-  GtkWidget *view;
-  GtkWidget *hbox;
-  GtkWidget *uri;
-  GtkWidget *loc;
-  GtkTextIter iter;
-  GtkWidget *window;
-  GtkTextBuffer *buffer;
-  GtkWidget *hbox_close;
-  GtkWidget *button_close;
-
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title (GTK_WINDOW (window), "Media information");
-  gtk_window_set_default_size (GTK_WINDOW (window), 550, 450);
-  gtk_window_set_position (GTK_WINDOW (window), GTK_WIN_POS_CENTER);
-  gtk_container_set_border_width (GTK_CONTAINER (window), 10);
-  gtk_window_set_transient_for (GTK_WINDOW (window), GTK_WINDOW (play));
-
-  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 8);
-  gtk_container_add (GTK_CONTAINER (window), vbox);
-
-  label = gtk_label_new (NULL);
-  gtk_label_set_markup (GTK_LABEL (label),
-      "Information about all the streams contains in your media. \n"
-      "Current selected streams are marked as (current).");
-  gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
-  gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 2);
-
-  sw = gtk_scrolled_window_new (NULL, NULL);
-  gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sw),
-      GTK_SHADOW_ETCHED_IN);
-  gtk_box_pack_start (GTK_BOX (vbox), sw, TRUE, TRUE, 0);
-
-  view = create_view_and_model (play, info);
-  gtk_container_add (GTK_CONTAINER (sw), view);
   g_signal_connect (view, "realize",
       G_CALLBACK (gtk_tree_view_expand_all), NULL);
+  
+  gtk_widget_set_size_request (play->media_info_dialog, 550, 450);
 
-  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
-  gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 2);
-
-  loc = gtk_label_new ("Location : ");
-  gtk_box_pack_start (GTK_BOX (hbox), loc, FALSE, FALSE, 2);
-
-  buffer = gtk_text_buffer_new (NULL);
-  gtk_text_buffer_get_start_iter (buffer, &iter);
-  gtk_text_buffer_insert (buffer, &iter,
-      gst_player_media_info_get_uri (info), -1);
-  uri = gtk_text_view_new_with_buffer (buffer);
-  gtk_box_pack_start (GTK_BOX (hbox), uri, FALSE, FALSE, 2);
-  gtk_text_view_set_editable (GTK_TEXT_VIEW (uri), FALSE);
-  g_object_unref (buffer);
-
-  hbox_close = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
-  gtk_box_pack_start (GTK_BOX (vbox), hbox_close, FALSE, FALSE, 2);
-  button_close = gtk_button_new_with_label (" Close ");
-  g_signal_connect (button_close, "clicked",
-      G_CALLBACK (delete_media_info_window), window);
-  gtk_box_pack_end (GTK_BOX (hbox_close), button_close, FALSE, FALSE, 3);
-
-  gtk_widget_show_all (window);
+  gtk_widget_show_all (play->media_info_dialog);
+  gtk_dialog_run (GTK_DIALOG (play->media_info_dialog));
 }
 
 static void
 media_info_clicked_cb (GtkButton * button, GtkPlay * play)
 {
-  GstPlayerMediaInfo *info;
+  GstPlayerMediaInfo *media_info;
 
-  info = gst_player_get_media_info (play->player);
-  if (!info)
+  media_info = gst_player_get_media_info (play->player);
+  if (!media_info)
     return;
 
-  create_media_info_window (play, info);
-
-  g_object_unref (info);
+  media_info_dialog (play, media_info);
+  g_object_unref (media_info);
 }
 
 static gboolean
-toolbar_hide_func (GtkPlay * play)
+toolbar_hide_cb (GtkPlay * play)
 {
   GdkCursor *cursor;
 
-  /* TODO: add some animation while hiding the toolbar. */
+  /* hide mouse pointer and toolbar */
   gtk_widget_hide (play->toolbar);
-
-  /* hide the mouse pointer */
   cursor =
       gdk_cursor_new_for_display (gtk_widget_get_display (GTK_WIDGET (play)),
       GDK_BLANK_CURSOR);
@@ -739,43 +695,59 @@ toolbar_hide_func (GtkPlay * play)
 }
 
 static void
-fullscreen_toggle_cb (GtkToggleButton * widget, GtkPlay * play)
+toolbar_show (GtkPlay * play)
+{
+  /* if timer is running then kill it */
+  if (play->toolbar_hide_timeout) {
+    g_source_remove (play->toolbar_hide_timeout);
+    play->toolbar_hide_timeout = 0;
+  }
+
+  /* show toolbar and mouse pointer */
+  gdk_window_set_cursor (gtk_widget_get_window (GTK_WIDGET
+          (play->video_area)), play->default_cursor);
+  gtk_widget_show (play->toolbar);
+}
+
+static void
+start_toolbar_hide_timer (GtkPlay * play)
+{
+  /* hide toolbar only if its playing */
+  if (!play->playing)
+    return;
+
+  /* start timer to hide toolbar */
+  if (play->toolbar_hide_timeout)
+    g_source_remove (play->toolbar_hide_timeout);
+  play->toolbar_hide_timeout = g_timeout_add_seconds (5,
+      (GSourceFunc) toolbar_hide_cb, play);
+}
+
+G_MODULE_EXPORT void
+fullscreen_button_toggled_cb (GtkToggleButton * widget, GtkPlay * play)
 {
   GtkWidget *image;
 
   if (gtk_toggle_button_get_active (widget)) {
-    image = gtk_image_new_from_icon_name ("view-restore", GTK_ICON_SIZE_BUTTON);
+    image = TOOLBAR_GET_OBJECT (restore_image);
     gtk_window_fullscreen (GTK_WINDOW (play));
     gtk_button_set_image (GTK_BUTTON (play->fullscreen_button), image);
-
-    /* start timer to hide toolbar */
-    if (play->toolbar_hide_timeout)
-      g_source_remove (play->toolbar_hide_timeout);
-    play->toolbar_hide_timeout = g_timeout_add_seconds (5,
-        (GSourceFunc) toolbar_hide_func, play);
   } else {
-    /* if toolbar hide timer is running then kill it */
-    if (play->toolbar_hide_timeout) {
-      g_source_remove (play->toolbar_hide_timeout);
-      play->toolbar_hide_timeout = 0;
-    }
-
-    image = gtk_image_new_from_icon_name ("view-fullscreen",
-        GTK_ICON_SIZE_BUTTON);
+    image = TOOLBAR_GET_OBJECT (fullscreen_image);
     gtk_window_unfullscreen (GTK_WINDOW (play));
     gtk_button_set_image (GTK_BUTTON (play->fullscreen_button), image);
   }
 }
 
-static void
+G_MODULE_EXPORT void
 seekbar_value_changed_cb (GtkRange * range, GtkPlay * play)
 {
   gdouble value = gtk_range_get_value (GTK_RANGE (play->seekbar));
   gst_player_seek (play->player, gst_util_uint64_scale (value, GST_SECOND, 1));
 }
 
-void
-volume_changed_cb (GtkScaleButton * button, gdouble value, GtkPlay * play)
+G_MODULE_EXPORT void
+volume_button_value_changed_cb (GtkScaleButton * button, gdouble value, GtkPlay * play)
 {
   gst_player_set_volume (play->player, value);
 }
@@ -860,7 +832,6 @@ disable_track (GtkPlay * play, GType type)
 {
   if (type == GST_TYPE_PLAYER_VIDEO_INFO) {
     gst_player_set_video_track_enabled (play->player, FALSE);
-    display_cover_art (play, NULL);     /* display cover art */
   } else if (type == GST_TYPE_PLAYER_AUDIO_INFO)
     gst_player_set_audio_track_enabled (play->player, FALSE);
   else
@@ -873,11 +844,6 @@ change_track (GtkPlay * play, gint index, GType type)
   if (type == GST_TYPE_PLAYER_VIDEO_INFO) {
     gst_player_set_video_track (play->player, index);
     gst_player_set_video_track_enabled (play->player, TRUE);
-    /* if video area widget is not visible then make it visible */
-    if (!gtk_widget_is_visible (play->video_area)) {
-      gtk_widget_hide (play->image_area);
-      gtk_widget_show (play->video_area);
-    }
   } else if (type == GST_TYPE_PLAYER_AUDIO_INFO) {
     gst_player_set_audio_track (play->player, index);
     gst_player_set_audio_track_enabled (play->player, TRUE);
@@ -912,18 +878,9 @@ visualization_changed_cb (GtkWidget * widget, GtkPlay * play)
   gchar *name;
 
   if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (widget))) {
-
-    /* video_area is window-id is shared with playbin hence
-     * video_area widget will be used by visualization elements to
-     * render the visuals. If visualization is enabled then hide
-     * image widget and show video widget and similiarly when visualization
-     * is disabled then hide video widget and show imag widget.
-     */
     name = g_object_get_data (G_OBJECT (widget), "name");
     if (g_strcmp0 (name, "disable") == 0) {
       gst_player_set_visualization_enabled (play->player, FALSE);
-      gtk_widget_hide (play->video_area);
-      gtk_widget_show (play->image_area);
     } else {
       const gchar *vis_name;
 
@@ -932,8 +889,6 @@ visualization_changed_cb (GtkWidget * widget, GtkPlay * play)
       if (!(vis_name = gst_player_get_current_visualization (play->player))) {
         gst_player_set_visualization_enabled (play->player, TRUE);
       }
-      gtk_widget_hide (play->image_area);
-      gtk_widget_show (play->video_area);
     }
   }
 }
@@ -1058,41 +1013,6 @@ player_set_rate_cb (GtkSpinButton * button, GtkPlay * play)
 }
 
 static void
-player_speed_clicked_cb (GtkButton * button, GtkPlay * play)
-{
-  GtkWidget *box;
-  GtkWidget *label;
-  GtkWidget *dialog;
-  GtkWidget *content;
-  GtkWidget *rate_spinbutton;
-
-  dialog =
-      gtk_dialog_new_with_buttons ("Playback speed control", GTK_WINDOW (play),
-      GTK_DIALOG_DESTROY_WITH_PARENT, "_Close", GTK_RESPONSE_CLOSE, NULL);
-  gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (play));
-
-  content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
-  box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
-  gtk_box_pack_start (GTK_BOX (content), box, TRUE, TRUE, 0);
-
-  label = gtk_label_new ("Playback rate");
-  rate_spinbutton = gtk_spin_button_new_with_range (-64, 64, 0.1);
-  gtk_spin_button_set_digits (GTK_SPIN_BUTTON (rate_spinbutton), 2);
-  gtk_spin_button_set_value (GTK_SPIN_BUTTON (rate_spinbutton),
-      gst_player_get_rate (play->player));
-
-  gtk_box_pack_start (GTK_BOX (box), label, TRUE, TRUE, 2);
-  gtk_box_pack_start (GTK_BOX (box), rate_spinbutton, TRUE, TRUE, 2);
-  g_signal_connect (rate_spinbutton, "value-changed",
-      G_CALLBACK (player_set_rate_cb), play);
-
-  gtk_widget_show_all (dialog);
-  gtk_dialog_run (GTK_DIALOG (dialog));
-
-  gtk_widget_destroy (dialog);
-}
-
-static void
 player_quit_clicked_cb (GtkButton * button, GtkPlay * play)
 {
   gtk_widget_destroy (GTK_WIDGET (play));
@@ -1113,7 +1033,6 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   GtkWidget *submenu;
   GtkWidget *vis;
   GtkWidget *cb;
-  GtkWidget *speed;
   GstPlayerMediaInfo *media_info;
 
   menu = gtk_menu_new ();
@@ -1127,7 +1046,6 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   quit = gtk_menu_item_new_with_label ("Quit");
   vis = gtk_menu_item_new_with_label ("Visualization");
   cb = gtk_menu_item_new_with_label ("Color Balance");
-  speed = gtk_menu_item_new_with_label ("Playback Speed");
 
   media_info = gst_player_get_media_info (play->player);
 
@@ -1182,13 +1100,11 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   g_signal_connect (G_OBJECT (cb), "activate",
       G_CALLBACK (color_balance_clicked_cb), play);
   g_signal_connect (G_OBJECT (next), "activate",
-      G_CALLBACK (skip_next_clicked_cb), play);
+      G_CALLBACK (next_button_clicked_cb), play);
   g_signal_connect (G_OBJECT (prev), "activate",
-      G_CALLBACK (skip_prev_clicked_cb), play);
+      G_CALLBACK (prev_button_clicked_cb), play);
   g_signal_connect (G_OBJECT (info), "activate",
       G_CALLBACK (media_info_clicked_cb), play);
-  g_signal_connect (G_OBJECT (speed), "activate",
-      G_CALLBACK (player_speed_clicked_cb), play);
   g_signal_connect (G_OBJECT (quit), "activate",
       G_CALLBACK (player_quit_clicked_cb), play);
 
@@ -1201,7 +1117,6 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), sub);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), info);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), cb);
-  gtk_menu_shell_append (GTK_MENU_SHELL (menu), speed);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), quit);
 
   gtk_widget_show_all (menu);
@@ -1233,68 +1148,108 @@ mouse_button_pressed_cb (GtkWidget * unused, GdkEventButton * event,
 }
 
 static gboolean
-image_area_draw_cb (GtkWidget * widget, cairo_t * cr, GtkPlay * play)
+video_area_leave_notify_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
 {
-  if (play->image_pixbuf) {
-    gint width, height;
-    gint pix_width, pix_height;
-    gint x = 0, y = 0;
-    gdouble scalex = 0.0, scaley = 0.0;
+  start_toolbar_hide_timer (play);
 
-    width = gtk_widget_get_allocated_width (widget);
-    height = gtk_widget_get_allocated_height (widget);
-    pix_width = gdk_pixbuf_get_width (play->image_pixbuf);
-    pix_height = gdk_pixbuf_get_height (play->image_pixbuf);
-
-    /* if image is bigger than widget then scale down otherwise center it. */
-    if (width <= pix_width)
-      scalex = (gdouble) width / (gdouble) pix_width;
-    else
-      x = (width - pix_width) / 2;
-    if (height <= pix_height)
-      scaley = (gdouble) height / (gdouble) pix_height;
-    else
-      y = (height - pix_height) / 2;
-
-    /* fill background with black */
-    cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
-    cairo_rectangle (cr, 0, 0, width, height);
-    cairo_fill (cr);
-
-    if (scalex > 0.0 && scaley > 0.0)
-      cairo_scale (cr, scalex, scaley);
-
-    gdk_cairo_set_source_pixbuf (cr, play->image_pixbuf, x, y);
-    cairo_paint (cr);
-  } else {
-    /* fill background with black */
-    cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
-    cairo_paint (cr);
-  }
-
-  return FALSE;
+  return TRUE;
 }
 
 static gboolean
-gtk_show_toolbar_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
+video_area_toolbar_show_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
 {
-  if (gtk_toggle_button_get_active
-      (GTK_TOGGLE_BUTTON (play->fullscreen_button))) {
+  toolbar_show (play);
 
-    /* if timer is running then kill it */
-    if (play->toolbar_hide_timeout) {
-      g_source_remove (play->toolbar_hide_timeout);
-      play->toolbar_hide_timeout = 0;
-    }
+  start_toolbar_hide_timer (play);
 
-    /* show mouse pointer */
-    gdk_window_set_cursor (gtk_widget_get_window (GTK_WIDGET
-            (play->video_area)), play->default_cursor);
+  return TRUE;
+}
 
-    gtk_widget_show (play->toolbar);
-    play->toolbar_hide_timeout = g_timeout_add_seconds (5,
-        (GSourceFunc) toolbar_hide_func, play);
+static gboolean
+overlay_leave_notify_event_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
+{
+  start_toolbar_hide_timer (play);
+
+  return TRUE;
+}
+
+static gboolean
+overlay_enter_notify_event_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
+{
+  toolbar_show (play);
+
+  return TRUE;
+}
+
+static void
+apply_css (GtkWidget *widget, GtkStyleProvider *provider)
+{
+  gtk_style_context_add_provider (gtk_widget_get_style_context (widget),
+      provider, G_MAXUINT);
+  if (GTK_IS_CONTAINER (widget)) {
+    gtk_container_forall (GTK_CONTAINER (widget),
+        (GtkCallback) apply_css, provider);
   }
+}
+
+static void
+gtk_widget_apply_css (GtkWidget * widget, const gchar * filename)
+{
+  GBytes  *bytes;
+  gsize data_size;
+  const guint8 *data;
+  GError *err = NULL;
+  GtkStyleProvider *provider;
+
+  if (widget == NULL)
+    return;
+
+  provider = GTK_STYLE_PROVIDER (gtk_css_provider_new ());
+  bytes = g_resources_lookup_data (filename, 0, &err);
+  if (err) {
+    g_print ("ERROR: failed to apply css %s '%s' \n", filename, err->message);
+    return;
+  }
+  data = g_bytes_get_data (bytes, &data_size);
+  gtk_css_provider_load_from_data (GTK_CSS_PROVIDER (provider),
+      (gchar *)data, data_size, NULL);
+  g_bytes_unref (bytes);
+
+  apply_css (widget, provider);
+}
+
+static gboolean
+get_child_position (GtkOverlay * overlay, GtkWidget * widget,
+    GtkAllocation * alloc, GtkPlay * play)
+{
+  GtkRequisition req;
+  GtkWidget *child;
+  GtkAllocation main_alloc;
+  gint x, y;
+  GtkWidget * relative = play->video_area;
+
+  child = gtk_bin_get_child (GTK_BIN (overlay));
+  gtk_widget_translate_coordinates (relative, child, 0, 0, &x, &y);
+  main_alloc.x = x;
+  main_alloc.y = y;
+  main_alloc.width = gtk_widget_get_allocated_width (relative);
+  main_alloc.height = gtk_widget_get_allocated_height (relative);
+
+  gtk_widget_get_preferred_size (widget, NULL, &req);
+
+  alloc->x = (main_alloc.width - req.width) / 2;
+  if (alloc->x < 0)
+    alloc->x = 0;
+  alloc->width = MIN (main_alloc.width, req.width);
+  if (gtk_widget_get_halign (widget) == GTK_ALIGN_END)
+    alloc->x += main_alloc.width - req.width;
+
+  alloc->y = main_alloc.height - req.height - 20;
+  if (alloc->y < 0)
+    alloc->y = 0;
+  alloc->height = MIN (main_alloc.height, req.height);
+  if (gtk_widget_get_valign (widget) == GTK_ALIGN_END)
+    alloc->y += main_alloc.height - req.height;
 
   return TRUE;
 }
@@ -1303,7 +1258,7 @@ static void
 create_ui (GtkPlay * play)
 {
   GtkWidget *image;
-  GtkWidget *controls, *main_hbox, *main_vbox;
+  GtkWidget *main_hbox, *main_vbox;
   GstElement *playbin, *gtk_sink;
 
   gtk_window_set_default_size (GTK_WINDOW (play), 640, 480);
@@ -1336,140 +1291,123 @@ create_ui (GtkPlay * play)
     g_signal_connect (play->video_area, "realize",
         G_CALLBACK (video_area_realize_cb), play);
   }
-  g_signal_connect (play->video_area, "button-press-event",
-      G_CALLBACK (mouse_button_pressed_cb), play);
-  g_signal_connect (play->video_area, "motion-notify-event",
-      G_CALLBACK (gtk_show_toolbar_cb), play);
-  g_signal_connect (play->video_area, "scroll-event",
-      G_CALLBACK (gtk_show_toolbar_cb), play);
   gtk_widget_set_events (play->video_area, GDK_EXPOSURE_MASK
       | GDK_LEAVE_NOTIFY_MASK
       | GDK_BUTTON_PRESS_MASK
       | GDK_POINTER_MOTION_MASK
       | GDK_POINTER_MOTION_HINT_MASK | GDK_ENTER_NOTIFY_MASK);
-
-  play->image_area = gtk_drawing_area_new ();
-  g_signal_connect (play->image_area, "button-press-event",
+  g_signal_connect (play->video_area, "motion-notify-event",
+      G_CALLBACK (video_area_toolbar_show_cb), play);
+  g_signal_connect (play->video_area, "scroll-event",
+      G_CALLBACK (video_area_toolbar_show_cb), play);
+  g_signal_connect (play->video_area, "button-press-event",
       G_CALLBACK (mouse_button_pressed_cb), play);
-  g_signal_connect (play->image_area, "draw",
-      G_CALLBACK (image_area_draw_cb), play);
-  g_signal_connect (play->image_area, "motion-notify-event",
-      G_CALLBACK (gtk_show_toolbar_cb), play);
-  g_signal_connect (play->image_area, "scroll-event",
-      G_CALLBACK (gtk_show_toolbar_cb), play);
-  gtk_widget_set_events (play->image_area, GDK_EXPOSURE_MASK
+  g_signal_connect (play->video_area, "leave-notify-event",
+      G_CALLBACK (video_area_leave_notify_cb), play);
+
+  /* load toolbar UI */
+  play->toolbar_ui = load_from_builder ("/ui/toolbar.ui", TRUE, play);
+  if (!play->toolbar_ui)
+    return;
+
+  play->toolbar = TOOLBAR_GET_OBJECT (toolbar);
+  play->play_pause_button = TOOLBAR_GET_OBJECT (play_pause_button);
+  play->seekbar = TOOLBAR_GET_OBJECT (seekbar);
+  play->next_button = TOOLBAR_GET_OBJECT (next_button);
+  play->prev_button = TOOLBAR_GET_OBJECT (prev_button);
+  play->fullscreen_button = TOOLBAR_GET_OBJECT (fullscreen_button);
+  play->volume_button = TOOLBAR_GET_OBJECT (volume_button);
+  play->elapshed_label = TOOLBAR_GET_LABEL (elapshed_time);
+  play->remain_label = TOOLBAR_GET_LABEL (remain_time);
+  play->rate_label = TOOLBAR_GET_LABEL (rate_label);
+  play->title_label = TOOLBAR_GET_LABEL (title_label);
+
+  main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_box_pack_start (GTK_BOX (main_hbox), play->video_area, TRUE, TRUE, 0);
+
+  /* set minimum window size */
+  gtk_widget_set_size_request (main_hbox, 320, 240);
+
+  /* set the toolbar size */
+  gtk_widget_set_size_request (play->toolbar, 500, 50);
+
+  play->toolbar_overlay = gtk_overlay_new ();
+  gtk_overlay_add_overlay (GTK_OVERLAY (play->toolbar_overlay), play->toolbar);
+  gtk_container_add (GTK_CONTAINER (play->toolbar_overlay), main_hbox);
+  gtk_container_add (GTK_CONTAINER (play), play->toolbar_overlay);
+  gtk_widget_set_events (play->toolbar_overlay, GDK_EXPOSURE_MASK
       | GDK_LEAVE_NOTIFY_MASK
       | GDK_BUTTON_PRESS_MASK
       | GDK_POINTER_MOTION_MASK
       | GDK_POINTER_MOTION_HINT_MASK | GDK_ENTER_NOTIFY_MASK);
 
-  /* Unified play/pause button */
-  play->play_pause_button =
-      gtk_button_new_from_icon_name ("media-playback-pause",
-      GTK_ICON_SIZE_BUTTON);
-  g_signal_connect (G_OBJECT (play->play_pause_button), "clicked",
-      G_CALLBACK (play_pause_clicked_cb), play);
+  g_signal_connect (play->toolbar_overlay, "get-child-position",
+      G_CALLBACK (get_child_position), play);
+  g_signal_connect (play->toolbar_overlay, "leave-notify-event",
+      G_CALLBACK (overlay_leave_notify_event_cb), play);
+  g_signal_connect (play->toolbar_overlay, "enter-notify-event",
+      G_CALLBACK (overlay_enter_notify_event_cb), play);
 
-  play->seekbar =
-      gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 100, 1);
-  gtk_scale_set_draw_value (GTK_SCALE (play->seekbar), 0);
-  gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
-  play->seekbar_value_changed_signal_id =
-      g_signal_connect (G_OBJECT (play->seekbar), "value-changed",
-      G_CALLBACK (seekbar_value_changed_cb), play);
-
-  /* Skip backward button */
-  play->prev_button =
-      gtk_button_new_from_icon_name ("media-skip-backward",
-      GTK_ICON_SIZE_BUTTON);
-  g_signal_connect (G_OBJECT (play->prev_button), "clicked",
-      G_CALLBACK (skip_prev_clicked_cb), play);
-  gtk_widget_set_sensitive (play->prev_button, FALSE);
-
-  /* Skip forward button */
-  play->next_button =
-      gtk_button_new_from_icon_name ("media-skip-forward",
-      GTK_ICON_SIZE_BUTTON);
-  g_signal_connect (G_OBJECT (play->next_button), "clicked",
-      G_CALLBACK (skip_next_clicked_cb), play);
-  gtk_widget_set_sensitive (play->next_button, FALSE);
-
-  /* Playlist repeat button */
-  play->repeat_button = gtk_toggle_button_new ();
-  image = gtk_image_new_from_icon_name ("media-playlist-repeat",
-      GTK_ICON_SIZE_BUTTON);
-  gtk_button_set_image (GTK_BUTTON (play->repeat_button), image);
-  if (play->loop)
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (play->repeat_button),
-        TRUE);
-
-  /* Volume control button */
-  play->volume_button = gtk_volume_button_new ();
-  gtk_scale_button_set_value (GTK_SCALE_BUTTON (play->volume_button),
-      gst_player_get_volume (play->player));
-  g_signal_connect (G_OBJECT (play->volume_button), "value-changed",
-      G_CALLBACK (volume_changed_cb), play);
-
-  /* media information button */
-  play->media_info_button = gtk_button_new_from_icon_name ("dialog-information",
-      GTK_ICON_SIZE_BUTTON);
-  g_signal_connect (G_OBJECT (play->media_info_button), "clicked",
-      G_CALLBACK (media_info_clicked_cb), play);
-  gtk_widget_set_sensitive (play->media_info_button, FALSE);
-
-  /* Full screen button */
-  play->fullscreen_button = gtk_toggle_button_new ();
-  image = gtk_image_new_from_icon_name ("view-fullscreen",
-      GTK_ICON_SIZE_BUTTON);
-  gtk_button_set_image (GTK_BUTTON (play->fullscreen_button), image);
-  g_signal_connect (G_OBJECT (play->fullscreen_button), "toggled",
-      G_CALLBACK (fullscreen_toggle_cb), play);
-  if (play->fullscreen)
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (play->fullscreen_button),
-        TRUE);
-
-  play->toolbar = controls = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start (GTK_BOX (controls), play->prev_button, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (controls), play->play_pause_button, FALSE,
-      FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (controls), play->next_button, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (controls), play->repeat_button, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (controls), play->seekbar, TRUE, TRUE, 2);
-  gtk_box_pack_start (GTK_BOX (controls), play->volume_button, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (controls), play->media_info_button,
-      FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (controls), play->fullscreen_button,
-      FALSE, FALSE, 2);
-
-  main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start (GTK_BOX (main_hbox), play->video_area, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX (main_hbox), play->image_area, TRUE, TRUE, 0);
-
-  main_vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start (GTK_BOX (main_vbox), main_hbox, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX (main_vbox), controls, FALSE, FALSE, 0);
-  gtk_container_add (GTK_CONTAINER (play), main_vbox);
+  /* apply css on widgets */
+  gtk_widget_apply_css (play->toolbar, "/css/toolbar.css");
 
   if (!gtk_sink)
     gtk_widget_realize (play->video_area);
   gtk_widget_hide (play->video_area);
+
+  /* start toolbar autohide timer */
+  start_toolbar_hide_timer (play);
+
+  /* check if we need to enable fullscreen */
+  if (play->fullscreen)
+    gtk_toggle_button_set_active
+      (GTK_TOGGLE_BUTTON (play->fullscreen_button), TRUE);
+
+  /* enable visualization (by default laybin uses goom) */
+  /* if visualization is enabled then use the first element */
+  gst_player_set_visualization_enabled (play->player, TRUE);
 }
 
 static void
 duration_changed_cb (GstPlayer * unused, GstClockTime duration, GtkPlay * play)
 {
-  gtk_range_set_range (GTK_RANGE (play->seekbar), 0,
+  gtk_range_set_range (GTK_RANGE (play->seekbar), 0.0,
       (gdouble) duration / GST_SECOND);
+}
+
+static void
+update_position_label (GtkLabel * label, guint64 seconds)
+{
+  gchar *data;
+  gint hrs, mins;
+
+  hrs = seconds / 3600;
+  seconds -= hrs * 3600;
+  mins = seconds / 60;
+  seconds -= mins * 60;
+
+  if (hrs)
+    data = g_strdup_printf ("%02d:%02d", hrs, mins);
+  else
+    data = g_strdup_printf ("%02d:%02ld", mins, seconds);
+
+  gtk_label_set_label (label, data);
+  g_free (data);
 }
 
 static void
 position_updated_cb (GstPlayer * unused, GstClockTime position, GtkPlay * play)
 {
-  g_signal_handler_block (play->seekbar, play->seekbar_value_changed_signal_id);
+  g_signal_handlers_block_by_func (play->seekbar,
+      seekbar_value_changed_cb, play);
   gtk_range_set_value (GTK_RANGE (play->seekbar),
       (gdouble) position / GST_SECOND);
-  g_signal_handler_unblock (play->seekbar,
-      play->seekbar_value_changed_signal_id);
+  update_position_label (play->elapshed_label, position / GST_SECOND);
+  update_position_label (play->remain_label,
+      GST_CLOCK_DIFF (position, gst_player_get_duration (play->player)) /
+      GST_SECOND);
+  g_signal_handlers_unblock_by_func (play->seekbar,
+      seekbar_value_changed_cb, play);
 }
 
 static void
@@ -1479,8 +1417,7 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
     GList *next = NULL;
 
     next = g_list_next (play->current_uri);
-    if (!next && gtk_toggle_button_get_active
-        (GTK_TOGGLE_BUTTON (play->repeat_button)))
+    if (!next && play->loop)
       next = g_list_first (play->uris);
 
     if (next) {
@@ -1489,9 +1426,7 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
       GtkWidget *image;
 
       gst_player_pause (play->player);
-      image =
-          gtk_image_new_from_icon_name ("media-playback-start",
-          GTK_ICON_SIZE_BUTTON);
+      image = TOOLBAR_GET_OBJECT (play_image);
       gtk_button_set_image (GTK_BUTTON (play->play_pause_button), image);
       play->playing = FALSE;
       if (play->inhibit_cookie)
@@ -1502,30 +1437,22 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
   }
 }
 
-static gboolean
-_has_active_stream (GtkPlay * play, void *(*func) (GstPlayer * player))
-{
-  void *obj;
-
-  obj = func (play->player);
-  if (obj) {
-    g_object_unref (obj);
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
 static GdkPixbuf *
-gst_sample_to_pixbuf (GtkPlay * play, GstSample * sample)
+gtk_play_get_cover_image (GstPlayerMediaInfo * media_info)
 {
-  GdkPixbufLoader *loader;
-  GdkPixbuf *pixbuf = NULL;
-  GError *err = NULL;
+  GstSample *sample;
   GstMapInfo info;
   GstBuffer *buffer;
+  GError *err = NULL;
+  GdkPixbufLoader *loader;
+  GdkPixbuf *pixbuf = NULL;
   const GstStructure *caps_struct;
   GstTagImageType type = GST_TAG_IMAGE_TYPE_UNDEFINED;
+
+  /* get image sample buffer from media */
+  sample = gst_player_media_info_get_image_sample (media_info);
+  if (!sample)
+    return NULL;
 
   buffer = gst_sample_get_buffer (sample);
   caps_struct = gst_sample_get_info (sample);
@@ -1566,84 +1493,27 @@ gst_sample_to_pixbuf (GtkPlay * play, GstSample * sample)
 
   return pixbuf;
 }
-
-static void
-display_cover_art (GtkPlay * play, GstPlayerMediaInfo * media_info)
-{
-  GstSample *sample;
-  GstPlayerMediaInfo *temp_media_info = NULL;
-
-  /* hide the video widget and show image widget */
-  gtk_widget_hide (play->video_area);
-  gtk_widget_show (play->image_area);
-
-  /* if media information is not passed then get it from player */
-  if (!media_info)
-    temp_media_info = media_info = gst_player_get_media_info (play->player);
-
-  sample = gst_player_media_info_get_image_sample (media_info);
-  if (!sample)
-    goto cleanup;
-
-  if (play->image_pixbuf)
-    g_object_unref (play->image_pixbuf);
-
-  play->image_pixbuf = gst_sample_to_pixbuf (play, sample);
-
-cleanup:
-  gtk_widget_queue_draw (play->image_area);     /* send expose event to widget */
-
-  if (temp_media_info)
-    g_object_unref (temp_media_info);
-}
-
-static gboolean
-has_active_stream (GtkPlay * play, GType type)
-{
-  if (type == GST_TYPE_PLAYER_VIDEO_INFO)
-    return _has_active_stream (play,
-        (void *) gst_player_get_current_video_track);
-  else if (type == GST_TYPE_PLAYER_AUDIO_INFO)
-    return _has_active_stream (play,
-        (void *) gst_player_get_current_audio_track);
-  else
-    return _has_active_stream (play,
-        (void *) gst_player_get_current_subtitle_track);
-}
-
 static void
 media_info_updated_cb (GstPlayer * player, GstPlayerMediaInfo * media_info,
     GtkPlay * play)
 {
-  if (!gtk_widget_is_sensitive (play->media_info_button)) {
-    const gchar *title;
-    const gchar *vis;
+  const gchar *title;
+  GdkPixbuf *pixbuf;
 
-    title = gst_player_media_info_get_title (media_info);
-    if (title)
-      set_title (play, title);
+  title = gst_player_media_info_get_title (media_info);
+  if (!title)
+    title = g_path_get_basename (gst_player_media_info_get_uri (media_info));
 
-    gtk_widget_set_sensitive (play->media_info_button, TRUE);
+  pixbuf = gtk_play_get_cover_image (media_info);
 
-    /* if we have active video stream then hide image widget
-     * and show video widget otherwise show the cover art.
-     */
-    if (has_active_stream (play, GST_TYPE_PLAYER_VIDEO_INFO)) {
-      gtk_widget_hide (play->image_area);
-      gtk_widget_show (play->video_area);
-    } else {
-      display_cover_art (play, media_info);
-    }
+  if (title) {
+    gtk_label_set_label (play->title_label, title);
+    set_title (play, title);
+  }
 
-    /* if we have audio only stream and visualization is enabled
-     * then show video widget.
-     */
-    vis = gst_player_get_current_visualization (play->player);
-    if (!has_active_stream (play, GST_TYPE_PLAYER_VIDEO_INFO) &&
-        has_active_stream (play, GST_TYPE_PLAYER_AUDIO_INFO) && vis) {
-      gtk_widget_show (play->video_area);
-      gtk_widget_hide (play->image_area);
-    }
+  if (pixbuf) {
+    gtk_window_set_icon (GTK_WINDOW (play), pixbuf);
+    g_object_unref (pixbuf);
   }
 }
 
@@ -1657,11 +1527,11 @@ player_volume_changed_cb (GstPlayer * player, GtkPlay * play)
 
   if (fabs (cur_val - new_val) > 0.001) {
     g_signal_handlers_block_by_func (play->volume_button,
-        volume_changed_cb, play);
+        volume_button_value_changed_cb, play);
     gtk_scale_button_set_value (GTK_SCALE_BUTTON (play->volume_button),
         new_val);
     g_signal_handlers_unblock_by_func (play->volume_button,
-        volume_changed_cb, play);
+        volume_button_value_changed_cb, play);
   }
 }
 
@@ -1677,9 +1547,6 @@ gtk_play_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case PROP_FULLSCREEN:
       self->fullscreen = g_value_get_boolean (value);
-      break;
-    case PROP_VISUAL:
-      self->visual = g_value_get_boolean (value);
       break;
     case PROP_URIS:
       self->uris = g_value_get_pointer (value);
@@ -1724,19 +1591,6 @@ gtk_play_constructor (GType type, guint n_construct_params,
   g_object_set (self->player, "dispatch-to-main-context", TRUE, NULL);
 
   create_ui (self);
-
-  /* if visualization is enabled then use the first element */
-  if (self->visual) {
-    GstPlayerVisualization **viss;
-    viss = gst_player_visualizations_get ();
-
-    if (viss && *viss) {
-      gst_player_set_visualization (self->player, (*viss)->name);
-      gst_player_set_visualization_enabled (self->player, TRUE);
-    }
-    if (viss)
-      gst_player_visualizations_free (viss);
-  }
 
   g_signal_connect (self->player, "position-updated",
       G_CALLBACK (position_updated_cb), self);
@@ -1801,9 +1655,6 @@ gtk_play_class_init (GtkPlayClass * klass)
       g_param_spec_boolean ("fullscreen", "Fullscreen", "Fullscreen mode",
       FALSE,
       G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
-  gtk_play_properties[PROP_VISUAL] =
-      g_param_spec_boolean ("visual", "Visual", "Use Visualizations", FALSE,
-      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
   gtk_play_properties[PROP_URIS] =
       g_param_spec_pointer ("uris", "URIs", "URIs to play",
       G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
@@ -1819,13 +1670,12 @@ gtk_play_app_command_line (GApplication * application,
   GVariantDict *options;
   GtkPlay *play;
   GList *uris = NULL;
-  gboolean loop = FALSE, visual = FALSE, fullscreen = FALSE;
+  gboolean loop = FALSE, fullscreen = FALSE;
   gchar **uris_array = NULL;
 
   options = g_application_command_line_get_options_dict (command_line);
 
   g_variant_dict_lookup (options, "loop", "b", &loop);
-  g_variant_dict_lookup (options, "visual", "b", &visual);
   g_variant_dict_lookup (options, "fullscreen", "b", &fullscreen);
   g_variant_dict_lookup (options, G_OPTION_REMAINING, "^a&ay", &uris_array);
 
@@ -1850,7 +1700,7 @@ gtk_play_app_command_line (GApplication * application,
 
   play =
       g_object_new (gtk_play_get_type (), "loop", loop, "fullscreen",
-      fullscreen, "visual", visual, "uris", uris, NULL);
+      fullscreen, "uris", uris, NULL);
   gtk_widget_show_all (GTK_WIDGET (play));
 
   return
@@ -1881,8 +1731,6 @@ gtk_play_app_new (void)
     {"loop", 'l', 0, G_OPTION_ARG_NONE, NULL, "Repeat all"},
     {"fullscreen", 'f', 0, G_OPTION_ARG_NONE, NULL,
         "Show the player in fullscreen"},
-    {"visual", 'v', 0, G_OPTION_ARG_NONE, NULL,
-        "Show visualization when there is no video stream"},
     {NULL}
   };
 
