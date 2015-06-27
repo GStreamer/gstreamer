@@ -277,13 +277,13 @@ gst_ffmpegviddec_finalize (GObject * object)
 {
   GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) object;
 
+  av_frame_free (&ffmpegdec->picture);
+
   if (ffmpegdec->context != NULL) {
     gst_ffmpeg_avcodec_close (ffmpegdec->context);
     av_free (ffmpegdec->context);
     ffmpegdec->context = NULL;
   }
-
-  av_frame_free (&ffmpegdec->picture);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
