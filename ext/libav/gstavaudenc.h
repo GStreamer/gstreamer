@@ -48,6 +48,8 @@ struct _GstFFMpegAudEnc
    * include a context here, rather than copy-and-past it from avcodec.h */
   AVCodecContext config;
 
+  AVFrame *frame;
+
   GstAudioChannelPosition ffmpeg_layout[64];
   gboolean needs_reorder;
 };

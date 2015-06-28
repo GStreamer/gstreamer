@@ -246,7 +246,7 @@ gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc)
 
   /* ffmpeg objects */
   ffmpegenc->context = avcodec_alloc_context3 (klass->in_plugin);
-  ffmpegenc->picture = avcodec_alloc_frame ();
+  ffmpegenc->picture = av_frame_alloc ();
   ffmpegenc->opened = FALSE;
 
   ffmpegenc->file = NULL;
@@ -274,9 +274,9 @@ gst_ffmpegvidenc_finalize (GObject * object)
   gst_ffmpeg_cfg_finalize (ffmpegenc);
 
   /* clean up remaining allocated data */
+  av_frame_free (&ffmpegenc->picture);
   gst_ffmpeg_avcodec_close (ffmpegenc->context);
   av_free (ffmpegenc->context);
-  avcodec_free_frame (&ffmpegenc->picture);
 
   g_free (ffmpegenc->filename);
 

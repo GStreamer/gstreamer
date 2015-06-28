@@ -179,6 +179,7 @@ gst_ffmpegaudenc_init (GstFFMpegAudEnc * ffmpegaudenc)
   /* ffmpeg objects */
   ffmpegaudenc->context = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegaudenc->opened = FALSE;
+  ffmpegaudenc->frame = av_frame_alloc ();
 
   ffmpegaudenc->compliance = FFMPEG_DEFAULT_COMPLIANCE;
 
@@ -191,6 +192,7 @@ gst_ffmpegaudenc_finalize (GObject * object)
   GstFFMpegAudEnc *ffmpegaudenc = (GstFFMpegAudEnc *) object;
 
   /* clean up remaining allocated data */
+  av_frame_free (&ffmpegaudenc->frame);
   gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
   av_free (ffmpegaudenc->context);
 
@@ -423,7 +425,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
   GstFlowReturn ret;
   GstAudioInfo *info;
   AVPacket *pkt;
-  AVFrame frame;
+  AVFrame *frame = ffmpegaudenc->frame;
   gboolean planar;
 
   enc = GST_AUDIO_ENCODER (ffmpegaudenc);
@@ -436,9 +438,6 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
   pkt = g_slice_new0 (AVPacket);
 
   if (audio_in != NULL) {
-    memset (&frame, 0, sizeof (frame));
-    avcodec_get_frame_defaults (&frame);
-
     info = gst_audio_encoder_get_audio_info (enc);
     planar = av_sample_fmt_is_planar (ffmpegaudenc->context->sample_fmt);
 
@@ -446,19 +445,20 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
       gint channels, nsamples;
       gint i, j;
 
-      nsamples = frame.nb_samples = in_size / info->bpf;
+      nsamples = frame->nb_samples = in_size / info->bpf;
       channels = info->channels;
 
       if (info->channels > AV_NUM_DATA_POINTERS) {
-        frame.extended_data = g_new (uint8_t *, info->channels);
+        frame->extended_data = g_new (uint8_t *, info->channels);
       } else {
-        frame.extended_data = frame.data;
+        frame->extended_data = frame->data;
       }
 
-      frame.extended_data[0] = g_malloc (in_size);
-      frame.linesize[0] = in_size / channels;
+      frame->extended_data[0] = g_malloc (in_size);
+      frame->linesize[0] = in_size / channels;
       for (i = 1; i < channels; i++)
-        frame.extended_data[i] = frame.extended_data[i - 1] + frame.linesize[0];
+        frame->extended_data[i] =
+            frame->extended_data[i - 1] + frame->linesize[0];
 
       switch (info->finfo->width) {
         case 8:{
@@ -466,7 +466,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              ((guint8 *) frame.extended_data[j])[i] = idata[j];
+              ((guint8 *) frame->extended_data[j])[i] = idata[j];
             }
             idata += channels;
           }
@@ -477,7 +477,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              ((guint16 *) frame.extended_data[j])[i] = idata[j];
+              ((guint16 *) frame->extended_data[j])[i] = idata[j];
             }
             idata += channels;
           }
@@ -488,7 +488,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              ((guint32 *) frame.extended_data[j])[i] = idata[j];
+              ((guint32 *) frame->extended_data[j])[i] = idata[j];
             }
             idata += channels;
           }
@@ -500,7 +500,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              ((guint64 *) frame.extended_data[j])[i] = idata[j];
+              ((guint64 *) frame->extended_data[j])[i] = idata[j];
             }
             idata += channels;
           }
@@ -513,19 +513,19 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
       }
 
     } else {
-      frame.data[0] = audio_in;
-      frame.extended_data = frame.data;
-      frame.linesize[0] = in_size;
-      frame.nb_samples = in_size / info->bpf;
+      frame->data[0] = audio_in;
+      frame->extended_data = frame->data;
+      frame->linesize[0] = in_size;
+      frame->nb_samples = in_size / info->bpf;
     }
 
     /* we have a frame to feed the encoder */
-    res = avcodec_encode_audio2 (ctx, pkt, &frame, have_data);
+    res = avcodec_encode_audio2 (ctx, pkt, frame, have_data);
 
     if (planar && info->channels > 1)
-      g_free (frame.data[0]);
-    if (frame.extended_data != frame.data)
-      g_free (frame.extended_data);
+      g_free (frame->data[0]);
+    if (frame->extended_data != frame->data)
+      g_free (frame->extended_data);
 
   } else {
     /* flushing the encoder */
@@ -559,7 +559,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
          but we have no way to know AFAICT */
       ret = gst_audio_encoder_finish_frame (enc, outbuf, -1);
     } else {
-      ret = gst_audio_encoder_finish_frame (enc, outbuf, frame.nb_samples);
+      ret = gst_audio_encoder_finish_frame (enc, outbuf, frame->nb_samples);
     }
   } else {
     GST_LOG_OBJECT (ffmpegaudenc, "no output produced");
