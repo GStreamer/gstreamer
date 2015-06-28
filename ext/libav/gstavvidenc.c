@@ -673,8 +673,8 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   frame = gst_video_encoder_get_oldest_frame (encoder);
 
   outbuf =
-      gst_buffer_new_wrapped_full (0, pkt->data, pkt->size, 0, pkt->size, pkt,
-      gst_ffmpegvidenc_free_avpacket);
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, pkt->data,
+      pkt->size, 0, pkt->size, pkt, gst_ffmpegvidenc_free_avpacket);
   frame->output_buffer = outbuf;
 
   /* buggy codec may not set coded_frame */
@@ -748,8 +748,8 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
 
     if (send && have_data) {
       outbuf =
-          gst_buffer_new_wrapped_full (0, pkt->data, pkt->size, 0, pkt->size,
-          pkt->data, gst_ffmpegvidenc_free_avpacket);
+          gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, pkt->data,
+          pkt->size, 0, pkt->size, pkt->data, gst_ffmpegvidenc_free_avpacket);
       frame->output_buffer = outbuf;
 
       if (ffmpegenc->context->coded_frame->key_frame)

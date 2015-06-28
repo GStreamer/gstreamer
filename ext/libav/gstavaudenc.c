@@ -587,8 +587,8 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
     GST_LOG_OBJECT (ffmpegaudenc, "pushing size %d", pkt->size);
 
     outbuf =
-        gst_buffer_new_wrapped_full (0, pkt->data, pkt->size, 0, pkt->size,
-        pkt, gst_ffmpegaudenc_free_avpacket);
+        gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, pkt->data,
+        pkt->size, 0, pkt->size, pkt, gst_ffmpegaudenc_free_avpacket);
 
     codec = ffmpegaudenc->context->codec;
     if ((codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE) || !buffer) {
