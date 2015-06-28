@@ -355,9 +355,6 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   if (ffmpegenc->interlaced) {
     ffmpegenc->context->flags |=
         CODEC_FLAG_INTERLACED_DCT | CODEC_FLAG_INTERLACED_ME;
-    ffmpegenc->picture->interlaced_frame = TRUE;
-    /* if this is not the case, a filter element should be used to swap fields */
-    ffmpegenc->picture->top_field_first = TRUE;
   }
 
   /* some other defaults */
@@ -608,6 +605,13 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   int have_data = 0;
   BufferInfo *buffer_info;
 
+  if (ffmpegenc->interlaced) {
+    ffmpegenc->picture->interlaced_frame = TRUE;
+    /* if this is not the case, a filter element should be used to swap fields */
+    ffmpegenc->picture->top_field_first =
+        GST_BUFFER_FLAG_IS_SET (frame->input_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+  }
+
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame))
     ffmpegenc->picture->pict_type = AV_PICTURE_TYPE_I;
 
@@ -683,10 +687,6 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
   } else
     GST_WARNING_OBJECT (ffmpegenc, "codec did not provide keyframe info");
-
-  /* Reset frame type */
-  if (ffmpegenc->picture->pict_type)
-    ffmpegenc->picture->pict_type = 0;
 
   return gst_video_encoder_finish_frame (encoder, frame);
 
