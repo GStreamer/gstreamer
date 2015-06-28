@@ -262,61 +262,6 @@ could_not_open:
   }
 }
 
-typedef struct
-{
-  GstBuffer *buffer;
-  GstMapInfo map;
-} BufferInfo;
-
-/* called when ffmpeg wants us to allocate a buffer to write the decoded frame
- * into. We try to give it memory from our pool */
-static int
-gst_ffmpegauddec_get_buffer (AVCodecContext * context, AVFrame * frame)
-{
-  GstFFMpegAudDec *ffmpegdec;
-  GstAudioInfo *info;
-  BufferInfo *buffer_info;
-
-  ffmpegdec = (GstFFMpegAudDec *) context->opaque;
-
-  if (ffmpegdec->info.finfo && settings_changed (ffmpegdec, context, frame))
-    goto fallback;
-
-  if (G_UNLIKELY (!gst_ffmpegauddec_negotiate (ffmpegdec, context, frame,
-              FALSE)))
-    goto negotiate_failed;
-
-  /* Always use the default allocator for planar audio formats because
-   * we will have to copy and deinterleave later anyway */
-  if (av_sample_fmt_is_planar (frame->format))
-    goto fallback;
-
-  info = gst_audio_decoder_get_audio_info (GST_AUDIO_DECODER (ffmpegdec));
-
-  buffer_info = g_slice_new (BufferInfo);
-  buffer_info->buffer =
-      gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER (ffmpegdec),
-      frame->nb_samples * info->bpf);
-  gst_buffer_map (buffer_info->buffer, &buffer_info->map, GST_MAP_WRITE);
-  frame->opaque = buffer_info;
-  frame->data[0] = buffer_info->map.data;
-  frame->extended_data = frame->data;
-  frame->linesize[0] = buffer_info->map.size;
-  frame->type = FF_BUFFER_TYPE_USER;
-
-  return 0;
-  /* fallbacks */
-negotiate_failed:
-  {
-    GST_DEBUG_OBJECT (ffmpegdec, "negotiate failed");
-    goto fallback;
-  }
-fallback:
-  {
-    return avcodec_default_get_buffer (context, frame);
-  }
-}
-
 static gboolean
 gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 {
@@ -356,10 +301,6 @@ gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   /* workaround encoder bugs */
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
   ffmpegdec->context->err_recognition = 1;
-
-  ffmpegdec->context->get_buffer = gst_ffmpegauddec_get_buffer;
-  ffmpegdec->context->reget_buffer = NULL;
-  ffmpegdec->context->release_buffer = NULL;
 
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
@@ -499,7 +440,6 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
       "Decode audio: len=%d, have_data=%d", len, *have_data);
 
   if (len >= 0 && *have_data) {
-    BufferInfo *buffer_info = ffmpegdec->frame->opaque;
     gint nsamples, channels, byte_per_sample;
     gsize output_size;
 
@@ -519,12 +459,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     output_size = nsamples * byte_per_sample * channels;
 
     GST_DEBUG_OBJECT (ffmpegdec, "Creating output buffer");
-    if (buffer_info) {
-      *outbuf = buffer_info->buffer;
-      gst_buffer_unmap (buffer_info->buffer, &buffer_info->map);
-      g_slice_free (BufferInfo, buffer_info);
-      ffmpegdec->frame->opaque = NULL;
-    } else if (av_sample_fmt_is_planar (ffmpegdec->context->sample_fmt)
+    if (av_sample_fmt_is_planar (ffmpegdec->context->sample_fmt)
         && channels > 1) {
       gint i, j;
       GstMapInfo minfo;
