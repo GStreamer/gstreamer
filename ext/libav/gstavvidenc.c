@@ -711,7 +711,7 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstBuffer *outbuf;
   gint ret;
-  AVPacket pkt;
+  AVPacket *pkt;
   int have_data = 0;
 
   GST_DEBUG_OBJECT (ffmpegenc, "flushing buffers with sending %d", send);
@@ -722,12 +722,13 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
 
   while ((frame =
           gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (ffmpegenc)))) {
-    memset (&pkt, 0, sizeof (pkt));
+    pkt = g_slice_new0 (AVPacket);
     have_data = 0;
 
-    ret = avcodec_encode_video2 (ffmpegenc->context, &pkt, NULL, &have_data);
+    ret = avcodec_encode_video2 (ffmpegenc->context, pkt, NULL, &have_data);
 
     if (ret < 0) {              /* there should be something, notify and give up */
+      g_slice_free (AVPacket, pkt);
 #ifndef GST_DISABLE_GST_DEBUG
       GstFFMpegVidEncClass *oclass =
           (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
@@ -746,8 +747,9 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
             GST_ERROR_SYSTEM);
 
     if (send && have_data) {
-      outbuf = gst_buffer_new_wrapped_full (0, pkt.data, pkt.size, 0, pkt.size,
-          pkt.data, av_free);
+      outbuf =
+          gst_buffer_new_wrapped_full (0, pkt->data, pkt->size, 0, pkt->size,
+          pkt->data, gst_ffmpegvidenc_free_avpacket);
       frame->output_buffer = outbuf;
 
       if (ffmpegenc->context->coded_frame->key_frame)
