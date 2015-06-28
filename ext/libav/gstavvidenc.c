@@ -580,6 +580,22 @@ gst_ffmpegvidenc_free_avpacket (gpointer pkt)
   g_slice_free (AVPacket, pkt);
 }
 
+typedef struct
+{
+  GstBuffer *buffer;
+  GstVideoFrame vframe;
+} BufferInfo;
+
+static void
+buffer_info_free (void *opaque, guint8 * data)
+{
+  BufferInfo *info = opaque;
+
+  gst_video_frame_unmap (&info->vframe);
+  gst_buffer_unref (info->buffer);
+  g_slice_free (BufferInfo, info);
+}
+
 static GstFlowReturn
 gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
@@ -588,24 +604,33 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   GstBuffer *outbuf;
   gint ret = 0, c;
   GstVideoInfo *info = &ffmpegenc->input_state->info;
-  GstVideoFrame vframe;
   AVPacket *pkt;
   int have_data = 0;
+  BufferInfo *buffer_info;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame))
     ffmpegenc->picture->pict_type = AV_PICTURE_TYPE_I;
 
-  if (!gst_video_frame_map (&vframe, info, frame->input_buffer, GST_MAP_READ)) {
+  buffer_info = g_slice_new0 (BufferInfo);
+  buffer_info->buffer = gst_buffer_ref (frame->input_buffer);
+
+  if (!gst_video_frame_map (&buffer_info->vframe, info, frame->input_buffer,
+          GST_MAP_READ)) {
     GST_ERROR_OBJECT (encoder, "Failed to map input buffer");
+    gst_buffer_unref (buffer_info->buffer);
+    g_slice_free (BufferInfo, buffer_info);
     return GST_FLOW_ERROR;
   }
 
   /* Fill avpicture */
+  ffmpegenc->picture->buf[0] =
+      av_buffer_create (NULL, 0, buffer_info_free, buffer_info, 0);
   for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
     if (c < GST_VIDEO_INFO_N_COMPONENTS (info)) {
-      ffmpegenc->picture->data[c] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, c);
+      ffmpegenc->picture->data[c] =
+          GST_VIDEO_FRAME_PLANE_DATA (&buffer_info->vframe, c);
       ffmpegenc->picture->linesize[c] =
-          GST_VIDEO_FRAME_COMP_STRIDE (&vframe, c);
+          GST_VIDEO_FRAME_COMP_STRIDE (&buffer_info->vframe, c);
     } else {
       ffmpegenc->picture->data[c] = NULL;
       ffmpegenc->picture->linesize[c] = 0;
@@ -623,7 +648,7 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
       avcodec_encode_video2 (ffmpegenc->context, pkt, ffmpegenc->picture,
       &have_data);
 
-  gst_video_frame_unmap (&vframe);
+  av_frame_unref (ffmpegenc->picture);
 
   if (ret < 0 || !have_data)
     g_slice_free (AVPacket, pkt);
