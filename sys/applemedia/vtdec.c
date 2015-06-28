@@ -543,31 +543,92 @@ create_format_description_from_codec_data (GstVtdec * vtdec,
     return NULL;
 }
 
+/* Custom FreeBlock function for CMBlockBuffer */
+static void
+cm_block_buffer_freeblock (void *refCon, void *doomedMemoryBlock,
+    size_t sizeInBytes)
+{
+  GstMapInfo *info = (GstMapInfo *) refCon;
+
+  gst_memory_unmap (info->memory, info);
+  gst_memory_unref (info->memory);
+  g_slice_free (GstMapInfo, info);
+}
+
+static CMBlockBufferRef
+cm_block_buffer_from_gst_buffer (GstBuffer * buf, GstMapFlags flags)
+{
+  OSStatus status;
+  CMBlockBufferRef bbuf;
+  CMBlockBufferCustomBlockSource blockSource;
+  guint memcount, i;
+
+  /* Initialize custom block source structure */
+  blockSource.version = kCMBlockBufferCustomBlockSourceVersion;
+  blockSource.AllocateBlock = NULL;
+  blockSource.FreeBlock = cm_block_buffer_freeblock;
+
+  /* Determine number of memory blocks */
+  memcount = gst_buffer_n_memory (buf);
+  status = CMBlockBufferCreateEmpty (NULL, memcount, 0, &bbuf);
+  if (status != kCMBlockBufferNoErr) {
+    GST_ERROR ("CMBlockBufferCreateEmpty returned %d", (int) status);
+    return NULL;
+  }
+
+  /* Go over all GstMemory objects and add them to the CMBlockBuffer */
+  for (i = 0; i < memcount; ++i) {
+    GstMemory *mem;
+    GstMapInfo *info;
+
+    mem = gst_buffer_get_memory (buf, i);
+
+    info = g_slice_new (GstMapInfo);
+    if (!gst_memory_map (mem, info, flags)) {
+      GST_ERROR ("failed mapping memory");
+      g_slice_free (GstMapInfo, info);
+      gst_memory_unref (mem);
+      CFRelease (bbuf);
+      return NULL;
+    }
+
+    blockSource.refCon = info;
+    status =
+        CMBlockBufferAppendMemoryBlock (bbuf, info->data, info->size, NULL,
+        &blockSource, 0, info->size, 0);
+    if (status != kCMBlockBufferNoErr) {
+      GST_ERROR ("CMBlockBufferAppendMemoryBlock returned %d", (int) status);
+      gst_memory_unmap (mem, info);
+      g_slice_free (GstMapInfo, info);
+      gst_memory_unref (mem);
+      CFRelease (bbuf);
+      return NULL;
+    }
+  }
+
+  return bbuf;
+}
+
 static CMSampleBufferRef
 cm_sample_buffer_from_gst_buffer (GstVtdec * vtdec, GstBuffer * buf)
 {
   OSStatus status;
   CMBlockBufferRef bbuf = NULL;
   CMSampleBufferRef sbuf = NULL;
-  GstMapInfo map;
   CMSampleTimingInfo sample_timing;
   CMSampleTimingInfo time_array[1];
 
   g_return_val_if_fail (vtdec->format_description, NULL);
 
-  gst_buffer_map (buf, &map, GST_MAP_READ);
+  /* create a block buffer */
+  bbuf = cm_block_buffer_from_gst_buffer (buf, GST_MAP_READ);
+  if (bbuf == NULL) {
+    GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
+        ("failed creating CMBlockBuffer"));
+    return NULL;
+  }
 
-  /* create a block buffer,  the CoreMedia equivalent of GstMemory */
-  status = CMBlockBufferCreateWithMemoryBlock (NULL,
-      map.data, (gint64) map.size, kCFAllocatorNull, NULL, 0, (gint64) map.size,
-      FALSE, &bbuf);
-
-  gst_buffer_unmap (buf, &map);
-
-  if (status != noErr)
-    goto block_error;
-
-  /* create a sample buffer, the CoreMedia equivalent of GstBuffer */
+  /* create a sample buffer */
   if (GST_BUFFER_DURATION_IS_VALID (buf))
     sample_timing.duration = CMTimeMake (GST_BUFFER_DURATION (buf), GST_SECOND);
   else
@@ -591,22 +652,13 @@ cm_sample_buffer_from_gst_buffer (GstVtdec * vtdec, GstBuffer * buf)
       CMSampleBufferCreate (NULL, bbuf, TRUE, 0, 0, vtdec->format_description,
       1, 1, time_array, 0, NULL, &sbuf);
   CFRelease (bbuf);
-  if (status != noErr)
-    goto sample_error;
+  if (status != noErr) {
+    GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
+        ("CMSampleBufferCreate returned %d", (int) status));
+    return NULL;
+  }
 
-out:
   return sbuf;
-
-block_error:
-  GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
-      ("CMBlockBufferCreateWithMemoryBlock returned %d", (int) status));
-  goto out;
-
-sample_error:
-  GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
-      ("CMSampleBufferCreate returned %d", (int) status));
-
-  goto out;
 }
 
 static gint
