@@ -728,13 +728,13 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
     ret = avcodec_encode_video2 (ffmpegenc->context, pkt, NULL, &have_data);
 
     if (ret < 0) {              /* there should be something, notify and give up */
-      g_slice_free (AVPacket, pkt);
 #ifndef GST_DISABLE_GST_DEBUG
       GstFFMpegVidEncClass *oclass =
           (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
       GST_WARNING_OBJECT (ffmpegenc,
           "avenc_%s: failed to flush buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
+      g_slice_free (AVPacket, pkt);
       gst_video_codec_frame_unref (frame);
       break;
     }
