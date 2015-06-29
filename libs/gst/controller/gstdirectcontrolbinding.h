@@ -81,13 +81,16 @@ struct _GstDirectControlBinding {
   GValue cur_value;
   gdouble last_value;
   gint byte_size;
-  gboolean want_absolute;
 
   GstDirectControlBindingConvertValue convert_value;
   GstDirectControlBindingConvertGValue convert_g_value;
 
-  gpointer _gst_reserved[GST_PADDING];
-};
+  union {
+    gpointer _gst_reserved[GST_PADDING];
+    struct {
+      gboolean want_absolute;
+    } abi;
+  } ABI;};
 
 /**
  * GstDirectControlBindingClass:

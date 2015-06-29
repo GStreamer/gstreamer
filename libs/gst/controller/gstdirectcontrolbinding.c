@@ -233,7 +233,7 @@ gst_direct_control_binding_constructor (GType type, guint n_construct_params,
     /* select mapping function */
 
 #define SET_CONVERT_FUNCTION(type) \
-    if (self->want_absolute) { \
+    if (self->ABI.abi.want_absolute) { \
         self->convert_g_value = abs_convert_g_value_to_##type; \
         self->convert_value = abs_convert_value_to_##type; \
     } \
@@ -300,7 +300,7 @@ gst_direct_control_binding_set_property (GObject * object, guint prop_id,
       self->cs = g_value_dup_object (value);
       break;
     case PROP_ABSOLUTE:
-      self->want_absolute = g_value_get_boolean (value);
+      self->ABI.abi.want_absolute = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -319,7 +319,7 @@ gst_direct_control_binding_get_property (GObject * object, guint prop_id,
       g_value_set_object (value, self->cs);
       break;
     case PROP_ABSOLUTE:
-      g_value_set_boolean (value, self->want_absolute);
+      g_value_set_boolean (value, self->ABI.abi.want_absolute);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
