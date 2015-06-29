@@ -265,6 +265,11 @@ struct _GstVideoDecoder
  *                  If not implemented, default returns
  *                  gst_video_decoder_proxy_getcaps
  *                  applied to sink template caps.
+ * @transform_meta: Optional. Transform the metadata on the input buffer to the
+ *                  output buffer. By default this method is copies all meta without
+ *                  tags and meta with only the "video" tag. subclasses can
+ *                  implement this method and return %TRUE if the metadata is to be
+ *                  copied. Since 1.6
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden, and @set_format
@@ -326,8 +331,12 @@ struct _GstVideoDecoderClass
 
   GstFlowReturn (*drain)          (GstVideoDecoder *decoder);
 
+  gboolean      (*transform_meta) (GstVideoDecoder *decoder,
+                                   GstVideoCodecFrame *frame,
+                                   GstMeta * meta);
+
   /*< private >*/
-  void         *padding[GST_PADDING_LARGE-5];
+  void         *padding[GST_PADDING_LARGE-6];
 };
 
 GType    gst_video_decoder_get_type (void);
