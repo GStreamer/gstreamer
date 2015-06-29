@@ -3276,6 +3276,19 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
     GstClockTime timer_timeout = -1;
     gint i, len;
 
+    /* If we have a clock, update "now" now with the very latest running time
+     * we have. It is used below when timeouts are triggered to calculate
+     * any next possible timeout. If we only update it after waiting for the
+     * clock, we would give a too old time to the timeout functions.
+     */
+    GST_OBJECT_LOCK (jitterbuffer);
+    if (GST_ELEMENT_CLOCK (jitterbuffer)) {
+      now =
+          gst_clock_get_time (GST_ELEMENT_CLOCK (jitterbuffer)) -
+          GST_ELEMENT_CAST (jitterbuffer)->base_time;
+    }
+    GST_OBJECT_UNLOCK (jitterbuffer);
+
     GST_DEBUG_OBJECT (jitterbuffer, "now %" GST_TIME_FORMAT,
         GST_TIME_ARGS (now));
 
@@ -3369,7 +3382,6 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       }
 
       if (ret != GST_CLOCK_UNSCHEDULED) {
-        now = timer_timeout + MAX (clock_jitter, 0);
         GST_DEBUG_OBJECT (jitterbuffer, "sync done, %d, #%d, %" G_GINT64_FORMAT,
             ret, priv->timer_seqnum, clock_jitter);
       } else {

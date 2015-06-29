@@ -677,9 +677,6 @@ GST_START_TEST (test_only_one_lost_event_on_large_gaps)
   g_assert_cmpint (GST_BUFFER_PTS (out_buf), ==, 0);
   gst_buffer_unref (out_buf);
 
-  /* move time ahead 10 seconds */
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 10 * GST_SECOND);
-
   /* wait a bit */
   g_usleep (G_USEC_PER_SEC / 10);
 
@@ -690,13 +687,16 @@ GST_START_TEST (test_only_one_lost_event_on_large_gaps)
 
   /* a buffer now arrives perfectly on time */
   in_buf = generate_test_buffer (10 * GST_SECOND, FALSE, 500, 500 * 160);
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 10 * GST_SECOND);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   /* release the wait */
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
   gst_test_clock_advance_time (GST_TEST_CLOCK (data.clock), GST_MSECOND * 20);
   test_id = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+
+  /* move time ahead 10 seconds */
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 10 * GST_SECOND);
+
   g_assert (id == test_id);
   gst_clock_id_unref (test_id);
   gst_clock_id_unref (id);
@@ -860,13 +860,12 @@ GST_START_TEST (test_late_packets_still_makes_lost_events)
 
   g_object_set (data.jitter_buffer, "latency", jb_latency_ms, NULL);
 
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 10 * GST_SECOND);
-
   /* push the first buffer in */
   in_buf = generate_test_buffer (0 * GST_MSECOND, TRUE, 0, 0);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 10 * GST_SECOND);
   test_id = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (test_id == id);
   gst_clock_id_unref (id);
@@ -933,13 +932,12 @@ GST_START_TEST (test_all_packets_are_timestamped_zero)
 
   g_object_set (data.jitter_buffer, "latency", jb_latency_ms, NULL);
 
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 10 * GST_SECOND);
-
   /* push the first buffer in */
   in_buf = generate_test_buffer (0 * GST_MSECOND, TRUE, 0, 0);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 10 * GST_SECOND);
   test_id = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (test_id == id);
   gst_clock_id_unref (test_id);
@@ -1125,8 +1123,8 @@ GST_START_TEST (test_rtx_two_missing)
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   /* wait for first retransmission request */
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 50 * GST_MSECOND);
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 50 * GST_MSECOND);
   tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (id == tid);
   gst_clock_id_unref (id);
@@ -1138,8 +1136,8 @@ GST_START_TEST (test_rtx_two_missing)
   verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 10, 20 * GST_MSECOND);
 
   /* wait for second retransmission request */
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 60 * GST_MSECOND);
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 60 * GST_MSECOND);
   tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (id == tid);
   gst_clock_id_unref (id);
@@ -1279,8 +1277,6 @@ GST_START_TEST (test_rtx_packet_delay)
   GST_BUFFER_FLAG_SET (in_buf, GST_BUFFER_FLAG_DISCONT);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 20 * GST_MSECOND);
-
   /* put second buffer, the jitterbuffer should now know that the packet spacing
    * is 20ms and should ask for retransmission of seqnum 2 in 20ms+10ms because
    * 2*jitter==0 and 0.5*packet_spacing==10ms */
@@ -1319,6 +1315,7 @@ GST_START_TEST (test_rtx_packet_delay)
 
   /* wait for timeout for rtx 6 -> 7 */
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_advance_time (GST_TEST_CLOCK (data.clock), GST_MSECOND * 60);
   tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (id == tid);
   gst_clock_id_unref (id);
