@@ -759,23 +759,6 @@ dpb_evict(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture, guint i)
         dpb_remove_index(decoder, i);
 }
 
-/* Finds the frame store holding the supplied picture */
-static gint
-dpb_find_picture(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
-{
-    GstVaapiDecoderH264Private * const priv = &decoder->priv;
-    gint i, j;
-
-    for (i = 0; i < priv->dpb_count; i++) {
-        GstVaapiFrameStore * const fs = priv->dpb[i];
-        for (j = 0; j < fs->num_buffers; j++) {
-            if (fs->buffers[j] == picture)
-                return i;
-        }
-    }
-    return -1;
-}
-
 /* Finds the picture with the nearest previous POC and same structure */
 static gint
 dpb_find_nearest_prev_poc(GstVaapiDecoderH264 *decoder,
@@ -1049,18 +1032,15 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     // Check if picture is the second field and the first field is still in DPB
     if (GST_VAAPI_PICTURE_IS_INTERLACED(picture) &&
         !GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture)) {
-        const gint found_index = dpb_find_picture(decoder,
-            GST_VAAPI_PICTURE_H264(picture->base.parent_picture));
-        if (found_index >= 0)
-            return gst_vaapi_frame_store_add(priv->dpb[found_index], picture);
-
-        // ... also check the previous picture that was immediately output
         fs = priv->prev_frames[picture->base.voc];
-        if (fs && &fs->buffers[0]->base == picture->base.parent_picture) {
-            if (!gst_vaapi_frame_store_add(fs, picture))
-                return FALSE;
+        if (!fs || &fs->buffers[0]->base != picture->base.parent_picture)
+            return FALSE;
+        if (!gst_vaapi_frame_store_add(fs, picture))
+            return FALSE;
+
+        if (fs->output_called)
             return dpb_output(decoder, fs);
-        }
+        return TRUE;
     }
 
     // Try to output the previous frame again if it was not submitted yet
