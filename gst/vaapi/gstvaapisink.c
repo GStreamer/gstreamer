@@ -1403,7 +1403,10 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
     g_signal_emit (sink, gst_vaapisink_signals[HANDOFF_SIGNAL], 0, buffer);
 
   /* Retain VA surface until the next one is displayed */
+  /* Need to release the lock for the duration, otherwise a deadlock is possible */
+  gst_vaapi_display_unlock (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
   gst_buffer_replace (&sink->video_buffer, buffer);
+  gst_vaapi_display_lock (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
 
   ret = GST_FLOW_OK;
 
