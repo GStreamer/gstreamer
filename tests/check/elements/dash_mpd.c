@@ -2126,6 +2126,30 @@ GST_START_TEST (dash_mpdparser_type_dynamic)
 GST_END_TEST;
 
 /*
+ * Validate gst_mpdparser_build_URL_from_template function
+ *
+ */
+GST_START_TEST (dash_mpdparser_template_parsing)
+{
+  const gchar *url_template;
+  const gchar *id = "TestId";
+  guint number = 7;
+  guint bandwidth = 2500;
+  guint64 time = 100;
+  gchar *result;
+
+  url_template = "TestMedia$Bandwidth$$$test";
+  result =
+      gst_mpdparser_build_URL_from_template (url_template, id, number,
+      bandwidth, time);
+  assert_equals_string (result, "TestMedia2500$test");
+  g_free (result);
+
+}
+
+GST_END_TEST;
+
+/*
  * Test handling Representation selection
  *
  */
@@ -2468,6 +2492,7 @@ dash_suite (void)
 
   /* tests checking other possible values for attributes */
   tcase_add_test (tc_simpleMPD, dash_mpdparser_type_dynamic);
+  tcase_add_test (tc_simpleMPD, dash_mpdparser_template_parsing);
 
   tcase_add_test (tc_complexMPD, dash_mpdparser_representation_selection);
   /* tests checking the parsing of missing/incomplete attributes of xml */

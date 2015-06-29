@@ -2681,6 +2681,8 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
         tokens[i] = g_strdup_printf ("%s", "$");
         g_free (token);
         last_token_par = TRUE;
+      } else {
+        last_token_par = FALSE;
       }
     } else {
       last_token_par = FALSE;
