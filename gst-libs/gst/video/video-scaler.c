@@ -1145,12 +1145,12 @@ gst_video_scaler_combine_packed_YUV (GstVideoScaler * y_scale,
     gint ic;
 
     if ((i & 1) == scale->out_y_offset) {
-      ic = CLAMP (i / 2, 0, y_scale->resampler.out_size - 1);
+      ic = MIN (i / 2, y_scale->resampler.out_size - 1);
       offset[i] = y_scale->resampler.offset[ic] * 2 + scale->in_y_offset;
       memcpy (taps + i * max_taps, y_scale->resampler.taps +
           y_scale->resampler.phase[ic] * max_taps, max_taps * sizeof (gdouble));
     } else {
-      ic = CLAMP (i / 4, 0, uv_scale->resampler.out_size - 1);
+      ic = MIN (i / 4, uv_scale->resampler.out_size - 1);
       offset[i] = uv_scale->resampler.offset[ic] * 4 + (i & 3);
       memcpy (taps + i * max_taps, uv_scale->resampler.taps +
           uv_scale->resampler.phase[ic] * max_taps,
