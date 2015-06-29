@@ -1110,6 +1110,7 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
       peer_caps = gst_caps_fixate (peer_caps);
     gst_video_info_from_caps (&peer_vi, peer_caps);
     out_format = GST_VIDEO_INFO_FORMAT (&peer_vi);
+    postproc->format = out_format;
     if (peer_caps)
       gst_caps_unref (peer_caps);
   }
