@@ -246,6 +246,11 @@ struct _GstAudioDecoder
  *                  If not implemented,
  *                  default returns gst_audio_decoder_proxy_getcaps
  *                  applied to sink template caps.
+ * @transform_meta: Optional. Transform the metadata on the input buffer to the
+ *                  output buffer. By default this method copies all meta without
+ *                  tags and meta with only the "audio" tag. subclasses can
+ *                  implement this method and return %TRUE if the metadata is to be
+ *                  copied. Since 1.6
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame (and likely @set_format) needs to be
@@ -300,8 +305,11 @@ struct _GstAudioDecoderClass
   GstCaps *     (*getcaps)            (GstAudioDecoder * dec,
                                        GstCaps * filter);
 
+  gboolean      (*transform_meta)     (GstAudioDecoder *enc, GstBuffer *outbuf,
+                                       GstMeta *meta, GstBuffer *inbuf);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 3];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 4];
 };
 
 GType             gst_audio_decoder_get_type (void);

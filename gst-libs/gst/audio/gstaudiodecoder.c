@@ -388,6 +388,9 @@ static gboolean gst_audio_decoder_sink_query_default (GstAudioDecoder * dec,
 static gboolean gst_audio_decoder_src_query_default (GstAudioDecoder * dec,
     GstQuery * query);
 
+static gboolean gst_audio_decoder_transform_meta_default (GstAudioDecoder *
+    decoder, GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
+
 static GstElementClass *parent_class = NULL;
 
 static void gst_audio_decoder_class_init (GstAudioDecoderClass * klass);
@@ -478,6 +481,8 @@ gst_audio_decoder_class_init (GstAudioDecoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_decoder_sink_query_default);
   audiodecoder_class->src_query =
       GST_DEBUG_FUNCPTR (gst_audio_decoder_src_query_default);
+  audiodecoder_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_audio_decoder_transform_meta_default);
 }
 
 static void
@@ -1155,6 +1160,66 @@ check_pending_reconfigure (GstAudioDecoder * dec)
   return ret;
 }
 
+static gboolean
+gst_audio_decoder_transform_meta_default (GstAudioDecoder *
+    decoder, GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  if (!tags || (g_strv_length ((gchar **) tags) == 1
+          && gst_meta_api_type_has_tag (info->api,
+              g_quark_from_string (GST_META_TAG_AUDIO_STR))))
+    return TRUE;
+
+  return FALSE;
+}
+
+typedef struct
+{
+  GstAudioDecoder *decoder;
+  GstBuffer *outbuf;
+} CopyMetaData;
+
+static gboolean
+foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
+{
+  CopyMetaData *data = user_data;
+  GstAudioDecoder *decoder = data->decoder;
+  GstAudioDecoderClass *klass = GST_AUDIO_DECODER_GET_CLASS (decoder);
+  GstBuffer *outbuf = data->outbuf;
+  const GstMetaInfo *info = (*meta)->info;
+  gboolean do_copy = FALSE;
+
+  if (GST_META_FLAG_IS_SET (*meta, GST_META_FLAG_POOLED)) {
+    /* never call the transform_meta with pool private metadata */
+    GST_DEBUG_OBJECT (decoder, "not copying pooled metadata %s",
+        g_type_name (info->api));
+    do_copy = FALSE;
+  } else if (gst_meta_api_type_has_tag (info->api, _gst_meta_tag_memory)) {
+    /* never call the transform_meta with memory specific metadata */
+    GST_DEBUG_OBJECT (decoder, "not copying memory specific metadata %s",
+        g_type_name (info->api));
+    do_copy = FALSE;
+  } else if (klass->transform_meta) {
+    do_copy = klass->transform_meta (decoder, outbuf, *meta, inbuf);
+    GST_DEBUG_OBJECT (decoder, "transformed metadata %s: copy: %d",
+        g_type_name (info->api), do_copy);
+  }
+
+  /* we only copy metadata when the subclass implemented a transform_meta
+   * function and when it returns %TRUE */
+  if (do_copy) {
+    GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
+    GST_DEBUG_OBJECT (decoder, "copy metadata %s", g_type_name (info->api));
+    /* simply copy then */
+    info->transform_func (outbuf, *meta, inbuf,
+        _gst_meta_transform_copy, &copy_data);
+  }
+  return TRUE;
+}
 
 /**
  * gst_audio_decoder_finish_frame:
@@ -1181,10 +1246,12 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 {
   GstAudioDecoderPrivate *priv;
   GstAudioDecoderContext *ctx;
+  GstAudioDecoderClass *klass = GST_AUDIO_DECODER_GET_CLASS (dec);
   gint samples = 0;
   GstClockTime ts, next_ts;
   gsize size;
   GstFlowReturn ret = GST_FLOW_OK;
+  GQueue inbufs = G_QUEUE_INIT;
 
   /* subclass should not hand us no data */
   g_return_val_if_fail (buf == NULL || gst_buffer_get_size (buf) > 0,
@@ -1252,7 +1319,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
       GST_TIME_ARGS (ts));
 
   while (priv->frames.length && frames) {
-    gst_buffer_unref (g_queue_pop_head (&priv->frames));
+    g_queue_push_tail (&inbufs, g_queue_pop_head (&priv->frames));
     dec->priv->ctx.delay = dec->priv->frames.length;
     frames--;
   }
@@ -1324,6 +1391,23 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
     GST_BUFFER_DURATION (buf) =
         GST_FRAMES_TO_CLOCK_TIME (samples, ctx->info.rate);
   }
+
+  if (klass->transform_meta) {
+    if (inbufs.length) {
+      GList *l;
+      for (l = inbufs.head; l; l = l->next) {
+        CopyMetaData data;
+
+        data.decoder = dec;
+        data.outbuf = buf;
+        gst_buffer_foreach_meta (l->data, foreach_metadata, &data);
+      }
+    } else {
+      GST_WARNING_OBJECT (dec,
+          "Can't copy metadata because input buffers disappeared");
+    }
+  }
+
   priv->samples += samples;
   priv->samples_out += samples;
 
@@ -1334,6 +1418,8 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   ret = gst_audio_decoder_output (dec, buf);
 
 exit:
+  g_queue_foreach (&inbufs, (GFunc) gst_buffer_unref, NULL);
+  g_queue_clear (&inbufs);
 
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
