@@ -225,6 +225,12 @@ struct _GstVideoEncoder
  *                  should chain up to the parent implementation to invoke the
  *                  default handler. Since 1.4
  *
+ * @transform_meta: Optional. Transform the metadata on the input buffer to the
+ *                  output buffer. By default this method is copies all meta without
+ *                  tags and meta with only the "video" tag. subclasses can
+ *                  implement this method and return %TRUE if the metadata is to be
+ *                  copied. Since 1.6
+ *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden, and @set_format
  * and @get_caps are likely needed as well.
@@ -281,8 +287,12 @@ struct _GstVideoEncoderClass
   gboolean      (*src_query)      (GstVideoEncoder *encoder,
 				   GstQuery *query);
 
+  gboolean      (*transform_meta) (GstVideoEncoder *encoder,
+                                   GstVideoCodecFrame *frame,
+                                   GstMeta * meta);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE-3];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-4];
 };
 
 GType                gst_video_encoder_get_type (void);

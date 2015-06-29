@@ -244,6 +244,9 @@ static gboolean gst_video_encoder_sink_query_default (GstVideoEncoder * encoder,
 static gboolean gst_video_encoder_src_query_default (GstVideoEncoder * encoder,
     GstQuery * query);
 
+static gboolean gst_video_encoder_transform_meta_default (GstVideoEncoder *
+    encoder, GstVideoCodecFrame * frame, GstMeta * meta);
+
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
 GType
@@ -307,6 +310,7 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
   klass->negotiate = gst_video_encoder_negotiate_default;
   klass->sink_query = gst_video_encoder_sink_query_default;
   klass->src_query = gst_video_encoder_src_query_default;
+  klass->transform_meta = gst_video_encoder_transform_meta_default;
 }
 
 static GList *
@@ -1800,6 +1804,67 @@ gst_video_encoder_release_frame (GstVideoEncoder * enc,
   gst_video_codec_frame_unref (frame);
 }
 
+static gboolean
+gst_video_encoder_transform_meta_default (GstVideoEncoder *
+    encoder, GstVideoCodecFrame * frame, GstMeta * meta)
+{
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  if (!tags || (g_strv_length ((gchar **) tags) == 1
+          && gst_meta_api_type_has_tag (info->api,
+              g_quark_from_string (GST_META_TAG_VIDEO_STR))))
+    return TRUE;
+
+  return FALSE;
+}
+
+typedef struct
+{
+  GstVideoEncoder *encoder;
+  GstVideoCodecFrame *frame;
+} CopyMetaData;
+
+static gboolean
+foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
+{
+  CopyMetaData *data = user_data;
+  GstVideoEncoder *encoder = data->encoder;
+  GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
+  GstVideoCodecFrame *frame = data->frame;
+  const GstMetaInfo *info = (*meta)->info;
+  gboolean do_copy = FALSE;
+
+  if (GST_META_FLAG_IS_SET (*meta, GST_META_FLAG_POOLED)) {
+    /* never call the transform_meta with pool private metadata */
+    GST_DEBUG_OBJECT (encoder, "not copying pooled metadata %s",
+        g_type_name (info->api));
+    do_copy = FALSE;
+  } else if (gst_meta_api_type_has_tag (info->api, _gst_meta_tag_memory)) {
+    /* never call the transform_meta with memory specific metadata */
+    GST_DEBUG_OBJECT (encoder, "not copying memory specific metadata %s",
+        g_type_name (info->api));
+    do_copy = FALSE;
+  } else if (klass->transform_meta) {
+    do_copy = klass->transform_meta (encoder, frame, *meta);
+    GST_DEBUG_OBJECT (encoder, "transformed metadata %s: copy: %d",
+        g_type_name (info->api), do_copy);
+  }
+
+  /* we only copy metadata when the subclass implemented a transform_meta
+   * function and when it returns %TRUE */
+  if (do_copy) {
+    GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
+    GST_DEBUG_OBJECT (encoder, "copy metadata %s", g_type_name (info->api));
+    /* simply copy then */
+    info->transform_func (frame->output_buffer, *meta, inbuf,
+        _gst_meta_transform_copy, &copy_data);
+  }
+  return TRUE;
+}
+
 /**
  * gst_video_encoder_finish_frame:
  * @encoder: a #GstVideoEncoder
@@ -2045,6 +2110,19 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
 
   if (encoder_class->pre_push)
     ret = encoder_class->pre_push (encoder, frame);
+
+  if (encoder_class->transform_meta) {
+    if (G_LIKELY (frame->input_buffer)) {
+      CopyMetaData data;
+
+      data.encoder = encoder;
+      data.frame = frame;
+      gst_buffer_foreach_meta (frame->input_buffer, foreach_metadata, &data);
+    } else {
+      GST_WARNING_OBJECT (encoder,
+          "Can't copy metadata because input frame disappeared");
+    }
+  }
 
   /* Get an additional ref to the buffer, which is going to be pushed
    * downstream, the original ref is owned by the frame */
