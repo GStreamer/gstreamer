@@ -1771,16 +1771,19 @@ gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
     case V4L2_YCBCR_ENC_XV601:
     case V4L2_YCBCR_ENC_SYCC:
       GST_FIXME ("XV601 and SYCC not defined, assuming 601");
+      /* fallthrough */
     case V4L2_YCBCR_ENC_601:
       cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
       break;
     case V4L2_YCBCR_ENC_XV709:
       GST_FIXME ("XV709 not defined, assuming 709");
+      /* fallthrough */
     case V4L2_YCBCR_ENC_709:
       cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT709;
       break;
     case V4L2_YCBCR_ENC_BT2020_CONST_LUM:
       GST_FIXME ("BT2020 with constant lumma is not defined, assuming BT2020");
+      /* fallthrough */
     case V4L2_YCBCR_ENC_BT2020:
       cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
       break;
@@ -2938,6 +2941,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       case GST_VIDEO_TRANSFER_GAMMA28:
         GST_WARNING_OBJECT (v4l2object->element,
             "GAMMA 18, 20, 22, 28 transfer functions not supported");
+        /* fallthrough */
       case GST_VIDEO_TRANSFER_GAMMA10:
         transfer = V4L2_XFER_FUNC_NONE;
         break;
