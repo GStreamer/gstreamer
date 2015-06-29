@@ -876,9 +876,9 @@ gst_audio_convert_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
 
   tags = gst_meta_api_type_get_tags (info->api);
 
-  if (tags && g_strv_length ((gchar **) tags) == 1
-      && gst_meta_api_type_has_tag (info->api,
-          g_quark_from_string (GST_META_TAG_AUDIO_STR)))
+  if (!tags || (g_strv_length ((gchar **) tags) == 1
+          && gst_meta_api_type_has_tag (info->api,
+              g_quark_from_string (GST_META_TAG_AUDIO_STR))))
     return TRUE;
 
   return FALSE;
