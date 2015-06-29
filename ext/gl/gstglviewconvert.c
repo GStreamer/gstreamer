@@ -278,6 +278,7 @@ gst_gl_view_convert_element_set_property (GObject * object, guint prop_id,
     case PROP_OUTPUT_DOWNMIX_MODE:
       g_object_set_property (G_OBJECT (convert->viewconvert), pspec->name,
           value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
