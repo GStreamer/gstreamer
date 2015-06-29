@@ -179,9 +179,9 @@ struct _GstBaseTransform {
  *                 The default implementation will copy the flags, timestamps and
  *                 offsets of the buffer.
  * @transform_meta: Optional. Transform the metadata on the input buffer to the
- *                  output buffer. By default this method is %NULL and no
- *                  metadata is copied. subclasses can implement this method and
- *                  return %TRUE if the metadata is to be copied.
+ *                  output buffer. By default this method copies all meta without
+ *                  tags. subclasses can implement this method and return %TRUE if
+ *                  the metadata is to be copied.
  * @before_transform: Optional.
  *                    This method is called right before the base class will
  *                    start processing. Dynamic properties or other delayed
