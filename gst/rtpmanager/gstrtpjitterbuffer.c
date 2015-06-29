@@ -3315,6 +3315,10 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
         GST_DEBUG_OBJECT (jitterbuffer, "new best %d", i);
         timer = test;
         timer_timeout = test_timeout;
+
+        /* Immediate timeout */
+        if (test_timeout == -1)
+          break;
       }
     }
     if (timer && !priv->blocked) {
