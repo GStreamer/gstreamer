@@ -752,6 +752,9 @@ gst_adapter_take (GstAdapter * adapter, gsize nbytes)
  * The caller needs to explicitly set or unset flags that should be set or
  * unset.
  *
+ * This will also copy over all GstMeta of the input buffers except
+ * for meta with the %GST_META_FLAG_POOLED flag or with the "memory" tag.
+ *
  * This function can return buffer up to the return value of
  * gst_adapter_available() without making copies if possible.
  *
@@ -821,6 +824,37 @@ done:
   return buffer;
 }
 
+static gboolean
+foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
+{
+  GstBuffer *outbuf = user_data;
+  const GstMetaInfo *info = (*meta)->info;
+  gboolean do_copy = FALSE;
+
+  if (GST_META_FLAG_IS_SET (*meta, GST_META_FLAG_POOLED)) {
+    /* never call the transform_meta with pool private metadata */
+    GST_DEBUG ("not copying pooled metadata %s", g_type_name (info->api));
+    do_copy = FALSE;
+  } else if (gst_meta_api_type_has_tag (info->api, _gst_meta_tag_memory)) {
+    /* never call the transform_meta with memory specific metadata */
+    GST_DEBUG ("not copying memory specific metadata %s",
+        g_type_name (info->api));
+    do_copy = FALSE;
+  } else {
+    do_copy = TRUE;
+    GST_DEBUG ("copying metadata %s", g_type_name (info->api));
+  }
+
+  if (do_copy) {
+    GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
+    GST_DEBUG ("copy metadata %s", g_type_name (info->api));
+    /* simply copy then */
+    info->transform_func (outbuf, *meta, inbuf,
+        _gst_meta_transform_copy, &copy_data);
+  }
+  return TRUE;
+}
+
 /**
  * gst_adapter_take_buffer:
  * @adapter: a #GstAdapter
@@ -837,6 +871,9 @@ done:
  * flags such as the DISCONT flag are set on the returned buffer, or not.
  * The caller needs to explicitly set or unset flags that should be set or
  * unset.
+ *
+ * Since 1.6 this will also copy over all GstMeta of the input buffers except
+ * for meta with the %GST_META_FLAG_POOLED flag or with the "memory" tag.
  *
  * Caller owns a reference to the returned buffer. gst_buffer_unref() after
  * usage.
@@ -900,6 +937,22 @@ gst_adapter_take_buffer (GstAdapter * adapter, gsize nbytes)
   data = gst_adapter_take_internal (adapter, nbytes);
 
   buffer = gst_buffer_new_wrapped (data, nbytes);
+
+  {
+    GSList *g;
+    GstBuffer *cur;
+    gsize read_offset = 0;
+
+    g = adapter->buflist;
+    while (g && read_offset < nbytes + adapter->skip) {
+      cur = g->data;
+
+      gst_buffer_foreach_meta (cur, foreach_metadata, buffer);
+      read_offset += gst_buffer_get_size (cur);
+
+      g = g_slist_next (g);
+    }
+  }
 
 done:
   gst_adapter_flush_unchecked (adapter, nbytes);
