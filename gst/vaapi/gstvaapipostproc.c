@@ -91,6 +91,9 @@ G_DEFINE_TYPE_WITH_CODE (GstVaapiPostproc, gst_vaapipostproc,
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
         gst_vaapipostproc_colorbalance_init));
 
+static GstVideoFormat native_formats[] =
+    { GST_VIDEO_FORMAT_NV12, GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_I420 };
+
 enum
 {
   PROP_0,
@@ -1239,14 +1242,36 @@ ensure_srcpad_buffer_pool (GstVaapiPostproc * postproc, GstCaps * caps)
 }
 
 static gboolean
+is_native_video_format (GstVideoFormat format)
+{
+  guint i = 0;
+  for (i = 0; i < G_N_ELEMENTS (native_formats); i++)
+    if (native_formats[i] == format)
+      return TRUE;
+  return FALSE;
+}
+
+static gboolean
 gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
     GstCaps * out_caps)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
   gboolean caps_changed = FALSE;
+  GstVideoInfo vinfo;
 
   if (!gst_vaapipostproc_update_sink_caps (postproc, caps, &caps_changed))
     return FALSE;
+  /* HACK: This is a workaround to deal with the va-intel-driver for non-native
+   * formats while doing advanced deinterlacing. The format of reference surfaces must
+   * be same as the format used by the driver internally for motion adaptive
+   * deinterlacing and motion compensated deinterlacing */
+  gst_video_info_from_caps (&vinfo, caps);
+  if (deint_method_is_advanced (postproc->deinterlace_method)
+      && !is_native_video_format (GST_VIDEO_INFO_FORMAT (&vinfo))) {
+    GST_WARNING_OBJECT (postproc,
+        "Advanced deinterlacing requires the native video formats used by the driver internally");
+    return FALSE;
+  }
   if (!gst_vaapipostproc_update_src_caps (postproc, out_caps, &caps_changed))
     return FALSE;
 
