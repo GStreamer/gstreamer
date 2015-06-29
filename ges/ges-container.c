@@ -283,6 +283,31 @@ _get_track_types (GESTimelineElement * object)
   return types ^ GES_TRACK_TYPE_UNKNOWN;
 }
 
+static gboolean
+_paste (GESTimelineElement * element, GESTimelineElement * ref,
+    GstClockTime paste_position)
+{
+  GList *tmp;
+  GESContainer *self = GES_CONTAINER (element);
+  GESContainer *refcontainer = GES_CONTAINER (ref);
+
+  for (tmp = GES_CONTAINER_CHILDREN (refcontainer); tmp; tmp = tmp->next) {
+    ChildMapping *map;
+    GESTimelineElement *child, *refchild = GES_TIMELINE_ELEMENT (tmp->data);
+
+    map = g_hash_table_lookup (refcontainer->priv->mappings, refchild);
+    child = ges_timeline_element_copy (GES_TIMELINE_ELEMENT (refchild), TRUE);
+
+    ges_timeline_element_paste (child, paste_position + map->start_offset);
+    ges_timeline_element_set_timeline (element,
+        GES_TIMELINE_ELEMENT_TIMELINE (ref));
+    ges_container_add (self, child);
+  }
+
+  return TRUE;
+}
+
+
 /******************************************
  *                                        *
  * GObject virtual methods implementation *
@@ -382,6 +407,7 @@ ges_container_class_init (GESContainerClass * klass)
   element_class->list_children_properties = _list_children_properties;
   element_class->lookup_child = _lookup_child;
   element_class->get_track_types = _get_track_types;
+  element_class->paste = _paste;
 
   /* No default implementations */
   klass->remove_child = NULL;

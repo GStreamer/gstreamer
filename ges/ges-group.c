@@ -598,6 +598,23 @@ _group (GList * containers)
   return ret;
 }
 
+static gboolean
+_paste (GESTimelineElement * element, GESTimelineElement * ref,
+    GstClockTime paste_position)
+{
+  if (GES_TIMELINE_ELEMENT_CLASS (parent_class)->paste (element,
+          ref, paste_position)) {
+
+    if (GES_CONTAINER_CHILDREN (element))
+      timeline_add_group (GES_TIMELINE_ELEMENT_TIMELINE (GES_CONTAINER_CHILDREN
+              (element)->data), GES_GROUP (element));
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 
 /****************************************************
  *                                                  *
@@ -675,6 +692,7 @@ ges_group_class_init (GESGroupClass * klass)
   element_class->set_inpoint = _set_inpoint;
   element_class->set_start = _set_start;
   element_class->set_priority = _set_priority;
+  element_class->paste = _paste;
 
   /* We override start, inpoint, duration and max-duration from GESTimelineElement
    * in order to makes sure those fields are not serialized.

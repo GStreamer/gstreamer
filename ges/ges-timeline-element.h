@@ -186,6 +186,8 @@ struct _GESTimelineElementClass
   gboolean (*roll_end)         (GESTimelineElement *self, guint64  end);
   gboolean (*trim)             (GESTimelineElement *self, guint64  start);
   void     (*deep_copy)        (GESTimelineElement *self, GESTimelineElement *copy);
+  gboolean (*paste)            (GESTimelineElement *self, GESTimelineElement *ref_element,
+                                GstClockTime paste_position);
 
   GParamSpec** (*list_children_properties) (GESTimelineElement * self, guint *n_properties);
   gboolean (*lookup_child)                 (GESTimelineElement *self, const gchar *prop_name,
@@ -276,6 +278,9 @@ gboolean ges_timeline_element_add_child_property   (GESTimelineElement * self,
 
 gboolean ges_timeline_element_remove_child_property(GESTimelineElement * self,
                                                     GParamSpec *pspec);
+
+gboolean ges_timeline_element_paste                (GESTimelineElement * self,
+                                                    GstClockTime paste_position);
 
 GESTrackType ges_timeline_element_get_track_types  (GESTimelineElement * self);
 

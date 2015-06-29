@@ -94,6 +94,8 @@ struct _GESTimelineElementPrivate
    * The hashtable should look like
    * {GParamaSpec ---> child}*/
   GHashTable *children_props;
+
+  GESTimelineElement *copied_from;
 };
 
 static gboolean
@@ -238,6 +240,14 @@ _set_property (GObject * object, guint property_id,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, property_id, pspec);
   }
+}
+
+static void
+ges_timeline_element_dispose (GObject * object)
+{
+  GESTimelineElement *self = GES_TIMELINE_ELEMENT (object);
+
+  g_clear_object (&self->priv->copied_from);
 }
 
 static void
@@ -387,6 +397,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
       G_SIGNAL_NO_HOOKS, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 2, G_TYPE_OBJECT, G_TYPE_PARAM);
 
+  object_class->dispose = ges_timeline_element_dispose;
   object_class->finalize = ges_timeline_element_finalize;
 
   klass->set_parent = NULL;
@@ -1113,6 +1124,10 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
           " on class %s. Can not finish the copy", G_OBJECT_CLASS_NAME (klass));
   }
 
+  if (deep) {
+    ret->priv->copied_from = gst_object_ref (self);
+  }
+
   return ret;
 }
 
@@ -1661,8 +1676,48 @@ ges_timeline_element_remove_child_property (GESTimelineElement * self,
 GESTrackType
 ges_timeline_element_get_track_types (GESTimelineElement * self)
 {
-  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
-  g_return_if_fail (GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_track_types);
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), 0);
+  g_return_val_if_fail (GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_track_types,
+      0);
 
   return GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_track_types (self);
+}
+
+/**
+ * ges_timeline_element_paste:
+ * @self: The #GESTimelineElement to paste
+ * @paste_position: The position in the timeline the element should
+ * be copied to, meaning it will become the start of @self
+ *
+ * Paste @self inside the timeline. @self must have been created
+ * using ges_timeline_element_copy with recurse=TRUE set,
+ * otherwise it will fail.
+ *
+ * Since: 1.6.0
+ */
+gboolean
+ges_timeline_element_paste (GESTimelineElement * self,
+    GstClockTime paste_position)
+{
+  gboolean res;
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+
+  if (!self->priv->copied_from) {
+    GST_ERROR_OBJECT (self, "Is not being 'deeply' copied!");
+
+    return FALSE;
+  }
+
+  if (!GES_TIMELINE_ELEMENT_GET_CLASS (self)->paste) {
+    GST_ERROR_OBJECT (self, "No paste vmethod implemented");
+
+    return FALSE;
+  }
+
+  res = GES_TIMELINE_ELEMENT_GET_CLASS (self)->paste (self,
+      self->priv->copied_from, paste_position);
+
+  g_clear_object (&self->priv->copied_from);
+
+  return res;
 }

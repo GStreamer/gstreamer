@@ -625,6 +625,44 @@ _edit (GESContainer * container, GList * layers,
   return ret;
 }
 
+static gboolean
+_paste (GESTimelineElement * element, GESTimelineElement * ref,
+    GstClockTime paste_position)
+{
+  GList *tmp;
+  GESClip *self = GES_CLIP (element);
+  GESClip *refclip = GES_CLIP (ref);
+
+  ges_clip_set_moving_from_layer (self, TRUE);
+  ges_layer_add_clip (refclip->priv->layer, self);
+  ges_clip_set_moving_from_layer (self, FALSE);
+
+  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (self), paste_position);
+
+  for (tmp = GES_CONTAINER_CHILDREN (refclip); tmp; tmp = tmp->next) {
+    GESTrackElement *new_trackelement, *trackelement =
+        GES_TRACK_ELEMENT (tmp->data);
+
+    new_trackelement =
+        GES_TRACK_ELEMENT (ges_timeline_element_copy (GES_TIMELINE_ELEMENT
+            (trackelement), FALSE));
+    if (new_trackelement == NULL) {
+      GST_WARNING_OBJECT (trackelement, "Could not create a copy");
+      continue;
+    }
+
+    ges_container_add (GES_CONTAINER (self),
+        GES_TIMELINE_ELEMENT (new_trackelement));
+
+    ges_track_element_copy_properties (GES_TIMELINE_ELEMENT (trackelement),
+        GES_TIMELINE_ELEMENT (new_trackelement));
+
+    ges_track_element_copy_bindings (trackelement, new_trackelement,
+        GST_CLOCK_TIME_NONE);
+  }
+
+  return TRUE;
+}
 
 
 /****************************************************
@@ -715,7 +753,7 @@ ges_clip_class_init (GESClipClass * klass)
   element_class->set_inpoint = _set_inpoint;
   element_class->set_priority = _set_priority;
   element_class->set_max_duration = _set_max_duration;
-  /* TODO implement the deep_copy Virtual method */
+  element_class->paste = _paste;
 
   container_class->add_child = _add_child;
   container_class->remove_child = _remove_child;
@@ -1245,7 +1283,7 @@ ges_clip_split (GESClip * clip, guint64 position)
     ges_track_element_copy_properties (GES_TIMELINE_ELEMENT (trackelement),
         GES_TIMELINE_ELEMENT (new_trackelement));
 
-    ges_track_element_split_bindings (trackelement, new_trackelement,
+    ges_track_element_copy_bindings (trackelement, new_trackelement,
         position - start + inpoint);
   }
 

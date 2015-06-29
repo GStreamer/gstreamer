@@ -339,7 +339,7 @@ G_GNUC_INTERNAL guint32   _ges_track_element_get_layer_priority (GESTrackElement
 G_GNUC_INTERNAL void ges_track_element_copy_properties          (GESTimelineElement * element,
                                                                  GESTimelineElement * elementcopy);
 
-G_GNUC_INTERNAL void ges_track_element_split_bindings (GESTrackElement *element,
+G_GNUC_INTERNAL void ges_track_element_copy_bindings (GESTrackElement *element,
 						       GESTrackElement *new_element,
 						       guint64 position);
 
