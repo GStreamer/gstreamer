@@ -174,6 +174,11 @@ struct _GstAudioEncoder {
  *                      Propose buffer allocation parameters for upstream elements.
  *                      Subclasses should chain up to the parent implementation to
  *                      invoke the default handler.
+ * @transform_meta: Optional. Transform the metadata on the input buffer to the
+ *                  output buffer. By default this method copies all meta without
+ *                  tags and meta with only the "audio" tag. subclasses can
+ *                  implement this method and return %TRUE if the metadata is to be
+ *                  copied. Since 1.6
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @set_format and @handle_frame needs to be overridden.
@@ -218,8 +223,12 @@ struct _GstAudioEncoderClass {
   gboolean      (*propose_allocation) (GstAudioEncoder * enc,
                                        GstQuery * query);
 
+  gboolean      (*transform_meta)     (GstAudioEncoder *enc, GstBuffer *outbuf,
+                                       GstMeta *meta, GstBuffer *inbuf);
+
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-1];
 };
 
 GType           gst_audio_encoder_get_type         (void);
