@@ -2039,12 +2039,13 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     delay = get_rtx_delay (priv);
 
     /* and update/install timer for next seqnum */
-    if (timer)
+    if (timer) {
       reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected,
           delay, TRUE);
-    else
+    } else {
       add_timer (jitterbuffer, TIMER_TYPE_EXPECTED, priv->next_in_seqnum, 0,
           expected, delay, priv->packet_spacing);
+    }
   } else if (timer && timer->type != TIMER_TYPE_DEADLINE) {
     /* if we had a timer, remove it, we don't know when to expect the next
      * packet. */
@@ -2465,7 +2466,20 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         }
       } else {
         /* new packet, we are missing some packets */
-        if (G_UNLIKELY (gap >= RTP_MAX_DROPOUT)) {
+        if (G_UNLIKELY (priv->timers->len >= RTP_MAX_DROPOUT)) {
+          /* If we have timers for more than RTP_MAX_DROPOUT packets
+           * pending this means that we have a huge gap overall. We can
+           * reset the jitterbuffer at this point because there's
+           * just too much data missing to be able to do anything
+           * sensible with the past data. Just try again from the
+           * next packet */
+          GST_WARNING_OBJECT (jitterbuffer,
+              "%d pending timers > %d - resetting", priv->timers->len,
+              RTP_MAX_DROPOUT);
+          reset = TRUE;
+          gst_buffer_unref (buffer);
+          buffer = NULL;
+        } else if (G_UNLIKELY (gap >= RTP_MAX_DROPOUT)) {
           reset =
               handle_big_gap_buffer (jitterbuffer, TRUE, buffer, pt, seqnum,
               gap);
