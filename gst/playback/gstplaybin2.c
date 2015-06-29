@@ -2540,7 +2540,6 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_string (value, group->uri);
       GST_PLAY_BIN_UNLOCK (playbin);
       break;
-      break;
     }
     case PROP_CURRENT_URI:
     {
