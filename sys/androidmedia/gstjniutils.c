@@ -630,7 +630,7 @@ gst_amc_jni_initialize_java_vm (void)
 
   if (java_vm) {
     GST_DEBUG ("Java VM already provided by the application");
-    return TRUE;
+    return initialize_classes ();
   }
 
   /* Returns TRUE if we can safely
