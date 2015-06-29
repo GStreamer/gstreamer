@@ -606,9 +606,6 @@ sample_error:
   GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
       ("CMSampleBufferCreate returned %d", (int) status));
 
-  if (bbuf)
-    CFRelease (bbuf);
-
   goto out;
 }
 
