@@ -975,7 +975,7 @@ GST_START_TEST (test_intersect_flagset)
       GST_SEEK_FLAG_TRICKMODE_NO_AUDIO;
 
   c1 = gst_caps_new_simple ("test/x-caps", "field", test_flagset_type,
-      (guint64) (test_flags), (guint64) (test_mask), NULL);
+      test_flags, test_mask, NULL);
 
   test_string = gst_caps_to_string (c1);
   fail_if (test_string == NULL);
