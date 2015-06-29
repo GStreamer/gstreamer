@@ -488,6 +488,7 @@ struct _GstVaapiDecoderH264Private {
     GstVaapiParserInfoH264     *active_pps;
     GstVaapiParserInfoH264     *prev_pi;
     GstVaapiParserInfoH264     *prev_slice_pi;
+    GstVaapiFrameStore        **prev_ref_frames;
     GstVaapiFrameStore        **prev_frames;
     guint                       prev_frames_alloc;
     GstVaapiFrameStore        **dpb;
@@ -794,29 +795,6 @@ dpb_find_nearest_prev_poc(GstVaapiDecoderH264 *decoder,
     return found_picture ? found_index : -1;
 }
 
-/* Finds the picture with the associated FrameNum */
-static gint
-dpb_find_frame_num(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture,
-    gint frame_num, GstVaapiPictureH264 **found_picture_ptr)
-{
-    GstVaapiDecoderH264Private * const priv = &decoder->priv;
-    guint i, j;
-
-    for (i = 0; i < priv->dpb_count; i++) {
-        GstVaapiFrameStore * const fs = priv->dpb[i];
-        if (picture && picture->base.view_id != fs->view_id)
-            continue;
-        for (j = 0; j < fs->num_buffers; j++) {
-            if (fs->buffers[j]->frame_num != frame_num)
-                continue;
-            if (found_picture_ptr)
-                *found_picture_ptr = fs->buffers[j];
-            return i;
-        }
-    }
-    return -1;
-}
-
 /* Finds the picture with the lowest POC that needs to be output */
 static gint
 dpb_find_lowest_poc(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture,
@@ -960,6 +938,15 @@ dpb_clear(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         for (i = 0; i < priv->max_views; i++)
             gst_vaapi_frame_store_replace(&priv->prev_frames[i], NULL);
     }
+
+    /* Clear previous reference frame buffers only if this is a "flush-all"
+       operation, or if the picture is part of an IDR NAL */
+    if (priv->prev_ref_frames && (!picture ||
+            GST_VAAPI_PICTURE_FLAG_IS_SET(picture,
+                GST_VAAPI_PICTURE_FLAG_IDR))) {
+        for (i = 0; i < priv->max_views; i++)
+            gst_vaapi_frame_store_replace(&priv->prev_ref_frames[i], NULL);
+    }
 }
 
 static void
@@ -1067,6 +1054,8 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
             if (!dpb_bump(decoder, picture))
                 return FALSE;
         }
+        gst_vaapi_frame_store_replace(&priv->prev_ref_frames[picture->base.voc],
+            fs);
     }
 
     // C.4.5.2 - Storage and marking of a non-reference decoded picture into the DPB
@@ -1137,19 +1126,36 @@ mvc_reset(GstVaapiDecoderH264 *decoder)
     }
 
     // Resize array of previous frame buffers
-    for (i = priv->max_views; i < priv->prev_frames_alloc; i++)
+    for (i = priv->max_views; i < priv->prev_frames_alloc; i++) {
+        gst_vaapi_frame_store_replace(&priv->prev_ref_frames[i], NULL);
         gst_vaapi_frame_store_replace(&priv->prev_frames[i], NULL);
+    }
+
+    priv->prev_ref_frames = g_try_realloc_n(priv->prev_ref_frames,
+        priv->max_views, sizeof(*priv->prev_ref_frames));
+    if (!priv->prev_ref_frames)
+        goto error_allocate;
 
     priv->prev_frames = g_try_realloc_n(priv->prev_frames, priv->max_views,
         sizeof(*priv->prev_frames));
-    if (!priv->prev_frames) {
-        priv->prev_frames_alloc = 0;
-        return FALSE;
-    }
-    for (i = priv->prev_frames_alloc; i < priv->max_views; i++)
+    if (!priv->prev_frames)
+        goto error_allocate;
+
+    for (i = priv->prev_frames_alloc; i < priv->max_views; i++) {
+        priv->prev_ref_frames[i] = NULL;
         priv->prev_frames[i] = NULL;
+    }
     priv->prev_frames_alloc = priv->max_views;
     return TRUE;
+
+    /* ERRORS */
+error_allocate:
+    g_free(priv->prev_ref_frames);
+    priv->prev_ref_frames = NULL;
+    g_free(priv->prev_frames);
+    priv->prev_frames = NULL;
+    priv->prev_frames_alloc = 0;
+    return FALSE;
 }
 
 static GstVaapiDecoderStatus
@@ -1224,6 +1230,8 @@ gst_vaapi_decoder_h264_destroy(GstVaapiDecoder *base_decoder)
     priv->dpb = NULL;
     priv->dpb_size = 0;
 
+    g_free(priv->prev_ref_frames);
+    priv->prev_ref_frames = NULL;
     g_free(priv->prev_frames);
     priv->prev_frames = NULL;
     priv->prev_frames_alloc = 0;
@@ -3151,6 +3159,7 @@ fill_picture_gaps(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture,
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstH264SPS * const sps = get_sps(decoder);
     const gint32 MaxFrameNum = 1 << (sps->log2_max_frame_num_minus4 + 4);
+    GstVaapiFrameStore *prev_frame;
     GstVaapiPicture *base_picture;
     GstVaapiPictureH264 *lost_picture, *prev_picture;
     GstH264SliceHdr lost_slice_hdr;
@@ -3163,11 +3172,9 @@ fill_picture_gaps(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture,
     if (priv->dpb_count == 0)
         return TRUE;
 
-    prev_picture = NULL;
-    dpb_find_frame_num(decoder, picture, priv->prev_ref_frame_num,
-        &prev_picture);
-    if (prev_picture)
-        gst_vaapi_picture_ref(prev_picture);
+    prev_frame = priv->prev_ref_frames[picture->base.voc];
+    g_assert(prev_frame != NULL);
+    prev_picture = gst_vaapi_picture_ref(prev_frame->buffers[0]);
     gst_vaapi_picture_ref(picture);
 
     lost_slice_hdr = *slice_hdr;
