@@ -1972,7 +1972,7 @@ gst_ptp_is_initialized (void)
 /**
  * gst_ptp_init:
  * @clock_id: PTP clock id of this process' clock or %GST_PTP_CLOCK_ID_NONE
- * @interfaces: (transfer none) (array zero-terminated=1): network interfaces to run the clock on
+ * @interfaces: (transfer none) (array zero-terminated=1) (allow-none): network interfaces to run the clock on
  *
  * Initialize the GStreamer PTP subsystem and create a PTP ordinary clock in
  * slave-only mode for all domains on the given @interfaces with the
