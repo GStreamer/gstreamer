@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 
 #include "gstrtpopuspay.h"
 
@@ -160,18 +161,52 @@ gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   return res;
 }
 
+typedef struct
+{
+  GstRtpOPUSPay *pay;
+  GstBuffer *outbuf;
+} CopyMetaData;
+
+static gboolean
+foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
+{
+  CopyMetaData *data = user_data;
+  GstRtpOPUSPay *pay = data->pay;
+  GstBuffer *outbuf = data->outbuf;
+  const GstMetaInfo *info = (*meta)->info;
+  const gchar *const *tags = gst_meta_api_type_get_tags (info->api);
+
+  if (!tags || (g_strv_length ((gchar **) tags) == 1
+          && gst_meta_api_type_has_tag (info->api,
+              g_quark_from_string (GST_META_TAG_AUDIO_STR)))) {
+    GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
+    GST_DEBUG_OBJECT (pay, "copy metadata %s", g_type_name (info->api));
+    /* simply copy then */
+    info->transform_func (outbuf, *meta, inbuf,
+        _gst_meta_transform_copy, &copy_data);
+  } else {
+    GST_DEBUG_OBJECT (pay, "not copying metadata %s", g_type_name (info->api));
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_rtp_opus_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstBuffer *outbuf;
   GstClockTime pts, dts, duration;
+  CopyMetaData data;
 
   pts = GST_BUFFER_PTS (buffer);
   dts = GST_BUFFER_DTS (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
   outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+  data.pay = GST_RTP_OPUS_PAY (basepayload);
+  data.outbuf = outbuf;
+  gst_buffer_foreach_meta (buffer, foreach_metadata, &data);
   outbuf = gst_buffer_append (outbuf, buffer);
 
   GST_BUFFER_PTS (outbuf) = pts;
