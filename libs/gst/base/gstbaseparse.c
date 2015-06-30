@@ -2813,7 +2813,6 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstBuffer *tmpbuf = NULL;
   guint fsize = 1;
   gint skip = -1;
-  const guint8 *data;
   guint min_size, av;
   GstClockTime pts, dts;
 
@@ -3012,11 +3011,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       parse->priv->next_dts = pts;
 
     /* always pass all available data */
-    data = gst_adapter_map (parse->priv->adapter, av);
-    /* arrange for actual data to be copied if subclass tries to,
-     * since what is passed is tied to the adapter */
-    tmpbuf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY |
-        GST_MEMORY_FLAG_NO_SHARE, (gpointer) data, av, 0, av, NULL, NULL);
+    tmpbuf = gst_adapter_get_buffer (parse->priv->adapter, av);
 
     /* already inform subclass what timestamps we have planned,
      * at least if provided by time-based upstream */
@@ -3029,9 +3024,6 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     ret = gst_base_parse_handle_buffer (parse, tmpbuf, &skip, &flush);
     tmpbuf = NULL;
 
-    /* probably already implicitly unmapped due to adapter operation,
-     * but for good measure ... */
-    gst_adapter_unmap (parse->priv->adapter);
     if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED) {
       goto done;
     }
