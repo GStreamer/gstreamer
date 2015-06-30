@@ -2,5 +2,5 @@
         path = common
         url = git://anongit.freedesktop.org/gstreamer/common
 [submodule "gst-libs/ext/libav"]
-	path = gst-libs/ext/libav
-	url = git://git.libav.org/libav.git
+        path = gst-libs/ext/libav
+        url = git://source.ffmpeg.org/ffmpeg.git
