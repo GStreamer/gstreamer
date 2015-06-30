@@ -37,6 +37,9 @@ struct _GstFFMpegAudDec
 
   AVFrame *frame;
 
+  guint8 *padded;
+  guint padded_size;
+
   /* prevent reopening the decoder on GST_EVENT_CAPS when caps are same as last time. */
   GstCaps *last_caps;
 
