@@ -5,6 +5,10 @@ EXPORTS
 	gst_adapter_copy
 	gst_adapter_copy_bytes
 	gst_adapter_flush
+	gst_adapter_get_buffer
+	gst_adapter_get_buffer_fast
+	gst_adapter_get_buffer_list
+	gst_adapter_get_list
 	gst_adapter_get_type
 	gst_adapter_map
 	gst_adapter_masked_scan_uint32

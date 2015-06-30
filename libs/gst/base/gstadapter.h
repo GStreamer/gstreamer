@@ -64,6 +64,10 @@ GstBuffer*              gst_adapter_take_buffer         (GstAdapter *adapter, gs
 GList*                  gst_adapter_take_list           (GstAdapter *adapter, gsize nbytes);
 GstBuffer *             gst_adapter_take_buffer_fast    (GstAdapter *adapter, gsize nbytes);
 GstBufferList *         gst_adapter_take_buffer_list    (GstAdapter *adapter, gsize nbytes);
+GstBuffer*              gst_adapter_get_buffer          (GstAdapter *adapter, gsize nbytes);
+GList*                  gst_adapter_get_list            (GstAdapter *adapter, gsize nbytes);
+GstBuffer *             gst_adapter_get_buffer_fast     (GstAdapter *adapter, gsize nbytes);
+GstBufferList *         gst_adapter_get_buffer_list     (GstAdapter *adapter, gsize nbytes);
 gsize                   gst_adapter_available           (GstAdapter *adapter);
 gsize                   gst_adapter_available_fast      (GstAdapter *adapter);
 
