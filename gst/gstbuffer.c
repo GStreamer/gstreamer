@@ -406,6 +406,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   GstMetaItem *walk;
   gsize bufsize;
   gboolean region = FALSE;
+  gboolean shared_memory;
 
   g_return_val_if_fail (dest != NULL, FALSE);
   g_return_val_if_fail (src != NULL, FALSE);
@@ -468,6 +469,8 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     left = size;
     skip = offset;
 
+    shared_memory = TRUE;
+
     /* copy and make regions of the memory */
     for (i = 0; i < len && left > 0; i++) {
       GstMemory *mem = GST_BUFFER_MEM_PTR (src, i);
@@ -496,12 +499,14 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
           /* deep copy or we're not allowed to share this memory
            * between buffers, always copy then */
           newmem = gst_memory_copy (mem, skip, tocopy);
+          shared_memory = FALSE;
           if (newmem) {
             gst_memory_lock (newmem, GST_LOCK_FLAG_EXCLUSIVE);
             skip = 0;
           }
         } else if (!newmem) {
           newmem = _memory_get_exclusive_reference (mem);
+          shared_memory = shared_memory && (newmem == mem);
         }
 
         if (!newmem) {
@@ -513,6 +518,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         left -= tocopy;
       }
     }
+
     if (flags & GST_BUFFER_COPY_MERGE) {
       GstMemory *mem;
 
@@ -523,7 +529,10 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         return FALSE;
       }
       _replace_memory (dest, len, 0, len, mem);
+      shared_memory = FALSE;
     }
+  } else {
+    shared_memory = FALSE;
   }
 
   if (flags & GST_BUFFER_COPY_META) {
@@ -534,7 +543,16 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       GstMeta *meta = &walk->meta;
       const GstMetaInfo *info = meta->info;
 
-      if (info->transform_func) {
+      if (GST_META_FLAG_IS_SET (meta, GST_META_FLAG_POOLED)) {
+        GST_CAT_DEBUG (GST_CAT_BUFFER,
+            "don't copy POOLED meta %p of API type %s", meta,
+            g_type_name (info->api));
+      } else if (!shared_memory
+          && gst_meta_api_type_has_tag (info->api, _gst_meta_tag_memory)) {
+        GST_CAT_DEBUG (GST_CAT_BUFFER,
+            "don't copy memory meta %p of API type %s", meta,
+            g_type_name (info->api));
+      } else if (info->transform_func) {
         GstMetaTransformCopy copy_data;
 
         copy_data.region = region;
