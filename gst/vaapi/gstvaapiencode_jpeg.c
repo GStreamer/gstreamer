@@ -67,8 +67,7 @@ static GstStaticPadTemplate gst_vaapiencode_jpeg_src_factory =
 /* *INDENT-ON* */
 
 /* jpeg encode */
-G_DEFINE_TYPE (GstVaapiEncodeJpeg, gst_vaapiencode_jpeg,
-    GST_TYPE_VAAPIENCODE);
+G_DEFINE_TYPE (GstVaapiEncodeJpeg, gst_vaapiencode_jpeg, GST_TYPE_VAAPIENCODE);
 
 static void
 gst_vaapiencode_jpeg_init (GstVaapiEncodeJpeg * encode)
@@ -150,7 +149,8 @@ gst_vaapiencode_jpeg_class_init (GstVaapiEncodeJpegClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "VA-API JPEG encoder",
       "Codec/Encoder/Image",
-      GST_PLUGIN_DESC, "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
+      GST_PLUGIN_DESC,
+      "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 
   /* sink pad */
   gst_element_class_add_pad_template (element_class,

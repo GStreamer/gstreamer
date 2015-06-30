@@ -42,8 +42,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapivideomemory);
 /* --- GstVaapiVideoMemory                                              --- */
 /* ------------------------------------------------------------------------ */
 
-static void
-gst_vaapi_video_memory_reset_image (GstVaapiVideoMemory * mem);
+static void gst_vaapi_video_memory_reset_image (GstVaapiVideoMemory * mem);
 
 static guchar *
 get_image_data (GstVaapiImage * image)

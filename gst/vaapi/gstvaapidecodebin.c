@@ -103,14 +103,16 @@ G_DEFINE_TYPE (GstVaapiDecodeBin, gst_vaapi_decode_bin, GST_TYPE_BIN);
 
 /* Remove the vaapipostproc if already added and reset the ghost pad target */
 static void
-disable_vpp (GstVaapiDecodeBin *vaapidecbin)
+disable_vpp (GstVaapiDecodeBin * vaapidecbin)
 {
   GstPad *pad;
   GstStateChangeReturn ret;
   GstState state;
 
   /*Fixme: Add run-time disabling support */
-  ret = gst_element_get_state (GST_ELEMENT (vaapidecbin), &state, NULL, GST_CLOCK_TIME_NONE);
+  ret =
+      gst_element_get_state (GST_ELEMENT (vaapidecbin), &state, NULL,
+      GST_CLOCK_TIME_NONE);
   if (ret != GST_STATE_CHANGE_SUCCESS || state > GST_STATE_NULL) {
     GST_WARNING_OBJECT (vaapidecbin, "Failed to set disable-vpp property!,,"
         "No support for run-time disabling, Ignoring the user request to disable VPP.");
@@ -120,14 +122,11 @@ disable_vpp (GstVaapiDecodeBin *vaapidecbin)
   gst_element_set_state (vaapidecbin->postproc, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (vaapidecbin), vaapidecbin->postproc);
 
-  pad =
-      gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->queue),
-          "src");
-  gst_ghost_pad_set_target ((GstGhostPad *) vaapidecbin->ghost_pad_src,
-      pad);
+  pad = gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->queue), "src");
+  gst_ghost_pad_set_target ((GstGhostPad *) vaapidecbin->ghost_pad_src, pad);
   gst_object_unref (pad);
 }
- 
+
 static void
 gst_vaapi_decode_bin_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)

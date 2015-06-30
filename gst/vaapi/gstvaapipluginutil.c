@@ -445,8 +445,10 @@ gst_vaapi_video_format_new_template_caps_with_features (GstVideoFormat format,
 static GstCaps *
 new_gl_texture_upload_meta_caps (void)
 {
-  return gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
-      GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }"));
+  return
+      gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+      (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
+          "{ RGBA, BGRA }"));
 }
 
 GstVaapiCapsFeature
@@ -462,14 +464,14 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
   GstCaps *out_caps;
   GstVideoFormat out_format;
 
-  out_caps= gst_pad_get_allowed_caps (pad);
+  out_caps = gst_pad_get_allowed_caps (pad);
   if (!out_caps) {
     feature = GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED;
     goto cleanup;
   }
 
   out_format = format == GST_VIDEO_FORMAT_ENCODED ?
-    GST_VIDEO_FORMAT_I420 : format;
+      GST_VIDEO_FORMAT_I420 : format;
 
   gl_texture_upload_caps = new_gl_texture_upload_meta_caps ();
   if (!gl_texture_upload_caps)

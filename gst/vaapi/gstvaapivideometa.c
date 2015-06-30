@@ -531,8 +531,8 @@ gst_vaapi_video_meta_get_surface (GstVaapiVideoMeta * meta)
 {
   g_return_val_if_fail (GST_VAAPI_IS_VIDEO_META (meta), NULL);
 
-  return ensure_surface_proxy (meta) ? GST_VAAPI_SURFACE_PROXY_SURFACE (meta->
-      proxy) : NULL;
+  return ensure_surface_proxy (meta) ?
+      GST_VAAPI_SURFACE_PROXY_SURFACE (meta->proxy) : NULL;
 }
 
 /**

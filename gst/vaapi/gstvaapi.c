@@ -51,50 +51,41 @@
 #define PLUGIN_LICENSE  "LGPL"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-    gst_element_register(plugin, "vaapidecode",
-                         GST_RANK_PRIMARY + 1,
-                         GST_TYPE_VAAPIDECODE);
-    gst_element_register(plugin, "vaapipostproc",
-                         GST_RANK_PRIMARY,
-                         GST_TYPE_VAAPIPOSTPROC);
-    gst_element_register(plugin, "vaapisink",
-                         GST_RANK_PRIMARY,
-                         GST_TYPE_VAAPISINK);
+  gst_element_register (plugin, "vaapidecode",
+      GST_RANK_PRIMARY + 1, GST_TYPE_VAAPIDECODE);
+  gst_element_register (plugin, "vaapipostproc",
+      GST_RANK_PRIMARY, GST_TYPE_VAAPIPOSTPROC);
+  gst_element_register (plugin, "vaapisink",
+      GST_RANK_PRIMARY, GST_TYPE_VAAPISINK);
 #if USE_ENCODERS
-    gst_element_register(plugin, "vaapiencode_h264",
-                         GST_RANK_PRIMARY,
-                         GST_TYPE_VAAPIENCODE_H264);
-    gst_element_register(plugin, "vaapiencode_mpeg2",
-                         GST_RANK_PRIMARY,
-                         GST_TYPE_VAAPIENCODE_MPEG2);
+  gst_element_register (plugin, "vaapiencode_h264",
+      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_H264);
+  gst_element_register (plugin, "vaapiencode_mpeg2",
+      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_MPEG2);
 #endif
 #if USE_JPEG_ENCODER
-    gst_element_register(plugin, "vaapiencode_jpeg",
-                         GST_RANK_PRIMARY,
-                         GST_TYPE_VAAPIENCODE_JPEG);
+  gst_element_register (plugin, "vaapiencode_jpeg",
+      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_JPEG);
 #endif
 #if USE_VP8_ENCODER
-    gst_element_register(plugin, "vaapiencode_vp8",
-                         GST_RANK_PRIMARY,
-                         GST_TYPE_VAAPIENCODE_VP8);
+  gst_element_register (plugin, "vaapiencode_vp8",
+      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_VP8);
 #endif
 
 #if USE_H265_ENCODER
-    gst_element_register(plugin, "vaapiencode_h265",
-                         GST_RANK_PRIMARY,
-                         GST_TYPE_VAAPIENCODE_H265);
+  gst_element_register (plugin, "vaapiencode_h265",
+      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_H265);
 #endif
 
 #if GST_CHECK_VERSION(1,4,0)
-    gst_element_register(plugin, "vaapidecodebin",
-                         GST_RANK_PRIMARY + 2,
-                         GST_TYPE_VAAPI_DECODE_BIN);
+  gst_element_register (plugin, "vaapidecodebin",
+      GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
 #endif
-    return TRUE;
+  return TRUE;
 }
 
-GST_PLUGIN_DEFINE(GST_VERSION_MAJOR, GST_VERSION_MINOR,
-                  vaapi, PLUGIN_DESC, plugin_init,
-                  PACKAGE_VERSION, PLUGIN_LICENSE, PACKAGE, PACKAGE_BUGREPORT)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,
+    vaapi, PLUGIN_DESC, plugin_init,
+    PACKAGE_VERSION, PLUGIN_LICENSE, PACKAGE, PACKAGE_BUGREPORT)

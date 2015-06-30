@@ -326,9 +326,9 @@ gst_vaapipostproc_stop (GstBaseTransform * trans)
   gst_vaapi_plugin_base_close (GST_VAAPI_PLUGIN_BASE (postproc));
 
   postproc->field_duration = GST_CLOCK_TIME_NONE;
-  gst_video_info_init(&postproc->sinkpad_info);
-  gst_video_info_init(&postproc->srcpad_info);
-  gst_video_info_init(&postproc->filter_pool_info);
+  gst_video_info_init (&postproc->sinkpad_info);
+  gst_video_info_init (&postproc->srcpad_info);
+  gst_video_info_init (&postproc->filter_pool_info);
 
   return TRUE;
 }
@@ -536,7 +536,7 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
 
   if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SKINTONE) &&
       !gst_vaapi_filter_set_skintone (postproc->filter,
-           postproc->skintone_enhance))
+          postproc->skintone_enhance))
     return GST_FLOW_NOT_SUPPORTED;
 
   inbuf_meta = gst_buffer_get_vaapi_video_meta (inbuf);
@@ -1082,7 +1082,6 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
     GST_VIDEO_INFO_FPS_N (&vi) = fps_n;
     GST_VIDEO_INFO_FPS_D (&vi) = fps_d;
   }
-
   // Signal the other pad that we only generate progressive frames
   GST_VIDEO_INFO_INTERLACE_MODE (&vi) = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
@@ -1206,8 +1205,7 @@ done:
 
 static GstFlowReturn
 gst_vaapipostproc_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * inbuf,
-    GstBuffer ** outbuf_ptr)
+    GstBuffer * inbuf, GstBuffer ** outbuf_ptr)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
 

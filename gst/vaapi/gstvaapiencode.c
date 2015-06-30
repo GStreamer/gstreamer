@@ -585,8 +585,9 @@ gst_vaapiencode_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-  return GST_ELEMENT_CLASS (gst_vaapiencode_parent_class)->
-      change_state (element, transition);
+  return
+      GST_ELEMENT_CLASS (gst_vaapiencode_parent_class)->change_state (element,
+      transition);
 }
 
 static gboolean

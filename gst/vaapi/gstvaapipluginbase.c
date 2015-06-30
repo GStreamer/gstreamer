@@ -397,7 +397,7 @@ has_dmabuf_capable_peer (GstVaapiPluginBase * plugin, GstPad * pad)
 
       v = 0;
       g_object_get (element, "io-mode", &v, NULL);
-      is_dmabuf_capable = v == 5; /* "dmabuf-import" enum value */
+      is_dmabuf_capable = v == 5;       /* "dmabuf-import" enum value */
       break;
     } else if (GST_IS_BASE_TRANSFORM (element)) {
       element_name = gst_element_get_name (element);
@@ -895,15 +895,13 @@ done:
 error_no_pool:
   {
     GST_ELEMENT_ERROR (plugin, STREAM, FAILED,
-        ("no buffer pool was negotiated"),
-        ("no buffer pool was negotiated"));
+        ("no buffer pool was negotiated"), ("no buffer pool was negotiated"));
     return GST_FLOW_ERROR;
   }
 error_active_pool:
   {
     GST_ELEMENT_ERROR (plugin, STREAM, FAILED,
-        ("failed to activate buffer pool"),
-        ("failed to activate buffer pool"));
+        ("failed to activate buffer pool"), ("failed to activate buffer pool"));
     return GST_FLOW_ERROR;
   }
 error_map_dst_buffer:

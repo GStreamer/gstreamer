@@ -287,7 +287,6 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
       vmeta->unmap = gst_video_meta_unmap_vaapi_memory;
     }
   }
-
 #if (USE_GLX || USE_EGL)
   if (priv->has_texture_upload_meta)
     gst_buffer_add_texture_upload_meta (buffer);
