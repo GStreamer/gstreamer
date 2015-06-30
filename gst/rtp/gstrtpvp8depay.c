@@ -173,9 +173,9 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstBuffer * buf)
   /* Marker indicates that it was the last rtp packet for this frame */
   if (gst_rtp_buffer_get_marker (&rtpbuffer)) {
     GstBuffer *out;
-    guint8 flag0;
+    guint8 header[10];
 
-    gst_adapter_copy (self->adapter, &flag0, 0, 1);
+    gst_adapter_copy (self->adapter, &header, 0, 10);
 
     out = gst_adapter_take_buffer (self->adapter,
         gst_adapter_available (self->adapter));
@@ -185,7 +185,7 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstBuffer * buf)
 
     /* mark keyframes */
     out = gst_buffer_make_writable (out);
-    if ((flag0 & 0x01)) {
+    if ((header[0] & 0x01)) {
       GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
 
       if (!self->caps_sent) {
@@ -197,38 +197,33 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstBuffer * buf)
                 TRUE, 0));
       }
     } else {
-      GstMapInfo info;
+      guint profile, width, height;
 
       GST_BUFFER_FLAG_UNSET (out, GST_BUFFER_FLAG_DELTA_UNIT);
 
-      if (gst_buffer_map (out, &info, GST_MAP_READ)) {
-        guint profile, width, height;
+      profile = (header[0] & 0x0e) >> 1;
+      width = GST_READ_UINT16_LE (header + 6) & 0x3fff;
+      height = GST_READ_UINT16_LE (header + 8) & 0x3fff;
 
-        profile = (flag0 & 0x0e) >> 1;
-        width = GST_READ_UINT16_LE (info.data + 6) & 0x3fff;
-        height = GST_READ_UINT16_LE (info.data + 8) & 0x3fff;
-        gst_buffer_unmap (out, &info);
+      if (G_UNLIKELY (self->last_width != width ||
+              self->last_height != height || self->last_profile != profile)) {
+        gchar profile_str[3];
+        GstCaps *srccaps;
 
-        if (G_UNLIKELY (self->last_width != width ||
-                self->last_height != height || self->last_profile != profile)) {
-          gchar profile_str[3];
-          GstCaps *srccaps;
+        snprintf (profile_str, 3, "%u", profile);
+        srccaps = gst_caps_new_simple ("video/x-vp8",
+            "framerate", GST_TYPE_FRACTION, 0, 1,
+            "height", G_TYPE_INT, height,
+            "width", G_TYPE_INT, width,
+            "profile", G_TYPE_STRING, profile_str, NULL);
 
-          snprintf (profile_str, 3, "%u", profile);
-          srccaps = gst_caps_new_simple ("video/x-vp8",
-              "framerate", GST_TYPE_FRACTION, 0, 1,
-              "height", G_TYPE_INT, height,
-              "width", G_TYPE_INT, width,
-              "profile", G_TYPE_STRING, profile_str, NULL);
+        gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depay), srccaps);
+        gst_caps_unref (srccaps);
 
-          gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depay), srccaps);
-          gst_caps_unref (srccaps);
-
-          self->caps_sent = TRUE;
-          self->last_width = width;
-          self->last_height = height;
-          self->last_profile = profile;
-        }
+        self->caps_sent = TRUE;
+        self->last_width = width;
+        self->last_height = height;
+        self->last_profile = profile;
       }
     }
 
