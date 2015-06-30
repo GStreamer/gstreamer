@@ -736,7 +736,7 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK) {
       sent_all_sps_pps = FALSE;
-      GST_WARNING ("Problem pushing SPS");
+      GST_WARNING_OBJECT (basepayload, "Problem pushing SPS");
     }
   }
   for (i = 0; i < rtph264pay->pps->len; i++) {
@@ -750,7 +750,7 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK) {
       sent_all_sps_pps = FALSE;
-      GST_WARNING ("Problem pushing PPS");
+      GST_WARNING_OBJECT (basepayload, "Problem pushing PPS");
     }
   }
 
