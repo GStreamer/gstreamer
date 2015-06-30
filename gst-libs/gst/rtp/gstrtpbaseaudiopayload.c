@@ -484,7 +484,6 @@ gst_rtp_base_audio_payload_push_buffer (GstRTPBaseAudioPayload *
   GstRTPBasePayload *basepayload;
   GstRTPBaseAudioPayloadPrivate *priv;
   GstBuffer *outbuf;
-  guint8 *payload;
   guint payload_len;
   GstFlowReturn ret;
 
@@ -496,13 +495,8 @@ gst_rtp_base_audio_payload_push_buffer (GstRTPBaseAudioPayload *
   GST_DEBUG_OBJECT (baseaudiopayload, "Pushing %d bytes ts %" GST_TIME_FORMAT,
       payload_len, GST_TIME_ARGS (timestamp));
 
-  if (priv->buffer_list) {
-    /* create just the RTP header buffer */
-    outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
-  } else {
-    /* create buffer to hold the payload */
-    outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
-  }
+  /* create just the RTP header buffer */
+  outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
 
   /* set metadata */
   gst_rtp_base_audio_payload_set_meta (baseaudiopayload, outbuf, payload_len,
@@ -525,15 +519,8 @@ gst_rtp_base_audio_payload_push_buffer (GstRTPBaseAudioPayload *
     GST_DEBUG_OBJECT (baseaudiopayload, "Pushing list %p", list);
     ret = gst_rtp_base_payload_push_list (basepayload, list);
   } else {
-    GstRTPBuffer rtp = { NULL };
-
     /* copy payload */
-    gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
-    payload = gst_rtp_buffer_get_payload (&rtp);
-    gst_buffer_extract (buffer, 0, payload, payload_len);
-    gst_rtp_buffer_unmap (&rtp);
-
-    gst_buffer_unref (buffer);
+    outbuf = gst_buffer_append (outbuf, buffer);
 
     GST_DEBUG_OBJECT (baseaudiopayload, "Pushing buffer %p", outbuf);
     ret = gst_rtp_base_payload_push (basepayload, outbuf);
