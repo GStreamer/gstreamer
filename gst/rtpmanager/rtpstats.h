@@ -194,6 +194,23 @@ typedef struct {
 #define RTP_MAX_MISORDER     100
 
 /**
+ * RTPPacketRateCtx:
+ *
+ * Context to calculate the pseudo-average packet rate.
+ */
+typedef struct {
+  gboolean probed;
+  guint32 clock_rate;
+  guint16 last_seqnum;
+  guint64 last_ts;
+  guint32 avg_packet_rate;
+} RTPPacketRateCtx;
+
+void gst_rtp_packet_rate_ctx_reset (RTPPacketRateCtx * ctx, guint32 clock_rate);
+guint32 gst_rtp_packet_rate_ctx_update (RTPPacketRateCtx *ctx, guint16 seqnum, guint32 ts);
+guint32 gst_rtp_packet_rate_ctx_get (RTPPacketRateCtx *ctx);
+
+/**
  * RTPSessionStats:
  *
  * Stats kept for a session and used to produce RTCP packet timeouts.
