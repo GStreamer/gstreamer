@@ -223,10 +223,14 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     guint32 real_tck_prio;
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
-    gint off = _PRIORITY (child) - _PRIORITY (element) - MIN_NLE_PRIO;
+    gint off = _PRIORITY (child) - _PRIORITY (element) - min_prio;
 
-    if (off >= LAYER_HEIGHT)
+    if (off >= LAYER_HEIGHT) {
+      GST_ERROR ("%s child %s as a priority offset %d >= LAYER_HEIGHT %d"
+          "clamping it to 0", GES_TIMELINE_ELEMENT_NAME (element),
+          GES_TIMELINE_ELEMENT_NAME (child), off, LAYER_HEIGHT);
       off = 0;
+    }
 
     real_tck_prio = min_prio + priority + off;
 
