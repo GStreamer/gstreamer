@@ -2607,7 +2607,7 @@ promote_format_to_uint64 (const gchar * format)
   /* After any 0 and alphanumeric values, there must be
    * an d, x or u. Otherwise validation would have failed
    */
-  g_assert (p[0] == 'd' || p[0] == 'x' || p[0] != 'u');
+  g_assert (p[0] == 'd' || p[0] == 'x' || p[0] == 'u');
 
   promoted_format =
       g_strdup_printf ("%.*s" G_GINT64_MODIFIER "%s", (gint) (p - format),
