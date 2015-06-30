@@ -71,6 +71,8 @@ struct _GstSrtpDec
 {
   GstElement element;
 
+  guint replay_window_size;
+
   GstPad *rtp_sinkpad, *rtp_srcpad;
   GstPad *rtcp_sinkpad, *rtcp_srcpad;
 

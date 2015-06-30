@@ -126,6 +126,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_srtp_dec_debug);
 #define GST_CAT_DEFAULT gst_srtp_dec_debug
 
+#define DEFAULT_REPLAY_WINDOW_SIZE 128
+
 /* Filter signals and args */
 enum
 {
@@ -139,7 +141,8 @@ enum
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_REPLAY_WINDOW_SIZE
 };
 
 typedef struct _ValidateBufferItData
@@ -193,6 +196,11 @@ GST_STATIC_PAD_TEMPLATE ("rtcp_src",
 static guint gst_srtp_dec_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE (GstSrtpDec, gst_srtp_dec, GST_TYPE_ELEMENT);
+
+static void gst_srtp_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_srtp_dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static void gst_srtp_dec_clear_streams (GstSrtpDec * filter);
 static void gst_srtp_dec_remove_stream (GstSrtpDec * filter, guint ssrc);
@@ -252,9 +260,14 @@ struct _GstSrtpDecSsrcStream
 static void
 gst_srtp_dec_class_init (GstSrtpDecClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
+  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+
+  gobject_class->set_property = gst_srtp_dec_set_property;
+  gobject_class->get_property = gst_srtp_dec_get_property;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&rtp_src_template));
@@ -276,6 +289,13 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
 
   klass->clear_streams = GST_DEBUG_FUNCPTR (gst_srtp_dec_clear_streams);
   klass->remove_stream = GST_DEBUG_FUNCPTR (gst_srtp_dec_remove_stream);
+
+  /* Install properties */
+  g_object_class_install_property (gobject_class, PROP_REPLAY_WINDOW_SIZE,
+      g_param_spec_uint ("replay-window-size", "Replay window size",
+          "Size of the replay protection window",
+          64, 0x8000, DEFAULT_REPLAY_WINDOW_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Install signals */
   /**
@@ -358,6 +378,8 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
 static void
 gst_srtp_dec_init (GstSrtpDec * filter)
 {
+  filter->replay_window_size = DEFAULT_REPLAY_WINDOW_SIZE;
+
   filter->rtp_sinkpad =
       gst_pad_new_from_static_template (&rtp_sink_template, "rtp_sink");
   gst_pad_set_event_function (filter->rtp_sinkpad,
@@ -409,6 +431,46 @@ gst_srtp_dec_init (GstSrtpDec * filter)
 
   filter->first_session = TRUE;
   filter->roc_changed = FALSE;
+}
+
+static void
+gst_srtp_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstSrtpDec *filter = GST_SRTP_DEC (object);
+
+  GST_OBJECT_LOCK (filter);
+
+  switch (prop_id) {
+    case PROP_REPLAY_WINDOW_SIZE:
+      filter->replay_window_size = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  GST_OBJECT_UNLOCK (filter);
+}
+
+static void
+gst_srtp_dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstSrtpDec *filter = GST_SRTP_DEC (object);
+
+  GST_OBJECT_LOCK (filter);
+
+  switch (prop_id) {
+    case PROP_REPLAY_WINDOW_SIZE:
+      g_value_set_uint (value, filter->replay_window_size);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void
@@ -545,6 +607,7 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
 
   policy.ssrc.value = ssrc;
   policy.ssrc.type = ssrc_specific;
+  policy.window_size = filter->replay_window_size;
   policy.next = NULL;
 
   /* If it is the first stream, create the session
