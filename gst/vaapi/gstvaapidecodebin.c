@@ -45,7 +45,8 @@ enum
   PROP_MAX_SIZE_BUFFERS,
   PROP_MAX_SIZE_BYTES,
   PROP_MAX_SIZE_TIME,
-  PROP_DEINTERLACE_METHOD
+  PROP_DEINTERLACE_METHOD,
+  PROP_DISABLE_VPP
 };
 
 #define GST_VAAPI_DECODE_BIN_SURFACE_CAPS \
@@ -100,6 +101,33 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 G_DEFINE_TYPE (GstVaapiDecodeBin, gst_vaapi_decode_bin, GST_TYPE_BIN);
 
+/* Remove the vaapipostproc if already added and reset the ghost pad target */
+static void
+disable_vpp (GstVaapiDecodeBin *vaapidecbin)
+{
+  GstPad *pad;
+  GstStateChangeReturn ret;
+  GstState state;
+
+  /*Fixme: Add run-time disabling support */
+  ret = gst_element_get_state (GST_ELEMENT (vaapidecbin), &state, NULL, GST_CLOCK_TIME_NONE);
+  if (ret != GST_STATE_CHANGE_SUCCESS || state > GST_STATE_NULL) {
+    GST_WARNING_OBJECT (vaapidecbin, "Failed to set disable-vpp property!,,"
+        "No support for run-time disabling, Ignoring the user request to disable VPP.");
+    return;
+  }
+
+  gst_element_set_state (vaapidecbin->postproc, GST_STATE_NULL);
+  gst_bin_remove (GST_BIN (vaapidecbin), vaapidecbin->postproc);
+
+  pad =
+      gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->queue),
+          "src");
+  gst_ghost_pad_set_target ((GstGhostPad *) vaapidecbin->ghost_pad_src,
+      pad);
+  gst_object_unref (pad);
+}
+ 
 static void
 gst_vaapi_decode_bin_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
@@ -127,6 +155,12 @@ gst_vaapi_decode_bin_set_property (GObject * object,
       g_object_set (G_OBJECT (vaapidecbin->postproc), "deinterlace-method",
           vaapidecbin->deinterlace_method, NULL);
       break;
+    case PROP_DISABLE_VPP:
+      vaapidecbin->disable_vpp = g_value_get_boolean (value);
+      /* Remove the vaapipostpro */
+      if (vaapidecbin->disable_vpp && vaapidecbin->postproc)
+        disable_vpp (vaapidecbin);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -151,6 +185,9 @@ gst_vaapi_decode_bin_get_property (GObject * object,
       break;
     case PROP_DEINTERLACE_METHOD:
       g_value_set_enum (value, vaapidecbin->deinterlace_method);
+      break;
+    case PROP_DISABLE_VPP:
+      g_value_set_boolean (value, vaapidecbin->disable_vpp);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -196,6 +233,11 @@ gst_vaapi_decode_bin_class_init (GstVaapiDecodeBinClass * klass)
           "Deinterlace method to use", GST_VAAPI_TYPE_DEINTERLACE_METHOD,
           DEFAULT_DEINTERLACE_METHOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DISABLE_VPP,
+      g_param_spec_boolean ("disable-vpp",
+          "Disable VPP",
+          "Disable Video Post Processing(No support for run time disabling)",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vaapi_decode_bin_sink_factory));
@@ -225,32 +267,36 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
     missing_factory = "queue";
     goto error_element_missing;
   }
-  /* create the postproc */
-  vaapidecbin->postproc =
-      gst_element_factory_make ("vaapipostproc", "vaapipostproc");
-  if (!vaapidecbin->postproc) {
-    missing_factory = "vaapipostproc";
-    goto error_element_missing;
-  }
 
   g_object_set (G_OBJECT (vaapidecbin->queue),
       "max-size-bytes", vaapidecbin->max_size_bytes,
       "max-size-buffers", vaapidecbin->max_size_buffers,
       "max-size-time", vaapidecbin->max_size_time, NULL);
 
-  g_object_set (G_OBJECT (vaapidecbin->postproc),
-      "deinterlace-method", vaapidecbin->deinterlace_method, NULL);
-
   gst_bin_add_many (GST_BIN (vaapidecbin),
-      vaapidecbin->decoder, vaapidecbin->queue, vaapidecbin->postproc, NULL);
+      vaapidecbin->decoder, vaapidecbin->queue, NULL);
 
   if (!gst_element_link_pads_full (vaapidecbin->decoder, "src",
           vaapidecbin->queue, "sink", GST_PAD_LINK_CHECK_NOTHING))
     goto error_link_pad;
 
-  if (!gst_element_link_pads_full (vaapidecbin->queue, "src",
-          vaapidecbin->postproc, "sink", GST_PAD_LINK_CHECK_NOTHING))
-    goto error_link_pad;
+  if (!vaapidecbin->disable_vpp) {
+    /* create the postproc */
+    vaapidecbin->postproc =
+        gst_element_factory_make ("vaapipostproc", "vaapipostproc");
+    if (!vaapidecbin->postproc) {
+      missing_factory = "vaapipostproc";
+      goto error_element_missing;
+    }
+
+    g_object_set (G_OBJECT (vaapidecbin->postproc),
+        "deinterlace-method", vaapidecbin->deinterlace_method, NULL);
+
+    gst_bin_add (GST_BIN (vaapidecbin), vaapidecbin->postproc);
+    if (!gst_element_link_pads_full (vaapidecbin->queue, "src",
+            vaapidecbin->postproc, "sink", GST_PAD_LINK_CHECK_NOTHING))
+      goto error_link_pad;
+  }
 
   return TRUE;
 
@@ -276,6 +322,7 @@ static void
 gst_vaapi_decode_bin_init (GstVaapiDecodeBin * vaapidecbin)
 {
   GstPad *element_pad, *ghost_pad;
+  GstElement *src_element;
 
   if (!gst_vaapi_decode_bin_configure (vaapidecbin))
     return;
@@ -290,11 +337,12 @@ gst_vaapi_decode_bin_init (GstVaapiDecodeBin * vaapidecbin)
   gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghost_pad);
 
   /* create ghost pad src */
-  element_pad =
-      gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->postproc), "src");
-  ghost_pad =
-      gst_ghost_pad_new_from_template ("src", element_pad,
-      GST_PAD_PAD_TEMPLATE (element_pad));
+  src_element =
+      vaapidecbin->disable_vpp ? vaapidecbin->queue : vaapidecbin->postproc;
+  element_pad = gst_element_get_static_pad (GST_ELEMENT (src_element), "src");
+
+  ghost_pad = gst_ghost_pad_new ("src", element_pad);
+  vaapidecbin->ghost_pad_src = ghost_pad;
   gst_object_unref (element_pad);
   gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghost_pad);
 }

@@ -47,11 +47,14 @@ typedef struct _GstVaapiDecodeBin {
   GstElement *queue;
   GstElement *postproc;
 
+  GstPad *ghost_pad_src;
+
   /* properties */
   guint   max_size_buffers;
   guint   max_size_bytes;
   guint64 max_size_time;
   GstVaapiDeinterlaceMethod deinterlace_method;
+  gboolean disable_vpp;
 
 } GstVaapiDecodeBin;
 
