@@ -29,7 +29,8 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
         gstglframebuffer.c \
         gstglsyncmeta.c \
         gstglviewconvert.c \
-        gstglcompositionoverlay.c
+        gstglcompositionoverlay.c \
+        gstgloverlaycompositor.c
 
 libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
 libgstgl_@GST_API_VERSION@include_HEADERS = \
@@ -54,6 +55,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglsyncmeta.h \
 	gstglviewconvert.h \
 	gstglcompositionoverlay.h \
+	gstgloverlaycompositor.c \
 	gstgl_fwd.h \
 	gl.h
 
