@@ -1721,6 +1721,7 @@ gst_glimage_sink_do_resize (GstGLImageSink * gl_sink, gint width, gint height)
    * It means that they cannot change between two set_caps
    */
   gboolean do_reshape;
+  gboolean reconfigure;
 
   GST_GLIMAGE_SINK_UNLOCK (gl_sink);
   /* check if a client reshape callback is registered */
@@ -1730,6 +1731,18 @@ gst_glimage_sink_do_resize (GstGLImageSink * gl_sink, gint width, gint height)
 
   width = MAX (1, width);
   height = MAX (1, height);
+
+  /* Check if we would suggest a different width/height now */
+  reconfigure = ((gl_sink->window_width != width)
+      || (gl_sink->window_height != height))
+      && (gl_sink->window_width != 0)
+      && (gl_sink->window_height != 0);
+
+  if (reconfigure) {
+    GST_DEBUG ("Sending reconfigure event on sinkpad.");
+    gst_pad_push_event (GST_BASE_SINK (gl_sink)->sinkpad,
+        gst_event_new_reconfigure ());
+  }
 
   gl_sink->window_width = width;
   gl_sink->window_height = height;
