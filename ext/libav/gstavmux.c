@@ -936,7 +936,13 @@ gst_ffmpegmux_register (GstPlugin * plugin)
         (!strncmp (in_plugin->name, "ffmetadata", 10)) ||
         (!strncmp (in_plugin->name, "srt", 3)) ||
         !strcmp (in_plugin->name, "segment") ||
-        !strcmp (in_plugin->name, "stream_segment,ssegment")
+        !strcmp (in_plugin->name, "stream_segment,ssegment") ||
+        !strcmp (in_plugin->name, "jacosub") ||
+        !strcmp (in_plugin->name, "webvtt") ||
+        !strcmp (in_plugin->name, "lrc") ||
+        !strcmp (in_plugin->name, "microdvd") ||
+        !strcmp (in_plugin->name, "tee") ||
+        !strncmp (in_plugin->name, "webm", 4)
         ) {
       GST_LOG ("Ignoring muxer %s", in_plugin->name);
       goto next;
