@@ -534,7 +534,17 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       GstMeta *meta = &walk->meta;
       const GstMetaInfo *info = meta->info;
 
-      if (info->transform_func) {
+      /* Don't copy memory metas if we only copied part of the buffer, didn't
+       * copy memories or merged memories. In all these cases the memory
+       * structure has changed and the memory meta becomes meaningless.
+       */
+      if ((region || !(flags & GST_BUFFER_COPY_MEMORY)
+              || (flags & GST_BUFFER_COPY_MERGE))
+          && gst_meta_api_type_has_tag (info->api, _gst_meta_tag_memory)) {
+        GST_CAT_DEBUG (GST_CAT_BUFFER,
+            "don't copy memory meta %p of API type %s", meta,
+            g_type_name (info->api));
+      } else if (info->transform_func) {
         GstMetaTransformCopy copy_data;
 
         copy_data.region = region;
