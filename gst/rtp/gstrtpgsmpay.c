@@ -25,10 +25,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
-#include <gst/audio/audio.h>
 
 #include "gstrtpgsmpay.h"
-#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpgsmpay_debug);
 #define GST_CAT_DEFAULT (rtpgsmpay_debug)
