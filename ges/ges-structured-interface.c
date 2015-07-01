@@ -37,9 +37,28 @@ _get_clocktime (GstStructure * structure, const gchar * name, gpointer var)
     if (G_VALUE_TYPE (gvalue) == GST_TYPE_CLOCK_TIME) {
       *val = (GstClockTime) g_value_get_uint64 (gvalue);
       found = TRUE;
-    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_DOUBLE) {
-      *val = (GstClockTime) g_value_get_double (gvalue) * GST_SECOND;
+    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_UINT64) {
+      *val = (GstClockTime) g_value_get_uint64 (gvalue);
       found = TRUE;
+    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_UINT) {
+      *val = (GstClockTime) g_value_get_uint (gvalue);
+      found = TRUE;
+    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_INT) {
+      *val = (GstClockTime) g_value_get_int (gvalue);
+      found = TRUE;
+    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_INT64) {
+      *val = (GstClockTime) g_value_get_int64 (gvalue);
+      found = TRUE;
+    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_DOUBLE) {
+      gdouble d = g_value_get_double (gvalue);
+
+      found = TRUE;
+      if (d == -1.0)
+        *val = GST_CLOCK_TIME_NONE;
+      else {
+        *val = d * GST_SECOND;
+        *val = GST_ROUND_UP_4 (*val);
+      }
     }
   }
 
@@ -66,7 +85,10 @@ _get_clocktime (GstStructure * structure, const gchar * name, gpointer var)
 } G_STMT_END
 
 #define TRY_GET(name,type,var,def) G_STMT_START {\
-  if (!gst_structure_get (structure, name, type, var, NULL)) {\
+  if (type == GST_TYPE_CLOCK_TIME) {\
+    if (!_get_clocktime(structure,name,var))\
+      *var = def; \
+  } else if  (!gst_structure_get (structure, name, type, var, NULL)) {\
     *var = def; \
   } \
 } G_STMT_END
