@@ -23,11 +23,13 @@ client_PCMA_LDADD = $(GST_LIBS) $(LIBM)
 noinst_SCRIPTS=client-H263p-AMR.sh \
                client-H263p-PCMA.sh \
                client-H264-PCMA.sh \
+               client-VP8-OPUS.sh \
                client-PCMA.sh \
                server-alsasrc-PCMA.sh \
                server-v4l2-H263p-alsasrc-AMR.sh \
                server-v4l2-H264-alsasrc-PCMA.sh \
-               server-VTS-H263p-ATS-PCMA.sh
+               server-VTS-H263p-ATS-PCMA.sh \
+               server-VTS-VP8-ATS-OPUS.sh
 
 EXTRA_DIST= $(noinst_SCRIPTS) \
 	    client-H263p-PCMA.sdp \
