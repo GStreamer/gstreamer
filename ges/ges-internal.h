@@ -111,6 +111,10 @@ G_GNUC_INTERNAL
 void
 track_resort_and_fill_gaps    (GESTrack *track);
 
+G_GNUC_INTERNAL
+void
+track_disable_last_gap        (GESTrack *track, gboolean disabled);
+
 G_GNUC_INTERNAL void
 ges_asset_cache_init (void);
 

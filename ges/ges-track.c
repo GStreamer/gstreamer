@@ -62,6 +62,7 @@ struct _GESTrackPrivate
   GSequence *trackelements_by_start;
   GHashTable *trackelements_iter;
   GList *gaps;
+  gboolean last_gap_disabled;
 
   guint64 duration;
 
@@ -234,12 +235,21 @@ update_gaps (GESTrack * track)
     }
   }
 
-  GST_DEBUG_OBJECT (track, "Adding a one second gap at the end");
-  gap = gap_new (track, timeline_duration, 1);
-  priv->gaps = g_list_prepend (priv->gaps, gap);
+  if (!track->priv->last_gap_disabled) {
+    GST_DEBUG_OBJECT (track, "Adding a one second gap at the end");
+    gap = gap_new (track, timeline_duration, 1);
+    priv->gaps = g_list_prepend (priv->gaps, gap);
+  }
 
   /* 4- Remove old gaps */
   g_list_free_full (gaps, (GDestroyNotify) free_gap);
+}
+
+void
+track_disable_last_gap (GESTrack * track, gboolean disabled)
+{
+  track->priv->last_gap_disabled = disabled;
+  update_gaps (track);
 }
 
 void

@@ -124,8 +124,8 @@ _overlay_set_render_rectangle (GstVideoOverlay * overlay, gint x,
 {
   GESPipeline *pipeline = GES_PIPELINE (overlay);
 
-  gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (pipeline->
-          priv->playsink), x, y, width, height);
+  gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (pipeline->priv->
+          playsink), x, y, width, height);
 }
 
 static void
@@ -133,8 +133,8 @@ _overlay_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
 {
   GESPipeline *pipeline = GES_PIPELINE (overlay);
 
-  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (pipeline->priv->
-          playsink), handle);
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (pipeline->
+          priv->playsink), handle);
 }
 
 static void
@@ -225,6 +225,9 @@ static void
 _timeline_track_added_cb (GESTimeline * timeline, GESTrack * track,
     GESPipeline * pipeline)
 {
+  track_disable_last_gap (track,
+      ! !(pipeline->priv->mode & (GES_PIPELINE_MODE_RENDER |
+              GES_PIPELINE_MODE_SMART_RENDER)));
   _link_track (pipeline, track);
 }
 
@@ -807,8 +810,9 @@ _link_track (GESPipeline * self, GESTrack * track)
   }
 
   /* Connect to encodebin */
-  if (self->priv->
-      mode & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER)) {
+  if (self->
+      priv->mode & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER))
+  {
     GstPad *tmppad;
     GST_DEBUG_OBJECT (self, "Connecting to encodebin");
 
@@ -1071,9 +1075,11 @@ ges_pipeline_get_mode (GESPipeline * pipeline)
 gboolean
 ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
 {
+
+  GList *tmp;
   g_return_val_if_fail (GES_IS_PIPELINE (pipeline), FALSE);
 
-  GST_DEBUG_OBJECT (pipeline, "current mode : %d, mode : %d",
+  GST_ERROR_OBJECT (pipeline, "current mode : %d, mode : %d",
       pipeline->priv->mode, mode);
 
   /* fast-path, nothing to change */
@@ -1086,6 +1092,15 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
 
   /* Switch pipeline to NULL since we're changing the configuration */
   gst_element_set_state (GST_ELEMENT_CAST (pipeline), GST_STATE_NULL);
+
+
+  if (pipeline->priv->timeline) {
+    gboolean disabled =
+        ! !(mode & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER));
+
+    for (tmp = pipeline->priv->timeline->tracks; tmp; tmp = tmp->next)
+      track_disable_last_gap (GES_TRACK (tmp->data), disabled);
+  }
 
   /* remove no-longer needed components */
   if (pipeline->priv->mode & GES_PIPELINE_MODE_PREVIEW &&
@@ -1128,7 +1143,6 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
       (mode & GES_PIPELINE_MODE_PREVIEW)) {
     /* Add playsink */
     GST_DEBUG ("Adding playsink");
-
     if (!gst_bin_add (GST_BIN_CAST (pipeline), pipeline->priv->playsink)) {
       GST_ERROR_OBJECT (pipeline, "Couldn't add playsink");
       return FALSE;
