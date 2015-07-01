@@ -47,8 +47,11 @@ enum
   PROP_MAX_SIZE_BYTES,
   PROP_MAX_SIZE_TIME,
   PROP_DEINTERLACE_METHOD,
-  PROP_DISABLE_VPP
+  PROP_DISABLE_VPP,
+  PROP_LAST
 };
+
+static GParamSpec *properties[PROP_LAST];
 
 #define GST_VAAPI_DECODE_BIN_SURFACE_CAPS \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(  \
@@ -275,6 +278,8 @@ gst_vaapi_decode_bin_handle_message (GstBin * bin, GstMessage * message)
     GST_WARNING_OBJECT (vaapidecbin, "VA driver doesn't support VPP");
     if (!vaapidecbin->disable_vpp) {
       vaapidecbin->disable_vpp = TRUE;
+      g_object_notify_by_pspec (G_OBJECT (vaapidecbin),
+          properties[PROP_DISABLE_VPP]);
     }
   }
 
@@ -308,31 +313,28 @@ gst_vaapi_decode_bin_class_init (GstVaapiDecodeBinClass * klass)
       GST_PLUGIN_DESC,
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 
-  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_BYTES,
-      g_param_spec_uint ("max-size-bytes", "Max. size (kB)",
-          "Max. amount of data in the queue (bytes, 0=disable)",
-          0, G_MAXUINT, DEFAULT_QUEUE_MAX_SIZE_BYTES,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_BUFFERS,
-      g_param_spec_uint ("max-size-buffers", "Max. size (buffers)",
-          "Max. number of buffers in the queue (0=disable)", 0, G_MAXUINT,
-          DEFAULT_QUEUE_MAX_SIZE_BUFFERS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_TIME,
-      g_param_spec_uint64 ("max-size-time", "Max. size (ns)",
-          "Max. amount of data in the queue (in ns, 0=disable)", 0, G_MAXUINT64,
-          DEFAULT_QUEUE_MAX_SIZE_TIME,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_DEINTERLACE_METHOD,
-      g_param_spec_enum ("deinterlace-method", "Deinterlace method",
-          "Deinterlace method to use", GST_VAAPI_TYPE_DEINTERLACE_METHOD,
-          DEFAULT_DEINTERLACE_METHOD,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_DISABLE_VPP,
-      g_param_spec_boolean ("disable-vpp",
-          "Disable VPP",
-          "Disable Video Post Processing(No support for run time disabling)",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  properties[PROP_MAX_SIZE_BYTES] = g_param_spec_uint ("max-size-bytes",
+      "Max. size (kB)", "Max. amount of data in the queue (bytes, 0=disable)",
+      0, G_MAXUINT, DEFAULT_QUEUE_MAX_SIZE_BYTES,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  properties[PROP_MAX_SIZE_BUFFERS] = g_param_spec_uint ("max-size-buffers",
+      "Max. size (buffers)", "Max. number of buffers in the queue (0=disable)",
+      0, G_MAXUINT, DEFAULT_QUEUE_MAX_SIZE_BUFFERS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  properties[PROP_MAX_SIZE_TIME] = g_param_spec_uint64 ("max-size-time",
+      "Max. size (ns)", "Max. amount of data in the queue (in ns, 0=disable)",
+      0, G_MAXUINT64, DEFAULT_QUEUE_MAX_SIZE_TIME,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  properties[PROP_DEINTERLACE_METHOD] = g_param_spec_enum ("deinterlace-method",
+      "Deinterlace method", "Deinterlace method to use",
+      GST_VAAPI_TYPE_DEINTERLACE_METHOD, DEFAULT_DEINTERLACE_METHOD,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  properties[PROP_DISABLE_VPP] = g_param_spec_boolean ("disable-vpp",
+      "Disable VPP",
+      "Disable Video Post Processing (No support for run time disabling)",
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vaapi_decode_bin_sink_factory));
