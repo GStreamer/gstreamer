@@ -664,12 +664,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
   const GstMetaInfo *info = (*meta)->info;
   gboolean do_copy = FALSE;
 
-  if (GST_META_FLAG_IS_SET (*meta, GST_META_FLAG_POOLED)) {
-    /* never call the transform_meta with pool private metadata */
-    GST_DEBUG_OBJECT (encoder, "not copying pooled metadata %s",
-        g_type_name (info->api));
-    do_copy = FALSE;
-  } else if (gst_meta_api_type_has_tag (info->api, _gst_meta_tag_memory)) {
+  if (gst_meta_api_type_has_tag (info->api, _gst_meta_tag_memory)) {
     /* never call the transform_meta with memory specific metadata */
     GST_DEBUG_OBJECT (encoder, "not copying memory specific metadata %s",
         g_type_name (info->api));
