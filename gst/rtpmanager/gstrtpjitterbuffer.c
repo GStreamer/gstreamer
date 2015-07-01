@@ -2941,30 +2941,31 @@ static GstFlowReturn
 handle_next_buffer (GstRtpJitterBuffer * jitterbuffer)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  GstFlowReturn result = GST_FLOW_OK;
+  GstFlowReturn result;
   RTPJitterBufferItem *item;
   guint seqnum;
   guint32 next_seqnum;
-  gint gap;
 
   /* only push buffers when PLAYING and active and not buffering */
   if (priv->blocked || !priv->active ||
-      rtp_jitter_buffer_is_buffering (priv->jbuf))
+      rtp_jitter_buffer_is_buffering (priv->jbuf)) {
     return GST_FLOW_WAIT;
+  }
 
-again:
   /* peek a buffer, we're just looking at the sequence number.
    * If all is fine, we'll pop and push it. If the sequence number is wrong we
    * wait for a timeout or something to change.
    * The peeked buffer is valid for as long as we hold the jitterbuffer lock. */
   item = rtp_jitter_buffer_peek (priv->jbuf);
-  if (item == NULL)
+  if (item == NULL) {
     goto wait;
+  }
 
   /* get the seqnum and the next expected seqnum */
   seqnum = item->seqnum;
-  if (seqnum == -1)
-    goto do_push;
+  if (seqnum == -1) {
+    return pop_and_push_next (jitterbuffer, seqnum);
+  }
 
   next_seqnum = priv->next_seqnum;
 
@@ -2977,22 +2978,19 @@ again:
      * fires, so wait for that */
     result = GST_FLOW_WAIT;
   } else {
-    /* else calculate GAP */
-    gap = gst_rtp_buffer_compare_seqnum (next_seqnum, seqnum);
+    gint gap = gst_rtp_buffer_compare_seqnum (next_seqnum, seqnum);
 
     if (G_LIKELY (gap == 0)) {
-    do_push:
       /* no missing packet, pop and push */
       result = pop_and_push_next (jitterbuffer, seqnum);
     } else if (G_UNLIKELY (gap < 0)) {
-      RTPJitterBufferItem *item;
       /* if we have a packet that we already pushed or considered dropped, pop it
        * off and get the next packet */
       GST_DEBUG_OBJECT (jitterbuffer, "Old packet #%d, next #%d dropping",
           seqnum, next_seqnum);
       item = rtp_jitter_buffer_pop (priv->jbuf, NULL);
       free_item (item);
-      goto again;
+      result = GST_FLOW_OK;
     } else {
       /* the chain function has scheduled timers to request retransmission or
        * when to consider the packet lost, wait for that */
@@ -3002,16 +3000,17 @@ again:
       result = GST_FLOW_WAIT;
     }
   }
+
   return result;
 
 wait:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "no buffer, going to wait");
-    if (priv->eos)
-      result = GST_FLOW_EOS;
-    else
-      result = GST_FLOW_WAIT;
-    return result;
+    if (priv->eos) {
+      return GST_FLOW_EOS;
+    } else {
+      return GST_FLOW_WAIT;
+    }
   }
 }
 
