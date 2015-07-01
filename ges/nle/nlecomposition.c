@@ -2134,8 +2134,9 @@ _is_ready_to_restart_task (NleComposition * comp, GstEvent * event)
 
 
   if (comp->priv->seqnum_to_restart_task == seqnum) {
-    gchar *name = g_strdup_printf ("new-stack__%" GST_TIME_FORMAT "--%"
-        GST_TIME_FORMAT "", GST_TIME_ARGS (comp->priv->segment_start),
+    gchar *name = g_strdup_printf ("%s-new-stack__%" GST_TIME_FORMAT "--%"
+        GST_TIME_FORMAT "", GST_OBJECT_NAME (comp),
+        GST_TIME_ARGS (comp->priv->segment_start),
         GST_TIME_ARGS (comp->priv->segment_stop));
 
     GST_INFO_OBJECT (comp, "Got %s with proper seqnum"

@@ -223,16 +223,17 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     guint32 real_tck_prio;
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
-    gint off = _PRIORITY (child) - _PRIORITY (element) - min_prio;
+    gint off = _ges_container_get_priority_offset (container, child);
+
 
     if (off >= LAYER_HEIGHT) {
       GST_ERROR ("%s child %s as a priority offset %d >= LAYER_HEIGHT %d"
-          "clamping it to 0", GES_TIMELINE_ELEMENT_NAME (element),
+          " ==> clamping it to 0", GES_TIMELINE_ELEMENT_NAME (element),
           GES_TIMELINE_ELEMENT_NAME (child), off, LAYER_HEIGHT);
       off = 0;
     }
 
-    real_tck_prio = min_prio + priority + off;
+    real_tck_prio = min_prio + priority - off;
 
     if (real_tck_prio > max_prio) {
       GST_WARNING ("%p priority of %i, is outside of the its containing "
@@ -300,6 +301,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
    */
   _get_priority_range (container, &min_prio, &max_prio);
   if (GES_IS_BASE_EFFECT (element)) {
+    GESChildrenControlMode mode = container->children_control_mode;
 
     GST_DEBUG_OBJECT (container, "Adding %ith effect: %" GST_PTR_FORMAT
         " Priority %i", priv->nb_effects + 1, element,
@@ -307,12 +309,15 @@ _add_child (GESContainer * container, GESTimelineElement * element)
         priv->nb_effects);
 
     tmp = g_list_nth (GES_CONTAINER_CHILDREN (container), priv->nb_effects);
-    for (; tmp; tmp = tmp->next)
+    container->children_control_mode = GES_CHILDREN_UPDATE_OFFSETS;
+    for (; tmp; tmp = tmp->next) {
       ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
           GES_TIMELINE_ELEMENT_PRIORITY (tmp->data) + 1);
+    }
 
     _set_priority0 (element, min_prio +
         GES_TIMELINE_ELEMENT_PRIORITY (container) + priv->nb_effects);
+    container->children_control_mode = mode;
     priv->nb_effects++;
   } else {
     /* We add the track element on top of the effect list */
