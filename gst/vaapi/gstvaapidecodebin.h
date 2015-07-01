@@ -55,6 +55,7 @@ typedef struct _GstVaapiDecodeBin {
   guint64 max_size_time;
   GstVaapiDeinterlaceMethod deinterlace_method;
   gboolean disable_vpp;
+  gboolean has_vpp;
 
 } GstVaapiDecodeBin;
 
