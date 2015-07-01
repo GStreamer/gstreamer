@@ -260,6 +260,7 @@ gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay)
     guint payload_len;
     guint packet_len;
     GstRTPBuffer rtp = { NULL, };
+    GstBuffer *payload_buffer;
 
     /* this will be the total length of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (2 + avail, 0, 0);
@@ -271,7 +272,7 @@ gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay)
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
 
     /* create buffer to hold the payload */
-    outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+    outbuf = gst_rtp_buffer_new_allocate (2, 0, 0);
 
     if (FT == 0) {
       /* check if it all fits */
@@ -314,13 +315,15 @@ gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay)
     payload[1] = NF;
     payload_len -= 2;
 
-    gst_adapter_copy (rtpac3pay->adapter, &payload[2], 0, payload_len);
-    gst_adapter_flush (rtpac3pay->adapter, payload_len);
-
-    avail -= payload_len;
-    if (avail == 0)
+    if (avail == payload_len)
       gst_rtp_buffer_set_marker (&rtp, TRUE);
     gst_rtp_buffer_unmap (&rtp);
+
+    payload_buffer =
+        gst_adapter_take_buffer_fast (rtpac3pay->adapter, payload_len);
+    outbuf = gst_buffer_append (outbuf, payload_buffer);
+
+    avail -= payload_len;
 
     GST_BUFFER_PTS (outbuf) = rtpac3pay->first_ts;
     GST_BUFFER_DURATION (outbuf) = rtpac3pay->duration;
