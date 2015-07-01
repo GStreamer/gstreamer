@@ -666,7 +666,7 @@ gst_avi_demux_seek_streams (GstAviDemux * avi, guint64 offset, gboolean before)
 }
 #endif
 
-static guint
+static gint
 gst_avi_demux_index_entry_offset_search (GstAviIndexEntry * entry,
     guint64 * offset)
 {
