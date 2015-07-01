@@ -1097,9 +1097,14 @@ gst_video_decoder_negotiate_default_caps (GstVideoDecoder * decoder)
     /* Random 1280x720@30 for fixation */
     gst_structure_fixate_field_nearest_int (structure, "width", 1280);
     gst_structure_fixate_field_nearest_int (structure, "height", 720);
-    gst_structure_fixate_field_nearest_fraction (structure,
-        "pixel-aspect-ratio", 1, 1);
     gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
+    if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
+      gst_structure_fixate_field_nearest_fraction (structure,
+          "pixel-aspect-ratio", 1, 1);
+    } else {
+      gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+          1, 1, NULL);
+    }
   }
   caps = gst_caps_fixate (caps);
   structure = gst_caps_get_structure (caps, 0);
