@@ -150,9 +150,9 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     libav,
     "All libav codecs and formats (" LIBAV_SOURCE ")",
     plugin_init, PACKAGE_VERSION,
-#ifdef GST_LIBAV_ENABLE_LGPL
-    "LGPL",
-#else
+#ifdef GST_LIBAV_ENABLE_GPL
     "GPL",
+#else
+    "LGPL",
 #endif
     "libav", "http://www.libav.org")

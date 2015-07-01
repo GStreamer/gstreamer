@@ -241,11 +241,11 @@ if test "x$HAVE_LZMA" = "xno"; then
     AC_WARN([lzma not found, tiff reader will not be able to read lzma files])
 fi
 
-AC_ARG_ENABLE(lgpl,
-              [AC_HELP_STRING([--enable-lgpl], [build a LGPL licensed gst-libav])])
-AM_CONDITIONAL(GST_LIBAV_ENABLE_LGPL, test "x$enable_lgpl" = "xyes")
-if test "x$enable_lgpl" = "xyes"; then
-  AC_DEFINE([GST_LIBAV_ENABLE_LGPL], [], [Defined if building a LGPL-only version of gst-libav])
+AC_ARG_ENABLE(gpl,
+              [AC_HELP_STRING([--enable-gpl], [build a GPL licensed gst-libav])])
+AM_CONDITIONAL(GST_LIBAV_ENABLE_GPL, test "x$enable_gpl" = "xyes")
+if test "x$enable_gpl" = "xyes"; then
+  AC_DEFINE([GST_LIBAV_ENABLE_GPL], [], [Defined if building a GPL-licensed version of gst-libav])
 fi
 
 dnl *** configure external libs ***
@@ -325,7 +325,7 @@ else
         --disable-network --disable-hwaccels --disable-dxva2 --disable-vdpau\
         --disable-filters --disable-doc --enable-optimizations"
 
-  if test "x$enable_lgpl" != "xyes"; then
+  if test "x$enable_gpl" == "xyes"; then
     emblibav_configure_args="$emblibav_configure_args --enable-gpl"
   fi
 
