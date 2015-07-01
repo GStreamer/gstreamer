@@ -795,7 +795,8 @@ gst_adapter_get_buffer_fast (GstAdapter * adapter, gsize nbytes)
     GST_LOG_OBJECT (adapter, "appending %" G_GSIZE_FORMAT " bytes"
         " via region copy", size);
     if (buffer)
-      gst_buffer_copy_into (buffer, cur, GST_BUFFER_COPY_MEMORY, skip, size);
+      gst_buffer_copy_into (buffer, cur,
+          GST_BUFFER_COPY_MEMORY | GST_BUFFER_COPY_META, skip, size);
     else
       buffer = gst_buffer_copy_region (cur, GST_BUFFER_COPY_ALL, skip, size);
     skip = 0;
@@ -864,11 +865,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
   const GstMetaInfo *info = (*meta)->info;
   gboolean do_copy = FALSE;
 
-  if (GST_META_FLAG_IS_SET (*meta, GST_META_FLAG_POOLED)) {
-    /* never call the transform_meta with pool private metadata */
-    GST_DEBUG ("not copying pooled metadata %s", g_type_name (info->api));
-    do_copy = FALSE;
-  } else if (gst_meta_api_type_has_tag (info->api, _gst_meta_tag_memory)) {
+  if (gst_meta_api_type_has_tag (info->api, _gst_meta_tag_memory)) {
     /* never call the transform_meta with memory specific metadata */
     GST_DEBUG ("not copying memory specific metadata %s",
         g_type_name (info->api));
