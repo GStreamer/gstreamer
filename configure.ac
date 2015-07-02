@@ -951,7 +951,7 @@ dnl ---------------------------------------------------------------------------
 dnl -- Generate files and summary                                            --
 dnl ---------------------------------------------------------------------------
 
-case ":$USE_X11:$USE_GLX:$USE_WAYLAND:$USE_DRM:" in
+case ":$USE_X11:$USE_GLX:$USE_EGL:$USE_WAYLAND:$USE_DRM:" in
 *:1:*)
     ;;
 *)
