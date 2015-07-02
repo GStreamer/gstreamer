@@ -271,6 +271,7 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
   if (frame) {
     if (!gst_buffer_map (frame->input_buffer, &map_info, GST_MAP_READ)) {
       GST_ERROR_OBJECT (openh264dec, "Cannot map input buffer!");
+      gst_video_codec_frame_unref (frame);
       return GST_FLOW_ERROR;
     }
 
@@ -305,8 +306,10 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
     ret =
         openh264dec->priv->decoder->DecodeFrame2 (NULL, 0, yuvdata,
         &dst_buf_info);
-    if (ret != dsErrorFree)
+    if (ret != dsErrorFree) {
+      gst_video_codec_frame_unref (frame);
       return GST_FLOW_EOS;
+    }
   }
 
   /* FIXME: openh264 has no way for us to get a connection
@@ -321,6 +324,7 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
 
   /* No output available yet */
   if (dst_buf_info.iBufferStatus != 1) {
+    gst_video_codec_frame_unref (frame);
     return (frame ? GST_FLOW_OK : GST_FLOW_EOS);
   }
 
@@ -339,6 +343,8 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
     if (!gst_video_decoder_negotiate (decoder)) {
       GST_ERROR_OBJECT (openh264dec,
           "Failed to negotiate with downstream elements");
+      gst_video_codec_state_unref (state);
+      gst_video_codec_frame_unref (frame);
       return GST_FLOW_NOT_NEGOTIATED;
     }
   } else {
@@ -348,6 +354,7 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
   flow_status = gst_video_decoder_allocate_output_frame (decoder, frame);
   if (flow_status != GST_FLOW_OK) {
     gst_video_codec_state_unref (state);
+    gst_video_codec_frame_unref (frame);
     return flow_status;
   }
 
@@ -355,6 +362,7 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
           GST_MAP_WRITE)) {
     GST_ERROR_OBJECT (openh264dec, "Cannot map output buffer!");
     gst_video_codec_state_unref (state);
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
 
