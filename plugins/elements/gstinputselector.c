@@ -627,21 +627,19 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_INPUT_SELECTOR_UNLOCK (sel);
   if (new_tags)
     g_object_notify (G_OBJECT (selpad), "tags");
-  if (event) {
-    if (forward) {
-      GST_DEBUG_OBJECT (pad, "forwarding event");
-      res = gst_pad_push_event (sel->srcpad, event);
-    } else {
-      /* If we aren't forwarding the event because the pad is not the
-       * active_sinkpad, then set the flag on the pad
-       * that says a segment needs sending if/when that pad is activated.
-       * For all other cases, we send the event immediately, which makes
-       * sparse streams and other segment updates work correctly downstream.
-       */
-      if (GST_EVENT_IS_STICKY (event))
-        selpad->events_pending = TRUE;
-      gst_event_unref (event);
-    }
+  if (forward) {
+    GST_DEBUG_OBJECT (pad, "forwarding event");
+    res = gst_pad_push_event (sel->srcpad, event);
+  } else {
+    /* If we aren't forwarding the event because the pad is not the
+     * active_sinkpad, then set the flag on the pad
+     * that says a segment needs sending if/when that pad is activated.
+     * For all other cases, we send the event immediately, which makes
+     * sparse streams and other segment updates work correctly downstream.
+     */
+    if (GST_EVENT_IS_STICKY (event))
+      selpad->events_pending = TRUE;
+    gst_event_unref (event);
   }
 
   return res;
