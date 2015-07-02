@@ -305,37 +305,35 @@ gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     /* frame is completed: append to previous, push it out */
     guint len, padlen;
     guint avail;
-    GstMapInfo map;
+    GstBuffer *padbuf;
 
     GST_LOG_OBJECT (depayload, "Frame complete");
+
+    outbuf =
+        gst_rtp_buffer_get_payload_subbuffer (&rtp, header_len, payload_len);
+    gst_adapter_push (rtph263pdepay->adapter, outbuf);
+    outbuf = NULL;
 
     avail = gst_adapter_available (rtph263pdepay->adapter);
     len = avail + payload_len;
     padlen = (len % 4) + 4;
 
-    outbuf = gst_buffer_new_and_alloc (len + padlen);
-
-    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
-    memset (map.data + len, 0, padlen);
-
-    /* prepend previous data */
-    if (avail > 0) {
-      gst_adapter_copy (rtph263pdepay->adapter, map.data, 0, avail);
-      gst_adapter_flush (rtph263pdepay->adapter, avail);
+    outbuf = gst_adapter_take_buffer (rtph263pdepay->adapter, avail);
+    if (padlen) {
+      padbuf = gst_buffer_new_and_alloc (padlen);
+      gst_buffer_memset (padbuf, 0, 0, padlen);
+      outbuf = gst_buffer_append (outbuf, padbuf);
     }
-    memcpy (map.data + avail, payload, payload_len);
-    gst_buffer_unmap (outbuf, &map);
     gst_rtp_buffer_unmap (&rtp);
 
     return outbuf;
 
   } else {
     /* frame not completed: store in adapter */
-    outbuf = gst_buffer_new_and_alloc (payload_len);
-
     GST_LOG_OBJECT (depayload, "Frame incomplete, storing %d", payload_len);
-    gst_buffer_fill (outbuf, 0, payload, payload_len);
 
+    outbuf =
+        gst_rtp_buffer_get_payload_subbuffer (&rtp, header_len, payload_len);
     gst_adapter_push (rtph263pdepay->adapter, outbuf);
     gst_rtp_buffer_unmap (&rtp);
   }
