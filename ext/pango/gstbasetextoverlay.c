@@ -698,13 +698,13 @@ gst_base_text_overlay_setcaps_txt (GstBaseTextOverlay * overlay, GstCaps * caps)
 static gboolean
 gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
 {
-  gboolean upstream_has_meta = FALSE;
   gboolean caps_has_meta = FALSE;
   gboolean alloc_has_meta = FALSE;
   gboolean attach = FALSE;
   gboolean ret = TRUE;
   GstCapsFeatures *f;
   GstCaps *overlay_caps;
+  GstQuery *query;
 
   GST_DEBUG_OBJECT (overlay, "performing negotiation");
 
@@ -722,48 +722,40 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
   }
 
-  if (upstream_has_meta) {
-    overlay_caps = gst_caps_ref (caps);
-  } else {
-    GstQuery *query;
+  /* First check if the allocation meta has compositon */
+  query = gst_query_new_allocation (caps, FALSE);
 
-    /* First check if the allocation meta has compositon */
-    query = gst_query_new_allocation (caps, FALSE);
+  if (!gst_pad_peer_query (overlay->srcpad, query)) {
+    /* no problem, we use the query defaults */
+    GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
 
-    if (!gst_pad_peer_query (overlay->srcpad, query)) {
-      /* no problem, we use the query defaults */
-      GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
-
-      /* In case we were flushing, mark reconfigure and fail this method,
-       * will make it retry */
-      if (overlay->video_flushing)
-        ret = FALSE;
-    }
-
-    alloc_has_meta = gst_query_find_allocation_meta (query,
-        GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
-
-    gst_query_unref (query);
-
-    /* Then check if downstream accept overlay composition in caps */
-    overlay_caps = gst_caps_copy (caps);
-
-    f = gst_caps_get_features (overlay_caps, 0);
-    gst_caps_features_add (f,
-        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
-
-    caps_has_meta = gst_pad_peer_query_accept_caps (overlay->srcpad,
-        overlay_caps);
+    /* In case we were flushing, mark reconfigure and fail this method,
+     * will make it retry */
+    if (overlay->video_flushing)
+      ret = FALSE;
   }
+
+  alloc_has_meta = gst_query_find_allocation_meta (query,
+      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
+
+  gst_query_unref (query);
+
+  /* Then check if downstream accept overlay composition in caps */
+  overlay_caps = gst_caps_copy (caps);
+
+  f = gst_caps_get_features (overlay_caps, 0);
+  gst_caps_features_add (f,
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+
+  caps_has_meta = gst_pad_peer_query_accept_caps (overlay->srcpad,
+      overlay_caps);
 
   /* For backward compatbility, we will prefer bliting if downstream
    * allocation does not support the meta. In other case we will prefer
    * attaching, and will fail the negotiation in the unlikely case we are
    * force to blit, but format isn't supported. */
 
-  if (upstream_has_meta) {
-    attach = TRUE;
-  } else if (caps_has_meta) {
+  if (caps_has_meta) {
     if (alloc_has_meta) {
       attach = TRUE;
     } else {
