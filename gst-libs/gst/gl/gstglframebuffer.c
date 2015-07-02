@@ -173,7 +173,7 @@ gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_width,
     GLuint texture_fbo, GLCB_V2 cb, gpointer stuff)
 {
   const GstGLFuncs *gl;
-  GLint viewport_dim[4];
+  GLint viewport_dim[4] = { 0 };
 
   g_return_val_if_fail (GST_IS_GL_FRAMEBUFFER (frame), FALSE);
   g_return_val_if_fail (texture_fbo_width > 0 && texture_fbo_height > 0, FALSE);
