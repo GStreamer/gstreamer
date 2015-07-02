@@ -1316,14 +1316,15 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
     gpointer src, gpointer dest, guint dest_offset, guint width)
 {
   gint n_elems;
-  GstVideoScalerHFunc func;
+  GstVideoScalerHFunc func = NULL;
 
   g_return_if_fail (scale != NULL);
   g_return_if_fail (src != NULL);
   g_return_if_fail (dest != NULL);
   g_return_if_fail (dest_offset + width <= scale->resampler.out_size);
 
-  if (!get_functions (scale, NULL, format, &func, NULL, &n_elems, &width))
+  if (!get_functions (scale, NULL, format, &func, NULL, &n_elems, &width)
+      || func == NULL)
     goto no_func;
 
   if (scale->tmpwidth < width)
@@ -1357,20 +1358,22 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
     gpointer src_lines[], gpointer dest, guint dest_offset, guint width)
 {
   gint n_elems;
-  GstVideoScalerVFunc func;
+  GstVideoScalerVFunc func = NULL;
 
   g_return_if_fail (scale != NULL);
   g_return_if_fail (src_lines != NULL);
   g_return_if_fail (dest != NULL);
   g_return_if_fail (dest_offset < scale->resampler.out_size);
 
-  if (!get_functions (NULL, scale, format, NULL, &func, &n_elems, &width))
+  if (!get_functions (NULL, scale, format, NULL, &func, &n_elems, &width)
+      || func == NULL)
     goto no_func;
 
   if (scale->tmpwidth < width)
     realloc_tmplines (scale, n_elems, width);
 
   func (scale, src_lines, dest, dest_offset, width, n_elems);
+
   return;
 
 no_func:
@@ -1410,8 +1413,8 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
     guint width, guint height)
 {
   gint n_elems;
-  GstVideoScalerHFunc hfunc;
-  GstVideoScalerVFunc vfunc;
+  GstVideoScalerHFunc hfunc = NULL;
+  GstVideoScalerVFunc vfunc = NULL;
   gint i;
 
   g_return_if_fail (src != NULL);
