@@ -718,7 +718,7 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
 
   /* Check if upstream caps have meta */
   if ((f = gst_caps_get_features (caps, 0))) {
-    caps_has_meta = gst_caps_features_contains (f,
+    upstream_has_meta = gst_caps_features_contains (f,
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
   }
 
