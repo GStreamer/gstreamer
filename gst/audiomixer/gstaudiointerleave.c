@@ -514,6 +514,11 @@ gst_audio_interleave_aggregate (GstAggregator * aggregator, gboolean timeout)
     GstStructure *s;
     gboolean ret;
 
+    if (self->sinkcaps == NULL || self->channels == 0) {
+      /* In this case, let the base class handle it */
+      goto not_negotiated;
+    }
+
     srccaps = gst_caps_copy (self->sinkcaps);
     s = gst_caps_get_structure (srccaps, 0);
 
@@ -535,6 +540,8 @@ gst_audio_interleave_aggregate (GstAggregator * aggregator, gboolean timeout)
 
     self->new_caps = FALSE;
   }
+
+not_negotiated:
   GST_OBJECT_UNLOCK (aggregator);
 
   return GST_AGGREGATOR_CLASS (parent_class)->aggregate (aggregator, timeout);
