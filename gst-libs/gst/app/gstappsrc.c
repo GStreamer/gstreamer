@@ -758,7 +758,7 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MIN_LATENCY:
     {
-      guint64 min;
+      guint64 min = 0;
 
       gst_app_src_get_latency (appsrc, &min, NULL);
       g_value_set_int64 (value, min);
@@ -766,7 +766,7 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
     }
     case PROP_MAX_LATENCY:
     {
-      guint64 max;
+      guint64 max = 0;
 
       gst_app_src_get_latency (appsrc, NULL, &max);
       g_value_set_int64 (value, max);
