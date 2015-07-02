@@ -643,9 +643,10 @@ static GstFlowReturn
 gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
 {
   guint avail;
-  GstBuffer *outbuf;
+  GstBufferList *list = NULL;
+  GstBuffer *outbuf = NULL;
   GstFlowReturn ret;
-  gboolean fragmented;
+  gboolean fragmented = FALSE;
 
   avail = gst_adapter_available (rtph263ppay->adapter);
   if (avail == 0)
@@ -666,45 +667,44 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
   while (avail > 0) {
     guint towrite;
     guint8 *payload;
-    guint payload_len;
     gint header_len;
     guint next_gop = 0;
     gboolean found_gob = FALSE;
     GstRTPBuffer rtp = { NULL };
+    GstBuffer *payload_buf;
 
     if (rtph263ppay->fragmentation_mode == GST_FRAGMENTATION_MODE_SYNC) {
       /* start after 1st gop possible */
-      guint parsed_len = 3;
-      const guint8 *parse_data = NULL;
-
-      parse_data = gst_adapter_map (rtph263ppay->adapter, avail);
 
       /* Check if we have a gob or eos , eossbs */
       /* FIXME EOS and EOSSBS packets should never contain any gobs and vice-versa */
-      if (avail >= 3 && *parse_data == 0 && *(parse_data + 1) == 0
-          && *(parse_data + 2) >= 0x80) {
+      next_gop =
+          gst_adapter_masked_scan_uint32 (rtph263ppay->adapter, 0xffff8000,
+          0x00008000, 0, avail);
+      if (next_gop == 0) {
         GST_DEBUG_OBJECT (rtph263ppay, " Found GOB header");
         found_gob = TRUE;
       }
+
       /* Find next and cut the packet accordingly */
       /* TODO we should get as many gobs as possible until MTU is reached, this
        * code seems to just get one GOB per packet */
-      while (parsed_len + 2 < avail) {
-        if (parse_data[parsed_len] == 0 && parse_data[parsed_len + 1] == 0
-            && parse_data[parsed_len + 2] >= 0x80) {
-          next_gop = parsed_len;
-          GST_DEBUG_OBJECT (rtph263ppay, " Next GOB Detected at :  %d",
-              next_gop);
-          break;
-        }
-        parsed_len++;
-      }
-      gst_adapter_unmap (rtph263ppay->adapter);
+      if (next_gop == 0 && avail > 3)
+        next_gop =
+            gst_adapter_masked_scan_uint32 (rtph263ppay->adapter, 0xffff8000,
+            0x00008000, 3, avail - 3);
+      GST_DEBUG_OBJECT (rtph263ppay, " Next GOB Detected at :  %d", next_gop);
+      if (next_gop == -1)
+        next_gop = 0;
     }
 
     /* for picture start frames (non-fragmented), we need to remove the first
      * two 0x00 bytes and set P=1 */
-    header_len = (fragmented && !found_gob) ? 2 : 0;
+    if (!fragmented || found_gob) {
+      gst_adapter_flush (rtph263ppay->adapter, 2);
+      avail -= 2;
+    }
+    header_len = 2;
 
     towrite = MIN (avail, gst_rtp_buffer_calc_payload_len
         (GST_RTP_BASE_PAYLOAD_MTU (rtph263ppay) - header_len, 0, 0));
@@ -712,17 +712,13 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     if (next_gop > 0)
       towrite = MIN (next_gop, towrite);
 
-    payload_len = header_len + towrite;
-
-    outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+    outbuf = gst_rtp_buffer_new_allocate (header_len, 0, 0);
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
     /* last fragment gets the marker bit set */
     gst_rtp_buffer_set_marker (&rtp, avail > towrite ? 0 : 1);
 
     payload = gst_rtp_buffer_get_payload (&rtp);
-
-    gst_adapter_copy (rtph263ppay->adapter, &payload[header_len], 0, towrite);
 
     /*  0                   1
      *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
@@ -738,13 +734,35 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     GST_BUFFER_DURATION (outbuf) = rtph263ppay->first_duration;
     gst_rtp_buffer_unmap (&rtp);
 
-    gst_adapter_flush (rtph263ppay->adapter, towrite);
+    payload_buf = gst_adapter_take_buffer_fast (rtph263ppay->adapter, towrite);
+    outbuf = gst_buffer_append (outbuf, payload_buf);
+    avail -= towrite;
 
+    /* If more data is available and this is our first iteration,
+     * we create a buffer list and remember that we're fragmented.
+     *
+     * If we're fragmented already, add buffers to the previously
+     * created buffer list.
+     *
+     * Otherwise fragmented will be FALSE and we just push the single output
+     * buffer, and no list is allocated.
+     */
+    if (avail && !fragmented) {
+      fragmented = TRUE;
+      list = gst_buffer_list_new ();
+      gst_buffer_list_add (list, outbuf);
+    } else if (fragmented) {
+      gst_buffer_list_add (list, outbuf);
+    }
+  }
+
+  if (fragmented) {
+    ret =
+        gst_rtp_base_payload_push_list (GST_RTP_BASE_PAYLOAD (rtph263ppay),
+        list);
+  } else {
     ret =
         gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtph263ppay), outbuf);
-
-    avail -= towrite;
-    fragmented = TRUE;
   }
 
   return ret;
