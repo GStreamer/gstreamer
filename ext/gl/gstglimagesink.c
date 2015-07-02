@@ -788,10 +788,7 @@ context_error:
       gl_sink->context = NULL;
     }
 
-    if (error) {
-      g_error_free (error);
-      error = NULL;
-    }
+    g_clear_error (&error);
 
     return FALSE;
   }
