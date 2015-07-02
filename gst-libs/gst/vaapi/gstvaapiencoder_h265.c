@@ -1687,7 +1687,7 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
       slice_param->slice_fields.bits.last_slice_of_pic_flag = 1;
 
     if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
-            VAEncPackedHeaderHEVC_Slice)
+            VA_ENC_PACKED_HEADER_SLICE)
         && !add_packed_slice_header (encoder, picture, slice))
       goto error_create_packed_slice_hdr;
 
@@ -1725,7 +1725,7 @@ ensure_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture)
     goto error_create_seq_param;
 
   /* add packed vps and sps headers */
-  if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderHEVC_SPS)
+  if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VA_ENC_PACKED_HEADER_SEQUENCE)
       && !(add_packed_vps_header (encoder, picture, sequence)
           && add_packed_sequence_header (encoder, picture, sequence))) {
     goto error_create_packed_seq_hdr;
@@ -1769,7 +1769,7 @@ ensure_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     return FALSE;
 
   if (picture->type == GST_VAAPI_PICTURE_TYPE_I &&
-      (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VAEncPackedHeaderHEVC_PPS)
+      (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VA_ENC_PACKED_HEADER_PICTURE)
       && !add_packed_picture_header (encoder, picture)) {
     GST_ERROR ("set picture packed header failed");
     return FALSE;
