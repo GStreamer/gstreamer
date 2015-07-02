@@ -673,7 +673,7 @@ goom_update (PluginInfo * goomInfo, gint16 data[2][512], int forceMode,
    */
   if ((goomInfo->update.stop_lines & 0xf000)
       || (!goomInfo->curGState->drawScope)) {
-    float param1, param2, amplitude;
+    float param1 = 0, param2 = 0, amplitude;
     int couleur;
     int mode;
 
