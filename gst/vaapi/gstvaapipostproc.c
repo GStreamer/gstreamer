@@ -1109,7 +1109,6 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
       peer_caps = gst_caps_fixate (peer_caps);
     gst_video_info_from_caps (&peer_vi, peer_caps);
     out_format = GST_VIDEO_INFO_FORMAT (&peer_vi);
-    postproc->format = out_format;
     if (peer_caps)
       gst_caps_unref (peer_caps);
   }
@@ -1128,6 +1127,13 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
     if (feature_str)
       gst_caps_set_features (out_caps, 0,
           gst_caps_features_new (feature_str, NULL));
+  }
+
+  /* we don't need to do format conversion if GL_TEXTURE_UPLOAD_META
+   * is negotiated */
+  if (feature != GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META &&
+      postproc->format != out_format) {
+    postproc->format = out_format;
   }
   return out_caps;
 }
