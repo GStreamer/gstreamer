@@ -34,6 +34,8 @@
 #include <gst/audio/audio.h>
 #include <gst/audio/audio-enumtypes.h>
 
+#include <gst/check/gstharness.h>
+
 static void
 gst_check_setup_events_audiointerleave (GstPad * srcpad, GstElement * element,
     GstCaps * caps, GstFormat format, const gchar * stream_id)
@@ -436,11 +438,11 @@ src_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
 {
   gint n = GPOINTER_TO_INT (user_data);
   gfloat *data;
-  gint i;
-  gsize size;
+  gint i, num_samples;
   GstCaps *caps;
   guint64 mask;
   GstAudioChannelPosition pos;
+  GstMapInfo map;
 
   fail_unless (gst_buffer_is_writable (buffer));
 
@@ -469,18 +471,18 @@ src_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
   gst_pad_set_caps (pad, caps);
   gst_caps_unref (caps);
 
-  size = 48000 * sizeof (gfloat);
-  data = g_malloc (size);
-  for (i = 0; i < 48000; i++)
+  fail_unless (gst_buffer_map (buffer, &map, GST_MAP_WRITE));
+  fail_unless (map.size % sizeof (gfloat) == 0);
+
+  fail_unless (map.size > 480);
+
+  num_samples = map.size / sizeof (gfloat);
+  data = (gfloat *) map.data;
+
+  for (i = 0; i < num_samples; i++)
     data[i] = (n % 2 == 0) ? -1.0 : 1.0;
 
-  gst_buffer_append_memory (buffer, gst_memory_new_wrapped (0, data,
-          size, 0, size, data, g_free));
-
-  GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_DURATION (buffer) = GST_SECOND;
+  gst_buffer_unmap (buffer, &map);
 }
 
 static void
@@ -518,7 +520,7 @@ sink_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
       gst_util_uint64_scale (map.size, GST_SECOND,
           48000 * 2 * sizeof (gfloat)) >= GST_BUFFER_DURATION (buffer) - 1);
 
-  if (n == 0) {
+  if (n == 0 || n == 3) {
     GstAudioChannelPosition pos[2] =
         { GST_AUDIO_CHANNEL_POSITION_NONE, GST_AUDIO_CHANNEL_POSITION_NONE };
     gst_audio_channel_positions_to_mask (pos, 2, FALSE, &mask);
@@ -536,23 +538,25 @@ sink_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
     g_assert_not_reached ();
   }
 
-  caps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
-      "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 48000,
-      "layout", G_TYPE_STRING, "interleaved",
-      "channel-mask", GST_TYPE_BITMASK, mask, NULL);
+  if (pad) {
+    caps = gst_caps_new_simple ("audio/x-raw",
+        "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+        "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 48000,
+        "layout", G_TYPE_STRING, "interleaved",
+        "channel-mask", GST_TYPE_BITMASK, mask, NULL);
 
-  ccaps = gst_pad_get_current_caps (pad);
-  fail_unless (gst_caps_is_equal (caps, ccaps));
-  gst_caps_unref (ccaps);
-  gst_caps_unref (caps);
-
+    ccaps = gst_pad_get_current_caps (pad);
+    fail_unless (gst_caps_is_equal (caps, ccaps));
+    gst_caps_unref (ccaps);
+    gst_caps_unref (caps);
+  }
 #ifdef HAVE_VALGRIND
   if (!(RUNNING_ON_VALGRIND))
 #endif
     for (i = 0; i < map.size / sizeof (float); i += 2) {
       fail_unless_equals_float (data[i], -1.0);
-      fail_unless_equals_float (data[i + 1], 1.0);
+      if (n != 3)
+        fail_unless_equals_float (data[i + 1], 1.0);
     }
   have_data += map.size;
 
@@ -578,6 +582,9 @@ test_audiointerleave_2ch_pipeline (gboolean interleaved)
   src1 = gst_element_factory_make ("fakesrc", "src1");
   fail_unless (src1 != NULL);
   g_object_set (src1, "num-buffers", 4, NULL);
+  g_object_set (src1, "sizetype", 2,
+      "sizemax", (int) 48000 * sizeof (gfloat),
+      "datarate", (int) 48000 * sizeof (gfloat), NULL);
   g_object_set (src1, "signal-handoffs", TRUE, NULL);
   g_object_set (src1, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (src1, "handoff", G_CALLBACK (src_handoff_float32),
@@ -587,6 +594,9 @@ test_audiointerleave_2ch_pipeline (gboolean interleaved)
   src2 = gst_element_factory_make ("fakesrc", "src2");
   fail_unless (src2 != NULL);
   g_object_set (src2, "num-buffers", 4, NULL);
+  g_object_set (src2, "sizetype", 2,
+      "sizemax", (int) 48000 * sizeof (gfloat),
+      "datarate", (int) 48000 * sizeof (gfloat), NULL);
   g_object_set (src2, "signal-handoffs", TRUE, NULL);
   g_object_set (src2, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (src2, "handoff", G_CALLBACK (src_handoff_float32),
@@ -675,6 +685,9 @@ GST_START_TEST (test_audiointerleave_2ch_pipeline_input_chanpos)
   src1 = gst_element_factory_make ("fakesrc", "src1");
   fail_unless (src1 != NULL);
   g_object_set (src1, "num-buffers", 4, NULL);
+  g_object_set (src1, "sizetype", 2,
+      "sizemax", (int) 48000 * sizeof (gfloat),
+      "datarate", (int) 48000 * sizeof (gfloat), NULL);
   g_object_set (src1, "signal-handoffs", TRUE, NULL);
   g_object_set (src1, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (src1, "handoff",
@@ -684,6 +697,9 @@ GST_START_TEST (test_audiointerleave_2ch_pipeline_input_chanpos)
   src2 = gst_element_factory_make ("fakesrc", "src2");
   fail_unless (src2 != NULL);
   g_object_set (src2, "num-buffers", 4, NULL);
+  g_object_set (src2, "sizetype", 2,
+      "sizemax", (int) 48000 * sizeof (gfloat),
+      "datarate", (int) 48000 * sizeof (gfloat), NULL);
   g_object_set (src2, "signal-handoffs", TRUE, NULL);
   g_object_set (src2, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (src2, "handoff",
@@ -764,6 +780,9 @@ GST_START_TEST (test_audiointerleave_2ch_pipeline_custom_chanpos)
   fail_unless (src1 != NULL);
   g_object_set (src1, "num-buffers", 4, NULL);
   g_object_set (src1, "signal-handoffs", TRUE, NULL);
+  g_object_set (src1, "sizetype", 2,
+      "sizemax", (int) 48000 * sizeof (gfloat),
+      "datarate", (int) 48000 * sizeof (gfloat), NULL);
   g_object_set (src1, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (src1, "handoff",
       G_CALLBACK (src_handoff_float32_audiointerleaved), GINT_TO_POINTER (0));
@@ -773,6 +792,9 @@ GST_START_TEST (test_audiointerleave_2ch_pipeline_custom_chanpos)
   fail_unless (src2 != NULL);
   g_object_set (src2, "num-buffers", 4, NULL);
   g_object_set (src2, "signal-handoffs", TRUE, NULL);
+  g_object_set (src2, "sizetype", 2,
+      "sizemax", (int) 48000 * sizeof (gfloat),
+      "datarate", (int) 48000 * sizeof (gfloat), NULL);
   g_object_set (src2, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (src2, "handoff",
       G_CALLBACK (src_handoff_float32_audiointerleaved), GINT_TO_POINTER (1));
@@ -862,6 +884,9 @@ GST_START_TEST (test_audiointerleave_2ch_pipeline_no_chanpos)
   fail_unless (src1 != NULL);
   g_object_set (src1, "num-buffers", 4, NULL);
   g_object_set (src1, "signal-handoffs", TRUE, NULL);
+  g_object_set (src1, "sizetype", 2,
+      "sizemax", (int) 48000 * sizeof (gfloat),
+      "datarate", (int) 48000 * sizeof (gfloat), NULL);
   g_object_set (src1, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (src1, "handoff",
       G_CALLBACK (src_handoff_float32_audiointerleaved), GINT_TO_POINTER (0));
@@ -871,6 +896,9 @@ GST_START_TEST (test_audiointerleave_2ch_pipeline_no_chanpos)
   fail_unless (src2 != NULL);
   g_object_set (src2, "num-buffers", 4, NULL);
   g_object_set (src2, "signal-handoffs", TRUE, NULL);
+  g_object_set (src2, "sizetype", 2,
+      "sizemax", (int) 48000 * sizeof (gfloat),
+      "datarate", (int) 48000 * sizeof (gfloat), NULL);
   g_object_set (src2, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (src2, "handoff",
       G_CALLBACK (src_handoff_float32_audiointerleaved), GINT_TO_POINTER (1));
@@ -933,6 +961,148 @@ GST_START_TEST (test_audiointerleave_2ch_pipeline_no_chanpos)
 
 GST_END_TEST;
 
+static void
+forward_check_event (GstHarness * h, GstHarness * hsrc, GstEventType type)
+{
+  GstEvent *e;
+
+  e = gst_harness_pull_event (hsrc);
+  fail_unless (GST_EVENT_TYPE (e) == type);
+  gst_harness_push_event (h, e);
+}
+
+GST_START_TEST (test_audiointerleave_2ch_smallbuf)
+{
+  GstElement *audiointerleave;
+  GstHarness *hsrc;
+  GstHarness *h;
+  GstHarness *h2;
+  GstBuffer *buffer;
+  GstQuery *q;
+  gint i;
+  GstEvent *ev;
+  GstCaps *ecaps, *caps;
+
+  audiointerleave = gst_element_factory_make ("audiointerleave", NULL);
+
+  g_object_set (audiointerleave, "latency", GST_SECOND / 2,
+      "output-buffer-duration", GST_SECOND / 4, NULL);
+
+  h = gst_harness_new_with_element (audiointerleave, "sink_0", "src");
+  gst_harness_use_testclock (h);
+
+  h2 = gst_harness_new_with_element (audiointerleave, "sink_1", NULL);
+  gst_harness_set_src_caps_str (h2, "audio/x-raw, "
+      "format=" GST_AUDIO_NE (F32) ", channels=(int)1,"
+      " layout=interleaved, rate=48000, channel-mask=(bitmask)8");
+
+  hsrc = gst_harness_new ("fakesrc");
+  gst_harness_use_testclock (hsrc);
+  g_object_set (hsrc->element,
+      "is-live", TRUE,
+      "sync", TRUE,
+      "signal-handoffs", TRUE,
+      "format", GST_FORMAT_TIME,
+      "sizetype", 2,
+      "sizemax", (int) 480 * sizeof (gfloat),
+      "datarate", (int) 48000 * sizeof (gfloat), NULL);
+  g_signal_connect (hsrc->element, "handoff",
+      G_CALLBACK (src_handoff_float32_audiointerleaved), GINT_TO_POINTER (2));
+  gst_harness_play (hsrc);
+
+  gst_harness_crank_single_clock_wait (hsrc);
+  forward_check_event (h, hsrc, GST_EVENT_STREAM_START);
+  forward_check_event (h, hsrc, GST_EVENT_CAPS);
+  forward_check_event (h, hsrc, GST_EVENT_SEGMENT);
+  gst_harness_push (h, gst_harness_pull (hsrc));        /* buffer */
+
+  for (i = 0; i < 24; i++) {
+    gst_harness_crank_single_clock_wait (hsrc);
+    forward_check_event (h, hsrc, GST_EVENT_CAPS);
+    gst_harness_push (h, gst_harness_pull (hsrc));      /* buffer */
+  }
+
+  gst_harness_crank_single_clock_wait (h);
+
+
+  gst_event_unref (gst_harness_pull_event (h)); /* stream-start */
+  ev = gst_harness_pull_event (h);      /* caps */
+  fail_unless_equals_int (GST_EVENT_CAPS, GST_EVENT_TYPE (ev));
+
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+      "channels", G_TYPE_INT, 2,
+      "layout", G_TYPE_STRING, "interleaved",
+      "rate", G_TYPE_INT, 48000, "channel-mask", GST_TYPE_BITMASK, 0x9, NULL);
+
+  gst_event_parse_caps (ev, &ecaps);
+  gst_check_caps_equal (ecaps, caps);
+  gst_caps_unref (caps);
+  gst_event_unref (ev);
+
+  for (i = 0; i < 24; i++)
+    gst_harness_crank_single_clock_wait (h);
+  fail_unless_equals_uint64 (gst_clock_get_time (GST_ELEMENT_CLOCK
+          (h->element)), 750 * GST_MSECOND);
+
+  /*  Check that the queue is really empty */
+  q = gst_query_new_drain ();
+  gst_pad_peer_query (h->srcpad, q);
+  gst_query_unref (q);
+
+  buffer = gst_harness_pull (h);
+  sink_handoff_float32 (NULL, buffer, NULL, GUINT_TO_POINTER (3));
+  gst_buffer_unref (buffer);
+  fail_unless_equals_int (gst_harness_buffers_received (h), 1);
+
+  for (i = 0; i < 50; i++) {
+    gst_harness_crank_single_clock_wait (hsrc);
+    forward_check_event (h, hsrc, GST_EVENT_CAPS);
+    gst_harness_push (h, gst_harness_pull (hsrc));      /* buffer */
+  }
+  for (i = 0; i < 25; i++)
+    gst_harness_crank_single_clock_wait (h);
+  fail_unless_equals_uint64 (gst_clock_get_time (GST_ELEMENT_CLOCK
+          (h->element)), 1000 * GST_MSECOND);
+  buffer = gst_harness_pull (h);
+  sink_handoff_float32 (NULL, buffer, NULL, GUINT_TO_POINTER (3));
+  gst_buffer_unref (buffer);
+  fail_unless_equals_int (gst_harness_buffers_received (h), 2);
+
+  for (i = 0; i < 25; i++) {
+    gst_harness_crank_single_clock_wait (hsrc);
+    forward_check_event (h, hsrc, GST_EVENT_CAPS);
+    gst_harness_push (h, gst_harness_pull (hsrc));      /* buffer */
+  }
+  for (i = 0; i < 25; i++)
+    gst_harness_crank_single_clock_wait (h);
+  fail_unless_equals_uint64 (gst_clock_get_time (GST_ELEMENT_CLOCK
+          (h->element)), 1250 * GST_MSECOND);
+  buffer = gst_harness_pull (h);
+  sink_handoff_float32 (NULL, buffer, NULL, GUINT_TO_POINTER (3));
+  gst_buffer_unref (buffer);
+  fail_unless_equals_int (gst_harness_buffers_received (h), 3);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  for (i = 0; i < 25; i++)
+    gst_harness_crank_single_clock_wait (h);
+  fail_unless_equals_uint64 (gst_clock_get_time (GST_ELEMENT_CLOCK
+          (h->element)), 1500 * GST_MSECOND);
+  buffer = gst_harness_pull (h);
+  sink_handoff_float32 (NULL, buffer, NULL, GUINT_TO_POINTER (3));
+  gst_buffer_unref (buffer);
+
+  fail_unless_equals_int (gst_harness_buffers_received (h), 4);
+
+  gst_harness_teardown (h2);
+  gst_harness_teardown (h);
+  gst_harness_teardown (hsrc);
+  gst_object_unref (audiointerleave);
+}
+
+GST_END_TEST;
+
 static Suite *
 audiointerleave_suite (void)
 {
@@ -951,6 +1121,7 @@ audiointerleave_suite (void)
   tcase_add_test (tc_chain, test_audiointerleave_2ch_pipeline_input_chanpos);
   tcase_add_test (tc_chain, test_audiointerleave_2ch_pipeline_custom_chanpos);
   tcase_add_test (tc_chain, test_audiointerleave_2ch_pipeline_no_chanpos);
+  tcase_add_test (tc_chain, test_audiointerleave_2ch_smallbuf);
 
   return s;
 }
