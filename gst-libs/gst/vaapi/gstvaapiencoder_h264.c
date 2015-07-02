@@ -81,12 +81,21 @@
   (VA_ENC_PACKED_HEADER_SEQUENCE |              \
    VA_ENC_PACKED_HEADER_PICTURE  |              \
    VA_ENC_PACKED_HEADER_SLICE    |              \
-   VA_ENC_PACKED_HEADER_RAW_DATA)
+   VA_ENC_PACKED_HEADER_RAW_DATA |              \
+   VA_ENC_PACKED_HEADER_MISC)
 
 #define GST_H264_NAL_REF_IDC_NONE        0
 #define GST_H264_NAL_REF_IDC_LOW         1
 #define GST_H264_NAL_REF_IDC_MEDIUM      2
 #define GST_H264_NAL_REF_IDC_HIGH        3
+
+/* only for internal usage, values won't be equal to actual payload type */
+typedef enum
+{
+  GST_VAAPI_H264_SEI_UNKNOWN = 0,
+  GST_VAAPI_H264_SEI_BUF_PERIOD = (1 << 0),
+  GST_VAAPI_H264_SEI_PIC_TIMING = (1 << 1)
+} GstVaapiH264SeiPayloadType;
 
 typedef struct
 {
@@ -115,6 +124,7 @@ typedef struct _GstVaapiH264ViewReorderPool
   GQueue reorder_frame_list;
   guint reorder_state;
   guint frame_index;
+  guint frame_count; /* monotonically increasing with in every idr period */
   guint cur_frame_num;
   guint cur_present_index;
 } GstVaapiH264ViewReorderPool;
@@ -491,7 +501,6 @@ bs_write_sps_data (GstBitWriter * bs,
 
     /* nal_hrd_parameters_present_flag */
     nal_hrd_parameters_present_flag = seq_param->bits_per_second > 0;
-    nal_hrd_parameters_present_flag = FALSE;    /* XXX: disabled for now */
     WRITE_UINT32 (bs, nal_hrd_parameters_present_flag, 1);
     if (nal_hrd_parameters_present_flag) {
       /* hrd_parameters */
@@ -527,7 +536,7 @@ bs_write_sps_data (GstBitWriter * bs,
       WRITE_UINT32 (bs, 0, 1);
     }
     /* pic_struct_present_flag */
-    WRITE_UINT32 (bs, 0, 1);
+    WRITE_UINT32 (bs, 1, 1);
     /* bs_restriction_flag */
     WRITE_UINT32 (bs, 0, 1);
   }
@@ -774,6 +783,95 @@ struct _GstVaapiEncoderH264
   GstVaapiH264ViewRefPool ref_pools[MAX_NUM_VIEWS];
   GstVaapiH264ViewReorderPool reorder_pools[MAX_NUM_VIEWS];
 };
+
+/* Write a SEI buffering period payload */
+static gboolean
+bs_write_sei_buf_period (GstBitWriter * bs,
+    GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
+{
+  guint initial_cpb_removal_delay = 0;
+  guint initial_cpb_removal_delay_offset = 0;
+  guint8 initial_cpb_removal_delay_length = 24;
+
+  /* sequence_parameter_set_id */
+  WRITE_UE (bs, encoder->view_idx);
+  /* NalHrdBpPresentFlag == TRUE */
+  /* cpb_cnt_minus1 == 0 */
+
+  /* decoding should start when the CPB fullness reaches half of cpb size
+   * initial_cpb_remvoal_delay = (((cpb_length / 2) * 90000) / 1000) */
+  initial_cpb_removal_delay = encoder->cpb_length * 45;
+
+  /* initial_cpb_remvoal_dealy */
+  WRITE_UINT32 (bs, initial_cpb_removal_delay, initial_cpb_removal_delay_length);
+
+  /* initial_cpb_removal_delay_offset */
+  WRITE_UINT32 (bs, initial_cpb_removal_delay_offset,
+    initial_cpb_removal_delay_length);
+
+  /* VclHrdBpPresentFlag == FALSE */
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write Buffering Period SEI message");
+    return FALSE;
+  }
+}
+
+/* Write a SEI picture timing payload */
+static gboolean
+bs_write_sei_pic_timing (GstBitWriter * bs,
+    GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
+{
+  GstVaapiH264ViewReorderPool *reorder_pool = NULL;
+  guint cpb_removal_delay;
+  guint dpb_output_delay;
+  guint8 cpb_removal_delay_length = 24;
+  guint8 dpb_output_delay_length = 24;
+  guint pic_struct = 0;
+  guint clock_timestamp_flag = 0;
+
+  reorder_pool = &encoder->reorder_pools[encoder->view_idx];
+  if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture))
+    reorder_pool->frame_count = 0;
+  else
+    reorder_pool->frame_count++;
+
+  /* clock-tick = no_units_in_tick/time_scale (C-1)
+   * time_scale = FPS_N * 2  (E.2.1)
+   * num_units_in_tick = FPS_D (E.2.1)
+   * frame_duration = clock-tick * 2
+   * so removal time for one frame is 2 clock-ticks.
+   * but adding a tolerance of one frame duration,
+   * which is 2 more clock-ticks */
+  cpb_removal_delay = (reorder_pool->frame_count * 2 + 2);
+
+  if (picture->type == GST_VAAPI_PICTURE_TYPE_B)
+    dpb_output_delay = 0;
+  else
+    dpb_output_delay = picture->poc - reorder_pool->frame_count * 2;
+
+  /* CpbDpbDelaysPresentFlag == 1 */
+  WRITE_UINT32 (bs, cpb_removal_delay, cpb_removal_delay_length);
+  WRITE_UINT32 (bs, dpb_output_delay, dpb_output_delay_length);
+
+  /* pic_struct_present_flag == 1 */
+  /* pic_struct */
+  WRITE_UINT32 (bs, pic_struct, 4);
+  /* clock_timestamp_flag */
+  WRITE_UINT32 (bs, clock_timestamp_flag, 1);
+
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write Picture Timing SEI message");
+    return FALSE;
+  }
+}
 
 /* Write a Slice NAL unit */
 static gboolean
@@ -1396,6 +1494,102 @@ add_packed_picture_header (GstVaapiEncoderH264 * encoder,
 bs_error:
   {
     GST_WARNING ("failed to write PPS NAL unit");
+    gst_bit_writer_clear (&bs, TRUE);
+    return FALSE;
+  }
+}
+
+static gboolean
+add_packed_sei_header (GstVaapiEncoderH264 * encoder,
+    GstVaapiEncPicture * picture,
+    GstVaapiH264SeiPayloadType payloadtype)
+{
+  GstVaapiEncPackedHeader *packed_sei;
+  GstBitWriter bs, bs_buf_period, bs_pic_timing;
+  VAEncPackedHeaderParameterBuffer packed_sei_param = { 0 };
+  guint32 data_bit_size;
+  guint8 buf_period_payload_size = 0, pic_timing_payload_size = 0;
+  guint8 *data, *buf_period_payload, *pic_timing_payload;
+  gboolean need_buf_period, need_pic_timing;
+
+  gst_bit_writer_init (&bs_buf_period, 128 * 8);
+  gst_bit_writer_init (&bs_pic_timing, 128 * 8);
+  gst_bit_writer_init (&bs, 128 * 8);
+
+  need_buf_period = GST_VAAPI_H264_SEI_BUF_PERIOD & payloadtype;
+  need_pic_timing = GST_VAAPI_H264_SEI_PIC_TIMING & payloadtype;
+
+  if (need_buf_period) {
+    /* Write a Buffering Period SEI message */
+    bs_write_sei_buf_period (&bs_buf_period, encoder, picture);
+    /* Write byte alignment bits */
+    if (GST_BIT_WRITER_BIT_SIZE (&bs_buf_period) % 8 != 0)
+      bs_write_trailing_bits(&bs_buf_period);
+    buf_period_payload_size =
+      (GST_BIT_WRITER_BIT_SIZE (&bs_buf_period)) / 8;
+    buf_period_payload = GST_BIT_WRITER_DATA (&bs_buf_period);
+  }
+
+  if (need_pic_timing) {
+    /* Write a Picture Timing SEI message */
+    if (GST_VAAPI_H264_SEI_PIC_TIMING & payloadtype)
+      bs_write_sei_pic_timing (&bs_pic_timing, encoder, picture);
+    /* Write byte alignment bits */
+    if (GST_BIT_WRITER_BIT_SIZE (&bs_pic_timing) % 8 != 0)
+      bs_write_trailing_bits(&bs_pic_timing);
+    pic_timing_payload_size =
+      (GST_BIT_WRITER_BIT_SIZE (&bs_pic_timing)) / 8;
+    pic_timing_payload = GST_BIT_WRITER_DATA (&bs_pic_timing);
+  }
+
+  /* Write the SEI message */
+  WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
+  bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_NONE, GST_H264_NAL_SEI);
+
+  if (need_buf_period) {
+    WRITE_UINT32 (&bs, GST_H264_SEI_BUF_PERIOD, 8);
+    WRITE_UINT32 (&bs, buf_period_payload_size, 8);
+    /* Add buffering period sei message */
+    gst_bit_writer_put_bytes (&bs, buf_period_payload, buf_period_payload_size);
+  }
+
+  if (need_pic_timing) {
+    WRITE_UINT32 (&bs, GST_H264_SEI_PIC_TIMING, 8);
+    WRITE_UINT32 (&bs, pic_timing_payload_size, 8);
+    /* Add picture timing sei message */
+    gst_bit_writer_put_bytes (&bs, pic_timing_payload, pic_timing_payload_size);
+  }
+
+  /* rbsp_trailing_bits */
+  bs_write_trailing_bits (&bs);
+
+  g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
+  data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
+  data = GST_BIT_WRITER_DATA (&bs);
+
+  packed_sei_param.type = VAEncPackedHeaderH264_SEI;
+  packed_sei_param.bit_length = data_bit_size;
+  packed_sei_param.has_emulation_bytes = 0;
+
+  packed_sei = gst_vaapi_enc_packed_header_new (GST_VAAPI_ENCODER (encoder),
+      &packed_sei_param, sizeof (packed_sei_param),
+      data, (data_bit_size + 7) / 8);
+  g_assert (packed_sei);
+
+  gst_vaapi_enc_picture_add_packed_header (picture, packed_sei);
+  gst_vaapi_codec_object_replace (&packed_sei, NULL);
+
+  gst_bit_writer_clear (&bs_buf_period, TRUE);
+  gst_bit_writer_clear (&bs_pic_timing, TRUE);
+  gst_bit_writer_clear (&bs, TRUE);
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write SEI NAL unit");
+    gst_bit_writer_clear (&bs_buf_period, TRUE);
+    gst_bit_writer_clear (&bs_pic_timing, TRUE);
     gst_bit_writer_clear (&bs, TRUE);
     return FALSE;
   }
@@ -2035,8 +2229,31 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
     rate_control->basic_unit_size = 0;
     gst_vaapi_enc_picture_add_misc_param (picture, misc);
     gst_vaapi_codec_object_replace (&misc, NULL);
+
+    if (!encoder->view_idx) {
+      if ((GST_VAAPI_ENC_PICTURE_IS_IDR (picture)) &&
+          (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+              VA_ENC_PACKED_HEADER_MISC) &&
+           !add_packed_sei_header (encoder, picture,
+              GST_VAAPI_H264_SEI_BUF_PERIOD | GST_VAAPI_H264_SEI_PIC_TIMING))
+        goto error_create_packed_sei_hdr;
+
+      else if (!GST_VAAPI_ENC_PICTURE_IS_IDR (picture) &&
+               (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+                  VA_ENC_PACKED_HEADER_MISC) &&
+               !add_packed_sei_header (encoder, picture,
+                  GST_VAAPI_H264_SEI_PIC_TIMING))
+        goto error_create_packed_sei_hdr;
+    }
+
   }
   return TRUE;
+
+error_create_packed_sei_hdr:
+  {
+    GST_ERROR ("failed to create packed SEI header");
+    return FALSE;
+  }
 }
 
 /* Generates and submits PPS header accordingly into the bitstream */
