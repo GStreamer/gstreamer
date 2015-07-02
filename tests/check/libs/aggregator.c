@@ -169,7 +169,7 @@ static void
 gst_test_aggregator_init (GstTestAggregator * self)
 {
   GstAggregator *agg = GST_AGGREGATOR (self);
-  gst_segment_init (&agg->segment, GST_FORMAT_BYTES);
+  gst_segment_init (&agg->segment, GST_FORMAT_TIME);
   self->timestamp = 0;
   self->gap_expected = FALSE;
 }
@@ -793,7 +793,7 @@ GST_START_TEST (test_flushing_seek)
 GST_END_TEST;
 
 static void
-infinite_seek (guint num_srcs, guint num_seeks)
+infinite_seek (guint num_srcs, guint num_seeks, gboolean is_live)
 {
   GstBus *bus;
   GstMessage *message;
@@ -809,13 +809,19 @@ infinite_seek (guint num_srcs, guint num_seeks)
   agg = gst_check_setup_element ("testaggregator");
   sink = gst_check_setup_element ("fakesink");
 
+  if (is_live)
+    g_object_set (agg, "latency", GST_MSECOND, NULL);
+
   fail_unless (gst_bin_add (GST_BIN (pipeline), agg));
   fail_unless (gst_bin_add (GST_BIN (pipeline), sink));
   fail_unless (gst_element_link (agg, sink));
 
   for (i = 0; i < num_srcs; i++) {
     src = gst_element_factory_make ("fakesrc", NULL);
-    g_object_set (src, "sizetype", 2, "sizemax", 4, NULL);
+    g_object_set (src, "sizetype", 2, "sizemax", 4,
+        "format", GST_FORMAT_TIME, "datarate", 1000, NULL);
+    if (is_live)
+      g_object_set (src, "is-live", TRUE, NULL);
     fail_unless (gst_bin_add (GST_BIN (pipeline), src));
     fail_unless (gst_element_link (src, agg));
   }
@@ -846,7 +852,7 @@ infinite_seek (guint num_srcs, guint num_seeks)
 
             GST_INFO ("Seeking (num: %i)", count);
             seek_res =
-                gst_element_seek_simple (sink, GST_FORMAT_BYTES,
+                gst_element_seek_simple (sink, GST_FORMAT_TIME,
                 GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, 0);
             GST_INFO ("seek result is : %d", seek_res);
             fail_unless (seek_res != 0);
@@ -874,14 +880,21 @@ infinite_seek (guint num_srcs, guint num_seeks)
 
 GST_START_TEST (test_infinite_seek)
 {
-  infinite_seek (2, 500);
+  infinite_seek (2, 500, FALSE);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_infinite_seek_50_src)
 {
-  infinite_seek (50, 100);
+  infinite_seek (50, 100, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_infinite_seek_50_src_live)
+{
+  infinite_seek (50, 100, TRUE);
 }
 
 GST_END_TEST;
@@ -948,7 +961,7 @@ GST_START_TEST (test_add_remove)
 
     src = gst_element_factory_make ("fakesrc", NULL);
     g_object_set (src, "num-buffers", 100000, "sizetype", 2, "sizemax", 4,
-        NULL);
+        "format", GST_FORMAT_TIME, "datarate", 1000, NULL);
     gst_element_set_locked_state (src, TRUE);
     fail_unless (gst_bin_add (GST_BIN (pipeline), src));
     fail_unless (gst_element_link (src, agg));
@@ -1027,7 +1040,7 @@ GST_START_TEST (test_add_remove)
     } while (carry_on);
 
     GST_INFO ("Seeking");
-    fail_unless (gst_element_seek_simple (pipeline, GST_FORMAT_BYTES,
+    fail_unless (gst_element_seek_simple (pipeline, GST_FORMAT_TIME,
             GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, 0));
 
     count++;
@@ -1168,6 +1181,7 @@ gst_aggregator_suite (void)
   tcase_add_test (general, test_flushing_seek);
   tcase_add_test (general, test_infinite_seek);
   tcase_add_test (general, test_infinite_seek_50_src);
+  tcase_add_test (general, test_infinite_seek_50_src_live);
   tcase_add_test (general, test_linear_pipeline);
   tcase_add_test (general, test_two_src_pipeline);
   tcase_add_test (general, test_timeout_pipeline);
