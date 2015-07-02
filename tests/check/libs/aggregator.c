@@ -641,14 +641,14 @@ _test_timeout (gint buffer_wait)
   pipeline = gst_pipeline_new ("pipeline");
   src = gst_element_factory_make ("fakesrc", NULL);
   g_object_set (src, "num-buffers", TIMEOUT_NUM_BUFFERS, "sizetype", 2,
-      "sizemax", 4, NULL);
+      "sizemax", 4, "is-live", TRUE, "datarate", 4000, NULL);
 
   src1 = gst_element_factory_make ("fakesrc", NULL);
   g_object_set (src1, "num-buffers", TIMEOUT_NUM_BUFFERS, "sizetype", 2,
-      "sizemax", 4, NULL);
+      "sizemax", 4, "is-live", TRUE, "datarate", 4000, NULL);
 
   agg = gst_check_setup_element ("testaggregator");
-  g_object_set (agg, "latency", G_GINT64_CONSTANT (1000) /* 1 us */ , NULL);
+  g_object_set (agg, "latency", GST_USECOND, NULL);
   sink = gst_check_setup_element ("fakesink");
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
   g_signal_connect (sink, "handoff", (GCallback) handoff, &count);
