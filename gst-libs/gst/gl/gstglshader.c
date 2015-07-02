@@ -522,6 +522,7 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
     /* compile */
     gl->CompileShader (priv->vertex_handle);
     /* check everything is ok */
+    status = GL_FALSE;
     gl->GetShaderiv (priv->vertex_handle, GL_COMPILE_STATUS, &status);
 
     priv->vtable.GetShaderInfoLog (priv->vertex_handle,
@@ -561,6 +562,7 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
     /* compile */
     gl->CompileShader (priv->fragment_handle);
     /* check everything is ok */
+    status = GL_FALSE;
     priv->vtable.GetShaderiv (priv->fragment_handle,
         GL_COMPILE_STATUS, &status);
 
@@ -587,6 +589,7 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
 
   /* if nothing failed link shaders */
   gl->LinkProgram (priv->program_handle);
+  status = GL_FALSE;
   priv->vtable.GetProgramiv (priv->program_handle, GL_LINK_STATUS, &status);
 
   priv->vtable.GetProgramInfoLog (priv->program_handle,

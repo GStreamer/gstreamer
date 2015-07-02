@@ -1179,7 +1179,8 @@ _build_extension_string (GstGLContext * context)
   const GstGLFuncs *gl = context->gl_vtable;
   GString *ext_g_str = g_string_sized_new (1024);
   const gchar *ext_const_c_str = NULL;
-  int i, n;
+  GLint i = 0;
+  GLint n = 0;
 
   gl->GetIntegerv (GL_NUM_EXTENSIONS, &n);
 

@@ -1586,7 +1586,7 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
   GstGLFuncs *gl;
   guint out_width, out_height;
   gint out_views, i;
-  GLint viewport_dim[4];
+  GLint viewport_dim[4] = { 0 };
   GLenum multipleRT[] = {
     GL_COLOR_ATTACHMENT0,
     GL_COLOR_ATTACHMENT1,
