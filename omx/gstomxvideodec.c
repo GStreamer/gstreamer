@@ -2530,14 +2530,18 @@ gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
         GstAllocationParams params;
 
         gst_query_parse_nth_allocation_param (query, i, &allocator, &params);
-        if (allocator
-            && g_strcmp0 (allocator->mem_type,
-                GST_EGL_IMAGE_MEMORY_TYPE) == 0) {
-          found = TRUE;
-          gst_query_set_nth_allocation_param (query, 0, allocator, &params);
-          while (gst_query_get_n_allocation_params (query) > 1)
-            gst_query_remove_nth_allocation_param (query, 1);
-          break;
+        if (allocator) {
+          if (g_strcmp0 (allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0) {
+            found = TRUE;
+            gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+            while (gst_query_get_n_allocation_params (query) > 1)
+              gst_query_remove_nth_allocation_param (query, 1);
+          }
+
+          gst_object_unref (allocator);
+
+          if (found)
+            break;
         }
       }
 
