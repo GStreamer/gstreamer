@@ -84,6 +84,8 @@ typedef struct
 
   GstState desired_state;       /* as per user interaction, PAUSED or PLAYING */
 
+  gulong deep_notify_id;
+
   /* configuration */
   gboolean gapless;
 
@@ -136,7 +138,7 @@ gst_play_printf (const gchar * format, ...)
 
 static GstPlay *
 play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
-    gboolean gapless, gdouble initial_volume)
+    gboolean gapless, gdouble initial_volume, gboolean verbose, int flags)
 {
   GstElement *sink, *playbin;
   GstPlay *play;
@@ -176,6 +178,14 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
       g_warning ("Couldn't create specified video sink '%s'", video_sink);
   }
 
+  if (flags)
+    g_object_set (play->playbin, "flags", flags, NULL);
+
+  if (verbose) {
+    play->deep_notify_id = g_signal_connect (play->playbin, "deep-notify",
+        G_CALLBACK (gst_object_default_deep_notify), NULL);
+  }
+
   play->loop = g_main_loop_new (NULL, FALSE);
 
   play->bus_watch = gst_bus_add_watch (GST_ELEMENT_BUS (play->playbin),
@@ -208,6 +218,10 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
 static void
 play_free (GstPlay * play)
 {
+  /* No need to see all those pad caps going to NULL etc., it's just noise */
+  if (play->deep_notify_id != 0)
+    g_signal_handler_disconnect (play->playbin, play->deep_notify_id);
+
   play_reset (play);
 
   gst_element_set_state (play->playbin, GST_STATE_NULL);
@@ -591,6 +605,8 @@ play_about_to_finish (GstElement * playbin, gpointer user_data)
 
   g_object_set (play->playbin, "uri", next_uri, NULL);
   play->cur_idx = next_idx;
+
+  g_object_set (play->playbin, "-v", NULL);
 }
 
 static void
@@ -1090,6 +1106,8 @@ main (int argc, char **argv)
 {
   GstPlay *play;
   GPtrArray *playlist;
+  gboolean verbose = FALSE;
+  int flags = 0;
   gboolean print_version = FALSE;
   gboolean interactive = TRUE;
   gboolean gapless = FALSE;
@@ -1104,6 +1122,11 @@ main (int argc, char **argv)
   GOptionContext *ctx;
   gchar *playlist_file = NULL;
   GOptionEntry options[] = {
+    {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
+        N_("Output status information and property notifications"), NULL},
+    {"flags", 0, 0, G_OPTION_ARG_INT, &flags,
+          N_("Control playback behaviour setting playbin 'flags' property"),
+        NULL},
     {"version", 0, 0, G_OPTION_ARG_NONE, &print_version,
         N_("Print version information and exit"), NULL},
     {"videosink", 0, 0, G_OPTION_ARG_STRING, &video_sink,
@@ -1226,7 +1249,8 @@ main (int argc, char **argv)
     shuffle_uris (uris, num);
 
   /* prepare */
-  play = play_new (uris, audio_sink, video_sink, gapless, volume);
+  play =
+      play_new (uris, audio_sink, video_sink, gapless, volume, verbose, flags);
 
   if (play == NULL) {
     g_printerr
