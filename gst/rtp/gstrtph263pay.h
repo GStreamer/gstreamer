@@ -24,7 +24,6 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstrtpbasepayload.h>
-#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_RTP_H263_PAY \
@@ -63,7 +62,9 @@ struct _GstRtpH263Pay
 {
   GstRTPBasePayload payload;
 
-  GstAdapter *adapter;
+  GstBuffer *current_buffer;
+  GstMapInfo map;
+
   GstClockTime first_ts;
   gboolean prop_payload_mode;
   guint8 *data;
