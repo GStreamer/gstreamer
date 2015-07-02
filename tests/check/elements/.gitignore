@@ -42,8 +42,9 @@ mxfdemux
 mxfmux
 neonhttpsrc
 ofa
-rtponvif
 opus
+pcapparse
+rtponvif
 rganalysis
 rglimiter
 rgvolume

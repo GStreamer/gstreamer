@@ -265,6 +265,7 @@ check_PROGRAMS = \
 	$(check_mpg123) \
 	elements/mxfdemux \
 	elements/mxfmux \
+	elements/pcapparse \
 	elements/rtponvif \
 	elements/id3mux \
 	pipelines/mxf \
@@ -316,6 +317,8 @@ elements_mpeg4videoparse_LDADD = libparser.la $(LDADD)
 elements_h263parse_LDADD = libparser.la $(LDADD)
 
 elements_h264parse_LDADD = libparser.la $(LDADD)
+
+elements_pcapparse_LDADD = libparser.la $(LDADD)
 
 libs_mpegvideoparser_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
