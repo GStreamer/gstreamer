@@ -13,9 +13,7 @@ m4_append([gst_vaapi_version], gst_vaapi_pre_version, [.pre])
 m4_define([default_glapi],              [any])
 
 # gstreamer-vaapi library (libtool) version number
-m4_define([gst_vaapi_lt_current],       [6])
-m4_define([gst0_vaapi_lt_current_bias], [0])
-m4_define([gst1_vaapi_lt_current_bias], [2])
+m4_define([gst_vaapi_lt_current],       [7])
 m4_define([gst2_vaapi_lt_current_bias], [4])
 m4_define([gst4_vaapi_lt_current_bias], [5])
 m4_define([gst6_vaapi_lt_current_bias], [6])
@@ -439,9 +437,8 @@ if test "$enable_egl" = "yes" -a $HAVE_GSTGL -ne 1; then
 fi
 
 case $GST_API_VERSION in
-1.0)    lt_bias=gst1_vaapi_lt_current_bias;;
 1.2)    lt_bias=gst2_vaapi_lt_current_bias;;
-1.4) lt_bias=gst4_vaapi_lt_current_bias;;
+1.4)    lt_bias=gst4_vaapi_lt_current_bias;;
 1.[[5-6]])    lt_bias=gst6_vaapi_lt_current_bias;;
 esac
 GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - "$lt_bias"`
