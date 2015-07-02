@@ -3423,7 +3423,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     if (G_UNLIKELY (stepped))
       goto dropped;
 
-    if (syncable && do_sync) {
+    if (syncable && do_sync && gst_base_sink_get_sync (basesink)) {
       GstClock *clock;
 
       GST_OBJECT_LOCK (basesink);
