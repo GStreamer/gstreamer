@@ -42,6 +42,9 @@
 #if USE_WAYLAND
 # include <gst/vaapi/gstvaapidisplay_wayland.h>
 #endif
+#if USE_EGL
+# include <gst/vaapi/gstvaapidisplay_egl.h>
+#endif
 
 #ifdef HAVE_VA_VA_GLX_H
 # include <va/va_glx.h>

@@ -37,6 +37,10 @@
 # include <gst/vaapi/gstvaapidisplay_wayland.h>
 # include <gst/vaapi/gstvaapiwindow_wayland.h>
 #endif
+#if USE_EGL
+# include <gst/vaapi/gstvaapidisplay_egl.h>
+# include <gst/vaapi/gstvaapiwindow_egl.h>
+#endif
 #include "image.h"
 
 static inline void
