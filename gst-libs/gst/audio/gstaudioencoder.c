@@ -805,25 +805,30 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
     }
     /* advance sample view */
     if (G_UNLIKELY (samples * ctx->info.bpf > priv->offset)) {
+      guint avail = gst_adapter_available (priv->adapter);
+
       if (G_LIKELY (!priv->force)) {
         /* we should have received EOS to enable force */
         goto overflow;
       } else {
         priv->offset = 0;
-        if (samples * ctx->info.bpf >= gst_adapter_available (priv->adapter)) {
-          inbuf =
-              gst_adapter_take_buffer_fast (priv->adapter,
-              gst_adapter_available (priv->adapter));
+        if (avail > 0 && samples * ctx->info.bpf >= avail) {
+          inbuf = gst_adapter_take_buffer_fast (priv->adapter, avail);
           gst_adapter_clear (priv->adapter);
-        } else {
+        } else if (avail > 0) {
           inbuf =
               gst_adapter_take_buffer_fast (priv->adapter,
               samples * ctx->info.bpf);
         }
       }
     } else {
-      inbuf =
-          gst_adapter_take_buffer_fast (priv->adapter, samples * ctx->info.bpf);
+      guint avail = gst_adapter_available (priv->adapter);
+
+      if (avail > 0) {
+        inbuf =
+            gst_adapter_take_buffer_fast (priv->adapter,
+            samples * ctx->info.bpf);
+      }
       priv->offset -= samples * ctx->info.bpf;
       /* avoid subsequent stray prev_ts */
       if (G_UNLIKELY (gst_adapter_available (priv->adapter) == 0))
