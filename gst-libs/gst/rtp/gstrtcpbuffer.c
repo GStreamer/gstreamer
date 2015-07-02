@@ -129,24 +129,28 @@ gst_rtcp_buffer_validate_data_internal (guint8 * data, guint len,
     if (data_len < 4)
       break;
 
+    /* padding only allowed on last packet */
+    if (padding)
+      break;
+
     /* check version of new packet */
     version = data[0] & 0xc0;
     if (version != (GST_RTCP_VERSION << 6))
       goto wrong_version;
 
-    /* padding only allowed on last packet */
-    if ((padding = data[0] & 0x20))
-      break;
+    /* check padding of new packet */
+    if (data[0] & 0x20) {
+      padding = TRUE;
+      /* last byte of padding contains the number of padded bytes including
+       * itself. must be a multiple of 4, but cannot be 0. */
+      pad_bytes = data[data_len - 1];
+      if (pad_bytes == 0 || (pad_bytes & 0x3))
+        goto wrong_padding;
+    }
   }
-  if (data_len > 0) {
-    /* some leftover bytes, check padding */
-    if (!padding)
-      goto wrong_length;
-
-    /* get padding */
-    pad_bytes = data[data_len - 1];
-    if (data_len != pad_bytes)
-      goto wrong_padding;
+  if (data_len != 0) {
+    /* some leftover bytes */
+    goto wrong_length;
   }
   return TRUE;
 
