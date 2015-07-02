@@ -207,10 +207,9 @@ static gboolean
 gst_openh264dec_stop (GstVideoDecoder * decoder)
 {
   GstOpenh264Dec *openh264dec = GST_OPENH264DEC (decoder);
-  gint ret = TRUE;
 
   if (openh264dec->priv->decoder) {
-    ret = openh264dec->priv->decoder->Uninitialize ();
+    openh264dec->priv->decoder->Uninitialize ();
     WelsDestroyDecoder (openh264dec->priv->decoder);
     openh264dec->priv->decoder = NULL;
   }
@@ -221,7 +220,7 @@ gst_openh264dec_stop (GstVideoDecoder * decoder)
   }
   openh264dec->priv->width = openh264dec->priv->height = 0;
 
-  return ret;
+  return TRUE;
 }
 
 static gboolean
