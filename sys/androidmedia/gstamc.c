@@ -962,7 +962,7 @@ gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
     goto done;
 
   *data = (*env)->GetDirectBufferAddress (env, v);
-  if (!data) {
+  if (*data == NULL) {
     gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
         GST_LIBRARY_ERROR_FAILED, "Failed get buffer address");
     goto done;
