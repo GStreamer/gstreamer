@@ -3229,6 +3229,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
             start_time = S->t * GST_SECOND;
             if (timescale > 1)
               start_time /= timescale;
+            start_time += PeriodStart;
           }
 
           if (!gst_mpd_client_add_media_segment (stream, SegmentURL->data, i,
@@ -3325,6 +3326,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
             start_time = S->t * GST_SECOND;
             if (timescale > 1)
               start_time /= timescale;
+            start_time += PeriodStart;
           }
 
           if (!gst_mpd_client_add_media_segment (stream, NULL, i, S->r, start,
