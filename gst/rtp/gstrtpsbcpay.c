@@ -160,7 +160,7 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   guint available;
   guint max_payload;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf, *paybuf;
   guint8 *payload_data;
   guint frame_count;
   guint payload_length;
@@ -183,8 +183,7 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   if (payload_length == 0)      /* Nothing to send */
     return GST_FLOW_OK;
 
-  outbuf = gst_rtp_buffer_new_allocate (payload_length +
-      RTP_SBC_PAYLOAD_HEADER_SIZE, 0, 0);
+  outbuf = gst_rtp_buffer_new_allocate (RTP_SBC_PAYLOAD_HEADER_SIZE, 0, 0);
 
   /* get payload */
   gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
@@ -197,12 +196,10 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   memset (payload, 0, sizeof (struct rtp_payload));
   payload->frame_count = frame_count;
 
-  gst_adapter_copy (sbcpay->adapter, payload_data +
-      RTP_SBC_PAYLOAD_HEADER_SIZE, 0, payload_length);
-
   gst_rtp_buffer_unmap (&rtp);
 
-  gst_adapter_flush (sbcpay->adapter, payload_length);
+  paybuf = gst_adapter_take_buffer_fast (sbcpay->adapter, payload_length);
+  outbuf = gst_buffer_append (outbuf, paybuf);
 
   /* FIXME: what about duration? */
   GST_BUFFER_PTS (outbuf) = sbcpay->timestamp;
