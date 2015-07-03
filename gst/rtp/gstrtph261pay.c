@@ -994,21 +994,7 @@ gst_rtp_h261_pay_init (GstRtpH261Pay * pay)
 {
   GstRTPBasePayload *payload = GST_RTP_BASE_PAYLOAD (pay);
   payload->pt = GST_RTP_PAYLOAD_H261;
-  pay->adapter = gst_adapter_new ();
   pay->offset = 0;
-}
-
-static void
-gst_rtp_h261_pay_finalize (GObject * object)
-{
-  GstRtpH261Pay *pay;
-
-  pay = GST_RTP_H261_PAY (object);
-
-  g_object_unref (pay->adapter);
-  pay->adapter = NULL;
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -1031,8 +1017,6 @@ gst_rtp_h261_pay_class_init (GstRtpH261PayClass * klass)
       "RTP H261 packet payloader", "Codec/Payloader/Network/RTP",
       "Payload-encodes H261 video in RTP packets (RFC 4587)",
       "Stian Selnes <stian@pexip.com>");
-
-  gobject_class->finalize = gst_rtp_h261_pay_finalize;
 
   gstrtpbasepayload_class->set_caps = gst_rtp_h261_pay_setcaps;
   gstrtpbasepayload_class->handle_buffer = gst_rtp_h261_pay_handle_buffer;
