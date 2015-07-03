@@ -26,9 +26,6 @@
 
 G_BEGIN_DECLS
 
-GST_DEBUG_CATEGORY_EXTERN (video_scale_debug);
-#define GST_CAT_DEFAULT video_scale_debug
-
 #define GST_TYPE_VIDEO_SCALE \
   (gst_video_scale_get_type())
 #define GST_VIDEO_SCALE(obj) \

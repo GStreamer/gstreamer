@@ -78,9 +78,9 @@
 
 #include "gstvideoscale.h"
 
-/* debug variable definition */
-GST_DEBUG_CATEGORY (video_scale_debug);
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
+#define GST_CAT_DEFAULT video_scale_debug
+GST_DEBUG_CATEGORY_STATIC (video_scale_debug);
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 
 #define DEFAULT_PROP_METHOD       GST_VIDEO_SCALE_BILINEAR
 #define DEFAULT_PROP_ADD_BORDERS  TRUE
