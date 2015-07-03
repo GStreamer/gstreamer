@@ -34,7 +34,6 @@ G_BEGIN_DECLS
 #define GST_IS_TYPE_FIND_ELEMENT(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TYPE_FIND_ELEMENT))
 #define GST_TYPE_FIND_ELEMENT_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TYPE_FIND_ELEMENT, GstTypeFindElementClass))
 #define GST_IS_TYPE_FIND_ELEMENT_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TYPE_FIND_ELEMENT))
-#define GST_TYPE_FIND_ELEMENT_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_TYPE_FIND_ELEMENT, GstTypeFindElementClass))
 
 typedef struct _GstTypeFindElement 		GstTypeFindElement;
 typedef struct _GstTypeFindElementClass 	GstTypeFindElementClass;

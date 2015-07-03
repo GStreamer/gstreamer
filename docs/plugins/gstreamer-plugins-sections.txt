@@ -1,118 +1,4 @@
 <SECTION>
-<FILE>element-fakesrc</FILE>
-<TITLE>fakesrc</TITLE>
-GstFakeSrc
-GstFakeSrcDataType
-GstFakeSrcFillType
-GstFakeSrcOutputType
-GstFakeSrcSizeType
-<SUBSECTION Standard>
-GstFakeSrcClass
-GST_FAKE_SRC
-GST_IS_FAKE_SRC
-GST_TYPE_FAKE_SRC
-GST_FAKE_SRC_CLASS
-GST_IS_FAKE_SRC_CLASS
-<SUBSECTION Private>
-gst_fake_src_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-fakesink</FILE>
-<TITLE>fakesink</TITLE>
-GstFakeSink
-GstFakeSinkStateError
-<SUBSECTION Standard>
-GstFakeSinkClass
-GST_FAKE_SINK
-GST_FAKE_SINK_CAST
-GST_IS_FAKE_SINK
-GST_TYPE_FAKE_SINK
-GST_FAKE_SINK_CLASS
-GST_IS_FAKE_SINK_CLASS
-<SUBSECTION Private>
-gst_fake_sink_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-fdsink</FILE>
-<TITLE>fdsink</TITLE>
-GstFdSink
-<SUBSECTION Standard>
-GstFdSinkClass
-GST_FD_SINK
-GST_FD_SINK_CAST
-GST_IS_FD_SINK
-GST_TYPE_FD_SINK
-GST_FD_SINK_CLASS
-GST_IS_FD_SINK_CLASS
-<SUBSECTION Private>
-gst_fd_sink_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-fdsrc</FILE>
-<TITLE>fdsrc</TITLE>
-GstFdSrc
-<SUBSECTION Standard>
-GstFdSrcClass
-GST_FD_SRC
-GST_IS_FD_SRC
-GST_TYPE_FD_SRC
-GST_FD_SRC_CLASS
-GST_IS_FD_SRC_CLASS
-<SUBSECTION Private>
-gst_fd_src_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-filesrc</FILE>
-<TITLE>filesrc</TITLE>
-GstFileSrc
-<SUBSECTION Standard>
-GstFileSrcClass
-GST_FILE_SRC
-GST_FILE_SRC_CAST
-GST_IS_FILE_SRC
-GST_TYPE_FILE_SRC
-GST_FILE_SRC_CLASS
-GST_IS_FILE_SRC_CLASS
-<SUBSECTION Private>
-gst_file_src_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-filesink</FILE>
-<TITLE>filesink</TITLE>
-GstFileSink
-<SUBSECTION Standard>
-GstFileSinkClass
-GST_FILE_SINK
-GST_FILE_SINK_CAST
-GST_IS_FILE_SINK
-GST_TYPE_FILE_SINK
-GST_FILE_SINK_CLASS
-GST_IS_FILE_SINK_CLASS
-<SUBSECTION Private>
-gst_file_sink_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-funnel</FILE>
-<TITLE>funnel</TITLE>
-GstFunnel
-<SUBSECTION Standard>
-GstFunnelClass
-GST_FUNNEL
-GST_IS_FUNNEL
-GST_TYPE_FUNNEL
-GST_FUNNEL_CLASS
-GST_IS_FUNNEL_CLASS
-<SUBSECTION Private>
-gst_funnel_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-capsfilter</FILE>
 <TITLE>capsfilter</TITLE>
 GstCapsFilter
@@ -136,9 +22,9 @@ GstConcatClass
 GST_CONCAT
 GST_CONCAT_CAST
 GST_IS_CONCAT
-GST_TYPE_CONCAT
 GST_CONCAT_CLASS
 GST_IS_CONCAT_CLASS
+GST_TYPE_CONCAT
 <SUBSECTION Private>
 gst_concat_get_type
 </SECTION>
@@ -150,12 +36,128 @@ GstDownloadBuffer
 <SUBSECTION Standard>
 GstDownloadBufferSize
 GstDownloadBufferClass
-GST_DOWNLOAD_BUFFER_CAST
 GST_DOWNLOAD_BUFFER
-GST_DOWNLOAD_BUFFER_CLASS
+GST_DOWNLOAD_BUFFER_CAST
 GST_IS_DOWNLOAD_BUFFER
+GST_DOWNLOAD_BUFFER_CLASS
 GST_IS_DOWNLOAD_BUFFER_CLASS
 GST_TYPE_DOWNLOAD_BUFFER
+<SUBSECTION Private>
+gst_download_buffer_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-fakesink</FILE>
+<TITLE>fakesink</TITLE>
+GstFakeSink
+GstFakeSinkStateError
+<SUBSECTION Standard>
+GstFakeSinkClass
+GST_FAKE_SINK
+GST_FAKE_SINK_CAST
+GST_IS_FAKE_SINK
+GST_FAKE_SINK_CLASS
+GST_IS_FAKE_SINK_CLASS
+GST_TYPE_FAKE_SINK
+<SUBSECTION Private>
+gst_fake_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-fakesrc</FILE>
+<TITLE>fakesrc</TITLE>
+GstFakeSrc
+GstFakeSrcDataType
+GstFakeSrcFillType
+GstFakeSrcOutputType
+GstFakeSrcSizeType
+<SUBSECTION Standard>
+GstFakeSrcClass
+GST_FAKE_SRC
+GST_IS_FAKE_SRC
+GST_FAKE_SRC_CLASS
+GST_IS_FAKE_SRC_CLASS
+GST_TYPE_FAKE_SRC
+<SUBSECTION Private>
+gst_fake_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-fdsink</FILE>
+<TITLE>fdsink</TITLE>
+GstFdSink
+<SUBSECTION Standard>
+GstFdSinkClass
+GST_FD_SINK
+GST_FD_SINK_CAST
+GST_IS_FD_SINK
+GST_FD_SINK_CLASS
+GST_IS_FD_SINK_CLASS
+GST_TYPE_FD_SINK
+<SUBSECTION Private>
+gst_fd_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-fdsrc</FILE>
+<TITLE>fdsrc</TITLE>
+GstFdSrc
+<SUBSECTION Standard>
+GstFdSrcClass
+GST_FD_SRC
+GST_IS_FD_SRC
+GST_FD_SRC_CLASS
+GST_IS_FD_SRC_CLASS
+GST_TYPE_FD_SRC
+<SUBSECTION Private>
+gst_fd_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-filesink</FILE>
+<TITLE>filesink</TITLE>
+GstFileSink
+<SUBSECTION Standard>
+GstFileSinkClass
+GST_FILE_SINK
+GST_FILE_SINK_CAST
+GST_IS_FILE_SINK
+GST_FILE_SINK_CLASS
+GST_IS_FILE_SINK_CLASS
+GST_TYPE_FILE_SINK
+<SUBSECTION Private>
+gst_file_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-filesrc</FILE>
+<TITLE>filesrc</TITLE>
+GstFileSrc
+<SUBSECTION Standard>
+GstFileSrcClass
+GST_FILE_SRC
+GST_FILE_SRC_CAST
+GST_IS_FILE_SRC
+GST_FILE_SRC_CLASS
+GST_IS_FILE_SRC_CLASS
+GST_TYPE_FILE_SRC
+<SUBSECTION Private>
+gst_file_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-funnel</FILE>
+<TITLE>funnel</TITLE>
+GstFunnel
+<SUBSECTION Standard>
+GstFunnelClass
+GST_FUNNEL
+GST_IS_FUNNEL
+GST_FUNNEL_CLASS
+GST_IS_FUNNEL_CLASS
+GST_TYPE_FUNNEL
+<SUBSECTION Private>
+gst_funnel_get_type
 </SECTION>
 
 <SECTION>
@@ -166,9 +168,9 @@ GstIdentity
 GstIdentityClass
 GST_IDENTITY
 GST_IS_IDENTITY
-GST_TYPE_IDENTITY
 GST_IDENTITY_CLASS
 GST_IS_IDENTITY_CLASS
+GST_TYPE_IDENTITY
 <SUBSECTION Private>
 gst_identity_get_type
 </SECTION>
@@ -181,17 +183,49 @@ GstInputSelectorSyncMode
 <SUBSECTION Standard>
 GstInputSelectorClass
 GST_INPUT_SELECTOR
-GST_INPUT_SELECTOR_CLASS
 GST_IS_INPUT_SELECTOR
+GST_INPUT_SELECTOR_CLASS
 GST_IS_INPUT_SELECTOR_CLASS
 GST_TYPE_INPUT_SELECTOR
-gst_input_selector_get_type
 GST_INPUT_SELECTOR_BROADCAST
 GST_INPUT_SELECTOR_GET_COND
 GST_INPUT_SELECTOR_GET_LOCK
 GST_INPUT_SELECTOR_LOCK
 GST_INPUT_SELECTOR_UNLOCK
 GST_INPUT_SELECTOR_WAIT
+<SUBSECTION Private>
+gst_input_selector_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-multiqueue</FILE>
+<TITLE>multiqueue</TITLE>
+GstMultiQueue
+<SUBSECTION Standard>
+GstMultiQueueClass
+GST_MULTI_QUEUE
+GST_IS_MULTI_QUEUE
+GST_MULTI_QUEUE_CLASS
+GST_IS_MULTI_QUEUE_CLASS
+GST_TYPE_MULTI_QUEUE
+<SUBSECTION Private>
+gst_multi_queue_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-output-selector</FILE>
+<TITLE>output-selector</TITLE>
+GstOutputSelector
+GstOutputSelectorPadNegotiationMode
+<SUBSECTION Standard>
+GstOutputSelectorClass
+GST_OUTPUT_SELECTOR
+GST_IS_OUTPUT_SELECTOR
+GST_OUTPUT_SELECTOR_CLASS
+GST_IS_OUTPUT_SELECTOR_CLASS
+GST_TYPE_OUTPUT_SELECTOR
+<SUBSECTION Private>
+gst_output_selector_get_type
 </SECTION>
 
 <SECTION>
@@ -202,9 +236,9 @@ GstQueueLeaky
 <SUBSECTION Standard>
 GstQueueClass
 GST_QUEUE
+GST_QUEUE_CAST
 GST_IS_QUEUE
 GST_QUEUE_CLASS
-GST_QUEUE_CAST
 GST_IS_QUEUE_CLASS
 GST_TYPE_QUEUE
 <SUBSECTION Private>
@@ -232,33 +266,20 @@ gst_queue2_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-multiqueue</FILE>
-<TITLE>multiqueue</TITLE>
-GstMultiQueue
+<FILE>element-tee</FILE>
+<TITLE>tee</TITLE>
+GstTee
+GstTeePullMode
 <SUBSECTION Standard>
-GstMultiQueueClass
-GST_MULTI_QUEUE
-GST_IS_MULTI_QUEUE
-GST_MULTI_QUEUE_CLASS
-GST_IS_MULTI_QUEUE_CLASS
-GST_TYPE_MULTI_QUEUE
+GstTeeClass
+GST_TEE
+GST_TEE_CAST
+GST_IS_TEE
+GST_TEE_CLASS
+GST_IS_TEE_CLASS
+GST_TYPE_TEE
 <SUBSECTION Private>
-gst_multi_queue_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-output-selector</FILE>
-<TITLE>output-selector</TITLE>
-GstOutputSelector
-GstOutputSelectorPadNegotiationMode
-<SUBSECTION Standard>
-GstOutputSelectorClass
-GST_OUTPUT_SELECTOR
-GST_OUTPUT_SELECTOR_CLASS
-GST_IS_OUTPUT_SELECTOR
-GST_IS_OUTPUT_SELECTOR_CLASS
-GST_TYPE_OUTPUT_SELECTOR
-gst_output_selector_get_type
+gst_tee_get_type
 </SECTION>
 
 <SECTION>
@@ -269,29 +290,11 @@ GstTypeFindElement
 GstTypeFindElementClass
 GST_TYPE_FIND_ELEMENT
 GST_IS_TYPE_FIND_ELEMENT
-GST_TYPE_TYPE_FIND_ELEMENT
 GST_TYPE_FIND_ELEMENT_CLASS
 GST_IS_TYPE_FIND_ELEMENT_CLASS
-GST_TYPE_FIND_ELEMENT_GET_CLASS
+GST_TYPE_TYPE_FIND_ELEMENT
 <SUBSECTION Private>
 gst_type_find_element_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-tee</FILE>
-<TITLE>tee</TITLE>
-GstTee
-GstTeePullMode
-<SUBSECTION Standard>
-GstTeeClass
-GST_TEE
-GST_TEE_CAST
-GST_IS_TEE
-GST_TYPE_TEE
-GST_TEE_CLASS
-GST_IS_TEE_CLASS
-<SUBSECTION Private>
-gst_tee_get_type
 </SECTION>
 
 <SECTION>
@@ -302,9 +305,9 @@ GstValve
 GstValveClass
 GST_VALVE
 GST_IS_VALVE
-GST_TYPE_VALVE
 GST_VALVE_CLASS
 GST_IS_VALVE_CLASS
+GST_TYPE_VALVE
 <SUBSECTION Private>
 gst_valve_get_type
 </SECTION>
