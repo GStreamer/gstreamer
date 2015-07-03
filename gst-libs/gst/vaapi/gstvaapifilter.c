@@ -401,6 +401,7 @@ init_properties (void)
       GST_VAAPI_TYPE_SCALE_METHOD,
       DEFAULT_SCALING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+#if VA_CHECK_VERSION(0,36,0)
   /**
    * GstVaapiFilter:skin-tone-enhancement:
    *
@@ -410,6 +411,7 @@ init_properties (void)
       "Skin tone enhancement",
       "Apply the skin tone enhancement algorithm",
       FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+#endif
 }
 
 static void
