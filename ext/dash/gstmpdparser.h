@@ -503,7 +503,6 @@ gboolean gst_mpd_client_get_next_header_index (GstMpdClient *client, gchar **uri
 gboolean gst_mpd_client_is_live (GstMpdClient * client);
 gboolean gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream, GstClockTime ts);
 gboolean gst_mpd_client_seek_to_time (GstMpdClient * client, GDateTime * time);
-GstDateTime *gst_mpd_client_add_time_difference (GstDateTime * t1, gint64 usecs);
 gint gst_mpd_client_check_time_position (GstMpdClient * client, GstActiveStream * stream, GstClockTime ts, gint64 * diff);
 GstClockTime gst_mpd_parser_get_stream_presentation_offset (GstMpdClient *client, guint stream_idx);
 
@@ -515,7 +514,6 @@ guint gst_mpd_client_get_period_index (GstMpdClient *client);
 const gchar *gst_mpd_client_get_period_id (GstMpdClient *client);
 gboolean gst_mpd_client_has_next_period (GstMpdClient *client);
 gboolean gst_mpd_client_has_previous_period (GstMpdClient * client);
-GstDateTime *gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client, GstActiveStream * stream);
 
 /* Representation selection */
 gint gst_mpdparser_get_rep_idx_with_max_bandwidth (GList *Representations, gint max_bandwidth);
@@ -537,6 +535,7 @@ GList * gst_mpd_client_get_adaptation_sets (GstMpdClient * client);
 gboolean gst_mpd_client_has_next_segment (GstMpdClient * client, GstActiveStream * stream, gboolean forward);
 GstFlowReturn gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream, gboolean forward);
 void gst_mpd_client_seek_to_first_segment (GstMpdClient * client);
+GstDateTime *gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client, GstActiveStream * stream);
 
 /* Get audio/video stream parameters (mimeType, width, height, rate, number of channels) */
 const gchar *gst_mpd_client_get_stream_mimeType (GstActiveStream * stream);
@@ -550,6 +549,7 @@ guint gst_mpd_client_get_audio_stream_num_channels (GstActiveStream * stream);
 guint gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient *client, GList **lang);
 
 gint64 gst_mpd_client_calculate_time_difference (const GstDateTime * t1, const GstDateTime * t2);
+GstDateTime *gst_mpd_client_add_time_difference (GstDateTime * t1, gint64 usecs);
 
 /* profiles */
 gboolean gst_mpd_client_has_isoff_ondemand_profile (GstMpdClient *client);
