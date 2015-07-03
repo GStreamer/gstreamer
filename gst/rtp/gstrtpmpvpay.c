@@ -160,18 +160,25 @@ gst_rtp_mpv_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
   return ret;
 }
 
+#define RTP_HEADER_LEN 12
+
 static GstFlowReturn
 gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
 {
-  GstBuffer *outbuf;
   GstFlowReturn ret;
   guint avail;
+  GstBufferList *list;
+  GstBuffer *outbuf;
 
   guint8 *payload;
 
   avail = gst_adapter_available (rtpmpvpay->adapter);
 
   ret = GST_FLOW_OK;
+
+  list =
+      gst_buffer_list_new_sized (avail / (GST_RTP_BASE_PAYLOAD_MTU (rtpmpvpay) -
+          RTP_HEADER_LEN) + 1);
 
   while (avail > 0) {
     guint towrite;
@@ -217,9 +224,10 @@ gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
     outbuf = gst_buffer_append (outbuf, paybuf);
 
     GST_BUFFER_PTS (outbuf) = rtpmpvpay->first_ts;
-
-    ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmpvpay), outbuf);
+    gst_buffer_list_add (list, outbuf);
   }
+
+  ret = gst_rtp_base_payload_push_list (GST_RTP_BASE_PAYLOAD (rtpmpvpay), list);
 
   return ret;
 }
