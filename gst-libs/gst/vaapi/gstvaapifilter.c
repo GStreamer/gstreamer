@@ -458,10 +458,12 @@ op_data_new (GstVaapiFilterOp op, GParamSpec * pspec)
       op_data->va_cap_size = sizeof (VAProcFilterCap);
       op_data->va_buffer_size = sizeof (VAProcFilterParameterBuffer);
       break;
+#if VA_CHECK_VERSION(0,36,0)
     case GST_VAAPI_FILTER_OP_SKINTONE:
       op_data->va_type = VAProcFilterSkinToneEnhancement;
       op_data->va_buffer_size = sizeof (VAProcFilterParameterBuffer);
       break;
+#endif
     case GST_VAAPI_FILTER_OP_HUE:
       op_data->va_subtype = VAProcColorBalanceHue;
       goto op_colorbalance;
