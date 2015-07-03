@@ -175,7 +175,7 @@ static void
 gst_capsfilter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstCapsFilter *capsfilter = GST_CAPSFILTER (object);
+  GstCapsFilter *capsfilter = GST_CAPS_FILTER (object);
 
   switch (prop_id) {
     case PROP_FILTER_CAPS:{
@@ -226,7 +226,7 @@ static void
 gst_capsfilter_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstCapsFilter *capsfilter = GST_CAPSFILTER (object);
+  GstCapsFilter *capsfilter = GST_CAPS_FILTER (object);
 
   switch (prop_id) {
     case PROP_FILTER_CAPS:
@@ -246,7 +246,7 @@ gst_capsfilter_get_property (GObject * object, guint prop_id, GValue * value,
 static void
 gst_capsfilter_dispose (GObject * object)
 {
-  GstCapsFilter *filter = GST_CAPSFILTER (object);
+  GstCapsFilter *filter = GST_CAPS_FILTER (object);
 
   gst_caps_replace (&filter->filter_caps, NULL);
   g_list_free_full (filter->pending_events, (GDestroyNotify) gst_event_unref);
@@ -259,7 +259,7 @@ static GstCaps *
 gst_capsfilter_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstCapsFilter *capsfilter = GST_CAPSFILTER (base);
+  GstCapsFilter *capsfilter = GST_CAPS_FILTER (base);
   GstCaps *ret, *filter_caps, *tmp;
   gboolean retried = FALSE;
   GstCapsFilterCapsChangeMode caps_change_mode;
@@ -314,7 +314,7 @@ static gboolean
 gst_capsfilter_accept_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstCapsFilter *capsfilter = GST_CAPSFILTER (base);
+  GstCapsFilter *capsfilter = GST_CAPS_FILTER (base);
   GstCaps *filter_caps;
   gboolean ret;
 
@@ -397,7 +397,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
     GstBuffer ** buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstCapsFilter *filter = GST_CAPSFILTER (trans);
+  GstCapsFilter *filter = GST_CAPS_FILTER (trans);
 
   /* always return the input as output buffer */
   *buf = input;
@@ -473,7 +473,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
 static gboolean
 gst_capsfilter_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
-  GstCapsFilter *filter = GST_CAPSFILTER (trans);
+  GstCapsFilter *filter = GST_CAPS_FILTER (trans);
   gboolean ret;
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
@@ -554,7 +554,7 @@ done:
 static gboolean
 gst_capsfilter_stop (GstBaseTransform * trans)
 {
-  GstCapsFilter *filter = GST_CAPSFILTER (trans);
+  GstCapsFilter *filter = GST_CAPS_FILTER (trans);
 
   g_list_free_full (filter->pending_events, (GDestroyNotify) gst_event_unref);
   filter->pending_events = NULL;

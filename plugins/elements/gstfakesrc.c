@@ -131,7 +131,7 @@ gst_fake_src_output_get_type (void)
 
   if (!fakesrc_output_type) {
     fakesrc_output_type =
-        g_enum_register_static ("GstFakeSrcOutput", fakesrc_output);
+        g_enum_register_static ("GstFakeSrcOutputType", fakesrc_output);
   }
   return fakesrc_output_type;
 }
