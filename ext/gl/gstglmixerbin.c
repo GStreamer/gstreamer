@@ -177,6 +177,10 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
       gst_pad_template_new ("sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
           upload_caps));
   gst_caps_unref (upload_caps);
+
+  gst_element_class_set_metadata (element_class, "OpenGL video_mixer empty bin",
+      "Bin/Filter/Effect/Video/Mixer", "OpenGL video_mixer empty bin",
+      "Matthew Waters <matthew@centricular.com>");
 }
 
 static void
