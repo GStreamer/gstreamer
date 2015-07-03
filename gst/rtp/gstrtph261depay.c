@@ -62,7 +62,7 @@ static GstBuffer *
 gst_rtp_h261_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpH261Depay *depay;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
   gint payload_len;
   guint8 *payload;
   const guint header_len = GST_RTP_H261_PAYLOAD_HEADER_LEN;
@@ -161,7 +161,6 @@ skip:
         GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
       GST_DEBUG_OBJECT (depay, "Pushing out a buffer of %u bytes", avail);
-      gst_rtp_base_depayload_push (depayload, outbuf);
       depay->start = FALSE;
     } else {
       depay->start = TRUE;
@@ -169,7 +168,7 @@ skip:
   }
   gst_rtp_buffer_unmap (&rtp);
 
-  return NULL;
+  return outbuf;
 }
 
 static gboolean
