@@ -117,7 +117,7 @@ static GstBuffer *
 gst_rtp_mpv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMPVDepay *rtpmpvdepay;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
   GstRTPBuffer rtp = { NULL };
 
   rtpmpvdepay = GST_RTP_MPV_DEPAY (depayload);
@@ -176,16 +176,19 @@ gst_rtp_mpv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
           "gst_rtp_mpv_depay_chain: pushing buffer of size %" G_GSIZE_FORMAT,
           gst_buffer_get_size (outbuf));
     }
-    return outbuf;
   }
 
-  return NULL;
+  gst_rtp_buffer_unmap (&rtp);
+
+  return outbuf;
 
   /* ERRORS */
 empty_packet:
   {
     GST_ELEMENT_WARNING (rtpmpvdepay, STREAM, DECODE,
         (NULL), ("Empty payload."));
+    gst_rtp_buffer_unmap (&rtp);
+    gst_buffer_unref (buf);
     return NULL;
   }
 }
