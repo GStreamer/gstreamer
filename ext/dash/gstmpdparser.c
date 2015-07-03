@@ -3274,8 +3274,8 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
 
       gst_mpdparser_init_active_stream_segments (stream);
       /* here we should have a single segment for each representation, whose URL is encoded in the baseURL element */
-      if (!gst_mpd_client_add_media_segment (stream, NULL, 1, 0, 0, PeriodEnd,
-              0, PeriodEnd)) {
+      if (!gst_mpd_client_add_media_segment (stream, NULL, 1, 0, 0,
+              PeriodEnd - PeriodStart, PeriodStart, PeriodEnd - PeriodStart)) {
         return FALSE;
       }
     } else {
