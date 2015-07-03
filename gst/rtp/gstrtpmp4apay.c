@@ -342,6 +342,8 @@ config_failed:
   }
 }
 
+#define RTP_HEADER_LEN 12
+
 /* we expect buffers as exactly one complete AU
  */
 static GstFlowReturn
@@ -350,11 +352,10 @@ gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
 {
   GstRtpMP4APay *rtpmp4apay;
   GstFlowReturn ret;
-  GstBuffer *outbuf;
-  guint count, mtu;
-  GstMapInfo map;
+  GstBufferList *list;
+  guint mtu;
+  guint offset;
   gsize size;
-  guint8 *data;
   gboolean fragmented;
   GstClockTime timestamp;
 
@@ -362,83 +363,90 @@ gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   rtpmp4apay = GST_RTP_MP4A_PAY (basepayload);
 
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
-  size = map.size;
-  data = map.data;
+  offset = 0;
+  size = gst_buffer_get_size (buffer);
 
   timestamp = GST_BUFFER_PTS (buffer);
 
   fragmented = FALSE;
   mtu = GST_RTP_BASE_PAYLOAD_MTU (rtpmp4apay);
 
+  list = gst_buffer_list_new_sized (size / (mtu - RTP_HEADER_LEN) + 1);
+
   while (size > 0) {
     guint towrite;
-    guint8 *payload;
+    GstBuffer *outbuf;
     guint payload_len;
     guint packet_len;
+    guint header_len;
+    GstBuffer *paybuf;
     GstRTPBuffer rtp = { NULL };
 
-    /* this will be the total lenght of the packet */
-    packet_len = gst_rtp_buffer_calc_packet_len (size, 0, 0);
-
+    header_len = 0;
     if (!fragmented) {
+      guint count;
       /* first packet calculate space for the packet including the header */
       count = size;
       while (count >= 0xff) {
-        packet_len++;
+        header_len++;
         count -= 0xff;
       }
-      packet_len++;
+      header_len++;
     }
 
-    /* fill one MTU or all available bytes */
+    packet_len = gst_rtp_buffer_calc_packet_len (header_len + size, 0, 0);
     towrite = MIN (packet_len, mtu);
-
-    /* this is the payload length */
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
+    payload_len -= header_len;
 
     GST_DEBUG_OBJECT (rtpmp4apay,
-        "avail %" G_GSIZE_FORMAT ", towrite %d, packet_len %d, payload_len %d",
-        size, towrite, packet_len, payload_len);
+        "avail %" G_GSIZE_FORMAT
+        ", header_len %d, packet_len %d, payload_len %d", size, header_len,
+        packet_len, payload_len);
 
     /* create buffer to hold the payload. */
-    outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+    outbuf = gst_rtp_buffer_new_allocate (header_len, 0, 0);
 
     /* copy payload */
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
-    payload = gst_rtp_buffer_get_payload (&rtp);
 
     if (!fragmented) {
+      guint8 *payload = gst_rtp_buffer_get_payload (&rtp);
+      guint count;
+
       /* first packet write the header */
       count = size;
       while (count >= 0xff) {
         *payload++ = 0xff;
-        payload_len--;
         count -= 0xff;
       }
       *payload++ = count;
-      payload_len--;
     }
 
-    /* copy data to payload */
-    memcpy (payload, data, payload_len);
-    data += payload_len;
-    size -= payload_len;
-
     /* marker only if the packet is complete */
-    gst_rtp_buffer_set_marker (&rtp, size == 0);
+    gst_rtp_buffer_set_marker (&rtp, size == payload_len);
 
     gst_rtp_buffer_unmap (&rtp);
+
+    /* create a new buf to hold the payload */
+    paybuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL,
+        offset, payload_len);
+
+    /* join memory parts */
+    outbuf = gst_buffer_append (outbuf, paybuf);
+    gst_buffer_list_add (list, outbuf);
+    offset += payload_len;
+    size -= payload_len;
 
     /* copy incomming timestamp (if any) to outgoing buffers */
     GST_BUFFER_PTS (outbuf) = timestamp;
 
-    ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmp4apay), outbuf);
-
     fragmented = TRUE;
   }
 
-  gst_buffer_unmap (buffer, &map);
+  ret =
+      gst_rtp_base_payload_push_list (GST_RTP_BASE_PAYLOAD (rtpmp4apay), list);
+
   gst_buffer_unref (buffer);
 
   return ret;
