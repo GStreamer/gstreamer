@@ -273,6 +273,7 @@ static void
 gst_gl_video_mixer_bin_class_init (GstGLVideoMixerBinClass * klass)
 {
   GstGLMixerBinClass *mixer_class = GST_GL_MIXER_BIN_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   mixer_class->create_input_pad = _create_video_mixer_input;
@@ -284,6 +285,10 @@ gst_gl_video_mixer_bin_class_init (GstGLVideoMixerBinClass * klass)
       g_param_spec_enum ("background", "Background", "Background type",
           GST_GL_TYPE_VIDEO_MIXER_BACKGROUND,
           DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_metadata (element_class, "OpenGL video_mixer bin",
+      "Bin/Filter/Effect/Video/Compositor", "OpenGL video_mixer bin",
+      "Matthew Waters <matthew@centricular.com>");
 }
 
 static void
