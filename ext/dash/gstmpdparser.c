@@ -1578,6 +1578,8 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node,
       &new_adap_set->maxFrameRate);
   gst_mpdparser_get_xml_prop_cond_uint (a_node, "segmentAlignment",
       &new_adap_set->segmentAlignment);
+  gst_mpdparser_get_xml_prop_boolean (a_node, "bitstreamSwitching",
+      FALSE, &new_adap_set->bitstreamSwitching);
   gst_mpdparser_get_xml_prop_cond_uint (a_node, "subsegmentAlignment",
       &new_adap_set->subsegmentAlignment);
   gst_mpdparser_get_xml_prop_SAP_type (a_node, "subsegmentStartsWithSAP",
