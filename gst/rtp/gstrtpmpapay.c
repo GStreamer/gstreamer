@@ -164,6 +164,8 @@ gst_rtp_mpa_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
   return ret;
 }
 
+#define RTP_HEADER_LEN 12
+
 static GstFlowReturn
 gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
 {
@@ -171,6 +173,7 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
   GstBuffer *outbuf;
   GstFlowReturn ret;
   guint16 frag_offset;
+  GstBufferList *list;
 
   /* the data available in the adapter is either smaller
    * than the MTU or bigger. In the case it is smaller, the complete
@@ -181,6 +184,10 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
   avail = gst_adapter_available (rtpmpapay->adapter);
 
   ret = GST_FLOW_OK;
+
+  list =
+      gst_buffer_list_new_sized (avail / (GST_RTP_BASE_PAYLOAD_MTU (rtpmpapay) -
+          RTP_HEADER_LEN) + 1);
 
   frag_offset = 0;
   while (avail > 0) {
@@ -235,9 +242,10 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
 
     GST_BUFFER_PTS (outbuf) = rtpmpapay->first_ts;
     GST_BUFFER_DURATION (outbuf) = rtpmpapay->duration;
-
-    ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmpapay), outbuf);
+    gst_buffer_list_add (list, outbuf);
   }
+
+  ret = gst_rtp_base_payload_push_list (GST_RTP_BASE_PAYLOAD (rtpmpapay), list);
 
   return ret;
 }
