@@ -3538,7 +3538,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
 
   GST_DEBUG ("0. Current stream %p", stream);
 
-  /* retrive representation list */
+  /* retrieve representation list */
   if (stream->cur_adapt_set != NULL)
     rep_list = stream->cur_adapt_set->Representations;
 
@@ -4474,11 +4474,12 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient * client,
   for (list = g_list_first (stream_period->period->AdaptationSets); list;
       list = g_list_next (list)) {
     adapt_set = (GstAdaptationSetNode *) list->data;
-    if (adapt_set) {
+    if (adapt_set && adapt_set->lang) {
       gchar *this_lang = adapt_set->lang;
       GstRepresentationNode *rep;
       rep =
           gst_mpdparser_get_lowest_representation (adapt_set->Representations);
+      mimeType = NULL;
       if (rep->RepresentationBase)
         mimeType = rep->RepresentationBase->mimeType;
       if (!mimeType && adapt_set->RepresentationBase) {
@@ -4486,10 +4487,8 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient * client,
       }
 
       if (strncmp_ext (mimeType, this_mimeType) == 0) {
-        if (this_lang) {
-          nb_adaptation_set++;
-          *lang = g_list_append (*lang, this_lang);
-        }
+        nb_adaptation_set++;
+        *lang = g_list_append (*lang, this_lang);
       }
     }
   }
