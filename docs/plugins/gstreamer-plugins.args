@@ -1118,3 +1118,13 @@
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstFunnel::forward-sticky-events</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Forward sticky events</NICK>
+<BLURB>Forward sticky events on stream changes.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+

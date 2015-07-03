@@ -2,6 +2,7 @@
 <FILE>element-capsfilter</FILE>
 <TITLE>capsfilter</TITLE>
 GstCapsFilter
+GstCapsFilterCapsChangeMode
 <SUBSECTION Standard>
 GstCapsFilterClass
 GST_CAPS_FILTER
@@ -118,6 +119,7 @@ gst_fd_src_get_type
 <FILE>element-filesink</FILE>
 <TITLE>filesink</TITLE>
 GstFileSink
+GstFileSinkBufferMode
 <SUBSECTION Standard>
 GstFileSinkClass
 GST_FILE_SINK
@@ -264,6 +266,22 @@ GST_TYPE_QUEUE2
 GstQueue2Size
 GstQueue2Range
 gst_queue2_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-streamiddemux</FILE>
+<TITLE>streamiddemux</TITLE>
+GstStreamidDemux
+<SUBSECTION Standard>
+GstStreamidDemuxClass
+GST_STREAMID_DEMUX
+GST_STREAMID_DEMUX_CAST
+GST_IS_STREAMID_DEMUX
+GST_STREAMID_DEMUX_CLASS
+GST_IS_STREAMID_DEMUX_CLASS
+GST_TYPE_STREAMID_DEMUX
+<SUBSECTION Private>
+gst_streamid_demux_get_type
 </SECTION>
 
 <SECTION>
