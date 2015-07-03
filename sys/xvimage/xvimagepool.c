@@ -34,8 +34,8 @@
 #include <gst/video/gstvideopool.h>
 
 
-GST_DEBUG_CATEGORY_EXTERN (gst_debug_xvimagepool);
-#define GST_CAT_DEFAULT gst_debug_xvimagepool
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_xv_image_pool);
+#define GST_CAT_DEFAULT gst_debug_xv_image_pool
 
 /* bufferpool */
 static void gst_xvimage_buffer_pool_finalize (GObject * object);

@@ -17,8 +17,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_XIMAGESINK_H__
-#define __GST_XIMAGESINK_H__
+#ifndef __GST_X_IMAGE_SINK_H__
+#define __GST_X_IMAGE_SINK_H__
 
 #include <gst/video/gstvideosink.h>
 
@@ -42,16 +42,16 @@
 #include <gst/video/video.h>
 
 G_BEGIN_DECLS
-#define GST_TYPE_XIMAGESINK \
-  (gst_ximagesink_get_type())
-#define GST_XIMAGESINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_XIMAGESINK, GstXImageSink))
-#define GST_XIMAGESINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_XIMAGESINK, GstXImageSinkClass))
-#define GST_IS_XIMAGESINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_XIMAGESINK))
-#define GST_IS_XIMAGESINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_XIMAGESINK))
+#define GST_TYPE_X_IMAGE_SINK \
+  (gst_x_image_sink_get_type())
+#define GST_X_IMAGE_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_X_IMAGE_SINK, GstXImageSink))
+#define GST_X_IMAGE_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_X_IMAGE_SINK, GstXImageSinkClass))
+#define GST_IS_X_IMAGE_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_X_IMAGE_SINK))
+#define GST_IS_X_IMAGE_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_X_IMAGE_SINK))
 
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
@@ -204,7 +204,7 @@ struct _GstXImageSinkClass
   GstVideoSinkClass parent_class;
 };
 
-GType gst_ximagesink_get_type (void);
+GType gst_x_image_sink_get_type (void);
 
 G_END_DECLS
-#endif /* __GST_XIMAGESINK_H__ */
+#endif /* __GST_X_IMAGE_SINK_H__ */

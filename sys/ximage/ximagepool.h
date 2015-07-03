@@ -105,7 +105,7 @@ GType gst_ximage_buffer_pool_get_type (void);
 
 GstBufferPool * gst_ximage_buffer_pool_new     (GstXImageSink * ximagesink);
 
-gboolean gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
+gboolean gst_x_image_sink_check_xshm_calls (GstXImageSink * ximagesink,
         GstXContext * xcontext);
 
 G_END_DECLS

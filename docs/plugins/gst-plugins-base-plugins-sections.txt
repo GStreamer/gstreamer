@@ -941,17 +941,17 @@ gst_vorbis_tag_get_type
 GstXImageSink
 <SUBSECTION Standard>
 GstXImageSinkClass
-GST_XIMAGESINK
-GST_IS_XIMAGESINK
-GST_XIMAGESINK_CLASS
-GST_IS_XIMAGESINK_CLASS
-GST_TYPE_XIMAGESINK
+GST_X_IMAGE_SINK
+GST_IS_X_IMAGE_SINK
+GST_X_IMAGE_SINK_CLASS
+GST_IS_X_IMAGE_SINK_CLASS
+GST_TYPE_X_IMAGE_SINK
 GstXImageBuffer
 GstXImageBufferClass
 GstXContext
 GstXWindow
 <SUBSECTION Private>
-gst_ximage_sink_get_type
+gst_x_image_sink_get_type
 </SECTION>
 
 <SECTION>
@@ -960,14 +960,14 @@ gst_ximage_sink_get_type
 GstXvImageSink
 <SUBSECTION Standard>
 GstXvImageSinkClass
-GST_XVIMAGESINK
-GST_IS_XVIMAGESINK
-GST_XVIMAGESINK_CLASS
-GST_IS_XVIMAGESINK_CLASS
-GST_TYPE_XVIMAGESINK
+GST_XV_IMAGE_SINK
+GST_IS_XV_IMAGE_SINK
+GST_XV_IMAGE_SINK_CLASS
+GST_IS_XV_IMAGE_SINK_CLASS
+GST_TYPE_XV_IMAGE_SINK
 GstXvImageBuffer
 GstXvImageBufferClass
 GstXvImageFormat
 <SUBSECTION Private>
-gst_xvimage_sink_get_type
+gst_xv_image_sink_get_type
 </SECTION>

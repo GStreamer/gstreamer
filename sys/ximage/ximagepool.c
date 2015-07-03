@@ -32,8 +32,8 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_debug_ximagepool);
-#define GST_CAT_DEFAULT gst_debug_ximagepool
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_x_image_pool);
+#define GST_CAT_DEFAULT gst_debug_x_image_pool
 
 /* X11 stuff */
 static gboolean error_caught = FALSE;
@@ -419,7 +419,7 @@ xattach_failed:
 /* This function checks that it is actually really possible to create an image
    using XShm */
 gboolean
-gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
+gst_x_image_sink_check_xshm_calls (GstXImageSink * ximagesink,
     GstXContext * xcontext)
 {
   XImage *ximage;
@@ -672,7 +672,7 @@ gst_ximage_buffer_pool_new (GstXImageSink * ximagesink)
 {
   GstXImageBufferPool *pool;
 
-  g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
+  g_return_val_if_fail (GST_IS_X_IMAGE_SINK (ximagesink), NULL);
 
   pool = g_object_new (GST_TYPE_XIMAGE_BUFFER_POOL, NULL);
   pool->sink = gst_object_ref (ximagesink);

@@ -23,23 +23,23 @@
 
 #include "xvimagesink.h"
 
-GST_DEBUG_CATEGORY (gst_debug_xvcontext);
-GST_DEBUG_CATEGORY (gst_debug_xvimagepool);
-GST_DEBUG_CATEGORY (gst_debug_xvimagesink);
+GST_DEBUG_CATEGORY (gst_debug_xv_context);
+GST_DEBUG_CATEGORY (gst_debug_xv_image_pool);
+GST_DEBUG_CATEGORY (gst_debug_xv_image_sink);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "xvimagesink",
-          GST_RANK_PRIMARY, GST_TYPE_XVIMAGESINK))
+          GST_RANK_PRIMARY, GST_TYPE_XV_IMAGE_SINK))
     return FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (gst_debug_xvcontext, "xcontext", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_debug_xv_context, "xcontext", 0,
       "xcontext miniobject");
-  GST_DEBUG_CATEGORY_INIT (gst_debug_xvimagesink, "xvimagesink", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_debug_xv_image_sink, "xvimagesink", 0,
       "xvimagesink element");
-  GST_DEBUG_CATEGORY_INIT (gst_debug_xvimagepool, "xvimagepool", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_debug_xv_image_pool, "xvimagepool", 0,
       "xvimagepool object");
 
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
