@@ -71,6 +71,151 @@ gst_gl_video_mixer_background_get_type (void)
   return mixer_background_type;
 }
 
+typedef struct _GstGLMixerControlBindingProxy GstGLMixerControlBindingProxy;
+typedef struct _GstGLMixerControlBindingProxyClass
+    GstGLMixerControlBindingProxyClass;
+
+struct _GstGLMixerControlBindingProxy
+{
+  GstControlBinding parent;
+
+  GstObject *ref_object;
+  const gchar *property_name;
+};
+
+struct _GstGLMixerControlBindingProxyClass
+{
+  GstControlBindingClass parent_class;
+};
+
+GType gst_gl_mixer_control_binding_proxy_get_type (void);
+#define GST_TYPE_GL_MIXER_CONTROL_BINDING \
+  (gst_gl_mixer_control_binding_proxy_get_type())
+
+G_DEFINE_TYPE (GstGLMixerControlBindingProxy,
+    gst_gl_mixer_control_binding_proxy, GST_TYPE_CONTROL_BINDING);
+
+static void
+gst_gl_mixer_control_binding_proxy_init (GstGLMixerControlBindingProxy * self)
+{
+}
+
+static gboolean
+gst_gl_mixer_control_binding_proxy_sync_values (GstControlBinding * binding,
+    GstObject * object, GstClockTime timestamp, GstClockTime last_sync)
+{
+  GstGLMixerControlBindingProxy *self = (GstGLMixerControlBindingProxy *)
+      binding;
+  GstControlBinding *ref_binding;
+  gboolean ret = TRUE;
+
+  ref_binding = gst_object_get_control_binding (self->ref_object,
+      self->property_name);
+
+  if (ref_binding) {
+    ret = gst_control_binding_sync_values (ref_binding, self->ref_object,
+        timestamp, last_sync);
+    gst_object_unref (ref_binding);
+  }
+
+  return ret;
+}
+
+static GValue *
+gst_gl_mixer_control_binding_proxy_get_value (GstControlBinding * binding,
+    GstClockTime timestamp)
+{
+  GstGLMixerControlBindingProxy *self = (GstGLMixerControlBindingProxy *)
+      binding;
+  GstControlBinding *ref_binding;
+  GValue *ret = NULL;
+
+  ref_binding = gst_object_get_control_binding (self->ref_object,
+      self->property_name);
+
+  if (ref_binding) {
+    ret = gst_control_binding_get_value (ref_binding, timestamp);
+    gst_object_unref (ref_binding);
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_gl_mixer_control_binding_proxy_get_value_array (GstControlBinding * binding,
+    GstClockTime timestamp, GstClockTime interval, guint n_values,
+    gpointer values)
+{
+  GstGLMixerControlBindingProxy *self = (GstGLMixerControlBindingProxy *)
+      binding;
+  GstControlBinding *ref_binding;
+  gboolean ret = FALSE;
+
+  ref_binding = gst_object_get_control_binding (self->ref_object,
+      self->property_name);
+
+  if (ref_binding) {
+    ret = gst_control_binding_get_value_array (ref_binding, timestamp,
+        interval, n_values, values);
+    gst_object_unref (ref_binding);
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_gl_mixer_control_binding_proxy_get_g_value_array (GstControlBinding *
+    binding, GstClockTime timestamp, GstClockTime interval, guint n_values,
+    GValue * values)
+{
+  GstGLMixerControlBindingProxy *self = (GstGLMixerControlBindingProxy *)
+      binding;
+  GstControlBinding *ref_binding;
+  gboolean ret = FALSE;
+
+  ref_binding = gst_object_get_control_binding (self->ref_object,
+      self->property_name);
+
+  if (ref_binding) {
+    ret = gst_control_binding_get_g_value_array (ref_binding, timestamp,
+        interval, n_values, values);
+    gst_object_unref (ref_binding);
+  }
+
+  return ret;
+}
+
+
+static void
+    gst_gl_mixer_control_binding_proxy_class_init
+    (GstGLMixerControlBindingProxyClass * klass)
+{
+  GstControlBindingClass *cb_class = GST_CONTROL_BINDING_CLASS (klass);
+
+  cb_class->sync_values = gst_gl_mixer_control_binding_proxy_sync_values;
+  cb_class->get_value = gst_gl_mixer_control_binding_proxy_get_value;
+  cb_class->get_value_array =
+      gst_gl_mixer_control_binding_proxy_get_value_array;
+  cb_class->get_g_value_array =
+      gst_gl_mixer_control_binding_proxy_get_g_value_array;
+}
+
+static GstControlBinding *
+gst_gl_mixer_control_binding_proxy_new (GstObject * object,
+    const gchar * property_name, GstObject * ref_object,
+    const gchar * ref_property_name)
+{
+  GstGLMixerControlBindingProxy *self =
+      g_object_new (GST_TYPE_GL_MIXER_CONTROL_BINDING, "object", object,
+      "name", property_name, NULL);
+
+  self->ref_object = ref_object;
+  self->property_name = ref_property_name;
+
+  return (GstControlBinding *) self;
+}
+
+
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
 #define DEFAULT_PAD_WIDTH  0
@@ -94,11 +239,6 @@ static void gst_gl_video_mixer_input_get_property (GObject * object,
 static void gst_gl_video_mixer_input_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_gl_video_mixer_input_chain (GstPad * pad,
-    GstObject * parent, GstBuffer * buffer);
-static GstFlowReturn gst_gl_video_mixer_input_event (GstPad * pad,
-    GstObject * parent, GstEvent * event);
-
 typedef struct _GstGLVideoMixerInput GstGLVideoMixerInput;
 typedef GstGhostPadClass GstGLVideoMixerInputClass;
 
@@ -118,9 +258,6 @@ G_DEFINE_TYPE (GstGLVideoMixerInput, gst_gl_video_mixer_input,
 static void
 gst_gl_video_mixer_input_init (GstGLVideoMixerInput * self)
 {
-  GstPad *pad = GST_PAD (self);
-
-  gst_pad_set_event_function (pad, gst_gl_video_mixer_input_event);
 }
 
 static void
@@ -177,51 +314,6 @@ gst_gl_video_mixer_input_set_property (GObject * object, guint prop_id,
     g_object_set_property (G_OBJECT (self->mixer_pad), pspec->name, value);
 }
 
-static GstFlowReturn
-gst_gl_video_mixer_input_chain (GstPad * pad, GstObject * parent,
-    GstBuffer * buffer)
-{
-  GstGLVideoMixerInput *self = (GstGLVideoMixerInput *) pad;
-  GstClockTime timestamp, stream_time;
-//  gdouble alpha;
-
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
-
-  stream_time =
-      gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME, timestamp);
-
-  gst_object_sync_values (GST_OBJECT (self), stream_time);
-#if 0
-  /* FIXME: implement no-upload on alpha = 0 */
-  g_object_get (self, "alpha", &alpha, NULL);
-
-  if (alpha <= 0.0) {
-    GST_DEBUG_OBJECT (self, "dropping buffer %" GST_PTR_FORMAT
-        " due to alpha value %f", buffer, alpha);
-    gst_buffer_unref (buffer);
-    return GST_FLOW_OK;
-  }
-#endif
-  return gst_proxy_pad_chain_default (pad, parent, buffer);
-}
-
-static GstFlowReturn
-gst_gl_video_mixer_input_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
-{
-  GstGLVideoMixerInput *self = (GstGLVideoMixerInput *) pad;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEGMENT:
-      gst_event_copy_segment (event, &self->segment);
-      break;
-    default:
-      break;
-  }
-
-  return gst_pad_event_default (pad, parent, event);
-}
-
 static GstGhostPad *
 _create_video_mixer_input (GstGLMixerBin * self, GstPad * mixer_pad)
 {
@@ -229,13 +321,25 @@ _create_video_mixer_input (GstGLMixerBin * self, GstPad * mixer_pad)
       g_object_new (gst_gl_video_mixer_input_get_type (), "name",
       GST_OBJECT_NAME (mixer_pad), "direction", GST_PAD_DIRECTION (mixer_pad),
       NULL);
+  GstControlBinding *cb;
 
   if (!gst_ghost_pad_construct (GST_GHOST_PAD (input))) {
     gst_object_unref (input);
     return NULL;
   }
+#define ADD_PROXY_CONTROL_BINDING(prop)                                 \
+  cb = gst_gl_mixer_control_binding_proxy_new (GST_OBJECT (input),      \
+      G_STRINGIFY (prop), GST_OBJECT (mixer_pad), G_STRINGIFY (prop));  \
+  gst_object_add_control_binding (GST_OBJECT (input), cb)
 
-  gst_pad_set_chain_function (GST_PAD (input), gst_gl_video_mixer_input_chain);
+  ADD_PROXY_CONTROL_BINDING (zorder);
+  ADD_PROXY_CONTROL_BINDING (xpos);
+  ADD_PROXY_CONTROL_BINDING (ypos);
+  ADD_PROXY_CONTROL_BINDING (width);
+  ADD_PROXY_CONTROL_BINDING (height);
+  ADD_PROXY_CONTROL_BINDING (alpha);
+
+#undef ADD_PROXY_CONTROL_BINDING
 
   input->mixer_pad = mixer_pad;
 
