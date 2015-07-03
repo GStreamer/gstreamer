@@ -18,6 +18,7 @@
  */
 
 #include "test-utils.h"
+#include "../../../ges/ges-structured-interface.h"
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
@@ -101,6 +102,181 @@ GST_START_TEST (test_object_properties)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_split_direct_bindings)
+{
+  GList *values;
+  GstControlSource *source;
+  GESTimeline *timeline;
+  GESClip *clip, *splitclip;
+  GError *error = NULL;
+  GstControlBinding *binding = NULL, *splitbinding;
+  GstTimedValueControlSource *splitsource;
+
+  GESTrackElement *element;
+
+  ges_init ();
+
+  fail_unless ((timeline = ges_timeline_new ()));
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_video_track_new ())));
+
+  _ges_add_clip_from_struct (timeline,
+      gst_structure_from_string
+      ("clip, asset-id=GESTestClip, name=ref_clip, layer=0, type=GESTestClip, inpoint=10.0, start=0.0, duration=10.0",
+          NULL), &error);
+  g_assert_no_error (error);
+
+  clip = GES_CLIP (ges_timeline_get_element (timeline, "ref_clip"));
+
+  CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 10 * GST_SECOND);
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  check_layer (clip, 0);
+
+  source = gst_interpolation_control_source_new ();
+  g_object_set (source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  element = GES_CONTAINER_CHILDREN (clip)->data;
+  fail_unless (ges_track_element_set_control_source (element,
+          source, "alpha", "direct"));
+
+  gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE (source),
+      10 * GST_SECOND, 0.0);
+  gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE (source),
+      20 * GST_SECOND, 1.0);
+
+  binding = ges_track_element_get_control_binding (element, "alpha");
+  assert_equals_int (g_value_get_double (gst_control_binding_get_value (binding,
+              10 * GST_SECOND)), 0.0);
+  assert_equals_int (g_value_get_double (gst_control_binding_get_value (binding,
+              20 * GST_SECOND)), 1.0);
+
+  splitclip = ges_clip_split (clip, 5 * GST_SECOND);
+  CHECK_OBJECT_PROPS (splitclip, 5 * GST_SECOND, 15 * GST_SECOND,
+      5 * GST_SECOND);
+  check_layer (splitclip, 0);
+
+  splitbinding =
+      ges_track_element_get_control_binding (GES_CONTAINER_CHILDREN
+      (splitclip)->data, "alpha");
+  g_object_get (splitbinding, "control_source", &splitsource, NULL);
+
+  values =
+      gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
+      (splitsource));
+  assert_equals_int (g_list_length (values), 2);
+  assert_equals_uint64 (((GstTimedValue *) values->data)->timestamp,
+      15 * GST_SECOND);
+  assert_equals_float (((GstTimedValue *) values->data)->value, 0.5);
+
+  assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
+      20 * GST_SECOND);
+  assert_equals_float (((GstTimedValue *) values->next->data)->value, 1.0);
+
+  values =
+      gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
+      (source));
+  assert_equals_int (g_list_length (values), 2);
+  assert_equals_uint64 (((GstTimedValue *) values->data)->timestamp,
+      10 * GST_SECOND);
+  assert_equals_float (((GstTimedValue *) values->data)->value, 0.0);
+
+  assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
+      15 * GST_SECOND);
+  assert_equals_float (((GstTimedValue *) values->next->data)->value, 0.50);
+
+  CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 5 * GST_SECOND);
+  check_layer (clip, 0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_split_direct_absolute_bindings)
+{
+  GList *values;
+  GstControlSource *source;
+  GESTimeline *timeline;
+  GESClip *clip, *splitclip;
+  GError *error = NULL;
+  GstControlBinding *binding = NULL, *splitbinding;
+  GstTimedValueControlSource *splitsource;
+
+  GESTrackElement *element;
+
+  ges_init ();
+
+  fail_unless ((timeline = ges_timeline_new ()));
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_video_track_new ())));
+
+  _ges_add_clip_from_struct (timeline,
+      gst_structure_from_string
+      ("clip, asset-id=GESTestClip, name=ref_clip, layer=0, type=GESTestClip, inpoint=10.0, start=0.0, duration=10.0",
+          NULL), &error);
+  g_assert_no_error (error);
+
+  clip = GES_CLIP (ges_timeline_get_element (timeline, "ref_clip"));
+
+  CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 10 * GST_SECOND);
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  check_layer (clip, 0);
+
+  source = gst_interpolation_control_source_new ();
+  g_object_set (source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  element = GES_CONTAINER_CHILDREN (clip)->data;
+  fail_unless (ges_track_element_set_control_source (element,
+          source, "posx", "direct-absolute"));
+
+  gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE (source),
+      10 * GST_SECOND, 0);
+  gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE (source),
+      20 * GST_SECOND, 500);
+
+  binding = ges_track_element_get_control_binding (element, "posx");
+  assert_equals_int (g_value_get_int (gst_control_binding_get_value (binding,
+              10 * GST_SECOND)), 0);
+  assert_equals_int (g_value_get_int (gst_control_binding_get_value (binding,
+              20 * GST_SECOND)), 500);
+
+  splitclip = ges_clip_split (clip, 5 * GST_SECOND);
+  CHECK_OBJECT_PROPS (splitclip, 5 * GST_SECOND, 15 * GST_SECOND,
+      5 * GST_SECOND);
+  check_layer (splitclip, 0);
+
+  splitbinding =
+      ges_track_element_get_control_binding (GES_CONTAINER_CHILDREN
+      (splitclip)->data, "posx");
+  g_object_get (splitbinding, "control_source", &splitsource, NULL);
+
+  values =
+      gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
+      (splitsource));
+  assert_equals_int (g_list_length (values), 2);
+  assert_equals_uint64 (((GstTimedValue *) values->data)->timestamp,
+      15 * GST_SECOND);
+  assert_equals_float (((GstTimedValue *) values->data)->value, 250.0);
+
+  assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
+      20 * GST_SECOND);
+  assert_equals_float (((GstTimedValue *) values->next->data)->value, 500.0);
+
+  values =
+      gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
+      (source));
+  assert_equals_int (g_list_length (values), 2);
+  assert_equals_uint64 (((GstTimedValue *) values->data)->timestamp,
+      10 * GST_SECOND);
+  assert_equals_float (((GstTimedValue *) values->data)->value, 0.0);
+
+  assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
+      15 * GST_SECOND);
+  assert_equals_float (((GstTimedValue *) values->next->data)->value, 250.0);
+
+  CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 5 * GST_SECOND);
+  check_layer (clip, 0);
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_split_object)
 {
@@ -511,6 +687,8 @@ ges_suite (void)
 
   tcase_add_test (tc_chain, test_object_properties);
   tcase_add_test (tc_chain, test_split_object);
+  tcase_add_test (tc_chain, test_split_direct_bindings);
+  tcase_add_test (tc_chain, test_split_direct_absolute_bindings);
   tcase_add_test (tc_chain, test_clip_group_ungroup);
   tcase_add_test (tc_chain, test_clip_refcount_remove_child);
   tcase_add_test (tc_chain, test_clip_find_track_element);

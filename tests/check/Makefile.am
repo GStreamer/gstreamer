@@ -20,7 +20,7 @@ testutils_noisnt_libraries=libtestutils.la
 testutils_noinst_headers=ges/test-utils.h nle/common.h
 libtestutils_la_LIBADD=$(common_ldadd)
 libtestutils_la_CFLAGS=$(common_cflags)
-libtestutils_la_SOURCES=ges/test-utils.c nle/common.c
+libtestutils_la_SOURCES=ges/test-utils.c nle/common.c ../../ges/ges-structured-interface.c
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp # $(srcdir)/gst-plugins-bad.supp
 

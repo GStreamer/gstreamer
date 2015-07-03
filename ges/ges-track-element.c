@@ -1297,7 +1297,8 @@ _split_binding (GESTrackElement * element, GESTrackElement * new_element,
 
   for (tmp = values; tmp; tmp = tmp->next) {
     GstTimedValue *value = tmp->data;
-    if (value->timestamp > position) {
+
+    if (value->timestamp > position && !past_position) {
       gfloat value_at_pos;
 
       /* FIXME We should be able to use gst_control_source_get_value so
@@ -1313,14 +1314,16 @@ _split_binding (GESTrackElement * element, GESTrackElement * new_element,
       gst_timed_value_control_source_set (new_source, position, value_at_pos);
       gst_timed_value_control_source_set (new_source, value->timestamp,
           value->value);
+
       gst_timed_value_control_source_unset (source, value->timestamp);
       gst_timed_value_control_source_set (source, position, value_at_pos);
     } else if (past_position) {
-      gst_timed_value_control_source_unset (source, value->timestamp);
       gst_timed_value_control_source_set (new_source, value->timestamp,
           value->value);
+      gst_timed_value_control_source_unset (source, value->timestamp);
     }
     last_value = value;
+
   }
 }
 
