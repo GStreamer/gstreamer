@@ -1000,11 +1000,9 @@ gst_rtp_h261_pay_init (GstRtpH261Pay * pay)
 static void
 gst_rtp_h261_pay_class_init (GstRtpH261PayClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
-  gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
   gstrtpbasepayload_class = GST_RTP_BASE_PAYLOAD_CLASS (klass);
 
