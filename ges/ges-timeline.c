@@ -125,8 +125,11 @@ struct _MoveContext
   /* Max priority of the objects currently in toplevel_containers */
   guint max_layer_prio;
 
-  /* Never trim so duration would becomes < 0 */
+  /* Never trim so duration would become < 0 */
   guint64 max_trim_pos;
+
+  /* Never trim so inpoint + duration would change */
+  guint64 min_trim_pos;
 
   /* fields to force/avoid new context */
   /* Set to %TRUE when the track is doing updates of track element
@@ -1328,6 +1331,7 @@ ges_move_context_set_objects (GESTimeline * timeline, GESTrackElement * obj,
     case GES_EDGE_START:
       /* set it properly in the context of "trimming" */
       mv_ctx->max_trim_pos = 0;
+      mv_ctx->min_trim_pos = 0;
       start = _START (obj);
 
       if (g_sequence_iter_is_begin (trackelement_iter))
@@ -1344,9 +1348,12 @@ ges_move_context_set_objects (GESTimeline * timeline, GESTrackElement * obj,
         if (tmpend <= start) {
           mv_ctx->max_trim_pos =
               MAX (mv_ctx->max_trim_pos, _START (tmptrackelement));
+          mv_ctx->min_trim_pos = MAX (mv_ctx->min_trim_pos,
+              _START (tmptrackelement) - _INPOINT (tmptrackelement));
           mv_ctx->moving_trackelements =
               g_list_prepend (mv_ctx->moving_trackelements, tmptrackelement);
         }
+
 
         if (g_sequence_iter_is_begin (iter))
           break;
@@ -1547,8 +1554,15 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
 
       /* Calculate new values */
       position = MIN (position, start + duration);
-      inpoint = inpoint + position > start ? inpoint + position - start : 0;
 
+      if (inpoint + position < start) {
+        GST_INFO_OBJECT (timeline, "Track element %s inpoint would be negative,"
+            " not trimming", GES_TIMELINE_ELEMENT_NAME (track_element));
+        gst_object_unref (toplevel);
+        return FALSE;
+      }
+
+      inpoint = inpoint + position - start;
       real_dur = _END (element) - position;
       duration = CLAMP (real_dur, 0, max_duration > inpoint ?
           max_duration - inpoint : G_MAXUINT64);
@@ -1772,7 +1786,8 @@ timeline_roll_object (GESTimeline * timeline, GESTrackElement * obj,
     case GES_EDGE_START:
 
       /* Avoid negative durations */
-      if (position < mv_ctx->max_trim_pos || position > end)
+      if (position < mv_ctx->max_trim_pos || position > end ||
+          position < mv_ctx->min_trim_pos)
         goto error;
 
       cur = g_hash_table_lookup (timeline->priv->by_start, obj);
@@ -1782,6 +1797,14 @@ timeline_roll_object (GESTimeline * timeline, GESTrackElement * obj,
 
       ret &= ges_timeline_trim_object_simple (timeline,
           GES_TIMELINE_ELEMENT (obj), layers, GES_EDGE_START, position, FALSE);
+
+      if (!ret) {
+        GST_INFO_OBJECT (timeline, "Could not trim %s",
+            GES_TIMELINE_ELEMENT_NAME (obj));
+
+        return FALSE;
+      }
+
 
       /* In the case we reached max_duration we just make sure to roll
        * everything to the real new position */

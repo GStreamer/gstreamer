@@ -216,19 +216,17 @@ GST_START_TEST (test_basic_timeline_edition)
    *          |  clip1 ||   clip  ||  clip2     |
    * time    20------ 25 ------ 62 ---------122
    */
-  fail_unless (ges_container_edit (clip, NULL, -1, GES_EDIT_MODE_TRIM,
-          GES_EDGE_START, 40) == TRUE);
-  fail_unless (ges_container_edit (clip, NULL, -1, GES_EDIT_MODE_ROLL,
-          GES_EDGE_START, 25) == TRUE);
-  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
-  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
+  fail_if (ges_container_edit (clip, NULL, -1, GES_EDIT_MODE_ROLL,
+          GES_EDGE_START, 25));
+  CHECK_OBJECT_PROPS (trackelement, 40, 3, 22);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 20);
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Make sure that not doing anything when not able to roll */
   fail_if (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_END, 65) == TRUE, 0);
-  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
-  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
+  CHECK_OBJECT_PROPS (trackelement, 40, 3, 22);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 20);
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   gst_object_unref (timeline);
@@ -859,6 +857,7 @@ GST_START_TEST (test_timeline_edition_mode)
    *                     25------62
    *
    */
+  ges_timeline_element_set_inpoint (GES_TIMELINE_ELEMENT (clip), 15);
   fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_END, 25) == TRUE);
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
@@ -868,6 +867,8 @@ GST_START_TEST (test_timeline_edition_mode)
   /* Make sure that not doing anything when not able to roll */
   fail_if (ges_container_edit (clip, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_START, 65));
+  fail_if (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_ROLL,
+          GES_EDGE_END, 65));
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
