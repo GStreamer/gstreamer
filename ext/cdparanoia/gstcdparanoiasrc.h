@@ -24,9 +24,6 @@
 
 G_BEGIN_DECLS
 
-#define size16 gint16
-#define size32 gint32
-
 /* on OSX the cdparanoia headers include IOKit framework headers (in particular
  * SCSICmds_INQUIRY_Definitions.h) which define a structure that has a member
  * named VERSION, so we must #undef VERSION here for things to compile on OSX */
