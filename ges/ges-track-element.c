@@ -1370,19 +1370,19 @@ ges_track_element_edit (GESTrackElement * object,
 
   switch (mode) {
     case GES_EDIT_MODE_NORMAL:
-      timeline_move_object (timeline, object, layers, edge, position);
+      return timeline_move_object (timeline, object, layers, edge, position);
       break;
     case GES_EDIT_MODE_TRIM:
-      timeline_trim_object (timeline, object, layers, edge, position);
+      return timeline_trim_object (timeline, object, layers, edge, position);
       break;
     case GES_EDIT_MODE_RIPPLE:
-      timeline_ripple_object (timeline, object, layers, edge, position);
+      return timeline_ripple_object (timeline, object, layers, edge, position);
       break;
     case GES_EDIT_MODE_ROLL:
-      timeline_roll_object (timeline, object, layers, edge, position);
+      return timeline_roll_object (timeline, object, layers, edge, position);
       break;
     case GES_EDIT_MODE_SLIDE:
-      timeline_slide_object (timeline, object, layers, edge, position);
+      return timeline_slide_object (timeline, object, layers, edge, position);
       break;
     default:
       GST_ERROR ("Unkown edit mode: %d", mode);

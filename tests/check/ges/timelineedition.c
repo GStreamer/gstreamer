@@ -225,9 +225,7 @@ GST_START_TEST (test_basic_timeline_edition)
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Make sure that not doing anything when not able to roll */
-  fail_unless (ges_container_edit (clip, NULL, -1, GES_EDIT_MODE_ROLL,
-          GES_EDGE_START, 65) == TRUE);
-  fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_ROLL,
+  fail_if (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_END, 65) == TRUE, 0);
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
@@ -320,8 +318,8 @@ GST_START_TEST (test_snapping)
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Snaping to edge, so no move */
-  fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_TRIM,
-          GES_EDGE_END, 27) == TRUE);
+  fail_if (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_TRIM,
+          GES_EDGE_END, 27));
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
@@ -529,7 +527,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_timeline_edition_mode)
 {
-  guint i;
   GESTrack *track;
   GESTimeline *timeline;
   GESTrackElement *trackelement, *trackelement1, *trackelement2;
@@ -735,18 +732,6 @@ GST_START_TEST (test_timeline_edition_mode)
   assert_equals_int (ges_layer_get_priority (layer), 2);
   gst_object_unref (layer);
 
-  /* Some more intensive roll testing */
-  for (i = 0; i < 20; i++) {
-    gint32 random = g_random_int_range (35, 94);
-    guint64 tck3_inpoint = random - 35;
-
-    fail_unless (ges_container_edit (clip, NULL, -1, GES_EDIT_MODE_ROLL,
-            GES_EDGE_END, random) == TRUE);
-    CHECK_OBJECT_PROPS (trackelement, 32, 5, random - 32);
-    CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
-    CHECK_OBJECT_PROPS (trackelement2, random, tck3_inpoint, 95 - random);
-  }
-
   /* Roll end clip back to 35
    * New timeline:
    * ------------
@@ -881,25 +866,23 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Make sure that not doing anything when not able to roll */
-  fail_unless (ges_container_edit (clip, NULL, -1, GES_EDIT_MODE_ROLL,
-          GES_EDGE_START, 65) == TRUE);
-  fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_ROLL,
-          GES_EDGE_END, 65) == TRUE, 0);
+  fail_if (ges_container_edit (clip, NULL, -1, GES_EDIT_MODE_ROLL,
+          GES_EDGE_START, 65));
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Snaping to edge, so no move */
   g_object_set (timeline, "snapping-distance", (guint64) 3, NULL);
-  fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_TRIM,
-          GES_EDGE_END, 27) == TRUE);
+  fail_if (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_TRIM,
+          GES_EDGE_END, 27));
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Snaping to edge, so no move */
-  fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_TRIM,
-          GES_EDGE_END, 27) == TRUE);
+  fail_if (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_TRIM,
+          GES_EDGE_END, 27));
 
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
