@@ -43,7 +43,6 @@ static const char GST_PLUGINS_BASE_VERSION[] = VERSION;
 #define GST_CD_PARANOIA_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CD_PARANOIA_SRC,GstCdParanoiaSrcClass))
 #define GST_IS_CD_PARANOIA_SRC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CD_PARANOIA_SRC))
 #define GST_IS_CD_PARANOIA_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CD_PARANOIA_SRC))
-#define GST_CD_PARANOIA_SRC_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_CDDA_BASAE_SRC, GstCdParanoiaSrcClass))
 
 typedef struct _GstCdParanoiaSrc GstCdParanoiaSrc;
 typedef struct _GstCdParanoiaSrcClass GstCdParanoiaSrcClass;
