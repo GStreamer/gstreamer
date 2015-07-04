@@ -18,6 +18,26 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-rtph261depay
+ * @see_also: rtph261pay
+ *
+ * Extract encoded H.261 video frames from RTP packets according to RFC 4587.
+ * For detailed information see: https://www.rfc-editor.org/rfc/rfc4587.txt
+ *
+ * The depayloader takes an RTP packet and extracts its H.261 stream. It
+ * aggregates the extracted stream until a complete frame is received before
+ * it pushes it downstream.
+ *
+ * <refsect2>
+ * <title>Example pipeline</title>
+ * |[
+ * gst-launch-1.0 udpsrc caps='application/x-rtp, payload=31' ! rtph261depay ! avdec_h261 ! autovideosink
+ * ]| This example pipeline will depayload and decode an RTP H.261 video stream.
+ * Refer to the rtph261pay example to create the RTP stream.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

@@ -1745,6 +1745,36 @@ gst_rtp_bv_pay_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-rtph261depay</FILE>
+<TITLE>rtph261depay</TITLE>
+GstRtpH261Depay
+<SUBSECTION Standard>
+GstRtpH261DepayClass
+GST_RTP_H261_DEPAY
+GST_IS_RTP_H261_DEPAY
+GST_TYPE_RTP_H261_DEPAY
+GST_RTP_H261_DEPAY_CLASS
+GST_IS_RTP_H261_DEPAY_CLASS
+gst_rtp_h261_depay_plugin_init
+gst_rtp_h261_depay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rtph261pay</FILE>
+<TITLE>rtph261pay</TITLE>
+GstRtpH261Pay
+<SUBSECTION Standard>
+GstRtpH261PayClass
+GST_RTP_H261_PAY
+GST_IS_RTP_H261_PAY
+GST_TYPE_RTP_H261_PAY
+GST_RTP_H261_PAY_CLASS
+GST_IS_RTP_H261_PAY_CLASS
+gst_rtp_h261_pay_plugin_init
+gst_rtp_h261_pay_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rtpL16depay</FILE>
 <TITLE>rtpL16depay</TITLE>
 GstRtpL16Depay

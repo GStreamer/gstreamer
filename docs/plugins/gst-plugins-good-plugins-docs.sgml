@@ -134,6 +134,8 @@
     <xi:include href="xml/element-rtpamrpay.xml" />
     <xi:include href="xml/element-rtpbvdepay.xml" />
     <xi:include href="xml/element-rtpbvpay.xml" />
+    <xi:include href="xml/element-rtph261depay.xml" />
+    <xi:include href="xml/element-rtph261pay.xml" />
     <xi:include href="xml/element-rtpL16depay.xml" />
     <xi:include href="xml/element-rtpL16pay.xml" />
     <xi:include href="xml/element-rtpj2kpay.xml" />

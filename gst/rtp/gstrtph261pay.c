@@ -18,6 +18,32 @@
  *
  */
 
+/**
+ * SECTION:element-rtph261pay
+ * @see_also: rtph261depay
+ *
+ * Payload encoded H.261 video frames into RTP packets according to RFC 4587.
+ * For detailed information see: https://www.rfc-editor.org/rfc/rfc4587.txt
+ *
+ * The payloader takes a H.261 frame, parses it and splits it into fragments
+ * on MB boundaries in order to match configured MTU size. For each fragment
+ * an RTP packet is constructed with an RTP packet header followed by the
+ * fragment. In addition the payloader will make sure the packetized H.261
+ * stream appears as a continuous bit-stream after depacketization by shifting
+ * the encoded bit-stream of a frame to align with the last significant bit of
+ * the previous frame. This helps interoperability in the case where the
+ * encoder does not produce a continuous bit-stream but the decoder requires
+ * it.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 videotestsrc ! avenc_h261 ! rtph261pay ! udpsink
+ * ]| This will encode a test video and payload it. Refer to the rtph261depay
+ * example to depayload and play the RTP stream.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
