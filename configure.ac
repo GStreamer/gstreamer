@@ -805,14 +805,14 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
 #endif
-# ifdef __APPLE__
+# ifdef HAVE_IOS
 #  include <OpenGLES/ES2/gl.h>
 #  include <OpenGLES/ES2/glext.h>
 # else
 #  include <GLES2/gl2.h>
 #  include <GLES2/gl2ext.h>
 # endif
-# if __APPLE__
+# ifdef __APPLE__
 #  include <OpenGL/OpenGL.h>
 #  include <OpenGL/gl.h>
 #  if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
@@ -999,12 +999,6 @@ case $host in
       if test "x$NEED_WGL" = "xyes"; then
         AC_MSG_ERROR([WGL is not available on Mac OS X])
       fi
-      if test "x$NEED_EGL" = "xyes"; then
-        AC_MSG_ERROR([EGL is not available on Mac OS X])
-      fi
-      if test "x$NEED_GLES2" = "xyes"; then
-        AC_MSG_ERROR([OpenGL|ES 2.0 is not supported on your platform yet])
-      fi
 
       if test "x$NEED_COCOA" != "xno"; then
         GL_LIBS="$LIBS -framework OpenGL -framework Cocoa -framework QuartzCore -framework CoreFoundation"
@@ -1028,6 +1022,24 @@ case $host in
             GL_LIBS="$GL_LIBS -lGL"
           fi
           USE_OPENGL=yes
+        fi
+      fi
+
+      if test "x$HAVE_EGL" = "xyes"; then
+        if test "x$NEED_EGL" != "xno"; then
+          if test "x$HAVE_WINDOW_X11" = "xyes"; then
+            GL_LIBS="$GL_LIBS -lEGL $EGL_LIBS"
+            GL_CFLAGS="$GL_CFLAGS $EGL_CFLAGS"
+            USE_EGL=yes
+          fi
+        fi
+      fi
+
+      dnl OpenGL|ES 2.0
+      if test "x$HAVE_GLES2" = "xyes"; then
+        if test "x$NEED_GLES2" != "xno"; then
+          GL_LIBS="$GL_LIBS -lGLESv2"
+          USE_GLES2=yes
         fi
       fi
     fi
@@ -1237,7 +1249,7 @@ if test "x$USE_GLES2" = "xyes"; then
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
 #endif
-# ifdef __APPLE__
+# ifdef HAVE_IOS
 #  include <OpenGLES/ES2/gl.h>
 #  include <OpenGLES/ES2/glext.h>
 # else
@@ -1249,7 +1261,7 @@ fi
 
 if test "x$USE_OPENGL" = "xyes"; then
   GL_INCLUDES="$GL_INCLUDES
-# if __APPLE__
+# ifdef __APPLE__
 #  include <OpenGL/OpenGL.h>
 #  include <OpenGL/gl.h>
 # else
