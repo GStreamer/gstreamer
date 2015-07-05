@@ -50,6 +50,7 @@ libgstrtp_la_SOURCES = \
 	gstrtpj2kpay.c \
 	gstrtpjpegdepay.c \
 	gstrtpjpegpay.c \
+	gstrtpklvdepay.c \
 	gstrtpklvpay.c \
 	gstrtpL16depay.c \
 	gstrtpL16pay.c \
@@ -154,6 +155,7 @@ noinst_HEADERS =			\
 	gstrtpj2kpay.h \
 	gstrtpjpegdepay.h \
 	gstrtpjpegpay.h \
+	gstrtpklvdepay.h \
 	gstrtpklvpay.h \
 	gstrtpmp1sdepay.h \
 	gstrtpmp2tdepay.h \
