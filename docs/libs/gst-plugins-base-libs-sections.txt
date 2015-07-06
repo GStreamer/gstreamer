@@ -2431,6 +2431,9 @@ GST_VIDEO_INFO_COLORIMETRY
 GST_VIDEO_INFO_MULTIVIEW_FLAGS
 GST_VIDEO_INFO_MULTIVIEW_MODE
 gst_video_info_init
+gst_video_info_new
+gst_video_info_copy
+gst_video_info_free
 gst_video_info_set_format
 gst_video_info_from_caps
 gst_video_info_to_caps
@@ -2449,6 +2452,7 @@ GST_TYPE_VIDEO_MULTIVIEW_MODE
 gst_video_multiview_mode_get_type
 gst_video_multiview_flagset_get_type
 gst_video_multiview_frame_packing_get_type
+gst_video_info_get_type
 
 #video-frame.h
 <SUBSECTION>

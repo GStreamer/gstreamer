@@ -180,9 +180,13 @@ EXPORTS
 	gst_video_guess_framerate
 	gst_video_info_align
 	gst_video_info_convert
+	gst_video_info_copy
+	gst_video_info_free
 	gst_video_info_from_caps
+	gst_video_info_get_type
 	gst_video_info_init
 	gst_video_info_is_equal
+	gst_video_info_new
 	gst_video_info_set_format
 	gst_video_info_to_caps
 	gst_video_interlace_mode_from_string
