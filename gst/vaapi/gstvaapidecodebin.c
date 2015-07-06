@@ -224,8 +224,9 @@ gst_vaapi_decode_bin_set_property (GObject * object,
       break;
     case PROP_DEINTERLACE_METHOD:
       vaapidecbin->deinterlace_method = g_value_get_enum (value);
-      g_object_set (G_OBJECT (vaapidecbin->postproc), "deinterlace-method",
-          vaapidecbin->deinterlace_method, NULL);
+      if (vaapidecbin->postproc)
+        g_object_set (G_OBJECT (vaapidecbin->postproc), "deinterlace-method",
+            vaapidecbin->deinterlace_method, NULL);
       break;
     case PROP_DISABLE_VPP:
     {
@@ -457,6 +458,7 @@ gst_vaapi_decode_bin_init (GstVaapiDecodeBin * vaapidecbin)
   GstPad *element_pad, *ghost_pad;
 
   vaapidecbin->has_vpp = HAS_VPP_UNKNOWN;
+  vaapidecbin->deinterlace_method = DEFAULT_DEINTERLACE_METHOD;
 
   if (!gst_vaapi_decode_bin_configure (vaapidecbin))
     return;
