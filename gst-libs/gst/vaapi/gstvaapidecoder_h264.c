@@ -307,6 +307,7 @@ struct _GstVaapiFrameStore {
     GstVaapiPictureH264        *buffers[2];
     guint                       num_buffers;
     guint                       output_needed;
+    guint                       output_called;
 };
 
 static void
@@ -340,6 +341,7 @@ gst_vaapi_frame_store_new(GstVaapiPictureH264 *picture)
     fs->buffers[1]      = NULL;
     fs->num_buffers     = 1;
     fs->output_needed   = 0;
+    fs->output_called   = 0;
 
     if (picture->output_flag) {
         picture->output_needed = TRUE;
@@ -728,6 +730,7 @@ dpb_output(GstVaapiDecoderH264 *decoder, GstVaapiFrameStore *fs)
 
     g_return_val_if_fail(fs != NULL, FALSE);
 
+    fs->output_called++;
     if (!gst_vaapi_frame_store_is_complete(fs))
         return TRUE;
 
@@ -740,6 +743,7 @@ dpb_output(GstVaapiDecoderH264 *decoder, GstVaapiFrameStore *fs)
     }
 
     fs->output_needed = 0;
+    fs->output_called = 0;
     if (!picture)
         return TRUE;
     return gst_vaapi_picture_output(GST_VAAPI_PICTURE_CAST(picture));
@@ -1058,6 +1062,12 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
             return dpb_output(decoder, fs);
         }
     }
+
+    // Try to output the previous frame again if it was not submitted yet
+    // e.g. delayed while waiting for the next field, or a field gap was closed
+    fs = priv->prev_frames[picture->base.voc];
+    if (fs && fs->output_called)
+        dpb_output(decoder, fs);
 
     // Create new frame store, and split fields if necessary
     fs = gst_vaapi_frame_store_new(picture);
@@ -3088,8 +3098,9 @@ static GstVaapiPictureH264 *
 fill_picture_other_field_gap(GstVaapiDecoderH264 *decoder,
     GstVaapiPictureH264 *f0)
 {
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstVaapiPictureH264 *prev_picture, *f1;
-    gint prev_picture_index;
+    gint prev_frame_index;
     guint picture_structure;
 
     picture_structure = f0->base.structure;
@@ -3106,10 +3117,10 @@ fill_picture_other_field_gap(GstVaapiDecoderH264 *decoder,
     }
     GST_VAAPI_PICTURE_FLAG_SET(f0, GST_VAAPI_PICTURE_FLAG_ONEFIELD);
 
-    prev_picture_index = dpb_find_nearest_prev_poc(decoder, f0,
+    prev_frame_index = dpb_find_nearest_prev_poc(decoder, f0,
         picture_structure, &prev_picture);
-    if (prev_picture_index < 0)
-        return NULL;
+    if (prev_frame_index < 0)
+        goto error_find_field;
 
     f1 = gst_vaapi_picture_h264_new_field(f0);
     if (!f1)
@@ -3126,18 +3137,30 @@ fill_picture_other_field_gap(GstVaapiDecoderH264 *decoder,
         (GST_VAAPI_PICTURE_FLAG_SKIPPED |
          GST_VAAPI_PICTURE_FLAG_GHOST));
 
+    gst_vaapi_picture_h264_set_reference(f1, 0, FALSE);
+    gst_vaapi_picture_replace(&priv->current_picture, f1);
+    gst_vaapi_picture_unref(f1);
+
+    init_picture_ref_lists(decoder, f1);
+    init_picture_refs_pic_num(decoder, f1, NULL);
+    if (!exec_ref_pic_marking_sliding_window(decoder))
+        goto error_exec_ref_pic_marking;
     if (!dpb_add(decoder, f1))
         goto error_append_field;
-    gst_vaapi_picture_unref(f1);
     return f1;
 
     /* ERRORS */
+error_find_field:
+    GST_ERROR("failed to find field with POC nearest to %d", f0->base.poc);
+    return NULL;
 error_allocate_field:
     GST_ERROR("failed to allocate missing field for previous frame store");
     return NULL;
+error_exec_ref_pic_marking:
+    GST_ERROR("failed to execute reference picture marking process");
+    return NULL;
 error_append_field:
     GST_ERROR("failed to add missing field into previous frame store");
-    gst_vaapi_picture_unref(f1);
     return NULL;
 }
 
