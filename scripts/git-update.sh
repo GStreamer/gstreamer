@@ -18,8 +18,6 @@ EXTRA_MODULES="\
     gst-rtsp-server \
     gst-python"
 
-MAKE_FLAGS=
-
 tmp=${TMPDIR-/tmp}
 tmp=$tmp/git-update.$(date +%Y%m%d-%H%M-).$RANDOM.$RANDOM.$RANDOM.$$
 
@@ -93,7 +91,7 @@ build()
     fi
 
     echo "+ $1: make"
-    make $MAKE_FLAGS > "$tmp/$1-make.log" 2>&1
+    make > "$tmp/$1-make.log" 2>&1
     if test $? -ne 0
     then
       echo "$1: make [$tmp/$1-make.log]" >> $ERROR_LOG
@@ -129,8 +127,6 @@ else
 fi
 exit
 }
-
-MAKE_FLAGS=$@
 
 # build core and base plugins sequentially
 # exit if build fails (excluding checks)
