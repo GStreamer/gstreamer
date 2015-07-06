@@ -36,6 +36,15 @@ gst_meta_ximage_api_get_type (void)
   return type;
 }
 
+static gboolean
+gst_meta_ximage_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  /* ximage metadata can't be transformed or copied */
+
+  return FALSE;
+}
+
 const GstMetaInfo *
 gst_meta_ximage_get_info (void)
 {
@@ -45,7 +54,7 @@ gst_meta_ximage_get_info (void)
     const GstMetaInfo *meta =
         gst_meta_register (gst_meta_ximage_api_get_type (), "GstMetaXImageSrc",
         sizeof (GstMetaXImage), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
+        (GstMetaFreeFunction) NULL, gst_meta_ximage_transform);
     g_once_init_leave (&meta_ximage_info, meta);
   }
   return meta_ximage_info;
