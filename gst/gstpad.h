@@ -500,14 +500,18 @@ typedef enum
 
 /**
  * GstPadProbeReturn:
- * @GST_PAD_PROBE_OK: normal probe return value
+ * @GST_PAD_PROBE_OK: normal probe return value. This leaves the probe in
+ *        place, and defers decisions about dropping or passing data to other
+ *        probes, if any. If there are no other probes, the default behaviour
+ *        for the probe type applies (block for blocking probes, and pass for
+ *        non-blocking probes).
  * @GST_PAD_PROBE_DROP: drop data in data probes. For push mode this means that
- *        the data item is not sent downstream. For pull mode, it means that the
- *        data item is not passed upstream. In both cases, this result code
- *        means that #GST_FLOW_OK or %TRUE is returned to the caller.
- * @GST_PAD_PROBE_REMOVE: remove probe
- * @GST_PAD_PROBE_PASS: pass the data item in the block probe and block on
- *                         the next item
+ *        the data item is not sent downstream. For pull mode, it means that
+ *        the data item is not passed upstream. In both cases, no more probes
+ *        are called and #GST_FLOW_OK or %TRUE is returned to the caller.
+ * @GST_PAD_PROBE_REMOVE: remove this probe.
+ * @GST_PAD_PROBE_PASS: pass the data item in the block probe and block on the
+ *        next item.
  *
  * Different return values for the #GstPadProbeCallback.
  */
