@@ -94,6 +94,12 @@ else
 GTK3_DIR=
 endif
 
+if USE_QT
+QT_DIR=qt
+else
+QT_DIR=
+endif
+
 if USE_RESINDVD
  RESINDVD_DIR = resindvd
 else
@@ -443,6 +449,7 @@ SUBDIRS=\
 	$(RESINDVD_DIR) \
 	$(GL_DIR) \
 	$(GTK3_DIR) \
+	$(QT_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(FLITE_DIR) \
@@ -524,6 +531,7 @@ DIST_SUBDIRS = \
 	dts \
 	gl \
 	gtk \
+	qt \
 	modplug \
 	mimic \
 	mpeg2enc \

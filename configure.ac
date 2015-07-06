@@ -2602,6 +2602,30 @@ AG_GST_CHECK_FEATURE(GTK3, [Gtk+ elements], gtk, [
 ])
 AM_CONDITIONAL(USE_GTK3_GL, test "x$HAVE_GTK3_GL" = "xyes")
 
+dnl *** Qt ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_QT, true)
+AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
+  PKG_CHECK_MODULES(QT, Qt5Core Qt5Gui Qt5Quick, [
+      AC_CHECK_PROGS(MOC, [moc-qt5 moc])
+      AC_CHECK_PROGS(UIC, [uic-qt5 uic])
+      AC_CHECK_PROGS(RCC, [rcc])
+      if test "x$MOC" = "x" || test "x$UIC" = "x" || test "x$RCC" = "x"; then
+        AC_MSG_WARN([One of the required qt build programs was not found])
+        HAVE_QT="no"
+      else
+        HAVE_QT="yes"
+        PKG_CHECK_MODULES(QT_X11, Qt5X11Extras, [
+            QT_CFLAGS="$QT_CFLAGS $QT_X11_CFLAGS"
+            QT_LIBS="$QT_LIBS $QT_X11_LIBS"
+            AC_SUBST([QT_CFLAGS])
+            AC_SUBST([QT_LIBS])
+        ], [])
+      fi
+  ], [
+      HAVE_QT="no"
+  ])
+])
+
 dnl *** libvisual ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
 AG_GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization library], libvisual, [
@@ -3032,6 +3056,7 @@ AM_CONDITIONAL(USE_OPENJPEG, false)
 AM_CONDITIONAL(USE_OPENNI2, false)
 AM_CONDITIONAL(USE_OPUS, false)
 AM_CONDITIONAL(USE_PVR, false)
+AM_CONDITIONAL(USE_QT, false)
 AM_CONDITIONAL(USE_LIBVISUAL, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
@@ -3339,6 +3364,7 @@ ext/openh264/Makefile
 ext/openjpeg/Makefile
 ext/openni2/Makefile
 ext/opus/Makefile
+ext/qt/Makefile
 ext/rsvg/Makefile
 ext/resindvd/Makefile
 ext/rtmp/Makefile
