@@ -416,16 +416,15 @@ gst_curl_ssh_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
     bcsink->error = g_strdup_printf ("failed to set SSH_KEYFUNCTION callback: "
         "%s", curl_easy_strerror (curl_err));
     return FALSE;
-  } else {
-    /* SSH_KEYFUNCTION callback successfully installed so go on and
-     * set the '*clientp' parameter as well */
-    if ((curl_err =
-            curl_easy_setopt (bcsink->curl, CURLOPT_SSH_KEYDATA,
-                sink)) != CURLE_OK) {
-      bcsink->error = g_strdup_printf ("failed to set CURLOPT_SSH_KEYDATA: %s",
-          curl_easy_strerror (curl_err));
-      return FALSE;
-    }
+  }
+  /* SSH_KEYFUNCTION callback successfully installed so go on and
+   * set the '*clientp' parameter as well */
+  if ((curl_err =
+          curl_easy_setopt (bcsink->curl, CURLOPT_SSH_KEYDATA,
+              sink)) != CURLE_OK) {
+    bcsink->error = g_strdup_printf ("failed to set CURLOPT_SSH_KEYDATA: %s",
+        curl_easy_strerror (curl_err));
+    return FALSE;
   }
 
   return TRUE;
