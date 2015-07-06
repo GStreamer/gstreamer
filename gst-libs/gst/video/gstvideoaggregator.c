@@ -866,7 +866,7 @@ gst_videoaggregator_pad_sink_getcaps (GstPad * pad, GstVideoAggregator * vagg,
         "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
     gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
-        NULL);
+        "pixel-aspect-ratio", NULL);
   }
 
   if (filter) {
@@ -1894,7 +1894,7 @@ gst_videoaggregator_pad_sink_acceptcaps (GstPad * pad,
         "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
     gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
-        NULL);
+        "pixel-aspect-ratio", NULL);
   }
 
   modified_caps = gst_caps_intersect (accepted_caps, template_caps);
