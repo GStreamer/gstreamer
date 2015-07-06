@@ -391,7 +391,7 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
     {
       GstNavigationMessageType mtype = gst_navigation_message_get_type (msg);
       if (mtype == GST_NAVIGATION_MESSAGE_EVENT) {
-        GstEvent *ev;
+        GstEvent *ev = NULL;
 
         if (gst_navigation_message_parse_event (msg, &ev)) {
           GstNavigationEventType e_type = gst_navigation_event_get_type (ev);
@@ -439,6 +439,8 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
               break;
           }
         }
+        if (ev)
+          gst_event_unref (ev);
       }
       break;
     }
