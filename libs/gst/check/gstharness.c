@@ -30,6 +30,7 @@
  * The basic structure of #GstHarness is two "floating" #GstPads, that connects
  * to the harnessed #GstElement src and sink #GstPads like so:
  *
+ * <programlisting>
  *           __________________________
  *  _____   |  _____            _____  |   _____
  * |     |  | |     |          |     | |  |     |
@@ -37,6 +38,7 @@
  * |_____|  | |_____|          |_____| |  |_____|
  *          |__________________________|
  *
+ * </programlisting>
  *
  * With this, you can now simulate any environment the #GstElement might find
  * itself in. By specifying the #GstCaps of the harness #GstPads, using
@@ -1875,7 +1877,7 @@ gst_harness_get_allocator (GstHarness * h, GstAllocator ** allocator,
 
 
 /**
- * gst_harness_get_allocator:
+ * gst_harness_set_propose_allocator:
  * @h: a #GstHarness
  * @allocator: (allow-none) (transfer full): a #GstAllocator
  * @params: (allow-none) (transfer none): a #GstAllocationParams
@@ -2225,6 +2227,8 @@ gst_harness_find_element (GstHarness * h, const gchar * element_name)
  * @h: a #GstHarness
  * @element_name: a #gchar with a #GstElementFactory name
  * @first_property_name: a #gchar with the first property name
+ * @...: value for the first property, followed optionally by more
+ *  name/value pairs, followed by %NULL
  *
  * A convenience function to allows you to call g_object_set on a #GstElement
  * that are residing inside the #GstHarness, by using normal g_object_set
@@ -2251,6 +2255,8 @@ gst_harness_set (GstHarness * h,
  * @h: a #GstHarness
  * @element_name: a #gchar with a #GstElementFactory name
  * @first_property_name: a #gchar with the first property name
+ * @...: return location for the first property, followed optionally by more
+ *  name/return location pairs, followed by %NULL
  *
  * A convenience function to allows you to call g_object_get on a #GstElement
  * that are residing inside the #GstHarness, by using normal g_object_get

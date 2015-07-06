@@ -26,10 +26,28 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstHarness GstHarness;
-typedef struct _GstHarnessPrivate GstHarnessPrivate;
+/**
+ * GstHarnessThread:
+ *
+ * Opaque handle representing a GstHarness stress testing thread.
+ *
+ * Since: 1.6
+ */
 typedef struct _GstHarnessThread GstHarnessThread;
 
+typedef struct _GstHarness GstHarness;
+typedef struct _GstHarnessPrivate GstHarnessPrivate;
+
+/**
+ * GstHarness:
+ * @element: the element inside the harness
+ * @srcpad: the internal harness source pad
+ * @sinkpad: the internal harness sink pad
+ * @src_harness: the source (input) harness (if any)
+ * @sink_harness: the sink (output) harness (if any)
+ *
+ * Since: 1.6
+ */
 struct _GstHarness {
   GstElement * element;
 
@@ -39,6 +57,7 @@ struct _GstHarness {
   GstHarness * src_harness;
   GstHarness * sink_harness;
 
+  /*< private >*/
   GstHarnessPrivate * priv;
 };
 

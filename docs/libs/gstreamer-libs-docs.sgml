@@ -90,6 +90,7 @@
       <xi:include href="xml/gstcheck.xml" />
       <xi:include href="xml/gstcheckbufferstraw.xml" />
       <xi:include href="xml/gstcheckconsistencychecker.xml" />
+      <xi:include href="xml/gstharness.xml" />
       <xi:include href="xml/gsttestclock.xml" />
     </chapter>
   </part>
