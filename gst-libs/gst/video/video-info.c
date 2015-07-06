@@ -29,6 +29,61 @@
 #include "video-info.h"
 #include "video-tile.h"
 
+/**
+ * gst_video_info_copy:
+ * @info: a #GstVideoInfo
+ *
+ * Copy a GstVideoInfo structure.
+ *
+ * Returns: a new #GstVideoInfo. free with gst_video_info_free.
+ *
+ * Since: 1.6
+ */
+GstVideoInfo *
+gst_video_info_copy (const GstVideoInfo * info)
+{
+  return g_slice_dup (GstVideoInfo, info);
+}
+
+/**
+ * gst_video_info_free:
+ * @info: a #GstVideoInfo
+ *
+ * Free a GstVideoInfo structure previously allocated with gst_video_info_new()
+ * or gst_video_info_copy().
+ *
+ * Since: 1.6
+ */
+void
+gst_video_info_free (GstVideoInfo * info)
+{
+  g_slice_free (GstVideoInfo, info);
+}
+
+G_DEFINE_BOXED_TYPE (GstVideoInfo, gst_video_info,
+    (GBoxedCopyFunc) gst_video_info_copy, (GBoxedFreeFunc) gst_video_info_free);
+
+/**
+ * gst_video_info_new:
+ *
+ * Allocate a new #GstVideoInfo that is also initialized with
+ * gst_video_info_init().
+ *
+ * Returns: a new #GstVideoInfo. free with gst_video_info_free().
+ *
+ * Since: 1.6
+ */
+GstVideoInfo *
+gst_video_info_new (void)
+{
+  GstVideoInfo *info;
+
+  info = g_slice_new (GstVideoInfo);
+  gst_video_info_init (info);
+
+  return info;
+}
+
 static int fill_planes (GstVideoInfo * info);
 
 /**

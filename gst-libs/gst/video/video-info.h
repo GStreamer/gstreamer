@@ -287,6 +287,8 @@ struct _GstVideoInfo {
   } ABI;
 };
 
+GType gst_video_info_get_type            (void);
+
 /* general info */
 #define GST_VIDEO_INFO_FORMAT(i)         (GST_VIDEO_FORMAT_INFO_FORMAT((i)->finfo))
 #define GST_VIDEO_INFO_NAME(i)           (GST_VIDEO_FORMAT_INFO_NAME((i)->finfo))
@@ -335,26 +337,29 @@ struct _GstVideoInfo {
 #define GST_VIDEO_INFO_COMP_PSTRIDE(i,c) GST_VIDEO_FORMAT_INFO_PSTRIDE((i)->finfo,(c))
 #define GST_VIDEO_INFO_COMP_POFFSET(i,c) GST_VIDEO_FORMAT_INFO_POFFSET((i)->finfo,(c))
 
-void         gst_video_info_init        (GstVideoInfo *info);
+GstVideoInfo * gst_video_info_new         (void);
+void           gst_video_info_init        (GstVideoInfo *info);
+GstVideoInfo * gst_video_info_copy        (const GstVideoInfo *info);
+void           gst_video_info_free        (GstVideoInfo *info);
 
-void         gst_video_info_set_format  (GstVideoInfo *info, GstVideoFormat format,
-                                         guint width, guint height);
+void           gst_video_info_set_format  (GstVideoInfo *info, GstVideoFormat format,
+                                           guint width, guint height);
 
-gboolean     gst_video_info_from_caps   (GstVideoInfo *info, const GstCaps  * caps);
+gboolean       gst_video_info_from_caps   (GstVideoInfo *info, const GstCaps  * caps);
 
-GstCaps *    gst_video_info_to_caps     (GstVideoInfo *info);
+GstCaps *      gst_video_info_to_caps     (GstVideoInfo *info);
 
-gboolean     gst_video_info_convert     (GstVideoInfo *info,
-                                         GstFormat     src_format,
-                                         gint64        src_value,
-                                         GstFormat     dest_format,
-                                         gint64       *dest_value);
-gboolean     gst_video_info_is_equal    (const GstVideoInfo *info,
-                     const GstVideoInfo *other);
+gboolean       gst_video_info_convert     (GstVideoInfo *info,
+                                           GstFormat     src_format,
+                                           gint64        src_value,
+                                           GstFormat     dest_format,
+                                           gint64       *dest_value);
+gboolean       gst_video_info_is_equal    (const GstVideoInfo *info,
+                                           const GstVideoInfo *other);
 
 #include <gst/video/video.h>
 
-void         gst_video_info_align       (GstVideoInfo * info, GstVideoAlignment * align);
+void           gst_video_info_align       (GstVideoInfo * info, GstVideoAlignment * align);
 
 
 G_END_DECLS
