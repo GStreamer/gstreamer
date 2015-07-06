@@ -53,7 +53,7 @@ GST_START_TEST (dash_mpdparser_validsimplempd)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\"> </MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\"> </MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -80,21 +80,21 @@ GST_START_TEST (dash_mpdparser_mpd)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
-      " schemaLocation=\"TestSchemaLocation\""
-      " xmlns:xsi=\"TestNamespaceXSI\""
-      " xmlns:ext=\"TestNamespaceEXT\""
-      " id=\"testId\""
-      " type=\"static\""
-      " availabilityStartTime=\"2015-03-24T1:10:50\""
-      " availabilityEndTime=\"2015-03-24T1:10:50\""
-      " mediaPresentationDuration=\"P0Y1M2DT12H10M20.5S\""
-      " minimumUpdatePeriod=\"P0Y1M2DT12H10M20.5S\""
-      " minBufferTime=\"P0Y1M2DT12H10M20.5S\""
-      " timeShiftBufferDepth=\"P0Y1M2DT12H10M20.5S\""
-      " suggestedPresentationDelay=\"P0Y1M2DT12H10M20.5S\""
-      " maxSegmentDuration=\"P0Y1M2DT12H10M20.5S\""
-      " maxSubsegmentDuration=\"P0Y1M2DT12H10M20.5S\"></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      "     schemaLocation=\"TestSchemaLocation\""
+      "     xmlns:xsi=\"TestNamespaceXSI\""
+      "     xmlns:ext=\"TestNamespaceEXT\""
+      "     id=\"testId\""
+      "     type=\"static\""
+      "     availabilityStartTime=\"2015-03-24T1:10:50\""
+      "     availabilityEndTime=\"2015-03-24T1:10:50\""
+      "     mediaPresentationDuration=\"P0Y1M2DT12H10M20.5S\""
+      "     minimumUpdatePeriod=\"P0Y1M2DT12H10M20.5S\""
+      "     minBufferTime=\"P0Y1M2DT12H10M20.5S\""
+      "     timeShiftBufferDepth=\"P0Y1M2DT12H10M20.5S\""
+      "     suggestedPresentationDelay=\"P0Y1M2DT12H10M20.5S\""
+      "     maxSegmentDuration=\"P0Y1M2DT12H10M20.5S\""
+      "     maxSubsegmentDuration=\"P0Y1M2DT12H10M20.5S\"></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -164,12 +164,13 @@ GST_START_TEST (dash_mpdparser_programInformation)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<ProgramInformation lang=\"en\""
-      " moreInformationURL=\"TestMoreInformationUrl\">"
-      "<Title>TestTitle</Title>"
-      "<Source>TestSource</Source>"
-      "<Copyright>TestCopyright</Copyright> </ProgramInformation> </MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <ProgramInformation lang=\"en\""
+      "                      moreInformationURL=\"TestMoreInformationUrl\">"
+      "    <Title>TestTitle</Title>"
+      "    <Source>TestSource</Source>"
+      "    <Copyright>TestCopyright</Copyright>"
+      "  </ProgramInformation> </MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -200,9 +201,9 @@ GST_START_TEST (dash_mpdparser_baseURL)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<BaseURL serviceLocation=\"TestServiceLocation\""
-      " byteRange=\"TestByteRange\">TestBaseURL</BaseURL></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <BaseURL serviceLocation=\"TestServiceLocation\""
+      "     byteRange=\"TestByteRange\">TestBaseURL</BaseURL></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -230,8 +231,8 @@ GST_START_TEST (dash_mpdparser_location)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Location>TestLocation</Location></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Location>TestLocation</Location></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -257,8 +258,8 @@ GST_START_TEST (dash_mpdparser_metrics)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Metrics metrics=\"TestMetric\"></Metrics></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Metrics metrics=\"TestMetric\"></Metrics></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -285,9 +286,11 @@ GST_START_TEST (dash_mpdparser_metrics_range)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Metrics><Range starttime=\"P0Y1M2DT12H10M20.5S\""
-      " duration=\"P0Y1M2DT12H10M20.1234567S\"></Range></Metrics></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Metrics>"
+      "    <Range starttime=\"P0Y1M2DT12H10M20.5S\""
+      "           duration=\"P0Y1M2DT12H10M20.1234567S\">"
+      "    </Range></Metrics></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -318,8 +321,8 @@ GST_START_TEST (dash_mpdparser_metrics_reporting)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Metrics><Reporting></Reporting></Metrics></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Metrics><Reporting></Reporting></Metrics></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -345,10 +348,11 @@ GST_START_TEST (dash_mpdparser_period)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period id=\"TestId\" start=\"P0Y1M2DT12H10M20.1234567S\""
-      " duration=\"P0Y1M2DT12H10M20.7654321S\""
-      " bitstreamSwitching=\"true\"></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period id=\"TestId\""
+      "          start=\"P0Y1M2DT12H10M20.1234567S\""
+      "          duration=\"P0Y1M2DT12H10M20.7654321S\""
+      "          bitstreamSwitching=\"true\"></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -380,9 +384,11 @@ GST_START_TEST (dash_mpdparser_period_baseURL)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><BaseURL serviceLocation=\"TestServiceLocation\""
-      " byteRange=\"TestByteRange\">TestBaseURL</BaseURL></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <BaseURL serviceLocation=\"TestServiceLocation\""
+      "             byteRange=\"TestByteRange\">TestBaseURL</BaseURL>"
+      "  </Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -412,11 +418,13 @@ GST_START_TEST (dash_mpdparser_period_segmentBase)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentBase timescale=\"123456\""
-      " presentationTimeOffset=\"123456789\""
-      " indexRange=\"100-200\""
-      " indexRangeExact=\"true\"></SegmentBase></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentBase timescale=\"123456\""
+      "                 presentationTimeOffset=\"123456789\""
+      "                 indexRange=\"100-200\""
+      "                 indexRangeExact=\"true\">"
+      "    </SegmentBase></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -449,10 +457,12 @@ GST_START_TEST (dash_mpdparser_period_segmentBase_initialization)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentBase><Initialisation"
-      " sourceURL=\"TestSourceURL\""
-      " range=\"100-200\"></Initialisation></SegmentBase></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentBase>"
+      "      <Initialisation sourceURL=\"TestSourceURL\""
+      "                      range=\"100-200\">"
+      "      </Initialisation></SegmentBase></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -484,10 +494,12 @@ GST_START_TEST (dash_mpdparser_period_segmentBase_representationIndex)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentBase><RepresentationIndex"
-      " sourceURL=\"TestSourceURL\""
-      " range=\"100-200\"></RepresentationIndex></SegmentBase></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentBase>"
+      "      <RepresentationIndex sourceURL=\"TestSourceURL\""
+      "                           range=\"100-200\">"
+      "      </RepresentationIndex></SegmentBase></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -518,8 +530,8 @@ GST_START_TEST (dash_mpdparser_period_segmentList)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentList></SegmentList></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period><SegmentList></SegmentList></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -548,9 +560,11 @@ GST_START_TEST (dash_mpdparser_period_segmentList_multipleSegmentBaseType)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentList duration=\"10\" startNumber=\"11\">"
-      "</SegmentList></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentList duration=\"10\""
+      "                 startNumber=\"11\">"
+      "    </SegmentList></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -583,11 +597,13 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentList timescale=\"10\""
-      " presentationTimeOffset=\"11\""
-      " indexRange=\"20-21\""
-      " indexRangeExact=\"false\"></SegmentList></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentList timescale=\"10\""
+      "                 presentationTimeOffset=\"11\""
+      "                 indexRange=\"20-21\""
+      "                 indexRangeExact=\"false\">"
+      "    </SegmentList></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -624,9 +640,11 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentList><SegmentTimeline "
-      " ></SegmentTimeline></SegmentList></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentList>"
+      "      <SegmentTimeline>"
+      "      </SegmentTimeline></SegmentList></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -660,9 +678,12 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentList><SegmentTimeline><S t=\"1\" d=\"2\" r=\"3\">"
-      "</S></SegmentTimeline></SegmentList></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentList>"
+      "      <SegmentTimeline>"
+      "        <S t=\"1\" d=\"2\" r=\"3\">"
+      "        </S></SegmentTimeline></SegmentList></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -698,10 +719,12 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentList><BitstreamSwitching"
-      " sourceURL=\"TestSourceURL\" range=\"100-200\""
-      "></BitstreamSwitching></SegmentList></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentList>"
+      "      <BitstreamSwitching sourceURL=\"TestSourceURL\""
+      "                          range=\"100-200\">"
+      "      </BitstreamSwitching></SegmentList></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -734,11 +757,14 @@ GST_START_TEST (dash_mpdparser_period_segmentList_segmentURL)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentList><SegmentURL"
-      " media=\"TestMedia\" mediaRange=\"100-200\""
-      " index=\"TestIndex\" indexRange=\"300-400\""
-      "></SegmentURL></SegmentList></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentList>"
+      "      <SegmentURL media=\"TestMedia\""
+      "                  mediaRange=\"100-200\""
+      "                  index=\"TestIndex\""
+      "                  indexRange=\"300-400\">"
+      "      </SegmentURL></SegmentList></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -772,12 +798,13 @@ GST_START_TEST (dash_mpdparser_period_segmentTemplate)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentTemplate"
-      " media=\"TestMedia\" index=\"TestIndex\""
-      " initialization=\"TestInitialization\""
-      " bitstreamSwitching=\"TestBitstreamSwitching\""
-      "></SegmentTemplate></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentTemplate media=\"TestMedia\""
+      "                     index=\"TestIndex\""
+      "                     initialization=\"TestInitialization\""
+      "                     bitstreamSwitching=\"TestBitstreamSwitching\">"
+      "    </SegmentTemplate></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -810,10 +837,11 @@ GST_START_TEST (dash_mpdparser_period_segmentTemplate_multipleSegmentBaseType)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentTemplate"
-      " duration=\"10\" startNumber=\"11\""
-      "></SegmentTemplate></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentTemplate duration=\"10\""
+      "                     startNumber=\"11\">"
+      "    </SegmentTemplate></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -846,11 +874,13 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentTemplate timescale=\"123456\""
-      " presentationTimeOffset=\"123456789\""
-      " indexRange=\"100-200\""
-      " indexRangeExact=\"true\"></SegmentTemplate></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentTemplate timescale=\"123456\""
+      "                     presentationTimeOffset=\"123456789\""
+      "                     indexRange=\"100-200\""
+      "                     indexRangeExact=\"true\">"
+      "    </SegmentTemplate></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -887,9 +917,11 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentTemplate><SegmentTimeline>"
-      "</SegmentTimeline></SegmentTemplate></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentTemplate>"
+      "      <SegmentTimeline>"
+      "      </SegmentTimeline></SegmentTemplate></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -923,9 +955,12 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentTemplate><SegmentTimeline><S t=\"1\" d=\"2\" r=\"3\">"
-      "</S></SegmentTimeline></SegmentTemplate></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentTemplate>"
+      "      <SegmentTimeline>"
+      "        <S t=\"1\" d=\"2\" r=\"3\">"
+      "        </S></SegmentTimeline></SegmentTemplate></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -961,10 +996,12 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><SegmentTemplate><BitstreamSwitching"
-      " sourceURL=\"TestSourceURL\" range=\"100-200\""
-      "></BitstreamSwitching></SegmentTemplate></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentTemplate>"
+      "      <BitstreamSwitching sourceURL=\"TestSourceURL\""
+      "                          range=\"100-200\">"
+      "      </BitstreamSwitching></SegmentTemplate></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -996,16 +1033,26 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet id=\"7\" group=\"8\" lang=\"en\""
-      " contentType=\"TestContentType\" par=\"4:3\""
-      " minBandwidth=\"100\" maxBandwidth=\"200\""
-      " minWidth=\"1000\" maxWidth=\"2000\""
-      " minHeight=\"1100\" maxHeight=\"2100\""
-      " minFrameRate=\"25/123\" maxFrameRate=\"26\""
-      " segmentAlignment=\"2\" subsegmentAlignment=\"false\""
-      " subsegmentStartsWithSAP=\"6\""
-      " bitstreamSwitching=\"false\"></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet id=\"7\""
+      "                   group=\"8\""
+      "                   lang=\"en\""
+      "                   contentType=\"TestContentType\""
+      "                   par=\"4:3\""
+      "                   minBandwidth=\"100\""
+      "                   maxBandwidth=\"200\""
+      "                   minWidth=\"1000\""
+      "                   maxWidth=\"2000\""
+      "                   minHeight=\"1100\""
+      "                   maxHeight=\"2100\""
+      "                   minFrameRate=\"25/123\""
+      "                   maxFrameRate=\"26\""
+      "                   segmentAlignment=\"2\""
+      "                   subsegmentAlignment=\"false\""
+      "                   subsegmentStartsWithSAP=\"6\""
+      "                   bitstreamSwitching=\"false\">"
+      "    </AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1055,20 +1102,23 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representationBase)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      " <Period><AdaptationSet profiles=\"TestProfiles\""
-      " width=\"100\" height=\"200\""
-      " sar=\"10:20\""
-      " frameRate=\"30/40\""
-      " audioSamplingRate=\"TestAudioSamplingRate\""
-      " mimeType=\"TestMimeType\""
-      " segmentProfiles=\"TestSegmentProfiles\""
-      " codecs=\"TestCodecs\""
-      " maximumSAPPeriod=\"3.4\""
-      " startWithSAP=\"0\""
-      " maxPlayoutRate=\"1.2\""
-      " codingDependency=\"false\""
-      " scanType=\"progressive\"></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet profiles=\"TestProfiles\""
+      "                   width=\"100\""
+      "                   height=\"200\""
+      "                   sar=\"10:20\""
+      "                   frameRate=\"30/40\""
+      "                   audioSamplingRate=\"TestAudioSamplingRate\""
+      "                   mimeType=\"TestMimeType\""
+      "                   segmentProfiles=\"TestSegmentProfiles\""
+      "                   codecs=\"TestCodecs\""
+      "                   maximumSAPPeriod=\"3.4\""
+      "                   startWithSAP=\"0\""
+      "                   maxPlayoutRate=\"1.2\""
+      "                   codingDependency=\"false\""
+      "                   scanType=\"progressive\">"
+      "    </AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1116,10 +1166,12 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><FramePacking"
-      " schemeIdUri=\"TestSchemeIdUri\" value=\"TestValue\""
-      " ></FramePacking></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <FramePacking schemeIdUri=\"TestSchemeIdUri\""
+      "                    value=\"TestValue\">"
+      "      </FramePacking></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1153,10 +1205,12 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><AudioChannelConfiguration"
-      " schemeIdUri=\"TestSchemeIdUri\" value=\"TestValue\""
-      " ></AudioChannelConfiguration></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <AudioChannelConfiguration schemeIdUri=\"TestSchemeIdUri\""
+      "                                 value=\"TestValue\">"
+      "      </AudioChannelConfiguration></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1191,10 +1245,12 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><ContentProtection"
-      " schemeIdUri=\"TestSchemeIdUri\" value=\"TestValue\""
-      " ></ContentProtection></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <ContentProtection schemeIdUri=\"TestSchemeIdUri\""
+      "                         value=\"TestValue\">"
+      "      </ContentProtection></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1227,10 +1283,12 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_accessibility)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Accessibility"
-      " schemeIdUri=\"TestSchemeIdUri\" value=\"TestValue\""
-      " ></Accessibility></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Accessibility schemeIdUri=\"TestSchemeIdUri\""
+      "                     value=\"TestValue\">"
+      "      </Accessibility></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1261,10 +1319,12 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_role)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Role"
-      " schemeIdUri=\"TestSchemeIdUri\" value=\"TestValue\""
-      " ></Role></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Role schemeIdUri=\"TestSchemeIdUri\""
+      "            value=\"TestValue\">"
+      "      </Role></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1295,10 +1355,12 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_rating)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Rating"
-      " schemeIdUri=\"TestSchemeIdUri\" value=\"TestValue\""
-      " ></Rating></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Rating schemeIdUri=\"TestSchemeIdUri\""
+      "              value=\"TestValue\">"
+      "      </Rating></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1329,10 +1391,12 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_viewpoint)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Viewpoint"
-      " schemeIdUri=\"TestSchemeIdUri\" value=\"TestValue\""
-      " ></Viewpoint></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Viewpoint schemeIdUri=\"TestSchemeIdUri\""
+      "                 value=\"TestValue\">"
+      "      </Viewpoint></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1363,10 +1427,14 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_contentComponent)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><ContentComponent"
-      " id=\"1\" lang=\"en\" contentType=\"TestContentType\" par=\"10:20\""
-      " ></ContentComponent></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <ContentComponent id=\"1\""
+      "                        lang=\"en\""
+      "                        contentType=\"TestContentType\""
+      "                        par=\"10:20\">"
+      "      </ContentComponent></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1402,10 +1470,14 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><ContentComponent><Accessibility"
-      " schemeIdUri=\"TestSchemeIdUri\" value=\"TestValue\""
-      " ></Accessibility></ContentComponent></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <ContentComponent>"
+      "        <Accessibility schemeIdUri=\"TestSchemeIdUri\""
+      "                       value=\"TestValue\">"
+      "        </Accessibility>"
+      "      </ContentComponent></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1439,10 +1511,13 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_contentComponent_role)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><ContentComponent><Role"
-      " schemeIdUri=\"TestSchemeIdUri\" value=\"TestValue\""
-      " ></Role></ContentComponent></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <ContentComponent>"
+      "        <Role schemeIdUri=\"TestSchemeIdUri\""
+      "              value=\"TestValue\">"
+      "        </Role></ContentComponent></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1476,10 +1551,14 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_contentComponent_rating)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><ContentComponent><Rating"
-      " schemeIdUri=\"TestSchemeIdUri\" value=\"TestValue\""
-      " ></Rating></ContentComponent></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <ContentComponent>"
+      "        <Rating schemeIdUri=\"TestSchemeIdUri\""
+      "                value=\"TestValue\">"
+      "        </Rating>"
+      "      </ContentComponent></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1513,10 +1592,14 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_contentComponent_viewpoint)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><ContentComponent><Viewpoint"
-      " schemeIdUri=\"TestSchemeIdUri\" value=\"TestValue\""
-      " ></Viewpoint></ContentComponent></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <ContentComponent>"
+      "        <Viewpoint schemeIdUri=\"TestSchemeIdUri\""
+      "                   value=\"TestValue\">"
+      "        </Viewpoint>"
+      "      </ContentComponent></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1549,10 +1632,12 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_baseURL)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><BaseURL"
-      " serviceLocation=\"TestServiceLocation\" byteRange=\"TestByteRange\""
-      " >TestBaseURL</BaseURL></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <BaseURL serviceLocation=\"TestServiceLocation\""
+      "               byteRange=\"TestByteRange\">TestBaseURL</BaseURL>"
+      "    </AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1584,13 +1669,14 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentBase)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><SegmentBase"
-      " timescale=\"123456\""
-      " presentationTimeOffset=\"123456789\""
-      " indexRange=\"100-200\""
-      " indexRangeExact=\"true\""
-      " ></SegmentBase></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <SegmentBase timescale=\"123456\""
+      "                   presentationTimeOffset=\"123456789\""
+      "                   indexRange=\"100-200\""
+      "                   indexRangeExact=\"true\">"
+      "      </SegmentBase></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1625,10 +1711,13 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentBase_initialization)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><SegmentBase><Initialisation"
-      " sourceURL=\"TestSourceURL\" range=\"100-200\""
-      "></Initialisation></SegmentBase></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <SegmentBase>"
+      "        <Initialisation sourceURL=\"TestSourceURL\""
+      "                        range=\"100-200\">"
+      "        </Initialisation></SegmentBase></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1662,10 +1751,14 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><SegmentBase><RepresentationIndex"
-      " sourceURL=\"TestSourceURL\" range=\"100-200\""
-      "></RepresentationIndex></SegmentBase></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <SegmentBase>"
+      "        <RepresentationIndex sourceURL=\"TestSourceURL\""
+      "                             range=\"100-200\">"
+      "        </RepresentationIndex>"
+      "      </SegmentBase></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1698,9 +1791,10 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentList)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><SegmentList"
-      "></SegmentList></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <SegmentList></SegmentList></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1730,12 +1824,14 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentTemplate)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><SegmentTemplate"
-      " media=\"TestMedia\" index=\"TestIndex\""
-      " initialization=\"TestInitialization\""
-      " bitstreamSwitching=\"TestBitstreamSwitching\""
-      "></SegmentTemplate></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <SegmentTemplate media=\"TestMedia\""
+      "                       index=\"TestIndex\""
+      "                       initialization=\"TestInitialization\""
+      "                       bitstreamSwitching=\"TestBitstreamSwitching\">"
+      "      </SegmentTemplate></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1769,14 +1865,15 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Representation"
-      " id=\"Test Id\""
-      " bandwidth=\"100\""
-      " qualityRanking=\"200\""
-      " dependencyId=\"one two three\""
-      " mediaStreamStructureId=\"\""
-      "></Representation></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Representation id=\"Test Id\""
+      "                      bandwidth=\"100\""
+      "                      qualityRanking=\"200\""
+      "                      dependencyId=\"one two three\""
+      "                      mediaStreamStructureId=\"\">"
+      "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1815,9 +1912,11 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Representation"
-      "></Representation></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Representation>"
+      "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1851,10 +1950,13 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation_baseURL)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Representation><BaseURL"
-      " serviceLocation=\"TestServiceLocation\" byteRange=\"TestByteRange\""
-      " >TestBaseURL</BaseURL></Representation></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Representation>"
+      "        <BaseURL serviceLocation=\"TestServiceLocation\""
+      "                 byteRange=\"TestByteRange\">TestBaseURL</BaseURL>"
+      "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1889,13 +1991,16 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Representation><SubRepresentation"
-      " level=\"100\""
-      " dependencyLevel=\"1 2 3\""
-      " bandwidth=\"200\""
-      " contentComponent=\"content1 content2\""
-      " ></SubRepresentation></Representation></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Representation>"
+      "        <SubRepresentation level=\"100\""
+      "                           dependencyLevel=\"1 2 3\""
+      "                           bandwidth=\"200\""
+      "                           contentComponent=\"content1 content2\">"
+      "        </SubRepresentation>"
+      "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1939,9 +2044,13 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Representation><SubRepresentation"
-      " ></SubRepresentation></Representation></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Representation>"
+      "        <SubRepresentation>"
+      "        </SubRepresentation>"
+      "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1977,9 +2086,13 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation_segmentBase)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Representation><SegmentBase"
-      " ></SegmentBase></Representation></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Representation>"
+      "        <SegmentBase>"
+      "        </SegmentBase>"
+      "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -2012,9 +2125,13 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation_segmentList)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Representation><SegmentList"
-      " ></SegmentList></Representation></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Representation>"
+      "        <SegmentList>"
+      "        </SegmentList>"
+      "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -2047,9 +2164,13 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><AdaptationSet><Representation><SegmentTemplate"
-      " ></SegmentTemplate></Representation></AdaptationSet></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <Representation>"
+      "        <SegmentTemplate>"
+      "        </SegmentTemplate>"
+      "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -2080,8 +2201,8 @@ GST_START_TEST (dash_mpdparser_period_subset)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "<Period><Subset contains=\"1 2 3\"></Subset></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period><Subset contains=\"1 2 3\"></Subset></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -2261,7 +2382,7 @@ GST_START_TEST (dash_mpdparser_no_end_tag)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\"> </NPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\"> </NPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -2305,12 +2426,12 @@ GST_START_TEST (dash_mpdparser_wrong_period_duration_inferred_from_next_period)
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
-      " availabilityStartTime=\"2015-03-24T0:0:0\""
-      " mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
-      "<Period id=\"Period0\" duration=\"P0Y0M0DT1H1M0S\"></Period>"
-      "<Period id=\"Period1\"></Period>"
-      "<Period id=\"Period2\" start=\"P0Y0M0DT0H0M10S\"></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      "     availabilityStartTime=\"2015-03-24T0:0:0\""
+      "     mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
+      "  <Period id=\"Period0\" duration=\"P0Y0M0DT1H1M0S\"></Period>"
+      "  <Period id=\"Period1\"></Period>"
+      "  <Period id=\"Period2\" start=\"P0Y0M0DT0H0M10S\"></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -2350,10 +2471,10 @@ GST_START_TEST
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
-      " availabilityStartTime=\"2015-03-24T0:0:0\""
-      " mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
-      "<Period id=\"Period0\" start=\"P0Y0M0DT4H0M0S\"></Period></MPD>";
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      "     availabilityStartTime=\"2015-03-24T0:0:0\""
+      "     mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
+      "  <Period id=\"Period0\" start=\"P0Y0M0DT4H0M0S\"></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
