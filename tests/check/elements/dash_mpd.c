@@ -59,8 +59,8 @@ GST_START_TEST (dash_mpdparser_validsimplempd)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   /* check that unset elements with default values are properly configured */
   assert_equals_int (mpdclient->mpd_node->type, GST_MPD_FILE_TYPE_STATIC);
 
@@ -100,7 +100,6 @@ GST_START_TEST (dash_mpdparser_mpd)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
 
   assert_equals_string (mpdclient->mpd_node->default_namespace,
@@ -176,8 +175,8 @@ GST_START_TEST (dash_mpdparser_programInformation)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   program =
       (GstProgramInformationNode *) mpdclient->mpd_node->ProgramInfo->data;
   assert_equals_string (program->lang, "en");
@@ -209,8 +208,8 @@ GST_START_TEST (dash_mpdparser_baseURL)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   baseURL = (GstBaseURL *) mpdclient->mpd_node->BaseURLs->data;
   assert_equals_string (baseURL->baseURL, "TestBaseURL");
   assert_equals_string (baseURL->serviceLocation, "TestServiceLocation");
@@ -238,8 +237,8 @@ GST_START_TEST (dash_mpdparser_location)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   location = (gchar *) mpdclient->mpd_node->Locations->data;
   assert_equals_string (location, "TestLocation");
 
@@ -265,10 +264,11 @@ GST_START_TEST (dash_mpdparser_metrics)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   metricsNode = (GstMetricsNode *) mpdclient->mpd_node->Metrics->data;
   assert_equals_string (metricsNode->metrics, "TestMetric");
+
   gst_mpd_client_free (mpdclient);
 }
 
@@ -293,8 +293,8 @@ GST_START_TEST (dash_mpdparser_metrics_range)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   metricsNode = (GstMetricsNode *) mpdclient->mpd_node->Metrics->data;
   assert_equals_pointer (metricsNode->metrics, NULL);
   metricsRangeNode = (GstMetricsRangeNode *) metricsNode->MetricsRanges->data;
@@ -325,8 +325,8 @@ GST_START_TEST (dash_mpdparser_metrics_reporting)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   metricsNode = (GstMetricsNode *) mpdclient->mpd_node->Metrics->data;
   assert_equals_pointer (metricsNode->metrics, NULL);
 
@@ -354,8 +354,8 @@ GST_START_TEST (dash_mpdparser_period)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   assert_equals_string (periodNode->id, "TestId");
   assert_equals_int64 (periodNode->start,
@@ -388,8 +388,8 @@ GST_START_TEST (dash_mpdparser_period_baseURL)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   baseURL = (GstBaseURL *) periodNode->BaseURLs->data;
   assert_equals_string (baseURL->baseURL, "TestBaseURL");
@@ -422,8 +422,8 @@ GST_START_TEST (dash_mpdparser_period_segmentBase)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentBase = periodNode->SegmentBase;
   assert_equals_uint64 (segmentBase->timescale, 123456);
@@ -458,8 +458,8 @@ GST_START_TEST (dash_mpdparser_period_segmentBase_initialization)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentBase = periodNode->SegmentBase;
   initialization = segmentBase->Initialization;
@@ -493,8 +493,8 @@ GST_START_TEST (dash_mpdparser_period_segmentBase_representationIndex)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentBase = periodNode->SegmentBase;
   representationIndex = segmentBase->RepresentationIndex;
@@ -525,8 +525,8 @@ GST_START_TEST (dash_mpdparser_period_segmentList)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentList = periodNode->SegmentList;
   fail_if (segmentList == NULL);
@@ -556,8 +556,8 @@ GST_START_TEST (dash_mpdparser_period_segmentList_multipleSegmentBaseType)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentList = periodNode->SegmentList;
   multSegBaseType = segmentList->MultSegBaseType;
@@ -593,8 +593,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentList = periodNode->SegmentList;
   multSegBaseType = segmentList->MultSegBaseType;
@@ -632,8 +632,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentList = periodNode->SegmentList;
   multSegBaseType = segmentList->MultSegBaseType;
@@ -668,8 +668,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentList = periodNode->SegmentList;
   multSegBaseType = segmentList->MultSegBaseType;
@@ -707,8 +707,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentList = periodNode->SegmentList;
   multSegBaseType = segmentList->MultSegBaseType;
@@ -744,8 +744,8 @@ GST_START_TEST (dash_mpdparser_period_segmentList_segmentURL)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentList = periodNode->SegmentList;
   segmentURL = (GstSegmentURLNode *) segmentList->SegmentURL->data;
@@ -783,8 +783,8 @@ GST_START_TEST (dash_mpdparser_period_segmentTemplate)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentTemplate = periodNode->SegmentTemplate;
   assert_equals_string (segmentTemplate->media, "TestMedia");
@@ -819,8 +819,8 @@ GST_START_TEST (dash_mpdparser_period_segmentTemplate_multipleSegmentBaseType)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentTemplate = periodNode->SegmentTemplate;
   multSegBaseType = segmentTemplate->MultSegBaseType;
@@ -856,8 +856,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentTemplate = periodNode->SegmentTemplate;
   multSegBaseType = segmentTemplate->MultSegBaseType;
@@ -895,8 +895,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentTemplate = periodNode->SegmentTemplate;
   multSegBaseType = segmentTemplate->MultSegBaseType;
@@ -931,8 +931,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentTemplate = periodNode->SegmentTemplate;
   multSegBaseType = segmentTemplate->MultSegBaseType;
@@ -970,8 +970,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   segmentTemplate = periodNode->SegmentTemplate;
   multSegBaseType = segmentTemplate->MultSegBaseType;
@@ -1011,8 +1011,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   assert_equals_uint64 (adaptationSet->id, 7);
@@ -1074,8 +1074,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representationBase)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representationBase = adaptationSet->RepresentationBase;
@@ -1125,8 +1125,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representationBase = adaptationSet->RepresentationBase;
@@ -1162,8 +1162,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representationBase = adaptationSet->RepresentationBase;
@@ -1200,8 +1200,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representationBase = adaptationSet->RepresentationBase;
@@ -1236,8 +1236,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_accessibility)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   accessibility = (GstDescriptorType *) adaptationSet->Accessibility->data;
@@ -1270,8 +1270,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_role)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   role = (GstDescriptorType *) adaptationSet->Role->data;
@@ -1304,8 +1304,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_rating)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   rating = (GstDescriptorType *) adaptationSet->Rating->data;
@@ -1338,8 +1338,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_viewpoint)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   viewpoint = (GstDescriptorType *) adaptationSet->Viewpoint->data;
@@ -1372,8 +1372,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_contentComponent)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   contentComponent = (GstContentComponentNode *)
@@ -1411,8 +1411,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   contentComponent = (GstContentComponentNode *)
@@ -1448,8 +1448,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_contentComponent_role)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   contentComponent = (GstContentComponentNode *)
@@ -1485,8 +1485,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_contentComponent_rating)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   contentComponent = (GstContentComponentNode *)
@@ -1522,8 +1522,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_contentComponent_viewpoint)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   contentComponent = (GstContentComponentNode *)
@@ -1558,8 +1558,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_baseURL)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   baseURL = (GstBaseURL *) adaptationSet->BaseURLs->data;
@@ -1596,8 +1596,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentBase)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   segmentBase = adaptationSet->SegmentBase;
@@ -1634,8 +1634,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentBase_initialization)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   segmentBase = adaptationSet->SegmentBase;
@@ -1671,8 +1671,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   segmentBase = adaptationSet->SegmentBase;
@@ -1706,8 +1706,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentList)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   segmentList = adaptationSet->SegmentList;
@@ -1741,8 +1741,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentTemplate)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   segmentTemplate = adaptationSet->SegmentTemplate;
@@ -1782,8 +1782,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representation = (GstRepresentationNode *)
@@ -1823,8 +1823,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representation = (GstRepresentationNode *)
@@ -1860,8 +1860,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation_baseURL)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representation = (GstRepresentationNode *)
@@ -1901,8 +1901,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representation = (GstRepresentationNode *)
@@ -1947,8 +1947,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representation = (GstRepresentationNode *)
@@ -1985,8 +1985,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation_segmentBase)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representation = (GstRepresentationNode *)
@@ -2020,8 +2020,8 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation_segmentList)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representation = (GstRepresentationNode *)
@@ -2055,8 +2055,8 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representation = (GstRepresentationNode *)
@@ -2087,8 +2087,8 @@ GST_START_TEST (dash_mpdparser_period_subset)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
+
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   subset = (GstSubsetNode *) periodNode->Subsets->data;
   assert_equals_uint64 (subset->size, 3);
@@ -2227,7 +2227,6 @@ GST_START_TEST (dash_mpdparser_missing_xml)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, FALSE);
 
   gst_mpd_client_free (mpdclient);
@@ -2247,7 +2246,6 @@ GST_START_TEST (dash_mpdparser_missing_mpd)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, FALSE);
 
   gst_mpd_client_free (mpdclient);
@@ -2269,7 +2267,6 @@ GST_START_TEST (dash_mpdparser_no_end_tag)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, FALSE);
 
   gst_mpd_client_free (mpdclient);
@@ -2290,7 +2287,6 @@ GST_START_TEST (dash_mpdparser_no_default_namespace)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, strlen (xml));
-
   assert_equals_int (ret, TRUE);
 
   gst_mpd_client_free (mpdclient);
@@ -2320,7 +2316,6 @@ GST_START_TEST (dash_mpdparser_wrong_period_duration_inferred_from_next_period)
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
 
   /* period_idx should be 0 and we should have no active periods */
@@ -2364,7 +2359,6 @@ GST_START_TEST
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
-
   assert_equals_int (ret, TRUE);
 
   /* period_idx should be 0 and we should have no active periods */
