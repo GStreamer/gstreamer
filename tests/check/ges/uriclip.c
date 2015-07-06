@@ -47,7 +47,7 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
 
   asset = ges_asset_request_finish (res, &error);
   ASSERT_OBJECT_REFCOUNT (asset, "1 for us + for the cache + 1 taken "
-      "by g_simple_async_result_complete_in_idle", 3);
+      "by g_task", 3);
   fail_unless (error == NULL);
   fail_if (asset == NULL);
   fail_if (g_strcmp0 (ges_asset_get_id (asset), av_uri));

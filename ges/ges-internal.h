@@ -134,7 +134,7 @@ G_GNUC_INTERNAL void
 ges_asset_set_id (GESAsset *asset, const gchar *id);
 
 G_GNUC_INTERNAL void
-ges_asset_cache_put (GESAsset * asset, GSimpleAsyncResult *res);
+ges_asset_cache_put (GESAsset * asset, GTask *task);
 
 G_GNUC_INTERNAL gboolean
 ges_asset_cache_set_loaded(GType extractable_type, const gchar * id, GError *error);

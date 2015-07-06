@@ -211,15 +211,14 @@ async_initable_init_async (GAsyncInitable * initable, gint io_priority,
     GCancellable * cancellable, GAsyncReadyCallback callback,
     gpointer user_data)
 {
-  GSimpleAsyncResult *simple;
+  GTask *task;
 
   GError *error = NULL;
   GESAsset *asset = GES_ASSET (initable);
 
-  simple = g_simple_async_result_new (G_OBJECT (asset),
-      callback, user_data, ges_asset_request_async);
+  task = g_task_new (asset, cancellable, callback, user_data);
 
-  ges_asset_cache_put (g_object_ref (asset), simple);
+  ges_asset_cache_put (g_object_ref (asset), task);
   switch (GES_ASSET_GET_CLASS (asset)->start_loading (asset, &error)) {
     case GES_ASSET_LOADING_ERROR:
     {
@@ -423,6 +422,13 @@ _free_entries (gpointer entry)
   g_slice_free (GESAssetCacheEntry, entry);
 }
 
+
+static void
+_gtask_return_true (GTask * task)
+{
+  g_task_return_boolean (task, TRUE);
+}
+
 /**
  * ges_asset_cache_lookup:
  *
@@ -450,14 +456,14 @@ ges_asset_cache_lookup (GType extractable_type, const gchar * id)
 }
 
 static void
-ges_asset_cache_append_result (GType extractable_type,
-    const gchar * id, GSimpleAsyncResult * res)
+ges_asset_cache_append_task (GType extractable_type,
+    const gchar * id, GTask * task)
 {
   GESAssetCacheEntry *entry = NULL;
 
   LOCK_CACHE;
   if ((entry = _lookup_entry (extractable_type, id)))
-    entry->results = g_list_append (entry->results, res);
+    entry->results = g_list_append (entry->results, task);
   UNLOCK_CACHE;
 }
 
@@ -496,9 +502,7 @@ ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
     /* In case of error we do not want to emit in idle as we need to recover
      * if possible */
     for (tmp = results; tmp; tmp = tmp->next) {
-      g_simple_async_result_set_from_error (G_SIMPLE_ASYNC_RESULT (tmp->data),
-          error);
-      g_simple_async_result_complete (G_SIMPLE_ASYNC_RESULT (tmp->data));
+      g_task_return_error (tmp->data, g_error_copy (error));
       gst_object_unref (tmp->data);
     }
 
@@ -507,8 +511,7 @@ ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
   } else {
     asset->priv->state = ASSET_INITIALIZED;
 
-    g_list_foreach (entry->results,
-        (GFunc) g_simple_async_result_complete_in_idle, NULL);
+    g_list_foreach (entry->results, (GFunc) _gtask_return_true, NULL);
     g_list_free_full (entry->results, gst_object_unref);
     entry->results = NULL;
     UNLOCK_CACHE;
@@ -518,7 +521,7 @@ ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
 }
 
 void
-ges_asset_cache_put (GESAsset * asset, GSimpleAsyncResult * res)
+ges_asset_cache_put (GESAsset * asset, GTask * task)
 {
   GType extractable_type;
   const gchar *asset_id;
@@ -545,14 +548,14 @@ ges_asset_cache_put (GESAsset * asset, GSimpleAsyncResult * res)
     entry = g_slice_new0 (GESAssetCacheEntry);
 
     entry->asset = asset;
-    if (res)
-      entry->results = g_list_prepend (entry->results, res);
+    if (task)
+      entry->results = g_list_prepend (entry->results, task);
     g_hash_table_insert (entries_table, (gpointer) g_strdup (asset_id),
         (gpointer) entry);
   } else {
-    if (res) {
-      GST_DEBUG ("%s already in cache, adding result %p", asset_id, res);
-      entry->results = g_list_prepend (entry->results, res);
+    if (task) {
+      GST_DEBUG ("%s already in cache, adding result %p", asset_id, task);
+      entry->results = g_list_prepend (entry->results, task);
     }
   }
   UNLOCK_CACHE;
@@ -854,8 +857,7 @@ ges_asset_request_async (GType extractable_type,
   /* Check if we already have a asset for this ID */
   asset = ges_asset_cache_lookup (extractable_type, real_id);
   if (asset) {
-    GSimpleAsyncResult *simple = g_simple_async_result_new (G_OBJECT (asset),
-        callback, user_data, ges_asset_request_async);
+    GTask *task = g_task_new (asset, NULL, callback, user_data);
 
     /* In the case of proxied asset, we will loop until we find the
      * last asset of the chain of proxied asset */
@@ -868,13 +870,13 @@ ges_asset_request_async (GType extractable_type,
               "using it");
 
           /* Takes its own references to @asset */
-          g_simple_async_result_complete_in_idle (simple);
+          g_task_return_boolean (task, TRUE);
 
           goto done;
         case ASSET_INITIALIZING:
           GST_DEBUG_OBJECT (asset, "Asset in cache and but not "
               "initialized, setting a new callback");
-          ges_asset_cache_append_result (extractable_type, real_id, simple);
+          ges_asset_cache_append_task (extractable_type, real_id, task);
 
           goto done;
         case ASSET_PROXIED:
@@ -889,11 +891,9 @@ ges_asset_request_async (GType extractable_type,
           }
           break;
         case ASSET_INITIALIZED_WITH_ERROR:
-          g_simple_async_report_gerror_in_idle (G_OBJECT (asset), callback,
-              user_data, error ? error : asset->priv->error);
+          g_task_return_error (task,
+              error ? error : g_error_copy (asset->priv->error));
 
-          if (error)
-            g_error_free (error);
           goto done;
         default:
           GST_WARNING ("Case %i not handle, returning", asset->priv->state);
