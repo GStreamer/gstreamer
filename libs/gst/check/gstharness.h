@@ -182,12 +182,19 @@ GstHarnessThread * gst_harness_stress_statechange_start_full (GstHarness * h,
 GstHarnessThread * gst_harness_stress_push_buffer_start_full (GstHarness * h,
     GstCaps * caps, const GstSegment * segment, GstBuffer * buf, gulong sleep);
 
-typedef GstBuffer * (*GstHarnessPrepareBuffer) (GstHarness * h, gpointer data);
+/**
+ * GstHarnessPrepareBufferFunc:
+ * @h: a #GstHarness
+ * @data: user data
+ *
+ * Since: 1.6
+ */
+typedef GstBuffer * (*GstHarnessPrepareBufferFunc) (GstHarness * h, gpointer data);
 #define gst_harness_stress_push_buffer_with_cb_start(h, c, s, f, d, n)         \
   gst_harness_stress_push_buffer_with_cb_start_full (h, c, s, f, d, n, 0)
 GstHarnessThread * gst_harness_stress_push_buffer_with_cb_start_full (
     GstHarness * h, GstCaps * caps, const GstSegment * segment,
-    GstHarnessPrepareBuffer func, gpointer data, GDestroyNotify notify,
+    GstHarnessPrepareBufferFunc func, gpointer data, GDestroyNotify notify,
     gulong sleep);
 
 #define gst_harness_stress_push_event_start(h, e)                              \

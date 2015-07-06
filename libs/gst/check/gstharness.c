@@ -2338,7 +2338,7 @@ typedef struct
 
   GstCaps *caps;
   GstSegment segment;
-  GstHarnessPrepareBuffer func;
+  GstHarnessPrepareBufferFunc func;
   gpointer data;
   GDestroyNotify notify;
 } GstHarnessPushBufferThread;
@@ -2725,9 +2725,9 @@ gst_harness_stress_push_buffer_start_full (GstHarness * h,
  * @h: a #GstHarness
  * @caps: a #GstCaps for the #GstBuffer
  * @segment: a #GstSegment
- * @func: a #GstHarnessPrepareBuffer function called before every iteration
+ * @func: a #GstHarnessPrepareBufferFunc function called before every iteration
  * to prepare / create a #GstBuffer for pushing
- * @data: a #gpointer with data to the #GstHarnessPrepareBuffer function
+ * @data: a #gpointer with data to the #GstHarnessPrepareBufferFunc function
  * @notify: a #GDestroyNotify that is called for every push to allow cleaning
  * up the #GstBuffer. (like gst_buffer_unref)
  * @sleep: a #gulong specifying how long to sleep in (microseconds) for
@@ -2744,7 +2744,7 @@ gst_harness_stress_push_buffer_start_full (GstHarness * h,
 GstHarnessThread *
 gst_harness_stress_push_buffer_with_cb_start_full (GstHarness * h,
     GstCaps * caps, const GstSegment * segment,
-    GstHarnessPrepareBuffer func, gpointer data, GDestroyNotify notify,
+    GstHarnessPrepareBufferFunc func, gpointer data, GDestroyNotify notify,
     gulong sleep)
 {
   GstHarnessPushBufferThread *t = g_slice_new0 (GstHarnessPushBufferThread);
