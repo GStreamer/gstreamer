@@ -668,23 +668,18 @@ parse_mb_until_pos (GstRtpH261Pay * pay, GstBitReader * br, Gob * gob,
   gint count = 0;
   gboolean stop = FALSE;
   guint maxpos = *endpos;
+  Macroblock mb;
 
   GST_LOG_OBJECT (pay, "Parse until pos %u, start at pos %u, gobn %d, mba %d",
       maxpos, gst_bit_reader_get_pos (br), gob->gn, gob->last.mba);
 
   while (!stop) {
-    Macroblock mb;
-
     ret = parse_mb (pay, br, &gob->last, &mb);
 
     switch (ret) {
       case PARSE_OK:
         if (mb.endpos > maxpos && count > 0) {
           /* Don't include current MB */
-          GST_DEBUG_OBJECT (pay,
-              "Split GOBN %d after MBA %d (endpos %u, maxpos %u, nextpos %u)",
-              gob->gn, gob->last.mba, *endpos, maxpos, mb.endpos);
-          gst_bit_reader_set_pos (br, *endpos);
           stop = TRUE;
         } else {
           /* Update to include current MB */
@@ -723,6 +718,13 @@ parse_mb_until_pos (GstRtpH261Pay * pay, GstBitReader * br, Gob * gob,
     }
   }
   gob->last.gobn = gob->gn;
+
+  if(ret == PARSE_OK) {
+    GST_DEBUG_OBJECT (pay,
+        "Split GOBN %d after MBA %d (endpos %u, maxpos %u, nextpos %u)",
+        gob->gn, gob->last.mba, *endpos, maxpos, mb.endpos);
+    gst_bit_reader_set_pos (br, *endpos);
+  }
 
   return ret;
 }
