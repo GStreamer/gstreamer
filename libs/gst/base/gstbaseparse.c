@@ -3322,8 +3322,6 @@ gst_base_parse_loop (GstPad * pad)
   }
 
   ret = gst_base_parse_scan_frame (parse, klass);
-  if (ret != GST_FLOW_OK)
-    goto done;
 
   /* eat expected eos signalling past segment in reverse playback */
   if (parse->segment.rate < 0.0 && ret == GST_FLOW_EOS &&
@@ -3333,8 +3331,11 @@ gst_base_parse_loop (GstPad * pad)
     gst_base_parse_finish_fragment (parse, FALSE);
     /* force previous fragment */
     parse->priv->offset = -1;
-    ret = GST_FLOW_OK;
+    goto eos;
   }
+
+  if (ret != GST_FLOW_OK)
+    goto done;
 
 done:
   if (ret == GST_FLOW_EOS)
@@ -4289,9 +4290,6 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   if (rate < 0.0 && parse->priv->pad_mode == GST_PAD_MODE_PUSH)
     goto negative_rate;
 
-  if (rate < 0.0 && parse->priv->pad_mode == GST_PAD_MODE_PULL)
-    goto negative_rate_pull_mode;
-
   if (start_type != GST_SEEK_TYPE_SET ||
       (stop_type != GST_SEEK_TYPE_SET && stop_type != GST_SEEK_TYPE_NONE))
     goto wrong_type;
@@ -4317,25 +4315,41 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     GST_DEBUG_OBJECT (parse, "accurate seek possible");
     accurate = TRUE;
   }
+
   if (accurate) {
-    GstClockTime startpos = seeksegment.position;
+    GstClockTime startpos;
+    if (rate >= 0)
+      startpos = seeksegment.position;
+    else
+      startpos = start;
 
     /* accurate requested, so ... seek a bit before target */
     if (startpos < parse->priv->lead_in_ts)
       startpos = 0;
     else
       startpos -= parse->priv->lead_in_ts;
+
+    if (seeksegment.stop == -1)
+      seeksegment.stop = seeksegment.duration;
     seekpos = gst_base_parse_find_offset (parse, startpos, TRUE, &start_ts);
     seekstop = gst_base_parse_find_offset (parse, seeksegment.stop, FALSE,
         NULL);
+    seeksegment.start = seeksegment.time = seeksegment.position = start_ts;
   } else {
-    start_ts = seeksegment.position;
-    if (!gst_base_parse_convert (parse, format, seeksegment.position,
+    if (rate >= 0)
+      start_ts = seeksegment.position;
+    else
+      start_ts = start;
+
+    if (seeksegment.stop == -1)
+      seeksegment.stop = seeksegment.duration;
+    if (!gst_base_parse_convert (parse, format, start_ts,
             GST_FORMAT_BYTES, &seekpos))
       goto convert_failed;
     if (!gst_base_parse_convert (parse, format, seeksegment.stop,
             GST_FORMAT_BYTES, &seekstop))
       goto convert_failed;
+
   }
 
   GST_DEBUG_OBJECT (parse,
@@ -4494,12 +4508,6 @@ done:
   return res;
 
   /* ERRORS */
-negative_rate_pull_mode:
-  {
-    GST_FIXME_OBJECT (parse, "negative playback in pull mode needs fixing");
-    res = FALSE;
-    goto done;
-  }
 negative_rate:
   {
     GST_DEBUG_OBJECT (parse, "negative playback rates delegated upstream.");
