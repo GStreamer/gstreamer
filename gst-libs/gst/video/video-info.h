@@ -287,6 +287,7 @@ struct _GstVideoInfo {
   } ABI;
 };
 
+#define GST_TYPE_VIDEO_INFO              (gst_video_info_get_type ())
 GType gst_video_info_get_type            (void);
 
 /* general info */

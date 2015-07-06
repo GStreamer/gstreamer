@@ -84,7 +84,8 @@ struct _GstAudioInfo {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_audio_info_get_type        (void);
+#define GST_TYPE_AUDIO_INFO                  (gst_audio_info_get_type ())
+GType gst_audio_info_get_type                (void);
 
 #define GST_AUDIO_INFO_IS_VALID(i)           ((i)->finfo != NULL && (i)->rate > 0 && (i)->channels > 0 && (i)->bpf > 0)
 
