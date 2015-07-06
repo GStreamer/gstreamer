@@ -683,7 +683,9 @@ gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * widget)
   }
 
   if (!widget->priv->other_context) {
+    g_mutex_unlock (&widget->priv->lock);
     _invoke_on_main ((ThreadFunc) _get_gl_context, widget);
+    g_mutex_lock (&widget->priv->lock);
   }
 
   if (!GST_GL_IS_CONTEXT (widget->priv->other_context)) {
