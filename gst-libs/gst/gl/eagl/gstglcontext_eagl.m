@@ -143,12 +143,12 @@ gst_gl_context_eagl_release_layer (GstGLContext * context)
 void
 gst_gl_context_eagl_update_layer (GstGLContext * context)
 {
-  __block GLuint framebuffer;
-  __block GLuint color_renderbuffer;
-  __block GLuint depth_renderbuffer;
-  __block GLint width;
-  __block GLint height;
-  __block CAEAGLLayer *eagl_layer;
+  GLuint framebuffer;
+  GLuint color_renderbuffer;
+  GLuint depth_renderbuffer;
+  GLint width;
+  GLint height;
+  CAEAGLLayer *eagl_layer;
   GLenum status;
   GstGLContextEagl *context_eagl = GST_GL_CONTEXT_EAGL (context);
   GstGLContextEaglPrivate *priv = context_eagl->priv;
@@ -168,33 +168,31 @@ gst_gl_context_eagl_update_layer (GstGLContext * context)
   if (priv->eagl_layer)
     gst_gl_context_eagl_release_layer (context);
 
-  dispatch_sync (dispatch_get_main_queue (), ^{
-      eagl_layer = (CAEAGLLayer *)[window_handle layer];
-      [EAGLContext setCurrentContext:priv->eagl_context];
+  eagl_layer = (CAEAGLLayer *)[window_handle layer];
+  [EAGLContext setCurrentContext:priv->eagl_context];
 
-      /* Allocate framebuffer */
-      glGenFramebuffers (1, &framebuffer);
-      glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
-      /* Allocate color render buffer */
-      glGenRenderbuffers (1, &color_renderbuffer);
-      glBindRenderbuffer (GL_RENDERBUFFER, color_renderbuffer);
-      [priv->eagl_context renderbufferStorage: GL_RENDERBUFFER fromDrawable:eagl_layer];
-      glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-          GL_RENDERBUFFER, color_renderbuffer);
-      /* Get renderbuffer width/height */
-      glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH,
-          &width);
-      glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT,
-          &height);
-      /* allocate depth render buffer */
-      glGenRenderbuffers (1, &depth_renderbuffer);
-      glBindRenderbuffer (GL_RENDERBUFFER, depth_renderbuffer);
-      glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width,
-          height);
-      glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-          GL_RENDERBUFFER, depth_renderbuffer);
-      [EAGLContext setCurrentContext:nil];
-  });
+  /* Allocate framebuffer */
+  glGenFramebuffers (1, &framebuffer);
+  glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
+  /* Allocate color render buffer */
+  glGenRenderbuffers (1, &color_renderbuffer);
+  glBindRenderbuffer (GL_RENDERBUFFER, color_renderbuffer);
+  [priv->eagl_context renderbufferStorage: GL_RENDERBUFFER fromDrawable:eagl_layer];
+  glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+      GL_RENDERBUFFER, color_renderbuffer);
+  /* Get renderbuffer width/height */
+  glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH,
+      &width);
+  glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT,
+      &height);
+  /* allocate depth render buffer */
+  glGenRenderbuffers (1, &depth_renderbuffer);
+  glBindRenderbuffer (GL_RENDERBUFFER, depth_renderbuffer);
+  glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width,
+      height);
+  glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+      GL_RENDERBUFFER, depth_renderbuffer);
+  [EAGLContext setCurrentContext:nil];
 
   [EAGLContext setCurrentContext:priv->eagl_context];
 
@@ -224,19 +222,17 @@ gst_gl_context_eagl_create_context (GstGLContext * context, GstGLAPI gl_api,
   GstGLContextEagl *context_eagl = GST_GL_CONTEXT_EAGL (context);
   GstGLContextEaglPrivate *priv = context_eagl->priv;
 
-  dispatch_sync (dispatch_get_main_queue (), ^{
-    if (other_context) {
-      EAGLContext *external_gl_context = (EAGLContext *)
-          gst_gl_context_get_gl_context (other_context);
-      EAGLSharegroup *share_group = [external_gl_context sharegroup];
+  if (other_context) {
+    EAGLContext *external_gl_context = (EAGLContext *)
+        gst_gl_context_get_gl_context (other_context);
+    EAGLSharegroup *share_group = [external_gl_context sharegroup];
 
-      priv->eagl_context = [[EAGLContext alloc] initWithAPI: kEAGLRenderingAPIOpenGLES2 sharegroup:share_group];
-      [share_group release];
-    } else {
-      priv->eagl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    }
-  });
-  
+    priv->eagl_context = [[EAGLContext alloc] initWithAPI: kEAGLRenderingAPIOpenGLES2 sharegroup:share_group];
+    [share_group release];
+  } else {
+    priv->eagl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+  }
+
   priv->eagl_layer = NULL;
   priv->framebuffer = 0;
   priv->color_renderbuffer = 0;
@@ -285,16 +281,14 @@ gst_gl_context_eagl_choose_format (GstGLContext * context, GError ** error)
     return TRUE;
   }
   
-  dispatch_sync (dispatch_get_main_queue (), ^{
-    CAEAGLLayer *eagl_layer;
-    NSDictionary * dict =[NSDictionary dictionaryWithObjectsAndKeys:
-	    [NSNumber numberWithBool:NO], kEAGLDrawablePropertyRetainedBacking,
-		kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, nil];
+  CAEAGLLayer *eagl_layer;
+  NSDictionary * dict =[NSDictionary dictionaryWithObjectsAndKeys:
+      [NSNumber numberWithBool:NO], kEAGLDrawablePropertyRetainedBacking,
+      kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, nil];
 
-    eagl_layer = (CAEAGLLayer *)[window_handle layer];
-    [eagl_layer setOpaque:YES];
-    [eagl_layer setDrawableProperties:dict];
-  });
+  eagl_layer = (CAEAGLLayer *)[window_handle layer];
+  [eagl_layer setOpaque:YES];
+  [eagl_layer setDrawableProperties:dict];
 
   gst_object_unref (window);
 
