@@ -132,7 +132,11 @@ _gst_gl_sync_meta_transform (GstBuffer * dest, GstMeta * meta,
        * metas after data */
       gst_gl_sync_meta_set_sync_point (dmeta, smeta->context);
     }
+  } else {
+    /* return FALSE, if transform type is not supported */
+    return FALSE;
   }
+
   return TRUE;
 }
 
