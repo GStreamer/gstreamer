@@ -394,7 +394,7 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
       GST_TIME_ARGS (pts), GST_TIME_ARGS (dts));
 
   /* Check seqnum. This is a very simple check that makes sure that the seqnums
-   * are striclty increasing, dropping anything that is out of the ordinary. We
+   * are strictly increasing, dropping anything that is out of the ordinary. We
    * can only do this when the next_seqnum is known. */
   if (G_LIKELY (priv->next_seqnum != -1)) {
     gap = gst_rtp_buffer_compare_seqnum (seqnum, priv->next_seqnum);
