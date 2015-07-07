@@ -1112,75 +1112,70 @@ gst_xv_image_sink_navigation_send_event (GstNavigation * navigation,
     GstStructure * structure)
 {
   GstXvImageSink *xvimagesink = GST_XV_IMAGE_SINK (navigation);
-  GstPad *peer;
   gboolean handled = FALSE;
   GstEvent *event = NULL;
 
-  if ((peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (xvimagesink)))) {
-    GstVideoRectangle src = { 0, };
-    GstVideoRectangle dst = { 0, };
-    GstVideoRectangle result;
-    gdouble x, y, xscale = 1.0, yscale = 1.0;
-    GstXWindow *xwindow;
+  GstVideoRectangle src = { 0, };
+  GstVideoRectangle dst = { 0, };
+  GstVideoRectangle result;
+  gdouble x, y, xscale = 1.0, yscale = 1.0;
+  GstXWindow *xwindow;
 
-    /* We take the flow_lock while we look at the window */
-    g_mutex_lock (&xvimagesink->flow_lock);
+  /* We take the flow_lock while we look at the window */
+  g_mutex_lock (&xvimagesink->flow_lock);
 
-    if (!(xwindow = xvimagesink->xwindow)) {
-      g_mutex_unlock (&xvimagesink->flow_lock);
-      gst_object_unref (peer);
-      return;
-    }
-
-    if (xvimagesink->keep_aspect) {
-      /* We get the frame position using the calculated geometry from _setcaps
-         that respect pixel aspect ratios */
-      src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
-      src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
-      dst.w = xwindow->render_rect.w;
-      dst.h = xwindow->render_rect.h;
-
-      gst_video_sink_center_rect (src, dst, &result, TRUE);
-      result.x += xwindow->render_rect.x;
-      result.y += xwindow->render_rect.y;
-    } else {
-      memcpy (&result, &xwindow->render_rect, sizeof (GstVideoRectangle));
-    }
-
+  if (!(xwindow = xvimagesink->xwindow)) {
     g_mutex_unlock (&xvimagesink->flow_lock);
+    return;
+  }
 
-    /* We calculate scaling using the original video frames geometry to include
-       pixel aspect ratio scaling. */
-    xscale = (gdouble) xvimagesink->video_width / result.w;
-    yscale = (gdouble) xvimagesink->video_height / result.h;
+  if (xvimagesink->keep_aspect) {
+    /* We get the frame position using the calculated geometry from _setcaps
+       that respect pixel aspect ratios */
+    src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
+    src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
+    dst.w = xwindow->render_rect.w;
+    dst.h = xwindow->render_rect.h;
 
-    /* Converting pointer coordinates to the non scaled geometry */
-    if (gst_structure_get_double (structure, "pointer_x", &x)) {
-      x = MIN (x, result.x + result.w);
-      x = MAX (x - result.x, 0);
-      gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
-          (gdouble) x * xscale, NULL);
-    }
-    if (gst_structure_get_double (structure, "pointer_y", &y)) {
-      y = MIN (y, result.y + result.h);
-      y = MAX (y - result.y, 0);
-      gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
-          (gdouble) y * yscale, NULL);
-    }
+    gst_video_sink_center_rect (src, dst, &result, TRUE);
+    result.x += xwindow->render_rect.x;
+    result.y += xwindow->render_rect.y;
+  } else {
+    memcpy (&result, &xwindow->render_rect, sizeof (GstVideoRectangle));
+  }
 
-    event = gst_event_new_navigation (structure);
+  g_mutex_unlock (&xvimagesink->flow_lock);
+
+  /* We calculate scaling using the original video frames geometry to include
+     pixel aspect ratio scaling. */
+  xscale = (gdouble) xvimagesink->video_width / result.w;
+  yscale = (gdouble) xvimagesink->video_height / result.h;
+
+  /* Converting pointer coordinates to the non scaled geometry */
+  if (gst_structure_get_double (structure, "pointer_x", &x)) {
+    x = MIN (x, result.x + result.w);
+    x = MAX (x - result.x, 0);
+    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+        (gdouble) x * xscale, NULL);
+  }
+  if (gst_structure_get_double (structure, "pointer_y", &y)) {
+    y = MIN (y, result.y + result.h);
+    y = MAX (y - result.y, 0);
+    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
+        (gdouble) y * yscale, NULL);
+  }
+
+  event = gst_event_new_navigation (structure);
+  if (event) {
     gst_event_ref (event);
-    handled = gst_pad_send_event (peer, event);
-    gst_object_unref (peer);
-  }
+    handled = gst_pad_push_event (GST_VIDEO_SINK_PAD (xvimagesink), event);
 
-  if (!handled && event) {
-    gst_element_post_message ((GstElement *) xvimagesink,
-        gst_navigation_message_new_event ((GstObject *) xvimagesink, event));
-  }
+    if (!handled)
+      gst_element_post_message ((GstElement *) xvimagesink,
+          gst_navigation_message_new_event ((GstObject *) xvimagesink, event));
 
-  if (event)
     gst_event_unref (event);
+  }
 }
 
 static void
