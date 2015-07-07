@@ -214,7 +214,7 @@ gst_rtp_klv_depay_process_data (GstRtpKlvDepay * klvdepay)
   if (!klv_get_vlen (data, data_len, &v_len, &len_size))
     goto bad_klv_packet;
 
-  GST_LOG_OBJECT (klvdepay, "want %" G_GSIZE_FORMAT " bytes, "
+  GST_LOG_OBJECT (klvdepay, "want %" G_GUINT64_FORMAT " bytes, "
       "have %" G_GSIZE_FORMAT " bytes", 16 + len_size + v_len, avail);
 
   if (avail < 16 + len_size + v_len)
