@@ -1128,6 +1128,7 @@ gst_xv_image_sink_navigation_send_event (GstNavigation * navigation,
 
     if (!(xwindow = xvimagesink->xwindow)) {
       g_mutex_unlock (&xvimagesink->flow_lock);
+      gst_object_unref (peer);
       return;
     }
 
