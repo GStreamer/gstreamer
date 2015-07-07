@@ -117,6 +117,9 @@ test_transform_func (GstBuffer * transbuf, GstMeta * meta,
       test->duration = -1;
     }
     test->clock_rate = tmeta->clock_rate;
+  } else {
+    /* return FALSE, if transform type is not supported */
+    return FALSE;
   }
   return TRUE;
 }

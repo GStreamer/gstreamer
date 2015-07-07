@@ -44,10 +44,13 @@ static gboolean
 net_address_meta_transform (GstBuffer * transbuf, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
 {
-  GstNetAddressMeta *nmeta = (GstNetAddressMeta *) meta;
+  GstNetAddressMeta *smeta, *dmeta;
+  smeta = (GstNetAddressMeta *) meta;
 
   /* we always copy no matter what transform */
-  gst_buffer_add_net_address_meta (transbuf, nmeta->addr);
+  dmeta = gst_buffer_add_net_address_meta (transbuf, smeta->addr);
+  if (!dmeta)
+    return FALSE;
 
   return TRUE;
 }

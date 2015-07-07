@@ -47,10 +47,13 @@ static gboolean
 net_control_message_meta_transform (GstBuffer * transbuf, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
 {
-  GstNetControlMessageMeta *nmeta = (GstNetControlMessageMeta *) meta;
+  GstNetControlMessageMeta *smeta, *dmeta;
+  smeta = (GstNetControlMessageMeta *) meta;
 
   /* we always copy no matter what transform */
-  gst_buffer_add_net_control_message_meta (transbuf, nmeta->message);
+  dmeta = gst_buffer_add_net_control_message_meta (transbuf, smeta->message);
+  if (!dmeta)
+    return FALSE;
 
   return TRUE;
 }

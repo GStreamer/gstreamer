@@ -2331,6 +2331,9 @@ _gst_parent_buffer_meta_transform (GstBuffer * dest, GstMeta * meta,
 
     GST_CAT_DEBUG (gst_parent_buffer_meta_debug,
         "copy buffer reference metadata");
+  } else {
+    /* return FALSE, if transform type is not supported */
+    return FALSE;
   }
   return TRUE;
 }
