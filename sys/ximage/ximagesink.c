@@ -1528,6 +1528,7 @@ gst_x_image_sink_navigation_send_event (GstNavigation * navigation,
   GstEvent *event = NULL;
   gint x_offset, y_offset;
   gdouble x, y;
+  gboolean handled = FALSE;
 
   /* We are not converting the pointer coordinates as there's no hardware
      scaling done here. The only possible scaling is done by videoscale and
@@ -1558,8 +1559,17 @@ gst_x_image_sink_navigation_send_event (GstNavigation * navigation,
   }
 
   event = gst_event_new_navigation (structure);
-  if (event)
-    gst_pad_push_event (GST_VIDEO_SINK_PAD (ximagesink), event);
+  if (event) {
+    gst_event_ref (event);
+    handled = gst_pad_push_event (GST_VIDEO_SINK_PAD (ximagesink), event);
+
+    if (!handled)
+      gst_element_post_message (GST_ELEMENT_CAST (ximagesink),
+          gst_navigation_message_new_event (GST_OBJECT_CAST (ximagesink),
+              event));
+
+    gst_event_unref (event);
+  }
 }
 
 static void
