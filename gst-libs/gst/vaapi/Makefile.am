@@ -496,6 +496,7 @@ libgstvaapi_egl_@GST_API_VERSION@_la_CFLAGS =	\
 	$(GLIB_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_VIDEO_CFLAGS)			\
+	$(LIBVA_CFLAGS)				\
 	$(EGL_CFLAGS)				\
 	$(NULL)
 
