@@ -149,21 +149,22 @@ static GstStaticPadTemplate hsinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-struct _GstHarnessPrivate {
-  gchar * element_sinkpad_name;
-  gchar * element_srcpad_name;
+struct _GstHarnessPrivate
+{
+  gchar *element_sinkpad_name;
+  gchar *element_srcpad_name;
 
-  GstCaps * src_caps;
-  GstCaps * sink_caps;
-  GstPad * sink_forward_pad;
+  GstCaps *src_caps;
+  GstCaps *sink_caps;
+  GstPad *sink_forward_pad;
 
   volatile gint recv_buffers;
   volatile gint recv_events;
   volatile gint recv_upstream_events;
 
-  GAsyncQueue * buffer_queue;
-  GAsyncQueue * src_event_queue;
-  GAsyncQueue * sink_event_queue;
+  GAsyncQueue *buffer_queue;
+  GAsyncQueue *src_event_queue;
+  GAsyncQueue *sink_event_queue;
 
   GstClockTime latency_min;
   GstClockTime latency_max;
@@ -171,17 +172,17 @@ struct _GstHarnessPrivate {
   gboolean drop_buffers;
   GstClockTime last_push_ts;
 
-  GstBufferPool * pool;
-  GstAllocator * allocator;
+  GstBufferPool *pool;
+  GstAllocator *allocator;
   GstAllocationParams allocation_params;
-  GstAllocator * propose_allocator;
+  GstAllocator *propose_allocator;
   GstAllocationParams propose_allocation_params;
 
   gboolean blocking_push_mode;
   GCond blocking_push_cond;
   GMutex blocking_push_mutex;
 
-  GPtrArray * stress;
+  GPtrArray *stress;
 };
 
 static GstFlowReturn
@@ -341,7 +342,9 @@ gst_harness_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
     {
       GstCaps *caps, *filter = NULL;
 
-      caps = priv->sink_caps ? gst_caps_ref (priv->sink_caps) : gst_caps_new_any ();
+      caps =
+          priv->
+          sink_caps ? gst_caps_ref (priv->sink_caps) : gst_caps_new_any ();
 
       gst_query_parse_caps (query, &filter);
       if (filter != NULL) {
@@ -399,7 +402,8 @@ gst_harness_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     {
       GstCaps *caps, *filter = NULL;
 
-      caps = priv->src_caps ? gst_caps_ref (priv->src_caps) : gst_caps_new_any ();
+      caps =
+          priv->src_caps ? gst_caps_ref (priv->src_caps) : gst_caps_new_any ();
 
       gst_query_parse_caps (query, &filter);
       if (filter != NULL) {
@@ -1368,8 +1372,8 @@ gst_harness_create_buffer (GstHarness * h, gsize size)
     gst_harness_negotiate (h);
 
   if (priv->pool) {
-    g_assert_cmpint (gst_buffer_pool_acquire_buffer (priv->pool, &ret, NULL), ==,
-        GST_FLOW_OK);
+    g_assert_cmpint (gst_buffer_pool_acquire_buffer (priv->pool, &ret, NULL),
+        ==, GST_FLOW_OK);
     if (gst_buffer_get_size (ret) != size) {
       GST_DEBUG_OBJECT (h,
           "use fallback, pool is configured with a different size (%zu != %zu)",
@@ -1380,7 +1384,9 @@ gst_harness_create_buffer (GstHarness * h, gsize size)
   }
 
   if (!ret)
-    ret = gst_buffer_new_allocate (priv->allocator, size, &priv->allocation_params);
+    ret =
+        gst_buffer_new_allocate (priv->allocator, size,
+        &priv->allocation_params);
 
   g_assert (ret != NULL);
   return ret;
@@ -2466,22 +2472,6 @@ gst_harness_requestpad_thread_free (GstHarnessReqPadThread * t)
    (t->running = FALSE,                                                        \
    GPOINTER_TO_UINT (g_thread_join (t->thread)))
 
-#define GST_HARNESS_STRESS_FUNC_BEGIN(ID, INIT)                                \
-  static gpointer                                                              \
-  gst_harness_stress_##ID##_func (GstHarnessThread * t)                        \
-  {                                                                            \
-    guint count = 0;                                                           \
-    INIT;                                                                      \
-                                                                               \
-    while (t->running) {
-
-#define GST_HARNESS_STRESS_FUNC_END()                                          \
-      count++;                                                                 \
-      g_usleep (t->sleep);                                                     \
-    }                                                                          \
-    return GUINT_TO_POINTER (count);                                           \
-  }
-
 static void
 gst_harness_stress_free (GstHarnessThread * t)
 {
@@ -2489,127 +2479,182 @@ gst_harness_stress_free (GstHarnessThread * t)
     t->freefunc (t);
 }
 
-GST_HARNESS_STRESS_FUNC_BEGIN (custom, {
-    GstHarnessCustomThread *ct = (GstHarnessCustomThread *) t;
-    ct->init (ct, ct->data);
-  }
-)
+static gpointer
+gst_harness_stress_custom_func (GstHarnessThread * t)
 {
   GstHarnessCustomThread *ct = (GstHarnessCustomThread *) t;
-  ct->callback (ct, ct->data);
-}
-GST_HARNESS_STRESS_FUNC_END ()
+  guint count = 0;
 
-GST_HARNESS_STRESS_FUNC_BEGIN (statechange, {})
+  ct->init (ct, ct->data);
+
+  while (t->running) {
+    ct->callback (ct, ct->data);
+
+    count++;
+    g_usleep (t->sleep);
+  }
+  return GUINT_TO_POINTER (count);
+}
+
+
+static gpointer
+gst_harness_stress_statechange_func (GstHarnessThread * t)
 {
-  GstClock *clock = gst_element_get_clock (t->h->element);
-  GstIterator *it;
-  gboolean done = FALSE;
+  guint count = 0;
 
-  g_assert (gst_element_set_state (t->h->element, GST_STATE_NULL) ==
-      GST_STATE_CHANGE_SUCCESS);
-  g_thread_yield ();
+  while (t->running) {
+    GstClock *clock = gst_element_get_clock (t->h->element);
+    GstIterator *it;
+    gboolean done = FALSE;
 
-  it = gst_element_iterate_sink_pads (t->h->element);
-  while (!done) {
-    GValue item = G_VALUE_INIT;
-    switch (gst_iterator_next (it, &item)) {
-      case GST_ITERATOR_OK:
-      {
-        GstPad *sinkpad = g_value_get_object (&item);
-        GstPad *srcpad = gst_pad_get_peer (sinkpad);
-        if (srcpad != NULL) {
-          gst_pad_unlink (srcpad, sinkpad);
-          gst_pad_link (srcpad, sinkpad);
-          gst_object_unref (srcpad);
+    g_assert (gst_element_set_state (t->h->element, GST_STATE_NULL) ==
+        GST_STATE_CHANGE_SUCCESS);
+    g_thread_yield ();
+
+    it = gst_element_iterate_sink_pads (t->h->element);
+    while (!done) {
+      GValue item = G_VALUE_INIT;
+      switch (gst_iterator_next (it, &item)) {
+        case GST_ITERATOR_OK:
+        {
+          GstPad *sinkpad = g_value_get_object (&item);
+          GstPad *srcpad = gst_pad_get_peer (sinkpad);
+          if (srcpad != NULL) {
+            gst_pad_unlink (srcpad, sinkpad);
+            gst_pad_link (srcpad, sinkpad);
+            gst_object_unref (srcpad);
+          }
+          g_value_reset (&item);
+          break;
         }
-        g_value_reset (&item);
-        break;
+        case GST_ITERATOR_RESYNC:
+          gst_iterator_resync (it);
+          break;
+        case GST_ITERATOR_ERROR:
+          g_assert_not_reached ();
+        case GST_ITERATOR_DONE:
+          done = TRUE;
+          break;
       }
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (it);
-        break;
-      case GST_ITERATOR_ERROR:
-        g_assert_not_reached ();
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
+      g_value_unset (&item);
     }
-    g_value_unset (&item);
-  }
-  gst_iterator_free (it);
+    gst_iterator_free (it);
 
-  if (clock != NULL) {
-    gst_element_set_clock (t->h->element, clock);
-    gst_object_unref (clock);
+    if (clock != NULL) {
+      gst_element_set_clock (t->h->element, clock);
+      gst_object_unref (clock);
+    }
+    g_assert (gst_element_set_state (t->h->element, GST_STATE_PLAYING) ==
+        GST_STATE_CHANGE_SUCCESS);
+
+    count++;
+    g_usleep (t->sleep);
   }
-  g_assert (gst_element_set_state (t->h->element, GST_STATE_PLAYING) ==
-      GST_STATE_CHANGE_SUCCESS);
+  return GUINT_TO_POINTER (count);
 }
-GST_HARNESS_STRESS_FUNC_END ()
 
-GST_HARNESS_STRESS_FUNC_BEGIN (buffer, {
-    GstHarnessPushBufferThread *pt = (GstHarnessPushBufferThread *) t;
-    gchar *sid;
-    /* Push stream start, caps and segment events */
-    sid = g_strdup_printf ("%s-%p", GST_OBJECT_NAME (t->h->element), t->h);
-    g_assert (gst_pad_push_event (t->h->srcpad,
-        gst_event_new_stream_start (sid))); g_free (sid);
-    g_assert (gst_pad_push_event (t->h->srcpad,
-        gst_event_new_caps (pt->caps)));
-    g_assert (gst_pad_push_event (t->h->srcpad,
-        gst_event_new_segment (&pt->segment)));
-  }
-)
+static gpointer
+gst_harness_stress_buffer_func (GstHarnessThread * t)
 {
   GstHarnessPushBufferThread *pt = (GstHarnessPushBufferThread *) t;
-  gst_harness_push (t->h, pt->func (t->h, pt->data));
-}
-GST_HARNESS_STRESS_FUNC_END ()
+  guint count = 0;
+  gchar *sid;
 
-GST_HARNESS_STRESS_FUNC_BEGIN (event, {})
+  /* Push stream start, caps and segment events */
+  sid = g_strdup_printf ("%s-%p", GST_OBJECT_NAME (t->h->element), t->h);
+  g_assert (gst_pad_push_event (t->h->srcpad,
+          gst_event_new_stream_start (sid)));
+  g_free (sid);
+  g_assert (gst_pad_push_event (t->h->srcpad, gst_event_new_caps (pt->caps)));
+  g_assert (gst_pad_push_event (t->h->srcpad,
+          gst_event_new_segment (&pt->segment)));
+
+  while (t->running) {
+    gst_harness_push (t->h, pt->func (t->h, pt->data));
+
+    count++;
+    g_usleep (t->sleep);
+  }
+  return GUINT_TO_POINTER (count);
+}
+
+static gpointer
+gst_harness_stress_event_func (GstHarnessThread * t)
 {
   GstHarnessPushEventThread *pet = (GstHarnessPushEventThread *) t;
-  gst_harness_push_event (t->h, gst_event_ref (pet->event));
-}
-GST_HARNESS_STRESS_FUNC_END ()
+  guint count = 0;
 
-GST_HARNESS_STRESS_FUNC_BEGIN (upstream_event, {})
+  while (t->running) {
+    gst_harness_push_event (t->h, gst_event_ref (pet->event));
+
+    count++;
+    g_usleep (t->sleep);
+  }
+  return GUINT_TO_POINTER (count);
+}
+
+static gpointer
+gst_harness_stress_upstream_event_func (GstHarnessThread * t)
 {
   GstHarnessPushEventThread *pet = (GstHarnessPushEventThread *) t;
-  gst_harness_push_upstream_event (t->h, gst_event_ref (pet->event));
-}
-GST_HARNESS_STRESS_FUNC_END ()
+  guint count = 0;
 
-GST_HARNESS_STRESS_FUNC_BEGIN (property, {})
+  while (t->running) {
+    gst_harness_push_upstream_event (t->h, gst_event_ref (pet->event));
+
+    count++;
+    g_usleep (t->sleep);
+  }
+  return GUINT_TO_POINTER (count);
+}
+
+static gpointer
+gst_harness_stress_property_func (GstHarnessThread * t)
 {
   GstHarnessPropThread *pt = (GstHarnessPropThread *) t;
-  GValue value = G_VALUE_INIT;
+  guint count = 0;
 
-  g_object_set_property (G_OBJECT (t->h->element), pt->name, &pt->value);
+  while (t->running) {
+    GValue value = G_VALUE_INIT;
 
-  g_value_init (&value, G_VALUE_TYPE (&pt->value));
-  g_object_get_property (G_OBJECT (t->h->element), pt->name, &value);
-  g_value_reset (&value);
+    g_object_set_property (G_OBJECT (t->h->element), pt->name, &pt->value);
+
+    g_value_init (&value, G_VALUE_TYPE (&pt->value));
+    g_object_get_property (G_OBJECT (t->h->element), pt->name, &value);
+    g_value_reset (&value);
+
+    count++;
+    g_usleep (t->sleep);
+  }
+  return GUINT_TO_POINTER (count);
 }
-GST_HARNESS_STRESS_FUNC_END ()
 
-GST_HARNESS_STRESS_FUNC_BEGIN (requestpad, {})
+static gpointer
+gst_harness_stress_requestpad_func (GstHarnessThread * t)
 {
   GstHarnessReqPadThread *rpt = (GstHarnessReqPadThread *) t;
-  GstPad *reqpad;
+  guint count = 0;
 
-  if (rpt->release)
-    gst_harness_requestpad_release_pads (rpt);
-  g_thread_yield ();
+  while (t->running) {
+    GstPad *reqpad;
 
-  reqpad = gst_element_request_pad (t->h->element,
-      rpt->templ, rpt->name, rpt->caps);
-  g_assert (reqpad != NULL);
+    if (rpt->release)
+      gst_harness_requestpad_release_pads (rpt);
 
-  rpt->pads = g_slist_prepend (rpt->pads, reqpad);
+    g_thread_yield ();
+
+    reqpad = gst_element_request_pad (t->h->element,
+        rpt->templ, rpt->name, rpt->caps);
+
+    g_assert (reqpad != NULL);
+
+    rpt->pads = g_slist_prepend (rpt->pads, reqpad);
+
+    count++;
+    g_usleep (t->sleep);
+  }
+  return GUINT_TO_POINTER (count);
 }
-GST_HARNESS_STRESS_FUNC_END ()
 
 /**
  * gst_harness_stress_thread_stop:
