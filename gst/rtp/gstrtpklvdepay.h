@@ -47,7 +47,8 @@ struct _GstRtpKlvDepay
 
   GstAdapter *adapter;
   gboolean    resync;
-  gint64      last_rtp_ts;   /* -1 if unset, otherwise 0-G_MAXUINT32 */
+  gint        last_marker_seq;   /* -1 if unset, otherwise 0-G_MAXUINT16 */
+  gint64      last_rtp_ts;       /* -1 if unset, otherwise 0-G_MAXUINT32 */
 };
 
 struct _GstRtpKlvDepayClass

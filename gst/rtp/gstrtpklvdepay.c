@@ -199,6 +199,8 @@ gst_rtp_klv_depay_process_data (GstRtpKlvDepay * klvdepay)
 
   avail = gst_adapter_available (klvdepay->adapter);
 
+  GST_TRACE_OBJECT (klvdepay, "%" G_GSIZE_FORMAT " bytes in adapter", avail);
+
   if (avail == 0)
     return NULL;
 
@@ -212,7 +214,14 @@ gst_rtp_klv_depay_process_data (GstRtpKlvDepay * klvdepay)
   if (!klv_get_vlen (data, data_len, &v_len, &len_size))
     goto bad_klv_packet;
 
+  GST_LOG_OBJECT (klvdepay, "want %" G_GSIZE_FORMAT " bytes, "
+      "have %" G_GSIZE_FORMAT " bytes", 16 + len_size + v_len, avail);
+
   if (avail < 16 + len_size + v_len)
+    goto incomplete_klv_packet;
+
+  /* something is wrong, this shouldn't ever happen */
+  if (avail > 16 + len_size + v_len)
     goto bad_klv_packet;
 
   outbuf = gst_adapter_take_buffer (klvdepay->adapter, avail);
@@ -232,17 +241,32 @@ bad_klv_packet:
     gst_rtp_klv_depay_reset (klvdepay);
     return NULL;
   }
+incomplete_klv_packet:
+  {
+    GST_DEBUG_OBJECT (klvdepay, "partial KLV packet: have %u bytes, want %u",
+        (guint) avail, (guint) (16 + len_size + v_len));
+    return NULL;
+  }
 }
 
+/* We're trying to be pragmatic here, not quite as strict as the spec wants
+ * us to be with regard to marker bits and resyncing after packet loss */
 static GstBuffer *
 gst_rtp_klv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpKlvDepay *klvdepay = GST_RTP_KLV_DEPAY (depayload);
   GstRTPBuffer rtp = { NULL };
   GstBuffer *payload, *outbuf = NULL;
-  gboolean marker, start;
+  gboolean marker, start = FALSE, maybe_start;
   guint32 rtp_ts;
+  guint16 seq;
   guint payload_len;
+
+  /* Ignore DISCONT on first buffer and on buffers following a discont */
+  if (GST_BUFFER_IS_DISCONT (buf) && klvdepay->last_rtp_ts != -1) {
+    GST_WARNING_OBJECT (klvdepay, "DISCONT, need to resync");
+    gst_rtp_klv_depay_reset (klvdepay);
+  }
 
   gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
@@ -251,36 +275,50 @@ gst_rtp_klv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   /* marker bit signals last fragment of a KLV unit */
   marker = gst_rtp_buffer_get_marker (&rtp);
 
+  seq = gst_rtp_buffer_get_seq (&rtp);
+
+  /* packet directly after one with marker bit set => start */
+  start = klvdepay->last_marker_seq != -1
+      && gst_rtp_buffer_compare_seqnum (klvdepay->last_marker_seq, seq) == 1;
+
   /* deduce start of new KLV unit in case sender doesn't set marker bits
    * (it's not like the spec is ambiguous about that, but what can you do) */
   rtp_ts = gst_rtp_buffer_get_timestamp (&rtp);
-  start = (klvdepay->last_rtp_ts != -1 && klvdepay->last_rtp_ts != rtp_ts);
+
+  maybe_start = klvdepay->last_rtp_ts == -1 || klvdepay->last_rtp_ts != rtp_ts;
 
   klvdepay->last_rtp_ts = rtp_ts;
 
-  /* yet another fallback to deduce start of new KLV unit */
-  if (!marker && !start && payload_len > 16) {
+  /* fallback to detect self-contained single KLV unit (usual case) */
+  if ((!start || !marker || maybe_start) && payload_len > 16) {
     const guint8 *data;
     guint64 v_len;
     gsize len_size;
 
     data = gst_rtp_buffer_get_payload (&rtp);
     if (GST_READ_UINT32_BE (data) == 0x060e2b34 &&
-        klv_get_vlen (data + 16, payload_len - 16, &v_len, &len_size) &&
-        16 + len_size + v_len == payload_len) {
-      GST_LOG_OBJECT (klvdepay, "Looks like we got a self-contained KLV unit");
-      marker = TRUE;
+        klv_get_vlen (data + 16, payload_len - 16, &v_len, &len_size)) {
+      if (16 + len_size + v_len == payload_len) {
+        GST_LOG_OBJECT (klvdepay, "Looks like a self-contained KLV unit");
+        marker = TRUE;
+        start = TRUE;
+      } else if (16 + len_size + v_len > payload_len) {
+        GST_LOG_OBJECT (klvdepay,
+            "Looks like the start of a fragmented KLV unit");
+        start = TRUE;
+      }
     }
   }
 
+  /* If this is the first packet and looks like a start, clear resync flag */
+  if (klvdepay->resync && klvdepay->last_marker_seq == -1 && start)
+    klvdepay->resync = FALSE;
+
+  if (marker)
+    klvdepay->last_marker_seq = seq;
+
   GST_LOG_OBJECT (klvdepay, "payload of %u bytes, marker=%d, start=%d",
       payload_len, marker, start);
-
-  if (GST_BUFFER_IS_DISCONT (buf)) {
-    GST_WARNING_OBJECT (klvdepay, "DISCONT, need to resync");
-    gst_rtp_klv_depay_reset (klvdepay);
-    start = FALSE;
-  }
 
   if (klvdepay->resync && !start) {
     GST_DEBUG_OBJECT (klvdepay, "Dropping buffer, waiting to resync");
@@ -318,6 +356,7 @@ gst_rtp_klv_depay_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_rtp_klv_depay_reset (klvdepay);
+      klvdepay->last_marker_seq = -1;
       break;
     default:
       break;
