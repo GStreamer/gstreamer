@@ -862,7 +862,6 @@ gst_rtp_base_depayload_change_state (GstElement * element,
       priv->next_seqnum = -1;
       priv->negotiated = FALSE;
       priv->discont = FALSE;
-      gst_event_replace (&filter->priv->segment_event, NULL);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -877,6 +876,7 @@ gst_rtp_base_depayload_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_caps_replace (&priv->last_caps, NULL);
+      gst_event_replace (&priv->segment_event, NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
