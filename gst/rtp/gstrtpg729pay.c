@@ -328,7 +328,7 @@ gst_rtp_g729_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
     rtpg729pay->next_ts = timestamp;
 
   if (available == 0 && size >= min_payload_len && size <= max_payload_len) {
-    ret = gst_rtp_g729_pay_push (rtpg729pay, gst_buffer_ref (buf));
+    ret = gst_rtp_g729_pay_push (rtpg729pay, buf);
     return ret;
   }
 
