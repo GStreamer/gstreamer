@@ -55,6 +55,7 @@ EXPORTS
 	gst_video_alpha_mode_get_type
 	gst_video_blend
 	gst_video_blend_scale_linear_RGBA
+	gst_video_buffer_flags_get_type
 	gst_video_buffer_pool_get_type
 	gst_video_buffer_pool_new
 	gst_video_calculate_display_ratio
@@ -170,7 +171,9 @@ EXPORTS
 	gst_video_format_to_string
 	gst_video_frame_copy
 	gst_video_frame_copy_plane
+	gst_video_frame_flags_get_type
 	gst_video_frame_map
+	gst_video_frame_map_flags_get_type
 	gst_video_frame_map_id
 	gst_video_frame_unmap
 	gst_video_gamma_mode_get_type
@@ -263,6 +266,7 @@ EXPORTS
 	gst_video_resampler_method_get_type
 	gst_video_scaler_2d
 	gst_video_scaler_combine_packed_YUV
+	gst_video_scaler_flags_get_type
 	gst_video_scaler_free
 	gst_video_scaler_get_coeff
 	gst_video_scaler_get_max_taps
