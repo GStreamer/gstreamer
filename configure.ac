@@ -321,9 +321,10 @@ else
         --enable-static --enable-pic \
         --disable-avdevice --disable-postproc --disable-avfilter \
         --disable-programs --disable-ffserver --disable-ffplay --disable-ffprobe --disable-ffmpeg \
-        --disable-encoder=flac --disable-protocols --disable-devices\
-        --disable-network --disable-hwaccels --disable-dxva2 --disable-vdpau\
-        --disable-filters --disable-doc --disable-vda --enable-optimizations"
+        --disable-encoder=flac --disable-protocols --disable-devices \
+        --disable-network --disable-hwaccels --disable-dxva2 --disable-vdpau \
+        --disable-filters --disable-doc --disable-vda --disable-d3d11va --disable-dxva2 \
+        --disable-iconv --enable-optimizations"
 
   if test "x$enable_gpl" == "xyes"; then
     emblibav_configure_args="$emblibav_configure_args --enable-gpl"
