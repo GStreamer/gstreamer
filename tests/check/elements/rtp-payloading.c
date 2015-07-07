@@ -300,14 +300,9 @@ rtp_pipeline_run (rtp_pipeline * p)
  * @param p Pointer to the RTP pipeline.
  */
 static void
-rtp_pipeline_enable_lists (rtp_pipeline * p, guint mtu_size)
+rtp_pipeline_enable_lists (rtp_pipeline * p)
 {
   GstPad *pad;
-
-  /* set mtu size if needed */
-  if (mtu_size) {
-    g_object_set (p->rtppay, "mtu", mtu_size, NULL);
-  }
 
   /* Add chain list function for the buffer list tests */
   pad = gst_element_get_static_pad (p->rtpdepay, "sink");
@@ -344,8 +339,13 @@ rtp_pipeline_test (const guint8 * frame_data, int frame_data_size,
     return;
   }
 
+  /* set mtu size if needed */
+  if (mtu_size > 0) {
+    g_object_set (p->rtppay, "mtu", mtu_size, NULL);
+  }
+
   if (use_lists) {
-    rtp_pipeline_enable_lists (p, mtu_size);
+    rtp_pipeline_enable_lists (p);
     chain_list_bytes_received = 0;
   }
 
@@ -357,7 +357,7 @@ rtp_pipeline_test (const guint8 * frame_data, int frame_data_size,
 
   if (use_lists) {
     /* 'next NAL' indicator is 4 bytes */
-    fail_if (chain_list_bytes_received != bytes_sent * LOOP_COUNT);
+    fail_unless_equals_int (chain_list_bytes_received, bytes_sent * LOOP_COUNT);
   }
 }
 
@@ -469,6 +469,7 @@ static const guint8 rtp_h261_frame_data[] = {
   0x00, 0x01, 0x00, 0x06, 0x00, 0x01, 0x11, 0x00, 0x00, 0x4c, 0x40, 0x00,
   0x15, 0x10,
 };
+
 static int rtp_h261_frame_data_size = 14;
 static int rtp_h261_frame_count = 1;
 
@@ -478,6 +479,7 @@ GST_START_TEST (rtp_h261)
       rtp_h261_frame_count, "video/x-h261", "rtph261pay", "rtph261depay",
       0, 0, FALSE);
 }
+
 GST_END_TEST;
 
 static const guint8 rtp_h263_frame_data[] =
@@ -662,6 +664,49 @@ GST_START_TEST (rtp_h264_list_gt_mtu_avc)
       "codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22c",
       "rtph264pay", "rtph264depay",
       rtp_h264_list_gt_mtu_bytes_sent_avc, rtp_h264_list_gt_mtu_mty_size, TRUE);
+}
+
+GST_END_TEST;
+
+/* KLV data from Day_Flight.mpg */
+static const guint8 rtp_KLV_frame_data[] = {
+  0x06, 0x0e, 0x2b, 0x34, 0x02, 0x0b, 0x01, 0x01,
+  0x0e, 0x01, 0x03, 0x01, 0x01, 0x00, 0x00, 0x00,
+  0x81, 0x91, 0x02, 0x08, 0x00, 0x04, 0x6c, 0x8e,
+  0x20, 0x03, 0x83, 0x85, 0x41, 0x01, 0x01, 0x05,
+  0x02, 0x3d, 0x3b, 0x06, 0x02, 0x15, 0x80, 0x07,
+  0x02, 0x01, 0x52, 0x0b, 0x03, 0x45, 0x4f, 0x4e,
+  0x0c, 0x0e, 0x47, 0x65, 0x6f, 0x64, 0x65, 0x74,
+  0x69, 0x63, 0x20, 0x57, 0x47, 0x53, 0x38, 0x34,
+  0x0d, 0x04, 0x4d, 0xc4, 0xdc, 0xbb, 0x0e, 0x04,
+  0xb1, 0xa8, 0x6c, 0xfe, 0x0f, 0x02, 0x1f, 0x4a,
+  0x10, 0x02, 0x00, 0x85, 0x11, 0x02, 0x00, 0x4b,
+  0x12, 0x04, 0x20, 0xc8, 0xd2, 0x7d, 0x13, 0x04,
+  0xfc, 0xdd, 0x02, 0xd8, 0x14, 0x04, 0xfe, 0xb8,
+  0xcb, 0x61, 0x15, 0x04, 0x00, 0x8f, 0x3e, 0x61,
+  0x16, 0x04, 0x00, 0x00, 0x01, 0xc9, 0x17, 0x04,
+  0x4d, 0xdd, 0x8c, 0x2a, 0x18, 0x04, 0xb1, 0xbe,
+  0x9e, 0xf4, 0x19, 0x02, 0x0b, 0x85, 0x28, 0x04,
+  0x4d, 0xdd, 0x8c, 0x2a, 0x29, 0x04, 0xb1, 0xbe,
+  0x9e, 0xf4, 0x2a, 0x02, 0x0b, 0x85, 0x38, 0x01,
+  0x2e, 0x39, 0x04, 0x00, 0x8d, 0xd4, 0x29, 0x01,
+  0x02, 0x1c, 0x5f
+};
+
+GST_START_TEST (rtp_klv)
+{
+  rtp_pipeline_test (rtp_KLV_frame_data, G_N_ELEMENTS (rtp_KLV_frame_data), 1,
+      "meta/x-klv, parsed=(bool)true", "rtpklvpay", "rtpklvdepay", 0, 0, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_klv_fragmented)
+{
+  /* force super-small mtu of 60 to fragment KLV unit */
+  rtp_pipeline_test (rtp_KLV_frame_data, sizeof (rtp_KLV_frame_data), 1,
+      "meta/x-klv, parsed=(bool)true", "rtpklvpay", "rtpklvdepay",
+      sizeof (rtp_KLV_frame_data), 60, FALSE);
 }
 
 GST_END_TEST;
@@ -969,6 +1014,8 @@ rtp_payloading_suite (void)
   tcase_add_test (tc_chain, rtp_h264_list_lt_mtu_avc);
   tcase_add_test (tc_chain, rtp_h264_list_gt_mtu);
   tcase_add_test (tc_chain, rtp_h264_list_gt_mtu_avc);
+  tcase_add_test (tc_chain, rtp_klv);
+  tcase_add_test (tc_chain, rtp_klv_fragmented);
   tcase_add_test (tc_chain, rtp_L16);
   tcase_add_test (tc_chain, rtp_L24);
   tcase_add_test (tc_chain, rtp_mp2t);
