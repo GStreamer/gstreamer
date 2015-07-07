@@ -49,11 +49,6 @@ typedef struct _GstAmrParseClass GstAmrParseClass;
  * @block_size: Pointer to frame size lookup table.
  * @need_header: Tells whether the MIME header should be read in the beginning.
  * @wide: Wideband mode.
- * @eos: Indicates the EOS situation. Set when EOS event is received.
- * @sync: Tells whether the parser is in sync.
- * @framecount: Total amount of frames handled.
- * @bytecount: Total amount of bytes handled.
- * @ts: Timestamp of the current media.
  *
  * The opaque GstAacParse data structure.
  */
