@@ -341,7 +341,7 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 }
 
-/**
+/*
  * Start of pad option handler code
  */
 #define DEFAULT_PAD_FRAME_DURATION TRUE

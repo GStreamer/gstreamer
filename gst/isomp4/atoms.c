@@ -50,7 +50,7 @@
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
 
-/**
+/*
  * Creates a new AtomsContext for the given flavor.
  */
 AtomsContext *
@@ -61,7 +61,7 @@ atoms_context_new (AtomsTreeFlavor flavor)
   return context;
 }
 
-/**
+/*
  * Frees an AtomsContext and all memory associated with it
  */
 void

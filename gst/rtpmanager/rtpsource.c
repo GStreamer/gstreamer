@@ -1803,6 +1803,7 @@ rtp_source_has_retained (RTPSource * src, GCompareFunc func, gconstpointer data)
 }
 
 /**
+ * rtp_source_register_nack:
  * @src: The #RTPSource
  * @seqnum: a seqnum
  *
@@ -1850,6 +1851,7 @@ rtp_source_register_nack (RTPSource * src, guint16 seqnum)
 }
 
 /**
+ * rtp_source_get_nacks:
  * @src: The #RTPSource
  * @n_nacks: result number of nacks
  *

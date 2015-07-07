@@ -40,7 +40,7 @@
  * SOFTWARE.
  */
 
-/**
+/*
  * This module contains functions for serializing partial information from
  * a mux in progress (by qtmux elements). This enables reconstruction of the
  * moov box if a crash happens and thus recovering the movie file.
@@ -128,7 +128,7 @@ atoms_recov_write_ftyp_info (FILE * f, AtomFTYP * ftyp, GstBuffer * prefix)
   return TRUE;
 }
 
-/**
+/*
  * Writes important info on the 'moov' atom (non-trak related)
  * to be able to recover the moov structure after a crash.
  *
@@ -153,7 +153,7 @@ atoms_recov_write_moov_info (FILE * f, AtomMOOV * moov)
   return atom_size > 0 && writen == atom_size;
 }
 
-/**
+/*
  * Writes the number of traks to the file.
  * This simply writes a guint32 in BE.
  */
@@ -165,7 +165,7 @@ atoms_recov_write_traks_number (FILE * f, guint32 traks)
   return fwrite (data, 4, 1, f) == 1;
 }
 
-/**
+/*
  * Writes the moov's timescale to the file
  * This simply writes a guint32 in BE.
  */
@@ -177,7 +177,7 @@ atoms_recov_write_moov_timescale (FILE * f, guint32 timescale)
   return fwrite (data, 4, 1, f) == 1;
 }
 
-/**
+/*
  * Writes the trak atom to the file.
  */
 gboolean
@@ -778,7 +778,7 @@ trak_recov_data_add_sample (TrakRecovData * trak, TrakBufferEntryInfo * b)
       b->chunk_offset, b->sync, b->pts_offset);
 }
 
-/**
+/*
  * Parses the buffer entries in the MoovRecovFile and matches the inputs
  * with the data in the MdatRecovFile. Whenever a buffer entry of that
  * represents 'x' bytes of data, the same amount of data is 'validated' in

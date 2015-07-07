@@ -112,7 +112,7 @@ void          atoms_context_free (AtomsContext *context);
 
 /* atom defs and functions */
 
-/**
+/*
  * Used for storing time related values for some atoms.
  */
 typedef struct _TimeInfo
