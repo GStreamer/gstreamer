@@ -2670,13 +2670,14 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     goto fail;
   data = (guint8 *) gst_byte_reader_peek_data_unchecked (trun);
 
-  if (stream->n_samples >=
+  if (stream->n_samples + samples_count >=
       QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
     goto index_too_big;
 
   GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u * %u (%.2f MB)",
-      stream->n_samples, (guint) sizeof (QtDemuxSample),
-      stream->n_samples * sizeof (QtDemuxSample) / (1024.0 * 1024.0));
+      stream->n_samples + samples_count, (guint) sizeof (QtDemuxSample),
+      (stream->n_samples + samples_count) *
+      sizeof (QtDemuxSample) / (1024.0 * 1024.0));
 
   /* create a new array of samples if it's the first sample parsed */
   if (stream->n_samples == 0)
