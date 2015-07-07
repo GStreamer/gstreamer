@@ -215,8 +215,14 @@ gst_video_overlay_composition_meta_transform (GstBuffer * dest, GstMeta * meta,
       dmeta =
           (GstVideoOverlayCompositionMeta *) gst_buffer_add_meta (dest,
           GST_VIDEO_OVERLAY_COMPOSITION_META_INFO, NULL);
+      if (!dmeta)
+        return FALSE;
+
       dmeta->overlay = gst_video_overlay_composition_ref (smeta->overlay);
     }
+  } else {
+    /* return FALSE, if transform type is not supported */
+    return FALSE;
   }
   return TRUE;
 }
