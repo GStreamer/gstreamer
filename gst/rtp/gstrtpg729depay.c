@@ -214,6 +214,7 @@ gst_rtp_g729_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 bad_packet:
   {
     /* no fatal error */
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }
