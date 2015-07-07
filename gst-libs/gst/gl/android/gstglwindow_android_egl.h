@@ -23,6 +23,7 @@
 #define __GST_GL_WINDOW_ANDROID_EGL_H__
 
 #include <gst/gl/gl.h>
+#include <gst/gl/egl/gstegl.h>
 
 G_BEGIN_DECLS
 
