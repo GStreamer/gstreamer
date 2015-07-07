@@ -580,12 +580,6 @@ gst_gl_transformation_callback (gpointer stuff)
   if (transformation->caps_change) {
     _upload_vertices (transformation);
     _bind_buffer (transformation);
-
-    if (gl->GenVertexArrays) {
-      gl->BindVertexArray (0);
-      gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
-      gl->BindBuffer (GL_ARRAY_BUFFER, 0);
-    }
   } else if (!gl->GenVertexArrays) {
     _bind_buffer (transformation);
   }
