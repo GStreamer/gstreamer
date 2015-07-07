@@ -389,14 +389,14 @@ gst_gl_context_egl_create_context (GstGLContext * context,
         gst_gl_context_egl_get_error_string ());
     goto failure;
   }
+  /* FIXME do we want a window vfunc ? */
+#if GST_GL_HAVE_WINDOW_X11
+  if (GST_GL_IS_WINDOW_X11 (context->window)) {
+    gst_gl_window_x11_create_window ((GstGLWindowX11 *) context->window);
+  }
+#endif
 
   if (other_context == NULL) {
-    /* FIXME do we want a window vfunc ? */
-#if GST_GL_HAVE_WINDOW_X11
-    if (GST_GL_IS_WINDOW_X11 (context->window)) {
-      gst_gl_window_x11_create_window ((GstGLWindowX11 *) context->window);
-    }
-#endif
 #if GST_GL_HAVE_WINDOW_WAYLAND
     if (GST_GL_IS_WINDOW_WAYLAND_EGL (context->window)) {
       gst_gl_window_wayland_egl_create_window ((GstGLWindowWaylandEGL *)

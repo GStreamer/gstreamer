@@ -32,8 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_download_element_debug);
 G_DEFINE_TYPE_WITH_CODE (GstGLDownloadElement, gst_gl_download_element,
     GST_TYPE_GL_BASE_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_gl_download_element_debug, "gldownloadelement",
-        0, "download element");
-    );
+        0, "download element"););
 
 static gboolean gst_gl_download_element_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
@@ -161,17 +160,29 @@ static GstFlowReturn
 gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer ** outbuf)
 {
+  GstCaps *src_caps = gst_pad_get_current_caps (bt->srcpad);
+  GstCapsFeatures *features = NULL;
   gint i, n;
 
   *outbuf = inbuf;
+
+  if (src_caps)
+    features = gst_caps_get_features (src_caps, 0);
 
   n = gst_buffer_n_memory (*outbuf);
   for (i = 0; i < n; i++) {
     GstMemory *mem = gst_buffer_peek_memory (*outbuf, i);
 
-    if (gst_is_gl_memory (mem))
-      gst_gl_memory_download_transfer ((GstGLMemory *) mem);
+    if (gst_is_gl_memory (mem)) {
+      if (!features || gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY)) {
+        gst_gl_memory_download_transfer ((GstGLMemory *) mem);
+      }
+    }
   }
+
+  if (src_caps)
+    gst_caps_unref (src_caps);
 
   return GST_FLOW_OK;
 }
