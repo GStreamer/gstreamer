@@ -577,6 +577,48 @@
       </pads>
     </element>
     <element>
+      <name>rtph261depay</name>
+      <longname>RTP H261 depayloader</longname>
+      <class>Codec/Depayloader/Network/RTP</class>
+      <description>Extracts H261 video from RTP packets (RFC 4587)</description>
+      <author>Stian Selnes &lt;stian@pexip.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)video, payload=(int)31, clock-rate=(int)90000, encoding-name=(string)H261; application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)H261</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-h261</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtph261pay</name>
+      <longname>RTP H261 packet payloader</longname>
+      <class>Codec/Payloader/Network/RTP</class>
+      <description>Payload-encodes H261 video in RTP packets (RFC 4587)</description>
+      <author>Stian Selnes &lt;stian@pexip.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-h261</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)video, payload=(int)31, clock-rate=(int)90000, encoding-name=(string)H261; application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)H261</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtph263depay</name>
       <longname>RTP H263 depayloader</longname>
       <class>Codec/Depayloader/Network/RTP</class>
@@ -825,6 +867,48 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-rtp, media=(string)video, payload=(int)26, clock-rate=(int)90000, encoding-name=(string)JPEG, width=(int)[ 1, 65536 ], height=(int)[ 1, 65536 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpklvdepay</name>
+      <longname>RTP KLV Depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts KLV (SMPTE ST 336) metadata from RTP packets</description>
+      <author>Tim-Philipp Müller &lt;tim@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)application, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)SMPTE336M</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>meta/x-klv, parsed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpklvpay</name>
+      <longname>RTP KLV Payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payloads KLV (SMPTE ST 336) metadata as RTP packets</description>
+      <author>Tim-Philipp Müller &lt;tim@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>meta/x-klv, parsed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)application, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)SMPTE336M</details>
         </caps>
       </pads>
     </element>

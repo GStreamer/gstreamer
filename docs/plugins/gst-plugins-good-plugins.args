@@ -994,7 +994,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Use pipeline clock</NICK>
-<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages.</BLURB>
+<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages(DEPRECATED: Use ntp-time-source property).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -1046,6 +1046,16 @@
 <NICK>TLS interaction</NICK>
 <BLURB>A GTlsInteraction object to promt the user for password or certificate.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::ntp-time-source</NAME>
+<TYPE>GstRTSPSrcNtpTimeSource</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>NTP Time Source</NICK>
+<BLURB>NTP time source for RTCP packets.</BLURB>
+<DEFAULT>NTP time based on realtime clock</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21344,7 +21354,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Use pipeline clock</NICK>
-<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages (DEPRECATED: Use ntp-source property).</BLURB>
+<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages (DEPRECATED: Use ntp-time-source property).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -21674,7 +21684,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Use pipeline clock</NICK>
-<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages (DEPRECATED: Use ntp-source property).</BLURB>
+<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages (DEPRECATED: Use ntp-time-source property).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 

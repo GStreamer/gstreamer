@@ -197,11 +197,13 @@ GObject
           GstRtpG726Depay
           GstRtpG729Depay
           GstRtpGSTDepay
+          GstRtpH261Depay
           GstRtpH263Depay
           GstRtpH263PDepay
           GstRtpH264Depay
           GstRtpJ2KDepay
           GstRtpJPEGDepay
+          GstRtpKlvDepay
           GstRtpL16Depay
           GstRtpL24Depay
           GstRtpMP1SDepay
@@ -245,11 +247,13 @@ GObject
           GstRtpAMRPay
           GstRtpCELTPay
           GstRtpGSTPay
+          GstRtpH261Pay
           GstRtpH263PPay
           GstRtpH263Pay
           GstRtpH264Pay
           GstRtpJ2KPay
           GstRtpJPEGPay
+          GstRtpKlvPay
           GstRtpMP4APay
           GstRtpMP4GPay
           GstRtpMP4VPay

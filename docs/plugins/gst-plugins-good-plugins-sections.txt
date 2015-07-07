@@ -1775,6 +1775,38 @@ gst_rtp_h261_pay_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-rtpklvdepay</FILE>
+<TITLE>rtpklvdepay</TITLE>
+GstRtpKlvDepay
+<SUBSECTION Standard>
+GstRtpKlvDepayClass
+GST_RTP_KLV_DEPAY
+GST_RTP_KLV_DEPAY_CAST
+GST_IS_RTP_KLV_DEPAY
+GST_RTP_KLV_DEPAY_CLASS
+GST_IS_RTP_KLV_DEPAY_CLASS
+GST_TYPE_RTP_KLV_DEPAY
+<SUBSECTION Private>
+gst_rtp_klv_depay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rtpklvpay</FILE>
+<TITLE>rtpklvpay</TITLE>
+GstRtpKlvPay
+<SUBSECTION Standard>
+GstRtpKlvPayClass
+GST_RTP_KLV_PAY
+GST_RTP_KLV_PAY_CAST
+GST_IS_RTP_KLV_PAY
+GST_RTP_KLV_PAY_CLASS
+GST_IS_RTP_KLV_PAY_CLASS
+GST_TYPE_RTP_KLV_PAY
+<SUBSECTION Private>
+gst_rtp_klv_pay_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rtpL16depay</FILE>
 <TITLE>rtpL16depay</TITLE>
 GstRtpL16Depay
