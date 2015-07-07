@@ -401,8 +401,6 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
       if (identity->clock_id) {
         GST_DEBUG_OBJECT (identity, "unlock clock wait");
         gst_clock_id_unschedule (identity->clock_id);
-        gst_clock_id_unref (identity->clock_id);
-        identity->clock_id = NULL;
       }
       GST_OBJECT_UNLOCK (identity);
     }
@@ -886,8 +884,6 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
       if (identity->clock_id) {
         GST_DEBUG_OBJECT (identity, "unlock clock wait");
         gst_clock_id_unschedule (identity->clock_id);
-        gst_clock_id_unref (identity->clock_id);
-        identity->clock_id = NULL;
       }
       identity->blocked = FALSE;
       g_cond_broadcast (&identity->blocked_cond);
