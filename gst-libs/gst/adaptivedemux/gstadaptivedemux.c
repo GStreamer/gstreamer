@@ -1935,8 +1935,18 @@ gst_adaptive_demux_stream_download_fragment (GstAdaptiveDemuxStream * stream)
         if (++stream->download_error_count <= MAX_DOWNLOAD_ERROR_COUNT) {
           /* looks like there is no way of knowing when a live stream has ended
            * Have to assume we are falling behind and cause a manifest reload */
+          GST_DEBUG_OBJECT (stream->pad,
+              "Converting error of live stream to EOS");
           return GST_FLOW_EOS;
         }
+      } else if (ret != GST_FLOW_ERROR
+          && !gst_adaptive_demux_stream_has_next_fragment (demux, stream)) {
+        /* If this is the last fragment, consider failures EOS and not actual
+         * errors. Due to rounding errors in the durations, the last fragment
+         * might not actually exist */
+        GST_DEBUG_OBJECT (stream->pad,
+            "Converting error for last fragment to EOS");
+        return GST_FLOW_EOS;
       }
     }
   }
