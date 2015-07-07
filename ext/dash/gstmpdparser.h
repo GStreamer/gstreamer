@@ -594,6 +594,7 @@ guint gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient *client, GLi
 
 gint64 gst_mpd_client_calculate_time_difference (const GstDateTime * t1, const GstDateTime * t2);
 GstDateTime *gst_mpd_client_add_time_difference (GstDateTime * t1, gint64 usecs);
+gint64 gst_mpd_client_parse_default_presentation_delay(GstMpdClient * client, const gchar * default_presentation_delay);
 
 /* profiles */
 gboolean gst_mpd_client_has_isoff_ondemand_profile (GstMpdClient *client);

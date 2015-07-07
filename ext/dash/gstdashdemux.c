@@ -146,6 +146,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <inttypes.h>
 #include <gio/gio.h>
 #include <gst/base/gsttypefindhelper.h>
@@ -188,6 +189,7 @@ enum
   PROP_MAX_BUFFERING_TIME,
   PROP_BANDWIDTH_USAGE,
   PROP_MAX_BITRATE,
+  PROP_PRESENTATION_DELAY,
   PROP_LAST
 };
 
@@ -195,6 +197,7 @@ enum
 #define DEFAULT_MAX_BUFFERING_TIME       30     /* in seconds */
 #define DEFAULT_BANDWIDTH_USAGE         0.8     /* 0 to 1     */
 #define DEFAULT_MAX_BITRATE        24000000     /* in bit/s  */
+#define DEFAULT_PRESENTATION_DELAY     NULL     /* zero */
 
 /* Clock drift compensation for live streams */
 #define SLOW_CLOCK_UPDATE_INTERVAL  (1000000 * 30 * 60) /* 30 minutes */
@@ -299,6 +302,7 @@ gst_dash_demux_dispose (GObject * obj)
 
   gst_dash_demux_clock_drift_free (demux->clock_drift);
   demux->clock_drift = NULL;
+  g_free (demux->default_presentation_delay);
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
@@ -379,6 +383,12 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
           1000, G_MAXUINT, DEFAULT_MAX_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_PRESENTATION_DELAY,
+      g_param_spec_string ("presentation-delay", "Presentation delay",
+          "Default presentation delay (in seconds, milliseconds or fragments) (e.g. 12s, 2500ms, 3f)",
+          DEFAULT_PRESENTATION_DELAY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_dash_demux_audiosrc_template));
   gst_element_class_add_pad_template (gstelement_class,
@@ -441,6 +451,7 @@ gst_dash_demux_init (GstDashDemux * demux)
   /* Properties */
   demux->max_buffering_time = DEFAULT_MAX_BUFFERING_TIME * GST_SECOND;
   demux->max_bitrate = DEFAULT_MAX_BITRATE;
+  demux->default_presentation_delay = DEFAULT_PRESENTATION_DELAY;
 
   g_mutex_init (&demux->client_lock);
 
@@ -465,6 +476,10 @@ gst_dash_demux_set_property (GObject * object, guint prop_id,
     case PROP_MAX_BITRATE:
       demux->max_bitrate = g_value_get_uint (value);
       break;
+    case PROP_PRESENTATION_DELAY:
+      g_free (demux->default_presentation_delay);
+      demux->default_presentation_delay = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -487,6 +502,12 @@ gst_dash_demux_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MAX_BITRATE:
       g_value_set_uint (value, demux->max_bitrate);
+      break;
+    case PROP_PRESENTATION_DELAY:
+      if (demux->default_presentation_delay == NULL)
+        g_value_set_static_string (value, "");
+      else
+        g_value_set_string (value, demux->default_presentation_delay);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -682,6 +703,13 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
     if (dashdemux->client->mpd_node->suggestedPresentationDelay != -1) {
       GstDateTime *target = gst_mpd_client_add_time_difference (now,
           dashdemux->client->mpd_node->suggestedPresentationDelay * -1000);
+      gst_date_time_unref (now);
+      now = target;
+    } else if (dashdemux->default_presentation_delay) {
+      gint64 dfp =
+          gst_mpd_client_parse_default_presentation_delay (dashdemux->client,
+          dashdemux->default_presentation_delay);
+      GstDateTime *target = gst_mpd_client_add_time_difference (now, dfp);
       gst_date_time_unref (now);
       now = target;
     }

@@ -5807,3 +5807,43 @@ gst_mpd_client_has_isoff_ondemand_profile (GstMpdClient * client)
 {
   return client->profile_isoff_ondemand;
 }
+
+/**
+ * gst_mpd_client_parse_default_presentation_delay:
+ * @client: #GstMpdClient that has a parsed manifest
+ * @default_presentation_delay: A string that specifies a time period
+ * in fragments (e.g. "5 f"), seconds ("12 s") or milliseconds
+ * ("12000 ms")
+ * Returns: the parsed string in milliseconds
+ *
+ * Since: 1.6
+ */
+gint64
+gst_mpd_client_parse_default_presentation_delay (GstMpdClient * client,
+    const gchar * default_presentation_delay)
+{
+  gint64 value;
+  char *endptr = NULL;
+
+  g_return_val_if_fail (client != NULL, 0);
+  g_return_val_if_fail (default_presentation_delay != NULL, 0);
+  value = strtol (default_presentation_delay, &endptr, 10);
+  if (endptr == default_presentation_delay || value == 0) {
+    return 0;
+  }
+  while (*endptr == ' ')
+    endptr++;
+  if (*endptr == 's' || *endptr == 'S') {
+    value *= 1000;              /* convert to ms */
+  } else if (*endptr == 'f' || *endptr == 'F') {
+    gint64 segment_duration;
+    g_assert (client->mpd_node != NULL);
+    segment_duration = client->mpd_node->maxSegmentDuration;
+    value *= segment_duration;
+  } else if (*endptr != 'm' && *endptr != 'M') {
+    GST_ERROR ("Unable to parse default presentation delay: %s",
+        default_presentation_delay);
+    value = 0;
+  }
+  return value;
+}

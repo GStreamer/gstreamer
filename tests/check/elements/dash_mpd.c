@@ -4751,6 +4751,49 @@ GST_START_TEST (dash_mpdparser_unmatched_segmentTimeline_segmentURL)
 GST_END_TEST;
 
 /*
+ * Test parsing of the default presentation delay property
+ */
+GST_START_TEST (dash_mpdparser_default_presentation_delay)
+{
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      "     maxSegmentDuration=\"PT2S\">"
+      "  <Period id=\"Period0\" start=\"P0S\"></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+  gint64 value;
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+  value = gst_mpd_client_parse_default_presentation_delay (mpdclient, "5s");
+  assert_equals_int64 (value, 5000);
+  value = gst_mpd_client_parse_default_presentation_delay (mpdclient, "5S");
+  assert_equals_int64 (value, 5000);
+  value =
+      gst_mpd_client_parse_default_presentation_delay (mpdclient, "5 seconds");
+  assert_equals_int64 (value, 5000);
+  value = gst_mpd_client_parse_default_presentation_delay (mpdclient, "2500ms");
+  assert_equals_int64 (value, 2500);
+  value = gst_mpd_client_parse_default_presentation_delay (mpdclient, "3f");
+  assert_equals_int64 (value, 6000);
+  value = gst_mpd_client_parse_default_presentation_delay (mpdclient, "3F");
+  assert_equals_int64 (value, 6000);
+  value = gst_mpd_client_parse_default_presentation_delay (mpdclient, "");
+  assert_equals_int64 (value, 0);
+  value = gst_mpd_client_parse_default_presentation_delay (mpdclient, "10");
+  assert_equals_int64 (value, 0);
+  value =
+      gst_mpd_client_parse_default_presentation_delay (mpdclient,
+      "not a number");
+  assert_equals_int64 (value, 0);
+}
+
+GST_END_TEST;
+
+/*
  * create a test suite containing all dash testcases
  */
 static Suite *
@@ -4871,6 +4914,7 @@ dash_suite (void)
   tcase_add_test (tc_simpleMPD, dash_mpdparser_isoff_ondemand_profile);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_GstDateTime);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_various_duration_formats);
+  tcase_add_test (tc_simpleMPD, dash_mpdparser_default_presentation_delay);
 
   /* tests checking the MPD management
    * (eg. setting active streams, obtaining attributes values)

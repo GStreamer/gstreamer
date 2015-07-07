@@ -96,6 +96,7 @@ struct _GstDashDemux
   /* Properties */
   GstClockTime max_buffering_time;      /* Maximum buffering time accumulated during playback */
   guint64 max_bitrate;          /* max of bitrate supported by target decoder         */
+  gchar* default_presentation_delay; /* presentation time delay if MPD@suggestedPresentationDelay is not present */
 
   gint n_audio_streams;
   gint n_video_streams;
