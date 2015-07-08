@@ -1090,26 +1090,40 @@ GList *
 gst_adapter_get_list (GstAdapter * adapter, gsize nbytes)
 {
   GQueue queue = G_QUEUE_INIT;
-  GstBuffer *cur;
+  GstBuffer *cur, *buffer;
   gsize hsize, skip, cur_size;
+  GSList *g = NULL;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
   g_return_val_if_fail (nbytes <= adapter->size, NULL);
 
   GST_LOG_OBJECT (adapter, "getting %" G_GSIZE_FORMAT " bytes", nbytes);
 
+  g = adapter->buflist;
+  skip = adapter->skip;
+
   while (nbytes > 0) {
-    cur = adapter->buflist->data;
-    skip = adapter->skip;
+    cur = g->data;
     cur_size = gst_buffer_get_size (cur);
     hsize = MIN (nbytes, cur_size - skip);
 
-    cur = gst_adapter_get_buffer (adapter, hsize);
+    if (skip == 0 && cur_size == hsize) {
+      GST_LOG_OBJECT (adapter, "providing buffer of %" G_GSIZE_FORMAT " bytes"
+          " as head buffer", hsize);
+      buffer = gst_buffer_ref (cur);
+    } else {
+      GST_LOG_OBJECT (adapter, "appending %" G_GSIZE_FORMAT " bytes"
+          " via region copy", hsize);
+      buffer = gst_buffer_copy_region (cur, GST_BUFFER_COPY_ALL, skip, hsize);
+    }
 
-    g_queue_push_tail (&queue, cur);
+    g_queue_push_tail (&queue, buffer);
 
     nbytes -= hsize;
+    skip = 0;
+    g = g_slist_next (g);
   }
+
   return queue.head;
 }
 
@@ -1189,9 +1203,10 @@ GstBufferList *
 gst_adapter_get_buffer_list (GstAdapter * adapter, gsize nbytes)
 {
   GstBufferList *buffer_list;
-  GstBuffer *cur;
+  GstBuffer *cur, *buffer;
   gsize hsize, skip, cur_size;
   guint n_bufs;
+  GSList *g = NULL;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
 
@@ -1208,15 +1223,31 @@ gst_adapter_get_buffer_list (GstAdapter * adapter, gsize nbytes)
 
   buffer_list = gst_buffer_list_new_sized (n_bufs);
 
+  g = adapter->buflist;
+  skip = adapter->skip;
+
   while (nbytes > 0) {
-    cur = adapter->buflist->data;
-    skip = adapter->skip;
+    cur = g->data;
     cur_size = gst_buffer_get_size (cur);
     hsize = MIN (nbytes, cur_size - skip);
 
-    gst_buffer_list_add (buffer_list, gst_adapter_get_buffer (adapter, hsize));
+    if (skip == 0 && cur_size == hsize) {
+      GST_LOG_OBJECT (adapter, "providing buffer of %" G_GSIZE_FORMAT " bytes"
+          " as head buffer", hsize);
+      buffer = gst_buffer_ref (cur);
+    } else {
+      GST_LOG_OBJECT (adapter, "appending %" G_GSIZE_FORMAT " bytes"
+          " via region copy", hsize);
+      buffer = gst_buffer_copy_region (cur, GST_BUFFER_COPY_ALL, skip, hsize);
+    }
+
+    gst_buffer_list_add (buffer_list, buffer);
+
     nbytes -= hsize;
+    skip = 0;
+    g = g_slist_next (g);
   }
+
   return buffer_list;
 }
 
