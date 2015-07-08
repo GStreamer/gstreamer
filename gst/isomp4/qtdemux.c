@@ -2006,16 +2006,9 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
           segment.stop = MAX (segment.stop, segment.start);
         }
       } else if (segment.format == GST_FORMAT_TIME) {
-        /* NOP */
-#if 0
-        gst_qtdemux_push_event (demux, gst_event_ref (event));
-        gst_event_new_new_segment_full (segment.update, segment.rate,
-            segment.arate, GST_FORMAT_TIME, segment.start, segment.stop,
-            segment.start);
-        gst_adapter_clear (demux->adapter);
-        demux->neededbytes = 16;
-        goto exit;
-#endif
+        /* push all data on the adapter before starting this
+         * new segment */
+        gst_qtdemux_process_adapter (demux, TRUE);
       } else {
         GST_DEBUG_OBJECT (demux, "unsupported segment format, ignoring");
         goto exit;
