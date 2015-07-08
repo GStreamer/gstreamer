@@ -807,6 +807,53 @@ GST_START_TEST (test_take_list)
 
 GST_END_TEST;
 
+/* Fill a buffer with a sequence of 32 bit ints and read a couple of front
+ * buffers using get_buffer, checking that they're still in the right order */
+GST_START_TEST (test_get_list)
+{
+  GstAdapter *adapter;
+  int i = 0;
+  gsize size = 0;
+  GList *list, *walk;
+  GstBuffer *buf;
+  gsize left;
+  GstMapInfo info;
+  guint8 *ptr;
+
+  adapter = create_and_fill_adapter ();
+  size = gst_adapter_available (adapter);
+
+  list = gst_adapter_get_list (adapter, sizeof (guint32) * 5);
+  fail_unless (list != NULL);
+
+  for (walk = list; walk; walk = g_list_next (walk)) {
+    buf = walk->data;
+
+    fail_unless (gst_buffer_map (buf, &info, GST_MAP_READ));
+
+    ptr = info.data;
+    left = info.size;
+
+    while (left > 0) {
+      fail_unless (GST_READ_UINT32_LE (ptr) == i);
+      i++;
+      ptr += sizeof (guint32);
+      left -= sizeof (guint32);
+    }
+    gst_buffer_unmap (buf, &info);
+
+    gst_buffer_unref (buf);
+  }
+  g_list_free (list);
+
+  fail_unless (gst_adapter_available (adapter) == size,
+      "All data should remain in the adapter");
+
+  g_object_unref (adapter);
+}
+
+GST_END_TEST;
+
 /* Fill a buffer with a sequence of 32 bit ints and read them back out
  * using take_buffer, checking that they're still in the right order */
 GST_START_TEST (test_take_buffer_list)
@@ -848,6 +895,55 @@ GST_START_TEST (test_take_buffer_list)
   }
   fail_unless (gst_adapter_available (adapter) == 0,
       "Data was left in the adapter");
+
+  g_object_unref (adapter);
+}
+
+GST_END_TEST;
+
+/* Fill a buffer with a sequence of 32 bit ints and read a couple of front
+ * buffers using get_buffer, checking that they're still in the right order */
+GST_START_TEST (test_get_buffer_list)
+{
+  GstAdapter *adapter;
+  int i = 0;
+  gsize size = 0;
+  GstBufferList *buffer_list;
+  GstBuffer *buf;
+  gsize left;
+  GstMapInfo info;
+  guint8 *ptr;
+  guint n, num;
+
+  adapter = create_and_fill_adapter ();
+  size = gst_adapter_available (adapter);
+
+  buffer_list = gst_adapter_get_buffer_list (adapter, sizeof (guint32) * 5);
+  fail_unless (buffer_list != NULL);
+
+  num = gst_buffer_list_length (buffer_list);
+  fail_unless (num > 0);
+
+  for (n = 0; n < num; ++n) {
+    buf = gst_buffer_list_get (buffer_list, n);
+
+    fail_unless (gst_buffer_map (buf, &info, GST_MAP_READ));
+
+    ptr = info.data;
+    left = info.size;
+
+    while (left > 0) {
+      fail_unless (GST_READ_UINT32_LE (ptr) == i);
+      i++;
+      ptr += sizeof (guint32);
+      left -= sizeof (guint32);
+    }
+    gst_buffer_unmap (buf, &info);
+  }
+  gst_buffer_list_unref (buffer_list);
+
+  fail_unless (gst_adapter_available (adapter) == size,
+      "All data should remain in the adapter");
 
   g_object_unref (adapter);
 }
@@ -963,7 +1059,9 @@ gst_adapter_suite (void)
   tcase_add_test (tc_chain, test_timestamp);
   tcase_add_test (tc_chain, test_scan);
   tcase_add_test (tc_chain, test_take_list);
+  tcase_add_test (tc_chain, test_get_list);
   tcase_add_test (tc_chain, test_take_buffer_list);
+  tcase_add_test (tc_chain, test_get_buffer_list);
   tcase_add_test (tc_chain, test_merge);
   tcase_add_test (tc_chain, test_take_buffer_fast);
 
