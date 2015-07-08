@@ -2166,13 +2166,21 @@ gst_qtdemux_stbl_free (QtDemuxStream * stream)
 }
 
 static void
+gst_qtdemux_stream_flush_segments_data (GstQTDemux * qtdemux,
+    QtDemuxStream * stream)
+{
+  g_free (stream->segments);
+  stream->segments = NULL;
+  stream->segment_index = -1;
+  stream->accumulated_base = 0;
+}
+
+static void
 gst_qtdemux_stream_flush_samples_data (GstQTDemux * qtdemux,
     QtDemuxStream * stream)
 {
   g_free (stream->samples);
   stream->samples = NULL;
-  g_free (stream->segments);
-  stream->segments = NULL;
   gst_qtdemux_stbl_free (stream);
 
   /* fragments */
@@ -2184,8 +2192,6 @@ gst_qtdemux_stream_flush_samples_data (GstQTDemux * qtdemux,
   stream->stbl_index = -1;
   stream->n_samples = 0;
   stream->time_position = 0;
-  stream->segment_index = -1;
-  stream->accumulated_base = 0;
 }
 
 static void
@@ -2210,6 +2216,7 @@ gst_qtdemux_stream_clear (GstQTDemux * qtdemux, QtDemuxStream * stream)
   stream->sent_eos = FALSE;
   stream->sparse = FALSE;
 
+  gst_qtdemux_stream_flush_segments_data (qtdemux, stream);
   gst_qtdemux_stream_flush_samples_data (qtdemux, stream);
 }
 
@@ -2694,7 +2701,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     timestamp = GSTTIME_TO_QTSTREAMTIME (stream, qtdemux->fragment_start);
     qtdemux->fragment_start = -1;
   } else {
-    if (G_UNLIKELY (stream->n_samples == 0)) {
+    if (stream->n_samples == 0) {
       if (decode_ts > 0) {
         timestamp = decode_ts;
       } else if (stream->pending_seek != NULL) {
@@ -3016,6 +3023,10 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     }
     if (G_UNLIKELY (base_offset < -1))
       goto lost_offset;
+
+    if (qtdemux->upstream_format_is_time)
+      gst_qtdemux_stream_flush_samples_data (qtdemux, stream);
+
     /* Track Run node */
     trun_node =
         qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun,
@@ -7821,6 +7832,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
 
     /* flush samples data from this track from previous moov */
+    gst_qtdemux_stream_flush_segments_data (qtdemux, stream);
     gst_qtdemux_stream_flush_samples_data (qtdemux, stream);
   }
 
