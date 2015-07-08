@@ -185,7 +185,7 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
 
       if (profile_string) {
         amc_profile.key = "profile";    /* named profile ? */
-        amc_profile.id = gst_amc_avc_mpeg4_profile_from_string (profile_string);
+        amc_profile.id = gst_amc_mpeg4_profile_from_string (profile_string);
       }
 
       if (level_string) {

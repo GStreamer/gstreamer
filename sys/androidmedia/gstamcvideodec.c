@@ -172,6 +172,8 @@ caps_to_mime (GstCaps * caps)
     return "video/3gpp";
   } else if (strcmp (name, "video/x-h264") == 0) {
     return "video/avc";
+  } else if (strcmp (name, "video/x-h265") == 0) {
+    return "video/hevc";
   } else if (strcmp (name, "video/x-vp8") == 0) {
     return "video/x-vnd.on2.vp8";
   } else if (strcmp (name, "video/x-divx") == 0) {

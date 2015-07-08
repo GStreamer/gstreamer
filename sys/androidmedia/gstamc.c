@@ -2539,6 +2539,109 @@ static const struct
 {
   gint id;
   const gchar *str;
+} hevc_profile_mapping_table[] = {
+  {
+  HEVCProfileMain, "main"}, {
+  HEVCProfileMain10, "main-10"}
+};
+
+const gchar *
+gst_amc_hevc_profile_to_string (gint profile)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (hevc_profile_mapping_table); i++) {
+    if (hevc_profile_mapping_table[i].id == profile) {
+      return hevc_profile_mapping_table[i].str;
+    }
+  }
+
+  return NULL;
+}
+
+gint
+gst_amc_hevc_profile_from_string (const gchar * profile)
+{
+  gint i;
+
+  g_return_val_if_fail (profile != NULL, -1);
+
+  for (i = 0; i < G_N_ELEMENTS (hevc_profile_mapping_table); i++) {
+    if (strcmp (hevc_profile_mapping_table[i].str, profile) == 0)
+      return hevc_profile_mapping_table[i].id;
+  }
+
+  return -1;
+}
+
+static const struct
+{
+  gint id;
+  const gchar *tier_str;
+  const gchar *level_str;
+} hevc_tier_level_mapping_table[] = {
+  {
+  HEVCMainTierLevel1, "main", "1"}, {
+  HEVCMainTierLevel2, "main", "2"}, {
+  HEVCMainTierLevel21, "main", "2.1"}, {
+  HEVCMainTierLevel3, "main", "3"}, {
+  HEVCMainTierLevel31, "main", "3.1"}, {
+  HEVCMainTierLevel4, "main", "4"}, {
+  HEVCMainTierLevel41, "main", "4.1"}, {
+  HEVCMainTierLevel5, "main", "5"}, {
+  HEVCMainTierLevel51, "main", "5.1"}, {
+  HEVCMainTierLevel52, "main", "5.2"}, {
+  HEVCMainTierLevel6, "main", "6"}, {
+  HEVCMainTierLevel61, "main", "6.1"}, {
+  HEVCMainTierLevel62, "main", "6.2"}, {
+  HEVCHighTierLevel1, "high", "1"}, {
+  HEVCHighTierLevel2, "high", "2"}, {
+  HEVCHighTierLevel21, "high", "2.1"}, {
+  HEVCHighTierLevel3, "high", "3"}, {
+  HEVCHighTierLevel31, "high", "3.1"}, {
+  HEVCHighTierLevel4, "high", "4"}, {
+  HEVCHighTierLevel41, "high", "4.1"}, {
+  HEVCHighTierLevel5, "high", "5"}, {
+  HEVCHighTierLevel51, "high", "5.1"}, {
+  HEVCHighTierLevel52, "high", "5.2"}, {
+  HEVCHighTierLevel6, "high", "6"}, {
+  HEVCHighTierLevel61, "high", "6.1"}
+};
+
+const gchar *
+gst_amc_hevc_tier_level_to_string (gint tier_level, const gchar ** tier)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (hevc_tier_level_mapping_table); i++) {
+    if (hevc_tier_level_mapping_table[i].id == tier_level)
+      *tier = hevc_tier_level_mapping_table[i].tier_str;
+    return hevc_tier_level_mapping_table[i].level_str;
+  }
+
+  return NULL;
+}
+
+gint
+gst_amc_hevc_tier_level_from_string (const gchar * tier, const gchar * level)
+{
+  gint i;
+
+  g_return_val_if_fail (level != NULL, -1);
+
+  for (i = 0; i < G_N_ELEMENTS (hevc_tier_level_mapping_table); i++) {
+    if (strcmp (hevc_tier_level_mapping_table[i].tier_str, tier) == 0 &&
+        strcmp (hevc_tier_level_mapping_table[i].level_str, level) == 0)
+      return hevc_tier_level_mapping_table[i].id;
+  }
+
+  return -1;
+}
+
+static const struct
+{
+  gint id;
+  const gchar *str;
   const gchar *alt_str;
 } avc_profile_mapping_table[] = {
   {
@@ -2757,7 +2860,7 @@ gst_amc_mpeg4_profile_to_string (gint profile)
 }
 
 gint
-gst_amc_avc_mpeg4_profile_from_string (const gchar * profile)
+gst_amc_mpeg4_profile_from_string (const gchar * profile)
 {
   gint i;
 
@@ -3573,6 +3676,74 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
               if (tmp3)
                 encoded_ret = gst_caps_merge_structure (encoded_ret, tmp3);
+              have_profile_level = TRUE;
+            }
+          }
+
+          if (!have_profile_level) {
+            encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+          } else {
+            gst_structure_free (tmp);
+          }
+        } else if (strcmp (type->mime, "video/hevc") == 0) {
+          gint j;
+          gboolean have_profile_level = FALSE;
+
+          tmp = gst_structure_new ("video/x-h265",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE,
+              0, 1, G_MAXINT, 1,
+              "parsed", G_TYPE_BOOLEAN, TRUE,
+              "stream-format", G_TYPE_STRING, "byte-stream",
+              "alignment", G_TYPE_STRING, "au", NULL);
+
+          if (type->n_profile_levels) {
+            for (j = type->n_profile_levels - 1; j >= 0; j--) {
+              const gchar *profile;
+
+              profile =
+                  gst_amc_hevc_profile_to_string (type->profile_levels[j].
+                  profile);
+
+              if (!profile) {
+                GST_ERROR ("Unable to map H265 profile 0x%08x",
+                    type->profile_levels[j].profile);
+                continue;
+              }
+
+              tmp2 = gst_structure_copy (tmp);
+              gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
+
+              /* FIXME: Implement tier/level support here */
+#if 0
+              if (codec_info->is_encoder) {
+                const gchar *level, *tier;
+                gint k;
+                GValue va = { 0, };
+                GValue v = { 0, };
+
+                g_value_init (&va, GST_TYPE_LIST);
+                g_value_init (&v, G_TYPE_STRING);
+                for (k = 1; k <= type->profile_levels[j].level && k != 0;
+                    k <<= 1) {
+                  level = gst_amc_hevc_tier_level_to_string (k, &tier);
+                  if (!level)
+                    continue;
+
+                  g_value_set_string (&v, level);
+                  gst_value_list_append_value (&va, &v);
+                  g_value_reset (&v);
+                }
+
+                gst_structure_set_value (tmp2, "level", &va);
+
+                g_value_unset (&va);
+                g_value_unset (&v);
+              }
+#endif
+
+              encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
               have_profile_level = TRUE;
             }
           }
