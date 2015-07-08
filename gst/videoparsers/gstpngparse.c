@@ -221,6 +221,8 @@ gst_png_parse_handle_frame (GstBaseParse * parse,
           } else {
             GST_WARNING_OBJECT (pngparse, "No framerate set");
           }
+
+          gst_caps_unref (sink_caps);
         }
 
         if (!gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps))
