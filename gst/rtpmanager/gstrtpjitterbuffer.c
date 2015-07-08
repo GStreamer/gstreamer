@@ -2586,6 +2586,28 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     }
   } else {
     GST_DEBUG_OBJECT (jitterbuffer, "First buffer #%d", seqnum);
+
+    /* If we have no DTS here, i.e. no capture time, get one from the
+     * clock now to have something to calculate with in the future.
+     */
+    if (dts == GST_CLOCK_TIME_NONE) {
+      GstClock *clock = gst_element_get_clock (GST_ELEMENT_CAST (jitterbuffer));
+
+      if (clock) {
+        GstClockTime base_time =
+            gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer));
+        GstClockTime clock_time = gst_clock_get_time (clock);
+
+        if (clock_time > base_time)
+          dts = clock_time - base_time;
+        else
+          dts = 0;
+        pts = dts;
+
+        gst_object_unref (clock);
+      }
+    }
+
     /* we don't know what the next_in_seqnum should be, wait for the last
      * possible moment to push this buffer, maybe we get an earlier seqnum
      * while we wait */
