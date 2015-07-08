@@ -2029,20 +2029,25 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
 
       /* clear leftover in current segment, if any */
       gst_adapter_clear (demux->adapter);
+
       /* set up streaming thread */
-      gst_qtdemux_find_sample (demux, offset, TRUE, TRUE, &stream, &idx, NULL);
       demux->offset = offset;
-      if (stream) {
-        demux->todrop = stream->samples[idx].offset - offset;
-        demux->neededbytes = demux->todrop + stream->samples[idx].size;
-      } else {
-        /* set up for EOS */
-        if (demux->upstream_format_is_time) {
-          demux->neededbytes = 16;
-        } else {
-          demux->neededbytes = -1;
-        }
+      if (demux->upstream_format_is_time) {
+        GST_DEBUG_OBJECT (demux, "Upstream is driving in time format, "
+            "set values to restart reading from a new atom");
+        demux->neededbytes = 16;
         demux->todrop = 0;
+      } else {
+        gst_qtdemux_find_sample (demux, offset, TRUE, TRUE, &stream, &idx,
+            NULL);
+        if (stream) {
+          demux->todrop = stream->samples[idx].offset - offset;
+          demux->neededbytes = demux->todrop + stream->samples[idx].size;
+        } else {
+          /* set up for EOS */
+          demux->neededbytes = -1;
+          demux->todrop = 0;
+        }
       }
     exit:
       gst_event_unref (event);
