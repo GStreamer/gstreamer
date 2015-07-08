@@ -2680,10 +2680,11 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
       sizeof (QtDemuxSample) / (1024.0 * 1024.0));
 
   /* create a new array of samples if it's the first sample parsed */
-  if (stream->n_samples == 0)
+  if (stream->n_samples == 0) {
+    g_assert (stream->samples == NULL);
     stream->samples = g_try_new0 (QtDemuxSample, samples_count);
-  /* or try to reallocate it with space enough to insert the new samples */
-  else
+    /* or try to reallocate it with space enough to insert the new samples */
+  } else
     stream->samples = g_try_renew (QtDemuxSample, stream->samples,
         stream->n_samples + samples_count);
   if (stream->samples == NULL)
@@ -6772,6 +6773,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     return FALSE;
   }
 
+  g_assert (stream->samples == NULL);
   stream->samples = g_try_new0 (QtDemuxSample, stream->n_samples);
   if (!stream->samples) {
     GST_WARNING_OBJECT (qtdemux, "failed to allocate %d samples",
@@ -7817,6 +7819,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       GST_WARNING_OBJECT (qtdemux, "Stream not found, going to ignore it");
       goto skip_track;
     }
+
+    /* flush samples data from this track from previous moov */
+    gst_qtdemux_stream_flush_samples_data (qtdemux, stream);
   }
 
   if (stream->pending_tags == NULL)
