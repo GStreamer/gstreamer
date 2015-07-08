@@ -2106,9 +2106,10 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
       "dts %" GST_TIME_FORMAT ", last %" GST_TIME_FORMAT,
       GST_TIME_ARGS (dts), GST_TIME_ARGS (priv->last_in_dts));
 
-  /* Nothing to be done here if we don't get packet receive times */
-  if (dts == GST_CLOCK_TIME_NONE)
+  if (dts == GST_CLOCK_TIME_NONE) {
+    GST_WARNING_OBJECT (jitterbuffer, "Have no DTS");
     return;
+  }
 
   /* the total duration spanned by the missing packets */
   if (dts >= priv->last_in_dts)
@@ -2445,6 +2446,34 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
 
     GST_DEBUG_OBJECT (jitterbuffer, "expected #%d, got #%d, gap of %d",
         expected, seqnum, gap);
+
+    /* Try to calculate a DTS if we have none, based on
+     * whatever the jitterbuffer currently knows */
+    if (dts == GST_CLOCK_TIME_NONE) {
+      guint64 base_rtptime, base_time;
+      guint32 clock_rate;
+      guint64 last_rtptime;
+      guint64 ext_rtptime;
+      GstClockTime gst_send_diff;
+      guint64 send_diff;
+
+      rtp_jitter_buffer_get_sync (jitterbuffer->priv->jbuf, &base_rtptime,
+          &base_time, &clock_rate, &last_rtptime);
+
+      if (base_rtptime != -1 && clock_rate != -1 && base_time != -1) {
+        ext_rtptime = gst_rtp_buffer_ext_timestamp (&last_rtptime, rtptime);
+        if (ext_rtptime > base_rtptime)
+          send_diff = ext_rtptime - base_rtptime;
+        else
+          send_diff = 0;
+
+        gst_send_diff =
+            gst_util_uint64_scale_int (send_diff, GST_SECOND, clock_rate);
+
+        dts = base_time + gst_send_diff;
+        pts = dts;
+      }
+    }
 
     if (G_LIKELY (gap == 0)) {
       /* packet is expected */
