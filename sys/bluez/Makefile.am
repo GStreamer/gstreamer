@@ -5,7 +5,9 @@ libgstbluez_la_SOURCES = \
 	gsta2dpsink.c \
 	gstavdtpsink.c \
 	gstavdtpsrc.c \
-	gstavdtputil.c \
+	gstavdtputil.c
+
+nodist_libgstbluez_la_SOURCES = \
 	$(BUILT_SOURCES)
 
 libgstbluez_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
@@ -30,8 +32,7 @@ noinst_HEADERS = \
 	gsta2dpsink.h \
 	gstavdtpsink.h \
 	gstavdtpsrc.h \
-	gstavdtputil.h \
-	bluez.h
+	gstavdtputil.h
 
 BUILT_SOURCES = \
 	bluez.h \
