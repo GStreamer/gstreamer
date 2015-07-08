@@ -312,6 +312,14 @@ interpolate_values_for_position (GstTimedValue * first_value,
   GstClockTime interval;
   gfloat value_at_pos;
 
+  g_assert (second_value || first_value);
+
+  if (first_value == NULL)
+    return second_value->value;
+
+  if (second_value == NULL)
+    return first_value->value;
+
   diff = second_value->value - first_value->value;
   interval = second_value->timestamp - first_value->timestamp;
 
