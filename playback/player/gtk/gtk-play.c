@@ -207,6 +207,147 @@ gtk_play_set_rate (GtkPlay * play, gdouble step)
   }
 }
 
+static inline void
+seekbar_add_delta (GtkPlay *play, gint delta_sec)
+{
+  gdouble value = gtk_range_get_value (GTK_RANGE (play->seekbar));
+  gtk_range_set_value (GTK_RANGE (play->seekbar), value + delta_sec);
+}
+
+/* this mapping follow the mplayer key-bindings */
+static gboolean
+key_press_event_cb (GtkWidget * widget, GdkEventKey * event, gpointer data)
+{
+  GtkPlay *play = (GtkPlay *) widget;
+
+  if (event->state != 0 &&
+      ((event->state & GDK_CONTROL_MASK) || (event->state & GDK_MOD1_MASK) ||
+       (event->state & GDK_MOD3_MASK) || (event->state & GDK_MOD4_MASK)))
+    return FALSE;
+
+  if (event->type != GDK_KEY_PRESS)
+    return FALSE;
+
+  switch (event->keyval) {
+    case GDK_KEY_KP_Right:
+    case GDK_KEY_Right: {
+      /* seek forward 10 seconds */
+      seekbar_add_delta (play, 10);
+      break;
+    }
+    case GDK_KEY_KP_Left:
+    case GDK_KEY_Left: {
+      /* seek backward 10 seconds */
+      seekbar_add_delta (play, -10);
+      break;
+    }
+    case GDK_KEY_KP_Up:
+    case GDK_KEY_Up: {
+      /* seek forward 1 minute */
+      seekbar_add_delta (play, 60);
+      break;
+    }
+    case GDK_KEY_KP_Down:
+    case GDK_KEY_Down: {
+      /* seek backward 1 minute */
+      seekbar_add_delta (play, -60);
+      break;
+    }
+    case GDK_KEY_KP_Page_Up:
+    case GDK_KEY_Page_Up: {
+      /* Seek forward 10 minutes */
+      seekbar_add_delta (play, 600);
+      break;
+    }
+    case GDK_KEY_KP_Page_Down:
+    case GDK_KEY_Page_Down: {
+      /* Seek backward 10 minutes */
+      seekbar_add_delta (play, -600);
+      break;
+    }
+    case GDK_KEY_bracketleft: {
+      /* Decrease current playback speed by 10% */
+      gtk_play_set_rate (play, -0.1);
+      break;
+    }
+    case GDK_KEY_bracketright: {
+      /* Increase current playback speed by 10% */
+      gtk_play_set_rate (play, 0.1);
+      break;
+      break;
+    }
+    case GDK_KEY_braceleft: {
+      /* Decrease current playback speed by 10% */
+      gtk_play_set_rate (play, -1.0);
+      break;
+    }
+    case GDK_KEY_braceright: {
+      /* Increase current playback speed by 10% */
+      gtk_play_set_rate (play, 1.0);
+      break;
+    }
+    case GDK_KEY_BackSpace: {
+      /* Reset playback speed to normal */
+      gdouble val = gst_player_get_rate (play->player);
+      gtk_play_set_rate (play, 1.0 - val);
+      break;
+    }
+    case GDK_KEY_less: {
+      /* Go backward in the playlist */
+      if (g_list_previous (play->current_uri))
+        gtk_button_clicked (GTK_BUTTON (play->prev_button));
+      break;
+    }
+    case GDK_KEY_Return:
+    case GDK_KEY_greater: {
+      /* Go forward in the playlist */
+      if (g_list_next (play->current_uri))
+        gtk_button_clicked (GTK_BUTTON (play->next_button));
+      break;
+    }
+    case GDK_KEY_KP_9:
+    case GDK_KEY_9: {
+      /* Increase volume */
+      gdouble volume = gst_player_get_volume (play->player);
+      gtk_scale_button_set_value (GTK_SCALE_BUTTON (play->volume_button),
+          volume * 1.10);
+      break;
+    }
+    case GDK_KEY_KP_0:
+    case GDK_KEY_0: {
+      /* Decrease volume */
+      gdouble volume = gst_player_get_volume (play->player);
+      gtk_scale_button_set_value (GTK_SCALE_BUTTON (play->volume_button),
+          volume * 0.9);
+      break;
+    }
+    case GDK_KEY_m: {
+      /* Mute sound */
+      gboolean mute = gst_player_get_mute (play->player);
+      gst_player_set_mute (play->player, !mute);
+      break;
+    }
+    case GDK_KEY_f: {
+      /* Toggle fullscreen */
+      GtkToggleButton *fs = GTK_TOGGLE_BUTTON (play->fullscreen_button);
+      gboolean active = !gtk_toggle_button_get_active (fs);
+      gtk_toggle_button_set_active (fs, active);
+      break;
+    }
+    case GDK_KEY_p:
+    case GDK_KEY_space:
+      /* toggle pause/play */
+      gtk_button_clicked (GTK_BUTTON (play->play_pause_button));
+      break;
+    case GDK_KEY_q:
+    case GDK_KEY_Escape:
+    default:
+      break;
+  }
+
+  return FALSE;
+}
+
 G_MODULE_EXPORT void
 rewind_button_clicked_cb (GtkButton * button, GtkPlay * play)
 {
@@ -1257,6 +1398,12 @@ create_ui (GtkPlay * play)
 
   g_signal_connect (G_OBJECT (play), "delete-event",
       G_CALLBACK (delete_event_cb), play);
+
+  gtk_widget_set_events (GTK_WIDGET (play),
+      GDK_KEY_RELEASE_MASK | GDK_KEY_PRESS_MASK);
+  g_signal_connect (G_OBJECT (play), "key-press-event",
+      G_CALLBACK (key_press_event_cb), NULL);
+
   set_title (play, APP_NAME);
   gtk_application_add_window (GTK_APPLICATION (g_application_get_default ()),
       GTK_WINDOW (play));
