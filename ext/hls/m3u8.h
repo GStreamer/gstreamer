@@ -96,6 +96,7 @@ struct _GstM3U8Client
   GstM3U8 *current;
   guint update_failed_count;
   GList *current_file;
+  GstClockTime current_file_duration; /* Duration of current fragment */
   gint64 sequence;              /* the next sequence for this client */
   GstClockTime sequence_position; /* position of this sequence */
   gint64 highest_sequence_number; /* largest seen sequence number */
