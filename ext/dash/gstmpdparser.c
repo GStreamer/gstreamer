@@ -3832,7 +3832,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
       mediaURL =
           g_strdup (gst_mpdparser_get_mediaURL (stream,
               currentChunk->SegmentURL));
-      indexURL = currentChunk->SegmentURL->index;
+      indexURL = g_strdup (currentChunk->SegmentURL->index);
     } else if (stream->cur_seg_template != NULL) {
       mediaURL =
           gst_mpdparser_build_URL_from_template (stream->
@@ -3905,6 +3905,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
 
   base_url = gst_uri_from_string (stream->baseURL);
   frag_url = gst_uri_from_string_with_base (base_url, mediaURL);
+  g_free (mediaURL);
   if (stream->queryURL) {
     frag_url = gst_uri_make_writable (frag_url);
     gst_uri_set_query_string (frag_url, stream->queryURL);
@@ -3918,11 +3919,8 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
     gst_uri_set_query_string (frag_url, stream->queryURL);
     fragment->index_uri = gst_uri_to_string (frag_url);
     gst_uri_unref (frag_url);
-  }
-
-  gst_uri_unref (base_url);
-
-  if (indexURL == NULL && (fragment->index_range_start
+    g_free (indexURL);
+  } else if (indexURL == NULL && (fragment->index_range_start
           || fragment->index_range_end != -1)) {
     /* index has no specific URL but has a range, we should only use this if
      * the media also has a range, otherwise we are serving some data twice
@@ -3935,6 +3933,8 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
       fragment->index_range_end = -1;
     }
   }
+
+  gst_uri_unref (base_url);
 
   GST_DEBUG ("Loading chunk with URL %s", fragment->uri);
 

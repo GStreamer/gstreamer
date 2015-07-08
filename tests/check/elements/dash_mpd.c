@@ -2914,6 +2914,8 @@ GST_START_TEST (dash_mpdparser_get_audio_languages)
   assert_equals_string ((gchar *) g_list_nth_data (languages, 0), "en");
   assert_equals_string ((gchar *) g_list_nth_data (languages, 1), "fr");
 
+  g_list_free (languages);
+
   gst_mpd_client_free (mpdclient);
 }
 
@@ -3266,6 +3268,7 @@ GST_START_TEST (dash_mpdparser_headers)
   assert_equals_string (uri, "TestSourceUrl");
   assert_equals_int64 (range_start, 100);
   assert_equals_int64 (range_end, 200);
+  g_free (uri);
 
   /* get segment url and range from segment indexRange */
   ret =
@@ -3275,6 +3278,7 @@ GST_START_TEST (dash_mpdparser_headers)
   assert_equals_string (uri, "TestSourceUrl");
   assert_equals_int64 (range_start, 10);
   assert_equals_int64 (range_end, 20);
+  g_free (uri);
 
   gst_mpd_client_free (mpdclient);
 }
