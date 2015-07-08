@@ -2030,7 +2030,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     }
   }
 
-  if (do_next_seqnum) {
+  if (do_next_seqnum && dts != GST_CLOCK_TIME_NONE) {
     GstClockTime expected, delay;
 
     /* calculate expected arrival time of the next seqnum */
@@ -2105,6 +2105,10 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   GST_DEBUG_OBJECT (jitterbuffer,
       "dts %" GST_TIME_FORMAT ", last %" GST_TIME_FORMAT,
       GST_TIME_ARGS (dts), GST_TIME_ARGS (priv->last_in_dts));
+
+  /* Nothing to be done here if we don't get packet receive times */
+  if (dts == GST_CLOCK_TIME_NONE)
+    return;
 
   /* the total duration spanned by the missing packets */
   if (dts >= priv->last_in_dts)
@@ -2449,12 +2453,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     } else {
       gboolean reset = FALSE;
 
-      if (!GST_CLOCK_TIME_IS_VALID (dts)) {
-        /* We would run into calculations with GST_CLOCK_TIME_NONE below
-         * and can't compensate for anything without DTS on RTP packets
-         */
-        goto gap_but_no_dts;
-      } else if (gap < 0) {
+      if (gap < 0) {
         /* we received an old packet */
         if (G_UNLIKELY (gap != -1 && gap < -RTP_MAX_MISORDER)) {
           reset =
@@ -2705,15 +2704,6 @@ duplicate:
         seqnum);
     priv->num_duplicates++;
     free_item (item);
-    goto finished;
-  }
-gap_but_no_dts:
-  {
-    /* this is fatal as we can't compensate for gaps without DTS */
-    GST_ELEMENT_ERROR (jitterbuffer, STREAM, DECODE, (NULL),
-        ("Received packet without DTS after a gap"));
-    gst_buffer_unref (buffer);
-    ret = GST_FLOW_ERROR;
     goto finished;
   }
 }
