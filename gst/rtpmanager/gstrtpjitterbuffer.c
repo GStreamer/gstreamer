@@ -2128,29 +2128,35 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     GstClockTime gap_time;
     guint lost_packets;
 
-    gap_time = total_duration - priv->latency_ns;
-
     if (duration > 0) {
+      GstClockTime gap_dur = gap * duration;
+      if (gap_dur > priv->latency_ns)
+        gap_time = gap_dur - priv->latency_ns;
+      else
+        gap_time = 0;
       lost_packets = gap_time / duration;
-      gap_time = lost_packets * duration;
     } else {
+      gap_time = total_duration - priv->latency_ns;
       lost_packets = gap;
     }
 
     /* too many lost packets, some of the missing packets are already
      * too late and we can generate lost packet events for them. */
-    GST_DEBUG_OBJECT (jitterbuffer, "too many lost packets %" GST_TIME_FORMAT
-        " > %" GST_TIME_FORMAT ", consider %u lost",
-        GST_TIME_ARGS (total_duration), GST_TIME_ARGS (priv->latency_ns),
-        lost_packets);
+    GST_DEBUG_OBJECT (jitterbuffer,
+        "lost packets (%d, #%d->#%d) duration too large %" GST_TIME_FORMAT
+        " > %" GST_TIME_FORMAT ", consider %u lost (%" GST_TIME_FORMAT ")",
+        gap, expected, seqnum, GST_TIME_ARGS (total_duration),
+        GST_TIME_ARGS (priv->latency_ns), lost_packets,
+        GST_TIME_ARGS(gap_time));
 
     /* this timer will fire immediately and the lost event will be pushed from
      * the timer thread */
-    add_timer (jitterbuffer, TIMER_TYPE_LOST, expected, lost_packets,
-        priv->last_in_dts + duration, 0, gap_time);
-
-    expected += lost_packets;
-    priv->last_in_dts += gap_time;
+    if (lost_packets > 0) {
+      add_timer (jitterbuffer, TIMER_TYPE_LOST, expected, lost_packets,
+          priv->last_in_dts + duration, 0, gap_time);
+      expected += lost_packets;
+      priv->last_in_dts += gap_time;
+    }
   }
 
   expected_dts = priv->last_in_dts + duration;
@@ -3183,7 +3189,7 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstClockTime duration, timestamp;
   guint seqnum, lost_packets, num_rtx_retry, next_in_seqnum;
-  gboolean late, head;
+  gboolean head;
   GstEvent *event;
   RTPJitterBufferItem *item;
 
@@ -3193,7 +3199,6 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   if (duration == GST_CLOCK_TIME_NONE && priv->packet_spacing > 0)
     duration = priv->packet_spacing;
   lost_packets = MAX (timer->num, 1);
-  late = timer->num > 0;
   num_rtx_retry = timer->num_rtx_retry;
 
   /* we had a gap and thus we lost some packets. Create an event for this.  */
@@ -3218,7 +3223,6 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
           "seqnum", G_TYPE_UINT, (guint) seqnum,
           "timestamp", G_TYPE_UINT64, timestamp,
           "duration", G_TYPE_UINT64, duration,
-          "late", G_TYPE_BOOLEAN, late,
           "retry", G_TYPE_UINT, num_rtx_retry, NULL));
 
   item = alloc_item (event, ITEM_TYPE_LOST, -1, -1, seqnum, lost_packets, -1);
