@@ -234,6 +234,9 @@ gst_rtp_h263_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   M = gst_rtp_buffer_get_marker (&rtp);
 
+  if (payload_len < 1)
+    goto too_small;
+
   /* Let's see what mode we are using */
   F = (payload[0] & 0x80) == 0x80;
   P = (payload[0] & 0x40) == 0x40;
@@ -255,6 +258,8 @@ gst_rtp_h263_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
      * |F|P|SBIT |EBIT | SRC |I|U|S|A|R      |DBQ| TRB |    TR         |
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
+    if (payload_len <= header_len)
+      goto too_small;
     I = (payload[1] & 0x10) == 0x10;
   } else {
     if (P == 0) {
@@ -271,6 +276,8 @@ gst_rtp_h263_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
        * |I|U|S|A| HMV1        | VMV1        | HMV2        | VMV2        |
        * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
+      if (payload_len <= header_len)
+        goto too_small;
       I = (payload[4] & 0x80) == 0x80;
     } else {
       /* F == 1 and P == 1
@@ -288,6 +295,8 @@ gst_rtp_h263_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
        * | RR                                  |DBQ| TRB |    TR         |
        * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
+      if (payload_len <= header_len)
+        goto too_small;
       I = (payload[4] & 0x80) == 0x80;
     }
   }
@@ -389,6 +398,14 @@ skip:
   gst_rtp_buffer_unmap (&rtp);
 
   return NULL;
+
+too_small:
+  {
+    GST_ELEMENT_WARNING (rtph263depay, STREAM, DECODE,
+        ("Packet payload was too small"), (NULL));
+    gst_rtp_buffer_unmap (&rtp);
+    return NULL;
+  }
 }
 
 static GstStateChangeReturn
