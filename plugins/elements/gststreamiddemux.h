@@ -42,6 +42,11 @@ G_BEGIN_DECLS
 typedef struct _GstStreamidDemux GstStreamidDemux;
 typedef struct _GstStreamidDemuxClass GstStreamidDemuxClass;
 
+/**
+ * GstStreamidDemux:
+ *
+ * The opaque #GstStreamidDemux data structure.
+ */
 struct _GstStreamidDemux
 {
   GstElement element;

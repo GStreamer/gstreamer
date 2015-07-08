@@ -23,10 +23,20 @@
  */
 
 /**
- * SECTION:element-streamid-demux
- * @see_also: #GstFunnel
+ * SECTION:element-streamiddemux
  *
- * Direct input stream to one out of N output pads by stream-id.
+ * The basic concept was started from de-funneling element which restores one
+ * serialized stream via #GstFunnel to its original state. #GstStreamidDemux
+ * classifies each stream base on stream ids.
+ *
+ * The stream id demux always takes one input and checks how many streams
+ * are contained in a stream by STREAM_START event. Likewise #GstFunnel,
+ * #GstStreamidDemux does not synchronize the different output streams.
+ *
+ * #GstStreamidDemux:active-pad provides information about which output pad
+ * is activated at the moment.
+ *
+ * @see_also: #GstFunnel, #gst_event_new_stream_start
  */
 
 #ifdef HAVE_CONFIG_H
