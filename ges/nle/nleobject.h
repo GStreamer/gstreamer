@@ -79,6 +79,7 @@ typedef enum
 #define NLE_OBJECT_DURATION(obj) (NLE_OBJECT_CAST (obj)->duration)
 #define NLE_OBJECT_INPOINT(obj) (NLE_OBJECT_CAST (obj)->inpoint)
 #define NLE_OBJECT_PRIORITY(obj) (NLE_OBJECT_CAST (obj)->priority)
+#define NLE_OBJECT_ACTIVE(obj) (NLE_OBJECT_DURATION(obj) > 0 && NLE_OBJECT_CAST (obj)->active)
 
 #define NLE_OBJECT_IS_COMMITING(obj) (NLE_OBJECT_CAST (obj)->commiting)
 

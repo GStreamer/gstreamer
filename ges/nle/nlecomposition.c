@@ -1696,7 +1696,7 @@ refine_start_stop_in_region_above_priority (NleComposition * composition,
     GST_LOG_OBJECT (object, "START %" GST_TIME_FORMAT "--%" GST_TIME_FORMAT,
         GST_TIME_ARGS (object->start), GST_TIME_ARGS (object->stop));
 
-    if ((object->priority >= priority) || (!object->active))
+    if ((object->priority >= priority) || (!NLE_OBJECT_ACTIVE (object)))
       continue;
 
     if (object->start <= timestamp)
@@ -1721,7 +1721,7 @@ refine_start_stop_in_region_above_priority (NleComposition * composition,
     GST_LOG_OBJECT (object, "STOP %" GST_TIME_FORMAT "--%" GST_TIME_FORMAT,
         GST_TIME_ARGS (object->start), GST_TIME_ARGS (object->stop));
 
-    if ((object->priority >= priority) || (!object->active))
+    if ((object->priority >= priority) || (!NLE_OBJECT_ACTIVE (object)))
       continue;
 
     if (object->stop >= timestamp)
@@ -1880,7 +1880,7 @@ get_stack_list (NleComposition * comp, GstClockTime timestamp,
       if (object->stop >= timestamp) {
         if ((object->start < timestamp) &&
             (object->priority >= priority) &&
-            ((!activeonly) || (object->active))) {
+            ((!activeonly) || (NLE_OBJECT_ACTIVE (object)))) {
           GST_LOG_OBJECT (comp, "adding %s: sorted to the stack",
               GST_OBJECT_NAME (object));
           stack = g_list_insert_sorted (stack, object,
@@ -1907,7 +1907,7 @@ get_stack_list (NleComposition * comp, GstClockTime timestamp,
       if (object->start <= timestamp) {
         if ((object->stop > timestamp) &&
             (object->priority >= priority) &&
-            ((!activeonly) || (object->active))) {
+            ((!activeonly) || (NLE_OBJECT_ACTIVE (object)))) {
           GST_LOG_OBJECT (comp, "adding %s: sorted to the stack",
               GST_OBJECT_NAME (object));
           stack = g_list_insert_sorted (stack, object,
