@@ -576,7 +576,7 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->exposed = FALSE;
   qtdemux->mss_mode = FALSE;
   qtdemux->pending_newsegment = NULL;
-  qtdemux->upstream_newsegment = FALSE;
+  qtdemux->upstream_format_is_time = FALSE;
   qtdemux->have_group_id = FALSE;
   qtdemux->group_id = G_MAXUINT;
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
@@ -1600,7 +1600,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
       GstClockTime ts = gst_util_get_timestamp ();
 #endif
 
-      if (qtdemux->upstream_newsegment && qtdemux->fragmented) {
+      if (qtdemux->upstream_format_is_time && qtdemux->fragmented) {
         /* seek should be handled by upstream, we might need to re-download fragments */
         GST_DEBUG_OBJECT (qtdemux,
             "let upstream handle seek for fragmented playback");
@@ -1845,7 +1845,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   GST_DEBUG_OBJECT (qtdemux, "Resetting demux");
   gst_pad_stop_task (qtdemux->sinkpad);
 
-  if (hard || qtdemux->upstream_newsegment) {
+  if (hard || qtdemux->upstream_format_is_time) {
     qtdemux->state = QTDEMUX_STATE_INITIAL;
     qtdemux->neededbytes = 16;
     qtdemux->todrop = 0;
@@ -1882,7 +1882,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     if (qtdemux->pending_newsegment)
       gst_event_unref (qtdemux->pending_newsegment);
     qtdemux->pending_newsegment = NULL;
-    qtdemux->upstream_newsegment = FALSE;
+    qtdemux->upstream_format_is_time = FALSE;
     qtdemux->upstream_seekable = FALSE;
     qtdemux->upstream_size = 0;
 
@@ -1954,7 +1954,7 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       if (segment.format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (demux, "new pending_newsegment");
         gst_event_replace (&demux->pending_newsegment, event);
-        demux->upstream_newsegment = TRUE;
+        demux->upstream_format_is_time = TRUE;
       } else {
         GST_DEBUG_OBJECT (demux, "Not storing upstream newsegment, "
             "not in time format");
@@ -2044,7 +2044,7 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
         demux->neededbytes = demux->todrop + stream->samples[idx].size;
       } else {
         /* set up for EOS */
-        if (demux->upstream_newsegment) {
+        if (demux->upstream_format_is_time) {
           demux->neededbytes = 16;
         } else {
           demux->neededbytes = -1;
