@@ -5756,8 +5756,10 @@ gst_avi_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GST_OBJECT_UNLOCK (avi);
 
       /* calculate and perform seek */
-      if (!avi_demux_handle_seek_push (avi, avi->sinkpad, event))
+      if (!avi_demux_handle_seek_push (avi, avi->sinkpad, event)) {
+        gst_event_unref (event);
         goto seek_failed;
+      }
 
       gst_event_unref (event);
       avi->state = GST_AVI_DEMUX_MOVI;
