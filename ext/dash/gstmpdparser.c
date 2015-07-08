@@ -3977,10 +3977,14 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
     }
 
     if (stream->segments == NULL) {
-      if (stream->segment_index < 0)
+      if (stream->segment_index < 0) {
         stream->segment_index = 0;
-      else
+      } else {
         stream->segment_index++;
+        if (segments_count > 0 && stream->segment_index >= segments_count) {
+          ret = GST_FLOW_EOS;
+        }
+      }
       goto done;
     }
 
@@ -4017,6 +4021,10 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
     if (stream->segment_repeat_index >= segment->repeat) {
       stream->segment_repeat_index = 0;
       stream->segment_index++;
+      if (segments_count > 0 && stream->segment_index >= segments_count) {
+        ret = GST_FLOW_EOS;
+        goto done;
+      }
     } else {
       stream->segment_repeat_index++;
     }
@@ -4024,6 +4032,7 @@ gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream,
     if (stream->segment_repeat_index == 0) {
       stream->segment_index--;
       if (stream->segment_index < 0) {
+        ret = GST_FLOW_EOS;
         goto done;
       }
 
