@@ -52,6 +52,7 @@ rtpaux
 rtpbin
 rtpbin_buffer_list
 rtpcollision
+rtph263
 rtpjitterbuffer
 rtpsession
 rtpmux
