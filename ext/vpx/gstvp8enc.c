@@ -557,7 +557,9 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_MULTIPASS_CACHE_FILE,
       g_param_spec_string ("multipass-cache-file", "Multipass Cache File",
-          "Multipass cache file",
+          "Multipass cache file. "
+          "If stream caps reinited, multiple files will be created: "
+          "file, file.1, file.2, ... and so on.",
           DEFAULT_MULTIPASS_CACHE_FILE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -759,7 +761,9 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc)
   gst_vp8_enc->cfg.kf_mode = DEFAULT_KF_MODE;
   gst_vp8_enc->cfg.kf_max_dist = DEFAULT_KF_MAX_DIST;
   gst_vp8_enc->cfg.g_pass = DEFAULT_MULTIPASS_MODE;
-  gst_vp8_enc->multipass_cache_file = g_strdup (DEFAULT_MULTIPASS_CACHE_FILE);
+  gst_vp8_enc->multipass_cache_prefix = g_strdup (DEFAULT_MULTIPASS_CACHE_FILE);
+  gst_vp8_enc->multipass_cache_file = NULL;
+  gst_vp8_enc->multipass_cache_idx = 0;
   gst_vp8_enc->cfg.ts_number_layers = DEFAULT_TS_NUMBER_LAYERS;
   gst_vp8_enc->n_ts_target_bitrate = 0;
   gst_vp8_enc->n_ts_rate_decimator = 0;
@@ -801,8 +805,10 @@ gst_vp8_enc_finalize (GObject * object)
   g_return_if_fail (GST_IS_VP8_ENC (object));
   gst_vp8_enc = GST_VP8_ENC (object);
 
+  g_free (gst_vp8_enc->multipass_cache_prefix);
   g_free (gst_vp8_enc->multipass_cache_file);
-  gst_vp8_enc->multipass_cache_file = NULL;
+  gst_vp8_enc->multipass_cache_idx = 0;
+
 
   if (gst_vp8_enc->input_state)
     gst_video_codec_state_unref (gst_vp8_enc->input_state);
@@ -904,9 +910,9 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       global = TRUE;
       break;
     case PROP_MULTIPASS_CACHE_FILE:
-      if (gst_vp8_enc->multipass_cache_file)
-        g_free (gst_vp8_enc->multipass_cache_file);
-      gst_vp8_enc->multipass_cache_file = g_value_dup_string (value);
+      if (gst_vp8_enc->multipass_cache_prefix)
+        g_free (gst_vp8_enc->multipass_cache_prefix);
+      gst_vp8_enc->multipass_cache_prefix = g_value_dup_string (value);
       break;
     case PROP_TS_NUMBER_LAYERS:
       gst_vp8_enc->cfg.ts_number_layers = g_value_get_int (value);
@@ -1264,7 +1270,7 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_enum (value, gst_vp8_enc->cfg.g_pass);
       break;
     case PROP_MULTIPASS_CACHE_FILE:
-      g_value_set_string (value, gst_vp8_enc->multipass_cache_file);
+      g_value_set_string (value, gst_vp8_enc->multipass_cache_prefix);
       break;
     case PROP_TS_NUMBER_LAYERS:
       g_value_set_int (value, gst_vp8_enc->cfg.ts_number_layers);
@@ -1520,6 +1526,7 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
     g_mutex_lock (&encoder->encoder_lock);
     vpx_codec_destroy (&encoder->encoder);
     encoder->inited = FALSE;
+    encoder->multipass_cache_idx++;
   } else {
     g_mutex_lock (&encoder->encoder_lock);
   }
@@ -1550,19 +1557,33 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
     encoder->cfg.g_timebase.den = 90000;
   }
 
-  if (encoder->cfg.g_pass == VPX_RC_FIRST_PASS) {
-    if (encoder->first_pass_cache_content == NULL) {
-      encoder->first_pass_cache_content = g_byte_array_sized_new (4096);
-    }
-  } else if (encoder->cfg.g_pass == VPX_RC_LAST_PASS) {
-    GError *err = NULL;
-
-    if (!encoder->multipass_cache_file) {
+  if (encoder->cfg.g_pass == VPX_RC_FIRST_PASS ||
+      encoder->cfg.g_pass == VPX_RC_LAST_PASS) {
+    if (!encoder->multipass_cache_prefix) {
       GST_ELEMENT_ERROR (encoder, RESOURCE, OPEN_READ,
           ("No multipass cache file provided"), (NULL));
       g_mutex_unlock (&encoder->encoder_lock);
       return FALSE;
     }
+
+    g_free (encoder->multipass_cache_file);
+
+    if (encoder->multipass_cache_idx > 0)
+      encoder->multipass_cache_file = g_strdup_printf ("%s.%u",
+          encoder->multipass_cache_prefix, encoder->multipass_cache_idx);
+    else
+      encoder->multipass_cache_file =
+          g_strdup (encoder->multipass_cache_prefix);
+  }
+
+  if (encoder->cfg.g_pass == VPX_RC_FIRST_PASS) {
+    if (encoder->first_pass_cache_content != NULL)
+      g_byte_array_free (encoder->first_pass_cache_content, TRUE);
+
+    encoder->first_pass_cache_content = g_byte_array_sized_new (4096);
+
+  } else if (encoder->cfg.g_pass == VPX_RC_LAST_PASS) {
+    GError *err = NULL;
 
     if (encoder->cfg.rc_twopass_stats_in.buf != NULL) {
       g_free (encoder->cfg.rc_twopass_stats_in.buf);
