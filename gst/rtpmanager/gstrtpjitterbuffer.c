@@ -2335,6 +2335,28 @@ handle_big_gap_buffer (GstRtpJitterBuffer * jitterbuffer, gboolean future,
   return reset;
 }
 
+static GstClockTime
+get_current_running_time (GstRtpJitterBuffer * jitterbuffer)
+{
+  GstClock *clock = gst_element_get_clock (GST_ELEMENT_CAST (jitterbuffer));
+  GstClockTime running_time = GST_CLOCK_TIME_NONE;
+
+  if (clock) {
+    GstClockTime base_time =
+        gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer));
+    GstClockTime clock_time = gst_clock_get_time (clock);
+
+    if (clock_time > base_time)
+      running_time = clock_time - base_time;
+    else
+      running_time = 0;
+
+    gst_object_unref (clock);
+  }
+
+  return running_time;
+}
+
 static GstFlowReturn
 gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -2353,6 +2375,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   gboolean do_next_seqnum = FALSE;
   RTPJitterBufferItem *item;
   GstMessage *msg = NULL;
+  gboolean estimated_dts = FALSE;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER_CAST (parent);
 
@@ -2374,12 +2397,20 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   else if (pts == -1)
     pts = dts;
 
-  /* take the DTS of the buffer. This is the time when the packet was
-   * received and is used to calculate jitter and clock skew. We will adjust
-   * this DTS with the smoothed value after processing it in the
-   * jitterbuffer and assign it as the PTS. */
-  /* bring to running time */
-  dts = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME, dts);
+  if (dts == -1) {
+    /* If we have no DTS here, i.e. no capture time, get one from the
+     * clock now to have something to calculate with in the future. */
+    dts = get_current_running_time (jitterbuffer);
+    pts = dts;
+    estimated_dts = TRUE;
+  } else {
+    /* take the DTS of the buffer. This is the time when the packet was
+     * received and is used to calculate jitter and clock skew. We will adjust
+     * this DTS with the smoothed value after processing it in the
+     * jitterbuffer and assign it as the PTS. */
+    /* bring to running time */
+    dts = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME, dts);
+  }
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "Received packet #%d at time %" GST_TIME_FORMAT ", discont %d", seqnum,
@@ -2452,34 +2483,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
 
     GST_DEBUG_OBJECT (jitterbuffer, "expected #%d, got #%d, gap of %d",
         expected, seqnum, gap);
-
-    /* Try to calculate a DTS if we have none, based on
-     * whatever the jitterbuffer currently knows */
-    if (dts == GST_CLOCK_TIME_NONE) {
-      guint64 base_rtptime, base_time;
-      guint32 clock_rate;
-      guint64 last_rtptime;
-      guint64 ext_rtptime;
-      GstClockTime gst_send_diff;
-      guint64 send_diff;
-
-      rtp_jitter_buffer_get_sync (jitterbuffer->priv->jbuf, &base_rtptime,
-          &base_time, &clock_rate, &last_rtptime);
-
-      if (base_rtptime != -1 && clock_rate != -1 && base_time != -1) {
-        ext_rtptime = gst_rtp_buffer_ext_timestamp (&last_rtptime, rtptime);
-        if (ext_rtptime > base_rtptime)
-          send_diff = ext_rtptime - base_rtptime;
-        else
-          send_diff = 0;
-
-        gst_send_diff =
-            gst_util_uint64_scale_int (send_diff, GST_SECOND, clock_rate);
-
-        dts = base_time + gst_send_diff;
-        pts = dts;
-      }
-    }
 
     if (G_LIKELY (gap == 0)) {
       /* packet is expected */
@@ -2587,27 +2590,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   } else {
     GST_DEBUG_OBJECT (jitterbuffer, "First buffer #%d", seqnum);
 
-    /* If we have no DTS here, i.e. no capture time, get one from the
-     * clock now to have something to calculate with in the future.
-     */
-    if (dts == GST_CLOCK_TIME_NONE) {
-      GstClock *clock = gst_element_get_clock (GST_ELEMENT_CAST (jitterbuffer));
-
-      if (clock) {
-        GstClockTime base_time =
-            gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer));
-        GstClockTime clock_time = gst_clock_get_time (clock);
-
-        if (clock_time > base_time)
-          dts = clock_time - base_time;
-        else
-          dts = 0;
-        pts = dts;
-
-        gst_object_unref (clock);
-      }
-    }
-
     /* we don't know what the next_in_seqnum should be, wait for the last
      * possible moment to push this buffer, maybe we get an earlier seqnum
      * while we wait */
@@ -2674,7 +2656,16 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     }
   }
 
-  item = alloc_item (buffer, ITEM_TYPE_BUFFER, dts, pts, seqnum, 1, rtptime);
+  /* If we estimated the DTS, don't consider it in the clock skew calculations
+   * later. The code above always sets dts to pts or the other way around if
+   * any of those is valid in the buffer, so we know that if we estimated the
+   * dts that both are unknown */
+  if (estimated_dts)
+    item =
+        alloc_item (buffer, ITEM_TYPE_BUFFER, GST_CLOCK_TIME_NONE,
+        GST_CLOCK_TIME_NONE, seqnum, 1, rtptime);
+  else
+    item = alloc_item (buffer, ITEM_TYPE_BUFFER, dts, pts, seqnum, 1, rtptime);
 
   /* now insert the packet into the queue in sorted order. This function returns
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
