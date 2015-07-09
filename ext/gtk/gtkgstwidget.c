@@ -341,7 +341,7 @@ gtk_gst_widget_set_buffer (GtkGstWidget * widget, GstBuffer * buffer)
   GMainContext *main_context = g_main_context_default ();
 
   g_return_if_fail (GTK_IS_GST_WIDGET (widget));
-  g_return_if_fail (widget->priv->negotiated);
+  g_return_if_fail (buffer == NULL || widget->priv->negotiated);
 
   g_mutex_lock (&widget->priv->lock);
 
