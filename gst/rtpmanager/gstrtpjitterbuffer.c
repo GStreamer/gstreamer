@@ -2147,7 +2147,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
         " > %" GST_TIME_FORMAT ", consider %u lost (%" GST_TIME_FORMAT ")",
         gap, expected, seqnum, GST_TIME_ARGS (total_duration),
         GST_TIME_ARGS (priv->latency_ns), lost_packets,
-        GST_TIME_ARGS(gap_time));
+        GST_TIME_ARGS (gap_time));
 
     /* this timer will fire immediately and the lost event will be pushed from
      * the timer thread */
