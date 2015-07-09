@@ -79,7 +79,8 @@ setup_jitterbuffer (gint num_buffers)
    *    "audio/x-raw,channels=1,rate=8000" ! mulawenc ! rtppcmupay !
    *     fakesink dump=1
    */
-  guint8 in[] = {               /* first 4 bytes are rtp-header, next 4 bytes are timestamp */
+  guint8 in[] = {
+    /* first 4 bytes are rtp-header, next 4 bytes are timestamp */
     0x80, 0x80, 0x1c, 0x24, 0x46, 0xcd, 0xb7, 0x11, 0x3c, 0x3a, 0x7c, 0x5b,
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
@@ -379,13 +380,14 @@ GST_START_TEST (test_clear_pt_map)
 
 GST_END_TEST;
 
-static const guint        PCMU_BUF_CLOCK_RATE = 8000;
-static const guint        PCMU_BUF_PT = 0;
-static const guint        PCMU_BUF_SSRC = 0x01BADBAD;
-static const guint        PCMU_BUF_MS = 20;
+static const guint PCMU_BUF_CLOCK_RATE = 8000;
+static const guint PCMU_BUF_PT = 0;
+static const guint PCMU_BUF_SSRC = 0x01BADBAD;
+static const guint PCMU_BUF_MS = 20;
 static const GstClockTime PCMU_BUF_DURATION = PCMU_BUF_MS * GST_MSECOND;
-static const guint        PCMU_BUF_SIZE = 64000 * PCMU_BUF_MS / 1000;
-static const guint        PCMU_RTP_TS_DURATION = PCMU_BUF_CLOCK_RATE * PCMU_BUF_MS / 1000;
+static const guint PCMU_BUF_SIZE = 64000 * PCMU_BUF_MS / 1000;
+static const guint PCMU_RTP_TS_DURATION =
+    PCMU_BUF_CLOCK_RATE * PCMU_BUF_MS / 1000;
 
 typedef struct
 {
@@ -653,8 +655,8 @@ verify_rtx_event (GstEvent * event, guint32 expected_seqnum,
 
 GST_START_TEST (test_only_one_lost_event_on_large_gaps)
 {
-  GstHarness * h = gst_harness_new ("rtpjitterbuffer");
-  GstTestClock * testclock;
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstTestClock *testclock;
   GstClockID id, test_id;
   GstBuffer *out_buf;
   GstEvent *out_event;
@@ -665,10 +667,7 @@ GST_START_TEST (test_only_one_lost_event_on_large_gaps)
   gst_harness_set_src_caps (h, generate_caps ());
   gst_harness_use_testclock (h);
   testclock = gst_harness_get_testclock (h);
-  g_object_set (h->element,
-      "do-lost", TRUE,
-      "latency", jb_latency_ms,
-      NULL);
+  g_object_set (h->element, "do-lost", TRUE, "latency", jb_latency_ms, NULL);
 
   /* push the first buffer in */
   gst_harness_push (h, generate_test_buffer (0));
@@ -709,19 +708,23 @@ GST_START_TEST (test_only_one_lost_event_on_large_gaps)
   /* we should now receive a packet-lost-event for buffers 1 through 489 ... */
   out_event = gst_harness_pull_event (h);
   g_assert (out_event != NULL);
-  verify_lost_event (out_event, 1, 1 * PCMU_BUF_DURATION, PCMU_BUF_DURATION * 489);
+  verify_lost_event (out_event, 1, 1 * PCMU_BUF_DURATION,
+      PCMU_BUF_DURATION * 489);
 
   /* ... as well as 490 (since at 10 sec 490 is too late) */
   out_event = gst_harness_pull_event (h);
   g_assert (out_event != NULL);
-  verify_lost_event (out_event, 490, 490 * PCMU_BUF_DURATION, PCMU_BUF_DURATION);
+  verify_lost_event (out_event, 490, 490 * PCMU_BUF_DURATION,
+      PCMU_BUF_DURATION);
 
-  /* we get as many lost events as the the number of buffers the jitterbuffer is able to wait for */
+  /* we get as many lost events as the the number of *
+   * buffers the jitterbuffer is able to wait for */
   for (int i = 1; i < num_lost_events; i++) {
     gst_harness_crank_single_clock_wait (h);
     out_event = gst_harness_pull_event (h);
     g_assert (out_event != NULL);
-    verify_lost_event (out_event, 490 + i, (490 + i) * PCMU_BUF_DURATION, PCMU_BUF_DURATION);
+    verify_lost_event (out_event, 490 + i, (490 + i) * PCMU_BUF_DURATION,
+        PCMU_BUF_DURATION);
   }
 
   /* and then the buffer is released */
@@ -738,16 +741,19 @@ GST_START_TEST (test_only_one_lost_event_on_large_gaps)
   gst_object_unref (testclock);
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_two_lost_one_arrives_in_time)
 {
-  GstHarness * h = gst_harness_new ("rtpjitterbuffer");
-  GstTestClock * testclock;
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstTestClock *testclock;
   GstClockID id;
   GstBuffer *out_buf;
   GstEvent *out_event;
-  gint jb_latency_ms = 100; /* FIXME: setting this to 10 produces a strange result (30ms lost event), find out why! */
+  gint jb_latency_ms = 100;     /* FIXME: setting this to 10 produces a
+                                 * strange result (30ms lost event),
+                                 * find out why! */
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   GstClockTime buffer_time;
   gint b;
@@ -755,10 +761,7 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
   gst_harness_set_src_caps (h, generate_caps ());
   gst_harness_use_testclock (h);
   testclock = gst_harness_get_testclock (h);
-  g_object_set (h->element,
-      "do-lost", TRUE,
-      "latency", jb_latency_ms,
-      NULL);
+  g_object_set (h->element, "do-lost", TRUE, "latency", jb_latency_ms, NULL);
 
   /* push the first buffer through */
   gst_harness_push (h, generate_test_buffer (0));
@@ -784,9 +787,11 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
   gst_harness_push (h, generate_test_buffer (b));
 
   /* verify that the jitterbuffer now wait for the latest moment it can push */
-  /* the first lost buffer (buffer 3) out on (buffer-timestamp (60) + latency (100) = 160) */
+  /* the first lost buffer (buffer 3) out on
+   * (buffer-timestamp (60) + latency (100) = 160) */
   gst_test_clock_wait_for_next_pending_id (testclock, &id);
-  g_assert_cmpint (gst_clock_id_get_time (id), ==, (3 * PCMU_BUF_DURATION) + (jb_latency_ms * GST_MSECOND));
+  g_assert_cmpint (gst_clock_id_get_time (id), ==,
+      (3 * PCMU_BUF_DURATION) + (jb_latency_ms * GST_MSECOND));
   gst_clock_id_unref (id);
 
   /* let the time expire... */
@@ -827,12 +832,13 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
   gst_object_unref (testclock);
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_late_packets_still_makes_lost_events)
 {
-  GstHarness * h = gst_harness_new ("rtpjitterbuffer");
-  GstTestClock * testclock;
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstTestClock *testclock;
   GstBuffer *out_buf;
   GstEvent *out_event;
   gint jb_latency_ms = 100;
@@ -843,10 +849,7 @@ GST_START_TEST (test_late_packets_still_makes_lost_events)
   gst_harness_set_src_caps (h, generate_caps ());
   gst_harness_use_testclock (h);
   testclock = gst_harness_get_testclock (h);
-  g_object_set (h->element,
-      "do-lost", TRUE,
-      "latency", jb_latency_ms,
-      NULL);
+  g_object_set (h->element, "do-lost", TRUE, "latency", jb_latency_ms, NULL);
 
   /* advance the clock with 10 seconds */
   gst_test_clock_set_time (testclock, 10 * GST_SECOND);
@@ -876,7 +879,7 @@ GST_START_TEST (test_late_packets_still_makes_lost_events)
   for (int i = 0; i < 3; i++)
     gst_event_unref (gst_harness_pull_event (h));
 
-  /* we should now receive packet-lost-events for buffer 3 and 4*/
+  /* we should now receive packet-lost-events for buffer 3 and 4 */
   out_event = gst_harness_pull_event (h);
   g_assert (out_event != NULL);
   verify_lost_event (out_event, 3, 3 * PCMU_BUF_DURATION, PCMU_BUF_DURATION);
@@ -896,12 +899,13 @@ GST_START_TEST (test_late_packets_still_makes_lost_events)
   gst_object_unref (testclock);
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_all_packets_are_timestamped_zero)
 {
-  GstHarness * h = gst_harness_new ("rtpjitterbuffer");
-  GstTestClock * testclock;
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstTestClock *testclock;
   GstBuffer *out_buf;
   GstEvent *out_event;
   gint jb_latency_ms = 100;
@@ -911,10 +915,7 @@ GST_START_TEST (test_all_packets_are_timestamped_zero)
   gst_harness_set_src_caps (h, generate_caps ());
   gst_harness_use_testclock (h);
   testclock = gst_harness_get_testclock (h);
-  g_object_set (h->element,
-      "do-lost", TRUE,
-      "latency", jb_latency_ms,
-      NULL);
+  g_object_set (h->element, "do-lost", TRUE, "latency", jb_latency_ms, NULL);
 
   /* advance the clock with 10 seconds */
   gst_test_clock_set_time (testclock, 10 * GST_SECOND);
@@ -924,7 +925,8 @@ GST_START_TEST (test_all_packets_are_timestamped_zero)
 
   /* push some buffers in, all timestamped 0 */
   for (b = 1; b < 3; b++) {
-    gst_harness_push (h, generate_test_buffer_full (0 * GST_MSECOND, TRUE, b, 0));
+    gst_harness_push (h, generate_test_buffer_full (0 * GST_MSECOND, TRUE, b,
+            0));
 
     /* check for the buffer coming out that was pushed in */
     out_buf = gst_harness_pull (h);
@@ -962,6 +964,7 @@ GST_START_TEST (test_all_packets_are_timestamped_zero)
   gst_object_unref (testclock);
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_rtx_expected_next)
@@ -988,9 +991,9 @@ GST_START_TEST (test_rtx_expected_next)
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
   gst_clock_id_unref (id);
 
-  /* put second buffer, the jitterbuffer should now know that the packet spacing
-   * is 20ms and should ask for retransmission of seqnum 2 in 20ms+10ms because
-   * 2*jitter==0 and 0.5*packet_spacing==10ms */
+  /* put second buffer, the jitterbuffer should now know that the packet
+   * spacing is 20ms and should ask for retransmission of seqnum 2 in
+   * 20ms+10ms because 2*jitter==0 and 0.5*packet_spacing==10ms */
   in_buf = generate_test_buffer (1);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
@@ -1083,14 +1086,14 @@ GST_START_TEST (test_rtx_two_missing)
 
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 20 * GST_MSECOND);
 
-  /* put second buffer, the jitterbuffer should now know that the packet spacing
-   * is 20ms and should ask for retransmission of seqnum 2 in 20ms+10ms because
-   * 2*jitter==0 and 0.5*packet_spacing==10ms */
+  /* put second buffer, the jitterbuffer should now know that the packet
+   * spacing is 20ms and should ask for retransmission of seqnum 2 in
+   * 20ms+10ms because 2*jitter==0 and 0.5*packet_spacing==10ms */
   in_buf = generate_test_buffer (1);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
-  /* push buffer 4, 2 and 3 are missing now, we should get retransmission events
-   * for 3 at 100ms*/
+  /* push buffer 4, 2 and 3 are missing now, we should get
+   * retransmission events for 3 at 100ms*/
   in_buf = generate_test_buffer (4);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
@@ -1249,18 +1252,20 @@ GST_START_TEST (test_rtx_packet_delay)
   GST_BUFFER_FLAG_SET (in_buf, GST_BUFFER_FLAG_DISCONT);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
-  /* put second buffer, the jitterbuffer should now know that the packet spacing
-   * is 20ms and should ask for retransmission of seqnum 2 in 20ms+10ms because
-   * 2*jitter==0 and 0.5*packet_spacing==10ms */
+  /* put second buffer, the jitterbuffer should now know that the packet
+   * spacing is 20ms and should ask for retransmission of seqnum 2 in
+   * 20ms+10ms because 2*jitter==0 and 0.5*packet_spacing==10ms */
   in_buf = generate_test_buffer (1);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   /* push buffer 8, 2 -> 7 are missing now. note that the rtp time is the same
    * as packet 1 because it was part of a fragmented payload. This means that
-   * the estimate for 2 could be refined now to 20ms. also packet 2, 3 and 4 are
-   * exceeding the max allowed reorder distance and should request a
+   * the estimate for 2 could be refined now to 20ms. also packet 2, 3 and 4
+   * are exceeding the max allowed reorder distance and should request a
    * retransmission right away */
-  in_buf = generate_test_buffer_full (20 * GST_MSECOND, TRUE, 8, 8 * PCMU_RTP_TS_DURATION);
+  in_buf =
+      generate_test_buffer_full (20 * GST_MSECOND, TRUE, 8,
+      8 * PCMU_RTP_TS_DURATION);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   /* we should now receive retransmission requests for 2 -> 5 */
@@ -1277,7 +1282,9 @@ GST_START_TEST (test_rtx_packet_delay)
   g_assert_cmpint (data.rtx_event_count, ==, 3);
 
   /* push 9, this should immediately request retransmission of 5 */
-  in_buf = generate_test_buffer_full (20 * GST_MSECOND, TRUE, 9, 9 * PCMU_RTP_TS_DURATION);
+  in_buf =
+      generate_test_buffer_full (20 * GST_MSECOND, TRUE, 9,
+      9 * PCMU_RTP_TS_DURATION);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   /* we should now receive retransmission requests for 5 */
@@ -1409,7 +1416,8 @@ GST_START_TEST (test_gap_exceeds_latency)
   g_object_set (data.jitter_buffer, "rtx-retry-period", 120, NULL);
 
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 0);
-  in_buf = generate_test_buffer_full (timestamp_ms * GST_MSECOND, TRUE, 0, rtp_ts);
+  in_buf =
+      generate_test_buffer_full (timestamp_ms * GST_MSECOND, TRUE, 0, rtp_ts);
   GST_BUFFER_FLAG_SET (in_buf, GST_BUFFER_FLAG_DISCONT);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
@@ -1418,7 +1426,8 @@ GST_START_TEST (test_gap_exceeds_latency)
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock),
       timestamp_ms * GST_MSECOND);
 
-  in_buf = generate_test_buffer_full (timestamp_ms * GST_MSECOND, TRUE, 1, rtp_ts);
+  in_buf =
+      generate_test_buffer_full (timestamp_ms * GST_MSECOND, TRUE, 1, rtp_ts);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
   last_rtp = rtp_ts;
   last_ts = timestamp_ms;
@@ -1456,7 +1465,8 @@ GST_START_TEST (test_gap_exceeds_latency)
 
   /*  Now data comes in again, a "bulk" lost packet is created for 3 -> 5 */
   rtp_ts += (PCMU_RTP_TS_DURATION * 15);
-  in_buf = generate_test_buffer_full (timestamp_ms * GST_MSECOND, TRUE, 16, rtp_ts);
+  in_buf =
+      generate_test_buffer_full (timestamp_ms * GST_MSECOND, TRUE, 16, rtp_ts);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   last_ts += 60;
@@ -1471,32 +1481,38 @@ GST_START_TEST (test_gap_exceeds_latency)
 
   last_ts += PCMU_BUF_MS;
   last_rtp += PCMU_RTP_TS_DURATION;
-  in_buf = generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 10, last_rtp);
+  in_buf =
+      generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 10, last_rtp);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   last_ts += PCMU_BUF_MS;
   last_rtp += PCMU_RTP_TS_DURATION;
-  in_buf = generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 11, last_rtp);
+  in_buf =
+      generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 11, last_rtp);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   last_ts += PCMU_BUF_MS;
   last_rtp += PCMU_RTP_TS_DURATION;
-  in_buf = generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 12, last_rtp);
+  in_buf =
+      generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 12, last_rtp);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   last_ts += PCMU_BUF_MS;
   last_rtp += PCMU_RTP_TS_DURATION;
-  in_buf = generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 13, last_rtp);
+  in_buf =
+      generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 13, last_rtp);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   last_ts += PCMU_BUF_MS;
   last_rtp += PCMU_RTP_TS_DURATION;
-  in_buf = generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 14, last_rtp);
+  in_buf =
+      generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 14, last_rtp);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   last_ts += PCMU_BUF_MS;
   last_rtp += PCMU_RTP_TS_DURATION;
-  in_buf = generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 15, last_rtp);
+  in_buf =
+      generate_test_buffer_full (last_ts * GST_MSECOND, TRUE, 15, last_rtp);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   /* Wait for data to be pushed. */
@@ -1563,6 +1579,7 @@ GST_START_TEST (test_gap_exceeds_latency)
 
   destroy_testharness (&data);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_deadline_ts_offset)
@@ -1617,8 +1634,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_dts_gap_larger_than_latency)
 {
-  GstHarness * h = gst_harness_new ("rtpjitterbuffer");
-  GstTestClock * testclock;
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstTestClock *testclock;
   GstEvent *out_event;
   gint jb_latency_ms = 100;
   GstClockTime dts_after_gap = (jb_latency_ms + 1) * GST_MSECOND;
@@ -1626,10 +1643,7 @@ GST_START_TEST (test_dts_gap_larger_than_latency)
   gst_harness_set_src_caps (h, generate_caps ());
   gst_harness_use_testclock (h);
   testclock = gst_harness_get_testclock (h);
-  g_object_set (h->element,
-      "do-lost", TRUE,
-      "latency", jb_latency_ms,
-      NULL);
+  g_object_set (h->element, "do-lost", TRUE, "latency", jb_latency_ms, NULL);
 
   /* push first buffer through */
   gst_harness_push (h, generate_test_buffer (0));
@@ -1656,6 +1670,7 @@ GST_START_TEST (test_dts_gap_larger_than_latency)
   gst_object_unref (testclock);
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 static Suite *
