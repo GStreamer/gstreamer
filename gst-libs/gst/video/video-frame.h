@@ -30,7 +30,7 @@ typedef struct _GstVideoFrame GstVideoFrame;
  * GstVideoFrameFlags:
  * @GST_VIDEO_FRAME_FLAG_NONE: no flags
  * @GST_VIDEO_FRAME_FLAG_INTERLACED: The video frame is interlaced. In mixed
- *           interlace-mode, this flags specifies if the frame is interlace or
+ *           interlace-mode, this flag specifies if the frame is interlaced or
  *           progressive.
  * @GST_VIDEO_FRAME_FLAG_TFF: The video frame has the top field first
  * @GST_VIDEO_FRAME_FLAG_RFF: The video frame has the repeat flag
