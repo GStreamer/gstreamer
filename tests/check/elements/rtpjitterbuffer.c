@@ -380,14 +380,13 @@ GST_START_TEST (test_clear_pt_map)
 
 GST_END_TEST;
 
-static const guint PCMU_BUF_CLOCK_RATE = 8000;
-static const guint PCMU_BUF_PT = 0;
-static const guint PCMU_BUF_SSRC = 0x01BADBAD;
-static const guint PCMU_BUF_MS = 20;
-static const GstClockTime PCMU_BUF_DURATION = PCMU_BUF_MS * GST_MSECOND;
-static const guint PCMU_BUF_SIZE = 64000 * PCMU_BUF_MS / 1000;
-static const guint PCMU_RTP_TS_DURATION =
-    PCMU_BUF_CLOCK_RATE * PCMU_BUF_MS / 1000;
+#define PCMU_BUF_CLOCK_RATE 8000
+#define PCMU_BUF_PT 0
+#define PCMU_BUF_SSRC 0x01BADBAD
+#define PCMU_BUF_MS  20
+#define PCMU_BUF_DURATION (PCMU_BUF_MS * GST_MSECOND)
+#define PCMU_BUF_SIZE (64000 * PCMU_BUF_MS / 1000)
+#define PCMU_RTP_TS_DURATION (PCMU_BUF_CLOCK_RATE * PCMU_BUF_MS / 1000)
 
 typedef struct
 {
