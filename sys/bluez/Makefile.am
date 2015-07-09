@@ -37,6 +37,8 @@ BUILT_SOURCES = \
 	bluez.h \
 	bluez.c
 
+EXTRA_DIST = org.bluez.xml
+
 bluez.h: bluez.c
 bluez.c: org.bluez.xml
 	$(AM_V_GEN) $(GDBUS_CODEGEN) \
