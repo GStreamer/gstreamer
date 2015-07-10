@@ -654,7 +654,7 @@ create_segment_event (GstRTPBaseDepayload * filter, guint rtptime,
   priv = filter->priv;
 
   /* determining the start of the segment */
-  start = 0;
+  start = filter->segment.start;
   if (priv->clock_base != -1 && position != -1) {
     GstClockTime exttime, gap;
 
@@ -675,12 +675,12 @@ create_segment_event (GstRTPBaseDepayload * filter, guint rtptime,
   }
 
   /* determining the stop of the segment */
-  stop = -1;
+  stop = filter->segment.stop;
   if (priv->npt_stop != -1)
     stop = start + (priv->npt_stop - priv->npt_start);
 
   if (position == -1)
-    position = 0;
+    position = start;
 
   running_time = gst_segment_to_running_time (&filter->segment,
       GST_FORMAT_TIME, start);
