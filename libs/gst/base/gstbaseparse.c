@@ -3396,6 +3396,9 @@ pause:
       push_eos = TRUE;
     }
     if (push_eos) {
+      if (parse->priv->estimated_duration <= 0) {
+        gst_base_parse_update_duration (parse);
+      }
       /* Push pending events, including SEGMENT events */
       gst_base_parse_push_pending_events (parse);
 
