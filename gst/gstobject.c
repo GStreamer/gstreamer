@@ -693,6 +693,8 @@ had_parent:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object,
         "set parent failed, object already had a parent");
+    gst_object_ref_sink (object);
+    gst_object_unref (object);
     GST_OBJECT_UNLOCK (object);
     return FALSE;
   }

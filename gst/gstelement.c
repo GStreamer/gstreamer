@@ -723,6 +723,8 @@ name_exists:
         pad_name, GST_ELEMENT_NAME (element));
     GST_OBJECT_UNLOCK (element);
     g_free (pad_name);
+    gst_object_ref_sink (pad);
+    gst_object_unref (pad);
     return FALSE;
   }
 had_parent:
@@ -732,6 +734,8 @@ had_parent:
         pad_name, GST_ELEMENT_NAME (element));
     GST_OBJECT_UNLOCK (element);
     g_free (pad_name);
+    gst_object_ref_sink (pad);
+    gst_object_unref (pad);
     return FALSE;
   }
 no_direction:

@@ -1375,6 +1375,8 @@ duplicate_name:
         elem_name, GST_ELEMENT_NAME (bin));
     GST_OBJECT_UNLOCK (bin);
     g_free (elem_name);
+    gst_object_ref_sink (element);
+    gst_object_unref (element);
     return FALSE;
   }
 had_parent:
@@ -1382,6 +1384,8 @@ had_parent:
     g_warning ("Element '%s' already has parent", elem_name);
     GST_OBJECT_UNLOCK (bin);
     g_free (elem_name);
+    gst_object_ref_sink (element);
+    gst_object_unref (element);
     return FALSE;
   }
 }
@@ -1537,6 +1541,8 @@ no_function:
   {
     g_warning ("adding elements to bin '%s' is not supported",
         GST_ELEMENT_NAME (bin));
+    gst_object_ref_sink (element);
+    gst_object_unref (element);
     return FALSE;
   }
 }
