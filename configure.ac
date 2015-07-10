@@ -2615,7 +2615,8 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
       else
         HAVE_QT="yes"
         PKG_CHECK_MODULES(QT_X11, Qt5X11Extras, [
-            QT_CFLAGS="$QT_CFLAGS $QT_X11_CFLAGS"
+	AC_DEFINE([HAVE_QT_X11], [], [Define if Qt X11 integration is installed])
+	    QT_CFLAGS="$QT_CFLAGS $QT_X11_CFLAGS"
             QT_LIBS="$QT_LIBS $QT_X11_LIBS"
             AC_SUBST([QT_CFLAGS])
             AC_SUBST([QT_LIBS])
