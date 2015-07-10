@@ -2982,9 +2982,10 @@ gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
      * between the version it was compiled for and the actual shared
      * library used
      */
-    LIBXML_TEST_VERSION
-        /* parse "data" into a document (which is a libxml2 tree structure xmlDoc) */
-        doc = xmlReadMemory (data, size, "noname.xml", NULL, 0);
+    LIBXML_TEST_VERSION;
+
+    /* parse "data" into a document (which is a libxml2 tree structure xmlDoc) */
+    doc = xmlReadMemory (data, size, "noname.xml", NULL, XML_PARSE_NONET);
     if (doc == NULL) {
       GST_ERROR ("failed to parse the MPD file");
       return FALSE;
