@@ -93,6 +93,12 @@ typedef enum
 
 typedef enum
 {
+  GST_XLINK_ACTUATE_ON_REQUEST,
+  GST_XLINK_ACTUATE_ON_LOAD
+} GstXLinkActuate;
+
+typedef enum
+{
   GST_MPD_UTCTIMING_TYPE_UNKNOWN     = 0x00,
   GST_MPD_UTCTIMING_TYPE_NTP         = 0x01,
   GST_MPD_UTCTIMING_TYPE_SNTP        = 0x02,
@@ -183,6 +189,9 @@ struct _GstSegmentListNode
   GstMultSegmentBaseType *MultSegBaseType;
   /* list of SegmentURL nodes */
   GList *SegmentURL;
+
+  gchar *xlink_href;
+  GstXLinkActuate actuate;
 };
 
 struct _GstSegmentTemplateNode
@@ -322,6 +331,9 @@ struct _GstAdaptationSetNode
   GList *Representations;
   /* list of ContentComponent nodes */
   GList *ContentComponents;
+
+  gchar *xlink_href;
+  GstXLinkActuate actuate;
 };
 
 struct _GstSubsetNode
@@ -348,6 +360,9 @@ struct _GstPeriodNode
   GList *Subsets;
   /* list of BaseURL nodes */
   GList *BaseURLs;
+
+  gchar *xlink_href;
+  GstXLinkActuate actuate;
 };
 
 struct _GstProgramInformationNode

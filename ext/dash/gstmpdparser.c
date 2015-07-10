@@ -35,6 +35,9 @@
 /* Property parsing */
 static gboolean gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
     const gchar * property_name, gchar ** property_value);
+static gboolean gst_mpdparser_get_xml_ns_prop_string (xmlNode * a_node,
+    const gchar * ns_name, const gchar * property_name,
+    gchar ** property_value);
 static gboolean gst_mpdparser_get_xml_prop_string_vector_type (xmlNode * a_node,
     const gchar * property_name, gchar *** property_value);
 static gboolean gst_mpdparser_get_xml_prop_signed_integer (xmlNode * a_node,
@@ -252,6 +255,25 @@ gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
     *property_value = (gchar *) prop_string;
     exists = TRUE;
     GST_LOG (" - %s: %s", property_name, prop_string);
+  }
+
+  return exists;
+}
+
+static gboolean
+gst_mpdparser_get_xml_ns_prop_string (xmlNode * a_node,
+    const gchar * ns_name, const gchar * property_name, gchar ** property_value)
+{
+  xmlChar *prop_string;
+  gboolean exists = FALSE;
+
+  prop_string =
+      xmlGetNsProp (a_node, (const xmlChar *) property_name,
+      (const xmlChar *) ns_name);
+  if (prop_string) {
+    *property_value = (gchar *) prop_string;
+    exists = TRUE;
+    GST_LOG (" - %s:%s: %s", ns_name, property_name, prop_string);
   }
 
   return exists;
@@ -1427,6 +1449,7 @@ gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer,
 {
   xmlNode *cur_node;
   GstSegmentListNode *new_segment_list;
+  gchar *actuate;
 
   gst_mpdparser_free_segment_list_node (*pointer);
   *pointer = new_segment_list = g_slice_new0 (GstSegmentListNode);
@@ -1442,6 +1465,16 @@ gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer,
           g_list_append (new_segment_list->SegmentURL,
           gst_mpdparser_clone_segment_url (seg_url));
     }
+  }
+
+  new_segment_list->actuate = GST_XLINK_ACTUATE_ON_REQUEST;
+  if (gst_mpdparser_get_xml_ns_prop_string (a_node,
+          "http://www.w3.org/1999/xlink", "href", &new_segment_list->xlink_href)
+      && gst_mpdparser_get_xml_ns_prop_string (a_node,
+          "http://www.w3.org/1999/xlink", "actuate", &actuate)) {
+    if (strcmp (actuate, "onLoad") == 0)
+      new_segment_list->actuate = GST_XLINK_ACTUATE_ON_LOAD;
+    xmlFree (actuate);
   }
 
   GST_LOG ("extension of SegmentList node:");
@@ -1574,11 +1607,23 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node,
 {
   xmlNode *cur_node;
   GstAdaptationSetNode *new_adap_set;
+  gchar *actuate;
 
   new_adap_set = g_slice_new0 (GstAdaptationSetNode);
   *list = g_list_append (*list, new_adap_set);
 
   GST_LOG ("attributes of AdaptationSet node:");
+
+  new_adap_set->actuate = GST_XLINK_ACTUATE_ON_REQUEST;
+  if (gst_mpdparser_get_xml_ns_prop_string (a_node,
+          "http://www.w3.org/1999/xlink", "href", &new_adap_set->xlink_href)
+      && gst_mpdparser_get_xml_ns_prop_string (a_node,
+          "http://www.w3.org/1999/xlink", "actuate", &actuate)) {
+    if (strcmp (actuate, "onLoad") == 0)
+      new_adap_set->actuate = GST_XLINK_ACTUATE_ON_LOAD;
+    xmlFree (actuate);
+  }
+
   gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "id", 0,
       &new_adap_set->id);
   gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "group", 0,
@@ -1726,11 +1771,23 @@ gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node)
 {
   xmlNode *cur_node;
   GstPeriodNode *new_period;
+  gchar *actuate;
 
   new_period = g_slice_new0 (GstPeriodNode);
   *list = g_list_append (*list, new_period);
 
   GST_LOG ("attributes of Period node:");
+
+  new_period->actuate = GST_XLINK_ACTUATE_ON_REQUEST;
+  if (gst_mpdparser_get_xml_ns_prop_string (a_node,
+          "http://www.w3.org/1999/xlink", "href", &new_period->xlink_href)
+      && gst_mpdparser_get_xml_ns_prop_string (a_node,
+          "http://www.w3.org/1999/xlink", "actuate", &actuate)) {
+    if (strcmp (actuate, "onLoad") == 0)
+      new_period->actuate = GST_XLINK_ACTUATE_ON_LOAD;
+    xmlFree (actuate);
+  }
+
   gst_mpdparser_get_xml_prop_string (a_node, "id", &new_period->id);
   gst_mpdparser_get_xml_prop_duration (a_node, "start", -1, &new_period->start);
   gst_mpdparser_get_xml_prop_duration (a_node, "duration", -1,
@@ -2230,6 +2287,8 @@ gst_mpdparser_free_period_node (GstPeriodNode * period_node)
         (GDestroyNotify) gst_mpdparser_free_subset_node);
     g_list_free_full (period_node->BaseURLs,
         (GDestroyNotify) gst_mpdparser_free_base_url_node);
+    if (period_node->xlink_href)
+      xmlFree (period_node->xlink_href);
     g_slice_free (GstPeriodNode, period_node);
   }
 }
@@ -2329,6 +2388,8 @@ gst_mpdparser_free_adaptation_set_node (GstAdaptationSetNode *
         (GDestroyNotify) gst_mpdparser_free_representation_node);
     g_list_free_full (adaptation_set_node->ContentComponents,
         (GDestroyNotify) gst_mpdparser_free_content_component_node);
+    if (adaptation_set_node->xlink_href)
+      xmlFree (adaptation_set_node->xlink_href);
     g_slice_free (GstAdaptationSetNode, adaptation_set_node);
   }
 }
@@ -2444,6 +2505,8 @@ gst_mpdparser_free_segment_list_node (GstSegmentListNode * segment_list_node)
     /* MultipleSegmentBaseType extension */
     gst_mpdparser_free_mult_seg_base_type_ext
         (segment_list_node->MultSegBaseType);
+    if (segment_list_node->xlink_href)
+      xmlFree (segment_list_node->xlink_href);
     g_slice_free (GstSegmentListNode, segment_list_node);
   }
 }
