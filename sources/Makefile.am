@@ -90,4 +90,4 @@ uninstall-local:
 	echo "$(GACUTIL) /u $(ASSEMBLY_NAME) $(GACUTIL_FLAGS)"; \
         $(GACUTIL) /u $(ASSEMBLY_NAME) $(GACUTIL_FLAGS) || exit 1;
 clean-local:
-	rm -r generated/*
+	rm -rf generated/*
