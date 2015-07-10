@@ -882,6 +882,19 @@ mpegtsmux_sink_event (GstCollectPads * pads, GstCollectData * data,
       forward = gst_tag_list_get_scope (list) == GST_TAG_SCOPE_GLOBAL;
       break;
     }
+    case GST_EVENT_STREAM_START:{
+      GstStreamFlags flags;
+
+      gst_event_parse_stream_flags (event, &flags);
+
+      /* Don't wait for data on sparse inputs like metadata streams */
+      if ((flags & GST_STREAM_FLAG_SPARSE)) {
+        GST_COLLECT_PADS_STATE_UNSET (data, GST_COLLECT_PADS_STATE_LOCKED);
+        gst_collect_pads_set_waiting (pads, data, FALSE);
+        GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_LOCKED);
+      }
+      break;
+    }
     default:
       break;
   }
