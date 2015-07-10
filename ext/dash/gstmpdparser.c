@@ -481,10 +481,6 @@ gst_mpdparser_get_xml_prop_range (xmlNode * a_node, const gchar * property_name,
     }
     /* malloc return data structure */
     *property_value = g_slice_new0 (GstRange);
-    if (*property_value == NULL) {
-      GST_WARNING ("Allocation of GstRange failed!");
-      goto error;
-    }
     exists = TRUE;
     (*property_value)->first_byte_pos = first_byte_pos;
     (*property_value)->last_byte_pos = last_byte_pos;
@@ -538,10 +534,6 @@ gst_mpdparser_get_xml_prop_ratio (xmlNode * a_node,
     }
     /* malloc return data structure */
     *property_value = g_slice_new0 (GstRatio);
-    if (*property_value == NULL) {
-      GST_WARNING ("Allocation of GstRatio failed!");
-      goto error;
-    }
     exists = TRUE;
     (*property_value)->num = num;
     (*property_value)->den = den;
@@ -590,10 +582,6 @@ gst_mpdparser_get_xml_prop_framerate (xmlNode * a_node,
     }
     /* alloc return data structure */
     *property_value = g_slice_new0 (GstFrameRate);
-    if (*property_value == NULL) {
-      GST_WARNING ("Allocation of GstFrameRate failed!");
-      goto error;
-    }
     exists = TRUE;
     (*property_value)->num = num;
     (*property_value)->den = den;
@@ -642,10 +630,6 @@ gst_mpdparser_get_xml_prop_cond_uint (xmlNode * a_node,
 
     /* alloc return data structure */
     *property_value = g_slice_new0 (GstConditionalUintType);
-    if (*property_value == NULL) {
-      GST_WARNING ("Allocation of GstConditionalUintType failed!");
-      goto error;
-    }
     exists = TRUE;
     (*property_value)->flag = flag;
     (*property_value)->value = val;
@@ -985,10 +969,6 @@ gst_mpdparser_parse_baseURL_node (GList ** list, xmlNode * a_node)
   GstBaseURL *new_base_url;
 
   new_base_url = g_slice_new0 (GstBaseURL);
-  if (new_base_url == NULL) {
-    GST_WARNING ("Allocation of BaseURL node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_base_url);
 
   GST_LOG ("content of BaseURL node:");
@@ -1007,10 +987,6 @@ gst_mpdparser_parse_descriptor_type_node (GList ** list, xmlNode * a_node)
   GstDescriptorType *new_descriptor;
 
   new_descriptor = g_slice_new0 (GstDescriptorType);
-  if (new_descriptor == NULL) {
-    GST_WARNING ("Allocation of DescriptorType node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_descriptor);
 
   GST_LOG ("attributes of %s node:", a_node->name);
@@ -1026,10 +1002,6 @@ gst_mpdparser_parse_content_component_node (GList ** list, xmlNode * a_node)
   GstContentComponentNode *new_content_component;
 
   new_content_component = g_slice_new0 (GstContentComponentNode);
-  if (new_content_component == NULL) {
-    GST_WARNING ("Allocation of ContentComponent node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_content_component);
 
   GST_LOG ("attributes of ContentComponent node:");
@@ -1077,10 +1049,6 @@ gst_mpdparser_parse_subrepresentation_node (GList ** list, xmlNode * a_node)
   GstSubRepresentationNode *new_subrep;
 
   new_subrep = g_slice_new0 (GstSubRepresentationNode);
-  if (new_subrep == NULL) {
-    GST_WARNING ("Allocation of SubRepresentation node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_subrep);
 
   GST_LOG ("attributes of SubRepresentation node:");
@@ -1105,14 +1073,10 @@ gst_mpdparser_clone_segment_url (GstSegmentURLNode * seg_url)
 
   if (seg_url) {
     clone = g_slice_new0 (GstSegmentURLNode);
-    if (clone) {
-      clone->media = xmlMemStrdup (seg_url->media);
-      clone->mediaRange = gst_mpdparser_clone_range (seg_url->mediaRange);
-      clone->index = xmlMemStrdup (seg_url->index);
-      clone->indexRange = gst_mpdparser_clone_range (seg_url->indexRange);
-    } else {
-      GST_WARNING ("Allocation of SegmentURL node failed!");
-    }
+    clone->media = xmlMemStrdup (seg_url->media);
+    clone->mediaRange = gst_mpdparser_clone_range (seg_url->mediaRange);
+    clone->index = xmlMemStrdup (seg_url->index);
+    clone->indexRange = gst_mpdparser_clone_range (seg_url->indexRange);
   }
 
   return clone;
@@ -1124,10 +1088,6 @@ gst_mpdparser_parse_segment_url_node (GList ** list, xmlNode * a_node)
   GstSegmentURLNode *new_segment_url;
 
   new_segment_url = g_slice_new0 (GstSegmentURLNode);
-  if (new_segment_url == NULL) {
-    GST_WARNING ("Allocation of SegmentURL node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_segment_url);
 
   GST_LOG ("attributes of SegmentURL node:");
@@ -1146,10 +1106,6 @@ gst_mpdparser_parse_url_type_node (GstURLType ** pointer, xmlNode * a_node)
 
   gst_mpdparser_free_url_type_node (*pointer);
   *pointer = new_url_type = g_slice_new0 (GstURLType);
-  if (new_url_type == NULL) {
-    GST_WARNING ("Allocation of URLType node failed!");
-    return;
-  }
 
   GST_LOG ("attributes of URLType node:");
   gst_mpdparser_get_xml_prop_string (a_node, "sourceURL",
@@ -1170,10 +1126,6 @@ gst_mpdparser_parse_seg_base_type_ext (GstSegmentBaseType ** pointer,
 
   gst_mpdparser_free_seg_base_type_ext (*pointer);
   *pointer = seg_base_type = g_slice_new0 (GstSegmentBaseType);
-  if (seg_base_type == NULL) {
-    GST_WARNING ("Allocation of SegmentBaseType node failed!");
-    return;
-  }
 
   /* Initialize values that have defaults */
   seg_base_type->indexRangeExact = FALSE;
@@ -1237,13 +1189,9 @@ gst_mpdparser_clone_s_node (GstSNode * pointer)
 
   if (pointer) {
     clone = g_slice_new0 (GstSNode);
-    if (clone) {
-      clone->t = pointer->t;
-      clone->d = pointer->d;
-      clone->r = pointer->r;
-    } else {
-      GST_WARNING ("Allocation of S node failed!");
-    }
+    clone->t = pointer->t;
+    clone->d = pointer->d;
+    clone->r = pointer->r;
   }
 
   return clone;
@@ -1255,10 +1203,6 @@ gst_mpdparser_parse_s_node (GQueue * queue, xmlNode * a_node)
   GstSNode *new_s_node;
 
   new_s_node = g_slice_new0 (GstSNode);
-  if (new_s_node == NULL) {
-    GST_WARNING ("Allocation of S node failed!");
-    return;
-  }
   g_queue_push_tail (queue, new_s_node);
 
   GST_LOG ("attributes of S node:");
@@ -1328,10 +1272,6 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
 
   gst_mpdparser_free_mult_seg_base_type_ext (*pointer);
   *pointer = mult_seg_base_type = g_slice_new0 (GstMultSegmentBaseType);
-  if (mult_seg_base_type == NULL) {
-    GST_WARNING ("Allocation of MultipleSegmentBaseType node failed!");
-    return;
-  }
 
   mult_seg_base_type->duration = 0;
   mult_seg_base_type->startNumber = 1;
@@ -1387,10 +1327,6 @@ gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer,
 
   gst_mpdparser_free_segment_list_node (*pointer);
   *pointer = new_segment_list = g_slice_new0 (GstSegmentListNode);
-  if (new_segment_list == NULL) {
-    GST_WARNING ("Allocation of SegmentList node failed!");
-    return;
-  }
 
   /* Inherit attribute values from parent */
   if (parent) {
@@ -1430,10 +1366,6 @@ gst_mpdparser_parse_representation_base_type (GstRepresentationBaseType **
 
   gst_mpdparser_free_representation_base_type (*pointer);
   *pointer = representation_base = g_slice_new0 (GstRepresentationBaseType);
-  if (representation_base == NULL) {
-    GST_WARNING ("Allocation of RepresentationBaseType node failed!");
-    return;
-  }
 
   GST_LOG ("attributes of RepresentationBaseType extension:");
   gst_mpdparser_get_xml_prop_string (a_node, "profiles",
@@ -1491,10 +1423,6 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node,
   GstRepresentationNode *new_representation;
 
   new_representation = g_slice_new0 (GstRepresentationNode);
-  if (new_representation == NULL) {
-    GST_WARNING ("Allocation of Representation node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_representation);
 
   GST_LOG ("attributes of Representation node:");
@@ -1545,10 +1473,6 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node,
   GstAdaptationSetNode *new_adap_set;
 
   new_adap_set = g_slice_new0 (GstAdaptationSetNode);
-  if (new_adap_set == NULL) {
-    GST_WARNING ("Allocation of AdaptationSet node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_adap_set);
 
   GST_LOG ("attributes of AdaptationSet node:");
@@ -1643,10 +1567,6 @@ gst_mpdparser_parse_subset_node (GList ** list, xmlNode * a_node)
   GstSubsetNode *new_subset;
 
   new_subset = g_slice_new0 (GstSubsetNode);
-  if (new_subset == NULL) {
-    GST_WARNING ("Allocation of Subset node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_subset);
 
   GST_LOG ("attributes of Subset node:");
@@ -1663,10 +1583,6 @@ gst_mpdparser_parse_segment_template_node (GstSegmentTemplateNode ** pointer,
 
   gst_mpdparser_free_segment_template_node (*pointer);
   *pointer = new_segment_template = g_slice_new0 (GstSegmentTemplateNode);
-  if (new_segment_template == NULL) {
-    GST_WARNING ("Allocation of SegmentTemplate node failed!");
-    return;
-  }
 
   /* Inherit attribute values from parent */
   if (parent) {
@@ -1705,10 +1621,6 @@ gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node)
   GstPeriodNode *new_period;
 
   new_period = g_slice_new0 (GstPeriodNode);
-  if (new_period == NULL) {
-    GST_WARNING ("Allocation of Period node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_period);
 
   new_period->start = GST_CLOCK_TIME_NONE;
@@ -1762,10 +1674,6 @@ gst_mpdparser_parse_program_info_node (GList ** list, xmlNode * a_node)
   GstProgramInformationNode *new_prog_info;
 
   new_prog_info = g_slice_new0 (GstProgramInformationNode);
-  if (new_prog_info == NULL) {
-    GST_WARNING ("Allocation of ProgramInfo node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_prog_info);
 
   GST_LOG ("attributes of ProgramInformation node:");
@@ -1795,10 +1703,6 @@ gst_mpdparser_parse_metrics_range_node (GList ** list, xmlNode * a_node)
   GstMetricsRangeNode *new_metrics_range;
 
   new_metrics_range = g_slice_new0 (GstMetricsRangeNode);
-  if (new_metrics_range == NULL) {
-    GST_WARNING ("Allocation of Metrics Range node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_metrics_range);
 
   GST_LOG ("attributes of Metrics Range node:");
@@ -1815,10 +1719,6 @@ gst_mpdparser_parse_metrics_node (GList ** list, xmlNode * a_node)
   GstMetricsNode *new_metrics;
 
   new_metrics = g_slice_new0 (GstMetricsNode);
-  if (new_metrics == NULL) {
-    GST_WARNING ("Allocation of Metrics node failed!");
-    return;
-  }
   *list = g_list_append (*list, new_metrics);
 
   GST_LOG ("attributes of Metrics node:");
@@ -1849,10 +1749,6 @@ gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node)
 
   gst_mpdparser_free_mpd_node (*pointer);
   *pointer = new_mpd = g_slice_new0 (GstMPDNode);
-  if (new_mpd == NULL) {
-    GST_WARNING ("Allocation of MPD node failed!");
-    return;
-  }
 
   GST_LOG ("namespaces of root MPD node:");
   new_mpd->default_namespace =
@@ -2756,12 +2652,8 @@ gst_mpdparser_clone_range (GstRange * range)
 
   if (range) {
     clone = g_slice_new0 (GstRange);
-    if (clone) {
-      clone->first_byte_pos = range->first_byte_pos;
-      clone->last_byte_pos = range->last_byte_pos;
-    } else {
-      GST_WARNING ("Allocation of GstRange failed!");
-    }
+    clone->first_byte_pos = range->first_byte_pos;
+    clone->last_byte_pos = range->last_byte_pos;
   }
 
   return clone;
@@ -2775,14 +2667,10 @@ gst_mpdparser_clone_URL (GstURLType * url)
 
   if (url) {
     clone = g_slice_new0 (GstURLType);
-    if (clone) {
-      if (url->sourceURL) {
-        clone->sourceURL = xmlMemStrdup (url->sourceURL);
-      }
-      clone->range = gst_mpdparser_clone_range (url->range);
-    } else {
-      GST_WARNING ("Allocation of URLType node failed!");
+    if (url->sourceURL) {
+      clone->sourceURL = xmlMemStrdup (url->sourceURL);
     }
+    clone->range = gst_mpdparser_clone_range (url->range);
   }
 
   return clone;
@@ -3108,10 +2996,6 @@ gst_mpd_client_add_media_segment (GstActiveStream * stream,
   g_return_val_if_fail (stream->segments != NULL, FALSE);
 
   media_segment = g_slice_new0 (GstMediaSegment);
-  if (media_segment == NULL) {
-    GST_WARNING ("Allocation of GstMediaSegment struct failed!");
-    return FALSE;
-  }
 
   media_segment->SegmentURL = url_node;
   media_segment->number = number;
@@ -3462,9 +3346,6 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
     }
 
     stream_period = g_slice_new0 (GstStreamPeriod);
-    if (stream_period == NULL) {
-      goto no_mem;
-    }
     client->periods = g_list_append (client->periods, stream_period);
     stream_period->period = period_node;
     stream_period->number = idx++;
@@ -3489,10 +3370,6 @@ syntax_error:
       ("Cannot get the duration of the Period %d, skipping the rest of the Media Presentation",
       idx);
   return ret;
-
-no_mem:
-  GST_WARNING ("Allocation of GstStreamPeriod struct failed!");
-  return FALSE;
 }
 
 static GList *
@@ -3532,10 +3409,6 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
   }
 
   stream = g_slice_new0 (GstActiveStream);
-  if (stream == NULL) {
-    GST_WARNING ("Allocation of active stream struct failed!");
-    return FALSE;
-  }
   gst_mpdparser_init_active_stream_segments (stream);
 
   stream->baseURL_idx = 0;
