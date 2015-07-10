@@ -2606,9 +2606,11 @@ dnl *** Qt ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_QT, true)
 AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
   PKG_CHECK_MODULES(QT, Qt5Core Qt5Gui Qt5Quick, [
-      AC_CHECK_PROGS(MOC, [moc-qt5 moc])
-      AC_CHECK_PROGS(UIC, [uic-qt5 uic])
-      AC_CHECK_PROGS(RCC, [rcc])
+      QT_PATH=`$PKG_CONFIG --variable=exec_prefix Qt5Core`
+      QT_HOST_PATH=`$PKG_CONFIG --variable=host_bins Qt5Core`
+      AC_PATH_PROGS(MOC, [moc-qt5 moc], moc, ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
+      AC_PATH_PROGS(RCC, [rcc-qt5 rcc], rcc, ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
+      AC_PATH_PROGS(UIC, [uic-qt5 uic], uic, ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
       if test "x$MOC" = "x" || test "x$UIC" = "x" || test "x$RCC" = "x"; then
         AC_MSG_WARN([One of the required qt build programs was not found])
         HAVE_QT="no"
