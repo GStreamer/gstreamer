@@ -2619,7 +2619,7 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
             QT_LIBS="$QT_LIBS $QT_X11_LIBS"
             AC_SUBST([QT_CFLAGS])
             AC_SUBST([QT_LIBS])
-        ], [])
+        ], [AC_MSG_NOTICE([Could not find Qt X11 integration])])
       fi
   ], [
       HAVE_QT="no"
