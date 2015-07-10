@@ -31,7 +31,7 @@
 #include "qtitem.h"
 #include "gstqsgtexture.h"
 
-#if GST_GL_HAVE_WINDOW_X11
+#if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
 #include <QX11Info>
 #include <gst/gl/x11/gstgldisplay_x11.h>
 #include <gst/gl/x11/gstglcontext_glx.h>
@@ -111,7 +111,7 @@ QtGLVideoItem::QtGLVideoItem()
 
   g_mutex_init (&this->priv->lock);
 
-#if GST_GL_HAVE_WINDOW_X11
+#if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
   if (QString::fromUtf8 ("xcb") == app->platformName())
     this->priv->display = (GstGLDisplay *)
         gst_gl_display_x11_new_with_display (QX11Info::display ());
@@ -259,7 +259,7 @@ QtGLVideoItem::onSceneGraphInitialized ()
     return;
   }
 
-#if GST_GL_HAVE_WINDOW_X11
+#if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
   if (GST_IS_GL_DISPLAY_X11 (this->priv->display)) {
     platform = GST_GL_PLATFORM_GLX;
     gl_api = gst_gl_context_get_current_gl_api (NULL, NULL);
