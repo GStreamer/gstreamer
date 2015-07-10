@@ -1108,11 +1108,11 @@ gst_adapter_get_list (GstAdapter * adapter, gsize nbytes)
     hsize = MIN (nbytes, cur_size - skip);
 
     if (skip == 0 && cur_size == hsize) {
-      GST_LOG_OBJECT (adapter, "providing buffer of %" G_GSIZE_FORMAT " bytes"
-          " as head buffer", hsize);
+      GST_LOG_OBJECT (adapter,
+          "inserting a buffer of %" G_GSIZE_FORMAT " bytes", hsize);
       buffer = gst_buffer_ref (cur);
     } else {
-      GST_LOG_OBJECT (adapter, "appending %" G_GSIZE_FORMAT " bytes"
+      GST_LOG_OBJECT (adapter, "inserting a buffer of %" G_GSIZE_FORMAT " bytes"
           " via region copy", hsize);
       buffer = gst_buffer_copy_region (cur, GST_BUFFER_COPY_ALL, skip, hsize);
     }
@@ -1232,11 +1232,11 @@ gst_adapter_get_buffer_list (GstAdapter * adapter, gsize nbytes)
     hsize = MIN (nbytes, cur_size - skip);
 
     if (skip == 0 && cur_size == hsize) {
-      GST_LOG_OBJECT (adapter, "providing buffer of %" G_GSIZE_FORMAT " bytes"
-          " as head buffer", hsize);
+      GST_LOG_OBJECT (adapter,
+          "inserting a buffer of %" G_GSIZE_FORMAT " bytes", hsize);
       buffer = gst_buffer_ref (cur);
     } else {
-      GST_LOG_OBJECT (adapter, "appending %" G_GSIZE_FORMAT " bytes"
+      GST_LOG_OBJECT (adapter, "inserting a buffer of %" G_GSIZE_FORMAT " bytes"
           " via region copy", hsize);
       buffer = gst_buffer_copy_region (cur, GST_BUFFER_COPY_ALL, skip, hsize);
     }
