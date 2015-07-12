@@ -75,7 +75,7 @@ static GstStateChangeReturn
 gst_rtp_dv_depay_change_state (GstElement * element, GstStateChange transition);
 
 static GstBuffer *gst_rtp_dv_depay_process (GstRTPBaseDepayload * base,
-    GstBuffer * in);
+    GstRTPBuffer * rtp);
 static gboolean gst_rtp_dv_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 
@@ -106,7 +106,7 @@ gst_rtp_dv_depay_class_init (GstRTPDVDepayClass * klass)
       "Depayloads DV from RTP packets (RFC 3189)",
       "Marcel Moreaux <marcelm@spacelabs.nl>, Wim Taymans <wim.taymans@gmail.com>");
 
-  gstrtpbasedepayload_class->process =
+  gstrtpbasedepayload_class->process_rtp_packet =
       GST_DEBUG_FUNCPTR (gst_rtp_dv_depay_process);
   gstrtpbasedepayload_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_rtp_dv_depay_setcaps);
@@ -286,7 +286,7 @@ calculate_difblock_location (guint8 * block)
  * NTSC.
  */
 static GstBuffer *
-gst_rtp_dv_depay_process (GstRTPBaseDepayload * base, GstBuffer * in)
+gst_rtp_dv_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
 {
   GstBuffer *out = NULL;
   guint8 *payload;
@@ -294,16 +294,13 @@ gst_rtp_dv_depay_process (GstRTPBaseDepayload * base, GstBuffer * in)
   guint payload_len, location;
   GstRTPDVDepay *dvdepay = GST_RTP_DV_DEPAY (base);
   gboolean marker;
-  GstRTPBuffer rtp = { NULL, };
   GstMapInfo map;
 
-  gst_rtp_buffer_map (in, GST_MAP_READ, &rtp);
-
-  marker = gst_rtp_buffer_get_marker (&rtp);
+  marker = gst_rtp_buffer_get_marker (rtp);
 
   /* Check if the received packet contains (the start of) a new frame, we do
    * this by checking the RTP timestamp. */
-  rtp_ts = gst_rtp_buffer_get_timestamp (&rtp);
+  rtp_ts = gst_rtp_buffer_get_timestamp (rtp);
 
   /* we cannot copy the packet yet if the marker is set, we will do that below
    * after taking out the data */
@@ -317,8 +314,8 @@ gst_rtp_dv_depay_process (GstRTPBaseDepayload * base, GstBuffer * in)
   }
 
   /* Extract the payload */
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
-  payload = gst_rtp_buffer_get_payload (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
+  payload = gst_rtp_buffer_get_payload (rtp);
 
   /* copy all DIF chunks in their place. */
   gst_buffer_map (dvdepay->acc, &map, GST_MAP_READWRITE);
@@ -350,7 +347,6 @@ gst_rtp_dv_depay_process (GstRTPBaseDepayload * base, GstBuffer * in)
     payload += 80;
     payload_len -= 80;
   }
-  gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unmap (dvdepay->acc, &map);
 
   if (marker) {

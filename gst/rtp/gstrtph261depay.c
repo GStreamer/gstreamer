@@ -79,7 +79,7 @@ G_DEFINE_TYPE (GstRtpH261Depay, gst_rtp_h261_depay,
 #define parent_class gst_rtp_h261_depay_parent_class
 
 static GstBuffer *
-gst_rtp_h261_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_h261_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpH261Depay *depay;
   GstBuffer *outbuf = NULL;
@@ -88,28 +88,24 @@ gst_rtp_h261_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   const guint header_len = GST_RTP_H261_PAYLOAD_HEADER_LEN;
   gboolean marker;
   GstRtpH261PayHeader *header;
-  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
 
   depay = GST_RTP_H261_DEPAY (depayload);
 
-  if (GST_BUFFER_IS_DISCONT (buf)) {
+  if (GST_BUFFER_IS_DISCONT (rtp->buffer)) {
     GST_DEBUG_OBJECT (depay, "Discont buffer, flushing adapter");
     gst_adapter_clear (depay->adapter);
     depay->leftover = NO_LEFTOVER;
     depay->start = FALSE;
   }
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
+  payload = gst_rtp_buffer_get_payload (rtp);
 
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
-  payload = gst_rtp_buffer_get_payload (&rtp);
-
-  marker = gst_rtp_buffer_get_marker (&rtp);
+  marker = gst_rtp_buffer_get_marker (rtp);
 
   if (payload_len < 4) {
     GST_WARNING_OBJECT (depay,
         "Dropping packet with payload length invalid length");
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 
@@ -148,12 +144,12 @@ gst_rtp_h261_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   if (header->ebit == 0) {
     /* H.261 stream ends on byte boundary, take entire packet */
     gst_adapter_push (depay->adapter,
-        gst_rtp_buffer_get_payload_subbuffer (&rtp, header_len, payload_len));
+        gst_rtp_buffer_get_payload_subbuffer (rtp, header_len, payload_len));
   } else {
     /* Take the entire buffer except for the last byte, which will be kept to
      * merge with next packet */
     gst_adapter_push (depay->adapter,
-        gst_rtp_buffer_get_payload_subbuffer (&rtp, header_len,
+        gst_rtp_buffer_get_payload_subbuffer (rtp, header_len,
             payload_len - 1));
     depay->leftover = payload[payload_len - 1] & (0xFF << header->ebit);
   }
@@ -186,7 +182,6 @@ skip:
       depay->start = TRUE;
     }
   }
-  gst_rtp_buffer_unmap (&rtp);
 
   return outbuf;
 }
@@ -270,7 +265,7 @@ gst_rtp_h261_depay_class_init (GstRtpH261DepayClass * klass)
       "Extracts H261 video from RTP packets (RFC 4587)",
       "Stian Selnes <stian@pexip.com>");
 
-  gstrtpbasedepayload_class->process = gst_rtp_h261_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_h261_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_h261_depay_setcaps;
 
   gobject_class->dispose = gst_rtp_h261_depay_dispose;

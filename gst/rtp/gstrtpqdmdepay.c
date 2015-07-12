@@ -60,7 +60,7 @@ static GstStateChangeReturn gst_rtp_qdm2_depay_change_state (GstElement *
     element, GstStateChange transition);
 
 static GstBuffer *gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 gboolean gst_rtp_qdm2_depay_setcaps (GstRTPBaseDepayload * filter,
     GstCaps * caps);
 
@@ -75,7 +75,7 @@ gst_rtp_qdm2_depay_class_init (GstRtpQDM2DepayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
-  gstrtpbasedepayload_class->process = gst_rtp_qdm2_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_qdm2_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_qdm2_depay_setcaps;
 
   gobject_class->finalize = gst_rtp_qdm2_depay_finalize;
@@ -223,12 +223,11 @@ add_packet (GstRtpQDM2Depay * depay, guint32 pid, guint32 len, guint8 * data)
 }
 
 static GstBuffer *
-gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpQDM2Depay *rtpqdm2depay;
   GstBuffer *outbuf = NULL;
   guint16 seq;
-  GstRTPBuffer rtp = { NULL };
 
   rtpqdm2depay = GST_RTP_QDM2_DEPAY (depayload);
 
@@ -238,20 +237,19 @@ gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     guint avail;
     guint pos = 0;
 
-    gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-    payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+    payload_len = gst_rtp_buffer_get_payload_len (rtp);
     if (payload_len < 3)
       goto bad_packet;
 
-    payload = gst_rtp_buffer_get_payload (&rtp);
-    seq = gst_rtp_buffer_get_seq (&rtp);
+    payload = gst_rtp_buffer_get_payload (rtp);
+    seq = gst_rtp_buffer_get_seq (rtp);
     if (G_UNLIKELY (seq != rtpqdm2depay->nextseq)) {
       GST_DEBUG ("GAP in sequence number, Resetting data !");
       /* Flush previous data */
       flush_data (rtpqdm2depay);
       /* And store new timestamp */
       rtpqdm2depay->ptimestamp = rtpqdm2depay->timestamp;
-      rtpqdm2depay->timestamp = GST_BUFFER_PTS (buf);
+      rtpqdm2depay->timestamp = GST_BUFFER_PTS (rtp->buffer);
       /* And that previous data will be pushed at the bottom */
     }
     rtpqdm2depay->nextseq = seq + 1;
@@ -273,7 +271,7 @@ gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
           GST_DEBUG ("Headers");
           /* Store the incoming timestamp */
           rtpqdm2depay->ptimestamp = rtpqdm2depay->timestamp;
-          rtpqdm2depay->timestamp = GST_BUFFER_PTS (buf);
+          rtpqdm2depay->timestamp = GST_BUFFER_PTS (rtp->buffer);
           /* flush the internal data if needed */
           flush_data (rtpqdm2depay);
           if (G_UNLIKELY (!rtpqdm2depay->configured)) {
@@ -362,7 +360,6 @@ gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     }
   }
 
-  gst_rtp_buffer_unmap (&rtp);
   return outbuf;
 
   /* ERRORS */
@@ -370,7 +367,6 @@ bad_packet:
   {
     GST_ELEMENT_WARNING (rtpqdm2depay, STREAM, DECODE,
         (NULL), ("Packet was too short"));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

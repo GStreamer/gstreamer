@@ -73,7 +73,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 static gboolean gst_rtp_g729_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_g729_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 
 #define gst_rtp_g729_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpG729Depay, gst_rtp_g729_depay,
@@ -101,7 +101,7 @@ gst_rtp_g729_depay_class_init (GstRtpG729DepayClass * klass)
       "Extracts G.729 audio from RTP packets (RFC 3551)",
       "Laurent Glayal <spglegle@yahoo.fr>");
 
-  gstrtpbasedepayload_class->process = gst_rtp_g729_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_g729_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_g729_depay_setcaps;
 }
 
@@ -168,19 +168,16 @@ wrong_clock_rate:
 }
 
 static GstBuffer *
-gst_rtp_g729_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_g729_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpG729Depay *rtpg729depay;
   GstBuffer *outbuf = NULL;
   gint payload_len;
   gboolean marker;
-  GstRTPBuffer rtp = { NULL };
 
   rtpg729depay = GST_RTP_G729_DEPAY (depayload);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
   /* At least 2 bytes (CNG from G729 Annex B) */
   if (payload_len < 2) {
@@ -195,10 +192,8 @@ gst_rtp_g729_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GST_LOG_OBJECT (rtpg729depay, "G729 payload contains CNG frame");
   }
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
-  marker = gst_rtp_buffer_get_marker (&rtp);
-
-  gst_rtp_buffer_unmap (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
+  marker = gst_rtp_buffer_get_marker (rtp);
 
   if (marker) {
     /* marker bit starts talkspurt */
@@ -214,7 +209,6 @@ gst_rtp_g729_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 bad_packet:
   {
     /* no fatal error */
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

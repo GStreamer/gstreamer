@@ -47,7 +47,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
      static GstBuffer *gst_rtp_siren_depay_process (GstRTPBaseDepayload *
-    depayload, GstBuffer * buf);
+    depayload, GstRTPBuffer * rtp);
      static gboolean gst_rtp_siren_depay_setcaps (GstRTPBaseDepayload *
     depayload, GstCaps * caps);
 
@@ -62,7 +62,7 @@ G_DEFINE_TYPE (GstRTPSirenDepay, gst_rtp_siren_depay,
   gstelement_class = (GstElementClass *) klass;
   gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
-  gstrtpbasedepayload_class->process = gst_rtp_siren_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_siren_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_siren_depay_setcaps;
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -101,14 +101,12 @@ gst_rtp_siren_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_siren_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_siren_depay_process (GstRTPBaseDepayload * depayload,
+    GstRTPBuffer * rtp)
 {
   GstBuffer *outbuf;
-  GstRTPBuffer rtp = { NULL };
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
-  gst_rtp_buffer_unmap (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
 
   return outbuf;
 }

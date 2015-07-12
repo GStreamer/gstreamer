@@ -75,7 +75,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 static gboolean gst_rtp_g723_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_g723_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 
 #define gst_rtp_g723_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpG723Depay, gst_rtp_g723_depay,
@@ -103,7 +103,7 @@ gst_rtp_g723_depay_class_init (GstRtpG723DepayClass * klass)
       "Extracts G.723 audio from RTP packets (RFC 3551)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstrtpbasedepayload_class->process = gst_rtp_g723_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_g723_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_g723_depay_setcaps;
 }
 
@@ -171,19 +171,16 @@ wrong_clock_rate:
 
 
 static GstBuffer *
-gst_rtp_g723_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_g723_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpG723Depay *rtpg723depay;
   GstBuffer *outbuf = NULL;
   gint payload_len;
   gboolean marker;
-  GstRTPBuffer rtp = { NULL };
 
   rtpg723depay = GST_RTP_G723_DEPAY (depayload);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
   /* At least 4 bytes */
   if (payload_len < 4)
@@ -191,9 +188,8 @@ gst_rtp_g723_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   GST_LOG_OBJECT (rtpg723depay, "payload len %d", payload_len);
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
-  marker = gst_rtp_buffer_get_marker (&rtp);
-  gst_rtp_buffer_unmap (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
+  marker = gst_rtp_buffer_get_marker (rtp);
 
   if (marker) {
     /* marker bit starts talkspurt */
@@ -215,7 +211,6 @@ too_small:
 bad_packet:
   {
     /* no fatal error */
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

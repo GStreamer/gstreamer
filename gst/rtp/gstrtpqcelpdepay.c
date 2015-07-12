@@ -74,7 +74,7 @@ static void gst_rtp_qcelp_depay_finalize (GObject * object);
 static gboolean gst_rtp_qcelp_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 
 #define gst_rtp_qcelp_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpQCELPDepay, gst_rtp_qcelp_depay,
@@ -93,7 +93,7 @@ gst_rtp_qcelp_depay_class_init (GstRtpQCELPDepayClass * klass)
 
   gobject_class->finalize = gst_rtp_qcelp_depay_finalize;
 
-  gstrtpbasedepayload_class->process = gst_rtp_qcelp_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_qcelp_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_qcelp_depay_setcaps;
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -248,7 +248,8 @@ create_erasure_buffer (GstRtpQCELPDepay * depay)
 }
 
 static GstBuffer *
-gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload,
+    GstRTPBuffer * rtp)
 {
   GstRtpQCELPDepay *depay;
   GstBuffer *outbuf;
@@ -256,20 +257,17 @@ gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint payload_len, offset, index;
   guint8 *payload;
   guint LLL, NNN;
-  GstRTPBuffer rtp = { NULL };
 
   depay = GST_RTP_QCELP_DEPAY (depayload);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
   if (payload_len < 2)
     goto too_small;
 
-  timestamp = GST_BUFFER_PTS (buf);
+  timestamp = GST_BUFFER_PTS (rtp->buffer);
 
-  payload = gst_rtp_buffer_get_payload (&rtp);
+  payload = gst_rtp_buffer_get_payload (rtp);
 
   /*  0 1 2 3 4 5 6 7
    * +-+-+-+-+-+-+-+-+
@@ -351,7 +349,7 @@ gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       outbuf = create_erasure_buffer (depay);
     } else {
       /* each frame goes into its buffer */
-      outbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp, offset, frame_len);
+      outbuf = gst_rtp_buffer_get_payload_subbuffer (rtp, offset, frame_len);
     }
 
     GST_BUFFER_PTS (outbuf) = timestamp;
@@ -393,7 +391,6 @@ gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     flush_packets (depay);
   }
 
-  gst_rtp_buffer_unmap (&rtp);
   return NULL;
 
   /* ERRORS */
@@ -401,28 +398,24 @@ too_small:
   {
     GST_ELEMENT_WARNING (depay, STREAM, DECODE,
         (NULL), ("QCELP RTP payload too small (%d)", payload_len));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 invalid_lll:
   {
     GST_ELEMENT_WARNING (depay, STREAM, DECODE,
         (NULL), ("QCELP RTP invalid LLL received (%d)", LLL));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 invalid_nnn:
   {
     GST_ELEMENT_WARNING (depay, STREAM, DECODE,
         (NULL), ("QCELP RTP invalid NNN received (%d)", NNN));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 invalid_frame:
   {
     GST_ELEMENT_WARNING (depay, STREAM, DECODE,
         (NULL), ("QCELP RTP invalid frame received"));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

@@ -55,7 +55,7 @@ G_DEFINE_TYPE (GstRtpMPADepay, gst_rtp_mpa_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 static gboolean gst_rtp_mpa_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_mpa_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 
 static void
 gst_rtp_mpa_depay_class_init (GstRtpMPADepayClass * klass)
@@ -80,7 +80,7 @@ gst_rtp_mpa_depay_class_init (GstRtpMPADepayClass * klass)
       "Wim Taymans <wim.taymans@gmail.com>");
 
   gstrtpbasedepayload_class->set_caps = gst_rtp_mpa_depay_setcaps;
-  gstrtpbasedepayload_class->process = gst_rtp_mpa_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_mpa_depay_process;
 }
 
 static void
@@ -111,11 +111,10 @@ gst_rtp_mpa_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_mpa_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_mpa_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpMPADepay *rtpmpadepay;
   GstBuffer *outbuf;
-  GstRTPBuffer rtp = { NULL };
   gint payload_len;
 #if 0
   guint8 *payload;
@@ -125,9 +124,7 @@ gst_rtp_mpa_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   rtpmpadepay = GST_RTP_MPA_DEPAY (depayload);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
   if (payload_len <= 4)
     goto empty_packet;
@@ -146,8 +143,8 @@ gst_rtp_mpa_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 #endif
 
   /* subbuffer skipping the 4 header bytes */
-  outbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp, 4, -1);
-  marker = gst_rtp_buffer_get_marker (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_subbuffer (rtp, 4, -1);
+  marker = gst_rtp_buffer_get_marker (rtp);
 
   if (marker) {
     /* mark start of talkspurt with RESYNC */
@@ -156,8 +153,6 @@ gst_rtp_mpa_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GST_DEBUG_OBJECT (rtpmpadepay,
       "gst_rtp_mpa_depay_chain: pushing buffer of size %" G_GSIZE_FORMAT "",
       gst_buffer_get_size (outbuf));
-
-  gst_rtp_buffer_unmap (&rtp);
 
   /* FIXME, we can push half mpeg frames when they are split over multiple
    * RTP packets */
@@ -168,7 +163,6 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpmpadepay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

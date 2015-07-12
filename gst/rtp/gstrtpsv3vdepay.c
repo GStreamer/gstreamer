@@ -56,7 +56,7 @@ static GstStateChangeReturn gst_rtp_sv3v_depay_change_state (GstElement *
     element, GstStateChange transition);
 
 static GstBuffer *gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 gboolean gst_rtp_sv3v_depay_setcaps (GstRTPBaseDepayload * filter,
     GstCaps * caps);
 
@@ -71,7 +71,7 @@ gst_rtp_sv3v_depay_class_init (GstRtpSV3VDepayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
-  gstrtpbasedepayload_class->process = gst_rtp_sv3v_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_sv3v_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_sv3v_depay_setcaps;
 
   gobject_class->finalize = gst_rtp_sv3v_depay_finalize;
@@ -125,7 +125,7 @@ gst_rtp_sv3v_depay_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpSV3VDepay *rtpsv3vdepay;
   static struct
@@ -147,17 +147,15 @@ gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   gboolean C, S, E;
   GstBuffer *outbuf = NULL;
   guint16 seq;
-  GstRTPBuffer rtp = { NULL };
 
   rtpsv3vdepay = GST_RTP_SV3V_DEPAY (depayload);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
   /* flush on sequence number gaps */
-  seq = gst_rtp_buffer_get_seq (&rtp);
+  seq = gst_rtp_buffer_get_seq (rtp);
 
   GST_DEBUG ("timestamp %" GST_TIME_FORMAT ", sequence number:%d",
-      GST_TIME_ARGS (GST_BUFFER_PTS (buf)), seq);
+      GST_TIME_ARGS (GST_BUFFER_PTS (rtp->buffer)), seq);
 
   if (seq != rtpsv3vdepay->nextseq) {
     GST_DEBUG ("Sequence discontinuity, clearing adapter");
@@ -165,13 +163,13 @@ gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   }
   rtpsv3vdepay->nextseq = seq + 1;
 
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
   if (payload_len < 3)
     goto bad_packet;
 
-  payload = gst_rtp_buffer_get_payload (&rtp);
+  payload = gst_rtp_buffer_get_payload (rtp);
 
-  M = gst_rtp_buffer_get_marker (&rtp);
+  M = gst_rtp_buffer_get_marker (rtp);
 
   /* This is all a guess:
    *                      1 1 1 1 1 1
@@ -255,7 +253,7 @@ gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
     GST_DEBUG ("Storing incoming payload");
     /* store data in adapter, stip off 2 bytes header */
-    tmpbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp, 2, -1);
+    tmpbuf = gst_rtp_buffer_get_payload_subbuffer (rtp, 2, -1);
     gst_adapter_push (rtpsv3vdepay->adapter, tmpbuf);
 
     if (G_UNLIKELY (M)) {
@@ -269,7 +267,6 @@ gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   }
 
 beach:
-  gst_rtp_buffer_unmap (&rtp);
   return outbuf;
 
   /* ERRORS */
@@ -277,7 +274,6 @@ bad_packet:
   {
     GST_ELEMENT_WARNING (rtpsv3vdepay, STREAM, DECODE,
         (NULL), ("Packet was too short"));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

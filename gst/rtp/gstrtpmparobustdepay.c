@@ -77,7 +77,7 @@ static GstStateChangeReturn gst_rtp_mpa_robust_change_state (GstElement *
 static gboolean gst_rtp_mpa_robust_depay_setcaps (GstRTPBaseDepayload *
     depayload, GstCaps * caps);
 static GstBuffer *gst_rtp_mpa_robust_depay_process (GstRTPBaseDepayload *
-    depayload, GstBuffer * buf);
+    depayload, GstRTPBuffer * rtp);
 
 static void
 gst_rtp_mpa_robust_depay_finalize (GObject * object)
@@ -122,7 +122,8 @@ gst_rtp_mpa_robust_depay_class_init (GstRtpMPARobustDepayClass * klass)
       "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
 
   gstrtpbasedepayload_class->set_caps = gst_rtp_mpa_robust_depay_setcaps;
-  gstrtpbasedepayload_class->process = gst_rtp_mpa_robust_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet =
+      gst_rtp_mpa_robust_depay_process;
 }
 
 static void
@@ -641,7 +642,7 @@ gst_rtp_mpa_robust_depay_submit_adu (GstRtpMPARobustDepay * rtpmpadepay,
 
 static GstBuffer *
 gst_rtp_mpa_robust_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf)
+    GstRTPBuffer * rtp)
 {
   GstRtpMPARobustDepay *rtpmpadepay;
   gint payload_len, offset;
@@ -649,19 +650,17 @@ gst_rtp_mpa_robust_depay_process (GstRTPBaseDepayload * depayload,
   gboolean cont, dtype;
   guint av, size;
   GstClockTime timestamp;
-  GstRTPBuffer rtp = { NULL };
+  GstBuffer *buf;
 
   rtpmpadepay = GST_RTP_MPA_ROBUST_DEPAY (depayload);
 
-  timestamp = GST_BUFFER_PTS (buf);
+  timestamp = GST_BUFFER_PTS (rtp->buffer);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
   if (payload_len <= 1)
     goto short_read;
 
-  payload = gst_rtp_buffer_get_payload (&rtp);
+  payload = gst_rtp_buffer_get_payload (rtp);
   offset = 0;
   GST_LOG_OBJECT (rtpmpadepay, "payload_len: %d", payload_len);
 
@@ -701,7 +700,7 @@ gst_rtp_mpa_robust_depay_process (GstRTPBaseDepayload * depayload,
     GST_LOG_OBJECT (rtpmpadepay, "offset %d has cont: %d, dtype: %d, size: %d",
         offset, cont, dtype, size);
 
-    buf = gst_rtp_buffer_get_payload_subbuffer (&rtp, offset,
+    buf = gst_rtp_buffer_get_payload_subbuffer (rtp, offset,
         MIN (size, payload_len));
 
     if (cont) {
@@ -745,7 +744,6 @@ gst_rtp_mpa_robust_depay_process (GstRTPBaseDepayload * depayload,
     /* timestamp applies to first payload, no idea for subsequent ones */
     timestamp = GST_CLOCK_TIME_NONE;
   }
-  gst_rtp_buffer_unmap (&rtp);
 
   return NULL;
 
@@ -754,7 +752,6 @@ short_read:
   {
     GST_ELEMENT_WARNING (rtpmpadepay, STREAM, DECODE,
         (NULL), ("Packet contains invalid data"));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

@@ -57,7 +57,7 @@ static GstStaticPadTemplate gst_rtp_gsm_depay_sink_template =
     );
 
 static GstBuffer *gst_rtp_gsm_depay_process (GstRTPBaseDepayload * _depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 static gboolean gst_rtp_gsm_depay_setcaps (GstRTPBaseDepayload * _depayload,
     GstCaps * caps);
 
@@ -82,7 +82,7 @@ gst_rtp_gsm_depay_class_init (GstRTPGSMDepayClass * klass)
       "RTP GSM depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts GSM audio from RTP packets", "Zeeshan Ali <zeenix@gmail.com>");
 
-  gstrtpbase_depayload_class->process = gst_rtp_gsm_depay_process;
+  gstrtpbase_depayload_class->process_rtp_packet = gst_rtp_gsm_depay_process;
   gstrtpbase_depayload_class->set_caps = gst_rtp_gsm_depay_setcaps;
 
   GST_DEBUG_CATEGORY_INIT (rtpgsmdepay_debug, "rtpgsmdepay", 0,
@@ -117,23 +117,18 @@ gst_rtp_gsm_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_gsm_depay_process (GstRTPBaseDepayload * _depayload, GstBuffer * buf)
+gst_rtp_gsm_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstBuffer *outbuf = NULL;
   gboolean marker;
-  GstRTPBuffer rtp = { NULL };
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  marker = gst_rtp_buffer_get_marker (&rtp);
+  marker = gst_rtp_buffer_get_marker (rtp);
 
   GST_DEBUG ("process : got %" G_GSIZE_FORMAT " bytes, mark %d ts %u seqn %d",
-      gst_buffer_get_size (buf), marker,
-      gst_rtp_buffer_get_timestamp (&rtp), gst_rtp_buffer_get_seq (&rtp));
+      gst_buffer_get_size (rtp->buffer), marker,
+      gst_rtp_buffer_get_timestamp (rtp), gst_rtp_buffer_get_seq (rtp));
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
-
-  gst_rtp_buffer_unmap (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
 
   if (marker && outbuf) {
     /* mark start of talkspurt with RESYNC */

@@ -73,7 +73,7 @@ G_DEFINE_TYPE (GstRtpL24Depay, gst_rtp_L24_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 static gboolean gst_rtp_L24_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_L24_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 
 static void
 gst_rtp_L24_depay_class_init (GstRtpL24DepayClass * klass)
@@ -85,7 +85,7 @@ gst_rtp_L24_depay_class_init (GstRtpL24DepayClass * klass)
   gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gstrtpbasedepayload_class->set_caps = gst_rtp_L24_depay_setcaps;
-  gstrtpbasedepayload_class->process = gst_rtp_L24_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_L24_depay_process;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_L24_depay_src_template));
@@ -203,26 +203,24 @@ no_clockrate:
 }
 
 static GstBuffer *
-gst_rtp_L24_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_L24_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpL24Depay *rtpL24depay;
   GstBuffer *outbuf;
   gint payload_len;
   gboolean marker;
-  GstRTPBuffer rtp = { NULL };
 
   rtpL24depay = GST_RTP_L24_DEPAY (depayload);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
   if (payload_len <= 0)
     goto empty_packet;
 
   GST_DEBUG_OBJECT (rtpL24depay, "got payload of %d bytes", payload_len);
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
-  marker = gst_rtp_buffer_get_marker (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
+  marker = gst_rtp_buffer_get_marker (rtp);
 
   if (marker) {
     /* mark talk spurt with RESYNC */
@@ -237,8 +235,6 @@ gst_rtp_L24_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     goto reorder_failed;
   }
 
-  gst_rtp_buffer_unmap (&rtp);
-
   return outbuf;
 
   /* ERRORS */
@@ -246,14 +242,12 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpL24depay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 reorder_failed:
   {
     GST_ELEMENT_ERROR (rtpL24depay, STREAM, DECODE,
         ("Channel reordering failed."), (NULL));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

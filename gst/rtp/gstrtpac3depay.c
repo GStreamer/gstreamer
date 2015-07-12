@@ -67,7 +67,7 @@ G_DEFINE_TYPE (GstRtpAC3Depay, gst_rtp_ac3_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 static gboolean gst_rtp_ac3_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_ac3_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 
 static void
 gst_rtp_ac3_depay_class_init (GstRtpAC3DepayClass * klass)
@@ -89,7 +89,7 @@ gst_rtp_ac3_depay_class_init (GstRtpAC3DepayClass * klass)
       "Wim Taymans <wim.taymans@gmail.com>");
 
   gstrtpbasedepayload_class->set_caps = gst_rtp_ac3_depay_setcaps;
-  gstrtpbasedepayload_class->process = gst_rtp_ac3_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_ac3_depay_process;
 
   GST_DEBUG_CATEGORY_INIT (rtpac3depay_debug, "rtpac3depay", 0,
       "AC3 Audio RTP Depayloader");
@@ -123,22 +123,19 @@ gst_rtp_ac3_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_ac3_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_ac3_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpAC3Depay *rtpac3depay;
   GstBuffer *outbuf;
-  GstRTPBuffer rtp = { NULL, };
   guint8 *payload;
   guint16 FT, NF;
 
   rtpac3depay = GST_RTP_AC3_DEPAY (depayload);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  if (gst_rtp_buffer_get_payload_len (&rtp) < 2)
+  if (gst_rtp_buffer_get_payload_len (rtp) < 2)
     goto empty_packet;
 
-  payload = gst_rtp_buffer_get_payload (&rtp);
+  payload = gst_rtp_buffer_get_payload (rtp);
 
   /* strip off header
    *
@@ -154,9 +151,7 @@ gst_rtp_ac3_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GST_DEBUG_OBJECT (rtpac3depay, "FT: %d, NF: %d", FT, NF);
 
   /* We don't bother with fragmented packets yet */
-  outbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp, 2, -1);
-
-  gst_rtp_buffer_unmap (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_subbuffer (rtp, 2, -1);
 
   if (outbuf)
     GST_DEBUG_OBJECT (rtpac3depay, "pushing buffer of size %" G_GSIZE_FORMAT,
@@ -169,7 +164,6 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpac3depay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

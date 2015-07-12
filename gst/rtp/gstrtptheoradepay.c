@@ -66,7 +66,7 @@ G_DEFINE_TYPE (GstRtpTheoraDepay, gst_rtp_theora_depay,
 static gboolean gst_rtp_theora_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 static gboolean gst_rtp_theora_depay_packet_lost (GstRTPBaseDepayload *
     depayload, GstEvent * event);
 
@@ -85,7 +85,7 @@ gst_rtp_theora_depay_class_init (GstRtpTheoraDepayClass * klass)
 
   gobject_class->finalize = gst_rtp_theora_depay_finalize;
 
-  gstrtpbasedepayload_class->process = gst_rtp_theora_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_theora_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_theora_depay_setcaps;
   gstrtpbasedepayload_class->packet_lost = gst_rtp_theora_depay_packet_lost;
 
@@ -388,7 +388,8 @@ gst_rtp_theora_depay_switch_codebook (GstRtpTheoraDepay * rtptheoradepay,
 }
 
 static GstBuffer *
-gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload,
+    GstRTPBuffer * rtp)
 {
   GstRtpTheoraDepay *rtptheoradepay;
   GstBuffer *outbuf;
@@ -397,14 +398,11 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint8 *payload, *to_free = NULL;
   guint32 header, ident;
   guint8 F, TDT, packets;
-  GstRTPBuffer rtp = { NULL };
   guint length;
 
   rtptheoradepay = GST_RTP_THEORA_DEPAY (depayload);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
   GST_DEBUG_OBJECT (depayload, "got RTP packet of size %d", payload_len);
 
@@ -412,7 +410,7 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   if (G_UNLIKELY (payload_len < 4))
     goto packet_short;
 
-  payload = gst_rtp_buffer_get_payload (&rtp);
+  payload = gst_rtp_buffer_get_payload (rtp);
 
   header = GST_READ_UINT32_BE (payload);
   /*
@@ -477,7 +475,7 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     /* first assembled packet, reuse 2 bytes to store the length */
     headerskip = (F == 1 ? 4 : 6);
     /* skip header and length. */
-    vdata = gst_rtp_buffer_get_payload_subbuffer (&rtp, headerskip, -1);
+    vdata = gst_rtp_buffer_get_payload_subbuffer (rtp, headerskip, -1);
 
     GST_DEBUG_OBJECT (depayload, "assemble theora packet");
     gst_adapter_push (rtptheoradepay->adapter, vdata);
@@ -576,7 +574,6 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 out:
 no_output:
 
-  gst_rtp_buffer_unmap (&rtp);
   g_free (to_free);
   return NULL;
 

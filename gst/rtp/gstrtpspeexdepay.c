@@ -58,7 +58,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstBuffer *gst_rtp_speex_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 static gboolean gst_rtp_speex_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 
@@ -74,7 +74,7 @@ gst_rtp_speex_depay_class_init (GstRtpSPEEXDepayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
-  gstrtpbasedepayload_class->process = gst_rtp_speex_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_speex_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_speex_depay_setcaps;
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -195,21 +195,18 @@ no_clockrate:
 }
 
 static GstBuffer *
-gst_rtp_speex_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_speex_depay_process (GstRTPBaseDepayload * depayload,
+    GstRTPBuffer * rtp)
 {
   GstBuffer *outbuf = NULL;
-  GstRTPBuffer rtp = { NULL };
-
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
   GST_DEBUG ("process : got %" G_GSIZE_FORMAT " bytes, mark %d ts %u seqn %d",
-      gst_buffer_get_size (buf),
-      gst_rtp_buffer_get_marker (&rtp),
-      gst_rtp_buffer_get_timestamp (&rtp), gst_rtp_buffer_get_seq (&rtp));
+      gst_buffer_get_size (rtp->buffer),
+      gst_rtp_buffer_get_marker (rtp),
+      gst_rtp_buffer_get_timestamp (rtp), gst_rtp_buffer_get_seq (rtp));
 
   /* nothing special to be done */
-  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
-  gst_rtp_buffer_unmap (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
 
   if (outbuf)
     GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;

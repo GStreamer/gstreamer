@@ -64,7 +64,7 @@ static void gst_rtp_mp4a_depay_finalize (GObject * object);
 static gboolean gst_rtp_mp4a_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 
 static GstStateChangeReturn gst_rtp_mp4a_depay_change_state (GstElement *
     element, GstStateChange transition);
@@ -85,7 +85,7 @@ gst_rtp_mp4a_depay_class_init (GstRtpMP4ADepayClass * klass)
 
   gstelement_class->change_state = gst_rtp_mp4a_depay_change_state;
 
-  gstrtpbasedepayload_class->process = gst_rtp_mp4a_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_mp4a_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_mp4a_depay_setcaps;
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -293,30 +293,28 @@ gst_rtp_mp4a_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpMP4ADepay *rtpmp4adepay;
   GstBuffer *outbuf;
-  GstRTPBuffer rtp = { NULL };
   GstMapInfo map;
 
   rtpmp4adepay = GST_RTP_MP4A_DEPAY (depayload);
 
   /* flush remaining data on discont */
-  if (GST_BUFFER_IS_DISCONT (buf)) {
+  if (GST_BUFFER_IS_DISCONT (rtp->buffer)) {
     gst_adapter_clear (rtpmp4adepay->adapter);
   }
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
 
   outbuf = gst_buffer_make_writable (outbuf);
-  GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (buf);
+  GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (rtp->buffer);
   gst_adapter_push (rtpmp4adepay->adapter, outbuf);
 
   /* RTP marker bit indicates the last packet of the AudioMuxElement => create
    * and push a buffer */
-  if (gst_rtp_buffer_get_marker (&rtp)) {
+  if (gst_rtp_buffer_get_marker (rtp)) {
     guint avail;
     guint i;
     guint8 *data;
@@ -394,7 +392,6 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     gst_buffer_unmap (outbuf, &map);
     gst_buffer_unref (outbuf);
   }
-  gst_rtp_buffer_unmap (&rtp);
   return NULL;
 
   /* ERRORS */
@@ -404,7 +401,6 @@ wrong_size:
         ("Packet did not validate"), ("wrong packet size"));
     gst_buffer_unmap (outbuf, &map);
     gst_buffer_unref (outbuf);
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

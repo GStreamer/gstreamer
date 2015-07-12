@@ -67,7 +67,7 @@ static GstStateChangeReturn gst_rtp_klv_depay_change_state (GstElement *
 static gboolean gst_rtp_klv_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_klv_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 
 static void gst_rtp_klv_depay_reset (GstRtpKlvDepay * klvdepay);
 
@@ -98,7 +98,7 @@ gst_rtp_klv_depay_class_init (GstRtpKlvDepayClass * klass)
   rtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   rtpbasedepayload_class->set_caps = gst_rtp_klv_depay_setcaps;
-  rtpbasedepayload_class->process = gst_rtp_klv_depay_process;
+  rtpbasedepayload_class->process_rtp_packet = gst_rtp_klv_depay_process;
 }
 
 static void
@@ -252,10 +252,9 @@ incomplete_klv_packet:
 /* We're trying to be pragmatic here, not quite as strict as the spec wants
  * us to be with regard to marker bits and resyncing after packet loss */
 static GstBuffer *
-gst_rtp_klv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_klv_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpKlvDepay *klvdepay = GST_RTP_KLV_DEPAY (depayload);
-  GstRTPBuffer rtp = { NULL };
   GstBuffer *payload, *outbuf = NULL;
   gboolean marker, start = FALSE, maybe_start;
   guint32 rtp_ts;
@@ -263,19 +262,17 @@ gst_rtp_klv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint payload_len;
 
   /* Ignore DISCONT on first buffer and on buffers following a discont */
-  if (GST_BUFFER_IS_DISCONT (buf) && klvdepay->last_rtp_ts != -1) {
+  if (GST_BUFFER_IS_DISCONT (rtp->buffer) && klvdepay->last_rtp_ts != -1) {
     GST_WARNING_OBJECT (klvdepay, "DISCONT, need to resync");
     gst_rtp_klv_depay_reset (klvdepay);
   }
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
   /* marker bit signals last fragment of a KLV unit */
-  marker = gst_rtp_buffer_get_marker (&rtp);
+  marker = gst_rtp_buffer_get_marker (rtp);
 
-  seq = gst_rtp_buffer_get_seq (&rtp);
+  seq = gst_rtp_buffer_get_seq (rtp);
 
   /* packet directly after one with marker bit set => start */
   start = klvdepay->last_marker_seq != -1
@@ -283,7 +280,7 @@ gst_rtp_klv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   /* deduce start of new KLV unit in case sender doesn't set marker bits
    * (it's not like the spec is ambiguous about that, but what can you do) */
-  rtp_ts = gst_rtp_buffer_get_timestamp (&rtp);
+  rtp_ts = gst_rtp_buffer_get_timestamp (rtp);
 
   maybe_start = klvdepay->last_rtp_ts == -1 || klvdepay->last_rtp_ts != rtp_ts;
 
@@ -295,7 +292,7 @@ gst_rtp_klv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     guint64 v_len;
     gsize len_size;
 
-    data = gst_rtp_buffer_get_payload (&rtp);
+    data = gst_rtp_buffer_get_payload (rtp);
     if (GST_READ_UINT32_BE (data) == 0x060e2b34 &&
         klv_get_vlen (data + 16, payload_len - 16, &v_len, &len_size)) {
       if (16 + len_size + v_len == payload_len) {
@@ -332,15 +329,13 @@ gst_rtp_klv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   if (start && !marker)
     outbuf = gst_rtp_klv_depay_process_data (klvdepay);
 
-  payload = gst_rtp_buffer_get_payload_buffer (&rtp);
+  payload = gst_rtp_buffer_get_payload_buffer (rtp);
   gst_adapter_push (klvdepay->adapter, payload);
 
   if (marker)
     outbuf = gst_rtp_klv_depay_process_data (klvdepay);
 
 done:
-
-  gst_rtp_buffer_unmap (&rtp);
 
   return outbuf;
 }

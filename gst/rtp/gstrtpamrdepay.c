@@ -124,7 +124,7 @@ static GstStaticPadTemplate gst_rtp_amr_depay_src_template =
 static gboolean gst_rtp_amr_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 
 #define gst_rtp_amr_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpAMRDepay, gst_rtp_amr_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
@@ -148,7 +148,7 @@ gst_rtp_amr_depay_class_init (GstRtpAMRDepayClass * klass)
       "Extracts AMR or AMR-WB audio from RTP packets (RFC 3267)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstrtpbasedepayload_class->process = gst_rtp_amr_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_amr_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_amr_depay_setcaps;
 
   GST_DEBUG_CATEGORY_INIT (rtpamrdepay_debug, "rtpamrdepay", 0,
@@ -281,13 +281,12 @@ static const gint wb_frame_size[16] = {
 };
 
 static GstBuffer *
-gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpAMRDepay *rtpamrdepay;
   const gint *frame_size;
   GstBuffer *outbuf = NULL;
   gint payload_len;
-  GstRTPBuffer rtp = { NULL };
   GstMapInfo map;
 
   rtpamrdepay = GST_RTP_AMR_DEPAY (depayload);
@@ -298,8 +297,6 @@ gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   else
     frame_size = wb_frame_size;
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
   /* when we get here, 1 channel, 8000/16000 Hz, octet aligned, no CRC,
    * no robust sorting, no interleaving data is to be depayloaded */
   {
@@ -308,13 +305,13 @@ gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     gint amr_len;
     gint ILL, ILP;
 
-    payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+    payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
     /* need at least 2 bytes for the header */
     if (payload_len < 2)
       goto too_small;
 
-    payload = gst_rtp_buffer_get_payload (&rtp);
+    payload = gst_rtp_buffer_get_payload (rtp);
 
     /* depay CMR. The CMR is used by the sender to request
      * a new encoding mode.
@@ -419,7 +416,7 @@ gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     /* we can set the duration because each packet is 20 milliseconds */
     GST_BUFFER_DURATION (outbuf) = num_packets * 20 * GST_MSECOND;
 
-    if (gst_rtp_buffer_get_marker (&rtp)) {
+    if (gst_rtp_buffer_get_marker (rtp)) {
       /* marker bit marks a buffer after a talkspurt. */
       GST_DEBUG_OBJECT (depayload, "marker bit was set");
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
@@ -429,7 +426,6 @@ gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         gst_buffer_get_size (outbuf));
   }
 
-  gst_rtp_buffer_unmap (&rtp);
   return outbuf;
 
   /* ERRORS */
@@ -466,7 +462,6 @@ wrong_length_2:
 bad_packet:
   {
     /* no fatal error */
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

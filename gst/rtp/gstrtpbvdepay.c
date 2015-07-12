@@ -56,7 +56,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstBuffer *gst_rtp_bv_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 static gboolean gst_rtp_bv_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 
@@ -82,7 +82,7 @@ gst_rtp_bv_depay_class_init (GstRTPBVDepayClass * klass)
       "Extracts BroadcomVoice audio from RTP packets (RFC 4298)",
       "Wim Taymans <wim.taymans@collabora.co.uk>");
 
-  gstrtpbasedepayload_class->process = gst_rtp_bv_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_bv_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_bv_depay_setcaps;
 }
 
@@ -155,22 +155,18 @@ wrong_rate:
 }
 
 static GstBuffer *
-gst_rtp_bv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_bv_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstBuffer *outbuf;
   gboolean marker;
-  GstRTPBuffer rtp = { NULL, };
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  marker = gst_rtp_buffer_get_marker (&rtp);
+  marker = gst_rtp_buffer_get_marker (rtp);
 
   GST_DEBUG ("process : got %" G_GSIZE_FORMAT " bytes, mark %d ts %u seqn %d",
-      gst_buffer_get_size (buf), marker,
-      gst_rtp_buffer_get_timestamp (&rtp), gst_rtp_buffer_get_seq (&rtp));
+      gst_buffer_get_size (rtp->buffer), marker,
+      gst_rtp_buffer_get_timestamp (rtp), gst_rtp_buffer_get_seq (rtp));
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
-  gst_rtp_buffer_unmap (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
 
   if (marker && outbuf) {
     /* mark start of talkspurt with RESYNC */

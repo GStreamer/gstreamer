@@ -66,7 +66,7 @@ G_DEFINE_TYPE (GstRtpG722Depay, gst_rtp_g722_depay,
 static gboolean gst_rtp_g722_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_g722_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 
 static void
 gst_rtp_g722_depay_class_init (GstRtpG722DepayClass * klass)
@@ -91,7 +91,7 @@ gst_rtp_g722_depay_class_init (GstRtpG722DepayClass * klass)
       "Wim Taymans <wim.taymans@gmail.com>");
 
   gstrtpbasedepayload_class->set_caps = gst_rtp_g722_depay_setcaps;
-  gstrtpbasedepayload_class->process = gst_rtp_g722_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_g722_depay_process;
 }
 
 static void
@@ -214,28 +214,24 @@ no_clockrate:
 }
 
 static GstBuffer *
-gst_rtp_g722_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_g722_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpG722Depay *rtpg722depay;
   GstBuffer *outbuf;
   gint payload_len;
   gboolean marker;
-  GstRTPBuffer rtp = { NULL };
 
   rtpg722depay = GST_RTP_G722_DEPAY (depayload);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
   if (payload_len <= 0)
     goto empty_packet;
 
   GST_DEBUG_OBJECT (rtpg722depay, "got payload of %d bytes", payload_len);
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
-  marker = gst_rtp_buffer_get_marker (&rtp);
-  gst_rtp_buffer_unmap (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
+  marker = gst_rtp_buffer_get_marker (rtp);
 
   if (marker && outbuf) {
     /* mark talk spurt with RESYNC */
@@ -249,7 +245,6 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpg722depay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

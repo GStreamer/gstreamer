@@ -78,7 +78,7 @@ gst_rtp_j2k_depay_change_state (GstElement * element,
 static gboolean gst_rtp_j2k_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_j2k_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 
 static void
 gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
@@ -109,7 +109,7 @@ gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
   gstelement_class->change_state = gst_rtp_j2k_depay_change_state;
 
   gstrtpbasedepayload_class->set_caps = gst_rtp_j2k_depay_setcaps;
-  gstrtpbasedepayload_class->process = gst_rtp_j2k_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_j2k_depay_process;
 
   GST_DEBUG_CATEGORY_INIT (rtpj2kdepay_debug, "rtpj2kdepay", 0,
       "J2K Video RTP Depayloader");
@@ -426,27 +426,24 @@ done:
 }
 
 static GstBuffer *
-gst_rtp_j2k_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_j2k_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpJ2KDepay *rtpj2kdepay;
   guint8 *payload;
   guint MHF, mh_id, frag_offset, tile, payload_len, j2klen;
   gint gap;
   guint32 rtptime;
-  GstRTPBuffer rtp = { NULL };
 
   rtpj2kdepay = GST_RTP_J2K_DEPAY (depayload);
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-  payload = gst_rtp_buffer_get_payload (&rtp);
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload = gst_rtp_buffer_get_payload (rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
   /* we need at least a header */
   if (payload_len < 8)
     goto empty_packet;
 
-  rtptime = gst_rtp_buffer_get_timestamp (&rtp);
+  rtptime = gst_rtp_buffer_get_timestamp (rtp);
 
   /* new timestamp marks new frame */
   if (rtpj2kdepay->last_rtptime != rtptime) {
@@ -543,7 +540,7 @@ gst_rtp_j2k_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     }
     /* and push in pu adapter */
     GST_DEBUG_OBJECT (rtpj2kdepay, "push pu of size %u in adapter", j2klen);
-    pu_frag = gst_rtp_buffer_get_payload_subbuffer (&rtp, 8, -1);
+    pu_frag = gst_rtp_buffer_get_payload_subbuffer (rtp, 8, -1);
     gst_adapter_push (rtpj2kdepay->pu_adapter, pu_frag);
 
     if (MHF & 2) {
@@ -556,12 +553,11 @@ gst_rtp_j2k_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   }
 
   /* marker bit finishes the frame */
-  if (gst_rtp_buffer_get_marker (&rtp)) {
+  if (gst_rtp_buffer_get_marker (rtp)) {
     GST_DEBUG_OBJECT (rtpj2kdepay, "marker set, last buffer");
     /* then flush frame */
     gst_rtp_j2k_depay_flush_frame (depayload);
   }
-  gst_rtp_buffer_unmap (&rtp);
 
   return NULL;
 
@@ -570,7 +566,6 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpj2kdepay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 wrong_mh_id:
@@ -579,7 +574,6 @@ wrong_mh_id:
         ("Invalid mh_id %u, expected %u", mh_id, rtpj2kdepay->last_mh_id),
         (NULL));
     gst_rtp_j2k_depay_clear_pu (rtpj2kdepay);
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }
