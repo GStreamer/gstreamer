@@ -64,16 +64,18 @@ struct _GstHarness {
 /* Harness creation */
 
 GstHarness * gst_harness_new_full (GstElement * element,
-                                   GstStaticPadTemplate * hsrc,  const gchar * sinkpad,
-                                   GstStaticPadTemplate * hsink, const gchar * srcpad);
+                                   GstStaticPadTemplate * hsrc,
+                                   const gchar          * element_sinkpad_name,
+                                   GstStaticPadTemplate * hsink,
+                                   const gchar          * element_srcpad_name);
 
 GstHarness * gst_harness_new_with_element  (GstElement  * element,
-                                            const gchar * sinkpad,
-                                            const gchar * srcpad);
+                                            const gchar * element_sinkpad_name,
+                                            const gchar * element_srcpad_name);
 
 GstHarness * gst_harness_new_with_padnames (const gchar * element_name,
-                                            const gchar * sinkpad,
-                                            const gchar * srcpad);
+                                            const gchar * element_sinkpad_name,
+                                            const gchar * element_srcpad_name);
 
 GstHarness * gst_harness_new_with_templates (const gchar * element_name,
                                              GstStaticPadTemplate * hsrc,
