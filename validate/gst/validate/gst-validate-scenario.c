@@ -27,6 +27,12 @@
  * A #GstValidateScenario represents the scenario that will be executed on a #GstPipeline.
  * It is basically an ordered list of #GstValidateAction that will be executed during the
  * execution of the pipeline.
+ *
+ * Possible configurations (see #GST_VALIDATE_CONFIG):
+ *  * scenario-action-execution-interval: Sets the interval in
+ *    milliseconds (1/1000ths of a second), between which actions
+ *    will be executed, setting it to 0 means "execute in idle"
+ *    (which is the default).
  */
 
 #ifdef HAVE_CONFIG_H
@@ -43,6 +49,7 @@
 #include "gst-validate-reporter.h"
 #include "gst-validate-report.h"
 #include "gst-validate-utils.h"
+#include "validate.h"
 #include <gst/validate/gst-validate-override.h>
 #include <gst/validate/gst-validate-override-registry.h>
 
@@ -126,6 +133,7 @@ struct _GstValidateScenarioPrivate
   guint execute_actions_source_id;      /* MT safe. Protect with SCENARIO_LOCK */
   guint wait_id;
   guint signal_handler_id;
+  guint action_execution_interval;
 
   /* Name of message the wait action is waiting for */
   const gchar *message_type;
@@ -933,8 +941,13 @@ _add_execute_actions_gsource (GstValidateScenario * scenario)
   SCENARIO_LOCK (scenario);
   if (priv->execute_actions_source_id == 0 && priv->wait_id == 0
       && priv->signal_handler_id == 0 && priv->message_type == NULL) {
-    priv->execute_actions_source_id =
-        g_idle_add ((GSourceFunc) execute_next_action, scenario);
+    if (!scenario->priv->action_execution_interval)
+      priv->execute_actions_source_id =
+          g_idle_add ((GSourceFunc) execute_next_action, scenario);
+    else
+      priv->execute_actions_source_id =
+          g_timeout_add (scenario->priv->action_execution_interval,
+          (GSourceFunc) execute_next_action, scenario);
     SCENARIO_UNLOCK (scenario);
 
     GST_DEBUG_OBJECT (scenario, "Start checking position again");
@@ -2608,6 +2621,7 @@ GstValidateScenario *
 gst_validate_scenario_factory_create (GstValidateRunner *
     runner, GstElement * pipeline, const gchar * scenario_name)
 {
+  GList *config;
   GstValidateScenario *scenario =
       g_object_new (GST_TYPE_VALIDATE_SCENARIO, "validate-runner",
       runner, NULL);
@@ -2650,6 +2664,30 @@ gst_validate_scenario_factory_create (GstValidateRunner *
   gst_bus_add_signal_watch (scenario->priv->bus);
   g_signal_connect (scenario->priv->bus, "message", (GCallback) message_cb,
       scenario);
+
+  for (config = gst_validate_plugin_get_config (NULL); config;
+      config = config->next) {
+    gint interval;
+
+    if (gst_structure_get_uint (config->data,
+            "scenario-action-execution-interval",
+            &scenario->priv->action_execution_interval)) {
+      GST_DEBUG_OBJECT (scenario, "Setting action execution interval to %d",
+          scenario->priv->action_execution_interval);
+      break;
+    } else if (gst_structure_get_int (config->data,
+            "scenario-action-execution-interval", &interval)) {
+      if (interval > 0) {
+        scenario->priv->action_execution_interval = (guint) interval;
+        GST_DEBUG_OBJECT (scenario, "Setting action execution interval to %d",
+            scenario->priv->action_execution_interval);
+
+        break;
+      } else {
+        GST_WARNING_OBJECT (scenario, "Interval is negative: %d", interval);
+      }
+    }
+  }
 
   if (scenario->priv->handles_state) {
     GST_INFO_OBJECT (scenario, "Scenario handles state,"
