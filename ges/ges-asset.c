@@ -474,7 +474,6 @@ ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
   GList *tmp;
   GESAsset *asset;
   GESAssetCacheEntry *entry = NULL;
-
   LOCK_CACHE;
   if ((entry = _lookup_entry (extractable_type, id)) == NULL) {
     UNLOCK_CACHE;
@@ -509,12 +508,15 @@ ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
     g_list_free (results);
     return TRUE;
   } else {
-    asset->priv->state = ASSET_INITIALIZED;
+    GList *results;
 
-    g_list_foreach (entry->results, (GFunc) _gtask_return_true, NULL);
-    g_list_free_full (entry->results, gst_object_unref);
+    asset->priv->state = ASSET_INITIALIZED;
+    results = entry->results;
     entry->results = NULL;
     UNLOCK_CACHE;
+
+    g_list_foreach (results, (GFunc) _gtask_return_true, NULL);
+    g_list_free_full (results, gst_object_unref);
   }
 
   return TRUE;
