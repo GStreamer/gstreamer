@@ -57,7 +57,7 @@
   <title><envar>GST_VALIDATE_FILE</envar></title>
 
   <para>
-    Set this variable to a to a colon-separated list of paths to redirect all
+    Set this variable to a colon-separated list of paths to redirect all
     GstValidate messages to this file.  If left unset, debug messages will be
     outputed into the standard error.
   </para>
@@ -71,7 +71,7 @@
   <title><envar>GST_VALIDATE_SCENARIOS_PATH</envar></title>
 
   <para>
-    Set this variable to a to a colon-separated list of paths. GstValidate will
+    Set this variable to a colon-separated list of paths. GstValidate will
     scan these paths for GstValidate scenario files.
 
     By default GstValidate will look for scenarios in the user data directory as
@@ -79,6 +79,36 @@
     <filename>.local/share/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
     and the system wide user data directory: <filename>/usr/lib/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
   </para>
+</formalpara>
+
+<formalpara id="GST-VALIDATE-CONFIG">
+  <title><envar>GST_VALIDATE_CONFIG</envar></title>
+
+  <para>
+    Set this variable to a colon-separated list of paths to GstValidate config files.
+    The config file has a format similar to the scenario file. The name of the configuration
+    corresponds to the name of the plugin the configuration applies to.
+  </para>
+
+  <para>
+    The special name "core" is used to configure GstValidate core functionnalities
+    (monitors, scenarios, etc...).
+  </para>
+
+  <informalexample>
+    For example if you want to make sure to set a property on a element of a type
+    (for example to disable QoS on all sinks) you can do:
+
+    <programlisting>
+      core, action=set-property, target-element-klass=Sink
+    </programlisting>
+  </informalexample>
+
+  <para>
+    For more examples you can look at the ssim GstValidate plugin documentation to
+    see how to configure that plugin.
+  </para>
+
 </formalpara>
 
 <formalpara id="GST-VALIDATE-OVERRIDE">
