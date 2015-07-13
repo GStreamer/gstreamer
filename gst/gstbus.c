@@ -911,6 +911,8 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
  * There can only be a single bus watch per bus, you must remove it before you
  * can set a new one.
  *
+ * The bus watch will only work if a GLib main loop is being run.
+ *
  * When @func is called, the message belongs to the caller; if you want to
  * keep a copy of it, call gst_message_ref() before leaving @func.
  *
@@ -952,6 +954,8 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  * This function is used to receive asynchronous messages in the main loop.
  * There can only be a single bus watch per bus, you must remove it before you
  * can set a new one.
+ *
+ * The bus watch will only work if a GLib main loop is being run.
  *
  * The watch can be removed using gst_bus_remove_watch() or by returning %FALSE
  * from @func. If the watch was added to the default main context it is also
