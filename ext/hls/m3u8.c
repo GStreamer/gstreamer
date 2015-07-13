@@ -1104,7 +1104,7 @@ alternate_advance (GstM3U8Client * client, gboolean forward)
       break;
   }
   if (tmp == NULL) {
-    GST_ERROR ("Can't find next fragment");
+    GST_WARNING ("Can't find next fragment");
     return;
   }
   client->current_file = tmp;
