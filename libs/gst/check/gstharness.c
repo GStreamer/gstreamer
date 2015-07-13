@@ -2074,6 +2074,14 @@ gst_harness_src_push_event (GstHarness * h)
   return gst_harness_push_event (h, gst_harness_pull_event (h->src_harness));
 }
 
+
+static gboolean
+forward_sticky_events (GstPad * pad, GstEvent ** ev, gpointer user_data)
+{
+  GstHarness * h = user_data;
+  return gst_pad_push_event (h->priv->sink_forward_pad, gst_event_ref (*ev));
+}
+
 /**
  * gst_harness_add_sink:
  * @h: a #GstHarness
@@ -2103,6 +2111,7 @@ gst_harness_add_sink (GstHarness * h, const gchar * sink_element_name)
   }
   h->sink_harness = gst_harness_new (sink_element_name);
   priv->sink_forward_pad = gst_object_ref (h->sink_harness->srcpad);
+  gst_pad_sticky_events_foreach (h->sinkpad, forward_sticky_events, h);
 }
 
 /**
@@ -2128,6 +2137,7 @@ gst_harness_add_sink_parse (GstHarness * h, const gchar * launchline)
   }
   h->sink_harness = gst_harness_new_parse (launchline);
   priv->sink_forward_pad = gst_object_ref (h->sink_harness->srcpad);
+  gst_pad_sticky_events_foreach (h->sinkpad, forward_sticky_events, h);
 }
 
 /**
