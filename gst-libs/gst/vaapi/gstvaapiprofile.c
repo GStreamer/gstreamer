@@ -121,6 +121,7 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
       "video/x-h264", "stereo-high"
     },
 #endif
+#if GST_CHECK_VERSION(1,5,0)
     { GST_VAAPI_PROFILE_VC1_SIMPLE, VAProfileVC1Simple,
       "video/x-wmv, wmvversion=3", "simple"
     },
@@ -130,6 +131,17 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
     { GST_VAAPI_PROFILE_VC1_ADVANCED, VAProfileVC1Advanced,
       "video/x-wmv, wmvversion=3, format=(string)WVC1", "advanced"
     },
+#else
+    { GST_VAAPI_PROFILE_VC1_SIMPLE, VAProfileVC1Simple,
+      "video/x-wmv, wmvversion=3", NULL
+    },
+    { GST_VAAPI_PROFILE_VC1_MAIN, VAProfileVC1Main,
+      "video/x-wmv, wmvversion=3", NULL
+    },
+    { GST_VAAPI_PROFILE_VC1_ADVANCED, VAProfileVC1Advanced,
+      "video/x-wmv, wmvversion=3, format=(string)WVC1", NULL
+    },
+#endif
 #if VA_CHECK_VERSION(0,32,0)
     { GST_VAAPI_PROFILE_JPEG_BASELINE, VAProfileJPEGBaseline,
       "image/jpeg", NULL
