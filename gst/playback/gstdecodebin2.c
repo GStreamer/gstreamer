@@ -4352,8 +4352,12 @@ retry:
             &drained, &switched);
         GST_ELEMENT_WARNING (dbin, STREAM, FAILED, (NULL),
             ("all streams without buffers"));
-        if (switched)
-          goto retry;
+        if (switched) {
+          if (gst_decode_chain_is_complete (dbin->decode_chain))
+            goto retry;
+          else
+            return FALSE;
+        }
       }
     }
 
