@@ -45,6 +45,7 @@
 
 #include <gst/gstconfig.h>
 #include <gst/rtsp/gstrtspdefs.h>
+#include <gst/rtsp/gstrtsp-enumtypes.h>
 
 G_BEGIN_DECLS
 
