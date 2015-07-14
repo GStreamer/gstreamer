@@ -509,7 +509,7 @@ gst_validate_scenario_execute_seek (GstValidateScenario * scenario,
         GST_TIME_ARGS (action->playback_time), action->name,
         action->action_number, action->repeat, GST_TIME_ARGS (start),
         GST_TIME_ARGS (stop), rate);
-    ret = GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    ret = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
   gst_event_unref (seek);
 
