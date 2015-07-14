@@ -146,7 +146,7 @@ struct _GstValidateScenarioPrivate
 
   GList *overrides;
 
-  GstStructure *description;
+  gchar *pipeline_name;
 };
 
 typedef struct KeyFileGroupName
@@ -2197,11 +2197,17 @@ _load_scenario_file (GstValidateScenario * scenario,
 
     type = gst_structure_get_name (structure);
     if (!g_strcmp0 (type, "description")) {
+      const gchar *pipeline_name;
+
       gst_structure_get_boolean (structure, "is-config", is_config);
       gst_structure_get_boolean (structure, "handles-states",
           &priv->handles_state);
 
-      priv->description = gst_structure_copy (structure);
+      pipeline_name = gst_structure_get_string (structure, "pipeline-name");
+      if (pipeline_name) {
+        g_free (priv->pipeline_name);
+        priv->pipeline_name = g_strdup (pipeline_name);
+      }
 
       continue;
     } else if (!(action_type = _find_action_type (type))) {
@@ -2499,8 +2505,7 @@ gst_validate_scenario_finalize (GObject * object)
       (GDestroyNotify) gst_mini_object_unref);
   g_list_free_full (priv->on_addition_actions,
       (GDestroyNotify) gst_mini_object_unref);
-  if (priv->description)
-    gst_structure_free (priv->description);
+  g_free (priv->pipeline_name);
   g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->finalize (object);
@@ -2633,20 +2638,16 @@ gst_validate_scenario_factory_create (GstValidateRunner *
     return NULL;
   }
 
-  if (scenario->priv->description) {
-    const gchar *pipeline_name =
-        gst_structure_get_string (scenario->priv->description,
-        "pipeline-name");
+  if (scenario->priv->pipeline_name &&
+      !g_pattern_match_simple (scenario->priv->pipeline_name,
+          GST_OBJECT_NAME (pipeline))) {
+    GST_INFO ("Scenario %s only applies on pipeline %s not %s",
+        scenario_name, scenario->priv->pipeline_name,
+        GST_OBJECT_NAME (pipeline));
 
-    if (pipeline_name && !g_pattern_match_simple (pipeline_name,
-            GST_OBJECT_NAME (pipeline))) {
-      GST_INFO ("Scenario %s only applies on pipeline %s not %s",
-          scenario_name, pipeline_name, GST_OBJECT_NAME (pipeline));
+    gst_object_unref (scenario);
 
-      gst_object_unref (scenario);
-
-      return NULL;
-    }
+    return NULL;
   }
 
   scenario->pipeline = pipeline;
