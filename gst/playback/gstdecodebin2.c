@@ -3421,7 +3421,7 @@ gst_decode_group_free_internal (GstDecodeGroup * group, gboolean hide)
     }
   }
 
-  GST_DEBUG_OBJECT (group->dbin, "%s group %p", (hide ? "Hided" : "Freed"),
+  GST_DEBUG_OBJECT (group->dbin, "%s group %p", (hide ? "Hid" : "Freed"),
       group);
   if (!hide)
     g_slice_free (GstDecodeGroup, group);
