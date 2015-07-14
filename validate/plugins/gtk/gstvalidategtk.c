@@ -137,7 +137,6 @@ _create_keyboard_events (GstValidateAction * action,
     return NULL;
   }
 
-
   device = get_device (action, GDK_SOURCE_KEYBOARD);
   if (device == NULL) {
     GST_VALIDATE_REPORT (action->scenario,
@@ -153,7 +152,7 @@ _create_keyboard_events (GstValidateAction * action,
     gtk_accelerator_parse_with_keycode (keyname, &keyval, &keys, &state);
     events =
         g_list_append (events, _create_key_event (window, etype, keyval,
-            keys[0], state, device));
+            keys ? keys[0] : 0, state, device));
   } else if (string) {
     gint i;
 
