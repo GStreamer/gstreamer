@@ -132,6 +132,8 @@ gst_gl_base_buffer_init (GstGLBaseBuffer * mem, GstAllocator * allocator,
       align, offset, size);
 
   mem->context = gst_object_ref (context);
+  mem->data = NULL;
+  mem->alloc_data = NULL;
 
   g_mutex_init (&mem->lock);
 
@@ -173,6 +175,8 @@ gst_gl_base_buffer_alloc_data (GstGLBaseBuffer * gl_mem)
   if (gl_mem->data)
     return gl_mem;
 
+  GST_CAT_LOG (GST_CAT_GL_BASE_BUFFER, "%p attempting allocation of data "
+      "pointer of size %" G_GSIZE_FORMAT, gl_mem, mem->maxsize);
   gl_mem->alloc_data = g_try_malloc (mem->maxsize);
 
   if (gl_mem->alloc_data == NULL) {
@@ -181,6 +185,9 @@ gst_gl_base_buffer_alloc_data (GstGLBaseBuffer * gl_mem)
   }
 
   gl_mem->data = _align_data (gl_mem->alloc_data, mem->align, &mem->maxsize);
+
+  GST_CAT_DEBUG (GST_CAT_GL_BASE_BUFFER, "%p allocated data pointer alloc %p, "
+      "data %p", gl_mem, gl_mem->alloc_data, gl_mem->data);
 
   return gl_mem;
 }
