@@ -72,6 +72,7 @@ enum
 #define DEFAULT_CHECK_IMPERFECT_TIMESTAMP FALSE
 #define DEFAULT_CHECK_IMPERFECT_OFFSET    FALSE
 #define DEFAULT_SIGNAL_HANDOFFS           TRUE
+#define DEFAULT_TS_OFFSET               0
 
 enum
 {
@@ -86,6 +87,7 @@ enum
   PROP_LAST_MESSAGE,
   PROP_DUMP,
   PROP_SYNC,
+  PROP_TS_OFFSET,
   PROP_CHECK_IMPERFECT_TIMESTAMP,
   PROP_CHECK_IMPERFECT_OFFSET,
   PROP_SIGNAL_HANDOFFS
@@ -197,6 +199,11 @@ gst_identity_class_init (GstIdentityClass * klass)
       g_param_spec_boolean ("sync", "Synchronize",
           "Synchronize to pipeline clock", DEFAULT_SYNC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
+      g_param_spec_int64 ("ts-offset", "Timestamp offset for synchronisation",
+          "Timestamp offset in nanoseconds for synchronisation, negative for earlier sync",
+          G_MININT64, G_MAXINT64, DEFAULT_TS_OFFSET,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_CHECK_IMPERFECT_TIMESTAMP,
       g_param_spec_boolean ("check-imperfect-timestamp",
@@ -274,6 +281,7 @@ gst_identity_init (GstIdentity * identity)
   identity->dump = DEFAULT_DUMP;
   identity->last_message = NULL;
   identity->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
+  identity->ts_offset = DEFAULT_TS_OFFSET;
   g_cond_init (&identity->blocked_cond);
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM_CAST (identity), TRUE);
@@ -303,9 +311,18 @@ gst_identity_do_sync (GstIdentity * identity, GstClockTime running_time)
     if ((clock = GST_ELEMENT (identity)->clock)) {
       GstClockReturn cret;
       GstClockTime timestamp;
+      GstClockTimeDiff ts_offset = identity->ts_offset;
 
       timestamp = running_time + GST_ELEMENT (identity)->base_time +
           identity->upstream_latency;
+      if (ts_offset < 0) {
+        ts_offset = -ts_offset;
+        if (ts_offset < timestamp)
+          timestamp -= ts_offset;
+        else
+          timestamp = 0;
+      } else
+        timestamp += ts_offset;
 
       /* save id if we need to unlock */
       identity->clock_id = gst_clock_new_single_shot_id (clock, timestamp);
@@ -715,6 +732,9 @@ gst_identity_set_property (GObject * object, guint prop_id,
     case PROP_SYNC:
       identity->sync = g_value_get_boolean (value);
       break;
+    case PROP_TS_OFFSET:
+      identity->ts_offset = g_value_get_int64 (value);
+      break;
     case PROP_CHECK_IMPERFECT_TIMESTAMP:
       identity->check_imperfect_timestamp = g_value_get_boolean (value);
       break;
@@ -774,6 +794,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SYNC:
       g_value_set_boolean (value, identity->sync);
+      break;
+    case PROP_TS_OFFSET:
+      identity->ts_offset = g_value_get_int64 (value);
       break;
     case PROP_CHECK_IMPERFECT_TIMESTAMP:
       g_value_set_boolean (value, identity->check_imperfect_timestamp);

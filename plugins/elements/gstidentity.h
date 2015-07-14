@@ -76,6 +76,7 @@ struct _GstIdentity {
   GstClockTime   upstream_latency;
   GCond          blocked_cond;
   gboolean       blocked;
+  GstClockTimeDiff  ts_offset;
 };
 
 struct _GstIdentityClass {
