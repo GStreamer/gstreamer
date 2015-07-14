@@ -281,8 +281,8 @@ gst_tee_class_init (GstTeeClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_ALLOW_NOT_LINKED,
       g_param_spec_boolean ("allow-not-linked", "Allow not linked",
-          "Return GTS_FLOW_OK even if there are not source pads or all are "
-          "unlinked", DEFAULT_PROP_ALLOW_NOT_LINKED,
+          "Return GST_FLOW_OK even if there are no source pads or they are "
+          "all unlinked", DEFAULT_PROP_ALLOW_NOT_LINKED,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
