@@ -411,11 +411,6 @@ tsmux_stream_initialize_pes_packet (TsMuxStream * stream)
     stream->cur_pes_payload_size = stream->pes_payload_size;
     tsmux_stream_find_pts_dts_within (stream, stream->cur_pes_payload_size,
         &stream->pts, &stream->dts);
-  } else if (stream->is_video_stream) {
-    /* Unbounded for video streams */
-    stream->cur_pes_payload_size = 0;
-    tsmux_stream_find_pts_dts_within (stream, stream->bytes_avail, &stream->pts,
-        &stream->dts);
   } else {
     /* Output a PES packet of all currently available bytes otherwise */
     stream->cur_pes_payload_size = stream->bytes_avail;
@@ -441,6 +436,16 @@ tsmux_stream_initialize_pes_packet (TsMuxStream * stream)
       stream->pi.flags |= TSMUX_PACKET_FLAG_RANDOM_ACCESS;
       stream->pi.flags |= TSMUX_PACKET_FLAG_ADAPTATION;
     }
+  }
+
+  if (stream->is_video_stream) {
+    guint8 hdr_len;
+
+    hdr_len = tsmux_stream_pes_header_length (stream);
+
+    /* Unbounded for video streams if pes packet length is over 16 bit */
+    if ((stream->cur_pes_payload_size + hdr_len - 6) > G_MAXUINT16)
+      stream->cur_pes_payload_size = 0;
   }
 
   return TRUE;
