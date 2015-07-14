@@ -542,6 +542,8 @@ rtp_session_class_init (RTPSessionClass * klass)
    *      dropped (due to bandwidth constraints)
    *  "sent-nack-count" G_TYPE_UINT   Number of NACKs sent
    *  "recv-nack-count" G_TYPE_UINT   Number of NACKs received
+   *  "source-stats"    G_TYPE_BOXED  GValueArray of #RTPSource::stats for all
+   *      RTP sources (Since 1.8)
    *
    * Since: 1.4
    */
@@ -701,15 +703,43 @@ rtp_session_create_sources (RTPSession * sess)
   return res;
 }
 
+static void
+create_source_stats (gpointer key, RTPSource * source, GValueArray *arr)
+{
+  GValue value = G_VALUE_INIT;
+  GstStructure *s;
+
+  g_object_get (source, "stats", &s, NULL);
+
+  g_value_init (&value, GST_TYPE_STRUCTURE);
+  gst_value_set_structure (&value, s);
+  g_value_array_append (arr, &value);
+  gst_structure_free (s);
+  g_value_unset (&value);
+}
+
 static GstStructure *
 rtp_session_create_stats (RTPSession * sess)
 {
   GstStructure *s;
+  GValueArray *source_stats;
+  GValue source_stats_v = G_VALUE_INIT;
+  guint size;
 
   s = gst_structure_new ("application/x-rtp-session-stats",
       "rtx-drop-count", G_TYPE_UINT, sess->stats.nacks_dropped,
       "sent-nack-count", G_TYPE_UINT, sess->stats.nacks_sent,
-      "recv-nack-count", G_TYPE_UINT, sess->stats.nacks_received, NULL);
+      "recv-nack-count", G_TYPE_UINT, sess->stats.nacks_received,
+      NULL);
+
+  size = g_hash_table_size (sess->ssrcs[sess->mask_idx]);
+  source_stats = g_value_array_new (size);
+  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+      (GHFunc) create_source_stats, source_stats);
+
+  g_value_init (&source_stats_v, G_TYPE_VALUE_ARRAY);
+  g_value_take_boxed (&source_stats_v, source_stats);
+  gst_structure_take_value (s, "source-stats", &source_stats_v);
 
   return s;
 }
@@ -3952,6 +3982,9 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
   /* update point-to-point status */
   session_update_ptp (sess);
+
+  /* notify about updated statistics */
+  g_object_notify (G_OBJECT (sess), "stats");
 
   /* see if we need to generate SR or RR packets */
   if (!is_rtcp_time (sess, current_time, &data))

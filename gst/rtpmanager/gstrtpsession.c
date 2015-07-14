@@ -465,6 +465,12 @@ on_sender_ssrc_active (RTPSession * session, RTPSource * src,
       src->ssrc);
 }
 
+static void
+on_notify_stats (RTPSession * session, GParamSpec *spec, GstRtpSession *rtpsession)
+{
+  g_object_notify (G_OBJECT (rtpsession), "stats");
+}
+
 #define gst_rtp_session_parent_class parent_class
 G_DEFINE_TYPE (GstRtpSession, gst_rtp_session, GST_TYPE_ELEMENT);
 
@@ -728,6 +734,8 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
    *      dropped (due to bandwidth constraints)
    *  "sent-nack-count" G_TYPE_UINT   Number of NACKs sent
    *  "recv-nack-count" G_TYPE_UINT   Number of NACKs received
+   *  "source-stats"    G_TYPE_BOXED  GValueArray of #RTPSource::stats for all
+   *      RTP sources (Since 1.8)
    *
    * Since: 1.4
    */
@@ -825,6 +833,8 @@ gst_rtp_session_init (GstRtpSession * rtpsession)
       (GCallback) on_new_sender_ssrc, rtpsession);
   g_signal_connect (rtpsession->priv->session, "on-sender-ssrc-active",
       (GCallback) on_sender_ssrc_active, rtpsession);
+  g_signal_connect (rtpsession->priv->session, "notify::stats",
+      (GCallback) on_notify_stats, rtpsession);
   rtpsession->priv->ptmap = g_hash_table_new_full (NULL, NULL, NULL,
       (GDestroyNotify) gst_caps_unref);
 
