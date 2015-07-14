@@ -48,6 +48,7 @@ struct _GstSocketSrc {
   GstPushSrc element;
 
  /*< private >*/
+  GstCaps *caps;
   GSocket *socket;
   GCancellable *cancellable;
 };
