@@ -294,7 +294,10 @@ gst_gtk_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gtk_gst_widget_set_buffer (gtk_sink->widget, NULL);
+      GST_OBJECT_LOCK (gtk_sink);
+      if (gtk_sink->widget)
+        gtk_gst_widget_set_buffer (gtk_sink->widget, NULL);
+      GST_OBJECT_UNLOCK (gtk_sink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -353,8 +356,18 @@ gst_gtk_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   gtk_sink = GST_GTK_SINK (vsink);
 
-  if (gtk_sink->widget)
-    gtk_gst_widget_set_buffer (gtk_sink->widget, buf);
+  GST_OBJECT_LOCK (vsink);
+
+  if (gtk_sink->widget == NULL) {
+    GST_OBJECT_UNLOCK (vsink);
+    GST_ELEMENT_ERROR (gtk_sink, RESOURCE, NOT_FOUND,
+        ("%s", "Output widget was destroyed"), (NULL));
+    return GST_FLOW_ERROR;
+  }
+
+  gtk_gst_widget_set_buffer (gtk_sink->widget, buf);
+
+  GST_OBJECT_UNLOCK (vsink);
 
   return GST_FLOW_OK;
 }

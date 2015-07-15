@@ -100,6 +100,10 @@ struct _GtkGstGLWidgetPrivate
   GLint attr_position;
   GLint attr_texture;
   GLuint current_tex;
+
+  /* Pending queued idles callback */
+  guint draw_id;
+  guint resize_id;
 };
 
 static void
@@ -430,15 +434,17 @@ gtk_gst_gl_widget_finalize (GObject * object)
     _invoke_on_main ((ThreadFunc) _reset_gl, widget);
   }
 
-  if (widget->priv->context) {
+  if (widget->priv->context)
     gst_object_unref (widget->priv->context);
-    widget->priv->context = NULL;
-  }
 
-  if (widget->priv->display) {
+  if (widget->priv->display)
     gst_object_unref (widget->priv->display);
-    widget->priv->display = NULL;
-  }
+
+  if (widget->priv->draw_id)
+    g_source_remove (widget->priv->draw_id);
+
+  if (widget->priv->resize_id)
+    g_source_remove (widget->priv->resize_id);
 
   G_OBJECT_CLASS (gtk_gst_gl_widget_parent_class)->finalize (object);
 }
@@ -575,6 +581,10 @@ gtk_gst_gl_widget_new (void)
 static gboolean
 _queue_draw (GtkGstGLWidget * widget)
 {
+  g_mutex_lock (&widget->priv->lock);
+  widget->priv->draw_id = 0;
+  g_mutex_unlock (&widget->priv->lock);
+
   gtk_widget_queue_draw (GTK_WIDGET (widget));
 
   return G_SOURCE_REMOVE;
@@ -583,8 +593,6 @@ _queue_draw (GtkGstGLWidget * widget)
 void
 gtk_gst_gl_widget_set_buffer (GtkGstGLWidget * widget, GstBuffer * buffer)
 {
-  GMainContext *main_context = g_main_context_default ();
-
   g_return_if_fail (GTK_IS_GST_GL_WIDGET (widget));
   g_return_if_fail (buffer == NULL || widget->priv->negotiated);
 
@@ -593,9 +601,12 @@ gtk_gst_gl_widget_set_buffer (GtkGstGLWidget * widget, GstBuffer * buffer)
   gst_buffer_replace (&widget->priv->buffer, buffer);
   widget->priv->new_buffer = TRUE;
 
-  g_mutex_unlock (&widget->priv->lock);
+  if (!widget->priv->draw_id) {
+    widget->priv->draw_id = g_idle_add_full (G_PRIORITY_DEFAULT,
+        (GSourceFunc) _queue_draw, widget, NULL);
+  }
 
-  g_main_context_invoke (main_context, (GSourceFunc) _queue_draw, widget);
+  g_mutex_unlock (&widget->priv->lock);
 }
 
 static void
@@ -664,6 +675,10 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
 static gboolean
 _queue_resize (GtkGstGLWidget * widget)
 {
+  g_mutex_lock (&widget->priv->lock);
+  widget->priv->resize_id = 0;
+  g_mutex_unlock (&widget->priv->lock);
+
   gtk_widget_queue_resize (GTK_WIDGET (widget));
 
   return G_SOURCE_REMOVE;
@@ -770,7 +785,6 @@ _calculate_par (GtkGstGLWidget * widget, GstVideoInfo * info)
 gboolean
 gtk_gst_gl_widget_set_caps (GtkGstGLWidget * widget, GstCaps * caps)
 {
-  GMainContext *main_context = g_main_context_default ();
   GstVideoInfo v_info;
 
   g_return_val_if_fail (GTK_IS_GST_GL_WIDGET (widget), FALSE);
@@ -801,9 +815,12 @@ gtk_gst_gl_widget_set_caps (GtkGstGLWidget * widget, GstCaps * caps)
   widget->priv->v_info = v_info;
   widget->priv->negotiated = TRUE;
 
-  g_mutex_unlock (&widget->priv->lock);
+  if (!widget->priv->resize_id) {
+    widget->priv->resize_id = g_idle_add_full (G_PRIORITY_DEFAULT,
+        (GSourceFunc) _queue_resize, widget, NULL);
+  }
 
-  g_main_context_invoke (main_context, (GSourceFunc) _queue_resize, widget);
+  g_mutex_unlock (&widget->priv->lock);
 
   return TRUE;
 }
