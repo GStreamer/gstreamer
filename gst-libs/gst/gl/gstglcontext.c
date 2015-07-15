@@ -1259,7 +1259,7 @@ gst_gl_context_create_thread (GstGLContext * context)
 
   if (context_class->choose_format &&
       !context_class->choose_format (context, error)) {
-    GST_WARNING ("Failed to choose format");
+    GST_WARNING_OBJECT (context, "Failed to choose format");
     g_assert (error == NULL || *error != NULL);
     g_free (compiled_api_s);
     g_free (user_api_s);
@@ -1575,7 +1575,8 @@ typedef struct
 static void
 _gst_gl_context_thread_run_generic (RunGenericData * data)
 {
-  GST_TRACE ("running function:%p data:%p", data->func, data->data);
+  GST_TRACE_OBJECT (data->context, "running function:%p data:%p", data->func,
+      data->data);
 
   data->func (data->context, data->data);
 }
