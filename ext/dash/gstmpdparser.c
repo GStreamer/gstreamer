@@ -788,6 +788,7 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
   gboolean have_ms = FALSE;
   gboolean exists = FALSE;
 
+  *property_value = default_value;
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     len = xmlStrlen (prop_string);
@@ -910,9 +911,6 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
     GST_LOG (" - %s: %" G_GINT64_FORMAT, property_name, *property_value);
   }
 
-  if (!exists) {
-    *property_value = default_value;
-  }
   return exists;
 
 error:
@@ -1647,8 +1645,6 @@ gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node)
 
   new_period = g_slice_new0 (GstPeriodNode);
   *list = g_list_append (*list, new_period);
-
-  new_period->start = GST_CLOCK_TIME_NONE;
 
   GST_LOG ("attributes of Period node:");
   gst_mpdparser_get_xml_prop_string (a_node, "id", &new_period->id);
