@@ -1,8 +1,8 @@
 # gstreamer-vaapi package version number
 m4_define([gst_vaapi_major_version], [0])
-m4_define([gst_vaapi_minor_version], [5])
-m4_define([gst_vaapi_micro_version], [11])
-m4_define([gst_vaapi_pre_version],   [1])
+m4_define([gst_vaapi_minor_version], [6])
+m4_define([gst_vaapi_micro_version], [0])
+m4_define([gst_vaapi_pre_version],   [0])
 m4_define([gst_vaapi_version],
           [gst_vaapi_major_version.gst_vaapi_minor_version.gst_vaapi_micro_version])
 m4_if(gst_vaapi_pre_version, [0], [], [
@@ -57,7 +57,7 @@ m4_define([gtkdoc_version], [1.9])
 
 AC_PREREQ([2.66])
 AC_INIT([gst_vaapi], [gst_vaapi_version],
-    [gwenole.beauchesne@intel.com],
+    [gwenole.beauchesne@intel.com, sreerenj.balachandran@intel.com],
     [gstreamer-vaapi])
 
 AC_CONFIG_HEADERS([config.h])
@@ -232,6 +232,10 @@ AC_SUBST([GST_PKG_VERSION])
 
 AC_DEFINE_UNQUOTED([GST_PKG_VERSION_S], ["$GST_PKG_VERSION"],
     [Defined to the string representation of GStreamer API version])
+
+if test "$GST_API_VERSION" = "1.2"; then
+    AC_MSG_WARN([support for GStreamer 1.2 is deprecated, please upgrade])
+fi
 
 dnl GStreamer Core
 PKG_CHECK_MODULES([GST],
