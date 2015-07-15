@@ -133,6 +133,35 @@ load_self_module (gpointer user_data)
 #error "Add module loading support for GLES3"
 #endif
 
+/* Context sharedness es tracked by a unique id stored in each context object
+ * in order track complex creation/deletion scenarios.  As a result, sharedness
+ * can only be successfully validated between two GstGLContext's where one is
+ * not a wrapped context.
+ *
+ * As there is no API at the winsys level to tell whether two OpenGL contexts
+ * can share GL resources, this is the next best thing.
+ */
+static volatile guint sharegroup_idx;
+
+static guint
+_new_sharegroup_id (void)
+{
+  guint current, ret;
+
+  do {
+    current = g_atomic_int_get (&sharegroup_idx);
+    ret = current + 1;
+
+    /* 0 is special */
+    if (ret == 0)
+      ret++;
+  } while (!g_atomic_int_compare_and_exchange (&sharegroup_idx, current, ret));
+
+  GST_TRACE ("generated new share group id %u", ret);
+
+  return ret;
+}
+
 #define GST_CAT_DEFAULT gst_gl_context_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
@@ -163,6 +192,7 @@ struct _GstGLContextPrivate
   gboolean alive;
 
   GWeakRef other_context_ref;
+  guint sharegroup_id;
   GError **error;
 
   gint gl_major;
@@ -359,6 +389,7 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   context = (GstGLContext *) context_wrap;
 
   context->display = gst_object_ref (display);
+  context->priv->sharegroup_id = _new_sharegroup_id ();
   context_wrap->handle = handle;
   context_wrap->platform = context_type;
   context_wrap->available_apis = available_apis;
@@ -822,52 +853,12 @@ gst_gl_context_get_window (GstGLContext * context)
   return gst_object_ref (context->window);
 }
 
-static gboolean
-_share_group_descendant (GstGLContext * context, GstGLContext * other_context,
-    GstGLContext ** root)
-{
-  GstGLContext *next = gst_object_ref (context);
-  GstGLContext *prev = NULL;
-
-  /* given a context tree where --> means "has other gl context":
-   *
-   * a-->b-->c-->d
-   *    /   /
-   *   e   /
-   *      /
-   * f-->g
-   *
-   * return TRUE if @other_context is a descendant of @context
-   *
-   * e.g. [a, b], [f, d], [e, c] are all descendants
-   * but [b, a], [d, f], [e, f] are not descendants.  Provide the root node (d)
-   * so that we can check if two chains end up at the end with the same
-   * GstGLContext
-   */
-
-  while (next != NULL) {
-    if (next == other_context) {
-      gst_object_unref (next);
-      if (root)
-        *root = NULL;
-      return TRUE;
-    }
-
-    prev = next;
-    next = g_weak_ref_get (&next->priv->other_context_ref);
-    gst_object_unref (prev);
-  }
-
-  if (root != NULL)
-    *root = prev;
-
-  return FALSE;
-}
-
 /**
  * gst_gl_context_can_share:
  * @context: a #GstGLContext
  * @other_context: another #GstGLContext
+ *
+ * Note: This will always fail for two wrapped #GstGLContext's
  *
  * Returns: whether @context and @other_context are able to share OpenGL
  *      resources.
@@ -877,16 +868,12 @@ _share_group_descendant (GstGLContext * context, GstGLContext * other_context,
 gboolean
 gst_gl_context_can_share (GstGLContext * context, GstGLContext * other_context)
 {
-  GstGLContext *root1, *root2;
-
   g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
   g_return_val_if_fail (GST_GL_IS_CONTEXT (other_context), FALSE);
 
   /* check if the contexts are descendants or the root nodes are the same */
-  return context == other_context
-      || _share_group_descendant (context, other_context, &root1)
-      || _share_group_descendant (other_context, context, &root2)
-      || ((root1 != NULL || root2 != NULL) && root1 == root2);
+  return context->priv->sharegroup_id != 0
+      && context->priv->sharegroup_id == other_context->priv->sharegroup_id;
 }
 
 /**
@@ -926,6 +913,10 @@ gst_gl_context_create (GstGLContext * context,
   if (!context->priv->created) {
     g_weak_ref_set (&context->priv->other_context_ref, other_context);
     context->priv->error = error;
+    if (other_context == NULL)
+      context->priv->sharegroup_id = _new_sharegroup_id ();
+    else
+      context->priv->sharegroup_id = other_context->priv->sharegroup_id;
 
     context->priv->gl_thread = g_thread_new ("gstglcontext",
         (GThreadFunc) gst_gl_context_create_thread, context);

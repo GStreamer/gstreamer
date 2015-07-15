@@ -442,6 +442,46 @@ GST_START_TEST (test_current_context)
 
 GST_END_TEST;
 
+GST_START_TEST (test_context_can_share)
+{
+  GstGLContext *c1, *c2, *c3;
+  GError *error = NULL;
+
+  c1 = gst_gl_context_new (display);
+  gst_gl_context_create (c1, NULL, &error);
+  fail_if (error != NULL, "Error creating context %s\n",
+      error ? error->message : "Unknown Error");
+
+  c2 = gst_gl_context_new (display);
+  gst_gl_context_create (c2, c1, &error);
+  fail_if (error != NULL, "Error creating context %s\n",
+      error ? error->message : "Unknown Error");
+
+  fail_unless (gst_gl_context_can_share (c1, c2));
+  fail_unless (gst_gl_context_can_share (c2, c1));
+
+  c3 = gst_gl_context_new (display);
+  gst_gl_context_create (c3, c2, &error);
+  fail_if (error != NULL, "Error creating context %s\n",
+      error ? error->message : "Unknown Error");
+
+  fail_unless (gst_gl_context_can_share (c1, c3));
+  fail_unless (gst_gl_context_can_share (c3, c1));
+  fail_unless (gst_gl_context_can_share (c2, c3));
+  fail_unless (gst_gl_context_can_share (c3, c2));
+
+  /* destroy the middle context */
+  gst_object_unref (c2);
+  c2 = NULL;
+
+  fail_unless (gst_gl_context_can_share (c1, c3));
+  fail_unless (gst_gl_context_can_share (c3, c1));
+
+  gst_object_unref (c1);
+  gst_object_unref (c3);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_gl_context_suite (void)
@@ -454,6 +494,7 @@ gst_gl_context_suite (void)
   tcase_add_test (tc_chain, test_share);
   tcase_add_test (tc_chain, test_wrapped_context);
   tcase_add_test (tc_chain, test_current_context);
+  tcase_add_test (tc_chain, test_context_can_share);
 
   return s;
 }
