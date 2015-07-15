@@ -1180,6 +1180,7 @@ update_streams (PlaybackApp * app)
         str = gst_tag_list_to_string (tags);
         g_print ("video %d: %s\n", i, str);
         g_free (str);
+        gst_tag_list_unref (tags);
       }
       /* find good name for the label */
       name = g_strdup_printf ("video %d", i + 1);
@@ -1199,6 +1200,7 @@ update_streams (PlaybackApp * app)
         str = gst_tag_list_to_string (tags);
         g_print ("audio %d: %s\n", i, str);
         g_free (str);
+        gst_tag_list_unref (tags);
       }
       /* find good name for the label */
       name = g_strdup_printf ("audio %d", i + 1);
@@ -1228,6 +1230,7 @@ update_streams (PlaybackApp * app)
         if (value && G_VALUE_HOLDS_STRING (value)) {
           name = g_strdup_printf ("text %s", g_value_get_string (value));
         }
+        gst_tag_list_unref (tags);
       }
       /* find good name for the label if we didn't use a tag */
       if (name == NULL)
