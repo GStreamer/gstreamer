@@ -32,6 +32,11 @@
 GST_DEBUG_CATEGORY (gst_debug_gtk_sink);
 #define GST_CAT_DEFAULT gst_debug_gtk_sink
 
+#define DEFAULT_FORCE_ASPECT_RATIO  TRUE
+#define DEFAULT_PAR_N               0
+#define DEFAULT_PAR_D               1
+#define DEFAULT_IGNORE_ALPHA        TRUE
+
 static void gst_gtk_sink_finalize (GObject * object);
 static void gst_gtk_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * param_spec);
@@ -63,11 +68,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (FORMATS))
     );
-
-#define DEFAULT_FORCE_ASPECT_RATIO  TRUE
-#define DEFAULT_PAR_N               0
-#define DEFAULT_PAR_D               1
-#define DEFAULT_IGNORE_ALPHA        TRUE
 
 enum
 {
