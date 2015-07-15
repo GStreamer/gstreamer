@@ -428,6 +428,7 @@ EXPORTS
 	gst_device_get_caps
 	gst_device_get_device_class
 	gst_device_get_display_name
+	gst_device_get_properties
 	gst_device_get_type
 	gst_device_has_classes
 	gst_device_has_classesv
