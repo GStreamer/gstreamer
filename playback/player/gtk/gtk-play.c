@@ -1006,12 +1006,6 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
 }
 
 static void
-player_set_rate_cb (GtkSpinButton * button, GtkPlay * play)
-{
-  gst_player_set_rate (play->player, gtk_spin_button_get_value (button));
-}
-
-static void
 player_quit_clicked_cb (GtkButton * button, GtkPlay * play)
 {
   gtk_widget_destroy (GTK_WIDGET (play));
