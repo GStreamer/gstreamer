@@ -1078,6 +1078,8 @@ gst_video_scale_transform_frame (GstVideoFilter * filter,
   GstVideoScale *videoscale = GST_VIDEO_SCALE_CAST (filter);
   GstFlowReturn ret = GST_FLOW_OK;
 
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, filter, "doing video scaling");
+
   gst_video_converter_frame (videoscale->convert, in_frame, out_frame);
 
   return ret;

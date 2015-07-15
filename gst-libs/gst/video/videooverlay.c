@@ -312,6 +312,9 @@
 
 #include "videooverlay.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_video_overlay_debug);
+#define GST_CAT_DEFAULT gst_video_overlay_debug
+
 GType
 gst_video_overlay_get_type (void)
 {
@@ -332,6 +335,9 @@ gst_video_overlay_get_type (void)
 
     gst_video_overlay_type = g_type_register_static (G_TYPE_INTERFACE,
         "GstVideoOverlay", &gst_video_overlay_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (gst_video_overlay_debug, "videooverlay", 0,
+        "videooverlay interface");
   }
 
   return gst_video_overlay_type;

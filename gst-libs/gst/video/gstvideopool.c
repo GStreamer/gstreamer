@@ -20,6 +20,10 @@
 #include "gst/video/gstvideometa.h"
 #include "gst/video/gstvideopool.h"
 
+
+GST_DEBUG_CATEGORY_STATIC (gst_video_pool_debug);
+#define GST_CAT_DEFAULT gst_video_pool_debug
+
 /**
  * SECTION:gstvideopool
  * @short_description: GstBufferPool for raw video buffers
@@ -277,6 +281,9 @@ gst_video_buffer_pool_class_init (GstVideoBufferPoolClass * klass)
   gstbufferpool_class->get_options = video_buffer_pool_get_options;
   gstbufferpool_class->set_config = video_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = video_buffer_pool_alloc;
+
+  GST_DEBUG_CATEGORY_INIT (gst_video_pool_debug, "videopool", 0,
+      "videopool object");
 }
 
 static void

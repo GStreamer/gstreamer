@@ -1186,8 +1186,6 @@ convert_hline_generic (paintinfo * p, GstVideoFrame * frame, int y)
 
     for (i = 0; i < n_lines; i++) {
       idx = CLAMP (y + i + offset, 0, height - 1);
-
-      GST_DEBUG ("line %d, %d, idx %d", i, y + i + offset, idx);
       lines[i] = p->lines[idx % n_lines];
     }
 
@@ -1198,7 +1196,6 @@ convert_hline_generic (paintinfo * p, GstVideoFrame * frame, int y)
       idx = y + i + offset;
       if (idx > height - 1)
         break;
-      GST_DEBUG ("pack line %d", idx);
       finfo->pack_func (finfo, GST_VIDEO_PACK_FLAG_NONE,
           lines[i], 0, frame->data, frame->info.stride,
           frame->info.chroma_site, idx, width);

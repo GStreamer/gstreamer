@@ -27,6 +27,28 @@
 
 #include "video-resampler.h"
 
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    gsize cat_done;
+
+    cat_done = (gsize) _gst_debug_category_new ("video-resampler", 0,
+        "video-resampler object");
+
+    g_once_init_leave (&cat_gonce, cat_done);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#else
+#define ensure_debug_category() /* NOOP */
+#endif /* GST_DISABLE_GST_DEBUG */
+
 /**
  * SECTION:gstvideoresampler
  * @short_description: Utility structure for resampler information
@@ -35,6 +57,7 @@
  * required to perform various kinds of resampling filtering.
  *
  */
+
 
 #define DEFAULT_OPT_CUBIC_B (1.0 / 3.0)
 #define DEFAULT_OPT_CUBIC_C (1.0 / 3.0)

@@ -29,6 +29,28 @@
 #include "video-info.h"
 #include "video-tile.h"
 
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    gsize cat_done;
+
+    cat_done = (gsize) _gst_debug_category_new ("video-info", 0,
+        "video-info structure");
+
+    g_once_init_leave (&cat_gonce, cat_done);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#else
+#define ensure_debug_category() /* NOOP */
+#endif /* GST_DISABLE_GST_DEBUG */
+
 /**
  * gst_video_info_copy:
  * @info: a #GstVideoInfo
@@ -666,8 +688,6 @@ fill_planes (GstVideoInfo * info)
         cr_h = GST_ROUND_UP_2 (cr_h);
       info->offset[2] = info->offset[1] + info->stride[1] * cr_h;
       info->size = info->offset[2] + info->stride[2] * cr_h;
-      GST_DEBUG ("%d %d %d", GST_VIDEO_INFO_IS_INTERLACED (info),
-          (int) info->offset[2], (int) info->size);
       break;
     case GST_VIDEO_FORMAT_Y41B:
       info->stride[0] = GST_ROUND_UP_4 (width);
