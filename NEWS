@@ -1,7 +1,50 @@
-gst-vaapi NEWS -- summary of changes.  2015-02-03
+gst-vaapi NEWS -- summary of changes.  2015-07-15
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.6 - 15.Jul.2015
+* Add HEVC(H265) Decoder
+* Add HEVC(H265) Encoder
+* Add VP8 Encoder
+* Add JPEG Encoder
+* Add support for EGL [#743846, #743847, #741079]
+* Add a vaapidecodebin(vaapidecode->queue->vaapipostproc) element [#745216]
+* Add skin-tone-enhancement feature in vaapipostproc [#744088]
+* Add support for H.264 MVC Multiview High profile encoding with more than 2 views [#732453]
+* Add support for GstVideoGLTextureOrientation in plugins
+* Add support for BGRA textures in plugins
+* Removed all GStreamer 0.10 and 1.0 specific code sections [#745728,#732666]
+* Add support for loss of picturers in h264 decoder [#745048,#703921]
+* Add a simple-encoder test program that uses libgstvaapi for video encoding [#719528]
+* Add finer wayland frame control and many other optimizations [#719528, #749078, #747492#]
+* Add scaling of quality factor and Qantization tables for JPEG encoder [#748335]
+* Add GstColorBalance interface in vaapipostproc [#720376]
+* Add a handoff signal to vaapisink [#747905]
+* Add rounding control handling for VC1 simple and Main profile [#743958]
+* Record glconext supplied by downstream to enable run-time compatibility check [#725643]
+* Switch back to single thread implementation in vaapidecode [#742605]
+* Set decoding latency in vaapidecode by assuming realtime performance fo the HW decoding [#740419]
+* Allow vaapidecode to connect with glimagesink, mark x11 display as compatible with EGL [#745902]
+* Allow decoding of VC1 streams which contain user BDUs [#741237]
+* Use git.mk, a small Makefile to autogenerate .gitignore files
+* Expose the overlay capability in vaapisink for compatibility with dvbsuboverlay [#750095]
+* Enable VPP element in vaapidecodebin only if there is HW support [#749554]
+* Fix autoplugging of vaapidecode in playbin for wmv/asf streams
+* Fix multi-slice hevc encoding [#749854]
+* Fix ABBA deadlock between vaapisink and vaapipostproc if running in different threds [#738249]
+* Fix Seeking failure while using navseek in pipeline [#738677]
+* Fix PTS cache for MPEG2 GOP start [#748676]
+* Fix the wrong selection of passthrough mode in vaapipostproc [#748184]
+* Fix GstVaapiVideoPool related dead-lock [#747944]
+* Fix the race condition while setting drm device type [#747914]
+* Fix crash in vaapidecode if buffer outlives the decoder [#745189]
+* Fix memory leak in vaapidecode [#743226]
+* Fix multiple caps negotiation issues with vaapi elements [#744618]
+* Improve check for upstream element that requires DMABUF buffer pool
+* Fix vaapisink memory leak in debug mode
+* Fix crash when seeking mpeg2 strems
+* Fix support for Wayland/EGL running alongside X11
 
 Version 0.5.10 - 3.Feb.2015
 * Add support for DRM Render-Nodes for headless operation
