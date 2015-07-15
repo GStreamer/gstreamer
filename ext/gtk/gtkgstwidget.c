@@ -265,6 +265,7 @@ gtk_gst_widget_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_PIXEL_ASPECT_RATIO:
       gst_value_set_fraction (value, gtk_widget->priv->par_n,
           gtk_widget->priv->par_d);
+      break;
     case PROP_IGNORE_ALPHA:
       g_value_set_boolean (value, gtk_widget->priv->ignore_alpha);
       break;
