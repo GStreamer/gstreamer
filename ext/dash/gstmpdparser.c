@@ -492,9 +492,9 @@ gst_mpdparser_get_xml_prop_range (xmlNode * a_node, const gchar * property_name,
   return exists;
 
 error:
-  xmlFree (prop_string);
   GST_WARNING ("failed to parse property %s from xml string %s", property_name,
       prop_string);
+  xmlFree (prop_string);
   return FALSE;
 }
 
@@ -544,9 +544,9 @@ gst_mpdparser_get_xml_prop_ratio (xmlNode * a_node,
   return exists;
 
 error:
-  xmlFree (prop_string);
   GST_WARNING ("failed to parse property %s from xml string %s", property_name,
       prop_string);
+  xmlFree (prop_string);
   return FALSE;
 }
 
@@ -595,9 +595,9 @@ gst_mpdparser_get_xml_prop_framerate (xmlNode * a_node,
   return exists;
 
 error:
-  xmlFree (prop_string);
   GST_WARNING ("failed to parse property %s from xml string %s", property_name,
       prop_string);
+  xmlFree (prop_string);
   return FALSE;
 }
 
@@ -641,9 +641,9 @@ gst_mpdparser_get_xml_prop_cond_uint (xmlNode * a_node,
   return exists;
 
 error:
-  xmlFree (prop_string);
   GST_WARNING ("failed to parse property %s from xml string %s", property_name,
       prop_string);
+  xmlFree (prop_string);
   return FALSE;
 }
 
@@ -731,9 +731,9 @@ gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
   return exists;
 
 error:
-  xmlFree (prop_string);
   GST_WARNING ("failed to parse property %s from xml string %s", property_name,
       prop_string);
+  xmlFree (prop_string);
   return FALSE;
 }
 
