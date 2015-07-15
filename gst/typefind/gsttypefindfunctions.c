@@ -3492,6 +3492,12 @@ mod_type_find (GstTypeFind * tf, gpointer unused)
         goto suggest_audio_mod_caps;
       }
     }
+    /* UMX */
+    if (memcmp (data, "\xC1\x83\x2A\x9E", 4) == 0) {
+      mod_type = "umx";
+      probability = GST_TYPE_FIND_POSSIBLE;
+      goto suggest_audio_mod_caps;
+    }
   }
   /* FAR (Farandole) (secondary detection) */
   if ((data = gst_type_find_peek (tf, 44, 3)) != NULL) {
@@ -5546,7 +5552,7 @@ plugin_init (GstPlugin * plugin)
       tta_type_find, "tta", TTA_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-mod", GST_RANK_SECONDARY, mod_type_find,
       "669,amf,ams,dbm,digi,dmf,dsm,gdm,far,imf,it,j2b,mdl,med,mod,mt2,mtm,"
-      "okt,psm,ptm,sam,s3m,stm,stx,ult,xm", MOD_CAPS, NULL, NULL);
+      "okt,psm,ptm,sam,s3m,stm,stx,ult,umx,xm", MOD_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/mpeg", GST_RANK_PRIMARY, mp3_type_find,
       "mp3,mp2,mp1,mpga", MP3_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-ac3", GST_RANK_PRIMARY, ac3_type_find,
