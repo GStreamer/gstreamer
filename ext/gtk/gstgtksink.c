@@ -159,9 +159,17 @@ gst_gtk_sink_finalize (GObject * object)
 {
   GstGtkSink *gtk_sink = GST_GTK_SINK (object);;
 
-  g_object_unref (gtk_sink->widget);
+  g_clear_object (&gtk_sink->widget);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+widget_destroy_cb (GtkWidget * widget, GstGtkSink * gtk_sink)
+{
+  GST_OBJECT_LOCK (gtk_sink);
+  g_clear_object (&gtk_sink->widget);
+  GST_OBJECT_UNLOCK (gtk_sink);
 }
 
 static GtkGstWidget *
@@ -191,6 +199,8 @@ gst_gtk_sink_get_widget (GstGtkSink * gtk_sink)
   /* Take the floating ref, other wise the destruction of the container will
    * make this widget disapear possibly before we are done. */
   gst_object_ref_sink (gtk_sink->widget);
+  g_signal_connect (gtk_sink->widget, "destroy",
+      G_CALLBACK (widget_destroy_cb), gtk_sink);
 
   return gtk_sink->widget;
 }
@@ -268,6 +278,7 @@ gst_gtk_sink_change_state (GstElement * element, GstStateChange transition)
 {
   GstGtkSink *gtk_sink = GST_GTK_SINK (element);
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GtkWidget *toplevel;
 
   GST_DEBUG ("changing state: %s => %s",
       gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
@@ -277,6 +288,22 @@ gst_gtk_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (gst_gtk_sink_get_widget (gtk_sink) == NULL)
         return GST_STATE_CHANGE_FAILURE;
+
+      /* After this point, gtk_sink->widget will always be set */
+
+      toplevel = gtk_widget_get_toplevel (GTK_WIDGET (gtk_sink->widget));
+      if (!gtk_widget_is_toplevel (toplevel)) {
+        GtkWidget *window;
+
+        /* User did not add widget its own UI, let's popup a new GtkWindow to
+         * make gst-launch-1.0 work. */
+        window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+        gtk_window_set_default_size (GTK_WINDOW (window), 640, 480);
+        gtk_window_set_title (GTK_WINDOW (window), "Gtk+ Cairo renderer");
+        gtk_container_add (GTK_CONTAINER (window), toplevel);
+        gtk_widget_show_all (window);
+      }
+
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
