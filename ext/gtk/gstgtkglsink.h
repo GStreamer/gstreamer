@@ -29,7 +29,6 @@
 
 typedef struct _GstGtkGLSink GstGtkGLSink;
 typedef struct _GstGtkGLSinkClass GstGtkGLSinkClass;
-typedef struct _GstGtkGLSinkPrivate GstGtkGLSinkPrivate;
 
 #include <gtkgstglwidget.h>
 
@@ -76,8 +75,6 @@ struct _GstGtkGLSink
 
   gboolean              ignore_alpha;
   GBinding             *bind_ignore_alpha;
-
-  GstGtkGLSinkPrivate  *priv;
 };
 
 /**
