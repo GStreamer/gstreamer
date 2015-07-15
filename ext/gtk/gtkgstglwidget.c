@@ -83,7 +83,6 @@ struct _GtkGstGLWidgetPrivate
 
   gboolean negotiated;
   GstBuffer *buffer;
-  GstCaps *gl_caps;
   GstCaps *caps;
   GstVideoInfo v_info;
   gboolean new_buffer;
@@ -409,7 +408,6 @@ _reset (GtkGstGLWidget * gst_widget)
   gst_buffer_replace (&gst_widget->priv->buffer, NULL);
 
   gst_caps_replace (&gst_widget->priv->caps, NULL);
-  gst_caps_replace (&gst_widget->priv->gl_caps, NULL);
 
   gst_widget->priv->negotiated = FALSE;
   gst_widget->priv->initted = FALSE;
@@ -802,10 +800,6 @@ gtk_gst_gl_widget_set_caps (GtkGstGLWidget * widget, GstCaps * caps)
   _reset (widget);
 
   gst_caps_replace (&widget->priv->caps, caps);
-
-  widget->priv->gl_caps = gst_video_info_to_caps (&v_info);
-  gst_caps_set_features (widget->priv->gl_caps, 0,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
 
   if (!_calculate_par (widget, &v_info)) {
     g_mutex_unlock (&widget->priv->lock);
