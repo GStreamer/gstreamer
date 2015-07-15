@@ -630,7 +630,6 @@ media_info_dialog (GtkPlay * play, GstPlayerMediaInfo * media_info)
   GtkBuilder *dialog_ui;
   GtkWidget *view;
   GtkTreeStore *tree;
-  GtkTreeModel *model;
   GtkTreeViewColumn *col;
   GtkCellRenderer *renderer;
 
@@ -1257,8 +1256,7 @@ get_child_position (GtkOverlay * overlay, GtkWidget * widget,
 static void
 create_ui (GtkPlay * play)
 {
-  GtkWidget *image;
-  GtkWidget *main_hbox, *main_vbox;
+  GtkWidget *main_hbox;
   GstElement *playbin, *gtk_sink;
 
   gtk_window_set_default_size (GTK_WINDOW (play), 640, 480);
