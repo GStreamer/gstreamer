@@ -2993,6 +2993,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
     /* Copy old buffer and add a 0 at the end */
     gst_buffer_fill (newbuf, 0, map.data, map.size);
     gst_buffer_memset (newbuf, map.size, 0, 1);
+    gst_buffer_set_size (newbuf, map.size);
     gst_buffer_unmap (*buf, &map);
 
     gst_buffer_copy_into (newbuf, *buf,
@@ -3004,7 +3005,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
   }
 
   if (!sub_stream->invalid_utf8) {
-    if (g_utf8_validate ((gchar *) map.data, map.size - 1, NULL)) {
+    if (g_utf8_validate ((gchar *) map.data, map.size, NULL)) {
       goto next;
     }
     GST_WARNING_OBJECT (element, "subtitle stream %" G_GUINT64_FORMAT
