@@ -112,6 +112,8 @@ static void gst_mpdparser_parse_metrics_range_node (GList ** list,
 static void gst_mpdparser_parse_metrics_node (GList ** list, xmlNode * a_node);
 static void gst_mpdparser_parse_root_node (GstMPDNode ** pointer,
     xmlNode * a_node);
+static void gst_mpdparser_parse_utctiming_node (GList ** list,
+    xmlNode * a_node);
 
 /* Helper functions */
 static gint convert_to_millisecs (gint decimals, gint pos);
@@ -200,9 +202,40 @@ static void gst_mpdparser_free_descriptor_type_node (GstDescriptorType *
     descriptor_type);
 static void gst_mpdparser_free_content_component_node (GstContentComponentNode *
     content_component_node);
+static void gst_mpdparser_free_utctiming_node (GstUTCTimingNode * timing_type);
 static void gst_mpdparser_free_stream_period (GstStreamPeriod * stream_period);
 static void gst_mpdparser_free_media_segment (GstMediaSegment * media_segment);
 static void gst_mpdparser_free_active_stream (GstActiveStream * active_stream);
+
+struct GstMpdParserUtcTimingMethod
+{
+  const gchar *name;
+  GstMPDUTCTimingType method;
+};
+
+static const struct GstMpdParserUtcTimingMethod
+    gst_mpdparser_utc_timing_methods[] = {
+  {"urn:mpeg:dash:utc:ntp:2014", GST_MPD_UTCTIMING_TYPE_NTP},
+  {"urn:mpeg:dash:utc:sntp:2014", GST_MPD_UTCTIMING_TYPE_SNTP},
+  {"urn:mpeg:dash:utc:http-head:2014", GST_MPD_UTCTIMING_TYPE_HTTP_HEAD},
+  {"urn:mpeg:dash:utc:http-xsdate:2014", GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE},
+  {"urn:mpeg:dash:utc:http-iso:2014", GST_MPD_UTCTIMING_TYPE_HTTP_ISO},
+  {"urn:mpeg:dash:utc:http-ntp:2014", GST_MPD_UTCTIMING_TYPE_HTTP_NTP},
+  {"urn:mpeg:dash:utc:direct:2014", GST_MPD_UTCTIMING_TYPE_DIRECT},
+  /*
+   * Early working drafts used the :2012 namespace and this namespace is
+   * used by some DASH packagers. To work-around these packagers, we also
+   * accept the early draft scheme names.
+   */
+  {"urn:mpeg:dash:utc:ntp:2012", GST_MPD_UTCTIMING_TYPE_NTP},
+  {"urn:mpeg:dash:utc:sntp:2012", GST_MPD_UTCTIMING_TYPE_SNTP},
+  {"urn:mpeg:dash:utc:http-head:2012", GST_MPD_UTCTIMING_TYPE_HTTP_HEAD},
+  {"urn:mpeg:dash:utc:http-xsdate:2012", GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE},
+  {"urn:mpeg:dash:utc:http-iso:2012", GST_MPD_UTCTIMING_TYPE_HTTP_ISO},
+  {"urn:mpeg:dash:utc:http-ntp:2012", GST_MPD_UTCTIMING_TYPE_HTTP_NTP},
+  {"urn:mpeg:dash:utc:direct:2012", GST_MPD_UTCTIMING_TYPE_DIRECT},
+  {NULL, 0}
+};
 
 /* functions to parse node namespaces, content and properties */
 static gboolean
@@ -1766,6 +1799,43 @@ gst_mpdparser_parse_metrics_node (GList ** list, xmlNode * a_node)
   }
 }
 
+/* The UTCTiming element is defined in
+ * ISO/IEC 23009-1:2014/PDAM 1 "Information technology — Dynamic adaptive streaming over HTTP (DASH) — Part 1: Media presentation description and segment formats / Amendment 1: High Profile and Availability Time Synchronization"
+ */
+static void
+gst_mpdparser_parse_utctiming_node (GList ** list, xmlNode * a_node)
+{
+  GstUTCTimingNode *new_timing;
+  gchar *method = NULL;
+  gchar *value = NULL;
+
+  new_timing = g_slice_new0 (GstUTCTimingNode);
+
+  GST_LOG ("attributes of UTCTiming node:");
+  if (gst_mpdparser_get_xml_prop_string (a_node, "schemeIdUri", &method)) {
+    for (int i = 0; gst_mpdparser_utc_timing_methods[i].name; ++i) {
+      if (g_ascii_strncasecmp (gst_mpdparser_utc_timing_methods[i].name,
+              method, strlen (gst_mpdparser_utc_timing_methods[i].name)) == 0) {
+        new_timing->method = gst_mpdparser_utc_timing_methods[i].method;
+        break;
+      }
+    }
+    xmlFree (method);
+  }
+  if (gst_mpdparser_get_xml_prop_string (a_node, "value", &value)) {
+    int max_tokens = 0;
+    if (GST_MPD_UTCTIMING_TYPE_DIRECT == new_timing->method) {
+      /* The GST_MPD_UTCTIMING_TYPE_DIRECT method is a special case
+       * that is not a space separated list.
+       */
+      max_tokens = 1;
+    }
+    new_timing->urls = g_strsplit (value, " ", max_tokens);
+    xmlFree (value);
+    *list = g_list_append (*list, new_timing);
+  }
+}
+
 static void
 gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node)
 {
@@ -1820,6 +1890,8 @@ gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node)
         gst_mpdparser_parse_location_node (&new_mpd->Locations, cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "Metrics") == 0) {
         gst_mpdparser_parse_metrics_node (&new_mpd->Metrics, cur_node);
+      } else if (xmlStrcmp (cur_node->name, (xmlChar *) "UTCTiming") == 0) {
+        gst_mpdparser_parse_utctiming_node (&new_mpd->UTCTiming, cur_node);
       }
     }
   }
@@ -2057,6 +2129,8 @@ gst_mpdparser_free_mpd_node (GstMPDNode * mpd_node)
         (GDestroyNotify) gst_mpdparser_free_period_node);
     g_list_free_full (mpd_node->Metrics,
         (GDestroyNotify) gst_mpdparser_free_metrics_node);
+    g_list_free_full (mpd_node->UTCTiming,
+        (GDestroyNotify) gst_mpdparser_free_utctiming_node);
     g_slice_free (GstMPDNode, mpd_node);
   }
 }
@@ -2391,6 +2465,16 @@ gst_mpdparser_free_content_component_node (GstContentComponentNode *
     g_list_free_full (content_component_node->Viewpoint,
         (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
     g_slice_free (GstContentComponentNode, content_component_node);
+  }
+}
+
+static void
+gst_mpdparser_free_utctiming_node (GstUTCTimingNode * timing_type)
+{
+  if (timing_type) {
+    if (timing_type->urls)
+      g_strfreev (timing_type->urls);
+    g_slice_free (GstUTCTimingNode, timing_type);
   }
 }
 
@@ -3661,6 +3745,43 @@ gst_mpd_parser_get_stream_presentation_offset (GstMpdClient * client,
     return stream->presentationTimeOffset - stream_period->start;
   else
     return 0;
+}
+
+/**
+ * gst_mpd_client_get_utc_timing_sources:
+ * @client: #GstMpdClient to check for UTCTiming elements
+ * @methods: A bit mask of #GstMPDUTCTimingType that specifies the methods
+ *     to search for.
+ * @selected_method: (nullable): The selected method
+ * Returns: (transfer none): A NULL terminated array of URLs of servers
+ *     that use @selected_method to provide a realtime clock.
+ *
+ * Searches the UTCTiming elements found in the manifest for an element
+ * that uses one of the UTC timing methods specified in @selected_method.
+ * If multiple UTCTiming elements are present that support one of the
+ * methods specified in @selected_method, the first one is returned.
+ *
+ * Since: 1.6
+ */
+gchar **
+gst_mpd_client_get_utc_timing_sources (GstMpdClient * client,
+    guint methods, GstMPDUTCTimingType * selected_method)
+{
+  GList *list;
+
+  g_return_val_if_fail (client != NULL, NULL);
+  g_return_val_if_fail (client->mpd_node != NULL, NULL);
+  for (list = g_list_first (client->mpd_node->UTCTiming); list;
+      list = g_list_next (list)) {
+    const GstUTCTimingNode *node = (const GstUTCTimingNode *) list->data;
+    if (node->method & methods) {
+      if (selected_method) {
+        *selected_method = node->method;
+      }
+      return node->urls;
+    }
+  }
+  return NULL;
 }
 
 gboolean

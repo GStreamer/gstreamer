@@ -56,6 +56,7 @@ typedef struct _GstSubsetNode             GstSubsetNode;
 typedef struct _GstProgramInformationNode GstProgramInformationNode;
 typedef struct _GstMetricsRangeNode       GstMetricsRangeNode;
 typedef struct _GstMetricsNode            GstMetricsNode;
+typedef struct _GstUTCTimingNode          GstUTCTimingNode;
 typedef struct _GstSNode                  GstSNode;
 typedef struct _GstSegmentTimelineNode    GstSegmentTimelineNode;
 typedef struct _GstSegmentBaseType        GstSegmentBaseType;
@@ -89,6 +90,18 @@ typedef enum
   GST_SAP_TYPE_5,
   GST_SAP_TYPE_6
 } GstSAPType;
+
+typedef enum
+{
+  GST_MPD_UTCTIMING_TYPE_UNKNOWN     = 0x00,
+  GST_MPD_UTCTIMING_TYPE_NTP         = 0x01,
+  GST_MPD_UTCTIMING_TYPE_SNTP        = 0x02,
+  GST_MPD_UTCTIMING_TYPE_HTTP_HEAD   = 0x04,
+  GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE = 0x08,
+  GST_MPD_UTCTIMING_TYPE_HTTP_ISO    = 0x10,
+  GST_MPD_UTCTIMING_TYPE_HTTP_NTP    = 0x20,
+  GST_MPD_UTCTIMING_TYPE_DIRECT      = 0x40
+} GstMPDUTCTimingType;
 
 struct _GstBaseURL
 {
@@ -362,6 +375,12 @@ struct _GstMetricsNode
   GList *Reportings;
 };
 
+struct _GstUTCTimingNode {
+  GstMPDUTCTimingType method;
+  /* NULL terminated array of strings */
+  gchar **urls;
+};
+
 struct _GstMPDNode
 {
   gchar *default_namespace;
@@ -390,6 +409,8 @@ struct _GstMPDNode
   GList *Periods;
   /* list of Metrics nodes */
   GList *Metrics;
+  /* list of GstUTCTimingNode nodes */
+  GList *UTCTiming;
 };
 
 /**
@@ -505,6 +526,7 @@ gboolean gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * st
 gboolean gst_mpd_client_seek_to_time (GstMpdClient * client, GDateTime * time);
 gint gst_mpd_client_check_time_position (GstMpdClient * client, GstActiveStream * stream, GstClockTime ts, gint64 * diff);
 GstClockTime gst_mpd_parser_get_stream_presentation_offset (GstMpdClient *client, guint stream_idx);
+gchar** gst_mpd_client_get_utc_timing_sources (GstMpdClient *client, guint methods, GstMPDUTCTimingType *selected_method);
 
 /* Period selection */
 guint gst_mpd_client_get_period_index_at_time (GstMpdClient * client, GstDateTime * time);

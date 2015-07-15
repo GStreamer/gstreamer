@@ -27,6 +27,7 @@ libgstdashdemux_la_LIBADD = \
 	-lgsttag-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
+	-lgstnet-$(GST_API_VERSION) \
 	$(LIBXML2_LIBS)
 libgstdashdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdashdemux_la_LIBTOOLFLAGS = --tag=disable-static

@@ -2268,6 +2268,62 @@ GST_START_TEST (dash_mpdparser_period_subset)
 GST_END_TEST;
 
 /*
+ * Test parsing UTCTiming elements
+ *
+ */
+GST_START_TEST (dash_mpdparser_utctiming)
+{
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "<UTCTiming schemeIdUri=\"urn:mpeg:dash:utc:http-xsdate:2014\" value=\"http://time.akamai.com/?iso http://example.time/xsdate\"/>"
+      "<UTCTiming schemeIdUri=\"urn:mpeg:dash:utc:direct:2014\" value=\"2002-05-30T09:30:10Z \"/>"
+      "<UTCTiming schemeIdUri=\"urn:mpeg:dash:utc:ntp:2014\" value=\"0.europe.pool.ntp.org 1.europe.pool.ntp.org 2.europe.pool.ntp.org 3.europe.pool.ntp.org\"/>"
+      "</MPD>";
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+  GstMPDUTCTimingType selected_method;
+  gchar **urls;
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+
+  assert_equals_int (ret, TRUE);
+  fail_if (mpdclient->mpd_node == NULL);
+  fail_if (mpdclient->mpd_node->UTCTiming == NULL);
+  assert_equals_int (g_list_length (mpdclient->mpd_node->UTCTiming), 3);
+  urls =
+      gst_mpd_client_get_utc_timing_sources (mpdclient,
+      GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE, &selected_method);
+  fail_if (urls == NULL);
+  assert_equals_int (selected_method, GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE);
+  assert_equals_int (g_strv_length (urls), 2);
+  assert_equals_string (urls[0], "http://time.akamai.com/?iso");
+  assert_equals_string (urls[1], "http://example.time/xsdate");
+  urls =
+      gst_mpd_client_get_utc_timing_sources (mpdclient,
+      GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE | GST_MPD_UTCTIMING_TYPE_HTTP_ISO,
+      &selected_method);
+  fail_if (urls == NULL);
+  assert_equals_int (selected_method, GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE);
+  urls =
+      gst_mpd_client_get_utc_timing_sources (mpdclient,
+      GST_MPD_UTCTIMING_TYPE_DIRECT, NULL);
+  fail_if (urls == NULL);
+  assert_equals_int (g_strv_length (urls), 1);
+  assert_equals_string (urls[0], "2002-05-30T09:30:10Z ");
+  urls =
+      gst_mpd_client_get_utc_timing_sources (mpdclient,
+      GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE | GST_MPD_UTCTIMING_TYPE_DIRECT,
+      &selected_method);
+  fail_if (urls == NULL);
+  assert_equals_int (selected_method, GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE);
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * Test parsing the type property: value "dynamic"
  *
  */
@@ -4333,6 +4389,7 @@ dash_suite (void)
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_representation_segmentTemplate);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_period_subset);
+  tcase_add_test (tc_simpleMPD, dash_mpdparser_utctiming);
 
   /* tests checking other possible values for attributes */
   tcase_add_test (tc_simpleMPD, dash_mpdparser_type_dynamic);

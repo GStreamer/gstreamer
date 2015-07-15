@@ -52,6 +52,7 @@ G_BEGIN_DECLS
 #define GST_DASH_DEMUX_CAST(obj) \
 	((GstDashDemux *)obj)
 
+typedef struct _GstDashDemuxClockDrift GstDashDemuxClockDrift;
 typedef struct _GstDashDemuxStream GstDashDemuxStream;
 typedef struct _GstDashDemux GstDashDemux;
 typedef struct _GstDashDemuxClass GstDashDemuxClass;
@@ -86,6 +87,8 @@ struct _GstDashDemux
 
   GstMpdClient *client;         /* MPD client */
   GMutex client_lock;
+
+  GstDashDemuxClockDrift *clock_drift;
 
   gboolean end_of_period;
   gboolean end_of_manifest;
