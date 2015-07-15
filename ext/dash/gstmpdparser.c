@@ -1129,6 +1129,7 @@ gst_mpdparser_parse_seg_base_type_ext (GstSegmentBaseType ** pointer,
 
   /* Initialize values that have defaults */
   seg_base_type->indexRangeExact = FALSE;
+  seg_base_type->timescale = 1;
 
   /* Inherit attribute values from parent */
   if (parent) {
@@ -1145,7 +1146,7 @@ gst_mpdparser_parse_seg_base_type_ext (GstSegmentBaseType ** pointer,
   /* We must retrieve each value first to see if it exists.  If it does not
    * exist, we do not want to overwrite an inherited value */
   GST_LOG ("attributes of SegmentBaseType extension:");
-  if (gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "timescale", 0,
+  if (gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "timescale", 1,
           &intval)) {
     seg_base_type->timescale = intval;
   }
@@ -2765,7 +2766,6 @@ gst_mpd_client_get_segment_duration (GstMpdClient * client,
   GstStreamPeriod *stream_period;
   GstMultSegmentBaseType *base = NULL;
   GstClockTime duration = 0;
-  guint timescale;
 
   g_return_val_if_fail (stream != NULL, GST_CLOCK_TIME_NONE);
   stream_period = gst_mpdparser_get_stream_period (client);
@@ -2786,10 +2786,7 @@ gst_mpd_client_get_segment_duration (GstMpdClient * client,
     duration = base->duration * GST_SECOND;
     if (scale_dur)
       *scale_dur = duration;
-    timescale = base->SegBaseType->timescale;
-
-    if (timescale > 1)
-      duration /= timescale;
+    duration /= base->SegBaseType->timescale;
   }
 
   return duration;
@@ -3109,13 +3106,11 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           duration = S->d * GST_SECOND;
           timescale =
               stream->cur_segment_list->MultSegBaseType->SegBaseType->timescale;
-          if (timescale > 1)
-            duration /= timescale;
+          duration /= timescale;
           if (S->t > 0) {
             start = S->t;
             start_time = S->t * GST_SECOND;
-            if (timescale > 1)
-              start_time /= timescale;
+            start_time /= timescale;
             start_time += PeriodStart;
           }
 
@@ -3177,16 +3172,10 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
       GST_LOG ("Building media segment list using this template: %s",
           stream->cur_seg_template->media);
 
-      /* Avoid dividing by zero and avoid overflows */
-      if (mult_seg->SegBaseType->timescale) {
-        stream->presentationTimeOffset =
-            gst_util_uint64_scale (mult_seg->
-            SegBaseType->presentationTimeOffset, GST_SECOND,
-            mult_seg->SegBaseType->timescale);
-      } else {
-        stream->presentationTimeOffset =
-            mult_seg->SegBaseType->presentationTimeOffset * GST_SECOND;
-      }
+      /* Avoid overflows */
+      stream->presentationTimeOffset =
+          gst_util_uint64_scale (mult_seg->SegBaseType->presentationTimeOffset,
+          GST_SECOND, mult_seg->SegBaseType->timescale);
       GST_LOG ("Setting stream's presentation time offset to %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->presentationTimeOffset));
 
@@ -3206,13 +3195,11 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
               G_GUINT64_FORMAT, S->d, S->r, S->t);
           duration = S->d * GST_SECOND;
           timescale = mult_seg->SegBaseType->timescale;
-          if (timescale > 1)
-            duration /= timescale;
+          duration /= timescale;
           if (S->t > 0) {
             start = S->t;
             start_time = S->t * GST_SECOND;
-            if (timescale > 1)
-              start_time /= timescale;
+            start_time /= timescale;
             start_time += PeriodStart;
           }
 
