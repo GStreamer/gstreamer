@@ -53,7 +53,6 @@ struct _GstGtkGLSink
   GstVideoSink          parent;
 
   GtkGstGLWidget       *widget;
-  gboolean              widget_destroyed;
 
   GstVideoInfo          v_info;
   GstBufferPool        *pool;
