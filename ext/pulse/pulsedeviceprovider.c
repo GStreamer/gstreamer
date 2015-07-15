@@ -40,7 +40,7 @@ GST_DEBUG_CATEGORY_EXTERN (pulse_debug);
 
 static GstDevice *gst_pulse_device_new (guint id,
     const gchar * device_name, GstCaps * caps, const gchar * internal_name,
-    GstPulseDeviceType type);
+    GstPulseDeviceType type, GstStructure * properties);
 
 G_DEFINE_TYPE (GstPulseDeviceProvider, gst_pulse_device_provider,
     GST_TYPE_DEVICE_PROVIDER);
@@ -189,6 +189,7 @@ static GstDevice *
 new_source (const pa_source_info * info)
 {
   GstCaps *caps;
+  GstStructure *props;
   guint i;
 
   caps = gst_caps_new_empty ();
@@ -196,14 +197,17 @@ new_source (const pa_source_info * info)
   for (i = 0; i < info->n_formats; i++)
     gst_caps_append (caps, gst_pulse_format_info_to_caps (info->formats[i]));
 
+  props = gst_pulse_make_structure (info->proplist);
+
   return gst_pulse_device_new (info->index, info->description,
-      caps, info->name, GST_PULSE_DEVICE_TYPE_SOURCE);
+      caps, info->name, GST_PULSE_DEVICE_TYPE_SOURCE, props);
 }
 
 static GstDevice *
 new_sink (const pa_sink_info * info)
 {
   GstCaps *caps;
+  GstStructure *props;
   guint i;
 
   caps = gst_caps_new_empty ();
@@ -211,8 +215,10 @@ new_sink (const pa_sink_info * info)
   for (i = 0; i < info->n_formats; i++)
     gst_caps_append (caps, gst_pulse_format_info_to_caps (info->formats[i]));
 
+  props = gst_pulse_make_structure (info->proplist);
+
   return gst_pulse_device_new (info->index, info->description,
-      caps, info->name, GST_PULSE_DEVICE_TYPE_SINK);
+      caps, info->name, GST_PULSE_DEVICE_TYPE_SINK, props);
 }
 
 static void
@@ -603,7 +609,8 @@ gst_pulse_device_reconfigure_element (GstDevice * device, GstElement * element)
 
 static GstDevice *
 gst_pulse_device_new (guint device_index, const gchar * device_name,
-    GstCaps * caps, const gchar * internal_name, GstPulseDeviceType type)
+    GstCaps * caps, const gchar * internal_name, GstPulseDeviceType type,
+    GstStructure * props)
 {
   GstPulseDevice *gstdev;
   const gchar *element = NULL;
@@ -631,7 +638,7 @@ gst_pulse_device_new (guint device_index, const gchar * device_name,
 
   gstdev = g_object_new (GST_TYPE_PULSE_DEVICE,
       "display-name", device_name, "caps", caps, "device-class", klass,
-      "internal-name", internal_name, NULL);
+      "internal-name", internal_name, "properties", props, NULL);
 
   gstdev->type = type;
   gstdev->device_index = device_index;

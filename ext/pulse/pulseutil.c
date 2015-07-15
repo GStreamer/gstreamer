@@ -376,6 +376,28 @@ gst_pulse_make_proplist (const GstStructure * properties)
   return proplist;
 }
 
+GstStructure *
+gst_pulse_make_structure (pa_proplist * properties)
+{
+  GstStructure *str;
+  void *state = NULL;
+
+  str = gst_structure_new_empty ("pulse-proplist");
+
+  while (TRUE) {
+    const char *key, *val;
+
+    key = pa_proplist_iterate (properties, &state);
+    if (key == NULL)
+      break;
+
+    val = pa_proplist_gets (properties, key);
+
+    gst_structure_set (str, key, G_TYPE_STRING, val, NULL);
+  }
+  return str;
+}
+
 static gboolean
 gst_pulse_format_info_int_prop_to_value (pa_format_info * format,
     const char *key, GValue * value)

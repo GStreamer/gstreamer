@@ -87,6 +87,7 @@ GstAudioRingBufferSpec *gst_pulse_channel_map_to_gst (const pa_channel_map * map
 void gst_pulse_cvolume_from_linear (pa_cvolume *v, unsigned channels, gdouble volume);
 
 pa_proplist *gst_pulse_make_proplist (const GstStructure *properties);
+GstStructure *gst_pulse_make_structure (pa_proplist *properties);
 
 GstCaps * gst_pulse_format_info_to_caps (pa_format_info * format);
 
