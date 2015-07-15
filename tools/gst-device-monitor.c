@@ -42,11 +42,23 @@ typedef struct
 
 static gboolean bus_msg_handler (GstBus * bus, GstMessage * msg, gpointer data);
 
+static gboolean
+print_structure_field (GQuark field_id, const GValue * value,
+    gpointer user_data)
+{
+  if (G_VALUE_HOLDS_STRING (value))
+    g_print ("\n\t\t%s = %s", g_quark_to_string (field_id),
+        g_value_get_string (value));
+
+  return TRUE;
+}
+
 static void
 device_added (GstDevice * device)
 {
-  gchar *device_class, *caps_str, *name;
+  gchar *device_class, *str, *name;
   GstCaps *caps;
+  GstStructure *props;
   guint i, size = 0;
 
   caps = gst_device_get_caps (device);
@@ -55,17 +67,22 @@ device_added (GstDevice * device)
 
   name = gst_device_get_display_name (device);
   device_class = gst_device_get_device_class (device);
+  props = gst_device_get_properties (device);
 
   g_print ("\nDevice found:\n\n");
   g_print ("\tname  : %s\n", name);
   g_print ("\tclass : %s\n", device_class);
   for (i = 0; i < size; ++i) {
     GstStructure *s = gst_caps_get_structure (caps, i);
-    caps_str = gst_structure_to_string (s);
-    g_print ("\t%s %s\n", (i == 0) ? "caps  :" : "       ", caps_str);
-    g_free (caps_str);
+    str = gst_structure_to_string (s);
+    g_print ("\t%s %s\n", (i == 0) ? "caps  :" : "       ", str);
+    g_free (str);
   }
-
+  if (props) {
+    g_print ("\tproperties:");
+    gst_structure_foreach (props, print_structure_field, NULL);
+    g_print ("\n");
+  }
   g_print ("\n");
 
   g_free (name);
