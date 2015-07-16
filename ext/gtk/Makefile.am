@@ -12,6 +12,8 @@ sources = \
 	gtkgstbasewidget.h \
 	gtkgstwidget.c \
 	gtkgstwidget.h \
+	gstgtkbasesink.c \
+	gstgtkbasesink.h \
 	gstgtksink.c \
 	gstgtksink.h \
 	gstplugin.c \
