@@ -53,7 +53,7 @@ struct _GstGtkSink
 
   GstVideoInfo         v_info;
 
-  GtkGstWidget        *widget;
+  GtkGstBaseWidget     *widget;
 
   /* properties */
   gboolean             force_aspect_ratio;

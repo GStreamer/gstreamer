@@ -24,6 +24,8 @@
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 
+#include "gtkgstbasewidget.h"
+
 G_BEGIN_DECLS
 
 GType gtk_gst_widget_get_type (void);
@@ -36,7 +38,6 @@ GType gtk_gst_widget_get_type (void);
 
 typedef struct _GtkGstWidget GtkGstWidget;
 typedef struct _GtkGstWidgetClass GtkGstWidgetClass;
-typedef struct _GtkGstWidgetPrivate GtkGstWidgetPrivate;
 
 /**
  * GtkGstWidget:
@@ -46,9 +47,7 @@ typedef struct _GtkGstWidgetPrivate GtkGstWidgetPrivate;
 struct _GtkGstWidget
 {
   /* <private> */
-  GtkDrawingArea         parent;
-
-  GtkGstWidgetPrivate   *priv;
+  GtkGstBaseWidget base;
 };
 
 /**
@@ -59,13 +58,10 @@ struct _GtkGstWidget
 struct _GtkGstWidgetClass
 {
   /* <private> */
-  GtkDrawingAreaClass object_class;
+  GtkGstBaseWidgetClass base_class;
 };
 
 GtkWidget *     gtk_gst_widget_new (void);
-
-gboolean        gtk_gst_widget_set_caps             (GtkGstWidget * widget, GstCaps *caps);
-void            gtk_gst_widget_set_buffer           (GtkGstWidget * widget, GstBuffer *buffer);
 
 G_END_DECLS
 
