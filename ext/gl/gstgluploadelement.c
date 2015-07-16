@@ -145,6 +145,9 @@ _gst_gl_upload_element_propose_allocation (GstBaseTransform * bt,
 {
   GstGLUploadElement *upload = GST_GL_UPLOAD_ELEMENT (bt);
 
+  if (!upload->upload)
+    return FALSE;
+
   gst_gl_upload_propose_allocation (upload->upload, decide_query, query);
 
   return TRUE;
