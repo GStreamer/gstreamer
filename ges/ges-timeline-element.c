@@ -1215,7 +1215,8 @@ ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
   /* error */
 had_timeline:
   {
-    GST_WARNING ("Objects already in a timeline can't be renamed");
+    GST_WARNING ("Object %s already in a timeline can't be renamed to %s",
+        self->name, name);
     return FALSE;
   }
 }
