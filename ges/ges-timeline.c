@@ -2192,9 +2192,38 @@ static void
 layer_auto_transition_changed_cb (GESLayer * layer,
     GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
 {
+  GList *tmp, *clips;
+
   timeline->priv->needs_rollback = FALSE;
   _create_transitions_on_layer (timeline, layer, NULL, NULL,
       _create_auto_transition_from_transitions);
+
+  clips = ges_layer_get_clips (layer);
+  for (tmp = clips; tmp; tmp = tmp->next) {
+    if (GES_IS_TRANSITION_CLIP (tmp->data)) {
+      GList *tmpautotrans;
+      gboolean found = FALSE;
+
+      for (tmpautotrans = timeline->priv->auto_transitions; tmpautotrans;
+          tmpautotrans = tmpautotrans->next) {
+        if (GES_AUTO_TRANSITION (tmpautotrans->data)->transition_clip ==
+            tmp->data) {
+          found = TRUE;
+          break;
+        }
+      }
+
+      if (!found) {
+        GST_ERROR_OBJECT (timeline,
+            "Transition %s could not be wrapped into an auto transition"
+            " REMOVING it", GES_TIMELINE_ELEMENT_NAME (tmp->data));
+
+        ges_layer_remove_clip (layer, tmp->data);
+      }
+    }
+  }
+  g_list_free_full (clips, gst_object_unref);
+
   if (timeline->priv->needs_rollback) {
     GList *tmp, *trans;
 
