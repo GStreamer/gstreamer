@@ -285,7 +285,7 @@ gst_validate_ssim_compare_frames (GstValidateSsim * self,
   else
     converted_frame1 = *ref_frame;
 
-  convinfo2 = (SSimConverterInfo *) g_list_nth_data (self->priv->converters, 0);
+  convinfo2 = (SSimConverterInfo *) g_list_nth_data (self->priv->converters, 1);
   if (convinfo2->converter)
     gst_validate_ssim_convert (self, convinfo2, frame, &converted_frame2);
   else
