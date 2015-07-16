@@ -52,7 +52,7 @@ struct _GstGtkGLSink
   /* <private> */
   GstVideoSink          parent;
 
-  GtkGstGLWidget       *widget;
+  GtkGstBaseWidget     *widget;
 
   GstVideoInfo          v_info;
   GstBufferPool        *pool;
