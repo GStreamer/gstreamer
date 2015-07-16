@@ -55,7 +55,18 @@ struct _GstDeviceProviderPrivate
   GMutex start_lock;
 
   gboolean started_count;
+
+  GList *hidden_providers;
 };
+
+enum
+{
+  PROVIDER_HIDDEN,
+  PROVIDER_UNHIDDEN,
+  LAST_SIGNAL
+};
+
+static guint gst_device_provider_signals[LAST_SIGNAL] = { 0 };
 
 /* this is used in gstelementfactory.c:gst_element_register() */
 GQuark __gst_deviceproviderclass_factory = 0;
@@ -134,6 +145,16 @@ gst_device_provider_class_init (GstDeviceProviderClass * klass)
 
   gobject_class->dispose = gst_device_provider_dispose;
   gobject_class->finalize = gst_device_provider_finalize;
+
+  gst_device_provider_signals[PROVIDER_HIDDEN] =
+      g_signal_new ("provider-hidden", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL,
+      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_STRING);
+
+  gst_device_provider_signals[PROVIDER_UNHIDDEN] =
+      g_signal_new ("provider-unhidden", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL,
+      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_STRING);
 }
 
 static void
@@ -597,4 +618,124 @@ gst_device_provider_device_remove (GstDeviceProvider * provider,
   gst_bus_post (provider->priv->bus, message);
   if (item)
     gst_object_unparent (GST_OBJECT (device));
+}
+
+/**
+ * gst_device_provider_get_hidden_providers:
+ * @provider: a #GstDeviceProvider
+ *
+ * Get the provider factory names of the #GstDeviceProvider instances that
+ * are hidden by @provider.
+ *
+ * Returns: (transfer full) (array zero-terminated=1) (element-type gchar*):
+ *   a list of hidden providers factory names or %NULL when
+ *   nothing is hidden by @provider. Free with g_strfreev.
+ *
+ * Since: 1.6
+ */
+gchar **
+gst_device_provider_get_hidden_providers (GstDeviceProvider * provider)
+{
+  GList *walk;
+  guint i, len;
+  gchar **res = NULL;
+
+  g_return_val_if_fail (GST_IS_DEVICE_PROVIDER (provider), NULL);
+
+  GST_OBJECT_LOCK (provider);
+  len = g_list_length (provider->priv->hidden_providers);
+  if (len == 0)
+    goto done;
+
+  res = g_new (gchar *, len + 1);
+  for (i = 0, walk = provider->priv->hidden_providers; walk;
+      walk = g_list_next (walk), i++)
+    res[i] = g_strdup (walk->data);
+  res[i] = NULL;
+
+done:
+  GST_OBJECT_UNLOCK (provider);
+
+  return res;
+}
+
+/**
+ * gst_device_provider_hide_provider:
+ * @provider: a #GstDeviceProvider
+ * @name: a provider factory name
+ *
+ * Make @provider hide the devices from the factory with @name.
+ *
+ * This function is used when @provider will also provide the devices reported
+ * by provider factory @name. A monitor should stop monitoring the
+ * device provider with @name to avoid duplicate devices.
+ *
+ * Since: 1.6
+ */
+void
+gst_device_provider_hide_provider (GstDeviceProvider * provider,
+    const gchar * name)
+{
+  GList *find;
+  const gchar *hidden_name = NULL;
+
+  g_return_if_fail (GST_IS_DEVICE_PROVIDER (provider));
+  g_return_if_fail (name != NULL);
+
+  GST_OBJECT_LOCK (provider);
+  find =
+      g_list_find_custom (provider->priv->hidden_providers, name,
+      (GCompareFunc) g_strcmp0);
+  if (find == NULL) {
+    hidden_name = name;
+    provider->priv->hidden_providers =
+        g_list_prepend (provider->priv->hidden_providers, g_strdup (name));
+  }
+  GST_OBJECT_UNLOCK (provider);
+
+  if (hidden_name)
+    g_signal_emit (provider, gst_device_provider_signals[PROVIDER_HIDDEN],
+        0, hidden_name);
+}
+
+/**
+ * gst_device_provider_unhide_provider:
+ * @provider: a #GstDeviceProvider
+ * @name: a provider factory name
+ *
+ * Make @provider unhide the devices from factory @name.
+ *
+ * This function is used when @provider will no longer provide the devices
+ * reported by provider factory @name. A monitor should start
+ * monitoring the devices from provider factory @name in order to see
+ * all devices again.
+ *
+ * Since: 1.6
+ */
+void
+gst_device_provider_unhide_provider (GstDeviceProvider * provider,
+    const gchar * name)
+{
+  GList *find;
+  gchar *unhidden_name = NULL;
+
+  g_return_if_fail (GST_IS_DEVICE_PROVIDER (provider));
+  g_return_if_fail (unhidden_name != NULL);
+
+  GST_OBJECT_LOCK (provider);
+  find =
+      g_list_find_custom (provider->priv->hidden_providers, name,
+      (GCompareFunc) g_strcmp0);
+  if (find) {
+    unhidden_name = find->data;
+    provider->priv->hidden_providers =
+        g_list_delete_link (provider->priv->hidden_providers, find);
+  }
+  GST_OBJECT_UNLOCK (provider);
+
+  if (unhidden_name) {
+    g_signal_emit (provider,
+        gst_device_provider_signals[PROVIDER_UNHIDDEN], 0, unhidden_name);
+    g_free (unhidden_name);
+  }
 }

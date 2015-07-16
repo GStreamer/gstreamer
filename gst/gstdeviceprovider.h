@@ -113,7 +113,13 @@ GstBus *    gst_device_provider_get_bus        (GstDeviceProvider * provider);
 void        gst_device_provider_device_add     (GstDeviceProvider * provider,
                                                 GstDevice * device);
 void        gst_device_provider_device_remove  (GstDeviceProvider * provider,
-                                               GstDevice * device);
+                                                GstDevice * device);
+
+gchar **    gst_device_provider_get_hidden_providers (GstDeviceProvider * provider);
+void        gst_device_provider_hide_provider        (GstDeviceProvider * provider,
+                                                      const gchar       * name);
+void        gst_device_provider_unhide_provider      (GstDeviceProvider * provider,
+                                                      const gchar       * name);
 
 
 /* device provider class meta data */
