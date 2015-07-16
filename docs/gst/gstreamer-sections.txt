@@ -3471,6 +3471,7 @@ gst_device_get_display_name
 gst_device_has_classes
 gst_device_has_classesv
 gst_device_reconfigure_element
+gst_device_get_properties
 
 <SUBSECTION Standard>
 GST_DEVICE
