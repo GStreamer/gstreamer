@@ -135,7 +135,7 @@ gst_sub_parse_class_init (GstSubParseClass * klass)
       "Subtitle parser", "Codec/Parser/Subtitle",
       "Parses subtitle (.sub) files into text streams",
       "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>, "
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 
   element_class->change_state = gst_sub_parse_change_state;
 

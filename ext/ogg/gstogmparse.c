@@ -279,7 +279,7 @@ gst_ogm_audio_parse_base_init (GstOgmParseClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "OGM audio stream parser", "Codec/Decoder/Audio",
       "parse an OGM audio header and stream",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory_audio));
@@ -298,7 +298,7 @@ gst_ogm_video_parse_base_init (GstOgmParseClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "OGM video stream parser", "Codec/Decoder/Video",
       "parse an OGM video header and stream",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory_video));
@@ -318,7 +318,7 @@ gst_ogm_text_parse_base_init (GstOgmParseClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "OGM text stream parser", "Codec/Decoder/Subtitle",
       "parse an OGM text header and stream",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory_text));

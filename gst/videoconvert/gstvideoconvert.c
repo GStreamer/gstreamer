@@ -519,7 +519,7 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "Colorspace converter", "Filter/Converter/Video",
       "Converts video from one colorspace to another",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 
   gstbasetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_convert_transform_caps);
