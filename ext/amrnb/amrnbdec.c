@@ -122,7 +122,7 @@ gst_amrnbdec_class_init (GstAmrnbDecClass * klass)
   gst_element_class_set_static_metadata (element_class, "AMR-NB audio decoder",
       "Codec/Decoder/Audio",
       "Adaptive Multi-Rate Narrow-Band audio decoder",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 
   base_class->start = GST_DEBUG_FUNCPTR (gst_amrnbdec_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_amrnbdec_stop);
