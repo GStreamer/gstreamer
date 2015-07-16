@@ -81,6 +81,7 @@ device_added (GstDevice * device)
   if (props) {
     g_print ("\tproperties:");
     gst_structure_foreach (props, print_structure_field, NULL);
+    gst_structure_free (props);
     g_print ("\n");
   }
   g_print ("\n");
