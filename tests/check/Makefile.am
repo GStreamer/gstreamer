@@ -193,6 +193,7 @@ endif
 
 if USE_PLUGIN_MATROSKA
 check_matroska = \
+	elements/matroskademux \
 	elements/matroskamux \
 	elements/matroskaparse
 else
