@@ -325,7 +325,10 @@ gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec, gboolean reset)
     av_free (ffmpegdec->context->extradata);
     ffmpegdec->context->extradata = NULL;
   }
-
+  if (ffmpegdec->context->slice_offset) {
+    g_free (ffmpegdec->context->slice_offset);
+    ffmpegdec->context->slice_offset = NULL;
+  }
   if (reset) {
     if (avcodec_get_context_defaults3 (ffmpegdec->context,
             oclass->in_plugin) < 0) {
