@@ -182,7 +182,7 @@ gst_matroska_parse_class_init (GstMatroskaParseClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "Matroska parser", "Codec/Parser",
       "Parses Matroska/WebM streams into video/audio/subtitles",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 }
 
 static void

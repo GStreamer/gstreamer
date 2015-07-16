@@ -262,7 +262,7 @@ gst_avi_mux_class_init (GstAviMuxClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Avi muxer",
       "Codec/Muxer",
       "Muxes audio and video into an avi stream",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 }
 
 /* reset pad to initial state

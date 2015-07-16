@@ -301,7 +301,7 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Matroska muxer",
       "Codec/Muxer",
       "Muxes video/audio/subtitle streams into a matroska stream",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 
   GST_DEBUG_CATEGORY_INIT (matroskamux_debug, "matroskamux", 0,
       "Matroska muxer");
