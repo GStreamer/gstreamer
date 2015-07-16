@@ -258,7 +258,8 @@ gst_multi_file_src_query (GstBaseSrc * src, GstQuery * query)
       switch (format) {
         case GST_FORMAT_BUFFERS:
         case GST_FORMAT_DEFAULT:
-          gst_query_set_position (query, GST_FORMAT_BUFFERS, mfsrc->index);
+          gst_query_set_position (query, format,
+              mfsrc->index - mfsrc->start_index);
           res = TRUE;
           break;
         default:
