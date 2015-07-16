@@ -63,7 +63,7 @@ been compiled against GstValidate.
 A default suite of tests is provided and is available at: http://cgit.freedesktop.org/gstreamer/gst-integration-testsuites/
 You can run it pretty simply doing:
 
-.    $gst-validate-launch --sync
+.    $gst-validate-launcher --sync
 
 That will download Gstreamer upstream default assets into the
 default folder (%s) and run all currently
@@ -77,7 +77,7 @@ To implement new tests, you will just need to set the media path using the
 --medias-paths argument. If you want to run all avalaible scenarios on all the
 file present in that folder, you should run the first time:
 
-.    $gst-validate-launch --medias-paths /path/to/media/files --generate-media-info
+.    $gst-validate-launcher --medias-paths /path/to/media/files --generate-media-info
 
 That will generate the .media_info files that contains information about the media
 files present in that folder. Those media_info files are simple XML file describing
