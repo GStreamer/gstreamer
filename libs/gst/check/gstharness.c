@@ -567,12 +567,16 @@ static gboolean
 gst_pad_is_request_pad (GstPad * pad)
 {
   GstPadTemplate *temp;
+  gboolean is_request;
+
   if (pad == NULL)
     return FALSE;
   temp = gst_pad_get_pad_template (pad);
   if (temp == NULL)
     return FALSE;
-  return GST_PAD_TEMPLATE_PRESENCE (temp) == GST_PAD_REQUEST;
+  is_request = GST_PAD_TEMPLATE_PRESENCE (temp) == GST_PAD_REQUEST;
+  gst_object_unref (temp);
+  return is_request;
 }
 
 /**
