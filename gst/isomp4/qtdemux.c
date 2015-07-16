@@ -6449,7 +6449,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
   } else if (stream->subtype == FOURCC_strm) {
     GST_DEBUG_OBJECT (qtdemux, "stream type, not creating pad");
   } else if (stream->subtype == FOURCC_subp || stream->subtype == FOURCC_text
-      || stream->subtype == FOURCC_sbtl) {
+      || stream->subtype == FOURCC_sbtl || stream->subtype == FOURCC_subt) {
     gchar *name = g_strdup_printf ("subtitle_%u", qtdemux->n_sub_streams);
 
     stream->pad =
@@ -9308,7 +9308,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
     stream->sampled = TRUE;
   } else if (stream->subtype == FOURCC_subp || stream->subtype == FOURCC_text
-      || stream->subtype == FOURCC_sbtl) {
+      || stream->subtype == FOURCC_sbtl || stream->subtype == FOURCC_subt) {
 
     stream->sampled = TRUE;
     stream->sparse = TRUE;
