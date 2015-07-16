@@ -679,6 +679,19 @@ gst_rmdemux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static void
+gst_rmdemux_free_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
+{
+  g_object_unref (stream->adapter);
+  gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
+  if (stream->pending_tags)
+    gst_tag_list_unref (stream->pending_tags);
+  if (stream->subpackets)
+    g_ptr_array_free (stream->subpackets, TRUE);
+  g_free (stream->index);
+  g_free (stream);
+}
+
+static void
 gst_rmdemux_reset (GstRMDemux * rmdemux)
 {
   GSList *cur;
@@ -690,16 +703,9 @@ gst_rmdemux_reset (GstRMDemux * rmdemux)
   for (cur = rmdemux->streams; cur; cur = cur->next) {
     GstRMDemuxStream *stream = cur->data;
 
-    g_object_unref (stream->adapter);
-    gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
     gst_flow_combiner_remove_pad (rmdemux->flowcombiner, stream->pad);
     gst_element_remove_pad (GST_ELEMENT (rmdemux), stream->pad);
-    if (stream->pending_tags)
-      gst_tag_list_unref (stream->pending_tags);
-    if (stream->subpackets)
-      g_ptr_array_free (stream->subpackets, TRUE);
-    g_free (stream->index);
-    g_free (stream);
+    gst_rmdemux_free_stream (rmdemux, stream);
   }
   g_slist_free (rmdemux->streams);
   rmdemux->streams = NULL;
@@ -1439,7 +1445,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         if (stream->flavor > 3) {
           GST_WARNING_OBJECT (rmdemux, "bad SIPR flavor %d, freeing it",
               stream->flavor);
-          g_free (stream);
+          g_object_unref (stream->pad);
+          gst_rmdemux_free_stream (rmdemux, stream);
           goto beach;
         }
 
@@ -1482,7 +1489,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   } else {
     GST_WARNING_OBJECT (rmdemux, "not adding stream of type %d, freeing it",
         stream->subtype);
-    g_free (stream);
+    gst_rmdemux_free_stream (rmdemux, stream);
     goto beach;
   }
 
