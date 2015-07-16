@@ -23,6 +23,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/gst.h>
 
@@ -296,6 +297,58 @@ GST_START_TEST (test_rtpdtmfmux_lock)
 
 GST_END_TEST;
 
+static GstBuffer *
+generate_test_buffer (guint seq_num, guint ssrc)
+{
+  GstBuffer *buf;
+  guint8 *payload;
+  guint i;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  gsize size = 10;
+
+  buf = gst_rtp_buffer_new_allocate (size, 0, 0);
+  GST_BUFFER_DTS (buf) = GST_MSECOND * 20 * seq_num;
+  GST_BUFFER_PTS (buf) = GST_MSECOND * 20 * seq_num;
+
+  gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
+  gst_rtp_buffer_set_payload_type (&rtp, 0);
+  gst_rtp_buffer_set_seq (&rtp, seq_num);
+  gst_rtp_buffer_set_timestamp (&rtp, 160 * seq_num);
+  gst_rtp_buffer_set_ssrc (&rtp, ssrc);
+
+  payload = gst_rtp_buffer_get_payload (&rtp);
+  for (i = 0; i < size; i++)
+    payload[i] = 0xff;
+
+  gst_rtp_buffer_unmap (&rtp);
+
+  return buf;
+}
+
+GST_START_TEST (test_rtpmux_ssrc)
+{
+  GstHarness * h = gst_harness_new_with_padnames ("rtpdtmfmux", NULL, "src");
+  GstHarness * h0 = gst_harness_new_with_element (
+      h->element, "sink_0", NULL);
+  GstHarness * h1 = gst_harness_new_with_element (
+      h->element, "sink_1", NULL);
+
+  g_object_set (h->element, "ssrc", 111111, NULL);
+
+  gst_harness_set_src_caps_str (h0, "application/x-rtp, ssrc=(uint)222222");
+  gst_harness_set_src_caps_str (h1, "application/x-rtp, ssrc=(uint)333333");
+
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h0, generate_test_buffer (0, 222222)));
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h1, generate_test_buffer (0, 333333)));
+
+  gst_harness_teardown (h0);
+  gst_harness_teardown (h1);
+  gst_harness_teardown (h);
+}
+GST_END_TEST;
+
 static Suite *
 rtpmux_suite (void)
 {
@@ -303,8 +356,9 @@ rtpmux_suite (void)
   TCase *tc_chain;
 
   tc_chain = tcase_create ("rtpmux_basic");
-  tcase_add_test (tc_chain, test_rtpmux_basic);
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_rtpmux_basic);
+  tcase_add_test (tc_chain, test_rtpmux_ssrc);
 
   tc_chain = tcase_create ("rtpdtmfmux_basic");
   tcase_add_test (tc_chain, test_rtpdtmfmux_basic);
