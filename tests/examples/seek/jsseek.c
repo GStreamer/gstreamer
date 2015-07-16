@@ -1947,6 +1947,7 @@ init_visualization_features (void)
     gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (vis_combo), name);
   }
   gtk_combo_box_set_active (GTK_COMBO_BOX (vis_combo), 0);
+  gst_plugin_feature_list_free (list);
 }
 
 static void
@@ -2679,7 +2680,7 @@ main (int argc, char **argv)
     g_print ("Error initializing: %s\n", err->message);
     exit (1);
   }
-
+  g_option_context_free (ctx);
   GST_DEBUG_CATEGORY_INIT (seek_debug, "seek", 0, "seek example");
 
   if (argc != 3) {
@@ -3022,6 +3023,7 @@ main (int argc, char **argv)
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   g_print ("free pipeline\n");
+  g_array_free (vis_entries, TRUE);
   gst_object_unref (pipeline);
 
   g_list_foreach (paths, (GFunc) g_free, NULL);
