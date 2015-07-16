@@ -2986,21 +2986,11 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
   if (!gst_buffer_get_size (*buf) || !gst_buffer_map (*buf, &map, GST_MAP_READ))
     return GST_FLOW_OK;
 
-  /* Need \0-terminator at the end */
-  if (map.data[map.size - 1] != '\0') {
-    newbuf = gst_buffer_new_and_alloc (map.size + 1);
-
-    /* Copy old buffer and add a 0 at the end */
-    gst_buffer_fill (newbuf, 0, map.data, map.size);
-    gst_buffer_memset (newbuf, map.size, 0, 1);
-    gst_buffer_set_size (newbuf, map.size);
+  /* The subtitle buffer we push out should not include a NUL terminator as
+   * part of the data. */
+  if (map.data[map.size - 1] == '\0') {
+    gst_buffer_set_size (*buf, map.size - 1);
     gst_buffer_unmap (*buf, &map);
-
-    gst_buffer_copy_into (newbuf, *buf,
-        GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS |
-        GST_BUFFER_COPY_META, 0, -1);
-    gst_buffer_unref (*buf);
-    *buf = newbuf;
     gst_buffer_map (*buf, &map, GST_MAP_READ);
   }
 
