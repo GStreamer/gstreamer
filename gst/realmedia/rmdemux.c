@@ -1926,6 +1926,7 @@ gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const guint8 * data, int length)
 
   rmdemux->pending_tags =
       gst_tag_list_merge (rmdemux->pending_tags, tags, GST_TAG_MERGE_APPEND);
+  gst_tag_list_unref (tags);
 }
 
 static void
