@@ -169,7 +169,7 @@ widget_destroy_cb (GtkWidget * widget, GstGtkGLSink * gtk_sink)
   GST_OBJECT_UNLOCK (gtk_sink);
 }
 
-static GtkGstGLWidget *
+static GtkGstBaseWidget *
 gst_gtk_gl_sink_get_widget (GstGtkGLSink * gtk_sink)
 {
   if (gtk_sink->widget != NULL)
@@ -182,7 +182,7 @@ gst_gtk_gl_sink_get_widget (GstGtkGLSink * gtk_sink)
     return NULL;
   }
 
-  gtk_sink->widget = (GtkGstGLWidget *) gtk_gst_gl_widget_new ();
+  gtk_sink->widget = (GtkGstBaseWidget *) gtk_gst_gl_widget_new ();
   gtk_sink->bind_force_aspect_ratio =
       g_object_bind_property (gtk_sink, "force-aspect-ratio", gtk_sink->widget,
       "force-aspect-ratio", G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
@@ -323,13 +323,16 @@ gst_gtk_gl_sink_change_state (GstElement * element, GstStateChange transition)
       gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:{
+      GtkGstGLWidget *gst_widget;
+
       if (gst_gtk_gl_sink_get_widget (gtk_sink) == NULL)
         return GST_STATE_CHANGE_FAILURE;
 
       /* After this point, gtk_sink->widget will always be set */
+      gst_widget = GTK_GST_GL_WIDGET (gtk_sink->widget);
 
-      toplevel = gtk_widget_get_toplevel (GTK_WIDGET (gtk_sink->widget));
+      toplevel = gtk_widget_get_toplevel (GTK_WIDGET (gst_widget));
       if (!gtk_widget_is_toplevel (toplevel)) {
         GtkWidget *window;
 
@@ -342,17 +345,17 @@ gst_gtk_gl_sink_change_state (GstElement * element, GstStateChange transition)
         gtk_widget_show_all (window);
       }
 
-      if (!gtk_gst_gl_widget_init_winsys (gtk_sink->widget))
+      if (!gtk_gst_gl_widget_init_winsys (gst_widget))
         return GST_STATE_CHANGE_FAILURE;
 
-      gtk_sink->display = gtk_gst_gl_widget_get_display (gtk_sink->widget);
-      gtk_sink->context = gtk_gst_gl_widget_get_context (gtk_sink->widget);
-      gtk_sink->gtk_context =
-          gtk_gst_gl_widget_get_gtk_context (gtk_sink->widget);
+      gtk_sink->display = gtk_gst_gl_widget_get_display (gst_widget);
+      gtk_sink->context = gtk_gst_gl_widget_get_context (gst_widget);
+      gtk_sink->gtk_context = gtk_gst_gl_widget_get_gtk_context (gst_widget);
 
       if (!gtk_sink->display || !gtk_sink->context || !gtk_sink->gtk_context)
         return GST_STATE_CHANGE_FAILURE;
       break;
+    }
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -371,7 +374,7 @@ gst_gtk_gl_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_OBJECT_LOCK (gtk_sink);
       if (gtk_sink->widget)
-        gtk_gst_gl_widget_set_buffer (gtk_sink->widget, NULL);
+        gtk_gst_base_widget_set_buffer (gtk_sink->widget, NULL);
       GST_OBJECT_UNLOCK (gtk_sink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -430,8 +433,19 @@ gst_gtk_gl_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_video_info_from_caps (&gtk_sink->v_info, caps))
     return FALSE;
 
-  if (!gtk_gst_gl_widget_set_caps (gtk_sink->widget, caps))
+  GST_OBJECT_LOCK (gtk_sink);
+
+  if (gtk_sink->widget == NULL) {
+    GST_OBJECT_UNLOCK (gtk_sink);
+    GST_ELEMENT_ERROR (gtk_sink, RESOURCE, NOT_FOUND,
+        ("%s", "Output widget was destroyed"), (NULL));
     return FALSE;
+  }
+
+  if (!gtk_gst_base_widget_set_caps (gtk_sink->widget, caps))
+    return FALSE;
+
+  GST_OBJECT_UNLOCK (gtk_sink);
 
   return TRUE;
 }
@@ -454,7 +468,7 @@ gst_gtk_gl_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     return GST_FLOW_ERROR;
   }
 
-  gtk_gst_gl_widget_set_buffer (gtk_sink->widget, buf);
+  gtk_gst_base_widget_set_buffer (gtk_sink->widget, buf);
 
   GST_OBJECT_UNLOCK (vsink);
 

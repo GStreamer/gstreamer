@@ -25,6 +25,8 @@
 #include <gst/gst.h>
 #include <gst/gl/gl.h>
 
+#include "gtkgstbasewidget.h"
+
 G_BEGIN_DECLS
 
 GType gtk_gst_gl_widget_get_type (void);
@@ -47,7 +49,7 @@ typedef struct _GtkGstGLWidgetPrivate GtkGstGLWidgetPrivate;
 struct _GtkGstGLWidget
 {
   /* <private> */
-  GtkGLArea         parent;
+  GtkGstBaseWidget base;
 
   GtkGstGLWidgetPrivate   *priv;
 };
@@ -60,14 +62,12 @@ struct _GtkGstGLWidget
 struct _GtkGstGLWidgetClass
 {
   /* <private> */
-  GtkGLAreaClass object_class;
+  GtkGstBaseWidgetClass base_class;
 };
 
 GtkWidget *     gtk_gst_gl_widget_new (void);
 
 gboolean        gtk_gst_gl_widget_init_winsys          (GtkGstGLWidget * widget);
-gboolean        gtk_gst_gl_widget_set_caps             (GtkGstGLWidget * widget, GstCaps *caps);
-void            gtk_gst_gl_widget_set_buffer           (GtkGstGLWidget * widget, GstBuffer *buffer);
 GstGLDisplay *  gtk_gst_gl_widget_get_display          (GtkGstGLWidget * widget);
 GstGLContext *  gtk_gst_gl_widget_get_context          (GtkGstGLWidget * widget);
 GstGLContext *  gtk_gst_gl_widget_get_gtk_context      (GtkGstGLWidget * widget);
