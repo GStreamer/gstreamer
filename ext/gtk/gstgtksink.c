@@ -172,7 +172,7 @@ widget_destroy_cb (GtkWidget * widget, GstGtkSink * gtk_sink)
   GST_OBJECT_UNLOCK (gtk_sink);
 }
 
-static GtkGstWidget *
+static GtkGstBaseWidget *
 gst_gtk_sink_get_widget (GstGtkSink * gtk_sink)
 {
   if (gtk_sink->widget != NULL)
@@ -185,7 +185,7 @@ gst_gtk_sink_get_widget (GstGtkSink * gtk_sink)
     return NULL;
   }
 
-  gtk_sink->widget = (GtkGstWidget *) gtk_gst_widget_new ();
+  gtk_sink->widget = (GtkGstBaseWidget *) gtk_gst_widget_new ();
   gtk_sink->bind_aspect_ratio =
       g_object_bind_property (gtk_sink, "force-aspect-ratio", gtk_sink->widget,
       "force-aspect-ratio", G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
@@ -323,7 +323,7 @@ gst_gtk_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_OBJECT_LOCK (gtk_sink);
       if (gtk_sink->widget)
-        gtk_gst_widget_set_buffer (gtk_sink->widget, NULL);
+        gtk_gst_base_widget_set_buffer (gtk_sink->widget, NULL);
       GST_OBJECT_UNLOCK (gtk_sink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -368,8 +368,19 @@ gst_gtk_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_video_info_from_caps (&gtk_sink->v_info, caps))
     return FALSE;
 
-  if (!gtk_gst_widget_set_caps (gtk_sink->widget, caps))
+  GST_OBJECT_LOCK (gtk_sink);
+
+  if (gtk_sink->widget == NULL) {
+    GST_OBJECT_UNLOCK (gtk_sink);
+    GST_ELEMENT_ERROR (gtk_sink, RESOURCE, NOT_FOUND,
+        ("%s", "Output widget was destroyed"), (NULL));
     return FALSE;
+  }
+
+  if (!gtk_gst_base_widget_set_caps (gtk_sink->widget, caps))
+    return FALSE;
+
+  GST_OBJECT_UNLOCK (gtk_sink);
 
   return TRUE;
 }
@@ -386,15 +397,15 @@ gst_gtk_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   GST_OBJECT_LOCK (vsink);
 
   if (gtk_sink->widget == NULL) {
-    GST_OBJECT_UNLOCK (vsink);
+    GST_OBJECT_UNLOCK (gtk_sink);
     GST_ELEMENT_ERROR (gtk_sink, RESOURCE, NOT_FOUND,
         ("%s", "Output widget was destroyed"), (NULL));
     return GST_FLOW_ERROR;
   }
 
-  gtk_gst_widget_set_buffer (gtk_sink->widget, buf);
+  gtk_gst_base_widget_set_buffer (gtk_sink->widget, buf);
 
-  GST_OBJECT_UNLOCK (vsink);
+  GST_OBJECT_UNLOCK (gtk_sink);
 
   return GST_FLOW_OK;
 }
