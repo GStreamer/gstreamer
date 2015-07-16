@@ -534,17 +534,17 @@ static void
 check_element_type (GstElement * element, gboolean * has_sinkpad,
     gboolean * has_srcpad)
 {
-  GstElementFactory * factory;
-  const GList * tmpl_list;
+  GstElementFactory *factory;
+  const GList *tmpl_list;
 
-  *has_srcpad  = element->numsrcpads  > 0;
+  *has_srcpad = element->numsrcpads > 0;
   *has_sinkpad = element->numsinkpads > 0;
 
   factory = gst_element_get_factory (element);
   tmpl_list = gst_element_factory_get_static_pad_templates (factory);
 
   while (tmpl_list) {
-    GstStaticPadTemplate * pad_tmpl = (GstStaticPadTemplate *)tmpl_list->data;
+    GstStaticPadTemplate *pad_tmpl = (GstStaticPadTemplate *) tmpl_list->data;
     tmpl_list = g_list_next (tmpl_list);
     if (pad_tmpl->direction == GST_PAD_SRC)
       *has_srcpad |= TRUE;
@@ -2114,7 +2114,7 @@ gst_harness_src_push_event (GstHarness * h)
 static gboolean
 forward_sticky_events (GstPad * pad, GstEvent ** ev, gpointer user_data)
 {
-  GstHarness * h = user_data;
+  GstHarness *h = user_data;
   return gst_pad_push_event (h->priv->sink_forward_pad, gst_event_ref (*ev));
 }
 
