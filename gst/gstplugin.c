@@ -80,8 +80,7 @@ static char *_gst_plugin_fault_handler_filename = NULL;
 
 /* list of valid licenses.
  * One of these must be specified or the plugin won't be loaded
- * Contact gstreamer-devel@lists.sourceforge.net if your license should be
- * added.
+ * Please file a bug to request any additional license be added.
  *
  * GPL: http://www.gnu.org/copyleft/gpl.html
  * LGPL: http://www.gnu.org/copyleft/lesser.html
