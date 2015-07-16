@@ -594,6 +594,21 @@ xml_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** application/dash+xml ****************************************************/
+
+static GstStaticCaps dash_caps = GST_STATIC_CAPS ("application/dash+xml");
+
+#define DASH_CAPS gst_static_caps_get (&dash_caps)
+
+static void
+dash_mpd_type_find (GstTypeFind * tf, gpointer unused)
+{
+  if (xml_check_first_element (tf, "MPD", 3, FALSE) ||
+      xml_check_first_element (tf, "mpd", 3, FALSE)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, DASH_CAPS);
+  }
+}
+
 /*** application/sdp *********************************************************/
 
 static GstStaticCaps sdp_caps = GST_STATIC_CAPS ("application/sdp");
@@ -5583,6 +5598,8 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "application/x-shockwave-flash",
       GST_RANK_SECONDARY, swf_type_find, "swf,swfl", SWF_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/dash+xml",
+      GST_RANK_PRIMARY, dash_mpd_type_find, "mpd,MPD", DASH_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/vnd.ms-sstr+xml",
       GST_RANK_PRIMARY, mss_manifest_type_find, NULL, MSS_MANIFEST_CAPS, NULL,
       NULL);
