@@ -21,7 +21,7 @@ real live maintainer, or some actual wide use.
  <category></category>
  <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-plugins-bad" />
  <screenshots></screenshots>
- <mailing-list rdf:resource="http://lists.sourceforge.net/lists/listinfo/gstreamer-devel/" />
+ <mailing-list rdf:resource="http://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
  <programming-language>C</programming-language>
  <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl"/>
  <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
