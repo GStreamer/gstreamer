@@ -294,7 +294,10 @@ class LauncherConfig(Loggable):
 
         self.http_server_dir = path
 
-    def add_paths(self, paths):
+    def add_paths(self, paths, force=False):
+        if force is False:
+            if self.paths:
+                return
         if not isinstance(paths, list):
             paths = [paths]
 
@@ -302,7 +305,6 @@ class LauncherConfig(Loggable):
             self.paths = paths
             self._using_default_paths = False
         else:
-
             for path in paths:
                 if path not in self.paths:
                     self.paths.append(path)
