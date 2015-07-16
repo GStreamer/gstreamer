@@ -483,6 +483,7 @@ gst_harness_setup_src_pad (GstHarness * h,
 {
   GstHarnessPrivate *priv = h->priv;
   g_assert (src_tmpl);
+  g_assert (h->srcpad == NULL);
 
   priv->src_event_queue =
       g_async_queue_new_full ((GDestroyNotify) gst_event_unref);
@@ -507,6 +508,7 @@ gst_harness_setup_sink_pad (GstHarness * h,
 {
   GstHarnessPrivate *priv = h->priv;
   g_assert (sink_tmpl);
+  g_assert (h->sinkpad == NULL);
 
   priv->buffer_queue = g_async_queue_new_full (
       (GDestroyNotify) gst_buffer_unref);
@@ -956,7 +958,8 @@ void
 gst_harness_add_element_src_pad (GstHarness * h, GstPad * srcpad)
 {
   GstHarnessPrivate *priv = h->priv;
-  gst_harness_setup_sink_pad (h, &hsinktemplate, NULL);
+  if (h->sinkpad == NULL)
+    gst_harness_setup_sink_pad (h, &hsinktemplate, NULL);
   g_assert_cmpint (gst_pad_link (srcpad, h->sinkpad), ==, GST_PAD_LINK_OK);
   g_free (priv->element_srcpad_name);
   priv->element_srcpad_name = gst_pad_get_name (srcpad);
@@ -977,7 +980,8 @@ void
 gst_harness_add_element_sink_pad (GstHarness * h, GstPad * sinkpad)
 {
   GstHarnessPrivate *priv = h->priv;
-  gst_harness_setup_src_pad (h, &hsrctemplate, NULL);
+  if (h->srcpad == NULL)
+    gst_harness_setup_src_pad (h, &hsrctemplate, NULL);
   g_assert_cmpint (gst_pad_link (h->srcpad, sinkpad), ==, GST_PAD_LINK_OK);
   g_free (priv->element_sinkpad_name);
   priv->element_sinkpad_name = gst_pad_get_name (sinkpad);
