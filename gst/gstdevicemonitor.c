@@ -209,7 +209,7 @@ gst_device_monitor_remove (GstDeviceMonitor * self, guint i)
   GstDeviceProvider *provider = g_ptr_array_index (self->priv->providers, i);
   GstBus *bus;
 
-  g_ptr_array_remove_index_fast (self->priv->providers, i);
+  g_ptr_array_remove_index (self->priv->providers, i);
 
   bus = gst_device_provider_get_bus (provider);
   g_signal_handlers_disconnect_by_func (bus, bus_sync_message, self);
@@ -324,7 +324,7 @@ again:
 
   GST_OBJECT_UNLOCK (monitor);
 
-  return devices;
+  return g_list_reverse (devices);
 }
 
 /**
