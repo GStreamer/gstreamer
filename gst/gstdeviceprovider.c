@@ -543,6 +543,9 @@ gst_device_provider_device_add (GstDeviceProvider * provider,
 {
   GstMessage *message;
 
+  g_return_if_fail (GST_IS_DEVICE_PROVIDER (provider));
+  g_return_if_fail (GST_IS_DEVICE (device));
+
   if (!gst_object_set_parent (GST_OBJECT (device), GST_OBJECT (provider))) {
     GST_WARNING_OBJECT (provider, "Could not parent device %p to provider,"
         " it already has a parent", device);
@@ -578,6 +581,9 @@ gst_device_provider_device_remove (GstDeviceProvider * provider,
 {
   GstMessage *message;
   GList *item;
+
+  g_return_if_fail (GST_IS_DEVICE_PROVIDER (provider));
+  g_return_if_fail (GST_IS_DEVICE (device));
 
   GST_OBJECT_LOCK (provider);
   item = g_list_find (provider->devices, device);

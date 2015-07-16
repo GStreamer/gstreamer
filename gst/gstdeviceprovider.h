@@ -111,31 +111,31 @@ gboolean    gst_device_provider_can_monitor    (GstDeviceProvider * provider);
 GstBus *    gst_device_provider_get_bus        (GstDeviceProvider * provider);
 
 void        gst_device_provider_device_add     (GstDeviceProvider * provider,
-                                               GstDevice * device);
+                                                GstDevice * device);
 void        gst_device_provider_device_remove  (GstDeviceProvider * provider,
                                                GstDevice * device);
 
 
 /* device provider class meta data */
-void        gst_device_provider_class_set_metadata          (GstDeviceProviderClass *klass,
+void        gst_device_provider_class_set_metadata         (GstDeviceProviderClass *klass,
                                                             const gchar     *longname,
                                                             const gchar     *classification,
                                                             const gchar     *description,
                                                             const gchar     *author);
-void        gst_device_provider_class_set_static_metadata   (GstDeviceProviderClass *klass,
+void        gst_device_provider_class_set_static_metadata  (GstDeviceProviderClass *klass,
                                                             const gchar     *longname,
                                                             const gchar     *classification,
                                                             const gchar     *description,
                                                             const gchar     *author);
-void        gst_device_provider_class_add_metadata          (GstDeviceProviderClass * klass,
+void        gst_device_provider_class_add_metadata         (GstDeviceProviderClass * klass,
                                                             const gchar * key, const gchar * value);
-void        gst_device_provider_class_add_static_metadata   (GstDeviceProviderClass * klass,
+void        gst_device_provider_class_add_static_metadata  (GstDeviceProviderClass * klass,
                                                             const gchar * key, const gchar * value);
-const gchar * gst_device_provider_class_get_metadata        (GstDeviceProviderClass * klass,
-                                                              const gchar * key);
+const gchar * gst_device_provider_class_get_metadata       (GstDeviceProviderClass * klass,
+                                                            const gchar * key);
 
 /* factory management */
-GstDeviceProviderFactory * gst_device_provider_get_factory   (GstDeviceProvider * provider);
+GstDeviceProviderFactory * gst_device_provider_get_factory (GstDeviceProvider * provider);
 
 G_END_DECLS
 
