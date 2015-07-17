@@ -62,7 +62,6 @@ struct _GtkGstBaseWidget
 
   /*< private >*/
   GMutex lock;
-  GstCaps *caps;
 
   /* Pending queued idles callback */
   guint draw_id;
@@ -86,7 +85,7 @@ void            gtk_gst_base_widget_init                 (GtkGstBaseWidget * wid
 void            gtk_gst_base_widget_finalize             (GObject * object);
 
 /* API */
-gboolean        gtk_gst_base_widget_set_caps             (GtkGstBaseWidget * widget, GstCaps *caps);
+gboolean        gtk_gst_base_widget_set_format           (GtkGstBaseWidget * widget, GstVideoInfo *v_info);
 void            gtk_gst_base_widget_set_buffer           (GtkGstBaseWidget * widget, GstBuffer *buffer);
 
 G_END_DECLS

@@ -258,22 +258,20 @@ gtk_gst_base_widget_finalize (GObject * object)
 }
 
 gboolean
-gtk_gst_base_widget_set_caps (GtkGstBaseWidget * widget, GstCaps * caps)
+gtk_gst_base_widget_set_format (GtkGstBaseWidget * widget,
+    GstVideoInfo * v_info)
 {
-  GstVideoInfo v_info;
-
-  if (widget->caps && gst_caps_is_equal_fixed (widget->caps, caps))
-    return TRUE;
-
-  if (!gst_video_info_from_caps (&v_info, caps))
-    return FALSE;
-
   GTK_GST_BASE_WIDGET_LOCK (widget);
+
+  if (gst_video_info_is_equal (&widget->v_info, v_info)) {
+    GTK_GST_BASE_WIDGET_UNLOCK (widget);
+    return TRUE;
+  }
 
   /* FIXME this will cause black frame to be displayed, move this in the
    * _queue_resize callback passing over the video info */
 
-  if (!_calculate_par (widget, &v_info)) {
+  if (!_calculate_par (widget, v_info)) {
     GTK_GST_BASE_WIDGET_UNLOCK (widget);
     return FALSE;
   }
@@ -282,8 +280,7 @@ gtk_gst_base_widget_set_caps (GtkGstBaseWidget * widget, GstCaps * caps)
     widget->reset (widget);
 
   gst_buffer_replace (&widget->buffer, NULL);
-  gst_caps_replace (&widget->caps, caps);
-  widget->v_info = v_info;
+  widget->v_info = *v_info;
   widget->negotiated = TRUE;
   widget->new_buffer = TRUE;
 
