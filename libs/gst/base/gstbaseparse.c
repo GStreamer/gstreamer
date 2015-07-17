@@ -4334,8 +4334,9 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     else
       startpos -= parse->priv->lead_in_ts;
 
-    if (seeksegment.stop == -1)
-      seeksegment.stop = seeksegment.duration;
+    if (seeksegment.stop == -1 && seeksegment.duration != -1)
+      seeksegment.stop = seeksegment.start + seeksegment.duration;
+
     seekpos = gst_base_parse_find_offset (parse, startpos, TRUE, &start_ts);
     seekstop = gst_base_parse_find_offset (parse, seeksegment.stop, FALSE,
         NULL);
@@ -4346,8 +4347,9 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     else
       start_ts = start;
 
-    if (seeksegment.stop == -1)
-      seeksegment.stop = seeksegment.duration;
+    if (seeksegment.stop == -1 && seeksegment.duration != -1)
+      seeksegment.stop = seeksegment.start + seeksegment.duration;
+
     if (!gst_base_parse_convert (parse, format, start_ts,
             GST_FORMAT_BYTES, &seekpos))
       goto convert_failed;
