@@ -58,9 +58,6 @@ G_DEFINE_TYPE_WITH_CODE (GtkGstGLWidget, gtk_gst_gl_widget, GTK_TYPE_GL_AREA,
 
 struct _GtkGstGLWidgetPrivate
 {
-  /* properties */
-  gboolean new_buffer;
-
   gboolean initted;
   GstGLDisplay *display;
   GdkGLContext *gdk_context;
