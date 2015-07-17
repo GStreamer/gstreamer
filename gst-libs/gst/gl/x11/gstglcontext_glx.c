@@ -135,6 +135,80 @@ _describe_fbconfig (Display * display, GLXFBConfig config)
   GST_DEBUG ("stencil: %d", val);
 }
 
+/* list of known OpenGL versions */
+/* *INDENT-OFF* */
+static const struct { int major, minor; } gl_versions[] = {
+   {4, 5},
+   {4, 4},
+   {4, 3},
+   {4, 2},
+   {4, 1},
+   {4, 0},
+
+   {3, 3},
+   {3, 2},
+   {3, 1},
+   {3, 0},
+
+   {2, 1},
+   {2, 0},
+
+   {1, 5},
+   {1, 4},
+   {1, 3},
+   {1, 2},
+   {1, 1},
+   {1, 0},
+
+   {0, 0} /* end of list */
+};
+/* *INDENT-ON* */
+
+static GLXContext
+_create_context_with_flags (GstGLContextGLX * context_glx, Display * dpy,
+    GLXFBConfig fbconfig, GLXContext share_context, gint major, gint minor,
+    gint contextFlags, gint profileMask)
+{
+  GLXContext ret;
+#define N_ATTRIBS 20
+  gint attribs[N_ATTRIBS];
+  int x_error = 0;
+  gint n = 0;
+
+  if (major) {
+    attribs[n++] = GLX_CONTEXT_MAJOR_VERSION_ARB;
+    attribs[n++] = major;
+  }
+  if (minor) {
+    attribs[n++] = GLX_CONTEXT_MINOR_VERSION_ARB;
+    attribs[n++] = minor;
+  }
+  if (contextFlags) {
+    attribs[n++] = GLX_CONTEXT_FLAGS_ARB;
+    attribs[n++] = contextFlags;
+  }
+#ifdef GLX_ARB_create_context_profile
+  if (profileMask) {
+    attribs[n++] = GLX_CONTEXT_PROFILE_MASK_ARB;
+    attribs[n++] = profileMask;
+  }
+#endif
+  attribs[n++] = None;
+
+  g_assert (n < N_ATTRIBS);
+#undef N_ATTRIBS
+
+  gst_gl_window_x11_trap_x_errors ();
+  ret = context_glx->priv->glXCreateContextAttribsARB (dpy, fbconfig,
+      share_context, True, attribs);
+  x_error = gst_gl_window_x11_untrap_x_errors ();
+
+  if (x_error)
+    ret = 0;
+
+  return ret;
+}
+
 static gboolean
 gst_gl_context_glx_create_context (GstGLContext * context,
     GstGLAPI gl_api, GstGLContext * other_context, GError ** error)
@@ -145,7 +219,6 @@ gst_gl_context_glx_create_context (GstGLContext * context,
   GstGLDisplay *display;
   gboolean create_context;
   const char *glx_exts;
-  int x_error = 0;
   Display *device;
   guintptr external_gl_context = 0;
 
@@ -174,53 +247,35 @@ gst_gl_context_glx_create_context (GstGLContext * context,
       "glXCreateContextAttribsARB");
 
   if (create_context && context_glx->priv->glXCreateContextAttribsARB) {
-    int context_attribs_3[] = {
-      GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-      GLX_CONTEXT_MINOR_VERSION_ARB, 1,
-      GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-#if !defined(GST_DISABLE_GST_DEBUG)
-      GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_DEBUG_BIT_ARB,
-#endif
-      None
-    };
+    gint i;
 
-    int context_attribs_pre_3[] = {
-      GLX_CONTEXT_MAJOR_VERSION_ARB, 1,
-      GLX_CONTEXT_MINOR_VERSION_ARB, 4,
-      None
-    };
+    for (i = 0; i < G_N_ELEMENTS (gl_versions); i++) {
+      GstGLAPI selected_gl_api;
+      gint profileMask = 0;
+      gint contextFlags = 0;
 
-    if (gl_api & GST_GL_API_OPENGL3) {
-      GST_DEBUG_OBJECT (window, "trying to create a GL 3.1 core context");
-      gst_gl_window_x11_trap_x_errors ();
-      context_glx->glx_context =
-          context_glx->priv->glXCreateContextAttribsARB (device,
-          context_glx->priv->fbconfigs[0], (GLXContext) external_gl_context,
-          True, context_attribs_3);
+      if (gl_api & GST_GL_API_OPENGL3 && (gl_versions[i].major > 3
+              || (gl_versions[i].major == 3 && gl_versions[i].minor >= 2))) {
+        profileMask |= GLX_CONTEXT_CORE_PROFILE_BIT_ARB;
+        selected_gl_api = GST_GL_API_OPENGL3;
+        contextFlags |= GLX_CONTEXT_DEBUG_BIT_ARB;
+      } else {
+        selected_gl_api = GST_GL_API_OPENGL;
+      }
 
-      x_error = gst_gl_window_x11_untrap_x_errors ();
+      GST_DEBUG_OBJECT (context, "trying to create a GL %d.%d context",
+          gl_versions[i].major, gl_versions[i].minor);
 
-      if (x_error != 0)
-        context_glx->glx_context = NULL;
-      context_glx->priv->context_api = GST_GL_API_OPENGL3;
+      context_glx->glx_context = _create_context_with_flags (context_glx,
+          device, context_glx->priv->fbconfigs[0],
+          (GLXContext) external_gl_context, gl_versions[i].major,
+          gl_versions[i].minor, contextFlags, profileMask);
+
+      if (context_glx->glx_context) {
+        context_glx->priv->context_api = selected_gl_api;
+        break;
+      }
     }
-
-    if (gl_api & GST_GL_API_OPENGL && context_glx->glx_context == NULL) {
-      GST_DEBUG_OBJECT (window, "trying to create a GL 1.4 context");
-
-      gst_gl_window_x11_trap_x_errors ();
-      context_glx->glx_context =
-          context_glx->priv->glXCreateContextAttribsARB (device,
-          context_glx->priv->fbconfigs[0], (GLXContext) external_gl_context,
-          True, context_attribs_pre_3);
-
-      x_error = gst_gl_window_x11_untrap_x_errors ();
-
-      if (x_error != 0)
-        context_glx->glx_context = NULL;
-      context_glx->priv->context_api = GST_GL_API_OPENGL;
-    }
-
   } else {
     context_glx->glx_context =
         glXCreateContext (device, window_x11->visual_info,
