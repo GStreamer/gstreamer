@@ -360,6 +360,26 @@ _reset (GtkGstBaseWidget * base_widget)
       !base_widget->ignore_alpha);
 }
 
+/* called from main thread */
+static void
+gtk_gst_gl_widget_reset (GtkGstBaseWidget * base_widget)
+{
+  GtkGstGLWidgetPrivate *priv = GTK_GST_GL_WIDGET (base_widget)->priv;
+  const GstGLFuncs *gl = priv->other_context->gl_vtable;
+
+  _reset (base_widget);
+
+  if (priv->vao) {
+    gl->DeleteVertexArrays (1, &priv->vao);
+    priv->vao = 0;
+  }
+
+  if (priv->vertex_buffer) {
+    gl->DeleteBuffers (1, &priv->vertex_buffer);
+    priv->vertex_buffer = 0;
+  }
+}
+
 static void
 gtk_gst_gl_widget_finalize (GObject * object)
 {
@@ -393,7 +413,7 @@ gtk_gst_gl_widget_class_init (GtkGstGLWidgetClass * klass)
 
   gobject_klass->finalize = gtk_gst_gl_widget_finalize;
   gl_widget_klass->render = gtk_gst_gl_widget_render;
-  base_widget_klass->reset = _reset;
+  base_widget_klass->reset = gtk_gst_gl_widget_reset;
 }
 
 static void
