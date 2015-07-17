@@ -117,26 +117,12 @@ gtk_gst_base_widget_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-_queue_resize (GtkGstBaseWidget * widget)
-{
-  GTK_GST_BASE_WIDGET_LOCK (widget);
-  widget->resize_id = 0;
-
-  GTK_GST_BASE_WIDGET_UNLOCK (widget);
-
-  gtk_widget_queue_resize (GTK_WIDGET (widget));
-
-  return G_SOURCE_REMOVE;
-}
-
-static gboolean
 _calculate_par (GtkGstBaseWidget * widget, GstVideoInfo * info)
 {
   gboolean ok;
   gint width, height;
   gint par_n, par_d;
   gint display_par_n, display_par_d;
-  guint display_ratio_num, display_ratio_den;
 
   width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
@@ -156,14 +142,31 @@ _calculate_par (GtkGstBaseWidget * widget, GstVideoInfo * info)
     display_par_d = 1;
   }
 
-  ok = gst_video_calculate_display_ratio (&display_ratio_num,
-      &display_ratio_den, width, height, par_n, par_d, display_par_n,
+
+  ok = gst_video_calculate_display_ratio (&widget->display_ratio_num,
+      &widget->display_ratio_den, width, height, par_n, par_d, display_par_n,
       display_par_d);
 
-  if (!ok)
-    return FALSE;
+  if (ok) {
+    GST_LOG ("PAR: %u/%u DAR:%u/%u", par_n, par_d, display_par_n,
+        display_par_d);
+    return TRUE;
+  }
 
-  GST_LOG ("PAR: %u/%u DAR:%u/%u", par_n, par_d, display_par_n, display_par_d);
+  return FALSE;
+}
+
+static void
+_apply_par (GtkGstBaseWidget * widget)
+{
+  guint display_ratio_num, display_ratio_den;
+  gint width, height;
+
+  width = GST_VIDEO_INFO_WIDTH (&widget->v_info);
+  height = GST_VIDEO_INFO_HEIGHT (&widget->v_info);
+
+  display_ratio_num = widget->display_ratio_num;
+  display_ratio_den = widget->display_ratio_den;
 
   if (height % display_ratio_den == 0) {
     GST_DEBUG ("keeping video height");
@@ -185,18 +188,33 @@ _calculate_par (GtkGstBaseWidget * widget, GstVideoInfo * info)
   }
 
   GST_DEBUG ("scaling to %dx%d", widget->display_width, widget->display_height);
-
-  return TRUE;
 }
 
+/* note, buffer is not refrence, it's only passed for pointer comparision */
 static gboolean
 _queue_draw (GtkGstBaseWidget * widget)
 {
   GTK_GST_BASE_WIDGET_LOCK (widget);
   widget->draw_id = 0;
-  GTK_GST_BASE_WIDGET_UNLOCK (widget);
 
-  gtk_widget_queue_draw (GTK_WIDGET (widget));
+  if (widget->pending_resize) {
+    widget->pending_resize = FALSE;
+
+    if (widget->reset)
+      widget->reset (widget);
+
+    widget->v_info = widget->pending_v_info;
+    widget->negotiated = TRUE;
+    widget->new_buffer = TRUE;
+
+    _apply_par (widget);
+
+    gtk_widget_queue_resize (GTK_WIDGET (widget));
+  } else {
+    gtk_widget_queue_draw (GTK_WIDGET (widget));
+  }
+
+  GTK_GST_BASE_WIDGET_UNLOCK (widget);
 
   return G_SOURCE_REMOVE;
 }
@@ -239,6 +257,9 @@ gtk_gst_base_widget_init (GtkGstBaseWidget * widget)
   widget->par_d = DEFAULT_PAR_D;
   widget->ignore_alpha = DEFAULT_IGNORE_ALPHA;
 
+  gst_video_info_init (&widget->v_info);
+  gst_video_info_init (&widget->pending_v_info);
+
   g_mutex_init (&widget->lock);
 }
 
@@ -252,9 +273,6 @@ gtk_gst_base_widget_finalize (GObject * object)
 
   if (widget->draw_id)
     g_source_remove (widget->draw_id);
-
-  if (widget->resize_id)
-    g_source_remove (widget->resize_id);
 }
 
 gboolean
@@ -268,26 +286,13 @@ gtk_gst_base_widget_set_format (GtkGstBaseWidget * widget,
     return TRUE;
   }
 
-  /* FIXME this will cause black frame to be displayed, move this in the
-   * _queue_resize callback passing over the video info */
-
   if (!_calculate_par (widget, v_info)) {
     GTK_GST_BASE_WIDGET_UNLOCK (widget);
     return FALSE;
   }
 
-  if (widget->reset)
-    widget->reset (widget);
-
-  gst_buffer_replace (&widget->buffer, NULL);
-  widget->v_info = *v_info;
-  widget->negotiated = TRUE;
-  widget->new_buffer = TRUE;
-
-  if (!widget->resize_id) {
-    widget->resize_id = g_idle_add_full (G_PRIORITY_DEFAULT,
-        (GSourceFunc) _queue_resize, widget, NULL);
-  }
+  widget->pending_resize = TRUE;
+  widget->pending_v_info = *v_info;
 
   GTK_GST_BASE_WIDGET_UNLOCK (widget);
 
@@ -299,7 +304,6 @@ gtk_gst_base_widget_set_buffer (GtkGstBaseWidget * widget, GstBuffer * buffer)
 {
   /* As we have no type, this is better then no check */
   g_return_if_fail (GTK_IS_WIDGET (widget));
-  g_return_if_fail (buffer == NULL || widget->negotiated);
 
   GTK_GST_BASE_WIDGET_LOCK (widget);
 

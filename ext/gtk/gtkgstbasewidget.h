@@ -57,15 +57,20 @@ struct _GtkGstBaseWidget
   GstVideoInfo v_info;
   gboolean new_buffer;
 
+  /* resize */
+  gboolean pending_resize;
+  GstVideoInfo pending_v_info;
+  guint display_ratio_num;
+  guint display_ratio_den;
+
   /* Poor-man virtual */
   void (*reset) (GtkGstBaseWidget * widget);
 
   /*< private >*/
   GMutex lock;
 
-  /* Pending queued idles callback */
+  /* Pending draw idles callback */
   guint draw_id;
-  guint resize_id;
 };
 
 struct _GtkGstBaseWidgetClass
@@ -85,8 +90,8 @@ void            gtk_gst_base_widget_init                 (GtkGstBaseWidget * wid
 void            gtk_gst_base_widget_finalize             (GObject * object);
 
 /* API */
-gboolean        gtk_gst_base_widget_set_format           (GtkGstBaseWidget * widget, GstVideoInfo *v_info);
-void            gtk_gst_base_widget_set_buffer           (GtkGstBaseWidget * widget, GstBuffer *buffer);
+gboolean        gtk_gst_base_widget_set_format           (GtkGstBaseWidget * widget, GstVideoInfo * v_info);
+void            gtk_gst_base_widget_set_buffer           (GtkGstBaseWidget * widget, GstBuffer * buffer);
 
 G_END_DECLS
 
