@@ -4340,7 +4340,6 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     seekpos = gst_base_parse_find_offset (parse, startpos, TRUE, &start_ts);
     seekstop = gst_base_parse_find_offset (parse, seeksegment.stop, FALSE,
         NULL);
-    seeksegment.start = seeksegment.time = seeksegment.position = start_ts;
   } else {
     if (rate >= 0)
       start_ts = seeksegment.position;
@@ -4356,7 +4355,6 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     if (!gst_base_parse_convert (parse, format, seeksegment.stop,
             GST_FORMAT_BYTES, &seekstop))
       goto convert_failed;
-
   }
 
   GST_DEBUG_OBJECT (parse,
