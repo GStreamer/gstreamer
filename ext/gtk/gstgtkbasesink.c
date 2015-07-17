@@ -88,7 +88,8 @@ gst_gtk_base_sink_class_init (GstGtkBaseSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_WIDGET,
       g_param_spec_object ("widget", "Gtk Widget",
-          "The GtkWidget to place in the widget heirachy",
+          "The GtkWidget to place in the widget hierarchy "
+          "(must only be get from the GTK main thread)",
           GTK_TYPE_WIDGET, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
