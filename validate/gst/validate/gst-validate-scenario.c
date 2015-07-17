@@ -349,8 +349,18 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
 
     if (!gst_element_query_duration (scenario->pipeline,
             GST_FORMAT_TIME, &duration)) {
-      GST_WARNING_OBJECT (scenario, "Could not query duration");
-      return FALSE;
+      GstValidateMonitor *monitor =
+          (GstValidateMonitor *) (g_object_get_data ((GObject *)
+              scenario->pipeline, "validate-monitor"));
+      GST_WARNING_OBJECT (scenario,
+          "Could not query duration. Trying to get duration from media-info");
+      if (monitor && monitor->media_descriptor)
+        duration =
+            gst_media_descriptor_get_duration (monitor->media_descriptor);
+      else {
+        GST_ERROR_OBJECT (scenario, "Media-info not set");
+        return FALSE;
+      }
     }
 
     if (!GST_CLOCK_TIME_IS_VALID (duration))
