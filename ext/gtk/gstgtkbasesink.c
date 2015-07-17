@@ -330,7 +330,7 @@ gst_gtk_base_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     return FALSE;
   }
 
-  if (!gtk_gst_base_widget_set_caps (gtk_sink->widget, caps))
+  if (!gtk_gst_base_widget_set_format (gtk_sink->widget, &gtk_sink->v_info))
     return FALSE;
 
   GST_OBJECT_UNLOCK (gtk_sink);
