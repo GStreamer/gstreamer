@@ -671,3 +671,48 @@ gst_device_monitor_get_bus (GstDeviceMonitor * monitor)
 
   return gst_object_ref (monitor->priv->bus);
 }
+
+/**
+ * gst_device_monitor_get_providers:
+ * @monitor: a #GstDeviceMonitor
+ *
+ * Get a list of the currently selected device provider factories.
+ *
+ * This
+ *
+ * Returns: (transfer full) (array zero-terminated=1) (element-type gchar*):
+ *     A list of device provider factory names that are currently being
+ *     monitored by @monitor or %NULL when nothing is being monitored.
+ *
+ * Since: 1.6
+ */
+gchar **
+gst_device_monitor_get_providers (GstDeviceMonitor * monitor)
+{
+  guint i, len;
+  gchar **res = NULL;
+
+  g_return_val_if_fail (GST_IS_DEVICE_MONITOR (monitor), NULL);
+
+  GST_OBJECT_LOCK (monitor);
+  len = monitor->priv->providers->len;
+  if (len == 0)
+    goto done;
+
+  res = g_new (gchar *, len + 1);
+
+  for (i = 0; i < len; i++) {
+    GstDeviceProvider *provider =
+        g_ptr_array_index (monitor->priv->providers, i);
+    GstDeviceProviderFactory *factory =
+        gst_device_provider_get_factory (provider);
+
+    res[i] = g_strdup (GST_OBJECT_NAME (factory));
+  }
+  res[i] = NULL;
+
+done:
+  GST_OBJECT_UNLOCK (monitor);
+
+  return res;
+}

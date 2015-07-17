@@ -95,6 +95,8 @@ guint     gst_device_monitor_add_filter (GstDeviceMonitor * monitor,
 gboolean  gst_device_monitor_remove_filter (GstDeviceMonitor * monitor,
                                             guint filter_id);
 
+gchar **  gst_device_monitor_get_providers (GstDeviceMonitor * monitor);
+
 G_END_DECLS
 
 #endif /* __GST_DEVICE_MONITOR_H__ */

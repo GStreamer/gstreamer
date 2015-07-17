@@ -435,6 +435,7 @@ EXPORTS
 	gst_device_monitor_add_filter
 	gst_device_monitor_get_bus
 	gst_device_monitor_get_devices
+	gst_device_monitor_get_providers
 	gst_device_monitor_get_type
 	gst_device_monitor_new
 	gst_device_monitor_remove_filter
