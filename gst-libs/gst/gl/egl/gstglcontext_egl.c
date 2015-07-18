@@ -622,11 +622,10 @@ load_egl_module (gpointer user_data)
 }
 
 gpointer
-gst_gl_context_egl_get_proc_address (GstGLContext * context, const gchar * name)
+gst_gl_context_egl_get_proc_address (GstGLAPI gl_api, const gchar * name)
 {
   gpointer result = NULL;
   static GOnce g_once = G_ONCE_INIT;
-  GstGLAPI gl_api = gst_gl_context_get_gl_api (context);
 
   result = gst_gl_context_default_get_proc_address (gl_api, name);
 

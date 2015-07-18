@@ -100,7 +100,7 @@ struct _GstGLContextClass {
   guintptr      (*get_gl_context)     (GstGLContext *context);
   GstGLAPI      (*get_gl_api)         (GstGLContext *context);
   GstGLPlatform (*get_gl_platform)    (GstGLContext *context);
-  gpointer      (*get_proc_address)   (GstGLContext *context, const gchar *name);
+  gpointer      (*get_proc_address)   (GstGLAPI gl_api, const gchar *name);
   gboolean      (*activate)           (GstGLContext *context, gboolean activate);
   gboolean      (*choose_format)      (GstGLContext *context, GError **error);
   gboolean      (*create_context)     (GstGLContext *context, GstGLAPI gl_api,
@@ -136,6 +136,7 @@ gboolean      gst_gl_context_create           (GstGLContext *context, GstGLConte
 void          gst_gl_context_destroy          (GstGLContext *context);
 
 gpointer      gst_gl_context_default_get_proc_address (GstGLAPI gl_api, const gchar *name);
+gpointer      gst_gl_context_get_proc_address_with_platform (GstGLPlatform, GstGLAPI gl_api, const gchar *name);
 
 gboolean      gst_gl_context_set_window (GstGLContext *context, GstGLWindow *window);
 GstGLWindow * gst_gl_context_get_window (GstGLContext *context);
