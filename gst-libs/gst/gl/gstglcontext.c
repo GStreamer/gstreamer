@@ -411,7 +411,7 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   if (context_type == GST_GL_PLATFORM_CGL) {
     context_class->get_current_context =
         gst_gl_context_cocoa_get_current_context;
-    context_class->get_proc_address = _default_get_proc_address;
+    context_class->get_proc_address = gst_gl_context_default_get_proc_address;
   }
 #endif
 #if GST_GL_HAVE_PLATFORM_WGL
@@ -424,7 +424,7 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   if (context_type == GST_GL_PLATFORM_EAGL) {
     context_class->get_current_context =
         gst_gl_context_eagl_get_current_context;
-    context_class->get_proc_address = _default_get_proc_address;
+    context_class->get_proc_address = gst_gl_context_default_get_proc_address;
   }
 #endif
 
@@ -507,6 +507,7 @@ gst_gl_context_get_proc_address_with_platform (GstGLPlatform context_type,
 
 /**
  * gst_gl_context_get_current_gl_api:
+ * @platform: the #GstGLPlatform to retreive the API for
  * @major: (out): (allow-none): the major version
  * @minor: (out): (allow-none): the minor version
  *
@@ -519,7 +520,8 @@ gst_gl_context_get_proc_address_with_platform (GstGLPlatform context_type,
  * Since: 1.6
  */
 GstGLAPI
-gst_gl_context_get_current_gl_api (guint * major, guint * minor)
+gst_gl_context_get_current_gl_api (GstGLPlatform platform, guint * major,
+    guint * minor)
 {
   const GLubyte *(*GetString) (GLenum name);
 #if GST_GL_HAVE_OPENGL
@@ -533,10 +535,13 @@ gst_gl_context_get_current_gl_api (guint * major, guint * minor)
 
   while (ret != GST_GL_API_NONE) {
     /* FIXME: attempt to delve into the platform specific GetProcAddress */
-    GetString = gst_gl_context_default_get_proc_address (ret, "glGetString");
+    GetString =
+        gst_gl_context_get_proc_address_with_platform (platform, ret,
+        "glGetString");
 #if GST_GL_HAVE_OPENGL
     GetIntegerv =
-        gst_gl_context_default_get_proc_address (ret, "glGetIntegerv");
+        gst_gl_context_get_proc_address_with_platform (platform, ret,
+        "glGetIntegerv");
 #endif
     if (!GetString) {
       goto next;

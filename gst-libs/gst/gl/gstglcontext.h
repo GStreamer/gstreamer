@@ -146,7 +146,7 @@ gboolean      gst_gl_context_check_gl_version (GstGLContext * context, GstGLAPI 
 gboolean      gst_gl_context_check_feature (GstGLContext *context, const gchar *feature);
 
 guintptr      gst_gl_context_get_current_gl_context     (GstGLPlatform platform);
-GstGLAPI      gst_gl_context_get_current_gl_api         (guint *major, guint *minor);
+GstGLAPI      gst_gl_context_get_current_gl_api         (GstGLPlatform platform, guint *major, guint *minor);
 
 gboolean gst_gl_context_fill_info (GstGLContext * context, GError ** error);
 
