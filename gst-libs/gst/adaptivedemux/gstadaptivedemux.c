@@ -657,17 +657,6 @@ gst_adaptive_demux_set_stream_struct_size (GstAdaptiveDemux * demux,
   demux->stream_struct_size = struct_size;
 }
 
-static void
-gst_adaptive_demux_send_event (gpointer data, gpointer userdata)
-{
-  GstEvent *event = (GstEvent *) data;
-  GstPad *pad = (GstPad *) userdata;
-
-  if (!gst_pad_push_event (pad, event)) {
-    GST_ERROR_OBJECT (pad, "Failed to send pending event");
-  }
-}
-
 static gboolean
 gst_adaptive_demux_expose_stream (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream)
@@ -1470,13 +1459,15 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
     gst_pad_push_event (stream->pad, gst_event_new_tag (stream->pending_tags));
     stream->pending_tags = NULL;
   }
-  if (G_UNLIKELY (stream->pending_events)) {
-    g_list_foreach (stream->pending_events, gst_adaptive_demux_send_event,
-        stream->pad);
-    g_list_free (stream->pending_events);
-    stream->pending_events = NULL;
-  }
+  while (stream->pending_events != NULL) {
+    GstEvent *event = stream->pending_events->data;
 
+    if (!gst_pad_push_event (stream->pad, event))
+      GST_ERROR_OBJECT (stream->pad, "Failed to send pending event");
+
+    stream->pending_events =
+        g_list_delete_link (stream->pending_events, stream->pending_events);
+  }
 
   ret = gst_pad_push (stream->pad, buffer);
   GST_LOG_OBJECT (stream->pad, "Push result: %d %s", ret,
