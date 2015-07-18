@@ -174,8 +174,6 @@ G_DEFINE_ABSTRACT_TYPE (GstGLContext, gst_gl_context, GST_TYPE_OBJECT);
 static void _init_debug (void);
 
 static gpointer gst_gl_context_create_thread (GstGLContext * context);
-static gpointer _default_get_proc_address (GstGLContext * context,
-    const gchar * name);
 static void gst_gl_context_finalize (GObject * object);
 
 struct _GstGLContextPrivate
@@ -269,7 +267,8 @@ gst_gl_context_class_init (GstGLContextClass * klass)
 {
   g_type_class_add_private (klass, sizeof (GstGLContextPrivate));
 
-  klass->get_proc_address = GST_DEBUG_FUNCPTR (_default_get_proc_address);
+  klass->get_proc_address =
+      GST_DEBUG_FUNCPTR (gst_gl_context_default_get_proc_address);
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_context_finalize;
 
@@ -478,6 +477,32 @@ gst_gl_context_get_current_gl_context (GstGLPlatform context_type)
     GST_WARNING ("Could not retrieve current context");
 
   return handle;
+}
+
+gpointer
+gst_gl_context_get_proc_address_with_platform (GstGLPlatform context_type,
+    GstGLAPI gl_api, const gchar * name)
+{
+  gpointer ret = NULL;
+
+#if GST_GL_HAVE_PLATFORM_GLX
+  if (!ret && (context_type & GST_GL_PLATFORM_GLX) != 0)
+    ret = gst_gl_context_glx_get_proc_address (gl_api, name);
+#endif
+#if GST_GL_HAVE_PLATFORM_EGL
+  if (!ret && (context_type & GST_GL_PLATFORM_EGL) != 0)
+    ret = gst_gl_context_egl_get_proc_address (gl_api, name);
+#endif
+#if GST_GL_HAVE_PLATFORM_WGL
+  if (!ret && (context_type & GST_GL_PLATFORM_WGL) != 0)
+    ret = gst_gl_context_wgl_get_proc_address (gl_api, name);
+#endif
+  /* CGL and EAGL rely on the default impl */
+
+  if (!ret)
+    ret = gst_gl_context_default_get_proc_address (gl_api, name);
+
+  return ret;
 }
 
 /**
@@ -723,14 +748,6 @@ gst_gl_context_get_gl_api (GstGLContext * context)
   return context_class->get_gl_api (context);
 }
 
-static gpointer
-_default_get_proc_address (GstGLContext * context, const gchar * name)
-{
-  GstGLAPI gl_api = gst_gl_context_get_gl_api (context);
-
-  return gst_gl_context_default_get_proc_address (gl_api, name);
-}
-
 /**
  * gst_gl_context_get_proc_address:
  * @context: a #GstGLContext
@@ -751,12 +768,14 @@ gst_gl_context_get_proc_address (GstGLContext * context, const gchar * name)
 {
   gpointer ret;
   GstGLContextClass *context_class;
+  GstGLAPI gl_api;
 
   g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   g_return_val_if_fail (context_class->get_proc_address != NULL, NULL);
 
-  ret = context_class->get_proc_address (context, name);
+  gl_api = gst_gl_context_get_gl_api (context);
+  ret = context_class->get_proc_address (gl_api, name);
 
   return ret;
 }

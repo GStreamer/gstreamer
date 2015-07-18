@@ -481,10 +481,9 @@ gst_gl_context_glx_get_gl_platform (GstGLContext * context)
 }
 
 gpointer
-gst_gl_context_glx_get_proc_address (GstGLContext * context, const gchar * name)
+gst_gl_context_glx_get_proc_address (GstGLAPI gl_api, const gchar * name)
 {
   gpointer result;
-  GstGLAPI gl_api = gst_gl_context_get_gl_api (context);
 
   if (!(result = gst_gl_context_default_get_proc_address (gl_api, name))) {
     result = glXGetProcAddressARB ((const GLubyte *) name);
