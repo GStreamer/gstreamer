@@ -477,7 +477,7 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
 #if GST_GL_HAVE_WINDOW_X11 && defined (GDK_WINDOWING_X11)
   if (GST_IS_GL_DISPLAY_X11 (priv->display)) {
     platform = GST_GL_PLATFORM_GLX;
-    gl_api = gst_gl_context_get_current_gl_api (NULL, NULL);
+    gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
     gl_handle = gst_gl_context_get_current_gl_context (platform);
     if (gl_handle)
       priv->other_context =
@@ -488,7 +488,7 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
 #if GST_GL_HAVE_WINDOW_WAYLAND && defined (GDK_WINDOWING_WAYLAND)
   if (GST_IS_GL_DISPLAY_WAYLAND (priv->display)) {
     platform = GST_GL_PLATFORM_EGL;
-    gl_api = gst_gl_context_get_current_gl_api (NULL, NULL);
+    gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
     gl_handle = gst_gl_context_get_current_gl_context (platform);
     if (gl_handle)
       priv->other_context =
