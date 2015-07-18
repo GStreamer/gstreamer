@@ -951,13 +951,15 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
     mmal_port_parameter_get(state->encoder_output_port, &param.hdr);
 
     if (param.value != -1 && param.value >= buffer->pts) {
-      GstClockTime offset = param.value - buffer->pts;
+      /* Convert microsecond RPi TS to GStreamer clock: */
+      GstClockTime offset = (param.value - buffer->pts) * 1000;
       if (runtime >= offset)
         gst_pts = runtime - offset;
     }
-    GST_LOG ("Buf PTS %" G_GINT64_FORMAT " DTS %" G_GINT64_FORMAT
-        " STC %" G_GINT64_FORMAT " TS %" GST_TIME_FORMAT,
-        buffer->pts, buffer->dts, param.value,
+    GST_LOG ("Buf (uS) PTS %" G_GINT64_FORMAT " DTS %" G_GINT64_FORMAT
+        " STC %" G_GINT64_FORMAT " (latency %" G_GINT64_FORMAT
+        "uS) TS %" GST_TIME_FORMAT,
+        buffer->pts, buffer->dts, param.value, param.value - buffer->pts,
         GST_TIME_ARGS (gst_pts));
   }
 
