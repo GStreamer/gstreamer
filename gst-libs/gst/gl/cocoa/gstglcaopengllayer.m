@@ -117,7 +117,7 @@ _context_ready (gpointer data)
   display = gst_gl_context_get_display (GST_GL_CONTEXT (self->gst_gl_context));
   self->draw_context = gst_gl_context_new_wrapped (display,
       (guintptr) self->gl_context, GST_GL_PLATFORM_CGL,
-      gst_gl_context_get_current_gl_api (NULL, NULL));
+      gst_gl_context_get_current_gl_api (GST_GL_PLATFORM_CGL, NULL, NULL));
   gst_object_unref (display);
 
   if (!self->draw_context) {

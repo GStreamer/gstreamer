@@ -401,7 +401,9 @@ static void
 _fill_context_info (GstGLContext * context, struct context_info *info)
 {
   info->handle = gst_gl_context_get_current_gl_context (info->platform);
-  info->api = gst_gl_context_get_current_gl_api (&info->major, &info->minor);
+  info->api =
+      gst_gl_context_get_current_gl_api (info->platform, &info->major,
+      &info->minor);
 }
 
 GST_START_TEST (test_current_context)
