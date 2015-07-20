@@ -743,11 +743,19 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
   if (upstream_has_meta) {
     overlay_caps = gst_caps_ref (caps);
   } else {
+    GstCaps *tmp_caps;
     GstQuery *query;
     guint alloc_index;
 
+    /* BaseTransform requires caps for the allocation query to work */
+    tmp_caps = gst_caps_copy (caps);
+    f = gst_caps_get_features (tmp_caps, 0);
+    gst_caps_features_add (f,
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+    ret = gst_pad_set_caps (overlay->srcpad, caps);
+
     /* First check if the allocation meta has compositon */
-    query = gst_query_new_allocation (caps, FALSE);
+    query = gst_query_new_allocation (tmp_caps, FALSE);
 
     if (!gst_pad_peer_query (overlay->srcpad, query)) {
       /* no problem, we use the query defaults */
@@ -789,12 +797,7 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
     gst_query_unref (query);
 
     /* Then check if downstream accept overlay composition in caps */
-    overlay_caps = gst_caps_copy (caps);
-
-    f = gst_caps_get_features (overlay_caps, 0);
-    gst_caps_features_add (f,
-        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
-
+    overlay_caps = tmp_caps;
     caps_has_meta = gst_pad_peer_query_accept_caps (overlay->srcpad,
         overlay_caps);
 
