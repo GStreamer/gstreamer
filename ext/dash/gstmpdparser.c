@@ -2807,6 +2807,7 @@ gst_mpd_client_get_segment_duration (GstMpdClient * client,
     if (scale_dur)
       *scale_dur = duration;
   } else {
+    /* duration is guint so this cannot overflow */
     duration = base->duration * GST_SECOND;
     if (scale_dur)
       *scale_dur = duration;
@@ -3127,14 +3128,13 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           S = (GstSNode *) list->data;
           GST_LOG ("Processing S node: d=%" G_GUINT64_FORMAT " r=%d t=%"
               G_GUINT64_FORMAT, S->d, S->r, S->t);
-          duration = S->d * GST_SECOND;
           timescale =
               stream->cur_segment_list->MultSegBaseType->SegBaseType->timescale;
-          duration /= timescale;
+          duration = gst_util_uint64_scale (S->d, GST_SECOND, timescale);
+
           if (S->t > 0) {
             start = S->t;
-            start_time = S->t * GST_SECOND;
-            start_time /= timescale;
+            start_time = gst_util_uint64_scale (S->t, GST_SECOND, timescale);
             start_time += PeriodStart;
           }
 
@@ -3217,13 +3217,11 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           S = (GstSNode *) list->data;
           GST_LOG ("Processing S node: d=%" G_GUINT64_FORMAT " r=%u t=%"
               G_GUINT64_FORMAT, S->d, S->r, S->t);
-          duration = S->d * GST_SECOND;
           timescale = mult_seg->SegBaseType->timescale;
-          duration /= timescale;
+          duration = gst_util_uint64_scale (S->d, GST_SECOND, timescale);
           if (S->t > 0) {
             start = S->t;
-            start_time = S->t * GST_SECOND;
-            start_time /= timescale;
+            start_time = gst_util_uint64_scale (S->t, GST_SECOND, timescale);
             start_time += PeriodStart;
           }
 
