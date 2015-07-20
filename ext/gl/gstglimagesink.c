@@ -1519,6 +1519,7 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstCaps *caps;
   guint size;
   gboolean need_pool;
+  GstStructure *allocation_meta = NULL;
 
   if (!_ensure_gl_setup (glimage_sink))
     return FALSE;
@@ -1556,6 +1557,18 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   if (glimage_sink->context->gl_vtable->FenceSync)
     gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
+
+  if (glimage_sink->window_width != 0 && glimage_sink->window_height != 0) {
+    allocation_meta =
+        gst_structure_new ("GstVideoOverlayCompositionMeta",
+        "width", G_TYPE_UINT, glimage_sink->window_width,
+        "height", G_TYPE_UINT, glimage_sink->window_height, NULL);
+    GST_DEBUG ("sending alloc query with size %dx%d",
+        glimage_sink->window_width, glimage_sink->window_height);
+  }
+
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, allocation_meta);
 
   return TRUE;
 
