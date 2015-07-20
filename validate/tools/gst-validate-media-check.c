@@ -103,8 +103,12 @@ main (int argc, gchar ** argv)
     goto out;
   }
 
-  if (output_file)
-    gst_media_descriptor_writer_write (writer, output_file);
+  if (output_file) {
+    if (!gst_media_descriptor_writer_write (writer, output_file)) {
+      ret = 1;
+      goto out;
+    }
+  }
 
   if (expected_file) {
     reference = gst_media_descriptor_parser_new (runner, expected_file, &err);
