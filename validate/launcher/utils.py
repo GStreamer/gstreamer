@@ -148,6 +148,7 @@ def url2path(url):
     if "win32" in sys.platform:
         if path[0] == '/':
             return path[1:]  # We need to remove the first '/' on windows
+    path = urllib.unquote(path)
     return path
 
 
