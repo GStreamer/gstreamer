@@ -51,7 +51,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 G_DEFINE_TYPE_WITH_CODE (GtkGstGLWidget, gtk_gst_gl_widget, GTK_TYPE_GL_AREA,
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gtkgstglwidget", 0,
-        "Gtk Gst GL Widget"););
+        "Gtk Gst GL Widget");
+    );
 
 #define GTK_GST_GL_WIDGET_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
     GTK_TYPE_GST_GL_WIDGET, GtkGstGLWidgetPrivate))
@@ -466,6 +467,10 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
     g_object_unref (priv->gdk_context);
   priv->gdk_context = gtk_gl_area_get_context (GTK_GL_AREA (gst_widget));
   if (priv->gdk_context == NULL) {
+    GError *error = gtk_gl_area_get_error (GTK_GL_AREA (gst_widget));
+
+    GST_ERROR_OBJECT (gst_widget, "Error creating GdkGLContext : %s",
+        error ? error->message : "No error set by Gdk");
     g_assert_not_reached ();
     return;
   }
