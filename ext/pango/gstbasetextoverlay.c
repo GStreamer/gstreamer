@@ -729,6 +729,9 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
 
   GST_DEBUG_OBJECT (overlay, "performing negotiation");
 
+  /* Clear any pending reconfigure to avoid negotiating twice */
+  gst_pad_check_reconfigure (overlay->srcpad);
+
   if (!caps)
     caps = gst_pad_get_current_caps (overlay->video_sinkpad);
   else
