@@ -721,8 +721,11 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
   gboolean alloc_has_meta = FALSE;
   gboolean attach = FALSE;
   gboolean ret = TRUE;
+  guint width, height;
   GstCapsFeatures *f;
   GstCaps *overlay_caps;
+  GstQuery *query;
+  guint alloc_index;
 
   GST_DEBUG_OBJECT (overlay, "performing negotiation");
 
@@ -740,70 +743,66 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
   }
 
+  /* Initialize dimensions */
+  width = overlay->stream_width;
+  height = overlay->stream_height;
+
   if (upstream_has_meta) {
     overlay_caps = gst_caps_ref (caps);
   } else {
-    GstCaps *tmp_caps;
-    GstQuery *query;
-    guint alloc_index;
-
     /* BaseTransform requires caps for the allocation query to work */
-    tmp_caps = gst_caps_copy (caps);
-    f = gst_caps_get_features (tmp_caps, 0);
+    overlay_caps = gst_caps_copy (caps);
+    f = gst_caps_get_features (overlay_caps, 0);
     gst_caps_features_add (f,
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
     ret = gst_pad_set_caps (overlay->srcpad, caps);
 
-    /* First check if the allocation meta has compositon */
-    query = gst_query_new_allocation (tmp_caps, FALSE);
-
-    if (!gst_pad_peer_query (overlay->srcpad, query)) {
-      /* no problem, we use the query defaults */
-      GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
-
-      /* In case we were flushing, mark reconfigure and fail this method,
-       * will make it retry */
-      if (overlay->video_flushing)
-        ret = FALSE;
-    }
-
-    alloc_has_meta = gst_query_find_allocation_meta (query,
-        GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, &alloc_index);
-
-    if (alloc_has_meta) {
-      guint width, height;
-      const GstStructure *params;
-
-      gst_query_parse_nth_allocation_meta (query, alloc_index, &params);
-      if (params) {
-        if (!gst_structure_get (params,
-                "width", G_TYPE_UINT, &width,
-                "height", G_TYPE_UINT, &height, NULL)) {
-          GST_ERROR ("%s: Could not read window dimensions",
-              gst_structure_get_name (params));
-        } else {
-          GST_DEBUG ("received window size: %dx%d", width, height);
-          if ((width != 0 && height != 0) &&
-              (overlay->window_width != width
-                  || overlay->window_height != height)) {
-            overlay->window_width = width;
-            overlay->window_height = height;
-            gst_base_text_overlay_update_render_size (overlay);
-          }
-        }
-      }
-    }
-
-    gst_query_unref (query);
-
     /* Then check if downstream accept overlay composition in caps */
-    overlay_caps = tmp_caps;
     caps_has_meta = gst_pad_peer_query_accept_caps (overlay->srcpad,
         overlay_caps);
 
     GST_DEBUG ("caps have overlay meta %d", caps_has_meta);
-    GST_DEBUG ("sink alloc has overlay meta %d", alloc_has_meta);
   }
+
+  /* First check if the allocation meta has compositon */
+  query = gst_query_new_allocation (overlay_caps, FALSE);
+
+  if (!gst_pad_peer_query (overlay->srcpad, query)) {
+    /* no problem, we use the query defaults */
+    GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
+
+    /* In case we were flushing, mark reconfigure and fail this method,
+     * will make it retry */
+    if (overlay->video_flushing)
+      ret = FALSE;
+  }
+
+  alloc_has_meta = gst_query_find_allocation_meta (query,
+      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, &alloc_index);
+
+  GST_DEBUG ("sink alloc has overlay meta %d", alloc_has_meta);
+
+  if (alloc_has_meta) {
+    const GstStructure *params;
+
+    gst_query_parse_nth_allocation_meta (query, alloc_index, &params);
+    if (params) {
+      if (gst_structure_get (params, "width", G_TYPE_UINT, &width,
+              "height", G_TYPE_UINT, &height, NULL)) {
+        GST_DEBUG ("received window size: %dx%d", width, height);
+      }
+    }
+  }
+
+  /* Update render size if needed */
+  if ((width != 0 && height != 0) && (overlay->window_width != width
+          || overlay->window_height != height)) {
+    overlay->window_width = width;
+    overlay->window_height = height;
+    gst_base_text_overlay_update_render_size (overlay);
+  }
+
+  gst_query_unref (query);
 
   /* For backward compatbility, we will prefer bliting if downstream
    * allocation does not support the meta. In other case we will prefer
@@ -888,16 +887,6 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
 
   overlay->stream_width = GST_VIDEO_INFO_WIDTH (&info);
   overlay->stream_height = GST_VIDEO_INFO_HEIGHT (&info);
-
-  if (overlay->width == 1) {
-    overlay->width = overlay->stream_width;
-    overlay->height = overlay->stream_height;
-    GST_DEBUG ("getting rendering dimensions from stream %dx%d",
-        overlay->width, overlay->height);
-  }
-
-  if (overlay->window_height != 1)
-    gst_base_text_overlay_update_render_size (overlay);
 
   ret = gst_base_text_overlay_negotiate (overlay, caps);
 
