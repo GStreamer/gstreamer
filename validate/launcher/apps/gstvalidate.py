@@ -396,7 +396,7 @@ class GstValidateLaunchTest(GstValidateTest):
         self.add_arguments(self.pipeline_desc)
         if self.media_descriptor is not None and self.media_descriptor.get_path():
             self.add_arguments(
-                "--set-media-info", self.media_descriptor.get_path())
+                "--set-media-info", '"' + self.media_descriptor.get_path() + '"')
 
 
 class GstValidateMediaCheckTest(GstValidateTest):
@@ -415,7 +415,7 @@ class GstValidateMediaCheckTest(GstValidateTest):
     def build_arguments(self):
         Test.build_arguments(self)
         self.add_arguments(self._uri, "--expected-results",
-                           self._media_info_path)
+                           '"' + self._media_info_path + '"')
 
 
 class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterface):
