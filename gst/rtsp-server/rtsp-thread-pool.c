@@ -552,10 +552,11 @@ gst_rtsp_thread_pool_cleanup (void)
   GstRTSPThreadPoolClass *klass;
 
   klass =
-      GST_RTSP_THREAD_POOL_CLASS (g_type_class_peek
+      GST_RTSP_THREAD_POOL_CLASS (g_type_class_ref
       (gst_rtsp_thread_pool_get_type ()));
   if (klass->pool != NULL) {
     g_thread_pool_free (klass->pool, FALSE, TRUE);
     klass->pool = NULL;
   }
+  g_type_class_unref (klass);
 }
