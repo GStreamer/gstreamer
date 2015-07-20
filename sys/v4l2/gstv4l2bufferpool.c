@@ -149,6 +149,8 @@ gst_v4l2_buffer_pool_copy_buffer (GstV4l2BufferPool * pool, GstBuffer * dest,
     gst_buffer_resize (dest, 0, gst_buffer_get_size (src));
   }
 
+  gst_buffer_copy_into (dest, src, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+
   GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, pool, "slow copy into buffer %p",
       dest);
 
@@ -1058,6 +1060,7 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 {
   GstV4l2MemoryGroup *group = NULL;
   const GstV4l2Object *obj = pool->obj;
+  GstClockTime timestamp;
   gint index;
 
   if (!gst_v4l2_is_buffer_valid (buf, &group)) {
@@ -1096,6 +1099,11 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
     }
 
     group->buffer.field = field;
+  }
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    timestamp = GST_BUFFER_TIMESTAMP (buf);
+    GST_TIME_TO_TIMEVAL (timestamp, group->buffer.timestamp);
   }
 
   if (!gst_v4l2_allocator_qbuf (pool->vallocator, group))
