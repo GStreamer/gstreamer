@@ -2406,8 +2406,14 @@ gst_base_text_overlay_video_chain (GstPad * pad, GstObject * parent,
 
   composition_meta = gst_buffer_get_video_overlay_composition_meta (buffer);
   if (composition_meta) {
-    GST_DEBUG ("GstVideoOverlayCompositionMeta found.");
-    overlay->upstream_composition = composition_meta->overlay;
+    if (overlay->upstream_composition != composition_meta->overlay) {
+      GST_DEBUG ("GstVideoOverlayCompositionMeta found.");
+      overlay->upstream_composition = composition_meta->overlay;
+      overlay->need_render = TRUE;
+    }
+  } else if (overlay->upstream_composition != NULL) {
+    overlay->upstream_composition = NULL;
+    overlay->need_render = TRUE;
   }
 
   klass = GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay);
