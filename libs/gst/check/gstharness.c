@@ -1947,18 +1947,10 @@ gst_harness_set_propose_allocator (GstHarness * h, GstAllocator * allocator,
     priv->propose_allocation_params = *params;
 }
 
-static void
-gst_harness_setup_src_harness (GstHarness * h, gboolean has_clock_wait)
-{
-  h->src_harness->priv->sink_forward_pad = gst_object_ref (h->srcpad);
-  gst_harness_use_testclock (h->src_harness);
-  h->src_harness->priv->has_clock_wait = has_clock_wait;
-}
-
 /**
- * gst_harness_add_src:
+ * gst_harness_add_src_harness:
  * @h: a #GstHarness
- * @src_element_name: a #gchar with the name of a #GstElement
+ * @src_harness: (transfer full): a #GstHarness to be added as a src-harness.
  * @has_clock_wait: a #gboolean specifying if the #GstElement uses
  * gst_clock_wait_id internally.
  *
@@ -1977,13 +1969,38 @@ gst_harness_setup_src_harness (GstHarness * h, gboolean has_clock_wait)
  * Since: 1.6
  */
 void
-gst_harness_add_src (GstHarness * h,
-    const gchar * src_element_name, gboolean has_clock_wait)
+gst_harness_add_src_harness (GstHarness * h,
+    GstHarness * src_harness, gboolean has_clock_wait)
 {
   if (h->src_harness)
     gst_harness_teardown (h->src_harness);
-  h->src_harness = gst_harness_new (src_element_name);
-  gst_harness_setup_src_harness (h, has_clock_wait);
+  h->src_harness = src_harness;
+
+  h->src_harness->priv->sink_forward_pad = gst_object_ref (h->srcpad);
+  gst_harness_use_testclock (h->src_harness);
+  h->src_harness->priv->has_clock_wait = has_clock_wait;
+}
+
+/**
+ * gst_harness_add_src:
+ * @h: a #GstHarness
+ * @src_element_name: a #gchar with the name of a #GstElement
+ * @has_clock_wait: a #gboolean specifying if the #GstElement uses
+ * gst_clock_wait_id internally.
+ *
+ * Similar to gst_harness_add_src_harness, this is a convenience to
+ * directly create a src-harness using the @src_element_name name specified.
+ *
+ * MT safe.
+ *
+ * Since: 1.6
+ */
+void
+gst_harness_add_src (GstHarness * h,
+    const gchar * src_element_name, gboolean has_clock_wait)
+{
+  GstHarness * src_harness = gst_harness_new (src_element_name);
+  gst_harness_add_src_harness (h, src_harness, has_clock_wait);
 }
 
 /**
@@ -2007,10 +2024,8 @@ void
 gst_harness_add_src_parse (GstHarness * h,
     const gchar * launchline, gboolean has_clock_wait)
 {
-  if (h->src_harness)
-    gst_harness_teardown (h->src_harness);
-  h->src_harness = gst_harness_new_parse (launchline);
-  gst_harness_setup_src_harness (h, has_clock_wait);
+  GstHarness * src_harness = gst_harness_new_parse (launchline);
+  gst_harness_add_src_harness (h, src_harness, has_clock_wait);
 }
 
 /**
@@ -2119,8 +2134,9 @@ forward_sticky_events (GstPad * pad, GstEvent ** ev, gpointer user_data)
 }
 
 /**
- * gst_harness_add_sink:
+ * gst_harness_add_sink_harness:
  * @h: a #GstHarness
+ * @sink_harness: (transfer full): a #GstHarness to be added as a sink-harness.
  * @sink_element_name: a #gchar with the name of a #GstElement
  *
  * Similar to gst_harness_add_src, this allows you to send the data coming out
@@ -2137,7 +2153,7 @@ forward_sticky_events (GstPad * pad, GstEvent ** ev, gpointer user_data)
  * Since: 1.6
  */
 void
-gst_harness_add_sink (GstHarness * h, const gchar * sink_element_name)
+gst_harness_add_sink_harness (GstHarness * h, GstHarness * sink_harness)
 {
   GstHarnessPrivate *priv = h->priv;
 
@@ -2145,9 +2161,29 @@ gst_harness_add_sink (GstHarness * h, const gchar * sink_element_name)
     gst_harness_teardown (h->sink_harness);
     gst_object_unref (priv->sink_forward_pad);
   }
-  h->sink_harness = gst_harness_new (sink_element_name);
+  h->sink_harness = sink_harness;
   priv->sink_forward_pad = gst_object_ref (h->sink_harness->srcpad);
+  gst_harness_use_testclock (h->sink_harness);
   gst_pad_sticky_events_foreach (h->sinkpad, forward_sticky_events, h);
+}
+
+/**
+ * gst_harness_add_sink:
+ * @h: a #GstHarness
+ * @sink_element_name: a #gchar with the name of a #GstElement
+ *
+ * Similar to gst_harness_add_sink_harness, this is a convenience to
+ * directly create a sink-harness using the @sink_element_name name specified.
+ *
+ * MT safe.
+ *
+ * Since: 1.6
+ */
+void
+gst_harness_add_sink (GstHarness * h, const gchar * sink_element_name)
+{
+  GstHarness *sink_harness = gst_harness_new (sink_element_name);
+  gst_harness_add_sink_harness (h, sink_harness);
 }
 
 /**
@@ -2165,15 +2201,8 @@ gst_harness_add_sink (GstHarness * h, const gchar * sink_element_name)
 void
 gst_harness_add_sink_parse (GstHarness * h, const gchar * launchline)
 {
-  GstHarnessPrivate *priv = h->priv;
-
-  if (h->sink_harness) {
-    gst_harness_teardown (h->sink_harness);
-    gst_object_unref (priv->sink_forward_pad);
-  }
-  h->sink_harness = gst_harness_new_parse (launchline);
-  priv->sink_forward_pad = gst_object_ref (h->sink_harness->srcpad);
-  gst_pad_sticky_events_foreach (h->sinkpad, forward_sticky_events, h);
+  GstHarness *sink_harness = gst_harness_new_parse (launchline);
+  gst_harness_add_sink_harness (h, sink_harness);
 }
 
 /**

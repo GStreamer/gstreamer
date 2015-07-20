@@ -1263,12 +1263,14 @@ gst_harness_set_propose_allocator
 gst_harness_get_allocator
 
 gst_harness_add_src
+gst_harness_add_src_harness
 gst_harness_add_src_parse
 gst_harness_push_from_src
 gst_harness_src_crank_and_push_many
 gst_harness_src_push_event
 
 gst_harness_add_sink
+gst_harness_add_sink_harness
 gst_harness_add_sink_parse
 gst_harness_push_to_sink
 gst_harness_sink_push_many

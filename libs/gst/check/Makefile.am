@@ -99,8 +99,10 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_harness_add_element_src_pad \
 	gst_harness_add_probe \
 	gst_harness_add_sink \
+	gst_harness_add_sink_harness \
 	gst_harness_add_sink_parse \
 	gst_harness_add_src \
+	gst_harness_add_src_harness \
 	gst_harness_add_src_parse \
 	gst_harness_buffers_received \
 	gst_harness_buffers_in_queue \

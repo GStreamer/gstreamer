@@ -194,6 +194,10 @@ void         gst_harness_get_allocator         (GstHarness          * h,
 
 /* src-harness */
 
+void          gst_harness_add_src_harness (GstHarness * h,
+                                           GstHarness * src_harness,
+                                           gboolean has_clock_wait);
+
 void          gst_harness_add_src (GstHarness  * h,
                                    const gchar * src_element_name,
                                    gboolean      has_clock_wait);
@@ -211,6 +215,9 @@ GstFlowReturn gst_harness_src_crank_and_push_many (GstHarness * h,
 gboolean      gst_harness_src_push_event (GstHarness * h);
 
 /* sink-harness */
+
+void          gst_harness_add_sink_harness (GstHarness * h,
+                                            GstHarness * sink_harness);
 
 void          gst_harness_add_sink (GstHarness  * h,
                                     const gchar * sink_element_name);
