@@ -376,18 +376,20 @@ gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc)
     caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, VOAAC_ENC_MPEGVERSION,
         "channels", G_TYPE_INT, voaacenc->channels,
-        "rate", G_TYPE_INT, voaacenc->rate,
-        "stream-format", G_TYPE_STRING,
-        (voaacenc->output_format ? "adts" : "raw")
-        , NULL);
+        "rate", G_TYPE_INT, voaacenc->rate, NULL);
 
     gst_codec_utils_aac_caps_set_level_and_profile (caps, map.data,
         VOAAC_ENC_CODECDATA_LEN);
     gst_buffer_unmap (codec_data, &map);
 
     if (!voaacenc->output_format) {
-      gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
-          NULL);
+      gst_caps_set_simple (caps,
+          "stream-format", G_TYPE_STRING, "raw",
+          "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+    } else {
+      gst_caps_set_simple (caps,
+          "stream-format", G_TYPE_STRING, "adts",
+          "framed", G_TYPE_BOOLEAN, TRUE, NULL);
     }
     gst_buffer_unref (codec_data);
   }
