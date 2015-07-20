@@ -143,10 +143,29 @@ static gboolean
 _gst_gl_upload_element_propose_allocation (GstBaseTransform * bt,
     GstQuery * decide_query, GstQuery * query)
 {
+  guint alloc_index;
+  gboolean alloc_has_overlay_meta;
   GstGLUploadElement *upload = GST_GL_UPLOAD_ELEMENT (bt);
 
   if (!upload->upload)
     return FALSE;
+
+  alloc_has_overlay_meta =
+      gst_query_find_allocation_meta (decide_query,
+      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, &alloc_index);
+
+  if (alloc_has_overlay_meta) {
+    const GstStructure *params;
+    GST_DEBUG ("adding allocation meta in upload for textoverlay");
+
+    /* read window size from decide_query */
+    gst_query_parse_nth_allocation_meta (decide_query, alloc_index, &params);
+
+    if (params)
+      gst_query_add_allocation_meta (query,
+          GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, params);
+
+  }
 
   gst_gl_upload_propose_allocation (upload->upload, decide_query, query);
 
