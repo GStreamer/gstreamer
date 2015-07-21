@@ -461,10 +461,12 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
   GstCaps *gl_texture_upload_caps = NULL;
   GstCaps *sysmem_caps = NULL;
   GstCaps *vaapi_caps = NULL;
-  GstCaps *out_caps;
+  GstCaps *out_caps, *templ;
   GstVideoFormat out_format;
 
-  out_caps = gst_pad_get_allowed_caps (pad);
+  templ = gst_pad_get_pad_template_caps (pad);
+  out_caps = gst_pad_peer_query_caps (pad, templ);
+  gst_caps_unref (templ);
   if (!out_caps) {
     feature = GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED;
     goto cleanup;
