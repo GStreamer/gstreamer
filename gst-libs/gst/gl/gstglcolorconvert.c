@@ -320,6 +320,35 @@ static const char frag_NV12_NV21_to_RGB[] = {
       "}"
 };
 
+/* RGB to NV12/NV21 conversion */
+/* NV12: u, v
+   NV21: v, u */
+static const char frag_RGB_to_NV12_NV21[] = {
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "varying vec2 v_texcoord;\n"
+    "uniform sampler2D tex;\n"
+    "uniform vec2 tex_scale0;\n"
+    "uniform vec2 tex_scale1;\n"
+    "uniform vec2 tex_scale2;\n"
+    RGB_TO_YUV_COEFFICIENTS
+    "void main(void) {\n"
+    "  float y, u, v;\n"
+    "  vec4 texel, uv_texel;\n"
+    "  texel = texture2D(tex, v_texcoord * tex_scale0).%c%c%c%c;\n"
+    "  uv_texel = texture2D(tex, v_texcoord * tex_scale0 * 2.0).%c%c%c%c;\n"
+    "  y = dot(texel.rgb, coeff1);\n"
+    "  u = dot(uv_texel.rgb, coeff2);\n"
+    "  v = dot(uv_texel.rgb, coeff3);\n"
+    "  y += offset.x;\n"
+    "  u += offset.y;\n"
+    "  v += offset.z;\n"
+    "  gl_FragData[0] = vec4(y, 0.0, 0.0, 1.0);\n"
+    "  gl_FragData[1] = vec4(%c, %c, 0.0, 1.0);\n"
+    "}"
+};
+
 /* YUY2:r,g,a
    UYVY:a,b,r */
 static const gchar frag_YUY2_UYVY_to_RGB[] =
@@ -1127,6 +1156,20 @@ _RGB_to_YUV (GstGLColorConvert * convert)
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
           "u", "y", "v", "y");
       info->out_n_textures = 1;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      info->frag_prog = g_strdup_printf (frag_RGB_to_NV12_NV21,
+          pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
+          pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
+          'u', 'v');
+      info->out_n_textures = 2;
+      break;
+    case GST_VIDEO_FORMAT_NV21:
+      info->frag_prog = g_strdup_printf (frag_RGB_to_NV12_NV21,
+          pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
+          pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
+          'v', 'u');
+      info->out_n_textures = 2;
       break;
     default:
       break;
