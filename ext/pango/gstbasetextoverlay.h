@@ -143,8 +143,8 @@ struct _GstBaseTextOverlay {
     /* stream metrics */
     GstVideoInfo             info;
     GstVideoFormat           format;
-    gint                     stream_width;
-    gint                     stream_height;
+    gint                     width;
+    gint                     height;
 
     /* properties */
     gint                     xpad;
@@ -176,17 +176,19 @@ struct _GstBaseTextOverlay {
     gboolean                 need_render;
     GstBuffer               *text_image;
 
-    /* rendering canvas dimension, this is adjusted to compensate the
-     * downstream reported window size. */
-    gint                     width;
-    gint                     height;
+    /* dimension relative to witch the render is done, this is the stream size
+     * or a portion of the window_size (adapted to aspect ratio) */
+    gint                     render_width;
+    gint                     render_height;
+    /* This is (render_width / width) uses to convert to stream scale */
+    gdouble                  render_scale;
 
     /* dimension of text_image, the physical dimension */
     gint                     image_width;
     gint                     image_height;
 
     /* window dimension, reported in the composition meta params. This is set
-     * to stream_width, stream_height if missing */
+     * to stream width, height if missing */
     gint                     window_width;
     gint                     window_height;
 

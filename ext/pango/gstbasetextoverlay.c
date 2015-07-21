@@ -35,6 +35,7 @@
 #include "gstclockoverlay.h"
 #include "gsttextrender.h"
 #include <string.h>
+#include <math.h>
 
 /* FIXME:
  *  - use proper strides and offset for I420
@@ -641,11 +642,12 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   overlay->window_width = 1;
   overlay->window_height = 1;
 
-  overlay->stream_height = 1;
-  overlay->stream_width = 1;
-
   overlay->image_width = 1;
   overlay->image_height = 1;
+
+  overlay->render_width = 1;
+  overlay->render_height = 1;
+  overlay->render_scale = 1.0l;
 
   g_mutex_init (&overlay->lock);
   g_cond_init (&overlay->cond);
@@ -747,8 +749,8 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
   }
 
   /* Initialize dimensions */
-  width = overlay->stream_width;
-  height = overlay->stream_height;
+  width = overlay->width;
+  height = overlay->height;
 
   if (upstream_has_meta) {
     overlay_caps = gst_caps_ref (caps);
@@ -793,17 +795,15 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
       if (gst_structure_get (params, "width", G_TYPE_UINT, &width,
               "height", G_TYPE_UINT, &height, NULL)) {
         GST_DEBUG ("received window size: %dx%d", width, height);
+        g_assert (width != 0 && height != 0);
       }
     }
   }
 
   /* Update render size if needed */
-  if ((width != 0 && height != 0) && (overlay->window_width != width
-          || overlay->window_height != height)) {
-    overlay->window_width = width;
-    overlay->window_height = height;
-    gst_base_text_overlay_update_render_size (overlay);
-  }
+  overlay->window_width = width;
+  overlay->window_height = height;
+  gst_base_text_overlay_update_render_size (overlay);
 
   gst_query_unref (query);
 
@@ -887,8 +887,8 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
 
   overlay->info = info;
   overlay->format = GST_VIDEO_INFO_FORMAT (&info);
-  overlay->stream_width = GST_VIDEO_INFO_WIDTH (&info);
-  overlay->stream_height = GST_VIDEO_INFO_HEIGHT (&info);
+  overlay->width = GST_VIDEO_INFO_WIDTH (&info);
+  overlay->height = GST_VIDEO_INFO_HEIGHT (&info);
 
   ret = gst_base_text_overlay_negotiate (overlay, caps);
 
@@ -1154,11 +1154,9 @@ gst_base_text_overlay_src_query (GstPad * pad, GstObject * parent,
 static void
 gst_base_text_overlay_update_render_size (GstBaseTextOverlay * overlay)
 {
-  gfloat video_aspect = (float) overlay->stream_width /
-      (float) overlay->stream_height;
-
-  gfloat window_aspect = (float) overlay->window_width /
-      (float) overlay->window_height;
+  gdouble video_aspect = (gdouble) overlay->width / (gdouble) overlay->height;
+  gdouble window_aspect = (gdouble) overlay->window_width /
+      (gdouble) overlay->window_height;
 
   guint text_buffer_width = 0;
   guint text_buffer_height = 0;
@@ -1171,15 +1169,20 @@ gst_base_text_overlay_update_render_size (GstBaseTextOverlay * overlay)
     text_buffer_height = overlay->window_height;
   }
 
-  overlay->need_render = TRUE;
+  if ((overlay->render_width == text_buffer_width) &&
+      (overlay->render_height == text_buffer_height))
+    return;
 
-  overlay->width = text_buffer_width;
-  overlay->height = text_buffer_height;
-  GST_DEBUG
-      ("updating render dimensions %dx%d from stream %dx%d and window %dx%d",
-      overlay->width, overlay->height,
-      overlay->stream_width, overlay->stream_height,
-      overlay->window_width, overlay->window_height);
+  overlay->need_render = TRUE;
+  overlay->render_width = text_buffer_width;
+  overlay->render_height = text_buffer_height;
+  overlay->render_scale = (gdouble) overlay->render_width /
+      (gdouble) overlay->width;
+
+  GST_DEBUG ("updating render dimensions %dx%d from stream %dx%d, window %dx%d "
+      "and render scale %f", overlay->render_width, overlay->render_height,
+      overlay->width, overlay->height, overlay->window_width,
+      overlay->window_height, overlay->render_scale);
 }
 
 static gboolean
@@ -1430,8 +1433,8 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
   GstBaseTextOverlayVAlign valign;
   GstBaseTextOverlayHAlign halign;
 
-  width = overlay->image_width;
-  height = overlay->image_height;
+  width = overlay->image_width / overlay->render_scale;
+  height = overlay->image_height / overlay->render_scale;
 
   if (overlay->use_vertical_render)
     halign = GST_BASE_TEXT_OVERLAY_HALIGN_RIGHT;
@@ -1494,17 +1497,26 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
   gint xpos, ypos;
   GstVideoOverlayRectangle *rectangle;
 
-  gst_base_text_overlay_get_pos (overlay, &xpos, &ypos);
-
-  GST_DEBUG ("updating composition for '%s' with window size %dx%d",
-      overlay->default_text, overlay->window_width, overlay->window_height);
-
   if (overlay->text_image && overlay->image_width != 1) {
+    gint render_width, render_height;
+
+    gst_base_text_overlay_get_pos (overlay, &xpos, &ypos);
+
+    render_width = round (overlay->image_width / overlay->render_scale);
+    render_height = round (overlay->image_height / overlay->render_scale);
+
+    GST_DEBUG ("updating composition for '%s' with window size %dx%d, "
+        "buffer size %dx%d, render size %dx%d and position (%d, %d)",
+        overlay->default_text, overlay->window_width, overlay->window_height,
+        overlay->image_width, overlay->image_height, render_width,
+        render_height, xpos, ypos);
+
     gst_buffer_add_video_meta (overlay->text_image, GST_VIDEO_FRAME_FLAG_NONE,
         GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB,
         overlay->image_width, overlay->image_height);
+
     rectangle = gst_video_overlay_rectangle_new_raw (overlay->text_image,
-        xpos, ypos, overlay->image_width, overlay->image_height,
+        xpos, ypos, render_width, render_height,
         GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
 
     if (overlay->composition)
@@ -1564,6 +1576,7 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
     /* 640 pixel is default */
     scalef = (double) (overlay->width) / DEFAULT_SCALE_BASIS;
   }
+
   pango_layout_set_width (overlay->layout, -1);
   /* set text on pango layout */
   pango_layout_set_markup (overlay->layout, string, textlen);
@@ -1571,7 +1584,7 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   /* get subtitle image size */
   pango_layout_get_pixel_extents (overlay->layout, &ink_rect, &logical_rect);
 
-  width = (logical_rect.width + overlay->shadow_offset) * scalef;
+  width = ceil ((logical_rect.width + overlay->shadow_offset) * scalef);
 
   if (width + overlay->deltax >
       (overlay->use_vertical_render ? overlay->height : overlay->width)) {
@@ -1584,11 +1597,17 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
     width = overlay->width;
   }
 
-  height =
-      (logical_rect.height + logical_rect.y + overlay->shadow_offset) * scalef;
+  height = ceil (
+      (logical_rect.height + logical_rect.y + overlay->shadow_offset) * scalef);
   if (height > overlay->height) {
     height = overlay->height;
   }
+
+  /* scale to reported window size */
+  width = ceil (width * overlay->render_scale);
+  height = ceil (height * overlay->render_scale);
+  scalef *= overlay->render_scale;
+
   if (overlay->use_vertical_render) {
     PangoRectangle rect;
     PangoContext *context;
