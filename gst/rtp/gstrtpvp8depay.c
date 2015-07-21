@@ -173,6 +173,8 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
     GstBuffer *out;
     guint8 header[10];
 
+    if (gst_adapter_available (self->adapter) < 10)
+      goto too_small;
     gst_adapter_copy (self->adapter, &header, 0, 10);
 
     out = gst_adapter_take_buffer (self->adapter,
