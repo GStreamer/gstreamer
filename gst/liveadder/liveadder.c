@@ -558,7 +558,8 @@ gst_live_adder_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       reset_pad_private (pad);
       GST_OBJECT_UNLOCK (adder);
       ret = gst_pad_push_event (adder->srcpad, event);
-      ret = gst_live_adder_src_activate_mode (adder->srcpad, GST_OBJECT (adder),
+      ret &=
+          gst_live_adder_src_activate_mode (adder->srcpad, GST_OBJECT (adder),
           GST_PAD_MODE_PUSH, TRUE);
       break;
     case GST_EVENT_EOS:
