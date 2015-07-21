@@ -86,7 +86,9 @@ static gboolean
 _is_rectangle_in_overlays (GList * overlays,
     GstVideoOverlayRectangle * rectangle)
 {
-  for (GList * l = overlays; l != NULL; l = l->next) {
+  GList *l;
+
+  for (l = overlays; l != NULL; l = l->next) {
     GstGLCompositionOverlay *overlay = (GstGLCompositionOverlay *) l->data;
     if (overlay->rectangle == rectangle)
       return TRUE;
@@ -98,8 +100,9 @@ static gboolean
 _is_overlay_in_rectangles (GstVideoOverlayComposition * composition,
     GstGLCompositionOverlay * overlay)
 {
-  for (guint i = 0;
-      i < gst_video_overlay_composition_n_rectangles (composition); i++) {
+  guint i;
+
+  for (i = 0; i < gst_video_overlay_composition_n_rectangles (composition); i++) {
     GstVideoOverlayRectangle *rectangle =
         gst_video_overlay_composition_get_rectangle (composition, i);
     if (overlay->rectangle == rectangle)
@@ -142,7 +145,7 @@ gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
   composition_meta = gst_buffer_get_video_overlay_composition_meta (buf);
   if (composition_meta) {
     GstVideoOverlayComposition *composition = NULL;
-    guint num_overlays;
+    guint num_overlays, i;
     GList *l = compositor->overlays;
 
     GST_DEBUG ("GstVideoOverlayCompositionMeta found.");
@@ -151,7 +154,7 @@ gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
     num_overlays = gst_video_overlay_composition_n_rectangles (composition);
 
     /* add new overlays to list */
-    for (guint i = 0; i < num_overlays; i++) {
+    for (i = 0; i < num_overlays; i++) {
       GstVideoOverlayRectangle *rectangle =
           gst_video_overlay_composition_get_rectangle (composition, i);
 
@@ -187,9 +190,11 @@ gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor,
 {
   const GstGLFuncs *gl = compositor->context->gl_vtable;
   if (compositor->overlays != NULL) {
+    GList *l;
+
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    for (GList * l = compositor->overlays; l != NULL; l = l->next) {
+    for (l = compositor->overlays; l != NULL; l = l->next) {
       GstGLCompositionOverlay *overlay = (GstGLCompositionOverlay *) l->data;
       gst_gl_composition_overlay_draw (overlay, shader);
     }
@@ -201,10 +206,11 @@ GstCaps *
 gst_gl_overlay_compositor_add_caps (GstCaps * caps)
 {
   GstCaps *composition_caps;
+  int i;
 
   composition_caps = gst_caps_copy (caps);
 
-  for (int i = 0; i < gst_caps_get_size (composition_caps); i++) {
+  for (i = 0; i < gst_caps_get_size (composition_caps); i++) {
     GstCapsFeatures *f = gst_caps_get_features (composition_caps, i);
     gst_caps_features_add (f,
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
