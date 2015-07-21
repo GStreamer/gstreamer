@@ -571,9 +571,11 @@ ensure_context (GstGLStereoSplit * self)
       self->context =
           gst_gl_display_get_gl_context_for_thread (self->display, NULL);
       if (!self->context) {
-        self->context = gst_gl_context_new (self->display);
-        if (!gst_gl_context_create (self->context, self->other_context, &error))
+        if (!gst_gl_display_create_context (self->display, self->other_context,
+                &self->context, &error)) {
+          GST_OBJECT_UNLOCK (self->display);
           goto context_error;
+        }
       }
     } while (!gst_gl_display_add_context (self->display, self->context));
     GST_OBJECT_UNLOCK (self->display);
