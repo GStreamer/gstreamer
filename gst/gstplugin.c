@@ -677,19 +677,27 @@ static GMutex gst_plugin_loading_mutex;
 GstPlugin *
 gst_plugin_load_file (const gchar * filename, GError ** error)
 {
+  return _priv_gst_plugin_load_file_for_registry (filename, NULL, error);
+}
+
+GstPlugin *
+_priv_gst_plugin_load_file_for_registry (const gchar * filename,
+    GstRegistry * registry, GError ** error)
+{
   GstPluginDesc *desc;
   GstPlugin *plugin;
   GModule *module;
   gboolean ret;
   gpointer ptr;
   GStatBuf file_status;
-  GstRegistry *registry;
   gboolean new_plugin = TRUE;
   GModuleFlags flags;
 
   g_return_val_if_fail (filename != NULL, NULL);
 
-  registry = gst_registry_get ();
+  if (registry == NULL)
+    registry = gst_registry_get ();
+
   g_mutex_lock (&gst_plugin_loading_mutex);
 
   plugin = gst_registry_lookup (registry, filename);
@@ -835,7 +843,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
 
   if (new_plugin) {
     gst_object_ref (plugin);
-    gst_registry_add_plugin (gst_registry_get (), plugin);
+    gst_registry_add_plugin (registry, plugin);
   }
 
   g_mutex_unlock (&gst_plugin_loading_mutex);

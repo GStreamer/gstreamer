@@ -1177,7 +1177,8 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
     /* We don't use a GError here because a failure to load some shared
      * objects as plugins is normal (particularly in the uninstalled case)
      */
-    newplugin = gst_plugin_load_file (filename, NULL);
+    newplugin = _priv_gst_plugin_load_file_for_registry (filename,
+        context->registry, NULL);
   }
 
   if (newplugin) {

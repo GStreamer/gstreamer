@@ -133,6 +133,10 @@ G_GNUC_INTERNAL  void _priv_gst_registry_cleanup (void);
 
 gboolean _gst_plugin_loader_client_run (void);
 
+G_GNUC_INTERNAL  GstPlugin * _priv_gst_plugin_load_file_for_registry (const gchar *filename,
+                                                                      GstRegistry * registry,
+                                                                      GError** error);
+
 /* Used in GstBin for manual state handling */
 G_GNUC_INTERNAL  void _priv_gst_element_state_changed (GstElement *element,
                       GstState oldstate, GstState newstate, GstState pending);
