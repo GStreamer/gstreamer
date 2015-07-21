@@ -530,6 +530,7 @@ gboolean
 gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * gst_widget)
 {
   GtkGstGLWidgetPrivate *priv = gst_widget->priv;
+  GError *error = NULL;
 
   g_return_val_if_fail (GTK_IS_GST_GL_WIDGET (gst_widget), FALSE);
 
@@ -551,14 +552,12 @@ gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * gst_widget)
     return FALSE;
   }
 
-  priv->context = gst_gl_context_new (priv->display);
-
-  if (!priv->context) {
+  if (!gst_gl_display_create_context (priv->display, priv->other_context,
+          &priv->context, &error)) {
+    g_clear_error (&error);
     GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
     return FALSE;
   }
-
-  gst_gl_context_create (priv->context, priv->other_context, NULL);
 
   GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
   return TRUE;
