@@ -1503,8 +1503,10 @@ gst_base_transform_default_query (GstBaseTransform * trans,
         GST_OBJECT_UNLOCK (trans);
         goto done;
       }
-      if ((decide_query = trans->priv->query))
-        gst_query_ref (decide_query);
+
+      decide_query = trans->priv->query;
+      trans->priv->query = NULL;
+
       GST_OBJECT_UNLOCK (trans);
 
       GST_DEBUG_OBJECT (trans,
@@ -1517,8 +1519,16 @@ gst_base_transform_default_query (GstBaseTransform * trans,
       else
         ret = FALSE;
 
-      if (decide_query)
-        gst_query_unref (decide_query);
+      if (decide_query) {
+        GST_OBJECT_LOCK (trans);
+
+        if (trans->priv->query == NULL)
+          trans->priv->query = decide_query;
+        else
+          gst_query_unref (decide_query);
+
+        GST_OBJECT_UNLOCK (trans);
+      }
 
       GST_DEBUG_OBJECT (trans, "ALLOCATION ret %d, %" GST_PTR_FORMAT, ret,
           query);
