@@ -1930,11 +1930,15 @@ gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const guint8 * data, int length)
   tags = gst_rm_utils_read_tags (data, length, gst_rm_utils_read_string16);
 
   if (tags) {
+    GstTagList *old_tags = rmdemux->pending_tags;
+
     GST_LOG_OBJECT (rmdemux, "tags: %" GST_PTR_FORMAT, tags);
 
     rmdemux->pending_tags =
-        gst_tag_list_merge (rmdemux->pending_tags, tags, GST_TAG_MERGE_APPEND);
+        gst_tag_list_merge (old_tags, tags, GST_TAG_MERGE_APPEND);
+
     gst_tag_list_unref (tags);
+    gst_tag_list_unref (old_tags);
   }
 }
 
