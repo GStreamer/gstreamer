@@ -797,9 +797,21 @@ gst_concat_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
+      GstIterator *iter = gst_element_iterate_sink_pads (element);
+      GstIteratorResult res;
+
       self->format = GST_FORMAT_UNDEFINED;
       self->current_start_offset = 0;
       self->last_stop = GST_CLOCK_TIME_NONE;
+
+      do {
+        res = gst_iterator_foreach (iter, reset_pad, NULL);
+      } while (res == GST_ITERATOR_RESYNC);
+
+      gst_iterator_free (iter);
+
+      if (res == GST_ITERATOR_ERROR)
+        return GST_STATE_CHANGE_FAILURE;
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:{
@@ -825,28 +837,6 @@ gst_concat_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:{
-      GstIterator *iter = gst_element_iterate_sink_pads (element);
-      GstIteratorResult res;
-
-      do {
-        res = gst_iterator_foreach (iter, reset_pad, NULL);
-      } while (res == GST_ITERATOR_RESYNC);
-
-      gst_iterator_free (iter);
-
-      if (res == GST_ITERATOR_ERROR)
-        return GST_STATE_CHANGE_FAILURE;
-
-      break;
-    }
-    default:
-      break;
-  }
 
   return ret;
 }
