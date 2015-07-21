@@ -623,9 +623,6 @@ gst_glimage_sink_finalize (GObject * object)
   g_return_if_fail (GST_IS_GLIMAGE_SINK (object));
 
   glimage_sink = GST_GLIMAGE_SINK (object);
-
-  gst_object_unref (glimage_sink->overlay_compositor);
-
   g_mutex_clear (&glimage_sink->drawing_lock);
 
   GST_DEBUG ("finalized");
@@ -912,11 +909,12 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       if (!_ensure_gl_setup (glimage_sink))
         return GST_STATE_CHANGE_FAILURE;
 
+      glimage_sink->overlay_compositor =
+          gst_gl_overlay_compositor_new (glimage_sink->context);
+
       g_atomic_int_set (&glimage_sink->to_quit, 0);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      glimage_sink->overlay_compositor =
-          gst_gl_overlay_compositor_new (glimage_sink->context);
       break;
     default:
       break;
@@ -985,6 +983,9 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         if (glimage_sink->mouse_sig_id)
           g_signal_handler_disconnect (window, glimage_sink->mouse_sig_id);
         glimage_sink->mouse_sig_id = 0;
+
+        gst_object_unref (glimage_sink->overlay_compositor);
+        glimage_sink->overlay_compositor = NULL;
 
         gst_object_unref (window);
         gst_object_unref (glimage_sink->context);
@@ -1285,10 +1286,9 @@ prepare_next_buffer (GstGLImageSink * glimage_sink)
     info = &glimage_sink->in_info;
   }
 
-  if (glimage_sink->overlay_compositor)
-    gst_gl_overlay_compositor_upload_overlays (glimage_sink->overlay_compositor,
-        next_buffer, glimage_sink->attr_position, glimage_sink->attr_texture,
-        glimage_sink->window_width, glimage_sink->window_height);
+  gst_gl_overlay_compositor_upload_overlays (glimage_sink->overlay_compositor,
+      next_buffer, glimage_sink->attr_position, glimage_sink->attr_texture,
+      glimage_sink->window_width, glimage_sink->window_height);
 
   /* in_buffer invalid now */
   if (!gst_video_frame_map (&gl_frame, info, next_buffer,
@@ -1880,9 +1880,8 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
-    if (gl_sink->overlay_compositor)
-      gst_gl_overlay_compositor_draw_overlays (gl_sink->overlay_compositor,
-          gl_sink->redisplay_shader);
+    gst_gl_overlay_compositor_draw_overlays (gl_sink->overlay_compositor,
+        gl_sink->redisplay_shader);
 
     gst_gl_context_clear_shader (gl_sink->context);
 
