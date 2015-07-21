@@ -55,7 +55,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglsyncmeta.h \
 	gstglviewconvert.h \
 	gstglcompositionoverlay.h \
-	gstgloverlaycompositor.c \
+	gstgloverlaycompositor.h \
 	gstgl_fwd.h \
 	gl.h
 
