@@ -80,11 +80,11 @@ typedef struct
   guint32 stream_start_seqnum;
   guint32 segment_seqnum;
   guint group_id;
-} GstStream;
+} GstSyncStream;
 
 /* Must be called with lock! */
 static inline GstPad *
-gst_stream_get_other_pad (GstStream * stream, GstPad * pad)
+gst_stream_get_other_pad (GstSyncStream * stream, GstPad * pad)
 {
   if (stream->sinkpad == pad)
     return gst_object_ref (stream->srcpad);
@@ -97,7 +97,7 @@ gst_stream_get_other_pad (GstStream * stream, GstPad * pad)
 static GstPad *
 gst_stream_get_other_pad_from_pad (GstStreamSynchronizer * self, GstPad * pad)
 {
-  GstStream *stream;
+  GstSyncStream *stream;
   GstPad *opad = NULL;
 
   GST_STREAM_SYNCHRONIZER_LOCK (self);
@@ -156,7 +156,7 @@ gst_stream_synchronizer_src_event (GstPad * pad, GstObject * parent,
       GstClockTimeDiff diff;
       GstClockTime timestamp;
       gint64 running_time_diff = -1;
-      GstStream *stream;
+      GstSyncStream *stream;
 
       gst_event_parse_qos (event, NULL, &proportion, &diff, &timestamp);
       gst_event_unref (event);
@@ -211,7 +211,7 @@ static gboolean
 gst_stream_synchronizer_wait (GstStreamSynchronizer * self, GstPad * pad)
 {
   gboolean ret = FALSE;
-  GstStream *stream;
+  GstSyncStream *stream;
 
   while (!self->eos && !self->flushing) {
     stream = gst_pad_get_element_private (pad);
@@ -278,7 +278,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_STREAM_START:
     {
-      GstStream *stream, *ostream;
+      GstSyncStream *stream, *ostream;
       guint32 seqnum = gst_event_get_seqnum (event);
       guint group_id;
       gboolean have_group_id;
@@ -344,7 +344,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         stream->wait = TRUE;
 
         for (l = self->streams; l; l = l->next) {
-          GstStream *ostream = l->data;
+          GstSyncStream *ostream = l->data;
 
           all_wait = all_wait && ((ostream->flags & GST_STREAM_FLAG_SPARSE)
               || (ostream->wait && (!have_group_id
@@ -366,7 +366,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
           self->group_id = group_id;
 
           for (l = self->streams; l; l = l->next) {
-            GstStream *ostream = l->data;
+            GstSyncStream *ostream = l->data;
             gint64 stop_running_time;
             gint64 position_running_time;
 
@@ -397,7 +397,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
               GST_TIME_ARGS (self->group_start_time));
 
           for (l = self->streams; l; l = l->next) {
-            GstStream *ostream = l->data;
+            GstSyncStream *ostream = l->data;
             ostream->wait = FALSE;
             g_cond_broadcast (&ostream->stream_finish_cond);
           }
@@ -408,7 +408,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       break;
     }
     case GST_EVENT_SEGMENT:{
-      GstStream *stream;
+      GstSyncStream *stream;
       GstSegment segment;
 
       gst_event_copy_segment (event, &segment);
@@ -457,7 +457,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       break;
     }
     case GST_EVENT_FLUSH_START:{
-      GstStream *stream;
+      GstSyncStream *stream;
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       stream = gst_pad_get_element_private (pad);
@@ -471,7 +471,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       break;
     }
     case GST_EVENT_FLUSH_STOP:{
-      GstStream *stream;
+      GstSyncStream *stream;
       GList *l;
       GstClockTime new_group_start_time = 0;
 
@@ -490,7 +490,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       }
 
       for (l = self->streams; l; l = l->next) {
-        GstStream *ostream = l->data;
+        GstSyncStream *ostream = l->data;
         GstClockTime start_running_time;
 
         if (ostream == stream)
@@ -518,7 +518,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       if (gst_event_has_name (event, "playsink-custom-video-flush")
           || gst_event_has_name (event, "playsink-custom-audio-flush")
           || gst_event_has_name (event, "playsink-custom-subtitle-flush")) {
-        GstStream *stream;
+        GstSyncStream *stream;
 
         GST_STREAM_SYNCHRONIZER_LOCK (self);
         stream = gst_pad_get_element_private (pad);
@@ -533,7 +533,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       break;
     }
     case GST_EVENT_EOS:{
-      GstStream *stream;
+      GstSyncStream *stream;
       GList *l;
       gboolean all_eos = TRUE;
       gboolean seen_data;
@@ -565,7 +565,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       stream->segment.position = timestamp;
 
       for (l = self->streams; l; l = l->next) {
-        GstStream *ostream = l->data;
+        GstSyncStream *ostream = l->data;
 
         all_eos = all_eos && ostream->is_eos;
         if (!all_eos)
@@ -576,7 +576,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (self, "All streams are EOS -- forwarding");
         self->eos = TRUE;
         for (l = self->streams; l; l = l->next) {
-          GstStream *ostream = l->data;
+          GstSyncStream *ostream = l->data;
           /* local snapshot of current pads */
           gst_object_ref (ostream->srcpad);
           pads = g_slist_prepend (pads, ostream->srcpad);
@@ -585,7 +585,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       if (pads) {
         GstPad *pad;
         GSList *epad;
-        GstStream *ostream;
+        GstSyncStream *ostream;
 
         ret = TRUE;
         epad = pads;
@@ -650,7 +650,7 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
   GstStreamSynchronizer *self = GST_STREAM_SYNCHRONIZER (parent);
   GstPad *opad;
   GstFlowReturn ret = GST_FLOW_ERROR;
-  GstStream *stream;
+  GstSyncStream *stream;
   GstClockTime duration = GST_CLOCK_TIME_NONE;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE;
   GstClockTime timestamp_end = GST_CLOCK_TIME_NONE;
@@ -723,7 +723,7 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
     }
 
     for (l = self->streams; l; l = l->next) {
-      GstStream *ostream = l->data;
+      GstSyncStream *ostream = l->data;
       gint64 position;
 
       if (!ostream->is_eos || ostream->eos_sent ||
@@ -766,14 +766,14 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * name, const GstCaps * caps)
 {
   GstStreamSynchronizer *self = GST_STREAM_SYNCHRONIZER (element);
-  GstStream *stream;
+  GstSyncStream *stream;
   gchar *tmp;
 
   GST_STREAM_SYNCHRONIZER_LOCK (self);
   GST_DEBUG_OBJECT (self, "Requesting new pad for stream %d",
       self->current_stream_number);
 
-  stream = g_slice_new0 (GstStream);
+  stream = g_slice_new0 (GstSyncStream);
   stream->transform = self;
   stream->stream_number = self->current_stream_number;
   g_cond_init (&stream->stream_finish_cond);
@@ -830,7 +830,7 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
 /* Must be called with lock! */
 static void
 gst_stream_synchronizer_release_stream (GstStreamSynchronizer * self,
-    GstStream * stream)
+    GstSyncStream * stream)
 {
   GList *l;
 
@@ -861,7 +861,7 @@ gst_stream_synchronizer_release_stream (GstStreamSynchronizer * self,
   gst_element_remove_pad (GST_ELEMENT_CAST (self), stream->sinkpad);
 
   g_cond_clear (&stream->stream_finish_cond);
-  g_slice_free (GstStream, stream);
+  g_slice_free (GstSyncStream, stream);
 
   /* NOTE: In theory we have to check here if all streams
    * are EOS but the one that was removed wasn't and then
@@ -880,7 +880,7 @@ static void
 gst_stream_synchronizer_release_pad (GstElement * element, GstPad * pad)
 {
   GstStreamSynchronizer *self = GST_STREAM_SYNCHRONIZER (element);
-  GstStream *stream;
+  GstSyncStream *stream;
 
   GST_STREAM_SYNCHRONIZER_LOCK (self);
   stream = gst_pad_get_element_private (pad);
@@ -923,7 +923,7 @@ gst_stream_synchronizer_change_state (GstElement * element,
       self->flushing = TRUE;
       self->shutdown = TRUE;
       for (l = self->streams; l; l = l->next) {
-        GstStream *ostream = l->data;
+        GstSyncStream *ostream = l->data;
         g_cond_broadcast (&ostream->stream_finish_cond);
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
@@ -945,7 +945,7 @@ gst_stream_synchronizer_change_state (GstElement * element,
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       for (l = self->streams; l; l = l->next) {
-        GstStream *stream = l->data;
+        GstSyncStream *stream = l->data;
         /* send GAP event to sink to finished pre-roll. The reason is function
          * chain () will be blocked on pad_push (), so can't trigger the track
          * which reach EOS to send GAP event. */
@@ -967,7 +967,7 @@ gst_stream_synchronizer_change_state (GstElement * element,
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       self->send_gap_event = FALSE;
       for (l = self->streams; l; l = l->next) {
-        GstStream *stream = l->data;
+        GstSyncStream *stream = l->data;
 
         gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
         stream->gap_duration = GST_CLOCK_TIME_NONE;
