@@ -887,7 +887,6 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
 
   overlay->info = info;
   overlay->format = GST_VIDEO_INFO_FORMAT (&info);
-
   overlay->stream_width = GST_VIDEO_INFO_WIDTH (&info);
   overlay->stream_height = GST_VIDEO_INFO_HEIGHT (&info);
 
@@ -1510,6 +1509,7 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
 
     if (overlay->composition)
       gst_video_overlay_composition_unref (overlay->composition);
+
     overlay->composition = gst_video_overlay_composition_new (rectangle);
     gst_video_overlay_rectangle_unref (rectangle);
 
