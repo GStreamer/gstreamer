@@ -357,12 +357,8 @@ _ensure_gl_setup (GstCAOpenGLLayerSink * ca_sink)
   gst_gl_display_filter_gl_api (ca_sink->display, SUPPORTED_GL_APIS);
 
   if (!ca_sink->context) {
-    ca_sink->context = gst_gl_context_new (ca_sink->display);
-    if (!ca_sink->context)
-      goto context_creation_error;
-
-    if (!gst_gl_context_create (ca_sink->context, ca_sink->other_context,
-            &error)) {
+    if (!gst_gl_display_create_context (ca_sink->display,
+            ca_sink->other_context, &ca_sink->context, &error)) {
       goto context_error;
     }
   }
