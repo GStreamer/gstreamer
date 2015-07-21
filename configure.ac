@@ -2150,13 +2150,19 @@ AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
 
 dnl **** Wayland ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_WAYLAND, true)
+AC_PATH_PROG([wayland_scanner], [wayland-scanner])
 AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
-  PKG_CHECK_MODULES(WAYLAND, wayland-client >= 1.4.0 wayland-scanner, [
-    HAVE_WAYLAND="yes" ], [ HAVE_WAYLAND="no"
+  PKG_CHECK_MODULES(WAYLAND, wayland-client >= 1.4.0, [
+    if test "x$wayland_scanner" != "x"; then
+      HAVE_WAYLAND="yes"
+    else
+      AC_MSG_RESULT([wayland-scanner is required to build the wayland plugin])
+      HAVE_WAYLAND="no"
+    fi
+    ],
+    [ HAVE_WAYLAND="no"
   ])
 ])
-
-AC_PATH_PROG([wayland_scanner], [wayland-scanner])
 
 dnl **** WebP ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_WEBP, true)
