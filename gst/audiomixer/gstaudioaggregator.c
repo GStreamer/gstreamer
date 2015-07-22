@@ -1011,10 +1011,6 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   element = GST_ELEMENT (agg);
   aagg = GST_AUDIO_AGGREGATOR (agg);
 
-  blocksize = gst_util_uint64_scale (aagg->priv->output_buffer_duration,
-      GST_AUDIO_INFO_RATE (&aagg->info), GST_SECOND);
-  blocksize = MAX (1, blocksize);
-
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (agg);
 
@@ -1062,6 +1058,9 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   rate = GST_AUDIO_INFO_RATE (&aagg->info);
   bpf = GST_AUDIO_INFO_BPF (&aagg->info);
 
+  blocksize = gst_util_uint64_scale (aagg->priv->output_buffer_duration,
+      GST_AUDIO_INFO_RATE (&aagg->info), GST_SECOND);
+  blocksize = MAX (1, blocksize);
 
   /* for the next timestamp, use the sample counter, which will
    * never accumulate rounding errors */
