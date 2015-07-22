@@ -1834,7 +1834,7 @@ AG_GST_CHECK_FEATURE(CURL, [Curl plugin], curl, [
 dnl **** DASH ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_DASH, true)
 AG_GST_CHECK_FEATURE(DASH, [DASH plug-in], dash, [
-  PKG_CHECK_MODULES(LIBXML2, libxml-2.0 >= 2.4, [HAVE_LIBXML2="yes"
+  PKG_CHECK_MODULES(LIBXML2, libxml-2.0 >= 2.8, [HAVE_LIBXML2="yes"
     HAVE_DASH="yes"], [HAVE_LIBXML2="no"
     HAVE_DASH="no"])
   AC_SUBST(LIBXML2_CFLAGS)
