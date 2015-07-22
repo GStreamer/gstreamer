@@ -78,9 +78,6 @@ typedef struct _GstGLViewConvert GstGLViewConvert;
 typedef struct _GstGLViewConvertClass GstGLViewConvertClass;
 typedef struct _GstGLViewConvertPrivate GstGLViewConvertPrivate;
 
-typedef struct _GstGLCompositionOverlay GstGLCompositionOverlay;
-typedef struct _GstGLCompositionOverlayClass GstGLCompositionOverlayClass;
-
 typedef struct _GstGLOverlayCompositor GstGLOverlayCompositor;
 typedef struct _GstGLOverlayCompositorClass GstGLOverlayCompositorClass;
 
