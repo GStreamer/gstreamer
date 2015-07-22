@@ -1,0 +1,107 @@
+From a711206aeb002e5e523ed6f4a045c2b2b7fb128e Mon Sep 17 00:00:00 2001
+From: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+Date: Tue, 21 Jul 2015 12:13:18 +0300
+Subject: [PATCH 4/4] h264parse: Disable 3D video support for GStremaer < 1.5
+
+All API/ABI changes for S3D/MVC are added in 1.5, backporting
+them to older verison is not recommended.
+
+Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+---
+ gst/vaapi/gsth264parse.c | 11 ++++++++++-
+ gst/vaapi/gsth264parse.h |  2 ++
+ 2 files changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
+index 98e9aa6..cd8cf2b 100644
+--- a/gst/vaapi/gsth264parse.c
++++ b/gst/vaapi/gsth264parse.c
+@@ -215,9 +215,11 @@ gst_h264_parse_reset_stream_info (GstH264Parse * h264parse)
+   h264parse->have_pps = FALSE;
+   h264parse->have_sps = FALSE;
+ 
++#if GST_CHECK_VERSION(1,5,0)
+   h264parse->multiview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+   h264parse->multiview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+   h264parse->first_in_bundle = TRUE;
++#endif
+ 
+   h264parse->align = GST_H264_PARSE_ALIGN_NONE;
+   h264parse->format = GST_H264_PARSE_FORMAT_NONE;
+@@ -562,6 +564,7 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+         /* Additional messages that are not innerly useful to the
+          * element but for debugging purposes */
+       case GST_H264_SEI_STEREO_VIDEO_INFO:{
++#if GST_CHECK_VERSION(1,5,0)
+         GstVideoMultiviewMode mview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+         GstVideoMultiviewFlags mview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+ 
+@@ -593,9 +596,11 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+           /* output caps need to be changed */
+           gst_h264_parse_update_src_caps (h264parse, NULL);
+         }
++#endif
+         break;
+       }
+       case GST_H264_SEI_FRAME_PACKING:{
++#if GST_CHECK_VERSION(1,5,0)
+         GstVideoMultiviewMode mview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+         GstVideoMultiviewFlags mview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+ 
+@@ -684,6 +689,7 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+           /* output caps need to be changed */
+           gst_h264_parse_update_src_caps (h264parse, NULL);
+         }
++#endif
+         break;
+       }
+     }
+@@ -1746,9 +1752,11 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
+       gint width, height;
+       GstClockTime latency;
+ 
++#if GST_CHECK_VERSION(1,5,0)
+       const gchar *caps_mview_mode = NULL;
+       GstVideoMultiviewMode mview_mode = h264parse->multiview_mode;
+       GstVideoMultiviewFlags mview_flags = h264parse->multiview_flags;
++#endif
+ 
+       fps_num = h264parse->fps_num;
+       fps_den = h264parse->fps_den;
+@@ -1780,6 +1788,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
+         }
+       }
+ 
++#if GST_CHECK_VERSION(1,5,0)
+       /* Pass through or set output stereo/multiview config */
+       if (s && gst_structure_has_field (s, "multiview-mode")) {
+         caps_mview_mode = gst_structure_get_string (s, "multiview-mode");
+@@ -1798,7 +1807,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
+             GST_TYPE_VIDEO_MULTIVIEW_FLAGSET, mview_flags,
+             GST_FLAG_SET_MASK_EXACT, NULL);
+       }
+-
++#endif
+       gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
+           "height", G_TYPE_INT, height, NULL);
+ 
+diff --git a/gst/vaapi/gsth264parse.h b/gst/vaapi/gsth264parse.h
+index 58d818c..de9be02 100644
+--- a/gst/vaapi/gsth264parse.h
++++ b/gst/vaapi/gsth264parse.h
+@@ -123,10 +123,12 @@ struct _GstH264Parse
+   GstClockTime pending_key_unit_ts;
+   GstEvent *force_key_unit_event;
+ 
++#if GST_CHECK_VERSION(1,5,0)
+   /* Stereo / multiview info */
+   GstVideoMultiviewMode multiview_mode;
+   GstVideoMultiviewFlags multiview_flags;
+   gboolean first_in_bundle;
++#endif
+ };
+ 
+ struct _GstH264ParseClass
+-- 
+2.1.4
+
