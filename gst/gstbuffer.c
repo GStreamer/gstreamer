@@ -2259,8 +2259,8 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
  *  the destination array will be written.
  * @dest_size: (out): A location where the size of @dest can be written
  *
- * Extracts a copy of at most @size bytes the data at @offset into a #GBytes.
- * @dest must be freed using g_free() when done.
+ * Extracts a copy of at most @size bytes the data at @offset into
+ * newly-allocated memory. @dest must be freed using g_free() when done.
  *
  * Since: 1.0.10
  */
