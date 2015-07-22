@@ -667,15 +667,18 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 self.options.paths = [os.path.join(self.options.paths)]
 
             for path in self.options.paths:
-                for root, dirs, files in os.walk(path):
-                    for f in files:
-                        fpath = os.path.join(path, root, f)
-                        if os.path.isdir(fpath) or \
-                                fpath.endswith(GstValidateMediaDescriptor.MEDIA_INFO_EXT) or\
-                                fpath.endswith(ScenarioManager.FILE_EXTENSION):
-                            continue
-                        else:
-                            self._discover_file(path2url(fpath), fpath)
+                if os.path.isfile(path):
+                    self._discover_file(path2url(path), path)
+                else:
+                    for root, dirs, files in os.walk(path):
+                        for f in files:
+                            fpath = os.path.join(path, root, f)
+                            if os.path.isdir(fpath) or \
+                                    fpath.endswith(GstValidateMediaDescriptor.MEDIA_INFO_EXT) or\
+                                    fpath.endswith(ScenarioManager.FILE_EXTENSION):
+                                continue
+                            else:
+                                self._discover_file(path2url(fpath), fpath)
 
         self.debug("Uris found: %s", self._uris)
 
