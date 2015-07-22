@@ -823,14 +823,11 @@ forward_event_func (const GValue * item, GValue * ret, gpointer user_data)
 static gboolean
 forward_event (GstLiveAdder * adder, GstEvent * event)
 {
-  gboolean ret;
   GstIterator *it;
   GValue vret = { 0 };
 
   GST_LOG_OBJECT (adder, "Forwarding event %p (%s)", event,
       GST_EVENT_TYPE_NAME (event));
-
-  ret = TRUE;
 
   g_value_init (&vret, G_TYPE_BOOLEAN);
   g_value_set_boolean (&vret, TRUE);
@@ -838,9 +835,7 @@ forward_event (GstLiveAdder * adder, GstEvent * event)
   gst_iterator_fold (it, forward_event_func, &vret, event);
   gst_iterator_free (it);
 
-  ret = g_value_get_boolean (&vret);
-
-  return ret;
+  return g_value_get_boolean (&vret);
 }
 
 
