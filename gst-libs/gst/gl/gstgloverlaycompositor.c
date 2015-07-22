@@ -187,7 +187,7 @@ gst_gl_composition_overlay_finalize (GObject * object)
 
   if (overlay->gl_memory)
     gst_memory_unref ((GstMemory *) overlay->gl_memory);
-  overlay->gl_memory = NULL;
+
   if (overlay->context) {
     gst_gl_context_thread_add (overlay->context,
         gst_gl_composition_overlay_free_vertex_buffer, overlay);
@@ -294,62 +294,65 @@ gst_gl_composition_overlay_new (GstGLContext * context,
 }
 
 static void
+_video_frame_unmap_and_free (gpointer user_data)
+{
+  GstVideoFrame *frame = user_data;
+
+  gst_video_frame_unmap (frame);
+  g_slice_free (GstVideoFrame, frame);
+}
+
+static void
 gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
     GstBuffer * buf)
 {
-  GstMapInfo info;
-  GstVideoMeta *vmeta;
   GstGLMemory *comp_gl_memory = NULL;
-  gint stride;
   GstBuffer *comp_buffer = NULL;
-  GstVideoMeta *meta;
-  GstVideoInfo text_info;
-  gpointer raw_overlay_data;
   GstBuffer *overlay_buffer = NULL;
+  GstVideoInfo vinfo;
+  GstVideoMeta *vmeta;
+  GstVideoFrame *comp_frame;
   GstVideoFrame gl_frame;
 
   comp_buffer =
       gst_video_overlay_rectangle_get_pixels_unscaled_argb (overlay->rectangle,
       GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
 
+  comp_frame = g_slice_new (GstVideoFrame);
+
   vmeta = gst_buffer_get_video_meta (comp_buffer);
+  gst_video_info_set_format (&vinfo, vmeta->format, vmeta->width,
+      vmeta->height);
+  vinfo.stride[0] = vmeta->stride[0];
 
-  if (gst_video_meta_map (vmeta, 0, &info, &raw_overlay_data, &stride,
-          GST_MAP_READ)) {
-    g_assert (raw_overlay_data);
-
-    meta = gst_buffer_get_video_meta (comp_buffer);
-
+  if (gst_video_frame_map (comp_frame, &vinfo, comp_buffer, GST_MAP_READ)) {
     gst_gl_composition_overlay_add_transformation (overlay, buf);
 
-    gst_video_info_init (&text_info);
-    gst_video_info_set_format (&text_info, meta->format, meta->width,
-        meta->height);
-    text_info->stride[0] = stride;
-
     comp_gl_memory =
-        gst_gl_memory_wrapped (overlay->context, &text_info, 0, NULL,
-        raw_overlay_data, NULL, NULL);
+        gst_gl_memory_wrapped (overlay->context, &comp_frame->info, 0, NULL,
+        comp_frame->data[0], comp_frame, _video_frame_unmap_and_free);
 
     overlay_buffer = gst_buffer_new ();
-    gst_buffer_append_memory (overlay_buffer,
-        gst_memory_ref ((GstMemory *) comp_gl_memory));
+    gst_buffer_append_memory (overlay_buffer, (GstMemory *) comp_gl_memory);
 
-    if (!gst_video_frame_map (&gl_frame, &text_info, overlay_buffer,
+    if (!gst_video_frame_map (&gl_frame, &comp_frame->info, overlay_buffer,
             GST_MAP_READ | GST_MAP_GL)) {
       gst_buffer_unref (overlay_buffer);
-      gst_video_meta_unmap (vmeta, 0, &info);
+      _video_frame_unmap_and_free (comp_frame);
       GST_WARNING_OBJECT (overlay, "Cannot upload overlay texture");
       return;
     }
 
-    gst_buffer_unref (overlay_buffer);
-    overlay->texture_id = comp_gl_memory->tex_id;
-    GST_DEBUG ("uploaded overlay texture %d", overlay->texture_id);
-    gst_video_frame_unmap (&gl_frame);
+    gst_memory_ref ((GstMemory *) comp_gl_memory);
     overlay->gl_memory = comp_gl_memory;
+    overlay->texture_id = comp_gl_memory->tex_id;
 
-    gst_video_meta_unmap (vmeta, 0, &info);
+    gst_buffer_unref (overlay_buffer);
+    gst_video_frame_unmap (&gl_frame);
+
+    GST_DEBUG ("uploaded overlay texture %d", overlay->texture_id);
+  } else {
+    g_slice_free (GstVideoFrame, comp_frame);
   }
 }
 
