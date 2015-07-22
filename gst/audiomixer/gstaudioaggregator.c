@@ -1026,7 +1026,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
   /* Sync pad properties to the stream time */
   gst_aggregator_iterate_sinkpads (agg,
-      (GstAggregatorPadForeachFunc) sync_pad_values, NULL);
+      (GstAggregatorPadForeachFunc) GST_DEBUG_FUNCPTR (sync_pad_values), NULL);
 
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (agg);
