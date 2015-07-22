@@ -158,7 +158,8 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
       g_param_spec_uint ("ssrc", "SSRC",
           "The SSRC of the packets (-1 == random)",
           0, G_MAXUINT, DEFAULT_SSRC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_mux_request_new_pad);
@@ -207,6 +208,51 @@ gst_rtp_mux_src_event_real (GstRTPMux * rtp_mux, GstEvent * event)
   gboolean result = FALSE;
   gboolean done = FALSE;
 
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+    {
+      const GstStructure *s = gst_event_get_structure (event);
+
+      if (gst_structure_has_name (s, "GstRTPCollision")) {
+        guint ssrc = 0;
+
+        if (!gst_structure_get_uint (s, "ssrc", &ssrc))
+          ssrc = -1;
+
+        GST_DEBUG_OBJECT (rtp_mux, "collided ssrc: %" G_GUINT32_FORMAT, ssrc);
+
+        /* choose another ssrc for our stream */
+        GST_OBJECT_LOCK (rtp_mux);
+        if (ssrc == rtp_mux->current_ssrc) {
+          GstCaps *caps;
+          guint suggested_ssrc = 0;
+          guint32 new_ssrc;
+
+          if (gst_structure_get_uint (s, "suggested-ssrc", &suggested_ssrc))
+            rtp_mux->current_ssrc = suggested_ssrc;
+
+          while (ssrc == rtp_mux->current_ssrc)
+            rtp_mux->current_ssrc = g_random_int ();
+
+          new_ssrc = rtp_mux->current_ssrc;
+          GST_OBJECT_UNLOCK (rtp_mux);
+
+          caps = gst_pad_get_current_caps (rtp_mux->srcpad);
+          caps = gst_caps_make_writable (caps);
+          gst_caps_set_simple (caps, "ssrc", G_TYPE_UINT, new_ssrc, NULL);
+          gst_pad_set_caps (rtp_mux->srcpad, caps);
+          gst_caps_unref (caps);
+        } else {
+          GST_OBJECT_UNLOCK (rtp_mux);
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+
   iter = gst_element_iterate_sink_pads (GST_ELEMENT (rtp_mux));
 
   while (!done) {
@@ -249,6 +295,7 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
   gst_element_add_pad (GST_ELEMENT (rtp_mux), rtp_mux->srcpad);
 
   rtp_mux->ssrc = DEFAULT_SSRC;
+  rtp_mux->current_ssrc = DEFAULT_SSRC;
   rtp_mux->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   rtp_mux->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
 
@@ -414,6 +461,17 @@ gst_rtp_mux_chain_list (GstPad * pad, GstObject * parent,
 
   rtp_mux = GST_RTP_MUX (parent);
 
+  if (gst_pad_check_reconfigure (rtp_mux->srcpad)) {
+    GstCaps *current_caps = gst_pad_get_current_caps (pad);
+
+    if (!gst_rtp_mux_setcaps (pad, rtp_mux, current_caps)) {
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      gst_buffer_list_unref (bufferlist);
+      goto out;
+    }
+    gst_caps_unref (current_caps);
+  }
+
   GST_OBJECT_LOCK (rtp_mux);
 
   padpriv = gst_pad_get_element_private (pad);
@@ -472,7 +530,18 @@ gst_rtp_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gboolean changed = FALSE;
   GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
 
-  rtp_mux = GST_RTP_MUX (GST_OBJECT_PARENT (pad));
+  rtp_mux = GST_RTP_MUX (parent);
+
+  if (gst_pad_check_reconfigure (rtp_mux->srcpad)) {
+    GstCaps *current_caps = gst_pad_get_current_caps (pad);
+
+    if (!gst_rtp_mux_setcaps (pad, rtp_mux, current_caps)) {
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      gst_buffer_unref (buffer);
+      goto out;
+    }
+    gst_caps_unref (current_caps);
+  }
 
   GST_OBJECT_LOCK (rtp_mux);
   padpriv = gst_pad_get_element_private (pad);
@@ -523,6 +592,7 @@ gst_rtp_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     ret = gst_pad_push (rtp_mux->srcpad, buffer);
   }
 
+out:
   return ret;
 }
 
@@ -532,6 +602,34 @@ gst_rtp_mux_setcaps (GstPad * pad, GstRTPMux * rtp_mux, GstCaps * caps)
   GstStructure *structure;
   gboolean ret = FALSE;
   GstRTPMuxPadPrivate *padpriv;
+  GstCaps *peercaps;
+
+  if (!gst_caps_is_fixed (caps))
+    return FALSE;
+
+  peercaps = gst_pad_peer_query_caps (rtp_mux->srcpad, NULL);
+  if (peercaps) {
+    GstCaps *tcaps, *othercaps;;
+    tcaps = gst_pad_get_pad_template_caps (pad);
+    othercaps = gst_caps_intersect_full (peercaps, tcaps,
+        GST_CAPS_INTERSECT_FIRST);
+
+    if (gst_caps_get_size (othercaps) > 0) {
+      structure = gst_caps_get_structure (othercaps, 0);
+      GST_OBJECT_LOCK (rtp_mux);
+      if (gst_structure_get_uint (structure, "ssrc", &rtp_mux->current_ssrc)) {
+        GST_DEBUG_OBJECT (pad, "Use downstream ssrc: %x",
+            rtp_mux->current_ssrc);
+        rtp_mux->have_ssrc = TRUE;
+      }
+      GST_OBJECT_UNLOCK (rtp_mux);
+    }
+
+    gst_caps_unref (othercaps);
+
+    gst_caps_unref (peercaps);
+    gst_caps_unref (tcaps);
+  }
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -545,13 +643,25 @@ gst_rtp_mux_setcaps (GstPad * pad, GstRTPMux * rtp_mux, GstCaps * caps)
           &padpriv->timestamp_offset)) {
     padpriv->have_timestamp_offset = TRUE;
   }
-  GST_OBJECT_UNLOCK (rtp_mux);
 
   caps = gst_caps_copy (caps);
 
+  /* if we don't have a specified ssrc, first try to take one from the caps,
+     and if that fails, generate one */
+  if (!rtp_mux->have_ssrc) {
+    if (rtp_mux->ssrc == DEFAULT_SSRC) {
+      if (!gst_structure_get_uint (structure, "ssrc", &rtp_mux->current_ssrc))
+        rtp_mux->current_ssrc = g_random_int ();
+      rtp_mux->have_ssrc = TRUE;
+    }
+  }
+
   gst_caps_set_simple (caps,
       "timestamp-offset", G_TYPE_UINT, rtp_mux->ts_base,
-      "seqnum-offset", G_TYPE_UINT, rtp_mux->seqnum_base, NULL);
+      "seqnum-offset", G_TYPE_UINT, rtp_mux->seqnum_base,
+      "ssrc", G_TYPE_UINT, rtp_mux->current_ssrc, NULL);
+
+  GST_OBJECT_UNLOCK (rtp_mux);
 
   if (rtp_mux->send_stream_start) {
     gchar s_id[32];
@@ -567,7 +677,6 @@ gst_rtp_mux_setcaps (GstPad * pad, GstRTPMux * rtp_mux, GstCaps * caps)
       "setting caps %" GST_PTR_FORMAT " on src pad..", caps);
   ret = gst_pad_set_caps (rtp_mux->srcpad, caps);
 
-  gst_structure_get_uint (structure, "ssrc", &rtp_mux->current_ssrc);
 
   gst_caps_unref (caps);
 
@@ -630,9 +739,8 @@ gst_rtp_mux_getcaps (GstPad * pad, GstRTPMux * mux, GstCaps * filter)
   GstCaps *peercaps;
   GstCaps *othercaps;
   GstCaps *tcaps;
-  GstCaps *other_filtered;
 
-  peercaps = gst_pad_peer_query_caps (mux->srcpad, filter);
+  peercaps = gst_pad_peer_query_caps (mux->srcpad, NULL);
 
   if (peercaps) {
     tcaps = gst_pad_get_pad_template_caps (pad);
@@ -649,21 +757,20 @@ gst_rtp_mux_getcaps (GstPad * pad, GstRTPMux * mux, GstCaps * filter)
   }
   gst_caps_unref (tcaps);
 
-  clear_caps (othercaps, FALSE);
+  GST_LOG_OBJECT (pad, "Intersected srcpad-peercaps and template caps: %"
+      GST_PTR_FORMAT, othercaps);
 
-  other_filtered = gst_caps_copy (othercaps);
-  clear_caps (other_filtered, TRUE);
+  clear_caps (othercaps, TRUE);
 
   g_value_init (&v, GST_TYPE_CAPS);
 
   iter = gst_element_iterate_sink_pads (GST_ELEMENT (mux));
   do {
-    gst_value_set_caps (&v, other_filtered);
+    gst_value_set_caps (&v, othercaps);
     res = gst_iterator_fold (iter, same_clock_rate_fold, &v, pad);
     gst_iterator_resync (iter);
   } while (res == GST_ITERATOR_RESYNC);
   gst_iterator_free (iter);
-  gst_caps_unref (other_filtered);
 
   caps = gst_caps_intersect ((GstCaps *) gst_value_get_caps (&v), othercaps);
 
@@ -691,8 +798,12 @@ gst_rtp_mux_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
+      GST_LOG_OBJECT (pad, "Received caps-query with filter-caps: %"
+          GST_PTR_FORMAT, filter);
       caps = gst_rtp_mux_getcaps (pad, mux, filter);
       gst_query_set_caps_result (query, caps);
+      GST_LOG_OBJECT (mux, "Answering caps-query with caps: %"
+          GST_PTR_FORMAT, caps);
       gst_caps_unref (caps);
       res = TRUE;
       break;
@@ -703,10 +814,7 @@ gst_rtp_mux_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   }
 
   return res;
-
-
 }
-
 
 static void
 gst_rtp_mux_get_property (GObject * object,
@@ -716,6 +824,7 @@ gst_rtp_mux_get_property (GObject * object,
 
   rtp_mux = GST_RTP_MUX (object);
 
+  GST_OBJECT_LOCK (rtp_mux);
   switch (prop_id) {
     case PROP_TIMESTAMP_OFFSET:
       g_value_set_int (value, rtp_mux->ts_offset);
@@ -724,9 +833,7 @@ gst_rtp_mux_get_property (GObject * object,
       g_value_set_int (value, rtp_mux->seqnum_offset);
       break;
     case PROP_SEQNUM:
-      GST_OBJECT_LOCK (rtp_mux);
       g_value_set_uint (value, rtp_mux->seqnum);
-      GST_OBJECT_UNLOCK (rtp_mux);
       break;
     case PROP_SSRC:
       g_value_set_uint (value, rtp_mux->ssrc);
@@ -735,6 +842,7 @@ gst_rtp_mux_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (rtp_mux);
 }
 
 static void
@@ -753,7 +861,11 @@ gst_rtp_mux_set_property (GObject * object,
       rtp_mux->seqnum_offset = g_value_get_int (value);
       break;
     case PROP_SSRC:
+      GST_OBJECT_LOCK (rtp_mux);
       rtp_mux->ssrc = g_value_get_uint (value);
+      rtp_mux->current_ssrc = rtp_mux->ssrc;
+      rtp_mux->have_ssrc = TRUE;
+      GST_OBJECT_UNLOCK (rtp_mux);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -774,6 +886,8 @@ gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
+      GST_LOG_OBJECT (pad, "Received caps-event with caps: %"
+          GST_PTR_FORMAT, caps);
       ret = gst_rtp_mux_setcaps (pad, mux, caps);
       gst_event_unref (event);
       return ret;
@@ -823,11 +937,6 @@ gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
   g_clear_object (&rtp_mux->last_pad);
   rtp_mux->send_stream_start = TRUE;
 
-  if (rtp_mux->ssrc == -1)
-    rtp_mux->current_ssrc = g_random_int ();
-  else
-    rtp_mux->current_ssrc = rtp_mux->ssrc;
-
   if (rtp_mux->seqnum_offset == -1)
     rtp_mux->seqnum_base = g_random_int_range (0, G_MAXUINT16);
   else
@@ -840,6 +949,13 @@ gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
     rtp_mux->ts_base = rtp_mux->ts_offset;
 
   rtp_mux->last_stop = GST_CLOCK_TIME_NONE;
+
+  if (rtp_mux->ssrc == DEFAULT_SSRC) {
+    rtp_mux->have_ssrc = FALSE;
+  } else {
+    rtp_mux->current_ssrc = rtp_mux->ssrc;
+    rtp_mux->have_ssrc = TRUE;
+  }
 
   GST_DEBUG_OBJECT (rtp_mux, "set timestamp-offset to %u", rtp_mux->ts_base);
 

@@ -71,6 +71,7 @@ struct _GstRTPMux
   guint16 seqnum;               /* protected by object lock */
   guint ssrc;
   guint current_ssrc;
+  gboolean have_ssrc;
 
   GstPad *last_pad; /* protected by object lock */
 
