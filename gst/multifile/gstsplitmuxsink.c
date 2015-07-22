@@ -1036,6 +1036,10 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
   /* Update total input byte counter for overflow detect */
   ctx->in_bytes += buf_info->buf_size;
 
+  /* initialize mux_start_time */
+  if (ctx->is_reference && splitmux->mux_start_time == 0)
+    splitmux->mux_start_time = buf_info->run_ts;
+
   GST_DEBUG_OBJECT (pad, "Buf TS %" GST_TIME_FORMAT
       " total in_bytes %" G_GSIZE_FORMAT,
       GST_TIME_ARGS (buf_info->run_ts), ctx->in_bytes);
