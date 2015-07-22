@@ -23,6 +23,7 @@ libgstpango_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
+	$(LIBM) \
 	$(PANGO_LIBS)
 libgstpango_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstpango_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
