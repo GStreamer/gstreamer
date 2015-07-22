@@ -22,7 +22,6 @@
 #define __GST_GL_OVERLAY_COMPOSITOR_H__
 
 #include <gst/video/video.h>
-#include <gst/gl/gstglcompositionoverlay.h>
 #include <gst/gl/gstgl_fwd.h>
 
 #define GST_TYPE_GL_OVERLAY_COMPOSITOR (gst_gl_overlay_compositor_get_type())
