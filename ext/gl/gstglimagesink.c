@@ -1287,7 +1287,7 @@ prepare_next_buffer (GstGLImageSink * glimage_sink)
   }
 
   gst_gl_overlay_compositor_upload_overlays (glimage_sink->overlay_compositor,
-      next_buffer, glimage_sink->window_width, glimage_sink->window_height);
+      next_buffer);
 
   /* in_buffer invalid now */
   if (!gst_video_frame_map (&gl_frame, info, next_buffer,

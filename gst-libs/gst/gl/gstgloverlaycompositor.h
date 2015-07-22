@@ -69,7 +69,7 @@ GstGLOverlayCompositor *gst_gl_overlay_compositor_new (GstGLContext * context);
 void gst_gl_overlay_compositor_free_overlays (GstGLOverlayCompositor * compositor);
 
 void gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
-        GstBuffer * buf, guint window_width, guint window_height);
+        GstBuffer * buf);
 
 void gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor);
 
