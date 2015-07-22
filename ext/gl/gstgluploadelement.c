@@ -161,10 +161,10 @@ _gst_gl_upload_element_propose_allocation (GstBaseTransform * bt,
     /* read window size from decide_query */
     gst_query_parse_nth_allocation_meta (decide_query, alloc_index, &params);
 
-    if (params)
-      gst_query_add_allocation_meta (query,
-          GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, params);
-
+    /* it does not matter if params are NULL (no known window size), forward
+     * the meta in any case */
+    gst_query_add_allocation_meta (query,
+        GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, params);
   }
 
   gst_gl_upload_propose_allocation (upload->upload, decide_query, query);
