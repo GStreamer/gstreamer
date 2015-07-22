@@ -265,7 +265,6 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
 
   rtp_mux->ssrc = DEFAULT_SSRC;
   rtp_mux->current_ssrc = DEFAULT_SSRC;
-  rtp_mux->ssrc_random = TRUE;
   rtp_mux->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   rtp_mux->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
 
@@ -647,12 +646,13 @@ gst_rtp_mux_setcaps (GstPad * pad, GstRTPMux * rtp_mux, GstCaps * caps)
 
   /* if we don't have a specified ssrc, first try to take one from the caps,
      and if that fails, generate one */
-  if (!rtp_mux->have_ssrc) {
-    if (rtp_mux->ssrc_random) {
+  if (rtp_mux->ssrc == DEFAULT_SSRC) {
+    if (rtp_mux->current_ssrc == DEFAULT_SSRC) {
       if (!gst_structure_get_uint (structure, "ssrc", &rtp_mux->current_ssrc))
         rtp_mux->current_ssrc = g_random_int ();
-      rtp_mux->have_ssrc = TRUE;
     }
+  } else {
+    rtp_mux->current_ssrc = rtp_mux->ssrc;
   }
 
   gst_caps_set_simple (caps,
@@ -738,6 +738,7 @@ gst_rtp_mux_getcaps (GstPad * pad, GstRTPMux * mux, GstCaps * filter)
   GstCaps *peercaps;
   GstCaps *othercaps;
   GstCaps *tcaps;
+  const GstStructure *structure;
 
   peercaps = gst_pad_peer_query_caps (mux->srcpad, NULL);
 
@@ -758,6 +759,12 @@ gst_rtp_mux_getcaps (GstPad * pad, GstRTPMux * mux, GstCaps * filter)
 
   GST_LOG_OBJECT (pad, "Intersected srcpad-peercaps and template caps: %"
       GST_PTR_FORMAT, othercaps);
+
+  structure = gst_caps_get_structure (othercaps, 0);
+  if (mux->ssrc == DEFAULT_SSRC) {
+    if (gst_structure_get_uint (structure, "ssrc", &mux->current_ssrc))
+      GST_DEBUG_OBJECT (pad, "Use downstream ssrc: %u", mux->current_ssrc);
+  }
 
   clear_caps (othercaps, TRUE);
 
