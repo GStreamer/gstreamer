@@ -216,7 +216,7 @@ compare_tags (GstMediaDescriptor * ref, StreamNode * rstream,
 
   rtags = rstream->tags;
   ctags = cstream->tags;
-  if (rtags == NULL && ctags)
+  if (!rtags && !ctags)
     return 1;
   else if (!rtags && ctags) {
     GList *taglist;
