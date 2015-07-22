@@ -287,7 +287,7 @@ compare_tags (GstMediaDescriptor * ref, StreamNode * rstream,
 
 /*  Return -1 if not found 1 if OK 0 if an error occured */
 static gint
-comparse_stream (GstMediaDescriptor * ref, StreamNode * rstream,
+compare_streams (GstMediaDescriptor * ref, StreamNode * rstream,
     StreamNode * cstream)
 {
   if (g_strcmp0 (rstream->id, cstream->id) == 0) {
@@ -349,7 +349,7 @@ gst_media_descriptors_compare (GstMediaDescriptor * ref,
     for (cstream_list = cfilenode->streams; cstream_list;
         cstream_list = cstream_list->next) {
 
-      sfound = comparse_stream (ref, rstream_list->data, cstream_list->data);
+      sfound = compare_streams (ref, rstream_list->data, cstream_list->data);
       if (sfound == 0) {
         return FALSE;
       } else if (sfound == 1) {
