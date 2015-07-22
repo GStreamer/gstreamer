@@ -1999,7 +1999,7 @@ void
 gst_harness_add_src (GstHarness * h,
     const gchar * src_element_name, gboolean has_clock_wait)
 {
-  GstHarness * src_harness = gst_harness_new (src_element_name);
+  GstHarness *src_harness = gst_harness_new (src_element_name);
   gst_harness_add_src_harness (h, src_harness, has_clock_wait);
 }
 
@@ -2024,7 +2024,7 @@ void
 gst_harness_add_src_parse (GstHarness * h,
     const gchar * launchline, gboolean has_clock_wait)
 {
-  GstHarness * src_harness = gst_harness_new_parse (launchline);
+  GstHarness *src_harness = gst_harness_new_parse (launchline);
   gst_harness_add_src_harness (h, src_harness, has_clock_wait);
 }
 
