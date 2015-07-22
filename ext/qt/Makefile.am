@@ -13,6 +13,8 @@ moc_generated = \
 BUILT_SOURCES = $(moc_generated)
 CLEANFILES = $(moc_generated)
 
+nodist_libqtsink_la_SOURCES = $(BUILT_SOURCES)
+
 libqtsink_la_SOURCES = \
 	gstqsgtexture.cc \
 	qtitem.cc \
