@@ -325,6 +325,7 @@ gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
     gst_video_info_init (&text_info);
     gst_video_info_set_format (&text_info, meta->format, meta->width,
         meta->height);
+    text_info->stride[0] = stride;
 
     comp_gl_memory =
         gst_gl_memory_wrapped (overlay->context, &text_info, 0, NULL,
