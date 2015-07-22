@@ -54,6 +54,20 @@ gst_gl_overlay_compositor_init (GstGLOverlayCompositor * compositor)
 {
 }
 
+static void
+gst_gl_overlay_compositor_init_gl (GstGLContext * context,
+    gpointer compositor_pointer)
+{
+  GstGLOverlayCompositor *compositor =
+      (GstGLOverlayCompositor *) compositor_pointer;
+
+  if (!gst_gl_shader_compile_with_default_vf_and_check
+      (compositor->shader, &compositor->position_attrib,
+          &compositor->texcoord_attrib)) {
+    GST_ERROR ("could not initialize shader.");
+  }
+}
+
 GstGLOverlayCompositor *
 gst_gl_overlay_compositor_new (GstGLContext * context)
 {
@@ -61,6 +75,11 @@ gst_gl_overlay_compositor_new (GstGLContext * context)
       g_object_new (GST_TYPE_GL_OVERLAY_COMPOSITOR, NULL);
 
   compositor->context = gst_object_ref (context);
+
+  compositor->shader = gst_gl_shader_new (compositor->context);
+
+  gst_gl_context_thread_add (compositor->context,
+      gst_gl_overlay_compositor_init_gl, compositor);
 
   GST_DEBUG_OBJECT (compositor, "Created new GstGLOverlayCompositor");
 
@@ -78,6 +97,11 @@ gst_gl_overlay_compositor_finalize (GObject * object)
 
   if (compositor->context)
     gst_object_unref (compositor->context);
+
+  if (compositor->shader) {
+    gst_object_unref (compositor->shader);
+    compositor->shader = NULL;
+  }
 
   G_OBJECT_CLASS (gst_gl_overlay_compositor_parent_class)->finalize (object);
 }
@@ -129,8 +153,7 @@ gst_gl_overlay_compositor_free_overlays (GstGLOverlayCompositor * compositor)
 
 void
 gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
-    GstBuffer * buf, GLint position_attrib, GLint texcoord_attrib,
-    guint window_width, guint window_height)
+    GstBuffer * buf, guint window_width, guint window_height)
 {
   GstVideoOverlayCompositionMeta *composition_meta;
 
@@ -161,10 +184,11 @@ gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
       if (!_is_rectangle_in_overlays (compositor->overlays, rectangle)) {
         GstGLCompositionOverlay *overlay =
             gst_gl_composition_overlay_new (compositor->context, rectangle,
-            position_attrib, texcoord_attrib);
+            compositor->position_attrib, compositor->texcoord_attrib);
 
-        gst_gl_composition_overlay_upload (overlay, buf,
-            window_width, window_height);
+        gst_gl_composition_overlay_upload (overlay, buf, window_width,
+            window_height);
+
         compositor->overlays = g_list_append (compositor->overlays, overlay);
       }
     }
@@ -185,19 +209,24 @@ gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
 }
 
 void
-gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor,
-    GstGLShader * shader)
+gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor)
 {
   const GstGLFuncs *gl = compositor->context->gl_vtable;
   if (compositor->overlays != NULL) {
     GList *l;
 
-    glEnable (GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    gl->Enable (GL_BLEND);
+    gl->BlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    gst_gl_shader_use (compositor->shader);
+    gl->ActiveTexture (GL_TEXTURE0);
+    gst_gl_shader_set_uniform_1i (compositor->shader, "tex", 0);
+
     for (l = compositor->overlays; l != NULL; l = l->next) {
       GstGLCompositionOverlay *overlay = (GstGLCompositionOverlay *) l->data;
-      gst_gl_composition_overlay_draw (overlay, shader);
+      gst_gl_composition_overlay_draw (overlay, compositor->shader);
     }
+
     gl->BindTexture (GL_TEXTURE_2D, 0);
   }
 }
