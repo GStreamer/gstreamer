@@ -49,6 +49,10 @@ struct _GstGLOverlayCompositor
   guint last_window_height;
 
   GList * overlays;
+ 
+  GstGLShader *shader;
+  GLint  position_attrib;
+  GLint  texcoord_attrib;
 };
 
 /**
@@ -65,11 +69,9 @@ GstGLOverlayCompositor *gst_gl_overlay_compositor_new (GstGLContext * context);
 void gst_gl_overlay_compositor_free_overlays (GstGLOverlayCompositor * compositor);
 
 void gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
-    GstBuffer * buf, GLint position_attrib, GLint texcoord_attrib,
-    guint window_width, guint window_height);
+        GstBuffer * buf, guint window_width, guint window_height);
 
-void gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor,
-  GstGLShader *shader);
+void gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor);
 
 GstCaps * gst_gl_overlay_compositor_add_caps(GstCaps * caps);
 
