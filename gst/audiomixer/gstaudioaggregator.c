@@ -943,8 +943,8 @@ static GstBuffer *
 gst_audio_aggregator_create_output_buffer (GstAudioAggregator * aagg,
     guint num_frames)
 {
-  GstBuffer *outbuf = gst_buffer_new_and_alloc (num_frames *
-      GST_AUDIO_INFO_BPF (&aagg->info));
+  GstBuffer *outbuf = gst_buffer_new_allocate (NULL, num_frames *
+      GST_AUDIO_INFO_BPF (&aagg->info), NULL);
   GstMapInfo outmap;
 
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
