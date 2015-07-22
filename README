@@ -21,13 +21,13 @@ gstreamer-vaapi consists in a collection of VA-API based plugins for
 GStreamer and helper libraries.
 
   * `vaapidecode' is used to decode JPEG, MPEG-2, MPEG-4:2, H.264 AVC,
-    H.264 MVC, VP8, VC-1, WMV3 videos to VA surfaces, depending on the
-    underlying hardware capabilities. This plugin is also able to
-    implicitly download the decoded surface to raw YUV buffers.
+    H.264 MVC, VP8, VC-1, WMV3, HEVC videos to VA surfaces, depending
+    on the underlying hardware capabilities. This plugin is also able
+    to implicitly download the decoded surface to raw YUV buffers.
 
   * `vaapiencode_<CODEC>' is used to encode into MPEG-2, H.264 AVC,
-    H.264 MVC, JPEG, VP8 videos, depending on the actual value of
-    <CODEC> (mpeg2, h264, etc.). By default, raw format bitstreams
+    H.264 MVC, JPEG, VP8, HEVC videos, depending on the actual value
+    of <CODEC> (mpeg2, h264, etc.). By default, raw format bitstreams
     are generated, so the result may be piped to a muxer.
     e.g. qtmux for MP4 containers.
 
@@ -44,17 +44,19 @@ GStreamer and helper libraries.
 Features
 --------
 
-  * VA-API support from 0.29 to 0.37
-  * JPEG, MPEG-2, MPEG-4, H.264 AVC, H.264 MVC, VP8 and VC-1 ad-hoc decoders
-  * MPEG-2, H.264 AVC,H.264 MVC, JPEG and VP8 ad-hoc encoders
+  * VA-API support from 0.29 to 0.38
+  * JPEG, MPEG-2, MPEG-4, H.264 AVC, H.264 MVC, VP8, VC-1 and HEVC ad-hoc decoders
+  * MPEG-2, H.264 AVC,H.264 MVC, JPEG, VP8 and HEVC ad-hoc encoders
   * OpenGL rendering through VA/GLX or GLX texture-from-pixmap + FBO
+  * Support for EGL backend
   * Support for the Wayland display server
   * Support for headless decode pipelines with VA/DRM
   * Support for major HW video decoding solutions on Linux (AMD, Intel, NVIDIA)
   * Support for HW video encoding on Intel HD Graphics hardware
   * Support for VA Video Processing APIs (VA/VPP)
     - Scaling and color conversion
-    - Image enhancement filters: Sharpening, Noise Reduction
+    - Image enhancement filters: Sharpening, Noise Reductio, Color Balance,
+      Skin-Tone-Enhancement
     - Advanced deinterlacing: Motion-Adaptive, Motion-Compensated
 
 
@@ -64,7 +66,7 @@ Requirements
 Software requirements
 
   * GStreamer 1.2.x (up to including GStreamer 1.6):
-      libglib2.0-dev (>= 2.28)
+      libglib2.0-dev (>= 2.32)
       libgstreamer1.0-dev (>= 1.2.0)
       libgstreamer-plugins-base1.0-dev (>= 1.2.0)
       libgstreamer-plugins-bad1.0-dev (>= 1.2.0)
@@ -73,14 +75,14 @@ Software requirements
       DRM: libva-dev (>= 1.1.0), libdrm-dev, libudev-dev
       X11: libva-dev (>= 1.0.1)
       GLX: libva-dev (>= 1.0.3)
-      Wayland: libva-dev (>= 1.1.0), libwayland-dev (>= 0.95.0)
+      Wayland: libva-dev (>= 1.1.0), libwayland-dev (>= 1.0.2)
 
 Hardware requirements
 
   * AMD platforms with UVD2 (XvBA supported)
   * Intel Eaglelake (G45)
   * Intel Ironlake, Sandybridge, Ivybridge, Haswell and Broadwell (HD Graphics)
-  * Intel BayTrail
+  * Intel BayTrail, Braswell
   * Intel Poulsbo (US15W)
   * Intel Medfield or Cedar Trail
   * NVIDIA platforms with PureVideo (VDPAU supported)
