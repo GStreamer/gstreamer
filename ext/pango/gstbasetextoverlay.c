@@ -760,7 +760,6 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
     f = gst_caps_get_features (overlay_caps, 0);
     gst_caps_features_add (f,
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
-    ret = gst_pad_set_caps (overlay->srcpad, caps);
 
     /* Then check if downstream accept overlay composition in caps */
     caps_has_meta = gst_pad_peer_query_accept_caps (overlay->srcpad,
@@ -769,43 +768,49 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
     GST_DEBUG ("caps have overlay meta %d", caps_has_meta);
   }
 
-  /* First check if the allocation meta has compositon */
-  query = gst_query_new_allocation (overlay_caps, FALSE);
+  if (upstream_has_meta || caps_has_meta) {
+    /* Send caps immediatly, it's needed by GstBaseTransform to get a reply
+     * from allocation query */
+    ret = gst_pad_set_caps (overlay->srcpad, overlay_caps);
 
-  if (!gst_pad_peer_query (overlay->srcpad, query)) {
-    /* no problem, we use the query defaults */
-    GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
+    /* First check if the allocation meta has compositon */
+    query = gst_query_new_allocation (overlay_caps, FALSE);
 
-    /* In case we were flushing, mark reconfigure and fail this method,
-     * will make it retry */
-    if (overlay->video_flushing)
-      ret = FALSE;
-  }
+    if (!gst_pad_peer_query (overlay->srcpad, query)) {
+      /* no problem, we use the query defaults */
+      GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
 
-  alloc_has_meta = gst_query_find_allocation_meta (query,
-      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, &alloc_index);
+      /* In case we were flushing, mark reconfigure and fail this method,
+       * will make it retry */
+      if (overlay->video_flushing)
+        ret = FALSE;
+    }
 
-  GST_DEBUG ("sink alloc has overlay meta %d", alloc_has_meta);
+    alloc_has_meta = gst_query_find_allocation_meta (query,
+        GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, &alloc_index);
 
-  if (alloc_has_meta) {
-    const GstStructure *params;
+    GST_DEBUG ("sink alloc has overlay meta %d", alloc_has_meta);
 
-    gst_query_parse_nth_allocation_meta (query, alloc_index, &params);
-    if (params) {
-      if (gst_structure_get (params, "width", G_TYPE_UINT, &width,
-              "height", G_TYPE_UINT, &height, NULL)) {
-        GST_DEBUG ("received window size: %dx%d", width, height);
-        g_assert (width != 0 && height != 0);
+    if (alloc_has_meta) {
+      const GstStructure *params;
+
+      gst_query_parse_nth_allocation_meta (query, alloc_index, &params);
+      if (params) {
+        if (gst_structure_get (params, "width", G_TYPE_UINT, &width,
+                "height", G_TYPE_UINT, &height, NULL)) {
+          GST_DEBUG ("received window size: %dx%d", width, height);
+          g_assert (width != 0 && height != 0);
+        }
       }
     }
+
+    gst_query_unref (query);
   }
 
   /* Update render size if needed */
   overlay->window_width = width;
   overlay->window_height = height;
   gst_base_text_overlay_update_render_size (overlay);
-
-  gst_query_unref (query);
 
   /* For backward compatbility, we will prefer bliting if downstream
    * allocation does not support the meta. In other case we will prefer
@@ -827,24 +832,21 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
 
   /* If we attach, then pick the overlay caps */
   if (attach) {
-    gst_caps_unref (caps);
-    caps = overlay_caps;
-  } else {
-    gst_caps_unref (overlay_caps);
-  }
-
-  /* If negotiation worked, set the caps and remember to attach */
-  if (ret) {
+    GST_DEBUG_OBJECT (overlay, "Using caps %" GST_PTR_FORMAT, overlay_caps);
+    /* Caps where already sent */
+  } else if (ret) {
     GST_DEBUG_OBJECT (overlay, "Using caps %" GST_PTR_FORMAT, caps);
-    overlay->attach_compo_to_buffer = attach;
     ret = gst_pad_set_caps (overlay->srcpad, caps);
   }
+
+  overlay->attach_compo_to_buffer = attach;
 
   if (!ret) {
     GST_DEBUG_OBJECT (overlay, "negotiation failed, schedule reconfigure");
     gst_pad_mark_reconfigure (overlay->srcpad);
   }
 
+  gst_caps_unref (overlay_caps);
   gst_caps_unref (caps);
 
   return ret;
