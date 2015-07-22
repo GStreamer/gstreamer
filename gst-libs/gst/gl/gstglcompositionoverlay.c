@@ -42,7 +42,7 @@ G_DEFINE_TYPE_WITH_CODE (GstGLCompositionOverlay, gst_gl_composition_overlay,
 static void gst_gl_composition_overlay_finalize (GObject * object);
 static void
 gst_gl_composition_overlay_add_transformation (GstGLCompositionOverlay *
-    overlay, GstBuffer * video_buffer, guint window_width, guint window_height);
+    overlay, GstBuffer * video_buffer);
 
 static void
 gst_gl_composition_overlay_class_init (GstGLCompositionOverlayClass * klass)
@@ -204,7 +204,7 @@ gst_gl_composition_overlay_init_vertex_buffer (GstGLContext * context,
 
 static void
 gst_gl_composition_overlay_add_transformation (GstGLCompositionOverlay *
-    overlay, GstBuffer * video_buffer, guint window_width, guint window_height)
+    overlay, GstBuffer * video_buffer)
 {
   gint comp_x, comp_y;
   guint comp_width, comp_height;
@@ -213,19 +213,13 @@ gst_gl_composition_overlay_add_transformation (GstGLCompositionOverlay *
 
   float rel_x, rel_y, rel_w, rel_h;
 
-  gfloat window_aspect = 1.0;
-  gfloat video_aspect = 1.0;
-
   meta = gst_buffer_get_video_meta (video_buffer);
 
   gst_video_overlay_rectangle_get_render_rectangle (overlay->rectangle,
       &comp_x, &comp_y, &comp_width, &comp_height);
 
-  width = window_width;
-  height = window_height;
-
-  window_aspect = (float) width / (float) height;
-  video_aspect = (float) meta->width / (float) meta->height;
+  width = meta->width;
+  height = meta->height;
 
   /* calculate relative position */
   rel_x = (float) comp_x / (float) width;
@@ -233,15 +227,6 @@ gst_gl_composition_overlay_add_transformation (GstGLCompositionOverlay *
 
   rel_w = (float) comp_width / (float) width;
   rel_h = (float) comp_height / (float) height;
-
-  /* transform to window aspect ratio */
-  if (window_aspect <= video_aspect) {
-    rel_y *= video_aspect / window_aspect;
-    rel_h *= video_aspect / window_aspect;
-  } else {
-    rel_x *= window_aspect / video_aspect;
-    rel_w *= window_aspect / video_aspect;
-  }
 
   /* transform from [0,1] to [-1,1], invert y axis */
   rel_x = rel_x * 2.0 - 1.0;
@@ -274,14 +259,13 @@ gst_gl_composition_overlay_add_transformation (GstGLCompositionOverlay *
       gst_gl_composition_overlay_init_vertex_buffer, overlay);
 
   GST_DEBUG
-      ("overlay position: (%d,%d) size: %dx%d video size: %dx%d, sink window %dx%d",
-      comp_x, comp_y, comp_width, comp_height, meta->width, meta->height,
-      window_width, window_height);
+      ("overlay position: (%d,%d) size: %dx%d video size: %dx%d",
+      comp_x, comp_y, comp_width, comp_height, meta->width, meta->height);
 }
 
 void
 gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
-    GstBuffer * buf, guint window_width, guint window_height)
+    GstBuffer * buf)
 {
   GstMapInfo info;
   GstVideoMeta *vmeta;
@@ -306,8 +290,7 @@ gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
 
     meta = gst_buffer_get_video_meta (comp_buffer);
 
-    gst_gl_composition_overlay_add_transformation (overlay, buf, window_width,
-        window_height);
+    gst_gl_composition_overlay_add_transformation (overlay, buf);
 
     gst_video_info_init (&text_info);
     gst_video_info_set_format (&text_info, meta->format, meta->width,

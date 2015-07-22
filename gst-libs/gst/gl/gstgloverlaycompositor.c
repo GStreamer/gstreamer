@@ -153,17 +153,9 @@ gst_gl_overlay_compositor_free_overlays (GstGLOverlayCompositor * compositor)
 
 void
 gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
-    GstBuffer * buf, guint window_width, guint window_height)
+    GstBuffer * buf)
 {
   GstVideoOverlayCompositionMeta *composition_meta;
-
-  if (compositor->last_window_width != window_width ||
-      compositor->last_window_height != window_height) {
-    gst_gl_overlay_compositor_free_overlays (compositor);
-    compositor->last_window_width = window_width;
-    compositor->last_window_height = window_height;
-    GST_DEBUG ("window size changed, freeing overlays");
-  }
 
   composition_meta = gst_buffer_get_video_overlay_composition_meta (buf);
   if (composition_meta) {
@@ -186,8 +178,7 @@ gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
             gst_gl_composition_overlay_new (compositor->context, rectangle,
             compositor->position_attrib, compositor->texcoord_attrib);
 
-        gst_gl_composition_overlay_upload (overlay, buf, window_width,
-            window_height);
+        gst_gl_composition_overlay_upload (overlay, buf);
 
         compositor->overlays = g_list_append (compositor->overlays, overlay);
       }

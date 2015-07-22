@@ -74,7 +74,7 @@ GstGLCompositionOverlay *gst_gl_composition_overlay_new (GstGLContext * context,
     GLint texcoord_attrib);
 
 void gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
-    GstBuffer * buf, guint window_width, guint window_height);
+    GstBuffer * buf);
 
 void gst_gl_composition_overlay_draw (GstGLCompositionOverlay * overlay,
     GstGLShader * shader);
