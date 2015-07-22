@@ -150,6 +150,22 @@ gboolean       gst_rtp_buffer_add_extension_twobytes_header (GstRTPBuffer *rtp,
                                                              gpointer data,
                                                              guint size);
 
+/**
+ * GstRTPBufferMapFlags:
+ * @GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING: Skip mapping and validation of RTP
+ *           padding and RTP pad count when present. Useful for buffers where
+ *           the padding may be encrypted.
+ * @GST_RTP_BUFFER_MAP_FLAG_LAST: Offset to define more flags
+ *
+ * Additional mapping flags for gst_rtp_buffer_map().
+ *
+ * Since: 1.8
+ */
+typedef enum {
+  GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING = (GST_MAP_FLAG_LAST << 0),
+  GST_RTP_BUFFER_MAP_FLAG_LAST         = (GST_MAP_FLAG_LAST << 8)
+  /* 8 more flags possible afterwards */
+} GstRTPBufferMapFlags;
 
 G_END_DECLS
 

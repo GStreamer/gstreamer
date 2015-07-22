@@ -399,8 +399,9 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
     rtp->size[1] = 0;
   }
 
-  /* check for padding */
-  if (data[0] & 0x20) {
+  /* check for padding unless flags says to skip */
+  if ((data[0] & 0x20) != 0 &&
+      (flags & GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING) == 0) {
     /* find memory for the padding bits */
     if (!gst_buffer_find_memory (buffer, bufsize - 1, 1, &idx, &length, &skip))
       goto wrong_length;

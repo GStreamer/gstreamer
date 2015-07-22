@@ -171,6 +171,36 @@ GST_START_TEST (test_rtp_buffer_validate_corrupt)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtp_buffer_validate_padding)
+{
+  GstBuffer *buf;
+  guint8 packet_with_padding[] = {
+    0xa0, 0x60, 0x6c, 0x49, 0x58, 0xab, 0xaa, 0x65, 0x65, 0x2e, 0xaf, 0xce,
+    0x68, 0xce, 0x3c, 0x80, 0x00, 0x00, 0x00, 0x04
+  };
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  buf = gst_buffer_new_and_alloc (sizeof (packet_with_padding));
+  gst_buffer_fill (buf, 0, packet_with_padding, sizeof (packet_with_padding));
+  fail_unless (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buf);
+
+  /* Set the padding to something invalid */
+  buf = gst_buffer_new_and_alloc (sizeof (packet_with_padding));
+  gst_buffer_fill (buf, 0, packet_with_padding, sizeof (packet_with_padding));
+  gst_buffer_memset (buf, gst_buffer_get_size (buf) - 1, 0xff, 1);
+  fail_if (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
+
+  memset (&rtp, 0, sizeof (rtp));
+  fail_unless (gst_rtp_buffer_map (buf, GST_MAP_READ |
+          GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING, &rtp));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 #if 0
 GST_START_TEST (test_rtp_buffer_list)
 {
@@ -1179,6 +1209,7 @@ rtp_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_rtp_buffer);
   tcase_add_test (tc_chain, test_rtp_buffer_validate_corrupt);
+  tcase_add_test (tc_chain, test_rtp_buffer_validate_padding);
   tcase_add_test (tc_chain, test_rtp_buffer_set_extension_data);
   //tcase_add_test (tc_chain, test_rtp_buffer_list_set_extension);
   tcase_add_test (tc_chain, test_rtp_seqnum_compare);
