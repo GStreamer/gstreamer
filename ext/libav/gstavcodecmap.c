@@ -3248,6 +3248,8 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
         "y4mversion", G_TYPE_INT, 2, NULL);
   } else if (!strcmp (format_name, "mpc")) {
     caps = gst_caps_from_string ("audio/x-musepack, streamversion = (int) 7");
+  } else if (!strcmp (format_name, "mpc8")) {
+    caps = gst_caps_from_string ("audio/x-musepack, streamversion = (int) 8");
   } else if (!strcmp (format_name, "vqf")) {
     caps = gst_caps_from_string ("audio/x-vqf");
   } else if (!strcmp (format_name, "nsv")) {
