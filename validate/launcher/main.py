@@ -86,6 +86,8 @@ next time. The generated media files will be used as a reference for following
 runs. You might want to check that they contain the right information yourself
 the first time.
 
+Once .media-info is generated, you can update it using --update-media-info.
+
 Those .media_info are the files that are used by gst-validate-launcher to know
 what media files can be used for the different scenarios. For example if a
 file is not seekable, seeking scenarios will not be run on it etc...
@@ -393,8 +395,8 @@ Note that all testsuite should be inside python modules, so the directory should
         "It implies --generate-media-info but enabling frame detection")
     parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
                         action='store',
-                        help="Defines the limite from which a test is concidered as long (in seconds)"
-                             " not that 0 will enable all tests", type=int),
+                        help="Defines the limit for which a test is considered as long (in seconds)."
+                             " Note that 0 will enable all tests", type=int),
     parser.add_argument("-c", "--config", dest="config",
                         help="This is DEPRECATED, prefer using the testsuite format"
                         " to configure testsuites")
@@ -403,7 +405,7 @@ Note that all testsuite should be inside python modules, so the directory should
                         help="Run the tests inside Valgrind")
     parser.add_argument("-nd", "--no-display", dest="no_display",
                         action="store_true",
-                        help="Run the tests without outputing graphics"
+                        help="Run the tests without outputting graphics"
                              " on any display. It tries to run all graphical operation"
                              " in a virtual framebuffer."
                              " Note that it is currently implemented only"
