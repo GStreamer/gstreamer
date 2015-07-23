@@ -576,17 +576,22 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
 
   streaminfo = gst_discoverer_info_get_stream_info (info);
 
-  if (GST_IS_DISCOVERER_CONTAINER_INFO (streaminfo)) {
-    ((GstMediaDescriptor *) writer)->filenode->caps =
-        gst_discoverer_stream_info_get_caps (GST_DISCOVERER_STREAM_INFO
-        (streaminfo));
+  if (streaminfo) {
+    if (GST_IS_DISCOVERER_CONTAINER_INFO (streaminfo)) {
+      ((GstMediaDescriptor *) writer)->filenode->caps =
+          gst_discoverer_stream_info_get_caps (GST_DISCOVERER_STREAM_INFO
+          (streaminfo));
 
-    streams = gst_discoverer_info_get_stream_list (info);
-    for (tmp = streams; tmp; tmp = tmp->next) {
-      gst_media_descriptor_writer_add_stream (writer, tmp->data);
+      streams = gst_discoverer_info_get_stream_list (info);
+      for (tmp = streams; tmp; tmp = tmp->next) {
+        gst_media_descriptor_writer_add_stream (writer, tmp->data);
+      }
+    } else {
+      gst_media_descriptor_writer_add_stream (writer, streaminfo);
     }
   } else {
-    gst_media_descriptor_writer_add_stream (writer, streaminfo);
+    GST_VALIDATE_REPORT (writer, FILE_NO_STREAM_INFO,
+        "Discoverer info, does not contain the stream info");
   }
 
   media_descriptor = (GstMediaDescriptor *) writer;

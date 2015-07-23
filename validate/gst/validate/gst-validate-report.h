@@ -91,6 +91,7 @@ typedef enum {
 
 #define STATE_CHANGE_FAILURE                     _QUARK("state::change-failure")
 
+#define FILE_NO_STREAM_INFO                      _QUARK("file-checking::no-stream-info")
 #define FILE_NO_STREAM_ID                        _QUARK("file-checking::no-stream-id")
 #define FILE_TAG_DETECTION_INCORRECT             _QUARK("file-checking::tag-detection-incorrect")
 #define FILE_SIZE_INCORRECT                      _QUARK("file-checking::size-incorrect")
