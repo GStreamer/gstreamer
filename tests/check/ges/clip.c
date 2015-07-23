@@ -109,25 +109,24 @@ GST_START_TEST (test_split_direct_bindings)
   GstControlSource *source;
   GESTimeline *timeline;
   GESClip *clip, *splitclip;
-  GError *error = NULL;
   GstControlBinding *binding = NULL, *splitbinding;
   GstTimedValueControlSource *splitsource;
+  GESLayer *layer;
+  GESAsset *asset;
 
   GESTrackElement *element;
 
   ges_init ();
 
   fail_unless ((timeline = ges_timeline_new ()));
+  fail_unless ((layer = ges_layer_new ()));
   fail_unless (ges_timeline_add_track (timeline,
           GES_TRACK (ges_video_track_new ())));
+  fail_unless (ges_timeline_add_layer (timeline, layer));
 
-  _ges_add_clip_from_struct (timeline,
-      gst_structure_from_string
-      ("clip, asset-id=GESTestClip, name=ref_clip, layer=0, type=GESTestClip, inpoint=10.0, start=0.0, duration=10.0",
-          NULL), &error);
-  g_assert_no_error (error);
-
-  clip = GES_CLIP (ges_timeline_get_element (timeline, "ref_clip"));
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+  clip = ges_layer_add_asset (layer, asset, 0, 10 * GST_SECOND, 10 * GST_SECOND,
+      GES_TRACK_TYPE_UNKNOWN);
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 10 * GST_SECOND);
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
@@ -196,25 +195,24 @@ GST_START_TEST (test_split_direct_absolute_bindings)
   GstControlSource *source;
   GESTimeline *timeline;
   GESClip *clip, *splitclip;
-  GError *error = NULL;
   GstControlBinding *binding = NULL, *splitbinding;
   GstTimedValueControlSource *splitsource;
+  GESLayer *layer;
+  GESAsset *asset;
 
   GESTrackElement *element;
 
   ges_init ();
 
   fail_unless ((timeline = ges_timeline_new ()));
+  fail_unless ((layer = ges_layer_new ()));
   fail_unless (ges_timeline_add_track (timeline,
           GES_TRACK (ges_video_track_new ())));
+  fail_unless (ges_timeline_add_layer (timeline, layer));
 
-  _ges_add_clip_from_struct (timeline,
-      gst_structure_from_string
-      ("clip, asset-id=GESTestClip, name=ref_clip, layer=0, type=GESTestClip, inpoint=10.0, start=0.0, duration=10.0",
-          NULL), &error);
-  g_assert_no_error (error);
-
-  clip = GES_CLIP (ges_timeline_get_element (timeline, "ref_clip"));
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+  clip = ges_layer_add_asset (layer, asset, 0, 10 * GST_SECOND, 10 * GST_SECOND,
+      GES_TRACK_TYPE_UNKNOWN);
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 10 * GST_SECOND);
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
