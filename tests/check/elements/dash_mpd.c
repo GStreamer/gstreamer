@@ -2337,6 +2337,89 @@ GST_START_TEST (dash_mpdparser_GstDateTime)
 GST_END_TEST;
 
 /*
+ * Test various duration formats
+ */
+GST_START_TEST (dash_mpdparser_various_duration_formats)
+{
+  GstPeriodNode *periodNode;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      "     availabilityStartTime=\"2015-03-24T0:0:0\""
+      "     mediaPresentationDuration=\"P100Y\">"
+      "  <Period id=\"Period0\" start=\"PT1S\"></Period>"
+      "  <Period id=\"Period1\" start=\"PT1.5S\"></Period>"
+      "  <Period id=\"Period2\" start=\"PT1,7S\"></Period>"
+      "  <Period id=\"Period3\" start=\"PT1M\"></Period>"
+      "  <Period id=\"Period4\" start=\"PT1H\"></Period>"
+      "  <Period id=\"Period5\" start=\"P1D\"></Period>"
+      "  <Period id=\"Period6\" start=\"P1M\"></Period>"
+      "  <Period id=\"Period7\" start=\"P1Y\"></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  ret = gst_mpd_client_setup_media_presentation (mpdclient);
+  assert_equals_int (ret, TRUE);
+
+  periodNode =
+      (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 0);
+  assert_equals_string (periodNode->id, "Period0");
+  assert_equals_int64 (periodNode->start,
+      (gint64) duration_to_ms (0, 0, 0, 0, 0, 1, 0));
+
+  periodNode =
+      (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 1);
+  assert_equals_string (periodNode->id, "Period1");
+  assert_equals_int64 (periodNode->start,
+      (gint64) duration_to_ms (0, 0, 0, 0, 0, 1, 500));
+
+  periodNode =
+      (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 2);
+  assert_equals_string (periodNode->id, "Period2");
+  assert_equals_int64 (periodNode->start,
+      (gint64) duration_to_ms (0, 0, 0, 0, 0, 1, 700));
+
+  periodNode =
+      (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 3);
+  assert_equals_string (periodNode->id, "Period3");
+  assert_equals_int64 (periodNode->start,
+      (gint64) duration_to_ms (0, 0, 0, 0, 1, 0, 0));
+
+  periodNode =
+      (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 4);
+  assert_equals_string (periodNode->id, "Period4");
+  assert_equals_int64 (periodNode->start,
+      (gint64) duration_to_ms (0, 0, 0, 1, 0, 0, 0));
+
+  periodNode =
+      (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 5);
+  assert_equals_string (periodNode->id, "Period5");
+  assert_equals_int64 (periodNode->start,
+      (gint64) duration_to_ms (0, 0, 1, 0, 0, 0, 0));
+
+  periodNode =
+      (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 6);
+  assert_equals_string (periodNode->id, "Period6");
+  assert_equals_int64 (periodNode->start,
+      (gint64) duration_to_ms (0, 1, 0, 0, 0, 0, 0));
+
+  periodNode =
+      (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 7);
+  assert_equals_string (periodNode->id, "Period7");
+  assert_equals_int64 (periodNode->start,
+      (gint64) duration_to_ms (1, 0, 0, 0, 0, 0, 0));
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * Test media presentation setup
  *
  */
@@ -4096,6 +4179,7 @@ dash_suite (void)
   tcase_add_test (tc_simpleMPD, dash_mpdparser_template_parsing);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_isoff_ondemand_profile);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_GstDateTime);
+  tcase_add_test (tc_simpleMPD, dash_mpdparser_various_duration_formats);
 
   /* tests checking the MPD management
    * (eg. setting active streams, obtaining attributes values)
