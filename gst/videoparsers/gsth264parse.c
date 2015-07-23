@@ -856,6 +856,12 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
             h264parse->idr_pos);
       }
       break;
+    case GST_H264_NAL_AU_DELIMITER:
+      /* Just accumulate AU Delimiter, whether it's before SPS or not */
+      pres = gst_h264_parser_parse_nal (nalparser, nalu);
+      if (pres != GST_H264_PARSER_OK)
+        return FALSE;
+      break;
     default:
       /* drop anything before the initial SPS */
       if (!GST_H264_PARSE_STATE_VALID (h264parse, GST_H264_PARSE_STATE_GOT_SPS))
