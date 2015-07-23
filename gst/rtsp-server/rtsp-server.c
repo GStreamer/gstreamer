@@ -1246,6 +1246,8 @@ watch_destroyed (GstRTSPServer * server)
  * unless cancellation happened at the same time as a condition change). You can
  * check for this in the callback using g_cancellable_is_cancelled().
  *
+ * This takes a reference on @server until @source is destroyed.
+ *
  * Returns: (transfer full): the #GSource for @server or %NULL when an error
  * occurred. Free with g_source_unref ()
  */
@@ -1303,6 +1305,12 @@ no_socket:
  *
  * This function should be called when the server properties and urls are fully
  * configured and the server is ready to start.
+ *
+ * This takes a reference on @server until the source is destroyed. Note that
+ * if @context is not the default main context as returned by
+ * g_main_context_default() (or %NULL), g_source_remove() cannot be used to
+ * destroy the source. In that case it is recommended to use
+ * gst_rtsp_server_create_source() and attach it to @context manually.
  *
  * Returns: the ID (greater than 0) for the source within the GMainContext.
  */
