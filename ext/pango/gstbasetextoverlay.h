@@ -194,7 +194,9 @@ struct _GstBaseTextOverlay {
 
     gdouble                  shadow_offset;
     gdouble                  outline_offset;
-    gint                     baseline_y;
+
+    PangoRectangle           ink_rect;
+    PangoRectangle           logical_rect;
 
     gboolean                    attach_compo_to_buffer;
     GstVideoOverlayComposition *composition;
