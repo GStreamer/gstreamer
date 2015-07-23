@@ -104,6 +104,7 @@ gst_validate_overide_registery_free (GstValidateOverrideRegistry * reg)
   g_queue_clear (&reg->name_overrides);
   g_queue_clear (&reg->gtype_overrides);
   g_queue_clear (&reg->klass_overrides);
+  g_mutex_clear (&reg->mutex);
 
   g_slice_free (GstValidateOverrideRegistry, reg);
 }
