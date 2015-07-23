@@ -149,7 +149,8 @@ gst_v4l2_buffer_pool_copy_buffer (GstV4l2BufferPool * pool, GstBuffer * dest,
     gst_buffer_resize (dest, 0, gst_buffer_get_size (src));
   }
 
-  gst_buffer_copy_into (dest, src, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+  gst_buffer_copy_into (dest, src,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
   GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, pool, "slow copy into buffer %p",
       dest);
