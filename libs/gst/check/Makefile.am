@@ -139,6 +139,7 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_harness_set_caps_str \
 	gst_harness_set_drop_buffers \
 	gst_harness_set_blocking_push_mode \
+	gst_harness_set_forwarding \
 	gst_harness_set_propose_allocator \
 	gst_harness_set_sink_caps \
 	gst_harness_set_src_caps \

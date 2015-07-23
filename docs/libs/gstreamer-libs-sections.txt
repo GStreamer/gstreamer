@@ -1232,6 +1232,7 @@ gst_harness_crank_multiple_clock_waits
 
 gst_harness_play
 gst_harness_set_blocking_push_mode
+gst_harness_set_forwarding
 
 gst_harness_create_buffer
 gst_harness_push

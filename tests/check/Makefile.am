@@ -158,6 +158,7 @@ check_PROGRAMS =				\
 	libs/flowcombiner			\
 	libs/sparsefile				\
 	libs/collectpads			\
+	libs/gstharness				\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider			\
 	libs/gsttestclock			\

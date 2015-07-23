@@ -156,6 +156,8 @@ struct _GstHarnessPrivate
 
   GstCaps *src_caps;
   GstCaps *sink_caps;
+
+  gboolean forwarding;
   GstPad *sink_forward_pad;
 
   volatile gint recv_buffers;
@@ -242,7 +244,7 @@ gst_harness_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
   }
 
-  if (forward && priv->sink_forward_pad) {
+  if (priv->forwarding && forward && priv->sink_forward_pad) {
     gst_pad_push_event (priv->sink_forward_pad, event);
   } else {
     g_async_queue_push (priv->sink_event_queue, event);
@@ -358,7 +360,7 @@ gst_harness_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
     case GST_QUERY_ALLOCATION:
     {
-      if (priv->sink_forward_pad != NULL) {
+      if (priv->forwarding && priv->sink_forward_pad != NULL) {
         GstPad *peer = gst_pad_get_peer (priv->sink_forward_pad);
         g_assert (peer != NULL);
         res = gst_pad_query (peer, query);
@@ -675,6 +677,9 @@ gst_harness_new_full (GstElement * element,
 
   priv->stress = g_ptr_array_new_with_free_func (
       (GDestroyNotify) gst_harness_stress_free);
+
+  /* we have forwarding on as a default */
+  gst_harness_set_forwarding (h, TRUE);
 
   return h;
 }
@@ -1401,6 +1406,40 @@ gst_harness_set_blocking_push_mode (GstHarness * h)
 }
 
 /**
+ * gst_harness_set_forwarding:
+ * @h: a #GstHarness
+ * @forwarding: a #gboolean to enable/disable forwarding
+ *
+ * As a convenience, a src-harness will forward %GST_EVENT_STREAM_START,
+ * %GST_EVENT_CAPS and %GST_EVENT_SEGMENT to the main-harness if forwarding
+ * is enabled, and forward any sticky-events from the main-harness to
+ * the sink-harness. It will also forward the %GST_QUERY_ALLOCATION.
+ *
+ * If forwarding is disabled, the user will have to either manually push
+ * these events from the src-harness using gst_harness_src_push_event, or
+ * create and push them manually. While this will allow full control and
+ * inspection of these events, for the most cases having forwarding enabled
+ * will be sufficient when writing a test where the src-harness' main function
+ * is providing data for the main-harness.
+ *
+ * Forwarding is enabled by default.
+ *
+ * MT safe.
+ *
+ * Since: 1.6
+ */
+void
+gst_harness_set_forwarding (GstHarness * h, gboolean forwarding)
+{
+  GstHarnessPrivate *priv = h->priv;
+  priv->forwarding = forwarding;
+  if (h->src_harness)
+    gst_harness_set_forwarding (h->src_harness, forwarding);
+  if (h->sink_harness)
+    gst_harness_set_forwarding (h->sink_harness, forwarding);
+}
+
+/**
  * gst_harness_create_buffer:
  * @h: a #GstHarness
  * @size: a #gsize specifying the size of the buffer
@@ -1995,6 +2034,7 @@ gst_harness_add_src_harness (GstHarness * h,
   h->src_harness->priv->sink_forward_pad = gst_object_ref (h->srcpad);
   gst_harness_use_testclock (h->src_harness);
   h->src_harness->priv->has_clock_wait = has_clock_wait;
+  gst_harness_set_forwarding (h->src_harness, h->priv->forwarding);
 }
 
 /**
@@ -2186,7 +2226,9 @@ gst_harness_add_sink_harness (GstHarness * h, GstHarness * sink_harness)
   h->sink_harness = sink_harness;
   priv->sink_forward_pad = gst_object_ref (h->sink_harness->srcpad);
   gst_harness_use_testclock (h->sink_harness);
-  gst_pad_sticky_events_foreach (h->sinkpad, forward_sticky_events, h);
+  if (priv->forwarding)
+    gst_pad_sticky_events_foreach (h->sinkpad, forward_sticky_events, h);
+  gst_harness_set_forwarding (h->sink_harness, priv->forwarding);
 }
 
 /**
