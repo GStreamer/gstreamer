@@ -419,11 +419,12 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     if (name
         && !ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip), name)) {
       res = FALSE;
-      g_error_new (GES_ERROR, 0, "couldn't set name %s on clip with id %s",
+      *error =
+          g_error_new (GES_ERROR, 0, "couldn't set name %s on clip with id %s",
           name, asset_id);
     }
   } else {
-    g_error_new (GES_ERROR, 0,
+    *error = g_error_new (GES_ERROR, 0,
         "Couldn't add clip with id %s to layer with priority %d", asset_id,
         layer_priority);
   }

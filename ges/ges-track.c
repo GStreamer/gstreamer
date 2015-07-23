@@ -491,12 +491,10 @@ ges_track_constructed (GObject * object)
 
   if (self->type == GES_TRACK_TYPE_VIDEO) {
     componame =
-        g_strdup_printf ("(video)%s",
-        GST_OBJECT_NAME (self->priv->composition));
+        g_strdup_printf ("video_%s", GST_OBJECT_NAME (self->priv->composition));
   } else if (self->type == GES_TRACK_TYPE_AUDIO) {
     componame =
-        g_strdup_printf ("(audio)%s",
-        GST_OBJECT_NAME (self->priv->composition));
+        g_strdup_printf ("audio_%s", GST_OBJECT_NAME (self->priv->composition));
   }
 
   if (componame) {
