@@ -598,7 +598,7 @@ _parse_encoding_profile (const gchar * option_name, const gchar * value,
     encoding_profile = NULL;
   }
 
-  for (i = 1; strcaps_v[i]; i++) {
+  for (i = 1; strcaps_v[i] && *strcaps_v[i]; i++) {
     GstEncodingProfile *profile = NULL;
     gchar *strcaps, *strpresence;
 
