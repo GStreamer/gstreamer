@@ -1566,9 +1566,12 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   cairo_surface_t *surface;
   PangoRectangle ink_rect, logical_rect;
   cairo_matrix_t cairo_matrix;
-  int width, height;
+  gint unscaled_width, unscaled_height;
+  gint width, height;
   double scalef = 1.0;
   double a, r, g, b;
+  gdouble shadow_offset = 0.0;
+  gdouble outline_offset = 0.0;
   GstBuffer *buffer;
   GstMapInfo map;
 
@@ -1579,6 +1582,14 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
     scalef = (double) (overlay->width) / DEFAULT_SCALE_BASIS;
   }
 
+  if (overlay->draw_shadow)
+    shadow_offset = overlay->shadow_offset;
+
+  /* This value is uses as cairo line width, which is the diameter of a pen
+   * that is circular. That's why only half of it is used to offset */
+  if (overlay->draw_outline)
+    outline_offset = overlay->outline_offset;
+
   pango_layout_set_width (overlay->layout, -1);
   /* set text on pango layout */
   pango_layout_set_markup (overlay->layout, string, textlen);
@@ -1586,7 +1597,8 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   /* get subtitle image size */
   pango_layout_get_pixel_extents (overlay->layout, &ink_rect, &logical_rect);
 
-  width = ceil ((logical_rect.width + overlay->shadow_offset) * scalef);
+  unscaled_width = ink_rect.width + shadow_offset + outline_offset;
+  width = ceil (unscaled_width * scalef);
 
   if (width + overlay->deltax >
       (overlay->use_vertical_render ? overlay->height : overlay->width)) {
@@ -1596,11 +1608,13 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
      */
     gst_base_text_overlay_update_wrap_mode (overlay);
     pango_layout_get_pixel_extents (overlay->layout, &ink_rect, &logical_rect);
+    unscaled_width = ink_rect.width + shadow_offset + outline_offset;
     width = overlay->width;
   }
 
-  height = ceil (
-      (logical_rect.height + logical_rect.y + overlay->shadow_offset) * scalef);
+  unscaled_height = ink_rect.height + shadow_offset + outline_offset;
+  height = ceil (unscaled_height * scalef);
+
   if (height > overlay->height) {
     height = overlay->height;
   }
@@ -1610,39 +1624,32 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   height = ceil (height * overlay->render_scale);
   scalef *= overlay->render_scale;
 
+  /* Prepare the transformation matrix. Note that the transformation happens
+   * in reverse order. So for horizontal text, we will translate and then
+   * scale. This is important to understand which scale shall be used. */
+  cairo_matrix_init_scale (&cairo_matrix, scalef, scalef);
+
   if (overlay->use_vertical_render) {
-    PangoRectangle rect;
-    PangoContext *context;
-    PangoMatrix matrix = PANGO_MATRIX_INIT;
-    int tmp;
+    gint tmp;
 
-    context = pango_layout_get_context (overlay->layout);
+    /* tranlate to the center of the image, rotate, and tranlate the rotated
+     * image back to the right place */
+    cairo_matrix_translate (&cairo_matrix, unscaled_height / 2.0l,
+        unscaled_width / 2.0l);
+    /* 90 degree clockwise rotation which is PI / 2 in radiants */
+    cairo_matrix_rotate (&cairo_matrix, G_PI_2);
+    cairo_matrix_translate (&cairo_matrix, -(unscaled_width / 2.0l),
+        -(unscaled_height / 2.0l));
 
-    pango_matrix_rotate (&matrix, -90);
-
-    rect.x = rect.y = 0;
-    rect.width = width;
-    rect.height = height;
-    pango_matrix_transform_pixel_rectangle (&matrix, &rect);
-    matrix.x0 = -rect.x;
-    matrix.y0 = -rect.y;
-
-    pango_context_set_matrix (context, &matrix);
-
-    cairo_matrix.xx = matrix.xx;
-    cairo_matrix.yx = matrix.yx;
-    cairo_matrix.xy = matrix.xy;
-    cairo_matrix.yy = matrix.yy;
-    cairo_matrix.x0 = matrix.x0;
-    cairo_matrix.y0 = matrix.y0;
-    cairo_matrix_scale (&cairo_matrix, scalef, scalef);
-
+    /* Swap width and height */
     tmp = height;
     height = width;
     width = tmp;
-  } else {
-    cairo_matrix_init_scale (&cairo_matrix, scalef, scalef);
   }
+
+  cairo_matrix_translate (&cairo_matrix,
+      ceil (outline_offset / 2.0l) - ink_rect.x,
+      ceil (outline_offset / 2.0l) - ink_rect.y);
 
   /* reallocate overlay buffer */
   buffer = gst_buffer_new_and_alloc (4 * width * height);
