@@ -1569,6 +1569,9 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   gst_query_add_allocation_meta (query,
       GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, allocation_meta);
 
+  if (allocation_meta)
+    gst_structure_free (allocation_meta);
+
   return TRUE;
 
   /* ERRORS */
