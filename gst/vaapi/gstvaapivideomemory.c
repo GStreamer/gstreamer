@@ -651,13 +651,90 @@ gst_video_info_update_from_image (GstVideoInfo * vip, GstVaapiImage * image)
   return TRUE;
 }
 
+static inline void
+allocator_configure_surface_info (GstVaapiDisplay * display,
+    GstVaapiVideoAllocator * allocator)
+{
+  const GstVideoInfo *vinfo;
+  GstVaapiSurface *surface = NULL;
+  GstVaapiImage *image = NULL;
+  gboolean updated;
+
+  vinfo = &allocator->video_info;
+
+  gst_video_info_set_format (&allocator->surface_info, GST_VIDEO_FORMAT_NV12,
+      GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo));
+
+  /* nothing to configure */
+  if (GST_VIDEO_INFO_FORMAT (vinfo) == GST_VIDEO_FORMAT_ENCODED)
+    return;
+
+  surface = new_surface (display, vinfo);
+  if (!surface)
+    goto bail;
+  image = gst_vaapi_surface_derive_image (surface);
+  if (!image)
+    goto bail;
+  if (!gst_vaapi_image_map (image))
+    goto bail;
+
+  updated = gst_video_info_update_from_image (&allocator->surface_info, image);
+
+  allocator->has_direct_rendering = !USE_NATIVE_FORMATS && updated &&
+      (GST_VAAPI_IMAGE_FORMAT (image) == GST_VIDEO_INFO_FORMAT (vinfo));
+
+  GST_INFO ("has direct-rendering for %s surfaces: %s",
+      GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info),
+      allocator->has_direct_rendering ? "yes" : "no");
+
+  gst_vaapi_image_unmap (image);
+
+bail:
+  if (surface)
+    gst_vaapi_object_unref (surface);
+  if (image)
+    gst_vaapi_object_unref (image);
+}
+
+static inline void
+allocator_configure_image_info (GstVaapiDisplay * display,
+    GstVaapiVideoAllocator * allocator)
+{
+  GstVaapiImage *image = NULL;
+  const GstVideoInfo *vinfo;
+
+  if (allocator->has_direct_rendering) {
+    allocator->image_info = allocator->surface_info;
+    return;
+  }
+
+  vinfo = &allocator->video_info;
+
+  if (GST_VIDEO_INFO_FORMAT (vinfo) == GST_VIDEO_FORMAT_ENCODED)
+    gst_video_info_set_format (&allocator->image_info, GST_VIDEO_FORMAT_I420,
+        GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo));
+  else
+      allocator->image_info = *vinfo;
+
+  image = new_image (display, &allocator->image_info);
+  if (!image)
+    goto bail;
+  if (!gst_vaapi_image_map (image))
+    goto bail;
+
+  gst_video_info_update_from_image (&allocator->image_info, image);
+  gst_vaapi_image_unmap (image);
+
+bail:
+  if (image)
+    gst_vaapi_object_unref (image);
+}
+
 GstAllocator *
 gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
     const GstVideoInfo * vip, guint flags)
 {
   GstVaapiVideoAllocator *allocator;
-  GstVaapiSurface *surface;
-  GstVaapiImage *image;
 
   g_return_val_if_fail (display != NULL, NULL);
   g_return_val_if_fail (vip != NULL, NULL);
@@ -667,63 +744,14 @@ gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
     return NULL;
 
   allocator->video_info = *vip;
-  gst_video_info_set_format (&allocator->surface_info, GST_VIDEO_FORMAT_NV12,
-      GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
 
-  if (GST_VIDEO_INFO_FORMAT (vip) != GST_VIDEO_FORMAT_ENCODED) {
-    image = NULL;
-    do {
-      surface = new_surface (display, vip);
-      if (!surface)
-        break;
-      image = gst_vaapi_surface_derive_image (surface);
-      if (!image)
-        break;
-      if (!gst_vaapi_image_map (image))
-        break;
-      allocator->has_direct_rendering =
-          gst_video_info_update_from_image (&allocator->surface_info, image);
-      if (GST_VAAPI_IMAGE_FORMAT (image) != GST_VIDEO_INFO_FORMAT (vip))
-        allocator->has_direct_rendering = FALSE;
-      if (USE_NATIVE_FORMATS)
-        allocator->has_direct_rendering = FALSE;
-      gst_vaapi_image_unmap (image);
-      GST_INFO ("has direct-rendering for %s surfaces: %s",
-          GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info),
-          allocator->has_direct_rendering ? "yes" : "no");
-    } while (0);
-    if (surface)
-      gst_vaapi_object_unref (surface);
-    if (image)
-      gst_vaapi_object_unref (image);
-  }
-
+  allocator_configure_surface_info (display, allocator);
   allocator->surface_pool = gst_vaapi_surface_pool_new_full (display,
       &allocator->surface_info, flags);
   if (!allocator->surface_pool)
     goto error_create_surface_pool;
 
-  allocator->image_info = *vip;
-  if (GST_VIDEO_INFO_FORMAT (vip) == GST_VIDEO_FORMAT_ENCODED)
-    gst_video_info_set_format (&allocator->image_info, GST_VIDEO_FORMAT_I420,
-        GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
-
-  if (allocator->has_direct_rendering)
-    allocator->image_info = allocator->surface_info;
-  else {
-    do {
-      image = new_image (display, &allocator->image_info);
-      if (!image)
-        break;
-      if (!gst_vaapi_image_map (image))
-        break;
-      gst_video_info_update_from_image (&allocator->image_info, image);
-      gst_vaapi_image_unmap (image);
-    } while (0);
-    if (image)
-      gst_vaapi_object_unref (image);
-  }
-
+  allocator_configure_image_info (display, allocator);
   allocator->image_pool = gst_vaapi_image_pool_new (display,
       &allocator->image_info);
   if (!allocator->image_pool)
