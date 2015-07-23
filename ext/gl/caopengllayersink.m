@@ -368,13 +368,6 @@ _ensure_gl_setup (GstCAOpenGLLayerSink * ca_sink)
 
   return TRUE;
 
-context_creation_error:
-  {
-    GST_ELEMENT_ERROR (ca_sink, RESOURCE, NOT_FOUND,
-        ("Failed to create GL context"), (NULL));
-    return FALSE;
-  }
-
 context_error:
   {
     GST_ELEMENT_ERROR (ca_sink, RESOURCE, NOT_FOUND, ("%s", error->message),
