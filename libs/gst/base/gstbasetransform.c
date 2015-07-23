@@ -2117,6 +2117,8 @@ skip:
 not_negotiated:
   {
     gst_buffer_unref (inbuf);
+    if (GST_PAD_IS_FLUSHING (trans->srcpad))
+      return GST_FLOW_FLUSHING;
     GST_ELEMENT_WARNING (trans, STREAM, FORMAT,
         ("not negotiated"), ("not negotiated"));
     return GST_FLOW_NOT_NEGOTIATED;
