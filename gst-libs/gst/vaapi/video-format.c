@@ -270,3 +270,35 @@ gst_vaapi_video_format_get_score (GstVideoFormat format)
 
   return m ? (m - &gst_vaapi_video_formats[0]) : G_MAXUINT;
 }
+
+/**
+ * gst_vaapi_video_format_get_best_native:
+ * @format: a #GstVideoFormat
+ *
+ * Returns the best "native" pixel format that matches a particular
+ * color-space.
+ *
+ * Returns: the #GstVideoFormat with the corresponding best native
+ * format for #GstVaapiSurface
+ **/
+GstVideoFormat
+gst_vaapi_video_format_get_best_native (GstVideoFormat format)
+{
+  GstVaapiChromaType chroma_type;
+
+  if (format == GST_VIDEO_FORMAT_ENCODED)
+    return GST_VIDEO_FORMAT_NV12;
+
+  chroma_type = gst_vaapi_video_format_get_chroma_type (format);
+  switch (chroma_type) {
+    case GST_VAAPI_CHROMA_TYPE_YUV422:
+      return GST_VIDEO_FORMAT_YUY2;
+    case GST_VAAPI_CHROMA_TYPE_YUV400:
+      return GST_VIDEO_FORMAT_GRAY8;
+    case GST_VAAPI_CHROMA_TYPE_YUV420:
+    case GST_VAAPI_CHROMA_TYPE_RGB32:  /* GstVideoGLTextureUploadMeta */
+      return GST_VIDEO_FORMAT_NV12;
+    default:
+      return GST_VIDEO_FORMAT_UNKNOWN;
+  };
+}

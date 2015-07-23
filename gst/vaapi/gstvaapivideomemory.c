@@ -659,10 +659,12 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
   GstVaapiSurface *surface = NULL;
   GstVaapiImage *image = NULL;
   gboolean updated;
+  GstVideoFormat fmt;
 
   vinfo = &allocator->video_info;
 
-  gst_video_info_set_format (&allocator->surface_info, GST_VIDEO_FORMAT_NV12,
+  fmt = gst_vaapi_video_format_get_best_native (GST_VIDEO_INFO_FORMAT (vinfo));
+  gst_video_info_set_format (&allocator->surface_info, fmt,
       GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo));
 
   /* nothing to configure */

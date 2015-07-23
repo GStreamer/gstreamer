@@ -53,6 +53,9 @@ gst_vaapi_video_format_get_chroma_type (GstVideoFormat format);
 guint
 gst_vaapi_video_format_get_score (GstVideoFormat format);
 
+GstVideoFormat
+gst_vaapi_video_format_get_best_native (GstVideoFormat format);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_VIDEO_FORMAT_H */
