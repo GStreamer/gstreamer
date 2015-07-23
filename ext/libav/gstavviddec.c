@@ -1378,6 +1378,10 @@ no_output:
 
 negotiation_error:
   {
+    if (GST_PAD_IS_FLUSHING (GST_VIDEO_DECODER_SRC_PAD (ffmpegdec))) {
+      *ret = GST_FLOW_FLUSHING;
+      goto beach;
+    }
     GST_WARNING_OBJECT (ffmpegdec, "Error negotiating format");
     *ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
