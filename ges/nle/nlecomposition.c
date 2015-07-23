@@ -2496,11 +2496,16 @@ _relink_children_recursively (NleComposition * comp,
     _relink_single_node (comp, child, toplevel_seek);
 
   if (G_UNLIKELY (nbchildren < oper->num_sinks))
-    GST_ERROR ("Not enough sinkpads to link all objects to the operation ! "
-        "%d / %d", oper->num_sinks, nbchildren);
+    GST_ERROR_OBJECT (comp,
+        "%" GST_PTR_FORMAT
+        " Not enough sinkpads to link all objects to the operation ! "
+        "%d / %d", oper, oper->num_sinks, nbchildren);
 
-  if (G_UNLIKELY (nbchildren == 0))
-    GST_ERROR ("Operation has no child objects to be connected to !!!");
+  if (G_UNLIKELY (nbchildren == 0)) {
+    GST_ERROR_OBJECT (comp,
+        "Operation %" GST_PTR_FORMAT
+        " has no child objects to be connected to !!!", oper);
+  }
   /* Make sure we have enough sinkpads */
 }
 
