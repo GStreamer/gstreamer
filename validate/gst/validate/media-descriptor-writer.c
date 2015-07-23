@@ -525,13 +525,40 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
   }
 
   info = gst_discoverer_discover_uri (discoverer, uri, err);
-  if (info == NULL
-      || gst_discoverer_info_get_result (info) != GST_DISCOVERER_OK) {
-
-    GST_ERROR ("Could not discover URI: %s (error: %s(", uri,
-        err && *err ? (*err)->message : "Unkown");
+  if (info == NULL && err && *err) {
+    GST_ERROR ("Could not discover URI: %s (error: %s)", uri, (*err)->message);
 
     goto out;
+  } else {
+    GstDiscovererResult result = gst_discoverer_info_get_result (info);
+    switch (result) {
+      case GST_DISCOVERER_OK:
+        break;
+      case GST_DISCOVERER_URI_INVALID:
+        GST_ERROR ("URI is not valid");
+        goto out;
+      case GST_DISCOVERER_TIMEOUT:
+        GST_ERROR ("Analyzing URI timed out\n");
+        goto out;
+      case GST_DISCOVERER_BUSY:
+        GST_ERROR ("Discoverer was busy\n");
+        goto out;
+      case GST_DISCOVERER_MISSING_PLUGINS:
+      {
+        gint i = 0;
+        const gchar **installer_details =
+            gst_discoverer_info_get_missing_elements_installer_details (info);
+        GST_ERROR ("Missing plugins");
+        while (installer_details[i]) {
+          GST_ERROR ("(%s)", installer_details[i]);
+          i++;
+        }
+
+        goto out;
+      }
+      default:
+        break;
+    }
   }
 
   writer =
