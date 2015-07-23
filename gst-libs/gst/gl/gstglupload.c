@@ -185,6 +185,8 @@ _gl_memory_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     ret = FALSE;
 
   gst_caps_features_free (gl_features);
+  gst_caps_features_free (gl_overlay_features);
+  gst_caps_features_free (system_memory_overlay_features);
 
   if (!ret)
     return FALSE;
