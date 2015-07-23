@@ -30,7 +30,6 @@
 #include <gst/video/gstvideoencoder.h>
 #include <gst/video/gstvideosink.h>
 #include <gst/vaapi/gstvaapidisplay.h>
-#include "gstvaapiuploader.h"
 
 #ifdef HAVE_GST_GL_GL_H
 # include <gst/gl/gstglcontext.h>
@@ -103,13 +102,6 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
   (gst_vaapi_display_replace(&GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin), \
        (new_display)))
 
-#define GST_VAAPI_PLUGIN_BASE_UPLOADER(plugin) \
-  (GST_VAAPI_PLUGIN_BASE(plugin)->uploader)
-#define GST_VAAPI_PLUGIN_BASE_UPLOADER_CAPS(plugin) \
-  (gst_vaapi_uploader_get_caps(GST_VAAPI_PLUGIN_BASE_UPLOADER(plugin)))
-#define GST_VAAPI_PLUGIN_BASE_UPLOADER_USED(plugin) \
-  (GST_VAAPI_PLUGIN_BASE(plugin)->uploader_used)
-
 struct _GstVaapiPluginBase
 {
   /*< private >*/
@@ -147,8 +139,7 @@ struct _GstVaapiPluginBase
 
   GstObject *gl_context;
 
-  GstVaapiUploader *uploader;
-  gboolean uploader_used;
+  GstCaps *allowed_raw_caps;
 };
 
 struct _GstVaapiPluginBaseClass
@@ -213,10 +204,6 @@ gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_plugin_base_ensure_uploader (GstVaapiPluginBase * plugin);
-
-G_GNUC_INTERNAL
-gboolean
 gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
     GstCaps * outcaps);
 
@@ -232,11 +219,6 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
 G_GNUC_INTERNAL
 GstFlowReturn
-gst_vaapi_plugin_base_allocate_input_buffer (GstVaapiPluginBase * plugin,
-    GstCaps * caps, GstBuffer ** outbuf_ptr);
-
-G_GNUC_INTERNAL
-GstFlowReturn
 gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
     GstBuffer * inbuf, GstBuffer ** outbuf_ptr);
 
@@ -244,6 +226,10 @@ G_GNUC_INTERNAL
 void
 gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
     GstObject * object);
+
+G_GNUC_INTERNAL
+GstCaps *
+gst_vaapi_plugin_base_get_allowed_raw_caps (GstVaapiPluginBase * plugin);
 
 G_END_DECLS
 

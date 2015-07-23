@@ -52,7 +52,6 @@ libgstvaapi_source_c = \
 	gstvaapipluginutil.c	\
 	gstvaapipostproc.c	\
 	gstvaapisink.c		\
-	gstvaapiuploader.c	\
 	gstvaapivideobuffer.c	\
 	gstvaapivideocontext.c	\
 	gstvaapivideometa.c	\
@@ -68,7 +67,6 @@ libgstvaapi_source_h = \
 	gstvaapipluginutil.h	\
 	gstvaapipostproc.h	\
 	gstvaapisink.h		\
-	gstvaapiuploader.h	\
 	gstvaapivideobuffer.h	\
 	gstvaapivideocontext.h	\
 	gstvaapivideometa.h	\

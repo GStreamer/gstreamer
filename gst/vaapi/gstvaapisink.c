@@ -980,16 +980,6 @@ gst_vaapisink_ensure_backend (GstVaapiSink * sink)
 }
 
 static gboolean
-gst_vaapisink_ensure_uploader (GstVaapiSink * sink)
-{
-  if (!gst_vaapisink_ensure_display (sink))
-    return FALSE;
-  if (!gst_vaapi_plugin_base_ensure_uploader (GST_VAAPI_PLUGIN_BASE (sink)))
-    return FALSE;
-  return TRUE;
-}
-
-static gboolean
 gst_vaapisink_ensure_render_rect (GstVaapiSink * sink, guint width,
     guint height)
 {
@@ -1193,9 +1183,7 @@ gst_vaapisink_start (GstBaseSink * base_sink)
 {
   GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
 
-  if (!gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (sink)))
-    return FALSE;
-  return gst_vaapisink_ensure_uploader (sink);
+  return gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (sink));
 }
 
 static gboolean
@@ -1214,17 +1202,17 @@ static GstCaps *
 gst_vaapisink_get_caps_impl (GstBaseSink * base_sink)
 {
   GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
-  GstCaps *out_caps, *yuv_caps;
+  GstCaps *out_caps, *raw_caps;
 
   out_caps = gst_static_pad_template_get_caps (&gst_vaapisink_sink_factory);
   if (!out_caps)
     return NULL;
 
-  if (gst_vaapisink_ensure_uploader (sink)) {
-    yuv_caps = GST_VAAPI_PLUGIN_BASE_UPLOADER_CAPS (sink);
-    if (yuv_caps) {
+  if (gst_vaapisink_ensure_display (sink)) {
+    raw_caps = gst_vaapi_plugin_base_get_allowed_raw_caps (GST_VAAPI_PLUGIN_BASE (sink));
+    if (raw_caps) {
       out_caps = gst_caps_make_writable (out_caps);
-      gst_caps_append (out_caps, gst_caps_copy (yuv_caps));
+      gst_caps_append (out_caps, gst_caps_copy (raw_caps));
     }
   }
   return out_caps;

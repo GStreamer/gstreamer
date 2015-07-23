@@ -58,16 +58,6 @@ ensure_display (GstVaapiEncode * encode)
 }
 
 static gboolean
-ensure_uploader (GstVaapiEncode * encode)
-{
-  if (!ensure_display (encode))
-    return FALSE;
-  if (!gst_vaapi_plugin_base_ensure_uploader (GST_VAAPI_PLUGIN_BASE (encode)))
-    return FALSE;
-  return TRUE;
-}
-
-static gboolean
 gst_vaapiencode_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstVaapiPluginBase *const plugin =
@@ -384,9 +374,6 @@ ensure_encoder (GstVaapiEncode * encode)
   guint i;
 
   g_return_val_if_fail (klass->alloc_encoder, FALSE);
-
-  if (!ensure_uploader (encode))
-    return FALSE;
 
   encode->encoder = klass->alloc_encoder (encode,
       GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));

@@ -214,16 +214,6 @@ gst_vaapipostproc_ensure_display (GstVaapiPostproc * postproc)
 }
 
 static gboolean
-gst_vaapipostproc_ensure_uploader (GstVaapiPostproc * postproc)
-{
-  if (!gst_vaapipostproc_ensure_display (postproc))
-    return FALSE;
-  if (!gst_vaapi_plugin_base_ensure_uploader (GST_VAAPI_PLUGIN_BASE (postproc)))
-    return FALSE;
-  return TRUE;
-}
-
-static gboolean
 gst_vaapipostproc_ensure_filter (GstVaapiPostproc * postproc)
 {
   if (postproc->filter)
@@ -264,8 +254,6 @@ gst_vaapipostproc_create (GstVaapiPostproc * postproc)
   if (!gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (postproc)))
     return FALSE;
   if (!gst_vaapipostproc_ensure_display (postproc))
-    return FALSE;
-  if (!gst_vaapipostproc_ensure_uploader (postproc))
     return FALSE;
 
   postproc->use_vpp = FALSE;
@@ -935,18 +923,19 @@ ensure_allowed_sinkpad_caps (GstVaapiPostproc * postproc)
   out_caps = gst_caps_from_string (GST_VAAPIPOSTPROC_SURFACE_CAPS ", "
       GST_CAPS_INTERLACED_MODES);
   if (!out_caps) {
-    GST_ERROR ("failed to create VA sink caps");
+    GST_ERROR_OBJECT (postproc, "failed to create VA sink caps");
     return FALSE;
   }
 
   /* Append raw video caps */
-  if (gst_vaapipostproc_ensure_uploader (postproc)) {
-    raw_caps = GST_VAAPI_PLUGIN_BASE_UPLOADER_CAPS (postproc);
+  if (gst_vaapipostproc_ensure_display (postproc)) {
+    raw_caps = gst_vaapi_plugin_base_get_allowed_raw_caps (GST_VAAPI_PLUGIN_BASE (postproc));
     if (raw_caps) {
       out_caps = gst_caps_make_writable (out_caps);
       gst_caps_append (out_caps, gst_caps_copy (raw_caps));
-    } else
-      GST_WARNING ("failed to create YUV sink caps");
+    } else {
+      GST_WARNING_OBJECT (postproc, "failed to create YUV sink caps");
+    }
   }
   postproc->allowed_sinkpad_caps = out_caps;
 

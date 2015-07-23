@@ -238,7 +238,6 @@ gst_vaapi_plugin_base_open (GstVaapiPluginBase * plugin)
 void
 gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
 {
-  g_clear_object (&plugin->uploader);
   gst_vaapi_display_replace (&plugin->display, NULL);
   gst_object_replace (&plugin->gl_context, NULL);
 
@@ -254,6 +253,7 @@ gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
   gst_caps_replace (&plugin->srcpad_caps, NULL);
   plugin->srcpad_caps_changed = FALSE;
   gst_video_info_init (&plugin->srcpad_info);
+  gst_caps_replace (&plugin->allowed_raw_caps, NULL);
 }
 
 /**
@@ -339,29 +339,6 @@ gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin)
   plugin->display_type = gst_vaapi_display_get_display_type (plugin->display);
 
   GST_VAAPI_PLUGIN_BASE_GET_CLASS (plugin)->display_changed (plugin);
-  return TRUE;
-}
-
-/**
- * gst_vaapi_plugin_base_ensure_uploader:
- * @plugin: a #GstVaapiPluginBase
- *
- * Makes sure the built-in #GstVaapiUploader object is created, or
- * that it was successfully notified of any VA display change.
- *
- * Returns: %TRUE if the uploader was successfully created, %FALSE otherwise.
- */
-gboolean
-gst_vaapi_plugin_base_ensure_uploader (GstVaapiPluginBase * plugin)
-{
-  if (plugin->uploader) {
-    if (!gst_vaapi_uploader_ensure_display (plugin->uploader, plugin->display))
-      return FALSE;
-  } else {
-    plugin->uploader = gst_vaapi_uploader_new (plugin->display);
-    if (!plugin->uploader)
-      return FALSE;
-  }
   return TRUE;
 }
 
@@ -519,14 +496,6 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
     if (!gst_video_info_from_caps (&plugin->srcpad_info, outcaps))
       return FALSE;
     plugin->srcpad_caps_changed = TRUE;
-  }
-
-  if (plugin->uploader && plugin->sinkpad_caps_is_raw) {
-    if (!gst_vaapi_uploader_ensure_display (plugin->uploader, plugin->display))
-      return FALSE;
-    if (!gst_vaapi_uploader_ensure_caps (plugin->uploader,
-            plugin->sinkpad_caps, plugin->srcpad_caps))
-      return FALSE;
   }
 
   if (!ensure_sinkpad_buffer_pool (plugin, plugin->sinkpad_caps))
@@ -778,49 +747,6 @@ config_failed:
 }
 
 /**
- * gst_vaapi_plugin_base_allocate_input_buffer:
- * @plugin: a #GstVaapiPluginBase
- * @caps: the buffer caps constraints to honour
- * @outbuf_ptr: the pointer location to the newly allocated buffer
- *
- * Creates a buffer that holds a VA surface memory for the sink pad to
- * use it as the result for buffer_alloc() impementations.
- *
- * Return: #GST_FLOW_OK if the buffer could be created.
- */
-GstFlowReturn
-gst_vaapi_plugin_base_allocate_input_buffer (GstVaapiPluginBase * plugin,
-    GstCaps * caps, GstBuffer ** outbuf_ptr)
-{
-  GstBuffer *outbuf;
-
-  *outbuf_ptr = NULL;
-
-  if (!plugin->sinkpad_caps_changed) {
-    if (!gst_video_info_from_caps (&plugin->sinkpad_info, caps))
-      return GST_FLOW_NOT_SUPPORTED;
-    plugin->sinkpad_caps_changed = TRUE;
-  }
-
-  if (!plugin->sinkpad_caps_is_raw)
-    return GST_FLOW_OK;
-
-  if (!gst_vaapi_uploader_ensure_display (plugin->uploader, plugin->display))
-    return GST_FLOW_NOT_SUPPORTED;
-  if (!gst_vaapi_uploader_ensure_caps (plugin->uploader, caps, NULL))
-    return GST_FLOW_NOT_SUPPORTED;
-
-  outbuf = gst_vaapi_uploader_get_buffer (plugin->uploader);
-  if (!outbuf) {
-    GST_WARNING ("failed to allocate resources for raw YUV buffer");
-    return GST_FLOW_NOT_SUPPORTED;
-  }
-
-  *outbuf_ptr = outbuf;
-  return GST_FLOW_OK;
-}
-
-/**
  * gst_vaapi_plugin_base_get_input_buffer:
  * @plugin: a #GstVaapiPluginBase
  * @incaps: the sink pad (input) buffer
@@ -982,4 +908,83 @@ gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
   }
   gst_vaapi_plugin_base_set_display_type (plugin, display_type);
 #endif
+}
+
+static gboolean
+ensure_allowed_raw_caps (GstVaapiPluginBase * plugin)
+{
+  GArray *formats, *out_formats;
+  GstVaapiSurface *surface;
+  guint i;
+  GstCaps *out_caps;
+  gboolean ret = FALSE;
+
+  if (plugin->allowed_raw_caps)
+    return TRUE;
+
+  out_formats = formats = NULL;
+  surface = NULL;
+
+  formats = gst_vaapi_display_get_image_formats (plugin->display);
+  if (!formats)
+    goto bail;
+
+  out_formats =
+      g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat), formats->len);
+  if (!out_formats)
+    goto bail;
+
+  surface =
+      gst_vaapi_surface_new (plugin->display, GST_VAAPI_CHROMA_TYPE_YUV420, 64,
+      64);
+  if (!surface)
+    goto bail;
+
+  for (i = 0; i < formats->len; i++) {
+    const GstVideoFormat format = g_array_index (formats, GstVideoFormat, i);
+    GstVaapiImage *image;
+
+    if (format == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+    image = gst_vaapi_image_new (plugin->display, format, 64, 64);
+    if (!image)
+      continue;
+    if (gst_vaapi_surface_put_image (surface, image))
+      g_array_append_val (out_formats, format);
+    gst_vaapi_object_unref (image);
+  }
+
+  out_caps = gst_vaapi_video_format_new_template_caps_from_list (out_formats);
+  if (!out_caps)
+    goto bail;
+
+  gst_caps_replace (&plugin->allowed_raw_caps, out_caps);
+  gst_caps_unref (out_caps);
+  ret = TRUE;
+
+bail:
+  if (formats)
+    g_array_unref (formats);
+  if (out_formats)
+    g_array_unref (out_formats);
+  if (surface)
+    gst_vaapi_object_unref (surface);
+
+  return ret;
+}
+
+/**
+ * gst_vaapi_plugin_base_get_allowed_raw_caps:
+ * @plugin: a #GstVaapiPluginBase
+ *
+ * Returns the raw #GstCaps allowed by the element.
+ *
+ * Returns: the allowed raw #GstCaps or %NULL
+ **/
+GstCaps *
+gst_vaapi_plugin_base_get_allowed_raw_caps (GstVaapiPluginBase * plugin)
+{
+  if (!ensure_allowed_raw_caps (plugin))
+    return NULL;
+  return plugin->allowed_raw_caps;
 }
