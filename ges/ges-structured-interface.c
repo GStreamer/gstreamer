@@ -346,7 +346,8 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   TRY_GET ("pattern", G_TYPE_STRING, &pattern, NULL);
   TRY_GET ("name", G_TYPE_STRING, &name, NULL);
   TRY_GET ("layer-priority", G_TYPE_INT, &layer_priority, -1);
-  TRY_GET ("layer", G_TYPE_INT, &layer_priority, -1);
+  if (layer_priority == -1)
+    TRY_GET ("layer", G_TYPE_INT, &layer_priority, -1);
   TRY_GET ("type", G_TYPE_STRING, &type_string, "GESUriClip");
   TRY_GET ("start", GST_TYPE_CLOCK_TIME, &start, GST_CLOCK_TIME_NONE);
   TRY_GET ("inpoint", GST_TYPE_CLOCK_TIME, &inpoint, 0);
