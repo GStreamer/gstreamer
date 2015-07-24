@@ -92,11 +92,10 @@ gst_gl_context_eagl_init (GstGLContextEagl * context)
 
 /* Must be called in the gl thread */
 GstGLContextEagl *
-gst_gl_context_eagl_new (void)
+gst_gl_context_eagl_new (GstGLDisplay * display)
 {
-  GstGLContextEagl *context = g_object_new (GST_GL_TYPE_CONTEXT_EAGL, NULL);
-
-  return context;
+  /* there isn't actually a display type for eagl yet? */
+  return g_object_new (GST_GL_TYPE_CONTEXT_EAGL, NULL);
 }
 
 void

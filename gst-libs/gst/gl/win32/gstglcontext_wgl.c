@@ -80,9 +80,12 @@ gst_gl_context_wgl_init (GstGLContextWGL * context_wgl)
 GstGLContextWGL *
 gst_gl_context_wgl_new (void)
 {
-  GstGLContextWGL *context = g_object_new (GST_GL_TYPE_CONTEXT_WGL, NULL);
+  if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_WIN32) ==
+      0)
+    /* we require an win32 display handle to create WGL contexts */
+    return NULL;
 
-  return context;
+  return g_object_new (GST_GL_TYPE_CONTEXT_WGL, NULL);
 }
 
 static gboolean

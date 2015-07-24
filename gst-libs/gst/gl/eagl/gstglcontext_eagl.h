@@ -57,7 +57,7 @@ struct _GstGLContextEaglClass {
 
 GType gst_gl_context_eagl_get_type (void);
 
-GstGLContextEagl * gst_gl_context_eagl_new (void);
+GstGLContextEagl * gst_gl_context_eagl_new (GstGLDisplay * display);
 
 void gst_gl_context_eagl_update_layer (GstGLContext * context);
 void gst_gl_context_eagl_resize (GstGLContextEagl * eagl_context);
