@@ -2572,18 +2572,20 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
     /* check if h264 has codec_data (avc) or streamheaders (bytestream) */
   } else if (gst_structure_has_name (caps_s, "video/x-h264")) {
     const GValue *value = gst_structure_get_value (caps_s, "codec_data");
-    GstBuffer *buf = gst_value_get_buffer (value);
-    GstMapInfo mapinfo;
+    if (value) {
+      GstBuffer *buf = gst_value_get_buffer (value);
+      GstMapInfo mapinfo;
 
-    if (gst_buffer_map (buf, &mapinfo, GST_MAP_READ)) {
-      if (mapinfo.size >= 4 && GST_READ_UINT32_BE (mapinfo.data) == 1) {
-        /* this looks like a bytestream start */
-        streamheader = gst_buffer_ref (buf);
-        gst_asf_demux_add_stream_headers_to_caps (demux, buf, caps_s);
-        gst_structure_remove_field (caps_s, "codec_data");
+      if (gst_buffer_map (buf, &mapinfo, GST_MAP_READ)) {
+        if (mapinfo.size >= 4 && GST_READ_UINT32_BE (mapinfo.data) == 1) {
+          /* this looks like a bytestream start */
+          streamheader = gst_buffer_ref (buf);
+          gst_asf_demux_add_stream_headers_to_caps (demux, buf, caps_s);
+          gst_structure_remove_field (caps_s, "codec_data");
+        }
+
+        gst_buffer_unmap (buf, &mapinfo);
       }
-
-      gst_buffer_unmap (buf, &mapinfo);
     }
   }
 
