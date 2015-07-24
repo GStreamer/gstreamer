@@ -119,8 +119,11 @@ main (int argc, gchar ** argv)
       goto out;
     }
 
-    gst_media_descriptors_compare (GST_MEDIA_DESCRIPTOR (reference),
-        GST_MEDIA_DESCRIPTOR (writer));
+    if (!gst_media_descriptors_compare (GST_MEDIA_DESCRIPTOR (reference),
+            GST_MEDIA_DESCRIPTOR (writer))) {
+      ret = 1;
+      goto out;
+    }
   } else {
     output = gst_media_descriptor_writer_serialize (writer);
     g_print ("Media info:\n%s\n", output);

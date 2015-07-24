@@ -358,7 +358,7 @@ gst_media_descriptors_compare (GstMediaDescriptor * ref,
       }
     }
 
-    if (sfound == FALSE) {
+    if (sfound == -1) {
       GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
           "Could not find stream %s in the compared descriptor",
           ((StreamNode *) rstream_list->data)->id);
