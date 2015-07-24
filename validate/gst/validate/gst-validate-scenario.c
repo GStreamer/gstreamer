@@ -94,8 +94,6 @@ static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
 static GstValidateActionType *_find_action_type (const gchar * type_name);
 
-static GPrivate main_thread_priv;
-
 /* GstValidateScenario is not really thread safe and
  * everything should be done from the thread GstValidate
  * was inited from, unless stated otherwize.
@@ -2928,13 +2926,10 @@ gst_validate_action_set_done (GstValidateAction * action)
     gst_validate_action_unref (action);
   }
 
-  if (GPOINTER_TO_INT (g_private_get (&main_thread_priv))) {
-    _action_set_done (action);
-  } else {
-    g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, (GSourceFunc) _action_set_done,
-        gst_mini_object_ref (GST_MINI_OBJECT (action)),
-        (GDestroyNotify) gst_validate_action_unref);
-  }
+  g_main_context_invoke_full (NULL, G_PRIORITY_DEFAULT_IDLE,
+      (GSourceFunc) _action_set_done,
+      gst_mini_object_ref (GST_MINI_OBJECT (action)),
+      (GDestroyNotify) gst_validate_action_unref);
 }
 
 /**
@@ -3149,15 +3144,18 @@ gst_validate_print_action_types (const gchar ** wanted_types,
 GList *
 gst_validate_scenario_get_actions (GstValidateScenario * scenario)
 {
-  if (GPOINTER_TO_INT (g_private_get (&main_thread_priv))) {
-    return g_list_copy_deep (scenario->priv->actions,
-        (GCopyFunc) gst_mini_object_ref, NULL);
-  } else {
-    GST_WARNING_OBJECT (scenario, "Trying to get next action from outside"
-        " the 'main' thread");
-  }
+  GList *ret;
+  gboolean main_context_acquired;
 
-  return NULL;
+  main_context_acquired = g_main_context_acquire (g_main_context_default ());
+  g_return_val_if_fail (main_context_acquired, NULL);
+
+  ret = g_list_copy_deep (scenario->priv->actions,
+      (GCopyFunc) gst_mini_object_ref, NULL);
+
+  g_main_context_release (g_main_context_default ());
+
+  return ret;
 }
 
 void
@@ -3168,8 +3166,6 @@ init_scenarios (void)
 
   _gst_validate_action_type = gst_validate_action_get_type ();
   _gst_validate_action_type_type = gst_validate_action_type_get_type ();
-
-  g_private_set (&main_thread_priv, GUINT_TO_POINTER (TRUE));
 
   /*  *INDENT-OFF* */
   REGISTER_ACTION_TYPE ("description", NULL,
