@@ -77,7 +77,7 @@ struct _GstGLWindowWin32Class {
 
 GType gst_gl_window_win32_get_type     (void);
 
-GstGLWindowWin32 * gst_gl_window_win32_new          (void);
+GstGLWindowWin32 * gst_gl_window_win32_new          (GstGLDisplay * display);
 
 gboolean gst_gl_window_win32_create_window (GstGLWindowWin32 * window_win32, GError ** error);
 

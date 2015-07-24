@@ -84,11 +84,10 @@ gst_gl_window_eagl_init (GstGLWindowEagl * window)
 
 /* Must be called in the gl thread */
 GstGLWindowEagl *
-gst_gl_window_eagl_new (void)
+gst_gl_window_eagl_new (GstGLDisplay * display)
 {
-  GstGLWindowEagl *window = g_object_new (GST_GL_TYPE_WINDOW_EAGL, NULL);
-
-  return window;
+  /* there isn't an eagl display type */
+  return g_object_new (GST_GL_TYPE_WINDOW_EAGL, NULL);
 }
 
 static guintptr

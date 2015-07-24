@@ -94,9 +94,12 @@ gst_gl_window_win32_init (GstGLWindowWin32 * window)
 GstGLWindowWin32 *
 gst_gl_window_win32_new (void)
 {
-  GstGLWindowWin32 *window = g_object_new (GST_GL_TYPE_WINDOW_WIN32, NULL);
+  if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_WIN32) ==
+      0)
+    /* we require an win32 display to create win32 windows */
+    return NULL;
 
-  return window;
+  return g_object_new (GST_GL_TYPE_WINDOW_WIN32, NULL);
 }
 
 static void
