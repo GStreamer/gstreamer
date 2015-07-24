@@ -1336,7 +1336,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
       gst_structure_set (template,
           "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
           "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
-          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL);
+          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
     }
     break;
   }
@@ -1369,7 +1369,7 @@ gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
         gst_structure_set (structure,
             "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
             "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
-            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL);
+            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
       }
 
       switch (gst_v4l2_formats[i].format) {
@@ -2146,8 +2146,8 @@ return_data:
     gst_structure_take_value (s, "framerate", &rates);
   } else if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ||
       v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
-    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1,
-        NULL);
+    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT,
+        1, NULL);
   }
   return s;
 
@@ -2444,7 +2444,7 @@ default_frame_sizes:
         v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
       /* if norm can't be used, copy the template framerate */
       gst_structure_set (tmp, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
-          100, 1, NULL);
+          G_MAXINT, 1, NULL);
     }
 
     if (min_w == max_w)
