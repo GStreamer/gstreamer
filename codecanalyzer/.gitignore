@@ -26,3 +26,6 @@ stamp-h1
 .libs
 Makefile
 Makefile.in
+
+build-aux
+src/codecanalyzer

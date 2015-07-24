@@ -40,6 +40,9 @@ stamp-h.in
 *.gir
 *.typefind
 *.orig
+*.stamp
+*.log
+*.trs
 
 .arcconfig
 /m4/*m4
@@ -47,5 +50,10 @@ stamp-h.in
 /po
 *docs/launcher/html
 *tools/gst-validate-launcher
+
+tests/check/validate/monitoring
+tests/check/validate/overrides
+tests/check/validate/reporting
+tests/check/validate/padmonitor
 
 /launcher/config.py

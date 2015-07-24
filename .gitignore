@@ -18,4 +18,5 @@
 /validate/pkgconfig/gst-validate-uninstalled.pc
 *.bak
 *.libs/*
+.#*
 tags
