@@ -69,15 +69,15 @@ gst_gl_window_android_egl_init (GstGLWindowAndroidEGL * window)
 
 /* Must be called in the gl thread */
 GstGLWindowAndroidEGL *
-gst_gl_window_android_egl_new (void)
+gst_gl_window_android_egl_new (GstGLDisplay * display)
 {
-  GstGLWindowAndroidEGL *window;
+  if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_EGL) == 0)
+    /* we require an egl display to create android windows */
+    return NULL;
 
   GST_DEBUG ("creating Android EGL window");
 
-  window = g_object_new (GST_GL_TYPE_WINDOW_ANDROID_EGL, NULL);
-
-  return window;
+  return g_object_new (GST_GL_TYPE_WINDOW_ANDROID_EGL, NULL);
 }
 
 static void

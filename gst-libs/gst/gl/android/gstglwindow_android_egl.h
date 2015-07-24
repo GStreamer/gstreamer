@@ -58,7 +58,7 @@ struct _GstGLWindowAndroidEGLClass {
 
 GType gst_gl_window_android_egl_get_type     (void);
 
-GstGLWindowAndroidEGL * gst_gl_window_android_egl_new  (void);
+GstGLWindowAndroidEGL * gst_gl_window_android_egl_new  (GstGLDisplay * display);
 
 G_END_DECLS
 

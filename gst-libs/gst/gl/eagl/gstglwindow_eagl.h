@@ -57,7 +57,7 @@ struct _GstGLWindowEaglClass {
 
 GType gst_gl_window_eagl_get_type     (void);
 
-GstGLWindowEagl * gst_gl_window_eagl_new (void);
+GstGLWindowEagl * gst_gl_window_eagl_new (GstGLDisplay * display);
 
 G_END_DECLS
 

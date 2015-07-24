@@ -83,29 +83,28 @@ gst_gl_window_dispmanx_egl_class_init (GstGLWindowDispmanxEGLClass * klass)
 static void
 gst_gl_window_dispmanx_egl_init (GstGLWindowDispmanxEGL * window_egl)
 {
+  window_egl->egldisplay = EGL_DEFAULT_DISPLAY;
+
+  window_egl->visible = FALSE;
+  window_egl->display = 0;
+  window_egl->dp_width = 0;
+  window_egl->dp_height = 0;
+  window_egl->native.element = 0;
+  window_egl->native.width = 0;
+  window_egl->native.height = 0;
 }
 
 /* Must be called in the gl thread */
 GstGLWindowDispmanxEGL *
-gst_gl_window_dispmanx_egl_new (void)
+gst_gl_window_dispmanx_egl_new (GstGLDisplay * display)
 {
-  GstGLWindowDispmanxEGL *window;
+  if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_EGL) == 0)
+    /* we require an egl display to create dispmanx windows */
+    return NULL;
 
   GST_DEBUG ("creating Dispmanx EGL window");
 
-  window = g_object_new (GST_GL_TYPE_WINDOW_DISPMANX_EGL, NULL);
-
-  window->egldisplay = EGL_DEFAULT_DISPLAY;
-
-  window->visible = FALSE;
-  window->display = 0;
-  window->dp_width = 0;
-  window->dp_height = 0;
-  window->native.element = 0;
-  window->native.width = 0;
-  window->native.height = 0;
-
-  return window;
+  return g_object_new (GST_GL_TYPE_WINDOW_DISPMANX_EGL, NULL);
 }
 
 static void
@@ -133,8 +132,8 @@ gst_gl_window_dispmanx_egl_open (GstGLWindow * window, GError ** error)
   gint ret = graphics_get_display_size (0, &window_egl->dp_width,
       &window_egl->dp_height);
   if (ret < 0) {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
-        "Can't open display");
+    g_set_error (error, GST_GL_WINDOW_ERROR,
+        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE, "Can't open display");
     return FALSE;
   }
   GST_DEBUG ("Got display size: %dx%d\n", window_egl->dp_width,
@@ -236,8 +235,8 @@ window_resize (GstGLWindowDispmanxEGL * window_egl, guint width, guint height,
     vc_dispmanx_update_submit_sync (dispman_update);
 
     if (GST_GL_WINDOW (window_egl)->resize)
-      GST_GL_WINDOW (window_egl)->resize (GST_GL_WINDOW (window_egl)->
-          resize_data, width, height);
+      GST_GL_WINDOW (window_egl)->
+          resize (GST_GL_WINDOW (window_egl)->resize_data, width, height);
   }
 
   window_egl->native.width = width;

@@ -97,7 +97,7 @@ struct _GstGLWindowWaylandEGLClass {
 
 GType gst_gl_window_wayland_egl_get_type     (void);
 
-GstGLWindowWaylandEGL * gst_gl_window_wayland_egl_new  (void);
+GstGLWindowWaylandEGL * gst_gl_window_wayland_egl_new  (GstGLDisplay * display);
 
 void gst_gl_window_wayland_egl_create_window (GstGLWindowWaylandEGL * window_egl);
 

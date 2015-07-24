@@ -83,7 +83,7 @@ struct _GstGLWindowDispmanxEGLClass {
 
 GType gst_gl_window_dispmanx_egl_get_type     (void);
 
-GstGLWindowDispmanxEGL * gst_gl_window_dispmanx_egl_new  (void);
+GstGLWindowDispmanxEGL * gst_gl_window_dispmanx_egl_new  (GstGLDisplay * display);
 gboolean gst_gl_window_dispmanx_egl_create_window (GstGLWindowDispmanxEGL * window_egl);
 
 G_END_DECLS

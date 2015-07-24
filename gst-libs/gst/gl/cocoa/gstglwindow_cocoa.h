@@ -58,7 +58,7 @@ struct _GstGLWindowCocoaClass {
 
 GType gst_gl_window_cocoa_get_type     (void);
 
-GstGLWindowCocoa * gst_gl_window_cocoa_new (void);
+GstGLWindowCocoa * gst_gl_window_cocoa_new (GstGLDisplay * display);
 
 void gst_gl_window_cocoa_draw_thread (GstGLWindowCocoa *window_cocoa);
 

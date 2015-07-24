@@ -130,17 +130,14 @@ gst_gl_window_x11_init (GstGLWindowX11 * window)
 GstGLWindowX11 *
 gst_gl_window_x11_new (GstGLDisplay * display)
 {
-  GstGLWindowX11 *window = NULL;
-
-  if ((display->type & GST_GL_DISPLAY_TYPE_X11) == GST_GL_DISPLAY_TYPE_NONE) {
+  if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_X11)
+      == GST_GL_DISPLAY_TYPE_NONE) {
     GST_INFO ("Wrong display type %u for this window type %u", display->type,
         GST_GL_DISPLAY_TYPE_X11);
     return NULL;
   }
 
-  window = g_object_new (GST_GL_TYPE_WINDOW_X11, NULL);
-
-  return window;
+  return g_object_new (GST_GL_TYPE_WINDOW_X11, NULL);
 }
 
 gboolean

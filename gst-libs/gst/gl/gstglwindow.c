@@ -272,7 +272,7 @@ gst_gl_window_new (GstGLDisplay * display)
 
 #if GST_GL_HAVE_WINDOW_COCOA
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
-    window = GST_GL_WINDOW (gst_gl_window_cocoa_new ());
+    window = GST_GL_WINDOW (gst_gl_window_cocoa_new (display));
 #endif
 #if GST_GL_HAVE_WINDOW_X11
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
@@ -280,23 +280,23 @@ gst_gl_window_new (GstGLDisplay * display)
 #endif
 #if GST_GL_HAVE_WINDOW_WIN32
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "win32")))
-    window = GST_GL_WINDOW (gst_gl_window_win32_new ());
+    window = GST_GL_WINDOW (gst_gl_window_win32_new (display));
 #endif
 #if GST_GL_HAVE_WINDOW_WAYLAND
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
-    window = GST_GL_WINDOW (gst_gl_window_wayland_egl_new ());
+    window = GST_GL_WINDOW (gst_gl_window_wayland_egl_new (display));
 #endif
 #if GST_GL_HAVE_WINDOW_DISPMANX
   if (!window && (!user_choice || g_strstr_len (user_choice, 8, "dispmanx")))
-    window = GST_GL_WINDOW (gst_gl_window_dispmanx_egl_new ());
+    window = GST_GL_WINDOW (gst_gl_window_dispmanx_egl_new (display));
 #endif
 #if GST_GL_HAVE_WINDOW_ANDROID
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "android")))
-    window = GST_GL_WINDOW (gst_gl_window_android_egl_new ());
+    window = GST_GL_WINDOW (gst_gl_window_android_egl_new (display));
 #endif
 #if GST_GL_HAVE_WINDOW_EAGL
   if (!window && (!user_choice || g_strstr_len (user_choice, 4, "eagl")))
-    window = GST_GL_WINDOW (gst_gl_window_eagl_new ());
+    window = GST_GL_WINDOW (gst_gl_window_eagl_new (display));
 #endif
   if (!window) {
     /* subclass returned a NULL window */
