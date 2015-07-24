@@ -189,6 +189,8 @@ struct _GstValidateActionPrivate
   gboolean printed;
   gboolean executing_last_subaction;
   gboolean optional;
+
+  GWeakRef scenario;
 };
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
@@ -231,6 +233,8 @@ _action_free (GstValidateAction * action)
     g_object_remove_weak_pointer (G_OBJECT (action->scenario),
         ((gpointer *) & action->scenario));
 
+  g_weak_ref_clear (&action->priv->scenario);
+
   g_slice_free (GstValidateActionPrivate, action->priv);
   g_slice_free (GstValidateAction, action);
 }
@@ -243,6 +247,8 @@ gst_validate_action_init (GstValidateAction * action)
       (GstMiniObjectFreeFunction) _action_free);
 
   action->priv = g_slice_new0 (GstValidateActionPrivate);
+
+  g_weak_ref_init (&action->priv->scenario, NULL);
 }
 
 static void
@@ -262,6 +268,7 @@ gst_validate_action_new (GstValidateScenario * scenario,
   action->type = action_type->name;
   action->repeat = -1;
 
+  g_weak_ref_set (&action->priv->scenario, scenario);
   action->scenario = scenario;
   if (scenario)
     g_object_add_weak_pointer (G_OBJECT (scenario),
@@ -2176,6 +2183,11 @@ static void
 _pipeline_freed_cb (GstValidateScenario * scenario,
     GObject * where_the_object_was)
 {
+  /* Because g_object_weak_ref() is used, this MUST be on the
+   * main thread. */
+  g_assert (g_main_context_acquire (g_main_context_default ()));
+  g_main_context_release (g_main_context_default ());
+
   scenario->pipeline = NULL;
 
   GST_DEBUG_OBJECT (scenario, "pipeline was freed");
@@ -2507,6 +2519,11 @@ static void
 gst_validate_scenario_finalize (GObject * object)
 {
   GstValidateScenarioPrivate *priv = GST_VALIDATE_SCENARIO (object)->priv;
+
+  /* Because g_object_add_weak_pointer() is used, this MUST be on the
+   * main thread. */
+  g_assert (g_main_context_acquire (g_main_context_default ()));
+  g_main_context_release (g_main_context_default ());
 
   g_list_free_full (priv->actions, (GDestroyNotify) gst_mini_object_unref);
   g_list_free_full (priv->interlaced_actions,
@@ -2912,18 +2929,22 @@ _action_set_done (GstValidateAction * action)
 void
 gst_validate_action_set_done (GstValidateAction * action)
 {
-  GstValidateScenario *scenario = action->scenario;
 
   if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_INTERLACED) {
+    GstValidateScenario *scenario = g_weak_ref_get (&action->priv->scenario);
+    GList *item = NULL;
 
     if (scenario) {
       SCENARIO_LOCK (scenario);
+      item = g_list_find (scenario->priv->interlaced_actions, action);
       scenario->priv->interlaced_actions =
-          g_list_remove (scenario->priv->interlaced_actions, action);
+          g_list_delete_link (scenario->priv->interlaced_actions, item);
       SCENARIO_UNLOCK (scenario);
+      g_object_unref (scenario);
     }
 
-    gst_validate_action_unref (action);
+    if (item)
+      gst_validate_action_unref (action);
   }
 
   g_main_context_invoke_full (NULL, G_PRIORITY_DEFAULT_IDLE,

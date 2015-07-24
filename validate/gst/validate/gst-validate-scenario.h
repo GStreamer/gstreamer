@@ -88,8 +88,11 @@ typedef struct _GstValidateActionPrivate          GstValidateActionPrivate;
  *        #gst_validate_register_action_type
  * @name: The name of the action, set from the user in the scenario
  * @structure: the #GstStructure defining the action
+ * @scenario: The scenario for this action
  *
  * The GstValidateAction defined to be executed as part of a scenario
+ *
+ * Only access it from the default main context.
  */
 struct _GstValidateAction
 {
