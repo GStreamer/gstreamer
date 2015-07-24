@@ -100,11 +100,11 @@ gst_gl_context_egl_init (GstGLContextEGL * context)
 
 /* Must be called in the gl thread */
 GstGLContextEGL *
-gst_gl_context_egl_new (void)
+gst_gl_context_egl_new (GstGLDisplay * display)
 {
-  GstGLContextEGL *window = g_object_new (GST_GL_TYPE_CONTEXT_EGL, NULL);
-
-  return window;
+  /* XXX: display type could theoretically be anything, as long as
+   * eglGetDisplay supports it. */
+  return g_object_new (GST_GL_TYPE_CONTEXT_EGL, NULL);
 }
 
 static const gchar *

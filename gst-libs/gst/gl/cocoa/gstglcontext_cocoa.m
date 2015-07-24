@@ -72,11 +72,13 @@ gst_gl_context_cocoa_init (GstGLContextCocoa * context)
 
 /* Must be called in the gl thread */
 GstGLContextCocoa *
-gst_gl_context_cocoa_new (void)
+gst_gl_context_cocoa_new (GstGLDisplay * display)
 {
-  GstGLContextCocoa *context = g_object_new (GST_GL_TYPE_CONTEXT_COCOA, NULL);
+  if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_COCOA) == 0)
+    /* we require an cocoa display to create CGL contexts */
+    return NULL;
 
-  return context;
+  return g_object_new (GST_GL_TYPE_CONTEXT_COCOA, NULL);
 }
 
 struct pixel_attr
