@@ -2896,6 +2896,21 @@ done:
   return res;
 }
 
+static gboolean
+_action_set_done (GstValidateAction * action)
+{
+  if (action->scenario == NULL)
+    return G_SOURCE_REMOVE;
+
+  action->priv->state = _execute_sub_action_action (action);
+  if (action->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
+    GST_DEBUG_OBJECT (action->scenario, "Sub action executed ASYNC");
+
+    execute_next_action (action->scenario);
+  }
+  return G_SOURCE_REMOVE;
+}
+
 void
 gst_validate_action_set_done (GstValidateAction * action)
 {
@@ -2903,38 +2918,23 @@ gst_validate_action_set_done (GstValidateAction * action)
 
   if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_INTERLACED) {
 
-    if (action->scenario) {
-      SCENARIO_LOCK (action->scenario);
-      action->scenario->priv->interlaced_actions =
-          g_list_remove (action->scenario->priv->interlaced_actions, action);
-      SCENARIO_UNLOCK (action->scenario);
+    if (scenario) {
+      SCENARIO_LOCK (scenario);
+      scenario->priv->interlaced_actions =
+          g_list_remove (scenario->priv->interlaced_actions, action);
+      SCENARIO_UNLOCK (scenario);
     }
 
     gst_validate_action_unref (action);
   }
 
-  action->priv->state = _execute_sub_action_action (action);
-  if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
-    GST_DEBUG_OBJECT (scenario, "Sub action executed ASYNC");
-
-    return;
+  if (GPOINTER_TO_INT (g_private_get (&main_thread_priv))) {
+    _action_set_done (action);
+  } else {
+    g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, (GSourceFunc) _action_set_done,
+        gst_mini_object_ref (GST_MINI_OBJECT (action)),
+        (GDestroyNotify) gst_validate_action_unref);
   }
-
-  if (scenario) {
-    if (GPOINTER_TO_INT (g_private_get (&main_thread_priv))) {
-      if (!scenario->priv->execute_on_idle) {
-        GST_DEBUG_OBJECT (scenario, "Right thread, executing next?");
-        execute_next_action (scenario);
-
-        return;
-      } else
-        GST_DEBUG_OBJECT (scenario, "Right thread, but executing only on idle");
-    } else
-      GST_DEBUG_OBJECT (action->scenario, "Not doing anything outside the"
-          " 'main' thread");
-  }
-
-  _add_execute_actions_gsource (scenario);
 }
 
 /**
