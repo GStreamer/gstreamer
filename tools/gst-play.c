@@ -708,7 +708,7 @@ relative_seek (GstPlay * play, gdouble percent)
 {
   GstQuery *query;
   gboolean seekable = FALSE;
-  gint64 dur = -1, pos = -1;
+  gint64 dur = -1, pos = -1, step;
 
   g_return_if_fail (percent >= -1.0 && percent <= 1.0);
 
@@ -727,7 +727,11 @@ relative_seek (GstPlay * play, gdouble percent)
   if (!seekable || dur <= 0)
     goto seek_failed;
 
-  pos = pos + dur * percent;
+  step = dur * percent;
+  if (ABS (step) < GST_SECOND)
+    step = (percent < 0) ? -GST_SECOND : GST_SECOND;
+
+  pos = pos + step;
   if (pos > dur) {
     if (!play_next (play)) {
       g_print ("\n%s\n", _("Reached end of play list."));
