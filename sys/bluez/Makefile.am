@@ -38,6 +38,8 @@ BUILT_SOURCES = \
 	bluez.h \
 	bluez.c
 
+CLEANFILES = $(BUILT_SOURCES)
+
 EXTRA_DIST = org.bluez.xml
 
 bluez.h: bluez.c
