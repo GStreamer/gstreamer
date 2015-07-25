@@ -99,7 +99,8 @@ static gboolean gst_asf_demux_activate_mode (GstPad * sinkpad,
 static void gst_asf_demux_loop (GstASFDemux * demux);
 static void
 gst_asf_demux_process_queued_extended_stream_objects (GstASFDemux * demux);
-static gboolean gst_asf_demux_pull_headers (GstASFDemux * demux);
+static gboolean gst_asf_demux_pull_headers (GstASFDemux * demux,
+    GstFlowReturn * pflow);
 static void gst_asf_demux_pull_indices (GstASFDemux * demux);
 static void gst_asf_demux_reset_stream_state_after_discont (GstASFDemux * asf);
 static gboolean
@@ -1123,9 +1124,9 @@ gst_asf_demux_parse_data_object_start (GstASFDemux * demux, guint8 * data)
 }
 
 static gboolean
-gst_asf_demux_pull_headers (GstASFDemux * demux)
+gst_asf_demux_pull_headers (GstASFDemux * demux, GstFlowReturn * pflow)
 {
-  GstFlowReturn flow;
+  GstFlowReturn flow = GST_FLOW_OK;
   AsfObject obj;
   GstBuffer *buf = NULL;
   guint64 size;
@@ -1135,7 +1136,7 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
   GST_LOG_OBJECT (demux, "reading headers");
 
   /* pull HEADER object header, so we know its size */
-  if (!gst_asf_demux_pull_data (demux, demux->base_offset, 16 + 8, &buf, NULL))
+  if (!gst_asf_demux_pull_data (demux, demux->base_offset, 16 + 8, &buf, &flow))
     goto read_failed;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
@@ -1151,7 +1152,7 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
 
   /* pull HEADER object */
   if (!gst_asf_demux_pull_data (demux, demux->base_offset, obj.size, &buf,
-          NULL))
+          &flow))
     goto read_failed;
 
   size = obj.size;              /* don't want obj.size changed */
@@ -1172,7 +1173,7 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
 
   /* now pull beginning of DATA object before packet data */
   if (!gst_asf_demux_pull_data (demux, demux->base_offset + obj.size, 50, &buf,
-          NULL))
+          &flow))
     goto read_failed;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
@@ -1198,17 +1199,22 @@ wrong_type:
     }
     GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
         ("This doesn't seem to be an ASF file"));
+    *pflow = GST_FLOW_ERROR;
     return FALSE;
   }
 
 no_streams:
+  flow = GST_FLOW_ERROR;
+  GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
+      ("header parsing failed, or no streams found, flow = %s",
+          gst_flow_get_name (flow)));
 read_failed:
 parse_failed:
   {
     if (buf)
       gst_buffer_unmap (buf, &map);
     gst_buffer_replace (&buf, NULL);
-    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL), (NULL));
+    *pflow = flow;
     return FALSE;
   }
 }
@@ -1805,8 +1811,7 @@ gst_asf_demux_loop (GstASFDemux * demux)
   gboolean sent_eos = FALSE;
 
   if (G_UNLIKELY (demux->state == GST_ASF_DEMUX_STATE_HEADER)) {
-    if (!gst_asf_demux_pull_headers (demux)) {
-      flow = GST_FLOW_ERROR;
+    if (!gst_asf_demux_pull_headers (demux, &flow)) {
       goto pause;
     }
 
