@@ -2923,9 +2923,16 @@ _action_set_done (GstValidateAction * action)
 
     execute_next_action (action->scenario);
   }
+
   return G_SOURCE_REMOVE;
 }
 
+/* gst_validate_action_set_done:
+ * @action: The action that is done executing
+ *
+ * Sets @action as "done" meaning that the next action can
+ * now be executed.
+ */
 void
 gst_validate_action_set_done (GstValidateAction * action)
 {
@@ -2951,6 +2958,20 @@ gst_validate_action_set_done (GstValidateAction * action)
       (GSourceFunc) _action_set_done,
       gst_mini_object_ref (GST_MINI_OBJECT (action)),
       (GDestroyNotify) gst_validate_action_unref);
+}
+
+/* gst_validate_action_get_scenario:
+ * @action: The action from which to retrieve the scenario
+ *
+ * Retrieve the scenario from which @action is executed.
+ *
+ * Returns: (transfer full): The scenario from which the action
+ * is being executed.
+ */
+GstValidateScenario *
+gst_validate_action_get_scenario (GstValidateAction * action)
+{
+  return g_weak_ref_get (&action->priv->scenario);
 }
 
 /**

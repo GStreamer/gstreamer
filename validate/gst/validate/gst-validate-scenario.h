@@ -88,7 +88,10 @@ typedef struct _GstValidateActionPrivate          GstValidateActionPrivate;
  *        #gst_validate_register_action_type
  * @name: The name of the action, set from the user in the scenario
  * @structure: the #GstStructure defining the action
- * @scenario: The scenario for this action
+ * @scenario: The scenario for this action. This is not thread
+ * safe and should be accessed exculsively from the main thread.
+ * If you need to access it from another thread use the
+ * #gst_validate_action_get_scenario method
  *
  * The GstValidateAction defined to be executed as part of a scenario
  *
@@ -114,7 +117,8 @@ struct _GstValidateAction
   gpointer _gst_reserved[GST_PADDING_LARGE - 2]; /* ->scenario + ->priv */
 };
 
-void gst_validate_action_set_done (GstValidateAction *action);
+void                  gst_validate_action_set_done     (GstValidateAction *action);
+GstValidateScenario * gst_validate_action_get_scenario (GstValidateAction *action);
 
 #define GST_TYPE_VALIDATE_ACTION            (gst_validate_action_get_type ())
 #define GST_IS_VALIDATE_ACTION(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION))
