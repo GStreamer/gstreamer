@@ -381,6 +381,8 @@ gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
   channels =
       av_get_channel_layout_nb_channels (av_frame_get_channel_layout (frame));
   if (channels == 0)
+    channels = av_frame_get_channels (frame);
+  if (channels == 0)
     goto no_caps;
 
   if (!force && !settings_changed (ffmpegdec, frame))
