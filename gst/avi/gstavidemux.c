@@ -4355,9 +4355,11 @@ no_index:
   }
 pull_range_failed:
   {
+    if (res == GST_FLOW_FLUSHING)
+      return res;
     GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),
         ("pull_range flow reading header: %s", gst_flow_get_name (res)));
-    return GST_FLOW_ERROR;
+    return res;
   }
 }
 
