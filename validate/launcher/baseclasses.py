@@ -316,6 +316,9 @@ class Test(Loggable):
             ('tool', 'memcheck'),
             ('leak-check', 'full'),
             ('leak-resolution', 'high'),
+            # TODO: errors-for-leak-kinds should be set to all instead of definite
+            #       and all false positives should be added to suppression files.
+            ('errors-for-leak-kinds', 'definite'),
             ('num-callers', '20'),
             ('log-file', '"' + vglogsfile + '"'),
             ('error-exitcode', str(VALGRIND_ERROR_CODE)),
