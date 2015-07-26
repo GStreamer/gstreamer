@@ -612,7 +612,8 @@ enum TfFlags
   TF_DEFAULT_SAMPLE_DURATION  = 0x08,     /* default-sample-duration-present */
   TF_DEFAULT_SAMPLE_SIZE      = 0x010,    /* default-sample-size-present */
   TF_DEFAULT_SAMPLE_FLAGS     = 0x020,    /* default-sample-flags-present */
-  TF_DURATION_IS_EMPTY        = 0x010000  /* sample-composition-time-offsets-presents */
+  TF_DURATION_IS_EMPTY        = 0x010000, /* sample-composition-time-offsets-presents */
+  TF_DEFAULT_BASE_IS_MOOF     = 0x020000  /* default-base-is-moof */
 };
 
 typedef struct _AtomTRAK

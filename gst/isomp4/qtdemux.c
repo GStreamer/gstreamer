@@ -2879,6 +2879,9 @@ qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
   if (G_UNLIKELY (!*stream))
     goto unknown_stream;
 
+  if (flags & TF_DEFAULT_BASE_IS_MOOF)
+    *base_offset = qtdemux->moof_offset;
+
   if (flags & TF_BASE_DATA_OFFSET)
     if (!gst_byte_reader_get_uint64_be (tfhd, (guint64 *) base_offset))
       goto invalid_track;
