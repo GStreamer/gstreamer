@@ -5294,6 +5294,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
                   GST_TIME_ARGS (demux->fragment_start));
             }
 
+            demux->moof_offset = demux->offset;
             if (!qtdemux_parse_moof (demux, data, demux->neededbytes,
                     demux->offset, NULL)) {
               gst_adapter_unmap (demux->adapter);
