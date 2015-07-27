@@ -696,11 +696,6 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
       picture->data[c] = GST_VIDEO_FRAME_PLANE_DATA (&dframe->vframe, c);
       picture->linesize[c] = GST_VIDEO_FRAME_PLANE_STRIDE (&dframe->vframe, c);
 
-      if (c == 0) {
-        picture->buf[c] =
-            av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
-      }
-
       /* libav does not allow stride changes currently, fall back to
        * non-direct rendering here:
        * https://bugzilla.gnome.org/show_bug.cgi?id=704769
@@ -732,6 +727,8 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
     GST_LOG_OBJECT (ffmpegdec, "linesize %d, data %p", picture->linesize[c],
         picture->data[c]);
   }
+
+  picture->buf[0] = av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
 
   /* tell ffmpeg we own this buffer, tranfer the ref we have on the buffer to
    * the opaque data. */
