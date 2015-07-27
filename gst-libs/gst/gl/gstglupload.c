@@ -696,11 +696,54 @@ static const UploadMethod _upload_meta_upload = {
   &_upload_meta_upload_free
 };
 
+struct RawUploadFrame
+{
+  gint ref_count;
+  GstVideoFrame frame;
+};
+
 struct RawUpload
 {
   GstGLUpload *upload;
-  GstVideoFrame in_frame;
+  struct RawUploadFrame *in_frame;
 };
+
+static struct RawUploadFrame *
+_raw_upload_frame_new (struct RawUpload *raw, GstBuffer * buffer)
+{
+  struct RawUploadFrame *frame;
+
+  if (!buffer)
+    return NULL;
+
+  frame = g_slice_new (struct RawUploadFrame);
+  frame->ref_count = 1;
+
+  if (!gst_video_frame_map (&frame->frame, &raw->upload->priv->in_info,
+          buffer, GST_MAP_READ)) {
+    g_slice_free (struct RawUploadFrame, frame);
+    return NULL;
+  }
+
+  raw->upload->priv->in_info = frame->frame.info;
+
+  return frame;
+}
+
+static void
+_raw_upload_frame_ref (struct RawUploadFrame *frame)
+{
+  g_atomic_int_inc (&frame->ref_count);
+}
+
+static void
+_raw_upload_frame_unref (struct RawUploadFrame *frame)
+{
+  if (g_atomic_int_dec_and_test (&frame->ref_count)) {
+    gst_video_frame_unmap (&frame->frame);
+    g_slice_free (struct RawUploadFrame, frame);
+  }
+}
 
 static gpointer
 _raw_data_upload_new (GstGLUpload * upload)
@@ -738,15 +781,9 @@ _raw_data_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY))
     return FALSE;
 
-  if (buffer) {
-    if (!gst_video_frame_map (&raw->in_frame, &raw->upload->priv->in_info,
-            buffer, GST_MAP_READ))
-      return FALSE;
+  raw->in_frame = _raw_upload_frame_new (raw, buffer);
 
-    raw->upload->priv->in_info = raw->in_frame.info;
-  }
-
-  return TRUE;
+  return (raw->in_frame != NULL);
 }
 
 static void
@@ -772,10 +809,12 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
     max_planes *= GST_VIDEO_INFO_VIEWS (in_info);
 
   gst_gl_memory_setup_wrapped (raw->upload->context,
-      &raw->upload->priv->in_info, NULL, raw->in_frame.data, in_tex);
+      &raw->upload->priv->in_info, NULL, raw->in_frame->frame.data, in_tex,
+      raw->in_frame, (GDestroyNotify) _raw_upload_frame_unref);
 
   *outbuf = gst_buffer_new ();
   for (i = 0; i < max_planes; i++) {
+    _raw_upload_frame_ref (raw->in_frame);
     gst_buffer_append_memory (*outbuf, (GstMemory *) in_tex[i]);
   }
 
@@ -786,8 +825,8 @@ static void
 _raw_data_upload_release (gpointer impl, GstBuffer * buffer)
 {
   struct RawUpload *raw = impl;
-
-  gst_video_frame_unmap (&raw->in_frame);
+  _raw_upload_frame_unref (raw->in_frame);
+  raw->in_frame = NULL;
 }
 
 static void

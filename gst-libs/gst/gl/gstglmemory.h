@@ -142,7 +142,9 @@ gboolean      gst_gl_memory_setup_wrapped (GstGLContext * context,
                                            GstVideoInfo * info,
                                            GstVideoAlignment *valign,
                                            gpointer data[GST_VIDEO_MAX_PLANES],
-                                           GstGLMemory *textures[GST_VIDEO_MAX_PLANES]);
+                                           GstGLMemory *textures[GST_VIDEO_MAX_PLANES],
+                                           gpointer user_data,
+                                           GDestroyNotify notify);
 
 gint          gst_gl_memory_get_texture_width  (GstGLMemory * gl_mem);
 gint          gst_gl_memory_get_texture_height (GstGLMemory * gl_mem);
