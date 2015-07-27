@@ -1508,22 +1508,26 @@ gst_gl_memory_setup_buffer (GstGLContext * context,
  * @valign: a #GstVideoInfo
  * @data: a list of per plane data pointers
  * @textures: (transfer out): a list of #GstGLMemory
+ * @user_data: user data for the destroy function
+ * @notify: A function called each time a memory is freed
  *
  * Wraps per plane data pointer in @data into the corresponding entry in
- * @textures based on @info and padding from @valign.
+ * @textures based on @info and padding from @valign. Note that the @notify
+ * will be called as many time as there is planes.
  *
  * Returns: whether the memory's were sucessfully created.
  */
 gboolean
 gst_gl_memory_setup_wrapped (GstGLContext * context, GstVideoInfo * info,
     GstVideoAlignment * valign, gpointer data[GST_VIDEO_MAX_PLANES],
-    GstGLMemory * textures[GST_VIDEO_MAX_PLANES])
+    GstGLMemory * textures[GST_VIDEO_MAX_PLANES], gpointer user_data,
+    GDestroyNotify notify)
 {
   gint i;
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
     textures[i] = (GstGLMemory *) gst_gl_memory_wrapped (context, info, i,
-        valign, data[i], NULL, NULL);
+        valign, data[i], user_data, notify);
   }
 
   return TRUE;
