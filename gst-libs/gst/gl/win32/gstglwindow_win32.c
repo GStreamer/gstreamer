@@ -92,7 +92,7 @@ gst_gl_window_win32_init (GstGLWindowWin32 * window)
 }
 
 GstGLWindowWin32 *
-gst_gl_window_win32_new (void)
+gst_gl_window_win32_new (GstGLDisplay * display)
 {
   if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_WIN32) ==
       0)
