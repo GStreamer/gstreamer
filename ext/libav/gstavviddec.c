@@ -668,7 +668,7 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
               FALSE)))
     goto negotiate_failed;
 
-  if (TRUE || !ffmpegdec->current_dr)
+  if (!ffmpegdec->current_dr)
     goto no_dr;
 
   ret =
