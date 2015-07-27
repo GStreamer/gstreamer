@@ -769,22 +769,19 @@ fallback:
 
     for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
       ffmpegdec->stride[c] = picture->linesize[c];
-
-      /* Wrap our buffer around the default one to be able to have a callback
-       * when our data can be freed. Just putting our data into the first free
-       * buffer might not work if there are too many allocated already
-       */
-      if (c == 0) {
-        if (picture->buf[c]) {
-          dframe->avbuffer = picture->buf[c];
-          picture->buf[c] =
-              av_buffer_create (picture->buf[c]->data, picture->buf[c]->size,
-              dummy_free_buffer, dframe, 0);
-        } else {
-          picture->buf[c] =
-              av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
-        }
-      }
+    }
+    /* Wrap our buffer around the default one to be able to have a callback
+     * when our data can be freed. Just putting our data into the first free
+     * buffer might not work if there are too many allocated already
+     */
+    if (picture->buf[0]) {
+      dframe->avbuffer = picture->buf[0];
+      picture->buf[0] =
+          av_buffer_create (picture->buf[0]->data, picture->buf[0]->size,
+          dummy_free_buffer, dframe, 0);
+    } else {
+      picture->buf[0] =
+          av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
     }
 
     return ret;
