@@ -55,7 +55,7 @@ struct _GstGLContextWGLClass {
 
 GType gst_gl_context_wgl_get_type     (void);
 
-GstGLContextWGL *   gst_gl_context_wgl_new                  (void);
+GstGLContextWGL *   gst_gl_context_wgl_new                  (GstGLDisplay * display);
 guintptr            gst_gl_context_wgl_get_current_context  (void);
 gpointer            gst_gl_context_wgl_get_proc_address     (GstGLAPI gl_api, const gchar * name);
 
