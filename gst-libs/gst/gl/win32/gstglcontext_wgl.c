@@ -78,7 +78,7 @@ gst_gl_context_wgl_init (GstGLContextWGL * context_wgl)
 
 /* Must be called in the gl thread */
 GstGLContextWGL *
-gst_gl_context_wgl_new (void)
+gst_gl_context_wgl_new (GstGLDisplay * display)
 {
   if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_WIN32) ==
       0)
