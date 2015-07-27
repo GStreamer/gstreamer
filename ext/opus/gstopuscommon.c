@@ -94,13 +94,18 @@ gst_opus_common_log_channel_mapping_table (GstElement * element,
     GstDebugCategory * category, const char *msg, int n_channels,
     const guint8 * table)
 {
-  char s[8 + 256 * 4] = "[ ";   /* enough for 256 times "255 " at most */
   int n;
+  GString *s;
 
+  if (gst_debug_category_get_threshold (category) < GST_LEVEL_INFO)
+    return;
+
+  s = g_string_new ("[ ");
   for (n = 0; n < n_channels; ++n) {
-    size_t len = strlen (s);
-    snprintf (s + len, sizeof (s) - len, "%d ", table[n]);
+    g_string_append_printf (s, "%d ", table[n]);
   }
-  strcat (s, "]");
-  GST_CAT_LEVEL_LOG (category, GST_LEVEL_INFO, element, "%s: %s", msg, s);
+  g_string_append (s, "]");
+
+  GST_CAT_LEVEL_LOG (category, GST_LEVEL_INFO, element, "%s: %s", msg, s->str);
+  g_string_free (s, TRUE);
 }
