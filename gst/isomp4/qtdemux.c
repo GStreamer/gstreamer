@@ -11730,31 +11730,32 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   const GstStructure *s;
   const gchar *name;
   gint endian = 0;
+  GstAudioFormat format = 0;
+  gint depth;
 
   GST_DEBUG_OBJECT (qtdemux, "resolve fourcc 0x%08x", GUINT32_TO_BE (fourcc));
+
+  depth = stream->bytes_per_packet * 8;
 
   switch (fourcc) {
     case GST_MAKE_FOURCC ('N', 'O', 'N', 'E'):
     case GST_MAKE_FOURCC ('r', 'a', 'w', ' '):
-      _codec ("Raw 8-bit PCM audio");
-      caps = gst_caps_new_simple ("audio/x-raw",
-          "format", G_TYPE_STRING, "U8",
-          "layout", G_TYPE_STRING, "interleaved", NULL);
-      break;
+      /* 8-bit audio is unsigned */
+      if (depth == 8)
+        format = GST_AUDIO_FORMAT_U8;
+      /* otherwise it's signed and big-endian just like 'twos' */
     case GST_MAKE_FOURCC ('t', 'w', 'o', 's'):
       endian = G_BIG_ENDIAN;
       /* fall-through */
     case GST_MAKE_FOURCC ('s', 'o', 'w', 't'):
     {
       gchar *str;
-      gint depth;
-      GstAudioFormat format;
 
       if (!endian)
         endian = G_LITTLE_ENDIAN;
 
-      depth = stream->bytes_per_packet * 8;
-      format = gst_audio_format_build_integer (TRUE, endian, depth, depth);
+      if (!format)
+        format = gst_audio_format_build_integer (TRUE, endian, depth, depth);
 
       str = g_strdup_printf ("Raw %d-bit PCM audio", depth);
       _codec (str);
