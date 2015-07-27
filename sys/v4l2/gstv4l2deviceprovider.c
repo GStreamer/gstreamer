@@ -39,7 +39,8 @@
 #endif
 
 static GstV4l2Device *gst_v4l2_device_new (const gchar * device_path,
-    const gchar * device_name, GstCaps * caps, GstV4l2DeviceType type);
+    const gchar * device_name, GstCaps * caps, GstV4l2DeviceType type,
+    GstStructure * props);
 
 
 G_DEFINE_TYPE (GstV4l2DeviceProvider, gst_v4l2_device_provider,
@@ -97,13 +98,15 @@ gst_v4l2_device_provider_finalize (GObject * object)
 
 static GstV4l2Device *
 gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
-    const gchar * device_path, const gchar * device_name)
+    const gchar * device_path, const gchar * device_name, GstStructure * props)
 {
   GstV4l2Object *v4l2obj;
   GstCaps *caps;
   GstV4l2Device *device = NULL;
   struct stat st;
   GstV4l2DeviceType type = GST_V4L2_DEVICE_TYPE_INVALID;
+
+  g_return_val_if_fail (props != NULL, NULL);
 
   if (stat (device_path, &st) == -1)
     return NULL;
@@ -117,6 +120,21 @@ gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
   if (!gst_v4l2_open (v4l2obj))
     goto destroy;
 
+  gst_structure_set (props, "device.api", G_TYPE_STRING, "v4l2", NULL);
+  gst_structure_set (props, "device.path", G_TYPE_STRING, device_path, NULL);
+
+  gst_structure_set (props, "v4l2.device.driver", G_TYPE_STRING,
+      v4l2obj->vcap.driver, NULL);
+  gst_structure_set (props, "v4l2.device.card", G_TYPE_STRING,
+      v4l2obj->vcap.card, NULL);
+  gst_structure_set (props, "v4l2.device.bus_info", G_TYPE_STRING,
+      v4l2obj->vcap.bus_info, NULL);
+  gst_structure_set (props, "v4l2.device.version", G_TYPE_UINT,
+      v4l2obj->vcap.version, NULL);
+  gst_structure_set (props, "v4l2.device.capabilities", G_TYPE_UINT,
+      v4l2obj->vcap.capabilities, NULL);
+  gst_structure_set (props, "v4l2.device.device_caps", G_TYPE_UINT,
+      v4l2obj->vcap.device_caps, NULL);
 
   if (v4l2obj->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE)
     type = GST_V4L2_DEVICE_TYPE_SOURCE;
@@ -144,7 +162,8 @@ gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
   }
 
   device = gst_v4l2_device_new (device_path,
-      device_name ? device_name : (gchar *) v4l2obj->vcap.card, caps, type);
+      device_name ? device_name : (gchar *) v4l2obj->vcap.card, caps, type,
+      props);
   gst_caps_unref (caps);
 
 close:
@@ -154,6 +173,9 @@ close:
 destroy:
 
   gst_v4l2_object_destroy (v4l2obj);
+
+  if (props)
+    gst_structure_free (props);
 
   return device;
 }
@@ -169,10 +191,14 @@ gst_v4l2_device_provider_probe (GstDeviceProvider * provider)
   it = gst_v4l2_iterator_new ();
 
   while (gst_v4l2_iterator_next (it)) {
+    GstStructure *props;
     GstV4l2Device *device;
 
-    device =
-        gst_v4l2_device_provider_probe_device (self, it->device_path, NULL);
+    props = gst_structure_new ("v4l2-proplist", "device.path", G_TYPE_STRING,
+        it->device_path, "udev-probed", G_TYPE_BOOLEAN, FALSE, NULL);
+    device = gst_v4l2_device_provider_probe_device (self, it->device_path, NULL,
+        props);
+    gst_structure_free (props);
 
     if (device) {
       gst_object_ref_sink (device);
@@ -193,16 +219,71 @@ gst_v4l2_device_provider_device_from_udev (GstV4l2DeviceProvider * provider,
 {
   GstV4l2Device *gstdev;
   const gchar *device_path = g_udev_device_get_device_file (udev_device);
-  const gchar *device_name;
+  const gchar *device_name, *str;
+  GstStructure *props;
+
+  props = gst_structure_new ("v4l2deviceprovider", "udev-probed",
+      G_TYPE_BOOLEAN, TRUE, NULL);
+
+  str = g_udev_device_get_property (udev_device, "ID_PATH");
+  if (!(str && *str)) {
+    str = g_udev_device_get_sysfs_path (udev_device);
+  }
+  if (str && *str)
+    gst_structure_set (props, "device.bus_path", G_TYPE_STRING, str, NULL);
+
+  if ((str = g_udev_device_get_sysfs_path (udev_device)) && *str)
+    gst_structure_set (props, "sysfs.path", G_TYPE_STRING, str, NULL);
+
+  if ((str = g_udev_device_get_property (udev_device, "ID_ID")) && *str)
+    gst_structure_set (props, "udev.id", G_TYPE_STRING, str, NULL);
+
+  if ((str = g_udev_device_get_property (udev_device, "ID_BUS")) && *str)
+    gst_structure_set (props, "device.bus", G_TYPE_STRING, str, NULL);
+
+  if ((str = g_udev_device_get_property (udev_device, "SUBSYSTEM")) && *str)
+    gst_structure_set (props, "device.subsystem", G_TYPE_STRING, str, NULL);
+
+  if ((str = g_udev_device_get_property (udev_device, "ID_VENDOR_ID")) && *str)
+    gst_structure_set (props, "device.vendor.id", G_TYPE_STRING, str, NULL);
+
+  str = g_udev_device_get_property (udev_device, "ID_VENDOR_FROM_DATABASE");
+  if (!(str && *str)) {
+    str = g_udev_device_get_property (udev_device, "ID_VENDOR_ENC");
+    if (!(str && *str)) {
+      str = g_udev_device_get_property (udev_device, "ID_VENDOR");
+    }
+  }
+  if (str && *str)
+    gst_structure_set (props, "device.vendor.name", G_TYPE_STRING, str, NULL);
+
+  if ((str = g_udev_device_get_property (udev_device, "ID_MODEL_ID")) && *str)
+    gst_structure_set (props, "device.product.id", G_TYPE_STRING, str, NULL);
 
   device_name = g_udev_device_get_property (udev_device, "ID_V4L_PRODUCT");
-  if (!device_name)
-    device_name = g_udev_device_get_property (udev_device, "ID_MODEL_ENC");
-  if (!device_name)
-    device_name = g_udev_device_get_property (udev_device, "ID_MODEL");
+  if (!(device_name && *device_name)) {
+    device_name =
+        g_udev_device_get_property (udev_device, "ID_MODEL_FROM_DATABASE");
+    if (!(device_name && *device_name)) {
+      device_name = g_udev_device_get_property (udev_device, "ID_MODEL_ENC");
+      if (!(device_name && *device_name)) {
+        device_name = g_udev_device_get_property (udev_device, "ID_MODEL");
+      }
+    }
+  }
+  if (device_name && *device_name)
+    gst_structure_set (props, "device.product.name", G_TYPE_STRING, device_name,
+        NULL);
+
+  if ((str = g_udev_device_get_property (udev_device, "ID_SERIAL")) && *str)
+    gst_structure_set (props, "device.serial", G_TYPE_STRING, str, NULL);
+
+  if ((str = g_udev_device_get_property (udev_device, "ID_V4L_CAPABILITIES"))
+      && *str)
+    gst_structure_set (props, "device.capabilities", G_TYPE_STRING, str, NULL);
 
   gstdev = gst_v4l2_device_provider_probe_device (provider, device_path,
-      device_name);
+      device_name, props);
 
   if (gstdev)
     gstdev->syspath = g_strdup (g_udev_device_get_sysfs_path (udev_device));
@@ -434,7 +515,7 @@ gst_v4l2_device_create_element (GstDevice * device, const gchar * name)
 
 static GstV4l2Device *
 gst_v4l2_device_new (const gchar * device_path, const gchar * device_name,
-    GstCaps * caps, GstV4l2DeviceType type)
+    GstCaps * caps, GstV4l2DeviceType type, GstStructure * props)
 {
   GstV4l2Device *gstdev;
   const gchar *element = NULL;
@@ -459,7 +540,8 @@ gst_v4l2_device_new (const gchar * device_path, const gchar * device_name,
   }
 
   gstdev = g_object_new (GST_TYPE_V4L2_DEVICE, "device-path", device_path,
-      "display-name", device_name, "caps", caps, "device-class", klass, NULL);
+      "display-name", device_name, "caps", caps, "device-class", klass,
+      "properties", props, NULL);
 
   gstdev->element = element;
 
