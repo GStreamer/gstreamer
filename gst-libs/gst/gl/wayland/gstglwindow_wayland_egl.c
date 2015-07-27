@@ -382,8 +382,16 @@ gst_gl_window_wayland_egl_close (GstGLWindow * window)
 static gboolean
 gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
 {
-  GstGLDisplayWayland *display = GST_GL_DISPLAY_WAYLAND (window->display);
+  GstGLDisplayWayland *display;
   GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
+
+  if (!GST_IS_GL_DISPLAY_WAYLAND (window->display)) {
+    g_set_error (error, GST_GL_WINDOW_ERROR,
+        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+        "Failed to retrieve Wayland display (wrong type?)");
+    return FALSE;
+  }
+  display = GST_GL_DISPLAY_WAYLAND (window->display);
 
   if (!display->display) {
     g_set_error (error, GST_GL_WINDOW_ERROR,
