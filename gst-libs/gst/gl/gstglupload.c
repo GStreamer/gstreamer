@@ -760,6 +760,7 @@ static GstGLUploadReturn
 _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
     GstBuffer ** outbuf)
 {
+  GstGLMemory *in_tex[GST_GL_UPLOAD_MAX_PLANES] = { 0, };
   struct RawUpload *raw = impl;
   int i;
   GstVideoInfo *in_info = &raw->upload->priv->in_info;
@@ -770,22 +771,12 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
       GST_VIDEO_MULTIVIEW_MODE_SEPARATED)
     max_planes *= GST_VIDEO_INFO_VIEWS (in_info);
 
-  /* FIXME: buffer pool */
+  gst_gl_memory_setup_wrapped (raw->upload->context,
+      &raw->upload->priv->in_info, NULL, raw->in_frame.data, in_tex);
+
   *outbuf = gst_buffer_new ();
-  gst_gl_memory_setup_buffer (raw->upload->context, NULL,
-      &raw->upload->priv->in_info, NULL, *outbuf);
-
   for (i = 0; i < max_planes; i++) {
-    GstMemory *mem = gst_buffer_peek_memory (*outbuf, i);
-    GstMapInfo map_info;
-
-    gst_memory_map (mem, &map_info, GST_MAP_WRITE);
-
-    memcpy (map_info.data, raw->in_frame.data[i], map_info.size);
-
-    gst_memory_unmap (mem, &map_info);
-
-    gst_gl_memory_upload_transfer ((GstGLMemory *) mem);
+    gst_buffer_append_memory (*outbuf, (GstMemory *) in_tex[i]);
   }
 
   return GST_GL_UPLOAD_DONE;
