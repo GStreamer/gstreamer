@@ -700,8 +700,6 @@ gst_vaapidecode_reset_full (GstVaapiDecode * decode, GstCaps * caps,
 {
   GstVaapiCodec codec;
 
-  decode->has_texture_upload_meta = FALSE;
-
   /* Reset tracked frame size */
   decode->current_frame_size = 0;
 
