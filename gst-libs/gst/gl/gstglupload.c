@@ -153,42 +153,17 @@ _gl_memory_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     GstCaps * out_caps)
 {
   struct GLMemoryUpload *upload = impl;
-  GstCapsFeatures *features, *gl_features, *gl_overlay_features,
-      *system_memory_overlay_features;
-  gboolean ret = TRUE;
+  GstCapsFeatures *features;
   int i;
 
-  gl_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-
   features = gst_caps_get_features (out_caps, 0);
-  if (!gst_caps_features_is_equal (features, gl_features))
-    ret = FALSE;
-
-  gl_overlay_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY ","
-      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
-  if (gst_caps_features_is_equal (features, gl_overlay_features))
-    ret = TRUE;
+  if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY))
+    return FALSE;
 
   features = gst_caps_get_features (in_caps, 0);
-
-  system_memory_overlay_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
-      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
-
-  if (!gst_caps_features_is_equal (features, gl_features)
-      && !gst_caps_features_is_equal (features, gl_overlay_features)
-      && !gst_caps_features_is_equal (features,
-          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
-      && !gst_caps_features_is_equal (features, system_memory_overlay_features))
-    ret = FALSE;
-
-  gst_caps_features_free (gl_features);
-  gst_caps_features_free (gl_overlay_features);
-  gst_caps_features_free (system_memory_overlay_features);
-
-  if (!ret)
+  if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)
+      && !gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY))
     return FALSE;
 
   if (buffer) {
@@ -375,25 +350,17 @@ _egl_image_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     GstCaps * out_caps)
 {
   struct EGLImageUpload *image = impl;
-  GstCapsFeatures *features, *gl_features;
+  GstCapsFeatures *features;
   gboolean ret = TRUE;
   int i;
 
-  gl_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE);
   features = gst_caps_get_features (in_caps, 0);
-  if (!gst_caps_features_is_equal (features, gl_features))
+  if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_EGL_IMAGE))
     ret = FALSE;
 
-  gst_caps_features_free (gl_features);
-
-  gl_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   features = gst_caps_get_features (out_caps, 0);
-  if (!gst_caps_features_is_equal (features, gl_features))
+  if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY))
     ret = FALSE;
-
-  gst_caps_features_free (gl_features);
 
   if (!ret)
     return FALSE;
@@ -559,27 +526,19 @@ _upload_meta_upload_accept (gpointer impl, GstBuffer * buffer,
     GstCaps * in_caps, GstCaps * out_caps)
 {
   struct GLUploadMeta *upload = impl;
-  GstCapsFeatures *features, *gl_features;
+  GstCapsFeatures *features;
   GstVideoGLTextureUploadMeta *meta;
   gboolean ret = TRUE;
 
   features = gst_caps_get_features (in_caps, 0);
-  gl_features =
-      gst_caps_features_from_string
-      (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
 
-  if (!gst_caps_features_is_equal (features, gl_features))
+  if (!gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META))
     ret = FALSE;
 
-  gst_caps_features_free (gl_features);
-
-  gl_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   features = gst_caps_get_features (out_caps, 0);
-  if (!gst_caps_features_is_equal (features, gl_features))
+  if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY))
     ret = FALSE;
-
-  gst_caps_features_free (gl_features);
 
   if (!ret)
     return ret;
@@ -773,19 +732,11 @@ _raw_data_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     GstCaps * out_caps)
 {
   struct RawUpload *raw = impl;
-  GstCapsFeatures *features, *gl_features;
-  gboolean ret = TRUE;
+  GstCapsFeatures *features;
 
-  gl_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   features = gst_caps_get_features (out_caps, 0);
-  if (!gst_caps_features_is_equal (features, gl_features))
-    ret = FALSE;
-
-  gst_caps_features_free (gl_features);
-
-  if (!ret)
-    return ret;
+  if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY))
+    return FALSE;
 
   if (buffer) {
     if (!gst_video_frame_map (&raw->in_frame, &raw->upload->priv->in_info,
@@ -1002,8 +953,11 @@ gst_gl_upload_transform_caps (GstGLContext * context, GstPadDirection direction,
 
   tmp = gst_gl_overlay_compositor_add_caps (tmp);
 
+
   if (filter) {
     result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    GST_LOG ("Filtering transformed caps %" GST_PTR_FORMAT " against filter %"
+        GST_PTR_FORMAT " yields %" GST_PTR_FORMAT, tmp, filter, result);
     gst_caps_unref (tmp);
   } else {
     result = tmp;
