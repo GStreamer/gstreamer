@@ -664,7 +664,12 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
     goto fallback;
 
   /* see if we need renegotiation */
-  if (G_UNLIKELY (!gst_ffmpegviddec_negotiate (ffmpegdec, context, picture,
+  /* Disabled for now as ffmpeg doesn't give us the output dimensions
+   * in the getbuffer2 callback. The real dimensions are only available
+   * when a buffer is produced.
+   */
+  if (FALSE
+      && G_UNLIKELY (!gst_ffmpegviddec_negotiate (ffmpegdec, context, picture,
               FALSE)))
     goto negotiate_failed;
 
