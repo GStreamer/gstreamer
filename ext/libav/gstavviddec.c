@@ -85,7 +85,7 @@ static void gst_ffmpegviddec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
-    AVCodecContext * context, AVFrame * picture, gboolean force);
+    AVCodecContext * context, AVFrame * picture);
 
 /* some sort of bufferpool handling, but different */
 static int gst_ffmpegviddec_get_buffer2 (AVCodecContext * context,
@@ -817,9 +817,9 @@ context_changed (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context)
 
 static gboolean
 update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
-    AVFrame * picture, gboolean force)
+    AVFrame * picture)
 {
-  if (!force && !picture_changed (ffmpegdec, picture)
+  if (!picture_changed (ffmpegdec, picture)
       && !context_changed (ffmpegdec, context))
     return FALSE;
 
@@ -923,14 +923,14 @@ no_par:
 
 static gboolean
 gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
-    AVCodecContext * context, AVFrame * picture, gboolean force)
+    AVCodecContext * context, AVFrame * picture)
 {
   GstVideoFormat fmt;
   GstVideoInfo *in_info, *out_info;
   GstVideoCodecState *output_state;
   gint fps_n, fps_d;
 
-  if (!update_video_context (ffmpegdec, context, picture, force))
+  if (!update_video_context (ffmpegdec, context, picture))
     return TRUE;
 
   fmt = gst_ffmpeg_pixfmt_to_videoformat (ffmpegdec->pic_pix_fmt);
@@ -1285,7 +1285,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       ! !(ffmpegdec->picture->flags & AV_FRAME_FLAG_CORRUPT));
 
   if (!gst_ffmpegviddec_negotiate (ffmpegdec, ffmpegdec->context,
-          ffmpegdec->picture, FALSE))
+          ffmpegdec->picture))
     goto negotiation_error;
 
   if (G_UNLIKELY (out_frame->output_buffer == NULL))
