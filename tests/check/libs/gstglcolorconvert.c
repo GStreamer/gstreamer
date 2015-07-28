@@ -134,7 +134,7 @@ check_conversion (TestFrame * frames, guint size)
     /* create GL buffer */
     inbuf = gst_buffer_new ();
     fail_unless (gst_gl_memory_setup_wrapped (context, &in_info, NULL,
-            (gpointer *) in_data, in_mem));
+            (gpointer *) in_data, in_mem, NULL, NULL));
 
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&in_info); j++) {
       gst_buffer_append_memory (inbuf, (GstMemory *) in_mem[j]);
