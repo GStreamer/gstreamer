@@ -727,6 +727,8 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
   if (upstream_has_meta) {
     overlay_caps = gst_caps_ref (caps);
   } else {
+    GstCaps *peercaps;
+
     /* BaseTransform requires caps for the allocation query to work */
     overlay_caps = gst_caps_copy (caps);
     f = gst_caps_get_features (overlay_caps, 0);
@@ -734,8 +736,14 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
 
     /* Then check if downstream accept overlay composition in caps */
-    caps_has_meta = gst_pad_peer_query_accept_caps (overlay->srcpad,
-        overlay_caps);
+    /* FIXME: We should probably check if downstream *prefers* the
+     * overlay meta, and only enforce usage of it if we can't handle
+     * the format ourselves and thus would have to drop the overlays.
+     * Otherwise we should prefer what downstream wants here.
+     */
+    peercaps = gst_pad_peer_query_caps (overlay->srcpad, NULL);
+    caps_has_meta = gst_caps_can_intersect (peercaps, overlay_caps);
+    gst_caps_unref (peercaps);
 
     GST_DEBUG ("caps have overlay meta %d", caps_has_meta);
   }
