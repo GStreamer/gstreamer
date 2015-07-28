@@ -47,6 +47,22 @@ typedef struct _GstFileSink GstFileSink;
 typedef struct _GstFileSinkClass GstFileSinkClass;
 
 /**
+ * GstFileSinkBufferMode:
+ * @GST_FILE_SINK_BUFFER_MODE_DEFAULT: Default buffering
+ * @GST_FILE_SINK_BUFFER_MODE_FULL: Fully buffered
+ * @GST_FILE_SINK_BUFFER_MODE_LINE: Line buffered
+ * @GST_FILE_SINK_BUFFER_MODE_UNBUFFERED: Unbuffered
+ *
+ * File read buffering mode.
+ */
+typedef enum {
+  GST_FILE_SINK_BUFFER_MODE_DEFAULT    = -1,
+  GST_FILE_SINK_BUFFER_MODE_FULL       = _IOFBF,
+  GST_FILE_SINK_BUFFER_MODE_LINE       = _IOLBF,
+  GST_FILE_SINK_BUFFER_MODE_UNBUFFERED = _IONBF
+} GstFileSinkBufferMode;
+
+/**
  * GstFileSink:
  *
  * Opaque #GstFileSink structure.

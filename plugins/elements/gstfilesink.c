@@ -71,22 +71,23 @@
 #endif
 
 #include "gstelements_private.h"
+#include "gstfilesink.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-#define GST_TYPE_BUFFER_MODE (buffer_mode_get_type ())
+#define GST_TYPE_FILE_SINK_BUFFER_MODE (gst_file_sink_buffer_mode_get_type ())
 static GType
-buffer_mode_get_type (void)
+gst_file_sink_buffer_mode_get_type (void)
 {
   static GType buffer_mode_type = 0;
   static const GEnumValue buffer_mode[] = {
-    {-1, "Default buffering", "default"},
-    {_IOFBF, "Fully buffered", "full"},
-    {_IOLBF, "Line buffered", "line"},
-    {_IONBF, "Unbuffered", "unbuffered"},
+    {GST_FILE_SINK_BUFFER_MODE_DEFAULT, "Default buffering", "default"},
+    {GST_FILE_SINK_BUFFER_MODE_FULL, "Fully buffered", "full"},
+    {GST_FILE_SINK_BUFFER_MODE_LINE, "Line buffered", "line"},
+    {GST_FILE_SINK_BUFFER_MODE_UNBUFFERED, "Unbuffered", "unbuffered"},
     {0, NULL, NULL},
   };
 
@@ -101,7 +102,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_file_sink_debug);
 #define GST_CAT_DEFAULT gst_file_sink_debug
 
 #define DEFAULT_LOCATION 	NULL
-#define DEFAULT_BUFFER_MODE 	-1
+#define DEFAULT_BUFFER_MODE 	GST_FILE_SINK_BUFFER_MODE_DEFAULT
 #define DEFAULT_BUFFER_SIZE 	64 * 1024
 #define DEFAULT_APPEND		FALSE
 
@@ -207,7 +208,7 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_MODE,
       g_param_spec_enum ("buffer-mode", "Buffering mode",
-          "The buffering mode to use", GST_TYPE_BUFFER_MODE,
+          "The buffering mode to use", GST_TYPE_FILE_SINK_BUFFER_MODE,
           DEFAULT_BUFFER_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
