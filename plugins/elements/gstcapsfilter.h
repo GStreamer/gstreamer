@@ -58,6 +58,7 @@ struct _GstCapsFilter {
   GstBaseTransform trans;
 
   GstCaps *filter_caps;
+  gboolean filter_caps_used;
   GstCapsFilterCapsChangeMode caps_change_mode;
 
   GList *pending_events;

@@ -168,6 +168,7 @@ gst_capsfilter_init (GstCapsFilter * filter)
   gst_base_transform_set_gap_aware (trans, TRUE);
   gst_base_transform_set_prefer_passthrough (trans, FALSE);
   filter->filter_caps = gst_caps_new_any ();
+  filter->filter_caps_used = FALSE;
   filter->caps_change_mode = DEFAULT_CAPS_CHANGE_MODE;
 }
 
@@ -193,8 +194,8 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (capsfilter);
       old_caps = capsfilter->filter_caps;
       capsfilter->filter_caps = new_caps;
-      if (old_caps
-          && capsfilter->caps_change_mode ==
+      if (old_caps && capsfilter->filter_caps_used &&
+          capsfilter->caps_change_mode ==
           GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED) {
         capsfilter->previous_caps =
             g_list_prepend (capsfilter->previous_caps, gst_caps_ref (old_caps));
@@ -204,6 +205,7 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
             (GDestroyNotify) gst_caps_unref);
         capsfilter->previous_caps = NULL;
       }
+      capsfilter->filter_caps_used = FALSE;
       GST_OBJECT_UNLOCK (capsfilter);
 
       gst_caps_unref (old_caps);
@@ -278,6 +280,7 @@ gst_capsfilter_transform_caps (GstBaseTransform * base,
 
   GST_OBJECT_LOCK (capsfilter);
   filter_caps = gst_caps_ref (capsfilter->filter_caps);
+  capsfilter->filter_caps_used = TRUE;
   caps_change_mode = capsfilter->caps_change_mode;
   GST_OBJECT_UNLOCK (capsfilter);
 
@@ -332,6 +335,7 @@ gst_capsfilter_accept_caps (GstBaseTransform * base,
 
   GST_OBJECT_LOCK (capsfilter);
   filter_caps = gst_caps_ref (capsfilter->filter_caps);
+  capsfilter->filter_caps_used = TRUE;
   GST_OBJECT_UNLOCK (capsfilter);
 
   ret = gst_caps_can_intersect (caps, filter_caps);
@@ -555,6 +559,7 @@ done:
     if (!l && gst_caps_can_intersect (caps, filter->filter_caps)) {
       g_list_free_full (filter->previous_caps, (GDestroyNotify) gst_caps_unref);
       filter->previous_caps = NULL;
+      filter->filter_caps_used = TRUE;
     }
     GST_OBJECT_UNLOCK (filter);
   }
