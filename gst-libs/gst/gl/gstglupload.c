@@ -812,6 +812,7 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
       &raw->upload->priv->in_info, NULL, raw->in_frame->frame.data, in_tex,
       raw->in_frame, (GDestroyNotify) _raw_upload_frame_unref);
 
+  /* FIXME Use a buffer pool to cache the generated textures */
   *outbuf = gst_buffer_new ();
   for (i = 0; i < max_planes; i++) {
     _raw_upload_frame_ref (raw->in_frame);
