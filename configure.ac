@@ -281,11 +281,7 @@ else
       dnl with static linking we can't use the .a archive directly as they would
       dnl be included in the final libgstlibav.a as a file and won't be usable.
       dnl libav*.a must be copied to the final destination too
-      LIBAV_LIBS="-L\$(top_builddir)/gst-libs/ext/libav/libavformat \
-                  -L\$(top_builddir)/gst-libs/ext/libav/libavcodec \
-                  -L\$(top_builddir)/gst-libs/ext/libav/libswresample \
-                  -L\$(top_builddir)/gst-libs/ext/libav/libavutil \
-                  -lavformat -lavcodec -lswresample -lavutil"
+      LIBAV_LIBS="-lavformat -lavcodec -lswresample -lavutil"
   else
       dnl libgstlibav.la: libs to statically link to
       LIBAV_LIBS="$LIBAV_DEPS"
@@ -302,9 +298,7 @@ else
       dnl with static linking we can't use the .a archive directly as they would
       dnl be included in the final libgstswscale.a as a file and won't be usable.
       dnl libav*.a must be copied to the final destination too
-      SWSCALE_LIBS="-L\$(top_builddir)/gst-libs/ext/libav/libswscale \
-                    -L\$(top_builddir)/gst-libs/ext/libav/libavutil \
-                    -lswscale -lavutil"
+      SWSCALE_LIBS="-lswscale -lavutil"
   else
       dnl libgstswscale.la: libs to statically link to
       SWSCALE_LIBS="$SWSCALE_DEPS"
