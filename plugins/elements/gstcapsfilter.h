@@ -44,6 +44,13 @@ G_BEGIN_DECLS
 typedef struct _GstCapsFilter GstCapsFilter;
 typedef struct _GstCapsFilterClass GstCapsFilterClass;
 
+/**
+ * GstCapsFilterCapsChangeMode:
+ * @GST_CAPS_FILTER_CAPS_CHANGE_MODE_IMMEDIATE: Only accept the current filter caps
+ * @GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED: Temporarily accept previous filter caps
+ *
+ * Filter caps change behaviour
+ */
 typedef enum {
   GST_CAPS_FILTER_CAPS_CHANGE_MODE_IMMEDIATE,
   GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED
