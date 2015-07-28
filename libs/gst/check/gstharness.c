@@ -1390,7 +1390,7 @@ gst_harness_set_blocking_push_mode (GstHarness * h)
  * @size: a #gsize specifying the size of the buffer
  *
  * Allocates a buffer using a #GstBufferPool if present, or else using the
- * configured #GstAllocator and #GstAllocatorParams
+ * configured #GstAllocator and #GstAllocationParams
  *
  * MT safe.
  *
@@ -1899,10 +1899,9 @@ gst_harness_set_upstream_latency (GstHarness * h, GstClockTime latency)
 /**
  * gst_harness_get_allocator:
  * @h: a #GstHarness
- * @allocator: (out) (allow-none) (transfer none): the #GstAllocator
- * used
- * @params: (out) (allow-none) (transfer full): the
- * #GstAllocatorParams of @allocator
+ * @allocator: (out) (allow-none) (transfer none): the #GstAllocator used
+ * @params: (out) (allow-none) (transfer full): the #GstAllocationParams of
+ *   @allocator
  *
  * Gets the @allocator and its @params that has been decided to use after an
  * allocation query.
