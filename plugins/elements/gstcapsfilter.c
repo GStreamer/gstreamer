@@ -213,9 +213,21 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
       gst_base_transform_reconfigure_sink (GST_BASE_TRANSFORM (object));
       break;
     }
-    case PROP_CAPS_CHANGE_MODE:
+    case PROP_CAPS_CHANGE_MODE:{
+      GstCapsFilterCapsChangeMode old_change_mode;
+
+      GST_OBJECT_LOCK (capsfilter);
+      old_change_mode = capsfilter->caps_change_mode;
       capsfilter->caps_change_mode = g_value_get_enum (value);
+
+      if (capsfilter->caps_change_mode != old_change_mode) {
+        g_list_free_full (capsfilter->previous_caps,
+            (GDestroyNotify) gst_caps_unref);
+        capsfilter->previous_caps = NULL;
+      }
+      GST_OBJECT_UNLOCK (capsfilter);
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
