@@ -1099,6 +1099,7 @@ gst_aggregator_release_pad (GstElement * element, GstPad * pad)
   gst_aggregator_pad_set_flushing (aggpad, GST_FLOW_FLUSHING);
   gst_element_remove_pad (element, pad);
 
+  self->priv->has_peer_latency = FALSE;
   SRC_BROADCAST (self);
   SRC_UNLOCK (self);
 }
@@ -1143,6 +1144,7 @@ gst_aggregator_request_new_pad (GstElement * element,
   }
 
   GST_DEBUG_OBJECT (element, "Adding pad %s", GST_PAD_NAME (agg_pad));
+  self->priv->has_peer_latency = FALSE;
 
   if (priv->running)
     gst_pad_set_active (GST_PAD (agg_pad), TRUE);
