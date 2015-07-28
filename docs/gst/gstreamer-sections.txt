@@ -615,6 +615,7 @@ GstClockReturn
 GstClockFlags
 GST_CLOCK_FLAGS
 gst_clock_add_observation
+gst_clock_add_observation_unapplied
 gst_clock_set_master
 gst_clock_get_master
 gst_clock_set_resolution
@@ -627,6 +628,7 @@ gst_clock_periodic_id_reinit
 gst_clock_get_internal_time
 gst_clock_adjust_unlocked
 gst_clock_unadjust_unlocked
+gst_clock_adjust_with_calibration
 gst_clock_get_calibration
 gst_clock_set_calibration
 gst_clock_get_timeout
@@ -963,9 +965,11 @@ GST_ELEMENT_FACTORY_TYPE_AUDIOVIDEO_SINKS
 GST_ELEMENT_FACTORY_TYPE_AUDIO_ENCODER
 GST_ELEMENT_FACTORY_TYPE_DECODABLE
 GST_ELEMENT_FACTORY_TYPE_DECODER
+GST_ELEMENT_FACTORY_TYPE_DECRYPTOR
 GST_ELEMENT_FACTORY_TYPE_DEMUXER
 GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER
 GST_ELEMENT_FACTORY_TYPE_ENCODER
+GST_ELEMENT_FACTORY_TYPE_ENCRYPTOR
 GST_ELEMENT_FACTORY_TYPE_FORMATTER
 GST_ELEMENT_FACTORY_TYPE_MAX_ELEMENTS
 GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO
@@ -994,9 +998,11 @@ GST_TYPE_ELEMENT_FACTORY
 <SUBSECTION Private>
 gst_element_factory_get_type
 GST_ELEMENT_FACTORY_KLASS_DECODER
+GST_ELEMENT_FACTORY_KLASS_DECRYPTOR
 GST_ELEMENT_FACTORY_KLASS_DEMUXER
 GST_ELEMENT_FACTORY_KLASS_DEPAYLOADER
 GST_ELEMENT_FACTORY_KLASS_ENCODER
+GST_ELEMENT_FACTORY_KLASS_ENCRYPTOR
 GST_ELEMENT_FACTORY_KLASS_FORMATTER
 GST_ELEMENT_FACTORY_KLASS_MEDIA_AUDIO
 GST_ELEMENT_FACTORY_KLASS_MEDIA_IMAGE
@@ -1343,6 +1349,9 @@ GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS
 gst_debug_print_stack_trace
 GST_TIME_FORMAT
 GST_TIME_ARGS
+GST_STIME_FORMAT
+GST_STIME_ARGS
+gst_debug_bin_to_dot_data
 gst_debug_bin_to_dot_file
 gst_debug_bin_to_dot_file_with_ts
 <SUBSECTION Standard>
@@ -2340,10 +2349,12 @@ GstProtectionMeta
 gst_buffer_add_protection_meta
 gst_buffer_get_protection_meta
 gst_protection_select_system
+GST_PROTECTION_SYSTEM_ID_CAPS_FIELD
 <SUBSECTION Standard>
 GST_PROTECTION_META_API_TYPE
 GST_PROTECTION_META_INFO
 gst_protection_meta_get_info
+gst_protection_meta_api_get_type
 </SECTION>
 
 <SECTION>
@@ -3429,6 +3440,7 @@ gst_value_array_get_value
 gst_value_array_prepend_value
 gst_value_fixate
 
+gst_flagset_register
 
 <SUBSECTION Standard>
 GST_TYPE_G_THREAD
