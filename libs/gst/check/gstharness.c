@@ -2137,7 +2137,6 @@ forward_sticky_events (GstPad * pad, GstEvent ** ev, gpointer user_data)
  * gst_harness_add_sink_harness:
  * @h: a #GstHarness
  * @sink_harness: (transfer full): a #GstHarness to be added as a sink-harness.
- * @sink_element_name: a #gchar with the name of a #GstElement
  *
  * Similar to gst_harness_add_src, this allows you to send the data coming out
  * of your harnessed #GstElement to a sink-element, allowing to test different
