@@ -1328,8 +1328,6 @@ GST_START_TEST (test_obscured_skipped)
 
 GST_END_TEST;
 
-static gint buffers_sent = 0;
-
 static void
 _pipeline_eos (GstBus * bus, GstMessage * message, GstPipeline * bin)
 {
@@ -1349,7 +1347,7 @@ _buffer_recvd (GstElement * appsink, gint * buffers_recvd)
   GST_INFO ("buffer recvd");
   gst_sample_unref (sample);
 
-  if (*buffers_recvd > buffers_sent)
+  if (*buffers_recvd > 5)
     g_main_loop_quit (main_loop);
 
   return GST_FLOW_OK;
@@ -1372,9 +1370,8 @@ GST_START_TEST (test_ignore_eos)
   bus = gst_element_get_bus (bin);
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
-  buffers_sent = 5;
   src = gst_element_factory_make ("videotestsrc", NULL);
-  g_object_set (src, "num-buffers", buffers_sent, NULL);
+  g_object_set (src, "num-buffers", 5, NULL);
   compositor = gst_element_factory_make ("compositor", NULL);
   appsink = gst_element_factory_make ("appsink", NULL);
   g_object_set (appsink, "emit-signals", TRUE, NULL);
@@ -1413,7 +1410,7 @@ GST_START_TEST (test_ignore_eos)
   state_res = gst_element_set_state (bin, GST_STATE_NULL);
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
-  ck_assert_msg (buffers_recvd > buffers_sent, "Did not receive more buffers"
+  ck_assert_msg (buffers_recvd > 5, "Did not receive more buffers"
       " than were sent");
 
   /* cleanup */
@@ -1421,6 +1418,169 @@ GST_START_TEST (test_ignore_eos)
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
+typedef struct
+{
+  gint buffers_sent;
+  GstClockTime first_pts;
+  gboolean first;
+  gboolean drop;
+} TestStartTimeSelectionData;
+
+static GstPadProbeReturn
+drop_buffer_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  TestStartTimeSelectionData *data = user_data;
+
+  if (data->drop) {
+    data->buffers_sent = data->buffers_sent + 1;
+    if (data->buffers_sent < 4)
+      return GST_PAD_PROBE_DROP;
+  }
+
+  data->first_pts = GST_BUFFER_PTS (info->data);
+
+  return GST_PAD_PROBE_REMOVE;
+}
+
+static GstFlowReturn
+first_buffer_received_cb (GstElement * appsink, gpointer user_data)
+{
+  TestStartTimeSelectionData *data = user_data;
+  GstSample *sample;
+  GstBuffer *buffer;
+
+  g_signal_emit_by_name (appsink, "pull-sample", &sample);
+  ck_assert_msg (sample != NULL, "NULL sample received!");
+
+  buffer = gst_sample_get_buffer (sample);
+  if (!data->first) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  } else {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), data->first_pts);
+  }
+
+  gst_sample_unref (sample);
+
+  g_main_loop_quit (main_loop);
+
+  return GST_FLOW_EOS;
+}
+
+static void
+run_test_start_time (gboolean first, gboolean drop, gboolean unlinked)
+{
+  gboolean res;
+  GstPadLinkReturn link_res;
+  GstStateChangeReturn state_res;
+  GstElement *bin, *src, *compositor, *appsink;
+  GstPad *srcpad, *sinkpad;
+  GstBus *bus;
+  TestStartTimeSelectionData data = { 0, GST_CLOCK_TIME_NONE, first, drop };
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  src = gst_element_factory_make ("videotestsrc", NULL);
+
+  srcpad = gst_element_get_static_pad (src, "src");
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BUFFER, drop_buffer_cb, &data,
+      NULL);
+  gst_object_unref (srcpad);
+
+  g_object_set (src, "is-live", TRUE, NULL);
+  compositor = gst_element_factory_make ("compositor", NULL);
+  g_object_set (compositor, "start-time-selection", (first ? 1 : 0), NULL);
+  appsink = gst_element_factory_make ("appsink", NULL);
+  g_object_set (appsink, "emit-signals", TRUE, NULL);
+  gst_bin_add_many (GST_BIN (bin), src, compositor, appsink, NULL);
+
+  res = gst_element_link (compositor, appsink);
+  ck_assert_msg (res == TRUE, "Could not link compositor with appsink");
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+  link_res = gst_pad_link (srcpad, sinkpad);
+  ck_assert_msg (GST_PAD_LINK_SUCCESSFUL (link_res), "videotestsrc -> "
+      "compositor pad  link failed: %i", link_res);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+
+  if (unlinked) {
+    sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+    gst_object_unref (sinkpad);
+  }
+
+  GST_INFO ("pipeline built, connecting signals");
+
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  ck_assert_msg (state_res != GST_STATE_CHANGE_FAILURE, "Pipeline didn't play");
+
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (bus, "message::error", G_CALLBACK (message_received), bin);
+  g_signal_connect (bus, "message::warning", G_CALLBACK (message_received),
+      bin);
+  g_signal_connect (bus, "message::eos", G_CALLBACK (_pipeline_eos), bin);
+  g_signal_connect (appsink, "new-sample",
+      G_CALLBACK (first_buffer_received_cb), &data);
+
+  GST_INFO ("starting test");
+  g_main_loop_run (main_loop);
+
+  state_res = gst_element_set_state (bin, GST_STATE_NULL);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  /* cleanup */
+  g_main_loop_unref (main_loop);
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+}
+
+GST_START_TEST (test_start_time_zero_live_drop_0)
+{
+  run_test_start_time (FALSE, FALSE, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_start_time_zero_live_drop_3)
+{
+  run_test_start_time (FALSE, TRUE, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_start_time_zero_live_drop_3_unlinked_1)
+{
+  run_test_start_time (FALSE, TRUE, TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_start_time_first_live_drop_0)
+{
+  run_test_start_time (TRUE, FALSE, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_start_time_first_live_drop_3)
+{
+  run_test_start_time (TRUE, TRUE, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_start_time_first_live_drop_3_unlinked_1)
+{
+  run_test_start_time (TRUE, TRUE, TRUE);
 }
 
 GST_END_TEST;
@@ -1446,6 +1606,12 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_segment_base_handling);
   tcase_add_test (tc_chain, test_obscured_skipped);
   tcase_add_test (tc_chain, test_ignore_eos);
+  tcase_add_test (tc_chain, test_start_time_zero_live_drop_0);
+  tcase_add_test (tc_chain, test_start_time_zero_live_drop_3);
+  tcase_add_test (tc_chain, test_start_time_zero_live_drop_3_unlinked_1);
+  tcase_add_test (tc_chain, test_start_time_first_live_drop_0);
+  tcase_add_test (tc_chain, test_start_time_first_live_drop_3);
+  tcase_add_test (tc_chain, test_start_time_first_live_drop_3_unlinked_1);
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
