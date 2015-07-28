@@ -107,9 +107,17 @@ _video_info_plane_size (GstVideoInfo * info, guint plane)
 }
 
 static void
+_frame_unref (gpointer user_data)
+{
+  gint *ref_count = user_data;
+  g_atomic_int_add (ref_count, -1);
+}
+
+static void
 check_conversion (TestFrame * frames, guint size)
 {
   gint i, j, k, l;
+  gint ref_count = 0;
 
   for (i = 0; i < size; i++) {
     GstBuffer *inbuf;
@@ -132,9 +140,10 @@ check_conversion (TestFrame * frames, guint size)
     }
 
     /* create GL buffer */
+    ref_count += GST_VIDEO_INFO_N_PLANES (&in_info);
     inbuf = gst_buffer_new ();
     fail_unless (gst_gl_memory_setup_wrapped (context, &in_info, NULL,
-            (gpointer *) in_data, in_mem, NULL, NULL));
+            (gpointer *) in_data, in_mem, &ref_count, _frame_unref));
 
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&in_info); j++) {
       gst_buffer_append_memory (inbuf, (GstMemory *) in_mem[j]);
@@ -201,6 +210,8 @@ check_conversion (TestFrame * frames, guint size)
     gst_caps_unref (in_caps);
     gst_video_frame_unmap (&in_frame);
     gst_buffer_unref (inbuf);
+
+    fail_unless_equals_int (ref_count, 0);
   }
 }
 
