@@ -987,8 +987,6 @@ gst_gl_upload_transform_caps (GstGLContext * context, GstPadDirection direction,
 
   if (filter) {
     result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
-    GST_LOG ("Filtering transformed caps %" GST_PTR_FORMAT " against filter %"
-        GST_PTR_FORMAT " yields %" GST_PTR_FORMAT, tmp, filter, result);
     gst_caps_unref (tmp);
   } else {
     result = tmp;
