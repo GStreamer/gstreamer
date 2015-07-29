@@ -478,7 +478,7 @@ gst_asf_demux_seek_index_lookup (GstASFDemux * demux, guint * packet,
   if (next) {
     /* if we want the next keyframe, we have to go forward till we find
        a different packet number */
-    guint idx2 = idx;
+    guint idx2;
     if (idx >= demux->sidx_num_entries - 1) {
       /* If we get here, we're asking for next keyframe after the last one. There isn't one. */
       if (eos)
