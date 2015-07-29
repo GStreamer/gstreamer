@@ -574,7 +574,6 @@ gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer, GPtrArray * frames)
     return FALSE;
 
   converted_buffer = mixer->primary_out;
-  v = 0;
   n = gst_buffer_n_memory (converted_buffer);
   g_assert (n == GST_VIDEO_INFO_N_PLANES (out_info) * views);
   for (v = 0; v < views; v++) {
