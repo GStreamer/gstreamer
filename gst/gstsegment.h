@@ -60,15 +60,15 @@ typedef enum {
  *                     elements to skip frames instead of generating all
  *                     frames. (Since 1.6)
  * @GST_SEEK_FLAG_SNAP_BEFORE: go to a location before the requested position,
- *                     if KEY_UNIT this means the keyframe at or before the
- *                     requested position the one at or before the seek target.
+ *                     if %GST_SEEK_FLAG_KEY_UNIT this means the keyframe at or before
+ *                     the requested position the one at or before the seek target.
  * @GST_SEEK_FLAG_SNAP_AFTER: go to a location after the requested position,
- *                     if KEY_UNIT this means the keyframe at of after the
+ *                     if %GST_SEEK_FLAG_KEY_UNIT this means the keyframe at of after the
  *                     requested position.
  * @GST_SEEK_FLAG_SNAP_NEAREST: go to a position near the requested position,
- *                     if KEY_UNIT this means the keyframe closest to the
- *                     requested position, if both keyframes are at an equal
- *                     distance, behaves like SNAP_BEFORE.
+ *                     if %GST_SEEK_FLAG_KEY_UNIT this means the keyframe closest
+ *                     to the requested position, if both keyframes are at an equal
+ *                     distance, behaves like %GST_SEEK_FLAG_SNAP_BEFORE.
  * @GST_SEEK_FLAG_TRICKMODE_KEY_UNITS: when doing fast forward or fast reverse
  *                     playback, request that elements only decode keyframes
  *                     and skip all other content, for formats that have
@@ -77,7 +77,7 @@ typedef enum {
  *                     playback, request that audio decoder elements skip
  *                     decoding and output only gap events or silence. (Since 1.6)
  * @GST_SEEK_FLAG_SKIP: Deprecated backward compatibility flag, replaced
- *                     by @GST_SEEK_FLAG_TRICKMODE
+ *                     by %GST_SEEK_FLAG_TRICKMODE
  *
  * Flags to be used with gst_element_seek() or gst_event_new_seek(). All flags
  * can be used together.
@@ -91,27 +91,28 @@ typedef enum {
  *
  * When performing a segment seek: after the playback of the segment completes,
  * no EOS will be emitted by the element that performed the seek, but a
- * #GST_MESSAGE_SEGMENT_DONE message will be posted on the bus by the element.
+ * %GST_MESSAGE_SEGMENT_DONE message will be posted on the bus by the element.
  * When this message is posted, it is possible to send a new seek event to
  * continue playback. With this seek method it is possible to perform seamless
  * looping or simple linear editing.
  *
  * When doing fast forward (rate > 1.0) or fast reverse (rate < -1.0) trickmode
- * playback, the @GST_SEEK_FLAG_TRICKMODE flag can be used to instruct decoders
+ * playback, the %GST_SEEK_FLAG_TRICKMODE flag can be used to instruct decoders
  * and demuxers to adjust the playback rate by skipping frames. This can improve
  * performance and decrease CPU usage because not all frames need to be decoded.
  *
- * Beyond that, the @GST_SEEK_FLAG_TRICKMODE_KEY_UNITS flag can be used to
+ * Beyond that, the %GST_SEEK_FLAG_TRICKMODE_KEY_UNITS flag can be used to
  * request that decoders skip all frames except key units, and
- * @GST_SEEK_FLAG_TRICKMODE_NO_AUDIO flags can be used to request that audio
+ * %GST_SEEK_FLAG_TRICKMODE_NO_AUDIO flags can be used to request that audio
  * decoders do no decoding at all, and simple output silence.
  *
- * The @GST_SEEK_FLAG_SNAP_BEFORE flag can be used to snap to the previous
- * relevant location, and the @GST_SEEK_FLAG_SNAP_AFTER flag can be used to
- * select the next relevant location. If KEY_UNIT is specified, the relevant
- * location is a keyframe. If both flags are specified, the nearest of these
- * locations will be selected. If none are specified, the implementation is
+ * The %GST_SEEK_FLAG_SNAP_BEFORE flag can be used to snap to the previous
+ * relevant location, and the %GST_SEEK_FLAG_SNAP_AFTER flag can be used to
+ * select the next relevant location. If %GST_SEEK_FLAG_KEY_UNIT is specified,
+ * the relevant location is a keyframe. If both flags are specified, the nearest
+ * of these locations will be selected. If none are specified, the implementation is
  * free to select whichever it wants.
+ *
  * The before and after here are in running time, so when playing backwards,
  * the next location refers to the one that will played in next, and not the
  * one that is located after in the actual source stream.
