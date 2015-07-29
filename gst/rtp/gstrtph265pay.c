@@ -1047,8 +1047,6 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
     pos += 2;
     size -= 2;
 
-    ret = GST_FLOW_OK;
-
     GST_DEBUG_OBJECT (basepayload, "Using FU fragmentation for data size=%d",
         size);
 
