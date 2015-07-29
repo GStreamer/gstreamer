@@ -145,6 +145,10 @@ struct _GstQTDemux {
   guint64 fragment_start_offset;
     
   gint64 chapters_track_id;
+
+  /* protection support */
+  GPtrArray *protection_system_ids; /* Holds identifiers of all content protection systems for all tracks */
+  GQueue protection_event_queue; /* holds copy of upstream protection events */
 };
 
 struct _GstQTDemuxClass {

@@ -189,6 +189,18 @@ static const QtNodeType qt_node_types[] = {
       qtdemux_dump_svmi},
   {FOURCC_scdi, "Stereoscopic Camera and Display Information", 0,
       qtdemux_dump_unknown},
+  {FOURCC_saiz, "sample auxiliary information sizes", 0},
+  {FOURCC_saio, "sample auxiliary information offsets", 0},
+  {FOURCC_encv, "encrypted visual sample entry", 0},
+  {FOURCC_enca, "encrypted audio sample entry", 0},
+  {FOURCC_enct, "encrypted text sample entry", 0},
+  {FOURCC_encs, "encrypted system sample entry", 0},
+  {FOURCC_sinf, "protection scheme information", QT_FLAG_CONTAINER},
+  {FOURCC_frma, "original format", 0},
+  {FOURCC_schm, "scheme type", 0},
+  {FOURCC_schi, "scheme information", QT_FLAG_CONTAINER},
+  {FOURCC_pssh, "protection system specific header", 0},
+  {FOURCC_tenc, "track encryption", 0},
   {0, "unknown", 0,},
 };
 

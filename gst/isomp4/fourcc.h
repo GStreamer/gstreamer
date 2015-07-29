@@ -235,6 +235,8 @@ G_BEGIN_DECLS
 #define FOURCC_apcs     GST_MAKE_FOURCC('a','p','c','s')
 #define FOURCC_m1v      GST_MAKE_FOURCC('m','1','v',' ')
 #define FOURCC_vivo     GST_MAKE_FOURCC('v','i','v','o')
+#define FOURCC_saiz     GST_MAKE_FOURCC('s','a','i','z')
+#define FOURCC_saio     GST_MAKE_FOURCC('s','a','i','o')
 
 #define FOURCC_3gg6     GST_MAKE_FOURCC('3','g','g','6')
 #define FOURCC_3gg7     GST_MAKE_FOURCC('3','g','g','7')
@@ -328,6 +330,21 @@ G_BEGIN_DECLS
 #define FOURCC_ss02     GST_MAKE_FOURCC('s','s','0','2')
 #define FOURCC_svmi     GST_MAKE_FOURCC('s','v','m','i')
 #define FOURCC_scdi     GST_MAKE_FOURCC('s','c','d','i')
+
+/* Protected streams */
+#define FOURCC_encv     GST_MAKE_FOURCC('e','n','c','v')
+#define FOURCC_enca     GST_MAKE_FOURCC('e','n','c','a')
+#define FOURCC_enct     GST_MAKE_FOURCC('e','n','c','t')
+#define FOURCC_encs     GST_MAKE_FOURCC('e','n','c','s')
+#define FOURCC_sinf     GST_MAKE_FOURCC('s','i','n','f')
+#define FOURCC_frma     GST_MAKE_FOURCC('f','r','m','a')
+#define FOURCC_schm     GST_MAKE_FOURCC('s','c','h','m')
+#define FOURCC_schi     GST_MAKE_FOURCC('s','c','h','i')
+
+/* Common Encryption */
+#define FOURCC_pssh     GST_MAKE_FOURCC('p','s','s','h')
+#define FOURCC_tenc     GST_MAKE_FOURCC('t','e','n','c')
+#define FOURCC_cenc     GST_MAKE_FOURCC('c','e','n','c')
 
 G_END_DECLS
 
