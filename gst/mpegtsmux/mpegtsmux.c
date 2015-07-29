@@ -332,7 +332,6 @@ mpegtsmux_init (MpegTsMux * mux)
 static void
 mpegtsmux_pad_reset (MpegTsPadData * pad_data)
 {
-  pad_data->pid = 0;
   pad_data->dts = GST_CLOCK_STIME_NONE;
   pad_data->prog_id = -1;
 #if 0
