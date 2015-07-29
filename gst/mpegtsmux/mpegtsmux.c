@@ -398,16 +398,7 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   mux->programs = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   if (mux->streamheader) {
-    GstBuffer *buf;
-    GList *sh;
-
-    sh = mux->streamheader;
-    while (sh) {
-      buf = sh->data;
-      gst_buffer_unref (buf);
-      sh = g_list_next (sh);
-    }
-    g_list_free (mux->streamheader);
+    g_list_free_full (mux->streamheader, (GDestroyNotify) (gst_buffer_unref));
     mux->streamheader = NULL;
   }
   gst_event_replace (&mux->force_key_unit_event, NULL);
@@ -1386,7 +1377,10 @@ new_packet_common_init (MpegTsMux * mux, GstBuffer * buf, guint8 * data,
       } else {
         hbuf = gst_buffer_copy (buf);
       }
-      mux->streamheader = g_list_append (mux->streamheader, hbuf);
+      GST_LOG_OBJECT (mux,
+          "Collecting packet with pid 0x%04x into streamheaders", pid);
+      /* Streamheader packets collected in reverse order for efficiency */
+      mux->streamheader = g_list_prepend (mux->streamheader, hbuf);
     } else if (mux->streamheader) {
       mpegtsmux_set_header_on_caps (mux);
       mux->streamheader_sent = TRUE;
@@ -1694,6 +1688,12 @@ mpegtsmux_set_header_on_caps (MpegTsMux * mux)
   structure = gst_caps_get_structure (caps, 0);
 
   g_value_init (&array, GST_TYPE_ARRAY);
+
+  GST_LOG_OBJECT (mux, "setting %u packets into streamheader",
+      g_list_length (mux->streamheader));
+
+  /* Stream headers were accumulated in reverse, so fix that */
+  mux->streamheader = g_list_reverse (mux->streamheader);
 
   sh = mux->streamheader;
   while (sh) {
