@@ -1241,7 +1241,6 @@ mpegts_base_scan (MpegTSBase * base)
   if (!gst_pad_peer_query_duration (base->sinkpad, format, &tmpval))
     goto beach;
   upstream_size = tmpval;
-  done = FALSE;
 
   /* The scanning takes place on the last 2048kB. Considering PCR should
    * be present at least every 100ms, this should cope with streams
@@ -1250,7 +1249,7 @@ mpegts_base_scan (MpegTSBase * base)
 
   /* Find last PCR value, searching backwards by chunks of 300 MPEG-ts packets */
   for (seek_pos = MAX (0, upstream_size - 56400);
-      seek_pos >= reverse_limit && !done; seek_pos -= 56400) {
+      seek_pos >= reverse_limit; seek_pos -= 56400) {
     mpegts_packetizer_clear (base->packetizer);
     GST_DEBUG ("Grabbing %" G_GUINT64_FORMAT " => %" G_GUINT64_FORMAT, seek_pos,
         seek_pos + 56400);
@@ -1274,7 +1273,6 @@ mpegts_base_scan (MpegTSBase * base)
       if (base->packetizer->nb_seen_offsets > initial_pcr_seen) {
         GST_DEBUG ("Got last PCR(s) (total seen:%d)",
             base->packetizer->nb_seen_offsets);
-        done = TRUE;
         break;
       }
     }
