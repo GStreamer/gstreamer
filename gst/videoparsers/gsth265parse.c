@@ -1945,8 +1945,8 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   }
 
   if (format == h265parse->format && align == h265parse->align) {
-    /* do not set CAPS and passthrough mode if VPS/SPS/PPS have not been parsed */
-    if (h265parse->have_vps && h265parse->have_sps && h265parse->have_pps) {
+    /* do not set CAPS and passthrough mode if SPS/PPS have not been parsed */
+    if (h265parse->have_sps && h265parse->have_pps) {
       gst_base_parse_set_passthrough (parse, TRUE);
 
       /* we did parse codec-data and might supplement src caps */
