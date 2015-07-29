@@ -147,7 +147,7 @@ struct MpegTsMux {
 
   /* write callback handling/state */
   GstFlowReturn last_flow_ret;
-  GList *streamheader;
+  GQueue streamheader;
   gboolean streamheader_sent;
   gboolean is_delta;
   gboolean is_header;

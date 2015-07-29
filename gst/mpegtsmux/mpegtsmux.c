@@ -362,6 +362,7 @@ mpegtsmux_pad_reset (MpegTsPadData * pad_data)
 static void
 mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
 {
+  GstBuffer *buf;
   GSList *walk;
 
   mux->first = TRUE;
@@ -396,10 +397,9 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   }
   mux->programs = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-  if (mux->streamheader) {
-    g_list_free_full (mux->streamheader, (GDestroyNotify) (gst_buffer_unref));
-    mux->streamheader = NULL;
-  }
+  while ((buf = g_queue_pop_head (&mux->streamheader)))
+    gst_buffer_unref (buf);
+
   gst_event_replace (&mux->force_key_unit_event, NULL);
   gst_buffer_replace (&mux->out_buffer, NULL);
 
@@ -1378,9 +1378,9 @@ new_packet_common_init (MpegTsMux * mux, GstBuffer * buf, guint8 * data,
       }
       GST_LOG_OBJECT (mux,
           "Collecting packet with pid 0x%04x into streamheaders", pid);
-      /* Streamheader packets collected in reverse order for efficiency */
-      mux->streamheader = g_list_prepend (mux->streamheader, hbuf);
-    } else if (mux->streamheader) {
+
+      g_queue_push_tail (&mux->streamheader, hbuf);
+    } else if (!g_queue_is_empty (&mux->streamheader)) {
       mpegtsmux_set_header_on_caps (mux);
       mux->streamheader_sent = TRUE;
     }
@@ -1681,7 +1681,6 @@ mpegtsmux_set_header_on_caps (MpegTsMux * mux)
   GValue array = { 0 };
   GValue value = { 0 };
   GstCaps *caps;
-  GList *sh;
 
   caps = gst_caps_make_writable (gst_pad_get_current_caps (mux->srcpad));
   structure = gst_caps_get_structure (caps, 0);
@@ -1689,23 +1688,14 @@ mpegtsmux_set_header_on_caps (MpegTsMux * mux)
   g_value_init (&array, GST_TYPE_ARRAY);
 
   GST_LOG_OBJECT (mux, "setting %u packets into streamheader",
-      g_list_length (mux->streamheader));
+      g_queue_get_length (&mux->streamheader));
 
-  /* Stream headers were accumulated in reverse, so fix that */
-  mux->streamheader = g_list_reverse (mux->streamheader);
-
-  sh = mux->streamheader;
-  while (sh) {
-    buf = sh->data;
+  while ((buf = g_queue_pop_head (&mux->streamheader))) {
     g_value_init (&value, GST_TYPE_BUFFER);
     gst_value_take_buffer (&value, buf);
     gst_value_array_append_value (&array, &value);
     g_value_unset (&value);
-    sh = g_list_next (sh);
   }
-
-  g_list_free (mux->streamheader);
-  mux->streamheader = NULL;
 
   gst_structure_set_value (structure, "streamheader", &array);
   gst_pad_set_caps (mux->srcpad, caps);
