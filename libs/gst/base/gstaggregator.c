@@ -295,7 +295,7 @@ gst_aggregator_pad_flush (GstAggregatorPad * aggpad, GstAggregator * agg)
   PAD_UNLOCK (aggpad);
 
   if (klass->flush)
-    return klass->flush (aggpad, agg);
+    return (klass->flush (aggpad, agg) == GST_FLOW_OK);
 
   return TRUE;
 }
