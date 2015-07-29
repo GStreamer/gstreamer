@@ -38,6 +38,7 @@
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
 #endif
+#include <locale.h>             /* for LC_ALL */
 
 static gint ret = 0;
 static GMainLoop *mainloop;
@@ -432,7 +433,7 @@ main (int argc, gchar ** argv)
           " if no parameter passed, it will list all avalaible action types"
           " otherwize will print the full description of the wanted types",
         NULL},
-    {"set-media-info", '\0', 0, G_OPTION_ARG_STRING, &media_info,
+    {"set-media-info", '\0', 0, G_OPTION_ARG_FILENAME, &media_info,
           "Set a media_info XML file descriptor to share information about the"
           " media file that will be reproduced.",
         NULL},
@@ -448,6 +449,8 @@ main (int argc, gchar ** argv)
   GstValidateRunner *runner;
   GstValidateMonitor *monitor;
   GstBus *bus;
+
+  setlocale (LC_ALL, "");
 
   g_set_prgname ("gst-validate-" GST_API_VERSION);
   ctx = g_option_context_new ("PIPELINE-DESCRIPTION");
