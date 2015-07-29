@@ -386,6 +386,23 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     gst_audio_encoder_set_frame_max (GST_AUDIO_ENCODER (ffmpegaudenc), 0);
   }
 
+  /* Store some tags */
+  {
+    GstTagList *tags = gst_tag_list_new_empty ();
+    const gchar *codec;
+
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_NOMINAL_BITRATE,
+        ffmpegaudenc->context->bit_rate, NULL);
+
+    if ((codec =
+            gst_ffmpeg_get_codecid_longname (ffmpegaudenc->context->codec_id)))
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_AUDIO_CODEC, codec,
+          NULL);
+
+    gst_audio_encoder_merge_tags (encoder, tags, GST_TAG_MERGE_REPLACE);
+    gst_tag_list_unref (tags);
+  }
+
   /* success! */
   ffmpegaudenc->opened = TRUE;
 

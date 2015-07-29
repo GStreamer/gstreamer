@@ -476,6 +476,23 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   output_format = gst_video_encoder_set_output_state (encoder, icaps, state);
   gst_video_codec_state_unref (output_format);
 
+  /* Store some tags */
+  {
+    GstTagList *tags = gst_tag_list_new_empty ();
+    const gchar *codec;
+
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_NOMINAL_BITRATE,
+        ffmpegenc->context->bit_rate, NULL);
+
+    if ((codec =
+            gst_ffmpeg_get_codecid_longname (ffmpegenc->context->codec_id)))
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_VIDEO_CODEC, codec,
+          NULL);
+
+    gst_video_encoder_merge_tags (encoder, tags, GST_TAG_MERGE_REPLACE);
+    gst_tag_list_unref (tags);
+  }
+
   /* success! */
   ffmpegenc->opened = TRUE;
 
