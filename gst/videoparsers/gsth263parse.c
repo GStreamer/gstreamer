@@ -277,6 +277,8 @@ gst_h263_parse_set_src_caps (GstH263Parse * h263parse,
 
   gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (h263parse)), caps);
   gst_caps_unref (caps);
+  if (sink_caps)
+    gst_caps_unref (sink_caps);
 }
 
 static GstFlowReturn
