@@ -293,7 +293,7 @@ gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     GstMpegtsSection * section);
 static void gst_ts_demux_flush (MpegTSBase * base, gboolean hard);
 static GstFlowReturn gst_ts_demux_drain (MpegTSBase * base);
-static void
+static gboolean
 gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * stream,
     MpegTSBaseProgram * program);
 static void
@@ -1549,7 +1549,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       caps = gst_caps_new_empty_simple ("video/x-cavs");
       break;
     default:
-      GST_WARNING ("Non-media stream (stream_type:0x%x). Not creating pad",
+      GST_DEBUG ("Non-media stream (stream_type:0x%x). Not creating pad",
           bstream->stream_type);
       break;
   }
@@ -1561,11 +1561,15 @@ done:
       name =
           g_strdup_printf ("audio_%01x_%04x", demux->program_generation,
           bstream->pid);
+      gst_stream_set_stream_type (bstream->stream_object,
+          GST_STREAM_TYPE_AUDIO);
     } else if (is_video) {
       template = gst_static_pad_template_get (&video_template);
       name =
           g_strdup_printf ("video_%01x_%04x", demux->program_generation,
           bstream->pid);
+      gst_stream_set_stream_type (bstream->stream_object,
+          GST_STREAM_TYPE_VIDEO);
     } else if (is_private) {
       template = gst_static_pad_template_get (&private_template);
       name =
@@ -1576,6 +1580,7 @@ done:
       name =
           g_strdup_printf ("subpicture_%01x_%04x", demux->program_generation,
           bstream->pid);
+      gst_stream_set_stream_type (bstream->stream_object, GST_STREAM_TYPE_TEXT);
     } else
       g_assert_not_reached ();
 
@@ -1583,16 +1588,14 @@ done:
 
   if (template && name && caps) {
     GstEvent *event;
-    gchar *stream_id;
+    const gchar *stream_id;
 
     GST_LOG ("stream:%p creating pad with name %s and caps %" GST_PTR_FORMAT,
         stream, name, caps);
     pad = gst_pad_new_from_template (template, name);
     gst_pad_set_active (pad, TRUE);
     gst_pad_use_fixed_caps (pad);
-    stream_id =
-        gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (base), "%08x",
-        bstream->pid);
+    stream_id = gst_stream_get_stream_id (bstream->stream_object);
 
     event = gst_pad_get_sticky_event (base->sinkpad, GST_EVENT_STREAM_START, 0);
     if (event) {
@@ -1606,19 +1609,24 @@ done:
       demux->group_id = gst_util_group_id_next ();
     }
     event = gst_event_new_stream_start (stream_id);
+    gst_event_set_stream (event, bstream->stream_object);
     if (demux->have_group_id)
       gst_event_set_group_id (event, demux->group_id);
-    if (sparse)
+    if (sparse) {
       gst_event_set_stream_flags (event, GST_STREAM_FLAG_SPARSE);
+      gst_stream_set_stream_flags (bstream->stream_object,
+          GST_STREAM_FLAG_SPARSE);
+    }
     stream->sparse = sparse;
 
     gst_pad_push_event (pad, event);
-    g_free (stream_id);
     gst_pad_set_caps (pad, caps);
+    gst_stream_set_caps (bstream->stream_object, caps);
     if (!stream->taglist)
       stream->taglist = gst_tag_list_new_empty ();
     gst_pb_utils_add_codec_description_to_tag_list (stream->taglist, NULL,
         caps);
+    gst_stream_set_tags (bstream->stream_object, stream->taglist);
     gst_pad_set_query_function (pad, gst_ts_demux_srcpad_query);
     gst_pad_set_event_function (pad, gst_ts_demux_srcpad_event);
   }
@@ -1632,7 +1640,7 @@ done:
   return pad;
 }
 
-static void
+static gboolean
 gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     MpegTSBaseProgram * program)
 {
@@ -1675,6 +1683,8 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     stream->pending_ts = program->pcr_pid < 0x1fff;
     stream->continuity_counter = CONTINUITY_UNSET;
   }
+
+  return (stream->pad != NULL);
 }
 
 static void
@@ -1836,6 +1846,11 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
 
     /* Increment the program_generation counter */
     demux->program_generation = (demux->program_generation + 1) & 0xf;
+
+    /* Emit collection message */
+    gst_element_post_message ((GstElement *) base,
+        gst_message_new_stream_collection ((GstObject *) base,
+            program->collection));
 
     /* If this is not the initial program, we need to calculate
      * a new segment */
@@ -2506,7 +2521,9 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     MpegTSBaseProgram * target_program)
 {
   GstFlowReturn res = GST_FLOW_OK;
+#ifndef GST_DISABLE_GST_DEBUG
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
+#endif
   GstBuffer *buffer = NULL;
   GstBufferList *buffer_list = NULL;
 

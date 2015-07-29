@@ -333,6 +333,7 @@ mpegts_base_new_program (MpegTSBase * base,
     gint program_number, guint16 pmt_pid)
 {
   MpegTSBaseProgram *program;
+  gchar *upstream_id, *stream_id;
 
   GST_DEBUG_OBJECT (base, "program_number : %d, pmt_pid : %d",
       program_number, pmt_pid);
@@ -343,6 +344,12 @@ mpegts_base_new_program (MpegTSBase * base,
   program->pcr_pid = G_MAXUINT16;
   program->streams = g_new0 (MpegTSBaseStream *, 0x2000);
   program->patcount = 0;
+
+  upstream_id = gst_pad_get_stream_id (base->sinkpad);
+  stream_id = g_strdup_printf ("%s:%d", upstream_id, program_number);
+  program->collection = gst_stream_collection_new (stream_id);
+  g_free (stream_id);
+  g_free (upstream_id);
 
   return program;
 }
@@ -398,6 +405,16 @@ mpegts_base_steal_program (MpegTSBase * base, gint program_number)
 }
 
 static void
+mpegts_base_free_stream (MpegTSBaseStream * stream)
+{
+  if (stream->stream_object)
+    gst_object_unref (stream->stream_object);
+  if (stream->stream_id)
+    g_free (stream->stream_id);
+  g_free (stream);
+}
+
+static void
 mpegts_base_free_program (MpegTSBaseProgram * program)
 {
   GList *tmp;
@@ -407,8 +424,10 @@ mpegts_base_free_program (MpegTSBaseProgram * program)
     program->pmt = NULL;
   }
 
+  /* FIXME FIXME FIXME FREE STREAM OBJECT ! */
   for (tmp = program->stream_list; tmp; tmp = tmp->next)
-    g_free (tmp->data);
+    mpegts_base_free_stream ((MpegTSBaseStream *) tmp->data);
+
   if (program->stream_list)
     g_list_free (program->stream_list);
 
@@ -416,6 +435,8 @@ mpegts_base_free_program (MpegTSBaseProgram * program)
 
   if (program->tags)
     gst_tag_list_unref (program->tags);
+  if (program->collection)
+    gst_object_unref (program->collection);
 
   g_free (program);
 }
@@ -465,6 +486,9 @@ mpegts_base_program_add_stream (MpegTSBase * base,
 
   GST_DEBUG ("pid:0x%04x, stream_type:0x%03x", pid, stream_type);
 
+  /* FIXME : PID information/nature might change through time.
+   * We therefore *do* want to be able to replace an existing stream
+   * with updated information */
   if (G_UNLIKELY (program->streams[pid])) {
     if (stream_type != 0xff)
       GST_WARNING ("Stream already present !");
@@ -472,9 +496,15 @@ mpegts_base_program_add_stream (MpegTSBase * base,
   }
 
   bstream = g_malloc0 (base->stream_size);
+  bstream->stream_id =
+      g_strdup_printf ("%s/%08x",
+      gst_stream_collection_get_upstream_id (program->collection), pid);
   bstream->pid = pid;
   bstream->stream_type = stream_type;
   bstream->stream = stream;
+  /* We don't yet know the stream type, subclasses will fill that */
+  bstream->stream_object = gst_stream_new (bstream->stream_id, NULL,
+      GST_STREAM_TYPE_UNKNOWN, GST_STREAM_FLAG_NONE);
   if (stream) {
     bstream->registration_id =
         get_registration_from_descriptors (stream->descriptors);
@@ -482,12 +512,14 @@ mpegts_base_program_add_stream (MpegTSBase * base,
         bstream->pid, SAFE_FOURCC_ARGS (bstream->registration_id));
   }
 
-
   program->streams[pid] = bstream;
   program->stream_list = g_list_append (program->stream_list, bstream);
 
   if (klass->stream_added)
-    klass->stream_added (base, bstream, program);
+    if (klass->stream_added (base, bstream, program))
+      gst_stream_collection_add_stream (program->collection,
+          (GstStream *) gst_object_ref (bstream->stream_object));
+
 
   return bstream;
 }
@@ -514,7 +546,7 @@ mpegts_base_program_remove_stream (MpegTSBase * base,
     klass->stream_removed (base, stream);
 
   program->stream_list = g_list_remove_all (program->stream_list, stream);
-  g_free (stream);
+  mpegts_base_free_stream (stream);
   program->streams[pid] = NULL;
 }
 

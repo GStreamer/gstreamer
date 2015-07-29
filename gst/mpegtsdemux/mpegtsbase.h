@@ -64,6 +64,8 @@ struct _MpegTSBaseStream
   guint32             registration_id;
 
   GstMpegtsPMTStream *stream;
+  GstStream          *stream_object;
+  gchar              *stream_id;
 };
 
 struct _MpegTSBaseProgram
@@ -81,6 +83,8 @@ struct _MpegTSBaseProgram
   MpegTSBaseStream  **streams;
   GList              *stream_list;
   gint                patcount;
+
+  GstStreamCollection *collection;
 
   /* Pending Tags for the program */
   GstTagList *tags;
@@ -175,7 +179,7 @@ struct _MpegTSBaseClass {
   gboolean (*can_remove_program) (MpegTSBase *base, MpegTSBaseProgram *program);
 
   /* stream_added is called whenever a new stream has been identified */
-  void (*stream_added) (MpegTSBase *base, MpegTSBaseStream *stream, MpegTSBaseProgram *program);
+  gboolean (*stream_added) (MpegTSBase *base, MpegTSBaseStream *stream, MpegTSBaseProgram *program);
   /* stream_removed is called whenever a stream is no longer referenced */
   void (*stream_removed) (MpegTSBase *base, MpegTSBaseStream *stream);
 
