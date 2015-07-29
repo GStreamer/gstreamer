@@ -1276,7 +1276,7 @@ gst_sdp_demux_handle_message (GstBin * bin, GstMessage * message)
 static gboolean
 gst_sdp_demux_start (GstSDPDemux * demux)
 {
-  guint8 *data;
+  guint8 *data = NULL;
   guint size;
   gint i, n_streams;
   GstSDPMessage sdp = { 0 };
@@ -1291,6 +1291,9 @@ gst_sdp_demux_start (GstSDPDemux * demux)
   GST_DEBUG_OBJECT (demux, "parse SDP...");
 
   size = gst_adapter_available (demux->adapter);
+  if (size == 0)
+    goto no_data;
+
   data = gst_adapter_take (demux->adapter, size);
 
   gst_sdp_message_init (&sdp);
@@ -1432,6 +1435,12 @@ no_manager:
   {
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
         ("Could not create RTP session manager."));
+    goto done;
+  }
+no_data:
+  {
+    GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
+        ("Empty SDP message."));
     goto done;
   }
 could_not_parse:
