@@ -258,7 +258,6 @@ gst_dvdemux_reset (GstDVDemux * dvdemux)
   dvdemux->frame_offset = 0;
   dvdemux->audio_offset = 0;
   dvdemux->video_offset = 0;
-  dvdemux->framecount = 0;
   g_atomic_int_set (&dvdemux->found_header, 0);
   dvdemux->frame_len = -1;
   dvdemux->need_segment = FALSE;
