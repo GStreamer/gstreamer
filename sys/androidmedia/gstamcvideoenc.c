@@ -261,9 +261,8 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
     /* gst_amc_format_set_int (format, amc_level.key, amc_level.id); */
   }
 
-  if (encoder->i_frame_int)
-    gst_amc_format_set_int (format, "i-frame-interval", encoder->i_frame_int,
-        &err);
+  gst_amc_format_set_int (format, "i-frame-interval", encoder->i_frame_int,
+      &err);
   if (err)
     GST_ELEMENT_WARNING_FROM_ERROR (encoder, err);
 
