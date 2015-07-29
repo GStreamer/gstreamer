@@ -524,7 +524,7 @@ gst_sdp_demux_parse_rtpmap (const gchar * rtpmap, gint * payload, gchar ** name,
 {
   gchar *p, *t;
 
-  t = p = (gchar *) rtpmap;
+  p = (gchar *) rtpmap;
 
   PARSE_INT (p, " ", *payload);
   if (*payload == -1)
