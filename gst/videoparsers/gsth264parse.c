@@ -492,13 +492,18 @@ static const gchar *nal_names[] = {
   "Filler Data",
   "SPS extension",
   "Prefix",
-  "SPS Subset"
+  "SPS Subset",
+  "Depth Parameter Set",
+  "Reserved", "Reserved",
+  "Slice Aux Unpartitioned",
+  "Slice Extension",
+  "Slice Depth/3D-AVC Extension"
 };
 
 static const gchar *
 _nal_name (GstH264NalUnitType nal_type)
 {
-  if (nal_type <= GST_H264_NAL_SUBSET_SPS)
+  if (nal_type <= GST_H264_NAL_SLICE_DEPTH)
     return nal_names[nal_type];
   return "Invalid";
 }

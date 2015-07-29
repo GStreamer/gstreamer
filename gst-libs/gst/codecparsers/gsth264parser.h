@@ -127,9 +127,11 @@ typedef enum {
  * @GST_H264_NAL_FILLER_DATA: Filler data nal lunit
  * @GST_H264_NAL_SPS_EXT: Sequence parameter set (SPS) extension NAL unit
  * @GST_H264_NAL_PREFIX_UNIT: Prefix NAL unit
- * @GST_H264_NAL_SUBSET_SPS: Subset sequence parameter set (SPS) NAL unit
+ * @GST_H264_NAL_SUBSET_SPS: Subset sequence parameter set (SSPS) NAL unit
+ * @GST_H264_NAL_DEPTH_SPS: Depth parameter set (DPS) NAL unit
  * @GST_H264_NAL_SLICE_AUX: Auxiliary coded picture without partitioning NAL unit
  * @GST_H264_NAL_SLICE_EXT: Coded slice extension NAL unit
+ * @GST_H264_NAL_SLICE_DEPTH: Coded slice extension for depth or 3D-AVC texture view
  *
  * Indicates the type of H264 Nal Units
  */
@@ -151,8 +153,10 @@ typedef enum
   GST_H264_NAL_SPS_EXT      = 13,
   GST_H264_NAL_PREFIX_UNIT  = 14,
   GST_H264_NAL_SUBSET_SPS   = 15,
+  GST_H264_NAL_DEPTH_SPS    = 16,
   GST_H264_NAL_SLICE_AUX    = 19,
-  GST_H264_NAL_SLICE_EXT    = 20
+  GST_H264_NAL_SLICE_EXT    = 20,
+  GST_H264_NAL_SLICE_DEPTH  = 21
 } GstH264NalUnitType;
 
 /**
