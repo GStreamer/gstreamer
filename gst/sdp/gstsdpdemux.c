@@ -668,8 +668,13 @@ gst_sdp_demux_media_to_caps (gint pt, const GstSDPMedia * media)
       /* <param>[=<value>] are separated with ';' */
       pairs = g_strsplit (p, ";", 0);
       for (i = 0; pairs[i]; i++) {
-        gchar *valpos, *key;
-        const gchar *val;
+        gchar *valpos;
+        const gchar *key, *val;
+        gint j;
+        const gchar *reserved_keys[] =
+            { "media", "payload", "clock-rate", "encoding-name",
+          "encoding-params"
+        };
 
         /* the key may not have a '=', the value can have other '='s */
         valpos = strstr (pairs[i], "=");
@@ -684,6 +689,19 @@ gst_sdp_demux_media_to_caps (gint pt, const GstSDPMedia * media)
         }
         /* strip the key of spaces, convert key to lowercase but not the value. */
         key = g_strstrip (pairs[i]);
+
+        /* skip keys from the fmtp, which we already use ourselves for the
+         * caps. Some software is adding random things like clock-rate into
+         * the fmtp, and we would otherwise here set a string-typed clock-rate
+         * in the caps... and thus fail to create valid RTP caps
+         */
+        for (j = 0; j < G_N_ELEMENTS (reserved_keys); j++) {
+          if (g_ascii_strcasecmp (reserved_keys[i], key) == 0) {
+            key = "";
+            break;
+          }
+        }
+
         if (strlen (key) > 1) {
           tmp = g_ascii_strdown (key, -1);
           gst_structure_set (s, tmp, G_TYPE_STRING, val, NULL);
