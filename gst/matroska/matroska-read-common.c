@@ -2034,6 +2034,7 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
     key_val = g_strdup_printf ("%s=%s", name_with_parent, value);
     gst_tag_list_add (*p_taglist, GST_TAG_MERGE_APPEND,
         GST_TAG_EXTENDED_COMMENT, key_val, NULL);
+    g_free (key_val);
   } else if (tag && value && *value != '\0') {
     gboolean matched = FALSE;
     guint i;
@@ -2078,6 +2079,7 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
       key_val = g_strdup_printf ("%s=%s", tag, value);
       gst_tag_list_add (*p_taglist, GST_TAG_MERGE_APPEND,
           GST_TAG_EXTENDED_COMMENT, key_val, NULL);
+      g_free (key_val);
     }
   }
 
