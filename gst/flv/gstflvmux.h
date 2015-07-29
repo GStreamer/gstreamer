@@ -52,6 +52,8 @@ typedef struct
   guint video_codec;
   GstBuffer *video_codec_data;
 
+  guint bitrate;
+
   GstClockTime last_timestamp;
   gint64 pts;
   gint64 dts;

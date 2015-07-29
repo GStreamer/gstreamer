@@ -280,23 +280,37 @@ gst_flv_mux_handle_src_event (GstPad * pad, GstObject * parent,
   return gst_pad_event_default (pad, parent, event);
 }
 
+/* Extract per-codec relevant tags for
+ * insertion into the metadata later - ie bitrate,
+ * but maybe others in the future */
+static void
+gst_flv_mux_store_codec_tags (GstFlvMux * mux,
+    GstFlvPad * flvpad, GstTagList * list)
+{
+  /* Look for a bitrate as either nominal or actual bitrate tag */
+  if (gst_tag_list_get_uint (list, GST_TAG_NOMINAL_BITRATE, &flvpad->bitrate) ||
+      gst_tag_list_get_uint (list, GST_TAG_BITRATE, &flvpad->bitrate)) {
+    GST_DEBUG_OBJECT (mux, "Stored bitrate for pad %" GST_PTR_FORMAT " = %u",
+        flvpad, flvpad->bitrate);
+  }
+}
+
 static gboolean
 gst_flv_mux_handle_sink_event (GstCollectPads * pads, GstCollectData * data,
     GstEvent * event, gpointer user_data)
 {
   GstFlvMux *mux = GST_FLV_MUX (user_data);
+  GstFlvPad *flvpad = (GstFlvPad *) data;
   gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
-      GstFlvPad *flvpad;
 
       gst_event_parse_caps (event, &caps);
 
       /* find stream data */
-      flvpad = (GstFlvPad *) data;
       g_assert (flvpad);
 
       if (flvpad->video) {
@@ -316,6 +330,7 @@ gst_flv_mux_handle_sink_event (GstCollectPads * pads, GstCollectData * data,
 
       gst_event_parse_tag (event, &list);
       gst_tag_setter_merge_tags (setter, list, mode);
+      gst_flv_mux_store_codec_tags (mux, flvpad, list);
       mux->new_tags = TRUE;
       ret = TRUE;
       gst_event_unref (event);
@@ -888,6 +903,13 @@ tags:
         script_tag = gst_buffer_append (script_tag, tmp);
         tags_written++;
       }
+
+      GST_DEBUG_OBJECT (mux, "putting videodatarate %u KB/s in the metadata",
+          cpad->bitrate / 1024);
+      tmp = gst_flv_mux_create_number_script_value ("videodatarate",
+          cpad->bitrate / 1024);
+      script_tag = gst_buffer_append (script_tag, tmp);
+      tags_written++;
     }
   }
 
@@ -910,6 +932,13 @@ tags:
 
       tmp = gst_flv_mux_create_number_script_value ("audiocodecid",
           cpad->audio_codec);
+      script_tag = gst_buffer_append (script_tag, tmp);
+      tags_written++;
+
+      GST_DEBUG_OBJECT (mux, "putting audiodatarate %u KB/s in the metadata",
+          cpad->bitrate / 1024);
+      tmp = gst_flv_mux_create_number_script_value ("audiodatarate",
+          cpad->bitrate / 1024);
       script_tag = gst_buffer_append (script_tag, tmp);
       tags_written++;
     }
