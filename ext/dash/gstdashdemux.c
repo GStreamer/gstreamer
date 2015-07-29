@@ -313,8 +313,8 @@ gst_dash_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
   GstDashDemux *self = GST_DASH_DEMUX (demux);
   GDateTime *now = gst_dash_demux_get_server_now_utc (self);
   GDateTime *mstart =
-      gst_date_time_to_g_date_time (self->client->
-      mpd_node->availabilityStartTime);
+      gst_date_time_to_g_date_time (self->client->mpd_node->
+      availabilityStartTime);
   GTimeSpan stream_now;
 
   stream_now = g_date_time_difference (now, mstart);
@@ -611,9 +611,9 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
         active_stream->cur_adapt_set->RepresentationBase &&
         active_stream->cur_adapt_set->RepresentationBase->ContentProtection) {
       GST_DEBUG_OBJECT (demux, "Adding ContentProtection events to source pad");
-      g_list_foreach (active_stream->cur_adapt_set->
-          RepresentationBase->ContentProtection,
-          gst_dash_demux_send_content_protection_event, stream);
+      g_list_foreach (active_stream->cur_adapt_set->RepresentationBase->
+          ContentProtection, gst_dash_demux_send_content_protection_event,
+          stream);
     }
 
     gst_isoff_sidx_parser_init (&stream->sidx_parser);
@@ -1039,24 +1039,43 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
   return GST_FLOW_EOS;
 }
 
+static gint
+gst_dash_demux_index_entry_search (GstSidxBoxEntry * entry, GstClockTime * ts,
+    gpointer user_data)
+{
+  GstClockTime entry_ts = entry->pts + entry->duration;
+  if (entry_ts < *ts)
+    return -1;
+  else if (entry->pts > *ts)
+    return 1;
+  else
+    return 0;
+}
+
 static void
 gst_dash_demux_stream_sidx_seek (GstDashDemuxStream * dashstream,
     GstClockTime ts)
 {
   GstSidxBox *sidx = SIDX (dashstream);
-  gint i;
+  GstSidxBoxEntry *entry;
+  gint idx = sidx->entries_count;
 
-  /* TODO optimize to a binary search */
-  for (i = 0; i < sidx->entries_count; i++) {
-    if (sidx->entries[i].pts + sidx->entries[i].duration >= ts)
-      break;
-  }
-  sidx->entry_index = i;
-  dashstream->sidx_index = i;
-  if (i < sidx->entries_count)
-    dashstream->sidx_current_remaining = sidx->entries[i].size;
-  else
+  /* check whether ts is already past the last element or not */
+  if (sidx->entries[idx - 1].pts + sidx->entries[idx - 1].duration < ts) {
     dashstream->sidx_current_remaining = 0;
+  } else {
+    entry =
+        gst_util_array_binary_search (sidx->entries, sidx->entries_count,
+        sizeof (GstSidxBoxEntry),
+        (GCompareDataFunc) gst_dash_demux_index_entry_search,
+        GST_SEARCH_MODE_BEFORE, &ts, NULL);
+
+    idx = entry - sidx->entries;
+    dashstream->sidx_current_remaining = sidx->entries[idx].size;
+  }
+
+  sidx->entry_index = idx;
+  dashstream->sidx_index = idx;
 }
 
 static GstFlowReturn
