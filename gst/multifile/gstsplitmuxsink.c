@@ -1158,6 +1158,12 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
           gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
           (splitmux->muxer), templ->name_template);
     }
+    if (mux_template == NULL) {
+      /* Fallback to find sink pad templates named 'sink_%d' (mpegtsmux) */
+      mux_template =
+          gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
+          (splitmux->muxer), "sink_%d");
+    }
   }
 
   res = gst_element_request_pad (splitmux->muxer, mux_template, name, caps);
