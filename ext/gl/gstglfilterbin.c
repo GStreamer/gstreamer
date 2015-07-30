@@ -111,7 +111,6 @@ gst_gl_filter_bin_class_init (GstGLFilterBinClass * klass)
 static void
 gst_gl_filter_bin_init (GstGLFilterBin * self)
 {
-  gboolean res = TRUE;
   GstPad *pad;
 
   self->upload = gst_element_factory_make ("glupload", NULL);
@@ -119,19 +118,16 @@ gst_gl_filter_bin_init (GstGLFilterBin * self)
   self->out_convert = gst_element_factory_make ("glcolorconvert", NULL);
   self->download = gst_element_factory_make ("gldownload", NULL);
 
-  res &= gst_bin_add (GST_BIN (self), self->upload);
-  res &= gst_bin_add (GST_BIN (self), self->in_convert);
-  res &= gst_bin_add (GST_BIN (self), self->out_convert);
-  res &= gst_bin_add (GST_BIN (self), self->download);
+  gst_bin_add (GST_BIN (self), self->upload);
+  gst_bin_add (GST_BIN (self), self->in_convert);
+  gst_bin_add (GST_BIN (self), self->out_convert);
+  gst_bin_add (GST_BIN (self), self->download);
 
-  res &= gst_element_link_pads (self->upload, "src", self->in_convert, "sink");
-  res &=
-      gst_element_link_pads (self->out_convert, "src", self->download, "sink");
+  gst_element_link_pads (self->upload, "src", self->in_convert, "sink");
+  gst_element_link_pads (self->out_convert, "src", self->download, "sink");
 
   pad = gst_element_get_static_pad (self->download, "src");
-  if (!pad) {
-    res = FALSE;
-  } else {
+  if (pad) {
     GST_DEBUG_OBJECT (self, "setting target src pad %" GST_PTR_FORMAT, pad);
     self->srcpad = gst_ghost_pad_new ("src", pad);
     gst_element_add_pad (GST_ELEMENT_CAST (self), self->srcpad);
@@ -139,9 +135,7 @@ gst_gl_filter_bin_init (GstGLFilterBin * self)
   }
 
   pad = gst_element_get_static_pad (self->upload, "sink");
-  if (!pad) {
-    res = FALSE;
-  } else {
+  if (pad) {
     GST_DEBUG_OBJECT (self, "setting target sink pad %" GST_PTR_FORMAT, pad);
     self->sinkpad = gst_ghost_pad_new ("sink", pad);
     gst_element_add_pad (GST_ELEMENT_CAST (self), self->sinkpad);
