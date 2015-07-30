@@ -1526,7 +1526,7 @@ update_position_label (GtkLabel * label, guint64 seconds)
   seconds -= mins * 60;
 
   if (hrs)
-    data = g_strdup_printf ("%02d:%02d", hrs, mins);
+    data = g_strdup_printf ("%d:%02d:%02ld", hrs, mins, seconds);
   else
     data = g_strdup_printf ("%02d:%02ld", mins, seconds);
 
