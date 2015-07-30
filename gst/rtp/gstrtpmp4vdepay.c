@@ -173,7 +173,6 @@ gst_rtp_mp4v_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
   pbuf = gst_rtp_buffer_get_payload_buffer (rtp);
   marker = gst_rtp_buffer_get_marker (rtp);
-  gst_rtp_buffer_unmap (rtp);
 
   gst_adapter_push (rtpmp4vdepay->adapter, pbuf);
 
