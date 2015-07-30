@@ -74,10 +74,10 @@ typedef struct
   GtkWidget *toolbar;
   GtkWidget *toolbar_overlay;
   GtkWidget *media_info_dialog;
-  GtkLabel  *title_label;
-  GtkLabel  *elapshed_label;
-  GtkLabel  *remain_label;
-  GtkLabel  *rate_label;
+  GtkLabel *title_label;
+  GtkLabel *elapshed_label;
+  GtkLabel *remain_label;
+  GtkLabel *rate_label;
   GdkCursor *default_cursor;
   gboolean playing;
   gboolean loop;
@@ -208,7 +208,7 @@ gtk_play_set_rate (GtkPlay * play, gdouble step)
 }
 
 static inline void
-seekbar_add_delta (GtkPlay *play, gint delta_sec)
+seekbar_add_delta (GtkPlay * play, gint delta_sec)
 {
   gdouble value = gtk_range_get_value (GTK_RANGE (play->seekbar));
   gtk_range_set_value (GTK_RANGE (play->seekbar), value + delta_sec);
@@ -222,7 +222,7 @@ key_press_event_cb (GtkWidget * widget, GdkEventKey * event, gpointer data)
 
   if (event->state != 0 &&
       ((event->state & GDK_CONTROL_MASK) || (event->state & GDK_MOD1_MASK) ||
-       (event->state & GDK_MOD3_MASK) || (event->state & GDK_MOD4_MASK)))
+          (event->state & GDK_MOD3_MASK) || (event->state & GDK_MOD4_MASK)))
     return FALSE;
 
   if (event->type != GDK_KEY_PRESS)
@@ -230,83 +230,83 @@ key_press_event_cb (GtkWidget * widget, GdkEventKey * event, gpointer data)
 
   switch (event->keyval) {
     case GDK_KEY_KP_Right:
-    case GDK_KEY_Right: {
+    case GDK_KEY_Right:{
       /* seek forward 10 seconds */
       seekbar_add_delta (play, 10);
       break;
     }
     case GDK_KEY_KP_Left:
-    case GDK_KEY_Left: {
+    case GDK_KEY_Left:{
       /* seek backward 10 seconds */
       seekbar_add_delta (play, -10);
       break;
     }
     case GDK_KEY_KP_Up:
-    case GDK_KEY_Up: {
+    case GDK_KEY_Up:{
       /* seek forward 1 minute */
       seekbar_add_delta (play, 60);
       break;
     }
     case GDK_KEY_KP_Down:
-    case GDK_KEY_Down: {
+    case GDK_KEY_Down:{
       /* seek backward 1 minute */
       seekbar_add_delta (play, -60);
       break;
     }
     case GDK_KEY_KP_Page_Up:
-    case GDK_KEY_Page_Up: {
+    case GDK_KEY_Page_Up:{
       /* Seek forward 10 minutes */
       seekbar_add_delta (play, 600);
       break;
     }
     case GDK_KEY_KP_Page_Down:
-    case GDK_KEY_Page_Down: {
+    case GDK_KEY_Page_Down:{
       /* Seek backward 10 minutes */
       seekbar_add_delta (play, -600);
       break;
     }
-    case GDK_KEY_bracketleft: {
+    case GDK_KEY_bracketleft:{
       /* Decrease current playback speed by 10% */
       gtk_play_set_rate (play, -0.1);
       break;
     }
-    case GDK_KEY_bracketright: {
+    case GDK_KEY_bracketright:{
       /* Increase current playback speed by 10% */
       gtk_play_set_rate (play, 0.1);
       break;
       break;
     }
-    case GDK_KEY_braceleft: {
+    case GDK_KEY_braceleft:{
       /* Decrease current playback speed by 10% */
       gtk_play_set_rate (play, -1.0);
       break;
     }
-    case GDK_KEY_braceright: {
+    case GDK_KEY_braceright:{
       /* Increase current playback speed by 10% */
       gtk_play_set_rate (play, 1.0);
       break;
     }
-    case GDK_KEY_BackSpace: {
+    case GDK_KEY_BackSpace:{
       /* Reset playback speed to normal */
       gdouble val = gst_player_get_rate (play->player);
       gtk_play_set_rate (play, 1.0 - val);
       break;
     }
-    case GDK_KEY_less: {
+    case GDK_KEY_less:{
       /* Go backward in the playlist */
       if (g_list_previous (play->current_uri))
         gtk_button_clicked (GTK_BUTTON (play->prev_button));
       break;
     }
     case GDK_KEY_Return:
-    case GDK_KEY_greater: {
+    case GDK_KEY_greater:{
       /* Go forward in the playlist */
       if (g_list_next (play->current_uri))
         gtk_button_clicked (GTK_BUTTON (play->next_button));
       break;
     }
     case GDK_KEY_KP_9:
-    case GDK_KEY_9: {
+    case GDK_KEY_9:{
       /* Increase volume */
       gdouble volume = gst_player_get_volume (play->player);
       gtk_scale_button_set_value (GTK_SCALE_BUTTON (play->volume_button),
@@ -314,20 +314,20 @@ key_press_event_cb (GtkWidget * widget, GdkEventKey * event, gpointer data)
       break;
     }
     case GDK_KEY_KP_0:
-    case GDK_KEY_0: {
+    case GDK_KEY_0:{
       /* Decrease volume */
       gdouble volume = gst_player_get_volume (play->player);
       gtk_scale_button_set_value (GTK_SCALE_BUTTON (play->volume_button),
           volume * 0.9);
       break;
     }
-    case GDK_KEY_m: {
+    case GDK_KEY_m:{
       /* Mute sound */
       gboolean mute = gst_player_get_mute (play->player);
       gst_player_set_mute (play->player, !mute);
       break;
     }
-    case GDK_KEY_f: {
+    case GDK_KEY_f:{
       /* Toggle fullscreen */
       GtkToggleButton *fs = GTK_TOGGLE_BUTTON (play->fullscreen_button);
       gboolean active = !gtk_toggle_button_get_active (fs);
@@ -779,7 +779,7 @@ media_info_dialog (GtkPlay * play, GstPlayerMediaInfo * media_info)
     return;
 
   play->media_info_dialog =
-    (GtkWidget *) gtk_builder_get_object (dialog_ui, "media_info_dialog");
+      (GtkWidget *) gtk_builder_get_object (dialog_ui, "media_info_dialog");
   gtk_window_set_transient_for (GTK_WINDOW (play->media_info_dialog),
       GTK_WINDOW (play));
 
@@ -796,7 +796,7 @@ media_info_dialog (GtkPlay * play, GstPlayerMediaInfo * media_info)
 
   g_signal_connect (view, "realize",
       G_CALLBACK (gtk_tree_view_expand_all), NULL);
-  
+
   gtk_widget_set_size_request (play->media_info_dialog, 550, 450);
 
   gtk_widget_show_all (play->media_info_dialog);
@@ -887,7 +887,8 @@ seekbar_value_changed_cb (GtkRange * range, GtkPlay * play)
 }
 
 G_MODULE_EXPORT void
-volume_button_value_changed_cb (GtkScaleButton * button, gdouble value, GtkPlay * play)
+volume_button_value_changed_cb (GtkScaleButton * button, gdouble value,
+    GtkPlay * play)
 {
   gst_player_set_volume (play->player, value);
 }
@@ -1282,7 +1283,8 @@ mouse_button_pressed_cb (GtkWidget * unused, GdkEventButton * event,
 }
 
 static gboolean
-video_area_leave_notify_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
+video_area_leave_notify_cb (GtkWidget * widget, GdkEvent * event,
+    GtkPlay * play)
 {
   start_toolbar_hide_timer (play);
 
@@ -1290,7 +1292,8 @@ video_area_leave_notify_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play
 }
 
 static gboolean
-video_area_toolbar_show_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
+video_area_toolbar_show_cb (GtkWidget * widget, GdkEvent * event,
+    GtkPlay * play)
 {
   toolbar_show (play);
 
@@ -1300,7 +1303,8 @@ video_area_toolbar_show_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play
 }
 
 static gboolean
-overlay_leave_notify_event_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
+overlay_leave_notify_event_cb (GtkWidget * widget, GdkEvent * event,
+    GtkPlay * play)
 {
   start_toolbar_hide_timer (play);
 
@@ -1308,7 +1312,8 @@ overlay_leave_notify_event_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * p
 }
 
 static gboolean
-overlay_enter_notify_event_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
+overlay_enter_notify_event_cb (GtkWidget * widget, GdkEvent * event,
+    GtkPlay * play)
 {
   toolbar_show (play);
 
@@ -1316,7 +1321,7 @@ overlay_enter_notify_event_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * p
 }
 
 static void
-apply_css (GtkWidget *widget, GtkStyleProvider *provider)
+apply_css (GtkWidget * widget, GtkStyleProvider * provider)
 {
   gtk_style_context_add_provider (gtk_widget_get_style_context (widget),
       provider, G_MAXUINT);
@@ -1329,7 +1334,7 @@ apply_css (GtkWidget *widget, GtkStyleProvider *provider)
 static void
 gtk_widget_apply_css (GtkWidget * widget, const gchar * filename)
 {
-  GBytes  *bytes;
+  GBytes *bytes;
   gsize data_size;
   const guint8 *data;
   GError *err = NULL;
@@ -1346,7 +1351,7 @@ gtk_widget_apply_css (GtkWidget * widget, const gchar * filename)
   }
   data = g_bytes_get_data (bytes, &data_size);
   gtk_css_provider_load_from_data (GTK_CSS_PROVIDER (provider),
-      (gchar *)data, data_size, NULL);
+      (gchar *) data, data_size, NULL);
   g_bytes_unref (bytes);
 
   apply_css (widget, provider);
@@ -1360,7 +1365,7 @@ get_child_position (GtkOverlay * overlay, GtkWidget * widget,
   GtkWidget *child;
   GtkAllocation main_alloc;
   gint x, y;
-  GtkWidget * relative = play->video_area;
+  GtkWidget *relative = play->video_area;
 
   child = gtk_bin_get_child (GTK_BIN (overlay));
   gtk_widget_translate_coordinates (relative, child, 0, 0, &x, &y);
@@ -1500,7 +1505,7 @@ create_ui (GtkPlay * play)
   /* check if we need to enable fullscreen */
   if (play->fullscreen)
     gtk_toggle_button_set_active
-      (GTK_TOGGLE_BUTTON (play->fullscreen_button), TRUE);
+        (GTK_TOGGLE_BUTTON (play->fullscreen_button), TRUE);
 
   /* enable visualization (by default laybin uses goom) */
   /* if visualization is enabled then use the first element */
@@ -1632,6 +1637,7 @@ gtk_play_get_cover_image (GstPlayerMediaInfo * media_info)
 
   return pixbuf;
 }
+
 static void
 media_info_updated_cb (GstPlayer * player, GstPlayerMediaInfo * media_info,
     GtkPlay * play)
@@ -1644,15 +1650,16 @@ media_info_updated_cb (GstPlayer * player, GstPlayerMediaInfo * media_info,
   title = gst_player_media_info_get_title (media_info);
 
   if (!title) {
-    filename = g_filename_from_uri(
-        gst_player_media_info_get_uri (media_info), NULL, NULL);
+    filename =
+        g_filename_from_uri (gst_player_media_info_get_uri (media_info), NULL,
+        NULL);
     basename = g_path_get_basename (filename);
   }
 
   gtk_label_set_label (play->title_label, title ? title : basename);
   set_title (play, title ? title : filename);
-  g_free(basename);
-  g_free(filename);
+  g_free (basename);
+  g_free (filename);
 
   pixbuf = gtk_play_get_cover_image (media_info);
 
