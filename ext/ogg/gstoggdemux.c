@@ -2777,6 +2777,7 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
   if (!ogg->pullmode) {
     if (ogg->building_chain == chain)
       ogg->building_chain = NULL;
+    ogg->current_chain = NULL;
     gst_ogg_chain_free (chain);
   }
 
@@ -4920,6 +4921,8 @@ gst_ogg_demux_clear_chains (GstOggDemux * ogg)
     gst_ogg_chain_free (chain);
   }
   ogg->chains = g_array_set_size (ogg->chains, 0);
+  ogg->current_chain = NULL;
+  ogg->building_chain = NULL;
   GST_CHAIN_UNLOCK (ogg);
 }
 
