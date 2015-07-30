@@ -353,6 +353,7 @@ _sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
           TEST_VIDEO_FPS_N));
   gst_buffer_unmap (buffer, &map);
+  gst_buffer_unref (buffer);
   buffer_count++;
 
   have_data = TRUE;
