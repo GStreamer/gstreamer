@@ -59,10 +59,10 @@ G_BEGIN_DECLS
  *  An example would be notifications about state changes or receiving/sending
  *  of events.
  * @GST_LEVEL_LOG: Log messages are messages that are very common but might be
- *  useful to know. As a rule of thumb a pipeline that is iterating as expected
- *  should never output anything else but LOG messages. Use this log level to
- *  log recurring information in chain functions and loop functions, for
- *  example.
+ *  useful to know. As a rule of thumb a pipeline that is running as expected
+ *  should never output anything else but LOG messages whilst processing data.
+ *  Use this log level to log recurring information in chain functions and
+ *  loop functions, for example.
  * @GST_LEVEL_TRACE: Tracing-related messages.
  *  Examples for this are referencing/dereferencing of objects.
  * @GST_LEVEL_MEMDUMP: memory dump messages are used to log (small) chunks of
