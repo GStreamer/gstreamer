@@ -303,6 +303,7 @@ compare_streams (GstMediaDescriptor * ref, StreamNode * rstream,
       return 0;
     }
 
+    /* We ignore the return value on purpose as this is not critical */
     compare_tags (ref, rstream, cstream);
 
     return 1;
