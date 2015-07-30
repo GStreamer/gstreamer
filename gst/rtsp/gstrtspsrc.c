@@ -2182,7 +2182,7 @@ gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media)
          * in the caps... and thus fail to create valid RTP caps
          */
         for (j = 0; j < G_N_ELEMENTS (reserved_keys); j++) {
-          if (g_ascii_strcasecmp (reserved_keys[i], key) == 0) {
+          if (g_ascii_strcasecmp (reserved_keys[j], key) == 0) {
             key = "";
             break;
           }
