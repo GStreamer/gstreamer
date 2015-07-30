@@ -397,6 +397,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   GstPadTemplate *templ = NULL;
   GstStreamFlags stream_flags;
   GstCaps *caps = NULL;
+  GstTagList *cached_taglist;
   gchar *padname = NULL;
   GstFlowReturn ret;
   guint32 id, riff_fourcc = 0;
@@ -1127,6 +1128,13 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 
     return ret;
   }
+
+  /* check for a cached track taglist  */
+  cached_taglist =
+      (GstTagList *) g_hash_table_lookup (demux->common.cached_track_taglists,
+      GUINT_TO_POINTER (context->uid));
+  if (cached_taglist)
+    gst_tag_list_insert (context->tags, cached_taglist, GST_TAG_MERGE_APPEND);
 
   /* now create the GStreamer connectivity */
   switch (context->type) {

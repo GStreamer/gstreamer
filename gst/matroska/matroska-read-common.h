@@ -102,6 +102,10 @@ typedef struct _GstMatroskaReadCommon {
 
   /* push based mode usual suspects */
   GstAdapter              *adapter;
+
+  /* cache for track tags that forward-reference their tracks */
+  GHashTable *cached_track_taglists ;
+ 
 } GstMatroskaReadCommon;
 
 GstFlowReturn gst_matroska_decode_content_encodings (GArray * encodings);
