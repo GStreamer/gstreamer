@@ -127,6 +127,7 @@ static gboolean gst_ffmpegdemux_sink_activate (GstPad * sinkpad,
     GstObject * parent);
 static gboolean gst_ffmpegdemux_sink_activate_mode (GstPad * sinkpad,
     GstObject * parent, GstPadMode mode, gboolean active);
+static GstTagList *gst_ffmpeg_metadata_to_tag_list (AVDictionary * metadata);
 
 #if 0
 static gboolean
@@ -1028,7 +1029,10 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
 
   /* metadata */
   if ((codec = gst_ffmpeg_get_codecid_longname (ctx->codec_id))) {
-    stream->tags = gst_tag_list_new_empty ();
+    stream->tags = gst_ffmpeg_metadata_to_tag_list (avstream->metadata);
+
+    if (stream->tags == NULL)
+      stream->tags = gst_tag_list_new_empty ();
 
     gst_tag_list_add (stream->tags, GST_TAG_MERGE_REPLACE,
         (ctx->codec_type == AVMEDIA_TYPE_VIDEO) ?
@@ -1055,12 +1059,8 @@ unknown_caps:
   }
 }
 
-#if 0
-    /* Re-enable once converted to new AVMetaData API
-     * See #566605
-     */
 static gchar *
-my_safe_copy (gchar * input)
+safe_utf8_copy (gchar * input)
 {
   gchar *output;
 
@@ -1074,62 +1074,128 @@ my_safe_copy (gchar * input)
   return output;
 }
 
+/* g_hash_table_insert requires non-const arguments, so
+ * we need to cast const strings to void * */
+#define ADD_TAG_MAPPING(h, k, g) \
+    g_hash_table_insert ((h), (void *) (k), (void *) (g));
+
 static GstTagList *
-gst_ffmpegdemux_read_tags (GstFFMpegDemux * demux)
+gst_ffmpeg_metadata_to_tag_list (AVDictionary * metadata)
 {
-  GstTagList *tlist;
-  gboolean hastag = FALSE;
+  GHashTable *tagmap = NULL;
+  AVDictionaryEntry *tag = NULL;
+  GstTagList *list;
 
-  tlist = gst_tag_list_new ();
+  if (g_once_init_enter (&tagmap)) {
+    GHashTable *tmp = g_hash_table_new (g_str_hash, g_str_equal);
 
-  if (*demux->context->title) {
-    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_TITLE, my_safe_copy (demux->context->title), NULL);
-    hastag = TRUE;
-  }
-  if (*demux->context->author) {
-    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_ARTIST, my_safe_copy (demux->context->author), NULL);
-    hastag = TRUE;
-  }
-  if (*demux->context->copyright) {
-    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_COPYRIGHT, my_safe_copy (demux->context->copyright), NULL);
-    hastag = TRUE;
-  }
-  if (*demux->context->comment) {
-    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_COMMENT, my_safe_copy (demux->context->comment), NULL);
-    hastag = TRUE;
-  }
-  if (*demux->context->album) {
-    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_ALBUM, my_safe_copy (demux->context->album), NULL);
-    hastag = TRUE;
-  }
-  if (demux->context->track) {
-    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_TRACK_NUMBER, demux->context->track, NULL);
-    hastag = TRUE;
-  }
-  if (*demux->context->genre) {
-    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_GENRE, my_safe_copy (demux->context->genre), NULL);
-    hastag = TRUE;
-  }
-  if (demux->context->year) {
-    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_DATE, g_date_new_dmy (1, 1, demux->context->year), NULL);
-    hastag = TRUE;
+    /* This is a list of standard tag keys taken from the avformat.h
+     * header, without handling any variants. */
+    ADD_TAG_MAPPING (tmp, "album", GST_TAG_ALBUM);
+    ADD_TAG_MAPPING (tmp, "album_artist", GST_TAG_ALBUM_ARTIST);
+    ADD_TAG_MAPPING (tmp, "artist", GST_TAG_ALBUM_ARTIST);
+    ADD_TAG_MAPPING (tmp, "comment", GST_TAG_COMMENT);
+    ADD_TAG_MAPPING (tmp, "composer", GST_TAG_COMPOSER);
+    ADD_TAG_MAPPING (tmp, "copyright", GST_TAG_COPYRIGHT);
+    /* Need to convert ISO 8601 to GstDateTime: */
+    ADD_TAG_MAPPING (tmp, "creation_time", GST_TAG_DATE_TIME);
+    /* Need to convert ISO 8601 to GDateTime: */
+    ADD_TAG_MAPPING (tmp, "date", GST_TAG_DATE_TIME);
+    ADD_TAG_MAPPING (tmp, "disc", GST_TAG_ALBUM_VOLUME_NUMBER);
+    ADD_TAG_MAPPING (tmp, "encoder", GST_TAG_ENCODER);
+    ADD_TAG_MAPPING (tmp, "encoded_by", GST_TAG_ENCODED_BY);
+    /* ADD_TAG_MAPPING (tmp, "filename", ); -- No mapping */
+    ADD_TAG_MAPPING (tmp, "genre", GST_TAG_GENRE);
+    ADD_TAG_MAPPING (tmp, "language", GST_TAG_LANGUAGE_CODE);
+    ADD_TAG_MAPPING (tmp, "performer", GST_TAG_PERFORMER);
+    ADD_TAG_MAPPING (tmp, "publisher", GST_TAG_PUBLISHER);
+    /* ADD_TAG_MAPPING(tmp, "service_name", ); -- No mapping */
+    /* ADD_TAG_MAPPING(tmp, "service_provider", ); -- No mapping */
+    ADD_TAG_MAPPING (tmp, "title", GST_TAG_TITLE);
+    ADD_TAG_MAPPING (tmp, "track", GST_TAG_TRACK_NUMBER);
+
+    g_once_init_leave (&tagmap, tmp);
   }
 
-  if (!hastag) {
-    gst_tag_list_unref (tlist);
-    tlist = NULL;
+  list = gst_tag_list_new_empty ();
+
+  while ((tag = av_dict_get (metadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
+    const gchar *gsttag = g_hash_table_lookup (tagmap, tag->key);
+    GType t;
+    GST_LOG ("mapping tag %s=%s\n", tag->key, tag->value);
+    if (gsttag == NULL) {
+      GST_LOG ("Ignoring unknown metadata tag %s", tag->key);
+      continue;
+    }
+    /* Special case, track and disc numbers may be x/n in libav, split
+     * them */
+    if (g_str_equal (gsttag, GST_TAG_TRACK_NUMBER)) {
+      guint track, trackcount;
+      if (sscanf (tag->value, "%u/%u", &track, &trackcount) == 2) {
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            gsttag, track, GST_TAG_TRACK_COUNT, trackcount, NULL);
+        continue;
+      }
+      /* Fall through and handle as a single uint below */
+    } else if (g_str_equal (gsttag, GST_TAG_ALBUM_VOLUME_NUMBER)) {
+      guint disc, disc_count;
+      if (sscanf (tag->value, "%u/%u", &disc, &disc_count) == 2) {
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            gsttag, disc, GST_TAG_ALBUM_VOLUME_COUNT, disc_count, NULL);
+        continue;
+      }
+      /* Fall through and handle as a single uint below */
+    }
+
+    t = gst_tag_get_type (gsttag);
+    if (t == G_TYPE_STRING) {
+      gchar *s = safe_utf8_copy (tag->value);
+      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, gsttag, s, NULL);
+      g_free (s);
+    } else if (t == G_TYPE_UINT || t == G_TYPE_INT) {
+      gchar *end;
+      gint v = strtol (tag->value, &end, 10);
+      if (end == tag->value)
+        continue;               /* Failed to parse */
+      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, gsttag, v, NULL);
+    } else if (t == G_TYPE_DATE) {
+      guint year, month, day;
+      GDate *date = NULL;
+      if (sscanf (tag->value, "%04u-%02u-%02u", &year, &month, &day) == 3) {
+        date = g_date_new_dmy (day, month, year);
+      } else {
+        /* Try interpreting just as a year */
+        gchar *end;
+
+        year = strtol (tag->value, &end, 10);
+        if (end != tag->value)
+          date = g_date_new_dmy (1, 1, year);
+      }
+      if (date) {
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, gsttag, date, NULL);
+        g_date_free (date);
+      }
+    } else if (t == GST_TYPE_DATE_TIME) {
+      gchar *s = safe_utf8_copy (tag->value);
+      GstDateTime *d = gst_date_time_new_from_iso8601_string (s);
+
+      g_free (s);
+      if (d) {
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, gsttag, d, NULL);
+        gst_date_time_unref (d);
+      }
+    } else {
+      GST_FIXME ("Unhandled tag %s", gsttag);
+    }
   }
-  return tlist;
+
+  if (gst_tag_list_is_empty (list)) {
+    gst_tag_list_unref (list);
+    return NULL;
+  }
+
+  return list;
 }
-#endif
 
 static gboolean
 gst_ffmpegdemux_open (GstFFMpegDemux * demux)
@@ -1138,12 +1204,7 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   GstFFMpegDemuxClass *oclass =
       (GstFFMpegDemuxClass *) G_OBJECT_GET_CLASS (demux);
   gint res, n_streams, i;
-#if 0
-  /* Re-enable once converted to new AVMetaData API
-   * See #566605
-   */
   GstTagList *tags;
-#endif
   GstEvent *event;
   GList *cached_events;
 
@@ -1224,28 +1285,31 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
     cached_events = g_list_delete_link (cached_events, cached_events);
   }
 
-#if 0
-  /* Re-enable once converted to new AVMetaData API
-   * See #566605
-   */
   /* grab the global tags */
-  tags = gst_ffmpegdemux_read_tags (demux);
+  tags = gst_ffmpeg_metadata_to_tag_list (demux->context->metadata);
   if (tags) {
     GST_INFO_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, tags);
-    gst_element_found_tags (GST_ELEMENT (demux), tags);
   }
-#endif
 
   /* now handle the stream tags */
   for (i = 0; i < n_streams; i++) {
     GstFFStream *stream;
 
     stream = gst_ffmpegdemux_get_stream (demux, demux->context->streams[i]);
-    if (stream->tags != NULL && stream->pad != NULL) {
-      GST_INFO_OBJECT (stream->pad, "stream tags: %" GST_PTR_FORMAT,
-          stream->tags);
-      gst_pad_push_event (stream->pad,
-          gst_event_new_tag (gst_tag_list_ref (stream->tags)));
+    if (stream->pad != NULL) {
+
+      /* Global tags */
+      if (tags)
+        gst_pad_push_event (stream->pad,
+            gst_event_new_tag (gst_tag_list_ref (tags)));
+
+      /* Per-stream tags */
+      if (stream->tags != NULL) {
+        GST_INFO_OBJECT (stream->pad, "stream tags: %" GST_PTR_FORMAT,
+            stream->tags);
+        gst_pad_push_event (stream->pad,
+            gst_event_new_tag (gst_tag_list_ref (stream->tags)));
+      }
     }
   }
 
