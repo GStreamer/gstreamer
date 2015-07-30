@@ -157,10 +157,11 @@ static void
 gst_av_sample_video_sink_finalize (GObject * object)
 {
   GstAVSampleVideoSink *av_sink = GST_AV_SAMPLE_VIDEO_SINK (object);
+  __block AVSampleBufferDisplayLayer *layer = av_sink->layer;
 
-  if (av_sink->layer) {
+  if (layer) {
     dispatch_async (dispatch_get_main_queue (), ^{
-      [av_sink->layer release];
+      [layer release];
     });
   }
 
