@@ -1,0 +1,11 @@
+- check supported encoding formats (H.264 etc.), don't assume H.264
+
+- check performance (time taken) of first cuInit()
+
+- provide buffer pool
+
+- more formats
+
+- renegotiation
+
+- support outputting of AVC as well as byte-stream, negotiate automatically

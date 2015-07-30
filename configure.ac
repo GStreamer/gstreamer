@@ -1726,6 +1726,108 @@ AC_SUBST(LIBUDEV_LIBS)
 AC_SUBST(LIBUSB_CFLAGS)
 AC_SUBST(LIBUSB_LIBS)
 
+dnl *** NVENC ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_NVENC, true)
+AG_GST_CHECK_FEATURE(NVENC, [NVIDIA Encode API], nvenc, [
+  AG_GST_PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-1.0)
+  AG_GST_PKG_CHECK_MODULES(GST_PBUTILS, gstreamer-pbutils-1.0)
+  AC_ARG_WITH([cuda-prefix],
+          AS_HELP_STRING([--with-cuda-prefix],
+          [Use the provided prefix for detecting the cuda installation]),
+          [AS_IF([test "x$with_cuda_prefix" != "x"],
+                 [CUDA_PREFIX="$with_cuda_prefix"])],
+          [CUDA_PREFIX=""])
+
+  HAVE_CUDA="yes"
+  if test "x$CUDA_PREFIX" != "x"; then
+    dnl only override if not already set
+    if test "x$CUDA_CFLAGS" = "x" -a "x$CUDA_LIBS" = "x"; then
+      dnl this is an educated guess, user can always override these
+      CUDA_CFLAGS="-I$CUDA_PREFIX/include"
+      CUDA_LIBS="-L$CUDA_PREFIX/lib -L$CUDA_PREFIX/lib64 -L$CUDA_PREFIX/lib/stubs -L$CUDA_PREFIX/lib64/stubs -lcuda -lcudart"
+    fi
+  else
+    PKG_CHECK_MODULES([CUDA], [cuda-7.5 cudart-7.5],, [
+      PKG_CHECK_MODULES([CUDA], [cuda-7.0 cudart-7.0],, [
+        PKG_CHECK_MODULES([CUDA], [cuda-6.5 cudart-6.5],, [
+          AC_MSG_WARN([Could not find cuda headers/libraries])])])])
+  fi
+
+  HAVE_CUDA_H=no
+  HAVE_CUDART_H=no
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CUDA_CFLAGS $save_CPPFLAGS "
+  AC_CHECK_HEADER([cuda.h], [HAVE_CUDA_H=yes],
+      AC_MSG_WARN([Could not find cuda.h]))
+  AC_CHECK_HEADER([cuda_runtime_api.h], [HAVE_CUDART_H=yes],
+      AC_MSG_WARN([Could not find cuda_runtime_api.h]))
+  CPPFLAGS=$save_CPPFLAGS
+
+  dnl libcuda and libcudart libraries
+  save_LIBS="$LIBS"
+  LIBS="$CUDA_LIBS $save_LIBS"
+  HAVE_CUDART_LIB="no"
+  AC_CHECK_LIB(cudart,cudaGetErrorString,[HAVE_CUDART_LIB="yes"], [
+      AC_MSG_WARN([Could not find cudart library])])
+  HAVE_CUDA_LIB="no"
+  AC_CHECK_LIB(cuda,cuInit,[HAVE_CUDA_LIB="yes"], [
+      AC_MSG_WARN([Could not find cuda library])])
+  LIBS="$save_LIBS"
+
+  dnl nvEncodeAPI.h header
+  HAVE_NVENCODEAPI_H=no
+  AC_ARG_VAR(NVENCODE_CFLAGS, [C compiler flags for NvEncodeAPI.h])
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$NVENCODE_CFLAGS $save_CPPFLAGS"
+  AC_CHECK_HEADER([nvEncodeAPI.h], [
+      AC_PREPROC_IFELSE([AC_LANG_SOURCE([[#include <nvEncodeAPI.h>
+          #if NVENCAPI_MAJOR_VERSION < 5
+          #error "Need nvEncodeAPI.h >= 5.0"
+          #endif
+          ]])], [
+          HAVE_NVENCODEAPI_H=yes
+          ], [
+          AC_MSG_WARN([nvEncodeAPI.h must be >= 5.0])
+          ])
+      ],
+      AC_MSG_WARN([Could not find nvEncodeAPI.h]))
+  AC_SUBST(NVENCODE_CFLAGS)
+  CPPFLAGS="$save_CPPFLAGS"
+
+  dnl libnvnidia-encode library
+  HAVE_NVENCODE_LIB=no
+  AC_ARG_VAR(NVENCODE_LIBS, [linker flags for nvidia-encode])
+  saved_LIBS="$LIBS"
+  LIBS="$NVENCODE_LIBS $saved_LIBS"
+  AC_CHECK_LIB(nvidia-encode, NvEncodeAPICreateInstance, [HAVE_NVENCODE_LIB="yes"],
+      AC_MSG_WARN([Could not find library nvidia-encode]))
+  NVENCODE_LIBS="$NVENCODE_LIBS -lnvidia-encode"
+  AC_SUBST(NVENCODE_LIBS)
+  LIBS="$saved_LIBS"
+
+  USE_NVENC_GST_GL=no
+  if test "x$HAVE_CUDA_H" = "xyes" \
+      -a "x$HAVE_CUDART_H" = "xyes" \
+      -a "x$HAVE_CUDA_LIB" = "xyes" \
+      -a "x$HAVE_CUDART_LIB" = "xyes" \
+      -a "x$HAVE_NVENCODEAPI_H" = "xyes" \
+      -a "x$HAVE_NVENCODE_LIB" = "xyes"; then
+    HAVE_NVENC="yes"
+    if test x"$USE_OPENGL" = x"yes"; then
+      dnl cuda-gl interop header
+      save_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$save_CPPFLAGS $CUDA_CFLAGS"
+      AC_CHECK_HEADER([cuda_gl_interop.h], [
+        USE_NVENC_GST_GL="yes"
+        AC_DEFINE(HAVE_NVENC_GST_GL, [1] , [NVENC GStreamer OpenGL support available])
+        ])
+      CPPFLAGS="$save_CPPFLAGS"
+    fi
+  else
+    HAVE_NVENC="no"
+  fi
+])
+AM_CONDITIONAL(USE_NVENC_GST_GL, test "x$USE_NVENC_GST_GL" = "xyes")
 
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !
@@ -3363,6 +3465,7 @@ sys/dshowvideosink/Makefile
 sys/dvb/Makefile
 sys/fbdev/Makefile
 sys/linsys/Makefile
+sys/nvenc/Makefile
 sys/opensles/Makefile
 sys/shm/Makefile
 sys/uvch264/Makefile

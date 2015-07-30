@@ -1,0 +1,30 @@
+This plugin is intended for use with NVIDIA hardware.  Specifically, the NVENC
+block available in recent NVIDIA GPU hardware.  This is provided by a
+libnvidia-encode library provided by NVIDIA graphic drivers.
+
+Requirements
+------------
+Cuda > 6.5
+NVENC 5.0
+
+See https://developer.nvidia.com/nvidia-video-codec-sdk for a list of
+supported GPU's.
+
+Building
+--------
+1. Retrieve the NVENC SDK
+from https://developer.nvidia.com/nvidia-video-codec-sdk
+- http://developer.download.nvidia.com/compute/nvenc/v5.0/nvenc_5.0.1_sdk.zip
+2. unzip this somewhere and retreive or note the location of the
+nvEncodeAPI.h under nvenc_api-5.0.1/Samples/common/inc/
+3. Retreive a version of cuda from
+https://developer.nvidia.com/cuda-downloads and install somewhere noting
+the installation prefix (typically /opt/cuda or /usr/local/cuda)
+4. Now that the dependencies are sorted, there are a couple of
+environment variables and/or or configure arguments that are needed to
+detect the necessary libraries/headers.
+
+More information is available from the following locations
+
+[1] - https://developer.nvidia.com/cuda-downloads
+[2] - https://developer.nvidia.com/nvidia-video-codec-sdk 
