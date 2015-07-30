@@ -1953,12 +1953,20 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
         start_time = 0;
         break;
       case GST_AGGREGATOR_START_TIME_SELECTION_FIRST:
-        start_time = GST_BUFFER_PTS (actual_buf);
-        if (start_time != -1) {
-          start_time = MAX (start_time, aggpad->segment.start);
-          start_time =
-              gst_segment_to_running_time (&aggpad->segment, GST_FORMAT_TIME,
-              start_time);
+        if (aggpad->segment.format == GST_FORMAT_TIME) {
+          start_time = GST_BUFFER_PTS (actual_buf);
+          if (start_time != -1) {
+            start_time = MAX (start_time, aggpad->segment.start);
+            start_time =
+                gst_segment_to_running_time (&aggpad->segment, GST_FORMAT_TIME,
+                start_time);
+          }
+        } else {
+          start_time = 0;
+          GST_WARNING_OBJECT (aggpad,
+              "Ignoring request of selecting the first start time "
+              "as the segment is a %s segment instead of a time segment",
+              gst_format_get_name (aggpad->segment.format));
         }
         break;
       case GST_AGGREGATOR_START_TIME_SELECTION_SET:
