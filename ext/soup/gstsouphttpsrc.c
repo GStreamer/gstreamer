@@ -472,7 +472,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->tls_database = DEFAULT_TLS_DATABASE;
   src->max_retries = DEFAULT_RETRIES;
   proxy = g_getenv ("http_proxy");
-  if (proxy && !gst_soup_http_src_set_proxy (src, proxy)) {
+  if (!gst_soup_http_src_set_proxy (src, proxy)) {
     GST_WARNING_OBJECT (src,
         "The proxy in the http_proxy env var (\"%s\") cannot be parsed.",
         proxy);
@@ -570,11 +570,6 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
       const gchar *proxy;
 
       proxy = g_value_get_string (value);
-
-      if (proxy == NULL) {
-        GST_WARNING ("proxy property cannot be NULL");
-        goto done;
-      }
       if (!gst_soup_http_src_set_proxy (src, proxy)) {
         GST_WARNING ("badly formatted proxy URI");
         goto done;
@@ -2039,6 +2034,10 @@ gst_soup_http_src_set_proxy (GstSoupHTTPSrc * src, const gchar * uri)
     soup_uri_free (src->proxy);
     src->proxy = NULL;
   }
+
+  if (uri == NULL || *uri == '\0')
+    return TRUE;
+
   if (g_str_has_prefix (uri, "http://")) {
     src->proxy = soup_uri_new (uri);
   } else {
@@ -2048,7 +2047,7 @@ gst_soup_http_src_set_proxy (GstSoupHTTPSrc * src, const gchar * uri)
     g_free (new_uri);
   }
 
-  return TRUE;
+  return (src->proxy != NULL);
 }
 
 static guint
