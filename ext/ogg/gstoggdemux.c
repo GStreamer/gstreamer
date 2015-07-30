@@ -4778,9 +4778,18 @@ chain_read_failed:
   }
 seek_failed:
   {
-    GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
-        ("failed to start demuxing ogg"));
-    ret = GST_FLOW_ERROR;
+    gboolean flushing;
+
+    GST_OBJECT_LOCK (pad);
+    flushing = GST_PAD_IS_FLUSHING (pad);
+    GST_OBJECT_UNLOCK (pad);
+    if (flushing) {
+      ret = GST_FLOW_FLUSHING;
+    } else {
+      GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
+          ("failed to start demuxing ogg"));
+      ret = GST_FLOW_ERROR;
+    }
     goto pause;
   }
 pause:
