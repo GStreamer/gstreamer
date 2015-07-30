@@ -487,11 +487,13 @@ invalid_buffer:
   }
 dropping:
   {
+    gst_rtp_buffer_unmap (&rtp);
     GST_WARNING_OBJECT (filter, "%d <= 100, dropping old packet", gap);
     return GST_FLOW_OK;
   }
 no_process:
   {
+    gst_rtp_buffer_unmap (&rtp);
     /* this is not fatal but should be filtered earlier */
     GST_ELEMENT_ERROR (filter, STREAM, NOT_IMPLEMENTED, (NULL),
         ("The subclass does not have a process or process_rtp_packet method"));
