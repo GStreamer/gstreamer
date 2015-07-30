@@ -1638,17 +1638,23 @@ media_info_updated_cb (GstPlayer * player, GstPlayerMediaInfo * media_info,
 {
   const gchar *title;
   GdkPixbuf *pixbuf;
+  gchar *basename = NULL;
+  gchar *filename = NULL;
 
   title = gst_player_media_info_get_title (media_info);
-  if (!title)
-    title = g_path_get_basename (gst_player_media_info_get_uri (media_info));
+
+  if (!title) {
+    filename = g_filename_from_uri(
+        gst_player_media_info_get_uri (media_info), NULL, NULL);
+    basename = g_path_get_basename (filename);
+  }
+
+  gtk_label_set_label (play->title_label, title ? title : basename);
+  set_title (play, title ? title : filename);
+  g_free(basename);
+  g_free(filename);
 
   pixbuf = gtk_play_get_cover_image (media_info);
-
-  if (title) {
-    gtk_label_set_label (play->title_label, title);
-    set_title (play, title);
-  }
 
   if (pixbuf) {
     gtk_window_set_icon (GTK_WINDOW (play), pixbuf);
