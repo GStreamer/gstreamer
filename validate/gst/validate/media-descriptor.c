@@ -20,6 +20,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <string.h>
 #include "media-descriptor.h"
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstMediaDescriptor, gst_media_descriptor,
@@ -285,12 +286,63 @@ compare_tags (GstMediaDescriptor * ref, StreamNode * rstream,
   return 1;
 }
 
+/* Workaround false warning caused by differnet file path */
+static gboolean
+stream_id_is_equal (const gchar * uri, const gchar * rid, const gchar * cid)
+{
+  gboolean is_file = g_str_has_prefix (uri, "file://");
+  GChecksum *cs;
+  const gchar *stream_id;
+
+  /* Simple case it's the same */
+  if (g_strcmp0 (rid, cid) == 0)
+    return TRUE;
+
+  /* If it's not from file, it should have been the same */
+  if (!is_file)
+    return FALSE;
+
+  /* taken from basesrc, compute the reference stream-id */
+  cs = g_checksum_new (G_CHECKSUM_SHA256);
+  g_checksum_update (cs, (const guchar *) uri, strlen (uri));
+
+  stream_id = g_checksum_get_string (cs);
+
+  /* If the reference stream_id is the URI SHA256, that means we have a single
+   * stream file (no demuxing), just assume it's the same id */
+  if (g_strcmp0 (rid, stream_id) == 0) {
+    g_checksum_free (cs);
+    return TRUE;
+  }
+
+  /* It should always be prefixed with the SHA256, otherwise it likely means
+   * that basesrc is no longer using a SHA256 checksum on the URI, and this
+   * workaround will need to be fixed */
+  if (!g_str_has_prefix (rid, stream_id)) {
+    g_checksum_free (cs);
+    return FALSE;
+  }
+  g_checksum_free (cs);
+
+  /* we strip the IDS to the delimitor, and then compare */
+  rid = strchr (rid, '/');
+  cid = strchr (cid, '/');
+
+  if (rid == NULL || cid == NULL)
+    return FALSE;
+
+  if (g_strcmp0 (rid, cid) == 0)
+    return TRUE;
+
+  return FALSE;
+}
+
 /*  Return -1 if not found 1 if OK 0 if an error occured */
 static gint
 compare_streams (GstMediaDescriptor * ref, StreamNode * rstream,
     StreamNode * cstream)
 {
-  if (g_strcmp0 (rstream->id, cstream->id) == 0) {
+  if (stream_id_is_equal (ref->filenode->uri, rstream->id, cstream->id)) {
     if (!gst_caps_is_equal (rstream->caps, cstream->caps)) {
       gchar *rcaps = gst_caps_to_string (rstream->caps),
           *ccaps = gst_caps_to_string (cstream->caps);
