@@ -70,7 +70,7 @@ deserialize_filenode (FileNode * filenode,
     else if (g_strcmp0 (names[i], "duration") == 0)
       filenode->duration = g_ascii_strtoull (values[i], NULL, 0);
     else if (g_strcmp0 (names[i], "seekable") == 0)
-      filenode->seekable = (gboolean) g_strcmp0 (values[i], "false");
+      filenode->seekable = (g_strcmp0 (values[i], "true") == 0);
   }
 }
 
