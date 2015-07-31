@@ -79,7 +79,7 @@ struct _GstTemplateMatch
   gint method;
   gboolean display;
 
-  gchar *template;
+  gchar *templ;
 
   IplImage *cvImage, *cvGray, *cvTemplateImage, *cvDistImage;
 };

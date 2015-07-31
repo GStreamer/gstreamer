@@ -140,7 +140,7 @@ gst_template_match_class_init (GstTemplateMatchClass * klass)
           "Specifies the way the template must be compared with image regions. 0=SQDIFF, 1=SQDIFF_NORMED, 2=CCOR, 3=CCOR_NORMED, 4=CCOEFF, 5=CCOEFF_NORMED.",
           0, 5, DEFAULT_METHOD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TEMPLATE,
-      g_param_spec_string ("template", "Template", "Filename of template image",
+      g_param_spec_string ("templ", "Template", "Filename of template image",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DISPLAY,
       g_param_spec_boolean ("display", "Display",
@@ -179,7 +179,7 @@ gst_template_match_init (GstTemplateMatch * filter)
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-  filter->template = NULL;
+  filter->templ = NULL;
   filter->display = TRUE;
   filter->cvTemplateImage = NULL;
   filter->cvDistImage = NULL;
@@ -243,7 +243,7 @@ gst_template_match_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, filter->method);
       break;
     case PROP_TEMPLATE:
-      g_value_set_string (value, filter->template);
+      g_value_set_string (value, filter->templ);
       break;
     case PROP_DISPLAY:
       g_value_set_boolean (value, filter->display);
@@ -298,7 +298,7 @@ gst_template_match_finalize (GObject * object)
   GstTemplateMatch *filter;
   filter = GST_TEMPLATE_MATCH (object);
 
-  g_free (filter->template);
+  g_free (filter->templ);
   if (filter->cvImage) {
     cvReleaseImageHeader (&filter->cvImage);
   }
@@ -405,12 +405,12 @@ gst_template_match_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
 
 static void
-gst_template_match_match (IplImage * input, IplImage * template,
+gst_template_match_match (IplImage * input, IplImage * templ,
     IplImage * dist_image, double *best_res, CvPoint * best_pos, int method)
 {
   double dist_min = 0, dist_max = 0;
   CvPoint min_pos, max_pos;
-  cvMatchTemplate (input, template, dist_image, method);
+  cvMatchTemplate (input, templ, dist_image, method);
   cvMinMaxLoc (dist_image, &dist_min, &dist_max, &min_pos, &max_pos, NULL);
   if ((CV_TM_SQDIFF_NORMED == method) || (CV_TM_SQDIFF == method)) {
     *best_res = dist_min;
@@ -427,28 +427,28 @@ gst_template_match_match (IplImage * input, IplImage * template,
 
 /* We take ownership of template here */
 static void
-gst_template_match_load_template (GstTemplateMatch * filter, gchar * template)
+gst_template_match_load_template (GstTemplateMatch * filter, gchar * templ)
 {
   gchar *oldTemplateFilename = NULL;
   IplImage *oldTemplateImage = NULL, *newTemplateImage = NULL, *oldDistImage =
       NULL;
 
-  if (template) {
-    newTemplateImage = cvLoadImage (template, CV_LOAD_IMAGE_COLOR);
+  if (templ) {
+    newTemplateImage = cvLoadImage (templ, CV_LOAD_IMAGE_COLOR);
     if (!newTemplateImage) {
       /* Unfortunately OpenCV doesn't seem to provide any way of finding out
          why the image load failed, so we can't be more specific than FAILED: */
       GST_ELEMENT_WARNING (filter, RESOURCE, FAILED,
           (_("OpenCV failed to load template image")),
-          ("While attempting to load template '%s'", template));
-      g_free (template);
-      template = NULL;
+          ("While attempting to load template '%s'", templ));
+      g_free (templ);
+      templ = NULL;
     }
   }
 
   GST_OBJECT_LOCK (filter);
-  oldTemplateFilename = filter->template;
-  filter->template = template;
+  oldTemplateFilename = filter->templ;
+  filter->templ = templ;
   oldTemplateImage = filter->cvTemplateImage;
   filter->cvTemplateImage = newTemplateImage;
   oldDistImage = filter->cvDistImage;
