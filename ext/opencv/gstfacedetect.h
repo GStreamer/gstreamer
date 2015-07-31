@@ -50,6 +50,7 @@
 
 #include <gst/gst.h>
 #include <opencv2/core/version.hpp>
+#include <cv.h>
 #include "gstopencvvideofilter.h"
 
 #if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
@@ -107,10 +108,10 @@ struct _GstFaceDetect
   gint updates;
 
   IplImage *cvGray;
-  CvHaarClassifierCascade *cvFaceDetect;
-  CvHaarClassifierCascade *cvNoseDetect;
-  CvHaarClassifierCascade *cvMouthDetect;
-  CvHaarClassifierCascade *cvEyesDetect;
+  cv::CascadeClassifier *cvFaceDetect;
+  cv::CascadeClassifier *cvNoseDetect;
+  cv::CascadeClassifier *cvMouthDetect;
+  cv::CascadeClassifier *cvEyesDetect;
   CvMemStorage *cvStorage;
 };
 
