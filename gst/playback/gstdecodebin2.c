@@ -2545,7 +2545,8 @@ beach:
     gst_object_unref (mqpad);
 
   if (error_details)
-    *deadend_details = g_string_free (error_details, (error_details->len == 0));
+    *deadend_details = g_string_free (error_details, (error_details->len == 0
+            || res));
   else
     *deadend_details = NULL;
 
