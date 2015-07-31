@@ -442,6 +442,8 @@ gst_dtsdec_update_streaminfo (GstDtsDec * dts)
         (guint) dts->bit_rate, NULL);
     gst_audio_decoder_merge_tags (GST_AUDIO_DECODER (dts), taglist,
         GST_TAG_MERGE_REPLACE);
+    if (taglist)
+      gst_tag_list_unref (taglist);
   }
 }
 
