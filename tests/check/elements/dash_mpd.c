@@ -1853,6 +1853,51 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentTemplate)
 
 GST_END_TEST;
 
+
+/*
+ * Test parsing Period AdaptationSet SegmentTemplate attributes with
+ * inheritance
+ */
+GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentTemplate_inherit)
+{
+  GstPeriodNode *periodNode;
+  GstAdaptationSetNode *adaptationSet;
+  GstSegmentTemplateNode *segmentTemplate;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentTemplate media=\"ParentMedia\" "
+      "                     initialization=\"ParentInitialization\">"
+      "    </SegmentTemplate>"
+      "    <AdaptationSet>"
+      "      <SegmentTemplate media=\"TestMedia\""
+      "                       index=\"TestIndex\""
+      "                       bitstreamSwitching=\"TestBitstreamSwitching\">"
+      "      </SegmentTemplate></AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
+  adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
+  segmentTemplate = adaptationSet->SegmentTemplate;
+  assert_equals_string (segmentTemplate->media, "TestMedia");
+  assert_equals_string (segmentTemplate->index, "TestIndex");
+  assert_equals_string (segmentTemplate->initialization,
+      "ParentInitialization");
+  assert_equals_string (segmentTemplate->bitstreamSwitching,
+      "TestBitstreamSwitching");
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
 /*
  * Test parsing Period AdaptationSet Representation attributes
  *
@@ -4269,6 +4314,8 @@ dash_suite (void)
       dash_mpdparser_period_adaptationSet_segmentList);
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_segmentTemplate);
+  tcase_add_test (tc_simpleMPD,
+      dash_mpdparser_period_adaptationSet_segmentTemplate_inherit);
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_representation);
   tcase_add_test (tc_simpleMPD,
