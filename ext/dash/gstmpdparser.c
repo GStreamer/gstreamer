@@ -1607,33 +1607,37 @@ gst_mpdparser_parse_segment_template_node (GstSegmentTemplateNode ** pointer,
   gst_mpdparser_free_segment_template_node (*pointer);
   *pointer = new_segment_template = g_slice_new0 (GstSegmentTemplateNode);
 
-  /* Inherit attribute values from parent */
-  if (parent) {
-    new_segment_template->media = xmlMemStrdup (parent->media);
-    new_segment_template->index = xmlMemStrdup (parent->index);
-    new_segment_template->initialization =
-        xmlMemStrdup (parent->initialization);
-    new_segment_template->bitstreamSwitching =
-        xmlMemStrdup (parent->bitstreamSwitching);
-  }
-
   GST_LOG ("extension of SegmentTemplate node:");
   gst_mpdparser_parse_mult_seg_base_type_ext
       (&new_segment_template->MultSegBaseType, a_node,
       (parent ? parent->MultSegBaseType : NULL));
 
+  /* Inherit attribute values from parent when the value isn't found */
   GST_LOG ("attributes of SegmentTemplate node:");
   if (gst_mpdparser_get_xml_prop_string (a_node, "media", &strval)) {
     new_segment_template->media = strval;
+  } else if (parent) {
+    new_segment_template->media = xmlMemStrdup (parent->media);
   }
+
   if (gst_mpdparser_get_xml_prop_string (a_node, "index", &strval)) {
     new_segment_template->index = strval;
+  } else if (parent) {
+    new_segment_template->index = xmlMemStrdup (parent->index);
   }
+
   if (gst_mpdparser_get_xml_prop_string (a_node, "initialization", &strval)) {
     new_segment_template->initialization = strval;
+  } else if (parent) {
+    new_segment_template->initialization =
+        xmlMemStrdup (parent->initialization);
   }
+
   if (gst_mpdparser_get_xml_prop_string (a_node, "bitstreamSwitching", &strval)) {
     new_segment_template->bitstreamSwitching = strval;
+  } else if (parent) {
+    new_segment_template->bitstreamSwitching =
+        xmlMemStrdup (parent->bitstreamSwitching);
   }
 }
 
