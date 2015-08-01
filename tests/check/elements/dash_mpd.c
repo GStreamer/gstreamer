@@ -3005,30 +3005,16 @@ GST_START_TEST (dash_mpdparser_get_audio_languages)
 GST_END_TEST;
 
 /*
- * Test getting the base URL
+ * Tests getting the base URL
  *
  */
-GST_START_TEST (dash_mpdparser_get_baseURL)
+static GstMpdClient *
+setup_mpd_client (const gchar * xml)
 {
   GList *adaptationSets;
   GstAdaptationSetNode *adapt_set;
   guint activeStreams;
   guint adaptationSetsCount;
-  const gchar *baseURL;
-
-  const gchar *xml =
-      "<?xml version=\"1.0\"?>"
-      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
-      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "  <BaseURL>mpd_base_url/</BaseURL>"
-      "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
-      "    <BaseURL> /period_base_url/</BaseURL>"
-      "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
-      "      <BaseURL>adaptation_base_url</BaseURL>"
-      "      <Representation>"
-      "        <BaseURL>representation_base_url</BaseURL>"
-      "      </Representation></AdaptationSet></Period></MPD>";
-
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
 
@@ -3054,6 +3040,52 @@ GST_START_TEST (dash_mpdparser_get_baseURL)
   activeStreams = gst_mpdparser_get_nb_active_stream (mpdclient);
   assert_equals_int (activeStreams, adaptationSetsCount);
 
+  return mpdclient;
+}
+
+GST_START_TEST (dash_mpdparser_get_baseURL1)
+{
+  const gchar *baseURL;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <BaseURL>http://example.com/</BaseURL>"
+      "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
+      "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
+      "      <Representation>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  GstMpdClient *mpdclient = setup_mpd_client (xml);
+
+  baseURL = gst_mpdparser_get_baseURL (mpdclient, 0);
+  fail_if (baseURL == NULL);
+  assert_equals_string (baseURL, "http://example.com/");
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (dash_mpdparser_get_baseURL2)
+{
+  const gchar *baseURL;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <BaseURL>mpd_base_url/</BaseURL>"
+      "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
+      "    <BaseURL> /period_base_url/</BaseURL>"
+      "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
+      "      <BaseURL>adaptation_base_url</BaseURL>"
+      "      <Representation>"
+      "        <BaseURL>representation_base_url</BaseURL>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  GstMpdClient *mpdclient = setup_mpd_client (xml);
+
   /* test baseURL. Its value should be computed like this:
    *  - start with xml url (null)
    *  - set it to the value from MPD's BaseURL element: "mpd_base_url/"
@@ -3071,6 +3103,87 @@ GST_START_TEST (dash_mpdparser_get_baseURL)
   baseURL = gst_mpdparser_get_baseURL (mpdclient, 0);
   fail_if (baseURL == NULL);
   assert_equals_string (baseURL, "/period_base_url/representation_base_url");
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (dash_mpdparser_get_baseURL3)
+{
+  const gchar *baseURL;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <BaseURL>mpd_base_url/</BaseURL>"
+      "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
+      "    <BaseURL> /period_base_url/</BaseURL>"
+      "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
+      "      <BaseURL>adaptation_base_url</BaseURL>"
+      "      <Representation>"
+      "        <BaseURL>/representation_base_url</BaseURL>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  GstMpdClient *mpdclient = setup_mpd_client (xml);
+
+  /* test baseURL. Its value should be computed like this:
+   *  - start with xml url (null)
+   *  - set it to the value from MPD's BaseURL element: "mpd_base_url/"
+   *  - update the value with BaseURL element from Period. Because Period's
+   * baseURL is absolute (starts with /) it will overwrite the current value
+   * for baseURL. So, baseURL becomes "/period_base_url/"
+   *  - update the value with BaseURL element from AdaptationSet. Because this
+   * is a relative url, it will update the current value. baseURL becomes
+   * "/period_base_url/adaptation_base_url"
+   *  - update the value with BaseURL element from Representation. Because this
+   * is an absolute url, it will replace everything again"
+   */
+  baseURL = gst_mpdparser_get_baseURL (mpdclient, 0);
+  fail_if (baseURL == NULL);
+  assert_equals_string (baseURL, "/representation_base_url");
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (dash_mpdparser_get_baseURL4)
+{
+  const gchar *baseURL;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <BaseURL>mpd_base_url/</BaseURL>"
+      "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
+      "    <BaseURL> /period_base_url/</BaseURL>"
+      "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
+      "      <BaseURL>adaptation_base_url/</BaseURL>"
+      "      <Representation>"
+      "        <BaseURL>representation_base_url/</BaseURL>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  GstMpdClient *mpdclient = setup_mpd_client (xml);
+
+  /* test baseURL. Its value should be computed like this:
+   *  - start with xml url (null)
+   *  - set it to the value from MPD's BaseURL element: "mpd_base_url/"
+   *  - update the value with BaseURL element from Period. Because Period's
+   * baseURL is absolute (starts with /) it will overwrite the current value
+   * for baseURL. So, baseURL becomes "/period_base_url/"
+   *  - update the value with BaseURL element from AdaptationSet. Because this
+   * is a relative url, it will update the current value. baseURL becomes
+   * "/period_base_url/adaptation_base_url/"
+   *  - update the value with BaseURL element from Representation. Because this
+   * is an relative url, it will update the current value."
+   */
+  baseURL = gst_mpdparser_get_baseURL (mpdclient, 0);
+  fail_if (baseURL == NULL);
+  assert_equals_string (baseURL,
+      "/period_base_url/adaptation_base_url/representation_base_url/");
 
   gst_mpd_client_free (mpdclient);
 }
@@ -4193,7 +4306,10 @@ dash_suite (void)
   tcase_add_test (tc_complexMPD, dash_mpdparser_activeStream_selection);
   tcase_add_test (tc_complexMPD, dash_mpdparser_activeStream_parameters);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_audio_languages);
-  tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL);
+  tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL1);
+  tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL2);
+  tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL3);
+  tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL4);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_mediaPresentationDuration);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_streamPresentationOffset);
   tcase_add_test (tc_complexMPD, dash_mpdparser_segments);
