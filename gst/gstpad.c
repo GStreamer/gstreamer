@@ -4280,6 +4280,7 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   GST_OBJECT_UNLOCK (pad);
 
   ret = gst_pad_chain_data_unchecked (peer, type, data);
+  data = NULL;
 
   gst_object_unref (peer);
 
