@@ -668,7 +668,8 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
       GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo));
 
   /* nothing to configure */
-  if (GST_VIDEO_INFO_FORMAT (vinfo) == GST_VIDEO_FORMAT_ENCODED)
+  if (USE_NATIVE_FORMATS ||
+      GST_VIDEO_INFO_FORMAT (vinfo) == GST_VIDEO_FORMAT_ENCODED)
     return;
 
   surface = new_surface (display, vinfo);
