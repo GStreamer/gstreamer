@@ -912,6 +912,7 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
   if (gst_mpd_client_get_next_fragment_timestamp (dashdemux->client,
           dashstream->index, &ts)) {
     if (GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER (stream)) {
+      gst_adaptive_demux_stream_fragment_clear (&stream->fragment);
       gst_dash_demux_stream_update_headers_info (stream);
     }
 
