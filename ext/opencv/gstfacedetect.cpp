@@ -538,7 +538,7 @@ gst_face_detect_message_new (GstFaceDetect * filter, GstBuffer * buf)
 static void
 gst_face_detect_run_detector (GstFaceDetect * filter,
     CascadeClassifier * detector, gint min_size_width,
-    gint min_size_height, Rect r, vector<Rect> &faces)
+    gint min_size_height, Rect r, vector < Rect > &faces)
 {
   double img_stddev = 0;
   if (filter->min_stddev > 0) {
@@ -576,10 +576,10 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     GstStructure *s;
     GValue facelist = { 0 };
     GValue facedata = { 0 };
-    vector<Rect> faces;
-    vector<Rect> mouth;
-    vector<Rect> nose;
-    vector<Rect> eyes;
+    vector < Rect > faces;
+    vector < Rect > mouth;
+    vector < Rect > nose;
+    vector < Rect > eyes;
     gboolean do_display = FALSE;
     gboolean post_msg = FALSE;
 
@@ -685,9 +685,10 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       }
 
       GST_LOG_OBJECT (filter,
-          "%2d/%2lu: x,y = %4u,%4u: w.h = %4u,%4u : features(e,n,m) = %d,%d,%d",
-          i, faces.size (), r.x, r.y, r.width, r.height,
-          have_eyes, have_nose, have_mouth);
+          "%2d/%2" G_GSIZE_FORMAT
+          ": x,y = %4u,%4u: w.h = %4u,%4u : features(e,n,m) = %d,%d,%d", i,
+          faces.size (), r.x, r.y, r.width, r.height, have_eyes, have_nose,
+          have_mouth);
       if (post_msg) {
         s = gst_structure_new ("face",
             "x", G_TYPE_UINT, r.x,
@@ -696,32 +697,29 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
             "height", G_TYPE_UINT, r.height, NULL);
         if (have_nose) {
           Rect sr = nose[0];
-          GST_LOG_OBJECT (filter, "nose/%lu: x,y = %4u,%4u: w.h = %4u,%4u",
+          GST_LOG_OBJECT (filter,
+              "nose/%" G_GSIZE_FORMAT ": x,y = %4u,%4u: w.h = %4u,%4u",
               nose.size (), rnx + sr.x, rny + sr.y, sr.width, sr.height);
-          gst_structure_set (s,
-              "nose->x", G_TYPE_UINT, rnx + sr.x,
-              "nose->y", G_TYPE_UINT, rny + sr.y,
-              "nose->width", G_TYPE_UINT, sr.width,
+          gst_structure_set (s, "nose->x", G_TYPE_UINT, rnx + sr.x, "nose->y",
+              G_TYPE_UINT, rny + sr.y, "nose->width", G_TYPE_UINT, sr.width,
               "nose->height", G_TYPE_UINT, sr.height, NULL);
         }
         if (have_mouth) {
           Rect sr = mouth[0];
-          GST_LOG_OBJECT (filter, "mouth/%lu: x,y = %4u,%4u: w.h = %4u,%4u",
+          GST_LOG_OBJECT (filter,
+              "mouth/%" G_GSIZE_FORMAT ": x,y = %4u,%4u: w.h = %4u,%4u",
               mouth.size (), rmx + sr.x, rmy + sr.y, sr.width, sr.height);
-          gst_structure_set (s,
-              "mouth->x", G_TYPE_UINT, rmx + sr.x,
-              "mouth->y", G_TYPE_UINT, rmy + sr.y,
-              "mouth->width", G_TYPE_UINT, sr.width,
+          gst_structure_set (s, "mouth->x", G_TYPE_UINT, rmx + sr.x, "mouth->y",
+              G_TYPE_UINT, rmy + sr.y, "mouth->width", G_TYPE_UINT, sr.width,
               "mouth->height", G_TYPE_UINT, sr.height, NULL);
         }
         if (have_eyes) {
           Rect sr = eyes[0];
-          GST_LOG_OBJECT (filter, "eyes/%ld: x,y = %4u,%4u: w.h = %4u,%4u",
+          GST_LOG_OBJECT (filter,
+              "eyes/%" G_GSIZE_FORMAT ": x,y = %4u,%4u: w.h = %4u,%4u",
               eyes.size (), rex + sr.x, rey + sr.y, sr.width, sr.height);
-          gst_structure_set (s,
-              "eyes->x", G_TYPE_UINT, rex + sr.x,
-              "eyes->y", G_TYPE_UINT, rey + sr.y,
-              "eyes->width", G_TYPE_UINT, sr.width,
+          gst_structure_set (s, "eyes->x", G_TYPE_UINT, rex + sr.x, "eyes->y",
+              G_TYPE_UINT, rey + sr.y, "eyes->width", G_TYPE_UINT, sr.width,
               "eyes->height", G_TYPE_UINT, sr.height, NULL);
         }
 
