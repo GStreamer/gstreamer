@@ -63,7 +63,8 @@ struct _GstDX9ScreenCapSrc
   /* Runtime variables */
   RECT screen_rect;
   RECT src_rect;
-  gint64 frames;
+  guint64 frame_number;
+  GstClockID clock_id;
 
   D3DDISPLAYMODE disp_mode;
   IDirect3DSurface9 *surface;

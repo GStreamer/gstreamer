@@ -76,15 +76,16 @@ static void gst_dx9screencapsrc_set_property (GObject * object,
 static void gst_dx9screencapsrc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstCaps * gst_dx9screencapsrc_fixate (GstBaseSrc * bsrc, GstCaps * caps);
+static GstCaps *gst_dx9screencapsrc_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 static gboolean gst_dx9screencapsrc_set_caps (GstBaseSrc * bsrc,
     GstCaps * caps);
-static GstCaps *gst_dx9screencapsrc_get_caps (GstBaseSrc * bsrc, GstCaps * filter);
+static GstCaps *gst_dx9screencapsrc_get_caps (GstBaseSrc * bsrc,
+    GstCaps * filter);
 static gboolean gst_dx9screencapsrc_start (GstBaseSrc * bsrc);
 static gboolean gst_dx9screencapsrc_stop (GstBaseSrc * bsrc);
 
-static void gst_dx9screencapsrc_get_times (GstBaseSrc * basesrc,
-    GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
+static gboolean gst_dx9screencapsrc_unlock (GstBaseSrc * bsrc);
+
 static GstFlowReturn gst_dx9screencapsrc_create (GstPushSrc * src,
     GstBuffer ** buf);
 
@@ -106,11 +107,11 @@ gst_dx9screencapsrc_class_init (GstDX9ScreenCapSrcClass * klass)
   go_class->set_property = GST_DEBUG_FUNCPTR (gst_dx9screencapsrc_set_property);
   go_class->get_property = GST_DEBUG_FUNCPTR (gst_dx9screencapsrc_get_property);
 
-  bs_class->get_times = GST_DEBUG_FUNCPTR (gst_dx9screencapsrc_get_times);
   bs_class->get_caps = GST_DEBUG_FUNCPTR (gst_dx9screencapsrc_get_caps);
   bs_class->set_caps = GST_DEBUG_FUNCPTR (gst_dx9screencapsrc_set_caps);
   bs_class->start = GST_DEBUG_FUNCPTR (gst_dx9screencapsrc_start);
   bs_class->stop = GST_DEBUG_FUNCPTR (gst_dx9screencapsrc_stop);
+  bs_class->unlock = GST_DEBUG_FUNCPTR (gst_dx9screencapsrc_unlock);
   bs_class->fixate = GST_DEBUG_FUNCPTR (gst_dx9screencapsrc_fixate);
 
   ps_class->create = GST_DEBUG_FUNCPTR (gst_dx9screencapsrc_create);
@@ -153,7 +154,6 @@ static void
 gst_dx9screencapsrc_init (GstDX9ScreenCapSrc * src)
 {
   /* Set src element inital values... */
-  src->frames = 0;
   src->surface = NULL;
   src->d3d9_device = NULL;
   src->capture_x = 0;
@@ -309,7 +309,7 @@ gst_dx9screencapsrc_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 {
   GstDX9ScreenCapSrc *src = GST_DX9SCREENCAPSRC (bsrc);
   RECT rect_dst;
-  GstCaps * caps;
+  GstCaps *caps;
 
   if (src->monitor >= IDirect3D9_GetAdapterCount (g_d3d9) ||
       FAILED (IDirect3D9_GetAdapterDisplayMode (g_d3d9, src->monitor,
@@ -352,7 +352,8 @@ gst_dx9screencapsrc_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
 
   if (filter) {
-    GstCaps * tmp = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    GstCaps *tmp =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (caps);
     caps = tmp;
   }
@@ -367,6 +368,8 @@ gst_dx9screencapsrc_start (GstBaseSrc * bsrc)
   D3DPRESENT_PARAMETERS d3dpp;
   HRESULT res;
 
+  src->frame_number = -1;
+
   ZeroMemory (&d3dpp, sizeof (D3DPRESENT_PARAMETERS));
   d3dpp.Windowed = TRUE;
   d3dpp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
@@ -379,8 +382,6 @@ gst_dx9screencapsrc_start (GstBaseSrc * bsrc)
   d3dpp.hDeviceWindow = GetDesktopWindow ();
   d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
   d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-
-  src->frames = 0;
 
   res = IDirect3D9_CreateDevice (g_d3d9, src->monitor, D3DDEVTYPE_HAL,
       GetDesktopWindow (), D3DCREATE_SOFTWARE_VERTEXPROCESSING,
@@ -407,21 +408,19 @@ gst_dx9screencapsrc_stop (GstBaseSrc * bsrc)
   return TRUE;
 }
 
-static void
-gst_dx9screencapsrc_get_times (GstBaseSrc * basesrc,
-    GstBuffer * buffer, GstClockTime * start, GstClockTime * end)
+static gboolean
+gst_dx9screencapsrc_unlock (GstBaseSrc * bsrc)
 {
-  GstClockTime timestamp;
+  GstDX9ScreenCapSrc *src = GST_DX9SCREENCAPSRC (bsrc);
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
-
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    GstClockTime duration = GST_BUFFER_DURATION (buffer);
-
-    if (GST_CLOCK_TIME_IS_VALID (duration))
-      *end = timestamp + duration;
-    *start = timestamp;
+  GST_OBJECT_LOCK (src);
+  if (src->clock_id) {
+    GST_DEBUG_OBJECT (src, "Waking up waiting clock");
+    gst_clock_id_unschedule (src->clock_id);
   }
+  GST_OBJECT_UNLOCK (src);
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -432,12 +431,12 @@ gst_dx9screencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
   gint new_buf_size, i;
   gint width, height, stride;
   GstClock *clock;
-  GstClockTime time = GST_CLOCK_TIME_NONE;
-  GstClockTime buf_time;
+  GstClockTime buf_time, buf_dur;
   D3DLOCKED_RECT locked_rect;
   LPBYTE p_dst, p_src;
   HRESULT hres;
   GstMapInfo map;
+  guint64 frame_number;
 
   if (G_UNLIKELY (!src->d3d9_device)) {
     GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
@@ -447,30 +446,82 @@ gst_dx9screencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
 
   clock = gst_element_get_clock (GST_ELEMENT (src));
   if (clock != NULL) {
+    GstClockTime time, base_time;
+
     /* Calculate sync time. */
-    GstClockTime base_time;
-    GstClockTime frame_time =
-        gst_util_uint64_scale_int (src->frames * GST_SECOND,
-        src->rate_denominator, src->rate_numerator);
 
     time = gst_clock_get_time (clock);
     base_time = gst_element_get_base_time (GST_ELEMENT (src));
-    buf_time = MAX (time - base_time, frame_time);
+    buf_time = time - base_time;
+
+    if (src->rate_numerator) {
+      frame_number = gst_util_uint64_scale (buf_time,
+          src->rate_numerator, GST_SECOND * src->rate_denominator);
+    } else {
+      frame_number = -1;
+    }
   } else {
     buf_time = GST_CLOCK_TIME_NONE;
+    frame_number = -1;
   }
+
+  if (frame_number != -1 && frame_number == src->frame_number) {
+    GstClockID id;
+    GstClockReturn ret;
+
+    /* Need to wait for the next frame */
+    frame_number += 1;
+
+    /* Figure out what the next frame time is */
+    buf_time = gst_util_uint64_scale (frame_number,
+        src->rate_denominator * GST_SECOND, src->rate_numerator);
+
+    id = gst_clock_new_single_shot_id (clock,
+        buf_time + gst_element_get_base_time (GST_ELEMENT (src)));
+    GST_OBJECT_LOCK (src);
+    src->clock_id = id;
+    GST_OBJECT_UNLOCK (src);
+
+    GST_DEBUG_OBJECT (src, "Waiting for next frame time %" G_GUINT64_FORMAT,
+        buf_time);
+    ret = gst_clock_id_wait (id, NULL);
+    GST_OBJECT_LOCK (src);
+
+    gst_clock_id_unref (id);
+    src->clock_id = NULL;
+    if (ret == GST_CLOCK_UNSCHEDULED) {
+      /* Got woken up by the unlock function */
+      GST_OBJECT_UNLOCK (src);
+      return GST_FLOW_FLUSHING;
+    }
+    GST_OBJECT_UNLOCK (src);
+
+    /* Duration is a complete 1/fps frame duration */
+    buf_dur =
+        gst_util_uint64_scale_int (GST_SECOND, src->rate_denominator,
+        src->rate_numerator);
+  } else if (frame_number != -1) {
+    GstClockTime next_buf_time;
+
+    GST_DEBUG_OBJECT (src, "No need to wait for next frame time %"
+        G_GUINT64_FORMAT " next frame = %" G_GINT64_FORMAT " prev = %"
+        G_GINT64_FORMAT, buf_time, frame_number, src->frame_number);
+    next_buf_time = gst_util_uint64_scale (frame_number + 1,
+        src->rate_denominator * GST_SECOND, src->rate_numerator);
+    /* Frame duration is from now until the next expected capture time */
+    buf_dur = next_buf_time - buf_time;
+  } else {
+    buf_dur = GST_CLOCK_TIME_NONE;
+  }
+  src->frame_number = frame_number;
 
   height = (src->src_rect.bottom - src->src_rect.top);
   width = (src->src_rect.right - src->src_rect.left);
   new_buf_size = width * 4 * height;
-  if (G_UNLIKELY (src->rate_numerator == 0 && src->frames == 1)) {
-    GST_DEBUG_OBJECT (src, "eos: 0 framerate, frame %d", (gint) src->frames);
-    return GST_FLOW_EOS;
-  }
 
   GST_LOG_OBJECT (src,
-      "creating buffer of %d bytes with %dx%d image for frame %d",
-      new_buf_size, width, height, (gint) src->frames);
+      "creating buffer of %d bytes with %dx%d image",
+      new_buf_size, width, height);
 
   /* Do screen capture and put it into buffer...
    * Aquire front buffer, and lock it
@@ -506,22 +557,7 @@ gst_dx9screencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
   IDirect3DSurface9_UnlockRect (src->surface);
 
   GST_BUFFER_TIMESTAMP (new_buf) = buf_time;
-  if (src->rate_numerator) {
-    GST_BUFFER_DURATION (new_buf) =
-        gst_util_uint64_scale_int (GST_SECOND,
-        src->rate_denominator, src->rate_numerator);
-
-    if (clock) {
-      GST_BUFFER_DURATION (new_buf) = MAX (GST_BUFFER_DURATION (new_buf),
-          gst_clock_get_time (clock) - time);
-    }
-  } else {
-    GST_BUFFER_DURATION (new_buf) = GST_CLOCK_TIME_NONE;
-  }
-
-  GST_BUFFER_OFFSET (new_buf) = src->frames;
-  src->frames++;
-  GST_BUFFER_OFFSET_END (new_buf) = src->frames;
+  GST_BUFFER_DURATION (new_buf) = buf_dur;
 
   if (clock != NULL)
     gst_object_unref (clock);
@@ -529,4 +565,3 @@ gst_dx9screencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
   *buf = new_buf;
   return GST_FLOW_OK;
 }
-
