@@ -327,10 +327,10 @@ _create_video_mixer_input (GstGLMixerBin * self, GstPad * mixer_pad)
     gst_object_unref (input);
     return NULL;
   }
-#define ADD_PROXY_CONTROL_BINDING(prop)                                 \
-  cb = gst_gl_mixer_control_binding_proxy_new (GST_OBJECT (input),      \
-      G_STRINGIFY (prop), GST_OBJECT (mixer_pad), G_STRINGIFY (prop));  \
-  gst_object_add_control_binding (GST_OBJECT (input), cb)
+#define ADD_PROXY_CONTROL_BINDING(prop)                                \
+  cb = gst_gl_mixer_control_binding_proxy_new (GST_OBJECT (mixer_pad), \
+      G_STRINGIFY (prop), GST_OBJECT (input), G_STRINGIFY (prop));     \
+  gst_object_add_control_binding (GST_OBJECT (mixer_pad), cb)
 
   ADD_PROXY_CONTROL_BINDING (zorder);
   ADD_PROXY_CONTROL_BINDING (xpos);
