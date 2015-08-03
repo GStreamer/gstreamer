@@ -832,6 +832,7 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
 {
   GList *cur;
   gboolean ready = TRUE;
+  GstClockTime current_max_in_running_time;
 
   if (splitmux->state == SPLITMUX_STATE_WAITING_GOP_COMPLETE) {
     /* Iterate each pad, and check that the input running time is at least
@@ -865,9 +866,11 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
 
   /* Some pad is not yet ready, or GOP is being pushed
    * either way, sleep and wait to get woken */
+  current_max_in_running_time = splitmux->max_in_running_time;
   while ((splitmux->state == SPLITMUX_STATE_WAITING_GOP_COMPLETE ||
           splitmux->state == SPLITMUX_STATE_START_NEXT_FRAGMENT) &&
-      !ctx->flushing) {
+      !ctx->flushing &&
+      (current_max_in_running_time == splitmux->max_in_running_time)) {
 
     GST_LOG_OBJECT (splitmux, "Sleeping for %s (ctx %p)",
         splitmux->state == SPLITMUX_STATE_WAITING_GOP_COMPLETE ?
