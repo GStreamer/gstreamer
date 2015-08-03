@@ -292,8 +292,8 @@ gst_file_sink_set_location (GstFileSink * sink, const gchar * location,
      * this should be in UTF8 */
     sink->filename = g_strdup (location);
     sink->uri = gst_filename_to_uri (location, NULL);
-    GST_INFO ("filename : %s", sink->filename);
-    GST_INFO ("uri      : %s", sink->uri);
+    GST_INFO_OBJECT (sink, "filename : %s", sink->filename);
+    GST_INFO_OBJECT (sink, "uri      : %s", sink->uri);
   } else {
     sink->filename = NULL;
     sink->uri = NULL;
