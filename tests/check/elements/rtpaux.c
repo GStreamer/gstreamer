@@ -94,7 +94,7 @@ rtprtxsend_srcpad_probe (GstPad * pad, GstPadProbeInfo * info,
     payload_type = gst_rtp_buffer_get_payload_type (&rtp);
 
     /* main stream packets */
-    if (payload_type == 96) {
+    if (payload_type == 8) {
       /* count packets of the main stream */
       ++rtxdata->nb_packets;
       /* drop some packets */
@@ -202,7 +202,7 @@ GST_START_TEST (test_simple_rtpbin_aux)
   RTXSendData send_rtxdata;
   send_rtxdata.count = 1;
   send_rtxdata.nb_packets = 0;
-  send_rtxdata.drop_every_n_packets = 50;
+  send_rtxdata.drop_every_n_packets = 25;
 
   GST_INFO ("preparing test");
 
