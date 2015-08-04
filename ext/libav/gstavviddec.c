@@ -660,19 +660,15 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
   /* If the picture format changed but we already negotiated before,
    * we will have to do fallback allocation until output and input
    * formats are in sync again. We will renegotiate on the output
+   * We use the info from the context which correspond to the input format,
+   * the info from the picture correspond to memory requires, not to the actual
+   * image size.
    */
-  if (ffmpegdec->pic_width != 0 && picture_changed (ffmpegdec, picture))
+  if (ffmpegdec->pic_width != 0 &&
+      !(ffmpegdec->pic_width == context->width
+          && ffmpegdec->pic_height == context->height
+          && ffmpegdec->pic_pix_fmt == picture->format))
     goto fallback;
-
-  /* see if we need renegotiation */
-  /* Disabled for now as ffmpeg doesn't give us the output dimensions
-   * in the getbuffer2 callback. The real dimensions are only available
-   * when a buffer is produced.
-   */
-  if (FALSE
-      && G_UNLIKELY (!gst_ffmpegviddec_negotiate (ffmpegdec, context, picture,
-              FALSE)))
-    goto negotiate_failed;
 
   if (!ffmpegdec->current_dr)
     goto no_dr;
@@ -745,11 +741,6 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
   return 0;
 
   /* fallbacks */
-negotiate_failed:
-  {
-    GST_DEBUG_OBJECT (ffmpegdec, "negotiate failed");
-    goto fallback;
-  }
 no_dr:
   {
     GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
