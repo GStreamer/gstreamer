@@ -3176,7 +3176,13 @@ gst_queue2_update_upstream_size (GstQueue2 * queue)
   if (gst_pad_peer_query_duration (queue->sinkpad, GST_FORMAT_BYTES,
           &upstream_size)) {
     GST_INFO_OBJECT (queue, "upstream size: %" G_GINT64_FORMAT, upstream_size);
-    queue->upstream_size = upstream_size;
+
+    /* upstream_size can be negative but queue->upstream_size is unsigned.
+     * Prevent setting negative values to it (the query can return -1) */
+    if (upstream_size >= 0)
+      queue->upstream_size = upstream_size;
+    else
+      queue->upstream_size = 0;
   }
 }
 
