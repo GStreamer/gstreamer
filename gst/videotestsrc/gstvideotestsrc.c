@@ -857,7 +857,7 @@ gst_video_test_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
 {
   /* for live sources, sync on the timestamp of the buffer */
   if (gst_base_src_is_live (basesrc)) {
-    GstClockTime timestamp = GST_BUFFER_DTS (buffer);
+    GstClockTime timestamp = GST_BUFFER_PTS (buffer);
 
     if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
       /* get duration to calculate end time */
@@ -945,11 +945,11 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   if (!gst_video_frame_map (&frame, &src->info, buffer, GST_MAP_WRITE))
     goto invalid_frame;
 
-  GST_BUFFER_DTS (buffer) =
+  GST_BUFFER_PTS (buffer) =
       src->accum_rtime + src->timestamp_offset + src->running_time;
-  GST_BUFFER_PTS (buffer) = GST_BUFFER_DTS (buffer);
+  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
 
-  gst_object_sync_values (GST_OBJECT (psrc), GST_BUFFER_DTS (buffer));
+  gst_object_sync_values (GST_OBJECT (psrc), GST_BUFFER_PTS (buffer));
 
   src->make_image (src, &frame);
 
