@@ -2354,8 +2354,8 @@ _gst_parent_buffer_meta_init (GstParentBufferMeta * parent_meta,
   static volatile gsize _init;
 
   if (g_once_init_enter (&_init)) {
-    GST_DEBUG_CATEGORY_INIT (gst_parent_buffer_meta_debug, "glbufferrefmeta", 0,
-        "glbufferrefmeta");
+    GST_DEBUG_CATEGORY_INIT (gst_parent_buffer_meta_debug, "parentbuffermeta",
+        0, "parentbuffermeta");
     g_once_init_leave (&_init, 1);
   }
 
