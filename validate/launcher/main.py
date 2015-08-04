@@ -131,8 +131,8 @@ http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
                      ),
        DEFAULT_MAIN_DIR,
        "\n  * ".join([getattr(Protocols, att) for att in
-                      dir(Protocols) if isinstance(getattr(Protocols, att), str)
-                      and not att.startswith("_")]))
+                      dir(Protocols) if isinstance(getattr(Protocols, att), str) and not
+                      att.startswith("_")]))
 
 QA_ASSETS = "gst-integration-testsuites"
 MEDIAS_FOLDER = "medias"
@@ -211,6 +211,7 @@ class LauncherConfig(Loggable):
         self.get_assets_command = "git clone"
         self.remote_assets_url = DEFAULT_GST_QA_ASSETS_REPO
         self.sync = False
+        self.force_sync = False
         self.sync_all = False
 
     def cleanup(self):
@@ -263,7 +264,7 @@ class LauncherConfig(Loggable):
         if self.generate_info_full is True:
             self.generate_info = True
 
-        if self.sync_all is True:
+        if self.sync_all is True or self.force_sync is True:
             self.sync = True
 
         if not self.sync and not os.path.exists(self.clone_dir) and \
@@ -459,6 +460,9 @@ Note that all testsuite should be inside python modules, so the directory should
                               help="Url to the remote assets (default:%s)" % DEFAULT_GST_QA_ASSETS_REPO)
     assets_group.add_argument("-S", "--sync", dest="sync", action="store_true",
                               help="Synchronize asset repository")
+    assets_group.add_argument("-fs", "--force-sync", dest="force_sync", action="store_true",
+                              help="Synchronize asset repository reseting any change that might have"
+                              " happened in the testsuite")
     assets_group.add_argument("--sync-all", dest="sync_all", action="store_true",
                               help="Synchronize asset repository,"
                               " including big media files")
@@ -513,7 +517,7 @@ Note that all testsuite should be inside python modules, so the directory should
         os.environ["DISPLAY"] = vfb_server.display_id
 
     if options.httponly is True:
-        print "Running HTTP server only"
+        print("Running HTTP server only")
         return
 
     e = None
