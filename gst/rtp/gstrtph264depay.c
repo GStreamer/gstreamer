@@ -26,6 +26,7 @@
 
 #include <gst/base/gstbitreader.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/pbutils/pbutils.h>
 #include "gstrtph264depay.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtph264depay_debug);
@@ -289,8 +290,6 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
 {
   gboolean res;
   GstCaps *srccaps;
-  guchar level = 0;
-  guchar profile_compat = G_MAXUINT8;
 
   if (!rtph264depay->byte_stream &&
       (!rtph264depay->new_codec_data ||
@@ -310,6 +309,8 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
     guint len;
     guint new_size;
     guint i;
+    guchar level = 0;
+    guchar profile_compat = G_MAXUINT8;
 
     /* start with 7 bytes header */
     len = 7;
@@ -390,6 +391,34 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
         "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
     gst_buffer_unref (codec_data);
   }
+
+  /* Set profile a level from SPS */
+  {
+    gint i;
+    GstBuffer *max_level_sps = NULL;
+    gint level = 0;
+    GstMapInfo nalmap;
+
+    /* Get the SPS with the highest level. We assume
+     * all SPS have the same profile */
+    for (i = 0; i < rtph264depay->sps->len; i++) {
+      gst_buffer_map (g_ptr_array_index (rtph264depay->sps, i), &nalmap,
+          GST_MAP_READ);
+      if (level == 0 || level < nalmap.data[3]) {
+        max_level_sps = g_ptr_array_index (rtph264depay->sps, i);
+        level = nalmap.data[3];
+      }
+      gst_buffer_unmap (g_ptr_array_index (rtph264depay->sps, i), &nalmap);
+    }
+
+    if (max_level_sps) {
+      gst_buffer_map (max_level_sps, &nalmap, GST_MAP_READ);
+      gst_codec_utils_h264_caps_set_level_and_profile (srccaps, nalmap.data + 1,
+          nalmap.size - 1);
+      gst_buffer_unmap (max_level_sps, &nalmap);
+    }
+  }
+
 
   if (gst_pad_has_current_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph264depay))) {
     GstCaps *old_caps =
