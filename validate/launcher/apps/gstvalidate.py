@@ -818,10 +818,6 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             ("validate.file.*.simple.scrub_forward_seeking.synchronized",
              "https://bugzilla.gnome.org/show_bug.cgi?id=734060"),
 
-            # FLAC known issues"
-            (".*reverse_playback.*flac",
-             "Reverse playback is not handled in flac"),
-
             # WMV known issues"
             (".*reverse_playback.*wmv",
              "Reverse playback is not handled in wmv"),
