@@ -203,8 +203,7 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, GstBuffer * buffer,
 
 
   if (!gst_video_frame_map (&vframe,
-          &gst_video_decoder_get_output_state (decoder)->info,
-          frame->output_buffer, GST_MAP_READWRITE)) {
+          &output_state->info, frame->output_buffer, GST_MAP_READWRITE)) {
     GST_ERROR_OBJECT (rsvg, "Failed to get SVG image");
     g_object_unref (handle);
     gst_video_codec_state_unref (output_state);
