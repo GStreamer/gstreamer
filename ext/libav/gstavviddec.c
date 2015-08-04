@@ -318,6 +318,7 @@ gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec, gboolean reset)
 
   for (i = 0; i < G_N_ELEMENTS (ffmpegdec->stride); i++)
     ffmpegdec->stride[i] = -1;
+  ffmpegdec->current_dr = FALSE;
 
   gst_buffer_replace (&ffmpegdec->palette, NULL);
 
@@ -1713,6 +1714,9 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   have_alignment =
       gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
+  /* Most cases don't do direct rendering */
+  ffmpegdec->current_dr = FALSE;
+
   /* we can only enable the alignment if downstream supports the
    * videometa api */
   if (have_alignment && have_videometa) {
@@ -1779,7 +1783,6 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     /* disable direct rendering. This will make us use the fallback ffmpeg
      * picture allocation code with padding etc. We will then do the final
      * copy (with cropping) into a buffer from our pool */
-    ffmpegdec->current_dr = FALSE;
   }
 
   /* and store */
