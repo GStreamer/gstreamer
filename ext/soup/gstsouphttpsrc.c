@@ -1540,7 +1540,7 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
           src->ret = GST_FLOW_CUSTOM_ERROR;
         } else {
           SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, READ,
-              _("A network error occured, or the server closed the connection "
+              _("A network error occurred, or the server closed the connection "
                   "unexpectedly."));
           src->ret = GST_FLOW_ERROR;
         }
