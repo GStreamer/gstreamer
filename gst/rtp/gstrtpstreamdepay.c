@@ -64,6 +64,9 @@ static GstCaps *gst_rtp_stream_depay_get_sink_caps (GstBaseParse * parse,
 static GstFlowReturn gst_rtp_stream_depay_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
 
+static gboolean gst_rtp_stream_depay_sink_activate (GstPad * pad,
+    GstObject * parent);
+
 static void
 gst_rtp_stream_depay_class_init (GstRtpStreamDepayClass * klass)
 {
@@ -95,6 +98,11 @@ static void
 gst_rtp_stream_depay_init (GstRtpStreamDepay * self)
 {
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (self), 2);
+
+  /* Force activation in push mode. We need to get a caps event from upstream
+   * to know the full RTP caps. */
+  gst_pad_set_activate_function (GST_BASE_PARSE_SINK_PAD (self),
+      gst_rtp_stream_depay_sink_activate);
 }
 
 static gboolean
@@ -209,6 +217,12 @@ gst_rtp_stream_depay_handle_frame (GstBaseParse * parse,
       gst_buffer_copy_region (frame->buffer, GST_BUFFER_COPY_ALL, 2, size);
 
   return gst_base_parse_finish_frame (parse, frame, size + 2);
+}
+
+static gboolean
+gst_rtp_stream_depay_sink_activate (GstPad * pad, GstObject * parent)
+{
+  return gst_pad_activate_mode (pad, GST_PAD_MODE_PUSH, TRUE);
 }
 
 gboolean
