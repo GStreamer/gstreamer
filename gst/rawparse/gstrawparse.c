@@ -810,13 +810,12 @@ gst_raw_parse_handle_seek_pull (GstRawParse * rp, GstEvent * event)
 
     GST_DEBUG_OBJECT (rp, "converted start - stop to time");
 
-    format = GST_FORMAT_TIME;
-
     gst_event_unref (event);
   } else {
-    format = GST_FORMAT_TIME;
     flags = 0;
   }
+
+  format = GST_FORMAT_TIME;
 
   flush = ((flags & GST_SEEK_FLAG_FLUSH) != 0);
 
