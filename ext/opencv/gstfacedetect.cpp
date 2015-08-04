@@ -233,13 +233,13 @@ gst_face_detect_finalize (GObject * obj)
   g_free (filter->eyes_profile);
 
   if (filter->cvFaceDetect)
-    delete (&filter->cvFaceDetect);
+    delete (filter->cvFaceDetect);
   if (filter->cvNoseDetect)
-    delete (&filter->cvNoseDetect);
+    delete (filter->cvNoseDetect);
   if (filter->cvMouthDetect)
-    delete (&filter->cvMouthDetect);
+    delete (filter->cvMouthDetect);
   if (filter->cvEyesDetect)
-    delete (&filter->cvEyesDetect);
+    delete (filter->cvEyesDetect);
 
   G_OBJECT_CLASS (gst_face_detect_parent_class)->finalize (obj);
 }
@@ -380,7 +380,7 @@ gst_face_detect_set_property (GObject * object, guint prop_id,
     case PROP_FACE_PROFILE:
       g_free (filter->face_profile);
       if (filter->cvFaceDetect)
-        delete (&filter->cvFaceDetect);
+        delete (filter->cvFaceDetect);
       filter->face_profile = g_value_dup_string (value);
       filter->cvFaceDetect =
           gst_face_detect_load_profile (filter, filter->face_profile);
@@ -388,7 +388,7 @@ gst_face_detect_set_property (GObject * object, guint prop_id,
     case PROP_NOSE_PROFILE:
       g_free (filter->nose_profile);
       if (filter->cvNoseDetect)
-        delete (&filter->cvNoseDetect);
+        delete (filter->cvNoseDetect);
       filter->nose_profile = g_value_dup_string (value);
       filter->cvNoseDetect =
           gst_face_detect_load_profile (filter, filter->nose_profile);
@@ -396,7 +396,7 @@ gst_face_detect_set_property (GObject * object, guint prop_id,
     case PROP_MOUTH_PROFILE:
       g_free (filter->mouth_profile);
       if (filter->cvMouthDetect)
-        delete (&filter->cvMouthDetect);
+        delete (filter->cvMouthDetect);
       filter->mouth_profile = g_value_dup_string (value);
       filter->cvMouthDetect =
           gst_face_detect_load_profile (filter, filter->mouth_profile);
@@ -404,7 +404,7 @@ gst_face_detect_set_property (GObject * object, guint prop_id,
     case PROP_EYES_PROFILE:
       g_free (filter->eyes_profile);
       if (filter->cvEyesDetect)
-        delete (&filter->cvEyesDetect);
+        delete (filter->cvEyesDetect);
       filter->eyes_profile = g_value_dup_string (value);
       filter->cvEyesDetect =
           gst_face_detect_load_profile (filter, filter->eyes_profile);
