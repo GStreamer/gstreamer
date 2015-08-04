@@ -2278,7 +2278,7 @@ gst_buffer_extract_dup (GstBuffer * buffer, gsize offset, gsize size,
   *dest_size = gst_buffer_extract (buffer, offset, *dest, size);
 }
 
-GST_DEBUG_CATEGORY (gst_parent_buffer_meta_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_parent_buffer_meta_debug);
 
 /**
  * gst_buffer_add_parent_buffer_meta:

@@ -907,7 +907,6 @@ EXPORTS
 	gst_param_spec_fraction
 	gst_param_spec_fraction_get_type
 	gst_parent_buffer_meta_api_get_type
-	gst_parent_buffer_meta_debug DATA
 	gst_parent_buffer_meta_get_info
 	gst_parse_bin_from_description
 	gst_parse_bin_from_description_full
