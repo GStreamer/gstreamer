@@ -519,7 +519,7 @@ gst_rtp_h264_add_sps_pps (GstElement * rtph264, GPtrArray * sps_array,
       gst_buffer_map (pps, &ppsmap, GST_MAP_READ);
       parse_pps (&ppsmap, &tmp_sps_id, &tmp_pps_id);
 
-      if (sps_id == tmp_sps_id && pps_id == tmp_pps_id) {
+      if (pps_id == tmp_pps_id) {
         if (map.size == ppsmap.size &&
             memcmp (map.data, ppsmap.data, ppsmap.size) == 0) {
           GST_LOG_OBJECT (rtph264, "Unchanged PPS %u:%u, not updating", sps_id,
