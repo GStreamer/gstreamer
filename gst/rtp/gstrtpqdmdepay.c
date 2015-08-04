@@ -24,7 +24,9 @@
 #include <string.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 #include "gstrtpqdmdepay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY (rtpqdm2depay_debug);
 #define GST_CAT_DEFAULT rtpqdm2depay_debug

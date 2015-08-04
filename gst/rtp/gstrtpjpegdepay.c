@@ -22,12 +22,14 @@
 #endif
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/video/video.h>
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "gstrtpjpegdepay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpjpegdepay_debug);
 #define GST_CAT_DEFAULT (rtpjpegdepay_debug)
@@ -711,6 +713,9 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
       rtpjpegdepay->discont = FALSE;
     }
+
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpjpegdepay), outbuf,
+        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
 
     GST_DEBUG_OBJECT (rtpjpegdepay, "returning %u bytes", avail);
   }

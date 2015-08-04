@@ -23,9 +23,11 @@
 
 #include <gst/tag/tag.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 
 #include <string.h>
 #include "gstrtpvorbisdepay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpvorbisdepay_debug);
 #define GST_CAT_DEFAULT (rtpvorbisdepay_debug)
@@ -288,7 +290,7 @@ gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
       GST_DEBUG_OBJECT (rtpvorbisdepay, "reading header %d, size %u", j,
           h_size);
 
-      buf = gst_buffer_copy_region (confbuf, GST_BUFFER_COPY_MEMORY, offset,
+      buf = gst_buffer_copy_region (confbuf, GST_BUFFER_COPY_ALL, offset,
           h_size);
       conf->headers = g_list_append (conf->headers, buf);
       offset += h_size;
@@ -443,13 +445,16 @@ gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload,
   GstBuffer *outbuf;
   GstFlowReturn ret;
   gint payload_len;
-  guint8 *payload, *to_free = NULL;
+  GstBuffer *payload_buffer = NULL;
+  guint8 *payload;
+  GstMapInfo map;
   guint32 header, ident;
   guint8 F, VDT, packets;
   guint length;
 
   rtpvorbisdepay = GST_RTP_VORBIS_DEPAY (depayload);
 
+  payload = gst_rtp_buffer_get_payload (rtp);
   payload_len = gst_rtp_buffer_get_payload_len (rtp);
 
   GST_DEBUG_OBJECT (depayload, "got RTP packet of size %d", payload_len);
@@ -457,8 +462,6 @@ gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload,
   /* we need at least 4 bytes for the packet header */
   if (G_UNLIKELY (payload_len < 4))
     goto packet_short;
-
-  payload = gst_rtp_buffer_get_payload (rtp);
 
   header = GST_READ_UINT32_BE (payload);
   /*
@@ -501,10 +504,6 @@ gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload,
     }
   }
 
-  /* skip header */
-  payload += 4;
-  payload_len -= 4;
-
   GST_DEBUG_OBJECT (depayload, "ident: %u, F: %d, VDT: %d, packets: %d", ident,
       F, VDT, packets);
 
@@ -536,19 +535,17 @@ gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload,
       goto no_output;
 
     /* construct assembled buffer */
-    payload_len = gst_adapter_available (rtpvorbisdepay->adapter);
-    payload = gst_adapter_take (rtpvorbisdepay->adapter, payload_len);
-
-    /* use this length */
-    length = payload_len - 2;
-
-    to_free = payload;
+    payload_buffer =
+        gst_adapter_take_buffer (rtpvorbisdepay->adapter, payload_len);
   } else {
-    /* read length from data */
-    length = 0;
+    payload_buffer = gst_rtp_buffer_get_payload_subbuffer (rtp, 4, -1);
   }
 
   GST_DEBUG_OBJECT (depayload, "assemble done");
+
+  gst_buffer_map (payload_buffer, &map, GST_MAP_READ);
+  payload = map.data;
+  payload_len = map.size;
 
   /* we not assembling anymore now */
   rtpvorbisdepay->assembling = FALSE;
@@ -570,8 +567,7 @@ gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload,
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+*
    */
   while (payload_len > 2) {
-    if (length == 0)
-      length = GST_READ_UINT16_BE (payload);
+    length = GST_READ_UINT16_BE (payload);
 
     payload += 2;
     payload_len -= 2;
@@ -593,17 +589,9 @@ gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload,
     }
 
     /* create buffer for packet */
-    if (G_UNLIKELY (to_free)) {
-      outbuf = gst_buffer_new ();
-      gst_buffer_append_memory (outbuf,
-          gst_memory_new_wrapped (0, to_free,
-              (payload - to_free) + length, payload - to_free, length, to_free,
-              g_free));
-      to_free = NULL;
-    } else {
-      outbuf = gst_buffer_new_and_alloc (length);
-      gst_buffer_fill (outbuf, 0, payload, length);
-    }
+    outbuf =
+        gst_buffer_copy_region (payload_buffer, GST_BUFFER_COPY_ALL,
+        payload - map.data, length);
 
     payload += length;
     payload_len -= length;
@@ -615,12 +603,17 @@ gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload,
       break;
   }
 
-  g_free (to_free);
+  gst_buffer_unmap (payload_buffer, &map);
+  gst_buffer_unref (payload_buffer);
 
   return NULL;
 
 no_output:
   {
+    if (payload_buffer) {
+      gst_buffer_unmap (payload_buffer, &map);
+      gst_buffer_unref (payload_buffer);
+    }
     return NULL;
   }
   /* ERORRS */
@@ -628,23 +621,39 @@ switch_failed:
   {
     GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,
         (NULL), ("Could not switch codebooks"));
+    if (payload_buffer) {
+      gst_buffer_unmap (payload_buffer, &map);
+      gst_buffer_unref (payload_buffer);
+    }
     return NULL;
   }
 packet_short:
   {
     GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,
         (NULL), ("Packet was too short (%d < 4)", payload_len));
+    if (payload_buffer) {
+      gst_buffer_unmap (payload_buffer, &map);
+      gst_buffer_unref (payload_buffer);
+    }
     return NULL;
   }
 ignore_reserved:
   {
     GST_WARNING_OBJECT (rtpvorbisdepay, "reserved VDT ignored");
+    if (payload_buffer) {
+      gst_buffer_unmap (payload_buffer, &map);
+      gst_buffer_unref (payload_buffer);
+    }
     return NULL;
   }
 length_short:
   {
     GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,
         (NULL), ("Packet contains invalid data"));
+    if (payload_buffer) {
+      gst_buffer_unmap (payload_buffer, &map);
+      gst_buffer_unref (payload_buffer);
+    }
     return NULL;
   }
 invalid_configuration:
@@ -652,6 +661,10 @@ invalid_configuration:
     /* fatal, as we otherwise risk carrying on without output */
     GST_ELEMENT_ERROR (rtpvorbisdepay, STREAM, DECODE,
         (NULL), ("Packet contains invalid configuration"));
+    if (payload_buffer) {
+      gst_buffer_unmap (payload_buffer, &map);
+      gst_buffer_unref (payload_buffer);
+    }
     return NULL;
   }
 }

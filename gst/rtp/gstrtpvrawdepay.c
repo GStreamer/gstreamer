@@ -22,10 +22,12 @@
 #endif
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/video/video.h>
 
 #include <string.h>
 #include <stdlib.h>
 #include "gstrtpvrawdepay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpvrawdepay_debug);
 #define GST_CAT_DEFAULT (rtpvrawdepay_debug)
@@ -328,7 +330,7 @@ gst_rtp_vraw_depay_process_packet (GstRTPBaseDepayload * depayload,
   gint width, height, xinc, yinc;
   GstVideoFrame *frame;
   gboolean marker;
-  GstBuffer *outbuf = NULL;
+  GstBuffer *buf, *outbuf = NULL;
 
   rtpvrawdepay = GST_RTP_VRAW_DEPAY (depayload);
 
@@ -396,6 +398,7 @@ gst_rtp_vraw_depay_process_packet (GstRTPBaseDepayload * depayload,
 
   payload = gst_rtp_buffer_get_payload (rtp);
   payload_len = gst_rtp_buffer_get_payload_len (rtp);
+  buf = gst_rtp_buffer_get_payload_buffer (rtp);
 
   if (payload_len < 3)
     goto short_packet;
@@ -406,6 +409,9 @@ gst_rtp_vraw_depay_process_packet (GstRTPBaseDepayload * depayload,
 
   /* remember header position */
   headers = payload;
+
+  gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpvrawdepay), frame->buffer, buf,
+      g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
 
   /* find data start */
   do {

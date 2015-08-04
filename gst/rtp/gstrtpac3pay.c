@@ -40,8 +40,10 @@
 #include <string.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 
 #include "gstrtpac3pay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpac3pay_debug);
 #define GST_CAT_DEFAULT (rtpac3pay_debug)
@@ -321,6 +323,9 @@ gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay)
 
     payload_buffer =
         gst_adapter_take_buffer_fast (rtpac3pay->adapter, payload_len);
+    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpac3pay), outbuf, payload_buffer,
+        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+
     outbuf = gst_buffer_append (outbuf, payload_buffer);
 
     avail -= payload_len;

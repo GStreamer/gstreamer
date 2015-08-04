@@ -38,9 +38,11 @@
 #endif
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 
 #include <string.h>
 #include "gstrtpac3depay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpac3depay_debug);
 #define GST_CAT_DEFAULT (rtpac3depay_debug)
@@ -153,9 +155,12 @@ gst_rtp_ac3_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   /* We don't bother with fragmented packets yet */
   outbuf = gst_rtp_buffer_get_payload_subbuffer (rtp, 2, -1);
 
-  if (outbuf)
+  if (outbuf) {
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpac3depay), outbuf,
+        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
     GST_DEBUG_OBJECT (rtpac3depay, "pushing buffer of size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (outbuf));
+  }
 
   return outbuf;
 

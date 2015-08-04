@@ -33,7 +33,9 @@
 #include <stdlib.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 #include "gstrtpbvdepay.h"
+#include "gstrtputils.h"
 
 static GstStaticPadTemplate gst_rtp_bv_depay_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -171,6 +173,11 @@ gst_rtp_bv_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   if (marker && outbuf) {
     /* mark start of talkspurt with RESYNC */
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
+  }
+
+  if (outbuf) {
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload), outbuf,
+        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
   }
 
   return outbuf;

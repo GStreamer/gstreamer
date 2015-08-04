@@ -22,9 +22,11 @@
 #endif
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/video/video.h>
 
 #include <string.h>
 #include "gstrtpj2kdepay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpj2kdepay_debug);
 #define GST_CAT_DEFAULT (rtpj2kdepay_debug)
@@ -400,8 +402,12 @@ gst_rtp_j2k_depay_flush_frame (GstRTPBaseDepayload * depayload)
 
     buflist = gst_buffer_list_new ();
 
-    for (walk = list; walk; walk = g_list_next (walk))
+    for (walk = list; walk; walk = g_list_next (walk)) {
+      gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload),
+          GST_BUFFER_CAST (walk->data),
+          g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
       gst_buffer_list_add (buflist, GST_BUFFER_CAST (walk->data));
+    }
 
     g_list_free (list);
 

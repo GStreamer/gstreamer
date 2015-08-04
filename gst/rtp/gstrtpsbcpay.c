@@ -23,9 +23,11 @@
 #include <config.h>
 #endif
 
+#include <gst/audio/audio.h>
 #include "gstrtpsbcpay.h"
 #include <math.h>
 #include <string.h>
+#include "gstrtputils.h"
 
 #define RTP_SBC_PAYLOAD_HEADER_SIZE 1
 #define DEFAULT_MIN_FRAMES 0
@@ -199,6 +201,8 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   gst_rtp_buffer_unmap (&rtp);
 
   paybuf = gst_adapter_take_buffer_fast (sbcpay->adapter, payload_length);
+  gst_rtp_copy_meta (GST_ELEMENT_CAST (sbcpay), outbuf, paybuf,
+      g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
   outbuf = gst_buffer_append (outbuf, paybuf);
 
   /* FIXME: what about duration? */

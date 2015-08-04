@@ -23,9 +23,11 @@
 
 #include <gst/base/gstbitreader.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 
 #include <string.h>
 #include "gstrtpmp4adepay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpmp4adepay_debug);
 #define GST_CAT_DEFAULT (rtpmp4adepay_debug)
@@ -359,8 +361,7 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
       /* take data out, skip the header */
       pos += skip;
-      tmp = gst_buffer_copy_region (outbuf, GST_BUFFER_COPY_MEMORY, pos,
-          data_len);
+      tmp = gst_buffer_copy_region (outbuf, GST_BUFFER_COPY_ALL, pos, data_len);
 
       /* skip data too */
       skip += data_len;
@@ -371,6 +372,8 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       avail -= skip;
 
       GST_BUFFER_PTS (tmp) = timestamp;
+      gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload), tmp,
+          g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
       gst_rtp_base_depayload_push (depayload, tmp);
 
       /* shift ts for next buffers */

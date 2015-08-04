@@ -49,7 +49,9 @@
 #endif
 
 #include "gstrtph261pay.h"
+#include "gstrtputils.h"
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/video/video.h>
 #include <gst/base/gstbitreader.h>
 #include <string.h>
 
@@ -798,9 +800,9 @@ gst_rtp_h261_pay_init_gobs (GstRtpH261Pay * pay, Gob * gobs, gint num_gobs,
 }
 
 static GstFlowReturn
-gst_rtp_h261_pay_fragment_push (GstRtpH261Pay * pay, const guint8 * bits,
-    guint start, guint end, const Macroblock * last_mb_in_previous_packet,
-    gboolean marker)
+gst_rtp_h261_pay_fragment_push (GstRtpH261Pay * pay, GstBuffer * buffer,
+    const guint8 * bits, guint start, guint end,
+    const Macroblock * last_mb_in_previous_packet, gboolean marker)
 {
   GstBuffer *outbuf;
   guint8 *payload;
@@ -848,12 +850,15 @@ gst_rtp_h261_pay_fragment_push (GstRtpH261Pay * pay, const guint8 * bits,
 
   gst_rtp_buffer_unmap (&rtp);
 
+  gst_rtp_copy_meta (GST_ELEMENT_CAST (pay), outbuf, buffer,
+      g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+
   return gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD_CAST (pay), outbuf);
 }
 
 static GstFlowReturn
-gst_rtp_h261_packetize_and_push (GstRtpH261Pay * pay, const guint8 * bits,
-    gsize len)
+gst_rtp_h261_packetize_and_push (GstRtpH261Pay * pay, GstBuffer * buffer,
+    const guint8 * bits, gsize len)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBitReader br_;
@@ -923,7 +928,7 @@ gst_rtp_h261_packetize_and_push (GstRtpH261Pay * pay, const guint8 * bits,
       goto beach;
 
     marker = result == PARSE_END_OF_FRAME;
-    ret = gst_rtp_h261_pay_fragment_push (pay, bits, startpos, endpos,
+    ret = gst_rtp_h261_pay_fragment_push (pay, buffer, bits, startpos, endpos,
         &last_mb_in_previous_packet, marker);
 
     last_mb_in_previous_packet = gob->last;
@@ -1003,7 +1008,7 @@ gst_rtp_h261_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 
   shift = pay->offset - psc_offset;
   bits = gst_rtp_h261_pay_shift_buffer (pay, map.data, map.size, shift, &len);
-  ret = gst_rtp_h261_packetize_and_push (pay, bits, len);
+  ret = gst_rtp_h261_packetize_and_push (pay, buffer, bits, len);
   g_free (bits);
 
 beach:

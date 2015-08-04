@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include "gstrtpmp1sdepay.h"
+#include "gstrtputils.h"
 
 /* RtpMP1SDepay signals and args */
 enum
@@ -124,9 +125,12 @@ gst_rtp_mp1s_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
   outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
 
-  if (outbuf)
+  if (outbuf) {
     GST_DEBUG ("gst_rtp_mp1s_depay_chain: pushing buffer of size %"
         G_GSIZE_FORMAT, gst_buffer_get_size (outbuf));
+
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload), outbuf, 0);
+  }
 
   return outbuf;
 }

@@ -38,8 +38,10 @@
 
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/video/video.h>
 
 #include "gstrtpjpegpay.h"
+#include "gstrtputils.h"
 
 static GstStaticPadTemplate gst_rtp_jpeg_pay_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -891,10 +893,12 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
     gst_rtp_buffer_unmap (&rtp);
 
     /* create a new buf to hold the payload */
-    paybuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY,
+    paybuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL,
         jpeg_header_size + offset, payload_size);
 
     /* join memory parts */
+    gst_rtp_copy_meta (GST_ELEMENT_CAST (pay), outbuf, paybuf,
+        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
     outbuf = gst_buffer_append (outbuf, paybuf);
 
     GST_BUFFER_PTS (outbuf) = timestamp;

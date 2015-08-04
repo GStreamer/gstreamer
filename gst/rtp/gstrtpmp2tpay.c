@@ -26,6 +26,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include "gstrtpmp2tpay.h"
+#include "gstrtputils.h"
 
 static GstStaticPadTemplate gst_rtp_mp2t_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -155,6 +156,7 @@ gst_rtp_mp2t_pay_flush (GstRTPMP2TPay * rtpmp2tpay)
 
     /* get payload */
     paybuf = gst_adapter_take_buffer_fast (rtpmp2tpay->adapter, payload_len);
+    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpmp2tpay), outbuf, paybuf, 0);
     outbuf = gst_buffer_append (outbuf, paybuf);
     avail -= payload_len;
 

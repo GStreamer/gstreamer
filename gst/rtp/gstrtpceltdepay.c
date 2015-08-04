@@ -24,8 +24,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 
 #include "gstrtpceltdepay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpceltdepay_debug);
 #define GST_CAT_DEFAULT (rtpceltdepay_debug)
@@ -257,6 +259,9 @@ gst_rtp_celt_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
         GST_TIME_FORMAT ", duration=%" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
+
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload), outbuf,
+        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
 
     gst_rtp_base_depayload_push (depayload, outbuf);
   }

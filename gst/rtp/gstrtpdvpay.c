@@ -27,6 +27,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include "gstrtpdvpay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY (rtpdvpay_debug);
 #define GST_CAT_DEFAULT (rtpdvpay_debug)
@@ -372,6 +373,7 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
       /* Push out the created piece, and check for errors. */
       gst_rtp_buffer_unmap (&rtp);
+      gst_rtp_copy_meta (GST_ELEMENT_CAST (basepayload), outbuf, buffer, 0);
       ret = gst_rtp_base_payload_push (basepayload, outbuf);
       if (ret != GST_FLOW_OK)
         break;

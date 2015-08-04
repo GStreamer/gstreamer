@@ -26,6 +26,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include "gstrtpgstpay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_pay_debug);
 #define GST_CAT_DEFAULT gst_rtp_pay_debug
@@ -336,6 +337,7 @@ gst_rtp_gst_pay_create_from_adapter (GstRtpGSTPay * rtpgstpay,
     paybuf = gst_adapter_take_buffer_fast (rtpgstpay->adapter, payload_len);
 
     /* create a new group to hold the rtp header and the payload */
+    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpgstpay), outbuf, paybuf, 0);
     outbuf = gst_buffer_append (outbuf, paybuf);
 
     GST_BUFFER_PTS (outbuf) = timestamp;

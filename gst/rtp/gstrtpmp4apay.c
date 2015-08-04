@@ -24,8 +24,10 @@
 #include <string.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 
 #include "gstrtpmp4apay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpmp4apay_debug);
 #define GST_CAT_DEFAULT (rtpmp4apay_debug)
@@ -433,6 +435,8 @@ gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
         offset, payload_len);
 
     /* join memory parts */
+    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpmp4apay), outbuf, paybuf,
+        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
     outbuf = gst_buffer_append (outbuf, paybuf);
     gst_buffer_list_add (list, outbuf);
     offset += payload_len;

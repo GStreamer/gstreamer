@@ -30,8 +30,10 @@
 #include <gst/base/gstbitreader.h>
 #include <gst/rtp/gstrtppayloads.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/video/video.h>
 #include "dboolhuff.h"
 #include "gstrtpvp8pay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp8_pay_debug);
 #define GST_CAT_DEFAULT gst_rtp_vp8_pay_debug
@@ -411,7 +413,6 @@ gst_rtp_vp8_create_header_buffer (GstRtpVP8Pay * self, guint8 partid,
   return out;
 }
 
-
 static guint
 gst_rtp_vp8_payload_next (GstRtpVP8Pay * self, GstBufferList * list,
     guint offset, GstBuffer * buffer, gsize buffer_size, gsize max_payload_len)
@@ -438,6 +439,8 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self, GstBufferList * list,
       offset == self->partition_offset[partition], mark, buffer);
   sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset, available);
 
+  gst_rtp_copy_meta (GST_ELEMENT_CAST (self), header, buffer,
+      g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
   out = gst_buffer_append (header, sub);
 
   gst_buffer_list_insert (list, -1, out);

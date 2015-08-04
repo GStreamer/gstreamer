@@ -32,8 +32,10 @@
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/base/gstadapter.h>
+#include <gst/audio/audio.h>
 
 #include "gstrtpg729pay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpg729pay_debug);
 #define GST_CAT_DEFAULT (rtpg729pay_debug)
@@ -188,6 +190,8 @@ gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay, GstBuffer * buf)
   gst_rtp_buffer_unmap (&rtp);
 
   /* append payload */
+  gst_rtp_copy_meta (GST_ELEMENT_CAST (basepayload), outbuf, buf,
+      g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
   outbuf = gst_buffer_append (outbuf, buf);
 
   ret = gst_rtp_base_payload_push (basepayload, outbuf);

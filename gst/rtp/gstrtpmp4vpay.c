@@ -24,8 +24,10 @@
 #include <string.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/video/video.h>
 
 #include "gstrtpmp4vpay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpmp4vpay_debug);
 #define GST_CAT_DEFAULT (rtpmp4vpay_debug)
@@ -285,7 +287,8 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
     gst_rtp_buffer_set_marker (&rtp, avail == 0);
     gst_rtp_buffer_unmap (&rtp);
-
+    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpmp4vpay), outbuf, outbuf_data,
+        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
     outbuf = gst_buffer_append (outbuf, outbuf_data);
 
     GST_BUFFER_PTS (outbuf) = rtpmp4vpay->first_timestamp;
@@ -462,7 +465,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
           (gint) size - strip);
 
       /* strip off header */
-      subbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY, strip,
+      subbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, strip,
           size - strip);
       GST_BUFFER_PTS (subbuf) = timestamp;
       gst_buffer_unref (buffer);

@@ -24,8 +24,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 
 #include "gstrtpspeexpay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpspeexpay_debug);
 #define GST_CAT_DEFAULT (rtpspeexpay_debug)
@@ -287,6 +289,8 @@ gst_rtp_speex_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GST_BUFFER_PTS (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = duration;
 
+  gst_rtp_copy_meta (GST_ELEMENT_CAST (basepayload), outbuf, buffer,
+      g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
   outbuf = gst_buffer_append (outbuf, buffer);
   buffer = NULL;
 

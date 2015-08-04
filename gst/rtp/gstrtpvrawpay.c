@@ -24,8 +24,10 @@
 #include <string.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/video/video.h>
 
 #include "gstrtpvrawpay.h"
+#include "gstrtputils.h"
 
 enum
 {
@@ -554,6 +556,10 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
         GST_LOG_OBJECT (rtpvrawpay, "we have %u bytes left", left);
         gst_buffer_resize (out, 0, gst_buffer_get_size (out) - left);
       }
+
+      gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpvrawpay), out, buffer,
+          g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+
 
       /* Now either push out the buffer directly */
       if (!use_buffer_lists) {

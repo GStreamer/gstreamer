@@ -24,8 +24,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 
 #include "gstrtpspeexdepay.h"
+#include "gstrtputils.h"
 
 /* RtpSPEEXDepay signals and args */
 enum
@@ -208,8 +210,11 @@ gst_rtp_speex_depay_process (GstRTPBaseDepayload * depayload,
   /* nothing special to be done */
   outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
 
-  if (outbuf)
+  if (outbuf) {
     GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload), outbuf,
+        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+  }
 
   return outbuf;
 }

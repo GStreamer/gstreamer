@@ -22,9 +22,11 @@
 #endif
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/video/video.h>
 
 #include <string.h>
 #include "gstrtpmp4vdepay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpmp4vdepay_debug);
 #define GST_CAT_DEFAULT (rtpmp4vdepay_debug)
@@ -185,7 +187,10 @@ gst_rtp_mp4v_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
     GST_DEBUG ("gst_rtp_mp4v_depay_chain: pushing buffer of size %"
         G_GSIZE_FORMAT, gst_buffer_get_size (outbuf));
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpmp4vdepay), outbuf,
+        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
   }
+
   return outbuf;
 }
 

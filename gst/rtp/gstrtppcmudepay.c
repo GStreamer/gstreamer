@@ -25,7 +25,9 @@
 
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 #include "gstrtppcmudepay.h"
+#include "gstrtputils.h"
 
 /* RtpPcmuDepay signals and args */
 enum
@@ -148,6 +150,9 @@ gst_rtp_pcmu_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       /* mark start of talkspurt with RESYNC */
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
     }
+
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload), outbuf,
+        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
   }
 
   return outbuf;

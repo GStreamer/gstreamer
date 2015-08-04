@@ -21,10 +21,12 @@
 #endif
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include "gstrtpg729depay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpg729depay_debug);
 #define GST_CAT_DEFAULT (rtpg729depay_debug)
@@ -199,6 +201,9 @@ gst_rtp_g729_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     /* marker bit starts talkspurt */
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
   }
+
+  gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload), outbuf,
+      g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
 
   GST_LOG_OBJECT (depayload, "pushing buffer of size %" G_GSIZE_FORMAT,
       gst_buffer_get_size (outbuf));

@@ -28,8 +28,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/audio/audio.h>
 
 #include "gstrtpg726depay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpg726depay_debug);
 #define GST_CAT_DEFAULT (rtpg726depay_debug)
@@ -226,6 +228,8 @@ gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
     if (!outbuf)
       goto bad_len;
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (depay), outbuf,
+        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
   } else {
     guint8 *in, *out, tmp;
     guint len;
@@ -238,6 +242,9 @@ gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     if (!outbuf)
       goto bad_len;
     outbuf = gst_buffer_make_writable (outbuf);
+
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (depay), outbuf,
+        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
 
     gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
     out = map.data;

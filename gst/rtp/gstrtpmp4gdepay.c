@@ -26,6 +26,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include "gstrtpmp4gdepay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpmp4gdepay_debug);
 #define GST_CAT_DEFAULT (rtpmp4gdepay_debug)
@@ -347,6 +348,7 @@ gst_rtp_mp4g_depay_flush_queue (GstRtpMP4GDepay * rtpmp4gdepay)
     }
 
     GST_DEBUG_OBJECT (rtpmp4gdepay, "pushing AU_index %u", AU_index);
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpmp4gdepay), outbuf, 0);
     gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmp4gdepay), outbuf);
     rtpmp4gdepay->next_AU_index = AU_index + 1;
   }
@@ -367,6 +369,7 @@ gst_rtp_mp4g_depay_queue (GstRtpMP4GDepay * rtpmp4gdepay, GstBuffer * outbuf)
 
     /* we received the expected packet, push it and flush as much as we can from
      * the queue */
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpmp4gdepay), outbuf, 0);
     gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmp4gdepay), outbuf);
     rtpmp4gdepay->next_AU_index++;
 
@@ -379,6 +382,7 @@ gst_rtp_mp4g_depay_queue (GstRtpMP4GDepay * rtpmp4gdepay, GstBuffer * outbuf)
         GST_DEBUG_OBJECT (rtpmp4gdepay, "pushing expected AU_index %u",
             AU_index);
         outbuf = g_queue_pop_head (rtpmp4gdepay->packets);
+        gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpmp4gdepay), outbuf, 0);
         gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmp4gdepay),
             outbuf);
         rtpmp4gdepay->next_AU_index++;

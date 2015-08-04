@@ -44,6 +44,7 @@
 
 #include "gstrtpL24depay.h"
 #include "gstrtpchannels.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpL24depay_debug);
 #define GST_CAT_DEFAULT (rtpL24depay_debug)
@@ -228,6 +229,10 @@ gst_rtp_L24_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   }
 
   outbuf = gst_buffer_make_writable (outbuf);
+  if (outbuf) {
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpL24depay), outbuf,
+        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+  }
   if (rtpL24depay->order &&
       !gst_audio_buffer_reorder_channels (outbuf,
           rtpL24depay->info.finfo->format, rtpL24depay->info.channels,

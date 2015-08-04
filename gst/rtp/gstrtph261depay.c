@@ -45,8 +45,10 @@
 #include <string.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/video/video.h>
 #include "gstrtph261depay.h"
 #include "gstrtph261pay.h"      /* GstRtpH261PayHeader */
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtph261depay_debug);
 #define GST_CAT_DEFAULT (rtph261depay_debug)
@@ -168,6 +170,8 @@ skip:
 
       avail = gst_adapter_available (depay->adapter);
       outbuf = gst_adapter_take_buffer (depay->adapter, avail);
+      gst_rtp_drop_meta (GST_ELEMENT_CAST (depay), outbuf,
+          g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
 
       /* Note that the I flag does not mean intra frame, but that the entire
        * stream is intra coded. */

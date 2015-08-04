@@ -26,11 +26,13 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/video/video.h>
 
 /* Included to not duplicate gst_rtp_h264_add_sps_pps () */
 #include "gstrtph264depay.h"
 
 #include "gstrtph264pay.h"
+#include "gstrtputils.h"
 
 
 #define IDR_TYPE_ID  5
@@ -877,6 +879,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     gst_rtp_buffer_unmap (&rtp);
 
     /* insert payload memory block */
+    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph264pay), outbuf, paybuf,
+        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
     outbuf = gst_buffer_append (outbuf, paybuf);
 
     /* push the buffer to the next element */
@@ -936,9 +940,10 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
       gst_rtp_buffer_unmap (&rtp);
 
       /* insert payload memory block */
-      gst_buffer_append (outbuf,
-          gst_buffer_copy_region (paybuf, GST_BUFFER_COPY_MEMORY, pos,
-              limitedSize));
+      gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph264pay), outbuf, paybuf,
+          g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+      gst_buffer_copy_into (outbuf, paybuf, GST_BUFFER_COPY_MEMORY, pos,
+          limitedSize);
 
       if (!delta_unit)
         /* Only the first packet sent should not have the flag */
@@ -1088,7 +1093,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
         end_of_au = TRUE;
       }
 
-      paybuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY, offset,
+      paybuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset,
           nal_len);
       ret =
           gst_rtp_h264_pay_payload_nal (basepayload, paybuf, dts, pts,
