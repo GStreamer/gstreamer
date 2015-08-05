@@ -581,7 +581,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
 
     if (!(self->digitalzoom = g_object_new (GST_TYPE_DIGITAL_ZOOM, NULL))) {
       GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN,
-          (_("Digitalzoom element cound't be created")), (NULL));
+          (_("Digitalzoom element couldn't be created")), (NULL));
 
       goto done;
     }
