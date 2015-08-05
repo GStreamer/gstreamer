@@ -894,7 +894,6 @@ gst_x265_enc_set_format (GstVideoEncoder * video_enc,
 {
   GstX265Enc *encoder = GST_X265_ENC (video_enc);
   GstVideoInfo *info = &state->info;
-  gboolean level_ok = TRUE;
 
   /* If the encoder is initialized, do not reinitialize it again if not
    * necessary */
@@ -917,9 +916,6 @@ gst_x265_enc_set_format (GstVideoEncoder * video_enc,
   if (encoder->input_state)
     gst_video_codec_state_unref (encoder->input_state);
   encoder->input_state = gst_video_codec_state_ref (state);
-
-  if (!level_ok)
-    return FALSE;
 
   if (!gst_x265_enc_init_encoder (encoder))
     return FALSE;
