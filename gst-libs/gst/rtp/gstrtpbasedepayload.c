@@ -355,7 +355,6 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
   GstRTPBaseDepayloadPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
-  GstClockTime pts, dts;
   guint16 seqnum;
   guint32 rtptime;
   gboolean discont, buf_discont;
@@ -376,14 +375,8 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
 
   buf_discont = GST_BUFFER_IS_DISCONT (in);
 
-  pts = GST_BUFFER_PTS (in);
-  dts = GST_BUFFER_DTS (in);
-  /* convert to running_time and save the timestamp, this is the timestamp
-   * we put on outgoing buffers. */
-  pts = gst_segment_to_running_time (&filter->segment, GST_FORMAT_TIME, pts);
-  dts = gst_segment_to_running_time (&filter->segment, GST_FORMAT_TIME, dts);
-  priv->pts = pts;
-  priv->dts = dts;
+  priv->pts = GST_BUFFER_PTS (in);
+  priv->dts = GST_BUFFER_DTS (in);
   priv->duration = GST_BUFFER_DURATION (in);
 
   seqnum = gst_rtp_buffer_get_seq (&rtp);
@@ -396,7 +389,7 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
 
   GST_LOG_OBJECT (filter, "discont %d, seqnum %u, rtptime %u, pts %"
       GST_TIME_FORMAT ", dts %" GST_TIME_FORMAT, buf_discont, seqnum, rtptime,
-      GST_TIME_ARGS (pts), GST_TIME_ARGS (dts));
+      GST_TIME_ARGS (priv->pts), GST_TIME_ARGS (priv->dts));
 
   /* Check seqnum. This is a very simple check that makes sure that the seqnums
    * are strictly increasing, dropping anything that is out of the ordinary. We
@@ -904,8 +897,16 @@ gst_rtp_base_depayload_create_stats (GstRTPBaseDepayload * depayload)
 {
   GstRTPBaseDepayloadPrivate *priv;
   GstStructure *s;
+  GstClockTime pts, dts;
 
   priv = depayload->priv;
+
+  /* FIXME this isn't thread safe */
+
+  pts = gst_segment_to_running_time (&depayload->segment, GST_FORMAT_TIME,
+      priv->pts);
+  dts = gst_segment_to_running_time (&depayload->segment, GST_FORMAT_TIME,
+      priv->dts);
 
   s = gst_structure_new ("application/x-rtp-depayload-stats",
       "clock_rate", G_TYPE_UINT, depayload->clock_rate,
@@ -913,8 +914,8 @@ gst_rtp_base_depayload_create_stats (GstRTPBaseDepayload * depayload)
       "npt-stop", G_TYPE_UINT64, priv->npt_stop,
       "play-speed", G_TYPE_DOUBLE, priv->play_speed,
       "play-scale", G_TYPE_DOUBLE, priv->play_scale,
-      "running-time-dts", G_TYPE_UINT64, priv->dts,
-      "running-time-pts", G_TYPE_UINT64, priv->pts,
+      "running-time-dts", G_TYPE_UINT64, dts,
+      "running-time-pts", G_TYPE_UINT64, pts,
       "seqnum", G_TYPE_UINT, (guint) priv->last_seqnum,
       "timestamp", G_TYPE_UINT, (guint) priv->last_rtptime, NULL);
 
