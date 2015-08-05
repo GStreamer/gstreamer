@@ -617,8 +617,9 @@ gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_WARNING_OBJECT (rtx, "Payload %d not in rtx-pt-map", payload);
 
       GST_DEBUG_OBJECT (rtx,
-          "got caps for payload: %d->%d, ssrc: %u->%d: %" GST_PTR_FORMAT,
-          payload, GPOINTER_TO_INT (rtx_payload), ssrc, data->rtx_ssrc, caps);
+          "got caps for payload: %d->%d, ssrc: %u->%" G_GUINT32_FORMAT ": %"
+          GST_PTR_FORMAT, payload, GPOINTER_TO_INT (rtx_payload), ssrc,
+          data->rtx_ssrc, caps);
 
       gst_structure_get_int (s, "clock-rate", &data->clock_rate);
 
