@@ -2629,7 +2629,8 @@ gst_harness_stress_custom_func (GstHarnessThread * t)
   GstHarnessCustomThread *ct = (GstHarnessCustomThread *) t;
   guint count = 0;
 
-  ct->init (ct, ct->data);
+  if (ct->init != NULL)
+    ct->init (ct, ct->data);
 
   while (t->running) {
     ct->callback (ct, ct->data);
@@ -2829,7 +2830,7 @@ gst_harness_stress_thread_stop (GstHarnessThread * t)
 /**
  * gst_harness_stress_custom_start: (skip)
  * @h: a #GstHarness
- * @init: a #GFunc that is called initially and only once
+ * @init: (allow-none): a #GFunc that is called initially and only once
  * @callback: a #GFunc that is called as often as possible
  * @data: a #gpointer with custom data to pass to the @callback function
  * @sleep: a #gulong specifying how long to sleep in (microseconds) for
