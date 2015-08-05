@@ -3400,10 +3400,21 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
       ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
 
-  /* a dropped buffer does not participate in anything */
+  /* a dropped buffer does not participate in anything. Buffer can only be
+   * dropped if their PTS falls completly outside the segment, while we sync
+   * preferably on DTS */
   if (GST_CLOCK_TIME_IS_VALID (start) && (segment->format == GST_FORMAT_TIME)) {
+    GstClockTime pts = GST_BUFFER_PTS (sync_buf);
+    GstClockTime pts_end = GST_CLOCK_TIME_NONE;
+
+    if (!GST_CLOCK_TIME_IS_VALID (pts))
+      pts = start;
+
+    if (GST_CLOCK_TIME_IS_VALID (end))
+      pts_end = pts + (end - start);
+
     if (G_UNLIKELY (!gst_segment_clip (segment,
-                GST_FORMAT_TIME, start, end, NULL, NULL)))
+                GST_FORMAT_TIME, pts, pts_end, NULL, NULL)))
       goto out_of_segment;
   }
 
