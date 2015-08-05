@@ -223,7 +223,7 @@ gst_face_detect_finalize (GObject * obj)
   GstFaceDetect *filter = GST_FACE_DETECT (obj);
 
   if (filter->cvGray)
-    delete (&filter->cvGray);
+    cvReleaseImage(&filter->cvGray);
   if (filter->cvStorage)
     cvReleaseMemStorage (&filter->cvStorage);
 
@@ -501,7 +501,7 @@ gst_face_detect_set_caps (GstOpencvVideoFilter * transform, gint in_width,
   filter = GST_FACE_DETECT (transform);
 
   if (filter->cvGray)
-    delete (&filter->cvGray);
+    cvReleaseImage(&filter->cvGray);
 
   filter->cvGray = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U,
       1);
