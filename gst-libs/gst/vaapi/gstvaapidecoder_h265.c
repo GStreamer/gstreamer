@@ -1620,10 +1620,6 @@ init_picture_refs (GstVaapiDecoderH265 * decoder,
   memset (priv->RefPicList1, 0, sizeof (GstVaapiPictureH265 *) * 16);
   priv->RefPicList0_count = priv->RefPicList1_count = 0;
 
-  if ((slice_hdr->type != GST_H265_B_SLICE) &&
-      (slice_hdr->type != GST_H265_P_SLICE))
-    return;
-
   if (slice_hdr->dependent_slice_segment_flag) {
     GstH265SliceHdr *tmp = &priv->prev_independent_slice_pi->data.slice_hdr;
     num_ref_idx_l0_active_minus1 = tmp->num_ref_idx_l0_active_minus1;
@@ -1636,6 +1632,11 @@ init_picture_refs (GstVaapiDecoderH265 * decoder,
     ref_pic_list_modification = &slice_hdr->ref_pic_list_modification;
     type = slice_hdr->type;
   }
+
+  /* decoding process for reference picture list construction needs to be
+   * invoked only for P and B slice */
+  if (type == GST_H265_I_SLICE)
+    return;
 
   NumRpsCurrTempList0 =
       MAX ((num_ref_idx_l0_active_minus1 + 1), priv->NumPocTotalCurr);
