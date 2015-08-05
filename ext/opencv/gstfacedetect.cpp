@@ -803,14 +803,12 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
 static CascadeClassifier *
 gst_face_detect_load_profile (GstFaceDetect * filter, gchar * profile)
 {
-  CascadeClassifier *cascade = new CascadeClassifier (profile);
+  CascadeClassifier *cascade;
 
   if (profile == NULL)
-    return NULL;
-  if (!cascade) {
-    GST_WARNING_OBJECT (filter, "Couldn't load Haar classifier cascade: %s.",
-        profile);
-  }
+     return NULL;
+
+  cascade = new CascadeClassifier (profile);
   return cascade;
 }
 
