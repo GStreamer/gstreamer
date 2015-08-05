@@ -69,6 +69,15 @@
    fun:aac_decode_frame
 }
 
+# PENDING: https://bugzilla.gnome.org/show_bug.cgi?id=752989
+{
+   https://bugzilla.gnome.org/show_bug.cgi?id=752989
+   Memcheck:Value4
+   ...
+   fun:aac_decode_frame_int
+   fun:aac_decode_frame
+}
+
 # PENDING: https://bugs.freedesktop.org/show_bug.cgi?id=90194
 {
    https://bugs.freedesktop.org/show_bug.cgi?id=90194
