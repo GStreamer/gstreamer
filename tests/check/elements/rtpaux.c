@@ -94,7 +94,7 @@ rtprtxsend_srcpad_probe (GstPad * pad, GstPadProbeInfo * info,
     payload_type = gst_rtp_buffer_get_payload_type (&rtp);
 
     /* main stream packets */
-    if (payload_type == 8) {
+    if (payload_type == 96) {
       /* count packets of the main stream */
       ++rtxdata->nb_packets;
       /* drop some packets */
@@ -238,7 +238,7 @@ GST_START_TEST (test_simple_rtpbin_aux)
   g_object_set (recvrtp_udpsrc, "port", 5006, NULL);
   rtpcaps =
       gst_caps_from_string
-      ("application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-name=(string)PCMA,payload=(int)8");
+      ("application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-name=(string)PCMA,payload=(int)96");
   g_object_set (recvrtp_udpsrc, "caps", rtpcaps, NULL);
   gst_caps_unref (rtpcaps);
   recvrtcp_udpsrc = gst_element_factory_make ("udpsrc", "recvrtcp_udpsrc");
