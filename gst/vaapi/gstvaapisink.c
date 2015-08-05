@@ -57,9 +57,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapisink);
 /* Default template */
 /* *INDENT-OFF* */
 static const char gst_vaapisink_sink_caps_str[] =
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
-        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE,
-        "{ ENCODED, NV12, I420, YV12 }") ";"
+    GST_VAAPI_MAKE_ENC_SURFACE_CAPS ";"
 #if GST_CHECK_VERSION(1,3,1)
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
         GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE ","

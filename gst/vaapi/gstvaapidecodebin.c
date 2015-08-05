@@ -53,10 +53,6 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
-#define GST_VAAPI_DECODE_BIN_SURFACE_CAPS \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(  \
-        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, I420, YV12, NV12 }")
-
 /* Default templates */
 #define GST_CAPS_CODEC(CODEC) CODEC "; "
 /* *INDENT-OFF* */
@@ -82,10 +78,9 @@ static const char gst_vaapi_decode_bin_sink_caps_str[] =
 
 /* *INDENT-OFF* */
 static const char gst_vaapi_decode_bin_src_caps_str[] =
-  GST_VAAPI_DECODE_BIN_SURFACE_CAPS ", "
+  GST_VAAPI_MAKE_SURFACE_CAPS ", "
   GST_CAPS_INTERLACED_FALSE "; "
-  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
-      GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }") ", "
+  GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS ", "
   GST_CAPS_INTERLACED_FALSE "; "
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
   GST_CAPS_INTERLACED_FALSE;

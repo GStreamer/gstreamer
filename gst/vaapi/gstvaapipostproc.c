@@ -44,29 +44,21 @@
 GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapipostproc);
 #define GST_CAT_DEFAULT gst_debug_vaapipostproc
 
-# define GST_VAAPIPOSTPROC_SURFACE_CAPS \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(  \
-        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, I420, YV12, NV12 }")
-
-# define GST_VAAPIPOSTPROC_GLTEXUPLOAD_CAPS \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(  \
-        GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }")
-
 /* Default templates */
 /* *INDENT-OFF* */
 static const char gst_vaapipostproc_sink_caps_str[] =
-  GST_VAAPIPOSTPROC_SURFACE_CAPS ", "
+  GST_VAAPI_MAKE_SURFACE_CAPS ", "
   GST_CAPS_INTERLACED_MODES "; "
-  GST_VAAPIPOSTPROC_GLTEXUPLOAD_CAPS "; "
+  GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS "; "
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
    GST_CAPS_INTERLACED_MODES;
 /* *INDENT-ON* */
 
 /* *INDENT-OFF* */
 static const char gst_vaapipostproc_src_caps_str[] =
-  GST_VAAPIPOSTPROC_SURFACE_CAPS ", "
+  GST_VAAPI_MAKE_SURFACE_CAPS ", "
   GST_CAPS_INTERLACED_FALSE "; "
-  GST_VAAPIPOSTPROC_GLTEXUPLOAD_CAPS "; "
+  GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS "; "
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
   GST_CAPS_INTERLACED_FALSE;
 /* *INDENT-ON* */
@@ -923,7 +915,7 @@ ensure_allowed_sinkpad_caps (GstVaapiPostproc * postproc)
     return TRUE;
 
   /* Create VA caps */
-  out_caps = gst_caps_from_string (GST_VAAPIPOSTPROC_SURFACE_CAPS ", "
+  out_caps = gst_caps_from_string (GST_VAAPI_MAKE_SURFACE_CAPS ", "
       GST_CAPS_INTERLACED_MODES);
   if (!out_caps) {
     GST_ERROR_OBJECT (postproc, "failed to create VA sink caps");

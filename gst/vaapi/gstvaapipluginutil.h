@@ -97,6 +97,18 @@ gst_vaapi_caps_feature_to_string (GstVaapiCapsFeature feature);
 # define GST_CAPS_INTERLACED_FALSE \
     "interlace-mode = (string)progressive"
 
+#define GST_VAAPI_MAKE_SURFACE_CAPS					\
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(					\
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, I420, YV12, NV12 }")
+
+#define GST_VAAPI_MAKE_ENC_SURFACE_CAPS				\
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(					\
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, NV12, I420, YV12 }")
+
+#define GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS				\
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(					\
+        GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }")
+
 G_GNUC_INTERNAL
 gboolean
 gst_caps_set_interlaced (GstCaps * caps, GstVideoInfo * vip);

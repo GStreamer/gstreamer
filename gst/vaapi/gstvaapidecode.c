@@ -82,10 +82,8 @@ static const char gst_vaapidecode_sink_caps_str[] =
     ;
 
 static const char gst_vaapidecode_src_caps_str[] =
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
-        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, I420, YV12, NV12 }") ";"
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
-        GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }") ";"
+    GST_VAAPI_MAKE_SURFACE_CAPS ";"
+    GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS ";"
     GST_VIDEO_CAPS_MAKE("{ I420, YV12, NV12 }");
 
 static GstStaticPadTemplate gst_vaapidecode_sink_factory =
