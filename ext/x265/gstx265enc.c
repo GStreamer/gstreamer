@@ -735,6 +735,7 @@ gst_x265_enc_set_level_tier_and_profile (GstX265Enc * encoder, GstCaps * caps)
   x265_nal *nal, *vps_nal;
   guint32 i_nal;
   int header_return;
+  gboolean ret = TRUE;
 
   GST_DEBUG_OBJECT (encoder, "set profile, level and tier");
 
@@ -756,12 +757,12 @@ gst_x265_enc_set_level_tier_and_profile (GstX265Enc * encoder, GstCaps * caps)
           vps_nal->payload + 6, vps_nal->sizeBytes - 6)) {
     GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, ("Encode x265 failed."),
         ("Failed to find correct level, tier or profile in VPS"));
-    return FALSE;
+    ret = FALSE;
   }
 
   x265_nal_free (vps_nal);
 
-  return TRUE;
+  return ret;
 }
 
 static GstBuffer *
