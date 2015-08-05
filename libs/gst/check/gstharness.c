@@ -366,11 +366,13 @@ gst_harness_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       } else {
         GstCaps *caps;
         gboolean need_pool;
+        guint size;
 
         gst_query_parse_allocation (query, &caps, &need_pool);
 
         /* FIXME: Can this be removed? */
-        g_assert_cmpuint (0, ==, gst_query_get_n_allocation_params (query));
+        size = gst_query_get_n_allocation_params (query);
+        g_assert_cmpuint (0, ==, size);
         gst_query_add_allocation_param (query,
             priv->propose_allocator, &priv->propose_allocation_params);
 
@@ -450,10 +452,12 @@ gst_harness_link_element_srcpad (GstHarness * h,
   GstHarnessPrivate *priv = h->priv;
   GstPad *srcpad = gst_element_get_static_pad (h->element,
       element_srcpad_name);
+  GstPadLinkReturn link;
   if (srcpad == NULL)
     srcpad = gst_element_get_request_pad (h->element, element_srcpad_name);
   g_assert (srcpad);
-  g_assert_cmpint (gst_pad_link (srcpad, h->sinkpad), ==, GST_PAD_LINK_OK);
+  link = gst_pad_link (srcpad, h->sinkpad);
+  g_assert_cmpint (link, ==, GST_PAD_LINK_OK);
   g_free (priv->element_srcpad_name);
   priv->element_srcpad_name = gst_pad_get_name (srcpad);
 
@@ -467,10 +471,12 @@ gst_harness_link_element_sinkpad (GstHarness * h,
   GstHarnessPrivate *priv = h->priv;
   GstPad *sinkpad = gst_element_get_static_pad (h->element,
       element_sinkpad_name);
+  GstPadLinkReturn link;
   if (sinkpad == NULL)
     sinkpad = gst_element_get_request_pad (h->element, element_sinkpad_name);
   g_assert (sinkpad);
-  g_assert_cmpint (gst_pad_link (h->srcpad, sinkpad), ==, GST_PAD_LINK_OK);
+  link = gst_pad_link (h->srcpad, sinkpad);
+  g_assert_cmpint (link, ==, GST_PAD_LINK_OK);
   g_free (priv->element_sinkpad_name);
   priv->element_sinkpad_name = gst_pad_get_name (sinkpad);
 
@@ -647,10 +653,12 @@ gst_harness_new_full (GstElement * element,
     turn_async_and_sync_off (h->element);
 
   if (h->srcpad != NULL) {
+    gboolean handled;
     gchar *stream_id = g_strdup_printf ("%s-%p",
         GST_OBJECT_NAME (h->element), h);
-    g_assert (gst_pad_push_event (h->srcpad,
-            gst_event_new_stream_start (stream_id)));
+    handled = gst_pad_push_event (h->srcpad,
+        gst_event_new_stream_start (stream_id));
+    g_assert (handled);
     g_free (stream_id);
   }
 
@@ -927,11 +935,12 @@ gst_harness_teardown (GstHarness * h)
 
   /* if we hold the last ref, set to NULL */
   if (gst_harness_element_unref (h) == 0) {
+    gboolean state_change;
     GstState state, pending;
-    g_assert (gst_element_set_state (h->element, GST_STATE_NULL) ==
-        GST_STATE_CHANGE_SUCCESS);
-    g_assert (gst_element_get_state (h->element, &state, &pending, 0) ==
-        GST_STATE_CHANGE_SUCCESS);
+    state_change = gst_element_set_state (h->element, GST_STATE_NULL);
+    g_assert (state_change == GST_STATE_CHANGE_SUCCESS);
+    state_change = gst_element_get_state (h->element, &state, &pending, 0);
+    g_assert (state_change == GST_STATE_CHANGE_SUCCESS);
     g_assert (state == GST_STATE_NULL);
   }
 
@@ -962,9 +971,11 @@ void
 gst_harness_add_element_src_pad (GstHarness * h, GstPad * srcpad)
 {
   GstHarnessPrivate *priv = h->priv;
+  GstPadLinkReturn link;
   if (h->sinkpad == NULL)
     gst_harness_setup_sink_pad (h, &hsinktemplate, NULL);
-  g_assert_cmpint (gst_pad_link (srcpad, h->sinkpad), ==, GST_PAD_LINK_OK);
+  link = gst_pad_link (srcpad, h->sinkpad);
+  g_assert_cmpint (link, ==, GST_PAD_LINK_OK);
   g_free (priv->element_srcpad_name);
   priv->element_srcpad_name = gst_pad_get_name (srcpad);
 }
@@ -984,9 +995,11 @@ void
 gst_harness_add_element_sink_pad (GstHarness * h, GstPad * sinkpad)
 {
   GstHarnessPrivate *priv = h->priv;
+  GstPadLinkReturn link;
   if (h->srcpad == NULL)
     gst_harness_setup_src_pad (h, &hsrctemplate, NULL);
-  g_assert_cmpint (gst_pad_link (h->srcpad, sinkpad), ==, GST_PAD_LINK_OK);
+  link = gst_pad_link (h->srcpad, sinkpad);
+  g_assert_cmpint (link, ==, GST_PAD_LINK_OK);
   g_free (priv->element_sinkpad_name);
   priv->element_sinkpad_name = gst_pad_get_name (sinkpad);
 }
@@ -1008,12 +1021,14 @@ gst_harness_set_src_caps (GstHarness * h, GstCaps * caps)
 {
   GstHarnessPrivate *priv = h->priv;
   GstSegment segment;
+  gboolean handled;
 
-  g_assert (gst_pad_push_event (h->srcpad, gst_event_new_caps (caps)));
+  handled = gst_pad_push_event (h->srcpad, gst_event_new_caps (caps));
+  g_assert (handled);
   gst_caps_take (&priv->src_caps, caps);
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
-  g_assert (gst_pad_push_event (h->srcpad, gst_event_new_segment (&segment)));
+  handled = gst_pad_push_event (h->srcpad, gst_event_new_segment (&segment));
 }
 
 /**
@@ -1356,10 +1371,11 @@ void
 gst_harness_play (GstHarness * h)
 {
   GstState state, pending;
-  g_assert_cmpint (GST_STATE_CHANGE_SUCCESS, ==,
-      gst_element_set_state (h->element, GST_STATE_PLAYING));
-  g_assert_cmpint (GST_STATE_CHANGE_SUCCESS, ==,
-      gst_element_get_state (h->element, &state, &pending, 0));
+  gboolean state_change;
+  state_change = gst_element_set_state (h->element, GST_STATE_PLAYING);
+  g_assert_cmpint (GST_STATE_CHANGE_SUCCESS, ==, state_change);
+  state_change = gst_element_get_state (h->element, &state, &pending, 0);
+  g_assert_cmpint (GST_STATE_CHANGE_SUCCESS, ==, state_change);
   g_assert_cmpint (GST_STATE_PLAYING, ==, state);
 }
 
@@ -1403,13 +1419,14 @@ gst_harness_create_buffer (GstHarness * h, gsize size)
 {
   GstHarnessPrivate *priv = h->priv;
   GstBuffer *ret = NULL;
+  GstFlowReturn flow;
 
   if (gst_pad_check_reconfigure (h->srcpad))
     gst_harness_negotiate (h);
 
   if (priv->pool) {
-    g_assert_cmpint (gst_buffer_pool_acquire_buffer (priv->pool, &ret, NULL),
-        ==, GST_FLOW_OK);
+    flow = gst_buffer_pool_acquire_buffer (priv->pool, &ret, NULL);
+    g_assert_cmpint (flow, ==, GST_FLOW_OK);
     if (gst_buffer_get_size (ret) != size) {
       GST_DEBUG_OBJECT (h,
           "use fallback, pool is configured with a different size (%zu != %zu)",
@@ -2048,6 +2065,7 @@ GstFlowReturn
 gst_harness_push_from_src (GstHarness * h)
 {
   GstBuffer *buf;
+  gboolean crank;
 
   g_assert (h->src_harness);
 
@@ -2056,10 +2074,12 @@ gst_harness_push_from_src (GstHarness * h)
   gst_harness_play (h->src_harness);
 
   if (h->src_harness->priv->has_clock_wait) {
-    g_assert (gst_harness_crank_single_clock_wait (h->src_harness));
+    crank = gst_harness_crank_single_clock_wait (h->src_harness);
+    g_assert (crank);
   }
 
-  g_assert ((buf = gst_harness_pull (h->src_harness)) != NULL);
+  buf = gst_harness_pull (h->src_harness);
+  g_assert (buf != NULL);
   return gst_harness_push (h, buf);
 }
 
@@ -2085,16 +2105,20 @@ GstFlowReturn
 gst_harness_src_crank_and_push_many (GstHarness * h, gint cranks, gint pushes)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  gboolean crank;
 
   g_assert (h->src_harness);
   gst_harness_play (h->src_harness);
 
-  for (int i = 0; i < cranks; i++)
-    g_assert (gst_harness_crank_single_clock_wait (h->src_harness));
+  for (int i = 0; i < cranks; i++) {
+    crank = gst_harness_crank_single_clock_wait (h->src_harness);
+    g_assert (crank);
+  }
 
   for (int i = 0; i < pushes; i++) {
     GstBuffer *buf;
-    g_assert ((buf = gst_harness_pull (h->src_harness)) != NULL);
+    buf = gst_harness_pull (h->src_harness);
+    g_assert (buf != NULL);
     ret = gst_harness_push (h, buf);
     if (ret != GST_FLOW_OK)
       break;
@@ -2221,7 +2245,8 @@ gst_harness_push_to_sink (GstHarness * h)
 {
   GstBuffer *buf;
   g_assert (h->sink_harness);
-  g_assert ((buf = gst_harness_pull (h)) != NULL);
+  buf = gst_harness_pull (h);
+  g_assert (buf != NULL);
   return gst_harness_push (h->sink_harness, buf);
 }
 
@@ -2579,9 +2604,10 @@ gst_harness_stress_statechange_func (GstHarnessThread * t)
     GstClock *clock = gst_element_get_clock (t->h->element);
     GstIterator *it;
     gboolean done = FALSE;
+    gboolean change;
 
-    g_assert (gst_element_set_state (t->h->element, GST_STATE_NULL) ==
-        GST_STATE_CHANGE_SUCCESS);
+    change = gst_element_set_state (t->h->element, GST_STATE_NULL);
+    g_assert (change == GST_STATE_CHANGE_SUCCESS);
     g_thread_yield ();
 
     it = gst_element_iterate_sink_pads (t->h->element);
@@ -2617,8 +2643,8 @@ gst_harness_stress_statechange_func (GstHarnessThread * t)
       gst_element_set_clock (t->h->element, clock);
       gst_object_unref (clock);
     }
-    g_assert (gst_element_set_state (t->h->element, GST_STATE_PLAYING) ==
-        GST_STATE_CHANGE_SUCCESS);
+    change = gst_element_set_state (t->h->element, GST_STATE_PLAYING);
+    g_assert (change == GST_STATE_CHANGE_SUCCESS);
 
     count++;
     g_usleep (t->sleep);
@@ -2632,15 +2658,18 @@ gst_harness_stress_buffer_func (GstHarnessThread * t)
   GstHarnessPushBufferThread *pt = (GstHarnessPushBufferThread *) t;
   guint count = 0;
   gchar *sid;
+  gboolean handled;
 
   /* Push stream start, caps and segment events */
   sid = g_strdup_printf ("%s-%p", GST_OBJECT_NAME (t->h->element), t->h);
-  g_assert (gst_pad_push_event (t->h->srcpad,
-          gst_event_new_stream_start (sid)));
+  handled = gst_pad_push_event (t->h->srcpad, gst_event_new_stream_start (sid));
+  g_assert (handled);
   g_free (sid);
-  g_assert (gst_pad_push_event (t->h->srcpad, gst_event_new_caps (pt->caps)));
-  g_assert (gst_pad_push_event (t->h->srcpad,
-          gst_event_new_segment (&pt->segment)));
+  handled = gst_pad_push_event (t->h->srcpad, gst_event_new_caps (pt->caps));
+  g_assert (handled);
+  handled = gst_pad_push_event (t->h->srcpad,
+      gst_event_new_segment (&pt->segment));
+  g_assert (handled);
 
   while (t->running) {
     gst_harness_push (t->h, pt->func (t->h, pt->data));
