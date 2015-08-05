@@ -433,7 +433,10 @@ gst_harness_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 static void
 gst_harness_element_ref (GstHarness * h)
 {
-  guint *data = g_object_get_data (G_OBJECT (h->element), HARNESS_REF);
+  guint *data;
+
+  GST_OBJECT_LOCK (h->element);
+  data = g_object_get_data (G_OBJECT (h->element), HARNESS_REF);
   if (data == NULL) {
     data = g_new0 (guint, 1);
     *data = 1;
@@ -441,15 +444,23 @@ gst_harness_element_ref (GstHarness * h)
   } else {
     (*data)++;
   }
+  GST_OBJECT_UNLOCK (h->element);
 }
 
 static guint
 gst_harness_element_unref (GstHarness * h)
 {
-  guint *data = g_object_get_data (G_OBJECT (h->element), HARNESS_REF);
+  guint *data;
+  guint ret;
+
+  GST_OBJECT_LOCK (h->element);
+  data = g_object_get_data (G_OBJECT (h->element), HARNESS_REF);
   g_assert (data != NULL);
   (*data)--;
-  return *data;
+  ret = *data;
+  GST_OBJECT_UNLOCK (h->element);
+
+  return ret;
 }
 
 static void

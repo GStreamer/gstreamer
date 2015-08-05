@@ -22,6 +22,33 @@
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 
+static void
+create_destroy_element_harness (gpointer data, gpointer user_data)
+{
+  GstElement * element = user_data;
+  GstHarness * h = gst_harness_new_with_element (element, NULL, NULL);
+  gst_harness_teardown (h);
+}
+
+GST_START_TEST(test_harness_element_ref)
+{
+  GstHarness * h = gst_harness_new ("identity");
+  GstHarnessThread * threads[100];
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (threads); i++)
+    threads[i] = gst_harness_stress_custom_start (h, NULL,
+        create_destroy_element_harness, h->element, 0);
+  for (i = 0; i < G_N_ELEMENTS (threads); i++)
+    gst_harness_stress_thread_stop (threads[i]);
+
+  fail_unless_equals_int (G_OBJECT (h->element)->ref_count, 1);
+
+  gst_harness_teardown (h);
+}
+GST_END_TEST;
+
+
 GST_START_TEST(test_src_harness)
 {
   GstHarness * h = gst_harness_new ("identity");
@@ -88,6 +115,7 @@ gst_harness_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
+  tcase_add_test (tc_chain, test_harness_element_ref);
   tcase_add_test (tc_chain, test_src_harness);
   tcase_add_test (tc_chain, test_src_harness_no_forwarding);
 
