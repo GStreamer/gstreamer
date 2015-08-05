@@ -932,7 +932,9 @@ ensure_allowed_sinkpad_caps (GstVaapiPostproc * postproc)
 
   /* Append raw video caps */
   if (gst_vaapipostproc_ensure_display (postproc)) {
-    raw_caps = gst_vaapi_plugin_base_get_allowed_raw_caps (GST_VAAPI_PLUGIN_BASE (postproc));
+    raw_caps =
+        gst_vaapi_plugin_base_get_allowed_raw_caps (GST_VAAPI_PLUGIN_BASE
+        (postproc));
     if (raw_caps) {
       out_caps = gst_caps_make_writable (out_caps);
       gst_caps_append (out_caps, gst_caps_copy (raw_caps));
