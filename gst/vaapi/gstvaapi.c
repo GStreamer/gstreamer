@@ -81,7 +81,7 @@ plugin_init (GstPlugin * plugin)
 
 #if GST_CHECK_VERSION(1,4,0)
   gst_element_register (plugin, "vaapidecodebin",
-      GST_RANK_MARGINAL, GST_TYPE_VAAPI_DECODE_BIN);
+      GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
 #endif
   return TRUE;
 }
