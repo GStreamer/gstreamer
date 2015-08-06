@@ -39,12 +39,16 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate gst_rtp_mpv_pay_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_MPV_STRING ", "
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"MPV\"; "
+        "application/x-rtp, "
+        "media = (string) \"video\", "
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"MPV\"")
     );
 
@@ -131,7 +135,8 @@ gst_rtp_mpv_pay_reset (GstRTPMPVPay * pay)
 static gboolean
 gst_rtp_mpv_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
-  gst_rtp_base_payload_set_options (payload, "video", FALSE, "MPV", 90000);
+  gst_rtp_base_payload_set_options (payload, "video",
+      payload->pt != GST_RTP_PAYLOAD_MPV, "MPV", 90000);
   return gst_rtp_base_payload_set_outcaps (payload, NULL);
 }
 

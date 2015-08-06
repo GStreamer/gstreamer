@@ -104,6 +104,8 @@ static void
 gst_rtp_mpa_pay_init (GstRtpMPAPay * rtpmpapay)
 {
   rtpmpapay->adapter = gst_adapter_new ();
+
+  GST_RTP_BASE_PAYLOAD (rtpmpapay)->pt = GST_RTP_PAYLOAD_MPA;
 }
 
 static void
@@ -133,7 +135,8 @@ gst_rtp_mpa_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
 
-  gst_rtp_base_payload_set_options (payload, "audio", TRUE, "MPA", 90000);
+  gst_rtp_base_payload_set_options (payload, "audio",
+      payload->pt != GST_RTP_PAYLOAD_MPA, "MPA", 90000);
   res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;

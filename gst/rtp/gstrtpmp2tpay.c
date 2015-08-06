@@ -112,7 +112,8 @@ gst_rtp_mp2t_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
 
-  gst_rtp_base_payload_set_options (payload, "video", TRUE, "MP2T", 90000);
+  gst_rtp_base_payload_set_options (payload, "video",
+      payload->pt != GST_RTP_PAYLOAD_MP2T, "MP2T", 90000);
   res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;

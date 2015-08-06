@@ -121,7 +121,6 @@ gst_rtp_g729_pay_init (GstRTPG729Pay * pay)
   GstRTPBasePayload *payload = GST_RTP_BASE_PAYLOAD (pay);
 
   payload->pt = GST_RTP_PAYLOAD_G729;
-  gst_rtp_base_payload_set_options (payload, "audio", FALSE, "G729", 8000);
 
   pay->adapter = gst_adapter_new ();
 }
@@ -140,15 +139,9 @@ static gboolean
 gst_rtp_g729_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
-  GstStructure *structure;
-  gint pt;
 
-  structure = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (structure, "payload", &pt))
-    pt = GST_RTP_PAYLOAD_G729;
-
-  payload->pt = pt;
-  payload->dynamic = pt != GST_RTP_PAYLOAD_G729;
+  gst_rtp_base_payload_set_options (payload, "audio",
+      payload->pt != GST_RTP_PAYLOAD_G729, "G729", 8000);
 
   res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 

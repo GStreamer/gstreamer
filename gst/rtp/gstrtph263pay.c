@@ -440,6 +440,7 @@ gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
 static void
 gst_rtp_h263_pay_init (GstRtpH263Pay * rtph263pay)
 {
+  GST_RTP_BASE_PAYLOAD_PT (rtph263pay) = GST_RTP_PAYLOAD_H263;
   rtph263pay->prop_payload_mode = DEFAULT_MODE_A;
 }
 
@@ -476,8 +477,8 @@ gst_rtp_h263_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
     framesize = g_strdup_printf ("%d-%d", width, height);
   }
 
-  payload->pt = GST_RTP_PAYLOAD_H263;
-  gst_rtp_base_payload_set_options (payload, "video", TRUE, "H263", 90000);
+  gst_rtp_base_payload_set_options (payload, "video",
+      payload->pt != GST_RTP_PAYLOAD_H263, "H263", 90000);
 
   if (framesize != NULL) {
     res = gst_rtp_base_payload_set_outcaps (payload,

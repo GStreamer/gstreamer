@@ -208,16 +208,16 @@ gst_rtp_L16_pay_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
       if (gst_structure_get_int (structure, "channels", &channels)) {
         gst_caps_set_simple (caps, "channels", G_TYPE_INT, channels, NULL);
       } else if (gst_structure_get_int (structure, "payload", &pt)) {
-        if (pt == 10)
+        if (pt == GST_RTP_PAYLOAD_L16_STEREO)
           gst_caps_set_simple (caps, "channels", G_TYPE_INT, 2, NULL);
-        else if (pt == 11)
+        else if (pt == GST_RTP_PAYLOAD_L16_MONO)
           gst_caps_set_simple (caps, "channels", G_TYPE_INT, 1, NULL);
       }
 
       if (gst_structure_get_int (structure, "clock-rate", &rate)) {
         gst_caps_set_simple (caps, "rate", G_TYPE_INT, rate, NULL);
       } else if (gst_structure_get_int (structure, "payload", &pt)) {
-        if (pt == 10 || pt == 11)
+        if (pt == GST_RTP_PAYLOAD_L16_STEREO || pt == GST_RTP_PAYLOAD_L16_MONO)
           gst_caps_set_simple (caps, "rate", G_TYPE_INT, 44100, NULL);
       }
 

@@ -107,7 +107,8 @@ gst_rtp_gsm_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   if (strcmp ("audio/x-gsm", stname))
     goto invalid_type;
 
-  gst_rtp_base_payload_set_options (payload, "audio", FALSE, "GSM", 8000);
+  gst_rtp_base_payload_set_options (payload, "audio",
+      payload->pt != GST_RTP_PAYLOAD_GSM, "GSM", 8000);
   res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;

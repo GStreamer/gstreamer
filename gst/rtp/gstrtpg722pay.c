@@ -40,13 +40,18 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate gst_rtp_g722_pay_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "encoding-name = (string) \"G722\", "
         "payload = (int) " GST_RTP_PAYLOAD_G722_STRING ", "
+        "clock-rate = (int) 8000; "
+        "application/x-rtp, "
+        "media = (string) \"audio\", "
+        "encoding-name = (string) \"G722\", "
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 8000")
     );
 
@@ -92,6 +97,8 @@ gst_rtp_g722_pay_init (GstRtpG722Pay * rtpg722pay)
 
   rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (rtpg722pay);
 
+  GST_RTP_BASE_PAYLOAD (rtpg722pay)->pt = GST_RTP_PAYLOAD_G722;
+
   /* tell rtpbaseaudiopayload that this is a sample based codec */
   gst_rtp_base_audio_payload_set_sample_based (rtpbaseaudiopayload);
 }
@@ -136,8 +143,8 @@ gst_rtp_g722_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
    * RFC 3551 although the sampling rate is 16000 Hz */
   clock_rate = 8000;
 
-  gst_rtp_base_payload_set_options (basepayload, "audio", TRUE, "G722",
-      clock_rate);
+  gst_rtp_base_payload_set_options (basepayload, "audio",
+      basepayload->pt != GST_RTP_PAYLOAD_G722, "G722", clock_rate);
   params = g_strdup_printf ("%d", channels);
 
 #if 0

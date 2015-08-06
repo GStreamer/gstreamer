@@ -86,6 +86,7 @@ gst_rtp_pcmu_pay_init (GstRtpPcmuPay * rtppcmupay)
 
   rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (rtppcmupay);
 
+  GST_RTP_BASE_PAYLOAD (rtppcmupay)->pt = GST_RTP_PAYLOAD_PCMU;
   GST_RTP_BASE_PAYLOAD (rtppcmupay)->clock_rate = 8000;
 
   /* tell rtpbaseaudiopayload that this is a sample based codec */
@@ -100,9 +101,8 @@ gst_rtp_pcmu_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
 
-  payload->pt = GST_RTP_PAYLOAD_PCMU;
-
-  gst_rtp_base_payload_set_options (payload, "audio", FALSE, "PCMU", 8000);
+  gst_rtp_base_payload_set_options (payload, "audio",
+      payload->pt != GST_RTP_PAYLOAD_PCMU, "PCMU", 8000);
   res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;
