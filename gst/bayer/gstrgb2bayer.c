@@ -256,7 +256,7 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   for (j = 0; j < height; j++) {
     guint8 *dest_line = dest + width * j;
-    guint8 *src_line = src + width * 4 * j;
+    guint8 *src_line = src + frame.info.stride[0] * j;
 
     for (i = 0; i < width; i++) {
       int is_blue = ((j & 1) << 1) | (i & 1);
