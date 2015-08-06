@@ -111,7 +111,7 @@ run_context_query (GstElement * element, GstQuery * query)
 }
 
 void
-gst_vaapi_video_context_prepare (GstElement * element, const gchar ** types)
+gst_vaapi_video_context_prepare (GstElement * element)
 {
   GstContext *context;
   GstQuery *query;

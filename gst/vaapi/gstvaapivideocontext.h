@@ -43,7 +43,7 @@ gst_vaapi_video_context_get_display (GstContext * context,
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_video_context_prepare (GstElement * element, const gchar ** types);
+gst_vaapi_video_context_prepare (GstElement * element);
 
 G_GNUC_INTERNAL
 void

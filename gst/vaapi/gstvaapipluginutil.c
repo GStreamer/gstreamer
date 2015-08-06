@@ -42,25 +42,6 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapipluginbase.h"
 
-/* Preferred first */
-static const char *display_types[] = {
-  "gst-vaapi-display",
-  "vaapi-display",
-#if USE_WAYLAND
-  "wl-display",
-  "wl-display-name",
-#endif
-#if USE_X11
-  "x11-display",
-  "x11-display-name",
-#endif
-#if USE_DRM
-  "drm-device",
-  "drm-device-path",
-#endif
-  NULL
-};
-
 typedef GstVaapiDisplay *(*GstVaapiDisplayCreateFunc) (const gchar *);
 typedef GstVaapiDisplay *(*GstVaapiDisplayCreateFromHandleFunc) (gpointer);
 
@@ -254,7 +235,7 @@ gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  gst_vaapi_video_context_prepare (element, display_types);
+  gst_vaapi_video_context_prepare (element);
 
   /* Neighbour found and it updated the display */
   if (gst_vaapi_plugin_base_has_display_type (plugin, type))
