@@ -1845,8 +1845,10 @@ gst_h264_parser_parse_subset_sps (GstH264NalParser * nalparser,
   if (res == GST_H264_PARSER_OK) {
     GST_DEBUG ("adding sequence parameter set with id: %d to array", sps->id);
 
-    if (!gst_h264_sps_copy (&nalparser->sps[sps->id], sps))
+    if (!gst_h264_sps_copy (&nalparser->sps[sps->id], sps)) {
+      gst_h264_sps_clear (sps);
       return GST_H264_PARSER_ERROR;
+    }
     nalparser->last_sps = &nalparser->sps[sps->id];
   }
   return res;
@@ -1899,6 +1901,7 @@ gst_h264_parse_subset_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
 
 error:
   GST_WARNING ("error parsing \"Subset sequence parameter set\"");
+  gst_h264_sps_clear (sps);
   sps->valid = FALSE;
   return GST_H264_PARSER_ERROR;
 }

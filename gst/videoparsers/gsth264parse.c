@@ -746,6 +746,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       }
 
       gst_h264_parser_store_nal (h264parse, sps.id, nal_type, nalu);
+      gst_h264_sps_clear (&sps);
       h264parse->state |= GST_H264_PARSE_STATE_GOT_SPS;
       h264parse->header |= TRUE;
       break;
