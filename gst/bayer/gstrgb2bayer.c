@@ -243,9 +243,14 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   int width = rgb2bayer->width;
   GstVideoFrame frame;
 
-  gst_video_frame_map (&frame, &rgb2bayer->info, inbuf, GST_MAP_READ);
+  if (!gst_video_frame_map (&frame, &rgb2bayer->info, inbuf, GST_MAP_READ))
+    goto map_failed;
 
-  gst_buffer_map (outbuf, &map, GST_MAP_READ);
+  if (!gst_buffer_map (outbuf, &map, GST_MAP_READ)) {
+    gst_video_frame_unmap (&frame);
+    goto map_failed;
+  }
+
   dest = map.data;
   src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
 
@@ -264,8 +269,13 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       }
     }
   }
+
   gst_buffer_unmap (outbuf, &map);
   gst_video_frame_unmap (&frame);
 
+  return GST_FLOW_OK;
+
+map_failed:
+  GST_WARNING_OBJECT (trans, "Could not map buffer, skipping");
   return GST_FLOW_OK;
 }
