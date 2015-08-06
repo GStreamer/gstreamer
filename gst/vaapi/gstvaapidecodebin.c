@@ -51,6 +51,13 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  HAS_VPP_UNKNOWN,
+  HAS_VPP_NO,
+  HAS_VPP_YES
+};
+
 static GParamSpec *properties[PROP_LAST];
 
 /* Default templates */
@@ -122,7 +129,7 @@ activate_vpp (GstVaapiDecodeBin * vaapidecbin)
   if (vaapidecbin->ghost_pad_src || vaapidecbin->postproc)
     return TRUE;
 
-  if (!vaapidecbin->has_vpp || vaapidecbin->disable_vpp) {
+  if (vaapidecbin->has_vpp != HAS_VPP_YES || vaapidecbin->disable_vpp) {
     src = vaapidecbin->queue;
     goto connect_src_ghost_pad;
   }
@@ -265,11 +272,12 @@ gst_vaapi_decode_bin_handle_message (GstBin * bin, GstMessage * message)
   if (!gst_vaapi_video_context_get_display (context, &display))
     goto bail;
 
-  vaapidecbin->has_vpp = gst_vaapi_display_has_video_processing (display);
+  vaapidecbin->has_vpp = gst_vaapi_display_has_video_processing (display) ?
+    HAS_VPP_YES : HAS_VPP_NO;
 
   /* the underlying VA driver implementation doesn't support video
    * post-processing, hence we have to disable it */
-  if (!vaapidecbin->has_vpp) {
+  if (vaapidecbin->has_vpp != HAS_VPP_YES) {
     GST_WARNING_OBJECT (vaapidecbin, "VA driver doesn't support VPP");
     if (!vaapidecbin->disable_vpp) {
       vaapidecbin->disable_vpp = TRUE;
@@ -391,8 +399,7 @@ gst_vaapi_decode_bin_init (GstVaapiDecodeBin * vaapidecbin)
 {
   GstPad *element_pad, *ghost_pad;
 
-  /* let's assume we have VPP until we prove the opposite */
-  vaapidecbin->has_vpp = TRUE;
+  vaapidecbin->has_vpp = HAS_VPP_UNKNOWN;
 
   if (!gst_vaapi_decode_bin_configure (vaapidecbin))
     return;
