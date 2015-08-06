@@ -462,14 +462,25 @@ gst_bayer2rgb_transform (GstBaseTransform * base, GstBuffer * inbuf,
   GstVideoFrame frame;
 
   GST_DEBUG ("transforming buffer");
-  gst_buffer_map (inbuf, &map, GST_MAP_READ);
-  gst_video_frame_map (&frame, &filter->info, outbuf, GST_MAP_WRITE);
+
+  if (!gst_buffer_map (inbuf, &map, GST_MAP_READ))
+    goto map_failed;
+
+  if (!gst_video_frame_map (&frame, &filter->info, outbuf, GST_MAP_WRITE)) {
+    gst_buffer_unmap (inbuf, &map);
+    goto map_failed;
+  }
 
   output = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
   gst_bayer2rgb_process (filter, output, filter->width * 4,
       map.data, filter->width);
+
   gst_video_frame_unmap (&frame);
   gst_buffer_unmap (inbuf, &map);
 
+  return GST_FLOW_OK;
+
+map_failed:
+  GST_WARNING_OBJECT (base, "Could not map buffer, skipping");
   return GST_FLOW_OK;
 }
