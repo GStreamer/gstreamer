@@ -389,7 +389,8 @@ error_element_missing:
   }
 error_link_pad:
   {
-    GST_ERROR_OBJECT (vaapidecbin, "Failed to link the child elements");
+    GST_ELEMENT_ERROR (vaapidecbin, CORE, PAD,
+        (NULL), ("Failed to configure the vaapidecodebin."));
     return FALSE;
   }
 }
