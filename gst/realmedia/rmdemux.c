@@ -1938,7 +1938,8 @@ gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const guint8 * data, int length)
         gst_tag_list_merge (old_tags, tags, GST_TAG_MERGE_APPEND);
 
     gst_tag_list_unref (tags);
-    gst_tag_list_unref (old_tags);
+    if (old_tags)
+      gst_tag_list_unref (old_tags);
 
     gst_tag_list_set_scope (rmdemux->pending_tags, GST_TAG_SCOPE_GLOBAL);
   }
