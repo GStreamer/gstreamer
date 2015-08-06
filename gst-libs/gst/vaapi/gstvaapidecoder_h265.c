@@ -604,8 +604,11 @@ get_max_dec_frame_buffering (GstH265SPS * sps)
         sps->profile_tier_level.level_idc);
     max_dec_frame_buffering = 16;
   }
+
   /* Fixme: Add limit check based on Annex A */
-  return MAX (1, (sps->max_dec_pic_buffering_minus1[0] + 1));
+
+  /* Assuming HighestTid as sps_max_sub_layers_minus1 */
+  return MAX (1, (sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1] + 1));
 }
 
 static void
