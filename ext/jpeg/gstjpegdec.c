@@ -1108,6 +1108,12 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
           GST_MAP_READWRITE))
     goto alloc_failed;
 
+  if (setjmp (dec->jerr.setjmp_buffer)) {
+    code = dec->jerr.pub.msg_code;
+    gst_video_frame_unmap (&vframe);
+    goto decode_error;
+  }
+
   GST_LOG_OBJECT (dec, "width %d, height %d", width, height);
 
   if (dec->cinfo.jpeg_color_space == JCS_RGB) {
@@ -1140,6 +1146,11 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
   }
 
   gst_video_frame_unmap (&vframe);
+
+  if (setjmp (dec->jerr.setjmp_buffer)) {
+    code = dec->jerr.pub.msg_code;
+    goto decode_error;
+  }
 
   GST_LOG_OBJECT (dec, "decompressing finished");
   jpeg_finish_decompress (&dec->cinfo);
