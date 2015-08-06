@@ -176,6 +176,30 @@ connect_src_ghost_pad:
   }
 }
 
+static gboolean
+ensure_vpp (GstVaapiDecodeBin * vaapidecbin)
+{
+  GstVaapiDisplay *display;
+
+  if (vaapidecbin->has_vpp != HAS_VPP_UNKNOWN)
+    return TRUE;
+
+  GST_DEBUG_OBJECT (vaapidecbin, "Creating a dummy display to test for vpp");
+  display = gst_vaapi_create_test_display ();
+  if (!display)
+    return FALSE;
+
+  vaapidecbin->has_vpp = gst_vaapi_display_has_video_processing (display) ?
+    HAS_VPP_YES : HAS_VPP_NO;
+
+  gst_vaapi_display_unref (display);
+
+  if (!activate_vpp (vaapidecbin))
+    return FALSE;
+
+  return TRUE;
+}
+
 static void
 gst_vaapi_decode_bin_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
@@ -293,6 +317,35 @@ bail:
       message);
 }
 
+static GstStateChangeReturn
+gst_vaapi_decode_bin_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstVaapiDecodeBin *vaapidecbin = GST_VAAPI_DECODE_BIN (element);
+  GstStateChangeReturn ret;
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (gst_vaapi_decode_bin_parent_class)->change_state
+    (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (!ensure_vpp (vaapidecbin))
+        return GST_STATE_CHANGE_FAILURE;
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
 static void
 gst_vaapi_decode_bin_class_init (GstVaapiDecodeBinClass * klass)
 {
@@ -306,6 +359,9 @@ gst_vaapi_decode_bin_class_init (GstVaapiDecodeBinClass * klass)
 
   gobject_class->set_property = gst_vaapi_decode_bin_set_property;
   gobject_class->get_property = gst_vaapi_decode_bin_get_property;
+
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_vaapi_decode_bin_change_state);
 
   bin_class->handle_message =
       GST_DEBUG_FUNCPTR (gst_vaapi_decode_bin_handle_message);

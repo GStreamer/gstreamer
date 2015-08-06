@@ -634,3 +634,18 @@ gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
   vip->fps_n = vi.fps_n;
   vip->fps_d = vi.fps_d;
 }
+
+/**
+ * gst_vaapi_create_test_display:
+ *
+ * Creates a temporal #GstVaapiDisplay instance, just for testing the
+ * supported features.
+ *
+ * Returns: a new #GstVaapiDisplay instances. Free with
+ * gst_vaapi_display_unref () after use.
+ **/
+GstVaapiDisplay *
+gst_vaapi_create_test_display ()
+{
+  return gst_vaapi_create_display (GST_VAAPI_DISPLAY_TYPE_ANY, NULL);
+}
