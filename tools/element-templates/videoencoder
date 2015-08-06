@@ -4,8 +4,8 @@ GstVideoEncoder
 % TYPE_CLASS_NAME
 GST_TYPE_VIDEO_ENCODER
 % pads
-srcpad-template-video
-sinkpad-simple
+srcpad-simple
+sinkpad-template-video
 % pkg-config
 gstreamer-video-1.0
 % includes
