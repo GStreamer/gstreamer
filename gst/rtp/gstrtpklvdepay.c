@@ -91,7 +91,7 @@ gst_rtp_klv_depay_class_init (GstRtpKlvDepayClass * klass)
       gst_static_pad_template_get (&sink_template));
 
   gst_element_class_set_static_metadata (element_class,
-      "RTP KLV Depayloader", "Codec/Depayloader/Network",
+      "RTP KLV Depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts KLV (SMPTE ST 336) metadata from RTP packets",
       "Tim-Philipp Müller <tim@centricular.com>");
 

@@ -79,7 +79,7 @@ gst_rtp_klv_pay_class_init (GstRtpKlvPayClass * klass)
       gst_static_pad_template_get (&sink_template));
 
   gst_element_class_set_static_metadata (element_class,
-      "RTP KLV Payloader", "Codec/Payloader/Network",
+      "RTP KLV Payloader", "Codec/Payloader/Network/RTP",
       "Payloads KLV (SMPTE ST 336) metadata as RTP packets",
       "Tim-Philipp Müller <tim@centricular.com>");
 
