@@ -404,11 +404,8 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
   /* detect FIST gesture fist */
   hands =
       cvHaarDetectObjects (filter->cvGray, filter->cvCascade_fist,
-      filter->cvStorage, 1.1, 2, CV_HAAR_DO_CANNY_PRUNING, cvSize (24, 24)
-#if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
-      , cvSize (0, 0)
-#endif
-      );
+      filter->cvStorage, 1.1, 2, CV_HAAR_DO_CANNY_PRUNING, cvSize (24, 24),
+      cvSize (0, 0));
 
   /* if FIST gesture detected */
   if (hands && hands->total > 0) {
@@ -496,11 +493,8 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
     /* if NO FIST gesture, detecting PALM gesture */
     hands =
         cvHaarDetectObjects (filter->cvGray, filter->cvCascade_palm,
-        filter->cvStorage, 1.1, 3, CV_HAAR_DO_CANNY_PRUNING, cvSize (24, 24)
-#if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
-        , cvSize (0, 0)
-#endif
-        );
+        filter->cvStorage, 1.1, 3, CV_HAAR_DO_CANNY_PRUNING, cvSize (24, 24),
+        cvSize (0, 0));
     /* if PALM detected */
     if (hands && hands->total > 0) {
       int min_distance, distance;

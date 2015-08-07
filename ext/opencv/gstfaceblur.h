@@ -51,10 +51,7 @@
 #include <opencv2/core/version.hpp>
 
 #include "gstopencvvideofilter.h"
-
-#if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
 #include <opencv2/objdetect/objdetect.hpp>
-#endif
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
