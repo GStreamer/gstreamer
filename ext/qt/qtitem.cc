@@ -37,7 +37,7 @@
 #include <gst/gl/x11/gstglcontext_glx.h>
 #endif
 
-#if GST_GL_HAVE_WINDOW_WAYLAND
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined (HAVE_QT_WAYLAND)
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
 #endif
 
@@ -273,7 +273,7 @@ QtGLVideoItem::onSceneGraphInitialized ()
           platform, gl_api);
   }
 #endif
-#if GST_GL_HAVE_WINDOW_WAYLAND
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined (HAVE_QT_WAYLAND)
   if (GST_IS_GL_DISPLAY_WAYLAND (this->priv->display)) {
     platform = GST_GL_PLATFORM_EGL;
     gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);

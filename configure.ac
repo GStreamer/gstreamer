@@ -2647,13 +2647,26 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
         HAVE_QT="no"
       else
         HAVE_QT="yes"
+        HAVE_QT_WINDOWING="no"
         PKG_CHECK_MODULES(QT_X11, Qt5X11Extras, [
 	AC_DEFINE([HAVE_QT_X11], [], [Define if Qt X11 integration is installed])
 	    QT_CFLAGS="$QT_CFLAGS $QT_X11_CFLAGS"
             QT_LIBS="$QT_LIBS $QT_X11_LIBS"
-            AC_SUBST([QT_CFLAGS])
-            AC_SUBST([QT_LIBS])
+            HAVE_QT_WINDOWING="yes"
         ], [AC_MSG_NOTICE([Could not find Qt X11 integration])])
+        PKG_CHECK_MODULES(QT_WAYLAND, Qt5WaylandClient, [
+	AC_DEFINE([HAVE_QT_WAYLAND], [],
+              [Define if Qt Wayland integration is installed])
+	    QT_CFLAGS="$QT_CFLAGS $QT_WAYLAND_CFLAGS"
+            QT_LIBS="$QT_LIBS $QT_WAYLAND_LIBS"
+            HAVE_QT_WINDOWING="yes"
+        ], [AC_MSG_NOTICE([Could not find Qt Wayland integration])])
+        if test "x$HAVE_QT_WINDOWING" = "xno"; then
+          AC_MSG_WARN([Could not find any Qt Windowing integration])
+          HAVE_QT="no"
+        fi
+        AC_SUBST([QT_CFLAGS])
+        AC_SUBST([QT_LIBS])
       fi
   ], [
       HAVE_QT="no"
