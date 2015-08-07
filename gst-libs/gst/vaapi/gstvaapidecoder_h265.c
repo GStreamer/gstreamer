@@ -608,7 +608,8 @@ get_max_dec_frame_buffering (GstH265SPS * sps)
   /* Fixme: Add limit check based on Annex A */
 
   /* Assuming HighestTid as sps_max_sub_layers_minus1 */
-  return MAX (1, (sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1] + 1));
+  return MAX (1,
+      (sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1] + 1));
 }
 
 static void
@@ -1022,8 +1023,21 @@ get_profile (GstVaapiDecoderH265 * decoder, GstH265SPS * sps, guint dpb_size)
 
   profile =
       gst_vaapi_utils_h265_get_profile (sps->profile_tier_level.profile_idc);
-  if (!profile)
-    return GST_VAAPI_PROFILE_UNKNOWN;
+  if (!profile) {
+    /* HACK: This is a work-around to identify some main profile streams having wrong profile_idc.
+     * There are some wrongly encoded main profile streams(eg: ENTP_C_LG_3.bin) which doesn't
+     * have any of the profile_idc values mentioned in Annex-A, instead general_profile_idc
+     * has been set as zero and having general_profile_compatibility_flag[general_profile_idc]
+     * is TRUE. Assuming them as MAIN profile for now */
+    if (sps->profile_tier_level.profile_space == 0 &&
+        sps->profile_tier_level.profile_idc == 0 &&
+        sps->profile_tier_level.profile_compatibility_flag[0] == 1) {
+      GST_WARNING ("Wrong profile_idc, blindly setting it as main profile !!");
+      profile = GST_VAAPI_PROFILE_H265_MAIN;
+    } else
+      return GST_VAAPI_PROFILE_UNKNOWN;
+  }
+
   fill_profiles (profiles, &n_profiles, profile);
   switch (profile) {
     case GST_VAAPI_PROFILE_H265_MAIN10:
