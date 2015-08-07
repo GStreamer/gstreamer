@@ -26,6 +26,7 @@
 
 #include <gst/gst-i18n-plugin.h>
 
+#include "alsamidisrc.h"
 #include "midiparse.h"
 
 GST_DEBUG_CATEGORY_STATIC (midi_debug);
@@ -45,14 +46,22 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
 
+#ifdef HAVE_ALSA
+  ret = gst_element_register (plugin, "alsamidisrc", GST_RANK_PRIMARY,
+      GST_TYPE_ALSA_MIDI_SRC);
+  if (!ret)
+    goto out;
+#endif
+
   ret = gst_element_register (plugin, "midiparse", GST_RANK_PRIMARY,
       GST_TYPE_MIDI_PARSE);
 
+out:
   return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     midi,
-    "Parse MIDI files",
+    "Generate MIDI events",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

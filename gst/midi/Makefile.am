@@ -14,3 +14,10 @@ libgstmidi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmidi_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = midiparse.h
+
+if USE_ALSA
+libgstmidi_la_SOURCES += alsamidisrc.c
+libgstmidi_la_CFLAGS += $(ALSA_FLAGS)
+libgstmidi_la_LIBADD += $(ALSA_LIBS)
+noinst_HEADERS += alsamidisrc.h
+endif
