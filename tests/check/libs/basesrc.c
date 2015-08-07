@@ -510,9 +510,11 @@ segment_event_catcher (GstObject * pad, GstPadProbeInfo * info,
   fail_unless (user_data != NULL);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
-    if (*last_event)
-      gst_event_unref (*last_event);
+    g_mutex_lock (&check_mutex);
+    fail_unless (*last_event == NULL);
     *last_event = gst_event_copy (event);
+    g_cond_signal (&check_cond);
+    g_mutex_unlock (&check_mutex);
   }
 
   return GST_PAD_PROBE_OK;
@@ -568,14 +570,26 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   state_ret = gst_element_get_state (pipe, NULL, NULL, -1);
   fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS);
 
+  /* wait for the first segment to be posted, and flush it ... */
+  g_mutex_lock (&check_mutex);
+  while (seg_event == NULL)
+    g_cond_wait (&check_cond, &check_mutex);
+  gst_event_unref (seg_event);
+  seg_event = NULL;
+  g_mutex_unlock (&check_mutex);
+
   GST_INFO ("seeking");
 
   /* seek */
   event_ret = gst_element_send_event (pipe, rate_seek);
   fail_unless (event_ret == TRUE);
 
-  /* wait a second, then do controlled shutdown */
-  g_usleep (GST_USECOND * 1);
+  /* wait for the updated segment to be posted, posting EOS make the loop
+   * thread exit before the updated segment is posted ... */
+  g_mutex_lock (&check_mutex);
+  while (seg_event == NULL)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
 
   /* shut down pipeline only (should send EOS message) ... */
   gst_element_send_event (pipe, gst_event_new_eos ());
