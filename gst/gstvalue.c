@@ -2445,7 +2445,7 @@ gst_value_deserialize_sample (GValue * dest, const gchar * s)
   GValue bval = G_VALUE_INIT, sval = G_VALUE_INIT;
   GstStructure *info;
   GstSample *sample;
-  GstCaps *caps;
+  GstCaps *caps = NULL;
   gboolean ret = FALSE;
   gchar **fields;
   gsize outlen;
@@ -2471,8 +2471,6 @@ gst_value_deserialize_sample (GValue * dest, const gchar * s)
     caps = gst_caps_from_string (fields[1]);
     if (caps == NULL)
       goto fail;
-  } else {
-    caps = NULL;
   }
 
   if (strcmp (fields[2], "None") != 0) {
@@ -2499,13 +2497,11 @@ gst_value_deserialize_sample (GValue * dest, const gchar * s)
 
   g_value_take_boxed (dest, sample);
 
-  if (caps)
-    gst_caps_unref (caps);
-
   ret = TRUE;
 
 fail:
-
+  if (caps)
+    gst_caps_unref (caps);
   g_value_unset (&bval);
   g_value_unset (&sval);
 
