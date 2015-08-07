@@ -2516,12 +2516,12 @@ start_prepare (GstRTSPMedia * media)
         (GCallback) no_more_pads_cb, media);
 
     g_object_set_data (G_OBJECT (elem), "gst-rtsp-dynpay-handlers", handlers);
-
-    /* we add a fakesink here in order to make the state change async. We remove
-     * the fakesink again in the no-more-pads callback. */
-    priv->fakesink = gst_element_factory_make ("fakesink", "fakesink");
-    gst_bin_add (GST_BIN (priv->pipeline), priv->fakesink);
   }
+
+  /* we add a fakesink here in order to make the state change async. We remove
+   * the fakesink again in the no-more-pads callback. */
+  priv->fakesink = gst_element_factory_make ("fakesink", "fakesink");
+  gst_bin_add (GST_BIN (priv->pipeline), priv->fakesink);
 
   if (!start_preroll (media))
     goto preroll_failed;
