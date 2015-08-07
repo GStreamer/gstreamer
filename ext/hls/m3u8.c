@@ -853,17 +853,16 @@ gst_m3u8_client_update (GstM3U8Client * self, gchar * data)
   }
 
   if (m3u8->files && self->sequence == -1) {
-    self->current_file = g_list_first (m3u8->files);
     if (GST_M3U8_CLIENT_IS_LIVE (self)) {
       /* for live streams, start GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE from
          the end of the playlist. See section 6.3.3 of HLS draft */
       gint pos =
           g_list_length (m3u8->files) - GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE;
-      self->sequence =
-          GST_M3U8_MEDIA_FILE (g_list_nth_data (m3u8->files,
-              pos >= 0 ? pos : 0))->sequence;
-    } else
-      self->sequence = GST_M3U8_MEDIA_FILE (self->current_file->data)->sequence;
+      self->current_file = g_list_nth (m3u8->files, pos >= 0 ? pos : 0);
+    } else {
+      self->current_file = g_list_first (m3u8->files);
+    }
+    self->sequence = GST_M3U8_MEDIA_FILE (self->current_file->data)->sequence;
     self->sequence_position = 0;
     GST_DEBUG ("Setting first sequence at %u", (guint) self->sequence);
   }
