@@ -1273,6 +1273,109 @@ get_level_string (guint8 level_idc)
   }
 }
 
+static GstCaps *
+get_compatible_profile_caps (GstH265SPS * sps)
+{
+  GstCaps *caps = NULL;
+  const gchar **profiles = NULL;
+  gint i;
+  GValue compat_profiles = G_VALUE_INIT;
+  g_value_init (&compat_profiles, GST_TYPE_LIST);
+
+  switch (sps->profile_tier_level.profile_idc) {
+    case GST_H265_PROFILE_MAIN_10:
+      if (sps->profile_tier_level.profile_compatibility_flag[1]) {
+        if (sps->profile_tier_level.profile_compatibility_flag[3]) {
+          static const gchar *profile_array[] =
+              { "main", "main-still-picture", NULL };
+          profiles = profile_array;
+        } else {
+          static const gchar *profile_array[] = { "main", NULL };
+          profiles = profile_array;
+        }
+      }
+      break;
+    case GST_H265_PROFILE_MAIN:
+      if (sps->profile_tier_level.profile_compatibility_flag[3]) {
+        static const gchar *profile_array[] =
+            { "main-still-picture", "main-10", NULL
+        };
+        profiles = profile_array;
+      } else {
+        static const gchar *profile_array[] = { "main-10", NULL };
+        profiles = profile_array;
+      }
+      break;
+    case GST_H265_PROFILE_MAIN_STILL_PICTURE:
+    {
+      static const gchar *profile_array[] = { "main", "main-10", NULL
+      };
+      profiles = profile_array;
+    }
+      break;
+    default:
+      break;
+  }
+
+  if (profiles) {
+    GValue value = G_VALUE_INIT;
+    caps = gst_caps_new_empty_simple ("video/x-h265");
+    for (i = 0; profiles[i]; i++) {
+      g_value_init (&value, G_TYPE_STRING);
+      g_value_set_string (&value, profiles[i]);
+      gst_value_list_append_value (&compat_profiles, &value);
+      g_value_unset (&value);
+    }
+    gst_caps_set_value (caps, "profile", &compat_profiles);
+    g_value_unset (&compat_profiles);
+  }
+
+  return caps;
+}
+
+/* if downstream didn't support the exact profile indicated in sps header,
+ * check for the compatible profiles also */
+static void
+ensure_caps_profile (GstH265Parse * h265parse, GstCaps * caps, GstH265SPS * sps)
+{
+  GstCaps *filter_caps, *peer_caps, *compat_caps;
+
+  filter_caps = gst_caps_new_empty_simple ("video/x-h265");
+  peer_caps =
+      gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (h265parse), filter_caps);
+
+  if (peer_caps && !gst_caps_can_intersect (caps, peer_caps)) {
+    GstStructure *structure;
+
+    compat_caps = get_compatible_profile_caps (sps);
+    if (compat_caps != NULL) {
+      GstCaps *res_caps = NULL;
+
+      res_caps = gst_caps_intersect (peer_caps, compat_caps);
+
+      if (res_caps && !gst_caps_is_empty (res_caps)) {
+        const gchar *profile_str = NULL;
+
+        res_caps = gst_caps_fixate (res_caps);
+        structure = gst_caps_get_structure (res_caps, 0);
+        profile_str = gst_structure_get_string (structure, "profile");
+        if (profile_str) {
+          gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile_str,
+              NULL);
+          GST_DEBUG_OBJECT (h265parse,
+              "Setting compatible profile %s to the caps", profile_str);
+        }
+      }
+      if (res_caps)
+        gst_caps_unref (res_caps);
+      gst_caps_unref (compat_caps);
+    }
+  }
+  if (peer_caps)
+    gst_caps_unref (peer_caps);
+  gst_caps_unref (filter_caps);
+}
+
 static void
 gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 {
@@ -1445,6 +1548,9 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       level = get_level_string (sps->profile_tier_level.level_idc);
       if (level != NULL)
         gst_caps_set_simple (caps, "level", G_TYPE_STRING, level, NULL);
+
+      /* relax the profile constraint to find a suitable decoder */
+      ensure_caps_profile (h265parse, caps, sps);
     }
 
     src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h265parse));
