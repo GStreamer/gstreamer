@@ -2530,6 +2530,8 @@ gst_validate_scenario_finalize (GObject * object)
       (GDestroyNotify) gst_mini_object_unref);
   g_list_free_full (priv->on_addition_actions,
       (GDestroyNotify) gst_mini_object_unref);
+  g_list_free_full (priv->needs_parsing,
+      (GDestroyNotify) gst_mini_object_unref);
   g_free (priv->pipeline_name);
   g_mutex_clear (&priv->lock);
 
