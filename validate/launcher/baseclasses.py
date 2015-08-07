@@ -317,7 +317,7 @@ class Test(Loggable):
             ('leak-check', 'full'),
             ('leak-resolution', 'high'),
             ('num-callers', '20'),
-            ('log-file', vglogsfile),
+            ('log-file', '"' + vglogsfile + '"'),
             ('error-exitcode', str(VALGRIND_ERROR_CODE)),
         ]
 

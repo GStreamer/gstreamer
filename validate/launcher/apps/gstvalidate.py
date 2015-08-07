@@ -29,7 +29,7 @@ from launcher.baseclasses import GstValidateTest, Test, \
     GstValidateMediaDescriptor, GstValidateEncodingTestInterface, \
     GstValidateBaseTestManager, MediaDescriptor, MediaFormatCombination
 
-from launcher.utils import path2url, DEFAULT_TIMEOUT, which, \
+from launcher.utils import path2url, url2path, DEFAULT_TIMEOUT, which, \
     GST_SECOND, Result, Protocols, mkdir, printc, Colors, get_data_file
 
 #
@@ -75,7 +75,7 @@ class GstValidateMediaCheckTestsGenerator(GstValidateTestsGenerator):
                 timeout = DEFAULT_TIMEOUT
 
             classname = "validate.%s.media_check.%s" % (protocol,
-                                                        os.path.basename(uri).replace(".", "_"))
+                                                        os.path.basename(url2path(uri)).replace(".", "_"))
             self.add_test(GstValidateMediaCheckTest(classname,
                                                     self.test_manager.options,
                                                     self.test_manager.reporter,
