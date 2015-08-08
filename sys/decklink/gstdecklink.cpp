@@ -535,6 +535,9 @@ public:
     BMDTimeValue capture_time, capture_duration;
     HRESULT res;
 
+    if (video_frame == NULL)
+      goto no_video_frame;
+
     res =
         video_frame->GetHardwareReferenceTimestamp (GST_SECOND, &capture_time,
         &capture_duration);
@@ -573,7 +576,9 @@ public:
           capture_duration);
     }
 
-    if (got_audio_packet && audiosrc) {
+no_video_frame:
+
+    if (audio_packet && got_audio_packet && audiosrc) {
       m_input->got_audio_packet (audiosrc, audio_packet, capture_time);
     }
 
