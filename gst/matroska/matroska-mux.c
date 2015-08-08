@@ -2675,7 +2675,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
       GST_INFO_OBJECT (mux, "downstream is %sseekable", seekable ? "" : "not ");
     } else {
-      /* have to assume seeking is supported if query not handled downstream */
+      /* assume seeking is not supported if query not handled downstream */
       GST_WARNING_OBJECT (mux, "downstream did not handle seeking query");
       seekable = FALSE;
     }
