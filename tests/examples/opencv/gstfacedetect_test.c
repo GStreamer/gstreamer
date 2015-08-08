@@ -79,6 +79,8 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 
     /* if face is detected, obtain the values X and Y of mouth and of nose. */
     if (size != 0) {
+      GstState state;
+
       faces_value = gst_value_list_get_value (value, 0);
       faces_structure = gst_value_get_structure (faces_value);
       have_mouth_y = gst_structure_has_field (faces_structure, "mouth->y");
@@ -86,9 +88,15 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
       have_nose_y = gst_structure_has_field (faces_structure, "nose->y");
       have_nose_x = gst_structure_has_field (faces_structure, "nose->x");
 
-      /* get the volume value and playbin changed the state to play */
+      /* if paused, set to playing */
+      gst_element_get_state (GST_ELEMENT (playbin), &state, NULL,
+          GST_CLOCK_TIME_NONE);
+      if (state != GST_STATE_PLAYING) {
+        gst_element_set_state (GST_ELEMENT (playbin), GST_STATE_PLAYING);
+      }
+
+      /* get the volume value */
       g_object_get (G_OBJECT (playbin), "volume", &volume, NULL);
-      gst_element_set_state (GST_ELEMENT (playbin), GST_STATE_PLAYING);
 
       /* media operation - hide your mouth for down the volume of the video */
       if (have_mouth_y == 0 && have_mouth_x == 0) {
