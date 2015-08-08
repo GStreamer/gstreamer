@@ -2662,8 +2662,11 @@ gst_pad_get_allowed_caps (GstPad * pad)
   /* Query peer caps */
   query = gst_query_new_caps (mycaps);
   gst_pad_peer_query (pad, query);
-  gst_query_parse_caps (query, &caps);
+  gst_query_parse_caps_result (query, &caps);
+  gst_caps_ref (caps);
   gst_query_unref (query);
+
+  gst_caps_unref (mycaps);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "allowed caps %" GST_PTR_FORMAT,
       caps);
