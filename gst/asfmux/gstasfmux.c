@@ -1265,6 +1265,31 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   if (padding < ASF_PADDING_OBJECT_SIZE)
     padding = 0;
 
+  /* if not streaming, check if downstream is seekable */
+  if (!asfmux->prop_streamable) {
+    gboolean seekable;
+    GstQuery *query;
+
+    query = gst_query_new_seeking (GST_FORMAT_BYTES);
+    if (gst_pad_peer_query (asfmux->srcpad, query)) {
+      gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+      GST_INFO_OBJECT (asfmux, "downstream is %sseekable",
+          seekable ? "" : "not ");
+    } else {
+      /* assume seeking is not supported if query not handled downstream */
+      GST_WARNING_OBJECT (asfmux, "downstream did not handle seeking query");
+      seekable = FALSE;
+    }
+    if (!seekable) {
+      asfmux->prop_streamable = TRUE;
+      g_object_notify (G_OBJECT (asfmux), "streamable");
+      GST_WARNING_OBJECT (asfmux, "downstream is not seekable, but "
+          "streamable=false. Will ignore that and create streamable output "
+          "instead");
+    }
+    gst_query_unref (query);
+  }
+
   /* from this point we started writing the headers */
   GST_INFO_OBJECT (asfmux, "Writing headers");
   asfmux->state = GST_ASF_MUX_STATE_HEADERS;
@@ -1277,8 +1302,12 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   gst_pad_set_caps (asfmux->srcpad, caps);
   gst_caps_unref (caps);
 
-  /* let downstream know we think in BYTES and expect to do seeking later */
-  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  /* send a BYTE format segment if we're going to seek to fix up the headers
+   * later, otherwise send a TIME segment */
+  if (asfmux->prop_streamable)
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+  else
+    gst_segment_init (&segment, GST_FORMAT_BYTES);
   gst_pad_push_event (asfmux->srcpad, gst_event_new_segment (&segment));
 
   gst_asf_generate_file_id (&asfmux->file_id);
