@@ -351,6 +351,7 @@ gst_rtp_theora_pay_finish_headers (GstRTPBasePayload * basepayload)
   guint8 *data, *config;
   guint32 ident;
   gboolean res;
+  const gchar *sampling = NULL;
 
   GST_DEBUG_OBJECT (rtptheorapay, "finish headers");
 
@@ -518,13 +519,27 @@ gst_rtp_theora_pay_finish_headers (GstRTPBasePayload * basepayload)
   g_free (config);
 
   /* configure payloader settings */
+  switch (rtptheorapay->pixel_format) {
+    case 2:
+      sampling = "YCbCr-4:2:2";
+      break;
+    case 3:
+      sampling = "YCbCr-4:4:4";
+      break;
+    case 0:
+    default:
+      sampling = "YCbCr-4:2:0";
+      break;
+  }
+
+
   wstr = g_strdup_printf ("%d", rtptheorapay->width);
   hstr = g_strdup_printf ("%d", rtptheorapay->height);
   gst_rtp_base_payload_set_options (basepayload, "video", TRUE, "THEORA",
       90000);
   res =
       gst_rtp_base_payload_set_outcaps (basepayload, "sampling", G_TYPE_STRING,
-      "YCbCr-4:2:0", "width", G_TYPE_STRING, wstr, "height", G_TYPE_STRING,
+      sampling, "width", G_TYPE_STRING, wstr, "height", G_TYPE_STRING,
       hstr, "configuration", G_TYPE_STRING, configuration, "delivery-method",
       G_TYPE_STRING, "inline",
       /* don't set the other defaults 
@@ -549,7 +564,7 @@ gst_rtp_theora_pay_parse_id (GstRTPBasePayload * basepayload, guint8 * data,
     guint size)
 {
   GstRtpTheoraPay *rtptheorapay;
-  gint width, height;
+  gint width, height, pixel_format;
 
   rtptheorapay = GST_RTP_THEORA_PAY (basepayload);
 
@@ -569,11 +584,12 @@ gst_rtp_theora_pay_parse_id (GstRTPBasePayload * basepayload, guint8 * data,
   width = GST_READ_UINT16_BE (data) << 4;
   data += 2;
   height = GST_READ_UINT16_BE (data) << 4;
-  data += 2;
+  data += 29;
 
-  /* FIXME, parse pixel format */
+  pixel_format = (GST_READ_UINT8 (data) >> 3) & 0x03;
 
   /* store values */
+  rtptheorapay->pixel_format = pixel_format;
   rtptheorapay->width = width;
   rtptheorapay->height = height;
 

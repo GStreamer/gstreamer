@@ -66,6 +66,7 @@ struct _GstRtpTheoraPay
   guint         config_interval;
   GstClockTime  last_config;
 
+  gint          pixel_format;
   gint          width;
   gint          height;
 };
