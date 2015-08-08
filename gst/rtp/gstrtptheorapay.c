@@ -651,6 +651,9 @@ gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
   if (flush)
     ret = gst_rtp_theora_pay_flush_packet (rtptheorapay);
 
+  if (ret != GST_FLOW_OK)
+    goto done;
+
   /* create new packet if we must */
   if (!rtptheorapay->packet) {
     gst_rtp_theora_pay_init_packet (rtptheorapay, TDT, timestamp);
@@ -720,10 +723,11 @@ gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
       if (duration != GST_CLOCK_TIME_NONE)
         rtptheorapay->payload_duration += duration;
     }
-  } while (size);
+  } while (size && ret == GST_FLOW_OK);
 
   if (rtp.buffer)
     gst_rtp_buffer_unmap (&rtp);
+done:
 
   return ret;
 }
