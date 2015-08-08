@@ -122,8 +122,6 @@ main (gint argc, gchar ** argv)
   GstBus *bus;
   gchar *uri;
 
-  const gchar *video_device = "/dev/video0";
-
   if (argc < 2) {
     fprintf (stderr, "oops, please give a file to play\n");
     return -1;
@@ -159,7 +157,6 @@ main (gint argc, gchar ** argv)
 
   /* set values */
   g_object_set (G_OBJECT (playbin), "uri", uri, NULL);
-  g_object_set (G_OBJECT (v4l2src), "device", video_device, NULL);
 
   /* set caps */
   caps =
