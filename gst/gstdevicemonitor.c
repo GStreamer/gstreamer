@@ -268,6 +268,7 @@ bus_sync_message (GstBus * bus, GstMessage * message,
     }
     GST_OBJECT_UNLOCK (monitor);
 
+    gst_object_unref (provider);
     gst_object_unref (device);
 
     if (matches)
