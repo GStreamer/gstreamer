@@ -210,27 +210,27 @@ GST_START_TEST (test_media_prepare)
 
 GST_END_TEST;
 
+#define FLAG_HAVE_CAPS GST_ELEMENT_FLAG_LAST
 static void
 on_notify_caps (GstPad * pad, GParamSpec * pspec, GstElement * pay)
 {
   GstCaps *caps;
-  static gboolean have_caps = FALSE;
 
   g_object_get (pad, "caps", &caps, NULL);
 
   GST_DEBUG ("notify %" GST_PTR_FORMAT, caps);
 
   if (caps) {
-    if (!have_caps) {
+    if (!GST_OBJECT_FLAG_IS_SET (pay, FLAG_HAVE_CAPS)) {
       g_signal_emit_by_name (pay, "pad-added", pad);
       g_signal_emit_by_name (pay, "no-more-pads", NULL);
-      have_caps = TRUE;
+      GST_OBJECT_FLAG_SET (pay, FLAG_HAVE_CAPS);
     }
     gst_caps_unref (caps);
   } else {
-    if (have_caps) {
+    if (GST_OBJECT_FLAG_IS_SET (pay, FLAG_HAVE_CAPS)) {
       g_signal_emit_by_name (pay, "pad-removed", pad);
-      have_caps = FALSE;
+      GST_OBJECT_FLAG_UNSET (pay, FLAG_HAVE_CAPS);
     }
   }
 }
@@ -412,6 +412,83 @@ GST_START_TEST (test_media_reset)
 
 GST_END_TEST;
 
+GST_START_TEST (test_media_multidyn_prepare)
+{
+  GstRTSPMedia *media;
+  GstElement *bin, *src0, *pay0, *src1, *pay1;
+  GstElement *pipeline;
+  GstPad *srcpad0, *srcpad1;
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread;
+
+  bin = gst_bin_new ("bin");
+  fail_if (bin == NULL);
+
+  src0 = gst_element_factory_make ("videotestsrc", NULL);
+  fail_if (src0 == NULL);
+
+  pay0 = gst_element_factory_make ("rtpvrawpay", "dynpay0");
+  fail_if (pay0 == NULL);
+  g_object_set (pay0, "pt", 96, NULL);
+
+  src1 = gst_element_factory_make ("videotestsrc", NULL);
+  fail_if (src1 == NULL);
+
+  pay1 = gst_element_factory_make ("rtpvrawpay", "dynpay1");
+  fail_if (pay1 == NULL);
+  g_object_set (pay1, "pt", 97, NULL);
+
+  gst_bin_add_many (GST_BIN_CAST (bin), src0, pay0, src1, pay1, NULL);
+  gst_element_link_many (src0, pay0, NULL);
+  gst_element_link_many (src1, pay1, NULL);
+
+  media = gst_rtsp_media_new (bin);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+
+  g_object_set (G_OBJECT (media), "reusable", TRUE, NULL);
+
+  pipeline = gst_pipeline_new ("media-pipeline");
+  gst_rtsp_media_take_pipeline (media, GST_PIPELINE_CAST (pipeline));
+
+  gst_rtsp_media_collect_streams (media);
+
+  srcpad0 = gst_element_get_static_pad (pay0, "src");
+  srcpad1 = gst_element_get_static_pad (pay1, "src");
+
+  g_signal_connect (srcpad0, "notify::caps", (GCallback) on_notify_caps, pay0);
+  g_signal_connect (srcpad1, "notify::caps", (GCallback) on_notify_caps, pay1);
+
+  pool = gst_rtsp_thread_pool_new ();
+
+  fail_unless (gst_rtsp_media_n_streams (media) == 0);
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (gst_rtsp_media_n_streams (media) == 2);
+  fail_unless (gst_rtsp_media_unprepare (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 0);
+
+  fail_unless (gst_rtsp_media_n_streams (media) == 0);
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (gst_rtsp_media_n_streams (media) == 2);
+  fail_unless (gst_rtsp_media_unprepare (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 0);
+
+  gst_object_unref (srcpad0);
+  gst_object_unref (srcpad1);
+  g_object_unref (media);
+  g_object_unref (pool);
+
+  gst_rtsp_thread_pool_cleanup ();
+}
+
+GST_END_TEST;
+
+
 static Suite *
 rtspmedia_suite (void)
 {
@@ -427,6 +504,7 @@ rtspmedia_suite (void)
   tcase_add_test (tc, test_media_prepare_port_alloc_fail);
   tcase_add_test (tc, test_media_take_pipeline);
   tcase_add_test (tc, test_media_reset);
+  tcase_add_test (tc, test_media_multidyn_prepare);
 
   return s;
 }
