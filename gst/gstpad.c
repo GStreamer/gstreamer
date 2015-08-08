@@ -2645,26 +2645,25 @@ GstCaps *
 gst_pad_get_allowed_caps (GstPad * pad)
 {
   GstCaps *mycaps;
-  GstCaps *caps;
-  GstPad *peer;
+  GstCaps *caps = NULL;
+  GstQuery *query;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   GST_OBJECT_LOCK (pad);
-  peer = GST_PAD_PEER (pad);
-  if (G_UNLIKELY (peer == NULL))
+  if (G_UNLIKELY (GST_PAD_PEER (pad) == NULL))
     goto no_peer;
+  GST_OBJECT_UNLOCK (pad);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PROPERTIES, pad, "getting allowed caps");
 
-  gst_object_ref (peer);
-  GST_OBJECT_UNLOCK (pad);
   mycaps = gst_pad_query_caps (pad, NULL);
 
-  caps = gst_pad_query_caps (peer, mycaps);
-  gst_object_unref (peer);
-
-  gst_caps_unref (mycaps);
+  /* Query peer caps */
+  query = gst_query_new_caps (mycaps);
+  gst_pad_peer_query (pad, query);
+  gst_query_parse_caps (query, &caps);
+  gst_query_unref (query);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "allowed caps %" GST_PTR_FORMAT,
       caps);
