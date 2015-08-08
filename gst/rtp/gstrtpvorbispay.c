@@ -629,6 +629,9 @@ gst_rtp_vorbis_pay_payload_buffer (GstRtpVorbisPay * rtpvorbispay, guint8 VDT,
   if (flush)
     ret = gst_rtp_vorbis_pay_flush_packet (rtpvorbispay);
 
+  if (ret != GST_FLOW_OK)
+    goto done;
+
   /* create new packet if we must */
   if (!rtpvorbispay->packet) {
     gst_rtp_vorbis_pay_init_packet (rtpvorbispay, VDT, timestamp);
@@ -698,10 +701,12 @@ gst_rtp_vorbis_pay_payload_buffer (GstRtpVorbisPay * rtpvorbispay, guint8 VDT,
       if (duration != GST_CLOCK_TIME_NONE)
         rtpvorbispay->payload_duration += duration;
     }
-  } while (size);
+  } while (size && ret == GST_FLOW_OK);
 
   if (rtp.buffer)
     gst_rtp_buffer_unmap (&rtp);
+
+done:
 
   return ret;
 }
