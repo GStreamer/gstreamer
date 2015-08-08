@@ -171,6 +171,7 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
   GstQSGTexture *tex;
 
   g_mutex_lock (&this->priv->lock);
+  gst_gl_context_activate (this->priv->other_context, TRUE);
 
   GST_TRACE ("%p updatePaintNode", this);
 
@@ -181,14 +182,15 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
 
   if (!texNode) {
     texNode = new QSGSimpleTextureNode ();
-    tex = new GstQSGTexture ();
-    texNode->setTexture (tex);
+    texNode->setOwnsTexture (true);
   } else {
     tex = static_cast<GstQSGTexture *> (texNode->texture());
   }
 
+  tex = new GstQSGTexture ();
   tex->setCaps (this->priv->caps);
   tex->setBuffer (this->priv->buffer);
+  texNode->setTexture (tex);
 
   if (this->priv->force_aspect_ratio) {
     src.w = this->priv->display_width;
@@ -209,6 +211,7 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
 
   texNode->setRect (QRectF (result.x, result.y, result.w, result.h));
 
+  gst_gl_context_activate (this->priv->other_context, FALSE);
   g_mutex_unlock (&this->priv->lock);
 
   return texNode;
