@@ -173,7 +173,7 @@ draw_render (gpointer data)
     gl->MatrixMode (GL_PROJECTION);
     gl->LoadIdentity ();
 
-    gl->ActiveTexture (GL_TEXTURE_2D);
+    gl->ActiveTexture (GL_TEXTURE0);
     gl->BindTexture (GL_TEXTURE_2D, tex);
 
     gl->EnableClientState (GL_VERTEX_ARRAY);
