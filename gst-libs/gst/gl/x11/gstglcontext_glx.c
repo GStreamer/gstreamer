@@ -248,21 +248,20 @@ gst_gl_context_glx_create_context (GstGLContext * context,
       (gpointer) glXGetProcAddressARB ((const GLubyte *)
       "glXCreateContextAttribsARB");
 
-  if (create_context && context_glx->priv->glXCreateContextAttribsARB) {
+  if (!context_glx->glx_context && gl_api & GST_GL_API_OPENGL3 && create_context
+      && context_glx->priv->glXCreateContextAttribsARB) {
     gint i;
 
     for (i = 0; i < G_N_ELEMENTS (gl_versions); i++) {
-      GstGLAPI selected_gl_api;
       gint profileMask = 0;
       gint contextFlags = 0;
 
-      if (gl_api & GST_GL_API_OPENGL3 && (gl_versions[i].major > 3
+      if ((gl_versions[i].major > 3
               || (gl_versions[i].major == 3 && gl_versions[i].minor >= 2))) {
         profileMask |= GLX_CONTEXT_CORE_PROFILE_BIT_ARB;
-        selected_gl_api = GST_GL_API_OPENGL3;
         contextFlags |= GLX_CONTEXT_DEBUG_BIT_ARB;
       } else {
-        selected_gl_api = GST_GL_API_OPENGL;
+        break;
       }
 
       GST_DEBUG_OBJECT (context, "trying to create a GL %d.%d context",
@@ -274,11 +273,12 @@ gst_gl_context_glx_create_context (GstGLContext * context,
           gl_versions[i].minor, contextFlags, profileMask);
 
       if (context_glx->glx_context) {
-        context_glx->priv->context_api = selected_gl_api;
+        context_glx->priv->context_api = GST_GL_API_OPENGL3;
         break;
       }
     }
-  } else {
+  }
+  if (!context_glx->glx_context && gl_api & GST_GL_API_OPENGL) {
     context_glx->glx_context =
         glXCreateContext (device, window_x11->visual_info,
         (GLXContext) external_gl_context, TRUE);
