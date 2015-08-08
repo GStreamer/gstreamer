@@ -44,6 +44,24 @@ typedef struct _GstGLCompositionOverlayClass GstGLCompositionOverlayClass;
 
 static GType gst_gl_composition_overlay_get_type (void);
 
+/* *INDENT-OFF* */
+const gchar *fragment_shader =
+  "#ifdef GL_ES\n"
+  "precision mediump float;\n"
+  "#endif\n"
+  "varying vec2 v_texcoord;\n"
+  "uniform sampler2D tex;\n"
+  "void main(void)\n"
+  "{\n"
+  "  vec4 t = texture2D(tex, v_texcoord);\n"
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  "  gl_FragColor = t.bgra;\n"
+#else
+  "  gl_FragColor = t.gbar;\n"
+#endif
+  "}";
+/* *INDENT-ON* */
+
 struct _GstGLCompositionOverlay
 {
   GstObject parent;
@@ -408,8 +426,8 @@ gst_gl_overlay_compositor_init_gl (GstGLContext * context,
   GstGLOverlayCompositor *compositor =
       (GstGLOverlayCompositor *) compositor_pointer;
 
-  if (!gst_gl_shader_compile_with_default_vf_and_check
-      (compositor->shader, &compositor->position_attrib,
+  if (!gst_gl_shader_compile_with_default_v_and_check (compositor->shader,
+          fragment_shader, &compositor->position_attrib,
           &compositor->texcoord_attrib)) {
     GST_ERROR ("could not initialize shader.");
   }
