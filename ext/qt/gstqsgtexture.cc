@@ -45,11 +45,13 @@ GstQSGTexture::GstQSGTexture ()
 
   gst_video_info_init (&this->v_info);
   this->buffer_ = NULL;
+  this->sync_buffer_ = gst_buffer_new ();
 }
 
 GstQSGTexture::~GstQSGTexture ()
 {
   gst_buffer_replace (&this->buffer_, NULL);
+  gst_buffer_replace (&this->sync_buffer_, NULL);
 }
 
 /* only called from the streaming thread with scene graph thread blocked */
@@ -62,23 +64,35 @@ GstQSGTexture::setCaps (GstCaps * caps)
 }
 
 /* only called from the streaming thread with scene graph thread blocked */
-void
+gboolean
 GstQSGTexture::setBuffer (GstBuffer * buffer)
 {
   GST_LOG ("%p setBuffer %" GST_PTR_FORMAT, this, buffer);
   /* FIXME: update more state here */
-  gst_buffer_replace (&this->buffer_, buffer);
+  if (!gst_buffer_replace (&this->buffer_, buffer))
+    return FALSE;
+
+  this->qt_context_ = gst_gl_context_get_current ();
+
+  return TRUE;
 }
 
 /* only called from qt's scene graph render thread */
 void
 GstQSGTexture::bind ()
 {
+  GstGLContext *context;
+  GstGLSyncMeta *sync_meta;
+  GstMemory *mem;
   guint tex_id;
 
   if (!this->buffer_)
     return;
   if (GST_VIDEO_INFO_FORMAT (&this->v_info) == GST_VIDEO_FORMAT_UNKNOWN)
+    return;
+
+  this->mem_ = gst_buffer_peek_memory (this->buffer_, 0);
+  if (!this->mem_)
     return;
 
   /* FIXME: should really lock the memory to prevent write access */
@@ -87,6 +101,20 @@ GstQSGTexture::bind ()
     g_assert_not_reached ();
     return;
   }
+
+  mem = gst_buffer_peek_memory (this->buffer_, 0);
+  g_assert (gst_is_gl_memory (mem));
+
+  context = ((GstGLBaseBuffer *)mem)->context;
+
+  sync_meta = gst_buffer_get_gl_sync_meta (this->sync_buffer_);
+  if (!sync_meta)
+    sync_meta = gst_buffer_add_gl_sync_meta (context, this->sync_buffer_);
+
+  gst_gl_sync_meta_set_sync_point (sync_meta, context);
+
+  g_assert (this->qt_context_);
+  gst_gl_sync_meta_wait (sync_meta, this->qt_context_);
 
   tex_id = *(guint *) this->v_frame.data[0];
   GST_LOG ("%p binding Qt texture %u", this, tex_id);

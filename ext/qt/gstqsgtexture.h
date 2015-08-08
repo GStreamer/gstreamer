@@ -25,6 +25,7 @@
 #include <QSGTexture>
 #include <QOpenGLFunctions>
 #include <gst/video/video.h>
+#include <gst/gl/gl.h>
 
 class GstQSGTexture : public QSGTexture, protected QOpenGLFunctions
 {
@@ -34,7 +35,7 @@ public:
     ~GstQSGTexture ();
 
     void setCaps (GstCaps * caps);
-    void setBuffer (GstBuffer * buffer);
+    gboolean setBuffer (GstBuffer * buffer);
 
     /* QSGTexture */
     void bind ();
@@ -45,6 +46,9 @@ public:
 
 private:
     GstBuffer * buffer_;
+    GstBuffer * sync_buffer_;
+    GstGLContext * qt_context_;
+    GstMemory * mem_;
     GstVideoInfo v_info;
     GstVideoFrame v_frame;
 };
