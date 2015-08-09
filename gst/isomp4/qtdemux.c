@@ -4891,10 +4891,11 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
 
     index = stream->sample_index - (stream->n_samples - info->crypto_info->len);
     if (G_LIKELY (index >= 0 && index < info->crypto_info->len)) {
-      crypto_info =
-          g_steal_pointer (&g_ptr_array_index (info->crypto_info, index));
+      /* steal structure from array */
+      crypto_info = g_ptr_array_index (info->crypto_info, index);
+      g_ptr_array_index (info->crypto_info, index) = NULL;
       GST_LOG_OBJECT (qtdemux, "attaching cenc metadata [%u]", index);
-      if (!gst_buffer_add_protection_meta (buf, crypto_info))
+      if (!crypto_info || !gst_buffer_add_protection_meta (buf, crypto_info))
         GST_ERROR_OBJECT (qtdemux, "failed to attach cenc metadata to buffer");
     }
   }
