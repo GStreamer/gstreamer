@@ -35,7 +35,7 @@ gst_gl_effects_rgb_to_curve (GstGLEffects * effects,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "rgb_to_curve",
-      rgb_to_curve_fragment_source_gles2, rgb_to_curve_fragment_source_opengl);
+      rgb_to_curve_fragment_source_gles2);
 
   if (!shader)
     return;

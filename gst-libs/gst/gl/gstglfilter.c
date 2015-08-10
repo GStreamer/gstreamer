@@ -1124,37 +1124,7 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
 
   GST_DEBUG ("drawing texture:%u dimensions:%ux%u", texture, width, height);
 
-#if GST_GL_HAVE_OPENGL
-  if (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL) {
-    GLfloat verts[] = { -1.0f, -1.0f,
-      1.0f, -1.0f,
-      1.0f, 1.0f,
-      -1.0f, 1.0f
-    };
-    GLfloat texcoords[] = { 0.0f, 0.0f,
-      1.0f, 0.0f,
-      1.0f, 1.0f,
-      0.0f, 1.0f
-    };
-
-    gl->ActiveTexture (GL_TEXTURE0);
-    gl->BindTexture (GL_TEXTURE_2D, texture);
-
-    gl->EnableClientState (GL_VERTEX_ARRAY);
-    gl->VertexPointer (2, GL_FLOAT, 0, &verts);
-
-    gl->ClientActiveTexture (GL_TEXTURE0);
-    gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
-    gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
-
-    gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
-
-    gl->DisableClientState (GL_VERTEX_ARRAY);
-    gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
-  }
-#endif
-  if (gst_gl_context_get_gl_api (context) & (GST_GL_API_GLES2 |
-          GST_GL_API_OPENGL3)) {
+  {
     if (!filter->vertex_buffer) {
       if (gl->GenVertexArrays) {
         gl->GenVertexArrays (1, &filter->vao);

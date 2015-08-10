@@ -37,8 +37,7 @@ gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "luma_threshold",
-      luma_threshold_fragment_source_gles2,
-      luma_threshold_fragment_source_opengl);
+      luma_threshold_fragment_source_gles2);
 
   if (!shader)
     return;
@@ -71,7 +70,7 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "hconv7",
-      hconv7_fragment_source_gles2, hconv7_fragment_source_opengl);
+      hconv7_fragment_source_gles2);
 
   if (!shader)
     return;
@@ -110,7 +109,7 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "vconv7",
-      vconv7_fragment_source_gles2, vconv7_fragment_source_opengl);
+      vconv7_fragment_source_gles2);
 
   if (!shader)
     return;
@@ -145,7 +144,7 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "sum",
-      sum_fragment_source_gles2, sum_fragment_source_opengl);
+      sum_fragment_source_gles2);
 
   if (!shader)
     return;

@@ -89,7 +89,7 @@ struct _GstGLEffectsClass
 GType gst_gl_effects_get_type (void);
 gboolean gst_gl_effects_register_filters (GstPlugin *, GstRank);
 GstGLShader* gst_gl_effects_get_fragment_shader (GstGLEffects *effects,
-    const gchar * shader_name, const gchar * shader_source_gles2, const gchar * shader_source_opengl);
+    const gchar * shader_name, const gchar * shader_source_gles2);
 
 void gst_gl_effects_identity (GstGLEffects *effects);
 void gst_gl_effects_mirror (GstGLEffects *effects);

@@ -34,7 +34,7 @@ gst_gl_effects_twirl_callback (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "twirl",
-      twirl_fragment_source_gles2, twirl_fragment_source_opengl);
+      twirl_fragment_source_gles2);
 
   if (!shader)
     return;

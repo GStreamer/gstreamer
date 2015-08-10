@@ -34,7 +34,7 @@ gst_gl_effects_stretch_callback (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "stretch",
-      stretch_fragment_source_gles2, stretch_fragment_source_opengl);
+      stretch_fragment_source_gles2);
 
   if (!shader)
     return;
