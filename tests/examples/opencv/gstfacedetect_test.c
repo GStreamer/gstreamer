@@ -29,6 +29,7 @@
 GstElement *playbin, *pipeline;
 GstElement *v4l2src, *videoscale, *videoconvert_in, *facedetect,
     *videoconvert_out, *autovideosink;
+static gboolean ctrlvol = FALSE;
 
 static GstBusSyncReply
 bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
@@ -42,7 +43,6 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   gchar *contents;
   gint i;
   guint size = 0;
-  gdouble volume = 0.0;
 
   /* select msg */
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT ||
@@ -81,13 +81,6 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
     if (size != 0) {
       GstState state;
 
-      faces_value = gst_value_list_get_value (value, 0);
-      faces_structure = gst_value_get_structure (faces_value);
-      have_mouth_y = gst_structure_has_field (faces_structure, "mouth->y");
-      have_mouth_x = gst_structure_has_field (faces_structure, "mouth->x");
-      have_nose_y = gst_structure_has_field (faces_structure, "nose->y");
-      have_nose_x = gst_structure_has_field (faces_structure, "nose->x");
-
       /* if paused, set to playing */
       gst_element_get_state (GST_ELEMENT (playbin), &state, NULL,
           GST_CLOCK_TIME_NONE);
@@ -95,22 +88,33 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
         gst_element_set_state (GST_ELEMENT (playbin), GST_STATE_PLAYING);
       }
 
-      /* get the volume value */
-      g_object_get (G_OBJECT (playbin), "volume", &volume, NULL);
+      if (ctrlvol) {
+        gdouble volume;
 
-      /* media operation - hide your mouth for down the volume of the video */
-      if (have_mouth_y == 0 && have_mouth_x == 0) {
-        volume = volume - 0.5;
-        if (volume <= 0.5)
-          volume = 0.0;
-        g_object_set (G_OBJECT (playbin), "volume", volume, NULL);
-      }
-      /* media operation - hide your nose for up the volume of the video */
-      if (have_nose_y == 0 && have_nose_x == 0) {
-        volume = volume + 0.5;
-        if (volume >= 9.5)
-          volume = 10.0;
-        g_object_set (G_OBJECT (playbin), "volume", volume, NULL);
+        faces_value = gst_value_list_get_value (value, 0);
+        faces_structure = gst_value_get_structure (faces_value);
+        have_mouth_y = gst_structure_has_field (faces_structure, "mouth->y");
+        have_mouth_x = gst_structure_has_field (faces_structure, "mouth->x");
+        have_nose_y = gst_structure_has_field (faces_structure, "nose->y");
+        have_nose_x = gst_structure_has_field (faces_structure, "nose->x");
+
+        /* get the volume value */
+        g_object_get (G_OBJECT (playbin), "volume", &volume, NULL);
+
+        /* media operation - hide your mouth for down the volume of the video */
+        if (have_mouth_y == 0 && have_mouth_x == 0) {
+          volume = volume - 0.5;
+          if (volume <= 0.5)
+            volume = 0.0;
+          g_object_set (G_OBJECT (playbin), "volume", volume, NULL);
+        }
+        /* media operation - hide your nose for up the volume of the video */
+        if (have_nose_y == 0 && have_nose_x == 0) {
+          volume = volume + 0.5;
+          if (volume >= 9.5)
+            volume = 10.0;
+          g_object_set (G_OBJECT (playbin), "volume", volume, NULL);
+        }
       }
       /* if face is not detected */
     } else {
@@ -129,6 +133,23 @@ main (gint argc, gchar ** argv)
   GstCaps *caps;
   GstBus *bus;
   gchar *uri;
+
+  GOptionEntry options[] = {
+    {"control-volume", 'c', 0, G_OPTION_ARG_NONE, &ctrlvol,
+        "Control the volume by hiding the nose or mouth", NULL},
+    {NULL}
+  };
+  GOptionContext *ctx;
+  GError *err = NULL;
+
+  ctx = g_option_context_new ("<video file>\n\nfacedetect test application.");
+  g_option_context_add_main_entries (ctx, options, NULL);
+  g_option_context_add_group (ctx, gst_init_get_option_group ());
+  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+    g_print ("Error initializing: %s\n", err->message);
+    exit (1);
+  }
+  g_option_context_free (ctx);
 
   if (argc < 2) {
     fprintf (stderr, "oops, please give a file to play\n");
