@@ -1351,7 +1351,7 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
           stop_type, &stop))
     goto no_format;
 
-  /* Upstrea seek in bytes will have undefined stop, but qtdemux stores
+  /* Upstream seek in bytes will have undefined stop, but qtdemux stores
    * the original stop position to use when upstream pushes the new segment
    * for this seek */
   original_stop = stop;
