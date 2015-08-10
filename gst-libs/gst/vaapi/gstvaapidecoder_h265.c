@@ -85,8 +85,7 @@ struct _GstVaapiParserInfoH265
     GstH265VPS vps;
     GstH265SPS sps;
     GstH265PPS pps;
-    /* Fix SEI parsing in codecparser, have to use GArray like h264parser */
-    GstH265SEIMessage sei;
+    GArray *sei;
     GstH265SliceHdr slice_hdr;
   } data;
   guint state;
@@ -106,7 +105,10 @@ gst_vaapi_parser_info_h265_finalize (GstVaapiParserInfoH265 * pi)
         break;
       case GST_H265_NAL_PREFIX_SEI:
       case GST_H265_NAL_SUFFIX_SEI:
-        gst_h265_sei_free (&pi->data.sei);
+        if (pi->data.sei) {
+          g_array_unref (pi->data.sei);
+          pi->data.sei = NULL;
+        }
         break;
     }
   }
@@ -1426,19 +1428,18 @@ parse_pps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
 static GstVaapiDecoderStatus
 parse_sei (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
 {
-  GST_FIXME ("Parse SEI, Not implemented !");
-#if 0
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiParserInfoH265 *const pi = unit->parsed_info;
-  GstH265SEIMessage *sei = &pi->data.sei;
+  GArray **const sei_ptr = &pi->data.sei;
   GstH265ParserResult result;
+
   GST_DEBUG ("parse SEI");
-  result = gst_h265_parser_parse_sei (priv->parser, &pi->nalu, sei);
+
+  result = gst_h265_parser_parse_sei (priv->parser, &pi->nalu, sei_ptr);
   if (result != GST_H265_PARSER_OK) {
     GST_WARNING ("failed to parse SEI messages");
     return get_status (result);
   }
-#endif
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -1516,24 +1517,27 @@ decode_pps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
 static GstVaapiDecoderStatus
 decode_sei (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
 {
-  GST_FIXME ("Decode SEI, Not implemented!");
-#if 0
+
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiParserInfoH265 *const pi = unit->parsed_info;
-  GstH265SEIMessage *sei = &pi->data.sei;
   guint i;
+
   GST_DEBUG ("decode SEI messages");
-  switch (sei->payloadType) {
-    case GST_H265_SEI_PIC_TIMING:{
-      GstH265PicTiming *pic_timing = &sei->payload.pic_timing;
-      /* Fix: only if vps->frame_field_info_present_flag */
-      priv->pic_structure = pic_timing->pic_struct;
-      break;
+
+  for (i = 0; i < pi->data.sei->len; i++) {
+    const GstH265SEIMessage *const sei =
+        &g_array_index (pi->data.sei, GstH265SEIMessage, i);
+
+    switch (sei->payloadType) {
+      case GST_H265_SEI_PIC_TIMING:{
+        const GstH265PicTiming *const pic_timing = &sei->payload.pic_timing;
+        priv->pic_structure = pic_timing->pic_struct;
+        break;
+      }
+      default:
+        break;
     }
-    default:
-      break;
   }
-#endif
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
