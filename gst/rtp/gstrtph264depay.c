@@ -463,7 +463,7 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
   gst_caps_unref (srccaps);
 
   /* Insert SPS and PPS into the stream on next opportunity */
-  {
+  if (rtph264depay->sps->len > 0 || rtph264depay->pps->len > 0) {
     gint i;
     GstBuffer *codec_data;
     GstMapInfo map;
