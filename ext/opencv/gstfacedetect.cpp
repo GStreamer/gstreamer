@@ -640,6 +640,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       guint rnx = 0, rny = 0, rnw, rnh;
       guint rmx = 0, rmy = 0, rmw, rmh;
       guint rex = 0, rey = 0, rew, reh;
+      guint rhh = r.height / 2;
       gboolean have_nose, have_mouth, have_eyes;
 
       /* detect face features */
@@ -648,7 +649,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         rnx = r.x + r.width / 4;
         rny = r.y + r.height / 4;
         rnw = r.width / 2;
-        rnh = r.height / 2;
+        rnh = rhh;
         gst_face_detect_run_detector (filter, filter->cvNoseDetect, mw, mh,
             Rect (rnx, rny, rnw, rnh), nose);
         have_nose = !nose.empty ();
@@ -660,7 +661,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         rmx = r.x;
         rmy = r.y + r.height / 2;
         rmw = r.width;
-        rmh = r.height / 2;
+        rmh = rhh;
         gst_face_detect_run_detector (filter, filter->cvMouthDetect, mw,
             mh, Rect (rmx, rmy, rmw, rmh), mouth);
         have_mouth = !mouth.empty ();
@@ -672,7 +673,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         rex = r.x;
         rey = r.y;
         rew = r.width;
-        reh = r.height / 2;
+        reh = rhh;
         gst_face_detect_run_detector (filter, filter->cvEyesDetect, mw, mh,
             Rect (rex, rey, rew, reh), eyes);
         have_eyes = !eyes.empty ();
