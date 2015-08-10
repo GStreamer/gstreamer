@@ -36,10 +36,6 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   const GstStructure *structure;
   const GValue *value;
-  const GstStructure *faces_structure;
-  const GValue *faces_value;
-  gboolean have_mouth_x, have_mouth_y;
-  gboolean have_nose_x, have_nose_y;
   gchar *contents;
   gint i;
   guint size = 0;
@@ -91,12 +87,17 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
       if (ctrlvol) {
         gdouble volume;
 
-        faces_value = gst_value_list_get_value (value, 0);
-        faces_structure = gst_value_get_structure (faces_value);
-        have_mouth_y = gst_structure_has_field (faces_structure, "mouth->y");
-        have_mouth_x = gst_structure_has_field (faces_structure, "mouth->x");
-        have_nose_y = gst_structure_has_field (faces_structure, "nose->y");
-        have_nose_x = gst_structure_has_field (faces_structure, "nose->x");
+        const GValue *faces_value = gst_value_list_get_value (value, 0);
+        const GstStructure *faces_structure =
+            gst_value_get_structure (faces_value);
+        gboolean have_mouth_y =
+            gst_structure_has_field (faces_structure, "mouth->y");
+        gboolean have_mouth_x =
+            gst_structure_has_field (faces_structure, "mouth->x");
+        gboolean have_nose_y =
+            gst_structure_has_field (faces_structure, "nose->y");
+        gboolean have_nose_x =
+            gst_structure_has_field (faces_structure, "nose->x");
 
         /* get the volume value */
         g_object_get (G_OBJECT (playbin), "volume", &volume, NULL);
