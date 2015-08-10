@@ -224,7 +224,6 @@ struct _GstVideoEncoder
  *                  return TRUE if the query could be performed. Subclasses
  *                  should chain up to the parent implementation to invoke the
  *                  default handler. Since 1.4
- *
  * @transform_meta: Optional. Transform the metadata on the input buffer to the
  *                  output buffer. By default this method is copies all meta without
  *                  tags and meta with only the "video" tag. subclasses can
