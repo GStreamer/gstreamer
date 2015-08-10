@@ -36,6 +36,7 @@
 
 #include <gst/gl/gl.h>
 #include "gstglcontext_glx.h"
+#include "../utils/opengl_versions.h"
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
 
@@ -137,35 +138,6 @@ _describe_fbconfig (Display * display, GLXFBConfig config)
   GST_DEBUG ("stencil: %d", val);
 }
 
-/* list of known OpenGL versions */
-/* *INDENT-OFF* */
-static const struct { int major, minor; } gl_versions[] = {
-   {4, 5},
-   {4, 4},
-   {4, 3},
-   {4, 2},
-   {4, 1},
-   {4, 0},
-
-   {3, 3},
-   {3, 2},
-   {3, 1},
-   {3, 0},
-
-   {2, 1},
-   {2, 0},
-
-   {1, 5},
-   {1, 4},
-   {1, 3},
-   {1, 2},
-   {1, 1},
-   {1, 0},
-
-   {0, 0} /* end of list */
-};
-/* *INDENT-ON* */
-
 static GLXContext
 _create_context_with_flags (GstGLContextGLX * context_glx, Display * dpy,
     GLXFBConfig fbconfig, GLXContext share_context, gint major, gint minor,
@@ -252,12 +224,13 @@ gst_gl_context_glx_create_context (GstGLContext * context,
       && context_glx->priv->glXCreateContextAttribsARB) {
     gint i;
 
-    for (i = 0; i < G_N_ELEMENTS (gl_versions); i++) {
+    for (i = 0; i < G_N_ELEMENTS (opengl_versions); i++) {
       gint profileMask = 0;
       gint contextFlags = 0;
 
-      if ((gl_versions[i].major > 3
-              || (gl_versions[i].major == 3 && gl_versions[i].minor >= 2))) {
+      if ((opengl_versions[i].major > 3
+              || (opengl_versions[i].major == 3
+                  && opengl_versions[i].minor >= 2))) {
         profileMask |= GLX_CONTEXT_CORE_PROFILE_BIT_ARB;
         contextFlags |= GLX_CONTEXT_DEBUG_BIT_ARB;
       } else {
@@ -265,12 +238,12 @@ gst_gl_context_glx_create_context (GstGLContext * context,
       }
 
       GST_DEBUG_OBJECT (context, "trying to create a GL %d.%d context",
-          gl_versions[i].major, gl_versions[i].minor);
+          opengl_versions[i].major, opengl_versions[i].minor);
 
       context_glx->glx_context = _create_context_with_flags (context_glx,
           device, context_glx->priv->fbconfigs[0],
-          (GLXContext) external_gl_context, gl_versions[i].major,
-          gl_versions[i].minor, contextFlags, profileMask);
+          (GLXContext) external_gl_context, opengl_versions[i].major,
+          opengl_versions[i].minor, contextFlags, profileMask);
 
       if (context_glx->glx_context) {
         context_glx->priv->context_api = GST_GL_API_OPENGL3;

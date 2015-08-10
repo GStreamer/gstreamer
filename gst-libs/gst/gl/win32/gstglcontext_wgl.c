@@ -31,8 +31,19 @@
 #include "gstglcontext_wgl.h"
 #include <GL/wglext.h>
 
+#include "../utils/opengl_versions.h"
+
+struct _GstGLContextWGLPrivate
+{
+  PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
+
+  GstGLAPI context_api;
+};
+
 #define gst_gl_context_wgl_parent_class parent_class
 G_DEFINE_TYPE (GstGLContextWGL, gst_gl_context_wgl, GST_GL_TYPE_CONTEXT);
+#define GST_GL_CONTEXT_WGL_GET_PRIVATE(o) \
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_CONTEXT_WGL, GstGLContextWGLPrivate))
 
 static guintptr gst_gl_context_wgl_get_gl_context (GstGLContext * context);
 static void gst_gl_context_wgl_swap_buffers (GstGLContext * context);
@@ -51,6 +62,8 @@ static void
 gst_gl_context_wgl_class_init (GstGLContextWGLClass * klass)
 {
   GstGLContextClass *context_class = (GstGLContextClass *) klass;
+
+  g_type_class_add_private (klass, sizeof (GstGLContextWGLPrivate));
 
   context_class->get_gl_context =
       GST_DEBUG_FUNCPTR (gst_gl_context_wgl_get_gl_context);
@@ -74,6 +87,9 @@ gst_gl_context_wgl_class_init (GstGLContextWGLClass * klass)
 static void
 gst_gl_context_wgl_init (GstGLContextWGL * context_wgl)
 {
+  context_wgl->priv = GST_GL_CONTEXT_WGL_GET_PRIVATE (context_wgl);
+
+  context_wgl->priv->context_api = GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
 }
 
 /* Must be called in the gl thread */
@@ -88,6 +104,44 @@ gst_gl_context_wgl_new (GstGLDisplay * display)
   return g_object_new (GST_GL_TYPE_CONTEXT_WGL, NULL);
 }
 
+static HGLRC
+_create_context_with_flags (GstGLContextWGL * context_wgl, HDC dpy,
+    HGLRC share_context, gint major, gint minor, gint contextFlags,
+    gint profileMask)
+{
+  HGLRC ret;
+#define N_ATTRIBS 20
+  gint attribs[N_ATTRIBS];
+  gint n = 0;
+
+  if (major) {
+    attribs[n++] = WGL_CONTEXT_MAJOR_VERSION_ARB;
+    attribs[n++] = major;
+  }
+  if (minor) {
+    attribs[n++] = WGL_CONTEXT_MINOR_VERSION_ARB;
+    attribs[n++] = minor;
+  }
+  if (contextFlags) {
+    attribs[n++] = WGL_CONTEXT_FLAGS_ARB;
+    attribs[n++] = contextFlags;
+  }
+  if (profileMask) {
+    attribs[n++] = WGL_CONTEXT_PROFILE_MASK_ARB;
+    attribs[n++] = profileMask;
+  }
+  attribs[n++] = 0;
+
+  g_assert (n < N_ATTRIBS);
+#undef N_ATTRIBS
+
+  ret =
+      context_wgl->priv->wglCreateContextAttribsARB (dpy, share_context,
+      attribs);
+
+  return ret;
+}
+
 static gboolean
 gst_gl_context_wgl_create_context (GstGLContext * context,
     GstGLAPI gl_api, GstGLContext * other_context, GError ** error)
@@ -95,7 +149,7 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
   GstGLWindow *window;
   GstGLContextWGL *context_wgl;
   HGLRC external_gl_context = NULL;
-  PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;
+  HGLRC trampoline;
   HDC device;
 
   context_wgl = GST_GL_CONTEXT_WGL (context);
@@ -112,45 +166,81 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
     external_gl_context = (HGLRC) gst_gl_context_get_gl_context (other_context);
   }
 
-  context_wgl->wgl_context = wglCreateContext (device);
-  if (context_wgl->wgl_context)
+  trampoline = wglCreateContext (device);
+  if (trampoline)
     GST_DEBUG ("gl context created: %" G_GUINTPTR_FORMAT,
-        (guintptr) context_wgl->wgl_context);
+        (guintptr) trampoline);
   else {
     g_set_error (error, GST_GL_CONTEXT_ERROR,
         GST_GL_CONTEXT_ERROR_CREATE_CONTEXT, "failed to create glcontext:0x%x",
         (unsigned int) GetLastError ());
     goto failure;
   }
-  g_assert (context_wgl->wgl_context);
+  g_assert (trampoline);
 
+  /* get extension functions */
+  wglMakeCurrent (device, trampoline);
 
-  if (external_gl_context) {
+  context_wgl->priv->wglCreateContextAttribsARB =
+      (PFNWGLCREATECONTEXTATTRIBSARBPROC)
+      wglGetProcAddress ("wglCreateContextAttribsARB");
 
-    wglMakeCurrent (device, context_wgl->wgl_context);
+  wglMakeCurrent (device, 0);
+  wglDeleteContext (trampoline);
+  trampoline = NULL;
 
-    wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)
-        wglGetProcAddress ("wglCreateContextAttribsARB");
+  if (context_wgl->priv->wglCreateContextAttribsARB != NULL
+      && gl_api & GST_GL_API_OPENGL3) {
+    gint i;
 
-    if (wglCreateContextAttribsARB != NULL) {
-      wglMakeCurrent (device, 0);
-      wglDeleteContext (context_wgl->wgl_context);
-      context_wgl->wgl_context =
-          wglCreateContextAttribsARB (device, external_gl_context, 0);
-      if (context_wgl->wgl_context == NULL) {
+    for (i = 0; i < G_N_ELEMENTS (opengl_versions); i++) {
+      gint profileMask = 0;
+      gint contextFlags = 0;
+
+      if ((opengl_versions[i].major > 3
+              || (opengl_versions[i].major == 3
+                  && opengl_versions[i].minor >= 2))) {
+        profileMask |= WGL_CONTEXT_CORE_PROFILE_BIT_ARB;
+        contextFlags |= WGL_CONTEXT_DEBUG_BIT_ARB;
+      } else {
+        break;
+      }
+
+      GST_DEBUG_OBJECT (context, "trying to create a GL %d.%d context",
+          opengl_versions[i].major, opengl_versions[i].minor);
+
+      context_wgl->wgl_context = _create_context_with_flags (context_wgl,
+          device, external_gl_context, opengl_versions[i].major,
+          opengl_versions[i].minor, contextFlags, profileMask);
+
+      if (context_wgl->wgl_context) {
+        context_wgl->priv->context_api = GST_GL_API_OPENGL3;
+        break;
+      }
+    }
+  }
+
+  if (!context_wgl->wgl_context) {
+    context_wgl->wgl_context = wglCreateContext (device);
+
+    if (!context_wgl->wgl_context) {
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
+          "Failed to create WGL context 0x%x", (unsigned int) GetLastError ());
+      goto failure;
+    }
+
+    if (external_gl_context) {
+      if (!wglShareLists (external_gl_context, context_wgl->wgl_context)) {
         g_set_error (error, GST_GL_CONTEXT_ERROR,
             GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
-            "failed to share context through wglCreateContextAttribsARB 0x%x",
+            "failed to share contexts through wglShareLists 0x%x",
             (unsigned int) GetLastError ());
         goto failure;
       }
-    } else if (!wglShareLists (external_gl_context, context_wgl->wgl_context)) {
-      g_set_error (error, GST_GL_CONTEXT_ERROR,
-          GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
-          "failed to share contexts through wglShareLists 0x%x",
-          (unsigned int) GetLastError ());
-      goto failure;
     }
+
+    context_wgl->priv->context_api = GST_GL_API_OPENGL;
   }
 
   GST_LOG ("gl context id: %" G_GUINTPTR_FORMAT,
@@ -277,7 +367,9 @@ gst_gl_context_wgl_activate (GstGLContext * context, gboolean activate)
 GstGLAPI
 gst_gl_context_wgl_get_gl_api (GstGLContext * context)
 {
-  return GST_GL_API_OPENGL;
+  GstGLContextWGL *context_wgl = GST_GL_CONTEXT_WGL (context);
+
+  return context_wgl->priv->context_api;
 }
 
 static GstGLPlatform

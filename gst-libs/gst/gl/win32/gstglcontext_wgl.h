@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstGLContextWGL        GstGLContextWGL;
 typedef struct _GstGLContextWGLClass   GstGLContextWGLClass;
+typedef struct _GstGLContextWGLPrivate GstGLContextWGLPrivate;
 
 struct _GstGLContextWGL {
   /*< private >*/
@@ -41,6 +42,8 @@ struct _GstGLContextWGL {
 
   HGLRC wgl_context;
   HGLRC external_gl_context;
+
+  GstGLContextWGLPrivate *priv;
 
   gpointer _reserved[GST_PADDING];
 };
