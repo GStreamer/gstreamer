@@ -34,7 +34,7 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "squeeze",
-      squeeze_fragment_source_gles2, squeeze_fragment_source_opengl);
+      squeeze_fragment_source_gles2);
 
   if (!shader)
     return;

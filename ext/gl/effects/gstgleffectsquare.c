@@ -34,7 +34,7 @@ gst_gl_effects_square_callback (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "square",
-      square_fragment_source_gles2, square_fragment_source_opengl);
+      square_fragment_source_gles2);
 
   if (!shader)
     return;

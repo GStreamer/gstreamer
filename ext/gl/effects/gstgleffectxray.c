@@ -49,7 +49,7 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "hconv7",
-      hconv7_fragment_source_gles2, hconv7_fragment_source_opengl);
+      hconv7_fragment_source_gles2);
 
   if (!shader)
     return;
@@ -88,7 +88,7 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "vconv7",
-      vconv7_fragment_source_gles2, vconv7_fragment_source_opengl);
+      vconv7_fragment_source_gles2);
 
   if (!shader)
     return;
@@ -124,7 +124,7 @@ gst_gl_effects_xray_desaturate (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "desaturate",
-      desaturate_fragment_source_gles2, desaturate_fragment_source_opengl);
+      desaturate_fragment_source_gles2);
 
   if (!shader)
     return;
@@ -156,8 +156,7 @@ gst_gl_effects_xray_sobel_hconv (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "sobel_hconv3",
-      sep_sobel_hconv3_fragment_source_gles2,
-      sep_sobel_hconv3_fragment_source_opengl);
+      sep_sobel_hconv3_fragment_source_gles2);
 
   if (!shader)
     return;
@@ -191,8 +190,7 @@ gst_gl_effects_xray_sobel_vconv (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "sobel_vconv3",
-      sep_sobel_vconv3_fragment_source_gles2,
-      sep_sobel_vconv3_fragment_source_opengl);
+      sep_sobel_vconv3_fragment_source_gles2);
 
   if (!shader)
     return;
@@ -226,8 +224,7 @@ gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "sobel_length",
-      sep_sobel_length_fragment_source_gles2,
-      sep_sobel_length_fragment_source_opengl);
+      sep_sobel_length_fragment_source_gles2);
 
   if (!shader)
     return;
@@ -262,7 +259,7 @@ gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "multiply",
-      multiply_fragment_source_gles2, multiply_fragment_source_opengl);
+      multiply_fragment_source_gles2);
 
   if (!shader)
     return;

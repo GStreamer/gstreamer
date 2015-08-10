@@ -48,7 +48,7 @@ gst_gl_effects_blur_callback_hconv (gint width, gint height, guint texture,
   GstGLEffects *effects = GST_GL_EFFECTS (data);
 
   if (NULL != (shader = gst_gl_effects_get_fragment_shader (effects, "hconv0",
-              hconv7_fragment_source_gles2, hconv7_fragment_source_opengl))) {
+              hconv7_fragment_source_gles2))) {
     GstGLFilter *filter = GST_GL_FILTER (effects);
     GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
@@ -82,7 +82,7 @@ gst_gl_effects_blur_callback_vconv (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
   if (NULL != (shader = gst_gl_effects_get_fragment_shader (effects, "vconv0",
-              vconv7_fragment_source_gles2, vconv7_fragment_source_opengl))) {
+              vconv7_fragment_source_gles2))) {
     GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
 #if GST_GL_HAVE_OPENGL

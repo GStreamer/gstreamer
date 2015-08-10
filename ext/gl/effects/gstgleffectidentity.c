@@ -31,6 +31,7 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (effects);
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
+  GstGLShader *shader;
 
 #if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (context)) {
@@ -38,32 +39,27 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
     gl->LoadIdentity ();
   }
 #endif
-  if (USING_GLES2 (context) || USING_OPENGL3 (context)) {
-    GstGLShader *shader =
-        g_hash_table_lookup (effects->shaderstable, "identity0");
 
-    if (!shader) {
-      shader = gst_gl_shader_new (context);
-      g_hash_table_insert (effects->shaderstable, (gchar *) "identity0",
-          shader);
+  shader = g_hash_table_lookup (effects->shaderstable, "identity0");
+  if (!shader) {
+    shader = gst_gl_shader_new (context);
+    g_hash_table_insert (effects->shaderstable, (gchar *) "identity0", shader);
 
-      if (!gst_gl_shader_compile_with_default_vf_and_check (shader,
-              &filter->draw_attr_position_loc,
-              &filter->draw_attr_texture_loc)) {
-        /* gst gl context error is already set */
-        GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-            ("Failed to initialize identity shader, %s",
-                gst_gl_context_get_error ()), (NULL));
-        return;
-      }
+    if (!gst_gl_shader_compile_with_default_vf_and_check (shader,
+            &filter->draw_attr_position_loc, &filter->draw_attr_texture_loc)) {
+      /* gst gl context error is already set */
+      GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+          ("Failed to initialize identity shader, %s",
+              gst_gl_context_get_error ()), (NULL));
+      return;
     }
-    gst_gl_shader_use (shader);
-
-    gl->ActiveTexture (GL_TEXTURE0);
-    gl->BindTexture (GL_TEXTURE_2D, texture);
-
-    gst_gl_shader_set_uniform_1i (shader, "tex", 0);
   }
+  gst_gl_shader_use (shader);
+
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+
+  gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }

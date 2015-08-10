@@ -34,8 +34,7 @@ gst_gl_effects_sobel_callback_desaturate (gint width, gint height,
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
   if (NULL != (shader = gst_gl_effects_get_fragment_shader (effects, "desat0",
-              desaturate_fragment_source_gles2,
-              desaturate_fragment_source_opengl))) {
+              desaturate_fragment_source_gles2))) {
     GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
 #if GST_GL_HAVE_OPENGL
@@ -65,8 +64,7 @@ gst_gl_effects_sobel_callback_hconv (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
   if (NULL != (shader = gst_gl_effects_get_fragment_shader (effects, "hconv0",
-              sep_sobel_hconv3_fragment_source_gles2,
-              sep_sobel_hconv3_fragment_source_opengl))) {
+              sep_sobel_hconv3_fragment_source_gles2))) {
     GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
 #if GST_GL_HAVE_OPENGL
@@ -97,8 +95,7 @@ gst_gl_effects_sobel_callback_vconv (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
   if (NULL != (shader = gst_gl_effects_get_fragment_shader (effects, "vconv0",
-              sep_sobel_vconv3_fragment_source_gles2,
-              sep_sobel_vconv3_fragment_source_opengl))) {
+              sep_sobel_vconv3_fragment_source_gles2))) {
     GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
 #if GST_GL_HAVE_OPENGL
@@ -129,8 +126,7 @@ gst_gl_effects_sobel_callback_length (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
   if (NULL != (shader = gst_gl_effects_get_fragment_shader (effects, "len0",
-              sep_sobel_length_fragment_source_gles2,
-              sep_sobel_length_fragment_source_opengl))) {
+              sep_sobel_length_fragment_source_gles2))) {
     GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
 #if GST_GL_HAVE_OPENGL

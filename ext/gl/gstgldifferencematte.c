@@ -96,39 +96,43 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
         gst_gl_shader_new (GST_GL_BASE_FILTER (filter)->context);
   }
 
-  if (!gst_gl_shader_compile_and_check (differencematte->shader[0],
-          difference_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+  if (!gst_gl_shader_compile_with_default_v_and_check (differencematte->shader
+          [0], difference_fragment_source, &filter->draw_attr_position_loc,
+          &filter->draw_attr_texture_loc)) {
     gst_gl_context_set_error (GST_GL_BASE_FILTER (differencematte)->context,
         "Failed to initialize difference shader");
-    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
+            gst_gl_context_get_error ()), (NULL));
     return;
   }
 
-  if (!gst_gl_shader_compile_and_check (differencematte->shader[1],
-          hconv7_fragment_source_opengl, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+  if (!gst_gl_shader_compile_with_default_v_and_check (differencematte->shader
+          [1], hconv7_fragment_source_gles2, &filter->draw_attr_position_loc,
+          &filter->draw_attr_texture_loc)) {
     gst_gl_context_set_error (GST_GL_BASE_FILTER (differencematte)->context,
         "Failed to initialize hconv7 shader");
-    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
+            gst_gl_context_get_error ()), (NULL));
     return;
   }
 
-  if (!gst_gl_shader_compile_and_check (differencematte->shader[2],
-          vconv7_fragment_source_opengl, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+  if (!gst_gl_shader_compile_with_default_v_and_check (differencematte->shader
+          [2], vconv7_fragment_source_gles2, &filter->draw_attr_position_loc,
+          &filter->draw_attr_texture_loc)) {
     gst_gl_context_set_error (GST_GL_BASE_FILTER (differencematte)->context,
         "Failed to initialize vconv7 shader");
-    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
+            gst_gl_context_get_error ()), (NULL));
     return;
   }
 
-  if (!gst_gl_shader_compile_and_check (differencematte->shader[3],
-          texture_interp_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+  if (!gst_gl_shader_compile_with_default_v_and_check (differencematte->shader
+          [3], texture_interp_fragment_source, &filter->draw_attr_position_loc,
+          &filter->draw_attr_texture_loc)) {
     gst_gl_context_set_error (GST_GL_BASE_FILTER (differencematte)->context,
         "Failed to initialize interp shader");
-    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
+            gst_gl_context_get_error ()), (NULL));
     return;
   }
 }
@@ -190,7 +194,8 @@ gst_gl_differencematte_class_init (GstGLDifferenceMatteClass * klass)
       "Saves a background frame and replace it with a pixbuf",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
-  GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
+  GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
+      GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
 }
 
 static void

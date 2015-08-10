@@ -34,7 +34,7 @@ gst_gl_effects_laplacian_callback (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
   if (NULL != (shader = gst_gl_effects_get_fragment_shader (effects, "conv0",
-              conv9_fragment_source_gles2, conv9_fragment_source_opengl))) {
+              conv9_fragment_source_gles2))) {
     GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
     static gfloat kernel[9] = { 0.0, -1.0, 0.0,
       -1.0, 4.0, -1.0,

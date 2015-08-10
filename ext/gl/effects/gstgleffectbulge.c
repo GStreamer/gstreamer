@@ -34,7 +34,7 @@ gst_gl_effects_bulge_callback (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "bulge",
-      bulge_fragment_source_gles2, bulge_fragment_source_opengl);
+      bulge_fragment_source_gles2);
 
   if (!shader)
     return;

@@ -34,7 +34,7 @@ gst_gl_effects_fisheye_callback (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "fisheye",
-      fisheye_fragment_source_gles2, fisheye_fragment_source_opengl);
+      fisheye_fragment_source_gles2);
 
   if (!shader)
     return;

@@ -35,8 +35,7 @@ gst_gl_effects_luma_to_curve (GstGLEffects * effects,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "luma_to_curve",
-      luma_to_curve_fragment_source_gles2,
-      luma_to_curve_fragment_source_opengl);
+      luma_to_curve_fragment_source_gles2);
 
   if (!shader)
     return;

@@ -34,7 +34,7 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "mirror",
-      mirror_fragment_source_gles2, mirror_fragment_source_opengl);
+      mirror_fragment_source_gles2);
 
   if (!shader)
     return;
