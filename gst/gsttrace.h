@@ -25,6 +25,7 @@
 #define __GST_TRACE_H__
 
 #include <glib.h>
+#include <gst/gstconfig.h>
 
 G_BEGIN_DECLS
 

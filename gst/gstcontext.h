@@ -24,6 +24,8 @@
 #ifndef __GST_CONTEXT_H__
 #define __GST_CONTEXT_H__
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 typedef struct _GstContext GstContext;

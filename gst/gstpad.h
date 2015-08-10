@@ -61,6 +61,8 @@ typedef enum {
   GST_PAD_MODE_PULL
 } GstPadMode;
 
+#include <glib.h>
+
 const gchar   * gst_pad_mode_get_name (GstPadMode mode);
 
 #include <gst/gstobject.h>

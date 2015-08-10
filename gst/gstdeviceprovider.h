@@ -19,7 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gstdeviceproviderfactory.h>
 
 
 #ifndef __GST_DEVICE_PROVIDER_H__
@@ -32,6 +31,8 @@ G_BEGIN_DECLS
 typedef struct _GstDeviceProvider GstDeviceProvider;
 typedef struct _GstDeviceProviderClass GstDeviceProviderClass;
 typedef struct _GstDeviceProviderPrivate GstDeviceProviderPrivate;
+
+#include <gst/gstdeviceproviderfactory.h>
 
 #define GST_TYPE_DEVICE_PROVIDER                 (gst_device_provider_get_type())
 #define GST_IS_DEVICE_PROVIDER(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEVICE_PROVIDER))

@@ -21,6 +21,7 @@
  */
 
 #include <glib.h>
+#include <glib-object.h>
 
 #ifndef __GST_ATOMIC_QUEUE_H__
 #define __GST_ATOMIC_QUEUE_H__

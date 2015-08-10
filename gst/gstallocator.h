@@ -24,6 +24,7 @@
 #define __GST_ALLOCATOR_H__
 
 #include <gst/gstmemory.h>
+#include <gst/gstobject.h>
 
 G_BEGIN_DECLS
 

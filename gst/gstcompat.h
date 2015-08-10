@@ -32,6 +32,9 @@
  * This can be done in CFLAGS for compiling old code.
  */
 
+#include <glib.h>
+#include <gst/gstpad.h>
+
 
 G_BEGIN_DECLS
 

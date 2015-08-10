@@ -22,6 +22,8 @@
 #ifndef __GST_QUARK_H__
 #define __GST_QUARK_H__
 
+#include <glib.h>
+
 /* These enums need to match the number and order
  * of strings declared in _quark_table, in gstquark.c */
 typedef enum _GstQuarkId

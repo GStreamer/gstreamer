@@ -26,6 +26,7 @@
 #include <gst/gstconfig.h>
 
 #include <glib-object.h>
+#include <gst/gstminiobject.h>
 
 G_BEGIN_DECLS
 

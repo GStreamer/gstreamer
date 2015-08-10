@@ -24,6 +24,9 @@
 #ifndef __GST_CLOCK_H__
 #define __GST_CLOCK_H__
 
+#include <gst/gstconfig.h>
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 /* --- standard type macros --- */
