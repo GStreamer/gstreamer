@@ -27,18 +27,18 @@
 
 G_BEGIN_DECLS
 
-#define GOOM_SAMPLES 512
+#define GOOM2K1_SAMPLES 512
 
-#define GST_TYPE_GOOM            (gst_goom_get_type())
-#define GST_GOOM(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GOOM,GstGoom))
-#define GST_GOOM_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GOOM,GstGoomClass))
-#define GST_IS_GOOM(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GOOM))
-#define GST_IS_GOOM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GOOM))
+#define GST_TYPE_GOOM2K1            (gst_goom2k1_get_type())
+#define GST_GOOM2K1(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GOOM2K1,GstGoom2k1))
+#define GST_GOOM2K1_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GOOM2K1,GstGoom2k1Class))
+#define GST_IS_GOOM2K1(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GOOM2K1))
+#define GST_IS_GOOM2K1_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GOOM2K1))
 
-typedef struct _GstGoom GstGoom;
-typedef struct _GstGoomClass GstGoomClass;
+typedef struct _GstGoom2k1 GstGoom2k1;
+typedef struct _GstGoom2k1Class GstGoom2k1Class;
 
-struct _GstGoom
+struct _GstGoom2k1
 {
   GstAudioVisualizer parent;
 
@@ -53,13 +53,13 @@ struct _GstGoom
   GoomData goomdata;
 };
 
-struct _GstGoomClass
+struct _GstGoom2k1Class
 {
   GstAudioVisualizerClass parent_class;
 };
 
-GType gst_goom_get_type (void);
-gboolean gst_goom_plugin_init (GstPlugin * plugin);
+GType gst_goom2k1_get_type (void);
+gboolean gst_goom2k1_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 

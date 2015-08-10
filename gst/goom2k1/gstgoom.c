@@ -43,8 +43,8 @@
 #include "gstgoom.h"
 #include "goom_core.h"
 
-GST_DEBUG_CATEGORY_STATIC (goom_debug);
-#define GST_CAT_DEFAULT goom_debug
+GST_DEBUG_CATEGORY_STATIC (goom2k1_debug);
+#define GST_CAT_DEFAULT goom2k1_debug
 
 #define DEFAULT_WIDTH  320
 #define DEFAULT_HEIGHT 240
@@ -76,19 +76,17 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",    
         "channel-mask = (bitmask) 0x3, " "layout = (string) interleaved")
     );
 
-static void gst_goom_finalize (GObject * object);
+static void gst_goom2k1_finalize (GObject * object);
 
-static gboolean gst_goom_setup (GstAudioVisualizer * base);
-static gboolean gst_goom_render (GstAudioVisualizer * base, GstBuffer * audio,
-    GstVideoFrame * video);
+static gboolean gst_goom2k1_setup (GstAudioVisualizer * base);
+static gboolean gst_goom2k1nrender (GstAudioVisualizer * base,
+    GstBuffer * audio, GstVideoFrame * video);
 
-typedef GstGoom GstGoom2k1;
-typedef GstGoomClass GstGoom2k1Class;
 
-G_DEFINE_TYPE (GstGoom2k1, gst_goom, GST_TYPE_AUDIO_VISUALIZER);
+G_DEFINE_TYPE (GstGoom2k1, gst_goom2k1, GST_TYPE_AUDIO_VISUALIZER);
 
 static void
-gst_goom_class_init (GstGoomClass * klass)
+gst_goom2k1_class_init (GstGoom2k1Class * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -98,7 +96,7 @@ gst_goom_class_init (GstGoomClass * klass)
   gstelement_class = (GstElementClass *) klass;
   visualizer_class = (GstAudioVisualizerClass *) klass;
 
-  gobject_class->finalize = gst_goom_finalize;
+  gobject_class->finalize = gst_goom2k1_finalize;
 
   gst_element_class_set_static_metadata (gstelement_class,
       "GOOM: what a GOOM! 2k1 edition", "Visualization",
@@ -109,14 +107,15 @@ gst_goom_class_init (GstGoomClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template));
 
-  GST_DEBUG_CATEGORY_INIT (goom_debug, "goom", 0, "goom visualisation element");
+  GST_DEBUG_CATEGORY_INIT (goom2k1_debug, "goom2k1", 0,
+      "goom2k1 visualisation element");
 
-  visualizer_class->setup = GST_DEBUG_FUNCPTR (gst_goom_setup);
-  visualizer_class->render = GST_DEBUG_FUNCPTR (gst_goom_render);
+  visualizer_class->setup = GST_DEBUG_FUNCPTR (gst_goom2k1_setup);
+  visualizer_class->render = GST_DEBUG_FUNCPTR (gst_goom2k1_render);
 }
 
 static void
-gst_goom_init (GstGoom * goom)
+gst_goom2k1_init (GstGoom2k1 * goom)
 {
   goom->width = DEFAULT_WIDTH;
   goom->height = DEFAULT_HEIGHT;
@@ -126,19 +125,19 @@ gst_goom_init (GstGoom * goom)
 }
 
 static void
-gst_goom_finalize (GObject * object)
+gst_goom2k1_finalize (GObject * object)
 {
-  GstGoom *goom = GST_GOOM (object);
+  GstGoom2k1 *goom = GST_GOOM2K1 (object);
 
   goom_close (&(goom->goomdata));
 
-  G_OBJECT_CLASS (gst_goom_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_goom2k1_parent_class)->finalize (object);
 }
 
 static gboolean
-gst_goom_setup (GstAudioVisualizer * base)
+gst_goom2k1_setup (GstAudioVisualizer * base)
 {
-  GstGoom *goom = GST_GOOM (base);
+  GstGoom2k1 *goom = GST_GOOM2K1 (base);
 
   goom->width = GST_VIDEO_INFO_WIDTH (&base->vinfo);
   goom->height = GST_VIDEO_INFO_HEIGHT (&base->vinfo);
@@ -149,26 +148,26 @@ gst_goom_setup (GstAudioVisualizer * base)
 }
 
 static gboolean
-gst_goom_render (GstAudioVisualizer * base, GstBuffer * audio,
+gst_goom2k1_render (GstAudioVisualizer * base, GstBuffer * audio,
     GstVideoFrame * video)
 {
-  GstGoom *goom = GST_GOOM (base);
+  GstGoom2k1 *goom = GST_GOOM2K1 (base);
   GstMapInfo amap;
-  gint16 datain[2][GOOM_SAMPLES];
+  gint16 datain[2][GOOM2K1_SAMPLES];
   gint16 *adata;
   gint i;
 
-  /* get next GOOM_SAMPLES, we have at least this amount of samples */
+  /* get next GOOM2K1_SAMPLES, we have at least this amount of samples */
   gst_buffer_map (audio, &amap, GST_MAP_READ);
   adata = (gint16 *) amap.data;
 
   if (goom->channels == 2) {
-    for (i = 0; i < GOOM_SAMPLES; i++) {
+    for (i = 0; i < GOOM2K1_SAMPLES; i++) {
       datain[0][i] = *adata++;
       datain[1][i] = *adata++;
     }
   } else {
-    for (i = 0; i < GOOM_SAMPLES; i++) {
+    for (i = 0; i < GOOM2K1_SAMPLES; i++) {
       datain[0][i] = *adata;
       datain[1][i] = *adata++;
     }
@@ -183,7 +182,8 @@ gst_goom_render (GstAudioVisualizer * base, GstBuffer * audio,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "goom2k1", GST_RANK_NONE, GST_TYPE_GOOM);
+  return gst_element_register (plugin, "goom2k1", GST_RANK_NONE,
+      GST_TYPE_GOOM2K1);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
