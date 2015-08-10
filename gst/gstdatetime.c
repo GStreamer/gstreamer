@@ -748,7 +748,13 @@ gst_date_time_to_iso8601_string (GstDateTime * datetime)
  * @string: ISO 8601-formatted datetime string.
  *
  * Tries to parse common variants of ISO-8601 datetime strings into a
- * #GstDateTime.
+ * #GstDateTime. Possible input formats are (for example):
+ * 2012-06-30T22:46:43Z, 2012, 2012-06, 2012-06-30, 2012-06-30T22:46:43-0430,
+ * 2012-06-30T22:46Z, 2012-06-30T22:46-0430, 2012-06-30 22:46,
+ * 2012-06-30 22:46:43, 2012-06-00, 2012-00-00, 2012-00-30, 22:46:43Z, 22:46Z,
+ * 22:46:43-0430, 22:46-0430, 22:46:30, 22:46
+ * If no date is provided, it is assumed to be "today" in the timezone
+ * provided (if any), otherwise UTC.
  *
  * Free-function: gst_date_time_unref
  *
@@ -759,6 +765,7 @@ GstDateTime *
 gst_date_time_new_from_iso8601_string (const gchar * string)
 {
   gint year = -1, month = -1, day = -1, hour = -1, minute = -1;
+  gint gmt_offset_hour = -99, gmt_offset_min = -99;
   gdouble second = -1.0;
   gfloat tzoffset = 0.0;
   guint64 usecs;
@@ -770,40 +777,45 @@ gst_date_time_new_from_iso8601_string (const gchar * string)
 
   len = strlen (string);
 
-  if (len < 4 || !g_ascii_isdigit (string[0]) || !g_ascii_isdigit (string[1])
-      || !g_ascii_isdigit (string[2]) || !g_ascii_isdigit (string[3]))
+  /* The input string is expected to start either with a year (4 digits) or
+   * with an hour (2 digits). Hour must be followed by minute. In any case,
+   * the string must be at least 4 characters long and start with 2 digits */
+  if (len < 4 || !g_ascii_isdigit (string[0]) || !g_ascii_isdigit (string[1]))
     return NULL;
 
-  ret = sscanf (string, "%04d-%02d-%02d", &year, &month, &day);
+  if (g_ascii_isdigit (string[2]) && g_ascii_isdigit (string[3])) {
+    ret = sscanf (string, "%04d-%02d-%02d", &year, &month, &day);
 
-  if (ret == 0)
-    return NULL;
+    if (ret == 0)
+      return NULL;
 
-  if (ret == 3 && day <= 0) {
-    ret = 2;
-    day = -1;
+    if (ret == 3 && day <= 0) {
+      ret = 2;
+      day = -1;
+    }
+
+    if (ret >= 2 && month <= 0) {
+      ret = 1;
+      month = day = -1;
+    }
+
+    if (ret >= 1 && year <= 0)
+      return NULL;
+
+    else if (ret >= 1 && len < 16)
+      /* YMD is 10 chars. XMD + HM will be 16 chars. if it is less,
+       * it make no sense to continue. We will stay with YMD. */
+      goto ymd;
+
+    string += 10;
+    /* Exit if there is no expeceted value on this stage */
+    if (!(*string == 'T' || *string == '-' || *string == ' '))
+      goto ymd;
+
+    string += 1;
   }
-
-  if (ret >= 2 && month <= 0) {
-    ret = 1;
-    month = day = -1;
-  }
-
-  if (ret >= 1 && year <= 0)
-    return NULL;
-
-  else if (ret >= 1 && len < 16)
-    /* YMD is 10 chars. XMD + HM will be 16 chars. if it is less,
-     * it make no sense to continue. We will stay with YMD. */
-    goto ymd;
-
-  string += 10;
-  /* Exit if there is no expeceted value on this stage */
-  if (!(*string == 'T' || *string == '-' || *string == ' '))
-    goto ymd;
-
-  /* if hour or minute fails, then we will use onlly ymd. */
-  hour = g_ascii_strtoull (string + 1, (gchar **) & string, 10);
+  /* if hour or minute fails, then we will use only ymd. */
+  hour = g_ascii_strtoull (string, (gchar **) & string, 10);
   if (hour > 24 || *string != ':')
     goto ymd;
 
@@ -838,7 +850,7 @@ gst_date_time_new_from_iso8601_string (const gchar * string)
     goto ymd_hms;
   else {
     /* reuse some code from gst-plugins-base/gst-libs/gst/tag/gstxmptag.c */
-    gint gmt_offset_hour = -1, gmt_offset_min = -1, gmt_offset = -1;
+    gint gmt_offset = -1;
     gchar *plus_pos = NULL;
     gchar *neg_pos = NULL;
     gchar *pos = NULL;
@@ -863,9 +875,11 @@ gst_date_time_new_from_iso8601_string (const gchar * string)
       GST_DEBUG ("Parsing timezone: %s", pos);
 
       if (ret_tz == 2) {
+        if (neg_pos != NULL && neg_pos + 1 == pos) {
+          gmt_offset_hour *= -1;
+          gmt_offset_min *= -1;
+        }
         gmt_offset = gmt_offset_hour * 60 + gmt_offset_min;
-        if (neg_pos != NULL && neg_pos + 1 == pos)
-          gmt_offset *= -1;
 
         tzoffset = gmt_offset / 60.0;
 
@@ -876,8 +890,31 @@ gst_date_time_new_from_iso8601_string (const gchar * string)
   }
 
 ymd_hms:
+  if (year == -1 || month == -1 || day == -1) {
+    GDateTime *now_utc, *now_in_given_tz;
+
+    /* No date was supplied: make it today */
+    now_utc = g_date_time_new_now_utc ();
+    if (tzoffset != 0.0) {
+      /* If a timezone offset was supplied, get the date of that timezone */
+      g_assert (gmt_offset_min != -99);
+      g_assert (gmt_offset_hour != -99);
+      now_in_given_tz =
+          g_date_time_add_minutes (now_utc,
+          (60 * gmt_offset_hour) + gmt_offset_min);
+      g_date_time_unref (now_utc);
+    } else {
+      now_in_given_tz = now_utc;
+    }
+    g_date_time_get_ymd (now_in_given_tz, &year, &month, &day);
+    g_date_time_unref (now_in_given_tz);
+  }
   return gst_date_time_new (tzoffset, year, month, day, hour, minute, second);
 ymd:
+  if (year == -1) {
+    /* No date was supplied and time failed to parse */
+    return NULL;
+  }
   return gst_date_time_new_ymd (year, month, day);
 }
 
