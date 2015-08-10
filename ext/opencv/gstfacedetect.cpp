@@ -805,7 +805,7 @@ gst_face_detect_load_profile (GstFaceDetect * filter, gchar * profile)
   cascade = new CascadeClassifier (profile);
   if (cascade->empty ()) {
     GST_ERROR_OBJECT (filter, "Invalid profile file: %s", profile);
-    delete (cascade);
+    delete cascade;
     return NULL;
   }
 
