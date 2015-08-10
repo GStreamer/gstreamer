@@ -6980,6 +6980,8 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
   }
 
   if (stream->pad) {
+    GList *l;
+
     GST_DEBUG_OBJECT (qtdemux, "adding pad %s %p to qtdemux %p",
         GST_OBJECT_NAME (stream->pad), stream->pad, qtdemux);
     gst_element_add_pad (GST_ELEMENT_CAST (qtdemux), stream->pad);
@@ -6993,11 +6995,8 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     stream->send_global_tags = TRUE;
     /* send upstream GST_EVENT_PROTECTION events that were received before
        this source pad was created */
-    for (int i = 0; i < qtdemux->protection_event_queue.length; ++i) {
-      GstEvent *event =
-          (GstEvent *) g_queue_peek_nth (&qtdemux->protection_event_queue, i);
-      gst_pad_push_event (stream->pad, gst_event_ref (event));
-    }
+    for (l = qtdemux->protection_event_queue.head; l != NULL; l = l->next)
+      gst_pad_push_event (stream->pad, gst_event_ref (l->data));
   }
 done:
   if (list)
