@@ -1234,6 +1234,7 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
     GstClockTime media_time;
     GstClockTime seg_time;
     QtDemuxSegment *seg;
+    gboolean empty_segment = FALSE;
 
     str = qtdemux->streams[n];
 
@@ -1247,41 +1248,61 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
     seg = &str->segments[seg_idx];
     seg_time = desired_time - seg->time;
 
+    while (QTSEGMENT_IS_EMPTY (seg)) {
+      seg_time = 0;
+      empty_segment = TRUE;
+      GST_DEBUG_OBJECT (str->pad, "Segment %d is empty, moving to next one",
+          seg_idx);
+      seg_idx++;
+      if (seg_idx == str->n_segments)
+        break;
+      seg = &str->segments[seg_idx];
+    }
+
+    if (seg_idx == str->n_segments) {
+      /* FIXME track shouldn't have the last segment as empty, but if it
+       * happens we better handle it */
+      continue;
+    }
+
     /* get the media time in the segment */
     media_start = seg->media_start + seg_time;
 
     /* get the index of the sample with media time */
     index = gst_qtdemux_find_index_linear (qtdemux, str, media_start);
     GST_DEBUG_OBJECT (qtdemux, "sample for %" GST_TIME_FORMAT " at %u"
-        " at offset %" G_GUINT64_FORMAT,
-        GST_TIME_ARGS (media_start), index, str->samples[index].offset);
+        " at offset %" G_GUINT64_FORMAT " (empty segment: %d)",
+        GST_TIME_ARGS (media_start), index, str->samples[index].offset,
+        empty_segment);
 
-    /* find previous keyframe */
-    kindex = gst_qtdemux_find_keyframe (qtdemux, str, index);
+    if (!empty_segment) {
+      /* find previous keyframe */
+      kindex = gst_qtdemux_find_keyframe (qtdemux, str, index);
 
-    /* if the keyframe is at a different position, we need to update the
-     * requested seek time */
-    if (index != kindex) {
-      index = kindex;
+      /* if the keyframe is at a different position, we need to update the
+       * requested seek time */
+      if (index != kindex) {
+        index = kindex;
 
-      /* get timestamp of keyframe */
-      media_time = QTSAMPLE_DTS (str, &str->samples[kindex]);
-      GST_DEBUG_OBJECT (qtdemux,
-          "keyframe at %u with time %" GST_TIME_FORMAT " at offset %"
-          G_GUINT64_FORMAT, kindex, GST_TIME_ARGS (media_time),
-          str->samples[kindex].offset);
+        /* get timestamp of keyframe */
+        media_time = QTSAMPLE_DTS (str, &str->samples[kindex]);
+        GST_DEBUG_OBJECT (qtdemux,
+            "keyframe at %u with time %" GST_TIME_FORMAT " at offset %"
+            G_GUINT64_FORMAT, kindex, GST_TIME_ARGS (media_time),
+            str->samples[kindex].offset);
 
-      /* keyframes in the segment get a chance to change the
-       * desired_offset. keyframes out of the segment are
-       * ignored. */
-      if (media_time >= seg->media_start) {
-        GstClockTime seg_time;
+        /* keyframes in the segment get a chance to change the
+         * desired_offset. keyframes out of the segment are
+         * ignored. */
+        if (media_time >= seg->media_start) {
+          GstClockTime seg_time;
 
-        /* this keyframe is inside the segment, convert back to
-         * segment time */
-        seg_time = (media_time - seg->media_start) + seg->time;
-        if (seg_time < min_offset)
-          min_offset = seg_time;
+          /* this keyframe is inside the segment, convert back to
+           * segment time */
+          seg_time = (media_time - seg->media_start) + seg->time;
+          if (seg_time < min_offset)
+            min_offset = seg_time;
+        }
       }
     }
 
