@@ -79,7 +79,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",    
 static void gst_goom2k1_finalize (GObject * object);
 
 static gboolean gst_goom2k1_setup (GstAudioVisualizer * base);
-static gboolean gst_goom2k1nrender (GstAudioVisualizer * base,
+static gboolean gst_goom2k1_render (GstAudioVisualizer * base,
     GstBuffer * audio, GstVideoFrame * video);
 
 
