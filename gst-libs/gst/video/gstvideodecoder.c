@@ -439,6 +439,8 @@ static void gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
 static GstFlowReturn gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 
+static void gst_video_decoder_push_event_list (GstVideoDecoder * decoder,
+    GList * events);
 static GstClockTime gst_video_decoder_get_frame_duration (GstVideoDecoder *
     decoder, GstVideoCodecFrame * frame);
 static GstVideoCodecFrame *gst_video_decoder_new_frame (GstVideoDecoder *
@@ -1222,6 +1224,8 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     {
       GstFlowReturn flow_ret = GST_FLOW_OK;
       gboolean needs_reconfigure = FALSE;
+      GList *events;
+      GList *frame_events;
 
       flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
       ret = (flow_ret == GST_FLOW_OK);
@@ -1247,7 +1251,18 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
           gst_pad_mark_reconfigure (decoder->srcpad);
         }
       }
+
+      GST_DEBUG_OBJECT (decoder, "Pushing all pending serialized events"
+          " before the gap");
+      events = decoder->priv->pending_events;
+      frame_events = decoder->priv->current_frame_events;
+      decoder->priv->pending_events = NULL;
+      decoder->priv->current_frame_events = NULL;
+
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
+      gst_video_decoder_push_event_list (decoder, events);
+      gst_video_decoder_push_event_list (decoder, frame_events);
 
       /* Forward GAP immediately. Everything is drained after
        * the GAP event and we can forward this event immediately
@@ -2544,6 +2559,19 @@ gst_video_decoder_new_frame (GstVideoDecoder * decoder)
 }
 
 static void
+gst_video_decoder_push_event_list (GstVideoDecoder * decoder, GList * events)
+{
+  GList *l;
+
+  /* events are stored in reverse order */
+  for (l = g_list_last (events); l; l = g_list_previous (l)) {
+    GST_LOG_OBJECT (decoder, "pushing %s event", GST_EVENT_TYPE_NAME (l->data));
+    gst_video_decoder_push_event (decoder, l->data);
+  }
+  g_list_free (events);
+}
+
+static void
 gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
     decoder, GstVideoCodecFrame * frame, gboolean dropping)
 {
@@ -2584,21 +2612,10 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
     decoder->priv->pending_events =
         g_list_concat (decoder->priv->pending_events, events);
   } else {
-    for (l = g_list_last (decoder->priv->pending_events); l;
-        l = g_list_previous (l)) {
-      GST_LOG_OBJECT (decoder, "pushing %s event",
-          GST_EVENT_TYPE_NAME (l->data));
-      gst_video_decoder_push_event (decoder, l->data);
-    }
-    g_list_free (decoder->priv->pending_events);
+    gst_video_decoder_push_event_list (decoder, decoder->priv->pending_events);
     decoder->priv->pending_events = NULL;
 
-    for (l = g_list_last (events); l; l = g_list_previous (l)) {
-      GST_LOG_OBJECT (decoder, "pushing %s event",
-          GST_EVENT_TYPE_NAME (l->data));
-      gst_video_decoder_push_event (decoder, l->data);
-    }
-    g_list_free (events);
+    gst_video_decoder_push_event_list (decoder, events);
   }
 
   /* Check if the data should not be displayed. For example altref/invisible

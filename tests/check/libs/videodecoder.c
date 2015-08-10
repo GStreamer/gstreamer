@@ -680,6 +680,57 @@ GST_START_TEST (videodecoder_buffer_after_segment)
 
 GST_END_TEST;
 
+/* make sure that the segment event is pushed before the gap */
+GST_START_TEST (videodecoder_first_data_is_gap)
+{
+  GstSegment segment;
+  GList *events_iter;
+
+  setup_videodecodertester (NULL, NULL);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push a gap */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_gap (0,
+              GST_SECOND)));
+  events_iter = events;
+  /* make sure the usual events have been received */
+  {
+    GstEvent *sstart = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (sstart) == GST_EVENT_STREAM_START);
+    events_iter = g_list_next (events_iter);
+  }
+  {
+    GstEvent *caps_event = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (caps_event) == GST_EVENT_CAPS);
+    events_iter = g_list_next (events_iter);
+  }
+  {
+    GstEvent *segment_event = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (segment_event) == GST_EVENT_SEGMENT);
+    events_iter = g_list_next (events_iter);
+  }
+
+  /* Make sure the gap was pushed */
+  {
+    GstEvent *gap = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (gap) == GST_EVENT_GAP);
+    events_iter = g_list_next (events_iter);
+  }
+  fail_unless (events_iter == NULL);
+
+  cleanup_videodecodertest ();
+}
+
+GST_END_TEST;
 
 GST_START_TEST (videodecoder_backwards_playback)
 {
@@ -1041,6 +1092,7 @@ gst_videodecoder_suite (void)
   tcase_add_test (tc, videodecoder_playback_with_events);
   tcase_add_test (tc, videodecoder_playback_first_frames_not_decoded);
   tcase_add_test (tc, videodecoder_buffer_after_segment);
+  tcase_add_test (tc, videodecoder_first_data_is_gap);
 
   tcase_add_test (tc, videodecoder_backwards_playback);
   tcase_add_test (tc, videodecoder_backwards_buffer_after_segment);
