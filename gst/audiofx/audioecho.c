@@ -210,17 +210,15 @@ gst_audio_echo_set_property (GObject * object, guint prop_id,
       break;
     }
     case PROP_MAX_DELAY:{
-      guint64 max_delay, delay;
+      guint64 max_delay;
 
       g_mutex_lock (&self->lock);
       max_delay = g_value_get_uint64 (value);
-      delay = self->delay;
 
       if (GST_STATE (self) > GST_STATE_READY) {
         GST_ERROR_OBJECT (self, "Can't change maximum delay in"
             " PLAYING or PAUSED state");
       } else {
-        self->delay = delay;
         self->max_delay = max_delay;
       }
       g_mutex_unlock (&self->lock);
