@@ -602,7 +602,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         post_msg = TRUE;
         break;
       case GST_FACEDETECT_UPDATES_ON_CHANGE:
-        if (!faces.empty () && (faces.size () > 0)) {
+        if (!faces.empty ()) {
           if (!filter->face_detected)
             post_msg = TRUE;
         } else {
@@ -612,7 +612,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         }
         break;
       case GST_FACEDETECT_UPDATES_ON_FACE:
-        if (!faces.empty () && (faces.size () > 0)) {
+        if (!faces.empty ()) {
           post_msg = TRUE;
         } else {
           post_msg = FALSE;
@@ -626,7 +626,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         break;
     }
 
-    filter->face_detected = !faces.empty ()? faces.size () > 0 : FALSE;
+    filter->face_detected = !faces.empty ()? TRUE : FALSE;
 
     if (post_msg) {
       msg = gst_face_detect_message_new (filter, buf);
@@ -651,7 +651,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         rnh = r.height / 2;
         gst_face_detect_run_detector (filter, filter->cvNoseDetect, mw, mh,
             Rect (rnx, rny, rnw, rnh), nose);
-        have_nose = (!nose.empty () && nose.size ());
+        have_nose = !nose.empty ();
       } else {
         have_nose = FALSE;
       }
@@ -663,7 +663,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         rmh = r.height / 2;
         gst_face_detect_run_detector (filter, filter->cvMouthDetect, mw,
             mh, Rect (rmx, rmy, rmw, rmh), mouth);
-        have_mouth = (!mouth.empty () && mouth.size ());
+        have_mouth = !mouth.empty ();
       } else {
         have_mouth = FALSE;
       }
@@ -675,7 +675,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         reh = r.height / 2;
         gst_face_detect_run_detector (filter, filter->cvEyesDetect, mw, mh,
             Rect (rex, rey, rew, reh), eyes);
-        have_eyes = (!eyes.empty () && eyes.size ());
+        have_eyes = !eyes.empty ();
       } else {
         have_eyes = FALSE;
       }
@@ -806,7 +806,7 @@ gst_face_detect_load_profile (GstFaceDetect * filter, gchar * profile)
     GST_ERROR_OBJECT (filter, "Invalid profile file: %s", profile);
     delete (cascade);
     return NULL;
- }
+  }
 
   return cascade;
 }
