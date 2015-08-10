@@ -443,6 +443,60 @@ GST_START_TEST (audiodecoder_delayed_negotiation_with_gap_event)
 
 GST_END_TEST;
 
+
+/* make sure that the segment event is pushed before the gap */
+GST_START_TEST (audiodecoder_first_data_is_gap)
+{
+  GstSegment segment;
+  GList *events_iter;
+
+  setup_audiodecodertester (NULL, NULL);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push a gap */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_gap (0,
+              GST_SECOND)));
+  events_iter = events;
+  /* make sure the usual events have been received */
+  {
+    GstEvent *sstart = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (sstart) == GST_EVENT_STREAM_START);
+    events_iter = g_list_next (events_iter);
+  }
+  {
+    GstEvent *caps_event = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (caps_event) == GST_EVENT_CAPS);
+    events_iter = g_list_next (events_iter);
+  }
+  {
+    GstEvent *segment_event = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (segment_event) == GST_EVENT_SEGMENT);
+    events_iter = g_list_next (events_iter);
+  }
+
+  /* Make sure the gap was pushed */
+  {
+    GstEvent *gap = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (gap) == GST_EVENT_GAP);
+    events_iter = g_list_next (events_iter);
+  }
+  fail_unless (events_iter == NULL);
+
+  cleanup_audiodecodertest ();
+}
+
+GST_END_TEST;
+
+
 static void
 _audiodecoder_flush_events (gboolean send_buffers)
 {
@@ -899,6 +953,7 @@ gst_audiodecoder_suite (void)
   tcase_add_test (tc, audiodecoder_negotiation_with_buffer);
   tcase_add_test (tc, audiodecoder_negotiation_with_gap_event);
   tcase_add_test (tc, audiodecoder_delayed_negotiation_with_gap_event);
+  tcase_add_test (tc, audiodecoder_first_data_is_gap);
   tcase_add_test (tc, audiodecoder_buffer_after_segment);
   tcase_add_test (tc, audiodecoder_output_too_many_frames);
 
