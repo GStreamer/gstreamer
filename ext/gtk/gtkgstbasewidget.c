@@ -260,6 +260,72 @@ gtk_gst_base_widget_key_event (GtkWidget * widget, GdkEventKey * event)
   return TRUE;
 }
 
+static void
+_fit_stream_to_allocated_size (GtkGstBaseWidget * base_widget,
+    GtkAllocation * allocation, GstVideoRectangle * result)
+{
+  if (base_widget->force_aspect_ratio) {
+    GstVideoRectangle src, dst;
+
+    src.x = 0;
+    src.y = 0;
+    src.w = base_widget->display_width;
+    src.h = base_widget->display_height;
+
+    dst.x = 0;
+    dst.y = 0;
+    dst.w = allocation->width;
+    dst.h = allocation->height;
+
+    gst_video_sink_center_rect (src, dst, result, TRUE);
+  } else {
+    result->x = 0;
+    result->y = 0;
+    result->w = allocation->width;
+    result->h = allocation->height;
+  }
+}
+
+static void
+_display_size_to_stream_size (GtkGstBaseWidget * base_widget, gdouble x,
+    gdouble y, gdouble * stream_x, gdouble * stream_y)
+{
+  gdouble stream_width, stream_height;
+  GtkAllocation allocation;
+  GstVideoRectangle result;
+
+  gtk_widget_get_allocation (GTK_WIDGET (base_widget), &allocation);
+  _fit_stream_to_allocated_size (base_widget, &allocation, &result);
+
+  stream_width = (gdouble) GST_VIDEO_INFO_WIDTH (&base_widget->v_info);
+  stream_height = (gdouble) GST_VIDEO_INFO_HEIGHT (&base_widget->v_info);
+
+  /* from display coordinates to stream coordinates */
+  if (result.w > 0)
+    *stream_x = (x - result.x) / result.w * stream_width;
+  else
+    *stream_x = 0.;
+
+  /* clip to stream size */
+  if (*stream_x < 0.)
+    *stream_x = 0.;
+  if (*stream_x > GST_VIDEO_INFO_WIDTH (&base_widget->v_info))
+    *stream_x = GST_VIDEO_INFO_WIDTH (&base_widget->v_info);
+
+  /* same for y-axis */
+  if (result.h > 0)
+    *stream_y = (y - result.y) / result.h * stream_height;
+  else
+    *stream_y = 0.;
+
+  if (*stream_y < 0.)
+    *stream_y = 0.;
+  if (*stream_y > GST_VIDEO_INFO_HEIGHT (&base_widget->v_info))
+    *stream_y = GST_VIDEO_INFO_HEIGHT (&base_widget->v_info);
+
+  GST_TRACE ("transform %fx%f into %fx%f", x, y, *stream_x, *stream_y);
+}
+
 static gboolean
 gtk_gst_base_widget_button_event (GtkWidget * widget, GdkEventButton * event)
 {
@@ -271,9 +337,12 @@ gtk_gst_base_widget_button_event (GtkWidget * widget, GdkEventButton * event)
       const gchar *key_type =
           event->type ==
           GDK_BUTTON_PRESS ? "mouse-button-press" : "mouse-button-release";
+      gdouble x, y;
+
+      _display_size_to_stream_size (base_widget, event->x, event->y, &x, &y);
 
       gst_navigation_send_mouse_event (GST_NAVIGATION (element), key_type,
-          event->button, event->x, event->y);
+          event->button, x, y);
     }
     g_object_unref (element);
   }
@@ -289,8 +358,12 @@ gtk_gst_base_widget_motion_event (GtkWidget * widget, GdkEventMotion * event)
 
   if ((element = g_weak_ref_get (&base_widget->element))) {
     if (GST_IS_NAVIGATION (element)) {
+      gdouble x, y;
+
+      _display_size_to_stream_size (base_widget, event->x, event->y, &x, &y);
+
       gst_navigation_send_mouse_event (GST_NAVIGATION (element), "motion-move",
-          0, event->x, event->y);
+          0, x, y);
     }
     g_object_unref (element);
   }
