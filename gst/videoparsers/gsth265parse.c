@@ -693,7 +693,7 @@ gst_h265_parse_collect_nal (GstH265Parse * h265parse, const guint8 * data,
   /* coded slice NAL starts a picture,
    * i.e. other types become aggregated in front of it */
   h265parse->picture_start |= ((nal_type >= GST_H265_NAL_SLICE_TRAIL_N
-          && nal_type <= GST_H265_NAL_SLICE_TRAIL_R)
+          && nal_type <= GST_H265_NAL_SLICE_RASL_R)
       || (nal_type >= GST_H265_NAL_SLICE_BLA_W_LP
           && nal_type <= RESERVED_IRAP_NAL_TYPE_MAX));
 
@@ -711,7 +711,7 @@ gst_h265_parse_collect_nal (GstH265Parse * h265parse, const guint8 * data,
   /* Any VCL Nal unit with first_slice_segment_in_pic_flag == 1 considered start of frame */
   complete |= h265parse->picture_start
       && (((nal_type >= GST_H265_NAL_SLICE_TRAIL_N
-              && nal_type <= GST_H265_NAL_SLICE_TRAIL_R)
+              && nal_type <= GST_H265_NAL_SLICE_RASL_R)
           || (nal_type >= GST_H265_NAL_SLICE_BLA_W_LP
               && nal_type <= RESERVED_IRAP_NAL_TYPE_MAX))
       && (nnalu.data[nnalu.offset + 2] & 0x80));
