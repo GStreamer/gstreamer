@@ -360,6 +360,43 @@ enum
 static guint gst_glimage_sink_signals[LAST_SIGNAL] = { 0 };
 
 static void
+_display_size_to_stream_size (GstGLImageSink * gl_sink, gdouble x,
+    gdouble y, gdouble * stream_x, gdouble * stream_y)
+{
+  gdouble stream_width, stream_height;
+
+  stream_width = (gdouble) GST_VIDEO_INFO_WIDTH (&gl_sink->out_info);
+  stream_height = (gdouble) GST_VIDEO_INFO_HEIGHT (&gl_sink->out_info);
+
+  /* from display coordinates to stream coordinates */
+  if (gl_sink->display_rect.w > 0)
+    *stream_x =
+        (x - gl_sink->display_rect.x) / gl_sink->display_rect.w * stream_width;
+  else
+    *stream_x = 0.;
+
+  /* clip to stream size */
+  if (*stream_x < 0.)
+    *stream_x = 0.;
+  if (*stream_x > GST_VIDEO_INFO_WIDTH (&gl_sink->out_info))
+    *stream_x = GST_VIDEO_INFO_WIDTH (&gl_sink->out_info);
+
+  /* same for y-axis */
+  if (gl_sink->display_rect.h > 0)
+    *stream_y =
+        (y - gl_sink->display_rect.y) / gl_sink->display_rect.h * stream_height;
+  else
+    *stream_y = 0.;
+
+  if (*stream_y < 0.)
+    *stream_y = 0.;
+  if (*stream_y > GST_VIDEO_INFO_HEIGHT (&gl_sink->out_info))
+    *stream_y = GST_VIDEO_INFO_HEIGHT (&gl_sink->out_info);
+
+  GST_TRACE ("transform %fx%f into %fx%f", x, y, *stream_x, *stream_y);
+}
+
+static void
 gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
     * structure)
 {
@@ -368,7 +405,7 @@ gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
   GstPad *pad = NULL;
   GstGLWindow *window;
   guint width, height;
-  gdouble x, y, xscale, yscale;
+  gdouble x, y;
 
   if (!sink->context)
     return;
@@ -384,19 +421,15 @@ gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
 
   pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink));
   /* Converting pointer coordinates to the non scaled geometry */
-  if (width != GST_VIDEO_SINK_WIDTH (sink) &&
-      width != 0 && gst_structure_get_double (structure, "pointer_x", &x)) {
-    xscale = (gdouble) GST_VIDEO_SINK_WIDTH (sink) / width;
-    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
-        (gdouble) x * xscale, NULL);
-  }
-  if (height != GST_VIDEO_SINK_HEIGHT (sink) &&
-      height != 0 && gst_structure_get_double (structure, "pointer_y", &y)) {
-    yscale = (gdouble) GST_VIDEO_SINK_HEIGHT (sink) / height;
-    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
-        (gdouble) y * yscale, NULL);
-  }
+  if (width != 0 && gst_structure_get_double (structure, "pointer_x", &x)
+      && height != 0 && gst_structure_get_double (structure, "pointer_y", &y)) {
+    gdouble stream_x, stream_y;
 
+    _display_size_to_stream_size (sink, x, y, &stream_x, &stream_y);
+
+    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+        stream_x, "pointer_y", G_TYPE_DOUBLE, stream_y, NULL);
+  }
 
   if (GST_IS_PAD (pad) && GST_IS_EVENT (event))
     gst_pad_send_event (pad, event);
