@@ -56,6 +56,9 @@ static gboolean gst_gtk_base_sink_set_caps (GstBaseSink * bsink,
 static GstFlowReturn gst_gtk_base_sink_show_frame (GstVideoSink * bsink,
     GstBuffer * buf);
 
+static void
+gst_gtk_base_sink_navigation_interface_init (GstNavigationInterface * iface);
+
 enum
 {
   PROP_0,
@@ -67,7 +70,10 @@ enum
 
 #define gst_gtk_base_sink_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstGtkBaseSink, gst_gtk_base_sink,
-    GST_TYPE_VIDEO_SINK, GST_DEBUG_CATEGORY_INIT (gst_debug_gtk_base_sink,
+    GST_TYPE_VIDEO_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
+        gst_gtk_base_sink_navigation_interface_init);
+    GST_DEBUG_CATEGORY_INIT (gst_debug_gtk_base_sink,
         "gtkbasesink", 0, "Gtk Video Sink base class"));
 
 static void
@@ -179,6 +185,10 @@ gst_gtk_base_sink_get_widget (GstGtkBaseSink * gtk_sink)
   g_signal_connect (gtk_sink->widget, "destroy",
       G_CALLBACK (widget_destroy_cb), gtk_sink);
 
+  /* back pointer */
+  gtk_gst_base_widget_set_element (GTK_GST_BASE_WIDGET (gtk_sink->widget),
+      GST_ELEMENT (gtk_sink));
+
   return gtk_sink->widget;
 }
 
@@ -228,6 +238,31 @@ gst_gtk_base_sink_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_gtk_base_sink_navigation_send_event (GstNavigation * navigation,
+    GstStructure * structure)
+{
+  GstGtkBaseSink *sink = GST_GTK_BASE_SINK (navigation);
+  GstEvent *event;
+  GstPad *pad;
+
+  event = gst_event_new_navigation (structure);
+  pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink));
+
+  GST_TRACE_OBJECT (sink, "navigation event %" GST_PTR_FORMAT, structure);
+
+  if (GST_IS_PAD (pad) && GST_IS_EVENT (event))
+    gst_pad_send_event (pad, event);
+
+  gst_object_unref (pad);
+}
+
+static void
+gst_gtk_base_sink_navigation_interface_init (GstNavigationInterface * iface)
+{
+  iface->send_event = gst_gtk_base_sink_navigation_send_event;
 }
 
 static gboolean
