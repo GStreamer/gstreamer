@@ -68,6 +68,7 @@ struct _GtkGstBaseWidget
 
   /*< private >*/
   GMutex lock;
+  GWeakRef element;
 
   /* Pending draw idles callback */
   guint draw_id;
@@ -92,6 +93,7 @@ void            gtk_gst_base_widget_finalize             (GObject * object);
 /* API */
 gboolean        gtk_gst_base_widget_set_format           (GtkGstBaseWidget * widget, GstVideoInfo * v_info);
 void            gtk_gst_base_widget_set_buffer           (GtkGstBaseWidget * widget, GstBuffer * buffer);
+void            gtk_gst_base_widget_set_element          (GtkGstBaseWidget * widget, GstElement * element);
 
 G_END_DECLS
 

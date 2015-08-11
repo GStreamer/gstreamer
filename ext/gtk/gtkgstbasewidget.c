@@ -219,6 +219,85 @@ _queue_draw (GtkGstBaseWidget * widget)
   return G_SOURCE_REMOVE;
 }
 
+static const gchar *
+_gdk_key_to_navigation_string (guint keyval)
+{
+  /* TODO: expand */
+  switch (keyval) {
+#define KEY(key) case GDK_KEY_ ## key: return G_STRINGIFY(key)
+      KEY (Up);
+      KEY (Down);
+      KEY (Left);
+      KEY (Right);
+      KEY (Home);
+      KEY (End);
+#undef KEY
+    default:
+      return NULL;
+  }
+}
+
+static gboolean
+gtk_gst_base_widget_key_event (GtkWidget * widget, GdkEventKey * event)
+{
+  GtkGstBaseWidget *base_widget = GTK_GST_BASE_WIDGET (widget);
+  GstElement *element;
+
+  if ((element = g_weak_ref_get (&base_widget->element))) {
+    if (GST_IS_NAVIGATION (element)) {
+      const gchar *str = _gdk_key_to_navigation_string (event->keyval);
+      const gchar *key_type =
+          event->type == GDK_KEY_PRESS ? "key-press" : "key-release";
+
+      if (!str)
+        str = event->string;
+
+      gst_navigation_send_key_event (GST_NAVIGATION (element), key_type, str);
+    }
+    g_object_unref (element);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gtk_gst_base_widget_button_event (GtkWidget * widget, GdkEventButton * event)
+{
+  GtkGstBaseWidget *base_widget = GTK_GST_BASE_WIDGET (widget);
+  GstElement *element;
+
+  if ((element = g_weak_ref_get (&base_widget->element))) {
+    if (GST_IS_NAVIGATION (element)) {
+      const gchar *key_type =
+          event->type ==
+          GDK_BUTTON_PRESS ? "mouse-button-press" : "mouse-button-release";
+
+      gst_navigation_send_mouse_event (GST_NAVIGATION (element), key_type,
+          event->button, event->x, event->y);
+    }
+    g_object_unref (element);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gtk_gst_base_widget_motion_event (GtkWidget * widget, GdkEventMotion * event)
+{
+  GtkGstBaseWidget *base_widget = GTK_GST_BASE_WIDGET (widget);
+  GstElement *element;
+
+  if ((element = g_weak_ref_get (&base_widget->element))) {
+    if (GST_IS_NAVIGATION (element)) {
+      gst_navigation_send_mouse_event (GST_NAVIGATION (element), "motion-move",
+          0, event->x, event->y);
+    }
+    g_object_unref (element);
+  }
+
+  return TRUE;
+}
+
 void
 gtk_gst_base_widget_class_init (GtkGstBaseWidgetClass * klass)
 {
@@ -247,11 +326,18 @@ gtk_gst_base_widget_class_init (GtkGstBaseWidgetClass * klass)
 
   widget_klass->get_preferred_width = gtk_gst_base_widget_get_preferred_width;
   widget_klass->get_preferred_height = gtk_gst_base_widget_get_preferred_height;
+  widget_klass->key_press_event = gtk_gst_base_widget_key_event;
+  widget_klass->key_release_event = gtk_gst_base_widget_key_event;
+  widget_klass->button_press_event = gtk_gst_base_widget_button_event;
+  widget_klass->button_release_event = gtk_gst_base_widget_button_event;
+  widget_klass->motion_notify_event = gtk_gst_base_widget_motion_event;
 }
 
 void
 gtk_gst_base_widget_init (GtkGstBaseWidget * widget)
 {
+  int event_mask;
+
   widget->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   widget->par_n = DEFAULT_PAR_N;
   widget->par_d = DEFAULT_PAR_D;
@@ -260,7 +346,17 @@ gtk_gst_base_widget_init (GtkGstBaseWidget * widget)
   gst_video_info_init (&widget->v_info);
   gst_video_info_init (&widget->pending_v_info);
 
+  g_weak_ref_init (&widget->element, NULL);
   g_mutex_init (&widget->lock);
+
+  gtk_widget_set_can_focus (GTK_WIDGET (widget), TRUE);
+  event_mask = gtk_widget_get_events (GTK_WIDGET (widget));
+  event_mask |= GDK_KEY_PRESS_MASK
+      | GDK_KEY_RELEASE_MASK
+      | GDK_BUTTON_PRESS_MASK
+      | GDK_BUTTON_RELEASE_MASK
+      | GDK_POINTER_MOTION_MASK | GDK_BUTTON_MOTION_MASK;
+  gtk_widget_set_events (GTK_WIDGET (widget), event_mask);
 }
 
 void
@@ -270,9 +366,17 @@ gtk_gst_base_widget_finalize (GObject * object)
 
   gst_buffer_replace (&widget->buffer, NULL);
   g_mutex_clear (&widget->lock);
+  g_weak_ref_clear (&widget->element);
 
   if (widget->draw_id)
     g_source_remove (widget->draw_id);
+}
+
+void
+gtk_gst_base_widget_set_element (GtkGstBaseWidget * widget,
+    GstElement * element)
+{
+  g_weak_ref_set (&widget->element, element);
 }
 
 gboolean
