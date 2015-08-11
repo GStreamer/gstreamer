@@ -442,7 +442,7 @@ main (int argc, gchar ** argv)
   int rep_err;
 
   GOptionEntry options[] = {
-    {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
+    {"set-scenario", '\0', 0, G_OPTION_ARG_FILENAME, &scenario,
         "Let you set a scenario, it can be a full path to a scenario file"
           " or the name of the scenario (name of the file without the"
           " '.scenario' extension).", NULL},

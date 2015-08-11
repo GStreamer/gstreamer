@@ -34,6 +34,7 @@
 #include <gst/validate/media-descriptor-parser.h>
 #include <gst/validate/media-descriptor.h>
 #include <gst/pbutils/encoding-profile.h>
+#include <locale.h>             /* for LC_ALL */
 
 int
 main (int argc, gchar ** argv)
@@ -64,6 +65,7 @@ main (int argc, gchar ** argv)
     {NULL}
   };
 
+  setlocale (LC_ALL, "");
   g_set_prgname ("gst-validate-media-check-" GST_API_VERSION);
   ctx = g_option_context_new ("[URI]");
   g_option_context_set_summary (ctx, "Analyzes a media file and writes "

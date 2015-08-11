@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/validate/validate.h>
 #include <gst/video/video.h>
+#include <locale.h>             /* for LC_ALL */
 
 int
 main (int argc, char **argv)
@@ -49,7 +50,7 @@ main (int argc, char **argv)
           "The minimum 'lowest' similarity under which we consider"
           "the test as failing",
         NULL},
-    {"result-output-folder", 'r', 0, G_OPTION_ARG_STRING,
+    {"result-output-folder", 'r', 0, G_OPTION_ARG_FILENAME,
           &outfolder,
           "The folder in which to store resulting grey scale images"
           " when the test failed. In that folder you will find"
@@ -58,6 +59,8 @@ main (int argc, char **argv)
         NULL},
     {NULL}
   };
+
+  setlocale (LC_ALL, "");
 
   g_set_prgname ("gst-validate-mages-check-" GST_API_VERSION);
   ctx = g_option_context_new ("/reference/file/path /compared/file/path");

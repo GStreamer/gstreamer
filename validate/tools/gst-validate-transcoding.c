@@ -27,6 +27,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>             /* for LC_ALL */
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -815,7 +816,7 @@ main (int argc, gchar ** argv)
           "The presence property of the profile can be specified with |<presence>, eg:\n"
           "video/webm:video/x-vp8|<presence>:audio/x-vorbis\n",
         "properties-values"},
-    {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
+    {"set-scenario", '\0', 0, G_OPTION_ARG_FILENAME, &scenario,
         "Let you set a scenario, it can be a full path to a scenario file"
           " or the name of the scenario (name of the file without the"
           " '.scenario' extension).", NULL},
@@ -846,6 +847,7 @@ main (int argc, gchar ** argv)
     {NULL}
   };
 
+  setlocale (LC_ALL, "");
   /* There is a bug that make gst_init remove the help param when initializing,
    * it is FIXED in 1.0 */
   for (i = 1; i < argc; i++) {
