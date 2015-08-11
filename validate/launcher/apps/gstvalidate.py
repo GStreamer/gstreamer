@@ -683,6 +683,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
             for path in self.options.paths:
                 if os.path.isfile(path):
+                    path = os.path.abspath(path)
                     self._discover_file(path2url(path), path)
                 else:
                     for root, dirs, files in os.walk(path):
