@@ -362,7 +362,7 @@ gtk_gst_base_widget_motion_event (GtkWidget * widget, GdkEventMotion * event)
 
       _display_size_to_stream_size (base_widget, event->x, event->y, &x, &y);
 
-      gst_navigation_send_mouse_event (GST_NAVIGATION (element), "motion-move",
+      gst_navigation_send_mouse_event (GST_NAVIGATION (element), "mouse-move",
           0, x, y);
     }
     g_object_unref (element);
