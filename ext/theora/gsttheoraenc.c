@@ -42,6 +42,9 @@
  * bitrate (CBR) stream while setting the quality property will produce a
  * variable bitrate (VBR) stream.
  *
+ * A videorate element is often required in front of theoraenc, especially
+ * when transcoding and when putting Theora into the Ogg container.
+ *
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
