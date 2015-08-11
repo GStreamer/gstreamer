@@ -22,6 +22,8 @@ rtsp: sdp
 
 pbutils: video audio
 
+rtp: audio
+
 INDEPENDENT_SUBDIRS = \
 	tag audio fft rtp sdp video app
 
