@@ -496,7 +496,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
   GstH265ParserResult pres = GST_H265_PARSER_ERROR;
 
   /* nothing to do for broken input */
-  if (G_UNLIKELY (nalu->size < 3)) {
+  if (G_UNLIKELY (nalu->size < 2)) {
     GST_DEBUG_OBJECT (h265parse, "not processing nal size %u", nalu->size);
     return;
   }
