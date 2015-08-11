@@ -139,6 +139,28 @@ typedef enum
 
 #define GST_TYPE_OPENCV_FACE_DETECT_FLAGS (gst_opencv_face_detect_flags_get_type())
 
+inline void
+structure_and_message (const vector < Rect > &rectangles, const gchar * name,
+    guint rx, guint ry, GstFaceDetect * filter, GstStructure * s)
+{
+  Rect sr = rectangles[0];
+  gchar *nx = g_strconcat (name, "->x", NULL);
+  gchar *ny = g_strconcat (name, "->y", NULL);
+  gchar *nw = g_strconcat (name, "->width", NULL);
+  gchar *nh = g_strconcat (name, "->height", NULL);
+
+  GST_LOG_OBJECT (filter,
+      "%s/%" G_GSIZE_FORMAT ": x,y = %4u,%4u: w.h = %4u,%4u",
+      name, rectangles.size (), rx + sr.x, ry + sr.y, sr.width, sr.height);
+  gst_structure_set (s, nx, G_TYPE_UINT, rx + sr.x, ny, G_TYPE_UINT, ry + sr.y,
+      nw, G_TYPE_UINT, sr.width, nh, G_TYPE_UINT, sr.height, NULL);
+
+  g_free (nx);
+  g_free (ny);
+  g_free (nw);
+  g_free (nh);
+}
+
 static void
 register_gst_opencv_face_detect_flags (GType * id)
 {
@@ -692,33 +714,12 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
             "y", G_TYPE_UINT, r.y,
             "width", G_TYPE_UINT, r.width,
             "height", G_TYPE_UINT, r.height, NULL);
-        if (have_nose) {
-          Rect sr = nose[0];
-          GST_LOG_OBJECT (filter,
-              "nose/%" G_GSIZE_FORMAT ": x,y = %4u,%4u: w.h = %4u,%4u",
-              nose.size (), rnx + sr.x, rny + sr.y, sr.width, sr.height);
-          gst_structure_set (s, "nose->x", G_TYPE_UINT, rnx + sr.x, "nose->y",
-              G_TYPE_UINT, rny + sr.y, "nose->width", G_TYPE_UINT, sr.width,
-              "nose->height", G_TYPE_UINT, sr.height, NULL);
-        }
-        if (have_mouth) {
-          Rect sr = mouth[0];
-          GST_LOG_OBJECT (filter,
-              "mouth/%" G_GSIZE_FORMAT ": x,y = %4u,%4u: w.h = %4u,%4u",
-              mouth.size (), rmx + sr.x, rmy + sr.y, sr.width, sr.height);
-          gst_structure_set (s, "mouth->x", G_TYPE_UINT, rmx + sr.x, "mouth->y",
-              G_TYPE_UINT, rmy + sr.y, "mouth->width", G_TYPE_UINT, sr.width,
-              "mouth->height", G_TYPE_UINT, sr.height, NULL);
-        }
-        if (have_eyes) {
-          Rect sr = eyes[0];
-          GST_LOG_OBJECT (filter,
-              "eyes/%" G_GSIZE_FORMAT ": x,y = %4u,%4u: w.h = %4u,%4u",
-              eyes.size (), rex + sr.x, rey + sr.y, sr.width, sr.height);
-          gst_structure_set (s, "eyes->x", G_TYPE_UINT, rex + sr.x, "eyes->y",
-              G_TYPE_UINT, rey + sr.y, "eyes->width", G_TYPE_UINT, sr.width,
-              "eyes->height", G_TYPE_UINT, sr.height, NULL);
-        }
+        if (have_nose)
+          structure_and_message (nose, "nose", rnx, rny, filter, s);
+        if (have_mouth)
+          structure_and_message (mouth, "mouth", rmx, rmy, filter, s);
+        if (have_eyes)
+          structure_and_message (eyes, "eyes", rex, rey, filter, s);
 
         g_value_init (&facedata, GST_TYPE_STRUCTURE);
         g_value_take_boxed (&facedata, s);
