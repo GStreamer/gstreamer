@@ -258,12 +258,8 @@ gst_frei0r_instance_construct (GstFrei0rFuncTable * ftable,
   f0r_instance_t *instance = ftable->construct (width, height);
   gint i;
 
-  for (i = 0; i < n_properties; i++) {
-    if (properties[i].info.type == F0R_PARAM_STRING)
-      ftable->set_param_value (instance, property_cache[i].data.s, i);
-    else
-      ftable->set_param_value (instance, &property_cache[i].data, i);
-  }
+  for (i = 0; i < n_properties; i++)
+    ftable->set_param_value (instance, &property_cache[i].data, i);
 
   return instance;
 }
