@@ -2668,8 +2668,12 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
         if (nut == 15) {
           seen_ssps = TRUE;
           good++;
-        } else if (seen_ssps && (nut == 14 || nut == 20)) {
-          good++;
+        } else if (nut == 14 || nut == 20) {
+          /* Sometimes we see NAL 14 or 20 without SSPS
+           * if dropped into the middle of a stream -
+           * just ignore those (don't add to bad count) */
+          if (seen_ssps)
+            good++;
         } else {
           /* reserved */
           /* Theoretically these are good, since if they exist in the
