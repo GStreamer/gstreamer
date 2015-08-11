@@ -13,6 +13,7 @@ gdp
 collectpads
 controller
 flowcombiner
+gstharness
 gstlibscpp
 gstnetclientclock
 gstnettimeprovider
