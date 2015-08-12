@@ -534,6 +534,56 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
       srccaps);
   gst_caps_unref (srccaps);
 
+  /* Insert SPS and PPS into the stream on next opportunity */
+  {
+    gint i;
+    GstBuffer *codec_data;
+    GstMapInfo map;
+    guint8 *data;
+    guint len = 0;
+
+    for (i = 0; i < rtph265depay->sps->len; i++) {
+      len += 4 + gst_buffer_get_size (g_ptr_array_index (rtph265depay->sps, i));
+    }
+
+    for (i = 0; i < rtph265depay->pps->len; i++) {
+      len += 4 + gst_buffer_get_size (g_ptr_array_index (rtph265depay->pps, i));
+    }
+
+    codec_data = gst_buffer_new_and_alloc (len);
+    gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
+    data = map.data;
+
+    for (i = 0; i < rtph265depay->sps->len; i++) {
+      GstBuffer *sps_buf = g_ptr_array_index (rtph265depay->sps, i);
+      guint sps_size = gst_buffer_get_size (sps_buf);
+
+      if (rtph265depay->byte_stream)
+        memcpy (data, sync_bytes, sizeof (sync_bytes));
+      else
+        GST_WRITE_UINT32_BE (data, sps_size);
+      gst_buffer_extract (sps_buf, 0, data + 4, -1);
+      data += 4 + sps_size;
+    }
+
+    for (i = 0; i < rtph265depay->pps->len; i++) {
+      GstBuffer *pps_buf = g_ptr_array_index (rtph265depay->pps, i);
+      guint pps_size = gst_buffer_get_size (pps_buf);
+
+      if (rtph265depay->byte_stream)
+        memcpy (data, sync_bytes, sizeof (sync_bytes));
+      else
+        GST_WRITE_UINT32_BE (data, pps_size);
+      gst_buffer_extract (pps_buf, 0, data + 4, -1);
+      data += 4 + pps_size;
+    }
+
+    gst_buffer_unmap (codec_data, &map);
+    if (rtph265depay->codec_data)
+      gst_buffer_unref (rtph265depay->codec_data);
+    rtph265depay->codec_data = codec_data;
+  }
+
   if (res)
     rtph265depay->new_codec_data = FALSE;
 
