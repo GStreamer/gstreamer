@@ -1148,12 +1148,14 @@ default_gen_key (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
   gchar *result;
   const gchar *pre_query;
   const gchar *query;
+  guint16 port;
 
   pre_query = url->query ? "?" : "";
   query = url->query ? url->query : "";
 
-  result =
-      g_strdup_printf ("%u%s%s%s", url->port, url->abspath, pre_query, query);
+  gst_rtsp_url_get_port (url, &port);
+
+  result = g_strdup_printf ("%u%s%s%s", port, url->abspath, pre_query, query);
 
   return result;
 }
