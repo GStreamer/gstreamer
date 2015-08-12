@@ -2210,8 +2210,6 @@ no_buffer:
         gst_flow_get_name (ret));
     return ret;
   }
-
-  return GST_FLOW_OK;
 }
 
 /* FIXME, getrange is broken, need to pull range from the other
