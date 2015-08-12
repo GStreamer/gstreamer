@@ -885,7 +885,7 @@ gst_h265_slice_parse_ref_pic_list_modification (GstH265SliceHdr * slice,
   READ_UINT8 (nr, rpl_mod->ref_pic_list_modification_flag_l0, 1);
 
   if (rpl_mod->ref_pic_list_modification_flag_l0) {
-    for (i = 0; i < slice->num_ref_idx_l0_active_minus1; i++) {
+    for (i = 0; i <= slice->num_ref_idx_l0_active_minus1; i++) {
       READ_UINT32 (nr, rpl_mod->list_entry_l0[i], n);
       CHECK_ALLOWED_MAX (rpl_mod->list_entry_l0[i], (NumPocTotalCurr - 1));
     }
