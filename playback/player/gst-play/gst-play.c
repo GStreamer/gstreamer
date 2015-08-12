@@ -351,9 +351,10 @@ play_new (gchar ** uris, gdouble initial_volume)
   play->num_uris = g_strv_length (uris);
   play->cur_idx = -1;
 
-  play->player = gst_player_new ();
+  play->player =
+      gst_player_new_full (gst_player_g_main_context_signal_dispatcher_new
+      (NULL));
 
-  g_object_set (play->player, "dispatch-to-main-context", TRUE, NULL);
   g_signal_connect (play->player, "position-updated",
       G_CALLBACK (position_updated_cb), play);
   g_signal_connect (play->player, "state-changed",
@@ -447,9 +448,8 @@ play_next (GstPlay * play)
     if (play->repeat) {
       g_print ("Looping playlist \n");
       play->cur_idx = -1;
-    }
-    else
-    return FALSE;
+    } else
+      return FALSE;
   }
 
   play_uri (play, play->uris[++play->cur_idx]);

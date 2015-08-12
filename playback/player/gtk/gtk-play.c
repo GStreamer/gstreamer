@@ -1730,7 +1730,9 @@ gtk_play_constructor (GType type, guint n_construct_params,
       (GtkPlay *) G_OBJECT_CLASS (gtk_play_parent_class)->constructor (type,
       n_construct_params, construct_params);
 
-  self->player = gst_player_new ();
+  self->player =
+      gst_player_new_full (gst_player_g_main_context_signal_dispatcher_new
+      (NULL));
   self->playing = TRUE;
 
   if (self->inhibit_cookie)
@@ -1739,8 +1741,6 @@ gtk_play_constructor (GType type, guint n_construct_params,
   self->inhibit_cookie =
       gtk_application_inhibit (GTK_APPLICATION (g_application_get_default ()),
       GTK_WINDOW (self), GTK_APPLICATION_INHIBIT_IDLE, "Playing media");
-
-  g_object_set (self->player, "dispatch-to-main-context", TRUE, NULL);
 
   create_ui (self);
 
