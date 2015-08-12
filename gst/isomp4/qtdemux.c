@@ -602,6 +602,9 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->upstream_format_is_time = FALSE;
   qtdemux->have_group_id = FALSE;
   qtdemux->group_id = G_MAXUINT;
+  qtdemux->cenc_aux_info_offset = 0;
+  qtdemux->cenc_aux_info_sizes = NULL;
+  qtdemux->cenc_aux_sample_count = 0;
   qtdemux->protection_system_ids = NULL;
   g_queue_init (&qtdemux->protection_event_queue);
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
@@ -623,6 +626,9 @@ gst_qtdemux_dispose (GObject * object)
   g_queue_foreach (&qtdemux->protection_event_queue, (GFunc) gst_event_unref,
       NULL);
   g_queue_clear (&qtdemux->protection_event_queue);
+
+  g_free (qtdemux->cenc_aux_info_sizes);
+  qtdemux->cenc_aux_info_sizes = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -3386,15 +3392,16 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_saiz,
         &saiz_data);
     if (saiz_node) {
-      guint8 *info_sizes;
-      guint32 sample_count;
       guint32 info_type = 0;
       guint64 offset = 0;
       guint32 info_type_parameter = 0;
 
-      info_sizes = qtdemux_parse_saiz (qtdemux, stream, &saiz_data,
-          &sample_count);
-      if (G_UNLIKELY (info_sizes == NULL)) {
+      g_free (qtdemux->cenc_aux_info_sizes);
+
+      qtdemux->cenc_aux_info_sizes =
+          qtdemux_parse_saiz (qtdemux, stream, &saiz_data,
+          &qtdemux->cenc_aux_sample_count);
+      if (qtdemux->cenc_aux_info_sizes == NULL) {
         GST_ERROR_OBJECT (qtdemux, "failed to parse saiz box");
         goto fail;
       }
@@ -3403,13 +3410,16 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
           &saio_data);
       if (!saio_node) {
         GST_ERROR_OBJECT (qtdemux, "saiz box without a corresponding saio box");
+        g_free (qtdemux->cenc_aux_info_sizes);
+        qtdemux->cenc_aux_info_sizes = NULL;
         goto fail;
       }
 
       if (G_UNLIKELY (!qtdemux_parse_saio (qtdemux, stream, &saio_data,
                   &info_type, &info_type_parameter, &offset))) {
         GST_ERROR_OBJECT (qtdemux, "failed to parse saio box");
-        g_free (info_sizes);
+        g_free (qtdemux->cenc_aux_info_sizes);
+        qtdemux->cenc_aux_info_sizes = NULL;
         goto fail;
       }
       if (base_offset > qtdemux->moof_offset)
@@ -3417,19 +3427,20 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
       if (info_type == FOURCC_cenc && info_type_parameter == 0U) {
         GstByteReader br;
         if (offset > length) {
-          GST_ERROR_OBJECT (qtdemux, "cenc auxiliary info outside moof "
-              "boxes is not supported");
-          g_free (info_sizes);
-          goto fail;
-        }
-        gst_byte_reader_init (&br, buffer + offset, length - offset);
-        if (!qtdemux_parse_cenc_aux_info (qtdemux, stream, &br,
-                info_sizes, sample_count)) {
-          GST_ERROR_OBJECT (qtdemux, "failed to parse cenc auxiliary info");
-          goto fail;
+          GST_DEBUG_OBJECT (qtdemux, "cenc auxiliary info stored out of moof");
+          qtdemux->cenc_aux_info_offset = offset;
+        } else {
+          gst_byte_reader_init (&br, buffer + offset, length - offset);
+          if (!qtdemux_parse_cenc_aux_info (qtdemux, stream, &br,
+                  qtdemux->cenc_aux_info_sizes,
+                  qtdemux->cenc_aux_sample_count)) {
+            GST_ERROR_OBJECT (qtdemux, "failed to parse cenc auxiliary info");
+            g_free (qtdemux->cenc_aux_info_sizes);
+            qtdemux->cenc_aux_info_sizes = NULL;
+            goto fail;
+          }
         }
       }
-      g_free (info_sizes);
     }
 
     tfdt_node =
@@ -5928,6 +5939,27 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         }
 
         if (demux->todrop) {
+          if (demux->cenc_aux_info_offset > 0) {
+            GstByteReader br;
+            const guint8 *data;
+
+            GST_DEBUG_OBJECT (demux, "parsing cenc auxiliary info");
+            data = gst_adapter_map (demux->adapter, demux->todrop);
+            gst_byte_reader_init (&br, data + 8, demux->todrop);
+            if (!qtdemux_parse_cenc_aux_info (demux, demux->streams[0], &br,
+                    demux->cenc_aux_info_sizes, demux->cenc_aux_sample_count)) {
+              GST_ERROR_OBJECT (demux, "failed to parse cenc auxiliary info");
+              ret = GST_FLOW_ERROR;
+              gst_adapter_unmap (demux->adapter);
+              g_free (demux->cenc_aux_info_sizes);
+              demux->cenc_aux_info_sizes = NULL;
+              goto done;
+            }
+            demux->cenc_aux_info_offset = 0;
+            g_free (demux->cenc_aux_info_sizes);
+            demux->cenc_aux_info_sizes = NULL;
+            gst_adapter_unmap (demux->adapter);
+          }
           gst_qtdemux_drop_data (demux, demux->todrop);
         }
 

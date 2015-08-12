@@ -149,6 +149,10 @@ struct _GstQTDemux {
   /* protection support */
   GPtrArray *protection_system_ids; /* Holds identifiers of all content protection systems for all tracks */
   GQueue protection_event_queue; /* holds copy of upstream protection events */
+  guint64 cenc_aux_info_offset;
+  guint8 *cenc_aux_info_sizes;
+  guint32 cenc_aux_sample_count;
+
 };
 
 struct _GstQTDemuxClass {
