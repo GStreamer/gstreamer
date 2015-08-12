@@ -103,7 +103,7 @@ static GstStateChangeReturn gst_rtp_h265_depay_change_state (GstElement *
     element, GstStateChange transition);
 
 static GstBuffer *gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
+    GstRTPBuffer * rtp);
 static gboolean gst_rtp_h265_depay_setcaps (GstRTPBaseDepayload * filter,
     GstCaps * caps);
 static gboolean gst_rtp_h265_depay_handle_event (GstRTPBaseDepayload * depay,
@@ -133,7 +133,7 @@ gst_rtp_h265_depay_class_init (GstRtpH265DepayClass * klass)
       "Jurgen Slowack <jurgenslowack@gmail.com>");
   gstelement_class->change_state = gst_rtp_h265_depay_change_state;
 
-  gstrtpbasedepayload_class->process = gst_rtp_h265_depay_process;
+  gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_h265_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_h265_depay_setcaps;
   gstrtpbasedepayload_class->handle_event = gst_rtp_h265_depay_handle_event;
 }
@@ -1016,17 +1016,16 @@ not_implemented:
 }
 
 static GstBuffer *
-gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
+gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpH265Depay *rtph265depay;
   GstBuffer *outbuf = NULL;
   guint8 nal_unit_type;
-  GstRTPBuffer rtp = { NULL };
 
   rtph265depay = GST_RTP_H265_DEPAY (depayload);
 
   /* flush remaining data on discont */
-  if (GST_BUFFER_IS_DISCONT (buf)) {
+  if (GST_BUFFER_IS_DISCONT (rtp->buffer)) {
     gst_adapter_clear (rtph265depay->adapter);
     rtph265depay->wait_start = TRUE;
     rtph265depay->current_fu_type = 0;
@@ -1047,13 +1046,11 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     gboolean donl_present = FALSE;
 #endif
 
-    timestamp = GST_BUFFER_PTS (buf);
+    timestamp = GST_BUFFER_PTS (rtp->buffer);
 
-    gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-
-    payload_len = gst_rtp_buffer_get_payload_len (&rtp);
-    payload = gst_rtp_buffer_get_payload (&rtp);
-    marker = gst_rtp_buffer_get_marker (&rtp);
+    payload_len = gst_rtp_buffer_get_payload_len (rtp);
+    payload = gst_rtp_buffer_get_payload (rtp);
+    marker = gst_rtp_buffer_get_marker (rtp);
 
     GST_DEBUG_OBJECT (rtph265depay, "receiving %d bytes", payload_len);
 
@@ -1319,7 +1316,6 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         break;
       }
     }
-    gst_rtp_buffer_unmap (&rtp);
   }
 
   return outbuf;
@@ -1328,13 +1324,11 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 empty_packet:
   {
     GST_DEBUG_OBJECT (rtph265depay, "empty packet");
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 waiting_start:
   {
     GST_DEBUG_OBJECT (rtph265depay, "waiting for start");
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 #if 0
@@ -1342,7 +1336,6 @@ not_implemented_donl_present:
   {
     GST_ELEMENT_ERROR (rtph265depay, STREAM, FORMAT,
         (NULL), ("DONL field present not supported yet"));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 #endif
@@ -1350,7 +1343,6 @@ not_implemented:
   {
     GST_ELEMENT_ERROR (rtph265depay, STREAM, FORMAT,
         (NULL), ("NAL unit type %d not supported yet", nal_unit_type));
-    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }
