@@ -574,7 +574,7 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
   gst_caps_unref (srccaps);
 
   /* Insert SPS and PPS into the stream on next opportunity */
-  {
+  if (rtph265depay->sps->len > 0 || rtph265depay->pps->len > 0) {
     gint i;
     GstBuffer *codec_data;
     GstMapInfo map;
