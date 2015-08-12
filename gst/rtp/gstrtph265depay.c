@@ -686,7 +686,7 @@ gst_rtp_h265_add_vps_sps_pps (GstElement * rtph265, GPtrArray * vps_array,
       gst_buffer_map (pps, &ppsmap, GST_MAP_READ);
       parse_pps (&ppsmap, &tmp_sps_id, &tmp_pps_id);
 
-      if (sps_id == tmp_sps_id && pps_id == tmp_pps_id) {
+      if (pps_id == tmp_pps_id) {
         if (map.size == ppsmap.size &&
             memcmp (map.data, ppsmap.data, ppsmap.size) == 0) {
           GST_LOG_OBJECT (rtph265, "Unchanged PPS %u:%u, not updating", sps_id,
