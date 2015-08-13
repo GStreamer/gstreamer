@@ -186,8 +186,7 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
         goto again;
       if (saved_errno == EBUSY) {       /* closing */
         wl_display_cancel_read (wl_display);
-        priv->is_cancelled = TRUE;
-        break;
+        return FALSE;
       }
       goto error;
     }
@@ -518,12 +517,7 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   /* Wait for the previous frame to complete redraw */
   if (!gst_vaapi_window_wayland_sync (window)) {
     wl_buffer_destroy (buffer);
-    return FALSE;
-  }
-
-  if (priv->is_cancelled) {
-    wl_buffer_destroy (buffer);
-    return TRUE;
+    return !priv->is_cancelled;
   }
 
   frame = frame_state_new (window);
