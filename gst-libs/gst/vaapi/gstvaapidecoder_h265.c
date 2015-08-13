@@ -2338,6 +2338,24 @@ fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
   if ((pps->weighted_pred_flag && GST_H265_IS_P_SLICE (slice_hdr)) ||
       (pps->weighted_bipred_flag && GST_H265_IS_B_SLICE (slice_hdr))) {
 
+    /* Fixme: This should be done in parser apis */
+    memset (slice_param->delta_luma_weight_l0, 0,
+        sizeof (slice_param->delta_luma_weight_l0));
+    memset (slice_param->luma_offset_l0, 0,
+        sizeof (slice_param->luma_offset_l0));
+    memset (slice_param->delta_luma_weight_l1, 0,
+        sizeof (slice_param->delta_luma_weight_l1));
+    memset (slice_param->luma_offset_l1, 0,
+        sizeof (slice_param->luma_offset_l1));
+    memset (slice_param->delta_chroma_weight_l0, 0,
+        sizeof (slice_param->delta_chroma_weight_l0));
+    memset (slice_param->ChromaOffsetL0, 0,
+        sizeof (slice_param->ChromaOffsetL0));
+    memset (slice_param->delta_chroma_weight_l1, 0,
+        sizeof (slice_param->delta_chroma_weight_l1));
+    memset (slice_param->ChromaOffsetL1, 0,
+        sizeof (slice_param->ChromaOffsetL1));
+
     slice_param->luma_log2_weight_denom = w->luma_log2_weight_denom;
     if (sps->chroma_array_type != 0)
       slice_param->delta_chroma_log2_weight_denom =
@@ -2388,23 +2406,6 @@ fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
                 127);
           }
         }
-      }
-    }
-  }
-  /* Fixme: Optimize */
-  else {
-    for (i = 0; i < 15; i++) {
-      slice_param->delta_luma_weight_l0[i] = 0;
-      slice_param->luma_offset_l0[i] = 0;
-      slice_param->delta_luma_weight_l1[i] = 0;
-      slice_param->luma_offset_l1[i] = 0;
-    }
-    for (i = 0; i < 15; i++) {
-      for (j = 0; j < 2; j++) {
-        slice_param->delta_chroma_weight_l0[i][j] = 0;
-        slice_param->ChromaOffsetL0[i][j] = 0;
-        slice_param->delta_chroma_weight_l1[i][j] = 0;
-        slice_param->ChromaOffsetL1[i][j] = 0;
       }
     }
   }
