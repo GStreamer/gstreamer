@@ -1285,46 +1285,51 @@ static gboolean
 gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstPad *pad;
-  GstCaps *allowed;
+  GstPad *pad, *otherpad;
+  GstCaps *templ, *otempl, *ocaps = NULL;
   gboolean ret = TRUE;
 
   pad =
       (direction ==
       GST_PAD_SINK) ? GST_BASE_TRANSFORM_SINK_PAD (trans) :
       GST_BASE_TRANSFORM_SRC_PAD (trans);
+  otherpad =
+      (direction ==
+      GST_PAD_SINK) ? GST_BASE_TRANSFORM_SRC_PAD (trans) :
+      GST_BASE_TRANSFORM_SINK_PAD (trans);
 
   GST_DEBUG_OBJECT (trans, "accept caps %" GST_PTR_FORMAT, caps);
 
+  templ = gst_pad_get_pad_template_caps (pad);
+  otempl = gst_pad_get_pad_template_caps (otherpad);
+
   /* get all the formats we can handle on this pad */
-  allowed = gst_pad_query_caps (pad, caps);
-  if (!allowed) {
-    GST_DEBUG_OBJECT (trans, "gst_pad_query_caps() failed");
-    goto no_transform_possible;
-  }
+  GST_DEBUG_OBJECT (trans, "intersect with pad template: %" GST_PTR_FORMAT,
+      templ);
+  if (!gst_caps_can_intersect (caps, templ))
+    goto reject_caps;
 
-  GST_DEBUG_OBJECT (trans, "allowed caps %" GST_PTR_FORMAT, allowed);
-
-  /* intersect with the requested format */
-  if (GST_PAD_IS_ACCEPT_INTERSECT (pad)) {
-    GST_DEBUG_OBJECT (pad,
-        "allowed caps intersect %" GST_PTR_FORMAT ", caps %" GST_PTR_FORMAT,
-        allowed, caps);
-    ret = gst_caps_can_intersect (caps, allowed);
-  } else {
-    GST_DEBUG_OBJECT (pad, "allowed caps subset %" GST_PTR_FORMAT ", caps %"
-        GST_PTR_FORMAT, allowed, caps);
-    ret = gst_caps_is_subset (caps, allowed);
-  }
-  gst_caps_unref (allowed);
-
-  if (!ret)
+  GST_DEBUG_OBJECT (trans, "trying to transform with filter: %"
+      GST_PTR_FORMAT " (the other pad template)", otempl);
+  ocaps = gst_base_transform_transform_caps (trans, direction, caps, otempl);
+  if (!ocaps || gst_caps_is_empty (ocaps))
     goto no_transform_possible;
 
 done:
+  GST_DEBUG_OBJECT (trans, "accept-caps result: %d", ret);
+  if (ocaps)
+    gst_caps_unref (ocaps);
+  gst_caps_unref (templ);
+  gst_caps_unref (otempl);
   return ret;
 
   /* ERRORS */
+reject_caps:
+  {
+    GST_DEBUG_OBJECT (trans, "caps can't intersect with the template");
+    ret = FALSE;
+    goto done;
+  }
 no_transform_possible:
   {
     GST_DEBUG_OBJECT (trans,
