@@ -283,7 +283,9 @@ gst_dvd_spu_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   if (peer) {
     res = gst_pad_send_event (peer, event);
     gst_object_unref (peer);
-  }
+  } else
+    gst_event_unref (event);
+
   return res;
 }
 
@@ -455,8 +457,10 @@ gst_dvd_spu_video_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       gst_event_copy_segment (event, &seg);
 
-      if (seg.format != GST_FORMAT_TIME)
+      if (seg.format != GST_FORMAT_TIME) {
+        gst_event_unref (event);
         return FALSE;
+      }
 
       /* Only print updates if they have an end time (don't print start_time
        * updates */
