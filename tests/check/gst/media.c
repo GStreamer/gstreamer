@@ -282,8 +282,6 @@ GST_START_TEST (test_media_dyn_prepare)
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
 
-  fail_unless (gst_rtsp_media_n_streams (media) == 0);
-
   thread = gst_rtsp_thread_pool_get_thread (pool,
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
@@ -467,8 +465,6 @@ GST_START_TEST (test_media_multidyn_prepare)
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (gst_rtsp_media_n_streams (media) == 2);
   fail_unless (gst_rtsp_media_unprepare (media));
-  fail_unless (gst_rtsp_media_n_streams (media) == 0);
-
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
 
   thread = gst_rtsp_thread_pool_get_thread (pool,
