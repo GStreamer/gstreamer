@@ -2377,9 +2377,9 @@ fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
           /* Find  ChromaWeightL0 */
           chroma_weight =
               (1 << chroma_log2_weight_denom) + w->delta_chroma_weight_l0[i][j];
-          /* 7-44 */
+          /* 7-56 */
           slice_param->ChromaOffsetL0[i][j] = CLAMP (
-              (w->delta_chroma_offset_l0[i][j] -
+              (127 + w->delta_chroma_offset_l0[i][j] -
                   ((128 * chroma_weight) >> chroma_log2_weight_denom)), -128,
               127);
         }
@@ -2401,7 +2401,7 @@ fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
                 (1 << chroma_log2_weight_denom) +
                 w->delta_chroma_weight_l1[i][j];
             slice_param->ChromaOffsetL1[i][j] =
-                CLAMP ((w->delta_chroma_offset_l1[i][j] -
+                CLAMP ((127 + w->delta_chroma_offset_l1[i][j] -
                     ((128 * chroma_weight) >> chroma_log2_weight_denom)), -128,
                 127);
           }
