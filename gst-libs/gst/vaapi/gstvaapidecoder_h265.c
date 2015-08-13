@@ -388,6 +388,7 @@ struct _GstVaapiDecoderH265Private
   guint RefPicList1_count;
 
   guint32 SpsMaxLatencyPictures;
+  gint32 WpOffsetHalfRangeC;
 
   guint nal_length_size;
 
@@ -1487,6 +1488,7 @@ decode_sps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiParserInfoH265 *const pi = unit->parsed_info;
   GstH265SPS *const sps = &pi->data.sps;
+  guint high_precision_offsets_enabled_flag = 0, bitdepthC = 0;
 
   GST_DEBUG ("decode SPS");
 
@@ -1494,6 +1496,13 @@ decode_sps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
     priv->SpsMaxLatencyPictures =
         sps->max_num_reorder_pics[sps->max_sub_layers_minus1] +
         sps->max_latency_increase_plus1[sps->max_sub_layers_minus1] - 1;
+
+  /* Calculate WpOffsetHalfRangeC: (7-34)
+   * Fixme: We don't have parser API for sps_range_extension, so assuming
+   * high_precision_offsets_enabled_flag as zero */
+  bitdepthC = sps->bit_depth_chroma_minus8 + 8;
+  priv->WpOffsetHalfRangeC =
+      1 << (high_precision_offsets_enabled_flag ? (bitdepthC - 1) : 7);
 
   gst_vaapi_parser_info_h265_replace (&priv->sps[sps->id], pi);
 
@@ -2325,6 +2334,7 @@ static gboolean
 fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
     GstVaapiSlice * slice, GstH265SliceHdr * slice_hdr)
 {
+  GstVaapiDecoderH265Private *const priv = &decoder->priv;
   VASliceParameterBufferHEVC *const slice_param = slice->param;
   GstH265PPS *const pps = get_pps (decoder);
   GstH265SPS *const sps = get_sps (decoder);
@@ -2379,9 +2389,10 @@ fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
               (1 << chroma_log2_weight_denom) + w->delta_chroma_weight_l0[i][j];
           /* 7-56 */
           slice_param->ChromaOffsetL0[i][j] = CLAMP (
-              (127 + w->delta_chroma_offset_l0[i][j] -
-                  ((128 * chroma_weight) >> chroma_log2_weight_denom)), -128,
-              127);
+              (priv->WpOffsetHalfRangeC + w->delta_chroma_offset_l0[i][j] -
+                  ((priv->WpOffsetHalfRangeC *
+                          chroma_weight) >> chroma_log2_weight_denom)),
+              -priv->WpOffsetHalfRangeC, priv->WpOffsetHalfRangeC - 1);
         }
       }
     }
@@ -2400,10 +2411,13 @@ fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
             chroma_weight =
                 (1 << chroma_log2_weight_denom) +
                 w->delta_chroma_weight_l1[i][j];
+            /* 7-56 */
             slice_param->ChromaOffsetL1[i][j] =
-                CLAMP ((127 + w->delta_chroma_offset_l1[i][j] -
-                    ((128 * chroma_weight) >> chroma_log2_weight_denom)), -128,
-                127);
+                CLAMP ((priv->WpOffsetHalfRangeC +
+                    w->delta_chroma_offset_l1[i][j] -
+                    ((priv->WpOffsetHalfRangeC *
+                            chroma_weight) >> chroma_log2_weight_denom)),
+                -priv->WpOffsetHalfRangeC, priv->WpOffsetHalfRangeC - 1);
           }
         }
       }
