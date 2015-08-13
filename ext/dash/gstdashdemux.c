@@ -193,7 +193,7 @@ enum
 #define SLOW_CLOCK_UPDATE_INTERVAL  (1000000 * 30 * 60) /* 30 minutes */
 #define FAST_CLOCK_UPDATE_INTERVAL  (1000000 * 30)      /* 30 seconds */
 #define SUPPORTED_CLOCK_FORMATS (GST_MPD_UTCTIMING_TYPE_NTP | GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE | GST_MPD_UTCTIMING_TYPE_HTTP_ISO | GST_MPD_UTCTIMING_TYPE_HTTP_NTP)
-#define NTP_TO_UNIX_EPOCH 2208988800LL  /* difference (in seconds) between NTP epoch and Unix epoch */
+#define NTP_TO_UNIX_EPOCH G_GUINT64_CONSTANT(2208988800)        /* difference (in seconds) between NTP epoch and Unix epoch */
 
 struct _GstDashDemuxClockDrift
 {
@@ -1556,6 +1556,15 @@ gst_dash_demux_clock_drift_free (GstDashDemuxClockDrift * clock_drift)
   }
 }
 
+/*
+ * The value attribute of the UTCTiming element contains a white-space
+ * separated list of servers that are recommended to be used in
+ * combination with the NTP protocol as defined in IETF RFC 5905 for
+ * getting the appropriate time.
+ *
+ * The DASH standard does not specify which version of NTP. This
+ * function only works with NTPv4 servers.
+*/
 static GstDateTime *
 gst_dash_demux_poll_ntp_server (GstDashDemuxClockDrift * clock_drift,
     gchar ** urls)
@@ -1579,9 +1588,12 @@ gst_dash_demux_poll_ntp_server (GstDashDemuxClockDrift * clock_drift,
         urls[clock_drift->selected_url], NULL, &err);
     g_object_unref (resolver);
     if (!inet_addrs || g_list_length (inet_addrs) == 0) {
-      GST_ERROR ("Failed to resolve hostname of NTP server: %s", err->message);
+      GST_ERROR ("Failed to resolve hostname of NTP server: %s",
+          err ? (err->message) : "unknown error");
       if (inet_addrs)
         g_resolver_free_addresses (inet_addrs);
+      if (err)
+        g_error_free (err);
       return NULL;
     }
     ip_addr =
@@ -1619,6 +1631,21 @@ gst_dash_demux_poll_ntp_server (GstDashDemuxClockDrift * clock_drift,
   return gst_date_time_new_from_g_date_time (dt2);
 }
 
+/*
+   The timing information is contained in the message body of the HTTP
+   response and contains a time value formatted according to NTP timestamp
+   format in IETF RFC 5905.
+
+       0                   1                   2                   3
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            Seconds                            |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            Fraction                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                             NTP Timestamp Format
+*/
 static GstDateTime *
 gst_dash_demux_parse_http_ntp (GstDashDemuxClockDrift * clock_drift,
     GstBuffer * buffer)
@@ -1648,6 +1675,11 @@ gst_dash_demux_parse_http_ntp (GstDashDemuxClockDrift * clock_drift,
   return gst_date_time_new_from_g_date_time (dt2);
 }
 
+/*
+  The timing information is contained in the message body of the
+  HTTP response and contains a time value formatted according to
+  xs:dateTime as defined in W3C XML Schema Part 2: Datatypes specification.
+*/
 static GstDateTime *
 gst_dash_demux_parse_http_xsdate (GstDashDemuxClockDrift * clock_drift,
     GstBuffer * buffer)
