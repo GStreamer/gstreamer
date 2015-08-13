@@ -299,7 +299,14 @@ gst_multi_file_src_set_property (GObject * object, guint prop_id,
       gst_multi_file_src_set_location (src, g_value_get_string (value));
       break;
     case PROP_INDEX:
-      src->index = g_value_get_int (value);
+      GST_OBJECT_LOCK (src);
+      /* index was really meant to be read-only, but for backwards-compatibility
+       * we set start_index to make it work as it used to */
+      if (!GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_FLAG_STARTED))
+        src->start_index = g_value_get_int (value);
+      else
+        src->index = g_value_get_int (value);
+      GST_OBJECT_UNLOCK (src);
       break;
     case PROP_START_INDEX:
       src->start_index = g_value_get_int (value);
