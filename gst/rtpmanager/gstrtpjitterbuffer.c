@@ -2402,7 +2402,13 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
      * clock now to have something to calculate with in the future. */
     dts = get_current_running_time (jitterbuffer);
     pts = dts;
-    estimated_dts = TRUE;
+
+    /* Remember that we estimated the DTS if we are running already
+     * and this is not our first packet (or first packet after a reset).
+     * If it's the first packet, we somehow must generate a timestamp for
+     * everything, otherwise we can't calculate any times
+     */
+    estimated_dts = (priv->next_in_seqnum != -1);
   } else {
     /* take the DTS of the buffer. This is the time when the packet was
      * received and is used to calculate jitter and clock skew. We will adjust
