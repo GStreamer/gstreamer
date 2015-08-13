@@ -478,6 +478,7 @@ gst_video_rate_fixate_caps (GstBaseTransform * trans,
 {
   GstStructure *s;
   gint num, denom;
+  const GValue *par;
 
   s = gst_caps_get_structure (caps, 0);
   if (G_UNLIKELY (!gst_structure_get_fraction (s, "framerate", &num, &denom)))
@@ -487,6 +488,9 @@ gst_video_rate_fixate_caps (GstBaseTransform * trans,
   othercaps = gst_caps_make_writable (othercaps);
   s = gst_caps_get_structure (othercaps, 0);
   gst_structure_fixate_field_nearest_fraction (s, "framerate", num, denom);
+
+  if ((par = gst_structure_get_value (s, "pixel-aspect-ratio")))
+    gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1, 1);
 
   return othercaps;
 }
