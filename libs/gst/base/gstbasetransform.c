@@ -1285,75 +1285,43 @@ static gboolean
 gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
-#if 0
-  GstPad *otherpad;
-  GstCaps *othercaps = NULL;
-#endif
   GstPad *pad;
+  GstCaps *allowed;
   gboolean ret = TRUE;
 
   pad =
       (direction ==
       GST_PAD_SINK) ? GST_BASE_TRANSFORM_SINK_PAD (trans) :
       GST_BASE_TRANSFORM_SRC_PAD (trans);
-#if 0
-  otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
 
-  /* we need fixed caps for the check, fall back to the default implementation
-   * if we don't */
-  if (!gst_caps_is_fixed (caps))
-#endif
-  {
-    GstCaps *allowed;
+  GST_DEBUG_OBJECT (trans, "accept caps %" GST_PTR_FORMAT, caps);
 
-    GST_DEBUG_OBJECT (trans, "accept caps %" GST_PTR_FORMAT, caps);
-
-    /* get all the formats we can handle on this pad */
-    allowed = gst_pad_query_caps (pad, caps);
-    if (!allowed) {
-      GST_DEBUG_OBJECT (trans, "gst_pad_query_caps() failed");
-      goto no_transform_possible;
-    }
-
-    GST_DEBUG_OBJECT (trans, "allowed caps %" GST_PTR_FORMAT, allowed);
-
-    /* intersect with the requested format */
-    if (GST_PAD_IS_ACCEPT_INTERSECT (pad)) {
-      GST_DEBUG_OBJECT (pad,
-          "allowed caps intersect %" GST_PTR_FORMAT ", caps %" GST_PTR_FORMAT,
-          allowed, caps);
-      ret = gst_caps_can_intersect (caps, allowed);
-    } else {
-      GST_DEBUG_OBJECT (pad, "allowed caps subset %" GST_PTR_FORMAT ", caps %"
-          GST_PTR_FORMAT, allowed, caps);
-      ret = gst_caps_is_subset (caps, allowed);
-    }
-    gst_caps_unref (allowed);
-
-    if (!ret)
-      goto no_transform_possible;
+  /* get all the formats we can handle on this pad */
+  allowed = gst_pad_query_caps (pad, caps);
+  if (!allowed) {
+    GST_DEBUG_OBJECT (trans, "gst_pad_query_caps() failed");
+    goto no_transform_possible;
   }
-#if 0
-  else {
-    GST_DEBUG_OBJECT (pad, "accept caps %" GST_PTR_FORMAT, caps);
 
-    /* find best possible caps for the other pad as a way to see if we can
-     * transform this caps. */
-    othercaps = gst_base_transform_find_transform (trans, pad, caps, FALSE);
-    if (!othercaps || gst_caps_is_empty (othercaps))
-      goto no_transform_possible;
+  GST_DEBUG_OBJECT (trans, "allowed caps %" GST_PTR_FORMAT, allowed);
 
-    GST_DEBUG_OBJECT (pad, "we can transform to %" GST_PTR_FORMAT, othercaps);
+  /* intersect with the requested format */
+  if (GST_PAD_IS_ACCEPT_INTERSECT (pad)) {
+    GST_DEBUG_OBJECT (pad,
+        "allowed caps intersect %" GST_PTR_FORMAT ", caps %" GST_PTR_FORMAT,
+        allowed, caps);
+    ret = gst_caps_can_intersect (caps, allowed);
+  } else {
+    GST_DEBUG_OBJECT (pad, "allowed caps subset %" GST_PTR_FORMAT ", caps %"
+        GST_PTR_FORMAT, allowed, caps);
+    ret = gst_caps_is_subset (caps, allowed);
   }
-#endif
+  gst_caps_unref (allowed);
+
+  if (!ret)
+    goto no_transform_possible;
 
 done:
-#if 0
-  /* We know it's always NULL since we never use it */
-  if (othercaps)
-    gst_caps_unref (othercaps);
-#endif
-
   return ret;
 
   /* ERRORS */
