@@ -2339,7 +2339,7 @@ fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
       (pps->weighted_bipred_flag && GST_H265_IS_B_SLICE (slice_hdr))) {
 
     slice_param->luma_log2_weight_denom = w->luma_log2_weight_denom;
-    if (!sps->chroma_format_idc)
+    if (sps->chroma_array_type != 0)
       slice_param->delta_chroma_log2_weight_denom =
           w->delta_chroma_log2_weight_denom;
 
