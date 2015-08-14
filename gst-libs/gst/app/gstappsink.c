@@ -554,7 +554,8 @@ gst_app_sink_setcaps (GstBaseSink * sink, GstCaps * caps)
   g_mutex_lock (&priv->mutex);
   GST_DEBUG_OBJECT (appsink, "receiving CAPS");
   g_queue_push_tail (priv->queue, gst_event_new_caps (caps));
-  gst_caps_replace (&priv->preroll_caps, caps);
+  if (!priv->preroll)
+    gst_caps_replace (&priv->preroll_caps, caps);
   g_mutex_unlock (&priv->mutex);
 
   return TRUE;
