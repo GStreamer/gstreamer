@@ -252,9 +252,15 @@ struct _GstAudioDecoderPrivate
   guint sync_flush;
   /* error count */
   gint error_count;
-  /* codec id tag */
-  GstTagList *taglist;
-  gboolean taglist_changed;
+
+  /* upstream stream tags (global tags are passed through as-is) */
+  GstTagList *upstream_tags;
+
+  /* subclass tags */
+  GstTagList *taglist;          /* FIXME: rename to decoder_tags */
+  GstTagMergeMode decoder_tags_merge_mode;
+
+  gboolean taglist_changed;     /* FIXME: rename to tags_changed */
 
   /* whether circumstances allow output aggregation */
   gint agg;
@@ -564,6 +570,11 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
       gst_tag_list_unref (dec->priv->taglist);
       dec->priv->taglist = NULL;
     }
+    dec->priv->decoder_tags_merge_mode = GST_TAG_MERGE_KEEP_ALL;
+    if (dec->priv->upstream_tags) {
+      gst_tag_list_unref (dec->priv->upstream_tags);
+      dec->priv->upstream_tags = NULL;
+    }
     dec->priv->taglist_changed = FALSE;
 
     gst_segment_init (&dec->input_segment, GST_FORMAT_TIME);
@@ -622,6 +633,32 @@ gst_audio_decoder_finalize (GObject * object)
   g_rec_mutex_clear (&dec->stream_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static GstEvent *
+gst_audio_decoder_create_merged_tags_event (GstAudioDecoder * dec)
+{
+  GstTagList *merged_tags;
+
+  GST_LOG_OBJECT (dec, "upstream : %" GST_PTR_FORMAT, dec->priv->upstream_tags);
+  GST_LOG_OBJECT (dec, "decoder  : %" GST_PTR_FORMAT, dec->priv->taglist);
+  GST_LOG_OBJECT (dec, "mode     : %d", dec->priv->decoder_tags_merge_mode);
+
+  merged_tags =
+      gst_tag_list_merge (dec->priv->upstream_tags,
+      dec->priv->taglist, dec->priv->decoder_tags_merge_mode);
+
+  GST_DEBUG_OBJECT (dec, "merged   : %" GST_PTR_FORMAT, merged_tags);
+
+  if (merged_tags == NULL)
+    return NULL;
+
+  if (gst_tag_list_is_empty (merged_tags)) {
+    gst_tag_list_unref (merged_tags);
+    return NULL;
+  }
+
+  return gst_event_new_tag (merged_tags);
 }
 
 static gboolean
@@ -1369,10 +1406,13 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
   /* delayed one-shot stuff until confirmed data */
   if (priv->taglist && priv->taglist_changed) {
-    GST_DEBUG_OBJECT (dec, "codec tag %" GST_PTR_FORMAT, priv->taglist);
-    if (!gst_tag_list_is_empty (priv->taglist))
-      gst_audio_decoder_push_event (dec,
-          gst_event_new_tag (gst_tag_list_ref (priv->taglist)));
+    GstEvent *tags_event;
+
+    tags_event = gst_audio_decoder_create_merged_tags_event (dec);
+
+    if (tags_event != NULL)
+      gst_audio_decoder_push_event (dec, tags_event);
+
     priv->taglist_changed = FALSE;
   }
 
@@ -2158,12 +2198,12 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       gst_audio_decoder_flush (dec, FALSE);
 
       GST_DEBUG_OBJECT (dec, "received STREAM_START. Clearing taglist");
-      /* Flush our merged taglist after a STREAM_START */
-      if (dec->priv->taglist) {
-        gst_tag_list_unref (dec->priv->taglist);
-        dec->priv->taglist = NULL;
+      /* Flush upstream tags after a STREAM_START */
+      if (dec->priv->upstream_tags) {
+        gst_tag_list_unref (dec->priv->upstream_tags);
+        dec->priv->upstream_tags = NULL;
       }
-      dec->priv->taglist_changed = FALSE;
+      dec->priv->taglist_changed = TRUE;
       GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
       ret = gst_audio_decoder_push_event (dec, event);
@@ -2292,11 +2332,16 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       gst_event_parse_tag (event, &tags);
 
       if (gst_tag_list_get_scope (tags) == GST_TAG_SCOPE_STREAM) {
-        gst_audio_decoder_merge_tags (dec, tags, GST_TAG_MERGE_REPLACE);
+        GST_AUDIO_DECODER_STREAM_LOCK (dec);
+        if (dec->priv->upstream_tags != tags) {
+          if (dec->priv->upstream_tags)
+            gst_tag_list_unref (dec->priv->upstream_tags);
+          dec->priv->upstream_tags = gst_tag_list_ref (tags);
+          GST_INFO_OBJECT (dec, "upstream stream tags: %" GST_PTR_FORMAT, tags);
+        }
         gst_event_unref (event);
-        event = NULL;
-        ret = TRUE;
-        break;
+        event = gst_audio_decoder_create_merged_tags_event (dec);
+        GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
       }
 
       /* fall through */
@@ -3500,36 +3545,39 @@ gst_audio_decoder_get_needs_format (GstAudioDecoder * dec)
 /**
  * gst_audio_decoder_merge_tags:
  * @dec: a #GstAudioDecoder
- * @tags: a #GstTagList to merge
- * @mode: the #GstTagMergeMode to use
+ * @tags: (allow-none): a #GstTagList to merge, or NULL
+ * @mode: the #GstTagMergeMode to use, usually #GST_TAG_MERGE_REPLACE
  *
- * Adds tags to so-called pending tags, which will be processed
- * before pushing out data downstream.
+ * Sets the audio decoder tags and how they should be merged with any
+ * upstream stream tags. This will override any tags previously-set
+ * with gst_audio_decoder_merge_tags().
  *
  * Note that this is provided for convenience, and the subclass is
- * not required to use this and can still do tag handling on its own,
- * although it should be aware that baseclass already takes care
- * of the usual CODEC/AUDIO_CODEC tags.
- *
- * MT safe.
+ * not required to use this and can still do tag handling on its own.
  */
 void
 gst_audio_decoder_merge_tags (GstAudioDecoder * dec,
     const GstTagList * tags, GstTagMergeMode mode)
 {
-  GstTagList *otags;
-
   g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
   g_return_if_fail (tags == NULL || GST_IS_TAG_LIST (tags));
+  g_return_if_fail (mode != GST_TAG_MERGE_UNDEFINED);
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
-  if (tags)
-    GST_DEBUG_OBJECT (dec, "merging tags %" GST_PTR_FORMAT, tags);
-  otags = dec->priv->taglist;
-  dec->priv->taglist = gst_tag_list_merge (dec->priv->taglist, tags, mode);
-  if (otags)
-    gst_tag_list_unref (otags);
-  dec->priv->taglist_changed = TRUE;
+  if (dec->priv->taglist != tags) {
+    if (dec->priv->taglist) {
+      gst_tag_list_unref (dec->priv->taglist);
+      dec->priv->taglist = NULL;
+      dec->priv->decoder_tags_merge_mode = GST_TAG_MERGE_KEEP_ALL;
+    }
+    if (tags) {
+      dec->priv->taglist = gst_tag_list_ref ((GstTagList *) tags);
+      dec->priv->decoder_tags_merge_mode = mode;
+    }
+
+    GST_DEBUG_OBJECT (dec, "setting decoder tags to %" GST_PTR_FORMAT, tags);
+    dec->priv->taglist_changed = TRUE;
+  }
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 }
 
