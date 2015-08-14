@@ -26,6 +26,9 @@
 
 #include <unistd.h>
 
+#include <glib.h>
+#include <glib/gprintf.h>
+#include <gmodule.h>
 #include <gst/check/gstcheck.h>
 
 static GList *elements = NULL;
@@ -235,4 +238,22 @@ states_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (states);
+int
+main (int argc, char **argv)
+{
+  Suite *s;
+  GModule *libx11;
+
+  libx11 =
+      g_module_open ("libX11.so.6", G_MODULE_BIND_LOCAL | G_MODULE_BIND_LAZY);
+  if (libx11) {
+    void (*xinitthreads) (void);
+    if (g_module_symbol (libx11, "XInitThreads", (gpointer *) & xinitthreads)) {
+      xinitthreads ();
+    }
+    g_module_close (libx11);
+  }
+  gst_check_init (&argc, &argv);
+  s = states_suite ();
+  return gst_check_run_suite (s, "states_bad", __FILE__);
+}
