@@ -659,8 +659,7 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
       src->max_retries = g_value_get_int (value);
       break;
     case PROP_METHOD:
-      if (src->method)
-        g_free (src->method);
+      g_free (src->method);
       src->method = g_value_dup_string (value);
       break;
     default:
