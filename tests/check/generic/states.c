@@ -210,7 +210,7 @@ GST_END_TEST;
 static Suite *
 states_suite (void)
 {
-  Suite *s = suite_create ("states");
+  Suite *s = suite_create ("states_good");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
