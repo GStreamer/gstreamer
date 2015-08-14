@@ -82,6 +82,8 @@ gst_png_parse_class_init (GstPngParseClass * klass)
 static void
 gst_png_parse_init (GstPngParse * pngparse)
 {
+  GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (pngparse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (pngparse));
 }
 
 static gboolean
