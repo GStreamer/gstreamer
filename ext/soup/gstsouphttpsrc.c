@@ -123,7 +123,8 @@ enum
   PROP_SSL_CA_FILE,
   PROP_SSL_USE_SYSTEM_CA_FILE,
   PROP_TLS_DATABASE,
-  PROP_RETRIES
+  PROP_RETRIES,
+  PROP_METHOD
 };
 
 #define DEFAULT_USER_AGENT           "GStreamer souphttpsrc "
@@ -137,6 +138,7 @@ enum
 #define DEFAULT_TLS_DATABASE         NULL
 #define DEFAULT_TIMEOUT              15
 #define DEFAULT_RETRIES              3
+#define DEFAULT_SOUP_METHOD          NULL
 
 static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -391,6 +393,18 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
           G_MAXINT, DEFAULT_RETRIES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+ /**
+   * GstSoupHTTPSrc::method
+   *
+   * The HTTP method to use when making a request
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_METHOD,
+      g_param_spec_string ("method", "HTTP method",
+          "The HTTP method to use (GET, HEAD, OPTIONS, etc)",
+          DEFAULT_SOUP_METHOD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
 
@@ -471,6 +485,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->ssl_use_system_ca_file = DEFAULT_SSL_USE_SYSTEM_CA_FILE;
   src->tls_database = DEFAULT_TLS_DATABASE;
   src->max_retries = DEFAULT_RETRIES;
+  src->method = DEFAULT_SOUP_METHOD;
   proxy = g_getenv ("http_proxy");
   if (!gst_soup_http_src_set_proxy (src, proxy)) {
     GST_WARNING_OBJECT (src,
@@ -527,6 +542,7 @@ gst_soup_http_src_finalize (GObject * gobject)
 
   if (src->tls_database)
     g_object_unref (src->tls_database);
+  g_free (src->method);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -642,6 +658,11 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
     case PROP_RETRIES:
       src->max_retries = g_value_get_int (value);
       break;
+    case PROP_METHOD:
+      if (src->method)
+        g_free (src->method);
+      src->method = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -726,6 +747,9 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RETRIES:
       g_value_set_int (value, src->max_retries);
+      break;
+    case PROP_METHOD:
+      g_value_set_string (value, src->method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1766,7 +1790,9 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   g_mutex_lock (&src->mutex);
   *outbuf = NULL;
-  ret = gst_soup_http_src_do_request (src, SOUP_METHOD_GET, outbuf);
+  ret =
+      gst_soup_http_src_do_request (src,
+      src->method ? src->method : SOUP_METHOD_GET, outbuf);
   http_headers_event = src->http_headers_event;
   src->http_headers_event = NULL;
   g_mutex_unlock (&src->mutex);

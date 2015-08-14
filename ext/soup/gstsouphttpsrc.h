@@ -71,6 +71,7 @@ struct _GstSoupHTTPSrc {
   gboolean retry;              /* Should attempt to reconnect. */
   gint retry_count;            /* Number of retries since we received data */
   gint max_retries;            /* Maximum number of retries */
+  gchar *method;               /* HTTP method */
 
   gboolean got_headers;        /* Already received headers from the server */
   gboolean have_size;          /* Received and parsed Content-Length
