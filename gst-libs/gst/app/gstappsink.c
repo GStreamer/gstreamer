@@ -538,8 +538,11 @@ gst_app_sink_stop (GstBaseSink * psink)
   priv->flushing = TRUE;
   priv->started = FALSE;
   gst_app_sink_flush_unlocked (appsink);
+  gst_buffer_replace (&priv->preroll, NULL);
   gst_caps_replace (&priv->preroll_caps, NULL);
   gst_caps_replace (&priv->last_caps, NULL);
+  gst_segment_init (&priv->preroll_segment, GST_FORMAT_UNDEFINED);
+  gst_segment_init (&priv->last_segment, GST_FORMAT_UNDEFINED);
   g_mutex_unlock (&priv->mutex);
 
   return TRUE;
