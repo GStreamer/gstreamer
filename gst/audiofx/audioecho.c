@@ -200,6 +200,10 @@ gst_audio_echo_set_property (GObject * object, guint prop_id,
       } else {
         self->delay = delay;
         self->max_delay = MAX (delay, max_delay);
+        if (delay > max_delay) {
+          g_free (self->buffer);
+          self->buffer = NULL;
+        }
       }
       rate = GST_AUDIO_FILTER_RATE (self);
       if (rate > 0)
@@ -220,6 +224,8 @@ gst_audio_echo_set_property (GObject * object, guint prop_id,
             " PLAYING or PAUSED state");
       } else {
         self->max_delay = max_delay;
+        g_free (self->buffer);
+        self->buffer = NULL;
       }
       g_mutex_unlock (&self->lock);
       break;
