@@ -352,7 +352,7 @@ play_new (gchar ** uris, gdouble initial_volume)
   play->cur_idx = -1;
 
   play->player =
-      gst_player_new_full (gst_player_g_main_context_signal_dispatcher_new
+      gst_player_new_full (NULL, gst_player_g_main_context_signal_dispatcher_new
       (NULL));
 
   g_signal_connect (play->player, "position-updated",

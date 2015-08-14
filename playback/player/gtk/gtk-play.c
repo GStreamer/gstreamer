@@ -39,6 +39,7 @@
 #include <gtk/gtk.h>
 
 #include <gst/player/player.h>
+#include "gtk-video-renderer.h"
 
 #define APP_NAME "gtk-play"
 
@@ -58,6 +59,7 @@ typedef struct
   GtkApplicationWindow parent;
 
   GstPlayer *player;
+  GstPlayerVideoRenderer *renderer;
   gchar *uri;
 
   GList *uris;
@@ -182,7 +184,8 @@ video_area_realize_cb (GtkWidget * widget, GtkPlay * play)
 #elif defined (GDK_WINDOWING_X11)
   window_handle = GDK_WINDOW_XID (window);
 #endif
-  g_object_set (play->player, "window-handle", (gpointer) window_handle, NULL);
+  g_object_set (play->renderer, "window-handle", (gpointer) window_handle,
+      NULL);
 }
 
 static void
@@ -1413,24 +1416,14 @@ create_ui (GtkPlay * play)
   gtk_application_add_window (GTK_APPLICATION (g_application_get_default ()),
       GTK_WINDOW (play));
 
-  if ((gtk_sink = gst_element_factory_make ("gtkglsink", NULL))) {
-    GstElement *video_sink;
-
-    g_object_get (gtk_sink, "widget", &play->video_area, NULL);
-
-    video_sink = gst_element_factory_make ("glsinkbin", NULL);
-    g_object_set (video_sink, "sink", gtk_sink, NULL);
-
-    playbin = gst_player_get_pipeline (play->player);
-    g_object_set (playbin, "video-sink", video_sink, NULL);
-    gst_object_unref (playbin);
-  } else if ((gtk_sink = gst_element_factory_make ("gtksink", NULL))) {
-    g_object_get (gtk_sink, "widget", &play->video_area, NULL);
-
-    playbin = gst_player_get_pipeline (play->player);
-    g_object_set (playbin, "video-sink", gtk_sink, NULL);
-    gst_object_unref (playbin);
+  play->renderer = gst_player_gtk_video_renderer_new ();
+  if (play->renderer) {
+    play->video_area =
+        gst_player_gtk_video_renderer_get_widget (GST_PLAYER_GTK_VIDEO_RENDERER
+        (play->renderer));
   } else {
+    play->renderer = gst_player_video_overlay_video_renderer_new (NULL);
+
     play->video_area = gtk_drawing_area_new ();
     g_signal_connect (play->video_area, "realize",
         G_CALLBACK (video_area_realize_cb), play);
@@ -1506,10 +1499,6 @@ create_ui (GtkPlay * play)
   if (play->fullscreen)
     gtk_toggle_button_set_active
         (GTK_TOGGLE_BUTTON (play->fullscreen_button), TRUE);
-
-  /* enable visualization (by default laybin uses goom) */
-  /* if visualization is enabled then use the first element */
-  gst_player_set_visualization_enabled (play->player, TRUE);
 }
 
 static void
@@ -1730,9 +1719,6 @@ gtk_play_constructor (GType type, guint n_construct_params,
       (GtkPlay *) G_OBJECT_CLASS (gtk_play_parent_class)->constructor (type,
       n_construct_params, construct_params);
 
-  self->player =
-      gst_player_new_full (gst_player_g_main_context_signal_dispatcher_new
-      (NULL));
   self->playing = TRUE;
 
   if (self->inhibit_cookie)
@@ -1744,6 +1730,10 @@ gtk_play_constructor (GType type, guint n_construct_params,
 
   create_ui (self);
 
+  self->player =
+      gst_player_new_full (self->renderer,
+      gst_player_g_main_context_signal_dispatcher_new (NULL));
+
   g_signal_connect (self->player, "position-updated",
       G_CALLBACK (position_updated_cb), self);
   g_signal_connect (self->player, "duration-changed",
@@ -1753,6 +1743,10 @@ gtk_play_constructor (GType type, guint n_construct_params,
       G_CALLBACK (media_info_updated_cb), self);
   g_signal_connect (self->player, "volume-changed",
       G_CALLBACK (player_volume_changed_cb), self);
+
+  /* enable visualization (by default playbin uses goom) */
+  /* if visualization is enabled then use the first element */
+  gst_player_set_visualization_enabled (self->player, TRUE);
 
   g_signal_connect (G_OBJECT (self), "show", G_CALLBACK (show_cb), NULL);
 
