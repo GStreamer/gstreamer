@@ -216,7 +216,7 @@ GST_END_TEST;
 static Suite *
 states_suite (void)
 {
-  Suite *s = suite_create ("states");
+  Suite *s = suite_create ("states_bad");
   TCase *tc_chain = tcase_create ("general");
 
 #if defined(HAVE_LADSPA) || defined(HAVE_LV2)
