@@ -2972,7 +2972,10 @@ gst_pad_query_accept_caps_default (GstPad * pad, GstQuery * query)
       "fallback ACCEPT_CAPS query, consider implementing a specialized version");
 
   gst_query_parse_accept_caps (query, &caps);
-  allowed = gst_pad_query_caps (pad, caps);
+  if (GST_PAD_IS_ACCEPT_TEMPLATE (pad))
+    allowed = gst_pad_get_pad_template_caps (pad);
+  else
+    allowed = gst_pad_query_caps (pad, caps);
 
   if (allowed) {
     if (GST_PAD_IS_ACCEPT_INTERSECT (pad)) {

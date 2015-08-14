@@ -631,6 +631,10 @@ typedef gboolean  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent **
  *                      it the caps intersect the query-caps result instead
  *                      of checking for a subset. This is interesting for
  *                      parsers that can accept incompletely specified caps.
+ * @GST_PAD_FLAG_ACCEPT_TEMPLATE: the default accept-caps handler will use
+ *                      the template pad caps instead of query caps to
+ *                      compare with the accept caps. Use this in combination
+ *                      with %GST_PAD_FLAG_ACCEPT_INTERSECT. (Since 1.6)
  * @GST_PAD_FLAG_LAST: offset to define more flags
  *
  * Pad state flags
@@ -648,6 +652,7 @@ typedef enum {
   GST_PAD_FLAG_PROXY_ALLOCATION = (GST_OBJECT_FLAG_LAST << 9),
   GST_PAD_FLAG_PROXY_SCHEDULING = (GST_OBJECT_FLAG_LAST << 10),
   GST_PAD_FLAG_ACCEPT_INTERSECT = (GST_OBJECT_FLAG_LAST << 11),
+  GST_PAD_FLAG_ACCEPT_TEMPLATE  = (GST_OBJECT_FLAG_LAST << 12),
   /* padding */
   GST_PAD_FLAG_LAST        = (GST_OBJECT_FLAG_LAST << 16)
 } GstPadFlags;
@@ -1116,6 +1121,38 @@ struct _GstPadClass {
  * Unset accept intersect flag.
  */
 #define GST_PAD_UNSET_ACCEPT_INTERSECT(pad) (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_ACCEPT_INTERSECT))
+/**
+ * GST_PAD_IS_ACCEPT_TEMPLATE:
+ * @pad: a #GstPad
+ *
+ * Check if the pad's accept caps operation will use the pad template caps.
+ * The default accept-caps will do a query caps to get the caps, which might
+ * be querying downstream causing unnecessary overhead. It is recommended to
+ * implement a proper accept-caps query handler or to use this flag to prevent
+ * recursive accept-caps handling.
+ *
+ * Since: 1.6
+ */
+#define GST_PAD_IS_ACCEPT_TEMPLATE(pad)    (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_ACCEPT_TEMPLATE))
+/**
+ * GST_PAD_SET_ACCEPT_TEMPLATE:
+ * @pad: a #GstPad
+ *
+ * Set @pad to by default use the pad template caps to compare with
+ * the accept caps instead of using a caps query result.
+ *
+ * Since: 1.6
+ */
+#define GST_PAD_SET_ACCEPT_TEMPLATE(pad)   (GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_ACCEPT_TEMPLATE))
+/**
+ * GST_PAD_UNSET_ACCEPT_TEMPLATE:
+ * @pad: a #GstPad
+ *
+ * Unset accept template flag.
+ *
+ * Since: 1.6
+ */
+#define GST_PAD_UNSET_ACCEPT_TEMPLATE(pad) (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_ACCEPT_TEMPLATE))
 /**
  * GST_PAD_GET_STREAM_LOCK:
  * @pad: a #GstPad
