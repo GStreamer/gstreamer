@@ -457,35 +457,12 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_play_sink_convert_bin_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  GstCaps *allowed_caps;
-  gboolean ret;
-
-  allowed_caps = gst_pad_query_caps (pad, NULL);
-  ret = gst_caps_is_subset (caps, allowed_caps);
-  gst_caps_unref (allowed_caps);
-
-  return ret;
-}
-
-static gboolean
 gst_play_sink_convert_bin_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ACCEPT_CAPS:
-    {
-      GstCaps *caps;
-
-      gst_query_parse_accept_caps (query, &caps);
-      gst_query_set_accept_caps_result (query,
-          gst_play_sink_convert_bin_acceptcaps (pad, caps));
-      res = TRUE;
-      break;
-    }
     case GST_QUERY_CAPS:
     {
       GstCaps *filter, *caps;
