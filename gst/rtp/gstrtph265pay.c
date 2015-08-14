@@ -995,8 +995,10 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
      * checking when we need to send SPS/PPS but convert to running_time first. */
     rtph265pay->send_vps_sps_pps = FALSE;
     ret = gst_rtp_h265_pay_send_vps_sps_pps (basepayload, rtph265pay, dts, pts);
-    if (ret != GST_FLOW_OK)
+    if (ret != GST_FLOW_OK) {
+      gst_buffer_unref (paybuf);
       return ret;
+    }
   }
 
   packet_len = gst_rtp_buffer_calc_packet_len (size, 0, 0);
