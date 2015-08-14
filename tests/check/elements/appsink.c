@@ -313,6 +313,41 @@ GST_START_TEST (test_buffer_list_fallback_signal)
 
 GST_END_TEST;
 
+GST_START_TEST (test_segment)
+{
+  GstElement *sink;
+  GstSegment segment;
+  GstBuffer *buffer;
+  GstSample *pulled_preroll;
+  GstSample *pulled_sample;
+
+  sink = setup_appsink ();
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 2 * GST_SECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  g_signal_emit_by_name (sink, "pull-preroll", &pulled_preroll);
+  fail_unless (gst_segment_is_equal (&segment,
+          gst_sample_get_segment (pulled_preroll)));
+  gst_sample_unref (pulled_preroll);
+
+  g_signal_emit_by_name (sink, "pull-sample", &pulled_sample);
+  fail_unless (gst_segment_is_equal (&segment,
+          gst_sample_get_segment (pulled_sample)));
+  gst_sample_unref (pulled_sample);
+
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
 static Suite *
 appsink_suite (void)
 {
@@ -326,6 +361,7 @@ appsink_suite (void)
   tcase_add_test (tc_chain, test_notify1);
   tcase_add_test (tc_chain, test_buffer_list_fallback);
   tcase_add_test (tc_chain, test_buffer_list_fallback_signal);
+  tcase_add_test (tc_chain, test_segment);
 
   return s;
 }
