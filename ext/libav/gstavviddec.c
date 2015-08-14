@@ -78,6 +78,8 @@ static gboolean gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query);
 static gboolean gst_ffmpegviddec_propose_allocation (GstVideoDecoder * decoder,
     GstQuery * query);
+static gboolean gst_ffmpegviddec_sink_query (GstVideoDecoder * decoder,
+    GstQuery * query);
 
 static void gst_ffmpegviddec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -250,6 +252,7 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
   viddec_class->drain = gst_ffmpegviddec_finish;        /* drain and finish are the same to us */
   viddec_class->decide_allocation = gst_ffmpegviddec_decide_allocation;
   viddec_class->propose_allocation = gst_ffmpegviddec_propose_allocation;
+  viddec_class->sink_query = gst_ffmpegviddec_sink_query;
 }
 
 static void
@@ -268,6 +271,8 @@ gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
   ffmpegdec->max_threads = DEFAULT_MAX_THREADS;
   ffmpegdec->output_corrupt = DEFAULT_OUTPUT_CORRUPT;
+
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (ffmpegdec));
 
   gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (ffmpegdec), TRUE);
 }
@@ -1574,6 +1579,24 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   return ret;
 }
 
+static gboolean
+gst_ffmpegviddec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
+{
+  gboolean ret;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
+      /* resort to the default accept-caps query handling to skip the videodecoder handling */
+      ret =
+          gst_pad_query_default (GST_VIDEO_DECODER_SINK_PAD (decoder),
+          GST_OBJECT_CAST (decoder), query);
+      break;
+    default:
+      ret = gst_video_decoder_sink_query_default (decoder, query);
+      break;
+  }
+  return ret;
+}
 
 static gboolean
 gst_ffmpegviddec_start (GstVideoDecoder * decoder)
