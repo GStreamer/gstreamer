@@ -125,6 +125,7 @@ gst_sbc_parse_init (GstSbcParse * sbcparse)
 {
   gst_sbc_parse_reset (sbcparse);
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (sbcparse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (sbcparse));
 }
 
 static gboolean

@@ -224,6 +224,7 @@ gst_ac3_parse_init (GstAc3Parse * ac3parse)
   ac3parse->baseparse_chainfunc =
       GST_BASE_PARSE_SINK_PAD (GST_BASE_PARSE (ac3parse))->chainfunc;
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (ac3parse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (ac3parse));
 }
 
 static void

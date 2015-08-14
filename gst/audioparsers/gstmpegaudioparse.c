@@ -227,6 +227,7 @@ gst_mpeg_audio_parse_init (GstMpegAudioParse * mp3parse)
 {
   gst_mpeg_audio_parse_reset (mp3parse);
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (mp3parse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (mp3parse));
 }
 
 static void

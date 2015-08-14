@@ -139,6 +139,7 @@ gst_dca_parse_init (GstDcaParse * dcaparse)
       GST_BASE_PARSE_SINK_PAD (GST_BASE_PARSE (dcaparse))->chainfunc;
 
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (dcaparse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (dcaparse));
 }
 
 static void

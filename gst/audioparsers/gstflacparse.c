@@ -258,6 +258,7 @@ gst_flac_parse_init (GstFlacParse * flacparse)
 {
   flacparse->check_frame_checksums = DEFAULT_CHECK_FRAME_CHECKSUMS;
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (flacparse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (flacparse));
 }
 
 static void

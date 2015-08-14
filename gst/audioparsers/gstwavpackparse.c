@@ -124,6 +124,7 @@ gst_wavpack_parse_init (GstWavpackParse * wvparse)
 {
   gst_wavpack_parse_reset (wvparse);
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (wvparse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (wvparse));
 }
 
 static void
