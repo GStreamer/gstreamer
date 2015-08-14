@@ -543,7 +543,7 @@ gst_audio_visualizer_change_shader (GstAudioVisualizer * scope)
 /* class */
 
 GType
-gst_audio_visualizer_get_type (void)
+goom2k1_gst_audio_visualizer_get_type (void)
 {
   static volatile gsize audio_visualizer_type = 0;
 
