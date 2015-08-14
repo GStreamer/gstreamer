@@ -200,9 +200,6 @@ _queue_draw (GtkGstBaseWidget * widget)
   if (widget->pending_resize) {
     widget->pending_resize = FALSE;
 
-    if (widget->reset)
-      widget->reset (widget);
-
     widget->v_info = widget->pending_v_info;
     widget->negotiated = TRUE;
     widget->new_buffer = TRUE;
