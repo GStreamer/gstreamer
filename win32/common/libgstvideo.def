@@ -129,6 +129,7 @@ EXPORTS
 	gst_video_decoder_set_needs_format
 	gst_video_decoder_set_output_state
 	gst_video_decoder_set_packetized
+	gst_video_decoder_sink_query_default
 	gst_video_dither_flags_get_type
 	gst_video_dither_free
 	gst_video_dither_line

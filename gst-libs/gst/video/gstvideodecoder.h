@@ -424,6 +424,9 @@ GstCaps *        gst_video_decoder_proxy_getcaps (GstVideoDecoder * decoder,
 						  GstCaps         * caps,
                                                   GstCaps         * filter);
 
+gboolean         gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
+                                                       GstQuery * query);
+
 
 G_END_DECLS
 
