@@ -63,9 +63,6 @@ struct _GtkGstBaseWidget
   guint display_ratio_num;
   guint display_ratio_den;
 
-  /* Poor-man virtual */
-  void (*reset) (GtkGstBaseWidget * widget);
-
   /*< private >*/
   GMutex lock;
   GWeakRef element;

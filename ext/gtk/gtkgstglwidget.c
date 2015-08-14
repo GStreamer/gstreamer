@@ -343,48 +343,10 @@ _reset_gl (GtkGstGLWidget * gst_widget)
 }
 
 static void
-_reset (GtkGstBaseWidget * base_widget)
-{
-  GtkGstGLWidgetPrivate *priv = GTK_GST_GL_WIDGET (base_widget)->priv;
-
-  priv->initted = FALSE;
-  priv->vao = 0;
-  priv->vertex_buffer = 0;
-  priv->attr_position = 0;
-  priv->attr_texture = 0;
-  priv->current_tex = 0;
-
-  gtk_gl_area_set_has_alpha (GTK_GL_AREA (base_widget),
-      !base_widget->ignore_alpha);
-}
-
-/* called from main thread */
-static void
-gtk_gst_gl_widget_reset (GtkGstBaseWidget * base_widget)
-{
-  GtkGstGLWidgetPrivate *priv = GTK_GST_GL_WIDGET (base_widget)->priv;
-  const GstGLFuncs *gl = priv->other_context->gl_vtable;
-
-  _reset (base_widget);
-
-  if (priv->vao) {
-    gl->DeleteVertexArrays (1, &priv->vao);
-    priv->vao = 0;
-  }
-
-  if (priv->vertex_buffer) {
-    gl->DeleteBuffers (1, &priv->vertex_buffer);
-    priv->vertex_buffer = 0;
-  }
-}
-
-static void
 gtk_gst_gl_widget_finalize (GObject * object)
 {
   GtkGstGLWidgetPrivate *priv = GTK_GST_GL_WIDGET (object)->priv;
   GtkGstBaseWidget *base_widget = GTK_GST_BASE_WIDGET (object);
-
-  _reset (base_widget);
 
   if (priv->other_context)
     _invoke_on_main ((ThreadFunc) _reset_gl, base_widget);
@@ -404,14 +366,12 @@ gtk_gst_gl_widget_class_init (GtkGstGLWidgetClass * klass)
 {
   GObjectClass *gobject_klass = (GObjectClass *) klass;
   GtkGLAreaClass *gl_widget_klass = (GtkGLAreaClass *) klass;
-  GtkGstBaseWidget *base_widget_klass = (GtkGstBaseWidget *) klass;
 
   g_type_class_add_private (klass, sizeof (GtkGstGLWidgetPrivate));
   gtk_gst_base_widget_class_init (GTK_GST_BASE_WIDGET_CLASS (klass));
 
   gobject_klass->finalize = gtk_gst_gl_widget_finalize;
   gl_widget_klass->render = gtk_gst_gl_widget_render;
-  base_widget_klass->reset = gtk_gst_gl_widget_reset;
 }
 
 static void
@@ -450,8 +410,6 @@ gtk_gst_gl_widget_init (GtkGstGLWidget * gst_widget)
   gtk_gl_area_set_has_alpha (GTK_GL_AREA (gst_widget),
       !base_widget->ignore_alpha);
 }
-
-
 
 static void
 _get_gl_context (GtkGstGLWidget * gst_widget)
