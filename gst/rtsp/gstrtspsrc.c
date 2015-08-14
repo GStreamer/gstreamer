@@ -4567,6 +4567,21 @@ gst_rtspsrc_connection_flush (GstRTSPSrc * src, gboolean flush)
   GST_RTSP_STATE_UNLOCK (src);
 }
 
+static GstRTSPResult
+gst_rtspsrc_init_request (GstRTSPSrc * src, GstRTSPMessage * msg,
+    GstRTSPMethod method, const gchar * uri)
+{
+  GstRTSPResult res;
+
+  res = gst_rtsp_message_init_request (msg, method, uri);
+  if (res < 0)
+    return res;
+
+  /* TODO add common initialization here */
+
+  return res;
+}
+
 /* FIXME, handle server request, reply with OK, for now */
 static GstRTSPResult
 gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPConnection * conn,
@@ -4643,7 +4658,7 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   if (control == NULL)
     goto no_control;
 
-  res = gst_rtsp_message_init_request (&request, method, control);
+  res = gst_rtspsrc_init_request (src, &request, method, control);
   if (res < 0)
     goto send_error;
 
@@ -6580,7 +6595,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
 
     /* create SETUP request */
     res =
-        gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
+        gst_rtspsrc_init_request (src, &request, GST_RTSP_SETUP,
         stream->conninfo.location);
     if (res < 0) {
       g_free (transports);
@@ -7117,7 +7132,7 @@ restart:
   /* create OPTIONS */
   GST_DEBUG_OBJECT (src, "create options...");
   res =
-      gst_rtsp_message_init_request (&request, GST_RTSP_OPTIONS,
+      gst_rtspsrc_init_request (src, &request, GST_RTSP_OPTIONS,
       src->conninfo.url_str);
   if (res < 0)
     goto create_request_failed;
@@ -7140,7 +7155,7 @@ restart:
   /* create DESCRIBE */
   GST_DEBUG_OBJECT (src, "create describe...");
   res =
-      gst_rtsp_message_init_request (&request, GST_RTSP_DESCRIBE,
+      gst_rtspsrc_init_request (src, &request, GST_RTSP_DESCRIBE,
       src->conninfo.url_str);
   if (res < 0)
     goto create_request_failed;
@@ -7356,7 +7371,7 @@ gst_rtspsrc_close (GstRTSPSrc * src, gboolean async, gboolean only_close)
 
     /* do TEARDOWN */
     res =
-        gst_rtsp_message_init_request (&request, GST_RTSP_TEARDOWN, setup_url);
+        gst_rtspsrc_init_request (src, &request, GST_RTSP_TEARDOWN, setup_url);
     if (res < 0)
       goto create_request_failed;
 
@@ -7670,7 +7685,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
     }
 
     /* do play */
-    res = gst_rtsp_message_init_request (&request, GST_RTSP_PLAY, setup_url);
+    res = gst_rtspsrc_init_request (src, &request, GST_RTSP_PLAY, setup_url);
     if (res < 0)
       goto create_request_failed;
 
@@ -7884,7 +7899,7 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean async)
           ("Sending PAUSE request"));
 
     if ((res =
-            gst_rtsp_message_init_request (&request, GST_RTSP_PAUSE,
+            gst_rtspsrc_init_request (src, &request, GST_RTSP_PAUSE,
                 setup_url)) < 0)
       goto create_request_failed;
 
