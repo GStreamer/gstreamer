@@ -237,6 +237,7 @@ struct _GstRTSPSrc {
   GTlsInteraction  *tls_interaction;
   gboolean          do_retransmission;
   gint              ntp_time_source;
+  gchar            *user_agent;
 
   /* state */
   GstRTSPState       state;

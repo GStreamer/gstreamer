@@ -231,6 +231,7 @@ gst_rtsp_src_ntp_time_source_get_type (void)
 #define DEFAULT_TLS_INTERACTION     NULL
 #define DEFAULT_DO_RETRANSMISSION        TRUE
 #define DEFAULT_NTP_TIME_SOURCE  NTP_TIME_SOURCE_NTP
+#define DEFAULT_USER_AGENT       "GStreamer/" PACKAGE_VERSION
 
 enum
 {
@@ -267,7 +268,8 @@ enum
   PROP_TLS_DATABASE,
   PROP_TLS_INTERACTION,
   PROP_DO_RETRANSMISSION,
-  PROP_NTP_TIME_SOURCE
+  PROP_NTP_TIME_SOURCE,
+  PROP_USER_AGENT
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -719,6 +721,18 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRTSPSrc::user-agent:
+   *
+   * The string to set in the User-Agent header.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_USER_AGENT,
+      g_param_spec_string ("user-agent", "User Agent",
+          "The User-Agent string to send to the server",
+          DEFAULT_USER_AGENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
    * @request: a #GstRTSPMessage
@@ -864,6 +878,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->tls_interaction = DEFAULT_TLS_INTERACTION;
   src->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   src->ntp_time_source = DEFAULT_NTP_TIME_SOURCE;
+  src->user_agent = g_strdup (DEFAULT_USER_AGENT);
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -898,6 +913,7 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->user_id);
   g_free (rtspsrc->user_pw);
   g_free (rtspsrc->multi_iface);
+  g_free (rtspsrc->user_agent);
 
   if (rtspsrc->sdp) {
     gst_sdp_message_free (rtspsrc->sdp);
@@ -1141,6 +1157,10 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_NTP_TIME_SOURCE:
       rtspsrc->ntp_time_source = g_value_get_enum (value);
       break;
+    case PROP_USER_AGENT:
+      g_free (rtspsrc->user_agent);
+      rtspsrc->user_agent = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1280,6 +1300,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_NTP_TIME_SOURCE:
       g_value_set_enum (value, rtspsrc->ntp_time_source);
+      break;
+    case PROP_USER_AGENT:
+      g_value_set_string (value, rtspsrc->user_agent);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -4577,7 +4600,9 @@ gst_rtspsrc_init_request (GstRTSPSrc * src, GstRTSPMessage * msg,
   if (res < 0)
     return res;
 
-  /* TODO add common initialization here */
+  /* set user-agent */
+  if (src->user_agent)
+    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_USER_AGENT, src->user_agent);
 
   return res;
 }
