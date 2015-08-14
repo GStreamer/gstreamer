@@ -394,6 +394,9 @@ void              gst_audio_decoder_get_allocator (GstAudioDecoder * dec,
 void              gst_audio_decoder_merge_tags (GstAudioDecoder * dec,
                                                 const GstTagList * tags, GstTagMergeMode mode);
 
+gboolean          gst_audio_decoder_sink_query_default (GstAudioDecoder * dec,
+                                                        GstQuery * query);
+
 G_END_DECLS
 
 #endif /* _GST_AUDIO_DECODER_H_ */
