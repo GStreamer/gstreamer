@@ -87,6 +87,15 @@ struct _GstRtpH265DepayClass
   GstRTPBaseDepayloadClass parent_class;
 };
 
+typedef struct
+{
+  GstElement *element;
+  GstBuffer *outbuf;
+  GQuark copy_tag;
+} CopyMetaData;
+
+void gst_rtp_copy_meta (GstElement * element, GstBuffer *outbuf, GstBuffer *inbuf, GQuark copy_tag);
+
 GType gst_rtp_h265_depay_get_type (void);
 
 gboolean gst_rtp_h265_depay_plugin_init (GstPlugin * plugin);
