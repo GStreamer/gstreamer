@@ -1915,8 +1915,6 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
-    gst_gl_overlay_compositor_draw_overlays (gl_sink->overlay_compositor);
-
     gst_gl_context_clear_shader (gl_sink->context);
 
     if (gl->GenVertexArrays)
@@ -1926,6 +1924,8 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
     if (gl_sink->ignore_alpha)
       gl->Disable (GL_BLEND);
+
+    gst_gl_overlay_compositor_draw_overlays (gl_sink->overlay_compositor);
   }
   /* end default opengl scene */
   window->is_drawing = FALSE;
