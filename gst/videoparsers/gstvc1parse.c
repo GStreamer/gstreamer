@@ -252,6 +252,7 @@ gst_vc1_parse_init (GstVC1Parse * vc1parse)
 
   gst_vc1_parse_reset (vc1parse);
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (vc1parse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (vc1parse));
 }
 
 static void

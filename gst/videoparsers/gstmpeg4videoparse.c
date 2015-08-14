@@ -187,6 +187,7 @@ gst_mpeg4vparse_init (GstMpeg4VParse * parse)
 
   gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (parse), FALSE);
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (parse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (parse));
 }
 
 static void

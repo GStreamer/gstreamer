@@ -97,6 +97,7 @@ static void
 gst_h263_parse_init (GstH263Parse * h263parse)
 {
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (h263parse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (h263parse));
 }
 
 static gboolean

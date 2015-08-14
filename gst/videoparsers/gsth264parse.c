@@ -164,6 +164,7 @@ gst_h264_parse_init (GstH264Parse * h264parse)
   h264parse->frame_out = gst_adapter_new ();
   gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (h264parse), FALSE);
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (h264parse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (h264parse));
 }
 
 
