@@ -37,6 +37,7 @@ gst_argb_control_binding_get_type
 <TITLE>GstDirectControlBinding</TITLE>
 <INCLUDE>libs/controller/gstdirectcontrolbinding.h</INCLUDE>
 gst_direct_control_binding_new
+gst_direct_control_binding_new_absolute
 <SUBSECTION Standard>
 GstDirectControlBindingConvertValue
 GstDirectControlBindingConvertGValue
