@@ -938,6 +938,231 @@ GST_START_TEST (audiodecoder_query_caps_with_custom_getcaps)
 
 GST_END_TEST;
 
+static GstTagList *
+pad_get_sticky_tags (GstPad * pad, GstTagScope scope)
+{
+  GstTagList *tags = NULL;
+  GstEvent *event;
+  guint i = 0;
+
+  do {
+    event = gst_pad_get_sticky_event (pad, GST_EVENT_TAG, i++);
+    if (event == NULL)
+      break;
+    gst_event_parse_tag (event, &tags);
+    if (scope == gst_tag_list_get_scope (tags))
+      tags = gst_tag_list_ref (tags);
+    else
+      tags = NULL;
+    gst_event_unref (event);
+  }
+  while (tags == NULL);
+
+  return tags;
+}
+
+#define tag_list_peek_string(list,tag,p_s) \
+    gst_tag_list_peek_string_index(list,tag,0,p_s)
+
+/* Check tag transformations and updates */
+GST_START_TEST (audiodecoder_tag_handling)
+{
+  GstTagList *global_tags;
+  GstTagList *tags;
+  GstSegment segment;
+  const gchar *s = NULL;
+  guint u = 0;
+
+  setup_audiodecodertester (NULL, NULL);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* =======================================================================
+   * SCENARIO 0: global tags passthrough; check upstream/decoder tag merging
+   * ======================================================================= */
+
+  /* push some global tags (these should be passed through and not messed with) */
+  global_tags = gst_tag_list_new (GST_TAG_TITLE, "Global", NULL);
+  gst_tag_list_set_scope (global_tags, GST_TAG_SCOPE_GLOBAL);
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_tag (gst_tag_list_ref (global_tags))));
+
+  /* create some (upstream) stream tags */
+  tags = gst_tag_list_new (GST_TAG_AUDIO_CODEC, "Upstream Codec",
+      GST_TAG_DESCRIPTION, "Upstream Description", NULL);
+  gst_tag_list_set_scope (tags, GST_TAG_SCOPE_STREAM);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_tag (tags)));
+  tags = NULL;
+
+  /* decoder tags: override/add AUDIO_CODEC, BITRATE and MAXIMUM_BITRATE */
+  {
+    GstTagList *decoder_tags;
+
+    decoder_tags = gst_tag_list_new (GST_TAG_AUDIO_CODEC, "Decoder Codec",
+        GST_TAG_BITRATE, 250000, GST_TAG_MAXIMUM_BITRATE, 255000, NULL);
+    gst_audio_decoder_merge_tags (GST_AUDIO_DECODER (dec),
+        decoder_tags, GST_TAG_MERGE_REPLACE);
+    gst_tag_list_unref (decoder_tags);
+  }
+
+  /* push buffer (this will call gst_audio_decoder_merge_tags with the above) */
+  fail_unless (gst_pad_push (mysrcpad, create_test_buffer (0)) == GST_FLOW_OK);
+  gst_buffer_unref (buffers->data);
+  buffers = g_list_delete_link (buffers, buffers);
+
+  /* check global tags: should not have been tampered with */
+  tags = pad_get_sticky_tags (mysinkpad, GST_TAG_SCOPE_GLOBAL);
+  fail_unless (tags != NULL);
+  GST_INFO ("global tags: %" GST_PTR_FORMAT, tags);
+  fail_unless (gst_tag_list_is_equal (tags, global_tags));
+
+  /* check merged stream tags */
+  tags = pad_get_sticky_tags (mysinkpad, GST_TAG_SCOPE_STREAM);
+  fail_unless (tags != NULL);
+  GST_INFO ("stream tags: %" GST_PTR_FORMAT, tags);
+  /* upstream audio codec should've been replaced with audiodecoder one */
+  fail_unless (tag_list_peek_string (tags, GST_TAG_AUDIO_CODEC, &s));
+  fail_unless_equals_string (s, "Decoder Codec");
+  /* no upstream bitrate, so audiodecoder one should've been added */
+  fail_unless (gst_tag_list_get_uint (tags, GST_TAG_BITRATE, &u));
+  fail_unless_equals_int (u, 250000);
+  /* no upstream maximum-bitrate, so audiodecoder one should've been added */
+  fail_unless (gst_tag_list_get_uint (tags, GST_TAG_MAXIMUM_BITRATE, &u));
+  fail_unless_equals_int (u, 255000);
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_AUDIO_CODEC) == 1);
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_BITRATE) == 1);
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_MAXIMUM_BITRATE) == 1);
+  /* upstream description should've been maintained */
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_DESCRIPTION) == 1);
+  /* and that should be all: AUDIO_CODEC, DESCRIPTION, BITRATE, MAX BITRATE */
+  fail_unless_equals_int (gst_tag_list_n_tags (tags), 4);
+  gst_tag_list_unref (tags);
+  s = NULL;
+
+  /* ===================================================================
+   * SCENARIO 1: upstream sends updated tags, decoder tags stay the same
+   * =================================================================== */
+
+  /* push same upstream stream tags again */
+  tags = gst_tag_list_new (GST_TAG_AUDIO_CODEC, "Upstream Codec",
+      GST_TAG_DESCRIPTION, "Upstream Description", NULL);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_tag (tags)));
+  tags = NULL;
+
+  /* decoder tags are still:
+   * audio-codec = "Decoder Codec", bitrate=250000, maximum-bitrate=255000 */
+
+  /* check possibly updated merged stream tags, should be same as before */
+  tags = pad_get_sticky_tags (mysinkpad, GST_TAG_SCOPE_STREAM);
+  fail_unless (tags != NULL);
+  GST_INFO ("stream tags: %" GST_PTR_FORMAT, tags);
+  /* upstream audio codec still be the one merge-replaced by the subclass */
+  fail_unless (tag_list_peek_string (tags, GST_TAG_AUDIO_CODEC, &s));
+  fail_unless_equals_string (s, "Decoder Codec");
+  /* no upstream bitrate, so audiodecoder one should've been added */
+  fail_unless (gst_tag_list_get_uint (tags, GST_TAG_BITRATE, &u));
+  fail_unless_equals_int (u, 250000);
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_AUDIO_CODEC) == 1);
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_BITRATE) == 1);
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_MAXIMUM_BITRATE) == 1);
+  /* upstream description should've been maintained */
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_DESCRIPTION) == 1);
+  /* and that should be all: AUDIO_CODEC, DESCRIPTION, BITRATE, MAX BITRATE */
+  fail_unless_equals_int (gst_tag_list_n_tags (tags), 4);
+  gst_tag_list_unref (tags);
+  s = NULL;
+
+  /* =============================================================
+   * SCENARIO 2: decoder updates tags, upstream tags stay the same
+   * ============================================================= */
+
+  /* new decoder tags: override AUDIO_CODEC, update/add BITRATE,
+   * no MAXIMUM_BITRATE this time (which means it should not appear
+   * any longer in the output tags now) (bitrate is a different value now) */
+  {
+    GstTagList *decoder_tags;
+
+    decoder_tags = gst_tag_list_new (GST_TAG_AUDIO_CODEC, "Decoder Codec",
+        GST_TAG_BITRATE, 275000, NULL);
+    gst_audio_decoder_merge_tags (GST_AUDIO_DECODER (dec),
+        decoder_tags, GST_TAG_MERGE_REPLACE);
+    gst_tag_list_unref (decoder_tags);
+  }
+
+  /* push another buffer to make decoder update tags */
+  fail_unless (gst_pad_push (mysrcpad, create_test_buffer (2)) == GST_FLOW_OK);
+  gst_buffer_unref (buffers->data);
+  buffers = g_list_delete_link (buffers, buffers);
+
+  /* check updated merged stream tags, the decoder bits should be different */
+  tags = pad_get_sticky_tags (mysinkpad, GST_TAG_SCOPE_STREAM);
+  fail_unless (tags != NULL);
+  GST_INFO ("stream tags: %" GST_PTR_FORMAT, tags);
+  /* upstream audio codec still replaced by the subclass's (wasn't updated) */
+  fail_unless (tag_list_peek_string (tags, GST_TAG_AUDIO_CODEC, &s));
+  fail_unless_equals_string (s, "Decoder Codec");
+  /* no upstream bitrate, so audiodecoder one should've been added, was updated */
+  fail_unless (gst_tag_list_get_uint (tags, GST_TAG_BITRATE, &u));
+  fail_unless_equals_int (u, 275000);
+  /* no upstream maximum-bitrate, and audiodecoder removed it now */
+  fail_unless (!gst_tag_list_get_uint (tags, GST_TAG_MAXIMUM_BITRATE, &u));
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_AUDIO_CODEC) == 1);
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_BITRATE) == 1);
+  /* upstream description should've been maintained */
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_DESCRIPTION) == 1);
+  /* and that should be all, just AUDIO_CODEC, DESCRIPTION, BITRATE */
+  fail_unless_equals_int (gst_tag_list_n_tags (tags), 3);
+  gst_tag_list_unref (tags);
+  s = NULL;
+
+  /* =================================================================
+   * SCENARIO 3: stream-start event should clear upstream tags
+   * ================================================================= */
+
+  /* also tests if the stream-start event clears the upstream tags */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("x")));
+
+  /* push another buffer to make decoder update tags */
+  fail_unless (gst_pad_push (mysrcpad, create_test_buffer (3)) == GST_FLOW_OK);
+  gst_buffer_unref (buffers->data);
+  buffers = g_list_delete_link (buffers, buffers);
+
+  /* check updated merged stream tags, should be just decoder tags now */
+  tags = pad_get_sticky_tags (mysinkpad, GST_TAG_SCOPE_STREAM);
+  fail_unless (tags != NULL);
+  GST_INFO ("stream tags: %" GST_PTR_FORMAT, tags);
+  fail_unless (tag_list_peek_string (tags, GST_TAG_AUDIO_CODEC, &s));
+  fail_unless_equals_string (s, "Decoder Codec");
+  fail_unless (gst_tag_list_get_uint (tags, GST_TAG_BITRATE, &u));
+  fail_unless_equals_int (u, 275000);
+  /* no upstream maximum-bitrate, and audiodecoder removed it now */
+  fail_unless (!gst_tag_list_get_uint (tags, GST_TAG_MAXIMUM_BITRATE, &u));
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_AUDIO_CODEC) == 1);
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_BITRATE) == 1);
+  /* no more description tag since no more upstream tags */
+  fail_unless (gst_tag_list_get_tag_size (tags, GST_TAG_DESCRIPTION) == 0);
+  /* and that should be all, just AUDIO_CODEC, BITRATE */
+  fail_unless_equals_int (gst_tag_list_n_tags (tags), 2);
+  gst_tag_list_unref (tags);
+  s = NULL;
+
+  /* clean up */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  fail_unless (buffers == NULL);
+
+  cleanup_audiodecodertest ();
+  gst_tag_list_unref (global_tags);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_audiodecoder_suite (void)
@@ -956,6 +1181,7 @@ gst_audiodecoder_suite (void)
   tcase_add_test (tc, audiodecoder_first_data_is_gap);
   tcase_add_test (tc, audiodecoder_buffer_after_segment);
   tcase_add_test (tc, audiodecoder_output_too_many_frames);
+  tcase_add_test (tc, audiodecoder_tag_handling);
 
   tcase_add_test (tc, audiodecoder_query_caps_with_fixed_caps_peer);
   tcase_add_test (tc, audiodecoder_query_caps_with_range_caps_peer);
