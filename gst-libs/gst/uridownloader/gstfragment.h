@@ -44,6 +44,8 @@ struct _GstFragment
   gchar * uri;                  /* URI of the fragment */
   gchar * redirect_uri;         /* Redirect target if any */
   gboolean redirect_permanent;  /* If the redirect is permanent */
+  gint64 range_start;
+  gint64 range_end;
 
   gchar * name;                 /* Name of the fragment */
   gboolean completed;           /* Whether the fragment is complete or not */
@@ -53,6 +55,7 @@ struct _GstFragment
   guint64 stop_time;            /* Stop time of the fragment */
   gboolean index;               /* Index of the fragment */
   gboolean discontinuous;       /* Whether this fragment is discontinuous or not */
+  GstStructure *headers;        /* HTTP request/response headers */
 
   GstFragmentPrivate *priv;
 };

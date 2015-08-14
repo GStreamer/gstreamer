@@ -145,6 +145,7 @@
 #endif
 
 #include <string.h>
+#include <stdio.h>
 #include <inttypes.h>
 #include <gio/gio.h>
 #include <gst/base/gsttypefindhelper.h>
@@ -192,7 +193,7 @@ enum
 /* Clock drift compensation for live streams */
 #define SLOW_CLOCK_UPDATE_INTERVAL  (1000000 * 30 * 60) /* 30 minutes */
 #define FAST_CLOCK_UPDATE_INTERVAL  (1000000 * 30)      /* 30 seconds */
-#define SUPPORTED_CLOCK_FORMATS (GST_MPD_UTCTIMING_TYPE_NTP | GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE | GST_MPD_UTCTIMING_TYPE_HTTP_ISO | GST_MPD_UTCTIMING_TYPE_HTTP_NTP)
+#define SUPPORTED_CLOCK_FORMATS (GST_MPD_UTCTIMING_TYPE_NTP | GST_MPD_UTCTIMING_TYPE_HTTP_HEAD | GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE | GST_MPD_UTCTIMING_TYPE_HTTP_ISO | GST_MPD_UTCTIMING_TYPE_HTTP_NTP)
 #define NTP_TO_UNIX_EPOCH G_GUINT64_CONSTANT(2208988800)        /* difference (in seconds) between NTP epoch and Unix epoch */
 
 struct _GstDashDemuxClockDrift
@@ -1631,6 +1632,121 @@ gst_dash_demux_poll_ntp_server (GstDashDemuxClockDrift * clock_drift,
   return gst_date_time_new_from_g_date_time (dt2);
 }
 
+struct Rfc822TimeZone
+{
+  const gchar *name;
+  gfloat tzoffset;
+};
+
+/*
+ Parse an RFC822 (section 5) date-time from the Date: field in the
+ HTTP response. 
+ See https://tools.ietf.org/html/rfc822#section-5
+*/
+static GstDateTime *
+gst_dash_demux_parse_http_head (GstDashDemuxClockDrift * clock_drift,
+    GstFragment * download)
+{
+  static const gchar *months[] = { NULL, "Jan", "Feb", "Mar", "Apr",
+    "May", "Jun", "Jul", "Aug",
+    "Sep", "Oct", "Nov", "Dec", NULL
+  };
+  static const struct Rfc822TimeZone timezones[] = {
+    {"Z", 0},
+    {"UT", 0},
+    {"GMT", 0},
+    {"BST", 1},
+    {"EST", -5},
+    {"EDT", -4},
+    {"CST", -6},
+    {"CDT", -5},
+    {"MST", -7},
+    {"MDT", -6},
+    {"PST", -8},
+    {"PDT", -7},
+    {NULL, 0}
+  };
+  GstDateTime *value = NULL;
+  const GstStructure *response_headers;
+  const gchar *http_date;
+  const GValue *val;
+  gint ret;
+  const gchar *pos;
+  gint year = -1, month = -1, day = -1, hour = -1, minute = -1, second = -1;
+  gchar zone[6];
+  gchar monthstr[4];
+  gfloat tzoffset = 0;
+  gboolean parsed_tz = FALSE;
+
+  g_return_val_if_fail (download != NULL, NULL);
+  g_return_val_if_fail (download->headers != NULL, NULL);
+
+  val = gst_structure_get_value (download->headers, "response-headers");
+  if (!val) {
+    return NULL;
+  }
+  response_headers = gst_value_get_structure (val);
+  http_date = gst_structure_get_string (response_headers, "Date");
+  if (!http_date) {
+    return NULL;
+  }
+
+  /* skip optional text version of day of the week */
+  pos = strchr (http_date, ',');
+  if (pos)
+    pos++;
+  else
+    pos = http_date;
+  ret =
+      sscanf (pos, "%02d %3s %04d %02d:%02d:%02d %5s", &day, monthstr, &year,
+      &hour, &minute, &second, zone);
+  if (ret == 7) {
+    gchar *z = zone;
+    for (int i = 1; months[i]; ++i) {
+      if (g_ascii_strncasecmp (months[i], monthstr, strlen (months[i])) == 0) {
+        month = i;
+        break;
+      }
+    }
+    while (*z == ' ') {
+      ++z;
+    }
+    for (int i = 0; timezones[i].name && !parsed_tz; ++i) {
+      if (g_ascii_strncasecmp (timezones[i].name, z,
+              strlen (timezones[i].name)) == 0) {
+        tzoffset = timezones[i].tzoffset;
+        parsed_tz = TRUE;
+      }
+    }
+    if (!parsed_tz) {
+      gint hh, mm;
+      gboolean neg = FALSE;
+      /* check if it is in the form +-HHMM */
+      if (*z == '+' || *z == '-') {
+        if (*z == '+')
+          ++z;
+        else if (*z == '-') {
+          ++z;
+          neg = TRUE;
+        }
+        ret = sscanf (z, "%02d%02d", &hh, &mm);
+        if (ret == 2) {
+          tzoffset = hh;
+          tzoffset += mm / 60.0;
+          if (neg)
+            tzoffset = -tzoffset;
+          parsed_tz = TRUE;
+        }
+      }
+    }
+  }
+  if (month > 0 && parsed_tz) {
+    value = gst_date_time_new (tzoffset,
+        year, month, day, hour, minute, second);
+  }
+  return value;
+}
+
 /*
    The timing information is contained in the message body of the HTTP
    response and contains a time value formatted according to NTP timestamp
@@ -1744,14 +1860,24 @@ gst_dash_demux_poll_clock_drift (GstDashDemux * demux)
   start = g_date_time_new_now_utc ();
   if (!value) {
     GstFragment *download;
+    gint64 range_start = 0, range_end = -1;
     GST_DEBUG_OBJECT (demux, "Fetching current time from %s",
         urls[clock_drift->selected_url]);
+    if (method == GST_MPD_UTCTIMING_TYPE_HTTP_HEAD) {
+      range_start = -1;
+    }
     download =
-        gst_uri_downloader_fetch_uri (GST_ADAPTIVE_DEMUX_CAST
+        gst_uri_downloader_fetch_uri_with_range (GST_ADAPTIVE_DEMUX_CAST
         (demux)->downloader, urls[clock_drift->selected_url], NULL, TRUE, TRUE,
-        TRUE, NULL);
-    buffer = gst_fragment_get_buffer (download);
-    g_object_unref (download);
+        TRUE, range_start, range_end, NULL);
+    if (download) {
+      if (method == GST_MPD_UTCTIMING_TYPE_HTTP_HEAD && download->headers) {
+        value = gst_dash_demux_parse_http_head (clock_drift, download);
+      } else {
+        buffer = gst_fragment_get_buffer (download);
+      }
+      g_object_unref (download);
+    }
   }
   g_mutex_unlock (&clock_drift->clock_lock);
   if (!value && !buffer) {
