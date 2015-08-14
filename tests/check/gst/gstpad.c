@@ -314,6 +314,105 @@ GST_START_TEST (test_sticky_caps_unlinked)
 
 GST_END_TEST;
 
+static gboolean
+check_if_caps_is_accepted (GstPad * sink, const gchar * str)
+{
+  GstCaps *caps;
+  gboolean ret;
+
+  caps = gst_caps_from_string (str);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  ret = gst_pad_query_accept_caps (sink, caps);
+  gst_caps_unref (caps);
+
+  return ret;
+}
+
+static gboolean
+sink_query_caps (GstPad * pad, GstObject * object, GstQuery * q)
+{
+  gboolean ret;
+  GstCaps *caps;
+
+  switch (GST_QUERY_TYPE (q)) {
+    case GST_QUERY_CAPS:
+      ret = TRUE;
+      caps =
+          gst_caps_from_string ("foo/bar, dummy=(int)1,"
+          " query-only-field=(int)1");
+      gst_query_set_caps_result (q, caps);
+      gst_caps_unref (caps);
+    default:
+      ret = gst_pad_query_default (pad, object, q);
+      break;
+  }
+
+  return ret;
+}
+
+/* Tests whether acceptcaps default handler works properly
+   with all 4 possible flag combinations */
+GST_START_TEST (test_default_accept_caps)
+{
+  GstCaps *caps;
+  GstPadTemplate *sink_template;
+  GstPad *sink;
+
+  caps = gst_caps_from_string ("foo/bar, dummy=(int){1, 2}");
+  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
+      GST_PAD_ALWAYS, caps);
+  gst_caps_unref (caps);
+
+  sink = gst_pad_new_from_template (sink_template, "sink");
+  fail_if (sink == NULL);
+  gst_pad_set_query_function (sink, sink_query_caps);
+
+  gst_object_unref (sink_template);
+
+  gst_pad_set_active (sink, TRUE);
+
+  /* 1. Check with caps query, subset check */
+  GST_PAD_UNSET_ACCEPT_INTERSECT (sink);
+  GST_PAD_UNSET_ACCEPT_TEMPLATE (sink);
+  fail_unless (check_if_caps_is_accepted (sink, "foo/bar, dummy=(int)1"));
+  fail_if (check_if_caps_is_accepted (sink, "foo/bar, dummy=(int)3"));
+  fail_unless (check_if_caps_is_accepted (sink,
+          "foo/bar, dummy=(int)1, query-only-field=(int)1"));
+  fail_if (check_if_caps_is_accepted (sink, "foo/bar, extra-field=(int)1"));
+
+  /* 2. Check with caps query, intersect check */
+  GST_PAD_SET_ACCEPT_INTERSECT (sink);
+  GST_PAD_UNSET_ACCEPT_TEMPLATE (sink);
+  fail_unless (check_if_caps_is_accepted (sink, "foo/bar, dummy=(int)1"));
+  fail_if (check_if_caps_is_accepted (sink, "foo/bar, dummy=(int)3"));
+  fail_unless (check_if_caps_is_accepted (sink,
+          "foo/bar, dummy=(int)1, query-only-field=(int)1"));
+  fail_unless (check_if_caps_is_accepted (sink, "foo/bar, extra-field=(int)1"));
+
+  /* 3. Check with template caps, subset check */
+  GST_PAD_UNSET_ACCEPT_INTERSECT (sink);
+  GST_PAD_SET_ACCEPT_TEMPLATE (sink);
+  fail_unless (check_if_caps_is_accepted (sink, "foo/bar, dummy=(int)1"));
+  fail_if (check_if_caps_is_accepted (sink, "foo/bar, dummy=(int)3"));
+  fail_unless (check_if_caps_is_accepted (sink,
+          "foo/bar, dummy=(int)1, query-only-field=(int)1"));
+  fail_if (check_if_caps_is_accepted (sink, "foo/bar, extra-field=(int)1"));
+
+  /* 3. Check with template caps, intersect check */
+  GST_PAD_SET_ACCEPT_INTERSECT (sink);
+  GST_PAD_SET_ACCEPT_TEMPLATE (sink);
+  fail_unless (check_if_caps_is_accepted (sink, "foo/bar, dummy=(int)1"));
+  fail_if (check_if_caps_is_accepted (sink, "foo/bar, dummy=(int)3"));
+  fail_unless (check_if_caps_is_accepted (sink,
+          "foo/bar, dummy=(int)1, query-only-field=(int)1"));
+  fail_unless (check_if_caps_is_accepted (sink, "foo/bar, extra-field=(int)1"));
+
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
 /* Same as test_sticky_caps_unlinked except that the source pad
  * has a template of ANY and we will attempt to push
  * incompatible caps */
@@ -2232,6 +2331,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_sticky_caps_unlinked);
   tcase_add_test (tc_chain, test_sticky_caps_unlinked_incompatible);
   tcase_add_test (tc_chain, test_sticky_caps_flushing);
+  tcase_add_test (tc_chain, test_default_accept_caps);
   tcase_add_test (tc_chain, test_link_unlink_threaded);
   tcase_add_test (tc_chain, test_name_is_valid);
   tcase_add_test (tc_chain, test_push_unlinked);
