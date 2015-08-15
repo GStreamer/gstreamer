@@ -7769,11 +7769,13 @@ done:
   /* if index has been completely parsed, free data that is no-longer needed */
   if (n + 1 == stream->n_samples) {
     gst_qtdemux_stbl_free (stream);
-    GST_DEBUG_OBJECT (qtdemux,
-        "parsed all available samples; checking for more");
-    while (n + 1 == stream->n_samples)
-      if (qtdemux_add_fragmented_samples (qtdemux) != GST_FLOW_OK)
-        break;
+    GST_DEBUG_OBJECT (qtdemux, "parsed all available samples;");
+    if (qtdemux->pullbased) {
+      GST_DEBUG_OBJECT (qtdemux, "checking for more samples");
+      while (n + 1 == stream->n_samples)
+        if (qtdemux_add_fragmented_samples (qtdemux) != GST_FLOW_OK)
+          break;
+    }
   }
   GST_OBJECT_UNLOCK (qtdemux);
 
