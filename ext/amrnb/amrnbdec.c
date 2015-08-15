@@ -144,6 +144,9 @@ static void
 gst_amrnbdec_init (GstAmrnbDec * amrnbdec)
 {
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (amrnbdec), TRUE);
+  gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
+      (amrnbdec), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (amrnbdec));
 }
 
 static gboolean

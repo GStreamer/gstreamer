@@ -144,6 +144,8 @@ gst_mad_init (GstMad * mad)
 
   dec = GST_AUDIO_DECODER (mad);
   gst_audio_decoder_set_tolerance (dec, 20 * GST_MSECOND);
+  gst_audio_decoder_set_use_default_pad_acceptcaps (dec, TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (dec));
 
   mad->half = FALSE;
   mad->ignore_crc = TRUE;
