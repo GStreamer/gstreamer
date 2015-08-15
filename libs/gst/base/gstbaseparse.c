@@ -1543,41 +1543,30 @@ no_duration_bytes:
 }
 
 static void
-gst_base_parse_update_duration (GstBaseParse * baseparse)
+gst_base_parse_update_duration (GstBaseParse * parse)
 {
-  GstPad *peer;
-  GstBaseParse *parse;
+  gint64 ptot, dest_value;
 
-  parse = GST_BASE_PARSE (baseparse);
+  if (!gst_pad_peer_query_duration (parse->sinkpad, GST_FORMAT_BYTES, &ptot))
+    return;
 
-  peer = gst_pad_get_peer (parse->sinkpad);
-  if (peer) {
-    gboolean qres = FALSE;
-    gint64 ptot, dest_value;
+  if (!gst_base_parse_convert (parse, GST_FORMAT_BYTES, ptot,
+          GST_FORMAT_TIME, &dest_value))
+    return;
 
-    qres = gst_pad_query_duration (peer, GST_FORMAT_BYTES, &ptot);
-    gst_object_unref (GST_OBJECT (peer));
-    if (qres) {
-      if (gst_base_parse_convert (parse, GST_FORMAT_BYTES, ptot,
-              GST_FORMAT_TIME, &dest_value)) {
+  /* inform if duration changed, but try to avoid spamming */
+  parse->priv->estimated_drift += dest_value - parse->priv->estimated_duration;
 
-        /* inform if duration changed, but try to avoid spamming */
-        parse->priv->estimated_drift +=
-            dest_value - parse->priv->estimated_duration;
+  parse->priv->estimated_duration = dest_value;
+  GST_LOG_OBJECT (parse,
+      "updated estimated duration to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (dest_value));
 
-        parse->priv->estimated_duration = dest_value;
-        GST_LOG_OBJECT (parse,
-            "updated estimated duration to %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (dest_value));
-
-        if (parse->priv->estimated_drift > GST_SECOND ||
-            parse->priv->estimated_drift < -GST_SECOND) {
-          gst_element_post_message (GST_ELEMENT (parse),
-              gst_message_new_duration_changed (GST_OBJECT (parse)));
-          parse->priv->estimated_drift = 0;
-        }
-      }
-    }
+  if (parse->priv->estimated_drift > GST_SECOND ||
+      parse->priv->estimated_drift < -GST_SECOND) {
+    gst_element_post_message (GST_ELEMENT (parse),
+        gst_message_new_duration_changed (GST_OBJECT (parse)));
+    parse->priv->estimated_drift = 0;
   }
 }
 
