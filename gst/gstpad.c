@@ -471,6 +471,8 @@ find_event_by_type (GstPad * pad, GstEventType type, guint idx)
       if (idx == 0)
         goto found;
       idx--;
+    } else if (GST_EVENT_TYPE (ev->event) > type) {
+      break;
     }
   }
   ev = NULL;
@@ -493,6 +495,8 @@ find_event (GstPad * pad, GstEvent * event)
     ev = &g_array_index (events, PadEvent, i);
     if (event == ev->event)
       goto found;
+    else if (GST_EVENT_TYPE (ev->event) > GST_EVENT_TYPE (event))
+      break;
   }
   ev = NULL;
 found:
@@ -516,7 +520,9 @@ remove_event_by_type (GstPad * pad, GstEventType type)
     if (ev->event == NULL)
       goto next;
 
-    if (GST_EVENT_TYPE (ev->event) != type)
+    if (GST_EVENT_TYPE (ev->event) > type)
+      break;
+    else if (GST_EVENT_TYPE (ev->event) != type)
       goto next;
 
     gst_event_unref (ev->event);
