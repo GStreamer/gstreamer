@@ -561,7 +561,10 @@ gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
+      GST_OBJECT_LOCK (filter);
       gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
+      GST_OBJECT_UNLOCK (filter);
+
       filter->need_newsegment = TRUE;
       filter->priv->next_seqnum = -1;
       gst_event_replace (&filter->priv->segment_event, NULL);
@@ -578,7 +581,10 @@ gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
     }
     case GST_EVENT_SEGMENT:
     {
+      GST_OBJECT_LOCK (filter);
       gst_event_copy_segment (event, &filter->segment);
+      GST_OBJECT_UNLOCK (filter);
+
       /* don't pass the event downstream, we generate our own segment including
        * the NTP time and other things we receive in caps */
       forward = FALSE;
@@ -647,6 +653,10 @@ create_segment_event (GstRTPBaseDepayload * filter, guint rtptime,
   GstSegment segment;
 
   priv = filter->priv;
+
+  /* We don't need the object lock around - the segment
+   * can't change here while we're holding the STREAM_LOCK
+   */
 
   /* determining the start of the segment */
   start = filter->segment.start;
@@ -897,16 +907,18 @@ gst_rtp_base_depayload_create_stats (GstRTPBaseDepayload * depayload)
 {
   GstRTPBaseDepayloadPrivate *priv;
   GstStructure *s;
-  GstClockTime pts, dts;
+  GstClockTime pts = GST_CLOCK_TIME_NONE, dts = GST_CLOCK_TIME_NONE;
 
   priv = depayload->priv;
 
-  /* FIXME this isn't thread safe */
-
-  pts = gst_segment_to_running_time (&depayload->segment, GST_FORMAT_TIME,
-      priv->pts);
-  dts = gst_segment_to_running_time (&depayload->segment, GST_FORMAT_TIME,
-      priv->dts);
+  GST_OBJECT_LOCK (depayload);
+  if (depayload->segment.format != GST_FORMAT_UNDEFINED) {
+    pts = gst_segment_to_running_time (&depayload->segment, GST_FORMAT_TIME,
+        priv->pts);
+    dts = gst_segment_to_running_time (&depayload->segment, GST_FORMAT_TIME,
+        priv->dts);
+  }
+  GST_OBJECT_UNLOCK (depayload);
 
   s = gst_structure_new ("application/x-rtp-depayload-stats",
       "clock_rate", G_TYPE_UINT, depayload->clock_rate,
