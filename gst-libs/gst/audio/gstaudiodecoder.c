@@ -386,6 +386,8 @@ static gboolean gst_audio_decoder_negotiate_default (GstAudioDecoder * dec);
 static gboolean gst_audio_decoder_negotiate_unlocked (GstAudioDecoder * dec);
 static gboolean gst_audio_decoder_handle_gap (GstAudioDecoder * dec,
     GstEvent * event);
+static gboolean gst_audio_decoder_sink_query_default (GstAudioDecoder * dec,
+    GstQuery * query);
 static gboolean gst_audio_decoder_src_query_default (GstAudioDecoder * dec,
     GstQuery * query);
 
@@ -2635,19 +2637,7 @@ gst_audio_decoder_sink_getcaps (GstAudioDecoder * decoder, GstCaps * filter)
   return caps;
 }
 
-/**
- * gst_audio_decoder_sink_query_default:
- * @decoder: a #GstAudioDecoder
- * @query: (transfer none): a #GstQuery
- *
- * Calls the default query handler for #GstAudioDecoder. It is useful
- * when a subclass only want to handle a particular type of query and
- * wants to use the default handler for others.
- *
- * Returns: a boolean, representing if the query was handled.
- * Since: 1.6
- */
-gboolean
+static gboolean
 gst_audio_decoder_sink_query_default (GstAudioDecoder * dec, GstQuery * query)
 {
   GstPad *pad = GST_AUDIO_DECODER_SINK_PAD (dec);

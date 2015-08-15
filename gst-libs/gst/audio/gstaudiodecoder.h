@@ -394,9 +394,6 @@ void              gst_audio_decoder_get_allocator (GstAudioDecoder * dec,
 void              gst_audio_decoder_merge_tags (GstAudioDecoder * dec,
                                                 const GstTagList * tags, GstTagMergeMode mode);
 
-gboolean          gst_audio_decoder_sink_query_default (GstAudioDecoder * dec,
-                                                        GstQuery * query);
-
 void              gst_audio_decoder_set_use_default_pad_acceptcaps (GstAudioDecoder * decoder,
                                                                    gboolean use);
 
