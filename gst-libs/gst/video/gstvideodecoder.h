@@ -427,6 +427,9 @@ GstCaps *        gst_video_decoder_proxy_getcaps (GstVideoDecoder * decoder,
 gboolean         gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
                                                        GstQuery * query);
 
+void             gst_video_decoder_set_use_default_pad_acceptcaps (GstVideoDecoder * decoder,
+                                                                   gboolean use);
+
 
 G_END_DECLS
 
