@@ -1434,6 +1434,10 @@ gst_vp9_enc_stop (GstVideoEncoder * video_encoder)
 
   gst_tag_setter_reset_tags (GST_TAG_SETTER (encoder));
 
+  g_free (encoder->multipass_cache_file);
+  encoder->multipass_cache_file = NULL;
+  encoder->multipass_cache_idx = 0;
+
   return TRUE;
 }
 
