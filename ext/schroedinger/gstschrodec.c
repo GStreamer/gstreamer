@@ -155,6 +155,9 @@ gst_schro_dec_init (GstSchroDec * schro_dec)
 
   schro_dec->decoder = schro_decoder_new ();
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (schro_dec), FALSE);
+  gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
+      (schro_dec), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (schro_dec));
   schro_dec->header_read = FALSE;
 }
 

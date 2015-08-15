@@ -200,6 +200,9 @@ gst_libde265_dec_init (GstLibde265Dec * dec)
   dec->length_size = 4;
   _gst_libde265_dec_reset_decoder (dec);
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (dec), TRUE);
+  gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
+      (dec), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (dec));
 }
 
 static inline void

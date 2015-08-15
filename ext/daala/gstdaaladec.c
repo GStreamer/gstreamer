@@ -131,6 +131,9 @@ gst_daala_dec_init (GstDaalaDec * dec)
    * but is not marked that way so data gets parsed and keyframes marked */
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (dec), FALSE);
   gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (dec), TRUE);
+  gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
+      (dec), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (dec));
 }
 
 static void

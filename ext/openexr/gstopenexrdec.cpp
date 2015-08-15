@@ -151,6 +151,9 @@ gst_openexr_dec_init (GstOpenEXRDec * self)
   GstVideoDecoder *decoder = (GstVideoDecoder *) self;
 
   gst_video_decoder_set_packetized (decoder, FALSE);
+  gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
+      (self), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (self));
 }
 
 static gboolean

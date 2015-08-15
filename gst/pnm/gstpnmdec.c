@@ -108,6 +108,10 @@ gst_pnmdec_init (GstPnmdec * s)
   /* Initialize decoder */
   s->buf = NULL;
   gst_pnmdec_flush (s);
+
+  gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
+      (s), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (s));
 }
 
 static GstFlowReturn
