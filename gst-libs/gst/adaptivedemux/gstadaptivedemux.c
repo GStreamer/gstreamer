@@ -1645,6 +1645,9 @@ gst_adaptive_demux_stream_wait_manifest_update (GstAdaptiveDemux * demux,
       break;
     }
 
+    GST_DEBUG_OBJECT (demux, "No fragment left but live playlist, wait a bit");
+    g_cond_wait (&demux->manifest_cond, GST_MANIFEST_GET_LOCK (demux));
+
     /* Got a new fragment or not live anymore? */
     if (gst_adaptive_demux_stream_has_next_fragment (demux, stream)) {
       GST_DEBUG_OBJECT (demux, "new fragment available, "
@@ -1659,9 +1662,6 @@ gst_adaptive_demux_stream_wait_manifest_update (GstAdaptiveDemux * demux,
       ret = FALSE;
       break;
     }
-
-    GST_DEBUG_OBJECT (demux, "No fragment left but live playlist, wait a bit");
-    g_cond_wait (&demux->manifest_cond, GST_MANIFEST_GET_LOCK (demux));
   }
   GST_DEBUG_OBJECT (demux, "Retrying now");
   return ret;
