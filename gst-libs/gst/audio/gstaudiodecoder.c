@@ -279,6 +279,9 @@ struct _GstAudioDecoderPrivate
 
   /* pending serialized sink events, will be sent from finish_frame() */
   GList *pending_events;
+
+  /* flags */
+  gboolean use_default_pad_acceptcaps;
 };
 
 //* Default channel layouts taken from audioconvert */
@@ -2691,28 +2694,34 @@ gst_audio_decoder_sink_query_default (GstAudioDecoder * dec, GstQuery * query)
       break;
     }
     case GST_QUERY_ACCEPT_CAPS:{
-      GstCaps *caps;
-      GstCaps *allowed_caps;
-      GstCaps *template_caps;
-      gboolean accept;
+      if (dec->priv->use_default_pad_acceptcaps) {
+        res =
+            gst_pad_query_default (GST_AUDIO_DECODER_SINK_PAD (dec),
+            GST_OBJECT_CAST (dec), query);
+      } else {
+        GstCaps *caps;
+        GstCaps *allowed_caps;
+        GstCaps *template_caps;
+        gboolean accept;
 
-      gst_query_parse_accept_caps (query, &caps);
+        gst_query_parse_accept_caps (query, &caps);
 
-      template_caps = gst_pad_get_pad_template_caps (pad);
-      accept = gst_caps_is_subset (caps, template_caps);
-      gst_caps_unref (template_caps);
+        template_caps = gst_pad_get_pad_template_caps (pad);
+        accept = gst_caps_is_subset (caps, template_caps);
+        gst_caps_unref (template_caps);
 
-      if (accept) {
-        allowed_caps = gst_pad_query_caps (GST_AUDIO_DECODER_SINK_PAD (dec),
-            caps);
+        if (accept) {
+          allowed_caps = gst_pad_query_caps (GST_AUDIO_DECODER_SINK_PAD (dec),
+              caps);
 
-        accept = gst_caps_can_intersect (caps, allowed_caps);
+          accept = gst_caps_can_intersect (caps, allowed_caps);
 
-        gst_caps_unref (allowed_caps);
+          gst_caps_unref (allowed_caps);
+        }
+
+        gst_query_set_accept_caps_result (query, accept);
+        res = TRUE;
       }
-
-      gst_query_set_accept_caps_result (query, accept);
-      res = TRUE;
       break;
     }
     case GST_QUERY_SEEKING:
@@ -3610,4 +3619,25 @@ gst_audio_decoder_get_allocator (GstAudioDecoder * dec,
 
   if (params)
     *params = dec->priv->ctx.params;
+}
+
+/**
+ * gst_audio_decoder_set_use_default_pad_acceptcaps:
+ * @decoder: a #GstAudioDecoder
+ * @use: if the default pad accept-caps query handling should be used
+ *
+ * Lets #GstAudioDecoder sub-classes decide if they want the sink pad
+ * to use the default pad query handler to reply to accept-caps queries.
+ *
+ * By setting this to true it is possible to further customize the default
+ * handler with %GST_PAD_SET_ACCEPT_INTERSECT and
+ * %GST_PAD_SET_ACCEPT_TEMPLATE
+ *
+ * Since: 1.6
+ */
+void
+gst_audio_decoder_set_use_default_pad_acceptcaps (GstAudioDecoder * decoder,
+    gboolean use)
+{
+  decoder->priv->use_default_pad_acceptcaps = use;
 }

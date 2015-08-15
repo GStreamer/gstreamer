@@ -67,6 +67,7 @@ EXPORTS
 	gst_audio_decoder_set_plc
 	gst_audio_decoder_set_plc_aware
 	gst_audio_decoder_set_tolerance
+	gst_audio_decoder_set_use_default_pad_acceptcaps
 	gst_audio_decoder_sink_query_default
 	gst_audio_downmix_meta_api_get_type
 	gst_audio_downmix_meta_get_info

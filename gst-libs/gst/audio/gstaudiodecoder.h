@@ -397,6 +397,9 @@ void              gst_audio_decoder_merge_tags (GstAudioDecoder * dec,
 gboolean          gst_audio_decoder_sink_query_default (GstAudioDecoder * dec,
                                                         GstQuery * query);
 
+void              gst_audio_decoder_set_use_default_pad_acceptcaps (GstAudioDecoder * decoder,
+                                                                   gboolean use);
+
 G_END_DECLS
 
 #endif /* _GST_AUDIO_DECODER_H_ */
