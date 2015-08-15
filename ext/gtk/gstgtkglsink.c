@@ -38,6 +38,8 @@ static gboolean gst_gtk_gl_sink_stop (GstBaseSink * bsink);
 static gboolean gst_gtk_gl_sink_query (GstBaseSink * bsink, GstQuery * query);
 static gboolean gst_gtk_gl_sink_propose_allocation (GstBaseSink * bsink,
     GstQuery * query);
+static GstCaps *gst_gtk_gl_sink_get_caps (GstBaseSink * bsink,
+    GstCaps * filter);
 
 static GstStaticPadTemplate gst_gtk_gl_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -66,6 +68,7 @@ gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
   gstbasesink_class->propose_allocation = gst_gtk_gl_sink_propose_allocation;
   gstbasesink_class->start = gst_gtk_gl_sink_start;
   gstbasesink_class->stop = gst_gtk_gl_sink_stop;
+  gstbasesink_class->get_caps = gst_gtk_gl_sink_get_caps;
 
   gstgtkbasesink_class->create_widget = gtk_gst_gl_widget_new;
   gstgtkbasesink_class->window_title = "Gtk+ GL renderer";
@@ -133,6 +136,31 @@ gst_gtk_gl_sink_query (GstBaseSink * bsink, GstQuery * query)
   return res;
 }
 
+static void
+_size_changed_cb (GtkWidget * widget, GdkRectangle * rectangle,
+    GstGtkGLSink * gtk_sink)
+{
+  gint scale_factor, width, height;
+  gboolean reconfigure;
+
+  scale_factor = gtk_widget_get_scale_factor (widget);
+  width = scale_factor * gtk_widget_get_allocated_width (widget);
+  height = scale_factor * gtk_widget_get_allocated_height (widget);
+
+  GST_OBJECT_LOCK (gtk_sink);
+  reconfigure =
+      (width != gtk_sink->display_width || height != gtk_sink->display_height);
+  gtk_sink->display_width = width;
+  gtk_sink->display_height = height;
+  GST_OBJECT_UNLOCK (gtk_sink);
+
+  if (reconfigure) {
+    GST_DEBUG_OBJECT (gtk_sink, "Sending reconfigure event on sinkpad.");
+    gst_pad_push_event (GST_BASE_SINK (gtk_sink)->sinkpad,
+        gst_event_new_reconfigure ());
+  }
+}
+
 static gboolean
 gst_gtk_gl_sink_start (GstBaseSink * bsink)
 {
@@ -145,6 +173,11 @@ gst_gtk_gl_sink_start (GstBaseSink * bsink)
 
   /* After this point, gtk_sink->widget will always be set */
   gst_widget = GTK_GST_GL_WIDGET (base_sink->widget);
+
+  /* Track the allocation size */
+  g_signal_connect (gst_widget, "size-allocate", G_CALLBACK (_size_changed_cb),
+      gtk_sink);
+  _size_changed_cb (GTK_WIDGET (gst_widget), NULL, gtk_sink);
 
   if (!gtk_gst_gl_widget_init_winsys (gst_widget))
     return FALSE;
@@ -191,6 +224,8 @@ gst_gtk_gl_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstCaps *caps;
   guint size;
   gboolean need_pool;
+  GstStructure *allocation_meta = NULL;
+  gint display_width, display_height;
 
   if (!gtk_sink->display || !gtk_sink->context)
     return FALSE;
@@ -222,6 +257,25 @@ gst_gtk_gl_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     gst_object_unref (pool);
   }
 
+  GST_OBJECT_LOCK (gtk_sink);
+  display_width = gtk_sink->display_width;
+  display_height = gtk_sink->display_height;
+  GST_OBJECT_UNLOCK (gtk_sink);
+
+  if (display_width != 0 && display_height != 0) {
+    GST_DEBUG_OBJECT (gtk_sink, "sending alloc query with size %dx%d",
+        display_width, display_height);
+    allocation_meta = gst_structure_new ("GstVideoOverlayCompositionMeta",
+        "width", G_TYPE_UINT, display_width,
+        "height", G_TYPE_UINT, display_height, NULL);
+  }
+
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, allocation_meta);
+
+  if (allocation_meta)
+    gst_structure_free (allocation_meta);
+
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
 
@@ -246,4 +300,29 @@ config_failed:
     GST_DEBUG_OBJECT (bsink, "failed setting config");
     return FALSE;
   }
+}
+
+static GstCaps *
+gst_gtk_gl_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
+{
+  GstCaps *tmp = NULL;
+  GstCaps *result = NULL;
+
+  tmp = gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD (bsink));
+
+  if (filter) {
+    GST_DEBUG_OBJECT (bsink, "intersecting with filter caps %" GST_PTR_FORMAT,
+        filter);
+
+    result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+  } else {
+    result = tmp;
+  }
+
+  result = gst_gl_overlay_compositor_add_caps (result);
+
+  GST_DEBUG_OBJECT (bsink, "returning caps: %" GST_PTR_FORMAT, result);
+
+  return result;
 }

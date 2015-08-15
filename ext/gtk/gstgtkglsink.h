@@ -60,6 +60,10 @@ struct _GstGtkGLSink
 
   GstGLUpload          *upload;
   GstBuffer            *uploaded_buffer;
+
+  /* read/write with object lock */
+  gint                  display_width;
+  gint                  display_height;
 };
 
 /**
