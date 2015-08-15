@@ -365,7 +365,10 @@ class GstValidateLaunchTest(GstValidateTest):
     def __init__(self, classname, options, reporter, pipeline_desc,
                  timeout=DEFAULT_TIMEOUT, scenario=None,
                  media_descriptor=None, duration=0, hard_timeout=None,
-                 extra_env_variables={}):
+                 extra_env_variables=None):
+
+        extra_env_variables = extra_env_variables or {}
+
         try:
             timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[
                 media_descriptor.get_protocol()]
@@ -403,7 +406,10 @@ class GstValidateLaunchTest(GstValidateTest):
 class GstValidateMediaCheckTest(GstValidateTest):
 
     def __init__(self, classname, options, reporter, media_descriptor,
-                 uri, minfo_path, timeout=DEFAULT_TIMEOUT, extra_env_variables={}):
+                 uri, minfo_path, timeout=DEFAULT_TIMEOUT,
+                 extra_env_variables=None):
+        extra_env_variables = extra_env_variables or {}
+
         super(
             GstValidateMediaCheckTest, self).__init__(G_V_DISCOVERER_COMMAND, classname,
                                                       options, reporter,
@@ -425,9 +431,11 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
     def __init__(self, classname, options, reporter,
                  combination, uri, media_descriptor,
                  timeout=DEFAULT_TIMEOUT,
-                 scenario=None, extra_env_variables={}):
-
+                 scenario=None,
+                 extra_env_variables=None):
         Loggable.__init__(self)
+
+        extra_env_variables = extra_env_variables or {}
 
         file_dur = long(media_descriptor.get_duration()) / GST_SECOND
         if not media_descriptor.get_num_tracks("video"):
@@ -452,7 +460,8 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
                                                        timeout=timeout,
                                                        scenario=scenario,
                                                        media_descriptor=media_descriptor,
-                                                       extra_env_variables=extra_env_variables)
+                                                       extra_env_variables=None)
+        extra_env_variables = extra_env_variables or {}
 
         GstValidateEncodingTestInterface.__init__(
             self, combination, media_descriptor)

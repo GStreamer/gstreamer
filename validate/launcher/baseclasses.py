@@ -44,6 +44,8 @@ VALGRIND_TIMEOUT_FACTOR = 20
 # The error reported by valgrind when detecting errors
 VALGRIND_ERROR_CODE = 20
 
+VALIDATE_OVERRIDE_EXTENSION = ".override"
+
 
 class Test(Loggable):
 
@@ -51,7 +53,7 @@ class Test(Loggable):
 
     def __init__(self, application_name, classname, options,
                  reporter, duration=0, timeout=DEFAULT_TIMEOUT,
-                 hard_timeout=None, extra_env_variables={}):
+                 hard_timeout=None, extra_env_variables=None):
         """
         @timeout: The timeout during which the value return by get_current_value
                   keeps being exactly equal
@@ -71,6 +73,7 @@ class Test(Loggable):
         self.queue = None
         self.duration = duration
 
+        extra_env_variables = extra_env_variables or {}
         self.extra_env_variables = extra_env_variables
 
         self.clean()
@@ -413,7 +416,9 @@ class GstValidateTest(Test):
     def __init__(self, application_name, classname,
                  options, reporter, duration=0,
                  timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None,
-                 media_descriptor=None, extra_env_variables={}):
+                 media_descriptor=None, extra_env_variables=None):
+
+        extra_env_variables = extra_env_variables or {}
 
         if not hard_timeout and self.HARD_TIMEOUT_FACTOR:
             if timeout:
@@ -433,6 +438,14 @@ class GstValidateTest(Test):
 
         self.media_descriptor = media_descriptor
 
+        override_path = self.get_override_file(media_descriptor)
+        if override_path:
+            if extra_env_variables:
+                if extra_env_variables.get("GST_VALIDATE_OVERRIDE", ""):
+                    extra_env_variables["GST_VALIDATE_OVERRIDE"] += os.path.pathsep
+
+            extra_env_variables["GST_VALIDATE_OVERRIDE"] = override_path
+
         super(GstValidateTest, self).__init__(application_name, classname,
                                               options, reporter,
                                               duration=duration,
@@ -449,6 +462,15 @@ class GstValidateTest(Test):
             self.scenario = None
         else:
             self.scenario = scenario
+
+    def get_override_file(self, media_descriptor):
+        if media_descriptor:
+            if media_descriptor.get_path():
+                override_path = os.path.splitext(media_descriptor.get_path())[0] + VALIDATE_OVERRIDE_EXTENSION
+                if os.path.exists(override_path):
+                    return override_path
+
+        return None
 
     def get_current_value(self):
         if self.scenario:
