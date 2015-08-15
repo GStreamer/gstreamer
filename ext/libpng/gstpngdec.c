@@ -112,6 +112,10 @@ gst_pngdec_init (GstPngDec * pngdec)
 
   pngdec->image_ready = FALSE;
   pngdec->read_data = 0;
+
+  gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
+      (pngdec), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (pngdec));
 }
 
 static void

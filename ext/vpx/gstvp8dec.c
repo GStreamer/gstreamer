@@ -207,6 +207,8 @@ gst_vp8_dec_init (GstVP8Dec * gst_vp8_dec)
   gst_vp8_dec->noise_level = DEFAULT_NOISE_LEVEL;
 
   gst_video_decoder_set_needs_format (decoder, TRUE);
+  gst_video_decoder_set_use_default_pad_acceptcaps (decoder, TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (decoder));
 }
 
 static void
