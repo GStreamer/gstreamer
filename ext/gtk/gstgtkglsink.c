@@ -249,6 +249,9 @@ gst_gtk_gl_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_GL_SYNC_META);
+
     if (!gst_buffer_pool_set_config (pool, config))
       goto config_failed;
 
