@@ -23,6 +23,8 @@
 #ifndef __GST_VERSION_H__
 #define __GST_VERSION_H__
 
+#include <glib.h>
+
 /**
  * SECTION:gstversion
  * @short_description: GStreamer version macros.
