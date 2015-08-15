@@ -71,6 +71,7 @@ struct _GtkGstGLWidgetPrivate
   GLint attr_position;
   GLint attr_texture;
   GLuint current_tex;
+  GstGLOverlayCompositor *overlay_compositor;
 };
 
 static const GLfloat vertices[] = {
@@ -139,6 +140,9 @@ gtk_gst_gl_widget_init_redisplay (GtkGstGLWidget * gst_widget)
   }
 
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+
+  priv->overlay_compositor =
+      gst_gl_overlay_compositor_new (priv->other_context);
 
   priv->initted = TRUE;
 }
@@ -237,6 +241,8 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
       goto done;
     }
 
+    gst_gl_overlay_compositor_upload_overlays (priv->overlay_compositor,
+        buffer);
 
     sync_meta = gst_buffer_get_gl_sync_meta (buffer);
     if (sync_meta) {
@@ -260,6 +266,7 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
       base_widget->buffer, context);
 
   _redraw_texture (GTK_GST_GL_WIDGET (widget), priv->current_tex);
+  gst_gl_overlay_compositor_draw_overlays (priv->overlay_compositor);
 
 done:
   if (priv->other_context)
@@ -349,6 +356,9 @@ _reset_gl (GtkGstGLWidget * gst_widget)
     gst_object_unref (priv->shader);
     priv->shader = NULL;
   }
+
+  if (priv->overlay_compositor)
+    gst_object_unref (priv->overlay_compositor);
 
   gst_gl_context_activate (priv->other_context, FALSE);
 
