@@ -120,18 +120,18 @@ gst_alaw_dec_set_format (GstAudioDecoder * dec, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
   if (!structure) {
-    GST_ERROR ("failed to get structure from caps");
-    goto error_failed_get_structure;
+    GST_ERROR_OBJECT (dec, "failed to get structure from caps");
+    return FALSE;
   }
 
   if (!gst_structure_get_int (structure, "rate", &rate)) {
-    GST_ERROR ("failed to find field rate in input caps");
-    goto error_failed_find_rate;
+    GST_ERROR_OBJECT (dec, "failed to find field rate in input caps");
+    return FALSE;
   }
 
   if (!gst_structure_get_int (structure, "channels", &channels)) {
-    GST_ERROR ("failed to find field channels in input caps");
-    goto error_failed_find_channel;
+    GST_ERROR_OBJECT (dec, "failed to find field channels in input caps");
+    return FALSE;
   }
 
   gst_audio_info_init (&info);
@@ -140,11 +140,6 @@ gst_alaw_dec_set_format (GstAudioDecoder * dec, GstCaps * caps)
   GST_DEBUG_OBJECT (alawdec, "rate=%d, channels=%d", rate, channels);
 
   return gst_audio_decoder_set_output_format (dec, &info);
-
-error_failed_find_channel:
-error_failed_find_rate:
-error_failed_get_structure:
-  return FALSE;
 }
 
 static GstFlowReturn
@@ -162,7 +157,7 @@ gst_alaw_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   }
 
   if (!gst_buffer_map (buffer, &inmap, GST_MAP_READ)) {
-    GST_ERROR ("failed to map input buffer");
+    GST_ERROR_OBJECT (dec, "failed to map input buffer");
     goto error_failed_map_input_buffer;
   }
 
@@ -173,7 +168,7 @@ gst_alaw_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 
   outbuf = gst_audio_decoder_allocate_output_buffer (dec, linear_size);
   if (!gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE)) {
-    GST_ERROR ("failed to map input buffer");
+    GST_ERROR_OBJECT (dec, "failed to map input buffer");
     goto error_failed_map_output_buffer;
   }
 
