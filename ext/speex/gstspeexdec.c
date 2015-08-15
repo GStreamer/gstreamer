@@ -156,6 +156,9 @@ static void
 gst_speex_dec_init (GstSpeexDec * dec)
 {
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (dec), TRUE);
+  gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
+      (dec), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (dec));
 
   dec->enh = DEFAULT_ENH;
 

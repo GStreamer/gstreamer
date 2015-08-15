@@ -224,4 +224,7 @@ static void
 gst_alaw_dec_init (GstALawDec * alawdec)
 {
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (alawdec), TRUE);
+  gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
+      (alawdec), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (alawdec));
 }

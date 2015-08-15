@@ -169,4 +169,7 @@ static void
 gst_mulawdec_init (GstMuLawDec * mulawdec)
 {
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (mulawdec), TRUE);
+  gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
+      (mulawdec), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (mulawdec));
 }
