@@ -197,6 +197,13 @@ _redraw_texture (GtkGstGLWidget * gst_widget, guint tex)
   gl->BindTexture (GL_TEXTURE_2D, 0);
 }
 
+static inline void
+_draw_black (void)
+{
+  glClearColor (0.0, 0.0, 0.0, 0.0);
+  glClear (GL_COLOR_BUFFER_BIT);
+}
+
 static gboolean
 gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
 {
@@ -205,44 +212,56 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
 
   GTK_GST_BASE_WIDGET_LOCK (widget);
 
-  if (!priv->initted && priv->context)
+  if (!priv->context || !priv->other_context)
+    goto done;
+
+  gst_gl_context_activate (priv->other_context, TRUE);
+
+  if (!priv->initted)
     gtk_gst_gl_widget_init_redisplay (GTK_GST_GL_WIDGET (widget));
 
-  if (priv->initted && base_widget->negotiated && base_widget->buffer) {
-    GST_DEBUG ("rendering buffer %p with gdk context %p",
-        base_widget->buffer, context);
-
-    gst_gl_context_activate (priv->other_context, TRUE);
-
-    if (base_widget->new_buffer || priv->current_tex == 0) {
-      GstVideoFrame gl_frame;
-      GstGLSyncMeta *sync_meta;
-
-      if (!gst_video_frame_map (&gl_frame, &base_widget->v_info,
-              base_widget->buffer, GST_MAP_READ | GST_MAP_GL)) {
-        goto error;
-      }
-
-      sync_meta = gst_buffer_get_gl_sync_meta (base_widget->buffer);
-      if (sync_meta) {
-        gst_gl_sync_meta_set_sync_point (sync_meta, priv->context);
-        gst_gl_sync_meta_wait (sync_meta, priv->other_context);
-      }
-
-      priv->current_tex = *(guint *) gl_frame.data[0];
-
-      gst_video_frame_unmap (&gl_frame);
-    }
-
-    _redraw_texture (GTK_GST_GL_WIDGET (widget), priv->current_tex);
-    base_widget->new_buffer = FALSE;
-  } else {
-  error:
-    /* FIXME: nothing to display */
-    glClearColor (0.0, 0.0, 0.0, 0.0);
-    glClear (GL_COLOR_BUFFER_BIT);
+  if (!priv->initted || !base_widget->negotiated) {
+    _draw_black ();
+    goto done;
   }
 
+  /* Upload latest buffer */
+  if (base_widget->pending_buffer) {
+    GstBuffer *buffer = base_widget->pending_buffer;
+    GstVideoFrame gl_frame;
+    GstGLSyncMeta *sync_meta;
+
+    if (!gst_video_frame_map (&gl_frame, &base_widget->v_info, buffer,
+            GST_MAP_READ | GST_MAP_GL)) {
+      _draw_black ();
+      goto done;
+    }
+
+
+    sync_meta = gst_buffer_get_gl_sync_meta (buffer);
+    if (sync_meta) {
+      gst_gl_sync_meta_set_sync_point (sync_meta, priv->context);
+      gst_gl_sync_meta_wait (sync_meta, priv->other_context);
+    }
+
+    priv->current_tex = *(guint *) gl_frame.data[0];
+
+    gst_video_frame_unmap (&gl_frame);
+
+    if (base_widget->buffer)
+      gst_buffer_unref (base_widget->buffer);
+
+    /* Keep the buffer to ensure current_tex stay valid */
+    base_widget->buffer = buffer;
+    base_widget->pending_buffer = NULL;
+  }
+
+  GST_DEBUG ("rendering buffer %p with gdk context %p",
+      base_widget->buffer, context);
+
+  _redraw_texture (GTK_GST_GL_WIDGET (widget), priv->current_tex);
+
+done:
   if (priv->other_context)
     gst_gl_context_activate (priv->other_context, FALSE);
 

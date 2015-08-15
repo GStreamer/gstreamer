@@ -50,6 +50,15 @@ gtk_gst_widget_draw (GtkWidget * widget, cairo_t * cr)
 
   GTK_GST_BASE_WIDGET_LOCK (gst_widget);
 
+  /* There is not much to optimize in term of redisplay, so simply swap the
+   * pending_buffer with the active buffer */
+  if (gst_widget->pending_buffer) {
+    if (gst_widget->buffer)
+      gst_buffer_unref (gst_widget->buffer);
+    gst_widget->buffer = gst_widget->pending_buffer;
+    gst_widget->pending_buffer = NULL;
+  }
+
   /* failed to map the video frame */
   if (gst_widget->negotiated && gst_widget->buffer
       && gst_video_frame_map (&frame, &gst_widget->v_info,

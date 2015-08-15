@@ -53,9 +53,9 @@ struct _GtkGstBaseWidget
   gint display_height;
 
   gboolean negotiated;
+  GstBuffer *pending_buffer;
   GstBuffer *buffer;
   GstVideoInfo v_info;
-  gboolean new_buffer;
 
   /* resize */
   gboolean pending_resize;

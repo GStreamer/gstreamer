@@ -190,7 +190,6 @@ _apply_par (GtkGstBaseWidget * widget)
   GST_DEBUG ("scaling to %dx%d", widget->display_width, widget->display_height);
 }
 
-/* note, buffer is not refrence, it's only passed for pointer comparision */
 static gboolean
 _queue_draw (GtkGstBaseWidget * widget)
 {
@@ -202,7 +201,6 @@ _queue_draw (GtkGstBaseWidget * widget)
 
     widget->v_info = widget->pending_v_info;
     widget->negotiated = TRUE;
-    widget->new_buffer = TRUE;
 
     _apply_par (widget);
 
@@ -434,6 +432,7 @@ gtk_gst_base_widget_finalize (GObject * object)
 {
   GtkGstBaseWidget *widget = GTK_GST_BASE_WIDGET (object);
 
+  gst_buffer_replace (&widget->pending_buffer, NULL);
   gst_buffer_replace (&widget->buffer, NULL);
   g_mutex_clear (&widget->lock);
   g_weak_ref_clear (&widget->element);
@@ -481,8 +480,7 @@ gtk_gst_base_widget_set_buffer (GtkGstBaseWidget * widget, GstBuffer * buffer)
 
   GTK_GST_BASE_WIDGET_LOCK (widget);
 
-  gst_buffer_replace (&widget->buffer, buffer);
-  widget->new_buffer = TRUE;
+  gst_buffer_replace (&widget->pending_buffer, buffer);
 
   if (!widget->draw_id) {
     widget->draw_id = g_idle_add_full (G_PRIORITY_DEFAULT,
