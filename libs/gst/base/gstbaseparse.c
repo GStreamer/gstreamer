@@ -359,6 +359,10 @@ struct _GstBaseParsePrivate
 
   /* When we need to skip more data than we have currently */
   guint skip;
+
+  /* Tag handling (stream tags only, global tags are passed through as-is) */
+  GstTagList *upstream_tags;
+  gboolean tags_changed;
 };
 
 typedef struct _GstBaseParseSeek
@@ -432,7 +436,8 @@ static gboolean gst_base_parse_sink_activate_mode (GstPad * pad,
     GstObject * parent, GstPadMode mode, gboolean active);
 static gboolean gst_base_parse_handle_seek (GstBaseParse * parse,
     GstEvent * event);
-static void gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event);
+static void gst_base_parse_set_upstream_tags (GstBaseParse * parse,
+    GstTagList * taglist);
 
 static void gst_base_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -867,6 +872,8 @@ gst_base_parse_reset (GstBaseParse * parse)
   if (parse->priv->adapter)
     gst_adapter_clear (parse->priv->adapter);
 
+  gst_base_parse_set_upstream_tags (parse, NULL);
+
   parse->priv->new_frame = TRUE;
 
   parse->priv->first_buffer = TRUE;
@@ -1235,15 +1242,28 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       break;
     }
     case GST_EVENT_TAG:
-      /* See if any bitrate tags were posted */
-      gst_base_parse_handle_tag (parse, event);
-      break;
+    {
+      GstTagList *tags = NULL;
 
+      gst_event_parse_tag (event, &tags);
+
+      /* We only care about stream tags here, global tags we just forward */
+      if (gst_tag_list_get_scope (tags) != GST_TAG_SCOPE_STREAM)
+        break;
+
+      gst_base_parse_set_upstream_tags (parse, tags);
+
+      /* FIXME: replace event with event with merged tags */
+      break;
+    }
     case GST_EVENT_STREAM_START:
+    {
       if (parse->priv->pad_mode != GST_PAD_MODE_PULL)
         forward_immediate = TRUE;
-      break;
 
+      gst_base_parse_set_upstream_tags (parse, NULL);
+      break;
+    }
     default:
       break;
   }
@@ -4533,16 +4553,24 @@ convert_failed:
  * override them later
  */
 static void
-gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event)
+gst_base_parse_set_upstream_tags (GstBaseParse * parse, GstTagList * taglist)
 {
-  GstTagList *taglist = NULL;
   guint tmp;
 
-  gst_event_parse_tag (event, &taglist);
-
-  /* We only care about stream tags here */
-  if (gst_tag_list_get_scope (taglist) != GST_TAG_SCOPE_STREAM)
+  if (taglist == parse->priv->upstream_tags)
     return;
+
+  if (parse->priv->upstream_tags) {
+    gst_tag_list_unref (parse->priv->upstream_tags);
+    parse->priv->upstream_tags = NULL;
+  }
+
+  GST_INFO_OBJECT (parse, "upstream tags: %" GST_PTR_FORMAT, taglist);
+
+  if (taglist == NULL)
+    return;
+
+  parse->priv->upstream_tags = gst_tag_list_ref (taglist);
 
   if (gst_tag_list_get_uint (taglist, GST_TAG_MINIMUM_BITRATE, &tmp)) {
     GST_DEBUG_OBJECT (parse, "upstream min bitrate %d", tmp);
