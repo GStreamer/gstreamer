@@ -874,7 +874,7 @@ gst_rtp_h265_pay_send_vps_sps_pps (GstRTPBasePayload * basepayload,
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK) {
       sent_all_vps_sps_pps = FALSE;
-      GST_WARNING ("Problem pushing VPS");
+      GST_WARNING_OBJECT (basepayload, "Problem pushing VPS");
     }
   }
   for (i = 0; i < rtph265pay->sps->len; i++) {
@@ -888,7 +888,7 @@ gst_rtp_h265_pay_send_vps_sps_pps (GstRTPBasePayload * basepayload,
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK) {
       sent_all_vps_sps_pps = FALSE;
-      GST_WARNING ("Problem pushing SPS");
+      GST_WARNING_OBJECT (basepayload, "Problem pushing SPS");
     }
   }
   for (i = 0; i < rtph265pay->pps->len; i++) {
