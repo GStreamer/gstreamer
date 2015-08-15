@@ -479,6 +479,8 @@ static GstFlowReturn gst_video_decoder_parse_available (GstVideoDecoder * dec,
     gboolean at_eos, gboolean new_buffer);
 static gboolean gst_video_decoder_negotiate_unlocked (GstVideoDecoder *
     decoder);
+static gboolean gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
+    GstQuery * query);
 static gboolean gst_video_decoder_src_query_default (GstVideoDecoder * decoder,
     GstQuery * query);
 
@@ -1806,19 +1808,7 @@ gst_video_decoder_sink_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
   return caps;
 }
 
-/**
- * gst_video_decoder_sink_query_default:
- * @decoder: a #GstVideoDecoder
- * @query: (transfer none): a #GstQuery
- *
- * Calls the default query handler for #GstVideoDecoder. It is useful
- * when a subclass only want to handle a particular type of query and
- * wants to use the default handler for others.
- *
- * Returns: a boolean, representing if the query was handled.
- * Since: 1.6
- */
-gboolean
+static gboolean
 gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
     GstQuery * query)
 {
