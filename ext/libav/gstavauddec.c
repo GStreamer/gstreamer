@@ -53,8 +53,6 @@ static gboolean gst_ffmpegauddec_set_format (GstAudioDecoder * decoder,
     GstCaps * caps);
 static GstFlowReturn gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder,
     GstBuffer * inbuf);
-static gboolean gst_ffmpegauddec_sink_query (GstAudioDecoder * decoder,
-    GstQuery * query);
 
 static gboolean gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
     AVCodecContext * context, AVFrame * frame, gboolean force);
@@ -135,8 +133,6 @@ gst_ffmpegauddec_class_init (GstFFMpegAudDecClass * klass)
   gstaudiodecoder_class->flush = GST_DEBUG_FUNCPTR (gst_ffmpegauddec_flush);
   gstaudiodecoder_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_ffmpegauddec_propose_allocation);
-  gstaudiodecoder_class->sink_query =
-      GST_DEBUG_FUNCPTR (gst_ffmpegauddec_sink_query);
 }
 
 static void
@@ -153,6 +149,8 @@ gst_ffmpegauddec_init (GstFFMpegAudDec * ffmpegdec)
   ffmpegdec->frame = av_frame_alloc ();
 
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (ffmpegdec));
+  gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
+      (ffmpegdec), TRUE);
 
   gst_audio_decoder_set_drainable (GST_AUDIO_DECODER (ffmpegdec), TRUE);
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (ffmpegdec), TRUE);
@@ -205,25 +203,6 @@ gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec, gboolean reset)
   }
 
   return TRUE;
-}
-
-static gboolean
-gst_ffmpegauddec_sink_query (GstAudioDecoder * decoder, GstQuery * query)
-{
-  gboolean ret;
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ACCEPT_CAPS:
-      /* resort to the default accept-caps query handling to skip the videodecoder handling */
-      ret =
-          gst_pad_query_default (GST_AUDIO_DECODER_SINK_PAD (decoder),
-          GST_OBJECT_CAST (decoder), query);
-      break;
-    default:
-      ret = gst_audio_decoder_sink_query_default (decoder, query);
-      break;
-  }
-  return ret;
 }
 
 static gboolean
