@@ -283,9 +283,6 @@ struct _GstBaseParsePrivate
   GstClockTime first_frame_dts;
   gint64 first_frame_offset;
 
-  gboolean post_min_bitrate;
-  gboolean post_avg_bitrate;
-  gboolean post_max_bitrate;
   guint min_bitrate;
   guint avg_bitrate;
   guint max_bitrate;
@@ -476,9 +473,6 @@ static gboolean gst_base_parse_src_query_default (GstBaseParse * parse,
 
 static void gst_base_parse_drain (GstBaseParse * parse);
 
-static void gst_base_parse_post_bitrates (GstBaseParse * parse,
-    gboolean post_min, gboolean post_avg, gboolean post_max);
-
 static gint64 gst_base_parse_find_offset (GstBaseParse * parse,
     GstClockTime time, gboolean before, GstClockTime * _ts);
 static GstFlowReturn gst_base_parse_locate_time (GstBaseParse * parse,
@@ -651,6 +645,10 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   GST_DEBUG_OBJECT (parse, "init ok");
 
   GST_OBJECT_FLAG_SET (parse, GST_ELEMENT_FLAG_INDEXABLE);
+
+  parse->priv->upstream_tags = NULL;
+  parse->priv->parser_tags = NULL;
+  parse->priv->parser_tags_merge_mode = GST_TAG_MERGE_APPEND;
 }
 
 static void
@@ -830,9 +828,6 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->pts_interpolate = TRUE;
   parse->priv->infer_ts = TRUE;
   parse->priv->has_timing_info = FALSE;
-  parse->priv->post_min_bitrate = TRUE;
-  parse->priv->post_avg_bitrate = TRUE;
-  parse->priv->post_max_bitrate = TRUE;
   parse->priv->min_bitrate = G_MAXUINT;
   parse->priv->max_bitrate = 0;
   parse->priv->avg_bitrate = 0;
@@ -891,6 +886,61 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->detect_buffers = NULL;
   parse->priv->detect_buffers_size = 0;
   GST_OBJECT_UNLOCK (parse);
+}
+
+/* Queues new tag event with the current combined state of the stream tags
+ * (i.e. upstream tags merged with subclass tags and current baseparse tags) */
+static void
+gst_base_parse_queue_tag_event_update (GstBaseParse * parse)
+{
+  GstTagList *merged_tags;
+  guint n;
+
+  GST_LOG_OBJECT (parse, "upstream : %" GST_PTR_FORMAT,
+      parse->priv->upstream_tags);
+  GST_LOG_OBJECT (parse, "parser   : %" GST_PTR_FORMAT,
+      parse->priv->parser_tags);
+  GST_LOG_OBJECT (parse, "mode     : %d", parse->priv->parser_tags_merge_mode);
+
+  merged_tags =
+      gst_tag_list_merge (parse->priv->upstream_tags, parse->priv->parser_tags,
+      parse->priv->parser_tags_merge_mode);
+
+  GST_DEBUG_OBJECT (parse, "merged   : %" GST_PTR_FORMAT, merged_tags);
+
+  if (merged_tags == NULL)
+    return;
+
+  if (gst_tag_list_is_empty (merged_tags)) {
+    gst_tag_list_unref (merged_tags);
+    return;
+  }
+
+  /* only add bitrate tags to non-empty taglists for now, and only if neither
+   * upstream tags nor the subclass sets the bitrate tag in question already */
+  if (parse->priv->min_bitrate != G_MAXUINT
+      && !gst_tag_list_get_uint (merged_tags, GST_TAG_MINIMUM_BITRATE, &n)) {
+    GST_LOG_OBJECT (parse, "adding min bitrate %u", n);
+    gst_tag_list_add (merged_tags, GST_TAG_MERGE_KEEP, GST_TAG_MINIMUM_BITRATE,
+        parse->priv->min_bitrate, NULL);
+  }
+  if (parse->priv->max_bitrate != 0
+      && !gst_tag_list_get_uint (merged_tags, GST_TAG_MAXIMUM_BITRATE, &n)) {
+    GST_LOG_OBJECT (parse, "adding max bitrate %u", n);
+    gst_tag_list_add (merged_tags, GST_TAG_MERGE_KEEP, GST_TAG_MAXIMUM_BITRATE,
+        parse->priv->max_bitrate, NULL);
+  }
+  if (parse->priv->avg_bitrate != 0
+      && !gst_tag_list_get_uint (merged_tags, GST_TAG_BITRATE, &n)) {
+    parse->priv->posted_avg_bitrate = parse->priv->avg_bitrate;
+    GST_LOG_OBJECT (parse, "adding avg bitrate %u", n);
+    gst_tag_list_add (merged_tags, GST_TAG_MERGE_KEEP, GST_TAG_BITRATE,
+        parse->priv->avg_bitrate, NULL);
+  }
+
+  parse->priv->pending_events =
+      g_list_prepend (parse->priv->pending_events,
+      gst_event_new_tag (merged_tags));
 }
 
 /* gst_base_parse_parse_frame:
@@ -1201,14 +1251,16 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
         GST_ELEMENT_ERROR (parse, STREAM, WRONG_TYPE,
             ("No valid frames found before end of stream"), (NULL));
       }
-      /* newsegment and other serialized events before eos */
-      gst_base_parse_push_pending_events (parse);
 
       if (!parse->priv->saw_gaps
           && parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE) {
         /* We've not posted bitrate tags yet - do so now */
-        gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
+        gst_base_parse_queue_tag_event_update (parse);
       }
+
+      /* newsegment and other serialized events before eos */
+      gst_base_parse_push_pending_events (parse);
+
       forward_immediate = TRUE;
       break;
     case GST_EVENT_CUSTOM_DOWNSTREAM:{
@@ -1260,8 +1312,11 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
         break;
 
       gst_base_parse_set_upstream_tags (parse, tags);
-
-      /* FIXME: replace event with event with merged tags */
+      gst_base_parse_queue_tag_event_update (parse);
+      parse->priv->tags_changed = FALSE;
+      gst_event_unref (event);
+      event = NULL;
+      ret = TRUE;
       break;
     }
     case GST_EVENT_STREAM_START:
@@ -1270,6 +1325,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
         forward_immediate = TRUE;
 
       gst_base_parse_set_upstream_tags (parse, NULL);
+      parse->priv->tags_changed = TRUE;
       break;
     }
     default:
@@ -1598,45 +1654,6 @@ gst_base_parse_update_duration (GstBaseParse * parse)
   }
 }
 
-static void
-gst_base_parse_post_bitrates (GstBaseParse * parse, gboolean post_min,
-    gboolean post_avg, gboolean post_max)
-{
-  GstTagList *taglist = NULL;
-
-  if (post_min && parse->priv->post_min_bitrate) {
-    taglist = gst_tag_list_new_empty ();
-
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_MINIMUM_BITRATE, parse->priv->min_bitrate, NULL);
-  }
-
-  if (post_avg && parse->priv->post_avg_bitrate) {
-    if (taglist == NULL)
-      taglist = gst_tag_list_new_empty ();
-
-    parse->priv->posted_avg_bitrate = parse->priv->avg_bitrate;
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
-        parse->priv->avg_bitrate, NULL);
-  }
-
-  if (post_max && parse->priv->post_max_bitrate) {
-    if (taglist == NULL)
-      taglist = gst_tag_list_new_empty ();
-
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_MAXIMUM_BITRATE, parse->priv->max_bitrate, NULL);
-  }
-
-  GST_DEBUG_OBJECT (parse, "Updated bitrates. Min: %u, Avg: %u, Max: %u",
-      parse->priv->min_bitrate, parse->priv->avg_bitrate,
-      parse->priv->max_bitrate);
-
-  if (taglist != NULL) {
-    gst_pad_push_event (parse->srcpad, gst_event_new_tag (taglist));
-  }
-}
-
 /* gst_base_parse_update_bitrates:
  * @parse: #GstBaseParse.
  * @buffer: Current frame as a #GstBuffer
@@ -1652,7 +1669,6 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   guint64 data_len, frame_dur;
   gint overhead, frame_bitrate, old_avg_bitrate;
-  gboolean update_min = FALSE, update_avg = FALSE, update_max = FALSE;
   GstBuffer *buffer = frame->buffer;
 
   overhead = frame->overhead;
@@ -1680,7 +1696,7 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
     parse->priv->avg_bitrate = parse->priv->bitrate;
     /* spread this (confirmed) info ASAP */
     if (parse->priv->posted_avg_bitrate != parse->priv->avg_bitrate)
-      gst_base_parse_post_bitrates (parse, FALSE, TRUE, FALSE);
+      parse->priv->tags_changed = TRUE;
   }
 
   if (frame_dur)
@@ -1691,36 +1707,29 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
   GST_LOG_OBJECT (parse, "frame bitrate %u, avg bitrate %u", frame_bitrate,
       parse->priv->avg_bitrate);
 
-  if (parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE) {
-    goto exit;
-  } else if (parse->priv->framecount == MIN_FRAMES_TO_POST_BITRATE) {
-    /* always post all at threshold time */
-    update_min = update_max = update_avg = TRUE;
-  }
+  if (parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE)
+    return;
+
+  if (parse->priv->framecount == MIN_FRAMES_TO_POST_BITRATE)
+    parse->priv->tags_changed = TRUE;
 
   if (G_LIKELY (parse->priv->framecount >= MIN_FRAMES_TO_POST_BITRATE)) {
     if (frame_bitrate < parse->priv->min_bitrate) {
       parse->priv->min_bitrate = frame_bitrate;
-      update_min = TRUE;
+      parse->priv->tags_changed = TRUE;
     }
 
     if (frame_bitrate > parse->priv->max_bitrate) {
       parse->priv->max_bitrate = frame_bitrate;
-      update_max = TRUE;
+      parse->priv->tags_changed = TRUE;
     }
 
     old_avg_bitrate = parse->priv->posted_avg_bitrate;
     if ((gint) (old_avg_bitrate - parse->priv->avg_bitrate) > update_threshold
         || (gint) (parse->priv->avg_bitrate - old_avg_bitrate) >
         update_threshold)
-      update_avg = TRUE;
+      parse->priv->tags_changed = TRUE;
   }
-
-  if ((update_min || update_avg || update_max))
-    gst_base_parse_post_bitrates (parse, update_min, update_avg, update_max);
-
-exit:
-  return;
 }
 
 /**
@@ -2254,6 +2263,11 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   if (G_UNLIKELY (!parse->priv->checked_media)) {
     /* have caps; check identity */
     gst_base_parse_check_media (parse);
+  }
+
+  if (parse->priv->tags_changed) {
+    gst_base_parse_queue_tag_event_update (parse);
+    parse->priv->tags_changed = FALSE;
   }
 
   /* Push pending events, including SEGMENT events */
@@ -4557,14 +4571,9 @@ convert_failed:
   }
 }
 
-/* Checks if bitrates are available from upstream tags so that we don't
- * override them later
- */
 static void
 gst_base_parse_set_upstream_tags (GstBaseParse * parse, GstTagList * taglist)
 {
-  guint tmp;
-
   if (taglist == parse->priv->upstream_tags)
     return;
 
@@ -4575,23 +4584,8 @@ gst_base_parse_set_upstream_tags (GstBaseParse * parse, GstTagList * taglist)
 
   GST_INFO_OBJECT (parse, "upstream tags: %" GST_PTR_FORMAT, taglist);
 
-  if (taglist == NULL)
-    return;
-
-  parse->priv->upstream_tags = gst_tag_list_ref (taglist);
-
-  if (gst_tag_list_get_uint (taglist, GST_TAG_MINIMUM_BITRATE, &tmp)) {
-    GST_DEBUG_OBJECT (parse, "upstream min bitrate %d", tmp);
-    parse->priv->post_min_bitrate = FALSE;
-  }
-  if (gst_tag_list_get_uint (taglist, GST_TAG_BITRATE, &tmp)) {
-    GST_DEBUG_OBJECT (parse, "upstream avg bitrate %d", tmp);
-    parse->priv->post_avg_bitrate = FALSE;
-  }
-  if (gst_tag_list_get_uint (taglist, GST_TAG_MAXIMUM_BITRATE, &tmp)) {
-    GST_DEBUG_OBJECT (parse, "upstream max bitrate %d", tmp);
-    parse->priv->post_max_bitrate = FALSE;
-  }
+  if (taglist != NULL)
+    parse->priv->upstream_tags = gst_tag_list_ref (taglist);
 }
 
 #if 0
@@ -4751,7 +4745,8 @@ gst_base_parse_merge_tags (GstBaseParse * parse, GstTagList * tags,
       parse->priv->parser_tags_merge_mode = mode;
     }
 
-    GST_DEBUG_OBJECT (parse, "setting parser tags to %" GST_PTR_FORMAT, tags);
+    GST_DEBUG_OBJECT (parse, "setting parser tags to %" GST_PTR_FORMAT
+        " (mode %d)", tags, parse->priv->parser_tags_merge_mode);
     parse->priv->tags_changed = TRUE;
   }
 
