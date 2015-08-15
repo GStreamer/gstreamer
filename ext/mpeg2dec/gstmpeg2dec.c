@@ -135,6 +135,9 @@ gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
 {
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (mpeg2dec), TRUE);
   gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (mpeg2dec), TRUE);
+  gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
+      (mpeg2dec), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (mpeg2dec));
 
   /* initialize the mpeg2dec acceleration */
 }
