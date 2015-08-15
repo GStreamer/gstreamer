@@ -58,7 +58,7 @@ GST_GL_EXT_FUNCTION (void, DepthRange,
 GST_GL_EXT_FUNCTION (void, DrawBuffer,
                      (GLenum mode))
 GST_GL_EXT_FUNCTION (void, ClearDepth,
-                     (GLclampd depth))
+                     (double depth))
 GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (only_in_big_gl_compat,
