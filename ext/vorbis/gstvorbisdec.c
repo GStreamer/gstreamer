@@ -109,6 +109,9 @@ gst_vorbis_dec_class_init (GstVorbisDecClass * klass)
 static void
 gst_vorbis_dec_init (GstVorbisDec * dec)
 {
+  gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
+      (dec), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (dec));
 }
 
 static void
