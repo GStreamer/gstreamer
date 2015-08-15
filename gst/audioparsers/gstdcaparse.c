@@ -321,7 +321,6 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
   GstDcaParse *dcaparse = GST_DCA_PARSE (parse);
   GstBuffer *buf = frame->buffer;
   GstByteReader r;
-  gboolean parser_draining;
   gboolean parser_in_sync;
   gboolean terminator;
   guint32 sync = 0;
@@ -379,6 +378,12 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
 
   dcaparse->last_sync = sync;
 
+  /* FIXME: Don't look for a second syncword, there are streams out there
+   * that consistently contain garbage between every frame so we never ever
+   * find a second consecutive syncword.
+   * See https://bugzilla.gnome.org/show_bug.cgi?id=738237
+   */
+#if 0
   parser_draining = GST_BASE_PARSE_DRAINING (parse);
 
   if (!parser_in_sync && !parser_draining) {
@@ -409,6 +414,7 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
       goto cleanup;
     }
   }
+#endif
 
   /* found frame */
   ret = GST_FLOW_OK;
