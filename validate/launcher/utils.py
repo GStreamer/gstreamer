@@ -54,7 +54,7 @@ class Protocols(object):
 
     @staticmethod
     def needs_clock_sync(protocol):
-        if protocol == Protocols.HLS:
+        if protocol in [Protocols.HLS, Protocols.DASH]:
             return True
 
         return False
