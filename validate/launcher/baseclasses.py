@@ -413,7 +413,7 @@ class GstValidateTest(Test):
     def __init__(self, application_name, classname,
                  options, reporter, duration=0,
                  timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None,
-                 extra_env_variables={}):
+                 media_descriptor=None, extra_env_variables={}):
 
         if not hard_timeout and self.HARD_TIMEOUT_FACTOR:
             if timeout:
@@ -430,6 +430,8 @@ class GstValidateTest(Test):
         p = look_for_file_in_source_dir('tools', debug)
         if p:
             application_name = p
+
+        self.media_descriptor = media_descriptor
 
         super(GstValidateTest, self).__init__(application_name, classname,
                                               options, reporter,

@@ -386,6 +386,7 @@ class GstValidateLaunchTest(GstValidateTest):
                                                   scenario=scenario,
                                                   timeout=timeout,
                                                   hard_timeout=hard_timeout,
+                                                  media_descriptor=media_descriptor,
                                                   extra_env_variables=extra_env_variables)
 
         self.pipeline_desc = pipeline_desc
@@ -407,9 +408,9 @@ class GstValidateMediaCheckTest(GstValidateTest):
             GstValidateMediaCheckTest, self).__init__(G_V_DISCOVERER_COMMAND, classname,
                                                       options, reporter,
                                                       timeout=timeout,
+                                                      media_descriptor=media_descriptor,
                                                       extra_env_variables=extra_env_variables)
         self._uri = uri
-        self.media_descriptor = media_descriptor
         self._media_info_path = minfo_path
 
     def build_arguments(self):
@@ -450,12 +451,12 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
                                                        duration=duration,
                                                        timeout=timeout,
                                                        scenario=scenario,
+                                                       media_descriptor=media_descriptor,
                                                        extra_env_variables=extra_env_variables)
 
         GstValidateEncodingTestInterface.__init__(
             self, combination, media_descriptor)
 
-        self.media_descriptor = media_descriptor
         self.uri = uri
 
     def set_rendering_info(self):
