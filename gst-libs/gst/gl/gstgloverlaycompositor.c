@@ -584,6 +584,7 @@ gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor)
     }
 
     gl->BindTexture (GL_TEXTURE_2D, 0);
+    gl->Disable (GL_BLEND);
   }
 }
 
