@@ -1431,6 +1431,13 @@ gst_rtp_h265_pay_change_state (GstElement * element, GstStateChange transition)
       rtph265pay->send_vps_sps_pps = FALSE;
       gst_adapter_clear (rtph265pay->adapter);
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       rtph265pay->last_vps_sps_pps = -1;
       gst_rtp_h265_pay_clear_vps_sps_pps (rtph265pay);
@@ -1438,8 +1445,6 @@ gst_rtp_h265_pay_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
 }
