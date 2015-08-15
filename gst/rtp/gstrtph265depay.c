@@ -1311,7 +1311,11 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph265depay), outbuf, buf,
               g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
 
-          gst_adapter_push (rtph265depay->adapter, outbuf);
+          outbuf =
+              gst_rtp_h265_depay_handle_nal (rtph265depay, outbuf, timestamp,
+              marker);
+          if (outbuf)
+            gst_adapter_push (rtph265depay->adapter, outbuf);
 
           payload += nalu_size;
           payload_len -= nalu_size;
