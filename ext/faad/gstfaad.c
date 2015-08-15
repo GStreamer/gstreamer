@@ -175,6 +175,9 @@ gst_faad_class_init (GstFaadClass * klass)
 static void
 gst_faad_init (GstFaad * faad)
 {
+  gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
+      (faad), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (faad));
   gst_faad_reset (faad);
 }
 

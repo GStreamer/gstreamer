@@ -209,6 +209,10 @@ gst_dtsdec_init (GstDtsDec * dtsdec)
   dtsdec->request_channels = DCA_CHANNEL;
   dtsdec->dynamic_range_compression = FALSE;
 
+  gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
+      (dtsdec), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (dtsdec));
+
   /* retrieve and intercept base class chain.
    * Quite HACKish, but that's dvd specs for you,
    * since one buffer needs to be split into 2 frames */

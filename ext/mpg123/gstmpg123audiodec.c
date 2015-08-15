@@ -197,6 +197,9 @@ gst_mpg123_audio_dec_init (GstMpg123AudioDec * mpg123_decoder)
 {
   mpg123_decoder->handle = NULL;
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (mpg123_decoder), TRUE);
+  gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
+      (mpg123_decoder), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (mpg123_decoder));
 }
 
 
