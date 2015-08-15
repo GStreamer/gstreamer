@@ -1143,7 +1143,7 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
         }
       }
       GST_MANIFEST_UNLOCK (demux);
-      GST_DEBUG_OBJECT (demux, "GST_QUERY_DURATION returns %s with duration %"
+      GST_LOG_OBJECT (demux, "GST_QUERY_DURATION returns %s with duration %"
           GST_TIME_FORMAT, ret ? "TRUE" : "FALSE", GST_TIME_ARGS (duration));
       break;
     }
