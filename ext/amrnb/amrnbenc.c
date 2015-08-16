@@ -171,6 +171,7 @@ gst_amrnbenc_class_init (GstAmrnbEncClass * klass)
 static void
 gst_amrnbenc_init (GstAmrnbEnc * amrnbenc)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (amrnbenc));
 }
 
 static gboolean

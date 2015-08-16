@@ -418,6 +418,8 @@ gst_two_lame_init (GstTwoLame * twolame)
 {
   GST_DEBUG_OBJECT (twolame, "starting initialization");
 
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (twolame));
+
   twolame->mode = gst_two_lame_default_settings.mode;
   twolame->psymodel = gst_two_lame_default_settings.psymodel;
   twolame->bitrate = gst_two_lame_default_settings.bitrate;

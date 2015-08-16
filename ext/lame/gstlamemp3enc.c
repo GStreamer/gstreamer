@@ -281,6 +281,7 @@ gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
 static void
 gst_lamemp3enc_init (GstLameMP3Enc * lame)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (lame));
 }
 
 static gboolean
