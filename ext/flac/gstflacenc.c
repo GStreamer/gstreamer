@@ -141,6 +141,8 @@ static GstFlowReturn gst_flac_enc_handle_frame (GstAudioEncoder * enc,
 static GstCaps *gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter);
 static gboolean gst_flac_enc_sink_event (GstAudioEncoder * enc,
     GstEvent * event);
+static gboolean gst_flac_enc_sink_query (GstAudioEncoder * enc,
+    GstQuery * query);
 
 static void gst_flac_enc_finalize (GObject * object);
 
@@ -359,6 +361,7 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_flac_enc_handle_frame);
   base_class->getcaps = GST_DEBUG_FUNCPTR (gst_flac_enc_getcaps);
   base_class->sink_event = GST_DEBUG_FUNCPTR (gst_flac_enc_sink_event);
+  base_class->sink_query = GST_DEBUG_FUNCPTR (gst_flac_enc_sink_query);
 }
 
 static void
@@ -1261,6 +1264,40 @@ gst_flac_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
       break;
     default:
       ret = GST_AUDIO_ENCODER_CLASS (parent_class)->sink_event (enc, event);
+      break;
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_flac_enc_sink_query (GstAudioEncoder * enc, GstQuery * query)
+{
+  GstPad *pad = GST_AUDIO_ENCODER_SINK_PAD (enc);
+  gboolean ret = FALSE;
+
+  GST_DEBUG ("Received %s query on sinkpad, %" GST_PTR_FORMAT,
+      GST_QUERY_TYPE_NAME (query), query);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:{
+      GstCaps *acceptable, *caps;
+
+      if (gst_pad_has_current_caps (pad)) {
+        acceptable = gst_pad_get_current_caps (pad);
+      } else {
+        acceptable = gst_pad_get_pad_template_caps (pad);
+      }
+
+      gst_query_parse_accept_caps (query, &caps);
+
+      gst_query_set_accept_caps_result (query,
+          gst_caps_is_subset (caps, acceptable));
+      gst_caps_unref (acceptable);
+    }
+      break;
+    default:
+      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->sink_query (enc, query);
       break;
   }
 
