@@ -739,19 +739,17 @@ gst_flac_enc_generate_sink_caps (void)
       "rate", GST_TYPE_INT_RANGE, 1, 655350, NULL);
 
   ret = gst_caps_new_empty ();
-  for (i = 1; i <= 8; i++) {
+  s2 = gst_structure_copy (s);
+  gst_structure_set (s2, "channels", G_TYPE_INT, 1, NULL);
+  gst_caps_append_structure (ret, s2);
+  for (i = 2; i <= 8; i++) {
+    guint64 channel_mask;
+
     s2 = gst_structure_copy (s);
-
-    if (i == 1) {
-      gst_structure_set (s2, "channels", G_TYPE_INT, 1, NULL);
-    } else {
-      guint64 channel_mask;
-
-      gst_audio_channel_positions_to_mask (channel_positions[i - 1], i,
-          FALSE, &channel_mask);
-      gst_structure_set (s2, "channels", G_TYPE_INT, i, "channel-mask",
-          GST_TYPE_BITMASK, channel_mask, NULL);
-    }
+    gst_audio_channel_positions_to_mask (channel_positions[i - 1], i,
+        FALSE, &channel_mask);
+    gst_structure_set (s2, "channels", G_TYPE_INT, i, "channel-mask",
+        GST_TYPE_BITMASK, channel_mask, NULL);
 
     gst_caps_append_structure (ret, s2);
   }
