@@ -959,7 +959,7 @@ mpegts_base_get_tags_from_eit (MpegTSBase * base, GstMpegtsSection * section)
 
   /* Early exit if it's not from the present/following table_id */
   if (section->table_id != GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_PRESENT
-      || section->table_id !=
+      && section->table_id !=
       GST_MTS_TABLE_ID_EVENT_INFORMATION_OTHER_TS_PRESENT)
     return TRUE;
 
