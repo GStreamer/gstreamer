@@ -242,6 +242,7 @@ gst_speex_enc_init (GstSpeexEnc * enc)
   /* arrange granulepos marking (and required perfect ts) */
   gst_audio_encoder_set_mark_granule (benc, TRUE);
   gst_audio_encoder_set_perfect_timestamp (benc, TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (enc));
 }
 
 static gboolean

@@ -423,4 +423,5 @@ gst_alaw_enc_class_init (GstALawEncClass * klass)
 static void
 gst_alaw_enc_init (GstALawEnc * alawenc)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (alawenc));
 }

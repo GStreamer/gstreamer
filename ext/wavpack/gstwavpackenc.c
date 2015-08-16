@@ -345,6 +345,8 @@ gst_wavpack_enc_init (GstWavpackEnc * enc)
 
   /* require perfect ts */
   gst_audio_encoder_set_perfect_timestamp (benc, TRUE);
+
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (enc));
 }
 
 
