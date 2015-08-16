@@ -56,8 +56,6 @@ struct _GstFFMpegVidDec
   guint8 *padded;
   guint padded_size;
 
-  gboolean current_dr;          /* if direct rendering is enabled */
-
   /* some properties */
   enum AVDiscard skip_frame;
   gint lowres;
@@ -69,6 +67,9 @@ struct _GstFFMpegVidDec
   gboolean is_realvideo;
 
   GstCaps *last_caps;
+
+  /* Internally used for direct rendering */
+  GstBufferPool *internal_pool;
 };
 
 typedef struct _GstFFMpegVidDecClass GstFFMpegVidDecClass;
