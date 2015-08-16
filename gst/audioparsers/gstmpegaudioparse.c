@@ -1321,15 +1321,43 @@ gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame)
 {
   GstMpegAudioParse *mp3parse = GST_MPEG_AUDIO_PARSE (parse);
-  GstTagList *taglist;
+  GstTagList *taglist = NULL;
+
+  /* we will create a taglist (if any of the parameters has changed)
+   * to add the tags that changed */
+  if (mp3parse->last_posted_crc != mp3parse->last_crc) {
+    gboolean using_crc;
+
+    if (!taglist)
+      taglist = gst_tag_list_new_empty ();
+
+    mp3parse->last_posted_crc = mp3parse->last_crc;
+    if (mp3parse->last_posted_crc == CRC_PROTECTED) {
+      using_crc = TRUE;
+    } else {
+      using_crc = FALSE;
+    }
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_CRC,
+        using_crc, NULL);
+  }
+
+  if (mp3parse->last_posted_channel_mode != mp3parse->last_mode) {
+    if (!taglist)
+      taglist = gst_tag_list_new_empty ();
+
+    mp3parse->last_posted_channel_mode = mp3parse->last_mode;
+
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_MODE,
+        gst_mpeg_audio_channel_mode_get_nick (mp3parse->last_mode), NULL);
+  }
 
   /* tag sending done late enough in hook to ensure pending events
    * have already been sent */
-
-  if (!mp3parse->sent_codec_tag) {
+  if (taglist != NULL || !mp3parse->sent_codec_tag) {
     GstCaps *caps;
 
-    taglist = gst_tag_list_new_empty ();
+    if (taglist == NULL)
+      taglist = gst_tag_list_new_empty ();
 
     /* codec tag */
     caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
@@ -1344,46 +1372,15 @@ gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
       gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_NOMINAL_BITRATE, mp3parse->hdr_bitrate, NULL);
     }
-    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (mp3parse),
-        gst_event_new_tag (taglist));
 
     /* also signals the end of first-frame processing */
     mp3parse->sent_codec_tag = TRUE;
   }
 
-  /* we will create a taglist (if any of the parameters has changed)
-   * to add the tags that changed */
-  taglist = NULL;
-  if (mp3parse->last_posted_crc != mp3parse->last_crc) {
-    gboolean using_crc;
-
-    if (!taglist) {
-      taglist = gst_tag_list_new_empty ();
-    }
-    mp3parse->last_posted_crc = mp3parse->last_crc;
-    if (mp3parse->last_posted_crc == CRC_PROTECTED) {
-      using_crc = TRUE;
-    } else {
-      using_crc = FALSE;
-    }
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_CRC,
-        using_crc, NULL);
-  }
-
-  if (mp3parse->last_posted_channel_mode != mp3parse->last_mode) {
-    if (!taglist) {
-      taglist = gst_tag_list_new_empty ();
-    }
-    mp3parse->last_posted_channel_mode = mp3parse->last_mode;
-
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_MODE,
-        gst_mpeg_audio_channel_mode_get_nick (mp3parse->last_mode), NULL);
-  }
-
-  /* if the taglist exists, we need to send it */
+  /* if the taglist exists, we need to update it so it gets sent out */
   if (taglist) {
-    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (mp3parse),
-        gst_event_new_tag (taglist));
+    gst_base_parse_merge_tags (parse, taglist, GST_TAG_MERGE_REPLACE);
+    gst_tag_list_unref (taglist);
   }
 
   /* usual clipping applies */
