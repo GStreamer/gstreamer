@@ -787,8 +787,6 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             # dash known issues
             ("validate.dash.media_check.*",
              "Caps are different depending on selected bitrates, etc"),
-            ("validate.dash.playback.reverse_playback.*",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=753661"),
 
             # Matroska/WEBM known issues:
             ("validate.*.reverse_playback.*webm$",
