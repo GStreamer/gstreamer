@@ -97,6 +97,7 @@ gst_gsmenc_class_init (GstGSMEncClass * klass)
 static void
 gst_gsmenc_init (GstGSMEnc * gsmenc)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (gsmenc));
 }
 
 static gboolean

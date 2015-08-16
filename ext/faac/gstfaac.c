@@ -243,6 +243,7 @@ gst_faac_class_init (GstFaacClass * klass)
 static void
 gst_faac_init (GstFaac * faac)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (faac));
 }
 
 static void

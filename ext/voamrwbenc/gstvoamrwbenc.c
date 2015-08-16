@@ -190,6 +190,8 @@ gst_voamrwbenc_class_init (GstVoAmrWbEncClass * klass)
 static void
 gst_voamrwbenc_init (GstVoAmrWbEnc * amrwbenc)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (amrwbenc));
+
   /* init rest */
   amrwbenc->handle = NULL;
   amrwbenc->channels = 0;

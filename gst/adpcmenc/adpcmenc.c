@@ -421,6 +421,8 @@ adpcmenc_stop (GstAudioEncoder * enc)
 static void
 adpcmenc_init (ADPCMEnc * enc)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (enc));
+
   /* Set defaults. */
   enc->blocksize = DEFAULT_ADPCM_BLOCK_SIZE;
   enc->layout = DEFAULT_ADPCM_LAYOUT;

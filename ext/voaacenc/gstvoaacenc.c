@@ -177,6 +177,7 @@ gst_voaacenc_class_init (GstVoAacEncClass * klass)
 static void
 gst_voaacenc_init (GstVoAacEnc * voaacenc)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (voaacenc));
   voaacenc->bitrate = VOAAC_ENC_DEFAULT_BITRATE;
   voaacenc->output_format = VOAAC_ENC_DEFAULT_OUTPUTFORMAT;
 

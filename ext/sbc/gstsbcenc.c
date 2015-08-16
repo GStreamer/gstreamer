@@ -362,6 +362,7 @@ gst_sbc_enc_class_init (GstSbcEncClass * klass)
 static void
 gst_sbc_enc_init (GstSbcEnc * self)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (self));
   self->subbands = 0;
   self->blocks = 0;
   self->rate = 0;
