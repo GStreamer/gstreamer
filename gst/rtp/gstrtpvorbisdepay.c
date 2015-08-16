@@ -640,10 +640,6 @@ packet_short:
 ignore_reserved:
   {
     GST_WARNING_OBJECT (rtpvorbisdepay, "reserved VDT ignored");
-    if (payload_buffer) {
-      gst_buffer_unmap (payload_buffer, &map);
-      gst_buffer_unref (payload_buffer);
-    }
     return NULL;
   }
 length_short:
