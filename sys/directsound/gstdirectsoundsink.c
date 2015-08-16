@@ -101,6 +101,10 @@ static gdouble gst_directsound_sink_get_volume (GstDirectSoundSink * sink);
 static void gst_directsound_sink_set_mute (GstDirectSoundSink * sink,
     gboolean mute);
 static gboolean gst_directsound_sink_get_mute (GstDirectSoundSink * sink);
+static const gchar *gst_directsound_sink_get_device (GstDirectSoundSink *
+    dsoundsink);
+static void gst_directsound_sink_set_device (GstDirectSoundSink * dsoundsink,
+    const gchar * device_id);
 
 static gboolean gst_directsound_sink_is_spdif_format (GstAudioRingBufferSpec *
     spec);
@@ -124,7 +128,8 @@ enum
 {
   PROP_0,
   PROP_VOLUME,
-  PROP_MUTE
+  PROP_MUTE,
+  PROP_DEVICE
 };
 
 #define gst_directsound_sink_parent_class parent_class
@@ -136,6 +141,9 @@ static void
 gst_directsound_sink_finalize (GObject * object)
 {
   GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (object);
+
+  g_free (dsoundsink->device_id);
+  dsoundsink->device_id = NULL;
 
   g_mutex_clear (&dsoundsink->dsound_lock);
 
@@ -189,6 +197,12 @@ gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass)
           "Mute state of this stream", DEFAULT_MUTE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class,
+      PROP_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "DirectSound playback device as a GUID string",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Direct Sound Audio Sink", "Sink/Audio",
       "Output to a sound card via Direct Sound",
@@ -203,6 +217,7 @@ gst_directsound_sink_init (GstDirectSoundSink * dsoundsink)
 {
   dsoundsink->volume = 100;
   dsoundsink->mute = FALSE;
+  dsoundsink->device_id = NULL;
   dsoundsink->pDS = NULL;
   dsoundsink->cached_caps = NULL;
   dsoundsink->pDSBSecondary = NULL;
@@ -226,6 +241,9 @@ gst_directsound_sink_set_property (GObject * object,
     case PROP_MUTE:
       gst_directsound_sink_set_mute (sink, g_value_get_boolean (value));
       break;
+    case PROP_DEVICE:
+      gst_directsound_sink_set_device (sink, g_value_get_string (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -244,6 +262,9 @@ gst_directsound_sink_get_property (GObject * object,
       break;
     case PROP_MUTE:
       g_value_set_boolean (value, gst_directsound_sink_get_mute (sink));
+      break;
+    case PROP_DEVICE:
+      g_value_set_string (value, gst_directsound_sink_get_device (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -378,21 +399,50 @@ gst_directsound_sink_query (GstBaseSink * sink, GstQuery * query)
   return res;
 }
 
+static LPGUID
+string_to_guid (const gchar * str)
+{
+  HRESULT ret;
+  gunichar2 *wstr;
+  LPGUID out;
+
+  wstr = g_utf8_to_utf16 (str, -1, NULL, NULL, NULL);
+  if (!wstr)
+    return NULL;
+
+  out = g_new (GUID, 1);
+  ret = CLSIDFromString ((LPOLESTR) wstr, out);
+  g_free (wstr);
+  if (ret != NOERROR) {
+    g_free (out);
+    return NULL;
+  }
+
+  return out;
+}
+
 static gboolean
 gst_directsound_sink_open (GstAudioSink * asink)
 {
   GstDirectSoundSink *dsoundsink;
   HRESULT hRes;
+  LPGUID lpGuid = NULL;
 
   dsoundsink = GST_DIRECTSOUND_SINK (asink);
 
+  if (dsoundsink->device_id)
+    lpGuid = string_to_guid (dsoundsink->device_id);
+
   /* create and initialize a DirecSound object */
-  if (FAILED (hRes = DirectSoundCreate (NULL, &dsoundsink->pDS, NULL))) {
+  if (FAILED (hRes = DirectSoundCreate (lpGuid, &dsoundsink->pDS, NULL))) {
     GST_ELEMENT_ERROR (dsoundsink, RESOURCE, OPEN_READ,
         ("gst_directsound_sink_open: DirectSoundCreate: %s",
             DXGetErrorString9 (hRes)), (NULL));
+    g_free (lpGuid);
     return FALSE;
   }
+
+  g_free (lpGuid);
 
   if (FAILED (hRes = IDirectSound_SetCooperativeLevel (dsoundsink->pDS,
               GetDesktopWindow (), DSSCL_PRIORITY))) {
@@ -873,4 +923,18 @@ static gboolean
 gst_directsound_sink_get_mute (GstDirectSoundSink * dsoundsink)
 {
   return FALSE;
+}
+
+static const gchar *
+gst_directsound_sink_get_device (GstDirectSoundSink * dsoundsink)
+{
+  return dsoundsink->device_id;
+}
+
+static void
+gst_directsound_sink_set_device (GstDirectSoundSink * dsoundsink,
+    const gchar * device_id)
+{
+  g_free (dsoundsink->device_id);
+  dsoundsink->device_id = g_strdup (device_id);
 }

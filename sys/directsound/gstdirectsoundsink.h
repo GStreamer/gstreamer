@@ -74,6 +74,9 @@ struct _GstDirectSoundSink
   /* current volume setup by mixer interface */
   glong volume;
   gboolean mute;
+  
+  /* current directsound device ID */
+  gchar * device_id;
 
   GstCaps *cached_caps;
   /* lock used to protect writes and resets */
