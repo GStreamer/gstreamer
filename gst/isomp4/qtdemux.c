@@ -4882,7 +4882,7 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
     GstStructure *crypto_info;
     QtDemuxCencSampleSetInfo *info =
         (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
-    guint index;
+    gint index;
     GstEvent *event;
 
     while ((event = g_queue_pop_head (&stream->protection_scheme_event_queue))) {
