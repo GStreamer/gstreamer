@@ -419,7 +419,13 @@ struct _GstVideoDecoderPrivate
   gint64 min_latency;
   gint64 max_latency;
 
+  /* upstream stream tags (global tags are passed through as-is) */
+  GstTagList *upstream_tags;
+
+  /* subclass tags */
   GstTagList *tags;
+  GstTagMergeMode tags_merge_mode;
+
   gboolean tags_changed;
 
   /* flags */
@@ -915,6 +921,32 @@ gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
   return ret;
 }
 
+static GstEvent *
+gst_video_decoder_create_merged_tags_event (GstVideoDecoder * dec)
+{
+  GstTagList *merged_tags;
+
+  GST_LOG_OBJECT (dec, "upstream : %" GST_PTR_FORMAT, dec->priv->upstream_tags);
+  GST_LOG_OBJECT (dec, "decoder  : %" GST_PTR_FORMAT, dec->priv->tags);
+  GST_LOG_OBJECT (dec, "mode     : %d", dec->priv->tags_merge_mode);
+
+  merged_tags =
+      gst_tag_list_merge (dec->priv->upstream_tags, dec->priv->tags,
+      dec->priv->tags_merge_mode);
+
+  GST_DEBUG_OBJECT (dec, "merged   : %" GST_PTR_FORMAT, merged_tags);
+
+  if (merged_tags == NULL)
+    return NULL;
+
+  if (gst_tag_list_is_empty (merged_tags)) {
+    gst_tag_list_unref (merged_tags);
+    return NULL;
+  }
+
+  return gst_event_new_tag (merged_tags);
+}
+
 static gboolean
 gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
 {
@@ -1166,11 +1198,12 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
 
       GST_DEBUG_OBJECT (decoder, "received STREAM_START. Clearing taglist");
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-      /* Flush our merged taglist after a STREAM_START */
-      if (priv->tags)
-        gst_tag_list_unref (priv->tags);
-      priv->tags = NULL;
-      priv->tags_changed = FALSE;
+      /* Flush upstream tags after a STREAM_START */
+      if (priv->upstream_tags) {
+        gst_tag_list_unref (priv->upstream_tags);
+        priv->upstream_tags = NULL;
+        priv->tags_changed = TRUE;
+      }
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
       /* Forward STREAM_START immediately. Everything is drained after
@@ -1382,10 +1415,16 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       gst_event_parse_tag (event, &tags);
 
       if (gst_tag_list_get_scope (tags) == GST_TAG_SCOPE_STREAM) {
-        gst_video_decoder_merge_tags (decoder, tags, GST_TAG_MERGE_REPLACE);
+        GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+        if (priv->upstream_tags != tags) {
+          if (priv->upstream_tags)
+            gst_tag_list_unref (priv->upstream_tags);
+          priv->upstream_tags = gst_tag_list_ref (tags);
+          GST_INFO_OBJECT (decoder, "upstream tags: %" GST_PTR_FORMAT, tags);
+        }
         gst_event_unref (event);
-        event = NULL;
-        ret = TRUE;
+        event = gst_video_decoder_create_merged_tags_event (decoder);
+        GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       }
       break;
     }
@@ -2069,6 +2108,11 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
     if (priv->tags)
       gst_tag_list_unref (priv->tags);
     priv->tags = NULL;
+    priv->tags_merge_mode = GST_TAG_MERGE_APPEND;
+    if (priv->upstream_tags) {
+      gst_tag_list_unref (priv->upstream_tags);
+      priv->upstream_tags = NULL;
+    }
     priv->tags_changed = FALSE;
     priv->reordered_output = FALSE;
 
@@ -2982,9 +3026,14 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
   gst_video_decoder_prepare_finish_frame (decoder, frame, FALSE);
   priv->processed++;
 
-  if (priv->tags && priv->tags_changed) {
-    gst_video_decoder_push_event (decoder,
-        gst_event_new_tag (gst_tag_list_ref (priv->tags)));
+  if (priv->tags_changed) {
+    GstEvent *tags_event;
+
+    tags_event = gst_video_decoder_create_merged_tags_event (decoder);
+
+    if (tags_event != NULL)
+      gst_video_decoder_push_event (decoder, tags_event);
+
     priv->tags_changed = FALSE;
   }
 
@@ -4217,11 +4266,13 @@ gst_video_decoder_get_latency (GstVideoDecoder * decoder,
 /**
  * gst_video_decoder_merge_tags:
  * @decoder: a #GstVideoDecoder
- * @tags: a #GstTagList to merge
- * @mode: the #GstTagMergeMode to use
+ * @tags: (allow-none): a #GstTagList to merge, or NULL to unset
+ *     previously-set tags
+ * @mode: the #GstTagMergeMode to use, usually #GST_TAG_MERGE_REPLACE
  *
- * Adds tags to so-called pending tags, which will be processed
- * before pushing out data downstream.
+ * Sets the audio decoder tags and how they should be merged with any
+ * upstream stream tags. This will override any tags previously-set
+ * with gst_audio_decoder_merge_tags().
  *
  * Note that this is provided for convenience, and the subclass is
  * not required to use this and can still do tag handling on its own.
@@ -4232,19 +4283,25 @@ void
 gst_video_decoder_merge_tags (GstVideoDecoder * decoder,
     const GstTagList * tags, GstTagMergeMode mode)
 {
-  GstTagList *otags;
-
   g_return_if_fail (GST_IS_VIDEO_DECODER (decoder));
   g_return_if_fail (tags == NULL || GST_IS_TAG_LIST (tags));
+  g_return_if_fail (tags == NULL || mode != GST_TAG_MERGE_UNDEFINED);
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-  if (tags)
-    GST_DEBUG_OBJECT (decoder, "merging tags %" GST_PTR_FORMAT, tags);
-  otags = decoder->priv->tags;
-  decoder->priv->tags = gst_tag_list_merge (decoder->priv->tags, tags, mode);
-  if (otags)
-    gst_tag_list_unref (otags);
-  decoder->priv->tags_changed = TRUE;
+  if (decoder->priv->tags != tags) {
+    if (decoder->priv->tags) {
+      gst_tag_list_unref (decoder->priv->tags);
+      decoder->priv->tags = NULL;
+      decoder->priv->tags_merge_mode = GST_TAG_MERGE_APPEND;
+    }
+    if (tags) {
+      decoder->priv->tags = gst_tag_list_ref ((GstTagList *) tags);
+      decoder->priv->tags_merge_mode = mode;
+    }
+
+    GST_DEBUG_OBJECT (decoder, "set decoder tags to %" GST_PTR_FORMAT, tags);
+    decoder->priv->tags_changed = TRUE;
+  }
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 }
 
