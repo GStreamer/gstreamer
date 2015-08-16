@@ -2048,7 +2048,7 @@ demuxer_source_pad_probe (GstPad * pad, GstPadProbeInfo * info,
         GList *tmp2;
         GstDecodeGroup *tmpgroup = (GstDecodeGroup *) tmp->data;
         if (tmpgroup != group) {
-          for (tmp2 = tmpgroup->reqpads; tmp; tmp = tmp->next) {
+          for (tmp2 = tmpgroup->reqpads; tmp2; tmp2 = tmp2->next) {
             GstPad *reqpad = (GstPad *) tmp2->data;
             gst_pad_send_event (reqpad, gst_event_ref (event));
           }
