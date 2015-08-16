@@ -306,6 +306,8 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
 static void
 gst_theora_enc_init (GstTheoraEnc * enc)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (enc));
+
   enc->video_bitrate = THEORA_DEF_BITRATE;
   enc->video_quality = THEORA_DEF_QUALITY;
   enc->keyframe_auto = THEORA_DEF_KEYFRAME_AUTO;
