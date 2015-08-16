@@ -179,6 +179,16 @@ struct _GstAudioEncoder {
  *                  tags and meta with only the "audio" tag. subclasses can
  *                  implement this method and return %TRUE if the metadata is to be
  *                  copied. Since 1.6
+ * @sink_query:     Optional.
+ *                  Query handler on the sink pad. This function should
+ *                  return TRUE if the query could be performed. Subclasses
+ *                  should chain up to the parent implementation to invoke the
+ *                  default handler. Since 1.6
+ * @src_query:      Optional.
+ *                  Query handler on the source pad. This function should
+ *                  return TRUE if the query could be performed. Subclasses
+ *                  should chain up to the parent implementation to invoke the
+ *                  default handler. Since 1.6
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @set_format and @handle_frame needs to be overridden.
@@ -226,9 +236,15 @@ struct _GstAudioEncoderClass {
   gboolean      (*transform_meta)     (GstAudioEncoder *enc, GstBuffer *outbuf,
                                        GstMeta *meta, GstBuffer *inbuf);
 
+  gboolean      (*sink_query)         (GstAudioEncoder *encoder,
+				       GstQuery *query);
+
+  gboolean      (*src_query)          (GstAudioEncoder *encoder,
+				       GstQuery *query);
+
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE-1];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-3];
 };
 
 GType           gst_audio_encoder_get_type         (void);

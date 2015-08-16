@@ -347,6 +347,11 @@ static gboolean gst_audio_encoder_negotiate_unlocked (GstAudioEncoder * enc);
 static gboolean gst_audio_encoder_transform_meta_default (GstAudioEncoder *
     encoder, GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 
+static gboolean gst_audio_encoder_sink_query_default (GstAudioEncoder * encoder,
+    GstQuery * query);
+static gboolean gst_audio_encoder_src_query_default (GstAudioEncoder * encoder,
+    GstQuery * query);
+
 static void
 gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
 {
@@ -392,6 +397,8 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
   klass->getcaps = gst_audio_encoder_getcaps_default;
   klass->sink_event = gst_audio_encoder_sink_event_default;
   klass->src_event = gst_audio_encoder_src_event_default;
+  klass->sink_query = gst_audio_encoder_sink_query_default;
+  klass->src_query = gst_audio_encoder_src_query_default;
   klass->propose_allocation = gst_audio_encoder_propose_allocation_default;
   klass->decide_allocation = gst_audio_encoder_decide_allocation_default;
   klass->negotiate = gst_audio_encoder_negotiate_default;
@@ -1630,13 +1637,10 @@ gst_audio_encoder_sink_event (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_audio_encoder_sink_query (GstPad * pad, GstObject * parent,
-    GstQuery * query)
+gst_audio_encoder_sink_query_default (GstAudioEncoder * enc, GstQuery * query)
 {
+  GstPad *pad = GST_AUDIO_ENCODER_SINK_PAD (enc);
   gboolean res = FALSE;
-  GstAudioEncoder *enc;
-
-  enc = GST_AUDIO_ENCODER (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_FORMATS:
@@ -1684,12 +1688,32 @@ gst_audio_encoder_sink_query (GstPad * pad, GstObject * parent,
       break;
     }
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      res = gst_pad_query_default (pad, GST_OBJECT (enc), query);
       break;
   }
 
 error:
   return res;
+}
+
+static gboolean
+gst_audio_encoder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
+{
+  GstAudioEncoder *encoder;
+  GstAudioEncoderClass *encoder_class;
+  gboolean ret = FALSE;
+
+  encoder = GST_AUDIO_ENCODER (parent);
+  encoder_class = GST_AUDIO_ENCODER_GET_CLASS (encoder);
+
+  GST_DEBUG_OBJECT (encoder, "received query %d, %s", GST_QUERY_TYPE (query),
+      GST_QUERY_TYPE_NAME (query));
+
+  if (encoder_class->sink_query)
+    ret = encoder_class->sink_query (encoder, query);
+
+  return ret;
 }
 
 static gboolean
@@ -1841,12 +1865,10 @@ exit:
  * segment stuff etc at all
  * Supposedly that's backward compatibility ... */
 static gboolean
-gst_audio_encoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+gst_audio_encoder_src_query_default (GstAudioEncoder * enc, GstQuery * query)
 {
-  GstAudioEncoder *enc;
+  GstPad *pad = GST_AUDIO_ENCODER_SRC_PAD (enc);
   gboolean res = FALSE;
-
-  enc = GST_AUDIO_ENCODER (parent);
 
   GST_LOG_OBJECT (enc, "handling query: %" GST_PTR_FORMAT, query);
 
@@ -1939,12 +1961,32 @@ gst_audio_encoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      res = gst_pad_query_default (pad, GST_OBJECT (enc), query);
       break;
   }
 
   return res;
 }
+
+static gboolean
+gst_audio_encoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstAudioEncoder *encoder;
+  GstAudioEncoderClass *encoder_class;
+  gboolean ret = FALSE;
+
+  encoder = GST_AUDIO_ENCODER (parent);
+  encoder_class = GST_AUDIO_ENCODER_GET_CLASS (encoder);
+
+  GST_DEBUG_OBJECT (encoder, "received query %d, %s", GST_QUERY_TYPE (query),
+      GST_QUERY_TYPE_NAME (query));
+
+  if (encoder_class->src_query)
+    ret = encoder_class->src_query (encoder, query);
+
+  return ret;
+}
+
 
 static void
 gst_audio_encoder_set_property (GObject * object, guint prop_id,
