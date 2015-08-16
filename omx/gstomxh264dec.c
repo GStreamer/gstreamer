@@ -83,6 +83,31 @@ static gboolean
 gst_omx_h264_dec_is_format_change (GstOMXVideoDec * dec,
     GstOMXPort * port, GstVideoCodecState * state)
 {
+  GstCaps *old_caps = NULL;
+  GstCaps *new_caps = state->caps;
+  GstStructure *old_structure, *new_structure;
+  const gchar *old_profile, *old_level, *new_profile, *new_level;
+
+  if (dec->input_state) {
+    old_caps = dec->input_state->caps;
+  }
+
+  if (!old_caps) {
+    return FALSE;
+  }
+
+  old_structure = gst_caps_get_structure (old_caps, 0);
+  new_structure = gst_caps_get_structure (new_caps, 0);
+  old_profile = gst_structure_get_string (old_structure, "profile");
+  old_level = gst_structure_get_string (old_structure, "level");
+  new_profile = gst_structure_get_string (new_structure, "profile");
+  new_level = gst_structure_get_string (new_structure, "level");
+
+  if (g_strcmp0 (old_profile, new_profile) != 0
+      || g_strcmp0 (old_level, new_level) != 0) {
+    return TRUE;
+  }
+
   return FALSE;
 }
 
