@@ -28,7 +28,7 @@
  * <para>
  * (write everything in one line, without the backslash characters)
  * <programlisting>
- * gst-launch-0.10 videotestsrc num-buffers=250 \
+ * gst-launch-1.0 videotestsrc num-buffers=250 \
  * ! 'video/x-raw,format=(string)I420,width=320,height=240,framerate=(fraction)25/1' \
  * ! y4menc ! filesink location=test.yuv
  * </programlisting>
