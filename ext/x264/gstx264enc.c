@@ -735,6 +735,39 @@ done:
   return fcaps;
 }
 
+static gboolean
+gst_x264_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
+{
+  GstPad *pad = GST_VIDEO_ENCODER_SINK_PAD (enc);
+  gboolean ret = FALSE;
+
+  GST_DEBUG ("Received %s query on sinkpad, %" GST_PTR_FORMAT,
+      GST_QUERY_TYPE_NAME (query), query);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:{
+      GstCaps *acceptable, *caps;
+
+      acceptable = gst_x264_enc_get_supported_input_caps ();
+      if (!acceptable) {
+        acceptable = gst_pad_get_pad_template_caps (pad);
+      }
+
+      gst_query_parse_accept_caps (query, &caps);
+
+      gst_query_set_accept_caps_result (query,
+          gst_caps_is_subset (caps, acceptable));
+      gst_caps_unref (acceptable);
+    }
+      break;
+    default:
+      ret = GST_VIDEO_ENCODER_CLASS (parent_class)->sink_query (enc, query);
+      break;
+  }
+
+  return ret;
+}
+
 static void
 gst_x264_enc_class_init (GstX264EncClass * klass)
 {
@@ -763,6 +796,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   gstencoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_x264_enc_sink_getcaps);
   gstencoder_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_x264_enc_propose_allocation);
+  gstencoder_class->sink_query = GST_DEBUG_FUNCPTR (gst_x264_enc_sink_query);
 
   /* options for which we don't use string equivalents */
   g_object_class_install_property (gobject_class, ARG_PASS,
