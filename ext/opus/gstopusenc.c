@@ -376,6 +376,8 @@ gst_opus_enc_init (GstOpusEnc * enc)
 
   GST_DEBUG_OBJECT (enc, "init");
 
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (enc));
+
   g_mutex_init (&enc->property_lock);
 
   enc->n_channels = -1;
