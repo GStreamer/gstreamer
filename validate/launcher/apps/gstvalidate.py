@@ -784,10 +784,6 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
     def register_default_blacklist(self):
         self.set_default_blacklist([
-            # hls known issues
-            ("validate.hls.playback.reverse_playback.*",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
-
             # dash known issues
             ("validate.dash.media_check.*",
              "Caps are different depending on selected bitrates, etc"),
