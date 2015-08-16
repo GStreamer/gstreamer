@@ -51,6 +51,11 @@ main (int argc, char *argv[])
     g_printerr ("Error parsing options: %s\n", error->message);
     return -1;
   }
+
+  if (argc < 2) {
+    g_print ("%s\n", g_option_context_get_help (optctx, TRUE, NULL));
+    return 1;
+  }
   g_option_context_free (optctx);
 
   loop = g_main_loop_new (NULL, FALSE);
