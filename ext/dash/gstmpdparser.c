@@ -1822,6 +1822,7 @@ gst_mpdparser_parse_utctiming_node (GList ** list, xmlNode * a_node)
     }
     xmlFree (method);
   }
+
   if (gst_mpdparser_get_xml_prop_string (a_node, "value", &value)) {
     int max_tokens = 0;
     if (GST_MPD_UTCTIMING_TYPE_DIRECT == new_timing->method) {
@@ -1833,6 +1834,8 @@ gst_mpdparser_parse_utctiming_node (GList ** list, xmlNode * a_node)
     new_timing->urls = g_strsplit (value, " ", max_tokens);
     xmlFree (value);
     *list = g_list_append (*list, new_timing);
+  } else {
+    gst_mpdparser_free_utctiming_node (new_timing);
   }
 }
 
