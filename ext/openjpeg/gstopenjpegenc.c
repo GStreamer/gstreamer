@@ -203,6 +203,8 @@ gst_openjpeg_enc_class_init (GstOpenJPEGEncClass * klass)
 static void
 gst_openjpeg_enc_init (GstOpenJPEGEnc * self)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (self));
+
   opj_set_default_encoder_parameters (&self->params);
 
   self->params.cp_fixed_quality = 1;

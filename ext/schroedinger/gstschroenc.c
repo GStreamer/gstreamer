@@ -240,6 +240,8 @@ gst_schro_enc_init (GstSchroEnc * schro_enc)
 {
   GST_DEBUG ("gst_schro_enc_init");
 
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (schro_enc));
+
   /* Normally, we'd create the encoder in ->start(), but we use the
    * encoder to store object properties.  So it needs to be created
    * here. */

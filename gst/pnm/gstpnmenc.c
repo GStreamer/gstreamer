@@ -111,6 +111,8 @@ gst_pnmenc_get_property (GObject * object, guint prop_id, GValue * value,
 static void
 gst_pnmenc_init (GstPnmenc * s)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (s));
+
   /* Set default encoding as RAW as ASCII takes up 4 time more bytes */
   s->info.encoding = GST_PNM_ENCODING_RAW;
 }

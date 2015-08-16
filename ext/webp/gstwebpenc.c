@@ -163,6 +163,8 @@ gst_webp_enc_class_init (GstWebpEncClass * klass)
 static void
 gst_webp_enc_init (GstWebpEnc * webpenc)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (webpenc));
+
   webpenc->lossless = DEFAULT_LOSSLESS;
   webpenc->quality = DEFAULT_QUALITY;
   webpenc->speed = DEFAULT_SPEED;
