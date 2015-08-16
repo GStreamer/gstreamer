@@ -56,16 +56,6 @@
 GST_DEBUG_CATEGORY_EXTERN (vorbisenc_debug);
 #define GST_CAT_DEFAULT vorbisenc_debug
 
-static GstStaticPadTemplate vorbis_enc_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " GST_AUDIO_NE (F32) ", "
-        "layout = (string) interleaved, "
-        "rate = (int) [ 1, 200000 ], " "channels = (int) [ 1, 255 ]")
-    );
-
 static GstStaticPadTemplate vorbis_enc_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -86,6 +76,7 @@ enum
 };
 
 static GstFlowReturn gst_vorbis_enc_output_buffers (GstVorbisEnc * vorbisenc);
+static GstCaps *gst_vorbis_enc_generate_sink_caps (void);
 
 
 #define MAX_BITRATE_DEFAULT     -1
@@ -101,8 +92,6 @@ static gboolean gst_vorbis_enc_set_format (GstAudioEncoder * enc,
     GstAudioInfo * info);
 static GstFlowReturn gst_vorbis_enc_handle_frame (GstAudioEncoder * enc,
     GstBuffer * in_buf);
-static GstCaps *gst_vorbis_enc_getcaps (GstAudioEncoder * enc,
-    GstCaps * filter);
 static gboolean gst_vorbis_enc_sink_event (GstAudioEncoder * enc,
     GstEvent * event);
 
@@ -125,6 +114,8 @@ gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstAudioEncoderClass *base_class;
+  GstCaps *sink_caps;
+  GstPadTemplate *sink_templ;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -165,10 +156,14 @@ gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
           "The last status message", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  sink_caps = gst_vorbis_enc_generate_sink_caps ();
+  sink_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, sink_caps);
+  gst_element_class_add_pad_template (gstelement_class, sink_templ);
+  gst_caps_unref (sink_caps);
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&vorbis_enc_src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vorbis_enc_sink_factory));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Vorbis audio encoder", "Codec/Encoder/Audio",
@@ -179,7 +174,6 @@ gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
   base_class->stop = GST_DEBUG_FUNCPTR (gst_vorbis_enc_stop);
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_vorbis_enc_set_format);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vorbis_enc_handle_frame);
-  base_class->getcaps = GST_DEBUG_FUNCPTR (gst_vorbis_enc_getcaps);
   base_class->sink_event = GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_event);
   base_class->flush = GST_DEBUG_FUNCPTR (gst_vorbis_enc_flush);
 }
@@ -285,27 +279,6 @@ gst_vorbis_enc_generate_sink_caps (void)
           "rate", GST_TYPE_INT_RANGE, 1, 200000,
           "channels", GST_TYPE_INT_RANGE, 9, 255,
           "channel-mask", GST_TYPE_BITMASK, G_GUINT64_CONSTANT (0), NULL));
-
-  return caps;
-}
-
-static GstCaps *
-gst_vorbis_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
-{
-  GstVorbisEnc *vorbisenc = GST_VORBISENC (enc);
-  GstCaps *caps;
-
-  if (vorbisenc->sinkcaps == NULL)
-    vorbisenc->sinkcaps = gst_vorbis_enc_generate_sink_caps ();
-
-  if (filter) {
-    GstCaps *int_caps = gst_caps_intersect_full (filter, vorbisenc->sinkcaps,
-        GST_CAPS_INTERSECT_FIRST);
-    caps = gst_audio_encoder_proxy_getcaps (enc, int_caps, filter);
-    gst_caps_unref (int_caps);
-  } else {
-    caps = gst_audio_encoder_proxy_getcaps (enc, vorbisenc->sinkcaps, filter);
-  }
 
   return caps;
 }
