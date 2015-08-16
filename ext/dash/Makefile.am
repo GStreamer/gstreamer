@@ -19,6 +19,7 @@ libgstdashdemux_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
+	$(GIO_CFLAGS) \
 	$(LIBXML2_CFLAGS)
 libgstdashdemux_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-@GST_API_VERSION@.la \
@@ -27,6 +28,7 @@ libgstdashdemux_la_LIBADD = \
 	-lgsttag-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
+	$(GIO_LIBS) \
 	-lgstnet-$(GST_API_VERSION) \
 	$(LIBXML2_LIBS)
 libgstdashdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
