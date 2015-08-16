@@ -61,8 +61,6 @@ static void gst_ffmpegaudenc_base_init (GstFFMpegAudEncClass * klass);
 static void gst_ffmpegaudenc_init (GstFFMpegAudEnc * ffmpegaudenc);
 static void gst_ffmpegaudenc_finalize (GObject * object);
 
-static GstCaps *gst_ffmpegaudenc_getcaps (GstAudioEncoder * encoder,
-    GstCaps * filter);
 static gboolean gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder,
     GstAudioInfo * info);
 static GstFlowReturn gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder,
@@ -162,7 +160,6 @@ gst_ffmpegaudenc_class_init (GstFFMpegAudEncClass * klass)
 
   gstaudioencoder_class->start = GST_DEBUG_FUNCPTR (gst_ffmpegaudenc_start);
   gstaudioencoder_class->stop = GST_DEBUG_FUNCPTR (gst_ffmpegaudenc_stop);
-  gstaudioencoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_ffmpegaudenc_getcaps);
   gstaudioencoder_class->flush = GST_DEBUG_FUNCPTR (gst_ffmpegaudenc_flush);
   gstaudioencoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_ffmpegaudenc_set_format);
@@ -236,21 +233,6 @@ gst_ffmpegaudenc_flush (GstAudioEncoder * encoder)
   if (ffmpegaudenc->opened) {
     avcodec_flush_buffers (ffmpegaudenc->context);
   }
-}
-
-static GstCaps *
-gst_ffmpegaudenc_getcaps (GstAudioEncoder * encoder, GstCaps * filter)
-{
-  GstCaps *caps = NULL;
-
-  GST_DEBUG_OBJECT (encoder, "getting caps");
-
-  /* audio needs no special care */
-  caps = gst_audio_encoder_proxy_getcaps (encoder, NULL, filter);
-
-  GST_DEBUG_OBJECT (encoder, "audio caps, return %" GST_PTR_FORMAT, caps);
-
-  return caps;
 }
 
 static gboolean
