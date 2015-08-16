@@ -183,6 +183,8 @@ gst_vorbis_enc_init (GstVorbisEnc * vorbisenc)
 {
   GstAudioEncoder *enc = GST_AUDIO_ENCODER (vorbisenc);
 
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (enc));
+
   vorbisenc->channels = -1;
   vorbisenc->frequency = -1;
 
