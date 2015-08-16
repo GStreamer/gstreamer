@@ -1187,10 +1187,13 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     period = list->data;
     current_pos = period->start;
     current_period = period->number;
-    GST_DEBUG_OBJECT (demux, "Looking at period %u pos %" GST_TIME_FORMAT,
-        current_period, GST_TIME_ARGS (current_pos));
+    GST_DEBUG_OBJECT (demux, "Looking at period %u) start:%"
+        GST_TIME_FORMAT " - duration:%"
+        GST_TIME_FORMAT ") for position %" GST_TIME_FORMAT,
+        current_period, GST_TIME_ARGS (current_pos),
+        GST_TIME_ARGS (period->duration), GST_TIME_ARGS (target_pos));
     if (current_pos <= target_pos
-        && target_pos < current_pos + period->duration) {
+        && target_pos <= current_pos + period->duration) {
       break;
     }
   }
