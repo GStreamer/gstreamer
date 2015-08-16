@@ -362,6 +362,8 @@ struct _GstBaseParsePrivate
 
   /* Tag handling (stream tags only, global tags are passed through as-is) */
   GstTagList *upstream_tags;
+  GstTagList *parser_tags;
+  GstTagMergeMode parser_tags_merge_mode;
   gboolean tags_changed;
 };
 
@@ -873,6 +875,12 @@ gst_base_parse_reset (GstBaseParse * parse)
     gst_adapter_clear (parse->priv->adapter);
 
   gst_base_parse_set_upstream_tags (parse, NULL);
+
+  if (parse->priv->parser_tags) {
+    gst_tag_list_unref (parse->priv->parser_tags);
+    parse->priv->parser_tags = NULL;
+  }
+  parse->priv->parser_tags_merge_mode = GST_TAG_MERGE_APPEND;
 
   parse->priv->new_frame = TRUE;
 
@@ -4704,4 +4712,48 @@ gst_base_parse_set_ts_at_offset (GstBaseParse * parse, gsize offset)
 
   if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts))
     parse->priv->prev_dts = parse->priv->next_dts = dts;
+}
+
+/**
+ * gst_base_parse_merge_tags:
+ * @parse: a #GstBaseParse
+ * @tags: (allow-none): a #GstTagList to merge, or NULL to unset
+ *     previously-set tags
+ * @mode: the #GstTagMergeMode to use, usually #GST_TAG_MERGE_REPLACE
+ *
+ * Sets the parser subclass's tags and how they should be merged with any
+ * upstream stream tags. This will override any tags previously-set
+ * with gst_base_parse_merge_tags().
+ *
+ * Note that this is provided for convenience, and the subclass is
+ * not required to use this and can still do tag handling on its own.
+ *
+ * Since: 1.6
+ */
+void
+gst_base_parse_merge_tags (GstBaseParse * parse, GstTagList * tags,
+    GstTagMergeMode mode)
+{
+  g_return_if_fail (GST_IS_BASE_PARSE (parse));
+  g_return_if_fail (tags == NULL || GST_IS_TAG_LIST (tags));
+  g_return_if_fail (tags == NULL || mode != GST_TAG_MERGE_UNDEFINED);
+
+  GST_OBJECT_LOCK (parse);
+
+  if (tags != parse->priv->parser_tags) {
+    if (parse->priv->parser_tags) {
+      gst_tag_list_unref (parse->priv->parser_tags);
+      parse->priv->parser_tags = NULL;
+      parse->priv->parser_tags_merge_mode = GST_TAG_MERGE_APPEND;
+    }
+    if (tags) {
+      parse->priv->parser_tags = gst_tag_list_ref (tags);
+      parse->priv->parser_tags_merge_mode = mode;
+    }
+
+    GST_DEBUG_OBJECT (parse, "setting parser tags to %" GST_PTR_FORMAT, tags);
+    parse->priv->tags_changed = TRUE;
+  }
+
+  GST_OBJECT_UNLOCK (parse);
 }

@@ -345,6 +345,10 @@ gboolean        gst_base_parse_add_index_entry (GstBaseParse * parse,
 void            gst_base_parse_set_ts_at_offset (GstBaseParse *parse,
                                                  gsize offset);
 
+void            gst_base_parse_merge_tags       (GstBaseParse  * parse,
+                                                 GstTagList    * tags,
+                                                 GstTagMergeMode mode);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_PARSE_H__ */

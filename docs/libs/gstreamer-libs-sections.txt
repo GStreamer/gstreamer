@@ -199,6 +199,7 @@ gst_adapter_get_type
 GstBaseParse
 GstBaseParseClass
 
+gst_base_parse_merge_tags
 gst_base_parse_set_duration
 gst_base_parse_set_average_bitrate
 gst_base_parse_set_min_frame_size

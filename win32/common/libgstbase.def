@@ -33,6 +33,7 @@ EXPORTS
 	gst_base_parse_frame_init
 	gst_base_parse_frame_new
 	gst_base_parse_get_type
+	gst_base_parse_merge_tags
 	gst_base_parse_push_frame
 	gst_base_parse_set_average_bitrate
 	gst_base_parse_set_duration
