@@ -283,6 +283,8 @@ gst_jpegenc_term_destination (j_compress_ptr cinfo)
 static void
 gst_jpegenc_init (GstJpegEnc * jpegenc)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (jpegenc));
+
   /* setup jpeglib */
   memset (&jpegenc->cinfo, 0, sizeof (jpegenc->cinfo));
   memset (&jpegenc->jerr, 0, sizeof (jpegenc->jerr));

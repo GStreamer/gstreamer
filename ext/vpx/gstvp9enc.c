@@ -698,6 +698,7 @@ gst_vp9_enc_init (GstVP9Enc * gst_vp9_enc)
   vpx_codec_err_t status;
 
   GST_DEBUG_OBJECT (gst_vp9_enc, "init");
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (gst_vp9_enc));
 
   status =
       vpx_codec_enc_config_default (&vpx_codec_vp9_cx_algo, &gst_vp9_enc->cfg,

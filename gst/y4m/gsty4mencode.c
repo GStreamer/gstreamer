@@ -114,6 +114,8 @@ gst_y4m_encode_class_init (GstY4mEncodeClass * klass)
 static void
 gst_y4m_encode_init (GstY4mEncode * filter)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (filter));
+
   /* init properties */
   gst_y4m_encode_reset (filter);
 }
