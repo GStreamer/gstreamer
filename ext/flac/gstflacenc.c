@@ -97,29 +97,10 @@ static const GstAudioChannelPosition channel_positions[8][8] = {
       GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}
 };
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS "{ S24LE, S24_32LE, S16LE, S8 } "
-#else
-#define FORMATS "{ S24BE, S24_32BE, S16BE, S8 } "
-#endif
-
-#define FLAC_SINK_CAPS                                    \
-    "audio/x-raw, "                                       \
-    "format = (string) " FORMATS ", "                     \
-    "layout = (string) interleaved, "                     \
-    "rate = (int) [ 1, 655350 ], "                        \
-    "channels = (int) [ 1, 8 ]"
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-flac")
-    );
-
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (FLAC_SINK_CAPS)
     );
 
 enum
@@ -162,6 +143,8 @@ static gboolean gst_flac_enc_sink_event (GstAudioEncoder * enc,
     GstEvent * event);
 
 static void gst_flac_enc_finalize (GObject * object);
+
+static GstCaps *gst_flac_enc_generate_sink_caps (void);
 
 static gboolean gst_flac_enc_update_quality (GstFlacEnc * flacenc,
     gint quality);
@@ -246,6 +229,8 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstAudioEncoderClass *base_class;
+  GstCaps *sink_caps;
+  GstPadTemplate *sink_templ;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -356,8 +341,12 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+
+  sink_caps = gst_flac_enc_generate_sink_caps ();
+  sink_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, sink_caps);
+  gst_element_class_add_pad_template (gstelement_class, sink_templ);
+  gst_caps_unref (sink_caps);
 
   gst_element_class_set_static_metadata (gstelement_class, "FLAC audio encoder",
       "Codec/Encoder/Audio",
@@ -718,6 +707,57 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, GstAudioInfo * info,
 }
 
 static GstCaps *
+gst_flac_enc_generate_sink_caps (void)
+{
+  GstCaps *ret;
+  gint i;
+  GValue v_list = { 0, };
+  GValue v = { 0, };
+  GstStructure *s, *s2;
+
+  g_value_init (&v_list, GST_TYPE_LIST);
+  g_value_init (&v, G_TYPE_STRING);
+
+  /* Use system's endianness */
+  g_value_set_static_string (&v, "S8");
+  gst_value_list_append_value (&v_list, &v);
+  g_value_set_static_string (&v, GST_AUDIO_NE (S16));
+  gst_value_list_append_value (&v_list, &v);
+  g_value_set_static_string (&v, GST_AUDIO_NE (S24));
+  gst_value_list_append_value (&v_list, &v);
+  g_value_set_static_string (&v, GST_AUDIO_NE (S24_32));
+  gst_value_list_append_value (&v_list, &v);
+  g_value_unset (&v);
+
+  s = gst_structure_new_empty ("audio/x-raw");
+  gst_structure_take_value (s, "format", &v_list);
+
+  gst_structure_set (s, "layout", G_TYPE_STRING, "interleaved",
+      "rate", GST_TYPE_INT_RANGE, 1, 655350, NULL);
+
+  ret = gst_caps_new_empty ();
+  for (i = 1; i <= 8; i++) {
+    s2 = gst_structure_copy (s);
+
+    if (i == 1) {
+      gst_structure_set (s2, "channels", G_TYPE_INT, 1, NULL);
+    } else {
+      guint64 channel_mask;
+
+      gst_audio_channel_positions_to_mask (channel_positions[i - 1], i,
+          FALSE, &channel_mask);
+      gst_structure_set (s2, "channels", G_TYPE_INT, i, "channel-mask",
+          GST_TYPE_BITMASK, channel_mask, NULL);
+    }
+
+    gst_caps_append_structure (ret, s2);
+  }
+  gst_structure_free (s);
+
+  return ret;
+}
+
+static GstCaps *
 gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
 {
   GstCaps *ret = NULL, *caps = NULL;
@@ -728,48 +768,7 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
   if (gst_pad_has_current_caps (pad)) {
     ret = gst_pad_get_current_caps (pad);
   } else {
-    gint i;
-    GValue v_list = { 0, };
-    GValue v = { 0, };
-    GstStructure *s, *s2;
-
-    g_value_init (&v_list, GST_TYPE_LIST);
-    g_value_init (&v, G_TYPE_STRING);
-
-    g_value_set_static_string (&v, "S8");
-    gst_value_list_append_value (&v_list, &v);
-    g_value_set_static_string (&v, GST_AUDIO_NE (S16));
-    gst_value_list_append_value (&v_list, &v);
-    g_value_set_static_string (&v, GST_AUDIO_NE (S24));
-    gst_value_list_append_value (&v_list, &v);
-    g_value_set_static_string (&v, GST_AUDIO_NE (S24_32));
-    gst_value_list_append_value (&v_list, &v);
-    g_value_unset (&v);
-
-    s = gst_structure_new_empty ("audio/x-raw");
-    gst_structure_take_value (s, "format", &v_list);
-
-    gst_structure_set (s, "layout", G_TYPE_STRING, "interleaved",
-        "rate", GST_TYPE_INT_RANGE, 1, 655350, NULL);
-
-    ret = gst_caps_new_empty ();
-    for (i = 1; i <= 8; i++) {
-      s2 = gst_structure_copy (s);
-
-      if (i == 1) {
-        gst_structure_set (s2, "channels", G_TYPE_INT, 1, NULL);
-      } else {
-        guint64 channel_mask;
-
-        gst_audio_channel_positions_to_mask (channel_positions[i - 1], i,
-            FALSE, &channel_mask);
-        gst_structure_set (s2, "channels", G_TYPE_INT, i, "channel-mask",
-            GST_TYPE_BITMASK, channel_mask, NULL);
-      }
-
-      gst_caps_append_structure (ret, s2);
-    }
-    gst_structure_free (s);
+    ret = gst_pad_get_pad_template_caps (pad);
   }
 
   GST_DEBUG_OBJECT (pad, "Return caps %" GST_PTR_FORMAT, ret);
