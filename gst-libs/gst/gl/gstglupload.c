@@ -714,6 +714,8 @@ static struct RawUploadFrame *
 _raw_upload_frame_new (struct RawUpload *raw, GstBuffer * buffer)
 {
   struct RawUploadFrame *frame;
+  GstVideoInfo *info;
+  gint i;
 
   if (!buffer)
     return NULL;
@@ -728,6 +730,14 @@ _raw_upload_frame_new (struct RawUpload *raw, GstBuffer * buffer)
   }
 
   raw->upload->priv->in_info = frame->frame.info;
+  info = &raw->upload->priv->in_info;
+
+  /* Recalculate the offsets (and size) */
+  info->size = 0;
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+    info->offset[i] = info->size;
+    info->size += gst_gl_get_plane_data_size (info, NULL, i);
+  }
 
   return frame;
 }
