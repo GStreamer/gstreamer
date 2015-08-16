@@ -2202,8 +2202,8 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       if (dec->priv->upstream_tags) {
         gst_tag_list_unref (dec->priv->upstream_tags);
         dec->priv->upstream_tags = NULL;
+        dec->priv->taglist_changed = TRUE;
       }
-      dec->priv->taglist_changed = TRUE;
       GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
       ret = gst_audio_decoder_push_event (dec, event);
@@ -2341,6 +2341,7 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
         }
         gst_event_unref (event);
         event = gst_audio_decoder_create_merged_tags_event (dec);
+        dec->priv->taglist_changed = FALSE;
         GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
       }
 
