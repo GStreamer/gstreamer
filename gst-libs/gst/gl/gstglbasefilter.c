@@ -327,6 +327,10 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
 {
   GstGLBaseFilter *filter = GST_GL_BASE_FILTER (trans);
   GError *error = NULL;
+  gboolean new_context = FALSE;
+
+  if (!filter->context)
+    new_context = TRUE;
 
   _find_local_gl_context (filter);
 
@@ -349,14 +353,17 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
     GST_OBJECT_UNLOCK (filter->display);
   }
 
-  if (filter->priv->gl_started)
-    gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_stop,
+  if (new_context) {
+    if (filter->priv->gl_started)
+      gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_stop,
+          filter);
+
+    gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_start,
         filter);
 
-  gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_start,
-      filter);
-  if (!filter->priv->gl_result)
-    goto error;
+    if (!filter->priv->gl_result)
+      goto error;
+  }
 
   return TRUE;
 
