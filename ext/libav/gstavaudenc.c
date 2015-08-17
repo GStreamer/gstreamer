@@ -173,6 +173,8 @@ gst_ffmpegaudenc_init (GstFFMpegAudEnc * ffmpegaudenc)
   GstFFMpegAudEncClass *klass =
       (GstFFMpegAudEncClass *) G_OBJECT_GET_CLASS (ffmpegaudenc);
 
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (ffmpegaudenc));
+
   /* ffmpeg objects */
   ffmpegaudenc->context = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegaudenc->opened = FALSE;
