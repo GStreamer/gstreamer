@@ -289,12 +289,16 @@ gst_handdetect_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PROFILE_FIST:
       g_free (filter->profile_fist);
+      if (filter->cvCascade_fist)
+        cvReleaseHaarClassifierCascade (&filter->cvCascade_fist);
       filter->profile_fist = g_value_dup_string (value);
       filter->cvCascade_fist =
           gst_handdetect_load_profile (filter, filter->profile_fist);
       break;
     case PROP_PROFILE_PALM:
       g_free (filter->profile_palm);
+      if (filter->cvCascade_palm)
+        cvReleaseHaarClassifierCascade (&filter->cvCascade_palm);
       filter->profile_palm = g_value_dup_string (value);
       filter->cvCascade_palm =
           gst_handdetect_load_profile (filter, filter->profile_palm);
