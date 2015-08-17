@@ -113,7 +113,8 @@ static gboolean gst_handdetect_set_caps (GstOpencvVideoFilter * transform,
 static GstFlowReturn gst_handdetect_transform_ip (GstOpencvVideoFilter *
     transform, GstBuffer * buffer, IplImage * img);
 
-static void gst_handdetect_load_profile (GstHanddetect * filter);
+static CvHaarClassifierCascade *gst_handdetect_load_profile (GstHanddetect *
+    filter, gchar * profile);
 
 static void gst_handdetect_navigation_interface_init (GstNavigationInterface *
     iface);
@@ -270,7 +271,10 @@ gst_handdetect_init (GstHanddetect * filter)
   filter->roi_height = 0;
   filter->display = TRUE;
 
-  gst_handdetect_load_profile (filter);
+  filter->cvCascade_fist =
+      gst_handdetect_load_profile (filter, filter->profile_fist);
+  filter->cvCascade_palm =
+      gst_handdetect_load_profile (filter, filter->profile_palm);
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
       TRUE);
@@ -286,12 +290,14 @@ gst_handdetect_set_property (GObject * object, guint prop_id,
     case PROP_PROFILE_FIST:
       g_free (filter->profile_fist);
       filter->profile_fist = g_value_dup_string (value);
-      gst_handdetect_load_profile (filter);
+      filter->cvCascade_fist =
+          gst_handdetect_load_profile (filter, filter->profile_fist);
       break;
     case PROP_PROFILE_PALM:
       g_free (filter->profile_palm);
       filter->profile_palm = g_value_dup_string (value);
-      gst_handdetect_load_profile (filter);
+      filter->cvCascade_palm =
+          gst_handdetect_load_profile (filter, filter->profile_palm);
       break;
     case PROP_DISPLAY:
       filter->display = g_value_get_boolean (value);
@@ -602,26 +608,18 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
   return GST_FLOW_OK;
 }
 
-static void
-gst_handdetect_load_profile (GstHanddetect * filter)
+static CvHaarClassifierCascade *
+gst_handdetect_load_profile (GstHanddetect * filter, gchar * profile)
 {
-  GST_DEBUG_OBJECT (filter, "Loading profiles...\n");
-  filter->cvCascade_fist =
-      (CvHaarClassifierCascade *) cvLoad (filter->profile_fist, 0, 0, 0);
-  filter->cvCascade_palm =
-      (CvHaarClassifierCascade *) cvLoad (filter->profile_palm, 0, 0, 0);
-  if (!filter->cvCascade_fist || !filter->cvCascade_palm)
-    GST_WARNING_OBJECT (filter,
-        "WARNING: Could not load HAAR classifier cascade: %s.\n",
-        filter->profile_fist);
-  else
-    GST_DEBUG_OBJECT (filter, "Loaded profile %s\n", filter->profile_fist);
-  if (!filter->cvCascade_palm)
-    GST_WARNING_OBJECT (filter,
-        "WARNING: Could not load HAAR classifier cascade: %s.\n",
-        filter->profile_palm);
-  else
-    GST_DEBUG_OBJECT (filter, "Loaded profile %s\n", filter->profile_palm);
+  CvHaarClassifierCascade *cascade;
+
+  if (profile == NULL)
+    return NULL;
+  if (!(cascade = (CvHaarClassifierCascade *) cvLoad (profile, 0, 0, 0))) {
+    GST_WARNING_OBJECT (filter, "Couldn't load Haar classifier cascade: %s.",
+        profile);
+  }
+  return cascade;
 }
 
 /* Entry point to initialize the plug-in
