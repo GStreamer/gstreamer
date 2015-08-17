@@ -151,6 +151,9 @@ gst_rtp_gsm_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GST_BUFFER_PTS (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = duration;
 
+  gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpgsmpay), outbuf, buffer,
+      g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+
   /* append payload */
   outbuf = gst_buffer_append (outbuf, buffer);
 

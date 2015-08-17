@@ -38,6 +38,7 @@
 #endif
 
 #include "gstrtpklvpay.h"
+#include "gstrtputils.h"
 
 #include <string.h>
 
@@ -158,6 +159,8 @@ gst_rtp_klv_pay_handle_buffer (GstRTPBasePayload * basepayload, GstBuffer * buf)
     }
 
     GST_LOG_OBJECT (pay, "packet with payload size %u", payload_size);
+
+    gst_rtp_copy_meta (GST_ELEMENT_CAST (pay), outbuf, buf, 0);
 
     payloadbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_MEMORY,
         offset, payload_size);
