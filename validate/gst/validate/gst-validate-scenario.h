@@ -308,6 +308,9 @@ GstValidateExecuteActionReturn
 gst_validate_execute_action                 (GstValidateActionType * action_type,
                                              GstValidateAction * action);
 
+GstState
+gst_validate_scenario_get_target_state     (GstValidateScenario *scenario);
+
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_SCENARIOS__ */

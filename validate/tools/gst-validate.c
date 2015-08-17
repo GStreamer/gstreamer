@@ -34,6 +34,7 @@
 #include <gst/validate/gst-validate-scenario.h>
 #include <gst/validate/gst-validate-utils.h>
 #include <gst/validate/media-descriptor-parser.h>
+#include <gst/validate/gst-validate-bin-monitor.h>
 
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
@@ -65,10 +66,18 @@ intr_handler (gpointer user_data)
 }
 #endif /* G_OS_UNIX */
 
+typedef struct
+{
+  GMainLoop *mainloop;
+  GstValidateMonitor *monitor;
+} BusCallbackData;
+
 static gboolean
 bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
-  GMainLoop *loop = data;
+  BusCallbackData *bus_callback_data = data;
+  GMainLoop *loop = bus_callback_data->mainloop;
+  GstValidateMonitor *monitor = bus_callback_data->monitor;
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
@@ -135,6 +144,15 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_BUFFERING:{
       gint percent;
       GstBufferingMode mode;
+      GstState target_state = GST_STATE_PLAYING;
+      gboolean monitor_handles_state;
+
+      g_object_get (monitor, "handles-states", &monitor_handles_state, NULL);
+      if (monitor_handles_state && GST_IS_VALIDATE_BIN_MONITOR (monitor)) {
+        target_state =
+            gst_validate_scenario_get_target_state (GST_VALIDATE_BIN_MONITOR
+            (monitor)->scenario);
+      }
 
       if (!buffering) {
         g_print ("\n");
@@ -154,8 +172,13 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
         /* a 100% message means buffering is done */
         if (buffering) {
           buffering = FALSE;
-          g_print ("Done buffering, setting pipeline to PLAYING\n");
-          gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+          if (target_state == GST_STATE_PLAYING) {
+            g_print ("Done buffering, setting pipeline to PLAYING\n");
+            gst_element_set_state (pipeline, GST_STATE_PLAYING);
+          } else {
+            g_print ("Done buffering, staying in PAUSED\n");
+          }
         }
       } else {
         /* buffering... */
@@ -411,6 +434,7 @@ main (int argc, gchar ** argv)
       inspect_action_type = FALSE;
   GstStateChangeReturn sret;
   gchar *output_file = NULL;
+  BusCallbackData bus_callback_data = { 0, };
 
 #ifdef G_OS_UNIX
   guint signal_watch_id;
@@ -575,7 +599,10 @@ main (int argc, gchar ** argv)
   mainloop = g_main_loop_new (NULL, FALSE);
   bus = gst_element_get_bus (pipeline);
   gst_bus_add_signal_watch (bus);
-  g_signal_connect (bus, "message", (GCallback) bus_callback, mainloop);
+  bus_callback_data.mainloop = mainloop;
+  bus_callback_data.monitor = monitor;
+  g_signal_connect (bus, "message", (GCallback) bus_callback,
+      &bus_callback_data);
 
   g_print ("Starting pipeline\n");
   g_object_get (monitor, "handles-states", &monitor_handles_state, NULL);

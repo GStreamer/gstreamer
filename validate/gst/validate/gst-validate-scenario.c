@@ -582,6 +582,7 @@ _pause_action_restore_playing (GstValidateScenario * scenario)
       GST_STATE_CHANGE_FAILURE) {
     GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
         "Failed to set state to playing");
+    scenario->priv->target_state = GST_STATE_PLAYING;
   }
 
   return FALSE;
@@ -3200,6 +3201,20 @@ gst_validate_scenario_get_actions (GstValidateScenario * scenario)
   g_main_context_release (g_main_context_default ());
 
   return ret;
+}
+
+/**
+ * gst_validate_scenario_get_target_state:
+ * @scenario: The scenario to retrieve the current target state for
+ *
+ * Get current target state from @scenario.
+ *
+ * Returns: Current target state.
+ */
+GstState
+gst_validate_scenario_get_target_state (GstValidateScenario * scenario)
+{
+  return scenario->priv->target_state;
 }
 
 void
