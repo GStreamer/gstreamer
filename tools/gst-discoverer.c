@@ -555,6 +555,8 @@ main (int argc, char **argv)
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_print ("Error initializing: %s\n", err->message);
+    g_option_context_free (ctx);
+    g_clear_error (&err);
     exit (1);
   }
 
@@ -568,6 +570,7 @@ main (int argc, char **argv)
   dc = gst_discoverer_new (timeout * GST_SECOND, &err);
   if (G_UNLIKELY (dc == NULL)) {
     g_print ("Error initializing: %s\n", err->message);
+    g_clear_error (&err);
     exit (1);
   }
 
