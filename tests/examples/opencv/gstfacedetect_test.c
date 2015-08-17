@@ -30,6 +30,7 @@ GstElement *playbin, *pipeline;
 GstElement *v4l2src, *videoscale, *videoconvert_in, *facedetect,
     *videoconvert_out, *autovideosink;
 static gboolean ctrlvol = FALSE;
+static gboolean silent = FALSE;
 
 static GstBusSyncReply
 bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
@@ -52,23 +53,26 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   /* if facedetect is into buffer */
   if (structure &&
       strcmp (gst_structure_get_name (structure), "facedetect") == 0) {
-    /* print message type and structure name */
-    g_print ("Type message, name message: %s{{%s}}\n",
-        gst_message_type_get_name (message->type),
-        gst_structure_get_name (structure));
-    /* print msg structure names&type */
-    for (i = 0; i < gst_structure_n_fields (structure); i++) {
-      const gchar *name = gst_structure_nth_field_name (structure, i);
-      GType type = gst_structure_get_field_type (structure, name);
-      g_print ("-Name field, type: %s[%s]\n", name, g_type_name (type));
+    if (!silent) {
+      /* print message type and structure name */
+      g_print ("Type message, name message: %s{{%s}}\n",
+          gst_message_type_get_name (message->type),
+          gst_structure_get_name (structure));
+
+      /* print msg structure names and type */
+      for (i = 0; i < gst_structure_n_fields (structure); i++) {
+        const gchar *name = gst_structure_nth_field_name (structure, i);
+        GType type = gst_structure_get_field_type (structure, name);
+        g_print ("-Name field, type: %s[%s]\n", name, g_type_name (type));
+      }
     }
-    g_print ("\n");
 
     /* get structure of faces */
     value = gst_structure_get_value (structure, "faces");
     /* obtain the contents into the structure */
     contents = g_strdup_value_contents (value);
-    g_print ("Detected objects: %s\n", *(&contents));
+    if (!silent)
+      g_print ("Detected objects: %s\n\n", *(&contents));
 
     /* list size */
     size = gst_value_list_get_size (value);
@@ -138,6 +142,8 @@ main (gint argc, gchar ** argv)
   GOptionEntry options[] = {
     {"control-volume", 'c', 0, G_OPTION_ARG_NONE, &ctrlvol,
         "Control the volume by hiding the nose or mouth", NULL},
+    {"silent", 's', 0, G_OPTION_ARG_NONE, &silent,
+        "Don't output the messages and detected faces structure", NULL},
     {NULL}
   };
   GOptionContext *ctx;
