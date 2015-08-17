@@ -39,6 +39,7 @@
 #endif
 
 #include <gst/validate/gst-validate-scenario.h>
+#include <gst/validate/gst-validate-bin-monitor.h>
 
 static gint ret = 0;
 static GMainLoop *mainloop;
@@ -423,10 +424,19 @@ _execute_set_restriction (GstValidateScenario * scenario,
   return TRUE;
 }
 
+typedef struct
+{
+  GMainLoop *mainloop;
+  GstValidateMonitor *monitor;
+} BusCallbackData;
+
 static gboolean
 bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
-  GMainLoop *loop = data;
+  BusCallbackData *bus_callback_data = data;
+  GMainLoop *loop = bus_callback_data->mainloop;
+  GstValidateMonitor *monitor = bus_callback_data->monitor;
+
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_STATE_CHANGED:
     {
@@ -461,6 +471,15 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       break;
     case GST_MESSAGE_BUFFERING:{
       gint percent;
+      GstState target_state = GST_STATE_PLAYING;
+      gboolean monitor_handles_state;
+
+      g_object_get (monitor, "handles-states", &monitor_handles_state, NULL);
+      if (monitor_handles_state && GST_IS_VALIDATE_BIN_MONITOR (monitor)) {
+        target_state =
+            gst_validate_scenario_get_target_state (GST_VALIDATE_BIN_MONITOR
+            (monitor)->scenario);
+      }
 
       if (!buffering) {
         g_print ("\n");
@@ -477,7 +496,13 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
         /* a 100% message means buffering is done */
         if (buffering) {
           buffering = FALSE;
-          gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+          if (target_state == GST_STATE_PLAYING) {
+            g_print ("Done buffering, setting pipeline to PLAYING\n");
+            gst_element_set_state (pipeline, GST_STATE_PLAYING);
+          } else {
+            g_print ("Done buffering, staying in PAUSED\n");
+          }
         }
       } else {
         /* buffering... */
@@ -769,6 +794,7 @@ main (int argc, gchar ** argv)
   int rep_err;
   GstStateChangeReturn sret;
   gchar *output_file = NULL;
+  BusCallbackData bus_callback_data = { 0, };
 
 #ifdef G_OS_UNIX
   guint signal_watch_id;
@@ -917,7 +943,10 @@ main (int argc, gchar ** argv)
 
   bus = gst_element_get_bus (pipeline);
   gst_bus_add_signal_watch (bus);
-  g_signal_connect (bus, "message", (GCallback) bus_callback, mainloop);
+  bus_callback_data.mainloop = mainloop;
+  bus_callback_data.monitor = monitor;
+  g_signal_connect (bus, "message", (GCallback) bus_callback,
+      &bus_callback_data);
 
   g_print ("Starting pipeline\n");
   sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
