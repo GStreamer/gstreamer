@@ -241,6 +241,8 @@ gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc)
   GstFFMpegVidEncClass *klass =
       (GstFFMpegVidEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
 
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (ffmpegenc));
+
   /* ffmpeg objects */
   ffmpegenc->context = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegenc->picture = av_frame_alloc ();
