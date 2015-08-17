@@ -95,7 +95,6 @@ struct _GstHanddetect
   CvHaarClassifierCascade *cvCascade_fist;
   CvHaarClassifierCascade *cvCascade_palm;
   CvMemStorage *cvStorage;
-  CvMemStorage *cvStorage_palm;
   CvRect *prev_r;
   CvRect *best_r;
 };

@@ -162,8 +162,6 @@ gst_handdetect_finalize (GObject * obj)
     cvReleaseImage (&filter->cvGray);
   if (filter->cvStorage)
     cvReleaseMemStorage (&filter->cvStorage);
-  if (filter->cvStorage_palm)
-    cvReleaseMemStorage (&filter->cvStorage_palm);
   g_free (filter->profile_fist);
   g_free (filter->profile_palm);
 
@@ -382,10 +380,6 @@ gst_handdetect_set_caps (GstOpencvVideoFilter * transform,
     filter->cvStorage = cvCreateMemStorage (0);
   else
     cvClearMemStorage (filter->cvStorage);
-  if (!filter->cvStorage_palm)
-    filter->cvStorage_palm = cvCreateMemStorage (0);
-  else
-    cvClearMemStorage (filter->cvStorage_palm);
   return TRUE;
 }
 
