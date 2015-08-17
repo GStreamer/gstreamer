@@ -65,6 +65,9 @@ const gchar spaces[] = {
       "                                "        /* 128 */
 };
 
+#define MAKE_INDENT(indent) \
+  &spaces[MAX (sizeof (spaces) - (1 + (indent) * 2), 0)]
+
 static gchar *
 debug_dump_make_object_name (GstObject * obj)
 {
@@ -165,7 +168,7 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
   GstPadPresence presence;
   gchar *pad_name;
   const gchar *style_name;
-  const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
+  const gchar *spc = MAKE_INDENT (indent);
 
   pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
 
@@ -247,7 +250,7 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
     if ((tmp_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad)))) {
       if ((target_pad = gst_pad_get_peer (tmp_pad))) {
         gchar *pad_name, *target_pad_name;
-        const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
+        const gchar *spc = MAKE_INDENT (indent);
 
         if ((target_element = gst_pad_get_parent_element (target_pad))) {
           target_element_name =
@@ -398,7 +401,7 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
   gchar *media_src = NULL, *media_sink = NULL;
   gchar *pad_name, *element_name;
   gchar *peer_pad_name, *peer_element_name;
-  const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
+  const gchar *spc = MAKE_INDENT (indent);
 
   if ((peer_pad = gst_pad_get_peer (pad))) {
     if ((details & GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE) ||
@@ -478,23 +481,27 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
 static void
 debug_dump_element_pads (GstIterator * pad_iter, GstPad * pad,
     GstElement * element, GstDebugGraphDetails details, GString * str,
-    const gint indent, guint * src_pads, guint * sink_pads)
+    const gint indent, guint * num_pads, gchar * cluster_name,
+    gchar ** first_pad_name)
 {
   GValue item = { 0, };
   gboolean pads_done;
-  GstPadDirection dir;
+  const gchar *spc = MAKE_INDENT (indent);
 
   pads_done = FALSE;
   while (!pads_done) {
     switch (gst_iterator_next (pad_iter, &item)) {
       case GST_ITERATOR_OK:
         pad = g_value_get_object (&item);
+        if (!*num_pads) {
+          g_string_append_printf (str, "%ssubgraph cluster_%s {\n", spc,
+              cluster_name);
+          g_string_append_printf (str, "%s  label=\"\";\n", spc);
+          g_string_append_printf (str, "%s  style=\"invis\";\n", spc);
+          (*first_pad_name) = debug_dump_make_object_name (GST_OBJECT (pad));
+        }
         debug_dump_element_pad (pad, element, details, str, indent);
-        dir = gst_pad_get_direction (pad);
-        if (dir == GST_PAD_SRC)
-          (*src_pads)++;
-        else if (dir == GST_PAD_SINK)
-          (*sink_pads)++;
+        (*num_pads)++;
         g_value_reset (&item);
         break;
       case GST_ITERATOR_RESYNC:
@@ -505,6 +512,9 @@ debug_dump_element_pads (GstIterator * pad_iter, GstPad * pad,
         pads_done = TRUE;
         break;
     }
+  }
+  if (*num_pads) {
+    g_string_append_printf (str, "%s}\n\n", spc);
   }
 }
 
@@ -527,10 +537,11 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details,
   GstElement *element;
   GstPad *pad = NULL;
   guint src_pads, sink_pads;
+  gchar *src_pad_name = NULL, *sink_pad_name = NULL;
   gchar *element_name;
   gchar *state_name = NULL;
   gchar *param_name = NULL;
-  const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
+  const gchar *spc = MAKE_INDENT (indent);
 
   element_iter = gst_bin_iterate_elements (bin);
   elements_done = FALSE;
@@ -553,8 +564,8 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details,
         g_string_append_printf (str, "%s  fontname=\"Bitstream Vera Sans\";\n",
             spc);
         g_string_append_printf (str, "%s  fontsize=\"8\";\n", spc);
-        g_string_append_printf (str, "%s  style=filled;\n", spc);
-        g_string_append_printf (str, "%s  color=black;\n\n", spc);
+        g_string_append_printf (str, "%s  style=\"filled,rounded\";\n", spc);
+        g_string_append_printf (str, "%s  color=black;\n", spc);
         g_string_append_printf (str, "%s  label=\"%s\\n%s%s%s\";\n", spc,
             G_OBJECT_TYPE_NAME (element), GST_OBJECT_NAME (element),
             (state_name ? state_name : ""), (param_name ? param_name : "")
@@ -567,19 +578,32 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details,
           g_free (param_name);
           param_name = NULL;
         }
-        g_free (element_name);
 
         src_pads = sink_pads = 0;
         if ((pad_iter = gst_element_iterate_sink_pads (element))) {
+          gchar *cluster_name = g_strdup_printf ("%s_sink", element_name);
           debug_dump_element_pads (pad_iter, pad, element, details, str,
-              indent, &src_pads, &sink_pads);
+              indent + 1, &sink_pads, cluster_name, &sink_pad_name);
+          g_free (cluster_name);
           gst_iterator_free (pad_iter);
         }
         if ((pad_iter = gst_element_iterate_src_pads (element))) {
+          gchar *cluster_name = g_strdup_printf ("%s_src", element_name);
           debug_dump_element_pads (pad_iter, pad, element, details, str,
-              indent, &src_pads, &sink_pads);
+              indent + 1, &src_pads, cluster_name, &src_pad_name);
+          g_free (cluster_name);
           gst_iterator_free (pad_iter);
         }
+        if (sink_pads && src_pads) {
+          /* add invisible link from first sink to first src pad */
+          g_string_append_printf (str,
+              "%s  %s_%s -> %s_%s [style=\"invis\"];\n",
+              spc, element_name, sink_pad_name, element_name, src_pad_name);
+        }
+        g_free (sink_pad_name);
+        g_free (src_pad_name);
+        g_free (element_name);
+        sink_pad_name = src_pad_name = NULL;
         if (GST_IS_BIN (element)) {
           g_string_append_printf (str, "%s  fillcolor=\"#ffffff\";\n", spc);
           /* recurse */
@@ -671,13 +695,14 @@ debug_dump_header (GstBin * bin, GstDebugGraphDetails details, GString * str)
       "  nodesep=.1;\n"
       "  ranksep=.2;\n"
       "  label=\"<%s>\\n%s%s%s\";\n"
-      "  node [style=filled, shape=box, fontsize=\"9\", fontname=\"sans\", margin=\"0.0,0.0\"];\n"
+      "  node [style=\"filled,rounded\", shape=box, fontsize=\"9\", fontname=\"sans\", margin=\"0.0,0.0\"];\n"
       "  edge [labelfontsize=\"6\", fontsize=\"9\", fontname=\"monospace\"];\n"
       "  \n"
       "  legend [\n"
       "    pos=\"0,0!\",\n"
       "    margin=\"0.05,0.05\",\n"
-      "    label=\"Legend\\lElement-States: [~] void-pending, [0] null, [-] ready, [=] paused, [>] playing\\lPad-Activation: [-] none, [>] push, [<] pull\\lPad-Flags: [b]locked, [f]lushing, [b]locking; upper-case is set\\lPad-Task: [T] has started task, [t] has paused task\\l\"\n,"
+      "    style=\"filled\",\n"
+      "    label=\"Legend\\lElement-States: [~] void-pending, [0] null, [-] ready, [=] paused, [>] playing\\lPad-Activation: [-] none, [>] push, [<] pull\\lPad-Flags: [b]locked, [f]lushing, [b]locking; upper-case is set\\lPad-Task: [T] has started task, [t] has paused task\\l\",\n"
       "  ];"
       "\n", G_OBJECT_TYPE_NAME (bin), GST_OBJECT_NAME (bin),
       (state_name ? state_name : ""), (param_name ? param_name : "")
