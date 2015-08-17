@@ -515,19 +515,21 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
   GstMediaDescriptorWriter *writer = NULL;
   GstMediaDescriptor *media_descriptor;
   const GstTagList *tags;
+  GError *error = NULL;
 
-  discoverer = gst_discoverer_new (GST_SECOND * 60, err);
+  discoverer = gst_discoverer_new (GST_SECOND * 60, &error);
 
   if (discoverer == NULL) {
     GST_ERROR ("Could not create discoverer");
-
+    g_propagate_error (err, error);
     return NULL;
   }
 
-  info = gst_discoverer_discover_uri (discoverer, uri, err);
-  if (info == NULL && err && *err) {
-    GST_ERROR ("Could not discover URI: %s (error: %s)", uri, (*err)->message);
+  info = gst_discoverer_discover_uri (discoverer, uri, &error);
 
+  if (error) {
+    GST_ERROR ("Could not discover URI: %s (error: %s)", uri, error->message);
+    g_propagate_error (err, error);
     goto out;
   } else {
     GstDiscovererResult result = gst_discoverer_info_get_result (info);
