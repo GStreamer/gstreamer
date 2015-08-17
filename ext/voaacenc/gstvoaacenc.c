@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=abc.wav ! wavparse ! audioresample ! audioconvert ! voaacenc ! filesink location=abc.aac
+ * gst-launch-1.0 filesrc location=abc.wav ! wavparse ! audioresample ! audioconvert ! voaacenc ! filesink location=abc.aac
  * ]|
  * </refsect2>
  */
