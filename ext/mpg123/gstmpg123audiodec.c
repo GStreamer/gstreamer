@@ -611,6 +611,8 @@ gst_mpg123_audio_dec_flush (GstAudioDecoder * dec, gboolean hard)
     mpg123_decoder->handle = NULL;
   }
 
+  if (hard)
+    mpg123_decoder->has_next_audioinfo = FALSE;
 
   /* opening/closing feeds do not affect the format defined by the
    * mpg123_format() call that was made in gst_mpg123_audio_dec_set_format(),
