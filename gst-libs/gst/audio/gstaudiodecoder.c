@@ -2343,6 +2343,12 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
         event = gst_audio_decoder_create_merged_tags_event (dec);
         dec->priv->taglist_changed = FALSE;
         GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+
+        /* No tags, go out of here instead of fall through */
+        if (!event) {
+          ret = TRUE;
+          break;
+        }
       }
 
       /* fall through */
