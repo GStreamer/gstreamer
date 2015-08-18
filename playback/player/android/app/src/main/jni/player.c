@@ -37,6 +37,7 @@ typedef struct _Player
 {
   jobject java_player;
   GstPlayer *player;
+  GstPlayerVideoRenderer *renderer;
   ANativeWindow *native_window;
 } Player;
 
@@ -197,7 +198,8 @@ native_new (JNIEnv * env, jobject thiz)
 {
   Player *player = g_new0 (Player, 1);
 
-  player->player = gst_player_new ();
+  player->renderer = gst_player_video_overlay_video_renderer_new (NULL);
+  player->player = gst_player_new_full (player->renderer, NULL);
   SET_CUSTOM_DATA (env, thiz, native_player_field_id, player);
   player->java_player = (*env)->NewGlobalRef (env, thiz);
 
@@ -402,8 +404,9 @@ native_set_surface (JNIEnv * env, jobject thiz, jobject surface)
   }
 
   player->native_window = new_native_window;
-  g_object_set (player->player, "window-handle", (gpointer) new_native_window,
-      NULL);
+  gst_player_video_overlay_video_renderer_set_window_handle
+      (GST_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER (player->renderer),
+      (gpointer) new_native_window);
 }
 
 static void
