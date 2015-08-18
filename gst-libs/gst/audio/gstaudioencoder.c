@@ -1641,6 +1641,12 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
         gst_event_unref (event);
         event = gst_audio_encoder_create_merged_tags_event (enc);
         GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+
+        /* No tags, go out of here instead of fall through */
+        if (!event) {
+          res = TRUE;
+          break;
+        }
       }
       /* fall through */
     }
