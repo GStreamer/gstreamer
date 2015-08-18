@@ -186,6 +186,8 @@ struct _GstDecodeBin
   GList *filtered_errors;       /* filtered error messages */
 
   GList *buffering_status;      /* element currently buffering messages */
+
+  gboolean extra_buffer_required;       /* whether to controll queue size or not */
 };
 
 struct _GstDecodeBinClass
@@ -285,11 +287,10 @@ static void type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin);
 
 static void decodebin_set_queue_size (GstDecodeBin * dbin,
-    GstElement * multiqueue, gboolean preroll, gboolean seekable,
-    gboolean extra_buffer_required);
+    GstElement * multiqueue, gboolean preroll, gboolean seekable);
 static void decodebin_set_queue_size_full (GstDecodeBin * dbin,
     GstElement * multiqueue, gboolean use_buffering, gboolean preroll,
-    gboolean seekable, gboolean extra_buffer_required);
+    gboolean seekable);
 
 static gboolean gst_decode_bin_autoplug_continue (GstElement * element,
     GstPad * pad, GstCaps * caps);
@@ -406,7 +407,6 @@ struct _GstDecodeGroup
 
   gboolean overrun;             /* TRUE if the multiqueue signaled overrun. This
                                  * means that we should really expose the group */
-  gboolean extra_buffer_required;       /* whether we allow some extra buffering to happen because of overrun */
 
   gboolean no_more_pads;        /* TRUE if the demuxer signaled no-more-pads */
   gboolean drained;             /* TRUE if the all children are drained */
@@ -1102,6 +1102,8 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
 
   decode_bin->expose_allstreams = DEFAULT_EXPOSE_ALL_STREAMS;
   decode_bin->connection_speed = DEFAULT_CONNECTION_SPEED;
+
+  decode_bin->extra_buffer_required = FALSE;
 }
 
 static void
@@ -3049,15 +3051,13 @@ no_more_pads_cb (GstElement * element, GstDecodeChain * chain)
   GST_DEBUG_OBJECT (element, "Setting group %p to complete", group);
 
   group->no_more_pads = TRUE;
-  group->extra_buffer_required = FALSE;
-
+  group->dbin->extra_buffer_required = FALSE;
   /* this group has prerolled enough to not need more pads,
    * we can probably set its buffering state to playing now */
   GST_DEBUG_OBJECT (group->dbin, "Setting group %p multiqueue to "
       "'playing' buffering mode", group);
   decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE,
-      (group->parent ? group->parent->seekable : TRUE),
-      group->extra_buffer_required);
+      (group->parent ? group->parent->seekable : TRUE));
   CHAIN_MUTEX_UNLOCK (chain);
 
   EXPOSE_LOCK (chain->dbin);
@@ -3490,17 +3490,16 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
   /* this group has prerolled enough to not need more pads,
    * we can probably set its buffering state to playing now */
   if (!group->no_more_pads && group->parent->demuxer
-      && !group->extra_buffer_required) {
+      && !dbin->extra_buffer_required) {
     group->overrun = FALSE;
-    group->extra_buffer_required = TRUE;
+    dbin->extra_buffer_required = TRUE;
   } else {
     GST_DEBUG_OBJECT (group->dbin, "Setting group %p multiqueue to "
         "'playing' buffering mode", group);
     group->overrun = TRUE;
-    group->extra_buffer_required = FALSE;
+    dbin->extra_buffer_required = FALSE;
     decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE,
-        (group->parent ? group->parent->seekable : TRUE),
-        group->extra_buffer_required);
+        (group->parent ? group->parent->seekable : TRUE));
   }
 
   /* FIXME: We should make sure that everything gets exposed now
@@ -3515,17 +3514,17 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
       if (!gst_decode_bin_expose (dbin))
         GST_WARNING_OBJECT (dbin, "Couldn't expose group");
     } else {
-      group->extra_buffer_required = TRUE;
+      dbin->extra_buffer_required = TRUE;
     }
   }
   EXPOSE_UNLOCK (dbin);
 
-  if (group->extra_buffer_required) {
+  if (dbin->extra_buffer_required) {
     GST_DEBUG_OBJECT (group->dbin,
-        "Setting group %p multiqueue to 'extra_buffer_required' mode", group);
+        "Setting group %p multiqueue to " "'extra_buffer_required' mode",
+        group);
     decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE,
-        (group->parent ? group->parent->seekable : TRUE),
-        group->extra_buffer_required);
+        (group->parent ? group->parent->seekable : TRUE));
   }
 }
 
@@ -3668,7 +3667,7 @@ gst_decode_chain_start_free_hidden_groups_thread (GstDecodeChain * chain)
 
 static void
 decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
-    gboolean preroll, gboolean seekable, gboolean extra_buffer_required)
+    gboolean preroll, gboolean seekable)
 {
   gboolean use_buffering;
 
@@ -3676,22 +3675,21 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
   g_object_get (multiqueue, "use-buffering", &use_buffering, NULL);
 
   decodebin_set_queue_size_full (dbin, multiqueue, use_buffering, preroll,
-      seekable, extra_buffer_required);
+      seekable);
 }
 
 /* configure queue sizes, this depends on the buffering method and if we are
  * playing or prerolling. */
 static void
 decodebin_set_queue_size_full (GstDecodeBin * dbin, GstElement * multiqueue,
-    gboolean use_buffering, gboolean preroll, gboolean seekable,
-    gboolean extra_buffer_required)
+    gboolean use_buffering, gboolean preroll, gboolean seekable)
 {
   guint max_bytes, max_buffers;
   guint64 max_time;
 
   GST_DEBUG_OBJECT (multiqueue,
-      "preroll: %d, use buffering: %d, seekable: %d, extra buffer mode: %d",
-      preroll, use_buffering, seekable, extra_buffer_required);
+      "use buffering %d, add extra buffer size mode %d", use_buffering,
+      dbin->extra_buffer_required);
 
   if (preroll || use_buffering) {
     /* takes queue limits, initially we only queue up up to the max bytes limit,
@@ -3707,7 +3705,7 @@ decodebin_set_queue_size_full (GstDecodeBin * dbin, GstElement * multiqueue,
         max_time = seekable ? AUTO_PREROLL_SEEKABLE_SIZE_TIME :
             AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME;
     }
-  } else if (extra_buffer_required) {
+  } else if (dbin->extra_buffer_required) {
     max_bytes = AUTO_PREROLL_SIZE_BYTES + DEFAULT_EXTRA_SIZE_BUFFERS_BYTES;
     max_buffers = AUTO_PREROLL_SIZE_BUFFERS;
     if ((max_time = dbin->max_size_time) == 0)
@@ -3771,10 +3769,7 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
       gst_object_unref (pad);
     }
   }
-  group->extra_buffer_required = FALSE;
-
-  decodebin_set_queue_size_full (dbin, mq, FALSE, TRUE, seekable,
-      group->extra_buffer_required);
+  decodebin_set_queue_size_full (dbin, mq, FALSE, TRUE, seekable);
 
   group->overrunsig = g_signal_connect (mq, "overrun",
       G_CALLBACK (multi_queue_overrun_cb), group);
@@ -4252,8 +4247,7 @@ gst_decode_group_reset_buffering (GstDecodeGroup * group)
   }
 
   decodebin_set_queue_size_full (group->dbin, group->multiqueue, !ret,
-      FALSE, (group->parent ? group->parent->seekable : TRUE),
-      group->extra_buffer_required);
+      FALSE, (group->parent ? group->parent->seekable : TRUE));
 
   if (ret) {
     /* all chains are buffering already, no need to do it here */
@@ -5207,6 +5201,7 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       g_list_free_full (dbin->buffering_status,
           (GDestroyNotify) gst_message_unref);
       dbin->buffering_status = NULL;
+      dbin->extra_buffer_required = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
     default:
