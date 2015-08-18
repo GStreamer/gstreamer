@@ -758,6 +758,7 @@ gst_x264_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
       gst_query_set_accept_caps_result (query,
           gst_caps_is_subset (caps, acceptable));
       gst_caps_unref (acceptable);
+      ret = TRUE;
     }
       break;
     default:
