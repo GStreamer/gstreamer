@@ -641,7 +641,7 @@ add_to_playlist (GPtrArray * playlist, const gchar * filename)
     while ((entry = g_dir_read_name (dir))) {
       gchar *path;
 
-      path = g_strconcat (filename, G_DIR_SEPARATOR_S, entry, NULL);
+      path = g_build_filename (filename, entry, NULL);
       files = g_list_insert_sorted (files, path, compare);
     }
 
