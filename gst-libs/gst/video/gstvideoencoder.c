@@ -1118,6 +1118,8 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
         gst_event_unref (event);
         event = gst_video_encoder_create_merged_tags_event (encoder);
         GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+        if (!event)
+          ret = TRUE;
       }
       break;
     }
