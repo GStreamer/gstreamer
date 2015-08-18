@@ -655,6 +655,19 @@ smil_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** application/ttml+xml *****************************************************/
+
+static GstStaticCaps ttml_xml_caps = GST_STATIC_CAPS ("application/ttml+xml");
+
+#define TTML_XML_CAPS (gst_static_caps_get(&ttml_xml_caps))
+static void
+ttml_xml_type_find (GstTypeFind * tf, gpointer unused)
+{
+  if (xml_check_first_element (tf, "tt", 2, FALSE)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, TTML_XML_CAPS);
+  }
+}
+
 /*** text/html ***/
 
 static GstStaticCaps html_caps = GST_STATIC_CAPS ("text/html");
@@ -5629,6 +5642,8 @@ plugin_init (GstPlugin * plugin)
       sdp_type_find, "sdp", SDP_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/smil", GST_RANK_SECONDARY,
       smil_type_find, "smil", SMIL_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/ttml+xml", GST_RANK_SECONDARY,
+      ttml_xml_type_find, "ttml+xml", TTML_XML_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/xml", GST_RANK_MARGINAL,
       xml_type_find, "xml", GENERIC_XML_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_RIFF (plugin, "audio/x-wav", GST_RANK_PRIMARY, "wav",
