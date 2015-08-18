@@ -3487,14 +3487,13 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
   GST_LOG_OBJECT (dbin, "multiqueue '%s' (%p) is full", GST_OBJECT_NAME (queue),
       queue);
 
+  /* this group has prerolled enough to not need more pads,
+   * we can probably set its buffering state to playing now */
   if (!group->no_more_pads && group->parent->demuxer
       && !group->extra_buffer_required) {
     group->overrun = FALSE;
     group->extra_buffer_required = TRUE;
   } else {
-    /* this group has prerolled enough to not need more pads,
-     * we can probably set its buffering state to playing now */
-
     GST_DEBUG_OBJECT (group->dbin, "Setting group %p multiqueue to "
         "'playing' buffering mode", group);
     group->overrun = TRUE;
@@ -3513,7 +3512,6 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
   EXPOSE_LOCK (dbin);
   if (dbin->decode_chain) {
     if (gst_decode_chain_is_complete (dbin->decode_chain)) {
-      group->extra_buffer_required = FALSE;
       if (!gst_decode_bin_expose (dbin))
         GST_WARNING_OBJECT (dbin, "Couldn't expose group");
     } else {
@@ -3525,7 +3523,7 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
   if (group->extra_buffer_required) {
     GST_DEBUG_OBJECT (group->dbin,
         "Setting group %p multiqueue to 'extra_buffer_required' mode", group);
-    decodebin_set_queue_size (group->dbin, group->multiqueue, TRUE,
+    decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE,
         (group->parent ? group->parent->seekable : TRUE),
         group->extra_buffer_required);
   }
@@ -3699,8 +3697,7 @@ decodebin_set_queue_size_full (GstDecodeBin * dbin, GstElement * multiqueue,
     /* takes queue limits, initially we only queue up up to the max bytes limit,
      * with a default of 2MB. we use the same values for buffering mode. */
     if (preroll || (max_bytes = dbin->max_size_bytes) == 0)
-      max_bytes = AUTO_PREROLL_SIZE_BYTES + (preroll
-          && extra_buffer_required ? DEFAULT_EXTRA_SIZE_BUFFERS_BYTES : 0);
+      max_bytes = AUTO_PREROLL_SIZE_BYTES;
     if (preroll || (max_buffers = dbin->max_size_buffers) == 0)
       max_buffers = AUTO_PREROLL_SIZE_BUFFERS;
     if (preroll || (max_time = dbin->max_size_time) == 0) {
@@ -3710,13 +3707,15 @@ decodebin_set_queue_size_full (GstDecodeBin * dbin, GstElement * multiqueue,
         max_time = seekable ? AUTO_PREROLL_SEEKABLE_SIZE_TIME :
             AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME;
     }
+  } else if (extra_buffer_required) {
+    max_bytes = AUTO_PREROLL_SIZE_BYTES + DEFAULT_EXTRA_SIZE_BUFFERS_BYTES;
+    max_buffers = AUTO_PREROLL_SIZE_BUFFERS;
+    if ((max_time = dbin->max_size_time) == 0)
+      max_time = seekable ? AUTO_PREROLL_SEEKABLE_SIZE_TIME :
+          AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME;
   } else {
     /* update runtime limits. At runtime, we try to keep the amount of buffers
      * in the queues as low as possible (but at least 5 buffers). */
-
-    /* dbin->use_buffering == TRUE and use_buffering == FALSE (see above if)
-     * happens when we do buffering but it happens already in downstream
-     * groups */
     if (dbin->use_buffering)
       max_bytes = 0;
     else if ((max_bytes = dbin->max_size_bytes) == 0)
