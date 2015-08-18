@@ -82,6 +82,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
+static GstCaps *daala_supported_caps = NULL;
+
 #define gst_daala_enc_parent_class parent_class
 G_DEFINE_TYPE (GstDaalaEnc, gst_daala_enc, GST_TYPE_VIDEO_ENCODER);
 
@@ -107,6 +109,85 @@ static void daala_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void daala_enc_finalize (GObject * object);
 
+static char *
+daala_enc_get_supported_formats (void)
+{
+  daala_enc_ctx *encoder;
+  daala_info info;
+  struct
+  {
+    GstVideoFormat fmt;
+    gint planes;
+    gint xdec[3], ydec[3];
+  } formats[] = {
+    {
+      GST_VIDEO_FORMAT_Y444, 3, {
+      0, 0, 0}, {
+    0, 0, 0}}, {
+      GST_VIDEO_FORMAT_I420, 3, {
+      0, 1, 1}, {
+    0, 1, 1}}
+  };
+  GString *string = NULL;
+  guint i;
+
+  daala_info_init (&info);
+  info.pic_width = 16;
+  info.pic_height = 16;
+  info.timebase_numerator = 25;
+  info.timebase_denominator = 1;
+  info.frame_duration = 1;
+  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
+    gint j;
+
+    info.nplanes = formats[i].planes;
+    for (j = 0; j < formats[i].planes; j++) {
+      info.plane_info[j].xdec = formats[i].xdec[j];
+      info.plane_info[j].ydec = formats[i].ydec[j];
+    }
+
+    encoder = daala_encode_create (&info);
+    if (encoder == NULL)
+      continue;
+
+    GST_LOG ("format %s is supported",
+        gst_video_format_to_string (formats[i].fmt));
+    daala_encode_free (encoder);
+
+    if (string == NULL) {
+      string = g_string_new (gst_video_format_to_string (formats[i].fmt));
+    } else {
+      g_string_append (string, ", ");
+      g_string_append (string, gst_video_format_to_string (formats[i].fmt));
+    }
+  }
+  daala_info_clear (&info);
+
+  return string == NULL ? NULL : g_string_free (string, FALSE);
+}
+
+static void
+initialize_supported_caps (void)
+{
+  char *supported_formats, *caps_string;
+
+  supported_formats = daala_enc_get_supported_formats ();
+  if (!supported_formats) {
+    GST_WARNING ("no supported formats found. Encoder disabled?");
+    daala_supported_caps = gst_caps_new_empty ();
+  }
+
+  caps_string = g_strdup_printf ("video/x-raw, "
+      "format = (string) { %s }, "
+      "framerate = (fraction) [1/MAX, MAX], "
+      "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]",
+      supported_formats);
+  daala_supported_caps = gst_caps_from_string (caps_string);
+  g_free (caps_string);
+  g_free (supported_formats);
+  GST_DEBUG ("Supported caps: %" GST_PTR_FORMAT, daala_supported_caps);
+}
+
 static void
 gst_daala_enc_class_init (GstDaalaEncClass * klass)
 {
@@ -114,6 +195,8 @@ gst_daala_enc_class_init (GstDaalaEncClass * klass)
   GstElementClass *element_class = (GstElementClass *) klass;
   GstVideoEncoderClass *gstvideo_encoder_class =
       GST_VIDEO_ENCODER_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (daalaenc_debug, "daalaenc", 0, "Daala encoder");
 
   gobject_class->set_property = daala_enc_set_property;
   gobject_class->get_property = daala_enc_get_property;
@@ -147,11 +230,12 @@ gst_daala_enc_class_init (GstDaalaEncClass * klass)
   gstvideo_encoder_class->pre_push = GST_DEBUG_FUNCPTR (daala_enc_pre_push);
   gstvideo_encoder_class->finish = GST_DEBUG_FUNCPTR (daala_enc_finish);
   gstvideo_encoder_class->getcaps = GST_DEBUG_FUNCPTR (daala_enc_getcaps);
-  gstvideo_encoder_class->sink_query = GST_DEBUG_FUNCPTR (daala_enc_sink_query);
+  gstvideo_encoder_class->sink_query =
+      GST_DEBUG_FUNCPTR (gst_daala_enc_sink_query);
   gstvideo_encoder_class->propose_allocation =
       GST_DEBUG_FUNCPTR (daala_enc_propose_allocation);
 
-  GST_DEBUG_CATEGORY_INIT (daalaenc_debug, "daalaenc", 0, "Daala encoder");
+  initialize_supported_caps ();
 }
 
 static void
@@ -238,63 +322,6 @@ daala_enc_stop (GstVideoEncoder * benc)
   return TRUE;
 }
 
-static char *
-daala_enc_get_supported_formats (void)
-{
-  daala_enc_ctx *encoder;
-  daala_info info;
-  struct
-  {
-    GstVideoFormat fmt;
-    gint planes;
-    gint xdec[3], ydec[3];
-  } formats[] = {
-    {
-      GST_VIDEO_FORMAT_Y444, 3, {
-      0, 0, 0}, {
-    0, 0, 0}}, {
-      GST_VIDEO_FORMAT_I420, 3, {
-      0, 1, 1}, {
-    0, 1, 1}}
-  };
-  GString *string = NULL;
-  guint i;
-
-  daala_info_init (&info);
-  info.pic_width = 16;
-  info.pic_height = 16;
-  info.timebase_numerator = 25;
-  info.timebase_denominator = 1;
-  info.frame_duration = 1;
-  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
-    gint j;
-
-    info.nplanes = formats[i].planes;
-    for (j = 0; j < formats[i].planes; j++) {
-      info.plane_info[j].xdec = formats[i].xdec[j];
-      info.plane_info[j].ydec = formats[i].ydec[j];
-    }
-
-    encoder = daala_encode_create (&info);
-    if (encoder == NULL)
-      continue;
-
-    GST_LOG ("format %s is supported",
-        gst_video_format_to_string (formats[i].fmt));
-    daala_encode_free (encoder);
-
-    if (string == NULL) {
-      string = g_string_new (gst_video_format_to_string (formats[i].fmt));
-    } else {
-      g_string_append (string, ", ");
-      g_string_append (string, gst_video_format_to_string (formats[i].fmt));
-    }
-  }
-  daala_info_clear (&info);
-
-  return string == NULL ? NULL : g_string_free (string, FALSE);
-}
-
 static gboolean
 gst_daala_enc_sink_query (GstVideoEncoder * encoder, GstQuery * query)
 {
@@ -302,14 +329,12 @@ gst_daala_enc_sink_query (GstVideoEncoder * encoder, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ACCEPT_CAPS:{
-      GstCaps *acceptable, *caps;
+      GstCaps *caps;
 
-      acceptable = daala_enc_get_supported_formats ();
       gst_query_parse_accept_caps (query, &caps);
 
       gst_query_set_accept_caps_result (query,
-          gst_caps_is_subset (caps, acceptable));
-      gst_caps_unref (acceptable);
+          gst_caps_is_subset (caps, daala_supported_caps));
       res = TRUE;
     }
       break;
@@ -324,29 +349,8 @@ gst_daala_enc_sink_query (GstVideoEncoder * encoder, GstQuery * query)
 static GstCaps *
 daala_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 {
-  GstCaps *caps, *ret;
-  char *supported_formats, *caps_string;
-
-  supported_formats = daala_enc_get_supported_formats ();
-  if (!supported_formats) {
-    GST_WARNING ("no supported formats found. Encoder disabled?");
-    return gst_caps_new_empty ();
-  }
-
-  caps_string = g_strdup_printf ("video/x-raw, "
-      "format = (string) { %s }, "
-      "framerate = (fraction) [1/MAX, MAX], "
-      "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]",
-      supported_formats);
-  caps = gst_caps_from_string (caps_string);
-  g_free (caps_string);
-  g_free (supported_formats);
-  GST_DEBUG ("Supported caps: %" GST_PTR_FORMAT, caps);
-
-  ret = gst_video_encoder_proxy_getcaps (encoder, caps, filter);
-  gst_caps_unref (caps);
-
-  return ret;
+  return gst_video_encoder_proxy_getcaps (encoder, daala_supported_caps,
+      filter);
 }
 
 static gboolean
