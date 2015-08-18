@@ -381,9 +381,16 @@ print_properties (GstDiscovererInfo * info, gint tab)
 static void
 print_info (GstDiscovererInfo * info, GError * err)
 {
-  GstDiscovererResult result = gst_discoverer_info_get_result (info);
+  GstDiscovererResult result;
   GstDiscovererStreamInfo *sinfo;
 
+  if (!info) {
+    g_print ("Could not discover URI\n");
+    g_print (" %s\n", err->message);
+    return;
+  }
+
+  result = gst_discoverer_info_get_result (info);
   g_print ("Done discovering %s\n", gst_discoverer_info_get_uri (info));
   switch (result) {
     case GST_DISCOVERER_OK:
