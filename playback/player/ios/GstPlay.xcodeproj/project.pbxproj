@@ -24,6 +24,7 @@
 		AD2B8861198D65780070367B /* LibraryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B885E198D65780070367B /* LibraryViewController.m */; };
 		AD2B8862198D65780070367B /* VideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B8860198D65780070367B /* VideoViewController.m */; };
 		AD2B886C198D69ED0070367B /* gstplayer.c in Sources */ = {isa = PBXBuildFile; fileRef = AD2B886A198D69ED0070367B /* gstplayer.c */; };
+		E95DEC9B1B8332F100CC3512 /* gstplayer-media-info.c in Sources */ = {isa = PBXBuildFile; fileRef = E95DEC981B8332F100CC3512 /* gstplayer-media-info.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +55,10 @@
 		AD2B8860198D65780070367B /* VideoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoViewController.m; sourceTree = "<group>"; };
 		AD2B886A198D69ED0070367B /* gstplayer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gstplayer.c; sourceTree = "<group>"; };
 		AD2B886B198D69ED0070367B /* gstplayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gstplayer.h; sourceTree = "<group>"; };
+		E95DEC971B8332F100CC3512 /* gstplayer-media-info-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "gstplayer-media-info-private.h"; sourceTree = "<group>"; };
+		E95DEC981B8332F100CC3512 /* gstplayer-media-info.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "gstplayer-media-info.c"; sourceTree = "<group>"; };
+		E95DEC991B8332F100CC3512 /* gstplayer-media-info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "gstplayer-media-info.h"; sourceTree = "<group>"; };
+		E95DEC9A1B8332F100CC3512 /* player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = player.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,6 +152,10 @@
 		AD2B8869198D69ED0070367B /* player */ = {
 			isa = PBXGroup;
 			children = (
+				E95DEC971B8332F100CC3512 /* gstplayer-media-info-private.h */,
+				E95DEC981B8332F100CC3512 /* gstplayer-media-info.c */,
+				E95DEC991B8332F100CC3512 /* gstplayer-media-info.h */,
+				E95DEC9A1B8332F100CC3512 /* player.h */,
 				AD2B886A198D69ED0070367B /* gstplayer.c */,
 				AD2B886B198D69ED0070367B /* gstplayer.h */,
 			);
@@ -220,6 +229,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E95DEC9B1B8332F100CC3512 /* gstplayer-media-info.c in Sources */,
 				AD2B8861198D65780070367B /* LibraryViewController.m in Sources */,
 				AD2B8831198D631B0070367B /* AppDelegate.m in Sources */,
 				AD2B8862198D65780070367B /* VideoViewController.m in Sources */,
