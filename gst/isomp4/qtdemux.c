@@ -3389,8 +3389,8 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         g_free (info_sizes);
         goto fail;
       }
-      offset += (base_offset > 0) ? (guint64) base_offset : 0;
-
+      if (base_offset > qtdemux->moof_offset)
+        offset += (guint64) (base_offset - qtdemux->moof_offset);
       if (info_type == FOURCC_cenc && info_type_parameter == 0U) {
         GstByteReader br;
         if (offset > length) {
