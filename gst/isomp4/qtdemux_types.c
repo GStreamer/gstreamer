@@ -201,6 +201,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_schi, "scheme information", QT_FLAG_CONTAINER},
   {FOURCC_pssh, "protection system specific header", 0},
   {FOURCC_tenc, "track encryption", 0},
+  {FOURCC_stpp, "XML subtitle sample entry", 0},
   {0, "unknown", 0,},
 };
 

@@ -195,6 +195,7 @@ G_BEGIN_DECLS
 #define FOURCC_sowt     GST_MAKE_FOURCC('s','o','w','t')
 #define FOURCC_stbl     GST_MAKE_FOURCC('s','t','b','l')
 #define FOURCC_stco     GST_MAKE_FOURCC('s','t','c','o')
+#define FOURCC_stpp     GST_MAKE_FOURCC('s','t','p','p')
 #define FOURCC_stps     GST_MAKE_FOURCC('s','t','p','s')
 #define FOURCC_strf     GST_MAKE_FOURCC('s','t','r','f')
 #define FOURCC_strm     GST_MAKE_FOURCC('s','t','r','m')

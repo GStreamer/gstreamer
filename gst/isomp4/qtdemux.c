@@ -12684,6 +12684,10 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       /* actual text piece needs to be extracted */
       stream->need_process = TRUE;
       break;
+    case FOURCC_stpp:
+      _codec ("XML subtitles");
+      caps = gst_caps_new_empty_simple ("application/ttml+xml");
+      break;
     default:
     {
       char *s, fourstr[5];
