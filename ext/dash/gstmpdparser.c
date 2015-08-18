@@ -5256,6 +5256,27 @@ gst_mpdparser_get_active_stream_by_index (GstMpdClient * client,
   return g_list_nth_data (client->active_streams, stream_idx);
 }
 
+gboolean
+gst_mpd_client_active_stream_contains_subtitles (GstActiveStream * stream)
+{
+  const gchar *mimeType;
+  const gchar *adapt_set_codecs;
+  const gchar *rep_codecs;
+
+  mimeType = stream->cur_representation->RepresentationBase->mimeType;
+  if (!mimeType)
+    mimeType = stream->cur_adapt_set->RepresentationBase->mimeType;
+
+  if (g_strcmp0 (mimeType, "application/ttml+xml") == 0)
+    return TRUE;
+
+  adapt_set_codecs = stream->cur_adapt_set->RepresentationBase->codecs;
+  rep_codecs = stream->cur_representation->RepresentationBase->codecs;
+
+  return (adapt_set_codecs && g_str_has_prefix (adapt_set_codecs, "stpp"))
+      || (rep_codecs && g_str_has_prefix (rep_codecs, "stpp"));
+}
+
 static const gchar *
 gst_mpdparser_mimetype_to_caps (const gchar * mimeType)
 {
@@ -5271,10 +5292,11 @@ gst_mpdparser_mimetype_to_caps (const gchar * mimeType)
     return mimeType;
 }
 
-const gchar *
-gst_mpd_client_get_stream_mimeType (GstActiveStream * stream)
+GstCaps *
+gst_mpd_client_get_stream_caps (GstActiveStream * stream)
 {
-  const gchar *mimeType;
+  const gchar *mimeType, *caps_string;
+  GstCaps *ret = NULL;
 
   if (stream == NULL || stream->cur_adapt_set == NULL
       || stream->cur_representation == NULL)
@@ -5285,7 +5307,16 @@ gst_mpd_client_get_stream_mimeType (GstActiveStream * stream)
     mimeType = stream->cur_adapt_set->RepresentationBase->mimeType;
   }
 
-  return gst_mpdparser_mimetype_to_caps (mimeType);
+  caps_string = gst_mpdparser_mimetype_to_caps (mimeType);
+
+  if ((g_strcmp0 (caps_string, "application/mp4") == 0)
+      && gst_mpd_client_active_stream_contains_subtitles (stream))
+    caps_string = "video/quicktime";
+
+  if (caps_string)
+    ret = gst_caps_from_string (caps_string);
+
+  return ret;
 }
 
 gboolean

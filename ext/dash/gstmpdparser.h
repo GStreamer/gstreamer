@@ -569,6 +569,7 @@ gboolean gst_mpdparser_get_chunk_by_index (GstMpdClient *client, guint indexStre
 /* Active stream */
 guint gst_mpdparser_get_nb_active_stream (GstMpdClient *client);
 GstActiveStream *gst_mpdparser_get_active_stream_by_index (GstMpdClient *client, guint stream_idx);
+gboolean gst_mpd_client_active_stream_contains_subtitles (GstActiveStream * stream);
 
 /* AdaptationSet */
 guint gst_mpdparser_get_nb_adaptationSet (GstMpdClient *client);
@@ -580,8 +581,8 @@ GstFlowReturn gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveSt
 void gst_mpd_client_seek_to_first_segment (GstMpdClient * client);
 GstDateTime *gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client, GstActiveStream * stream);
 
-/* Get audio/video stream parameters (mimeType, width, height, rate, number of channels) */
-const gchar *gst_mpd_client_get_stream_mimeType (GstActiveStream * stream);
+/* Get audio/video stream parameters (caps, width, height, rate, number of channels) */
+GstCaps * gst_mpd_client_get_stream_caps (GstActiveStream * stream);
 gboolean gst_mpd_client_get_bitstream_switching_flag (GstActiveStream * stream);
 guint gst_mpd_client_get_video_stream_width (GstActiveStream * stream);
 guint gst_mpd_client_get_video_stream_height (GstActiveStream * stream);
