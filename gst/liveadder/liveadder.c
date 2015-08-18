@@ -876,8 +876,16 @@ gst_live_adder_length_from_duration (GstLiveAdder * adder,
   return (guint) ret;
 }
 
+static GstClockTime
+gst_live_adder_length_to_duration (GstLiveAdder * adder, guint size)
+{
+  return GST_FRAMES_TO_CLOCK_TIME ((size /
+          GST_AUDIO_INFO_BPF (&adder->info)),
+      GST_AUDIO_INFO_RATE (&adder->info));
+}
+
 static GstFlowReturn
-gst_live_live_adder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+gst_live_adder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstLiveAdder *adder = GST_LIVE_ADDER (parent);
   GstLiveAdderPadPrivate *padprivate = NULL;
@@ -885,6 +893,9 @@ gst_live_live_adder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GList *item = NULL;
   GstClockTime skip = 0;
   gint64 drift = 0;             /* Positive if new buffer after old buffer */
+  gsize buffer_size = 0;
+  gsize subbuffer_size = 0;
+  gsize offset = 0;
 
   GST_OBJECT_LOCK (adder);
 
@@ -1037,9 +1048,19 @@ gst_live_live_adder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       GstClockTime subbuffer_duration = GST_BUFFER_TIMESTAMP (oldbuffer) -
           (GST_BUFFER_TIMESTAMP (buffer) + skip);
 
+      buffer_size = gst_buffer_get_size (buffer);
+      offset = gst_live_adder_length_from_duration (adder, skip);
+      subbuffer_size = gst_live_adder_length_from_duration (adder,
+          subbuffer_duration);
+
+      if (offset + subbuffer_size > buffer_size) {
+        subbuffer_size = buffer_size - offset;
+        subbuffer_duration = gst_live_adder_length_to_duration (adder,
+            subbuffer_size);
+      }
+
       subbuffer = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL,
-          gst_live_adder_length_from_duration (adder, skip),
-          gst_live_adder_length_from_duration (adder, subbuffer_duration));
+          offset, subbuffer_size);
 
       GST_BUFFER_TIMESTAMP (subbuffer) = GST_BUFFER_TIMESTAMP (buffer) + skip;
       GST_BUFFER_DURATION (subbuffer) = subbuffer_duration;
@@ -1090,10 +1111,22 @@ gst_live_live_adder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (skip) {
       GstClockTime subbuffer_duration = GST_BUFFER_DURATION (buffer) - skip;
       GstClockTime subbuffer_ts = GST_BUFFER_TIMESTAMP (buffer) + skip;
-      GstBuffer *new_buffer = gst_buffer_copy_region (buffer,
-          GST_BUFFER_COPY_ALL,
-          gst_live_adder_length_from_duration (adder, skip),
-          gst_live_adder_length_from_duration (adder, subbuffer_duration));
+      GstBuffer *new_buffer;
+
+      buffer_size = gst_buffer_get_size (buffer);
+      offset = gst_live_adder_length_from_duration (adder, skip);
+      subbuffer_size = gst_live_adder_length_from_duration (adder,
+          subbuffer_duration);
+
+      if (offset + subbuffer_size > buffer_size) {
+        subbuffer_size = buffer_size - offset;
+        subbuffer_duration = gst_live_adder_length_to_duration (adder,
+            subbuffer_size);
+      }
+
+      new_buffer = gst_buffer_copy_region (buffer,
+          GST_BUFFER_COPY_ALL, offset, subbuffer_size);
+
       gst_buffer_unref (buffer);
       buffer = new_buffer;
       GST_BUFFER_PTS (buffer) = subbuffer_ts;
@@ -1369,7 +1402,7 @@ gst_live_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   gst_pad_set_element_private (newpad, padprivate);
 
-  gst_pad_set_chain_function (newpad, gst_live_live_adder_chain);
+  gst_pad_set_chain_function (newpad, gst_live_adder_chain);
 
 
   if (!gst_pad_set_active (newpad, TRUE))
