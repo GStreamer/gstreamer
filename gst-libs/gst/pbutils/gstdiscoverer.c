@@ -2107,6 +2107,9 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
   if (G_UNLIKELY (discoverer->priv->current_info)) {
     DISCO_UNLOCK (discoverer);
     GST_WARNING_OBJECT (discoverer, "Already handling a uri");
+    if (err)
+      *err = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
+          "Already handling a uri");
     return NULL;
   }
 
