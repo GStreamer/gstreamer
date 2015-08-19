@@ -780,6 +780,24 @@ gst_ass_render_can_handle_caps (GstCaps * incaps)
   return ret;
 }
 
+static void
+gst_ass_render_update_render_size (GstAssRender * render)
+{
+  gdouble video_aspect = (gdouble) render->info.width /
+      (gdouble) render->info.height;
+  gdouble window_aspect = (gdouble) render->window_width /
+      (gdouble) render->window_height;
+
+  /* render at the window size, with the video aspect ratio */
+  if (video_aspect >= window_aspect) {
+    render->ass_frame_width = render->window_width;
+    render->ass_frame_height = render->window_width / video_aspect;
+  } else {
+    render->ass_frame_width = render->window_height * video_aspect;
+    render->ass_frame_height = render->window_height;
+  }
+}
+
 static gboolean
 gst_ass_render_negotiate (GstAssRender * render, GstCaps * caps)
 {
@@ -788,6 +806,7 @@ gst_ass_render_negotiate (GstAssRender * render, GstCaps * caps)
   gboolean alloc_has_meta = FALSE;
   gboolean attach = FALSE;
   gboolean ret = TRUE;
+  guint width, height;
   GstCapsFeatures *f;
   GstCaps *overlay_caps;
   GstQuery *query;
@@ -814,6 +833,10 @@ gst_ass_render_negotiate (GstAssRender * render, GstCaps * caps)
     upstream_has_meta = gst_caps_features_contains (f,
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
   }
+
+  /* Initialize dimensions */
+  width = render->info.width;
+  height = render->info.height;
 
   if (upstream_has_meta) {
     overlay_caps = gst_caps_ref (caps);
@@ -862,8 +885,26 @@ gst_ass_render_negotiate (GstAssRender * render, GstCaps * caps)
 
     GST_DEBUG ("sink alloc has overlay meta %d", alloc_has_meta);
 
+    if (alloc_has_meta) {
+      const GstStructure *params;
+
+      gst_query_parse_nth_allocation_meta (query, alloc_index, &params);
+      if (params) {
+        if (gst_structure_get (params, "width", G_TYPE_UINT, &width,
+                "height", G_TYPE_UINT, &height, NULL)) {
+          GST_DEBUG ("received window size: %dx%d", width, height);
+          g_assert (width != 0 && height != 0);
+        }
+      }
+    }
+
     gst_query_unref (query);
   }
+
+  /* Update render size if needed */
+  render->window_width = width;
+  render->window_height = height;
+  gst_ass_render_update_render_size (render);
 
   /* For backward compatbility, we will prefer bliting if downstream
    * allocation does not support the meta. In other case we will prefer
@@ -900,7 +941,7 @@ gst_ass_render_negotiate (GstAssRender * render, GstCaps * caps)
   } else {
     g_mutex_lock (&render->ass_mutex);
     ass_set_frame_size (render->ass_renderer,
-        render->info.width, render->info.height);
+        render->ass_frame_width, render->ass_frame_height);
     ass_set_storage_size (render->ass_renderer,
         render->info.width, render->info.height);
     ass_set_pixel_aspect (render->ass_renderer,
@@ -1054,6 +1095,7 @@ gst_ass_render_composite_overlay (GstAssRender * render, ASS_Image * images)
   gint max_x, max_y;
   gint width, height;
   gint stride;
+  gdouble hscale, vscale;
   gpointer data;
 
   min_x = G_MAXINT;
@@ -1073,8 +1115,8 @@ gst_ass_render_composite_overlay (GstAssRender * render, ASS_Image * images)
       max_y = image->dst_y + image->h;
   }
 
-  width = MIN (max_x - min_x, render->info.width);
-  height = MIN (max_y - min_y, render->info.height);
+  width = MIN (max_x - min_x, render->ass_frame_width);
+  height = MIN (max_y - min_y, render->ass_frame_height);
 
   GST_DEBUG_OBJECT (render, "render overlay rectangle %dx%d%+d%+d",
       width, height, min_x, min_y);
@@ -1098,8 +1140,12 @@ gst_ass_render_composite_overlay (GstAssRender * render, ASS_Image * images)
       -min_x, -min_y);
   gst_video_meta_unmap (vmeta, 0, &map);
 
-  rectangle = gst_video_overlay_rectangle_new_raw (buffer, min_x, min_y,
-      width, height, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+  hscale = (gdouble) render->info.width / (gdouble) render->ass_frame_width;
+  vscale = (gdouble) render->info.height / (gdouble) render->ass_frame_height;
+
+  rectangle = gst_video_overlay_rectangle_new_raw (buffer,
+      hscale * min_x, vscale * min_y, hscale * width, vscale * height,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
 
   gst_buffer_unref (buffer);
 
