@@ -3,12 +3,33 @@
   <description>All libav codecs and formats (local snapshot)</description>
   <filename>../../ext/libav/.libs/libgstlibav.so</filename>
   <basename>libgstlibav.so</basename>
-  <version>1.5.2</version>
-  <license>GPL</license>
+  <version>1.5.90</version>
+  <license>LGPL</license>
   <source>gst-libav</source>
   <package>libav</package>
   <origin>http://www.libav.org</origin>
   <elements>
+    <element>
+      <name>avdec_012v</name>
+      <longname>libav Uncompressed 4:2:2 10-bit decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav 012v decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
     <element>
       <name>avdec_4xm</name>
       <longname>libav 4X Movie decoder</longname>
@@ -178,6 +199,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_ac3_fixed</name>
+      <longname>libav ATSC A/52A (AC-3) decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav ac3_fixed decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-ac3</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_adpcm_4xm</name>
       <longname>libav ADPCM 4X Movie decoder</longname>
       <class>Codec/Decoder/Audio</class>
@@ -220,6 +262,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_adpcm_afc</name>
+      <longname>libav ADPCM Nintendo Gamecube AFC decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav adpcm_afc decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_adpcm_ct</name>
       <longname>libav ADPCM Creative Technology decoder</longname>
       <class>Codec/Decoder/Audio</class>
@@ -231,6 +294,27 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-adpcm, layout=(string)ct</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_adpcm_dtk</name>
+      <longname>libav ADPCM Nintendo Gamecube DTK decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav adpcm_dtk decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
         <caps>
           <name>src</name>
@@ -514,6 +598,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_adpcm_ima_oki</name>
+      <longname>libav ADPCM IMA Dialogic OKI decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav adpcm_ima_oki decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_adpcm_ima_qt</name>
       <longname>libav ADPCM IMA QuickTime decoder</longname>
       <class>Codec/Decoder/Audio</class>
@@ -525,6 +630,27 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-adpcm, layout=(string)quicktime</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_adpcm_ima_rad</name>
+      <longname>libav ADPCM IMA Radical decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav adpcm_ima_rad decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
         <caps>
           <name>src</name>
@@ -997,6 +1123,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_apng</name>
+      <longname>libav APNG (Animated Portable Network Graphics) image decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav apng decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_asv1</name>
       <longname>libav ASUS V1 decoder</longname>
       <class>Codec/Decoder/Video</class>
@@ -1144,6 +1291,48 @@
       </pads>
     </element>
     <element>
+      <name>avdec_avrn</name>
+      <longname>libav Avid AVI Codec decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav avrn decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_avrp</name>
+      <longname>libav Avid 1:1 10-bit RGB Packer decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav avrp decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_avs</name>
       <longname>libav AVS (Audio Video Standard) video decoder</longname>
       <class>Codec/Decoder/Video</class>
@@ -1155,6 +1344,48 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-gst-av-avs</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_avui</name>
+      <longname>libav Avid Meridien Uncompressed decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav avui decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_ayuv</name>
+      <longname>libav Uncompressed packed MS 4:4:4:4 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav ayuv decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1253,6 +1484,27 @@
       <longname>libav Bink video decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>libav binkvideo decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_bintext</name>
+      <longname>libav Binary text decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav bintext decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
         <caps>
@@ -1585,6 +1837,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_cpia</name>
+      <longname>libav CPiA video format decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav cpia decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_cyuv</name>
       <longname>libav Creative YUV (CYUV) decoder</longname>
       <class>Codec/Decoder/Video</class>
@@ -1648,6 +1921,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_dirac</name>
+      <longname>libav BBC Dirac VC-2 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav dirac decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_dnxhd</name>
       <longname>libav VC3/DNxHD decoder</longname>
       <class>Codec/Decoder/Video</class>
@@ -1670,7 +1964,7 @@
     </element>
     <element>
       <name>avdec_dpx</name>
-      <longname>libav DPX image decoder</longname>
+      <longname>libav DPX (Digital Picture Exchange) image decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>libav dpx decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
@@ -1686,6 +1980,90 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_dsd_lsbf</name>
+      <longname>libav DSD (Direct Stream Digital), least significant bit first decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav dsd_lsbf decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_dsd_lsbf_planar</name>
+      <longname>libav DSD (Direct Stream Digital), least significant bit first, planar decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav dsd_lsbf_planar decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_dsd_msbf</name>
+      <longname>libav DSD (Direct Stream Digital), most significant bit first decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav dsd_msbf decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_dsd_msbf_planar</name>
+      <longname>libav DSD (Direct Stream Digital), most significant bit first, planar decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav dsd_msbf_planar decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
         </caps>
       </pads>
     </element>
@@ -1728,6 +2106,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_dss_sp</name>
+      <longname>libav Digital Speech Standard - Standard Play mode (DSS SP) decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav dss_sp decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
         </caps>
       </pads>
     </element>
@@ -1959,6 +2358,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_evrc</name>
+      <longname>libav EVRC (Enhanced Variable Rate Codec) decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav evrc decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
         </caps>
       </pads>
     </element>
@@ -2278,6 +2698,48 @@
       </pads>
     </element>
     <element>
+      <name>avdec_g726le</name>
+      <longname>libav G.726 ADPCM little-endian decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav g726le decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_g729</name>
+      <longname>libav G.729 decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav g729 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_gsm</name>
       <longname>libav GSM decoder</longname>
       <class>Codec/Decoder/Audio</class>
@@ -2383,6 +2845,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_h263p</name>
+      <longname>libav H.263 / H.263-1996, H.263+ / H.263-1998 / H.263 version 2 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav h263p decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-h263, variant=(string)itu, h263version=(string)h263p</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)I420</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_h264</name>
       <longname>libav H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 decoder</longname>
       <class>Codec/Decoder/Video</class>
@@ -2429,6 +2912,48 @@
       <longname>libav HNM 4 video decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>libav hnm4video decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_hq_hqa</name>
+      <longname>libav Canopus HQ/HQA decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav hq_hqa decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_hqx</name>
+      <longname>libav Canopus HQX decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav hqx decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
         <caps>
@@ -2509,10 +3034,10 @@
       </pads>
     </element>
     <element>
-      <name>avdec_iff_byterun1</name>
-      <longname>libav IFF ByteRun1 decoder</longname>
+      <name>avdec_idf</name>
+      <longname>libav iCEDraw text decoder</longname>
       <class>Codec/Decoder/Video</class>
-      <description>libav iff_byterun1 decoder</description>
+      <description>libav idf decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
         <caps>
@@ -2530,10 +3055,10 @@
       </pads>
     </element>
     <element>
-      <name>avdec_iff_ilbm</name>
-      <longname>libav IFF ILBM decoder</longname>
+      <name>avdec_iff</name>
+      <longname>libav IFF decoder</longname>
       <class>Codec/Decoder/Video</class>
-      <description>libav iff_ilbm decoder</description>
+      <description>libav iff decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
         <caps>
@@ -3307,6 +3832,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_mpegvideo</name>
+      <longname>libav MPEG-1 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav mpegvideo decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], systemstream=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_msa1</name>
       <longname>libav MS ATC Screen decoder</longname>
       <class>Codec/Decoder/Video</class>
@@ -3769,6 +4315,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_pcm_s16be_planar</name>
+      <longname>libav PCM signed 16-bit big-endian planar decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav pcm_s16be_planar decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_pcm_s24le_planar</name>
       <longname>libav PCM signed 24-bit little-endian planar decoder</longname>
       <class>Codec/Decoder/Audio</class>
@@ -3959,9 +4526,30 @@
     </element>
     <element>
       <name>avdec_prores</name>
-      <longname>libav Apple ProRes (iCodec Pro) decoder</longname>
+      <longname>libav ProRes decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>libav prores decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-prores</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_prores_lgpl</name>
+      <longname>libav Apple ProRes (iCodec Pro) decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav prores_lgpl decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
         <caps>
@@ -4379,7 +4967,7 @@
     </element>
     <element>
       <name>avdec_sanm</name>
-      <longname>libav LucasArts SANM video decoder</longname>
+      <longname>libav LucasArts SANM/Smush video decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>libav sanm decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
@@ -4457,7 +5045,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string){ S16LE, U8 }</details>
         </caps>
       </pads>
     </element>
@@ -4546,6 +5134,48 @@
       </pads>
     </element>
     <element>
+      <name>avdec_smvjpeg</name>
+      <longname>libav SMV JPEG decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav smvjpeg decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_snow</name>
+      <longname>libav Snow decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav snow decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_sol_dpcm</name>
       <longname>libav DPCM Sol decoder</longname>
       <class>Codec/Decoder/Audio</class>
@@ -4557,6 +5187,27 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-dpcm, layout=(string)sol</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_sonic</name>
+      <longname>libav Sonic decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav sonic decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
         <caps>
           <name>src</name>
@@ -4683,6 +5334,48 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>image/x-tga</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_targa_y216</name>
+      <longname>libav Pinnacle TARGA CineWave YUV16 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav targa_y216 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_tdsc</name>
+      <longname>libav TDSC decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav tdsc decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
         <caps>
           <name>src</name>
@@ -4987,6 +5680,48 @@
       </pads>
     </element>
     <element>
+      <name>avdec_v308</name>
+      <longname>libav Uncompressed packed 4:4:4 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav v308 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_v408</name>
+      <longname>libav Uncompressed packed QT 4:4:4:4 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav v408 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_v410</name>
       <longname>libav Uncompressed 4:4:4 10-bit decoder</longname>
       <class>Codec/Decoder/Video</class>
@@ -5109,6 +5844,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_vima</name>
+      <longname>libav LucasArts VIMA audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav vima decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
         </caps>
       </pads>
     </element>
@@ -5333,7 +6089,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>unknown/unknown</details>
+          <details>video/x-vp9</details>
         </caps>
         <caps>
           <name>src</name>
@@ -5361,6 +6117,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_wavesynth</name>
+      <longname>libav Wave synthesis pseudo-codec decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav wavesynth decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
         </caps>
       </pads>
     </element>
@@ -5680,6 +6457,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_xbin</name>
+      <longname>libav eXtended BINary text decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav xbin decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_xbm</name>
       <longname>libav XBM (X BitMap) image decoder</longname>
       <class>Codec/Decoder/Video</class>
@@ -5697,6 +6495,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_xface</name>
+      <longname>libav X-face image decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav xface decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw</details>
         </caps>
       </pads>
     </element>
@@ -5743,10 +6562,52 @@
       </pads>
     </element>
     <element>
+      <name>avdec_y41p</name>
+      <longname>libav Uncompressed YUV 4:1:1 12-bit decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav y41p decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_yop</name>
       <longname>libav Psygnosis YOP Video decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>libav yop decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_yuv4</name>
+      <longname>libav Uncompressed packed 4:2:0 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav yuv4 decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
         <caps>
@@ -6010,6 +6871,33 @@
       </pads>
     </element>
     <element>
+      <name>avdemux_ffm</name>
+      <longname>libav FFM (FFserver live feed) demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>libav FFM (FFserver live feed) demuxer</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-ffm</details>
+        </caps>
+        <caps>
+          <name>audio_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdemux_film_cpk</name>
       <longname>libav Sega FILM / CPK demuxer</longname>
       <class>Codec/Demuxer</class>
@@ -6021,6 +6909,33 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-gst-av-film_cpk</details>
+        </caps>
+        <caps>
+          <name>audio_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdemux_gif</name>
+      <longname>libav CompuServe Graphics Interchange Format (GIF) demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>libav CompuServe Graphics Interchange Format (GIF) demuxer</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/gif</details>
         </caps>
         <caps>
           <name>audio_%u</name>
@@ -6183,6 +7098,33 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-musepack, streamversion=(int)7</details>
+        </caps>
+        <caps>
+          <name>audio_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdemux_mpc8</name>
+      <longname>libav Musepack SV8 demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>libav Musepack SV8 demuxer</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-musepack, streamversion=(int)8</details>
         </caps>
         <caps>
           <name>audio_%u</name>
@@ -6362,9 +7304,9 @@
     </element>
     <element>
       <name>avdemux_smk</name>
-      <longname>libav Smacker video demuxer</longname>
+      <longname>libav Smacker demuxer</longname>
       <class>Codec/Demuxer</class>
-      <description>libav Smacker video demuxer</description>
+      <description>libav Smacker demuxer</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
         <caps>
@@ -6656,7 +7598,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 6 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 6 ], rate=(int){ 96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350 }, layout=(string)interleaved, format=(string)F32LE</details>
         </caps>
         <caps>
           <name>src</name>
@@ -6877,6 +7819,48 @@
       </pads>
     </element>
     <element>
+      <name>avenc_amv</name>
+      <longname>libav AMV Video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav amv encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)I420</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-amv</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_apng</name>
+      <longname>libav APNG (Animated Portable Network Graphics) image encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav apng encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ RGB, RGBA, RGB8P, GRAY8, GRAY16_BE }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_asv1</name>
       <longname>libav ASUS V1 encoder</longname>
       <class>Codec/Encoder/Video</class>
@@ -6919,6 +7903,69 @@
       </pads>
     </element>
     <element>
+      <name>avenc_avrp</name>
+      <longname>libav Avid 1:1 10-bit RGB Packer encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav avrp encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_avui</name>
+      <longname>libav Avid Meridien Uncompressed encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav avui encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)UYVY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_ayuv</name>
+      <longname>libav Uncompressed packed MS 4:4:4:4 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav ayuv encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_bmp</name>
       <longname>libav BMP (Windows and OS/2 bitmap) encoder</longname>
       <class>Codec/Encoder/Video</class>
@@ -6929,13 +7976,34 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ BGR, RGB15, RGB16, GRAY8, RGB8P }</details>
+          <details>video/x-raw, format=(string){ BGRA, BGR, RGB16, RGB15, GRAY8, RGB8P }</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>image/bmp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_cinepak</name>
+      <longname>libav Cinepak / CVID encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav cinepak encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ RGB, GRAY8 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-cinepak</details>
         </caps>
       </pads>
     </element>
@@ -6982,6 +8050,27 @@
       </pads>
     </element>
     <element>
+      <name>avenc_dca</name>
+      <longname>libav DCA (DTS Coherent Acoustics) encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav dca encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channel-mask=(bitmask)0x0000000000000004, channels=(int)1, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, layout=(string)interleaved, format=(string)S32LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000003, channels=(int)2, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, layout=(string)interleaved, format=(string)S32LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000c03, channels=(int)4, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, layout=(string)interleaved, format=(string)S32LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000c07, channels=(int)5, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, layout=(string)interleaved, format=(string)S32LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000c0f, channels=(int)6, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, layout=(string)interleaved, format=(string)S32LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-dts, channels=(int)[ 1, 6 ], rate=(int)[ 4000, 96000 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_dnxhd</name>
       <longname>libav VC3/DNxHD encoder</longname>
       <class>Codec/Encoder/Video</class>
@@ -7004,7 +8093,7 @@
     </element>
     <element>
       <name>avenc_dpx</name>
-      <longname>libav DPX image encoder</longname>
+      <longname>libav DPX (Digital Picture Exchange) image encoder</longname>
       <class>Codec/Encoder/Video</class>
       <description>libav dpx encoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
@@ -7013,7 +8102,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ RGB, RGBA }</details>
+          <details>video/x-raw, format=(string){ GRAY8, RGB, RGBA, ABGR, GRAY16_LE, GRAY16_BE, GBR_10LE, GBR_10BE }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7076,7 +8165,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ I420, Y42B, Y444, Y41B, YUV9, I420_10LE, I422_10LE, Y444_10LE, BGRA, GBR_10LE, A420, GRAY16_LE, GRAY8 }</details>
+          <details>video/x-raw, format=(string){ I420, A420, Y444, Y42B, Y41B, YUV9, BGRA, I420_10LE, I422_10LE, Y444_10LE, A444_10LE, A422_10LE, A420_10LE, GRAY16_LE, GRAY8, GBR_10LE }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7097,7 +8186,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ I420, Y42B, RGB, BGRA }</details>
+          <details>video/x-raw, format=(string){ I420, Y42B, Y444, Y41B, YUV9, GBR, GBR_10LE, GRAY8, GRAY16_LE, A420, I420_10LE, I422_10LE, Y444_10LE, A420_10LE, A422_10LE, A444_10LE, RGB, BGRA }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7125,6 +8214,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-flash-screen</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_flashsv2</name>
+      <longname>libav Flash Screen Video Version 2 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav flashsv2 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)BGR</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
       </pads>
     </element>
@@ -7167,6 +8277,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/G722, channels=(int)1, rate=(int){ 16000 }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_g723_1</name>
+      <longname>libav G.723.1 encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav g723_1 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
       </pads>
     </element>
@@ -7276,6 +8407,27 @@
       </pads>
     </element>
     <element>
+      <name>avenc_jpeg2000</name>
+      <longname>libav JPEG 2000 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav jpeg2000 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ RGB, Y444, GRAY8 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_jpegls</name>
       <longname>libav JPEG-LS encoder</longname>
       <class>Codec/Encoder/Video</class>
@@ -7307,7 +8459,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ I420, Y42B, Y444, BGR }</details>
+          <details>video/x-raw, format=(string){ BGR, BGRA, I420, Y444, Y42B }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7328,7 +8480,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ I420, Y42B }</details>
+          <details>video/x-raw, format=(string){ I420, Y42B, Y444 }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7343,6 +8495,27 @@
       <longname>libav MP2 (MPEG audio layer 2) encoder</longname>
       <class>Codec/Encoder/Audio</class>
       <description>libav mp2 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channel-mask=(bitmask)0x0000000000000004, channels=(int)1, rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000003, channels=(int)2, rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, channels=(int)[ 1, 2 ], rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, mpegversion=(int)1, layer=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_mp2fixed</name>
+      <longname>libav MP2 fixed point (MPEG audio layer 2) encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav mp2fixed encoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
         <caps>
@@ -7391,7 +8564,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, framerate=(fraction){ 24000/1001, 24/1, 25/1, 30000/1001, 30/1, 50/1, 60000/1001, 60/1, 15/1, 5/1, 10/1, 12/1, 15/1 }, format=(string){ I420, Y42B }</details>
+          <details>video/x-raw, framerate=(fraction){ 1/1, 2/1, 3/1, 4/1, 5/1, 6/1, 8/1, 9/1, 10/1, 12/1, 15/1, 16/1, 18/1, 20/1, 24/1, 25/1, 30/1, 32/1, 36/1, 40/1, 45/1, 48/1, 50/1, 60/1, 72/1, 75/1, 80/1, 90/1, 96/1, 100/1, 120/1, 150/1, 180/1, 200/1, 240/1, 750/1001, 800/1001, 960/1001, 1000/1001, 1200/1001, 1250/1001, 1500/1001, 1600/1001, 1875/1001, 2000/1001, 2400/1001, 2500/1001, 3000/1001, 3750/1001, 4000/1001, 4800/1001, 5000/1001, 6000/1001, 7500/1001, 8000/1001, 10000/1001, 12000/1001, 15000/1001, 20000/1001, 24000/1001, 30000/1001, 60000/1001 }, format=(string){ I420, Y42B }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7465,6 +8638,27 @@
       </pads>
     </element>
     <element>
+      <name>avenc_msvideo1</name>
+      <longname>libav Microsoft Video-1 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav msvideo1 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGB15</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-msvideocodec, msvideoversion=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_nellymoser</name>
       <longname>libav Nellymoser Asao encoder</longname>
       <class>Codec/Encoder/Audio</class>
@@ -7496,7 +8690,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ RGB, BGRA, GRAY8 }</details>
+          <details>video/x-raw, format=(string){ RGB, RGBA, GRAY8, GRAY16_BE }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7524,6 +8718,90 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>image/pbm</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_pcm_s16be_planar</name>
+      <longname>libav PCM signed 16-bit big-endian planar encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav pcm_s16be_planar encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_pcm_s24le_planar</name>
+      <longname>libav PCM signed 24-bit little-endian planar encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav pcm_s24le_planar encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S32LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_pcm_s32le_planar</name>
+      <longname>libav PCM signed 32-bit little-endian planar encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav pcm_s32le_planar encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S32LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_pcm_s8_planar</name>
+      <longname>libav PCM signed 8-bit planar encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav pcm_s8_planar encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)U8</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
       </pads>
     </element>
@@ -7601,7 +8879,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ RGB, BGRA, RGB8P, GRAY8, GRAY16_BE }</details>
+          <details>video/x-raw, format=(string){ RGB, RGBA, RGB8P, GRAY8, GRAY16_BE }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7634,9 +8912,51 @@
     </element>
     <element>
       <name>avenc_prores</name>
-      <longname>libav Apple ProRes (iCodec Pro) encoder</longname>
+      <longname>libav Apple ProRes encoder</longname>
       <class>Codec/Encoder/Video</class>
       <description>libav prores encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)I422_10LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-prores</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_prores_aw</name>
+      <longname>libav Apple ProRes encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav prores_aw encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)I422_10LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-prores</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_prores_ks</name>
+      <longname>libav Apple ProRes (iCodec Pro) encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav prores_ks encoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
         <caps>
@@ -7664,13 +8984,34 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ RGB, ARGB }</details>
+          <details>video/x-raw, format=(string){ RGB, ARGB, GRAY8 }</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-rle, layout=(string)quicktime, depth=(int)[ 1, 64 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_r10k</name>
+      <longname>libav AJA Kona 10-bit RGB Codec encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav r10k encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
       </pads>
     </element>
@@ -7685,7 +9026,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channel-mask=(bitmask)0x0000000000000004, channels=(int)1, rate=(int)8000, layout=(string)interleaved, format=(string)S16LE</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7727,7 +9068,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, framerate=(fraction)30/1, format=(string)Y444</details>
+          <details>video/x-raw, format=(string)Y444</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7780,6 +9121,27 @@
       </pads>
     </element>
     <element>
+      <name>avenc_s302m</name>
+      <longname>libav SMPTE 302M encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav s302m encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)48000, layout=(string)interleaved, format=(string){ S32LE, S16LE }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-smpte-302m</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_sgi</name>
       <longname>libav SGI image encoder</longname>
       <class>Codec/Encoder/Video</class>
@@ -7797,6 +9159,69 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>image/x-sgi</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_snow</name>
+      <longname>libav Snow encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav snow encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUV9, Y444, GRAY8 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_sonic</name>
+      <longname>libav Sonic encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav sonic encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_sonicls</name>
+      <longname>libav Sonic lossless encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav sonicls encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
       </pads>
     </element>
@@ -7853,7 +9278,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ BGR, BGRA, RGB15, GRAY8 }</details>
+          <details>video/x-raw, format=(string){ BGR, BGRA, RGB15, GRAY8, RGB8P }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7885,6 +9310,27 @@
       </pads>
     </element>
     <element>
+      <name>avenc_tta</name>
+      <longname>libav TTA (True Audio) encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav tta encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ U8, S16LE, S32LE }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-tta, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_utvideo</name>
       <longname>libav Ut Video encoder</longname>
       <class>Codec/Encoder/Video</class>
@@ -7906,6 +9352,48 @@
       </pads>
     </element>
     <element>
+      <name>avenc_v308</name>
+      <longname>libav Uncompressed packed 4:4:4 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav v308 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)Y444</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_v408</name>
+      <longname>libav Uncompressed packed QT 4:4:4:4 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav v408 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_v410</name>
       <longname>libav Uncompressed 4:4:4 10-bit encoder</longname>
       <class>Codec/Encoder/Video</class>
@@ -7917,6 +9405,27 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string)Y444_10LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_wavpack</name>
+      <longname>libav WavPack encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav wavpack encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8032,6 +9541,27 @@
       </pads>
     </element>
     <element>
+      <name>avenc_xface</name>
+      <longname>libav X-face image encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav xface encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_xwd</name>
       <longname>libav XWD (X Window Dump) image encoder</longname>
       <class>Codec/Encoder/Video</class>
@@ -8042,7 +9572,49 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ BGRA, RGBA, ARGB, ABGR, RGB, BGR, RGB16, RGB15, RGB8P }</details>
+          <details>video/x-raw, format=(string){ BGRA, RGBA, ARGB, ABGR, RGB, BGR, RGB16, RGB15, RGB8P, GRAY8 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_y41p</name>
+      <longname>libav Uncompressed YUV 4:1:1 12-bit encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav y41p encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)Y41B</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_yuv4</name>
+      <longname>libav Uncompressed packed 4:2:0 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav yuv4 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)I420</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8198,6 +9770,12 @@
           <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16BE, layout=(string)interleaved</details>
         </caps>
         <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>image/png</details>
+        </caps>
+        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
@@ -8223,6 +9801,21 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-amr-nb-sh</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_apng</name>
+      <longname>libav Animated Portable Network Graphics muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav Animated Portable Network Graphics muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-apng</details>
         </caps>
       </pads>
     </element>
@@ -8264,7 +9857,7 @@
           <name>audio_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>audio/mpeg, channels=(int)[ 1, 2 ], rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, mpegversion=(int)1, layer=(int)2</details>
+          <details>audio/x-wma, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], wmaversion=(int)2, block_align=(int)[ 0, 2147483647 ], bitrate=(int)[ 0, 2147483647 ]</details>
         </caps>
         <caps>
           <name>video_%u</name>
@@ -8277,6 +9870,21 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-gst-av-asf_stream</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_ast</name>
+      <longname>libav AST (Audio Stream) muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav AST (Audio Stream) muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-ast</details>
         </caps>
       </pads>
     </element>
@@ -8352,6 +9960,69 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-gst-av-avm2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_bit</name>
+      <longname>libav G.729 BIT file format muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav G.729 BIT file format muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-bit</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_caf</name>
+      <longname>libav Apple CAF (Core Audio Format) muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav Apple CAF (Core Audio Format) muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16BE, layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-caf</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_dash</name>
+      <longname>libav DASH Muxer muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav DASH Muxer muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/mpeg, channels=(int)[ 1, 6 ], rate=(int)[ 4000, 96000 ], mpegversion=(int)4, stream-format=(string)raw, base-profile=(string)lc</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/x-h264, alignment=(string)au</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-dash</details>
         </caps>
       </pads>
     </element>
@@ -8448,6 +10119,33 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-gst-av-f4v</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_ffm</name>
+      <longname>libav FFM (FFserver live feed) muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav FFM (FFserver live feed) muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/mpeg, channels=(int)[ 1, 2 ], rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, mpegversion=(int)1, layer=(int)2</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/mpeg, mpegversion=(int)1, systemstream=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-ffm</details>
         </caps>
       </pads>
     </element>
@@ -8581,6 +10279,27 @@
       </pads>
     </element>
     <element>
+      <name>avmux_ico</name>
+      <longname>libav Microsoft Windows ICO muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav Microsoft Windows ICO muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>image/bmp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-ico</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avmux_ilbc</name>
       <longname>libav iLBC storage muxer</longname>
       <class>Codec/Muxer</class>
@@ -8619,6 +10338,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/quicktime, variant=(string)ipod</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_ircam</name>
+      <longname>libav Berkeley/IRCAM/CARL Sound Format muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav Berkeley/IRCAM/CARL Sound Format muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-ircam</details>
         </caps>
       </pads>
     </element>
@@ -8742,6 +10482,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-gst-av-md5</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_mkvtimestamp_v2</name>
+      <longname>libav extract pts as timecode v2 format, as defined by mkvtoolnix muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav extract pts as timecode v2 format, as defined by mkvtoolnix muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-mkvtimestamp_v2</details>
         </caps>
       </pads>
     </element>
@@ -8998,6 +10759,33 @@
       </pads>
     </element>
     <element>
+      <name>avmux_mxf_opatom</name>
+      <longname>libav MXF (Material eXchange Format) Operational Pattern Atom muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav MXF (Material eXchange Format) Operational Pattern Atom muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/x-dnxhd, width=(int)1920, height=(int)1080, framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dnxhd, width=(int)1280, height=(int)720, framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-mxf_opatom</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avmux_nut</name>
       <longname>libav NUT muxer</longname>
       <class>Codec/Muxer</class>
@@ -9021,6 +10809,21 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-gst-av-nut</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_oga</name>
+      <longname>libav Ogg Audio muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav Ogg Audio muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-oga</details>
         </caps>
       </pads>
     </element>
@@ -9067,6 +10870,21 @@
       </pads>
     </element>
     <element>
+      <name>avmux_opus</name>
+      <longname>libav Ogg Opus muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav Ogg Opus muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-opus</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avmux_psp</name>
       <longname>libav PSP MP4 (MPEG-4 Part 14) muxer</longname>
       <class>Codec/Muxer</class>
@@ -9090,27 +10908,6 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/quicktime, variant=(string)psp</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>avmux_rcv</name>
-      <longname>libav VC-1 test bitstream muxer</longname>
-      <class>Codec/Muxer</class>
-      <description>libav VC-1 test bitstream muxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
-      <pads>
-        <caps>
-          <name>video_%u</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>video/x-wmv, wmvversion=(int)3, format=(string)WMV3</details>
-        </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-gst-av-rcv</details>
         </caps>
       </pads>
     </element>
@@ -9159,6 +10956,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-gst-av-rso</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_singlejpeg</name>
+      <longname>libav JPEG single image muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav JPEG single image muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>image/jpeg, parsed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-singlejpeg</details>
         </caps>
       </pads>
     </element>
@@ -9253,6 +11071,21 @@
       </pads>
     </element>
     <element>
+      <name>avmux_spx</name>
+      <longname>libav Ogg Speex muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav Ogg Speex muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-spx</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avmux_svcd</name>
       <longname>libav MPEG-2 PS (SVCD) muxer</longname>
       <class>Codec/Muxer</class>
@@ -9303,6 +11136,54 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-shockwave-flash</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_uncodedframecrc</name>
+      <longname>libav uncoded framecrc testing muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav uncoded framecrc testing muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-uncodedframecrc</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_vc1test</name>
+      <longname>libav VC-1 test bitstream muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav VC-1 test bitstream muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/x-wmv, wmvversion=(int)3, format=(string)WMV3</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-vc1test</details>
         </caps>
       </pads>
     </element>
@@ -9371,13 +11252,34 @@
           <name>audio_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)U8, layout=(string)interleaved</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-voc</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_w64</name>
+      <longname>libav Sony Wave64 muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav Sony Wave64 muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-w64</details>
         </caps>
       </pads>
     </element>
@@ -9403,23 +11305,44 @@
       </pads>
     </element>
     <element>
-      <name>avmux_webm</name>
-      <longname>libav WebM muxer (not recommended, use webmmux instead)</longname>
+      <name>avmux_webp</name>
+      <longname>libav WebP muxer</longname>
       <class>Codec/Muxer</class>
-      <description>libav WebM muxer (not recommended, use webmmux instead)</description>
+      <description>libav WebP muxer</description>
       <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-webp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_wtv</name>
+      <longname>libav Windows Television (WTV) muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav Windows Television (WTV) muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-ac3, channels=(int)[ 1, 6 ], rate=(int){ 48000, 44100, 32000 }</details>
+        </caps>
         <caps>
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/x-vp8</details>
+          <details>video/mpeg, mpegversion=(int)2, systemstream=(boolean)false</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/webm</details>
+          <details>application/x-gst-av-wtv</details>
         </caps>
       </pads>
     </element>

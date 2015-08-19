@@ -1,9 +1,397 @@
-=== release 1.5.2 ===
+=== release 1.5.90 ===
 
-2015-06-24  Sebastian Dröge <slomo@coaxion.net>
+2015-08-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.2
+	  releasing 1.5.90
+
+2015-08-16 19:08:16 +0200  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  aviddec: Re-enable direct rendering
+	  This is achieved by using a tempory internal pool. We can then switch to a
+	  downstream pool if the downstream pool buffer have matching strides.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752802
+
+2015-08-17 04:36:39 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: use template subset check for accept-caps
+	  It is faster than doing a query that propagates downstream and
+	  should be enough
+
+2015-08-17 04:35:41 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: use pad template caps for accept-caps
+	  use template subset check for accept-caps
+	  It is faster than doing a query that propagates downstream and
+	  should be enough
+
+2015-08-16 14:14:27 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: remove useless getcaps method
+	  It just calls the exact same function as the default handler
+
+2015-08-16 14:13:05 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: remove useless getcaps method
+	  It just calls the exact same function as the default handler
+
+2015-08-15 07:30:26 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: let audiodecoder call the default pad query handler
+	  Avoids repeating the same handling in many decoders
+
+2015-08-15 07:18:07 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: let videodecoder call the default pad query handler
+	  Avoids repeating the same handling in many decoders
+
+2015-08-15 12:51:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n2.7.2
+
+2015-08-14 08:22:39 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: use template caps intersection for accept-caps
+	  Avoid doing downstream caps queries when accept-caps should just
+	  do a shallow caps check on the element itself
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753623
+
+2015-08-14 08:21:51 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: use template caps intersection for accept-caps
+	  Avoid doing downstream caps queries when accept-caps should just
+	  do a shallow caps check on the element itself
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753623
+
+2015-07-30 23:07:39 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/libav/gstavdemux.c:
+	  Map ffmpeg metadata to GStreamer tags
+	  Update to the metadata API ffmpeg has had in
+	  place for a long time now, and reenable output
+	  of GStreamer tags from the demuxer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=566605
+
+2015-07-28 17:54:23 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Remove unused force parameter
+	  This parameter has been always false for a long time.
+
+2015-08-03 21:40:12 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Use caps-like size in get_buffer2()
+	  The size in the AVFrame in get_buffer2 don't match the output size,
+	  instead they match ffmpeg's memory requirements, so we can't compare
+	  them from the values of the output AVFrame. Those are comparable to
+	  the values in the passed AVCodecContext.
+
+2015-08-03 21:02:37 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Reset current_dr on close and when not chosing it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753189
+
+2015-07-28 16:16:10 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Disable direct rendering before a frame has been produces
+	  ffmpeg doesn't provide the final's image width & height in the get_buffer2()
+	  callback, so it's not possible to create an output state for GstVideoDecoder
+	  at this stage. So only try to do direct rendering if the buffer pool has already
+	  been negotiated based on the final decoded size.
+	  This partially reverts the effects of 2e621f8db
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752802
+
+2015-07-28 11:19:52 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Revert "For static builds, add the ffmpeg library directories to the linker flags"
+	  This reverts commit ac3437153dc6cb3d82cdda0d1f60ffc5600fdf67.
+	  Doesn't actually make sense as it will put the (uninstalled) library paths
+	  into the installed .la files. How does this all work?
+
+2015-07-28 11:02:47 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  For static builds, add the ffmpeg library directories to the linker flags
+
+2015-07-27 18:49:49 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Get code out of loop
+	  Code was executed only on the first iteration, so just pull it out
+	  of the loop entirely. This makes it clear it has nothing to do with the loop.
+
+2015-07-27 18:44:53 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Only create the AVBuffer once the stride is validated
+	  If it is created earlier and the stride is invalid, then the frame
+	  will be freed and it won't be possible to use it in the fallback path.
+	  Not doing this causes a segfault because it will try to use
+	  already freed memory.
+
+2015-07-27 15:29:49 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Re-enable direct rendering
+
+2015-07-25 02:54:20 -0400  Olivier Crete <olivier.crete@collabora.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Read channels from the channels field
+	  If there is no layout, just read the channel count from the
+	  channels field.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752186
+
+2015-07-23 19:15:43 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Ignore negotiation error on shutdown
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752800
+
+2015-07-25 03:05:25 -0400  Olivier Crête <olivier.crete@ocrete.ca>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Access field using accessors
+	  Those fields are documented to only be safe to access using
+	  accessors as their position is not part of the ABI.
+
+2015-07-22 09:44:27 +0100  James Smith <smithjd15@gmail.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavdemux.c:
+	  Add support for musepack (mpc) sv8 audio
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732682
+
+2015-07-16 18:17:05 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: fix slice_offset memory leak
+	  In case of real videos, slice_offset is being allocated,
+	  but the same is not being freed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752404
+
+2015-07-16 17:24:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libav.doap:
+	  Update mailing list in doap file
+
+2015-07-07 17:52:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Disable iconv support to fix Windows build
+	  It's needed only for subtitle charset conversion, and we don't
+	  use the ffmpeg subtitle support anyway.
+	  Also disable d3d11va and dxva2 support, we don't use the hardware
+	  codec support.
+
+2015-07-03 21:59:42 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f74b2df to 9aed1d7
+
+2015-07-02 15:44:45 +0200  Heinrich Fink <hfink@toolsonair.com>
+
+	* configure.ac:
+	  Fix OSX build: Explicitly disable VDA h264 decoder
+	  VideoDecodeAcceleration framework is deprecated in 10.11, and currently
+	  cuases linker errors when compiling on OSX. Oddly, --disable-hwaccels
+	  did not also disable h264_vda already.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751838
+
+2015-07-01 22:40:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* ext/libav/gstav.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  Make the LGPL build the default and require --enable-gpl to build a GPL licensed version
+
+2015-07-01 22:11:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Blacklist some subtitle and adaptive streaming muxers
+
+2015-06-30 12:05:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* .gitmodules:
+	* configure.ac:
+	* ext/libav/Makefile.am:
+	* gst-libs/ext/libav:
+	  Switch from libav v11.4 to ffmpeg n2.7.1
+	  ffmpeg seems to be the one of the two forks, which is most widely used by
+	  Linux distributions and in general. Also Google is using it for e.g. Chrome
+	  and has engineers working on finding and fixing security issues in it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751607
+
+2015-06-30 19:59:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Remember how many samples the codec consumed for telling the base class
+
+2015-06-30 19:18:53 +0200  Thomas Bluemel <tbluemel@control4.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavauddec.h:
+	  avauddec: Ensure input buffers have FF_INPUT_BUFFER_PADDING_SIZE padding, which is required by avcodec_decode_audio4 ()
+
+2015-06-29 13:29:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Ignore stream_segment,ssegment muxer that is provided by ffmpeg
+	  The comma confuses our code, e.g. it's not a valid element name or structure
+	  name.
+
+2015-06-28 16:54:35 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Fix compiler warning
+	  gstavvidenc.c: In function 'gst_ffmpegvidenc_flush_buffers':
+	  gstavvidenc.c:733:7: error: ISO C90 forbids mixed declarations and code [-Werror=declaration-after-statement]
+	  GstFFMpegVidEncClass *oclass =
+	  ^
+	  cc1: all warnings being treated as errors
+
+2015-06-28 16:35:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Set AVFrame flags for interlacing per frame and not in set_format()
+	  They will get overridden by av_frame_unref() with the defaults.
+
+2015-06-28 16:32:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavvidenc.c:
+	  av{aud,vid}enc: Create wrapped output buffers with GST_MEMORY_FLAG_READONLY
+	  libav might still have references to the buffers itself and uses a writability
+	  system similar to ours based on reference counts.
+
+2015-06-28 16:30:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Properly wrap and free the output AVPackets generated during draining
+
+2015-06-28 16:27:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Make sure to keep input data alive until libav is done with it
+
+2015-06-28 16:21:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Make sure to keep input data alive until libav is done with it
+
+2015-06-28 15:37:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavaudenc.h:
+	* ext/libav/gstavvidenc.c:
+	  av{aud,vid}enc: Stop using deprecated AVFrame APIs
+
+2015-06-28 12:33:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Remove custom buffer allocation function
+	  libav always uses planar audio formats nowadays, not much use in
+	  us trying to allocate anything here until we add support for planar
+	  aka non-interleaved audio formats at least in audioconvert.
+
+2015-06-27 20:25:36 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavauddec.h:
+	  avauddec: Use undeprecated AVFrame API
+
+2015-06-27 20:25:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Free frame before the codec is freed
+	  Who knows, maybe freeing the frame calls cleanup inside the codec.
+
+2015-06-27 20:15:20 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Use undeprecated AVFrame API and unref frame once we're done with it
+
+2015-06-27 20:08:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Negotiate based on the AVFrame instead of just the AVCodecContext
+
+2015-06-26 20:38:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Use the new get_buffer2() API instead of the deprecated APIs
+	  And do the frame reference counting by adding AVBufferRefs to the frame.
+
+2015-06-26 20:20:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Also proxy the data/size pointers for our wrapper AVBufferRef
+
+2015-06-26 17:30:25 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  codecmap: add vp9 mapping
+
+2015-06-26 16:50:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Wrap the original AVBufferRef in our own buffer for the destroy function
+	  Just adding a dummy buffer at the very end might not be enough as there
+	  already might be too many buffers.
+
+2015-06-26 15:38:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: libav will already copy the reordered_opaque pointer for us
+	  If we do it ourselves, it might get the wrong value if our assumptions are
+	  broken by libav at a later time.
+
+2015-06-26 15:34:30 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: Negotiate based on the AVFrame information, not the context information
+	  The context contains the information from the latest input frame, we're
+	  however interested in the information from the latest output frame. As we have
+	  to negotiate for the buffer that is about to come next.
+	  This should fix some crashes that happened when both information got out of
+	  sync. If that happens now, we will do fallback allocation until the output
+	  is renegotiated too.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750865
+
+2015-06-25 00:04:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.5.2 ===
+
+2015-06-24 23:40:51 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.5.2
 
 2015-06-16 17:50:03 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
 
