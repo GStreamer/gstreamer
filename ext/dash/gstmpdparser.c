@@ -972,18 +972,10 @@ gst_mpdparser_get_xml_node_as_string (xmlNode * a_node, gchar ** content)
 {
   gboolean exists = FALSE;
   const char *txt_encoding;
-  xmlCharEncodingHandlerPtr conv_hdlr = NULL;
   xmlOutputBufferPtr out_buf;
 
   txt_encoding = (const char *) a_node->doc->encoding;
-  if (txt_encoding != NULL) {
-    conv_hdlr = xmlFindCharEncodingHandler (txt_encoding);
-    if (conv_hdlr == NULL) {
-      GST_ERROR ("Unable to find encoder for encoding: %s", txt_encoding);
-      return FALSE;
-    }
-  }
-  out_buf = xmlAllocOutputBuffer (conv_hdlr);
+  out_buf = xmlAllocOutputBuffer (NULL);
   g_assert (out_buf != NULL);
   xmlNodeDumpOutput (out_buf, a_node->doc, a_node, 0, 0, txt_encoding);
   xmlOutputBufferFlush (out_buf);

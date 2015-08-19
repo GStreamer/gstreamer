@@ -1281,7 +1281,7 @@ GST_START_TEST (dash_mpdparser_contentProtection_no_value)
   GstRepresentationBaseType *representationBase;
   GstDescriptorType *contentProtection;
   const gchar *xml =
-      "<?xml version=\"1.0\"?>"
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
@@ -1310,7 +1310,6 @@ GST_START_TEST (dash_mpdparser_contentProtection_no_value)
   assert_equals_string (contentProtection->schemeIdUri,
       "urn:uuid:5e629af5-38da-4063-8977-97ffbd9902d4");
   fail_if (contentProtection->value == NULL);
-  g_print ("%s\n", contentProtection->value);
   /* We can't do a simple compare of value (which should be an XML dump
      of the ContentProtection element), because the whitespace
      formatting from xmlDump might differ between versions of libxml */
@@ -1326,6 +1325,50 @@ GST_START_TEST (dash_mpdparser_contentProtection_no_value)
   fail_if (str == NULL);
   str = strstr (contentProtection->value, "</ContentProtection>");
   fail_if (str == NULL);
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
+ * Test parsing ContentProtection element that has no value attribute
+ * nor an XML encoding
+ */
+GST_START_TEST (dash_mpdparser_contentProtection_no_value_no_encoding)
+{
+  GstPeriodNode *periodNode;
+  GstAdaptationSetNode *adaptationSet;
+  GstRepresentationBaseType *representationBase;
+  GstDescriptorType *contentProtection;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <ContentProtection schemeIdUri=\"urn:mpeg:dash:mp4protection:2011\" value=\"cenc\"/>"
+      "      <ContentProtection xmlns:mas=\"urn:marlin:mas:1-0:services:schemas:mpd\" schemeIdUri=\"urn:uuid:5e629af5-38da-4063-8977-97ffbd9902d4\">"
+      "	      <mas:MarlinContentIds>"
+      "	        <mas:MarlinContentId>urn:marlin:kid:02020202020202020202020202020202</mas:MarlinContentId>"
+      "       </mas:MarlinContentIds>"
+      "     </ContentProtection>" "</AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
+  adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
+  representationBase = adaptationSet->RepresentationBase;
+  assert_equals_int (g_list_length (representationBase->ContentProtection), 2);
+  contentProtection =
+      (GstDescriptorType *) g_list_nth (representationBase->ContentProtection,
+      1)->data;
+  assert_equals_string (contentProtection->schemeIdUri,
+      "urn:uuid:5e629af5-38da-4063-8977-97ffbd9902d4");
+  fail_if (contentProtection->value == NULL);
   gst_mpd_client_free (mpdclient);
 }
 
@@ -4405,6 +4448,8 @@ dash_suite (void)
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_representationBase_contentProtection);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_contentProtection_no_value);
+  tcase_add_test (tc_simpleMPD,
+      dash_mpdparser_contentProtection_no_value_no_encoding);
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_accessibility);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_period_adaptationSet_role);
