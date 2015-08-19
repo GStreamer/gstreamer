@@ -34,7 +34,6 @@
 #include <ges/ges.h>
 #include "ges/gstframepositionner.h"
 #include "ges-internal.h"
-#include "ges/nle/nle.h"
 
 #define GES_GNONLIN_VERSION_NEEDED_MAJOR 1
 #define GES_GNONLIN_VERSION_NEEDED_MINOR 2
@@ -43,20 +42,6 @@
 GST_DEBUG_CATEGORY (_ges_debug);
 
 static gboolean ges_initialized = FALSE;
-
-struct _elements_entry
-{
-  const gchar *name;
-    GType (*type) (void);
-};
-
-static struct _elements_entry _elements[] = {
-  {"nlesource", nle_source_get_type},
-  {"nlecomposition", nle_composition_get_type},
-  {"nleoperation", nle_operation_get_type},
-  {"nleurisource", nle_urisource_get_type},
-  {NULL, 0}
-};
 
 /**
  * ges_init:
@@ -69,8 +54,6 @@ static struct _elements_entry _elements[] = {
 gboolean
 ges_init (void)
 {
-  gint i = 0;
-
   /* initialize debugging category */
   GST_DEBUG_CATEGORY_INIT (_ges_debug, "ges", GST_DEBUG_FG_YELLOW,
       "GStreamer Editing Services");
@@ -107,13 +90,6 @@ ges_init (void)
   gst_element_register (NULL, "framepositionner", 0,
       GST_TYPE_FRAME_POSITIONNER);
   gst_element_register (NULL, "gespipeline", 0, GES_TYPE_PIPELINE);
-
-  for (; _elements[i].name; i++)
-    if (!(gst_element_register (NULL,
-                _elements[i].name, GST_RANK_NONE, (_elements[i].type) ())))
-      return FALSE;
-
-  nle_init_ghostpad_category ();
 
   /* TODO: user-defined types? */
   ges_initialized = TRUE;

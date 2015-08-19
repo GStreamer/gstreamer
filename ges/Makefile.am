@@ -15,12 +15,6 @@ nodist_libges_@GST_API_VERSION@_la_SOURCES = lex.priv_ges_parse_yy.c parse_lex.h
 
 libges_@GST_API_VERSION@_la_SOURCES = 		\
 	$(built_source_make)			\
-	nle/nleobject.c		\
-	nle/nlecomposition.c	\
-	nle/nleghostpad.c		\
-	nle/nleoperation.c		\
-	nle/nlesource.c		\
-	nle/nleurisource.c  \
 	ges.c					\
 	ges-enums.c				\
 	ges-meta-container.c        \
@@ -151,15 +145,6 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-version.h
 
 noinst_HEADERS = \
-	nle/nle.h			\
-	nle/nleobject.h		\
-	nle/nlecomposition.h	\
-	nle/nletypes.h		\
-	nle/nleghostpad.h		\
-	nle/nleoperation.h		\
-	nle/nlesource.h		\
-	nle/nletypes.h		\
-	nle/nleurisource.h \
 	ges-internal.h \
 	ges-auto-transition.h \
 	ges-structured-interface.h \

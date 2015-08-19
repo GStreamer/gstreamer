@@ -173,3 +173,13 @@ nle_composition_remove_object (GstElement * comp, GstElement * object)
 {
   return gst_bin_remove (GST_BIN (comp), object);
 }
+
+gboolean
+nle_object_commit (GstElement * nlesource, gboolean recurse)
+{
+  gboolean ret;
+
+  g_signal_emit_by_name (nlesource, "commit", recurse, &ret);
+
+  return ret;
+}

@@ -33,7 +33,6 @@
 #include "ges-meta-container.h"
 #include "ges-video-track.h"
 #include "ges-audio-track.h"
-#include "nle/nleobject.h"
 
 G_DEFINE_TYPE_WITH_CODE (GESTrack, ges_track, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
@@ -453,7 +452,7 @@ ges_track_dispose (GObject * object)
       (GFunc) dispose_trackelements_foreach, track);
   g_sequence_free (priv->trackelements_by_start);
   g_list_free_full (priv->gaps, (GDestroyNotify) free_gap);
-  nle_object_commit (NLE_OBJECT (track->priv->composition), TRUE);
+  nle_object_commit (track->priv->composition, TRUE);
 
   if (priv->mixing_operation)
     gst_object_unref (priv->mixing_operation);
@@ -1096,7 +1095,7 @@ ges_track_commit (GESTrack * track)
 
   track_resort_and_fill_gaps (track);
 
-  return nle_object_commit (NLE_OBJECT (track->priv->composition), TRUE);
+  return nle_object_commit (track->priv->composition, TRUE);
 }
 
 

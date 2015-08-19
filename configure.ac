@@ -235,6 +235,12 @@ AG_GST_CHECK_GST_CONTROLLER($GST_API_VERSION, [$GST_REQ], yes)
 AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GSTPB_REQ], yes)
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 
+AG_GST_ARG_WITH_PLUGINS
+AG_GST_CHECK_PLUGIN(plugins)
+
+dnl set location of plugin directory
+AG_GST_SET_PLUGINDIR
+
 GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_API_VERSION --variable pluginsdir`
 AC_SUBST(GSTPB_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
@@ -420,6 +426,8 @@ docs/libs/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-editing-services.pc
 pkgconfig/gst-editing-services-uninstalled.pc
+plugins/Makefile
+plugins/nle/Makefile
 bindings/Makefile
 bindings/python/Makefile
 bindings/python/gi/Makefile
