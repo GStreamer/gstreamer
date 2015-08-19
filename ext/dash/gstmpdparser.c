@@ -971,17 +971,45 @@ static gboolean
 gst_mpdparser_get_xml_node_as_string (xmlNode * a_node, gchar ** content)
 {
   gboolean exists = FALSE;
-  xmlBufferPtr buffer = xmlBufferCreate ();
-  int size;
+  const char *txt_encoding;
+  xmlCharEncodingHandlerPtr conv_hdlr = NULL;
+  xmlOutputBufferPtr out_buf;
 
-  size = xmlNodeDump (buffer, a_node->doc, a_node, 0,   /* indent */
-      0 /* format */ );
-  if (size > 0) {
-    *content = (gchar *) xmlBufferDetach (buffer);
+  txt_encoding = (const char *) a_node->doc->encoding;
+  if (txt_encoding != NULL) {
+    conv_hdlr = xmlFindCharEncodingHandler (txt_encoding);
+    if (conv_hdlr == NULL) {
+      GST_ERROR ("Unable to find encoder for encoding: %s", txt_encoding);
+      return FALSE;
+    }
+  }
+  out_buf = xmlAllocOutputBuffer (conv_hdlr);
+  g_assert (out_buf != NULL);
+  xmlNodeDumpOutput (out_buf, a_node->doc, a_node, 0, 0, txt_encoding);
+  xmlOutputBufferFlush (out_buf);
+#ifdef LIBXML2_NEW_BUFFER
+  if (xmlOutputBufferGetSize (out_buf) > 0) {
+    *content =
+        (gchar *) xmlStrndup (xmlOutputBufferGetContent (out_buf),
+        xmlOutputBufferGetSize (out_buf));
     exists = TRUE;
+  }
+#else
+  if (out_buf->conv && out_buf->conv->use > 0) {
+    *content =
+        (gchar *) xmlStrndup (out_buf->conv->content, out_buf->conv->use);
+    exists = TRUE;
+  } else if (out_buf->buffer && out_buf->buffer->use > 0) {
+    *content =
+        (gchar *) xmlStrndup (out_buf->buffer->content, out_buf->buffer->use);
+    exists = TRUE;
+  }
+#endif // LIBXML2_NEW_BUFFER
+  (void) xmlOutputBufferClose (out_buf);
+
+  if (exists) {
     GST_LOG (" - %s: %s", a_node->name, *content);
   }
-  xmlBufferFree (buffer);
   return exists;
 }
 
