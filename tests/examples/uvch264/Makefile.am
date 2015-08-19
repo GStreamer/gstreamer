@@ -11,14 +11,12 @@ test_uvch264_SOURCES = test-uvch264.c
 test_uvch264_CFLAGS  = \
         $(GST_PLUGINS_BAD_CFLAGS) \
         $(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_VIDEO_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(GTK_CFLAGS) \
 	$(GMODULE_EXPORT_CFLAGS) \
         -DGST_USE_UNSTABLE_API
 test_uvch264_LDADD   = \
-        $(GST_PLUGINS_BASE_LIBS) \
-	$(GST_VIDEO_LIBS) \
+        $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
         $(GST_LIBS) \
 	$(GTK_LIBS) \
 	$(GMODULE_EXPORT_LIBS)
