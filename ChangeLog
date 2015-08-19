@@ -1,9 +1,102 @@
-=== release 1.5.2 ===
+=== release 1.5.90 ===
 
-2015-06-24  Sebastian Dröge <slomo@coaxion.net>
+2015-08-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.2
+	  releasing 1.5.90
+
+2015-08-12 14:33:44 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  media-factory: get port number through gst_rtsp_url_get_port
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753473
+
+2015-08-13 11:24:10 +0200  Francisco Velazquez <francisv@ifi.uio.no>
+
+	* tests/check/gst/media.c:
+	  media-test: Removing unnecessary assertion
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753385
+
+2015-07-23 14:50:30 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  Document that source keeps a ref on server until it's destroyed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749227
+
+2015-08-08 11:09:57 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* tests/check/gst/media.c:
+	  media-test: Test for multiple dynamic payload
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753385
+
+2015-08-08 09:40:09 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: Only add fakesink once per pipeline
+	  The intention is to prevent going PLAYING state before pads are created.
+	  If there was mutilple dynamic payload, it would leak few fakesink and
+	  actually prevent from ever reaching playing state.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753385
+
+2015-08-08 09:08:37 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  Revert "rtsp-media: Only add 1 fakesink per pipeline"
+	  This reverts commit 22bf61f16c1210bb458fc3f53642179a0211104f.
+
+2015-08-07 09:21:36 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Only add 1 fakesink per pipeline
+	  There should be only one fakesink per pipeline, not per dynpay. This
+	  would lead to element naming clash.
+
+2015-07-30 15:32:43 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: assertion error due to wrong condition check
+	  In media to caps function, reserved_keys array is being used for variable i,
+	  leading to GLib-CRITICAL **: g_ascii_strcasecmp: assertion 's1 != NULL' failed
+	  changed it to variable j
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753009
+
+2015-07-29 11:27:05 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Strip keys from the fmtp that we use internally in our caps
+	  Skip keys from the fmtp, which we already use ourselves for the
+	  caps. Some software is adding random things like clock-rate into
+	  the fmtp, and we would otherwise here set a string-typed clock-rate
+	  in the caps... and thus fail to create valid RTP caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753009
+
+2015-07-20 16:37:44 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	  threadpool: Fix possible warning in gst_rtsp_thread_pool_cleanup()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752640
+
+2015-07-03 22:00:00 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f74b2df to 9aed1d7
+
+2015-06-25 00:04:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.5.2 ===
+
+2015-06-24 23:44:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.5.2
 
 2015-06-18 13:12:04 +0200  Ognyan Tonchev <ognyan@axis.com>
 

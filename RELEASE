@@ -1,26 +1,27 @@
 
-Release notes for GStreamer RTSP Server Library 1.5.2
+Release notes for GStreamer RTSP Server Library 1.5.90
 
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.5 release series. The 1.5 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate for the
+stable 1.6 release series. The 1.6 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.5 release series
-will lead to the stable 1.6 release series in the next weeks, and newly added
-API can still change until that point.
+series of the GStreamer multimedia framework. The final 1.6.0 release is planned
+in the next few days unless any major bugs are found.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.5 release series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
+the GStreamer project.
+
 
 
   
 
 Bugs fixed in this release
      
-      * 749417 : rtsp-client: add API to allow application to decide what requirements are supported
-      * 750764 : gst-rtsp-server: add missing apis to doc
-      * 750800 : rtsp-media: always use real payloader when creating streams
+      * 749227 : rtsp-server: gst_rtsp_server_attach() is misleading
+      * 752640 : Warning in gst_rtsp_thread_pool_cleanup()
+      * 753385 : media: Adding multiple dynamic payload is broken
+      * 753473 : rtsp-server: shared media uri with explicit port given doesn't match same path uri without port
 
 ==== Download ====
 
@@ -55,15 +56,13 @@ Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
 
         
-Applications
-  
 Contributors to this release
     
-      * Edward Hervey
+      * Francisco Velazquez
       * Hyunjun Ko
       * Nicolas Dufresne
-      * Ognyan Tonchev
       * Sebastian Dröge
       * Stefan Sauer
+      * Vineeth TM
       * Xavier Claessens
  
