@@ -1837,7 +1837,7 @@ if test "x$BUILD_EXTERNAL" = "xyes"; then
 dnl *** assrender ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ASSRENDER, true)
 AG_GST_CHECK_FEATURE(ASSRENDER, [ASS/SSA renderer], assrender, [
-  PKG_CHECK_MODULES(ASSRENDER, libass >= 0.9.4, [
+  PKG_CHECK_MODULES(ASSRENDER, libass >= 0.10.2, [
     HAVE_ASSRENDER="yes" ], [
     HAVE_ASSRENDER="no"
   ])

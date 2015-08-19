@@ -184,7 +184,6 @@ gst_ass_render_class_init (GstAssRenderClass * klass)
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }
 
-#if defined(LIBASS_VERSION) && LIBASS_VERSION >= 0x00907000
 static void
 _libass_message_cb (gint level, const gchar * fmt, va_list args,
     gpointer render)
@@ -204,7 +203,6 @@ _libass_message_cb (gint level, const gchar * fmt, va_list args,
 
   g_free (message);
 }
-#endif
 
 static void
 gst_ass_render_init (GstAssRender * render)
@@ -256,9 +254,7 @@ gst_ass_render_init (GstAssRender * render)
 
   g_mutex_init (&render->ass_mutex);
   render->ass_library = ass_library_init ();
-#if defined(LIBASS_VERSION) && LIBASS_VERSION >= 0x00907000
   ass_set_message_cb (render->ass_library, _libass_message_cb, render);
-#endif
   ass_set_extract_fonts (render->ass_library, 1);
 
   render->ass_renderer = ass_renderer_init (render->ass_library);
@@ -784,8 +780,6 @@ gst_ass_render_setcaps_video (GstPad * pad, GstAssRender * render,
 {
   GstQuery *query;
   gboolean ret = FALSE;
-  gint par_n = 1, par_d = 1;
-  gdouble dar;
   GstVideoInfo info;
   gboolean attach = FALSE;
   gboolean caps_has_meta = TRUE;
@@ -866,25 +860,15 @@ gst_ass_render_setcaps_video (GstPad * pad, GstAssRender * render,
 
   g_mutex_lock (&render->ass_mutex);
   ass_set_frame_size (render->ass_renderer, render->width, render->height);
-
-  dar = (((gdouble) par_n) * ((gdouble) render->width))
-      / (((gdouble) par_d) * ((gdouble) render->height));
-#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907000
-  ass_set_aspect_ratio (render->ass_renderer, dar);
-#else
-  ass_set_aspect_ratio (render->ass_renderer,
-      dar, ((gdouble) render->width) / ((gdouble) render->height));
-#endif
+  ass_set_storage_size (render->ass_renderer,
+      render->info.width, render->info.height);
+  ass_set_pixel_aspect (render->ass_renderer,
+      (gdouble) render->info.par_n / (gdouble) render->info.par_d);
   ass_set_font_scale (render->ass_renderer, 1.0);
   ass_set_hinting (render->ass_renderer, ASS_HINTING_LIGHT);
 
-#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907000
-  ass_set_fonts (render->ass_renderer, "Arial", "sans-serif");
-  ass_set_fonts (render->ass_renderer, NULL, "Sans");
-#else
   ass_set_fonts (render->ass_renderer, "Arial", "sans-serif", 1, NULL, 1);
   ass_set_fonts (render->ass_renderer, NULL, "Sans", 1, NULL, 1);
-#endif
   ass_set_margins (render->ass_renderer, 0, 0, 0, 0);
   ass_set_use_margins (render->ass_renderer, 0);
   g_mutex_unlock (&render->ass_mutex);
