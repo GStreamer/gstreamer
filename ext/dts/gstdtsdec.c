@@ -461,7 +461,7 @@ gst_dtsdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   gsize size;
   GstMapInfo map;
   gint chans;
-  gint length = 0, flags, sample_rate, bit_rate, frame_length;
+  gint length, flags, sample_rate, bit_rate, frame_length;
   GstFlowReturn result = GST_FLOW_OK;
   GstBuffer *outbuf;
 
