@@ -3,7 +3,7 @@
   <description>AAC audio encoder</description>
   <filename>../../ext/voaacenc/.libs/libgstvoaacenc.so</filename>
   <basename>libgstvoaacenc.so</basename>
-  <version>1.5.2</version>
+  <version>1.5.90</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000 }, channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000 }, channels=(int)1; audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000 }, channels=(int)2, channel-mask=(bitmask)0x0000000000000003</details>
         </caps>
         <caps>
           <name>src</name>

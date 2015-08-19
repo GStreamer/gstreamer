@@ -52,6 +52,9 @@ GstGSettingsSwitchSink GstChildProxy
 GstGSettingsSwitchSrc GstChildProxy
 GstGSettingsVideoSink GstChildProxy
 GstGSettingsVideoSrc GstChildProxy
+GstGtkBaseSink GstNavigation
+GstGtkGLSink GstNavigation
+GstGtkSink GstNavigation
 GstHLSDemux GstChildProxy
 GstHanddetect GstNavigation
 GstHlsSink GstChildProxy

@@ -87,8 +87,10 @@ GObject
             GstDfbVideoSink
             GstFBDEVSink
             GstGLImageSink
-            GstGtkGLSink
-            GstGtkSink
+            GstGtkBaseSink
+              GstGtkGLSink
+              GstGtkSink
+            GstQtSink
             GstWaylandSink
         GstBaseSrc
           GstDataURISrc
@@ -199,23 +201,8 @@ GObject
               GstPerspective
               GstRotate
               GstSquare
-            GstGrabcut
-            GstOpencvVideoFilter
-              GstCvDilateErode
-                GstCvDilate
-                GstCvErode
-              GstCvEqualizeHist
-              GstCvLaplace
-              GstCvSmooth
-              GstCvSobel
-              GstFaceBlur
-              GstFaceDetect
-              GstHanddetect
-              GstSkinDetect
-            GstRetinex
             GstRsvgOverlay
             GstSceneChange
-            GstSegmentation
             GstSimpleVideoMark
             GstSimpleVideoMarkDetect
             GstSmooth
@@ -259,11 +246,9 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
-        GstDisparity
         GstDtlsDec
         GstDtlsEnc
         GstDtlsSrtpDemux
-        GstEdgeDetect
         GstErrorIgnore
         GstFestival
         GstFieldAnalysis
@@ -285,14 +270,11 @@ GObject
         GstMimDec
         GstMimEnc
         GstModPlug
-        GstMotioncells
         GstMpeg2enc
         GstMpegPSDemux
         GstMplex
-        GstOpencvTextOverlay
         GstPcapParse
         GstPitch
-        GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
           GstRtpH265Depay
@@ -316,12 +298,11 @@ GObject
         GstSrtpEnc
         GstTagMux
           GstId3Mux
-        GstTemplateMatch
         GstUvcH264MjpgDemux
         GstVideoDecoder
-          GstLibde265Dec
           GstOpenEXRDec
           GstOpenJPEGDec
+          GstOpenh264Dec
           GstPnmdec
           GstRsvgDec
           GstSchroDec
@@ -329,6 +310,7 @@ GObject
           GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
+          GstOpenh264Enc
           GstPnmenc
           GstSchroEnc
           GstWebpEnc

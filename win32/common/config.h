@@ -89,7 +89,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2015-06-24"
+#define GST_PACKAGE_RELEASE_DATETIME "2015-08-19"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -118,10 +118,7 @@
 /* Define to enable Bluez (used by bluez). */
 #undef HAVE_BLUEZ
 
-/* Old bluez detected */
-#undef HAVE_BLUEZ4
-
-/* Current bluez detected */
+/* Bluez5 detected */
 #undef HAVE_BLUEZ5
 
 /* Define to enable bs2b (used by bs2b). */
@@ -501,6 +498,12 @@
 /* Define to enable pvrvideosink (used by pvr). */
 #undef HAVE_PVR
 
+/* Define to enable Qt elements (used by qt). */
+#undef HAVE_QT
+
+/* Define if Qt X11 integration is installed */
+#undef HAVE_QT_X11
+
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
 
@@ -695,6 +698,9 @@
 /* Define if the old MusePack API is used */
 #undef MPC_IS_OLD_API
 
+/* OpenCV path name */
+#undef OPENCV_PATH_NAME
+
 /* opencv install prefix */
 #undef OPENCV_PREFIX
 
@@ -708,7 +714,7 @@
 #define PACKAGE_NAME "GStreamer Bad Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.5.2"
+#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.5.90"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-bad"
@@ -717,7 +723,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.5.2"
+#define PACKAGE_VERSION "1.5.90"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -761,7 +767,7 @@
 #undef USE_EGL_RPI
 
 /* Version number of package */
-#define VERSION "1.5.2"
+#define VERSION "1.5.90"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

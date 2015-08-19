@@ -1,17 +1,16 @@
 
-Release notes for GStreamer Bad Plugins 1.5.2
+Release notes for GStreamer Bad Plugins 1.5.90
 
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.5 release series. The 1.5 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate for the
+stable 1.6 release series. The 1.6 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.5 release series
-will lead to the stable 1.6 release series in the next weeks, and newly added
-API can still change until that point.
+series of the GStreamer multimedia framework. The final 1.6.0 release is planned
+in the next few days unless any major bugs are found.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.5 release series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
+the GStreamer project.
 
 
 
@@ -63,44 +62,87 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
+      * 752745 : glfiltercube: the cube does not look like a cube
+      * 745768 : aggregator: Add internal queue
+      * 706292 : mpegtsmux: Can't re-use safely after coming back from GST_STATE_NULL again
+      * 719553 : rtpasfpay: crash and segment format warnings with asfmux ! rtpasfpay
+      * 725167 : opusdec PLC doesn't seem to work as well as Chrome
+      * 734060 : videoaggregator: Race when scrub forward seeking in PAUSED leading to no ASYNC_DONE on the bus
+      * 743220 : bluetooth modules need to track transport state
+      * 744763 : gltransformation: Make all property into universal [0-1] coordinate
+      * 745107 : glimagesink: implement GstVideoOverlayCompositionMeta
+      * 745206 : glimagesink: crash when using meta:GLTextureUpload method
+      * 746387 : srtp: Add support for buffer list in srtpenc
+      * 746631 : avsamplebufferlayersink: Uses API that is only OSX > =10.10
+      * 747613 : Fixes to HEVC: codecparser, videoparser, codec-utils
+      * 748377 : OpenCV face detection does not work with OpenCV newer than 2.4.10
+      * 749574 : audioaggregator: Deadlock in gst_object_sync_values()
+      * 749734 : gltransformation: black screen (or crash) on Windows
+      * 749966 : aggregator: Allow selecting the aggregation output start time and not always start outputting at 0
+      * 750310 : GL: allow an application to provide an external backend
+      * 751071 : applemedia: CMBlockBuffer can be non-contiguous
+      * 751072 : applemedia: enable sharing of CMBlockBuffer data
       * 751101 : glimagesink: Broken on iOS
-      * 673925 : [API] codecparsers: add JPEG baseline parser
-      * 735653 : mpegts: return early if packetizing short section
-      * 739345 : codecparsers: mpeg4: fix ignored increment of return value
-      * 744459 : opensles: Allow setting stream type
-      * 745748 : liveadder: Fix memory leak
-      * 746765 : mpegtsmux: Remove arbitrary constraint on prog-map program ids
-      * 748922 : vtdec: duplicating input frame's metas (inc. source H264 sample buffer)
-      * 748946 : videoaggregator: add " ignore-eos " property to input pads to ignore EOS
-      * 748947 : playout: New example for seamless audio/video playback
-      * 749856 : d3dvideosink: avoid frame rendering while window handle is hidden
-      * 750098 : New element to convert GST_FLOW_ERROR into GST_FLOW_OK
-      * 750185 : gl: Not showing any video on Android (skip glDrawElements, PowerVR SGX 544MP)
-      * 750390 : tests: dashdemux: add unit tests for checking the parsing of MPD element
-      * 750601 : uvch264: FTBFS because of uninitialized variables
-      * 750619 : cannot build dash against an uninstalled GStreamer
-      * 750635 : vtenc: add alignment=au to sink caps
-      * 750638 : avfassetsrc: fix huge memory leak
-      * 750668 : vtenc: gst_vtenc_frame_free on error
-      * 750669 : vtenc: always enqueue frames, even on error
-      * 750671 : vtenc: free input buffer ASAP
-      * 750685 : h263parse: Wrong mask use in the find_psc function.
-      * 750797 : dashdemux: period duration is not validated
-      * 750804 : dashdemux: incorrectly calculates presentationTimeOffset if the value is larger than 2^32
-      * 750863 : tests: dashdemux: added unit tests for parsing period element
-      * 750866 : dashdemux: xml parser will segfault if there is no default namespace
-      * 750881 : glmixerbin: correctly free input chain on pad release
-      * 750961 : mpegtsmux: fix build error
-      * 750992 : opusenc: Add bitrate to the tags
-      * 751003 : glimagesink: Windows are sharing their events
-      * 751048 : avfvideosrc: caps should indicate frame rate range
-      * 751087 : nalutils: trivial cleanup
-      * 751149 : dashdemux: add warning messages
-      * 751153 : dashdemux: wrong representation index returned when max_bandwidth is 0
-      * 751221 : motioncells: Fix the build on FreeBSD
-      * 751228 : texParameterf missing?
-      * 751255 : videoaggregator: simplifies and improves sink_get_caps.
-      * 751305 : bad: fix some issues found using static analysis tools
+      * 751104 : make Gtk sinks usable from gst-launch
+      * 751165 : gles2: glBufferSubData is called with GL_PIXEL_UNPACK_BUFFER
+      * 751170 : dashdemux: the bitstreamSwitching attribute from AdaptationSet is not parsed
+      * 751449 : dashdemux: wrong duration computed by gst_mpd_client_setup_representation
+      * 751465 : dashdemux: incorrect use of period start
+      * 751500 : dashdemux: incorrect use of timeShiftBufferDepth
+      * 751528 : mpegdemux: Fix a prevent defect which dereference null return value
+      * 751539 : dashdemux: wrong duration validation in gst_mpd_client_get_next_fragment_duration
+      * 751641 : vtdec: fix refcount error in error handling
+      * 751664 : gstjniutils.c - JNI method IDs not set for android platform causing app to crash during runtime.
+      * 751682 : dashdemux: template parsing does not recognize $$$
+      * 751716 : dashdemux: %u is not correctly parsed for segment templates
+      * 751729 : srtpdec: Add config for the replay window size
+      * 751778 : metainfo: some meta has no transform_func in plugins
+      * 751821 : amc: fix check whether we managed to acquire a buffer
+      * 751823 : glimagesink: possible null pointer dereference
+      * 751841 : dashdemux: segment timestamp not correctly computed for SegmentTimeline
+      * 751850 : dashdemux: gst_mpd_client_advance_segment should return GST_FLOW_EOS when index is out of range
+      * 751879 : pcapparse: Fix parsing of packets with eth padding
+      * 751911 : dashdemux: mimeType local variable must be reinitialized at the beginning of loop iteration
+      * 751914 : dashdemux: wrong segment duration computed by gst_mpd_client_setup_representation
+      * 752027 : dashdemux: tests: improve unit test code coverage
+      * 752127 : pngparse: fix caps leak
+      * 752185 : new qt5 qml video sink
+      * 752413 : dashdemux: add support for parsing UTCTiming elements
+      * 752414 : dashdemux: default timescale value should be 1, not 0
+      * 752419 : dashdemux: string is used to print a warning message after it was freed
+      * 752426 : dashdemux: gst_mpdparser_get_xml_prop_duration does not set default value in case of parsing errors
+      * 752431 : mpg123audiodec: fix handling of sample rate change during playback
+      * 752441 : gtk: Create a base class to remove code duplication
+      * 752442 : gtksink: Display once black frame when caps changes
+      * 752620 : dashdemux: segment start time and duration could overflow
+      * 752652 : glimagesink: overlay composition resize does not place text correctly
+      * 752661 : gl : passing immutable gst structure to gst_structure_id_take_value
+      * 752703 : configure: DASH plugin requires libxml2 > = 2.8 now
+      * 752743 : gl: add support for egl+x11+swrast on osx
+      * 752774 : srtpenc: remove unnecessary rtp/rtcp checks to improve performance
+      * 752776 : dashdemux: tests: extend unit tests
+      * 752807 : h265parse: Fix sticky event mishandling when stream does not have VPS
+      * 752912 : Regression: vaapidecode ! glimagesink broken since GL overlay composition
+      * 752937 : glupload: Raw upload is doing an extra copy
+      * 752991 : h263parse: fix caps memory leak
+      * 753037 : rtpopusdepay: timestamp handling regression
+      * 753081 : applemedia/avsample: Cleanup of CA layer is racy and crashes occasionally
+      * 753086 : dtsdec: fix taglist leak
+      * 753188 : dashdemux: memory leak in gst_dash_demux_stream_update_fragment_info
+      * 753241 : camerabin2: Typo (cound't) in translatable string
+      * 753243 : rawparse: Fix duplicated format in handle_seek_pull
+      * 753262 : rsvgdec: Leaks output state
+      * 753306 : h264parse: fix MVC specific data memory leak
+      * 753326 : element-template wrong pad in videoencoder
+      * 753497 : HEVC videoparser fixes: improve frame start detection
+      * 753552 : codecparsers: h265: Fix the parsing of slice header when there is a modification in reference picture lists
+      * 753639 : gl: ClearDepth call missing
+      * 753651 : opencv: Fedora doesn't find haar cascade files
+      * 753661 : dashdemux: Reverse playback doesn't work well
+      * 753759 : liveadder: assertion on buffer copy region
+      * 751241 : vtdec: handle non-consecutive GstBuffer input without copying
+      * 752842 : gloverlaycompositor: Wrong color format
+      * 753228 : rtph265: Sync with rtph264 changes
 
 ==== Download ====
 
@@ -137,34 +179,46 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
       * Alex Ashley
+      * Anders Jonsson
       * Arun Raghavan
-      * Chris Clayton
+      * Carlos Garnacho
+      * Carlos Rafael Giani
       * Edward Hervey
-      * Fabio Cetrini
       * Florin Apostol
-      * Gwenole Beauchesne
+      * Guillaume Marquebielle
+      * Heinrich Fink
+      * Hyunjun Ko
+      * Ilya Averyanov
       * Ilya Konstantinov
       * Jan Schmidt
-      * Jesper Larsen
-      * John Ludwig
+      * Jason Litzinger
+      * Jimmy Ohn
       * Julien Isorce
+      * Lubosz Sarnecki
       * Luis de Bethencourt
-      * Mathieu Duponchelle
+      * Martin Kelly
       * Matthew Waters
-      * Mersad Jelacic
+      * Miguel París Díaz
+      * Nick Stoughton
       * Nicolas Dufresne
       * Nirbheek Chauhan
-      * Santiago Carot-Nemesio
+      * Olivier Crête
+      * Rico Tzschichholz
+      * Roman Donchenko
+      * Sangkyu Park
       * Sebastian Dröge
+      * Sreerenj Balachandran
       * Stefan Sauer
+      * Stian Selnes
       * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
+      * Vanessa Chipi
+      * Vanessa Chipirrás
+      * Vanessa Chipirrás Navalón
       * Vineeth TM
-      * Vivia Nikolaidou
-      * Wim Taymans
-      * Wind Yuan
-      * Yanko Kaneti
+      * Xavier Claessens
+      * Young Han Lee
+      * vanechipi
  

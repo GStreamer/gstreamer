@@ -67861,6 +67861,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstOpenh264Enc::complexity</NAME>
+<TYPE>GstOpenh264encComplexity</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Complexity / quality / speed tradeoff</NICK>
+<BLURB>Complexity.</BLURB>
+<DEFAULT>Medium complexity / medium speed encoding</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstLibde265Dec::max-threads</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -68888,5 +68898,45 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Tune options</NICK>
 <BLURB>Preset name for tuning options.</BLURB>
 <DEFAULT>ssim</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQtSink::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force aspect ratio</NICK>
+<BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQtSink::pixel-aspect-ratio</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>The pixel aspect ratio of the device.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQtSink::widget</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>QQuickItem</NICK>
+<BLURB>The QQuickItem to place in the object heirachy.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSrtpDec::replay-window-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[64,32768]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Replay window size</NICK>
+<BLURB>Size of the replay protection window.</BLURB>
+<DEFAULT>128</DEFAULT>
 </ARG>
 
