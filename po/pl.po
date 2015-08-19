@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-24 22:59+0200\n"
+"POT-Creation-Date: 2015-08-19 12:49+0300\n"
 "PO-Revision-Date: 2015-06-10 22:06+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -185,7 +185,8 @@ msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
 "Położenie pliku ustawiono na NULL, proszę ustawić na poprawną nazwę pliku"
 
-msgid "Digitalzoom element cound't be created"
+#, fuzzy
+msgid "Digitalzoom element couldn't be created"
 msgstr "Nie udało się utworzyć elementu Digitalzoom"
 
 msgid "Subpicture format was not configured before data flow"

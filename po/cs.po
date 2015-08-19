@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-24 22:59+0200\n"
+"POT-Creation-Date: 2015-08-19 12:49+0300\n"
 "PO-Revision-Date: 2015-06-17 14:19+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -190,7 +190,8 @@ msgstr ""
 "Umístění souboru je nastavené prázdné, nastavte jej prosím na platný název "
 "souboru"
 
-msgid "Digitalzoom element cound't be created"
+#, fuzzy
+msgid "Digitalzoom element couldn't be created"
 msgstr "Nelze vytvořit prvek digitalzoom"
 
 msgid "Subpicture format was not configured before data flow"
