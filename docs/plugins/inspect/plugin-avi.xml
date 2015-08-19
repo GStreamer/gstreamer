@@ -3,7 +3,7 @@
   <description>AVI stream handling</description>
   <filename>../../gst/avi/.libs/libgstavi.so</filename>
   <basename>libgstavi.so</basename>
-  <version>1.5.2</version>
+  <version>1.5.90</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -53,7 +53,7 @@
       <longname>Avi muxer</longname>
       <class>Codec/Muxer</class>
       <description>Muxes audio and video into an avi stream</description>
-      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
       <pads>
         <caps>
           <name>audio_%u</name>

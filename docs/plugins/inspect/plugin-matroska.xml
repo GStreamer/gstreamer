@@ -3,7 +3,7 @@
   <description>Matroska and WebM stream handling</description>
   <filename>../../gst/matroska/.libs/libgstmatroska.so</filename>
   <basename>libgstmatroska.so</basename>
-  <version>1.5.2</version>
+  <version>1.5.90</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -14,7 +14,7 @@
       <longname>Matroska demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>Demuxes Matroska/WebM streams into video/audio/subtitles</description>
-      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -47,7 +47,7 @@
       <longname>Matroska muxer</longname>
       <class>Codec/Muxer</class>
       <description>Muxes video/audio/subtitle streams into a matroska stream</description>
-      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
       <pads>
         <caps>
           <name>audio_%u</name>
@@ -80,7 +80,7 @@
       <longname>Matroska parser</longname>
       <class>Codec/Parser</class>
       <description>Parses Matroska/WebM streams into video/audio/subtitles</description>
-      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -101,7 +101,7 @@
       <longname>WebM muxer</longname>
       <class>Codec/Muxer</class>
       <description>Muxes video and audio streams into a WebM stream</description>
-      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
       <pads>
         <caps>
           <name>audio_%u</name>

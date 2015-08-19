@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.5.2</version>
+  <version>1.5.90</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -362,7 +362,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, encoding-name=(string)G722, payload=(int)9, clock-rate=(int)8000</details>
+          <details>application/x-rtp, media=(string)audio, encoding-name=(string)G722, payload=(int)9, clock-rate=(int)8000; application/x-rtp, media=(string)audio, encoding-name=(string)G722, payload=(int)[ 96, 127 ], clock-rate=(int)8000</details>
         </caps>
       </pads>
     </element>
@@ -866,14 +866,14 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)26, clock-rate=(int)90000, encoding-name=(string)JPEG, width=(int)[ 1, 65536 ], height=(int)[ 1, 65536 ]</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)26, clock-rate=(int)90000, encoding-name=(string)JPEG, width=(int)[ 1, 65536 ], height=(int)[ 1, 65536 ]; application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)JPEG, width=(int)[ 1, 65536 ], height=(int)[ 1, 65536 ]</details>
         </caps>
       </pads>
     </element>
     <element>
       <name>rtpklvdepay</name>
       <longname>RTP KLV Depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts KLV (SMPTE ST 336) metadata from RTP packets</description>
       <author>Tim-Philipp Müller &lt;tim@centricular.com&gt;</author>
       <pads>
@@ -894,7 +894,7 @@
     <element>
       <name>rtpklvpay</name>
       <longname>RTP KLV Payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payloads KLV (SMPTE ST 336) metadata as RTP packets</description>
       <author>Tim-Philipp Müller &lt;tim@centricular.com&gt;</author>
       <pads>
@@ -1202,7 +1202,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)32, clock-rate=(int)90000, encoding-name=(string)MPV</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)32, clock-rate=(int)90000, encoding-name=(string)MPV; application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MPV</details>
         </caps>
       </pads>
     </element>

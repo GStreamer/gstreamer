@@ -19,16 +19,16 @@ GObject
         GstV4l2DeviceProvider
       GstElement
         Gst3GPPMux
-        GstALawDec
-        GstALawEnc
         GstAsteriskh263
         GstAuParse
         GstAudioDecoder
+          GstALawDec
           GstFlacDec
           GstMuLawDec
           GstSpeexDec
           GstWavpackDec
         GstAudioEncoder
+          GstALawEnc
           GstFlacEnc
           GstMuLawEnc
           GstSpeexEnc

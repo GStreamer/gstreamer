@@ -3,7 +3,7 @@
   <description>The FLAC Lossless compressor Codec</description>
   <filename>../../ext/flac/.libs/libgstflac.so</filename>
   <basename>libgstflac.so</basename>
-  <version>1.5.2</version>
+  <version>1.5.90</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string){ S24LE, S24_32LE, S16LE, S8 }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)[ 1, 8 ]</details>
+          <details>audio/x-raw, format=(string){ S8, S16LE, S24LE, S24_32LE }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)1; audio/x-raw, format=(string){ S8, S16LE, S24LE, S24_32LE }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)2, channel-mask=(bitmask)0x0000000000000003; audio/x-raw, format=(string){ S8, S16LE, S24LE, S24_32LE }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)3, channel-mask=(bitmask)0x0000000000000007; audio/x-raw, format=(string){ S8, S16LE, S24LE, S24_32LE }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)4, channel-mask=(bitmask)0x0000000000000033; audio/x-raw, format=(string){ S8, S16LE, S24LE, S24_32LE }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)5, channel-mask=(bitmask)0x0000000000000037; audio/x-raw, format=(string){ S8, S16LE, S24LE, S24_32LE }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)6, channel-mask=(bitmask)0x000000000000003f; audio/x-raw, format=(string){ S8, S16LE, S24LE, S24_32LE }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)7, channel-mask=(bitmask)0x000000000000013f; audio/x-raw, format=(string){ S8, S16LE, S24LE, S24_32LE }, layout=(string)interleaved, rate=(int)[ 1, 655350 ], channels=(int)8, channel-mask=(bitmask)0x0000000000000c3f</details>
         </caps>
         <caps>
           <name>src</name>

@@ -1,17 +1,16 @@
 
-Release notes for GStreamer Good Plugins 1.5.2
+Release notes for GStreamer Good Plugins 1.5.90
 
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.5 release series. The 1.5 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate for the
+stable 1.6 release series. The 1.6 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.5 release series
-will lead to the stable 1.6 release series in the next weeks, and newly added
-API can still change until that point.
+series of the GStreamer multimedia framework. The final 1.6.0 release is planned
+in the next few days unless any major bugs are found.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.5 release series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
+the GStreamer project.
 
 
 
@@ -58,26 +57,58 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 742917 : v4l2: Allow scaling in the v4l2*convert element
-      * 746146 : v4l2src: Seems to produce invalid or not-supported colorimetry field
-      * 750298 : souphttpsrc: add tls-database property
-      * 750471 : rtspsrc: Add support for TLS client authentication
-      * 750566 : goom: FTBFS: possible uninitialized variables compiler warning
-      * 750567 : rtpvp8depay: FTBFS because of access beyond end of array compiler warning
-      * 750653 : rtpmanager: document units of stats and arguments
-      * 750675 : qtdemux: reverse playback not working
-      * 750747 : splitmuxtest sometimes fails
-      * 750868 : osxaudio: fix latency property query on RemoteIO
-      * 750965 : rtpjitterbuffer: 1. Fix a typing error of comment, 2. Add null check in free_item function
-      * 751164 : rtspsrc does not respect the timeout value in the SETUP reply
-      * 751297 : rtprtxqueue: reverse pending list before pushing buffers
-      * 751298 : flvmux: produced files does not work well with common flash players
-      * 751306 : good plugins: fix some issues found using static analysis tool
-      * 751316 : rtpjitterbuffer : Fix a typing error of comment and the code which is wrong coding style. (trivial cleanup)
-      * 751320 : flvmux: Does not append AVC end of sequence
-      * 751361 : qtmux generates bad output timestamps
-      * 751364 : flacparse: fix possible memory leak
-      * 743338 : gstv4l2bufferpool: handle -EPIPE from DQBUF to signal EOS
+      * 738363 : jitterbuffer: lost-events are broken
+      * 738570 : flvdemux: Fix support for seeking flags
+      * 738681 : qtdemux: does not detect orientation
+      * 739472 : multifilesrc: Lost the ability to start at a different frame by setting index property
+      * 739868 : rtpmanager: rtpjitterbuffer fixes and improvements
+      * 745089 : qtdemux: gets stuck if file only has a moof and no moov
+      * 746445 : rtpaux: Unit test is racy and producing warnings
+      * 747728 : vp8enc: multipass-mode=2 is not working
+      * 747881 : rtpmp4gdepay does not calculate timestamp for RTP packets with multiple Access Units
+      * 747965 : rtppayload: payload type could be inconsistent in some payloader, which have pre-defined pt by RFC standard
+      * 749536 : rtspsrc: handle gap in tcp mode
+      * 750101 : rtspsrc: send the user-agent header
+      * 750106 : splitmuxsink: add a " format-location " signal that allows better control over filenames
+      * 751240 : splitmuxsrc: improve sticky events handling
+      * 751334 : FLAC: memory leak on a specific media file
+      * 751496 : rtspsrc: Add new ntp-time-source property and deprecate use-pipeline-clock property
+      * 751774 : rtp: Copy over metas if possible
+      * 751780 : avidemux: Fix the return type of index_entry_offset_search
+      * 751886 : Add rtph261pay and rtph261depay
+      * 751929 : rtpvp8depay: Ignore reserved bit in payload descriptor
+      * 751982 : rtph261pay: rtph261depay: Add documentation
+      * 751985 : rtph261pay: Fix uninitialized variable compiler error
+      * 752012 : rtph263pdepay: Fix initialization of debug category
+      * 752053 : goom:  Initialised variables to remove compiler warnings
+      * 752073 : Revert " imagefreeze: Remove impossible error condition " 
+      * 752100 : rtpklvdepay: fix build error
+      * 752112 : rtph263depay: Make sure payload is large enough
+      * 752117 : avidemux: fix event leak
+      * 752416 : audiofx: fix typos in example pipelines
+      * 752421 : matroskademux: SRT subtitles with markup are displayed with a trailing asterisk
+      * 752613 : qtdemux: raw 16 bit PCM audio in 'raw ' fourcc not working
+      * 752618 : v4l2bufferpool: Set timestamp when queue buffer
+      * 752655 : qtdemux: support 'subt' subtype for subtitle tracks
+      * 752663 : rtpvp8depay: Check available bytes before copy
+      * 752825 : v4l2: Patch to remove limit on framerate
+      * 752850 : matroskademux: Does not send user-supplied metadata tags from streamable files
+      * 752866 : souphttpsrc: allow empty http proxy string
+      * 752992 : matroska: fix minor tag string leak
+      * 753008 : dvdemux: Remove unused variable
+      * 753009 : rtspsrc: Strip keys from the fmtp that we use internally in our caps
+      * 753042 : rtpmp4vdepay: rtpbuffer is being unref'ed twice
+      * 753066 : rtpstreamdepay: No Caps set error when activating in pull mode
+      * 753240 : souphttpsrc: Typo (occured) in translatable string
+      * 753325 : rtpklv(de)pay: add " RTP " in the klass string
+      * 753430 : rtph264depay: Not working with caps " byte-stream/nal " 
+      * 753450 : audioecho: unused local variable in set_property function
+      * 753490 : audioecho: reallocate buffer on changing max_delay
+      * 753556 : matroska: Remove unused variables
+      * 753670 : directsoundsink: allow specifying audio playback device
+      * 753706 : rtp: some (de)payloaders are missing copying metadata.
+      * 743758 : osxaudiosrc supports only 44100 sample rate on iOS
+      * 679768 : mpegaudioparse, baseparse: fix tag handling
 
 ==== Download ====
 
@@ -114,22 +145,40 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Alex Ashley
       * Arun Raghavan
-      * Chris Clayton
+      * Dimitrios Christidis
+      * Dimitrios Katsaros
+      * Dustin Spicuzza
       * Edward Hervey
-      * Enrico Jorns
+      * Eunhae Choi
+      * George Kiagiadakis
+      * Gilbok Lee
+      * Glen Diener
+      * Havard Graff
+      * Hyunjun Ko
       * Ilya Konstantinov
+      * Jan Alexander Steffens (heftig)
       * Jan Schmidt
-      * Jose Antonio Santos Cadenas
+      * Jimmy Ohn
       * Luis de Bethencourt
+      * Manasa Athreya
       * Miguel París Díaz
       * Nicolas Dufresne
-      * Philipp Zabel
-      * Sangkyu Park
+      * Oleksij Rempel
+      * Olivier Crête
+      * Paul Hyunil
+      * Prashant Gotarne
+      * Ramiro Polla
+      * Ravi Kiran K N
       * Sebastian Dröge
+      * Song Bing
       * Stefan Sauer
+      * Stian Selnes
       * Thiago Santos
+      * Tim-Philipp Müller
+      * Tobias Mueller
       * Vineeth T M
       * Vineeth TM
-      * Xavier Claessens
+      * Wim Taymans
  

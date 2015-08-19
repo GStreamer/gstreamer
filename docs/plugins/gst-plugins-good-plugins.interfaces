@@ -2,6 +2,7 @@ GSocket GInitable
 GdkPixbuf GIcon
 GdkPixbuf GIcon GLoadableIcon
 Gst3GPPMux GstTagSetter GstTagXmpWriter
+GstALawEnc GstPreset
 GstApev2Mux GstTagSetter
 GstAspectRatioCrop GstChildProxy
 GstAudioEncoder GstPreset

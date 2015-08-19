@@ -1059,6 +1059,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::user-agent</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>User Agent</NICK>
+<BLURB>The User-Agent string to send to the server.</BLURB>
+<DEFAULT>"GStreamer/1.5.90"</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -4316,6 +4326,16 @@
 <NICK>TLS database</NICK>
 <BLURB>TLS database with anchor certificate authorities used to validate the server certificate.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::method</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>HTTP method</NICK>
+<BLURB>The HTTP method to use (GET, HEAD, OPTIONS, etc).</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23914,7 +23934,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Multipass Cache File</NICK>
-<BLURB>Multipass cache file.</BLURB>
+<BLURB>Multipass cache file. If stream caps reinited, multiple files will be created: file, file.1, file.2, ... and so on.</BLURB>
 <DEFAULT>"multipass.cache"</DEFAULT>
 </ARG>
 
@@ -24824,7 +24844,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Multipass Cache File</NICK>
-<BLURB>Multipass cache file.</BLURB>
+<BLURB>Multipass cache file. If stream caps reinited, multiple files will be created: file, file.1, file.2, ... and so on.</BLURB>
 <DEFAULT>"multipass.cache"</DEFAULT>
 </ARG>
 

@@ -789,3 +789,11 @@ GstRTSPSrc *gstrtspsrc
 guint  arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstSplitMuxSink::format-location</NAME>
+<RETURNS>gchar*</RETURNS>
+<FLAGS>l</FLAGS>
+GstSplitMuxSink *gstsplitmuxsink
+guint  arg1
+</SIGNAL>
+
