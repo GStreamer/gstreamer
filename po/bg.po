@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-24 22:51+0200\n"
+"POT-Creation-Date: 2015-08-19 12:42+0300\n"
 "PO-Revision-Date: 2011-04-26 22:35+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -47,8 +47,9 @@ msgstr "Не може да се осъществи връзка към сърв�
 msgid "Secure connection setup failed."
 msgstr "Неуспешно осъществяване на шифрирана връзка."
 
+#, fuzzy
 msgid ""
-"A network error occured, or the server closed the connection unexpectedly."
+"A network error occurred, or the server closed the connection unexpectedly."
 msgstr "Възникна мрежова грешка или сървърът неочаквано прекъсна връзката."
 
 msgid "Server sent bad data."

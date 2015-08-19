@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-06-24 22:51+0200\n"
+"POT-Creation-Date: 2015-08-19 12:42+0300\n"
 "PO-Revision-Date: 2014-06-29 18:59+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -50,8 +50,9 @@ msgstr "Не удалось установить соединение с сер�
 msgid "Secure connection setup failed."
 msgstr "Не удалось настроить защищённое соединение."
 
+#, fuzzy
 msgid ""
-"A network error occured, or the server closed the connection unexpectedly."
+"A network error occurred, or the server closed the connection unexpectedly."
 msgstr "Произошла сетевая ошибка или сервер неожиданно закрыл соединение."
 
 msgid "Server sent bad data."
