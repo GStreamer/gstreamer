@@ -23,6 +23,8 @@
 #ifndef __GST_VERSION_H__
 #define __GST_VERSION_H__
 
+#include <glib.h>
+
 /**
  * SECTION:gstversion
  * @short_description: GStreamer version macros.
@@ -58,7 +60,7 @@ G_BEGIN_DECLS
  *
  * The micro version of GStreamer at compile time:
  */
-#define GST_VERSION_MICRO (2)
+#define GST_VERSION_MICRO (90)
 /**
  * GST_VERSION_NANO:
  *

@@ -1272,6 +1272,7 @@ gst_pad_probe_return_get_type (void)
     {C_ENUM (GST_PAD_PROBE_OK), "GST_PAD_PROBE_OK", "ok"},
     {C_ENUM (GST_PAD_PROBE_REMOVE), "GST_PAD_PROBE_REMOVE", "remove"},
     {C_ENUM (GST_PAD_PROBE_PASS), "GST_PAD_PROBE_PASS", "pass"},
+    {C_ENUM (GST_PAD_PROBE_HANDLED), "GST_PAD_PROBE_HANDLED", "handled"},
     {0, NULL, NULL}
   };
 
@@ -1308,6 +1309,8 @@ gst_pad_flags_get_type (void)
         "proxy-scheduling"},
     {C_FLAGS (GST_PAD_FLAG_ACCEPT_INTERSECT), "GST_PAD_FLAG_ACCEPT_INTERSECT",
         "accept-intersect"},
+    {C_FLAGS (GST_PAD_FLAG_ACCEPT_TEMPLATE), "GST_PAD_FLAG_ACCEPT_TEMPLATE",
+        "accept-template"},
     {C_FLAGS (GST_PAD_FLAG_LAST), "GST_PAD_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };

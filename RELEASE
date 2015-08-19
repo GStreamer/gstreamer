@@ -1,17 +1,16 @@
 
-Release notes for GStreamer 1.5.2
+Release notes for GStreamer 1.5.90
 
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.5 release series. The 1.5 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate for the
+stable 1.6 release series. The 1.6 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.5 release series
-will lead to the stable 1.6 release series in the next weeks, and newly added
-API can still change until that point.
+series of the GStreamer multimedia framework. The final 1.6.0 release is planned
+in the next few days unless any major bugs are found.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.5 release series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
+the GStreamer project.
 
 
 
@@ -38,23 +37,37 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 740502 : Add absolute property to GstDirectControlBinding
-      * 740575 : Fixing DTS in GStreamer
-      * 745366 : concat: Forward FLUSH_START / FLUSH_STOP events
-      * 746949 : concat: Add active-pad property
-      * 750027 : concat: Reset internal start offset to 0 after flushing seek
-      * 750033 : basetransform - allow collation/separation of buffers
-      * 750039 : Keeping buffers with shared memory alive
-      * 750319 : memory: subclasses don't know map flags in unmap
-      * 750530 : ptp: FreeBSD, DragonFly and other BSDs don't have ifreq.ifw_hwaddr
-      * 750574 : netclientclock: Make the clock a wrapper clock around an internal clock
-      * 750761 : inputselector: Handle different duration track selection
-      * 750782 : pipeline: Add gst_pipeline_set_latency(), getter and GObject property
-      * 751026 : basesink: Properly handle buffer lists for the last-sample property
-      * 751047 : concat: Add adjust-base property
-      * 751107 : concat: when releasing pad, send EOS appropriately.
-      * 751235 : utils: get_compatible_pad does not fully respect filter caps
-      * 751420 : basesink: need to deep-copy last buffer list in drain
+      * 746385 : task: add function guards for gst_task_set_lock()
+      * 746431 : gsttask: function gst_task_join should do the argument verification before accessing GstTaskPrivate
+      * 746439 : task: guard against NULL task function in  gst_task_new()
+      * 748643 : gstpad: Add a new GST_PROBE_HANDLED return value for probes
+      * 749590 : protection_meta: implement transform function
+      * 750149 : queuearray: allow storing of structs in addition to pointers (for GQueue optimisation)
+      * 750783 : baseparse: reverse playback in pull mode
+      * 751622 : test_ABI: failed ABI check
+      * 751628 : tests: caps: test_intersect_flagset failure
+      * 751712 : buffer: gst_buffer_copy_into() should probably not copy GST_META_FLAG_POOLED metadata
+      * 751819 : basesink: Shouldn't drop buffer when sync=false
+      * 751840 : inputselector: unnecessary check is always true
+      * 751881 : memory: Add missing field initializers to GstMapInfo
+      * 751916 : Add GstHarness test framework
+      * 752055 : identity: invalid read when unscheduling a gst_clock_id_wait
+      * 752092 : baseparse: Passes bogus buffer durations to subclass
+      * 752116 : adapter: failure of gst_adapter_get_(buffer_)list
+      * 752123 : harness: don't run code inside g_assert()
+      * 752493 : harness: Improve detection of element type
+      * 752494 : harness: Forward sticky events to sink harness
+      * 752498 : GstHarness improvements
+      * 752623 : concat: Test pipeline with uridecodebin and concat freezes sometimes when setting pipeline to state NULL
+      * 752662 : registry: Add plugins to the registry we are loading and not default one
+      * 752746 : harness: allow full control over event forwarding
+      * 752800 : basetransform: may return not-negotiation on shutdown
+      * 753011 : queue2: can not update upstream_size with valid data
+      * 753151 : gstpad: fix invalid object unref
+      * 753338 : value: free caps during failure
+      * 753455 : datetime: allow passing just a time to gst_date_time_new_from_iso8601_string() and default to " today " as date then
+      * 753538 : basetransform: remove unreachable return statement
+      * 753623 : pad: implement default handling of accept-caps using the template caps
 
 ==== Download ====
 
@@ -91,21 +104,32 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alison Chaiken
-      * Carlos Rafael Giani
+      * Arnaud Vrac
+      * Arun Raghavan
       * Edward Hervey
-      * Hyunjun
+      * Eunhae Choi
+      * George Kiagiadakis
+      * Havard Graff
       * Hyunjun Ko
       * Jan Schmidt
-      * Jonas Holmberg
-      * Lazar Claudiu
+      * Justin Joy
+      * Luis de Bethencourt
       * Mathieu Duponchelle
-      * Matthew Waters
+      * Miguel París Díaz
       * Nicolas Dufresne
+      * Nirbheek Chauhan
+      * Olivier Crête
+      * Philippe Normand
+      * Prashant Gotarne
       * Sebastian Dröge
       * Song Bing
       * Stefan Sauer
+      * Stian Selnes
       * Thiago Santos
+      * Thibault Saunier
       * Tim-Philipp Müller
-      * Руслан Ижбулатов
+      * Vineeth T M
+      * Vineeth TM
+      * Vivia Nikolaidou
+      * Wim Taymans
  

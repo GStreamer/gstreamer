@@ -104,7 +104,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Allow not linked</NICK>
-<BLURB>Return GTS_FLOW_OK even if there are not source pads or all are unlinked.</BLURB>
+<BLURB>Return GST_FLOW_OK even if there are no source pads or they are all unlinked.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
