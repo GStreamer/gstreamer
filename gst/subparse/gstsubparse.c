@@ -452,7 +452,7 @@ convert_encoding (GstSubParse * self, const gchar * str, gsize len,
         self->detected_encoding, err->message);
     g_free (self->detected_encoding);
     self->detected_encoding = NULL;
-    g_error_free (err);
+    g_clear_error (&err);
   }
 
   /* Otherwise check if it's UTF8 */
@@ -484,7 +484,7 @@ convert_encoding (GstSubParse * self, const gchar * str, gsize len,
   if (err) {
     GST_WARNING_OBJECT (self, "could not convert string from '%s' to UTF-8: %s",
         encoding, err->message);
-    g_error_free (err);
+    g_clear_error (&err);
 
     /* invalid input encoding, fall back to ISO-8859-15 (always succeeds) */
     ret = gst_convert_to_utf8 (str, len, "ISO-8859-15", consumed, NULL);
@@ -1214,7 +1214,7 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
           G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of mdvd regex failed: %s", gerr->message);
-        g_error_free (gerr);
+        g_clear_error (&gerr);
       }
       break;
     case GST_SUB_PARSE_REGEX_SUBRIP:
@@ -1225,7 +1225,7 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
           G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of subrip regex failed: %s", gerr->message);
-        g_error_free (gerr);
+        g_clear_error (&gerr);
       }
       break;
     case GST_SUB_PARSE_REGEX_DKS:
@@ -1233,7 +1233,7 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
           G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of dks regex failed: %s", gerr->message);
-        g_error_free (gerr);
+        g_clear_error (&gerr);
       }
       break;
     default:
@@ -1764,7 +1764,7 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
     if (converted_str == NULL) {
       GST_DEBUG ("Encoding '%s' detected but conversion failed: %s", encoding,
           err->message);
-      g_error_free (err);
+      g_clear_error (&err);
     } else {
       g_free (str);
       str = converted_str;
