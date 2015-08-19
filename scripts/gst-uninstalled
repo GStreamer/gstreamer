@@ -165,6 +165,7 @@ $GST/gstreamer/plugins\
 :$GST/farsight2/transmitters\
 :$GST/libnice/gst\
 :$GST/gst-rpicamsrc/src/.libs\
+:$GST/gst-editing-services/plugins/nle/.libs\
 ${GST_PLUGIN_PATH:+:$GST_PLUGIN_PATH}"
 
 # don't use any system-installed plug-ins at all
