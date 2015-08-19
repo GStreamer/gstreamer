@@ -1,9 +1,220 @@
-=== release 1.5.2 ===
+=== release 1.5.90 ===
 
-2015-06-24  Sebastian Dröge <slomo@coaxion.net>
+2015-08-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.2
+	  releasing 1.5.90
+
+2015-08-19 11:33:01 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/id.po:
+	* po/sv.po:
+	  po: Update translations
+
+2015-08-18 02:23:55 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: actually return TRUE from accept-caps handler
+	  The query was handled
+
+2015-08-16 14:27:44 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: implement accept-caps handling
+	  Implement accept-caps handling without doing caps queries downstream
+
+2015-08-15 22:15:26 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/amrnb/amrnbenc.c:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/twolame/gsttwolamemp2enc.c:
+	  audioencoders: use template subset check for accept-caps
+	  It is faster than doing a query that propagates downstream and
+	  should be enough
+	  Elements: amrnbenc, lamemp3enc, twolamemp2enc
+
+2015-08-15 11:46:59 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: use default pad accept-caps handling
+	  Avoids useless check of downstream caps when handling an
+	  accept-caps query
+
+2015-08-15 11:46:13 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrwbdec/amrwbdec.c:
+	* ext/mad/gstmad.c:
+	  audiodecoders: use default pad accept-caps handling
+	  Avoids useless check of downstream caps when handling an
+	  accept-caps query
+	  Elements: a52dec, amrnbdec, amrwbdec, mad
+
+2015-08-14 11:14:31 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* tests/check/generic/states.c:
+	  check: Rename states unit test
+	  Makes it easier to differentiate from other modules states unit test
+
+2015-08-06 10:05:53 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: fix assertion error when freeing old tags.
+	  Check if old_tags is present before calling gst_tag_list_unref
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753301
+
+2015-07-24 10:08:34 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix assertion error when codec_data is not present in structure
+	  When discovering a particular asf file, caps structure doesn't have
+	  codec_data, and this was not being checked before using the same,
+	  resulting in assertion error
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752803
+
+2015-07-29 15:55:14 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: remove unread value
+	  Init value of idx2 is never used. First usage sets it to idx + 1. Removing
+	  initial value.
+
+2015-07-25 04:55:15 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Don't post error on flushing while reading headers
+
+2015-07-21 11:13:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: mark tag list as global scope
+
+2015-07-21 11:10:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: fix taglist leak
+	  merge doesn't take ownership, so must unref the
+	  old tags if we do merge.
+
+2015-07-21 12:44:55 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: fix wrong unref when there are no tags
+	  Tags should be appended to pending tags and unref'ed only if tags
+	  are present. Else there is no need to append.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752404
+
+2015-07-16 18:11:37 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: fix memory leaks during error cases
+	  while adding stream, during error cases, only stream is
+	  being freed. Adapter, pad, tags, subpackets, index are not being
+	  freed resulting in memory leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752404
+
+2015-07-16 17:23:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-plugins-ugly.doap:
+	  Update mailing list in doap file as well
+
+2015-07-16 17:19:37 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/amrnb/amrnbdec.c:
+	  Update mailing list address from sourceforge to freedesktop
+
+2015-07-16 09:49:17 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: fix tag memory leak
+	  tags is not being freed after being merged to the
+	  pending_tags.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752404
+
+2015-07-03 21:58:33 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f74b2df to 9aed1d7
+
+2015-06-25 00:04:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.5.2 ===
+
+2015-06-24 23:39:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.5.2
+
+2015-06-24 23:14:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2015-06-24 11:15:22 +0200  Sebastian Dröge <sebastian@centricular.com>
 

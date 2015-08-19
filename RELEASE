@@ -1,17 +1,16 @@
 
-Release notes for GStreamer Ugly Plugins 1.5.2
+Release notes for GStreamer Ugly Plugins 1.5.90
 
 
-The GStreamer team is pleased to announce the first release of the unstable
-1.5 release series. The 1.5 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate for the
+stable 1.6 release series. The 1.6 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.5 release series
-will lead to the stable 1.6 release series in the next weeks, and newly added
-API can still change until that point.
+series of the GStreamer multimedia framework. The final 1.6.0 release is planned
+in the next few days unless any major bugs are found.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.5 release series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
+the GStreamer project.
 
 
 
@@ -60,9 +59,9 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 711190 : asfdemux: signal 3D video
-      * 731351 : x264enc: Shift PTS and DTS with bframes
-      * 750596 : xingmux: FTBFS because of uninitialized variables
+      * 752404 : realmedia: fix leaks while playing real media files
+      * 752803 : asfdemux: fix assertion error when codec_data is not present in structure
+      * 753301 : rmdemux: fix assertion error when freeing tags
 
 ==== Download ====
 
@@ -99,11 +98,13 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Chris Clayton
       * Edward Hervey
-      * Jan Schmidt
-      * Matej Knopp
-      * Nicolas Dufresne
+      * Luis de Bethencourt
+      * Olivier Crête
       * Sebastian Dröge
       * Stefan Sauer
+      * Thiago Santos
+      * Tim-Philipp Müller
+      * Vineeth T M
+      * Vineeth TM
  
