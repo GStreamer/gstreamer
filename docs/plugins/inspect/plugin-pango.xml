@@ -3,7 +3,7 @@
   <description>Pango-based text rendering and overlay</description>
   <filename>../../ext/pango/.libs/libgstpango.so</filename>
   <basename>libgstpango.so</basename>
-  <version>1.5.2</version>
+  <version>1.5.90</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -62,7 +62,7 @@
       <longname>Text renderer</longname>
       <class>Filter/Editor/Video</class>
       <description>Renders a text string to an image bitmap</description>
-      <author>David Schleef &lt;ds@schleef.org&gt;, GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
+      <author>David Schleef &lt;ds@schleef.org&gt;, GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

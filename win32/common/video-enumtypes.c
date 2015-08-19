@@ -14,6 +14,8 @@
 #include "video-tile.h"
 #include "video-converter.h"
 #include "video-resampler.h"
+#include "video-frame.h"
+#include "video-scaler.h"
 
 /* enumerations from "video-format.h" */
 GType
@@ -799,6 +801,96 @@ gst_video_resampler_flags_get_type (void)
     };
     GType g_define_type_id =
         g_enum_register_static ("GstVideoResamplerFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "video-frame.h" */
+GType
+gst_video_frame_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_FRAME_FLAG_NONE, "GST_VIDEO_FRAME_FLAG_NONE", "none"},
+      {GST_VIDEO_FRAME_FLAG_INTERLACED, "GST_VIDEO_FRAME_FLAG_INTERLACED",
+          "interlaced"},
+      {GST_VIDEO_FRAME_FLAG_TFF, "GST_VIDEO_FRAME_FLAG_TFF", "tff"},
+      {GST_VIDEO_FRAME_FLAG_RFF, "GST_VIDEO_FRAME_FLAG_RFF", "rff"},
+      {GST_VIDEO_FRAME_FLAG_ONEFIELD, "GST_VIDEO_FRAME_FLAG_ONEFIELD",
+          "onefield"},
+      {GST_VIDEO_FRAME_FLAG_MULTIPLE_VIEW, "GST_VIDEO_FRAME_FLAG_MULTIPLE_VIEW",
+          "multiple-view"},
+      {GST_VIDEO_FRAME_FLAG_FIRST_IN_BUNDLE,
+          "GST_VIDEO_FRAME_FLAG_FIRST_IN_BUNDLE", "first-in-bundle"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoFrameFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_buffer_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_BUFFER_FLAG_INTERLACED, "GST_VIDEO_BUFFER_FLAG_INTERLACED",
+          "interlaced"},
+      {GST_VIDEO_BUFFER_FLAG_TFF, "GST_VIDEO_BUFFER_FLAG_TFF", "tff"},
+      {GST_VIDEO_BUFFER_FLAG_RFF, "GST_VIDEO_BUFFER_FLAG_RFF", "rff"},
+      {GST_VIDEO_BUFFER_FLAG_ONEFIELD, "GST_VIDEO_BUFFER_FLAG_ONEFIELD",
+          "onefield"},
+      {GST_VIDEO_BUFFER_FLAG_MULTIPLE_VIEW,
+          "GST_VIDEO_BUFFER_FLAG_MULTIPLE_VIEW", "multiple-view"},
+      {GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE,
+          "GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE", "first-in-bundle"},
+      {GST_VIDEO_BUFFER_FLAG_LAST, "GST_VIDEO_BUFFER_FLAG_LAST", "last"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoBufferFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_frame_map_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_FRAME_MAP_FLAG_NO_REF, "GST_VIDEO_FRAME_MAP_FLAG_NO_REF",
+          "no-ref"},
+      {GST_VIDEO_FRAME_MAP_FLAG_LAST, "GST_VIDEO_FRAME_MAP_FLAG_LAST", "last"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoFrameMapFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "video-scaler.h" */
+GType
+gst_video_scaler_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_SCALER_FLAG_NONE, "GST_VIDEO_SCALER_FLAG_NONE", "none"},
+      {GST_VIDEO_SCALER_FLAG_INTERLACED, "GST_VIDEO_SCALER_FLAG_INTERLACED",
+          "interlaced"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoScalerFlags", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;

@@ -2529,6 +2529,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstSocketSrc::caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps</NICK>
+<BLURB>The caps of the source pad.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstTimeOverlay::time-mode</NAME>
 <TYPE>GstTimeOverlayTimeLine</TYPE>
 <RANGE></RANGE>

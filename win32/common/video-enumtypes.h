@@ -89,6 +89,18 @@ GType gst_video_resampler_method_get_type (void);
 #define GST_TYPE_VIDEO_RESAMPLER_METHOD (gst_video_resampler_method_get_type())
 GType gst_video_resampler_flags_get_type (void);
 #define GST_TYPE_VIDEO_RESAMPLER_FLAGS (gst_video_resampler_flags_get_type())
+
+/* enumerations from "video-frame.h" */
+GType gst_video_frame_flags_get_type (void);
+#define GST_TYPE_VIDEO_FRAME_FLAGS (gst_video_frame_flags_get_type())
+GType gst_video_buffer_flags_get_type (void);
+#define GST_TYPE_VIDEO_BUFFER_FLAGS (gst_video_buffer_flags_get_type())
+GType gst_video_frame_map_flags_get_type (void);
+#define GST_TYPE_VIDEO_FRAME_MAP_FLAGS (gst_video_frame_map_flags_get_type())
+
+/* enumerations from "video-scaler.h" */
+GType gst_video_scaler_flags_get_type (void);
+#define GST_TYPE_VIDEO_SCALER_FLAGS (gst_video_scaler_flags_get_type())
 G_END_DECLS
 
 #endif /* __GST_VIDEO_ENUM_TYPES_H__ */
