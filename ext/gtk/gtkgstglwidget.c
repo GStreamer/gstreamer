@@ -202,10 +202,12 @@ _redraw_texture (GtkGstGLWidget * gst_widget, guint tex)
 }
 
 static inline void
-_draw_black (void)
+_draw_black (GstGLContext * context)
 {
-  glClearColor (0.0, 0.0, 0.0, 0.0);
-  glClear (GL_COLOR_BUFFER_BIT);
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+  gl->Clear (GL_COLOR_BUFFER_BIT);
 }
 
 static gboolean
@@ -225,7 +227,7 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
     gtk_gst_gl_widget_init_redisplay (GTK_GST_GL_WIDGET (widget));
 
   if (!priv->initted || !base_widget->negotiated) {
-    _draw_black ();
+    _draw_black (priv->other_context);
     goto done;
   }
 
@@ -237,7 +239,7 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
 
     if (!gst_video_frame_map (&gl_frame, &base_widget->v_info, buffer,
             GST_MAP_READ | GST_MAP_GL)) {
-      _draw_black ();
+      _draw_black (priv->other_context);
       goto done;
     }
 
