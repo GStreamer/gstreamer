@@ -75,6 +75,7 @@ main (int argc, char **argv)
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_printerr ("Error initializing: %s\n", err->message);
     g_option_context_free (ctx);
+    g_clear_error (&err);
     return -1;
   }
 

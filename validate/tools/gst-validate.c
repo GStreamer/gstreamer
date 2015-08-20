@@ -136,7 +136,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       if (debug)
         g_print ("Additional debug info:\n%s\n", debug);
 
-      g_error_free (gerror);
+      g_clear_error (&gerror);
       g_free (debug);
       g_free (name);
       break;
