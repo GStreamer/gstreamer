@@ -1,9 +1,426 @@
-=== release 1.5.2 ===
+=== release 1.5.90 ===
 
-2015-06-24  Thibault Saunier <tsaunier@gnome.org>
+2015-08-21  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.5.2
+	  releasing 1.5.90
+
+2015-08-20 17:58:36 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.5.90
+
+2015-08-20 16:35:15 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/configure.ac:
+	* validate/launcher/config.py.in:
+	  validate: Put the GstValidate testsuite version in the launcher config
+	  This way testsuite implementation can have the information
+
+2015-08-17 17:20:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate/transcoding: Don't override the target state of the scenario when receiving BUFFERING=100%
+	  If the scenario handles the states and wants to stay in PAUSED, it's not a
+	  good idea to change the state to PLAYING when receiving BUFFERING=100%. This
+	  caused a race condition in varios seeking tests, most often in the dash scrub
+	  seeking test.
+
+2015-08-17 14:27:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/tools/gst-validate.c:
+	  validate: Don't override the target state of the scenario when receiving BUFFERING=100%
+	  If the scenario handles the states and wants to stay in PAUSED, it's not a
+	  good idea to change the state to PLAYING when receiving BUFFERING=100%. This
+	  caused a race condition in varios seeking tests, most often in the dash scrub
+	  seeking test.
+
+2015-08-16 17:59:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Fix typo
+
+2015-08-16 17:53:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate/launcher: Blacklist some HLS seeking tests again
+
+2015-08-16 08:50:36 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate/launcher: Un-blacklist validate.dash.playback.reverse_playback.*
+	  Fixed now
+
+2015-08-16 12:26:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate/launcher: Un-blacklist validate.hls.playback.reverse_playback.*
+	  It apparently succeeds now.
+
+2015-08-15 19:07:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate/launcher: De-blacklist some HLS tests
+
+2015-08-15 19:04:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate/launcher: Blacklist some DASH tests
+
+2015-08-15 16:40:11 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  launcher: Handle override files for media files
+	  And make sure to create a new dict for extra_env_vars when instanciating
+	  GstValidateTest
+
+2015-08-15 16:23:02 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  launcher: Make sure MediaDescriptor is set in the GstValidateTest class itself
+	  It is used there but was set in each and every subclasses
+
+2015-08-15 16:19:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/launcher/utils.py:
+	  validate/launcher: Treat DASH like HLS in another place
+
+2015-08-07 12:51:53 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: scenario: fix leak during error cases
+	  When message_async is not called during error cases, needs_parsing GList is
+	  not being freed resulting in leak. Hence free'ing the same in finalize.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753339
+
+2015-07-23 15:51:09 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: descriptor-writer: Handle error when stream info is not available
+	  There is no check to see if stream info is available. This leads to
+	  assertion error. Adding proper error messages for the same and reported
+	  the same as a validate warning message.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752758
+
+2015-07-23 15:08:55 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: descriptor-writer: Print proper error message when discover fails
+	  When discovering the files, there will be different kind of errors. If we print
+	  the exact message, then it will be more helpful for user. Especially in the case
+	  of missing plugins, displaying which plugin is missing as error message
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752758
+
+2015-07-23 13:35:04 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/gst/validate/gst-validate-override-registry.c:
+	  validate:override-registry: fix memory leak
+	  mutex is being initialized but not cleared.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752754
+
+2015-07-23 11:08:18 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate: tools: transcoding error due to wrong condition check
+	  when checking the restriction caps, not adding proper check, which
+	  results in assertion error when calling gst_caps_from_string
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752749
+
+2015-07-23 09:18:46 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/launcher/main.py:
+	  validate:launcher: Fix documentation
+	  Fix some trivial spelling mistakes in documentation
+	  and document about --update-media-info.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752748
+
+2015-07-22 08:45:26 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: escape the characters to remove bad range in regex
+	  When media file name consists of some special characters of the format
+	  [b-a].mp3, then it fails with 'bad character range' error and exits.
+	  call re.escape to escape the characters before using it in findall
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752650
+
+2015-08-04 08:35:16 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: improve uri generation for --medias-path
+	  When --medias-paths option is being used, right now we have to
+	  specify the full path, like /home/user/gst/master/media/
+	  But when inside master directory, would like to specify only
+	  media/ and expect it to work. Using os.path.abspath and create uri based on that.
+	  This way we can either just pass media/ or pass the full path as parameters.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752518
+
+2015-07-17 16:45:35 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: skip setting up test suite for --medias-paths
+	  in validate.py, some mixer test generators are being added by default.
+	  When passing --media-paths, i would not want to test these.
+	  So instead of setting up the validate test suite, just call tester.register_defaults().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752518
+
+2015-08-04 13:47:24 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/data/scenarios/reverse_playback.scenario:
+	  validate: scenarios: Change start time for reverse playback
+	  Right now reverse playback happens till the beginning of the media file.
+	  But for files which are longer than 150 seconds,
+	  Timeout 'Hard timeout reached: 150 secs' error happens. So we should set the
+	  start time within 150 seconds.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753216
+
+2015-08-04 15:21:16 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/main.py:
+	  validate: launcher: Add a --force-sync option
+	  Which should put the testsuite in a clean state (basically using git
+	  reset --hard for git based testsuite for example)
+
+2015-08-04 08:53:17 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Enable flac reverse playback tests
+	  This is now supported and works as expected.
+
+2015-07-31 10:50:24 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  validate: media-descriptor: Workaround file:// stream-id changing
+	  file:// base stream-id will vary depending on the file path. As we
+	  don't expect everyone to use the same absolute path to place the
+	  validate testsuite, the resulting stream-id changes. Because of that,
+	  we can't match the stream-id in the recorded file, hence cannot do
+	  further check. We work around this by doing what filesink would do,
+	  which is compute a SHA256 of the URI which we can use to first
+	  validate the ID is prefixed like expected, and decide if we should
+	  consider the stream IDs the same or not.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753079
+
+2015-07-31 10:49:00 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* validate/gst/validate/media-descriptor-parser.c:
+	  validate: media-descriptor: Fix reading seekable record
+	  Casting the result of g_strmp0 to boolean won't make gboolean
+	  value 0 or 1. We need proper 0 and 1 so we can use == comparision.
+
+2015-07-24 15:36:27 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	* validate/tools/gst-validate-media-check.c:
+	  validate: media-descriptor: handle proper return values
+	  while comparing the media descriptor with --expected-results, the return
+	  values are not being handled properly, which results in wrong comparision
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748390
+
+2015-07-30 15:14:13 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  validate: media-descriptor: Add comment before ignored return value
+	  As stated in the bug, this comparison failing is not a critical
+	  error, warning is enough. Add a comment so nobody thinks it's a
+	  coding error.
+	  https://bugzilla.gnome.org/review?bug=748390
+
+2015-07-22 16:32:06 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  validate: media-descriptor: remove duplicate conditions
+	  when comparing tags, two conditions in if an else if are same
+	  the correct way is to first check if both are NULL and return.
+	  changed the condition accordingly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748390
+
+2015-07-22 16:07:19 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  validate: media-descriptor: fix trivial spelling mistakes
+	  replace comparse_stream with compare_streams
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748390
+
+2015-07-29 16:42:48 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/tools/gst-validate.c:
+	  validate:tools: set locale to all and change argument to FILENAME
+	  When file name consists of characters from other languages, say korean,
+	  then it throws an error
+	  Error initializing: Invalid byte sequence in conversion input
+	  Hence setting locale to all to fix this.
+	  And changing the media-info argument to type G_OPTION_ARG_FILENAME
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752945
+
+2015-07-25 10:54:19 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/docs/validate/gst-validate-sections.txt:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate: Add a method to get action->scenario in a thread safe way
+	  API:
+	  gst_validate_action_get_scenario
+
+2015-07-24 16:47:57 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate-scenario: Use thread-safe GWeakRef
+	  Since _set_done() is meant to be thread safe,
+	  it can not be used with g_object_add_weak_pointer(),
+	  instead, one must use GWeakRef. But since it is in the API,
+	  document that fact and add a couple assertions to make sure
+	  it doesn't get broken in the future.
+
+2015-07-24 16:25:38 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Use GLib functions to make sure GMainContext is used
+
+2015-07-24 16:19:46 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Only modify the actions from the main thread
+	  The action's content is not protected by a mutex, so only
+	  modify it from the main thread.
+
+2015-07-24 17:05:30 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* .gitignore:
+	* codecanalyzer/.gitignore:
+	* validate/.gitignore:
+	* validate/docs/plugins/.gitignore:
+	  gitignore: Add more generated files
+
+2015-07-17 23:42:22 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: get duration from media_info if not able to query
+	  In case of files, which don't have duration in header, baseparse
+	  estimates the duration only after 1.5 seconds. But Async_done event
+	  is sent before the duration is estimated, which results in error.
+	  If duration query fails, getting the duration from the media-info being
+	  passed through --set-media-info. If media-info is also not set,
+	  printing an error message and throwing error.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752521
+
+2015-07-20 19:37:41 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: add quotes to the file path
+	  When folder name contains space or other special characters,
+	  it fails to recognise the same and error is thrown. Adding the path
+	  inside  to recognise the same
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752611
+
+2015-07-20 19:35:34 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/launcher/utils.py:
+	  validate:launcher: unquote the path to remove special characters
+	  When getting path from url using, url2path, it is returning
+	  special characters (%20 for space etc..), instead of returning
+	  plain path. path.unquote replaces the same..
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752611
+
+2015-07-20 17:27:56 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/tools/gst-validate-media-check.c:
+	  validate:launcher: return on error cases properly
+	  When folder name contains spaces during --medias-paths, it does not
+	  create the media info, but still it shows as passed.
+	  Returing failed during this case
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752611
+
+2015-07-22 15:20:54 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: handle file path in --medias-paths
+	  right now --medias-paths accepts only directories. Added support to
+	  accept file path as well.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752692
+
+2015-07-16 20:27:11 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/launcher/main.py:
+	  validate:launcher: skip default media path for --media-paths option
+	  when --media-paths is specified, then no need to check the default media.
+	  And add Force argument to let testsuite force the inclusion of
+	  default media directory.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752461
+
+2015-07-16 13:44:07 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	  validate:ssim: Fix calls to the converters
+	  We were mixing them
+
+2015-07-16 10:28:18 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/launcher/main.py:
+	  validate:main.py: trivial document fixes
+	  gst-validate-launch is being used instead of gst-validate-launcher
+	  in a couple of places.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752455
+
+2015-07-14 20:31:59 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/plugins/gtk/gstvalidategtk.c:
+	  validate:gtk: Handle the case were we are 'pressing' only a modifier
+
+2015-07-14 18:28:18 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: don't store the full description struct
+	  Summary:
+	  When running valgrind we'll have 2 scenarios loaded (the normal one and
+	  "setup_sink_props_max_lateness.scenario"). The loading code shouldn't assume
+	  which one will contain the description it actually care about and so just look
+	  for the fields it actually needs.
+	  Reviewers: thiblahute
+	  Differential Revision: http://phabricator.freedesktop.org/D199
+
+2015-07-14 18:16:40 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Report EVENT_SEEK_NOT_HANDLED as reported error on error
+
+2015-07-13 13:10:15 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/docs/validate/envvariables.xml:
+	  validate: Document the GST_VALIDATE_CONFIG environment variable
+
+2015-07-13 13:05:41 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Implement a config to set the interval between action calls
+	  Allowing users to decide the time between which the action should be
+	  executed. In some cases executing on idle might lead to action not
+	  being executed fast enough so the user might want to force an interval
+	  in that case.
+
+2015-06-24 17:43:53 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/configure.ac:
+	  Back to development
+
+=== release 1.5.2 ===
+
+2015-06-24 17:42:16 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.5.2
 
 2015-06-24 16:06:06 +0200  Thibault Saunier <tsaunier@gnome.org>
 

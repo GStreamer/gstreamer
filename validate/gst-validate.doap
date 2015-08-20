@@ -52,6 +52,14 @@
    </GitRepository>
  </repository> 
 
+  <Version>
+   <revision>1.5.90</revision>
+   <branch>1.5</branch>
+   <created>2015-08-20</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.5.90.tar.xz" />
+  </Version>
+ </release>
+
  <release>
   <Version>
    <revision>1.5.2</revision>

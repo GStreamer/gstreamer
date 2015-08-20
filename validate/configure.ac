@@ -2,15 +2,15 @@ AC_PREREQ(2.62)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(Gst-Validate, 1.5.2.1,
+AC_INIT(Gst-Validate, 1.5.90,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-validate)
 
 dnl This is the version of the testsuite to use with the current version
 dnl of gst-validate. During development it should be "master"
 dnl during release cycle it should be the release version (1.6 in the 1.6
-dnl branch)
-GST_VALIDATE_TESTSUITE_VERSION="master"
+dnl branch, 1.5.90 for the 1.5.90 release)
+GST_VALIDATE_TESTSUITE_VERSION="1.5.90"
 AS_AC_EXPAND(GST_VALIDATE_TESTSUITE_VERSION, $GST_VALIDATE_TESTSUITE_VERSION)
 
 AG_GST_INIT
