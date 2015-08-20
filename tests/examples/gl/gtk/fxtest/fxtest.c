@@ -76,7 +76,7 @@ end_stream_cb (GstBus * bus, GstMessage * message, GstElement * pipeline)
       gst_message_parse_error (message, &err, &debug);
 
       g_print ("Error: %s\n", err->message);
-      g_error_free (err);
+      g_clear_error (&err);
 
       if (debug) {
         g_print ("Debug details: %s\n", debug);
@@ -202,6 +202,8 @@ main (gint argc, gchar * argv[])
   g_option_context_add_group (context, gtk_get_option_group (TRUE));
   if (!g_option_context_parse (context, &argc, &argv, &error)) {
     g_print ("Inizialization error: %s\n", GST_STR_NULL (error->message));
+    g_option_context_free (context);
+    g_clear_error (&error);
     return -1;
   }
   g_option_context_free (context);

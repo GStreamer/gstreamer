@@ -206,6 +206,8 @@ main (gint argc, gchar * argv[])
   g_option_context_add_group (context, gtk_get_option_group (TRUE));
   if (!g_option_context_parse (context, &argc, &argv, &error)) {
     g_print ("Inizialization error: %s\n", GST_STR_NULL (error->message));
+    g_option_context_free (context);
+    g_clear_error (&error);
     return -1;
   }
   g_option_context_free (context);
