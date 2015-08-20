@@ -558,13 +558,13 @@ GST_START_TEST (test_playlist_with_doubles_duration)
   pl = client->current;
   /* Check first media segments */
   file = GST_M3U8_MEDIA_FILE (g_list_nth_data (pl->files, 0));
-  assert_equals_uint64 (file->duration, 10.321 * GST_SECOND);
+  assert_equals_float (file->duration / (double) GST_SECOND, 10.321);
   file = GST_M3U8_MEDIA_FILE (g_list_nth_data (pl->files, 1));
-  assert_equals_uint64 (file->duration, 9.6789 * GST_SECOND);
+  assert_equals_float (file->duration / (double) GST_SECOND, 9.6789);
   file = GST_M3U8_MEDIA_FILE (g_list_nth_data (pl->files, 2));
-  assert_equals_uint64 (file->duration, 10.2344 * GST_SECOND);
+  assert_equals_float (file->duration / (double) GST_SECOND, 10.2344);
   file = GST_M3U8_MEDIA_FILE (g_list_nth_data (pl->files, 3));
-  assert_equals_uint64 (file->duration, 9.92 * GST_SECOND);
+  assert_equals_float (file->duration / (double) GST_SECOND, 9.92);
   gst_m3u8_client_free (client);
 }
 
