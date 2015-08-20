@@ -57,8 +57,6 @@ G_DEFINE_TYPE (GstCvDilate, gst_cv_dilate, GST_TYPE_CV_DILATE_ERODE);
 
 static GstFlowReturn gst_cv_dilate_transform_ip (GstOpencvVideoFilter *
     filter, GstBuffer * buf, IplImage * img);
-static GstFlowReturn gst_cv_dilate_transform (GstOpencvVideoFilter * filter,
-    GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
 /* initialize the cvdilate's class */
 static void
@@ -70,7 +68,6 @@ gst_cv_dilate_class_init (GstCvDilateClass * klass)
   gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   gstopencvbasefilter_class->cv_trans_ip_func = gst_cv_dilate_transform_ip;
-  gstopencvbasefilter_class->cv_trans_func = gst_cv_dilate_transform;
   gst_element_class_set_static_metadata (element_class,
       "cvdilate",
       "Transform/Effect/Video",
@@ -86,18 +83,6 @@ gst_cv_dilate_class_init (GstCvDilateClass * klass)
 static void
 gst_cv_dilate_init (GstCvDilate * filter)
 {
-}
-
-static GstFlowReturn
-gst_cv_dilate_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
-    IplImage * img, GstBuffer * outbuf, IplImage * outimg)
-{
-  GstCvDilateErode *filter = GST_CV_DILATE_ERODE (base);
-
-  /* TODO support kernel as a parameter */
-  cvDilate (img, outimg, NULL, filter->iterations);
-
-  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
