@@ -415,6 +415,7 @@ parse_license_rdf (const gchar * fn, const gchar * rdf)
 
   if (!g_markup_parse_context_parse (ctx, rdf, -1, &err)) {
     g_error ("Error parsing file %s: %s\n", fn, err->message);
+    g_clear_error (&err);
   }
 
   licenses = g_list_append (licenses, license);
@@ -433,6 +434,7 @@ read_licenses (const gchar * licenses_dir)
 
   if (dir == NULL)
     g_error ("Failed to g_dir_open('%s'): %s", licenses_dir, err->message);
+  g_clear_error (&err);
 
   while ((name = g_dir_read_name (dir))) {
     gchar *fn, *rdf;
@@ -443,7 +445,7 @@ read_licenses (const gchar * licenses_dir)
       g_free (rdf);
     } else {
       g_printerr ("Could not read file '%s': %s\n", fn, err->message);
-      g_error_free (err);
+      g_clear_error (&err);
       err = NULL;
     }
     g_free (fn);
@@ -722,6 +724,8 @@ main (int argc, char **argv)
   g_option_context_add_main_entries (ctx, options, NULL);
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_printerr ("Error initializing: %s\n", err->message);
+    g_option_context_free (ctx);
+    g_clear_error (&err);
     exit (1);
   }
   g_option_context_free (ctx);

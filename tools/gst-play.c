@@ -352,7 +352,7 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       g_printerr ("WARNING %s\n", err->message);
       if (dbg != NULL)
         g_printerr ("WARNING debug information: %s\n", dbg);
-      g_error_free (err);
+      g_clear_error (&err);
       g_free (dbg);
       break;
     }
@@ -368,7 +368,7 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       g_printerr ("ERROR %s for %s\n", err->message, play->uris[play->cur_idx]);
       if (dbg != NULL)
         g_printerr ("ERROR debug information: %s\n", dbg);
-      g_error_free (err);
+      g_clear_error (&err);
       g_free (dbg);
 
       /* flush any other error messages from the bus and clean up */
@@ -1139,6 +1139,8 @@ main (int argc, char **argv)
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
+    g_option_context_free (ctx);
+    g_clear_error (&err);
     return 1;
   }
   g_option_context_free (ctx);

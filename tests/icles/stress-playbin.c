@@ -34,7 +34,7 @@ play_file (const gint delay, const gchar * uri)
 
         gst_message_parse_error (msg, &gerror, &debug);
         gst_object_default_error (GST_MESSAGE_SRC (msg), gerror, debug);
-        g_error_free (gerror);
+        g_clear_error (&gerror);
         g_free (debug);
         break;
       }
@@ -103,6 +103,8 @@ main (int argc, char **argv)
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
+    g_option_context_free (ctx);
+    g_clear_error (&err);
     exit (1);
   }
   g_option_context_free (ctx);

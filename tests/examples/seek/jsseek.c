@@ -961,9 +961,8 @@ static GstElement *
 make_parselaunch_pipeline (const gchar * description)
 {
   GstElement *pipeline;
-  GError *error = NULL;
 
-  pipeline = gst_parse_launch (description, &error);
+  pipeline = gst_parse_launch (description, NULL);
 
   seekable_elements = g_list_prepend (seekable_elements, pipeline);
 
@@ -2057,9 +2056,7 @@ shot_cb (GtkButton * button, gpointer data)
     /* save the pixbuf */
     gdk_pixbuf_save (pixbuf, "snapshot.png", "png", &error, NULL);
     gst_buffer_unmap (buffer, &map);
-
-    /* save the pixbuf */
-    gdk_pixbuf_save (pixbuf, "snapshot.png", "png", &error, NULL);
+    g_clear_error (&error);
 
   done:
     gst_buffer_unref (buffer);
@@ -2624,7 +2621,7 @@ read_joystick (GIOChannel * source, GIOCondition condition, gpointer user_data)
       &bytes_read, &err);
   if (err) {
     g_print ("error reading from joystick: %s", err->message);
-    g_error_free (err);
+    g_clear_error (&err);
     return FALSE;
   } else if (bytes_read != sizeof (struct js_event)) {
     g_print ("error reading joystick, read %u bytes of %u\n",
@@ -2678,6 +2675,8 @@ main (int argc, char **argv)
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_print ("Error initializing: %s\n", err->message);
+    g_option_context_free (ctx);
+    g_clear_error (&err);
     exit (1);
   }
   g_option_context_free (ctx);

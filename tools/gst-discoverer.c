@@ -487,7 +487,7 @@ process_file (GstDiscoverer * dc, const gchar * filename)
 
     if (err) {
       g_warning ("Couldn't convert filename to URI: %s\n", err->message);
-      g_error_free (err);
+      g_clear_error (&err);
       return;
     }
   } else {
@@ -498,9 +498,9 @@ process_file (GstDiscoverer * dc, const gchar * filename)
     g_print ("Analyzing %s\n", uri);
     info = gst_discoverer_discover_uri (dc, uri, &err);
     print_info (info, err);
-    if (err)
-      g_error_free (err);
-    gst_discoverer_info_unref (info);
+    g_clear_error (&err);
+    if (info)
+      gst_discoverer_info_unref (info);
   } else {
     gst_discoverer_discover_uri_async (dc, uri);
   }
