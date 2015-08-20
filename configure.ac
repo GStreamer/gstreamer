@@ -3,7 +3,7 @@ AC_PREREQ(2.62)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(GStreamer Editing Services, 1.5.2.1,
+AC_INIT(GStreamer Editing Services, 1.5.90,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gstreamer-editing-services)
 
@@ -54,8 +54,8 @@ AC_SUBST(GST_API_VERSION)
 AS_LIBTOOL(GST, 0, 0, 0)
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=1.5.1
-GSTPB_REQ=1.5.1
+GST_REQ=1.5.90
+GSTPB_REQ=1.5.90
 
 dnl *** autotools stuff ****
 
@@ -151,7 +151,7 @@ PKG_CHECK_MODULES(PYGOBJECT, pygobject-3.0 >= $PYGOBJECT_REQ,
 AM_CONDITIONAL(WITH_PYTHON, [test "x$HAVE_PYGOBJECT" = "xyes"])
 
 dnl check for pygobject
-PKG_CHECK_MODULES(GST_VALIDATE, gst-validate-1.0 >= 1.5.2,
+PKG_CHECK_MODULES(GST_VALIDATE, gst-validate-1.0 >= 1.5.90,
   [
     HAVE_GST_VALIDATE=yes
     AC_DEFINE(HAVE_GST_VALIDATE, 1, [Define if build with gst-validate support])

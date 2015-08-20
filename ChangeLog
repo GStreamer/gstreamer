@@ -1,9 +1,342 @@
-=== release 1.5.2 ===
+=== release 1.5.90 ===
 
-2015-06-24  Thibault Saunier <tsaunier@gnome.org>
+2015-08-20  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.5.2
+	  releasing 1.5.90
+
+2015-08-19 11:24:11 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* .arcconfig:
+	* Makefile.am:
+	* configure.ac:
+	* ges/Makefile.am:
+	* ges/ges-internal.h:
+	* ges/ges-track.c:
+	* ges/ges-utils.c:
+	* ges/ges.c:
+	* ges/nle/.gitignore:
+	* ges/nle/gnlmarshal.list:
+	* ges/nle/nle.h:
+	* ges/nle/nlecomposition.c:
+	* ges/nle/nlecomposition.h:
+	* ges/nle/nleghostpad.c:
+	* ges/nle/nleghostpad.h:
+	* ges/nle/nleobject.c:
+	* ges/nle/nleobject.h:
+	* ges/nle/nleoperation.c:
+	* ges/nle/nleoperation.h:
+	* ges/nle/nlesource.c:
+	* ges/nle/nlesource.h:
+	* ges/nle/nletypes.h:
+	* ges/nle/nleurisource.c:
+	* ges/nle/nleurisource.h:
+	* plugins/Makefile.am:
+	* plugins/nle/.gitignore:
+	* plugins/nle/Makefile.am:
+	* plugins/nle/gnlmarshal.list:
+	* plugins/nle/gstnle.c:
+	* plugins/nle/nle.h:
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nlecomposition.h:
+	* plugins/nle/nleghostpad.c:
+	* plugins/nle/nleghostpad.h:
+	* plugins/nle/nleobject.c:
+	* plugins/nle/nleobject.h:
+	* plugins/nle/nleoperation.c:
+	* plugins/nle/nleoperation.h:
+	* plugins/nle/nlesource.c:
+	* plugins/nle/nlesource.h:
+	* plugins/nle/nletypes.h:
+	* plugins/nle/nleurisource.c:
+	* plugins/nle/nleurisource.h:
+	  Move NLE to a dedicated GstPlugin
+	  Summary: Allowing external user to directly use it
+	  Reviewers: Mathieu_Du
+	  Differential Revision: https://phabricator.freedesktop.org/D231
+
+2015-07-23 11:53:52 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/nle/nlecomposition.c:
+	  nle: Enhance debug logging
+
+2015-07-23 11:42:48 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-structured-interface.c:
+	* ges/ges-track.c:
+	  ges: Do not leak and uselessly create errors
+	  And avoid parenthesis in GstObject names
+
+2015-07-23 11:40:57 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-structured-interface.c:
+	  ges: Fix how we handle layer vs layer-priority in the structured interface
+
+2015-07-23 11:39:04 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/clip.c:
+	  tests: Do not use gst-structured-interface in the tests
+	  It breaks $ make distcheck
+
+2015-07-16 17:26:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-editing-services.doap:
+	  Update mailing list in doap file
+
+2015-07-16 10:54:54 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline.c:
+	  timeline: Remove transitions that can no fit into an auto transition
+	  When activating auto transition mode
+
+2015-07-16 10:53:17 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline-element.c:
+	  ges; Minor debug enhancement
+
+2015-07-13 13:48:40 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-asset.c:
+	  assets: Avoid deadlock when done initialising asset
+	  Avoid to hold the CACHE lock when setting the GTasks return values.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=752300
+
+2015-07-08 18:59:33 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/nle/nlecomposition.c:
+	* ges/nle/nleobject.h:
+	  nleobject: Concider objects as 'inactive' when they have a duration == 0
+
+2015-07-08 18:59:00 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track-element.c:
+	  track-element: Handle the case where we have only one keyframe set when interpollating keyframes
+
+2015-07-06 10:24:33 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-asset.c:
+	* ges/ges-internal.h:
+	* tests/check/ges/uriclip.c:
+	  asset: Port use of deprecated GSimpleAsyncResult to GTask
+
+2015-07-03 22:00:08 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f74b2df to 9aed1d7
+
+2015-07-03 13:49:57 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track-element.c:
+	* tests/check/Makefile.am:
+	* tests/check/ges/clip.c:
+	  track-element: Fix splitting bindings and add unit tests
+
+2015-07-01 18:33:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-structured-interface.c:
+	  structured-interface: Better handle CLOCK_TIME type from GstStructures
+
+2015-06-29 18:04:32 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-group.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-track-element.c:
+	  element: Implement a paste method
+	  Allowing user to copy paste clips very easily
+
+2015-06-23 16:11:26 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline.c:
+	* ges/gstframepositionner.c:
+	* tests/check/ges/layer.c:
+	  timeline: Disable movement that lead to 2 transition at a position
+	  We should never let 3 objects to overlap at a same position, for that
+	  we introduce a "rollback" feature and whenever such an editing happens,
+	  we rollback object position to whatever it was before the move.
+
+2015-06-23 19:19:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-smart-video-mixer.c:
+	  smart-video-mixer: Always keep a ref on the mixer pad
+
+2015-06-23 13:27:00 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-container.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-track-element.c:
+	  timeline-element: Add a method to get the TrackType it interacts with
+	  API:
+	  + ges_timeline_element_get_track_types
+
+2015-06-19 11:08:25 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-internal.h:
+	* ges/ges-timeline.c:
+	  timeline: Never create transitions between rippled objects
+	  In case of groups, we can have track elements that do not belong
+	  directly to the moved_trackelements but will be moved as others. Never
+	  create transition to all object that have a start > moving group start.
+
+2015-06-16 17:07:40 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-smart-video-mixer.h:
+	* ges/ges-video-transition.c:
+	  video-transition: Use a SmartMixer as mixer
+	  So that the frame position metas are parsed and taken into account
+
+2015-06-16 15:02:18 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-pipeline.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track-element.h:
+	  track-element: Add method to remove control binding
+	  API:
+	  ges_track_element_remove_control_binding
+
+2015-06-16 13:25:32 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track-element.c:
+	* ges/ges-xml-formatter.c:
+	  ges: Handle absolute GstDirectControlBindings
+
+2015-06-13 18:48:20 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/gstframepositionner.c:
+	* ges/gstframepositionner.h:
+	  framepositionner: Make use of the new CompositorPad.width/height
+	  So that the scaling is done in the compositor and this way we can cleanly interpolate its value
+
+2015-07-03 09:19:30 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/timelineedition.c:
+	  timeline: Never change output media time when trimming start
+	  + Fix testsuite
+	  https://bugzilla.gnome.org/show_bug.cgi?id=638802
+
+2015-07-03 09:16:50 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track-element.c:
+	* tests/check/ges/timelineedition.c:
+	  track-element: Return right value when editing
+	  We used to always return TRUE which was wrong
+	  + Fix testsuite and remove randomness from the tests
+
+2015-07-01 17:28:52 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-internal.h:
+	* ges/ges-pipeline.c:
+	* ges/ges-track.c:
+	  ges: Do not add a final gap at the end of track while rendering
+	  It is not correct to force a black frame at the end of the rendered
+	  video and it also leads to rendering issue with vpX encoders.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751510
+
+2015-07-01 11:35:42 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-clip.c:
+	* ges/nle/nlecomposition.c:
+	  clip: Use container priority offset when setting children prios
+	  Instead of trying to compute it ourself which might lead to wrong
+	  behaviour when moving between layer.
+	  + Make sure that when we reset clip children priority (to make space
+	  for effects,) we update the container knowledge of priority offsets
+
+2015-06-30 23:13:28 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-clip.c:
+	  clip: Fix track element priority computation
+	  We were computing the priority offset taking the global MIN_NLE_PRIO
+	  (which is a constant == 2 to make space for the mixing elements) instead
+	  of the layer 'track element' relative priority, leading to very big
+	  offsets on layer with a prio > 0. In the end it leaded to effects having
+	  the same priority as the sources which leads to an undefined behaviour
+	  in NLE.
+
+2015-06-24 09:06:30 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-uri-asset.c:
+	  uri-asset: Bump the discoverer timeout to 1 minute
+	  We should by default avoid false timeouts
+
+2015-06-22 01:52:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track.c:
+	  track: Give usefull name to compositions
+
+2015-06-25 11:03:12 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/nle/nlecomposition.c:
+	* ges/nle/nleobject.c:
+	* tests/check/nle/common.c:
+	  nle: Port tests to the "commit" action signals
+	  Now that nle_object_commit symbol is hidden, we can't use it
+	  in the tests.
+
+2015-06-25 10:32:46 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-sections.txt:
+	* docs/random/lifecycle:
+	* docs/random/scenarios:
+	* ges/ges-track-element.c:
+	* ges/ges-track-element.h:
+	  ges: Unbreeak API after renaming of GNL to NLE
+
+2015-06-25 10:28:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-auto-transition.h:
+	* ges/ges-internal.h:
+	* ges/ges-structure-parser.h:
+	* ges/gstframepositionner.h:
+	  ges: Hide more symbols of headers that are not installed
+
+2015-06-25 10:25:48 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/nle/nlecomposition.c:
+	  nle: Remove unused function
+	  nle/nlecomposition.c:2471:1: error: unused function '_parent_or_priority_changed' [-Werror,-Wunused-function]
+	  _parent_or_priority_changed (NleObject * obj, GNode * oldnode,
+	  ^
+
+2015-06-25 10:24:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* ges/nle/nlecomposition.h:
+	* ges/nle/nleghostpad.h:
+	* ges/nle/nleobject.h:
+	* ges/nle/nleoperation.h:
+	* ges/nle/nlesource.h:
+	* ges/nle/nleurisource.h:
+	  nle: Hide away symbols, they're supposed to be internal
+
+2015-06-24 17:55:22 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.5.2 ===
+
+2015-06-24 17:44:04 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.5.2
 
 2015-06-23 09:41:01 +0100  Tim-Philipp Müller <tim@centricular.com>
 

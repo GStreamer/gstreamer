@@ -1,9 +1,16 @@
 
-Release notes for GStreamer Editing Services 1.5.2
+Release notes for GStreamer Editing Services 1.5.90
 
 
-The GStreamer team is proud to announce a new development release
-in the 1.5.x development serie of the GStreamer Editing Services.
+The GStreamer team is pleased to announce the first release candidate for the
+stable 1.6 release series. The 1.6 release series is adding new features on top of
+the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer Editing Services. The final 1.6.0 release is planned
+in the next few days unless any major bugs are found.
+
+
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
+the GStreamer project.
 
 
   
@@ -13,17 +20,8 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 721602 : Pitivi renders videoless files when the projects begins with an image bigger then the project settings
-      * 727880 : Expose TitleSource children properties as any other child properties in a GESTrackElement
-      * 728634 : Expose outline-color in GES.TitleSource
-      * 728635 : Expose shaded-background in GES.TitleSource
-      * 729487 : The GESEffect.active property is deserialized from xges always as True
-      * 739527 : Loading a project the setting video track caps restriction leads to video source height to be wrong
-      * 740726 : track: [API]: ges_track_update_restriction_caps.
-      * 740727 : *source: new lines in xml break my parser.
-      * 743406 : Make sure the GESTextOverlayClip is registered on init
-      * 746354 : Malformed XGES syntax detection problems
-      * 709148 : [pitivi] Groups are not saved / serialized into formatters
+      * 751510 : gst-library-error-quark: Failed to encode frame when rendering to webm
+      * 752300 : After updating GES from 1.5.2 to Master complex timelines makes whole app to hang
 
 ==== Download ====
 
@@ -62,11 +60,6 @@ Applications
   
 Contributors to this release
     
-      * Edward Hervey
-      * Joris Valette
-      * Luis de Bethencourt
-      * Mathieu Duponchelle
-      * Nicolas Dufresne
       * Sebastian Dröge
       * Stefan Sauer
       * Thibault Saunier
