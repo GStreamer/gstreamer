@@ -374,7 +374,7 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
           "Percentage of the available bandwidth to use when "
           "selecting representations (deprecated)",
           0, 1, DEFAULT_BANDWIDTH_USAGE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
 #endif
 
   g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
