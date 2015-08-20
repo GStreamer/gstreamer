@@ -175,7 +175,7 @@ bus_message_cb (GstBus * bus, GstMessage * msg, AppInfo * info)
 
       gst_message_parse_error (msg, &err, &dbg);
       g_error ("Error: %s\n%s\n", err->message, (dbg) ? dbg : "");
-      g_error_free (err);
+      g_clear_error (&err);
       g_free (dbg);
       break;
     }
@@ -345,6 +345,8 @@ main (int argc, char **argv)
 
   if (!g_option_context_parse (ctx, &argc, &argv, &opt_err)) {
     g_error ("Error parsing command line options: %s", opt_err->message);
+    g_option_context_free (ctx);
+    g_clear_error (&opt_err);
     return -1;
   }
 

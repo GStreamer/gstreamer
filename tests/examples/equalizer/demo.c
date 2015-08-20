@@ -180,8 +180,11 @@ main (int argc, char *argv[])
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_print ("Error initializing: %s\n", err->message);
+    g_option_context_free (ctx);
+    g_clear_error (&err);
     exit (1);
   }
+  g_option_context_free (ctx);
 
   if (argc < 2) {
     g_print ("Usage: %s <uri to play>\n", argv[0]);

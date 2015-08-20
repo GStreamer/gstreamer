@@ -151,7 +151,7 @@ bus_cb (GstBus * bus, GstMessage * msg, gpointer user_data)
 
       gst_message_parse_error (msg, &err, &dbg);
       gst_object_default_error (msg->src, err, dbg);
-      g_error_free (err);
+      g_clear_error (&err);
       g_free (dbg);
       g_main_loop_quit (loop);
       break;
@@ -218,6 +218,8 @@ main (int argc, char **argv)
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_print ("Error initializing: %s\n", err->message);
+    g_option_context_free (ctx);
+    g_clear_error (&err);
     return 1;
   }
   g_option_context_free (ctx);

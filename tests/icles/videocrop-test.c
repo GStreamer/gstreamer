@@ -53,7 +53,7 @@ check_bus_for_errors (GstBus * bus, GstClockTime max_wait_time)
     gst_message_parse_error (msg, &err, &debug);
     GST_ERROR ("ERROR: %s [%s]", err->message, debug);
     g_print ("\n===========> ERROR: %s\n%s\n\n", err->message, debug);
-    g_error_free (err);
+    g_clear_error (&err);
     g_free (debug);
     gst_message_unref (msg);
   }
@@ -201,8 +201,11 @@ main (int argc, char **argv)
 
   if (!g_option_context_parse (ctx, &argc, &argv, &opt_err)) {
     g_error ("Error parsing command line options: %s", opt_err->message);
+    g_option_context_free (ctx);
+    g_clear_error (&opt_err);
     return -1;
   }
+  g_option_context_free (ctx);
 
   GST_DEBUG_CATEGORY_INIT (videocrop_test_debug, "videocroptest", 0, "vctest");
 
