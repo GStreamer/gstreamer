@@ -680,7 +680,7 @@ playout_item_create_decoder (PlayoutItem * item)
   uri = gst_filename_to_uri (item->fn, &err);
   if (err != NULL) {
     GST_WARNING ("Could not convert '%s' to uri: %s", item->fn, err->message);
-    g_error_free (err);
+    g_clear_error (&err);
     return NULL;
   }
 
@@ -1064,6 +1064,8 @@ main (int argc, char **argv)
       g_printerr ("Error initializing: %s\n", err->message);
     else
       g_printerr ("Error initializing: Unknown error!\n");
+    g_option_context_free (ctx);
+    g_clear_error (&err);
     return 1;
   }
 

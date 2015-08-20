@@ -239,7 +239,7 @@ process_file (const gchar * fn)
 
   if (!g_file_get_contents (fn, &data, &size, &err)) {
     g_error ("%s", err->message);
-    g_error_free (err);
+    g_clear_error (&err);
     return;
   }
 
@@ -286,6 +286,8 @@ main (int argc, gchar ** argv)
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
+    g_option_context_free (ctx);
+    g_clear_error (&err);
     exit (1);
   }
   g_option_context_free (ctx);

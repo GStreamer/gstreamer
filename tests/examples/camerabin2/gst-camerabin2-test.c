@@ -428,7 +428,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 
       gst_message_parse_error (message, &err, &debug);
       g_print ("Error: %s\n", err->message);
-      g_error_free (err);
+      g_clear_error (&err);
       g_free (debug);
 
       /* Write debug graph to file */
@@ -556,8 +556,7 @@ load_encoding_profile (void)
           gep_filename);
       if (error) {
         GST_WARNING ("Error from file loading: %s", error->message);
-        g_error_free (error);
-        error = NULL;
+        g_clear_error (&error);
       }
     } else {
       prof = gst_encoding_target_get_profile (target, gep_profilename);
@@ -601,7 +600,7 @@ setup_pipeline_element (GstElement * element, const gchar * property_name,
           property_name);
       if (error) {
         GST_ERROR ("%s", error->message);
-        g_error_free (error);
+        g_clear_error (&error);
       }
       res = FALSE;
     }
@@ -1253,6 +1252,8 @@ main (int argc, char *argv[])
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_print ("Error initializing: %s\n", err->message);
+    g_option_context_free (ctx);
+    g_clear_error (&err);
     exit (1);
   }
   g_option_context_free (ctx);

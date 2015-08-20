@@ -151,6 +151,8 @@ main (int argc, char *argv[])
   g_option_context_add_group (context, gst_init_get_option_group ());
   if (!g_option_context_parse (context, &argc, &argv, &error)) {
     g_print ("option parsing failed: %s\n", error->message);
+    g_clear_error (&error);
+    g_option_context_free (context);
     exit (1);
   }
   g_option_context_free (context);
@@ -223,6 +225,7 @@ gst_replace_create_pipeline_playbin (GstReplace *replace, const char *uri)
 
   if (error) {
     g_print("pipeline parsing error: %s\n", error->message);
+    g_clear_error (&error);
     gst_object_unref (pipeline);
     return;
   }
@@ -262,6 +265,7 @@ gst_replace_create_pipeline (GstReplace *replace)
 
   if (error) {
     g_print("pipeline parsing error: %s\n", error->message);
+    g_clear_error (&error);
     gst_object_unref (pipeline);
     return;
   }
@@ -378,6 +382,7 @@ gst_replace_handle_message (GstBus *bus, GstMessage *message,
 
         gst_message_parse_error (message, &error, &debug);
         gst_replace_handle_error (replace, error, debug);
+        g_clear_error (&error);
       }
       break;
     case GST_MESSAGE_WARNING:
@@ -387,6 +392,7 @@ gst_replace_handle_message (GstBus *bus, GstMessage *message,
 
         gst_message_parse_warning (message, &error, &debug);
         gst_replace_handle_warning (replace, error, debug);
+        g_clear_error (&error);
       }
       break;
     case GST_MESSAGE_INFO:
@@ -396,6 +402,7 @@ gst_replace_handle_message (GstBus *bus, GstMessage *message,
 
         gst_message_parse_info (message, &error, &debug);
         gst_replace_handle_info (replace, error, debug);
+        g_clear_error (&error);
       }
       break;
     case GST_MESSAGE_TAG:
