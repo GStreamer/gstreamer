@@ -2880,6 +2880,12 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
   dbin = chain->dbin;
 
   GST_DEBUG_OBJECT (pad, "pad added, chain:%p", chain);
+  GST_PAD_STREAM_LOCK (pad);
+  if (!gst_pad_is_active (pad)) {
+    GST_PAD_STREAM_UNLOCK (pad);
+    GST_DEBUG_OBJECT (pad, "Ignoring pad-added from a deactivated pad");
+    return;
+  }
 
   caps = get_pad_caps (pad);
   if (analyze_new_pad (dbin, element, pad, caps, chain, &new_chain))
@@ -2900,6 +2906,7 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
     GST_DEBUG_OBJECT (dbin, "No decode chain, new pad ignored");
   }
   EXPOSE_UNLOCK (dbin);
+  GST_PAD_STREAM_UNLOCK (pad);
 }
 
 static GstPadProbeReturn
