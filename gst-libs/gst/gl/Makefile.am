@@ -18,6 +18,7 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstglfilter.c \
 	gstglbasefilter.c \
 	gstglshader.c \
+	gstglsl.c \
 	gstglshadervariables.c \
 	gstglcolorconvert.c \
 	gstgldownload.c \
@@ -31,6 +32,7 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstglsyncmeta.c \
 	gstglviewconvert.c \
 	gstgloverlaycompositor.c \
+	gstglsl_private.h \
 	utils/opengl_versions.h
 
 libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
@@ -46,6 +48,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglbasefilter.h \
 	gstglshadervariables.h \
 	gstglshader.h \
+	gstglsl.h \
 	gstglcolorconvert.h \
 	gstgldownload.h \
 	gstgluploadmeta.h \
