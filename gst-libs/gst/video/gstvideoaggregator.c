@@ -1025,6 +1025,7 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
           GST_DEBUG_OBJECT (pad, "buffer duration is -1, start_time < "
               "output_start_time.  Discarding old buffer");
           gst_buffer_replace (&pad->buffer, buf);
+          pad->buffer_vinfo = *vinfo;
           gst_buffer_unref (buf);
           gst_aggregator_pad_drop_buffer (bpad);
           need_more_data = TRUE;
