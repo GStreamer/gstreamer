@@ -10,3 +10,4 @@ gstglcontext
 gstglmemory
 gstglupload
 gstglcolorconvert
+gstglsl
