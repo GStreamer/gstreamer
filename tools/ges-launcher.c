@@ -288,7 +288,7 @@ bus_message_cb (GstBus * bus, GstMessage * message, GESLauncher * self)
       g_printerr ("ERROR from element %s: %s\n", GST_OBJECT_NAME (message->src),
           err->message);
       g_printerr ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
-      g_error_free (err);
+      g_clear_error (&err);
       g_free (dbg_info);
       self->priv->seenerrors = TRUE;
       g_application_quit (G_APPLICATION (self));
@@ -733,7 +733,7 @@ _local_command_line (GApplication * application, gchar ** arguments[],
 
   if (!g_application_register (application, NULL, &error)) {
     *exit_status = 1;
-    g_error_free (error);
+    g_clear_error (&error);
     return FALSE;
   }
 
