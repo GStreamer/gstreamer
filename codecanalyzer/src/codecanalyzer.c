@@ -1015,6 +1015,8 @@ main (int argc, char *argv[])
       g_printerr ("Failed to initialize: %s\n", err->message);
     else
       g_printerr ("Failed to initialize, Unknown error\n");
+    g_clear_error (&err);
+    g_option_context_free (ctx);
     exit (1);
   }
   g_option_context_free (ctx);
