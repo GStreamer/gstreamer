@@ -70,6 +70,10 @@ struct _GstFFMpegVidDec
 
   /* Internally used for direct rendering */
   GstBufferPool *internal_pool;
+  gint pool_width;
+  gint pool_height;
+  enum PixelFormat pool_format;
+  GstVideoInfo pool_info;
 };
 
 typedef struct _GstFFMpegVidDecClass GstFFMpegVidDecClass;
