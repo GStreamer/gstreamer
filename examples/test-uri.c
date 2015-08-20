@@ -76,6 +76,8 @@ main (int argc, gchar * argv[])
   g_option_context_add_group (optctx, gst_init_get_option_group ());
   if (!g_option_context_parse (optctx, &argc, &argv, &error)) {
     g_printerr ("Error parsing options: %s\n", error->message);
+    g_option_context_free (optctx);
+    g_clear_error (&error);
     return -1;
   }
   g_option_context_free (optctx);
