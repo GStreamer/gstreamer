@@ -102,9 +102,11 @@ main (int   argc,
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &amp;argc, &amp;argv, &amp;err)) {
     g_print ("Failed to initialize: %s\n", err->message);
-    g_error_free (err);
+    g_clear_error (&amp;err);
+    g_option_context_free (ctx);
     return 1;
   }
+  g_option_context_free (ctx);
 
   printf ("Run me with --help to see the Application options appended.\n");
 

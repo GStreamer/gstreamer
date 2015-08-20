@@ -1499,6 +1499,8 @@ main (int argc, char *argv[])
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_printerr ("Error initializing: %s\n", err->message);
+    g_clear_error (&err);
+    g_option_context_free (ctx);
     return -1;
   }
   g_option_context_free (ctx);
@@ -1615,7 +1617,7 @@ main (int argc, char *argv[])
             }
           } else {
             g_printerr (_("Could not load plugin file: %s\n"), error->message);
-            g_error_free (error);
+            g_clear_error (&error);
             return -1;
           }
         } else {

@@ -70,6 +70,7 @@ main (gint argc, gchar ** argv)
   g_option_context_add_group (opt_ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (opt_ctx, &argc, &argv, &err))
     g_error ("Error parsing options: %s", err->message);
+  g_clear_error (&err);
   g_option_context_free (opt_ctx);
 
   if (!gst_ptp_init (GST_PTP_CLOCK_ID_NONE, NULL))

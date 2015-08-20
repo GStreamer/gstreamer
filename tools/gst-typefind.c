@@ -106,7 +106,7 @@ typefind_file (const gchar * filename)
       if (msg) {
         gst_message_parse_error (msg, &err, NULL);
         g_printerr ("%s - FAILED: %s\n", filename, err->message);
-        g_error_free (err);
+        g_clear_error (&err);
         gst_message_unref (msg);
       } else {
         g_printerr ("%s - FAILED: unknown error\n", filename);
@@ -162,6 +162,8 @@ main (int argc, char *argv[])
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
+    g_clear_error (&err);
+    g_option_context_free (ctx);
     exit (1);
   }
   g_option_context_free (ctx);

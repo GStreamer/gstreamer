@@ -127,8 +127,11 @@ main (gint argc, gchar **argv)
    * calls gtk_init() and gst_init() */
   if (!g_option_context_parse (ctx, &amp;argc, &amp;argv, &amp;err)) {
     g_print ("Error initializing: %s\n", err->message);
+    g_clear_error (&amp;err);
+    g_option_context_free (ctx);
     exit (1);
   }
+  g_option_context_free (ctx);
 
   /* any filenames we got passed on the command line? parse them! */
   if (cmd_filenames != NULL) {
