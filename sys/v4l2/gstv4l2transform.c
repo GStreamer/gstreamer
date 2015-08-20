@@ -173,7 +173,7 @@ gst_v4l2_transform_close (GstV4l2Transform * self)
   gst_v4l2_object_close (self->v4l2capture);
 
   gst_caps_replace (&self->probed_srccaps, NULL);
-  gst_caps_replace (&self->probed_srccaps, NULL);
+  gst_caps_replace (&self->probed_sinkcaps, NULL);
 }
 
 static gboolean
