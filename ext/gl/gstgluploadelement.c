@@ -45,6 +45,8 @@ static GstCaps *_gst_gl_upload_element_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean _gst_gl_upload_element_set_caps (GstBaseTransform * bt,
     GstCaps * in_caps, GstCaps * out_caps);
+static gboolean gst_gl_upload_element_filter_meta (GstBaseTransform * trans,
+    GstQuery * query, GType api, const GstStructure * params);
 static gboolean _gst_gl_upload_element_propose_allocation (GstBaseTransform *
     bt, GstQuery * decide_query, GstQuery * query);
 static gboolean _gst_gl_upload_element_decide_allocation (GstBaseTransform *
@@ -72,6 +74,7 @@ gst_gl_upload_element_class_init (GstGLUploadElementClass * klass)
   bt_class->query = gst_gl_upload_element_query;
   bt_class->transform_caps = _gst_gl_upload_element_transform_caps;
   bt_class->set_caps = _gst_gl_upload_element_set_caps;
+  bt_class->filter_meta = gst_gl_upload_element_filter_meta;
   bt_class->propose_allocation = _gst_gl_upload_element_propose_allocation;
   bt_class->decide_allocation = _gst_gl_upload_element_decide_allocation;
   bt_class->get_unit_size = gst_gl_upload_element_get_unit_size;
@@ -140,36 +143,28 @@ _gst_gl_upload_element_transform_caps (GstBaseTransform * bt,
 }
 
 static gboolean
+gst_gl_upload_element_filter_meta (GstBaseTransform * trans, GstQuery * query,
+    GType api, const GstStructure * params)
+{
+  /* propose all metadata upstream */
+  return TRUE;
+}
+
+static gboolean
 _gst_gl_upload_element_propose_allocation (GstBaseTransform * bt,
     GstQuery * decide_query, GstQuery * query)
 {
-  guint alloc_index;
-  gboolean alloc_has_overlay_meta;
   GstGLUploadElement *upload = GST_GL_UPLOAD_ELEMENT (bt);
+  gboolean ret;
 
   if (!upload->upload)
     return FALSE;
 
-  alloc_has_overlay_meta =
-      gst_query_find_allocation_meta (decide_query,
-      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, &alloc_index);
-
-  if (alloc_has_overlay_meta) {
-    const GstStructure *params;
-    GST_DEBUG ("adding allocation meta in upload for textoverlay");
-
-    /* read window size from decide_query */
-    gst_query_parse_nth_allocation_meta (decide_query, alloc_index, &params);
-
-    /* it does not matter if params are NULL (no known window size), forward
-     * the meta in any case */
-    gst_query_add_allocation_meta (query,
-        GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, params);
-  }
-
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (bt,
+      decide_query, query);
   gst_gl_upload_propose_allocation (upload->upload, decide_query, query);
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean

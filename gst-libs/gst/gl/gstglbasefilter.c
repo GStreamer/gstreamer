@@ -69,8 +69,6 @@ static gboolean gst_gl_base_filter_start (GstBaseTransform * bt);
 static gboolean gst_gl_base_filter_stop (GstBaseTransform * bt);
 static gboolean gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
     GstQuery * query);
-static gboolean gst_gl_base_filter_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query);
 
 /* GstGLContextThreadFunc */
 static void gst_gl_base_filter_gl_start (GstGLContext * context, gpointer data);
@@ -95,8 +93,6 @@ gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_base_filter_stop;
   GST_BASE_TRANSFORM_CLASS (klass)->decide_allocation =
       gst_gl_base_filter_decide_allocation;
-  GST_BASE_TRANSFORM_CLASS (klass)->propose_allocation =
-      gst_gl_base_filter_propose_allocation;
 
   element_class->set_context = gst_gl_base_filter_set_context;
   element_class->change_state = gst_gl_base_filter_change_state;
@@ -365,7 +361,8 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
       goto error;
   }
 
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
+      query);
 
 context_error:
   {
@@ -379,13 +376,6 @@ error:
         ("Subclass failed to initialize."), (NULL));
     return FALSE;
   }
-}
-
-static gboolean
-gst_gl_base_filter_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query)
-{
-  return FALSE;
 }
 
 static GstStateChangeReturn
