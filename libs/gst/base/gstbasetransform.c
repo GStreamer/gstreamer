@@ -1452,6 +1452,37 @@ gst_base_transform_default_propose_allocation (GstBaseTransform * trans,
 }
 
 static gboolean
+gst_base_transform_reconfigure (GstBaseTransform * trans)
+{
+  gboolean reconfigure, ret = TRUE;
+
+  reconfigure = gst_pad_check_reconfigure (trans->srcpad);
+
+  if (G_UNLIKELY (reconfigure)) {
+    GstCaps *incaps;
+
+    GST_DEBUG_OBJECT (trans, "we had a pending reconfigure");
+
+    incaps = gst_pad_get_current_caps (trans->sinkpad);
+    if (incaps == NULL)
+      goto done;
+
+    /* if we need to reconfigure we pretend new caps arrived. This
+     * will reconfigure the transform with the new output format. */
+    if (!gst_base_transform_setcaps (trans, trans->sinkpad, incaps)) {
+      GST_ELEMENT_WARNING (trans, STREAM, FORMAT,
+          ("not negotiated"), ("not negotiated"));
+      ret = FALSE;
+    }
+
+    gst_caps_unref (incaps);
+  }
+
+done:
+  return ret;
+}
+
+static gboolean
 gst_base_transform_default_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query)
 {
@@ -1479,6 +1510,10 @@ gst_base_transform_default_query (GstBaseTransform * trans,
       if (direction != GST_PAD_SINK)
         goto done;
 
+      ret = gst_base_transform_reconfigure (trans);
+      if (G_UNLIKELY (!ret))
+        goto done;
+
       GST_OBJECT_LOCK (trans);
       if (!priv->negotiated && !priv->passthrough && (klass->set_caps != NULL)) {
         GST_DEBUG_OBJECT (trans,
@@ -1489,7 +1524,6 @@ gst_base_transform_default_query (GstBaseTransform * trans,
 
       decide_query = trans->priv->query;
       trans->priv->query = NULL;
-
       GST_OBJECT_UNLOCK (trans);
 
       GST_DEBUG_OBJECT (trans,
@@ -1986,31 +2020,12 @@ default_submit_input_buffer (GstBaseTransform * trans, gboolean is_discont,
   GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   GstBaseTransformPrivate *priv = trans->priv;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean reconfigure;
   GstClockTime running_time;
   GstClockTime timestamp;
 
-  reconfigure = gst_pad_check_reconfigure (trans->srcpad);
+  if (G_UNLIKELY (!gst_base_transform_reconfigure (trans)))
+    goto not_negotiated;
 
-  if (G_UNLIKELY (reconfigure)) {
-    GstCaps *incaps;
-
-    GST_DEBUG_OBJECT (trans, "we had a pending reconfigure");
-
-    incaps = gst_pad_get_current_caps (trans->sinkpad);
-    if (incaps == NULL)
-      goto no_reconfigure;
-
-    /* if we need to reconfigure we pretend new caps arrived. This
-     * will reconfigure the transform with the new output format. */
-    if (!gst_base_transform_setcaps (trans, trans->sinkpad, incaps)) {
-      gst_caps_unref (incaps);
-      goto not_negotiated;
-    }
-    gst_caps_unref (incaps);
-  }
-
-no_reconfigure:
   if (GST_BUFFER_OFFSET_IS_VALID (inbuf))
     GST_DEBUG_OBJECT (trans,
         "handling buffer %p of size %" G_GSIZE_FORMAT " and offset %"
@@ -2102,8 +2117,6 @@ not_negotiated:
     gst_buffer_unref (inbuf);
     if (GST_PAD_IS_FLUSHING (trans->srcpad))
       return GST_FLOW_FLUSHING;
-    GST_ELEMENT_WARNING (trans, STREAM, FORMAT,
-        ("not negotiated"), ("not negotiated"));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
