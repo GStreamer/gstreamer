@@ -439,7 +439,6 @@ gst_ca_opengl_layer_sink_query (GstBaseSink * bsink, GstQuery * query)
       gst_buffer_replace (&ca_sink->next_buffer, NULL);
       gst_buffer_replace (&ca_sink->next_sync, NULL);
 
-      res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
     }
     default:
