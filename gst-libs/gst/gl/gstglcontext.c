@@ -1118,10 +1118,15 @@ _create_context_info (GstGLContext * context, GstGLAPI gl_api, gint * gl_major,
 
   gl = context->gl_vtable;
 
-  if (!gl->GetString || !gl->GetString (GL_VERSION)
-      || !gl->GetString (GL_SHADING_LANGUAGE_VERSION)) {
+  if (!gl->GetString || !gl->GetString (GL_VERSION)) {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
         "glGetString not defined or returned invalid value");
+    return FALSE;
+  }
+
+  if (!gl->GetString (GL_SHADING_LANGUAGE_VERSION)) {
+    g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
+        "No GL shader support available");
     return FALSE;
   }
 
