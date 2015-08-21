@@ -41,6 +41,9 @@ static GstCaps *gst_gl_color_convert_element_transform_caps (GstBaseTransform *
     bt, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_gl_color_convert_element_get_unit_size (GstBaseTransform *
     trans, GstCaps * caps, gsize * size);
+static gboolean
+gst_gl_color_convert_element_filter_meta (GstBaseTransform * trans,
+    GstQuery * query, GType api, const GstStructure * params);
 static gboolean gst_gl_color_convert_element_decide_allocation (GstBaseTransform
     * trans, GstQuery * query);
 static GstFlowReturn
@@ -92,6 +95,7 @@ gst_gl_color_convert_element_class_init (GstGLColorConvertElementClass * klass)
   bt_class->transform_caps = gst_gl_color_convert_element_transform_caps;
   bt_class->set_caps = gst_gl_color_convert_element_set_caps;
   bt_class->get_unit_size = gst_gl_color_convert_element_get_unit_size;
+  bt_class->filter_meta = gst_gl_color_convert_element_filter_meta;
   bt_class->decide_allocation = gst_gl_color_convert_element_decide_allocation;
   bt_class->prepare_output_buffer =
       gst_gl_color_convert_element_prepare_output_buffer;
@@ -156,6 +160,14 @@ gst_gl_color_convert_element_get_unit_size (GstBaseTransform * trans,
   if (ret)
     *size = GST_VIDEO_INFO_SIZE (&info);
 
+  return TRUE;
+}
+
+static gboolean
+gst_gl_color_convert_element_filter_meta (GstBaseTransform * trans,
+    GstQuery * query, GType api, const GstStructure * params)
+{
+  /* propose all metadata upstream */
   return TRUE;
 }
 
