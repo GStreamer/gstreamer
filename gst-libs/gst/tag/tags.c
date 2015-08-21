@@ -118,6 +118,12 @@ gst_tag_register_tags_internal (gpointer unused)
       G_TYPE_DOUBLE, _("capturing focal length"),
       _("Focal length of the lens used capturing the image, in mm"), NULL);
 
+  gst_tag_register_static (GST_TAG_CAPTURING_FOCAL_LENGTH_35_MM,
+      GST_TAG_FLAG_META, G_TYPE_DOUBLE,
+      _("capturing 35 mm equivalent focal length"),
+      _("35 mm equivalent focal length of the lens used capturing the image, "
+          "in mm"), NULL);
+
   gst_tag_register_static (GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO,
       GST_TAG_FLAG_META, G_TYPE_DOUBLE, _("capturing digital zoom ratio"),
       _("Digital zoom ratio used when capturing an image"), NULL);

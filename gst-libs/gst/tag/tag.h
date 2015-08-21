@@ -152,6 +152,15 @@ G_BEGIN_DECLS
 #define GST_TAG_CAPTURING_FOCAL_LENGTH         "capturing-focal-length"
 
 /**
+ * GST_TAG_CAPTURING_FOCAL_LENGTH_35_MM:
+ *
+ * 35 mm equivalent focal length used when capturing an image, in mm. (double)
+ *
+ * Since: 1.10
+ */
+#define GST_TAG_CAPTURING_FOCAL_LENGTH_35_MM   "capturing-focal-length-35mm"
+
+/**
  * GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO:
  *
  * Digital zoom ratio used when capturing an image. (double)
