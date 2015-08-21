@@ -757,6 +757,7 @@ gst_matroska_read_common_parse_toc_tag (GstTocEntry * entry,
   }
 
   gst_toc_entry_merge_tags (entry, etags, GST_TAG_MERGE_APPEND);
+  gst_tag_list_unref (etags);
 
   cur = gst_toc_entry_get_sub_entries (entry);
   while (cur != NULL) {
