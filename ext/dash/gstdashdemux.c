@@ -411,6 +411,10 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
       gst_dash_demux_get_live_seek_range;
   gstadaptivedemux_class->get_presentation_offset =
       gst_dash_demux_get_presentation_offset;
+
+  gstadaptivedemux_class->finish_fragment =
+      gst_dash_demux_stream_fragment_finished;
+  gstadaptivedemux_class->data_received = gst_dash_demux_data_received;
 }
 
 static void
@@ -702,7 +706,6 @@ done:
 static gboolean
 gst_dash_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
 {
-  GstAdaptiveDemuxClass *klass;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   gboolean ret = FALSE;
   gchar *manifest;
@@ -722,13 +725,6 @@ gst_dash_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
   if (gst_buffer_map (buf, &mapinfo, GST_MAP_READ)) {
     manifest = (gchar *) mapinfo.data;
     if (gst_mpd_parse (dashdemux->client, manifest, mapinfo.size)) {
-      if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
-        klass = GST_ADAPTIVE_DEMUX_GET_CLASS (dashdemux);
-
-        klass->data_received = gst_dash_demux_data_received;
-        klass->finish_fragment = gst_dash_demux_stream_fragment_finished;
-      }
-
       if (gst_mpd_client_setup_media_presentation (dashdemux->client)) {
         ret = TRUE;
       } else {
@@ -1434,6 +1430,7 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
       dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED)
     /* fragment is advanced on data_received when byte limits are reached */
     return GST_FLOW_OK;
+
   if (G_UNLIKELY (stream->downloading_header || stream->downloading_index))
     return GST_FLOW_OK;
 
@@ -1446,9 +1443,14 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream)
 {
   GstDashDemuxStream *dash_stream = (GstDashDemuxStream *) stream;
+  GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buffer;
   gsize available;
+
+  if (!gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client))
+    return GST_ADAPTIVE_DEMUX_CLASS (parent_class)->data_received (demux,
+        stream);
 
   if (stream->downloading_index) {
     GstIsoffParserResult res;
