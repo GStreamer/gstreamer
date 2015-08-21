@@ -1775,14 +1775,14 @@ gst_glimage_sink_do_resize (GstGLImageSink * gl_sink, gint width, gint height)
       && (gl_sink->window_width != 0)
       && (gl_sink->window_height != 0);
 
+  gl_sink->window_width = width;
+  gl_sink->window_height = height;
+
   if (reconfigure) {
     GST_DEBUG ("Sending reconfigure event on sinkpad.");
     gst_pad_push_event (GST_BASE_SINK (gl_sink)->sinkpad,
         gst_event_new_reconfigure ());
   }
-
-  gl_sink->window_width = width;
-  gl_sink->window_height = height;
 
   /* default reshape */
   if (!do_reshape) {
