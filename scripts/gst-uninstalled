@@ -107,6 +107,7 @@ do
   DYLD_LIBRARY_PATH=$GST/gst-plugins-bad/gst-libs/gst/$path/.libs:$DYLD_LIBRARY_PATH
   GI_TYPELIB_PATH=$GST/gst-plugins-bad/gst-libs/gst/$path:$GI_TYPELIB_PATH
 done
+export GST_HAAR_CASCADES_PATH=$GST/gst-plugins-bad/ext/opencv/
 
 # GStreamer core libraries
 for path in base check controller net
