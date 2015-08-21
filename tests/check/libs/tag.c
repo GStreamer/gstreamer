@@ -1775,6 +1775,10 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_double (&value, -2.5);
   do_simple_exif_tag_serialization_deserialization
       (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
+
+  g_value_set_double (&value, 50.0);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_FOCAL_LENGTH_35_MM, &value);
   g_value_unset (&value);
 
   g_value_init (&value, G_TYPE_INT);

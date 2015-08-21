@@ -311,6 +311,7 @@ EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
 #define EXIF_TAG_EXPOSURE_MODE 0xA402
 #define EXIF_TAG_WHITE_BALANCE 0xA403
 #define EXIF_TAG_DIGITAL_ZOOM_RATIO 0xA404
+#define EXIF_TAG_FOCAL_LENGTH_IN_35_MM_FILM 0xa405
 #define EXIF_TAG_SCENE_CAPTURE_TYPE 0xA406
 #define EXIF_TAG_GAIN_CONTROL 0xA407
 #define EXIF_TAG_CONTRAST 0xA408
@@ -411,6 +412,8 @@ static const GstExifTagMatch tag_map_exif[] = {
   {GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, EXIF_TAG_DIGITAL_ZOOM_RATIO,
         EXIF_TYPE_RATIONAL, 0, NULL,
       NULL},
+  {GST_TAG_CAPTURING_FOCAL_LENGTH_35_MM, EXIF_TAG_FOCAL_LENGTH_IN_35_MM_FILM,
+      EXIF_TYPE_SHORT, 0, NULL, NULL},
   {GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE, EXIF_TAG_SCENE_CAPTURE_TYPE,
         EXIF_TYPE_SHORT, 0, serialize_scene_capture_type,
       deserialize_scene_capture_type},
@@ -1048,6 +1051,9 @@ write_exif_integer_tag_from_taglist (GstExifWriter * writer,
     case G_TYPE_INT:
       num = g_value_get_int (value);
       break;
+    case G_TYPE_DOUBLE:
+      num = (gint) g_value_get_double (value);
+      break;
     default:
       GST_WARNING ("Conversion from %s to int not supported",
           G_VALUE_TYPE_NAME (value));
@@ -1311,6 +1317,37 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
         tag->gst_tag);
   }
   g_free (utfstr);
+}
+
+static void
+parse_exif_short_tag (GstExifReader * reader, const GstExifTagMatch * tag,
+    guint32 count, guint32 offset, const guint8 * offset_as_data)
+{
+  GType tagtype;
+  guint16 value;
+
+  if (count > 1) {
+    GST_WARNING ("Short tags with more than one value are not supported");
+    return;
+  }
+
+  /* value is encoded into offset */
+  if (reader->byte_order == G_LITTLE_ENDIAN)
+    value = GST_READ_UINT16_LE (offset_as_data);
+  else
+    value = GST_READ_UINT16_BE (offset_as_data);
+
+  tagtype = gst_tag_get_type (tag->gst_tag);
+  if (tagtype == G_TYPE_INT) {
+    gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
+        value, NULL);
+  } else if (tagtype == G_TYPE_DOUBLE) {
+    gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
+        (gdouble) value, NULL);
+  } else {
+    GST_WARNING ("No parsing function associated to %x(%s)", tag->exif_tag,
+        tag->gst_tag);
+  }
 }
 
 static void
@@ -1761,6 +1798,10 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
         break;
       case EXIF_TYPE_LONG:
         parse_exif_long_tag (exif_reader, &tag_map[map_index],
+            tagdata.count, tagdata.offset, tagdata.offset_as_data);
+        break;
+      case EXIF_TYPE_SHORT:
+        parse_exif_short_tag (exif_reader, &tag_map[map_index],
             tagdata.count, tagdata.offset, tagdata.offset_as_data);
         break;
       default:
