@@ -2584,6 +2584,7 @@ gst_matroska_ebmlnum_sint (guint8 * data, guint size, gint64 * num)
 static void
 gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
 {
+  GstClockTime gap_threshold;
   gint stream_nr;
 
   GST_OBJECT_LOCK (demux);
@@ -2601,21 +2602,22 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
         "Checking for resync on stream %d (%" GST_TIME_FORMAT ")", stream_nr,
         GST_TIME_ARGS (context->pos));
 
-    if (G_LIKELY (context->type != GST_MATROSKA_TRACK_TYPE_SUBTITLE)) {
-      GST_LOG_OBJECT (demux, "Skipping sync on non-subtitle stream");
-      continue;
-    }
+    /* Only send gap events on non-subtitle streams if lagging way behind.
+     * The 0.5 second threshold for subtitle streams is also quite random. */
+    if (context->type == GST_MATROSKA_TRACK_TYPE_SUBTITLE)
+      gap_threshold = GST_SECOND / 2;
+    else
+      gap_threshold = 3 * GST_SECOND;
 
-    /* does it lag? 0.5 seconds is a random threshold...
-     * lag need only be considered if we have advanced into requested segment */
+    /* Lag need only be considered if we have advanced into requested segment */
     if (GST_CLOCK_TIME_IS_VALID (context->pos) &&
         GST_CLOCK_TIME_IS_VALID (demux->common.segment.position) &&
         demux->common.segment.position > demux->common.segment.start &&
-        context->pos + (GST_SECOND / 2) < demux->common.segment.position) {
+        context->pos + gap_threshold < demux->common.segment.position) {
 
       GstEvent *event;
       guint64 start = context->pos;
-      guint64 stop = demux->common.segment.position - (GST_SECOND / 2);
+      guint64 stop = demux->common.segment.position - gap_threshold;
 
       GST_DEBUG_OBJECT (demux,
           "Synchronizing stream %d with other by advancing time from %"
