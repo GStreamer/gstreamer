@@ -7214,7 +7214,7 @@ restart:
   }
 
   /* it could be that the DESCRIBE method was not implemented */
-  if (!src->methods & GST_RTSP_DESCRIBE)
+  if (!(src->methods & GST_RTSP_DESCRIBE))
     goto no_describe;
 
   /* check if reply is SDP */
