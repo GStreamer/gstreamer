@@ -1824,9 +1824,17 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_CURL, true)
 AG_GST_CHECK_FEATURE(CURL, [Curl plugin], curl, [
   PKG_CHECK_MODULES(CURL, libcurl >= 7.35.0, [
     HAVE_CURL="yes"
-    AC_CHECK_HEADERS([unistd.h sys/socket.h sys/types.h netinet/in.h netinet/ip.h netinet/tcp.h fcntl.h], [ ], [
+    AC_CHECK_HEADERS([unistd.h sys/socket.h sys/types.h netinet/in.h netinet/tcp.h fcntl.h], [ ], [
       AC_CHECK_HEADERS([unistd.h sys/types.h winsock2.h ws2tcpip.h fcntl.h], [ ], [HAVE_CURL="no"])
     ])
+    AC_CHECK_HEADERS([netinet/ip.h], [], [HAVE_CURL="no"],
+    [[#ifdef HAVE_SYS_TYPES_H
+     # include <sys/types.h>
+     #endif
+     #ifdef HAVE_NETINET_IN_H
+     # include <netinet/in.h>
+     #endif
+    ]])
     AC_MSG_CHECKING([for socket support needed by curlsink])
     AC_MSG_RESULT($HAVE_CURL)
   ], [
