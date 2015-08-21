@@ -266,6 +266,7 @@ gst_wavpack_dec_post_tags (GstWavpackDec * dec)
         (guint) bitrate, NULL);
     gst_audio_decoder_merge_tags (GST_AUDIO_DECODER (dec), list,
         GST_TAG_MERGE_REPLACE);
+    gst_tag_list_unref (list);
   }
 }
 
