@@ -724,6 +724,7 @@ gst_dash_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
   if (dashdemux->client)
     gst_mpd_client_free (dashdemux->client);
   dashdemux->client = gst_mpd_client_new ();
+  gst_mpd_client_set_uri_downloader (dashdemux->client, demux->downloader);
 
   dashdemux->client->mpd_uri = g_strdup (demux->manifest_uri);
   dashdemux->client->mpd_base_uri = g_strdup (demux->manifest_base_uri);
@@ -801,6 +802,7 @@ gst_dash_demux_reset (GstAdaptiveDemux * ademux)
   gst_dash_demux_clock_drift_free (demux->clock_drift);
   demux->clock_drift = NULL;
   demux->client = gst_mpd_client_new ();
+  gst_mpd_client_set_uri_downloader (demux->client, ademux->downloader);
 
   demux->n_audio_streams = 0;
   demux->n_video_streams = 0;
@@ -1273,6 +1275,7 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
 
   /* parse the manifest file */
   new_client = gst_mpd_client_new ();
+  gst_mpd_client_set_uri_downloader (new_client, demux->downloader);
   new_client->mpd_uri = g_strdup (demux->manifest_uri);
   new_client->mpd_base_uri = g_strdup (demux->manifest_base_uri);
   gst_buffer_map (buffer, &mapinfo, GST_MAP_READ);
