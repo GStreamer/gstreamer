@@ -3051,7 +3051,20 @@ gst_mpd_client_free (GstMpdClient * client)
   g_free (client->mpd_base_uri);
   client->mpd_base_uri = NULL;
 
+  if (client->downloader)
+    gst_object_unref (client->downloader);
+  client->downloader = NULL;
+
   g_free (client);
+}
+
+void
+gst_mpd_client_set_uri_downloader (GstMpdClient * client,
+    GstUriDownloader * downloader)
+{
+  if (client->downloader)
+    gst_object_unref (client->downloader);
+  client->downloader = gst_object_ref (downloader);
 }
 
 static void

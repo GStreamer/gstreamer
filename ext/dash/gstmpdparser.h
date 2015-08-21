@@ -28,6 +28,7 @@
 #define __GST_MPDPARSER_H__
 
 #include <gst/gst.h>
+#include <gst/uridownloader/gsturidownloader.h>
 
 G_BEGIN_DECLS
 
@@ -514,6 +515,8 @@ struct _GstMpdClient
 
   /* profiles */
   gboolean profile_isoff_ondemand;
+
+  GstUriDownloader * downloader;
 };
 
 /* Basic initialization/deinitialization functions */
@@ -521,6 +524,8 @@ GstMpdClient *gst_mpd_client_new (void);
 void gst_active_streams_free (GstMpdClient * client);
 void gst_mpd_client_free (GstMpdClient * client);
 void gst_media_fragment_info_clear (GstMediaFragmentInfo * fragment);
+
+void gst_mpd_client_set_uri_downloader (GstMpdClient * client, GstUriDownloader * download);
 
 /* MPD file parsing */
 gboolean gst_mpd_parse (GstMpdClient *client, const gchar *data, gint size);

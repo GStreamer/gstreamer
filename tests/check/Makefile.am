@@ -441,8 +441,9 @@ elements_mpg123audiodec_LDADD = \
 elements_uvch264demux_CFLAGS = -DUVCH264DEMUX_DATADIR="$(srcdir)/elements/uvch264demux_data" \
 				$(AM_CFLAGS)
 
-elements_dash_mpd_CFLAGS = $(AM_CFLAGS) $(LIBXML2_CFLAGS)
-elements_dash_mpd_LDADD = $(LDADD) $(LIBXML2_LIBS)
+elements_dash_mpd_CFLAGS = $(AM_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS) $(LIBXML2_CFLAGS)
+elements_dash_mpd_LDADD = $(LDADD) $(LIBXML2_LIBS) \
+	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-@GST_API_VERSION@.la
 elements_dash_mpd_SOURCES = elements/dash_mpd.c
 
 pipelines_streamheader_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
