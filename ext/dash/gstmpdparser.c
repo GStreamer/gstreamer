@@ -2895,14 +2895,13 @@ gst_mpdparser_clone_URL (GstURLType * url)
  * baseURLs. Takes ownership of base and returns a new base.
  */
 static GstUri *
-combine_urls (GstUri * base, GList * list, gchar ** query,
-    GstActiveStream * stream)
+combine_urls (GstUri * base, GList * list, gchar ** query, guint idx)
 {
   GstBaseURL *baseURL;
   GstUri *ret = base;
 
   if (list != NULL) {
-    baseURL = g_list_nth_data (list, stream->baseURL_idx);
+    baseURL = g_list_nth_data (list, idx);
     if (!baseURL) {
       baseURL = list->data;
     }
@@ -2949,22 +2948,26 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
       mpd_base_uri ? client->mpd_base_uri : client->mpd_uri);
 
   /* combine a BaseURL at the MPD level with the current base url */
-  abs_url = combine_urls (abs_url, client->mpd_node->BaseURLs, query, stream);
+  abs_url =
+      combine_urls (abs_url, client->mpd_node->BaseURLs, query,
+      stream->baseURL_idx);
 
   /* combine a BaseURL at the Period level with the current base url */
   abs_url =
-      combine_urls (abs_url, stream_period->period->BaseURLs, query, stream);
+      combine_urls (abs_url, stream_period->period->BaseURLs, query,
+      stream->baseURL_idx);
 
   GST_DEBUG ("Current adaptation set id %i (%s)", stream->cur_adapt_set->id,
       stream->cur_adapt_set->contentType);
   /* combine a BaseURL at the AdaptationSet level with the current base url */
   abs_url =
-      combine_urls (abs_url, stream->cur_adapt_set->BaseURLs, query, stream);
+      combine_urls (abs_url, stream->cur_adapt_set->BaseURLs, query,
+      stream->baseURL_idx);
 
   /* combine a BaseURL at the Representation level with the current base url */
   abs_url =
       combine_urls (abs_url, stream->cur_representation->BaseURLs, query,
-      stream);
+      stream->baseURL_idx);
 
   ret = gst_uri_to_string (abs_url);
   gst_uri_unref (abs_url);
@@ -3492,11 +3495,106 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
   return TRUE;
 }
 
+static GList *
+gst_mpd_client_fetch_external_period (GstMpdClient * client,
+    GstPeriodNode * period_node, gboolean * error)
+{
+  GstFragment *download;
+  GstBuffer *period_buffer;
+  GstMapInfo map;
+  GError *err = NULL;
+  xmlDocPtr doc;
+  GstUri *base_uri, *uri;
+  gchar *query = NULL;
+  gchar *uri_string;
+  GList *new_periods = NULL;
+
+  *error = FALSE;
+
+  /* ISO/IEC 23009-1:2014 5.5.3 4)
+   * Remove nodes that resolve to nothing when resolving
+   */
+  if (strcmp (period_node->xlink_href,
+          "urn:mpeg:dash:resolve-to-zero:2013") == 0) {
+    return NULL;
+  }
+
+  if (!client->downloader) {
+    *error = TRUE;
+    return NULL;
+  }
+
+  /* Build absolute URI */
+
+  /* Get base URI at the MPD level */
+  base_uri =
+      gst_uri_from_string (client->
+      mpd_base_uri ? client->mpd_base_uri : client->mpd_uri);
+
+  /* combine a BaseURL at the MPD level with the current base url */
+  base_uri = combine_urls (base_uri, client->mpd_node->BaseURLs, &query, 0);
+  uri = gst_uri_from_string_with_base (base_uri, period_node->xlink_href);
+  if (query)
+    gst_uri_set_query_string (uri, query);
+  g_free (query);
+  uri_string = gst_uri_to_string (uri);
+  gst_uri_unref (base_uri);
+  gst_uri_unref (uri);
+
+  download =
+      gst_uri_downloader_fetch_uri (client->downloader,
+      uri_string, client->mpd_uri, TRUE, FALSE, TRUE, &err);
+  g_free (uri_string);
+
+  if (!download) {
+    GST_ERROR ("Failed to download external Period node at '%s': %s",
+        period_node->xlink_href, err->message);
+    g_clear_error (&err);
+    *error = TRUE;
+    return NULL;
+  }
+
+  period_buffer = gst_fragment_get_buffer (download);
+  g_object_unref (download);
+
+  gst_buffer_map (period_buffer, &map, GST_MAP_READ);
+
+  doc =
+      xmlReadMemory ((const gchar *) map.data, map.size, "noname.xml", NULL,
+      XML_PARSE_NONET);
+  if (doc) {
+    xmlNode *root_element = xmlDocGetRootElement (doc);
+    if (root_element->type != XML_ELEMENT_NODE ||
+        xmlStrcmp (root_element->name, (xmlChar *) "Period") != 0) {
+      xmlFreeDoc (doc);
+      gst_buffer_unmap (period_buffer, &map);
+      gst_buffer_unref (period_buffer);
+      *error = TRUE;
+      return NULL;
+    }
+
+    gst_mpdparser_parse_period_node (&new_periods, root_element);
+  } else {
+    GST_ERROR ("Failed to parse period node XML");
+    gst_buffer_unmap (period_buffer, &map);
+    gst_buffer_unref (period_buffer);
+    *error = TRUE;
+    return NULL;
+  }
+  gst_buffer_unmap (period_buffer, &map);
+  gst_buffer_unref (period_buffer);
+
+  return new_periods;
+}
+
+/* TODO: Implement xlink actuation onRequest properly. Currently we download
+ * each external MPD immediately when iterating over the periods. We should
+ * do this only when actually switching to this period.
+ */
 gboolean
 gst_mpd_client_setup_media_presentation (GstMpdClient * client)
 {
   GstStreamPeriod *stream_period;
-  GstPeriodNode *period_node;
   GstClockTime start, duration;
   GList *list, *next;
   guint idx;
@@ -3517,9 +3615,51 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
   idx = 0;
   start = 0;
   duration = GST_CLOCK_TIME_NONE;
-  for (list = g_list_first (client->mpd_node->Periods); list;
-      list = g_list_next (list)) {
-    period_node = (GstPeriodNode *) list->data;
+  for (list = client->mpd_node->Periods; list; /* explicitly advanced below */ ) {
+    GstPeriodNode *period_node = list->data;
+    GstPeriodNode *next_period_node = NULL;
+
+    /* Download external period */
+    if (period_node->xlink_href) {
+      GList *new_periods;
+      gboolean error = FALSE;
+      GList *prev;
+
+      new_periods =
+          gst_mpd_client_fetch_external_period (client, period_node, &error);
+      if (!new_periods && error)
+        goto syntax_error;
+
+      prev = list->prev;
+      client->mpd_node->Periods =
+          g_list_delete_link (client->mpd_node->Periods, list);
+      gst_mpdparser_free_period_node (period_node);
+      period_node = NULL;
+
+      /* Get new next node, we will insert before this */
+      if (prev)
+        next = prev->next;
+      else
+        next = client->mpd_node->Periods;
+
+      while (new_periods) {
+        client->mpd_node->Periods =
+            g_list_insert_before (client->mpd_node->Periods, next,
+            new_periods->data);
+        new_periods = g_list_delete_link (new_periods, new_periods);
+      }
+      next = NULL;
+
+      /* Update our iterator to the first new period if any, or the next */
+      if (prev)
+        list = prev->next;
+      else
+        list = client->mpd_node->Periods;
+
+      /* And try again */
+      continue;
+    }
+
     if (period_node->start != -1) {
       /* we have a regular period */
       /* start cannot be smaller than previous start */
@@ -3551,9 +3691,44 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
        "The Period extends until the PeriodStart of the next Period, or until
        the end of the Media Presentation in the case of the last Period."
      */
-    if ((next = g_list_next (list)) != NULL) {
+
+    while ((next = g_list_next (list)) != NULL) {
       /* try to infer this period duration from the start time of the next period */
-      GstPeriodNode *next_period_node = next->data;
+      next_period_node = next->data;
+
+      if (next_period_node->xlink_href) {
+        gboolean next_error;
+        GList *new_periods;
+
+        new_periods =
+            gst_mpd_client_fetch_external_period (client, next_period_node,
+            &next_error);
+
+        if (!new_periods && next_error)
+          goto syntax_error;
+
+        client->mpd_node->Periods =
+            g_list_delete_link (client->mpd_node->Periods, next);
+        gst_mpdparser_free_period_node (next_period_node);
+        next_period_node = NULL;
+        /* Get new next node, we will insert before this */
+        next = g_list_next (list);
+        while (new_periods) {
+          client->mpd_node->Periods =
+              g_list_insert_before (client->mpd_node->Periods, next,
+              new_periods->data);
+          new_periods = g_list_delete_link (new_periods, new_periods);
+        }
+
+        /* And try again, getting the next list element which is now our newly
+         * inserted nodes. If any */
+      } else {
+        /* Got the next period and it doesn't have to be downloaded first */
+        break;
+      }
+    }
+
+    if (next_period_node) {
       if (next_period_node->start != -1) {
         if (start >= next_period_node->start * GST_MSECOND) {
           /* Invalid MPD file: duration would be negative or zero */
@@ -3594,6 +3769,8 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
     ret = TRUE;
     GST_LOG (" - added Period %d start=%" GST_TIME_FORMAT " duration=%"
         GST_TIME_FORMAT, idx, GST_TIME_ARGS (start), GST_TIME_ARGS (duration));
+
+    list = list->next;
   }
 
   GST_DEBUG ("Found a total of %d valid Periods in the Media Presentation",
