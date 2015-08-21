@@ -981,7 +981,7 @@ GST_START_TEST (test_clip)
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
   /* The aggregation is done in a dedicated thread, so we can't
-   * not know when it is actually going to happen, so we use a DRAIN query
+   * know when it is actually going to happen, so we use a DRAIN query
    * to wait for it to complete.
    */
   gst_pad_query (sinkpad, drain);
