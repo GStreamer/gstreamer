@@ -246,8 +246,6 @@ gst_face_detect_finalize (GObject * obj)
 
   if (filter->cvGray)
     cvReleaseImage (&filter->cvGray);
-  if (filter->cvStorage)
-    cvReleaseMemStorage (&filter->cvStorage);
 
   g_free (filter->face_profile);
   g_free (filter->nose_profile);
@@ -528,11 +526,6 @@ gst_face_detect_set_caps (GstOpencvVideoFilter * transform, gint in_width,
   filter->cvGray = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U,
       1);
 
-  if (!filter->cvStorage)
-    filter->cvStorage = cvCreateMemStorage (0);
-  else
-    cvClearMemStorage (filter->cvStorage);
-
   return TRUE;
 }
 
@@ -612,7 +605,6 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     }
 
     cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
-    cvClearMemStorage (filter->cvStorage);
 
     gst_face_detect_run_detector (filter, filter->cvFaceDetect,
         filter->min_size_width, filter->min_size_height,

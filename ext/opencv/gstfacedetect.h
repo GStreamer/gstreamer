@@ -109,7 +109,6 @@ struct _GstFaceDetect
   cv::CascadeClassifier *cvNoseDetect;
   cv::CascadeClassifier *cvMouthDetect;
   cv::CascadeClassifier *cvEyesDetect;
-  CvMemStorage *cvStorage;
 };
 
 struct _GstFaceDetectClass
