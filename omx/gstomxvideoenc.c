@@ -1538,6 +1538,18 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
     GST_DEBUG_OBJECT (self, "Handling frame");
 
     if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
+#ifdef USE_OMX_TARGET_RPI
+      OMX_CONFIG_BOOLEANTYPE config;
+
+      GST_OMX_INIT_STRUCT (&config);
+      config.bEnabled = OMX_TRUE;
+
+      GST_DEBUG_OBJECT (self, "Forcing a keyframe (iframe on the RPi)");
+
+      err =
+          gst_omx_component_set_config (self->enc,
+          OMX_IndexConfigBrcmVideoRequestIFrame, &config);
+#else
       OMX_CONFIG_INTRAREFRESHVOPTYPE config;
 
       GST_OMX_INIT_STRUCT (&config);
@@ -1548,6 +1560,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
       err =
           gst_omx_component_set_config (self->enc,
           OMX_IndexConfigVideoIntraVOPRefresh, &config);
+#endif
       if (err != OMX_ErrorNone)
         GST_ERROR_OBJECT (self, "Failed to force a keyframe: %s (0x%08x)",
             gst_omx_error_to_string (err), err);
