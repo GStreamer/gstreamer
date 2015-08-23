@@ -523,8 +523,7 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
            PTS/DTS. We therefore allow a latency of 700ms for that.
          */
         gst_query_parse_latency (query, &live, &min_lat, &max_lat);
-        if (min_lat)
-          min_lat += TS_LATENCY;
+        min_lat += TS_LATENCY;
         if (GST_CLOCK_TIME_IS_VALID (max_lat))
           max_lat += TS_LATENCY;
         gst_query_set_latency (query, live, min_lat, max_lat);
