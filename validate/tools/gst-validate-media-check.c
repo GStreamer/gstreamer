@@ -150,5 +150,8 @@ out:
   gst_deinit ();
   gst_validate_deinit ();
 
+  g_print ("\n=======> Test %s (Return value: %i)\n\n",
+      ret == 0 ? "PASSED" : "FAILED", ret);
+
   return ret;
 }
