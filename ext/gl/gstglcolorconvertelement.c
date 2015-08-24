@@ -201,6 +201,9 @@ gst_gl_color_convert_element_prepare_output_buffer (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer ** outbuf)
 {
   GstGLColorConvertElement *convert = GST_GL_COLOR_CONVERT_ELEMENT (bt);
+  GstBaseTransformClass *bclass;
+
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (bt);
 
   if (gst_base_transform_is_passthrough (bt)) {
     *outbuf = inbuf;
@@ -220,8 +223,8 @@ gst_gl_color_convert_element_prepare_output_buffer (GstBaseTransform * bt,
   /* basetransform doesn't unref if they're the same */
   if (inbuf == *outbuf)
     gst_buffer_unref (*outbuf);
-  gst_buffer_copy_into (*outbuf, inbuf,
-      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+  else
+    bclass->copy_metadata (bt, inbuf, *outbuf);
 
   return GST_FLOW_OK;
 }
