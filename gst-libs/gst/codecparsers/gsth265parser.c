@@ -933,8 +933,10 @@ gst_h265_slice_parse_pred_weight_table (GstH265SliceHdr * slice, NalReader * nr)
     }
   }
 
-  if (sps->chroma_format_idc != 0)
-    READ_SE_ALLOWED (nr, p->delta_chroma_log2_weight_denom, -7, 7);
+  if (sps->chroma_format_idc != 0) {
+    READ_SE_ALLOWED (nr, p->delta_chroma_log2_weight_denom,
+        (0 - p->luma_log2_weight_denom), (7 - p->luma_log2_weight_denom));
+  }
 
   for (i = 0; i <= slice->num_ref_idx_l0_active_minus1; i++)
     READ_UINT8 (nr, p->luma_weight_l0_flag[i], 1);
