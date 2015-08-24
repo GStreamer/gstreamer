@@ -827,6 +827,9 @@ struct _GstH265PPS
 
   guint8 pps_extension_flag;
 
+  /* calculated values */
+  guint32 PicWidthInCtbsY;
+  guint32 PicHeightInCtbsY;
   gboolean valid;
 };
 

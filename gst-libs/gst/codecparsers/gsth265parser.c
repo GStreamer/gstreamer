@@ -1795,6 +1795,7 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
   GstH265SPS *sps;
   gint sps_id;
   gint qp_bd_offset;
+  guint32 CtbSizeY, MinCbLog2SizeY, CtbLog2SizeY;
   guint8 i;
 
   INITIALIZE_DEBUG_CATEGORY;
@@ -1814,6 +1815,14 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
   }
   pps->sps = sps;
   qp_bd_offset = 6 * sps->bit_depth_luma_minus8;
+
+  MinCbLog2SizeY = sps->log2_min_luma_coding_block_size_minus3 + 3;
+  CtbLog2SizeY = MinCbLog2SizeY + sps->log2_diff_max_min_luma_coding_block_size;
+  CtbSizeY = 1 << CtbLog2SizeY;
+  pps->PicHeightInCtbsY =
+      ceil ((gdouble) sps->pic_height_in_luma_samples / (gdouble) CtbSizeY);
+  pps->PicWidthInCtbsY =
+      ceil ((gdouble) sps->pic_width_in_luma_samples / (gdouble) CtbSizeY);
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
@@ -1860,12 +1869,36 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
     READ_UE_ALLOWED (&nr, pps->num_tile_rows_minus1, 0, 21);
 
     READ_UINT8 (&nr, pps->uniform_spacing_flag, 1);
-    if (!pps->uniform_spacing_flag) {
-      for (i = 0; i < pps->num_tile_columns_minus1; i++)
+    /* 6.5.1, 6-4, 6-5, 7.4.3.3.1 */
+    if (pps->uniform_spacing_flag) {
+      guint8 num_col = pps->num_tile_columns_minus1 + 1;
+      guint8 num_row = pps->num_tile_rows_minus1 + 1;
+      for (i = 0; i < num_col; i++) {
+        pps->column_width_minus1[i] =
+            ((i + 1) * pps->PicWidthInCtbsY / num_col
+            - i * pps->PicWidthInCtbsY / num_col) - 1;
+      }
+      for (i = 0; i < num_row; i++) {
+        pps->row_height_minus1[i] =
+            ((i + 1) * pps->PicHeightInCtbsY / num_row
+            - i * pps->PicHeightInCtbsY / num_row) - 1;
+      }
+    } else {
+      pps->column_width_minus1[pps->num_tile_columns_minus1] =
+          pps->PicWidthInCtbsY - 1;
+      for (i = 0; i < pps->num_tile_columns_minus1; i++) {
         READ_UE (&nr, pps->column_width_minus1[i]);
+        pps->column_width_minus1[pps->num_tile_columns_minus1] -=
+            (pps->column_width_minus1[i] + 1);
+      }
 
-      for (i = 0; i < pps->num_tile_rows_minus1; i++)
+      pps->row_height_minus1[pps->num_tile_rows_minus1] =
+          pps->PicHeightInCtbsY - 1;
+      for (i = 0; i < pps->num_tile_rows_minus1; i++) {
         READ_UE (&nr, pps->row_height_minus1[i]);
+        pps->row_height_minus1[pps->num_tile_rows_minus1] -=
+            (pps->row_height_minus1[i] + 1);
+      }
     }
     READ_UINT8 (&nr, pps->loop_filter_across_tiles_enabled_flag, 1);
   }
@@ -1956,11 +1989,6 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
   GstH265ShortTermRefPicSet *stRPS = NULL;
   guint32 UsedByCurrPicLt[16];
   guint32 PicSizeInCtbsY;
-  guint32 PicWidthInCtbsY;
-  guint32 PicHeightInCtbsY;
-  guint32 CtbSizeY;
-  guint32 MinCbLog2SizeY;
-  guint32 CtbLog2SizeY;
   gint NumPocTotalCurr = 0;
 
   if (!nalu->size) {
@@ -1996,14 +2024,7 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
     return GST_H265_PARSER_BROKEN_LINK;
   }
 
-  MinCbLog2SizeY = sps->log2_min_luma_coding_block_size_minus3 + 3;
-  CtbLog2SizeY = MinCbLog2SizeY + sps->log2_diff_max_min_luma_coding_block_size;
-  CtbSizeY = 1 << CtbLog2SizeY;
-  PicHeightInCtbsY =
-      ceil ((gdouble) sps->pic_height_in_luma_samples / (gdouble) CtbSizeY);
-  PicWidthInCtbsY =
-      ceil ((gdouble) sps->pic_width_in_luma_samples / (gdouble) CtbSizeY);
-  PicSizeInCtbsY = PicWidthInCtbsY * PicHeightInCtbsY;
+  PicSizeInCtbsY = pps->PicWidthInCtbsY * pps->PicHeightInCtbsY;
   /* set default values for fields that might not be present in the bitstream
    * and have valid defaults */
   slice->dependent_slice_segment_flag = 0;
@@ -2211,13 +2232,14 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
     guint32 offset_max;
 
     if (!pps->tiles_enabled_flag && pps->entropy_coding_sync_enabled_flag)
-      offset_max = PicHeightInCtbsY - 1;
+      offset_max = pps->PicHeightInCtbsY - 1;
     else if (pps->tiles_enabled_flag && !pps->entropy_coding_sync_enabled_flag)
       offset_max =
           (pps->num_tile_columns_minus1 + 1) * (pps->num_tile_rows_minus1 + 1) -
           1;
     else
-      offset_max = (pps->num_tile_columns_minus1 + 1) * PicHeightInCtbsY - 1;
+      offset_max =
+          (pps->num_tile_columns_minus1 + 1) * pps->PicHeightInCtbsY - 1;
 
     READ_UE_MAX (&nr, slice->num_entry_point_offsets, offset_max);
     if (slice->num_entry_point_offsets > 0) {
