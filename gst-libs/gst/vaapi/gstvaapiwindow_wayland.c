@@ -109,7 +109,7 @@ struct _GstVaapiWindowWaylandPrivate
   guint is_shown:1;
   guint fullscreen_on_show:1;
   guint use_vpp:1;
-  guint is_cancelled:1;
+  guint sync_failed:1;
   volatile guint num_frames_pending;
 };
 
@@ -161,7 +161,7 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
   struct wl_display *const wl_display =
       GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
 
-  if (priv->is_cancelled)
+  if (priv->sync_failed)
     return FALSE;
 
   if (priv->pollfd.fd < 0) {
@@ -199,7 +199,7 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
   return TRUE;
 
 error:
-  priv->is_cancelled = TRUE;
+  priv->sync_failed = TRUE;
   GST_ERROR ("Error on dispatching events: %s", g_strerror (errno));
   return FALSE;
 }
@@ -517,7 +517,7 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   /* Wait for the previous frame to complete redraw */
   if (!gst_vaapi_window_wayland_sync (window)) {
     wl_buffer_destroy (buffer);
-    return !priv->is_cancelled;
+    return !priv->sync_failed;
   }
 
   frame = frame_state_new (window);
