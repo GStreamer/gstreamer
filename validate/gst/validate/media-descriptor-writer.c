@@ -563,22 +563,22 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
     }
   }
 
-  writer =
-      gst_media_descriptor_writer_new (runner,
-      gst_discoverer_info_get_uri (info),
-      gst_discoverer_info_get_duration (info),
-      gst_discoverer_info_get_seekable (info));
-
-  if (handle_g_logs)
-    gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (writer));
-
-  tags = gst_discoverer_info_get_tags (info);
-  if (tags)
-    gst_media_descriptor_writer_add_taglist (writer, tags);
-
   streaminfo = gst_discoverer_info_get_stream_info (info);
 
   if (streaminfo) {
+    writer =
+        gst_media_descriptor_writer_new (runner,
+        gst_discoverer_info_get_uri (info),
+        gst_discoverer_info_get_duration (info),
+        gst_discoverer_info_get_seekable (info));
+
+    if (handle_g_logs)
+      gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (writer));
+
+    tags = gst_discoverer_info_get_tags (info);
+    if (tags)
+      gst_media_descriptor_writer_add_taglist (writer, tags);
+
     if (GST_IS_DISCOVERER_CONTAINER_INFO (streaminfo)) {
       ((GstMediaDescriptor *) writer)->filenode->caps =
           gst_discoverer_stream_info_get_caps (GST_DISCOVERER_STREAM_INFO
@@ -594,6 +594,7 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
   } else {
     GST_VALIDATE_REPORT (writer, FILE_NO_STREAM_INFO,
         "Discoverer info, does not contain the stream info");
+    goto out;
   }
 
   media_descriptor = (GstMediaDescriptor *) writer;
