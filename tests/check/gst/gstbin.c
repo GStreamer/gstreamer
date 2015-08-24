@@ -697,7 +697,7 @@ GST_START_TEST (test_add_self)
   bin = gst_bin_new (NULL);
   fail_unless (bin != NULL, "Could not create bin");
 
-  ASSERT_WARNING (gst_bin_add (GST_BIN (bin), bin));
+  ASSERT_CRITICAL (gst_bin_add (GST_BIN (bin), bin));
 
   gst_object_unref (bin);
 }

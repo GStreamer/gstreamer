@@ -1290,6 +1290,7 @@ gst_bin_add (GstBin * bin, GstElement * element)
 
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_ELEMENT_CAST (bin) != element, FALSE);
 
   bclass = GST_BIN_GET_CLASS (bin);
 
@@ -1332,6 +1333,10 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   GstStateChangeReturn ret;
 
   GST_DEBUG_OBJECT (bin, "element :%s", GST_ELEMENT_NAME (element));
+
+  /* we obviously can't remove ourself from ourself */
+  if (G_UNLIKELY (element == GST_ELEMENT_CAST (bin)))
+    goto removing_itself;
 
   GST_OBJECT_LOCK (bin);
 
@@ -1564,6 +1569,13 @@ no_state_recalc:
   return TRUE;
 
   /* ERROR handling */
+removing_itself:
+  {
+    GST_OBJECT_LOCK (bin);
+    g_warning ("Cannot remove bin '%s' from itself", GST_ELEMENT_NAME (bin));
+    GST_OBJECT_UNLOCK (bin);
+    return FALSE;
+  }
 not_in_bin:
   {
     g_warning ("Element '%s' is not in bin '%s'", elem_name,
@@ -1603,6 +1615,7 @@ gst_bin_remove (GstBin * bin, GstElement * element)
 
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_ELEMENT_CAST (bin) != element, FALSE);
 
   bclass = GST_BIN_GET_CLASS (bin);
 
