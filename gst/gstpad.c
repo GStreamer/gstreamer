@@ -2973,9 +2973,8 @@ gst_pad_query_accept_caps_default (GstPad * pad, GstQuery * query)
   /* first forward the query to internally linked pads when we are dealing with
    * a PROXY CAPS */
   if (GST_PAD_IS_PROXY_CAPS (pad)) {
-    if ((result = gst_pad_proxy_query_accept_caps (pad, query))) {
-      goto done;
-    }
+    result = gst_pad_proxy_query_accept_caps (pad, query);
+    goto done;
   }
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, pad,
