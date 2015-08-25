@@ -12,7 +12,8 @@ Build-Depends: debhelper (>= 5),
 @USE_X11_TRUE@	       libx11-dev, libxrandr-dev,
 @USE_GLX_TRUE@	       libgl-dev,
 @USE_WAYLAND_TRUE@	       libwayland-dev (>= @WAYLAND_API_VERSION@),
-	       libva-dev (>= @LIBVA_PACKAGE_VERSION@)
+	       libva-dev (>= @LIBVA_PACKAGE_VERSION@),
+	       yasm
 Build-Depends-Indep: gtk-doc-tools (>= @GTKDOC_VERSION@)
 Standards-Version: 3.7.2
 
