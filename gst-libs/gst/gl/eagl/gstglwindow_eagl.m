@@ -114,6 +114,8 @@ gst_gl_window_eagl_set_window_handle (GstGLWindow * window, guintptr handle)
   window_eagl->priv->view = (UIView *) handle;
   GST_INFO_OBJECT (context, "handle set, updating layer");
   gst_gl_context_eagl_update_layer (context);
+
+  gst_object_unref (context);
 }
 
 static void
