@@ -206,7 +206,7 @@ gst_sf_dec_do_seek (GstSFDec * self, GstEvent * event)
 
   /* FIXME: we should be using GstSegment for all this */
   if (cur_type != GST_SEEK_TYPE_SET || stop_type != GST_SEEK_TYPE_NONE)
-    goto unsuported_type;
+    goto unsupported_type;
 
   if (stop_type == GST_SEEK_TYPE_NONE)
     stop = GST_CLOCK_TIME_NONE;
@@ -270,7 +270,7 @@ unsupported_format:
     GST_DEBUG_OBJECT (self, "seeking is only supported in TIME format");
     return FALSE;
   }
-unsuported_type:
+unsupported_type:
   {
     GST_DEBUG_OBJECT (self, "unsupported seek type");
     return FALSE;
