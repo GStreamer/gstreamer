@@ -1319,7 +1319,6 @@ gst_video_rate_set_property (GObject * object,
       latency_changed = new_value != videorate->drop_only;
       videorate->drop_only = g_value_get_boolean (value);
       goto reconfigure;
-      break;
     }
     case PROP_AVERAGE_PERIOD:
       videorate->average_period_set = g_value_get_uint64 (value);
@@ -1327,7 +1326,6 @@ gst_video_rate_set_property (GObject * object,
     case PROP_MAX_RATE:
       g_atomic_int_set (&videorate->max_rate, g_value_get_int (value));
       goto reconfigure;
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
