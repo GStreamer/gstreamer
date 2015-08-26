@@ -1381,47 +1381,6 @@ parse_pps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
   if (result != GST_H265_PARSER_OK)
     return get_status (result);
 
-  if (pps->tiles_enabled_flag) {
-    guint i;
-    guint PicWidthInCtbsY, PicHeightInCtbsY;
-
-    get_pic_width_height_in_ctbs (pps, &PicWidthInCtbsY, &PicHeightInCtbsY);
-    GST_DEBUG ("PicWidthInCtbsY %d PicHeightInCtbsY %d", PicWidthInCtbsY,
-        PicHeightInCtbsY);
-
-    /* Tile Scanning Conversion 6-3 and 6-4 */
-    if (pps->uniform_spacing_flag) {
-
-      for (i = 0; i <= pps->num_tile_columns_minus1; i++)
-        col_width[i] =
-            ((i + 1) * PicWidthInCtbsY) / (pps->num_tile_columns_minus1 + 1) -
-            (i * PicWidthInCtbsY) / (pps->num_tile_columns_minus1 + 1);
-
-      for (i = 0; i <= pps->num_tile_rows_minus1; i++)
-        row_height[i] =
-            ((i + 1) * PicHeightInCtbsY) / (pps->num_tile_rows_minus1 + 1) -
-            (i * PicHeightInCtbsY) / (pps->num_tile_rows_minus1 + 1);
-
-    } else {
-
-      col_width[pps->num_tile_columns_minus1] = PicWidthInCtbsY;
-      for (i = 0; i < pps->num_tile_columns_minus1; i++) {
-        col_width[i] = pps->column_width_minus1[i] + 1;
-        col_width[pps->num_tile_columns_minus1] -= col_width[i];
-      }
-
-      row_height[pps->num_tile_rows_minus1] = PicHeightInCtbsY;
-      for (i = 0; i < pps->num_tile_rows_minus1; i++) {
-        row_height[i] = pps->row_height_minus1[i] + 1;
-        row_height[pps->num_tile_rows_minus1] -= row_height[i];
-      }
-    }
-    for (i = 0; i <= pps->num_tile_columns_minus1; i++)
-      pps->column_width_minus1[i] = col_width[i] - 1;
-    for (i = 0; i <= pps->num_tile_rows_minus1; i++)
-      pps->row_height_minus1[i] = row_height[i] - 1;
-  }
-
   priv->parser_state |= GST_H265_VIDEO_STATE_GOT_PPS;
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
