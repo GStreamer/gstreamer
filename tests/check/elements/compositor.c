@@ -1315,6 +1315,17 @@ GST_START_TEST (test_obscured_skipped)
   xpos0 = ypos0 = xpos1 = ypos1 = 0;
   buffer_mapped = FALSE;
 
+  xpos1 = ypos1 = 0;
+  xpos0 = ypos0 = width0 = height0 = width1 = height1 = 10;
+  out_width = out_height = 20;
+  GST_INFO ("testing bug 754107");
+  _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
+      width1, height1, alpha1, out_width, out_height);
+  fail_unless (buffer_mapped == TRUE);
+  xpos0 = ypos0 = xpos1 = ypos1 = width0 = height0 = width1 = height1 = 0;
+  out_width = out_height = 0;
+  buffer_mapped = FALSE;
+
   xpos0 = ypos0 = 10000;
   out_width = 320;
   out_height = 240;

@@ -350,6 +350,26 @@ is_rectangle_contained (GstVideoRectangle rect1, GstVideoRectangle rect2)
   return FALSE;
 }
 
+static GstVideoRectangle
+clamp_rectangle (guint x, guint y, guint w, guint h, guint outer_width,
+    guint outer_height)
+{
+  guint x2 = x + w;
+  guint y2 = y + h;
+  GstVideoRectangle clamped;
+
+  /* Clamp the x/y coordinates of this frame to the output boundaries to cover
+   * the case where (say, with negative xpos/ypos or w/h greater than the output
+   * size) the non-obscured portion of the frame could be outside the bounds of
+   * the video itself and hence not visible at all */
+  clamped.x = CLAMP (x, 0, outer_width);
+  clamped.y = CLAMP (y, 0, outer_height);
+  clamped.w = CLAMP (x2, 0, outer_width) - clamped.x;
+  clamped.h = CLAMP (y2, 0, outer_height) - clamped.y;
+
+  return clamped;
+}
+
 static gboolean
 gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     GstVideoAggregator * vagg)
@@ -451,15 +471,21 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     g_free (wanted_colorimetry);
   }
 
-  /* Clamp the x/y coordinates of this frame to the video boundaries to cover
-   * the case where (say, with negative xpos/ypos) the non-obscured portion of
-   * the frame could be outside the bounds of the video itself and hence not
-   * visible at all */
-  frame_rect.x = CLAMP (cpad->xpos, 0, GST_VIDEO_INFO_WIDTH (&vagg->info));
-  frame_rect.y = CLAMP (cpad->ypos, 0, GST_VIDEO_INFO_HEIGHT (&vagg->info));
-  /* Clamp the width/height to the frame boundaries as well */
-  frame_rect.w = MAX (width - frame_rect.x, 0);
-  frame_rect.h = MAX (height - frame_rect.y, 0);
+  if (cpad->alpha == 0.0) {
+    GST_DEBUG_OBJECT (vagg, "Pad has alpha 0.0, not converting frame");
+    converted_frame = NULL;
+    goto done;
+  }
+
+  frame_rect = clamp_rectangle (cpad->xpos, cpad->ypos, width, height,
+      GST_VIDEO_INFO_WIDTH (&vagg->info), GST_VIDEO_INFO_HEIGHT (&vagg->info));
+
+  if (frame_rect.w == 0 || frame_rect.h == 0) {
+    GST_DEBUG_OBJECT (vagg, "Resulting frame is zero-width or zero-height "
+        "(w: %i, h: %i), skipping", frame_rect.w, frame_rect.h);
+    converted_frame = NULL;
+    goto done;
+  }
 
   GST_OBJECT_LOCK (vagg);
   /* Check if this frame is obscured by a higher-zorder frame
@@ -488,20 +514,18 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
         !GST_VIDEO_INFO_HAS_ALPHA (&pad2->info) &&
         is_rectangle_contained (frame_rect, frame2_rect)) {
       frame_obscured = TRUE;
-      GST_DEBUG_OBJECT (pad, "Obscured by %s, skipping frame",
-          GST_PAD_NAME (pad2));
+      GST_DEBUG_OBJECT (pad, "%ix%i@(%i,%i) obscured by %s %ix%i@(%i,%i) "
+          "in output of size %ix%i; skipping frame", frame_rect.w, frame_rect.h,
+          frame_rect.x, frame_rect.y, GST_PAD_NAME (pad2), frame2_rect.w,
+          frame2_rect.h, frame2_rect.x, frame2_rect.y,
+          GST_VIDEO_INFO_WIDTH (&vagg->info),
+          GST_VIDEO_INFO_HEIGHT (&vagg->info));
       break;
     }
   }
   GST_OBJECT_UNLOCK (vagg);
 
   if (frame_obscured) {
-    converted_frame = NULL;
-    goto done;
-  }
-
-  if (cpad->alpha == 0.0) {
-    GST_DEBUG_OBJECT (vagg, "Pad has alpha 0.0, not converting frame");
     converted_frame = NULL;
     goto done;
   }
