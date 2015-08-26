@@ -338,7 +338,8 @@ gst_h265_parse_negotiate (GstH265Parse * h265parse, gint in_format,
     }
   }
 
-  if (caps) {
+  /* FIXME We could fail the negotiation immediatly if caps are empty */
+  if (caps && !gst_caps_is_empty (caps)) {
     /* fixate to avoid ambiguity with lists when parsing */
     caps = gst_caps_fixate (caps);
     gst_h265_parse_format_from_caps (caps, &format, &align);
