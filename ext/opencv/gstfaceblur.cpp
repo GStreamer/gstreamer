@@ -168,9 +168,6 @@ gst_face_blur_finalize (GObject * obj)
   if (filter->cvGray)
     cvReleaseImage (&filter->cvGray);
 
-  if (filter->cvStorage)
-    cvReleaseMemStorage (&filter->cvStorage);
-
   if (filter->cvCascade)
     delete filter->cvCascade;
 
@@ -338,11 +335,6 @@ gst_face_blur_set_caps (GstOpencvVideoFilter * transform,
   filter->cvGray =
       cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
 
-  if (filter->cvStorage)
-    cvClearMemStorage (filter->cvStorage);
-  else
-    filter->cvStorage = cvCreateMemStorage (0);
-
   return TRUE;
 }
 
@@ -366,7 +358,6 @@ gst_face_blur_transform_ip (GstOpencvVideoFilter * transform,
   }
 
   cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
-  cvClearMemStorage (filter->cvStorage);
 
   Mat image (filter->cvGray, Rect (filter->cvGray->origin,
           filter->cvGray->origin, filter->cvGray->width,

@@ -84,7 +84,6 @@ struct _GstFaceBlur
 
   IplImage *cvGray;
   cv::CascadeClassifier *cvCascade;
-  CvMemStorage *cvStorage;
 };
 
 struct _GstFaceBlurClass
