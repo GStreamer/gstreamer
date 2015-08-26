@@ -265,6 +265,8 @@ gst_face_blur_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PROFILE:
       g_free (filter->profile);
+      if (filter->cvCascade)
+        cvReleaseHaarClassifierCascade (&filter->cvCascade);
       filter->profile = g_value_dup_string (value);
       filter->cvCascade = gst_face_blur_load_profile (filter, filter->profile);
       filter->sent_profile_load_failed_msg = FALSE;
