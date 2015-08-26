@@ -1148,7 +1148,7 @@ fill_iq_matrix_4x4 (VAIQMatrixBufferHEVC * iq_matrix,
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList4x4) == 6);
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList4x4[0]) == 16);
   for (i = 0; i < G_N_ELEMENTS (iq_matrix->ScalingList4x4); i++) {
-    gst_h265_quant_matrix_4x4_get_raster_from_zigzag (iq_matrix->ScalingList4x4
+    gst_h265_quant_matrix_4x4_get_raster_from_uprightdiagonal (iq_matrix->ScalingList4x4
         [i], scaling_list->scaling_lists_4x4[i]);
   }
 }
@@ -1162,7 +1162,7 @@ fill_iq_matrix_8x8 (VAIQMatrixBufferHEVC * iq_matrix,
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList8x8) == 6);
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList8x8[0]) == 64);
   for (i = 0; i < G_N_ELEMENTS (iq_matrix->ScalingList8x8); i++) {
-    gst_h265_quant_matrix_8x8_get_raster_from_zigzag (iq_matrix->ScalingList8x8
+    gst_h265_quant_matrix_8x8_get_raster_from_uprightdiagonal (iq_matrix->ScalingList8x8
         [i], scaling_list->scaling_lists_8x8[i]);
   }
 }
@@ -1176,7 +1176,7 @@ fill_iq_matrix_16x16 (VAIQMatrixBufferHEVC * iq_matrix,
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList16x16) == 6);
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList16x16[0]) == 64);
   for (i = 0; i < G_N_ELEMENTS (iq_matrix->ScalingList16x16); i++) {
-    gst_h265_quant_matrix_16x16_get_raster_from_zigzag
+    gst_h265_quant_matrix_16x16_get_raster_from_uprightdiagonal
         (iq_matrix->ScalingList16x16[i], scaling_list->scaling_lists_16x16[i]);
   }
 }
@@ -1190,7 +1190,7 @@ fill_iq_matrix_32x32 (VAIQMatrixBufferHEVC * iq_matrix,
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList32x32) == 2);
   g_assert (G_N_ELEMENTS (iq_matrix->ScalingList32x32[0]) == 64);
   for (i = 0; i < G_N_ELEMENTS (iq_matrix->ScalingList32x32); i++) {
-    gst_h265_quant_matrix_32x32_get_raster_from_zigzag
+    gst_h265_quant_matrix_32x32_get_raster_from_uprightdiagonal
         (iq_matrix->ScalingList32x32[i], scaling_list->scaling_lists_32x32[i]);
   }
 }
