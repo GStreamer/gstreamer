@@ -62,10 +62,12 @@
 #endif
 
 #include <gst/gst.h>
+#include <vector>
 
 #include "gstopencvutils.h"
 #include "gstfaceblur.h"
 #include <opencv2/imgproc/imgproc_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
 
 GST_DEBUG_CATEGORY_STATIC (gst_face_blur_debug);
 #define GST_CAT_DEFAULT gst_face_blur_debug
@@ -79,6 +81,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_face_blur_debug);
 #define DEFAULT_MIN_SIZE_WIDTH 30
 #define DEFAULT_MIN_SIZE_HEIGHT 30
 
+using namespace cv;
 enum
 {
   PROP_0,
@@ -153,7 +156,7 @@ static gboolean gst_face_blur_set_caps (GstOpencvVideoFilter * transform,
 static GstFlowReturn gst_face_blur_transform_ip (GstOpencvVideoFilter *
     transform, GstBuffer * buffer, IplImage * img);
 
-static CvHaarClassifierCascade *gst_face_blur_load_profile (GstFaceBlur *
+static CascadeClassifier *gst_face_blur_load_profile (GstFaceBlur *
     filter, gchar * profile);
 
 /* Clean up */
@@ -169,7 +172,7 @@ gst_face_blur_finalize (GObject * obj)
     cvReleaseMemStorage (&filter->cvStorage);
 
   if (filter->cvCascade)
-    cvReleaseHaarClassifierCascade (&filter->cvCascade);
+    delete filter->cvCascade;
 
   g_free (filter->profile);
 
@@ -266,7 +269,7 @@ gst_face_blur_set_property (GObject * object, guint prop_id,
     case PROP_PROFILE:
       g_free (filter->profile);
       if (filter->cvCascade)
-        cvReleaseHaarClassifierCascade (&filter->cvCascade);
+        delete filter->cvCascade;
       filter->profile = g_value_dup_string (value);
       filter->cvCascade = gst_face_blur_load_profile (filter, filter->profile);
       filter->sent_profile_load_failed_msg = FALSE;
@@ -348,8 +351,8 @@ gst_face_blur_transform_ip (GstOpencvVideoFilter * transform,
     GstBuffer * buffer, IplImage * img)
 {
   GstFaceBlur *filter = GST_FACE_BLUR (transform);
-  CvSeq *faces;
-  int i;
+  vector < Rect > faces;
+  unsigned int i;
 
   if (!filter->cvCascade) {
     if (filter->profile != NULL
@@ -359,41 +362,42 @@ gst_face_blur_transform_ip (GstOpencvVideoFilter * transform,
           ("missing faceblur profile file %s", filter->profile));
       filter->sent_profile_load_failed_msg = TRUE;
     }
-
     return GST_FLOW_OK;
   }
 
   cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
   cvClearMemStorage (filter->cvStorage);
 
-  faces =
-      cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
-      filter->cvStorage, filter->scale_factor, filter->min_neighbors,
-      filter->flags, cvSize (filter->min_size_width, filter->min_size_height),
-      cvSize (filter->min_size_width + 2, filter->min_size_height + 2));
+  Mat image (filter->cvGray, Rect (filter->cvGray->origin,
+          filter->cvGray->origin, filter->cvGray->width,
+          filter->cvGray->height));
+  filter->cvCascade->detectMultiScale (image, faces, filter->scale_factor,
+      filter->min_neighbors, filter->flags,
+      cvSize (filter->min_size_width, filter->min_size_height), cvSize (0, 0));
 
-  for (i = 0; i < (faces ? faces->total : 0); i++) {
-    CvRect *r = (CvRect *) cvGetSeqElem (faces, i);
-    cvSetImageROI (img, *r);
-    cvSmooth (img, img, CV_BLUR, 11, 11, 0, 0);
-    cvSmooth (img, img, CV_GAUSSIAN, 11, 11, 0, 0);
-    cvResetImageROI (img);
+  if (!faces.empty ()) {
+
+    for (i = 0; i < faces.size (); ++i) {
+      Rect *r = &faces[i];
+      Mat roi (img, Rect (r->x, r->y, r->width, r->height));
+      blur (roi, roi, Size (11, 11));
+      GaussianBlur (roi, roi, Size (11, 11), 0, 0);
+    }
   }
 
   return GST_FLOW_OK;
 }
 
-
-static CvHaarClassifierCascade *
+static CascadeClassifier *
 gst_face_blur_load_profile (GstFaceBlur * filter, gchar * profile)
 {
-  CvHaarClassifierCascade *cascade;
+  CascadeClassifier *cascade;
 
-  if (profile == NULL)
+  cascade = new CascadeClassifier (profile);
+  if (cascade->empty ()) {
+    GST_ERROR_OBJECT (filter, "Invalid profile file: %s", profile);
+    delete cascade;
     return NULL;
-  if (!(cascade = (CvHaarClassifierCascade *) cvLoad (profile, 0, 0, 0))) {
-    GST_WARNING_OBJECT (filter, "Couldn't load Haar classifier cascade: %s.",
-        profile);
   }
   return cascade;
 }
