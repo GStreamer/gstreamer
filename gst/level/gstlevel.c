@@ -701,7 +701,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
         filter->decay_peak_age[i] = G_GINT64_CONSTANT (0);
       }
     }
-    in_data += block_size * bps;
+    in_data += block_size * bps * channels;
 
     filter->num_frames += block_size;
     num_frames -= block_size;
