@@ -682,7 +682,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 else:
                     for root, dirs, files in os.walk(path):
                         for f in files:
-                            fpath = os.path.join(os.path.abspath(path), root, f)
+                            fpath = os.path.abspath(os.path.join(root, f))
                             if os.path.isdir(fpath) or \
                                     fpath.endswith(GstValidateMediaDescriptor.MEDIA_INFO_EXT) or\
                                     fpath.endswith(ScenarioManager.FILE_EXTENSION):
