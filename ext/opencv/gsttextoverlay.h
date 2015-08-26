@@ -73,7 +73,6 @@ struct _GstOpencvTextOverlay
   GstPad *sinkpad, *srcpad;
 
   IplImage *cvImage;
-  CvMemStorage *cvStorage;
   CvFont font;  
 
   gint xpos;
