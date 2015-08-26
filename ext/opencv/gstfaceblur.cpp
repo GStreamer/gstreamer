@@ -197,29 +197,30 @@ gst_face_blur_class_init (GstFaceBlurClass * klass)
   g_object_class_install_property (gobject_class, PROP_PROFILE,
       g_param_spec_string ("profile", "Profile",
           "Location of Haar cascade file to use for face blurion",
-          DEFAULT_PROFILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROFILE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_FLAGS,
       g_param_spec_flags ("flags", "Flags", "Flags to cvHaarDetectObjects",
           GST_TYPE_OPENCV_FACE_BLUR_FLAGS, DEFAULT_FLAGS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_SCALE_FACTOR,
       g_param_spec_double ("scale-factor", "Scale factor",
-          "Factor by which the windows is scaled after each scan",
-          1.1, 10.0, DEFAULT_SCALE_FACTOR,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Factor by which the windows is scaled after each scan", 1.1, 10.0,
+          DEFAULT_SCALE_FACTOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_MIN_NEIGHBORS,
       g_param_spec_int ("min-neighbors", "Mininum neighbors",
           "Minimum number (minus 1) of neighbor rectangles that makes up "
           "an object", 0, G_MAXINT, DEFAULT_MIN_NEIGHBORS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_MIN_SIZE_WIDTH,
       g_param_spec_int ("min-size-width", "Minimum size width",
           "Minimum window width size", 0, G_MAXINT, DEFAULT_MIN_SIZE_WIDTH,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_MIN_SIZE_HEIGHT,
       g_param_spec_int ("min-size-height", "Minimum size height",
           "Minimum window height size", 0, G_MAXINT, DEFAULT_MIN_SIZE_HEIGHT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "faceblur",
