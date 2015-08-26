@@ -243,11 +243,12 @@ GST_START_TEST (create_events)
     const gchar *parsed_id;
     GstBuffer *parsed_data;
     const gchar clearkey_sys_id[] = "78f32170-d883-11e0-9572-0800200c9a66";
+    gsize offset;
 
     data = gst_buffer_new ();
     mem = gst_allocator_alloc (NULL, 40, NULL);
     gst_buffer_insert_memory (data, -1, mem);
-    for (gsize offset = 0; offset < 40; offset += 4) {
+    for (offset = 0; offset < 40; offset += 4) {
       gst_buffer_fill (data, offset, "pssi", 4);
     }
     ASSERT_MINI_OBJECT_REFCOUNT (data, "data", 1);
