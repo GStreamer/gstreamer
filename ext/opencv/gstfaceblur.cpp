@@ -153,7 +153,8 @@ static gboolean gst_face_blur_set_caps (GstOpencvVideoFilter * transform,
 static GstFlowReturn gst_face_blur_transform_ip (GstOpencvVideoFilter *
     transform, GstBuffer * buffer, IplImage * img);
 
-static void gst_face_blur_load_profile (GstFaceBlur * filter);
+static CvHaarClassifierCascade *gst_face_blur_load_profile (GstFaceBlur *
+    filter, gchar * profile);
 
 /* Clean up */
 static void
@@ -243,7 +244,7 @@ static void
 gst_face_blur_init (GstFaceBlur * filter)
 {
   filter->profile = g_strdup (DEFAULT_PROFILE);
-  gst_face_blur_load_profile (filter);
+  filter->cvCascade = gst_face_blur_load_profile (filter, filter->profile);
   filter->sent_profile_load_failed_msg = FALSE;
   filter->scale_factor = DEFAULT_SCALE_FACTOR;
   filter->min_neighbors = DEFAULT_MIN_NEIGHBORS;
@@ -265,7 +266,7 @@ gst_face_blur_set_property (GObject * object, guint prop_id,
     case PROP_PROFILE:
       g_free (filter->profile);
       filter->profile = g_value_dup_string (value);
-      gst_face_blur_load_profile (filter);
+      filter->cvCascade = gst_face_blur_load_profile (filter, filter->profile);
       filter->sent_profile_load_failed_msg = FALSE;
       break;
     case PROP_SCALE_FACTOR:
@@ -381,15 +382,18 @@ gst_face_blur_transform_ip (GstOpencvVideoFilter * transform,
 }
 
 
-static void
-gst_face_blur_load_profile (GstFaceBlur * filter)
+static CvHaarClassifierCascade *
+gst_face_blur_load_profile (GstFaceBlur * filter, gchar * profile)
 {
-  if (filter->cvCascade)
-    cvReleaseHaarClassifierCascade (&filter->cvCascade);
-  filter->cvCascade =
-      (CvHaarClassifierCascade *) cvLoad (filter->profile, 0, 0, 0);
-  if (!filter->cvCascade)
-    GST_WARNING ("Couldn't load Haar classifier cascade: %s.", filter->profile);
+  CvHaarClassifierCascade *cascade;
+
+  if (profile == NULL)
+    return NULL;
+  if (!(cascade = (CvHaarClassifierCascade *) cvLoad (profile, 0, 0, 0))) {
+    GST_WARNING_OBJECT (filter, "Couldn't load Haar classifier cascade: %s.",
+        profile);
+  }
+  return cascade;
 }
 
 
