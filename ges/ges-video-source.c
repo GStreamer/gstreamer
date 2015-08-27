@@ -77,48 +77,31 @@
 #include "ges-layer.h"
 #include "gstframepositionner.h"
 
+#define parent_class ges_video_source_parent_class
 G_DEFINE_ABSTRACT_TYPE (GESVideoSource, ges_video_source, GES_TYPE_SOURCE);
 
 struct _GESVideoSourcePrivate
 {
   GstFramePositionner *positionner;
   GstElement *capsfilter;
-  GESLayer *layer;
 };
 
 /* TrackElement VMethods */
-static void
-layer_priority_changed_cb (GESLayer * layer, GParamSpec * arg G_GNUC_UNUSED,
-    GESVideoSource * self)
+
+static gboolean
+_set_priority (GESTimelineElement * element, guint32 priority)
 {
-  g_object_set (self->priv->positionner, "zorder",
-      10000 - ges_layer_get_priority (layer), NULL);
-}
+  gboolean res;
+  GESVideoSource *self = GES_VIDEO_SOURCE (element);
 
-static void
-layer_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
-    GESVideoSource * self)
-{
-  GESVideoSourcePrivate *priv = self->priv;
+  res = GES_TIMELINE_ELEMENT_CLASS (parent_class)->set_priority (element,
+      priority);
 
-  if (priv->layer) {
-    g_signal_handlers_disconnect_by_func (priv->layer,
-        layer_priority_changed_cb, self);
-  }
+  if (res && self->priv->positionner)
+    g_object_set (self->priv->positionner, "zorder",
+        GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
 
-  priv->layer = ges_clip_get_layer (clip);
-  if (priv->layer == NULL)
-    return;
-
-  /* We do not need any ref ourself as our parent owns one and we are connected
-   * to it */
-  g_object_unref (priv->layer);
-  /* 10000 is the max value of zorder on videomixerpad, hardcoded */
-  g_signal_connect (self->priv->layer, "notify::priority",
-      G_CALLBACK (layer_priority_changed_cb), self);
-
-  g_object_set (self->priv->positionner, "zorder",
-      10000 - ges_layer_get_priority (self->priv->layer), NULL);
+  return res;
 }
 
 static void
@@ -190,9 +173,6 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
   if (parent) {
     self->priv->positionner = GST_FRAME_POSITIONNER (positionner);
-    g_signal_connect (parent, "notify::layer",
-        (GCallback) layer_changed_cb, trksrc);
-    layer_changed_cb (GES_CLIP (parent), NULL, self);
     gst_object_unref (parent);
   } else {
     GST_ERROR ("No parent timeline element, SHOULD NOT HAPPEN");
@@ -201,28 +181,6 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   self->priv->capsfilter = capsfilter;
 
   return topbin;
-}
-
-static gboolean
-_set_parent (GESTimelineElement * self, GESTimelineElement * parent)
-{
-  GESVideoSourcePrivate *priv = GES_VIDEO_SOURCE (self)->priv;
-
-  if (self->parent) {
-    if (priv->layer) {
-      g_signal_handlers_disconnect_by_func (priv->layer,
-          layer_priority_changed_cb, self);
-      priv->layer = NULL;
-    }
-
-    g_signal_handlers_disconnect_by_func (self->parent, layer_changed_cb, self);
-  }
-
-  if (parent && priv->positionner)
-    layer_changed_cb (GES_CLIP (parent), NULL, GES_VIDEO_SOURCE (self));
-
-
-  return TRUE;
 }
 
 static void
@@ -234,7 +192,8 @@ ges_video_source_class_init (GESVideoSourceClass * klass)
 
   g_type_class_add_private (klass, sizeof (GESVideoSourcePrivate));
 
-  element_class->set_parent = _set_parent;
+  element_class->set_priority = _set_priority;
+
   track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = ges_video_source_create_element;
   video_source_class->create_source = NULL;

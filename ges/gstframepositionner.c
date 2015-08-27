@@ -289,7 +289,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_ZORDER,
       g_param_spec_uint ("zorder", "zorder", "z order of the stream",
-          0, 10000, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT, 0, G_PARAM_READWRITE));
 
   /**
    * gesframepositionner:width:
