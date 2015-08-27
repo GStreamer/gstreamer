@@ -236,7 +236,7 @@ print_all_stream_info (GstPlayerMediaInfo * media_info)
 static void
 print_all_video_stream (GstPlayerMediaInfo * media_info)
 {
-  GList *list = NULL, *l;
+  GList *list, *l;
 
   list = gst_player_get_video_streams (media_info);
   if (!list)
@@ -255,7 +255,7 @@ print_all_video_stream (GstPlayerMediaInfo * media_info)
 static void
 print_all_subtitle_stream (GstPlayerMediaInfo * media_info)
 {
-  GList *list = NULL, *l;
+  GList *list, *l;
 
   list = gst_player_get_subtitle_streams (media_info);
   if (!list)
@@ -274,7 +274,7 @@ print_all_subtitle_stream (GstPlayerMediaInfo * media_info)
 static void
 print_all_audio_stream (GstPlayerMediaInfo * media_info)
 {
-  GList *list = NULL, *l;
+  GList *list, *l;
 
   list = gst_player_get_audio_streams (media_info);
   if (!list)
