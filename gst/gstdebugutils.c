@@ -95,8 +95,8 @@ debug_dump_get_element_state (GstElement * element)
 }
 
 static gchar *
-debug_dump_get_element_params (GstElement * element,
-    GstDebugGraphDetails details)
+debug_dump_get_object_params (GObject * object,
+    GstDebugGraphDetails details, const char *const *ignored_propnames)
 {
   gchar *param_name = NULL;
   GParamSpec **properties, *property;
@@ -107,10 +107,12 @@ debug_dump_get_element_params (GstElement * element,
 
   /* get paramspecs and show non-default properties */
   properties =
-      g_object_class_list_properties (G_OBJECT_CLASS (GST_ELEMENT_GET_CLASS
-          (element)), &number_of_properties);
+      g_object_class_list_properties (G_OBJECT_GET_CLASS (object),
+      &number_of_properties);
   if (properties) {
     for (i = 0; i < number_of_properties; i++) {
+      gint j;
+      gboolean ignore = FALSE;
       property = properties[i];
 
       /* skip some properties */
@@ -119,8 +121,16 @@ debug_dump_get_element_params (GstElement * element,
       if (!strcmp (property->name, "name"))
         continue;
 
+      if (ignored_propnames)
+        for (j = 0; ignored_propnames[j]; j++)
+          if (!g_strcmp0 (ignored_propnames[j], property->name))
+            ignore = TRUE;
+
+      if (ignore)
+        continue;
+
       g_value_init (&value, property->value_type);
-      g_object_get_property (G_OBJECT (element), property->name, &value);
+      g_object_get_property (G_OBJECT (object), property->name, &value);
       if (!(g_param_value_defaults (property, &value))) {
         tmp = g_strdup_value_contents (&value);
         value_str = g_strescape (tmp, NULL);
@@ -166,8 +176,12 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
 {
   GstPadTemplate *pad_templ;
   GstPadPresence presence;
-  gchar *pad_name;
+  gchar *pad_name, *param_name = NULL;
   const gchar *style_name;
+  static const char *const ignore_propnames[] =
+      { "parent", "direction", "template",
+    "caps", NULL
+  };
   const gchar *spc = MAKE_INDENT (indent);
 
   pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
@@ -183,6 +197,9 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
       style_name = "filled,dashed";
     }
   }
+
+  param_name =
+      debug_dump_get_object_params (G_OBJECT (pad), details, ignore_propnames);
   if (details & GST_DEBUG_GRAPH_SHOW_STATES) {
     gchar pad_flags[4];
     const gchar *activation_mode = "-><";
@@ -216,14 +233,15 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
     pad_flags[3] = '\0';
 
     g_string_append_printf (str,
-        "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\\n[%c][%s]%s\", height=\"0.2\", style=\"%s\"];\n",
+        "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s%s\\n[%c][%s]%s\", height=\"0.2\", style=\"%s\"];\n",
         spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad),
+        (param_name ? param_name : ""),
         activation_mode[pad->mode], pad_flags, task_mode, style_name);
   } else {
     g_string_append_printf (str,
-        "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\", height=\"0.2\", style=\"%s\"];\n",
+        "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s%s\", height=\"0.2\", style=\"%s\"];\n",
         spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad),
-        style_name);
+        (param_name ? param_name : ""), style_name);
   }
 
   g_free (pad_name);
@@ -555,8 +573,8 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details,
           state_name = debug_dump_get_element_state (GST_ELEMENT (element));
         }
         if (details & GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS) {
-          param_name = debug_dump_get_element_params (GST_ELEMENT (element),
-              details);
+          param_name = debug_dump_get_object_params (G_OBJECT (element),
+              details, NULL);
         }
         /* elements */
         g_string_append_printf (str, "%ssubgraph cluster_%s {\n", spc,
@@ -682,7 +700,7 @@ debug_dump_header (GstBin * bin, GstDebugGraphDetails details, GString * str)
     state_name = debug_dump_get_element_state (GST_ELEMENT (bin));
   }
   if (details & GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS) {
-    param_name = debug_dump_get_element_params (GST_ELEMENT (bin), details);
+    param_name = debug_dump_get_object_params (G_OBJECT (bin), details, NULL);
   }
 
   /* write header */
