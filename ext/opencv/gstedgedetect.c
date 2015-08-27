@@ -312,8 +312,6 @@ gst_edge_detect_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   filter->cvImage->imageData = (char *) in_info.data;
 
   cvCvtColor (filter->cvImage, filter->cvGray, CV_RGB2GRAY);
-  cvSmooth (filter->cvGray, filter->cvEdge, CV_BLUR, 3, 3, 0, 0);
-  cvNot (filter->cvGray, filter->cvEdge);
   cvCanny (filter->cvGray, filter->cvEdge, filter->threshold1,
       filter->threshold2, filter->aperture);
 
