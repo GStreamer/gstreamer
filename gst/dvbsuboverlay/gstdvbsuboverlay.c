@@ -647,7 +647,7 @@ gst_dvbsub_overlay_can_handle_caps (GstCaps * incaps)
 {
   gboolean ret;
   GstCaps *caps;
-  GstStaticCaps static_caps = GST_STATIC_CAPS (DVBSUB_OVERLAY_CAPS);
+  static GstStaticCaps static_caps = GST_STATIC_CAPS (DVBSUB_OVERLAY_CAPS);
 
   caps = gst_static_caps_get (&static_caps);
   ret = gst_caps_is_subset (incaps, caps);
