@@ -435,6 +435,8 @@ GST_AUDIO_BASE_SRC_CAST
 GstAudioBaseSink
 GstAudioBaseSinkClass
 GstAudioBaseSinkSlaveMethod
+GstAudioBaseSinkDiscontReason
+GstAudioBaseSinkCustomSlavingCallback
 
 GST_AUDIO_BASE_SINK_CLOCK
 GST_AUDIO_BASE_SINK_PAD
@@ -449,6 +451,8 @@ gst_audio_base_sink_set_alignment_threshold
 gst_audio_base_sink_get_alignment_threshold
 gst_audio_base_sink_set_discont_wait
 gst_audio_base_sink_get_discont_wait
+gst_audio_base_sink_set_custom_slaving_callback
+gst_audio_base_sink_report_device_failure
 <SUBSECTION Standard>
 GST_AUDIO_BASE_SINK
 GST_IS_AUDIO_BASE_SINK
