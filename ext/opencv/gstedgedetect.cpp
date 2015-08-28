@@ -145,19 +145,19 @@ gst_edge_detect_class_init (GstEdgeDetectClass * klass)
   g_object_class_install_property (gobject_class, PROP_MASK,
       g_param_spec_boolean ("mask", "Mask",
           "Sets whether the detected edges should be used as a mask on the original input or not",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          TRUE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_THRESHOLD1,
       g_param_spec_int ("threshold1", "Threshold1",
           "Threshold value for canny edge detection", 0, 1000, 50,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_THRESHOLD2,
       g_param_spec_int ("threshold2", "Threshold2",
           "Second threshold value for canny edge detection", 0, 1000, 150,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_APERTURE,
       g_param_spec_int ("aperture", "Aperture",
           "Aperture size for Sobel operator (Must be either 3, 5 or 7", 3, 7, 3,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "edgedetect",
@@ -323,7 +323,8 @@ gst_edge_detect_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   outbuf = gst_buffer_new_and_alloc (filter->cvCEdge->imageSize);
-  gst_buffer_copy_into (outbuf, buf, GST_BUFFER_COPY_METADATA, 0, -1);
+  gst_buffer_copy_into (outbuf, buf,
+      (GstBufferCopyFlags) GST_BUFFER_COPY_METADATA, 0, -1);
 
   gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
   memcpy (out_info.data, filter->cvCEdge->imageData,
