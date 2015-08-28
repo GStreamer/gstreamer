@@ -107,6 +107,8 @@ G_DEFINE_TYPE_WITH_CODE(
     GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES)
 /* *INDENT-ON* */
 
+static gboolean
+gst_vaapidecode_update_sink_caps (GstVaapiDecode * decode, GstCaps * caps);
 static gboolean gst_vaapidecode_update_src_caps (GstVaapiDecode * decode);
 
 static gboolean
@@ -130,12 +132,10 @@ gst_vaapi_decoder_state_changed (GstVaapiDecoder * decoder,
 
   if (!gst_vaapi_decode_input_state_replace (decode, codec_state))
     return;
-  if (!gst_vaapidecode_update_src_caps (decode))
-    return;
-  if (!gst_video_decoder_negotiate (vdec))
-    return;
-  if (!gst_vaapi_plugin_base_set_caps (plugin, NULL, decode->srcpad_caps))
-    return;
+  if (!gst_vaapidecode_update_sink_caps (decode, decode->input_state->caps))
+    return FALSE;
+
+  decode->do_renego = TRUE;
 }
 
 static GstVideoCodecState *
@@ -379,6 +379,31 @@ error_commit_buffer:
   }
 }
 
+static gboolean
+gst_vaapidecode_negotiate (GstVaapiDecode * decode)
+{
+  GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (vdec);
+
+  if (!decode->do_renego)
+    return TRUE;
+
+  GST_DEBUG_OBJECT (decode, "Input codec state changed, doing renegotiation");
+
+  if (!gst_vaapi_plugin_base_set_caps (plugin, decode->sinkpad_caps, NULL))
+    return FALSE;
+  if (!gst_vaapidecode_update_src_caps (decode))
+    return FALSE;
+  if (!gst_video_decoder_negotiate (vdec))
+    return FALSE;
+  if (!gst_vaapi_plugin_base_set_caps (plugin, NULL, decode->srcpad_caps))
+    return FALSE;
+
+  decode->do_renego = FALSE;
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_vaapidecode_push_all_decoded_frames (GstVaapiDecode * decode)
 {
@@ -397,6 +422,8 @@ gst_vaapidecode_push_all_decoded_frames (GstVaapiDecode * decode)
           return ret;
         break;
       case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
+        if (!gst_vaapidecode_negotiate (decode))
+          return GST_FLOW_ERROR;
         return GST_FLOW_OK;
       default:
         GST_VIDEO_DECODER_ERROR (vdec, 1, STREAM, DECODE, ("Decoding failed"),

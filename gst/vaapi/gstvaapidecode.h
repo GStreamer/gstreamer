@@ -73,6 +73,7 @@ struct _GstVaapiDecode {
 
     GstVideoCodecState *input_state;
     volatile gboolean   active;
+    volatile gboolean   do_renego;
 };
 
 struct _GstVaapiDecodeClass {
