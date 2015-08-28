@@ -137,6 +137,9 @@ static void
 gst_omx_video_dec_init (GstOMXVideoDec * self)
 {
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
+  gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
+      (self), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (self));
 
   g_mutex_init (&self->drain_lock);
   g_cond_init (&self->drain_cond);
