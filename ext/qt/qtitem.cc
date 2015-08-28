@@ -193,8 +193,6 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
   if (!texNode) {
     texNode = new QSGSimpleTextureNode ();
     texNode->setOwnsTexture (true);
-  } else {
-    tex = static_cast<GstQSGTexture *> (texNode->texture());
   }
 
   tex = new GstQSGTexture ();
