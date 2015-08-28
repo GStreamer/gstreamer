@@ -271,6 +271,8 @@ gst_qt_sink_query (GstBaseSink * bsink, GstQuery * query)
 
       if (ret)
         return ret;
+
+      /* fallthrough */
     }
     default:
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
