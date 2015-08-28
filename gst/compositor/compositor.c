@@ -362,10 +362,10 @@ clamp_rectangle (guint x, guint y, guint w, guint h, guint outer_width,
    * the case where (say, with negative xpos/ypos or w/h greater than the output
    * size) the non-obscured portion of the frame could be outside the bounds of
    * the video itself and hence not visible at all */
-  clamped.x = CLAMP (x, 0, outer_width);
-  clamped.y = CLAMP (y, 0, outer_height);
-  clamped.w = CLAMP (x2, 0, outer_width) - clamped.x;
-  clamped.h = CLAMP (y2, 0, outer_height) - clamped.y;
+  clamped.x = MIN (x, outer_width);
+  clamped.y = MIN (y, outer_height);
+  clamped.w = MIN (x2, outer_width) - clamped.x;
+  clamped.h = MIN (y2, outer_height) - clamped.y;
 
   return clamped;
 }
