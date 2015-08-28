@@ -133,7 +133,7 @@ gst_vaapi_decoder_state_changed (GstVaapiDecoder * decoder,
   if (!gst_vaapi_decode_input_state_replace (decode, codec_state))
     return;
   if (!gst_vaapidecode_update_sink_caps (decode, decode->input_state->caps))
-    return FALSE;
+    return;
 
   decode->do_renego = TRUE;
 }
