@@ -1962,6 +1962,7 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           g_assert_not_reached ();
           break;
       }
+      break;
 
     case VC1_STREAM_FORMAT_FRAME_LAYER:
       switch (vc1parse->input_stream_format) {
