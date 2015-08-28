@@ -350,6 +350,42 @@ gst_play_sink_convert_bin_sink_setcaps (GstPlaySinkConvertBin * self,
   }                                                                           \
 } G_STMT_END
 
+static gboolean
+gst_play_sink_convert_bin_acceptcaps (GstPad * pad, GstCaps * caps)
+{
+  GstPlaySinkConvertBin *self =
+      GST_PLAY_SINK_CONVERT_BIN (gst_pad_get_parent (pad));
+  gboolean ret;
+  GstPad *otherpad;
+
+  GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
+  if (pad == self->srcpad) {
+    otherpad = self->sinkpad;
+  } else if (pad == self->sinkpad) {
+    otherpad = self->srcpad;
+  } else {
+    GST_ERROR_OBJECT (pad, "Not one of our pads");
+    otherpad = NULL;
+  }
+
+  if (otherpad) {
+    ret = gst_pad_peer_query_accept_caps (otherpad, caps);
+    if (!ret && self->converter_caps) {
+      /* maybe we can convert */
+      ret = gst_caps_can_intersect (caps, self->converter_caps);
+    }
+  } else {
+    ret = TRUE;
+  }
+  GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
+
+  gst_object_unref (self);
+
+  GST_DEBUG_OBJECT (pad, "Accept caps: '%" GST_PTR_FORMAT "' %d", caps, ret);
+
+  return ret;
+}
+
 static GstCaps *
 gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
 {
@@ -471,6 +507,17 @@ gst_play_sink_convert_bin_query (GstPad * pad, GstObject * parent,
       caps = gst_play_sink_convert_bin_getcaps (pad, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      gboolean ret;
+      GstCaps *caps;
+
+      gst_query_parse_accept_caps (query, &caps);
+      ret = gst_play_sink_convert_bin_acceptcaps (pad, caps);
+      gst_query_set_accept_caps_result (query, ret);
       res = TRUE;
       break;
     }
