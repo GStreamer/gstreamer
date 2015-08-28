@@ -1889,6 +1889,7 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     if (!working_pool) {
       gst_object_unref (pool);
       pool = gst_video_buffer_pool_new ();
+      gst_structure_free (config);
       config = gst_buffer_pool_get_config (pool);
       gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
       gst_buffer_pool_config_set_allocator (config, NULL, &params);
