@@ -176,8 +176,13 @@ gst_vaapi_decode_input_state_replace (GstVaapiDecode * decode,
   if (decode->input_state) {
     if (new_state) {
       const GstCaps *curcaps = decode->input_state->caps;
-      if (gst_caps_is_always_compatible (curcaps, new_state->caps))
+      /* If existing caps are equal of the new state, keep the
+       * existing state without renegotiating. */
+      if (gst_caps_is_strictly_equal (curcaps, new_state->caps)) {
+        GST_DEBUG ("Ignoring new caps %" GST_PTR_FORMAT
+            " since are equal to current ones", new_state->caps);
         return FALSE;
+      }
     }
     gst_video_codec_state_unref (decode->input_state);
   }
