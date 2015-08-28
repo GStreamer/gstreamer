@@ -398,6 +398,46 @@ GST_START_TEST (audioencoder_events_before_eos)
 
 GST_END_TEST;
 
+GST_START_TEST (audioencoder_headers_timestamp)
+{
+  GstHarness *h = setup_audioencodertester ();
+  GList *headers = NULL;
+  GstBuffer *buf;
+
+  /* create and add headers */
+  headers = g_list_append (headers, gst_buffer_new ());
+  headers = g_list_append (headers, gst_buffer_new ());
+  gst_audio_encoder_set_headers (GST_AUDIO_ENCODER (h->element), headers);
+
+  /* push buffer with timestamp 10 seconds*/
+  fail_unless (gst_harness_push (h, create_test_buffer (10)) == GST_FLOW_OK);
+
+  /* first header */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_uint64 (10 * GST_SECOND, GST_BUFFER_PTS (buf));
+  fail_unless_equals_uint64 (10 * GST_SECOND, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (0, GST_BUFFER_DURATION (buf));
+  gst_buffer_unref (buf);
+
+  /* second header */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_uint64 (10 * GST_SECOND, GST_BUFFER_PTS (buf));
+  fail_unless_equals_uint64 (10 * GST_SECOND, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (0, GST_BUFFER_DURATION (buf));
+  gst_buffer_unref (buf);
+
+  /* buffer */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_uint64 (10 * GST_SECOND, GST_BUFFER_PTS (buf));
+  fail_unless_equals_uint64 (10 * GST_SECOND, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (1 * GST_SECOND, GST_BUFFER_DURATION (buf));
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_audioencoder_suite (void)
 {
@@ -410,6 +450,8 @@ gst_audioencoder_suite (void)
   tcase_add_test (tc, audioencoder_tags_before_eos);
   tcase_add_test (tc, audioencoder_events_before_eos);
   tcase_add_test (tc, audioencoder_flush_events);
+
+  tcase_add_test (tc, audioencoder_headers_timestamp);
 
   return s;
 }

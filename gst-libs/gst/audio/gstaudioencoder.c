@@ -880,6 +880,16 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
   /* collect output */
   if (G_LIKELY (buf)) {
     gsize size;
+    GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+
+    if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (priv->base_ts))) {
+      /* FIXME ? lookahead could lead to weird ts and duration ?
+       * (particularly if not in perfect mode) */
+      /* mind sample rounding and produce perfect output */
+      timestamp = priv->base_ts +
+          gst_util_uint64_scale (priv->samples - ctx->lookahead, GST_SECOND,
+          ctx->info.rate);
+    }
 
     /* Pushing headers first */
     if (G_UNLIKELY (priv->ctx.new_headers)) {
@@ -892,6 +902,12 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
 
         tmpbuf = gst_buffer_make_writable (tmpbuf);
         size = gst_buffer_get_size (tmpbuf);
+
+        /* we timestamp the headers with the same timestamp as the first
+           buffer, and set their duration to 0 */
+        GST_BUFFER_PTS (tmpbuf) = timestamp;
+        GST_BUFFER_DTS (tmpbuf) = timestamp;
+        GST_BUFFER_DURATION (tmpbuf) = 0;
 
         if (G_UNLIKELY (priv->discont)) {
           GST_LOG_OBJECT (enc, "marking discont");
@@ -923,13 +939,8 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
 
     /* decorate */
     if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (priv->base_ts))) {
-      /* FIXME ? lookahead could lead to weird ts and duration ?
-       * (particularly if not in perfect mode) */
-      /* mind sample rounding and produce perfect output */
-      GST_BUFFER_TIMESTAMP (buf) = priv->base_ts +
-          gst_util_uint64_scale (priv->samples - ctx->lookahead, GST_SECOND,
-          ctx->info.rate);
-      GST_BUFFER_DTS (buf) = GST_BUFFER_TIMESTAMP (buf);
+      GST_BUFFER_PTS (buf) = timestamp;
+      GST_BUFFER_DTS (buf) = timestamp;
       GST_DEBUG_OBJECT (enc, "out samples %d", samples);
       if (G_LIKELY (samples > 0)) {
         priv->samples += samples;
