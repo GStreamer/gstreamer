@@ -573,6 +573,12 @@ get_sps (GstVaapiDecoderH265 * decoder)
   return pi ? &pi->data.sps : NULL;
 }
 
+/* VPS nal is not necessary to decode the base layers, so this is not
+ * needed at the moment. But in future we need this, especially when
+ * dealing with MVC and scalable layer decoding.
+ * See https://bugzilla.gnome.org/show_bug.cgi?id=754250
+ */
+#if 0
 /* Activate the supplied VPS */
 static GstH265VPS *
 ensure_vps (GstVaapiDecoderH265 * decoder, GstH265VPS * vps)
@@ -591,6 +597,7 @@ get_vps (GstVaapiDecoderH265 * decoder)
   GstVaapiParserInfoH265 *const pi = decoder->priv.active_vps;
   return pi ? &pi->data.vps : NULL;
 }
+#endif
 
 /* Get number of reference frames to use */
 static guint
@@ -1340,24 +1347,6 @@ parse_sps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
 
   priv->parser_state |= GST_H265_VIDEO_STATE_GOT_SPS;
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
-}
-
-static void
-get_pic_width_height_in_ctbs (GstH265PPS * pps,
-    guint * PicWidthInCtbsY, guint * PicHeightInCtbsY)
-{
-  gint MinCbLog2SizeY, CtbLog2SizeY, MinCbSizeY, CtbSizeY;
-  GstH265SPS *sps = pps->sps;
-
-  MinCbLog2SizeY = sps->log2_min_luma_coding_block_size_minus3 + 3;
-  CtbLog2SizeY = MinCbLog2SizeY + sps->log2_diff_max_min_luma_coding_block_size;
-  MinCbSizeY = 1 << MinCbLog2SizeY;
-  CtbSizeY = 1 << CtbLog2SizeY;
-
-  *PicWidthInCtbsY =
-      ceil ((double) sps->pic_width_in_luma_samples / (double) CtbSizeY);
-  *PicHeightInCtbsY =
-      ceil ((double) sps->pic_height_in_luma_samples / (double) CtbSizeY);
 }
 
 static GstVaapiDecoderStatus
