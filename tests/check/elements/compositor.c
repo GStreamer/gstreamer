@@ -1444,6 +1444,50 @@ GST_START_TEST (test_ignore_eos)
 
 GST_END_TEST;
 
+/* Test that the GST_ELEMENT(vagg)->sinkpads GList is always sorted by zorder */
+GST_START_TEST (test_pad_z_order)
+{
+  GstElement *compositor;
+  GstPad *sinkpad1, *sinkpad2, *sinkpad3;
+  guint zorder1, zorder2;
+  GList *sinkpads;
+
+  GST_INFO ("preparing test");
+
+  compositor = gst_element_factory_make ("compositor", NULL);
+  sinkpad1 = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad2 = gst_element_get_request_pad (compositor, "sink_%u");
+
+  /* Pads requested later have a higher z-order than earlier ones by default */
+  g_object_get (sinkpad1, "zorder", &zorder1, NULL);
+  g_object_get (sinkpad2, "zorder", &zorder2, NULL);
+  ck_assert_int_gt (zorder2, zorder1);
+  sinkpads = GST_ELEMENT (compositor)->sinkpads;
+  ck_assert_ptr_eq (sinkpads->data, sinkpad1);
+  ck_assert_ptr_eq (sinkpads->next->data, sinkpad2);
+
+  /* Make sinkpad1's zorder the largest, which should re-sort the sinkpads */
+  g_object_set (sinkpad1, "zorder", zorder2 + 1, NULL);
+  sinkpads = GST_ELEMENT (compositor)->sinkpads;
+  ck_assert_ptr_eq (sinkpads->data, sinkpad2);
+  ck_assert_ptr_eq (sinkpads->next->data, sinkpad1);
+
+  /* Get a new pad, which should be the highest pad now */
+  sinkpad3 = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpads = GST_ELEMENT (compositor)->sinkpads;
+  ck_assert_ptr_eq (sinkpads->data, sinkpad2);
+  ck_assert_ptr_eq (sinkpads->next->data, sinkpad1);
+  ck_assert_ptr_eq (sinkpads->next->next->data, sinkpad3);
+
+  /* cleanup */
+  gst_object_unref (compositor);
+  gst_object_unref (sinkpad1);
+  gst_object_unref (sinkpad2);
+  gst_object_unref (sinkpad3);
+}
+
+GST_END_TEST;
+
 typedef struct
 {
   gint buffers_sent;
@@ -1628,6 +1672,7 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_segment_base_handling);
   tcase_add_test (tc_chain, test_obscured_skipped);
   tcase_add_test (tc_chain, test_ignore_eos);
+  tcase_add_test (tc_chain, test_pad_z_order);
   tcase_add_test (tc_chain, test_start_time_zero_live_drop_0);
   tcase_add_test (tc_chain, test_start_time_zero_live_drop_3);
   tcase_add_test (tc_chain, test_start_time_zero_live_drop_3_unlinked_1);
