@@ -24,6 +24,7 @@
 #define __GST_WL_SHM_ALLOCATOR_H__
 
 #include <gst/video/video.h>
+#include <gst/allocators/allocators.h>
 #include <wayland-client-protocol.h>
 #include "wldisplay.h"
 
@@ -38,26 +39,17 @@ G_BEGIN_DECLS
 
 #define GST_ALLOCATOR_WL_SHM "wl_shm"
 
-typedef struct _GstWlShmMemory GstWlShmMemory;
 typedef struct _GstWlShmAllocator GstWlShmAllocator;
 typedef struct _GstWlShmAllocatorClass GstWlShmAllocatorClass;
 
-struct _GstWlShmMemory
-{
-  GstMemory parent;
-
-  gpointer data;
-  gint fd;
-};
-
 struct _GstWlShmAllocator
 {
-  GstAllocator parent_instance;
+  GstFdAllocator parent_instance;
 };
 
 struct _GstWlShmAllocatorClass
 {
-  GstAllocatorClass parent_class;
+  GstFdAllocatorClass parent_class;
 };
 
 GType gst_wl_shm_allocator_get_type (void);

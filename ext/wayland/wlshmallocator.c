@@ -34,7 +34,7 @@
 GST_DEBUG_CATEGORY_EXTERN (gstwayland_debug);
 #define GST_CAT_DEFAULT gstwayland_debug
 
-G_DEFINE_TYPE (GstWlShmAllocator, gst_wl_shm_allocator, GST_TYPE_ALLOCATOR);
+G_DEFINE_TYPE (GstWlShmAllocator, gst_wl_shm_allocator, GST_TYPE_FD_ALLOCATOR);
 
 static GstMemory *
 gst_wl_shm_allocator_alloc (GstAllocator * allocator, gsize size,
@@ -44,8 +44,8 @@ gst_wl_shm_allocator_alloc (GstAllocator * allocator, gsize size,
   char filename[1024];
   static int init = 0;
   int fd;
-  gpointer data;
-  GstWlShmMemory *mem;
+  GstMemory *mem;
+  GstMapInfo info;
 
   /* TODO: make use of the allocation params, if necessary */
 
@@ -65,45 +65,28 @@ gst_wl_shm_allocator_alloc (GstAllocator * allocator, gsize size,
     return NULL;
   }
 
-  data = mmap (NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (data == MAP_FAILED) {
-    GST_ERROR_OBJECT (self, "mmap failed: %s", strerror (errno));
+  mem = gst_fd_allocator_alloc (allocator, fd, size,
+      GST_FD_MEMORY_FLAG_KEEP_MAPPED);
+  if (G_UNLIKELY (!mem)) {
+    GST_ERROR_OBJECT (self, "GstFdMemory allocation failed");
     close (fd);
     return NULL;
   }
 
+  /* we need to map the memory in order to unlink the file without losing it */
+  if (!gst_memory_map (mem, &info, GST_MAP_READWRITE)) {
+    GST_ERROR_OBJECT (self, "GstFdMemory map failed");
+    close (fd);
+    return NULL;
+  }
+
+  /* unmap will not really munmap(), we just
+   * need it to release the miniobject lock */
+  gst_memory_unmap (mem, &info);
+
   unlink (filename);
 
-  mem = g_slice_new0 (GstWlShmMemory);
-  gst_memory_init ((GstMemory *) mem, GST_MEMORY_FLAG_NO_SHARE, allocator, NULL,
-      size, 0, 0, size);
-  mem->data = data;
-  mem->fd = fd;
-
-  return (GstMemory *) mem;
-}
-
-static void
-gst_wl_shm_allocator_free (GstAllocator * allocator, GstMemory * memory)
-{
-  GstWlShmMemory *shm_mem = (GstWlShmMemory *) memory;
-
-  if (shm_mem->fd != -1)
-    close (shm_mem->fd);
-  munmap (shm_mem->data, memory->maxsize);
-
-  g_slice_free (GstWlShmMemory, shm_mem);
-}
-
-static gpointer
-gst_wl_shm_mem_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
-{
-  return ((GstWlShmMemory *) mem)->data;
-}
-
-static void
-gst_wl_shm_mem_unmap (GstMemory * mem)
-{
+  return mem;
 }
 
 static void
@@ -112,17 +95,16 @@ gst_wl_shm_allocator_class_init (GstWlShmAllocatorClass * klass)
   GstAllocatorClass *alloc_class = (GstAllocatorClass *) klass;
 
   alloc_class->alloc = GST_DEBUG_FUNCPTR (gst_wl_shm_allocator_alloc);
-  alloc_class->free = GST_DEBUG_FUNCPTR (gst_wl_shm_allocator_free);
 }
 
 static void
 gst_wl_shm_allocator_init (GstWlShmAllocator * self)
 {
-  self->parent_instance.mem_type = GST_ALLOCATOR_WL_SHM;
-  self->parent_instance.mem_map = gst_wl_shm_mem_map;
-  self->parent_instance.mem_unmap = gst_wl_shm_mem_unmap;
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (self);
 
-  GST_OBJECT_FLAG_SET (self, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
+  alloc->mem_type = GST_ALLOCATOR_WL_SHM;
+
+  GST_OBJECT_FLAG_UNSET (self, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
 void
@@ -148,7 +130,6 @@ struct wl_buffer *
 gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem, GstWlDisplay * display,
     const GstVideoInfo * info)
 {
-  GstWlShmMemory *shm_mem = (GstWlShmMemory *) mem;
   gint width, height, stride;
   gsize size;
   enum wl_shm_format format;
@@ -163,18 +144,15 @@ gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem, GstWlDisplay * display,
 
   g_return_val_if_fail (gst_is_wl_shm_memory (mem), NULL);
   g_return_val_if_fail (size <= mem->size, NULL);
-  g_return_val_if_fail (shm_mem->fd != -1, NULL);
 
   GST_DEBUG_OBJECT (mem->allocator, "Creating wl_buffer of size %"
       G_GSSIZE_FORMAT " (%d x %d, stride %d), format %s", size, width, height,
       stride, gst_wl_shm_format_to_string (format));
 
-  wl_pool = wl_shm_create_pool (display->shm, shm_mem->fd, mem->size);
+  wl_pool = wl_shm_create_pool (display->shm, gst_fd_memory_get_fd (mem),
+      mem->size);
   wbuffer = wl_shm_pool_create_buffer (wl_pool, 0, width, height, stride,
       format);
-
-  close (shm_mem->fd);
-  shm_mem->fd = -1;
   wl_shm_pool_destroy (wl_pool);
 
   return wbuffer;
