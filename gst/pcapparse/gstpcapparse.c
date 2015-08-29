@@ -36,7 +36,6 @@
  */
 
 /* TODO:
- * - React on state-change and update state accordingly.
  * - Implement support for timestamping the buffers.
  */
 
@@ -604,9 +603,6 @@ out:
   if (list)
     gst_buffer_list_unref (list);
 
-  if (ret != GST_FLOW_OK)
-    gst_pcap_parse_reset (self);
-
   return ret;
 }
 
@@ -621,10 +617,33 @@ gst_pcap_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* Drop it, we'll replace it with our own */
       gst_event_unref (event);
       break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_pcap_parse_reset (self);
+      break;
     default:
       ret = gst_pad_push_event (self->src_pad, event);
       break;
   }
+
+  return ret;
+}
+
+static GstStateChangeReturn
+gst_pcap_parse_change_state (GstElement * element, GstStateChange transition)
+{
+  GstPcapParse *self = GST_PCAP_PARSE (element);
+  GstStateChangeReturn ret;
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_pcap_parse_reset (element);
+      break;
+    default:
+      break;
+  }
+
 
   return ret;
 }
