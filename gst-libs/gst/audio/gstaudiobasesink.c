@@ -1134,7 +1134,8 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
       /* We must have a negotiated format before starting the ringbuffer */
       if (G_UNLIKELY (!gst_audio_ring_buffer_is_acquired (sink->ringbuffer))) {
         GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL),
-            ("Sink not negotiated before GAP event."));
+            ("Sink not negotiated before %s event.",
+                GST_EVENT_TYPE_NAME (event)));
         return GST_FLOW_ERROR;
       }
 
