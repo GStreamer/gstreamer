@@ -1501,6 +1501,7 @@ gst_aggregator_send_event (GstElement * element, GstEvent * event)
     gst_segment_do_seek (&self->segment, rate, fmt, flags, start_type, start,
         stop_type, stop, NULL);
     self->priv->seqnum = gst_event_get_seqnum (event);
+    self->priv->first_buffer = FALSE;
     GST_OBJECT_UNLOCK (self);
 
     GST_DEBUG_OBJECT (element, "Storing segment %" GST_PTR_FORMAT, event);
