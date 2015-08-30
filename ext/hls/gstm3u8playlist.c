@@ -119,12 +119,12 @@ gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
 static guint
 gst_m3u8_playlist_target_duration (GstM3U8Playlist * playlist)
 {
-  gint i;
-  GstM3U8Entry *entry;
   guint64 target_duration = 0;
+  GList *l;
 
-  for (i = 0; i < playlist->entries->length; i++) {
-    entry = (GstM3U8Entry *) g_queue_peek_nth (playlist->entries, i);
+  for (l = playlist->entries->head; l != NULL; l = l->next) {
+    GstM3U8Entry *entry = l->data;
+
     if (entry->duration > target_duration)
       target_duration = entry->duration;
   }
