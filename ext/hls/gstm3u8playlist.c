@@ -161,50 +161,46 @@ gst_m3u8_playlist_target_duration (GstM3U8Playlist * playlist)
   return (guint) ((target_duration + 500 * GST_MSECOND) / GST_SECOND);
 }
 
-static void
-render_entry (GstM3U8Entry * entry, GstM3U8Playlist * playlist)
-{
-  gchar *entry_str;
-
-  entry_str = gst_m3u8_entry_render (entry, playlist->version);
-  g_string_append_printf (playlist->playlist_str, "%s", entry_str);
-  g_free (entry_str);
-}
-
 gchar *
 gst_m3u8_playlist_render (GstM3U8Playlist * playlist)
 {
-  gchar *pl;
+  GString *playlist_str;
+  GList *l;
 
   g_return_val_if_fail (playlist != NULL, NULL);
 
-  playlist->playlist_str = g_string_new ("");
+  playlist_str = g_string_new ("");
 
   /* #EXTM3U */
-  g_string_append_printf (playlist->playlist_str, M3U8_HEADER_TAG);
+  g_string_append_printf (playlist_str, M3U8_HEADER_TAG);
   /* #EXT-X-VERSION */
-  g_string_append_printf (playlist->playlist_str, M3U8_VERSION_TAG,
-      playlist->version);
+  g_string_append_printf (playlist_str, M3U8_VERSION_TAG, playlist->version);
   /* #EXT-X-ALLOW_CACHE */
-  g_string_append_printf (playlist->playlist_str, M3U8_ALLOW_CACHE_TAG,
+  g_string_append_printf (playlist_str, M3U8_ALLOW_CACHE_TAG,
       playlist->allow_cache ? "YES" : "NO");
   /* #EXT-X-MEDIA-SEQUENCE */
-  g_string_append_printf (playlist->playlist_str, M3U8_MEDIA_SEQUENCE_TAG,
+  g_string_append_printf (playlist_str, M3U8_MEDIA_SEQUENCE_TAG,
       playlist->sequence_number - playlist->entries->length);
   /* #EXT-X-TARGETDURATION */
-  g_string_append_printf (playlist->playlist_str, M3U8_TARGETDURATION_TAG,
+  g_string_append_printf (playlist_str, M3U8_TARGETDURATION_TAG,
       gst_m3u8_playlist_target_duration (playlist));
-  g_string_append_printf (playlist->playlist_str, "\n");
+  g_string_append (playlist_str, "\n");
 
   /* Entries */
-  g_queue_foreach (playlist->entries, (GFunc) render_entry, playlist);
+  for (l = playlist->entries->head; l != NULL; l = l->next) {
+    GstM3U8Entry *entry = l->data;
+    gchar *entry_str;
+
+    /* FIXME: just make gst_m3u8_entry_render() append to GString directly */
+    entry_str = gst_m3u8_entry_render (entry, playlist->version);
+    g_string_append (playlist_str, entry_str);
+    g_free (entry_str);
+  }
 
   if (playlist->end_list)
-    g_string_append_printf (playlist->playlist_str, M3U8_ENDLIST_TAG);
+    g_string_append (playlist_str, M3U8_ENDLIST_TAG);
 
-  pl = playlist->playlist_str->str;
-  g_string_free (playlist->playlist_str, FALSE);
-  return pl;
+  return g_string_free (playlist_str, FALSE);
 }
 
 void

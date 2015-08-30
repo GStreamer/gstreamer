@@ -49,7 +49,6 @@ struct _GstM3U8Playlist
 
   /*< Private >*/
   GQueue *entries;
-  GString *playlist_str;
 };
 
 
