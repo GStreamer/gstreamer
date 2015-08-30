@@ -32,6 +32,16 @@ enum
   GST_M3U8_PLAYLIST_TYPE_VOD,
 };
 
+typedef struct _GstM3U8Entry GstM3U8Entry;
+
+struct _GstM3U8Entry
+{
+  gfloat duration;
+  gchar *title;
+  gchar *url;
+  gboolean discontinuous;
+};
+
 static GstM3U8Entry *
 gst_m3u8_entry_new (const gchar * url, const gchar * title,
     gfloat duration, gboolean discontinuous)
@@ -180,21 +190,4 @@ gst_m3u8_playlist_render (GstM3U8Playlist * playlist)
     g_string_append (playlist_str, "#EXT-X-ENDLIST");
 
   return g_string_free (playlist_str, FALSE);
-}
-
-void
-gst_m3u8_playlist_clear (GstM3U8Playlist * playlist)
-{
-  g_return_if_fail (playlist != NULL);
-
-  g_queue_foreach (playlist->entries, (GFunc) gst_m3u8_entry_free, NULL);
-  g_queue_clear (playlist->entries);
-}
-
-guint
-gst_m3u8_playlist_n_entries (GstM3U8Playlist * playlist)
-{
-  g_return_val_if_fail (playlist != NULL, 0);
-
-  return playlist->entries->length;
 }
