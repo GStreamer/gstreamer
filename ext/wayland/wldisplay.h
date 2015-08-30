@@ -52,7 +52,7 @@ struct _GstWlDisplay
   struct wl_shell *shell;
   struct wl_shm *shm;
   struct wl_scaler *scaler;
-  GArray *formats;
+  GArray *shm_formats;
 
   /* private */
   gboolean own_display;

@@ -44,7 +44,7 @@ gst_wl_display_class_init (GstWlDisplayClass * klass)
 static void
 gst_wl_display_init (GstWlDisplay * self)
 {
-  self->formats = g_array_new (FALSE, FALSE, sizeof (uint32_t));
+  self->shm_formats = g_array_new (FALSE, FALSE, sizeof (uint32_t));
   self->wl_fd_poll = gst_poll_new (TRUE);
   self->buffers = g_hash_table_new (g_direct_hash, g_direct_equal);
   g_mutex_init (&self->buffers_mutex);
@@ -69,7 +69,7 @@ gst_wl_display_finalize (GObject * gobject)
       (GHFunc) gst_wl_buffer_force_release_and_unref, NULL);
   g_hash_table_remove_all (self->buffers);
 
-  g_array_unref (self->formats);
+  g_array_unref (self->shm_formats);
   gst_poll_free (self->wl_fd_poll);
   g_hash_table_unref (self->buffers);
   g_mutex_clear (&self->buffers_mutex);
@@ -136,7 +136,7 @@ shm_format (void *data, struct wl_shm *wl_shm, uint32_t format)
 {
   GstWlDisplay *self = data;
 
-  g_array_append_val (self->formats, format);
+  g_array_append_val (self->shm_formats, format);
 }
 
 static const struct wl_shm_listener shm_listener = {

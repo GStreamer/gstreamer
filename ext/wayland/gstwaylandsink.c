@@ -403,7 +403,7 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     g_value_init (&list, GST_TYPE_LIST);
     g_value_init (&value, G_TYPE_STRING);
 
-    formats = sink->display->formats;
+    formats = sink->display->shm_formats;
     for (i = 0; i < formats->len; i++) {
       fmt = g_array_index (formats, uint32_t, i);
       g_value_set_string (&value, gst_wl_shm_format_to_string (fmt));
@@ -454,7 +454,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     goto invalid_format;
 
   /* verify we support the requested format */
-  formats = sink->display->formats;
+  formats = sink->display->shm_formats;
   for (i = 0; i < formats->len; i++) {
     if (g_array_index (formats, uint32_t, i) == format)
       break;
