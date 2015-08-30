@@ -652,7 +652,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
       /* the first time we acquire a buffer,
        * we need to attach a wl_buffer on it */
-      wlbuffer = gst_buffer_get_wl_buffer (buffer);
+      wlbuffer = gst_buffer_get_wl_buffer (to_render);
       if (G_UNLIKELY (!wlbuffer)) {
         mem = gst_buffer_peek_memory (to_render, 0);
         wbuf = gst_wl_shm_memory_construct_wl_buffer (mem, sink->display,
@@ -660,7 +660,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
         if (G_UNLIKELY (!wbuf))
           goto no_wl_buffer;
 
-        gst_buffer_add_wl_buffer (buffer, wbuf, sink->display);
+        gst_buffer_add_wl_buffer (to_render, wbuf, sink->display);
       }
 
       gst_buffer_map (buffer, &src, GST_MAP_READ);
