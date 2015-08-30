@@ -36,7 +36,6 @@
 #include "gsthlssink.h"
 #include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
-#include <gio/gio.h>
 #include <glib/gstdio.h>
 #include <memory.h>
 
