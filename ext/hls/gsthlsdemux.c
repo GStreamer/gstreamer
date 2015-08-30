@@ -67,8 +67,6 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition);
 /* GstHLSDemux */
 static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux,
     gboolean update, GError ** err);
-static gboolean gst_hls_demux_set_location (GstHLSDemux * demux,
-    const gchar * uri, const gchar * base_uri);
 static gchar *gst_hls_src_buf_to_utf8_playlist (GstBuffer * buf);
 
 static gboolean gst_hls_demux_change_playlist (GstHLSDemux * demux,
@@ -364,8 +362,14 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   gchar *playlist = NULL;
 
-  gst_hls_demux_set_location (hlsdemux, demux->manifest_uri,
-      demux->manifest_base_uri);
+  if (hlsdemux->client)
+    gst_m3u8_client_free (hlsdemux->client);
+
+  hlsdemux->client =
+      gst_m3u8_client_new (demux->manifest_uri, demux->manifest_base_uri);
+
+  GST_INFO_OBJECT (demux, "Changed location: %s (base uri: %s)",
+      demux->manifest_uri, GST_STR_NULL (demux->manifest_base_uri));
 
   playlist = gst_hls_src_buf_to_utf8_playlist (buf);
   if (playlist == NULL) {
@@ -748,18 +752,6 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
   }
 
   gst_hls_demux_decrypt_end (demux);
-}
-
-static gboolean
-gst_hls_demux_set_location (GstHLSDemux * demux, const gchar * uri,
-    const gchar * base_uri)
-{
-  if (demux->client)
-    gst_m3u8_client_free (demux->client);
-  demux->client = gst_m3u8_client_new (uri, base_uri);
-  GST_INFO_OBJECT (demux, "Changed location: %s (base uri: %s)", uri,
-      GST_STR_NULL (base_uri));
-  return TRUE;
 }
 
 static gchar *
