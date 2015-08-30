@@ -31,9 +31,6 @@
 #define M3U8_ALLOW_CACHE_TAG "#EXT-X-ALLOW-CACHE:%s\n"
 #define M3U8_TARGETDURATION_TAG "#EXT-X-TARGETDURATION:%d\n"
 #define M3U8_MEDIA_SEQUENCE_TAG "#EXT-X-MEDIA-SEQUENCE:%d\n"
-#define M3U8_DISCONTINUITY_TAG "#EXT-X-DISCONTINUITY\n"
-#define M3U8_INT_INF_TAG "#EXTINF:%d,%s\n%s\n"
-#define M3U8_FLOAT_INF_TAG "#EXTINF:%s,%s\n%s\n"
 #define M3U8_ENDLIST_TAG "#EXT-X-ENDLIST"
 
 enum
@@ -66,25 +63,6 @@ gst_m3u8_entry_free (GstM3U8Entry * entry)
   g_free (entry->url);
   g_free (entry->title);
   g_free (entry);
-}
-
-static gchar *
-gst_m3u8_entry_render (GstM3U8Entry * entry, guint version)
-{
-  gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
-
-  g_return_val_if_fail (entry != NULL, NULL);
-
-  if (version < 3)
-    return g_strdup_printf ("%s" M3U8_INT_INF_TAG,
-        entry->discontinuous ? M3U8_DISCONTINUITY_TAG : "",
-        (gint) ((entry->duration + 500 * GST_MSECOND) / GST_SECOND),
-        entry->title ? entry->title : "", entry->url);
-
-  return g_strdup_printf ("%s" M3U8_FLOAT_INF_TAG,
-      entry->discontinuous ? M3U8_DISCONTINUITY_TAG : "",
-      g_ascii_dtostr (buf, sizeof (buf), (entry->duration / GST_SECOND)),
-      entry->title ? entry->title : "", entry->url);
 }
 
 GstM3U8Playlist *
@@ -188,13 +166,23 @@ gst_m3u8_playlist_render (GstM3U8Playlist * playlist)
 
   /* Entries */
   for (l = playlist->entries->head; l != NULL; l = l->next) {
+    gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
     GstM3U8Entry *entry = l->data;
-    gchar *entry_str;
 
-    /* FIXME: just make gst_m3u8_entry_render() append to GString directly */
-    entry_str = gst_m3u8_entry_render (entry, playlist->version);
-    g_string_append (playlist_str, entry_str);
-    g_free (entry_str);
+    if (entry->discontinuous)
+      g_string_append (playlist_str, "#EXT-X-DISCONTINUITY\n");
+
+    if (playlist->version < 3) {
+      g_string_append_printf (playlist_str, "#EXTINF:%d,%s\n",
+          (gint) ((entry->duration + 500 * GST_MSECOND) / GST_SECOND),
+          entry->title ? entry->title : "");
+    } else {
+      g_string_append_printf (playlist_str, "#EXTINF:%s,%s\n",
+          g_ascii_dtostr (buf, sizeof (buf), entry->duration / GST_SECOND),
+          entry->title ? entry->title : "");
+    }
+
+    g_string_append_printf (playlist_str, "%s\n", entry->url);
   }
 
   if (playlist->end_list)
