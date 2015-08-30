@@ -57,21 +57,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_hls_demux_debug);
 #define GST_CAT_DEFAULT gst_hls_demux_debug
 
-enum
-{
-  PROP_0,
-
-  PROP_FRAGMENTS_CACHE,
-  PROP_LAST
-};
-
-#define DEFAULT_FRAGMENTS_CACHE 1
-
 /* GObject */
-static void gst_hls_demux_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_hls_demux_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 static void gst_hls_demux_dispose (GObject * obj);
 
 /* GstElement */
@@ -146,18 +132,7 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
   element_class = (GstElementClass *) klass;
   adaptivedemux_class = (GstAdaptiveDemuxClass *) klass;
 
-  gobject_class->set_property = gst_hls_demux_set_property;
-  gobject_class->get_property = gst_hls_demux_get_property;
   gobject_class->dispose = gst_hls_demux_dispose;
-
-#ifndef GST_REMOVE_DEPRECATED
-  g_object_class_install_property (gobject_class, PROP_FRAGMENTS_CACHE,
-      g_param_spec_uint ("fragments-cache", "Fragments cache",
-          "Number of fragments needed to be cached to start playing "
-          "(DEPRECATED: Has no effect since 1.3.1)",
-          1, G_MAXUINT, DEFAULT_FRAGMENTS_CACHE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
-#endif
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_hls_demux_change_state);
 
@@ -202,33 +177,6 @@ static void
 gst_hls_demux_init (GstHLSDemux * demux)
 {
   demux->do_typefind = TRUE;
-}
-
-static void
-gst_hls_demux_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    case PROP_FRAGMENTS_CACHE:
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_hls_demux_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  switch (prop_id) {
-    case PROP_FRAGMENTS_CACHE:
-      g_value_set_uint (value, 1);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static GstStateChangeReturn
