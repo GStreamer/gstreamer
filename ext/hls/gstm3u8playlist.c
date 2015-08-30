@@ -26,13 +26,6 @@
 
 #define GST_CAT_DEFAULT fragmented_debug
 
-#define M3U8_HEADER_TAG "#EXTM3U\n"
-#define M3U8_VERSION_TAG "#EXT-X-VERSION:%d\n"
-#define M3U8_ALLOW_CACHE_TAG "#EXT-X-ALLOW-CACHE:%s\n"
-#define M3U8_TARGETDURATION_TAG "#EXT-X-TARGETDURATION:%d\n"
-#define M3U8_MEDIA_SEQUENCE_TAG "#EXT-X-MEDIA-SEQUENCE:%d\n"
-#define M3U8_ENDLIST_TAG "#EXT-X-ENDLIST"
-
 enum
 {
   GST_M3U8_PLAYLIST_TYPE_EVENT,
@@ -147,20 +140,18 @@ gst_m3u8_playlist_render (GstM3U8Playlist * playlist)
 
   g_return_val_if_fail (playlist != NULL, NULL);
 
-  playlist_str = g_string_new ("");
+  playlist_str = g_string_new ("#EXTM3U\n");
 
-  /* #EXTM3U */
-  g_string_append_printf (playlist_str, M3U8_HEADER_TAG);
-  /* #EXT-X-VERSION */
-  g_string_append_printf (playlist_str, M3U8_VERSION_TAG, playlist->version);
-  /* #EXT-X-ALLOW_CACHE */
-  g_string_append_printf (playlist_str, M3U8_ALLOW_CACHE_TAG,
+  g_string_append_printf (playlist_str, "#EXT-X-VERSION:%d\n",
+      playlist->version);
+
+  g_string_append_printf (playlist_str, "#EXT-X-ALLOW-CACHE:%s\n",
       playlist->allow_cache ? "YES" : "NO");
-  /* #EXT-X-MEDIA-SEQUENCE */
-  g_string_append_printf (playlist_str, M3U8_MEDIA_SEQUENCE_TAG,
+
+  g_string_append_printf (playlist_str, "#EXT-X-MEDIA-SEQUENCE:%d\n",
       playlist->sequence_number - playlist->entries->length);
-  /* #EXT-X-TARGETDURATION */
-  g_string_append_printf (playlist_str, M3U8_TARGETDURATION_TAG,
+
+  g_string_append_printf (playlist_str, "#EXT-X-TARGETDURATION:%u\n",
       gst_m3u8_playlist_target_duration (playlist));
   g_string_append (playlist_str, "\n");
 
@@ -186,7 +177,7 @@ gst_m3u8_playlist_render (GstM3U8Playlist * playlist)
   }
 
   if (playlist->end_list)
-    g_string_append (playlist_str, M3U8_ENDLIST_TAG);
+    g_string_append (playlist_str, "#EXT-X-ENDLIST");
 
   return g_string_free (playlist_str, FALSE);
 }
