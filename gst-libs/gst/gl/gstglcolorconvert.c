@@ -1732,6 +1732,10 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
   else
     views = 1;
 
+  gst_gl_insert_debug_marker (context, "%s converting from %s to %s",
+      GST_OBJECT_NAME (convert),
+      gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)),
+      gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&convert->out_info)));
   /* Handle all views on input and output one at a time */
   for (v = 0; res && v < views; v++)
     res = _do_convert_one_view (context, convert, v);
