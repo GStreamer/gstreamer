@@ -211,7 +211,7 @@ static gboolean default_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp);
 
 static gboolean wait_preroll (GstRTSPMedia * media);
 
-static GstElement * find_payload_element (GstElement * payloader);
+static GstElement *find_payload_element (GstElement * payloader);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
@@ -1124,6 +1124,7 @@ void
 gst_rtsp_media_set_buffer_size (GstRTSPMedia * media, guint size)
 {
   GstRTSPMediaPrivate *priv;
+  guint i;
 
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
@@ -1133,6 +1134,11 @@ gst_rtsp_media_set_buffer_size (GstRTSPMedia * media, guint size)
 
   g_mutex_lock (&priv->lock);
   priv->buffer_size = size;
+
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+    gst_rtsp_stream_set_buffer_size (stream, size);
+  }
   g_mutex_unlock (&priv->lock);
 }
 
@@ -1560,6 +1566,7 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   gst_rtsp_stream_set_profiles (stream, priv->profiles);
   gst_rtsp_stream_set_protocols (stream, priv->protocols);
   gst_rtsp_stream_set_retransmission_time (stream, priv->rtx_time);
+  gst_rtsp_stream_set_buffer_size (stream, priv->buffer_size);
 
   g_ptr_array_add (priv->streams, stream);
 

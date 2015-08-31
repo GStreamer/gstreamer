@@ -160,6 +160,8 @@ GstClockTime      gst_rtsp_stream_get_retransmission_time     (GstRTSPStream *st
 guint             gst_rtsp_stream_get_retransmission_pt       (GstRTSPStream * stream);
 void              gst_rtsp_stream_set_retransmission_pt       (GstRTSPStream * stream,
                                                                guint rtx_pt);
+void              gst_rtsp_stream_set_buffer_size  (GstRTSPStream *stream, guint size);
+guint             gst_rtsp_stream_get_buffer_size  (GstRTSPStream *stream);
 
 void              gst_rtsp_stream_set_pt_map                 (GstRTSPStream * stream, guint pt, GstCaps * caps);
 GstElement *      gst_rtsp_stream_request_aux_sender         (GstRTSPStream * stream, guint sessid);

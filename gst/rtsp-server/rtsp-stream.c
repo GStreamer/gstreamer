@@ -1389,8 +1389,8 @@ gst_rtsp_stream_set_retransmission_time (GstRTSPStream * stream,
 }
 
 /**
- * gst_rtsp_media_get_retransmission_time:
- * @media: a #GstRTSPMedia
+ * gst_rtsp_stream_get_retransmission_time:
+ * @stream: a #GstRTSPStream
  *
  * Get the amount of time to store retransmission data.
  *
@@ -1410,6 +1410,13 @@ gst_rtsp_stream_get_retransmission_time (GstRTSPStream * stream)
   return ret;
 }
 
+/**
+ * gst_rtsp_stream_set_retransmission_pt:
+ * @stream: a #GstRTSPStream
+ * @rtx_pt: a #guint
+ *
+ * Set the payload type (pt) for retransmission of this stream.
+ */
 void
 gst_rtsp_stream_set_retransmission_pt (GstRTSPStream * stream, guint rtx_pt)
 {
@@ -1431,6 +1438,14 @@ gst_rtsp_stream_set_retransmission_pt (GstRTSPStream * stream, guint rtx_pt)
   g_mutex_unlock (&stream->priv->lock);
 }
 
+/**
+ * gst_rtsp_stream_get_retransmission_pt:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the payload-type used for retransmission of this stream
+ *
+ * Returns: The retransmission PT.
+ */
 guint
 gst_rtsp_stream_get_retransmission_pt (GstRTSPStream * stream)
 {
@@ -1443,6 +1458,43 @@ gst_rtsp_stream_get_retransmission_pt (GstRTSPStream * stream)
   g_mutex_unlock (&stream->priv->lock);
 
   return rtx_pt;
+}
+
+/**
+ * gst_rtsp_media_get_buffer_size:
+ * @media: a #GstRTSPMedia
+ * @size: a #guint
+ *
+ * Set the size of the UDP transmission buffer (in bytes)
+ * Needs to be set before the stream is joined to a bin.
+ *
+ */
+void
+gst_rtsp_stream_set_buffer_size (GstRTSPStream * stream, guint size)
+{
+  g_mutex_lock (&stream->priv->lock);
+  stream->priv->buffer_size = size;
+  g_mutex_unlock (&stream->priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_buffer_size:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the size of the UDP transmission buffer (in bytes)
+ *
+ * Returns: the size of the UDP TX buffer
+ */
+guint
+gst_rtsp_stream_get_buffer_size (GstRTSPStream * stream)
+{
+  guint buffer_size;
+
+  g_mutex_lock (&stream->priv->lock);
+  buffer_size = stream->priv->buffer_size;
+  g_mutex_unlock (&stream->priv->lock);
+
+  return buffer_size;
 }
 
 /* executed from streaming thread */
