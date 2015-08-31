@@ -500,7 +500,7 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
 
     gst_gl_context_activate (priv->other_context, TRUE);
     if (!gst_gl_context_fill_info (priv->other_context, &error)) {
-      GST_ERROR ("failed to retreive gdk context info: %s", error->message);
+      GST_ERROR ("failed to retrieve gdk context info: %s", error->message);
       g_object_unref (priv->other_context);
       priv->other_context = NULL;
     } else {
