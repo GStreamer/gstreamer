@@ -30,7 +30,7 @@
 #include <gst/video/video.h>
 
 
-
+G_BEGIN_DECLS
 gboolean
 gst_opencv_get_ipldepth (gint depth, gint bpp, gint * ipldepth);
 
@@ -42,5 +42,6 @@ gboolean gst_opencv_parse_iplimage_params_from_structure
     gint * channels, GError ** err);
 
 GstCaps * gst_opencv_caps_from_cv_image_type (int cv_type);
+G_END_DECLS
 
 #endif /* __GST_OPENCV_UTILS__ */
