@@ -311,14 +311,14 @@ GST_START_TEST (test_int16_panned)
   GstBus *bus;
   GstMessage *message;
   const GstStructure *structure;
-  gint j;
+  gint i, j;
   const GValue *list, *value;
   gdouble dB;
   const gchar *fields[3] = { "rms", "peak", "decay" };
 
   level = setup_level (LEVEL_S16_CAPS_STRING);
   g_object_set (level, "post-messages", TRUE,
-      "interval", (guint64) GST_SECOND / 10, NULL);
+      "interval", (guint64) GST_SECOND / 30, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
   bus = gst_bus_new ();
@@ -332,41 +332,48 @@ GST_START_TEST (test_int16_panned)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
 
-  message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, -1);
-  structure = gst_message_get_structure (message);
+  /* do multiple messages per buffer, to verify that the inner loop in level
+   * advances the read-index correctly, see
+   * https://bugzilla.gnome.org/show_bug.cgi?id=754144
+   */
+  for (i = 0; i < 3; i++) {
+    GST_DEBUG ("get message number %d", i);
+    message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, -1);
+    structure = gst_message_get_structure (message);
 
-  /* silence has 0 dB for rms, peak and decay */
-  for (j = 0; j < 3; ++j) {
-    GValueArray *arr;
+    /* silence has 0 dB for rms, peak and decay */
+    for (j = 0; j < 3; ++j) {
+      GValueArray *arr;
 
-    list = gst_structure_get_value (structure, fields[j]);
-    arr = g_value_get_boxed (list);
-    value = g_value_array_get_nth (arr, 0);
-    dB = g_value_get_double (value);
-    GST_DEBUG ("%s[0] is %lf", fields[j], dB);
+      list = gst_structure_get_value (structure, fields[j]);
+      arr = g_value_get_boxed (list);
+      value = g_value_array_get_nth (arr, 0);
+      dB = g_value_get_double (value);
+      GST_DEBUG ("%s[0] is %lf", fields[j], dB);
 #ifdef HAVE_ISINF
-    fail_unless (isinf (dB));
+      fail_unless (isinf (dB));
 #elif defined (HAVE_FPCLASS)
-    fail_unless (fpclass (dB) == FP_NINF);
+      fail_unless (fpclass (dB) == FP_NINF);
 #endif
-  }
-  /* block wave of half amplitude has -5.94 dB for rms, peak and decay */
-  for (j = 0; j < 3; ++j) {
-    GValueArray *arr;
+    }
+    /* block wave of half amplitude has -5.94 dB for rms, peak and decay */
+    for (j = 0; j < 3; ++j) {
+      GValueArray *arr;
 
-    list = gst_structure_get_value (structure, fields[j]);
-    arr = g_value_get_boxed (list);
-    value = g_value_array_get_nth (arr, 1);
-    dB = g_value_get_double (value);
-    GST_DEBUG ("%s[1] is %lf", fields[j], dB);
-    fail_if (dB < -6.1);
-    fail_if (dB > -5.9);
+      list = gst_structure_get_value (structure, fields[j]);
+      arr = g_value_get_boxed (list);
+      value = g_value_array_get_nth (arr, 1);
+      dB = g_value_get_double (value);
+      GST_DEBUG ("%s[1] is %lf", fields[j], dB);
+      fail_if (dB < -6.1);
+      fail_if (dB > -5.9);
+    }
+    gst_message_unref (message);
   }
 
   /* clean up */
   /* flush current messages,and future state change messages */
   gst_bus_set_flushing (bus, TRUE);
-  gst_message_unref (message);
   gst_element_set_bus (level, NULL);
   gst_object_unref (bus);
   gst_buffer_unref (outbuffer);
