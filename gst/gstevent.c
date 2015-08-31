@@ -1057,6 +1057,9 @@ gst_event_parse_qos (GstEvent * event, GstQOSType * type,
             GST_QUARK (DIFF)));
   if (timestamp) {
     gint64 offset = gst_event_get_running_time_offset (event);
+    GstClockTimeDiff diff_ =
+        g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (DIFF)));
 
     *timestamp =
         g_value_get_uint64 (gst_structure_id_get_value (structure,
@@ -1066,6 +1069,11 @@ gst_event_parse_qos (GstEvent * event, GstQOSType * type,
       *timestamp += offset;
     else
       *timestamp = 0;
+
+    /* Make sure that timestamp + diff is always >= 0. Because
+     * of the running time offset this might not be true */
+    if (diff_ < 0 && *timestamp < -diff_)
+      *timestamp = (GstClockTime) - diff_;
   }
 }
 
