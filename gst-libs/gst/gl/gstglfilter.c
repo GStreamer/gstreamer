@@ -914,6 +914,8 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   if (in_sync_meta)
     gst_gl_sync_meta_wait (in_sync_meta, context);
 
+  gst_gl_insert_debug_marker (context,
+      "processing in element %s", GST_OBJECT_NAME (filter));
   if (filter_class->filter)
     ret = filter_class->filter (filter, inbuf, outbuf);
   else

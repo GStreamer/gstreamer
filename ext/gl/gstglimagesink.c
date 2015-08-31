@@ -1781,6 +1781,9 @@ gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
         gst_event_new_reconfigure ());
   }
 
+  gst_gl_insert_debug_marker (gl_sink->context, "%s window resize to %ix%i",
+      GST_OBJECT_NAME (gl_sink), width, height);
+
   /* default reshape */
   if (!do_reshape) {
     if (gl_sink->keep_aspect_ratio) {
@@ -1850,6 +1853,8 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
   window->is_drawing = TRUE;
 
   /* opengl scene */
+  gst_gl_insert_debug_marker (gl_sink->context, "%s element drawing texture %u",
+      GST_OBJECT_NAME (gl_sink), gl_sink->redisplay_texture);
   GST_TRACE ("redrawing texture:%u", gl_sink->redisplay_texture);
 
   sync_meta = gst_buffer_get_gl_sync_meta (gl_sink->stored_sync);
