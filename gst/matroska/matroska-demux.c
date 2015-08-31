@@ -5012,6 +5012,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         videocontext->pixel_height);
     caps = gst_video_info_to_caps (&info);
     *codec_name = gst_pb_utils_get_codec_description (caps);
+    context->alignment = 32;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_SP)) {
     caps = gst_caps_new_simple ("video/x-divx",
         "divxversion", G_TYPE_INT, 4, NULL);
