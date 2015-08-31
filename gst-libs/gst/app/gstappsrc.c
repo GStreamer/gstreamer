@@ -527,7 +527,6 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   basesrc_class->do_seek = gst_app_src_do_seek;
   basesrc_class->is_seekable = gst_app_src_is_seekable;
   basesrc_class->get_size = gst_app_src_do_get_size;
-  basesrc_class->get_size = gst_app_src_do_get_size;
   basesrc_class->query = gst_app_src_query;
 
   klass->push_buffer = gst_app_src_push_buffer_action;
