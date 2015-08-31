@@ -232,8 +232,12 @@ GST_START_TEST (test_multiple_ssrc_rr)
       gst_clock_id_unref (tid);
   }
 
+  out_buf = g_async_queue_try_pop (data.rtcp_queue);
+  if (out_buf)
+    gst_buffer_unref (out_buf);
+
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock),
-      gst_clock_id_get_time (id) + (2 * GST_SECOND));
+      gst_clock_id_get_time (id) + (5 * GST_SECOND));
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
   tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   gst_clock_id_unref (id);
