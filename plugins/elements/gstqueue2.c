@@ -3092,55 +3092,6 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
       break;
     }
-    case GST_QUERY_SEEKING:
-    {
-      gint64 segment_start, segment_end;
-      GstFormat format;
-      gboolean seekable, peer_success;
-
-      peer_success = gst_pad_peer_query (queue->sinkpad, query);
-
-      gst_query_parse_seeking (query, &format, &seekable, &segment_start,
-          &segment_end);
-
-      if (peer_success && seekable) {
-        GST_DEBUG_OBJECT (queue, "peer seekable (%s) from %" G_GINT64_FORMAT
-            " to %" G_GINT64_FORMAT, gst_format_get_name (format),
-            segment_start, segment_end);
-        break;
-      }
-
-      if (format != GST_FORMAT_BYTES) {
-        GST_DEBUG_OBJECT (queue, "query in %s (not BYTES) format, cannot seek",
-            gst_format_get_name (format));
-        return FALSE;
-      }
-
-      GST_QUEUE2_MUTEX_LOCK (queue);
-      if (queue->current) {
-        if (QUEUE_IS_USING_RING_BUFFER (queue)) {
-          segment_start = queue->current->rb_offset;
-          segment_end = queue->current->rb_writing_pos;
-        } else if (QUEUE_IS_USING_TEMP_FILE (queue)) {
-          segment_start = queue->current->offset;
-          segment_end = queue->current->writing_pos;
-        } else {
-          segment_start = -1;
-          segment_end = -1;
-        }
-      }
-      GST_QUEUE2_MUTEX_UNLOCK (queue);
-
-      seekable = ! !(segment_start < segment_end);
-
-      GST_DEBUG_OBJECT (queue, "segment from %" G_GINT64_FORMAT " to %"
-          G_GINT64_FORMAT " %sseekable", segment_start, segment_end,
-          seekable ? "" : "not ");
-
-      gst_query_set_seeking (query, format, seekable, segment_start,
-          segment_end);
-      break;
-    }
     default:
       /* peer handled other queries */
       if (!gst_pad_query_default (pad, parent, query))
