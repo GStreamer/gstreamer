@@ -507,7 +507,7 @@ gst_gl_context_get_proc_address_with_platform (GstGLPlatform context_type,
 
 /**
  * gst_gl_context_get_current_gl_api:
- * @platform: the #GstGLPlatform to retreive the API for
+ * @platform: the #GstGLPlatform to retrieve the API for
  * @major: (out): (allow-none): the major version
  * @minor: (out): (allow-none): the minor version
  *
