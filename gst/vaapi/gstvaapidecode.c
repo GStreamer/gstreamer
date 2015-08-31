@@ -125,7 +125,6 @@ gst_vaapi_decoder_state_changed (GstVaapiDecoder * decoder,
     const GstVideoCodecState * codec_state, gpointer user_data)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (user_data);
-  GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
 
   g_assert (decode->decoder == decoder);
 
