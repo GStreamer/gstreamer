@@ -109,6 +109,24 @@ gsize gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align
 GstCaps * gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
     const gchar * feature_name);
 
+#ifndef GST_DISABLE_GST_DEBUG
+void gst_gl_insert_debug_marker (GstGLContext * context,
+                                 const gchar * format, ...) G_GNUC_PRINTF (2, 3);
+#else /* GST_DISABLE_GST_DEBUG */
+#if G_HAVE_ISO_VARARGS
+#define gst_gl_insert_debug_marker(...) G_STMT_START{ }G_STMT_END
+#else /* G_HAVE_ISO_VARARGS */
+#if G_HAVE_GNUC_VARARGS
+#define gst_gl_insert_debug_marker(args...) G_STMT_START{ }G_STMT_END
+#else /* G_HAVE_GNUC_VARARGS */
+static inline void
+gst_gl_insert_debug_marker (GstGLContext * context, const gchar * format, ...)
+{
+}
+#endif /* G_HAVE_GNUC_VARARGS */
+#endif /* G_HAVE_ISO_VARARGS */
+#endif /* GST_DISABLE_GST_DEBUG */
+
 G_END_DECLS
 
 #endif /* __GST_GL_UTILS_H__ */
