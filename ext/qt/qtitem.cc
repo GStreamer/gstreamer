@@ -294,7 +294,7 @@ QtGLVideoItem::onSceneGraphInitialized ()
 
     gst_gl_context_activate (this->priv->other_context, TRUE);
     if (!gst_gl_context_fill_info (this->priv->other_context, &error)) {
-      GST_ERROR ("%p failed to retreive qt context info: %s", this, error->message);
+      GST_ERROR ("%p failed to retrieve qt context info: %s", this, error->message);
       g_object_unref (this->priv->other_context);
       this->priv->other_context = NULL;
     } else {
@@ -328,14 +328,14 @@ qt_item_init_winsys (QtGLVideoItem * widget)
   }
 
   if (!GST_IS_GL_DISPLAY (widget->priv->display)) {
-    GST_ERROR ("%p failed to retreive display connection %" GST_PTR_FORMAT,
+    GST_ERROR ("%p failed to retrieve display connection %" GST_PTR_FORMAT,
         widget, widget->priv->display);
     g_mutex_unlock (&widget->priv->lock);
     return FALSE;
   }
 
   if (!GST_GL_IS_CONTEXT (widget->priv->other_context)) {
-    GST_ERROR ("%p failed to retreive wrapped context %" GST_PTR_FORMAT, widget,
+    GST_ERROR ("%p failed to retrieve wrapped context %" GST_PTR_FORMAT, widget,
         widget->priv->other_context);
     g_mutex_unlock (&widget->priv->lock);
     return FALSE;

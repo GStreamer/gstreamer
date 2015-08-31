@@ -303,7 +303,7 @@ gst_qt_sink_change_state (GstElement * element, GstStateChange transition)
       if (!app) {
         GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
             ("%s", "Failed to connect to Qt"),
-            ("%s", "Could not retreive QGuiApplication instance"));
+            ("%s", "Could not retrieve QGuiApplication instance"));
         return GST_STATE_CHANGE_FAILURE;
       }
 
@@ -327,7 +327,7 @@ gst_qt_sink_change_state (GstElement * element, GstStateChange transition)
 
       if (!qt_sink->display || !qt_sink->context || !qt_sink->qt_context) {
         GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
-            ("%s", "Could not retreive window system OpenGL configuration"),
+            ("%s", "Could not retrieve window system OpenGL configuration"),
             (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
