@@ -238,7 +238,7 @@ gboolean              gst_rtsp_media_handle_sdp (GstRTSPMedia * media, GstSDPMes
 void                  gst_rtsp_media_collect_streams  (GstRTSPMedia *media);
 GstRTSPStream *       gst_rtsp_media_create_stream    (GstRTSPMedia *media,
                                                        GstElement *payloader,
-                                                       GstPad *srcpad);
+                                                       GstPad *pad);
 
 /* dealing with the media */
 GstClock *            gst_rtsp_media_get_clock        (GstRTSPMedia *media);
