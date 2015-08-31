@@ -25,7 +25,7 @@ pbutils: video audio
 rtp: audio
 
 INDEPENDENT_SUBDIRS = \
-	tag audio fft rtp sdp video app
+	tag audio fft sdp video app
 
 .PHONY: independent-subdirs $(INDEPENDENT_SUBDIRS)
 
