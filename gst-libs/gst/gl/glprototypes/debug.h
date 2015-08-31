@@ -34,6 +34,7 @@ GST_GL_EXT_FUNCTION (void, DebugMessageControl,
 GST_GL_EXT_FUNCTION (void, DebugMessageInsert,
                      (GLenum source,
                       GLenum type,
+                      GLuint id,
                       GLenum severity,
                       GLsizei length,
                       const gchar *message))
@@ -52,7 +53,7 @@ GST_GL_EXT_FUNCTION (GLuint, GetDebugMessageLog,
 GST_GL_EXT_FUNCTION (void, GetPointerv,
                      (GLenum pname,
                       gpointer * params))
-GST_GL_EXT_END ()                      
+GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (khr_debug,
                   GST_GL_API_OPENGL3,
@@ -88,3 +89,29 @@ GST_GL_EXT_FUNCTION (void, GetObjectPtrLabel,
                       gchar *label))
 GST_GL_EXT_END ()
 
+GST_GL_EXT_BEGIN (ext_debug_marker,
+                  GST_GL_API_NONE,
+                  255, 255,
+                  255, 255,
+                  "EXT\0",
+                  "debug_marker\0")
+GST_GL_EXT_FUNCTION (void, InsertEventMarker,
+                     (GLsizei length,
+                      const gchar * message))
+GST_GL_EXT_FUNCTION (void, PushGroupMarker,
+                     (GLsizei length,
+                      const gchar * message))
+GST_GL_EXT_FUNCTION (void, PopGroupMarker,
+                     (void))
+GST_GL_EXT_END ()
+
+GST_GL_EXT_BEGIN (gremedy_string_marker,
+                  GST_GL_API_NONE,
+                  255, 255,
+                  255, 255,
+                  "GREMEDY\0",
+                  "string_marker\0")
+GST_GL_EXT_FUNCTION (void, StringMarker,
+                     (GLsizei length,
+                      const gchar * message))
+GST_GL_EXT_END ()
