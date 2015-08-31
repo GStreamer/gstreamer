@@ -215,6 +215,8 @@ struct _GstAggregatorPadPrivate
   gboolean pending_flush_stop;
   gboolean pending_eos;
 
+  gboolean first_buffer;
+
   GQueue buffers;
   guint num_buffers;
   GstClockTime head_position;
@@ -311,6 +313,7 @@ typedef struct
   GstEvent *event;
   gboolean result;
   gboolean flush;
+  gboolean only_to_active_pads;
 
   gboolean one_actually_seeked;
 } EventData;
@@ -1086,6 +1089,8 @@ gst_aggregator_default_sink_event (GstAggregator * self,
         GST_OBJECT_UNLOCK (self);
       }
 
+      aggpad->priv->first_buffer = TRUE;
+
       /* We never forward the event */
       goto eat;
     }
@@ -1554,9 +1559,14 @@ gst_aggregator_event_forward_func (GstPad * pad, gpointer user_data)
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
 
   if (peer) {
-    ret = gst_pad_send_event (peer, gst_event_ref (evdata->event));
-    GST_DEBUG_OBJECT (pad, "return of event push is %d", ret);
-    gst_object_unref (peer);
+    if (evdata->only_to_active_pads && aggpad->priv->first_buffer) {
+      GST_DEBUG_OBJECT (pad, "not sending event to inactive pad");
+      ret = TRUE;
+    } else {
+      ret = gst_pad_send_event (peer, gst_event_ref (evdata->event));
+      GST_DEBUG_OBJECT (pad, "return of event push is %d", ret);
+      gst_object_unref (peer);
+    }
   }
 
   if (ret == FALSE) {
@@ -1602,7 +1612,7 @@ gst_aggregator_event_forward_func (GstPad * pad, gpointer user_data)
 
 static EventData
 gst_aggregator_forward_event_to_all_sinkpads (GstAggregator * self,
-    GstEvent * event, gboolean flush)
+    GstEvent * event, gboolean flush, gboolean only_to_active_pads)
 {
   EventData evdata;
 
@@ -1610,6 +1620,7 @@ gst_aggregator_forward_event_to_all_sinkpads (GstAggregator * self,
   evdata.result = TRUE;
   evdata.flush = flush;
   evdata.one_actually_seeked = FALSE;
+  evdata.only_to_active_pads = only_to_active_pads;
 
   /* We first need to set all pads as flushing in a first pass
    * as flush_start flush_stop is sometimes sent synchronously
@@ -1669,7 +1680,8 @@ gst_aggregator_do_seek (GstAggregator * self, GstEvent * event)
   GST_OBJECT_UNLOCK (self);
 
   /* forward the seek upstream */
-  evdata = gst_aggregator_forward_event_to_all_sinkpads (self, event, flush);
+  evdata =
+      gst_aggregator_forward_event_to_all_sinkpads (self, event, flush, FALSE);
   event = NULL;
 
   if (!evdata.result || !evdata.one_actually_seeked) {
@@ -1712,7 +1724,12 @@ gst_aggregator_default_src_event (GstAggregator * self, GstEvent * event)
     }
   }
 
-  evdata = gst_aggregator_forward_event_to_all_sinkpads (self, event, FALSE);
+  /* Don't forward QOS events to pads that had no active buffer yet. Otherwise
+   * they will receive a QOS event that has earliest_time=0 (because we can't
+   * have negative timestamps), and consider their buffer as too late */
+  evdata =
+      gst_aggregator_forward_event_to_all_sinkpads (self, event, FALSE,
+      GST_EVENT_TYPE (event) == GST_EVENT_QOS);
   res = evdata.result;
 
 done:
@@ -2132,6 +2149,8 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
 
   buf_pts = GST_BUFFER_PTS (actual_buf);
 
+  aggpad->priv->first_buffer = FALSE;
+
   for (;;) {
     SRC_LOCK (self);
     PAD_LOCK (aggpad);
@@ -2417,6 +2436,8 @@ gst_aggregator_pad_init (GstAggregatorPad * pad)
 
   g_mutex_init (&pad->priv->flush_lock);
   g_mutex_init (&pad->priv->lock);
+
+  pad->priv->first_buffer = TRUE;
 }
 
 /**
