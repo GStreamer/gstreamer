@@ -196,6 +196,7 @@ static gboolean gst_rtp_dtmf_src_unlock_stop (GstBaseSrc * src);
 static GstFlowReturn gst_rtp_dtmf_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
 static gboolean gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc);
+static gboolean gst_rtp_dtmf_src_query (GstBaseSrc * basesrc, GstQuery * query);
 
 
 static void
@@ -274,6 +275,7 @@ gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_handle_event);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_create);
   gstbasesrc_class->negotiate = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_negotiate);
+  gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_query);
 }
 
 static void
@@ -1023,6 +1025,33 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
 
 }
 
+static gboolean
+gst_rtp_dtmf_src_query (GstBaseSrc * basesrc, GstQuery * query)
+{
+  GstRTPDTMFSrc *dtmfsrc = GST_RTP_DTMF_SRC (basesrc);
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      GstClockTime latency;
+
+      latency = dtmfsrc->ptime * GST_MSECOND;
+      gst_query_set_latency (query, gst_base_src_is_live (basesrc), latency,
+          GST_CLOCK_TIME_NONE);
+      GST_DEBUG_OBJECT (dtmfsrc, "Reporting latency of %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (latency));
+      res = TRUE;
+    }
+      break;
+    default:
+      res = GST_BASE_SRC_CLASS (gst_rtp_dtmf_src_parent_class)->query (basesrc,
+          query);
+      break;
+  }
+
+  return res;
+}
 
 static void
 gst_rtp_dtmf_src_ready_to_paused (GstRTPDTMFSrc * dtmfsrc)
