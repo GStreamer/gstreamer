@@ -71,7 +71,6 @@ struct _GstM3U8
   GList *lists;                 /* list of GstM3U8 from the main playlist */
   GList *iframe_lists;          /* I-frame lists from the main playlist */
   GList *current_variant;       /* Current variant playlist used */
-  GstM3U8 *parent;              /* main playlist (if any) */
   gint64 mediasequence;          /* EXT-X-MEDIA-SEQUENCE & increased with new media file */
 };
 

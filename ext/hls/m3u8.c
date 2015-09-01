@@ -122,7 +122,7 @@ gst_m3u8_media_file_copy (const GstM3U8MediaFile * self, gpointer user_data)
 }
 
 static GstM3U8 *
-_m3u8_copy (const GstM3U8 * self, GstM3U8 * parent)
+_m3u8_copy (const GstM3U8 * self)
 {
   GstM3U8 *dup;
 
@@ -148,11 +148,10 @@ _m3u8_copy (const GstM3U8 * self, GstM3U8 * parent)
 
   /* private */
   dup->last_data = g_strdup (self->last_data);
-  dup->lists = g_list_copy_deep (self->lists, (GCopyFunc) _m3u8_copy, dup);
+  dup->lists = g_list_copy_deep (self->lists, (GCopyFunc) _m3u8_copy, NULL);
   dup->iframe_lists =
-      g_list_copy_deep (self->iframe_lists, (GCopyFunc) _m3u8_copy, dup);
+      g_list_copy_deep (self->iframe_lists, (GCopyFunc) _m3u8_copy, NULL);
   /* NOTE: current_variant will get set in gst_m3u8_copy () */
-  dup->parent = parent;
   dup->mediasequence = self->mediasequence;
   return dup;
 }
@@ -163,7 +162,7 @@ gst_m3u8_copy (const GstM3U8 * self)
   GList *entry;
   guint n;
 
-  GstM3U8 *dup = _m3u8_copy (self, NULL);
+  GstM3U8 *dup = _m3u8_copy (self);
 
   if (self->current_variant != NULL) {
     for (n = 0, entry = self->lists; entry; entry = entry->next, n++) {
@@ -531,7 +530,6 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
         GstM3U8 *new_list;
 
         new_list = gst_m3u8_new ();
-        new_list->parent = self;
         new_list->iframe = iframe;
         data = data + (iframe ? 26 : 18);
         while (data && parse_attributes (&data, &a, &v)) {
