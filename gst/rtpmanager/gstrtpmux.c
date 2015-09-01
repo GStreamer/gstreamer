@@ -156,7 +156,7 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
           0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
       g_param_spec_uint ("ssrc", "SSRC",
-          "The SSRC of the packets (-1 == random)",
+          "The SSRC of the packets (default == random)",
           0, G_MAXUINT, DEFAULT_SSRC,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
@@ -296,6 +296,7 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
 
   rtp_mux->ssrc = DEFAULT_SSRC;
   rtp_mux->current_ssrc = DEFAULT_SSRC;
+  rtp_mux->ssrc_random = TRUE;
   rtp_mux->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   rtp_mux->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
 
@@ -649,7 +650,7 @@ gst_rtp_mux_setcaps (GstPad * pad, GstRTPMux * rtp_mux, GstCaps * caps)
   /* if we don't have a specified ssrc, first try to take one from the caps,
      and if that fails, generate one */
   if (!rtp_mux->have_ssrc) {
-    if (rtp_mux->ssrc == DEFAULT_SSRC) {
+    if (rtp_mux->ssrc_random) {
       if (!gst_structure_get_uint (structure, "ssrc", &rtp_mux->current_ssrc))
         rtp_mux->current_ssrc = g_random_int ();
       rtp_mux->have_ssrc = TRUE;
@@ -865,6 +866,7 @@ gst_rtp_mux_set_property (GObject * object,
       rtp_mux->ssrc = g_value_get_uint (value);
       rtp_mux->current_ssrc = rtp_mux->ssrc;
       rtp_mux->have_ssrc = TRUE;
+      rtp_mux->ssrc_random = FALSE;
       GST_OBJECT_UNLOCK (rtp_mux);
       break;
     default:
@@ -950,7 +952,7 @@ gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
 
   rtp_mux->last_stop = GST_CLOCK_TIME_NONE;
 
-  if (rtp_mux->ssrc == DEFAULT_SSRC) {
+  if (rtp_mux->ssrc_random) {
     rtp_mux->have_ssrc = FALSE;
   } else {
     rtp_mux->current_ssrc = rtp_mux->ssrc;
