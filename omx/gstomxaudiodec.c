@@ -102,6 +102,9 @@ gst_omx_audio_dec_init (GstOMXAudioDec * self)
 {
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (self), TRUE);
   gst_audio_decoder_set_drainable (GST_AUDIO_DECODER (self), TRUE);
+  gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
+      (self), TRUE);
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (self));
 
   g_mutex_init (&self->drain_lock);
   g_cond_init (&self->drain_cond);
