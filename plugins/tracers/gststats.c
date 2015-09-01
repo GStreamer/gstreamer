@@ -471,13 +471,21 @@ do_post_message_pre (GstStatsTracer * self, guint64 ts, GstElement * elem,
     GstMessage * msg)
 {
   GstElementStats *stats = get_element_stats (self, elem);
+  const GstStructure *msg_s;
+  GstStructure *structure = gst_structure_new ("message",
+      "thread-id", G_TYPE_UINT, GPOINTER_TO_UINT (g_thread_self ()),
+      "ts", G_TYPE_UINT64, ts,
+      "elem-ix", G_TYPE_UINT, stats->index,
+      "name", G_TYPE_STRING, GST_MESSAGE_TYPE_NAME (msg),
+      NULL);
 
   stats->last_ts = ts;
-  gst_tracer_log_trace (gst_structure_new ("message",
-          "thread-id", G_TYPE_UINT, GPOINTER_TO_UINT (g_thread_self ()),
-          "ts", G_TYPE_UINT64, ts,
-          "elem-ix", G_TYPE_UINT, stats->index,
-          "name", G_TYPE_STRING, GST_MESSAGE_TYPE_NAME (msg), NULL));
+
+  if ((msg_s = gst_message_get_structure (msg))) {
+    gst_structure_set (structure, "structure", GST_TYPE_STRUCTURE, msg_s, NULL);
+  }
+
+  gst_tracer_log_trace (structure);
 }
 
 static void
@@ -591,6 +599,10 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "description", G_TYPE_STRING, "name of the message",
           "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          NULL),
+      "structure", GST_TYPE_STRUCTURE, gst_structure_new ("structure",
+          "type", G_TYPE_GTYPE, GST_TYPE_STRUCTURE,
+          "description", G_TYPE_STRING, "message structure",
           NULL),
       NULL));
   gst_tracer_log_trace (gst_structure_new ("elementquery.class",
