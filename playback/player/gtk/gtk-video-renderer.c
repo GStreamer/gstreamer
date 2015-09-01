@@ -125,7 +125,6 @@ gst_player_gtk_video_renderer_init (GstPlayerGtkVideoRenderer * self)
 static GstElement *gst_player_gtk_video_renderer_create_video_sink
     (GstPlayerVideoRenderer * iface, GstPlayer * player)
 {
-  GstElement *gtk;
   GstPlayerGtkVideoRenderer *self = GST_PLAYER_GTK_VIDEO_RENDERER (iface);
 
   return gst_object_ref (self->sink);
