@@ -204,10 +204,6 @@ gst_rtp_mux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 static gboolean
 gst_rtp_mux_src_event_real (GstRTPMux * rtp_mux, GstEvent * event)
 {
-  GstIterator *iter;
-  gboolean result = FALSE;
-  gboolean done = FALSE;
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_UPSTREAM:
     {
@@ -253,32 +249,7 @@ gst_rtp_mux_src_event_real (GstRTPMux * rtp_mux, GstEvent * event)
   }
 
 
-  iter = gst_element_iterate_sink_pads (GST_ELEMENT (rtp_mux));
-
-  while (!done) {
-    GValue item = { 0, };
-
-    switch (gst_iterator_next (iter, &item)) {
-      case GST_ITERATOR_OK:
-        gst_event_ref (event);
-        result |= gst_pad_push_event (g_value_get_object (&item), event);
-        g_value_reset (&item);
-        break;
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (iter);
-        result = FALSE;
-        break;
-      case GST_ITERATOR_ERROR:
-        GST_WARNING_OBJECT (rtp_mux, "Error iterating sinkpads");
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-    }
-  }
-  gst_iterator_free (iter);
-  gst_event_unref (event);
-
-  return result;
+  return gst_pad_event_default (rtp_mux->srcpad, GST_OBJECT (rtp_mux), event);
 }
 
 static void
