@@ -20,6 +20,7 @@ libgstqtsink_la_SOURCES = \
 	qtitem.cc \
 	gstqtsink.cc \
 	gstqtsink.h \
+	gstqtgl.h \
 	gstplugin.cc
 
 libgstqtsink_la_CXXFLAGS = \

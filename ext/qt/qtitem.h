@@ -23,6 +23,8 @@
 
 #include <gst/gst.h>
 #include <gst/gl/gl.h>
+
+#include "gstqtgl.h"
 #include <QQuickItem>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>

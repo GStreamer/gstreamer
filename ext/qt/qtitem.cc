@@ -25,11 +25,12 @@
 #include <stdio.h>
 
 #include <gst/video/video.h>
+#include "qtitem.h"
+#include "gstqsgtexture.h"
+
 #include <QGuiApplication>
 #include <QQuickWindow>
 #include <QSGSimpleTextureNode>
-#include "qtitem.h"
-#include "gstqsgtexture.h"
 
 #if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (HAVE_QT_X11)
 #include <QX11Info>
@@ -39,6 +40,11 @@
 
 #if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_WAYLAND)
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
+#endif
+
+#if GST_GL_HAVE_WINDOW_ANDROID && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_ANDROID)
+#include <gst/gl/egl/gstgldisplay_egl.h>
+#include <gst/gl/egl/gstglcontext_egl.h>
 #endif
 
 /**
@@ -115,6 +121,10 @@ QtGLVideoItem::QtGLVideoItem()
   if (QString::fromUtf8 ("xcb") == app->platformName())
     this->priv->display = (GstGLDisplay *)
         gst_gl_display_x11_new_with_display (QX11Info::display ());
+#endif
+#if GST_GL_HAVE_WINDOW_ANDROID && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_ANDROID)
+  if (QString::fromUtf8 ("android") == app->platformName())
+    this->priv->display = (GstGLDisplay *) gst_gl_display_egl_new ();
 #endif
 
   if (!this->priv->display)
@@ -275,6 +285,17 @@ QtGLVideoItem::onSceneGraphInitialized ()
 #endif
 #if GST_GL_HAVE_WINDOW_WAYLAND && defined (HAVE_QT_WAYLAND)
   if (GST_IS_GL_DISPLAY_WAYLAND (this->priv->display)) {
+    platform = GST_GL_PLATFORM_EGL;
+    gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
+    gl_handle = gst_gl_context_get_current_gl_context (platform);
+    if (gl_handle)
+      this->priv->other_context =
+          gst_gl_context_new_wrapped (this->priv->display, gl_handle,
+          platform, gl_api);
+  }
+#endif
+#if GST_GL_HAVE_WINDOW_ANDROID && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_ANDROID)
+  if (GST_IS_GL_DISPLAY_EGL (this->priv->display)) {
     platform = GST_GL_PLATFORM_EGL;
     gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
     gl_handle = gst_gl_context_get_current_gl_context (platform);
