@@ -87,7 +87,7 @@ The following notation is used:
              timestamp.
   - S.stop: stop field in the SEGMENT event. This is the highers allowed
             timestamp.
-  - S.rate: rate field of SEGMENT event. This is the desired playback rate.
+  - S.rate: rate field of SEGMENT event. This is the playback rate.
   - S.base: a base time for the time. This is the total elapsed running_time of any
             previous segments.
   - S.offset: an offset to apply to S.start or S.stop. This is the amount that
@@ -185,7 +185,7 @@ It is the stream time that is used for:
 Additional fields in the SEGMENT are used:
 
   - S.time: time field in the SEGMENT event. This the stream-time of S.start
-  - S.applied_rate: The rate already applied to the stream.
+  - S.applied_rate: The rate already applied to the segment.
 
 Stream time is calculated using the buffer times and the preceding SEGMENT
 event as follows:
