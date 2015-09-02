@@ -324,6 +324,8 @@ ges_video_transition_create_element (GESTrackElement * object)
       (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
       mixer, GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR, &priv->smpte,
       priv);
+  g_object_set (priv->mixer_sinka, "zorder", 0, NULL);
+  g_object_set (priv->mixer_sinkb, "zorder", 1, NULL);
 
   fast_element_link (mixer, oconv);
 
