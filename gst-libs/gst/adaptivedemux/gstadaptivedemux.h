@@ -408,6 +408,19 @@ struct _GstAdaptiveDemuxClass
    * @stream.
    */
   GstClockTime (*get_presentation_offset) (GstAdaptiveDemux *demux, GstAdaptiveDemuxStream *stream);
+
+  /**
+   * get_period_start_time:
+   * @demux: #GstAdaptiveDemux
+   *
+   * Gets the start time of the current period. Timestamps are resetting to 0
+   * after each period but we have to maintain a continuous stream and running
+   * time so need to know the start time of the current period.
+   *
+   * Return: a #GstClockTime representing the start time of the currently
+   * selected period.
+   */
+  GstClockTime (*get_period_start_time) (GstAdaptiveDemux *demux);
 };
 
 GType    gst_adaptive_demux_get_type (void);

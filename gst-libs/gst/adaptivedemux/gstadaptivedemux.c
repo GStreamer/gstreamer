@@ -151,8 +151,7 @@ static void gst_adaptive_demux_updates_loop (GstAdaptiveDemux * demux);
 static void gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream *
     stream);
 static void gst_adaptive_demux_reset (GstAdaptiveDemux * demux);
-static gboolean gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
-    gboolean first_segment);
+static gboolean gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux);
 static gboolean gst_adaptive_demux_is_live (GstAdaptiveDemux * demux);
 static GstFlowReturn gst_adaptive_demux_stream_seek (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstClockTime ts);
@@ -511,7 +510,7 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
         }
 
         if (demux->next_streams) {
-          gst_adaptive_demux_expose_streams (demux, TRUE);
+          gst_adaptive_demux_expose_streams (demux);
           gst_adaptive_demux_start_tasks (demux);
           if (gst_adaptive_demux_is_live (demux)) {
             /* Task to periodically update the manifest */
@@ -723,13 +722,25 @@ gst_adaptive_demux_stream_get_presentation_offset (GstAdaptiveDemux * demux,
   return klass->get_presentation_offset (demux, stream);
 }
 
+static GstClockTime
+gst_adaptive_demux_get_period_start_time (GstAdaptiveDemux * demux)
+{
+  GstAdaptiveDemuxClass *klass;
+
+  klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
+
+  if (klass->get_period_start_time == NULL)
+    return 0;
+
+  return klass->get_period_start_time (demux);
+}
+
 static gboolean
-gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
-    gboolean first_segment)
+gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux)
 {
   GList *iter;
   GList *old_streams;
-  GstClockTime min_pts = GST_CLOCK_TIME_NONE;
+  GstClockTime period_start;
 
   g_return_val_if_fail (demux->next_streams != NULL, FALSE);
 
@@ -745,22 +756,10 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
             GST_ADAPTIVE_DEMUX_STREAM_CAST (stream))) {
       /* TODO act on error */
     }
-
-    if (first_segment) {
-      /* TODO we only need the first timestamp, maybe create a simple function */
-      gst_adaptive_demux_stream_update_fragment_info (demux, stream);
-
-      if (GST_CLOCK_TIME_IS_VALID (min_pts)) {
-        min_pts = MIN (min_pts, stream->fragment.timestamp);
-      } else {
-        min_pts = stream->fragment.timestamp;
-      }
-    }
   }
 
-  if (first_segment)
-    demux->segment.start = demux->segment.position = demux->segment.time =
-        min_pts;
+  period_start = gst_adaptive_demux_get_period_start_time (demux);
+
   for (iter = demux->streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemuxStream *stream = iter->data;
     GstClockTime offset;
@@ -768,15 +767,70 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
     offset = gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
     stream->segment = demux->segment;
 
-    if (first_segment)
-      demux->segment.start = demux->segment.position = demux->segment.time =
-          stream->fragment.timestamp;
-    stream->segment.start += offset;
+    /* The demuxer segment is just built from seek events, but for each stream
+     * we have to adjust segments according to the current period and the
+     * stream specific presentation time offset.
+     *
+     * For each period, buffer timestamps start again from 0. Additionally the
+     * buffer timestamps are shifted by the stream specific presentation time
+     * offset, so the first buffer timestamp of a period is 0 + presentation
+     * time offset. If the stream contains timestamps itself, this is also
+     * supposed to be the presentation time stored inside the stream.
+     *
+     * The stream time over periods is supposed to be continuous, that is the
+     * buffer timestamp 0 + presentation time offset should map to the start
+     * time of the current period.
+     *
+     *
+     * The adjustment of the stream segments as such works the following.
+     *
+     * If the demuxer segment start is bigger than the period start, this
+     * means that we have to drop some media at the beginning of the current
+     * period, e.g. because a seek into the middle of the period has
+     * happened. The amount of media to drop is the difference between the
+     * period start and the demuxer segment start, and as each period starts
+     * again from 0, this difference is going to be the actual stream's
+     * segment start. As all timestamps of the stream are shifted by the
+     * presentation time offset, we will also have to move the segment start
+     * by that offset.
+     *
+     * Now the running time and stream time at the stream's segment start has to
+     * be the one that is stored inside the demuxer's segment, which means
+     * that segment.base and segment.time have to be copied over.
+     *
+     *
+     * If the demuxer segment start is smaller than the period start time,
+     * this means that the whole period is inside the segment. As each period
+     * starts timestamps from 0, and additionally timestamps are shifted by
+     * the presentation time offset, the stream's first timestamp (and as such
+     * the stream's segment start) has to be the presentation time offset.
+     * The stream time at the segment start is supposed to be the stream time
+     * of the period start according to the demuxer segment, so the stream
+     * segment's time would be set to that. The same goes for the stream
+     * segment's base, which is supposed to be the running time of the period
+     * start according to the demuxer's segment.
+     *
+     *
+     * For the first case where not the complete period is inside the segment,
+     * the segment time and base as calculated by the second case would be
+     * equivalent.
+     */
 
-    if (first_segment)
+    if (demux->segment.start > period_start) {
+      stream->segment.start = demux->segment.start - period_start + offset;
+      stream->segment.position = offset;
+      stream->segment.time = demux->segment.time;
+      stream->segment.base = demux->segment.base;
+    } else {
+      stream->segment.start = offset;
+      stream->segment.position = offset;
+      stream->segment.time =
+          gst_segment_to_stream_time (&demux->segment, GST_FORMAT_TIME,
+          period_start);
       stream->segment.base =
-          gst_segment_to_running_time (&stream->segment, GST_FORMAT_TIME,
-          stream->segment.start);
+          gst_segment_to_running_time (&demux->segment, GST_FORMAT_TIME,
+          period_start);
+    }
 
     stream->pending_segment = gst_event_new_segment (&stream->segment);
     gst_event_set_seqnum (stream->pending_segment, demux->priv->segment_seqnum);
@@ -1036,19 +1090,24 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
       }
 
       if (demux->next_streams) {
-        gst_adaptive_demux_expose_streams (demux, FALSE);
+        gst_adaptive_demux_expose_streams (demux);
       } else {
         GList *iter;
+        GstClockTime period_start =
+            gst_adaptive_demux_get_period_start_time (demux);
 
         for (iter = demux->streams; iter; iter = g_list_next (iter)) {
           GstAdaptiveDemuxStream *stream = iter->data;
           GstEvent *seg_evt;
           GstClockTime offset;
 
+          /* See comments in gst_adaptive_demux_get_period_start_time() for
+           * an explanation of the segment modifications */
           stream->segment = demux->segment;
           offset =
               gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
-          stream->segment.start += offset;
+          stream->segment.start += offset - period_start;
+          stream->segment.position = stream->segment.start;
           seg_evt = gst_event_new_segment (&stream->segment);
           gst_event_set_seqnum (seg_evt, demux->priv->segment_seqnum);
           gst_event_replace (&stream->pending_segment, seg_evt);
@@ -1404,6 +1463,8 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
   if (stream->first_fragment_buffer) {
     GstClockTime offset =
         gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
+    GstClockTime period_start =
+        gst_adaptive_demux_get_period_start_time (demux);
 
     if (demux->segment.rate < 0)
       /* Set DISCONT flag for every first buffer in reverse playback mode
@@ -1416,8 +1477,13 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
 
     if (GST_BUFFER_PTS_IS_VALID (buffer)) {
       stream->segment.position = GST_BUFFER_PTS (buffer);
-      if (stream->segment.position > demux->segment.position)
-        demux->segment.position = stream->segment.position;
+
+      /* Convert from position inside the stream's segment to the demuxer's
+       * segment, they are not necessarily the same */
+      if (stream->segment.position - offset + period_start >
+          demux->segment.position)
+        demux->segment.position =
+            stream->segment.position - offset + period_start;
     }
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
@@ -1511,6 +1577,8 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   if (stream->starting_fragment) {
     GstClockTime offset =
         gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
+    GstClockTime period_start =
+        gst_adaptive_demux_get_period_start_time (demux);
 
     stream->starting_fragment = FALSE;
     if (klass->start_fragment) {
@@ -1526,8 +1594,13 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     if (GST_BUFFER_PTS_IS_VALID (buffer)) {
       stream->segment.position = GST_BUFFER_PTS (buffer);
-      if (stream->segment.position > demux->segment.position)
-        demux->segment.position = stream->segment.position;
+
+      /* Convert from position inside the stream's segment to the demuxer's
+       * segment, they are not necessarily the same */
+      if (stream->segment.position - offset + period_start >
+          demux->segment.position)
+        demux->segment.position =
+            stream->segment.position - offset + period_start;
     }
 
   } else {
@@ -1997,14 +2070,14 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
   /* Check if we're done with our segment */
   if (demux->segment.rate > 0) {
     if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop)
-        && stream->segment.position >= demux->segment.stop) {
+        && stream->segment.position >= stream->segment.stop) {
       ret = GST_FLOW_EOS;
       gst_task_stop (stream->download_task);
       goto end_of_manifest;
     }
   } else {
     if (GST_CLOCK_TIME_IS_VALID (demux->segment.start)
-        && stream->segment.position < demux->segment.start) {
+        && stream->segment.position < stream->segment.start) {
       ret = GST_FLOW_EOS;
       gst_task_stop (stream->download_task);
       goto end_of_manifest;
@@ -2036,13 +2109,15 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
   if (G_UNLIKELY (stream->restart_download)) {
     GstSegment segment;
     GstEvent *seg_event;
-    GstClockTime cur, ts, offset;
+    GstClockTime cur, ts;
     gint64 pos;
 
     GST_DEBUG_OBJECT (stream->pad,
         "Activating stream due to reconfigure event");
 
-    cur = ts = stream->segment.position;
+    cur = ts =
+        gst_segment_to_stream_time (&stream->segment, GST_FORMAT_TIME,
+        stream->segment.position);
 
     if (gst_pad_peer_query_position (stream->pad, GST_FORMAT_TIME, &pos)) {
       ts = (GstClockTime) pos;
@@ -2076,16 +2151,21 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
     gst_segment_copy_into (&demux->segment, &segment);
 
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
+      GstClockTime offset, period_start;
+
+      offset =
+          gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
+      period_start = gst_adaptive_demux_get_period_start_time (demux);
+
       /* TODO check return */
       gst_adaptive_demux_stream_seek (demux, stream, ts);
 
-      if (cur < ts) {
-        segment.position = ts;
-      }
+      segment.position = ts - period_start + offset;
     }
-    stream->segment = segment;
-    offset = gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
-    stream->segment.start += offset;
+
+    /* The stream's segment is still correct except for
+     * the position, so let's send a new one with the
+     * updated position */
     seg_event = gst_event_new_segment (&stream->segment);
     gst_event_set_seqnum (seg_event, demux->priv->segment_seqnum);
     GST_DEBUG_OBJECT (stream->pad, "Sending restart segment: %"
@@ -2462,9 +2542,19 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
               stream->download_total_time * GST_USECOND, NULL)));
 
   if (GST_CLOCK_TIME_IS_VALID (duration)) {
+    GstClockTime offset =
+        gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
+    GstClockTime period_start =
+        gst_adaptive_demux_get_period_start_time (demux);
+
     stream->segment.position += duration;
-    if (stream->segment.position > demux->segment.position)
-      demux->segment.position = stream->segment.position;
+
+    /* Convert from position inside the stream's segment to the demuxer's
+     * segment, they are not necessarily the same */
+    if (stream->segment.position - offset + period_start >
+        demux->segment.position)
+      demux->segment.position =
+          stream->segment.position - offset + period_start;
   }
 
   if (gst_adaptive_demux_is_live (demux)
@@ -2491,7 +2581,7 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
       /* TODO only allow switching streams if other downloads are not ongoing */
       GST_DEBUG_OBJECT (demux, "Subclass wants new pads "
           "to do bitrate switching");
-      gst_adaptive_demux_expose_streams (demux, FALSE);
+      gst_adaptive_demux_expose_streams (demux);
       gst_adaptive_demux_start_tasks (demux);
       ret = GST_FLOW_EOS;
     }
@@ -2645,7 +2735,7 @@ gst_adaptive_demux_advance_period (GstAdaptiveDemux * demux)
 
   GST_DEBUG_OBJECT (demux, "Advancing to next period");
   klass->advance_period (demux);
-  gst_adaptive_demux_expose_streams (demux, FALSE);
+  gst_adaptive_demux_expose_streams (demux);
   gst_adaptive_demux_start_tasks (demux);
 }
 
