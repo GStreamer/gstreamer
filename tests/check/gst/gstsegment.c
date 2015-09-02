@@ -26,7 +26,7 @@ static void
 check_times (GstSegment * segment, guint64 position, guint64 stream_time,
     guint64 running_time)
 {
-  guint64 st, rt;
+  guint64 st, rt, pos;
 
   st = gst_segment_to_stream_time (segment, segment->format, position);
   rt = gst_segment_to_running_time (segment, segment->format, position);
@@ -35,6 +35,10 @@ check_times (GstSegment * segment, guint64 position, guint64 stream_time,
 
   fail_unless_equals_int64 (st, stream_time);
   fail_unless_equals_int64 (rt, running_time);
+  if (stream_time != -1) {
+    pos = gst_segment_position_from_stream_time (segment, segment->format, st);
+    fail_unless_equals_int64 (pos, position);
+  }
 }
 
 /* mess with the segment structure in the bytes format */
