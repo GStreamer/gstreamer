@@ -2680,6 +2680,25 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
             HAVE_QT_WINDOWING="yes"
           ], [AC_MSG_NOTICE([Could not find Qt Wayland integration])])
         fi
+        if test "x$GST_GL_HAVE_WINDOW_ANDROID" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EGL" = "x1"; then
+          PKG_CHECK_MODULES(QT_ANDROID, Qt5AndroidExtras, [
+            # c++ on android requires a standard library and there are multiple
+            # choices.  cerbero provides a pkg-config file the describes a choice
+            # so try to use that.  Outside cerbero one has to pass these flags
+            # manually for the library one is using
+            PKG_CHECK_MODULES(GNUSTL, gnustl, [
+              QT_CFLAGS="$QT_CFLAGS $GNUSTL_CFLAGS"
+              QT_LIBS="$QT_CFLAGS $GNUSTL_LIBS"
+              ], [
+              AC_MSG_NOTICE([Could not find Standard C++ library])])
+
+            AC_DEFINE([HAVE_QT_ANDROID], [],
+                [Define if Qt Android integration is installed])
+            QT_CFLAGS="$QT_CFLAGS $QT_ANDROID_CFLAGS"
+            QT_LIBS="$QT_LIBS $QT_ANDROID_LIBS"
+            HAVE_QT_WINDOWING="yes"
+          ], [AC_MSG_NOTICE([Could not find Qt Android integration])])
+        fi
         if test "x$HAVE_QT_WINDOWING" = "xno"; then
           AC_MSG_WARN([Could not find any Qt Windowing integration])
           HAVE_QT="no"

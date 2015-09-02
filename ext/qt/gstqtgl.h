@@ -18,41 +18,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_QSG_TEXTURE_H__
-#define __GST_QSG_TEXTURE_H__
+/* qt uses the same trick as us to typedef GLsync on gles2 but to a different
+ * type which confuses the preprocessor.  As it's never actually used by qt
+ * public headers, define it to something else to avoid redefinition
+ * warnings/errors */
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/gl/gl.h>
+#include <gst/gl/gstglconfig.h>
+#include <QtCore/qglobal.h>
 
-#include "gstqtgl.h"
-#include <QSGTexture>
+#if defined(QT_OPENGL_ES_2) && GST_GL_HAVE_WINDOW_ANDROID
+#define GLsync gst_qt_GLsync
+#include <QOpenGLContext>
 #include <QOpenGLFunctions>
-
-class GstQSGTexture : public QSGTexture, protected QOpenGLFunctions
-{
-    Q_OBJECT
-public:
-    GstQSGTexture ();
-    ~GstQSGTexture ();
-
-    void setCaps (GstCaps * caps);
-    gboolean setBuffer (GstBuffer * buffer);
-
-    /* QSGTexture */
-    void bind ();
-    int textureId () const;
-    QSize textureSize () const;
-    bool hasAlphaChannel () const;
-    bool hasMipmaps () const;
-
-private:
-    GstBuffer * buffer_;
-    GstBuffer * sync_buffer_;
-    GstGLContext * qt_context_;
-    GstMemory * mem_;
-    GstVideoInfo v_info;
-    GstVideoFrame v_frame;
-};
-
-#endif /* __GST_QSG_TEXTURE_H__ */
+#undef GLsync
+#endif /* defined(QT_OPENGL_ES_2) */
