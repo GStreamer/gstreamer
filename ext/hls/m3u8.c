@@ -943,12 +943,6 @@ gst_m3u8_client_update_variant_playlist (GstM3U8Client * self, gchar * data,
   return ret;
 }
 
-static gboolean
-_find_current (GstM3U8MediaFile * file, GstM3U8Client * client)
-{
-  return file->sequence != client->sequence;
-}
-
 static GList *
 find_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
 {
@@ -1126,16 +1120,19 @@ gst_m3u8_client_advance_fragment (GstM3U8Client * client, gboolean forward)
     GList *l;
 
     GST_DEBUG ("Looking for fragment %" G_GINT64_FORMAT, client->sequence);
-    l = g_list_find_custom (client->current->files, client,
-        (GCompareFunc) _find_current);
-    if (l == NULL) {
+    for (l = client->current->files; l != NULL; l = l->next) {
+      if (GST_M3U8_MEDIA_FILE (l->data)->sequence == client->sequence) {
+        client->current_file = l;
+        break;
+      }
+    }
+    if (client->current_file == NULL) {
       GST_DEBUG
           ("Could not find current fragment, trying next fragment directly");
       alternate_advance (client, forward);
       GST_M3U8_CLIENT_UNLOCK (client);
       return;
     }
-    client->current_file = l;
   }
 
   file = GST_M3U8_MEDIA_FILE (client->current_file->data);
@@ -1364,19 +1361,20 @@ out:
 guint64
 gst_m3u8_client_get_current_fragment_duration (GstM3U8Client * client)
 {
-  guint64 dur;
-  GList *list;
+  guint64 dur = GST_CLOCK_TIME_NONE;
+  GList *l;
 
   g_return_val_if_fail (client != NULL, 0);
 
   GST_M3U8_CLIENT_LOCK (client);
 
-  list = g_list_find_custom (client->current->files, client,
-      (GCompareFunc) _find_current);
-  if (list == NULL) {
-    dur = -1;
-  } else {
-    dur = GST_M3U8_MEDIA_FILE (list->data)->duration;
+  for (l = client->current->files; l != NULL; l = l->next) {
+    GstM3U8MediaFile *file = l->data;
+
+    if (file->sequence == client->sequence) {
+      dur = file->duration;
+      break;
+    }
   }
 
   GST_M3U8_CLIENT_UNLOCK (client);
