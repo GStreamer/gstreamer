@@ -99,7 +99,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
   if (res && self->priv->positionner)
     g_object_set (self->priv->positionner, "zorder",
-        GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
+        G_MAXUINT - GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
 
   return res;
 }
@@ -136,6 +136,8 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   /* That positionner will add metadata to buffers according to its
      properties, acting like a proxy for our smart-mixer dynamic pads. */
   positionner = gst_element_factory_make ("framepositionner", "frame_tagger");
+  g_object_set (positionner, "zorder",
+      G_MAXUINT - GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
 
   videoscale =
       gst_element_factory_make ("videoscale", "track-element-videoscale");

@@ -54,7 +54,7 @@ struct _GESSmartMixer
   GMutex lock;
 
   GstCaps *caps;
-  gboolean no_alpha;
+  gboolean disable_zorder_alpha;
 
   gpointer _ges_reserved[GES_PADDING];
 };

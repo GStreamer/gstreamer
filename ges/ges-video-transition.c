@@ -314,7 +314,7 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   mixer = ges_smart_mixer_new (NULL);
   g_assert (mixer);
-  GES_SMART_MIXER (mixer)->no_alpha = TRUE;
+  GES_SMART_MIXER (mixer)->disable_zorder_alpha = TRUE;
   gst_bin_add (GST_BIN (topbin), mixer);
 
   priv->mixer_sinka =

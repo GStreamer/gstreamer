@@ -101,13 +101,13 @@ parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info,
     return GST_PAD_PROBE_OK;
   }
 
-  if (!self->no_alpha) {
-    g_object_set (mixer_pad, "alpha", meta->alpha, NULL);
+  if (!self->disable_zorder_alpha) {
+    g_object_set (mixer_pad, "alpha", meta->alpha,
+        "zorder", meta->zorder, NULL);
   }
 
   g_object_set (mixer_pad, "xpos", meta->posx, "ypos",
-      meta->posy, "zorder", meta->zorder, "width", meta->width,
-      "height", meta->height, NULL);
+      meta->posy, "width", meta->width, "height", meta->height, NULL);
 
   return GST_PAD_PROBE_OK;
 }
