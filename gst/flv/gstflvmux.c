@@ -1125,6 +1125,10 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     data[11] |= (cpad->width << 1) & 0x02;
     data[11] |= (cpad->channels << 0) & 0x01;
 
+    GST_DEBUG_OBJECT (mux, "Creating byte %02x with "
+        "audio_codec:%d, rate:%d, width:%d, channels:%d",
+        data[11], cpad->audio_codec, cpad->rate, cpad->width, cpad->channels);
+
     if (cpad->audio_codec == 10) {
       data[12] = is_codec_data ? 0 : 1;
 
@@ -1144,8 +1148,14 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   GST_BUFFER_DURATION (tag) = GST_CLOCK_TIME_NONE;
 
   if (buffer) {
-    GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET (buffer);
-    GST_BUFFER_OFFSET_END (tag) = GST_BUFFER_OFFSET_END (buffer);
+    /* if we are streamable we copy over timestamps and offsets,
+       if not just copy the offsets */
+    if (mux->streamable) {
+      gst_buffer_copy_into (tag, buffer, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+    } else {
+      GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET (buffer);
+      GST_BUFFER_OFFSET_END (tag) = GST_BUFFER_OFFSET_END (buffer);
+    }
 
     /* mark the buffer if it's an audio buffer and there's also video being muxed
      * or it's a video interframe */
@@ -1298,7 +1308,8 @@ gst_flv_mux_write_header (GstFlvMux * mux)
   gst_caps_unref (caps);
 
   /* segment */
-  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_segment_init (&segment,
+      mux->streamable ? GST_FORMAT_TIME : GST_FORMAT_BYTES);
   gst_pad_push_event (mux->srcpad, gst_event_new_segment (&segment));
 
   /* push the header buffer, the metadata and the codec info, if any */
