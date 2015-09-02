@@ -813,9 +813,7 @@ gst_videoaggregator_pad_sink_setcaps (GstPad * pad, GstObject * parent,
 
   GST_VIDEO_AGGREGATOR_LOCK (vagg);
   if (GST_VIDEO_INFO_FORMAT (&vagg->info) != GST_VIDEO_FORMAT_UNKNOWN) {
-    if (GST_VIDEO_INFO_PAR_N (&vagg->info) != GST_VIDEO_INFO_PAR_N (&info)
-        || GST_VIDEO_INFO_PAR_D (&vagg->info) != GST_VIDEO_INFO_PAR_D (&info) ||
-        GST_VIDEO_INFO_INTERLACE_MODE (&vagg->info) !=
+    if (GST_VIDEO_INFO_INTERLACE_MODE (&vagg->info) !=
         GST_VIDEO_INFO_INTERLACE_MODE (&info)) {
       GST_ERROR_OBJECT (pad,
           "got input caps %" GST_PTR_FORMAT ", but " "current caps are %"
