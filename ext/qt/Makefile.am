@@ -1,4 +1,4 @@
-plugin_LTLIBRARIES = libqtsink.la
+plugin_LTLIBRARIES = libgstqtsink.la
 
 noinst_HEADERS = \
 	gstqsgtexture.h \
@@ -13,16 +13,16 @@ moc_generated = \
 BUILT_SOURCES = $(moc_generated)
 CLEANFILES = $(moc_generated)
 
-nodist_libqtsink_la_SOURCES = $(BUILT_SOURCES)
+nodist_libgstqtsink_la_SOURCES = $(BUILT_SOURCES)
 
-libqtsink_la_SOURCES = \
+libgstqtsink_la_SOURCES = \
 	gstqsgtexture.cc \
 	qtitem.cc \
 	gstqtsink.cc \
 	gstqtsink.h \
 	gstplugin.cc
 
-libqtsink_la_CXXFLAGS = \
+libgstqtsink_la_CXXFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_builddir)/gst-libs \
 	$(GST_CXXFLAGS) \
@@ -30,15 +30,15 @@ libqtsink_la_CXXFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(QT_CFLAGS)
 
-libqtsink_la_LIBADD = \
+libgstqtsink_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(QT_LIBS) \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_API_VERSION).la \
 	-lgstvideo-$(GST_API_VERSION)
 
-libqtsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libqtsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+libgstqtsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstqtsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 
 $(moc_generated): moc_%.cc: %.h
