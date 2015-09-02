@@ -740,7 +740,7 @@ gst_segment_clip (const GstSegment * segment, GstFormat format, guint64 start,
 }
 
 /**
- * gst_segment_to_position:
+ * gst_segment_position_from_running_time:
  * @segment: a #GstSegment structure.
  * @format: the format of the segment.
  * @running_time: the running_time in the segment
@@ -750,10 +750,12 @@ gst_segment_clip (const GstSegment * segment, GstFormat format, guint64 start,
  *
  * Returns: the position in the segment for @running_time. This function returns
  * -1 when @running_time is -1 or when it is not inside @segment.
+ *
+ * Since: 1.8
  */
 guint64
-gst_segment_to_position (const GstSegment * segment, GstFormat format,
-    guint64 running_time)
+gst_segment_position_from_running_time (const GstSegment * segment,
+    GstFormat format, guint64 running_time)
 {
   guint64 result;
   guint64 start, stop, base;
@@ -802,6 +804,33 @@ gst_segment_to_position (const GstSegment * segment, GstFormat format,
 }
 
 /**
+ * gst_segment_to_position:
+ * @segment: a #GstSegment structure.
+ * @format: the format of the segment.
+ * @running_time: the running_time in the segment
+ *
+ * Convert @running_time into a position in the segment so that
+ * gst_segment_to_running_time() with that position returns @running_time.
+ *
+ * Returns: the position in the segment for @running_time. This function returns
+ * -1 when @running_time is -1 or when it is not inside @segment.
+ *
+ * Deprecated. Use gst_segment_position_from_running_time() instead.
+ */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+guint64 gst_segment_to_position (const GstSegment * segment, GstFormat format,
+    guint64 running_time);
+#endif
+guint64
+gst_segment_to_position (const GstSegment * segment, GstFormat format,
+    guint64 running_time)
+{
+  return gst_segment_position_from_running_time (segment, format, running_time);
+}
+#endif
+
+/**
  * gst_segment_set_running_time:
  * @segment: a #GstSegment structure.
  * @format: the format of the segment.
@@ -821,7 +850,8 @@ gst_segment_set_running_time (GstSegment * segment, GstFormat format,
   guint64 start, stop;
 
   /* start by bringing the running_time into the segment position */
-  position = gst_segment_to_position (segment, format, running_time);
+  position =
+      gst_segment_position_from_running_time (segment, format, running_time);
 
   /* we must have a valid position now */
   if (G_UNLIKELY (position == -1))
@@ -884,7 +914,8 @@ gst_segment_offset_running_time (GstSegment * segment, GstFormat format,
       /* subtract all from segment.base, remainder in offset */
       offset -= segment->base;
       segment->base = 0;
-      position = gst_segment_to_position (segment, format, offset);
+      position =
+          gst_segment_position_from_running_time (segment, format, offset);
       if (position == -1)
         return FALSE;
 

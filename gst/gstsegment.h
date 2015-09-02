@@ -224,7 +224,10 @@ guint64      gst_segment_to_running_time     (const GstSegment *segment, GstForm
 
 gint         gst_segment_to_running_time_full (const GstSegment *segment, GstFormat format, guint64 position,
                                                guint64 * running_time);
+#ifndef GST_DISABLE_DEPRECATED
 guint64      gst_segment_to_position         (const GstSegment *segment, GstFormat format, guint64 running_time);
+#endif
+guint64      gst_segment_position_from_running_time (const GstSegment *segment, GstFormat format, guint64 running_time);
 
 gboolean     gst_segment_set_running_time    (GstSegment *segment, GstFormat format, guint64 running_time);
 

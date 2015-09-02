@@ -1659,7 +1659,9 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
       /* update the segment clipping regions for non-flushing seeks */
       if (segment->rate > 0.0) {
         if (end != -1)
-          position = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+          position =
+              gst_segment_position_from_running_time (segment, GST_FORMAT_TIME,
+              end);
         else
           position = segment->stop;
 
@@ -1667,7 +1669,9 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
         segment->position = position;
       } else {
         if (end != -1)
-          position = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+          position =
+              gst_segment_position_from_running_time (segment, GST_FORMAT_TIME,
+              end);
         else
           position = segment->start;
 
@@ -1803,10 +1807,14 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
         step_end = TRUE;
         if (segment->rate > 0.0) {
           *rstart = end;
-          *cstart = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+          *cstart =
+              gst_segment_position_from_running_time (segment, GST_FORMAT_TIME,
+              end);
         } else {
           *rstop = end;
-          *cstop = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+          *cstop =
+              gst_segment_position_from_running_time (segment, GST_FORMAT_TIME,
+              end);
         }
       }
       GST_DEBUG_OBJECT (sink,
