@@ -527,6 +527,7 @@ gboolean gst_mpd_client_seek_to_time (GstMpdClient * client, GDateTime * time);
 gint gst_mpd_client_check_time_position (GstMpdClient * client, GstActiveStream * stream, GstClockTime ts, gint64 * diff);
 GstClockTime gst_mpd_parser_get_stream_presentation_offset (GstMpdClient *client, guint stream_idx);
 gchar** gst_mpd_client_get_utc_timing_sources (GstMpdClient *client, guint methods, GstMPDUTCTimingType *selected_method);
+GstClockTime gst_mpd_parser_get_period_start_time (GstMpdClient *client);
 
 /* Period selection */
 guint gst_mpd_client_get_period_index_at_time (GstMpdClient * client, GstDateTime * time);

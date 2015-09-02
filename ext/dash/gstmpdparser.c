@@ -3757,12 +3757,24 @@ gst_mpd_parser_get_stream_presentation_offset (GstMpdClient * client,
 {
   GstActiveStream *stream = NULL;
 
-  g_return_val_if_fail (client != NULL, FALSE);
-  g_return_val_if_fail (client->active_streams != NULL, FALSE);
+  g_return_val_if_fail (client != NULL, 0);
+  g_return_val_if_fail (client->active_streams != NULL, 0);
   stream = g_list_nth_data (client->active_streams, stream_idx);
-  g_return_val_if_fail (stream != NULL, FALSE);
+  g_return_val_if_fail (stream != NULL, 0);
 
   return stream->presentationTimeOffset;
+}
+
+GstClockTime
+gst_mpd_parser_get_period_start_time (GstMpdClient * client)
+{
+  GstStreamPeriod *stream_period = NULL;
+
+  g_return_val_if_fail (client != NULL, 0);
+  stream_period = gst_mpdparser_get_stream_period (client);
+  g_return_val_if_fail (stream_period != NULL, 0);
+
+  return stream_period->start;
 }
 
 /**

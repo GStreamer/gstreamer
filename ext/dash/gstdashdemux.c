@@ -327,6 +327,14 @@ gst_dash_demux_get_presentation_offset (GstAdaptiveDemux * demux,
       dashstream->index);
 }
 
+static GstClockTime
+gst_dash_demux_get_period_start_time (GstAdaptiveDemux * demux)
+{
+  GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
+
+  return gst_mpd_parser_get_period_start_time (dashdemux->client);
+}
+
 static void
 gst_dash_demux_class_init (GstDashDemuxClass * klass)
 {
@@ -411,6 +419,8 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
       gst_dash_demux_get_live_seek_range;
   gstadaptivedemux_class->get_presentation_offset =
       gst_dash_demux_get_presentation_offset;
+  gstadaptivedemux_class->get_period_start_time =
+      gst_dash_demux_get_period_start_time;
 
   gstadaptivedemux_class->finish_fragment =
       gst_dash_demux_stream_fragment_finished;
