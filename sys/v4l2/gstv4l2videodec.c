@@ -336,15 +336,28 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Finishing decoding");
 
-  /* Keep queuing empty buffers until the processing thread has stopped,
-   * _pool_process() will return FLUSHING when that happened */
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-  while (ret == GST_FLOW_OK) {
-    buffer = gst_buffer_new ();
-    ret =
-        gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->
-            v4l2output->pool), &buffer);
-    gst_buffer_unref (buffer);
+
+  if (gst_v4l2_decoder_cmd (self->v4l2output, V4L2_DEC_CMD_STOP, 0)) {
+    GstTask *task = decoder->srcpad->task;
+
+    /* If the decoder stop command succeeded, just wait until processing is
+     * finished */
+    GST_OBJECT_LOCK (task);
+    while (GST_TASK_STATE (task) == GST_TASK_STARTED)
+      GST_TASK_WAIT (task);
+    GST_OBJECT_UNLOCK (task);
+    ret = GST_FLOW_FLUSHING;
+  } else {
+    /* otherwise keep queuing empty buffers until the processing thread has
+     * stopped, _pool_process() will return FLUSHING when that happened */
+    while (ret == GST_FLOW_OK) {
+      buffer = gst_buffer_new ();
+      ret =
+          gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->
+              v4l2output->pool), &buffer);
+      gst_buffer_unref (buffer);
+    }
   }
 
   /* and ensure the processing thread has stopped in case another error
