@@ -27,6 +27,7 @@
 #endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 
 #include <gst/gst.h>
 
@@ -152,6 +153,178 @@ GST_START_TEST (test_index_writing)
 
 GST_END_TEST;
 
+static GstBuffer *
+create_buffer (guint8 * data, gsize size,
+    GstClockTime timestamp, GstClockTime duration)
+{
+  GstBuffer * buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+    data, size, 0, size, NULL, NULL);
+  GST_BUFFER_PTS (buf) = timestamp;
+  GST_BUFFER_DTS (buf) = timestamp;
+  GST_BUFFER_DURATION (buf) = duration;
+  return buf;
+}
+
+GST_START_TEST (test_speex_streamable)
+{
+  GstBuffer * buf;
+  GstMapInfo map = GST_MAP_INFO_INIT;
+
+  guint8 header0[] = {
+      0x53, 0x70, 0x65, 0x65, 0x78, 0x20, 0x20, 0x20,
+      0x31, 0x2e, 0x32, 0x72, 0x63, 0x31, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+      0x50, 0x00, 0x00, 0x00, 0x80, 0x3e, 0x00, 0x00,
+      0x01, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00,
+      0x01, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
+      0x40, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  };
+
+  guint8 header1[] = {
+      0x1f, 0x00, 0x00, 0x00, 0x45, 0x6e, 0x63, 0x6f,
+      0x64, 0x65, 0x64, 0x20, 0x77, 0x69, 0x74, 0x68,
+      0x20, 0x47, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d,
+      0x65, 0x72, 0x20, 0x53, 0x70, 0x65, 0x65, 0x78,
+      0x65, 0x6e, 0x63, 0x00, 0x00, 0x00, 0x00, 0x01
+  };
+
+  guint8 buffer[] = {
+      0x36, 0x9d, 0x1b, 0x9a, 0x20, 0x00, 0x01, 0x68,
+      0xe8, 0xe8, 0xe8, 0xe8, 0xe8, 0xe8, 0xe8, 0x84,
+      0x00, 0xb4, 0x74, 0x74, 0x74, 0x74, 0x74, 0x74,
+      0x74, 0x42, 0x00, 0x5a, 0x3a, 0x3a, 0x3a, 0x3a,
+      0x3a, 0x3a, 0x3a, 0x21, 0x00, 0x2d, 0x1d, 0x1d,
+      0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1b, 0x3b, 0x60,
+      0xab, 0xab, 0xab, 0xab, 0xab, 0x0a, 0xba, 0xba,
+      0xba, 0xba, 0xb0, 0xab, 0xab, 0xab, 0xab, 0xab,
+      0x0a, 0xba, 0xba, 0xba, 0xba, 0xb7
+  };
+
+  GstCaps * caps = gst_caps_new_simple ("audio/x-speex",
+      "rate", G_TYPE_INT, 16000,
+      "channels", G_TYPE_INT, 1,
+      NULL);
+
+  const GstClockTime base_time = 123456789;
+  const GstClockTime duration_ms = 20;
+  const GstClockTime duration = duration_ms * GST_MSECOND;
+
+  GstHarness * h = gst_harness_new_with_padnames ("flvmux", "audio", "src");
+  gst_harness_set_src_caps (h, caps);
+  g_object_set (h->element, "streamable", 1, NULL);
+
+  /* push speex header0 */
+  gst_harness_push (h, create_buffer (header0, sizeof (header0), base_time, 0));
+
+  /* push speex header1 */
+  gst_harness_push (h, create_buffer (header1, sizeof (header1), base_time, 0));
+
+  /* push speex data */
+  gst_harness_push (h, create_buffer (buffer, sizeof (buffer),
+      base_time, duration));
+
+  /* push speex data 2*/
+  gst_harness_push (h, create_buffer (buffer, sizeof (buffer),
+      base_time + duration, duration));
+
+  /* pull out stream-start event */
+  gst_event_unref (gst_harness_pull_event (h));
+
+  /* pull out caps event */
+  gst_event_unref (gst_harness_pull_event (h));
+
+  /* pull out segment event and verify we are using GST_FORMAT_TIME */
+  {
+    GstEvent * event = gst_harness_pull_event (h);
+    const GstSegment * segment;
+    gst_event_parse_segment (event, &segment);
+    fail_unless_equals_int (GST_FORMAT_TIME, segment->format);
+    gst_event_unref (event);
+  }
+
+  /* pull FLV header buffer */
+  buf = gst_harness_pull (h);
+  gst_buffer_unref (buf);
+
+  /* pull Metadata buffer */
+  buf = gst_harness_pull (h);
+  gst_buffer_unref (buf);
+
+  /* pull header0 */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_uint64 (base_time, GST_BUFFER_PTS (buf));
+  fail_unless_equals_uint64 (base_time, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (0, GST_BUFFER_DURATION (buf));
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  /* 0x08 means it is audio */
+  fail_unless_equals_int (0x08, map.data[0]);
+  /* timestamp should be starting from 0 */
+  fail_unless_equals_int (0x00, map.data[6]);
+  /* 0xb2 means Speex, 16000Hz, Mono */
+  fail_unless_equals_int (0xb2, map.data[11]);
+  /* verify content is intact */
+  fail_unless_equals_int (0, memcmp (&map.data[12], header0, sizeof (header0)));
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unref (buf);
+
+  /* pull header1 */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_uint64 (base_time, GST_BUFFER_PTS (buf));
+  fail_unless_equals_uint64 (base_time, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (0, GST_BUFFER_DURATION (buf));
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  /* 0x08 means it is audio */
+  fail_unless_equals_int (0x08, map.data[0]);
+  /* timestamp should be starting from 0 */
+  fail_unless_equals_int (0x00, map.data[6]);
+  /* 0xb2 means Speex, 16000Hz, Mono */
+  fail_unless_equals_int (0xb2, map.data[11]);
+  /* verify content is intact */
+  fail_unless_equals_int (0, memcmp (&map.data[12], header1, sizeof (header1)));
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unref (buf);
+
+  /* pull data */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_uint64 (base_time, GST_BUFFER_PTS (buf));
+  fail_unless_equals_uint64 (base_time, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (duration, GST_BUFFER_DURATION (buf));
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  /* 0x08 means it is audio */
+  fail_unless_equals_int (0x08, map.data[0]);
+  /* timestamp should be starting from 0 */
+  fail_unless_equals_int (0x00, map.data[6]);
+  /* 0xb2 means Speex, 16000Hz, Mono */
+  fail_unless_equals_int (0xb2, map.data[11]);
+  /* verify content is intact */
+  fail_unless_equals_int (0, memcmp (&map.data[12], buffer, sizeof (buffer)));
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unref (buf);
+
+  /* pull data */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_uint64 (base_time + duration, GST_BUFFER_PTS (buf));
+  fail_unless_equals_uint64 (base_time + duration, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (duration, GST_BUFFER_DURATION (buf));
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  /* 0x08 means it is audio */
+  fail_unless_equals_int (0x08, map.data[0]);
+  /* timestamp should reflect the duration_ms */
+  fail_unless_equals_int (duration_ms, map.data[6]);
+  /* 0xb2 means Speex, 16000Hz, Mono */
+  fail_unless_equals_int (0xb2, map.data[11]);
+  /* verify content is intact */
+  fail_unless_equals_int (0, memcmp (&map.data[12], buffer, sizeof (buffer)));
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+}
+GST_END_TEST;
+
 static Suite *
 flvmux_suite (void)
 {
@@ -168,6 +341,8 @@ flvmux_suite (void)
 #endif
 
   tcase_add_loop_test (tc_chain, test_index_writing, 1, loop);
+
+  tcase_add_test (tc_chain, test_speex_streamable);
 
   return s;
 }
