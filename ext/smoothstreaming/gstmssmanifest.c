@@ -904,7 +904,7 @@ gst_mss_stream_get_fragment_gst_timestamp (GstMssStream * stream)
   guint64 timescale;
   GstMssStreamFragment *fragment;
 
-  g_return_val_if_fail (stream->active, GST_FLOW_ERROR);
+  g_return_val_if_fail (stream->active, GST_CLOCK_TIME_NONE);
 
   if (!stream->current_fragment) {
     GList *last = g_list_last (stream->fragments);
@@ -912,13 +912,12 @@ gst_mss_stream_get_fragment_gst_timestamp (GstMssStream * stream)
       return GST_CLOCK_TIME_NONE;
 
     fragment = last->data;
-    return fragment->time + (fragment->duration * fragment->repetitions);
+    time = fragment->time + (fragment->duration * fragment->repetitions);
+  } else {
+    fragment = stream->current_fragment->data;
+    time = fragment->time + (fragment->duration * stream->fragment_repetition_index);
   }
 
-  fragment = stream->current_fragment->data;
-
-  time =
-      fragment->time + (fragment->duration * stream->fragment_repetition_index);
   timescale = gst_mss_stream_get_timescale (stream);
   return (GstClockTime) gst_util_uint64_scale_round (time, GST_SECOND,
       timescale);
