@@ -63,7 +63,7 @@
     media_width = 320;
     media_height = 240;
 
-    player = gst_player_new_full (gst_player_video_overlay_video_renderer_new (video_view), NULL);
+    player = gst_player_new_full (gst_player_video_overlay_video_renderer_new ((__bridge gpointer)(video_view)), NULL);
     g_object_set (player, "uri", [uri UTF8String], NULL);
     
     gst_debug_set_threshold_for_name("gst-player", GST_LEVEL_TRACE);
