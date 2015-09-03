@@ -1673,6 +1673,19 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   height = ceil (height * overlay->render_scale);
   scalef *= overlay->render_scale;
 
+  if (width <= 0 || height <= 0) {
+    g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
+    GST_DEBUG_OBJECT (overlay,
+        "Overlay is outside video frame. Skipping text rendering");
+    return;
+  }
+
+  if (unscaled_height <= 0 || unscaled_width <= 0) {
+    g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
+    GST_DEBUG_OBJECT (overlay,
+        "Overlay is outside video frame. Skipping text rendering");
+    return;
+  }
   /* Prepare the transformation matrix. Note that the transformation happens
    * in reverse order. So for horizontal text, we will translate and then
    * scale. This is important to understand which scale shall be used. */
