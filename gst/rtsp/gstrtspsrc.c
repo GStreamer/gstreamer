@@ -1483,6 +1483,7 @@ gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
 {
   guint i, len;
   const gchar *proto;
+  GstCaps *global_caps;
 
   /* get proto */
   proto = gst_sdp_media_get_proto (media);
@@ -1500,10 +1501,17 @@ gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
   else
     goto unknown_proto;
 
+  /* Parse global SDP attributes once */
+  global_caps = gst_caps_new_empty_simple ("application/x-unknown");
+  GST_DEBUG ("mapping sdp session level attributes to caps");
+  gst_rtspsrc_sdp_attributes_to_caps (sdp->attributes, global_caps);
+  GST_DEBUG ("mapping sdp media level attributes to caps");
+  gst_rtspsrc_sdp_attributes_to_caps (media->attributes, global_caps);
+
   len = gst_sdp_media_formats_len (media);
   for (i = 0; i < len; i++) {
     gint pt;
-    GstCaps *caps;
+    GstCaps *caps, *outcaps;
     GstStructure *s;
     const gchar *enc;
     PtMapItem item;
@@ -1526,19 +1534,23 @@ gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
       if (strcmp (enc, "X-ASF-PF") == 0)
         stream->container = TRUE;
     }
-    GST_DEBUG ("mapping sdp session level attributes to caps");
-    gst_rtspsrc_sdp_attributes_to_caps (sdp->attributes, caps);
-    GST_DEBUG ("mapping sdp media level attributes to caps");
-    gst_rtspsrc_sdp_attributes_to_caps (media->attributes, caps);
+
+    /* Merge in global caps */
+    /* Intersect will merge in missing fields to the current caps */
+    outcaps = gst_caps_intersect (caps, global_caps);
+    gst_caps_unref (caps);
 
     /* the first pt will be the default */
     if (stream->ptmap->len == 0)
       stream->default_pt = pt;
 
     item.pt = pt;
-    item.caps = caps;
+    item.caps = outcaps;
+
     g_array_append_val (stream->ptmap, item);
   }
+
+  gst_caps_unref (global_caps);
   return;
 
 no_proto:
