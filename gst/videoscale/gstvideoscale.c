@@ -610,7 +610,8 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
 
     if (videoscale->gamma_decode) {
       gst_structure_set (options,
-          GST_VIDEO_CONVERTER_OPT_GAMMA_MODE, G_TYPE_STRING, "remap", NULL);
+          GST_VIDEO_CONVERTER_OPT_GAMMA_MODE, GST_TYPE_VIDEO_GAMMA_MODE,
+          GST_VIDEO_GAMMA_MODE_REMAP, NULL);
     }
 
     if (videoscale->convert)
