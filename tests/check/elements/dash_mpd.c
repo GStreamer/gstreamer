@@ -4082,7 +4082,14 @@ GST_START_TEST (dash_mpdparser_segment_template)
    * We expect it to not be limited to period duration.
    */
   expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 12000, 0);
-  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 10, 0);
+
+  /* while the period starts at 10ms, the fragment timestamp is supposed to be
+   * 0ms. timestamps are starting from 0 at every period, and only the overall
+   * composition of periods should consider the period start timestamp. In
+   * dashdemux this is done by mapping the 0 fragment timestamp to a stream
+   * time equal to the period start time.
+   */
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 0, 0);
 
   ret = gst_mpd_client_get_next_fragment (mpdclient, 0, &fragment);
   assert_equals_int (ret, TRUE);
