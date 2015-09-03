@@ -354,12 +354,34 @@ convert_to_internal_clock (GstDecklinkVideoSink * self,
     gst_clock_get_calibration (self->output->clock, &internal, &external,
         &rate_n, &rate_d);
 
-    if (rate_n != rate_d && self->internal_base_time != GST_CLOCK_TIME_NONE) {
+    if (self->internal_base_time != GST_CLOCK_TIME_NONE) {
       GstClockTime external_timestamp = *timestamp;
+      GstClockTime base_time;
 
       // Convert to the running time corresponding to both clock times
-      internal -= self->internal_base_time;
-      external -= self->external_base_time;
+      if (internal < self->internal_base_time)
+        internal = 0;
+      else
+        internal -= self->internal_base_time;
+
+      if (external < self->external_base_time)
+        external = 0;
+      else
+        external -= self->external_base_time;
+
+      // Convert timestamp to the "running time" since we started scheduled
+      // playback, that is the difference between the pipeline's base time
+      // and our own base time.
+      base_time = gst_element_get_base_time (GST_ELEMENT_CAST (self));
+      if (base_time > self->external_base_time)
+        base_time = 0;
+      else
+        base_time = self->external_base_time - base_time;
+
+      if (external_timestamp < base_time)
+        external_timestamp = 0;
+      else
+        external_timestamp = external_timestamp - base_time;
 
       // Get the difference in the external time, note
       // that the running time is external time.
@@ -398,7 +420,7 @@ convert_to_internal_clock (GstDecklinkVideoSink * self,
             GST_TIME_ARGS (external), ((gdouble) rate_n) / ((gdouble) rate_d));
       }
     } else {
-      GST_LOG_OBJECT (self, "No clock conversion needed, relative rate is 1.0");
+      GST_LOG_OBJECT (self, "No clock conversion needed, not started yet");
     }
   } else {
     GST_LOG_OBJECT (self, "No clock conversion needed, same clocks");
