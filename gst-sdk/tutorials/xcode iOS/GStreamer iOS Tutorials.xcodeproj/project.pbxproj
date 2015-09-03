@@ -1005,7 +1005,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
-				VALID_ARCHS = "armv7 i386";
+				VALID_ARCHS = "armv7 i386 arm64";
 			};
 			name = Debug;
 		};
@@ -1016,7 +1016,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
-				VALID_ARCHS = "armv7 i386";
+				VALID_ARCHS = "armv7 i386 arm64";
 			};
 			name = Release;
 		};
@@ -1210,6 +1210,8 @@
 					QuartzCore,
 					"-framework",
 					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1271,6 +1273,8 @@
 					QuartzCore,
 					"-framework",
 					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1340,6 +1344,8 @@
 					QuartzCore,
 					"-framework",
 					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1401,6 +1407,8 @@
 					QuartzCore,
 					"-framework",
 					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1470,6 +1478,8 @@
 					QuartzCore,
 					"-framework",
 					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1531,6 +1541,8 @@
 					QuartzCore,
 					"-framework",
 					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1600,6 +1612,8 @@
 					QuartzCore,
 					"-framework",
 					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1661,6 +1675,8 @@
 					QuartzCore,
 					"-framework",
 					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
