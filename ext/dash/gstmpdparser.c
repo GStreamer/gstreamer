@@ -3204,7 +3204,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
       GST_DEBUG ("No useful SegmentList node for the current Representation");
       /* here we should have a single segment for each representation, whose URL is encoded in the baseURL element */
       if (!gst_mpd_client_add_media_segment (stream, NULL, 1, 0, 0,
-              PeriodEnd - PeriodStart, PeriodStart, PeriodEnd - PeriodStart)) {
+              PeriodEnd - PeriodStart, 0, PeriodEnd - PeriodStart)) {
         return FALSE;
       }
     } else {
@@ -3219,7 +3219,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
       /* build segment list */
       i = stream->cur_segment_list->MultSegBaseType->startNumber;
       start = 0;
-      start_time = PeriodStart;
+      start_time = 0;
 
       GST_LOG ("Building media segment list using a SegmentList node");
       if (stream->cur_segment_list->MultSegBaseType->SegmentTimeline) {
@@ -3242,7 +3242,6 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           if (S->t > 0) {
             start = S->t;
             start_time = gst_util_uint64_scale (S->t, GST_SECOND, timescale);
-            start_time += PeriodStart;
           }
 
           if (!gst_mpd_client_add_media_segment (stream, SegmentURL->data, i,
@@ -3289,7 +3288,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
       gst_mpdparser_init_active_stream_segments (stream);
       /* here we should have a single segment for each representation, whose URL is encoded in the baseURL element */
       if (!gst_mpd_client_add_media_segment (stream, NULL, 1, 0, 0,
-              PeriodEnd - PeriodStart, PeriodStart, PeriodEnd - PeriodStart)) {
+              PeriodEnd - PeriodStart, 0, PeriodEnd - PeriodStart)) {
         return FALSE;
       }
     } else {
@@ -3298,7 +3297,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
       /* build segment list */
       i = mult_seg->startNumber;
       start = 0;
-      start_time = PeriodStart;
+      start_time = 0;
 
       GST_LOG ("Building media segment list using this template: %s",
           stream->cur_seg_template->media);
@@ -3329,7 +3328,6 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           if (S->t > 0) {
             start = S->t;
             start_time = gst_util_uint64_scale (S->t, GST_SECOND, timescale);
-            start_time += PeriodStart;
           }
 
           if (!gst_mpd_client_add_media_segment (stream, NULL, i, S->r, start,
@@ -3353,7 +3351,8 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
 
   if (last_media_segment && GST_CLOCK_TIME_IS_VALID (PeriodEnd)) {
     if (last_media_segment->start + last_media_segment->duration > PeriodEnd) {
-      last_media_segment->duration = PeriodEnd - last_media_segment->start;
+      last_media_segment->duration =
+          PeriodEnd - PeriodStart - last_media_segment->start;
       GST_LOG ("Fixed duration of last segment: %" GST_TIME_FORMAT,
           GST_TIME_ARGS (last_media_segment->duration));
     }
