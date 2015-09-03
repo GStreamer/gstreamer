@@ -1858,7 +1858,6 @@ static gboolean
 parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
 {
   gboolean res = FALSE;
-  gchar *p, *kmpid;
   gsize size;
   guchar *data;
   GstMIKEYMessage *msg;
@@ -1866,17 +1865,28 @@ parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
   const gchar *srtp_cipher;
   const gchar *srtp_auth;
 
-  p = (gchar *) keymgmt;
+  {
+    gchar *orig_value;
+    gchar *p, *kmpid;
 
-  SKIP_SPACES (p);
-  if (*p == '\0')
-    return FALSE;
+    p = orig_value = g_strdup (keymgmt);
 
-  PARSE_STRING (p, " ", kmpid);
-  if (!g_str_equal (kmpid, "mikey"))
-    return FALSE;
+    SKIP_SPACES (p);
+    if (*p == '\0') {
+      g_free (orig_value);
+      return FALSE;
+    }
 
-  data = g_base64_decode (p, &size);
+    PARSE_STRING (p, " ", kmpid);
+    if (kmpid == NULL || !g_str_equal (kmpid, "mikey")) {
+      g_free (orig_value);
+      return FALSE;
+    }
+    data = g_base64_decode (p, &size);
+
+    g_free (orig_value);        /* Don't need this any more */
+  }
+
   if (data == NULL)
     return FALSE;
 
@@ -1984,6 +1994,7 @@ parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
         gst_buffer_new_wrapped (g_memdup (pkd->key_data, pkd->key_len),
         pkd->key_len);
     gst_caps_set_simple (caps, "srtp-key", GST_TYPE_BUFFER, buf, NULL);
+    gst_buffer_unref (buf);
   }
 
   gst_caps_set_simple (caps,
@@ -5940,6 +5951,7 @@ gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPConnection * conn,
 
     switch (int_code) {
       case GST_RTSP_STS_UNAUTHORIZED:
+      case GST_RTSP_STS_NOT_FOUND:
         if (gst_rtspsrc_setup_auth (src, response)) {
           /* Try the request/response again after configuring the auth info
            * and loop again */
@@ -6335,10 +6347,11 @@ default_srtcp_params (void)
   GstBuffer *buf;
   guint8 *key_data;
 #define KEY_SIZE 30
+  guint data_size = GST_ROUND_UP_4 (KEY_SIZE);
 
   /* create a random key */
-  key_data = g_malloc (KEY_SIZE);
-  for (i = 0; i < KEY_SIZE; i += 4)
+  key_data = g_malloc (data_size);
+  for (i = 0; i < data_size; i += 4)
     GST_WRITE_UINT32_BE (key_data + i, g_random_int ());
 
   buf = gst_buffer_new_wrapped (key_data, KEY_SIZE);
