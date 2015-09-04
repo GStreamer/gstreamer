@@ -138,6 +138,8 @@ struct _GstAdaptiveDemuxStream
   /* download tooling */
   GstElement *src;
   GstPad *src_srcpad;
+  GstElement *uri_handler;
+  GstElement *queue;
   GMutex fragment_download_lock;
   GCond fragment_download_cond;
   gboolean download_finished;   /* protected by fragment_download_lock */
@@ -149,15 +151,6 @@ struct _GstAdaptiveDemuxStream
   gint64 download_total_time;
   gint64 download_total_bytes;
   guint64 current_download_rate;
-
-  /* Per fragment download information */
-  guint64 fragment_total_time;
-  guint64 fragment_total_size;
-
-  /* Average for the last fragments */
-  guint64 moving_bitrate;
-  guint moving_index;
-  guint64 *fragment_bitrates;
 
   GstAdaptiveDemuxStreamFragment fragment;
 
