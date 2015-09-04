@@ -1682,13 +1682,23 @@ static void
 gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
 {
   const GstGLFuncs *gl = gl_sink->context->gl_vtable;
+  GError *error = NULL;
 
-  gl_sink->redisplay_shader = gst_gl_shader_new (gl_sink->context);
-
-  if (!gst_gl_shader_compile_with_default_vf_and_check
-      (gl_sink->redisplay_shader, &gl_sink->attr_position,
-          &gl_sink->attr_texture))
+  if (!(gl_sink->redisplay_shader =
+          gst_gl_shader_new_link_with_stages (gl_sink->context, &error,
+              gst_glsl_stage_new_default_vertex (gl_sink->context),
+              gst_glsl_stage_new_default_fragment (gl_sink->context), NULL))) {
+    GST_ERROR_OBJECT (gl_sink, "Failed to link shader: %s", error->message);
     gst_glimage_sink_cleanup_glthread (gl_sink);
+    return;
+  }
+
+  gl_sink->attr_position =
+      gst_gl_shader_get_attribute_location (gl_sink->redisplay_shader,
+      "a_position");
+  gl_sink->attr_texture =
+      gst_gl_shader_get_attribute_location (gl_sink->redisplay_shader,
+      "a_texcoord");
 
   if (gl->GenVertexArrays) {
     gl->GenVertexArrays (1, &gl_sink->vao);

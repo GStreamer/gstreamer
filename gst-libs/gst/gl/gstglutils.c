@@ -375,20 +375,60 @@ gst_gl_context_del_fbo (GstGLContext * context, GLuint fbo, GLuint depth_buffer)
   gst_object_unref (frame);
 }
 
-static void
-_compile_shader (GstGLContext * context, GstGLShader ** shader)
+struct _compile_shader
 {
+  GstGLShader **shader;
+  const gchar *vertex_src;
+  const gchar *fragment_src;
+};
+
+static void
+_compile_shader (GstGLContext * context, struct _compile_shader *data)
+{
+  GstGLShader *shader;
+  GstGLSLStage *vert, *frag;
   GError *error = NULL;
 
-  gst_gl_shader_compile (*shader, &error);
-  if (error) {
-    gst_gl_context_set_error (context, "%s", error->message);
+  shader = gst_gl_shader_new (context);
+
+  if (data->vertex_src) {
+    vert = gst_glsl_stage_new_with_string (context, GL_VERTEX_SHADER,
+        GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_NONE, data->vertex_src);
+    if (!gst_glsl_stage_compile (vert, &error)) {
+      GST_ERROR_OBJECT (vert, "%s", error->message);
+      gst_object_unref (shader);
+      return;
+    }
+    if (!gst_gl_shader_attach (shader, vert)) {
+      gst_object_unref (shader);
+      return;
+    }
+  }
+
+  if (data->fragment_src) {
+    frag = gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+        GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_NONE, data->fragment_src);
+    if (!gst_glsl_stage_compile (frag, &error)) {
+      GST_ERROR_OBJECT (frag, "%s", error->message);
+      gst_object_unref (shader);
+      return;
+    }
+    if (!gst_gl_shader_attach (shader, frag)) {
+      gst_object_unref (shader);
+      return;
+    }
+  }
+
+  if (!gst_gl_shader_link (shader, &error)) {
+    GST_ERROR_OBJECT (shader, "%s", error->message);
     g_error_free (error);
     error = NULL;
     gst_gl_context_clear_shader (context);
-    gst_object_unref (*shader);
-    *shader = NULL;
+    gst_object_unref (shader);
+    return;
   }
+
+  *data->shader = shader;
 }
 
 /* Called by glfilter */
@@ -396,18 +436,17 @@ gboolean
 gst_gl_context_gen_shader (GstGLContext * context, const gchar * vert_src,
     const gchar * frag_src, GstGLShader ** shader)
 {
+  struct _compile_shader data;
+
   g_return_val_if_fail (frag_src != NULL || vert_src != NULL, FALSE);
   g_return_val_if_fail (shader != NULL, FALSE);
 
-  *shader = gst_gl_shader_new (context);
-
-  if (frag_src)
-    gst_gl_shader_set_fragment_source (*shader, frag_src);
-  if (vert_src)
-    gst_gl_shader_set_vertex_source (*shader, vert_src);
+  data.shader = shader;
+  data.vertex_src = vert_src;
+  data.fragment_src = frag_src;
 
   gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _compile_shader,
-      shader);
+      &data);
 
   return *shader != NULL;
 }

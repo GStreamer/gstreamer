@@ -25,38 +25,8 @@
 
 #include "gl.h"
 #include "gstglshader.h"
+#include "gstglsl_private.h"
 
-/* FIXME: separate into separate shader stage objects that can be added/removed
- * independently of the shader program */
-
-static const gchar *es2_version_header = "#version 100\n";
-
-/* *INDENT-OFF* */
-static const gchar *simple_vertex_shader_str_gles2 =
-      "attribute vec4 a_position;\n"
-      "attribute vec2 a_texcoord;\n"
-      "varying vec2 v_texcoord;\n"
-      "void main()\n"
-      "{\n"
-      "   gl_Position = a_position;\n"
-      "   v_texcoord = a_texcoord;\n"
-      "}\n";
-
-static const gchar *simple_fragment_shader_str_gles2 =
-      "#ifdef GL_ES\n"
-      "precision mediump float;\n"
-      "#endif\n"
-      "varying vec2 v_texcoord;\n"
-      "uniform sampler2D tex;\n"
-      "void main()\n"
-      "{\n"
-      "  gl_FragColor = texture2D(tex, v_texcoord);\n"
-      "}";
-/* *INDENT-ON* */
-
-#ifndef GL_COMPILE_STATUS
-#define GL_COMPILE_STATUS             0x8B81
-#endif
 #ifndef GLhandleARB
 #define GLhandleARB GLuint
 #endif
@@ -94,27 +64,17 @@ typedef struct _GstGLShaderVTable
 enum
 {
   PROP_0,
-  PROP_VERTEX_SRC,
-  PROP_FRAGMENT_SRC,
-  PROP_COMPILED,
-  PROP_ACTIVE                   /* unused */
+  PROP_LINKED,
 };
 
 struct _GstGLShaderPrivate
 {
-  gchar *vertex_src;
-  gchar *fragment_src;
-
-  GLhandleARB vertex_handle;
-  GLhandleARB fragment_handle;
   GLhandleARB program_handle;
+  GList *stages;
 
-  gboolean compiled;
-  gboolean active;
+  gboolean linked;
 
-  GstGLAPI gl_api;
-
-  GstGLShaderVTable vtable;
+  GstGLSLFuncs vtable;
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_shader_debug);
@@ -130,21 +90,21 @@ _cleanup_shader (GstGLContext * context, GstGLShader * shader)
 {
   GstGLShaderPrivate *priv = shader->priv;
 
+  GST_OBJECT_LOCK (shader);
+
   /* release shader objects */
-  gst_gl_shader_release (shader);
+  gst_gl_shader_release_unlocked (shader);
 
   /* delete program */
   if (priv->program_handle) {
     GST_TRACE ("finalizing program shader %u", priv->program_handle);
 
     priv->vtable.DeleteProgram (priv->program_handle);
-    /* err = glGetError (); */
-    /* GST_WARNING ("error: 0x%x", err);  */
-    /* glGetObjectParameteriv(priv->program_handle, GL_OBJECT_DELETE_STATUS_, &status); */
-    /* GST_INFO ("program deletion status:%s", status == GL_TRUE ? "true" : "false" ); */
   }
 
   GST_DEBUG ("shader deleted %u", priv->program_handle);
+
+  GST_OBJECT_UNLOCK (shader);
 }
 
 static void
@@ -158,14 +118,9 @@ gst_gl_shader_finalize (GObject * object)
 
   GST_TRACE_OBJECT (shader, "finalizing shader %u", priv->program_handle);
 
-  g_free (priv->vertex_src);
-  g_free (priv->fragment_src);
-
   gst_gl_context_thread_add (shader->context,
       (GstGLContextThreadFunc) _cleanup_shader, shader);
 
-  priv->fragment_handle = 0;
-  priv->vertex_handle = 0;
   priv->program_handle = 0;
 
   if (shader->context) {
@@ -180,15 +135,7 @@ static void
 gst_gl_shader_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstGLShader *shader = GST_GL_SHADER (object);
-
   switch (prop_id) {
-    case PROP_VERTEX_SRC:
-      gst_gl_shader_set_vertex_source (shader, g_value_get_string (value));
-      break;
-    case PROP_FRAGMENT_SRC:
-      gst_gl_shader_set_fragment_source (shader, g_value_get_string (value));
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -203,27 +150,13 @@ gst_gl_shader_get_property (GObject * object,
   GstGLShaderPrivate *priv = shader->priv;
 
   switch (prop_id) {
-    case PROP_VERTEX_SRC:
-      g_value_set_string (value, priv->vertex_src);
-      break;
-    case PROP_FRAGMENT_SRC:
-      g_value_set_string (value, priv->fragment_src);
-      break;
-    case PROP_COMPILED:
-      g_value_set_boolean (value, priv->compiled);
+    case PROP_LINKED:
+      g_value_set_boolean (value, priv->linked);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-
-}
-
-int
-gst_gl_shader_get_program_handle (GstGLShader * shader)
-{
-  GstGLShaderPrivate *priv = shader->priv;
-  return (int) priv->program_handle;
 }
 
 static void
@@ -239,80 +172,12 @@ gst_gl_shader_class_init (GstGLShaderClass * klass)
   obj_class->get_property = gst_gl_shader_get_property;
 
   /* .. and install properties */
-
   g_object_class_install_property (obj_class,
-      PROP_VERTEX_SRC,
-      g_param_spec_string ("vertex-src",
-          "Vertex Source",
-          "GLSL Vertex Shader source code", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (obj_class,
-      PROP_FRAGMENT_SRC,
-      g_param_spec_string ("fragment-src",
-          "Fragment Source",
-          "GLSL Fragment Shader source code", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (obj_class,
-      PROP_ACTIVE,
-      g_param_spec_string ("active",
-          "Active", "Enable/Disable the shader", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (obj_class,
-      PROP_COMPILED,
-      g_param_spec_boolean ("compiled",
-          "Compiled",
-          "Shader compile and link status", FALSE,
+      PROP_LINKED,
+      g_param_spec_boolean ("linked",
+          "Linked",
+          "Shader link status", FALSE,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-}
-
-void
-gst_gl_shader_set_vertex_source (GstGLShader * shader, const gchar * src)
-{
-  GstGLShaderPrivate *priv;
-
-  g_return_if_fail (GST_GL_IS_SHADER (shader));
-  g_return_if_fail (src != NULL);
-
-  priv = shader->priv;
-
-  if (gst_gl_shader_is_compiled (shader))
-    gst_gl_shader_release (shader);
-
-  g_free (priv->vertex_src);
-
-  priv->vertex_src = g_strdup (src);
-}
-
-void
-gst_gl_shader_set_fragment_source (GstGLShader * shader, const gchar * src)
-{
-  GstGLShaderPrivate *priv;
-
-  g_return_if_fail (GST_GL_IS_SHADER (shader));
-  g_return_if_fail (src != NULL);
-
-  priv = shader->priv;
-
-  if (gst_gl_shader_is_compiled (shader))
-    gst_gl_shader_release (shader);
-
-  g_free (priv->fragment_src);
-
-  priv->fragment_src = g_strdup (src);
-}
-
-const gchar *
-gst_gl_shader_get_vertex_source (GstGLShader * shader)
-{
-  g_return_val_if_fail (GST_GL_IS_SHADER (shader), NULL);
-  return shader->priv->vertex_src;
-}
-
-const gchar *
-gst_gl_shader_get_fragment_source (GstGLShader * shader)
-{
-  g_return_val_if_fail (GST_GL_IS_SHADER (shader), NULL);
-  return shader->priv->fragment_src;
 }
 
 static void
@@ -323,268 +188,426 @@ gst_gl_shader_init (GstGLShader * self)
 
   priv = self->priv = GST_GL_SHADER_GET_PRIVATE (self);
 
-  priv->vertex_src = NULL;
-  priv->fragment_src = NULL;
-
-  priv->fragment_handle = 0;
-  priv->vertex_handle = 0;
-
-  priv->compiled = FALSE;
-  priv->active = FALSE;         /* unused at the moment */
-
-  /* FIXME: add API to get/set this for each shader */
-  priv->gl_api = GST_GL_API_ANY;
+  priv->linked = FALSE;
 }
 
-static gboolean
-_fill_vtable (GstGLShader * shader, GstGLContext * context)
-{
-  GstGLFuncs *gl = context->gl_vtable;
-  GstGLShaderVTable *vtable = &shader->priv->vtable;
-
-  if (gl->CreateProgram) {
-    vtable->CreateProgram = gl->CreateProgram;
-    vtable->DeleteProgram = gl->DeleteProgram;
-    vtable->UseProgram = gl->UseProgram;
-
-    vtable->CreateShader = gl->CreateShader;
-    vtable->DeleteShader = gl->DeleteShader;
-    vtable->AttachShader = gl->AttachShader;
-    vtable->DetachShader = gl->DetachShader;
-
-    vtable->GetAttachedShaders = gl->GetAttachedShaders;
-
-    vtable->GetShaderInfoLog = gl->GetShaderInfoLog;
-    vtable->GetShaderiv = gl->GetShaderiv;
-    vtable->GetProgramInfoLog = gl->GetProgramInfoLog;
-    vtable->GetProgramiv = gl->GetProgramiv;
-  } else if (gl->CreateProgramObject) {
-    vtable->CreateProgram = gl->CreateProgramObject;
-    vtable->DeleteProgram = gl->DeleteObject;
-    vtable->UseProgram = gl->UseProgramObject;
-
-    vtable->CreateShader = gl->CreateShaderObject;
-    vtable->DeleteShader = gl->DeleteObject;
-    vtable->AttachShader = gl->AttachObject;
-    vtable->DetachShader = gl->DetachObject;
-
-    vtable->GetAttachedShaders = gl->GetAttachedObjects;
-
-    vtable->GetShaderInfoLog = gl->GetInfoLog;
-    vtable->GetShaderiv = gl->GetObjectParameteriv;
-    vtable->GetProgramInfoLog = gl->GetInfoLog;
-    vtable->GetProgramiv = gl->GetObjectParameteriv;
-  } else {
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-GstGLShader *
-gst_gl_shader_new (GstGLContext * context)
+static GstGLShader *
+_new_with_stages_va_list (GstGLContext * context, GError ** error,
+    va_list varargs)
 {
   GstGLShader *shader;
+  GstGLSLStage *stage;
 
   g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
 
   shader = g_object_new (GST_GL_TYPE_SHADER, NULL);
   shader->context = gst_object_ref (context);
 
-  GST_DEBUG_OBJECT (shader, "Created new GLShader for context %" GST_PTR_FORMAT,
-      context);
+  while ((stage = va_arg (varargs, GstGLSLStage *))) {
+    if (!gst_glsl_stage_compile (stage, error)) {
+      gst_object_unref (shader);
+      return NULL;
+    }
+    if (!gst_gl_shader_attach (shader, stage)) {
+      g_set_error (error, GST_GLSL_ERROR, GST_GLSL_ERROR_PROGRAM,
+          "Failed to attach stage to program");
+      gst_object_unref (shader);
+      return NULL;
+    }
+  }
 
   return shader;
 }
 
-gboolean
-gst_gl_shader_is_compiled (GstGLShader * shader)
+/**
+ * gst_gl_shader_new_link_with_stages:
+ * @context: a #GstGLContext
+ * @error: a #GError
+ *
+ * Each stage will attempt to be compiled and attached to @shader.  Then
+ * the shader will be linked. On error, %NULL will be returned and @error will
+ * contain the details of the error.
+ *
+ * Note: must be called in the GL thread
+ *
+ * Returns: (transfer full): a new @shader with the specified stages.
+ */
+GstGLShader *
+gst_gl_shader_new_link_with_stages (GstGLContext * context, GError ** error,
+    ...)
 {
+  GstGLShader *shader;
+  va_list varargs;
+
+  va_start (varargs, error);
+  shader = _new_with_stages_va_list (context, error, varargs);
+  va_end (varargs);
+
+  if (!shader)
+    return NULL;
+
+  if (!gst_gl_shader_link (shader, error))
+    return NULL;
+
+  return shader;
+}
+
+/**
+ * gst_gl_shader_new_with_stages:
+ * @context: a #GstGLContext
+ * @error: a #GError
+ *
+ * Each stage will attempt to be compiled and attached to @shader.  On error,
+ * %NULL will be returned and @error will contain the details of the error.
+ *
+ * Note: must be called in the GL thread
+ *
+ * Returns: (transfer full): a new @shader with the specified stages.
+ */
+GstGLShader *
+gst_gl_shader_new_with_stages (GstGLContext * context, GError ** error, ...)
+{
+  GstGLShader *shader;
+  va_list varargs;
+
+  va_start (varargs, error);
+  shader = _new_with_stages_va_list (context, error, varargs);
+  va_end (varargs);
+
+  return shader;
+}
+
+/**
+ * gst_gl_shader_new:
+ * @context: a #GstGLContext
+ *
+ * Note: must be called in the GL thread
+ *
+ * Returns: (transfer full): a new empty @shader
+ */
+GstGLShader *
+gst_gl_shader_new (GstGLContext * context)
+{
+  return gst_gl_shader_new_with_stages (context, NULL, NULL);
+}
+
+/**
+ * gst_gl_shader_new_default:
+ * @context: a #GstGLContext
+ *
+ * Note: must be called in the GL thread
+ *
+ * Returns: (transfer full): a default @shader
+ */
+GstGLShader *
+gst_gl_shader_new_default (GstGLContext * context, GError ** error)
+{
+  return gst_gl_shader_new_link_with_stages (context, error,
+      gst_glsl_stage_new_default_vertex (context),
+      gst_glsl_stage_new_default_fragment (context), NULL);
+}
+
+/**
+ * gst_gl_shader_is_linked:
+ * @shader: a #GstGLShader
+ *
+ * Note: must be called in the GL thread
+ *
+ * Returns: whether @shader has been successfully linked
+ */
+gboolean
+gst_gl_shader_is_linked (GstGLShader * shader)
+{
+  gboolean ret;
+
   g_return_val_if_fail (GST_GL_IS_SHADER (shader), FALSE);
 
-  return shader->priv->compiled;
+  GST_OBJECT_LOCK (shader);
+  ret = shader->priv->linked;
+  GST_OBJECT_UNLOCK (shader);
+
+  return ret;
 }
 
 static gboolean
-_shader_string_has_version (const gchar * str)
+_ensure_program (GstGLShader * shader)
 {
-  gboolean sl_comment = FALSE;
-  gboolean ml_comment = FALSE;
-  gboolean has_version = FALSE;
-  gint i = 0;
+  if (shader->priv->program_handle)
+    return TRUE;
 
-  /* search for #version to allow for preceeding comments as allowed by the
-   * GLSL specification */
-  while (str && str[i] != '\0' && i < 1024) {
-    if (sl_comment) {
-      if (str[i] != '\n')
-        sl_comment = FALSE;
-      i++;
-      continue;
-    }
+  shader->priv->program_handle = shader->priv->vtable.CreateProgram ();
+  return shader->priv->program_handle != 0;
+}
 
-    if (ml_comment) {
-      if (g_strstr_len (&str[i], 2, "*/")) {
-        ml_comment = FALSE;
-        i += 2;
-      } else {
-        i++;
-      }
-      continue;
-    }
+/**
+ * gst_gl_shader_get_program_handle:
+ * @shader: a #GstGLShader
+ *
+ * Returns: the GL program handle for this shader
+ */
+int
+gst_gl_shader_get_program_handle (GstGLShader * shader)
+{
+  int ret;
 
-    if (g_strstr_len (&str[i], 2, "//")) {
-      sl_comment = TRUE;
-      i += 2;
-      continue;
-    }
+  g_return_val_if_fail (GST_GL_IS_SHADER (shader), 0);
 
-    if (g_strstr_len (&str[i], 2, "/*")) {
-      ml_comment = TRUE;
-      i += 2;
-      continue;
-    }
+  GST_OBJECT_LOCK (shader);
+  ret = (int) shader->priv->program_handle;
+  GST_OBJECT_UNLOCK (shader);
 
-    if (g_strstr_len (&str[i], 1, "#")) {
-      if (g_strstr_len (&str[i], 8, "#version"))
-        has_version = TRUE;
-      break;
-    }
+  return ret;
+}
 
-    i++;
+/**
+ * gst_gl_shader_detach_unlocked:
+ * @shader: a #GstGLShader
+ * @stage: a #GstGLSLStage to attach
+ *
+ * Detaches @stage from @shader.  @stage must have been successfully attached
+ * to @shader with gst_gl_shader_attach() or gst_gl_shader_attach_unlocked().
+ *
+ * Note: must be called in the GL thread
+ */
+void
+gst_gl_shader_detach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
+{
+  guint stage_handle;
+  GList *elem;
+
+  g_return_if_fail (GST_GL_IS_SHADER (shader));
+  g_return_if_fail (GST_IS_GLSL_STAGE (stage));
+
+  if (!_gst_glsl_funcs_fill (&shader->priv->vtable, shader->context)) {
+    GST_WARNING_OBJECT (shader, "Failed to retreive required GLSL functions");
+    return;
   }
 
-  return has_version;
+  if (!shader->priv->program_handle)
+    return;
+
+  elem = g_list_find (shader->priv->stages, stage);
+  if (!elem) {
+    GST_FIXME_OBJECT (shader, "Could not find stage %p in shader %p", stage,
+        shader);
+    return;
+  }
+
+  stage_handle = gst_glsl_stage_get_handle (stage);
+  if (!stage_handle) {
+    GST_FIXME_OBJECT (shader, "Stage %p doesn't have a GL handle", stage);
+    return;
+  }
+
+  g_assert (shader->context->gl_vtable->IsProgram (shader->priv->
+          program_handle));
+  g_assert (shader->context->gl_vtable->IsShader (stage_handle));
+
+  GST_LOG_OBJECT (shader, "detaching shader %i from program %i", stage_handle,
+      (int) shader->priv->program_handle);
+  shader->priv->vtable.DetachShader (shader->priv->program_handle,
+      stage_handle);
+
+  shader->priv->stages = g_list_remove_link (shader->priv->stages, elem);
+  gst_object_unref (stage);
+  g_list_free_1 (elem);
 }
 
-static void
-_maybe_prepend_version (GstGLShader * shader, const gchar * shader_str,
-    gint * n_vertex_sources, const gchar *** vertex_sources)
+/**
+ * gst_gl_shader_detach:
+ * @shader: a #GstGLShader
+ * @stage: a #GstGLSLStage to attach
+ *
+ * Detaches @stage from @shader.  @stage must have been successfully attached
+ * to @shader with gst_gl_shader_attach() or gst_gl_shader_attach_unlocked().
+ *
+ * Note: must be called in the GL thread
+ */
+void
+gst_gl_shader_detach (GstGLShader * shader, GstGLSLStage * stage)
 {
-  gint n = 1;
+  g_return_if_fail (GST_GL_IS_SHADER (shader));
+  g_return_if_fail (GST_IS_GLSL_STAGE (stage));
 
-  /* FIXME: this all an educated guess */
-  if (gst_gl_context_check_gl_version (shader->context, GST_GL_API_OPENGL3, 3,
-          0)
-      && (shader->priv->gl_api & GST_GL_API_GLES2) != 0
-      && !_shader_string_has_version (shader_str))
-    n = 2;
-
-  *vertex_sources = g_malloc0 (n * sizeof (gchar *));
-
-  if (n > 1)
-    *vertex_sources[0] = es2_version_header;
-
-  (*vertex_sources)[n - 1] = shader_str;
-  *n_vertex_sources = n;
+  GST_OBJECT_LOCK (shader);
+  gst_gl_shader_detach_unlocked (shader, stage);
+  GST_OBJECT_UNLOCK (shader);
 }
 
+/**
+ * gst_gl_shader_attach_unlocked:
+ * @shader: a #GstGLShader
+ * @stage: a #GstGLSLStage to attach
+ *
+ * Attaches @stage to @shader.  @stage must have been successfully compiled
+ * with gst_glsl_stage_compile().
+ *
+ * Note: must be called in the GL thread
+ *
+ * Returns: whether @stage could be attached to @shader
+ */
 gboolean
-gst_gl_shader_compile (GstGLShader * shader, GError ** error)
+gst_gl_shader_attach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-
-  gchar info_buffer[2048];
-  gint len = 0;
-  GLint status = GL_FALSE;
+  guint stage_handle;
 
   g_return_val_if_fail (GST_GL_IS_SHADER (shader), FALSE);
+  g_return_val_if_fail (GST_IS_GLSL_STAGE (stage), FALSE);
+
+  if (!_gst_glsl_funcs_fill (&shader->priv->vtable, shader->context)) {
+    GST_WARNING_OBJECT (shader, "Failed to retreive required GLSL functions");
+    return FALSE;
+  }
+
+  if (!_ensure_program (shader))
+    return FALSE;
+
+  /* already attached? */
+  if (g_list_find (shader->priv->stages, stage))
+    return TRUE;
+
+  stage_handle = gst_glsl_stage_get_handle (stage);
+  if (!stage_handle) {
+    return FALSE;
+  }
+
+  g_assert (shader->context->gl_vtable->IsProgram (shader->priv->
+          program_handle));
+  g_assert (shader->context->gl_vtable->IsShader (stage_handle));
+
+  shader->priv->stages =
+      g_list_prepend (shader->priv->stages, gst_object_ref_sink (stage));
+  GST_LOG_OBJECT (shader, "attaching shader %i to program %i", stage_handle,
+      (int) shader->priv->program_handle);
+  shader->priv->vtable.AttachShader (shader->priv->program_handle,
+      stage_handle);
+
+  return TRUE;
+}
+
+/**
+ * gst_gl_shader_attach:
+ * @shader: a #GstGLShader
+ * @stage: a #GstGLSLStage to attach
+ *
+ * Attaches @stage to @shader.  @stage must have been successfully compiled
+ * with gst_glsl_stage_compile().
+ *
+ * Note: must be called in the GL thread
+ *
+ * Returns: whether @stage could be attached to @shader
+ */
+gboolean
+gst_gl_shader_attach (GstGLShader * shader, GstGLSLStage * stage)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_GL_IS_SHADER (shader), FALSE);
+  g_return_val_if_fail (GST_IS_GLSL_STAGE (stage), FALSE);
+
+  GST_OBJECT_LOCK (shader);
+  ret = gst_gl_shader_attach_unlocked (shader, stage);
+  GST_OBJECT_UNLOCK (shader);
+
+  return ret;
+}
+
+/**
+ * gst_gl_shader_compile_attach_stage:
+ * @shader: a #GstGLShader
+ * @stage: a #GstGLSLStage to attach
+ * @error: a #GError
+ *
+ * Compiles @stage and attaches it to @shader.
+ *
+ * Note: must be called in the GL thread
+ *
+ * Returns: whether @stage could be compiled and attached to @shader
+ */
+gboolean
+gst_gl_shader_compile_attach_stage (GstGLShader * shader, GstGLSLStage * stage,
+    GError ** error)
+{
+  g_return_val_if_fail (GST_IS_GLSL_STAGE (stage), FALSE);
+
+  if (!gst_glsl_stage_compile (stage, error)) {
+    return FALSE;
+  }
+
+  if (!gst_gl_shader_attach (shader, stage)) {
+    g_set_error (error, GST_GLSL_ERROR, GST_GLSL_ERROR_COMPILE,
+        "Failed to attach stage to shader");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_gl_shader_link:
+ * @shader: a #GstGLShader
+ * @error: a #GError
+ *
+ * Links the current list of #GstGLSLStage's in @shader.
+ *
+ * Note: must be called in the GL thread
+ *
+ * Returns: whether @shader could be linked together.
+ */
+gboolean
+gst_gl_shader_link (GstGLShader * shader, GError ** error)
+{
+  GstGLShaderPrivate *priv;
+  const GstGLFuncs *gl;
+  gchar info_buffer[2048];
+  GLint status = GL_FALSE;
+  gint len = 0;
+  gboolean ret;
+  GList *elem;
+
+  g_return_val_if_fail (GST_GL_IS_SHADER (shader), FALSE);
+
+  GST_OBJECT_LOCK (shader);
 
   priv = shader->priv;
   gl = shader->context->gl_vtable;
 
-  if (priv->compiled)
-    return priv->compiled;
+  if (priv->linked) {
+    GST_OBJECT_UNLOCK (shader);
+    return TRUE;
+  }
 
-  if (!_fill_vtable (shader, shader->context))
+  if (!_gst_glsl_funcs_fill (&shader->priv->vtable, shader->context)) {
+    g_set_error (error, GST_GLSL_ERROR, GST_GLSL_ERROR_PROGRAM,
+        "Failed to retreive required GLSL functions");
+    GST_OBJECT_UNLOCK (shader);
     return FALSE;
+  }
 
-  shader->priv->program_handle = shader->priv->vtable.CreateProgram ();
+  if (!_ensure_program (shader)) {
+    g_set_error (error, GST_GLSL_ERROR, GST_GLSL_ERROR_PROGRAM,
+        "Failed to create GL program object");
+    GST_OBJECT_UNLOCK (shader);
+    return FALSE;
+  }
 
   GST_TRACE ("shader created %u", shader->priv->program_handle);
 
-  g_return_val_if_fail (priv->program_handle, FALSE);
+  for (elem = shader->priv->stages; elem; elem = elem->next) {
+    GstGLSLStage *stage = elem->data;
 
-  if (priv->vertex_src) {
-    gint n_vertex_sources;
-    const gchar **vertex_sources;
-
-    _maybe_prepend_version (shader, priv->vertex_src, &n_vertex_sources,
-        &vertex_sources);
-
-    /* create vertex object */
-    priv->vertex_handle = priv->vtable.CreateShader (GL_VERTEX_SHADER);
-    gl->ShaderSource (priv->vertex_handle, n_vertex_sources, vertex_sources,
-        NULL);
-    g_free (vertex_sources);
-
-    /* compile */
-    gl->CompileShader (priv->vertex_handle);
-    /* check everything is ok */
-    status = GL_FALSE;
-    gl->GetShaderiv (priv->vertex_handle, GL_COMPILE_STATUS, &status);
-
-    priv->vtable.GetShaderInfoLog (priv->vertex_handle,
-        sizeof (info_buffer) - 1, &len, info_buffer);
-    info_buffer[len] = '\0';
-
-    if (status != GL_TRUE) {
-      GST_ERROR ("Vertex Shader compilation failed:\n%s", info_buffer);
-
-      g_set_error (error, GST_GL_SHADER_ERROR,
-          GST_GL_SHADER_ERROR_COMPILE,
-          "Vertex Shader compilation failed:\n%s", info_buffer);
-
-      priv->vtable.DeleteShader (priv->vertex_handle);
-      priv->compiled = FALSE;
-      return priv->compiled;
-    } else if (len > 1) {
-      GST_FIXME ("vertex shader info log:\n%s\n", info_buffer);
+    if (!gst_glsl_stage_compile (stage, error)) {
+      GST_OBJECT_UNLOCK (shader);
+      return FALSE;
     }
-    priv->vtable.AttachShader (priv->program_handle, priv->vertex_handle);
 
-    GST_LOG ("vertex shader attached %u", priv->vertex_handle);
-  }
-
-  if (priv->fragment_src) {
-    gint n_fragment_sources;
-    const gchar **fragment_sources;
-
-    _maybe_prepend_version (shader, priv->fragment_src, &n_fragment_sources,
-        &fragment_sources);
-
-    /* create fragment object */
-    priv->fragment_handle = priv->vtable.CreateShader (GL_FRAGMENT_SHADER);
-    gl->ShaderSource (priv->fragment_handle, n_fragment_sources,
-        fragment_sources, NULL);
-    g_free (fragment_sources);
-    /* compile */
-    gl->CompileShader (priv->fragment_handle);
-    /* check everything is ok */
-    status = GL_FALSE;
-    priv->vtable.GetShaderiv (priv->fragment_handle,
-        GL_COMPILE_STATUS, &status);
-
-    priv->vtable.GetShaderInfoLog (priv->fragment_handle,
-        sizeof (info_buffer) - 1, &len, info_buffer);
-    info_buffer[len] = '\0';
-    if (status != GL_TRUE) {
-      GST_ERROR ("Fragment Shader compilation failed:\n%s", info_buffer);
-
-      g_set_error (error, GST_GL_SHADER_ERROR,
-          GST_GL_SHADER_ERROR_COMPILE,
-          "Fragment Shader compilation failed:\n%s", info_buffer);
-
-      priv->vtable.DeleteShader (priv->fragment_handle);
-      priv->compiled = FALSE;
-      return priv->compiled;
-    } else if (len > 1) {
-      GST_FIXME ("vertex shader info log:\n%s\n", info_buffer);
+    if (!gst_gl_shader_attach_unlocked (shader, stage)) {
+      g_set_error (error, GST_GLSL_ERROR, GST_GLSL_ERROR_COMPILE,
+          "Failed to attach shader %" GST_PTR_FORMAT "to program %"
+          GST_PTR_FORMAT, stage, shader);
+      GST_OBJECT_UNLOCK (shader);
+      return FALSE;
     }
-    priv->vtable.AttachShader (priv->program_handle, priv->fragment_handle);
-
-    GST_LOG ("fragment shader attached %u", priv->fragment_handle);
   }
 
   /* if nothing failed link shaders */
@@ -599,53 +622,81 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
   if (status != GL_TRUE) {
     GST_ERROR ("Shader linking failed:\n%s", info_buffer);
 
-    g_set_error (error, GST_GL_SHADER_ERROR,
-        GST_GL_SHADER_ERROR_LINK, "Shader Linking failed:\n%s", info_buffer);
-    priv->compiled = FALSE;
-    return priv->compiled;
+    g_set_error (error, GST_GLSL_ERROR, GST_GLSL_ERROR_LINK,
+        "Shader Linking failed:\n%s", info_buffer);
+    ret = priv->linked = FALSE;
+    GST_OBJECT_UNLOCK (shader);
+    return ret;
   } else if (len > 1) {
     GST_FIXME ("shader link log:\n%s\n", info_buffer);
   }
-  /* success! */
-  priv->compiled = TRUE;
-  g_object_notify (G_OBJECT (shader), "compiled");
 
-  return priv->compiled;
+  ret = priv->linked = TRUE;
+  GST_OBJECT_UNLOCK (shader);
+
+  g_object_notify (G_OBJECT (shader), "linked");
+
+  return ret;
 }
 
+/**
+ * gst_gl_shader_release_unlocked:
+ * @shader: a #GstGLShader
+ *
+ * Releases the shader and stages.
+ *
+ * Note: must be called in the GL thread
+ */
 void
-gst_gl_shader_release (GstGLShader * shader)
+gst_gl_shader_release_unlocked (GstGLShader * shader)
 {
   GstGLShaderPrivate *priv;
+  GList *elem;
 
   g_return_if_fail (GST_GL_IS_SHADER (shader));
 
   priv = shader->priv;
 
-  if (!priv->compiled || !priv->program_handle)
-    return;
+  for (elem = shader->priv->stages; elem; elem = elem->next) {
+    GstGLSLStage *stage = elem->data;
 
-  if (priv->vertex_handle) {    /* not needed but nvidia doesn't care to respect the spec */
-    GST_TRACE ("finalizing vertex shader %u", priv->vertex_handle);
-
-    priv->vtable.DeleteShader (priv->vertex_handle);
+    gst_gl_shader_detach_unlocked (shader, stage);
   }
 
-  if (priv->fragment_handle) {
-    GST_TRACE ("finalizing fragment shader %u", priv->fragment_handle);
+  g_list_free_full (shader->priv->stages, (GDestroyNotify) gst_object_unref);
+  shader->priv->stages = NULL;
 
-    priv->vtable.DeleteShader (priv->fragment_handle);
-  }
+  priv->linked = FALSE;
 
-  if (priv->vertex_handle)
-    priv->vtable.DetachShader (priv->program_handle, priv->vertex_handle);
-  if (priv->fragment_handle)
-    priv->vtable.DetachShader (priv->program_handle, priv->fragment_handle);
-
-  priv->compiled = FALSE;
-  g_object_notify (G_OBJECT (shader), "compiled");
+  g_object_notify (G_OBJECT (shader), "linked");
 }
 
+/**
+ * gst_gl_shader_release:
+ * @shader: a #GstGLShader
+ *
+ * Releases the shader and stages.
+ *
+ * Note: must be called in the GL thread
+ */
+void
+gst_gl_shader_release (GstGLShader * shader)
+{
+  g_return_if_fail (GST_GL_IS_SHADER (shader));
+
+  GST_OBJECT_LOCK (shader);
+  gst_gl_shader_release_unlocked (shader);
+  GST_OBJECT_UNLOCK (shader);
+}
+
+/**
+ * gst_gl_shader_use:
+ * @shader: a #GstGLShader
+ *
+ * Mark's @shader as being used for the next GL draw command.
+ *
+ * Note: must be called in the GL thread and @shader must have been linked.
+ */
 void
 gst_gl_shader_use (GstGLShader * shader)
 {
@@ -662,6 +713,14 @@ gst_gl_shader_use (GstGLShader * shader)
   return;
 }
 
+/**
+ * gst_gl_context_clear_shader:
+ * @shader: a #GstGLShader
+ *
+ * Clear's the currently set shader from the GL state machine.
+ *
+ * Note: must be called in the GL thread.
+ */
 void
 gst_gl_context_clear_shader (GstGLContext * context)
 {
@@ -675,104 +734,6 @@ gst_gl_context_clear_shader (GstGLContext * context)
     gl->UseProgram (0);
   else if (gl->CreateProgramObject)
     gl->UseProgramObject (0);
-}
-
-gboolean
-gst_gl_shader_compile_and_check (GstGLShader * shader,
-    const gchar * source, GstGLShaderSourceType type)
-{
-  gboolean is_compiled = FALSE;
-
-  g_object_get (G_OBJECT (shader), "compiled", &is_compiled, NULL);
-
-  if (!is_compiled) {
-    GError *error = NULL;
-
-    switch (type) {
-      case GST_GL_SHADER_FRAGMENT_SOURCE:
-        gst_gl_shader_set_fragment_source (shader, source);
-        break;
-      case GST_GL_SHADER_VERTEX_SOURCE:
-        gst_gl_shader_set_vertex_source (shader, source);
-        break;
-      default:
-        g_assert_not_reached ();
-        break;
-    }
-
-    gst_gl_shader_compile (shader, &error);
-    if (error) {
-      gst_gl_context_set_error (shader->context, "%s", error->message);
-      g_error_free (error);
-      gst_gl_context_clear_shader (shader->context);
-
-      return FALSE;
-    }
-  }
-  return TRUE;
-}
-
-gboolean
-gst_gl_shader_compile_all_with_attribs_and_check (GstGLShader * shader,
-    const gchar * v_src, const gchar * f_src, const gint n_attribs,
-    const gchar * attrib_names[], GLint attrib_locs[])
-{
-  gint i = 0;
-  GError *error = NULL;
-
-  gst_gl_shader_set_vertex_source (shader, v_src);
-  gst_gl_shader_set_fragment_source (shader, f_src);
-
-  gst_gl_shader_compile (shader, &error);
-  if (error) {
-    gst_gl_context_set_error (shader->context, "%s", error->message);
-    g_error_free (error);
-    gst_gl_context_clear_shader (shader->context);
-
-    return FALSE;
-  }
-
-  for (i = 0; i < n_attribs; i++)
-    attrib_locs[i] =
-        gst_gl_shader_get_attribute_location (shader, attrib_names[i]);
-
-  return TRUE;
-}
-
-gboolean
-gst_gl_shader_compile_with_default_f_and_check (GstGLShader * shader,
-    const gchar * v_src, const gint n_attribs, const gchar * attrib_names[],
-    GLint attrib_locs[])
-{
-  return gst_gl_shader_compile_all_with_attribs_and_check (shader, v_src,
-      simple_fragment_shader_str_gles2, n_attribs, attrib_names, attrib_locs);
-}
-
-gboolean
-gst_gl_shader_compile_with_default_v_and_check (GstGLShader * shader,
-    const gchar * f_src, GLint * pos_loc, GLint * tex_loc)
-{
-  const gchar *attrib_names[2] = { "a_position", "a_texcoord" };
-  GLint attrib_locs[2] = { 0 };
-  gboolean ret = TRUE;
-
-  ret = gst_gl_shader_compile_all_with_attribs_and_check (shader,
-      simple_vertex_shader_str_gles2, f_src, 2, attrib_names, attrib_locs);
-
-  if (ret) {
-    *pos_loc = attrib_locs[0];
-    *tex_loc = attrib_locs[1];
-  }
-
-  return ret;
-}
-
-gboolean
-gst_gl_shader_compile_with_default_vf_and_check (GstGLShader * shader,
-    GLint * pos_loc, GLint * tex_loc)
-{
-  return gst_gl_shader_compile_with_default_v_and_check (shader,
-      simple_fragment_shader_str_gles2, pos_loc, tex_loc);
 }
 
 void
@@ -1233,16 +1194,20 @@ gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)
 {
   GstGLShaderPrivate *priv;
   GstGLFuncs *gl;
+  gint ret;
 
   g_return_val_if_fail (shader != NULL, -1);
   priv = shader->priv;
   g_return_val_if_fail (priv->program_handle != 0, -1);
-  if (0 == priv->vertex_handle)
-    return -1;
 
   gl = shader->context->gl_vtable;
 
-  return gl->GetAttribLocation (priv->program_handle, name);
+  ret = gl->GetAttribLocation (priv->program_handle, name);
+
+  GST_TRACE_OBJECT (shader, "retreived program %i attribute \'%s\' location %i",
+      (int) priv->program_handle, name, ret);
+
+  return ret;
 }
 
 void
@@ -1257,11 +1222,8 @@ gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index,
   g_return_if_fail (priv->program_handle != 0);
   gl = shader->context->gl_vtable;
 
-  gl->BindAttribLocation (priv->program_handle, index, name);
-}
+  GST_TRACE_OBJECT (shader, "binding program %i attribute \'%s\' location %i",
+      (int) priv->program_handle, name, index);
 
-GQuark
-gst_gl_shader_error_quark (void)
-{
-  return g_quark_from_static_string ("gst-gl-shader-error");
+  gl->BindAttribLocation (priv->program_handle, index, name);
 }
