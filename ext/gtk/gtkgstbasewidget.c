@@ -252,7 +252,7 @@ gtk_gst_base_widget_key_event (GtkWidget * widget, GdkEventKey * event)
     g_object_unref (element);
   }
 
-  return TRUE;
+  return FALSE;
 }
 
 static void
@@ -342,7 +342,7 @@ gtk_gst_base_widget_button_event (GtkWidget * widget, GdkEventButton * event)
     g_object_unref (element);
   }
 
-  return TRUE;
+  return FALSE;
 }
 
 static gboolean
@@ -363,7 +363,7 @@ gtk_gst_base_widget_motion_event (GtkWidget * widget, GdkEventMotion * event)
     g_object_unref (element);
   }
 
-  return TRUE;
+  return FALSE;
 }
 
 void
