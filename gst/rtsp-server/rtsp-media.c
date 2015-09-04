@@ -3356,7 +3356,6 @@ static gboolean
 parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
 {
   gboolean res = FALSE;
-  gchar *p, *kmpid;
   gsize size;
   guchar *data;
   GstMIKEYMessage *msg;
@@ -3364,17 +3363,28 @@ parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
   const gchar *srtp_cipher;
   const gchar *srtp_auth;
 
-  p = (gchar *) keymgmt;
+  {
+    gchar *orig_value;
+    gchar *p, *kmpid;
 
-  SKIP_SPACES (p);
-  if (*p == '\0')
-    return FALSE;
+    p = orig_value = g_strdup (keymgmt);
 
-  PARSE_STRING (p, " ", kmpid);
-  if (!g_str_equal (kmpid, "mikey"))
-    return FALSE;
+    SKIP_SPACES (p);
+    if (*p == '\0') {
+      g_free (orig_value);
+      return FALSE;
+    }
 
-  data = g_base64_decode (p, &size);
+    PARSE_STRING (p, " ", kmpid);
+    if (kmpid == NULL || !g_str_equal (kmpid, "mikey")) {
+      g_free (orig_value);
+      return FALSE;
+    }
+    data = g_base64_decode (p, &size);
+
+    g_free (orig_value);        /* Don't need this any more */
+  }
+
   if (data == NULL)
     return FALSE;
 
