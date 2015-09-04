@@ -816,12 +816,14 @@ dpb_add (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture)
   guint i = 0;
 
   /* C.5.2.3 */
-  while (i < priv->dpb_count) {
-    GstVaapiFrameStore *const fs = priv->dpb[i];
-    tmp_pic = fs->buffer;
-    if (tmp_pic->output_needed)
-      tmp_pic->pic_latency_cnt += 1;
-    i++;
+  if (picture->output_flag) {
+    while (i < priv->dpb_count) {
+      GstVaapiFrameStore *const fs = priv->dpb[i];
+      tmp_pic = fs->buffer;
+      if (tmp_pic->output_needed)
+        tmp_pic->pic_latency_cnt += 1;
+      i++;
+    }
   }
 
   if (picture->output_flag) {
