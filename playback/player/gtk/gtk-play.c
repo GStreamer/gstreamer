@@ -52,6 +52,7 @@
 typedef GtkApplication GtkPlayApp;
 typedef GtkApplicationClass GtkPlayAppClass;
 
+GType gtk_play_app_get_type (void);
 G_DEFINE_TYPE (GtkPlayApp, gtk_play_app, GTK_TYPE_APPLICATION);
 
 typedef struct
@@ -91,7 +92,19 @@ typedef struct
 
 typedef GtkApplicationWindowClass GtkPlayClass;
 
+GType gtk_play_get_type (void);
 G_DEFINE_TYPE (GtkPlay, gtk_play, GTK_TYPE_APPLICATION_WINDOW);
+
+void rewind_button_clicked_cb (GtkButton * button, GtkPlay * play);
+void forward_button_clicked_cb (GtkButton * button, GtkPlay * play);
+void play_pause_button_clicked_cb (GtkButton * button, GtkPlay * play);
+void prev_button_clicked_cb (GtkButton * button, GtkPlay * play);
+void next_button_clicked_cb (GtkButton * button, GtkPlay * play);
+void media_info_dialog_button_clicked_cb (GtkButton * button, GtkPlay * play);
+void fullscreen_button_toggled_cb (GtkToggleButton * widget, GtkPlay * play);
+void seekbar_value_changed_cb (GtkRange * range, GtkPlay * play);
+void volume_button_value_changed_cb (GtkScaleButton * button, gdouble value,
+    GtkPlay * play);
 
 enum
 {
@@ -1071,7 +1084,7 @@ create_visualization_menu (GtkPlay * play)
   sep = gtk_separator_menu_item_new ();
   item = gtk_radio_menu_item_new_with_label (group, "Disable");
   group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (item));
-  g_object_set_data (G_OBJECT (item), "name", "disable");
+  g_object_set_data (G_OBJECT (item), "name", (gpointer) "disable");
   if (cur_vis == NULL)
     gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), True);
   g_signal_connect (G_OBJECT (item), "toggled",
@@ -1400,7 +1413,6 @@ static void
 create_ui (GtkPlay * play)
 {
   GtkWidget *main_hbox;
-  GstElement *playbin, *gtk_sink;
 
   gtk_window_set_default_size (GTK_WINDOW (play), 640, 480);
 
@@ -1488,8 +1500,7 @@ create_ui (GtkPlay * play)
   /* apply css on widgets */
   gtk_widget_apply_css (play->toolbar, "/css/toolbar.css");
 
-  if (!gtk_sink)
-    gtk_widget_realize (play->video_area);
+  gtk_widget_realize (play->video_area);
   gtk_widget_hide (play->video_area);
 
   /* start toolbar autohide timer */
@@ -1867,7 +1878,7 @@ gtk_play_app_class_init (GtkPlayAppClass * klass)
   application_class->command_line = gtk_play_app_command_line;
 }
 
-GtkPlayApp *
+static GtkPlayApp *
 gtk_play_app_new (void)
 {
   GtkPlayApp *self;
