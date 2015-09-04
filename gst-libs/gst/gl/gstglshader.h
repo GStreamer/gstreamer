@@ -26,25 +26,13 @@
 
 G_BEGIN_DECLS
 
+GType gst_gl_shader_get_type (void);
 #define GST_GL_TYPE_SHADER         (gst_gl_shader_get_type())
 #define GST_GL_SHADER(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_SHADER, GstGLShader))
 #define GST_GL_SHADER_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_GL_TYPE_SHADER, GstGLShaderClass))
 #define GST_GL_IS_SHADER(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_SHADER))
 #define GST_GL_IS_SHADER_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_SHADER))
 #define GST_GL_SHADER_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_SHADER, GstGLShaderClass))
-
-#define GST_GL_SHADER_ERROR (gst_gl_shader_error_quark ())
-
-typedef enum {
-  GST_GL_SHADER_ERROR_COMPILE,
-  GST_GL_SHADER_ERROR_LINK,
-  GST_GL_SHADER_ERROR_PROGRAM
-} GstGLShaderError;
-
-typedef enum {
-  GST_GL_SHADER_FRAGMENT_SOURCE,
-  GST_GL_SHADER_VERTEX_SOURCE
-} GstGLShaderSourceType;
 
 struct _GstGLShader {
   /*< private >*/
@@ -53,6 +41,8 @@ struct _GstGLShader {
   GstGLContext *context;
 
   GstGLShaderPrivate *priv;
+
+  gpointer _padding[GST_PADDING];
 };
 
 struct _GstGLShaderClass {
@@ -60,33 +50,29 @@ struct _GstGLShaderClass {
   GstObjectClass parent_class;
 };
 
-/* methods */
+GstGLShader * gst_gl_shader_new                     (GstGLContext *context);
+GstGLShader * gst_gl_shader_new_with_stages         (GstGLContext * context, GError ** error, ...);
+GstGLShader * gst_gl_shader_new_link_with_stages    (GstGLContext * context, GError ** error, ...);
+GstGLShader * gst_gl_shader_new_default             (GstGLContext * context, GError ** error);
 
-GQuark gst_gl_shader_error_quark (void);
-GType gst_gl_shader_get_type (void);
+gboolean gst_gl_shader_attach                       (GstGLShader * shader, GstGLSLStage * stage);
+gboolean gst_gl_shader_attach_unlocked              (GstGLShader * shader, GstGLSLStage * stage);
 
-GstGLShader * gst_gl_shader_new (GstGLContext *context);
+void     gst_gl_shader_detach                       (GstGLShader * shader, GstGLSLStage * stage);
+void     gst_gl_shader_detach_unlocked              (GstGLShader * shader, GstGLSLStage * stage);
 
-int gst_gl_shader_get_program_handle(GstGLShader * shader);
+gboolean gst_gl_shader_compile_attach_stage         (GstGLShader * shader,
+                                                     GstGLSLStage *stage,
+                                                     GError ** error);
+gboolean gst_gl_shader_link                         (GstGLShader * shader, GError ** error);
+gboolean gst_gl_shader_is_linked                    (GstGLShader *shader);
 
-void          gst_gl_shader_set_vertex_source   (GstGLShader *shader, const gchar *src);
-void          gst_gl_shader_set_fragment_source (GstGLShader *shader, const gchar *src);
-const gchar * gst_gl_shader_get_vertex_source   (GstGLShader *shader);
-const gchar * gst_gl_shader_get_fragment_source (GstGLShader *shader);
+int gst_gl_shader_get_program_handle                (GstGLShader * shader);
 
-void     gst_gl_shader_set_active        (GstGLShader *shader, gboolean active);
-gboolean gst_gl_shader_is_compiled       (GstGLShader *shader);
-gboolean gst_gl_shader_compile           (GstGLShader *shader, GError **error);
-gboolean gst_gl_shader_compile_and_check (GstGLShader *shader, const gchar *source, GstGLShaderSourceType type);
-gboolean gst_gl_shader_compile_all_with_attribs_and_check (GstGLShader *shader, const gchar *v_src, const gchar *f_src, const gint n_attribs, const gchar *attrib_names[], GLint attrib_locs[]);
-
-gboolean gst_gl_shader_compile_with_default_f_and_check   (GstGLShader *shader, const gchar *v_src, const gint n_attribs, const gchar *attrib_names[], GLint attrib_locs[]);
-gboolean gst_gl_shader_compile_with_default_v_and_check   (GstGLShader *shader, const gchar *f_src, GLint *pos_loc, GLint *tex_loc);
-gboolean gst_gl_shader_compile_with_default_vf_and_check  (GstGLShader *shader, GLint *pos_loc, GLint *tex_loc);
-
-void gst_gl_shader_release       (GstGLShader *shader);
-void gst_gl_shader_use           (GstGLShader *shader);
-void gst_gl_context_clear_shader (GstGLContext *context);
+void gst_gl_shader_release                          (GstGLShader *shader);
+void gst_gl_shader_release_unlocked                 (GstGLShader * shader);
+void gst_gl_shader_use                              (GstGLShader *shader);
+void gst_gl_context_clear_shader                    (GstGLContext *context);
 
 void gst_gl_shader_set_uniform_1i           (GstGLShader *shader, const gchar *name, gint value);
 void gst_gl_shader_set_uniform_1iv          (GstGLShader *shader, const gchar *name, guint count, gint *value);

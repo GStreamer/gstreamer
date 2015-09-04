@@ -142,18 +142,19 @@ gst_gl_colorscale_gl_start (GstGLBaseFilter * base_filter)
   GstGLColorscale *colorscale = GST_GL_COLORSCALE (base_filter);
   GstGLFilter *filter = GST_GL_FILTER (base_filter);
   GstGLShader *shader;
+  GError *error = NULL;
 
-  shader = gst_gl_shader_new (base_filter->context);
-
-  if (!gst_gl_shader_compile_with_default_vf_and_check (shader,
-          &filter->draw_attr_position_loc, &filter->draw_attr_texture_loc)) {
-    gst_gl_context_clear_shader (base_filter->context);
+  if (!(shader = gst_gl_shader_new_default (base_filter->context, &error))) {
+    GST_ERROR_OBJECT (colorscale, "Failed to initialize shader: %s",
+        error->message);
     gst_object_unref (shader);
-    GST_ERROR_OBJECT (colorscale, "Failed to initialize identity shader");
-    GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND, ("%s",
-            "Failed to initialize identity shader"), (NULL));
     return FALSE;
   }
+
+  filter->draw_attr_position_loc =
+      gst_gl_shader_get_attribute_location (shader, "a_position");
+  filter->draw_attr_texture_loc =
+      gst_gl_shader_get_attribute_location (shader, "a_texcoord");
 
   colorscale->shader = shader;
 

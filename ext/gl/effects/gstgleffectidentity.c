@@ -42,17 +42,18 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
 
   shader = g_hash_table_lookup (effects->shaderstable, "identity0");
   if (!shader) {
-    shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, (gchar *) "identity0", shader);
+    GError *error = NULL;
 
-    if (!gst_gl_shader_compile_with_default_vf_and_check (shader,
-            &filter->draw_attr_position_loc, &filter->draw_attr_texture_loc)) {
-      /* gst gl context error is already set */
+    if (!(shader = gst_gl_shader_new_default (context, &error))) {
       GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-          ("Failed to initialize identity shader, %s",
-              gst_gl_context_get_error ()), (NULL));
+          ("Failed to initialize identity shader: %s", error->message), (NULL));
       return;
     }
+
+    filter->draw_attr_position_loc =
+        gst_gl_shader_get_attribute_location (shader, "a_position");
+    filter->draw_attr_texture_loc =
+        gst_gl_shader_get_attribute_location (shader, "a_texcoord");
   }
   gst_gl_shader_use (shader);
 

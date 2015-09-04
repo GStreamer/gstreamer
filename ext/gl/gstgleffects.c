@@ -545,21 +545,22 @@ gst_gl_effects_get_fragment_shader (GstGLEffects * effects,
   shader = g_hash_table_lookup (effects->shaderstable, shader_name);
 
   if (!shader) {
-    shader = gst_gl_shader_new (context);
-    if (!gst_gl_shader_compile_with_default_v_and_check (shader,
-            shader_source_gles2, &filter->draw_attr_position_loc,
-            &filter->draw_attr_texture_loc)) {
-      /* gst gl context error is already set */
-      GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-          ("Failed to initialize %s shader, %s",
-              shader_name, gst_gl_context_get_error ()), (NULL));
-      gst_object_unref (shader);
-      shader = NULL;
-    }
-  }
+    GError *error = NULL;
 
-  if (!shader)
-    return NULL;
+    if (!(shader = gst_gl_shader_new_link_with_stages (context, &error,
+                gst_glsl_stage_new_default_vertex (context),
+                gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+                    GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_ES,
+                    shader_source_gles2), NULL))) {
+      GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+          ("Failed to initialize %s shader", shader_name), (NULL));
+    }
+
+    filter->draw_attr_position_loc =
+        gst_gl_shader_get_attribute_location (shader, "a_position");
+    filter->draw_attr_texture_loc =
+        gst_gl_shader_get_attribute_location (shader, "a_texcoord");
+  }
 
   g_hash_table_insert (effects->shaderstable, (gchar *) shader_name, shader);
 

@@ -78,7 +78,9 @@ static void
 gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (filter);
-  GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
+  const GstGLFuncs *gl = context->gl_vtable;
+  GError *error = NULL;
   gint i;
 
   for (i = 0; i < 4; i++) {
@@ -96,45 +98,57 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
         gst_gl_shader_new (GST_GL_BASE_FILTER (filter)->context);
   }
 
-  if (!gst_gl_shader_compile_with_default_v_and_check (differencematte->shader
-          [0], difference_fragment_source, &filter->draw_attr_position_loc,
-          &filter->draw_attr_texture_loc)) {
-    gst_gl_context_set_error (GST_GL_BASE_FILTER (differencematte)->context,
-        "Failed to initialize difference shader");
+  if (!(differencematte->shader[0] =
+          gst_gl_shader_new_link_with_stages (context, &error,
+              gst_glsl_stage_new_default_vertex (context),
+              gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+                  GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_ES,
+                  difference_fragment_source), NULL))) {
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
             gst_gl_context_get_error ()), (NULL));
     return;
   }
 
-  if (!gst_gl_shader_compile_with_default_v_and_check (differencematte->shader
-          [1], hconv7_fragment_source_gles2, &filter->draw_attr_position_loc,
-          &filter->draw_attr_texture_loc)) {
-    gst_gl_context_set_error (GST_GL_BASE_FILTER (differencematte)->context,
-        "Failed to initialize hconv7 shader");
+  if (!(differencematte->shader[1] =
+          gst_gl_shader_new_link_with_stages (context, &error,
+              gst_glsl_stage_new_default_vertex (context),
+              gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+                  GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_ES,
+                  hconv7_fragment_source_gles2), NULL))) {
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
             gst_gl_context_get_error ()), (NULL));
     return;
   }
 
-  if (!gst_gl_shader_compile_with_default_v_and_check (differencematte->shader
-          [2], vconv7_fragment_source_gles2, &filter->draw_attr_position_loc,
-          &filter->draw_attr_texture_loc)) {
-    gst_gl_context_set_error (GST_GL_BASE_FILTER (differencematte)->context,
-        "Failed to initialize vconv7 shader");
+  if (!(differencematte->shader[2] =
+          gst_gl_shader_new_link_with_stages (context, &error,
+              gst_glsl_stage_new_default_vertex (context),
+              gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+                  GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_ES,
+                  vconv7_fragment_source_gles2), NULL))) {
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
             gst_gl_context_get_error ()), (NULL));
     return;
   }
 
-  if (!gst_gl_shader_compile_with_default_v_and_check (differencematte->shader
-          [3], texture_interp_fragment_source, &filter->draw_attr_position_loc,
-          &filter->draw_attr_texture_loc)) {
-    gst_gl_context_set_error (GST_GL_BASE_FILTER (differencematte)->context,
-        "Failed to initialize interp shader");
+  if (!(differencematte->shader[3] =
+          gst_gl_shader_new_link_with_stages (context, &error,
+              gst_glsl_stage_new_default_vertex (context),
+              gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+                  GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_ES,
+                  texture_interp_fragment_source), NULL))) {
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
             gst_gl_context_get_error ()), (NULL));
     return;
   }
+
+  /* FIXME: this should really be per shader */
+  filter->draw_attr_position_loc =
+      gst_gl_shader_get_attribute_location (differencematte->shader[3],
+      "a_position");
+  filter->draw_attr_texture_loc =
+      gst_gl_shader_get_attribute_location (differencematte->shader[3],
+      "a_texcoord");
 }
 
 /* free resources that need a gl context */

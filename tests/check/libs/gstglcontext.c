@@ -28,29 +28,6 @@
 
 #include <stdio.h>
 
-#if GST_GL_HAVE_GLES2
-/* *INDENT-OFF* */
-static const gchar *vertex_shader_str_gles2 =
-      "attribute vec4 a_position;   \n"
-      "attribute vec2 a_texCoord;   \n"
-      "varying vec2 v_texCoord;     \n"
-      "void main()                  \n"
-      "{                            \n"
-      "   gl_Position = a_position; \n"
-      "   v_texCoord = a_texCoord;  \n"
-      "}                            \n";
-
-static const gchar *fragment_shader_str_gles2 =
-      "precision mediump float;                            \n"
-      "varying vec2 v_texCoord;                            \n"
-      "uniform sampler2D s_texture;                        \n"
-      "void main()                                         \n"
-      "{                                                   \n"
-      "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
-      "}                                                   \n";
-/* *INDENT-ON* */
-#endif
-
 static GstGLDisplay *display;
 
 static void
@@ -67,17 +44,15 @@ teardown (void)
 
 static GLuint fbo_id, rbo, tex;
 static GstGLFramebuffer *fbo;
-#if GST_GL_HAVE_GLES2
-static GError *error;
 static GstGLShader *shader;
 static GLint shader_attr_position_loc;
 static GLint shader_attr_texture_loc;
-#endif
 
 static void
 init (gpointer data)
 {
   GstGLContext *context = data;
+  GError *error = NULL;
 
   /* has to be called in the thread that is going to use the framebuffer */
   fbo = gst_gl_framebuffer_new (context);
@@ -88,25 +63,14 @@ init (gpointer data)
   gst_gl_context_gen_texture (context, &tex, GST_VIDEO_FORMAT_RGBA, 320, 240);
   fail_if (tex == 0, "failed to create texture");
 
-#if GST_GL_HAVE_GLES2
-  if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2) {
-    shader = gst_gl_shader_new (context);
-    fail_if (shader == NULL, "failed to create shader object");
+  shader = gst_gl_shader_new_default (context, &error);
+  fail_if (shader == NULL, "failed to create shader object: %s",
+      error->message);
 
-    gst_gl_shader_set_vertex_source (shader, vertex_shader_str_gles2);
-    gst_gl_shader_set_fragment_source (shader, fragment_shader_str_gles2);
-
-    error = NULL;
-    gst_gl_shader_compile (shader, &error);
-    fail_if (error != NULL, "Error compiling shader %s\n",
-        error ? error->message : "Unknown Error");
-
-    shader_attr_position_loc =
-        gst_gl_shader_get_attribute_location (shader, "a_position");
-    shader_attr_texture_loc =
-        gst_gl_shader_get_attribute_location (shader, "a_texCoord");
-  }
-#endif
+  shader_attr_position_loc =
+      gst_gl_shader_get_attribute_location (shader, "a_position");
+  shader_attr_texture_loc =
+      gst_gl_shader_get_attribute_location (shader, "a_texcoord");
 }
 
 static void
@@ -116,10 +80,7 @@ deinit (gpointer data)
   GstGLFuncs *gl = context->gl_vtable;
   gl->DeleteTextures (1, &tex);
   gst_object_unref (fbo);
-#if GST_GL_HAVE_GLES2
-  if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
-    gst_object_unref (shader);
-#endif
+  gst_object_unref (shader);
 }
 
 static void
@@ -150,81 +111,38 @@ draw_render (gpointer data)
   GstGLContext *context = data;
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
   const GstGLFuncs *gl = context->gl_vtable;
+  const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
+    1.0f, 0.0f,
+    -1.0f, 1.0f, 0.0f,
+    0.0f, 0.0f,
+    -1.0f, -1.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, -1.0f, 0.0f,
+    1.0f, 1.0f
+  };
 
-  /* redraw the texture into the system provided framebuffer */
+  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-#if GST_GL_HAVE_OPENGL
-  if (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL) {
-    GLfloat verts[8] = { 1.0f, 1.0f,
-      -1.0f, 1.0f,
-      -1.0f, -1.0f,
-      1.0f, -1.0f
-    };
-    GLfloat texcoords[8] = { 1.0f, 0.0f,
-      0.0f, 0.0f,
-      0.0f, 1.0f,
-      1.0f, 1.0f
-    };
+  gl->Clear (GL_COLOR_BUFFER_BIT);
 
-    gl->Viewport (0, 0, 320, 240);
+  gst_gl_shader_use (shader);
 
-    gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  /* Load the vertex position */
+  gl->VertexAttribPointer (shader_attr_position_loc, 3,
+      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
 
-    gl->MatrixMode (GL_PROJECTION);
-    gl->LoadIdentity ();
+  /* Load the texture coordinate */
+  gl->VertexAttribPointer (shader_attr_texture_loc, 2,
+      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
-    gl->ActiveTexture (GL_TEXTURE0);
-    gl->BindTexture (GL_TEXTURE_2D, tex);
+  gl->EnableVertexAttribArray (shader_attr_position_loc);
+  gl->EnableVertexAttribArray (shader_attr_texture_loc);
 
-    gl->EnableClientState (GL_VERTEX_ARRAY);
-    gl->VertexPointer (2, GL_FLOAT, 0, &verts);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->BindTexture (GL_TEXTURE_2D, tex);
+  gst_gl_shader_set_uniform_1i (shader, "s_texture", 0);
 
-    gl->ClientActiveTexture (GL_TEXTURE0);
-    gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
-    gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
-
-    gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
-
-    gl->DisableClientState (GL_VERTEX_ARRAY);
-    gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
-  }
-#endif
-#if GST_GL_HAVE_GLES2
-  if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2) {
-    const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
-      1.0f, 0.0f,
-      -1.0f, 1.0f, 0.0f,
-      0.0f, 0.0f,
-      -1.0f, -1.0f, 0.0f,
-      0.0f, 1.0f,
-      1.0f, -1.0f, 0.0f,
-      1.0f, 1.0f
-    };
-
-    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
-
-    gl->Clear (GL_COLOR_BUFFER_BIT);
-
-    gst_gl_shader_use (shader);
-
-    /* Load the vertex position */
-    gl->VertexAttribPointer (shader_attr_position_loc, 3,
-        GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-
-    /* Load the texture coordinate */
-    gl->VertexAttribPointer (shader_attr_texture_loc, 2,
-        GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-    gl->EnableVertexAttribArray (shader_attr_position_loc);
-    gl->EnableVertexAttribArray (shader_attr_texture_loc);
-
-    gl->ActiveTexture (GL_TEXTURE0);
-    gl->BindTexture (GL_TEXTURE_2D, tex);
-    gst_gl_shader_set_uniform_1i (shader, "s_texture", 0);
-
-    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
-  }
-#endif
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
   context_class->swap_buffers (context);
 }
@@ -314,6 +232,7 @@ check_wrapped (gpointer data)
   fail_if (!ret, "error received %s\n",
       error ? error->message : "Unknown error");
   fail_if (wrapped_context->gl_vtable->TexImage2D == NULL);
+  gst_gl_context_activate (wrapped_context, FALSE);
 }
 
 GST_START_TEST (test_wrapped_context)
