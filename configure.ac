@@ -775,6 +775,16 @@ dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
 AC_SUBST(GLIB_PREFIX)
 
+dnl GTK is optional and only used in examples
+HAVE_GTK=no
+GTK_REQ=3.10
+if test "x$BUILD_EXAMPLES" = "xyes"; then
+  PKG_CHECK_MODULES(GTK, gtk+-3.0 >= $GTK_REQ, HAVE_GTK=yes, HAVE_GTK=no)
+  AC_SUBST(GTK_LIBS)
+  AC_SUBST(GTK_CFLAGS)
+fi
+AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
+
 dnl building of unit test libraries
 AC_ARG_ENABLE(check,
   AS_HELP_STRING([--disable-check],[disable building unit test libraries]),
