@@ -97,18 +97,6 @@ enum
   PROP_INVERT
 };
 
-/* FIXME: should use video meta etc. */
-#define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
-#define I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
-#define I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
-
-#define I420_Y_OFFSET(w,h) (0)
-#define I420_U_OFFSET(w,h) (I420_Y_OFFSET(w,h)+(I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
-#define I420_V_OFFSET(w,h) (I420_U_OFFSET(w,h)+(I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-
-#define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-
-
 #define GST_TYPE_SMPTE_TRANSITION_TYPE (gst_smpte_transition_type_get_type())
 static GType
 gst_smpte_transition_type_get_type (void)
@@ -219,13 +207,13 @@ static const int u_colors[] = { 128, 0, 170, 46, 212, 85, 255, 128, 0, 128 };
 static const int v_colors[] = { 128, 155, 0, 21, 235, 255, 107, 128, 128, 255 };
 
 static void
-fill_i420 (guint8 * data, gint width, gint height, gint color)
+fill_i420 (GstVideoInfo * vinfo, guint8 * data, gint height, gint color)
 {
-  gint size = I420_Y_ROWSTRIDE (width) * GST_ROUND_UP_2 (height);
+  gint size = GST_VIDEO_INFO_COMP_STRIDE (vinfo, 0) * GST_ROUND_UP_2 (height);
   gint size4 = size >> 2;
   guint8 *yp = data;
-  guint8 *up = data + I420_U_OFFSET (width, height);
-  guint8 *vp = data + I420_V_OFFSET (width, height);
+  guint8 *up = data + GST_VIDEO_INFO_COMP_OFFSET (vinfo, 1);
+  guint8 *vp = data + GST_VIDEO_INFO_COMP_OFFSET (vinfo, 2);
 
   memset (yp, y_colors[color], size);
   memset (up, u_colors[color], size4);
@@ -499,21 +487,21 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
 
   if (in1 == NULL) {
     /* if no input, make picture black */
-    in1 = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
+    in1 = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&smpte->vinfo1));
     gst_buffer_map (in1, &map, GST_MAP_WRITE);
-    fill_i420 (map.data, smpte->width, smpte->height, 7);
+    fill_i420 (&smpte->vinfo1, map.data, smpte->height, 7);
     gst_buffer_unmap (in1, &map);
   }
   if (in2 == NULL) {
     /* if no input, make picture white */
-    in2 = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
+    in2 = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&smpte->vinfo2));
     gst_buffer_map (in2, &map, GST_MAP_WRITE);
-    fill_i420 (map.data, smpte->width, smpte->height, 0);
+    fill_i420 (&smpte->vinfo2, map.data, smpte->height, 0);
     gst_buffer_unmap (in2, &map);
   }
 
   if (smpte->position < smpte->end_position) {
-    outbuf = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
+    outbuf = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&smpte->vinfo1));
 
     /* set caps if not done yet */
     if (!gst_pad_has_current_caps (smpte->srcpad)) {
