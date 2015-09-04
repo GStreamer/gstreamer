@@ -118,12 +118,18 @@ gtk_gst_gl_widget_init_redisplay (GtkGstGLWidget * gst_widget)
 {
   GtkGstGLWidgetPrivate *priv = gst_widget->priv;
   const GstGLFuncs *gl = priv->context->gl_vtable;
+  GError *error = NULL;
 
-  priv->shader = gst_gl_shader_new (priv->context);
   gst_gl_insert_debug_marker (priv->other_context, "initializing redisplay");
+  if (!(priv->shader = gst_gl_shader_new_default (priv->context, &error))) {
+    GST_ERROR ("Failed to initialize shader: %s", error->message);
+    return;
+  }
 
-  gst_gl_shader_compile_with_default_vf_and_check (priv->shader,
-      &priv->attr_position, &priv->attr_texture);
+  priv->attr_position =
+      gst_gl_shader_get_attribute_location (priv->shader, "a_position");
+  priv->attr_texture =
+      gst_gl_shader_get_attribute_location (priv->shader, "a_texcoord");
 
   if (gl->GenVertexArrays) {
     gl->GenVertexArrays (1, &priv->vao);
