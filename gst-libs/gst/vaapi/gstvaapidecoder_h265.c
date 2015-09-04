@@ -826,6 +826,13 @@ dpb_add (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture)
     }
   }
 
+  /* Create new frame store */
+  fs = gst_vaapi_frame_store_new (picture);
+  if (!fs)
+    return FALSE;
+  gst_vaapi_frame_store_replace (&priv->dpb[priv->dpb_count++], fs);
+  gst_vaapi_frame_store_unref (fs);
+
   if (picture->output_flag) {
     picture->output_needed = 1;
     picture->pic_latency_cnt = 0;
@@ -842,13 +849,6 @@ dpb_add (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture)
       || (sps->max_latency_increase_plus1[sps->max_sub_layers_minus1]
           && check_latency_cnt (decoder)))
     dpb_bump (decoder, picture);
-
-  /* Create new frame store */
-  fs = gst_vaapi_frame_store_new (picture);
-  if (!fs)
-    return FALSE;
-  gst_vaapi_frame_store_replace (&priv->dpb[priv->dpb_count++], fs);
-  gst_vaapi_frame_store_unref (fs);
 
   return TRUE;
 }
