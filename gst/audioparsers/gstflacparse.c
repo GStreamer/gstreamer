@@ -1645,16 +1645,18 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
     /* also cater for oggmux metadata */
     if (flacparse->blocking_strategy == 0) {
-      GST_BUFFER_TIMESTAMP (buffer) =
+      GST_BUFFER_PTS (buffer) =
           gst_util_uint64_scale (flacparse->sample_number,
           flacparse->block_size * GST_SECOND, flacparse->samplerate);
+      GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer);
       GST_BUFFER_OFFSET_END (buffer) =
           flacparse->sample_number * flacparse->block_size +
           flacparse->block_size;
     } else {
-      GST_BUFFER_TIMESTAMP (buffer) =
+      GST_BUFFER_PTS (buffer) =
           gst_util_uint64_scale (flacparse->sample_number, GST_SECOND,
           flacparse->samplerate);
+      GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer);
       GST_BUFFER_OFFSET_END (buffer) =
           flacparse->sample_number + flacparse->block_size;
     }
@@ -1662,7 +1664,7 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
         gst_util_uint64_scale (GST_BUFFER_OFFSET_END (buffer), GST_SECOND,
         flacparse->samplerate);
     GST_BUFFER_DURATION (buffer) =
-        GST_BUFFER_OFFSET (buffer) - GST_BUFFER_TIMESTAMP (buffer);
+        GST_BUFFER_OFFSET (buffer) - GST_BUFFER_PTS (buffer);
 
     /* To simplify, we just assume that it's a fixed size header and ignore
      * subframe headers. The first could lead us to being off by 88 bits and
