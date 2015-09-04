@@ -544,11 +544,12 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
 
   GST_LOG_OBJECT (parse, "rate: %u, width: %u, chans: %u", rate, width, chans);
 
-  GST_BUFFER_TIMESTAMP (buf) =
+  GST_BUFFER_PTS (buf) =
       gst_util_uint64_scale_int (wph.block_index, GST_SECOND, rate);
+  GST_BUFFER_DTS (buf) = GST_BUFFER_PTS (buf);
   GST_BUFFER_DURATION (buf) =
       gst_util_uint64_scale_int (wph.block_index + wph.block_samples,
-      GST_SECOND, rate) - GST_BUFFER_TIMESTAMP (buf);
+      GST_SECOND, rate) - GST_BUFFER_PTS (buf);
 
   if (G_UNLIKELY (wvparse->sample_rate != rate || wvparse->channels != chans
           || wvparse->width != width || wvparse->channel_mask != mask)) {
