@@ -99,7 +99,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
   if (res && self->priv->positionner)
     g_object_set (self->priv->positionner, "zorder",
-        G_MAXUINT - GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
+        G_MAXUINT - priority, NULL);
 
   return res;
 }
