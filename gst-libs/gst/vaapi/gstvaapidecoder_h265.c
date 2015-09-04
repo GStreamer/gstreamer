@@ -1511,7 +1511,6 @@ decode_sequence_end (GstVaapiDecoderH265 * decoder)
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
     return status;
 
-  dpb_flush (decoder);
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
