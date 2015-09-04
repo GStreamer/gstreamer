@@ -58,7 +58,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_hls_demux_debug);
 #define GST_CAT_DEFAULT gst_hls_demux_debug
 
 /* GObject */
-static void gst_hls_demux_dispose (GObject * obj);
+static void gst_hls_demux_finalize (GObject * obj);
 
 /* GstElement */
 static GstStateChangeReturn
@@ -109,14 +109,14 @@ static gboolean gst_hls_demux_get_live_seek_range (GstAdaptiveDemux * demux,
 G_DEFINE_TYPE (GstHLSDemux, gst_hls_demux, GST_TYPE_ADAPTIVE_DEMUX);
 
 static void
-gst_hls_demux_dispose (GObject * obj)
+gst_hls_demux_finalize (GObject * obj)
 {
   GstHLSDemux *demux = GST_HLS_DEMUX (obj);
 
   gst_hls_demux_reset (GST_ADAPTIVE_DEMUX_CAST (demux));
   gst_m3u8_client_free (demux->client);
 
-  G_OBJECT_CLASS (parent_class)->dispose (obj);
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void
@@ -130,7 +130,7 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
   element_class = (GstElementClass *) klass;
   adaptivedemux_class = (GstAdaptiveDemuxClass *) klass;
 
-  gobject_class->dispose = gst_hls_demux_dispose;
+  gobject_class->finalize = gst_hls_demux_finalize;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_hls_demux_change_state);
 
