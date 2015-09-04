@@ -41,26 +41,23 @@
 
 #include "gstglfiltershader.h"
 
-/* horizontal filter */
-static gchar *hfilter_fragment_source;
-static gchar *hfilter_fragment_variables[2];
-
 enum
 {
   PROP_0,
-  PROP_LOCATION,
-  PROP_PRESET,
-  PROP_VARIABLES
+  PROP_SHADER,
+  PROP_VERTEX,
+  PROP_FRAGMENT,
+  PROP_LAST,
 };
 
-static const gchar text_vertex_shader[] =
-    "attribute vec4 a_position;   \n"
-    "attribute vec2 a_texcoord;   \n"
-    "varying vec2 v_texcoord;     \n"
-    "void main()                  \n"
-    "{                            \n"
-    "   gl_Position = a_position; \n"
-    "   v_texcoord = a_texcoord;  \n" "}                            \n";
+enum
+{
+  SIGNAL_0,
+  SIGNAL_CREATE_SHADER,
+  SIGNAL_LAST,
+};
+
+static guint gst_gl_shader_signals[SIGNAL_LAST] = { 0 };
 
 #define GST_CAT_DEFAULT gst_gl_filtershader_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -71,49 +68,19 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 G_DEFINE_TYPE_WITH_CODE (GstGLFilterShader, gst_gl_filtershader,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
+static void gst_gl_filtershader_finalize (GObject * object);
 static void gst_gl_filtershader_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_filtershader_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static gboolean gst_gl_filter_filtershader_reset (GstBaseTransform * trans);
-
-static gboolean gst_gl_filtershader_load_shader (GstGLFilterShader *
-    filter_shader, char *filename, char **storage);
-static gboolean gst_gl_filtershader_load_variables (GstGLFilterShader *
-    filter_shader, char *filename, char **storage);
-static gboolean gst_gl_filtershader_init_shader (GstGLFilter * filter);
+static gboolean gst_gl_filtershader_gl_start (GstGLBaseFilter * base);
+static void gst_gl_filtershader_gl_stop (GstGLBaseFilter * base);
 static gboolean gst_gl_filtershader_filter (GstGLFilter * filter,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_gl_filtershader_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
 static void gst_gl_filtershader_hcallback (gint width, gint height,
     guint texture, gpointer stuff);
-
-
-static void
-gst_gl_filtershader_init_resources (GstGLFilter * filter)
-{
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  guint internal_format;
-
-  internal_format =
-      gst_gl_sized_gl_format_from_gl_format_type (context, GL_RGBA,
-      GL_UNSIGNED_BYTE);
-  glTexImage2D (GL_TEXTURE_2D, 0, internal_format,
-      GST_VIDEO_INFO_WIDTH (&filter->out_info),
-      GST_VIDEO_INFO_HEIGHT (&filter->out_info), 0, GL_RGBA, GL_UNSIGNED_BYTE,
-      NULL);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-}
-
-static void
-gst_gl_filtershader_reset_resources (GstGLFilter * filter)
-{
-  //GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
-}
 
 static void
 gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
@@ -124,39 +91,41 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
 
+  gobject_class->finalize = gst_gl_filtershader_finalize;
   gobject_class->set_property = gst_gl_filtershader_set_property;
   gobject_class->get_property = gst_gl_filtershader_get_property;
 
-  g_object_class_install_property (gobject_class, PROP_LOCATION,
-      g_param_spec_string ("location", "File Location",
-          "Location of the GLSL file to load", NULL,
+  g_object_class_install_property (gobject_class, PROP_SHADER,
+      g_param_spec_object ("shader", "Shader object",
+          "GstGLShader to use", GST_GL_TYPE_SHADER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_PRESET,
-      g_param_spec_string ("preset", "Preset File Location",
-          "Location of the shader uniform variables preset file", NULL,
+  g_object_class_install_property (gobject_class, PROP_VERTEX,
+      g_param_spec_string ("vertex", "Vertex Source",
+          "GLSL vertex source", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_VARIABLES,
-      g_param_spec_string ("vars", "Uniform variables",
-          "Set the shader uniform variables", NULL,
-          G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FRAGMENT,
+      g_param_spec_string ("fragment", "Fragment Source",
+          "GLSL fragment source", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /* FIXME: add other stages */
+
+  gst_gl_shader_signals[SIGNAL_CREATE_SHADER] =
+      g_signal_new ("create-shader", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      GST_GL_TYPE_SHADER, 0);
 
   gst_element_class_set_metadata (element_class,
       "OpenGL fragment shader filter", "Filter/Effect",
-      "Load GLSL fragment shader from file", "<luc.deschenaux@freesurf.ch>");
-
-  GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_filtershader_reset;
+      "Perform operations with a GLSL shader", "<matthew@centricular.com>");
 
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filtershader_filter;
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_filtershader_filter_texture;
-  GST_GL_FILTER_CLASS (klass)->display_init_cb =
-      gst_gl_filtershader_init_resources;
-  GST_GL_FILTER_CLASS (klass)->display_reset_cb =
-      gst_gl_filtershader_reset_resources;
-  GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_filtershader_init_shader;
 
+  GST_GL_BASE_FILTER_CLASS (klass)->gl_start = gst_gl_filtershader_gl_start;
+  GST_GL_BASE_FILTER_CLASS (klass)->gl_stop = gst_gl_filtershader_gl_stop;
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3;
 }
@@ -164,21 +133,20 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
 static void
 gst_gl_filtershader_init (GstGLFilterShader * filtershader)
 {
-  filtershader->shader0 = NULL;
+  filtershader->new_source = TRUE;
 }
 
-static gboolean
-gst_gl_filter_filtershader_reset (GstBaseTransform * trans)
+static void
+gst_gl_filtershader_finalize (GObject * object)
 {
-  GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (trans);
+  GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (object);
 
-  //blocking call, wait the opengl thread has destroyed the shader
-  if (filtershader->shader0)
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (trans)->context,
-        filtershader->shader0);
-  filtershader->shader0 = NULL;
+  if (filtershader->shader_prop) {
+    gst_object_unref (filtershader->shader_prop);
+    filtershader->shader_prop = NULL;
+  }
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
+  G_OBJECT_CLASS (gst_gl_filtershader_parent_class)->finalize (object);
 }
 
 static void
@@ -188,59 +156,29 @@ gst_gl_filtershader_set_property (GObject * object, guint prop_id,
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (object);
 
   switch (prop_id) {
-
-    case PROP_LOCATION:
-
-      if (filtershader->filename) {
-        g_free (filtershader->filename);
-      }
-      if (filtershader->compiled) {
-        if (filtershader->shader0)
-          gst_gl_context_del_shader (GST_GL_BASE_FILTER (filtershader)->context,
-              filtershader->shader0);
-        filtershader->shader0 = 0;
-      }
-      filtershader->filename = g_strdup (g_value_get_string (value));
-      filtershader->compiled = 0;
-      filtershader->texSet = 0;
-
+    case PROP_SHADER:
+      GST_OBJECT_LOCK (filtershader);
+      gst_object_replace ((GstObject **) & filtershader->shader_prop,
+          g_value_dup_object (value));
+      filtershader->new_source = TRUE;
+      GST_OBJECT_UNLOCK (filtershader);
       break;
-
-    case PROP_PRESET:
-
-      if (filtershader->presetfile) {
-        g_free (filtershader->presetfile);
-      }
-
-      filtershader->presetfile = g_strdup (g_value_get_string (value));
-
-      if (hfilter_fragment_variables[0]) {
-        g_free (hfilter_fragment_variables[0]);
-        hfilter_fragment_variables[0] = 0;
-      }
-
-      if (!filtershader->presetfile[0]) {
-        g_free (filtershader->presetfile);
-        filtershader->presetfile = 0;
-      }
-
+    case PROP_VERTEX:
+      GST_OBJECT_LOCK (filtershader);
+      if (filtershader->vertex)
+        g_free (filtershader->vertex);
+      filtershader->vertex = g_value_dup_string (value);
+      filtershader->new_source = TRUE;
+      GST_OBJECT_UNLOCK (filtershader);
       break;
-
-    case PROP_VARIABLES:
-
-      if (hfilter_fragment_variables[1]) {
-        g_free (hfilter_fragment_variables[1]);
-      }
-
-      hfilter_fragment_variables[1] = g_strdup (g_value_get_string (value));
-
-      if (!hfilter_fragment_variables[1][0]) {
-        g_free (hfilter_fragment_variables[1]);
-        hfilter_fragment_variables[1] = 0;
-      }
-
+    case PROP_FRAGMENT:
+      GST_OBJECT_LOCK (filtershader);
+      if (filtershader->fragment)
+        g_free (filtershader->fragment);
+      filtershader->fragment = g_value_dup_string (value);
+      filtershader->new_source = TRUE;
+      GST_OBJECT_UNLOCK (filtershader);
       break;
-
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -254,101 +192,43 @@ gst_gl_filtershader_get_property (GObject * object, guint prop_id,
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (object);
 
   switch (prop_id) {
-    case PROP_LOCATION:
-      g_value_set_string (value, filtershader->filename);
+    case PROP_SHADER:
+      GST_OBJECT_LOCK (filtershader);
+      g_value_set_object (value, filtershader->shader_prop);
+      GST_OBJECT_UNLOCK (filtershader);
       break;
-
-    case PROP_PRESET:
-      g_value_set_string (value, filtershader->presetfile);
+    case PROP_VERTEX:
+      GST_OBJECT_LOCK (filtershader);
+      g_value_set_string (value, filtershader->vertex);
+      GST_OBJECT_UNLOCK (filtershader);
       break;
-
+    case PROP_FRAGMENT:
+      GST_OBJECT_LOCK (filtershader);
+      g_value_set_string (value, filtershader->fragment);
+      GST_OBJECT_UNLOCK (filtershader);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
-static gboolean
-gst_gl_filtershader_load_shader (GstGLFilterShader * filter_shader,
-    char *filename, char **storage)
-{
-  GError *error = NULL;
-  gsize length;
-
-  g_return_val_if_fail (storage != NULL, FALSE);
-
-  if (!filename) {
-    GST_ELEMENT_ERROR (filter_shader, RESOURCE, NOT_FOUND,
-        ("A shader file is required"), (NULL));
-    return FALSE;
-  }
-
-  if (!g_file_get_contents (filename, storage, &length, &error)) {
-    GST_ELEMENT_ERROR (filter_shader, RESOURCE, NOT_FOUND, ("%s",
-            error->message), (NULL));
-    g_error_free (error);
-
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-gst_gl_filtershader_load_variables (GstGLFilterShader * filter_shader,
-    char *filename, char **storage)
-{
-  GError *error = NULL;
-  gsize length;
-
-  if (storage[0]) {
-    g_free (storage[0]);
-    storage[0] = 0;
-  }
-
-  if (!filename)
-    return TRUE;
-
-  if (!g_file_get_contents (filename, storage, &length, &error)) {
-    GST_ELEMENT_ERROR (filter_shader, RESOURCE, NOT_FOUND, ("%s",
-            error->message), (NULL));
-    g_error_free (error);
-
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
 static void
-gst_gl_filtershader_variables_parse (GstGLShader * shader, gchar * variables)
+gst_gl_filtershader_gl_stop (GstGLBaseFilter * base)
 {
-  gst_gl_shadervariables_parse (shader, variables, 0);
+  GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (base);
+
+  if (filtershader->shader)
+    gst_object_unref (filtershader->shader);
+  filtershader->shader = NULL;
+
+  GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base);
 }
 
 static gboolean
-gst_gl_filtershader_init_shader (GstGLFilter * filter)
+gst_gl_filtershader_gl_start (GstGLBaseFilter * base)
 {
-
-  GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
-
-  if (!gst_gl_filtershader_load_shader (filtershader, filtershader->filename,
-          &hfilter_fragment_source))
-    return FALSE;
-
-  //blocking call, wait the opengl thread has compiled the shader
-  if (!gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context,
-          text_vertex_shader, hfilter_fragment_source, &filtershader->shader0))
-    return FALSE;
-
-
-  if (!gst_gl_filtershader_load_variables (filtershader,
-          filtershader->presetfile, &hfilter_fragment_variables[0]))
-    return FALSE;
-
-  filtershader->compiled = 1;
-
-  return TRUE;
+  return GST_GL_BASE_FILTER_CLASS (parent_class)->gl_start (base);
 }
 
 static inline gboolean
@@ -397,7 +277,104 @@ gst_gl_filtershader_filter_texture (GstGLFilter * filter, guint in_tex,
   gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
       gst_gl_filtershader_hcallback, filtershader);
 
+  if (!filtershader->shader)
+    return FALSE;
+
   return TRUE;
+}
+
+static GstGLShader *
+_maybe_recompile_shader (GstGLFilterShader * filtershader)
+{
+  GstGLContext *context = GST_GL_BASE_FILTER (filtershader)->context;
+  GstGLShader *shader;
+  GError *error = NULL;
+
+  GST_OBJECT_LOCK (filtershader);
+
+  if (filtershader->shader_prop) {
+    shader = gst_object_ref (filtershader->shader_prop);
+    GST_OBJECT_UNLOCK (filtershader);
+    return shader;
+  }
+  if (!filtershader->shader) {
+    g_signal_emit (filtershader, gst_gl_shader_signals[SIGNAL_CREATE_SHADER], 0,
+        &filtershader->shader);
+    if (filtershader->shader) {
+      filtershader->new_source = FALSE;
+      shader = gst_object_ref (filtershader->shader);
+      GST_OBJECT_UNLOCK (filtershader);
+      return shader;
+    }
+  }
+
+  if (filtershader->new_source) {
+    GstGLSLStage *stage;
+
+    shader = gst_gl_shader_new (context);
+
+    if (filtershader->vertex) {
+      if (!(stage = gst_glsl_stage_new_with_string (context, GL_VERTEX_SHADER,
+                  GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_NONE,
+                  filtershader->vertex))) {
+        g_set_error (&error, GST_GLSL_ERROR, GST_GLSL_ERROR_COMPILE,
+            "Failed to create shader vertex stage");
+        goto print_error;
+      }
+    } else {
+      stage = gst_glsl_stage_new_default_vertex (context);
+    }
+
+    if (!gst_gl_shader_compile_attach_stage (shader, stage, &error)) {
+      gst_object_unref (stage);
+      goto print_error;
+    }
+
+    if (filtershader->fragment) {
+      if (!(stage = gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+                  GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_NONE,
+                  filtershader->fragment))) {
+        g_set_error (&error, GST_GLSL_ERROR, GST_GLSL_ERROR_COMPILE,
+            "Failed to create shader fragment stage");
+        goto print_error;
+      }
+    } else {
+      stage = gst_glsl_stage_new_default_fragment (context);
+    }
+
+    if (!gst_gl_shader_compile_attach_stage (shader, stage, &error)) {
+      gst_object_unref (stage);
+      goto print_error;
+    }
+
+    if (!gst_gl_shader_link (shader, &error)) {
+      goto print_error;
+    }
+    if (filtershader->shader)
+      gst_object_unref (filtershader->shader);
+    filtershader->shader = gst_object_ref (shader);
+    filtershader->new_source = FALSE;
+
+    GST_OBJECT_UNLOCK (filtershader);
+    return shader;
+  } else if (filtershader->shader) {
+    shader = gst_object_ref (filtershader->shader);
+    GST_OBJECT_UNLOCK (filtershader);
+    return shader;
+  }
+
+  return NULL;
+
+print_error:
+  if (shader) {
+    gst_object_unref (shader);
+    shader = NULL;
+  }
+
+  GST_OBJECT_UNLOCK (filtershader);
+  GST_ELEMENT_ERROR (filtershader, RESOURCE, NOT_FOUND,
+      ("%s", error->message), (NULL));
+  return NULL;
 }
 
 static void
@@ -407,39 +384,32 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
   GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
+  GstGLShader *shader;
 
-  gst_gl_shader_use (filtershader->shader0);
+  if (!(shader = _maybe_recompile_shader (filtershader)))
+    return;
+
+  gl->ClearColor (0.0, 0.0, 0.0, 1.0);
+  gl->Clear (GL_COLOR_BUFFER_BIT);
+
+  gst_gl_shader_use (shader);
+
+  /* FIXME: propertise these */
+  gst_gl_shader_set_uniform_1i (shader, "tex", 0);
+  gst_gl_shader_set_uniform_1f (shader, "width", width);
+  gst_gl_shader_set_uniform_1f (shader, "height", height);
+  gst_gl_shader_set_uniform_1f (shader, "time", filtershader->time);
+
+  /* FIXME: propertise these */
+  filter->draw_attr_position_loc =
+      gst_gl_shader_get_attribute_location (shader, "a_position");
+  filter->draw_attr_texture_loc =
+      gst_gl_shader_get_attribute_location (shader, "a_texcoord");
 
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (GL_TEXTURE_2D, texture);
 
-  gst_gl_shader_set_uniform_1i (filtershader->shader0, "tex", 0);
-  gst_gl_shader_set_uniform_1f (filtershader->shader0, "width", width);
-  gst_gl_shader_set_uniform_1f (filtershader->shader0, "height", height);
-  gst_gl_shader_set_uniform_1f (filtershader->shader0, "time",
-      filtershader->time);
-
-  filter->draw_attr_position_loc =
-      gst_gl_shader_get_attribute_location (filtershader->shader0,
-      "a_position");
-  filter->draw_attr_texture_loc =
-      gst_gl_shader_get_attribute_location (filtershader->shader0,
-      "a_texcoord");
-
-  if (hfilter_fragment_variables[0]) {
-    gst_gl_filtershader_variables_parse (filtershader->shader0,
-        hfilter_fragment_variables[0]);
-    g_free (hfilter_fragment_variables[0]);
-    hfilter_fragment_variables[0] = 0;
-  }
-  if (hfilter_fragment_variables[1]) {
-    gst_gl_filtershader_variables_parse (filtershader->shader0,
-        hfilter_fragment_variables[1]);
-    g_free (hfilter_fragment_variables[1]);
-    hfilter_fragment_variables[1] = 0;
-  }
-
-  gl->Clear (GL_COLOR_BUFFER_BIT);
-
   gst_gl_filter_draw_texture (filter, texture, width, height);
+
+  gst_object_unref (shader);
 }
