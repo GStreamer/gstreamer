@@ -375,6 +375,9 @@ gst_smpte_finalize (GstSMPTE * smpte)
   if (smpte->collect) {
     gst_object_unref (smpte->collect);
   }
+  if (smpte->mask) {
+    gst_mask_destroy (smpte->mask);
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) smpte);
 }
