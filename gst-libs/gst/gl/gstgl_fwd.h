@@ -47,6 +47,10 @@ typedef struct _GstGLMemory GstGLMemory;
 typedef struct _GstGLAllocator GstGLAllocator;
 typedef struct _GstGLAllocatorClass GstGLAllocatorClass;
 
+typedef struct _GstGLSLStage        GstGLSLStage;
+typedef struct _GstGLSLStagePrivate GstGLSLStagePrivate;
+typedef struct _GstGLSLStageClass   GstGLSLStageClass;
+
 typedef struct _GstGLShader        GstGLShader;
 typedef struct _GstGLShaderPrivate GstGLShaderPrivate;
 typedef struct _GstGLShaderClass   GstGLShaderClass;
