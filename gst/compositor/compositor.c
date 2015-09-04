@@ -351,8 +351,8 @@ is_rectangle_contained (GstVideoRectangle rect1, GstVideoRectangle rect2)
 }
 
 static GstVideoRectangle
-clamp_rectangle (gint x, gint y, gint w, gint h, guint outer_width,
-    guint outer_height)
+clamp_rectangle (gint x, gint y, gint w, gint h, gint outer_width,
+    gint outer_height)
 {
   gint x2 = x + w;
   gint y2 = y + h;
