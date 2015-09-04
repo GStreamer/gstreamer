@@ -409,6 +409,7 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
     self->files = NULL;
   }
   client->duration = GST_CLOCK_TIME_NONE;
+  self->mediasequence = 0;
 
   /* By default, allow caching */
   self->allowcache = TRUE;
