@@ -580,8 +580,12 @@ retry:
      * with udpsink generated a "port unreachable" ICMP response. We ignore
      * that and try again.
      * On Windows we get G_IO_ERROR_CONNECTION_CLOSED instead */
+#if GLIB_CHECK_VERSION(2,44,0)
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_HOST_UNREACHABLE) ||
         g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CONNECTION_CLOSED)) {
+#else
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_HOST_UNREACHABLE)) {
+#endif
       g_clear_error (&err);
       goto retry;
     }
