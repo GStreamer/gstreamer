@@ -35,6 +35,7 @@
 #include <gst/gl/gstglfeature.h>
 #include <gst/gl/gstglutils.h>
 #include <gst/gl/gstglwindow.h>
+#include <gst/gl/gstglslstage.h>
 #include <gst/gl/gstglshader.h>
 #include <gst/gl/gstglcolorconvert.h>
 #include <gst/gl/gstglupload.h>
