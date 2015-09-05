@@ -912,7 +912,7 @@ main (int argc, char *argv[])
   gboolean check_index = FALSE;
 #endif
   gchar *savefile = NULL;
-  gchar *exclude_args = NULL;
+  gchar **exclude_args = NULL;
 #ifndef GST_DISABLE_OPTION_PARSING
   GOptionEntry options[] = {
     {"tags", 't', 0, G_OPTION_ARG_NONE, &tags,
@@ -925,8 +925,10 @@ main (int argc, char *argv[])
         N_("Do not print any progress information"), NULL},
     {"messages", 'm', 0, G_OPTION_ARG_NONE, &messages,
         N_("Output messages"), NULL},
-    {"exclude", 'X', 0, G_OPTION_ARG_NONE, &exclude_args,
-        N_("Do not output status information of TYPE"), N_("TYPE1,TYPE2,...")},
+    {"exclude", 'X', 0, G_OPTION_ARG_STRING_ARRAY, &exclude_args,
+          N_("Do not output status information for the specified property "
+              "if verbose output is enabled (can be used multiple times)"),
+        N_("PROPERTY-NAME")},
     {"no-fault", 'f', 0, G_OPTION_ARG_NONE, &no_fault,
         N_("Do not install a fault handler"), NULL},
     {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
@@ -1027,10 +1029,8 @@ main (int argc, char *argv[])
       pipeline = real_pipeline;
     }
     if (verbose) {
-      gchar **exclude_list =
-          exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
       deep_notify_id = g_signal_connect (pipeline, "deep-notify",
-          G_CALLBACK (gst_object_default_deep_notify), exclude_list);
+          G_CALLBACK (gst_object_default_deep_notify), exclude_args);
     }
 #if 0
     if (check_index) {
