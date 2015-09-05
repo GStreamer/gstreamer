@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-08-19 12:27+0300\n"
+"POT-Creation-Date: 2015-09-05 11:20+0100\n"
 "PO-Revision-Date: 2015-06-13 11:32+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -1221,11 +1221,13 @@ msgstr "Не выводить информацию о ходе выполнен�
 msgid "Output messages"
 msgstr "Выводить сообщения"
 
-msgid "Do not output status information of TYPE"
-msgstr "Не выводить информацию о состоянии ТИПА"
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
 
-msgid "TYPE1,TYPE2,..."
-msgstr "ТИП1, ТИП2,…"
+msgid "PROPERTY-NAME"
+msgstr ""
 
 msgid "Do not install a fault handler"
 msgstr "Не устанавливать обработчик ошибок"
@@ -1303,6 +1305,12 @@ msgstr "Установка конвейера в состояние NULL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Освобождение конвейера…\n"
+
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "Не выводить информацию о состоянии ТИПА"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "ТИП1, ТИП2,…"
 
 #~ msgid "link without source element"
 #~ msgstr "попытка соединения без элемента-источника"

@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-08-19 12:27+0300\n"
+"POT-Creation-Date: 2015-09-05 11:20+0100\n"
 "PO-Revision-Date: 2010-10-25 10:03+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -1398,12 +1398,13 @@ msgstr "Non stampa alcuna informazione di avanzamento"
 msgid "Output messages"
 msgstr "Stampa i messaggi"
 
-# -X, --exclude=TIPO1,TIPO2,...
-msgid "Do not output status information of TYPE"
-msgstr "Non stampa le informazioni di stato per TIPO"
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
 
-msgid "TYPE1,TYPE2,..."
-msgstr "TIPO1,TIPO2,..."
+msgid "PROPERTY-NAME"
+msgstr ""
 
 # -f, --no-fault
 msgid "Do not install a fault handler"
@@ -1491,6 +1492,13 @@ msgstr "Impostazione della pipeline a NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Esecuzione di free sulla pipeline...\n"
+
+# -X, --exclude=TIPO1,TIPO2,...
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "Non stampa le informazioni di stato per TIPO"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "TIPO1,TIPO2,..."
 
 #~ msgid "link without source element"
 #~ msgstr "collegamento senza elemento sorgente"

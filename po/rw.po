@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-08-19 12:27+0300\n"
+"POT-Creation-Date: 2015-09-05 11:20+0100\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -1393,11 +1393,12 @@ msgstr "OYA Ibisohoka Imimerere Ibisobanuro Bya"
 msgid "Output messages"
 msgstr ""
 
-#, fuzzy
-msgid "Do not output status information of TYPE"
-msgstr "OYA Ibisohoka Imimerere Ibisobanuro Bya"
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
 
-msgid "TYPE1,TYPE2,..."
+msgid "PROPERTY-NAME"
 msgstr ""
 
 #, fuzzy
@@ -1482,6 +1483,10 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "OYA Ibisohoka Imimerere Ibisobanuro Bya"
 
 #, fuzzy
 #~ msgid "link without source element"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-08-19 12:27+0300\n"
+"POT-Creation-Date: 2015-09-05 11:20+0100\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -1240,11 +1240,13 @@ msgstr "Να μην εμφανισθεί καμμία πληροφορία πρ�
 msgid "Output messages"
 msgstr "Μηνύματα εξόδου"
 
-msgid "Do not output status information of TYPE"
-msgstr "Να μην εξάγεται πληροφορία κατάστασης εξόδου του TYPE"
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
 
-msgid "TYPE1,TYPE2,..."
-msgstr "TYPE1,TYPE2,…"
+msgid "PROPERTY-NAME"
+msgstr ""
 
 msgid "Do not install a fault handler"
 msgstr "Να μην εγκατασταθεί χειριστής σφαλμάτων"
@@ -1326,6 +1328,12 @@ msgstr "Ορισμός διασωλήνωσης σε NULL …\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Αποδέσμευση της διασωλήνωσης …\n"
+
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "Να μην εξάγεται πληροφορία κατάστασης εξόδου του TYPE"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "TYPE1,TYPE2,…"
 
 #~ msgid "link without source element"
 #~ msgstr "σύνδεση χωρίς στοιχείο προέλευσης"

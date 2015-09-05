@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-08-19 12:27+0300\n"
+"POT-Creation-Date: 2015-09-05 11:20+0100\n"
 "PO-Revision-Date: 2011-04-26 22:40+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -1225,11 +1225,13 @@ msgstr "Да не се отпечатва информация за напред
 msgid "Output messages"
 msgstr "Изходни съобщения"
 
-msgid "Do not output status information of TYPE"
-msgstr "Да не се дават изходни съобщения от следните ВИДове за състоянието "
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
 
-msgid "TYPE1,TYPE2,..."
-msgstr "ВИД1,ВИД2,…"
+msgid "PROPERTY-NAME"
+msgstr ""
 
 msgid "Do not install a fault handler"
 msgstr "Да не се инсталира модул за обработка на грешки"
@@ -1310,6 +1312,12 @@ msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Конвейерът се освобождава…\n"
+
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "Да не се дават изходни съобщения от следните ВИДове за състоянието "
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "ВИД1,ВИД2,…"
 
 #~ msgid "link without source element"
 #~ msgstr "връзка без елемент-източник"
