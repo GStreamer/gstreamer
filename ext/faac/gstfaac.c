@@ -341,6 +341,22 @@ gst_faac_enc_generate_sink_caps (void)
   return caps;
 }
 
+static void
+gst_faac_set_tags (GstFaac * faac)
+{
+  GstTagList *taglist;
+
+  /* create a taglist and add a bitrate tag to it */
+  taglist = gst_tag_list_new_empty ();
+  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+      GST_TAG_BITRATE, faac->bitrate, NULL);
+
+  gst_audio_encoder_merge_tags (GST_AUDIO_ENCODER (faac), taglist,
+      GST_TAG_MERGE_REPLACE);
+
+  gst_tag_list_unref (taglist);
+}
+
 static gboolean
 gst_faac_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 {
@@ -374,6 +390,8 @@ gst_faac_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   result = gst_faac_configure_source_pad (faac, info);
   if (!result)
     goto done;
+
+  gst_faac_set_tags (faac);
 
   /* report needs to base class */
   gst_audio_encoder_set_frame_samples_min (enc, faac->samples);
