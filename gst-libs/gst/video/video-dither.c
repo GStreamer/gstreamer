@@ -413,7 +413,7 @@ gst_video_dither_new (GstVideoDitherMethod method, GstVideoDitherFlags flags,
   }
   dither->orc_mask64 = GUINT64_FROM_BE (dither->orc_mask64);
   dither->orc_mask32 = GUINT32_FROM_BE (dither->orc_mask32);
-  GST_DEBUG ("mask64 %08llx", (unsigned long long int) dither->orc_mask64);
+  GST_DEBUG ("mask64 %08" G_GINT64_MODIFIER "x", (guint64) dither->orc_mask64);
   GST_DEBUG ("mask32 %08x", dither->orc_mask32);
 
   switch (method) {
