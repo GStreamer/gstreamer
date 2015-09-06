@@ -86,6 +86,7 @@ struct _GstDVDemux {
   gint           found_header; /* ATOMIC */
   GstEvent      *seek_event;
   GstEvent	*pending_segment;
+  GstEvent      *tag_event;
 
   gint16        *audio_buffers[4];
 };

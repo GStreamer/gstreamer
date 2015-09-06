@@ -272,6 +272,7 @@ gst_dvdemux_reset (GstDVDemux * dvdemux)
   dvdemux->upstream_time_segment = FALSE;
   dvdemux->have_group_id = FALSE;
   dvdemux->group_id = G_MAXUINT;
+  dvdemux->tag_event = NULL;
 }
 
 static gboolean
@@ -294,16 +295,35 @@ have_group_id (GstDVDemux * demux)
   return demux->have_group_id;
 }
 
+static GstEvent *
+gst_dvdemux_create_global_tag_event (GstDVDemux * dvdemux)
+{
+  gchar rec_datetime[40];
+  GstDateTime *rec_dt;
+  GstTagList *tags;
+
+  tags = gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "DV", NULL);
+  gst_tag_list_set_scope (tags, GST_TAG_SCOPE_GLOBAL);
+
+  if (dv_get_recording_datetime (dvdemux->decoder, rec_datetime)) {
+    rec_dt = gst_date_time_new_from_iso8601_string (rec_datetime);
+    if (rec_dt) {
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_DATE_TIME,
+          rec_dt, NULL);
+      gst_date_time_unref (rec_dt);
+    }
+  }
+
+  return gst_event_new_tag (tags);
+}
+
 static GstPad *
 gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template,
     GstCaps * caps)
 {
-  gboolean no_more_pads;
   GstPad *pad;
   GstEvent *event;
   gchar *stream_id;
-  gchar rec_datetime[40];
-  GstDateTime *rec_dt;
 
   pad = gst_pad_new_from_static_template (template, template->name_template);
 
@@ -330,35 +350,12 @@ gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template,
 
   gst_element_add_pad (GST_ELEMENT (dvdemux), pad);
 
-  no_more_pads =
-      (dvdemux->videosrcpad != NULL && template == &audio_src_temp) ||
-      (dvdemux->audiosrcpad != NULL && template == &video_src_temp);
+  if (!dvdemux->tag_event) {
+    dvdemux->tag_event = gst_dvdemux_create_global_tag_event (dvdemux);
+  }
 
-  if (no_more_pads)
-    gst_element_no_more_pads (GST_ELEMENT (dvdemux));
-
-  if (no_more_pads) {
-    GstTagList *tags;
-
-    tags = gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "DV", NULL);
-    gst_tag_list_set_scope (tags, GST_TAG_SCOPE_GLOBAL);
-
-    if (dv_get_recording_datetime (dvdemux->decoder, rec_datetime)) {
-      rec_dt = gst_date_time_new_from_iso8601_string (rec_datetime);
-      if (rec_dt) {
-        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_DATE_TIME,
-            rec_dt, NULL);
-        gst_date_time_unref (rec_dt);
-      }
-    }
-
-    if (dvdemux->videosrcpad)
-      gst_pad_push_event (dvdemux->videosrcpad,
-          gst_event_new_tag (gst_tag_list_ref (tags)));
-    if (dvdemux->audiosrcpad)
-      gst_pad_push_event (dvdemux->audiosrcpad,
-          gst_event_new_tag (gst_tag_list_ref (tags)));
-    gst_tag_list_unref (tags);
+  if (pad && dvdemux->tag_event) {
+    gst_pad_push_event (pad, gst_event_ref (dvdemux->tag_event));
   }
 
   return pad;
@@ -1279,6 +1276,10 @@ gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
       if (G_UNLIKELY (dvdemux->audiosrcpad == NULL)) {
         dvdemux->audiosrcpad =
             gst_dvdemux_add_pad (dvdemux, &audio_src_temp, caps);
+
+        if (dvdemux->videosrcpad && dvdemux->audiosrcpad)
+          gst_element_no_more_pads (GST_ELEMENT (dvdemux));
+
       } else {
         gst_pad_set_caps (dvdemux->audiosrcpad, caps);
       }
@@ -1309,7 +1310,6 @@ gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
 
     if (dvdemux->new_media || dvdemux->discont)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-
     ret = gst_pad_push (dvdemux->audiosrcpad, outbuf);
   } else {
     /* no samples */
@@ -1372,6 +1372,10 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, GstBuffer * buffer,
     if (G_UNLIKELY (dvdemux->videosrcpad == NULL)) {
       dvdemux->videosrcpad =
           gst_dvdemux_add_pad (dvdemux, &video_src_temp, caps);
+
+      if (dvdemux->videosrcpad && dvdemux->audiosrcpad)
+        gst_element_no_more_pads (GST_ELEMENT (dvdemux));
+
     } else {
       gst_pad_set_caps (dvdemux->videosrcpad, caps);
     }
@@ -2018,6 +2022,12 @@ gst_dvdemux_change_state (GstElement * element, GstStateChange transition)
       dvdemux->decoder = NULL;
 
       gst_dvdemux_remove_pads (dvdemux);
+
+      if (dvdemux->tag_event) {
+        gst_event_unref (dvdemux->tag_event);
+        dvdemux->tag_event = NULL;
+      }
+
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
     {
