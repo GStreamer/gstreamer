@@ -50,13 +50,6 @@ GstMultiQueue *gstmultiqueue
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstInputSelector::block</NAME>
-<RETURNS>gint64</RETURNS>
-<FLAGS>la</FLAGS>
-GstInputSelector *gstinputselector
-</SIGNAL>
-
-<SIGNAL>
 <NAME>GstIdentity::handoff</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
