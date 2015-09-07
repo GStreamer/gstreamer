@@ -54,7 +54,10 @@ typedef struct _GstInterpolationControlSourcePrivate GstInterpolationControlSour
  * GstInterpolationMode:
  * @GST_INTERPOLATION_MODE_NONE: steps-like interpolation, default
  * @GST_INTERPOLATION_MODE_LINEAR: linear interpolation
- * @GST_INTERPOLATION_MODE_CUBIC: cubic interpolation
+ * @GST_INTERPOLATION_MODE_CUBIC: cubic interpolation (natural), may overshoot
+ *   the min or max values set by the control point, but is more 'curvy'
+ * @GST_INTERPOLATION_MODE_CUBIC_MONO: (Since 1.8) monotonic cubic interpolation, will not
+ *   produce any values outside of the min-max range set by the control points
  *
  * The various interpolation modes available.
  */
@@ -62,7 +65,8 @@ typedef enum
 {
   GST_INTERPOLATION_MODE_NONE,
   GST_INTERPOLATION_MODE_LINEAR,
-  GST_INTERPOLATION_MODE_CUBIC
+  GST_INTERPOLATION_MODE_CUBIC,
+  GST_INTERPOLATION_MODE_CUBIC_MONO,
 } GstInterpolationMode;
 
 /**

@@ -427,6 +427,176 @@ interpolate_cubic_get_value_array (GstTimedValueControlSource * self,
   return ret;
 }
 
+
+/*  monotonic cubic interpolation */
+
+/* the following functions implement monotonic cubic spline interpolation.
+ * For details: http://en.wikipedia.org/wiki/Monotone_cubic_interpolation
+ *
+ * In contrast to the previous cubic mode, the values won't overshoot.
+ */
+
+static void
+_interpolate_cubic_mono_update_cache (GstTimedValueControlSource * self)
+{
+  gint i, n = self->nvalues;
+  gdouble *dxs = g_new0 (gdouble, n);
+  gdouble *dys = g_new0 (gdouble, n);
+  gdouble *ms = g_new0 (gdouble, n);
+  gdouble *c1s = g_new0 (gdouble, n);
+
+  GSequenceIter *iter;
+  GstControlPoint *cp;
+  GstClockTime x, x_next, dx;
+  gdouble y, y_next, dy;
+
+  /* Get consecutive differences and slopes */
+  iter = g_sequence_get_begin_iter (self->values);
+  cp = g_sequence_get (iter);
+  x_next = cp->timestamp;
+  y_next = cp->value;
+  for (i = 0; i < n - 1; i++) {
+    x = x_next;
+    y = y_next;
+    iter = g_sequence_iter_next (iter);
+    cp = g_sequence_get (iter);
+    x_next = cp->timestamp;
+    y_next = cp->value;
+
+    dx = gst_guint64_to_gdouble (x_next - x);
+    dy = y_next - y;
+    dxs[i] = dx;
+    dys[i] = dy;
+    ms[i] = dy / dx;
+  }
+
+  /* Get degree-1 coefficients */
+  c1s[0] = ms[0];
+  for (i = 1; i < n; i++) {
+    gdouble m = ms[i - 1];
+    gdouble m_next = ms[i];
+
+    if (m * m_next <= 0) {
+      c1s[i] = 0.0;
+    } else {
+      gdouble dx_next, dx_sum;
+
+      dx = dxs[i], dx_next = dxs[i + 1], dx_sum = dx + dx_next;
+      c1s[i] = 3.0 * dx_sum / ((dx_sum + dx_next) / m + (dx_sum + dx) / m_next);
+    }
+  }
+  c1s[n - 1] = ms[n - 1];
+
+  /* Get degree-2 and degree-3 coefficients */
+  iter = g_sequence_get_begin_iter (self->values);
+  for (i = 0; i < n - 1; i++) {
+    gdouble c1, m, inv_dx, common;
+    cp = g_sequence_get (iter);
+
+    c1 = c1s[i];
+    m = ms[i];
+    inv_dx = 1.0 / dxs[i];
+    common = c1 + c1s[i + 1] - m - m;
+
+    cp->cache.cubic_mono.c1s = c1;
+    cp->cache.cubic_mono.c2s = (m - c1 - common) * inv_dx;
+    cp->cache.cubic_mono.c3s = common * inv_dx * inv_dx;
+
+    iter = g_sequence_iter_next (iter);
+  }
+
+  /* Free our temporary arrays */
+  g_free (dxs);
+  g_free (dys);
+  g_free (ms);
+  g_free (c1s);
+}
+
+static inline gdouble
+_interpolate_cubic_mono (GstTimedValueControlSource * self,
+    GstControlPoint * cp1, gdouble value1, GstControlPoint * cp2,
+    gdouble value2, GstClockTime timestamp)
+{
+  if (!self->valid_cache) {
+    _interpolate_cubic_mono_update_cache (self);
+    self->valid_cache = TRUE;
+  }
+
+  if (cp2) {
+    gdouble diff = gst_guint64_to_gdouble (timestamp - cp1->timestamp);
+    gdouble diff2 = diff * diff;
+    gdouble out;
+
+    out = value1 + cp1->cache.cubic_mono.c1s * diff;
+    out += cp1->cache.cubic_mono.c2s * diff2;
+    out += cp1->cache.cubic_mono.c3s * diff * diff2;
+    return out;
+  } else {
+    return value1;
+  }
+}
+
+static gboolean
+interpolate_cubic_mono_get (GstTimedValueControlSource * self,
+    GstClockTime timestamp, gdouble * value)
+{
+  gboolean ret = FALSE;
+  GstControlPoint *cp1, *cp2 = NULL;
+
+  if (self->nvalues <= 2)
+    return interpolate_linear_get (self, timestamp, value);
+
+  g_mutex_lock (&self->lock);
+
+  if (_get_nearest_control_points (self, timestamp, &cp1, &cp2)) {
+    *value = _interpolate_cubic_mono (self, cp1, cp1->value, cp2,
+        (cp2 ? cp2->value : 0.0), timestamp);
+    ret = TRUE;
+  }
+  g_mutex_unlock (&self->lock);
+  return ret;
+}
+
+static gboolean
+interpolate_cubic_mono_get_value_array (GstTimedValueControlSource * self,
+    GstClockTime timestamp, GstClockTime interval, guint n_values,
+    gdouble * values)
+{
+  gboolean ret = FALSE;
+  guint i;
+  GstClockTime ts = timestamp;
+  GstClockTime next_ts = 0;
+  GstControlPoint *cp1 = NULL, *cp2 = NULL;
+
+  if (self->nvalues <= 2)
+    return interpolate_linear_get_value_array (self, timestamp, interval,
+        n_values, values);
+
+  g_mutex_lock (&self->lock);
+
+  for (i = 0; i < n_values; i++) {
+    GST_LOG ("values[%3d] : ts=%" GST_TIME_FORMAT ", next_ts=%" GST_TIME_FORMAT,
+        i, GST_TIME_ARGS (ts), GST_TIME_ARGS (next_ts));
+    if (ts >= next_ts) {
+      _get_nearest_control_points2 (self, ts, &cp1, &cp2, &next_ts);
+    }
+    if (cp1) {
+      *values = _interpolate_cubic_mono (self, cp1, cp1->value, cp2,
+          (cp2 ? cp2->value : 0.0), ts);
+      ret = TRUE;
+      GST_LOG ("values[%3d]=%lf", i, *values);
+    } else {
+      *values = NAN;
+      GST_LOG ("values[%3d]=-", i);
+    }
+    ts += interval;
+    values++;
+  }
+  g_mutex_unlock (&self->lock);
+  return ret;
+}
+
+
 static struct
 {
   GstControlSourceGetValue get;
@@ -438,8 +608,10 @@ static struct
   (GstControlSourceGetValue) interpolate_linear_get,
         (GstControlSourceGetValueArray) interpolate_linear_get_value_array}, {
   (GstControlSourceGetValue) interpolate_cubic_get,
-        (GstControlSourceGetValueArray) interpolate_cubic_get_value_array}
-};
+        (GstControlSourceGetValueArray) interpolate_cubic_get_value_array}, {
+    (GstControlSourceGetValue) interpolate_cubic_mono_get,
+        (GstControlSourceGetValueArray)
+interpolate_cubic_mono_get_value_array}};
 
 static const guint num_interpolation_modes = G_N_ELEMENTS (interpolation_modes);
 
@@ -456,6 +628,8 @@ gst_interpolation_mode_get_type (void)
     {GST_INTERPOLATION_MODE_NONE, "GST_INTERPOLATION_MODE_NONE", "none"},
     {GST_INTERPOLATION_MODE_LINEAR, "GST_INTERPOLATION_MODE_LINEAR", "linear"},
     {GST_INTERPOLATION_MODE_CUBIC, "GST_INTERPOLATION_MODE_CUBIC", "cubic"},
+    {GST_INTERPOLATION_MODE_CUBIC_MONO, "GST_INTERPOLATION_MODE_CUBIC_MONO",
+        "cubic-mono"},
     {0, NULL, NULL}
   };
 

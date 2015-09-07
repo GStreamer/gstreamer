@@ -74,6 +74,9 @@ struct _GstControlPoint
       gdouble h;
       gdouble z;
     } cubic;
+    struct {
+      gdouble c1s, c2s, c3s;
+    } cubic_mono;
   } cache;
 
 };
