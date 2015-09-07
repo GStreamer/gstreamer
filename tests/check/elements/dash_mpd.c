@@ -4082,6 +4082,7 @@ GST_START_TEST (dash_mpdparser_segment_template)
   GstClockTime expectedDuration;
   GstClockTime expectedTimestamp;
   GstClockTime periodStartTime;
+  GstClockTime offset;
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
@@ -4092,6 +4093,7 @@ GST_START_TEST (dash_mpdparser_segment_template)
       "    <AdaptationSet mimeType=\"video/mp4\">"
       "      <Representation id=\"repId\" bandwidth=\"250000\">"
       "        <SegmentTemplate duration=\"12000\""
+      "                         presentationTimeOffset=\"15\""
       "                         media=\"TestMedia_rep=$RepresentationID$number=$Number$bandwidth=$Bandwidth$time=$Time$\""
       "                         index=\"TestIndex\">"
       "        </SegmentTemplate>"
@@ -4150,6 +4152,9 @@ GST_START_TEST (dash_mpdparser_segment_template)
 
   periodStartTime = gst_mpd_parser_get_period_start_time (mpdclient);
   assert_equals_uint64 (periodStartTime, 10 * GST_SECOND);
+
+  offset = gst_mpd_parser_get_stream_presentation_offset (mpdclient, 0);
+  assert_equals_uint64 (offset, 15 * GST_SECOND);
 
   gst_media_fragment_info_clear (&fragment);
 
