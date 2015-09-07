@@ -416,6 +416,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   HRESULT ret;
   GstClockTime timestamp, duration;
   GstClockTime running_time, running_time_duration;
+  GstClockTime latency, render_delay, ts_offset;
   gint i;
 
   GST_DEBUG_OBJECT (self, "Preparing buffer %p", buffer);
@@ -438,6 +439,28 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   running_time_duration =
       gst_segment_to_running_time (&GST_BASE_SINK_CAST (self)->segment,
       GST_FORMAT_TIME, timestamp + duration) - running_time;
+
+  /* See gst_base_sink_adjust_time() */
+  latency = gst_base_sink_get_latency (bsink);
+  render_delay = gst_base_sink_get_render_delay (bsink);
+  ts_offset = gst_base_sink_get_ts_offset (bsink);
+
+  running_time += latency;
+
+  if (ts_offset < 0) {
+    ts_offset = -ts_offset;
+    if (ts_offset < running_time)
+      running_time -= ts_offset;
+    else
+      running_time = 0;
+  } else {
+    running_time += ts_offset;
+  }
+
+  if (running_time > render_delay)
+    running_time -= render_delay;
+  else
+    running_time = 0;
 
   ret = self->output->output->CreateVideoFrame (self->info.width,
       self->info.height, self->info.stride[0], bmdFormat8BitYUV,
