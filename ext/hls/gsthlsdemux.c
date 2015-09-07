@@ -1059,7 +1059,7 @@ retry_failover_protection:
     main_uri = gst_m3u8_client_get_uri (demux->client);
     gst_element_post_message (GST_ELEMENT_CAST (demux),
         gst_message_new_element (GST_OBJECT_CAST (demux),
-            gst_structure_new (STATISTICS_MESSAGE_NAME,
+            gst_structure_new (GST_ADAPTIVE_DEMUX_STATISTICS_MESSAGE_NAME,
                 "manifest-uri", G_TYPE_STRING,
                 main_uri, "uri", G_TYPE_STRING,
                 uri, "bitrate", G_TYPE_INT, new_bandwidth, NULL)));
