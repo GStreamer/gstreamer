@@ -46,13 +46,67 @@
 #define GST_CAT_DEFAULT controller_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+/* helper functions */
+
+static inline gboolean
+_get_nearest_control_points (GstTimedValueControlSource * self,
+    GstClockTime ts, GstControlPoint ** cp1, GstControlPoint ** cp2)
+{
+  GSequenceIter *iter;
+
+  iter = gst_timed_value_control_source_find_control_point_iter (self, ts);
+  if (iter) {
+    *cp1 = g_sequence_get (iter);
+    iter = g_sequence_iter_next (iter);
+    if (iter && !g_sequence_iter_is_end (iter)) {
+      *cp2 = g_sequence_get (iter);
+    } else {
+      *cp2 = NULL;
+    }
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static inline void
+_get_nearest_control_points2 (GstTimedValueControlSource * self,
+    GstClockTime ts, GstControlPoint ** cp1, GstControlPoint ** cp2,
+    GstClockTime * next_ts)
+{
+  GSequenceIter *iter1, *iter2 = NULL;
+
+  *cp1 = *cp2 = NULL;
+  iter1 = gst_timed_value_control_source_find_control_point_iter (self, ts);
+  if (iter1) {
+    *cp1 = g_sequence_get (iter1);
+    iter2 = g_sequence_iter_next (iter1);
+  } else {
+    if (G_LIKELY (self->values)) {
+      /* all values in the control point list come after the given timestamp */
+      iter2 = g_sequence_get_begin_iter (self->values);
+      /* why this? if !cp1 we don't interpolate anyway
+       * if we can eliminate this, we can also use _get_nearest_control_points()
+       * here, is this just to set next_ts? */
+    } else {
+      /* no values */
+      iter2 = NULL;
+    }
+  }
+
+  if (iter2 && !g_sequence_iter_is_end (iter2)) {
+    *cp2 = g_sequence_get (iter2);
+    *next_ts = (*cp2)->timestamp;
+  } else {
+    *next_ts = GST_CLOCK_TIME_NONE;
+  }
+}
+
+
 /*  steps-like (no-)interpolation, default */
 /*  just returns the value for the most recent key-frame */
 static inline gdouble
-_interpolate_none (GstTimedValueControlSource * self, GSequenceIter * iter)
+_interpolate_none (GstTimedValueControlSource * self, GstControlPoint * cp)
 {
-  GstControlPoint *cp = g_sequence_get (iter);
-
   return cp->value;
 }
 
@@ -62,13 +116,15 @@ interpolate_none_get (GstTimedValueControlSource * self, GstClockTime timestamp,
 {
   gboolean ret = FALSE;
   GSequenceIter *iter;
+  GstControlPoint *cp;
 
   g_mutex_lock (&self->lock);
 
   iter =
       gst_timed_value_control_source_find_control_point_iter (self, timestamp);
   if (iter) {
-    *value = _interpolate_none (self, iter);
+    cp = g_sequence_get (iter);
+    *value = _interpolate_none (self, cp);
     ret = TRUE;
   }
   g_mutex_unlock (&self->lock);
@@ -84,43 +140,24 @@ interpolate_none_get_value_array (GstTimedValueControlSource * self,
   guint i;
   GstClockTime ts = timestamp;
   GstClockTime next_ts = 0;
-  gdouble val;
-  GSequenceIter *iter1 = NULL, *iter2 = NULL;
+  GstControlPoint *cp1 = NULL, *cp2 = NULL;
 
   g_mutex_lock (&self->lock);
 
   for (i = 0; i < n_values; i++) {
     GST_LOG ("values[%3d] : ts=%" GST_TIME_FORMAT ", next_ts=%" GST_TIME_FORMAT,
         i, GST_TIME_ARGS (ts), GST_TIME_ARGS (next_ts));
-    val = NAN;
     if (ts >= next_ts) {
-      iter1 = gst_timed_value_control_source_find_control_point_iter (self, ts);
-      if (!iter1) {
-        if (G_LIKELY (self->values))
-          iter2 = g_sequence_get_begin_iter (self->values);
-        else
-          iter2 = NULL;
-      } else {
-        iter2 = g_sequence_iter_next (iter1);
-      }
-
-      if (iter2 && !g_sequence_iter_is_end (iter2)) {
-        GstControlPoint *cp;
-
-        cp = g_sequence_get (iter2);
-        next_ts = cp->timestamp;
-      } else {
-        next_ts = GST_CLOCK_TIME_NONE;
-      }
+      _get_nearest_control_points2 (self, ts, &cp1, &cp2, &next_ts);
     }
-    if (iter1) {
-      val = _interpolate_none (self, iter1);
+    if (cp1) {
+      *values = _interpolate_none (self, cp1);
       ret = TRUE;
-      GST_LOG ("values[%3d]=%lf", i, val);
+      GST_LOG ("values[%3d]=%lf", i, *values);
     } else {
+      *values = NAN;
       GST_LOG ("values[%3d]=-", i);
     }
-    *values = val;
     ts += interval;
     values++;
   }
@@ -152,22 +189,11 @@ interpolate_linear_get (GstTimedValueControlSource * self,
     GstClockTime timestamp, gdouble * value)
 {
   gboolean ret = FALSE;
-  GSequenceIter *iter;
   GstControlPoint *cp1, *cp2;
 
   g_mutex_lock (&self->lock);
 
-  iter =
-      gst_timed_value_control_source_find_control_point_iter (self, timestamp);
-  if (iter) {
-    cp1 = g_sequence_get (iter);
-    iter = g_sequence_iter_next (iter);
-    if (iter && !g_sequence_iter_is_end (iter)) {
-      cp2 = g_sequence_get (iter);
-    } else {
-      cp2 = NULL;
-    }
-
+  if (_get_nearest_control_points (self, timestamp, &cp1, &cp2)) {
     *value = _interpolate_linear (cp1->timestamp, cp1->value,
         (cp2 ? cp2->timestamp : GST_CLOCK_TIME_NONE),
         (cp2 ? cp2->value : 0.0), timestamp);
@@ -186,8 +212,6 @@ interpolate_linear_get_value_array (GstTimedValueControlSource * self,
   guint i;
   GstClockTime ts = timestamp;
   GstClockTime next_ts = 0;
-  gdouble val;
-  GSequenceIter *iter1, *iter2 = NULL;
   GstControlPoint *cp1 = NULL, *cp2 = NULL;
 
   g_mutex_lock (&self->lock);
@@ -195,37 +219,19 @@ interpolate_linear_get_value_array (GstTimedValueControlSource * self,
   for (i = 0; i < n_values; i++) {
     GST_LOG ("values[%3d] : ts=%" GST_TIME_FORMAT ", next_ts=%" GST_TIME_FORMAT,
         i, GST_TIME_ARGS (ts), GST_TIME_ARGS (next_ts));
-    val = NAN;
     if (ts >= next_ts) {
-      cp1 = cp2 = NULL;
-      iter1 = gst_timed_value_control_source_find_control_point_iter (self, ts);
-      if (!iter1) {
-        if (G_LIKELY (self->values))
-          iter2 = g_sequence_get_begin_iter (self->values);
-        else
-          iter2 = NULL;
-      } else {
-        cp1 = g_sequence_get (iter1);
-        iter2 = g_sequence_iter_next (iter1);
-      }
-
-      if (iter2 && !g_sequence_iter_is_end (iter2)) {
-        cp2 = g_sequence_get (iter2);
-        next_ts = cp2->timestamp;
-      } else {
-        next_ts = GST_CLOCK_TIME_NONE;
-      }
+      _get_nearest_control_points2 (self, ts, &cp1, &cp2, &next_ts);
     }
     if (cp1) {
-      val = _interpolate_linear (cp1->timestamp, cp1->value,
+      *values = _interpolate_linear (cp1->timestamp, cp1->value,
           (cp2 ? cp2->timestamp : GST_CLOCK_TIME_NONE),
           (cp2 ? cp2->value : 0.0), ts);
       ret = TRUE;
-      GST_LOG ("values[%3d]=%lf", i, val);
+      GST_LOG ("values[%3d]=%lf", i, *values);
     } else {
+      *values++ = NAN;
       GST_LOG ("values[%3d]=-", i);
     }
-    *values = val;
     ts += interval;
     values++;
   }
@@ -366,7 +372,6 @@ interpolate_cubic_get (GstTimedValueControlSource * self,
     GstClockTime timestamp, gdouble * value)
 {
   gboolean ret = FALSE;
-  GSequenceIter *iter;
   GstControlPoint *cp1, *cp2 = NULL;
 
   if (self->nvalues <= 2)
@@ -374,16 +379,7 @@ interpolate_cubic_get (GstTimedValueControlSource * self,
 
   g_mutex_lock (&self->lock);
 
-  iter =
-      gst_timed_value_control_source_find_control_point_iter (self, timestamp);
-  if (iter) {
-    cp1 = g_sequence_get (iter);
-    iter = g_sequence_iter_next (iter);
-    if (iter && !g_sequence_iter_is_end (iter)) {
-      cp2 = g_sequence_get (iter);
-    } else {
-      cp2 = NULL;
-    }
+  if (_get_nearest_control_points (self, timestamp, &cp1, &cp2)) {
     *value = _interpolate_cubic (self, cp1, cp1->value, cp2,
         (cp2 ? cp2->value : 0.0), timestamp);
     ret = TRUE;
@@ -401,8 +397,6 @@ interpolate_cubic_get_value_array (GstTimedValueControlSource * self,
   guint i;
   GstClockTime ts = timestamp;
   GstClockTime next_ts = 0;
-  gdouble val;
-  GSequenceIter *iter1, *iter2 = NULL;
   GstControlPoint *cp1 = NULL, *cp2 = NULL;
 
   if (self->nvalues <= 2)
@@ -414,36 +408,18 @@ interpolate_cubic_get_value_array (GstTimedValueControlSource * self,
   for (i = 0; i < n_values; i++) {
     GST_LOG ("values[%3d] : ts=%" GST_TIME_FORMAT ", next_ts=%" GST_TIME_FORMAT,
         i, GST_TIME_ARGS (ts), GST_TIME_ARGS (next_ts));
-    val = NAN;
     if (ts >= next_ts) {
-      cp1 = cp2 = NULL;
-      iter1 = gst_timed_value_control_source_find_control_point_iter (self, ts);
-      if (!iter1) {
-        if (G_LIKELY (self->values))
-          iter2 = g_sequence_get_begin_iter (self->values);
-        else
-          iter2 = NULL;
-      } else {
-        cp1 = g_sequence_get (iter1);
-        iter2 = g_sequence_iter_next (iter1);
-      }
-
-      if (iter2 && !g_sequence_iter_is_end (iter2)) {
-        cp2 = g_sequence_get (iter2);
-        next_ts = cp2->timestamp;
-      } else {
-        next_ts = GST_CLOCK_TIME_NONE;
-      }
+      _get_nearest_control_points2 (self, ts, &cp1, &cp2, &next_ts);
     }
     if (cp1) {
-      val = _interpolate_cubic (self, cp1, cp1->value, cp2,
+      *values = _interpolate_cubic (self, cp1, cp1->value, cp2,
           (cp2 ? cp2->value : 0.0), ts);
       ret = TRUE;
-      GST_LOG ("values[%3d]=%lf", i, val);
+      GST_LOG ("values[%3d]=%lf", i, *values);
     } else {
+      *values = NAN;
       GST_LOG ("values[%3d]=-", i);
     }
-    *values = val;
     ts += interval;
     values++;
   }
