@@ -138,7 +138,7 @@ struct _GstSNode
 {
   guint64 t;
   guint64 d;
-  guint r;
+  gint r;
 };
 
 struct _GstSegmentTimelineNode

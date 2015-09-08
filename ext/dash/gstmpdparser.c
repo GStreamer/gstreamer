@@ -37,6 +37,8 @@ static gboolean gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
     const gchar * property_name, gchar ** property_value);
 static gboolean gst_mpdparser_get_xml_prop_string_vector_type (xmlNode * a_node,
     const gchar * property_name, gchar *** property_value);
+static gboolean gst_mpdparser_get_xml_prop_signed_integer (xmlNode * a_node,
+    const gchar * property_name, gint default_val, gint * property_value);
 static gboolean gst_mpdparser_get_xml_prop_unsigned_integer (xmlNode * a_node,
     const gchar * property_name, guint default_val, guint * property_value);
 static gboolean gst_mpdparser_get_xml_prop_unsigned_integer_64 (xmlNode *
@@ -277,6 +279,30 @@ gst_mpdparser_get_xml_prop_string_vector_type (xmlNode * a_node,
       }
     } else {
       GST_WARNING ("Scan of string vector property failed!");
+    }
+    xmlFree (prop_string);
+  }
+
+  return exists;
+}
+
+static gboolean
+gst_mpdparser_get_xml_prop_signed_integer (xmlNode * a_node,
+    const gchar * property_name, gint default_val, gint * property_value)
+{
+  xmlChar *prop_string;
+  gboolean exists = FALSE;
+
+  *property_value = default_val;
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
+  if (prop_string) {
+    if (sscanf ((const gchar *) prop_string, "%d", property_value) == 1) {
+      exists = TRUE;
+      GST_LOG (" - %s: %d", property_name, *property_value);
+    } else {
+      GST_WARNING
+          ("failed to parse signed integer property %s from xml string %s",
+          property_name, prop_string);
     }
     xmlFree (prop_string);
   }
@@ -1287,7 +1313,13 @@ gst_mpdparser_parse_s_node (GQueue * queue, xmlNode * a_node)
       &new_s_node->t);
   gst_mpdparser_get_xml_prop_unsigned_integer_64 (a_node, "d", 0,
       &new_s_node->d);
-  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "r", 0, &new_s_node->r);
+  gst_mpdparser_get_xml_prop_signed_integer (a_node, "r", 0, &new_s_node->r);
+
+  /* we don't support negative r values yet (5.3.9.6.1) */
+  if (new_s_node->r < 0) {
+    GST_WARNING ("Negative r are unsupported, defaulting to 0");
+    new_s_node->r = 0;          /* single segment */
+  }
 }
 
 static GstSegmentTimelineNode *
