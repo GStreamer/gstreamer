@@ -3790,10 +3790,155 @@ syntax_error:
 }
 
 static GList *
+gst_mpd_client_fetch_external_adaptation_set (GstMpdClient * client,
+    GstPeriodNode * period, GstAdaptationSetNode * adapt_set, gboolean * error)
+{
+  GstFragment *download;
+  GstBuffer *adapt_set_buffer;
+  GstMapInfo map;
+  GError *err = NULL;
+  xmlDocPtr doc;
+  GstUri *base_uri, *uri;
+  gchar *query = NULL;
+  gchar *uri_string;
+  GList *new_adapt_sets = NULL;
+
+  *error = FALSE;
+
+  /* ISO/IEC 23009-1:2014 5.5.3 4)
+   * Remove nodes that resolve to nothing when resolving
+   */
+  if (strcmp (adapt_set->xlink_href, "urn:mpeg:dash:resolve-to-zero:2013") == 0) {
+    return NULL;
+  }
+
+  if (!client->downloader) {
+    *error = TRUE;
+    return NULL;
+  }
+
+  /* Build absolute URI */
+
+  /* Get base URI at the MPD level */
+  base_uri =
+      gst_uri_from_string (client->
+      mpd_base_uri ? client->mpd_base_uri : client->mpd_uri);
+
+  /* combine a BaseURL at the MPD level with the current base url */
+  base_uri = combine_urls (base_uri, client->mpd_node->BaseURLs, &query, 0);
+
+  /* combine a BaseURL at the Period level with the current base url */
+  base_uri = combine_urls (base_uri, period->BaseURLs, &query, 0);
+
+  uri = gst_uri_from_string_with_base (base_uri, adapt_set->xlink_href);
+  if (query)
+    gst_uri_set_query_string (uri, query);
+  g_free (query);
+  uri_string = gst_uri_to_string (uri);
+  gst_uri_unref (base_uri);
+  gst_uri_unref (uri);
+
+  download =
+      gst_uri_downloader_fetch_uri (client->downloader,
+      uri_string, client->mpd_uri, TRUE, FALSE, TRUE, &err);
+  g_free (uri_string);
+
+  if (!download) {
+    GST_ERROR ("Failed to download external AdaptationSet node at '%s': %s",
+        adapt_set->xlink_href, err->message);
+    g_clear_error (&err);
+    *error = TRUE;
+    return NULL;
+  }
+
+  adapt_set_buffer = gst_fragment_get_buffer (download);
+  g_object_unref (download);
+
+  gst_buffer_map (adapt_set_buffer, &map, GST_MAP_READ);
+
+  doc =
+      xmlReadMemory ((const gchar *) map.data, map.size, "noname.xml", NULL,
+      XML_PARSE_NONET);
+  if (doc) {
+    xmlNode *root_element = xmlDocGetRootElement (doc);
+
+    if (root_element->type != XML_ELEMENT_NODE ||
+        xmlStrcmp (root_element->name, (xmlChar *) "AdaptationSet") != 0) {
+      xmlFreeDoc (doc);
+      gst_buffer_unmap (adapt_set_buffer, &map);
+      gst_buffer_unref (adapt_set_buffer);
+      *error = TRUE;
+      return NULL;
+    }
+
+    gst_mpdparser_parse_adaptation_set_node (&new_adapt_sets, root_element,
+        period);
+  } else {
+    GST_ERROR ("Failed to parse adaptation set node XML");
+    gst_buffer_unmap (adapt_set_buffer, &map);
+    gst_buffer_unref (adapt_set_buffer);
+    *error = TRUE;
+    return NULL;
+  }
+  gst_buffer_unmap (adapt_set_buffer, &map);
+  gst_buffer_unref (adapt_set_buffer);
+
+  return new_adapt_sets;
+}
+
+static GList *
 gst_mpd_client_get_adaptation_sets_for_period (GstMpdClient * client,
     GstStreamPeriod * period)
 {
+  GList *list;
+
   g_return_val_if_fail (period != NULL, NULL);
+
+  /* Resolve all external adaptation sets of this period. Every user of
+   * the adaptation sets would need to know the content of all adaptation sets
+   * to decide which one to use, so we have to resolve them all here
+   */
+  for (list = period->period->AdaptationSets; list;
+      /* advanced explicitely below */ ) {
+    GstAdaptationSetNode *adapt_set = (GstAdaptationSetNode *) list->data;
+    GList *new_adapt_sets = NULL, *prev, *next;
+    gboolean error;
+
+    if (!adapt_set->xlink_href) {
+      list = list->next;
+      continue;
+    }
+
+    new_adapt_sets =
+        gst_mpd_client_fetch_external_adaptation_set (client, period->period,
+        adapt_set, &error);
+
+    prev = list->prev;
+    period->period->AdaptationSets =
+        g_list_delete_link (period->period->AdaptationSets, list);
+    gst_mpdparser_free_adaptation_set_node (adapt_set);
+    adapt_set = NULL;
+
+    /* Get new next node, we will insert before this */
+    if (prev)
+      next = prev->next;
+    else
+      next = period->period->AdaptationSets;
+
+    while (new_adapt_sets) {
+      period->period->AdaptationSets =
+          g_list_insert_before (period->period->AdaptationSets, next,
+          new_adapt_sets->data);
+      new_adapt_sets = g_list_delete_link (new_adapt_sets, new_adapt_sets);
+    }
+
+    /* Update our iterator to the first new adaptation set if any, or the next */
+    if (prev)
+      list = prev->next;
+    else
+      list = period->period->AdaptationSets;
+  }
+
   return period->period->AdaptationSets;
 }
 
@@ -4870,7 +5015,7 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient * client,
 {
   GstStreamPeriod *stream_period;
   GstAdaptationSetNode *adapt_set;
-  GList *list;
+  GList *adaptation_sets, *list;
   const gchar *this_mimeType = "audio";
   gchar *mimeType = NULL;
   guint nb_adaptation_set = 0;
@@ -4879,8 +5024,9 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient * client,
   g_return_val_if_fail (stream_period != NULL, 0);
   g_return_val_if_fail (stream_period->period != NULL, 0);
 
-  for (list = g_list_first (stream_period->period->AdaptationSets); list;
-      list = g_list_next (list)) {
+  adaptation_sets =
+      gst_mpd_client_get_adaptation_sets_for_period (client, stream_period);
+  for (list = adaptation_sets; list; list = g_list_next (list)) {
     adapt_set = (GstAdaptationSetNode *) list->data;
     if (adapt_set && adapt_set->lang) {
       gchar *this_lang = adapt_set->lang;
