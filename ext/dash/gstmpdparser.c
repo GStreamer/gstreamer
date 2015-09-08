@@ -901,8 +901,9 @@ convert_to_millisecs (gint decimals, gint pos)
 }
 
 static gboolean
-gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
-    const gchar * property_name, gint64 default_value, gint64 * property_value)
+gst_mpdparser_get_xml_prop_duration_inner (xmlNode * a_node,
+    const gchar * property_name, gint64 default_value, gint64 * property_value,
+    gboolean allow_negative)
 {
   xmlChar *prop_string;
   gchar *str;
@@ -927,6 +928,10 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
         goto error;
       }
       GST_TRACE ("found - sign at the beginning");
+      if (!allow_negative) {
+        GST_WARNING ("sign \"-\" not allowed for property '%s'", property_name);
+        goto error;
+      }
       sign = -1;
       str++;
       len--;
@@ -1041,6 +1046,22 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
 error:
   xmlFree (prop_string);
   return FALSE;
+}
+
+static gboolean
+gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
+    const gchar * property_name, gint64 default_value, gint64 * property_value)
+{
+  return gst_mpdparser_get_xml_prop_duration_inner (a_node, property_name,
+      default_value, property_value, TRUE);
+}
+
+static gboolean
+gst_mpdparser_get_xml_prop_duration_unsigned (xmlNode * a_node,
+    const gchar * property_name, gint64 default_value, gint64 * property_value)
+{
+  return gst_mpdparser_get_xml_prop_duration_inner (a_node, property_name,
+      default_value, property_value, FALSE);
 }
 
 static gboolean
@@ -2080,8 +2101,8 @@ gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node)
       &new_mpd->minBufferTime);
   gst_mpdparser_get_xml_prop_duration (a_node, "timeShiftBufferDepth", -1,
       &new_mpd->timeShiftBufferDepth);
-  gst_mpdparser_get_xml_prop_duration (a_node, "suggestedPresentationDelay", -1,
-      &new_mpd->suggestedPresentationDelay);
+  gst_mpdparser_get_xml_prop_duration_unsigned (a_node,
+      "suggestedPresentationDelay", -1, &new_mpd->suggestedPresentationDelay);
   gst_mpdparser_get_xml_prop_duration (a_node, "maxSegmentDuration", -1,
       &new_mpd->maxSegmentDuration);
   gst_mpdparser_get_xml_prop_duration (a_node, "maxSubsegmentDuration", -1,
