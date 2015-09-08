@@ -981,6 +981,15 @@ handle_transfer (GstCurlBaseSink * sink)
 
   GST_OBJECT_LOCK (sink);
   if (sink->socket_type == CURLSOCKTYPE_ACCEPT) {
+    /* FIXME: remove this again once we can depend on libcurl > 7.44.0,
+     * see https://github.com/bagder/curl/issues/405.
+     */
+    if (G_UNLIKELY (sink->fd.fd < 0)) {
+      sink->error = g_strdup_printf ("unknown error");
+      retval = GST_FLOW_ERROR;
+      GST_OBJECT_UNLOCK (sink);
+      goto fail;
+    }
     if (!gst_poll_remove_fd (sink->fdset, &sink->fd)) {
       sink->error = g_strdup_printf ("failed to remove fd");
       retval = GST_FLOW_ERROR;
