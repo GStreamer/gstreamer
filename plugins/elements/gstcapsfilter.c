@@ -359,19 +359,6 @@ gst_capsfilter_accept_caps (GstBaseTransform * base,
       gst_base_transform_reconfigure_sink (base);
   }
 
-  if (ret) {
-    /* if we can intersect, see if the other end also accepts */
-    if (direction == GST_PAD_SRC)
-      ret =
-          gst_pad_peer_query_accept_caps (GST_BASE_TRANSFORM_SINK_PAD (base),
-          caps);
-    else
-      ret =
-          gst_pad_peer_query_accept_caps (GST_BASE_TRANSFORM_SRC_PAD (base),
-          caps);
-    GST_DEBUG_OBJECT (capsfilter, "peer accept: %d", ret);
-  }
-
   gst_caps_unref (filter_caps);
 
   return ret;
