@@ -3394,6 +3394,8 @@ typedef struct
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub, pack } }
 #define MAKE_YUVA_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_ALPHA, depth, pstride, plane, offs, sub, pack } }
+#define MAKE_YUVA_LE_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack ) \
+ { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub, pack } }
 #define MAKE_YUVA_PACK_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_UNPACK, depth, pstride, plane, offs, sub, pack } }
 #define MAKE_YUVA_LE_PACK_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
@@ -3558,17 +3560,17 @@ static const VideoFormat formats[] = {
   MAKE_YUV_T_FORMAT (NV12_64Z32, "raw video",
       GST_MAKE_FOURCC ('T', 'M', '1', '2'), DPTH8880, PSTR122, PLANE011,
       OFFS001, SUB420, PACK_NV12_64Z32, TILE_64x32 (ZFLIPZ_2X2)),
-  MAKE_YUV_FORMAT (A420_10BE, "raw video", 0x00000000, DPTH10_10_10_10,
+  MAKE_YUVA_FORMAT (A420_10BE, "raw video", 0x00000000, DPTH10_10_10_10,
       PSTR2222, PLANE0123, OFFS0, SUB4204, PACK_A420_10BE),
-  MAKE_YUV_LE_FORMAT (A420_10LE, "raw video", 0x00000000, DPTH10_10_10_10,
+  MAKE_YUVA_LE_FORMAT (A420_10LE, "raw video", 0x00000000, DPTH10_10_10_10,
       PSTR2222, PLANE0123, OFFS0, SUB4204, PACK_A420_10LE),
-  MAKE_YUV_FORMAT (A422_10BE, "raw video", 0x00000000, DPTH10_10_10_10,
+  MAKE_YUVA_FORMAT (A422_10BE, "raw video", 0x00000000, DPTH10_10_10_10,
       PSTR2222, PLANE0123, OFFS0, SUB4224, PACK_A422_10BE),
-  MAKE_YUV_LE_FORMAT (A422_10LE, "raw video", 0x00000000, DPTH10_10_10_10,
+  MAKE_YUVA_LE_FORMAT (A422_10LE, "raw video", 0x00000000, DPTH10_10_10_10,
       PSTR2222, PLANE0123, OFFS0, SUB4224, PACK_A422_10LE),
-  MAKE_YUV_FORMAT (A444_10BE, "raw video", 0x00000000, DPTH10_10_10_10,
+  MAKE_YUVA_FORMAT (A444_10BE, "raw video", 0x00000000, DPTH10_10_10_10,
       PSTR2222, PLANE0123, OFFS0, SUB4444, PACK_A444_10BE),
-  MAKE_YUV_LE_FORMAT (A444_10LE, "raw video", 0x00000000, DPTH10_10_10_10,
+  MAKE_YUVA_LE_FORMAT (A444_10LE, "raw video", 0x00000000, DPTH10_10_10_10,
       PSTR2222, PLANE0123, OFFS0, SUB4444, PACK_A444_10LE),
   MAKE_YUV_FORMAT (NV61, "raw video", GST_MAKE_FOURCC ('N', 'V', '6', '1'),
       DPTH888, PSTR122, PLANE011, OFFS010, SUB422, PACK_NV61),
