@@ -556,9 +556,16 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
       lang = adp_set->lang;
 
       /* Fallback to the language in ContentComponent node */
-      if (lang == NULL && g_list_length (adp_set->ContentComponents) == 1) {
-        GstContentComponentNode *cc_node = adp_set->ContentComponents->data;
-        lang = cc_node->lang;
+      if (lang == NULL) {
+        GList *it;
+
+        for (it = adp_set->ContentComponents; it; it = it->next) {
+          GstContentComponentNode *cc_node = it->data;
+          if (cc_node->lang) {
+            lang = cc_node->lang;
+            break;
+          }
+        }
       }
     }
 
