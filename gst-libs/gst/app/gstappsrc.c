@@ -561,6 +561,7 @@ gst_app_src_init (GstAppSrc * appsrc)
   gst_base_src_set_live (GST_BASE_SRC (appsrc), DEFAULT_PROP_IS_LIVE);
 }
 
+/* Must be called with priv->mutex */
 static void
 gst_app_src_flush_queued (GstAppSrc * src, gboolean retain_last_caps)
 {
@@ -607,7 +608,10 @@ gst_app_src_dispose (GObject * obj)
   priv->notify = NULL;
 
   GST_OBJECT_UNLOCK (appsrc);
+
+  g_mutex_lock (&priv->mutex);
   gst_app_src_flush_queued (appsrc, FALSE);
+  g_mutex_unlock (&priv->mutex);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
@@ -767,10 +771,13 @@ static gboolean
 gst_app_src_send_event (GstElement * element, GstEvent * event)
 {
   GstAppSrc *appsrc = GST_APP_SRC_CAST (element);
+  GstAppSrcPrivate *priv = appsrc->priv;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
+      g_mutex_lock (&priv->mutex);
       gst_app_src_flush_queued (appsrc, TRUE);
+      g_mutex_unlock (&priv->mutex);
       break;
     default:
       break;
@@ -961,7 +968,9 @@ gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
 
   if (res) {
     GST_DEBUG_OBJECT (appsrc, "flushing queue");
+    g_mutex_lock (&priv->mutex);
     gst_app_src_flush_queued (appsrc, TRUE);
+    g_mutex_unlock (&priv->mutex);
     priv->is_eos = FALSE;
   } else {
     GST_WARNING_OBJECT (appsrc, "seek failed");
