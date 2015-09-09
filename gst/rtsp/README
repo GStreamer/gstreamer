@@ -180,7 +180,7 @@ URL. The media streams are typically audio and video.
 The streaming server typically uses a different channel to send the media
 data to clients, typically using RTP over UDP. It is also possible to stream
 the data to the client using the initial RTSP TCP session (the interleaved
-mode). This last mode is usufull when the client is behind a firewall but
+mode). This last mode is useful when the client is behind a firewall but
 does not take advantage of the RTP/UDP features.
 
 In both cases, media data is send to the clients in an unmultiplexed format
