@@ -706,7 +706,9 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   if (!g_option_context_parse (ctx, &argc, &argv, &error)) {
     g_printerr ("Error initializing: %s\n", error->message);
     g_option_context_free (ctx);
+    g_error_free (error);
     *exit_status = 1;
+    return TRUE;
   }
 
   if (opts->inspect_action_type) {
