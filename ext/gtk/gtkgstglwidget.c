@@ -27,13 +27,13 @@
 #include "gtkgstglwidget.h"
 #include <gst/video/video.h>
 
-#if GST_GL_HAVE_WINDOW_X11 && defined (GDK_WINDOWING_X11)
+#if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
 #include <gst/gl/x11/gstgldisplay_x11.h>
 #include <gst/gl/x11/gstglcontext_glx.h>
 #endif
 
-#if GST_GL_HAVE_WINDOW_WAYLAND && defined (GDK_WINDOWING_WAYLAND)
+#if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (GDK_WINDOWING_WAYLAND)
 #include <gdk/gdkwayland.h>
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
 #endif
@@ -418,13 +418,13 @@ gtk_gst_gl_widget_init (GtkGstGLWidget * gst_widget)
 
   display = gdk_display_get_default ();
 
-#if GST_GL_HAVE_WINDOW_X11 && defined (GDK_WINDOWING_X11)
+#if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (GDK_WINDOWING_X11)
   if (GDK_IS_X11_DISPLAY (display))
     priv->display = (GstGLDisplay *)
         gst_gl_display_x11_new_with_display (gdk_x11_display_get_xdisplay
         (display));
 #endif
-#if GST_GL_HAVE_WINDOW_WAYLAND && defined (GDK_WINDOWING_WAYLAND)
+#if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (GDK_WINDOWING_WAYLAND)
   if (GDK_IS_WAYLAND_DISPLAY (display)) {
     struct wl_display *wayland_display =
         gdk_wayland_display_get_wl_display (display);
@@ -468,7 +468,7 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
 
   gdk_gl_context_make_current (priv->gdk_context);
 
-#if GST_GL_HAVE_WINDOW_X11 && defined (GDK_WINDOWING_X11)
+#if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (GDK_WINDOWING_X11)
   if (GST_IS_GL_DISPLAY_X11 (priv->display)) {
     platform = GST_GL_PLATFORM_GLX;
     gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
@@ -479,7 +479,7 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
           platform, gl_api);
   }
 #endif
-#if GST_GL_HAVE_WINDOW_WAYLAND && defined (GDK_WINDOWING_WAYLAND)
+#if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (GDK_WINDOWING_WAYLAND)
   if (GST_IS_GL_DISPLAY_WAYLAND (priv->display)) {
     platform = GST_GL_PLATFORM_EGL;
     gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);

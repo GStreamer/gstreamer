@@ -2617,16 +2617,31 @@ HAVE_GTK3_GL="no"
 translit(dnm, m, l) AM_CONDITIONAL(USE_GTK3, true)
 AG_GST_CHECK_FEATURE(GTK3, [Gtk+ elements], gtk, [
   PKG_CHECK_MODULES(GTK3, gtk+-3.0, [
-      AC_DEFINE([HAVE_GTK3], 1, [Define if Gtk+ 3.0 is installed])
-      HAVE_GTK3="yes"
+    AC_DEFINE([HAVE_GTK3], 1, [Define if Gtk+ 3.0 is installed])
+    HAVE_GTK3="yes"
   ], [
-      HAVE_GTK3="no"
+    HAVE_GTK3="no"
   ])
   PKG_CHECK_MODULES(GTK3_GL, gtk+-3.0 >= 3.15.0, [
+    GDK_WINDOWING="no"
+    if test "x$GST_GL_HAVE_WINDOW_X11" = "x1" -a "x$GST_GL_HAVE_PLATFORM_GLX" = "x1"; then
+      PKG_CHECK_MODULES(GTK3_X11, gtk+-x11-3.0, [
+        GTK3_CFLAGS="$GTK3_CFLAGS $GTK3_X11_CFLAGS"
+        GTK3_LIBS="$GTK3_LIBS $GTK3_X11_LIBS"
+        GDK_WINDOWING="yes"
+      ], [AC_MSG_NOTICE([Could not find Gtk X11 integration])])
+    fi
+    if test "x$GST_GL_HAVE_WINDOW_WAYLAND" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EGL" = "x1"; then
+      PKG_CHECK_MODULES(GTK3_WAYLAND, gtk+-wayland-3.0, [
+        GTK3_CFLAGS="$GTK3_CFLAGS $GTK3_WAYLAND_CFLAGS"
+        GTK3_LIBS="$GTK3_LIBS $GTK3_WAYLAND_LIBS"
+        GDK_WINDOWING="yes"
+      ], [AC_MSG_NOTICE([Could not find Gtk Wayland integration])])
+    fi
+    if test "x$GDK_WINDOWING" = "xyes"; then
       AC_DEFINE([HAVE_GTK3_GL], 1, [Define if Gtk+ 3.0 GL is installed])
-      if test "x$HAVE_GL" = "xyes"; then
-        HAVE_GTK3_GL="yes"
-      fi
+      HAVE_GTK3_GL="yes"
+    fi
   ], [
       HAVE_GTK3_GL="no"
   ])
@@ -2648,19 +2663,23 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
       else
         HAVE_QT="yes"
         HAVE_QT_WINDOWING="no"
-        PKG_CHECK_MODULES(QT_X11, Qt5X11Extras, [
-          AC_DEFINE([HAVE_QT_X11], [], [Define if Qt X11 integration is installed])
+        if test "x$GST_GL_HAVE_WINDOW_X11" = "x1" -a "x$GST_GL_HAVE_PLATFORM_GLX" = "x1"; then
+          PKG_CHECK_MODULES(QT_X11, Qt5X11Extras, [
+            AC_DEFINE([HAVE_QT_X11], [], [Define if Qt X11 integration is installed])
             QT_CFLAGS="$QT_CFLAGS $QT_X11_CFLAGS"
             QT_LIBS="$QT_LIBS $QT_X11_LIBS"
             HAVE_QT_WINDOWING="yes"
-        ], [AC_MSG_NOTICE([Could not find Qt X11 integration])])
-        PKG_CHECK_MODULES(QT_WAYLAND, Qt5WaylandClient, [
-          AC_DEFINE([HAVE_QT_WAYLAND], [],
-              [Define if Qt Wayland integration is installed])
-          QT_CFLAGS="$QT_CFLAGS $QT_WAYLAND_CFLAGS"
-          QT_LIBS="$QT_LIBS $QT_WAYLAND_LIBS"
-          HAVE_QT_WINDOWING="yes"
-        ], [AC_MSG_NOTICE([Could not find Qt Wayland integration])])
+          ], [AC_MSG_NOTICE([Could not find Qt X11 integration])])
+        fi
+        if test "x$GST_GL_HAVE_WINDOW_WAYLAND" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EGL" = "x1"; then
+          PKG_CHECK_MODULES(QT_WAYLAND, Qt5WaylandClient, [
+            AC_DEFINE([HAVE_QT_WAYLAND], [],
+                [Define if Qt Wayland integration is installed])
+            QT_CFLAGS="$QT_CFLAGS $QT_WAYLAND_CFLAGS"
+            QT_LIBS="$QT_LIBS $QT_WAYLAND_LIBS"
+            HAVE_QT_WINDOWING="yes"
+          ], [AC_MSG_NOTICE([Could not find Qt Wayland integration])])
+        fi
         if test "x$HAVE_QT_WINDOWING" = "xno"; then
           AC_MSG_WARN([Could not find any Qt Windowing integration])
           HAVE_QT="no"

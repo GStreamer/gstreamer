@@ -31,13 +31,13 @@
 #include "qtitem.h"
 #include "gstqsgtexture.h"
 
-#if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
+#if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (HAVE_QT_X11)
 #include <QX11Info>
 #include <gst/gl/x11/gstgldisplay_x11.h>
 #include <gst/gl/x11/gstglcontext_glx.h>
 #endif
 
-#if GST_GL_HAVE_WINDOW_WAYLAND && defined (HAVE_QT_WAYLAND)
+#if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_WAYLAND)
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
 #endif
 
