@@ -2488,10 +2488,13 @@ GST_START_TEST (dash_mpdparser_template_parsing)
     {"TestMedia$Bandwidth$$$test", "TestMedia2500$test"},       /* Bandwidth identifier */
     {"TestMedia$Time$", "TestMedia100"},        /* Time identifier */
     {"TestMedia$Time", NULL},   /* Identifier not finished with $ */
+    {"Time$Time%d$", "Time100"},        /* usage of %d (no width) */
     {"Time$Time%0d$", "Time100"},       /* usage of format smaller than number of digits */
     {"Time$Time%01d$", "Time100"},      /* usage of format smaller than number of digits */
     {"Time$Time%05d$", "Time00100"},    /* usage of format bigger than number of digits */
     {"Time$Time%05dtest$", "Time00100test"},    /* usage extra text in format */
+    {"Time$Time%3d$", NULL},    /* incorrect format: width does not start with 0 */
+    {"Time$Time%0-4d$", NULL},  /* incorrect format: width is not a number */
     {"Time$Time%0$", NULL},     /* incorrect format: no d, x or u */
     {"Time$Time1%01d$", NULL},  /* incorrect format: does not start with % after identifier */
     {"$Bandwidth%/init.mp4v", NULL},    /* incorrect identifier: not finished with $ */

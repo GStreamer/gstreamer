@@ -2968,15 +2968,18 @@ validate_format (const gchar * format)
     return FALSE;
   p++;
 
-  /* Following the % must be a 0, or any of d, x or u.
+  /* the spec mandates a format like %0[width]d
+     But we also accept %d, because it doesn't hurt us
+   */
+  /* Following the %, if we have a number, it must start with 0 */
+  if (g_ascii_isdigit (p[0]) && p[0] != '0')
+    return FALSE;
+
+  /* Following the % must be a number, or any of d, x or u.
    * x and u are not part of the spec, but don't hurt us
    */
-  if (p[0] == '0') {
+  while (g_ascii_isdigit (*p))
     p++;
-
-    while (g_ascii_isdigit (*p))
-      p++;
-  }
 
   /* After any 0 and alphanumeric values, there must be
    * an d, x or u.
