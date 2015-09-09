@@ -111,6 +111,8 @@ struct _GstVideoAggregatorClass
 
   gboolean           preserve_update_caps_result;
 
+  GstCaps           *sink_non_alpha_caps;
+
   /* < private > */
   gpointer            _gst_reserved[GST_PADDING_LARGE];
 };
