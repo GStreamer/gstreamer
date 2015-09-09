@@ -81,6 +81,7 @@ GstQSGTexture::setBuffer (GstBuffer * buffer)
 void
 GstQSGTexture::bind ()
 {
+  const GstGLFuncs *gl;
   GstGLContext *context;
   GstGLSyncMeta *sync_meta;
   GstMemory *mem;
@@ -94,6 +95,9 @@ GstQSGTexture::bind ()
   this->mem_ = gst_buffer_peek_memory (this->buffer_, 0);
   if (!this->mem_)
     return;
+
+  g_assert (this->qt_context_);
+  gl = this->qt_context_->gl_vtable;
 
   /* FIXME: should really lock the memory to prevent write access */
   if (!gst_video_frame_map (&this->v_frame, &this->v_info, this->buffer_,
@@ -113,13 +117,12 @@ GstQSGTexture::bind ()
 
   gst_gl_sync_meta_set_sync_point (sync_meta, context);
 
-  g_assert (this->qt_context_);
   gst_gl_sync_meta_wait (sync_meta, this->qt_context_);
 
   tex_id = *(guint *) this->v_frame.data[0];
   GST_LOG ("%p binding Qt texture %u", this, tex_id);
 
-  glBindTexture (GL_TEXTURE_2D, tex_id);
+  gl->BindTexture (GL_TEXTURE_2D, tex_id);
 
   gst_video_frame_unmap (&this->v_frame);
 }
