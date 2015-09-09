@@ -294,7 +294,7 @@ gst_mpdparser_get_xml_prop_unsigned_integer (xmlNode * a_node,
   *property_value = default_val;
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    if (sscanf ((gchar *) prop_string, "%u", property_value)) {
+    if (sscanf ((gchar *) prop_string, "%u", property_value) == 1) {
       exists = TRUE;
       GST_LOG (" - %s: %u", property_name, *property_value);
     } else {
@@ -318,7 +318,8 @@ gst_mpdparser_get_xml_prop_unsigned_integer_64 (xmlNode * a_node,
   *property_value = default_val;
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    if (sscanf ((gchar *) prop_string, "%" G_GUINT64_FORMAT, property_value)) {
+    if (sscanf ((gchar *) prop_string, "%" G_GUINT64_FORMAT,
+            property_value) == 1) {
       exists = TRUE;
       GST_LOG (" - %s: %" G_GUINT64_FORMAT, property_name, *property_value);
     } else {
@@ -351,7 +352,7 @@ gst_mpdparser_get_xml_prop_uint_vector_type (xmlNode * a_node,
         exists = TRUE;
         GST_LOG (" - %s:", property_name);
         for (i = 0; i < *value_size; i++) {
-          if (sscanf ((gchar *) str_vector[i], "%u", &prop_uint_vector[i])) {
+          if (sscanf ((gchar *) str_vector[i], "%u", &prop_uint_vector[i]) == 1) {
             GST_LOG ("    %u", prop_uint_vector[i]);
           } else {
             GST_WARNING
@@ -382,7 +383,7 @@ gst_mpdparser_get_xml_prop_double (xmlNode * a_node,
 
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    if (sscanf ((gchar *) prop_string, "%lf", property_value)) {
+    if (sscanf ((gchar *) prop_string, "%lf", property_value) == 1) {
       exists = TRUE;
       GST_LOG (" - %s: %lf", property_name, *property_value);
     } else {
@@ -464,7 +465,7 @@ gst_mpdparser_get_xml_prop_SAP_type (xmlNode * a_node,
 
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    if (sscanf ((gchar *) prop_string, "%u", &prop_SAP_type)
+    if (sscanf ((gchar *) prop_string, "%u", &prop_SAP_type) == 1
         && prop_SAP_type <= 6) {
       exists = TRUE;
       *property_value = (GstSAPType) prop_SAP_type;
