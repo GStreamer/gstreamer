@@ -198,6 +198,7 @@ gst_gl_context_eagl_update_layer (GstGLContext * context)
     GST_ERROR ("Failed to make complete framebuffer object %x", status);
     goto out;
   }
+  glBindRenderbuffer (GL_RENDERBUFFER, 0);
   glBindFramebuffer (GL_FRAMEBUFFER, 0);
 
   priv->eagl_layer = eagl_layer;
