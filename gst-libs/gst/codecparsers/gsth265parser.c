@@ -1985,7 +1985,6 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
   GstH265PPS *pps;
   GstH265SPS *sps;
   guint i;
-  guint CurrRpsIdx = 0;
   GstH265ShortTermRefPicSet *stRPS = NULL;
   guint32 UsedByCurrPicLt[16];
   guint32 PicSizeInCtbsY;
@@ -2150,10 +2149,10 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
 
       /* calculate NumPocTotalCurr */
       if (slice->short_term_ref_pic_set_sps_flag)
-        CurrRpsIdx = slice->short_term_ref_pic_set_idx;
+        stRPS = &sps->short_term_ref_pic_set[slice->short_term_ref_pic_set_idx];
       else
-        CurrRpsIdx = sps->num_short_term_ref_pic_sets;
-      stRPS = &sps->short_term_ref_pic_set[CurrRpsIdx];
+        stRPS = &slice->short_term_ref_pic_sets;
+
       for (i = 0; i < stRPS->NumNegativePics; i++)
         if (stRPS->UsedByCurrPicS0[i])
           NumPocTotalCurr++;
