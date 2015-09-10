@@ -438,7 +438,8 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   HRESULT ret;
   GstClockTime timestamp, duration;
   GstClockTime running_time, running_time_duration;
-  GstClockTime latency, render_delay, ts_offset;
+  GstClockTime latency, render_delay;
+  GstClockTimeDiff ts_offset;
   gint i;
 
   GST_DEBUG_OBJECT (self, "Preparing buffer %p", buffer);
@@ -471,7 +472,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
 
   if (ts_offset < 0) {
     ts_offset = -ts_offset;
-    if (ts_offset < running_time)
+    if ((GstClockTime) ts_offset < running_time)
       running_time -= ts_offset;
     else
       running_time = 0;
