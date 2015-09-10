@@ -260,6 +260,8 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml, gboolean is_keyframe,
     }
     if (ebml->writing_streamheader) {
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
+    } else {
+      GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_HEADER);
     }
     if (!is_keyframe) {
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -459,6 +461,8 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf,
     GST_BUFFER_OFFSET_END (buf) = ebml->pos;
     if (ebml->writing_streamheader) {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
+    } else {
+      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_HEADER);
     }
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
