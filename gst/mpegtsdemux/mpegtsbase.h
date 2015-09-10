@@ -174,6 +174,10 @@ struct _MpegTSBaseClass {
   void (*program_started) (MpegTSBase *base, MpegTSBaseProgram *program);
   /* program_stopped gets called when pat no longer has program's pmt */
   void (*program_stopped) (MpegTSBase *base, MpegTSBaseProgram *program);
+  /* Whether mpegtbase can deactivate/free a program or whether the subclass will do it
+   * If the subclass responds TRUE, it should call mpegts_base_deactivate_and_free_program()
+   * when it wants to remove it */
+  gboolean (*can_remove_program) (MpegTSBase *base, MpegTSBaseProgram *program);
 
   /* stream_added is called whenever a new stream has been identified */
   void (*stream_added) (MpegTSBase *base, MpegTSBaseStream *stream, MpegTSBaseProgram *program);
@@ -222,9 +226,8 @@ mpegts_base_handle_seek_event(MpegTSBase * base, GstPad * pad, GstEvent * event)
 
 G_GNUC_INTERNAL gboolean gst_mpegtsbase_plugin_init (GstPlugin * plugin);
 
-G_GNUC_INTERNAL void mpegts_base_program_remove_stream (MpegTSBase * base, MpegTSBaseProgram * program, guint16 pid);
+G_GNUC_INTERNAL void mpegts_base_deactivate_and_free_program (MpegTSBase *base, MpegTSBaseProgram *program);
 
-G_GNUC_INTERNAL void mpegts_base_remove_program(MpegTSBase *base, gint program_number);
 G_END_DECLS
 
 #endif /* GST_MPEG_TS_BASE_H */

@@ -282,6 +282,9 @@ static void
 gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program);
 static void
 gst_ts_demux_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program);
+static gboolean
+gst_ts_demux_can_remove_program (MpegTSBase * base,
+    MpegTSBaseProgram * program);
 static void gst_ts_demux_reset (MpegTSBase * base);
 static GstFlowReturn
 gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
@@ -379,6 +382,7 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
   ts_class->push_event = GST_DEBUG_FUNCPTR (push_event);
   ts_class->program_started = GST_DEBUG_FUNCPTR (gst_ts_demux_program_started);
   ts_class->program_stopped = GST_DEBUG_FUNCPTR (gst_ts_demux_program_stopped);
+  ts_class->can_remove_program = gst_ts_demux_can_remove_program;
   ts_class->stream_added = gst_ts_demux_stream_added;
   ts_class->stream_removed = gst_ts_demux_stream_removed;
   ts_class->seek = GST_DEBUG_FUNCPTR (gst_ts_demux_do_seek);
@@ -1760,6 +1764,24 @@ gst_ts_demux_flush_streams (GstTSDemux * demux, gboolean hard)
     gst_ts_demux_stream_flush (walk->data, demux, hard);
 }
 
+static gboolean
+gst_ts_demux_can_remove_program (MpegTSBase * base, MpegTSBaseProgram * program)
+{
+  GstTSDemux *demux = GST_TS_DEMUX (base);
+
+  /* If it's our current active program, we return FALSE, we'll deactivate it
+   * ourselves when the next program gets activated */
+  if (demux->program == program) {
+    GST_DEBUG
+        ("Attempting to remove current program, delaying until new program gets activated");
+    demux->previous_program = program;
+    demux->program_number = -1;
+    return FALSE;
+  }
+  return TRUE;
+}
+
+
 static void
 gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
 {
@@ -1788,6 +1810,11 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
     for (tmp = program->stream_list; tmp; tmp = tmp->next) {
       TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
       activate_pad_for_stream (demux, stream);
+    }
+    if (demux->previous_program) {
+      GST_DEBUG ("Deactivating previous program");
+      mpegts_base_deactivate_and_free_program (base, demux->previous_program);
+      demux->previous_program = NULL;
     }
     gst_element_no_more_pads ((GstElement *) demux);
   }

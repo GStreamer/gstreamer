@@ -65,6 +65,8 @@ struct _GstTSDemux
 
   /*< private >*/
   MpegTSBaseProgram *program;	/* Current program */
+  MpegTSBaseProgram *previous_program; /* Previous program, to deactivate once
+					* the new program becomes active */
 
   /* segments to be sent */
   GstSegment segment;
