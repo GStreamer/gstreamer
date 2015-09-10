@@ -91,7 +91,7 @@ gst_dmabuf_allocator_new (void)
 
 /**
  * gst_dmabuf_allocator_alloc:
- * @allocator: (allow-none): allocator to be used for this memory
+ * @allocator: allocator to be used for this memory
  * @fd: dmabuf file descriptor
  * @size: memory size
  *
