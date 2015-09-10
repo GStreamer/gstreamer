@@ -4821,6 +4821,103 @@ GST_START_TEST (dash_mpdparser_multiple_inherited_segmentURL)
 GST_END_TEST;
 
 /*
+ * Test SegmentList with multiple segmentURL
+ *
+ */
+GST_START_TEST (dash_mpdparser_multipleSegmentURL)
+{
+  GList *adaptationSets;
+  GstAdaptationSetNode *adapt_set;
+  GstActiveStream *activeStream;
+  GstMediaFragmentInfo fragment;
+  GstClockTime expectedDuration;
+  GstClockTime expectedTimestamp;
+  GstFlowReturn flow;
+
+  /*
+   * Period duration is 30 seconds
+   * Period start is 10 seconds. Thus, period duration is 20 seconds.
+   *
+   * Segment duration is 25 seconds. There are 2 segments in the list.
+   * We expect first segment to have a duration of 20 seconds (limited by the period)
+   * and the second segment to not exist.
+   */
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      " availabilityStartTime=\"2015-03-24T0:0:0\""
+      " mediaPresentationDuration=\"P0Y0M0DT0H0M30S\">"
+      "<Period start=\"P0Y0M0DT0H0M10S\">"
+      "  <AdaptationSet mimeType=\"video/mp4\">"
+      "    <Representation>"
+      "      <SegmentList duration=\"25\">"
+      "        <SegmentURL"
+      "           media=\"TestMedia0\" mediaRange=\"10-20\""
+      "           index=\"TestIndex0\" indexRange=\"100-200\""
+      "        ></SegmentURL>"
+      "        <SegmentURL"
+      "           media=\"TestMedia1\" mediaRange=\"20-30\""
+      "           index=\"TestIndex1\" indexRange=\"200-300\""
+      "        ></SegmentURL>"
+      "      </SegmentList>"
+      "    </Representation></AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  /* process the xml data */
+  ret =
+      gst_mpd_client_setup_media_presentation (mpdclient, GST_CLOCK_TIME_NONE,
+      -1, NULL);
+  assert_equals_int (ret, TRUE);
+
+  /* get the list of adaptation sets of the first period */
+  adaptationSets = gst_mpd_client_get_adaptation_sets (mpdclient);
+  fail_if (adaptationSets == NULL);
+
+  /* setup streaming from the first adaptation set */
+  adapt_set = (GstAdaptationSetNode *) g_list_nth_data (adaptationSets, 0);
+  fail_if (adapt_set == NULL);
+  ret = gst_mpd_client_setup_streaming (mpdclient, adapt_set);
+  assert_equals_int (ret, TRUE);
+
+  activeStream = gst_mpdparser_get_active_stream_by_index (mpdclient, 0);
+  fail_if (activeStream == NULL);
+
+  expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 20, 0);
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 0, 0);
+
+  /* the representation contains 2 segments. The first is partially
+   * clipped, and the second entirely (and thus discarded).
+   */
+
+  /* check first segment */
+  ret = gst_mpd_client_get_next_fragment (mpdclient, 0, &fragment);
+  assert_equals_int (ret, TRUE);
+  assert_equals_string (fragment.uri, "/TestMedia0");
+  assert_equals_int64 (fragment.range_start, 10);
+  assert_equals_int64 (fragment.range_end, 20);
+  assert_equals_string (fragment.index_uri, "/TestIndex0");
+  assert_equals_int64 (fragment.index_range_start, 100);
+  assert_equals_int64 (fragment.index_range_end, 200);
+  assert_equals_uint64 (fragment.duration, expectedDuration * GST_MSECOND);
+  assert_equals_uint64 (fragment.timestamp, expectedTimestamp * GST_MSECOND);
+  gst_media_fragment_info_clear (&fragment);
+
+  /* advance to next segment */
+  flow = gst_mpd_client_advance_segment (mpdclient, activeStream, TRUE);
+  assert_equals_int (flow, GST_FLOW_EOS);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * Test parsing empty xml string
  *
  */
@@ -5482,6 +5579,7 @@ dash_suite (void)
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_period_at_time);
   tcase_add_test (tc_complexMPD, dash_mpdparser_adaptationSet_handling);
   tcase_add_test (tc_complexMPD, dash_mpdparser_representation_selection);
+  tcase_add_test (tc_complexMPD, dash_mpdparser_multipleSegmentURL);
   tcase_add_test (tc_complexMPD, dash_mpdparser_activeStream_selection);
   tcase_add_test (tc_complexMPD, dash_mpdparser_activeStream_parameters);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_audio_languages);
