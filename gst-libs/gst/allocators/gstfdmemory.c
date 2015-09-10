@@ -232,7 +232,7 @@ gst_fd_allocator_new (void)
 
 /**
  * gst_fd_allocator_alloc:
- * @allocator: (allow-none): allocator to be used for this memory
+ * @allocator: allocator to be used for this memory
  * @fd: file descriptor
  * @size: memory size
  * @flags: extra #GstFdMemoryFlags
