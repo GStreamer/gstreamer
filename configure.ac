@@ -620,6 +620,14 @@ AC_CHECK_FUNCS([poll])
 AC_CHECK_FUNCS([ppoll])
 AC_CHECK_FUNCS([pselect])
 
+dnl check for socketpair()
+AC_CHECK_FUNC(socketpair, [], [
+  AC_CHECK_LIB(socket, socketpair, [
+    SOCKET_LIBS="-lsocket"
+    AC_SUBST(SOCKET_LIBS)
+  ])
+])
+
 dnl ****************************************
 dnl *** GLib POLL* compatibility defines ***
 dnl ****************************************

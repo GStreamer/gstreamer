@@ -151,6 +151,7 @@ libgstreamer_@GST_API_VERSION@_la_LIBADD =		\
 	$(GST_PRINTF_LA)				\
 	$(GST_ALL_LIBS)					\
 	$(WIN32_LIBS)					\
+	$(SOCKET_LIBS)					\
 	$(LIBM)
 
 libgstreamer_@GST_API_VERSION@_la_LDFLAGS =		\
