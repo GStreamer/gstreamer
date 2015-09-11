@@ -1002,6 +1002,10 @@ nle_composition_dispose (GObject * object)
 
   nle_composition_reset_target_pad (comp);
 
+  if (priv->pending_io) {
+    g_hash_table_unref (priv->pending_io);
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
