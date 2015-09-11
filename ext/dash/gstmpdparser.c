@@ -3406,7 +3406,11 @@ gst_mpd_client_set_uri_downloader (GstMpdClient * client,
 static void
 gst_mpd_client_check_profiles (GstMpdClient * client)
 {
-  GST_DEBUG ("Profiles: %s", client->mpd_node->profiles);
+  GST_DEBUG ("Profiles: %s",
+      client->mpd_node->profiles ? client->mpd_node->profiles : "<none>");
+
+  if (!client->mpd_node->profiles)
+    return;
 
   if (g_strstr_len (client->mpd_node->profiles, -1,
           "urn:mpeg:dash:profile:isoff-on-demand:2011")) {
