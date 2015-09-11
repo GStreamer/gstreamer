@@ -482,6 +482,7 @@ gst_udp_client_new (GstMultiUDPSink * sink, const gchar * host, gint port)
 
 name_resolve:
   {
+    g_clear_error (&err);
     g_object_unref (resolver);
 
     return NULL;
