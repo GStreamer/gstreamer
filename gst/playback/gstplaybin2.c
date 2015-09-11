@@ -251,6 +251,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 #define GST_IS_PLAY_BIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAY_BIN))
 
 #define ULONG_TO_POINTER(number)        ((gpointer) (guintptr) (number))
+#define POINTER_TO_ULONG(number)        ((guintptr) (number))
 
 #define VOLUME_MAX_DOUBLE 10.0
 
@@ -3562,10 +3563,10 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   GST_SOURCE_GROUP_LOCK (group);
 
   if ((group_id_probe_handler =
-          (guintptr) g_object_get_data (G_OBJECT (pad),
-              "playbin.event_probe_id"))) {
+          POINTER_TO_ULONG (g_object_get_data (G_OBJECT (pad),
+                  "playbin.event_probe_id")))) {
     gst_pad_remove_probe (pad, group_id_probe_handler);
-    g_object_set_data (G_OBJECT (pad), "playbin.event_probe_id", 0);
+    g_object_set_data (G_OBJECT (pad), "playbin.event_probe_id", NULL);
   }
 
   if ((combine = g_object_get_data (G_OBJECT (pad), "playbin.combine"))) {
@@ -3591,8 +3592,8 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       gulong notify_tags_handler;
 
       notify_tags_handler =
-          (guintptr) g_object_get_data (G_OBJECT (peer),
-          "playbin.notify_tags_handler");
+          POINTER_TO_ULONG (g_object_get_data (G_OBJECT (peer),
+              "playbin.notify_tags_handler"));
       if (notify_tags_handler != 0)
         g_signal_handler_disconnect (G_OBJECT (peer), notify_tags_handler);
       g_object_set_data (G_OBJECT (peer), "playbin.notify_tags_handler", NULL);
