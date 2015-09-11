@@ -299,6 +299,11 @@ nle_object_dispose (GObject * object)
     nle->caps = NULL;
   }
 
+  if (nle->srcpad) {
+    nle_object_remove_ghost_pad (nle, nle->srcpad);
+    nle->srcpad = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
