@@ -320,7 +320,11 @@ AC_CACHE_CHECK([for H.264 parser],
               GstH264Profile profile = GST_H264_PROFILE_HIGH;
               slice_hdr.n_emulation_prevention_bytes = 0;
               vui_params.par_n = 0;
-              vui_params.par_d = 0;]])],
+              vui_params.par_d = 0;
+              GstH264SPS sps;
+              sps.extension.mvc.num_views_minus1 = 1;
+              GstH264NalUnit nalu;
+              nalu.extension_type = GST_H264_NAL_EXTENSION_MVC;]])],
         [ac_cv_have_gst_h264_parser="yes"],
         [ac_cv_have_gst_h264_parser="no"]
     )
@@ -389,7 +393,10 @@ AC_CACHE_CHECK([for H.265 parser],
               GstH265Profile profile = GST_H265_PROFILE_MAIN_STILL_PICTURE;
               slice_hdr.n_emulation_prevention_bytes = 0;
               vui_params.par_n = 0;
-              vui_params.par_d = 0;]])],
+              vui_params.par_d = 0;
+              GstH265SPS sps;
+              sps.crop_rect_x = 0;
+              sps.crop_rect_width = 0;]])],
         [ac_cv_have_gst_h265_parser="yes"],
         [ac_cv_have_gst_h265_parser="no"]
     )
