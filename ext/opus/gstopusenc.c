@@ -1035,12 +1035,13 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_enum (value, enc->frame_size);
       break;
     case PROP_CBR:
-      g_warning ("cbr property is deprecated; use bitrate-type instead");
+      GST_WARNING_OBJECT (enc,
+          "cbr property is deprecated; use bitrate-type instead");
       g_value_set_boolean (value, enc->bitrate_type == BITRATE_TYPE_CBR);
       break;
     case PROP_CONSTRAINED_VBR:
-      g_warning
-          ("constrained-vbr property is deprecated; use bitrate-type instead");
+      GST_WARNING_OBJECT (enc,
+          "constrained-vbr property is deprecated; use bitrate-type instead");
       g_value_set_boolean (value,
           enc->bitrate_type == BITRATE_TYPE_CONSTRAINED_VBR);
       break;
@@ -1110,6 +1111,8 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       g_mutex_unlock (&enc->property_lock);
       break;
     case PROP_CBR:
+      GST_WARNING_OBJECT (enc,
+          "cbr property is deprecated; use bitrate-type instead");
       g_warning ("cbr property is deprecated; use bitrate-type instead");
       g_mutex_lock (&enc->property_lock);
       enc->bitrate_type = BITRATE_TYPE_CBR;
@@ -1121,6 +1124,8 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       g_mutex_unlock (&enc->property_lock);
       break;
     case PROP_CONSTRAINED_VBR:
+      GST_WARNING_OBJECT (enc,
+          "constrained-vbr property is deprecated; use bitrate-type instead");
       g_warning
           ("constrained-vbr property is deprecated; use bitrate-type instead");
       g_mutex_lock (&enc->property_lock);
