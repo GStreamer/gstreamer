@@ -173,10 +173,29 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
   if (priv->need_alignment && priv->add_videometa) {
-    /* get an apply the alignment to the info */
+    guint max_align, n;
+
     gst_buffer_pool_config_get_video_alignment (config, &priv->video_align);
+
+    /* ensure GstAllocationParams alignment is compatible with video alignment */
+    max_align = priv->params.align;
+    for (n = 0; n < GST_VIDEO_MAX_PLANES; ++n)
+      max_align |= priv->video_align.stride_align[n];
+
+    for (n = 0; n < GST_VIDEO_MAX_PLANES; ++n)
+      priv->video_align.stride_align[n] = max_align;
+
+    /* apply the alignment to the info */
     gst_video_info_align (&info, &priv->video_align);
     gst_buffer_pool_config_set_video_alignment (config, &priv->video_align);
+
+    if (priv->params.align < max_align) {
+      GST_WARNING_OBJECT (pool, "allocation params alignment %u is smaller "
+          "than the max specified video stride alignment %u, fixing",
+          (guint) priv->params.align, max_align);
+      priv->params.align = max_align;
+      gst_buffer_pool_config_set_allocator (config, allocator, &priv->params);
+    }
   }
   priv->info = info;
   info.size = MAX (size, info.size);
