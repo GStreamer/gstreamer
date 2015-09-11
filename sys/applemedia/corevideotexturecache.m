@@ -172,30 +172,40 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
             CVOpenGLESTextureGetName (texture), CVOpenGLESTextureGetTarget (texture),
             &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
         break;
-      case GST_VIDEO_FORMAT_NV12:
+      case GST_VIDEO_FORMAT_NV12: {
+        GstVideoGLTextureType textype;
+        GLenum texfmt;
+
+        textype = gst_gl_texture_type_from_format (cache->ctx, GST_VIDEO_FORMAT_NV12, 0);
+        texfmt = gst_gl_format_from_gl_texture_type (textype);
+
         /* vtdec does NV12 on iOS when doing GLMemory */
         if (CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
-              cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, GL_LUMINANCE,
+              cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, texfmt,
               GST_VIDEO_INFO_WIDTH (&cache->input_info),
               GST_VIDEO_INFO_HEIGHT (&cache->input_info),
-              GL_LUMINANCE, GL_UNSIGNED_BYTE, 0, &texture) != kCVReturnSuccess)
+              texfmt, GL_UNSIGNED_BYTE, 0, &texture) != kCVReturnSuccess)
           goto error;
 
         *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
             CVOpenGLESTextureGetName (texture), CVOpenGLESTextureGetTarget (texture),
             &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
 
+        textype = gst_gl_texture_type_from_format (cache->ctx, GST_VIDEO_FORMAT_NV12, 1);
+        texfmt = gst_gl_format_from_gl_texture_type (textype);
+
         if (CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
-              cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, GL_LUMINANCE_ALPHA,
+              cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, texfmt,
               GST_VIDEO_INFO_WIDTH (&cache->input_info) / 2,
               GST_VIDEO_INFO_HEIGHT (&cache->input_info) / 2,
-              GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, 1, &texture) != kCVReturnSuccess)
+              texfmt, GL_UNSIGNED_BYTE, 1, &texture) != kCVReturnSuccess)
           goto error;
 
         *mem2 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
             CVOpenGLESTextureGetName (texture), CVOpenGLESTextureGetTarget (texture),
             &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
         break;
+      }
 #endif
       default:
         g_warn_if_reached ();
