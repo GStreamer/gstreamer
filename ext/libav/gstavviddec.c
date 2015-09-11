@@ -616,16 +616,19 @@ dummy_free_buffer (void *opaque, uint8_t * data)
 
 /* This function prepares the pool configuration for direct rendering. To use
  * this method, the codec should support direct rendering and the pool should
- * support video meta and video alignement */
+ * support video meta and video alignment */
 static void
 gst_ffmpegvideodec_prepare_dr_pool (GstFFMpegVidDec * ffmpegdec,
     GstBufferPool * pool, GstVideoInfo * info, GstStructure * config)
 {
+  GstAllocationParams params;
   GstVideoAlignment align;
+  GstAllocator *allocator = NULL;
   gint width, height;
   gint linesize_align[4];
   gint i;
   guint edge;
+  gsize max_align;
 
   width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
@@ -651,8 +654,22 @@ gst_ffmpegvideodec_prepare_dr_pool (GstFFMpegVidDec * ffmpegdec,
   /* add extra padding to match libav buffer allocation sizes */
   align.padding_bottom++;
 
+  gst_buffer_pool_config_get_allocator (config, &allocator, &params);
+
+  max_align = DEFAULT_STRIDE_ALIGN;
+  max_align |= params.align;
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    if (linesize_align[i] > 0)
+      max_align |= linesize_align[i] - 1;
+  }
+
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
-    align.stride_align[i] = (linesize_align[i] > 0 ? linesize_align[i] - 1 : 0);
+    align.stride_align[i] = max_align;
+
+  params.align = max_align;
+
+  gst_buffer_pool_config_set_allocator (config, allocator, &params);
 
   GST_DEBUG_OBJECT (ffmpegdec, "aligned dimension %dx%d -> %dx%d "
       "padding t:%u l:%u r:%u b:%u, stride_align %d:%d:%d:%d",
@@ -1815,7 +1832,7 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   have_alignment =
       gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
-  /* If have videometa, we never have to copy */
+  /* If we have videometa, we never have to copy */
   if (have_videometa && have_pool && have_alignment &&
       gst_ffmpegviddec_can_direct_render (ffmpegdec)) {
     gst_ffmpegvideodec_prepare_dr_pool (ffmpegdec, pool, &state->info, config);
