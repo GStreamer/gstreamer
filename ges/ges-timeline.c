@@ -3108,6 +3108,7 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
   }
 
   tr_priv = tmp->data;
+  gst_object_unref (tr_priv->pad);
   priv->priv_tracks = g_list_remove (priv->priv_tracks, tr_priv);
   UNLOCK_DYN (timeline);
   timeline->tracks = g_list_remove (timeline->tracks, track);
