@@ -1713,6 +1713,7 @@ parse_pps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
        standard but that should get a default value anyway */
     pps->slice_group_map_type = 0;
     pps->slice_group_change_rate_minus1 = 0;
+    pps->slice_group_id = NULL;
 
     result = gst_h264_parser_parse_pps(priv->parser, &pi->nalu, pps);
     if (result != GST_H264_PARSER_OK)
