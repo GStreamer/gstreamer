@@ -169,6 +169,7 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
     g_assert_no_error (error);
     if (error) {
       self->priv->seenerrors = TRUE;
+      g_error_free (error);
       g_application_quit (G_APPLICATION (self));
     }
   }
@@ -227,7 +228,7 @@ _create_timeline (GESLauncher * self, const gchar * serialized_timeline,
   if (error) {
     g_printerr ("\nERROR: Could not create timeline because: %s\n\n",
         error->message);
-
+    g_error_free (error);
     return FALSE;
   }
 
@@ -247,6 +248,8 @@ _set_sink (GESLauncher * self, const gchar * sink_desc,
     if (sink == NULL) {
       GST_ERROR ("could not create the requested videosink %s (err: %s), "
           "exiting", err ? err->message : "", sink_desc);
+      if (err)
+        g_error_free (err);
       return FALSE;
     }
     set_func (self->priv->pipeline, sink);
