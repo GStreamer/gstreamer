@@ -578,8 +578,9 @@ gst_audio_aggregator_src_query (GstAggregator * agg, GstQuery * query)
 
       switch (format) {
         case GST_FORMAT_TIME:
-          /* FIXME, bring to stream time, might be tricky */
-          gst_query_set_position (query, format, agg->segment.position);
+          gst_query_set_position (query, format,
+              gst_segment_to_stream_time (&agg->segment, GST_FORMAT_TIME,
+                  agg->segment.position));
           res = TRUE;
           break;
         case GST_FORMAT_BYTES:
