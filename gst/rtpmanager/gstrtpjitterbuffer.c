@@ -1315,6 +1315,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->avg_jitter = 0;
   priv->last_dts = -1;
   priv->last_rtptime = -1;
+  priv->last_in_dts = 0;
   GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
   rtp_jitter_buffer_flush (priv->jbuf, (GFunc) free_item, NULL);
   rtp_jitter_buffer_disable_buffering (priv->jbuf, FALSE);
