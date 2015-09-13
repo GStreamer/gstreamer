@@ -273,7 +273,6 @@ struct _GstRtpJitterBufferPrivate
 
   /* the next expected seqnum we receive */
   GstClockTime last_in_dts;
-  guint32 last_in_seqnum;
   guint32 next_in_seqnum;
 
   GArray *timers;
@@ -2548,7 +2547,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         priv->last_popped_seqnum = -1;
         priv->next_seqnum = seqnum;
 
-        priv->last_in_seqnum = -1;
         priv->last_in_dts = -1;
         priv->next_in_seqnum = -1;
 
@@ -2619,7 +2617,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   }
 
   if (do_next_seqnum) {
-    priv->last_in_seqnum = seqnum;
     priv->last_in_dts = dts;
     priv->next_in_seqnum = (seqnum + 1) & 0xffff;
   }
