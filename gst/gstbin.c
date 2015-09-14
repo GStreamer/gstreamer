@@ -475,7 +475,7 @@ gst_bin_class_init (GstBinClass * klass)
   klass->pool =
       g_thread_pool_new ((GFunc) gst_bin_continue_func, NULL, -1, FALSE, &err);
   if (err != NULL) {
-    g_critical ("could alloc threadpool %s", err->message);
+    g_critical ("could not alloc threadpool %s", err->message);
   }
 }
 
