@@ -2753,7 +2753,7 @@ AM_CONDITIONAL(USE_GTK3_GL, test "x$HAVE_GTK3_GL" = "xyes")
 dnl *** Qt ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_QT, true)
 AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
-  PKG_CHECK_MODULES(QT, Qt5Core Qt5Gui Qt5Quick >= 5.4.0, [
+  PKG_CHECK_MODULES(QT, Qt5Core Qt5Gui Qt5Qml Qt5Quick >= 5.4.0, [
       QT_PATH=`$PKG_CONFIG --variable=exec_prefix Qt5Core`
       QT_HOST_PATH=`$PKG_CONFIG --variable=host_bins Qt5Core`
       AC_PATH_PROGS(MOC, [moc-qt5 moc], moc, ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
@@ -2800,6 +2800,25 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
             QT_LIBS="$QT_LIBS $QT_ANDROID_LIBS"
             HAVE_QT_WINDOWING="yes"
           ], [AC_MSG_NOTICE([Could not find Qt Android integration])])
+        fi
+        if test "x$GST_GL_HAVE_WINDOW_COCOA" = "x1" -a "x$GST_GL_HAVE_PLATFORM_CGL" = "x1"; then
+          PKG_CHECK_MODULES(QT_MAC, Qt5MacExtras, [
+            AC_DEFINE([HAVE_QT_MAC], [],
+                [Define if Qt Mac integration is installed])
+            QT_LIBDIR=`$PKG_CONFIG --variable=libdir Qt5Core`
+            QT_CFLAGS="$QT_CFLAGS $QT_MAC_CFLAGS -F$QT_LIBDIR -framework QtCore -framework QtGui -framework QtQuick -framework QtQml -framework QtMacExtras"
+            QT_LIBS="$QT_LIBS $QT_MAC_LIBS"
+            HAVE_QT_WINDOWING="yes"
+          ], [AC_MSG_NOTICE([Could not find Qt Mac integration])])
+        fi
+        if test "x$GST_GL_HAVE_WINDOW_EAGL" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EAGL" = "x1"; then
+          if test "x$HAVE_IOS" = "xyes"; then
+            # iOS doesn't have its own extras package so if we have the core
+            # modules we are good to go
+            AC_DEFINE([HAVE_QT_IOS], [],
+                [Define if Qt iOS integration is installed])
+            HAVE_QT_WINDOWING="yes"
+          fi
         fi
         if test "x$HAVE_QT_WINDOWING" = "xno"; then
           AC_MSG_WARN([Could not find any Qt Windowing integration])

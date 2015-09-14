@@ -25,9 +25,9 @@
 #include <gst/gl/gl.h>
 
 #include "gstqtgl.h"
-#include <QQuickItem>
-#include <QOpenGLContext>
-#include <QOpenGLFunctions>
+#include <QtQuick/QQuickItem>
+#include <QtGui/QOpenGLContext>
+#include <QtGui/QOpenGLFunctions>
 
 typedef struct _QtGLVideoItemPrivate QtGLVideoItemPrivate;
 

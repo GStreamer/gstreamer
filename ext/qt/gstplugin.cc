@@ -23,7 +23,7 @@
 #endif
 
 #include "gstqtsink.h"
-#include <QQmlApplicationEngine>
+#include <QtQml/QQmlApplicationEngine>
 
 static gboolean
 plugin_init (GstPlugin * plugin)
