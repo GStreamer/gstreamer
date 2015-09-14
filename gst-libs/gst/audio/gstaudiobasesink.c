@@ -1086,13 +1086,14 @@ gst_audio_base_sink_force_start (GstAudioBaseSink * sink)
 }
 
 /* This waits for the drain to happen and can be canceled */
-static gboolean
+static GstFlowReturn
 gst_audio_base_sink_drain (GstAudioBaseSink * sink)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   if (!sink->ringbuffer)
-    return TRUE;
+    return ret;
   if (!sink->ringbuffer->spec.info.rate)
-    return TRUE;
+    return ret;
 
   /* if PLAYING is interrupted,
    * arrange to have clock running when going to PLAYING again */
@@ -1111,19 +1112,19 @@ gst_audio_base_sink_drain (GstAudioBaseSink * sink)
 
     /* wait for the EOS time to be reached, this is the time when the last
      * sample is played. */
-    gst_base_sink_wait (GST_BASE_SINK (sink), sink->priv->eos_time, NULL);
+    ret = gst_base_sink_wait (GST_BASE_SINK (sink), sink->priv->eos_time, NULL);
 
     GST_DEBUG_OBJECT (sink, "drained audio");
   }
   g_atomic_int_set (&sink->eos_rendering, 0);
-  return TRUE;
+  return ret;
 }
 
 static GstFlowReturn
 gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
 {
   GstAudioBaseSink *sink = GST_AUDIO_BASE_SINK (bsink);
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   gboolean clear_force_start_flag = FALSE;
 
   /* For both gap and EOS events, make sure the ringbuffer is running
@@ -1155,7 +1156,7 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       /* now wait till we played everything */
-      gst_audio_base_sink_drain (sink);
+      ret = gst_audio_base_sink_drain (sink);
       break;
     default:
       break;
