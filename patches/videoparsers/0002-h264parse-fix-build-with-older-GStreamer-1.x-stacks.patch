@@ -1,40 +1,55 @@
-From cb4349b2f36194fbdd557eb11175d83fac144158 Mon Sep 17 00:00:00 2001
+From 48233a9eeb20d19fbc3f5550d8fecb4271be1822 Mon Sep 17 00:00:00 2001
 From: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 Date: Wed, 26 Aug 2015 06:50:41 +0300
-Subject: [PATCH 2/2] h264parse: fix build with older GStreamer 1.x stacks
+Subject: [PATCH 2/6] h264parse: fix build with older GStreamer 1.x stacks
 
 ---
- gst/vaapi/gsth264parse.c | 2 ++
+ gst/vaapi/gsth264parse.c | 9 +++++++++
  gst/vaapi/gsth264parse.h | 1 +
- 2 files changed, 3 insertions(+)
+ 2 files changed, 10 insertions(+)
 
 diff --git a/gst/vaapi/gsth264parse.c b/gst/vaapi/gsth264parse.c
-index 8f3b225..a3d2952 100644
+index 96901e0..f472a5e 100644
 --- a/gst/vaapi/gsth264parse.c
 +++ b/gst/vaapi/gsth264parse.c
-@@ -165,8 +165,10 @@ gst_h264_parse_init (GstH264Parse * h264parse)
+@@ -165,8 +165,12 @@ gst_h264_parse_init (GstH264Parse * h264parse)
  {
    h264parse->frame_out = gst_adapter_new ();
    gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (h264parse), FALSE);
 +#if GST_CHECK_VERSION(1,3,0)
    GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (h264parse));
++#endif
++#if GST_CHECK_VERSION(1,5,0)
    GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (h264parse));
 +#endif
  }
- 
- 
+
+
+@@ -2216,8 +2220,13 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+         GST_TAG_VIDEO_CODEC, caps);
+     gst_caps_unref (caps);
+
++#if GST_CHECK_VERSION(1,5,0)
+     gst_base_parse_merge_tags (parse, taglist, GST_TAG_MERGE_REPLACE);
+     gst_tag_list_unref (taglist);
++#else
++    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (h264parse),
++        gst_event_new_tag (taglist));
++#endif
+
+     /* also signals the end of first-frame processing */
+     h264parse->sent_codec_tag = TRUE;
 diff --git a/gst/vaapi/gsth264parse.h b/gst/vaapi/gsth264parse.h
 index 58d818c..617e616 100644
 --- a/gst/vaapi/gsth264parse.h
 +++ b/gst/vaapi/gsth264parse.h
 @@ -27,6 +27,7 @@
- 
+
  #include <gst/gst.h>
  #include <gst/base/gstbaseparse.h>
 +#include <gst/base/gstadapter.h>
  #include <gst/codecparsers/gsth264parser.h>
  #include <gst/video/video.h>
- 
--- 
-2.1.4
 
+--
+2.5.1
