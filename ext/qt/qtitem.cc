@@ -28,9 +28,9 @@
 #include "qtitem.h"
 #include "gstqsgtexture.h"
 
-#include <QGuiApplication>
-#include <QQuickWindow>
-#include <QSGSimpleTextureNode>
+#include <QtGui/QGuiApplication>
+#include <QtQuick/QQuickWindow>
+#include <QtQuick/QSGSimpleTextureNode>
 
 #if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (HAVE_QT_X11)
 #include <QX11Info>
@@ -45,6 +45,10 @@
 #if GST_GL_HAVE_WINDOW_ANDROID && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_ANDROID)
 #include <gst/gl/egl/gstgldisplay_egl.h>
 #include <gst/gl/egl/gstglcontext_egl.h>
+#endif
+
+#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
+#include <gst/gl/coaoa/gstgldisplay_cocoa.h>
 #endif
 
 /**
@@ -125,6 +129,14 @@ QtGLVideoItem::QtGLVideoItem()
 #if GST_GL_HAVE_WINDOW_ANDROID && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_ANDROID)
   if (QString::fromUtf8 ("android") == app->platformName())
     this->priv->display = (GstGLDisplay *) gst_gl_display_egl_new ();
+#endif
+#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
+  if (QString::fromUtf8 ("cocoa") == app->platformName())
+    this->priv->display = (GstGLDisplay *) gst_gl_display_cocoa_new ();
+#endif
+#if GST_GL_HAVE_WINDOW_EAGL && GST_GL_HAVE_PLATFORM_EAGL && defined (HAVE_QT_IOS)
+  if (QString::fromUtf8 ("ios") == app->platformName())
+    this->priv->display = gst_gl_display_new ();
 #endif
 
   if (!this->priv->display)
@@ -295,6 +307,28 @@ QtGLVideoItem::onSceneGraphInitialized ()
 #if GST_GL_HAVE_WINDOW_ANDROID && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_ANDROID)
   if (GST_IS_GL_DISPLAY_EGL (this->priv->display)) {
     platform = GST_GL_PLATFORM_EGL;
+    gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
+    gl_handle = gst_gl_context_get_current_gl_context (platform);
+    if (gl_handle)
+      this->priv->other_context =
+          gst_gl_context_new_wrapped (this->priv->display, gl_handle,
+          platform, gl_api);
+  }
+#endif
+#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
+  if (this->priv->display) {
+    platform = GST_GL_PLATFORM_CGL;
+    gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
+    gl_handle = gst_gl_context_get_current_gl_context (platform);
+    if (gl_handle)
+      this->priv->other_context =
+          gst_gl_context_new_wrapped (this->priv->display, gl_handle,
+          platform, gl_api);
+  }
+#endif
+#if GST_GL_HAVE_WINDOW_EAGL && GST_GL_HAVE_PLATFORM_EAGL && defined (HAVE_QT_IOS)
+  if (this->priv->display) {
+    platform = GST_GL_PLATFORM_EAGL;
     gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
     gl_handle = gst_gl_context_get_current_gl_context (platform);
     if (gl_handle)

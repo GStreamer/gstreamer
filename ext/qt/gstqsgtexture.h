@@ -26,8 +26,8 @@
 #include <gst/gl/gl.h>
 
 #include "gstqtgl.h"
-#include <QSGTexture>
-#include <QOpenGLFunctions>
+#include <QtQuick/QSGTexture>
+#include <QtGui/QOpenGLFunctions>
 
 class GstQSGTexture : public QSGTexture, protected QOpenGLFunctions
 {
