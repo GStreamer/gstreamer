@@ -1,14 +1,14 @@
-From a205193cffee9405bc9013416b15d8d1499be6bb Mon Sep 17 00:00:00 2001
+From 06ab8f433c02590b63e8afdf394a2a1caf570fad Mon Sep 17 00:00:00 2001
 From: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
 Date: Thu, 16 Apr 2015 18:04:53 +0300
-Subject: [PATCH] h265parse: include gstvaapiparse.h
+Subject: [PATCH 5/6] h265parse: include gstvaapiparse.h
 
 ---
  gst/vaapi/gsth265parse.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/gst/vaapi/gsth265parse.c b/gst/vaapi/gsth265parse.c
-index 2d7b997..5942d41 100644
+index d649681..5f65ab6 100644
 --- a/gst/vaapi/gsth265parse.c
 +++ b/gst/vaapi/gsth265parse.c
 @@ -22,6 +22,7 @@
@@ -19,7 +19,7 @@ index 2d7b997..5942d41 100644
  #include <gst/base/base.h>
  #include <gst/pbutils/pbutils.h>
  #include <gst/video/video.h>
-@@ -101,7 +102,7 @@ gst_h265_parse_class_init (GstH265ParseClass * klass)
+@@ -100,7 +101,7 @@ gst_h265_parse_class_init (GstH265ParseClass * klass)
    GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
    GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
@@ -29,5 +29,4 @@ index 2d7b997..5942d41 100644
    gobject_class->finalize = gst_h265_parse_finalize;
    gobject_class->set_property = gst_h265_parse_set_property;
 --
-1.9.1
-
+2.5.1
