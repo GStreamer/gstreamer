@@ -1025,6 +1025,24 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, GstClockTime ts)
 }
 
 static gboolean
+gst_dash_demux_stream_has_next_subfragment (GstAdaptiveDemuxStream * stream)
+{
+  GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
+  GstSidxBox *sidx = SIDX (dashstream);
+
+  if (dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
+    if (stream->demux->segment.rate > 0.0) {
+      if (sidx->entry_index + 1 < sidx->entries_count)
+        return TRUE;
+    } else {
+      if (sidx->entry_index >= 1)
+        return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+static gboolean
 gst_dash_demux_stream_advance_subfragment (GstAdaptiveDemuxStream * stream)
 {
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
@@ -1061,6 +1079,11 @@ gst_dash_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream)
 {
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
+
+  if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
+    if (gst_dash_demux_stream_has_next_subfragment (stream))
+      return TRUE;
+  }
 
   return gst_mpd_client_has_next_segment (dashdemux->client,
       dashstream->active_stream, stream->demux->segment.rate > 0.0);
