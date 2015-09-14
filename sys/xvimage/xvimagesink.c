@@ -1756,7 +1756,8 @@ no_context:
   {
     gst_element_message_full (GST_ELEMENT (xvimagesink), GST_MESSAGE_ERROR,
         error->domain, error->code, g_strdup ("Could not initialise Xv output"),
-        error->message, __FILE__, GST_FUNCTION, __LINE__);
+        g_strdup (error->message), __FILE__, GST_FUNCTION, __LINE__);
+    g_clear_error (&error);
     return FALSE;
   }
 }
