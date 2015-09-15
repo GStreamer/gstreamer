@@ -1776,6 +1776,10 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   type = GST_EVENT_TYPE (event);
 
   switch (type) {
+    case GST_EVENT_STREAM_START:
+      /* Remove EOS flag */
+      sq->is_eos = FALSE;
+      break;
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (mq, "SingleQueue %d : received flush start event",
           sq->id);
