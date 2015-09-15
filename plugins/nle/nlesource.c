@@ -214,8 +214,9 @@ element_pad_removed_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
 
     GST_DEBUG_OBJECT (source, "Clearing up ghostpad");
 
-    nle_object_ghost_pad_set_target (NLE_OBJECT (source), nleobject->srcpad,
-        NULL);
+    if (nleobject->srcpad)
+      nle_object_ghost_pad_set_target (NLE_OBJECT (source), nleobject->srcpad,
+          NULL);
     priv->ghostedpad = NULL;
   } else {
     GST_DEBUG_OBJECT (source, "The removed pad is NOT our controlled pad");
