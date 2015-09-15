@@ -1704,7 +1704,7 @@ activate_pad_for_stream (GstTSDemux * tsdemux, TSDemuxStream * stream)
       gst_pad_push_event (stream->pad, gst_event_new_gap (0, 0));
     }
   } else if (((MpegTSBaseStream *) stream)->stream_type != 0xff) {
-    GST_WARNING_OBJECT (tsdemux,
+    GST_DEBUG_OBJECT (tsdemux,
         "stream %p (pid 0x%04x, type:0x%02x) has no pad", stream,
         ((MpegTSBaseStream *) stream)->pid,
         ((MpegTSBaseStream *) stream)->stream_type);
@@ -1804,6 +1804,17 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
     if (demux->segment_event) {
       gst_event_unref (demux->segment_event);
       demux->segment_event = NULL;
+    }
+
+    /* DRAIN ALL STREAMS FIRST ! */
+    if (demux->previous_program) {
+      GList *tmp;
+      GST_DEBUG_OBJECT (demux, "Draining previous program");
+      for (tmp = demux->previous_program->stream_list; tmp; tmp = tmp->next) {
+        TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
+        if (stream->pad)
+          gst_ts_demux_push_pending_data (demux, stream);
+      }
     }
 
     /* Add all streams, then fire no-more-pads */
