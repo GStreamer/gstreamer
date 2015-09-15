@@ -996,8 +996,8 @@ gst_buffer_pool_config_get_params (GstStructure * config, GstCaps ** caps,
 /**
  * gst_buffer_pool_config_get_allocator:
  * @config: (transfer none): a #GstBufferPool configuration
- * @allocator: (transfer none): a #GstAllocator
- * @params: #GstAllocationParams
+ * @allocator: (out) (allow-none) (transfer none): a #GstAllocator, or %NULL
+ * @params: (out) (allow-none): #GstAllocationParams, or %NULL
  *
  * Get the @allocator and @params from @config.
  *
