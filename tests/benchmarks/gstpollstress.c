@@ -165,6 +165,7 @@ main (gint argc, gchar * argv[])
 
     if (error) {
       printf ("ERROR: g_thread_try_new() %s\n", error->message);
+      g_clear_error (&error);
       exit (-1);
     }
   }

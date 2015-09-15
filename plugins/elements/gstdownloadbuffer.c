@@ -840,6 +840,7 @@ hit_eos:
 out_flushing:
   {
     GST_DEBUG_OBJECT (dlbuf, "we are flushing");
+    g_clear_error (&error);
     gst_buffer_unmap (buf, &info);
     if (*buffer == NULL)
       gst_buffer_unref (buf);

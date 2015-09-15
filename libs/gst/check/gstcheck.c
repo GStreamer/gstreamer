@@ -794,6 +794,7 @@ gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes)
       if (!g_file_set_contents (fn, s->str, s->len, &err)) {
         g_print ("%s", s->str);
         g_printerr ("\nFailed to write ABI information: %s\n", err->message);
+        g_clear_error (&err);
       } else {
         g_print ("\nWrote ABI information to '%s'.\n", fn);
       }
