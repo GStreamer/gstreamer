@@ -1460,9 +1460,12 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
-      dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED)
+      dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
     /* fragment is advanced on data_received when byte limits are reached */
-    return GST_FLOW_OK;
+    if (gst_dash_demux_stream_has_next_fragment (stream))
+      return GST_FLOW_OK;
+    return GST_FLOW_EOS;
+  }
 
   if (G_UNLIKELY (stream->downloading_header || stream->downloading_index))
     return GST_FLOW_OK;
