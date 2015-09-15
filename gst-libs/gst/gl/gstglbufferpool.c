@@ -93,6 +93,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstVideoInfo info;
   GstCaps *caps = NULL;
   guint min_buffers, max_buffers;
+  guint max_align, n;
   GstAllocator *allocator = NULL;
   GstAllocationParams alloc_params;
   gboolean reset = TRUE;
@@ -152,17 +153,36 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->want_eglimage = FALSE;
 #endif
 
+  max_align = alloc_params.align;
+
   if (gst_buffer_pool_config_has_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
 
     priv->add_videometa = TRUE;
 
     gst_buffer_pool_config_get_video_alignment (config, &priv->valign);
+
+    for (n = 0; n < GST_VIDEO_MAX_PLANES; ++n)
+      max_align |= priv->valign.stride_align[n];
+
+    for (n = 0; n < GST_VIDEO_MAX_PLANES; ++n)
+      priv->valign.stride_align[n] = max_align;
+
     gst_video_info_align (&priv->info, &priv->valign);
 
     gst_buffer_pool_config_set_video_alignment (config, &priv->valign);
   } else {
     gst_video_alignment_reset (&priv->valign);
+  }
+
+  if (alloc_params.align < max_align) {
+    GST_WARNING_OBJECT (pool, "allocation params alignment %u is smaller "
+        "than the max specified video stride alignment %u, fixing",
+        (guint) alloc_params.align, max_align);
+
+    alloc_params.align = max_align;
+    gst_buffer_pool_config_set_allocator (config, allocator, &alloc_params);
+    priv->params = alloc_params;
   }
 
   if (reset) {
