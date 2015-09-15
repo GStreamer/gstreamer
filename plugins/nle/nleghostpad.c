@@ -281,12 +281,6 @@ translate_incoming_segment (NleObject * object, GstEvent * event)
     segment.time = 0;
   };
 
-  if (NLE_IS_OPERATION (object)) {
-    segment.base = NLE_OPERATION (object)->next_base_time;
-    GST_INFO_OBJECT (object, "Using operation base time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (NLE_OPERATION (object)->next_base_time));
-  }
-
   if (G_UNLIKELY (segment.time > G_MAXINT64))
     GST_WARNING_OBJECT (object, "Return value too big...");
 
