@@ -631,6 +631,21 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   else
     gst_video_alignment_reset (&mem->valign);
 
+  /* double-check alignment requirements (caller should've taken care of this) */
+  if (params) {
+    guint max_align, n;
+
+    max_align = gst_memory_alignment;
+    max_align |= params->align;
+    for (n = 0; n < GST_VIDEO_MAX_PLANES; ++n)
+      max_align |= mem->valign.stride_align[n];
+
+    if (params->align < max_align && max_align > gst_memory_alignment) {
+      GST_WARNING ("allocation params alignment %" G_GSIZE_FORMAT " is smaller "
+          "than the max required video alignment %u", params->align, max_align);
+    }
+  }
+
   size = gst_gl_get_plane_data_size (info, valign, plane);
 
   /* we always operate on 2D textures unless we're dealing with wrapped textures */
