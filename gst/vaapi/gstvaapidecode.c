@@ -263,8 +263,8 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   gint fps_d = GST_VIDEO_INFO_FPS_D (vi);
   if (fps_n <= 0 || fps_d <= 0) {
     GST_DEBUG_OBJECT (decode, "forcing 25/1 framerate for latency calculation");
-    fps_n = 1;
-    fps_d = 25;
+    fps_n = 25;
+    fps_d = 1;
   }
 
   /* For parsing/preparation purposes we'd need at least 1 frame
