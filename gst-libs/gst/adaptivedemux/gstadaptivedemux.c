@@ -1649,16 +1649,17 @@ gst_adaptive_demux_stream_fragment_download_finish (GstAdaptiveDemuxStream *
   g_mutex_lock (&stream->fragment_download_lock);
   stream->download_finished = TRUE;
 
+  GST_DEBUG_OBJECT (stream->pad, "Download finish: %d %s - err: %p", ret,
+      gst_flow_get_name (ret), err);
+
   /* if we have an error, only replace last_ret if it was OK before to avoid
    * overwriting the first error we got */
-  if (err) {
-    if (stream->last_ret == GST_FLOW_OK) {
-      stream->last_ret = ret;
+  if (stream->last_ret == GST_FLOW_OK) {
+    stream->last_ret = ret;
+    if (err) {
       g_clear_error (&stream->last_error);
       stream->last_error = g_error_copy (err);
     }
-  } else {
-    stream->last_ret = ret;
   }
   g_cond_signal (&stream->fragment_download_cond);
   g_mutex_unlock (&stream->fragment_download_lock);
@@ -1931,7 +1932,8 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
       }
       ret = stream->last_ret;
 
-      GST_DEBUG_OBJECT (stream->pad, "Fragment download finished: %s", uri);
+      GST_DEBUG_OBJECT (stream->pad, "Fragment download finished: %s %d %s",
+          uri, stream->last_ret, gst_flow_get_name (stream->last_ret));
     }
     g_mutex_unlock (&stream->fragment_download_lock);
   } else {
