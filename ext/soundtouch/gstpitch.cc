@@ -679,6 +679,7 @@ gst_pitch_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 static gboolean
 gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
 {
+  gint seqnum;
   gdouble out_seg_rate, our_arate;
   gfloat stream_time_ratio;
   GstSegment seg;
@@ -732,8 +733,10 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
 
   GST_LOG_OBJECT (pitch->sinkpad, "out segment %" GST_SEGMENT_FORMAT, &seg);
 
+  seqnum = gst_event_get_seqnum (*event);
   gst_event_unref (*event);
   *event = gst_event_new_segment (&seg);
+  gst_event_set_seqnum (*event, seqnum);
 
   return TRUE;
 }
