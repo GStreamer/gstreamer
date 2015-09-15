@@ -297,12 +297,6 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
   gst_buffer_map (buf, &map, GST_MAP_READ);
   data = map.data;
 
-  if (!(dec->n_channels == 0 || dec->n_channels == data[9])) {
-    gst_buffer_unmap (buf, &map);
-    GST_ERROR_OBJECT (dec, "Opus ID header has invalid channels");
-    return GST_FLOW_ERROR;
-  }
-
   dec->n_channels = data[9];
   dec->sample_rate = GST_READ_UINT32_LE (data + 12);
   dec->pre_skip = GST_READ_UINT16_LE (data + 10);
