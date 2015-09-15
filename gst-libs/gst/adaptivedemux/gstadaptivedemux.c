@@ -151,7 +151,8 @@ static void gst_adaptive_demux_updates_loop (GstAdaptiveDemux * demux);
 static void gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream *
     stream);
 static void gst_adaptive_demux_reset (GstAdaptiveDemux * demux);
-static gboolean gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux);
+static gboolean gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
+    gboolean first_and_live);
 static gboolean gst_adaptive_demux_is_live (GstAdaptiveDemux * demux);
 static GstFlowReturn gst_adaptive_demux_stream_seek (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstClockTime ts);
@@ -510,7 +511,8 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
         }
 
         if (demux->next_streams) {
-          gst_adaptive_demux_expose_streams (demux);
+          gst_adaptive_demux_expose_streams (demux,
+              gst_adaptive_demux_is_live (demux));
           gst_adaptive_demux_start_tasks (demux);
           if (gst_adaptive_demux_is_live (demux)) {
             /* Task to periodically update the manifest */
@@ -736,11 +738,12 @@ gst_adaptive_demux_get_period_start_time (GstAdaptiveDemux * demux)
 }
 
 static gboolean
-gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux)
+gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
+    gboolean first_and_live)
 {
   GList *iter;
   GList *old_streams;
-  GstClockTime period_start;
+  GstClockTime period_start, min_pts = GST_CLOCK_TIME_NONE;
 
   g_return_val_if_fail (demux->next_streams != NULL, FALSE);
 
@@ -756,6 +759,29 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux)
             GST_ADAPTIVE_DEMUX_STREAM_CAST (stream))) {
       /* TODO act on error */
     }
+
+    if (first_and_live) {
+      /* TODO we only need the first timestamp, maybe create a simple function */
+      gst_adaptive_demux_stream_update_fragment_info (demux, stream);
+
+      if (GST_CLOCK_TIME_IS_VALID (min_pts)) {
+        min_pts = MIN (min_pts, stream->fragment.timestamp);
+      } else {
+        min_pts = stream->fragment.timestamp;
+      }
+    }
+  }
+
+  /* For live streams, the subclass is supposed to seek to the current
+   * fragment and then tell us its timestamp in stream->fragment.timestamp.
+   * We now also have to seek our demuxer segment to reflect this.
+   *
+   * FIXME: This needs some refactoring at some point.
+   */
+  if (first_and_live) {
+    gst_segment_do_seek (&demux->segment, demux->segment.rate, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, min_pts, GST_SEEK_TYPE_NONE, -1,
+        NULL);
   }
 
   period_start = gst_adaptive_demux_get_period_start_time (demux);
@@ -1090,7 +1116,7 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
       }
 
       if (demux->next_streams) {
-        gst_adaptive_demux_expose_streams (demux);
+        gst_adaptive_demux_expose_streams (demux, FALSE);
       } else {
         GList *iter;
         GstClockTime period_start =
@@ -2583,7 +2609,7 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
       /* TODO only allow switching streams if other downloads are not ongoing */
       GST_DEBUG_OBJECT (demux, "Subclass wants new pads "
           "to do bitrate switching");
-      gst_adaptive_demux_expose_streams (demux);
+      gst_adaptive_demux_expose_streams (demux, FALSE);
       gst_adaptive_demux_start_tasks (demux);
       ret = GST_FLOW_EOS;
     }
@@ -2737,7 +2763,7 @@ gst_adaptive_demux_advance_period (GstAdaptiveDemux * demux)
 
   GST_DEBUG_OBJECT (demux, "Advancing to next period");
   klass->advance_period (demux);
-  gst_adaptive_demux_expose_streams (demux);
+  gst_adaptive_demux_expose_streams (demux, FALSE);
   gst_adaptive_demux_start_tasks (demux);
 }
 
