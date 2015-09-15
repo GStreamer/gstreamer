@@ -1015,17 +1015,16 @@ gst_check_object_destroyed_on_unref (gpointer object_to_unref)
 
 /* For ABI compatibility with GStreamer < 1.5 */
 void
-_fail_unless (int result, const char *file, int line, const char *expr, ...)
-G_GNUC_PRINTF (4, 5);
+_fail_unless (int result, const char *file, int line, const char *expr, ...);
 
-void _fail_unless (int result, const char *file, int line,
-    const char *expr, ...)
+void
+_fail_unless (int result, const char *file, int line, const char *expr, ...)
 {
   gchar *msg;
   va_list args;
 
   if (result) {
-    _mark_point(file, line);
+    _mark_point (file, line);
     return;
   }
 
