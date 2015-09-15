@@ -210,14 +210,18 @@ libgstvaapi_parse_la_CFLAGS = \
 	$(GST_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_PLUGINS_BASE_CFLAGS)		\
-	$(GST_VIDEO_CFLAGS)
+	$(GST_VIDEO_CFLAGS) 			\
+	$(GST_CODEC_PARSERS_CFLAGS)		\
+	$(NULL)
 
 libgstvaapi_parse_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/codecparsers/libgstvaapi-codecparsers.la \
 	$(GST_LIBS)				\
 	$(GST_BASE_LIBS)			\
 	$(GST_PLUGINS_BASE_LIBS)		\
-	$(GST_VIDEO_LIBS) -lgstpbutils-$(GST_PKG_VERSION)
+	$(GST_VIDEO_LIBS) -lgstpbutils-$(GST_PKG_VERSION) \
+	$(GST_CODEC_PARSERS_LIBS)		\
+	$(NULL)
 
 libgstvaapi_parse_la_LDFLAGS		= $(GST_PLUGIN_LDFLAGS)
 libgstvaapi_parse_la_LIBTOOLFLAGS	= --tag=disable-static
