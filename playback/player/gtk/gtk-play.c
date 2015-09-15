@@ -623,108 +623,98 @@ audio_channels_string (gint num)
 static gchar *
 stream_info_get_string (GstPlayerStreamInfo * stream, gint type, gboolean label)
 {
+  gchar *buffer = NULL;
+
   switch (type) {
     case AUDIO_INFO_RATE:
     {
-      gchar *buffer;
       GstPlayerAudioInfo *audio = (GstPlayerAudioInfo *) stream;
       buffer = g_strdup_printf ("%s%d", label ? "Sample rate : " : "",
           gst_player_audio_info_get_sample_rate (audio));
-      return buffer;
+      break;
     }
     case AUDIO_INFO_LANGUAGE:
     {
-      gchar *buffer;
       GstPlayerAudioInfo *audio = (GstPlayerAudioInfo *) stream;
-      if (!gst_player_audio_info_get_language (audio))
-        return NULL;
-      buffer = g_strdup_printf ("%s%s", label ? "Language : " : "",
-          gst_player_audio_info_get_language (audio));
-      return buffer;
+      const gchar* lang = gst_player_audio_info_get_language (audio);
+      if (lang)
+        buffer = g_strdup_printf ("%s%s", label ? "Language : " : "", lang);
+      break;
     }
     case AUDIO_INFO_CHANNELS:
     {
-      gchar *buffer;
       GstPlayerAudioInfo *audio = (GstPlayerAudioInfo *) stream;
       buffer = g_strdup_printf ("%s%s", label ? "Channels : " : "",
           audio_channels_string (gst_player_audio_info_get_channels (audio)));
-      return buffer;
+      break;
     }
     case SUBTITLE_INFO_CODEC:
     case VIDEO_INFO_CODEC:
     case AUDIO_INFO_CODEC:
     {
-      gchar *buffer;
       buffer = g_strdup_printf ("%s%s", label ? "Codec : " : "",
           gst_player_stream_info_get_codec (stream));
-      return buffer;
+      break;
     }
     case AUDIO_INFO_MAX_BITRATE:
     {
-      gchar *buffer = NULL;
       GstPlayerAudioInfo *audio = (GstPlayerAudioInfo *) stream;
       gint bitrate = gst_player_audio_info_get_max_bitrate (audio);
 
       if (bitrate > 0)
         buffer = g_strdup_printf ("%s%d", label ? "Max bitrate : " : "",
             bitrate);
-      return buffer;
+      break;
     }
     case VIDEO_INFO_MAX_BITRATE:
     {
-      gchar *buffer = NULL;
       GstPlayerVideoInfo *video = (GstPlayerVideoInfo *) stream;
       gint bitrate = gst_player_video_info_get_max_bitrate (video);
 
       if (bitrate > 0)
         buffer = g_strdup_printf ("%s%d", label ? "Max bitrate : " : "",
             bitrate);
-      return buffer;
+      break;
     }
     case VIDEO_INFO_PAR:
     {
       guint par_d, par_n;
-      gchar *buffer;
       GstPlayerVideoInfo *video = (GstPlayerVideoInfo *) stream;
 
       gst_player_video_info_get_pixel_aspect_ratio (video, &par_n, &par_d);
       buffer = g_strdup_printf ("%s%u:%u", label ? "pixel-aspect-ratio : " :
           "", par_n, par_d);
-      return buffer;
+      break;
     }
     case VIDEO_INFO_FPS:
     {
       gint fps_d, fps_n;
-      gchar *buffer;
       GstPlayerVideoInfo *video = (GstPlayerVideoInfo *) stream;
 
       gst_player_video_info_get_framerate (video, &fps_n, &fps_d);
       buffer = g_strdup_printf ("%s%.2f", label ? "Framerate : " : "",
           (gdouble) fps_n / fps_d);
-      return buffer;
+      break;
     }
     case VIDEO_INFO_RESOLUTION:
     {
-      gchar *buffer;
       GstPlayerVideoInfo *video = (GstPlayerVideoInfo *) stream;
       buffer = g_strdup_printf ("%s%dx%d", label ? "Resolution : " : "",
           gst_player_video_info_get_width (video),
           gst_player_video_info_get_height (video));
-      return buffer;
+      break;
     }
     case SUBTITLE_INFO_LANGUAGE:
     {
-      gchar *buffer;
       GstPlayerSubtitleInfo *sub = (GstPlayerSubtitleInfo *) stream;
       buffer = g_strdup_printf ("%s%s", label ? "Language : " : "",
           gst_player_subtitle_info_get_language (sub));
-      return buffer;
+      break;
     }
     default:
-    {
-      return NULL;
-    }
+      break;
   }
+  return buffer;
 }
 
 static void
