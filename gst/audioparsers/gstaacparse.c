@@ -581,9 +581,11 @@ gst_aac_parse_read_loas_config (GstAacParse * aacparse, const guint8 * data,
   if (!gst_bit_reader_get_bits_uint8 (&br, &u8, 1))
     return FALSE;
   if (u8) {
-    GST_DEBUG_OBJECT (aacparse, "Frame uses previous config");
+    GST_LOG_OBJECT (aacparse, "Frame uses previous config");
     if (!aacparse->sample_rate || !aacparse->channels) {
-      GST_WARNING_OBJECT (aacparse, "No previous config to use");
+      GST_DEBUG_OBJECT (aacparse,
+          "No previous config to use. We'll look for more data.");
+      return FALSE;
     }
     *sample_rate = aacparse->sample_rate;
     *channels = aacparse->channels;
@@ -876,7 +878,9 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
 
     if (!gst_aac_parse_read_loas_config (aacparse, data, avail, &rate,
             &channels, &aacparse->mpegversion)) {
-      GST_WARNING_OBJECT (aacparse, "Error reading LOAS config");
+      /* This is pretty normal when skipping data at the start of
+       * random stream (MPEG-TS capture for example) */
+      GST_LOG_OBJECT (aacparse, "Error reading LOAS config");
       return FALSE;
     }
 
@@ -884,10 +888,10 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
       gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse), rate,
           aacparse->frame_samples, 2, 2);
 
+      /* Don't store the sample rate and channels yet -
+       * this is just format detection. */
       GST_DEBUG ("LOAS: samplerate %d, channels %d, objtype %d, version %d",
           rate, channels, aacparse->object_type, aacparse->mpegversion);
-      aacparse->sample_rate = rate;
-      aacparse->channels = channels;
     }
 
     gst_base_parse_set_syncable (GST_BASE_PARSE (aacparse), TRUE);
@@ -1293,9 +1297,15 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
     frame->overhead = 3;
 
     if (!gst_aac_parse_read_loas_config (aacparse, map.data, map.size, &rate,
-            &channels, NULL)) {
-      GST_WARNING_OBJECT (aacparse, "Error reading LOAS config");
-    } else if (G_UNLIKELY (rate != aacparse->sample_rate
+            &channels, NULL) || !rate || !channels) {
+      /* This is pretty normal when skipping data at the start of
+       * random stream (MPEG-TS capture for example) */
+      GST_DEBUG_OBJECT (aacparse, "Error reading LOAS config. Skipping.");
+      *skipsize = map.size;
+      goto exit;
+    }
+
+    if (G_UNLIKELY (rate != aacparse->sample_rate
             || channels != aacparse->channels)) {
       aacparse->sample_rate = rate;
       aacparse->channels = channels;
