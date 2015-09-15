@@ -197,10 +197,6 @@ print_all_stream_info (GstPlayerMediaInfo * media_info)
   guint count = 0;
   GList *list, *l;
 
-  list = gst_player_media_info_get_stream_list (media_info);
-  if (!list)
-    return;
-
   g_print ("URI : %s\n", gst_player_media_info_get_uri (media_info));
   g_print ("Duration: %" GST_TIME_FORMAT "\n",
       GST_TIME_ARGS (gst_player_media_info_get_duration (media_info)));
@@ -210,6 +206,12 @@ print_all_stream_info (GstPlayerMediaInfo * media_info)
         print_one_tag, NULL);
   else
     g_print ("  (nil) \n");
+
+  list = gst_player_media_info_get_stream_list (media_info);
+  if (!list)
+    return;
+
+  g_print ("All Stream information\n");
   for (l = list; l != NULL; l = l->next) {
     GstTagList *tags = NULL;
     GstPlayerStreamInfo *stream = (GstPlayerStreamInfo *) l->data;
