@@ -20,7 +20,7 @@
 #ifndef _GST_INTER_VIDEO_SINK_H_
 #define _GST_INTER_VIDEO_SINK_H_
 
-#include <gst/base/gstbasesink.h>
+#include <gst/video/video.h>
 #include "gstintersurface.h"
 
 G_BEGIN_DECLS
@@ -36,7 +36,7 @@ typedef struct _GstInterVideoSinkClass GstInterVideoSinkClass;
 
 struct _GstInterVideoSink
 {
-  GstBaseSink base_intervideosink;
+  GstVideoSink videosink;
 
   GstInterSurface *surface;
   char *channel;
@@ -46,7 +46,7 @@ struct _GstInterVideoSink
 
 struct _GstInterVideoSinkClass
 {
-  GstBaseSinkClass base_intervideosink_class;
+  GstVideoSinkClass videosinkclass;
 };
 
 GType gst_inter_video_sink_get_type (void);

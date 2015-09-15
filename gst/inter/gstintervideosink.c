@@ -40,9 +40,6 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
-#include <gst/base/gstbasesink.h>
-#include <gst/video/video.h>
 #include "gstintervideosink.h"
 
 #include <string.h>
@@ -63,7 +60,7 @@ static gboolean gst_inter_video_sink_start (GstBaseSink * sink);
 static gboolean gst_inter_video_sink_stop (GstBaseSink * sink);
 static gboolean gst_inter_video_sink_set_caps (GstBaseSink * sink,
     GstCaps * caps);
-static GstFlowReturn gst_inter_video_sink_render (GstBaseSink * sink,
+static GstFlowReturn gst_inter_video_sink_show_frame (GstVideoSink * sink,
     GstBuffer * buffer);
 
 enum
@@ -84,7 +81,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 
 /* class initialization */
-G_DEFINE_TYPE (GstInterVideoSink, gst_inter_video_sink, GST_TYPE_BASE_SINK);
+G_DEFINE_TYPE (GstInterVideoSink, gst_inter_video_sink, GST_TYPE_VIDEO_SINK);
 
 static void
 gst_inter_video_sink_class_init (GstInterVideoSinkClass * klass)
@@ -92,6 +89,7 @@ gst_inter_video_sink_class_init (GstInterVideoSinkClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseSinkClass *base_sink_class = GST_BASE_SINK_CLASS (klass);
+  GstVideoSinkClass *video_sink_class = GST_VIDEO_SINK_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_inter_video_sink_debug_category,
       "intervideosink", 0, "debug category for intervideosink element");
@@ -112,8 +110,9 @@ gst_inter_video_sink_class_init (GstInterVideoSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_inter_video_sink_get_times);
   base_sink_class->start = GST_DEBUG_FUNCPTR (gst_inter_video_sink_start);
   base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_inter_video_sink_stop);
-  base_sink_class->render = GST_DEBUG_FUNCPTR (gst_inter_video_sink_render);
   base_sink_class->set_caps = GST_DEBUG_FUNCPTR (gst_inter_video_sink_set_caps);
+  video_sink_class->show_frame =
+      GST_DEBUG_FUNCPTR (gst_inter_video_sink_show_frame);
 
   g_object_class_install_property (gobject_class, PROP_CHANNEL,
       g_param_spec_string ("channel", "Channel",
@@ -244,7 +243,7 @@ gst_inter_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_inter_video_sink_render (GstBaseSink * sink, GstBuffer * buffer)
+gst_inter_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buffer)
 {
   GstInterVideoSink *intervideosink = GST_INTER_VIDEO_SINK (sink);
 
