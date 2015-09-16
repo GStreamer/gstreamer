@@ -686,6 +686,7 @@ gst_dvbsub_overlay_negotiate (GstDVBSubOverlay * overlay, GstCaps * caps)
       || !gst_caps_features_contains (f,
           GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION)) {
     GstCaps *overlay_caps;
+    GstCaps *peercaps;
 
     /* In this case we added the meta, but we can work without it
      * so preserve the original caps so we can use it as a fallback */
@@ -695,9 +696,18 @@ gst_dvbsub_overlay_negotiate (GstDVBSubOverlay * overlay, GstCaps * caps)
     gst_caps_features_add (f,
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
 
-    ret = gst_pad_peer_query_accept_caps (overlay->srcpad, overlay_caps);
-    GST_DEBUG_OBJECT (overlay, "Downstream accepts the overlay meta: %d", ret);
-    if (ret) {
+    /* FIXME: We should probably check if downstream *prefers* the
+     * overlay meta, and only enforce usage of it if we can't handle
+     * the format ourselves and thus would have to drop the overlays.
+     * Otherwise we should prefer what downstream wants here.
+     */
+    peercaps = gst_pad_peer_query_caps (overlay->srcpad, NULL);
+    caps_has_meta = gst_caps_can_intersect (peercaps, overlay_caps);
+    gst_caps_unref (peercaps);
+
+    GST_DEBUG_OBJECT (overlay, "Downstream accepts the overlay meta: %d",
+        caps_has_meta);
+    if (caps_has_meta) {
       gst_caps_unref (caps);
       caps = overlay_caps;
 
