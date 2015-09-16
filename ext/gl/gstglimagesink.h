@@ -101,7 +101,6 @@ struct _GstGLImageSink
     gboolean caps_change;
     guint window_width;
     guint window_height;
-    gboolean update_viewport;
 
     GstVideoRectangle display_rect;
 
