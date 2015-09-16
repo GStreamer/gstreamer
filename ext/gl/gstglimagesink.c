@@ -1742,11 +1742,19 @@ gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
 static void
 gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
 {
+  const GstGLFuncs *gl = gl_sink->context->gl_vtable;
+
   GST_DEBUG_OBJECT (gl_sink, "GL Window resized to %ux%u", width, height);
 
   GST_GLIMAGE_SINK_LOCK (gl_sink);
   gl_sink->output_mode_changed = TRUE;
   gst_glimage_sink_do_resize (gl_sink, width, height);
+
+  gl->Viewport (gl_sink->display_rect.x, gl_sink->display_rect.y,
+      gl_sink->display_rect.w, gl_sink->display_rect.h);
+  GST_DEBUG_OBJECT (gl_sink, "GL output area now %u,%u %ux%u",
+      gl_sink->display_rect.x, gl_sink->display_rect.y,
+      gl_sink->display_rect.w, gl_sink->display_rect.h);
   GST_GLIMAGE_SINK_UNLOCK (gl_sink);
 }
 
@@ -1812,8 +1820,6 @@ gst_glimage_sink_do_resize (GstGLImageSink * gl_sink, gint width, gint height)
       gl_sink->display_rect.w = width;
       gl_sink->display_rect.h = height;
     }
-    gl_sink->update_viewport = TRUE;
-
   }
 }
 
@@ -1852,17 +1858,11 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   if (gl_sink->caps_change && gl_sink->window_width > 0
       && gl_sink->window_height > 0) {
+    /* FIXME: invoke a winsys resize event to get the correct viewport
+     * on OSX where the calayer messes with the viewport */
     gst_glimage_sink_do_resize (gl_sink, gl_sink->window_width,
         gl_sink->window_height);
     gl_sink->caps_change = FALSE;
-  }
-  if (gl_sink->update_viewport == TRUE) {
-    gl->Viewport (gl_sink->display_rect.x, gl_sink->display_rect.y,
-        gl_sink->display_rect.w, gl_sink->display_rect.h);
-    GST_DEBUG_OBJECT (gl_sink, "GL output area now %u,%u %ux%u",
-        gl_sink->display_rect.x, gl_sink->display_rect.y,
-        gl_sink->display_rect.w, gl_sink->display_rect.h);
-    gl_sink->update_viewport = FALSE;
   }
 
   sync_meta = gst_buffer_get_gl_sync_meta (gl_sink->stored_sync);
