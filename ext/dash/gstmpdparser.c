@@ -2047,34 +2047,26 @@ gst_mpdparser_get_segment_base (GstPeriodNode * Period,
 {
   GstSegmentBaseType *SegmentBase = NULL;
 
-  if (Representation && Representation->SegmentBase
-      && Representation->SegmentBase->Initialization) {
+  if (Representation && Representation->SegmentBase) {
     SegmentBase = Representation->SegmentBase;
-  } else if (AdaptationSet && AdaptationSet->SegmentBase
-      && AdaptationSet->SegmentBase->Initialization) {
+  } else if (AdaptationSet && AdaptationSet->SegmentBase) {
     SegmentBase = AdaptationSet->SegmentBase;
-  } else if (Period && Period->SegmentBase
-      && Period->SegmentBase->Initialization) {
+  } else if (Period && Period->SegmentBase) {
     SegmentBase = Period->SegmentBase;
   }
   /* the SegmentBase element could be encoded also inside a SegmentList element */
   if (SegmentBase == NULL) {
     if (Representation && Representation->SegmentList
         && Representation->SegmentList->MultSegBaseType
-        && Representation->SegmentList->MultSegBaseType->SegBaseType
-        && Representation->SegmentList->MultSegBaseType->SegBaseType->
-        Initialization) {
+        && Representation->SegmentList->MultSegBaseType->SegBaseType) {
       SegmentBase = Representation->SegmentList->MultSegBaseType->SegBaseType;
     } else if (AdaptationSet && AdaptationSet->SegmentList
         && AdaptationSet->SegmentList->MultSegBaseType
-        && AdaptationSet->SegmentList->MultSegBaseType->SegBaseType
-        && AdaptationSet->SegmentList->MultSegBaseType->SegBaseType->
-        Initialization) {
+        && AdaptationSet->SegmentList->MultSegBaseType->SegBaseType) {
       SegmentBase = AdaptationSet->SegmentList->MultSegBaseType->SegBaseType;
     } else if (Period && Period->SegmentList
         && Period->SegmentList->MultSegBaseType
-        && Period->SegmentList->MultSegBaseType->SegBaseType
-        && Period->SegmentList->MultSegBaseType->SegBaseType->Initialization) {
+        && Period->SegmentList->MultSegBaseType->SegBaseType) {
       SegmentBase = Period->SegmentList->MultSegBaseType->SegBaseType;
     }
   }
@@ -2589,10 +2581,10 @@ gst_mpdparser_get_initializationURL (GstActiveStream * stream,
   const gchar *url_prefix;
 
   g_return_val_if_fail (stream != NULL, NULL);
-  g_return_val_if_fail (InitializationURL != NULL, NULL);
 
-  url_prefix = InitializationURL->sourceURL ? InitializationURL->sourceURL :
-      stream->baseURL;
+  url_prefix = (InitializationURL
+      && InitializationURL->sourceURL) ? InitializationURL->
+      sourceURL : stream->baseURL;
 
   return url_prefix;
 }
@@ -4211,15 +4203,23 @@ gst_mpd_client_get_next_header (GstMpdClient * client, gchar ** uri,
 
   GST_DEBUG ("Looking for current representation header");
   *uri = NULL;
-  if (stream->cur_segment_base && stream->cur_segment_base->Initialization) {
-    *uri =
-        g_strdup (gst_mpdparser_get_initializationURL (stream,
-            stream->cur_segment_base->Initialization));
-    if (stream->cur_segment_base->Initialization->range) {
-      *range_start =
-          stream->cur_segment_base->Initialization->range->first_byte_pos;
-      *range_end =
-          stream->cur_segment_base->Initialization->range->last_byte_pos;
+  if (stream->cur_segment_base) {
+    if (stream->cur_segment_base->Initialization) {
+      *uri =
+          g_strdup (gst_mpdparser_get_initializationURL (stream,
+              stream->cur_segment_base->Initialization));
+      if (stream->cur_segment_base->Initialization->range) {
+        *range_start =
+            stream->cur_segment_base->Initialization->range->first_byte_pos;
+        *range_end =
+            stream->cur_segment_base->Initialization->range->last_byte_pos;
+      }
+    } else if (stream->cur_segment_base->indexRange) {
+      *uri =
+          g_strdup (gst_mpdparser_get_initializationURL (stream,
+              stream->cur_segment_base->Initialization));
+      *range_start = 0;
+      *range_end = stream->cur_segment_base->indexRange->first_byte_pos - 1;
     }
   } else if (stream->cur_seg_template) {
     const gchar *initialization = NULL;
