@@ -3572,7 +3572,7 @@ GST_START_TEST (dash_mpdparser_segments)
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
       "     availabilityStartTime=\"2015-03-24T0:0:0\""
       "     mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
-      "  <Period id=\"Period0\">"
+      "  <Period id=\"Period0\" start=\"P0Y0M0DT0H0M10S\">"
       "    <AdaptationSet mimeType=\"video/mp4\">"
       "      <Representation>"
       "        <SegmentList duration=\"45\">"
@@ -3664,6 +3664,7 @@ GST_START_TEST (dash_mpdparser_segments)
   /* each segment has a duration of 0 hours, 0 min 45 seconds
    * segment index is 1.
    * End time is at the end of segment 1, so 2 * segment_duration = 2 * 45s
+   * We also add period start time (10s)
    */
   segmentEndTime =
       gst_mpd_client_get_next_segment_availability_end_time (mpdclient,
@@ -3673,7 +3674,7 @@ GST_START_TEST (dash_mpdparser_segments)
   assert_equals_int (gst_date_time_get_day (segmentEndTime), 24);
   assert_equals_int (gst_date_time_get_hour (segmentEndTime), 0);
   assert_equals_int (gst_date_time_get_minute (segmentEndTime), 1);
-  assert_equals_int (gst_date_time_get_second (segmentEndTime), 30);
+  assert_equals_int (gst_date_time_get_second (segmentEndTime), 40);
   gst_date_time_unref (segmentEndTime);
 
   /* seek to time */
