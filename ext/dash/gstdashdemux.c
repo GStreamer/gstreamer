@@ -911,27 +911,23 @@ gst_dash_demux_stream_update_headers_info (GstAdaptiveDemuxStream * stream)
       &path, dashstream->index,
       &stream->fragment.header_range_start, &stream->fragment.header_range_end);
 
-  if (path != NULL && strncmp (path, "http://", 7) != 0) {
+  if (path != NULL) {
     stream->fragment.header_uri =
         gst_uri_join_strings (gst_mpdparser_get_baseURL (dashdemux->client,
             dashstream->index), path);
     g_free (path);
-  } else {
-    stream->fragment.header_uri = path;
+    path = NULL;
   }
-  path = NULL;
 
   gst_mpd_client_get_next_header_index (dashdemux->client,
       &path, dashstream->index,
       &stream->fragment.index_range_start, &stream->fragment.index_range_end);
 
-  if (path != NULL && strncmp (path, "http://", 7) != 0) {
+  if (path != NULL) {
     stream->fragment.index_uri =
         gst_uri_join_strings (gst_mpdparser_get_baseURL (dashdemux->client,
             dashstream->index), path);
     g_free (path);
-  } else {
-    stream->fragment.index_uri = path;
   }
 }
 
