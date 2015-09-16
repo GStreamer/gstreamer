@@ -798,7 +798,7 @@ retry:
       TRUE, TRUE, TRUE, err);
   g_free (main_uri);
   if (download == NULL) {
-    if (!adaptive_demux->cancelled && update && !main_checked
+    if (update && !main_checked
         && gst_m3u8_client_has_variant_playlist (demux->client)
         && gst_m3u8_client_has_main (demux->client)) {
       GError *err2 = NULL;
