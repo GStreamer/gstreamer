@@ -388,6 +388,7 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
 {
   GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (demux);
   GSList *streams = gst_mss_manifest_get_streams (mssdemux->manifest);
+  GSList *active_streams = NULL;
   GSList *iter;
   const gchar *protection_system_id =
       gst_mss_manifest_get_protection_system_id (mssdemux->manifest);
@@ -419,12 +420,12 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
       demux->connection_speed);
   gst_mss_manifest_change_bitrate (mssdemux->manifest, demux->connection_speed);
 
+  GST_INFO_OBJECT (mssdemux, "Activating streams");
+
   for (iter = streams; iter; iter = g_slist_next (iter)) {
     GstPad *srcpad = NULL;
     GstMssDemuxStream *stream = NULL;
     GstMssStream *manifeststream = iter->data;
-    GstCaps *caps;
-    const gchar *lang;
 
     srcpad = _create_pad (mssdemux, manifeststream);
 
@@ -437,6 +438,17 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
         srcpad);
     stream->manifest_stream = manifeststream;
     gst_mss_stream_set_active (manifeststream, TRUE);
+    active_streams = g_slist_prepend (active_streams, stream);
+  }
+
+  GST_INFO_OBJECT (mssdemux, "Changing max bitrate to %u",
+      demux->connection_speed);
+  gst_mss_manifest_change_bitrate (mssdemux->manifest, demux->connection_speed);
+
+  for (iter = active_streams; iter; iter = g_slist_next (iter)) {
+    GstMssDemuxStream *stream = iter->data;
+    GstCaps *caps;
+    const gchar *lang;
 
     caps = gst_mss_stream_get_caps (stream->manifest_stream);
 
@@ -474,6 +486,7 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
     }
   }
 
+  g_slist_free (active_streams);
   return TRUE;
 }
 
