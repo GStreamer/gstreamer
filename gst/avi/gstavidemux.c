@@ -5186,6 +5186,10 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
           && (timestamp > avi->segment.stop)) {
         goto eos_stop;
       }
+    } else {
+      if (keyframe && GST_CLOCK_TIME_IS_VALID (avi->segment.start)
+          && (timestamp < avi->segment.start))
+        goto eos_stop;
     }
 
     GST_LOG ("reading buffer (size=%" G_GUINT64_FORMAT "), stream %d, pos %"
