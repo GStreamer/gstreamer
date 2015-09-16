@@ -69,6 +69,7 @@ struct _GstRtpBin {
   GstClockTime    buffer_start;
   gboolean        do_retransmission;
   GstRTPProfile   rtp_profile;
+  gboolean        rtcp_sync_send_time;
 
   /* a list of session */
   GSList         *sessions;

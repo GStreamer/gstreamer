@@ -290,6 +290,7 @@ enum
 #define DEFAULT_DO_RETRANSMISSION    FALSE
 #define DEFAULT_RTP_PROFILE          GST_RTP_PROFILE_AVP
 #define DEFAULT_NTP_TIME_SOURCE      GST_RTP_NTP_TIME_SOURCE_NTP
+#define DEFAULT_RTCP_SYNC_SEND_TIME  TRUE
 
 enum
 {
@@ -308,7 +309,8 @@ enum
   PROP_DO_SYNC_EVENT,
   PROP_DO_RETRANSMISSION,
   PROP_RTP_PROFILE,
-  PROP_NTP_TIME_SOURCE
+  PROP_NTP_TIME_SOURCE,
+  PROP_RTCP_SYNC_SEND_TIME
 };
 
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
@@ -625,7 +627,8 @@ create_session (GstRtpBin * rtpbin, gint id)
   /* configure SDES items */
   GST_OBJECT_LOCK (rtpbin);
   g_object_set (session, "sdes", rtpbin->sdes, "rtp-profile",
-      rtpbin->rtp_profile, NULL);
+      rtpbin->rtp_profile, "rtcp-sync-send-time", rtpbin->rtcp_sync_send_time,
+      NULL);
   if (rtpbin->use_pipeline_clock)
     g_object_set (session, "use-pipeline-clock", rtpbin->use_pipeline_clock,
         NULL);
@@ -2171,6 +2174,13 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           gst_rtp_ntp_time_source_get_type (), DEFAULT_NTP_TIME_SOURCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RTCP_SYNC_SEND_TIME,
+      g_param_spec_boolean ("rtcp-sync-send-time", "RTCP Sync Send Time",
+          "Use send time or capture time for RTCP sync "
+          "(TRUE = send time, FALSE = capture time)",
+          DEFAULT_RTCP_SYNC_SEND_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -2235,6 +2245,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   rtpbin->rtp_profile = DEFAULT_RTP_PROFILE;
   rtpbin->ntp_time_source = DEFAULT_NTP_TIME_SOURCE;
+  rtpbin->rtcp_sync_send_time = DEFAULT_RTCP_SYNC_SEND_TIME;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -2412,6 +2423,20 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       GST_RTP_BIN_UNLOCK (rtpbin);
       break;
     }
+    case PROP_RTCP_SYNC_SEND_TIME:{
+      GSList *sessions;
+      GST_RTP_BIN_LOCK (rtpbin);
+      rtpbin->rtcp_sync_send_time = g_value_get_boolean (value);
+      for (sessions = rtpbin->sessions; sessions;
+          sessions = g_slist_next (sessions)) {
+        GstRtpBinSession *session = (GstRtpBinSession *) sessions->data;
+
+        g_object_set (G_OBJECT (session->session),
+            "rtcp-sync-send-time", rtpbin->rtcp_sync_send_time, NULL);
+      }
+      GST_RTP_BIN_UNLOCK (rtpbin);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2479,6 +2504,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_NTP_TIME_SOURCE:
       g_value_set_enum (value, rtpbin->ntp_time_source);
+      break;
+    case PROP_RTCP_SYNC_SEND_TIME:
+      g_value_set_boolean (value, rtpbin->rtcp_sync_send_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
