@@ -1288,7 +1288,7 @@ static const gchar *blacklisted_uris[] = { NULL };
 
 /* media types that use adaptive streaming */
 static const gchar *adaptive_media[] = {
-  "application/x-hls", "application/x-smoothstreaming-manifest",
+  "application/x-hls", "application/vnd.ms-sstr+xml",
   "application/dash+xml", NULL
 };
 
