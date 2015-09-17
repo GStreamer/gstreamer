@@ -48,9 +48,11 @@ G_BEGIN_DECLS
   GDestroyNotify resize_notify;
 
   gint can_draw;
+  gboolean queue_resize;
 }
 - (void) setDrawCallback:(GstGLWindowCB)cb data:(gpointer)a notify:(GDestroyNotify)notify;
 - (void) setResizeCallback:(GstGLWindowResizeCB)cb data:(gpointer)a notify:(GDestroyNotify)notify;
+- (void) queueResize;
 - (id) initWithGstGLContext: (GstGLContextCocoa *)context;
 @end
 

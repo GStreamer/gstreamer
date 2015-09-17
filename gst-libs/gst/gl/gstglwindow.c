@@ -96,6 +96,9 @@ struct _GstGLWindowPrivate
   GMainLoop *loop;
   GThread *navigation_thread;
 
+  guint surface_width;
+  guint surface_height;
+
   gboolean alive;
 };
 
@@ -437,6 +440,13 @@ draw_cb (gpointer data)
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
+  if (window->queue_resize) {
+    guint width, height;
+
+    gst_gl_window_get_surface_dimensions (window, &width, &height);
+    gst_gl_window_resize (window, width, height);
+  }
+
   if (window->draw)
     window->draw (window->draw_data);
 
@@ -471,6 +481,8 @@ gst_gl_window_draw_unlocked (GstGLWindow * window)
   g_return_if_fail (window_class->draw_unlocked != NULL);
 
   window_class->draw_unlocked (window);
+
+  window->queue_resize = FALSE;
 }
 
 /**
@@ -496,6 +508,8 @@ gst_gl_window_draw (GstGLWindow * window)
   }
 
   window_class->draw (window);
+
+  window->queue_resize = FALSE;
 }
 
 /**
@@ -926,11 +940,10 @@ void
 gst_gl_window_get_surface_dimensions (GstGLWindow * window, guint * width,
     guint * height)
 {
-  GstGLWindowClass *window_class;
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
-  window_class = GST_GL_WINDOW_GET_CLASS (window);
-  g_return_if_fail (window_class->get_surface_dimensions != NULL);
-  window_class->get_surface_dimensions (window, width, height);
+  if (width)
+    *width = window->priv->surface_width;
+  if (height)
+    *height = window->priv->surface_height;
 }
 
 GType gst_gl_dummy_window_get_type (void);
@@ -1008,12 +1021,6 @@ gst_gl_dummy_window_get_display (GstGLWindow * window)
 }
 
 static void
-gst_gl_dummy_window_get_surface_dimensions (GstGLWindow * window, guint * width,
-    guint * height)
-{
-}
-
-static void
 gst_gl_dummy_window_class_init (GstGLDummyWindowClass * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
@@ -1024,8 +1031,6 @@ gst_gl_dummy_window_class_init (GstGLDummyWindowClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_dummy_window_get_window_handle);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_dummy_window_set_window_handle);
-  window_class->get_surface_dimensions =
-      GST_DEBUG_FUNCPTR (gst_gl_dummy_window_get_surface_dimensions);
 }
 
 static void
@@ -1137,4 +1142,29 @@ gst_gl_window_set_render_rectangle (GstGLWindow * window, gint x, gint y,
     ret = window_class->set_render_rectangle (window, x, y, width, height);
 
   return ret;
+}
+
+void
+gst_gl_window_queue_resize (GstGLWindow * window)
+{
+  GstGLWindowClass *window_class;
+
+  g_return_val_if_fail (GST_GL_IS_WINDOW (window), FALSE);
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+
+  window->queue_resize = TRUE;
+  if (window_class->queue_resize)
+    window_class->queue_resize (window);
+}
+
+void
+gst_gl_window_resize (GstGLWindow * window, guint width, guint height)
+{
+  g_return_if_fail (GST_GL_IS_WINDOW (window));
+
+  if (window->resize)
+    window->resize (window->resize_data, width, height);
+
+  window->priv->surface_width = width;
+  window->priv->surface_height = height;
 }

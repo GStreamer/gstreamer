@@ -143,7 +143,7 @@ draw_cb (gpointer data)
     eagl_layer = (CAEAGLLayer *)[window_eagl->priv->view layer];
     size = eagl_layer.frame.size;
 
-    if (window_eagl->priv->window_width != size.width ||
+    if (window->queue_resize || window_eagl->priv->window_width != size.width ||
         window_eagl->priv->window_height != size.height) {
 
       window_eagl->priv->window_width = size.width;
@@ -151,8 +151,7 @@ draw_cb (gpointer data)
 
       gst_gl_context_eagl_resize (eagl_context);
 
-      if (window->resize)
-        window->resize (window->resize_data, window_eagl->priv->window_width,
+      gst_gl_window_resize (window, window_eagl->priv->window_width,
             window_eagl->priv->window_height);
     }
   }

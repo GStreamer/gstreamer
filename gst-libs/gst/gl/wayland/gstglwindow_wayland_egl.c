@@ -315,6 +315,8 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
   window_egl->window.window_height = height;
 
   if (!window_egl->window.native) {
+    gst_gl_window_resize (GST_GL_WINDOW (window_egl), width, height);
+
     window_egl->window.native =
         wl_egl_window_create (window_egl->window.surface, width, height);
     if (window_egl->window.queue)
@@ -469,8 +471,7 @@ window_resize (GstGLWindowWaylandEGL * window_egl, guint width, guint height)
     wl_egl_window_resize (window_egl->window.native, width, height, 0, 0);
   }
 
-  if (window->resize)
-    window->resize (window->resize_data, width, height);
+  gst_gl_window_resize (window, width, height);
 
   window_egl->window.window_width = width;
   window_egl->window.window_height = height;
@@ -488,6 +489,13 @@ draw_cb (gpointer data)
 
   if (window_egl->window.subsurface)
     wl_subsurface_set_desync (window_egl->window.subsurface);
+
+  if (window->queue_resize) {
+    guint width, height;
+
+    gst_gl_window_get_surface_dimensions (window, &width, &height);
+    gst_gl_window_resize (window, width, height);
+  }
 
   if (window->draw)
     window->draw (window->draw_data);

@@ -64,8 +64,6 @@ struct _GstGLWindowX11
   gint          depth;
   gint          device_width;
   gint          device_height;
-  gint          current_width;
-  gint          current_height;
   gint          connection;
   XVisualInfo  *visual_info;
   Window        parent_win;

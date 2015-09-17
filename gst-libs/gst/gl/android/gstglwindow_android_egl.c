@@ -108,18 +108,17 @@ draw_cb (gpointer data)
 
   if (context_egl->egl_surface) {
     gint width, height;
+    gint window_width, window_height;
 
-    if (eglQuerySurface (context_egl->egl_display,
-            context_egl->egl_surface, EGL_WIDTH, &width) &&
-        eglQuerySurface (context_egl->egl_display,
-            context_egl->egl_surface, EGL_HEIGHT, &height)
-        && (width != window_egl->window_width
+    gst_gl_window_get_surface_dimensions (window, &window_width,
+        &window_height);
+    if (eglQuerySurface (context_egl->egl_display, context_egl->egl_surface,
+            EGL_WIDTH, &width)
+        && eglQuerySurface (context_egl->egl_display, context_egl->egl_surface,
+            EGL_HEIGHT, &height)
+        && (window->queue_resize || width != window_egl->window_width
             || height != window_egl->window_height)) {
-      window_egl->window_width = width;
-      window_egl->window_height = height;
-
-      if (window->resize)
-        window->resize (window->resize_data, width, height);
+      gst_gl_window_resize (window, width, height);
     }
   }
 

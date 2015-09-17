@@ -409,15 +409,16 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch (uMsg) {
       case WM_SIZE:
-      {
-        if (window->resize) {
-          window->resize (window->resize_data, LOWORD (lParam),
-              HIWORD (lParam));
-        }
+        gst_gl_window_resize (window, LOWORD (lParam), HIWORD (lParam));
         break;
-      }
       case WM_PAINT:
       {
+        if (window->queue_resize) {
+          guint width, height;
+
+          gst_gl_window_get_surface_dimensions (window, &width, &height);
+          gst_gl_window_resize (window, width, height);
+        }
         if (window->draw) {
           PAINTSTRUCT ps;
           BeginPaint (hWnd, &ps);
@@ -440,6 +441,12 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       case WM_CAPTURECHANGED:
       {
         GST_DEBUG ("WM_CAPTURECHANGED");
+        if (window->queue_resize) {
+          guint width, height;
+
+          gst_gl_window_get_surface_dimensions (window, &width, &height);
+          gst_gl_window_resize (window, width, height);
+        }
         if (window->draw)
           window->draw (window->draw_data);
         break;
