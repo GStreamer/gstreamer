@@ -460,6 +460,7 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
 
     GST_ERROR_OBJECT (gst_widget, "Error creating GdkGLContext : %s",
         error ? error->message : "No error set by Gdk");
+    g_clear_error (&error);
     g_assert_not_reached ();
     return;
   }
@@ -501,6 +502,7 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
     gst_gl_context_activate (priv->other_context, TRUE);
     if (!gst_gl_context_fill_info (priv->other_context, &error)) {
       GST_ERROR ("failed to retrieve gdk context info: %s", error->message);
+      g_clear_error (&error);
       g_object_unref (priv->other_context);
       priv->other_context = NULL;
     } else {

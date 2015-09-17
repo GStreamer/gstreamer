@@ -853,6 +853,7 @@ context_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("%s", error->message),
         (NULL));
+    g_clear_error (&error);
     if (src->context)
       gst_object_unref (src->context);
     src->context = NULL;

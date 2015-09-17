@@ -110,6 +110,7 @@ _mem_create_gl (GstGLContext * context, struct create_data *transfer)
 
   GST_CAT_ERROR (GST_CAT_GL_BASE_BUFFER, "Failed to create GL buffer: %s",
       error->message);
+  g_clear_error (&error);
 }
 
 void
