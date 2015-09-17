@@ -3465,6 +3465,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
                     if (avi->globaltags) {
                       gst_tag_list_insert (avi->globaltags, tags,
                           GST_TAG_MERGE_REPLACE);
+                      gst_tag_list_unref (tags);
                     } else {
                       avi->globaltags = tags;
                     }
@@ -4051,6 +4052,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
               if (avi->globaltags) {
                 gst_tag_list_insert (avi->globaltags, tags,
                     GST_TAG_MERGE_REPLACE);
+                gst_tag_list_unref (tags);
               } else {
                 avi->globaltags = tags;
               }
@@ -4067,6 +4069,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
               if (avi->globaltags) {
                 gst_tag_list_insert (avi->globaltags, tags,
                     GST_TAG_MERGE_REPLACE);
+                gst_tag_list_unref (tags);
               } else {
                 avi->globaltags = tags;
               }
@@ -4180,6 +4183,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
               if (avi->globaltags) {
                 gst_tag_list_insert (avi->globaltags, tags,
                     GST_TAG_MERGE_REPLACE);
+                gst_tag_list_unref (tags);
               } else {
                 avi->globaltags = tags;
               }
@@ -4214,6 +4218,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
               if (avi->globaltags) {
                 gst_tag_list_insert (avi->globaltags, tags,
                     GST_TAG_MERGE_REPLACE);
+                gst_tag_list_unref (tags);
               } else {
                 avi->globaltags = tags;
               }
