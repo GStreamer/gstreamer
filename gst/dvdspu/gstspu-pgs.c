@@ -592,14 +592,14 @@ parse_set_object_data (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
     payload += 3;
 
     PGS_DUMP ("%d bytes of RLE data, of %d bytes total.\n",
-        end - payload, obj->rle_data_size);
+        (int) (end - payload), obj->rle_data_size);
 
     obj->rle_data = g_realloc (obj->rle_data, obj->rle_data_size);
     obj->rle_data_used = end - payload;
     memcpy (obj->rle_data, payload, end - payload);
     payload = end;
   } else {
-    PGS_DUMP ("%d bytes of additional RLE data\n", end - payload);
+    PGS_DUMP ("%d bytes of additional RLE data\n", (int) (end - payload));
     /* Check that the data chunk is for this object version, and fits in the buffer */
     if (obj->rle_data_ver == obj_ver &&
         obj->rle_data_used + end - payload <= obj->rle_data_size) {
@@ -697,7 +697,7 @@ gstspu_exec_pgs_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
   }
 
   PGS_DUMP ("Begin dumping command buffer of size %u ts %" GST_TIME_FORMAT "\n",
-      end - pos, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      (guint) (end - pos), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
   do {
     type = *pos++;
     packet_len = GST_READ_UINT16_BE (pos);
@@ -705,7 +705,7 @@ gstspu_exec_pgs_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
 
     if (pos + packet_len > end) {
       PGS_DUMP ("Invalid packet length %u (only have %u bytes)\n", packet_len,
-          end - pos);
+          (guint) (end - pos));
       goto error;
     }
 
@@ -715,7 +715,8 @@ gstspu_exec_pgs_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
     pos += packet_len;
   } while (pos + 3 <= end);
 
-  PGS_DUMP ("End dumping command buffer with %u bytes remaining\n", end - pos);
+  PGS_DUMP ("End dumping command buffer with %u bytes remaining\n",
+      (guint) (end - pos));
   remaining = (gint) (pos - map.data);
   gst_buffer_unmap (buf, &map);
   return remaining;
