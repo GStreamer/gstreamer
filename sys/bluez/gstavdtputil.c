@@ -99,6 +99,7 @@ gst_avdtp_connection_acquire (GstAvdtpConnection * conn, gboolean use_try)
     if (conn->data.conn == NULL) {
       GST_ERROR ("Failed to create proxy for media transport: %s",
           err && err->message ? err->message : "Unknown error");
+      g_clear_error (&err);
       return FALSE;
     }
 
@@ -154,11 +155,14 @@ gst_avdtp_connection_transport_release (GstAvdtpConnection * conn)
 
   if (!bluez_media_transport1_call_release_sync (conn->data.conn, NULL, &err)) {
     /* We don't care about errors if the transport was already marked stale */
-    if (!conn->data.is_acquired)
+    if (!conn->data.is_acquired) {
+      g_clear_error (&err);
       return;
+    }
 
     GST_ERROR ("Failed to release transport stream: %s", err->message ?
         err->message : "unknown error");
+    g_clear_error (&err);
   }
   conn->data.is_acquired = FALSE;
 }
@@ -724,7 +728,6 @@ gboolean
 gst_avdtp_connection_conf_recv_stream_fd (GstAvdtpConnection * conn)
 {
   struct bluetooth_data *data = &conn->data;
-  GError *gerr = NULL;
   GIOStatus status;
   GIOFlags flags;
   int fd;
@@ -740,7 +743,7 @@ gst_avdtp_connection_conf_recv_stream_fd (GstAvdtpConnection * conn)
   /* set stream socket to nonblock */
   flags = g_io_channel_get_flags (conn->stream);
   flags |= G_IO_FLAG_NONBLOCK;
-  status = g_io_channel_set_flags (conn->stream, flags, &gerr);
+  status = g_io_channel_set_flags (conn->stream, flags, NULL);
   if (status != G_IO_STATUS_NORMAL)
     GST_WARNING ("Error while setting server socket to nonblock");
 
@@ -757,7 +760,7 @@ gst_avdtp_connection_conf_recv_stream_fd (GstAvdtpConnection * conn)
   /* set stream socket to block */
   flags = g_io_channel_get_flags (conn->stream);
   flags &= ~G_IO_FLAG_NONBLOCK;
-  status = g_io_channel_set_flags (conn->stream, flags, &gerr);
+  status = g_io_channel_set_flags (conn->stream, flags, NULL);
   if (status != G_IO_STATUS_NORMAL)
     GST_WARNING ("Error while setting server socket to block");
 
