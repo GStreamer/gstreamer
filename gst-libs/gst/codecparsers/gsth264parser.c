@@ -428,17 +428,10 @@ gst_h264_parse_vui_parameters (GstH264SPS * sps, NalReader * nr)
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
-  vui->aspect_ratio_idc = 0;
   vui->video_format = 5;
-  vui->video_full_range_flag = 0;
   vui->colour_primaries = 2;
   vui->transfer_characteristics = 2;
   vui->matrix_coefficients = 2;
-  vui->chroma_sample_loc_type_top_field = 0;
-  vui->chroma_sample_loc_type_bottom_field = 0;
-  vui->low_delay_hrd_flag = 0;
-  vui->par_n = 0;
-  vui->par_d = 0;
 
   READ_UINT8 (nr, vui->aspect_ratio_info_present_flag, 1);
   if (vui->aspect_ratio_info_present_flag) {
@@ -780,11 +773,9 @@ gst_h264_slice_parse_pred_weight_table (GstH264SliceHdr * slice,
   default_luma_weight = 1 << p->luma_log2_weight_denom;
   for (i = 0; i < G_N_ELEMENTS (p->luma_weight_l0); i++)
     p->luma_weight_l0[i] = default_luma_weight;
-  memset (p->luma_offset_l0, 0, sizeof (p->luma_offset_l0));
   if (GST_H264_IS_B_SLICE (slice)) {
     for (i = 0; i < G_N_ELEMENTS (p->luma_weight_l1); i++)
       p->luma_weight_l1[i] = default_luma_weight;
-    memset (p->luma_offset_l1, 0, sizeof (p->luma_offset_l1));
   }
 
   if (chroma_array_type != 0) {
@@ -795,13 +786,11 @@ gst_h264_slice_parse_pred_weight_table (GstH264SliceHdr * slice,
       p->chroma_weight_l0[i][0] = default_chroma_weight;
       p->chroma_weight_l0[i][1] = default_chroma_weight;
     }
-    memset (p->chroma_offset_l0, 0, sizeof (p->chroma_offset_l0));
     if (GST_H264_IS_B_SLICE (slice)) {
       for (i = 0; i < G_N_ELEMENTS (p->chroma_weight_l1); i++) {
         p->chroma_weight_l1[i][0] = default_chroma_weight;
         p->chroma_weight_l1[i][1] = default_chroma_weight;
       }
-      memset (p->chroma_offset_l1, 0, sizeof (p->chroma_offset_l1));
     }
   }
 
@@ -985,12 +974,6 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
     goto error;
   }
 
-  /* default values */
-  tim->cpb_removal_delay = 0;
-  tim->dpb_output_delay = 0;
-  tim->pic_struct_present_flag = FALSE;
-  memset (tim->clock_timestamp_flag, 0, 3);
-
   if (nalparser->last_sps->vui_parameters_present_flag) {
     GstH264VUIParams *vui = &nalparser->last_sps->vui_parameters;
 
@@ -1154,7 +1137,8 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
 
   GST_DEBUG ("parsing \"Sei message\"");
 
-  sei->payloadType = 0;
+  memset (sei, 0, sizeof (*sei));
+
   do {
     READ_UINT8 (nr, payload_type_byte, 8);
     sei->payloadType += payload_type_byte;
@@ -1294,6 +1278,8 @@ gst_h264_parser_identify_nalu_unchecked (GstH264NalParser * nalparser,
 {
   gint off1;
 
+  memset (nalu, 0, sizeof (*nalu));
+
   if (size < offset + 4) {
     GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT
         ", offset %u", size, offset);
@@ -1414,6 +1400,8 @@ gst_h264_parser_identify_nalu_avc (GstH264NalParser * nalparser,
 {
   GstBitReader br;
 
+  memset (nalu, 0, sizeof (*nalu));
+
   if (size < offset + nal_length_size) {
     GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT
         ", offset %u", size, offset);
@@ -1512,22 +1500,14 @@ gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps,
   guint subhc[] = { 1, 2, 1, 1 };
   GstH264VUIParams *vui = NULL;
 
+  memset (sps, 0, sizeof (*sps));
+
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
   sps->extension_type = GST_H264_NAL_EXTENSION_NONE;
   sps->chroma_format_idc = 1;
-  sps->separate_colour_plane_flag = 0;
-  sps->bit_depth_luma_minus8 = 0;
-  sps->bit_depth_chroma_minus8 = 0;
   memset (sps->scaling_lists_4x4, 16, 96);
   memset (sps->scaling_lists_8x8, 16, 384);
-  memset (&sps->vui_parameters, 0, sizeof (sps->vui_parameters));
-  sps->mb_adaptive_frame_field_flag = 0;
-  sps->frame_crop_left_offset = 0;
-  sps->frame_crop_right_offset = 0;
-  sps->frame_crop_top_offset = 0;
-  sps->frame_crop_bottom_offset = 0;
-  sps->delta_pic_order_always_zero_flag = 0;
 
   READ_UINT8 (nr, sps->profile_idc, 8);
   READ_UINT8 (nr, sps->constraint_set0_flag, 1);
@@ -1616,9 +1596,7 @@ gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps,
   }
 
   /* calculate ChromaArrayType */
-  if (sps->separate_colour_plane_flag)
-    sps->chroma_array_type = 0;
-  else
+  if (!sps->separate_colour_plane_flag)
     sps->chroma_array_type = sps->chroma_format_idc;
 
   /* Calculate  width and height */
@@ -1936,6 +1914,8 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
       nalu->size - nalu->header_bytes);
 
+  memset (pps, 0, sizeof (*pps));
+
   READ_UE_MAX (&nr, pps->id, GST_H264_MAX_PPS_COUNT - 1);
   READ_UE_MAX (&nr, sps_id, GST_H264_MAX_SPS_COUNT - 1);
 
@@ -1951,8 +1931,6 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
-  pps->slice_group_id = NULL;
-  pps->transform_8x8_mode_flag = 0;
   memcpy (&pps->scaling_lists_4x4, &sps->scaling_lists_4x4, 96);
   memcpy (&pps->scaling_lists_8x8, &sps->scaling_lists_8x8, 384);
 
@@ -2113,11 +2091,12 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
   GstH264PPS *pps;
   GstH264SPS *sps;
 
+  memset (slice, 0, sizeof (*slice));
+
   if (!nalu->size) {
     GST_DEBUG ("Invalid Nal Unit");
     return GST_H264_PARSER_ERROR;
   }
-
 
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
       nalu->size - nalu->header_bytes);
@@ -2153,17 +2132,8 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
-  slice->field_pic_flag = 0;
-  slice->bottom_field_flag = 0;
-  slice->delta_pic_order_cnt_bottom = 0;
-  slice->delta_pic_order_cnt[0] = 0;
-  slice->delta_pic_order_cnt[1] = 0;
-  slice->redundant_pic_cnt = 0;
   slice->num_ref_idx_l0_active_minus1 = pps->num_ref_idx_l0_active_minus1;
   slice->num_ref_idx_l1_active_minus1 = pps->num_ref_idx_l1_active_minus1;
-  slice->disable_deblocking_filter_idc = 0;
-  slice->slice_alpha_c0_offset_div2 = 0;
-  slice->slice_beta_offset_div2 = 0;
 
   if (sps->separate_colour_plane_flag)
     READ_UINT8 (&nr, slice->colour_plane_id, 2);
