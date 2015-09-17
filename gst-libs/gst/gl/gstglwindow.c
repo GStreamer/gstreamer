@@ -1149,7 +1149,7 @@ gst_gl_window_queue_resize (GstGLWindow * window)
 {
   GstGLWindowClass *window_class;
 
-  g_return_val_if_fail (GST_GL_IS_WINDOW (window), FALSE);
+  g_return_if_fail (GST_GL_IS_WINDOW (window));
   window_class = GST_GL_WINDOW_GET_CLASS (window);
 
   window->queue_resize = TRUE;
