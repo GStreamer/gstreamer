@@ -29,6 +29,8 @@
 
 #include "gstglcontext_eagl.h"
 
+#define GST_CAT_DEFAULT gst_gl_context_debug
+
 static gboolean gst_gl_context_eagl_create_context (GstGLContext * context,
     GstGLAPI gl_api, GstGLContext * other_context, GError ** error);
 static void gst_gl_context_eagl_destroy_context (GstGLContext * context);
