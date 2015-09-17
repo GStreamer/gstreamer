@@ -34,8 +34,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_element_debug);
 G_DEFINE_TYPE_WITH_CODE (GstGLUploadElement, gst_gl_upload_element,
     GST_TYPE_GL_BASE_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_gl_upload_element_debug, "gluploadelement", 0,
-        "glupload Element");
-    );
+        "glupload Element"););
 
 static gboolean gst_gl_upload_element_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
@@ -224,13 +223,21 @@ gst_gl_upload_element_prepare_output_buffer (GstBaseTransform * bt,
   /* FIXME Having to release after perform is an aberation */
   gst_gl_upload_release_buffer (upload->upload);
 
+  if (ret != GST_GL_UPLOAD_DONE || *outbuf == NULL) {
+    GST_ELEMENT_ERROR (bt, RESOURCE, NOT_FOUND, ("%s",
+            "Failed to upload buffer"), (NULL));
+    if (*outbuf)
+      gst_buffer_unref (*outbuf);
+    return GST_FLOW_ERROR;
+  }
+
   /* basetransform doesn't unref if they're the same */
   if (buffer == *outbuf)
     gst_buffer_unref (*outbuf);
   else
     bclass->copy_metadata (bt, buffer, *outbuf);
 
-  return ret == GST_GL_UPLOAD_DONE ? GST_FLOW_OK : GST_FLOW_ERROR;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
