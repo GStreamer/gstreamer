@@ -169,7 +169,7 @@ GtkWidget *gst_player_gtk_video_renderer_get_widget
 {
   GtkWidget *widget;
 
-  g_return_if_fail (GST_IS_PLAYER_GTK_VIDEO_RENDERER (self));
+  g_return_val_if_fail (GST_IS_PLAYER_GTK_VIDEO_RENDERER (self), NULL);
 
   g_object_get (self, "widget", &widget, NULL);
 
