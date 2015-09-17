@@ -592,7 +592,7 @@ _gl_mem_create (GstGLMemory * gl_mem, GError ** error)
       gst_gl_sized_gl_format_from_gl_format_type (context, tex_format,
       tex_type);
 
-  if (!gl_mem->tex_id) {
+  if (!gl_mem->texture_wrapped) {
     gl_mem->tex_id =
         _new_texture (context, gl_mem->tex_target, internal_format, tex_format,
         tex_type, gl_mem->tex_width, GL_MEM_HEIGHT (gl_mem));
@@ -1287,12 +1287,12 @@ gst_gl_memory_wrapped_texture (GstGLContext * context,
   mem = g_slice_new0 (GstGLMemory);
 
   mem->tex_id = texture_id;
+  mem->texture_wrapped = TRUE;
 
   _gl_mem_init (mem, _gl_allocator, NULL, context, NULL, info, valign, plane,
       user_data, notify);
 
   mem->tex_target = texture_target;
-  mem->texture_wrapped = TRUE;
 
   mem = (GstGLMemory *) gst_gl_base_buffer_alloc_data ((GstGLBaseBuffer *) mem);
   GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD);
