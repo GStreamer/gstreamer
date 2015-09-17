@@ -571,7 +571,7 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
               event.xconfigure.height);
 
         window_x11->current_width = event.xconfigure.width;
-        window_x11->current_height = event.xconfigure.width;
+        window_x11->current_height = event.xconfigure.height;
         break;
       }
 
@@ -599,7 +599,7 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
         }
 
         window_x11->current_width = event.xexpose.width;
-        window_x11->current_height = event.xexpose.width;
+        window_x11->current_height = event.xexpose.height;
         break;
 
       case VisibilityNotify:
