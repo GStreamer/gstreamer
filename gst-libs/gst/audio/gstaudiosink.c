@@ -480,6 +480,7 @@ thread_failed:
       GST_ERROR_OBJECT (sink, "could not create thread %s", error->message);
     else
       GST_ERROR_OBJECT (sink, "could not create thread for unknown reason");
+    g_clear_error (&error);
     return FALSE;
   }
 }

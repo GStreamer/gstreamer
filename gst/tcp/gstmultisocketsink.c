@@ -854,6 +854,7 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
           GST_LOG_OBJECT (sink, "write would block %p",
               mhclient->handle.socket);
           more = FALSE;
+          g_clear_error (&err);
         } else {
           goto write_error;
         }
