@@ -230,8 +230,23 @@ gst_vtdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
       gst_query_unref (query);
 
       if (context) {
+        GstVideoFormat internal_format;
+        GstVideoCodecState *output_state =
+            gst_video_decoder_get_output_state (decoder);
+
         GST_INFO_OBJECT (decoder, "pushing textures. GL context %p", context);
+        if (vtdec->texture_cache)
+          gst_core_video_texture_cache_free (vtdec->texture_cache);
+
+#ifdef HAVE_IOS
+        internal_format = GST_VIDEO_FORMAT_NV12;
+#else
+        internal_format = GST_VIDEO_FORMAT_UYVY;
+#endif
         vtdec->texture_cache = gst_core_video_texture_cache_new (gl_context);
+        gst_core_video_texture_cache_set_format (vtdec->texture_cache,
+            internal_format, output_state->caps);
+        gst_video_codec_state_unref (output_state);
         gst_object_unref (gl_context);
       } else {
         GST_WARNING_OBJECT (decoder,
@@ -767,23 +782,8 @@ gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
    */
   /* negotiate now so that we know whether we need to use the GL upload meta or
    * not */
-  if (gst_pad_check_reconfigure (decoder->srcpad)) {
+  if (gst_pad_check_reconfigure (decoder->srcpad))
     gst_video_decoder_negotiate (decoder);
-    if (vtdec->texture_cache) {
-      GstVideoFormat internal_format;
-      GstVideoCodecState *output_state =
-          gst_video_decoder_get_output_state (decoder);
-
-#ifdef HAVE_IOS
-      internal_format = GST_VIDEO_FORMAT_NV12;
-#else
-      internal_format = GST_VIDEO_FORMAT_UYVY;
-#endif
-      gst_core_video_texture_cache_set_format (vtdec->texture_cache,
-          internal_format, output_state->caps);
-      gst_video_codec_state_unref (output_state);
-    }
-  }
 
   if (drain)
     VTDecompressionSessionWaitForAsynchronousFrames (vtdec->session);
