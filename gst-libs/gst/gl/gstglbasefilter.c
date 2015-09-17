@@ -368,6 +368,7 @@ context_error:
   {
     GST_ELEMENT_ERROR (trans, RESOURCE, NOT_FOUND, ("%s", error->message),
         (NULL));
+    g_clear_error (&error);
     return FALSE;
   }
 error:

@@ -178,7 +178,6 @@ gst_gl_filter_gl_start (GstGLBaseFilter * base_filter)
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   gint out_width, out_height;
-  GError *error = NULL;
 
   out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
@@ -205,7 +204,7 @@ gst_gl_filter_gl_start (GstGLBaseFilter * base_filter)
 
 context_error:
   {
-    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND, ("%s", error->message),
+    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND, ("Could not generate FBO"),
         (NULL));
     return FALSE;
   }
