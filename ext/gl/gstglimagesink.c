@@ -281,8 +281,6 @@ static void gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink);
 static void gst_glimage_sink_on_close (GstGLImageSink * gl_sink);
 static void gst_glimage_sink_on_resize (GstGLImageSink * gl_sink,
     gint width, gint height);
-static void gst_glimage_sink_do_resize (GstGLImageSink * gl_sink,
-    gint width, gint height);
 static void gst_glimage_sink_on_draw (GstGLImageSink * gl_sink);
 static gboolean gst_glimage_sink_redisplay (GstGLImageSink * gl_sink);
 
@@ -1163,6 +1161,7 @@ update_output_format (GstGLImageSink * glimage_sink)
   GstVideoInfo *out_info = &glimage_sink->out_info;
   gboolean input_is_mono = FALSE;
   GstVideoMultiviewMode mv_mode;
+  GstGLWindow *window = NULL;
   gboolean ret;
 
   *out_info = glimage_sink->in_info;
@@ -1214,7 +1213,13 @@ update_output_format (GstGLImageSink * glimage_sink)
   }
 
   glimage_sink->output_mode_changed = FALSE;
-  glimage_sink->caps_change = TRUE;
+
+  if (glimage_sink->context)
+    window = gst_gl_context_get_window (glimage_sink->context);
+  if (window) {
+    gst_gl_window_queue_resize (window);
+    gst_object_unref (window);
+  }
 
   if (glimage_sink->out_caps)
     gst_caps_unref (glimage_sink->out_caps);
@@ -1739,41 +1744,25 @@ gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
   gst_gl_overlay_compositor_free_overlays (gl_sink->overlay_compositor);
 }
 
-static void
-gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
-{
-  const GstGLFuncs *gl = gl_sink->context->gl_vtable;
-
-  GST_DEBUG_OBJECT (gl_sink, "GL Window resized to %ux%u", width, height);
-
-  GST_GLIMAGE_SINK_LOCK (gl_sink);
-  gl_sink->output_mode_changed = TRUE;
-  gst_glimage_sink_do_resize (gl_sink, width, height);
-
-  gl->Viewport (gl_sink->display_rect.x, gl_sink->display_rect.y,
-      gl_sink->display_rect.w, gl_sink->display_rect.h);
-  GST_DEBUG_OBJECT (gl_sink, "GL output area now %u,%u %ux%u",
-      gl_sink->display_rect.x, gl_sink->display_rect.y,
-      gl_sink->display_rect.w, gl_sink->display_rect.h);
-  GST_GLIMAGE_SINK_UNLOCK (gl_sink);
-}
-
 /* Called with object lock held */
 static void
-gst_glimage_sink_do_resize (GstGLImageSink * gl_sink, gint width, gint height)
+gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
 {
   /* Here gl_sink members (ex:gl_sink->out_info) have a life time of set_caps.
    * It means that they cannot change between two set_caps
    */
+  const GstGLFuncs *gl;
   gboolean do_reshape;
   gboolean reconfigure;
 
-  GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+  GST_DEBUG_OBJECT (gl_sink, "GL Window resized to %ux%u", width, height);
+
   /* check if a client reshape callback is registered */
   g_signal_emit (gl_sink, gst_glimage_sink_signals[CLIENT_RESHAPE_SIGNAL], 0,
       gl_sink->context, width, height, &do_reshape);
   GST_GLIMAGE_SINK_LOCK (gl_sink);
 
+  gl = gl_sink->context->gl_vtable;
   width = MAX (1, width);
   height = MAX (1, height);
 
@@ -1820,7 +1809,14 @@ gst_glimage_sink_do_resize (GstGLImageSink * gl_sink, gint width, gint height)
       gl_sink->display_rect.w = width;
       gl_sink->display_rect.h = height;
     }
+
+    gl->Viewport (gl_sink->display_rect.x, gl_sink->display_rect.y,
+        gl_sink->display_rect.w, gl_sink->display_rect.h);
+    GST_DEBUG_OBJECT (gl_sink, "GL output area now %u,%u %ux%u",
+        gl_sink->display_rect.x, gl_sink->display_rect.y,
+        gl_sink->display_rect.w, gl_sink->display_rect.h);
   }
+  GST_GLIMAGE_SINK_UNLOCK (gl_sink);
 }
 
 static void
@@ -1855,15 +1851,6 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   /* opengl scene */
   GST_TRACE ("redrawing texture:%u", gl_sink->redisplay_texture);
-
-  if (gl_sink->caps_change && gl_sink->window_width > 0
-      && gl_sink->window_height > 0) {
-    /* FIXME: invoke a winsys resize event to get the correct viewport
-     * on OSX where the calayer messes with the viewport */
-    gst_glimage_sink_do_resize (gl_sink, gl_sink->window_width,
-        gl_sink->window_height);
-    gl_sink->caps_change = FALSE;
-  }
 
   sync_meta = gst_buffer_get_gl_sync_meta (gl_sink->stored_sync);
   if (sync_meta)
