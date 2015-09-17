@@ -135,6 +135,10 @@ _context_ready (gpointer data)
   return self->gl_context;
 }
 
+- (void)queueResize {
+  self->queue_resize = TRUE;
+}
+
 - (void)releaseCGLContext:(CGLContextObj)glContext {
   CGLReleaseContext (glContext);
 }
