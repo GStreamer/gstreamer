@@ -216,6 +216,7 @@ struct _GstAggregatorPadPrivate
   gboolean pending_eos;
 
   GQueue buffers;
+  guint num_buffers;
   GstClockTime head_position;
   GstClockTime tail_position;
   GstClockTime head_time;
@@ -777,6 +778,7 @@ gst_aggregator_pad_set_flushing (GstAggregatorPad * aggpad,
     }
     item = next;
   }
+  aggpad->priv->num_buffers = 0;
 
   PAD_BROADCAST_EVENT (aggpad);
   PAD_UNLOCK (aggpad);
@@ -2041,12 +2043,17 @@ gst_aggregator_get_type (void)
   return type;
 }
 
-/* Must be called with PAD lock held */
+/* Must be called with SRC lock and PAD lock held */
 static gboolean
 gst_aggregator_pad_has_space (GstAggregator * self, GstAggregatorPad * aggpad)
 {
   /* Empty queue always has space */
   if (g_queue_get_length (&aggpad->priv->buffers) == 0)
+    return TRUE;
+
+  /* We also want at least two buffers, one is being processed and one is ready
+   * for the next iteration when we operate in live mode. */
+  if (self->priv->peer_latency_live && aggpad->priv->num_buffers < 2)
     return TRUE;
 
   /* zero latency, if there is a buffer, it's full */
@@ -2135,6 +2142,7 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
       else
         g_queue_push_tail (&aggpad->priv->buffers, actual_buf);
       apply_buffer (aggpad, actual_buf, head);
+      aggpad->priv->num_buffers++;
       actual_buf = buffer = NULL;
       SRC_BROADCAST (self);
       break;
@@ -2431,6 +2439,7 @@ gst_aggregator_pad_steal_buffer (GstAggregatorPad * pad)
 
   if (buffer) {
     apply_buffer (pad, buffer, FALSE);
+    pad->priv->num_buffers--;
     GST_TRACE_OBJECT (pad, "Consuming buffer");
     if (gst_aggregator_pad_queue_is_empty (pad) && pad->priv->pending_eos) {
       pad->priv->pending_eos = FALSE;
