@@ -1046,6 +1046,7 @@ get_current_times (GstRtpBin * bin, GstClockTime * running_time,
           ntpns = clock_time;
           break;
         default:
+          ntpns = -1;           /* Fix uninited compiler warning */
           g_assert_not_reached ();
           break;
       }

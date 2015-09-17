@@ -229,7 +229,7 @@ gst_gdk_pixbuf_sink_set_caps (GstBaseSink * basesink, GstCaps * caps)
   GstGdkPixbufSink *sink = GST_GDK_PIXBUF_SINK (basesink);
   GstVideoInfo info;
   GstVideoFormat fmt;
-  gint w, h, s, par_n, par_d;
+  gint w, h, par_n, par_d;
 
   GST_LOG_OBJECT (sink, "caps: %" GST_PTR_FORMAT, caps);
 
@@ -241,12 +241,17 @@ gst_gdk_pixbuf_sink_set_caps (GstBaseSink * basesink, GstCaps * caps)
   fmt = GST_VIDEO_INFO_FORMAT (&info);
   w = GST_VIDEO_INFO_WIDTH (&info);
   h = GST_VIDEO_INFO_HEIGHT (&info);
-  s = GST_VIDEO_INFO_COMP_PSTRIDE (&info, 0);
   par_n = GST_VIDEO_INFO_PAR_N (&info);
   par_d = GST_VIDEO_INFO_PAR_N (&info);
 
-  g_assert ((fmt == GST_VIDEO_FORMAT_RGB && s == 3) ||
-      (fmt == GST_VIDEO_FORMAT_RGBA && s == 4));
+#ifndef G_DISABLE_ASSERT
+  {
+    gint s;
+    s = GST_VIDEO_INFO_COMP_PSTRIDE (&info, 0);
+    g_assert ((fmt == GST_VIDEO_FORMAT_RGB && s == 3) ||
+        (fmt == GST_VIDEO_FORMAT_RGBA && s == 4));
+  }
+#endif
 
   GST_VIDEO_SINK_WIDTH (sink) = w;
   GST_VIDEO_SINK_HEIGHT (sink) = h;

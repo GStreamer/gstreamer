@@ -963,6 +963,7 @@ get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
           ntpns = clock_time;
           break;
         default:
+          ntpns = -1;
           g_assert_not_reached ();
           break;
       }
