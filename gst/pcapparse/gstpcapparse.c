@@ -84,6 +84,8 @@ static void gst_pcap_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_pcap_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+static GstStateChangeReturn
+gst_pcap_parse_change_state (GstElement * element, GstStateChange transition);
 
 static void gst_pcap_parse_reset (GstPcapParse * self);
 
@@ -91,6 +93,7 @@ static GstFlowReturn gst_pcap_parse_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
 static gboolean gst_pcap_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
+
 
 #define parent_class gst_pcap_parse_parent_class
 G_DEFINE_TYPE (GstPcapParse, gst_pcap_parse, GST_TYPE_ELEMENT);
@@ -139,6 +142,8 @@ gst_pcap_parse_class_init (GstPcapParseClass * klass)
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
+
+  element_class->change_state = gst_pcap_parse_change_state;
 
   gst_element_class_set_static_metadata (element_class, "PCapParse",
       "Raw/Parser",
@@ -638,7 +643,7 @@ gst_pcap_parse_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_pcap_parse_reset (element);
+      gst_pcap_parse_reset (self);
       break;
     default:
       break;
