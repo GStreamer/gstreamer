@@ -1461,13 +1461,14 @@ gst_rtsp_stream_get_retransmission_pt (GstRTSPStream * stream)
 }
 
 /**
- * gst_rtsp_media_get_buffer_size:
- * @media: a #GstRTSPMedia
- * @size: a #guint
+ * gst_rtsp_stream_set_buffer_size:
+ * @stream: a #GstRTSPStream
+ * @size: the buffer size
  *
  * Set the size of the UDP transmission buffer (in bytes)
  * Needs to be set before the stream is joined to a bin.
  *
+ * Since: 1.6
  */
 void
 gst_rtsp_stream_set_buffer_size (GstRTSPStream * stream, guint size)
@@ -1478,12 +1479,14 @@ gst_rtsp_stream_set_buffer_size (GstRTSPStream * stream, guint size)
 }
 
 /**
- * gst_rtsp_media_get_buffer_size:
- * @media: a #GstRTSPMedia
+ * gst_rtsp_stream_get_buffer_size:
+ * @stream: a #GstRTSPStream
  *
  * Get the size of the UDP transmission buffer (in bytes)
  *
  * Returns: the size of the UDP TX buffer
+ *
+ * Since: 1.6
  */
 guint
 gst_rtsp_stream_get_buffer_size (GstRTSPStream * stream)

@@ -564,6 +564,9 @@ gst_rtsp_stream_set_protocols
 gst_rtsp_stream_get_retransmission_time
 gst_rtsp_stream_set_retransmission_time
 
+gst_rtsp_stream_set_buffer_size
+gst_rtsp_stream_get_buffer_size
+
 gst_rtsp_stream_set_seqnum_offset
 gst_rtsp_stream_get_current_seqnum
 
