@@ -458,10 +458,13 @@ gst_dtsdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   gint channels, i, num_blocks;
   gboolean need_renegotiation = FALSE;
   guint8 *data;
-  gsize size;
   GstMapInfo map;
   gint chans;
-  gint length, flags, sample_rate, bit_rate, frame_length;
+#ifndef G_DISABLE_ASSERT
+  gsize size;
+  gint length;
+#endif
+  gint flags, sample_rate, bit_rate, frame_length;
   GstFlowReturn result = GST_FLOW_OK;
   GstBuffer *outbuf;
 
@@ -474,15 +477,24 @@ gst_dtsdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   /* parsed stuff already, so this should work out fine */
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   data = map.data;
+
+#ifndef G_DISABLE_ASSERT
   size = map.size;
   g_assert (size >= 7);
+#endif
 
   bit_rate = dts->bit_rate;
   sample_rate = dts->sample_rate;
   flags = 0;
+
+#ifndef G_DISABLE_ASSERT
   length = dca_syncinfo (dts->state, data, &flags, &sample_rate, &bit_rate,
       &frame_length);
   g_assert (length == size);
+#else
+  (void) dca_syncinfo (dts->state, data, &flags, &sample_rate, &bit_rate,
+      &frame_length);
+#endif
 
   if (flags != dts->prev_flags) {
     dts->prev_flags = flags;
@@ -597,7 +609,6 @@ gst_dtsdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
 
   gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
   data = map.data;
-  size = map.size;
   {
     guint8 *ptr = data;
     for (i = 0; i < num_blocks; i++) {

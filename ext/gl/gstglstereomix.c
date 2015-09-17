@@ -503,7 +503,10 @@ gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer, GPtrArray * frames)
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mixer);
   GstBuffer *converted_buffer, *inbuf;
   GstVideoInfo *out_info = &vagg->info;
-  gint count = 0, n;
+  gint count = 0;
+#ifndef G_DISABLE_ASSERT
+  gint n;
+#endif
   gint v, views;
   gint valid_views = 0;
 
@@ -574,8 +577,12 @@ gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer, GPtrArray * frames)
     return FALSE;
 
   converted_buffer = mixer->primary_out;
+
+#ifndef G_DISABLE_ASSERT
   n = gst_buffer_n_memory (converted_buffer);
   g_assert (n == GST_VIDEO_INFO_N_PLANES (out_info) * views);
+#endif
+
   for (v = 0; v < views; v++) {
     gst_buffer_add_video_meta_full (converted_buffer, v,
         GST_VIDEO_INFO_FORMAT (out_info),

@@ -355,12 +355,18 @@ gst_dtls_connection_check_timeout_locked (GstDtlsConnection * self)
     GST_DEBUG_OBJECT (self, "waiting for %" G_GINT64_FORMAT " usec", wait_time);
     if (wait_time) {
       GstClockID clock_id;
+#ifndef G_DISABLE_ASSERT
       GstClockReturn clock_return;
+#endif
 
       end_time = gst_clock_get_time (system_clock) + wait_time * GST_USECOND;
 
       clock_id = gst_clock_new_single_shot_id (system_clock, end_time);
+#ifndef G_DISABLE_ASSERT
       clock_return =
+#else
+      (void)
+#endif
           gst_clock_id_wait_async (clock_id, schedule_timeout_handling,
           g_object_ref (self), (GDestroyNotify) g_object_unref);
       g_assert (clock_return == GST_CLOCK_OK);
