@@ -76,6 +76,7 @@ static void gst_gl_window_cocoa_draw (GstGLWindow * window);
 static void gst_gl_window_cocoa_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 static void gst_gl_window_cocoa_show (GstGLWindow * window);
+static void gst_gl_window_cocoa_queue_resize (GstGLWindow * window);
 
 struct _GstGLWindowCocoaPrivate
 {
@@ -110,6 +111,7 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_preferred_size);
   window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_show);
+  window_class->queue_resize = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_queue_resize);
 
   gobject_class->finalize = gst_gl_window_cocoa_finalize;
 }
@@ -267,6 +269,20 @@ gst_gl_window_cocoa_show (GstGLWindow * window)
 }
 
 static void
+gst_gl_window_cocoa_queue_resize (GstGLWindow * window)
+{
+  GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
+  GstGLNSView *view;
+
+  if (!g_atomic_int_get (&window_cocoa->priv->view_ready))
+    return;
+
+  view = (GstGLNSView *)[window_cocoa->priv->internal_win_id contentView];
+
+  [view->layer queueResize];
+}
+
+static void
 gst_gl_window_cocoa_draw (GstGLWindow * window)
 {
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
@@ -343,10 +359,8 @@ gst_gl_cocoa_resize_cb (GstGLNSView * view, guint width, guint height)
                       visibleRect.origin.x, visibleRect.origin.y,
                       visibleRect.size.width, visibleRect.size.height);
 
-    if (window->resize) {
-      window->resize (window->resize_data, width, height);
-      gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
-    }
+    gst_gl_window_resize (window, width, height);
+    gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
 
     gl->Viewport (viewport_dim[0] - visibleRect.origin.x,
                   viewport_dim[1] - visibleRect.origin.y,

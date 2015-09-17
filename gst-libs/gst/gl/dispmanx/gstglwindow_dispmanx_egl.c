@@ -185,6 +185,8 @@ static void
 window_resize (GstGLWindowDispmanxEGL * window_egl, guint width, guint height,
     gboolean visible)
 {
+  GstGLWindow *window = GST_GL_WINDOW (window_egl);
+
   GST_DEBUG ("resizing %s window from %ux%u to %ux%u",
       visible ? "visible" : "invisible", window_egl->native.width,
       window_egl->native.height, width, height);
@@ -234,9 +236,8 @@ window_resize (GstGLWindowDispmanxEGL * window_egl, guint width, guint height,
 
     vc_dispmanx_update_submit_sync (dispman_update);
 
-    if (GST_GL_WINDOW (window_egl)->resize)
-      GST_GL_WINDOW (window_egl)->
-          resize (GST_GL_WINDOW (window_egl)->resize_data, width, height);
+    if (window->resize)
+      window->resize (window->resize_data, width, height);
   }
 
   window_egl->native.width = width;

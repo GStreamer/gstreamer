@@ -80,8 +80,6 @@ gboolean gst_gl_window_x11_create_context (GstGLWindow * window,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
 gboolean gst_gl_window_x11_open (GstGLWindow * window, GError ** error);
 void gst_gl_window_x11_close (GstGLWindow * window);
-static void gst_gl_window_x11_get_surface_dimensions (GstGLWindow * window,
-    guint * width, guint * height);
 void gst_gl_window_x11_handle_events (GstGLWindow * window,
     gboolean handle_events);
 
@@ -111,8 +109,6 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_x11_draw);
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_x11_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_x11_close);
-  window_class->get_surface_dimensions =
-      GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_surface_dimensions);
   window_class->handle_events =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_handle_events);
   window_class->set_preferred_size =
@@ -399,6 +395,13 @@ gst_gl_window_x11_draw_unlocked (GstGLWindow * window)
 
   if (gst_gl_window_is_running (GST_GL_WINDOW (window_x11))
       && window_x11->allow_extra_expose_events) {
+    if (window->queue_resize) {
+      guint width, height;
+
+      gst_gl_window_get_surface_dimensions (window, &width, &height);
+      gst_gl_window_resize (window, width, height);
+    }
+
     if (window->draw) {
       GstGLContext *context = gst_gl_window_get_context (window);
       GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
@@ -566,12 +569,8 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
       case CreateNotify:
       case ConfigureNotify:
       {
-        if (window->resize)
-          window->resize (window->resize_data, event.xconfigure.width,
-              event.xconfigure.height);
-
-        window_x11->current_width = event.xconfigure.width;
-        window_x11->current_height = event.xconfigure.height;
+        gst_gl_window_resize (window, event.xconfigure.width,
+            event.xconfigure.height);
         break;
       }
 
@@ -597,9 +596,6 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
 
           gst_object_unref (context);
         }
-
-        window_x11->current_width = event.xexpose.width;
-        window_x11->current_height = event.xexpose.height;
         break;
 
       case VisibilityNotify:
@@ -698,15 +694,4 @@ gst_gl_window_x11_get_display (GstGLWindow * window)
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
 
   return (guintptr) window_x11->device;
-}
-
-static void
-gst_gl_window_x11_get_surface_dimensions (GstGLWindow * window, guint * width,
-    guint * height)
-{
-  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
-  if (width != NULL)
-    *width = window_x11->current_width;
-  if (height != NULL)
-    *height = window_x11->current_height;
 }

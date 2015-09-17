@@ -184,7 +184,7 @@ _context_ready (gpointer data)
   gl->GetIntegerv (GL_VIEWPORT, ca_viewport);
 
   gst_gl_context_activate (self->draw_context, TRUE);
-  if (self->last_bounds.size.width != self.bounds.size.width
+  if (self->queue_resize || self->last_bounds.size.width != self.bounds.size.width
       || self->last_bounds.size.height != self.bounds.size.height) {
     if (self->resize_cb) {
       self->resize_cb (self->resize_data, self.bounds.size.width,
@@ -200,6 +200,7 @@ _context_ready (gpointer data)
     }
 
     self->last_bounds = self.bounds;
+    self->queue_resize = FALSE;
   }
 
   src.x = self->expected_dims[0];
