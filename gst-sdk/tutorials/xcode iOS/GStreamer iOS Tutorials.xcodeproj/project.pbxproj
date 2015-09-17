@@ -115,6 +115,11 @@
 		C6EB85BA173BEFF800C3953D /* appicon-4-iPad@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6EB85B6173BEFF800C3953D /* appicon-4-iPad@2x.png */; };
 		C6EB85BB173BEFF800C3953D /* appicon-4-iPhone.png in Resources */ = {isa = PBXBuildFile; fileRef = C6EB85B7173BEFF800C3953D /* appicon-4-iPhone.png */; };
 		C6EB85BC173BEFF800C3953D /* appicon-4-iPhone@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6EB85B8173BEFF800C3953D /* appicon-4-iPhone@2x.png */; };
+		C987C0DB1BAB090B00D54784 /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */; };
+		C987C0DC1BAB096C00D54784 /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */; };
+		C987C0DD1BAB09A100D54784 /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */; };
+		C987C0DE1BAB09AA00D54784 /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */; };
+		C987C0DF1BAB09AF00D54784 /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -254,6 +259,7 @@
 		C6EB85B6173BEFF800C3953D /* appicon-4-iPad@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-4-iPad@2x.png"; sourceTree = "<group>"; };
 		C6EB85B7173BEFF800C3953D /* appicon-4-iPhone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-4-iPhone.png"; sourceTree = "<group>"; };
 		C6EB85B8173BEFF800C3953D /* appicon-4-iPhone@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-4-iPhone@2x.png"; sourceTree = "<group>"; };
+		C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.2.dylib; path = usr/lib/libiconv.2.dylib; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -261,6 +267,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C987C0DB1BAB090B00D54784 /* libiconv.2.dylib in Frameworks */,
 				C67B40CD172EBEA3008359CC /* UIKit.framework in Frameworks */,
 				C67B40CF172EBEA3008359CC /* Foundation.framework in Frameworks */,
 				C67B40D1172EBEA3008359CC /* CoreGraphics.framework in Frameworks */,
@@ -272,6 +279,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C987C0DC1BAB096C00D54784 /* libiconv.2.dylib in Frameworks */,
 				C67B4100172FC7F4008359CC /* UIKit.framework in Frameworks */,
 				C67B4101172FC7F4008359CC /* Foundation.framework in Frameworks */,
 				C67B4102172FC7F4008359CC /* CoreGraphics.framework in Frameworks */,
@@ -283,6 +291,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C987C0DF1BAB09AF00D54784 /* libiconv.2.dylib in Frameworks */,
 				C68B1D8917465EB7004FD7D0 /* UIKit.framework in Frameworks */,
 				C68B1D8A17465EB7004FD7D0 /* Foundation.framework in Frameworks */,
 				C68B1D8B17465EB7004FD7D0 /* CoreGraphics.framework in Frameworks */,
@@ -294,6 +303,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C987C0DD1BAB09A100D54784 /* libiconv.2.dylib in Frameworks */,
 				C6B6126017395CF2003FC410 /* UIKit.framework in Frameworks */,
 				C6B6126117395CF2003FC410 /* Foundation.framework in Frameworks */,
 				C6B6126217395CF2003FC410 /* CoreGraphics.framework in Frameworks */,
@@ -305,6 +315,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C987C0DE1BAB09AA00D54784 /* libiconv.2.dylib in Frameworks */,
 				C6EB8582173BEE5E00C3953D /* UIKit.framework in Frameworks */,
 				C6EB8583173BEE5E00C3953D /* Foundation.framework in Frameworks */,
 				C6EB8584173BEE5E00C3953D /* CoreGraphics.framework in Frameworks */,
@@ -343,6 +354,7 @@
 		C67B40CB172EBEA3008359CC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */,
 				C67B40CC172EBEA3008359CC /* UIKit.framework */,
 				C67B40CE172EBEA3008359CC /* Foundation.framework */,
 				C67B40D0172EBEA3008359CC /* CoreGraphics.framework */,
