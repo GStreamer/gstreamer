@@ -4,28 +4,30 @@
 # Wenzheng Hu <db_lobster@163.com>, 2007.
 # LI Daobing <lidaobing@gmail.com>, 2008, 2009.
 # Wylmer Wang <wantinghard@gmail.com>, 2011.
+# Mingye Wang <arthur200126@gmail.com>, 2015.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-ugly 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-08-19 12:54+0300\n"
-"PO-Revision-Date: 2011-12-20 10:58+0800\n"
-"Last-Translator: Wylmer Wang <wantinghard@gmail.com>\n"
+"POT-Creation-Date: 2015-09-18 11:51+0200\n"
+"PO-Revision-Date: 2015-08-28 15:36+0800\n"
+"Last-Translator: Mingye Wang <arthur200126@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.4\n"
 
 msgid "Could not read from CD."
-msgstr "无法读取CD。"
+msgstr "无法读取 CD。"
 
 msgid "Could not open CD device for reading."
-msgstr "无法打开以读方式打开CD设备。"
+msgstr "无法打开以读方式打开 CD 设备。"
 
 msgid "Disc is not an Audio CD."
-msgstr "盘类型不是音频CD。"
+msgstr "盘类型不是音频 CD。"
 
 msgid "Could not open DVD"
 msgstr "无法打开 DVD"
@@ -52,10 +54,9 @@ msgstr "无法读取 DVD。可能 DVD 光盘已加密，但 DVD 解密库没有�
 msgid "Could not read DVD."
 msgstr "无法读取 DVD。"
 
-#, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr "设置 LAME 编码器失败. 请检查你的编码参数."
+msgstr "配置 LAME mp3 编码器失败. 请检查你的编码参数."
 
 #, c-format
 msgid ""
