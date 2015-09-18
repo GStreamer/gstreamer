@@ -3385,7 +3385,8 @@ reset_app (PlaybackApp * app)
   g_list_free (app->paths);
   g_list_foreach (app->sub_paths, (GFunc) g_free, NULL);
   g_list_free (app->sub_paths);
-  g_array_free (app->vis_entries, TRUE);
+  if (app->vis_entries)
+    g_array_free (app->vis_entries, TRUE);
   g_print ("free pipeline\n");
   gst_object_unref (app->pipeline);
 }
