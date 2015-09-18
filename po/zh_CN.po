@@ -1,20 +1,22 @@
 # Chinese (simplified) translation about gstreamer.
 # This file is put in the public domain.
 # Funda Wang <fundawang@linux.net.cn>, 2005.
-# Ji ZhengYu <zhengyuji@gmail.com>, 2008, 2009, 2010.
+# Ji ZhengYu <zhengyuji@gmail.com>, 2008, 2009.
+# zwpwjwtz <zwpwjwtz@126.com>, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.25.2\n"
+"Project-Id-Version: gstreamer 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-05 11:20+0100\n"
-"PO-Revision-Date: 2010-02-02 18:58+0800\n"
-"Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
+"POT-Creation-Date: 2015-09-18 11:48+0200\n"
+"PO-Revision-Date: 2015-09-05 23:18+0800\n"
+"Last-Translator: zwpwjwtz <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 1.8.4\n"
 
 msgid "Print the GStreamer version"
 msgstr "打印 GStreamer 版本"
@@ -25,10 +27,9 @@ msgstr "将所有的警告也当作严重问题"
 msgid "Print available debug categories and exit"
 msgstr "打印可用的调试类别并退出"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
-msgstr "默认调试级别，从 1(仅有错误)到 5(所有内容)，0代表无输出"
+msgstr "默认调试级别，从 1(仅有错误)到 9(所有内容)，0代表无输出"
 
 msgid "LEVEL"
 msgstr "级别"
@@ -49,7 +50,7 @@ msgstr "禁止彩色的调试信息输出"
 msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
-msgstr ""
+msgstr "改变调试日志的颜色模式。可能的模式有：off、on、disable、auto和unix"
 
 msgid "Disable debugging"
 msgstr "禁止调试"
@@ -79,7 +80,7 @@ msgid "Disable updating the registry"
 msgstr "禁止更新寄存器"
 
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "扫描寄存器时不可启用帮助"
+msgstr "扫描寄存器时禁止启动帮助进程"
 
 msgid "GStreamer Options"
 msgstr "GStreamer 选项"
@@ -104,18 +105,16 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
-"GStreamer 错误: 状态更改错误，而且某些组件无法对错误原因给出合适的错误信息。"
+"Gstreamer 错误：改变状态时失败，并且一些组件无法提供有关错误原因的信息。"
 
-#, fuzzy
 msgid "Internal GStreamer error: pad problem."
 msgstr "GStreamer 内部错误: 填充问题。"
 
 msgid "Internal GStreamer error: thread problem."
 msgstr "GStreamer 内部错误：线程问题。"
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "GStreamer 内部错误: 协商问题。"
+msgstr "GStreamer 错误: 协商问题。"
 
 msgid "Internal GStreamer error: event problem."
 msgstr "GStreamer 内部错误：事件问题。"
@@ -132,9 +131,8 @@ msgstr "GStreamer 内部错误：标签问题。"
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "您的 GStreamer 安装缺少插件。"
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "GStreamer 内部错误：始终错误。"
+msgstr "GStreamer 错误：时钟错误。"
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -154,7 +152,7 @@ msgid "Could not configure supporting library."
 msgstr "无法配置支持库。"
 
 msgid "Encoding error."
-msgstr ""
+msgstr "编码错误。"
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer 遇到了常规资源错误。"
@@ -195,9 +193,8 @@ msgstr "无法从资源获得设置或在资源上设定设置。"
 msgid "No space left on the resource."
 msgstr "资源上无剩余空间。"
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "资源上无剩余空间。"
+msgstr "无权访问资源。"
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer 遇到了常规流错误。"
@@ -274,7 +271,7 @@ msgid "artist sortname"
 msgstr "排序后的艺术家"
 
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr "用于排序的负责录制的个人"
+msgstr "用于排序的负责录制的人名"
 
 msgid "album"
 msgstr "专辑"
@@ -286,19 +283,19 @@ msgid "album sortname"
 msgstr "排序后的专辑名"
 
 msgid "album containing this data for sorting purposes"
-msgstr "用于排序的包含此数据的专辑"
+msgstr "用于排序的专辑名"
 
 msgid "album artist"
-msgstr "专辑艺术家"
+msgstr "艺术家列表"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr "所应当显示的整张专辑的艺术家"
+msgstr "用于显示的整张专辑的艺术家"
 
 msgid "album artist sortname"
-msgstr "专辑艺术家排序"
+msgstr "排序后的艺术家名"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr "排序后的整张专辑艺术家"
+msgstr "用于排序的整张专辑的艺术家名"
 
 msgid "date"
 msgstr "日期"
@@ -306,13 +303,11 @@ msgstr "日期"
 msgid "date the data was created (as a GDate structure)"
 msgstr "创建数据的日期(为 GDate 结构)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "日期"
+msgstr "日期和时间"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "创建数据的日期(为 GDate 结构)"
+msgstr "创建数据的日期和时间为 GDate 结构)"
 
 msgid "genre"
 msgstr "流派"
@@ -403,12 +398,11 @@ msgstr "版权 uri"
 msgid "URI to the copyright notice of the data"
 msgstr "数据的版权警告 URI"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "编码器"
+msgstr "编码者为"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "进行编码的人或组织"
 
 msgid "contact"
 msgstr "联系人"
@@ -471,10 +465,10 @@ msgid "codec the subtitle data is stored in"
 msgstr "字幕编码数据保存在"
 
 msgid "container format"
-msgstr "内容格式"
+msgstr "容器格式"
 
 msgid "container format the data is stored in"
-msgstr "数据以...格式存储"
+msgstr "用于储存数据的容器格式"
 
 msgid "bitrate"
 msgstr "比特率"
@@ -551,16 +545,14 @@ msgstr "音轨和专辑增益的参考级别值"
 msgid "language code"
 msgstr "语言代码"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "此流的语言代码，遵从为 ISO-639-1"
+msgstr "此流的语言代码（依照 ISO-639-1 或 ISO-639-2 规范）"
 
-#, fuzzy
 msgid "language name"
-msgstr "语言代码"
+msgstr "语言名称"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "此流的语言名称（freeform格式）"
 
 msgid "image"
 msgstr "图像"
@@ -599,7 +591,7 @@ msgstr "地理位置名称"
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
-msgstr "人们易理解的位置描述或是此媒体在哪里录制或是产生"
+msgstr "有关此媒体在何处录制或生产的可读信息"
 
 msgid "geo location latitude"
 msgstr "地理纬度"
@@ -633,65 +625,60 @@ msgstr ""
 "根据 WGS84（平均海平面为 0 米）标准确定的地理海拔高度（有关此媒体在哪里录制或"
 "产生的）"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "地理经度"
+msgstr "地理位置（国家）"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
-msgstr "人们易理解的位置描述或是此媒体在哪里录制或是产生"
+msgstr "媒体录制或制作地所在国家（的英语名）"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "地理纬度"
+msgstr "地理位置（城市）"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
-msgstr "人们易理解的位置描述或是此媒体在哪里录制或是产生"
+msgstr "媒体录制或制作地所在城市（的英语名）"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "地理海拔"
+msgstr "地理区域（区）"
 
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
-msgstr ""
+msgstr "媒体录制或制作地所在城市的区（的英语名），如“the neighborhood”"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "地理位置名称"
+msgstr "地理位置（水平误差）"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "预期的水平定位测量误差（单位为米）"
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "地理经度"
+msgstr "地理位置（移动速度）"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
-msgstr ""
+msgstr "进行捕捉时捕捉设备的移动速度，单位：米每秒"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "地理海拔"
+msgstr "地理位置（移动方向）"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"进行捕捉时捕捉设备的移动方向。它由角度的浮点值表示，0为地理北极，且按顺时针方"
+"向增大"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "地理海拔"
+msgstr "地理位置（捕获方向）"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"进行捕捉时捕捉设备的朝向。它由角度的浮点值表示，0为地理北极，且按顺时针方向增"
+"大"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -702,14 +689,14 @@ msgstr "tv/podcast/series 的名称，此名称代表媒体来自何处"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
-msgstr "排名显示"
+msgstr "显示排序名"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr "tv/podcast/series 名称代表此媒体来自何处（排名显示）"
 
 msgid "episode number"
-msgstr "场景编号"
+msgstr "年代"
 
 msgid "The episode number in the season the media is part of"
 msgstr "媒体是一季中的第几场景"
@@ -727,10 +714,10 @@ msgid "The lyrics of the media, commonly used for songs"
 msgstr "媒体歌词，通常用于歌曲"
 
 msgid "composer sortname"
-msgstr "排序后的作曲家"
+msgstr "排序后的作曲者"
 
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "创作录音的人（排序显示）"
+msgstr "用于排序的负责制作的人名"
 
 msgid "grouping"
 msgstr "媒体组"
@@ -742,76 +729,72 @@ msgstr ""
 "媒体组横跨多个音轨，就好像是一场音乐会的不同时段。这个概念范围比音轨高，但小"
 "于专辑"
 
-#, fuzzy
 msgid "user rating"
-msgstr "时期"
+msgstr "用户评级"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
-msgstr ""
+msgstr "由用户提供的评级。评级越高，意味着有越多的用户喜欢这一媒体"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "设备商"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "用于编码此流的编码器版本"
+msgstr "用于创建此媒体的设备的生产厂家"
 
 msgid "device model"
-msgstr ""
+msgstr "设备模式"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "用于编码此流的编码器版本"
+msgstr "用于创建此媒体的设备的模式"
 
-#, fuzzy
 msgid "application name"
-msgstr "地理位置名称"
+msgstr "应用程序名称"
 
 msgid "Application used to create the media"
-msgstr ""
+msgstr "用于创建此媒体的应用程序"
 
 msgid "application data"
-msgstr ""
+msgstr "应用程序数据"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "被序列化后写入到媒体中的应用程序数据"
 
 msgid "image orientation"
-msgstr ""
+msgstr "图像方向"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "指示应如何旋转或翻转该图像后再显示它"
 
 msgid "publisher"
-msgstr ""
+msgstr "出版者"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "标签或出版商的名称"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "解说者为"
 
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr ""
+msgstr "混音（或类似解说）作者的信息"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "基于midi的注解"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "音频轨的midi注解编号"
 
 msgid ", "
 msgstr ", "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "未找到用于 %s 协议的URI处理器"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "不支持URI方案“%s”"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -827,11 +810,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "链接没有源 [汇为 %s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "链接没有汇 [源为 %s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -851,11 +834,11 @@ msgstr "无组件“%s”"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "未预期的引用“%s” - 忽略"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "未预期的填充引用“%s” - 忽略"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -870,24 +853,24 @@ msgid "no source element for URI \"%s\""
 msgstr "URI“%s”无源组件"
 
 msgid "syntax error"
-msgstr ""
+msgstr "语法错误"
 
 msgid "bin"
-msgstr ""
+msgstr "储仓"
 
-#, fuzzy, c-format
+#, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "不允许指定空储仓“%s”"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "找不到储仓“%s”，跳过"
+msgstr "找不到用于解包组件的储仓“%s”"
 
 msgid "empty pipeline not allowed"
 msgstr "不允许空管道"
 
 msgid "A lot of buffers are being dropped."
-msgstr "很多缓冲区正被丢弃。"
+msgstr "许多缓冲被丢弃。"
 
 msgid "Internal data flow problem."
 msgstr "内部数据流问题。"
@@ -902,7 +885,7 @@ msgid "Internal clock error."
 msgstr "内部时钟错误。"
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "映射缓冲失败。"
 
 msgid "Filter caps"
 msgstr "过滤分析器"
@@ -915,10 +898,10 @@ msgstr ""
 "关联应用。"
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "分析器变更模式"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "过滤分析器变更行为"
 
 msgid "No Temp directory specified."
 msgstr "未指定临时目录。"
@@ -931,9 +914,8 @@ msgstr "无法创建临时文件“%s”。"
 msgid "Could not open file \"%s\" for reading."
 msgstr "无法打开文件“%s”读取。"
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "写入文件“%s”时出错。"
+msgstr "写入下载文件时出错。"
 
 msgid "No file name specified for writing."
 msgstr "未指定写入的文件名。"
@@ -987,9 +969,8 @@ msgstr "强制分析"
 msgid "force caps without doing a typefind"
 msgstr "不做类型查找的强制分析"
 
-#, fuzzy
 msgid "Stream contains not enough data."
-msgstr "流中不含数据"
+msgstr "流中没有足够数据。"
 
 msgid "Stream contains no data."
 msgstr "流中不含数据"
@@ -1004,19 +985,19 @@ msgid "writable"
 msgstr "可写"
 
 msgid "deprecated"
-msgstr ""
+msgstr "已废弃"
 
 msgid "controllable"
 msgstr "可控制"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "可以在NULL、READY、PAUSED或PLAYING状态下改变"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "只能在NULL、READY或PAUSED状态下改变"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "只能在NULL、或READY状态下改变"
 
 msgid "Blacklisted files:"
 msgstr "文件黑名单:"
@@ -1056,19 +1037,19 @@ msgid ""
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
-"显示机器可解析的指定插件或所有插件提供的特性列表。\n"
-"                                       与外部自动插件安装机制连接时有用"
+"打印机器可解析的指定（或所有）插件提供的特性列表。\n"
+"                                       可以用于与外部自动插件安装机制的连接"
 
 msgid "List the plugin contents"
 msgstr "列出插件信息"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "检查指定的组件或插件是否存在"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
-msgstr ""
+msgstr "当检查组件或插件是否存在时，也检测它们的版本是否大于等于指定版本"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "打印所支持的 URI 样式及它们的关联组件"
@@ -1082,23 +1063,23 @@ msgid "No such element or plugin '%s'\n"
 msgstr "没有那样的组件或插件‘%s’\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "索引统计"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "从组件\"%2$s\"(%3$s)中获取信息 #%1$u:"
+msgstr "从组件“%2$s”获得消息 #%1$u（%3$s）： "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "从组件\"%2$s:%3$s\"(%4$s)中获取信息 #%1$u:"
+msgstr "从填充“%2$s：%3$s”获得消息 #%1$u（%4$s）： "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "从组件\"%2$s\"(%3$s)中获取信息 #%1$u:"
+msgstr "从对象“%2$s”获得消息 #%1$u（%3$s）： "
 
 #, c-format
 msgid "Got message #%u (%s): "
-msgstr "获取信息 #%u (%s):"
+msgstr "获得消息 #%u（%s）： "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -1106,30 +1087,29 @@ msgstr "收到来自组件“%s”的 EOS 信号。\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "找到标识    :由组件“%s”找到。\n"
+msgstr "找到标识      ：由组件“%s”找到。\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "找到标识    :由组件“%s:%s”找到。\n"
+msgstr "找到标识      ：由填充“%s：%s”找到。\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "找到标识    :由组件“%s”找到。\n"
+msgstr "找到标识      ：由对象“%s”找到。\n"
 
 msgid "FOUND TAG\n"
 msgstr "找到标识\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "找到标识    :由组件“%s”找到。\n"
+msgstr "找到TOC      ：由组件“%s”找到。\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "找到标识    :由组件“%s”找到。\n"
+msgstr "找到TOC      ：由对象“%s”找到。\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "找到标识\n"
+msgstr "找到TOC\n"
 
 #, c-format
 msgid ""
@@ -1144,11 +1124,10 @@ msgid "WARNING: from element %s: %s\n"
 msgstr "警告：来自组件 %s：%s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr "Prerolled，等待缓冲完成...\n"
+msgstr "已加载预告片，等待缓冲完成...\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Prerolled，等待缓冲完成...\n"
+msgstr "已加载预告片，等待处理完成...\n"
 
 msgid "buffering..."
 msgstr "正在缓冲..."
@@ -1171,24 +1150,24 @@ msgstr "中断: 中止管道 ...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "进度：（%s）%s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "无组件“%s”"
+msgstr "缺少组件：“%s”\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "警告：来自组件 %s：%s\n"
+msgstr "从组件“%s”获取上下文：%s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "输出标识(也可认为是元数据)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "输出TOC（章节和版本）"
 
 msgid "Output status information and property notifications"
-msgstr "输出状态信息和属性通告"
+msgstr "输出状态信息和属性通知"
 
 msgid "Do not print any progress information"
 msgstr "不打印任何进度信息"
@@ -1207,12 +1186,11 @@ msgstr ""
 msgid "Do not install a fault handler"
 msgstr "不安装错误的处理程序"
 
-#, fuzzy
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "关闭管道前强制对源发出 EOS 信号"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "收集并显示索引统计"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1255,9 +1233,8 @@ msgstr "错误: 管道不想播放。\n"
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "允许关闭时发出 EOS 信号 —— 强制对管道发出 EOS 信号\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "允许关闭时发出 EOS 信号 —— 强制对管道发出 EOS 信号\n"
+msgstr "允许关闭时发出 EOS 信号 —— 发生错误后等待EOS信号\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "等待 EOS 信号...\n"
@@ -1265,9 +1242,8 @@ msgstr "等待 EOS 信号...\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "收到 EOS 信号 - 中止管道 ...\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "中断: 中止管道 ...\n"
+msgstr "等待EOS信号时被中断 - 正在中止管道...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "等待 EOS 信号时出现一个错误\n"
@@ -1352,3 +1328,6 @@ msgstr "释放管道资源 ...\n"
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "文件原始位置作为 URI 地址"
+
+#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+#~ msgstr "不设置 SIGUSR1 和 SIGUSR2 信号的处理器"
