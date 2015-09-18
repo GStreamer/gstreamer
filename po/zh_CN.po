@@ -2,18 +2,20 @@
 # This file is put in the public domain.
 # Funda Wang <fundawang@linux.net.cn>, 2005.
 # Ji ZhengYu <zhengyuji@gmail.com>, 2008.
+# zwpwjwtz <zwpwjwtz@126.com>, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.21.3\n"
+"Project-Id-Version: gst-plugins-base 1.5.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-08-19 12:37+0300\n"
-"PO-Revision-Date: 2009-01-14 12:41+0800\n"
-"Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
+"POT-Creation-Date: 2015-09-18 11:49+0200\n"
+"PO-Revision-Date: 2015-09-05 13:43+0800\n"
+"Last-Translator: zwpwjwtz <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.4\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "无法在单声道模式打开设备播放。"
@@ -34,7 +36,7 @@ msgid "Could not open audio device for playback."
 msgstr "无法打开音频设备播放。"
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr ""
+msgstr "输出到音频设备错误。设备已断开连接。"
 
 msgid "Could not open device for recording in mono mode."
 msgstr "无法在单声道模式打开设备录音。"
@@ -55,7 +57,7 @@ msgid "Could not open audio device for recording."
 msgstr "无法打开音频设备录音。"
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr ""
+msgstr "从音频设备输入错误。设备已断开连接。"
 
 msgid "Could not open CD device for reading."
 msgstr "无法打开 CD 设备读取。"
@@ -73,66 +75,59 @@ msgstr "内部数据流错误。"
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "未找到组件‘%s’－请检查您的 GStreamer 安装情况。"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "无法创建“typefind”组件。"
+msgstr "无法确定流的类型"
 
 msgid "This appears to be a text file"
 msgstr "此文件是个文本文件"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "无法创建“decodebin”组件。"
+msgstr "无法创建“uridecodebin”组件。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "autovideosink 和 xvimagesink 组件都缺少。"
+msgstr "缺少 autovideosink 和 %s 组件。"
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "autovideosink 和 xvimagesink 组件都缺少。"
+msgstr "缺少 autovideosink 组件。"
 
 #, c-format
 msgid "Configured videosink %s is not working."
-msgstr ""
+msgstr "配置后的 videosink %s 无法工作。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "autovideosink 和 xvimagesink 组件都缺少。"
+msgstr "autovideosink 和 %s 组件都无法工作。"
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "autovideosink 和 xvimagesink 组件都缺少。"
+msgstr "autovideosink 组件无法工作。"
 
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "自定义文字汇组件不可用。"
 
 msgid "No volume control found"
 msgstr "未找到音量控制"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "autovideosink 和 alsasink 组件都缺少。"
+msgstr "缺少 autovideosink 和 %s 组件。"
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "autovideosink 和 alsasink 组件都缺少。"
+msgstr "缺少 autovideosink 组件。"
 
 #, c-format
 msgid "Configured audiosink %s is not working."
-msgstr ""
+msgstr "配置后的 audiosink %s 无法工作。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "autovideosink 和 alsasink 组件都缺少。"
+msgstr "autovideosink 和 %s 组件都无法工作。"
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "autovideosink 和 alsasink 组件都缺少。"
+msgstr "autovideosink 组件无法工作。"
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "无法播放不带视频的文本文件。"
+msgstr "无法播放不带视频或可视化效果的文本文件。"
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -199,22 +194,19 @@ msgid "Run-length encoding"
 msgstr "Run-length 编码"
 
 msgid "Timed Text"
-msgstr ""
+msgstr "定时文本"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "字幕"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "TMPlayer 字幕格式"
+msgstr "MPL2 字幕格式"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Sami 字幕格式"
+msgstr "DKS 字幕格式"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Kate 字幕格式"
+msgstr "QTtext 字幕格式"
 
 msgid "Sami subtitle format"
 msgstr "Sami 字幕格式"
@@ -225,45 +217,42 @@ msgstr "TMPlayer 字幕格式"
 msgid "Kate subtitle format"
 msgstr "Kate 字幕格式"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "未压缩的 YUV"
+msgstr "未压缩的视频"
 
-#, fuzzy
 msgid "Uncompressed gray"
 msgstr "未压缩的灰度图像"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "未压缩的 packed YUV 4:2:2"
+msgstr "未压缩的紧缩 YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "未压缩的 planar YUV 4:2:0"
+msgstr "未压缩的半平面 YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "未压缩的 planar YUV 4:2:0"
+msgstr "未压缩的平面 YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "未压缩的 palettized %d-位 %s"
+msgstr "未压缩的调色板映射 %d位 %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "未压缩的 palettized %d-位 %s"
+msgstr "未压缩的 %d位 %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
-msgstr "DivX MPEG-4 版本 %d"
+msgstr "DivX MPEG-4 第 %d 版"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "未压缩的 YUV"
+msgstr "未压缩的音频"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "原始 %d-位 PCM 音频"
+msgstr "原始 %d位 %s 音频"
 
 msgid "Audio CD source"
 msgstr "音频 CD 源"
@@ -281,15 +270,15 @@ msgstr "Microsoft 媒体服务协议(MMS)源"
 msgid "%s protocol source"
 msgstr "%s 协议源"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s video RTP depayloader"
 msgstr "%s 视频 RTP 去负载器"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s audio RTP depayloader"
 msgstr "%s 音频 RTP 去负载器"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s RTP depayloader"
 msgstr "%s RTP 去负载器"
 
@@ -329,7 +318,7 @@ msgid "Unknown source element"
 msgstr "未知源组件"
 
 msgid "Unknown sink element"
-msgstr "未知消音组件"
+msgstr "未知的汇组件"
 
 msgid "Unknown element"
 msgstr "未知组件"
@@ -377,270 +366,268 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "捕捉快门速度"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "用于捕捉图像的快门速度，单位为秒"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "捕捉焦比"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "捕捉图像时的焦比（f值）"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "捕捉焦距"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "（在mm中）捕捉图像时的焦距"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "捕捉数码变焦比"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "捕捉图像时的数码变焦比"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "捕捉ISO感光度"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "捕捉图像时使用的ISO感光度"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "捕捉曝光程序"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "用于捕捉图像的曝光程序"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "捕捉曝光模式"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "捕捉图像时使用的曝光模式"
 
 msgid "capturing exposure compensation"
-msgstr ""
+msgstr "捕捉曝光补偿"
 
 msgid "The exposure compensation used when capturing an image"
-msgstr ""
+msgstr "捕捉图像时使用的曝光补偿值"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "捕捉场景模式"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "用于捕捉图像的场景模式"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "捕捉增益调节"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "调整应用于图像的总体增益"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "捕捉白平衡"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "捕捉图像时的白平衡"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "捕捉对比度"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "捕捉图像时所使用的对比度"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "捕捉饱和度"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "捕捉图像时所使用的饱和度"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "捕捉锐度"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "捕捉图像时所使用的锐度"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "捕捉闪光灯"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "设定在捕捉图像时是否使用闪光灯补光"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "捕捉闪光模式"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "捕捉图像时使用的闪光模式"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "捕捉测光"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr ""
+msgstr "用于确定要捕捉图像的曝光度的测光模式"
 
 msgid "capturing source"
-msgstr ""
+msgstr "捕捉源"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "指定用于捕捉的源或设备类型"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "图像横向ppi"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "指定媒体（图片/视频）的横向像素密度，单位是ppi"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "图像纵向ppi"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "指定媒体（图片/视频）的纵向像素密度，单位是ppi"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "ID3v2 帧"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "未被解析的 ID3v2 标识帧"
 
 msgid "musical-key"
-msgstr ""
+msgstr "音调"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "音乐开始时的音调"
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "显示版本信息，然后退出。"
 
 msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
-msgstr ""
+msgstr "显示初始设备列表后不退出，而是等待设备被添加或移除。"
 
 #, c-format
 msgid "Volume: %.0f%%"
-msgstr ""
+msgstr "音量：%.0f%%"
 
 msgid "Buffering..."
-msgstr ""
+msgstr "缓冲中..."
 
 msgid "Clock lost, selecting a new one\n"
-msgstr ""
+msgstr "时钟已丢失，请选择一个新的\n"
 
 msgid "Reached end of play list."
-msgstr ""
+msgstr "到达播放列表结尾。"
 
 msgid "Paused"
-msgstr ""
+msgstr "已暂停"
 
 #, c-format
 msgid "Now playing %s\n"
-msgstr ""
+msgstr "正在播放 %s\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr ""
+msgstr "即将结束，准备下一标题：%s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "回放速率：%.2f"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "无法在立体声模式打开设备播放。"
+msgstr "无法将回放速率改变为%.2f"
 
 msgid "space"
-msgstr ""
+msgstr "空格"
 
 msgid "pause/unpause"
-msgstr ""
+msgstr "暂停/继续"
 
 msgid "q or ESC"
-msgstr ""
+msgstr "q 或 ESC"
 
 msgid "quit"
-msgstr ""
+msgstr "退出"
 
 msgid "play next"
-msgstr ""
+msgstr "下一曲"
 
 msgid "play previous"
-msgstr ""
+msgstr "上一曲"
 
 msgid "seek forward"
-msgstr ""
+msgstr "前进"
 
 msgid "seek backward"
-msgstr ""
+msgstr "后退"
 
 msgid "volume up"
-msgstr ""
+msgstr "增大音量"
 
 msgid "volume down"
-msgstr ""
+msgstr "减小音量"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "增大回放速率"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "减小回访率"
 
 msgid "change playback direction"
-msgstr ""
+msgstr "改变回放方向"
 
 msgid "enable/disable trick modes"
-msgstr ""
+msgstr "启用/禁用特效模式"
 
-#, fuzzy
 msgid "change audio track"
-msgstr "此 CD 无音轨"
+msgstr "改变音频轨"
 
 msgid "change video track"
-msgstr ""
+msgstr "改变视频轨"
 
-#, fuzzy
 msgid "change subtitle track"
-msgstr "Kate 字幕格式"
+msgstr "改变字幕轨"
 
 msgid "show keyboard shortcuts"
-msgstr ""
+msgstr "显示键盘快捷键"
 
 msgid "Interactive mode - keyboard controls:"
-msgstr ""
+msgstr "交互模式 - 键盘控制："
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "要使用的视频接收组件（默认为autovideosink）"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "要使用的音频接收组件（默认为autoaudiosink）"
 
 msgid "Enable gapless playback"
-msgstr ""
+msgstr "启用无缝回放"
 
 msgid "Shuffle playlist"
-msgstr ""
+msgstr "随机播放列表"
 
 msgid "Disable interactive control via the keyboard"
-msgstr ""
+msgstr "禁用键盘交互操作"
 
 msgid "Volume"
-msgstr ""
+msgstr "音量"
 
 msgid "Playlist file containing input media files"
-msgstr ""
+msgstr "播放列表文件含有媒体文件"
 
 msgid "Do not print any output (apart from errors)"
-msgstr ""
+msgstr "不显示任何输出（除了错误信息）"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "用法：%s [文件1|URI1] [文件2|URI2] [文件3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "你必须提供至少一个文件名或URI来播放。"
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr ""
+msgstr "按“k”键来显示键盘快捷键列表。\n"
 
 #~ msgid "Master"
 #~ msgstr "主音量"
@@ -727,7 +714,6 @@ msgstr ""
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "无法创建“queue2”组件。"
 
-#, fuzzy
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "发送 gdp 头部数据至“%s:%d”时出错。"
 
@@ -738,25 +724,25 @@ msgstr ""
 #~ msgstr "拒绝连接至 %s:%d。"
 
 #~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "未压缩的 planar YVU 4:2:0"
+#~ msgstr "未压缩的平面 YVU 4:2:0"
 
 #~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "未压缩的 packed YUV 4:1:0"
+#~ msgstr "未压缩的紧缩 YUV 4:1:0"
 
 #~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "未压缩的 packed YVU 4:1:0"
+#~ msgstr "未压缩的紧缩 YVU 4:1:0"
 
 #~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "未压缩的 packed YUV 4:1:1"
+#~ msgstr "未压缩的紧缩 YUV 4:1:1"
 
 #~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "未压缩的 packed YUV 4:4:4"
+#~ msgstr "未压缩的紧缩 YUV 4:4:4"
 
 #~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "未压缩的 planar YUV 4:2:2"
+#~ msgstr "未压缩的平面 YUV 4:2:2"
 
 #~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "未压缩的 planar YUV 4:1:1"
+#~ msgstr "未压缩的平面 YUV 4:1:1"
 
 #~ msgid "Uncompressed black and white Y-plane"
 #~ msgstr "未压缩的黑白 Y-plane"
@@ -765,7 +751,7 @@ msgstr ""
 #~ msgstr "原始 PCM 音频"
 
 #~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "原始 %d-位浮点音频"
+#~ msgstr "原始 %d位浮点音频"
 
 #~ msgid "Raw floating-point audio"
 #~ msgstr "原始浮点音频"
@@ -777,7 +763,31 @@ msgstr ""
 #~ msgstr "设备“%s”不存在。"
 
 #~ msgid "Device \"%s\" is already being used."
-#~ msgstr "设备“%s”目前已被使用了。"
+#~ msgstr "设备“%s”正被使用。"
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "无法打开设备“%s”读取。"
+
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "未压缩的 %s YUV %s"
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "缺少 autovideosink 和 xvimagesink 组件。"
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "缺少 autovideosink 和 alsasink 组件。"
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "无法创建“typefind”组件。"
+
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "无法同时播放文本格式的子标题和子画面。"
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "未指定临时设备。"
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "无法创建临时文件“%s”。"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "内部数据流错误。"

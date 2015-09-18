@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.5.1\n"
+"Project-Id-Version: gst-plugins-base 1.5.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-08-19 12:37+0300\n"
-"PO-Revision-Date: 2015-06-11 08:32+0700\n"
+"POT-Creation-Date: 2015-09-18 11:49+0200\n"
+"PO-Revision-Date: 2015-08-23 15:58+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -537,7 +537,7 @@ msgid "Reached end of play list."
 msgstr "Đã tìm đến cuối danh sách phát."
 
 msgid "Paused"
-msgstr ""
+msgstr "Đã tạm dừng"
 
 #, c-format
 msgid "Now playing %s\n"
@@ -597,16 +597,14 @@ msgstr "thay đổi hướng phát lại"
 msgid "enable/disable trick modes"
 msgstr "bật/tắt chế độ thủ thuật"
 
-#, fuzzy
 msgid "change audio track"
-msgstr "Đĩa CD này không có rãnh âm thanh nào"
+msgstr "đổi rãnh âm thanh"
 
 msgid "change video track"
-msgstr ""
+msgstr "đổi rãnh phim"
 
-#, fuzzy
 msgid "change subtitle track"
-msgstr "Định dạng phụ đề Kate"
+msgstr "đổi phụ đề rãnh"
 
 msgid "show keyboard shortcuts"
 msgstr "hiện phím tắt"
