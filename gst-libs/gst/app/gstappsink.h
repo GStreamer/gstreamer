@@ -47,14 +47,14 @@ typedef struct _GstAppSinkPrivate GstAppSinkPrivate;
 /**
  * GstAppSinkCallbacks: (skip)
  * @eos: Called when the end-of-stream has been reached. This callback
- *       is called from the steaming thread.
+ *       is called from the streaming thread.
  * @new_preroll: Called when a new preroll sample is available.
- *       This callback is called from the steaming thread.
+ *       This callback is called from the streaming thread.
  *       The new preroll sample can be retrieved with
  *       gst_app_sink_pull_preroll() either from this callback
  *       or from any other thread.
  * @new_sample: Called when a new sample is available.
- *       This callback is called from the steaming thread.
+ *       This callback is called from the streaming thread.
  *       The new sample can be retrieved with
  *       gst_app_sink_pull_sample() either from this callback
  *       or from any other thread.
