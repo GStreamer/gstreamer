@@ -1,8 +1,8 @@
 
-Release notes for GStreamer RTSP Server Library 1.5.90
+Release notes for GStreamer RTSP Server Library 1.5.91
 
 
-The GStreamer team is pleased to announce the first release candidate for the
+The GStreamer team is pleased to announce the second release candidate for the
 stable 1.6 release series. The 1.6 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The final 1.6.0 release is planned
@@ -13,15 +13,12 @@ Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
 the GStreamer project.
 
 
-
   
 
 Bugs fixed in this release
      
-      * 749227 : rtsp-server: gst_rtsp_server_attach() is misleading
-      * 752640 : Warning in gst_rtsp_thread_pool_cleanup()
-      * 753385 : media: Adding multiple dynamic payload is broken
-      * 753473 : rtsp-server: shared media uri with explicit port given doesn't match same path uri without port
+      * 749095 : rtsp-stream: add API to set UDP buffer size
+      * 754753 : rtsp-media: don't mutate original string when parsing keymgmt
 
 ==== Download ====
 
@@ -56,13 +53,10 @@ Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
 
         
+Applications
+  
 Contributors to this release
     
-      * Francisco Velazquez
-      * Hyunjun Ko
-      * Nicolas Dufresne
-      * Sebastian Dröge
-      * Stefan Sauer
-      * Vineeth TM
-      * Xavier Claessens
+      * Jan Schmidt
+      * Tim-Philipp Müller
  

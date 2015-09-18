@@ -1,9 +1,63 @@
-=== release 1.5.90 ===
+=== release 1.5.91 ===
 
-2015-08-19  Sebastian Dröge <slomo@coaxion.net>
+2015-09-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.90
+	  releasing 1.5.91
+
+2015-09-17 20:07:34 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: fix docs for recently-added get/set_buffer_size API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749095
+
+2015-09-04 11:23:43 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Don't crash on encrypted RTX SDP
+	  In parse_keymgmt(), don't mutate the input string that's been passed
+	  as const, especially since we might need the original value again if
+	  the same key info applies to multiple streams (RTX, for example).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754753
+
+2015-08-22 20:59:40 +1000  Jan Schmidt <jan@centricular.com>
+
+	* examples/test-mp4.c:
+	  test-mp4: Support filenames with spaces in them. Error out on too few arguments
+
+2015-08-17 02:36:31 +1000  Jan Schmidt <jan@centricular.com>
+
+	* examples/test-record.c:
+	  test-record: Check parameter count and print out help
+	  If no launch pipeline was supplied, print out some help
+
+2015-08-31 22:48:34 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-stream: Implement UDP buffer size setting.
+	  Add gst_rtsp_stream_(get|set)_buffer_size and use it to configure the
+	  UDP TX buffer size.
+	  Incorporates a patch by Hyunjun Ko <zzoon.ko@samsung.com>
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=749095
+
+2015-08-31 22:47:45 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.h:
+	  rtsp-media: Fix small typo causing gtk-doc to complain
+
+=== release 1.5.90 ===
+
+2015-08-19 14:15:23 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.5.90
 
 2015-08-12 14:33:44 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
 
