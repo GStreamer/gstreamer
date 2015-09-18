@@ -976,7 +976,7 @@ gst_audio_aggregator_mix_buffer (GstAudioAggregator * aagg,
   if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
     /* skip gap buffer */
     GST_LOG_OBJECT (pad, "skipping GAP buffer");
-    pad->priv->output_offset += pad->priv->size;
+    pad->priv->output_offset += pad->priv->size - pad->priv->position;
     pad->priv->position = pad->priv->size;
 
     gst_buffer_replace (&pad->priv->buffer, NULL);
