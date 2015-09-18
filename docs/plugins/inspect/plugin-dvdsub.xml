@@ -3,7 +3,7 @@
   <description>DVD subtitle parser and decoder</description>
   <filename>../../gst/dvdsub/.libs/libgstdvdsub.so</filename>
   <basename>libgstdvdsub.so</basename>
-  <version>1.5.90</version>
+  <version>1.5.91</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>

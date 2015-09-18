@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Ugly Plugins 1.5.90
+Release notes for GStreamer Ugly Plugins 1.5.91
 
 
-The GStreamer team is pleased to announce the first release candidate for the
+The GStreamer team is pleased to announce the second release candidate for the
 stable 1.6 release series. The 1.6 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The final 1.6.0 release is planned
@@ -57,11 +57,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Bugs fixed in this release
-     
-      * 752404 : realmedia: fix leaks while playing real media files
-      * 752803 : asfdemux: fix assertion error when codec_data is not present in structure
-      * 753301 : rmdemux: fix assertion error when freeing tags
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -98,13 +95,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
-      * Luis de Bethencourt
-      * Olivier Crête
+      * Jan Schmidt
       * Sebastian Dröge
-      * Stefan Sauer
-      * Thiago Santos
       * Tim-Philipp Müller
-      * Vineeth T M
-      * Vineeth TM
  
