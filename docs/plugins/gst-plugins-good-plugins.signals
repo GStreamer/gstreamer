@@ -1,4 +1,3 @@
-
 <SIGNAL>
 <NAME>GstMultiUDPSink::add</NAME>
 <RETURNS>void</RETURNS>
