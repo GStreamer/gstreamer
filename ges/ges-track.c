@@ -132,7 +132,7 @@ gap_new (GESTrack * track, GstClockTime start, GstClockTime duration)
     return NULL;
   }
 
-  if (G_UNLIKELY (nle_composition_add_object (track->priv->composition,
+  if (G_UNLIKELY (ges_nle_composition_add_object (track->priv->composition,
               nlesrc) == FALSE)) {
     GST_WARNING_OBJECT (track, "Could not add gap to the composition");
 
@@ -171,7 +171,7 @@ free_gap (Gap * gap)
   GST_DEBUG_OBJECT (track, "Removed gap with start %" GST_TIME_FORMAT
       " duration %" GST_TIME_FORMAT, GST_TIME_ARGS (gap->start),
       GST_TIME_ARGS (gap->duration));
-  nle_composition_remove_object (track->priv->composition, gap->nleobj);
+  ges_nle_composition_remove_object (track->priv->composition, gap->nleobj);
 
   g_slice_free (Gap, gap);
 }
@@ -363,7 +363,7 @@ remove_object_internal (GESTrack * track, GESTrackElement * object)
     GST_DEBUG ("Removing NleObject '%s' from composition '%s'",
         GST_ELEMENT_NAME (nleobject), GST_ELEMENT_NAME (priv->composition));
 
-    if (!nle_composition_remove_object (priv->composition, nleobject)) {
+    if (!ges_nle_composition_remove_object (priv->composition, nleobject)) {
       GST_WARNING ("Failed to remove nleobject from composition");
       return FALSE;
     }
@@ -452,7 +452,7 @@ ges_track_dispose (GObject * object)
       (GFunc) dispose_trackelements_foreach, track);
   g_sequence_free (priv->trackelements_by_start);
   g_list_free_full (priv->gaps, (GDestroyNotify) free_gap);
-  nle_object_commit (track->priv->composition, TRUE);
+  ges_nle_object_commit (track->priv->composition, TRUE);
 
   if (priv->mixing_operation)
     gst_object_unref (priv->mixing_operation);
@@ -529,7 +529,7 @@ ges_track_constructed (GObject * object)
     g_object_set (nleobject, "expandable", TRUE, NULL);
 
     if (self->priv->mixing) {
-      if (!nle_composition_add_object (self->priv->composition, nleobject)) {
+      if (!ges_nle_composition_add_object (self->priv->composition, nleobject)) {
         GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
 
         return;
@@ -877,13 +877,13 @@ ges_track_set_mixing (GESTrack * track, gboolean mixing)
   if (mixing) {
     /* increase ref count to hold the object */
     gst_object_ref (track->priv->mixing_operation);
-    if (!nle_composition_add_object (track->priv->composition,
+    if (!ges_nle_composition_add_object (track->priv->composition,
             track->priv->mixing_operation)) {
       GST_WARNING_OBJECT (track, "Could not add the mixer to our composition");
       return;
     }
   } else {
-    if (!nle_composition_remove_object (track->priv->composition,
+    if (!ges_nle_composition_remove_object (track->priv->composition,
             track->priv->mixing_operation)) {
       GST_WARNING_OBJECT (track,
           "Could not remove the mixer from our composition");
@@ -931,7 +931,7 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
       GST_OBJECT_NAME (ges_track_element_get_nleobject (object)),
       GST_OBJECT_NAME (track->priv->composition));
 
-  if (G_UNLIKELY (!nle_composition_add_object (track->priv->composition,
+  if (G_UNLIKELY (!ges_nle_composition_add_object (track->priv->composition,
               ges_track_element_get_nleobject (object)))) {
     GST_WARNING ("Couldn't add object to the NleComposition");
     return FALSE;
@@ -1095,7 +1095,7 @@ ges_track_commit (GESTrack * track)
 
   track_resort_and_fill_gaps (track);
 
-  return nle_object_commit (track->priv->composition, TRUE);
+  return ges_nle_object_commit (track->priv->composition, TRUE);
 }
 
 

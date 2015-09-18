@@ -380,8 +380,8 @@ G_GNUC_INTERNAL GESMultiFileURI * ges_multi_file_uri_new (const gchar * uri);
  *  Gnonlin helpers *
  ********************/
 
-G_GNUC_INTERNAL gboolean nle_composition_add_object (GstElement *comp, GstElement *object);
-G_GNUC_INTERNAL gboolean nle_composition_remove_object (GstElement *comp, GstElement *object);
-G_GNUC_INTERNAL gboolean nle_object_commit (GstElement * nlesource, gboolean recurse);
+G_GNUC_INTERNAL gboolean ges_nle_composition_add_object (GstElement *comp, GstElement *object);
+G_GNUC_INTERNAL gboolean ges_nle_composition_remove_object (GstElement *comp, GstElement *object);
+G_GNUC_INTERNAL gboolean ges_nle_object_commit (GstElement * nlesource, gboolean recurse);
 
 #endif /* __GES_INTERNAL_H__ */
