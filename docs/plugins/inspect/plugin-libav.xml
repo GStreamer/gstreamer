@@ -3,7 +3,7 @@
   <description>All libav codecs and formats (local snapshot)</description>
   <filename>../../ext/libav/.libs/libgstlibav.so</filename>
   <basename>libgstlibav.so</basename>
-  <version>1.5.90</version>
+  <version>1.5.91</version>
   <license>LGPL</license>
   <source>gst-libav</source>
   <package>libav</package>
@@ -132,6 +132,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_aac_fixed</name>
+      <longname>libav AAC (Advanced Audio Coding) decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav aac_fixed decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int){ 2, 4 }, stream-format=(string){ raw, adts, adif }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)S32LE</details>
         </caps>
       </pads>
     </element>
@@ -830,7 +851,7 @@
     </element>
     <element>
       <name>avdec_adpcm_thp</name>
-      <longname>libav ADPCM Nintendo Gamecube THP decoder</longname>
+      <longname>libav ADPCM Nintendo THP decoder</longname>
       <class>Codec/Decoder/Audio</class>
       <description>libav adpcm_thp decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
@@ -840,6 +861,27 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-adpcm, layout=(string)thp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_adpcm_thp_le</name>
+      <longname>libav ADPCM Nintendo THP (little-endian) decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav adpcm_thp_le decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1900,6 +1942,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_dds</name>
+      <longname>libav DirectDraw Surface image decoder decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav dds decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_dfa</name>
       <longname>libav Chronomaster DFA decoder</longname>
       <class>Codec/Decoder/Video</class>
@@ -2898,6 +2961,27 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-h265, alignment=(string)au, stream-format=(string){ hvc1, hev1, byte-stream }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_hap</name>
+      <longname>libav Vidvox Hap decoder decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav hap decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8417,7 +8501,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ RGB, Y444, GRAY8 }</details>
+          <details>video/x-raw, format=(string){ RGB, Y444, GRAY8, I420, Y42B, YUV9, Y41B }</details>
         </caps>
         <caps>
           <name>src</name>

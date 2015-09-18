@@ -12,6 +12,7 @@ GObject
           avdec_8svx_exp
           avdec_8svx_fib
           avdec_aac
+          avdec_aac_fixed
           avdec_aac_latm
           avdec_ac3
           avdec_ac3_fixed
@@ -45,6 +46,7 @@ GObject
           avdec_adpcm_sbpro_4
           avdec_adpcm_swf
           avdec_adpcm_thp
+          avdec_adpcm_thp_le
           avdec_adpcm_vima
           avdec_adpcm_xa
           avdec_adpcm_yamaha
@@ -205,6 +207,7 @@ GObject
           avdec_cllc
           avdec_cpia
           avdec_cyuv
+          avdec_dds
           avdec_dfa
           avdec_dirac
           avdec_dnxhd
@@ -237,6 +240,7 @@ GObject
           avdec_h263p
           avdec_h264
           avdec_h265
+          avdec_hap
           avdec_hnm4video
           avdec_hq_hqa
           avdec_hqx

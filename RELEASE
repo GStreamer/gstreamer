@@ -1,8 +1,8 @@
 
-Release notes for GStreamer libav Plugins 1.5.90
+Release notes for GStreamer libav Plugins 1.5.91
 
 
-The GStreamer team is pleased to announce the first release candidate for the
+The GStreamer team is pleased to announce the second release candidate for the
 stable 1.6 release series. The 1.6 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The final 1.6.0 release is planned
@@ -39,16 +39,9 @@ contains a set of less supported plugins that haven't passed the
 
 Bugs fixed in this release
      
-      * 566605 : Support the new libav metadata API
-      * 721983 : Port to get_buffer2
-      * 731286 : avauddec: Ensure input buffers have FF_INPUT_BUFFER_PADDING_SIZE padding
-      * 731347 : libav: If codec sets channels to 0, gst_ffmpegauddec_get_buffer () crashes
-      * 732682 : gst-libav not declaring support for mpc sv8
-      * 750865 : avviddec: Crashing if resolution changes without corresponding input caps changes
-      * 751607 : Reconsider decision to use libav or ffmpeg
-      * 751838 : Compilation fails with ffmpeg h264_vda build
-      * 752802 : avviddec: Sends incorrect CAPS event before the correct one
-      * 753189 : avdec_h264: Broken image after resizing
+      * 753869 : avviddec: Resolution changes result in outdated buffer pool configuration
+      * 754120 : avdec_hevc: Segfault in hevc decode with glimagesink and AVX2 CPU feature
+      * 754920 : Update to ffmpeg 2.8
 
 ==== Download ====
 
@@ -85,17 +78,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Heinrich Fink
-      * James Smith
       * Jan Schmidt
       * Nicolas Dufresne
-      * Olivier Crete
-      * Olivier Crête
       * Sebastian Dröge
-      * Stefan Sauer
-      * Thiago Santos
-      * Thomas Bluemel
       * Tim-Philipp Müller
-      * Vineeth T M
-      * Wim Taymans
  

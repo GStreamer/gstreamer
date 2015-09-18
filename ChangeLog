@@ -1,9 +1,73 @@
-=== release 1.5.90 ===
+=== release 1.5.91 ===
 
-2015-08-19  Sebastian Dröge <slomo@coaxion.net>
+2015-09-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.90
+	  releasing 1.5.91
+
+2015-08-28 09:38:53 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avvidec: increase default alignment to 32 bytes
+	  Change default alignment from 16 to 32 bytes, which fixes crashes
+	  when decoding H.265 using AVX2-based decoder code paths and when
+	  using ximagesink/glimagesink.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754120
+
+2015-09-11 23:19:21 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avvideodec: ensure required mem alignment fixing avdec_h265 crashes with ximagesink/glimagesink
+	  Make sure the alignment requirement in GstAllocationParams
+	  matches the GstVideoAlignment requirements. This fixes
+	  issues with avdec_h265 crashing in the avx2 code path when
+	  used with playbin and ximagesink/glimagesink as videosink.
+	  The internal video pool would allocate buffers with an
+	  alignment of 15 even though GstVideoAlignment specified
+	  a stride_align requirement of 31 (which comes from ffmpeg).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754120
+
+2015-09-12 14:06:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n2.8
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754920
+
+2015-07-30 01:24:54 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavvidenc.c:
+	  avvid/audenc: Set some tags in the output for downstream's info
+	  Add the codec name and bitrate into the output for informational
+	  purposes. Bitrate in particular is now used by flvmux to set
+	  videodatarate and audiodatarate in the resulting stream
+
+2015-08-20 08:02:11 -0700  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: Fix pool reallocation logic
+	  Some check where incorect and also unsafe. The only reliable information
+	  in get_buffer2 is the picture width/height really. The side effect is
+	  that the width/height of the internal pool endup padded, so when we
+	  switch we also need to switch to the a new width/height, hence we save
+	  the pool info.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753869
+
+=== release 1.5.90 ===
+
+2015-08-19 14:12:35 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-libav-plugins.args:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/gst-libav-plugins.interfaces:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.5.90
 
 2015-08-16 19:08:16 +0200  Nicolas Dufresne <nicolas.dufresne@collabora.com>
 
