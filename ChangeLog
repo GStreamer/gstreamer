@@ -1,9 +1,289 @@
-=== release 1.5.90 ===
+=== release 1.5.91 ===
 
-2015-08-19  Sebastian Dröge <slomo@coaxion.net>
+2015-09-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.90
+	  releasing 1.5.91
+
+2015-09-18 17:48:49 +0200  Christophe Fergeau <cfergeau@redhat.com>
+
+	* gst-libs/gst/app/gstappsink.c:
+	* gst-libs/gst/app/gstappsink.h:
+	  appsink: Fix 'steaming' typo in API doc
+	  There are several occurrences of 'steaming' where 'streaming' was meant.
+
+2015-09-18 11:49:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: Update translations
+
+2015-09-18 10:59:46 +0530  Ravi Kiran K N <ravi.kiran@samsung.com>
+
+	* tests/examples/playback/playback-test.c:
+	  playback-test: avoid critical on exit
+	  Only free vis_entries array when not null on exit.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755201
+
+2015-09-18 09:48:18 +0530  Prashant Gotarne <ps.gotarne@samsung.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  basetextoverlay: fix typo in debug log message
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755198
+
+2015-09-17 14:27:33 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* gst-libs/gst/audio/gstaudiosink.c:
+	* gst/tcp/gstmultisocketsink.c:
+	  audiosink, multisocketsink: Fix error leak during failures
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755143
+
+2015-09-16 19:53:35 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: Use the correct caps name for MS Smooth Streaming manifests
+	  Thanks to John Chang <r97922153@gmail.com> for reporting.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755098
+
+2015-09-15 15:26:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/app/gstappsink.c:
+	  appsink: minor docs fix
+
+2015-09-11 23:36:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/video/gstvideopool.c:
+	  videopool: ensure allocation alignment is consistent with video alignment requirements
+	  Make sure GstAllocationParams alignment is not less than
+	  any alignment requirement specified via GstVideoAlignment.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754120
+
+2015-09-14 09:36:20 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* sys/xvimage/xvimagesink.c:
+	  xvimagesink: fix error leak when context creation fails
+	  When context creation fails, error is getting leaked.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754973
+
+2015-09-11 23:28:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playback: Add POINTER_TO_ULONG() macro for consistency
+
+2015-09-11 23:48:05 +0900  Kouhei Sutou <kou@clear-code.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playback: fix build error for 64bit Windows build by MinGW
+	  Casting to gpointer from gulong generates the following warning with
+	  64bit Windows target MinGW:
+	  gstplaybin2.c: In function 'pad_added_cb':
+	  gstplaybin2.c:3476:7: error: cast to pointer from integer of different size [-Werror=int-to-pointer-cast]
+	  (gpointer) group_id_probe_handler);
+	  ^
+	  cc1: all warnings being treated as errors
+	  We should cast to guintptr from gulong before we cast to gpointer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754755
+
+2015-09-09 19:00:33 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst-libs/gst/video/video-format.c:
+	  video-format: add missing alpha flag for some formats
+	  Some formats didn't have the alpha flag marked, use the correct
+	  macro so they get it right.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754808
+
+2015-09-09 12:33:02 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: Always take the mutex before flushing the queue
+	  Otherwise the application might push new buffers into the queue while we're
+	  flushing, potentially causing the GQueue data structure to become inconsistent
+	  and causing crashes soon after.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754597
+
+2015-09-08 01:35:19 +0530  Vikram Fugro <vikram.fugro@gmail.com>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	* tests/check/elements/appsrc.c:
+	  appsrc: retain the latest caps in queue when flushing
+	  - Retain the latest caps in the internal queue, when
+	  flushing.
+	  - Add a unit test case for the same.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754597
+
+2015-09-07 00:19:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/video/video-format.h:
+	  video: improve GstVideoFormatUnpack docs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754650
+
+2015-09-06 18:17:15 +0900  Kouhei Sutou <kou@clear-code.com>
+
+	* gst-libs/gst/video/video-dither.c:
+	  libs: Fix build error on MinGW where "%ll" is not available
+	  "ll" isn't available on MinGW. We can use G_GINT64_MODIFIER for portable
+	  64bit size data modifier.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754630
+
+2015-08-31 10:46:43 +0200  Havard Graff <havard.graff@gmail.com>
+
+	* gst-libs/gst/Makefile.am:
+	  libs: build rtp after audio
+	  The dependency setup does not seem to work for all systems,
+	  causing the build to fail with:
+	  gstrtpbaseaudiopayload.c:65:0:
+	  fatal error: gst/audio/audio-enumtypes.h: No such file or directory
+	  My setup:
+	  gcc (Ubuntu 4.8.4-2ubuntu1~14.04) 4.8.4
+	  autoconf (GNU Autoconf) 2.69
+	  automake (GNU automake) 1.14.1
+	  libtool (GNU libtool) 2.4.2
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754344
+
+2015-08-31 10:49:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/Makefile.am:
+	  libs: rtp is no longer an independent subdir
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754344
+
+2015-09-03 17:55:10 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: fix gamma-decode option
+	  We need to use the enum to configure the option now.
+
+2015-09-03 08:58:08 +0530  Prashant Gotarne <ps.gotarne@samsung.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  basetextoverlay: FIX crash if padding greater than video size
+	  Skipping rendering of textimage if overlay is completely
+	  outside video frame.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754429
+
+2015-08-31 11:09:09 +0200  Philippe Normand <philn@igalia.com>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: remove duplicate get_size vfunc assignment
+
+2015-08-29 21:38:52 +0200  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* gst-libs/gst/allocators/allocators.h:
+	  allocators: include gstfdmemory.h in the main library header, allocators.h
+
+2015-08-29 10:44:28 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/audio/gstaudiobasesink.c:
+	  audiobasesink: fix misleading error message debug detail
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754260
+
+2015-08-28 09:36:15 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/playback/gstplaysinkconvertbin.c:
+	  playsinkconvertbin: implement accept-caps handler
+	  The default one will just go through the internal elements which might
+	  just be identity when it is in passthrough which will lead to the query
+	  being handled by the downstream sink, ignoring all that playsinkconvertbin
+	  could actually handle and convert.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754235
+
+2015-08-27 23:08:51 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/audio/gstaudiobasesink.h:
+	  audiobasesink: Fix incorrect/missing custom slaving method documentation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754199
+
+2015-08-19 21:19:05 +0900  Eunhae Choi <eunhae1.choi@samsung.com>
+
+	* gst/subparse/gstsubparse.c:
+	  subparse: use g_clear_error instead of g_error_free
+	  To avoid invalid pointer accees the err pointer should be set to NULL.
+	  By using g_clear_error() it calls free and clear the pointer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753817
+
+=== release 1.5.90 ===
+
+2015-08-19 13:10:23 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	* win32/common/video-enumtypes.c:
+	* win32/common/video-enumtypes.h:
+	  Release 1.5.90
+
+2015-08-19 12:39:17 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2015-08-19 11:23:09 +0300  Sebastian Dröge <sebastian@centricular.com>
 

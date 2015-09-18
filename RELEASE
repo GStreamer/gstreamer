@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Base Plugins 1.5.90
+Release notes for GStreamer Base Plugins 1.5.91
 
 
-The GStreamer team is pleased to announce the first release candidate for the
+The GStreamer team is pleased to announce the second release candidate for the
 stable 1.6 release series. The 1.6 release series is adding new features on top of
 the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The final 1.6.0 release is planned
@@ -60,38 +60,23 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 728636 : textoverlay: cuts off right edge italicised text
-      * 737427 : appsink: Can't influence allocation query to satisfy user needs
-      * 742385 : video/audio encoders/decoders: need API to determine when to copy over GstMetas and when to drop them
-      * 746010 : oggdemux: doesn't go into pull mode even when queue2 ring-buffer is enabled
-      * 748635 : videorate: caps negotiation regression
-      * 750235 : [API] rtpbasedepayload: add process_rtp_packet() vfunc
-      * 751147 : appsink: pull_preroll returns wrong segment in the sample
-      * 751690 : playbin : remove unnecessary break
-      * 751883 : rtcpbuffer: Fix validation of packets with padding
-      * 751932 : GstVideoDecoder: Fix setting default pixel-aspect-ratio
-      * 752011 : video: Add boxed type for GstVideoInfo structure
-      * 752040 : gst-play: fix memory leak
-      * 752041 : ximagesink: fix navigation event leak
-      * 752042 : xvimagesink: fix pad memory leak
-      * 752043 : ximagesink: Post navigation events as message on the bus
-      * 752051 : GstVideoScaler:  Initialised scaling functions to get rid of compiler messages
-      * 752059 : xvimagesink: refactor to use gst_pad_push_event
-      * 752111 : rtpbasedepayload: Fix minor leak of segment event
-      * 752156 : playsink: Require streamvolume interface for sink volumes for standardized behaviour
-      * 752228 : payloader/depayload: Wrong segment handling
-      * 752359 : playback-test: fix memory leak
-      * 752397 : playback-test: fix tag list leak
-      * 752400 : jsseek: fix tag list leak
-      * 752436 : typefind: Treat *.umx (Unreal Music Package) as audio/x-mod
-      * 752454 : jsseek: fix memory leaks
-      * 753001 : rtp buffer: NULL GstBuffer pointer being passed within gst_rtp_buffer_set_extension_data
-      * 753078 : oggdemux: Segfault on state-change intensive test
-      * 753088 : decodebin: fix deadend_details string leak
-      * 753360 : videodecoder: pushes gap before segment
-      * 753483 : videorate: add support for bayer formats
-      * 753701 : discoverer: Few trivial fixes in handling error cases
-      * 611157 : video: API to signal stereoscopic and multiview video
+      * 734617 : videodecoder: Call the child class finish() function on stream changes
+      * 740387 : [REGRESSION] videoscale: The port to the new scaling API broke some file playback
+      * 744806 : audiodecoder: early call to drain() causes segment event to be sent before caps
+      * 753817 : subparse: SIGSEGV with abnormal file
+      * 753850 : gl: overlay composition negotation with the sink fails
+      * 754199 : audiobasesink: patch for missing/incorrect documentation about the custom slaving method
+      * 754235 : playsinkconvertbin: regression after removing accept-caps handler
+      * 754429 : basetextoverlay: crash in basetextoverlay for padding greater than video size
+      * 754597 : appsrc: fails to push the caps at the start of the data flow when configured in seekable/random-access mode
+      * 754630 : libs: " ll " printf modifier isn't available on MinGW
+      * 754755 : playbin: Compiler warning with 64bit Windows target MinGW, cast to pointer from integer of different size
+      * 754808 : video: missing alpha flag for some formats
+      * 754973 : xvimagesink: fix error leak when context creation fails
+      * 755098 : uridecodebin: Smooth Streaming's media type does not match
+      * 755143 : audiosink, multisocketsink: Fix error leak during failures
+      * 755198 : basetextoverlay: trivial fix in debug message
+      * 755201 : playback-test: Dont free null array on exit
 
 ==== Download ====
 
@@ -128,29 +113,20 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Brian Peters
-      * Edward Hervey
+      * Carlos Rafael Giani
+      * Christophe Fergeau
+      * Eunhae Choi
       * George Kiagiadakis
-      * Hyunjun Ko
-      * Jan Schmidt
-      * Joan Pau Beltran
-      * Lubosz Sarnecki
-      * Luis de Bethencourt
-      * Marcin Kolny
-      * Myoungsun Lee
-      * Nicolas Dufresne
-      * Olivier Crête
-      * Rico Tzschichholz
+      * Havard Graff
+      * Kouhei Sutou
+      * Philippe Normand
+      * Prashant Gotarne
+      * Ravi Kiran K N
       * Sebastian Dröge
-      * Stefan Sauer
-      * Stian Selnes
       * Thiago Santos
       * Tim-Philipp Müller
-      * Tobias Mueller
-      * Ville Skyttä
+      * Vikram Fugro
       * Vineeth T M
       * Vineeth TM
-      * Vivia Nikolaidou
       * Wim Taymans
-      * danny song
  
