@@ -260,7 +260,8 @@ out:
 }
 
 static gboolean
-gst_vtdec_negotiate_output_format (GstVtdec * vtdec, GstVideoCodecState *input_state)
+gst_vtdec_negotiate_output_format (GstVtdec * vtdec,
+    GstVideoCodecState * input_state)
 {
   GstCaps *caps = NULL, *peercaps = NULL, *templcaps;
   GstVideoFormat output_format;
@@ -273,7 +274,8 @@ gst_vtdec_negotiate_output_format (GstVtdec * vtdec, GstVideoCodecState *input_s
 
   /* Check if output supports GL caps by preference */
   templcaps = gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD (vtdec));
-  caps = gst_caps_intersect_full (templcaps, peercaps, GST_CAPS_INTERSECT_FIRST);
+  caps =
+      gst_caps_intersect_full (templcaps, peercaps, GST_CAPS_INTERSECT_FIRST);
 
   gst_caps_unref (peercaps);
   gst_caps_unref (templcaps);
@@ -292,7 +294,8 @@ gst_vtdec_negotiate_output_format (GstVtdec * vtdec, GstVideoCodecState *input_s
   }
 
   output_state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (vtdec),
-      output_format, vtdec->video_info.width, vtdec->video_info.height, input_state);
+      output_format, vtdec->video_info.width, vtdec->video_info.height,
+      input_state);
 
   output_state->caps = gst_video_info_to_caps (&output_state->info);
   gst_caps_set_features (output_state->caps, 0, features);
