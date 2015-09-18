@@ -266,11 +266,6 @@ gst_h265_parse_profile_tier_level (GstH265ProfileTierLevel * ptl,
   guint i, j;
   GST_DEBUG ("parsing \"ProfileTierLevel parameters\"");
 
-  /* set default values for fields that might not be present in the
-   * bitstream and have valid defaults */
-  for (i = 0; i < maxNumSubLayersMinus1; i++)
-    ptl->sub_layer_tier_flag[i] = 0;
-
   READ_UINT8 (nr, ptl->profile_space, 2);
   READ_UINT8 (nr, ptl->tier_flag, 1);
   READ_UINT8 (nr, ptl->profile_idc, 5);
@@ -336,11 +331,6 @@ gst_h265_parse_sub_layer_hrd_parameters (GstH265SubLayerHRDParams * sub_hrd,
 
   GST_DEBUG ("parsing \"SubLayer HRD Parameters\"");
 
-  /* set default values for fields that might not be present in the bitstream
-     and have valid defaults */
-  for (i = 0; i <= CpbCnt; i++)
-    sub_hrd->cbr_flag[i] = 0;
-
   for (i = 0; i <= CpbCnt; i++) {
     READ_UE_MAX (nr, sub_hrd->bit_rate_value_minus1[i], G_MAXUINT32 - 1);
     READ_UE_MAX (nr, sub_hrd->cpb_size_value_minus1[i], G_MAXUINT32 - 1);
@@ -370,16 +360,9 @@ gst_h265_parse_hrd_parameters (GstH265HRDParams * hrd, NalReader * nr,
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
-  hrd->sub_pic_hrd_params_present_flag = 0;
-  hrd->sub_pic_cpb_params_in_pic_timing_sei_flag = 0;
   hrd->initial_cpb_removal_delay_length_minus1 = 23;
   hrd->au_cpb_removal_delay_length_minus1 = 23;
   hrd->dpb_output_delay_length_minus1 = 23;
-  for (i = 0; i <= maxNumSubLayersMinus1; i++) {
-    hrd->fixed_pic_rate_general_flag[i] = 0;
-    hrd->low_delay_hrd_flag[i] = 0;
-    hrd->cpb_cnt_minus1[i] = 0;
-  }
 
   if (commonInfPresentFlag) {
     READ_UINT8 (nr, hrd->nal_hrd_parameters_present_flag, 1);
@@ -454,35 +437,19 @@ gst_h265_parse_vui_parameters (GstH265SPS * sps, NalReader * nr)
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
-  vui->aspect_ratio_idc = 0;
   vui->video_format = 5;
-  vui->video_full_range_flag = 0;
   vui->colour_primaries = 2;
   vui->transfer_characteristics = 2;
   vui->matrix_coefficients = 2;
-  vui->chroma_sample_loc_type_top_field = 0;
-  vui->chroma_sample_loc_type_bottom_field = 0;
-  vui->neutral_chroma_indication_flag = 0;
-  vui->field_seq_flag = 0;
-  vui->def_disp_win_left_offset = 0;
-  vui->def_disp_win_right_offset = 0;
-  vui->def_disp_win_top_offset = 0;
-  vui->def_disp_win_bottom_offset = 0;
-  vui->tiles_fixed_structure_flag = 0;
   vui->motion_vectors_over_pic_boundaries_flag = 1;
-  vui->min_spatial_segmentation_idc = 0;
   vui->max_bytes_per_pic_denom = 2;
   vui->max_bits_per_min_cu_denom = 1;
   vui->log2_max_mv_length_horizontal = 15;
   vui->log2_max_mv_length_vertical = 15;
-  vui->par_n = 0;
-  vui->par_d = 0;
 
   if (sps && sps->profile_tier_level.progressive_source_flag
       && sps->profile_tier_level.interlaced_source_flag)
     vui->frame_field_info_present_flag = 1;
-  else
-    vui->frame_field_info_present_flag = 0;
 
   READ_UINT8 (nr, vui->aspect_ratio_info_present_flag, 1);
   if (vui->aspect_ratio_info_present_flag) {
@@ -755,8 +722,6 @@ gst_h265_parser_parse_short_term_ref_pic_sets (GstH265ShortTermRefPicSet *
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
-  stRPS->inter_ref_pic_set_prediction_flag = 0;
-  stRPS->delta_idx_minus1 = 0;
   for (j = 0; j < 16; j++)
     use_delta_flag[j] = 1;
 
@@ -892,14 +857,6 @@ gst_h265_slice_parse_ref_pic_list_modification (GstH265SliceHdr * slice,
   GstH265RefPicListModification *rpl_mod = &slice->ref_pic_list_modification;
   const guint n = ceil_log2 (NumPocTotalCurr);
 
-  /* set default values */
-  rpl_mod->ref_pic_list_modification_flag_l0 = 0;
-  rpl_mod->ref_pic_list_modification_flag_l1 = 0;
-  for (i = 0; i < slice->num_ref_idx_l0_active_minus1; i++)
-    rpl_mod->list_entry_l0[i] = 0;
-  for (i = 0; i <= slice->num_ref_idx_l1_active_minus1; i++)
-    rpl_mod->list_entry_l1[i] = 0;
-
   READ_UINT8 (nr, rpl_mod->ref_pic_list_modification_flag_l0, 1);
 
   if (rpl_mod->ref_pic_list_modification_flag_l0) {
@@ -937,19 +894,6 @@ gst_h265_slice_parse_pred_weight_table (GstH265SliceHdr * slice, NalReader * nr)
   p = &slice->pred_weight_table;
 
   READ_UE_MAX (nr, p->luma_log2_weight_denom, 7);
-
-  /* set default values */
-  for (i = 0; i < G_N_ELEMENTS (p->chroma_weight_l0_flag); i++) {
-    p->chroma_weight_l0_flag[i] = 0;
-    p->luma_offset_l0[i] = 0;
-  }
-
-  if (GST_H265_IS_B_SLICE (slice)) {
-    for (i = 0; i < G_N_ELEMENTS (p->luma_weight_l1_flag); i++) {
-      p->chroma_weight_l1_flag[i] = 0;
-      p->luma_offset_l1[i] = 0;
-    }
-  }
 
   if (sps->chroma_format_idc != 0) {
     READ_SE_ALLOWED (nr, p->delta_chroma_log2_weight_denom,
@@ -1022,11 +966,6 @@ gst_h265_parser_parse_buffering_period (GstH265Parser * parser,
   }
   per->sps = sps;
 
-  /* set default values if not present */
-  per->irap_cpb_params_present_flag = 0;
-  per->cpb_delay_offset = 0;
-  per->dpb_delay_offset = 0;
-
   if (sps->vui_parameters_present_flag) {
     GstH265VUIParams *vui = &sps->vui_params;
     GstH265HRDParams *hrd = &vui->hrd_params;
@@ -1096,7 +1035,6 @@ gst_h265_parser_parse_pic_timing (GstH265Parser * parser,
   profile_tier_level = &parser->last_sps->profile_tier_level;
 
   /* set default values */
-  tim->pic_struct = 0;
   if (!profile_tier_level->progressive_source_flag
       && profile_tier_level->interlaced_source_flag)
     tim->source_scan_type = 0;
@@ -1220,6 +1158,8 @@ gst_h265_parser_identify_nalu_unchecked (GstH265Parser * parser,
 {
   gint off1;
 
+  memset (nalu, 0, sizeof (*nalu));
+
   if (size < offset + 4) {
     GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT
         ", offset %u", size, offset);
@@ -1334,6 +1274,8 @@ gst_h265_parser_identify_nalu_hevc (GstH265Parser * parser,
     GstH265NalUnit * nalu)
 {
   GstBitReader br;
+
+  memset (nalu, 0, sizeof (*nalu));
 
   if (size < offset + nal_length_size) {
     GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT
@@ -1450,8 +1392,8 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
       nalu->size - nalu->header_bytes);
 
-  memset (&vps->profile_tier_level, 0, sizeof (vps->profile_tier_level));
-  memset (&vps->hrd_params, 0, sizeof (vps->hrd_params));
+  memset (vps, 0, sizeof (*vps));
+
   vps->cprms_present_flag = 1;
 
   READ_UINT8 (&nr, vps->id, 4);
@@ -1594,17 +1536,7 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
       nalu->size - nalu->header_bytes);
 
-  /* set default values for fields that might not be present in the bitstream
-     and have valid defaults */
-  memset (&sps->profile_tier_level, 0, sizeof (sps->profile_tier_level));
-  memset (sps->short_term_ref_pic_set, 0, sizeof (sps->short_term_ref_pic_set));
-  sps->scaling_list_data_present_flag = 0;
-  sps->separate_colour_plane_flag = 0;
-  sps->conf_win_left_offset = 0;
-  sps->conf_win_right_offset = 0;
-  sps->conf_win_top_offset = 0;
-  sps->conf_win_bottom_offset = 0;
-  sps->pcm_loop_filter_disabled_flag = 0;
+  memset (sps, 0, sizeof (*sps));
 
   READ_UINT8 (&nr, vps_id, 4);
   vps = gst_h265_parser_get_vps (parser, vps_id);
@@ -1722,9 +1654,7 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
   READ_UINT8 (&nr, sps->sps_extension_flag, 1);
 
   /* calculate ChromaArrayType */
-  if (sps->separate_colour_plane_flag)
-    sps->chroma_array_type = 0;
-  else
+  if (!sps->separate_colour_plane_flag)
     sps->chroma_array_type = sps->chroma_format_idc;
 
   /* Calculate  width and height */
@@ -1804,6 +1734,8 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
       nalu->size - nalu->header_bytes);
 
+  memset (pps, 0, sizeof (*pps));
+
   READ_UE_MAX (&nr, pps->id, GST_H265_MAX_PPS_COUNT - 1);
   READ_UE_MAX (&nr, sps_id, GST_H265_MAX_SPS_COUNT - 1);
 
@@ -1826,15 +1758,8 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
-  pps->diff_cu_qp_delta_depth = 0;
-  pps->num_tile_columns_minus1 = 0;
-  pps->num_tile_rows_minus1 = 0;
   pps->uniform_spacing_flag = 1;
   pps->loop_filter_across_tiles_enabled_flag = 1;
-  pps->deblocking_filter_override_enabled_flag = 0;
-  pps->deblocking_filter_disabled_flag = 0;
-  pps->beta_offset_div2 = 0;
-  pps->tc_offset_div2 = 0;
 
   READ_UINT8 (&nr, pps->dependent_slice_segments_enabled_flag, 1);
   READ_UINT8 (&nr, pps->output_flag_present_flag, 1);
@@ -1990,6 +1915,8 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
   guint32 PicSizeInCtbsY;
   gint NumPocTotalCurr = 0;
 
+  memset (slice, 0, sizeof (*slice));
+
   if (!nalu->size) {
     GST_DEBUG ("Invalid Nal Unit");
     return GST_H265_PARSER_ERROR;
@@ -2026,32 +1953,12 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
   PicSizeInCtbsY = pps->PicWidthInCtbsY * pps->PicHeightInCtbsY;
   /* set default values for fields that might not be present in the bitstream
    * and have valid defaults */
-  slice->dependent_slice_segment_flag = 0;
-  slice->segment_address = 0;
   slice->pic_output_flag = 1;
-  slice->pic_order_cnt_lsb = 0;
-  slice->short_term_ref_pic_set_idx = 0;
-  slice->num_long_term_sps = 0;
-  slice->num_long_term_pics = 0;
-  for (i = 0; i < 16; i++) {
-    slice->lt_idx_sps[i] = 0;
-    slice->delta_poc_msb_cycle_lt[i] = 0;
-  }
-  slice->temporal_mvp_enabled_flag = 0;
-  slice->sao_luma_flag = 0;
-  slice->sao_chroma_flag = 0;
-  slice->cabac_init_flag = 0;
   slice->collocated_from_l0_flag = 1;
-  slice->cb_qp_offset = 0;
-  slice->cr_qp_offset = 0;
-  slice->deblocking_filter_override_flag = 0;
-  slice->deblocking_filter_disabled_flag = 0;
   slice->beta_offset_div2 = pps->beta_offset_div2;
   slice->tc_offset_div2 = pps->tc_offset_div2;
   slice->loop_filter_across_slices_enabled_flag =
       pps->loop_filter_across_slices_enabled_flag;
-  slice->num_entry_point_offsets = 0;
-  slice->entry_point_offset_minus1 = NULL;
 
   if (!slice->first_slice_segment_in_pic_flag) {
     const guint n = ceil_log2 (PicSizeInCtbsY);
@@ -2303,7 +2210,8 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
 
   GST_DEBUG ("parsing \"Sei message\"");
 
-  sei->payloadType = 0;
+  memset (sei, 0, sizeof (*sei));
+
   do {
     READ_UINT8 (nr, payload_type_byte, 8);
     sei->payloadType += payload_type_byte;
