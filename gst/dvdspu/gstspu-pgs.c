@@ -484,8 +484,8 @@ parse_set_palette (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
     guint8 n, Y, U, V, A;
     n = payload[0];
     Y = payload[1];
-    U = payload[2];
-    V = payload[3];
+    V = payload[2];
+    U = payload[3];
     A = payload[4];
 
 #if DUMP_FULL_PALETTE
