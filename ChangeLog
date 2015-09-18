@@ -1,9 +1,119 @@
-=== release 1.5.90 ===
+=== release 1.5.91 ===
 
-2015-08-20  Thibault Saunier <tsaunier@gnome.org>
+2015-09-18  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.5.90
+	  releasing 1.5.91
+
+2015-09-18 10:01:44 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-internal.h:
+	* ges/ges-track.c:
+	* ges/ges-utils.c:
+	  ges: Namespace NLE utils function into GES
+	  Avoiding name clashes when built statically
+
+2015-09-15 12:17:19 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugins/nle/nlesource.c:
+	  nle: Avoid unsetting srcpad target after the srcpad is already freed
+	  That leaded to segfaults
+
+2015-09-15 11:08:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugins/nle/nleghostpad.c:
+	  nle: Stop wrongly set operation segment base time
+	  Inside the composition we actually do not need to have any notion
+	  of what the timing outside the compositon as we already tweak the segment
+	  base time outside the composition. This code was only there to work
+	  around https://bugzilla.gnome.org/show_bug.cgi?id=753196
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754893
+
+2015-09-11 16:18:46 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: don't leak internal hashtable
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754867
+
+2015-09-11 16:13:19 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* plugins/nle/nleobject.c:
+	  nleobject: don't leak srcpad when disposing
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754867
+
+2015-09-11 16:11:40 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-timeline.c:
+	  timeline: don't leak pad in private structure
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754867
+
+2015-09-11 09:58:56 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* tools/ges-launcher.c:
+	  ges-launcher: don't leak GError
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754858
+
+2015-09-09 23:32:19 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* tools/ges-launcher.c:
+	  ges-launcher: fix double free when argument is invalid
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754783
+
+2015-09-04 12:01:16 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-video-source.c:
+	  video-source: Use the priority being set to compute zorder
+
+2015-09-02 23:27:16 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-video-transition.c:
+	  video:transition: Set mixer pad zorder
+
+2015-09-02 17:58:33 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-smart-video-mixer.h:
+	* ges/ges-video-source.c:
+	* ges/ges-video-transition.c:
+	  video-source: Make sure to set framepositionner zorder when creating it
+	  And fix a computation bug where we would be having mixing order
+	  reversed between layers.
+	  And make sure that the positionner does not mix up Transition handling
+	  of the zorder
+
+2015-08-27 16:28:42 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-video-source.c:
+	* ges/gstframepositionner.c:
+	  video-source: Simply set framepositionner->zorder = self->priority
+	  Summary:
+	  Making the code simpler and handling the transition case
+	  where elements are in the same layer (which was failing
+	  /setting same zorders until now).
+	  Reviewers: Mathieu_Du
+	  Differential Revision: https://phabricator.freedesktop.org/D237
+
+2015-08-23 01:35:18 +1000  Jan Schmidt <jan@centricular.com>
+
+	* configure.ac:
+	  Use standard GST_PLUGIN_LDFLAGS for the nle plugin
+	  Add the standard GST_PLUGIN_LDFLAGS to the configure.ac file.
+
+2015-08-21 21:25:27 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	  Add support for static plugins builds
+
+=== release 1.5.90 ===
+
+2015-08-20 17:55:48 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.5.90
 
 2015-08-19 11:24:11 +0200  Thibault Saunier <tsaunier@gnome.org>
 
