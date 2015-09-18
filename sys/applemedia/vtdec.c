@@ -108,11 +108,16 @@ CFSTR ("RequireHardwareAcceleratedVideoDecoder");
 #define GST_VTDEC_VIDEO_FORMAT_STR "UYVY"
 #endif
 
+#ifdef HAVE_IOS
 #define VIDEO_SRC_CAPS \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
     (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, \
         "RGBA") ";" \
     GST_VIDEO_CAPS_MAKE(GST_VTDEC_VIDEO_FORMAT_STR) ";"
+#else
+#define VIDEO_SRC_CAPS \
+    GST_VIDEO_CAPS_MAKE(GST_VTDEC_VIDEO_FORMAT_STR) ";"
+#endif
 
 G_DEFINE_TYPE (GstVtdec, gst_vtdec, GST_TYPE_VIDEO_DECODER);
 
