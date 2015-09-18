@@ -1624,7 +1624,7 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   }
 
   GST_DEBUG_OBJECT (overlay, "Rendering with ink rect (%d, %d) %dx%d and "
-      "locial rect (%d, %d) %dx%d", ink_rect.x, ink_rect.y, ink_rect.width,
+      "logical rect (%d, %d) %dx%d", ink_rect.x, ink_rect.y, ink_rect.width,
       ink_rect.height, logical_rect.x, logical_rect.y, logical_rect.width,
       logical_rect.height);
   GST_DEBUG_OBJECT (overlay, "Rendering with width %d and height %d "
