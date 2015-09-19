@@ -74,6 +74,9 @@ static gboolean gst_rtp_theora_depay_packet_lost (GstRTPBaseDepayload *
 
 static void gst_rtp_theora_depay_finalize (GObject * object);
 
+static GstStateChangeReturn gst_rtp_theora_depay_change_state (GstElement *
+    element, GstStateChange transition);
+
 static void
 gst_rtp_theora_depay_class_init (GstRtpTheoraDepayClass * klass)
 {
@@ -86,6 +89,8 @@ gst_rtp_theora_depay_class_init (GstRtpTheoraDepayClass * klass)
   gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_theora_depay_finalize;
+
+  gstelement_class->change_state = gst_rtp_theora_depay_change_state;
 
   gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_theora_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_theora_depay_setcaps;
@@ -109,6 +114,20 @@ static void
 gst_rtp_theora_depay_init (GstRtpTheoraDepay * rtptheoradepay)
 {
   rtptheoradepay->adapter = gst_adapter_new ();
+}
+
+static void
+free_config (GstRtpTheoraConfig * config)
+{
+  g_list_free_full (config->headers, (GDestroyNotify) gst_buffer_unref);
+  g_free (config);
+}
+
+static void
+free_indents (GstRtpTheoraDepay * rtptheoradepay)
+{
+  g_list_free_full (rtptheoradepay->configs, (GDestroyNotify) free_config);
+  rtptheoradepay->configs = NULL;
 }
 
 static void
@@ -244,6 +263,7 @@ gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
       h_size = h_sizes[j];
       if (size < h_size) {
         if (j != n_headers || size + extra != h_size) {
+          free_config (conf);
           goto too_small;
         } else {
           /* otherwise means that overall length field contained total length,
@@ -266,6 +286,8 @@ gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
   }
 
   gst_buffer_unmap (confbuf, &map);
+  gst_buffer_unref (confbuf);
+
   return TRUE;
 
   /* ERRORS */
@@ -273,6 +295,7 @@ too_small:
   {
     GST_DEBUG_OBJECT (rtptheoradepay, "configuration too small");
     gst_buffer_unmap (confbuf, &map);
+    gst_buffer_unref (confbuf);
     return FALSE;
   }
 }
@@ -623,6 +646,38 @@ request_keyframe:
             gst_structure_new_empty ("GstForceKeyUnit")));
     goto out;
   }
+}
+
+static GstStateChangeReturn
+gst_rtp_theora_depay_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstRtpTheoraDepay *rtptheoradepay;
+  GstStateChangeReturn ret;
+
+  rtptheoradepay = GST_RTP_THEORA_DEPAY (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      free_indents (rtptheoradepay);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+  return ret;
 }
 
 gboolean
