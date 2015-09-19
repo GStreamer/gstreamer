@@ -212,7 +212,7 @@ gst_gtk_gl_sink_stop (GstBaseSink * bsink)
     gtk_sink->gtk_context = NULL;
   }
 
-  return TRUE;
+  return GST_BASE_SINK_CLASS (parent_class)->stop (bsink);
 }
 
 static gboolean

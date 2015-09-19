@@ -67,6 +67,8 @@ struct _GstGtkBaseSink
 
   gboolean              ignore_alpha;
   GBinding             *bind_ignore_alpha;
+
+  GtkWidget            *window;
 };
 
 /**

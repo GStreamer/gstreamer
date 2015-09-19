@@ -44,6 +44,7 @@ static void gst_gtk_base_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * param_spec);
 
 static gboolean gst_gtk_base_sink_start (GstBaseSink * bsink);
+static gboolean gst_gtk_base_sink_stop (GstBaseSink * bsink);
 
 static GstStateChangeReturn
 gst_gtk_base_sink_change_state (GstElement * element,
@@ -121,6 +122,7 @@ gst_gtk_base_sink_class_init (GstGtkBaseSinkClass * klass)
   gstbasesink_class->set_caps = gst_gtk_base_sink_set_caps;
   gstbasesink_class->get_times = gst_gtk_base_sink_get_times;
   gstbasesink_class->start = gst_gtk_base_sink_start;
+  gstbasesink_class->stop = gst_gtk_base_sink_stop;
 
   gstvideosink_class->show_frame = gst_gtk_base_sink_show_frame;
 }
@@ -279,18 +281,30 @@ gst_gtk_base_sink_start (GstBaseSink * bsink)
 
   toplevel = gtk_widget_get_toplevel (GTK_WIDGET (gst_sink->widget));
   if (!gtk_widget_is_toplevel (toplevel)) {
-    GtkWidget *window;
-
     /* sanity check */
     g_assert (klass->window_title);
 
     /* User did not add widget its own UI, let's popup a new GtkWindow to
      * make gst-launch-1.0 work. */
-    window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size (GTK_WINDOW (window), 640, 480);
-    gtk_window_set_title (GTK_WINDOW (window), klass->window_title);
-    gtk_container_add (GTK_CONTAINER (window), toplevel);
-    gtk_widget_show_all (window);
+    gst_sink->window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_default_size (GTK_WINDOW (gst_sink->window), 640, 480);
+    gtk_window_set_title (GTK_WINDOW (gst_sink->window), klass->window_title);
+    gtk_container_add (GTK_CONTAINER (gst_sink->window), toplevel);
+    gtk_widget_show_all (gst_sink->window);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_gtk_base_sink_stop (GstBaseSink * bsink)
+{
+  GstGtkBaseSink *gst_sink = GST_GTK_BASE_SINK (bsink);
+
+  if (gst_sink->window) {
+    gtk_widget_destroy (gst_sink->window);
+    gst_sink->window = NULL;
+    gst_sink->widget = NULL;
   }
 
   return TRUE;
