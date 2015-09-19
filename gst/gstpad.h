@@ -1117,7 +1117,7 @@ struct _GstPadClass {
  * @pad: a #GstPad
  *
  * Check if the pad's accept intersect flag is set. The default accept-caps
- * handler will check it the caps intersect the query-caps result instead of
+ * handler will check if the caps intersect the query-caps result instead of
  * checking for a subset. This is interesting for parser elements that can
  * accept incompletely specified caps.
  */

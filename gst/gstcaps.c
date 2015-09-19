@@ -1446,7 +1446,7 @@ gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
   len1 = GST_CAPS_LEN (caps1);
   len2 = GST_CAPS_LEN (caps2);
   for (i = 0; i < len1 + len2 - 1; i++) {
-    /* superset index goes from 0 to sgst_caps_structure_intersectuperset->structs->len-1 */
+    /* superset index goes from 0 to superset->structs->len-1 */
     j = MIN (i, len1 - 1);
     /* subset index stays 0 until i reaches superset->structs->len, then it
      * counts up from 1 to subset->structs->len - 1 */
