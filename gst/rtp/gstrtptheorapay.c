@@ -153,22 +153,17 @@ gst_rtp_theora_pay_clear_packet (GstRtpTheoraPay * rtptheorapay)
   if (rtptheorapay->packet)
     gst_buffer_unref (rtptheorapay->packet);
   rtptheorapay->packet = NULL;
-
-  g_list_foreach (rtptheorapay->packet_buffers, (GFunc) gst_mini_object_unref,
-      NULL);
-  g_list_free (rtptheorapay->packet_buffers);
+  g_list_free_full (rtptheorapay->packet_buffers,
+      (GDestroyNotify) gst_buffer_unref);
   rtptheorapay->packet_buffers = NULL;
 }
 
 static void
 gst_rtp_theora_pay_cleanup (GstRtpTheoraPay * rtptheorapay)
 {
-  g_list_foreach (rtptheorapay->headers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (rtptheorapay->headers);
-  rtptheorapay->headers = NULL;
-
   gst_rtp_theora_pay_clear_packet (rtptheorapay);
-
+  g_list_free_full (rtptheorapay->headers, (GDestroyNotify) gst_buffer_unref);
+  rtptheorapay->headers = NULL;
   if (rtptheorapay->config_data)
     g_free (rtptheorapay->config_data);
   rtptheorapay->config_data = NULL;
@@ -283,13 +278,7 @@ gst_rtp_theora_pay_init_packet (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
 {
   GST_DEBUG_OBJECT (rtptheorapay, "starting new packet, TDT: %d", TDT);
 
-  if (rtptheorapay->packet)
-    gst_buffer_unref (rtptheorapay->packet);
-
-  g_list_foreach (rtptheorapay->packet_buffers, (GFunc) gst_mini_object_unref,
-      NULL);
-  g_list_free (rtptheorapay->packet_buffers);
-  rtptheorapay->packet_buffers = NULL;
+  gst_rtp_theora_pay_clear_packet (rtptheorapay);
 
   /* new packet allocate max packet size */
   rtptheorapay->packet =

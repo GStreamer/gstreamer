@@ -113,26 +113,14 @@ gst_rtp_vorbis_depay_init (GstRtpVorbisDepay * rtpvorbisdepay)
 static void
 free_config (GstRtpVorbisConfig * conf)
 {
-  GList *headers;
-
-  for (headers = conf->headers; headers; headers = g_list_next (headers)) {
-    GstBuffer *header = GST_BUFFER_CAST (headers->data);
-
-    gst_buffer_unref (header);
-  }
-  g_list_free (conf->headers);
+  g_list_free_full (conf->headers, (GDestroyNotify) gst_buffer_unref);
   g_free (conf);
 }
 
 static void
 free_indents (GstRtpVorbisDepay * rtpvorbisdepay)
 {
-  GList *walk;
-
-  for (walk = rtpvorbisdepay->configs; walk; walk = g_list_next (walk)) {
-    free_config ((GstRtpVorbisConfig *) walk->data);
-  }
-  g_list_free (rtpvorbisdepay->configs);
+  g_list_free_full (rtpvorbisdepay->configs, (GDestroyNotify) free_config);
   rtpvorbisdepay->configs = NULL;
 }
 

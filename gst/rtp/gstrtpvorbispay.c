@@ -145,21 +145,17 @@ gst_rtp_vorbis_pay_clear_packet (GstRtpVorbisPay * rtpvorbispay)
   if (rtpvorbispay->packet)
     gst_buffer_unref (rtpvorbispay->packet);
   rtpvorbispay->packet = NULL;
-  g_list_foreach (rtpvorbispay->packet_buffers, (GFunc) gst_mini_object_unref,
-      NULL);
-  g_list_free (rtpvorbispay->packet_buffers);
+  g_list_free_full (rtpvorbispay->packet_buffers,
+      (GDestroyNotify) gst_buffer_unref);
   rtpvorbispay->packet_buffers = NULL;
 }
 
 static void
 gst_rtp_vorbis_pay_cleanup (GstRtpVorbisPay * rtpvorbispay)
 {
-  g_list_foreach (rtpvorbispay->headers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (rtpvorbispay->headers);
-  rtpvorbispay->headers = NULL;
-
   gst_rtp_vorbis_pay_clear_packet (rtpvorbispay);
-
+  g_list_free_full (rtpvorbispay->headers, (GDestroyNotify) gst_buffer_unref);
+  rtpvorbispay->headers = NULL;
   if (rtpvorbispay->config_data)
     g_free (rtpvorbispay->config_data);
   rtpvorbispay->config_data = NULL;
@@ -277,12 +273,7 @@ gst_rtp_vorbis_pay_init_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT,
 {
   GST_LOG_OBJECT (rtpvorbispay, "starting new packet, VDT: %d", VDT);
 
-  if (rtpvorbispay->packet)
-    gst_buffer_unref (rtpvorbispay->packet);
-  g_list_foreach (rtpvorbispay->packet_buffers, (GFunc) gst_mini_object_unref,
-      NULL);
-  g_list_free (rtpvorbispay->packet_buffers);
-  rtpvorbispay->packet_buffers = NULL;
+  gst_rtp_vorbis_pay_clear_packet (rtpvorbispay);
 
   /* new packet allocate max packet size */
   rtpvorbispay->packet =
