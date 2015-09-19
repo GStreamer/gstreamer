@@ -684,7 +684,7 @@ gst_rtp_vorbis_pay_payload_buffer (GstRtpVorbisPay * rtpvorbispay, guint8 VDT,
       for (l = rtpvorbispay->headers; l; l = l->next)
         rtpvorbispay->packet_buffers =
             g_list_prepend (rtpvorbispay->packet_buffers,
-            gst_buffer_ref (buffer));
+            gst_buffer_ref (l->data));
     }
 
     /* only first (only) configuration cuts length field */

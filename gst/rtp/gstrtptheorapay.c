@@ -708,7 +708,7 @@ gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
       for (l = rtptheorapay->headers; l; l = l->next)
         rtptheorapay->packet_buffers =
             g_list_prepend (rtptheorapay->packet_buffers,
-            gst_buffer_ref (buffer));
+            gst_buffer_ref (l->data));
     }
 
     /* only first (only) configuration cuts length field */
