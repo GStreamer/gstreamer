@@ -136,6 +136,7 @@ enum
 #define DEFAULT_RTX_MIN_RETRY_TIMEOUT   -1
 #define DEFAULT_RTX_RETRY_PERIOD    -1
 #define DEFAULT_RTX_MAX_RETRIES    -1
+#define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
 
 #define DEFAULT_AUTO_RTX_DELAY (20 * GST_MSECOND)
 #define DEFAULT_AUTO_RTX_TIMEOUT (40 * GST_MSECOND)
@@ -158,7 +159,8 @@ enum
   PROP_RTX_MIN_RETRY_TIMEOUT,
   PROP_RTX_RETRY_PERIOD,
   PROP_RTX_MAX_RETRIES,
-  PROP_STATS
+  PROP_STATS,
+  PROP_MAX_RTCP_RTP_TIME_DIFF
 };
 
 #define JBUF_LOCK(priv)   (g_mutex_lock (&(priv)->jbuf_lock))
@@ -255,6 +257,7 @@ struct _GstRtpJitterBufferPrivate
   gint rtx_min_retry_timeout;
   gint rtx_retry_period;
   gint rtx_max_retries;
+  gint max_rtcp_rtp_time_diff;
 
   /* the last seqnum we pushed out */
   guint32 last_popped_seqnum;
@@ -706,6 +709,22 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtpJitterBuffer:max-rtcp-rtp-time-diff
+   *
+   * The maximum amount of time in ms that the RTP time in the RTCP SRs
+   * is allowed to be ahead of the last RTP packet we received. Use
+   * -1 to disable ignoring of RTCP packets.
+   *
+   * Since: 1.8
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_RTCP_RTP_TIME_DIFF,
+      g_param_spec_int ("max-rtcp-rtp-time-diff", "Max RTCP RTP Time Diff",
+          "Maximum amount of time in ms that the RTP time in RTCP SRs "
+          "is allowed to be ahead (-1 disabled)", -1, G_MAXINT,
+          DEFAULT_MAX_RTCP_RTP_TIME_DIFF,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
    * @pt: the pt
@@ -822,6 +841,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->rtx_min_retry_timeout = DEFAULT_RTX_MIN_RETRY_TIMEOUT;
   priv->rtx_retry_period = DEFAULT_RTX_RETRY_PERIOD;
   priv->rtx_max_retries = DEFAULT_RTX_MAX_RETRIES;
+  priv->max_rtcp_rtp_time_diff = DEFAULT_MAX_RTCP_RTP_TIME_DIFF;
 
   priv->last_dts = -1;
   priv->last_rtptime = -1;
@@ -3552,7 +3572,10 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
         /* check how far ahead it is to our RTP timestamps */
         diff = ext_rtptime - last_rtptime;
         /* if bigger than 1 second, we drop it */
-        if (diff > clock_rate) {
+        if (jitterbuffer->priv->max_rtcp_rtp_time_diff != -1 &&
+            diff >
+            gst_util_uint64_scale (jitterbuffer->priv->max_rtcp_rtp_time_diff,
+                clock_rate, 1000)) {
           GST_DEBUG_OBJECT (jitterbuffer, "too far ahead");
           /* should drop this, but some RTSP servers end up with bogus
            * way too ahead RTCP packet when repeated PAUSE/PLAY,
@@ -3929,6 +3952,11 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->rtx_max_retries = g_value_get_int (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_MAX_RTCP_RTP_TIME_DIFF:
+      JBUF_LOCK (priv);
+      priv->max_rtcp_rtp_time_diff = g_value_get_int (value);
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -4033,6 +4061,11 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_STATS:
       g_value_take_boxed (value,
           gst_rtp_jitter_buffer_create_stats (jitterbuffer));
+      break;
+    case PROP_MAX_RTCP_RTP_TIME_DIFF:
+      JBUF_LOCK (priv);
+      g_value_set_int (value, priv->max_rtcp_rtp_time_diff);
+      JBUF_UNLOCK (priv);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

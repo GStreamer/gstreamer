@@ -232,6 +232,7 @@ gst_rtsp_src_ntp_time_source_get_type (void)
 #define DEFAULT_DO_RETRANSMISSION        TRUE
 #define DEFAULT_NTP_TIME_SOURCE  NTP_TIME_SOURCE_NTP
 #define DEFAULT_USER_AGENT       "GStreamer/" PACKAGE_VERSION
+#define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
 
 enum
 {
@@ -269,7 +270,8 @@ enum
   PROP_TLS_INTERACTION,
   PROP_DO_RETRANSMISSION,
   PROP_NTP_TIME_SOURCE,
-  PROP_USER_AGENT
+  PROP_USER_AGENT,
+  PROP_MAX_RTCP_RTP_TIME_DIFF
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -732,6 +734,13 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "The User-Agent string to send to the server",
           DEFAULT_USER_AGENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_RTCP_RTP_TIME_DIFF,
+      g_param_spec_int ("max-rtcp-rtp-time-diff", "Max RTCP RTP Time Diff",
+          "Maximum amount of time in ms that the RTP time in RTCP SRs "
+          "is allowed to be ahead (-1 disabled)", -1, G_MAXINT,
+          DEFAULT_MAX_RTCP_RTP_TIME_DIFF,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
@@ -879,6 +888,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   src->ntp_time_source = DEFAULT_NTP_TIME_SOURCE;
   src->user_agent = g_strdup (DEFAULT_USER_AGENT);
+  src->max_rtcp_rtp_time_diff = DEFAULT_MAX_RTCP_RTP_TIME_DIFF;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1161,6 +1171,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       g_free (rtspsrc->user_agent);
       rtspsrc->user_agent = g_value_dup_string (value);
       break;
+    case PROP_MAX_RTCP_RTP_TIME_DIFF:
+      rtspsrc->max_rtcp_rtp_time_diff = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1303,6 +1316,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_USER_AGENT:
       g_value_set_string (value, rtspsrc->user_agent);
+      break;
+    case PROP_MAX_RTCP_RTP_TIME_DIFF:
+      g_value_set_int (value, rtspsrc->max_rtcp_rtp_time_diff);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3491,6 +3507,11 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       if (g_object_class_find_property (klass, "drop-on-latency")) {
         g_object_set (src->manager, "drop-on-latency", src->drop_on_latency,
             NULL);
+      }
+
+      if (g_object_class_find_property (klass, "max-rtcp-rtp-time-diff")) {
+        g_object_set (src->manager, "max-rtcp-rtp-time-diff",
+            src->max_rtcp_rtp_time_diff, NULL);
       }
 
       /* buffer mode pauses are handled by adding offsets to buffer times,

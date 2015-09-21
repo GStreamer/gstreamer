@@ -238,6 +238,7 @@ struct _GstRTSPSrc {
   gboolean          do_retransmission;
   gint              ntp_time_source;
   gchar            *user_agent;
+  GstClockTime      max_rtcp_rtp_time_diff;
 
   /* state */
   GstRTSPState       state;

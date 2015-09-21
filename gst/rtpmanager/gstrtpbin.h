@@ -70,6 +70,7 @@ struct _GstRtpBin {
   gboolean        do_retransmission;
   GstRTPProfile   rtp_profile;
   gboolean        rtcp_sync_send_time;
+  gint            max_rtcp_rtp_time_diff;
 
   /* a list of session */
   GSList         *sessions;

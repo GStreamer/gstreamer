@@ -291,6 +291,7 @@ enum
 #define DEFAULT_RTP_PROFILE          GST_RTP_PROFILE_AVP
 #define DEFAULT_NTP_TIME_SOURCE      GST_RTP_NTP_TIME_SOURCE_NTP
 #define DEFAULT_RTCP_SYNC_SEND_TIME  TRUE
+#define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
 
 enum
 {
@@ -310,7 +311,8 @@ enum
   PROP_DO_RETRANSMISSION,
   PROP_RTP_PROFILE,
   PROP_NTP_TIME_SOURCE,
-  PROP_RTCP_SYNC_SEND_TIME
+  PROP_RTCP_SYNC_SEND_TIME,
+  PROP_MAX_RTCP_RTP_TIME_DIFF
 };
 
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
@@ -1552,6 +1554,8 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   g_object_set (buffer, "do-lost", rtpbin->do_lost, NULL);
   g_object_set (buffer, "mode", rtpbin->buffer_mode, NULL);
   g_object_set (buffer, "do-retransmission", rtpbin->do_retransmission, NULL);
+  g_object_set (buffer, "max-rtcp-rtp-time-diff",
+      rtpbin->max_rtcp_rtp_time_diff, NULL);
 
   g_signal_emit (rtpbin, gst_rtp_bin_signals[SIGNAL_NEW_JITTERBUFFER], 0,
       buffer, session->id, ssrc);
@@ -2181,6 +2185,13 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           DEFAULT_RTCP_SYNC_SEND_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_RTCP_RTP_TIME_DIFF,
+      g_param_spec_int ("max-rtcp-rtp-time-diff", "Max RTCP RTP Time Diff",
+          "Maximum amount of time in ms that the RTP time in RTCP SRs "
+          "is allowed to be ahead (-1 disabled)", -1, G_MAXINT,
+          DEFAULT_MAX_RTCP_RTP_TIME_DIFF,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -2246,6 +2257,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->rtp_profile = DEFAULT_RTP_PROFILE;
   rtpbin->ntp_time_source = DEFAULT_NTP_TIME_SOURCE;
   rtpbin->rtcp_sync_send_time = DEFAULT_RTCP_SYNC_SEND_TIME;
+  rtpbin->max_rtcp_rtp_time_diff = DEFAULT_MAX_RTCP_RTP_TIME_DIFF;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -2437,6 +2449,13 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       GST_RTP_BIN_UNLOCK (rtpbin);
       break;
     }
+    case PROP_MAX_RTCP_RTP_TIME_DIFF:
+      GST_RTP_BIN_LOCK (rtpbin);
+      rtpbin->max_rtcp_rtp_time_diff = g_value_get_int (value);
+      GST_RTP_BIN_UNLOCK (rtpbin);
+      gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin,
+          "max-rtcp-rtp-time-diff", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2507,6 +2526,11 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RTCP_SYNC_SEND_TIME:
       g_value_set_boolean (value, rtpbin->rtcp_sync_send_time);
+      break;
+    case PROP_MAX_RTCP_RTP_TIME_DIFF:
+      GST_RTP_BIN_LOCK (rtpbin);
+      g_value_set_int (value, rtpbin->max_rtcp_rtp_time_diff);
+      GST_RTP_BIN_UNLOCK (rtpbin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
