@@ -2679,15 +2679,20 @@ invalid_return:
 }
 
 /* gst_iterator_fold functions for pads_activate
- * Stop the iterator if activating one pad failed. */
+ * Stop the iterator if activating one pad failed, but only if that pad
+ * has not been removed from the element. */
 static gboolean
 activate_pads (const GValue * vpad, GValue * ret, gboolean * active)
 {
   GstPad *pad = g_value_get_object (vpad);
   gboolean cont = TRUE;
 
-  if (!(cont = gst_pad_set_active (pad, *active)))
-    g_value_set_boolean (ret, FALSE);
+  if (!gst_pad_set_active (pad, *active)) {
+    if (GST_PAD_PARENT (pad) != NULL) {
+      cont = FALSE;
+      g_value_set_boolean (ret, FALSE);
+    }
+  }
 
   return cont;
 }
