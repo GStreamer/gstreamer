@@ -376,6 +376,7 @@ gst_selector_pad_cache_buffer (GstSelectorPad * selpad, GstBuffer * buffer)
   if (selpad->segment.format != GST_FORMAT_TIME) {
     GST_DEBUG_OBJECT (selpad, "Buffer %p with segment not in time format, "
         "not caching", buffer);
+    gst_buffer_unref (buffer);
     return;
   }
 
