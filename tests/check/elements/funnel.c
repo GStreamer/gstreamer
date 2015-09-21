@@ -23,6 +23,7 @@
 # include <config.h>
 #endif
 
+#include <gst/check/gstharness.h>
 #include <gst/check/gstcheck.h>
 
 struct TestData
@@ -372,6 +373,42 @@ GST_START_TEST (test_funnel_gap_event)
 
 GST_END_TEST;
 
+GST_START_TEST (test_funnel_stress)
+{
+  GstHarness *h0 = gst_harness_new_with_padnames ("funnel", "sink_0", "src");
+  GstHarness *h1 = gst_harness_new_with_element (h0->element, "sink_1", NULL);
+  GstHarnessThread *state, *req, *push0, *push1;
+  GstPadTemplate *templ = gst_element_class_get_pad_template (
+      GST_ELEMENT_GET_CLASS (h0->element), "sink_%u");
+  GstCaps *caps = gst_caps_from_string ("testcaps");
+  GstBuffer *buf = gst_buffer_new ();
+  GstSegment segment;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  state = gst_harness_stress_statechange_start (h0);
+  req = gst_harness_stress_requestpad_start (h0, templ, NULL, NULL, TRUE);
+  push0 = gst_harness_stress_push_buffer_start (h0, caps, &segment, buf);
+  push1 = gst_harness_stress_push_buffer_start (h1, caps, &segment, buf);
+
+  gst_caps_unref (caps);
+  gst_buffer_unref (buf);
+
+  /* test-length */
+  g_usleep (G_USEC_PER_SEC * 1);
+
+  gst_harness_stress_thread_stop (push1);
+  gst_harness_stress_thread_stop (push0);
+  gst_harness_stress_thread_stop (req);
+  gst_harness_stress_thread_stop (state);
+
+  gst_harness_teardown (h1);
+  gst_harness_teardown (h0);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 funnel_suite (void)
 {
@@ -382,6 +419,7 @@ funnel_suite (void)
   tcase_add_test (tc_chain, test_funnel_simple);
   tcase_add_test (tc_chain, test_funnel_eos);
   tcase_add_test (tc_chain, test_funnel_gap_event);
+  tcase_add_test (tc_chain, test_funnel_stress);
   suite_add_tcase (s, tc_chain);
 
   return s;

@@ -429,10 +429,11 @@ reset_pad (const GValue * data, gpointer user_data)
 {
   GstPad *pad = g_value_get_object (data);
   GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
+  GstFunnel *funnel = user_data;
 
-  GST_OBJECT_LOCK (pad);
+  GST_OBJECT_LOCK (funnel);
   fpad->got_eos = FALSE;
-  GST_OBJECT_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (funnel);
 }
 
 static GstStateChangeReturn
@@ -451,9 +452,10 @@ gst_funnel_change_state (GstElement * element, GstStateChange transition)
       GstIteratorResult res;
 
       do {
-        res = gst_iterator_foreach (iter, reset_pad, NULL);
+        res = gst_iterator_foreach (iter, reset_pad, element);
+        if (res == GST_ITERATOR_RESYNC)
+          gst_iterator_resync (iter);
       } while (res == GST_ITERATOR_RESYNC);
-
       gst_iterator_free (iter);
 
       if (res == GST_ITERATOR_ERROR)
