@@ -215,6 +215,12 @@ static void gst_mpdparser_free_active_stream (GstActiveStream * active_stream);
 static GstUri *combine_urls (GstUri * base, GList * list, gchar ** query,
     guint idx);
 
+static GList *gst_mpd_client_fetch_external_period (GstMpdClient * client,
+    GstPeriodNode * period_node, gboolean * error);
+static GList *gst_mpd_client_fetch_external_adaptation_set (GstMpdClient *
+    client, GstPeriodNode * period, GstAdaptationSetNode * adapt_set,
+    gboolean * error);
+
 struct GstMpdParserUtcTimingMethod
 {
   const gchar *name;
@@ -3216,6 +3222,169 @@ gst_mpd_client_check_profiles (GstMpdClient * client)
   }
 }
 
+static gboolean
+gst_mpd_client_fetch_on_load_external_resources (GstMpdClient * client)
+{
+  GList *l;
+
+  for (l = client->mpd_node->Periods; l; /* explicitly advanced below */ ) {
+    GstPeriodNode *period = l->data;
+    GList *m;
+
+    if (period->xlink_href && period->actuate == GST_XLINK_ACTUATE_ON_LOAD) {
+      GList *new_periods, *prev, *next;
+      gboolean error;
+
+      new_periods =
+          gst_mpd_client_fetch_external_period (client, period, &error);
+
+      if (!new_periods && error)
+        goto syntax_error;
+
+      prev = l->prev;
+      client->mpd_node->Periods =
+          g_list_delete_link (client->mpd_node->Periods, l);
+      gst_mpdparser_free_period_node (period);
+      period = NULL;
+
+      /* Get new next node, we will insert before this */
+      if (prev)
+        next = prev->next;
+      else
+        next = client->mpd_node->Periods;
+
+      while (new_periods) {
+        client->mpd_node->Periods =
+            g_list_insert_before (client->mpd_node->Periods, next,
+            new_periods->data);
+        new_periods = g_list_delete_link (new_periods, new_periods);
+      }
+      next = NULL;
+
+      /* Update our iterator to the first new period if any, or the next */
+      if (prev)
+        l = prev->next;
+      else
+        l = client->mpd_node->Periods;
+
+      continue;
+    }
+
+    if (period->SegmentList && period->SegmentList->xlink_href
+        && period->SegmentList->actuate == GST_XLINK_ACTUATE_ON_LOAD) {
+      GstSegmentListNode *new_segment_list;
+      gboolean error;
+
+      new_segment_list =
+          gst_mpd_client_fetch_external_segment_list (client, period, NULL,
+          NULL, NULL, period->SegmentList, &error);
+
+      if (!new_segment_list && error)
+        goto syntax_error;
+
+      gst_mpdparser_free_segment_list_node (period->SegmentList);
+      period->SegmentList = new_segment_list;
+    }
+
+    for (m = period->AdaptationSets; m; /* explicitly advanced below */ ) {
+      GstAdaptationSetNode *adapt_set = m->data;
+      GList *n;
+
+      if (adapt_set->xlink_href
+          && adapt_set->actuate == GST_XLINK_ACTUATE_ON_LOAD) {
+        GList *new_adapt_sets, *prev, *next;
+        gboolean error;
+
+        new_adapt_sets =
+            gst_mpd_client_fetch_external_adaptation_set (client, period,
+            adapt_set, &error);
+
+        if (!new_adapt_sets && error)
+          goto syntax_error;
+
+        prev = l->prev;
+        period->AdaptationSets = g_list_delete_link (period->AdaptationSets, l);
+        gst_mpdparser_free_adaptation_set_node (adapt_set);
+        adapt_set = NULL;
+
+        /* Get new next node, we will insert before this */
+        if (prev)
+          next = prev->next;
+        else
+          next = period->AdaptationSets;
+
+        while (new_adapt_sets) {
+          period->AdaptationSets =
+              g_list_insert_before (period->AdaptationSets, next,
+              new_adapt_sets->data);
+          new_adapt_sets = g_list_delete_link (new_adapt_sets, new_adapt_sets);
+        }
+        next = NULL;
+
+        /* Update our iterator to the first new adapt_set if any, or the next */
+        if (prev)
+          l = prev->next;
+        else
+          l = period->AdaptationSets;
+
+        continue;
+      }
+
+      if (adapt_set->SegmentList && adapt_set->SegmentList->xlink_href
+          && adapt_set->SegmentList->actuate == GST_XLINK_ACTUATE_ON_LOAD) {
+        GstSegmentListNode *new_segment_list;
+        gboolean error;
+
+        new_segment_list =
+            gst_mpd_client_fetch_external_segment_list (client, period,
+            adapt_set, NULL, period->SegmentList, adapt_set->SegmentList,
+            &error);
+
+        if (!new_segment_list && error)
+          goto syntax_error;
+
+        gst_mpdparser_free_segment_list_node (adapt_set->SegmentList);
+        adapt_set->SegmentList = new_segment_list;
+      }
+
+      for (n = adapt_set->Representations; n; n = n->next) {
+        GstRepresentationNode *representation = n->data;
+
+        if (representation->SegmentList
+            && representation->SegmentList->xlink_href
+            && representation->SegmentList->actuate ==
+            GST_XLINK_ACTUATE_ON_LOAD) {
+
+          GstSegmentListNode *new_segment_list;
+          gboolean error;
+
+          new_segment_list =
+              gst_mpd_client_fetch_external_segment_list (client, period,
+              adapt_set, representation, adapt_set->SegmentList,
+              representation->SegmentList, &error);
+
+          if (!new_segment_list && error)
+            goto syntax_error;
+
+          gst_mpdparser_free_segment_list_node (representation->SegmentList);
+          representation->SegmentList = new_segment_list;
+
+        }
+      }
+
+      m = m->next;
+    }
+
+    l = l->next;
+  }
+
+  return TRUE;
+
+syntax_error:
+
+  return FALSE;
+}
+
 gboolean
 gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
 {
@@ -3255,6 +3424,9 @@ gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
     }
 
     gst_mpd_client_check_profiles (client);
+
+    if (!gst_mpd_client_fetch_on_load_external_resources (client))
+      return FALSE;
 
     return TRUE;
   }
