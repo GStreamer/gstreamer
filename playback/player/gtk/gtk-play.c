@@ -636,7 +636,7 @@ stream_info_get_string (GstPlayerStreamInfo * stream, gint type, gboolean label)
     case AUDIO_INFO_LANGUAGE:
     {
       GstPlayerAudioInfo *audio = (GstPlayerAudioInfo *) stream;
-      const gchar* lang = gst_player_audio_info_get_language (audio);
+      const gchar *lang = gst_player_audio_info_get_language (audio);
       if (lang)
         buffer = g_strdup_printf ("%s%s", label ? "Language : " : "", lang);
       break;
