@@ -107,7 +107,7 @@ gst_frame_positionner_update_properties (GstFramePositionner * pos,
     pos->height = pos->track_height;
   }
 
-  GST_DEBUG_OBJECT (pos, "setting caps : %s", gst_caps_to_string (caps));
+  GST_DEBUG_OBJECT (caps, "setting caps");
 
   g_object_set (pos->capsfilter, "caps", caps, NULL);
 

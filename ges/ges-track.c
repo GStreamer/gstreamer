@@ -292,6 +292,7 @@ _ghost_nlecomposition_srcpad (GESTrack * track)
 
   gst_pad_link (pad, capsfilter_sink);
   gst_object_unref (capsfilter_sink);
+  gst_object_unref (pad);
 
   capsfilter_src = gst_element_get_static_pad (priv->capsfilter, "src");
   /* ghost the pad */
@@ -522,6 +523,7 @@ ges_track_constructed (GObject * object)
     nleobject = gst_element_factory_make ("nleoperation", "mixing-operation");
     if (!gst_bin_add (GST_BIN (nleobject), mixer)) {
       GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
+      gst_object_unref (mixer);
       gst_object_unref (nleobject);
 
       return;
@@ -531,12 +533,13 @@ ges_track_constructed (GObject * object)
     if (self->priv->mixing) {
       if (!ges_nle_composition_add_object (self->priv->composition, nleobject)) {
         GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
+        gst_object_unref (nleobject);
 
         return;
       }
     }
 
-    self->priv->mixing_operation = gst_object_ref (nleobject);
+    self->priv->mixing_operation = nleobject;
 
   } else {
     GST_INFO_OBJECT (self, "No way to create a main mixer");
