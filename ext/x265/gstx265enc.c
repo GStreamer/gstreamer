@@ -171,7 +171,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-h265, "
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 4, MAX ], " "height = (int) [ 4, MAX ], "
-        "stream-format = (string) { avc, byte-stream }, "
+        "stream-format = (string) byte-stream, "
         "alignment = (string) au, " "profile = (string) { main }")
     );
 
