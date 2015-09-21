@@ -150,7 +150,12 @@ static void
 widget_destroy_cb (GtkWidget * widget, GstGtkBaseSink * gtk_sink)
 {
   GST_OBJECT_LOCK (gtk_sink);
-  g_clear_object (&gtk_sink->widget);
+  if (widget == GTK_WIDGET (gtk_sink->widget))
+    g_clear_object (&gtk_sink->widget);
+  else if (widget == gtk_sink->window)
+    gtk_sink->window = NULL;
+  else
+    g_assert_not_reached ();
   GST_OBJECT_UNLOCK (gtk_sink);
 }
 
@@ -290,6 +295,8 @@ gst_gtk_base_sink_start (GstBaseSink * bsink)
     gtk_window_set_default_size (GTK_WINDOW (gst_sink->window), 640, 480);
     gtk_window_set_title (GTK_WINDOW (gst_sink->window), klass->window_title);
     gtk_container_add (GTK_CONTAINER (gst_sink->window), toplevel);
+    g_signal_connect (gst_sink->window, "destroy",
+        G_CALLBACK (widget_destroy_cb), gst_sink);
     gtk_widget_show_all (gst_sink->window);
   }
 
