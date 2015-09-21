@@ -2444,6 +2444,8 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
         guint64 stereo_mode = 0;
 
         switch (videocontext->multiview_mode) {
+          case GST_VIDEO_MULTIVIEW_MODE_MONO:
+            break;
           case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE:
             if (videocontext->multiview_flags &
                 GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST)
