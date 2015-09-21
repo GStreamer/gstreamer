@@ -236,8 +236,7 @@ window_resize (GstGLWindowDispmanxEGL * window_egl, guint width, guint height,
 
     vc_dispmanx_update_submit_sync (dispman_update);
 
-    if (window->resize)
-      window->resize (window->resize_data, width, height);
+    gst_gl_window_resize (window, width, height);
   }
 
   window_egl->native.width = width;
