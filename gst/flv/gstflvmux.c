@@ -1152,6 +1152,8 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
        if not just copy the offsets */
     if (mux->streamable) {
       gst_buffer_copy_into (tag, buffer, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+      GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_OFFSET_END (tag) = GST_BUFFER_OFFSET_NONE;
     } else {
       GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET (buffer);
       GST_BUFFER_OFFSET_END (tag) = GST_BUFFER_OFFSET_END (buffer);
