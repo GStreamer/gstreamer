@@ -246,24 +246,24 @@ struct _TSDemuxStream
     GST_STATIC_CAPS ("subpicture/x-pgs; subpicture/x-dvd; subpicture/x-dvb")
 
 static GstStaticPadTemplate video_template =
-GST_STATIC_PAD_TEMPLATE ("video_%04x", GST_PAD_SRC,
+GST_STATIC_PAD_TEMPLATE ("video_%01x_%05x", GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     VIDEO_CAPS);
 
 static GstStaticPadTemplate audio_template =
-GST_STATIC_PAD_TEMPLATE ("audio_%04x",
+GST_STATIC_PAD_TEMPLATE ("audio_%01x_%05x",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     AUDIO_CAPS);
 
 static GstStaticPadTemplate subpicture_template =
-GST_STATIC_PAD_TEMPLATE ("subpicture_%04x",
+GST_STATIC_PAD_TEMPLATE ("subpicture_%01x_%05x",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     SUBPICTURE_CAPS);
 
 static GstStaticPadTemplate private_template =
-GST_STATIC_PAD_TEMPLATE ("private_%04x",
+GST_STATIC_PAD_TEMPLATE ("private_%01x_%05x",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -418,6 +418,7 @@ gst_ts_demux_reset (MpegTSBase * base)
   demux->group_id = G_MAXUINT;
 
   demux->last_seek_offset = -1;
+  demux->program_generation = 0;
 }
 
 static void
@@ -1533,16 +1534,24 @@ done:
   if (caps) {
     if (is_audio) {
       template = gst_static_pad_template_get (&audio_template);
-      name = g_strdup_printf ("audio_%04x", bstream->pid);
+      name =
+          g_strdup_printf ("audio_%01x_%04x", demux->program_generation,
+          bstream->pid);
     } else if (is_video) {
       template = gst_static_pad_template_get (&video_template);
-      name = g_strdup_printf ("video_%04x", bstream->pid);
+      name =
+          g_strdup_printf ("video_%01x_%04x", demux->program_generation,
+          bstream->pid);
     } else if (is_private) {
       template = gst_static_pad_template_get (&private_template);
-      name = g_strdup_printf ("private_%04x", bstream->pid);
+      name =
+          g_strdup_printf ("private_%01x_%04x", demux->program_generation,
+          bstream->pid);
     } else if (is_subpicture) {
       template = gst_static_pad_template_get (&subpicture_template);
-      name = g_strdup_printf ("subpicture_%04x", bstream->pid);
+      name =
+          g_strdup_printf ("subpicture_%01x_%04x", demux->program_generation,
+          bstream->pid);
     } else
       g_assert_not_reached ();
 
@@ -1798,6 +1807,9 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
     GST_LOG ("program %d started", program->program_number);
     demux->program_number = program->program_number;
     demux->program = program;
+
+    /* Increment the program_generation counter */
+    demux->program_generation = (demux->program_generation + 1) & 0xf;
 
     /* If this is not the initial program, we need to calculate
      * a new segment */

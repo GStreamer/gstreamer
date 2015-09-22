@@ -64,6 +64,7 @@ struct _GstTSDemux
   gboolean emit_statistics;
 
   /*< private >*/
+  gint program_generation; /* Incremented each time we switch program 0..15 */
   MpegTSBaseProgram *program;	/* Current program */
   MpegTSBaseProgram *previous_program; /* Previous program, to deactivate once
 					* the new program becomes active */
