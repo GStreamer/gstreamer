@@ -396,6 +396,7 @@ _start_task (NleComposition * comp)
     gst_task_set_lock (task, GET_TASK_LOCK (comp));
     GST_DEBUG_OBJECT (comp, "created task %p", task);
     comp->task = task;
+    g_free (taskname);
   }
 
   gst_task_set_state (task, GST_TASK_STARTED);
@@ -760,11 +761,11 @@ _add_action (NleComposition * comp, GCallback func,
   Action *action;
   NleCompositionPrivate *priv = comp->priv;
 
-
   action = (Action *) g_closure_new_simple (sizeof (Action), data);
   g_closure_add_finalize_notifier ((GClosure *) action, data,
       (GClosureNotify) _free_action);
   ACTION_CALLBACK (action) = func;
+
   action->priority = priority;
   g_closure_set_marshal ((GClosure *) action, g_cclosure_marshal_VOID__VOID);
 
@@ -2873,15 +2874,10 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
   priv->current = stack;
 
   if (priv->current) {
-    UpdateCompositionData *ucompo = g_slice_new0 (UpdateCompositionData);
 
     GST_INFO_OBJECT (comp, "New stack set and ready to run, probing src pad"
         " and stopping children thread until we are actually ready with"
         " that new stack");
-
-    ucompo->comp = comp;
-    ucompo->reason = update_reason;
-    ucompo->seqnum = seqnum;
 
     comp->priv->updating_reason = update_reason;
     comp->priv->seqnum_to_restart_task = seqnum;
