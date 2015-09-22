@@ -162,6 +162,8 @@ create_buffer (guint8 * data, gsize size,
   GST_BUFFER_PTS (buf) = timestamp;
   GST_BUFFER_DTS (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = duration;
+  GST_BUFFER_OFFSET (buf) = 0;
+  GST_BUFFER_OFFSET_END (buf) = 0;
   return buf;
 }
 
@@ -257,7 +259,6 @@ GST_START_TEST (test_speex_streamable)
   buf = gst_harness_pull (h);
   fail_unless_equals_uint64 (base_time, GST_BUFFER_PTS (buf));
   fail_unless_equals_uint64 (base_time, GST_BUFFER_DTS (buf));
-  fail_unless_equals_uint64 (0, GST_BUFFER_DURATION (buf));
   gst_buffer_map (buf, &map, GST_MAP_READ);
   /* 0x08 means it is audio */
   fail_unless_equals_int (0x08, map.data[0]);
@@ -292,6 +293,8 @@ GST_START_TEST (test_speex_streamable)
   fail_unless_equals_uint64 (base_time, GST_BUFFER_PTS (buf));
   fail_unless_equals_uint64 (base_time, GST_BUFFER_DTS (buf));
   fail_unless_equals_uint64 (duration, GST_BUFFER_DURATION (buf));
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET_NONE, GST_BUFFER_OFFSET (buf));
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET_NONE, GST_BUFFER_OFFSET_END (buf));
   gst_buffer_map (buf, &map, GST_MAP_READ);
   /* 0x08 means it is audio */
   fail_unless_equals_int (0x08, map.data[0]);
@@ -309,6 +312,8 @@ GST_START_TEST (test_speex_streamable)
   fail_unless_equals_uint64 (base_time + duration, GST_BUFFER_PTS (buf));
   fail_unless_equals_uint64 (base_time + duration, GST_BUFFER_DTS (buf));
   fail_unless_equals_uint64 (duration, GST_BUFFER_DURATION (buf));
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET_NONE, GST_BUFFER_OFFSET (buf));
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET_NONE, GST_BUFFER_OFFSET_END (buf));
   gst_buffer_map (buf, &map, GST_MAP_READ);
   /* 0x08 means it is audio */
   fail_unless_equals_int (0x08, map.data[0]);
