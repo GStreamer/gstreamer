@@ -109,6 +109,8 @@ static GstFlowReturn gst_decklink_audio_src_create (GstPushSrc * psrc,
 static gboolean gst_decklink_audio_src_open (GstDecklinkAudioSrc * self);
 static gboolean gst_decklink_audio_src_close (GstDecklinkAudioSrc * self);
 
+static gboolean gst_decklink_audio_src_stop (GstDecklinkAudioSrc * self);
+
 #define parent_class gst_decklink_audio_src_parent_class
 G_DEFINE_TYPE (GstDecklinkAudioSrc, gst_decklink_audio_src, GST_TYPE_PUSH_SRC);
 
@@ -646,7 +648,7 @@ gst_decklink_audio_src_unlock_stop (GstBaseSrc * bsrc)
 static gboolean
 gst_decklink_audio_src_open (GstDecklinkAudioSrc * self)
 {
-  GST_DEBUG_OBJECT (self, "Starting");
+  GST_DEBUG_OBJECT (self, "Opening");
 
   self->input =
       gst_decklink_acquire_nth_input (self->device_number,
@@ -666,21 +668,36 @@ gst_decklink_audio_src_open (GstDecklinkAudioSrc * self)
 static gboolean
 gst_decklink_audio_src_close (GstDecklinkAudioSrc * self)
 {
-
-  GST_DEBUG_OBJECT (self, "Stopping");
+  GST_DEBUG_OBJECT (self, "Closing");
 
   if (self->input) {
     g_mutex_lock (&self->input->lock);
     self->input->got_audio_packet = NULL;
-    self->input->audio_enabled = FALSE;
-    if (self->input->start_streams && self->input->videosrc)
-      self->input->start_streams (self->input->videosrc);
     g_mutex_unlock (&self->input->lock);
 
-    self->input->input->DisableAudioInput ();
     gst_decklink_release_nth_input (self->device_number,
         GST_ELEMENT_CAST (self), TRUE);
     self->input = NULL;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_decklink_audio_src_stop (GstDecklinkAudioSrc * self)
+{
+  GST_DEBUG_OBJECT (self, "Stopping");
+
+  g_queue_foreach (&self->current_packets, (GFunc) capture_packet_free,
+      NULL);
+  g_queue_clear (&self->current_packets);
+
+  if (self->input && self->input->audio_enabled) {
+    g_mutex_lock (&self->input->lock);
+    self->input->audio_enabled = FALSE;
+    g_mutex_unlock (&self->input->lock);
+
+    self->input->input->DisableAudioInput ();
   }
 
   return TRUE;
@@ -769,9 +786,7 @@ gst_decklink_audio_src_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      g_queue_foreach (&self->current_packets, (GFunc) capture_packet_free,
-          NULL);
-      g_queue_clear (&self->current_packets);
+      gst_decklink_audio_src_stop (self);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_decklink_audio_src_close (self);
