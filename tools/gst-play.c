@@ -973,6 +973,7 @@ print_keyboard_help (void)
     "a", N_("change audio track")}, {
     "v", N_("change video track")}, {
     "s", N_("change subtitle track")}, {
+    "0", N_("seek to beginning")}, {
   "k", N_("show keyboard shortcuts")},};
   guint i, chars_to_pad, desc_len, max_desc_len = 0;
 
@@ -1062,6 +1063,9 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
       break;
     case 's':
       play_cycle_track_selection (play, GST_PLAY_TRACK_TYPE_SUBTITLE);
+      break;
+    case '0':
+      play_do_seek (play, 0, play->rate, play->trick_mode);
       break;
       /* fall through */
     default:
