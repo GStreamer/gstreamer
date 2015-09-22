@@ -4057,7 +4057,8 @@ gst_mpd_client_has_next_segment (GstMpdClient * client,
   if (forward) {
     guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
 
-    if (segments_count > 0 && stream->segment_index + 1 == segments_count) {
+    if (segments_count > 0 && stream->segments
+        && stream->segment_index + 1 == segments_count) {
       GstMediaSegment *segment;
 
       segment = g_ptr_array_index (stream->segments, stream->segment_index);
