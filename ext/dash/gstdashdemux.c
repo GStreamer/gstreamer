@@ -736,7 +736,8 @@ gst_dash_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
   if (gst_buffer_map (buf, &mapinfo, GST_MAP_READ)) {
     manifest = (gchar *) mapinfo.data;
     if (gst_mpd_parse (dashdemux->client, manifest, mapinfo.size)) {
-      if (gst_mpd_client_setup_media_presentation (dashdemux->client)) {
+      if (gst_mpd_client_setup_media_presentation (dashdemux->client, 0, 0,
+              NULL)) {
         ret = TRUE;
       } else {
         GST_ELEMENT_ERROR (demux, STREAM, DECODE,
@@ -1208,6 +1209,10 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     target_pos = (GstClockTime) demux->segment.stop;
 
   /* select the requested Period in the Media Presentation */
+  if (!gst_mpd_client_setup_media_presentation (dashdemux->client, target_pos,
+          -1, NULL))
+    return FALSE;
+
   current_period = 0;
   for (list = g_list_first (dashdemux->client->periods); list;
       list = g_list_next (list)) {
@@ -1295,7 +1300,8 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
     period_idx = gst_mpd_client_get_period_index (dashdemux->client);
 
     /* setup video, audio and subtitle streams, starting from current Period */
-    if (!gst_mpd_client_setup_media_presentation (new_client)) {
+    if (!gst_mpd_client_setup_media_presentation (new_client, -1,
+            (period_id ? -1 : period_idx), period_id)) {
       /* TODO */
     }
 
