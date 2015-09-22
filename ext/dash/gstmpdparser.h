@@ -531,7 +531,7 @@ void gst_mpd_client_set_uri_downloader (GstMpdClient * client, GstUriDownloader 
 gboolean gst_mpd_parse (GstMpdClient *client, const gchar *data, gint size);
 
 /* Streaming management */
-gboolean gst_mpd_client_setup_media_presentation (GstMpdClient *client);
+gboolean gst_mpd_client_setup_media_presentation (GstMpdClient *client, GstClockTime time, gint period_index, const gchar *period_id);
 gboolean gst_mpd_client_setup_streaming (GstMpdClient * client, GstAdaptationSetNode * adapt_set);
 gboolean gst_mpd_client_setup_representation (GstMpdClient *client, GstActiveStream *stream, GstRepresentationNode *representation);
 GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client, GstActiveStream * stream);

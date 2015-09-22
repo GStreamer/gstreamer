@@ -2978,6 +2978,9 @@ gst_mpd_client_get_period_index_at_time (GstMpdClient * client,
   if (time_offset < 0)
     return 0;
 
+  if (!gst_mpd_client_setup_media_presentation (client, time_offset, -1, NULL))
+    return 0;
+
   for (idx = 0, iter = client->periods; iter; idx++, iter = g_list_next (iter)) {
     stream_period = iter->data;
     if (stream_period->start <= time_offset
@@ -3893,12 +3896,9 @@ gst_mpd_client_fetch_external_period (GstMpdClient * client,
   return new_periods;
 }
 
-/* TODO: Implement xlink actuation onRequest properly. Currently we download
- * each external MPD immediately when iterating over the periods. We should
- * do this only when actually switching to this period.
- */
 gboolean
-gst_mpd_client_setup_media_presentation (GstMpdClient * client)
+gst_mpd_client_setup_media_presentation (GstMpdClient * client,
+    GstClockTime time, gint period_idx, const gchar * period_id)
 {
   GstStreamPeriod *stream_period;
   GstClockTime start, duration;
@@ -3909,8 +3909,30 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->mpd_node != NULL, FALSE);
 
+  /* Check if we set up the media presentation far enough already */
+  for (list = client->periods; list; list = list->next) {
+    GstStreamPeriod *stream_period = list->data;
+
+    if ((time != GST_CLOCK_TIME_NONE
+            && stream_period->duration != GST_CLOCK_TIME_NONE
+            && stream_period->start + stream_period->duration >= time)
+        || (time != GST_CLOCK_TIME_NONE && stream_period->start >= time))
+      return TRUE;
+
+    if (period_idx != -1 && stream_period->number >= period_idx)
+      return TRUE;
+
+    if (period_id != NULL && stream_period->period->id != NULL
+        && strcmp (stream_period->period->id, period_id) == 0)
+      return TRUE;
+
+  }
+
   GST_DEBUG ("Building the list of Periods in the Media Presentation");
   /* clean the old period list, if any */
+  /* TODO: In theory we could reuse the ones we have so far but that
+   * seems more complicated than the overhead caused here
+   */
   if (client->periods) {
     g_list_foreach (client->periods,
         (GFunc) gst_mpdparser_free_stream_period, NULL);
@@ -4076,10 +4098,24 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
     GST_LOG (" - added Period %d start=%" GST_TIME_FORMAT " duration=%"
         GST_TIME_FORMAT, idx, GST_TIME_ARGS (start), GST_TIME_ARGS (duration));
 
+    if ((time != GST_CLOCK_TIME_NONE
+            && stream_period->duration != GST_CLOCK_TIME_NONE
+            && stream_period->start + stream_period->duration >= time)
+        || (time != GST_CLOCK_TIME_NONE && stream_period->start >= time))
+      break;
+
+    if (period_idx != -1 && stream_period->number >= period_idx)
+      break;
+
+    if (period_id != NULL && stream_period->period->id != NULL
+        && strcmp (stream_period->period->id, period_id) == 0)
+      break;
+
     list = list->next;
   }
 
-  GST_DEBUG ("Found a total of %d valid Periods in the Media Presentation",
+  GST_DEBUG
+      ("Found a total of %d valid Periods in the Media Presentation up to this point",
       idx);
   return ret;
 
@@ -5052,6 +5088,10 @@ gst_mpd_client_set_period_id (GstMpdClient * client, const gchar * period_id)
   g_return_val_if_fail (client->periods != NULL, FALSE);
   g_return_val_if_fail (period_id != NULL, FALSE);
 
+  if (!gst_mpd_client_setup_media_presentation (client, GST_CLOCK_TIME_NONE, -1,
+          period_id))
+    return FALSE;
+
   for (period_idx = 0, iter = client->periods; iter;
       period_idx++, iter = g_list_next (iter)) {
     next_stream_period = iter->data;
@@ -5075,6 +5115,9 @@ gst_mpd_client_set_period_index (GstMpdClient * client, guint period_idx)
 
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->periods != NULL, FALSE);
+
+  if (!gst_mpd_client_setup_media_presentation (client, -1, period_idx, NULL))
+    return FALSE;
 
   next_stream_period = g_list_nth_data (client->periods, period_idx);
   if (next_stream_period != NULL) {
