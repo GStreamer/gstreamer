@@ -54,6 +54,7 @@ GST_DEBUG_CATEGORY_STATIC (jpegenc_debug);
 #define JPEG_DEFAULT_QUALITY 85
 #define JPEG_DEFAULT_SMOOTHING 0
 #define JPEG_DEFAULT_IDCT_METHOD	JDCT_FASTEST
+#define JPEG_DEFAULT_SNAPSHOT		FALSE
 
 /* JpegEnc signals and args */
 enum
@@ -67,7 +68,8 @@ enum
   PROP_0,
   PROP_QUALITY,
   PROP_SMOOTHING,
-  PROP_IDCT_METHOD
+  PROP_IDCT_METHOD,
+  PROP_SNAPSHOT
 };
 
 static void gst_jpegenc_finalize (GObject * object);
@@ -150,11 +152,23 @@ gst_jpegenc_class_init (GstJpegEncClass * klass)
           "The IDCT algorithm to use", GST_TYPE_IDCT_METHOD,
           JPEG_DEFAULT_IDCT_METHOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstJpegEnc:snapshot:
+   *
+   * Send EOS after encoding a frame, useful for snapshots.
+   *
+   * Since: 1.14
+   */
+  g_object_class_install_property (gobject_class, PROP_SNAPSHOT,
+      g_param_spec_boolean ("snapshot", "Snapshot",
+          "Send EOS after encoding a frame, useful for snapshots",
+          JPEG_DEFAULT_SNAPSHOT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_jpegenc_sink_pad_template);
   gst_element_class_add_static_pad_template (element_class,
       &gst_jpegenc_src_pad_template);
+
   gst_element_class_set_static_metadata (element_class, "JPEG image encoder",
       "Codec/Encoder/Image", "Encode images in JPEG format",
       "Wim Taymans <wim.taymans@tvd.be>");
@@ -303,6 +317,7 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
   jpegenc->quality = JPEG_DEFAULT_QUALITY;
   jpegenc->smoothing = JPEG_DEFAULT_SMOOTHING;
   jpegenc->idct_method = JPEG_DEFAULT_IDCT_METHOD;
+  jpegenc->snapshot = JPEG_DEFAULT_SNAPSHOT;
 }
 
 static void
@@ -528,7 +543,7 @@ gst_jpegenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   jpeg_finish_compress (&jpegenc->cinfo);
   GST_LOG_OBJECT (jpegenc, "compressing done");
 
-  return jpegenc->res;
+  return (jpegenc->snapshot) ? GST_FLOW_EOS : jpegenc->res;
 
 invalid_frame:
   {
@@ -566,6 +581,9 @@ gst_jpegenc_set_property (GObject * object, guint prop_id,
     case PROP_IDCT_METHOD:
       jpegenc->idct_method = g_value_get_enum (value);
       break;
+    case PROP_SNAPSHOT:
+      jpegenc->snapshot = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -593,6 +611,9 @@ gst_jpegenc_get_property (GObject * object, guint prop_id, GValue * value,
 #endif
     case PROP_IDCT_METHOD:
       g_value_set_enum (value, jpegenc->idct_method);
+      break;
+    case PROP_SNAPSHOT:
+      g_value_set_boolean (value, jpegenc->snapshot);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -86,6 +86,7 @@ struct _GstJpegEnc
   gint quality;
   gint smoothing;
   gint idct_method;
+  gboolean snapshot;
 
   GstMemory *output_mem;
   GstMapInfo output_map;
