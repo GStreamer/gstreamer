@@ -746,8 +746,7 @@ gst_spectrum_message_new (GstSpectrum * spectrum, GstClockTime timestamp,
             spectrum->bands);
       }
       if (spectrum->message_phase) {
-        gst_spectrum_message_add_array (pcv, cd->spect_magnitude,
-            spectrum->bands);
+        gst_spectrum_message_add_array (pcv, cd->spect_phase, spectrum->bands);
       }
     }
   }
