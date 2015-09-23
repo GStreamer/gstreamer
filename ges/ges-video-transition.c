@@ -29,6 +29,7 @@
 
 #include <gst/controller/gstdirectcontrolbinding.h>
 
+#define parent_class ges_video_transition_parent_class
 G_DEFINE_TYPE (GESVideoTransition, ges_video_transition, GES_TYPE_TRANSITION);
 
 static inline void
@@ -63,6 +64,8 @@ struct _GESVideoTransitionPrivate
   /* This is in case the smpte doesn't exist yet */
   gint pending_border_value;
   gboolean pending_inverted;
+
+  GstElement *positionner;
 };
 
 enum
@@ -105,11 +108,28 @@ duration_changed_cb (GESTrackElement * self, GParamSpec * arg G_GNUC_UNUSED)
       ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (self)));
 }
 
+static gboolean
+_set_priority (GESTimelineElement * element, guint32 priority)
+{
+  gboolean res;
+  GESVideoTransition *self = GES_VIDEO_TRANSITION (element);
+
+  res = GES_TIMELINE_ELEMENT_CLASS (parent_class)->set_priority (element,
+      priority);
+
+  if (res && self->priv->positionner)
+    g_object_set (self->priv->positionner, "zorder",
+        G_MAXUINT - priority, NULL);
+
+  return res;
+}
+
 static void
 ges_video_transition_class_init (GESVideoTransitionClass * klass)
 {
   GObjectClass *object_class;
   GESTrackElementClass *toclass;
+  GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESVideoTransitionPrivate));
 
@@ -159,6 +179,8 @@ ges_video_transition_class_init (GESVideoTransitionClass * klass)
 
   toclass = GES_TRACK_ELEMENT_CLASS (klass);
   toclass->create_element = ges_video_transition_create_element;
+
+  element_class->set_priority = _set_priority;
 }
 
 static void
@@ -308,9 +330,14 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   iconva = gst_element_factory_make ("videoconvert", "tr-csp-a");
   iconvb = gst_element_factory_make ("videoconvert", "tr-csp-b");
+  priv->positionner =
+      gst_element_factory_make ("framepositionner", "frame_tagger");
+  g_object_set (priv->positionner, "zorder",
+      G_MAXUINT - GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
   oconv = gst_element_factory_make ("videoconvert", "tr-csp-output");
 
-  gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, oconv, NULL);
+  gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, priv->positionner,
+      oconv, NULL);
 
   mixer = ges_smart_mixer_new (NULL);
   g_assert (mixer);
@@ -327,7 +354,8 @@ ges_video_transition_create_element (GESTrackElement * object)
   g_object_set (priv->mixer_sinka, "zorder", 0, NULL);
   g_object_set (priv->mixer_sinkb, "zorder", 1, NULL);
 
-  fast_element_link (mixer, oconv);
+  fast_element_link (mixer, priv->positionner);
+  fast_element_link (priv->positionner, oconv);
 
   sinka_target = gst_element_get_static_pad (iconva, "sink");
   sinkb_target = gst_element_get_static_pad (iconvb, "sink");
