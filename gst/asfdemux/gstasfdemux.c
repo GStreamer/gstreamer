@@ -1962,9 +1962,12 @@ eos:
         return;
       }
     }
-    /* normal playback, send EOS to all linked pads */
-    GST_INFO_OBJECT (demux, "Sending EOS, at end of stream");
-    gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
+
+    if (!(demux->segment.flags & GST_SEEK_FLAG_SEGMENT)) {
+      /* normal playback, send EOS to all linked pads */
+      GST_INFO_OBJECT (demux, "Sending EOS, at end of stream");
+      gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
+    }
     /* ... and fall through to pause */
   }
 pause:
@@ -1980,7 +1983,9 @@ pause:
       GST_ELEMENT_ERROR (demux, STREAM, FAILED,
           (_("Internal data stream error.")),
           ("streaming stopped, reason %s", gst_flow_get_name (flow)));
+      gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
     }
+
     return;
   }
 
@@ -1988,7 +1993,6 @@ pause:
 read_failed:
   {
     GST_DEBUG_OBJECT (demux, "Read failed, doh");
-    gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
     flow = GST_FLOW_EOS;
     goto pause;
   }
