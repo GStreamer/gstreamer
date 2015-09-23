@@ -1595,6 +1595,8 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 
   while ((stream = gst_asf_demux_find_stream_with_complete_payload (demux))) {
     AsfPayload *payload;
+    GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+    GstClockTime duration = GST_CLOCK_TIME_NONE;
 
     /* wait until we had a chance to "lock on" some payload's timestamp */
     if (G_UNLIKELY (demux->need_newsegment
@@ -1708,16 +1710,20 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
      * typically useful for live src, but might (unavoidably) mess with
      * position reporting if a live src is playing not so live content
      * (e.g. rtspsrc taking some time to fall back to tcp) */
-    GST_BUFFER_PTS (payload->buf) = payload->ts;
-    if (GST_BUFFER_PTS_IS_VALID (payload->buf)) {
-      GST_BUFFER_PTS (payload->buf) += demux->in_gap;
+    timestamp = payload->ts;
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      timestamp += demux->in_gap;
     }
+
+    GST_BUFFER_PTS (payload->buf) = timestamp;
+
     if (payload->duration == GST_CLOCK_TIME_NONE
-        && stream->ext_props.avg_time_per_frame != 0)
-      GST_BUFFER_DURATION (payload->buf) =
-          stream->ext_props.avg_time_per_frame * 100;
-    else
-      GST_BUFFER_DURATION (payload->buf) = payload->duration;
+        && stream->ext_props.avg_time_per_frame != 0) {
+      duration = stream->ext_props.avg_time_per_frame * 100;
+    } else {
+      duration = payload->duration;
+    }
+    GST_BUFFER_DURATION (payload->buf) = duration;
 
     /* FIXME: we should really set durations on buffers if we can */
 
@@ -1732,6 +1738,13 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
           gst_pad_push (stream->pad, gst_buffer_ref (stream->streamheader));
         }
         stream->first_buffer = FALSE;
+      }
+
+      if (GST_CLOCK_TIME_IS_VALID (timestamp)
+          && timestamp > demux->segment.position) {
+        demux->segment.position = timestamp;
+        if (GST_CLOCK_TIME_IS_VALID (duration))
+          demux->segment.position += timestamp;
       }
 
       ret = gst_pad_push (stream->pad, payload->buf);
