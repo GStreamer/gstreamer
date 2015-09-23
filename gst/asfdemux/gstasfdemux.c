@@ -1808,7 +1808,6 @@ gst_asf_demux_loop (GstASFDemux * demux)
   GstFlowReturn flow = GST_FLOW_OK;
   GstBuffer *buf = NULL;
   guint64 off;
-  gboolean sent_eos = FALSE;
 
   if (G_UNLIKELY (demux->state == GST_ASF_DEMUX_STATE_HEADER)) {
     if (!gst_asf_demux_pull_headers (demux, &flow)) {
@@ -1832,13 +1831,14 @@ gst_asf_demux_loop (GstASFDemux * demux)
   if (G_UNLIKELY (!gst_asf_demux_pull_data (demux, off,
               demux->packet_size * demux->speed_packets, &buf, &flow))) {
     GST_DEBUG_OBJECT (demux, "got flow %s", gst_flow_get_name (flow));
-    if (flow == GST_FLOW_EOS)
+    if (flow == GST_FLOW_EOS) {
       goto eos;
-    else if (flow == GST_FLOW_FLUSHING) {
+    } else if (flow == GST_FLOW_FLUSHING) {
       GST_DEBUG_OBJECT (demux, "Not fatal");
       goto pause;
-    } else
+    } else {
       goto read_failed;
+    }
   }
 
   if (G_LIKELY (demux->speed_packets == 1)) {
@@ -1914,8 +1914,9 @@ gst_asf_demux_loop (GstASFDemux * demux)
 
   gst_buffer_unref (buf);
 
-  if (G_UNLIKELY (demux->num_packets > 0
-          && demux->packet >= demux->num_packets)) {
+  if (G_UNLIKELY ((demux->num_packets > 0
+              && demux->packet >= demux->num_packets)
+          || flow == GST_FLOW_EOS)) {
     GST_LOG_OBJECT (demux, "reached EOS");
     goto eos;
   }
@@ -1964,7 +1965,6 @@ eos:
     /* normal playback, send EOS to all linked pads */
     GST_INFO_OBJECT (demux, "Sending EOS, at end of stream");
     gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
-    sent_eos = TRUE;
     /* ... and fall through to pause */
   }
 pause:
@@ -1974,16 +1974,12 @@ pause:
     demux->segment_running = FALSE;
     gst_pad_pause_task (demux->sinkpad);
 
-    /* For the error cases (not EOS) */
-    if (!sent_eos) {
-      if (flow == GST_FLOW_EOS)
-        gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
-      else if (flow < GST_FLOW_EOS || flow == GST_FLOW_NOT_LINKED) {
-        /* Post an error. Hopefully something else already has, but if not... */
-        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-            (_("Internal data stream error.")),
-            ("streaming stopped, reason %s", gst_flow_get_name (flow)));
-      }
+    /* For the error cases */
+    if (flow < GST_FLOW_EOS || flow == GST_FLOW_NOT_LINKED) {
+      /* Post an error. Hopefully something else already has, but if not... */
+      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+          (_("Internal data stream error.")),
+          ("streaming stopped, reason %s", gst_flow_get_name (flow)));
     }
     return;
   }
