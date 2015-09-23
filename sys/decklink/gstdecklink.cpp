@@ -885,6 +885,7 @@ gst_decklink_clock_get_internal_time (GstClock * clock)
 
       self->input->clock_last_time = result;
     }
+    result += self->input->clock_epoch;
     g_mutex_unlock (&self->input->lock);
   } else if (self->output != NULL) {
     g_mutex_lock (&self->output->lock);
@@ -924,6 +925,7 @@ gst_decklink_clock_get_internal_time (GstClock * clock)
 
       self->output->clock_last_time = result;
     }
+    result += self->output->clock_epoch;
     g_mutex_unlock (&self->output->lock);
   } else {
     g_assert_not_reached ();

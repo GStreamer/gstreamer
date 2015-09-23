@@ -134,7 +134,7 @@ struct _GstDecklinkOutput {
   IDeckLink *device;
   IDeckLinkOutput *output;
   GstClock *clock;
-  GstClockTime clock_start_time, clock_last_time;
+  GstClockTime clock_start_time, clock_last_time, clock_epoch;
   GstClockTimeDiff clock_offset;
   gboolean started, clock_restart;
 
@@ -162,7 +162,7 @@ struct _GstDecklinkInput {
   IDeckLinkConfiguration *config;
   IDeckLinkAttributes *attributes;
   GstClock *clock;
-  GstClockTime clock_start_time, clock_offset, clock_last_time;
+  GstClockTime clock_start_time, clock_offset, clock_last_time, clock_epoch;
   gboolean started, clock_restart;
 
   /* Everything below protected by mutex */

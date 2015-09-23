@@ -558,6 +558,7 @@ gst_decklink_video_sink_open (GstBaseSink * bsink)
   self->output->start_scheduled_playback =
       gst_decklink_video_sink_start_scheduled_playback;
   self->output->clock_start_time = GST_CLOCK_TIME_NONE;
+  self->output->clock_epoch += self->output->clock_last_time;
   self->output->clock_last_time = 0;
   self->output->clock_offset = 0;
   g_mutex_unlock (&self->output->lock);
@@ -706,6 +707,7 @@ gst_decklink_video_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_mutex_lock (&self->output->lock);
       self->output->clock_start_time = GST_CLOCK_TIME_NONE;
+      self->output->clock_epoch += self->output->clock_last_time;
       self->output->clock_last_time = 0;
       self->output->clock_offset = 0;
       g_mutex_unlock (&self->output->lock);
@@ -746,6 +748,7 @@ gst_decklink_video_sink_change_state (GstElement * element,
       gst_clock_set_calibration (self->output->clock, 0, 0, 1, 1);
       g_mutex_lock (&self->output->lock);
       self->output->clock_start_time = GST_CLOCK_TIME_NONE;
+      self->output->clock_epoch += self->output->clock_last_time;
       self->output->clock_last_time = 0;
       self->output->clock_offset = 0;
       g_mutex_unlock (&self->output->lock);
