@@ -511,6 +511,9 @@ EXPORTS
 	gst_element_get_clock
 	gst_element_get_compatible_pad
 	gst_element_get_compatible_pad_template
+	gst_element_get_context
+	gst_element_get_context_unlocked
+	gst_element_get_contexts
 	gst_element_get_factory
 	gst_element_get_request_pad
 	gst_element_get_start_time

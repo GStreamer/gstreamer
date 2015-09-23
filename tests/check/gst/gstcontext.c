@@ -75,6 +75,9 @@ gst_context_element_set_context (GstElement * element, GstContext * context)
 {
   if (strcmp (gst_context_get_context_type (context), "foobar") == 0)
     ((GstContextElement *) element)->have_foobar = TRUE;
+
+  GST_ELEMENT_CLASS (gst_context_element_parent_class)->set_context (element,
+      context);
 }
 
 static GstStateChangeReturn
@@ -91,9 +94,7 @@ gst_context_element_change_state (GstElement * element,
     if (celement->set_before_ready && !have_foobar)
       return GST_STATE_CHANGE_FAILURE;
     else if (celement->set_before_ready)
-      return
-          GST_ELEMENT_CLASS (gst_context_element_parent_class)->change_state
-          (element, transition);
+      goto chain_up;
 
     if (celement->set_from_need_context && have_foobar)
       return GST_STATE_CHANGE_FAILURE;
@@ -109,9 +110,7 @@ gst_context_element_change_state (GstElement * element,
     if (celement->set_from_need_context && !have_foobar)
       return GST_STATE_CHANGE_FAILURE;
     else if (celement->set_from_need_context)
-      return
-          GST_ELEMENT_CLASS (gst_context_element_parent_class)->change_state
-          (element, transition);
+      goto chain_up;
 
     if (celement->create_self && have_foobar)
       return GST_STATE_CHANGE_FAILURE;
@@ -125,11 +124,9 @@ gst_context_element_change_state (GstElement * element,
       gst_element_post_message (element, msg);
       gst_context_unref (context);
     }
-    return
-        GST_ELEMENT_CLASS (gst_context_element_parent_class)->change_state
-        (element, transition);
   }
 
+chain_up:
   return
       GST_ELEMENT_CLASS (gst_context_element_parent_class)->change_state
       (element, transition);
@@ -321,6 +318,117 @@ GST_START_TEST (test_element_bin_caching)
 
 GST_END_TEST;
 
+GST_START_TEST (test_add_element_to_bin)
+{
+  GstBus *bus;
+  GstElement *bin;
+  GstElement *element;
+  GList *contexts, *contexts2, *l;
+
+  /* Start with an element not inside a bin requesting a context. Add the
+   * element to a bin and check the context propagation. */
+  element = g_object_new (gst_context_element_get_type (), NULL);
+
+  ((GstContextElement *) element)->create_self = TRUE;
+
+  fail_unless (gst_element_set_state (element,
+          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS);
+
+  fail_unless (((GstContextElement *) element)->have_foobar);
+
+  bin = gst_bin_new (NULL);
+
+  bus = gst_bus_new ();
+  gst_element_set_bus (bin, bus);
+
+  fail_unless (gst_element_set_state (bin,
+          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS);
+
+  gst_bin_add (GST_BIN (bin), element);
+
+  /* check the contexts are the same */
+  contexts = gst_element_get_contexts (element);
+  contexts2 = gst_element_get_contexts (bin);
+  for (l = contexts; l; l = l->next)
+    fail_unless (g_list_find (contexts2, l->data));
+  g_list_free_full (contexts, (GDestroyNotify) gst_context_unref);
+  g_list_free_full (contexts2, (GDestroyNotify) gst_context_unref);
+
+  gst_element_set_bus (bin, NULL);
+  fail_unless (gst_element_set_state (bin,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_add_element_to_bin_collision)
+{
+  GstBus *bus;
+  GstElement *bin;
+  GstElement *element, *element2;
+  GList *contexts, *contexts2, *l;
+
+  /* Start with a bin containing an element that requests a context and then add
+   * another element to the bin that has already requested the same context. */
+
+  bin = gst_bin_new (NULL);
+  element = g_object_new (gst_context_element_get_type (), NULL);
+  gst_bin_add (GST_BIN (bin), element);
+
+  ((GstContextElement *) element)->create_self = TRUE;
+
+  bus = gst_bus_new ();
+  gst_element_set_bus (bin, bus);
+
+  fail_unless (gst_element_set_state (bin,
+          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS);
+
+  fail_unless (((GstContextElement *) element)->have_foobar);
+
+  /* propagate a context without a parent bin */
+  element2 = g_object_new (gst_context_element_get_type (), NULL);
+  ((GstContextElement *) element2)->create_self = TRUE;
+
+  fail_unless (gst_element_set_state (element2,
+          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS);
+
+  fail_unless (((GstContextElement *) element2)->have_foobar);
+
+  ((GstContextElement *) element)->have_foobar = FALSE;
+  ((GstContextElement *) element2)->have_foobar = FALSE;
+
+  /* add element to bin should result in the propagation of contexts to the
+   * added element */
+  gst_bin_add (GST_BIN (bin), element2);
+
+  fail_unless (((GstContextElement *) element)->have_foobar == FALSE);
+  fail_unless (((GstContextElement *) element2)->have_foobar);
+
+  /* check the contexts are the same */
+  contexts = gst_element_get_contexts (element);
+  contexts2 = gst_element_get_contexts (element2);
+  for (l = contexts; l; l = l->next)
+    fail_unless (g_list_find (contexts2, l->data));
+  g_list_free_full (contexts, (GDestroyNotify) gst_context_unref);
+  contexts = gst_element_get_contexts (bin);
+  for (l = contexts; l; l = l->next)
+    fail_unless (g_list_find (contexts2, l->data));
+  g_list_free_full (contexts, (GDestroyNotify) gst_context_unref);
+  g_list_free_full (contexts2, (GDestroyNotify) gst_context_unref);
+
+  gst_element_set_bus (bin, NULL);
+  fail_unless (gst_element_set_state (bin,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_context_suite (void)
 {
@@ -335,6 +443,8 @@ gst_context_suite (void)
   tcase_add_test (tc_chain, test_element_set_from_need_context);
   tcase_add_test (tc_chain, test_element_create_self);
   tcase_add_test (tc_chain, test_element_bin_caching);
+  tcase_add_test (tc_chain, test_add_element_to_bin);
+  tcase_add_test (tc_chain, test_add_element_to_bin_collision);
 
   return s;
 }

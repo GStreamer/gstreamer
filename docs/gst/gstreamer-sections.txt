@@ -869,6 +869,9 @@ gst_element_get_start_time
 gst_element_set_bus
 gst_element_get_bus
 gst_element_set_context
+gst_element_get_context
+gst_element_get_context_unlocked
+gst_element_get_contexts
 gst_element_get_factory
 gst_element_set_name
 gst_element_get_name
