@@ -44,6 +44,7 @@
 #include <gst/pbutils/pbutils.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
+#include <gst/tag/tag.h>
 
 /* FIXME: don't rely on own GstIndex */
 #include "gstindex.c"
@@ -749,6 +750,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       GstByteWriter w;
       GstStructure *structure;
       GstBuffer *buf;
+      GstTagList *tags;
 
       caps = gst_caps_new_empty_simple ("audio/x-speex");
       structure = gst_caps_get_structure (caps, 0);
@@ -785,7 +787,10 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
 
       /* comment part */
       g_value_init (&value, GST_TYPE_BUFFER);
-      buf = gst_buffer_new_wrapped (g_memdup ("No comments", 12), 12);
+      tags = gst_tag_list_new_empty ();
+      buf = gst_tag_list_to_vorbiscomment_buffer (tags, NULL,
+          0, "No comments");
+      gst_tag_list_unref (tags);
       g_value_take_boxed (&value, buf);
       gst_value_array_append_value (&streamheader, &value);
       g_value_unset (&value);

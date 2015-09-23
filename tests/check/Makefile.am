@@ -424,6 +424,8 @@ elements_amrparse_LDADD = libparser.la $(LDADD)
 
 elements_flacparse_LDADD = libparser.la $(LDADD)
 
+elements_flvdemux_LDADD = -lgsttag-$(GST_API_VERSION) $(LDADD)
+
 elements_mpegaudioparse_LDADD = libparser.la $(LDADD)
 
 elements_aspectratiocrop_LDADD = $(LDADD)
