@@ -1713,6 +1713,25 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
     timestamp = payload->ts;
     if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
       timestamp += demux->in_gap;
+
+      /* Check if we're after the segment already, if so no need to push
+       * anything here */
+      if (demux->segment.stop != -1 && timestamp > demux->segment.stop) {
+        GST_DEBUG_OBJECT (stream->pad,
+            "Payload after segment stop %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (demux->segment.stop));
+        ret =
+            gst_flow_combiner_update_pad_flow (demux->flowcombiner, stream->pad,
+            GST_FLOW_EOS);
+        gst_buffer_unref (payload->buf);
+        payload->buf = NULL;
+        g_array_remove_index (stream->payloads, 0);
+        /* Break out as soon as we have an issue */
+        if (G_UNLIKELY (ret != GST_FLOW_OK))
+          break;
+
+        continue;
+      }
     }
 
     GST_BUFFER_PTS (payload->buf) = timestamp;
@@ -1748,7 +1767,9 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
       }
 
       ret = gst_pad_push (stream->pad, payload->buf);
-      ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
+      ret =
+          gst_flow_combiner_update_pad_flow (demux->flowcombiner, stream->pad,
+          ret);
     } else {
       gst_buffer_unref (payload->buf);
       ret = GST_FLOW_OK;
