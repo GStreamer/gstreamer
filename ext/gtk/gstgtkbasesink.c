@@ -297,7 +297,6 @@ gst_gtk_base_sink_start (GstBaseSink * bsink)
     gtk_container_add (GTK_CONTAINER (gst_sink->window), toplevel);
     g_signal_connect (gst_sink->window, "destroy",
         G_CALLBACK (widget_destroy_cb), gst_sink);
-    gtk_widget_show_all (gst_sink->window);
   }
 
   return TRUE;
@@ -317,6 +316,14 @@ gst_gtk_base_sink_stop (GstBaseSink * bsink)
   return TRUE;
 }
 
+static gboolean
+_show_window_cb (GstGtkBaseSink * gtk_sink)
+{
+  gtk_widget_show_all (gtk_sink->window);
+
+  return FALSE;
+}
+
 static GstStateChangeReturn
 gst_gtk_base_sink_change_state (GstElement * element, GstStateChange transition)
 {
@@ -332,6 +339,12 @@ gst_gtk_base_sink_change_state (GstElement * element, GstStateChange transition)
     return ret;
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_OBJECT_LOCK (gtk_sink);
+      if (gtk_sink->window)
+        g_idle_add ((GSourceFunc) _show_window_cb, gtk_sink);
+      GST_OBJECT_UNLOCK (gtk_sink);
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_OBJECT_LOCK (gtk_sink);
       if (gtk_sink->widget)
