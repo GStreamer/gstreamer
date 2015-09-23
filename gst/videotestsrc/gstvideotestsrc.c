@@ -313,10 +313,73 @@ gst_video_test_src_init (GstVideoTestSrc * src)
 static GstCaps *
 gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
+  GstVideoTestSrc *src = GST_VIDEO_TEST_SRC (bsrc);
   GstStructure *structure;
 
-  caps = gst_caps_make_writable (caps);
+  /* Check if foreground color has alpha, if it is the case,
+   * force color format with an alpha channel downstream */
+  if (src->foreground_color >> 24 != 255) {
+    guint i;
+    GstCaps *alpha_only_caps = gst_caps_new_empty ();
 
+    for (i = 0; i < gst_caps_get_size (caps); i++) {
+      const GstVideoFormatInfo *info;
+      const GValue *formats =
+          gst_structure_get_value (gst_caps_get_structure (caps, i),
+          "format");
+
+      if (GST_VALUE_HOLDS_LIST (formats)) {
+        GValue possible_formats = { 0, };
+        guint list_size = gst_value_list_get_size (formats);
+        guint index;
+
+        g_value_init (&possible_formats, GST_TYPE_LIST);
+        for (index = 0; index < list_size; index++) {
+          const GValue *list_item = gst_value_list_get_value (formats, index);
+          info =
+              gst_video_format_get_info (gst_video_format_from_string
+              (g_value_get_string (list_item)));
+          if (GST_VIDEO_FORMAT_INFO_HAS_ALPHA (info)) {
+            GValue tmp = { 0, };
+
+            gst_value_init_and_copy (&tmp, list_item);
+            gst_value_list_append_value (&possible_formats, &tmp);
+          }
+        }
+
+        if (gst_value_list_get_size (&possible_formats)) {
+          GstStructure *astruct =
+              gst_structure_copy (gst_caps_get_structure (caps, i));
+
+          gst_structure_set_value (astruct, "format", &possible_formats);
+          gst_caps_append_structure (alpha_only_caps, astruct);
+        }
+
+      } else if (G_VALUE_HOLDS_STRING (formats)) {
+        info =
+            gst_video_format_get_info (gst_video_format_from_string
+            (g_value_get_string (formats)));
+
+        if (GST_VIDEO_FORMAT_INFO_HAS_ALPHA (info)) {
+          gst_caps_append_structure (alpha_only_caps,
+              gst_structure_copy (gst_caps_get_structure (caps, i)));
+        }
+      } else {
+        g_assert_not_reached ();
+        GST_WARNING ("Unexpected type for video 'format' field: %s",
+            G_VALUE_TYPE_NAME (formats));
+      }
+    }
+
+    if (gst_caps_is_empty (alpha_only_caps)) {
+      GST_WARNING_OBJECT (src,
+          "Foreground color contains alpha, but downstream can't support alpha.");
+    } else {
+      gst_caps_replace (&caps, alpha_only_caps);
+    }
+  }
+
+  caps = gst_caps_make_writable (caps);
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
