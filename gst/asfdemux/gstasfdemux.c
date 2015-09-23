@@ -274,7 +274,7 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
     demux->need_newsegment = TRUE;
     demux->segment_seqnum = 0;
     demux->segment_running = FALSE;
-    demux->accurate = FALSE;
+    demux->keyunit_sync = FALSE;
     demux->metadata = gst_caps_new_empty ();
     demux->global_metadata = gst_structure_new_empty ("metadata");
     demux->data_size = 0;
@@ -622,7 +622,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   GstSeekType cur_type, stop_type;
   GstFormat format;
   gboolean only_need_update;
-  gboolean keyunit_sync, after, before, next;
+  gboolean accurate, after, before, next;
   gboolean flush;
   gdouble rate;
   gint64 cur, stop;
@@ -663,9 +663,9 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 
   seqnum = gst_event_get_seqnum (event);
   flush = ((flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
-  demux->accurate =
-      ((flags & GST_SEEK_FLAG_ACCURATE) == GST_SEEK_FLAG_ACCURATE);
-  keyunit_sync = ((flags & GST_SEEK_FLAG_KEY_UNIT) == GST_SEEK_FLAG_KEY_UNIT);
+  accurate = ((flags & GST_SEEK_FLAG_ACCURATE) == GST_SEEK_FLAG_ACCURATE);
+  demux->keyunit_sync =
+      ((flags & GST_SEEK_FLAG_KEY_UNIT) == GST_SEEK_FLAG_KEY_UNIT);
   after = ((flags & GST_SEEK_FLAG_SNAP_AFTER) == GST_SEEK_FLAG_SNAP_AFTER);
   before = ((flags & GST_SEEK_FLAG_SNAP_BEFORE) == GST_SEEK_FLAG_SNAP_BEFORE);
   next = after && !before;
@@ -765,7 +765,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
        * the hope of hitting a keyframe and let the sinks throw away the stuff
        * before the segment start. For audio-only this is unnecessary as every
        * frame is 'key'. */
-      if (flush && (demux->accurate || (keyunit_sync && !next))
+      if (flush && (accurate || (demux->keyunit_sync && !next))
           && demux->num_video_streams > 0) {
         seek_time -= 5 * GST_SECOND;
         if (seek_time < 0)
@@ -779,7 +779,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
         packet = demux->num_packets;
     }
   } else {
-    if (G_LIKELY (keyunit_sync)) {
+    if (G_LIKELY (demux->keyunit_sync)) {
       GST_DEBUG_OBJECT (demux, "key unit seek, adjust seek_time = %"
           GST_TIME_FORMAT " to index_time = %" GST_TIME_FORMAT,
           GST_TIME_ARGS (seek_time), GST_TIME_ARGS (idx_time));
@@ -1542,7 +1542,7 @@ gst_asf_demux_find_stream_with_complete_payload (GstASFDemux * demux)
 
       if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (payload->ts) &&
               (payload->ts < demux->segment.start))) {
-        if (G_UNLIKELY ((!demux->accurate) && payload->keyframe)) {
+        if (G_UNLIKELY (demux->keyunit_sync && payload->keyframe)) {
           GST_DEBUG_OBJECT (stream->pad,
               "Found keyframe, updating segment start to %" GST_TIME_FORMAT,
               GST_TIME_ARGS (payload->ts));
@@ -1620,8 +1620,8 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
       }
 
       /* FIXME : only if ACCURATE ! */
-      if (G_LIKELY (!demux->accurate
-              && (GST_CLOCK_TIME_IS_VALID (payload->ts)))) {
+      if (G_LIKELY (demux->keyunit_sync
+              && GST_CLOCK_TIME_IS_VALID (payload->ts))) {
         GST_DEBUG ("Adjusting newsegment start to %" GST_TIME_FORMAT,
             GST_TIME_ARGS (payload->ts));
         demux->segment.start = payload->ts;
@@ -4541,7 +4541,7 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       gst_segment_init (&demux->segment, GST_FORMAT_TIME);
       demux->need_newsegment = TRUE;
       demux->segment_running = FALSE;
-      demux->accurate = FALSE;
+      demux->keyunit_sync = FALSE;
       demux->adapter = gst_adapter_new ();
       demux->metadata = gst_caps_new_empty ();
       demux->global_metadata = gst_structure_new_empty ("metadata");
