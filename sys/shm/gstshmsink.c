@@ -779,11 +779,19 @@ pollthread_func (gpointer data)
   GstShmSink *self = GST_SHM_SINK (data);
   GList *item;
   GstClockTime timeout = GST_CLOCK_TIME_NONE;
+  int rv = 0;
 
   while (!self->stop) {
 
-    if (gst_poll_wait (self->poll, timeout) < 0)
+    do {
+      rv = gst_poll_wait (self->poll, timeout);
+    } while (rv < 0 && errno == EINTR);
+
+    if (rv < 0) {
+      GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Failed waiting on fd activity"),
+                         ("gst_poll_wait returned %d, errno: %d", rv, errno));
       return NULL;
+    }
 
     timeout = GST_CLOCK_TIME_NONE;
 
