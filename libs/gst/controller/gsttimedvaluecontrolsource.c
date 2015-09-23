@@ -171,36 +171,25 @@ static void
 gst_timed_value_control_source_set_internal (GstTimedValueControlSource *
     self, GstClockTime timestamp, const gdouble value)
 {
-  GSequenceIter *iter;
   GstControlPoint *cp;
 
   g_mutex_lock (&self->lock);
 
   /* check if a control point for the timestamp already exists */
-  /* iter contains the iter right *after* timestamp */
   if (G_LIKELY (self->values)) {
-    iter =
-        g_sequence_search (self->values, &timestamp,
+    GSequenceIter *iter = g_sequence_lookup (self->values, &timestamp,
         (GCompareDataFunc) gst_control_point_find, NULL);
+
     if (iter) {
-      GSequenceIter *prev = g_sequence_iter_prev (iter);
+      GstControlPoint *cp = g_sequence_get (iter);
 
-      if (!g_sequence_iter_is_end (prev)) {
-        GstControlPoint *cp = g_sequence_get (prev);
+      /* update control point */
+      cp->value = value;
+      g_mutex_unlock (&self->lock);
 
-        /* If the timestamp is the same just update the control point value */
-        if (cp->timestamp == timestamp) {
-
-          /* update control point */
-          cp->value = value;
-          g_mutex_unlock (&self->lock);
-
-          g_signal_emit (self,
-              gst_timed_value_control_source_signals[VALUE_CHANGED_SIGNAL], 0,
-              cp);
-          goto done;
-        }
-      }
+      g_signal_emit (self,
+          gst_timed_value_control_source_signals[VALUE_CHANGED_SIGNAL], 0, cp);
+      goto done;
     }
   } else {
     self->values = g_sequence_new ((GDestroyNotify) gst_control_point_free);
@@ -337,24 +326,17 @@ gst_timed_value_control_source_unset (GstTimedValueControlSource * self,
   g_mutex_lock (&self->lock);
   /* check if a control point for the timestamp exists */
   if (G_LIKELY (self->values) && (iter =
-          g_sequence_search (self->values, &timestamp,
+          g_sequence_lookup (self->values, &timestamp,
               (GCompareDataFunc) gst_control_point_find, NULL))) {
 
     /* Iter contains the iter right after timestamp, i.e.
      * we need to get the previous one and check the timestamp
      */
-    iter = g_sequence_iter_prev (iter);
-    cp = g_sequence_get (iter);
-    if (cp->timestamp == timestamp) {
-      cp = g_slice_dup (GstControlPoint, cp);
-      g_sequence_remove (iter);
-      self->nvalues--;
-      self->valid_cache = FALSE;
-      res = TRUE;
-    } else {
-      cp = NULL;
-    }
-
+    cp = g_slice_dup (GstControlPoint, g_sequence_get (iter));
+    g_sequence_remove (iter);
+    self->nvalues--;
+    self->valid_cache = FALSE;
+    res = TRUE;
   }
   g_mutex_unlock (&self->lock);
 
