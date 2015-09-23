@@ -8423,6 +8423,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   guint32 fourcc;
   guint value_size, stsd_len, len;
   guint32 track_id;
+  guint32 dummy;
 
   GST_DEBUG_OBJECT (qtdemux, "parse_trak");
 
@@ -8454,6 +8455,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     gst_qtdemux_stream_flush_segments_data (qtdemux, stream);
     gst_qtdemux_stream_flush_samples_data (qtdemux, stream);
   }
+  /* need defaults for fragments */
+  qtdemux_parse_trex (qtdemux, stream, &dummy, &dummy, &dummy);
 
   if (stream->pending_tags == NULL)
     stream->pending_tags = gst_tag_list_new_empty ();
@@ -10023,7 +10026,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     goto samples_failed;
 
   if (qtdemux->fragmented) {
-    guint32 dummy;
     guint64 offset;
 
     /* need all moov samples as basis; probably not many if any at all */
@@ -10041,8 +10043,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         GST_CLOCK_TIME_IS_VALID (qtdemux->segment.duration))
       stream->duration =
           GSTTIME_TO_QTSTREAMTIME (stream, qtdemux->segment.duration);
-    /* need defaults for fragments */
-    qtdemux_parse_trex (qtdemux, stream, &dummy, &dummy, &dummy);
   }
 
   /* configure segments */
