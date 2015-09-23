@@ -84,6 +84,12 @@ _get_clocktime (GstStructure * structure, const gchar * name, gpointer var)
   } \
 } G_STMT_END
 
+#define TRY_GET_STRING(name,var,def) G_STMT_START {\
+  *var = gst_structure_get_string (structure, name); \
+  if (*var == NULL) \
+    *var = def; \
+} G_STMT_END
+
 #define TRY_GET(name,type,var,def) G_STMT_START {\
   if (type == GST_TYPE_CLOCK_TIME) {\
     if (!_get_clocktime(structure,name,var))\
@@ -324,6 +330,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   const gchar *name;
   const gchar *pattern;
   gchar *asset_id = NULL;
+  gchar *check_asset_id = NULL;
   const gchar *type_string;
   GType type;
   gboolean res = FALSE;
@@ -341,14 +348,14 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   if (!_check_fields (structure, fields_error, error))
     return FALSE;
 
-  GET_AND_CHECK ("asset-id", G_TYPE_STRING, &asset_id, beach);
+  GET_AND_CHECK ("asset-id", G_TYPE_STRING, &check_asset_id, beach);
 
-  TRY_GET ("pattern", G_TYPE_STRING, &pattern, NULL);
-  TRY_GET ("name", G_TYPE_STRING, &name, NULL);
+  TRY_GET_STRING ("pattern", &pattern, NULL);
+  TRY_GET_STRING ("name", &name, NULL);
   TRY_GET ("layer-priority", G_TYPE_INT, &layer_priority, -1);
   if (layer_priority == -1)
     TRY_GET ("layer", G_TYPE_INT, &layer_priority, -1);
-  TRY_GET ("type", G_TYPE_STRING, &type_string, "GESUriClip");
+  TRY_GET_STRING ("type", &type_string, "GESUriClip");
   TRY_GET ("start", GST_TYPE_CLOCK_TIME, &start, GST_CLOCK_TIME_NONE);
   TRY_GET ("inpoint", GST_TYPE_CLOCK_TIME, &inpoint, 0);
   TRY_GET ("duration", GST_TYPE_CLOCK_TIME, &duration, GST_CLOCK_TIME_NONE);
@@ -361,9 +368,9 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   }
 
   if (type == GES_TYPE_URI_CLIP) {
-    asset_id = ensure_uri (asset_id);
+    asset_id = ensure_uri (check_asset_id);
   } else {
-    asset_id = g_strdup (asset_id);
+    asset_id = g_strdup (check_asset_id);
   }
 
   asset = _ges_get_asset_from_timeline (timeline, type, asset_id, error);
@@ -438,6 +445,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
 
 beach:
   g_free (asset_id);
+  g_free (check_asset_id);
   return res;
 }
 
