@@ -1012,7 +1012,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   /* codec tags with special rates */
   if (codec_tag == 5 || codec_tag == 14)
     rate = 8000;
-  else if (codec_tag == 4)
+  else if ((codec_tag == 4) || (codec_tag == 11))
     rate = 16000;
 
   GST_LOG_OBJECT (demux, "audio tag with %d channels, %dHz sampling rate, "
