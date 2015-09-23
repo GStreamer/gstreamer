@@ -4192,11 +4192,6 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* Copy flags from main segment */
   stream->segment.flags = qtdemux->segment.flags;
 
-  /* accumulate previous segments */
-  if (GST_CLOCK_TIME_IS_VALID (stream->segment.stop))
-    stream->accumulated_base += (stream->segment.stop - stream->segment.start) /
-        ABS (stream->segment.rate);
-
   /* update the segment values used for clipping */
   stream->segment.offset = qtdemux->segment.offset;
   stream->segment.base = qtdemux->segment.base + stream->accumulated_base;
@@ -4480,6 +4475,13 @@ next_segment:
       stream->time_position = segment->stop_time;
     }
     /* make sure we select a new segment */
+
+    /* accumulate previous segments */
+    if (GST_CLOCK_TIME_IS_VALID (stream->segment.stop))
+      stream->accumulated_base +=
+          (stream->segment.stop -
+          stream->segment.start) / ABS (stream->segment.rate);
+
     stream->segment_index = -1;
   }
 }
