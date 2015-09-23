@@ -140,31 +140,16 @@ static GstVideoCodecState *
 copy_video_codec_state (const GstVideoCodecState * in_state)
 {
   GstVideoCodecState *state;
-  GstStructure *structure;
-  const GValue *codec_data;
 
   g_return_val_if_fail (in_state != NULL, NULL);
 
   state = g_slice_new0 (GstVideoCodecState);
   state->ref_count = 1;
-  gst_video_info_init (&state->info);
-  if (G_UNLIKELY (!gst_video_info_from_caps (&state->info, in_state->caps)))
-    goto fail;
+  state->info = in_state->info;
   state->caps = gst_caps_copy (in_state->caps);
-
-  structure = gst_caps_get_structure (state->caps, 0);
-
-  codec_data = gst_structure_get_value (structure, "codec_data");
-  if (codec_data && G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER)
-    state->codec_data = GST_BUFFER (g_value_dup_boxed (codec_data));
+  state->codec_data = gst_buffer_copy_deep (in_state->codec_data);
 
   return state;
-
-fail:
-  {
-    g_slice_free (GstVideoCodecState, state);
-    return NULL;
-  }
 }
 
 static gboolean
