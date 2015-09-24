@@ -185,12 +185,11 @@ libgstvaapi_1_4p_parse_gen_source_h = \
 	$(NULL)
 
 libgstvaapi_parse_gen_sources = \
-	$(libgstvaapi_parse_gen_source_c) \
-	$(libgstvaapi_parse_gen_source_h) \
+	$(libgstvaapi_parse_gen_source_c) 	\
+	$(libgstvaapi_parse_gen_source_h) 	\
+	$(libgstvaapi_1_4p_parse_gen_source_c)	\
+	$(libgstvaapi_1_4p_parse_gen_source_h)	\
 	$(NUL)
-
-libgstvaapi_parse_gen_sources += $(libgstvaapi_1_4p_parse_gen_source_c)
-libgstvaapi_parse_gen_sources += $(libgstvaapi_1_4p_parse_gen_source_h)
 
 libgstvaapi_parse_source_c = gstvaapiparse.c $(libgstvaapi_parse_gen_source_c)
 libgstvaapi_parse_source_h = gstvaapiparse.h $(libgstvaapi_parse_gen_source_h)
@@ -233,17 +232,21 @@ videoparsers_patches_dir = \
 include $(videoparsers_patches_dir)/series.frag
 videoparsers_patches = \
 	$(videoparsers_patches_base:%=$(top_srcdir)/patches/videoparsers/%)
+videoparsers_orig_sources = \
+	$(libgstvaapi_parse_gen_sources:%=$(videoparsers_sources_dir)/%)
 
-videoparsers.prepare.stamp: $(videoparsers_patches)
-	@for f in $(libgstvaapi_parse_gen_sources); do	\
-	  cp -f $(videoparsers_sources_dir)/$$f $$f;	\
-	done
-	@for f in $(videoparsers_patches); do		\
-	  patch -p3 < $$f;				\
+$(libgstvaapi_parse_gen_sources): $(videoparsers_orig_sources)
+	cp -f $(videoparsers_sources_dir)/$@ $@
+
+videoparsers.prepare.stamp: $(videoparsers_patches) $(libgstvaapi_parse_gen_sources)
+	@for f in $(videoparsers_patches); do	\
+	   patch -p3 < $$f;			\
 	done
 	@touch $@
 
-BUILT_SOURCES += videoparsers.prepare.stamp
+BUILT_SOURCES += \
+	$(libgstvaapi_parse_gen_sources) \
+	videoparsers.prepare.stamp
 endif
 
 CLEANFILES = \
