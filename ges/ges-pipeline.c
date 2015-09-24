@@ -798,6 +798,7 @@ _link_track (GESPipeline * self, GESTrack * track)
       gst_object_unref (tmppad);
       goto error;
     }
+    gst_object_unref (tmppad);
 
     GST_DEBUG ("Reconfiguring playsink");
 
