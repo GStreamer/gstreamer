@@ -262,10 +262,16 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
     return TRUE;
   }
 
-  /* FIXME. assumes subsampling of component N is the same as plane N, which is
+  /* FIXME: assumes subsampling of component N is the same as plane N, which is
    * currently true for all formats we have but it might not be in the future. */
   w = GST_VIDEO_FRAME_COMP_WIDTH (dest,
       plane) * GST_VIDEO_FRAME_COMP_PSTRIDE (dest, plane);
+  /* FIXME: workaround for complex formats like v210, UYVP and IYU1 that have
+   * pstride == 0 */
+  if (w == 0)
+    w = MIN (GST_VIDEO_INFO_PLANE_STRIDE (dinfo, plane),
+        GST_VIDEO_INFO_PLANE_STRIDE (sinfo, plane));
+
   h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, plane);
 
   ss = GST_VIDEO_INFO_PLANE_STRIDE (sinfo, plane);
