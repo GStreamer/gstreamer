@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstteletextdec.la
 
-libgstteletextdec_la_SOURCES = gstteletextdec.c teletext.c
+libgstteletextdec_la_SOURCES = gstteletextdec.c
 
 libgstteletextdec_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(TELETEXTDEC_CFLAGS)
 libgstteletextdec_la_LIBADD = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_LIBS) $(TELETEXTDEC_LIBS)

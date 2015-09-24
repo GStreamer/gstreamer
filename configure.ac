@@ -427,7 +427,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  gsettings \
  musepack nas sdl timidity \
  acm wininet \
- xvid lv2 teletextdec sndio libvisual"
+ xvid lv2 sndio libvisual"
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
