@@ -107,6 +107,16 @@ GST_START_TEST(test_src_harness_no_forwarding)
 }
 GST_END_TEST;
 
+GST_START_TEST(test_add_sink_harness_without_sinkpad)
+{
+  GstHarness * h = gst_harness_new ("fakesink");
+
+  gst_harness_add_sink (h, "fakesink");
+
+  gst_harness_teardown (h);
+}
+GST_END_TEST;
+
 static Suite *
 gst_harness_suite (void)
 {
@@ -118,6 +128,7 @@ gst_harness_suite (void)
   tcase_add_test (tc_chain, test_harness_element_ref);
   tcase_add_test (tc_chain, test_src_harness);
   tcase_add_test (tc_chain, test_src_harness_no_forwarding);
+  tcase_add_test (tc_chain, test_add_sink_harness_without_sinkpad);
 
   return s;
 }

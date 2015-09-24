@@ -2241,7 +2241,7 @@ gst_harness_add_sink_harness (GstHarness * h, GstHarness * sink_harness)
   h->sink_harness = sink_harness;
   priv->sink_forward_pad = gst_object_ref (h->sink_harness->srcpad);
   gst_harness_use_testclock (h->sink_harness);
-  if (priv->forwarding)
+  if (priv->forwarding && h->sinkpad)
     gst_pad_sticky_events_foreach (h->sinkpad, forward_sticky_events, h);
   gst_harness_set_forwarding (h->sink_harness, priv->forwarding);
 }
