@@ -347,7 +347,7 @@ gst_gtk_base_sink_stop (GstBaseSink * bsink)
 }
 
 static void
-gst_gtk_widget_show_all_and_unref (GtkWidget *widget)
+gst_gtk_widget_show_all_and_unref (GtkWidget * widget)
 {
   gtk_widget_show_all (widget);
   g_object_unref (widget);
@@ -378,7 +378,8 @@ gst_gtk_base_sink_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_UNLOCK (gtk_sink);
 
       if (window)
-        gst_gtk_invoke_on_main ((GThreadFunc) gst_gtk_widget_show_all_and_unref, window);
+        gst_gtk_invoke_on_main ((GThreadFunc) gst_gtk_widget_show_all_and_unref,
+            window);
 
       break;
     }
@@ -437,9 +438,10 @@ gst_gtk_base_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     return FALSE;
   }
 
-  if (!gtk_gst_base_widget_set_format (gtk_sink->widget, &gtk_sink->v_info))
+  if (!gtk_gst_base_widget_set_format (gtk_sink->widget, &gtk_sink->v_info)) {
+    GST_OBJECT_UNLOCK (gtk_sink);
     return FALSE;
-
+  }
   GST_OBJECT_UNLOCK (gtk_sink);
 
   return TRUE;
