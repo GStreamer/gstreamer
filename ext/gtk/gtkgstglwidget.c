@@ -25,6 +25,7 @@
 #include <stdio.h>
 
 #include "gtkgstglwidget.h"
+#include "gstgtkutils.h"
 #include <gst/video/video.h>
 
 #if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (GDK_WINDOWING_X11)
@@ -278,52 +279,6 @@ done:
   return FALSE;
 }
 
-typedef void (*ThreadFunc) (gpointer data);
-
-struct invoke_context
-{
-  ThreadFunc func;
-  gpointer data;
-  GMutex lock;
-  GCond cond;
-  gboolean fired;
-};
-
-static gboolean
-_invoke_func (struct invoke_context *info)
-{
-  g_mutex_lock (&info->lock);
-  info->func (info->data);
-  info->fired = TRUE;
-  g_cond_signal (&info->cond);
-  g_mutex_unlock (&info->lock);
-
-  return G_SOURCE_REMOVE;
-}
-
-static void
-_invoke_on_main (ThreadFunc func, gpointer data)
-{
-  GMainContext *main_context = g_main_context_default ();
-  struct invoke_context info;
-
-  g_mutex_init (&info.lock);
-  g_cond_init (&info.cond);
-  info.fired = FALSE;
-  info.func = func;
-  info.data = data;
-
-  g_main_context_invoke (main_context, (GSourceFunc) _invoke_func, &info);
-
-  g_mutex_lock (&info.lock);
-  while (!info.fired)
-    g_cond_wait (&info.cond, &info.lock);
-  g_mutex_unlock (&info.lock);
-
-  g_mutex_clear (&info.lock);
-  g_cond_clear (&info.cond);
-}
-
 static void
 _reset_gl (GtkGstGLWidget * gst_widget)
 {
@@ -380,7 +335,7 @@ gtk_gst_gl_widget_finalize (GObject * object)
   GtkGstBaseWidget *base_widget = GTK_GST_BASE_WIDGET (object);
 
   if (priv->other_context)
-    _invoke_on_main ((ThreadFunc) _reset_gl, base_widget);
+    gst_gtk_invoke_on_main ((GThreadFunc) _reset_gl, base_widget);
 
   if (priv->context)
     gst_object_unref (priv->context);
@@ -534,7 +489,7 @@ gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * gst_widget)
 
   if (!priv->other_context) {
     GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
-    _invoke_on_main ((ThreadFunc) _get_gl_context, gst_widget);
+    gst_gtk_invoke_on_main ((GThreadFunc) _get_gl_context, gst_widget);
     GTK_GST_BASE_WIDGET_LOCK (gst_widget);
   }
 

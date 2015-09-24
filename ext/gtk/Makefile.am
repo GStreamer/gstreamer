@@ -16,6 +16,8 @@ sources = \
 	gstgtkbasesink.h \
 	gstgtksink.c \
 	gstgtksink.h \
+	gstgtkutils.c \
+	gstgtkutils.h \
 	gstplugin.c \
 	$(NULL)
 

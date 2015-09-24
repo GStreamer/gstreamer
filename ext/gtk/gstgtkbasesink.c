@@ -28,6 +28,7 @@
 #endif
 
 #include "gstgtkbasesink.h"
+#include "gstgtkutils.h"
 
 GST_DEBUG_CATEGORY (gst_debug_gtk_base_sink);
 #define GST_CAT_DEFAULT gst_debug_gtk_base_sink
@@ -77,53 +78,6 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstGtkBaseSink, gst_gtk_base_sink,
     GST_DEBUG_CATEGORY_INIT (gst_debug_gtk_base_sink,
         "gtkbasesink", 0, "Gtk Video Sink base class"));
 
-struct invoke_context
-{
-  GThreadFunc func;
-  gpointer data;
-  GMutex lock;
-  GCond cond;
-  gboolean fired;
-
-  gpointer res;
-};
-
-static gboolean
-_invoke_func (struct invoke_context *info)
-{
-  g_mutex_lock (&info->lock);
-  info->res = info->func (info->data);
-  info->fired = TRUE;
-  g_cond_signal (&info->cond);
-  g_mutex_unlock (&info->lock);
-
-  return G_SOURCE_REMOVE;
-}
-
-static gpointer
-_invoke_on_main (GThreadFunc func, gpointer data)
-{
-  GMainContext *main_context = g_main_context_default ();
-  struct invoke_context info;
-
-  g_mutex_init (&info.lock);
-  g_cond_init (&info.cond);
-  info.fired = FALSE;
-  info.func = func;
-  info.data = data;
-
-  g_main_context_invoke (main_context, (GSourceFunc) _invoke_func, &info);
-
-  g_mutex_lock (&info.lock);
-  while (!info.fired)
-    g_cond_wait (&info.cond, &info.lock);
-  g_mutex_unlock (&info.lock);
-
-  g_mutex_clear (&info.lock);
-  g_cond_clear (&info.cond);
-
-  return info.res;
-}
 
 static void
 gst_gtk_base_sink_class_init (GstGtkBaseSinkClass * klass)
@@ -264,7 +218,8 @@ gst_gtk_base_sink_get_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (gtk_sink);
 
       if (!widget)
-        widget = _invoke_on_main ((GThreadFunc) gst_gtk_base_sink_get_widget,
+        widget =
+            gst_gtk_invoke_on_main ((GThreadFunc) gst_gtk_base_sink_get_widget,
             gtk_sink);
 
       g_value_set_object (value, widget);
@@ -366,8 +321,8 @@ gst_gtk_base_sink_start_on_main (GstBaseSink * bsink)
 static gboolean
 gst_gtk_base_sink_start (GstBaseSink * bsink)
 {
-  return ! !_invoke_on_main ((GThreadFunc) gst_gtk_base_sink_start_on_main,
-      bsink);
+  return ! !gst_gtk_invoke_on_main ((GThreadFunc)
+      gst_gtk_base_sink_start_on_main, bsink);
 }
 
 static gboolean
@@ -387,12 +342,12 @@ gst_gtk_base_sink_stop_on_main (GstBaseSink * bsink)
 static gboolean
 gst_gtk_base_sink_stop (GstBaseSink * bsink)
 {
-  return ! !_invoke_on_main ((GThreadFunc) gst_gtk_base_sink_stop_on_main,
-      bsink);
+  return ! !gst_gtk_invoke_on_main ((GThreadFunc)
+      gst_gtk_base_sink_stop_on_main, bsink);
 }
 
 static void
-gst_gtk_widget_show_all_and_unref (GtkWidget * widget)
+gst_gtk_widget_show_all_and_unref (GtkWidget *widget)
 {
   gtk_widget_show_all (widget);
   g_object_unref (widget);
@@ -423,8 +378,7 @@ gst_gtk_base_sink_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_UNLOCK (gtk_sink);
 
       if (window)
-        _invoke_on_main ((GThreadFunc) gst_gtk_widget_show_all_and_unref,
-            window);
+        gst_gtk_invoke_on_main ((GThreadFunc) gst_gtk_widget_show_all_and_unref, window);
 
       break;
     }
