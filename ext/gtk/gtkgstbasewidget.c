@@ -454,7 +454,7 @@ gtk_gst_base_widget_set_format (GtkGstBaseWidget * widget,
 {
   GTK_GST_BASE_WIDGET_LOCK (widget);
 
-  if (gst_video_info_is_equal (&widget->v_info, v_info)) {
+  if (gst_video_info_is_equal (&widget->pending_v_info, v_info)) {
     GTK_GST_BASE_WIDGET_UNLOCK (widget);
     return TRUE;
   }
