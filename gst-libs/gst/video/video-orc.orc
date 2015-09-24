@@ -2550,5 +2550,5 @@ x4 convsuswb d, p
 .temp 8 m
 
 loadpq m, masks
-x4 addw p, d, e1
+x4 addusw p, d, e1
 x4 andnw d, m, p
