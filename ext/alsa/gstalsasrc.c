@@ -248,7 +248,7 @@ gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
           g_object_get (clk, "clock-type", &clocktype, NULL);
           if (clocktype == GST_CLOCK_TYPE_MONOTONIC) {
             GST_INFO ("Using driver timestamps !");
-            alsa->driver_timestamps = TRUE;
+            alsa->driver_timestamps = FALSE;
           }
         }
 
