@@ -689,6 +689,7 @@ ges_pitivi_formatter_finalize (GObject * object)
   if (priv->clips_table != NULL) {
     g_hash_table_foreach (priv->clips_table,
         (GHFunc) list_table_destroyer, NULL);
+    g_hash_table_destroy (priv->clips_table);
   }
 
   if (priv->layers_table != NULL)
