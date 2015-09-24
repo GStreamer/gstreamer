@@ -77,6 +77,10 @@ struct _GESContainerPrivate
    */
   GHashTable *mappings;
   guint nb_effects;
+
+  /* List of GESTimelineElement being in the "child-added" signal
+   * emission stage */
+  GList *adding_children;
 };
 
 enum
@@ -380,6 +384,9 @@ ges_container_class_init (GESContainerClass * klass)
    * @element: the #GESTimelineElement that was added.
    *
    * Will be emitted after a child was added to @container.
+   * Usually you should connect with #g_signal_connect_after
+   * as in the first emission stage, the signal emission might
+   * get stopped internally.
    */
   ges_container_signals[CHILD_ADDED_SIGNAL] =
       g_signal_new ("child-added", G_TYPE_FROM_CLASS (klass),
@@ -687,8 +694,10 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
 
   _ges_container_add_child_properties (container, child);
 
+  priv->adding_children = g_list_prepend (priv->adding_children, child);
   g_signal_emit (container, ges_container_signals[CHILD_ADDED_SIGNAL], 0,
       child);
+  priv->adding_children = g_list_remove (priv->adding_children, child);
 
   return TRUE;
 }
@@ -733,8 +742,13 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
 
   _ges_container_remove_child_properties (container, child);
 
-  g_signal_emit (container, ges_container_signals[CHILD_REMOVED_SIGNAL], 0,
-      child);
+  if (!g_list_find (container->priv->adding_children, child)) {
+    g_signal_emit (container, ges_container_signals[CHILD_REMOVED_SIGNAL], 0,
+        child);
+  } else {
+    GST_INFO_OBJECT (container, "Not emitting 'child-removed' signal as child"
+        " removal happend during 'child-added' signal emission");
+  }
   gst_object_unref (child);
 
   return TRUE;

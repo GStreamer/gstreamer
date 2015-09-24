@@ -2276,13 +2276,14 @@ clip_track_element_added_cb (GESClip * clip,
 
   if (!tracks || tracks->len == 0) {
     GST_WARNING_OBJECT (timeline, "Got no Track to add %p (type %s), removing"
-        " from clip",
+        " from clip (stopping 'child-added' signal emission).",
         track_element, ges_track_type_name (ges_track_element_get_track_type
             (track_element)));
 
     if (tracks)
       g_ptr_array_unref (tracks);
 
+    g_signal_stop_emission_by_name (clip, "child-added");
     ges_container_remove (GES_CONTAINER (clip),
         GES_TIMELINE_ELEMENT (track_element));
 
@@ -2306,8 +2307,9 @@ clip_track_element_added_cb (GESClip * clip,
     }
   } else {
     GST_INFO_OBJECT (clip, "Already had a Source Element in %" GST_PTR_FORMAT
-        " of type %s, removing new one.", track,
-        G_OBJECT_TYPE_NAME (track_element));
+        " of type %s, removing new one. (stopping 'child-added' emission)",
+        track, G_OBJECT_TYPE_NAME (track_element));
+    g_signal_stop_emission_by_name (clip, "child-added");
     ges_container_remove (GES_CONTAINER (clip),
         GES_TIMELINE_ELEMENT (track_element));
   }
@@ -2331,8 +2333,9 @@ clip_track_element_added_cb (GESClip * clip,
       continue;
     } else {
       GST_INFO_OBJECT (clip, "Already had a Source Element in %" GST_PTR_FORMAT
-          " of type %s, removing new one.", track,
-          G_OBJECT_TYPE_NAME (track_element));
+          " of type %s, removing new one. (stopping 'child-added' emission)",
+          track, G_OBJECT_TYPE_NAME (track_element));
+      g_signal_stop_emission_by_name (clip, "child-added");
       ges_container_remove (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (track_element));
     }
