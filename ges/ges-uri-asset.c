@@ -577,6 +577,7 @@ G_DEFINE_TYPE (GESUriSourceAsset, ges_uri_source_asset,
 static GESExtractable *
 _extract (GESAsset * asset, GError ** error)
 {
+  gchar *uri = NULL;
   GESTrackElement *trackelement;
   GESUriSourceAssetPrivate *priv = GES_URI_SOURCE_ASSET (asset)->priv;
 
@@ -592,23 +593,23 @@ _extract (GESAsset * asset, GError ** error)
     return NULL;
   }
 
+  uri = g_strdup (priv->uri);
+
   if (g_str_has_prefix (priv->uri, GES_MULTI_FILE_URI_PREFIX)) {
-    trackelement =
-        GES_TRACK_ELEMENT (ges_multi_file_source_new (g_strdup (priv->uri)));
+    trackelement = GES_TRACK_ELEMENT (ges_multi_file_source_new (uri));
   } else if (GST_IS_DISCOVERER_VIDEO_INFO (priv->sinfo)
       && gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
           priv->sinfo))
-    trackelement =
-        GES_TRACK_ELEMENT (ges_image_source_new (g_strdup (priv->uri)));
+    trackelement = GES_TRACK_ELEMENT (ges_image_source_new (uri));
   else if (GST_IS_DISCOVERER_VIDEO_INFO (priv->sinfo))
-    trackelement =
-        GES_TRACK_ELEMENT (ges_video_uri_source_new (g_strdup (priv->uri)));
+    trackelement = GES_TRACK_ELEMENT (ges_video_uri_source_new (uri));
   else
-    trackelement =
-        GES_TRACK_ELEMENT (ges_audio_uri_source_new (g_strdup (priv->uri)));
+    trackelement = GES_TRACK_ELEMENT (ges_audio_uri_source_new (uri));
 
   ges_track_element_set_track_type (trackelement,
       ges_track_element_asset_get_track_type (GES_TRACK_ELEMENT_ASSET (asset)));
+
+  g_free (uri);
 
   return GES_EXTRACTABLE (trackelement);
 }
