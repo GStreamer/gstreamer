@@ -28,17 +28,13 @@
 
 #ifdef HAVE_VP9_ENCODER
 
-#include <gst/gst.h>
-#include <gst/video/gstvideoencoder.h>
+#include <gstvpxenc.h>
 
 /* FIXME: Undef HAVE_CONFIG_H because vpx_codec.h uses it,
  * which causes compilation failures */
 #ifdef HAVE_CONFIG_H
 #undef HAVE_CONFIG_H
 #endif
-
-#include <vpx/vpx_encoder.h>
-#include <vpx/vp8cx.h>
 
 G_BEGIN_DECLS
 
@@ -58,59 +54,12 @@ typedef struct _GstVP9EncClass GstVP9EncClass;
 
 struct _GstVP9Enc
 {
-  GstVideoEncoder base_video_encoder;
-
-  /* < private > */
-  vpx_codec_ctx_t encoder;
-  GMutex encoder_lock;
-
-  /* properties */
-  vpx_codec_enc_cfg_t cfg;
-  gboolean have_default_config;
-  gboolean rc_target_bitrate_set;
-  gint n_ts_target_bitrate;
-  gint n_ts_rate_decimator;
-  gint n_ts_layer_id;
-  /* Global two-pass options */
-  gchar *multipass_cache_file;
-  gchar *multipass_cache_prefix;
-  guint multipass_cache_idx;
-  GByteArray *first_pass_cache_content;
-
-  /* Encode parameter */
-  gint64 deadline;
-
-  /* Controls */
-  VPX_SCALING_MODE h_scaling_mode;
-  VPX_SCALING_MODE v_scaling_mode;
-  int cpu_used;
-  gboolean enable_auto_alt_ref;
-  unsigned int noise_sensitivity;
-  unsigned int sharpness;
-  unsigned int static_threshold;
-  vp8e_token_partitions token_partitions;
-  unsigned int arnr_maxframes;
-  unsigned int arnr_strength;
-  unsigned int arnr_type;
-  vp8e_tuning tuning;
-  unsigned int cq_level;
-  unsigned int max_intra_bitrate_pct;
-  /* Timebase - a value of 0 will use the framerate */
-  unsigned int timebase_n;
-  unsigned int timebase_d;
-
-  /* state */
-  gboolean inited;
-
-  vpx_image_t image;
-
-  GstClockTime last_pts;
-  GstVideoCodecState *input_state;
+	GstVPXEnc base_vpx_encoder;
 };
 
 struct _GstVP9EncClass
 {
-  GstVideoEncoderClass base_video_encoder_class;
+  GstVPXEncClass  base_vpxenc_class;
 };
 
 GType gst_vp9_enc_get_type (void);
