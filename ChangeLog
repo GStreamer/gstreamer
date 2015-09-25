@@ -1,9 +1,23 @@
-=== release 1.5.91 ===
+=== release 1.6.0 ===
 
-2015-09-18  Sebastian Dröge <slomo@coaxion.net>
+2015-09-25  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.91
+	  releasing 1.6.0
+
+=== release 1.5.91 ===
+
+2015-09-18 20:10:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-libav-plugins.args:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.5.91
 
 2015-08-28 09:38:53 +0100  Tim-Philipp Müller <tim@centricular.com>
 
