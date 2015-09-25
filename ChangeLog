@@ -1,9 +1,124 @@
-=== release 1.5.91 ===
+=== release 1.6.0 ===
 
-2015-09-18  Sebastian Dröge <slomo@coaxion.net>
+2015-09-25  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.5.91
+	  releasing 1.6.0
+
+2015-09-25 10:18:07 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptpclock: Fix error leak during failures
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755607
+
+2015-09-21 13:58:51 +0200  Stian Selnes <stian@pexip.com>
+
+	* plugins/elements/gstfunnel.c:
+	* tests/check/elements/funnel.c:
+	  funnel: Fix racy state change
+	  Iterator may need to be resynced, for instance if pads are released
+	  during state change.
+	  got_eos should be protected by the object lock of the element, not of
+	  the pad, as is the case throughout the rest of the funnel code.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755343
+
+2015-09-21 15:22:19 +0200  Stian Selnes <stian@pexip.com>
+
+	* gst/gstbin.c:
+	* gst/gstelement.c:
+	  bin: element: Ignore activate result for removed pads on state change
+	  This fixes a race where a state change may return failure if it has
+	  request pads that are deactivated and removed (and thus have no
+	  parent) at the same time as the element changes state and (de)activates
+	  its pads.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755342
+
+2015-09-24 10:23:14 +0200  Havard Graff <havard.graff@gmail.com>
+
+	* libs/gst/check/gstharness.c:
+	* tests/check/libs/gstharness.c:
+	  harness: don't crash when adding a sink-harness without h->sinkpad
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755511
+
+2015-09-23 20:31:48 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: Print buffer PTS when submitting an input buffer
+
+2015-09-21 14:58:46 +0900  Eunhae Choi <eunhae1.choi@samsung.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Fix buffer leak in sync_streams & cache_buffers mode
+	  After doing gst_pad_push() in case of sync_streams and cache_buffers,
+	  if the buffer can not be kept in cache, it should be unreffed to avoid
+	  memory leackage.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755141
+
+2015-09-19 16:57:26 +0530  Vikram Fugro <vikram.fugro@gmail.com>
+
+	* gst/gstcaps.c:
+	* gst/gstpad.h:
+	  gst: Documentation typo fix in caps & pad APIs
+	  gst_caps_can_intersect() & GST_PAD_IS_ACCEPT_INTERSECT()
+	  documentation typo fix.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755257
+
+=== release 1.5.91 ===
+
+2015-09-18 19:07:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.5.91
+
+2015-09-18 19:07:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2015-09-18 11:49:03 +0200  Sebastian Dröge <sebastian@centricular.com>
 

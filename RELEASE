@@ -1,16 +1,19 @@
 
-Release notes for GStreamer 1.5.91
+Release notes for GStreamer 1.6.0
 
 
-The GStreamer team is pleased to announce the second release candidate for the
-stable 1.6 release series. The 1.6 release series is adding new features on top of
-the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The final 1.6.0 release is planned
-in the next few days unless any major bugs are found.
+The GStreamer team is proud to announce a new major feature release in the
+stable 1.x API series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
-the GStreamer project.
+This release has been in the works for more than a year and is packed with new
+features, bug fixes and other improvements.
+
+
+See
+http://gstreamer.freedesktop.org/releases/1.6/
+for the full list of changes.
+
 
 
 This module, gstreamer, only contains core functionality.
@@ -36,13 +39,13 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 754036 : bin: Make sure we don't add/remove a bin to/from itself
-      * 754040 : Investigate why caps negotiation is slower than in 1.4
-      * 754193 : harness: misc bugfixes
-      * 754661 : harness: Fix race for gst_harness_element_ref
-      * 754875 : configure.ac: no socketpair() check causes unresolved reference
-      * 754975 : bin: trivial fix in critical log when threadpool alloc fails
-      * 755019 : gstreamer: Fix error leak during failure cases
+      * 753887 : queue2: " Process SEEKING query " ok, but should handle SEEK events too (regression with non-seekable sources)
+      * 755141 : inputselector: fix buffer leak
+      * 755257 : Minor documentation typo in gstpad & gstcaps APIs
+      * 755342 : element: state_change may fail because of release_request_pad (racy)
+      * 755343 : funnel: Fix racy state change
+      * 755511 : gstharness: don't crash when adding a sink-harness without h- > sinkpad
+      * 755607 : ptpclock: Fix error leak during failures
 
 ==== Download ====
 
@@ -79,15 +82,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arun Raghavan
+      * Eunhae Choi
       * Havard Graff
-      * Igor Rondarev
-      * Nicolas Dufresne
       * Sebastian Dröge
       * Stian Selnes
-      * Thiago Santos
-      * Thibault Saunier
-      * Tim-Philipp Müller
+      * Vikram Fugro
       * Vineeth TM
-      * Vivia Nikolaidou
  
