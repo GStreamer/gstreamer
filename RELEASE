@@ -1,16 +1,18 @@
 
-Release notes for GStreamer Ugly Plugins 1.5.91
+Release notes for GStreamer Ugly Plugins 1.6.0
 
 
-The GStreamer team is pleased to announce the second release candidate for the
-stable 1.6 release series. The 1.6 release series is adding new features on top of
-the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The final 1.6.0 release is planned
-in the next few days unless any major bugs are found.
+The GStreamer team is proud to announce a new major feature release in the
+stable 1.x API series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
-the GStreamer project.
+This release has been in the works for more than a year and is packed with new
+features, bug fixes and other improvements.
+
+
+See
+http://gstreamer.freedesktop.org/releases/1.6/
+for the full list of changes.
 
 
 

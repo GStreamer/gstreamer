@@ -1,2 +1,64 @@
-This is GStreamer Ugly Plugins 1.5.91
+This is GStreamer 1.6.0
+
+The GStreamer team is proud to announce a new major feature release in the
+stable 1.x API series of your favourite cross-platform multimedia framework!
+
+This release has been in the works for more than a year and is packed with new
+features, bug fixes and other improvements.
+
+See http://gstreamer.freedesktop.org/releases/1.6/ for the full list of
+changes.
+
+Highlights
+
+- Stereoscopic 3D and multiview video support
+- Trick mode API for key-frame only fast-forward/fast-reverse playback etc.
+- Improved DTS (decoding timestamp) vs. PTS (presentation timestamp) handling
+  to account for negative DTS
+- New GstVideoConverter API for more optimised and more correct conversion of
+  raw video frames between all supported formats, with rescaling
+- v4l2src now supports renegotiation
+- v4l2transform can now do scaling
+- V4L2 Element now report Colorimetry properly
+- Easier chunked recording of MP4, Matroska, Ogg, MPEG-TS: new splitmuxsink
+  and multifilesink improvements
+- Content Protection signalling API and Common Encryption (CENC) support for
+  DASH/MP4
+- Many adaptive streaming (DASH, HLS and MSS) improvements
+- New PTP and NTP network client clocks and better remote clock tracking
+  stability
+- High-quality text subtitle overlay at display resolutions with glimagesink
+  or gtkglsink
+- RECORD support for the GStreamer RTSP Server
+- Retransmissions (RTX) support in RTSP server and client
+- RTSP seeking support in client and server has been fixed
+- RTCP scheduling improvements and reduced size RTCP support
+- MP4/MOV muxer acquired a new "robust" mode of operation which attempts to
+  keep the output file in a valid state at all times
+- Live mixing support in aggregator, audiomixer and compositor was improved a
+  lot
+- compositor now supports rescaling and converting inputs streams on the fly
+- New audiointerleave element with proper input synchronisation and live input
+  support
+- Blackmagic Design DeckLink capture and playback card support was rewritten
+  from scratch; 2k/4k support; mode sensing
+- KLV metadata support in RTP and MPEG-TS
+- H.265 video encoder (x265), decoders (libav, libde265) and RTP payloader and
+  depayloaders
+- New DTLS plugin and SRTP/DTLS support
+- OpenGL3 support, multiple contexts and context propagation, 3D video,
+  transfer/conversion separation, subtitle blending
+- New OpenGL-based QML video sink, Gtk GL video sink, CoreAnimation
+  CAOpenGLLayerSink video sink
+- gst-libav switched to ffmpeg as libav-provider, gains support for
+  3D/multiview video, trick modes, and the CAVS codec
+- GstHarness API for unit tests
+- gst-editing-services got a completely new ges-launch-1.0 interface, improved
+  mixing support and integration into gst-validate
+- gnonlin has been deprecated in favor of nle (Non Linear Engine) in
+  gst-editing-services
+- gst-validate has a new plugin system, an extensive default testsuite,
+  support for concurrent test runs and valgrind support
+- cerbero build tool for SDK binary packages gains new 'bundle-source' command
+- Various improvements to the Android, iOS, OS X and Windows platform support
 
