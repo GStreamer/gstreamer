@@ -275,7 +275,6 @@ GObject
         GstGDPDepay
         GstGDPPay
         GstGLStereoSplit
-        GstGmeDec
         GstInterlace
         GstJP2kDecimator
         GstJifMux

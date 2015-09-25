@@ -1,16 +1,18 @@
 
-Release notes for GStreamer Bad Plugins 1.5.91
+Release notes for GStreamer Bad Plugins 1.6.0
 
 
-The GStreamer team is pleased to announce the second release candidate for the
-stable 1.6 release series. The 1.6 release series is adding new features on top of
-the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The final 1.6.0 release is planned
-in the next few days unless any major bugs are found.
+The GStreamer team is proud to announce a new major feature release in the
+stable 1.x API series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
-the GStreamer project.
+This release has been in the works for more than a year and is packed with new
+features, bug fixes and other improvements.
+
+
+See
+http://gstreamer.freedesktop.org/releases/1.6/
+for the full list of changes.
 
 
 
@@ -62,54 +64,15 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 751508 : tsdemux: jerky sound on some multicast streams (regression)
-      * 752480 : dashdemux: negative values for r attribute in S node are not supported
-      * 753152 : pcapparse wrong magic when used with identity sync=1
-      * 753196 : audio/videoaggregator:  Assumes that running time starts at seeking position after a seek (but it starts at 0 for flushing seeks)
-      * 753344 : hlsdemux: Fix playback of live streams
-      * 753758 : ios: Does not shut down context and navigation GMainLoop
-      * 753805 : compositor/videoaggregator: Crashes because of invalid video info
-      * 753812 : qt: Checks for Qt5 don't require new enough version.
-      * 753813 : dashdemux: replace use of xmlNodeDump as it is described as a deprecated function
-      * 753818 : hlsdemux: deadlock on stop
-      * 753820 : video-bad: fix build failure
-      * 753822 : assrender: do not crash when video frame mapping fails
-      * 753837 : dtsdec: overwritten init value
-      * 753881 : hls/m3u8: make check fails for hlsdemux_m3u8 due to floating point rounding error
-      * 753905 : android emulator returns NULL for GL_SHADING_LANGUAGE_VERSION
-      * 753913 : caopengllayersink: Don't chain up to parent's query handling twice for DRAIN query
-      * 753915 : audiomixer: Remove duplicated word in comment
-      * 753937 : dashdemux: don't meddle with the class struct from an instance
-      * 753944 : curl: configure check for netinet/ip.h doesn't work on FreeBSD
-      * 754024 : codecparsers: Various HEVC codecparser fixes
-      * 754047 : glupload: Loses overlay meta when using raw uploader
-      * 754107 : compositor: Inputs are " obscured " when they aren't
-      * 754108 : qmlsink: Ensure that at least one windowing system is available
-      * 754122 : h265parse/h264parse: Crashes instead of returning not-negotiated
-      * 754222 : adaptivedemux: Timestamping of multi-period streams is not correct
-      * 754291 : videoaggregator: Compositor fails with " reason not-negotiated " when changing the pixel-aspect-ratio during runtime
-      * 754465 : compositor: Negotiation failure with ARGB64
-      * 754504 : vtdec: invalid colorimetry and generating greenish output
-      * 754528 : decklinkvideosink: Properly handle pipelines where the running time does not start around 0
-      * 754576 : compositor: input stream is wrongly considered obscured in some cases (regression)
-      * 754666 : decklinkvideosink: Consider pipeline latency when scheduling frames
-      * 754668 : mpdparser: fix incorrect start value scaling
-      * 754686 : adaptivedemux: statistics message name macro is unprefixed
-      * 754732 : gl: (ubuntu) error: conflicting types for 'GLsizeiptr' ( & more)
-      * 754756 : directsoundsrc: Compiler warning with 64bit Windows MinGW, cast from pointer to integer of different size
-      * 754757 : gl/eagl: Don't make context uncurrent just to make it current again in the next line
-      * 754819 : opusenc: critical/warning when dumping dots
-      * 754834 : codecparsers: hevc:  Fixes in scaling list value and NumPocTocalCurr value calculation
-      * 754851 : aggregator: Use the whole aggregator latency for the queue size, not just the latency property
-      * 755042 : dashdemux: sidx parsing crashes at end of stream
-      * 755047 : mssdemux/dashdemux: live playback regression
-      * 755049 : intervideosrc doesn't render the preroll frame (in paused state)
-      * 755059 : opusdec: negotiation regression
-      * 755111 : Regression: glimagesink 3D video handling
-      * 755113 : Regression: dvbsuboverlay negotiates invalid caps
-      * 755140 : gstgl: Fix GError leaks during failures
-      * 755142 : avdtputil: fix GError memory leak during failures
-      * 755156 : vtdec: resizing glimagesink results in a not-negotiated error
+      * 754903 : eagl: crashes or no video display on reuse
+      * 755249 : gtkglsink: Hide and cleaned the GtkWindow we might create
+      * 755251 : gtksink: Rework threading around GtkWindow creation
+      * 755411 : mpdparser: Only check stream- > segments for a repeated last segment if we have a static list of segments
+      * 755426 : decklinkvideosrc: Can't go to PAUSED again from READY
+      * 755456 : glmemory: fix texture leak in _gl_mem_copy
+      * 755459 : gtksink: Do not show window until we reach the PAUSED state
+      * 755542 : gtk: Fix a race where we end up setting wrong VideoInfo
+      * 755618 : gstglfilter: fix error GL_INVALID_OPERATION " glBindBuffer: buffer bound to more than 1 " 
 
 ==== Download ====
 
@@ -146,31 +109,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alex Ashley
-      * Arnaud Vrac
-      * Athanasios Oikonomou
-      * Ben Browitt
-      * Carlos Rafael Giani
-      * Jan Schmidt
-      * Justin Kim
-      * Koop Mast
-      * Kouhei Sutou
-      * Luis de Bethencourt
+      * Arun Raghavan
+      * Julien Isorce
       * Matthew Waters
-      * Miguel París Díaz
-      * Nicolas Dufresne
-      * Nirbheek Chauhan
-      * Olivier Crête
-      * Philippe Normand
       * Sebastian Dröge
-      * Sreerenj Balachandran
-      * Thiago Santos
       * Thibault Saunier
-      * Tim-Philipp Müller
-      * Vanessa Chipirrás Navalón
-      * Vincent Penquerc'h
-      * Vineeth T M
-      * XuGuangxin
-      * hoonhee.lee
-      * lyb
  
