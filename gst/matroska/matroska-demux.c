@@ -3505,7 +3505,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         GST_OBJECT_LOCK (demux);
         earliest_time = videocontext->earliest_time;
         GST_OBJECT_UNLOCK (demux);
-        earliest_stream_time = gst_segment_to_position (&demux->common.segment,
+        earliest_stream_time =
+            gst_segment_position_from_running_time (&demux->common.segment,
             GST_FORMAT_TIME, earliest_time);
 
         if (GST_CLOCK_TIME_IS_VALID (lace_time) &&

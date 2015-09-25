@@ -2911,9 +2911,11 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
       }
 
       dts =
-          gst_segment_to_position (&priv->segment, GST_FORMAT_TIME, item->dts);
+          gst_segment_position_from_running_time (&priv->segment,
+          GST_FORMAT_TIME, item->dts);
       pts =
-          gst_segment_to_position (&priv->segment, GST_FORMAT_TIME, item->pts);
+          gst_segment_position_from_running_time (&priv->segment,
+          GST_FORMAT_TIME, item->pts);
 
       /* apply timestamp with offset to buffer now */
       GST_BUFFER_DTS (outbuf) = apply_offset (jitterbuffer, dts);

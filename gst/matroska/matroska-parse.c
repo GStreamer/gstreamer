@@ -1839,7 +1839,8 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
         GST_OBJECT_LOCK (parse);
         earliest_time = videocontext->earliest_time;
         GST_OBJECT_UNLOCK (parse);
-        earliest_stream_time = gst_segment_to_position (&parse->common.segment,
+        earliest_stream_time =
+            gst_segment_position_from_running_time (&parse->common.segment,
             GST_FORMAT_TIME, earliest_time);
 
         if (GST_CLOCK_TIME_IS_VALID (lace_time) &&
