@@ -1136,8 +1136,8 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
           GL_STATIC_DRAW);
 
       gl->GenBuffers (1, &filter->vbo_indices);
-      gl->BindBuffer (GL_ARRAY_BUFFER, filter->vbo_indices);
-      gl->BufferData (GL_ARRAY_BUFFER, sizeof (indices), indices,
+      gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, filter->vbo_indices);
+      gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
           GL_STATIC_DRAW);
 
       if (gl->GenVertexArrays) {
