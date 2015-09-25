@@ -853,7 +853,7 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
 
     /* Convert to position in the output segment */
     start_output_offset =
-        gst_segment_to_position (&agg->segment, GST_FORMAT_TIME,
+        gst_segment_position_from_running_time (&agg->segment, GST_FORMAT_TIME,
         start_running_time);
     if (start_output_offset != -1)
       start_output_offset =
@@ -861,7 +861,7 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
           GST_SECOND);
 
     end_output_offset =
-        gst_segment_to_position (&agg->segment, GST_FORMAT_TIME,
+        gst_segment_position_from_running_time (&agg->segment, GST_FORMAT_TIME,
         end_running_time);
     if (end_output_offset != -1)
       end_output_offset =
