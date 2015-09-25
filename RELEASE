@@ -1,24 +1,24 @@
 
-Release notes for GStreamer RTSP Server Library 1.5.91
+Release notes for GStreamer RTSP Server Library 1.6.0
 
 
-The GStreamer team is pleased to announce the second release candidate for the
-stable 1.6 release series. The 1.6 release series is adding new features on top of
-the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The final 1.6.0 release is planned
-in the next few days unless any major bugs are found.
+The GStreamer team is proud to announce a new major feature release in the
+stable 1.x API series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
-the GStreamer project.
+This release has been in the works for more than a year and is packed with new
+features, bug fixes and other improvements.
+
+
+See
+http://gstreamer.freedesktop.org/releases/1.6/
+for the full list of changes.
 
 
   
 
-Bugs fixed in this release
-     
-      * 749095 : rtsp-stream: add API to set UDP buffer size
-      * 754753 : rtsp-media: don't mutate original string when parsing keymgmt
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -53,10 +53,9 @@ Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
 
         
-Applications
-  
 Contributors to this release
     
       * Jan Schmidt
+      * Sebastian Dröge
       * Tim-Philipp Müller
  
