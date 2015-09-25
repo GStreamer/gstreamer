@@ -219,6 +219,7 @@ void         gst_segment_free                (GstSegment *segment);
 void         gst_segment_init                (GstSegment *segment, GstFormat format);
 
 guint64      gst_segment_to_stream_time      (const GstSegment *segment, GstFormat format, guint64 position);
+guint64      gst_segment_position_from_stream_time (const GstSegment * segment, GstFormat format, guint64 stream_time);
 guint64      gst_segment_to_running_time     (const GstSegment *segment, GstFormat format, guint64 position);
 
 gint         gst_segment_to_running_time_full (const GstSegment *segment, GstFormat format, guint64 position,

@@ -453,6 +453,69 @@ gst_segment_to_stream_time (const GstSegment * segment, GstFormat format,
 }
 
 /**
+ * gst_segment_position_from_stream_time:
+ * @segment: a #GstSegment structure.
+ * @format: the format of the segment.
+ * @stream_time: the stream_time in the segment
+ *
+ * Convert @stream_time into a position in the segment so that
+ * gst_segment_to_stream_time() with that position returns @stream_time.
+ *
+ * Returns: the position in the segment for @stream_time. This function returns
+ * -1 when @stream_time is -1 or when it is not inside @segment.
+ *
+ * Since: 1.8
+ */
+guint64
+gst_segment_position_from_stream_time (const GstSegment * segment,
+    GstFormat format, guint64 stream_time)
+{
+  guint64 position, start, stop, time;
+  gdouble abs_applied_rate;
+
+  /* format does not matter for -1 */
+  if (G_UNLIKELY (stream_time == -1))
+    return -1;
+
+  g_return_val_if_fail (segment != NULL, -1);
+  g_return_val_if_fail (segment->format == format, -1);
+
+  start = segment->start;
+  time = segment->time;
+  /* this stream time was for a previous segment */
+  if (G_UNLIKELY (stream_time < segment->time))
+    return -1;
+
+  /* time must be known */
+  if (G_UNLIKELY (time == -1))
+    return -1;
+
+  if (G_LIKELY (segment->applied_rate > 0.0)) {
+    position = stream_time - time;
+  } else {
+    if (G_LIKELY (time > stream_time))
+      position = time - stream_time;
+    else
+      return -1;
+  }
+
+  abs_applied_rate = ABS (segment->applied_rate);
+
+  /* correct for applied rate if needed */
+  if (G_UNLIKELY (abs_applied_rate != 1.0))
+    position /= abs_applied_rate;
+
+  position += start;
+
+  stop = segment->stop;
+  /* outside of the segment boundary stop */
+  if (G_UNLIKELY (stop != -1 && position > stop))
+    return -1;
+
+  return position;
+}
+
+/**
  * gst_segment_to_running_time_full:
  * @segment: a #GstSegment structure.
  * @format: the format of the segment.
