@@ -1,9 +1,25 @@
-=== release 1.5.90 ===
+=== release 1.6.0 ===
 
-2015-08-21  Thibault Saunier <tsaunier@gnome.org>
+2015-09-25  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.5.90
+	  releasing 1.6.0
+
+2015-09-16 17:12:17 +0900  eunhae choi <eunhae1.choi@samsung.com>
+
+	* validate/data/scenarios/switch_subtitle_track.scenario:
+	* validate/data/scenarios/switch_subtitle_track_while_paused.scenario:
+	  validate: scenarios: set need clock sync for switching subtitle track
+	  As soon as the track is changed, the pipeline state is set to NULL
+	  by execution 'stop' action even if there is a 'playback-time' with 5sec.
+	  If the AV sink is not synchronized,
+	  audio fakesink and video fakesink has different position value.
+	  When the validate request the position information of pipeline
+	  to do 'stop' action, the audio fakesink response of the position query
+	  with the bigger value than 5sec.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755101
+
+=== release 1.5.90 ===
 
 2015-08-20 17:58:36 +0200  Thibault Saunier <thibault.saunier@collabora.com>
 
@@ -12,6 +28,11 @@
 	* validate/configure.ac:
 	* validate/gst-validate.doap:
 	  Release 1.5.90
+
+2015-08-21 11:09:03 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/common:
+	  Update common submodule
 
 2015-08-20 16:35:15 +0200  Thibault Saunier <thibault.saunier@collabora.com>
 
