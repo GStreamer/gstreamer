@@ -1965,15 +1965,14 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   if (sessmedia == NULL) {
     /* manage the media in our session now, if not done already  */
-    sessmedia = gst_rtsp_session_manage_media (session, path, media);
+    sessmedia =
+        gst_rtsp_session_manage_media (session, path, g_object_ref (media));
     /* if we stil have no media, error */
     if (sessmedia == NULL)
       goto sessmedia_unavailable;
 
     /* don't cache media anymore */
     clean_cached_media (client, FALSE);
-  } else {
-    g_object_unref (media);
   }
 
   ctx->sessmedia = sessmedia;
@@ -2036,6 +2035,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
       gst_rtsp_session_media_set_rtsp_state (sessmedia, GST_RTSP_STATE_READY);
       break;
   }
+  g_object_unref (media);
   g_object_unref (session);
   g_free (path);
 
@@ -2100,12 +2100,12 @@ sessmedia_unavailable:
   {
     GST_ERROR ("client %p: can't create session media", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
-    g_object_unref (media);
-    goto cleanup_session;
+    goto cleanup_transport;
   }
 configure_media_failed_no_reply:
   {
     GST_ERROR ("client %p: configure_media failed", client);
+    g_object_unref (media);
     /* error reply is already sent */
     goto cleanup_session;
   }
@@ -2141,6 +2141,8 @@ keymgmt_error:
   {
   cleanup_transport:
     gst_rtsp_transport_free (ct);
+    if (media)
+      g_object_unref (media);
   cleanup_session:
     if (new_session)
       gst_rtsp_session_pool_remove (priv->session_pool, session);
