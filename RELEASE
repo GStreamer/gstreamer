@@ -1,16 +1,18 @@
 
-Release notes for GStreamer Good Plugins 1.5.91
+Release notes for GStreamer Good Plugins 1.6.0
 
 
-The GStreamer team is pleased to announce the second release candidate for the
-stable 1.6 release series. The 1.6 release series is adding new features on top of
-the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The final 1.6.0 release is planned
-in the next few days unless any major bugs are found.
+The GStreamer team is proud to announce a new major feature release in the
+stable 1.x API series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
-the GStreamer project.
+This release has been in the works for more than a year and is packed with new
+features, bug fixes and other improvements.
+
+
+See
+http://gstreamer.freedesktop.org/releases/1.6/
+for the full list of changes.
 
 
 
@@ -57,22 +59,14 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 661624 : flvmux: overstates the number of metadata elements when 'streamable=true'
-      * 736965 : matroskademux: Output raw video in unaligned buffers causing crashing in ORC video conversion code
-      * 744420 : splitmuxsink - Deadlock on while starting 2nd fragment on function gst_element_sync_state_with_parent
-      * 752106 : flacparse: makes up bogus DTS for audio after seeking
-      * 753875 : v4l2transform: fix pad closing
-      * 753903 : wavpackdec: fix taglist memory leak
-      * 753904 : matroska: read: fix tag list memory leak
-      * 753912 : rtspsrc: fix check if DESCRIBE method is supported
-      * 754144 : level: regression for channels > 1
-      * 754153 : smpte: memory leak
-      * 754417 : rtptheoradepay: Reading headers from caps is broken
-      * 754768 : matroskademux: Streaming via tcpserversink fails - reading large block not supported
-      * 754807 : Small typo fix in rtsp readme
-      * 754869 : multiudpsink: fix GError memory leak in hostname lookup failure code path
-      * 755138 : avidemux: fix taglist leak
-      * 751386 : aacparse: cannot set LOAS src caps
+      * 705991 : Adding support for DASH common encryption to qtdemux and dashdemux
+      * 750731 : rtpsession test fails sometimes
+      * 751393 : aacparse: LOAS config never retrieved
+      * 755265 : rtp{vorbis,theora}pay: Store headers in the packet buffers lists, not a NULL buffer
+      * 755277 : rtptheoradepay: Memory leaks
+      * 755463 : spectrum: Sending magnitude instead of phase in message for Phase info
+      * 755471 : qtdemux: Segment seeks broken again
+      * 755621 : smptealpha: Do not set width/height before comparing with old values
 
 ==== Download ====
 
@@ -109,18 +103,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Eunhae Choi
-      * George Chriss
-      * Jan Alexander Steffens (heftig)
       * Jan Schmidt
-      * Jean-Michel Hautbois
-      * Mark Nauwelaerts
-      * Martin Kelly
-      * Olivier Crête
-      * Ravi Kiran K N
       * Sebastian Dröge
-      * Stefan Sauer
-      * Thiago Santos
-      * Tim-Philipp Müller
-      * Vineeth TM
+      * Sebastian Rasmussen
+      * Thibault Saunier
+      * Vikram Fugro
  
