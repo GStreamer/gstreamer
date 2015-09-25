@@ -1,16 +1,16 @@
 
-Release notes for GStreamer Editing Services 1.5.91
+Release notes for GStreamer Editing Services 1.6.0
 
 
-The GStreamer team is pleased to announce the second release candidate for the
-stable 1.6 release series. The 1.6 release series is adding new features on top of
-the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer Editing Services. The final 1.6.0 release is planned
-in the next few days unless any major bugs are found.
+The GStreamer team is pleased to announce the first release of the GStreamer
+Editing Services stable 1.6 release series. The 1.6 release series is adding
+new features on top of the 1.2 and 1.4 series and is part of the API and
+ABI-stable 1.x release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
-the GStreamer project.
+
+Binaries for Android, iOS, Mac OS X and Windows are provided together
+with this release.
 
 
   
@@ -20,12 +20,7 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 753806 : [REGRESSION] aggregator: Default to " zero " start time selection mode as documented broke several GES Validate tests
-      * 754783 : ges-launch: crash when argument is invalid
-      * 754858 : ges-launch: leakage of GError
-      * 754867 : timeline,nleobject,nlecomposition: leakage of pad and hashtable reference when disposing
-      * 754893 : nle: Segment base time accumulation is broken fixing videoaggregator segment handling
-      * 755012 : GES timeline playback stops after playing a clip with an effect containing the pitch plugin
+      * 755417 : nlecomposition allocates unused UpdateCompositionData
 
 ==== Download ====
 
@@ -64,7 +59,6 @@ Applications
   
 Contributors to this release
     
-      * Jan Schmidt
       * Justin Kim
       * Thibault Saunier
  

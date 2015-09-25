@@ -1,9 +1,64 @@
-=== release 1.5.91 ===
+=== release 1.6.0 ===
 
-2015-09-18  Thibault Saunier <tsaunier@gnome.org>
+2015-09-25  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.5.91
+	  releasing 1.6.0
+
+2015-09-24 13:21:15 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-container.c:
+	* ges/ges-timeline.c:
+	  ges: Avoid emitting 'child-added/removed' when signal emission stops addition
+	  In the GESTimeline, TrackElement addition to a clip might get cancelled
+	  (and thus the element gets removed), we need to make sure users do not
+	  get wrong signals.
+	  Also document the fact that user should connect to container::child-added
+	  with g_signal_connect_after.
+
+2015-09-22 23:10:35 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nleobject.c:
+	  nle{composition,object}: remove unused allocation & trivial leakages
+	  nlecomposition allocates unused 'UpdateCompositionData' and it
+	  causes leakages.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755417
+
+2015-09-24 13:40:27 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: don't leak GstPad
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755505
+
+2015-09-24 13:42:16 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-pitivi-formatter.c:
+	  pitivi-formatter: don't leak internal hash table
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755505
+
+2015-09-23 21:23:13 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-video-transition.c:
+	  video-transition: Make compositor background transparent
+	  Allowing further mixing downstream
+
+2015-09-23 21:12:33 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-video-transition.c:
+	  video-transition: Add a framepositioner at the end of the transitio
+	  So downstream compositor knows the zorder of the various streams
+
+=== release 1.5.91 ===
+
+2015-09-18 18:40:18 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.5.91
 
 2015-09-18 10:01:44 +0200  Thibault Saunier <tsaunier@gnome.org>
 
