@@ -615,22 +615,20 @@ gst_smpte_alpha_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
 {
   GstSMPTEAlpha *smpte = GST_SMPTE_ALPHA (vfilter);
   gboolean ret;
-  gint width, height;
 
   smpte->process = NULL;
-
   smpte->in_format = GST_VIDEO_INFO_FORMAT (in_info);
   smpte->out_format = GST_VIDEO_INFO_FORMAT (out_info);
-  smpte->width = width = GST_VIDEO_INFO_WIDTH (out_info);
-  smpte->height = height = GST_VIDEO_INFO_HEIGHT (out_info);
 
   /* try to update the mask now, this will also adjust the width/height on
    * success */
   GST_OBJECT_LOCK (smpte);
   ret =
       gst_smpte_alpha_update_mask (smpte, smpte->type, smpte->invert,
-      smpte->depth, width, height);
+      smpte->depth, GST_VIDEO_INFO_WIDTH (out_info),
+      GST_VIDEO_INFO_HEIGHT (out_info));
   GST_OBJECT_UNLOCK (smpte);
+
   if (!ret)
     goto mask_failed;
 
