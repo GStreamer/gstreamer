@@ -655,6 +655,7 @@ gst_aac_parse_read_loas_config (GstAacParse * aacparse, const guint8 * data,
     GST_LOG_OBJECT (aacparse, "More data ignored");
   } else {
     GST_WARNING_OBJECT (aacparse, "Spec says \"TBD\"...");
+    return FALSE;
   }
   return TRUE;
 }
@@ -870,7 +871,7 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
 
   if (gst_aac_parse_check_loas_frame (aacparse, data, avail, drain,
           framesize, &need_data_loas)) {
-    gint rate, channels;
+    gint rate = 0, channels = 0;
 
     GST_INFO ("LOAS, framesize: %d", *framesize);
 
@@ -1212,7 +1213,7 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
   gboolean lost_sync;
   GstBuffer *buffer;
   guint framesize;
-  gint rate, channels;
+  gint rate = 0, channels = 0;
 
   aacparse = GST_AAC_PARSE (parse);
   buffer = frame->buffer;
