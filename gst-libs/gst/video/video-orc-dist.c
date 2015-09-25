@@ -31105,11 +31105,15 @@ video_orc_dither_ordered_4u16_mask (guint16 * ORC_RESTRICT d1,
     var34 = ptr0[i];
     /* 2: loadq */
     var35 = ptr4[i];
-    /* 3: addw */
-    var38.x4[0] = var34.x4[0] + var35.x4[0];
-    var38.x4[1] = var34.x4[1] + var35.x4[1];
-    var38.x4[2] = var34.x4[2] + var35.x4[2];
-    var38.x4[3] = var34.x4[3] + var35.x4[3];
+    /* 3: addusw */
+    var38.x4[0] =
+        ORC_CLAMP_UW ((orc_uint16) var34.x4[0] + (orc_uint16) var35.x4[0]);
+    var38.x4[1] =
+        ORC_CLAMP_UW ((orc_uint16) var34.x4[1] + (orc_uint16) var35.x4[1]);
+    var38.x4[2] =
+        ORC_CLAMP_UW ((orc_uint16) var34.x4[2] + (orc_uint16) var35.x4[2]);
+    var38.x4[3] =
+        ORC_CLAMP_UW ((orc_uint16) var34.x4[3] + (orc_uint16) var35.x4[3]);
     /* 4: andnw */
     var36.x4[0] = (~var37.x4[0]) & var38.x4[0];
     var36.x4[1] = (~var37.x4[1]) & var38.x4[1];
@@ -31148,11 +31152,15 @@ _backup_video_orc_dither_ordered_4u16_mask (OrcExecutor * ORC_RESTRICT ex)
     var34 = ptr0[i];
     /* 2: loadq */
     var35 = ptr4[i];
-    /* 3: addw */
-    var38.x4[0] = var34.x4[0] + var35.x4[0];
-    var38.x4[1] = var34.x4[1] + var35.x4[1];
-    var38.x4[2] = var34.x4[2] + var35.x4[2];
-    var38.x4[3] = var34.x4[3] + var35.x4[3];
+    /* 3: addusw */
+    var38.x4[0] =
+        ORC_CLAMP_UW ((orc_uint16) var34.x4[0] + (orc_uint16) var35.x4[0]);
+    var38.x4[1] =
+        ORC_CLAMP_UW ((orc_uint16) var34.x4[1] + (orc_uint16) var35.x4[1]);
+    var38.x4[2] =
+        ORC_CLAMP_UW ((orc_uint16) var34.x4[2] + (orc_uint16) var35.x4[2]);
+    var38.x4[3] =
+        ORC_CLAMP_UW ((orc_uint16) var34.x4[3] + (orc_uint16) var35.x4[3]);
     /* 4: andnw */
     var36.x4[0] = (~var37.x4[0]) & var38.x4[0];
     var36.x4[1] = (~var37.x4[1]) & var38.x4[1];
@@ -31184,7 +31192,7 @@ video_orc_dither_ordered_4u16_mask (guint16 * ORC_RESTRICT d1,
         104, 101, 114, 95, 111, 114, 100, 101, 114, 101, 100, 95, 52, 117, 49,
         54,
         95, 109, 97, 115, 107, 11, 8, 8, 12, 8, 8, 18, 8, 20, 8, 20,
-        8, 134, 33, 24, 21, 2, 70, 32, 0, 4, 21, 2, 74, 0, 33, 32,
+        8, 134, 33, 24, 21, 2, 72, 32, 0, 4, 21, 2, 74, 0, 33, 32,
         2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
@@ -31203,7 +31211,7 @@ video_orc_dither_ordered_4u16_mask (guint16 * ORC_RESTRICT d1,
 
       orc_program_append_2 (p, "loadpq", 0, ORC_VAR_T2, ORC_VAR_P1, ORC_VAR_D1,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "addw", 2, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_S1,
+      orc_program_append_2 (p, "addusw", 2, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "andnw", 2, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_T1,
           ORC_VAR_D1);

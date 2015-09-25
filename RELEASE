@@ -1,16 +1,18 @@
 
-Release notes for GStreamer Base Plugins 1.5.91
+Release notes for GStreamer Base Plugins 1.6.0
 
 
-The GStreamer team is pleased to announce the second release candidate for the
-stable 1.6 release series. The 1.6 release series is adding new features on top of
-the 1.0, 1.2 and 1.4 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The final 1.6.0 release is planned
-in the next few days unless any major bugs are found.
+The GStreamer team is proud to announce a new major feature release in the
+stable 1.x API series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately by
-the GStreamer project.
+This release has been in the works for more than a year and is packed with new
+features, bug fixes and other improvements.
+
+
+See
+http://gstreamer.freedesktop.org/releases/1.6/
+for the full list of changes.
 
 
 
@@ -60,23 +62,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 734617 : videodecoder: Call the child class finish() function on stream changes
-      * 740387 : [REGRESSION] videoscale: The port to the new scaling API broke some file playback
-      * 744806 : audiodecoder: early call to drain() causes segment event to be sent before caps
-      * 753817 : subparse: SIGSEGV with abnormal file
-      * 753850 : gl: overlay composition negotation with the sink fails
-      * 754199 : audiobasesink: patch for missing/incorrect documentation about the custom slaving method
-      * 754235 : playsinkconvertbin: regression after removing accept-caps handler
-      * 754429 : basetextoverlay: crash in basetextoverlay for padding greater than video size
-      * 754597 : appsrc: fails to push the caps at the start of the data flow when configured in seekable/random-access mode
-      * 754630 : libs: " ll " printf modifier isn't available on MinGW
-      * 754755 : playbin: Compiler warning with 64bit Windows target MinGW, cast to pointer from integer of different size
-      * 754808 : video: missing alpha flag for some formats
-      * 754973 : xvimagesink: fix error leak when context creation fails
-      * 755098 : uridecodebin: Smooth Streaming's media type does not match
-      * 755143 : audiosink, multisocketsink: Fix error leak during failures
-      * 755198 : basetextoverlay: trivial fix in debug message
-      * 755201 : playback-test: Dont free null array on exit
+      * 752148 : Drawing from paths passed to cairo does not work with PANGOCAIRO_BACKEND=coretext
+      * 754344 : libs: build rtp after audio
+      * 754833 : dmabuf & fdmemory: fix allocator_alloc documentation
+      * 755392 : video: bugs with gst_video_frame_copy and videoconvert (with test scripts)
 
 ==== Download ====
 
@@ -113,20 +102,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Carlos Rafael Giani
-      * Christophe Fergeau
-      * Eunhae Choi
-      * George Kiagiadakis
-      * Havard Graff
-      * Kouhei Sutou
-      * Philippe Normand
-      * Prashant Gotarne
-      * Ravi Kiran K N
+      * Aurélien Zanelli
       * Sebastian Dröge
-      * Thiago Santos
-      * Tim-Philipp Müller
-      * Vikram Fugro
-      * Vineeth T M
-      * Vineeth TM
-      * Wim Taymans
  
