@@ -1067,7 +1067,6 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
     case '0':
       play_do_seek (play, 0, play->rate, play->trick_mode);
       break;
-      /* fall through */
     default:
       if (strcmp (key_input, GST_PLAY_KB_ARROW_RIGHT) == 0) {
         relative_seek (play, +0.08);
