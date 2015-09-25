@@ -1,9 +1,26 @@
-=== release 1.5.2 ===
+=== release 1.6.0 ===
 
-2015-06-24  Thibault Saunier <tsaunier@gnome.org>
+2015-09-25  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.5.2
+	  releasing 1.6.0
+
+2015-06-24 17:44:44 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.5.2 ===
+
+2015-06-24 17:44:30 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	* testsuite/__init__.py:
+	  Release 1.5.2
 
 2015-04-24 10:35:14 +0200  Thibault Saunier <tsaunier@gnome.org>
 
