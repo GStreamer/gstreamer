@@ -1006,6 +1006,9 @@ gst_audio_base_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   gst_audio_ring_buffer_debug_spec_buff (spec);
 
+  gst_element_post_message (GST_ELEMENT_CAST (bsink),
+      gst_message_new_latency (GST_OBJECT (bsink)));
+
   return TRUE;
 
   /* ERRORS */
