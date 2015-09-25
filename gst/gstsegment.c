@@ -398,7 +398,7 @@ guint64
 gst_segment_to_stream_time (const GstSegment * segment, GstFormat format,
     guint64 position)
 {
-  guint64 result, start, stop, time;
+  guint64 stream_time, start, stop, time;
   gdouble abs_applied_rate;
 
   /* format does not matter for -1 */
@@ -427,29 +427,29 @@ gst_segment_to_stream_time (const GstSegment * segment, GstFormat format,
     return -1;
 
   /* bring to uncorrected position in segment */
-  result = position - start;
+  stream_time = position - start;
 
   abs_applied_rate = ABS (segment->applied_rate);
 
   /* correct for applied rate if needed */
   if (G_UNLIKELY (abs_applied_rate != 1.0))
-    result *= abs_applied_rate;
+    stream_time *= abs_applied_rate;
 
   /* add or subtract from segment time based on applied rate */
   if (G_LIKELY (segment->applied_rate > 0.0)) {
     /* correct for segment time */
-    result += time;
+    stream_time += time;
   } else {
     /* correct for segment time, clamp at 0. Streams with a negative
      * applied_rate have timestamps between start and stop, as usual, but have
      * the time member starting high and going backwards.  */
-    if (G_LIKELY (time > result))
-      result = time - result;
+    if (G_LIKELY (time > stream_time))
+      stream_time = time - stream_time;
     else
-      result = 0;
+      stream_time = 0;
   }
 
-  return result;
+  return stream_time;
 }
 
 /**
