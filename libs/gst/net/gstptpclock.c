@@ -961,6 +961,7 @@ send_delay_req_timeout (PtpPendingSync * sync)
       sizeof (header), &written, &err);
   if (status == G_IO_STATUS_ERROR) {
     g_warning ("Failed to write to stdout: %s", err->message);
+    g_clear_error (&err);
     return G_SOURCE_REMOVE;
   } else if (status == G_IO_STATUS_EOF) {
     g_message ("EOF on stdout");
@@ -984,6 +985,7 @@ send_delay_req_timeout (PtpPendingSync * sync)
       (const gchar *) delay_req, 44, &written, &err);
   if (status == G_IO_STATUS_ERROR) {
     g_warning ("Failed to write to stdout: %s", err->message);
+    g_clear_error (&err);
     g_main_loop_quit (main_loop);
     return G_SOURCE_REMOVE;
   } else if (status == G_IO_STATUS_EOF) {
@@ -1748,6 +1750,7 @@ have_stdin_data_cb (GIOChannel * channel, GIOCondition condition,
       &read, &err);
   if (status == G_IO_STATUS_ERROR) {
     GST_ERROR ("Failed to read from stdin: %s", err->message);
+    g_clear_error (&err);
     g_main_loop_quit (main_loop);
     return G_SOURCE_REMOVE;
   } else if (status == G_IO_STATUS_EOF) {
@@ -1771,6 +1774,7 @@ have_stdin_data_cb (GIOChannel * channel, GIOCondition condition,
   status = g_io_channel_read_chars (channel, buffer, header.size, &read, &err);
   if (status == G_IO_STATUS_ERROR) {
     GST_ERROR ("Failed to read from stdin: %s", err->message);
+    g_clear_error (&err);
     g_main_loop_quit (main_loop);
     return G_SOURCE_REMOVE;
   } else if (status == G_IO_STATUS_EOF) {
