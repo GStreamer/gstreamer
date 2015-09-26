@@ -644,7 +644,7 @@ _handle_buffer (GstValidateOverride * override,
 
   running_time = gst_segment_to_running_time (&pad_monitor->segment,
       GST_FORMAT_TIME, GST_BUFFER_PTS (buffer));
-  position = gst_segment_to_position (&pad_monitor->segment,
+  position = gst_segment_position_from_running_time (&pad_monitor->segment,
       GST_FORMAT_TIME, running_time);
 
   if (!_should_dump_buffer (o, pad_monitor, position)) {
