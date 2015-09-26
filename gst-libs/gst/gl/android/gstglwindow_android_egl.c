@@ -57,8 +57,6 @@ gst_gl_window_android_egl_class_init (GstGLWindowAndroidEGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_get_window_handle);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_set_window_handle);
-  window_class->draw_unlocked =
-      GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_draw);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_draw);
 }
 

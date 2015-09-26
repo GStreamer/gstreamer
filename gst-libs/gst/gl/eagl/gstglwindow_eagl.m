@@ -69,7 +69,6 @@ gst_gl_window_eagl_class_init (GstGLWindowEaglClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_eagl_get_window_handle);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_eagl_set_window_handle);
-  window_class->draw_unlocked = GST_DEBUG_FUNCPTR (gst_gl_window_eagl_draw);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_eagl_draw);
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_eagl_set_preferred_size);

@@ -1274,7 +1274,6 @@ GstGLWindow
 GstGLWindowClass
 gst_gl_window_new
 gst_gl_window_draw
-gst_gl_window_draw_unlocked
 gst_gl_window_is_running
 gst_gl_window_quit
 gst_gl_window_run

@@ -74,7 +74,6 @@ guintptr gst_gl_window_x11_get_window_handle (GstGLWindow * window);
 static void gst_gl_window_x11_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 void gst_gl_window_x11_show (GstGLWindow * window);
-void gst_gl_window_x11_draw_unlocked (GstGLWindow * window);
 void gst_gl_window_x11_draw (GstGLWindow * window);
 gboolean gst_gl_window_x11_create_context (GstGLWindow * window,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
@@ -104,8 +103,6 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_set_window_handle);
   window_class->get_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_window_handle);
-  window_class->draw_unlocked =
-      GST_DEBUG_FUNCPTR (gst_gl_window_x11_draw_unlocked);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_x11_draw);
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_x11_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_x11_close);
@@ -387,39 +384,13 @@ gst_gl_window_x11_show (GstGLWindow * window)
   gst_gl_window_send_message (window, (GstGLWindowCB) _show_window, window);
 }
 
-/* Called in the gl thread */
-void
-gst_gl_window_x11_draw_unlocked (GstGLWindow * window)
-{
-  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
-
-  if (gst_gl_window_is_running (GST_GL_WINDOW (window_x11))
-      && window_x11->allow_extra_expose_events) {
-    if (window->queue_resize) {
-      guint width, height;
-
-      gst_gl_window_get_surface_dimensions (window, &width, &height);
-      gst_gl_window_resize (window, width, height);
-    }
-
-    if (window->draw) {
-      GstGLContext *context = gst_gl_window_get_context (window);
-      GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
-
-      window->draw (window->draw_data);
-      context_class->swap_buffers (context);
-
-      gst_object_unref (context);
-    }
-  }
-}
-
 static void
 draw_cb (gpointer data)
 {
   GstGLWindowX11 *window_x11 = data;
+  GstGLWindow *window = GST_GL_WINDOW (window_x11);
 
-  if (gst_gl_window_is_running (GST_GL_WINDOW (window_x11))) {
+  if (gst_gl_window_is_running (window)) {
     XWindowAttributes attr;
 
     XGetWindowAttributes (window_x11->device, window_x11->internal_win_id,
@@ -443,7 +414,24 @@ draw_cb (gpointer data)
       }
     }
 
-    gst_gl_window_x11_draw_unlocked (GST_GL_WINDOW (window_x11));
+    if (window_x11->allow_extra_expose_events) {
+      if (window->queue_resize) {
+        guint width, height;
+
+        gst_gl_window_get_surface_dimensions (window, &width, &height);
+        gst_gl_window_resize (window, width, height);
+      }
+
+      if (window->draw) {
+        GstGLContext *context = gst_gl_window_get_context (window);
+        GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
+
+        window->draw (window->draw_data);
+        context_class->swap_buffers (context);
+
+        gst_object_unref (context);
+      }
+    }
   }
 }
 
