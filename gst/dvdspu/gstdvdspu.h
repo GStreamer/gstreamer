@@ -94,7 +94,6 @@ struct _GstDVDSpu {
   /* Mutex to protect state we access from different chain funcs */
   GMutex spu_lock;
 
-  gboolean video_flushing;
   GstSegment video_seg;
   GstSegment subp_seg;
 
