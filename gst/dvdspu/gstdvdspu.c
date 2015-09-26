@@ -180,15 +180,6 @@ gst_dvd_spu_init (GstDVDSpu * dvdspu)
 }
 
 static void
-gst_dvd_spu_reset_composition (GstDVDSpu * dvdspu)
-{
-  if (dvdspu->composition) {
-    gst_video_overlay_composition_unref (dvdspu->composition);
-    dvdspu->composition = NULL;
-  }
-}
-
-static void
 gst_dvd_spu_clear (GstDVDSpu * dvdspu)
 {
   gst_dvd_spu_flush_spu_info (dvdspu, FALSE);
@@ -278,8 +269,6 @@ gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu, gboolean keep_events)
     default:
       break;
   }
-
-  gst_dvd_spu_reset_composition (dvdspu);
 }
 
 static gboolean
@@ -810,27 +799,26 @@ gstspu_render (GstDVDSpu * dvdspu, GstBuffer * buf)
   GstVideoOverlayComposition *composition;
   GstVideoFrame frame;
 
-  if (!dvdspu->composition) {
-    dvdspu->composition = gstspu_render_composition (dvdspu);
-    if (!dvdspu->composition)
-      return;
-  }
-
-  composition = dvdspu->composition;
+  composition = gstspu_render_composition (dvdspu);
+  if (!composition)
+    return;
 
   if (dvdspu->attach_compo_to_buffer) {
     gst_buffer_add_video_overlay_composition_meta (buf, composition);
-    return;
+    goto done;
   }
 
   if (!gst_video_frame_map (&frame, &dvdspu->spu_state.info, buf,
           GST_MAP_READWRITE)) {
     GST_WARNING_OBJECT (dvdspu, "failed to map video frame for blending");
-    return;
+    goto done;
   }
 
   gst_video_overlay_composition_blend (composition, &frame);
   gst_video_frame_unmap (&frame);
+
+done:
+  gst_video_overlay_composition_unref (composition);
 }
 
 /* With SPU LOCK */
@@ -899,9 +887,6 @@ gst_dvd_spu_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event)
       break;
   }
 
-  if (hl_change)
-    gst_dvd_spu_reset_composition (dvdspu);
-
   if (hl_change && (dvdspu->spu_state.flags & SPU_STATE_STILL_FRAME)) {
     gst_dvd_spu_redraw_still (dvdspu, FALSE);
   }
@@ -954,8 +939,6 @@ gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts)
                   GST_FORMAT_TIME, dvdspu->video_seg.position)),
           GST_TIME_ARGS (dvdspu->video_seg.position),
           packet->buf ? "buffer" : "event");
-
-      gst_dvd_spu_reset_composition (dvdspu);
 
       if (packet->buf) {
         switch (dvdspu->spu_input_type) {
@@ -1067,8 +1050,6 @@ gst_dvd_spu_negotiate (GstDVDSpu * dvdspu)
   GstQuery *query;
   GstCaps *caps;
   gboolean attach = FALSE;
-
-  gst_dvd_spu_reset_composition (dvdspu);
 
   GST_DEBUG_OBJECT (dvdspu, "performing negotiation");
 
