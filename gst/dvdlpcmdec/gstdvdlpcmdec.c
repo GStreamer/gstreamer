@@ -250,10 +250,12 @@ gst_dvdlpcmdec_update_audio_formats (GstDvdLpcmDec * dec, gint channels,
       GST_AUDIO_CHANNEL_POSITION_INVALID) {
     const GstAudioChannelPosition *position;
     GstAudioChannelPosition sorted_position[8];
+    guint c;
 
     position = channel_positions[channels - 1];
     dec->lpcm_layout = position;
-    memcpy (sorted_position, position, sizeof (sorted_position));
+    for (c = 0; c < channels; ++c)
+      sorted_position[c] = position[c];
     gst_audio_channel_positions_to_valid_order (sorted_position, channels);
     gst_audio_info_set_format (&dec->info, format, rate, channels,
         sorted_position);
