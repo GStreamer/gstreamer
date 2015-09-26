@@ -3080,7 +3080,8 @@ GST_START_TEST (dash_mpdparser_activeStream_parameters)
   GstAdaptationSetNode *adapt_set;
   guint activeStreams;
   GstActiveStream *activeStream;
-  const gchar *mimeType;
+  GstCaps *caps;
+  GstStructure *s;
   gboolean bitstreamSwitchingFlag;
   guint videoStreamWidth;
   guint videoStreamHeight;
@@ -3133,8 +3134,11 @@ GST_START_TEST (dash_mpdparser_activeStream_parameters)
   fail_if (activeStream == NULL);
 
   assert_equals_int (activeStream->mimeType, GST_STREAM_VIDEO);
-  mimeType = gst_mpd_client_get_stream_mimeType (activeStream);
-  assert_equals_string (mimeType, "video/quicktime");
+  caps = gst_mpd_client_get_stream_caps (activeStream);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  assert_equals_string (gst_structure_get_name (s), "video/quicktime");
+  gst_caps_unref (caps);
 
   bitstreamSwitchingFlag =
       gst_mpd_client_get_bitstream_switching_flag (activeStream);
