@@ -116,22 +116,22 @@ guint           gst_util_group_id_next          (void);
 #ifndef __GTK_DOC_IGNORE__
 #if GST_HAVE_UNALIGNED_ACCESS
 static inline guint16 __gst_fast_read16(const guint8 *v) {
-  return *(const guint16*)(v);
+  return *(const guint16*)(const void*)(v);
 }
 static inline guint32 __gst_fast_read32(const guint8 *v) {
-  return *(const guint32*)(v);
+  return *(const guint32*)(const void*)(v);
 }
 static inline guint64 __gst_fast_read64(const guint8 *v) {
-  return *(const guint64*)(v);
+  return *(const guint64*)(const void*)(v);
 }
 static inline guint16 __gst_fast_read_swap16(const guint8 *v) {
-  return GUINT16_SWAP_LE_BE(*(const guint16*)(v));
+  return GUINT16_SWAP_LE_BE(*(const guint16*)(const void*)(v));
 }
 static inline guint32 __gst_fast_read_swap32(const guint8 *v) {
-  return GUINT32_SWAP_LE_BE(*(const guint32*)(v));
+  return GUINT32_SWAP_LE_BE(*(const guint32*)(const void*)(v));
 }
 static inline guint64 __gst_fast_read_swap64(const guint8 *v) {
-  return GUINT64_SWAP_LE_BE(*(const guint64*)(v));
+  return GUINT64_SWAP_LE_BE(*(const guint64*)(const void*)(v));
 }
 # define _GST_FAST_READ(s, d) __gst_fast_read##s((const guint8 *)(d))
 # define _GST_FAST_READ_SWAP(s, d) __gst_fast_read_swap##s((const guint8 *)(d))
