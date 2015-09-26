@@ -23,11 +23,11 @@
  * @short_description: A test-harness for writing GStreamer unit tests
  * @see_also: #GstTestClock,\
  *
- * #GstHarness is ment to make writing unit test for GStreamer much easier.
- * It can be though of as a way of treating a #GstElement as a black box,
- * deterministially feeding it data, and controlling what data it outputs.
+ * #GstHarness is meant to make writing unit test for GStreamer much easier.
+ * It can be thought of as a way of treating a #GstElement as a black box,
+ * deterministically feeding it data, and controlling what data it outputs.
  *
- * The basic structure of #GstHarness is two "floating" #GstPads, that connects
+ * The basic structure of #GstHarness is two "floating" #GstPads that connect
  * to the harnessed #GstElement src and sink #GstPads like so:
  *
  * <programlisting>
@@ -42,17 +42,17 @@
  *
  * With this, you can now simulate any environment the #GstElement might find
  * itself in. By specifying the #GstCaps of the harness #GstPads, using
- * functions like gst_harness_set_src_caps or gst_harness_set_sink_caps_str,
- * you can test how the #GstElement interacts with different capssets.
+ * functions like gst_harness_set_src_caps() or gst_harness_set_sink_caps_str(),
+ * you can test how the #GstElement interacts with different caps sets.
  *
  * Your harnessed #GstElement can of course also be a bin, and using
- * gst_harness_new_parse supporting standard gst-launch syntax, you can
+ * gst_harness_new_parse() supporting standard gst-launch syntax, you can
  * easily test a whole pipeline instead of just one element.
  *
  * You can then go on to push #GstBuffers and #GstEvents on to the srcpad,
- * using functions like gst_harness_push and gst_harness_push_event, and
- * then pull them out to examine them with gst_harness_pull and
- * gst_harness_pull_event.
+ * using functions like gst_harness_push() and gst_harness_push_event(), and
+ * then pull them out to examine them with gst_harness_pull() and
+ * gst_harness_pull_event().
  *
  * <example>
  * <title>A simple buffer-in buffer-out example</title>
@@ -92,14 +92,14 @@
  * #GstTestClock. Operating the #GstTestClock can be very challenging, but
  * #GstHarness simplifies some of the most desired actions a lot, like wanting
  * to manually advance the clock while at the same time releasing a #GstClockID
- * that is waiting, with functions like gst_harness_crank_single_clock_wait.
+ * that is waiting, with functions like gst_harness_crank_single_clock_wait().
  *
  * #GstHarness also supports sub-harnesses, as a way of generating and
  * validating data. A sub-harness is another #GstHarness that is managed by
  * the "parent" harness, and can either be created by using the standard
  * gst_harness_new type functions directly on the (GstHarness *)->src_harness,
- * or using the much more convenient gst_harness_add_src or
- * gst_harness_add_sink_parse. If you have a decoder-element you want to test,
+ * or using the much more convenient gst_harness_add_src() or
+ * gst_harness_add_sink_parse(). If you have a decoder-element you want to test,
  * (like vp8dec) it can be very useful to add a src-harness with both a
  * src-element (videotestsrc) and an encoder (vp8enc) to feed the decoder data
  * with different configurations, by simply doing:
