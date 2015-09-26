@@ -106,7 +106,6 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_get_window_handle);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_window_handle);
-  window_class->draw_unlocked = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_draw);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_draw);
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_preferred_size);

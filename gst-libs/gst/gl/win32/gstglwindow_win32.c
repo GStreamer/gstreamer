@@ -74,7 +74,6 @@ gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
 
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_set_window_handle);
-  window_class->draw_unlocked = GST_DEBUG_FUNCPTR (gst_gl_window_win32_draw);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_win32_draw);
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_get_display);

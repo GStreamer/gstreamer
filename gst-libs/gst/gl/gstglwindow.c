@@ -209,7 +209,6 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
   klass->close = GST_DEBUG_FUNCPTR (gst_gl_window_default_close);
   klass->run = GST_DEBUG_FUNCPTR (gst_gl_window_default_run);
   klass->quit = GST_DEBUG_FUNCPTR (gst_gl_window_default_quit);
-  klass->draw_unlocked = GST_DEBUG_FUNCPTR (gst_gl_window_default_draw);
   klass->draw = GST_DEBUG_FUNCPTR (gst_gl_window_default_draw);
   klass->send_message = GST_DEBUG_FUNCPTR (gst_gl_window_default_send_message);
   klass->send_message_async =
@@ -460,29 +459,6 @@ static void
 gst_gl_window_default_draw (GstGLWindow * window)
 {
   gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
-}
-
-
-/**
- * gst_gl_window_draw_unlocked:
- * @window: a #GstGLWindow
- *
- * Redraw the window contents.  Implementations should invoke the draw callback.
- *
- * Since: 1.4
- */
-void
-gst_gl_window_draw_unlocked (GstGLWindow * window)
-{
-  GstGLWindowClass *window_class;
-
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
-  window_class = GST_GL_WINDOW_GET_CLASS (window);
-  g_return_if_fail (window_class->draw_unlocked != NULL);
-
-  window_class->draw_unlocked (window);
-
-  window->queue_resize = FALSE;
 }
 
 /**

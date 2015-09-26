@@ -334,8 +334,6 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_window_handle);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_set_window_handle);
-  window_class->draw_unlocked =
-      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_draw);
   window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_show);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_draw);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_close);

@@ -108,7 +108,6 @@ struct _GstGLWindow {
  * @set_window_handle: Set a window to render into
  * @get_window_handle: Gets the current window that this #GstGLWindow is
  *                     rendering into
- * @draw_unlocked: redraw the window with the specified dimensions
  * @draw: redraw the window with the specified dimensions
  * @run: run the mainloop
  * @quit: send a quit to the mainloop
@@ -131,7 +130,6 @@ struct _GstGLWindowClass {
   guintptr (*get_display)        (GstGLWindow *window);
   void     (*set_window_handle)  (GstGLWindow *window, guintptr id);
   guintptr (*get_window_handle)  (GstGLWindow *window);
-  void     (*draw_unlocked)      (GstGLWindow *window);
   void     (*draw)               (GstGLWindow *window);
   void     (*run)                (GstGLWindow *window);
   void     (*quit)               (GstGLWindow *window);
@@ -216,7 +214,6 @@ void     gst_gl_window_send_mouse_event     (GstGLWindow * window,
 
 /* surfaces/rendering */
 void     gst_gl_window_queue_resize         (GstGLWindow *window);
-void     gst_gl_window_draw_unlocked        (GstGLWindow *window);
 void     gst_gl_window_draw                 (GstGLWindow *window);
 void     gst_gl_window_show                 (GstGLWindow *window);
 void     gst_gl_window_set_preferred_size   (GstGLWindow * window,
