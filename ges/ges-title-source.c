@@ -231,7 +231,8 @@ ges_title_source_set_property (GObject * object,
 static GstElement *
 ges_title_source_create_source (GESTrackElement * object)
 {
-  GstElement *topbin, *background, *text;
+  GstCaps *alphacaps;
+  GstElement *topbin, *background, *text, *capsfilter;
   GstPad *src, *pad;
 
   GESTitleSource *self = GES_TITLE_SOURCE (object);
@@ -243,7 +244,11 @@ ges_title_source_create_source (GESTrackElement * object)
 
   topbin = gst_bin_new ("titlesrc-bin");
   background = gst_element_factory_make ("videotestsrc", "titlesrc-bg");
+  capsfilter = gst_element_factory_make ("capsfilter", NULL);
 
+  alphacaps =
+      gst_caps_from_string ("video/x-raw, format={AYUV, AYUV64, ARGB, ARGB64}");
+  g_object_set (capsfilter, "caps", alphacaps, NULL);
   text = gst_element_factory_make ("textoverlay", "titlsrc-text");
   if (priv->text) {
     g_object_set (text, "text", priv->text, NULL);
@@ -263,9 +268,11 @@ ges_title_source_create_source (GESTrackElement * object)
   g_object_set (background, "foreground-color", (guint) self->priv->background,
       NULL);
 
-  gst_bin_add_many (GST_BIN (topbin), background, text, NULL);
+  gst_bin_add_many (GST_BIN (topbin), background, capsfilter, text, NULL);
 
-  gst_element_link_pads_full (background, "src", text, "video_sink",
+  gst_element_link_pads_full (background, "src", capsfilter, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
+  gst_element_link_pads_full (capsfilter, "src", text, "video_sink",
       GST_PAD_LINK_CHECK_NOTHING);
 
   pad = gst_element_get_static_pad (text, "src");
