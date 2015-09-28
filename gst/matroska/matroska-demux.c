@@ -3700,7 +3700,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
          for 32 bit samples, etc), or bad things will happen downstream as
          elements typically assume minimal alignment.
          Therefore, create an aligned copy if necessary. */
-      g_assert (stream->alignment <= G_MEM_ALIGN);
       sub = gst_matroska_demux_align_buffer (demux, sub, stream->alignment);
 
       if (GST_BUFFER_PTS_IS_VALID (sub)) {
