@@ -90,7 +90,8 @@ struct _GstDirectControlBinding {
     struct {
       gboolean want_absolute;
     } abi;
-  } ABI;};
+  } ABI;
+};
 
 /**
  * GstDirectControlBindingClass:
