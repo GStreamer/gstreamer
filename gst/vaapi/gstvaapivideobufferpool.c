@@ -199,7 +199,8 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
     gst_buffer_pool_config_set_video_alignment (config, &align);
   }
 
-  priv->has_texture_upload_meta = gst_buffer_pool_config_has_option (config,
+  priv->has_texture_upload_meta = !priv->use_dmabuf_memory
+      && gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
 
   return
