@@ -22,7 +22,7 @@ GstCheckABIStruct list[] = {
   {"GstInterpolationControlSource", sizeof (GstInterpolationControlSource), 240},
   {"GstLFOControlSourceClass", sizeof (GstLFOControlSourceClass), 248},
   {"GstLFOControlSource", sizeof (GstLFOControlSource), 184},
-  {"GstControlPoint", sizeof (GstControlPoint), 32},
+  {"GstControlPoint", sizeof (GstControlPoint), 48},
   {"GstTimedValueControlSourceClass", sizeof (GstTimedValueControlSourceClass), 248},
   {"GstTimedValueControlSource", sizeof (GstTimedValueControlSource), 200},
   {"GstTriggerControlSourceClass", sizeof (GstTriggerControlSourceClass), 280},

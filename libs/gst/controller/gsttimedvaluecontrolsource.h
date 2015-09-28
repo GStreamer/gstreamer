@@ -55,7 +55,7 @@ typedef struct _GstControlPoint GstControlPoint;
  * @timestamp: timestamp of the value change
  * @value: the new value
  *
- * a internal structure for value+time and various temporary
+ * An internal structure for value+time and various temporary
  * values used for interpolation. This "inherits" from
  * GstTimedValue.
  */
@@ -77,8 +77,8 @@ struct _GstControlPoint
     struct {
       gdouble c1s, c2s, c3s;
     } cubic_mono;
+    gpointer _gst_reserved[GST_PADDING];
   } cache;
-
 };
 
 GType gst_control_point_get_type (void);
