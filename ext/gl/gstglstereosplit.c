@@ -210,6 +210,9 @@ stereosplit_set_context (GstElement * element, GstContext * context)
 
   if (stereosplit->display)
     gst_gl_display_filter_gl_api (stereosplit->display, SUPPORTED_GL_APIS);
+
+  GST_ELEMENT_CLASS (gst_gl_stereosplit_parent_class)->set_context (element,
+      context);
 }
 
 static GstStateChangeReturn
