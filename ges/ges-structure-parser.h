@@ -26,6 +26,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_STRUCTURE_PARSER            ges_structure_parser_get_type()
+#define GES_STRUCTURE_PARSER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_STRUCTURE_PARSER, GESStructureParser))
 
 typedef struct _GESStructureParser GESStructureParser;
 typedef struct _GESStructureParserClass GESStructureParserClass;

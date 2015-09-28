@@ -32,15 +32,10 @@ ges_structure_parser_init (GESStructureParser * self)
 static void
 _finalize (GObject * self)
 {
-  GList *tmp;
+  GESStructureParser *parser = GES_STRUCTURE_PARSER (self);
 
-  for (tmp = ((GESStructureParser *) self)->structures; tmp; tmp = tmp->next) {
-    gst_structure_free (tmp->data);
-  }
-
-  for (tmp = ((GESStructureParser *) self)->wrong_strings; tmp; tmp = tmp->next) {
-    g_free (tmp->data);
-  }
+  g_list_free_full (parser->structures, (GDestroyNotify) gst_structure_free);
+  g_list_free_full (parser->wrong_strings, (GDestroyNotify) g_free);
 }
 
 static void
