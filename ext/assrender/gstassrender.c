@@ -1681,6 +1681,9 @@ gst_ass_render_event_text (GstPad * pad, GstObject * parent, GstEvent * event)
        * a text segment update */
       GST_ASS_RENDER_BROADCAST (render);
       GST_ASS_RENDER_UNLOCK (render);
+
+      gst_event_unref (event);
+      ret = TRUE;
       break;
     }
     case GST_EVENT_FLUSH_STOP:
