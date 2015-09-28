@@ -512,10 +512,12 @@ _gst_context_query (GstElement * element,
     gst_query_parse_context (query, &ctxt);
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "found context (%p) in downstream query", ctxt);
+    gst_element_set_context (element, ctxt);
   } else if (gst_gl_run_query (element, query, GST_PAD_SINK)) {
     gst_query_parse_context (query, &ctxt);
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "found context (%p) in upstream query", ctxt);
+    gst_element_set_context (element, ctxt);
   } else {
     /* 3) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with
      *    the required context type and afterwards check if a
@@ -653,6 +655,8 @@ gst_gl_display_context_propagate (GstElement * element, GstGLDisplay * display)
 
   context = gst_context_new (GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
   gst_context_set_gl_display (context, display);
+
+  gst_element_set_context (element, context);
 
   GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
       "posting have context (%p) message with display (%p)", context, display);
