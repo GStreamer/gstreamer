@@ -2603,7 +2603,8 @@ default_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
 
   /* do remainder in context */
   source = g_idle_source_new ();
-  g_source_set_callback (source, (GSourceFunc) start_prepare, media, NULL);
+  g_source_set_callback (source, (GSourceFunc) start_prepare,
+    g_object_ref (media), (GDestroyNotify) g_object_unref);
   g_source_attach (source, context);
   g_source_unref (source);
 
