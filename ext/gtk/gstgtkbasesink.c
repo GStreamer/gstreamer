@@ -276,10 +276,12 @@ gst_gtk_base_sink_navigation_send_event (GstNavigation * navigation,
 
   GST_TRACE_OBJECT (sink, "navigation event %" GST_PTR_FORMAT, structure);
 
-  if (GST_IS_PAD (pad) && GST_IS_EVENT (event))
-    gst_pad_send_event (pad, event);
+  if (GST_IS_PAD (pad)) {
+    if (GST_IS_EVENT (event))
+      gst_pad_send_event (pad, event);
 
-  gst_object_unref (pad);
+    gst_object_unref (pad);
+  }
 }
 
 static void
