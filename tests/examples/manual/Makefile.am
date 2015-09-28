@@ -14,9 +14,9 @@ REGISTRY_ENVIRONMENT = \
 
 AM_TESTS_ENVIRONMENT = \
         $(REGISTRY_ENVIRONMENT)                                 \
-        GST_PLUGIN_SCANNER=$(top_builddir)/libs/gst/helpers/gst-plugin-scanner \
-        GST_PLUGIN_SYSTEM_PATH=                                 \
-        GST_PLUGIN_PATH=$(top_builddir)/plugins
+        GST_PLUGIN_SCANNER_1_0=$(top_builddir)/libs/gst/helpers/gst-plugin-scanner \
+        GST_PLUGIN_SYSTEM_PATH_1_0=                                 \
+        GST_PLUGIN_PATH_1_0=$(top_builddir)/plugins
 
 EXTRA_DIST = extract.pl
 
