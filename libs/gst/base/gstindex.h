@@ -217,6 +217,7 @@ struct _GstIndexEntry {
       const gchar       *key;
     } format;
   } data;
+  // FIXME 2.0: add padding
 };
 
 /**
@@ -238,6 +239,7 @@ struct _GstIndexGroup {
 
   /* peer group that contains more certain entries */
   gint peergroup;
+  // FIXME 2.0: add padding
 };
 
 /**
