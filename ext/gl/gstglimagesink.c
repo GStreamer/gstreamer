@@ -914,6 +914,8 @@ gst_glimage_sink_set_context (GstElement * element, GstContext * context)
 
   if (gl_sink->display)
     gst_gl_display_filter_gl_api (gl_sink->display, SUPPORTED_GL_APIS);
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 static GstStateChangeReturn

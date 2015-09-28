@@ -459,6 +459,8 @@ gst_gl_test_src_set_context (GstElement * element, GstContext * context)
 
   if (src->display)
     gst_gl_display_filter_gl_api (src->display, SUPPORTED_GL_APIS);
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 static gboolean

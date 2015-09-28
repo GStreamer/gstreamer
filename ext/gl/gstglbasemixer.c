@@ -320,6 +320,8 @@ gst_gl_base_mixer_set_context (GstElement * element, GstContext * context)
 
   if (mix->display)
     gst_gl_display_filter_gl_api (mix->display, mix_class->supported_gl_api);
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 static gboolean

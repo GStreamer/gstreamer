@@ -476,6 +476,8 @@ gst_ca_opengl_layer_sink_set_context (GstElement * element, GstContext * context
 
   if (ca_sink->display)
     gst_gl_display_filter_gl_api (ca_sink->display, SUPPORTED_GL_APIS);
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 static GstStateChangeReturn
