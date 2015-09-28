@@ -528,8 +528,8 @@ add_cuesheet (const GstToc * toc, guint sample_rate,
         (FLAC__uint64) gst_util_uint64_scale_round (start, sample_rate,
         GST_SECOND);
     track->number = (FLAC__byte) track_num + 1;
-    if (isrc)
-      strcpy (track->isrc, isrc);
+    if (isrc != NULL && strlen (isrc) <= 12)
+      g_strlcpy (track->isrc, isrc, 13);
     if (track->number <= 0)
       return FALSE;
     if (!FLAC__metadata_object_cuesheet_insert_track (cuesheet, track_num,
