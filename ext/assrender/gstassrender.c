@@ -1424,7 +1424,7 @@ beach:
 }
 
 static void
-gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
+gst_ass_render_handle_tag_sample (GstAssRender * render, GstSample * sample)
 {
   static const gchar *mimetypes[] = {
     "application/x-font-ttf",
@@ -1435,6 +1435,60 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
     ".otf",
     ".ttf"
   };
+
+  GstBuffer *buf;
+  const GstStructure *structure;
+  gboolean valid_mimetype, valid_extension;
+  guint i;
+  const gchar *filename;
+
+  buf = gst_sample_get_buffer (sample);
+  structure = gst_sample_get_info (sample);
+
+  if (!buf || !structure)
+    return;
+
+  valid_mimetype = FALSE;
+  valid_extension = FALSE;
+
+  for (i = 0; i < G_N_ELEMENTS (mimetypes); i++) {
+    if (gst_structure_has_name (structure, mimetypes[i])) {
+      valid_mimetype = TRUE;
+      break;
+    }
+  }
+
+  filename = gst_structure_get_string (structure, "filename");
+  if (!filename)
+    return;
+
+  if (!valid_mimetype) {
+    guint len = strlen (filename);
+    const gchar *extension = filename + len - 4;
+    for (i = 0; i < G_N_ELEMENTS (extensions); i++) {
+      if (g_ascii_strcasecmp (extension, extensions[i]) == 0) {
+        valid_extension = TRUE;
+        break;
+      }
+    }
+  }
+
+  if (valid_mimetype || valid_extension) {
+    GstMapInfo map;
+
+    g_mutex_lock (&render->ass_mutex);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    ass_add_font (render->ass_library, (gchar *) filename,
+        (gchar *) map.data, map.size);
+    gst_buffer_unmap (buf, &map);
+    GST_DEBUG_OBJECT (render, "registered new font %s", filename);
+    g_mutex_unlock (&render->ass_mutex);
+  }
+}
+
+static void
+gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
+{
   guint tag_size;
 
   if (!taglist)
@@ -1442,58 +1496,16 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
 
   tag_size = gst_tag_list_get_tag_size (taglist, GST_TAG_ATTACHMENT);
   if (tag_size > 0 && render->embeddedfonts) {
-    GstSample *sample;
-    GstBuffer *buf;
-    const GstStructure *structure;
-    gboolean valid_mimetype, valid_extension;
-    guint j;
-    const gchar *filename;
     guint index;
-    GstMapInfo map;
+    GstSample *sample;
 
     GST_DEBUG_OBJECT (render, "TAG event has attachments");
 
     for (index = 0; index < tag_size; index++) {
-      if (!gst_tag_list_get_sample_index (taglist, GST_TAG_ATTACHMENT, index,
-              &sample))
-        continue;
-      buf = gst_sample_get_buffer (sample);
-      structure = gst_sample_get_info (sample);
-      if (!buf || !structure)
-        continue;
-
-      valid_mimetype = FALSE;
-      valid_extension = FALSE;
-
-      for (j = 0; j < G_N_ELEMENTS (mimetypes); j++) {
-        if (gst_structure_has_name (structure, mimetypes[j])) {
-          valid_mimetype = TRUE;
-          break;
-        }
-      }
-      filename = gst_structure_get_string (structure, "filename");
-      if (!filename)
-        continue;
-
-      if (!valid_mimetype) {
-        guint len = strlen (filename);
-        const gchar *extension = filename + len - 4;
-        for (j = 0; j < G_N_ELEMENTS (extensions); j++) {
-          if (g_ascii_strcasecmp (extension, extensions[j]) == 0) {
-            valid_extension = TRUE;
-            break;
-          }
-        }
-      }
-
-      if (valid_mimetype || valid_extension) {
-        g_mutex_lock (&render->ass_mutex);
-        gst_buffer_map (buf, &map, GST_MAP_READ);
-        ass_add_font (render->ass_library, (gchar *) filename,
-            (gchar *) map.data, map.size);
-        gst_buffer_unmap (buf, &map);
-        GST_DEBUG_OBJECT (render, "registered new font %s", filename);
-        g_mutex_unlock (&render->ass_mutex);
+      if (gst_tag_list_get_sample_index (taglist, GST_TAG_ATTACHMENT, index,
+              &sample)) {
+        gst_ass_render_handle_tag_sample (render, sample);
+        gst_sample_unref (sample);
       }
     }
   }
