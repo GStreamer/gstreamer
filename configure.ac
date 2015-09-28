@@ -17,6 +17,7 @@ m4_define([gst_vaapi_lt_current],       [7])
 m4_define([gst2_vaapi_lt_current_bias], [4])
 m4_define([gst4_vaapi_lt_current_bias], [5])
 m4_define([gst6_vaapi_lt_current_bias], [6])
+m4_define([gst8_vaapi_lt_current_bias], [7])
 m4_define([gst_vaapi_lt_revision],      [0])
 m4_define([gst_vaapi_lt_age],           [0])
 
@@ -34,6 +35,9 @@ m4_define([gst14_plugins_bad_version],  [1.3.0])
 m4_define([gst16_version],              [1.5.0])
 m4_define([gst16_plugins_base_version], [1.5.0])
 m4_define([gst16_plugins_bad_version],  [1.5.0])
+m4_define([gst18_version],              [1.7.0])
+m4_define([gst18_plugins_base_version], [1.7.0])
+m4_define([gst18_plugins_bad_version],  [1.7.0])
 
 # Wayland minimum version number
 m4_define([wayland_api_version], [1.0.2])
@@ -209,6 +213,11 @@ case $GST_API_VERSION in
     GST_VERSION_REQUIRED=gst16_version
     GST_PLUGINS_BASE_VERSION_REQUIRED=gst16_plugins_base_version
     GST_PLUGINS_BAD_VERSION_REQUIRED=gst16_plugins_bad_version
+    ;;
+1.[[7-8]])
+    GST_VERSION_REQUIRED=gst18_version
+    GST_PLUGINS_BASE_VERSION_REQUIRED=gst18_plugins_base_version
+    GST_PLUGINS_BAD_VERSION_REQUIRED=gst18_plugins_bad_version
     ;;
 *)
     AC_MSG_ERROR([unsupported GStreamer API version $GST_API_VERSION])
@@ -451,6 +460,7 @@ case $GST_API_VERSION in
 1.2)    lt_bias=gst2_vaapi_lt_current_bias;;
 1.4)    lt_bias=gst4_vaapi_lt_current_bias;;
 1.[[5-6]])    lt_bias=gst6_vaapi_lt_current_bias;;
+1.[[7-8]])    lt_bias=gst8_vaapi_lt_current_bias;;
 esac
 GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - "$lt_bias"`
 AC_SUBST(GST_VAAPI_MAJOR_VERSION)
