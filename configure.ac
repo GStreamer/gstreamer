@@ -1403,18 +1403,6 @@ AM_CONDITIONAL(HAVE_JPEG, test "x$HAVE_JPEG" = "xyes")
 
 dnl *** sys plug-ins ***
 
-dnl *** alsa ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
-AG_GST_CHECK_FEATURE(ALSA, [ALSA], alsa, [
-  PKG_CHECK_MODULES(ALSA, alsa >= 0.9.1, [
-    HAVE_ALSA="yes"
-    AC_SUBST(ALSA_CFLAGS)
-    AC_SUBST(ALSA_LIBS)
-  ], [
-    AM_PATH_ALSA(0.9.1, HAVE_ALSA="yes", HAVE_ALSA="no")
-  ])
-])
-
 dnl DirectSound
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTSOUND, true)
 AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound], directsoundsrc, [
