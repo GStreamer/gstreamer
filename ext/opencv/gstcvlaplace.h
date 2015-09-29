@@ -70,6 +70,8 @@ struct _GstCvLaplace
   GstOpencvVideoFilter element;
 
   gint aperture_size;
+  gdouble scale;
+  gdouble shift;
 
   IplImage *intermediary_img;
 };

@@ -83,10 +83,14 @@ enum
 enum
 {
   PROP_0,
-  PROP_APERTURE_SIZE
+  PROP_APERTURE_SIZE,
+  PROP_SCALE,
+  PROP_SHIFT
 };
 
 #define DEFAULT_APERTURE_SIZE 3
+#define DEFAULT_SCALE_FACTOR 1.0
+#define DEFAULT_SHIFT 0.0
 
 G_DEFINE_TYPE (GstCvLaplace, gst_cv_laplace, GST_TYPE_OPENCV_VIDEO_FILTER);
 
@@ -143,6 +147,14 @@ gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
       g_param_spec_int ("aperture-size", "aperture size",
           "Size of the extended Laplace Kernel (1, 3, 5 or 7)", 1, 7,
           DEFAULT_APERTURE_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SCALE,
+      g_param_spec_double ("scale", "scale factor",
+          "Scale factor", 0.0, G_MAXDOUBLE,
+          DEFAULT_SCALE_FACTOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SHIFT,
+      g_param_spec_double ("shift", "Shift",
+          "Value added to the scaled source array elements", 0.0, G_MAXDOUBLE,
+          DEFAULT_SHIFT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -160,6 +172,8 @@ static void
 gst_cv_laplace_init (GstCvLaplace * filter)
 {
   filter->aperture_size = DEFAULT_APERTURE_SIZE;
+  filter->scale = DEFAULT_SCALE_FACTOR;
+  filter->shift = DEFAULT_SHIFT;
 
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), FALSE);
 }
@@ -277,6 +291,12 @@ gst_cv_laplace_set_property (GObject * object, guint prop_id,
         filter->aperture_size = g_value_get_int (value);
     }
       break;
+    case PROP_SCALE:
+      filter->scale = g_value_get_double (value);
+      break;
+    case PROP_SHIFT:
+      filter->shift = g_value_get_double (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -293,6 +313,12 @@ gst_cv_laplace_get_property (GObject * object, guint prop_id,
     case PROP_APERTURE_SIZE:
       g_value_set_int (value, filter->aperture_size);
       break;
+    case PROP_SCALE:
+      g_value_set_double (value, filter->scale);
+      break;
+    case PROP_SHIFT:
+      g_value_set_double (value, filter->shift);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -308,7 +334,8 @@ gst_cv_laplace_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
   g_assert (filter->intermediary_img);
 
   cvLaplace (img, filter->intermediary_img, filter->aperture_size);
-  cvConvertScale (filter->intermediary_img, outimg, 1, 0);
+  cvConvertScale (filter->intermediary_img, outimg, filter->scale,
+      filter->shift);
 
   return GST_FLOW_OK;
 }
