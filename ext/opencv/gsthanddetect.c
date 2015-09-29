@@ -261,8 +261,17 @@ gst_handdetect_class_init (GstHanddetectClass * klass)
 static void
 gst_handdetect_init (GstHanddetect * filter)
 {
-  filter->profile_fist = g_strdup (HAAR_FILE_FIST);
-  filter->profile_palm = g_strdup (HAAR_FILE_PALM);
+  const gchar *haar_path;
+
+  haar_path = g_getenv ("GST_HAAR_CASCADES_PATH");
+  if (haar_path) {
+    filter->profile_fist = g_build_filename (haar_path, "fist.xml", NULL);
+    filter->profile_palm = g_build_filename (haar_path, "palm.xml", NULL);
+  } else {
+    filter->profile_fist = g_strdup (HAAR_FILE_FIST);
+    filter->profile_palm = g_strdup (HAAR_FILE_PALM);
+  }
+
   filter->roi_x = 0;
   filter->roi_y = 0;
   filter->roi_width = 0;
