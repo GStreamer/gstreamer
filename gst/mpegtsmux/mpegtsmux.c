@@ -997,8 +997,7 @@ check_pending_key_unit_event (GstEvent * pending_event, GstSegment * segment,
       timestamp == GST_CLOCK_TIME_NONE)
     goto out;
 
-  running_time = gst_segment_to_running_time (segment,
-      GST_FORMAT_TIME, timestamp);
+  running_time = timestamp;
 
   GST_INFO ("now %" GST_TIME_FORMAT " wanted %" GST_TIME_FORMAT,
       GST_TIME_ARGS (running_time), GST_TIME_ARGS (pending_key_unit_ts));
