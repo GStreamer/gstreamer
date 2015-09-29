@@ -947,8 +947,8 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
   xmlChar *prop_string;
   gchar *str;
   gint ret, len, pos, posT;
-  guint years = 0, months = 0, days = 0, hours = 0, minutes = 0, seconds =
-      0, decimals = 0, read;
+  gint years = -1, months = -1, days = -1, hours = -1, minutes = -1, seconds =
+      -1, decimals = -1, read;
   gboolean have_ms = FALSE;
   gboolean exists = FALSE;
 
@@ -986,12 +986,24 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
         }
         switch (str[pos]) {
           case 'Y':
+            if (years != -1 || months != -1 || days != -1) {
+              GST_WARNING ("year, month or day was already set");
+              goto error;
+            }
             years = read;
             break;
           case 'M':
+            if (months != -1 || days != -1) {
+              GST_WARNING ("month or day was already set");
+              goto error;
+            }
             months = read;
             break;
           case 'D':
+            if (days != -1) {
+              GST_WARNING ("day was already set");
+              goto error;
+            }
             days = read;
             break;
           default:
@@ -1003,9 +1015,17 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
         str += (pos + 1);
         posT -= (pos + 1);
       } while (posT > 0);
-
-      GST_TRACE ("Y:M:D=%u:%u:%u", years, months, days);
     }
+
+    if (years == -1)
+      years = 0;
+    if (months == -1)
+      months = 0;
+    if (days == -1)
+      days = 0;
+
+    GST_TRACE ("Y:M:D=%d:%d:%d", years, months, days);
+
     /* read "T" for time (if present) */
     /* here T is at pos == 0 */
     str++;
@@ -1024,9 +1044,17 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
         }
         switch (str[pos]) {
           case 'H':
+            if (hours != -1 || minutes != -1 || seconds != -1) {
+              GST_WARNING ("hour, minute or second was already set");
+              goto error;
+            }
             hours = read;
             break;
           case 'M':
+            if (minutes != -1 || seconds != -1) {
+              GST_WARNING ("minute or second was already set");
+              goto error;
+            }
             minutes = read;
             break;
           case 'S':
@@ -1036,6 +1064,10 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
               GST_TRACE ("decimal number %u (%d digits) -> %d ms", read, pos,
                   decimals);
             } else {
+              if (seconds != -1) {
+                GST_WARNING ("second was already set");
+                goto error;
+              }
               /* no decimals */
               seconds = read;
             }
@@ -1043,6 +1075,10 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
           case '.':
           case ',':
             /* we have read the integer part of a decimal number in seconds */
+            if (seconds != -1) {
+              GST_WARNING ("second was already set");
+              goto error;
+            }
             seconds = read;
             have_ms = TRUE;
             break;
@@ -1055,9 +1091,17 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
         str += pos + 1;
         len -= (pos + 1);
       } while (len > 0);
-
-      GST_TRACE ("H:M:S.MS=%u:%u:%u.%03u", hours, minutes, seconds, decimals);
     }
+
+    if (hours == -1)
+      hours = 0;
+    if (minutes == -1)
+      minutes = 0;
+    if (seconds == -1)
+      seconds = 0;
+    if (decimals == -1)
+      decimals = 0;
+    GST_TRACE ("H:M:S.MS=%d:%d:%d.%03d", hours, minutes, seconds, decimals);
 
     xmlFree (prop_string);
     exists = TRUE;
