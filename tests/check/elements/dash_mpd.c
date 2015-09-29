@@ -2016,7 +2016,7 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation)
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <AdaptationSet>"
-      "      <Representation id=\"Test Id\""
+      "      <Representation id=\"Test_Id\""
       "                      bandwidth=\"100\""
       "                      qualityRanking=\"200\""
       "                      dependencyId=\"one two three\""
@@ -2033,7 +2033,7 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation)
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representation = (GstRepresentationNode *)
       adaptationSet->Representations->data;
-  assert_equals_string (representation->id, "Test Id");
+  assert_equals_string (representation->id, "Test_Id");
   assert_equals_uint64 (representation->bandwidth, 100);
   assert_equals_uint64 (representation->qualityRanking, 200);
   assert_equals_string (representation->dependencyId[0], "one");
@@ -4447,6 +4447,44 @@ GST_START_TEST
 
 GST_END_TEST;
 
+GST_START_TEST (dash_mpdparser_whitespace_strings)
+{
+  fail_unless (gst_mpdparser_validate_no_whitespace ("") == TRUE);
+  fail_unless (gst_mpdparser_validate_no_whitespace ("/") == TRUE);
+  fail_unless (gst_mpdparser_validate_no_whitespace (" ") == FALSE);
+  fail_unless (gst_mpdparser_validate_no_whitespace ("aaaaaaaa ") == FALSE);
+  fail_unless (gst_mpdparser_validate_no_whitespace ("a\ta") == FALSE);
+  fail_unless (gst_mpdparser_validate_no_whitespace ("a\ra") == FALSE);
+  fail_unless (gst_mpdparser_validate_no_whitespace ("a\na") == FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (dash_mpdparser_rfc1738_strings)
+{
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("/") == FALSE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url (" ") == FALSE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("aaaaaaaa ") == FALSE);
+
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("") == TRUE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("a") == TRUE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url
+      (";:@&=aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789$-_.+!*'(),%AA")
+      == TRUE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url
+      (";:@&=aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789$-_.+!*'(),% ")
+      == FALSE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("%AA") == TRUE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("%A") == FALSE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("%") == FALSE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("%XA") == FALSE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("%AX") == FALSE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("%XX") == FALSE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("\001") == FALSE);
+}
+
+GST_END_TEST;
+
 /*
  * create a test suite containing all dash testcases
  */
@@ -4457,6 +4495,7 @@ dash_suite (void)
   TCase *tc_simpleMPD = tcase_create ("simpleMPD");
   TCase *tc_complexMPD = tcase_create ("complexMPD");
   TCase *tc_negativeTests = tcase_create ("negativeTests");
+  TCase *tc_stringTests = tcase_create ("stringTests");
 
   GST_DEBUG_CATEGORY_INIT (gst_dash_demux_debug, "gst_dash_demux_debug", 0,
       "mpeg dash tests");
@@ -4605,9 +4644,13 @@ dash_suite (void)
   tcase_add_test (tc_negativeTests,
       dash_mpdparser_wrong_period_duration_inferred_from_next_mediaPresentationDuration);
 
+  tcase_add_test (tc_stringTests, dash_mpdparser_whitespace_strings);
+  tcase_add_test (tc_stringTests, dash_mpdparser_rfc1738_strings);
+
   suite_add_tcase (s, tc_simpleMPD);
   suite_add_tcase (s, tc_complexMPD);
   suite_add_tcase (s, tc_negativeTests);
+  suite_add_tcase (s, tc_stringTests);
 
   return s;
 }

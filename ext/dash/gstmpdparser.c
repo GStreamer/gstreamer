@@ -33,6 +33,9 @@
 #define GST_CAT_DEFAULT gst_dash_demux_debug
 
 /* Property parsing */
+static gboolean gst_mpdparser_get_xml_prop_validated_string (xmlNode * a_node,
+    const gchar * property_name, gchar ** property_value,
+    gboolean (*validator) (const char *));
 static gboolean gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
     const gchar * property_name, gchar ** property_value);
 static gboolean gst_mpdparser_get_xml_ns_prop_string (xmlNode * a_node,
@@ -253,14 +256,20 @@ static const struct GstMpdParserUtcTimingMethod
 
 /* functions to parse node namespaces, content and properties */
 static gboolean
-gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
-    const gchar * property_name, gchar ** property_value)
+gst_mpdparser_get_xml_prop_validated_string (xmlNode * a_node,
+    const gchar * property_name, gchar ** property_value,
+    gboolean (*validate) (const char *))
 {
   xmlChar *prop_string;
   gboolean exists = FALSE;
 
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
+    if (validate && !(*validate) ((const char *) prop_string)) {
+      GST_WARNING ("Validation failure: %s", prop_string);
+      xmlFree (prop_string);
+      return FALSE;
+    }
     *property_value = (gchar *) prop_string;
     exists = TRUE;
     GST_LOG (" - %s: %s", property_name, prop_string);
@@ -286,6 +295,28 @@ gst_mpdparser_get_xml_ns_prop_string (xmlNode * a_node,
   }
 
   return exists;
+}
+
+static gboolean
+gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
+    const gchar * property_name, gchar ** property_value)
+{
+  return gst_mpdparser_get_xml_prop_validated_string (a_node, property_name,
+      property_value, NULL);
+}
+
+static gboolean
+gst_mpdparser_validate_no_whitespace (const char *s)
+{
+  return !strpbrk (s, "\r\n\t ");
+}
+
+static gboolean
+gst_mpdparser_get_xml_prop_string_no_whitespace (xmlNode * a_node,
+    const gchar * property_name, gchar ** property_value)
+{
+  return gst_mpdparser_get_xml_prop_validated_string (a_node, property_name,
+      property_value, gst_mpdparser_validate_no_whitespace);
 }
 
 static gboolean
@@ -1571,7 +1602,8 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node,
   *list = g_list_append (*list, new_representation);
 
   GST_LOG ("attributes of Representation node:");
-  gst_mpdparser_get_xml_prop_string (a_node, "id", &new_representation->id);
+  gst_mpdparser_get_xml_prop_string_no_whitespace (a_node, "id",
+      &new_representation->id);
   gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "bandwidth", 0,
       &new_representation->bandwidth);
   gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "qualityRanking", 0,
@@ -2868,6 +2900,26 @@ promote_format_to_uint64 (const gchar * format)
   return promoted_format;
 }
 
+static gboolean
+gst_mpdparser_validate_rfc1738_url (const char *s)
+{
+  while (*s) {
+    if (!strchr
+        (";:@&=aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789$-_.+!*'(),%",
+            *s))
+      return FALSE;
+    if (*s == '%') {
+      /* g_ascii_isdigit returns FALSE for NUL, and || is a short circuiting
+         operator, so this is safe for strings ending before two hex digits */
+      if (!g_ascii_isxdigit (s[1]) || !g_ascii_isxdigit (s[2]))
+        return FALSE;
+      s += 2;
+    }
+    s++;
+  }
+  return TRUE;
+}
+
 static gchar *
 gst_mpdparser_build_URL_from_template (const gchar * url_template,
     const gchar * id, guint number, guint bandwidth, guint64 time)
@@ -2891,6 +2943,11 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
     format = default_format;
 
     if (!g_strcmp0 (token, "RepresentationID")) {
+      if (!gst_mpdparser_validate_rfc1738_url (id)) {
+        GST_WARNING ("String '%s' has characters invalid in an RFC 1738 URL",
+            id);
+        goto invalid_format;
+      }
       tokens[i] = g_strdup_printf ("%s", id);
       g_free (token);
       last_token_par = TRUE;
