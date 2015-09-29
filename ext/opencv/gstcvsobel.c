@@ -158,7 +158,8 @@ gst_cv_sobel_init (GstCvSobel * filter)
   filter->y_order = DEFAULT_Y_ORDER;
   filter->aperture_size = DEFAULT_APERTURE_SIZE;
 
-  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), FALSE);
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
+      FALSE);
 }
 
 static GstCaps *

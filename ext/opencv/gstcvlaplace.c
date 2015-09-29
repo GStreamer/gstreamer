@@ -175,7 +175,8 @@ gst_cv_laplace_init (GstCvLaplace * filter)
   filter->scale = DEFAULT_SCALE_FACTOR;
   filter->shift = DEFAULT_SHIFT;
 
-  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), FALSE);
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
+      FALSE);
 }
 
 static gboolean

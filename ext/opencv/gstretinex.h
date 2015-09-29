@@ -49,6 +49,7 @@
 #include <gst/video/gstvideofilter.h>
 #include <opencv2/core/core_c.h>
 
+#include <gstopencvvideofilter.h>
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */

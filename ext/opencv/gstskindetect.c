@@ -186,7 +186,8 @@ gst_skin_detect_init (GstSkinDetect * filter)
   filter->postprocess = TRUE;
   filter->method = HSV;
 
-  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), FALSE);
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
+      FALSE);
 }
 
 

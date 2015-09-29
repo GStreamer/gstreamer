@@ -206,7 +206,8 @@ gst_cv_smooth_init (GstCvSmooth * filter)
   filter->colorsigma = DEFAULT_COLORSIGMA;
   filter->spatialsigma = DEFAULT_SPATIALSIGMA;
 
-  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), FALSE);
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
+      FALSE);
 }
 
 static void
@@ -220,10 +221,12 @@ gst_cv_smooth_change_type (GstCvSmooth * filter, gint value)
   switch (value) {
     case CV_GAUSSIAN:
     case CV_BLUR:
-      gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
+      gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST
+          (filter), TRUE);
       break;
     default:
-      gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), FALSE);
+      gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST
+          (filter), FALSE);
       break;
   }
 }

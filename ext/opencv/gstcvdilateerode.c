@@ -155,7 +155,8 @@ gst_cv_dilate_erode_init (GstCvDilateErode * filter,
     GstCvDilateErodeClass * gclass)
 {
   filter->iterations = DEFAULT_ITERATIONS;
-  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
+      TRUE);
 }
 
 static void

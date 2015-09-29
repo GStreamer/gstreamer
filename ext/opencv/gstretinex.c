@@ -184,7 +184,8 @@ gst_retinex_init (GstRetinex * filter)
   filter->method = DEFAULT_METHOD;
   filter->scales = DEFAULT_SCALES;
   filter->current_scales = 0;
-  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
+      TRUE);
 }
 
 
