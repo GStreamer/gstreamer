@@ -438,25 +438,17 @@ static void gst_videoaggregator_init (GstVideoAggregator * self,
     GstVideoAggregatorClass * klass);
 static void gst_videoaggregator_class_init (GstVideoAggregatorClass * klass);
 static gpointer gst_videoaggregator_parent_class = NULL;
-static gint GstVideoAggregator_private_offset;
-
-_G_DEFINE_TYPE_EXTENDED_CLASS_INIT (GstVideoAggregator, gst_videoaggregator);
-
-G_GNUC_UNUSED static inline gpointer
-gst_videoaggregator_get_instance_private (const GstVideoAggregator * self)
-{
-  return (G_STRUCT_MEMBER_P (self, GstVideoAggregator_private_offset));
-}
 
 GType
 gst_videoaggregator_get_type (void)
 {
   static volatile gsize g_define_type_id_volatile = 0;
+
   if (g_once_init_enter (&g_define_type_id_volatile)) {
     GType g_define_type_id = g_type_register_static_simple (GST_TYPE_AGGREGATOR,
         g_intern_static_string ("GstVideoAggregator"),
         sizeof (GstVideoAggregatorClass),
-        (GClassInitFunc) gst_videoaggregator_class_intern_init,
+        (GClassInitFunc) gst_videoaggregator_class_init,
         sizeof (GstVideoAggregator),
         (GInstanceInitFunc) gst_videoaggregator_init,
         (GTypeFlags) G_TYPE_FLAG_ABSTRACT);
@@ -2078,6 +2070,8 @@ gst_videoaggregator_class_init (GstVideoAggregatorClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_videoaggregator_debug, "videoaggregator", 0,
       "base video aggregator");
+
+  gst_videoaggregator_parent_class = g_type_class_peek_parent (klass);
 
   g_type_class_add_private (klass, sizeof (GstVideoAggregatorPrivate));
 
