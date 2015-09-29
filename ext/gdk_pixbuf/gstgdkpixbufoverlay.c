@@ -462,6 +462,9 @@ gst_gdk_pixbuf_overlay_set_pixbuf (GstGdkPixbufOverlay * overlay,
     }
   }
 
+  if (overlay->pixels)
+    gst_buffer_unref (overlay->pixels);
+
   /* assume we have row padding even for the last row */
   /* transfer ownership of pixbuf to the buffer */
   overlay->pixels = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
