@@ -52,8 +52,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 G_DEFINE_TYPE_WITH_CODE (GtkGstGLWidget, gtk_gst_gl_widget, GTK_TYPE_GL_AREA,
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gtkgstglwidget", 0,
-        "Gtk Gst GL Widget");
-    );
+        "Gtk Gst GL Widget"););
 
 #define GTK_GST_GL_WIDGET_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
     GTK_TYPE_GST_GL_WIDGET, GtkGstGLWidgetPrivate))
@@ -121,6 +120,7 @@ gtk_gst_gl_widget_init_redisplay (GtkGstGLWidget * gst_widget)
   const GstGLFuncs *gl = priv->context->gl_vtable;
 
   priv->shader = gst_gl_shader_new (priv->context);
+  gst_gl_insert_debug_marker (priv->other_context, "initializing redisplay");
 
   gst_gl_shader_compile_with_default_vf_and_check (priv->shader,
       &priv->attr_position, &priv->attr_texture);
@@ -207,6 +207,7 @@ _draw_black (GstGLContext * context)
 {
   const GstGLFuncs *gl = context->gl_vtable;
 
+  gst_gl_insert_debug_marker (context, "no buffer.  rendering black");
   gl->ClearColor (0.0, 0.0, 0.0, 0.0);
   gl->Clear (GL_COLOR_BUFFER_BIT);
 }
@@ -244,6 +245,10 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
       goto done;
     }
 
+    priv->current_tex = *(guint *) gl_frame.data[0];
+    gst_gl_insert_debug_marker (priv->other_context, "redrawing texture %u",
+        priv->current_tex);
+
     gst_gl_overlay_compositor_upload_overlays (priv->overlay_compositor,
         buffer);
 
@@ -252,8 +257,6 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
       gst_gl_sync_meta_set_sync_point (sync_meta, priv->context);
       gst_gl_sync_meta_wait (sync_meta, priv->other_context);
     }
-
-    priv->current_tex = *(guint *) gl_frame.data[0];
 
     gst_video_frame_unmap (&gl_frame);
 
@@ -270,6 +273,9 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
 
   _redraw_texture (GTK_GST_GL_WIDGET (widget), priv->current_tex);
   gst_gl_overlay_compositor_draw_overlays (priv->overlay_compositor);
+
+  gst_gl_insert_debug_marker (priv->other_context, "texture %u redrawn",
+      priv->current_tex);
 
 done:
   if (priv->other_context)
