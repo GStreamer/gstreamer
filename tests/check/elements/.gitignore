@@ -25,6 +25,7 @@ deinterlace
 deinterleave
 dtmf
 equalizer
+gdkpixbufoverlay
 gdkpixbufsink
 flacparse
 flvdemux

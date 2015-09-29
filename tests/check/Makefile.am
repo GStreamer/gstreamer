@@ -146,7 +146,7 @@ check_law =
 endif
 
 if USE_GDK_PIXBUF
-check_gdkpixbuf = elements/gdkpixbufsink
+check_gdkpixbuf = elements/gdkpixbufsink elements/gdkpixbufoverlay
 else
 check_gdkpixbuf =
 endif
