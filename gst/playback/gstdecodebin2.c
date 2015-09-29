@@ -4061,7 +4061,6 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
       if (chain->next_groups) {
         /* Switch to next group */
         GST_DEBUG_OBJECT (dbin, "Hiding current group %p", chain->active_group);
-        gst_decode_chain_start_free_hidden_groups_thread (chain);
         gst_decode_group_hide (chain->active_group);
         chain->old_groups =
             g_list_prepend (chain->old_groups, chain->active_group);
@@ -4070,6 +4069,7 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
         chain->active_group = chain->next_groups->data;
         chain->next_groups =
             g_list_delete_link (chain->next_groups, chain->next_groups);
+        gst_decode_chain_start_free_hidden_groups_thread (chain);
         *switched = TRUE;
         chain->drained = FALSE;
       } else {
