@@ -290,6 +290,8 @@ gst_nv_base_enc_set_context (GstElement * element, GstContext * context)
     gst_gl_display_filter_gl_api (GST_GL_DISPLAY (nvenc->display),
         SUPPORTED_GL_APIS);
 #endif
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 static gboolean
