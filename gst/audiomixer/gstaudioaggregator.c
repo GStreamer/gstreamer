@@ -681,7 +681,7 @@ gst_audio_aggregator_reset (GstAudioAggregator * aagg)
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (aagg);
   agg->segment.position = -1;
-  aagg->priv->offset = 0;
+  aagg->priv->offset = -1;
   gst_audio_info_init (&aagg->info);
   gst_caps_replace (&aagg->current_caps, NULL);
   gst_buffer_replace (&aagg->priv->current_buffer, NULL);
@@ -717,7 +717,7 @@ gst_audio_aggregator_flush (GstAggregator * agg)
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (aagg);
   agg->segment.position = -1;
-  aagg->priv->offset = 0;
+  aagg->priv->offset = -1;
   gst_buffer_replace (&aagg->priv->current_buffer, NULL);
   GST_OBJECT_UNLOCK (aagg);
   GST_AUDIO_AGGREGATOR_UNLOCK (aagg);
@@ -1135,8 +1135,15 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   rate = GST_AUDIO_INFO_RATE (&aagg->info);
   bpf = GST_AUDIO_INFO_BPF (&aagg->info);
 
+  if (aagg->priv->offset == -1) {
+    aagg->priv->offset =
+        gst_util_uint64_scale (agg->segment.position - agg->segment.start, rate,
+        GST_SECOND);
+    GST_DEBUG_OBJECT (aagg, "Starting at offset %lu", aagg->priv->offset);
+  }
+
   blocksize = gst_util_uint64_scale (aagg->priv->output_buffer_duration,
-      GST_AUDIO_INFO_RATE (&aagg->info), GST_SECOND);
+      rate, GST_SECOND);
   blocksize = MAX (1, blocksize);
 
   /* for the next timestamp, use the sample counter, which will
