@@ -520,8 +520,10 @@ gst_deinterleave_sink_getcaps (GstPad * pad, GstObject * parent,
   for (l = GST_ELEMENT (self)->pads; l != NULL; l = l->next) {
     GstPad *ourpad = GST_PAD (l->data);
     GstCaps *peercaps = NULL, *ourcaps;
+    GstCaps *templ_caps = gst_pad_get_pad_template_caps (ourpad);
 
-    ourcaps = gst_caps_copy (gst_pad_get_pad_template_caps (ourpad));
+    ourcaps = gst_caps_copy (templ_caps);
+    gst_caps_unref (templ_caps);
 
     if (pad == ourpad) {
       if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK)
