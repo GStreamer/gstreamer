@@ -2444,6 +2444,197 @@ GST_START_TEST (test_flush_stop_inactive)
 
 GST_END_TEST;
 
+/* For proxy caps flag tests */
+
+typedef struct _GstProxyTestElement GstProxyTestElement;
+typedef struct _GstProxyTestElementClass GstProxyTestElementClass;
+
+struct _GstProxyTestElement
+{
+  GstElement element;
+};
+
+struct _GstProxyTestElementClass
+{
+  GstElementClass parent_class;
+};
+
+G_GNUC_INTERNAL GType gst_proxytestelement_get_type (void);
+
+static GstStaticPadTemplate proxytestelement_peer_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("test/proxy, option=(int)1"));
+
+static GstStaticPadTemplate proxytestelement_peer_incompatible_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("test/proxy-incompatible"));
+
+static GstStaticPadTemplate proxytestelement_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("test/proxy"));
+
+static GstStaticPadTemplate proxytestelement_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+G_DEFINE_TYPE (GstProxyTestElement, gst_proxytestelement, GST_TYPE_ELEMENT);
+
+static void
+gst_proxytestelement_class_init (GstProxyTestElementClass * klass)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Proxy Test Element", "Test", "Proxy test element",
+      "Thiago Santos <thiagoss@osg.samsung.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&proxytestelement_sink_template));
+}
+
+static void
+gst_proxytestelement_init (GstProxyTestElement * element)
+{
+  GstPad *sinkpad;
+  sinkpad =
+      gst_pad_new_from_static_template (&proxytestelement_sink_template,
+      "sink");
+  GST_PAD_SET_PROXY_CAPS (sinkpad);
+  gst_element_add_pad (GST_ELEMENT_CAST (element), sinkpad);
+}
+
+GST_START_TEST (test_proxy_accept_caps_no_proxy)
+{
+  GstElement *element;
+  GstPad *sinkpad;
+  GstCaps *caps;
+
+  gst_element_register (NULL, "proxytestelement", GST_RANK_NONE,
+      gst_proxytestelement_get_type ());
+  element = gst_element_factory_make ("proxytestelement", NULL);
+  sinkpad = gst_element_get_static_pad (element, "sink");
+
+  gst_element_set_state (element, GST_STATE_PLAYING);
+
+  caps = gst_caps_from_string ("test/proxy");
+  fail_unless (gst_pad_query_accept_caps (sinkpad, caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string ("test/bad");
+  fail_if (gst_pad_query_accept_caps (sinkpad, caps));
+  gst_caps_unref (caps);
+
+  gst_object_unref (sinkpad);
+  gst_element_set_state (element, GST_STATE_NULL);
+  gst_object_unref (element);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_proxy_accept_caps_with_proxy)
+{
+  GstElement *element;
+  GstPad *sinkpad, *srcpad;
+  GstPad *peerpad;
+  GstCaps *caps;
+
+  gst_element_register (NULL, "proxytestelement", GST_RANK_NONE,
+      gst_proxytestelement_get_type ());
+  element = gst_element_factory_make ("proxytestelement", NULL);
+
+  srcpad =
+      gst_pad_new_from_static_template (&proxytestelement_src_template, "src");
+  gst_element_add_pad (GST_ELEMENT_CAST (element), srcpad);
+
+  sinkpad = gst_element_get_static_pad (element, "sink");
+  srcpad = gst_element_get_static_pad (element, "src");
+
+  peerpad =
+      gst_pad_new_from_static_template (&proxytestelement_peer_template,
+      "sink");
+  fail_unless (gst_pad_link (srcpad, peerpad) == GST_PAD_LINK_OK);
+  gst_pad_set_active (peerpad, TRUE);
+
+  gst_element_set_state (element, GST_STATE_PLAYING);
+
+  caps = gst_caps_from_string ("test/bad");
+  fail_if (gst_pad_query_accept_caps (sinkpad, caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string ("test/proxy, option=(int)1");
+  fail_unless (gst_pad_query_accept_caps (sinkpad, caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string ("test/proxy, option=(int)2");
+  fail_if (gst_pad_query_accept_caps (sinkpad, caps));
+  gst_caps_unref (caps);
+
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+  gst_pad_set_active (peerpad, FALSE);
+  gst_object_unref (peerpad);
+  gst_element_set_state (element, GST_STATE_NULL);
+  gst_object_unref (element);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_proxy_accept_caps_with_incompatible_proxy)
+{
+  GstElement *element;
+  GstPad *sinkpad, *srcpad;
+  GstPad *peerpad;
+  GstCaps *caps;
+
+  gst_element_register (NULL, "proxytestelement", GST_RANK_NONE,
+      gst_proxytestelement_get_type ());
+  element = gst_element_factory_make ("proxytestelement", NULL);
+
+  srcpad =
+      gst_pad_new_from_static_template (&proxytestelement_src_template, "src");
+  gst_element_add_pad (GST_ELEMENT_CAST (element), srcpad);
+
+  sinkpad = gst_element_get_static_pad (element, "sink");
+  srcpad = gst_element_get_static_pad (element, "src");
+
+  peerpad =
+      gst_pad_new_from_static_template
+      (&proxytestelement_peer_incompatible_template, "sink");
+  fail_unless (gst_pad_link (srcpad, peerpad) == GST_PAD_LINK_OK);
+
+  gst_element_set_state (element, GST_STATE_PLAYING);
+
+  caps = gst_caps_from_string ("test/bad");
+  fail_if (gst_pad_query_accept_caps (sinkpad, caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string ("test/proxy");
+  fail_if (gst_pad_query_accept_caps (sinkpad, caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string ("test/proxy-incompatible");
+  fail_if (gst_pad_query_accept_caps (sinkpad, caps));
+  gst_caps_unref (caps);
+
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+  gst_pad_set_active (peerpad, FALSE);
+  gst_object_unref (peerpad);
+  gst_element_set_state (element, GST_STATE_NULL);
+  gst_object_unref (element);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_pad_suite (void)
 {
@@ -2494,6 +2685,9 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_last_flow_return_push);
   tcase_add_test (tc_chain, test_last_flow_return_pull);
   tcase_add_test (tc_chain, test_flush_stop_inactive);
+  tcase_add_test (tc_chain, test_proxy_accept_caps_no_proxy);
+  tcase_add_test (tc_chain, test_proxy_accept_caps_with_proxy);
+  tcase_add_test (tc_chain, test_proxy_accept_caps_with_incompatible_proxy);
 
   return s;
 }
