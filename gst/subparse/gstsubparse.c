@@ -683,15 +683,24 @@ subrip_unescape_formatting (gchar * txt)
   }
 
   for (pos = txt; pos != NULL && *pos != '\0'; ++pos) {
-    if (g_ascii_strncasecmp (pos, "&lt;/u&gt;", 10) == 0 ||
-        g_ascii_strncasecmp (pos, "&lt;/i&gt;", 10) == 0 ||
-        g_ascii_strncasecmp (pos, "&lt;/b&gt;", 10) == 0) {
+    gchar *tag;
+
+    /* look for start of an escaped closing tag */
+    if (g_ascii_strncasecmp (pos, "&lt;/", 5) != 0)
+      continue;
+    tag = pos + 5;
+    while (*tag == ' ')
+      ++tag;
+    if ((*tag == 'u' || *tag == 'i' || *tag == 'b') &&
+        g_ascii_strncasecmp (tag + 1, "&gt;", 4) == 0) {
+      gsize tag_len = (guintptr) (tag + 1 + 4 - pos);
+
       pos[0] = '<';
       pos[1] = '/';
-      pos[2] = g_ascii_tolower (pos[5]);
+      pos[2] = g_ascii_tolower (*tag);
       pos[3] = '>';
       /* move NUL terminator as well */
-      memmove (pos + 4, pos + 10, strlen (pos + 10) + 1);
+      memmove (pos + 4, pos + tag_len, strlen (pos + tag_len) + 1);
       pos += 3;
     }
   }
