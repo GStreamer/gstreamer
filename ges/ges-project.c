@@ -269,9 +269,8 @@ _add_media_new_paths_recursing (const gchar * value)
 
   GST_INFO ("Adding folder: %s", value);
   g_ptr_array_add (new_paths, g_strdup (value));
-  for (info = g_file_enumerator_next_file (fenum, NULL, NULL);
-      info; info = g_file_enumerator_next_file (fenum, NULL, NULL)) {
-
+  info = g_file_enumerator_next_file (fenum, NULL, NULL);
+  while (info != NULL) {
     if (g_file_info_get_file_type (info) == G_FILE_TYPE_DIRECTORY) {
       GFile *f = g_file_enumerator_get_child (fenum, info);
       gchar *uri = g_file_get_uri (f);
@@ -280,6 +279,8 @@ _add_media_new_paths_recursing (const gchar * value)
       gst_object_unref (f);
       g_free (uri);
     }
+    g_object_unref (info);
+    info = g_file_enumerator_next_file (fenum, NULL, NULL);
   }
 
 done:
