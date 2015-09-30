@@ -70,14 +70,14 @@ struct _GstControlPoint
   /* Caches for the interpolators */
   /* FIXME: we should not have this here already ... */
   union {
-    struct {
+    struct { /* 16 bytes */
       gdouble h;
       gdouble z;
     } cubic;
-    struct {
+    struct { /* 24 bytes */
       gdouble c1s, c2s, c3s;
     } cubic_mono;
-    gpointer _gst_reserved[GST_PADDING];
+    guint8 _gst_reserved[64];
   } cache;
 };
 
