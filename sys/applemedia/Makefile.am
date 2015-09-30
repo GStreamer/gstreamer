@@ -56,11 +56,13 @@ libgstapplemedia_la_LDFLAGS =			\
 noinst_HEADERS =				\
 	qtkitvideosrc.h				\
 	avfvideosrc.h				\
+	avsamplevideosink.h			\
 	vtenc.h					\
 	vtdec.h					\
 	vtutil.h				\
 	corevideobuffer.h			\
 	coremediabuffer.h			\
+	corevideotexturecache.h			\
 	atdec.h 				\
 	iosassetsrc.h				\
 	avfassetsrc.h
