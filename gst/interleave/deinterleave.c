@@ -567,6 +567,14 @@ gst_deinterleave_getcaps (GstPad * pad, GstObject * parent, GstCaps * filter)
   }
   GST_OBJECT_UNLOCK (self);
 
+  if (filter) {
+    GstCaps *aux;
+
+    aux = gst_caps_intersect (ret, filter);
+    gst_caps_unref (ret);
+    ret = aux;
+  }
+
   GST_DEBUG_OBJECT (pad, "Intersected caps to %" GST_PTR_FORMAT, ret);
 
   return ret;
