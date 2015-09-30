@@ -2197,8 +2197,6 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
         self->segment.position = start_time;
       else
         self->segment.position = MIN (start_time, self->segment.position);
-      self->segment.start = MIN (start_time, self->segment.start);
-      self->segment.time = MIN (start_time, self->segment.time);
 
       GST_DEBUG_OBJECT (self, "Selecting start time %" GST_TIME_FORMAT,
           GST_TIME_ARGS (start_time));
