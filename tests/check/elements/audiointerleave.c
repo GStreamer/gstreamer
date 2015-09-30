@@ -1033,7 +1033,8 @@ GST_START_TEST (test_audiointerleave_2ch_smallbuf)
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
       "channels", G_TYPE_INT, 2,
       "layout", G_TYPE_STRING, "interleaved",
-      "rate", G_TYPE_INT, 48000, "channel-mask", GST_TYPE_BITMASK, 0x9, NULL);
+      "rate", G_TYPE_INT, 48000, "channel-mask", GST_TYPE_BITMASK,
+      (guint64) 0x9, NULL);
 
   gst_event_parse_caps (ev, &ecaps);
   gst_check_caps_equal (ecaps, caps);
