@@ -769,6 +769,7 @@ nle_operation_hard_cleanup (NleOperation * operation)
           GST_ERROR ("Unlinking %" GST_PTR_FORMAT " and  %"
               GST_PTR_FORMAT, srcpad, sinkpad);
           gst_pad_unlink (srcpad, sinkpad);
+          gst_object_unref (srcpad);
         }
 
         g_value_reset (&item);
