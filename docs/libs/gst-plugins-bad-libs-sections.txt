@@ -1199,7 +1199,6 @@ gst_gl_upload_set_caps
 gst_gl_upload_propose_allocation
 gst_gl_upload_transform_caps
 gst_gl_upload_perform_with_buffer
-gst_gl_upload_release_buffer
 <SUBSECTION Standard>
 GST_GL_UPLOAD
 GST_GL_UPLOAD_CAST

@@ -99,7 +99,6 @@ void          gst_gl_upload_propose_allocation     (GstGLUpload * upload,
 GstGLUploadReturn gst_gl_upload_perform_with_buffer (GstGLUpload * upload,
                                                     GstBuffer * buffer,
                                                     GstBuffer ** outbuf);
-void              gst_gl_upload_release_buffer     (GstGLUpload * upload);
 
 G_END_DECLS
 
