@@ -1560,11 +1560,10 @@ gst_aggregator_event_forward_func (GstPad * pad, gpointer user_data)
   }
 
   if (ret == FALSE) {
-    if (GST_EVENT_TYPE (evdata->event) == GST_EVENT_SEEK)
-      GST_ERROR_OBJECT (pad, "Event %" GST_PTR_FORMAT " failed", evdata->event);
-
     if (GST_EVENT_TYPE (evdata->event) == GST_EVENT_SEEK) {
       GstQuery *seeking = gst_query_new_seeking (GST_FORMAT_TIME);
+
+      GST_DEBUG_OBJECT (pad, "Event %" GST_PTR_FORMAT " failed", evdata->event);
 
       if (gst_pad_query (peer, seeking)) {
         gboolean seekable;
