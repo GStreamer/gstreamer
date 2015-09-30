@@ -389,6 +389,18 @@ dispose_trackelements_foreach (GESTrackElement * trackelement, GESTrack * track)
   remove_object_internal (track, trackelement);
 }
 
+/* GstElement virtual methods */
+
+static GstStateChangeReturn
+ges_track_change_state (GstElement * element, GstStateChange transition)
+{
+  if (transition == GST_STATE_CHANGE_READY_TO_PAUSED)
+    track_resort_and_fill_gaps (GES_TRACK (element));
+
+  return GST_ELEMENT_CLASS (ges_track_parent_class)->change_state (element,
+      transition);
+}
+
 /* GObject virtual methods */
 static void
 ges_track_get_property (GObject * object, guint property_id,
@@ -553,6 +565,8 @@ ges_track_class_init (GESTrackClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GESTrackPrivate));
+
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (ges_track_change_state);
 
   object_class->get_property = ges_track_get_property;
   object_class->set_property = ges_track_set_property;
