@@ -2162,7 +2162,7 @@ AG_GST_CHECK_FEATURE(SRTP, [srtp library], srtp, [
 dnl *** dtls ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DTLS, true)
 AG_GST_CHECK_FEATURE(DTLS, [DTLS plugin], dtls, [
-  PKG_CHECK_MODULES(DTLS, [ openssl >= 0.9.5  libcrypto ], [
+  PKG_CHECK_MODULES(DTLS, [ openssl >= 1.0.1  libcrypto ], [
     HAVE_DTLS="yes"
     AC_SUBST(DTLS_CFLAGS)
     AC_SUBST(DTLS_LIBS)
