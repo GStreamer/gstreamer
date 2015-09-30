@@ -134,6 +134,8 @@ gst_deinterleave_change_state (GstElement * element, GstStateChange transition);
 
 static gboolean gst_deinterleave_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
+static gboolean gst_deinterleave_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static gboolean gst_deinterleave_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
@@ -212,6 +214,8 @@ gst_deinterleave_init (GstDeinterleave * self)
       GST_DEBUG_FUNCPTR (gst_deinterleave_chain));
   gst_pad_set_event_function (self->sink,
       GST_DEBUG_FUNCPTR (gst_deinterleave_sink_event));
+  gst_pad_set_query_function (self->sink,
+      GST_DEBUG_FUNCPTR (gst_deinterleave_sink_query));
   gst_element_add_pad (GST_ELEMENT (self), self->sink);
 }
 
@@ -501,8 +505,7 @@ __set_channels (GstCaps * caps, gint channels)
 }
 
 static GstCaps *
-gst_deinterleave_sink_getcaps (GstPad * pad, GstObject * parent,
-    GstCaps * filter)
+gst_deinterleave_getcaps (GstPad * pad, GstObject * parent, GstCaps * filter)
 {
   GstDeinterleave *self = GST_DEINTERLEAVE (parent);
   GstCaps *ret;
@@ -615,6 +618,31 @@ gst_deinterleave_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static gboolean
+gst_deinterleave_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  gboolean res;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:{
+      GstCaps *filter;
+      GstCaps *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_deinterleave_getcaps (pad, parent, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+
+  return res;
+}
+
+static gboolean
 gst_deinterleave_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstDeinterleave *self = GST_DEINTERLEAVE (parent);
@@ -650,7 +678,7 @@ gst_deinterleave_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     GstCaps *filter, *caps;
 
     gst_query_parse_caps (query, &filter);
-    caps = gst_deinterleave_sink_getcaps (pad, parent, filter);
+    caps = gst_deinterleave_getcaps (pad, parent, filter);
     gst_query_set_caps_result (query, caps);
     gst_caps_unref (caps);
   }
