@@ -1348,7 +1348,7 @@ class Scenario(object):
 
     def get_min_media_duration(self):
         if hasattr(self, "min_media_duration"):
-            return long(self.min_media_duration)
+            return float(self.min_media_duration)
 
         return 0
 
