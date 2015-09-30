@@ -272,6 +272,7 @@ GST_START_TEST (test_2_channels_caps_change)
 {
   GstPad *sinkpad;
   GstCaps *caps, *caps2;
+  GstCaps *ret_caps;
   gint i;
   GstBuffer *inbuf;
   gfloat *indata;
@@ -297,12 +298,16 @@ GST_START_TEST (test_2_channels_caps_change)
       G_GUINT64_CONSTANT (1) << GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
   gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, channel_mask,
       NULL);
-  gst_check_setup_events (mysrcpad, deinterleave, caps, GST_FORMAT_TIME);
 
   sinkpad = gst_element_get_static_pad (deinterleave, "sink");
   fail_unless (sinkpad != NULL);
   fail_unless (gst_pad_link (mysrcpad, sinkpad) == GST_PAD_LINK_OK);
   g_object_unref (sinkpad);
+
+  ret_caps = gst_pad_peer_query_caps (mysrcpad, caps);
+  fail_if (gst_caps_is_empty (ret_caps));
+  gst_caps_unref (ret_caps);
+  gst_check_setup_events (mysrcpad, deinterleave, caps, GST_FORMAT_TIME);
 
   g_signal_connect (deinterleave, "pad-added",
       G_CALLBACK (deinterleave_pad_added), GINT_TO_POINTER (2));
@@ -333,6 +338,9 @@ GST_START_TEST (test_2_channels_caps_change)
       G_GUINT64_CONSTANT (1) << GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
   gst_caps_set_simple (caps2, "channel-mask", GST_TYPE_BITMASK, channel_mask,
       NULL);
+  ret_caps = gst_pad_peer_query_caps (mysrcpad, caps2);
+  fail_if (gst_caps_is_empty (ret_caps));
+  gst_caps_unref (ret_caps);
   gst_pad_set_caps (mysrcpad, caps2);
 
   inbuf = gst_buffer_new_and_alloc (2 * 48000 * sizeof (gfloat));
@@ -360,6 +368,9 @@ GST_START_TEST (test_2_channels_caps_change)
       G_GUINT64_CONSTANT (1) << GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
   gst_caps_set_simple (caps2, "channel-mask", GST_TYPE_BITMASK, channel_mask,
       NULL);
+  ret_caps = gst_pad_peer_query_caps (mysrcpad, caps2);
+  fail_unless (gst_caps_is_empty (ret_caps));
+  gst_caps_unref (ret_caps);
   gst_pad_set_caps (mysrcpad, caps2);
 
   inbuf = gst_buffer_new_and_alloc (3 * 48000 * sizeof (gfloat));
