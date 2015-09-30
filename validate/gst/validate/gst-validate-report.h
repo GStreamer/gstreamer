@@ -110,6 +110,7 @@ typedef enum {
 #define SCENARIO_NOT_ENDED                       _QUARK("scenario::not-ended")
 #define SCENARIO_FILE_MALFORMED                  _QUARK("scenario::malformed")
 #define SCENARIO_ACTION_EXECUTION_ERROR          _QUARK("scenario::execution-error")
+#define SCENARIO_ACTION_TIMEOUT                  _QUARK("scenario::action-timeout")
 #define SCENARIO_ACTION_EXECUTION_ISSUE          _QUARK("scenario::execution-issue")
 
 #define G_LOG_ISSUE                              _QUARK("g-log::issue")

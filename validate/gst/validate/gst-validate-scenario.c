@@ -190,6 +190,9 @@ struct _GstValidateActionPrivate
   gboolean executing_last_subaction;
   gboolean optional;
 
+  GstClockTime execution_time;
+  GstClockTime timeout;
+
   GWeakRef scenario;
 };
 
@@ -216,6 +219,7 @@ _action_copy (GstValidateAction * act)
 
   copy->action_number = act->action_number;
   copy->playback_time = act->playback_time;
+  copy->priv->timeout = act->priv->timeout;
 
   return copy;
 }
@@ -265,6 +269,7 @@ gst_validate_action_new (GstValidateScenario * scenario,
 
   gst_validate_action_init (action);
   action->playback_time = GST_CLOCK_TIME_NONE;
+  action->priv->timeout = GST_CLOCK_TIME_NONE;
   action->type = action_type->name;
   action->repeat = -1;
 
@@ -1163,6 +1168,7 @@ gst_validate_execute_action (GstValidateActionType * action_type,
 
   gst_validate_print_action (action, NULL);
 
+  action->priv->execution_time = gst_util_get_timestamp ();
   res = action_type->execute (action->scenario, action);
 
   if (!gst_structure_has_field (action->structure, "sub-action")) {
@@ -1236,6 +1242,12 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   } else
     GST_INFO_OBJECT (scenario,
         "No playback time for action %" GST_PTR_FORMAT, structure);
+
+  if (!gst_validate_utils_get_clocktime (structure,
+          "timeout", &action->priv->timeout)) {
+    GST_INFO_OBJECT (scenario,
+        "No timeout time for action %" GST_PTR_FORMAT, structure);
+  }
 
   if (!(action->name = gst_structure_get_string (structure, "name")))
     action->name = "";
@@ -1378,12 +1390,6 @@ execute_next_action (GstValidateScenario * scenario)
     return G_SOURCE_CONTINUE;
   }
 
-  /* TODO what about non flushing seeks? */
-  if (priv->last_seek && priv->target_state > GST_STATE_READY) {
-    GST_LOG_OBJECT (scenario, "Still seeking -- not executing action");
-    return G_SOURCE_CONTINUE;
-  }
-
   if (scenario->priv->actions)
     act = scenario->priv->actions->data;
 
@@ -1405,6 +1411,21 @@ execute_next_action (GstValidateScenario * scenario)
         act = NULL;
       }
     } else if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
+      if (GST_CLOCK_TIME_IS_VALID (act->priv->timeout)) {
+        GstClockTime etime =
+            gst_util_get_timestamp () - act->priv->execution_time;
+
+        if (etime > act->priv->timeout) {
+          gchar *str = gst_structure_to_string (act->structure);
+
+          GST_VALIDATE_REPORT (scenario,
+              SCENARIO_ACTION_EXECUTION_ERROR,
+              "Action %s timed out after: %" GST_TIME_FORMAT, str,
+              GST_TIME_ARGS (etime));
+
+          g_free (str);
+        }
+      }
       GST_LOG_OBJECT (scenario, "Action %" GST_PTR_FORMAT " still running",
           act->structure);
 
@@ -2920,6 +2941,7 @@ _action_set_done (GstValidateAction * action)
   if (action->scenario == NULL)
     return G_SOURCE_REMOVE;
 
+  action->priv->execution_time = GST_CLOCK_TIME_NONE;
   action->priv->state = _execute_sub_action_action (action);
   if (action->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
     GST_DEBUG_OBJECT (action->scenario, "Sub action executed ASYNC");

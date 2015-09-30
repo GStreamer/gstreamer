@@ -322,6 +322,8 @@ gst_validate_report_load_issues (void)
           "segment"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_NOT_ENDED,
       _("All the actions were not executed before the program stopped"), NULL);
+  REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_TIMEOUT,
+      _("The execution of an action timed out"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_FILE_MALFORMED,
       _("The scenario file was malformed"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_EXECUTION_ERROR,
