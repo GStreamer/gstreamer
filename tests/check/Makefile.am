@@ -75,7 +75,8 @@ endif
 
 if USE_PLUGIN_PLAYBACK
 check_playback = elements/decodebin elements/playbin \
-    elements/playbin-complex elements/streamsynchronizer
+    elements/playbin-complex elements/streamsynchronizer \
+    elements/playsink
 else
 check_playback =
 endif
