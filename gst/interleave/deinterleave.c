@@ -361,6 +361,56 @@ gst_deinterleave_set_process_function (GstDeinterleave * self)
 }
 
 static gboolean
+gst_deinterleave_check_caps_change (GstDeinterleave * self,
+    GstAudioInfo * old_info, GstAudioInfo * new_info)
+{
+  gint i;
+  gboolean same_layout = TRUE;
+  gboolean was_unpositioned;
+  gboolean is_unpositioned = GST_AUDIO_INFO_IS_UNPOSITIONED (new_info);
+  gint new_channels = GST_AUDIO_INFO_CHANNELS (new_info);
+  gint old_channels;
+
+  was_unpositioned = GST_AUDIO_INFO_IS_UNPOSITIONED (old_info);
+  old_channels = GST_AUDIO_INFO_CHANNELS (old_info);
+
+  /* We allow caps changes as long as the number of channels doesn't change
+   * and the channel positions stay the same. _getcaps() should've cared
+   * for this already but better be safe.
+   */
+  if (new_channels != old_channels)
+    goto cannot_change_caps;
+
+  /* Now check the channel positions. If we had no channel positions
+   * and get them or the other way around things have changed.
+   * If we had channel positions and get different ones things have
+   * changed too of course
+   */
+  if ((!was_unpositioned && is_unpositioned) || (was_unpositioned
+          && !is_unpositioned))
+    goto cannot_change_caps;
+
+  if (!is_unpositioned) {
+    if (GST_AUDIO_INFO_CHANNELS (old_info) !=
+        GST_AUDIO_INFO_CHANNELS (new_info))
+      goto cannot_change_caps;
+    for (i = 0; i < GST_AUDIO_INFO_CHANNELS (old_info); i++) {
+      if (new_info->position[i] != old_info->position[i]) {
+        same_layout = FALSE;
+        break;
+      }
+    }
+    if (!same_layout)
+      goto cannot_change_caps;
+  }
+
+  return TRUE;
+
+cannot_change_caps:
+  return FALSE;
+}
+
+static gboolean
 gst_deinterleave_sink_setcaps (GstDeinterleave * self, GstCaps * caps)
 {
   GstCaps *srccaps;
@@ -375,51 +425,17 @@ gst_deinterleave_sink_setcaps (GstDeinterleave * self, GstCaps * caps)
     goto unsupported_caps;
 
   if (self->sinkcaps && !gst_caps_is_equal (caps, self->sinkcaps)) {
-    gint i;
-    gboolean same_layout = TRUE;
-    gboolean was_unpositioned;
-    gboolean is_unpositioned =
-        GST_AUDIO_INFO_IS_UNPOSITIONED (&self->audio_info);
-    gint new_channels = GST_AUDIO_INFO_CHANNELS (&self->audio_info);
-    gint old_channels;
     GstAudioInfo old_info;
 
     gst_audio_info_init (&old_info);
     if (!gst_audio_info_from_caps (&old_info, self->sinkcaps))
       goto info_from_caps_failed;
-    was_unpositioned = GST_AUDIO_INFO_IS_UNPOSITIONED (&old_info);
-    old_channels = GST_AUDIO_INFO_CHANNELS (&old_info);
 
-    /* We allow caps changes as long as the number of channels doesn't change
-     * and the channel positions stay the same. _getcaps() should've cared
-     * for this already but better be safe.
-     */
-    if (new_channels != old_channels ||
-        !gst_deinterleave_set_process_function (self))
-      goto cannot_change_caps;
-
-    /* Now check the channel positions. If we had no channel positions
-     * and get them or the other way around things have changed.
-     * If we had channel positions and get different ones things have
-     * changed too of course
-     */
-    if ((!was_unpositioned && is_unpositioned) || (was_unpositioned
-            && !is_unpositioned))
-      goto cannot_change_caps;
-
-    if (!is_unpositioned) {
-      if (GST_AUDIO_INFO_CHANNELS (&old_info) !=
-          GST_AUDIO_INFO_CHANNELS (&self->audio_info))
+    if (gst_deinterleave_check_caps_change (self, &old_info, &self->audio_info)) {
+      if (!gst_deinterleave_set_process_function (self))
         goto cannot_change_caps;
-      for (i = 0; i < GST_AUDIO_INFO_CHANNELS (&old_info); i++) {
-        if (self->audio_info.position[i] != old_info.position[i]) {
-          same_layout = FALSE;
-          break;
-        }
-      }
-      if (!same_layout)
-        goto cannot_change_caps;
-    }
+    } else
+      goto cannot_change_caps;
 
   }
 
@@ -501,6 +517,35 @@ __set_channels (GstCaps * caps, gint channels)
       gst_structure_set (s, "channels", G_TYPE_INT, channels, NULL);
     else
       gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+  }
+}
+
+static gboolean
+gst_deinterleave_sink_acceptcaps (GstPad * pad, GstObject * parent,
+    GstCaps * caps)
+{
+  GstDeinterleave *self = GST_DEINTERLEAVE (parent);
+  GstCaps *templ_caps = gst_pad_get_pad_template_caps (pad);
+  gboolean ret;
+
+  ret = gst_caps_can_intersect (templ_caps, caps);
+  gst_caps_unref (templ_caps);
+  if (ret && self->sinkcaps) {
+    GstAudioInfo new_info;
+
+    gst_audio_info_init (&new_info);
+    if (!gst_audio_info_from_caps (&new_info, caps))
+      goto info_from_caps_failed;
+    ret =
+        gst_deinterleave_check_caps_change (self, &self->audio_info, &new_info);
+  }
+
+  return ret;
+
+info_from_caps_failed:
+  {
+    GST_ERROR_OBJECT (self, "coud not get info from caps");
+    return FALSE;
   }
 }
 
@@ -639,6 +684,16 @@ gst_deinterleave_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       caps = gst_deinterleave_getcaps (pad, parent, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    case GST_QUERY_ACCEPT_CAPS:{
+      GstCaps *caps;
+      gboolean ret;
+
+      gst_query_parse_accept_caps (query, &caps);
+      ret = gst_deinterleave_sink_acceptcaps (pad, parent, caps);
+      gst_query_set_accept_caps_result (query, ret);
       res = TRUE;
       break;
     }

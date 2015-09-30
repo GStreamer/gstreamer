@@ -306,6 +306,7 @@ GST_START_TEST (test_2_channels_caps_change)
 
   ret_caps = gst_pad_peer_query_caps (mysrcpad, caps);
   fail_if (gst_caps_is_empty (ret_caps));
+  fail_unless (gst_pad_peer_query_accept_caps (mysrcpad, caps));
   gst_caps_unref (ret_caps);
   gst_check_setup_events (mysrcpad, deinterleave, caps, GST_FORMAT_TIME);
 
@@ -340,6 +341,7 @@ GST_START_TEST (test_2_channels_caps_change)
       NULL);
   ret_caps = gst_pad_peer_query_caps (mysrcpad, caps2);
   fail_if (gst_caps_is_empty (ret_caps));
+  fail_unless (gst_pad_peer_query_accept_caps (mysrcpad, caps2));
   gst_caps_unref (ret_caps);
   gst_pad_set_caps (mysrcpad, caps2);
 
@@ -371,6 +373,7 @@ GST_START_TEST (test_2_channels_caps_change)
   ret_caps = gst_pad_peer_query_caps (mysrcpad, caps2);
   fail_unless (gst_caps_is_empty (ret_caps));
   gst_caps_unref (ret_caps);
+  fail_if (gst_pad_peer_query_accept_caps (mysrcpad, caps2));
   gst_pad_set_caps (mysrcpad, caps2);
 
   inbuf = gst_buffer_new_and_alloc (3 * 48000 * sizeof (gfloat));
