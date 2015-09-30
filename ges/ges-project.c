@@ -199,7 +199,7 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
   formatter = GES_FORMATTER (ges_asset_extract (priv->formatter_asset, &lerr));
   if (lerr) {
     GST_WARNING_OBJECT (project, "Could not create the formatter: %s",
-        (*error)->message);
+        lerr->message);
 
     goto failed;
   }
