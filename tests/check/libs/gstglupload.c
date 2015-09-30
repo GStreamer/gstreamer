@@ -318,7 +318,6 @@ GST_START_TEST (test_upload_buffer)
     i++;
   }
 
-  gst_gl_upload_release_buffer (upload);
   gst_buffer_unref (buffer);
   gst_buffer_unref (outbuf);
 }

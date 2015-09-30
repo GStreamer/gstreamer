@@ -220,8 +220,6 @@ gst_gl_upload_element_prepare_output_buffer (GstBaseTransform * bt,
     return GST_FLOW_NOT_NEGOTIATED;
 
   ret = gst_gl_upload_perform_with_buffer (upload->upload, buffer, outbuf);
-  /* FIXME Having to release after perform is an aberation */
-  gst_gl_upload_release_buffer (upload->upload);
 
   if (ret != GST_GL_UPLOAD_DONE || *outbuf == NULL) {
     GST_ELEMENT_ERROR (bt, RESOURCE, NOT_FOUND, ("%s",

@@ -56,7 +56,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
 G_DEFINE_TYPE_WITH_CODE (GstGLUpload, gst_gl_upload, GST_TYPE_OBJECT,
     DEBUG_INIT);
 static void gst_gl_upload_finalize (GObject * object);
-static void gst_gl_upload_release_buffer_unlocked (GstGLUpload * upload);
 
 #define GST_GL_UPLOAD_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
     GST_TYPE_GL_UPLOAD, GstGLUploadPrivate))
@@ -122,7 +121,6 @@ struct _UploadMethod
       GstQuery * query);
     GstGLUploadReturn (*perform) (gpointer impl, GstBuffer * buffer,
       GstBuffer ** outbuf);
-  void (*release) (gpointer impl, GstBuffer * buffer);
   void (*free) (gpointer impl);
 } _UploadMethod;
 
@@ -285,11 +283,6 @@ _gl_memory_upload_perform (gpointer impl, GstBuffer * buffer,
 }
 
 static void
-_gl_memory_upload_release (gpointer impl, GstBuffer * buffer)
-{
-}
-
-static void
 _gl_memory_upload_free (gpointer impl)
 {
   g_free (impl);
@@ -309,7 +302,6 @@ static const UploadMethod _gl_memory_upload = {
   &_gl_memory_upload_accept,
   &_gl_memory_upload_propose_allocation,
   &_gl_memory_upload_perform,
-  &_gl_memory_upload_release,
   &_gl_memory_upload_free
 };
 
@@ -458,11 +450,6 @@ _egl_image_upload_perform (gpointer impl, GstBuffer * buffer,
 }
 
 static void
-_egl_image_upload_release (gpointer impl, GstBuffer * buffer)
-{
-}
-
-static void
 _egl_image_upload_free (gpointer impl)
 {
   g_free (impl);
@@ -481,7 +468,6 @@ static const UploadMethod _egl_image_upload = {
   &_egl_image_upload_accept,
   &_egl_image_upload_propose_allocation,
   &_egl_image_upload_perform,
-  &_egl_image_upload_release,
   &_egl_image_upload_free
 };
 #endif
@@ -661,11 +647,6 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
 }
 
 static void
-_upload_meta_upload_release (gpointer impl, GstBuffer * buffer)
-{
-}
-
-static void
 _upload_meta_upload_free (gpointer impl)
 {
   struct GLUploadMeta *upload = impl;
@@ -694,7 +675,6 @@ static const UploadMethod _upload_meta_upload = {
   &_upload_meta_upload_accept,
   &_upload_meta_upload_propose_allocation,
   &_upload_meta_upload_perform,
-  &_upload_meta_upload_release,
   &_upload_meta_upload_free
 };
 
@@ -793,6 +773,8 @@ _raw_data_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY))
     return FALSE;
 
+  if (raw->in_frame)
+    _raw_upload_frame_unref (raw->in_frame);
   raw->in_frame = _raw_upload_frame_new (raw, buffer);
 
   return (raw->in_frame != NULL);
@@ -831,15 +813,9 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
     gst_buffer_append_memory (*outbuf, (GstMemory *) in_tex[i]);
   }
 
-  return GST_GL_UPLOAD_DONE;
-}
-
-static void
-_raw_data_upload_release (gpointer impl, GstBuffer * buffer)
-{
-  struct RawUpload *raw = impl;
   _raw_upload_frame_unref (raw->in_frame);
   raw->in_frame = NULL;
+  return GST_GL_UPLOAD_DONE;
 }
 
 static void
@@ -862,7 +838,6 @@ static const UploadMethod _raw_data_upload = {
   &_raw_data_upload_accept,
   &_raw_data_upload_propose_allocation,
   &_raw_data_upload_perform,
-  &_raw_data_upload_release,
   &_raw_data_upload_free
 };
 
@@ -944,8 +919,6 @@ gst_gl_upload_finalize (GObject * object)
   gint i, n;
 
   upload = GST_GL_UPLOAD (object);
-
-  gst_gl_upload_release_buffer_unlocked (upload);
 
   if (upload->priv->method_impl)
     upload->priv->method->free (upload->priv->method_impl);
@@ -1097,32 +1070,6 @@ gst_gl_upload_get_caps (GstGLUpload * upload, GstCaps ** in_caps,
   GST_OBJECT_UNLOCK (upload);
 }
 
-static void
-gst_gl_upload_release_buffer_unlocked (GstGLUpload * upload)
-{
-  if (upload->priv->outbuf && upload->priv->method_impl) {
-    upload->priv->method->release (upload->priv->method_impl,
-        upload->priv->outbuf);
-    gst_buffer_replace (&upload->priv->outbuf, NULL);
-  }
-}
-
-/**
- * gst_gl_upload_release_buffer:
- * @upload: a #GstGLUpload
- *
- * Releases any buffers currently referenced by @upload
- */
-void
-gst_gl_upload_release_buffer (GstGLUpload * upload)
-{
-  g_return_if_fail (upload != NULL);
-
-  GST_OBJECT_LOCK (upload);
-  gst_gl_upload_release_buffer_unlocked (upload);
-  GST_OBJECT_UNLOCK (upload);
-}
-
 static gboolean
 _upload_find_method (GstGLUpload * upload)
 {
@@ -1149,10 +1096,10 @@ _upload_find_method (GstGLUpload * upload)
  * gst_gl_upload_perform_with_buffer:
  * @upload: a #GstGLUpload
  * @buffer: a #GstBuffer
- * @outbuf_ptr: (allow-none): resulting buffer
+ * @outbuf_ptr: esulting buffer
  *
- * Uploads @buffer to the texture given by @tex_id.  @tex_id is valid
- * until gst_gl_upload_release_buffer() is called.
+ * Uploads @buffer using the transformation specified by
+ * gst_gl_upload_set_caps().
  *
  * Returns: whether the upload was successful
  */
@@ -1161,13 +1108,13 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
     GstBuffer ** outbuf_ptr)
 {
   GstGLUploadReturn ret = GST_GL_UPLOAD_ERROR;
+  GstBuffer *outbuf;
 
   g_return_val_if_fail (GST_IS_GL_UPLOAD (upload), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (outbuf_ptr != NULL, FALSE);
 
   GST_OBJECT_LOCK (upload);
-
-  gst_gl_upload_release_buffer_unlocked (upload);
 
 #define NEXT_METHOD \
 do { \
@@ -1188,7 +1135,7 @@ restart:
 
   ret =
       upload->priv->method->perform (upload->priv->method_impl, buffer,
-      &upload->priv->outbuf);
+      &outbuf);
   if (ret == GST_GL_UPLOAD_UNSHARED_GL_CONTEXT) {
     upload->priv->method->free (upload->priv->method_impl);
     upload->priv->method = &_raw_data_upload;
@@ -1197,18 +1144,15 @@ restart:
   } else if (ret == GST_GL_UPLOAD_DONE) {
     /* we are done */
   } else {
-    gst_gl_upload_release_buffer_unlocked (upload);
     upload->priv->method->free (upload->priv->method_impl);
     upload->priv->method_impl = NULL;
     NEXT_METHOD;
   }
 
-  if (outbuf_ptr) {
-    if (buffer != upload->priv->outbuf)
-      gst_buffer_copy_into (upload->priv->outbuf, buffer,
-          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
-    *outbuf_ptr = gst_buffer_ref (upload->priv->outbuf);
-  }
+  if (buffer != outbuf)
+    gst_buffer_copy_into (outbuf, buffer,
+        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+  *outbuf_ptr = outbuf;
 
   GST_OBJECT_UNLOCK (upload);
 
