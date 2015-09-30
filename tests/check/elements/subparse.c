@@ -105,7 +105,13 @@ static SubParseInputChunk srt_input[] = {
       360 * GST_SECOND, 480 * GST_SECOND, "Rock &amp; Roll"}, {
         "28\n00:10:00,000 --> 00:11:00,000\n"
         "<font \"#0000FF\"><joj>This is </xxx>in blue but <5</font>\n\n",
-      600 * GST_SECOND, 660 * GST_SECOND, "This is in blue but &lt;5"}
+      600 * GST_SECOND, 660 * GST_SECOND, "This is in blue but &lt;5"}, {
+        /* closing tags should be recognised properly even if there's a space */
+        "29\n00:11:00,000 --> 00:12:00,000\n" "<i>italics</ i>\n\n",
+      660 * GST_SECOND, 720 * GST_SECOND, "<i>italics</i>"}, {
+        /* closing tags should be escaped and fixed up if not recognised */
+        "30\n00:12:00,000 --> 00:12:01,000\n" "<i>italics</ x>\n\n",
+      720 * GST_SECOND, 721 * GST_SECOND, "<i>italics&lt;/ x&gt;</i>"},
 };
 
 /* starts with chunk number 0 (not exactly according to spec) */
