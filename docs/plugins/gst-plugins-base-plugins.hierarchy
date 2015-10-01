@@ -52,6 +52,7 @@ GObject
             GstGioSrc
             GstGioStreamSrc
           GstPushSrc
+            GstAlsaMidiSrc
             GstAudioBaseSrc
               GstAudioSrc
                 GstAlsaSrc

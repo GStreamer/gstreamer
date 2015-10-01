@@ -18,6 +18,7 @@
   <chapter>
     <title>gst-plugins-base Elements</title>
     <xi:include href="xml/element-adder.xml" />
+    <xi:include href="xml/element-alsamidisrc.xml" />
     <xi:include href="xml/element-alsasink.xml" />
     <xi:include href="xml/element-alsasrc.xml" />
     <xi:include href="xml/element-appsink.xml" />

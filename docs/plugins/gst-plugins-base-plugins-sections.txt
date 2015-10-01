@@ -18,6 +18,21 @@ GstAdderInputChannel
 </SECTION>
 
 <SECTION>
+<FILE>element-alsamidisrc</FILE>
+<TITLE>alsamidisrc</TITLE>
+GstAlsaMidiSrc
+<SUBSECTION Standard>
+GstAlsaMidiSrcClass
+GST_ALSA_MIDI_SRC
+GST_ALSA_MIDI_SRC_CLASS
+GST_IS_ALSA_MIDI_SRC
+GST_IS_ALSA_MIDI_SRC_CLASS
+GST_TYPE_ALSA_MIDI_SRC
+SUBSECTION Private>
+gst_alsa_midi_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-alsasink</FILE>
 <TITLE>alsasink</TITLE>
 GstAlsaSink

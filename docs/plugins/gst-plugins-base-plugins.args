@@ -2548,3 +2548,13 @@
 <DEFAULT>buffer-time</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstAlsaMidiSrc::ports</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ports</NICK>
+<BLURB>Comma separated list of sequencer ports (e.g. client:port,...).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
