@@ -229,7 +229,7 @@ interpolate_linear_get_value_array (GstTimedValueControlSource * self,
       ret = TRUE;
       GST_LOG ("values[%3d]=%lf", i, *values);
     } else {
-      *values++ = NAN;
+      *values = NAN;
       GST_LOG ("values[%3d]=-", i);
     }
     ts += interval;
