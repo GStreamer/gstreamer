@@ -22,7 +22,7 @@
 #ifndef __GST_WAVE_SCOPE_H__
 #define __GST_WAVE_SCOPE_H__
 
-#include "gstaudiovisualizer.h"
+#include "gst/pbutils/gstaudiovisualizer.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_WAVE_SCOPE            (gst_wave_scope_get_type())

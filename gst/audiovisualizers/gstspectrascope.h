@@ -22,7 +22,7 @@
 #ifndef __GST_SPECTRA_SCOPE_H__
 #define __GST_SPECTRA_SCOPE_H__
 
-#include "gstaudiovisualizer.h"
+#include "gst/pbutils/gstaudiovisualizer.h"
 #include <gst/fft/gstffts16.h>
 
 G_BEGIN_DECLS

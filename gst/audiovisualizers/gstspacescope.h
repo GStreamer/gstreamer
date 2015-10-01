@@ -22,7 +22,7 @@
 #ifndef __GST_SPACE_SCOPE_H__
 #define __GST_SPACE_SCOPE_H__
 
-#include "gstaudiovisualizer.h"
+#include "gst/pbutils/gstaudiovisualizer.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_SPACE_SCOPE            (gst_space_scope_get_type())
