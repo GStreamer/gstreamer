@@ -183,7 +183,7 @@ ges_multi_file_source_create_source (GESTrackElement * track_element)
     g_assert (stream_info);
     disc_caps = gst_discoverer_stream_info_get_caps (stream_info);
     caps = gst_caps_copy (disc_caps);
-    GST_DEBUG ("Got some nice caps %s", gst_caps_to_string (disc_caps));
+    GST_DEBUG_OBJECT (disc_caps, "Got some nice caps");
     gst_object_unref (stream_info);
     gst_caps_unref (disc_caps);
   } else {

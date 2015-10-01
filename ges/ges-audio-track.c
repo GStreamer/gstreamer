@@ -121,6 +121,7 @@ ges_audio_track_new (void)
 {
   GESAudioTrack *ret;
   GstCaps *caps = gst_caps_from_string (DEFAULT_CAPS);
+  GstCaps *restriction_caps = gst_caps_from_string (DEFAULT_RESTRICTION_CAPS);
 
   ret = g_object_new (GES_TYPE_AUDIO_TRACK, "caps", caps,
       "track-type", GES_TRACK_TYPE_AUDIO, NULL);
@@ -128,9 +129,10 @@ ges_audio_track_new (void)
   ges_track_set_create_element_for_gap_func (GES_TRACK (ret),
       create_element_for_raw_audio_gap);
 
-  ges_track_set_restriction_caps (GES_TRACK (ret),
-      gst_caps_from_string (DEFAULT_RESTRICTION_CAPS));
+  ges_track_set_restriction_caps (GES_TRACK (ret), restriction_caps);
+
   gst_caps_unref (caps);
+  gst_caps_unref (restriction_caps);
 
   return ret;
 }

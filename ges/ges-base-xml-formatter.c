@@ -192,7 +192,7 @@ done:
     g_free (xmlcontent);
 
   if (file)
-    gst_object_unref (file);
+    g_object_unref (file);
 
   return parsecontext;
 
@@ -203,6 +203,9 @@ wrong_uri:
 
 failed:
   g_propagate_error (error, err);
+
+  if (file)
+    g_object_unref (file);
 
   if (parsecontext) {
     g_markup_parse_context_free (parsecontext);
@@ -478,7 +481,7 @@ static gboolean
 _loading_done_cb (GESFormatter * self)
 {
   _loading_done (self);
-  g_object_unref (self);
+  gst_object_unref (self);
 
   return FALSE;
 }
@@ -1007,9 +1010,6 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
   if (priv->check_only) {
-    if (caps)
-      gst_caps_unref (caps);
-
     return;
   }
 
@@ -1018,18 +1018,20 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
 
   if (properties) {
     gchar *restriction;
-    GstCaps *caps;
+    GstCaps *restriction_caps;
 
     gst_structure_get (properties, "restriction-caps", G_TYPE_STRING,
         &restriction, NULL);
     gst_structure_remove_fields (properties, "restriction-caps", "caps",
         "message-forward", NULL);
     if (g_strcmp0 (restriction, "NULL")) {
-      caps = gst_caps_from_string (restriction);
-      ges_track_set_restriction_caps (track, caps);
+      restriction_caps = gst_caps_from_string (restriction);
+      ges_track_set_restriction_caps (track, restriction_caps);
+      gst_caps_unref (restriction_caps);
     }
     gst_structure_foreach (properties,
         (GstStructureForeachFunc) set_property_foreach, track);
+    g_free (restriction);
   }
 
   g_hash_table_insert (priv->tracks, g_strdup (id), gst_object_ref (track));
