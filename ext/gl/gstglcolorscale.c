@@ -70,24 +70,25 @@ static void gst_gl_colorscale_set_property (GObject * object, guint prop_id,
 static void gst_gl_colorscale_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gl_colorscale_gen_gl_resources (GstGLFilter * filter);
-static gboolean gst_gl_colorscale_del_gl_resources (GstBaseTransform * trans);
+static gboolean gst_gl_colorscale_gl_start (GstGLBaseFilter * base_filter);
+static void gst_gl_colorscale_gl_stop (GstGLBaseFilter * base_filter);
 
 static gboolean gst_gl_colorscale_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
-static void gst_gl_colorscale_callback (gint width, gint height,
-    guint texture, gpointer stuff);
 
 static void
 gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
+  GstBaseTransformClass *basetransform_class;
+  GstGLBaseFilterClass *base_filter_class;
   GstGLFilterClass *filter_class;
-  GstBaseTransformClass *basetransform_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
+  basetransform_class = GST_BASE_TRANSFORM_CLASS (klass);
+  base_filter_class = GST_GL_BASE_FILTER_CLASS (klass);
   filter_class = GST_GL_FILTER_CLASS (klass);
 
   gobject_class->set_property = gst_gl_colorscale_set_property;
@@ -95,24 +96,22 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
 
   gst_element_class_set_metadata (element_class, "OpenGL color scale",
       "Filter/Effect/Video", "Colorspace converter and video scaler",
-      "Julien Isorce <julien.isorce@gmail.com>");
+      "Julien Isorce <julien.isorce@gmail.com>\n"
+      "Matthew Waters <matthew@centricular.com>");
 
-  filter_class->init_fbo =
-      GST_DEBUG_FUNCPTR (gst_gl_colorscale_gen_gl_resources);
+  basetransform_class->passthrough_on_same_caps = TRUE;
+
+  base_filter_class->gl_start = GST_DEBUG_FUNCPTR (gst_gl_colorscale_gl_start);
+  base_filter_class->gl_stop = GST_DEBUG_FUNCPTR (gst_gl_colorscale_gl_stop);
+  base_filter_class->supported_gl_api =
+      GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
 
   filter_class->filter_texture = gst_gl_colorscale_filter_texture;
-
-  basetransform_class->stop =
-      GST_DEBUG_FUNCPTR (gst_gl_colorscale_del_gl_resources);
-  basetransform_class->passthrough_on_same_caps = TRUE;
-  GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
-      GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
 }
 
 static void
 gst_gl_colorscale_init (GstGLColorscale * colorscale)
 {
-  colorscale->shader = NULL;
 }
 
 static void
@@ -137,93 +136,52 @@ gst_gl_colorscale_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-_compile_identity_shader (GstGLContext * context, GstGLColorscale * colorscale)
+static gboolean
+gst_gl_colorscale_gl_start (GstGLBaseFilter * base_filter)
 {
-  GstGLFilter *filter = GST_GL_FILTER (colorscale);
+  GstGLColorscale *colorscale = GST_GL_COLORSCALE (base_filter);
+  GstGLFilter *filter = GST_GL_FILTER (base_filter);
+  GstGLShader *shader;
 
-  colorscale->shader = gst_gl_shader_new (context);
+  shader = gst_gl_shader_new (base_filter->context);
 
-  if (!gst_gl_shader_compile_with_default_vf_and_check (colorscale->shader,
+  if (!gst_gl_shader_compile_with_default_vf_and_check (shader,
           &filter->draw_attr_position_loc, &filter->draw_attr_texture_loc)) {
-    gst_gl_context_clear_shader (context);
+    gst_gl_context_clear_shader (base_filter->context);
+    gst_object_unref (shader);
+    GST_ERROR_OBJECT (colorscale, "Failed to initialize identity shader");
+    GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND, ("%s",
+            "Failed to initialize identity shader"), (NULL));
+    return FALSE;
+  }
+
+  colorscale->shader = shader;
+
+  return GST_GL_BASE_FILTER_CLASS (parent_class)->gl_start (base_filter);
+}
+
+static void
+gst_gl_colorscale_gl_stop (GstGLBaseFilter * base_filter)
+{
+  GstGLColorscale *colorscale = GST_GL_COLORSCALE (base_filter);
+
+  if (colorscale->shader) {
     gst_object_unref (colorscale->shader);
     colorscale->shader = NULL;
   }
-}
 
-static gboolean
-gst_gl_colorscale_gen_gl_resources (GstGLFilter * filter)
-{
-  GstGLColorscale *colorscale = GST_GL_COLORSCALE (filter);
-
-  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
-      (GST_GL_API_GLES2 | GST_GL_API_OPENGL3)) {
-    gst_gl_context_thread_add (GST_GL_BASE_FILTER (filter)->context,
-        (GstGLContextThreadFunc) _compile_identity_shader, colorscale);
-
-    if (!colorscale->shader) {
-      gst_gl_context_set_error (GST_GL_BASE_FILTER (filter)->context,
-          "Failed to initialize identity shader");
-      GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND, ("%s",
-              gst_gl_context_get_error ()), (NULL));
-      return FALSE;
-    }
-  }
-
-  return TRUE;
-}
-
-static gboolean
-gst_gl_colorscale_del_gl_resources (GstBaseTransform * trans)
-{
-  GstGLColorscale *colorscale = GST_GL_COLORSCALE (trans);
-
-  if (colorscale->shader) {
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (trans)->context,
-        colorscale->shader);
-    colorscale->shader = NULL;
-  }
-
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
+  return GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base_filter);
 }
 
 static gboolean
 gst_gl_colorscale_filter_texture (GstGLFilter * filter, guint in_tex,
     guint out_tex)
 {
-  GstGLColorscale *colorscale;
+  GstGLColorscale *colorscale = GST_GL_COLORSCALE (filter);
 
-  colorscale = GST_GL_COLORSCALE (filter);
-
-  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
-      (GST_GL_API_GLES2 | GST_GL_API_OPENGL3))
+  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context))
     gst_gl_filter_render_to_target_with_shader (filter, TRUE, in_tex, out_tex,
         colorscale->shader);
 
-  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
-      GST_GL_API_OPENGL)
-    gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
-        gst_gl_colorscale_callback, colorscale);
-
   return TRUE;
-}
-
-static void
-gst_gl_colorscale_callback (gint width, gint height, guint texture,
-    gpointer stuff)
-{
-  GstGLFilter *filter = GST_GL_FILTER (stuff);
-
-#if GST_GL_HAVE_OPENGL
-  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
-      GST_GL_API_OPENGL) {
-    const GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
-
-    gl->MatrixMode (GL_PROJECTION);
-    gl->LoadIdentity ();
-  }
-#endif
-
-  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
