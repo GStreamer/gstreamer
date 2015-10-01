@@ -24,7 +24,7 @@ libgstgoom2k1_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CF
 	-DzoomFilterDestroy=zoomFilterDestroy2k1		\
 	-DzoomFilterNew=zoomFilterNew2k1
 
-libgstgoom2k1_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) -lgstvideo-$(GST_API_VERSION) -lgstaudio-$(GST_API_VERSION)
+libgstgoom2k1_la_LIBADD = $(GST_BASE_LIBS) -lgstpbutils-$(GST_API_VERSION) $(GST_LIBS) $(LIBM)
 libgstgoom2k1_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstgoom2k1_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 

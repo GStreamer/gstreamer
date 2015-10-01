@@ -22,7 +22,7 @@
 #ifndef __GST_GOOM_H__
 #define __GST_GOOM_H__
 
-#include "gstaudiovisualizer.h"
+#include "gst/pbutils/gstaudiovisualizer.h"
 #include "goom_core.h"
 
 G_BEGIN_DECLS
