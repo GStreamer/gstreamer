@@ -234,8 +234,11 @@ gst_rtmp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
       GST_ERROR_OBJECT (src, "Failed to parse URI %s", uri);
       g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
           "Could not parse RTMP URI");
+      /* FIXME: we should not be freeing RTMP internals to avoid leaking */
+      free (playpath.av_val);
       return FALSE;
     }
+    free (playpath.av_val);
     src->uri = g_strdup (uri);
   }
 
@@ -559,7 +562,6 @@ static gboolean
 gst_rtmp_src_start (GstBaseSrc * basesrc)
 {
   GstRTMPSrc *src;
-  gchar *uri_copy;
 
   src = GST_RTMP_SRC (basesrc);
 
@@ -572,13 +574,11 @@ gst_rtmp_src_start (GstBaseSrc * basesrc)
   src->last_timestamp = 0;
   src->discont = TRUE;
 
-  uri_copy = g_strdup (src->uri);
   src->rtmp = RTMP_Alloc ();
   RTMP_Init (src->rtmp);
-  if (!RTMP_SetupURL (src->rtmp, uri_copy)) {
+  if (!RTMP_SetupURL (src->rtmp, src->uri)) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
         ("Failed to setup URL '%s'", src->uri));
-    g_free (uri_copy);
     RTMP_Free (src->rtmp);
     src->rtmp = NULL;
     return FALSE;
