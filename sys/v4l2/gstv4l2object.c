@@ -2138,12 +2138,42 @@ gst_v4l2_object_add_interlace_mode (GstV4l2Object * v4l2object,
 }
 
 static void
+gst_v4l2_object_fill_colorimetry_list (GValue * list,
+    GstVideoColorimetry * cinfo)
+{
+  GValue colorimetry = G_VALUE_INIT;
+  guint size;
+  guint i;
+  gboolean found = FALSE;
+
+  g_value_init (&colorimetry, G_TYPE_STRING);
+  g_value_take_string (&colorimetry, gst_video_colorimetry_to_string (cinfo));
+
+  /* only insert if no duplicate */
+  size = gst_value_list_get_size (list);
+  for (i = 0; i < size; i++) {
+    const GValue *tmp;
+
+    tmp = gst_value_list_get_value (list, i);
+    if (gst_value_compare (&colorimetry, tmp) == GST_VALUE_EQUAL) {
+      found = TRUE;
+      break;
+    }
+  }
+
+  if (!found)
+    gst_value_list_append_and_take_value (list, &colorimetry);
+}
+
+static void
 gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
     guint32 width, guint32 height, guint32 pixelformat)
 {
   struct v4l2_format fmt;
-  GValue colorimetry = G_VALUE_INIT;
+  GValue list = G_VALUE_INIT;
   GstVideoColorimetry cinfo;
+  enum v4l2_colorspace req_cspace;
+  gboolean is_rgb = gst_v4l2_object_v4l2fourcc_is_rgb (pixelformat);
 
   memset (&fmt, 0, sizeof (fmt));
   fmt.type = v4l2object->type;
@@ -2151,12 +2181,15 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
   fmt.fmt.pix.height = height;
   fmt.fmt.pix.pixelformat = pixelformat;
 
+  g_value_init (&list, GST_TYPE_LIST);
+
+  /* step 1: get device default colorspace and insert it first as
+   * it should be the preferred one */
   if (gst_v4l2_object_try_fmt (v4l2object, &fmt) == 0) {
     enum v4l2_colorspace colorspace;
     enum v4l2_quantization range;
     enum v4l2_ycbcr_encoding matrix;
     enum v4l2_xfer_func transfer;
-    gboolean is_rgb = gst_v4l2_object_v4l2fourcc_is_rgb (pixelformat);
 
     if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
       colorspace = fmt.fmt.pix_mp.colorspace;
@@ -2178,12 +2211,62 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
       if (is_rgb)
         cinfo.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
 
-      g_value_init (&colorimetry, G_TYPE_STRING);
-      g_value_take_string (&colorimetry,
-          gst_video_colorimetry_to_string (&cinfo));
-      gst_structure_take_value (s, "colorimetry", &colorimetry);
+      gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
     }
   }
+
+  /* step 2: probe all colorspace other than default
+   * We don't probe all colorspace, range, matrix and transfer combination to
+   * avoid ioctl flooding which could greatly increase initialization time
+   * with low-speed devices (UVC...) */
+  for (req_cspace = V4L2_COLORSPACE_SMPTE170M;
+      req_cspace <= V4L2_COLORSPACE_RAW; req_cspace++) {
+    /* V4L2_COLORSPACE_BT878 is deprecated and shall not be used, so skip */
+    if (req_cspace == V4L2_COLORSPACE_BT878)
+      continue;
+
+    if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type))
+      fmt.fmt.pix_mp.colorspace = req_cspace;
+    else
+      fmt.fmt.pix.colorspace = req_cspace;
+
+    if (gst_v4l2_object_try_fmt (v4l2object, &fmt) == 0) {
+      enum v4l2_colorspace colorspace;
+      enum v4l2_quantization range;
+      enum v4l2_ycbcr_encoding matrix;
+      enum v4l2_xfer_func transfer;
+
+      if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
+        colorspace = fmt.fmt.pix_mp.colorspace;
+        range = fmt.fmt.pix_mp.quantization;
+        matrix = fmt.fmt.pix_mp.ycbcr_enc;
+        transfer = fmt.fmt.pix_mp.xfer_func;
+      } else {
+        colorspace = fmt.fmt.pix.colorspace;
+        range = fmt.fmt.pix.quantization;
+        matrix = fmt.fmt.pix.ycbcr_enc;
+        transfer = fmt.fmt.pix.xfer_func;
+      }
+
+      if (colorspace == req_cspace) {
+        if (gst_v4l2_object_get_colorspace (colorspace, range, matrix, transfer,
+                is_rgb, &cinfo)) {
+          /* Set identity matrix for R'G'B' formats to avoid creating
+           * confusion. This though is cosmetic as it's now properly ignored by
+           * the video info API and videoconvert. */
+          if (is_rgb)
+            cinfo.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+
+          gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
+        }
+      }
+    }
+  }
+
+  if (gst_value_list_get_size (&list) > 0)
+    gst_structure_take_value (s, "colorimetry", &list);
+
+  return;
 }
 
 /* The frame interval enumeration code first appeared in Linux 2.6.19. */
