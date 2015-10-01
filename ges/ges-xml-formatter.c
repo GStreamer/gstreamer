@@ -344,6 +344,8 @@ _parse_track (GMarkupParseContext * context, const gchar * element_name,
   if (props)
     gst_structure_free (props);
 
+  gst_caps_unref (caps);
+
   return;
 
 wrong_caps:
@@ -879,10 +881,12 @@ _serialize_properties (GObject * object, const gchar * fieldname, ...)
     spec = pspecs[j];
     if (spec->value_type == GST_TYPE_CAPS) {
       GstCaps *caps;
+      gchar *caps_str;
 
       g_object_get (object, spec->name, &caps, NULL);
-      gst_structure_set (structure, spec->name, G_TYPE_STRING,
-          gst_caps_to_string (caps), NULL);
+      caps_str = gst_caps_to_string (caps);
+      gst_structure_set (structure, spec->name, G_TYPE_STRING, caps_str, NULL);
+      g_free (caps_str);
     } else if (_can_serialize_spec (spec)) {
       _init_value_from_spec_for_serialization (&val, spec);
       g_object_get_property (object, spec->name, &val);
@@ -962,6 +966,7 @@ _save_children_properties (GString * str, GESTrackElement * trackelement)
   GstStructure *structure;
   GParamSpec **pspecs, *spec;
   guint i, n_props;
+  gchar *struct_str;
 
   pspecs = ges_track_element_list_children_properties (trackelement, &n_props);
 
@@ -980,11 +985,11 @@ _save_children_properties (GString * str, GESTrackElement * trackelement)
   }
   g_free (pspecs);
 
+  struct_str = gst_structure_to_string (structure);
   append_escaped (str,
-      g_markup_printf_escaped (" children-properties='%s'",
-          gst_structure_to_string (structure)));
-
+      g_markup_printf_escaped (" children-properties='%s'", struct_str));
   gst_structure_free (structure);
+  g_free (struct_str);
 }
 
 /* TODO : Use this function for every track element with controllable properties */
@@ -1054,6 +1059,7 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
   gchar *properties, *metas;
   guint track_id = 0;
   gboolean serialize;
+  gchar *extractable_id;
 
   g_object_get (trackelement, "serialize", &serialize, NULL);
   if (!serialize) {
@@ -1082,12 +1088,14 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
       "in-point", "duration", "locked", "max-duration", "name", NULL);
   metas =
       ges_meta_container_metas_to_string (GES_META_CONTAINER (trackelement));
+  extractable_id = ges_extractable_get_id (GES_EXTRACTABLE (trackelement));
   append_escaped (str,
       g_markup_printf_escaped ("          <effect asset-id='%s' clip-id='%u'"
           " type-name='%s' track-type='%i' track-id='%i' properties='%s' metadatas='%s'",
-          ges_extractable_get_id (GES_EXTRACTABLE (trackelement)), clip_id,
+          extractable_id, clip_id,
           g_type_name (G_OBJECT_TYPE (trackelement)), tck->type, track_id,
           properties, metas));
+  g_free (extractable_id);
   g_free (properties);
   g_free (metas);
 
@@ -1128,6 +1136,7 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
       GList *tmptrackelement;
       GList *tracks;
       gboolean serialize;
+      gchar *extractable_id;
 
       clip = GES_CLIP (tmpclip->data);
 
@@ -1144,15 +1153,17 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
       properties = _serialize_properties (G_OBJECT (clip),
           "supported-formats", "rate", "in-point", "start", "duration",
           "max-duration", "priority", "vtype", "uri", NULL);
+      extractable_id = ges_extractable_get_id (GES_EXTRACTABLE (clip));
       append_escaped (str,
           g_markup_printf_escaped ("        <clip id='%i' asset-id='%s'"
               " type-name='%s' layer-priority='%i' track-types='%i' start='%"
               G_GUINT64_FORMAT "' duration='%" G_GUINT64_FORMAT "' inpoint='%"
               G_GUINT64_FORMAT "' rate='%d' properties='%s' >\n",
-              priv->nbelements, ges_extractable_get_id (GES_EXTRACTABLE (clip)),
+              priv->nbelements, extractable_id,
               g_type_name (G_OBJECT_TYPE (clip)), priority,
               ges_clip_get_supported_formats (clip), _START (clip),
               _DURATION (clip), _INPOINT (clip), 0, properties));
+      g_free (extractable_id);
       g_free (properties);
 
       g_hash_table_insert (self->priv->element_id, clip,

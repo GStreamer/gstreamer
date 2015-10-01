@@ -56,6 +56,7 @@ _sync_capsfilter_with_track (GESTrack * track, GstElement * capsfilter)
       fps_d, NULL);
 
   g_object_set (capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
 }
 
 static void
