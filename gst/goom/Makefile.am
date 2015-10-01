@@ -39,7 +39,7 @@ libgstgoom_la_SOURCES =						\
 	$(ARCH_FILES)
 
 libgstgoom_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GOOM_FILTER_CFLAGS) $(ARCH_CFLAGS) $(ORC_CFLAGS)
-libgstgoom_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) -lgstvideo-$(GST_API_VERSION) -lgstaudio-$(GST_API_VERSION) $(LIBM) $(ORC_LIBS)
+libgstgoom_la_LIBADD = $(GST_BASE_LIBS) -lgstpbutils-$(GST_API_VERSION) $(GST_LIBS) $(LIBM) $(ORC_LIBS)
 libgstgoom_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstgoom_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
