@@ -2343,10 +2343,10 @@ static GstStaticCaps mpegts_caps = GST_STATIC_CAPS ("video/mpegts, "
  * null PIDs. Still, these streams are valid TS streams (for null packets,
  * AFC is supposed to be 0x1, but the spec also says decoders should just
  * discard any packets with AFC = 0x00) */
-#define IS_MPEGTS_HEADER(data) (((data)[0] == 0x47) && \
-                                (((data)[1] & 0x80) == 0x00) && \
-                                ((((data)[3] & 0x30) != 0x00) || \
-                                ((((data)[3] & 0x30) == 0x00) && (((data)[1] & 0x1f) == 0x1f) && (((data)[2] & 0xff) == 0xff))))
+#define IS_MPEGTS_HEADER(data) (data[0] == 0x47 && \
+                                (data[1] & 0x80) == 0x00 && \
+                                ((data[3] & 0x30) != 0x00 || \
+                                ((data[3] & 0x30) == 0x00 && (data[1] & 0x1f) == 0x1f && (data[2] & 0xff) == 0xff)))
 
 /* Helper function to search ahead at intervals of packet_size for mpegts
  * headers */
