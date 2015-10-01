@@ -885,29 +885,3 @@ gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
 
   return tmp;
 }
-
-#ifndef GST_DISABLE_GST_DEBUG
-void
-gst_gl_insert_debug_marker (GstGLContext * context, const gchar * format, ...)
-{
-  const GstGLFuncs *gl = context->gl_vtable;
-  gchar *string;
-  gint len;
-  va_list args;
-
-  va_start (args, format);
-  len = g_vasprintf (&string, format, args);
-  va_end (args);
-
-#if defined (GL_DEBUG_TYPE_MARKER)
-  if (gl->DebugMessageInsert) {
-    gl->DebugMessageInsert (GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_MARKER,
-        0, GL_DEBUG_SEVERITY_LOW, (gsize) len, string);
-  } else
-#endif
-  if (gl->InsertEventMarker)
-    gl->InsertEventMarker (len, string);
-  else if (gl->StringMarker)
-    gl->StringMarker (len, string);
-}
-#endif
