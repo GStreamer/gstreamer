@@ -28,7 +28,7 @@
 #include <gst/audio/audio.h>
 #include <libvisual/libvisual.h>
 
-#include "gstaudiovisualizer.h"
+#include "gst/pbutils/gstaudiovisualizer.h"
 
 G_BEGIN_DECLS
 
