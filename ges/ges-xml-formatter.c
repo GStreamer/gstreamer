@@ -1513,6 +1513,8 @@ _dispose (GObject * object)
 {
   g_clear_pointer (&GES_XML_FORMATTER (object)->priv->element_id,
       (GDestroyNotify) g_hash_table_unref);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
