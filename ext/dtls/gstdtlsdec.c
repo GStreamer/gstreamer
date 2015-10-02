@@ -569,7 +569,7 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     return GST_FLOW_OK;
   }
 
-  GST_DEBUG_OBJECT (self, "received buffer from %s with length %zd",
+  GST_DEBUG_OBJECT (self, "received buffer from %s with length %" G_GSIZE_FORMAT,
       self->connection_id, gst_buffer_get_size (buffer));
 
   buffer = gst_buffer_make_writable (buffer);
