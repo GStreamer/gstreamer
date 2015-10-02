@@ -161,8 +161,6 @@ gst_handdetect_finalize (GObject * obj)
 
   if (filter->cvGray)
     cvReleaseImage (&filter->cvGray);
-  if (filter->cvStorage)
-    cvReleaseMemStorage (&filter->cvStorage);
   g_free (filter->profile_fist);
   g_free (filter->profile_palm);
   g_free (filter->best_r);
@@ -387,10 +385,6 @@ gst_handdetect_set_caps (GstOpencvVideoFilter * transform,
   filter->cvGray =
       cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
 
-  if (!filter->cvStorage)
-    filter->cvStorage = cvCreateMemStorage (0);
-  else
-    cvClearMemStorage (filter->cvStorage);
   return TRUE;
 }
 
@@ -412,7 +406,6 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
   if (filter->cvCascade_fist && filter->cvCascade_palm) {
   /* cvt to gray colour space for hand detect */
     cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
-    cvClearMemStorage (filter->cvStorage);
 
     /* detect FIST gesture fist */
     Mat roi (filter->cvGray, Rect (filter->cvGray->origin,

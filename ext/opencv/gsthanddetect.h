@@ -96,7 +96,6 @@ struct _GstHanddetect
   IplImage *cvGray;
   cv::CascadeClassifier *cvCascade_fist;
   cv::CascadeClassifier *cvCascade_palm;
-  CvMemStorage *cvStorage;
   cv::Rect *prev_r;
   cv::Rect *best_r;
 };
