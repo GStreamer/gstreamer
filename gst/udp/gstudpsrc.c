@@ -112,9 +112,7 @@
 
 #include <gst/net/gstnetaddressmeta.h>
 
-#if GLIB_CHECK_VERSION (2, 35, 7)
 #include <gio/gnetworking.h>
-#else
 
 /* nicked from gnetworking.h */
 #ifdef G_OS_WIN32
@@ -984,7 +982,6 @@ gst_udpsrc_open (GstUDPSrc * src)
       goto getsockname_error;
   }
 
-#if GLIB_CHECK_VERSION (2, 35, 7)
   {
     gint val = 0;
 
@@ -1016,47 +1013,6 @@ gst_udpsrc_open (GstUDPSrc * src)
       GST_DEBUG_OBJECT (src, "could not get udp buffer size");
     }
   }
-#elif defined (SO_RCVBUF)
-  {
-    gint rcvsize, ret;
-    socklen_t len;
-
-    len = sizeof (rcvsize);
-    if (src->buffer_size != 0) {
-      rcvsize = src->buffer_size;
-
-      GST_DEBUG_OBJECT (src, "setting udp buffer of %d bytes", rcvsize);
-      /* set buffer size, Note that on Linux this is typically limited to a
-       * maximum of around 100K. Also a minimum of 128 bytes is required on
-       * Linux. */
-      ret =
-          setsockopt (g_socket_get_fd (src->used_socket), SOL_SOCKET, SO_RCVBUF,
-          (void *) &rcvsize, len);
-      if (ret != 0) {
-        GST_ELEMENT_WARNING (src, RESOURCE, SETTINGS, (NULL),
-            ("Could not create a buffer of requested %d bytes, %d: %s (%d)",
-                rcvsize, ret, g_strerror (errno), errno));
-      }
-    }
-
-    /* read the value of the receive buffer. Note that on linux this returns 2x the
-     * value we set because the kernel allocates extra memory for metadata.
-     * The default on Linux is about 100K (which is about 50K without metadata) */
-    ret =
-        getsockopt (g_socket_get_fd (src->used_socket), SOL_SOCKET, SO_RCVBUF,
-        (void *) &rcvsize, &len);
-    if (ret == 0)
-      GST_DEBUG_OBJECT (src, "have udp buffer of %d bytes", rcvsize);
-    else
-      GST_DEBUG_OBJECT (src, "could not get udp buffer size");
-  }
-#else
-  if (src->buffer_size != 0) {
-    GST_WARNING_OBJECT (src, "don't know how to set udp buffer size on this "
-        "OS. Consider upgrading your GLib to >= 2.35.7 and re-compiling the "
-        "GStreamer udp plugin");
-  }
-#endif
 
   g_socket_set_broadcast (src->used_socket, TRUE);
 
