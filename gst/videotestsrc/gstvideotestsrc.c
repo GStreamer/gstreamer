@@ -321,7 +321,11 @@ gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
-  gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
+
+  if (gst_structure_has_field (structure, "framerate"))
+    gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
+  else
+    gst_structure_set (structure, "framerate", GST_TYPE_FRACTION, 30, 1, NULL);
 
   if (gst_structure_has_field (structure, "pixel-aspect-ratio"))
     gst_structure_fixate_field_nearest_fraction (structure,
