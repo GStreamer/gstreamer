@@ -50,9 +50,9 @@ struct _resinDvdSrc
 
   gboolean	faststart;
 
-  GMutex	*dvd_lock;
-  GCond		*still_cond;
-  GMutex	*branch_lock;
+  GMutex	dvd_lock;
+  GCond		still_cond;
+  GMutex	branch_lock;
   gboolean	branching;
 
   gchar		*device;

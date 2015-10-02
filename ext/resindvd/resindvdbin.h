@@ -58,8 +58,8 @@ struct _RsnDvdBin
   GstBin element;
 
   /* Protects pieces list and properties */
-  GMutex *dvd_lock;
-  GMutex *preroll_lock;
+  GMutex dvd_lock;
+  GMutex preroll_lock;
 
   gchar *device;
   gchar *last_uri;

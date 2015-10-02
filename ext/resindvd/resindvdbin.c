@@ -43,11 +43,11 @@
 GST_DEBUG_CATEGORY_EXTERN (resindvd_debug);
 #define GST_CAT_DEFAULT resindvd_debug
 
-#define DVDBIN_LOCK(d) g_mutex_lock((d)->dvd_lock)
-#define DVDBIN_UNLOCK(d) g_mutex_unlock((d)->dvd_lock)
+#define DVDBIN_LOCK(d) g_mutex_lock(&(d)->dvd_lock)
+#define DVDBIN_UNLOCK(d) g_mutex_unlock(&(d)->dvd_lock)
 
-#define DVDBIN_PREROLL_LOCK(d) g_mutex_lock((d)->preroll_lock)
-#define DVDBIN_PREROLL_UNLOCK(d) g_mutex_unlock((d)->preroll_lock)
+#define DVDBIN_PREROLL_LOCK(d) g_mutex_lock(&(d)->preroll_lock)
+#define DVDBIN_PREROLL_UNLOCK(d) g_mutex_unlock(&(d)->preroll_lock)
 
 #define DEFAULT_DEVICE "/dev/dvd"
 enum
@@ -135,8 +135,8 @@ rsn_dvdbin_class_init (RsnDvdBinClass * klass)
 static void
 rsn_dvdbin_init (RsnDvdBin * dvdbin)
 {
-  dvdbin->dvd_lock = g_mutex_new ();
-  dvdbin->preroll_lock = g_mutex_new ();
+  g_mutex_init (&dvdbin->dvd_lock);
+  g_mutex_init (&dvdbin->preroll_lock);
 }
 
 static void
@@ -144,8 +144,8 @@ rsn_dvdbin_finalize (GObject * object)
 {
   RsnDvdBin *dvdbin = RESINDVDBIN (object);
 
-  g_mutex_free (dvdbin->dvd_lock);
-  g_mutex_free (dvdbin->preroll_lock);
+  g_mutex_clear (&dvdbin->dvd_lock);
+  g_mutex_clear (&dvdbin->preroll_lock);
   g_free (dvdbin->last_uri);
   g_free (dvdbin->device);
 
