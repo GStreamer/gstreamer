@@ -72,6 +72,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_handdetect_debug);
 #define HAAR_FILE_FIST GST_HAAR_CASCADES_DIR G_DIR_SEPARATOR_S "fist.xml"
 #define HAAR_FILE_PALM GST_HAAR_CASCADES_DIR G_DIR_SEPARATOR_S "palm.xml"
 
+using namespace cv;
 /* Filter signals and args */
 enum
 {
@@ -113,8 +114,8 @@ static gboolean gst_handdetect_set_caps (GstOpencvVideoFilter * transform,
 static GstFlowReturn gst_handdetect_transform_ip (GstOpencvVideoFilter *
     transform, GstBuffer * buffer, IplImage * img);
 
-static CvHaarClassifierCascade *gst_handdetect_load_profile (GstHanddetect *
-    filter, gchar * profile);
+static CascadeClassifier *gst_handdetect_load_profile (GstHanddetect * filter,
+    gchar * profile);
 
 static void gst_handdetect_navigation_interface_init (GstNavigationInterface *
     iface);
@@ -164,6 +165,7 @@ gst_handdetect_finalize (GObject * obj)
     cvReleaseMemStorage (&filter->cvStorage);
   g_free (filter->profile_fist);
   g_free (filter->profile_palm);
+  g_free (filter->best_r);
 
   G_OBJECT_CLASS (gst_handdetect_parent_class)->finalize (obj);
 }
@@ -297,7 +299,7 @@ gst_handdetect_set_property (GObject * object, guint prop_id,
     case PROP_PROFILE_FIST:
       g_free (filter->profile_fist);
       if (filter->cvCascade_fist)
-        cvReleaseHaarClassifierCascade (&filter->cvCascade_fist);
+        delete filter->cvCascade_fist;
       filter->profile_fist = g_value_dup_string (value);
       filter->cvCascade_fist =
           gst_handdetect_load_profile (filter, filter->profile_fist);
@@ -305,7 +307,7 @@ gst_handdetect_set_property (GObject * object, guint prop_id,
     case PROP_PROFILE_PALM:
       g_free (filter->profile_palm);
       if (filter->cvCascade_palm)
-        cvReleaseHaarClassifierCascade (&filter->cvCascade_palm);
+        delete filter->cvCascade_palm;
       filter->profile_palm = g_value_dup_string (value);
       filter->cvCascade_palm =
           gst_handdetect_load_profile (filter, filter->profile_palm);
@@ -400,147 +402,55 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
     GstBuffer * buffer, IplImage * img)
 {
   GstHanddetect *filter = GST_HANDDETECT (transform);
-  CvSeq *hands;
-  CvRect *r;
+  Rect *r;
   GstStructure *s;
   GstMessage *m;
-  int i;
+  unsigned int i;
+  vector < Rect > hands;
 
   /* check detection cascades */
-  if (!filter->cvCascade_fist || !filter->cvCascade_palm)
-    return GST_FLOW_OK;
-
+  if (filter->cvCascade_fist && filter->cvCascade_palm) {
   /* cvt to gray colour space for hand detect */
-  cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
-  cvClearMemStorage (filter->cvStorage);
+    cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
+    cvClearMemStorage (filter->cvStorage);
 
-  /* detect FIST gesture fist */
-  hands =
-      cvHaarDetectObjects (filter->cvGray, filter->cvCascade_fist,
-      filter->cvStorage, 1.1, 2, CV_HAAR_DO_CANNY_PRUNING, cvSize (24, 24),
-      cvSize (0, 0));
+    /* detect FIST gesture fist */
+    Mat roi (filter->cvGray, Rect (filter->cvGray->origin,
+            filter->cvGray->origin, filter->cvGray->width,
+            filter->cvGray->height));
+    filter->cvCascade_fist->detectMultiScale (roi, hands, 1.1, 2,
+        CV_HAAR_DO_CANNY_PRUNING, cvSize (24, 24), cvSize (0, 0));
 
-  /* if FIST gesture detected */
-  if (hands && hands->total > 0) {
-    int min_distance, distance;
-    CvRect temp_r;
-    CvPoint c;
+    /* if FIST gesture detected */
+    if (!hands.empty ()) {
 
-    GST_DEBUG_OBJECT (filter, "%d FIST gestures detected\n",
-        (int) hands->total);
-
-    /* Go through all detected FIST gestures to get the best one
-     * prev_r => previous hand
-     * best_r => best hand in this frame
-     */
-    /* set min_distance for init comparison */
-    min_distance = img->width + img->height;
-    /* Init filter->prev_r */
-    temp_r = cvRect (0, 0, 0, 0);
-    if (filter->prev_r == NULL)
-      filter->prev_r = &temp_r;
-    /* Get the best FIST gesture */
-    for (i = 0; i < hands->total; i++) {
-      r = (CvRect *) cvGetSeqElem (hands, i);
-      distance = (int) sqrt (pow ((r->x - filter->prev_r->x),
-              2) + pow ((r->y - filter->prev_r->y), 2));
-      if (distance <= min_distance) {
-        min_distance = distance;
-        filter->best_r = r;
-      }
-    }
-    /* Save best_r as prev_r for next frame comparison */
-    filter->prev_r = (CvRect *) filter->best_r;
-    /* send msg to app/bus if the detected gesture falls in the region of interest */
-    /* get center point of gesture */
-    c = cvPoint (filter->best_r->x + filter->best_r->width / 2,
-        filter->best_r->y + filter->best_r->height / 2);
-    /* send message:
-     * if the center point is in the region of interest, OR,
-     * if the region of interest remains default as (0,0,0,0)*/
-    if ((c.x >= filter->roi_x && c.x <= (filter->roi_x + filter->roi_width)
-            && c.y >= filter->roi_y
-            && c.y <= (filter->roi_y + filter->roi_height))
-        || (filter->roi_x == 0
-            && filter->roi_y == 0
-            && filter->roi_width == 0 && filter->roi_height == 0)) {
-      /* Define structure for message post */
-      s = gst_structure_new ("hand-gesture",
-          "gesture", G_TYPE_STRING, "fist",
-          "x", G_TYPE_UINT,
-          (guint) (filter->best_r->x + filter->best_r->width * 0.5), "y",
-          G_TYPE_UINT,
-          (guint) (filter->best_r->y + filter->best_r->height * 0.5), "width",
-          G_TYPE_UINT, (guint) filter->best_r->width, "height", G_TYPE_UINT,
-          (guint) filter->best_r->height, NULL);
-      /* Init message element */
-      m = gst_message_new_element (GST_OBJECT (filter), s);
-      /* Send message */
-      gst_element_post_message (GST_ELEMENT (filter), m);
-
-#if 0
-      /* send event
-       * here we use mouse-move event instead of fist-move or palm-move event
-       * !!! this will CHANGE in the future !!!
-       * !!! by adding gst_navigation_send_hand_detect_event() in navigation.c !!!
-       */
-      gst_navigation_send_mouse_event (GST_NAVIGATION (filter),
-          "mouse-move",
-          0,
-          (double) (filter->best_r->x + filter->best_r->width * 0.5),
-          (double) (filter->best_r->y + filter->best_r->height * 0.5));
-#endif
-    }
-    /* Check filter->display,
-     * If TRUE, displaying red circle marker in the out frame */
-    if (filter->display) {
-      CvPoint center;
-      int radius;
-      center.x = cvRound ((filter->best_r->x + filter->best_r->width * 0.5));
-      center.y = cvRound ((filter->best_r->y + filter->best_r->height * 0.5));
-      radius =
-          cvRound ((filter->best_r->width + filter->best_r->height) * 0.25);
-      cvCircle (img, center, radius, CV_RGB (0, 0, 200), 1, 8, 0);
-    }
-  } else {
-    /* if NO FIST gesture, detecting PALM gesture */
-    hands =
-        cvHaarDetectObjects (filter->cvGray, filter->cvCascade_palm,
-        filter->cvStorage, 1.1, 3, CV_HAAR_DO_CANNY_PRUNING, cvSize (24, 24),
-        cvSize (0, 0));
-    /* if PALM detected */
-    if (hands && hands->total > 0) {
       int min_distance, distance;
-      CvRect temp_r;
+      Rect temp_r;
       CvPoint c;
-      /* set frame buffer writable */
-      if (filter->display) {
-        buffer = gst_buffer_make_writable (buffer);
-        GST_DEBUG_OBJECT (filter, "%d PALM gestures detected\n",
-            (int) hands->total);
-      }
-      /* Go through all detected PALM gestures to get the best one
+
+      /* Go through all detected FIST gestures to get the best one
        * prev_r => previous hand
        * best_r => best hand in this frame
        */
-      /* suppose a min_distance for init comparison */
+      /* set min_distance for init comparison */
       min_distance = img->width + img->height;
       /* Init filter->prev_r */
-      temp_r = cvRect (0, 0, 0, 0);
+      temp_r = Rect (0, 0, 0, 0);
       if (filter->prev_r == NULL)
         filter->prev_r = &temp_r;
-      /* Get the best PALM gesture */
-      for (i = 0; i < hands->total; i++) {
-        r = (CvRect *) cvGetSeqElem (hands, i);
+      /* Get the best FIST gesture */
+      for (i = 0; i < hands.size(); i++) {
+        r = &hands[i];
         distance = (int) sqrt (pow ((r->x - filter->prev_r->x),
                 2) + pow ((r->y - filter->prev_r->y), 2));
         if (distance <= min_distance) {
           min_distance = distance;
-          filter->best_r = r;
+          g_free (filter->best_r);
+          filter->best_r = new Rect (*r);
         }
       }
       /* Save best_r as prev_r for next frame comparison */
-      filter->prev_r = (CvRect *) filter->best_r;
+      filter->prev_r = filter->best_r;
 
       /* send msg to app/bus if the detected gesture falls in the region of interest */
       /* get center point of gesture */
@@ -557,7 +467,7 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
               && filter->roi_width == 0 && filter->roi_height == 0)) {
         /* Define structure for message post */
         s = gst_structure_new ("hand-gesture",
-            "gesture", G_TYPE_STRING, "palm",
+            "gesture", G_TYPE_STRING, "fist",
             "x", G_TYPE_UINT,
             (guint) (filter->best_r->x + filter->best_r->width * 0.5), "y",
             G_TYPE_UINT,
@@ -581,20 +491,6 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
             (double) (filter->best_r->x + filter->best_r->width * 0.5),
             (double) (filter->best_r->y + filter->best_r->height * 0.5));
 
-        /* or use another way to send upstream navigation event for debug
-         *
-         * GstEvent *event =
-         * gst_event_new_navigation (gst_structure_new
-         * ("application/x-gst-navigation", "event", G_TYPE_STRING,
-         * "mouse-move",
-         * "button", G_TYPE_INT, 0,
-         * "pointer_x", G_TYPE_DOUBLE,
-         * (double) (filter->best_r->x + filter->best_r->width * 0.5),
-         * "pointer_y", G_TYPE_DOUBLE,
-         * (double) (filter->best_r->y + filter->best_r->height * 0.5),
-         * NULL));
-         * gst_pad_send_event (GST_BASE_TRANSFORM_CAST (filter)->srcpad, event);
-         */
 #endif
       }
       /* Check filter->display,
@@ -608,6 +504,114 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
             cvRound ((filter->best_r->width + filter->best_r->height) * 0.25);
         cvCircle (img, center, radius, CV_RGB (0, 0, 200), 1, 8, 0);
       }
+    } else {
+     /* if NO FIST gesture, detecting PALM gesture */
+      filter->cvCascade_palm->detectMultiScale (roi, hands, 1.1, 2,
+          CV_HAAR_DO_CANNY_PRUNING, cvSize (24, 24), cvSize (0, 0));
+      /* if PALM detected */
+      if (!hands.empty ()) {
+        int min_distance, distance;
+        Rect temp_r;
+        CvPoint c;
+        /* set frame buffer writable */
+        if (filter->display) {
+          buffer = gst_buffer_make_writable (buffer);
+          GST_DEBUG_OBJECT (filter, "%d PALM gestures detected\n",
+              (int) hands.size ());
+        }
+        /* Go through all detected PALM gestures to get the best one
+         * prev_r => previous hand
+         * best_r => best hand in this frame
+         */
+        /* suppose a min_distance for init comparison */
+        min_distance = img->width + img->height;
+        /* Init filter->prev_r */
+        temp_r = Rect (0, 0, 0, 0);
+       if (filter->prev_r == NULL)
+          filter->prev_r = &temp_r;
+        /* Get the best PALM gesture */
+        for (i = 0; i < hands.size (); ++i) {
+          r = &hands[i];
+          distance = (int) sqrt (pow ((r->x - filter->prev_r->x),
+                  2) + pow ((r->y - filter->prev_r->y), 2));
+          if (distance <= min_distance) {
+            min_distance = distance;
+            g_free (filter->best_r);
+            filter->best_r = new Rect (*r);
+          }
+        }
+        /* Save best_r as prev_r for next frame comparison */
+        filter->prev_r = filter->best_r;
+
+        /* send msg to app/bus if the detected gesture falls in the region of interest */
+        /* get center point of gesture */
+        c = cvPoint (filter->best_r->x + filter->best_r->width / 2,
+            filter->best_r->y + filter->best_r->height / 2);
+        /* send message:
+         * if the center point is in the region of interest, OR,
+         * if the region of interest remains default as (0,0,0,0)*/
+        if (((guint) c.x >= filter->roi_x
+                && (guint) c.x <= (filter->roi_x + filter->roi_width)
+                && (guint) c.y >= filter->roi_y
+                && (guint) c.y <= (filter->roi_y + filter->roi_height))
+            || (filter->roi_x == 0 && filter->roi_y == 0
+                && filter->roi_width == 0 && filter->roi_height == 0)) {
+          /* Define structure for message post */
+          s = gst_structure_new ("hand-gesture",
+              "gesture", G_TYPE_STRING, "palm",
+              "x", G_TYPE_UINT,
+              (guint) (filter->best_r->x + filter->best_r->width * 0.5), "y",
+              G_TYPE_UINT,
+              (guint) (filter->best_r->y + filter->best_r->height * 0.5),
+              "width", G_TYPE_UINT, (guint) filter->best_r->width, "height",
+              G_TYPE_UINT, (guint) filter->best_r->height, NULL);
+          /* Init message element */
+          m = gst_message_new_element (GST_OBJECT (filter), s);
+          /* Send message */
+          gst_element_post_message (GST_ELEMENT (filter), m);
+
+#if 0
+          /* send event
+           * here we use mouse-move event instead of fist-move or palm-move event
+           * !!! this will CHANGE in the future !!!
+           * !!! by adding gst_navigation_send_hand_detect_event() in navigation.c !!!
+           */
+          gst_navigation_send_mouse_event (GST_NAVIGATION (filter),
+              "mouse-move",
+              0,
+              (double) (filter->best_r->x + filter->best_r->width * 0.5),
+              (double) (filter->best_r->y + filter->best_r->height * 0.5));
+
+          /* or use another way to send upstream navigation event for debug
+           *
+           * GstEvent *event =
+           * gst_event_new_navigation (gst_structure_new
+           * ("application/x-gst-navigation", "event", G_TYPE_STRING,
+           * "mouse-move",
+           * "button", G_TYPE_INT, 0,
+           * "pointer_x", G_TYPE_DOUBLE,
+           * (double) (filter->best_r->x + filter->best_r->width * 0.5),
+           * "pointer_y", G_TYPE_DOUBLE,
+           * (double) (filter->best_r->y + filter->best_r->height * 0.5),
+           * NULL));
+           * gst_pad_send_event (GST_BASE_TRANSFORM_CAST (filter)->srcpad, event);
+           */
+#endif
+        }
+        /* Check filter->display,
+         * If TRUE, displaying red circle marker in the out frame */
+        if (filter->display) {
+          CvPoint center;
+          int radius;
+          center.x =
+              cvRound ((filter->best_r->x + filter->best_r->width * 0.5));
+          center.y =
+              cvRound ((filter->best_r->y + filter->best_r->height * 0.5));
+          radius =
+              cvRound ((filter->best_r->width + filter->best_r->height) * 0.25);
+          cvCircle (img, center, radius, CV_RGB (0, 0, 200), 1, 8, 0);
+        }
+      }
     }
   }
 
@@ -615,17 +619,18 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
   return GST_FLOW_OK;
 }
 
-static CvHaarClassifierCascade *
+static CascadeClassifier *
 gst_handdetect_load_profile (GstHanddetect * filter, gchar * profile)
 {
-  CvHaarClassifierCascade *cascade;
+  CascadeClassifier *cascade;
 
-  if (profile == NULL)
+  cascade = new CascadeClassifier (profile);
+  if (cascade->empty ()) {
+    GST_ERROR_OBJECT (filter, "Invalid profile file: %s", profile);
+    delete cascade;
     return NULL;
-  if (!(cascade = (CvHaarClassifierCascade *) cvLoad (profile, 0, 0, 0))) {
-    GST_WARNING_OBJECT (filter, "Couldn't load Haar classifier cascade: %s.",
-        profile);
   }
+
   return cascade;
 }
 
