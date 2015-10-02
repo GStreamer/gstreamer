@@ -212,34 +212,34 @@ gst_handdetect_class_init (GstHanddetectClass * klass)
   /* FIXME: property name needs fixing */
   g_object_class_install_property (gobject_class,
       PROP_ROI_X,
-      g_param_spec_uint ("ROI_X",
+      g_param_spec_int ("ROI_X",
           "ROI_X",
           "X of left-top pointer in region of interest \nGestures in the defined region of interest will emit messages",
-          0, UINT_MAX, 0, G_PARAM_READWRITE)
+          0, INT_MAX, 0, G_PARAM_READWRITE)
       );
   /* FIXME: property name needs fixing */
   g_object_class_install_property (gobject_class,
       PROP_ROI_Y,
-      g_param_spec_uint ("ROI_Y",
+      g_param_spec_int ("ROI_Y",
           "ROI_Y",
           "Y of left-top pointer in region of interest \nGestures in the defined region of interest will emit messages",
-          0, UINT_MAX, 0, G_PARAM_READWRITE)
+          0, INT_MAX, 0, G_PARAM_READWRITE)
       );
   /* FIXME: property name needs fixing */
   g_object_class_install_property (gobject_class,
       PROP_ROI_WIDTH,
-      g_param_spec_uint ("ROI_WIDTH",
+      g_param_spec_int ("ROI_WIDTH",
           "ROI_WIDTH",
           "WIDTH of left-top pointer in region of interest \nGestures in the defined region of interest will emit messages",
-          0, UINT_MAX, 0, G_PARAM_READWRITE)
+          0, INT_MAX, 0, G_PARAM_READWRITE)
       );
   /* FIXME: property name needs fixing */
   g_object_class_install_property (gobject_class,
       PROP_ROI_HEIGHT,
-      g_param_spec_uint ("ROI_HEIGHT",
+      g_param_spec_int ("ROI_HEIGHT",
           "ROI_HEIGHT",
           "HEIGHT of left-top pointer in region of interest \nGestures in the defined region of interest will emit messages",
-          0, UINT_MAX, 0, G_PARAM_READWRITE)
+          0, INT_MAX, 0, G_PARAM_READWRITE)
       );
 
   gst_element_class_set_static_metadata (element_class,
@@ -316,16 +316,16 @@ gst_handdetect_set_property (GObject * object, guint prop_id,
       filter->display = g_value_get_boolean (value);
       break;
     case PROP_ROI_X:
-      filter->roi_x = g_value_get_uint (value);
+      filter->roi_x = g_value_get_int (value);
       break;
     case PROP_ROI_Y:
-      filter->roi_y = g_value_get_uint (value);
+      filter->roi_y = g_value_get_int (value);
       break;
     case PROP_ROI_WIDTH:
-      filter->roi_width = g_value_get_uint (value);
+      filter->roi_width = g_value_get_int (value);
       break;
     case PROP_ROI_HEIGHT:
-      filter->roi_height = g_value_get_uint (value);
+      filter->roi_height = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -350,16 +350,16 @@ gst_handdetect_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_string (value, filter->profile_palm);
       break;
     case PROP_ROI_X:
-      g_value_set_uint (value, filter->roi_x);
+      g_value_set_int (value, filter->roi_x);
       break;
     case PROP_ROI_Y:
-      g_value_set_uint (value, filter->roi_y);
+      g_value_set_int (value, filter->roi_y);
       break;
     case PROP_ROI_WIDTH:
-      g_value_set_uint (value, filter->roi_width);
+      g_value_set_int (value, filter->roi_width);
       break;
     case PROP_ROI_HEIGHT:
-      g_value_set_uint (value, filter->roi_height);
+      g_value_set_int (value, filter->roi_height);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -468,12 +468,12 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
         /* Define structure for message post */
         s = gst_structure_new ("hand-gesture",
             "gesture", G_TYPE_STRING, "fist",
-            "x", G_TYPE_UINT,
-            (guint) (filter->best_r->x + filter->best_r->width * 0.5), "y",
-            G_TYPE_UINT,
-            (guint) (filter->best_r->y + filter->best_r->height * 0.5), "width",
-            G_TYPE_UINT, (guint) filter->best_r->width, "height", G_TYPE_UINT,
-            (guint) filter->best_r->height, NULL);
+            "x", G_TYPE_INT,
+            (gint) (filter->best_r->x + filter->best_r->width * 0.5), "y",
+            G_TYPE_INT,
+            (gint) (filter->best_r->y + filter->best_r->height * 0.5), "width",
+            G_TYPE_INT, (gint) filter->best_r->width, "height", G_TYPE_INT,
+            (gint) filter->best_r->height, NULL);
         /* Init message element */
         m = gst_message_new_element (GST_OBJECT (filter), s);
         /* Send message */
@@ -550,21 +550,21 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
         /* send message:
          * if the center point is in the region of interest, OR,
          * if the region of interest remains default as (0,0,0,0)*/
-        if (((guint) c.x >= filter->roi_x
-                && (guint) c.x <= (filter->roi_x + filter->roi_width)
-                && (guint) c.y >= filter->roi_y
-                && (guint) c.y <= (filter->roi_y + filter->roi_height))
+        if (((gint) c.x >= filter->roi_x
+                && (gint) c.x <= (filter->roi_x + filter->roi_width)
+                && (gint) c.y >= filter->roi_y
+                && (gint) c.y <= (filter->roi_y + filter->roi_height))
             || (filter->roi_x == 0 && filter->roi_y == 0
                 && filter->roi_width == 0 && filter->roi_height == 0)) {
           /* Define structure for message post */
           s = gst_structure_new ("hand-gesture",
               "gesture", G_TYPE_STRING, "palm",
-              "x", G_TYPE_UINT,
-              (guint) (filter->best_r->x + filter->best_r->width * 0.5), "y",
-              G_TYPE_UINT,
-              (guint) (filter->best_r->y + filter->best_r->height * 0.5),
-              "width", G_TYPE_UINT, (guint) filter->best_r->width, "height",
-              G_TYPE_UINT, (guint) filter->best_r->height, NULL);
+              "x", G_TYPE_INT,
+              (gint) (filter->best_r->x + filter->best_r->width * 0.5), "y",
+              G_TYPE_INT,
+              (gint) (filter->best_r->y + filter->best_r->height * 0.5),
+              "width", G_TYPE_INT, (gint) filter->best_r->width, "height",
+              G_TYPE_INT, (gint) filter->best_r->height, NULL);
           /* Init message element */
           m = gst_message_new_element (GST_OBJECT (filter), s);
           /* Send message */

@@ -85,10 +85,10 @@ struct _GstHanddetect
   gchar *profile_fist;
   gchar *profile_palm;
   /* region of interest */
-  guint roi_x;
-  guint roi_y;
-  guint roi_width;
-  guint roi_height;
+  gint roi_x;
+  gint roi_y;
+  gint roi_width;
+  gint roi_height;
 
   /* opencv
    * cvGray - image to gray colour
