@@ -1,3 +1,5 @@
 {
-    "phabricator.uri" : "https:\/\/phabricator.freedesktop.org\/api\/"
+    "phabricator.uri" : "https:\/\/phabricator.freedesktop.org\/api\/",
+    "repository.callsign" : "GES",
+    "project": "GStreamer Editing Services"
 }

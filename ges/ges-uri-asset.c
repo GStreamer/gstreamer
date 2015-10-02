@@ -344,6 +344,7 @@ static void
 discoverer_discovered_cb (GstDiscoverer * discoverer,
     GstDiscovererInfo * info, GError * err, gpointer user_data)
 {
+  GError *error = NULL;
   const GstTagList *tags;
 
   const gchar *uri = gst_discoverer_info_get_uri (info);
@@ -356,13 +357,20 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 
   if (gst_discoverer_info_get_result (info) == GST_DISCOVERER_OK) {
     ges_uri_clip_asset_set_info (mfs, info);
-  } else if (!err) {
-    err = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
-        "Stream %s discovering failed (error code: %d)",
-        uri, gst_discoverer_info_get_result (info));
+  } else {
+    if (err) {
+      error = g_error_copy (err);
+    } else {
+      error = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+          "Stream %s discovering failed (error code: %d)",
+          uri, gst_discoverer_info_get_result (info));
+    }
   }
 
-  ges_asset_cache_set_loaded (GES_TYPE_URI_CLIP, uri, err);
+  ges_asset_cache_set_loaded (GES_TYPE_URI_CLIP, uri, error);
+
+  if (error)
+    g_error_free (error);
 }
 
 /* API implementation */
