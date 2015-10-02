@@ -16,7 +16,7 @@ libgstaudiovisualizers_la_LIBADD = \
 libgstaudiovisualizers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaudiovisualizers_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
-+noinst_HEADERS = gstdrawhelpers.h \
+noinst_HEADERS = gstdrawhelpers.h \
 	gstspacescope.h \
 	gstspectrascope.h \
 	gstsynaescope.h \
