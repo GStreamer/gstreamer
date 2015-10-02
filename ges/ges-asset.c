@@ -87,6 +87,10 @@
 
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY_STATIC (ges_asset_debug);
+#undef GST_CAT_DEFAULT
+#define GST_CAT_DEFAULT ges_asset_debug
+
 enum
 {
   PROP_0,
@@ -339,6 +343,8 @@ ges_asset_finalize (GObject * object)
 {
   GESAssetPrivate *priv = GES_ASSET (object)->priv;
 
+  GST_DEBUG_OBJECT (object, "finalizing");
+
   if (priv->id)
     g_free (priv->id);
 
@@ -377,6 +383,9 @@ ges_asset_class_init (GESAssetClass * klass)
   klass->extract = ges_asset_extract_default;
   klass->request_id_update = ges_asset_request_id_update_default;
   klass->inform_proxy = NULL;
+
+  GST_DEBUG_CATEGORY_INIT (ges_asset_debug, "ges-asset",
+      GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GES Asset");
 }
 
 void
@@ -422,9 +431,14 @@ _free_entries (gpointer entry)
   g_slice_free (GESAssetCacheEntry, entry);
 }
 
+static void
+_gtask_return_error (GTask * task, GError * error)
+{
+  g_task_return_error (task, g_error_copy (error));
+}
 
 static void
-_gtask_return_true (GTask * task)
+_gtask_return_true (GTask * task, gpointer udata)
 {
   g_task_return_boolean (task, TRUE);
 }
@@ -471,9 +485,12 @@ gboolean
 ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
     GError * error)
 {
-  GList *tmp;
   GESAsset *asset;
   GESAssetCacheEntry *entry = NULL;
+  GList *results = NULL;
+  GFunc user_func = NULL;
+  gpointer user_data = NULL;
+
   LOCK_CACHE;
   if ((entry = _lookup_entry (extractable_type, id)) == NULL) {
     UNLOCK_CACHE;
@@ -488,36 +505,29 @@ ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
       "callback (Error: %s)", g_type_name (asset->priv->extractable_type),
       g_list_length (entry->results), error ? error->message : "");
 
-  if (error) {
-    GList *results = entry->results;
+  results = entry->results;
+  entry->results = NULL;
 
+  if (error) {
     asset->priv->state = ASSET_INITIALIZED_WITH_ERROR;
     if (asset->priv->error)
       g_error_free (asset->priv->error);
     asset->priv->error = g_error_copy (error);
-    entry->results = NULL;
-    UNLOCK_CACHE;
 
     /* In case of error we do not want to emit in idle as we need to recover
      * if possible */
-    for (tmp = results; tmp; tmp = tmp->next) {
-      g_task_return_error (tmp->data, g_error_copy (error));
-      gst_object_unref (tmp->data);
-    }
-
-    g_list_free (results);
-    return TRUE;
+    user_func = (GFunc) _gtask_return_error;
+    user_data = error;
+    GST_DEBUG_OBJECT (asset, "initialized with error");
   } else {
-    GList *results;
-
     asset->priv->state = ASSET_INITIALIZED;
-    results = entry->results;
-    entry->results = NULL;
-    UNLOCK_CACHE;
-
-    g_list_foreach (results, (GFunc) _gtask_return_true, NULL);
-    g_list_free_full (results, gst_object_unref);
+    user_func = (GFunc) _gtask_return_true;
+    GST_DEBUG_OBJECT (asset, "initialized");
   }
+  UNLOCK_CACHE;
+
+  g_list_foreach (results, user_func, user_data);
+  g_list_free_full (results, g_object_unref);
 
   return TRUE;
 }
@@ -753,7 +763,7 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
           break;
         case ASSET_INITIALIZED_WITH_ERROR:
           GST_WARNING_OBJECT (asset, "Initialized with error, not returning");
-          if (error)
+          if (asset->priv->error)
             *error = g_error_copy (asset->priv->error);
           asset = NULL;
           goto done;
