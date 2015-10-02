@@ -85,7 +85,7 @@ gst_ffmpeg_init_pix_fmt_info(void);
 int
 gst_ffmpeg_auto_max_threads(void);
 
-G_CONST_RETURN gchar *
+const gchar *
 gst_ffmpeg_get_codecid_longname (enum AVCodecID codec_id);
 
 gint

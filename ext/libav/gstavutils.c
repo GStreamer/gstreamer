@@ -31,7 +31,7 @@
 
 #include <libavutil/mem.h>
 
-G_CONST_RETURN gchar *
+const gchar *
 gst_ffmpeg_get_codecid_longname (enum AVCodecID codec_id)
 {
   AVCodec *codec;
