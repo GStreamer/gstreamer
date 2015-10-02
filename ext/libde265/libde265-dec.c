@@ -41,58 +41,6 @@
 
 #include "libde265-dec.h"
 
-#if !GLIB_CHECK_VERSION(2, 36, 0)
-#include <stdio.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef G_OS_WIN32
-#include <windows.h>
-#endif
-#define g_get_num_processors gst_g_get_num_processors
-static guint
-gst_g_get_num_processors (void)
-{
-  guint threads = 0;
-
-#if defined(_SC_NPROC_ONLN)
-  threads = sysconf (_SC_NPROC_ONLN);
-#elif defined(_SC_NPROCESSORS_ONLN)
-  threads = sysconf (_SC_NPROCESSORS_ONLN);
-#elif defined(G_OS_WIN32)
-  {
-    SYSTEM_INFO sysinfo;
-    DWORD_PTR process_cpus;
-    DWORD_PTR system_cpus;
-
-    /* This *never* fails, but doesn't take CPU affinity into account */
-    GetSystemInfo (&sysinfo);
-    threads = (int) sysinfo.dwNumberOfProcessors;
-
-    /* This *can* fail, but produces correct results if affinity mask is used,
-     * unlike the simpler code above.
-     */
-    if (GetProcessAffinityMask (GetCurrentProcess (),
-            &process_cpus, &system_cpus)) {
-      unsigned int count;
-
-      for (count = 0; process_cpus != 0; process_cpus >>= 1)
-        if (process_cpus & 1)
-          count++;
-    }
-  }
-#else
-#warning "Don't know how to get number of CPU cores, will use the default thread count"
-  threads = DEFAULT_THREAD_COUNT;
-#endif
-
-  if (threads > 0)
-    return threads;
-
-  return 1;
-}
-#endif /* !GLIB_CHECK_VERSION(2, 36, 0) */
-
 /* use two decoder threads if no information about
  * available CPU cores can be retrieved */
 #define DEFAULT_THREAD_COUNT        2
