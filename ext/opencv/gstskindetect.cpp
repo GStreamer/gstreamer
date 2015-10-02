@@ -158,7 +158,7 @@ gst_skin_detect_class_init (GstSkinDetectClass * klass)
           "Method to use",
           "Method to use",
           GST_TYPE_SKIN_DETECT_METHOD, HSV,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "skindetect",
