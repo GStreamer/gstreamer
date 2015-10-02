@@ -143,21 +143,21 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
           "type",
           "Smooth Type",
           GST_TYPE_CV_SMOOTH_TYPE,
-          DEFAULT_CV_SMOOTH_TYPE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+          DEFAULT_CV_SMOOTH_TYPE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
       );
   g_object_class_install_property (gobject_class, PROP_WIDTH,
       g_param_spec_int ("width", "width (aperture width)",
           "The aperture width (Must be positive and odd)."
           "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
           "/documentation/image_filtering.html#cvSmooth", 1, G_MAXINT,
-          DEFAULT_WIDTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_WIDTH, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
       g_param_spec_int ("height", "height (aperture height)",
           "The aperture height, if zero, the width is used."
           "(Must be positive and odd or zero, unuset in median and bilateral "
           "types). Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
           "/documentation/image_filtering.html#cvSmooth", 0, G_MAXINT,
-          DEFAULT_HEIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_HEIGHT, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_COLORSIGMA,
       g_param_spec_double ("color", "color (gaussian standard deviation or "
           "color sigma",
@@ -167,14 +167,14 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
           "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
           "/documentation/image_filtering.html#cvSmooth",
           0, G_MAXDOUBLE, DEFAULT_COLORSIGMA,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_SPATIALSIGMA,
       g_param_spec_double ("spatial", "spatial (spatial sigma, bilateral only)",
           "Only used in bilateral type, means the spatial-sigma."
           "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
           "/documentation/image_filtering.html#cvSmooth",
           0, G_MAXDOUBLE, DEFAULT_SPATIALSIGMA,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "cvsmooth",
