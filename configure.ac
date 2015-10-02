@@ -219,7 +219,7 @@ dnl *** checks for headers ***
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.34.0])
+AG_GST_GLIB_CHECK([2.40.0])
 
 PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.16, HAVE_GIO=yes, HAVE_GIO=no)
 AC_SUBST(GIO_CFLAGS)
