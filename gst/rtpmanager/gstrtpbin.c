@@ -272,6 +272,9 @@ enum
   SIGNAL_REQUEST_AUX_SENDER,
   SIGNAL_REQUEST_AUX_RECEIVER,
 
+  SIGNAL_ON_NEW_SENDER_SSRC,
+  SIGNAL_ON_SENDER_SSRC_ACTIVE,
+
   LAST_SIGNAL
 };
 
@@ -565,6 +568,21 @@ on_npt_stop (GstElement * jbuf, GstRtpBinStream * stream)
       stream->session->id, stream->ssrc);
 }
 
+static void
+on_new_sender_ssrc (GstElement * session, guint32 ssrc, GstRtpBinSession * sess)
+{
+  g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_NEW_SENDER_SSRC], 0,
+      sess->id, ssrc);
+}
+
+static void
+on_sender_ssrc_active (GstElement * session, guint32 ssrc,
+    GstRtpBinSession * sess)
+{
+  g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_SENDER_SSRC_ACTIVE],
+      0, sess->id, ssrc);
+}
+
 /* must be called with the SESSION lock */
 static GstRtpBinStream *
 find_stream_by_ssrc (GstRtpBinSession * session, guint32 ssrc)
@@ -659,6 +677,10 @@ create_session (GstRtpBin * rtpbin, gint id)
   g_signal_connect (sess->session, "on-timeout", (GCallback) on_timeout, sess);
   g_signal_connect (sess->session, "on-sender-timeout",
       (GCallback) on_sender_timeout, sess);
+  g_signal_connect (sess->session, "on-new-sender-ssrc",
+      (GCallback) on_new_sender_ssrc, sess);
+  g_signal_connect (sess->session, "on-sender-ssrc-active",
+      (GCallback) on_sender_ssrc_active, sess);
 
   gst_bin_add (GST_BIN_CAST (rtpbin), session);
   gst_bin_add (GST_BIN_CAST (rtpbin), demux);
@@ -2070,6 +2092,36 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
           request_aux_receiver), _gst_element_accumulator, NULL,
       g_cclosure_marshal_generic, GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+  /**
+   * GstRtpBin::on-new-sender-ssrc:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the sender SSRC
+   *
+   * Since: 1.8
+   *
+   * Notify of a new sender SSRC that entered @session.
+   */
+  gst_rtp_bin_signals[SIGNAL_ON_NEW_SENDER_SSRC] =
+      g_signal_new ("on-new-sender-ssrc", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_new_sender_ssrc),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
+  /**
+   * GstRtpBin::on-ssrc-active:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the sender SSRC
+   *
+   * Since: 1.8
+   *
+   * Notify of a sender SSRC that is active, i.e., sending RTCP.
+   */
+  gst_rtp_bin_signals[SIGNAL_ON_SENDER_SSRC_ACTIVE] =
+      g_signal_new ("on-sender-ssrc-active", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
+          on_sender_ssrc_active), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
 
   g_object_class_install_property (gobject_class, PROP_SDES,
       g_param_spec_boxed ("sdes", "SDES",

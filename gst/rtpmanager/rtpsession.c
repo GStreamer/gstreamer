@@ -51,6 +51,8 @@ enum
   SIGNAL_SEND_RTCP,
   SIGNAL_SEND_RTCP_FULL,
   SIGNAL_ON_RECEIVING_RTCP,
+  SIGNAL_ON_NEW_SENDER_SSRC,
+  SIGNAL_ON_SENDER_SSRC_ACTIVE,
   LAST_SIGNAL
 };
 
@@ -361,6 +363,36 @@ rtp_session_class_init (RTPSessionClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_receiving_rtcp),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
+
+  /**
+   * RTPSession::on-new-sender-ssrc:
+   * @session: the object which received the signal
+   * @src: the new sender RTPSource
+   *
+   * Notify of a new sender SSRC that entered @session.
+   *
+   * Since: 1.8
+   */
+  rtp_session_signals[SIGNAL_ON_NEW_SENDER_SSRC] =
+      g_signal_new ("on-new-sender-ssrc", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_new_sender_ssrc),
+      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+      RTP_TYPE_SOURCE);
+
+  /**
+   * RTPSession::on-sender-ssrc-active:
+   * @session: the object which received the signal
+   * @src: the active sender RTPSource
+   *
+   * Notify of a sender SSRC that is active, i.e., sending RTCP.
+   *
+   * Since: 1.8
+   */
+  rtp_session_signals[SIGNAL_ON_SENDER_SSRC_ACTIVE] =
+      g_signal_new ("on-sender-ssrc-active", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass,
+          on_sender_ssrc_active), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SSRC,
       g_param_spec_uint ("internal-ssrc", "Internal SSRC",
@@ -893,6 +925,28 @@ on_sender_timeout (RTPSession * sess, RTPSource * source)
   g_object_ref (source);
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SENDER_TIMEOUT], 0,
+      source);
+  RTP_SESSION_LOCK (sess);
+  g_object_unref (source);
+}
+
+static void
+on_new_sender_ssrc (RTPSession * sess, RTPSource * source)
+{
+  g_object_ref (source);
+  RTP_SESSION_UNLOCK (sess);
+  g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_NEW_SENDER_SSRC], 0,
+      source);
+  RTP_SESSION_LOCK (sess);
+  g_object_unref (source);
+}
+
+static void
+on_sender_ssrc_active (RTPSession * sess, RTPSource * source)
+{
+  g_object_ref (source);
+  RTP_SESSION_UNLOCK (sess);
+  g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SENDER_SSRC_ACTIVE], 0,
       source);
   RTP_SESSION_LOCK (sess);
   g_object_unref (source);
@@ -2754,6 +2808,10 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
     sess->internal_ssrc_from_caps_or_property = TRUE;
     if (source) {
       rtp_source_update_caps (source, caps);
+
+      if (created)
+        on_new_sender_ssrc (sess, source);
+
       g_object_unref (source);
     }
 
@@ -2806,6 +2864,8 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
     goto invalid_packet;
 
   source = obtain_internal_source (sess, pinfo.ssrc, &created, current_time);
+  if (created)
+    on_new_sender_ssrc (sess, source);
 
   prevsender = RTP_SOURCE_IS_SENDER (source);
   oldrate = source->bitrate;
@@ -3817,6 +3877,10 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     source = obtain_internal_source (sess, sess->suggested_ssrc, &created,
         current_time);
     sess->internal_ssrc_set = TRUE;
+
+    if (created)
+      on_new_sender_ssrc (sess, source);
+
     g_object_unref (source);
   }
 
@@ -3903,6 +3967,10 @@ done:
           sess->callbacks.send_rtcp (sess, source, buffer, output->is_bye,
           sess->send_rtcp_user_data);
       sess->stats.nacks_sent += data.nacked_seqnums;
+
+      RTP_SESSION_LOCK (sess);
+      on_sender_ssrc_active (sess, source);
+      RTP_SESSION_UNLOCK (sess);
     } else {
       GST_DEBUG ("freeing packet callback: %p"
           " do_not_suppress: %d may_suppress: %d", sess->callbacks.send_rtcp,

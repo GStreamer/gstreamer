@@ -349,6 +349,24 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpBin::on-new-sender-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::on-sender-ssrc-active</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
@@ -501,6 +519,22 @@ guint  arg1
 <SIGNAL>
 <NAME>GstRtpSession::request-pt-map</NAME>
 <RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::on-new-sender-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::on-sender-ssrc-active</NAME>
+<RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
 GstRtpSession *gstrtpsession
 guint  arg1

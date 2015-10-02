@@ -309,6 +309,8 @@ struct _RTPSessionClass {
       guint sender_ssrc, guint media_ssrc, GstBuffer *fci);
   gboolean (*send_rtcp)     (RTPSession *sess, GstClockTime max_delay);
   void (*on_receiving_rtcp) (RTPSession *sess, GstBuffer *buffer);
+  void (*on_new_sender_ssrc)     (RTPSession *sess, RTPSource *source);
+  void (*on_sender_ssrc_active)  (RTPSession *sess, RTPSource *source);
 };
 
 GType rtp_session_get_type (void);

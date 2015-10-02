@@ -72,6 +72,8 @@ struct _GstRtpSessionClass {
   void     (*on_bye_timeout)    (GstRtpSession *sess, guint32 ssrc);
   void     (*on_timeout)        (GstRtpSession *sess, guint32 ssrc);
   void     (*on_sender_timeout) (GstRtpSession *sess, guint32 ssrc);
+  void     (*on_new_sender_ssrc)      (GstRtpSession *sess, guint32 ssrc);
+  void     (*on_sender_ssrc_active)   (GstRtpSession *sess, guint32 ssrc);
 };
 
 GType gst_rtp_session_get_type (void);

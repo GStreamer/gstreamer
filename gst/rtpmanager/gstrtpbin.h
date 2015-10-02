@@ -119,6 +119,9 @@ struct _GstRtpBinClass {
 
   GstElement* (*request_aux_sender)   (GstRtpBin *rtpbin, guint session);
   GstElement* (*request_aux_receiver) (GstRtpBin *rtpbin, guint session);
+
+  void     (*on_new_sender_ssrc)      (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_sender_ssrc_active)   (GstRtpBin *rtpbin, guint session, guint32 ssrc);
 };
 
 GType gst_rtp_bin_get_type (void);
