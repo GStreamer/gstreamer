@@ -6568,20 +6568,7 @@ FUNC_VALUE_GET_TYPE_CLASSED (flagset, "GstFlagSet",
 GType
 gst_g_thread_get_type (void)
 {
-#if GLIB_CHECK_VERSION(2,35,3)
   return G_TYPE_THREAD;
-#else
-  static volatile gsize type_id = 0;
-
-  if (g_once_init_enter (&type_id)) {
-    GType tmp =
-        g_boxed_type_register_static (g_intern_static_string ("GstGThread"),
-        (GBoxedCopyFunc) g_thread_ref, (GBoxedFreeFunc) g_thread_unref);
-    g_once_init_leave (&type_id, tmp);
-  }
-
-  return type_id;
-#endif
 }
 
 #define SERIAL_VTABLE(t,c,s,d) { t, c, s, d }

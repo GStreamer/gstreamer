@@ -475,10 +475,6 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     GST_DEBUG ("already initialized");
     return TRUE;
   }
-#if !GLIB_CHECK_VERSION(2, 35, 0)
-  g_type_init ();
-#endif
-
 #ifndef GST_DISABLE_GST_DEBUG
   _priv_gst_debug_init ();
   priv_gst_dump_dot_dir = g_getenv ("GST_DEBUG_DUMP_DOT_DIR");

@@ -118,25 +118,6 @@ _gst_ascii_strcasestr (const gchar * s, const gchar * find)
 }
 #endif
 
-#if !GLIB_CHECK_VERSION (2, 33, 4)
-#define g_list_copy_deep gst_g_list_copy_deep
-static GList *
-gst_g_list_copy_deep (GList * list, GCopyFunc func, gpointer user_data)
-{
-  list = g_list_copy (list);
-
-  if (func != NULL) {
-    GList *l;
-
-    for (l = list; l != NULL; l = l->next) {
-      l->data = func (l->data, user_data);
-    }
-  }
-
-  return list;
-}
-#endif
-
 GType
 gst_uri_handler_get_type (void)
 {
