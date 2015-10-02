@@ -114,6 +114,7 @@ endif
 if USE_EGL
 SUBDIRS += egl
 libgstgl_@GST_API_VERSION@_la_LIBADD += egl/libgstgl-egl.la
+libgstgl_@GST_API_VERSION@_la_LIBADD += -lgstallocators-$(GST_API_VERSION)
 endif
 
 configexecincludedir = $(libdir)/gstreamer-@GST_API_VERSION@/include/gst/gl
