@@ -467,9 +467,6 @@ ges_track_dispose (GObject * object)
   g_list_free_full (priv->gaps, (GDestroyNotify) free_gap);
   ges_nle_object_commit (track->priv->composition, TRUE);
 
-  if (priv->mixing_operation)
-    gst_object_unref (priv->mixing_operation);
-
   if (priv->composition) {
     gst_element_remove_pad (GST_ELEMENT (track), priv->srcpad);
     gst_bin_remove (GST_BIN (object), priv->composition);
@@ -892,8 +889,6 @@ ges_track_set_mixing (GESTrack * track, gboolean mixing)
   }
 
   if (mixing) {
-    /* increase ref count to hold the object */
-    gst_object_ref (track->priv->mixing_operation);
     if (!ges_nle_composition_add_object (track->priv->composition,
             track->priv->mixing_operation)) {
       GST_WARNING_OBJECT (track, "Could not add the mixer to our composition");
