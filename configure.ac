@@ -149,7 +149,7 @@ dnl *** checks for library functions ***
 dnl *** checks for dependancy libraries ***
 
 dnl GLib is required
-GLIB_REQ=2.32.0
+GLIB_REQ=2.40.0
 AC_SUBST([GLIB_REQ])
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
