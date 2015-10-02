@@ -65,10 +65,12 @@
 #include <gst/gst.h>
 #include "gstretinex.h"
 #include <opencv2/imgproc/imgproc_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
 
 GST_DEBUG_CATEGORY_STATIC (gst_retinex_debug);
 #define GST_CAT_DEFAULT gst_retinex_debug
 
+using namespace cv;
 /* Filter signals and args */
 enum
 {
@@ -153,12 +155,13 @@ gst_retinex_class_init (GstRetinexClass * klass)
           "Retinex method to use",
           "Retinex method to use",
           GST_TYPE_RETINEX_METHOD, DEFAULT_METHOD,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_SCALES,
       g_param_spec_int ("scales", "scales",
           "Amount of gaussian filters (scales) used in multiscale retinex", 1,
-          4, DEFAULT_SCALES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          4, DEFAULT_SCALES,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "Retinex image colour enhacement", "Filter/Effect/Video",
@@ -169,9 +172,7 @@ gst_retinex_class_init (GstRetinexClass * klass)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-
 }
-
 
 /* initialize the new element
  * instantiate pads and add them to element
@@ -294,8 +295,9 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   int gain = 128;
   int offset = 128;
   int filter_size;
+  Mat icvD (retinex->cvD, false);
 
-  if (!gst_buffer_map (buf, &info, GST_MAP_READWRITE)) {
+  if (!gst_buffer_map (buf, &info, (GstMapFlags) GST_MAP_READWRITE)) {
     return GST_FLOW_ERROR;
   }
   retinex->cvRGBin->imageData = (char *) info.data;
@@ -314,8 +316,7 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
     filter_size = filter_size * 2 + 1;
 
     cvConvert (retinex->cvRGBin, retinex->cvD);
-    cvSmooth (retinex->cvD, retinex->cvD, CV_GAUSSIAN, filter_size, filter_size,
-        0.0, 0.0);
+    GaussianBlur (icvD, icvD, Size (filter_size, filter_size), 0.0, 0.0);
     cvLog (retinex->cvD, retinex->cvC);
 
     /*  Compute difference */
@@ -360,8 +361,7 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
       filter_size = filter_size * 2 + 1;
 
       cvConvert (retinex->cvRGBin, retinex->cvD);
-      cvSmooth (retinex->cvD, retinex->cvD, CV_GAUSSIAN, filter_size,
-          filter_size, 0.0, 0.0);
+      GaussianBlur (icvD, icvD, Size (filter_size, filter_size), 0.0, 0.0);
       cvLog (retinex->cvD, retinex->cvC);
 
       /*  Compute weighted difference */
