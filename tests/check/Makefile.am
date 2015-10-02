@@ -194,6 +194,7 @@ check_PROGRAMS = \
 	libs/audiocdsrc \
 	libs/audiodecoder \
 	libs/audioencoder \
+	libs/baseaudiovisualizer \
 	libs/discoverer \
 	libs/fft \
 	libs/navigation \
@@ -341,6 +342,16 @@ libs_audiocdsrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
+
+libs_baseaudiovisualizer_SOURCES = libs/baseaudiovisualizer.c
+libs_baseaudiovisualizer_CFLAGS = \
+        $(GST_PLUGINS_BASE_CFLAGS) \
+        $(GST_BASE_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+libs_baseaudiovisualizer_LDADD = \
+        $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
+        $(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+        $(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) \
+        $(GST_LIBS) $(LDADD)
 
 libs_discoverer_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
