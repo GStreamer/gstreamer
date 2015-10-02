@@ -19,7 +19,7 @@ libgstopencv_la_SOURCES = gstopencv.cpp \
 			gsttextoverlay.c \
 			gstmotioncells.c \
 			gstskindetect.c \
-			gstretinex.c \
+			gstretinex.cpp \
 			gstfacedetect.cpp \
 			gstsegmentation.cpp \
 			gstgrabcut.cpp \
