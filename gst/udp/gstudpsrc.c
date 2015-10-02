@@ -114,21 +114,6 @@
 
 #include <gio/gnetworking.h>
 
-/* nicked from gnetworking.h */
-#ifdef G_OS_WIN32
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501
-#endif
-#include <winsock2.h>
-#undef interface
-#include <ws2tcpip.h>           /* for socklen_t */
-#endif /* G_OS_WIN32 */
-
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#endif
-
 /* not 100% correct, but a good upper bound for memory allocation purposes */
 #define MAX_IPV4_UDP_PACKET_SIZE (65536 - 8)
 
