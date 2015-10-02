@@ -4,7 +4,7 @@ plugin_LTLIBRARIES = libgstopencv.la
 libgstopencv_la_SOURCES = gstopencv.cpp \
 			gstopencvvideofilter.c \
 			gstopencvutils.c \
-			gstcvdilate.c \
+			gstcvdilate.cpp \
 			gstcvdilateerode.c \
 			gstcvequalizehist.c \
 			gstcverode.c \
