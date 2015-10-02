@@ -320,16 +320,28 @@ _remove_actions_for_type (NleComposition * comp, GCallback callback)
   GList *tmp;
 
   ACTIONS_LOCK (comp);
-  for (tmp = comp->priv->actions; tmp; tmp = tmp->next) {
+
+  GST_LOG_OBJECT (comp, "finding action[callback=%s], action count = %d",
+      GST_DEBUG_FUNCPTR_NAME (callback), g_list_length (comp->priv->actions));
+  tmp = g_list_first (comp->priv->actions);
+  while (tmp != NULL) {
     Action *act = tmp->data;
+    GList *removed = NULL;
 
     if (ACTION_CALLBACK (act) == callback) {
+      GST_LOG_OBJECT (comp, "remove action for callback %s",
+          GST_DEBUG_FUNCPTR_NAME (callback));
+      removed = tmp;
       g_closure_unref ((GClosure *) act);
-      comp->priv->actions = g_list_delete_link (comp->priv->actions, tmp);
+      comp->priv->actions = g_list_remove_link (comp->priv->actions, removed);
     }
-  }
-  ACTIONS_UNLOCK (comp);
 
+    tmp = g_list_next (tmp);
+    if (removed)
+      g_list_free (removed);
+  }
+
+  ACTIONS_UNLOCK (comp);
 }
 
 static void
@@ -359,17 +371,25 @@ _execute_actions (NleComposition * comp)
     GValue params[1] = { G_VALUE_INIT };
     GList *lact;
 
+    GST_LOG_OBJECT (comp, "scheduled actions [%d]",
+        g_list_length (priv->actions));
+
     g_value_init (&params[0], G_TYPE_OBJECT);
     g_value_set_object (&params[0], comp);
 
-    lact = priv->actions;
-    priv->actions = priv->actions->next;
+    lact = g_list_first (priv->actions);
+    priv->actions = g_list_remove_link (priv->actions, lact);
     ACTIONS_UNLOCK (comp);
 
     GST_INFO_OBJECT (comp, "Invoking %p:%s",
         lact->data, GST_DEBUG_FUNCPTR_NAME ((ACTION_CALLBACK (lact->data))));
     g_closure_invoke (lact->data, NULL, 1, params, NULL);
     g_value_unset (&params[0]);
+    g_closure_unref (lact->data);
+    g_list_free (lact);
+
+    GST_LOG_OBJECT (comp, "remaining actions [%d]",
+        g_list_length (priv->actions));
   } else {
     ACTIONS_UNLOCK (comp);
   }
@@ -718,7 +738,6 @@ _add_object_func (NleComposition * comp, ChildIOData * childio)
     return;
   }
 
-
   g_hash_table_add (priv->pending_io, object);
 }
 
@@ -739,6 +758,8 @@ _add_add_object_action (NleComposition * comp, NleObject * object)
 static void
 _free_action (gpointer udata, Action * action)
 {
+  GST_LOG ("freeing %p action for %s", action,
+      GST_DEBUG_FUNCPTR_NAME (ACTION_CALLBACK (action)));
   if (ACTION_CALLBACK (action) == _seek_pipeline_func) {
     SeekData *seekd = (SeekData *) udata;
 
@@ -777,6 +798,9 @@ _add_action (NleComposition * comp, GCallback func,
     priv->actions = g_list_prepend (priv->actions, action);
   else
     priv->actions = g_list_append (priv->actions, action);
+
+  GST_LOG_OBJECT (comp, "the number of remaining actions: %d",
+      g_list_length (priv->actions));
 
   SIGNAL_NEW_ACTION (comp);
   ACTIONS_UNLOCK (comp);
@@ -965,9 +989,28 @@ nle_composition_init (NleComposition * comp)
 }
 
 static void
+_remove_each_nleobj (gpointer data, gpointer udata)
+{
+  NleComposition *comp = NLE_COMPOSITION (udata);
+  NleObject *nleobj = NLE_OBJECT (data);
+
+  _nle_composition_remove_object (NLE_COMPOSITION (comp), NLE_OBJECT (nleobj));
+}
+
+static void
+_remove_each_action (gpointer data)
+{
+  Action *action = (Action *) (data);
+
+  GST_LOG ("remove action %p for %s", action,
+      GST_DEBUG_FUNCPTR_NAME (ACTION_CALLBACK (action)));
+  g_closure_invalidate ((GClosure *) action);
+  g_closure_unref ((GClosure *) action);
+}
+
+static void
 nle_composition_dispose (GObject * object)
 {
-  GList *iter;
   NleComposition *comp = NLE_COMPOSITION (object);
   NleCompositionPrivate *priv = comp->priv;
 
@@ -976,30 +1019,16 @@ nle_composition_dispose (GObject * object)
 
   priv->dispose_has_run = TRUE;
 
-  iter = priv->objects_start;
-  while (iter) {
-    GList *next = iter->next;
+  g_list_foreach (priv->objects_start, _remove_each_nleobj, comp);
+  g_list_free (priv->objects_start);
 
-    _nle_composition_remove_object (comp, iter->data);
-    iter = next;
-  }
+  g_list_foreach (priv->expandables, _remove_each_nleobj, comp);
+  g_list_free (priv->expandables);
 
+  g_list_foreach (priv->objects_stop, _remove_each_nleobj, comp);
   g_list_free (priv->objects_stop);
 
-  if (priv->expandables) {
-    GList *iter;
-
-    iter = priv->expandables;
-
-    while (iter) {
-      GList *next = iter->next;
-
-      _nle_composition_remove_object (comp, iter->data);
-      iter = next;
-    }
-
-    priv->expandables = NULL;
-  }
+  g_list_free_full (priv->actions, (GDestroyNotify) _remove_each_action);
 
   nle_composition_reset_target_pad (comp);
 
