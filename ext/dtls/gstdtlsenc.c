@@ -483,8 +483,8 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         map_info.size);
     if (ret != map_info.size) {
       GST_WARNING_OBJECT (self,
-          "error sending data: %d B were written, expected value was %zd B",
-          ret, map_info.size);
+          "error sending data: %d B were written, expected value was %"
+          G_GSIZE_FORMAT " B", ret, map_info.size);
     }
   }
 
