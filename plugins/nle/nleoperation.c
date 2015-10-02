@@ -785,6 +785,8 @@ nle_operation_hard_cleanup (NleOperation * operation)
     }
   }
   nle_object_cleanup (NLE_OBJECT (operation));
+
+  gst_iterator_free (pads);
 }
 
 
