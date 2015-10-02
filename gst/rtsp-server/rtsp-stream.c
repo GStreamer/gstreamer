@@ -1683,6 +1683,38 @@ on_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
 }
 
 static void
+on_new_sender_ssrc (GObject * session, GObject * source, GstRTSPStream * stream)
+{
+  GST_INFO ("%p: new sender source %p", stream, source);
+#ifndef DUMP_STATS
+  {
+    GstStructure *stats;
+    g_object_get (source, "stats", &stats, NULL);
+    if (stats) {
+      dump_structure (stats);
+      gst_structure_free (stats);
+    }
+  }
+#endif
+}
+
+static void
+on_sender_ssrc_active (GObject * session, GObject * source,
+    GstRTSPStream * stream)
+{
+#ifndef DUMP_STATS
+  {
+    GstStructure *stats;
+    g_object_get (source, "stats", &stats, NULL);
+    if (stats) {
+      dump_structure (stats);
+      gst_structure_free (stats);
+    }
+  }
+#endif
+}
+
+static void
 clear_tr_cache (GstRTSPStreamPrivate * priv, gboolean is_rtp)
 {
   if (is_rtp) {
@@ -2134,6 +2166,12 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
       (GCallback) on_bye_timeout, stream);
   g_signal_connect (priv->session, "on-timeout", (GCallback) on_timeout,
       stream);
+
+  /* signal for sender ssrc */
+  g_signal_connect (priv->session, "on-new-sender-ssrc",
+      (GCallback) on_new_sender_ssrc, stream);
+  g_signal_connect (priv->session, "on-sender-ssrc-active",
+      (GCallback) on_sender_ssrc_active, stream);
 
   for (i = 0; i < 2; i++) {
     GstPad *teepad, *queuepad;

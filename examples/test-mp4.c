@@ -51,6 +51,26 @@ on_ssrc_active (GObject * session, GObject * source, GstRTSPMedia * media)
   }
 }
 
+static void
+on_sender_ssrc_active (GObject * session, GObject * source,
+    GstRTSPMedia * media)
+{
+  GstStructure *stats;
+
+  GST_INFO ("source %p in session %p is active", source, session);
+
+  g_object_get (source, "stats", &stats, NULL);
+  if (stats) {
+    gchar *sstr;
+
+    sstr = gst_structure_to_string (stats);
+    g_print ("Sender stats:\nstructure: %s\n", sstr);
+    g_free (sstr);
+
+    gst_structure_free (stats);
+  }
+}
+
 /* signal callback when the media is prepared for streaming. We can get the
  * session manager for each of the streams and connect to some signals. */
 static void
@@ -75,6 +95,8 @@ media_prepared_cb (GstRTSPMedia * media)
 
     g_signal_connect (session, "on-ssrc-active",
         (GCallback) on_ssrc_active, media);
+    g_signal_connect (session, "on-sender-ssrc-active",
+        (GCallback) on_sender_ssrc_active, media);
   }
 }
 
