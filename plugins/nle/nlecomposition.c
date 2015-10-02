@@ -737,7 +737,7 @@ _add_add_object_action (NleComposition * comp, NleObject * object)
 }
 
 static void
-_free_action (Action * action, gpointer udata)
+_free_action (gpointer udata, Action * action)
 {
   if (ACTION_CALLBACK (action) == _seek_pipeline_func) {
     SeekData *seekd = (SeekData *) udata;
