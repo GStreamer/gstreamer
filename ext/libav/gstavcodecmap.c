@@ -2967,12 +2967,8 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
     GST_DEBUG ("have codec data of size %" G_GSIZE_FORMAT, map.size);
 
     gst_buffer_unmap (buf, &map);
-  } else if (context->extradata == NULL && codec_id != AV_CODEC_ID_AAC_LATM &&
-      codec_id != AV_CODEC_ID_FLAC) {
-    /* no extradata, alloc dummy with 0 sized, some codecs insist on reading
-     * extradata anyway which makes then segfault. */
-    context->extradata =
-        av_mallocz (GST_ROUND_UP_16 (FF_INPUT_BUFFER_PADDING_SIZE));
+  } else {
+    context->extradata = NULL;
     context->extradata_size = 0;
     GST_DEBUG ("no codec data");
   }
