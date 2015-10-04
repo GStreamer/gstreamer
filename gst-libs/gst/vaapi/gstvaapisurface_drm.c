@@ -36,11 +36,20 @@ gst_vaapi_surface_get_drm_buf_handle (GstVaapiSurface * surface, guint type)
   if (!image)
     goto error_derive_image;
 
+  if (type == GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF)
+      proxy =
+          gst_vaapi_buffer_proxy_new_from_object (GST_VAAPI_OBJECT (surface),
+          image->internal_image.buf, type, NULL, NULL);
+  else
   proxy =
       gst_vaapi_buffer_proxy_new_from_object (GST_VAAPI_OBJECT (surface),
       image->internal_image.buf, type, gst_vaapi_object_unref, image);
   if (!proxy)
     goto error_alloc_export_buffer;
+
+  if (type == GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF)
+    gst_vaapi_object_unref (image);
+
   return proxy;
 
   /* ERRORS */
