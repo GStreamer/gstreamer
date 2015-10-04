@@ -132,7 +132,6 @@
     <xi:include href="xml/plugin-geometrictransform.xml" />
     <xi:include href="xml/plugin-gsm.xml" />
     <xi:include href="xml/plugin-jpegformat.xml" />
-    <xi:include href="xml/plugin-liveadder.xml" />
     <xi:include href="xml/plugin-mimic.xml" />
     <xi:include href="xml/plugin-mms.xml" />
     <xi:include href="xml/plugin-modplug.xml" />

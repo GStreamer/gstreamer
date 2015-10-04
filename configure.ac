@@ -466,7 +466,6 @@ AG_GST_CHECK_PLUGIN(ivtc)
 AG_GST_CHECK_PLUGIN(jp2kdecimator)
 AG_GST_CHECK_PLUGIN(jpegformat)
 AG_GST_CHECK_PLUGIN(librfb)
-AG_GST_CHECK_PLUGIN(liveadder)
 AG_GST_CHECK_PLUGIN(midi)
 AG_GST_CHECK_PLUGIN(mpegdemux)
 AG_GST_CHECK_PLUGIN(mpegtsdemux)
@@ -3412,7 +3411,6 @@ gst/ivtc/Makefile
 gst/jp2kdecimator/Makefile
 gst/jpegformat/Makefile
 gst/librfb/Makefile
-gst/liveadder/Makefile
 gst/midi/Makefile
 gst/mpegdemux/Makefile
 gst/mpegtsdemux/Makefile

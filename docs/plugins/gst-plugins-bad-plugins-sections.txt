@@ -720,15 +720,7 @@ gst_jpeg_parse_get_type
 GstLiveAdder
 <SUBSECTION Standard>
 GstLiveAdderClass
-GST_IS_LIVE_ADDER
-GST_IS_LIVE_ADDER_CLASS
-GST_IS_MXF_DEMUX_PAD
-GST_LIVE_ADDER
-GST_LIVE_ADDER_CLASS
-GST_LIVE_ADDER_GET_CLASS
 GST_TYPE_LIVE_ADDER
-GstLiveAdderFormat
-GstLiveAdderFunction
 gst_live_adder_get_type
 </SECTION>
 
@@ -1008,6 +1000,7 @@ GST_MXF_DEMUX
 GST_MXF_DEMUX_CLASS
 GST_TYPE_MXF_DEMUX
 gst_mxf_demux_get_type
+GST_IS_MXF_DEMUX_PAD
 </SECTION>
 
 <SECTION>

@@ -781,6 +781,28 @@ gst_audiomixer_child_proxy_init (gpointer g_iface, gpointer iface_data)
   iface->get_children_count = gst_audiomixer_child_proxy_get_children_count;
 }
 
+/* Empty liveadder alias with non-zero latency */
+
+typedef GstAudioMixer GstLiveAdder;
+typedef GstAudioMixerClass GstLiveAdderClass;
+
+static GType gst_live_adder_get_type (void);
+#define GST_TYPE_LIVE_ADDER gst_live_adder_get_type ()
+
+G_DEFINE_TYPE (GstLiveAdder, gst_live_adder, GST_TYPE_AUDIO_MIXER);
+
+static void
+gst_live_adder_init (GstLiveAdder * self)
+{
+  g_object_set (self, "latency", 30 * GST_MSECOND, NULL);
+}
+
+static void
+gst_live_adder_class_init (GstLiveAdderClass * klass)
+{
+}
+
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -789,6 +811,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "audiomixer", GST_RANK_NONE,
           GST_TYPE_AUDIO_MIXER))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "liveadder", GST_RANK_NONE,
+          GST_TYPE_LIVE_ADDER))
     return FALSE;
 
   if (!gst_element_register (plugin, "audiointerleave", GST_RANK_NONE,
