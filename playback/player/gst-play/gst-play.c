@@ -548,15 +548,13 @@ restore_terminal (void)
 static void
 toggle_paused (GstPlay * play)
 {
-  if (play->desired_state == GST_STATE_PLAYING)
+  if (play->desired_state == GST_STATE_PLAYING) {
     play->desired_state = GST_STATE_PAUSED;
-  else
-    play->desired_state = GST_STATE_PLAYING;
-
-  if (play->desired_state == GST_STATE_PLAYING)
-    gst_player_play (play->player);
-  else
     gst_player_pause (play->player);
+  } else {
+    play->desired_state = GST_STATE_PLAYING;
+    gst_player_play (play->player);
+  }
 }
 
 static void
@@ -568,20 +566,15 @@ relative_seek (GstPlay * play, gdouble percent)
 
   g_object_get (play->player, "position", &pos, "duration", &dur, NULL);
 
-  if (dur <= 0)
-    goto seek_failed;
+  if (dur <= 0) {
+    g_print ("\nCould not seek.\n");
+    return;
+  }
 
   pos = pos + dur * percent;
   if (pos < 0)
     pos = 0;
   gst_player_seek (play->player, pos);
-
-  return;
-
-seek_failed:
-  {
-    g_print ("\nCould not seek.\n");
-  }
 }
 
 static void
