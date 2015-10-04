@@ -167,13 +167,14 @@ xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstVideoInfo *info;
   GstBuffer *xvimage;
   GstMemory *mem;
+  GError *err = NULL;
 
   info = &xvpool->info;
 
   xvimage = gst_buffer_new ();
 
   mem = gst_xvimage_allocator_alloc (xvpool->allocator, xvpool->im_format,
-      xvpool->padded_width, xvpool->padded_height, &xvpool->crop, NULL);
+      xvpool->padded_width, xvpool->padded_height, &xvpool->crop, &err);
 
   if (mem == NULL) {
     gst_buffer_unref (xvimage);
@@ -196,7 +197,8 @@ xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   /* ERROR */
 no_buffer:
   {
-    GST_WARNING_OBJECT (pool, "can't create image");
+    GST_WARNING_OBJECT (pool, "can't create image: %s", err->message);
+    g_clear_error (&err);
     return GST_FLOW_ERROR;
   }
 }
