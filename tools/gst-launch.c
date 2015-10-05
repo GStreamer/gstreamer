@@ -371,6 +371,7 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
         g_warning ("Couldn't fetch sample for %s tag", tag);
         g_assert_not_reached ();
       }
+      gst_sample_unref (sample);
     } else if (gst_tag_get_type (tag) == GST_TYPE_DATE_TIME) {
       GstDateTime *dt = NULL;
 
