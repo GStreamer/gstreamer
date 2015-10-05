@@ -97,6 +97,9 @@ enum
 #define gst_cutter_parent_class parent_class
 G_DEFINE_TYPE (GstCutter, gst_cutter, GST_TYPE_ELEMENT);
 
+static GstStateChangeReturn
+gst_cutter_change_state (GstElement * element, GstStateChange transition);
+
 static void gst_cutter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_cutter_get_property (GObject * object, guint prop_id,
@@ -152,6 +155,7 @@ gst_cutter_class_init (GstCutterClass * klass)
       "Filter/Editor/Audio",
       "Audio Cutter to split audio into non-silent bits",
       "Thomas Vander Stichele <thomas at apestaart dot org>");
+  element_class->change_state = gst_cutter_change_state;
 }
 
 static void
@@ -234,6 +238,25 @@ gst_cutter_setcaps (GstCutter * filter, GstCaps * caps)
   filter->info = info;
 
   return gst_pad_set_caps (filter->srcpad, caps);
+}
+
+static GstStateChangeReturn
+gst_cutter_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstCutter *filter = GST_CUTTER (element);
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_list_free_full (filter->pre_buffer, (GDestroyNotify) gst_buffer_unref);
+      filter->pre_buffer = NULL;
+      break;
+    default:
+      break;
+  }
+  return ret;
 }
 
 static gboolean
