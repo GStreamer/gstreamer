@@ -593,9 +593,12 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             scenarios = self.scenarios_manager.get_scenario(None)
         uris = self._list_uris()
 
-        for generator in self.get_generators():
-            for test in generator.generate_tests(uris, scenarios):
-                self.add_test(test)
+        if uris:
+            for generator in self.get_generators():
+                for test in generator.generate_tests(uris, scenarios):
+                    self.add_test(test)
+        else:
+            printc("No valid uris present in the path. Check if media files and info files exist", Colors.FAIL)
 
         return self.tests
 
@@ -642,8 +645,10 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 self._add_media(fpath)
                 return True
             elif not self.options.generate_info and not self.options.update_media_info and not self.options.validate_uris:
+                self.info("%s not present. Use --generate-media-info", media_info)
                 return True
             elif self.options.update_media_info and not os.path.isfile(media_info):
+                self.info("%s not present. Use --generate-media-info", media_info)
                 return True
 
             media_descriptor = GstValidateMediaDescriptor.new_from_uri(
