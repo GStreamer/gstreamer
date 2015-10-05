@@ -498,8 +498,10 @@ add_id3v2frame_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
         guint8 *data;
         gint size;
 
-        if (!gst_buffer_map (buf, &mapinfo, GST_MAP_READ))
+        if (!gst_buffer_map (buf, &mapinfo, GST_MAP_READ)) {
+          gst_sample_unref (sample);
           continue;
+        }
 
         size = mapinfo.size;
         data = mapinfo.data;
@@ -526,6 +528,7 @@ add_id3v2frame_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
             "version");
       }
     }
+    gst_sample_unref (sample);
   }
 }
 
@@ -777,6 +780,7 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     } else {
       GST_WARNING ("no image or caps: %p, caps=%" GST_PTR_FORMAT, image, caps);
     }
+    gst_sample_unref (sample);
   }
 }
 
