@@ -1414,6 +1414,7 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list,
         }
         gst_buffer_unmap (buf, &map);
       }
+      gst_sample_unref (sample);
     }
   }
 
