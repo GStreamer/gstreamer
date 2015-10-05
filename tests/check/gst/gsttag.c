@@ -373,13 +373,9 @@ GST_START_TEST (test_buffer_tags)
   gst_sample_unref (s2);
 
   fail_if (gst_tag_list_get_sample_index (tags, GST_TAG_IMAGE, 1, &s1));
-  gst_sample_unref (s1);
   fail_if (gst_tag_list_get_sample_index (tags, GST_TAG_IMAGE, 2, &s1));
-  gst_sample_unref (s1);
   fail_if (gst_tag_list_get_sample_index (tags, GST_TAG_PREVIEW_IMAGE, 1, &s1));
-  gst_sample_unref (s1);
   fail_if (gst_tag_list_get_sample_index (tags, GST_TAG_PREVIEW_IMAGE, 2, &s1));
-  gst_sample_unref (s1);
 
   fail_if (!gst_tag_list_get_sample_index (tags, GST_TAG_IMAGE, 0, &s1));
   fail_if (!gst_tag_list_get_sample_index (tags, GST_TAG_PREVIEW_IMAGE, 0,
