@@ -857,7 +857,7 @@ no_buffers:
   }
 start_failed:
   {
-    GST_ERROR_OBJECT (pool, "failed to start streaming");
+    GST_ERROR_OBJECT (pool, "allocate failed");
     return FALSE;
   }
 other_pool_failed:
