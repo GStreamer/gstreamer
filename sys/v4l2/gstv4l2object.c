@@ -51,7 +51,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define DEFAULT_PROP_FREQUENCY          0
 #define DEFAULT_PROP_IO_MODE            GST_V4L2_IO_AUTO
 
-#define ENCODED_BUFFER_SIZE             (1 * 1024 * 1024)
+#define ENCODED_BUFFER_SIZE             (2 * 1024 * 1024)
 
 enum
 {
