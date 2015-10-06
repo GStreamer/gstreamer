@@ -222,6 +222,7 @@ gst_gl_mixer_control_binding_proxy_new (GstObject * object,
 #define DEFAULT_PAD_HEIGHT 0
 #define DEFAULT_PAD_ALPHA  1.0
 #define DEFAULT_PAD_ZORDER 0
+#define DEFAULT_PAD_IGNORE_EOS FALSE
 
 enum
 {
@@ -232,6 +233,7 @@ enum
   PROP_INPUT_HEIGHT,
   PROP_INPUT_ALPHA,
   PROP_INPUT_ZORDER,
+  PROP_INPUT_IGNORE_EOS,
 };
 
 static void gst_gl_video_mixer_input_get_property (GObject * object,
@@ -271,6 +273,11 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
   g_object_class_install_property (gobject_class, PROP_INPUT_ZORDER,
       g_param_spec_uint ("zorder", "Z-Order", "Z Order of the picture",
           0, 10000, DEFAULT_PAD_ZORDER,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_INPUT_IGNORE_EOS,
+      g_param_spec_boolean ("ignore-eos", "Ignore EOS", "Aggregate the last "
+          "frame on pads that are EOS till they are released",
+          DEFAULT_PAD_IGNORE_EOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INPUT_XPOS,
       g_param_spec_int ("xpos", "X Position", "X Position of the picture",
