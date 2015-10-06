@@ -45,7 +45,7 @@ gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type
 
 /* These enums need to match the number and order
  * of strings declared in _quark_table, in gsttracerutils.c */
-typedef enum _GstTracerQuarkId
+typedef enum /*< skip >*/
 {
   GST_TRACER_QUARK_HOOK_PAD_PUSH_PRE = 0,
   GST_TRACER_QUARK_HOOK_PAD_PUSH_POST,
