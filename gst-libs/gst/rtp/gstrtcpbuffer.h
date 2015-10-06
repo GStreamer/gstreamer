@@ -315,6 +315,17 @@ guint8          gst_rtcp_packet_bye_get_reason_len    (GstRTCPPacket *packet);
 gchar*          gst_rtcp_packet_bye_get_reason        (GstRTCPPacket *packet);
 gboolean        gst_rtcp_packet_bye_set_reason        (GstRTCPPacket *packet, const gchar *reason);
 
+/* app packets */
+void            gst_rtcp_packet_app_set_subtype       (GstRTCPPacket * packet, guint8 subtype);
+guint8          gst_rtcp_packet_app_get_subtype       (GstRTCPPacket * packet);
+void            gst_rtcp_packet_app_set_ssrc          (GstRTCPPacket * packet, guint32 ssrc);
+guint32         gst_rtcp_packet_app_get_ssrc          (GstRTCPPacket * packet);
+void            gst_rtcp_packet_app_set_name          (GstRTCPPacket * packet, const gchar *name);
+const gchar*    gst_rtcp_packet_app_get_name          (GstRTCPPacket * packet);
+guint16         gst_rtcp_packet_app_get_data_length   (GstRTCPPacket * packet);
+gboolean        gst_rtcp_packet_app_set_data_length   (GstRTCPPacket * packet, guint16 wordlen);
+guint8*         gst_rtcp_packet_app_get_data          (GstRTCPPacket * packet);
+
 /* feedback packets */
 guint32         gst_rtcp_packet_fb_get_sender_ssrc    (GstRTCPPacket *packet);
 void            gst_rtcp_packet_fb_set_sender_ssrc    (GstRTCPPacket *packet, guint32 ssrc);

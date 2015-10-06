@@ -1080,6 +1080,56 @@ GST_START_TEST (test_rtcp_buffer_profile_specific_extension)
 }
 GST_END_TEST;
 
+GST_START_TEST (test_rtcp_buffer_app)
+{
+  GstBuffer *buf;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket packet;
+  guint mtu = 1000;
+  const guint8 data[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77 };
+  guint max_data_length = (mtu - 12) / 4;
+  guint8 *data_ptr;
+
+  fail_unless ((buf = gst_rtcp_buffer_new (mtu)) != NULL);
+  gst_rtcp_buffer_map (buf, GST_MAP_READWRITE, &rtcp);
+
+  /* Not a valid packet yet */
+  fail_if (gst_rtcp_buffer_validate (buf));
+  fail_if (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+  fail_unless_equals_int (gst_rtcp_buffer_get_packet_count (&rtcp), 0);
+
+  /* Add APP packet  */
+  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_APP, &packet));
+  gst_rtcp_packet_app_set_subtype (&packet, 0x15);
+  gst_rtcp_packet_app_set_ssrc (&packet, 0x01234567);
+  gst_rtcp_packet_app_set_name (&packet, "Test");
+
+  /* Check maximum allowed data */
+  fail_if (gst_rtcp_packet_app_set_data_length (&packet, max_data_length + 1));
+  fail_unless (gst_rtcp_packet_app_set_data_length (&packet, max_data_length));
+
+  /* Add data */
+  fail_unless (gst_rtcp_packet_app_set_data_length (&packet, (sizeof (data) + 3) / 4));
+  fail_unless_equals_int (gst_rtcp_packet_app_get_data_length (&packet), 2);
+  fail_unless ((data_ptr = gst_rtcp_packet_app_get_data (&packet)));
+  memcpy (data_ptr, data, sizeof (data));
+
+  gst_rtcp_buffer_unmap (&rtcp);
+
+  /* Map again with only the READ flag and check fields */
+  gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcp);
+  fail_unless_equals_int (gst_rtcp_packet_app_get_subtype (&packet), 0x15);
+  fail_unless_equals_int (gst_rtcp_packet_app_get_ssrc (&packet), 0x01234567);
+  fail_unless (memcmp (gst_rtcp_packet_app_get_name (&packet), "Test", 4) == 0);
+  fail_unless_equals_int (gst_rtcp_packet_app_get_data_length (&packet), 2);
+  fail_unless ((data_ptr = gst_rtcp_packet_app_get_data (&packet)));
+  fail_unless (memcmp (data_ptr, data, sizeof (data)) == 0);
+  gst_rtcp_buffer_unmap (&rtcp);
+
+  gst_buffer_unref (buf);
+}
+GST_END_TEST;
+
 GST_START_TEST (test_rtp_ntp64_extension)
 {
   GstBuffer *buf;
@@ -1321,6 +1371,7 @@ rtp_suite (void)
   tcase_add_test (tc_chain, test_rtcp_validate_reduced_without_padding);
   tcase_add_test (tc_chain, test_rtcp_validate_reduced_with_padding);
   tcase_add_test (tc_chain, test_rtcp_buffer_profile_specific_extension);
+  tcase_add_test (tc_chain, test_rtcp_buffer_app);
 
   tcase_add_test (tc_chain, test_rtp_ntp64_extension);
   tcase_add_test (tc_chain, test_rtp_ntp56_extension);

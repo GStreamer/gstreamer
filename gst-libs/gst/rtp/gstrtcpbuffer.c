@@ -2311,3 +2311,232 @@ gst_rtcp_packet_fb_get_fci (GstRTCPPacket * packet)
 
   return data + 12;
 }
+
+/**
+ * gst_rtcp_packet_app_set_subtype:
+ * @packet: a valid APP #GstRTCPPacket
+ * @subtype: subtype of the packet
+ *
+ * Set the subtype field of the APP @packet.
+ *
+ * Since: 1.8
+ **/
+void
+gst_rtcp_packet_app_set_subtype (GstRTCPPacket * packet, guint8 subtype)
+{
+  guint8 *data;
+
+  g_return_if_fail (packet != NULL);
+  g_return_if_fail (packet->type == GST_RTCP_TYPE_APP);
+  g_return_if_fail (packet->rtcp != NULL);
+  g_return_if_fail (packet->rtcp->map.flags & GST_MAP_WRITE);
+
+  data = packet->rtcp->map.data + packet->offset;
+  data[0] = (data[0] & 0xe0) | subtype;
+}
+
+/**
+ * gst_rtcp_packet_app_get_subtype:
+ * @packet: a valid APP #GstRTCPPacket
+ *
+ * Get the subtype field of the APP @packet.
+ *
+ * Returns: The subtype.
+ *
+ * Since: 1.8
+ */
+guint8
+gst_rtcp_packet_app_get_subtype (GstRTCPPacket * packet)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (packet != NULL, 0);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_APP, 0);
+  g_return_val_if_fail (packet->rtcp != NULL, 0);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, 0);
+
+  data = packet->rtcp->map.data + packet->offset;
+
+  return data[0] & 0x1f;
+}
+
+/**
+ * gst_rtcp_packet_app_set_ssrc:
+ * @packet: a valid APP #GstRTCPPacket
+ * @ssrc: SSRC/CSRC of the packet
+ *
+ * Set the SSRC/CSRC field of the APP @packet.
+ *
+ * Since: 1.8
+ **/
+void
+gst_rtcp_packet_app_set_ssrc (GstRTCPPacket * packet, guint32 ssrc)
+{
+  guint8 *data;
+
+  g_return_if_fail (packet != NULL);
+  g_return_if_fail (packet->type == GST_RTCP_TYPE_APP);
+  g_return_if_fail (packet->rtcp != NULL);
+  g_return_if_fail (packet->rtcp->map.flags & GST_MAP_WRITE);
+
+  data = packet->rtcp->map.data + packet->offset + 4;
+  GST_WRITE_UINT32_BE (data, ssrc);
+}
+
+/**
+ * gst_rtcp_packet_app_get_ssrc:
+ * @packet: a valid APP #GstRTCPPacket
+ *
+ * Get the SSRC/CSRC field of the APP @packet.
+ *
+ * Returns: The SSRC/CSRC.
+ *
+ * Since: 1.8
+ **/
+guint32
+gst_rtcp_packet_app_get_ssrc (GstRTCPPacket * packet)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (packet != NULL, 0);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_APP, 0);
+  g_return_val_if_fail (packet->rtcp != NULL, 0);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, 0);
+
+  data = packet->rtcp->map.data + packet->offset + 4;
+
+  return GST_READ_UINT32_BE (data);
+}
+
+/**
+ * gst_rtcp_packet_app_set_name:
+ * @packet: a valid APP #GstRTCPPacket
+ * @name: 4-byte ASCII name
+ *
+ * Set the name field of the APP @packet.
+ *
+ * Since: 1.8
+ **/
+void
+gst_rtcp_packet_app_set_name (GstRTCPPacket * packet, const gchar * name)
+{
+  guint8 *data;
+
+  g_return_if_fail (packet != NULL);
+  g_return_if_fail (packet->type == GST_RTCP_TYPE_APP);
+  g_return_if_fail (packet->rtcp != NULL);
+  g_return_if_fail (packet->rtcp->map.flags & GST_MAP_WRITE);
+
+  data = packet->rtcp->map.data + packet->offset + 8;
+  memcpy (data, name, 4);
+}
+
+/**
+ * gst_rtcp_packet_app_get_name:
+ * @packet: a valid APP #GstRTCPPacket
+ *
+ * Get the name field of the APP @packet.
+ *
+ * Returns: The 4-byte name field, not zero-terminated.
+ *
+ * Since: 1.8
+ **/
+const gchar *
+gst_rtcp_packet_app_get_name (GstRTCPPacket * packet)
+{
+  g_return_val_if_fail (packet != NULL, NULL);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_APP, NULL);
+  g_return_val_if_fail (packet->rtcp != NULL, NULL);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, NULL);
+
+  return (const gchar *)&packet->rtcp->map.data[packet->offset + 8];
+}
+
+/**
+ * gst_rtcp_packet_app_get_data_length:
+ * @packet: a valid APP #GstRTCPPacket
+ *
+ * Get the length of the application-dependent data attached to an APP
+ * @packet.
+ *
+ * Returns: The length of data in 32-bit words.
+ *
+ * Since: 1.8
+ **/
+guint16
+gst_rtcp_packet_app_get_data_length (GstRTCPPacket * packet)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (packet != NULL, 0);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_APP, 0);
+  g_return_val_if_fail (packet->rtcp != NULL, 0);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, 0);
+
+  data = packet->rtcp->map.data + packet->offset + 2;
+
+  return GST_READ_UINT16_BE (data) - 2;
+}
+
+/**
+ * gst_rtcp_packet_app_set_data_length:
+ * @packet: a valid APP #GstRTCPPacket
+ * @wordlen: Length of the data in 32-bit words
+ *
+ * Set the length of the application-dependent data attached to an APP
+ * @packet.
+ *
+ * Returns: %TRUE if there was enough space in the packet to add this much
+ * data.
+ *
+ * Since: 1.8
+ */
+gboolean
+gst_rtcp_packet_app_set_data_length (GstRTCPPacket * packet, guint16 wordlen)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_APP, FALSE);
+  g_return_val_if_fail (packet->rtcp != NULL, FALSE);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_WRITE, FALSE);
+
+  if (packet->rtcp->map.maxsize < packet->offset + ((wordlen + 3) * 4))
+    return FALSE;
+
+  data = packet->rtcp->map.data + packet->offset + 2;
+  wordlen += 2;
+  GST_WRITE_UINT16_BE (data, wordlen);
+
+  packet->rtcp->map.size = packet->offset + ((wordlen + 1) * 4);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_app_get_data:
+ * @packet: a valid APP #GstRTCPPacket
+ *
+ * Get the application-dependent data attached to a RTPFB or PSFB @packet.
+ *
+ * Returns: A pointer to the data
+ *
+ * Since: 1.8
+ */
+guint8 *
+gst_rtcp_packet_app_get_data (GstRTCPPacket * packet)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (packet != NULL, NULL);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_APP, NULL);
+  g_return_val_if_fail (packet->rtcp != NULL, NULL);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, NULL);
+
+  data = packet->rtcp->map.data + packet->offset;
+
+  if (GST_READ_UINT16_BE (data + 2) <= 2)
+    return NULL;
+
+  return data + 12;
+}
