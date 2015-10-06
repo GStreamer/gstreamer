@@ -1384,7 +1384,6 @@ EXPORTS
 	gst_tracer_factory_get_type
 	gst_tracer_get_type
 	gst_tracer_log_trace
-	gst_tracer_quark_id_get_type
 	gst_tracer_register
 	gst_tracing_register_hook
 	gst_tracing_register_hook_id
