@@ -2931,6 +2931,7 @@ sink_pad_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
         if (otherpeer) {
           GST_DEBUG_OBJECT (otherpeer, "Attempting to forward event");
           if (gst_pad_send_event (otherpeer, gst_event_ref (event))) {
+            gst_event_unref (event);
             proberet = GST_PAD_PROBE_HANDLED;
           }
           gst_object_unref (otherpeer);
