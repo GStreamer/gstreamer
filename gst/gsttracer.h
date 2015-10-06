@@ -67,6 +67,10 @@ void gst_tracing_register_hook (GstTracer *tracer, const gchar *detail,
 void gst_tracing_register_hook_id (GstTracer *tracer, GQuark detail, 
   GCallback func);
 
+/* tracing modules */
+gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type);
+
+/* tracing module helpers */
 void gst_tracer_log_trace (GstStructure * s);
 
 G_END_DECLS

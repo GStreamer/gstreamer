@@ -37,10 +37,6 @@ G_BEGIN_DECLS
 void _priv_gst_tracing_init (void);
 void _priv_gst_tracing_deinit (void);
 
-/* tracing modules */
-
-gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type);
-
 /* tracer quarks */
 
 /* These enums need to match the number and order
