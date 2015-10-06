@@ -892,7 +892,7 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
       pad->priv->output_offset = -1;
       GST_DEBUG_OBJECT (pad,
           "Buffer before segment or current position: %" G_GUINT64_FORMAT " < %"
-          G_GUINT64_FORMAT, end_output_offset, aagg->priv->offset);
+          G_GINT64_FORMAT, end_output_offset, aagg->priv->offset);
       return FALSE;
     }
 
@@ -922,7 +922,7 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
         pad->priv->output_offset = -1;
         GST_DEBUG_OBJECT (pad,
             "Buffer before segment or current position: %" G_GUINT64_FORMAT
-            " < %" G_GUINT64_FORMAT, end_output_offset, aagg->priv->offset);
+            " < %" G_GINT64_FORMAT, end_output_offset, aagg->priv->offset);
         return FALSE;
       }
     }
@@ -934,7 +934,7 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
 
     GST_DEBUG_OBJECT (pad,
         "Buffer resynced: Pad offset %" G_GUINT64_FORMAT
-        ", current audio aggregator offset %" G_GUINT64_FORMAT,
+        ", current audio aggregator offset %" G_GINT64_FORMAT,
         pad->priv->output_offset, aagg->priv->offset);
   }
 
@@ -1139,7 +1139,8 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     aagg->priv->offset =
         gst_util_uint64_scale (agg->segment.position - agg->segment.start, rate,
         GST_SECOND);
-    GST_DEBUG_OBJECT (aagg, "Starting at offset %lu", aagg->priv->offset);
+    GST_DEBUG_OBJECT (aagg, "Starting at offset %" G_GINT64_FORMAT,
+        aagg->priv->offset);
   }
 
   blocksize = gst_util_uint64_scale (aagg->priv->output_buffer_duration,
@@ -1172,7 +1173,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   outbuf = aagg->priv->current_buffer;
 
   GST_LOG_OBJECT (agg,
-      "Starting to mix %u samples for offset %" G_GUINT64_FORMAT
+      "Starting to mix %u samples for offset %" G_GINT64_FORMAT
       " with timestamp %" GST_TIME_FORMAT, blocksize,
       aagg->priv->offset, GST_TIME_ARGS (agg->segment.position));
 
@@ -1263,7 +1264,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
       if (pad->priv->output_offset >= next_offset) {
         GST_DEBUG_OBJECT (pad,
             "Pad is after current offset: %" G_GUINT64_FORMAT " >= %"
-            G_GUINT64_FORMAT, pad->priv->output_offset, next_offset);
+            G_GINT64_FORMAT, pad->priv->output_offset, next_offset);
       } else {
         is_done = FALSE;
       }
@@ -1314,7 +1315,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     if (max_offset <= next_offset) {
       GST_DEBUG_OBJECT (aagg,
           "Last buffer is incomplete: %" G_GUINT64_FORMAT " <= %"
-          G_GUINT64_FORMAT, max_offset, next_offset);
+          G_GINT64_FORMAT, max_offset, next_offset);
       next_offset = max_offset;
       next_timestamp =
           agg->segment.start + gst_util_uint64_scale (next_offset, GST_SECOND,
