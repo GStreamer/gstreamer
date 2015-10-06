@@ -36,13 +36,3 @@ CLEANFILES = *.gcno *.gcda *.gcov *.gcov.out
 
 gcov: $(libgstcoretracers_la_SOURCES:=.gcov)
 
-Android.mk: Makefile.am
-	androgenizer -:PROJECT gstreamer -:SHARED libgstcoretracers -:TAGS eng debug \
-	 -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstcoretracers_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(libgstcoretracers_la_CFLAGS) \
-	 -:LDFLAGS $(libgstcoretracers_la_LDFLAGS) \
-	            $(libgstcoretracers_la_LIBADD) \
-	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	               LOCAL_MODULE_PATH:=$$\(TARGET_OUT\)/lib/gstreamer-@GST_API_VERSION@ \
-	> $@
