@@ -307,17 +307,17 @@ typedef void (*GstTracerHookPadUnlinkPost) (GObject *, GstClockTime,
 #define GST_TRACER_ELEMENT_POST_MESSAGE_POST(element, res)
 #define GST_TRACER_ELEMENT_QUERY_PRE(element, query)
 #define GST_TRACER_ELEMENT_QUERY_POST(element, res)
-#define GST_TRACER_ELEMENT_NEW(element),
-#define GST_TRACER_ELEMENT_ADD_PAD(element, pad),
-#define GST_TRACER_ELEMENT_REMOVE_PAD(element, pad),
-#define GST_TRACER_BIN_ADD_PRE(bin, element),
-#define GST_TRACER_BIN_ADD_POST(bin, element, res),
-#define GST_TRACER_BIN_REMOVE_PRE(bin, element),
-#define GST_TRACER_BIN_REMOVE_POST(bin, res),
-#define GST_TRACER_PAD_LINK_PRE(srcpad, sinkpad),
-#define GST_TRACER_PAD_LINK_POST(srcpad, sinkpad, res),
-#define GST_TRACER_PAD_UNLINK_PRE(srcpad, sinkpad),
-#define GST_TRACER_PAD_UNLINK_POST(srcpad, sinkpad, res),
+#define GST_TRACER_ELEMENT_NEW(element)
+#define GST_TRACER_ELEMENT_ADD_PAD(element, pad)
+#define GST_TRACER_ELEMENT_REMOVE_PAD(element, pad)
+#define GST_TRACER_BIN_ADD_PRE(bin, element)
+#define GST_TRACER_BIN_ADD_POST(bin, element, res)
+#define GST_TRACER_BIN_REMOVE_PRE(bin, element)
+#define GST_TRACER_BIN_REMOVE_POST(bin, res)
+#define GST_TRACER_PAD_LINK_PRE(srcpad, sinkpad)
+#define GST_TRACER_PAD_LINK_POST(srcpad, sinkpad, res)
+#define GST_TRACER_PAD_UNLINK_PRE(srcpad, sinkpad)
+#define GST_TRACER_PAD_UNLINK_POST(srcpad, sinkpad, res)
 
 #endif /* GST_DISABLE_GST_DEBUG */
 
