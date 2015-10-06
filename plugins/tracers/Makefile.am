@@ -7,10 +7,16 @@ else
 RUSAGE_SOURCES =
 endif
 
+if GST_DISABLE_GST_DEBUG
+LOG_SOURCES =
+else
+LOG_SOURCES = gstlog.c
+endif
+
 libgstcoretracers_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la
 libgstcoretracers_la_SOURCES = \
   gstlatency.c \
-  gstlog.c \
+  $(LOG_SOURCES) \
   $(RUSAGE_SOURCES) \
   gststats.c \
 	gsttracers.c
