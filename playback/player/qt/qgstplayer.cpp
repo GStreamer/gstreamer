@@ -21,8 +21,9 @@
 #include "qgstplayer.h"
 #include <QDebug>
 #include <QSize>
-
 #include <QMetaObject>
+#include <functional>
+#include <QThread>
 
 class QGstPlayerRegisterMetaTypes
 {
@@ -86,7 +87,8 @@ QGstPlayer::QGstPlayer(QObject *parent, QGstPlayer::VideoRenderer *renderer)
     , videoAvailable_(false)
 {
 
-    player_ = gst_player_new_full(renderer ? renderer->renderer() : 0, 0);
+    player_ = gst_player_new_full(renderer ? renderer->renderer() : 0,
+        gst_player_qt_signal_dispatcher_new(this));
 
     g_object_connect(player_,
         "swapped-signal::state-changed", G_CALLBACK (QGstPlayer::onStateChanged), this,
@@ -354,7 +356,6 @@ gst_player_qt_video_renderer_set_property (GObject * object,
 
   switch (prop_id) {
     case QT_VIDEO_RENDERER_PROP_RENDERER:
-      qDebug() << "setting renderer";
       self->renderer = g_value_get_pointer (value);
       break;
     default:
@@ -432,4 +433,141 @@ gst_player_qt_video_renderer_interface_init
     (GstPlayerVideoRendererInterface * iface)
 {
   iface->create_video_sink = gst_player_qt_video_renderer_create_video_sink;
+}
+
+struct _GstPlayerQtSignalDispatcher
+{
+  GObject parent;
+
+  gpointer player;
+};
+
+struct _GstPlayerQtSignalDispatcherClass
+{
+  GObjectClass parent_class;
+};
+
+static void
+gst_player_qt_signal_dispatcher_interface_init
+    (GstPlayerSignalDispatcherInterface * iface);
+
+enum
+{
+  QT_SIGNAL_DISPATCHER_PROP_0,
+  QT_SIGNAL_DISPATCHER_PROP_PLAYER,
+  QT_SIGNAL_DISPATCHER_PROP_LAST
+};
+
+G_DEFINE_TYPE_WITH_CODE (GstPlayerQtSignalDispatcher,
+    gst_player_qt_signal_dispatcher, G_TYPE_OBJECT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PLAYER_SIGNAL_DISPATCHER,
+        gst_player_qt_signal_dispatcher_interface_init));
+
+static GParamSpec
+* qt_signal_dispatcher_param_specs
+[QT_SIGNAL_DISPATCHER_PROP_LAST] = { NULL, };
+
+static void
+gst_player_qt_signal_dispatcher_finalize (GObject * object)
+{
+  GstPlayerQtSignalDispatcher *self =
+      GST_PLAYER_QT_SIGNAL_DISPATCHER (object);
+
+  G_OBJECT_CLASS
+      (gst_player_qt_signal_dispatcher_parent_class)->finalize
+      (object);
+}
+
+static void
+gst_player_qt_signal_dispatcher_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstPlayerQtSignalDispatcher *self =
+      GST_PLAYER_QT_SIGNAL_DISPATCHER (object);
+
+  switch (prop_id) {
+    case QT_SIGNAL_DISPATCHER_PROP_PLAYER:
+      self->player = g_value_get_pointer (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_player_qt_signal_dispatcher_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstPlayerQtSignalDispatcher *self =
+      GST_PLAYER_QT_SIGNAL_DISPATCHER (object);
+
+  switch (prop_id) {
+    case QT_SIGNAL_DISPATCHER_PROP_PLAYER:
+      g_value_set_pointer (value, self->player);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+    gst_player_qt_signal_dispatcher_class_init
+    (GstPlayerQtSignalDispatcherClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->finalize =
+      gst_player_qt_signal_dispatcher_finalize;
+  gobject_class->set_property =
+      gst_player_qt_signal_dispatcher_set_property;
+  gobject_class->get_property =
+      gst_player_qt_signal_dispatcher_get_property;
+
+  qt_signal_dispatcher_param_specs
+      [QT_SIGNAL_DISPATCHER_PROP_PLAYER] =
+      g_param_spec_pointer ("player", "QGstPlayer instance", "",
+      static_cast<GParamFlags>(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_properties (gobject_class,
+      QT_SIGNAL_DISPATCHER_PROP_LAST,
+      qt_signal_dispatcher_param_specs);
+}
+
+static void
+gst_player_qt_signal_dispatcher_init
+    (GstPlayerQtSignalDispatcher * self)
+{
+
+}
+
+static void
+gst_player_qt_signal_dispatcher_dispatch (GstPlayerSignalDispatcher
+    * iface, GstPlayer * player, void (*emitter) (gpointer data), gpointer data,
+    GDestroyNotify destroy)
+{
+  GstPlayerQtSignalDispatcher *self = GST_PLAYER_QT_SIGNAL_DISPATCHER (iface);
+  QObject dispatch;
+  QObject *receiver = static_cast<QObject*>(self->player);
+
+  QObject::connect(&dispatch, &QObject::destroyed, receiver, [=]() {
+    emitter(data);
+    if (destroy) destroy(data);
+  }, Qt::QueuedConnection);
+}
+
+static void
+gst_player_qt_signal_dispatcher_interface_init
+(GstPlayerSignalDispatcherInterface * iface)
+{
+  iface->dispatch = gst_player_qt_signal_dispatcher_dispatch;
+}
+
+GstPlayerSignalDispatcher *
+gst_player_qt_signal_dispatcher_new (gpointer player)
+{
+  return static_cast<GstPlayerSignalDispatcher*>
+  (g_object_new (GST_TYPE_PLAYER_QT_SIGNAL_DISPATCHER,
+      "player", player, NULL));
 }
