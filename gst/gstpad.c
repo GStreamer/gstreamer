@@ -5331,6 +5331,7 @@ eos:
   {
     GST_DEBUG_OBJECT (pad, "We're EOS");
     GST_OBJECT_UNLOCK (pad);
+    gst_event_unref (event);
     goto done;
   }
 done:
