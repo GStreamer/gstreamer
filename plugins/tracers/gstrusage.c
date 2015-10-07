@@ -177,17 +177,21 @@ do_stats (GstTracer * obj, guint64 ts)
       GST_WARNING_OBJECT (obj,
           "clock_gettime (CLOCK_THREAD_CPUTIME_ID,...) failed: %s",
           g_strerror (errno));
+#ifdef RUSAGE_THREAD
       getrusage (RUSAGE_THREAD, &ru);
       tthread =
           GST_TIMEVAL_TO_TIME (ru.ru_utime) + GST_TIMEVAL_TO_TIME (ru.ru_stime);
+#endif
     }
   }
 #else
   getrusage (RUSAGE_SELF, &ru);
   tproc = GST_TIMEVAL_TO_TIME (ru.ru_utime) + GST_TIMEVAL_TO_TIME (ru.ru_stime);
+#ifdef RUSAGE_THREAD
   getrusage (RUSAGE_THREAD, &ru);
   tthread =
       GST_TIMEVAL_TO_TIME (ru.ru_utime) + GST_TIMEVAL_TO_TIME (ru.ru_stime);
+#endif
 #endif
   /* get stats record for current thread */
   if (!(stats = g_hash_table_lookup (self->threads, thread_id))) {
