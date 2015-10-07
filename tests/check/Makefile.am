@@ -284,6 +284,7 @@ check_PROGRAMS = \
 	$(check_mpg123) \
 	elements/mxfdemux \
 	elements/mxfmux \
+	elements/netsim \
 	elements/pcapparse \
 	elements/rtponvifparse \
 	elements/rtponviftimestamp \

@@ -501,6 +501,7 @@ AG_GST_CHECK_PLUGIN(mpegtsmux)
 AG_GST_CHECK_PLUGIN(mpegpsmux)
 AG_GST_CHECK_PLUGIN(mve)
 AG_GST_CHECK_PLUGIN(mxf)
+AG_GST_CHECK_PLUGIN(netsim)
 AG_GST_CHECK_PLUGIN(nuvdemux)
 AG_GST_CHECK_PLUGIN(onvif)
 AG_GST_CHECK_PLUGIN(patchdetect)
@@ -3474,6 +3475,7 @@ gst/mpegtsmux/tsmux/Makefile
 gst/mpegpsmux/Makefile
 gst/mve/Makefile
 gst/mxf/Makefile
+gst/netsim/Makefile
 gst/nuvdemux/Makefile
 gst/onvif/Makefile
 gst/patchdetect/Makefile
