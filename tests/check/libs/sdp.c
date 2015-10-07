@@ -62,6 +62,18 @@ static const gchar *sdp = "v=0\r\n"
     "a=sendrecv\r\n" "m=audio 4545 RTP/AVP 14\r\n" "a=sendrecv\r\n"
     "m=audio 1010 TCP 14\r\n";
 
+static const gchar caps_video_string1[] =
+    "application/x-unknown, media=(string)video, payload=(int)96, "
+    "clock-rate=(int)90000, encoding-name=(string)MP4V-ES";
+
+static const gchar caps_video_string2[] =
+    "application/x-unknown, media=(string)video, payload=(int)97, "
+    "clock-rate=(int)90000, encoding-name=(string)H263-1998";
+
+static const gchar caps_audio_string[] =
+    "application/x-unknown, media=(string)audio, payload=(int)14, "
+    "clock-rate=(int)90000";
+
 GST_START_TEST (boxed)
 {
   GValue value = G_VALUE_INIT;
@@ -194,6 +206,97 @@ GST_START_TEST (modify)
 }
 
 GST_END_TEST
+GST_START_TEST (caps_from_media)
+{
+  GstSDPMessage *message;
+  glong length = -1;
+  const GstSDPMedia *media1, *media2, *media3;
+  GstCaps *caps_video1, *caps_video2, *caps_audio;
+  GstCaps *result_video1, *result_video2, *result_audio;
+
+  gst_sdp_message_new (&message);
+  gst_sdp_message_parse_buffer ((guint8 *) sdp, length, message);
+
+  media1 = gst_sdp_message_get_media (message, 0);
+  fail_unless (media1 != NULL);
+
+  media2 = gst_sdp_message_get_media (message, 1);
+  fail_unless (media2 != NULL);
+
+  media3 = gst_sdp_message_get_media (message, 2);
+  fail_unless (media2 != NULL);
+
+  caps_video1 = gst_sdp_media_get_caps_from_media (media1, 96);
+  caps_video2 = gst_sdp_media_get_caps_from_media (media1, 97);
+  caps_audio = gst_sdp_media_get_caps_from_media (media3, 14);
+
+  result_video1 = gst_caps_from_string (caps_video_string1);
+  fail_unless (gst_caps_is_strictly_equal (caps_video1, result_video1));
+  gst_caps_unref (result_video1);
+  gst_caps_unref (caps_video1);
+
+  result_video2 = gst_caps_from_string (caps_video_string2);
+  fail_unless (gst_caps_is_strictly_equal (caps_video2, result_video2));
+  gst_caps_unref (result_video2);
+  gst_caps_unref (caps_video2);
+
+  result_audio = gst_caps_from_string (caps_audio_string);
+  fail_unless (gst_caps_is_strictly_equal (caps_audio, result_audio));
+  gst_caps_unref (result_audio);
+  gst_caps_unref (caps_audio);
+
+  gst_sdp_message_free (message);
+}
+
+GST_END_TEST
+GST_START_TEST (media_from_caps)
+{
+  GstSDPResult ret = GST_SDP_OK;
+  GstSDPMessage *message;
+  glong length = -1;
+  GstSDPMedia *media_video, *media_audio;
+  const GstSDPMedia *result_video, *result_audio;
+  GstCaps *caps_video, *caps_audio;
+  const gchar *media1_text, *media2_text, *media3_text, *media4_text;
+
+  caps_video = gst_caps_from_string (caps_video_string1);
+  caps_audio = gst_caps_from_string (caps_audio_string);
+
+  gst_sdp_media_new (&media_video);
+  fail_unless (media_video != NULL);
+  gst_sdp_media_new (&media_audio);
+  fail_unless (media_audio != NULL);
+
+  ret = gst_sdp_media_set_media_from_caps (caps_video, media_video);
+  fail_unless (ret == GST_SDP_OK);
+  gst_caps_unref (caps_video);
+  ret = gst_sdp_media_set_media_from_caps (caps_audio, media_audio);
+  fail_unless (ret == GST_SDP_OK);
+  gst_caps_unref (caps_audio);
+
+  gst_sdp_message_new (&message);
+  gst_sdp_message_parse_buffer ((guint8 *) sdp, length, message);
+
+  result_video = gst_sdp_message_get_media (message, 0);
+  fail_unless (result_video != NULL);
+
+  result_audio = gst_sdp_message_get_media (message, 2);
+  fail_unless (result_audio != NULL);
+
+  media1_text = gst_sdp_media_get_attribute_val (media_video, "rtpmap");
+  media2_text = gst_sdp_media_get_attribute_val (result_video, "rtpmap");
+  media3_text = gst_sdp_media_get_format (media_audio, 0);
+  media4_text = gst_sdp_media_get_format (result_audio, 0);
+
+  fail_if (g_strcmp0 (media1_text, media2_text) != 0);
+  fail_if (g_strcmp0 (media3_text, media4_text) != 0);
+
+  gst_sdp_media_free (media_video);
+  gst_sdp_media_free (media_audio);
+  gst_sdp_message_free (message);
+}
+
+GST_END_TEST
 /*
  * End of test cases
  */
@@ -207,6 +310,8 @@ sdp_suite (void)
   tcase_add_test (tc_chain, copy);
   tcase_add_test (tc_chain, boxed);
   tcase_add_test (tc_chain, modify);
+  tcase_add_test (tc_chain, caps_from_media);
+  tcase_add_test (tc_chain, media_from_caps);
 
   return s;
 }

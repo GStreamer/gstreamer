@@ -2148,3 +2148,170 @@ parse_error:
     return NULL;
   }
 }
+
+#define AES_128_KEY_LEN 16
+#define AES_256_KEY_LEN 32
+#define HMAC_32_KEY_LEN 4
+#define HMAC_80_KEY_LEN 10
+
+static guint8
+enc_key_length_from_cipher_name (const gchar * cipher)
+{
+  if (g_strcmp0 (cipher, "aes-128-icm") == 0)
+    return AES_128_KEY_LEN;
+  else if (g_strcmp0 (cipher, "aes-256-icm") == 0)
+    return AES_256_KEY_LEN;
+  else {
+    GST_ERROR ("encryption algorithm '%s' not supported", cipher);
+    return 0;
+  }
+}
+
+static guint8
+auth_key_length_from_auth_name (const gchar * auth)
+{
+  if (g_strcmp0 (auth, "hmac-sha1-32") == 0)
+    return HMAC_32_KEY_LEN;
+  else if (g_strcmp0 (auth, "hmac-sha1-80") == 0)
+    return HMAC_80_KEY_LEN;
+  else {
+    GST_ERROR ("authentication algorithm '%s' not supported", auth);
+    return 0;
+  }
+}
+
+/**
+ * gst_mikey_message_new_from_caps:
+ * @caps: a #GstCaps, including SRTP parameters (srtp/srtcp cipher, authorization, key data)
+ *
+ * Makes mikey message including:
+ *  - Security Policy Payload
+ *  - Key Data Transport Payload
+ *  - Key Data Sub-Payload
+ *
+ * Returns: (transfer full): a #GstMIKEYMessage,
+ * or %NULL if there is no srtp information in the caps.
+ *
+ * Since: 1.8
+ */
+GstMIKEYMessage *
+gst_mikey_message_new_from_caps (GstCaps * caps)
+{
+  GstMIKEYMessage *msg;
+  GstMIKEYPayload *payload, *pkd;
+  guint8 byte;
+  GstStructure *s;
+  GstMapInfo info;
+  GstBuffer *srtpkey;
+  const GValue *val;
+  const gchar *srtpcipher, *srtpauth, *srtcpcipher, *srtcpauth;
+
+  g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), NULL);
+
+  s = gst_caps_get_structure (caps, 0);
+  g_return_val_if_fail (s != NULL, NULL);
+
+  val = gst_structure_get_value (s, "srtp-key");
+  if (!val)
+    goto no_key;
+
+  srtpkey = gst_value_get_buffer (val);
+  if (!srtpkey || !GST_IS_BUFFER (srtpkey))
+    goto no_key;
+
+  srtpcipher = gst_structure_get_string (s, "srtp-cipher");
+  srtpauth = gst_structure_get_string (s, "srtp-auth");
+  srtcpcipher = gst_structure_get_string (s, "srtcp-cipher");
+  srtcpauth = gst_structure_get_string (s, "srtcp-auth");
+
+  if (srtpcipher == NULL || srtpauth == NULL || srtcpcipher == NULL ||
+      srtcpauth == NULL) {
+    GST_WARNING ("could not find the right SRTP parameters in caps");
+    return NULL;
+  }
+
+  msg = gst_mikey_message_new ();
+  /* unencrypted MIKEY message, we send this over TLS so this is allowed */
+  gst_mikey_message_set_info (msg, GST_MIKEY_VERSION, GST_MIKEY_TYPE_PSK_INIT,
+      FALSE, GST_MIKEY_PRF_MIKEY_1, g_random_int (), GST_MIKEY_MAP_TYPE_SRTP);
+
+  /* timestamp is now */
+  gst_mikey_message_add_t_now_ntp_utc (msg);
+  /* add some random data */
+  gst_mikey_message_add_rand_len (msg, 16);
+
+  /* the policy '0' is SRTP */
+  payload = gst_mikey_payload_new (GST_MIKEY_PT_SP);
+  gst_mikey_payload_sp_set (payload, 0, GST_MIKEY_SEC_PROTO_SRTP);
+
+  /* only AES-CM is supported */
+  byte = 1;
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_ALG, 1, &byte);
+  /* encryption key length */
+  byte = enc_key_length_from_cipher_name (srtpcipher);
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_KEY_LEN, 1,
+      &byte);
+  /* only HMAC-SHA1 */
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_ALG, 1,
+      &byte);
+  /* authentication key length */
+  byte = auth_key_length_from_auth_name (srtpauth);
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_KEY_LEN, 1,
+      &byte);
+  /* we enable encryption on RTP and RTCP */
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTP_ENC, 1,
+      &byte);
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTCP_ENC, 1,
+      &byte);
+  /* we enable authentication on RTP and RTCP */
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTP_AUTH, 1,
+      &byte);
+  gst_mikey_message_add_payload (msg, payload);
+
+  /* make unencrypted KEMAC */
+  payload = gst_mikey_payload_new (GST_MIKEY_PT_KEMAC);
+  gst_mikey_payload_kemac_set (payload, GST_MIKEY_ENC_NULL, GST_MIKEY_MAC_NULL);
+  /* add the key in KEMAC */
+  pkd = gst_mikey_payload_new (GST_MIKEY_PT_KEY_DATA);
+  gst_buffer_map (srtpkey, &info, GST_MAP_READ);
+  gst_mikey_payload_key_data_set_key (pkd, GST_MIKEY_KD_TEK, info.size,
+      info.data);
+  gst_buffer_unmap (srtpkey, &info);
+  gst_mikey_payload_kemac_add_sub (payload, pkd);
+  gst_mikey_message_add_payload (msg, payload);
+
+  return msg;
+
+no_key:
+  GST_INFO ("No srtp key");
+  return NULL;
+}
+
+/**
+ * gst_mikey_message_base64_encode:
+ * @msg: a #GstMIKEYMessage
+ *
+ * Returns: (transfer full): a #gchar, base64-encoded data
+ *
+ * Since: 1.8
+ */
+gchar *
+gst_mikey_message_base64_encode (GstMIKEYMessage * msg)
+{
+  GBytes *bytes;
+  gchar *base64;
+  const guint8 *data;
+  gsize size;
+
+  g_return_val_if_fail (msg != NULL, NULL);
+
+  /* serialize mikey message to bytes */
+  bytes = gst_mikey_message_to_bytes (msg, NULL, NULL);
+
+  /* and make it into base64 */
+  data = g_bytes_get_data (bytes, &size);
+  base64 = g_base64_encode (data, size);
+  g_bytes_unref (bytes);
+
+  return base64;
+}

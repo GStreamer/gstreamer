@@ -56,12 +56,15 @@
 #include "config.h"
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <gio/gio.h>
 
+#include <gst/rtp/gstrtppayloads.h>
 #include "gstsdpmessage.h"
+#include "gstmikey.h"
 
 #define FREE_STRING(field)              g_free (field); (field) = NULL
 #define REPLACE_STRING(field, val)      FREE_STRING(field); (field) = g_strdup (val)
@@ -2802,7 +2805,7 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
   switch (type) {
     case 'v':
       if (buffer[0] != '0')
-        g_warning ("wrong SDP version");
+        GST_WARNING ("wrong SDP version");
       gst_sdp_message_set_version (c->msg, buffer);
       break;
     case 'o':
@@ -3164,4 +3167,700 @@ gst_sdp_message_dump (const GstSDPMessage * msg)
     }
   }
   return GST_SDP_OK;
+}
+
+static const gchar *
+gst_sdp_get_attribute_for_pt (const GstSDPMedia * media, const gchar * name,
+    gint pt)
+{
+  guint i;
+
+  for (i = 0;; i++) {
+    const gchar *attr;
+    gint val;
+
+    if ((attr = gst_sdp_media_get_attribute_val_n (media, name, i)) == NULL)
+      break;
+
+    if (sscanf (attr, "%d ", &val) != 1)
+      continue;
+
+    if (val == pt)
+      return attr;
+  }
+  return NULL;
+}
+
+#define PARSE_INT(p, del, res)          \
+G_STMT_START {                          \
+  gchar *t = p;                         \
+  p = strstr (p, del);                  \
+  if (p == NULL)                        \
+    res = -1;                           \
+  else {                                \
+    *p = '\0';                          \
+    p++;                                \
+    res = atoi (t);                     \
+  }                                     \
+} G_STMT_END
+
+#define PARSE_STRING(p, del, res)       \
+G_STMT_START {                          \
+  gchar *t = p;                         \
+  p = strstr (p, del);                  \
+  if (p == NULL) {                      \
+    res = NULL;                         \
+    p = t;                              \
+  }                                     \
+  else {                                \
+    *p = '\0';                          \
+    p++;                                \
+    res = t;                            \
+  }                                     \
+} G_STMT_END
+
+#define SKIP_SPACES(p)                  \
+  while (*p && g_ascii_isspace (*p))    \
+    p++;
+
+/* rtpmap contains:
+ *
+ *  <payload> <encoding_name>/<clock_rate>[/<encoding_params>]
+ */
+static gboolean
+gst_sdp_parse_rtpmap (const gchar * rtpmap, gint * payload, gchar ** name,
+    gint * rate, gchar ** params)
+{
+  gchar *p, *t;
+
+  p = (gchar *) rtpmap;
+
+  PARSE_INT (p, " ", *payload);
+  if (*payload == -1)
+    return FALSE;
+
+  SKIP_SPACES (p);
+  if (*p == '\0')
+    return FALSE;
+
+  PARSE_STRING (p, "/", *name);
+  if (*name == NULL) {
+    GST_DEBUG ("no rate, name %s", p);
+    /* no rate, assume -1 then, this is not supposed to happen but RealMedia
+     * streams seem to omit the rate. */
+    *name = p;
+    *rate = -1;
+    return TRUE;
+  }
+
+  t = p;
+  p = strstr (p, "/");
+  if (p == NULL) {
+    *rate = atoi (t);
+    return TRUE;
+  }
+  *p = '\0';
+  p++;
+  *rate = atoi (t);
+
+  t = p;
+  if (*p == '\0')
+    return TRUE;
+  *params = t;
+
+  return TRUE;
+}
+
+/**
+ * gst_sdp_media_get_caps_from_media:
+ * @media: a #GstSDPMedia
+ * @pt: a payload type
+ *
+ * Mapping of caps from SDP fields:
+ *
+ * a=rtpmap:(payload) (encoding_name)/(clock_rate)[/(encoding_params)]
+ *
+ * a=framesize:(payload) (width)-(height)
+ *
+ * a=fmtp:(payload) (param)[=(value)];...
+ *
+ * Returns: a #GstCaps, or %NULL if an error happened
+ *
+ * Since: 1.8
+ */
+GstCaps *
+gst_sdp_media_get_caps_from_media (const GstSDPMedia * media, gint pt)
+{
+  GstCaps *caps;
+  const gchar *rtpmap;
+  const gchar *fmtp;
+  const gchar *framesize;
+  gchar *name = NULL;
+  gint rate = -1;
+  gchar *params = NULL;
+  gchar *tmp;
+  GstStructure *s;
+  gint payload = 0;
+  gboolean ret;
+
+  /* get and parse rtpmap */
+  rtpmap = gst_sdp_get_attribute_for_pt (media, "rtpmap", pt);
+
+  if (rtpmap) {
+    ret = gst_sdp_parse_rtpmap (rtpmap, &payload, &name, &rate, &params);
+    if (!ret) {
+      GST_ERROR ("error parsing rtpmap, ignoring");
+      rtpmap = NULL;
+    }
+  }
+  /* dynamic payloads need rtpmap or we fail */
+  if (rtpmap == NULL && pt >= 96)
+    goto no_rtpmap;
+
+  /* check if we have a rate, if not, we need to look up the rate from the
+   * default rates based on the payload types. */
+  if (rate == -1) {
+    const GstRTPPayloadInfo *info;
+
+    if (GST_RTP_PAYLOAD_IS_DYNAMIC (pt)) {
+      /* dynamic types, use media and encoding_name */
+      tmp = g_ascii_strdown (media->media, -1);
+      info = gst_rtp_payload_info_for_name (tmp, name);
+      g_free (tmp);
+    } else {
+      /* static types, use payload type */
+      info = gst_rtp_payload_info_for_pt (pt);
+    }
+
+    if (info) {
+      if ((rate = info->clock_rate) == 0)
+        rate = -1;
+    }
+    /* we fail if we cannot find one */
+    if (rate == -1)
+      goto no_rate;
+  }
+
+  tmp = g_ascii_strdown (media->media, -1);
+  caps = gst_caps_new_simple ("application/x-unknown",
+      "media", G_TYPE_STRING, tmp, "payload", G_TYPE_INT, pt, NULL);
+  g_free (tmp);
+  s = gst_caps_get_structure (caps, 0);
+
+  gst_structure_set (s, "clock-rate", G_TYPE_INT, rate, NULL);
+
+  /* encoding name must be upper case */
+  if (name != NULL) {
+    tmp = g_ascii_strup (name, -1);
+    gst_structure_set (s, "encoding-name", G_TYPE_STRING, tmp, NULL);
+    g_free (tmp);
+  }
+
+  /* params must be lower case */
+  if (params != NULL) {
+    tmp = g_ascii_strdown (params, -1);
+    gst_structure_set (s, "encoding-params", G_TYPE_STRING, tmp, NULL);
+    g_free (tmp);
+  }
+
+  /* parse optional fmtp: field */
+  if ((fmtp = gst_sdp_get_attribute_for_pt (media, "fmtp", pt))) {
+    gchar *p;
+    gint payload = 0;
+
+    p = (gchar *) fmtp;
+
+    /* p is now of the format <payload> <param>[=<value>];... */
+    PARSE_INT (p, " ", payload);
+    if (payload != -1 && payload == pt) {
+      gchar **pairs;
+      gint i;
+
+      /* <param>[=<value>] are separated with ';' */
+      pairs = g_strsplit (p, ";", 0);
+      for (i = 0; pairs[i]; i++) {
+        gchar *valpos;
+        const gchar *val, *key;
+        gint j;
+        const gchar *reserved_keys[] =
+            { "media", "payload", "clock-rate", "encoding-name",
+          "encoding-params"
+        };
+
+        /* the key may not have a '=', the value can have other '='s */
+        valpos = strstr (pairs[i], "=");
+        if (valpos) {
+          /* we have a '=' and thus a value, remove the '=' with \0 */
+          *valpos = '\0';
+          /* value is everything between '=' and ';'. We split the pairs at ;
+           * boundaries so we can take the remainder of the value. Some servers
+           * put spaces around the value which we strip off here. Alternatively
+           * we could strip those spaces in the depayloaders should these spaces
+           * actually carry any meaning in the future. */
+          val = g_strstrip (valpos + 1);
+        } else {
+          /* simple <param>;.. is translated into <param>=1;... */
+          val = "1";
+        }
+        /* strip the key of spaces, convert key to lowercase but not the value. */
+        key = g_strstrip (pairs[i]);
+
+        /* skip keys from the fmtp, which we already use ourselves for the
+         * caps. Some software is adding random things like clock-rate into
+         * the fmtp, and we would otherwise here set a string-typed clock-rate
+         * in the caps... and thus fail to create valid RTP caps
+         */
+        for (j = 0; j < G_N_ELEMENTS (reserved_keys); j++) {
+          if (g_ascii_strcasecmp (reserved_keys[j], key) == 0) {
+            key = "";
+            break;
+          }
+        }
+
+        if (strlen (key) > 1) {
+          tmp = g_ascii_strdown (key, -1);
+          gst_structure_set (s, tmp, G_TYPE_STRING, val, NULL);
+          g_free (tmp);
+        }
+      }
+      g_strfreev (pairs);
+    }
+  }
+
+  /* parse framesize: field */
+  if ((framesize = gst_sdp_media_get_attribute_val (media, "framesize"))) {
+    gchar *p;
+
+    /* p is now of the format <payload> <width>-<height> */
+    p = (gchar *) framesize;
+
+    PARSE_INT (p, " ", payload);
+    if (payload != -1 && payload == pt) {
+      gst_structure_set (s, "a-framesize", G_TYPE_STRING, p, NULL);
+    }
+  }
+
+  return caps;
+
+  /* ERRORS */
+no_rtpmap:
+  {
+    GST_ERROR ("rtpmap type not given for dynamic payload %d", pt);
+    return NULL;
+  }
+no_rate:
+  {
+    GST_ERROR ("rate unknown for payload type %d", pt);
+    return NULL;
+  }
+}
+
+/**
+ * gst_sdp_media_set_media_from_caps:
+ * @caps: a #GstCaps
+ * @media: a #GstSDPMedia
+ *
+ * Mapping of caps to SDP fields:
+ *
+ * a=rtpmap:(payload) (encoding_name) or (clock_rate)[or (encoding_params)]
+ *
+ * a=framesize:(payload) (width)-(height)
+ *
+ * a=fmtp:(payload) (param)[=(value)];...
+ *
+ * Returns: a #GstSDPResult.
+ *
+ * Since: 1.8
+ */
+GstSDPResult
+gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
+{
+  const gchar *caps_str, *caps_enc, *caps_params;
+  gchar *tmp;
+  gint caps_pt, caps_rate;
+  guint n_fields, j;
+  gboolean first;
+  GString *fmtp;
+  GstStructure *s;
+
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), GST_SDP_EINVAL);
+
+  s = gst_caps_get_structure (caps, 0);
+  if (s == NULL) {
+    GST_ERROR ("ignoring stream without media type");
+    goto error;
+  }
+
+  /* get media type and payload for the m= line */
+  caps_str = gst_structure_get_string (s, "media");
+  gst_sdp_media_set_media (media, caps_str);
+
+  gst_structure_get_int (s, "payload", &caps_pt);
+  tmp = g_strdup_printf ("%d", caps_pt);
+  gst_sdp_media_add_format (media, tmp);
+  g_free (tmp);
+
+  /* get clock-rate, media type and params for the rtpmap attribute */
+  gst_structure_get_int (s, "clock-rate", &caps_rate);
+  caps_enc = gst_structure_get_string (s, "encoding-name");
+  caps_params = gst_structure_get_string (s, "encoding-params");
+
+  if (caps_enc) {
+    if (caps_params)
+      tmp = g_strdup_printf ("%d %s/%d/%s", caps_pt, caps_enc, caps_rate,
+          caps_params);
+    else
+      tmp = g_strdup_printf ("%d %s/%d", caps_pt, caps_enc, caps_rate);
+
+    gst_sdp_media_add_attribute (media, "rtpmap", tmp);
+    g_free (tmp);
+  }
+
+  /* collect all other properties and add them to fmtp or attributes */
+  fmtp = g_string_new ("");
+  g_string_append_printf (fmtp, "%d ", caps_pt);
+  first = TRUE;
+  n_fields = gst_structure_n_fields (s);
+  for (j = 0; j < n_fields; j++) {
+    const gchar *fname, *fval;
+
+    fname = gst_structure_nth_field_name (s, j);
+
+    /* filter out standard properties */
+    if (!strcmp (fname, "media"))
+      continue;
+    if (!strcmp (fname, "payload"))
+      continue;
+    if (!strcmp (fname, "clock-rate"))
+      continue;
+    if (!strcmp (fname, "encoding-name"))
+      continue;
+    if (!strcmp (fname, "encoding-params"))
+      continue;
+    if (!strcmp (fname, "ssrc"))
+      continue;
+    if (!strcmp (fname, "timestamp-offset"))
+      continue;
+    if (!strcmp (fname, "seqnum-offset"))
+      continue;
+    if (g_str_has_prefix (fname, "srtp-"))
+      continue;
+    if (g_str_has_prefix (fname, "srtcp-"))
+      continue;
+    /* handled later */
+    if (g_str_has_prefix (fname, "x-gst-rtsp-server-rtx-time"))
+      continue;
+
+    if (!strcmp (fname, "a-framesize")) {
+      /* a-framesize attribute */
+      if ((fval = gst_structure_get_string (s, fname))) {
+        tmp = g_strdup_printf ("%d %s", caps_pt, fval);
+        gst_sdp_media_add_attribute (media, fname + 2, tmp);
+        g_free (tmp);
+      }
+      continue;
+    }
+
+    if (g_str_has_prefix (fname, "a-")) {
+      /* attribute */
+      if ((fval = gst_structure_get_string (s, fname)))
+        gst_sdp_media_add_attribute (media, fname + 2, fval);
+      continue;
+    }
+    if (g_str_has_prefix (fname, "x-")) {
+      /* attribute */
+      if ((fval = gst_structure_get_string (s, fname)))
+        gst_sdp_media_add_attribute (media, fname, fval);
+      continue;
+    }
+
+    if ((fval = gst_structure_get_string (s, fname))) {
+      g_string_append_printf (fmtp, "%s%s=%s", first ? "" : ";", fname, fval);
+      first = FALSE;
+    }
+  }
+
+  if (!first) {
+    tmp = g_string_free (fmtp, FALSE);
+    gst_sdp_media_add_attribute (media, "fmtp", tmp);
+    g_free (tmp);
+  } else {
+    g_string_free (fmtp, TRUE);
+  }
+
+  return GST_SDP_OK;
+
+  /* ERRORS */
+error:
+  {
+    GST_DEBUG ("ignoring stream");
+    return GST_SDP_EINVAL;
+  }
+}
+
+/**
+ * gst_sdp_make_keymgmt:
+ * @uri: a #gchar URI
+ * @base64: a #gchar base64-encoded key data
+ *
+ * Makes key management data
+ *
+ * Returns: (transfer full): a #gchar key-mgmt data,
+ *
+ * Since: 1.8
+ */
+gchar *
+gst_sdp_make_keymgmt (const gchar * uri, const gchar * base64)
+{
+  g_return_val_if_fail (uri != NULL, NULL);
+  g_return_val_if_fail (base64 != NULL, NULL);
+
+  return g_strdup_printf ("prot=mikey;uri=\"%s\";data=\"%s\"", uri, base64);
+}
+
+#define AES_128_KEY_LEN 16
+#define AES_256_KEY_LEN 32
+#define HMAC_32_KEY_LEN 4
+#define HMAC_80_KEY_LEN 10
+
+static gboolean
+gst_sdp_parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
+{
+  gboolean res = FALSE;
+  gsize size;
+  guchar *data;
+  GstMIKEYMessage *msg;
+  const GstMIKEYPayload *payload;
+  const gchar *srtp_cipher;
+  const gchar *srtp_auth;
+  gchar *orig_value;
+  gchar *p, *kmpid;
+
+  p = orig_value = g_strdup (keymgmt);
+
+  SKIP_SPACES (p);
+  if (*p == '\0') {
+    g_free (orig_value);
+    return FALSE;
+  }
+
+  PARSE_STRING (p, " ", kmpid);
+  if (kmpid == NULL || !g_str_equal (kmpid, "mikey")) {
+    g_free (orig_value);
+    return FALSE;
+  }
+  data = g_base64_decode (p, &size);
+  g_free (orig_value);          /* Don't need this any more */
+
+  if (data == NULL)
+    return FALSE;
+
+  msg = gst_mikey_message_new_from_data (data, size, NULL, NULL);
+  g_free (data);
+  if (msg == NULL)
+    return FALSE;
+
+  srtp_cipher = "aes-128-icm";
+  srtp_auth = "hmac-sha1-80";
+
+  /* check the Security policy if any */
+  if ((payload = gst_mikey_message_find_payload (msg, GST_MIKEY_PT_SP, 0))) {
+    GstMIKEYPayloadSP *p = (GstMIKEYPayloadSP *) payload;
+    guint len, i;
+
+    if (p->proto != GST_MIKEY_SEC_PROTO_SRTP)
+      goto done;
+
+    len = gst_mikey_payload_sp_get_n_params (payload);
+    for (i = 0; i < len; i++) {
+      const GstMIKEYPayloadSPParam *param =
+          gst_mikey_payload_sp_get_param (payload, i);
+
+      switch (param->type) {
+        case GST_MIKEY_SP_SRTP_ENC_ALG:
+          switch (param->val[0]) {
+            case 0:
+              srtp_cipher = "null";
+              break;
+            case 2:
+            case 1:
+              srtp_cipher = "aes-128-icm";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_ENC_KEY_LEN:
+          switch (param->val[0]) {
+            case AES_128_KEY_LEN:
+              srtp_cipher = "aes-128-icm";
+              break;
+            case AES_256_KEY_LEN:
+              srtp_cipher = "aes-256-icm";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_AUTH_ALG:
+          switch (param->val[0]) {
+            case 0:
+              srtp_auth = "null";
+              break;
+            case 2:
+            case 1:
+              srtp_auth = "hmac-sha1-80";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_AUTH_KEY_LEN:
+          switch (param->val[0]) {
+            case HMAC_32_KEY_LEN:
+              srtp_auth = "hmac-sha1-32";
+              break;
+            case HMAC_80_KEY_LEN:
+              srtp_auth = "hmac-sha1-80";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_SRTP_ENC:
+          break;
+        case GST_MIKEY_SP_SRTP_SRTCP_ENC:
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  if (!(payload = gst_mikey_message_find_payload (msg, GST_MIKEY_PT_KEMAC, 0)))
+    goto done;
+  else {
+    GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
+    const GstMIKEYPayload *sub;
+    GstMIKEYPayloadKeyData *pkd;
+    GstBuffer *buf;
+
+    if (p->enc_alg != GST_MIKEY_ENC_NULL || p->mac_alg != GST_MIKEY_MAC_NULL)
+      goto done;
+
+    if (!(sub = gst_mikey_payload_kemac_get_sub (payload, 0)))
+      goto done;
+
+    if (sub->type != GST_MIKEY_PT_KEY_DATA)
+      goto done;
+
+    pkd = (GstMIKEYPayloadKeyData *) sub;
+    buf =
+        gst_buffer_new_wrapped (g_memdup (pkd->key_data, pkd->key_len),
+        pkd->key_len);
+    gst_caps_set_simple (caps, "srtp-key", GST_TYPE_BUFFER, buf, NULL);
+    gst_buffer_unref (buf);
+  }
+
+  gst_caps_set_simple (caps,
+      "srtp-cipher", G_TYPE_STRING, srtp_cipher,
+      "srtp-auth", G_TYPE_STRING, srtp_auth,
+      "srtcp-cipher", G_TYPE_STRING, srtp_cipher,
+      "srtcp-auth", G_TYPE_STRING, srtp_auth, NULL);
+
+  res = TRUE;
+done:
+  gst_mikey_message_unref (msg);
+
+  return res;
+}
+
+static GstSDPResult
+sdp_addtributes_to_caps (GArray * attributes, GstCaps * caps)
+{
+  if (attributes->len > 0) {
+    GstStructure *s;
+    guint i;
+
+    s = gst_caps_get_structure (caps, 0);
+
+    for (i = 0; i < attributes->len; i++) {
+      GstSDPAttribute *attr = &g_array_index (attributes, GstSDPAttribute, i);
+      gchar *tofree, *key;
+
+      key = attr->key;
+
+      /* skip some of the attribute we already handle */
+      if (!strcmp (key, "fmtp"))
+        continue;
+      if (!strcmp (key, "rtpmap"))
+        continue;
+      if (!strcmp (key, "control"))
+        continue;
+      if (!strcmp (key, "range"))
+        continue;
+      if (!strcmp (key, "framesize"))
+        continue;
+      if (g_str_equal (key, "key-mgmt")) {
+        gst_sdp_parse_keymgmt (attr->value, caps);
+        continue;
+      }
+
+      /* string must be valid UTF8 */
+      if (!g_utf8_validate (attr->value, -1, NULL))
+        continue;
+
+      if (!g_str_has_prefix (key, "x-"))
+        tofree = key = g_strdup_printf ("a-%s", key);
+      else
+        tofree = NULL;
+
+      GST_DEBUG ("adding caps: %s=%s", key, attr->value);
+      gst_structure_set (s, key, G_TYPE_STRING, attr->value, NULL);
+      g_free (tofree);
+    }
+  }
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_message_attributes_to_caps:
+ * @msg: a #GstSDPMessage
+ * @caps: a #GstCaps
+ *
+ * Mapping of attributes of #GstSDPMessage to #GstCaps
+ *
+ * Returns: a #GstSDPResult.
+ *
+ * Since: 1.8
+ */
+GstSDPResult
+gst_sdp_message_attributes_to_caps (const GstSDPMessage * msg, GstCaps * caps)
+{
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), GST_SDP_EINVAL);
+
+  return sdp_addtributes_to_caps (msg->attributes, caps);
+}
+
+/**
+ * gst_sdp_media_attributes_to_caps:
+ * @media: a #GstSDPMedia
+ * @caps: a #GstCaps
+ *
+ * Mapping of attributes of #GstSDPMedia to #GstCaps
+ *
+ * Returns: a #GstSDPResult.
+ *
+ * Since: 1.8
+ */
+GstSDPResult
+gst_sdp_media_attributes_to_caps (const GstSDPMedia * media, GstCaps * caps)
+{
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), GST_SDP_EINVAL);
+
+  return sdp_addtributes_to_caps (media->attributes, caps);
 }

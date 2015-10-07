@@ -559,6 +559,9 @@ GstMIKEYMessage *           gst_mikey_message_new_from_bytes    (GBytes *bytes, 
                                                                  GError **error);
 GBytes *                    gst_mikey_message_to_bytes          (GstMIKEYMessage *msg, GstMIKEYEncryptInfo *info,
                                                                  GError **error);
+GstMIKEYMessage *           gst_mikey_message_new_from_caps         (GstCaps *caps);
+gchar *                     gst_mikey_message_base64_encode     (GstMIKEYMessage* msg);
+
 /**
  * gst_mikey_message_ref:
  * @message: The message to refcount

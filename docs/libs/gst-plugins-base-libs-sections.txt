@@ -1793,6 +1793,11 @@ gst_sdp_media_insert_attribute
 gst_sdp_media_replace_attribute
 gst_sdp_media_remove_attribute
 gst_sdp_media_add_attribute
+gst_sdp_media_get_caps_from_media
+gst_sdp_media_set_media_from_caps
+gst_sdp_make_keymgmt
+gst_sdp_message_attributes_to_caps
+gst_sdp_media_attributes_to_caps
 <SUBSECTION Standard>
 gst_sdp_message_get_type
 </SECTION>
@@ -1807,8 +1812,10 @@ GstMIKEYMessage
 
 gst_mikey_message_new
 gst_mikey_message_new_from_bytes
+gst_mikey_message_new_from_caps
 gst_mikey_message_new_from_data
 gst_mikey_message_to_bytes
+gst_mikey_message_base64_encode
 gst_mikey_message_copy
 gst_mikey_message_ref
 gst_mikey_message_unref

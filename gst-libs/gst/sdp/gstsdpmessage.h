@@ -501,6 +501,11 @@ GstSDPResult            gst_sdp_media_replace_attribute     (GstSDPMedia *media,
 GstSDPResult            gst_sdp_media_remove_attribute      (GstSDPMedia *media, guint idx);
 GstSDPResult            gst_sdp_media_add_attribute         (GstSDPMedia *media, const gchar *key,
                                                              const gchar *value);
+GstCaps*                gst_sdp_media_get_caps_from_media   (const GstSDPMedia *media, gint pt);
+GstSDPResult            gst_sdp_media_set_media_from_caps   (const GstCaps* caps, GstSDPMedia *media);
+gchar *                 gst_sdp_make_keymgmt                (const gchar *uri, const gchar *base64);
+GstSDPResult            gst_sdp_message_attributes_to_caps  (const GstSDPMessage *msg, GstCaps *caps);
+GstSDPResult            gst_sdp_media_attributes_to_caps    (const GstSDPMedia *media, GstCaps *caps);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstSDPMessage, gst_sdp_message_free)
