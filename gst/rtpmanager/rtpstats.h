@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
+ * Copyright (C)  2015 Kurento (http://kurento.org/)
+ *   @author: Miguel París <mparisdiaz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -183,15 +185,18 @@ typedef struct {
 #define RTP_STATS_BYE_TIMEOUT           (2 * GST_SECOND)
 
 /*
- * The maximum number of missing packets we tolerate. These are packets with a
- * sequence number bigger than the last seen packet.
+ * The default and minimum values of the maximum number of missing packets we tolerate.
+ * These are packets with asequence number bigger than the last seen packet.
  */
-#define RTP_MAX_DROPOUT      3000
+#define RTP_DEF_DROPOUT      3000
+#define RTP_MIN_DROPOUT      30
+
 /*
- * The maximum number of misordered packets we tolerate. These are packets with
- * a sequence number smaller than the last seen packet.
+ * The default and minimum values of the maximum number of misordered packets we tolerate.
+ * These are packets with a sequence number smaller than the last seen packet.
  */
-#define RTP_MAX_MISORDER     100
+#define RTP_DEF_MISORDER     100
+#define RTP_MIN_MISORDER     10
 
 /**
  * RTPPacketRateCtx:
@@ -209,6 +214,8 @@ typedef struct {
 void gst_rtp_packet_rate_ctx_reset (RTPPacketRateCtx * ctx, guint32 clock_rate);
 guint32 gst_rtp_packet_rate_ctx_update (RTPPacketRateCtx *ctx, guint16 seqnum, guint32 ts);
 guint32 gst_rtp_packet_rate_ctx_get (RTPPacketRateCtx *ctx);
+guint32 gst_rtp_packet_rate_ctx_get_max_dropout (RTPPacketRateCtx *ctx, gint32 time_ms);
+guint32 gst_rtp_packet_rate_ctx_get_max_misorder (RTPPacketRateCtx *ctx, gint32 time_ms);
 
 /**
  * RTPSessionStats:

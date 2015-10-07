@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
+ * Copyright (C)  2015 Kurento (http://kurento.org/)
+ *   @author: Miguel París <mparisdiaz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -174,6 +176,7 @@ struct _RTPSource {
   guint64       bytes_received;
 
   GQueue       *packets;
+  RTPPacketRateCtx packet_rate_ctx;
   guint32       max_dropout_time;
   guint32       max_misorder_time;
 

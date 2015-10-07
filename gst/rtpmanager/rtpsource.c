@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
+ * Copyright (C)  2015 Kurento (http://kurento.org/)
+ *   @author: Miguel París <mparisdiaz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -908,6 +910,7 @@ get_clock_rate (RTPSource * src, guint8 payload)
     GST_DEBUG ("got clock-rate %d", clock_rate);
 
     src->clock_rate = clock_rate;
+    gst_rtp_packet_rate_ctx_reset (&src->packet_rate_ctx, clock_rate);
   }
   return src->clock_rate;
 }
@@ -1041,10 +1044,23 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo,
   guint16 seqnr, expected;
   RTPSourceStats *stats;
   gint16 delta;
+  gint32 packet_rate, max_dropout, max_misorder;
 
   stats = &src->stats;
 
   seqnr = pinfo->seqnum;
+
+  packet_rate =
+      gst_rtp_packet_rate_ctx_update (&src->packet_rate_ctx, pinfo->seqnum,
+      pinfo->rtptime);
+  max_dropout =
+      gst_rtp_packet_rate_ctx_get_max_dropout (&src->packet_rate_ctx,
+      src->max_dropout_time);
+  max_misorder =
+      gst_rtp_packet_rate_ctx_get_max_misorder (&src->packet_rate_ctx,
+      src->max_misorder_time);
+  GST_TRACE ("SSRC %08x, packet_rate: %d, max_dropout: %d, max_misorder: %d",
+      src->ssrc, packet_rate, max_dropout, max_misorder);
 
   if (stats->cycles == -1) {
     GST_DEBUG ("received first packet");
@@ -1092,7 +1108,7 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo,
         /* unexpected seqnum in probation */
         goto probation_seqnum;
       }
-    } else if (delta >= 0 && delta < RTP_MAX_DROPOUT) {
+    } else if (delta >= 0 && delta < max_dropout) {
       /* Clear bad packets */
       stats->bad_seq = RTP_SEQ_MOD + 1; /* so seq == bad_seq is false */
       g_queue_foreach (src->packets, (GFunc) gst_buffer_unref, NULL);
@@ -1104,7 +1120,7 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo,
         stats->cycles += RTP_SEQ_MOD;
       }
       stats->max_seq = seqnr;
-    } else if (delta < -RTP_MAX_MISORDER || delta >= RTP_MAX_DROPOUT) {
+    } else if (delta < -max_misorder || delta >= max_dropout) {
       /* the sequence number made a very large jump */
       if (seqnr == stats->bad_seq && src->packets->head) {
         /* two sequential packets -- assume that the other side
@@ -1120,7 +1136,7 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo,
         pinfo->data = NULL;
         goto bad_sequence;
       }
-    } else {                    /* delta < 0 && delta >= -RTP_MAX_MISORDER */
+    } else {                    /* delta < 0 && delta >= -max_misorder */
       /* Clear bad packets */
       stats->bad_seq = RTP_SEQ_MOD + 1; /* so seq == bad_seq is false */
       g_queue_foreach (src->packets, (GFunc) gst_buffer_unref, NULL);
@@ -1150,7 +1166,9 @@ done:
   }
 bad_sequence:
   {
-    GST_WARNING ("unacceptable seqnum received");
+    GST_WARNING
+        ("unacceptable seqnum received (seqnr %u, delta %d, packet_rate: %d, max_dropout: %d, max_misorder: %d)",
+        seqnr, delta, packet_rate, max_dropout, max_misorder);
     return FALSE;
   }
 probation_seqnum:
