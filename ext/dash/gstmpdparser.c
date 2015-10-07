@@ -5160,6 +5160,10 @@ gst_mpd_client_has_previous_period (GstMpdClient * client)
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->periods != NULL, FALSE);
 
+  if (!gst_mpd_client_setup_media_presentation (client, GST_CLOCK_TIME_NONE,
+          client->period_idx - 1, NULL))
+    return FALSE;
+
   next_stream_period =
       g_list_nth_data (client->periods, client->period_idx - 1);
 
@@ -5172,6 +5176,10 @@ gst_mpd_client_has_next_period (GstMpdClient * client)
   GList *next_stream_period;
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->periods != NULL, FALSE);
+
+  if (!gst_mpd_client_setup_media_presentation (client, GST_CLOCK_TIME_NONE,
+          client->period_idx + 1, NULL))
+    return FALSE;
 
   next_stream_period =
       g_list_nth_data (client->periods, client->period_idx + 1);
