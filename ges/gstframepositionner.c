@@ -87,9 +87,11 @@ gst_frame_positionner_update_properties (GstFramePositionner * pos,
   if (pos->track_width && pos->track_height) {
     caps =
         gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
-        pos->track_width, "height", G_TYPE_INT, pos->track_height, NULL);
+        pos->track_width, "height", G_TYPE_INT, pos->track_height,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
   } else {
-    caps = gst_caps_new_empty_simple ("video/x-raw");
+    caps = gst_caps_new_simple ("video/x-raw",
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
   }
 
   if (pos->fps_n != -1)
