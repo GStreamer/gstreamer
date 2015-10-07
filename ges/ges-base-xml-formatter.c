@@ -21,6 +21,10 @@
 #include "ges.h"
 #include "ges-internal.h"
 
+GST_DEBUG_CATEGORY_STATIC (base_xml_formatter);
+#undef GST_CAT_DEFAULT
+#define GST_CAT_DEFAULT base_xml_formatter
+
 #define parent_class ges_base_xml_formatter_parent_class
 G_DEFINE_ABSTRACT_TYPE (GESBaseXmlFormatter, ges_base_xml_formatter,
     GES_TYPE_FORMATTER);
@@ -167,10 +171,17 @@ create_parser_context (GESBaseXmlFormatter * self, const gchar * uri,
 
   GError *err = NULL;
 
-  if ((file = g_file_new_for_uri (uri)) == NULL)
-    goto wrong_uri;
+  GST_DEBUG_OBJECT (self, "loading xml from %s", uri);
+
+  file = g_file_new_for_uri (uri);
 
   /* TODO Handle GCancellable */
+  if (!g_file_query_exists (file, NULL)) {
+    err = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Invalid URI: \"%s\"", uri);
+    goto failed;
+  }
+
   if (!g_file_load_contents (file, NULL, &xmlcontent, &xmlsize, NULL, &err))
     goto failed;
 
@@ -187,25 +198,16 @@ create_parser_context (GESBaseXmlFormatter * self, const gchar * uri,
   if (!g_markup_parse_context_end_parse (parsecontext, &err))
     goto failed;
 
-done:
-  if (xmlcontent)
-    g_free (xmlcontent);
 
-  if (file)
-    g_object_unref (file);
+done:
+  g_free (xmlcontent);
+  g_object_unref (file);
 
   return parsecontext;
 
-wrong_uri:
-  GST_WARNING ("%s wrong uri", uri);
-
-  goto done;
-
 failed:
+  GST_WARNING ("failed to load contents from \"%s\"", uri);
   g_propagate_error (error, err);
-
-  if (file)
-    g_object_unref (file);
 
   if (parsecontext) {
     g_markup_parse_context_free (parsecontext);
@@ -410,6 +412,9 @@ ges_base_xml_formatter_class_init (GESBaseXmlFormatterClass * self_class)
   formatter_klass->save_to_uri = _save_to_uri;
 
   self_class->save = NULL;
+
+  GST_DEBUG_CATEGORY_INIT (base_xml_formatter, "base-xml-formatter",
+      GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "Base XML Formatter");
 }
 
 /***********************************************
