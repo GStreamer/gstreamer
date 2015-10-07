@@ -174,6 +174,8 @@ struct _RTPSource {
   guint64       bytes_received;
 
   GQueue       *packets;
+  guint32       max_dropout_time;
+  guint32       max_misorder_time;
 
   RTPSourceCallbacks callbacks;
   gpointer           user_data;

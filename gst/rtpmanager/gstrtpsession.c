@@ -223,6 +223,8 @@ enum
 #define DEFAULT_USE_PIPELINE_CLOCK   FALSE
 #define DEFAULT_RTCP_MIN_INTERVAL    (RTP_STATS_MIN_INTERVAL * GST_SECOND)
 #define DEFAULT_PROBATION            RTP_DEFAULT_PROBATION
+#define DEFAULT_MAX_DROPOUT_TIME     60000
+#define DEFAULT_MAX_MISORDER_TIME    2000
 #define DEFAULT_RTP_PROFILE          GST_RTP_PROFILE_AVP
 #define DEFAULT_NTP_TIME_SOURCE      GST_RTP_NTP_TIME_SOURCE_NTP
 #define DEFAULT_RTCP_SYNC_SEND_TIME  TRUE
@@ -241,6 +243,8 @@ enum
   PROP_USE_PIPELINE_CLOCK,
   PROP_RTCP_MIN_INTERVAL,
   PROP_PROBATION,
+  PROP_MAX_DROPOUT_TIME,
+  PROP_MAX_MISORDER_TIME,
   PROP_STATS,
   PROP_RTP_PROFILE,
   PROP_NTP_TIME_SOURCE,
@@ -700,6 +704,18 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           0, G_MAXUINT, DEFAULT_PROBATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_DROPOUT_TIME,
+      g_param_spec_uint ("max-dropout-time", "Max dropout time",
+          "The maximum time (milliseconds) of missing packets tolerated.",
+          0, G_MAXUINT, DEFAULT_MAX_DROPOUT_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_MISORDER_TIME,
+      g_param_spec_uint ("max-misorder-time", "Max misorder time",
+          "The maximum time (milliseconds) of misordered packets tolerated.",
+          0, G_MAXUINT, DEFAULT_MAX_MISORDER_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRtpSession::stats:
    *
@@ -876,6 +892,14 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_PROBATION:
       g_object_set_property (G_OBJECT (priv->session), "probation", value);
       break;
+    case PROP_MAX_DROPOUT_TIME:
+      g_object_set_property (G_OBJECT (priv->session), "max-dropout-time",
+          value);
+      break;
+    case PROP_MAX_MISORDER_TIME:
+      g_object_set_property (G_OBJECT (priv->session), "max-misorder-time",
+          value);
+      break;
     case PROP_RTP_PROFILE:
       g_object_set_property (G_OBJECT (priv->session), "rtp-profile", value);
       break;
@@ -938,6 +962,14 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PROBATION:
       g_object_get_property (G_OBJECT (priv->session), "probation", value);
+      break;
+    case PROP_MAX_DROPOUT_TIME:
+      g_object_get_property (G_OBJECT (priv->session), "max-dropout-time",
+          value);
+      break;
+    case PROP_MAX_MISORDER_TIME:
+      g_object_get_property (G_OBJECT (priv->session), "max-misorder-time",
+          value);
       break;
     case PROP_STATS:
       g_value_take_boxed (value, gst_rtp_session_create_stats (rtpsession));
