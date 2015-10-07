@@ -38,7 +38,7 @@ plugin_init (GstPlugin * plugin)
   if (!gst_tracer_register (plugin, "log", gst_log_tracer_get_type ()))
     return FALSE;
 #endif
-#ifdef HAVE_GETRUSAGE
+#ifdef HAVE_RUSAGE_THREAD
   if (!gst_tracer_register (plugin, "rusage", gst_rusage_tracer_get_type ()))
     return FALSE;
 #endif

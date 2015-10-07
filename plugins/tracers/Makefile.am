@@ -1,7 +1,7 @@
 
 plugin_LTLIBRARIES = libgstcoretracers.la
 
-if HAVE_GETRUSAGE
+if HAVE_RUSAGE_THREAD
 RUSAGE_SOURCES = gstrusage.c
 else
 RUSAGE_SOURCES =

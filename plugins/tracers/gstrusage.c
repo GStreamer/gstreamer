@@ -32,12 +32,10 @@
 #include <unistd.h>
 #include "gstrusage.h"
 
-#ifdef HAVE_SYS_RESOURCE_H
 #ifndef __USE_GNU
 # define __USE_GNU              /* RUSAGE_THREAD */
 #endif
 #include <sys/resource.h>
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_rusage_debug);
 #define GST_CAT_DEFAULT gst_rusage_debug

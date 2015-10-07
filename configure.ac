@@ -605,8 +605,25 @@ AC_CHECK_FUNCS([gmtime_r])
 AC_CHECK_FUNCS([localtime_r])
 AC_CHECK_FUNCS([sigaction])
 AC_CHECK_FUNCS([getrusage])
-AM_CONDITIONAL(HAVE_GETRUSAGE, test "x$ac_cv_func_getrusage" = "xyes")
 AC_CHECK_HEADERS([sys/resource.h])
+AC_CACHE_CHECK(for RUSAGE_THREAD, gst_cv_rusage_thread,
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <unistd.h>
+#ifndef __USE_GNU
+# define __USE_GNU              /* RUSAGE_THREAD */
+#endif
+#include <sys/resource.h>
+    ]], [[
+struct rusage ru;
+getrusage (RUSAGE_THREAD, &ru);
+    ]])],[
+      gst_cv_rusage_thread=yes
+      AC_DEFINE(HAVE_RUSAGE_THREAD, 1, [RUSAGE_THREAD is available])
+    ],[
+      gst_cv_rusage_thread=no
+    ])
+)
+AM_CONDITIONAL(HAVE_RUSAGE_THREAD, test "x$gst_cv_rusage_thread" = "xyes")
 
 dnl check for fseeko()
 AC_FUNC_FSEEKO
