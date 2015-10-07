@@ -2261,7 +2261,12 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
 
       GST_MANIFEST_UNLOCK (demux);
 
-      gst_element_sync_state_with_parent (stream->src);
+      if (!gst_element_sync_state_with_parent (stream->src)) {
+        GST_WARNING_OBJECT (demux, "Could not sync state for src element");
+        GST_MANIFEST_LOCK (demux);
+        ret = stream->last_ret = GST_FLOW_ERROR;
+        return ret;
+      }
 
       /* wait for the fragment to be completely downloaded */
       GST_DEBUG_OBJECT (stream->pad,
