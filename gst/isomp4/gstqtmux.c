@@ -1004,6 +1004,7 @@ gst_qt_mux_add_3gp_date (GstQTMux * qtmux, const GstTagList * list,
     return;
 
   year = g_date_get_year (date);
+  g_date_free (date);
 
   if (year == G_DATE_BAD_YEAR) {
     GST_WARNING_OBJECT (qtmux, "invalid date in tag");
