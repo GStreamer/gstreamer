@@ -2640,6 +2640,7 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       GST_RTP_BIN_LOCK (rtpbin);
       g_value_set_int (value, rtpbin->max_rtcp_rtp_time_diff);
       GST_RTP_BIN_UNLOCK (rtpbin);
+      break;
     case PROP_MAX_DROPOUT_TIME:
       g_value_set_uint (value, rtpbin->max_dropout_time);
       break;
