@@ -547,6 +547,11 @@ gst_gdk_pixbuf_dec_change_state (GstElement * element,
       }
       g_list_free_full (dec->pending_events, (GDestroyNotify) gst_event_unref);
       dec->pending_events = NULL;
+      if (dec->pixbuf_loader != NULL) {
+        gdk_pixbuf_loader_close (dec->pixbuf_loader, NULL);
+        g_object_unref (G_OBJECT (dec->pixbuf_loader));
+        dec->pixbuf_loader = NULL;
+      }
       break;
     default:
       break;
