@@ -43,8 +43,6 @@ struct _GstAudioDynamic
 {
   GstAudioFilter audiofilter;
 
-  gfloat degree;
-
   /* < private > */
   GstAudioDynamicProcessFunc process;
   gint characteristics;
