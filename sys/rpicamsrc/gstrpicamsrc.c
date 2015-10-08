@@ -345,7 +345,7 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
       g_param_spec_float ("awb-gain-red", "AWB Red Gain",
           "Manual AWB Gain for red channel when awb-mode=off", 0, 8.0, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_AWB_GAIN_RED,
+  g_object_class_install_property (gobject_class, PROP_AWB_GAIN_BLUE,
       g_param_spec_float ("awb-gain-blue", "AWB Blue Gain",
           "Manual AWB Gain for blue channel when awb-mode=off", 0, 8.0, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
