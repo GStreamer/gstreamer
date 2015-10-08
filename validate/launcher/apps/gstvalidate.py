@@ -482,7 +482,7 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
     def build_arguments(self):
         GstValidateTest.build_arguments(self)
         self.set_rendering_info()
-        self.add_arguments(self.uri, self.dest_file)
+        self.add_arguments(self.uri, '"' + self.dest_file + '"')
 
     def get_current_value(self):
         if self.scenario:
