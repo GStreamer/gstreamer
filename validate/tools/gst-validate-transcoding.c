@@ -911,7 +911,7 @@ main (int argc, gchar ** argv)
   if (argc != 3) {
     g_printerr ("%i arguments recived, 2 expected.\n"
         "You should run the test using:\n"
-        "    ./gst-validate-transcoding-0.10 <input-uri> <output-uri> [options]\n",
+        "    ./gst-validate-transcoding-1.0 <input-uri> <output-uri> [options]\n",
         argc - 1);
     return 1;
   }
