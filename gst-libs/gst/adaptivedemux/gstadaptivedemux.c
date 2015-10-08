@@ -2395,10 +2395,10 @@ gst_adaptive_demux_stream_download_fragment (GstAdaptiveDemuxStream * stream)
 
   if (stream->need_header) {
     ret = gst_adaptive_demux_stream_download_header_fragment (stream);
-    stream->need_header = FALSE;
     if (ret != GST_FLOW_OK) {
       return ret;
     }
+    stream->need_header = FALSE;
   }
 
   url = stream->fragment.uri;
