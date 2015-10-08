@@ -54,6 +54,9 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename,
   gchar **lines;
   gchar *line;
   gchar **fields;
+  int i, parsedchannels = 0;
+  GHashTable *res;
+  GError *err = NULL;
   const gchar *terrestrial[] = { "inversion", "bandwidth",
     "code-rate-hp", "code-rate-lp", "modulation", "transmission-mode",
     "guard", "hierarchy"
@@ -64,9 +67,6 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename,
   const gchar *cable[] = { "inversion", "symbol-rate", "code-rate-hp",
     "modulation"
   };
-  int i, parsedchannels = 0;
-  GHashTable *res;
-  GError *err = NULL;
 
   GST_INFO_OBJECT (dvbbasebin, "parsing '%s'", filename);
 
@@ -79,18 +79,37 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename,
   i = 0;
   line = lines[0];
   while (line != NULL) {
-    if (line[0] != '#') {
-      int numfields;
-      gboolean parsed = FALSE;
-      GHashTable *params = g_hash_table_new_full (g_str_hash, g_str_equal,
-          g_free, g_free);
+    GHashTable *params;
+    int j, numfields;
 
-      fields = g_strsplit (line, ":", 0);
-      numfields = g_strv_length (fields);
-      if (numfields == 8) {
-        /* satellite */
-        int j;
+    if (line[0] == '#')
+      goto next_line;
 
+    params = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+    fields = g_strsplit (line, ":", 0);
+    numfields = g_strv_length (fields);
+
+    switch (numfields) {
+      case 13:                 /* terrestrial */
+        g_hash_table_insert (params, g_strdup ("type"),
+            g_strdup ("terrestrial"));
+        for (j = 2; j <= 9; j++) {
+          g_hash_table_insert (params, g_strdup (terrestrial[j - 2]),
+              g_strdup (fields[j]));
+        }
+        g_hash_table_insert (params, g_strdup ("frequency"),
+            g_strdup (fields[1]));
+        break;
+      case 9:                  /* cable */
+        g_hash_table_insert (params, g_strdup ("type"), g_strdup ("cable"));
+        for (j = 2; j <= 5; j++) {
+          g_hash_table_insert (params, g_strdup (cable[j - 2]),
+              g_strdup (fields[j]));
+        }
+        g_hash_table_insert (params, g_strdup ("frequency"),
+            g_strdup (fields[1]));
+        break;
+      case 8:                  /* satellite */
         g_hash_table_insert (params, g_strdup ("type"), g_strdup ("satellite"));
         for (j = 2; j <= 4; j++) {
           g_hash_table_insert (params, g_strdup (satellite[j - 2]),
@@ -107,52 +126,31 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename,
           g_hash_table_insert (params, g_strdup ("frequency"),
               g_strdup_printf ("%d", atoi (fields[1])));
         }
-        parsed = TRUE;
-      } else if (numfields == 13) {
-        /* terrestrial */
-        int j;
-
-        g_hash_table_insert (params, g_strdup ("type"),
-            g_strdup ("terrestrial"));
-        for (j = 2; j <= 9; j++) {
-          g_hash_table_insert (params, g_strdup (terrestrial[j - 2]),
-              g_strdup (fields[j]));
-        }
-        g_hash_table_insert (params, g_strdup ("frequency"),
-            g_strdup (fields[1]));
-        parsed = TRUE;
-      } else if (numfields == 9) {
-        /* cable */
-        int j;
-
-        g_hash_table_insert (params, g_strdup ("type"), g_strdup ("cable"));
-        for (j = 2; j <= 5; j++) {
-          g_hash_table_insert (params, g_strdup (cable[j - 2]),
-              g_strdup (fields[j]));
-        }
-        g_hash_table_insert (params, g_strdup ("frequency"),
-            g_strdup (fields[1]));
-        parsed = TRUE;
-      } else if (numfields == 6) {
-        /* atsc (vsb/qam) */
+        break;
+      case 6:                  /* atsc (vsb/qam) */
         g_hash_table_insert (params, g_strdup ("type"), g_strdup ("atsc"));
         g_hash_table_insert (params, g_strdup ("modulation"),
             g_strdup (fields[2]));
 
         g_hash_table_insert (params, g_strdup ("frequency"),
             g_strdup (fields[1]));
-        parsed = TRUE;
-      }
-      if (parsed) {
-        g_hash_table_insert (params, g_strdup ("sid"),
-            g_strdup (fields[numfields - 1]));
-        g_hash_table_insert (res, g_strdup (fields[0]), params);
-        parsedchannels++;
-      }
-      g_strfreev (fields);
+        break;
+      default:
+        goto not_parsed;
     }
+
+    /* parsed */
+    g_hash_table_insert (params, g_strdup ("sid"),
+        g_strdup (fields[numfields - 1]));
+    g_hash_table_insert (res, g_strdup (fields[0]), params);
+    parsedchannels++;
+
+  not_parsed:
+    g_strfreev (fields);
+  next_line:
     line = lines[++i];
   }
+
   g_strfreev (lines);
   g_free (contents);
 
@@ -162,25 +160,21 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename,
   return res;
 
 open_fail:
-  {
-    if (err->code == G_FILE_ERROR_NOENT) {
-      g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
-          _("Couldn't find DVB channel configuration file"));
-    } else {
-      g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
-          _("Couldn't load DVB channel configuration file: %s"), err->message);
-    }
-    g_clear_error (&err);
-    return NULL;
+  if (err->code == G_FILE_ERROR_NOENT) {
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
+        _("Couldn't find DVB channel configuration file"));
+  } else {
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+        _("Couldn't load DVB channel configuration file: %s"), err->message);
   }
+  g_clear_error (&err);
+  return NULL;
 
 no_channels:
-  {
-    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
-        _("DVB channel configuration file doesn't contain any channels"));
-    g_hash_table_unref (res);
-    return NULL;
-  }
+  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+      _("DVB channel configuration file doesn't contain any channels"));
+  g_hash_table_unref (res);
+  return NULL;
 }
 
 static gboolean
