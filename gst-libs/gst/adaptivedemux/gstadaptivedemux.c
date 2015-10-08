@@ -2458,7 +2458,7 @@ static void
 gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
 {
   GstAdaptiveDemux *demux = stream->demux;
-  guint64 next_download = 0;
+  guint64 next_download = g_get_monotonic_time ();
   GstFlowReturn ret;
   gboolean live;
 
