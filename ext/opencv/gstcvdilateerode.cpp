@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -131,7 +131,8 @@ gst_cv_dilate_erode_class_init (GstCvDilateErodeClass * klass)
   g_object_class_install_property (gobject_class, PROP_ITERATIONS,
       g_param_spec_int ("iterations", "iterations",
           "Number of iterations to run the algorithm", 1, G_MAXINT,
-          DEFAULT_ITERATIONS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_ITERATIONS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* add sink and source pad templates */
   caps = gst_opencv_caps_from_cv_image_type (CV_16UC1);

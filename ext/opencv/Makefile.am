@@ -5,9 +5,9 @@ libgstopencv_la_SOURCES = gstopencv.cpp \
 			gstopencvvideofilter.c \
 			gstopencvutils.c \
 			gstcvdilate.cpp \
-			gstcvdilateerode.c \
+			gstcvdilateerode.cpp \
 			gstcvequalizehist.c \
-			gstcverode.c \
+			gstcverode.cpp \
 			gstcvlaplace.c \
 			gstcvsmooth.cpp \
 			gstcvsobel.c \
