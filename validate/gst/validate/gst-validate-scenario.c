@@ -2303,7 +2303,6 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
 {
   gchar **scenarios = NULL;
   guint i;
-  gchar *lfilename = NULL, *tldir = NULL;
   gboolean found_actions = FALSE, is_config, ret = TRUE;
   const gchar *scenarios_path = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
 
@@ -2316,6 +2315,7 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   scenarios = g_strsplit (scenario_name, ":", -1);
 
   for (i = 0; scenarios[i]; i++) {
+    gchar *lfilename = NULL, *tldir = NULL;
 
     /* First check if the scenario name is not a full path to the
      * actual scenario */
