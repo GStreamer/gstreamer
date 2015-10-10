@@ -26,8 +26,6 @@
 		63DE883E156DAC18006F2D3B /* basic-tutorial-7.c in Sources */ = {isa = PBXBuildFile; fileRef = 63DE8838156DAC09006F2D3B /* basic-tutorial-7.c */; };
 		63DE883F156DAC1D006F2D3B /* basic-tutorial-8.c in Sources */ = {isa = PBXBuildFile; fileRef = 63DE883A156DAC0E006F2D3B /* basic-tutorial-8.c */; };
 		63DE8840156DAC21006F2D3B /* basic-tutorial-9.c in Sources */ = {isa = PBXBuildFile; fileRef = 63DE883C156DAC15006F2D3B /* basic-tutorial-9.c */; };
-		63E2230116073E04001954D7 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
-		63E2230216075DFC001954D7 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
 		63E2230316075E05001954D7 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
 		63E2230416075E24001954D7 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
 		63E2230616075E34001954D7 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
@@ -45,6 +43,8 @@
 		63EA7B5A1753A3D00032388A /* playback-tutorial-5.c in Sources */ = {isa = PBXBuildFile; fileRef = 63EA7B591753A3D00032388A /* playback-tutorial-5.c */; };
 		63EA7B691753A4100032388A /* playback-tutorial-6.c in Sources */ = {isa = PBXBuildFile; fileRef = 63EA7B681753A4100032388A /* playback-tutorial-6.c */; };
 		63EA7B781753A4370032388A /* playback-tutorial-7.c in Sources */ = {isa = PBXBuildFile; fileRef = 63EA7B771753A4370032388A /* playback-tutorial-7.c */; };
+		C3EC97E31BC69D7900DD7808 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
+		C3EC97E41BC69DD700DD7808 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -244,7 +244,7 @@
 		63DE8838156DAC09006F2D3B /* basic-tutorial-7.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-7.c"; path = "../basic-tutorial-7.c"; sourceTree = SOURCE_ROOT; };
 		63DE883A156DAC0E006F2D3B /* basic-tutorial-8.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-8.c"; path = "../basic-tutorial-8.c"; sourceTree = SOURCE_ROOT; };
 		63DE883C156DAC15006F2D3B /* basic-tutorial-9.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-9.c"; path = "../basic-tutorial-9.c"; sourceTree = SOURCE_ROOT; };
-		63E2230016073E04001954D7 /* GStreamer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GStreamer.framework; path = Library/Frameworks/GStreamer.framework; sourceTree = SDKROOT; };
+		63E2230016073E04001954D7 /* GStreamer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GStreamer.framework; path = /Library/Frameworks/GStreamer.framework; sourceTree = "<absolute>"; };
 		63EA7B0517539E570032388A /* Tutorial 12 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 12"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63EA7B0E1753A1D50032388A /* basic-tutorial-12.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-12.c"; path = "../basic-tutorial-12.c"; sourceTree = SOURCE_ROOT; };
 		63EA7B141753A2700032388A /* Tutorial 13 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 13"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -284,7 +284,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63E2230116073E04001954D7 /* GStreamer.framework in Frameworks */,
+				C3EC97E31BC69D7900DD7808 /* GStreamer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -300,7 +300,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63E2230216075DFC001954D7 /* GStreamer.framework in Frameworks */,
+				C3EC97E41BC69DD700DD7808 /* GStreamer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1233,6 +1233,10 @@
 		63118C90156D2D190085CF03 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1240,6 +1244,10 @@
 		63118C91156D2D190085CF03 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1277,6 +1285,10 @@
 		63118CC1156D31240085CF03 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1284,6 +1296,10 @@
 		63118CC2156D31240085CF03 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
