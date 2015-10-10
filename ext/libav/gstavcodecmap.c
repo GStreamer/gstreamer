@@ -954,6 +954,18 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
 
+    case AV_CODEC_ID_JPEG2000:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode, "image/x-j2c",
+          NULL);
+      if (!encode) {
+        gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
+                encode, "image/x-jpc", NULL));
+        gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
+                encode, "image/jp2", NULL));
+      }
+      break;
+
     case AV_CODEC_ID_SP5X:
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/sp5x",
