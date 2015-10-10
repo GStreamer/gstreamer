@@ -2322,7 +2322,7 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
     if (g_file_test (scenarios[i], G_FILE_TEST_IS_REGULAR)) {
       GST_DEBUG_OBJECT (scenario, "Scenario: %s is a full path to a scenario "
           "trying to load it", scenarios[i]);
-      if ((ret = _load_scenario_file (scenario, scenario_name, &is_config)))
+      if ((ret = _load_scenario_file (scenario, scenarios[i], &is_config)))
         goto check_scenario;
     }
 
