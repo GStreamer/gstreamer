@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -146,15 +146,15 @@ gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
   g_object_class_install_property (gobject_class, PROP_APERTURE_SIZE,
       g_param_spec_int ("aperture-size", "aperture size",
           "Size of the extended Laplace Kernel (1, 3, 5 or 7)", 1, 7,
-          DEFAULT_APERTURE_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_APERTURE_SIZE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_SCALE,
       g_param_spec_double ("scale", "scale factor",
           "Scale factor", 0.0, G_MAXDOUBLE,
-          DEFAULT_SCALE_FACTOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_SCALE_FACTOR, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_SHIFT,
       g_param_spec_double ("shift", "Shift",
           "Value added to the scaled source array elements", 0.0, G_MAXDOUBLE,
-          DEFAULT_SHIFT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_SHIFT, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -215,7 +215,7 @@ gst_cv_laplace_transform_caps (GstBaseTransform * trans, GstPadDirection dir,
   GstCaps *templ;
   GstStructure *structure;
   GstPad *other;
-  gint i;
+  guint i;
 
   to = gst_caps_new_empty ();
 
