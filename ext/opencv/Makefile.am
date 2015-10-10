@@ -6,7 +6,7 @@ libgstopencv_la_SOURCES = gstopencv.cpp \
 			gstopencvutils.c \
 			gstcvdilate.cpp \
 			gstcvdilateerode.cpp \
-			gstcvequalizehist.c \
+			gstcvequalizehist.cpp \
 			gstcverode.cpp \
 			gstcvlaplace.c \
 			gstcvsmooth.cpp \
