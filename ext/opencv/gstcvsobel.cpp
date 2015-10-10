@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -129,15 +129,17 @@ gst_cv_sobel_class_init (GstCvSobelClass * klass)
   g_object_class_install_property (gobject_class, PROP_X_ORDER,
       g_param_spec_int ("x-order", "x order",
           "Order of the derivative x", -1, G_MAXINT,
-          DEFAULT_X_ORDER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_X_ORDER,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_Y_ORDER,
-      g_param_spec_int ("y-order", "y order",
-          "Order of the derivative y", -1, G_MAXINT,
-          DEFAULT_Y_ORDER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("y-order", "y order", "Order of the derivative y", -1,
+          G_MAXINT, DEFAULT_Y_ORDER,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_APERTURE_SIZE,
       g_param_spec_int ("aperture-size", "aperture size",
           "Size of the extended Sobel Kernel (1, 3, 5 or 7)", 1, 7,
-          DEFAULT_APERTURE_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_APERTURE_SIZE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -170,7 +172,7 @@ gst_cv_sobel_transform_caps (GstBaseTransform * trans, GstPadDirection dir,
   GstCaps *templ;
   GstStructure *structure;
   GstPad *other;
-  gint i;
+  guint i;
 
   to = gst_caps_new_empty ();
 

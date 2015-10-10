@@ -10,7 +10,7 @@ libgstopencv_la_SOURCES = gstopencv.cpp \
 			gstcverode.cpp \
 			gstcvlaplace.cpp \
 			gstcvsmooth.cpp \
-			gstcvsobel.c \
+			gstcvsobel.cpp \
 			gstedgedetect.cpp \
 			gstfaceblur.cpp \
 			gsthanddetect.cpp \
