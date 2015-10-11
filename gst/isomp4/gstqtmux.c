@@ -4026,6 +4026,18 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
 
     gst_structure_get_uint (structure, "format", &fourcc);
     entry.fourcc = fourcc;
+  } else if (strcmp (mimetype, "video/x-prores") == 0) {
+    const gchar *variant;
+
+    variant = gst_structure_get_string (structure, "format");
+    if (!variant || !g_strcmp0 (variant, "standard"))
+      entry.fourcc = GST_MAKE_FOURCC ('a', 'p', 'c', 'n');
+    else if (!g_strcmp0 (variant, "lt"))
+      entry.fourcc = GST_MAKE_FOURCC ('a', 'p', 'c', 's');
+    else if (!g_strcmp0 (variant, "hq"))
+      entry.fourcc = GST_MAKE_FOURCC ('a', 'p', 'c', 'h');
+    else if (!g_strcmp0 (variant, "proxy"))
+      entry.fourcc = GST_MAKE_FOURCC ('a', 'p', '4', 'h');
   }
 
   if (!entry.fourcc)
