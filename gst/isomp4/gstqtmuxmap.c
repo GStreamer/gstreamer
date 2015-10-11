@@ -97,15 +97,11 @@
   COMMON_AUDIO_CAPS (2, MAX)
 
 #define PCM_CAPS_FULL \
-  PCM_CAPS "; " \
   "audio/x-raw, " \
-  "format = (string) { S24LE, S24BE }, " \
+  "format = (string) { S32LE, S32BE, S24LE, S24BE }, " \
   "layout = (string) interleaved, " \
   COMMON_AUDIO_CAPS (2, MAX) "; " \
-  "audio/x-raw, " \
-  "format = (string) { S32LE, S32BE }, " \
-  "layout = (string) interleaved, " \
-  COMMON_AUDIO_CAPS (2, MAX)
+  PCM_CAPS
 
 #define MP3_CAPS \
   "audio/mpeg, " \
