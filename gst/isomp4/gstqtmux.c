@@ -3557,6 +3557,8 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
         entry.fourcc = FOURCC_sowt;
       else if (info.finfo->endianness == G_BIG_ENDIAN)
         entry.fourcc = FOURCC_twos;
+      else
+        entry.fourcc = FOURCC_sowt;
       /* maximum backward compatibility; only new version for > 16 bit */
       if (info.finfo->depth <= 16)
         entry.version = 0;
