@@ -3,7 +3,7 @@
  * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2010 Sreerenj Balachandran <bsreerenj@gmail.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -160,47 +160,55 @@ gst_opencv_text_overlay_class_init (GstOpencvTextOverlayClass * klass)
   g_object_class_install_property (gobject_class, PROP_TEXT,
       g_param_spec_string ("text", "text",
           "Text to be display.", DEFAULT_PROP_TEXT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_XPOS,
       g_param_spec_int ("xpos", "horizontal position",
           "Sets the Horizontal position", 0, G_MAXINT,
-          DEFAULT_PROP_XPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_XPOS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_YPOS,
       g_param_spec_int ("ypos", "vertical position",
           "Sets the Vertical position", 0, G_MAXINT,
-          DEFAULT_PROP_YPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_YPOS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_THICKNESS,
       g_param_spec_int ("thickness", "font thickness",
           "Sets the Thickness of Font", 0, G_MAXINT,
-          DEFAULT_PROP_THICKNESS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_THICKNESS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_COLOR_R,
       g_param_spec_int ("colorR", "color -Red ",
           "Sets the color -R", 0, 255,
-          DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_COLOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_COLOR_G,
       g_param_spec_int ("colorG", "color -Green",
           "Sets the color -G", 0, 255,
-          DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_COLOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_COLOR_B,
       g_param_spec_int ("colorB", "color -Blue",
           "Sets the color -B", 0, 255,
-          DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_COLOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
       g_param_spec_double ("height", "Height",
           "Sets the height of fonts", 1.0, 5.0,
-          DEFAULT_HEIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_HEIGHT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_WIDTH,
       g_param_spec_double ("width", "Width",
           "Sets the width of fonts", 1.0, 5.0,
-          DEFAULT_WIDTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_WIDTH,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "opencvtextoverlay",
