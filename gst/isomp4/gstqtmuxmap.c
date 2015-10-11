@@ -73,6 +73,10 @@
   "divxversion = (int) 5, "\
   COMMON_VIDEO_CAPS
 
+#define PRORES_CAPS \
+  "video/x-prores, variant = (string) {standard, lt, hq, proxy}, " \
+  COMMON_VIDEO_CAPS
+
 #define SVQ_CAPS \
   "video/x-svq, " \
   "svqversion = (int) 3, " \
@@ -156,6 +160,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             "format = (string) { RGB, UYVY, v210 }, "
             COMMON_VIDEO_CAPS "; "
             MPEG4V_CAPS "; "
+            PRORES_CAPS "; "
             H263_CAPS "; "
             H264_CAPS "; "
             SVQ_CAPS "; "
