@@ -3,7 +3,7 @@
  * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2008 Michael Sheldon <mike@mikeasoft.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -70,6 +70,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_pyramid_segment_debug);
 #define GST_CAT_DEFAULT gst_pyramid_segment_debug
 
+using namespace cv;
 /* Filter signals and args */
 enum
 {
@@ -144,22 +145,22 @@ gst_pyramid_segment_class_init (GstPyramidSegmentClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD1,
       g_param_spec_double ("threshold1", "Threshold1",
           "Error threshold for establishing links", 0, 1000, 50,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD2,
       g_param_spec_double ("threshold2", "Threshold2",
           "Error threshold for segment clustering", 0, 1000, 60,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_LEVEL,
       g_param_spec_int ("level", "Level",
           "Maximum level of the pyramid segmentation", 1, 4, 4,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "pyramidsegment",
@@ -302,7 +303,7 @@ gst_pyramid_segment_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   filter = GST_PYRAMID_SEGMENT (GST_OBJECT_PARENT (pad));
 
   buf = gst_buffer_make_writable (buf);
-  gst_buffer_map (buf, &info, GST_MAP_READWRITE);
+  gst_buffer_map (buf, &info, (GstMapFlags) GST_MAP_READWRITE);
   filter->cvImage->imageData = (char *) info.data;
   filter->cvSegmentedImage = cvCloneImage (filter->cvImage);
 
@@ -313,7 +314,8 @@ gst_pyramid_segment_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
    * delete only the struct headers. Would avoid a memcpy here */
 
   outbuf = gst_buffer_new_and_alloc (filter->cvSegmentedImage->imageSize);
-  gst_buffer_copy_into (outbuf, buf, GST_BUFFER_COPY_METADATA, 0, -1);
+  gst_buffer_copy_into (outbuf, buf,
+      (GstBufferCopyFlags) GST_BUFFER_COPY_METADATA, 0, -1);
   gst_buffer_map (outbuf, &outinfo, GST_MAP_WRITE);
   memcpy (outinfo.data, filter->cvSegmentedImage->imageData,
       gst_buffer_get_size (outbuf));
