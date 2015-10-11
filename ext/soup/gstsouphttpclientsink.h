@@ -43,6 +43,7 @@ struct _GstSoupHttpClientSink
   GMainContext *context;
   GMainLoop *loop;
   GThread *thread;
+  GSource *timer;
   SoupMessage *message;
   SoupSession *session;
   GList *queued_buffers;
@@ -54,6 +55,7 @@ struct _GstSoupHttpClientSink
 
   guint64 offset;
   int timeout;
+  gint failures;
 
   /* properties */
   SoupSession *prop_session;
@@ -67,6 +69,8 @@ struct _GstSoupHttpClientSink
   gboolean automatic_redirect;
   gchar **cookies;
   SoupLoggerLogLevel log_level;
+  gint retry_delay;
+  gint retries;
 };
 
 struct _GstSoupHttpClientSinkClass
