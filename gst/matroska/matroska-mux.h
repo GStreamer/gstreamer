@@ -104,7 +104,6 @@ struct _GstMatroskaMux {
   GstMatroskaIndex *index;
   guint          num_indexes;
   GstClockTimeDiff min_index_interval;
-  gboolean       streamable;
  
   /* timescale in the file */
   guint64        time_scale;

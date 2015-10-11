@@ -456,7 +456,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux, gpointer g_class)
   mux->doctype_version = DEFAULT_DOCTYPE_VERSION;
   mux->writing_app = g_strdup (DEFAULT_WRITING_APP);
   mux->min_index_interval = DEFAULT_MIN_INDEX_INTERVAL;
-  mux->streamable = DEFAULT_STREAMABLE;
+  mux->ebml_write->streamable = DEFAULT_STREAMABLE;
 
   /* initialize internal variables */
   mux->index = NULL;
@@ -2668,7 +2668,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
 #endif
 
   /* if not streaming, check if downstream is seekable */
-  if (!mux->streamable) {
+  if (!mux->ebml_write->streamable) {
     gboolean seekable;
     GstQuery *query;
 
@@ -2682,7 +2682,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       seekable = FALSE;
     }
     if (!seekable) {
-      mux->streamable = TRUE;
+      mux->ebml_write->streamable = TRUE;
       g_object_notify (G_OBJECT (mux), "streamable");
       GST_WARNING_OBJECT (mux, "downstream is not seekable, but "
           "streamable=false. Will ignore that and create streamable output "
@@ -2718,7 +2718,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEGMENT);
   mux->segment_master = ebml->pos;
 
-  if (!mux->streamable) {
+  if (!mux->ebml_write->streamable) {
     /* seekhead (table of contents) - we set the positions later */
     mux->seekhead_pos = ebml->pos;
     master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEEKHEAD);
@@ -2731,7 +2731,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     gst_ebml_write_master_finish (ebml, master);
   }
 
-  if (mux->streamable) {
+  if (mux->ebml_write->streamable) {
     const GstTagList *tags;
     gboolean has_main_tags;
 
@@ -2772,7 +2772,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TIMECODESCALE, mux->time_scale);
   mux->duration_pos = ebml->pos;
   /* get duration */
-  if (!mux->streamable) {
+  if (!mux->ebml_write->streamable) {
     for (collected = mux->collect->data; collected;
         collected = g_slist_next (collected)) {
       GstMatroskaPad *collect_pad;
@@ -2836,7 +2836,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
 #if 0
   /* chapters */
   toc = gst_toc_setter_get_toc (GST_TOC_SETTER (mux));
-  if (toc != NULL && !mux->streamable) {
+  if (toc != NULL && !mux->ebml_write->streamable) {
     guint64 master_chapters = 0;
     GstTocEntry *toc_entry;
     GList *cur, *to_write = NULL;
@@ -3493,7 +3493,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     if (mux->cluster_time +
         mux->max_cluster_duration < buffer_timestamp
         || is_video_keyframe || mux->force_key_unit_event) {
-      if (!mux->streamable)
+      if (!mux->ebml_write->streamable)
         gst_ebml_write_master_finish (ebml, mux->cluster);
 
       /* Forward the GstForceKeyUnit event after finishing the cluster */
@@ -3536,7 +3536,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
    * the block in the cluster which contains the timestamp, should also work
    * for files with multiple audio tracks.
    */
-  if (!mux->streamable &&
+  if (!mux->ebml_write->streamable &&
       (is_video_keyframe ||
           ((collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_AUDIO) &&
               (mux->num_streams == 1)))) {
@@ -3677,7 +3677,7 @@ gst_matroska_mux_handle_buffer (GstCollectPads * pads, GstCollectData * data,
   /* if there is no best pad, we have reached EOS */
   if (best == NULL) {
     GST_DEBUG_OBJECT (mux, "No best pad. Finishing...");
-    if (!mux->streamable) {
+    if (!mux->ebml_write->streamable) {
       gst_matroska_mux_finish (mux);
     } else {
       GST_DEBUG_OBJECT (mux, "... but streamable, nothing to finish");
@@ -3796,7 +3796,7 @@ gst_matroska_mux_set_property (GObject * object,
       mux->min_index_interval = g_value_get_int64 (value);
       break;
     case PROP_STREAMABLE:
-      mux->streamable = g_value_get_boolean (value);
+      mux->ebml_write->streamable = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3824,7 +3824,7 @@ gst_matroska_mux_get_property (GObject * object,
       g_value_set_int64 (value, mux->min_index_interval);
       break;
     case PROP_STREAMABLE:
-      g_value_set_boolean (value, mux->streamable);
+      g_value_set_boolean (value, mux->ebml_write->streamable);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

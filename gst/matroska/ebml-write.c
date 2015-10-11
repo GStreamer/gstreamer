@@ -215,7 +215,8 @@ gst_ebml_writer_send_segment_event (GstEbmlWrite * ebml, guint64 new_pos)
 
   GST_INFO ("seeking to %" G_GUINT64_FORMAT, new_pos);
 
-  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_segment_init (&segment,
+      ebml->streamable ? GST_FORMAT_TIME : GST_FORMAT_BYTES);
   segment.start = new_pos;
   segment.stop = -1;
   segment.position = 0;
