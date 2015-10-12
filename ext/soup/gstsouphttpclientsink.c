@@ -72,7 +72,6 @@ static GstFlowReturn gst_soup_http_client_sink_preroll (GstBaseSink * sink,
 static GstFlowReturn gst_soup_http_client_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 
-static void free_buffer_list (GList * list);
 static void gst_soup_http_client_sink_reset (GstSoupHttpClientSink *
     souphttpsink);
 static void authenticate (SoupSession * session, SoupMessage * msg,
@@ -450,7 +449,8 @@ gst_soup_http_client_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   value_array = gst_structure_get_value (structure, "streamheader");
   if (value_array) {
-    free_buffer_list (souphttpsink->streamheader_buffers);
+    g_list_free_full (souphttpsink->streamheader_buffers,
+        (GDestroyNotify) gst_buffer_unref);
     souphttpsink->streamheader_buffers = NULL;
 
     n = gst_value_array_get_size (value_array);
@@ -627,17 +627,6 @@ gst_soup_http_client_sink_preroll (GstBaseSink * sink, GstBuffer * buffer)
 }
 
 static void
-free_buffer_list (GList * list)
-{
-  GList *g;
-  for (g = list; g; g = g_list_next (g)) {
-    GstBuffer *buffer = g->data;
-    gst_buffer_unref (buffer);
-  }
-  g_list_free (list);
-}
-
-static void
 send_message_locked (GstSoupHttpClientSink * souphttpsink)
 {
   GList *g;
@@ -650,7 +639,8 @@ send_message_locked (GstSoupHttpClientSink * souphttpsink)
   /* If the URI went away, drop all these buffers */
   if (souphttpsink->location == NULL) {
     GST_DEBUG_OBJECT (souphttpsink, "URI went away, dropping queued buffers");
-    free_buffer_list (souphttpsink->queued_buffers);
+    g_list_free_full (souphttpsink->queued_buffers,
+        (GDestroyNotify) gst_buffer_unref);
     souphttpsink->queued_buffers = NULL;
     return;
   }
@@ -715,7 +705,8 @@ send_message_locked (GstSoupHttpClientSink * souphttpsink)
   if (n == 0) {
     GST_DEBUG_OBJECT (souphttpsink,
         "total size of buffers queued is 0, freeing everything");
-    free_buffer_list (souphttpsink->queued_buffers);
+    g_list_free_full (souphttpsink->queued_buffers,
+        (GDestroyNotify) gst_buffer_unref);
     souphttpsink->queued_buffers = NULL;
     g_object_unref (souphttpsink->message);
     souphttpsink->message = NULL;
@@ -763,7 +754,8 @@ callback (SoupSession * session, SoupMessage * msg, gpointer user_data)
     return;
   }
 
-  free_buffer_list (souphttpsink->sent_buffers);
+  g_list_free_full (souphttpsink->sent_buffers,
+      (GDestroyNotify) gst_buffer_unref);
   souphttpsink->sent_buffers = NULL;
 
   send_message_locked (souphttpsink);
