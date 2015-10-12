@@ -435,7 +435,7 @@ gst_mp3parse_validate_extended (GstMpegAudioParse * mp3parse, GstBuffer * buf,
     if (G_UNLIKELY (!bpf)) {
       GST_DEBUG_OBJECT (mp3parse, "next header invalid (bitrate 0)");
       *valid = FALSE;
-      return TRUE;
+      goto cleanup;
     }
 
     offset += bpf;
@@ -673,7 +673,7 @@ gst_mpeg_audio_parse_handle_frame (GstBaseParse * parse,
         /* not enough data */
         gst_base_parse_set_min_frame_size (parse, valid);
         *skipsize = 0;
-        return FALSE;
+        goto cleanup;
       } else {
         GST_DEBUG_OBJECT (parse, "determined freeform size %d", valid);
         mp3parse->freerate = valid;
@@ -685,7 +685,7 @@ gst_mpeg_audio_parse_handle_frame (GstBaseParse * parse,
     if (!bpf) {
       /* did not come up with valid freeform length, reject after all */
       *skipsize = 1;
-      return FALSE;
+      goto cleanup;
     }
   }
 
