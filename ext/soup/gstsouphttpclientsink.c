@@ -658,6 +658,15 @@ send_message_locked (GstSoupHttpClientSink * souphttpsink)
   }
 
   souphttpsink->message = soup_message_new ("PUT", souphttpsink->location);
+  if (souphttpsink->message == NULL) {
+    GST_WARNING_OBJECT (souphttpsink,
+        "URI could not be parsed while creating message.");
+    g_list_free_full (souphttpsink->queued_buffers,
+        (GDestroyNotify) gst_buffer_unref);
+    souphttpsink->queued_buffers = NULL;
+    return;
+  }
+
   soup_message_set_flags (souphttpsink->message,
       (souphttpsink->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
 
