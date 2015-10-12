@@ -794,7 +794,8 @@ G_DEFINE_TYPE (GstLiveAdder, gst_live_adder, GST_TYPE_AUDIO_MIXER);
 static void
 gst_live_adder_init (GstLiveAdder * self)
 {
-  g_object_set (self, "latency", 30 * GST_MSECOND, NULL);
+  /* FIXME: old live adder had latency as uint property */
+  g_object_set (self, "latency", (guint64) 30 * GST_MSECOND, NULL);
 }
 
 static void
