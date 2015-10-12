@@ -251,6 +251,10 @@ gst_soup_http_client_sink_reset (GstSoupHttpClientSink * souphttpsink)
   souphttpsink->status_code = 0;
   souphttpsink->offset = 0;
 
+  g_list_free_full (souphttpsink->streamheader_buffers,
+      (GDestroyNotify) gst_buffer_unref);
+  g_list_free_full (souphttpsink->sent_buffers,
+      (GDestroyNotify) gst_buffer_unref);
 }
 
 static gboolean
