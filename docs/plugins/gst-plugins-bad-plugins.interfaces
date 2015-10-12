@@ -63,6 +63,7 @@ GstId3Mux GstTagSetter
 GstJifMux GstTagSetter GstTagXmpWriter
 GstKateEnc GstTagSetter
 GstKateTag GstTagSetter
+GstLiveAdder GstChildProxy
 GstMMS GstURIHandler
 GstMpeg2enc GstPreset
 GstMssDemux GstChildProxy

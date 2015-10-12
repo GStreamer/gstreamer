@@ -3,6 +3,7 @@ GObject
     GstObject
       GstAllocator
         GstAllocatorSysmem
+        GstVdpVideoAllocator
         GstWlShmAllocator
       GstAudioRingBuffer
         GstAudioSinkRingBuffer
@@ -18,6 +19,7 @@ GObject
           GstAudioAggregator
             GstAudioInterleave
             GstAudioMixer
+              GstLiveAdder
           GstVideoAggregator
             GstCompositor
             GstGLBaseMixer
@@ -40,13 +42,14 @@ GObject
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
+          GstFaac
           GstGSMEnc
           GstOpusEnc
           GstSbcEnc
           GstSirenEnc
           GstVoAacEnc
           GstVoAmrWbEnc
-        GstAudioVisualizer-BadGstAudioVisualizers
+        GstAudioVisualizer-BaseExtLibvisual
           GstSpaceScope
           GstSpectraScope
           GstSynaeScope
@@ -74,6 +77,8 @@ GObject
           GstChecksumSink
           GstCurlBaseSink
             GstCurlFileSink
+            GstCurlSshSink
+              GstCurlSftpSink
             GstCurlTlsSink
               GstCurlFtpSink
               GstCurlHttpSink
@@ -84,7 +89,6 @@ GObject
           GstRTMPSink
           GstShmSink
           GstVideoSink
-            GstDfbVideoSink
             GstFBDEVSink
             GstGLImageSink
             GstGtkBaseSink
@@ -111,6 +115,7 @@ GObject
             GstDvbSrc
             GstGLTestSrc
             GstMMS
+            GstNeonhttpSrc
             GstRTMPSrc
             GstRfbSrc
             GstShmSrc
@@ -134,7 +139,6 @@ GObject
             GstStereo
           GstBayer2RGB
           GstDebugSpy
-          GstDtmfDetect
           GstFreeverb
           GstGLBaseFilter
             GstGLColorConvertElement
@@ -275,6 +279,7 @@ GObject
         GstGDPDepay
         GstGDPPay
         GstGLStereoSplit
+        GstGmeDec
         GstInterlace
         GstJP2kDecimator
         GstJifMux
@@ -282,7 +287,6 @@ GObject
         GstKateEnc
         GstKateParse
           GstKateTag
-        GstLiveAdder
         GstMXFDemux
         GstMidiParse
         GstMimDec
@@ -311,7 +315,6 @@ GObject
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
-        GstSpanPlc
         GstSpeed
         GstSrtEnc
         GstSrtpDec
@@ -328,6 +331,8 @@ GObject
           GstRsvgDec
           GstSchroDec
           GstVMncDec
+          GstVdpDecoder
+            GstVdpMpegDec
           GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
@@ -359,13 +364,14 @@ GObject
       GstPluginFeature
         GstDeviceProviderFactory
         GstElementFactory
+        GstTracerFactory
         GstTypeFindFactory
       GstRegistry
       GstTask
       GstTaskPool
     GtkWidget
-  GstColorBalanceChannel
   GstEncodingProfile
+  GstVdpDevice
   MXFMetadataBase
     MXFDescriptiveMetadata
       MXFDMS1
@@ -443,7 +449,6 @@ GInterface
   AtkImplementorIface
   GTypePlugin
   GstChildProxy
-  GstColorBalance
   GstNavigation
   GstPreset
   GstTagSetter
