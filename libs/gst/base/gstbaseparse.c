@@ -2448,8 +2448,9 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   }
 
   /* Update current running segment position */
-  if (ret == GST_FLOW_OK && last_stop != GST_CLOCK_TIME_NONE &&
-      parse->segment.position < last_stop)
+  if ((ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED)
+      && last_stop != GST_CLOCK_TIME_NONE
+      && parse->segment.position < last_stop)
     parse->segment.position = last_stop;
 
   return ret;
