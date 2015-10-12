@@ -295,6 +295,14 @@ gst_soup_http_client_sink_set_property (GObject * object, guint property_id,
       g_free (souphttpsink->location);
       souphttpsink->location = g_value_dup_string (value);
       souphttpsink->offset = 0;
+      if ((souphttpsink->location == NULL)
+          || !gst_uri_is_valid (souphttpsink->location)) {
+        GST_WARNING_OBJECT (souphttpsink,
+            "The location (\"%s\") set, is not a valid uri.",
+            souphttpsink->location);
+        g_free (souphttpsink->location);
+        souphttpsink->location = NULL;
+      }
       break;
     case PROP_USER_AGENT:
       g_free (souphttpsink->user_agent);
