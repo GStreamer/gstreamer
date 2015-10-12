@@ -425,7 +425,7 @@ elements_amrparse_LDADD = libparser.la $(LDADD)
 elements_flacparse_LDADD = libparser.la $(LDADD)
 
 elements_flvdemux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
-elements_flvdemux_LDADD = -lgsttag-$(GST_API_VERSION) $(LDADD)
+elements_flvdemux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) $(LDADD)
 
 elements_mpegaudioparse_LDADD = libparser.la $(LDADD)
 
