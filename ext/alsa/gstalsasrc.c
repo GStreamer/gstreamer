@@ -954,12 +954,11 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length,
   GstAlsaSrc *alsa;
   gint err;
   gint cptr;
-  gint16 *ptr;
+  guint8 *ptr = data;
 
   alsa = GST_ALSA_SRC (asrc);
 
   cptr = length / alsa->bpf;
-  ptr = data;
 
   GST_ALSA_SRC_LOCK (asrc);
   while (cptr > 0) {
@@ -975,7 +974,7 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length,
       continue;
     }
 
-    ptr += err * alsa->channels;
+    ptr += snd_pcm_frames_to_bytes (alsa->handle, err);
     cptr -= err;
   }
   GST_ALSA_SRC_UNLOCK (asrc);
