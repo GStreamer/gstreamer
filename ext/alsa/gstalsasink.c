@@ -1020,16 +1020,17 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
   GstAlsaSink *alsa;
   gint err;
   gint cptr;
-  gint16 *ptr = data;
+  guint8 *ptr = data;
 
   alsa = GST_ALSA_SINK (asink);
 
   if (alsa->iec958 && alsa->need_swap) {
     guint i;
+    guint16 *ptr_tmp = (guint16 *) ptr;
 
     GST_DEBUG_OBJECT (asink, "swapping bytes");
     for (i = 0; i < length / 2; i++) {
-      ptr[i] = GUINT16_SWAP_LE_BE (ptr[i]);
+      ptr_tmp[i] = GUINT16_SWAP_LE_BE (ptr_tmp[i]);
     }
   }
 
