@@ -1884,6 +1884,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     if (gst_buffer_pool_config_validate_params (config, state->caps, size, min,
             max)) {
       working_pool = gst_buffer_pool_set_config (pool, config);
+    } else {
+      gst_structure_free (config);
     }
 
     if (!working_pool) {
