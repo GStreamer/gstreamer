@@ -1156,14 +1156,14 @@ get_running_time (GstSegment * segment, GstMiniObject * object, gboolean end)
 
   if (GST_IS_BUFFER (object)) {
     GstBuffer *buf = GST_BUFFER_CAST (object);
+    GstClockTime btime = GST_BUFFER_DTS_OR_PTS (buf);
 
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-      time = GST_BUFFER_TIMESTAMP (buf);
+    if (GST_CLOCK_TIME_IS_VALID (btime)) {
       if (end && GST_BUFFER_DURATION_IS_VALID (buf))
-        time += GST_BUFFER_DURATION (buf);
-      if (time > segment->stop)
-        time = segment->stop;
-      time = gst_segment_to_running_time (segment, GST_FORMAT_TIME, time);
+        btime += GST_BUFFER_DURATION (buf);
+      if (btime > segment->stop)
+        btime = segment->stop;
+      time = gst_segment_to_running_time (segment, GST_FORMAT_TIME, btime);
     }
   } else if (GST_IS_BUFFER_LIST (object)) {
     GstBufferList *list = GST_BUFFER_LIST_CAST (object);
@@ -1172,14 +1172,15 @@ get_running_time (GstSegment * segment, GstMiniObject * object, gboolean end)
 
     n = gst_buffer_list_length (list);
     for (i = 0; i < n; i++) {
+      GstClockTime btime;
       buf = gst_buffer_list_get (list, i);
-      if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-        time = GST_BUFFER_TIMESTAMP (buf);
+      btime = GST_BUFFER_DTS_OR_PTS (buf);
+      if (GST_CLOCK_TIME_IS_VALID (btime)) {
         if (end && GST_BUFFER_DURATION_IS_VALID (buf))
-          time += GST_BUFFER_DURATION (buf);
+          btime += GST_BUFFER_DURATION (buf);
         if (time > segment->stop)
-          time = segment->stop;
-        time = gst_segment_to_running_time (segment, GST_FORMAT_TIME, time);
+          btime = segment->stop;
+        time = gst_segment_to_running_time (segment, GST_FORMAT_TIME, btime);
         if (!end)
           goto done;
       } else if (!end) {
@@ -1217,7 +1218,7 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
     GstClockTime timestamp, duration;
 
     buffer = GST_BUFFER_CAST (object);
-    timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    timestamp = GST_BUFFER_DTS_OR_PTS (buffer);
     duration = GST_BUFFER_DURATION (buffer);
 
     apply_buffer (mq, sq, timestamp, duration, &sq->src_segment);
@@ -1673,7 +1674,7 @@ gst_multi_queue_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   item = gst_multi_queue_buffer_item_new (GST_MINI_OBJECT_CAST (buffer), curid);
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_DTS_OR_PTS (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
   if (!(gst_data_queue_push (sq->queue, (GstDataQueueItem *) item)))
