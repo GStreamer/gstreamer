@@ -497,6 +497,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
       state.header.tile = 0;
 
       offset += data_size;
+      state.header.offset = offset;
     }
     offset = pos;
   } while (offset < map.size);
