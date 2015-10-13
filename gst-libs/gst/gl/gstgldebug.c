@@ -211,5 +211,7 @@ gst_gl_insert_debug_marker (GstGLContext * context, const gchar * format, ...)
     gl->InsertEventMarker (len, string);
   else if (gl->StringMarker)
     gl->StringMarker (len, string);
+
+  g_free (string);
 }
 #endif
