@@ -53,22 +53,6 @@ setup_element (GstElement * element)
       "could not set to playing");
 }
 
-static GstElement *
-setup_rtponviftimestamp (gboolean set_e_bit)
-{
-  GstElement *timestamp;
-
-  GST_DEBUG ("setup_rtponviftimestamp");
-  timestamp = gst_check_setup_element ("rtponviftimestamp");
-
-  g_object_set (timestamp, "ntp-offset", NTP_OFFSET, "cseq", 0x12345678,
-      "set-e-bit", set_e_bit, NULL);
-
-  setup_element (timestamp);
-
-  return timestamp;
-}
-
 static void
 cleanup_element (GstElement * element)
 {
@@ -83,61 +67,6 @@ cleanup_element (GstElement * element)
   gst_check_teardown_element (element);
   mysrcpad = NULL;
   mysinkpad = NULL;
-}
-
-static void
-cleanup_rtponviftimestamp (GstElement * timestamp)
-{
-  GST_DEBUG ("cleanup_rtponviftimestamp");
-
-  cleanup_element (timestamp);
-}
-
-static void
-check_buffer_equal (GstBuffer * buf, GstBuffer * expected)
-{
-  GstMapInfo info_buf, info_expected;
-
-  fail_if (buf == NULL);
-  fail_if (expected == NULL);
-
-  gst_buffer_map (buf, &info_buf, GST_MAP_READ);
-  gst_buffer_map (expected, &info_expected, GST_MAP_READ);
-
-  GST_LOG ("buffer: size %" G_GSIZE_FORMAT, info_buf.size);
-  GST_LOG ("expected: size %" G_GSIZE_FORMAT, info_expected.size);
-  GST_MEMDUMP ("buffer", info_buf.data, info_buf.size);
-  GST_MEMDUMP ("expected", info_expected.data, info_expected.size);
-
-  fail_unless (info_buf.size == info_expected.size,
-      "size of the buffers are not the same");
-  fail_unless (memcmp (info_buf.data, info_expected.data, info_buf.size) == 0,
-      "data is not the same");
-
-  gst_buffer_unmap (buf, &info_buf);
-  gst_buffer_unmap (expected, &info_expected);
-}
-
-/* Create a RTP buffer without the extension */
-static GstBuffer *
-create_rtp_buffer (guint64 timestamp, gboolean clean_point, gboolean discont)
-{
-  GstBuffer *buffer_in;
-  GstRTPBuffer rtpbuffer_in = GST_RTP_BUFFER_INIT;
-
-  buffer_in = gst_rtp_buffer_new_allocate (4, 0, 0);
-  buffer_in->pts = timestamp;
-
-  if (!clean_point)
-    GST_BUFFER_FLAG_SET (buffer_in, GST_BUFFER_FLAG_DELTA_UNIT);
-  if (discont)
-    GST_BUFFER_FLAG_SET (buffer_in, GST_BUFFER_FLAG_DISCONT);
-
-  fail_unless (gst_rtp_buffer_map (buffer_in, GST_MAP_READ, &rtpbuffer_in));
-  fail_if (gst_rtp_buffer_get_extension (&rtpbuffer_in));
-  gst_rtp_buffer_unmap (&rtpbuffer_in);
-
-  return buffer_in;
 }
 
 static guint64
@@ -196,134 +125,6 @@ create_extension_buffer (GstBuffer * buffer_in, gboolean clean_point,
 
   return buffer_out;
 }
-
-static void
-do_one_buffer_test_apply (gboolean clean_point, gboolean discont)
-{
-  GstElement *apply;
-  GstBuffer *buffer_in, *buffer_out;
-  GstSegment segment;
-
-  apply = setup_rtponviftimestamp (FALSE);
-
-  buffer_in = create_rtp_buffer (TIMESTAMP, clean_point, discont);
-  buffer_out = create_extension_buffer (buffer_in, clean_point, FALSE, discont);
-
-  /* stream start */
-  fail_unless (gst_pad_push_event (mysrcpad,
-          gst_event_new_stream_start ("test")));
-
-  /* Push a segment */
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
-
-  /* Push buffer */
-  fail_unless (gst_pad_push (mysrcpad, buffer_in) == GST_FLOW_OK,
-      "failed pushing buffer");
-
-  check_buffer_equal (buffers->data, buffer_out);
-
-  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (buffers);
-  buffers = NULL;
-
-  ASSERT_OBJECT_REFCOUNT (apply, "rtponviftimestamp", 1);
-  cleanup_rtponviftimestamp (apply);
-}
-
-static void
-do_two_buffers_test_apply (gboolean end_contiguous)
-{
-  GstElement *apply;
-  GstBuffer *buffer_in, *buffer_out;
-  GstSegment segment;
-
-  apply = setup_rtponviftimestamp (TRUE);
-
-  buffer_in = create_rtp_buffer (TIMESTAMP, FALSE, FALSE);
-  buffer_out = create_extension_buffer (buffer_in, FALSE, end_contiguous,
-      FALSE);
-
-  /* stream start */
-  fail_unless (gst_pad_push_event (mysrcpad,
-          gst_event_new_stream_start ("test")));
-
-  /* Push a segment */
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
-
-  /* Push buffer */
-  fail_unless (gst_pad_push (mysrcpad, buffer_in) == GST_FLOW_OK,
-      "failed pushing buffer");
-
-  /* The buffer hasn't been pushed it as the element is waiting for the next
-   * buffer. */
-  g_assert_cmpuint (g_list_length (buffers), ==, 0);
-
-  /* A second buffer is pushed, it has the DISCONT flag if we want that the
-   * first one has the 'E' bit set. */
-  buffer_in = create_rtp_buffer (TIMESTAMP + 1, FALSE, end_contiguous);
-
-  fail_unless (gst_pad_push (mysrcpad, buffer_in) == GST_FLOW_OK,
-      "failed pushing buffer");
-
-  /* The first buffer has now been pushed out */
-  g_assert_cmpuint (g_list_length (buffers), ==, 1);
-
-  check_buffer_equal (buffers->data, buffer_out);
-
-  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (buffers);
-  buffers = NULL;
-
-  /* Push EOS */
-  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
-
-  /* The second buffer has been pushed out */
-  g_assert_cmpuint (g_list_length (buffers), ==, 1);
-
-  /* Latest buffer always has the 'E' flag */
-  buffer_out = create_extension_buffer (buffer_in, FALSE, TRUE, end_contiguous);
-  check_buffer_equal (buffers->data, buffer_out);
-
-  ASSERT_OBJECT_REFCOUNT (apply, "rtponviftimestamp", 1);
-  cleanup_rtponviftimestamp (apply);
-}
-
-GST_START_TEST (test_apply_discont)
-{
-  do_one_buffer_test_apply (FALSE, TRUE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_apply_not_discont)
-{
-  do_one_buffer_test_apply (FALSE, FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_apply_clean_point)
-{
-  do_one_buffer_test_apply (TRUE, FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_apply_no_e_bit)
-{
-  do_two_buffers_test_apply (FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_apply_e_bit)
-{
-  do_two_buffers_test_apply (TRUE);
-}
-
-GST_END_TEST;
 
 static GstElement *
 setup_rtponvifparse (gboolean set_e_bit)
@@ -419,14 +220,6 @@ onviftimestamp_suite (void)
   Suite *s = suite_create ("onviftimestamp");
   TCase *tc_chain;
 
-  tc_chain = tcase_create ("apply");
-  suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_apply_discont);
-  tcase_add_test (tc_chain, test_apply_not_discont);
-  tcase_add_test (tc_chain, test_apply_clean_point);
-  tcase_add_test (tc_chain, test_apply_no_e_bit);
-  tcase_add_test (tc_chain, test_apply_e_bit);
-
   tc_chain = tcase_create ("parse");
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_parse_no_flag);
@@ -436,4 +229,18 @@ onviftimestamp_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (onviftimestamp);
+int
+main (int argc, char **argv)
+{
+  int nf;
+  Suite *s = onviftimestamp_suite ();
+  SRunner *sr = srunner_create (s);
+
+  gst_check_init (&argc, &argv);
+
+  srunner_run_all (sr, CK_NORMAL);
+  nf = srunner_ntests_failed (sr);
+  srunner_free (sr);
+
+  return nf;
+}
