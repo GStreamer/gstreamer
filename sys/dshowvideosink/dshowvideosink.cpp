@@ -31,10 +31,6 @@
 
 #include "windows.h"
 
-#ifdef _WIN64
-#define GWL_WNDPROC GWLP_WNDPROC
-#endif
-
 #define WM_GRAPH_NOTIFY WM_APP + 1 /* Private message */
 
 GST_DEBUG_CATEGORY (dshowvideosink_debug);
@@ -129,7 +125,7 @@ gst_dshowvideosink_set_window_handle (GstVideoOverlay * overlay, guintptr window
       sink->window_closed = FALSE;
     } else {
       /* Return control of application window */
-      SetWindowLongPtr (previous_window, GWL_WNDPROC, (LONG)sink->prevWndProc);
+      SetWindowLongPtr (previous_window, GWLP_WNDPROC, (LONG_PTR)sink->prevWndProc);
       SetWindowPos (previous_window, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
     }
 
@@ -678,7 +674,7 @@ gst_dshowvideosink_window_thread (GstDshowVideoSink * sink)
 
   sink->is_new_window = TRUE;
 
-  SetWindowLongPtr (video_window, GWLP_USERDATA, (LONG)sink);
+  SetWindowLongPtr (video_window, GWLP_USERDATA, (LONG_PTR)sink);
 
   sink->window_id = video_window;
 
@@ -747,7 +743,7 @@ failed:
 
 static void gst_dshowvideosink_set_window_for_renderer (GstDshowVideoSink *sink)
 {
-  WNDPROC prevWndProc = (WNDPROC)GetWindowLong (sink->window_id, GWL_WNDPROC);
+  WNDPROC prevWndProc = (WNDPROC)GetWindowLongPtr (sink->window_id, GWLP_WNDPROC);
   if (prevWndProc == WndProcHook) {
     /* The WndProc already points to our hook. Something has gone wrong
      * somewhere else and this safety net prevents an infinite recursion */
@@ -755,7 +751,7 @@ static void gst_dshowvideosink_set_window_for_renderer (GstDshowVideoSink *sink)
   }
 
   /* Application has requested a specific window ID */
-  sink->prevWndProc = (WNDPROC) SetWindowLong (sink->window_id, GWL_WNDPROC, (LONG)WndProcHook);
+  sink->prevWndProc = (WNDPROC) SetWindowLongPtr (sink->window_id, GWLP_WNDPROC, (LONG_PTR)WndProcHook);
   GST_DEBUG_OBJECT (sink, "Set wndproc to %p from %p", WndProcHook, sink->prevWndProc);
   SetProp (sink->window_id, (LPCSTR)"GstDShowVideoSink", sink);
   /* This causes the new WNDPROC to become active */
@@ -948,7 +944,7 @@ gst_dshowvideosink_stop_graph (GstDshowVideoSink *sink)
 
   if (sink->window_id) {
     /* Return control of application window */
-    SetWindowLong (sink->window_id, GWL_WNDPROC, (LONG)sink->prevWndProc);
+    SetWindowLongPtr (sink->window_id, GWLP_WNDPROC, (LONG_PTR)sink->prevWndProc);
     RemoveProp (sink->window_id, (LPCSTR)"GstDShowVideoSink");
     SetWindowPos (sink->window_id, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
     sink->prevWndProc = NULL;
