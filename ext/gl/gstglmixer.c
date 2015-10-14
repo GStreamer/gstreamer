@@ -221,9 +221,17 @@ gst_gl_mixer_pad_sink_acceptcaps (GstPad * pad, GstGLMixer * mix,
 
 /* copies the given caps */
 static GstCaps *
-_update_caps (GstVideoAggregator * vagg, GstCaps * caps)
+_update_caps (GstVideoAggregator * vagg, GstCaps * caps, GstCaps * filter)
 {
-  return gst_gl_caps_replace_all_caps_features (caps,
+  GstCaps *tmp;
+
+  if (filter) {
+    tmp = gst_caps_intersect (caps, filter);
+  } else {
+    tmp = caps;
+  }
+
+  return gst_gl_caps_replace_all_caps_features (tmp,
       GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
 }
 

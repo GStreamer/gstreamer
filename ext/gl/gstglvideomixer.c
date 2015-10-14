@@ -460,7 +460,9 @@ static void gst_gl_video_mixer_set_property (GObject * object, guint prop_id,
 static void gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps);
+static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps,
+    GstCaps * filter);
+static GstCaps *_fixate_caps (GstVideoAggregator * vagg, GstCaps * caps);
 static void gst_gl_video_mixer_reset (GstGLMixer * mixer);
 static gboolean gst_gl_video_mixer_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
@@ -863,6 +865,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
       gst_gl_video_mixer_process_textures;
 
   vagg_class->update_caps = _update_caps;
+  vagg_class->fixate_caps = _fixate_caps;
 
   agg_class->sinkpads_type = GST_TYPE_GL_VIDEO_MIXER_PAD;
 
@@ -912,9 +915,9 @@ gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
 
 static void
 _mixer_pad_get_output_size (GstGLVideoMixer * mix,
-    GstGLVideoMixerPad * mix_pad, gint * width, gint * height)
+    GstGLVideoMixerPad * mix_pad, gint out_par_n, gint out_par_d, gint * width,
+    gint * height)
 {
-  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mix);
   GstVideoAggregatorPad *vagg_pad = GST_VIDEO_AGGREGATOR_PAD (mix_pad);
   gint pad_width, pad_height;
   guint dar_n, dar_d;
@@ -937,13 +940,10 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
 
   gst_video_calculate_display_ratio (&dar_n, &dar_d, pad_width, pad_height,
       GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
-      GST_VIDEO_INFO_PAR_D (&vagg_pad->info),
-      GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info)
-      );
+      GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d);
   GST_LOG_OBJECT (mix_pad, "scaling %ux%u by %u/%u (%u/%u / %u/%u)", pad_width,
       pad_height, dar_n, dar_d, GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
-      GST_VIDEO_INFO_PAR_D (&vagg_pad->info),
-      GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info));
+      GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d);
 
   if (pad_height % dar_n == 0) {
     pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
@@ -960,17 +960,45 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
 }
 
 static GstCaps *
-_update_caps (GstVideoAggregator * vagg, GstCaps * caps)
+_update_caps (GstVideoAggregator * vagg, GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *ret;
+
+  ret =
+      GST_VIDEO_AGGREGATOR_CLASS (gst_gl_video_mixer_parent_class)->update_caps
+      (vagg, caps, NULL);
+
+  if (filter) {
+    GstCaps *tmp = gst_caps_intersect (ret, filter);
+    gst_caps_unref (ret);
+    ret = tmp;
+  }
+
+  return ret;
+}
+
+static GstCaps *
+_fixate_caps (GstVideoAggregator * vagg, GstCaps * caps)
 {
   GstGLVideoMixer *mix = GST_GL_VIDEO_MIXER (vagg);
-  GList *l;
-  gint best_width = -1, best_height = -1;
-  GstVideoInfo info;
+  gint best_width = 0, best_height = 0;
+  gint best_fps_n = 0, best_fps_d = 0;
+  gint par_n, par_d;
+  gdouble best_fps = 0.;
   GstCaps *ret = NULL;
-  int i;
+  GstStructure *s;
+  GList *l;
 
-  caps = gst_caps_make_writable (caps);
-  gst_video_info_from_caps (&info, caps);
+  ret = gst_caps_make_writable (caps);
+
+  /* we need this to calculate how large to make the output frame */
+  s = gst_caps_get_structure (ret, 0);
+  if (gst_structure_has_field (s, "pixel-aspect-ratio")) {
+    gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1, 1);
+    gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n, &par_d);
+  } else {
+    par_n = par_d = 1;
+  }
 
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
@@ -978,8 +1006,12 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps)
     GstGLVideoMixerPad *mixer_pad = GST_GL_VIDEO_MIXER_PAD (vaggpad);
     gint this_width, this_height;
     gint width, height;
+    gint fps_n, fps_d;
+    gdouble cur_fps;
 
-    _mixer_pad_get_output_size (mix, mixer_pad, &width, &height);
+    fps_n = GST_VIDEO_INFO_FPS_N (&vaggpad->info);
+    fps_d = GST_VIDEO_INFO_FPS_D (&vaggpad->info);
+    _mixer_pad_get_output_size (mix, mixer_pad, par_n, par_d, &width, &height);
 
     if (width == 0 || height == 0)
       continue;
@@ -991,19 +1023,33 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps)
       best_width = this_width;
     if (best_height < this_height)
       best_height = this_height;
+
+    if (fps_d == 0)
+      cur_fps = 0.0;
+    else
+      gst_util_fraction_to_double (fps_n, fps_d, &cur_fps);
+
+    if (best_fps < cur_fps) {
+      best_fps = cur_fps;
+      best_fps_n = fps_n;
+      best_fps_d = fps_d;
+    }
   }
   GST_OBJECT_UNLOCK (vagg);
 
-  ret =
-      GST_VIDEO_AGGREGATOR_CLASS (gst_gl_video_mixer_parent_class)->update_caps
-      (vagg, caps);
-
-  for (i = 0; i < gst_caps_get_size (ret); i++) {
-    GstStructure *s = gst_caps_get_structure (ret, i);
-
-    gst_structure_set (s, "width", G_TYPE_INT, best_width, "height", G_TYPE_INT,
-        best_height, NULL);
+  if (best_fps_n <= 0 || best_fps_d <= 0 || best_fps == 0.0) {
+    best_fps_n = 25;
+    best_fps_d = 1;
+    best_fps = 25.0;
   }
+
+  s = gst_caps_get_structure (ret, 0);
+  gst_structure_fixate_field_nearest_int (s, "width", best_width);
+  gst_structure_fixate_field_nearest_int (s, "height", best_height);
+  gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
+      best_fps_d);
+  gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1, 1);
+  ret = gst_caps_fixate (ret);
 
   return ret;
 }
@@ -1397,7 +1443,9 @@ gst_gl_video_mixer_callback (gpointer stuff)
       gint pad_width, pad_height;
       gfloat w, h;
 
-      _mixer_pad_get_output_size (video_mixer, pad, &pad_width, &pad_height);
+      _mixer_pad_get_output_size (video_mixer, pad,
+          GST_VIDEO_INFO_PAR_N (&vagg->info),
+          GST_VIDEO_INFO_PAR_D (&vagg->info), &pad_width, &pad_height);
 
       w = ((gfloat) pad_width / (gfloat) out_width);
       h = ((gfloat) pad_height / (gfloat) out_height);
