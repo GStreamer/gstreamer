@@ -543,7 +543,7 @@ gst_mpdparser_get_xml_prop_range (xmlNode * a_node, const gchar * property_name,
     GstRange ** property_value)
 {
   xmlChar *prop_string;
-  guint64 first_byte_pos = 0, last_byte_pos = 0;
+  guint64 first_byte_pos = 0, last_byte_pos = -1;
   guint len, pos;
   gchar *str;
   gboolean exists = FALSE;
