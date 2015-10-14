@@ -576,20 +576,15 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
   GstCaps *caps = NULL;
   GstVideoCodecState *state;
-  GstVaapiCapsFeature feature;
-  GstVideoFormat out_format;
 
   gst_query_parse_allocation (query, &caps, NULL);
-
-  feature =
-      gst_vaapi_find_preferred_caps_feature (GST_VIDEO_DECODER_SRC_PAD (vdec),
-      GST_VIDEO_FORMAT_ENCODED, &out_format);
   decode->has_texture_upload_meta = FALSE;
 #if (USE_GLX || USE_EGL)
   decode->has_texture_upload_meta =
-      (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META) &&
       gst_query_find_allocation_meta (query,
-      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
+          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL) &&
+      gst_vaapi_caps_feature_contains (caps,
+          GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META);
 #endif
 
   /* Update src caps if feature is not handled downstream */
@@ -599,7 +594,7 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
   gst_video_codec_state_unref (state);
 
   return gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (vdec),
-      query, feature);
+      query, 0);
 }
 
 static inline gboolean

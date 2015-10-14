@@ -91,6 +91,11 @@ G_GNUC_INTERNAL
 const gchar *
 gst_vaapi_caps_feature_to_string (GstVaapiCapsFeature feature);
 
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_caps_feature_contains (const GstCaps * caps,
+    GstVaapiCapsFeature feature);
+
 /* Helpers to handle interlaced contents */
 # define GST_CAPS_INTERLACED_MODES \
     "interlace-mode = (string){ progressive, interleaved, mixed }"

@@ -590,32 +590,44 @@ gst_caps_set_interlaced (GstCaps * caps, GstVideoInfo * vip)
   return TRUE;
 }
 
+static gboolean
+_gst_caps_has_feature (const GstCaps * caps, const gchar * feature)
+{
+  guint i;
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstCapsFeatures *const features = gst_caps_get_features (caps, i);
+    /* Skip ANY features, we need an exact match for correct evaluation */
+    if (gst_caps_features_is_any (features))
+      continue;
+    if (gst_caps_features_contains (features, feature))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+gboolean
+gst_vaapi_caps_feature_contains (const GstCaps * caps, GstVaapiCapsFeature feature)
+{
+  const gchar *feature_str;
+
+  g_return_val_if_fail (caps != NULL, FALSE);
+
+  feature_str = gst_vaapi_caps_feature_to_string (feature);
+  if (!feature_str)
+    return FALSE;
+
+  return _gst_caps_has_feature (caps, feature_str);
+}
+
 /* Checks whether the supplied caps contain VA surfaces */
 gboolean
 gst_caps_has_vaapi_surface (GstCaps * caps)
 {
-  gboolean found_caps = FALSE;
-  guint i, num_structures;
-
   g_return_val_if_fail (caps != NULL, FALSE);
 
-  num_structures = gst_caps_get_size (caps);
-  if (num_structures < 1)
-    return FALSE;
-
-  for (i = 0; i < num_structures && !found_caps; i++) {
-    GstCapsFeatures *const features = gst_caps_get_features (caps, i);
-
-#if GST_CHECK_VERSION(1,3,0)
-    /* Skip ANY features, we need an exact match for correct evaluation */
-    if (gst_caps_features_is_any (features))
-      continue;
-#endif
-
-    found_caps = gst_caps_features_contains (features,
-        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE);
-  }
-  return found_caps;
+  return _gst_caps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE);
 }
 
 void
