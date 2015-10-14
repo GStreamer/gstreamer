@@ -791,13 +791,13 @@ gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src, guint64 offset,
     guint64 stop_offset)
 {
   gchar buf[64];
-
   gint rc;
 
   soup_message_headers_remove (src->msg->request_headers, "Range");
   if (offset || stop_offset != -1) {
     if (stop_offset != -1) {
-      /* FIXME: If stop_offset == 0, this will still download a single byte */
+      g_assert (offset != stop_offset);
+
       rc = g_snprintf (buf, sizeof (buf), "bytes=%" G_GUINT64_FORMAT "-%"
           G_GUINT64_FORMAT, offset, (stop_offset > 0) ? stop_offset - 1 :
           stop_offset);
@@ -1687,6 +1687,10 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
   GST_LOG_OBJECT (src, "Running request for method: %s", method);
   if (src->msg && (src->request_position != src->read_position)) {
     if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE) {
+      /* EOS immediately if we have an empty segment */
+      if (src->request_position == src->stop_position)
+        return GST_FLOW_EOS;
+
       gst_soup_http_src_add_range_header (src, src->request_position,
           src->stop_position);
     } else {
@@ -1696,10 +1700,14 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
       gst_soup_http_src_cancel_message (src);
     }
   }
-  if (!src->msg)
-    if (!gst_soup_http_src_build_message (src, method)) {
+  if (!src->msg) {
+    /* EOS immediately if we have an empty segment */
+    if (src->request_position == src->stop_position)
+      return GST_FLOW_EOS;
+
+    if (!gst_soup_http_src_build_message (src, method))
       return GST_FLOW_ERROR;
-    }
+  }
 
   src->ret = GST_FLOW_CUSTOM_ERROR;
   src->outbuf = outbuf;
@@ -1711,9 +1719,13 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
     }
     if (src->retry) {
       GST_INFO_OBJECT (src, "Reconnecting");
-      if (!gst_soup_http_src_build_message (src, method)) {
+
+      /* EOS immediately if we have an empty segment */
+      if (src->request_position == src->stop_position)
+        return GST_FLOW_EOS;
+
+      if (!gst_soup_http_src_build_message (src, method))
         return GST_FLOW_ERROR;
-      }
       src->retry = FALSE;
       continue;
     }
