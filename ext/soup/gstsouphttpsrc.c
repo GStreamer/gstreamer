@@ -797,8 +797,10 @@ gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src, guint64 offset,
   soup_message_headers_remove (src->msg->request_headers, "Range");
   if (offset || stop_offset != -1) {
     if (stop_offset != -1) {
+      /* FIXME: If stop_offset == 0, this will still download a single byte */
       rc = g_snprintf (buf, sizeof (buf), "bytes=%" G_GUINT64_FORMAT "-%"
-          G_GUINT64_FORMAT, offset, stop_offset);
+          G_GUINT64_FORMAT, offset, (stop_offset > 0) ? stop_offset - 1 :
+          stop_offset);
     } else {
       rc = g_snprintf (buf, sizeof (buf), "bytes=%" G_GUINT64_FORMAT "-",
           offset);
