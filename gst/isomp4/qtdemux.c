@@ -8803,6 +8803,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       }
     }
 
+    if (stream->caps)
+      gst_caps_unref (stream->caps);
+
     stream->caps =
         qtdemux_video_caps (qtdemux, stream, fourcc, stsd_data, &codec);
     if (G_UNLIKELY (!stream->caps)) {
@@ -9532,6 +9535,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     } else if (version != 0x00000) {
       GST_WARNING_OBJECT (qtdemux, "unknown audio STSD version %08x", version);
     }
+
+    if (stream->caps)
+      gst_caps_unref (stream->caps);
 
     stream->caps = qtdemux_audio_caps (qtdemux, stream, fourcc,
         stsd_data + 32, len - 16, &codec);
