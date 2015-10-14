@@ -1989,6 +1989,7 @@ static const struct
   COLOR_QCOM_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}, {
   COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka, GST_VIDEO_FORMAT_NV12}, {
   COLOR_QCOM_FormatYVU420SemiPlanar32m, GST_VIDEO_FORMAT_NV12}, {
+  COLOR_QCOM_FormatYVU420SemiPlanar32mMultiView, GST_VIDEO_FORMAT_NV12}, {
   COLOR_OMX_SEC_FormatNV12Tiled, GST_VIDEO_FORMAT_NV12}, {
   COLOR_FormatYCbYCr, GST_VIDEO_FORMAT_YUY2}, {
   COLOR_FormatYV12, GST_VIDEO_FORMAT_YV12}
@@ -2216,6 +2217,7 @@ gst_amc_color_format_info_set (GstAmcColorFormatInfo * color_format_info,
     }
     case COLOR_QCOM_FormatYUV420SemiPlanar:
     case COLOR_QCOM_FormatYVU420SemiPlanar32m:
+    case COLOR_QCOM_FormatYVU420SemiPlanar32mMultiView:
     case COLOR_FormatYUV420SemiPlanar:{
       if (stride == 0 || slice_height == 0) {
         GST_ERROR ("Stride or slice height is 0");
@@ -2397,6 +2399,7 @@ gst_amc_color_format_copy (GstAmcColorFormatInfo * cinfo,
     }
     case COLOR_QCOM_FormatYUV420SemiPlanar:
     case COLOR_QCOM_FormatYVU420SemiPlanar32m:
+    case COLOR_QCOM_FormatYVU420SemiPlanar32mMultiView:
     case COLOR_FormatYUV420SemiPlanar:{
       gint i, j, height;
       gint c_stride, v_stride;
