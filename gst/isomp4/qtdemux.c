@@ -8573,7 +8573,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           "found, assuming preview image or something; skipping track",
           stream->duration, stream->timescale, qtdemux->duration,
           qtdemux->timescale);
-      g_free (stream);
+      if (new_stream)
+        gst_qtdemux_stream_free (qtdemux, stream);
       return TRUE;
     }
   }
@@ -8651,7 +8652,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   if (stsd_len < 24) {
     /* .. but skip stream with empty stsd produced by some Vivotek cameras */
     if (stream->subtype == FOURCC_vivo) {
-      g_free (stream);
+      if (new_stream)
+        gst_qtdemux_stream_free (qtdemux, stream);
       return TRUE;
     } else {
       goto corrupt_file;
