@@ -4,7 +4,7 @@
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2008 Michael Sheldon <mike@mikeasoft.com>
  * Copyright (C) 2009 Noam Lewis <jones.noamle@gmail.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -115,13 +115,6 @@ static gboolean gst_template_match_handle_sink_event (GstPad * pad,
 static GstFlowReturn gst_template_match_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 
-static void gst_template_match_load_template (GstTemplateMatch * filter,
-    gchar * template);
-static void gst_template_match_match (IplImage * input, IplImage * template,
-    IplImage * dist_image, double *best_res, CvPoint * best_pos, int method);
-
-
-
 /* initialize the templatematch's class */
 static void
 gst_template_match_class_init (GstTemplateMatchClass * klass)
@@ -138,14 +131,14 @@ gst_template_match_class_init (GstTemplateMatchClass * klass)
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_int ("method", "Method",
           "Specifies the way the template must be compared with image regions. 0=SQDIFF, 1=SQDIFF_NORMED, 2=CCOR, 3=CCOR_NORMED, 4=CCOEFF, 5=CCOEFF_NORMED.",
-          0, 5, DEFAULT_METHOD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          0, 5, DEFAULT_METHOD, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_TEMPLATE,
       g_param_spec_string ("template", "Template", "Filename of template image",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          NULL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_DISPLAY,
       g_param_spec_boolean ("display", "Display",
           "Sets whether the detected template should be highlighted in the output",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          TRUE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "templatematch",
@@ -185,6 +178,42 @@ gst_template_match_init (GstTemplateMatch * filter)
   filter->cvDistImage = NULL;
   filter->cvImage = NULL;
   filter->method = DEFAULT_METHOD;
+}
+
+/* We take ownership of template here */
+static void
+gst_template_match_load_template (GstTemplateMatch * filter, gchar * templ)
+{
+  gchar *oldTemplateFilename = NULL;
+  IplImage *oldTemplateImage = NULL, *newTemplateImage = NULL, *oldDistImage =
+      NULL;
+
+  if (templ) {
+    newTemplateImage = cvLoadImage (templ, CV_LOAD_IMAGE_COLOR);
+    if (!newTemplateImage) {
+      /* Unfortunately OpenCV doesn't seem to provide any way of finding out
+         why the image load failed, so we can't be more specific than FAILED: */
+      GST_ELEMENT_WARNING (filter, RESOURCE, FAILED,
+          (_("OpenCV failed to load template image")),
+          ("While attempting to load template '%s'", templ));
+      g_free (templ);
+      templ = NULL;
+    }
+  }
+
+  GST_OBJECT_LOCK (filter);
+  oldTemplateFilename = filter->templ;
+  filter->templ = templ;
+  oldTemplateImage = filter->cvTemplateImage;
+  filter->cvTemplateImage = newTemplateImage;
+  oldDistImage = filter->cvDistImage;
+  /* This will be recreated in the chain function as required: */
+  filter->cvDistImage = NULL;
+  GST_OBJECT_UNLOCK (filter);
+
+  cvReleaseImage (&oldDistImage);
+  cvReleaseImage (&oldTemplateImage);
+  g_free (oldTemplateFilename);
 }
 
 static void
@@ -312,6 +341,26 @@ gst_template_match_finalize (GObject * object)
   G_OBJECT_CLASS (gst_template_match_parent_class)->finalize (object);
 }
 
+static void
+gst_template_match_match (IplImage * input, IplImage * templ,
+    IplImage * dist_image, double *best_res, CvPoint * best_pos, int method)
+{
+  double dist_min = 0, dist_max = 0;
+  CvPoint min_pos, max_pos;
+  cvMatchTemplate (input, templ, dist_image, method);
+  cvMinMaxLoc (dist_image, &dist_min, &dist_max, &min_pos, &max_pos, NULL);
+  if ((CV_TM_SQDIFF_NORMED == method) || (CV_TM_SQDIFF == method)) {
+    *best_res = dist_min;
+    *best_pos = min_pos;
+    if (CV_TM_SQDIFF_NORMED == method) {
+      *best_res = 1 - *best_res;
+    }
+  } else {
+    *best_res = dist_max;
+    *best_pos = max_pos;
+  }
+}
+
 /* chain function
  * this function does the actual processing
  */
@@ -332,7 +381,7 @@ gst_template_match_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_LOG_OBJECT (filter, "Buffer size %u", (guint) gst_buffer_get_size (buf));
 
   buf = gst_buffer_make_writable (buf);
-  gst_buffer_map (buf, &info, GST_MAP_READWRITE);
+  gst_buffer_map (buf, &info, (GstMapFlags) (GST_MAP_READWRITE));
   filter->cvImage->imageData = (char *) info.data;
 
   GST_OBJECT_LOCK (filter);
@@ -401,66 +450,6 @@ gst_template_match_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
   return gst_pad_push (filter->srcpad, buf);
 }
-
-
-
-static void
-gst_template_match_match (IplImage * input, IplImage * templ,
-    IplImage * dist_image, double *best_res, CvPoint * best_pos, int method)
-{
-  double dist_min = 0, dist_max = 0;
-  CvPoint min_pos, max_pos;
-  cvMatchTemplate (input, templ, dist_image, method);
-  cvMinMaxLoc (dist_image, &dist_min, &dist_max, &min_pos, &max_pos, NULL);
-  if ((CV_TM_SQDIFF_NORMED == method) || (CV_TM_SQDIFF == method)) {
-    *best_res = dist_min;
-    *best_pos = min_pos;
-    if (CV_TM_SQDIFF_NORMED == method) {
-      *best_res = 1 - *best_res;
-    }
-  } else {
-    *best_res = dist_max;
-    *best_pos = max_pos;
-  }
-}
-
-
-/* We take ownership of template here */
-static void
-gst_template_match_load_template (GstTemplateMatch * filter, gchar * templ)
-{
-  gchar *oldTemplateFilename = NULL;
-  IplImage *oldTemplateImage = NULL, *newTemplateImage = NULL, *oldDistImage =
-      NULL;
-
-  if (templ) {
-    newTemplateImage = cvLoadImage (templ, CV_LOAD_IMAGE_COLOR);
-    if (!newTemplateImage) {
-      /* Unfortunately OpenCV doesn't seem to provide any way of finding out
-         why the image load failed, so we can't be more specific than FAILED: */
-      GST_ELEMENT_WARNING (filter, RESOURCE, FAILED,
-          (_("OpenCV failed to load template image")),
-          ("While attempting to load template '%s'", templ));
-      g_free (templ);
-      templ = NULL;
-    }
-  }
-
-  GST_OBJECT_LOCK (filter);
-  oldTemplateFilename = filter->templ;
-  filter->templ = templ;
-  oldTemplateImage = filter->cvTemplateImage;
-  filter->cvTemplateImage = newTemplateImage;
-  oldDistImage = filter->cvDistImage;
-  /* This will be recreated in the chain function as required: */
-  filter->cvDistImage = NULL;
-  GST_OBJECT_UNLOCK (filter);
-
-  cvReleaseImage (&oldDistImage);
-  cvReleaseImage (&oldTemplateImage);
-  g_free (oldTemplateFilename);
-}
-
 
 /* entry point to initialize the plug-in
  * initialize the plug-in itself

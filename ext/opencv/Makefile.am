@@ -2,8 +2,8 @@ plugin_LTLIBRARIES = libgstopencv.la
 
 # sources used to compile this plug-in
 libgstopencv_la_SOURCES = gstopencv.cpp \
-			gstopencvvideofilter.c \
-			gstopencvutils.c \
+			gstopencvvideofilter.cpp \
+			gstopencvutils.cpp \
 			gstcvdilate.cpp \
 			gstcvdilateerode.cpp \
 			gstcvequalizehist.cpp \
@@ -15,7 +15,7 @@ libgstopencv_la_SOURCES = gstopencv.cpp \
 			gstfaceblur.cpp \
 			gsthanddetect.cpp \
 			gstpyramidsegment.cpp \
-			gsttemplatematch.c \
+			gsttemplatematch.cpp \
 			gsttextoverlay.cpp \
 			gstmotioncells.cpp \
 			gstskindetect.cpp \

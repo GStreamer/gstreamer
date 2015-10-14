@@ -32,7 +32,8 @@ gst_opencv_get_ipl_depth_and_channels (GstStructure * structure,
 {
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
   const GstVideoFormatInfo *info;
-  gint depth = 0, i;
+  gint depth = 0;
+  guint i;
   const gchar *s;
 
   if (gst_structure_has_name (structure, "video/x-raw")) {
@@ -97,7 +98,8 @@ gst_opencv_parse_iplimage_params_from_caps (GstCaps * caps, gint * width,
     gint * height, gint * ipldepth, gint * channels, GError ** err)
 {
   GstVideoInfo info;
-  gint i, depth = 0;
+  gint depth = 0;
+  guint i;
 
   if (!gst_video_info_from_caps (&info, caps)) {
     GST_ERROR ("Failed to get the videoinfo from caps");

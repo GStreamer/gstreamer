@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -135,7 +135,7 @@ gst_opencv_video_filter_class_init (GstOpencvVideoFilterClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   basetrans_class = (GstBaseTransformClass *) klass;
-  parent_class = g_type_class_peek_parent (klass);
+  parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_opencv_video_filter_debug,
       "opencvbasetransform", 0, "opencvbasetransform element");
@@ -217,7 +217,7 @@ gst_opencv_video_filter_transform_ip (GstBaseTransform * trans,
   g_return_val_if_fail (fclass->cv_trans_ip_func != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (transform->cvImage != NULL, GST_FLOW_ERROR);
 
-  if (!gst_buffer_map (buffer, &info, GST_MAP_READWRITE))
+  if (!gst_buffer_map (buffer, &info, (GstMapFlags) (GST_MAP_READWRITE)))
     goto map_failed;
 
   transform->cvImage->imageData = (char *) info.data;
