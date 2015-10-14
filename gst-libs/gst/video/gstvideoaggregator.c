@@ -532,86 +532,6 @@ gst_videoaggreagator_find_best_format (GstVideoAggregator * vagg,
   g_hash_table_unref (formats_table);
 }
 
-/* WITH GST_VIDEO_AGGREGATOR_LOCK TAKEN
- * NOTE: After calling that method you **have to** call
- *       gst_videoaggregator_update_src_caps (without releasing
- *       the GST_VIDEO_AGGREGATOR_LOCK in between)
- */
-static gboolean
-gst_videoaggregator_update_converters (GstVideoAggregator * vagg)
-{
-  GList *tmp;
-  GstVideoFormat best_format;
-  GstVideoInfo best_info;
-  gboolean at_least_one_alpha = FALSE;
-  GstCaps *downstream_caps;
-  GstAggregator *agg = GST_AGGREGATOR (vagg);
-
-  GstVideoAggregatorClass *vagg_class = GST_VIDEO_AGGREGATOR_GET_CLASS (vagg);
-  GstVideoAggregatorPadClass *vaggpad_class = g_type_class_peek
-      (GST_AGGREGATOR_GET_CLASS (vagg)->sinkpads_type);
-
-  best_format = GST_VIDEO_FORMAT_UNKNOWN;
-  gst_video_info_init (&best_info);
-
-  downstream_caps = gst_pad_get_allowed_caps (agg->srcpad);
-
-  if (!downstream_caps || gst_caps_is_empty (downstream_caps)) {
-    GST_INFO_OBJECT (vagg, "No downstream caps found %"
-        GST_PTR_FORMAT, downstream_caps);
-    if (downstream_caps)
-      gst_caps_unref (downstream_caps);
-    return FALSE;
-  }
-
-
-  if (vagg_class->find_best_format) {
-    vagg_class->find_best_format (vagg, downstream_caps, &best_info,
-        &at_least_one_alpha);
-
-    best_format = GST_VIDEO_INFO_FORMAT (&best_info);
-  }
-
-  if (best_format == GST_VIDEO_FORMAT_UNKNOWN) {
-    downstream_caps = gst_caps_fixate (downstream_caps);
-    gst_video_info_from_caps (&best_info, downstream_caps);
-    best_format = GST_VIDEO_INFO_FORMAT (&best_info);
-  }
-
-  gst_caps_unref (downstream_caps);
-
-  if (at_least_one_alpha
-      && !(best_info.finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)) {
-    GST_ELEMENT_ERROR (vagg, CORE, NEGOTIATION,
-        ("At least one of the input pads contains alpha, but downstream can't support alpha."),
-        ("Either convert your inputs to not contain alpha or add a videoconvert after the aggregator"));
-    return FALSE;
-  }
-
-  vagg->info = best_info;
-
-  GST_DEBUG_OBJECT (vagg,
-      "The output format will now be : %d with chroma : %s",
-      best_format, gst_video_chroma_to_string (best_info.chroma_site));
-
-  if (vaggpad_class->set_info) {
-    GST_OBJECT_LOCK (vagg);
-    /* Then browse the sinks once more, setting or unsetting conversion if needed */
-    for (tmp = GST_ELEMENT (vagg)->sinkpads; tmp; tmp = tmp->next) {
-      GstVideoAggregatorPad *pad = GST_VIDEO_AGGREGATOR_PAD (tmp->data);
-
-      if (!vaggpad_class->set_info (pad, vagg, &pad->info, &best_info)) {
-        GST_OBJECT_UNLOCK (vagg);
-
-        return FALSE;
-      }
-    }
-    GST_OBJECT_UNLOCK (vagg);
-  }
-
-  return TRUE;
-}
-
 /* WITH GST_VIDEO_AGGREGATOR_LOCK TAKEN */
 static gboolean
 gst_videoaggregator_src_setcaps (GstVideoAggregator * vagg, GstCaps * caps)
@@ -662,25 +582,22 @@ done:
   return ret;
 }
 
-/* WITH GST_VIDEO_AGGREGATOR_LOCK TAKEN */
-static gboolean
-gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
+static GstCaps *
+gst_videoaggregator_default_fixate_caps (GstVideoAggregator * vagg,
+    GstCaps * caps)
 {
-  GList *l;
   gint best_width = -1, best_height = -1;
-  gdouble best_fps = -1, cur_fps;
   gint best_fps_n = -1, best_fps_d = -1;
-  gboolean ret = TRUE;
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (vagg);
-  GstVideoAggregatorClass *vagg_klass = (GstVideoAggregatorClass *) klass;
-  GstAggregator *agg = GST_AGGREGATOR (vagg);
+  gdouble best_fps = -1.;
+  GstStructure *s;
+  GList *l;
 
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
     GstVideoAggregatorPad *mpad = l->data;
-    gint this_width, this_height;
     gint fps_n, fps_d;
     gint width, height;
+    gdouble cur_fps;
 
     fps_n = GST_VIDEO_INFO_FPS_N (&mpad->info);
     fps_d = GST_VIDEO_INFO_FPS_D (&mpad->info);
@@ -690,13 +607,10 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
     if (width == 0 || height == 0)
       continue;
 
-    this_width = width;
-    this_height = height;
-
-    if (best_width < this_width)
-      best_width = this_width;
-    if (best_height < this_height)
-      best_height = this_height;
+    if (best_width < width)
+      best_width = width;
+    if (best_height < height)
+      best_height = height;
 
     if (fps_d == 0)
       cur_fps = 0.0;
@@ -717,88 +631,142 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
     best_fps = 25.0;
   }
 
-  if (best_width > 0 && best_height > 0 && best_fps > 0) {
-    GstCaps *caps, *peercaps, *info_caps;
-    GstStructure *s;
-    GstVideoInfo info;
-    int i;
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_fixate_field_nearest_int (s, "width", best_width);
+  gst_structure_fixate_field_nearest_int (s, "height", best_height);
+  gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
+      best_fps_d);
+  if (gst_structure_has_field (s, "pixel-aspect-ratio"))
+    gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1, 1);
+  caps = gst_caps_fixate (caps);
 
-    /* Initialize the video info with our target format and
-     * the best width and height and framerate. Then copy over
-     * all other fields as we negotiated them before
-     */
-    gst_video_info_set_format (&info, GST_VIDEO_INFO_FORMAT (&vagg->info),
-        best_width, best_height);
-    info.fps_n = best_fps_n;
-    info.fps_d = best_fps_d;
-    info.chroma_site = vagg->info.chroma_site;
-    info.par_n = vagg->info.par_n;
-    info.par_d = vagg->info.par_d;
-    info.colorimetry = vagg->info.colorimetry;
-    info.flags = vagg->info.flags;
-    info.interlace_mode = vagg->info.interlace_mode;
+  return caps;
+}
 
-    info_caps = gst_video_info_to_caps (&info);
+static GstCaps *
+gst_videoaggregator_default_update_caps (GstVideoAggregator * vagg,
+    GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *ret;
 
-    if (vagg_klass->update_caps) {
-      if (!(caps = vagg_klass->update_caps (vagg, info_caps))) {
-        gst_caps_unref (info_caps);
-        ret = FALSE;
-        goto done;
-      }
-      gst_caps_unref (info_caps);
-    } else {
-      caps = info_caps;
+  if (filter) {
+    ret = gst_caps_intersect (caps, filter);
+  } else {
+    ret = gst_caps_ref (caps);
+  }
+
+  return ret;
+}
+
+/* WITH GST_VIDEO_AGGREGATOR_LOCK TAKEN */
+static gboolean
+gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
+{
+  GstVideoAggregatorClass *vagg_klass = GST_VIDEO_AGGREGATOR_GET_CLASS (vagg);
+  GstVideoAggregatorPadClass *vaggpad_klass = g_type_class_peek
+      (GST_AGGREGATOR_GET_CLASS (vagg)->sinkpads_type);
+  GstAggregator *agg = GST_AGGREGATOR (vagg);
+  gboolean ret = TRUE, at_least_one_pad_configured = FALSE;
+  GstVideoFormat best_format;
+  GstVideoInfo best_info;
+  gboolean at_least_one_alpha = FALSE;
+  GstCaps *downstream_caps;
+  GList *l;
+
+  best_format = GST_VIDEO_FORMAT_UNKNOWN;
+  gst_video_info_init (&best_info);
+
+  downstream_caps = gst_pad_get_allowed_caps (agg->srcpad);
+
+  if (!downstream_caps || gst_caps_is_empty (downstream_caps)) {
+    GST_INFO_OBJECT (vagg, "No downstream caps found %"
+        GST_PTR_FORMAT, downstream_caps);
+    if (downstream_caps)
+      gst_caps_unref (downstream_caps);
+    return FALSE;
+  }
+
+  if (vagg_klass->find_best_format) {
+    vagg_klass->find_best_format (vagg, downstream_caps, &best_info,
+        &at_least_one_alpha);
+
+    best_format = GST_VIDEO_INFO_FORMAT (&best_info);
+  }
+
+  if (best_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GstCaps *tmp = gst_caps_fixate (gst_caps_ref (downstream_caps));
+    gst_video_info_from_caps (&best_info, tmp);
+    best_format = GST_VIDEO_INFO_FORMAT (&best_info);
+    gst_caps_unref (tmp);
+  }
+
+  if (at_least_one_alpha
+      && !(best_info.finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)) {
+    GST_ELEMENT_ERROR (vagg, CORE, NEGOTIATION,
+        ("At least one of the input pads contains alpha, but downstream can't support alpha."),
+        ("Either convert your inputs to not contain alpha or add a videoconvert after the aggregator"));
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (vagg,
+      "The output format will now be : %d with chroma : %s",
+      best_format, gst_video_chroma_to_string (best_info.chroma_site));
+
+  GST_OBJECT_LOCK (vagg);
+  for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
+    GstVideoAggregatorPad *mpad = l->data;
+
+    if (GST_VIDEO_INFO_WIDTH (&mpad->info) == 0
+        || GST_VIDEO_INFO_HEIGHT (&mpad->info) == 0)
+      continue;
+
+    at_least_one_pad_configured = TRUE;
+    break;
+  }
+  GST_OBJECT_UNLOCK (vagg);
+
+  if (at_least_one_pad_configured) {
+    GstCaps *caps, *peercaps;
+
+    peercaps = gst_pad_peer_query_caps (agg->srcpad, NULL);
+
+    g_assert (vagg_klass->update_caps);
+    if (!(caps = vagg_klass->update_caps (vagg, downstream_caps, peercaps))) {
+      GST_WARNING_OBJECT (vagg, "Subclass failed to update provided caps");
+      gst_caps_unref (downstream_caps);
+      if (peercaps)
+        gst_caps_unref (peercaps);
+      ret = FALSE;
+      goto done;
     }
-
-    /* If the sub-class allows it, allow size/framerate changes */
-    if (!vagg_klass->preserve_update_caps_result) {
-      s = gst_caps_get_structure (caps, 0);
-      gst_structure_get (s, "width", G_TYPE_INT, &best_width, "height",
-          G_TYPE_INT, &best_height, NULL);
-
-      for (i = 0; i < gst_caps_get_size (caps); i++) {
-        s = gst_caps_get_structure (caps, i);
-        gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, "framerate",
-            GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-      }
-    }
-
-    peercaps = gst_pad_peer_query_caps (agg->srcpad, caps);
-    if (peercaps) {
-      GstCaps *tmp;
-
-      tmp = gst_caps_intersect (caps, peercaps);
-      GST_DEBUG_OBJECT (vagg, "intersecting %" GST_PTR_FORMAT
-          " with peer caps %" GST_PTR_FORMAT " result %" GST_PTR_FORMAT, caps,
-          peercaps, tmp);
-
-      gst_caps_unref (caps);
+    gst_caps_unref (downstream_caps);
+    if (peercaps)
       gst_caps_unref (peercaps);
-      caps = tmp;               /* pass ownership */
-      if (gst_caps_is_empty (caps)) {
-        GST_DEBUG_OBJECT (vagg, "empty caps");
+
+    if (!gst_caps_is_fixed (caps)) {
+      g_assert (vagg_klass->fixate_caps);
+
+      caps = gst_caps_make_writable (caps);
+      if (!(caps = vagg_klass->fixate_caps (vagg, caps))) {
+        GST_WARNING_OBJECT (vagg, "Subclass failed to fixate provided caps");
         ret = FALSE;
-        gst_caps_unref (caps);
         goto done;
       }
+    }
 
-      caps = gst_caps_truncate (caps);
-      s = gst_caps_get_structure (caps, 0);
-      gst_structure_fixate_field_nearest_int (s, "width", best_width);
-      gst_structure_fixate_field_nearest_int (s, "height", best_height);
-      gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
-          best_fps_d);
-      gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1,
-          1);
+    gst_video_info_from_caps (&vagg->info, caps);
 
-      /* fixate the the rest of the fields */
-      caps = gst_caps_fixate (caps);
+    if (vaggpad_klass->set_info) {
+      /* Then browse the sinks once more, setting or unsetting conversion if needed */
+      for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
+        GstVideoAggregatorPad *pad = GST_VIDEO_AGGREGATOR_PAD (l->data);
 
-      gst_structure_get_int (s, "width", &info.width);
-      gst_structure_get_int (s, "height", &info.height);
-      gst_structure_get_fraction (s, "framerate", &info.fps_n, &info.fps_d);
+        if (!vaggpad_klass->set_info (pad, vagg, &pad->info, &vagg->info)) {
+          GST_OBJECT_UNLOCK (vagg);
+
+          return FALSE;
+        }
+      }
     }
 
     if (gst_videoaggregator_src_setcaps (vagg, caps)) {
@@ -1414,10 +1382,7 @@ gst_videoaggregator_check_reconfigure (GstVideoAggregator * vagg,
       || gst_pad_check_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg))) {
     gboolean ret;
 
-    ret = gst_videoaggregator_update_converters (vagg);
-    if (ret)
-      ret = gst_videoaggregator_update_src_caps (vagg);
-
+    ret = gst_videoaggregator_update_src_caps (vagg);
     if (!ret) {
       if (timeout && gst_pad_needs_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg))) {
         guint64 frame_duration;
@@ -2099,6 +2064,8 @@ gst_videoaggregator_class_init (GstVideoAggregatorClass * klass)
 
   klass->find_best_format = gst_videoaggreagator_find_best_format;
   klass->get_output_buffer = gst_videoaggregator_get_output_buffer;
+  klass->update_caps = gst_videoaggregator_default_update_caps;
+  klass->fixate_caps = gst_videoaggregator_default_fixate_caps;
 
   /* Register the pad class */
   g_type_class_ref (GST_TYPE_VIDEO_AGGREGATOR_PAD);

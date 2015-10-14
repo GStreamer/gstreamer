@@ -216,9 +216,9 @@ gst_compositor_pad_set_property (GObject * object, guint prop_id,
 
 static void
 _mixer_pad_get_output_size (GstCompositor * comp,
-    GstCompositorPad * comp_pad, gint * width, gint * height)
+    GstCompositorPad * comp_pad, gint out_par_n, gint out_par_d, gint * width,
+    gint * height)
 {
-  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (comp);
   GstVideoAggregatorPad *vagg_pad = GST_VIDEO_AGGREGATOR_PAD (comp_pad);
   gint pad_width, pad_height;
   guint dar_n, dar_d;
@@ -241,13 +241,10 @@ _mixer_pad_get_output_size (GstCompositor * comp,
 
   gst_video_calculate_display_ratio (&dar_n, &dar_d, pad_width, pad_height,
       GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
-      GST_VIDEO_INFO_PAR_D (&vagg_pad->info),
-      GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info)
-      );
+      GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d);
   GST_LOG_OBJECT (comp_pad, "scaling %ux%u by %u/%u (%u/%u / %u/%u)", pad_width,
       pad_height, dar_n, dar_d, GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
-      GST_VIDEO_INFO_PAR_D (&vagg_pad->info),
-      GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info));
+      GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d);
 
   if (pad_height % dar_n == 0) {
     pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
@@ -292,7 +289,8 @@ gst_compositor_pad_set_info (GstVideoAggregatorPad * pad,
       gst_video_colorimetry_to_string (&(wanted_info->colorimetry));
   best_chroma = gst_video_chroma_to_string (wanted_info->chroma_site);
 
-  _mixer_pad_get_output_size (comp, cpad, &width, &height);
+  _mixer_pad_get_output_size (comp, cpad, GST_VIDEO_INFO_PAR_N (&vagg->info),
+      GST_VIDEO_INFO_PAR_D (&vagg->info), &width, &height);
 
   if (GST_VIDEO_INFO_FORMAT (wanted_info) !=
       GST_VIDEO_INFO_FORMAT (current_info)
@@ -310,8 +308,8 @@ gst_compositor_pad_set_info (GstVideoAggregatorPad * pad,
         width, height);
     tmp_info.chroma_site = wanted_info->chroma_site;
     tmp_info.colorimetry = wanted_info->colorimetry;
-    tmp_info.par_n = vagg->info.par_n;
-    tmp_info.par_d = vagg->info.par_d;
+    tmp_info.par_n = wanted_info->par_n;
+    tmp_info.par_d = wanted_info->par_d;
     tmp_info.fps_n = current_info->fps_n;
     tmp_info.fps_d = current_info->fps_d;
     tmp_info.flags = current_info->flags;
@@ -403,7 +401,8 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
    *     width/height. See ->set_info()
    * */
 
-  _mixer_pad_get_output_size (comp, cpad, &width, &height);
+  _mixer_pad_get_output_size (comp, cpad, GST_VIDEO_INFO_PAR_N (&vagg->info),
+      GST_VIDEO_INFO_PAR_D (&vagg->info), &width, &height);
 
   /* The only thing that can change here is the width
    * and height, otherwise set_info would've been called */
@@ -498,7 +497,8 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     GstCompositorPad *cpad2 = GST_COMPOSITOR_PAD (pad2);
     gint pad2_width, pad2_height;
 
-    _mixer_pad_get_output_size (comp, cpad2, &pad2_width, &pad2_height);
+    _mixer_pad_get_output_size (comp, cpad2, GST_VIDEO_INFO_PAR_N (&vagg->info),
+        GST_VIDEO_INFO_PAR_D (&vagg->info), &pad2_width, &pad2_height);
 
     /* We don't need to clamp the coords of the second rectangle */
     frame2_rect.x = cpad2->xpos;
@@ -883,17 +883,26 @@ set_functions (GstCompositor * self, GstVideoInfo * info)
 }
 
 static GstCaps *
-_update_caps (GstVideoAggregator * vagg, GstCaps * caps)
+_fixate_caps (GstVideoAggregator * vagg, GstCaps * caps)
 {
   GList *l;
   gint best_width = -1, best_height = -1;
-  GstVideoInfo info;
+  gint best_fps_n = -1, best_fps_d = -1;
+  gint par_n, par_d;
+  gdouble best_fps = 0.;
   GstCaps *ret = NULL;
+  GstStructure *s;
 
-  gst_video_info_from_caps (&info, caps);
+  ret = gst_caps_make_writable (caps);
 
-  /* FIXME: this doesn't work for non 1/1 output par's as we don't have that
-   * information available at this time */
+  /* we need this to calculate how large to make the output frame */
+  s = gst_caps_get_structure (ret, 0);
+  if (gst_structure_has_field (s, "pixel-aspect-ratio")) {
+    gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1, 1);
+    gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n, &par_d);
+  } else {
+    par_n = par_d = 1;
+  }
 
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
@@ -901,9 +910,13 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps)
     GstCompositorPad *compositor_pad = GST_COMPOSITOR_PAD (vaggpad);
     gint this_width, this_height;
     gint width, height;
+    gint fps_n, fps_d;
+    gdouble cur_fps;
 
-    _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), compositor_pad, &width,
-        &height);
+    fps_n = GST_VIDEO_INFO_FPS_N (&vaggpad->info);
+    fps_d = GST_VIDEO_INFO_FPS_D (&vaggpad->info);
+    _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), compositor_pad, par_n,
+        par_d, &width, &height);
 
     if (width == 0 || height == 0)
       continue;
@@ -915,17 +928,40 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps)
       best_width = this_width;
     if (best_height < this_height)
       best_height = this_height;
+
+    if (fps_d == 0)
+      cur_fps = 0.0;
+    else
+      gst_util_fraction_to_double (fps_n, fps_d, &cur_fps);
+
+    if (best_fps < cur_fps) {
+      best_fps = cur_fps;
+      best_fps_n = fps_n;
+      best_fps_d = fps_d;
+    }
   }
   GST_OBJECT_UNLOCK (vagg);
 
-  if (best_width > 0 && best_height > 0) {
-    info.width = best_width;
-    info.height = best_height;
-    if (set_functions (GST_COMPOSITOR (vagg), &info))
-      ret = gst_video_info_to_caps (&info);
+  if (best_fps_n <= 0 || best_fps_d <= 0 || best_fps == 0.0) {
+    best_fps_n = 25;
+    best_fps_d = 1;
+    best_fps = 25.0;
+  }
 
-    gst_caps_set_simple (ret, "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE,
-        1, G_MAXINT, G_MAXINT, 1, NULL);
+  gst_structure_fixate_field_nearest_int (s, "width", best_width);
+  gst_structure_fixate_field_nearest_int (s, "height", best_height);
+  gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
+      best_fps_d);
+  ret = gst_caps_fixate (ret);
+
+  if (best_width > 0 && best_height > 0) {
+    GstVideoInfo v_info;
+
+    gst_video_info_from_caps (&v_info, ret);
+    if (!set_functions (GST_COMPOSITOR (vagg), &v_info)) {
+      GST_ERROR_OBJECT (vagg, "Failed to setup vfuncs");
+      return NULL;
+    }
   }
 
   return ret;
@@ -1059,7 +1095,7 @@ gst_compositor_class_init (GstCompositorClass * klass)
 
   agg_class->sinkpads_type = GST_TYPE_COMPOSITOR_PAD;
   agg_class->sink_query = _sink_query;
-  videoaggregator_class->update_caps = _update_caps;
+  videoaggregator_class->fixate_caps = _fixate_caps;
   videoaggregator_class->aggregate_frames = gst_compositor_aggregate_frames;
 
   g_object_class_install_property (gobject_class, PROP_BACKGROUND,
