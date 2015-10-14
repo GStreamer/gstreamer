@@ -33,7 +33,8 @@ GST_DEBUG_CATEGORY (gst_gl_stereo_mix_debug);
 #define gst_gl_stereo_mix_parent_class parent_class
 G_DEFINE_TYPE (GstGLStereoMix, gst_gl_stereo_mix, GST_TYPE_GL_MIXER);
 
-static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps);
+static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps,
+    GstCaps * filter);
 static gboolean _negotiated_caps (GstVideoAggregator * videoaggregator,
     GstCaps * caps);
 gboolean gst_gl_stereo_mix_make_output (GstGLStereoMix * mix);
@@ -153,7 +154,6 @@ gst_gl_stereo_mix_class_init (GstGLStereoMixClass * klass)
   videoaggregator_class->get_output_buffer =
       gst_gl_stereo_mix_get_output_buffer;
   videoaggregator_class->find_best_format = gst_gl_stereo_mix_find_best_format;
-  videoaggregator_class->preserve_update_caps_result = TRUE;
 
   base_mix_class->supported_gl_api = GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
 }
@@ -471,7 +471,7 @@ get_converted_caps (GstGLStereoMix * mix, GstCaps * caps)
 
 /* Return the possible output caps we decided in find_best_format() */
 static GstCaps *
-_update_caps (GstVideoAggregator * vagg, GstCaps * caps)
+_update_caps (GstVideoAggregator * vagg, GstCaps * caps, GstCaps * filter)
 {
   GstGLStereoMix *mix = GST_GL_STEREO_MIX (vagg);
 
