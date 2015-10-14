@@ -47,6 +47,7 @@
 
 #include <gst/gst.h>
 #include <opencv2/core/core_c.h>
+#include "motioncells_wrapper.h"
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
@@ -62,24 +63,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MOTIONCELLS))
 typedef struct _GstMotioncells GstMotioncells;
 typedef struct _GstMotioncellsClass GstMotioncellsClass;
-
-typedef struct {
-	int upper_left_x;
-	int upper_left_y;
-	int lower_right_x;
-	int lower_right_y;
-} motionmaskcoordrect;
-
-typedef struct {
-	int R_channel_value;
-	int G_channel_value;
-	int B_channel_value;
-} cellscolor;
-
-typedef struct {
-	int lineidx;
-	int columnidx;
-} motioncellidx;
 
 struct _GstMotioncells
 {
@@ -99,7 +82,8 @@ struct _GstMotioncells
   cellscolor *motioncellscolor;
   motioncellidx *motioncellsidx, *motionmaskcellsidx;
   int motionmaskcoord_count, motioncells_count, motionmaskcells_count;
-  int gap, thickness, datafileidx, postnomotion, minimum_motion_frames;
+  int thickness;
+  guint gap, datafileidx, postnomotion, minimum_motion_frames;
   guint64 motion_begin_timestamp, last_motion_timestamp, motion_timestamp,
       last_nomotion_notified, prev_buff_timestamp, cur_buff_timestamp;
   gint64 diff_timestamp, starttime;

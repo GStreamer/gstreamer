@@ -56,6 +56,9 @@
 static int instanceCounter = 0;
 static bool element_id_was_max = false;
 
+vector < instanceOfMC > motioncellsvector;
+vector < int > motioncellsfreeids;
+
 MotionCells *mc;
 char p_str[] = "idx failed";
 
