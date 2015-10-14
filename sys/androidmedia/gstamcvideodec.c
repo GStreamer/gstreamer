@@ -475,6 +475,7 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
   GstVideoFormat gst_format;
   GstAmcVideoDecClass *klass = GST_AMC_VIDEO_DEC_GET_CLASS (self);
   GError *err = NULL;
+  gboolean ret;
 
   if (!gst_amc_format_get_int (format, "color-format", &color_format, &err) ||
       !gst_amc_format_get_int (format, "width", &width, &err) ||
@@ -559,11 +560,11 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
       self->color_format_info.crop_top, self->color_format_info.crop_right,
       self->color_format_info.crop_bottom, self->color_format_info.frame_size);
 
-  gst_video_decoder_negotiate (GST_VIDEO_DECODER (self));
+  ret = gst_video_decoder_negotiate (GST_VIDEO_DECODER (self));
   gst_video_codec_state_unref (output_state);
   self->input_state_changed = FALSE;
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
