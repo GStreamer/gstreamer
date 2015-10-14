@@ -12198,6 +12198,12 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "divxversion", G_TYPE_INT, 5, NULL);
       break;
 
+    case GST_MAKE_FOURCC ('F', 'F', 'V', '1'):
+      _codec ("FFV1");
+      caps = gst_caps_new_simple ("video/x-ffv",
+          "ffvversion", G_TYPE_INT, 1, NULL);
+      break;
+
     case GST_MAKE_FOURCC ('3', 'I', 'V', '1'):
     case GST_MAKE_FOURCC ('3', 'I', 'V', '2'):
     case GST_MAKE_FOURCC ('X', 'V', 'I', 'D'):
