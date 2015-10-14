@@ -1716,7 +1716,11 @@ class MediaFormatCombination(object):
                "ogg": "application/ogg",
                "mkv": "video/x-matroska",
                "mp4": "video/quicktime,variant=iso;",
-               "webm": "video/webm"}
+               "webm": "video/webm",
+               "quicktime": "video/quicktime;",
+               "rawaudio": "audio/x-raw",
+               "prores": "video/x-prores",
+               }
 
     def __str__(self):
         return "%s and %s in %s" % (self.audio, self.video, self.container)
