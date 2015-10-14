@@ -397,6 +397,8 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
     return FALSE;
   }
 
+  GST_TRACE ("data:\n%s", data);
+
   g_free (self->last_data);
   self->last_data = data;
 
