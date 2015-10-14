@@ -213,12 +213,9 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   switch (feature) {
 #if (USE_GLX || USE_EGL)
     case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
-      if (decode->has_texture_upload_meta)
         features =
             gst_caps_features_new
             (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
-      else
-        format = GST_VIDEO_FORMAT_I420;
       break;
 #endif
 #if GST_CHECK_VERSION(1,5,0)
