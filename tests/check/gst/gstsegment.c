@@ -22,29 +22,26 @@
 
 #include <gst/check/gstcheck.h>
 
-static void
-check_times (GstSegment * segment, guint64 position, guint64 stream_time,
-    guint64 running_time)
-{
-  guint64 st, rt, pos;
-
-  st = gst_segment_to_stream_time (segment, segment->format, position);
-  rt = gst_segment_to_running_time (segment, segment->format, position);
-  GST_DEBUG ("position %" G_GUINT64_FORMAT ", st %" G_GUINT64_FORMAT ", rt %"
-      G_GUINT64_FORMAT, position, stream_time, running_time);
-
-  fail_unless_equals_int64 (st, stream_time);
-  fail_unless_equals_int64 (rt, running_time);
-  if (stream_time != -1) {
-    pos = gst_segment_position_from_stream_time (segment, segment->format, st);
-    fail_unless_equals_int64 (pos, position);
-  }
-
-  if (running_time != -1) {
-    pos = gst_segment_position_from_running_time (segment, segment->format, rt);
-    fail_unless_equals_int64 (pos, position);
-  }
-}
+#define check_times(segment, position, stream_time, running_time) G_STMT_START { \
+  guint64 st, rt, pos; \
+  \
+  st = gst_segment_to_stream_time ((segment), (segment)->format, (position)); \
+  rt = gst_segment_to_running_time ((segment), (segment)->format, (position)); \
+  GST_DEBUG ("position %" G_GUINT64_FORMAT ", st %" G_GUINT64_FORMAT ", rt %" \
+      G_GUINT64_FORMAT, (guint64) (position), (guint64) (stream_time), (guint64) (running_time)); \
+  \
+  fail_unless_equals_int64 (st, (stream_time)); \
+  fail_unless_equals_int64 (rt, (running_time)); \
+  if ((stream_time) != -1) { \
+    pos = gst_segment_position_from_stream_time ((segment), (segment)->format, st); \
+    fail_unless_equals_int64 (pos, (position)); \
+  } \
+  \
+  if ((running_time) != -1) { \
+    pos = gst_segment_position_from_running_time ((segment), (segment)->format, rt); \
+    fail_unless_equals_int64 (pos, (position)); \
+  } \
+} G_STMT_END;
 
 /* mess with the segment structure in the bytes format */
 GST_START_TEST (segment_seek_nosize)
