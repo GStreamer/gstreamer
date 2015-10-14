@@ -1927,6 +1927,10 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
   if (gst_element_set_state (stream->src,
           GST_STATE_READY) != GST_STATE_CHANGE_FAILURE) {
     if (start != 0 || end != -1) {
+      /* HTTP ranges are inclusive, GStreamer segments are exclusive for the
+       * stop position */
+      if (end != -1)
+        end += 1;
       if (!gst_element_send_event (stream->src, gst_event_new_seek (1.0,
                   GST_FORMAT_BYTES, (GstSeekFlags) GST_SEEK_FLAG_FLUSH,
                   GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_SET, end))) {
