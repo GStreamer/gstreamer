@@ -38,6 +38,13 @@
 # define DEPRECATED_IN_MAC_OS_X_VERSION_10_7_AND_LATER
 #endif
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#ifdef X509_NAME
+#undef X509_NAME
+#endif
+#endif
+
 #include <openssl/ssl.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_dtls_certificate_debug);
