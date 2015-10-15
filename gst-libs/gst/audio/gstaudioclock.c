@@ -184,22 +184,19 @@ gst_audio_clock_get_internal_time (GstClock * clock)
  * Returns: the time as reported by the time function of the audio clock
  */
 GstClockTime
-gst_audio_clock_get_time (GstClock * clock)
+gst_audio_clock_get_time (GstAudioClock * clock)
 {
-  GstAudioClock *aclock;
   GstClockTime result;
 
-  aclock = GST_AUDIO_CLOCK_CAST (clock);
-
-  result = aclock->func (clock, aclock->user_data);
+  result = clock->func (GST_CLOCK_CAST (clock), clock->user_data);
   if (result == GST_CLOCK_TIME_NONE) {
     GST_DEBUG_OBJECT (clock, "no time, reuse last");
-    result = aclock->last_time - aclock->time_offset;
+    result = clock->last_time - clock->time_offset;
   }
 
   GST_DEBUG_OBJECT (clock,
       "result %" GST_TIME_FORMAT ", last_time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (result), GST_TIME_ARGS (aclock->last_time));
+      GST_TIME_ARGS (result), GST_TIME_ARGS (clock->last_time));
 
   return result;
 }
@@ -214,14 +211,11 @@ gst_audio_clock_get_time (GstClock * clock)
  * Returns: @time adjusted with the internal offset.
  */
 GstClockTime
-gst_audio_clock_adjust (GstClock * clock, GstClockTime time)
+gst_audio_clock_adjust (GstAudioClock * clock, GstClockTime time)
 {
-  GstAudioClock *aclock;
   GstClockTime result;
 
-  aclock = GST_AUDIO_CLOCK_CAST (clock);
-
-  result = time + aclock->time_offset;
+  result = time + clock->time_offset;
 
   return result;
 }
@@ -238,11 +232,7 @@ gst_audio_clock_adjust (GstClock * clock, GstClockTime time)
  * the rest of its lifetime.
  */
 void
-gst_audio_clock_invalidate (GstClock * clock)
+gst_audio_clock_invalidate (GstAudioClock * clock)
 {
-  GstAudioClock *aclock;
-
-  aclock = GST_AUDIO_CLOCK_CAST (clock);
-
-  aclock->func = gst_audio_clock_func_invalid;
+  clock->func = gst_audio_clock_func_invalid;
 }

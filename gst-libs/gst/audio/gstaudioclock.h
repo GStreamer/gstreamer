@@ -94,10 +94,10 @@ GstClock*       gst_audio_clock_new             (const gchar *name, GstAudioCloc
                                                  gpointer user_data, GDestroyNotify destroy_notify);
 void            gst_audio_clock_reset           (GstAudioClock *clock, GstClockTime time);
 
-GstClockTime    gst_audio_clock_get_time        (GstClock * clock);
-GstClockTime    gst_audio_clock_adjust          (GstClock * clock, GstClockTime time);
+GstClockTime    gst_audio_clock_get_time        (GstAudioClock * clock);
+GstClockTime    gst_audio_clock_adjust          (GstAudioClock * clock, GstClockTime time);
 
-void            gst_audio_clock_invalidate      (GstClock * clock);
+void            gst_audio_clock_invalidate      (GstAudioClock * clock);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAudioClock, gst_object_unref)

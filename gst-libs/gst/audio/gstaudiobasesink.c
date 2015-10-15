@@ -341,7 +341,7 @@ gst_audio_base_sink_dispose (GObject * object)
     sink->priv->custom_slaving_cb_notify (sink->priv->custom_slaving_cb_data);
 
   if (sink->provided_clock) {
-    gst_audio_clock_invalidate (sink->provided_clock);
+    gst_audio_clock_invalidate (GST_AUDIO_CLOCK (sink->provided_clock));
     gst_object_unref (sink->provided_clock);
     sink->provided_clock = NULL;
   }
@@ -1295,8 +1295,9 @@ gst_audio_base_sink_custom_slaving (GstAudioBaseSink * sink,
 
   /* sample clocks and figure out clock skew */
   etime = gst_clock_get_time (GST_ELEMENT_CLOCK (sink));
-  itime = gst_audio_clock_get_time (sink->provided_clock);
-  itime = gst_audio_clock_adjust (sink->provided_clock, itime);
+  itime = gst_audio_clock_get_time (GST_AUDIO_CLOCK (sink->provided_clock));
+  itime =
+      gst_audio_clock_adjust (GST_AUDIO_CLOCK (sink->provided_clock), itime);
 
   GST_DEBUG_OBJECT (sink,
       "internal %" GST_TIME_FORMAT " external %" GST_TIME_FORMAT
@@ -1442,8 +1443,9 @@ gst_audio_base_sink_skew_slaving (GstAudioBaseSink * sink,
 
   /* sample clocks and figure out clock skew */
   etime = gst_clock_get_time (GST_ELEMENT_CLOCK (sink));
-  itime = gst_audio_clock_get_time (sink->provided_clock);
-  itime = gst_audio_clock_adjust (sink->provided_clock, itime);
+  itime = gst_audio_clock_get_time (GST_AUDIO_CLOCK (sink->provided_clock));
+  itime =
+      gst_audio_clock_adjust (GST_AUDIO_CLOCK (sink->provided_clock), itime);
 
   GST_DEBUG_OBJECT (sink,
       "internal %" GST_TIME_FORMAT " external %" GST_TIME_FORMAT
@@ -1668,8 +1670,9 @@ gst_audio_base_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
 
   /* We might need to take the object lock within gst_audio_clock_get_time(),
    * so call that before we take it again */
-  itime = gst_audio_clock_get_time (sink->provided_clock);
-  itime = gst_audio_clock_adjust (sink->provided_clock, itime);
+  itime = gst_audio_clock_get_time (GST_AUDIO_CLOCK (sink->provided_clock));
+  itime =
+      gst_audio_clock_adjust (GST_AUDIO_CLOCK (sink->provided_clock), itime);
 
   GST_OBJECT_LOCK (sink);
 

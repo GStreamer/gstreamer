@@ -272,7 +272,7 @@ gst_audio_base_src_dispose (GObject * object)
 
   GST_OBJECT_LOCK (src);
   if (src->clock) {
-    gst_audio_clock_invalidate (src->clock);
+    gst_audio_clock_invalidate (GST_AUDIO_CLOCK (src->clock));
     gst_object_unref (src->clock);
     src->clock = NULL;
   }
@@ -1027,7 +1027,7 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     } else {
       /* to get the timestamp against the clock we also need to add our
        * offset */
-      timestamp = gst_audio_clock_adjust (clock, timestamp);
+      timestamp = gst_audio_clock_adjust (GST_AUDIO_CLOCK (clock), timestamp);
     }
 
     /* we are not slaved, subtract base_time */
