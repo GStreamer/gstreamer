@@ -98,7 +98,6 @@ vpx.configure.stamp:
 		--$(VP9_DECODER)-vp9-decoder				\
 		--$(VP9_ENCODER)-vp9-encoder				\
 		--enable-runtime-cpu-detect				\
-		--disable-md5						\
 		--disable-examples					\
 		--disable-docs						\
 		--disable-unit-tests					&& \
