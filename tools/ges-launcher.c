@@ -146,6 +146,7 @@ static void
 _project_loaded_cb (GESProject * project, GESTimeline * timeline,
     GESLauncher * self)
 {
+  gchar *project_uri = NULL;
   ParsedOptions *opts = &self->priv->parsed_options;
   GST_INFO ("Project loaded, playing it");
 
@@ -174,15 +175,18 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
     }
   }
 
-  _timeline_set_user_options (self, timeline, ges_project_get_uri (project));
+  project_uri = ges_project_get_uri (project);
+  _timeline_set_user_options (self, timeline, project_uri);
 
-  if (self->priv->parsed_options.load_path && ges_project_get_uri (project)
+  if (self->priv->parsed_options.load_path && project_uri
       && ges_validate_activate (GST_PIPELINE (self->priv->pipeline),
           opts->scenario, &opts->needs_set_state) == FALSE) {
     g_error ("Could not activate scenario %s", opts->scenario);
     self->priv->seenerrors = TRUE;
     g_application_quit (G_APPLICATION (self));
   }
+
+  g_free (project_uri);
 
   if (!self->priv->seenerrors && opts->needs_set_state &&
       gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
