@@ -243,7 +243,7 @@ AC_DEFINE_UNQUOTED([GST_PKG_VERSION_S], ["$GST_PKG_VERSION"],
     [Defined to the string representation of GStreamer API version])
 
 if test "$GST_API_VERSION" = "1.2"; then
-    AC_MSG_WARN([support for GStreamer 1.2 is deprecated, please upgrade])
+    AC_MSG_WARN([support for GStreamer 1.2 is obsolete, and will be removed])
 fi
 
 dnl GStreamer Core
