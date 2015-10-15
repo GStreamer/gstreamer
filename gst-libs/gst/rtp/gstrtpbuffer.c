@@ -454,23 +454,23 @@ map_failed:
   }
 wrong_length:
   {
-    GST_WARNING ("length check failed");
+    GST_DEBUG ("length check failed");
     goto dump_packet;
   }
 wrong_version:
   {
-    GST_WARNING ("version check failed (%d != %d)", version, GST_RTP_VERSION);
+    GST_DEBUG ("version check failed (%d != %d)", version, GST_RTP_VERSION);
     goto dump_packet;
   }
 reserved_pt:
   {
-    GST_WARNING ("reserved PT %d found", pt);
+    GST_DEBUG ("reserved PT %d found", pt);
     goto dump_packet;
   }
 wrong_padding:
   {
-    GST_WARNING ("padding check failed (%" G_GSIZE_FORMAT " - %d < %d)",
-        bufsize, header_len, padding);
+    GST_DEBUG ("padding check failed (%" G_GSIZE_FORMAT " - %d < %d)", bufsize,
+        header_len, padding);
     goto dump_packet;
   }
 dump_packet:
