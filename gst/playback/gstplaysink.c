@@ -3472,6 +3472,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
         activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
         disconnect_audio_chain (playsink->audiochain, playsink);
+        if (playsink->audiochain->volume)
+          gst_object_unref (playsink->audiochain->volume);
         playsink->audiochain->volume = NULL;
         if (playsink->audiochain->ts_offset)
           gst_object_unref (playsink->audiochain->ts_offset);
@@ -3580,6 +3582,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
       if (playsink->audiochain->sink_volume) {
         disconnect_audio_chain (playsink->audiochain, playsink);
+        if (playsink->audiochain->volume)
+          gst_object_unref (playsink->audiochain->volume);
         playsink->audiochain->volume = NULL;
         if (playsink->audiochain->ts_offset)
           gst_object_unref (playsink->audiochain->ts_offset);
@@ -4786,6 +4790,8 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         /* remove our links to the volume elements when they were
          * provided by a sink */
         disconnect_audio_chain (playsink->audiochain, playsink);
+        if (playsink->audiochain->volume)
+          gst_object_unref (playsink->audiochain->volume);
         playsink->audiochain->volume = NULL;
       }
 
