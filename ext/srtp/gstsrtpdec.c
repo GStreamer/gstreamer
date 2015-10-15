@@ -625,7 +625,8 @@ validate_buffer (GstSrtpDec * filter, GstBuffer * buf, guint32 * ssrc,
   GstSrtpDecSsrcStream *stream = NULL;
   GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
 
-  if (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtpbuf)) {
+  if (gst_rtp_buffer_map (buf,
+          GST_MAP_READ | GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING, &rtpbuf)) {
     if (gst_rtp_buffer_get_payload_type (&rtpbuf) < 64
         || gst_rtp_buffer_get_payload_type (&rtpbuf) > 80) {
       *ssrc = gst_rtp_buffer_get_ssrc (&rtpbuf);
@@ -1124,7 +1125,8 @@ unprotect:
         guint16 seqnum = 0;
         GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
 
-        gst_rtp_buffer_map (buf, GST_MAP_READ, &rtpbuf);
+        gst_rtp_buffer_map (buf,
+            GST_MAP_READ | GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING, &rtpbuf);
         seqnum = gst_rtp_buffer_get_seq (&rtpbuf);
         gst_rtp_buffer_unmap (&rtpbuf);
 
