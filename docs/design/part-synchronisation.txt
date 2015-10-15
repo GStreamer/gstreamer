@@ -101,8 +101,13 @@ The following transformation to running_time exist:
 
   if (S.rate > 0.0)
     B.running_time = (B.timestamp - (S.start + S.offset)) / ABS (S.rate) + S.base
+    =>
+    B.timestamp = (B.running_time - S.base) * ABS (S.rate) + S.start + S.offset
   else
     B.running_time = ((S.stop - S.offset) - B.timestamp) / ABS (S.rate) + S.base
+    =>
+    B.timestamp = S.stop - S.offset - ((B.running_time - S.base) * ABS (S.rate))
+
 
 We write B.running_time as the running_time obtained from the SEGMENT event
 and the buffers of that segment.
@@ -191,9 +196,13 @@ Stream time is calculated using the buffer times and the preceding SEGMENT
 event as follows:
 
     stream_time = (B.timestamp - S.start) * ABS (S.applied_rate) + S.time
- 
+    => B.timestamp = (stream_time - S.time) / ABS(S.applied_rate) + S.start
+
 For negative rates, B.timestamp will go backwards from S.stop to S.start,
-making the stream time go backwards.
+making the stream time go backwards:
+
+    stream_time = (S.stop - B.timestamp) * ABS(S.applied_rate) + S.time
+    => B.timestamp = S.stop - (stream_time - S.time) / ABS(S.applied_rate)
 
 In the PLAYING state, it is also possible to use the pipeline clock to derive
 the current stream_time.

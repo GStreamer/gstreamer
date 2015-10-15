@@ -755,7 +755,7 @@ GST_END_TEST;
 GST_START_TEST (segment_full)
 {
   GstSegment segment;
-  guint64 rt;
+  guint64 rt, pos;
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
 
@@ -770,9 +770,15 @@ GST_START_TEST (segment_full)
   fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
           50, &rt) == 1);
   fail_unless (rt == 0);
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, rt, &pos) == 1);
+  fail_unless (pos == 50);
   fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
           200, &rt) == 1);
   fail_unless (rt == 150);
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, rt, &pos) == 1);
+  fail_unless (pos == 200);
   fail_unless (!gst_segment_clip (&segment, GST_FORMAT_TIME, 40, 40, NULL,
           NULL));
   fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME, 40,
@@ -785,6 +791,9 @@ GST_START_TEST (segment_full)
           NULL));
   fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME, 201,
           &rt) == 1);
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, rt, &pos) == 1);
+  fail_unless (pos == 201);
 
   fail_unless (gst_segment_offset_running_time (&segment, GST_FORMAT_TIME,
           -50) == TRUE);
@@ -794,6 +803,99 @@ GST_START_TEST (segment_full)
           50, &rt) == -1);
   GST_DEBUG ("%" G_GUINT64_FORMAT, rt);
   fail_unless (rt == 50);
+
+  segment.start = 50;
+  segment.stop = 300;
+  segment.position = 150;
+  segment.time = 0;
+  segment.offset = 0;
+  gst_segment_set_running_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless_equals_int (segment.base, 100);
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 70, &pos) == -1);
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 140, &pos) == 1);
+  fail_unless_equals_int (pos, 190);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (segment_stream_time_full)
+{
+  GstSegment segment;
+  guint64 st, pos;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  segment.start = 50;
+  segment.stop = 200;
+  segment.time = 30;
+  segment.position = 0;
+
+  fail_unless (gst_segment_to_stream_time_full (&segment, GST_FORMAT_TIME,
+          0, &st) == -1);
+  fail_unless_equals_int (st, 20);
+  fail_unless (gst_segment_to_stream_time_full (&segment, GST_FORMAT_TIME,
+          20, &st) == 1);
+  fail_unless_equals_int (st, 0);
+  fail_unless (gst_segment_position_from_stream_time_full (&segment,
+          GST_FORMAT_TIME, 0, &pos) == 1);
+  fail_unless_equals_int (pos, 20);
+  fail_unless (gst_segment_to_stream_time_full (&segment, GST_FORMAT_TIME,
+          10, &st) == -1);
+  fail_unless_equals_int (st, 10);
+  fail_unless (gst_segment_to_stream_time_full (&segment, GST_FORMAT_TIME,
+          40, &st) == 1);
+  fail_unless_equals_int (st, 20);
+  fail_unless (gst_segment_position_from_stream_time_full (&segment,
+          GST_FORMAT_TIME, st, &pos) == 1);
+  fail_unless_equals_int (pos, 40);
+  segment.time = 100;
+  fail_unless (gst_segment_position_from_stream_time_full (&segment,
+          GST_FORMAT_TIME, 40, &pos) == -1);
+  fail_unless_equals_int (pos, 10);
+  fail_unless (gst_segment_position_from_stream_time_full (&segment,
+          GST_FORMAT_TIME, 60, &pos) == 1);
+  fail_unless_equals_int (pos, 10);
+
+  segment.start = 50;
+  segment.position = 150;
+  segment.stop = 200;
+  segment.time = 0;
+  segment.applied_rate = -1;
+  segment.rate = -1;
+
+  fail_unless (gst_segment_to_stream_time_full (&segment, GST_FORMAT_TIME,
+          0, &st) == 1);
+  fail_unless_equals_int (st, 200);
+  fail_unless (gst_segment_position_from_stream_time_full (&segment,
+          GST_FORMAT_TIME, 200, &pos) == 1);
+  fail_unless_equals_int (pos, 0);
+  fail_unless (gst_segment_to_stream_time_full (&segment, GST_FORMAT_TIME,
+          250, &st) == -1);
+  fail_unless_equals_int (st, 50);
+  fail_unless (gst_segment_position_from_stream_time_full (&segment,
+          GST_FORMAT_TIME, 200, &pos) == 1);
+  fail_unless_equals_int (pos, 0);
+  fail_unless (gst_segment_position_from_stream_time_full (&segment,
+          GST_FORMAT_TIME, 250, &pos) == -1);
+  fail_unless_equals_int (pos, 50);
+
+  segment.time = 70;
+  fail_unless (gst_segment_to_stream_time_full (&segment, GST_FORMAT_TIME,
+          250, &st) == 1);
+  fail_unless_equals_int (st, 20);
+  fail_unless (gst_segment_position_from_stream_time_full (&segment,
+          GST_FORMAT_TIME, 50, &pos) == 1);
+  fail_unless_equals_int (pos, 220);
+  fail_unless (gst_segment_position_from_stream_time_full (&segment,
+          GST_FORMAT_TIME, 90, &pos) == 1);
+  fail_unless_equals_int (pos, 180);
+
+  segment.stop = 60;
+  fail_unless (gst_segment_position_from_stream_time_full (&segment,
+          GST_FORMAT_TIME, 5, &pos) == 1);
+  fail_unless_equals_int (pos, 125);
 }
 
 GST_END_TEST;
@@ -897,6 +999,7 @@ gst_segment_suite (void)
   tcase_add_test (tc_chain, segment_full);
   tcase_add_test (tc_chain, segment_negative_rate);
   tcase_add_test (tc_chain, segment_negative_applied_rate);
+  tcase_add_test (tc_chain, segment_stream_time_full);
 
   return s;
 }
