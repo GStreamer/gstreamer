@@ -419,7 +419,7 @@ _maybe_prepend_version (GstGLSLStage * stage, gchar ** shader_str,
 
   i = 0;
   if (add_header)
-    *vertex_sources[i++] = es2_version_header;
+    (*vertex_sources)[i++] = es2_version_header;
 
   for (j = 0; j < stage->priv->n_strings; i++, j++)
     (*vertex_sources)[i] = shader_str[j];
