@@ -1484,7 +1484,8 @@ decode_pad_set_target (GstDecodePad * dpad, GstPad * target)
  *  - get list of factories to autoplug.
  *  - continue autoplugging to one of the factories.
  */
-static void
+/* returns whether to expose the pad */
+static gboolean
 analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     GstCaps * caps, GstDecodeChain * chain)
 {
@@ -1504,12 +1505,12 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       && src != ((GstDecodeElement *) chain->elements->data)->element
       && src != ((GstDecodeElement *) chain->elements->data)->capsfilter) {
     GST_ERROR_OBJECT (dbin, "New pad from not the last element in this chain");
-    return;
+    return FALSE;
   }
 
   if (chain->endpad) {
     GST_ERROR_OBJECT (dbin, "New pad in a chain that is already complete");
-    return;
+    return FALSE;
   }
 
   if (chain->demuxer) {
@@ -1532,7 +1533,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     CHAIN_MUTEX_UNLOCK (oldchain);
     if (!group) {
       GST_WARNING_OBJECT (dbin, "No current group");
-      return;
+      return FALSE;
     }
 
     /* If this is not a dynamic pad demuxer, we're no-more-pads
@@ -1786,15 +1787,15 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
   gst_caps_unref (caps);
 
-  return;
+  return FALSE;
 
 expose_pad:
   {
-    GST_LOG_OBJECT (dbin, "Pad is final. autoplug-continue:%d", apcontinue);
-    expose_pad (dbin, src, dpad, pad, caps, chain);
+    GST_LOG_OBJECT (dbin, "Pad is final and should expose the pad. "
+        "autoplug-continue:%d", apcontinue);
     gst_object_unref (dpad);
     gst_caps_unref (caps);
-    return;
+    return TRUE;
   }
 
 discarded_type:
@@ -1814,7 +1815,7 @@ discarded_type:
     EXPOSE_UNLOCK (dbin);
     do_async_done (dbin);
 
-    return;
+    return FALSE;
   }
 
 unknown_type:
@@ -1848,7 +1849,7 @@ unknown_type:
       }
       do_async_done (dbin);
     }
-    return;
+    return FALSE;
   }
 non_fixed:
   {
@@ -1887,7 +1888,7 @@ setup_caps_delay:
     if (caps)
       gst_caps_unref (caps);
 
-    return;
+    return FALSE;
   }
 }
 
@@ -1982,39 +1983,6 @@ error_message_to_string (GstMessage * msg)
   g_clear_error (&err);
 
   return full_message;
-}
-
-/* We consider elements as "simple demuxer" when they are a demuxer
- * with one and only one ALWAYS source pad.
- */
-static gboolean
-is_simple_demuxer_factory (GstElementFactory * factory)
-{
-  if (strstr (gst_element_factory_get_metadata (factory,
-              GST_ELEMENT_METADATA_KLASS), "Demuxer")) {
-    const GList *tmp;
-    gint num_alway_srcpads = 0;
-
-    for (tmp = gst_element_factory_get_static_pad_templates (factory);
-        tmp; tmp = tmp->next) {
-      GstStaticPadTemplate *template = tmp->data;
-
-      if (template->direction == GST_PAD_SRC) {
-        if (template->presence == GST_PAD_ALWAYS) {
-          if (num_alway_srcpads >= 0)
-            num_alway_srcpads++;
-        } else {
-          num_alway_srcpads = -1;
-        }
-      }
-
-    }
-
-    if (num_alway_srcpads == 1)
-      return TRUE;
-  }
-
-  return FALSE;
 }
 
 static GstPadProbeReturn
@@ -2122,7 +2090,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GParamSpec *pspec;
     gboolean subtitle;
     GList *to_connect = NULL;
-    gboolean is_parser_converter = FALSE, is_simple_demuxer = FALSE;
+    gboolean is_parser_converter = FALSE;
+    gboolean to_expose = FALSE;
 
     /* Set dpad target to pad again, it might've been unset
      * below but we came back here because something failed
@@ -2190,7 +2159,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
      */
     is_parser_converter = strstr (gst_element_factory_get_metadata (factory,
             GST_ELEMENT_METADATA_KLASS), "Parser") != NULL;
-    is_simple_demuxer = is_simple_demuxer_factory (factory);
 
     if (is_parser_converter) {
       gboolean skip = FALSE;
@@ -2447,14 +2415,15 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* link this element further */
     to_connect = connect_element (dbin, delem, chain);
 
-    if ((is_simple_demuxer || is_parser_converter) && to_connect) {
+    {
       GList *l;
       for (l = to_connect; l; l = g_list_next (l)) {
         GstPad *opad = GST_PAD_CAST (l->data);
         GstCaps *ocaps;
 
         ocaps = get_pad_caps (opad);
-        analyze_new_pad (dbin, delem->element, opad, ocaps, chain);
+        to_expose = analyze_new_pad (dbin, delem->element, opad, ocaps, chain);
+
         if (ocaps)
           gst_caps_unref (ocaps);
 
@@ -2573,22 +2542,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       SUBTITLE_UNLOCK (dbin);
     }
 
-    if (to_connect) {
-      GList *l;
-      for (l = to_connect; l; l = g_list_next (l)) {
-        GstPad *opad = GST_PAD_CAST (l->data);
-        GstCaps *ocaps;
-
-        ocaps = get_pad_caps (opad);
-        analyze_new_pad (dbin, delem->element, opad, ocaps, chain);
-        if (ocaps)
-          gst_caps_unref (ocaps);
-
-        gst_object_unref (opad);
-      }
-      g_list_free (to_connect);
-      to_connect = NULL;
-    }
+    if (to_expose)
+      expose_pad (dbin, delem->element, dpad, pad, caps, chain);
 
     res = TRUE;
     break;
@@ -2836,7 +2791,8 @@ type_found (GstElement * typefind, guint probability,
    * be held (if called from a proxied setcaps), so grab it anyway */
   GST_PAD_STREAM_LOCK (sink_pad);
   decode_bin->decode_chain = gst_decode_chain_new (decode_bin, NULL, pad);
-  analyze_new_pad (decode_bin, typefind, pad, caps, decode_bin->decode_chain);
+  if (analyze_new_pad (decode_bin, typefind, pad, caps, decode_bin->decode_chain))
+    expose_pad (decode_bin, typefind, decode_bin->decode_chain->current_pad, pad, caps, decode_bin->decode_chain);
   GST_PAD_STREAM_UNLOCK (sink_pad);
 
   gst_object_unref (sink_pad);
@@ -2889,7 +2845,8 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
   GST_DEBUG_OBJECT (pad, "pad added, chain:%p", chain);
 
   caps = get_pad_caps (pad);
-  analyze_new_pad (dbin, element, pad, caps, chain);
+  if (analyze_new_pad (dbin, element, pad, caps, chain))
+    expose_pad (dbin, element, chain->current_pad, pad, caps, chain);
   if (caps)
     gst_caps_unref (caps);
 
