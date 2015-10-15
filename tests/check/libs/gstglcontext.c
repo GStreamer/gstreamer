@@ -42,11 +42,21 @@ teardown (void)
   gst_object_unref (display);
 }
 
-static GLuint fbo_id, rbo, tex;
+static GLuint vbo, vbo_indices, vao, fbo_id, rbo, tex;
 static GstGLFramebuffer *fbo;
 static GstGLShader *shader;
 static GLint shader_attr_position_loc;
 static GLint shader_attr_texture_loc;
+
+static const GLfloat vertices[] = {
+  /* x, y, z, s, t */
+  1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+  -1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+  -1.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+  1.0f, -1.0f, 0.0f, 1.0f, 1.0f
+};
+
+static const GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
 static void
 init (gpointer data)
@@ -79,6 +89,8 @@ deinit (gpointer data)
   GstGLContext *context = data;
   GstGLFuncs *gl = context->gl_vtable;
   gl->DeleteTextures (1, &tex);
+  if (vao)
+    gl->DeleteVertexArrays (1, &vao);
   gst_object_unref (fbo);
   gst_object_unref (shader);
 }
@@ -106,43 +118,112 @@ draw_tex (gpointer data)
 }
 
 static void
+_bind_buffer (GstGLContext * context)
+{
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
+  gl->BindBuffer (GL_ARRAY_BUFFER, vbo);
+
+  /* Load the vertex position */
+  gl->VertexAttribPointer (shader_attr_position_loc, 3, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) 0);
+
+  /* Load the texture coordinate */
+  gl->VertexAttribPointer (shader_attr_texture_loc, 2, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
+
+  gl->EnableVertexAttribArray (shader_attr_position_loc);
+  gl->EnableVertexAttribArray (shader_attr_texture_loc);
+}
+
+static void
+_unbind_buffer (GstGLContext * context)
+{
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+
+  gl->DisableVertexAttribArray (shader_attr_position_loc);
+  gl->DisableVertexAttribArray (shader_attr_texture_loc);
+}
+
+static void
+init_blit (gpointer data)
+{
+  GstGLContext *context = data;
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  if (!vbo) {
+    if (gl->GenVertexArrays) {
+      gl->GenVertexArrays (1, &vao);
+      gl->BindVertexArray (vao);
+    }
+
+    gl->GenBuffers (1, &vbo);
+    gl->BindBuffer (GL_ARRAY_BUFFER, vbo);
+    gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), vertices,
+        GL_STATIC_DRAW);
+
+    gl->GenBuffers (1, &vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+        GL_STATIC_DRAW);
+
+    if (gl->GenVertexArrays) {
+      _bind_buffer (context);
+      gl->BindVertexArray (0);
+    }
+
+    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+  }
+}
+
+static void
+deinit_blit (gpointer data)
+{
+  GstGLContext *context = data;
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  if (vbo)
+    gl->DeleteBuffers (1, &vbo);
+  vbo = 0;
+  if (vbo_indices)
+    gl->DeleteBuffers (1, &vbo_indices);
+  vbo_indices = 0;
+  if (vao)
+    gl->DeleteVertexArrays (1, &vao);
+  vao = 0;
+}
+
+static void
 draw_render (gpointer data)
 {
   GstGLContext *context = data;
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
   const GstGLFuncs *gl = context->gl_vtable;
-  const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
-    1.0f, 0.0f,
-    -1.0f, 1.0f, 0.0f,
-    0.0f, 0.0f,
-    -1.0f, -1.0f, 0.0f,
-    0.0f, 1.0f,
-    1.0f, -1.0f, 0.0f,
-    1.0f, 1.0f
-  };
-
-  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
   gl->Clear (GL_COLOR_BUFFER_BIT);
 
   gst_gl_shader_use (shader);
 
-  /* Load the vertex position */
-  gl->VertexAttribPointer (shader_attr_position_loc, 3,
-      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-
-  /* Load the texture coordinate */
-  gl->VertexAttribPointer (shader_attr_texture_loc, 2,
-      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-  gl->EnableVertexAttribArray (shader_attr_position_loc);
-  gl->EnableVertexAttribArray (shader_attr_texture_loc);
-
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (GL_TEXTURE_2D, tex);
   gst_gl_shader_set_uniform_1i (shader, "s_texture", 0);
 
-  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (vao);
+  else
+    _bind_buffer (context);
+
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (0);
+  else
+    _unbind_buffer (context);
 
   context_class->swap_buffers (context);
 }
@@ -181,6 +262,7 @@ GST_START_TEST (test_share)
   gst_gl_window_draw (window);
 
   gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (init), context);
+  gst_gl_window_send_message (window, GST_GL_WINDOW_CB (init_blit), context);
 
   while (i < 10) {
     gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (draw_tex),
@@ -191,6 +273,7 @@ GST_START_TEST (test_share)
   }
 
   gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (deinit), context);
+  gst_gl_window_send_message (window, GST_GL_WINDOW_CB (deinit_blit), context);
 
   gst_object_unref (window);
   gst_object_unref (other_window);
@@ -284,6 +367,7 @@ GST_START_TEST (test_wrapped_context)
   gst_gl_window_draw (window);
 
   gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (init), context);
+  gst_gl_window_send_message (window, GST_GL_WINDOW_CB (init_blit), context);
 
   while (i < 10) {
     gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (draw_tex),
@@ -297,6 +381,7 @@ GST_START_TEST (test_wrapped_context)
       wrapped_context);
 
   gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (deinit), context);
+  gst_gl_window_send_message (window, GST_GL_WINDOW_CB (deinit_blit), context);
 
   gst_object_unref (other_context);
   gst_object_unref (other_window);
