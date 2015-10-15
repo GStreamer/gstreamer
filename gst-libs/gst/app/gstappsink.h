@@ -115,6 +115,9 @@ guint           gst_app_sink_get_max_buffers  (GstAppSink *appsink);
 void            gst_app_sink_set_drop         (GstAppSink *appsink, gboolean drop);
 gboolean        gst_app_sink_get_drop         (GstAppSink *appsink);
 
+void            gst_app_sink_set_wait_on_eos  (GstAppSink *appsink, gboolean wait);
+gboolean        gst_app_sink_get_wait_on_eos  (GstAppSink *appsink);
+
 GstSample *     gst_app_sink_pull_preroll     (GstAppSink *appsink);
 GstSample *     gst_app_sink_pull_sample      (GstAppSink *appsink);
 

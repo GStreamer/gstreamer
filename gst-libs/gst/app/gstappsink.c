@@ -79,6 +79,7 @@ struct _GstAppSinkPrivate
   guint num_buffers;
   guint max_buffers;
   gboolean drop;
+  gboolean wait_on_eos;
 
   GCond cond;
   GMutex mutex;
@@ -119,6 +120,7 @@ enum
 #define DEFAULT_PROP_EMIT_SIGNALS	FALSE
 #define DEFAULT_PROP_MAX_BUFFERS	0
 #define DEFAULT_PROP_DROP		FALSE
+#define DEFAULT_PROP_WAIT_ON_EOS	TRUE
 
 enum
 {
@@ -128,6 +130,7 @@ enum
   PROP_EMIT_SIGNALS,
   PROP_MAX_BUFFERS,
   PROP_DROP,
+  PROP_WAIT_ON_EOS,
   PROP_LAST
 };
 
@@ -208,6 +211,22 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_DROP,
       g_param_spec_boolean ("drop", "Drop",
           "Drop old buffers when the buffer queue is filled", DEFAULT_PROP_DROP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstAppSink::wait-on-eos:
+   *
+   * Wait for all buffers to be processed after receiving an EOS.
+   *
+   * In cases where it is uncertain if an @appsink will have a consumer for its buffers
+   * when it receives an EOS, set to %FALSE to ensure that the @appsink will not hang.
+   *
+   * Since: 1.8
+   */
+  g_object_class_install_property (gobject_class, PROP_WAIT_ON_EOS,
+      g_param_spec_boolean ("wait-on-eos", "Wait on EOS",
+          "Wait for all buffers to be processed after receiving an EOS",
+          DEFAULT_PROP_WAIT_ON_EOS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -359,6 +378,7 @@ gst_app_sink_init (GstAppSink * appsink)
   priv->emit_signals = DEFAULT_PROP_EMIT_SIGNALS;
   priv->max_buffers = DEFAULT_PROP_MAX_BUFFERS;
   priv->drop = DEFAULT_PROP_DROP;
+  priv->wait_on_eos = DEFAULT_PROP_WAIT_ON_EOS;
 }
 
 static void
@@ -424,6 +444,9 @@ gst_app_sink_set_property (GObject * object, guint prop_id,
     case PROP_DROP:
       gst_app_sink_set_drop (appsink, g_value_get_boolean (value));
       break;
+    case PROP_WAIT_ON_EOS:
+      gst_app_sink_set_wait_on_eos (appsink, g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -458,6 +481,9 @@ gst_app_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_DROP:
       g_value_set_boolean (value, gst_app_sink_get_drop (appsink));
+      break;
+    case PROP_WAIT_ON_EOS:
+      g_value_set_boolean (value, gst_app_sink_get_wait_on_eos (appsink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -593,7 +619,7 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
        * Otherwise we might signal EOS before all buffers are
        * consumed, which is a bit confusing for the application
        */
-      while (priv->num_buffers > 0 && !priv->flushing)
+      while (priv->num_buffers > 0 && !priv->flushing && priv->wait_on_eos)
         g_cond_wait (&priv->cond, &priv->mutex);
       if (priv->flushing)
         emit = FALSE;
@@ -1091,6 +1117,59 @@ gst_app_sink_get_drop (GstAppSink * appsink)
 
   g_mutex_lock (&priv->mutex);
   result = priv->drop;
+  g_mutex_unlock (&priv->mutex);
+
+  return result;
+}
+
+/**
+ * gst_app_sink_set_wait_on_eos:
+ * @appsink: a #GstAppSink
+ * @wait: the new state
+ *
+ * Instruct @appsink to wait for all buffers to be consumed when an EOS is received.
+ *
+ */
+void
+gst_app_sink_set_wait_on_eos (GstAppSink * appsink, gboolean wait)
+{
+  GstAppSinkPrivate *priv;
+
+  g_return_if_fail (GST_IS_APP_SINK (appsink));
+
+  priv = appsink->priv;
+
+  g_mutex_lock (&priv->mutex);
+  if (priv->wait_on_eos != wait) {
+    priv->wait_on_eos = wait;
+    /* signal the change */
+    g_cond_signal (&priv->cond);
+  }
+  g_mutex_unlock (&priv->mutex);
+}
+
+/**
+ * gst_app_sink_get_wait_on_eos:
+ * @appsink: a #GstAppSink
+ *
+ * Check if @appsink will wait for all buffers to be consumed when an EOS is
+ * received.
+ *
+ * Returns: %TRUE if @appsink will wait for all buffers to be consumed when an
+ * EOS is received.
+ */
+gboolean
+gst_app_sink_get_wait_on_eos (GstAppSink * appsink)
+{
+  gboolean result;
+  GstAppSinkPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_APP_SINK (appsink), FALSE);
+
+  priv = appsink->priv;
+
+  g_mutex_lock (&priv->mutex);
+  result = priv->wait_on_eos;
   g_mutex_unlock (&priv->mutex);
 
   return result;
