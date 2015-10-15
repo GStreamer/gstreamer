@@ -94,7 +94,9 @@ struct _GstAmcVideoDec
 
   GstAmcSurface *surface;
 
+  GstGLDisplay *gl_display;
   GstGLContext *gl_context;
+  GstGLContext *other_gl_context;
   GstAmc2DTextureRenderer *renderer;
 
   gboolean downstream_supports_gl;

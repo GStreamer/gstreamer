@@ -105,6 +105,8 @@ static void gst_amc_video_dec_finalize (GObject * object);
 static GstStateChangeReturn
 gst_amc_video_dec_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_amc_video_dec_set_context (GstElement * element,
+    GstContext * context);
 
 static gboolean gst_amc_video_dec_open (GstVideoDecoder * decoder);
 static gboolean gst_amc_video_dec_close (GstVideoDecoder * decoder);
@@ -117,6 +119,8 @@ static GstFlowReturn gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static GstFlowReturn gst_amc_video_dec_finish (GstVideoDecoder * decoder);
 static gboolean gst_amc_video_dec_decide_allocation (GstVideoDecoder * bdec,
+    GstQuery * query);
+static gboolean gst_amc_video_dec_src_query (GstVideoDecoder * bdec,
     GstQuery * query);
 
 static GstFlowReturn gst_amc_video_dec_drain (GstAmcVideoDec * self);
@@ -268,6 +272,8 @@ gst_amc_video_dec_class_init (GstAmcVideoDecClass * klass)
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_amc_video_dec_change_state);
+  element_class->set_context =
+      GST_DEBUG_FUNCPTR (gst_amc_video_dec_set_context);
 
   videodec_class->start = GST_DEBUG_FUNCPTR (gst_amc_video_dec_start);
   videodec_class->stop = GST_DEBUG_FUNCPTR (gst_amc_video_dec_stop);
@@ -280,6 +286,7 @@ gst_amc_video_dec_class_init (GstAmcVideoDecClass * klass)
   videodec_class->finish = GST_DEBUG_FUNCPTR (gst_amc_video_dec_finish);
   videodec_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_amc_video_dec_decide_allocation);
+  videodec_class->src_query = GST_DEBUG_FUNCPTR (gst_amc_video_dec_src_query);
 }
 
 static void
@@ -362,6 +369,17 @@ gst_amc_video_dec_finalize (GObject * object)
   g_cond_clear (&self->drain_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_amc_video_dec_set_context (GstElement * element, GstContext * context)
+{
+  GstAmcVideoDec *self = GST_AMC_VIDEO_DEC (element);
+
+  gst_gl_handle_set_context (element, context, &self->gl_display,
+      &self->other_gl_context);
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 static GstStateChangeReturn
@@ -1832,6 +1850,54 @@ gst_amc_video_dec_drain (GstAmcVideoDec * self)
 }
 
 static gboolean
+gst_amc_video_dec_src_query (GstVideoDecoder * bdec, GstQuery * query)
+{
+  GstAmcVideoDec *self = GST_AMC_VIDEO_DEC (bdec);
+  gboolean ret;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:
+    {
+      const gchar *context_type;
+      GstContext *context, *old_context;
+
+      ret = gst_gl_handle_context_query ((GstElement *) self, query,
+          &self->gl_display, &self->other_gl_context);
+      gst_query_parse_context_type (query, &context_type);
+
+      if (g_strcmp0 (context_type, "gst.gl.local_context") == 0) {
+        GstStructure *s;
+
+        gst_query_parse_context (query, &old_context);
+
+        if (old_context)
+          context = gst_context_copy (old_context);
+        else
+          context = gst_context_new ("gst.gl.local_context", FALSE);
+
+        s = gst_context_writable_structure (context);
+        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, self->gl_context,
+            NULL);
+        gst_query_set_context (query, context);
+        gst_context_unref (context);
+
+        ret = self->gl_context != NULL;
+      }
+      GST_LOG_OBJECT (self, "context query of type %s %i", context_type, ret);
+
+      if (ret)
+        return ret;
+
+      break;
+    }
+    default:
+      break;
+  }
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->src_query (bdec, query);
+}
+
+static gboolean
 _caps_are_rgba_with_gl_memory (GstCaps * caps)
 {
   GstVideoInfo info;
@@ -1854,11 +1920,42 @@ _caps_are_rgba_with_gl_memory (GstCaps * caps)
 }
 
 static gboolean
+_find_local_gl_context (GstAmcVideoDec * self)
+{
+  GstQuery *query;
+  GstContext *context;
+  const GstStructure *s;
+
+  if (self->gl_context)
+    return TRUE;
+
+  query = gst_query_new_context ("gst.gl.local_context");
+  if (!self->gl_context && gst_gl_run_query (GST_ELEMENT (self), query, GST_PAD_SRC)) {
+    gst_query_parse_context (query, &context);
+    if (context) {
+      s = gst_context_get_structure (context);
+      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &self->gl_context,
+          NULL);
+    }
+  }
+
+  GST_DEBUG_OBJECT (self, "found local context %p", self->gl_context);
+
+  gst_query_unref (query);
+
+  if (self->gl_context)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
 gst_amc_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
 {
-  GstCaps *caps = NULL;
-  gboolean need_pool = FALSE;
   GstAmcVideoDec *self = GST_AMC_VIDEO_DEC (bdec);
+  gboolean need_pool = FALSE;
+  GstCaps *caps = NULL;
+//  GError *error = NULL;
 
   if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (bdec, query))
     return FALSE;
@@ -1866,68 +1963,54 @@ gst_amc_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   self->downstream_supports_gl = FALSE;
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (_caps_are_rgba_with_gl_memory (caps)) {
-    guint i, n_allocation_pools;
-    GstGLBufferPool *gl_pool = NULL;
-    GstGLContext *gl_context = NULL;
-    GstGLDisplay *gl_display = NULL;
 
-    n_allocation_pools = MAX (gst_query_get_n_allocation_pools (query), 1);
-    for (i = 0; i < n_allocation_pools; i++) {
-      GstBufferPool *pool = NULL;
-      GstStructure *config = NULL;
-      guint min, max, size;
-
-      gst_query_parse_nth_allocation_pool (query, i, &pool, &size, &min, &max);
-      config = gst_buffer_pool_get_config (pool);
-      if (!config) {
-        gst_object_unref (pool);
-        continue;
-      }
-
-      if (!GST_IS_GL_BUFFER_POOL (pool)) {
-        gst_object_unref (pool);
-        continue;
-      }
-
-      gl_pool = GST_GL_BUFFER_POOL (pool);
-      break;
-    }
-
-    if (!gl_pool) {
-      GST_WARNING_OBJECT (bdec, "Failed to get gl pool from downstream");
-      gst_object_unref (gl_pool);
+    if (!gst_gl_ensure_element_data (self, &self->gl_display,
+            &self->other_gl_context))
       return FALSE;
-    }
 
-    gl_context = gl_pool->context;
-    if (!gl_context) {
-      GST_WARNING_OBJECT (bdec, "Failed to get gl context from downstream");
-      gst_object_unref (gl_pool);
-      return FALSE;
+    if (!_find_local_gl_context (self))
+      goto out;
+#if 0
+    if (!self->gl_context) {
+      GST_OBJECT_LOCK (self->gl_display);
+      do {
+        if (self->gl_context) {
+          gst_object_unref (self->gl_context);
+          self->gl_context = NULL;
+        }
+        /* just get a GL context.  we don't care */
+        self->gl_context =
+            gst_gl_display_get_gl_context_for_thread (self->gl_display, NULL);
+        if (!self->gl_context) {
+          if (!gst_gl_display_create_context (self->gl_display,
+                  self->other_gl_context, &self->gl_context, &error)) {
+            GST_OBJECT_UNLOCK (mix->display);
+            goto context_error;
+          }
+        }
+      } while (!gst_gl_display_add_context (self->gl_display, self->gl_context));
+      GST_OBJECT_UNLOCK (self->gl_display);
     }
-
-    if (self->gl_context) {
-      gst_object_unref (self->gl_context);
-    }
-
+#endif
     if (self->renderer) {
       gst_amc_2d_texture_renderer_free (self->renderer);
       self->renderer = NULL;
     }
 
-//    gl_display = gst_gl_context_get_display (gl_context);
-//    self->gl_context = gst_gl_context_new (gl_display);
-//    gst_object_unref (gl_display);
-    self->gl_context = gst_object_ref (gl_context);
-
-//    gst_gl_context_create (self->gl_context, gl_context, NULL);
-
-    gst_object_unref (gl_pool);
-
     self->downstream_supports_gl = TRUE;
   }
 
+out:
   return gst_amc_video_dec_check_codec_config (self);
+#if 0
+context_error:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND, ("%s", error->message),
+        (NULL));
+    g_clear_error (&error);
+    return FALSE;
+  }
+#endif
 }
 
 static void
