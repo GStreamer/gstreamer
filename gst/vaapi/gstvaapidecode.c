@@ -575,7 +575,6 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
   GstCaps *caps = NULL;
-  GstVideoCodecState *state;
 
   gst_query_parse_allocation (query, &caps, NULL);
   decode->has_texture_upload_meta = FALSE;
@@ -586,12 +585,6 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
       gst_vaapi_caps_feature_contains (caps,
           GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META);
 #endif
-
-  /* Update src caps if feature is not handled downstream */
-  state = gst_video_decoder_get_output_state (vdec);
-  if (!gst_caps_is_always_compatible (caps, state->caps))
-    gst_vaapidecode_update_src_caps (decode);
-  gst_video_codec_state_unref (state);
 
   return gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (vdec),
       query, 0);
