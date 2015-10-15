@@ -937,11 +937,11 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
 
       gst_gl_display_filter_gl_api (glimage_sink->display, SUPPORTED_GL_APIS);
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
+
       if (!_ensure_gl_setup (glimage_sink))
         return GST_STATE_CHANGE_FAILURE;
-
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       glimage_sink->overlay_compositor =
           gst_gl_overlay_compositor_new (glimage_sink->context);
 
@@ -999,7 +999,9 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         gst_caps_unref (glimage_sink->out_caps);
         glimage_sink->out_caps = NULL;
       }
-
+      break;
+    }
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (glimage_sink->context) {
         GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
 
@@ -1024,9 +1026,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         gst_object_unref (glimage_sink->context);
         glimage_sink->context = NULL;
       }
-      break;
-    }
-    case GST_STATE_CHANGE_READY_TO_NULL:
+
       if (glimage_sink->other_context) {
         gst_object_unref (glimage_sink->other_context);
         glimage_sink->other_context = NULL;
