@@ -1859,7 +1859,8 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* a new segment allows us to accept more buffers if we got EOS
        * from downstream */
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-      sq->srcresult = GST_FLOW_OK;
+      if (sq->srcresult == GST_FLOW_EOS)
+        sq->srcresult = GST_FLOW_OK;
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       break;
     case GST_EVENT_GAP:
