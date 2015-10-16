@@ -891,8 +891,6 @@ gst_ca_opengl_layer_sink_thread_init_redisplay (GstCAOpenGLLayerSink * ca_sink)
   const GstGLFuncs *gl = ca_sink->context->gl_vtable;
   GError *error = NULL;
 
-  ca_sink->redisplay_shader = gst_gl_shader_new (ca_sink->context);
-
   if (!(ca_sink->redisplay_shader = gst_gl_shader_new_default (ca_sink->context, &error))) {
     GST_ERROR_OBJECT (ca_sink, "Failed to link shader: %s", error->message);
     gst_ca_opengl_layer_sink_cleanup_glthread (ca_sink);
