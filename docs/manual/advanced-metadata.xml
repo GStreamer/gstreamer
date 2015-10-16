@@ -107,16 +107,23 @@ main (int argc, char ** argv)
 {
   GstElement *pipe, *dec, *sink;
   GstMessage *msg;
+  gchar *uri;
 
   gst_init (&amp;argc, &amp;argv);
 
-  if (argc &lt; 2 || !gst_uri_is_valid (argv[1]))
-    g_error ("Usage: %s file:///path/to/file", argv[0]);
+  if (argc &lt; 2)
+    g_error ("Usage: %s FILE or URI", argv[0]);
+
+  if (gst_uri_is_valid (argv[1])) {
+    uri = g_strdup (argv[1]);
+  } else {
+    uri = gst_filename_to_uri (argv[1], NULL);
+  }
 
   pipe = gst_pipeline_new ("pipeline");
 
   dec = gst_element_factory_make ("uridecodebin", NULL);
-  g_object_set (dec, "uri", argv[1], NULL);
+  g_object_set (dec, "uri", uri, NULL);
   gst_bin_add (GST_BIN (pipe), dec);
 
   sink = gst_element_factory_make ("fakesink", NULL);
@@ -144,14 +151,20 @@ main (int argc, char ** argv)
     gst_tag_list_unref (tags);
 
     gst_message_unref (msg);
-  };
+  }
 
-  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
-    g_error ("Got error");
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+    GError *err = NULL;
+
+    gst_message_parse_error (msg, &amp;err, NULL);
+    g_printerr ("Got error: %s\n", err->message);
+    g_error_free (err);
+  }
 
   gst_message_unref (msg);
   gst_element_set_state (pipe, GST_STATE_NULL);
   gst_object_unref (pipe);
+  g_free (uri);
   return 0;
 }
     </programlisting>
