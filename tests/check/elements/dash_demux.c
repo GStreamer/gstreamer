@@ -1237,6 +1237,119 @@ GST_START_TEST (testDownloadError)
 
 GST_END_TEST;
 
+/* generate queries to adaptive demux */
+static gboolean
+testQueryCheckDataReceived (GstDashDemuxTestData * testData,
+    GstDashDemuxTestOutputStreamData * testOutputStreamData, GstBuffer * buffer)
+{
+  GList *pads;
+  GstPad *pad;
+  GstQuery *query;
+  gboolean ret;
+  gint64 duration;
+  gboolean seekable;
+  gint64 segment_start;
+  gint64 segment_end;
+  gchar *uri;
+  gchar *redirect_uri;
+  gboolean redirect_permanent;
+
+  pads = GST_ELEMENT_PADS (testOutputStreamData->scratchData->appsink);
+
+  /* AppSink should have only 1 pad */
+  fail_unless (pads != NULL);
+  fail_unless (g_list_length (pads) == 1);
+  pad = GST_PAD (pads->data);
+
+  query = gst_query_new_duration (GST_FORMAT_TIME);
+  ret = gst_pad_peer_query (pad, query);
+  fail_unless (ret == TRUE);
+  gst_query_parse_duration (query, NULL, &duration);
+  fail_unless (duration == 135743 * GST_MSECOND);
+  gst_query_unref (query);
+
+  query = gst_query_new_seeking (GST_FORMAT_TIME);
+  ret = gst_pad_peer_query (pad, query);
+  fail_unless (ret == TRUE);
+  gst_query_parse_seeking (query, NULL, &seekable, &segment_start,
+      &segment_end);
+  fail_unless (seekable == TRUE);
+  fail_unless (segment_start == 0);
+  fail_unless (segment_end == duration);
+  gst_query_unref (query);
+
+  query = gst_query_new_uri ();
+  ret = gst_pad_peer_query (pad, query);
+  fail_unless (ret == TRUE);
+  gst_query_parse_uri (query, &uri);
+  gst_query_parse_uri_redirection (query, &redirect_uri);
+  gst_query_parse_uri_redirection_permanent (query, &redirect_permanent);
+  fail_unless (strcmp (uri, "http://unit.test/test.mpd") == 0);
+  /* adaptive demux does not reply with redirect information */
+  fail_unless (redirect_uri == NULL);
+  fail_unless (redirect_permanent == FALSE);
+  g_free (uri);
+  g_free (redirect_uri);
+  gst_query_unref (query);
+
+  return checkDataReceived (testData, testOutputStreamData, buffer);
+}
+
+/*
+ * Test queries
+ *
+ */
+GST_START_TEST (testQuery)
+{
+  const gchar *mpd =
+      "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+      "<MPD xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+      "     xmlns=\"urn:mpeg:DASH:schema:MPD:2011\""
+      "     xsi:schemaLocation=\"urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd\""
+      "     xmlns:yt=\"http://youtube.com/yt/2012/10/10\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\""
+      "     type=\"static\""
+      "     minBufferTime=\"PT1.500S\""
+      "     mediaPresentationDuration=\"PT135.743S\">"
+      "  <Period>"
+      "    <AdaptationSet mimeType=\"audio/webm\""
+      "                   subsegmentAlignment=\"true\">"
+      "      <Representation id=\"171\""
+      "                      codecs=\"vorbis\""
+      "                      audioSamplingRate=\"44100\""
+      "                      startWithSAP=\"1\""
+      "                      bandwidth=\"129553\">"
+      "        <AudioChannelConfiguration"
+      "           schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\""
+      "           value=\"2\" />"
+      "        <BaseURL>audio.webm</BaseURL>"
+      "        <SegmentBase indexRange=\"4452-4686\""
+      "                     indexRangeExact=\"true\">"
+      "          <Initialization range=\"0-4451\" />"
+      "        </SegmentBase>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  const GstFakeHttpSrcInputData inputTestData[] = {
+    {"http://unit.test/test.mpd", mpd, 0},
+    {"http://unit.test/audio.webm", NULL, 5000},
+    {NULL, NULL, 0},
+  };
+
+  GstDashDemuxTestOutputStreamData outputTestData[] = {
+    {"audio_00", 5000, NULL},
+  };
+
+  Callbacks cb = { 0 };
+  cb.appSinkGotDataCallback = testQueryCheckDataReceived;
+  cb.appSinkGotEosCallback = checkSizeOfDataReceived;
+
+  runTest (inputTestData,
+      outputTestData, sizeof (outputTestData) / sizeof (outputTestData[0]),
+      &cb);
+}
+
+GST_END_TEST;
+
 static Suite *
 dash_demux_suite (void)
 {
@@ -1248,6 +1361,7 @@ dash_demux_suite (void)
   tcase_add_test (tc_basicTest, testParameters);
   tcase_add_test (tc_basicTest, testSeek);
   tcase_add_test (tc_basicTest, testDownloadError);
+  tcase_add_test (tc_basicTest, testQuery);
 
   tcase_add_unchecked_fixture (tc_basicTest, test_setup, test_teardown);
 
