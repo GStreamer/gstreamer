@@ -235,14 +235,14 @@ gst_fake_soup_http_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
     return FALSE;
   }
 
-  if (segment->stop != -1 && segment->stop + 1 > src->size) {
+  if (segment->stop != -1 && segment->stop > src->size) {
     return FALSE;
   }
 
   src->position = segment->start;
 
   if (segment->stop != -1) {
-    src->segment_end = segment->stop + 1;
+    src->segment_end = segment->stop;
   }
 
   return TRUE;
