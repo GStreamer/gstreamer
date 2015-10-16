@@ -1151,6 +1151,92 @@ GST_START_TEST (testSeek)
 
 GST_END_TEST;
 
+
+/* callback called when main_loop detects an error message
+ * The test is passed. We will signal main loop to quit
+ */
+static void
+testDownloadErrorOnErrorMessage (GstBus * bus, GstMessage * msg, gpointer data)
+{
+  GstDashDemuxTestData *testData = (GstDashDemuxTestData *) data;
+  GError *err = NULL;
+  gchar *dbg_info = NULL;
+
+  gst_message_parse_error (msg, &err, &dbg_info);
+  GST_DEBUG ("ERROR from element %s: '%s'. Debugging info: %s",
+      GST_OBJECT_NAME (msg->src), err->message, (dbg_info) ? dbg_info : "none");
+  g_error_free (err);
+  g_free (dbg_info);
+
+  g_main_loop_quit (testData->scratchData->loop);
+}
+
+static void
+testDownloadErrorPreTestCallback (GstDashDemuxTestData * testData)
+{
+  GstBus *bus;
+
+  /* register a callback to listen for error messages */
+  bus = gst_pipeline_get_bus (GST_PIPELINE (testData->scratchData->pipeline));
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message::error",
+      G_CALLBACK (testDownloadErrorOnErrorMessage), testData);
+}
+
+/*
+ * Test error download
+ *
+ */
+GST_START_TEST (testDownloadError)
+{
+  const gchar *mpd =
+      "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+      "<MPD xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+      "     xmlns=\"urn:mpeg:DASH:schema:MPD:2011\""
+      "     xsi:schemaLocation=\"urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd\""
+      "     xmlns:yt=\"http://youtube.com/yt/2012/10/10\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\""
+      "     type=\"static\""
+      "     minBufferTime=\"PT1.500S\""
+      "     mediaPresentationDuration=\"PT0.5S\">"
+      "  <Period>"
+      "    <AdaptationSet mimeType=\"audio/webm\""
+      "                   subsegmentAlignment=\"true\">"
+      "      <Representation id=\"171\""
+      "                      codecs=\"vorbis\""
+      "                      audioSamplingRate=\"44100\""
+      "                      startWithSAP=\"1\""
+      "                      bandwidth=\"129553\">"
+      "        <AudioChannelConfiguration"
+      "           schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\""
+      "           value=\"2\" />"
+      "        <BaseURL>audio_file_not_available.webm</BaseURL>"
+      "        <SegmentBase indexRange=\"4452-4686\""
+      "                     indexRangeExact=\"true\">"
+      "          <Initialization range=\"0-4451\" />"
+      "        </SegmentBase>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  const GstFakeHttpSrcInputData inputTestData[] = {
+    {"http://unit.test/test.mpd", mpd, 0},
+    {NULL, NULL, 0},
+  };
+
+  GstDashDemuxTestOutputStreamData outputTestData[] = {
+    {"audio_00", 5000, NULL},
+  };
+
+  Callbacks cb = { 0 };
+  cb.appSinkGotDataCallback = checkDataReceived;
+  cb.appSinkGotEosCallback = checkSizeOfDataReceived;
+  cb.preTestCallback = testDownloadErrorPreTestCallback;
+
+  runTest (inputTestData, outputTestData,
+      sizeof (outputTestData) / sizeof (outputTestData[0]), &cb);
+}
+
+GST_END_TEST;
+
 static Suite *
 dash_demux_suite (void)
 {
@@ -1161,6 +1247,7 @@ dash_demux_suite (void)
   tcase_add_test (tc_basicTest, testTwoPeriods);
   tcase_add_test (tc_basicTest, testParameters);
   tcase_add_test (tc_basicTest, testSeek);
+  tcase_add_test (tc_basicTest, testDownloadError);
 
   tcase_add_unchecked_fixture (tc_basicTest, test_setup, test_teardown);
 
