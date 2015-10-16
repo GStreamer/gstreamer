@@ -165,6 +165,20 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
 
         if (type == GST_TYPE_CAPS) {
           extra = gst_caps_to_string (data);
+        } else if (type == GST_TYPE_EVENT) {
+          const GstStructure *s = gst_event_get_structure (data);
+
+          if (s == NULL)
+            extra = g_strdup_printf ("%s", GST_EVENT_TYPE_NAME (data));
+          else
+            extra = gst_structure_to_string (s);
+        } else if (type == GST_TYPE_MESSAGE) {
+          const GstStructure *s = gst_message_get_structure (data);
+
+          if (s == NULL)
+            extra = g_strdup_printf ("%s", GST_MESSAGE_TYPE_NAME (data));
+          else
+            extra = gst_structure_to_string (s);
         }
         refcount = GST_MINI_OBJECT_REFCOUNT_VALUE (data);
       }
