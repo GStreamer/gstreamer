@@ -96,12 +96,6 @@ AC_ARG_VAR([GIT], [Path to git program, if any])
 AC_PATH_PROG([GIT], [git])
 AM_CONDITIONAL([HAVE_GIT], [test -n "$GIT"])
 
-AC_ARG_VAR([YASM], [Path to yasm program, if any])
-AC_PATH_PROG([YASM], [yasm])
-if test -z "$YASM" -a "$enable_builtin_libvpx" = "yes"; then
-    AC_MSG_ERROR([yasm is needed to build libvpx sources])
-fi
-
 dnl Initialize libtool
 LT_PREREQ([2.2])
 LT_INIT
@@ -155,6 +149,22 @@ AC_ARG_WITH([glapi],
     AS_HELP_STRING([--with-glapi=APIs],
         [build with the specified OpenGL APIs @<:@default=default_glapi@:>@]),
     [GLAPI="$with_glapi"], [GLAPI=default_glapi])
+
+
+dnl Check fr YASM
+AC_ARG_VAR([YASM], [Path to yasm program, if any])
+AC_PATH_PROG([YASM], [yasm])
+if test -z "$YASM" -a "$enable_builtin_libvpx" = "yes"; then
+    AC_MSG_ERROR([yasm is needed to build libvpx sources])
+fi
+
+dnl Check for PATCH
+AC_ARG_VAR([PATCH], [Path to patch program, if any])
+AC_PATH_PROG([PATCH], [patch])
+if test -z "$PATCH" -a "$enable_builtin_videoparsers" = "yes"; then
+    AC_MSG_ERROR([patch is needed to apply patches for built videoparsers
+sources])
+fi
 
 dnl Check for basic libraries
 AC_CHECK_LIB(m, tan)
