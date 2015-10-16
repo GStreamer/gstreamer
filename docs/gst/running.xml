@@ -361,6 +361,11 @@ from the graphviz set of tools, like this:
   <command>dot foo.dot -Tpng -o foo.png</command> or
   <command>dot foo.dot -Tjpg -o foo.jpg</command>.
   </para>
+  <para>
+There is also a utility called <command>xdot</command> which allows you to
+view the dot file directly without converting it first.
+  </para>
+
 
 </formalpara>
 
