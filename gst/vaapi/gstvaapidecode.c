@@ -218,7 +218,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
             (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
       break;
 #endif
-#if GST_CHECK_VERSION(1,5,0)
+#if GST_CHECK_VERSION(1,3,1)
     case GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE:
       features =
           gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, NULL);
