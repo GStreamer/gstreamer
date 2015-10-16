@@ -1835,10 +1835,13 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   /* If we have videometa, we never have to copy */
   if (have_videometa && have_pool && have_alignment &&
       gst_ffmpegviddec_can_direct_render (ffmpegdec)) {
-    gst_ffmpegvideodec_prepare_dr_pool (ffmpegdec, pool, &state->info, config);
+    GstStructure *config_copy = gst_structure_copy (config);
+
+    gst_ffmpegvideodec_prepare_dr_pool (ffmpegdec, pool, &state->info,
+        config_copy);
 
     /* FIXME validate and retry */
-    if (gst_buffer_pool_set_config (pool, config)) {
+    if (gst_buffer_pool_set_config (pool, gst_structure_copy (config_copy))) {
       GstFlowReturn ret;
       GstBuffer *tmp;
 
@@ -1863,6 +1866,7 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
             gst_object_unref (ffmpegdec->internal_pool);
           ffmpegdec->internal_pool = gst_object_ref (pool);
           ffmpegdec->pool_info = state->info;
+          gst_structure_free (config);
           goto done;
         }
       }
@@ -1873,6 +1877,7 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     update_pool = TRUE;
     gst_object_unref (pool);
     pool = gst_object_ref (ffmpegdec->internal_pool);
+    gst_structure_free (config);
     goto done;
   }
 
