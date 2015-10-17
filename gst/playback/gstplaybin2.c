@@ -5779,6 +5779,8 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
   /* ERRORS */
 failure:
   {
+    do_async_done (playbin);
+
     if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
       GstSourceGroup *curr_group;
 

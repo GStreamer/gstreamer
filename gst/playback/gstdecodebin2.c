@@ -5190,6 +5190,7 @@ activate_failed:
   {
     GST_DEBUG_OBJECT (element,
         "element failed to change states -- activation problem?");
+    do_async_done (dbin);
     return GST_STATE_CHANGE_FAILURE;
   }
 }
