@@ -1333,8 +1333,11 @@ gst_subtitle_overlay_change_state (GstElement * element,
 
     bret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
     GST_DEBUG_OBJECT (self, "Base class state changed returned: %d", bret);
-    if (G_UNLIKELY (bret == GST_STATE_CHANGE_FAILURE))
+    if (G_UNLIKELY (bret == GST_STATE_CHANGE_FAILURE)) {
+      do_async_done (self);
       return ret;
+    }
+
     else if (bret == GST_STATE_CHANGE_ASYNC)
       ret = bret;
     else if (G_UNLIKELY (bret == GST_STATE_CHANGE_NO_PREROLL)) {
