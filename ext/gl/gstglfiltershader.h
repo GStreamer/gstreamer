@@ -39,12 +39,12 @@ struct _GstGLFilterShader
   GstGLFilter filter;
 
   /* properties */
-  GstGLShader *shader_prop;
+  GstGLShader *shader;
   gchar *vertex;
   gchar *fragment;
+  gboolean update_shader; /* update the shader on the next draw */
   GstStructure *uniforms;
 
-  GstGLShader *shader;
   gboolean new_source;
   gdouble time;
 

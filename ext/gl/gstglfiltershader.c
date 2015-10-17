@@ -47,6 +47,7 @@ enum
   PROP_SHADER,
   PROP_VERTEX,
   PROP_FRAGMENT,
+  PROP_UPDATE_SHADER,
   PROP_LAST,
 };
 
@@ -111,6 +112,20 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* FIXME: add other stages */
 
+  g_object_class_install_property (gobject_class, PROP_UPDATE_SHADER,
+      g_param_spec_boolean ("update-shader", "Update Shader",
+          "Emit the \'create-shader\' signal for the next frame",
+          FALSE, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+
+  /*
+   * GstGLFilterShader::create-shader:
+   * @object: the #GstGLFilterShader
+   *
+   * Ask's the application for a shader to render with as a result of
+   * inititialization or setting the 'update-shader' property.
+   *
+   * Returns: a new #GstGLShader for use in the rendering pipeline
+   */
   gst_gl_shader_signals[SIGNAL_CREATE_SHADER] =
       g_signal_new ("create-shader", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
@@ -139,13 +154,6 @@ gst_gl_filtershader_init (GstGLFilterShader * filtershader)
 static void
 gst_gl_filtershader_finalize (GObject * object)
 {
-  GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (object);
-
-  if (filtershader->shader_prop) {
-    gst_object_unref (filtershader->shader_prop);
-    filtershader->shader_prop = NULL;
-  }
-
   G_OBJECT_CLASS (gst_gl_filtershader_parent_class)->finalize (object);
 }
 
@@ -158,9 +166,9 @@ gst_gl_filtershader_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_SHADER:
       GST_OBJECT_LOCK (filtershader);
-      gst_object_replace ((GstObject **) & filtershader->shader_prop,
+      gst_object_replace ((GstObject **) & filtershader->shader,
           g_value_dup_object (value));
-      filtershader->new_source = TRUE;
+      filtershader->new_source = FALSE;
       GST_OBJECT_UNLOCK (filtershader);
       break;
     case PROP_VERTEX:
@@ -179,6 +187,11 @@ gst_gl_filtershader_set_property (GObject * object, guint prop_id,
       filtershader->new_source = TRUE;
       GST_OBJECT_UNLOCK (filtershader);
       break;
+    case PROP_UPDATE_SHADER:
+      GST_OBJECT_LOCK (filtershader);
+      filtershader->update_shader = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (filtershader);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -194,7 +207,7 @@ gst_gl_filtershader_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_SHADER:
       GST_OBJECT_LOCK (filtershader);
-      g_value_set_object (value, filtershader->shader_prop);
+      g_value_set_object (value, filtershader->shader);
       GST_OBJECT_UNLOCK (filtershader);
       break;
     case PROP_VERTEX:
@@ -292,20 +305,27 @@ _maybe_recompile_shader (GstGLFilterShader * filtershader)
 
   GST_OBJECT_LOCK (filtershader);
 
-  if (filtershader->shader_prop) {
-    shader = gst_object_ref (filtershader->shader_prop);
+  if (!filtershader->shader || filtershader->update_shader) {
+    filtershader->update_shader = FALSE;
     GST_OBJECT_UNLOCK (filtershader);
-    return shader;
-  }
-  if (!filtershader->shader) {
     g_signal_emit (filtershader, gst_gl_shader_signals[SIGNAL_CREATE_SHADER], 0,
-        &filtershader->shader);
-    if (filtershader->shader) {
+        &shader);
+    GST_OBJECT_LOCK (filtershader);
+
+    if (shader) {
+      if (filtershader->shader)
+        gst_object_unref (filtershader->shader);
       filtershader->new_source = FALSE;
-      shader = gst_object_ref (filtershader->shader);
+      filtershader->shader = gst_object_ref (shader);
       GST_OBJECT_UNLOCK (filtershader);
       return shader;
     }
+  }
+
+  if (filtershader->shader) {
+    shader = gst_object_ref (filtershader->shader);
+    GST_OBJECT_UNLOCK (filtershader);
+    return shader;
   }
 
   if (filtershader->new_source) {
