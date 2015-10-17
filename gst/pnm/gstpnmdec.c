@@ -44,6 +44,9 @@
 #include <stdio.h>
 
 static gboolean gst_pnmdec_start (GstVideoDecoder * decoder);
+static gboolean gst_pnmdec_set_format (GstVideoDecoder * decoder,
+    GstVideoCodecState * state);
+static gboolean gst_pnmdec_stop (GstVideoDecoder * decoder);
 static GstFlowReturn gst_pnmdec_parse (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
 static GstFlowReturn gst_pnmdec_handle_frame (GstVideoDecoder * decoder,
@@ -83,8 +86,10 @@ gst_pnmdec_class_init (GstPnmdecClass * klass)
       "Lutz Mueller <lutz@users.sourceforge.net>");
 
   vdec_class->start = gst_pnmdec_start;
+  vdec_class->stop = gst_pnmdec_stop;
   vdec_class->parse = gst_pnmdec_parse;
   vdec_class->handle_frame = gst_pnmdec_handle_frame;
+  vdec_class->set_format = gst_pnmdec_set_format;
 }
 
 static void
@@ -109,6 +114,31 @@ gst_pnmdec_init (GstPnmdec * s)
   gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
       (s), TRUE);
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (s));
+}
+
+static gboolean
+gst_pnmdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
+{
+  GstPnmdec *pnmdec = (GstPnmdec *) decoder;
+
+  if (pnmdec->input_state)
+    gst_video_codec_state_unref (pnmdec->input_state);
+  pnmdec->input_state = gst_video_codec_state_ref (state);
+
+  return TRUE;
+}
+
+static gboolean
+gst_pnmdec_stop (GstVideoDecoder * decoder)
+{
+  GstPnmdec *pnmdec = (GstPnmdec *) decoder;
+
+  if (pnmdec->input_state) {
+    gst_video_codec_state_unref (pnmdec->input_state);
+    pnmdec->input_state = NULL;
+  }
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -330,7 +360,7 @@ gst_pnmdec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
         }
         output_state =
             gst_video_decoder_set_output_state (GST_VIDEO_DECODER (s), format,
-            s->mngr.info.width, s->mngr.info.height, NULL);
+            s->mngr.info.width, s->mngr.info.height, s->input_state);
         gst_video_codec_state_unref (output_state);
         if (gst_video_decoder_negotiate (GST_VIDEO_DECODER (s)) == FALSE) {
           r = GST_FLOW_NOT_NEGOTIATED;
