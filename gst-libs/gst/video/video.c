@@ -43,8 +43,8 @@
 
 /**
  * gst_video_calculate_display_ratio:
- * @dar_n: Numerator of the calculated display_ratio
- * @dar_d: Denominator of the calculated display_ratio
+ * @dar_n: (out): Numerator of the calculated display_ratio
+ * @dar_d: (out): Denominator of the calculated display_ratio
  * @video_width: Width of the video frame in pixels
  * @video_height: Height of the video frame in pixels
  * @video_par_n: Numerator of the pixel aspect ratio of the input video.
