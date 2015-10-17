@@ -2752,8 +2752,6 @@ gst_uri_decode_bin_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto setup_failed;
-  else if (ret == GST_STATE_CHANGE_NO_PREROLL)
-    do_async_done (decoder);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -2799,6 +2797,10 @@ gst_uri_decode_bin_change_state (GstElement * element,
     default:
       break;
   }
+
+  if (ret == GST_STATE_CHANGE_NO_PREROLL)
+    do_async_done (decoder);
+
   return ret;
 
   /* ERRORS */

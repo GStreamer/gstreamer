@@ -5774,6 +5774,9 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
+  if (ret == GST_STATE_CHANGE_NO_PREROLL)
+    do_async_done (playbin);
+
   return ret;
 
   /* ERRORS */
