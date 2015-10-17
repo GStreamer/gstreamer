@@ -148,6 +148,7 @@ struct _GstRegistryPrivate
   GList *plugins;
   GList *features;
 
+  guint n_plugins;
 #if 0
   GList *paths;
 #endif
@@ -271,6 +272,7 @@ gst_registry_finalize (GObject * object)
 
   plugins = registry->priv->plugins;
   registry->priv->plugins = NULL;
+  registry->priv->n_plugins = 0;
 
   GST_DEBUG_OBJECT (registry, "registry finalize");
   p = plugins;
@@ -465,6 +467,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
       }
       registry->priv->plugins =
           g_list_remove (registry->priv->plugins, existing_plugin);
+      --registry->priv->n_plugins;
       if (G_LIKELY (existing_plugin->basename))
         g_hash_table_remove (registry->priv->basename_hash,
             existing_plugin->basename);
@@ -476,6 +479,8 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
       plugin, GST_STR_NULL (plugin->filename));
 
   registry->priv->plugins = g_list_prepend (registry->priv->plugins, plugin);
+  ++registry->priv->n_plugins;
+
   if (G_LIKELY (plugin->basename))
     g_hash_table_replace (registry->priv->basename_hash, plugin->basename,
         plugin);
@@ -541,6 +546,7 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
 
   GST_OBJECT_LOCK (registry);
   registry->priv->plugins = g_list_remove (registry->priv->plugins, plugin);
+  --registry->priv->n_plugins;
   if (G_LIKELY (plugin->basename))
     g_hash_table_remove (registry->priv->basename_hash, plugin->basename);
   gst_registry_remove_features_for_plugin_unlocked (registry, plugin);
@@ -657,26 +663,30 @@ GList *
 gst_registry_plugin_filter (GstRegistry * registry,
     GstPluginFilter filter, gboolean first, gpointer user_data)
 {
-  GList *list = NULL;
+  GstPlugin **plugins;
+  GList *walk, *list = NULL;
+  guint n_plugins, i;
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
   GST_OBJECT_LOCK (registry);
-  {
-    const GList *walk;
+  n_plugins = registry->priv->n_plugins;
+  plugins = g_newa (GstPlugin *, n_plugins + 1);
+  for (walk = registry->priv->plugins, i = 0; walk != NULL; walk = walk->next)
+    plugins[i++] = gst_object_ref (walk->data);
+  GST_OBJECT_UNLOCK (registry);
 
-    for (walk = registry->priv->plugins; walk != NULL; walk = walk->next) {
-      GstPlugin *plugin = walk->data;
+  for (i = 0; i < n_plugins; ++i) {
+    if (filter == NULL || filter (plugins[i], user_data)) {
+      list = g_list_prepend (list, gst_object_ref (plugins[i]));
 
-      if (filter == NULL || filter (plugin, user_data)) {
-        list = g_list_prepend (list, gst_object_ref (plugin));
-
-        if (first)
-          break;
-      }
+      if (first)
+        break;
     }
   }
-  GST_OBJECT_UNLOCK (registry);
+
+  for (i = 0; i < n_plugins; ++i)
+    gst_object_unref (plugins[i]);
 
   return list;
 }
@@ -830,26 +840,30 @@ GList *
 gst_registry_feature_filter (GstRegistry * registry,
     GstPluginFeatureFilter filter, gboolean first, gpointer user_data)
 {
-  GList *list = NULL;
+  GstPluginFeature **features;
+  GList *walk, *list = NULL;
+  guint n_features, i;
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
   GST_OBJECT_LOCK (registry);
-  {
-    const GList *walk;
+  n_features = g_hash_table_size (registry->priv->feature_hash);
+  features = g_newa (GstPluginFeature *, n_features + 1);
+  for (walk = registry->priv->features, i = 0; walk != NULL; walk = walk->next)
+    features[i++] = gst_object_ref (walk->data);
+  GST_OBJECT_UNLOCK (registry);
 
-    for (walk = registry->priv->features; walk != NULL; walk = walk->next) {
-      GstPluginFeature *feature = walk->data;
+  for (i = 0; i < n_features; ++i) {
+    if (filter == NULL || filter (features[i], user_data)) {
+      list = g_list_prepend (list, gst_object_ref (features[i]));
 
-      if (filter == NULL || filter (feature, user_data)) {
-        list = g_list_prepend (list, gst_object_ref (feature));
-
-        if (first)
-          break;
-      }
+      if (first)
+        break;
     }
   }
-  GST_OBJECT_UNLOCK (registry);
+
+  for (i = 0; i < n_features; ++i)
+    gst_object_unref (features[i]);
 
   return list;
 }
@@ -1533,6 +1547,7 @@ gst_registry_remove_cache_plugins (GstRegistry * registry)
       GST_DEBUG_OBJECT (registry, "removing cached plugin \"%s\"",
           GST_STR_NULL (plugin->filename));
       registry->priv->plugins = g_list_delete_link (registry->priv->plugins, g);
+      --registry->priv->n_plugins;
       if (G_LIKELY (plugin->basename))
         g_hash_table_remove (registry->priv->basename_hash, plugin->basename);
       gst_registry_remove_features_for_plugin_unlocked (registry, plugin);
