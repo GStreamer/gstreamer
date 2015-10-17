@@ -195,36 +195,36 @@ _new_shader (GstGLContext * context, struct shader_state *state)
   return shader;
 }
 
+static gboolean
+_set_compilation_state (struct shader_state *state)
+{
+  gtk_label_set_text (GTK_LABEL (state->label),
+      state->shader_linked ? "Success" : "Failure");
+
+  return G_SOURCE_REMOVE;
+}
+
 static GstGLShader *
 _create_shader (GstElement * element, struct shader_state *state)
 {
   GstGLContext *context;
-  GstGLShader *shader;
+  GstGLShader *shader, *new_shader;
 
-  g_object_get (G_OBJECT (element), "context", &context, NULL);
+  g_object_get (G_OBJECT (element), "context", &context, "shader", &shader,
+      NULL);
 
-  shader = _new_shader (context, state);
-  state->shader_linked = TRUE;
+  new_shader = _new_shader (context, state);
+  if (!shader && !new_shader)
+    g_warning ("Failed to create a shader!");
+  state->shader_linked = new_shader != NULL;
 
-  if (state->context)
-    gst_object_unref (state->context);
-  state->context = context;
+  if (shader)
+    gst_object_unref (shader);
+  gst_object_unref (context);
 
-  return shader;
-}
+  g_main_context_invoke (NULL, (GSourceFunc) _set_compilation_state, state);
 
-static void
-_modify_shader (GstGLContext * context, struct shader_state *state)
-{
-  GstGLShader *shader;
-
-  if (!(shader = _new_shader (context, state))) {
-    state->shader_linked = FALSE;
-    return;
-  }
-  state->shader_linked = TRUE;
-
-  g_object_set (state->shader, "shader", shader, NULL);
+  return new_shader;
 }
 
 static void
@@ -232,18 +232,11 @@ _on_text_changed (GtkTextBuffer * text, struct text_view_state *state)
 {
   GtkTextIter start, end;
 
-  if (!state->state->context)
-    return;
-
   gtk_text_buffer_get_bounds (text, &start, &end);
   if (state->str)
     g_free (state->str);
   state->str = gtk_text_buffer_get_text (text, &start, &end, FALSE);
-  gst_gl_context_thread_add (state->state->context,
-      (GstGLContextThreadFunc) _modify_shader, state->state);
-
-  gtk_label_set_text (GTK_LABEL (state->state->label),
-      state->state->shader_linked ? "Success" : "Failure");
+  g_object_set (state->state->shader, "update-shader", TRUE, NULL);
 }
 
 static GtkWidget *
