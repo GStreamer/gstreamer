@@ -228,6 +228,7 @@ gst_pnmdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   r = gst_video_decoder_allocate_output_frame (decoder, frame);
   if (r != GST_FLOW_OK) {
+    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (s), frame);
     goto out;
   }
 
