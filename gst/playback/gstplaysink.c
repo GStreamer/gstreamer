@@ -4769,8 +4769,10 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       ret = GST_STATE_CHANGE_ASYNC;
 
       /* block all pads here */
-      if (!gst_play_sink_reconfigure (playsink))
+      if (!gst_play_sink_reconfigure (playsink)) {
         ret = GST_STATE_CHANGE_FAILURE;
+        goto activate_failed;
+      }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* unblock all pads here */
