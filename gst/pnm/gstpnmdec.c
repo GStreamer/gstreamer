@@ -90,10 +90,7 @@ gst_pnmdec_class_init (GstPnmdecClass * klass)
 static void
 gst_pnmdec_flush (GstPnmdec * s)
 {
-  s->mngr.info.width = 0;
-  s->mngr.info.height = 0;
-  s->mngr.info.fields = 0;
-  s->mngr.info.max = 0;
+  memset (&s->mngr, 0, sizeof (s->mngr));
   s->size = 0;
   s->current_size = 0;
   if (s->buf) {
