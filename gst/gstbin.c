@@ -2630,6 +2630,11 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
         goto activate_failure;
       break;
     case GST_STATE_NULL:
+      /* Clear message list on next NULL */
+      GST_OBJECT_LOCK (bin);
+      GST_DEBUG_OBJECT (element, "clearing all cached messages");
+      bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
+      GST_OBJECT_UNLOCK (bin);
       if (current == GST_STATE_READY) {
         GList *l;
 
