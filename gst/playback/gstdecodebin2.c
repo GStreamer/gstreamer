@@ -2095,7 +2095,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     gboolean subtitle;
     GList *to_connect = NULL;
     gboolean is_parser_converter = FALSE;
-    gboolean to_expose = FALSE;
 
     /* Set dpad target to pad again, it might've been unset
      * below but we came back here because something failed
@@ -2421,8 +2420,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
     {
       GList *l;
-      for (l = to_connect; l; l = g_list_next (l)) {
+      for (l = to_connect; l;) {
         GstPad *opad = GST_PAD_CAST (l->data);
+        gboolean to_expose = FALSE;
         GstCaps *ocaps;
 
         ocaps = get_pad_caps (opad);
@@ -2432,10 +2432,19 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         if (ocaps)
           gst_caps_unref (ocaps);
 
-        gst_object_unref (opad);
+        if (!to_expose) {
+          GList *l2 = l;
+
+          gst_object_unref (opad);
+
+          l2 = g_list_next (l);
+          to_connect = g_list_delete_link (to_connect, l);
+          l = l2;
+        } else {
+          l = g_list_next (l);
+        }
       }
-      g_list_free (to_connect);
-      to_connect = NULL;
+      /* any pads left in to_connect are to be exposed */
     }
 
     /* Bring the element to the state of the parent */
@@ -2547,8 +2556,23 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       SUBTITLE_UNLOCK (dbin);
     }
 
-    if (to_expose)
-      expose_pad (dbin, delem->element, dpad, pad, caps, chain);
+    {
+      GList *l;
+      for (l = to_connect; l; l = g_list_next (l)) {
+        GstPad *opad = GST_PAD_CAST (l->data);
+        GstCaps *ocaps;
+
+        ocaps = get_pad_caps (opad);
+        expose_pad (dbin, delem->element, dpad, opad, ocaps, chain);
+
+        if (ocaps)
+          gst_caps_unref (ocaps);
+
+        gst_object_unref (opad);
+      }
+      g_list_free (to_connect);
+      to_connect = NULL;
+    }
 
     res = TRUE;
     break;
