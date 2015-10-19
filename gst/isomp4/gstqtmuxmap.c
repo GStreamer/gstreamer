@@ -88,20 +88,15 @@
 
 #define PCM_CAPS \
   "audio/x-raw, " \
-  "format = (string) { S8, U8 }, " \
-  "layout = (string) interleaved, " \
-  COMMON_AUDIO_CAPS (2, MAX) "; " \
-  "audio/x-raw, " \
-  "format = (string) { S16LE, S16BE }, " \
+  "format = (string) { S16LE, S16BE, S8, U8 }, " \
   "layout = (string) interleaved, " \
   COMMON_AUDIO_CAPS (2, MAX)
 
 #define PCM_CAPS_FULL \
   "audio/x-raw, " \
-  "format = (string) { S32LE, S32BE, S24LE, S24BE }, " \
+  "format = (string) { S32LE, S32BE, S24LE, S24BE, S16LE, S16BE, S8, U8 }, " \
   "layout = (string) interleaved, " \
-  COMMON_AUDIO_CAPS (2, MAX) "; " \
-  PCM_CAPS
+  COMMON_AUDIO_CAPS (2, MAX)
 
 #define MP3_CAPS \
   "audio/mpeg, " \
