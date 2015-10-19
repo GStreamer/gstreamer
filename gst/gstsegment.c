@@ -426,27 +426,29 @@ gst_segment_to_stream_time (const GstSegment * segment, GstFormat format,
   if (G_UNLIKELY (time == -1))
     return -1;
 
-  /* bring to uncorrected position in segment */
-  stream_time = position - start;
-
   abs_applied_rate = ABS (segment->applied_rate);
-
-  /* correct for applied rate if needed */
-  if (G_UNLIKELY (abs_applied_rate != 1.0))
-    stream_time *= abs_applied_rate;
 
   /* add or subtract from segment time based on applied rate */
   if (G_LIKELY (segment->applied_rate > 0.0)) {
+    if (G_UNLIKELY (position < start))
+      return -1;
+    /* bring to uncorrected position in segment */
+    stream_time = position - start;
+    /* correct for applied rate if needed */
+    if (G_UNLIKELY (abs_applied_rate != 1.0))
+      stream_time *= abs_applied_rate;
     /* correct for segment time */
     stream_time += time;
   } else {
     /* correct for segment time, clamp at 0. Streams with a negative
      * applied_rate have timestamps between start and stop, as usual, but have
      * the time member starting high and going backwards.  */
-    if (G_LIKELY (time > stream_time))
-      stream_time = time - stream_time;
-    else
-      stream_time = 0;
+    if (G_UNLIKELY (position > stop))
+      return -1;
+    stream_time = stop - position;
+    if (G_UNLIKELY (abs_applied_rate != 1.0))
+      stream_time *= abs_applied_rate;
+    stream_time += time;
   }
 
   return stream_time;
@@ -490,27 +492,34 @@ gst_segment_position_from_stream_time (const GstSegment * segment,
   if (G_UNLIKELY (time == -1))
     return -1;
 
-  if (G_LIKELY (segment->applied_rate > 0.0)) {
-    position = stream_time - time;
-  } else {
-    if (G_LIKELY (time > stream_time))
-      position = time - stream_time;
-    else
-      return -1;
-  }
+  position = stream_time - time;
 
   abs_applied_rate = ABS (segment->applied_rate);
+  stop = segment->stop;
 
   /* correct for applied rate if needed */
   if (G_UNLIKELY (abs_applied_rate != 1.0))
     position /= abs_applied_rate;
 
-  position += start;
+  if (G_LIKELY (segment->applied_rate > 0.0)) {
+    position += start;
+    /* outside of the segment boundary stop */
+    if (G_UNLIKELY (stop != -1 && position > stop))
+      return -1;
+  } else {
+    /* cannot calculate without known boundary stop */
+    if (G_UNLIKELY (stop == -1))
+      return -1;
+    /* outside segment boundary */
+    if (G_UNLIKELY (position > stop))
+      return -1;
 
-  stop = segment->stop;
-  /* outside of the segment boundary stop */
-  if (G_UNLIKELY (stop != -1 && position > stop))
-    return -1;
+    position = stop - position;
+
+    /* position before segment start */
+    if (G_UNLIKELY (position < start))
+      return -1;
+  }
 
   return position;
 }
