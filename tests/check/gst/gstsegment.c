@@ -792,6 +792,86 @@ GST_START_TEST (segment_full)
 
 GST_END_TEST;
 
+GST_START_TEST (segment_negative_rate)
+{
+  GstSegment segment;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  segment.start = 50;
+  segment.position = 150;
+  segment.stop = 200;
+  segment.time = 0;
+  segment.applied_rate = -1;
+  segment.rate = -1;
+
+  /* somewhere in the middle */
+  check_times (&segment, 100, 100, 100);
+  /* after stop */
+  check_times (&segment, 220, -1, -1);
+  /* before start */
+  check_times (&segment, 10, -1, -1);
+  /* at segment start */
+  check_times (&segment, 50, 150, 150);
+  /* another place in the middle */
+  check_times (&segment, 150, 50, 50);
+  /* at segment stop */
+  check_times (&segment, 200, 0, 0);
+
+  segment.time = 100;
+  segment.base = 100;
+  /* somewhere in the middle */
+  check_times (&segment, 100, 200, 200);
+  /* at segment start */
+  check_times (&segment, 50, 250, 250);
+  /* another place in the middle */
+  check_times (&segment, 150, 150, 150);
+  /* at segment stop */
+  check_times (&segment, 200, 100, 100);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (segment_negative_applied_rate)
+{
+  GstSegment segment;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  segment.start = 50;
+  segment.position = 150;
+  segment.stop = 200;
+  segment.time = 0;
+  segment.applied_rate = -1;
+  segment.rate = 1;
+
+  /* somewhere in the middle */
+  check_times (&segment, 100, 100, 50);
+  /* after stop */
+  check_times (&segment, 220, -1, -1);
+  /* before start */
+  check_times (&segment, 10, -1, -1);
+  /* at segment start */
+  check_times (&segment, 50, 150, 0);
+  /* another place in the middle */
+  check_times (&segment, 150, 50, 100);
+  /* at segment stop */
+  check_times (&segment, 200, 0, 150);
+
+  segment.time = 100;
+  segment.base = 100;
+  /* somewhere in the middle */
+  check_times (&segment, 100, 200, 150);
+  /* at segment start */
+  check_times (&segment, 50, 250, 100);
+  /* another place in the middle */
+  check_times (&segment, 150, 150, 200);
+  /* at segment stop */
+  check_times (&segment, 200, 100, 250);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_segment_suite (void)
 {
@@ -809,6 +889,8 @@ gst_segment_suite (void)
   tcase_add_test (tc_chain, segment_seek_noupdate);
   tcase_add_test (tc_chain, segment_offset);
   tcase_add_test (tc_chain, segment_full);
+  tcase_add_test (tc_chain, segment_negative_rate);
+  tcase_add_test (tc_chain, segment_negative_applied_rate);
 
   return s;
 }
