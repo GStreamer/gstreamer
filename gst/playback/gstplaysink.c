@@ -3700,12 +3700,12 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
         g_value_unset (&item);
         g_assert (playsink->text_srcpad_stream_synchronizer);
         gst_iterator_free (it);
-
-        gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),
-            playsink->text_sinkpad_stream_synchronizer);
-        gst_pad_link_full (playsink->text_srcpad_stream_synchronizer,
-            playsink->textchain->textsinkpad, GST_PAD_LINK_CHECK_NOTHING);
       }
+
+      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),
+          playsink->text_sinkpad_stream_synchronizer);
+      gst_pad_link_full (playsink->text_srcpad_stream_synchronizer,
+          playsink->textchain->textsinkpad, GST_PAD_LINK_CHECK_NOTHING);
 
       if (need_vis || need_video) {
         if (need_vis) {
