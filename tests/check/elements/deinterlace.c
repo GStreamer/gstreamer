@@ -223,7 +223,7 @@ srcpad_dequeue_and_compare_buffer (GstPad * pad, GstPadProbeInfo * info,
 
 /*
  * Utility function that sets up a pipeline with deinterlace for
- * validanting that it operates in passthrough mode when receiving
+ * validating that it operates in passthrough mode when receiving
  * data with 'infiltercaps' as the input caps and operating in 'mode' mode
  */
 static void
