@@ -2182,6 +2182,7 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
 
       if (!interlace_mode || g_strcmp0 (interlace_mode, "progressive") == 0) {
         filter_interlaced = FALSE;
+        break;
       }
     }
   }
