@@ -1487,7 +1487,7 @@ decode_pad_set_target (GstDecodePad * dpad, GstPad * target)
 /* returns whether to expose the pad */
 static gboolean
 analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
-    GstCaps * caps, GstDecodeChain * chain)
+    GstCaps * caps, GstDecodeChain * chain, GstDecodeChain ** new_chain)
 {
   gboolean apcontinue = TRUE;
   GValueArray *factories = NULL, *result = NULL;
@@ -1500,6 +1500,9 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
   GST_DEBUG_OBJECT (dbin, "Pad %s:%s caps:%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
+
+  if (new_chain)
+    *new_chain = chain;
 
   if (chain->elements
       && src != ((GstDecodeElement *) chain->elements->data)->element
@@ -1527,7 +1530,8 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     CHAIN_MUTEX_LOCK (oldchain);
     group = gst_decode_chain_get_current_group (chain);
     if (group && !g_list_find (group->children, chain)) {
-      chain = gst_decode_chain_new (dbin, group, pad);
+      g_assert (new_chain != NULL);
+      *new_chain = chain = gst_decode_chain_new (dbin, group, pad);
       group->children = g_list_prepend (group->children, chain);
     }
     CHAIN_MUTEX_UNLOCK (oldchain);
@@ -2422,7 +2426,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         GstCaps *ocaps;
 
         ocaps = get_pad_caps (opad);
-        to_expose = analyze_new_pad (dbin, delem->element, opad, ocaps, chain);
+        to_expose =
+            analyze_new_pad (dbin, delem->element, opad, ocaps, chain, &chain);
 
         if (ocaps)
           gst_caps_unref (ocaps);
@@ -2791,8 +2796,10 @@ type_found (GstElement * typefind, guint probability,
    * be held (if called from a proxied setcaps), so grab it anyway */
   GST_PAD_STREAM_LOCK (sink_pad);
   decode_bin->decode_chain = gst_decode_chain_new (decode_bin, NULL, pad);
-  if (analyze_new_pad (decode_bin, typefind, pad, caps, decode_bin->decode_chain))
-    expose_pad (decode_bin, typefind, decode_bin->decode_chain->current_pad, pad, caps, decode_bin->decode_chain);
+  if (analyze_new_pad (decode_bin, typefind, pad, caps,
+          decode_bin->decode_chain, NULL))
+    expose_pad (decode_bin, typefind, decode_bin->decode_chain->current_pad,
+        pad, caps, decode_bin->decode_chain);
   GST_PAD_STREAM_UNLOCK (sink_pad);
 
   gst_object_unref (sink_pad);
@@ -2839,14 +2846,15 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
 {
   GstCaps *caps;
   GstDecodeBin *dbin;
+  GstDecodeChain *new_chain;
 
   dbin = chain->dbin;
 
   GST_DEBUG_OBJECT (pad, "pad added, chain:%p", chain);
 
   caps = get_pad_caps (pad);
-  if (analyze_new_pad (dbin, element, pad, caps, chain))
-    expose_pad (dbin, element, chain->current_pad, pad, caps, chain);
+  if (analyze_new_pad (dbin, element, pad, caps, chain, &new_chain))
+    expose_pad (dbin, element, new_chain->current_pad, pad, caps, new_chain);
   if (caps)
     gst_caps_unref (caps);
 
