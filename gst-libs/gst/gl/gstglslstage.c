@@ -218,7 +218,7 @@ gst_glsl_stage_new_with_strings (GstGLContext * context, guint type,
 {
   GstGLSLStage *stage;
 
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
   g_return_val_if_fail (_is_valid_shader_type (type), NULL);
 
   stage = g_object_new (GST_TYPE_GLSL_STAGE, NULL);

@@ -30,8 +30,8 @@ GType gst_gl_shader_get_type (void);
 #define GST_GL_TYPE_SHADER         (gst_gl_shader_get_type())
 #define GST_GL_SHADER(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_SHADER, GstGLShader))
 #define GST_GL_SHADER_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_GL_TYPE_SHADER, GstGLShaderClass))
-#define GST_GL_IS_SHADER(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_SHADER))
-#define GST_GL_IS_SHADER_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_SHADER))
+#define GST_IS_GL_SHADER(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_SHADER))
+#define GST_IS_GL_SHADER_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_SHADER))
 #define GST_GL_SHADER_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_SHADER, GstGLShaderClass))
 
 struct _GstGLShader {

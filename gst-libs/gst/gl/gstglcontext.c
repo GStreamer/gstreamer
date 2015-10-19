@@ -223,8 +223,8 @@ G_DEFINE_TYPE (GstGLWrappedContext, gst_gl_wrapped_context,
 
 #define GST_GL_WRAPPED_CONTEXT(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_WRAPPED_CONTEXT, GstGLWrappedContext))
 #define GST_GL_WRAPPED_CONTEXT_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_GL_TYPE_CONTEXT, GstGLContextClass))
-#define GST_GL_IS_WRAPPED_CONTEXT(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_WRAPPED_CONTEXT))
-#define GST_GL_IS_WRAPPED_CONTEXT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_WRAPPED_CONTEXT))
+#define GST_IS_GL_WRAPPED_CONTEXT(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_WRAPPED_CONTEXT))
+#define GST_IS_GL_WRAPPED_CONTEXT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_WRAPPED_CONTEXT))
 #define GST_GL_WRAPPED_CONTEXT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_WRAPPED_CONTEXT, GstGLWrappedContextClass))
 
 GQuark
@@ -686,7 +686,7 @@ gst_gl_context_activate (GstGLContext * context, gboolean activate)
   GstGLContextClass *context_class;
   gboolean result;
 
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   g_return_val_if_fail (context_class->activate != NULL, FALSE);
 
@@ -747,7 +747,7 @@ gst_gl_context_get_gl_api (GstGLContext * context)
 {
   GstGLContextClass *context_class;
 
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), GST_GL_API_NONE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), GST_GL_API_NONE);
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   g_return_val_if_fail (context_class->get_gl_api != NULL, GST_GL_API_NONE);
 
@@ -776,7 +776,7 @@ gst_gl_context_get_proc_address (GstGLContext * context, const gchar * name)
   GstGLContextClass *context_class;
   GstGLAPI gl_api;
 
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   g_return_val_if_fail (context_class->get_proc_address != NULL, NULL);
 
@@ -832,7 +832,7 @@ gst_gl_context_default_get_proc_address (GstGLAPI gl_api, const gchar * name)
 gboolean
 gst_gl_context_set_window (GstGLContext * context, GstGLWindow * window)
 {
-  g_return_val_if_fail (!GST_GL_IS_WRAPPED_CONTEXT (context), FALSE);
+  g_return_val_if_fail (!GST_IS_GL_WRAPPED_CONTEXT (context), FALSE);
 
   GST_DEBUG_OBJECT (context, "window:%" GST_PTR_FORMAT, window);
 
@@ -866,9 +866,9 @@ gst_gl_context_set_window (GstGLContext * context, GstGLWindow * window)
 GstGLWindow *
 gst_gl_context_get_window (GstGLContext * context)
 {
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
 
-  if (GST_GL_IS_WRAPPED_CONTEXT (context)) {
+  if (GST_IS_GL_WRAPPED_CONTEXT (context)) {
     GST_WARNING_OBJECT (context, "context is not toplevel, returning NULL");
     return NULL;
   }
@@ -893,8 +893,8 @@ gst_gl_context_get_window (GstGLContext * context)
 gboolean
 gst_gl_context_can_share (GstGLContext * context, GstGLContext * other_context)
 {
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (other_context), FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (other_context), FALSE);
 
   /* check if the contexts are descendants or the root nodes are the same */
   return context->priv->sharegroup_id != 0
@@ -926,8 +926,8 @@ gst_gl_context_create (GstGLContext * context,
 {
   gboolean alive = FALSE;
 
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
-  g_return_val_if_fail (!GST_GL_IS_WRAPPED_CONTEXT (context), FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
+  g_return_val_if_fail (!GST_IS_GL_WRAPPED_CONTEXT (context), FALSE);
 
   GST_DEBUG_OBJECT (context, " other_context:%" GST_PTR_FORMAT, other_context);
 
@@ -1273,7 +1273,7 @@ gst_gl_context_destroy (GstGLContext * context)
 {
   GstGLContextClass *context_class;
 
-  g_return_if_fail (GST_GL_IS_CONTEXT (context));
+  g_return_if_fail (GST_IS_GL_CONTEXT (context));
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   g_return_if_fail (context_class->destroy_context != NULL);
 
@@ -1299,7 +1299,7 @@ gst_gl_context_fill_info (GstGLContext * context, GError ** error)
   GstGLAPI gl_api;
   gboolean ret;
 
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
   g_return_val_if_fail (context->priv->active_thread == g_thread_self (),
       FALSE);
 
@@ -1391,7 +1391,7 @@ gst_gl_context_get_gl_context (GstGLContext * context)
   GstGLContextClass *context_class;
   guintptr result;
 
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), 0);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), 0);
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   g_return_val_if_fail (context_class->get_gl_context != NULL, 0);
 
@@ -1415,7 +1415,7 @@ gst_gl_context_get_gl_platform (GstGLContext * context)
 {
   GstGLContextClass *context_class;
 
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), 0);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), 0);
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   g_return_val_if_fail (context_class->get_gl_platform != NULL, 0);
 
@@ -1433,7 +1433,7 @@ gst_gl_context_get_gl_platform (GstGLContext * context)
 GstGLDisplay *
 gst_gl_context_get_display (GstGLContext * context)
 {
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
 
   return gst_object_ref (context->display);
 }
@@ -1473,10 +1473,10 @@ gst_gl_context_thread_add (GstGLContext * context,
   GstGLWindow *window;
   RunGenericData rdata;
 
-  g_return_if_fail (GST_GL_IS_CONTEXT (context));
+  g_return_if_fail (GST_IS_GL_CONTEXT (context));
   g_return_if_fail (func != NULL);
 
-  if (GST_GL_IS_WRAPPED_CONTEXT (context)) {
+  if (GST_IS_GL_WRAPPED_CONTEXT (context)) {
     g_return_if_fail (context->priv->active_thread == g_thread_self ());
     func (context, data);
     return;
@@ -1509,7 +1509,7 @@ gst_gl_context_thread_add (GstGLContext * context,
 void
 gst_gl_context_get_gl_version (GstGLContext * context, gint * maj, gint * min)
 {
-  g_return_if_fail (GST_GL_IS_CONTEXT (context));
+  g_return_if_fail (GST_IS_GL_CONTEXT (context));
   g_return_if_fail (maj != NULL && min != NULL);
 
   if (maj)
@@ -1535,7 +1535,7 @@ gboolean
 gst_gl_context_check_gl_version (GstGLContext * context, GstGLAPI api,
     gint maj, gint min)
 {
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
 
   if (maj > context->priv->gl_major)
     return FALSE;
@@ -1569,7 +1569,7 @@ gst_gl_context_check_feature (GstGLContext * context, const gchar * feature)
 {
   GstGLContextClass *context_class;
 
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
   g_return_val_if_fail (feature != NULL, FALSE);
 
   context_class = GST_GL_CONTEXT_GET_CLASS (context);

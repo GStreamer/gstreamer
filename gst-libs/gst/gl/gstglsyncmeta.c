@@ -43,7 +43,7 @@ gst_buffer_add_gl_sync_meta (GstGLContext * context, GstBuffer * buffer)
 {
   GstGLSyncMeta *meta;
 
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
 
   meta =
       (GstGLSyncMeta *) gst_buffer_add_meta ((buffer), GST_GL_SYNC_META_INFO,

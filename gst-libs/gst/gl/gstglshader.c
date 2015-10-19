@@ -198,7 +198,7 @@ _new_with_stages_va_list (GstGLContext * context, GError ** error,
   GstGLShader *shader;
   GstGLSLStage *stage;
 
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
 
   shader = g_object_new (GST_GL_TYPE_SHADER, NULL);
   shader->context = gst_object_ref (context);
@@ -320,7 +320,7 @@ gst_gl_shader_is_linked (GstGLShader * shader)
 {
   gboolean ret;
 
-  g_return_val_if_fail (GST_GL_IS_SHADER (shader), FALSE);
+  g_return_val_if_fail (GST_IS_GL_SHADER (shader), FALSE);
 
   GST_OBJECT_LOCK (shader);
   ret = shader->priv->linked;
@@ -350,7 +350,7 @@ gst_gl_shader_get_program_handle (GstGLShader * shader)
 {
   int ret;
 
-  g_return_val_if_fail (GST_GL_IS_SHADER (shader), 0);
+  g_return_val_if_fail (GST_IS_GL_SHADER (shader), 0);
 
   GST_OBJECT_LOCK (shader);
   ret = (int) shader->priv->program_handle;
@@ -375,7 +375,7 @@ gst_gl_shader_detach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
   guint stage_handle;
   GList *elem;
 
-  g_return_if_fail (GST_GL_IS_SHADER (shader));
+  g_return_if_fail (GST_IS_GL_SHADER (shader));
   g_return_if_fail (GST_IS_GLSL_STAGE (stage));
 
   if (!_gst_glsl_funcs_fill (&shader->priv->vtable, shader->context)) {
@@ -426,7 +426,7 @@ gst_gl_shader_detach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
 void
 gst_gl_shader_detach (GstGLShader * shader, GstGLSLStage * stage)
 {
-  g_return_if_fail (GST_GL_IS_SHADER (shader));
+  g_return_if_fail (GST_IS_GL_SHADER (shader));
   g_return_if_fail (GST_IS_GLSL_STAGE (stage));
 
   GST_OBJECT_LOCK (shader);
@@ -451,7 +451,7 @@ gst_gl_shader_attach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
 {
   guint stage_handle;
 
-  g_return_val_if_fail (GST_GL_IS_SHADER (shader), FALSE);
+  g_return_val_if_fail (GST_IS_GL_SHADER (shader), FALSE);
   g_return_val_if_fail (GST_IS_GLSL_STAGE (stage), FALSE);
 
   if (!_gst_glsl_funcs_fill (&shader->priv->vtable, shader->context)) {
@@ -502,7 +502,7 @@ gst_gl_shader_attach (GstGLShader * shader, GstGLSLStage * stage)
 {
   gboolean ret;
 
-  g_return_val_if_fail (GST_GL_IS_SHADER (shader), FALSE);
+  g_return_val_if_fail (GST_IS_GL_SHADER (shader), FALSE);
   g_return_val_if_fail (GST_IS_GLSL_STAGE (stage), FALSE);
 
   GST_OBJECT_LOCK (shader);
@@ -565,7 +565,7 @@ gst_gl_shader_link (GstGLShader * shader, GError ** error)
   gboolean ret;
   GList *elem;
 
-  g_return_val_if_fail (GST_GL_IS_SHADER (shader), FALSE);
+  g_return_val_if_fail (GST_IS_GL_SHADER (shader), FALSE);
 
   GST_OBJECT_LOCK (shader);
 
@@ -653,7 +653,7 @@ gst_gl_shader_release_unlocked (GstGLShader * shader)
   GstGLShaderPrivate *priv;
   GList *elem;
 
-  g_return_if_fail (GST_GL_IS_SHADER (shader));
+  g_return_if_fail (GST_IS_GL_SHADER (shader));
 
   priv = shader->priv;
 
@@ -682,7 +682,7 @@ gst_gl_shader_release_unlocked (GstGLShader * shader)
 void
 gst_gl_shader_release (GstGLShader * shader)
 {
-  g_return_if_fail (GST_GL_IS_SHADER (shader));
+  g_return_if_fail (GST_IS_GL_SHADER (shader));
 
   GST_OBJECT_LOCK (shader);
   gst_gl_shader_release_unlocked (shader);
@@ -702,7 +702,7 @@ gst_gl_shader_use (GstGLShader * shader)
 {
   GstGLShaderPrivate *priv;
 
-  g_return_if_fail (GST_GL_IS_SHADER (shader));
+  g_return_if_fail (GST_IS_GL_SHADER (shader));
 
   priv = shader->priv;
 
@@ -726,7 +726,7 @@ gst_gl_context_clear_shader (GstGLContext * context)
 {
   GstGLFuncs *gl;
 
-  g_return_if_fail (GST_GL_IS_CONTEXT (context));
+  g_return_if_fail (GST_IS_GL_CONTEXT (context));
 
   gl = context->gl_vtable;
 
