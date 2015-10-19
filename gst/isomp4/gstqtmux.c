@@ -694,6 +694,7 @@ gst_qt_mux_prepare_tx3g_buffer (GstQTPad * qtpad, GstBuffer * buf,
   GstMapInfo frommap;
   GstMapInfo tomap;
   gsize size;
+  const guint8 *dataend;
 
   GST_LOG_OBJECT (qtmux, "Preparing tx3g buffer %" GST_PTR_FORMAT, buf);
 
@@ -702,7 +703,8 @@ gst_qt_mux_prepare_tx3g_buffer (GstQTPad * qtpad, GstBuffer * buf,
 
   gst_buffer_map (buf, &frommap, GST_MAP_READ);
 
-  size = (gint16) strnlen ((const char *) frommap.data, frommap.size);
+  dataend = memchr (frommap.data, 0, frommap.size);
+  size = dataend ? dataend - frommap.data : frommap.size;
   newbuf = gst_buffer_new_and_alloc (size + 2);
 
   gst_buffer_map (newbuf, &tomap, GST_MAP_WRITE);
