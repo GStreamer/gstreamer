@@ -2123,6 +2123,32 @@ gst_fraction_double (gint * n_out, gint * d_out, gboolean half)
   return TRUE;
 }
 
+static gboolean
+gst_deinterlace_acceptcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
+{
+  gboolean ret;
+  GstCaps *ourcaps;
+  GstVideoInterlaceMode interlacing_mode;
+
+  interlacing_mode = GST_VIDEO_INFO_INTERLACE_MODE (&self->vinfo);
+
+  if (self->mode == GST_DEINTERLACE_MODE_INTERLACED ||
+      (self->mode == GST_DEINTERLACE_MODE_AUTO &&
+          interlacing_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)) {
+    ourcaps = gst_caps_from_string (DEINTERLACE_CAPS);
+  } else {
+    ourcaps = gst_pad_get_pad_template_caps (pad);
+  }
+
+  ret = gst_caps_can_intersect (caps, ourcaps);
+  gst_caps_unref (ourcaps);
+
+  GST_DEBUG_OBJECT (pad, "accept-caps result:%d for caps %" GST_PTR_FORMAT,
+      ret, caps);
+
+  return ret;
+}
+
 static GstCaps *
 gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
 {
@@ -2672,6 +2698,17 @@ gst_deinterlace_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       caps = gst_deinterlace_getcaps (self, pad, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstCaps *caps;
+      gboolean ret;
+
+      gst_query_parse_accept_caps (query, &caps);
+      ret = gst_deinterlace_acceptcaps (self, pad, caps);
+      gst_query_set_accept_caps_result (query, ret);
       res = TRUE;
       break;
     }
