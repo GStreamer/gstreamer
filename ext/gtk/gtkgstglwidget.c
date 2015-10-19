@@ -505,7 +505,7 @@ gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * gst_widget)
     GTK_GST_BASE_WIDGET_LOCK (gst_widget);
   }
 
-  if (!GST_GL_IS_CONTEXT (priv->other_context)) {
+  if (!GST_IS_GL_CONTEXT (priv->other_context)) {
     GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
     return FALSE;
   }

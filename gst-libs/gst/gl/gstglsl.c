@@ -436,7 +436,7 @@ gboolean
 gst_gl_context_supports_glsl_profile_version (GstGLContext * context,
     GstGLSLVersion version, GstGLSLProfile profile)
 {
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
 
   if (!_is_valid_version_profile (version, profile))
     return FALSE;

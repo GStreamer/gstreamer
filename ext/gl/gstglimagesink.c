@@ -409,7 +409,7 @@ gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
     return;
 
   window = gst_gl_context_get_window (sink->context);
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
 
   width = GST_VIDEO_SINK_WIDTH (sink);
   height = GST_VIDEO_SINK_HEIGHT (sink);

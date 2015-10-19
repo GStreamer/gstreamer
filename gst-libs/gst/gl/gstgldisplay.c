@@ -533,7 +533,7 @@ gst_gl_display_add_context (GstGLDisplay * display, GstGLContext * context)
   GWeakRef *ref;
 
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), FALSE);
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
 
   context_display = gst_gl_context_get_display (context);
   g_assert (context_display == display);

@@ -1899,7 +1899,7 @@ gst_gl_view_convert_get_output (GstGLViewConvert * viewconvert,
   GstVideoMultiviewFlags in_flags, out_flags;
 
   g_return_val_if_fail (GST_IS_GL_VIEW_CONVERT (viewconvert), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_GL_IS_CONTEXT (viewconvert->context),
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (viewconvert->context),
       GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (viewconvert);

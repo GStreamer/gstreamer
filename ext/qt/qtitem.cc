@@ -387,7 +387,7 @@ qt_item_init_winsys (QtGLVideoItem * widget)
     return FALSE;
   }
 
-  if (!GST_GL_IS_CONTEXT (widget->priv->other_context)) {
+  if (!GST_IS_GL_CONTEXT (widget->priv->other_context)) {
     GST_ERROR ("%p failed to retrieve wrapped context %" GST_PTR_FORMAT, widget,
         widget->priv->other_context);
     g_mutex_unlock (&widget->priv->lock);

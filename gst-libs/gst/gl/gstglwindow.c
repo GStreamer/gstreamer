@@ -415,7 +415,7 @@ gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
   GstGLWindowClass *window_class;
   GstSetWindowHandleCb *data;
 
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   g_return_if_fail (handle != 0);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->set_window_handle != NULL);
@@ -474,7 +474,7 @@ gst_gl_window_draw (GstGLWindow * window)
 {
   GstGLWindowClass *window_class;
 
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->draw != NULL);
 
@@ -504,7 +504,7 @@ gst_gl_window_set_preferred_size (GstGLWindow * window, gint width, gint height)
 {
   GstGLWindowClass *window_class;
 
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   window_class = GST_GL_WINDOW_GET_CLASS (window);
 
   if (window_class->set_preferred_size)
@@ -524,7 +524,7 @@ gst_gl_window_show (GstGLWindow * window)
 {
   GstGLWindowClass *window_class;
 
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   window_class = GST_GL_WINDOW_GET_CLASS (window);
 
   if (window_class->show)
@@ -550,7 +550,7 @@ gst_gl_window_run (GstGLWindow * window)
 {
   GstGLWindowClass *window_class;
 
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->run != NULL);
 
@@ -569,7 +569,7 @@ gst_gl_window_run (GstGLWindow * window)
 void
 gst_gl_window_run_navigation (GstGLWindow * window)
 {
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   g_return_if_fail (window->navigation_context != NULL);
   g_return_if_fail (window->navigation_loop != NULL);
   g_main_loop_run (window->navigation_loop);
@@ -594,7 +594,7 @@ gst_gl_window_quit (GstGLWindow * window)
 {
   GstGLWindowClass *window_class;
 
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->quit != NULL);
 
@@ -675,7 +675,7 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
 {
   GstGLWindowClass *window_class;
 
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   g_return_if_fail (callback != NULL);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->send_message != NULL);
@@ -737,7 +737,7 @@ gst_gl_window_send_message_async (GstGLWindow * window, GstGLWindowCB callback,
 {
   GstGLWindowClass *window_class;
 
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   g_return_if_fail (callback != NULL);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->send_message_async != NULL);
@@ -760,7 +760,7 @@ void
 gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data, GDestroyNotify destroy_notify)
 {
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
 
   GST_GL_WINDOW_LOCK (window);
 
@@ -789,7 +789,7 @@ void
 gst_gl_window_set_resize_callback (GstGLWindow * window,
     GstGLWindowResizeCB callback, gpointer data, GDestroyNotify destroy_notify)
 {
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
 
   GST_GL_WINDOW_LOCK (window);
 
@@ -818,7 +818,7 @@ void
 gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data, GDestroyNotify destroy_notify)
 {
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
 
   GST_GL_WINDOW_LOCK (window);
 
@@ -861,7 +861,7 @@ gst_gl_window_get_display (GstGLWindow * window)
 {
   GstGLWindowClass *window_class;
 
-  g_return_val_if_fail (GST_GL_IS_WINDOW (window), 0);
+  g_return_val_if_fail (GST_IS_GL_WINDOW (window), 0);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_val_if_fail (window_class->get_display != NULL, 0);
 
@@ -881,7 +881,7 @@ gst_gl_window_get_window_handle (GstGLWindow * window)
 {
   GstGLWindowClass *window_class;
 
-  g_return_val_if_fail (GST_GL_IS_WINDOW (window), 0);
+  g_return_val_if_fail (GST_IS_GL_WINDOW (window), 0);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_val_if_fail (window_class->get_window_handle != NULL, 0);
 
@@ -899,7 +899,7 @@ gst_gl_window_get_window_handle (GstGLWindow * window)
 GstGLContext *
 gst_gl_window_get_context (GstGLWindow * window)
 {
-  g_return_val_if_fail (GST_GL_IS_WINDOW (window), NULL);
+  g_return_val_if_fail (GST_IS_GL_WINDOW (window), NULL);
 
   return (GstGLContext *) g_weak_ref_get (&window->context_ref);
 }
@@ -929,7 +929,7 @@ G_DEFINE_TYPE (GstGLDummyWindow, gst_gl_dummy_window, GST_GL_TYPE_WINDOW);
 void
 gst_gl_window_open_navigation (GstGLWindow * window)
 {
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   g_mutex_lock (&window->nav_lock);
   window->navigation_context = g_main_context_new ();
   window->navigation_loop = g_main_loop_new (window->navigation_context, FALSE);
@@ -942,7 +942,7 @@ gst_gl_window_open_navigation (GstGLWindow * window)
 void
 gst_gl_window_close_navigation (GstGLWindow * window)
 {
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   g_return_if_fail (window->navigation_context != NULL);
   g_return_if_fail (window->navigation_loop != NULL);
 
@@ -958,7 +958,7 @@ gst_gl_window_close_navigation (GstGLWindow * window)
 void
 gst_gl_window_quit_navigation (GstGLWindow * window)
 {
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
 
   g_main_loop_quit (window->navigation_loop);
 }
@@ -1081,7 +1081,7 @@ gst_gl_window_handle_events (GstGLWindow * window, gboolean handle_events)
 {
   GstGLWindowClass *window_class;
 
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   window_class = GST_GL_WINDOW_GET_CLASS (window);
 
   if (window_class->handle_events)
@@ -1108,7 +1108,7 @@ gst_gl_window_set_render_rectangle (GstGLWindow * window, gint x, gint y,
   GstGLWindowClass *window_class;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (GST_GL_IS_WINDOW (window), FALSE);
+  g_return_val_if_fail (GST_IS_GL_WINDOW (window), FALSE);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
 
   if (x < 0 || y < 0 || width <= 0 || height <= 0)
@@ -1125,7 +1125,7 @@ gst_gl_window_queue_resize (GstGLWindow * window)
 {
   GstGLWindowClass *window_class;
 
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
   window_class = GST_GL_WINDOW_GET_CLASS (window);
 
   window->queue_resize = TRUE;
@@ -1136,7 +1136,7 @@ gst_gl_window_queue_resize (GstGLWindow * window)
 void
 gst_gl_window_resize (GstGLWindow * window, guint width, guint height)
 {
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_IS_GL_WINDOW (window));
 
   if (window->resize)
     window->resize (window->resize_data, width, height);
