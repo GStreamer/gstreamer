@@ -756,6 +756,7 @@ gst_au_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       ret = gst_au_parse_handle_seek (auparse, event);
+      gst_event_unref (event);
       break;
     default:
       ret = gst_pad_event_default (pad, parent, event);
