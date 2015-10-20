@@ -221,7 +221,7 @@ mxf_jpeg2000_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
 
   /* TODO: What about other field values? */
   caps =
-      gst_caps_new_simple ("image/x-jpc", "fields", G_TYPE_INT, 1, "colorspace",
+      gst_caps_new_simple ("image/x-jpc", "colorspace",
       G_TYPE_STRING, colorspace, NULL);
   if (p) {
     mxf_metadata_generic_picture_essence_descriptor_set_caps (p, caps);
@@ -360,7 +360,7 @@ mxf_jpeg2000_init (void)
   mxf_jpeg2000_essence_element_writer.pad_template =
       gst_pad_template_new ("jpeg2000_video_sink_%u", GST_PAD_SINK,
       GST_PAD_REQUEST,
-      gst_caps_from_string ("image/x-jpc, fields = 1, width = "
+      gst_caps_from_string ("image/x-jpc, width = "
           GST_VIDEO_SIZE_RANGE ", height = " GST_VIDEO_SIZE_RANGE
           ", framerate = " GST_VIDEO_FPS_RANGE
           ", colorspace = (string) { \"sRGB\", \"sYUV\" }"));
