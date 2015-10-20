@@ -159,7 +159,7 @@ gboolean       gst_rtp_buffer_add_extension_twobytes_header (GstRTPBuffer *rtp,
  *
  * Additional mapping flags for gst_rtp_buffer_map().
  *
- * Since: 1.8
+ * Since: 1.6.1
  */
 typedef enum {
   GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING = (GST_MAP_FLAG_LAST << 0),
