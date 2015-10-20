@@ -355,17 +355,10 @@ gst_mxf_mux_handle_sink_event (GstCollectPads * pads, GstCollectData * data,
     case GST_EVENT_TAG:
       /* TODO: do something with the tags */
       break;
-    case GST_EVENT_SEGMENT:
-      /* We don't support SEGMENT events */
-      ret = FALSE;
-      gst_event_unref (event);
-      break;
     case GST_EVENT_CAPS:
       gst_event_parse_caps (event, &caps);
 
       gst_mxf_mux_event_caps (data->pad, caps);
-
-      gst_caps_unref (caps);
       break;
     default:
       break;
