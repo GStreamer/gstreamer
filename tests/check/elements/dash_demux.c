@@ -1284,6 +1284,112 @@ GST_START_TEST (testDownloadError)
 
 GST_END_TEST;
 
+/* generate error message on adaptive demux pipeline */
+static gboolean
+testFragmentDownloadErrorCheckDataReceived (GstDashDemuxTestData * testData,
+    GstDashDemuxTestOutputStreamData * testOutputStreamData, GstBuffer * buffer)
+{
+  checkDataReceived (testData, testOutputStreamData, buffer);
+
+  if (testOutputStreamData->scratchData->segmentReceivedSize > 2000) {
+    GstPad *fakeHttpSrcPad;
+    GstObject *fakeHttpSrcElement;
+
+    /* tell fake soup http src to post an error on the adaptive demux bus */
+    fakeHttpSrcPad =
+        gst_pad_get_peer (testOutputStreamData->scratchData->internalPad);
+    fakeHttpSrcElement = gst_pad_get_parent (fakeHttpSrcPad);
+
+    gst_fake_soup_http_src_simulate_download_error ((GstFakeSoupHTTPSrc *)
+        fakeHttpSrcElement, 404);
+
+    gst_object_unref (fakeHttpSrcPad);
+    gst_object_unref (fakeHttpSrcElement);
+
+    testData->expectError = TRUE;
+  }
+
+  return TRUE;
+}
+
+/* function to check total size of data received by AppSink
+ * will be called when AppSink receives eos.
+ */
+static gboolean
+testFragmentDownloadErrorCheckSizeOfDataReceived (GstDashDemuxTestData *
+    testData, GstDashDemuxTestOutputStreamData * testOutputStreamData)
+{
+  /* expect to receive more than 0 */
+  fail_unless (testOutputStreamData->scratchData->totalReceivedSize > 0,
+      "size validation failed for %s, expected > 0, received %d",
+      testOutputStreamData->name,
+      testOutputStreamData->scratchData->totalReceivedSize);
+
+  /* expect to receive less than file size */
+  fail_unless (testOutputStreamData->scratchData->totalReceivedSize <
+      testOutputStreamData->expectedSize,
+      "size validation failed for %s, expected < %d received %d",
+      testOutputStreamData->name, testOutputStreamData->expectedSize,
+      testOutputStreamData->scratchData->totalReceivedSize);
+
+  return TRUE;
+}
+
+/*
+ * Test fragment download error
+ * Let the adaptive demux download a few bytes, then instruct the fake soup http
+ * src element to generate an error.
+ */
+GST_START_TEST (testFragmentDownloadError)
+{
+  const gchar *mpd =
+      "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+      "<MPD xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+      "     xmlns=\"urn:mpeg:DASH:schema:MPD:2011\""
+      "     xsi:schemaLocation=\"urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd\""
+      "     xmlns:yt=\"http://youtube.com/yt/2012/10/10\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\""
+      "     type=\"static\""
+      "     minBufferTime=\"PT1.500S\""
+      "     mediaPresentationDuration=\"PT0.5S\">"
+      "  <Period>"
+      "    <AdaptationSet mimeType=\"audio/webm\""
+      "                   subsegmentAlignment=\"true\">"
+      "      <Representation id=\"171\""
+      "                      codecs=\"vorbis\""
+      "                      audioSamplingRate=\"44100\""
+      "                      startWithSAP=\"1\""
+      "                      bandwidth=\"129553\">"
+      "        <AudioChannelConfiguration"
+      "           schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\""
+      "           value=\"2\" />"
+      "        <BaseURL>audio.webm</BaseURL>"
+      "        <SegmentBase indexRange=\"4452-4686\""
+      "                     indexRangeExact=\"true\">"
+      "          <Initialization range=\"0-4451\" />"
+      "        </SegmentBase>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  const GstFakeHttpSrcInputData inputTestData[] = {
+    {"http://unit.test/test.mpd", mpd, 0},
+    {"http://unit.test/audio.webm", NULL, 5000},
+    {NULL, NULL, 0},
+  };
+
+  GstDashDemuxTestOutputStreamData outputTestData[] = {
+    {"audio_00", 5000, NULL},
+  };
+
+  Callbacks cb = { 0 };
+  cb.appSinkGotDataCallback = testFragmentDownloadErrorCheckDataReceived;
+  cb.appSinkGotEosCallback = testFragmentDownloadErrorCheckSizeOfDataReceived;
+
+  runTest (inputTestData, outputTestData,
+      sizeof (outputTestData) / sizeof (outputTestData[0]), &cb);
+}
+
+GST_END_TEST;
+
 /* generate queries to adaptive demux */
 static gboolean
 testQueryCheckDataReceived (GstDashDemuxTestData * testData,
@@ -1408,6 +1514,7 @@ dash_demux_suite (void)
   tcase_add_test (tc_basicTest, testParameters);
   tcase_add_test (tc_basicTest, testSeek);
   tcase_add_test (tc_basicTest, testDownloadError);
+  tcase_add_test (tc_basicTest, testFragmentDownloadError);
   tcase_add_test (tc_basicTest, testQuery);
 
   tcase_add_unchecked_fixture (tc_basicTest, test_setup, test_teardown);

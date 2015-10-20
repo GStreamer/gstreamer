@@ -43,6 +43,8 @@ typedef struct _GstFakeHttpSrcInputData
   guint64 size;
 } GstFakeHttpSrcInputData;
 
+typedef struct _GstFakeSoupHTTPSrc GstFakeSoupHTTPSrc;
+
 /* GstFakeSoupHTTPSrc will send buffers up to this size */
 #define GST_FAKE_SOUP_HTTP_SRC_MAX_BUF_SIZE (1024)
 
@@ -51,3 +53,9 @@ GType gst_fake_soup_http_src_get_type (void);
 gboolean gst_fake_soup_http_src_register_plugin (GstRegistry * registry, const gchar * name);
 
 void gst_fake_soup_http_src_set_input_data (const GstFakeHttpSrcInputData *input);
+
+/* TODO: use SoupKnownStatusCode. But it requires makefile support to include
+ * <libsoup/soup.h>
+ */
+void gst_fake_soup_http_src_simulate_download_error (
+    GstFakeSoupHTTPSrc *fakeSoupHTTPSrc, guint downloadErrorCode);

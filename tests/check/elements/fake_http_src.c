@@ -55,6 +55,9 @@ typedef struct _GstFakeSoupHTTPSrc
   guint64 position;
   /* index immediately after the last byte from the segment to be retrieved */
   guint64 segment_end;
+
+  /* download error code to simulate during create function */
+  guint downloadErrorCode;
 } GstFakeSoupHTTPSrc;
 
 typedef struct _GstFakeSoupHTTPSrcClass
@@ -138,6 +141,7 @@ gst_fake_soup_http_src_init (GstFakeSoupHTTPSrc * src)
   src->position = 0;
   src->size = 0;
   src->segment_end = 0;
+  src->downloadErrorCode = 0;
   gst_base_src_set_blocksize (GST_BASE_SRC (src),
       GST_FAKE_SOUP_HTTP_SRC_MAX_BUF_SIZE);
 }
@@ -163,7 +167,8 @@ gst_fake_soup_http_src_start (GstBaseSrc * basesrc)
   src = GST_FAKE_SOUP_HTTP_SRC (basesrc);
 
   if (!src->uri) {
-    GST_WARNING ("gst_fake_soup_http_src_start without location");
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (("No URL set.")),
+        ("Missing location property"));
     return FALSE;
   }
 
@@ -176,6 +181,7 @@ gst_fake_soup_http_src_start (GstBaseSrc * basesrc)
       else
         src->size = input[i].size;
       src->segment_end = src->size;
+      src->downloadErrorCode = 0;
       gst_base_src_set_dynamic_size (basesrc, FALSE);
       return TRUE;
     }
@@ -293,6 +299,13 @@ gst_fake_soup_http_src_create (GstBaseSrc * basesrc, guint64 offset,
       src->position);
   if (src->uri == NULL) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
+    return GST_FLOW_ERROR;
+  }
+  if (src->downloadErrorCode) {
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("%s",
+            "Generated requested error"), ("%s (%d), URL: %s, Redirect to: %s",
+            "Generated requested error", src->downloadErrorCode, src->uri,
+            GST_STR_NULL (NULL)));
     return GST_FLOW_ERROR;
   }
 
@@ -430,4 +443,11 @@ void
 gst_fake_soup_http_src_set_input_data (const GstFakeHttpSrcInputData * input)
 {
   gst_fake_soup_http_src_inputData = input;
+}
+
+void
+gst_fake_soup_http_src_simulate_download_error (GstFakeSoupHTTPSrc *
+    fakeSoupHTTPSrc, guint downloadErrorCode)
+{
+  fakeSoupHTTPSrc->downloadErrorCode = downloadErrorCode;
 }
