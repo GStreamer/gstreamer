@@ -163,7 +163,7 @@ gst_handdetect_finalize (GObject * obj)
     cvReleaseImage (&filter->cvGray);
   g_free (filter->profile_fist);
   g_free (filter->profile_palm);
-  g_free (filter->best_r);
+  delete (filter->best_r);
 
   G_OBJECT_CLASS (gst_handdetect_parent_class)->finalize (obj);
 }
@@ -438,7 +438,7 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
                 2) + pow ((r->y - filter->prev_r->y), 2));
         if (distance <= min_distance) {
           min_distance = distance;
-          g_free (filter->best_r);
+          delete (filter->best_r);
           filter->best_r = new Rect (*r);
         }
       }
@@ -529,7 +529,7 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
                   2) + pow ((r->y - filter->prev_r->y), 2));
           if (distance <= min_distance) {
             min_distance = distance;
-            g_free (filter->best_r);
+            delete (filter->best_r);
             filter->best_r = new Rect (*r);
           }
         }
