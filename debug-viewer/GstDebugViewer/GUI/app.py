@@ -21,8 +21,8 @@
 
 import os.path
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
 
 from GstDebugViewer import Common
 from GstDebugViewer.GUI.columns import ViewColumnManager
@@ -94,7 +94,7 @@ class App (object):
         
         widget "*.log_view" style "no-expander-treeview-style"
         """
-        gtk.rc_parse_string (rcstring)
+        Gtk.rc_parse_string (rcstring)
 
         self.open_window ()
 
@@ -107,7 +107,7 @@ class App (object):
     def run (self):
 
         try:
-            Common.Main.MainLoopWrapper (gtk.main, gtk.main_quit).run ()
+            Common.Main.MainLoopWrapper (Gtk.main, Gtk.main_quit).run ()
         except:
             raise
         else:
@@ -123,7 +123,7 @@ class App (object):
         if not self.windows:
             # GtkTreeView takes some time to go down for large files.  Let's block
             # until the window is hidden:
-            gobject.idle_add (gtk.main_quit)
-            gtk.main ()
+            GObject.idle_add (Gtk.main_quit)
+            Gtk.main ()
 
-            gtk.main_quit ()
+            Gtk.main_quit ()

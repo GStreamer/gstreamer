@@ -19,10 +19,9 @@
 
 """GStreamer Development Utilities Common Data module."""
 
-import pygtk
-pygtk.require ("2.0")
+import gi
 
-import gobject
+from gi.repository import GObject
 
 class Dispatcher (object):
 
@@ -52,14 +51,14 @@ class GSourceDispatcher (Dispatcher):
     def __call__ (self, iterator):
 
         if self.source_id is not None:
-            gobject.source_remove (self.source_id)
+            GObject.source_remove (self.source_id)
 
-        self.source_id = gobject.idle_add (iterator.next, priority = gobject.PRIORITY_LOW)
+        self.source_id = GObject.idle_add (iterator.next, priority = GObject.PRIORITY_LOW)
 
     def cancel (self):
 
         if self.source_id is None:
             return
 
-        gobject.source_remove (self.source_id)
+        GObject.source_remove (self.source_id)
         self.source_id = None

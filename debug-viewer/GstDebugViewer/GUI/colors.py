@@ -19,7 +19,8 @@
 
 """GStreamer Debug Viewer GUI module."""
 
-import gtk
+from gi.repository import Gtk
+from gi.repository import Gdk
 
 from GstDebugViewer import Data
 
@@ -36,7 +37,7 @@ class Color (object):
 
     def gdk_color (self):
 
-        return gtk.gdk.color_parse (self.hex_string ())
+        return Gdk.color_parse (self.hex_string ())
 
     def hex_string (self):
 

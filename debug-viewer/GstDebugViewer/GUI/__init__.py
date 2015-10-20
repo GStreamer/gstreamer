@@ -22,9 +22,7 @@
 __author__ = u"René Stadler <mail@renestadler.de>"
 __version__ = "0.1"
 
-import pygtk
-pygtk.require ("2.0")
-del pygtk
+import gi
 
 from GstDebugViewer.GUI.app import App
 

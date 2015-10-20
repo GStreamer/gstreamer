@@ -26,11 +26,9 @@ import os.path
 from glob import glob
 import time
 
-import pygtk
-pygtk.require ("2.0")
-del pygtk
+import gi
 
-import gobject
+from gi.repository import GObject
 
 sys.path.insert (0, os.path.join (sys.path[0], os.pardir))
 
@@ -40,7 +38,7 @@ class TestParsingPerformance (object):
 
     def __init__ (self, filename):
 
-        self.main_loop = gobject.MainLoop ()
+        self.main_loop = GObject.MainLoop ()
         self.log_file = Data.LogFile (filename, Common.Data.DefaultDispatcher ())
         self.log_file.consumers.append (self)
 

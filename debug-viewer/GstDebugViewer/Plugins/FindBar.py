@@ -25,7 +25,8 @@ from GstDebugViewer import Common, Data, GUI
 from GstDebugViewer.Plugins import *
 
 import glib
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
 
 class SearchOperation (object):
 
@@ -127,32 +128,32 @@ class SearchSentinel (object):
 
         pass
 
-class FindBarWidget (gtk.HBox):
+class FindBarWidget (Gtk.HBox):
 
     __status = {"no-match-found" : _N("No match found"),
                 "searching" : _N("Searching...")}
 
     def __init__ (self, action_group):
 
-        gtk.HBox.__init__ (self)
+        GObject.GObject.__init__ (self)
 
-        label = gtk.Label (_("Find:"))
+        label = Gtk.Label(label=_("Find:"))
         self.pack_start (label, False, False, 2)
 
-        self.entry = gtk.Entry ()
-        self.pack_start (self.entry)
+        self.entry = Gtk.Entry ()
+        self.pack_start (self.entry, True, True, 0)
 
         prev_action = action_group.get_action ("goto-previous-search-result")
-        prev_button = gtk.Button ()
-        prev_action.connect_proxy (prev_button)
+        prev_button = Gtk.Button ()
+        prev_button.set_related_action (prev_action)
         self.pack_start (prev_button, False, False, 0)
 
         next_action = action_group.get_action ("goto-next-search-result")
-        next_button = gtk.Button ()
-        next_action.connect_proxy (next_button)
+        next_button = Gtk.Button ()
+        next_button.set_related_action (next_action)
         self.pack_start (next_button, False, False, 0)
 
-        self.status_label = gtk.Label ()
+        self.status_label = Gtk.Label ()
         self.status_label.props.xalign = 0.
         self.status_label.props.use_markup = True
         self.pack_start (self.status_label, False, False, 6)
@@ -170,8 +171,8 @@ class FindBarWidget (gtk.HBox):
         try:
             for status in self.__status.values ():
                 self.__set_status (_(status))
-                width, height = label.size_request ()
-                max_width = max (max_width, width)
+                req = label.size_request ()
+                max_width = max (max_width, req.width)
             label.set_size_request (max_width, -1)
         finally:
             label.props.label = old_markup
@@ -206,7 +207,7 @@ class FindBarFeature (FeatureBase):
 
         self.logger = logging.getLogger ("ui.findbar")
 
-        self.action_group = gtk.ActionGroup ("FindBarActions")
+        self.action_group = Gtk.ActionGroup ("FindBarActions")
         self.action_group.add_toggle_actions ([("show-find-bar",
                                                 None,
                                                 _("Find Bar"),
@@ -233,7 +234,7 @@ class FindBarFeature (FeatureBase):
 
         view = self.log_view
 
-        path = (line_index,)
+        path = Gtk.TreePath((line_index,))
 
         start_path, end_path = view.get_visible_range ()
 
@@ -259,7 +260,7 @@ class FindBarFeature (FeatureBase):
                                   ("ViewNextResult", "goto-next-search-result",),
                                   ("ViewPrevResult", "goto-previous-search-result",)]:
             ui.add_ui (self.merge_id, "/menubar/ViewMenu/ViewMenuAdditions",
-                       name, action_name, gtk.UI_MANAGER_MENUITEM, False)
+                       name, action_name, Gtk.UIManagerItemType.MENUITEM, False)
 
         box = window.widgets.vbox_view
         self.bar = FindBarWidget (self.action_group)

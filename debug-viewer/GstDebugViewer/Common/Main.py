@@ -28,11 +28,10 @@ import locale
 import gettext
 from gettext import gettext as _, ngettext
 
-import pygtk
-pygtk.require ("2.0")
-del pygtk
+import gi
 
-import gobject
+from gi.repository import GObject
+from gi.repository import Gtk;
 
 class ExceptionHandler (object):
 
@@ -305,8 +304,8 @@ class OptionParser (object):
 
         # Remaining args parsing with pygobject does not work with glib before
         # 2.13.2 (e.g. Ubuntu Feisty).
-        ## if gobject.glib_version >= (2, 13, 2,):
-        ##     self.__entries.append ((gobject.OPTION_REMAINING, "\0", 0, "", "",))
+        ## if GObject.glib_version >= (2, 13, 2,):
+        ##     self.__entries.append ((GObject.OPTION_REMAINING, "\0", 0, "", "",))
 
     def add_option (self, long_name, short_name = None, description = None,
                     arg_name = None, arg_parser = None, hidden = False):
@@ -321,12 +320,12 @@ class OptionParser (object):
             description = ""
 
         if arg_name is None:
-            flags |= gobject.OPTION_FLAG_NO_ARG
+            flags |= GObject.OPTION_FLAG_NO_ARG
         elif arg_parser is not None:
             self.__parsers[long_name] = arg_parser
 
         if hidden:
-            flags |= gobject.OPTION_FLAG_HIDDEN
+            flags |= GObject.OPTION_FLAG_HIDDEN
 
         self.__entries.append ((long_name, short_name, flags, description,
                                 arg_name,))
@@ -334,7 +333,7 @@ class OptionParser (object):
     def __handle_option (self, option, arg, group):
 
         # See __init__ for glib requirement.
-        ## if option == gobject.OPTION_REMAINING:
+        ## if option == GObject.OPTION_REMAINING:
         ##     self.__remaining_args.append (arg)
         ##     return
 
@@ -356,14 +355,14 @@ class OptionParser (object):
 
     def parse (self, argv):
 
-        context = gobject.OptionContext (self.get_parameter_string ())
-        group = gobject.OptionGroup (None, None, None, self.__handle_option)
+        context = GObject.OptionContext (self.get_parameter_string ())
+        group = GObject.OptionGroup (None, None, None, self.__handle_option)
         context.set_main_group (group)
         group.add_entries (self.__entries)
 
         try:
             result_argv = context.parse (argv)
-        except gobject.GError as exc:
+        except GObject.GError as exc:
             raise OptionError (exc.message)
 
         self.__remaining_args = result_argv[1:]

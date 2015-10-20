@@ -25,7 +25,7 @@ def _ (s):
 import logging
 
 import glib
-import gtk
+from gi.repository import Gtk
 
 from GstDebugViewer import Common, Data
 from GstDebugViewer.GUI.colors import LevelColorThemeTango
@@ -45,7 +45,7 @@ class Column (object):
 
     def __init__ (self):
 
-        view_column = gtk.TreeViewColumn (self.label_header)
+        view_column = Gtk.TreeViewColumn (self.label_header)
         view_column.props.reorderable = True
 
         self.view_column = view_column
@@ -68,8 +68,8 @@ class TextColumn (SizedColumn):
         Column.__init__ (self)
 
         column = self.view_column
-        cell = gtk.CellRendererText ()
-        column.pack_start (cell)
+        cell = Gtk.CellRendererText ()
+        column.pack_start (cell, True)
 
         cell.props.yalign = 0.
         cell.props.ypad = 0
@@ -83,7 +83,7 @@ class TextColumn (SizedColumn):
             assert data_func
             id_ = self.id
             if id_ is not None:
-                def cell_data_func (column, cell, model, tree_iter):
+                def cell_data_func (column, cell, model, tree_iter, user_data):
                     data_func (cell.props, model.get_value (tree_iter, id_))
             else:
                 cell_data_func = data_func
@@ -99,7 +99,7 @@ class TextColumn (SizedColumn):
 
         modify_func = self.get_modify_func ()
         id_ = self.id
-        def cell_data_func (column, cell, model, tree_iter):
+        def cell_data_func (column, cell, model, tree_iter, user_data):
             cell.props.text = modify_func (model.get_value (tree_iter, id_))
         column.set_cell_data_func (cell, cell_data_func)
 
@@ -109,7 +109,7 @@ class TextColumn (SizedColumn):
         if not values:
             return SizedColumn.compute_default_size (self)
 
-        cell = self.view_column.get_cell_renderers ()[0]
+        cell = self.view_column.get_cells ()[0]
 
         if self.get_modify_func is not None:
             format = self.get_modify_func ()
@@ -120,7 +120,7 @@ class TextColumn (SizedColumn):
         max_width = 0
         for value in values:
             cell.props.text = format (value)
-            rect, x, y, w, h = self.view_column.cell_get_size ()
+            x, y, w, h = self.view_column.cell_get_size ()
             max_width = max (max_width, w)
 
         return max_width
@@ -171,7 +171,7 @@ class TimeColumn (TextColumn):
         self.base_time = base_time
 
         column = self.view_column
-        cell = column.get_cell_renderers ()[0]
+        cell = column.get_cells ()[0]
         self.update_modify_func (column, cell)
 
 class LevelColumn (TextColumn):
@@ -184,7 +184,7 @@ class LevelColumn (TextColumn):
 
         TextColumn.__init__ (self)
 
-        cell = self.view_column.get_cell_renderers ()[0]
+        cell = self.view_column.get_cells ()[0]
         cell.props.xalign = .5
 
     @staticmethod
@@ -278,7 +278,7 @@ class CodeColumn (TextColumn):
 
         filename_id = LogModelBase.COL_FILENAME
         line_number_id = LogModelBase.COL_LINE_NUMBER
-        def filename_data_func (column, cell, model, tree_iter):
+        def filename_data_func (column, cell, model, tree_iter, user_data):
             args = model.get (tree_iter, filename_id, line_number_id)
             cell.props.text = "%s:%i" % args
 
@@ -325,7 +325,7 @@ class MessageColumn (TextColumn):
         highlighters = self.highlighters
         id_ = LazyLogModel.COL_MESSAGE
 
-        def message_data_func (column, cell, model, tree_iter):
+        def message_data_func (column, cell, model, tree_iter, user_data):
 
             msg = model.get_value (tree_iter, id_)
 
@@ -382,7 +382,7 @@ class ColumnManager (Common.GUI.Manager):
         self.columns = []
         self.column_order = list (self.column_classes)
 
-        self.action_group = gtk.ActionGroup ("ColumnActions")
+        self.action_group = Gtk.ActionGroup ("ColumnActions")
 
         def make_entry (col_class):
             return ("show-%s-column" % (col_class.name,),
@@ -449,12 +449,12 @@ class ColumnManager (Common.GUI.Manager):
         self.default_sort = tree_sortable_get_sort_column_id (sort_model)
 
         sort_model.set_sort_column_id (TREE_SORTABLE_UNSORTED_COLUMN_ID,
-                                       gtk.SORT_ASCENDING)
+                                       Gtk.SortType.ASCENDING)
 
     def set_zoom (self, scale):
 
         for column in self.columns:
-            cell = column.view_column.get_cell_renderers ()[0]
+            cell = column.view_column.get_cells ()[0]
             cell.props.scale = scale
             column.view_column.queue_resize ()
 
@@ -485,9 +485,9 @@ class ColumnManager (Common.GUI.Manager):
         pos = self.__get_column_insert_position (column)
 
         if self.view.props.fixed_height_mode:
-            column.view_column.props.sizing = gtk.TREE_VIEW_COLUMN_FIXED
+            column.view_column.props.sizing = Gtk.TreeViewColumnSizing.FIXED
 
-        cell = column.view_column.get_cell_renderers ()[0]
+        cell = column.view_column.get_cells ()[0]
         cell.props.scale = self.zoom
 
         self.columns.insert (pos, column)
@@ -672,7 +672,7 @@ class WrappingMessageColumn (MessageColumn):
 
         col = self.view_column
         col.props.max_width = width
-        col.get_cell_renderers ()[0].props.wrap_width = width
+        col.get_cells ()[0].props.wrap_width = width
         col.queue_resize ()
 
 class LineViewColumnManager (ColumnManager):

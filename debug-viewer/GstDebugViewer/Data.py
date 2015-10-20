@@ -23,7 +23,7 @@ import os
 import logging
 import re
 
-# Nanosecond resolution (like gst.SECOND)
+# Nanosecond resolution (like Gst.SECOND)
 SECOND = 1000000000
 
 def time_args (ts):

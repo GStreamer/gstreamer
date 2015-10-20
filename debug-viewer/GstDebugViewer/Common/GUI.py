@@ -23,15 +23,16 @@ import os
 
 import logging
 
-import pygtk
-pygtk.require ("2.0")
-del pygtk
+import gi
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.types import GObjectMeta
 
 import GstDebugViewer
 from GstDebugViewer.Common import utils
+from generictreemodel import GenericTreeModel
 
 def widget_add_popup_menu (widget, menu, button = 3):
 
@@ -78,10 +79,10 @@ class Widgets (dict):
     def __init__ (self, builder):
 
         widgets = (obj for obj in builder.get_objects ()
-                   if isinstance(obj, gtk.Buildable))
-        # gtk.Widget.get_name() shadows out the GtkBuildable interface method
+                   if isinstance(obj, Gtk.Buildable))
+        # Gtk.Widget.get_name() shadows out the GtkBuildable interface method
         # of the same name, hence calling the unbound interface method here:
-        items = ((gtk.Buildable.get_name (w), w,) for w in widgets)
+        items = ((Gtk.Buildable.get_name (w), w,) for w in widgets)
 
         dict.__init__ (self, items)
 
@@ -108,7 +109,7 @@ class WidgetFactory (object):
 
         builder_filename = os.path.join (self.directory, filename)
 
-        builder = gtk.Builder ()
+        builder = Gtk.Builder ()
         builder.set_translation_domain (GstDebugViewer.GETTEXT_DOMAIN)
         builder.add_from_file (builder_filename)
 
@@ -141,7 +142,7 @@ class UIFactory (object):
 
     def make (self, extra_actions = None):
 
-        ui_manager = gtk.UIManager ()
+        ui_manager = Gtk.UIManager ()
         for action_group in self.action_groups.values ():
             ui_manager.insert_action_group (action_group, 0)
         if extra_actions:
@@ -152,7 +153,7 @@ class UIFactory (object):
 
         return ui_manager
 
-class MetaModel (gobject.GObjectMeta):
+class MetaModel (GObjectMeta):
 
     """Meta class for easy setup of gtk tree models.
 
@@ -167,13 +168,13 @@ class MetaModel (gobject.GObjectMeta):
     cls.name2 = 1
     ...
 
-    Example: A gtk.ListStore derived model can use
+    Example: A Gtk.ListStore derived model can use
 
         columns = ("COL_NAME", str, "COL_VALUE", str)
 
     and use this in __init__:
 
-        gtk.ListStore.__init__ (self, *self.column_types)
+        GObject.GObject.__init__ (self, *self.column_types)
 
     Then insert data like this:
 
@@ -497,10 +498,10 @@ class WindowState (object):
 
     def handle_window_state_event (self, window, event):
 
-        if not event.changed_mask & gtk.gdk.WINDOW_STATE_MAXIMIZED:
+        if not event.changed_mask & Gdk.WindowState.MAXIMIZED:
             return
 
-        if event.new_window_state & gtk.gdk.WINDOW_STATE_MAXIMIZED:
+        if event.new_window_state & Gdk.WindowState.MAXIMIZED:
             self.logger.debug ("maximized")
             self.is_maximized = True
         else:

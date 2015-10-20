@@ -23,18 +23,19 @@ from array import array
 from bisect import bisect_left
 import logging
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
 
 from GstDebugViewer import Common, Data
 
-class LogModelBase (gtk.GenericTreeModel):
+
+class LogModelBase (Common.GUI.GenericTreeModel):
 
     __metaclass__ = Common.GUI.MetaModel
 
-    columns = ("COL_TIME", gobject.TYPE_UINT64,
+    columns = ("COL_TIME", GObject.TYPE_UINT64,
                "COL_PID", int,
-               "COL_THREAD", gobject.TYPE_UINT64,
+               "COL_THREAD", GObject.TYPE_UINT64,
                "COL_LEVEL", object,
                "COL_CATEGORY", str,
                "COL_FILENAME", str,
@@ -45,7 +46,7 @@ class LogModelBase (gtk.GenericTreeModel):
 
     def __init__ (self):
 
-        gtk.GenericTreeModel.__init__ (self)
+        Common.GUI.GenericTreeModel.__init__ (self)
 
         ##self.props.leak_references = False
 
@@ -76,7 +77,7 @@ class LogModelBase (gtk.GenericTreeModel):
 
     def on_get_flags (self):
 
-        flags = gtk.TREE_MODEL_LIST_ONLY | gtk.TREE_MODEL_ITERS_PERSIST
+        flags = Gtk.TreeModelFlags.LIST_ONLY | Gtk.TreeModelFlags.ITERS_PERSIST
 
         return flags
 

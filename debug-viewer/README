@@ -1,0 +1,28 @@
+# how to build #
+
+./setup.py build; sudo ./setup.py install --prefix=/usr
+sudo chmod a+r /usr/share/gst-debug-viewer/*.ui
+
+# porting issues #
+
+http://stackoverflow.com/questions/11025700/generictreemodel-with-pygobject-introspection-gtk-3
+
+# tips #
+
+OLD: prev_action.connect_proxy(prev_button)
+NEW: prev_button.set_related_action (prev_action)
+
+OLD: box.pack_start (widget)
+NEW: box.pack_start (widget, True, True, 0)
+
+OLD: column.pack_start (cell)
+NEW: column.pack_start (cell, True)
+
+OLD: view_column.get_cell_renderers ()
+NEW: column.get_cells ()
+
+GenericTreeModel
+http://cgit.freedesktop.org/gstreamer/gst-devtools/tree/debug-viewer/GstDebugViewer/GUI/models.py
+https://gist.github.com/andialbrecht/4463278
+http://mailman.daa.com.au/cgi-bin/pipermail/pygtk/2012-December/020510.html
+https://github.com/GNOME/pygobject/blob/master/pygtkcompat/generictreemodel.py

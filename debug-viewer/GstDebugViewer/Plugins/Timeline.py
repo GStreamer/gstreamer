@@ -25,8 +25,9 @@ from GstDebugViewer import Common, Data
 from GstDebugViewer.GUI.colors import LevelColorThemeTango, ThreadColorThemeTango
 from GstDebugViewer.Plugins import *
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Gdk
 import cairo
 
 def iter_model_reversed (model):
@@ -267,13 +268,13 @@ class UpdateProcess (object):
 
         pass
 
-class VerticalTimelineWidget (gtk.DrawingArea):
+class VerticalTimelineWidget (Gtk.DrawingArea):
 
     __gtype_name__ = "GstDebugViewerVerticalTimelineWidget"
 
     def __init__ (self, log_view):
 
-        gtk.DrawingArea.__init__ (self)
+        GObject.GObject.__init__ (self)
 
         self.logger = logging.getLogger ("ui.vtimeline")
 
@@ -306,7 +307,11 @@ class VerticalTimelineWidget (gtk.DrawingArea):
     def __draw (self, drawable):
 
         ctx = drawable.cairo_create ()
-        x, y, w, h = self.get_allocation ()
+        alloc = self.get_allocation ()
+        x = alloc.x
+        y = alloc.y
+        w = alloc.width
+        h = alloc.height
 
         # White background rectangle.
         ctx.set_line_width (0.)
@@ -419,23 +424,23 @@ class VerticalTimelineWidget (gtk.DrawingArea):
         self.params = None
         self.queue_draw ()
 
-class TimelineWidget (gtk.DrawingArea):
+class TimelineWidget (Gtk.DrawingArea):
 
     __gtype_name__ = "GstDebugViewerTimelineWidget"
 
-    __gsignals__ = {"change-position" : (gobject.SIGNAL_RUN_LAST,
-                                         gobject.TYPE_NONE,
-                                         (gobject.TYPE_INT,),)}
+    __gsignals__ = {"change-position" : (GObject.SignalFlags.RUN_LAST,
+                                         None,
+                                         (GObject.TYPE_INT,),)}
 
     def __init__ (self):
 
-        gtk.DrawingArea.__init__ (self)
+        GObject.GObject.__init__ (self)
 
         self.logger = logging.getLogger ("ui.timeline")
 
-        self.add_events (gtk.gdk.BUTTON1_MOTION_MASK |
-                         gtk.gdk.BUTTON_PRESS_MASK |
-                         gtk.gdk.BUTTON_RELEASE_MASK)
+        self.add_events (Gdk.EventMask.BUTTON1_MOTION_MASK |
+                         Gdk.EventMask.BUTTON_PRESS_MASK |
+                         Gdk.EventMask.BUTTON_RELEASE_MASK)
 
         self.process = UpdateProcess (None, None)
         self.process.handle_sentinel_progress = self.__handle_sentinel_progress
@@ -473,22 +478,22 @@ class TimelineWidget (gtk.DrawingArea):
 
     def __ensure_offscreen (self):
 
-        x, y, width, height = self.get_allocation ()
-        if self.__offscreen_size == (width, height):
+        alloc = self.get_allocation ()
+        if self.__offscreen_size == (alloc.width, alloc.height):
             return
 
-        self.__offscreen = gtk.gdk.Pixmap (self.window, width, height, -1)
-        self.__offscreen_size = (width, height)
-        self.__offscreen_dirty = (0, width)
+        self.__offscreen = Gdk.Pixmap (self.window, alloc.width, alloc.height, -1)
+        self.__offscreen_size = (alloc.width, alloc.height)
+        self.__offscreen_dirty = (0, alloc.width)
         if not self.__offscreen:
             self.__offscreen_size = (0, 0)
             raise ValueError ("could not obtain pixmap")
 
     def __invalidate_offscreen (self, start, stop):
 
-        x, y, width, height = self.get_allocation ()
+        alloc = self.get_allocation ()
         if stop < 0:
-            stop += width
+            stop += alloc.width
 
         dirty_start, dirty_stop = self.__offscreen_dirty
         if dirty_start != dirty_stop:
@@ -502,22 +507,22 @@ class TimelineWidget (gtk.DrawingArea):
         # Just like in __draw_offscreen. FIXME: Need this in one place!
         start -= 8
         stop += 8
-        self.queue_draw_area (start, 0, stop - start, height)
+        self.queue_draw_area (start, 0, stop - start, alloc.height)
 
     def __draw_from_offscreen (self, rect = None):
 
         if not self.props.visible:
             return
 
-        x, y, width, height = self.get_allocation ()
+        alloc = self.get_allocation ()
         offscreen_width, offscreen_height = self.__offscreen_size
         if rect is None:
-            rect = (0, 0, width, height)
+            rect = (0, 0, alloc.width, alloc.height)
 
         # Fill the background (where the offscreen pixmap doesn't fit) with
         # white. This happens after enlarging the window, until all sentinels
         # have finished running.
-        if offscreen_width < width or offscreen_height < height:
+        if offscreen_width < alloc.width or offscreen_height < alloc.height:
             ctx = self.window.cairo_create ()
 
             if rect:
@@ -526,17 +531,17 @@ class TimelineWidget (gtk.DrawingArea):
                                rect.y + rect.height)
                 ctx.clip ()
 
-            if offscreen_width < width:
-                ctx.rectangle (offscreen_width, 0, width, offscreen_height)
-            if offscreen_height < height:
+            if offscreen_width < alloc.width:
+                ctx.rectangle (offscreen_width, 0, alloc.width, offscreen_height)
+            if offscreen_height < alloc.height:
                 ctx.new_path ()
-                ctx.rectangle (0, offscreen_height, width, height)
+                ctx.rectangle (0, offscreen_height, alloc.width, alloc.height)
 
             ctx.set_line_width (0.)
             ctx.set_source_rgb (1., 1., 1.)
             ctx.fill ()
 
-        gc = gtk.gdk.GC (self.window)
+        gc = Gdk.GC (self.window)
         x, y, width, height = rect
         self.window.draw_drawable (gc, self.__offscreen, x, y, x, y, width, height)
         self.__draw_position (self.window, clip = rect)
@@ -550,7 +555,7 @@ class TimelineWidget (gtk.DrawingArea):
             self.__dist_sentinel_progress = 0
             self.process.freq_sentinel = LineFrequencySentinel (model)
             self.process.dist_sentinel = LevelDistributionSentinel (self.process.freq_sentinel, model)
-            width = self.get_allocation ()[2]
+            width = self.get_allocation ().width
             self.process.freq_sentinel.run_for (width)
             self.process.run ()
 
@@ -570,15 +575,15 @@ class TimelineWidget (gtk.DrawingArea):
         if not self.process.freq_sentinel.data:
             return
 
-        x, y, width, height = self.get_allocation ()
+        alloc = self.get_allocation ()
 
         # Queue old position rectangle for redraw:
         if self.__position_ts_range is not None:
             start, stop = self.ts_range_to_position (*self.__position_ts_range)
-            self.queue_draw_area (start - 1, 0, stop - start + 2, height)
+            self.queue_draw_area (start - 1, 0, stop - start + 2, alloc.height)
         # And the new one:
         start, stop = self.ts_range_to_position (start_ts, end_ts)
-        self.queue_draw_area (start - 1, 0, stop - start + 2, height)
+        self.queue_draw_area (start - 1, 0, stop - start + 2, alloc.height)
 
         self.__position_ts_range = (start_ts, end_ts,)
 
@@ -766,7 +771,7 @@ class TimelineWidget (gtk.DrawingArea):
                 return
 
         ctx = drawable.cairo_create ()
-        x, y, width, height = self.get_allocation ()
+        height = self.get_allocation ().height
 
         if clip:
             ctx.rectangle (*clip)
@@ -840,13 +845,13 @@ class TimelineWidget (gtk.DrawingArea):
 
         x, y, mod = self.window.get_pointer ()
 
-        if event.state & gtk.gdk.BUTTON1_MASK:
+        if event.get_state() & Gdk.ModifierType.BUTTON1_MASK:
             self.emit ("change-position", int (x))
-            gtk.gdk.event_request_motions (event)
+            Gdk.event_request_motions (event)
             return True
         else:
             self._handle_motion (x, y)
-            gtk.gdk.event_request_motions (event)
+            Gdk.event_request_motions (event)
             return False
 
     def _handle_motion (self, x, y):
@@ -868,18 +873,18 @@ class AttachedWindow (object):
         self.merge_id = ui.new_merge_id ()
         ui.add_ui (self.merge_id, "/menubar/ViewMenu/ViewMenuAdditions",
                    "ViewTimeline", "show-timeline",
-                   gtk.UI_MANAGER_MENUITEM, False)
+                   Gtk.UIManagerItemType.MENUITEM, False)
 
         ui.add_ui (self.merge_id, "/", "TimelineContextMenu", None,
-                   gtk.UI_MANAGER_POPUP, False)
+                   Gtk.UIManagerItemType.POPUP, False)
         # TODO: Make hide before/after operate on the partition that the mouse
         # is pointed at instead of the currently selected line.
         # ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineHideLinesBefore",
-        #            "hide-before-line", gtk.UI_MANAGER_MENUITEM, False)
+        #            "hide-before-line", Gtk.UIManagerItemType.MENUITEM, False)
         # ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineHideLinesAfter",
-        #            "hide-after-line", gtk.UI_MANAGER_MENUITEM, False)
+        #            "hide-after-line", Gtk.UIManagerItemType.MENUITEM, False)
         ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineShowHiddenLines",
-                   "show-hidden-lines", gtk.UI_MANAGER_MENUITEM, False)
+                   "show-hidden-lines", Gtk.UIManagerItemType.MENUITEM, False)
 
         box = window.get_top_attach_point ()
 
@@ -928,7 +933,7 @@ class AttachedWindow (object):
 
         self.idle_scroll_path = None
         if self.idle_scroll_id is not None:
-            gobject.source_remove (self.idle_scroll_id)
+            GObject.source_remove (self.idle_scroll_id)
             self.idle_scroll_id = None
 
     def handle_detach_log_file (self, log_file):
@@ -953,7 +958,7 @@ class AttachedWindow (object):
             self.update_timeline_position ()
             self.vtimeline.update ()
             return False
-        gobject.idle_add (idle_update, priority = gobject.PRIORITY_LOW)
+        GObject.idle_add (idle_update, priority = GObject.PRIORITY_LOW)
 
     def handle_log_view_adjustment_value_changed (self, adj):
 
@@ -1016,7 +1021,7 @@ class AttachedWindow (object):
         self.idle_scroll_path = path
 
         if self.idle_scroll_id is None:
-            self.idle_scroll_id = gobject.idle_add (self.idle_scroll)
+            self.idle_scroll_id = GObject.idle_add (self.idle_scroll)
 
         return False
 
@@ -1041,7 +1046,7 @@ class TimelineFeature (FeatureBase):
 
         self.logger = logging.getLogger ("ui.timeline")
 
-        self.action_group = gtk.ActionGroup ("TimelineActions")
+        self.action_group = Gtk.ActionGroup ("TimelineActions")
         self.action_group.add_toggle_actions ([("show-timeline",
                                                 None, _("_Timeline"),)])
 

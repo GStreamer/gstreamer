@@ -21,13 +21,13 @@
 
 from GstDebugViewer.Plugins import *
 import logging
-import gtk
+from gi.repository import Gtk
 
 class FilePropertiesSentinel (object):
 
     pass
 
-class FilePropertiesDialog (gtk.Dialog):
+class FilePropertiesDialog (Gtk.Dialog):
 
     pass
 
@@ -35,8 +35,8 @@ class FilePropertiesFeature (FeatureBase):
 
     def __init__ (self, *a, **kw):
 
-        self.action_group = gtk.ActionGroup ("FilePropertiesActions")
-        self.action_group.add_actions ([("show-file-properties", gtk.STOCK_PROPERTIES,
+        self.action_group = Gtk.ActionGroup ("FilePropertiesActions")
+        self.action_group.add_actions ([("show-file-properties", Gtk.STOCK_PROPERTIES,
                                          _("_Properties"), "<Ctrl>P")])
 
     def attach (self, window):
@@ -47,7 +47,7 @@ class FilePropertiesFeature (FeatureBase):
         self.merge_id = ui.new_merge_id ()
         ui.add_ui (self.merge_id, "/menubar/FileMenu/FileMenuAdditions",
                    "FileProperties", "show-file-properties",
-                   gtk.UI_MANAGER_MENUITEM, False)
+                   Gtk.UIManagerItemType.MENUITEM, False)
 
         handler = self.handle_action_activate
         self.action_group.get_action ("show-file-properties").connect ("activate", handler)

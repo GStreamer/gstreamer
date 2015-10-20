@@ -29,8 +29,9 @@ from bisect import bisect_right, bisect_left
 import logging
 
 import glib
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Gdk
 
 from GstDebugViewer import Common, Data, Main
 from GstDebugViewer.GUI.columns import LineViewColumnManager, ViewColumnManager
@@ -180,16 +181,16 @@ class ProgressDialog (object):
 
     def __init__ (self, window, title = ""):
 
-        bar = gtk.InfoBar ()
-        bar.props.message_type = gtk.MESSAGE_INFO
+        bar = Gtk.InfoBar ()
+        bar.props.message_type = Gtk.MessageType.INFO
         bar.connect ("response", self.__handle_info_bar_response)
-        bar.add_button (gtk.STOCK_CANCEL, 1)
+        bar.add_button (Gtk.STOCK_CANCEL, 1)
         area_box = bar.get_content_area ()
-        box = gtk.HBox (spacing = 8)
+        box = Gtk.HBox (spacing = 8)
 
-        box.pack_start (gtk.Label (title), False, False, 0)
+        box.pack_start (Gtk.Label(label=title), False, False, 0)
 
-        progress = gtk.ProgressBar ()
+        progress = Gtk.ProgressBar ()
         box.pack_start (progress, False, False, 0)
 
         area_box.pack_start (box, False, False, 0)
@@ -229,7 +230,7 @@ class Window (object):
 
         self.actions = Common.GUI.Actions ()
 
-        group = gtk.ActionGroup ("MenuActions")
+        group = Gtk.ActionGroup ("MenuActions")
         group.add_actions ([("AppMenuAction", None, _("_Application")),
                             ("ViewMenuAction", None, _("_View")),
                             ("ViewColumnsMenuAction", None, _("_Columns")),
@@ -237,26 +238,26 @@ class Window (object):
                             ("LineViewContextMenuAction", None, "")])
         self.actions.add_group (group)
 
-        group = gtk.ActionGroup ("WindowActions")
-        group.add_actions ([("new-window", gtk.STOCK_NEW, _("_New Window"), "<Ctrl>N"),
-                            ("open-file", gtk.STOCK_OPEN, _("_Open File"), "<Ctrl>O"),
-                            ("reload-file", gtk.STOCK_REFRESH, _("_Reload File"), "<Ctrl>R"),
-                            ("close-window", gtk.STOCK_CLOSE, _("Close _Window"), "<Ctrl>W"),
-                            ("cancel-load", gtk.STOCK_CANCEL, None,),
-                            ("clear-line-view", gtk.STOCK_CLEAR, None),
+        group = Gtk.ActionGroup ("WindowActions")
+        group.add_actions ([("new-window", Gtk.STOCK_NEW, _("_New Window"), "<Ctrl>N"),
+                            ("open-file", Gtk.STOCK_OPEN, _("_Open File"), "<Ctrl>O"),
+                            ("reload-file", Gtk.STOCK_REFRESH, _("_Reload File"), "<Ctrl>R"),
+                            ("close-window", Gtk.STOCK_CLOSE, _("Close _Window"), "<Ctrl>W"),
+                            ("cancel-load", Gtk.STOCK_CANCEL, None,),
+                            ("clear-line-view", Gtk.STOCK_CLEAR, None),
                             ("show-about", None, _("About GStreamer Debug Viewer",)),
-                            ("enlarge-text", gtk.STOCK_ZOOM_IN, _("Enlarge Text"), "<Ctrl>plus"),
-                            ("shrink-text", gtk.STOCK_ZOOM_OUT, _("Shrink Text"), "<Ctrl>minus"),
-                            ("reset-text", gtk.STOCK_ZOOM_100, _("Normal Text Size"), "<Ctrl>0")])
+                            ("enlarge-text", Gtk.STOCK_ZOOM_IN, _("Enlarge Text"), "<Ctrl>plus"),
+                            ("shrink-text", Gtk.STOCK_ZOOM_OUT, _("Shrink Text"), "<Ctrl>minus"),
+                            ("reset-text", Gtk.STOCK_ZOOM_100, _("Normal Text Size"), "<Ctrl>0")])
         self.actions.add_group (group)
         self.actions.reload_file.props.sensitive = False
 
-        group = gtk.ActionGroup ("RowActions")
+        group = Gtk.ActionGroup ("RowActions")
         group.add_actions ([("hide-before-line", None, _("Hide lines before this point")),
                             ("hide-after-line", None, _("Hide lines after this point")),
                             ("show-hidden-lines", None, _("Show hidden lines")),
-                            ("edit-copy-line", gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
-                            ("edit-copy-message", gtk.STOCK_COPY, _("Copy message"), ""),
+                            ("edit-copy-line", Gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
+                            ("edit-copy-message", Gtk.STOCK_COPY, _("Copy message"), ""),
                             ("set-base-time", None, _("Set base time")),
                             ("hide-log-level", None, _("Hide log level")),
                             ("hide-log-category", None, _("Hide log category")),
@@ -327,8 +328,8 @@ class Window (object):
         self.window_state.attach (window = self.gtk_window,
                                   state = self.app.state_section)
 
-        self.clipboard = gtk.Clipboard (self.gtk_window.get_display (),
-                                        gtk.gdk.SELECTION_CLIPBOARD)
+        self.clipboard = Gtk.Clipboard.get_for_display (self.gtk_window.get_display (),
+                                        Gdk.SELECTION_CLIPBOARD)
 
         for action_name, handler in iter_actions (self):
             action = getattr (self.actions, action_name)
@@ -348,7 +349,7 @@ class Window (object):
         # FIXME: With multiple selection mode, browsing the list with key
         # up/down slows to a crawl! WTF is wrong with this stupid widget???
         sel = self.log_view.get_selection ()
-        sel.set_mode (gtk.SELECTION_BROWSE)
+        sel.set_mode (Gtk.SelectionMode.BROWSE)
 
         self.line_view.attach (self)
 
@@ -515,13 +516,13 @@ class Window (object):
     @action
     def handle_open_file_action_activate (self, action):
 
-        dialog = gtk.FileChooserDialog (None, self.gtk_window,
-                                        gtk.FILE_CHOOSER_ACTION_OPEN,
-                                        (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                         gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT,))
+        dialog = Gtk.FileChooserDialog (None, self.gtk_window,
+                                        Gtk.FileChooserAction.OPEN,
+                                        (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                         Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT,))
         response = dialog.run ()
         dialog.hide ()
-        if response == gtk.RESPONSE_ACCEPT:
+        if response == Gtk.ResponseType.ACCEPT:
             self.set_log_file (dialog.get_filename ())
         dialog.destroy ()
 
@@ -544,7 +545,7 @@ class Window (object):
             self.hide_info ()
             self.progress_dialog = None
         if self.update_progress_id is not None:
-            gobject.source_remove (self.update_progress_id)
+            GObject.source_remove (self.update_progress_id)
             self.update_progress_id = None
 
         self.set_sensitive (True)
@@ -699,7 +700,7 @@ class Window (object):
         self.log_view.set_model (None)
         self.log_filter.add_filter (filter, dispatcher = dispatcher)
 
-        gobject.timeout_add (250, self.update_filter_progress)
+        GObject.timeout_add (250, self.update_filter_progress)
 
         self.set_sensitive (False)
 
@@ -845,13 +846,13 @@ class Window (object):
 
     def show_error (self, message1, message2):
 
-        bar = gtk.InfoBar ()
-        bar.props.message_type = gtk.MESSAGE_ERROR
+        bar = Gtk.InfoBar ()
+        bar.props.message_type = Gtk.MessageType.ERROR
         box = bar.get_content_area ()
 
         markup = "<b>%s</b> %s" % (glib.markup_escape_text (message1),
                                    glib.markup_escape_text (message2),)
-        label = gtk.Label ()
+        label = Gtk.Label ()
         label.props.use_markup = True
         label.props.label = markup
         label.props.selectable = True
@@ -866,7 +867,7 @@ class Window (object):
         self.progress_dialog = ProgressDialog (self, _("Loading log file"))
         self.show_info (self.progress_dialog.widget)
         self.progress_dialog.handle_cancel = self.handle_load_progress_dialog_cancel
-        self.update_progress_id = gobject.timeout_add (250, self.update_load_progress)
+        self.update_progress_id = GObject.timeout_add (250, self.update_load_progress)
 
         self.set_sensitive (False)
 
@@ -917,4 +918,4 @@ class Window (object):
                 sel.select_path ((0,))
             return False
 
-        gobject.idle_add (idle_set)
+        GObject.idle_add (idle_set)
