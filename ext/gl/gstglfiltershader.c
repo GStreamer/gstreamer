@@ -164,6 +164,14 @@ gst_gl_filtershader_finalize (GObject * object)
 {
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (object);
 
+  if (filtershader->vertex)
+    g_free (filtershader->vertex);
+  filtershader->vertex = NULL;
+
+  if (filtershader->fragment)
+    g_free (filtershader->fragment);
+  filtershader->fragment = NULL;
+
   if (filtershader->uniforms)
     gst_structure_free (filtershader->uniforms);
   filtershader->uniforms = NULL;
