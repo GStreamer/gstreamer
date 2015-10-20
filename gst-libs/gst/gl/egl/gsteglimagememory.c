@@ -25,6 +25,7 @@
 #endif
 
 #include "gsteglimagememory.h"
+#include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_EGL_IMAGE_MEMORY);
 #define GST_CAT_DEFAULT GST_CAT_EGL_IMAGE_MEMORY
