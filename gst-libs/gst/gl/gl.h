@@ -48,7 +48,6 @@
 #include <gst/gl/gstglbasefilter.h>
 #include <gst/gl/gstglviewconvert.h>
 #include <gst/gl/gstglfilter.h>
-#include <gst/gl/gstglshadervariables.h>
 #include <gst/gl/gstglsyncmeta.h>
 #include <gst/gl/gstgloverlaycompositor.h>
 
