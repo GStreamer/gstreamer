@@ -583,10 +583,11 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
           } else {
             self->iframe_lists = g_list_append (self->iframe_lists, new_list);
           }
-        } else if (list != NULL) {
-          GST_WARNING ("Found a list without a uri..., dropping");
-          gst_m3u8_free (list);
         } else {
+          if (list != NULL) {
+            GST_WARNING ("Found a list without a uri..., dropping");
+            gst_m3u8_free (list);
+          }
           list = new_list;
         }
       } else if (g_str_has_prefix (data_ext_x, "TARGETDURATION:")) {
