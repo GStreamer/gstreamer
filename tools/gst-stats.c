@@ -836,10 +836,10 @@ collect_stats (const gchar * filename)
           }
         }
       }
-      fclose (log);
     } else {
       GST_WARNING ("empty log");
     }
+    fclose (log);
   }
 }
 
