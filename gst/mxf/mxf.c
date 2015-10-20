@@ -71,8 +71,9 @@ plugin_init (GstPlugin * plugin)
 
   /* mxfmux is disabled for now - it compiles but is completely untested */
   if (!gst_element_register (plugin, "mxfdemux", GST_RANK_PRIMARY,
-          GST_TYPE_MXF_DEMUX))
-    /* || !gst_element_register (plugin, "mxfmux", GST_RANK_PRIMARY, GST_TYPE_MXF_MUX)) */
+          GST_TYPE_MXF_DEMUX)
+      || !gst_element_register (plugin, "mxfmux", GST_RANK_PRIMARY,
+          GST_TYPE_MXF_MUX))
     return FALSE;
 
   return TRUE;
