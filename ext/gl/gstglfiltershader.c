@@ -40,6 +40,9 @@
 #include <gst/gl/gstglshadervariables.h>
 
 #include "gstglfiltershader.h"
+#if HAVE_GRAPHENE
+#include <graphene-gobject.h>
+#endif
 
 enum
 {
@@ -47,6 +50,7 @@ enum
   PROP_SHADER,
   PROP_VERTEX,
   PROP_FRAGMENT,
+  PROP_UNIFORMS,
   PROP_UPDATE_SHADER,
   PROP_LAST,
 };
@@ -112,6 +116,11 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* FIXME: add other stages */
 
+  g_object_class_install_property (gobject_class, PROP_UNIFORMS,
+      g_param_spec_boxed ("uniforms", "GLSL Uniforms",
+          "GLSL Uniforms", GST_TYPE_STRUCTURE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_UPDATE_SHADER,
       g_param_spec_boolean ("update-shader", "Update Shader",
           "Emit the \'create-shader\' signal for the next frame",
@@ -154,6 +163,12 @@ gst_gl_filtershader_init (GstGLFilterShader * filtershader)
 static void
 gst_gl_filtershader_finalize (GObject * object)
 {
+  GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (object);
+
+  if (filtershader->uniforms)
+    gst_structure_free (filtershader->uniforms);
+  filtershader->uniforms = NULL;
+
   G_OBJECT_CLASS (gst_gl_filtershader_parent_class)->finalize (object);
 }
 
@@ -187,6 +202,14 @@ gst_gl_filtershader_set_property (GObject * object, guint prop_id,
       filtershader->new_source = TRUE;
       GST_OBJECT_UNLOCK (filtershader);
       break;
+    case PROP_UNIFORMS:
+      GST_OBJECT_LOCK (filtershader);
+      if (filtershader->uniforms)
+        gst_structure_free (filtershader->uniforms);
+      filtershader->uniforms = g_value_dup_boxed (value);
+      filtershader->new_uniforms = TRUE;
+      GST_OBJECT_UNLOCK (filtershader);
+      break;
     case PROP_UPDATE_SHADER:
       GST_OBJECT_LOCK (filtershader);
       filtershader->update_shader = g_value_get_boolean (value);
@@ -218,6 +241,11 @@ gst_gl_filtershader_get_property (GObject * object, guint prop_id,
     case PROP_FRAGMENT:
       GST_OBJECT_LOCK (filtershader);
       g_value_set_string (value, filtershader->fragment);
+      GST_OBJECT_UNLOCK (filtershader);
+      break;
+    case PROP_UNIFORMS:
+      GST_OBJECT_LOCK (filtershader);
+      g_value_set_boxed (value, filtershader->uniforms);
       GST_OBJECT_UNLOCK (filtershader);
       break;
     default:
@@ -296,6 +324,65 @@ gst_gl_filtershader_filter_texture (GstGLFilter * filter, guint in_tex,
   return TRUE;
 }
 
+static gboolean
+_set_uniform (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  GstGLShader *shader = user_data;
+  const gchar *field_name = g_quark_to_string (field_id);
+
+  if (G_TYPE_CHECK_VALUE_TYPE ((value), G_TYPE_INT)) {
+    gst_gl_shader_set_uniform_1i (shader, field_name, g_value_get_int (value));
+  } else if (G_TYPE_CHECK_VALUE_TYPE ((value), G_TYPE_FLOAT)) {
+    gst_gl_shader_set_uniform_1f (shader, field_name,
+        g_value_get_float (value));
+#if HAVE_GRAPHENE
+  } else if (G_TYPE_CHECK_VALUE_TYPE ((value), GRAPHENE_TYPE_VEC2)) {
+    graphene_vec2_t *vec2 = g_value_get_boxed (value);
+    float x = graphene_vec2_get_x (vec2);
+    float y = graphene_vec2_get_y (vec2);
+    gst_gl_shader_set_uniform_2f (shader, field_name, x, y);
+  } else if (G_TYPE_CHECK_VALUE_TYPE ((value), GRAPHENE_TYPE_VEC3)) {
+    graphene_vec3_t *vec3 = g_value_get_boxed (value);
+    float x = graphene_vec3_get_x (vec3);
+    float y = graphene_vec3_get_y (vec3);
+    float z = graphene_vec3_get_z (vec3);
+    gst_gl_shader_set_uniform_3f (shader, field_name, x, y, z);
+  } else if (G_TYPE_CHECK_VALUE_TYPE ((value), GRAPHENE_TYPE_VEC4)) {
+    graphene_vec4_t *vec4 = g_value_get_boxed (value);
+    float x = graphene_vec4_get_x (vec4);
+    float y = graphene_vec4_get_y (vec4);
+    float z = graphene_vec4_get_z (vec4);
+    float w = graphene_vec4_get_w (vec4);
+    gst_gl_shader_set_uniform_4f (shader, field_name, x, y, z, w);
+  } else if (G_TYPE_CHECK_VALUE_TYPE ((value), GRAPHENE_TYPE_MATRIX)) {
+    graphene_matrix_t *matrix = g_value_get_boxed (value);
+    float matrix_f[16];
+    graphene_matrix_to_float (matrix, matrix_f);
+    gst_gl_shader_set_uniform_matrix_4fv (shader, field_name, 1, FALSE,
+        matrix_f);
+#endif
+  } else {
+    /* FIXME: Add support for unsigned ints, non 4x4 matrices, etc */
+    GST_FIXME ("Don't know how to set the \'%s\' paramater.  Unknown type",
+        field_name);
+    return TRUE;
+  }
+
+  return TRUE;
+}
+
+static void
+_update_uniforms (GstGLFilterShader * filtershader)
+{
+  if (filtershader->new_uniforms && filtershader->uniforms) {
+    gst_gl_shader_use (filtershader->shader);
+
+    gst_structure_foreach (filtershader->uniforms,
+        (GstStructureForeachFunc) _set_uniform, filtershader->shader);
+    filtershader->new_uniforms = FALSE;
+  }
+}
+
 static GstGLShader *
 _maybe_recompile_shader (GstGLFilterShader * filtershader)
 {
@@ -317,6 +404,8 @@ _maybe_recompile_shader (GstGLFilterShader * filtershader)
         gst_object_unref (filtershader->shader);
       filtershader->new_source = FALSE;
       filtershader->shader = gst_object_ref (shader);
+      filtershader->new_uniforms = TRUE;
+      _update_uniforms (filtershader);
       GST_OBJECT_UNLOCK (filtershader);
       return shader;
     }
@@ -324,6 +413,7 @@ _maybe_recompile_shader (GstGLFilterShader * filtershader)
 
   if (filtershader->shader) {
     shader = gst_object_ref (filtershader->shader);
+    _update_uniforms (filtershader);
     GST_OBJECT_UNLOCK (filtershader);
     return shader;
   }
@@ -374,10 +464,13 @@ _maybe_recompile_shader (GstGLFilterShader * filtershader)
       gst_object_unref (filtershader->shader);
     filtershader->shader = gst_object_ref (shader);
     filtershader->new_source = FALSE;
+    filtershader->new_uniforms = TRUE;
+    _update_uniforms (filtershader);
 
     GST_OBJECT_UNLOCK (filtershader);
     return shader;
   } else if (filtershader->shader) {
+    _update_uniforms (filtershader);
     shader = gst_object_ref (filtershader->shader);
     GST_OBJECT_UNLOCK (filtershader);
     return shader;
