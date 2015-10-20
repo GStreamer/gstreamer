@@ -134,13 +134,8 @@ gst_mxf_mux_class_init (GstMXFMuxClass * klass)
 static void
 gst_mxf_mux_init (GstMXFMux * mux)
 {
-  GstCaps *caps;
-
   mux->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
   gst_pad_set_event_function (mux->srcpad, gst_mxf_mux_handle_src_event);
-  caps = gst_caps_new_empty_simple ("application/mxf");
-  gst_pad_set_caps (mux->srcpad, caps);
-  gst_caps_unref (caps);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
 
   mux->collect = gst_collect_pads_new ();
@@ -1403,12 +1398,23 @@ gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
   }
 
   if (mux->state == GST_MXF_MUX_STATE_HEADER) {
+    GstCaps *caps;
+    gchar s_id[32];
+
     if (mux->collect->data == NULL) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
           ("No input streams configured"));
       ret = GST_FLOW_ERROR;
       goto error;
     }
+
+    /* stream-start (FIXME: create id based on input ids) */
+    g_snprintf (s_id, sizeof (s_id), "mxfmux-%08x", g_random_int ());
+    gst_pad_push_event (mux->srcpad, gst_event_new_stream_start (s_id));
+
+    caps = gst_caps_new_empty_simple ("application/mxf");
+    gst_pad_set_caps (mux->srcpad, caps);
+    gst_caps_unref (caps);
 
     gst_segment_init (&segment, GST_FORMAT_BYTES);
     if (gst_pad_push_event (mux->srcpad, gst_event_new_segment (&segment))) {
