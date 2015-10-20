@@ -536,7 +536,7 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
     ret = klass->transform_caps (trans, direction, caps, filter);
     GST_LOG_OBJECT (trans, "  to: %" GST_PTR_FORMAT, ret);
 
-#ifndef G_DISABLE_ASSERT
+#ifdef GST_ENABLE_EXTRA_CHECKS
     if (filter) {
       if (!gst_caps_is_subset (ret, filter)) {
         GstCaps *intersection;

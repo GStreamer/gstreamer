@@ -81,6 +81,7 @@ AG_GST_GETTEXT([gstreamer-$GST_API_VERSION])
 dnl *** check for arguments to configure ***
 
 AG_GST_ARG_DISABLE_FATAL_WARNINGS
+AG_GST_ARG_ENABLE_EXTRA_CHECKS
 
 dnl subsystems - can influence other decisions so needs to be high up
 dnl we need to AM_CONDITIONAL them here for automake 1.6.x compatibility
