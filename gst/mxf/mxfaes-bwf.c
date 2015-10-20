@@ -1266,7 +1266,8 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
           descriptor->channel_count) / 8;
 
     audio_format =
-        gst_audio_format_build_integer (block_align != 1, G_LITTLE_ENDIAN,
+        gst_audio_format_build_integer (block_align !=
+        descriptor->channel_count, G_LITTLE_ENDIAN,
         (block_align / descriptor->channel_count) * 8,
         (block_align / descriptor->channel_count) * 8);
     ret =
@@ -1297,7 +1298,8 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
           descriptor->channel_count) / 8;
 
     audio_format =
-        gst_audio_format_build_integer (block_align != 1, G_BIG_ENDIAN,
+        gst_audio_format_build_integer (block_align !=
+        descriptor->channel_count, G_BIG_ENDIAN,
         (block_align / descriptor->channel_count) * 8,
         (block_align / descriptor->channel_count) * 8);
     ret =
@@ -1374,8 +1376,8 @@ mxf_aes3_create_caps (MXFMetadataTimelineTrack * track,
         descriptor->channel_count) / 8;
 
   audio_format =
-      gst_audio_format_build_integer (block_align != 1, G_LITTLE_ENDIAN,
-      (block_align / descriptor->channel_count) * 8,
+      gst_audio_format_build_integer (block_align != descriptor->channel_count,
+      G_LITTLE_ENDIAN, (block_align / descriptor->channel_count) * 8,
       (block_align / descriptor->channel_count) * 8);
   ret =
       mxf_metadata_generic_sound_essence_descriptor_create_caps (descriptor,
