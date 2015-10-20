@@ -46,6 +46,7 @@ struct _GstGLFilterShader
   GstStructure *uniforms;
 
   gboolean new_source;
+  gboolean new_uniforms;
   gdouble time;
 
   gint attr_position_loc;
