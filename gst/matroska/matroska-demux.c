@@ -3551,8 +3551,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         goto next_lace;
       }
 
-      buffer_timestamp = gst_matroska_track_get_buffer_timestamp (stream, sub);
-
       if (!stream->dts_only) {
         GST_BUFFER_PTS (sub) = lace_time;
       } else {
@@ -3560,6 +3558,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         if (stream->intra_only)
           GST_BUFFER_PTS (sub) = lace_time;
       }
+
+      buffer_timestamp = gst_matroska_track_get_buffer_timestamp (stream, sub);
 
       if (GST_CLOCK_TIME_IS_VALID (lace_time)) {
         GstClockTime last_stop_end;
