@@ -517,8 +517,7 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
           filter->motionmaskcoord_count = 0;
         }
       }
-      if (strs)
-        g_strfreev (strs);
+      g_strfreev (strs);
       tmpux = -1;
       tmpuy = -1;
       tmplx = -1;
@@ -545,8 +544,7 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
           filter->motionmaskcells_count = 0;
         }
       }
-      if (motionmaskcellsstr)
-        g_strfreev (motionmaskcellsstr);
+      g_strfreev (motionmaskcellsstr);
       tmpux = -1;
       tmpuy = -1;
       tmplx = -1;
@@ -568,8 +566,7 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
         filter->motioncellscolor->G_channel_value = g;
         filter->motioncellscolor->B_channel_value = b;
       }
-      if (colorstr)
-        g_strfreev (colorstr);
+      g_strfreev (colorstr);
       break;
     case PROP_MOTIONCELLSIDX:
       motioncellsstr = g_strsplit (g_value_get_string (value), ",", 255);
@@ -595,8 +592,7 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
           filter->motioncells_count = 0;
         }
       }
-      if (motioncellsstr)
-        g_strfreev (motioncellsstr);
+      g_strfreev (motioncellsstr);
       tmpux = -1;
       tmpuy = -1;
       tmplx = -1;
