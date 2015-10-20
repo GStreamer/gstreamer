@@ -571,7 +571,6 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
 {
   GstVideoCodecState *output_state;
   const gchar *mime;
-  gint ret;
   gint color_format, width, height;
   gint stride, slice_height;
   gint crop_left, crop_right;
@@ -896,8 +895,8 @@ retry:
         flow_ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), outbuf);
       }
     } else {
-      GST_WARNING_OBJECT (self, "No frame available after %lldms",
-          timeout / G_TIME_SPAN_MILLISECOND);
+      GST_WARNING_OBJECT (self, "No frame available after "
+          "%" G_GINT64_FORMAT "ms", timeout / G_TIME_SPAN_MILLISECOND);
 
       if (frame) {
         flow_ret =
@@ -1930,7 +1929,8 @@ _find_local_gl_context (GstAmcVideoDec * self)
     return TRUE;
 
   query = gst_query_new_context ("gst.gl.local_context");
-  if (!self->gl_context && gst_gl_run_query (GST_ELEMENT (self), query, GST_PAD_SRC)) {
+  if (!self->gl_context
+      && gst_gl_run_query (GST_ELEMENT (self), query, GST_PAD_SRC)) {
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
@@ -1988,7 +1988,8 @@ gst_amc_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
             goto context_error;
           }
         }
-      } while (!gst_gl_display_add_context (self->gl_display, self->gl_context));
+      } while (!gst_gl_display_add_context (self->gl_display,
+              self->gl_context));
       GST_OBJECT_UNLOCK (self->gl_display);
     }
 #endif
