@@ -1695,14 +1695,6 @@ activate_pad_for_stream (GstTSDemux * tsdemux, TSDemuxStream * stream)
     gst_element_add_pad ((GstElement *) tsdemux, stream->pad);
     stream->active = TRUE;
     GST_DEBUG_OBJECT (stream->pad, "done adding pad");
-    /* force sending of pending sticky events which have been stored on the
-     * pad already and which otherwise would only be sent on the first buffer
-     * or serialized event (which means very late in case of subtitle streams),
-     * and playsink waits for stream-start or another serialized event */
-    if (stream->sparse) {
-      GST_DEBUG_OBJECT (stream->pad, "sparse stream, pushing GAP event");
-      gst_pad_push_event (stream->pad, gst_event_new_gap (0, 0));
-    }
   } else if (((MpegTSBaseStream *) stream)->stream_type != 0xff) {
     GST_DEBUG_OBJECT (tsdemux,
         "stream %p (pid 0x%04x, type:0x%02x) has no pad", stream,
@@ -1822,10 +1814,28 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
       TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
       activate_pad_for_stream (demux, stream);
     }
+
+    /* If there was a previous program, now is the time to deactivate it
+     * and remove old pads (including pushing EOS) */
     if (demux->previous_program) {
       GST_DEBUG ("Deactivating previous program");
       mpegts_base_deactivate_and_free_program (base, demux->previous_program);
       demux->previous_program = NULL;
+    }
+    /* If any of the stream is sparse, push a GAP event before anything else
+     * This is done here, and not in activate_pad_for_stream() because pushing
+     * a GAP event *is* considering data, and we want to ensure the (potential)
+     * old pads are all removed before we push any data on the new ones */
+    for (tmp = program->stream_list; tmp; tmp = tmp->next) {
+      TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
+      if (stream->sparse) {
+        /* force sending of pending sticky events which have been stored on the
+         * pad already and which otherwise would only be sent on the first buffer
+         * or serialized event (which means very late in case of subtitle streams),
+         * and playsink waits for stream-start or another serialized event */
+        GST_DEBUG_OBJECT (stream->pad, "sparse stream, pushing GAP event");
+        gst_pad_push_event (stream->pad, gst_event_new_gap (0, 0));
+      }
     }
     gst_element_no_more_pads ((GstElement *) demux);
   }
