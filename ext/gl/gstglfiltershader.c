@@ -37,7 +37,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/gl/gstglshadervariables.h>
 
 #include "gstglfiltershader.h"
 #if HAVE_GRAPHENE
