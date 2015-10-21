@@ -3945,6 +3945,9 @@ gst_mxf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         } else {
           GST_WARNING_OBJECT (demux,
               "Seek to remaining part of the file failed");
+          p->eos = TRUE;
+          gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
+          continue;
         }
       }
 
