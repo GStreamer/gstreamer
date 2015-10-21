@@ -295,7 +295,7 @@ parse_flv_demux_parse_date_string (const gchar * s)
 
   /* time */
   hh = mm = ss = 0;
-  if (sscanf (tokens[3], "%02d:%02d:%02d", &hh, &mm, &ss) < 2)
+  if (sscanf (tokens[3], "%d:%d:%d", &hh, &mm, &ss) < 2)
     goto out;
   if (hh >= 0 && hh < 24 && mm >= 0 && mm < 60 && ss >= 0 && ss < 60) {
     hour = hh;
