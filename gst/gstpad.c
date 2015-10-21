@@ -6069,7 +6069,7 @@ gst_pad_probe_info_get_buffer (GstPadProbeInfo * info)
 }
 
 /**
- * gst_pad_probe_info_get_bufferlist:
+ * gst_pad_probe_info_get_buffer_list:
  * @info: a #GstPadProbeInfo
  *
  * Returns: (transfer none): The #GstBufferlist from the probe
