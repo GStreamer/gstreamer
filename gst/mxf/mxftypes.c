@@ -746,13 +746,13 @@ mxf_op_set_generalized (MXFUL * ul, MXFOperationalPattern pattern,
   else if (pattern == MXF_OP_1c || pattern == MXF_OP_2c || pattern == MXF_OP_3c)
     ul->u[13] = 0x02;
 
-  ul->u[14] = 0x80;
+  ul->u[14] = 0x08;
   if (!internal_essence)
-    ul->u[14] |= 0x40;
+    ul->u[14] |= 0x04;
   if (!streamable)
-    ul->u[14] |= 0x20;
+    ul->u[14] |= 0x02;
   if (!single_track)
-    ul->u[14] |= 0x10;
+    ul->u[14] |= 0x01;
 
   ul->u[15] = 0;
 }
