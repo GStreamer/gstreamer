@@ -236,6 +236,7 @@ gst_mxf_mux_handle_src_event (GstPad * pad, GstObject * parent,
   switch (type) {
     case GST_EVENT_SEEK:
       /* disable seeking for now */
+      gst_event_unref (event);
       return FALSE;
     default:
       break;
