@@ -1336,7 +1336,7 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
       mux->partition.closed = TRUE;
       mux->partition.complete = TRUE;
       mux->partition.this_partition = 0;
-      mux->partition.prev_partition = footer_partition;
+      mux->partition.prev_partition = 0;
       mux->partition.footer_partition = footer_partition;
       mux->partition.header_byte_count = 0;
       mux->partition.index_byte_count = 0;
