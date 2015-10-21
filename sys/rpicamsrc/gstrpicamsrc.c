@@ -126,6 +126,9 @@ enum
   PROP_DRC,
   PROP_ANNOTATION_MODE,
   PROP_ANNOTATION_TEXT,
+  PROP_ANNOTATION_TEXT_SIZE,
+  PROP_ANNOTATION_TEXT_COLOUR,
+  PROP_ANNOTATION_TEXT_BG_COLOUR,
   PROP_INTRA_REFRESH_TYPE
 };
 
@@ -422,6 +425,18 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           GST_RPI_CAM_TYPE_RPI_CAM_SRC_INTRA_REFRESH_TYPE,
           GST_RPI_CAM_SRC_INTRA_REFRESH_TYPE_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ANNOTATION_TEXT_SIZE,
+      g_param_spec_int ("annotation-text-size", "Annotation text size",
+          "Set the size of annotation text (in pixels) (0 = Auto)", 0,
+          G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ANNOTATION_TEXT_COLOUR,
+      g_param_spec_int ("annotation-text-colour", "Annotation text colour (VUY)",
+          "Set the annotation text colour, as a VUY hex value eg #8080FF, -1 for default", -1,
+          G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ANNOTATION_TEXT_BG_COLOUR,
+      g_param_spec_int ("annotation-text-bg-colour", "Annotation text background colour (VUY)",
+          "Set the annotation text background colour, as a VUY hex value eg #8080FF, -1 for default", -1,
+          G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Raspberry Pi Camera Source", "Source/Video",
@@ -819,6 +834,21 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
           - 1] = '\0';
       src->capture_config.change_flags |= PROP_CHANGE_ANNOTATION;
       break;
+    case PROP_ANNOTATION_TEXT_SIZE:
+      src->capture_config.
+          camera_parameters.annotate_text_size = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ANNOTATION;
+      break;
+    case PROP_ANNOTATION_TEXT_COLOUR:
+      src->capture_config.
+          camera_parameters.annotate_text_colour = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ANNOTATION;
+      break;
+    case PROP_ANNOTATION_TEXT_BG_COLOUR:
+      src->capture_config.
+          camera_parameters.annotate_bg_colour = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ANNOTATION;
+      break;
     case PROP_INTRA_REFRESH_TYPE:
       src->capture_config.intra_refresh_type = g_value_get_enum (value);
       src->capture_config.change_flags |= PROP_CHANGE_ENCODING;
@@ -954,6 +984,15 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
     case PROP_ANNOTATION_TEXT:
       g_value_set_string (value,
           src->capture_config.camera_parameters.annotate_string);
+      break;
+    case PROP_ANNOTATION_TEXT_SIZE:
+      g_value_set_int (value, src->capture_config.camera_parameters.annotate_text_size);
+      break;
+    case PROP_ANNOTATION_TEXT_COLOUR:
+      g_value_set_int (value, src->capture_config.camera_parameters.annotate_text_colour);
+      break;
+    case PROP_ANNOTATION_TEXT_BG_COLOUR:
+      g_value_set_int (value, src->capture_config.camera_parameters.annotate_bg_colour);
       break;
     case PROP_INTRA_REFRESH_TYPE:
       g_value_set_enum (value, src->capture_config.intra_refresh_type);
