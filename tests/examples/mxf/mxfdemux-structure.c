@@ -182,6 +182,7 @@ on_pad_added (GstElement * src, GstPad * pad, gpointer data)
   GstElement *bin = (GstElement *) gst_element_get_parent (src);
 
   gst_bin_add (GST_BIN (bin), fakesink);
+  gst_element_sync_state_with_parent (fakesink);
 
   gst_pad_link (pad, sinkpad);
 
@@ -244,7 +245,10 @@ main (int argc, char **argv)
   gtk_container_add (GTK_CONTAINER (window), scrolled_window);
   gtk_widget_show_all (window);
 
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+    g_error ("Failed to change state to PLAYING");
+  }
 
   gtk_main ();
 
