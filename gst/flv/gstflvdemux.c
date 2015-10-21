@@ -808,8 +808,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       /* comment part */
       g_value_init (&value, GST_TYPE_BUFFER);
       tags = gst_tag_list_new_empty ();
-      buf = gst_tag_list_to_vorbiscomment_buffer (tags, NULL,
-          0, "No comments");
+      buf = gst_tag_list_to_vorbiscomment_buffer (tags, NULL, 0, "No comments");
       gst_tag_list_unref (tags);
       g_value_take_boxed (&value, buf);
       gst_value_array_append_value (&streamheader, &value);
