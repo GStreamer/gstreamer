@@ -977,7 +977,7 @@ tags:
     secs = tv.tv_sec;
     tm = gmtime (&secs);
 
-    s = g_strdup_printf ("%s %s %d %d:%d:%d %d", weekdays[tm->tm_wday],
+    s = g_strdup_printf ("%s %s %d %02d:%02d:%02d %d", weekdays[tm->tm_wday],
         months[tm->tm_mon], tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec,
         tm->tm_year + 1900);
 
