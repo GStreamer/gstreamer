@@ -3165,6 +3165,7 @@ qtdemux_parse_saio (GstQTDemux * qtdemux, QtDemuxStream * stream,
   guint32 entry_count;
   guint32 off_32;
   guint64 off_64;
+  const guint8 *aux_info_type_data = NULL;
 
   g_return_val_if_fail (qtdemux != NULL, FALSE);
   g_return_val_if_fail (stream != NULL, FALSE);
@@ -3178,8 +3179,11 @@ qtdemux_parse_saio (GstQTDemux * qtdemux, QtDemuxStream * stream,
     return FALSE;
 
   if (flags & 0x1) {
-    if (!gst_byte_reader_get_uint32_be (br, &aux_info_type))
+
+    if (!gst_byte_reader_get_data (br, 4, &aux_info_type_data))
       return FALSE;
+    aux_info_type = QT_FOURCC (aux_info_type_data);
+
     if (!gst_byte_reader_get_uint32_be (br, &aux_info_type_parameter))
       return FALSE;
   } else if (stream->protected) {
