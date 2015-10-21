@@ -506,9 +506,8 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
         int min_distance, distance;
         Rect temp_r;
         CvPoint c;
-        /* set frame buffer writable */
+
         if (filter->display) {
-          buffer = gst_buffer_make_writable (buffer);
           GST_DEBUG_OBJECT (filter, "%d PALM gestures detected\n",
               (int) hands.size ());
         }
