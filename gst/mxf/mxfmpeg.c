@@ -701,8 +701,9 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     } else if ((p->picture_essence_coding.u[13] >> 4) == 0x03) {
       /* RP 2008 */
 
-      /* TODO: What about codec_data for AVC1 streams? */
-      caps = gst_caps_new_empty_simple ("video/x-h264");
+      caps =
+          gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
+          "byte-stream", NULL);
       codec_name = "h.264 Video";
       t = MXF_MPEG_ESSENCE_TYPE_VIDEO_AVC;
       memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
@@ -890,17 +891,16 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   } else if (f->essence_container.u[13] == 0x0f) {
     GST_DEBUG ("Found h264 NAL unit stream");
     /* RP 2008 */
-    /* TODO: What about codec_data? */
     caps =
         gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
-        "avc", NULL);
+        "byte-stream", NULL);
 
     if (!*tags)
       *tags = gst_tag_list_new_empty ();
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "h.264 Video", NULL);
   } else if (f->essence_container.u[13] == 0x10) {
-    GST_DEBUG ("Found h264 byte stream stream");
+    GST_DEBUG ("Found h264 byte-stream stream");
     /* RP 2008 */
     caps =
         gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
@@ -1364,6 +1364,7 @@ static MXFEssenceElementWriter mxf_mpeg_video_essence_element_writer = {
 "height = " GST_VIDEO_SIZE_RANGE ", " \
 "framerate = " GST_VIDEO_FPS_RANGE "; " \
 "video/x-h264, " \
+"stream-format = (string) byte-stream, " \
 "width = " GST_VIDEO_SIZE_RANGE ", " \
 "height = " GST_VIDEO_SIZE_RANGE ", " \
 "framerate = " GST_VIDEO_FPS_RANGE
