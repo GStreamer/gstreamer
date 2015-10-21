@@ -239,6 +239,32 @@ GST_START_TEST (test_multiple_av_streams)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h264_raw_audio)
+{
+  gchar *pipeline;
+  GstElementFactory *factory = NULL;
+
+  if ((factory = gst_element_factory_find ("x264enc")) == NULL)
+    return;
+  gst_object_unref (factory);
+  if ((factory = gst_element_factory_find ("h264parse")) == NULL)
+    return;
+  gst_object_unref (factory);
+
+  pipeline = g_strdup_printf ("videotestsrc num-buffers=250 ! "
+      "video/x-raw,framerate=25/1 ! "
+      "x264enc ! h264parse ! "
+      "mxfmux name=mux ! "
+      "fakesink  "
+      "audiotestsrc num-buffers=250 ! "
+      "audioconvert ! " "audio/x-raw,format=S24LE,channels=2 ! mux. ");
+
+  run_test (pipeline);
+  g_free (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 mxfmux_suite (void)
 {
@@ -253,6 +279,7 @@ mxfmux_suite (void)
   tcase_add_test (tc_chain, test_raw_video_stride_transform);
   tcase_add_test (tc_chain, test_jpeg2000_alaw);
   tcase_add_test (tc_chain, test_dnxhd_mp3);
+  tcase_add_test (tc_chain, test_h264_raw_audio);
   tcase_add_test (tc_chain, test_multiple_av_streams);
 
   return s;
