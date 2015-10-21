@@ -120,7 +120,7 @@ mxf_vc3_get_track_wrapping (const MXFMetadataTimelineTrack * track)
                 parent.descriptor[i])))
       continue;
 
-    switch (track->parent.descriptor[i]->essence_container.u[15]) {
+    switch (track->parent.descriptor[i]->essence_container.u[14]) {
       case 0x01:
         return MXF_ESSENCE_WRAPPING_FRAME_WRAPPING;
         break;
