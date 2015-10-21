@@ -291,22 +291,8 @@ class VerticalTimelineWidget (Gtk.DrawingArea):
             # Compatibility.
             pass
 
-    def do_expose_event (self, event):
+    def do_draw (self, ctx):
 
-        self.__draw (self.window)
-
-        return True
-
-    def do_configure_event (self, event):
-
-        self.params = None
-        self.queue_draw ()
-
-        return False
-
-    def __draw (self, drawable):
-
-        ctx = drawable.cairo_create ()
         alloc = self.get_allocation ()
         x = alloc.x
         y = alloc.y
@@ -362,10 +348,18 @@ class VerticalTimelineWidget (Gtk.DrawingArea):
             ctx.line_to (w + .5, row_offset - half_height)
             ctx.line_to (w + .5, row_offset + half_height)
             ctx.fill ()
+        return True
 
-    def do_size_request (self, req):
+    def do_configure_event (self, event):
 
-        req.width = 64 # FIXME
+        self.params = None
+        self.queue_draw ()
+
+        return False
+   
+    def do_get_preferred_width (self):
+
+        return 64, 64 # FIXME
 
     def clear (self):
 
@@ -482,12 +476,12 @@ class TimelineWidget (Gtk.DrawingArea):
         if self.__offscreen_size == (alloc.width, alloc.height):
             return
 
-        self.__offscreen = Gdk.Pixmap (self.window, alloc.width, alloc.height, -1)
+        self.__offscreen = cairo.ImageSurface (cairo.FORMAT_ARGB32, alloc.width, alloc.height)
         self.__offscreen_size = (alloc.width, alloc.height)
         self.__offscreen_dirty = (0, alloc.width)
         if not self.__offscreen:
             self.__offscreen_size = (0, 0)
-            raise ValueError ("could not obtain pixmap")
+            raise ValueError ("could not obtain offscreen image surface")
 
     def __invalidate_offscreen (self, start, stop):
 
@@ -509,27 +503,22 @@ class TimelineWidget (Gtk.DrawingArea):
         stop += 8
         self.queue_draw_area (start, 0, stop - start, alloc.height)
 
-    def __draw_from_offscreen (self, rect = None):
+    def __draw_from_offscreen (self, ctx):
 
         if not self.props.visible:
             return
 
         alloc = self.get_allocation ()
         offscreen_width, offscreen_height = self.__offscreen_size
-        if rect is None:
-            rect = (0, 0, alloc.width, alloc.height)
+        rect = Gdk.Rectangle () # TODO: damage region
+        rect.x, rect.y, rect.width, rect.height = 0, 0, alloc.width, alloc.height
 
         # Fill the background (where the offscreen pixmap doesn't fit) with
         # white. This happens after enlarging the window, until all sentinels
         # have finished running.
         if offscreen_width < alloc.width or offscreen_height < alloc.height:
-            ctx = self.window.cairo_create ()
-
-            if rect:
-                ctx.rectangle (rect.x, rect.y,
-                               rect.x + rect.width,
-                               rect.y + rect.height)
-                ctx.clip ()
+            ctx.rectangle (rect.x, rect.y, rect.width, rect.height)
+            ctx.clip ()
 
             if offscreen_width < alloc.width:
                 ctx.rectangle (offscreen_width, 0, alloc.width, offscreen_height)
@@ -541,10 +530,11 @@ class TimelineWidget (Gtk.DrawingArea):
             ctx.set_source_rgb (1., 1., 1.)
             ctx.fill ()
 
-        gc = Gdk.GC (self.window)
-        x, y, width, height = rect
-        self.window.draw_drawable (gc, self.__offscreen, x, y, x, y, width, height)
-        self.__draw_position (self.window, clip = rect)
+        ctx.set_source_surface (self.__offscreen)
+        ctx.rectangle (rect.x, rect.y, rect.width, rect.height)
+        ctx.paint ()
+        
+        self.__draw_position (ctx, clip = rect)
 
     def update (self, model):
 
@@ -600,11 +590,9 @@ class TimelineWidget (Gtk.DrawingArea):
             return
 
         self.__offscreen_dirty = (0, 0)
-
-        drawable = self.__offscreen
         width, height = self.__offscreen_size
 
-        ctx = drawable.cairo_create ()
+        ctx = cairo.Context (self.__offscreen)
 
         # Indicator (triangle) size is 8, so we need to draw surrounding areas
         # a bit:
@@ -757,25 +745,26 @@ class TimelineWidget (Gtk.DrawingArea):
 
         return (position1, position2)
 
-    def __draw_position (self, drawable, clip = None):
+    def __draw_position (self, ctx, clip = None):
 
         if not self.__have_position () or self.__position_ts_range is None:
+            if not self.__have_position ():
+                self.logger.debug ("have no positions")
+            else:
+                self.logger.debug ("have no positions_ts_range")
             return
 
         start_ts, end_ts = self.__position_ts_range
         position1, position2 = self.ts_range_to_position (start_ts, end_ts)
 
         if clip:
-            clip_x, clip_y, clip_w, clip_h = clip
-            if clip_x + clip_w < position1 - 1 or clip_x > position2 + 1:
+            if clip.x + clip.width < position1 - 1 or clip.x > position2 + 1:
+                self.logger.debug ("outside of clip range: %d + %d, pos: %d, %d", clip.x, clip.width, position1, position2)
                 return
-
-        ctx = drawable.cairo_create ()
-        height = self.get_allocation ().height
-
-        if clip:
-            ctx.rectangle (*clip)
+            ctx.rectangle (clip.x, clip.y, clip.width, clip.height)
             ctx.clip ()
+
+        height = self.get_allocation ().height
 
         line_width = position2 - position1
         if line_width <= 1:
@@ -789,11 +778,11 @@ class TimelineWidget (Gtk.DrawingArea):
             ctx.rectangle (position1, 0, line_width, height)
             ctx.fill ()
 
-    def do_expose_event (self, event):
+    def do_draw (self, cr):
 
         self.__ensure_offscreen ()
         self.__draw_offscreen ()
-        self.__draw_from_offscreen (event.area)
+        self.__draw_from_offscreen (cr)
 
         return True
 
@@ -809,10 +798,9 @@ class TimelineWidget (Gtk.DrawingArea):
 
         return False
 
-    def do_size_request (self, req):
+    def do_get_preferred_height (self):
 
-        # FIXME:
-        req.height = 64
+        return 64, 64 # FIXME:
 
     def do_button_press_event (self, event):
 
@@ -843,14 +831,12 @@ class TimelineWidget (Gtk.DrawingArea):
 
     def do_motion_notify_event (self, event):
 
-        x, y, mod = self.window.get_pointer ()
-
         if event.get_state() & Gdk.ModifierType.BUTTON1_MASK:
-            self.emit ("change-position", int (x))
+            self.emit ("change-position", int (event.x))
             Gdk.event_request_motions (event)
             return True
         else:
-            self._handle_motion (x, y)
+            self._handle_motion (event.x, event.y)
             Gdk.event_request_motions (event)
             return False
 
