@@ -993,7 +993,7 @@ gst_mxf_mux_init_partition_pack (GstMXFMux * mux)
   mux->partition.closed = mux->partition.complete = FALSE;
   mux->partition.major_version = 0x0001;
   mux->partition.minor_version = 0x0002;
-  mux->partition.kag_size = 0;
+  mux->partition.kag_size = 1;
   mux->partition.this_partition = 0;
   mux->partition.prev_partition = 0;
   mux->partition.footer_partition = 0;
