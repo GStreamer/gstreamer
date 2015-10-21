@@ -38,6 +38,7 @@
 #include "gstflvmux.h"
 
 #include <string.h>
+#include <stdio.h>
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbytewriter.h>
 #include <gst/pbutils/descriptions.h>
@@ -243,55 +244,74 @@ gst_flv_demux_check_seekability (GstFlvDemux * demux)
   GST_DEBUG_OBJECT (demux, "upstream seekable: %d", demux->upstream_seekable);
 }
 
-static void
-parse_flv_demux_parse_date_string (GDate * date, const gchar * s)
+static GstDateTime *
+parse_flv_demux_parse_date_string (const gchar * s)
 {
-  g_date_set_parse (date, s);
-  if (g_date_valid (date))
-    return;
+  static const gchar months[12][4] = {
+    "Jan", "Feb", "Mar", "Apr",
+    "May", "Jun", "Jul", "Aug",
+    "Sep", "Oct", "Nov", "Dec"
+  };
+  GstDateTime *dt = NULL;
+  gchar **tokens;
+  guint64 d;
+  gchar *endptr;
+  gint i, hh, mm, ss;
+  gint year = -1, month = -1, day = -1;
+  gint hour = -1, minute = -1, seconds = -1;
 
   /* "Fri Oct 15 15:13:16 2004" needs to be parsed */
-  {
-    static const gchar *months[] = {
-      "Jan", "Feb", "Mar", "Apr",
-      "May", "Jun", "Jul", "Aug",
-      "Sep", "Oct", "Nov", "Dec"
-    };
-    gchar **tokens = g_strsplit (s, " ", -1);
-    guint64 d;
-    gchar *endptr;
-    gint i;
+  tokens = g_strsplit (s, " ", -1);
 
-    if (g_strv_length (tokens) != 5)
-      goto out;
+  if (g_strv_length (tokens) != 5)
+    goto out;
 
-    if (strlen (tokens[1]) != 3)
-      goto out;
-    for (i = 0; i < 12; i++) {
-      if (!strcmp (tokens[1], months[i])) {
-        break;
-      }
+  /* year */
+  d = g_ascii_strtoull (tokens[4], &endptr, 10);
+  if (d == 0 && *endptr != '\0')
+    goto out;
+
+  year = d;
+
+  /* month */
+  if (strlen (tokens[1]) != 3)
+    goto out;
+  for (i = 0; i < 12; i++) {
+    if (!strcmp (tokens[1], months[i])) {
+      break;
     }
-    if (i == 12)
-      goto out;
-    g_date_set_month (date, i + 1);
-
-    d = g_ascii_strtoull (tokens[2], &endptr, 10);
-    if (d == 0 && *endptr != '\0')
-      goto out;
-
-    g_date_set_day (date, d);
-
-    d = g_ascii_strtoull (tokens[4], &endptr, 10);
-    if (d == 0 && *endptr != '\0')
-      goto out;
-
-    g_date_set_year (date, d);
-
-  out:
-    if (tokens)
-      g_strfreev (tokens);
   }
+  if (i == 12)
+    goto out;
+
+  month = i + 1;
+
+  /* day */
+  d = g_ascii_strtoull (tokens[2], &endptr, 10);
+  if (d == 0 && *endptr != '\0')
+    goto out;
+
+  day = d;
+
+  /* time */
+  hh = mm = ss = 0;
+  if (sscanf (tokens[3], "%02d:%02d:%02d", &hh, &mm, &ss) < 2)
+    goto out;
+  if (hh >= 0 && hh < 24 && mm >= 0 && mm < 60 && ss >= 0 && ss < 60) {
+    hour = hh;
+    minute = mm;
+    seconds = ss;
+  }
+
+out:
+
+  if (tokens)
+    g_strfreev (tokens);
+
+  if (year > 0)
+    dt = gst_date_time_new (0.0, year, month, day, hour, minute, seconds);
+
+  return dt;
 }
 
 static gboolean
@@ -374,16 +394,16 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
       GST_DEBUG_OBJECT (demux, "%s => (string) %s", tag_name, s);
 
       if (!strcmp (tag_name, "creationdate")) {
-        GDate *date = g_date_new ();
+        GstDateTime *dt;
 
-        parse_flv_demux_parse_date_string (date, s);
-        if (!g_date_valid (date)) {
-          GST_DEBUG_OBJECT (demux, "Failed to parse string as date");
+        dt = parse_flv_demux_parse_date_string (s);
+        if (dt == NULL) {
+          GST_DEBUG_OBJECT (demux, "Failed to parse '%s' into datetime", s);
         } else {
           gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-              GST_TAG_DATE, date, NULL);
+              GST_TAG_DATE_TIME, dt, NULL);
         }
-        g_date_free (date);
+        gst_date_time_unref (dt);
       } else if (!strcmp (tag_name, "creator")) {
         gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
             GST_TAG_ARTIST, s, NULL);
