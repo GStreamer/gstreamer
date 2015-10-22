@@ -55,7 +55,7 @@ event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
 
-  GST_DEBUG ("got %s",  GST_EVENT_TYPE_NAME (event));
+  GST_INFO ("got %" GST_PTR_FORMAT,  event);
   myreceivedevents = g_list_append (myreceivedevents, gst_event_ref (event));
 
   return GST_PAD_PROBE_OK;
@@ -679,13 +679,88 @@ GST_START_TEST (test_non_serialized_events)
 
 GST_END_TEST;
 
+static void
+do_ntp_time (GstClockTime buffer_time, gint segment_start, gint segment_base)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
+  guint8 *data;
+  guint64 expected_ntp_time;
+  guint64 timestamp;
+
+  /* create a segment that controls the behavior
+   * by changing segment.start and segment.base we affect the stream time and
+   * running time respectively */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = segment_start;
+  segment.base = segment_base;
+  gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
+
+  expected_ntp_time = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME,
+      buffer_time);
+    expected_ntp_time += NTP_OFFSET;
+  expected_ntp_time = gst_util_uint64_scale (expected_ntp_time,
+      (G_GINT64_CONSTANT (1) << 32), GST_SECOND);
+
+  buffer = create_rtp_buffer (buffer_time, FALSE);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  buffer = g_list_last (buffers)->data;
+
+  /* get the extension header */
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READWRITE, &rtpbuffer));
+  fail_unless (gst_rtp_buffer_get_extension_data (&rtpbuffer, NULL,
+          (gpointer) & data, NULL));
+
+  /* ...and read the NTP timestamp and verify that it's the expected one */
+  timestamp = GST_READ_UINT64_BE (data);
+  fail_unless_equals_uint64 (timestamp, expected_ntp_time);
+
+  gst_rtp_buffer_unmap (&rtpbuffer);
+  gst_check_drop_buffers ();
+}
+
+GST_START_TEST (test_ntp_time)
+{
+  /* we do not need buffer caching, so do not set the e-bit */
+  g_object_set (element, "set-e-bit", FALSE, NULL);
+  /* set an ntp offset suitable for testing */
+  g_object_set (element, "ntp-offset", NTP_OFFSET, NULL);
+
+  ASSERT_SET_STATE (element, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+
+  /* push initial events */
+  gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
+
+  /* first test with a "clean" segment */
+  do_ntp_time (GST_MSECOND, 0, 0);
+  do_ntp_time (GST_SECOND + GST_MSECOND, 0, 0);
+
+  /* verify that changing the running time does not affect the ntp time stamps  */
+  do_ntp_time (GST_MSECOND, 0, GST_SECOND);
+  do_ntp_time (GST_SECOND + GST_MSECOND, 0, GST_SECOND);
+
+  /* changing the segment.start affects the stream time, verify that the element
+   * handles it correctly */
+  do_ntp_time (GST_MSECOND, GST_MSECOND / 2, 0);
+  do_ntp_time (GST_SECOND + GST_MSECOND, GST_MSECOND / 2, 0);
+
+  /* and finally change both of them and verify that all's fine */
+  do_ntp_time (GST_MSECOND, GST_MSECOND / 2, GST_SECOND);
+  do_ntp_time (GST_SECOND + GST_MSECOND, GST_MSECOND / 2, GST_SECOND);
+}
+
+GST_END_TEST;
+
 static Suite *
 onviftimestamp_suite (void)
 {
   Suite *s = suite_create ("onviftimestamp");
   TCase *tc_general, *tc_events;
 
-  tc_general = tcase_create ("apply");
+  tc_general = tcase_create ("general");
   suite_add_tcase (s, tc_general);
   tcase_add_checked_fixture (tc_general, setup, cleanup);
 
@@ -696,6 +771,7 @@ onviftimestamp_suite (void)
   tcase_add_test (tc_general, test_reusable_element_no_e_bit);
   tcase_add_test (tc_general, test_reusable_element_e_bit);
   tcase_add_test (tc_general, test_ntp_offset_event);
+  tcase_add_test (tc_general, test_ntp_time);
 
   tc_events = tcase_create ("events");
   suite_add_tcase (s, tc_events);
