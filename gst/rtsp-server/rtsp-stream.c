@@ -2881,7 +2881,6 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
           gst_object_unref (pad);
           gst_object_unref (selpad);
         }
-        gst_object_unref (bin);
 
         priv->transport_sources =
             g_list_prepend (priv->transport_sources, source);
@@ -2916,6 +2915,8 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
           g_slice_free (GstRTSPMulticastTransportSource, source);
         }
       }
+
+      gst_object_unref (bin);
 
       /* fall through for the generic case */
     }
