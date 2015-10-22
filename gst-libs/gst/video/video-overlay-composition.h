@@ -36,7 +36,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_VIDEO_OVERLAY_RECTANGLE			\
   (gst_video_overlay_rectangle_get_type ())
 #define GST_VIDEO_OVERLAY_RECTANGLE_CAST(obj)			\
-  ((GstVideoOverlayRectangle *)(obj)
+  ((GstVideoOverlayRectangle *)(obj))
 #define GST_VIDEO_OVERLAY_RECTANGLE(obj)			\
   (GST_VIDEO_OVERLAY_RECTANGLE_CAST(obj))
 #define GST_IS_VIDEO_OVERLAY_RECTANGLE(obj)			\
@@ -190,7 +190,7 @@ void                         gst_video_overlay_rectangle_set_global_alpha       
 #define GST_TYPE_VIDEO_OVERLAY_COMPOSITION			\
   (gst_video_overlay_composition_get_type ())
 #define GST_VIDEO_OVERLAY_COMPOSITION_CAST(obj)			\
-  ((GstVideoOverlayComposition *)(obj)
+  ((GstVideoOverlayComposition *)(obj))
 #define GST_VIDEO_OVERLAY_COMPOSITION(obj)			\
   (GST_VIDEO_OVERLAY_COMPOSITION_CAST(obj))
 #define GST_IS_VIDEO_OVERLAY_COMPOSITION(obj)			\
