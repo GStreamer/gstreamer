@@ -39,7 +39,6 @@
 
 #define TEST_MOUNT_POINT  "/test"
 #define TEST_PROTO        "RTP/AVP"
-#define TEST_PROTO_TCP    "RTP/AVP/TCP"
 #define TEST_ENCODING     "X-GST"
 #define TEST_CLOCK_RATE   "90000"
 
@@ -155,6 +154,7 @@ start_server (void)
   GstRTSPMountPoints *mounts;
   gchar *service;
   GstRTSPMediaFactory *factory;
+  GstRTSPAddressPool *pool;
 
   mounts = gst_rtsp_server_get_mount_points (server);
 
@@ -164,6 +164,13 @@ start_server (void)
       "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
   gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
   g_object_unref (mounts);
+
+  /* use an address pool for multicast */
+  pool = gst_rtsp_address_pool_new ();
+  gst_rtsp_address_pool_add_range (pool,
+      "224.3.0.0", "224.3.0.10", 5000, 5010, 16);
+  gst_rtsp_media_factory_set_address_pool (factory, pool);
+  gst_object_unref (pool);
 
   /* set port to any */
   gst_rtsp_server_set_service (server, "0");
@@ -428,9 +435,9 @@ static GstSDPMessage *
 do_describe (GstRTSPConnection * conn, const gchar * mount_point)
 {
   GstSDPMessage *sdp_message;
-  gchar *content_type;
-  gchar *content_base;
-  gchar *body;
+  gchar *content_type = NULL;
+  gchar *content_base = NULL;
+  gchar *body = NULL;
   gchar *address;
   gchar *expected_content_base;
 
@@ -467,13 +474,13 @@ do_describe (GstRTSPConnection * conn, const gchar * mount_point)
  * transport must be freed by the caller. */
 static GstRTSPStatusCode
 do_setup_full (GstRTSPConnection * conn, const gchar * control,
-    gboolean use_tcp_transport, const GstRTSPRange * client_ports,
+    GstRTSPLowerTrans lower_transport, const GstRTSPRange * client_ports,
     const gchar * require, gchar ** session, GstRTSPTransport ** transport,
     gchar ** unsupported)
 {
   GstRTSPStatusCode code;
   gchar *session_in = NULL;
-  gchar *transport_string_in = NULL;
+  GString *transport_string_in = NULL;
   gchar **session_out = NULL;
   gchar *transport_string_out = NULL;
 
@@ -486,18 +493,35 @@ do_setup_full (GstRTSPConnection * conn, const gchar * control,
     }
   }
 
-  if (use_tcp_transport) {
-    transport_string_in = g_strdup_printf (TEST_PROTO_TCP ";unicast");
-  } else {
-    transport_string_in =
-        g_strdup_printf (TEST_PROTO ";unicast;client_port=%d-%d",
+  transport_string_in = g_string_new (TEST_PROTO);
+  switch (lower_transport) {
+    case GST_RTSP_LOWER_TRANS_UDP:
+      transport_string_in =
+          g_string_append (transport_string_in, "/UDP;unicast");
+      break;
+    case GST_RTSP_LOWER_TRANS_UDP_MCAST:
+      transport_string_in =
+          g_string_append (transport_string_in, "/UDP;multicast");
+      break;
+    case GST_RTSP_LOWER_TRANS_TCP:
+      transport_string_in =
+          g_string_append (transport_string_in, "/TCP;unicast");
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  if (client_ports) {
+    g_string_append_printf (transport_string_in, ";client_port=%d-%d",
         client_ports->min, client_ports->max);
   }
+
   code =
       do_request_full (conn, GST_RTSP_SETUP, control, session_in,
-      transport_string_in, NULL, require, NULL, NULL, NULL, session_out,
+      transport_string_in->str, NULL, require, NULL, NULL, NULL, session_out,
       &transport_string_out, NULL, unsupported);
-  g_free (transport_string_in);
+  g_string_free (transport_string_in, TRUE);
 
   if (transport_string_out) {
     /* create transport */
@@ -519,20 +543,8 @@ do_setup (GstRTSPConnection * conn, const gchar * control,
     const GstRTSPRange * client_ports, gchar ** session,
     GstRTSPTransport ** transport)
 {
-  return do_setup_full (conn, control, FALSE, client_ports, NULL, session,
-      transport, NULL);
-}
-
-/* send a SETUP request and receive response. if *session is not NULL,
- * it is used in the request. otherwise, *session is set to a returned
- * session string that must be freed by the caller. the returned
- * transport must be freed by the caller. */
-static GstRTSPStatusCode
-do_setup_tcp (GstRTSPConnection * conn, const gchar * control,
-    gchar ** session, GstRTSPTransport ** transport)
-{
-  return do_setup_full (conn, control, TRUE, NULL, NULL, session, transport,
-      NULL);
+  return do_setup_full (conn, control, GST_RTSP_LOWER_TRANS_UDP, client_ports,
+      NULL, session, transport, NULL);
 }
 
 /* fixture setup function */
@@ -670,14 +682,15 @@ GST_START_TEST (test_describe_non_existing_mount_point)
 
 GST_END_TEST;
 
-GST_START_TEST (test_setup)
+static void
+do_test_setup (GstRTSPLowerTrans lower_transport)
 {
   GstRTSPConnection *conn;
   GstSDPMessage *sdp_message = NULL;
   const GstSDPMedia *sdp_media;
   const gchar *video_control;
   const gchar *audio_control;
-  GstRTSPRange client_ports;
+  GstRTSPRange client_ports = { 0 };
   gchar *session = NULL;
   GstRTSPTransport *video_transport = NULL;
   GstRTSPTransport *audio_transport = NULL;
@@ -698,26 +711,28 @@ GST_START_TEST (test_setup)
   get_client_ports (&client_ports);
 
   /* send SETUP request for video */
-  fail_unless (do_setup (conn, video_control, &client_ports, &session,
-          &video_transport) == GST_RTSP_STS_OK);
+  fail_unless (do_setup_full (conn, video_control, lower_transport,
+          &client_ports, NULL, &session, &video_transport,
+          NULL) == GST_RTSP_STS_OK);
   GST_DEBUG ("set up video %s, got session '%s'", video_control, session);
 
   /* check response from SETUP */
   fail_unless (video_transport->trans == GST_RTSP_TRANS_RTP);
   fail_unless (video_transport->profile == GST_RTSP_PROFILE_AVP);
-  fail_unless (video_transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP);
+  fail_unless (video_transport->lower_transport == lower_transport);
   fail_unless (video_transport->mode_play);
   gst_rtsp_transport_free (video_transport);
 
   /* send SETUP request for audio */
-  fail_unless (do_setup (conn, audio_control, &client_ports, &session,
-          &audio_transport) == GST_RTSP_STS_OK);
+  fail_unless (do_setup_full (conn, audio_control, lower_transport,
+          &client_ports, NULL, &session, &audio_transport,
+          NULL) == GST_RTSP_STS_OK);
   GST_DEBUG ("set up audio %s with session '%s'", audio_control, session);
 
   /* check response from SETUP */
   fail_unless (audio_transport->trans == GST_RTSP_TRANS_RTP);
   fail_unless (audio_transport->profile == GST_RTSP_PROFILE_AVP);
-  fail_unless (audio_transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP);
+  fail_unless (audio_transport->lower_transport == lower_transport);
   fail_unless (audio_transport->mode_play);
   gst_rtsp_transport_free (audio_transport);
 
@@ -733,66 +748,23 @@ GST_START_TEST (test_setup)
   iterate ();
 }
 
+GST_START_TEST (test_setup_udp)
+{
+  do_test_setup (GST_RTSP_LOWER_TRANS_UDP);
+}
+
 GST_END_TEST;
 
 GST_START_TEST (test_setup_tcp)
 {
-  GstRTSPConnection *conn;
-  GstSDPMessage *sdp_message = NULL;
-  const GstSDPMedia *sdp_media;
-  const gchar *video_control;
-  const gchar *audio_control;
-  gchar *session = NULL;
-  GstRTSPTransport *video_transport = NULL;
-  GstRTSPTransport *audio_transport = NULL;
+  do_test_setup (GST_RTSP_LOWER_TRANS_TCP);
+}
 
-  start_server ();
+GST_END_TEST;
 
-  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
-
-  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
-
-  /* get control strings from DESCRIBE response */
-  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
-  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
-  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
-  sdp_media = gst_sdp_message_get_media (sdp_message, 1);
-  audio_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
-
-  /* send SETUP request for video */
-  fail_unless (do_setup_tcp (conn, video_control, &session,
-          &video_transport) == GST_RTSP_STS_OK);
-  GST_DEBUG ("set up video %s, got session '%s'", video_control, session);
-
-  /* check response from SETUP */
-  fail_unless (video_transport->trans == GST_RTSP_TRANS_RTP);
-  fail_unless (video_transport->profile == GST_RTSP_PROFILE_AVP);
-  fail_unless (video_transport->lower_transport == GST_RTSP_LOWER_TRANS_TCP);
-  fail_unless (video_transport->mode_play);
-  gst_rtsp_transport_free (video_transport);
-
-  /* send SETUP request for audio */
-  fail_unless (do_setup_tcp (conn, audio_control, &session,
-          &audio_transport) == GST_RTSP_STS_OK);
-  GST_DEBUG ("set up audio %s with session '%s'", audio_control, session);
-
-  /* check response from SETUP */
-  fail_unless (audio_transport->trans == GST_RTSP_TRANS_RTP);
-  fail_unless (audio_transport->profile == GST_RTSP_PROFILE_AVP);
-  fail_unless (audio_transport->lower_transport == GST_RTSP_LOWER_TRANS_TCP);
-  fail_unless (audio_transport->mode_play);
-  gst_rtsp_transport_free (audio_transport);
-
-  /* send TEARDOWN request and check that we get 200 OK */
-  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
-          session) == GST_RTSP_STS_OK);
-
-  /* clean up and iterate so the clean-up can finish */
-  g_free (session);
-  gst_sdp_message_free (sdp_message);
-  gst_rtsp_connection_free (conn);
-  stop_server ();
-  iterate ();
+GST_START_TEST (test_setup_udp_mcast)
+{
+  do_test_setup (GST_RTSP_LOWER_TRANS_UDP_MCAST);
 }
 
 GST_END_TEST;
@@ -894,17 +866,18 @@ GST_START_TEST (test_setup_with_require_header)
   get_client_ports (&client_ports);
 
   /* send SETUP request for video, with single Require header */
-  fail_unless_equals_int (do_setup_full (conn, video_control, FALSE,
-          &client_ports, "funky-feature", &session, &video_transport,
-          &unsupported), GST_RTSP_STS_OPTION_NOT_SUPPORTED);
+  fail_unless_equals_int (do_setup_full (conn, video_control,
+          GST_RTSP_LOWER_TRANS_UDP, &client_ports, "funky-feature", &session,
+          &video_transport, &unsupported), GST_RTSP_STS_OPTION_NOT_SUPPORTED);
   fail_unless_equals_string (unsupported, "funky-feature");
   g_free (unsupported);
   unsupported = NULL;
 
   /* send SETUP request for video, with multiple Require headers */
-  fail_unless_equals_int (do_setup_full (conn, video_control, FALSE,
-          &client_ports, "funky-feature, foo-bar, superburst", &session,
-          &video_transport, &unsupported), GST_RTSP_STS_OPTION_NOT_SUPPORTED);
+  fail_unless_equals_int (do_setup_full (conn, video_control,
+          GST_RTSP_LOWER_TRANS_UDP, &client_ports,
+          "funky-feature, foo-bar, superburst", &session, &video_transport,
+          &unsupported), GST_RTSP_STS_OPTION_NOT_SUPPORTED);
   fail_unless_equals_string (unsupported, "funky-feature, foo-bar, superburst");
   g_free (unsupported);
   unsupported = NULL;
@@ -1034,7 +1007,7 @@ done:
 }
 
 static void
-do_test_play (const gchar * range)
+do_test_play_full (const gchar * range, GstRTSPLowerTrans lower_transport)
 {
   GstRTSPConnection *conn;
   GstSDPMessage *sdp_message = NULL;
@@ -1062,10 +1035,12 @@ do_test_play (const gchar * range)
   get_client_ports_full (&client_port, &rtp_socket, &rtcp_socket);
 
   /* do SETUP for video and audio */
-  fail_unless (do_setup (conn, video_control, &client_port, &session,
-          &video_transport) == GST_RTSP_STS_OK);
-  fail_unless (do_setup (conn, audio_control, &client_port, &session,
-          &audio_transport) == GST_RTSP_STS_OK);
+  fail_unless (do_setup_full (conn, video_control, lower_transport,
+          &client_port, NULL, &session, &video_transport,
+          NULL) == GST_RTSP_STS_OK);
+  fail_unless (do_setup_full (conn, audio_control, lower_transport,
+          &client_port, NULL, &session, &audio_transport,
+          NULL) == GST_RTSP_STS_OK);
 
   /* send PLAY request and check that we get 200 OK */
   fail_unless (do_request (conn, GST_RTSP_PLAY, NULL, session, NULL, range,
@@ -1096,6 +1071,11 @@ do_test_play (const gchar * range)
   gst_rtsp_connection_free (conn);
 }
 
+static void
+do_test_play (const gchar * range)
+{
+  do_test_play_full (range, GST_RTSP_LOWER_TRANS_UDP);
+}
 
 GST_START_TEST (test_play)
 {
@@ -1329,10 +1309,12 @@ GST_START_TEST (test_play_multithreaded_timeout_client)
   get_client_ports (&client_port);
 
   /* do SETUP for video and audio */
-  fail_unless (do_setup (conn, video_control, &client_port, &session,
-          &video_transport) == GST_RTSP_STS_OK);
-  fail_unless (do_setup (conn, audio_control, &client_port, &session,
-          &audio_transport) == GST_RTSP_STS_OK);
+  fail_unless (do_setup_full (conn, video_control, GST_RTSP_LOWER_TRANS_UDP,
+          &client_port, NULL, &session, &video_transport,
+          NULL) == GST_RTSP_STS_OK);
+  fail_unless (do_setup_full (conn, audio_control, GST_RTSP_LOWER_TRANS_UDP,
+          &client_port, NULL, &session, &audio_transport,
+          NULL) == GST_RTSP_STS_OK);
 
   fail_unless (gst_rtsp_session_pool_get_n_sessions (pool) == 1);
 
@@ -1923,8 +1905,9 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_describe);
   tcase_add_test (tc, test_describe_non_existing_mount_point);
   tcase_add_test (tc, test_describe_record_media);
-  tcase_add_test (tc, test_setup);
+  tcase_add_test (tc, test_setup_udp);
   tcase_add_test (tc, test_setup_tcp);
+  tcase_add_test (tc, test_setup_udp_mcast);
   tcase_add_test (tc, test_setup_twice);
   tcase_add_test (tc, test_setup_with_require_header);
   tcase_add_test (tc, test_setup_non_existing_stream);
