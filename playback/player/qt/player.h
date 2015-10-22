@@ -27,7 +27,7 @@
 
 class QuickRenderer;
 
-class Player : public QGstPlayer
+class Player : public QGstPlayer::Player
 {
     Q_OBJECT
 public:

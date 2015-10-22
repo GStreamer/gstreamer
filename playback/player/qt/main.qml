@@ -44,7 +44,7 @@ ApplicationWindow {
         volume: 0.5
         onStateChanged: {
             if (state === Player.STOPPED) {
-                playbutton.text = FontAwesome.Icon.Play
+                playbutton.state = "play"
             }
         }
         onResolutionChanged: {
@@ -116,16 +116,236 @@ ApplicationWindow {
                 interval: 10000
                 onTriggered: {
                     parent.opacity = 0.0
+                    settings.visible = false
                     stop()
+                }
+            }
+
+            Rectangle {
+                id: settings
+                width: 150; height: settingsView.contentHeight
+                color: Qt.rgba(1, 1, 1, 0.7)
+                anchors.right: parent.right
+                anchors.bottom: parent.top
+                anchors.bottomMargin: 3
+                border.width: 1
+                border.color: "white"
+                radius: 5
+                visible: false
+
+                ListModel {
+                    id: settingsModel
+                    ListElement {
+                        name: "Video"
+                    }
+                    ListElement {
+                        name: "Audio"
+                    }
+                    ListElement {
+                        name: "Subtitle"
+                    }
+                }
+
+                Component {
+                    id: settingsDelegate
+                    Item {
+                        width: 150; height: 20
+                        Text {
+                            text: model.name
+                            font.pointSize: 13
+                            anchors.centerIn: parent
+                        }
+
+                        Text {
+                            font.pointSize: 13
+                            font.family: "FontAwesome"
+                            text: FontAwesome.Icon.ChevronRight
+                            anchors.right: parent.right
+                            anchors.rightMargin: 10
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        MouseArea {
+                           anchors.fill: parent
+                           onClicked: {
+                               switch(name) {
+                               case 'Video':
+                                   videos.visible = true
+                                   break
+                               case 'Audio':
+                                   audios.visible = true
+                                   break
+                               case 'Subtitle' :
+                                   subtitles.visible = true
+                                   break
+                               }
+                               settings.visible = false
+                           }
+                        }
+                    }
+                }
+
+                ListView {
+                    id: settingsView
+                    anchors.fill: parent
+                    model: settingsModel
+                    delegate: settingsDelegate
+                }
+            }
+
+            Rectangle {
+                id: videos
+                width: 150; height: videoView.contentHeight
+                color: Qt.rgba(1, 1, 1, 0.7)
+                anchors.right: parent.right
+                anchors.bottom: parent.top
+                anchors.bottomMargin: 3
+                border.width: 1
+                border.color: "white"
+                radius: 5
+
+                property bool selected: ListView.isCurrentItem
+                visible: false
+
+                Component {
+                    id: videoDelegate
+                    Item {
+                        width: 150; height: 20
+                        Text {
+                            text: model.modelData.resolution.width + 'x' + model.modelData.resolution.height
+                            font.pointSize: 13
+                            anchors.centerIn: parent
+                        }
+
+                        MouseArea {
+                           anchors.fill: parent
+                           onClicked: {
+                               parent.ListView.view.currentIndex = index
+                               player.currentVideo = model.modelData
+                           }
+                       }
+                    }
+                }
+
+                ListView {
+                    id : videoView
+                    anchors.fill: parent
+                    model: player.mediaInfo.videoStreams
+                    delegate: videoDelegate
+                    highlight: Rectangle {
+                        color: "white"
+                        radius: 5
+                        border.width: 1
+                        border.color: "white"
+                    }
+                    focus: true
+                    clip: true
+                }
+            }
+
+            Rectangle {
+                id: audios
+                width: 150; height: audioView.contentHeight
+                color: Qt.rgba(1, 1, 1, 0.7)
+                anchors.right: parent.right
+                anchors.bottom: parent.top
+                anchors.bottomMargin: 3
+                border.width: 1
+                border.color: "white"
+                radius: 5
+
+                property bool selected: ListView.isCurrentItem
+                visible: false
+
+                Component {
+                    id: audioDelegate
+                    Item {
+                        width: 150; height: 20
+                        Text {
+                            text: model.modelData.channels + 'channels'
+                            font.pointSize: 13
+                            anchors.centerIn: parent
+                        }
+
+                        MouseArea {
+                           anchors.fill: parent
+                           onClicked: {
+                               parent.ListView.view.currentIndex = index
+                               player.currentAudio = model.modelData
+                           }
+                       }
+                    }
+                }
+
+                ListView {
+                    id : audioView
+                    anchors.fill: parent
+                    model: player.mediaInfo.audioStreams
+                    delegate: audioDelegate
+                    highlight: Rectangle {
+                        color: "white"
+                        radius: 5
+                        border.width: 1
+                        border.color: "white"
+                    }
+                    focus: true
+                    clip: true
+                }
+            }
+
+            Rectangle {
+                id: subtitles
+                width: 150; height: subtitleView.contentHeight
+                color: Qt.rgba(1, 1, 1, 0.7)
+                anchors.right: parent.right
+                anchors.bottom: parent.top
+                anchors.bottomMargin: 3
+                border.width: 1
+                border.color: "white"
+                radius: 5
+
+                property bool selected: ListView.isCurrentItem
+                visible: false
+
+                Component {
+                    id: subtitleDelegate
+                    Item {
+                        width: 150; height: 20
+                        Text {
+                            text: model.modelData.language
+                            font.pointSize: 13
+                            anchors.centerIn: parent
+                        }
+
+                        MouseArea {
+                           anchors.fill: parent
+                           onClicked: {
+                               parent.ListView.view.currentIndex = index
+                               player.currentSubtitle = model.modelData
+                           }
+                       }
+                    }
+                }
+
+                ListView {
+                    id : subtitleView
+                    anchors.fill: parent
+                    model: player.mediaInfo.subtitleStreams
+                    delegate: subtitleDelegate
+                    highlight: Rectangle {
+                        color: "white"
+                        radius: 5
+                        border.width: 1
+                        border.color: "white"
+                    }
+                    focus: true
+                    clip: true
                 }
             }
 
             Grid {
                 id: grid
                 anchors.horizontalCenter: parent.horizontalCenter
-//                anchors.top: parent.top
-//                anchors.topMargin: 5
-
                 spacing: 7
                 rows: 1
                 verticalItemAlignment: Qt.AlignVCenter
@@ -161,10 +381,27 @@ ApplicationWindow {
                     Text {
                         anchors.centerIn: parent
                         id : playbutton
-                        font.pointSize: 25
                         font.family: "FontAwesome"
-                        //font.weight: Font.Light
-                        text: FontAwesome.Icon.PlayCircle
+                        state: "play"
+
+                        states: [
+                            State {
+                                name: "play"
+                                PropertyChanges {
+                                    target: playbutton
+                                    text: FontAwesome.Icon.PlayCircle
+                                    font.pointSize: 25
+                                }
+                            },
+                            State {
+                                name: "pause"
+                                PropertyChanges {
+                                    target: playbutton
+                                    text: FontAwesome.Icon.Pause
+                                    font.pointSize: 17
+                                }
+                            }
+                        ]
                     }
 
                     MouseArea {
@@ -173,12 +410,10 @@ ApplicationWindow {
                        onPressed: {
                            if (player.state !== Player.PLAYING) {
                                player.play()
-                               playbutton.text = FontAwesome.Icon.Pause
-                               playbutton.font.pointSize = 17
+                               playbutton.state = "pause"
                            } else {
                                player.pause()
-                               playbutton.text = FontAwesome.Icon.PlayCircle
-                               playbutton.font.pointSize = 25
+                               playbutton.state = "play"
                            }
                        }
                     }
@@ -221,8 +456,6 @@ ApplicationWindow {
                     }
                 }
 
-
-
                 Item {
                     width: 40
                     height: 17
@@ -238,10 +471,24 @@ ApplicationWindow {
                     }
                 }
 
+                Text {
+                    id: sub
+                    font.pointSize: 17
+                    font.family: "FontAwesome"
+                    text: FontAwesome.Icon.ClosedCaptions
+                    color: player.subtitleEnabled ? "red" : "black"
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            player.subtitleEnabled = !player.subtitleEnabled
+                        }
+                    }
+                }
+
                 Item {
                     width: 17
                     height: 17
-
 
                     Text {
                         id : volume
@@ -343,10 +590,22 @@ ApplicationWindow {
                 }
 
                 Text {
-                    id: sub
+                    id: cog
                     font.pointSize: 17
                     font.family: "FontAwesome"
-                    text: FontAwesome.Icon.ClosedCaptions
+                    text: FontAwesome.Icon.Cog
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            settings.visible = !settings.visible
+                            videos.visible = false
+                            audios.visible = false
+                            subtitles.visible = false
+
+
+                        }
+                    }
                 }
 
                 Text {
@@ -380,7 +639,7 @@ ApplicationWindow {
                     maximumValue: player.duration
                     value: player.position
                     onPressedChanged: player.seek(value)
-                    enabled: player.mediaInfo.isSeekable
+                    enabled: player.mediaInfo.seekable
                     anchors.bottom: parent.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
 
@@ -455,7 +714,6 @@ ApplicationWindow {
                     }
                 }
             }
-
         }
     }
 }

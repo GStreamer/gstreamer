@@ -29,7 +29,7 @@ Player::Player(QObject *parent)
 }
 
 Player::Player(QObject *parent, QuickRenderer *renderer)
-    : QGstPlayer(parent, renderer)
+    : QGstPlayer::Player(parent, renderer)
     , renderer_(renderer)
 {
     renderer_->setParent(this);

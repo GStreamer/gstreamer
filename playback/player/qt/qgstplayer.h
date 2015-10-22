@@ -28,7 +28,16 @@
 #include <QtQml/QQmlPropertyMap>
 #include <gst/player/player.h>
 
-class QGstPlayer : public QObject
+namespace QGstPlayer {
+
+class VideoRenderer;
+class MediaInfo;
+class StreamInfo;
+class VideInfo;
+class AudioInfo;
+class SubtitleInfo;
+
+class Player : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
@@ -41,14 +50,16 @@ class QGstPlayer : public QObject
     Q_PROPERTY(State state READ state NOTIFY stateChanged)
     Q_PROPERTY(QObject *mediaInfo READ mediaInfo NOTIFY mediaInfoChanged)
     Q_PROPERTY(bool videoAvailable READ isVideoAvailable NOTIFY videoAvailableChanged)
+    Q_PROPERTY(QVariant currentVideo READ currentVideo WRITE setCurrentVideo)
+    Q_PROPERTY(QVariant currentAudio READ currentAudio WRITE setCurrentAudio)
+    Q_PROPERTY(QVariant currentSubtitle READ currentSubtitle WRITE setCurrentSubtitle)
+    Q_PROPERTY(bool subtitleEnabled READ isSubtitleEnabled WRITE setSubtitleEnabled
+               NOTIFY subtitleEnabledChanged)
 
     Q_ENUMS(State)
 
 public:
-
-    class VideoRenderer;
-
-    explicit QGstPlayer(QObject *parent = 0, VideoRenderer *renderer = 0);
+    explicit Player(QObject *parent = 0, VideoRenderer *renderer = 0);
 
     typedef GstPlayerError Error;
     enum State {
@@ -56,29 +67,6 @@ public:
         BUFFERING = GST_PLAYER_STATE_BUFFERING,
         PAUSED = GST_PLAYER_STATE_PAUSED,
         PLAYING = GST_PLAYER_STATE_PLAYING
-    };
-
-    class VideoRenderer
-    {
-    public:
-        GstPlayerVideoRenderer *renderer();
-        virtual GstElement *createVideoSink() = 0;
-    protected:
-        VideoRenderer();
-        virtual ~VideoRenderer();
-    private:
-        GstPlayerVideoRenderer *renderer_;
-    };
-
-    // TODO add remaining bits
-    class MediaInfo
-    {
-    public:
-        MediaInfo(GstPlayerMediaInfo *media_info);
-        QString title() const;
-        bool isSeekable() const;
-    private:
-        GstPlayerMediaInfo *mediaInfo_;
     };
 
     QUrl source() const;
@@ -92,8 +80,11 @@ public:
     QSize resolution() const;
     void setResolution(QSize size);
     bool isVideoAvailable() const;
-    QQmlPropertyMap *mediaInfo() const;
-
+    MediaInfo *mediaInfo() const;
+    QVariant currentVideo() const;
+    QVariant currentAudio() const;
+    QVariant currentSubtitle() const;
+    bool isSubtitleEnabled() const;
 
 signals:
     void stateChanged(State new_state);
@@ -107,6 +98,7 @@ signals:
     void mediaInfoChanged();
     void sourceChanged(QUrl new_url);
     void videoAvailableChanged(bool videoAvailable);
+    void subtitleEnabledChanged(bool enabled);
 
 public slots:
     void play();
@@ -117,27 +109,144 @@ public slots:
     void setVolume(qreal val);
     void setMuted(bool val);
     void setPosition(qint64 pos);
+    void setCurrentVideo(QVariant track);
+    void setCurrentAudio(QVariant track);
+    void setCurrentSubtitle(QVariant track);
+    void setSubtitleEnabled(bool enabled);
 
 private:
-    Q_DISABLE_COPY(QGstPlayer)
-    static void onStateChanged(QGstPlayer *, GstPlayerState state);
-    static void onPositionUpdated(QGstPlayer *, GstClockTime position);
-    static void onDurationChanged(QGstPlayer *, GstClockTime duration);
-    static void onBufferingChanged(QGstPlayer *, int percent);
-    static void onVideoDimensionsChanged(QGstPlayer *, int w, int h);
-    static void onVolumeChanged(QGstPlayer *);
-    static void onMuteChanged(QGstPlayer *);
-    static void onMediaInfoUpdated(QGstPlayer *, GstPlayerMediaInfo *media_info);
+    Q_DISABLE_COPY(Player)
+    static void onStateChanged(Player *, GstPlayerState state);
+    static void onPositionUpdated(Player *, GstClockTime position);
+    static void onDurationChanged(Player *, GstClockTime duration);
+    static void onBufferingChanged(Player *, int percent);
+    static void onVideoDimensionsChanged(Player *, int w, int h);
+    static void onVolumeChanged(Player *);
+    static void onMuteChanged(Player *);
+    static void onMediaInfoUpdated(Player *, GstPlayerMediaInfo *media_info);
 
     GstPlayer *player_;
     State state_;
     QSize videoDimensions_;
-    QQmlPropertyMap *mediaInfoMap_;
+    MediaInfo *mediaInfo_;
     bool videoAvailable_;
+    bool subtitleEnabled_;
 };
 
-Q_DECLARE_METATYPE(QGstPlayer*)
-Q_DECLARE_METATYPE(QGstPlayer::State)
+class VideoRenderer
+{
+public:
+    GstPlayerVideoRenderer *renderer();
+    virtual GstElement *createVideoSink() = 0;
+protected:
+    VideoRenderer();
+    virtual ~VideoRenderer();
+private:
+    GstPlayerVideoRenderer *renderer_;
+};
+
+class MediaInfo : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString uri READ uri NOTIFY uriChanged)
+    Q_PROPERTY(bool seekable READ isSeekable NOTIFY seekableChanged)
+    Q_PROPERTY(QString title READ title NOTIFY titleChanged)
+    Q_PROPERTY(QList<QObject*> videoStreams READ videoStreams CONSTANT)
+    Q_PROPERTY(QList<QObject*> audioStreams READ audioStreams CONSTANT)
+    Q_PROPERTY(QList<QObject*> subtitleStreams READ subtitleStreams CONSTANT)
+
+public:
+    explicit MediaInfo(Player *player = 0);
+    QString uri() const;
+    QString title() const;
+    bool isSeekable() const;
+    const QList<QObject*> &videoStreams() const;
+    const QList<QObject*> &audioStreams() const;
+    const QList<QObject*> &subtitleStreams() const;
+
+signals:
+    void uriChanged();
+    void seekableChanged();
+    void titleChanged();
+
+public Q_SLOTS:
+    void update(GstPlayerMediaInfo *info);
+private:
+    QString uri_;
+    QString title_;
+    bool isSeekable_;
+    QList<QObject*> videoStreams_;
+    QList<QObject*> audioStreams_;
+    QList<QObject*> subtitleStreams_;
+};
+
+class StreamInfo : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int index READ index CONSTANT)
+public:
+    int index() const;
+
+protected:
+    StreamInfo(GstPlayerStreamInfo* info);
+private:
+    GstPlayerStreamInfo *stream_;
+    int index_;
+};
+
+class VideoInfo : public StreamInfo
+{
+    Q_OBJECT
+    Q_PROPERTY(QSize resolution READ resolution CONSTANT)
+public:
+    VideoInfo(GstPlayerVideoInfo *info);
+    QSize resolution() const;
+
+private:
+    GstPlayerVideoInfo *video_;
+    QSize resolution_;
+};
+
+class AudioInfo : public StreamInfo
+{
+    Q_OBJECT
+    Q_PROPERTY(QString language READ language CONSTANT)
+    Q_PROPERTY(int channels READ channels CONSTANT)
+    Q_PROPERTY(int bitRate READ bitRate CONSTANT)
+    Q_PROPERTY(int sampleRate READ sampleRate CONSTANT)
+
+public:
+    AudioInfo(GstPlayerAudioInfo *info);
+    QString const& language() const;
+    int channels() const;
+    int bitRate() const;
+    int sampleRate() const;
+
+private:
+    GstPlayerAudioInfo *audio_;
+    QString language_;
+    int channels_;
+    int bitRate_;
+    int sampleRate_;
+};
+
+class SubtitleInfo : public StreamInfo
+{
+    Q_OBJECT
+    Q_PROPERTY(QString language READ language CONSTANT)
+public:
+    SubtitleInfo(GstPlayerSubtitleInfo *info);
+    QString const& language() const;
+
+private:
+    GstPlayerSubtitleInfo *subtitle_;
+    QString language_;
+};
+
+}
+
+Q_DECLARE_METATYPE(QGstPlayer::Player*)
+Q_DECLARE_METATYPE(QGstPlayer::Player::State)
 
 extern "C" {
 
