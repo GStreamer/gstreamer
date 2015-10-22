@@ -178,7 +178,11 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
           case ' ':
             /* Check for maximum and minimum supported bit depth and
                return error if its out of range */
-            if ((mngr->info.max > 255) || (mngr->info.max < 1)) {
+            if (mngr->info.type == GST_PNM_TYPE_GRAYMAP) {
+              if ((mngr->info.max > 65535) || (mngr->info.max < 1)) {
+                return GST_PNM_INFO_MNGR_RESULT_FAILED;
+              }
+            } else if ((mngr->info.max > 255) || (mngr->info.max < 1)) {
               return GST_PNM_INFO_MNGR_RESULT_FAILED;
             }
             mngr->info.fields |= GST_PNM_INFO_FIELDS_MAX;

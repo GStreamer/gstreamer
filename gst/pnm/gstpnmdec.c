@@ -57,11 +57,11 @@ gst_pnmdec_parse_ascii (GstPnmdec * s, const guint8 * b, guint bs);
 G_DEFINE_TYPE (GstPnmdec, gst_pnmdec, GST_TYPE_VIDEO_DECODER);
 
 static GstStaticPadTemplate gst_pnmdec_src_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB") "; "
-        GST_VIDEO_CAPS_MAKE ("GRAY8")));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+        ("{ RGB, GRAY8, GRAY16_BE, GRAY16_LE }")));
 
 static GstStaticPadTemplate gst_pnmdec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -69,6 +69,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (MIME_ALL));
 
+GST_DEBUG_CATEGORY (pnmdecoder_debug);
+#define GST_CAT_DEFAULT pnmdecoder_debug
 
 static void
 gst_pnmdec_class_init (GstPnmdecClass * klass)
@@ -76,10 +78,13 @@ gst_pnmdec_class_init (GstPnmdecClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *vdec_class = (GstVideoDecoderClass *) klass;
 
+  GST_DEBUG_CATEGORY_INIT (pnmdecoder_debug, "pnmdec", 0, "PNM Video Decoder");
+
   gst_element_class_add_static_pad_template (element_class,
       &gst_pnmdec_src_pad_template);
   gst_element_class_add_static_pad_template (element_class,
       &gst_pnmdec_sink_pad_template);
+
   gst_element_class_set_static_metadata (element_class, "PNM image decoder",
       "Codec/Decoder/Image",
       "Decodes images in portable pixmap/graymap/bitmap/anymamp (PNM) format",
@@ -116,10 +121,73 @@ gst_pnmdec_init (GstPnmdec * s)
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (s));
 }
 
+static void
+gst_pnmdec_resolve_gray16_format (GstVideoDecoder * decoder)
+{
+  GstPnmdec *pnmdec = (GstPnmdec *) decoder;
+  GstCaps *peercaps;
+  GstStructure *peerstruct;
+  gint i, j;
+  const GValue *svalue, *lvalue;
+  const gchar *fmtstr = NULL;
+  GstVideoFormat fmt = GST_VIDEO_FORMAT_UNKNOWN;
+  /* perform some basic negotiation to resolve which endianess, if any is supported by the
+   * component downstream
+   */
+  peercaps = gst_pad_peer_query_caps (decoder->srcpad, NULL);
+  if (!gst_caps_is_empty (peercaps) && !gst_caps_is_any (peercaps)) {
+    GST_DEBUG ("Received caps from peer: %" GST_PTR_FORMAT, peercaps);
+    for (i = 0; i < gst_caps_get_size (peercaps); i++) {
+      peerstruct = gst_caps_get_structure (peercaps, i);
+      if (peerstruct) {
+        svalue = gst_structure_get_value (peerstruct, "format");
+        /* if it is fixated, check if it is a GRAY16 format */
+        if (G_VALUE_TYPE (svalue) == G_TYPE_STRING) {
+          fmtstr = gst_structure_get_string (peerstruct, "format");
+          if (fmtstr && g_str_equal (fmtstr, "GRAY16_BE")) {
+            fmt = GST_VIDEO_FORMAT_GRAY16_BE;
+          } else if (fmtstr && g_str_equal (fmtstr, "GRAY16_LE")) {
+            fmt = GST_VIDEO_FORMAT_GRAY16_LE;
+          }
+        }
+        /* if layout is not fixated, check for BE and LE, prioritizing BE */
+        else if (G_VALUE_TYPE (svalue) == GST_TYPE_LIST) {
+          for (j = 0; j < gst_value_list_get_size (svalue); j++) {
+            lvalue = gst_value_list_get_value (svalue, j);
+            if (lvalue && G_VALUE_TYPE (lvalue) == G_TYPE_STRING) {
+              fmtstr = g_value_get_string (lvalue);
+              if (fmtstr && g_str_equal (fmtstr, "GRAY16_BE")) {
+                GST_DEBUG ("Found GRAY16_BE, setting pnm 16bit format");
+                fmt = GST_VIDEO_FORMAT_GRAY16_BE;
+                break;
+              } else if (fmtstr && g_str_equal (fmtstr, "GRAY16_LE")) {
+                GST_DEBUG ("Found GRAY16_LE, setting pnm 16bit format");
+                fmt = GST_VIDEO_FORMAT_GRAY16_LE;
+              }
+            }
+          }
+        }
+      }
+      if (fmt == GST_VIDEO_FORMAT_GRAY16_BE)
+        break;
+    }
+  }
+  gst_caps_unref (peercaps);
+
+  /* if no negotiation was achieved we default to big endian. */
+  if (fmt == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_DEBUG ("No 16bit format detected, defaulting to GRAY16_BE");
+    pnmdec->gray16format = GST_VIDEO_FORMAT_GRAY16_BE;
+  } else
+    pnmdec->gray16format = fmt;
+}
+
 static gboolean
 gst_pnmdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   GstPnmdec *pnmdec = (GstPnmdec *) decoder;
+
+  gst_pnmdec_resolve_gray16_format (decoder);
 
   if (pnmdec->input_state)
     gst_video_codec_state_unref (pnmdec->input_state);
@@ -172,7 +240,7 @@ gst_pnmdec_parse_ascii (GstPnmdec * s, const guint8 * b, guint bs)
         goto drop_error;
       }
     }
-    if (s->last_byte > 255) {
+    if (s->last_byte > s->mngr.info.max) {
       GST_DEBUG_OBJECT (s, "Corrupt ASCII encoded PNM file.");
       goto drop_error;
     }
@@ -269,7 +337,10 @@ gst_pnmdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       i_rowstride = 3 * s->mngr.info.width;
       o_rowstride = GST_ROUND_UP_4 (i_rowstride);
     } else {
-      i_rowstride = s->mngr.info.width;
+      if (s->mngr.info.max > 255)
+        i_rowstride = s->mngr.info.width * 2;
+      else
+        i_rowstride = s->mngr.info.width;
       o_rowstride = GST_ROUND_UP_4 (i_rowstride);
     }
 
@@ -284,7 +355,19 @@ gst_pnmdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   if (s->mngr.info.type != GST_PNM_TYPE_BITMAP) {
     /* Convert the pixels from 0 - max range to 0 - 255 range */
-    if (s->mngr.info.max < 255) {
+    if (s->mngr.info.max > 255 && s->mngr.info.max < 65535) {
+      guint16 *data = (guint16 *) omap.data;
+      gint max = s->mngr.info.max;
+      for (i = 0; i < total_bytes / 2; i++) {
+        if (data[i] <= max) {
+          data[i] = 65535 * data[i] / max;
+        } else {
+          /* This is an error case, wherein value in the data stream is
+             more than max. Clamp such values to 255 */
+          data[i] = 65535;
+        }
+      }
+    } else if (s->mngr.info.max < 255) {
       gint max = s->mngr.info.max;
       for (i = 0; i < total_bytes; i++) {
         if (omap.data[i] <= max) {
@@ -356,8 +439,13 @@ gst_pnmdec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
             format = GST_VIDEO_FORMAT_GRAY8;
             break;
           case GST_PNM_TYPE_GRAYMAP:
-            s->size = s->mngr.info.width * s->mngr.info.height * 1;
-            format = GST_VIDEO_FORMAT_GRAY8;
+            if (s->mngr.info.max > 255) {
+              s->size = s->mngr.info.width * s->mngr.info.height * 2;
+              format = s->gray16format;
+            } else {
+              s->size = s->mngr.info.width * s->mngr.info.height * 1;
+              format = GST_VIDEO_FORMAT_GRAY8;
+            }
             break;
           case GST_PNM_TYPE_PIXMAP:
             s->size = s->mngr.info.width * s->mngr.info.height * 3;
@@ -387,7 +475,7 @@ gst_pnmdec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
   }
 
   if (s->mngr.info.encoding == GST_PNM_ENCODING_ASCII) {
-    /* Parse ASCII data dn populate s->current_size with the number of 
+    /* Parse ASCII data dn populate s->current_size with the number of
        bytes actually parsed from the input data */
     r = gst_pnmdec_parse_ascii (s, raw_data + offset, size);
   } else {
@@ -417,7 +505,6 @@ static gboolean
 gst_pnmdec_start (GstVideoDecoder * decoder)
 {
   GstPnmdec *pnmdec = (GstPnmdec *) decoder;
-
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (pnmdec), FALSE);
   return TRUE;
 }
