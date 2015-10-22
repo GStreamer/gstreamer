@@ -19,10 +19,16 @@ libgstmxf_la_SOURCES = \
 	mxfvc3.c \
 	mxfdms1.c
 
-libgstmxf_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
-libgstmxf_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
+libgstmxf_la_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(GST_CFLAGS)
+libgstmxf_la_LIBADD = \
+	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-@GST_API_VERSION@ \
-	-lgstaudio-@GST_API_VERSION@
+	-lgstaudio-@GST_API_VERSION@ \
+	$(GST_BASE_LIBS) \
+	$(GST_LIBS)
 libgstmxf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmxf_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
