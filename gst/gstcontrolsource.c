@@ -92,7 +92,7 @@ gst_control_source_constructor (GType type, guint n_construct_params,
  * gst_control_source_get_value:
  * @self: the #GstControlSource object
  * @timestamp: the time for which the value should be returned
- * @value: the value
+ * @value: (out): the value
  *
  * Gets the value for this #GstControlSource at a given timestamp.
  *
