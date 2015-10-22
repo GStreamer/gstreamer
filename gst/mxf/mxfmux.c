@@ -1085,7 +1085,7 @@ gst_mxf_mux_write_header_metadata (GstMXFMux * mux)
 }
 
 static const guint8 _gc_essence_element_ul[] = {
-  0x06, 0x0e, 0x2b, 0x34, 0x01, 0x02, 0x01, 0x00,
+  0x06, 0x0e, 0x2b, 0x34, 0x01, 0x02, 0x01, 0x01,
   0x0d, 0x01, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00
 };
 
@@ -1148,7 +1148,6 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * cpad)
   packet = gst_buffer_new_and_alloc (16 + slen + readmap.size);
   gst_buffer_map (packet, &map, GST_MAP_WRITE);
   memcpy (map.data, _gc_essence_element_ul, 16);
-  map.data[7] = cpad->descriptor->essence_container.u[7];
   GST_WRITE_UINT32_BE (map.data + 12, cpad->source_track->parent.track_number);
   memcpy (map.data + 16, ber, slen);
   memcpy (map.data + 16 + slen, readmap.data, readmap.size);
