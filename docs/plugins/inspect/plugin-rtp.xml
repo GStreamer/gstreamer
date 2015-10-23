@@ -1630,7 +1630,7 @@
       <name>rtpvp8pay</name>
       <longname>RTP VP8 payloader</longname>
       <class>Codec/Payloader/Network/RTP</class>
-      <description>Puts VP8 video in RTP packets)</description>
+      <description>Puts VP8 video in RTP packets</description>
       <author>Sjoerd Simons &lt;sjoerd@luon.net&gt;</author>
       <pads>
         <caps>

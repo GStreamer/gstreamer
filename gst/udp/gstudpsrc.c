@@ -41,7 +41,7 @@
  * one.
  *
  * The #GstUDPSrc:caps property is mainly used to give a type to the UDP packet
- * so that they can be autoplugged in GStreamer pipelines. This is very usefull
+ * so that they can be autoplugged in GStreamer pipelines. This is very useful
  * for RTP implementations where the contents of the UDP packets is transfered
  * out-of-bounds using SDP or other means.
  *

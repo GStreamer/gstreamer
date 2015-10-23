@@ -314,7 +314,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
           seqnum = -1;
 
         /* retrieve ssrc of the packet that need to be retransmitted
-         * it's usefull when reconstructing the original packet from the rtx packet */
+         * it's useful when reconstructing the original packet from the rtx packet */
         if (!gst_structure_get_uint (s, "ssrc", &ssrc))
           ssrc = -1;
 

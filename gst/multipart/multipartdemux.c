@@ -733,7 +733,7 @@ gst_multipart_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_BOUNDARY:
-      /* Not really that usefull anymore as we can reliably autoscan */
+      /* Not really that useful anymore as we can reliably autoscan */
       g_free (filter->boundary);
       filter->boundary = g_value_dup_string (value);
       if (filter->boundary != NULL) {

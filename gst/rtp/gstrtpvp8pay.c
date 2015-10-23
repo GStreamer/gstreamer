@@ -126,7 +126,7 @@ gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
 
   gst_element_class_set_static_metadata (element_class, "RTP VP8 payloader",
       "Codec/Payloader/Network/RTP",
-      "Puts VP8 video in RTP packets)", "Sjoerd Simons <sjoerd@luon.net>");
+      "Puts VP8 video in RTP packets", "Sjoerd Simons <sjoerd@luon.net>");
 
   pay_class->handle_buffer = gst_rtp_vp8_pay_handle_buffer;
   pay_class->sink_event = gst_rtp_vp8_pay_sink_event;
