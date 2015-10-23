@@ -245,6 +245,11 @@ struct _GstAggregatorClass {
 
   GstClockTime      (*get_next_time)  (GstAggregator    *  aggregator);
 
+  GstAggregatorPad * (*create_new_pad) (GstAggregator  * self,
+                                        GstPadTemplate * templ,
+                                        const gchar    * req_name,
+                                        const GstCaps  * caps);
+
   /*< private >*/
   gpointer          _gst_reserved[GST_PADDING_LARGE];
 };
