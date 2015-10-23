@@ -149,6 +149,7 @@ typefind_test_file (const gchar * filename)
   GST_LOG ("reading file '%s'", path);
   if (!g_file_get_contents (path, &data, &data_len, &err)) {
     g_error ("error loading test file: %s", err->message);
+    g_clear_error (&err);
   }
 
   buf = gst_buffer_new ();
