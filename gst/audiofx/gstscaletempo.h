@@ -48,7 +48,7 @@ struct _GstScaletempo
   guint ms_search;
 
   /* caps */
-  gboolean use_int;
+  GstAudioFormat format;
   guint samples_per_frame;      /* AKA number of channels */
   guint bytes_per_sample;
   guint bytes_per_frame;

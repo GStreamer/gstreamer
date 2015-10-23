@@ -94,6 +94,7 @@ enum
 #define SUPPORTED_CAPS \
 GST_STATIC_CAPS ( \
     GST_AUDIO_CAPS_MAKE (GST_AUDIO_NE (F32)) "; " \
+    GST_AUDIO_CAPS_MAKE (GST_AUDIO_NE (F64)) "; " \
     GST_AUDIO_CAPS_MAKE (GST_AUDIO_NE (S16)) \
 )
 
@@ -113,39 +114,43 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 G_DEFINE_TYPE_WITH_CODE (GstScaletempo, gst_scaletempo,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT (0));
 
-static guint
-best_overlap_offset_float (GstScaletempo * st)
-{
-  gfloat *pw, *po, *ppc, *search_start;
-  gfloat best_corr = G_MININT;
-  guint best_off = 0;
-  gint i, off;
-
-  pw = st->table_window;
-  po = st->buf_overlap;
-  po += st->samples_per_frame;
-  ppc = st->buf_pre_corr;
-  for (i = st->samples_per_frame; i < st->samples_overlap; i++) {
-    *ppc++ = *pw++ * *po++;
-  }
-
-  search_start = (gfloat *) st->buf_queue + st->samples_per_frame;
-  for (off = 0; off < st->frames_search; off++) {
-    gfloat corr = 0;
-    gfloat *ps = search_start;
-    ppc = st->buf_pre_corr;
-    for (i = st->samples_per_frame; i < st->samples_overlap; i++) {
-      corr += *ppc++ * *ps++;
-    }
-    if (corr > best_corr) {
-      best_corr = corr;
-      best_off = off;
-    }
-    search_start += st->samples_per_frame;
-  }
-
-  return best_off * st->bytes_per_frame;
+#define CREATE_BEST_OVERLAP_OFFSET_FLOAT_FUNC(type) \
+static guint \
+best_overlap_offset_##type (GstScaletempo * st) \
+{ \
+  g##type *pw, *po, *ppc, *search_start; \
+  g##type best_corr = G_MININT; \
+  guint best_off = 0; \
+  gint i, off; \
+  \
+  pw = st->table_window; \
+  po = st->buf_overlap; \
+  po += st->samples_per_frame; \
+  ppc = st->buf_pre_corr; \
+  for (i = st->samples_per_frame; i < st->samples_overlap; i++) { \
+    *ppc++ = *pw++ * *po++; \
+  } \
+  \
+  search_start = (g##type *) st->buf_queue + st->samples_per_frame; \
+  for (off = 0; off < st->frames_search; off++) { \
+    g##type corr = 0; \
+    g##type *ps = search_start; \
+    ppc = st->buf_pre_corr; \
+    for (i = st->samples_per_frame; i < st->samples_overlap; i++) { \
+      corr += *ppc++ * *ps++; \
+    } \
+    if (corr > best_corr) { \
+      best_corr = corr; \
+      best_off = off; \
+    } \
+    search_start += st->samples_per_frame; \
+  } \
+  \
+  return best_off * st->bytes_per_frame; \
 }
+
+CREATE_BEST_OVERLAP_OFFSET_FLOAT_FUNC (float);
+CREATE_BEST_OVERLAP_OFFSET_FLOAT_FUNC (double);
 
 /* buffer padding for loop optimization: sizeof(gint32) * (loop_size - 1) */
 #define UNROLL_PADDING (4*3)
@@ -192,19 +197,23 @@ best_overlap_offset_s16 (GstScaletempo * st)
   return best_off * st->bytes_per_frame;
 }
 
-static void
-output_overlap_float (GstScaletempo * st, gpointer buf_out, guint bytes_off)
-{
-  gfloat *pout = buf_out;
-  gfloat *pb = st->table_blend;
-  gfloat *po = st->buf_overlap;
-  gfloat *pin = (gfloat *) (st->buf_queue + bytes_off);
-  gint i;
-  for (i = 0; i < st->samples_overlap; i++) {
-    *pout++ = *po - *pb++ * (*po - *pin++);
-    po++;
-  }
+#define CREATE_OUTPUT_OVERLAP_FLOAT_FUNC(type) \
+static void \
+output_overlap_##type (GstScaletempo * st, gpointer buf_out, guint bytes_off) \
+{ \
+  g##type *pout = buf_out; \
+  g##type *pb = st->table_blend; \
+  g##type *po = st->buf_overlap; \
+  g##type *pin = (g##type *) (st->buf_queue + bytes_off); \
+  gint i; \
+  for (i = 0; i < st->samples_overlap; i++) { \
+    *pout++ = *po - *pb++ * (*po - *pin++); \
+    po++; \
+  } \
 }
+
+CREATE_OUTPUT_OVERLAP_FLOAT_FUNC (float);
+CREATE_OUTPUT_OVERLAP_FLOAT_FUNC (double);
 
 static void
 output_overlap_s16 (GstScaletempo * st, gpointer buf_out, guint bytes_off)
@@ -283,12 +292,13 @@ reinit_buffers (GstScaletempo * st)
     st->bytes_standing = st->bytes_stride - st->bytes_overlap;
     st->samples_standing = st->bytes_standing / st->bytes_per_sample;
     st->buf_overlap = g_realloc (st->buf_overlap, st->bytes_overlap);
-    st->table_blend = g_realloc (st->table_blend, st->samples_overlap * 4);     /* sizeof (gint32|gfloat) */
+    st->table_blend =
+        g_realloc (st->table_blend, st->samples_overlap * st->bytes_per_sample);
     if (st->bytes_overlap > prev_overlap) {
       memset ((guint8 *) st->buf_overlap + prev_overlap, 0,
           st->bytes_overlap - prev_overlap);
     }
-    if (st->use_int) {
+    if (st->format == GST_AUDIO_FORMAT_S16) {
       gint32 *pb = st->table_blend;
       gint64 blend = 0;
       for (i = 0; i < frames_overlap; i++) {
@@ -299,7 +309,7 @@ reinit_buffers (GstScaletempo * st)
         blend += 65535;         /* 2^16 */
       }
       st->output_overlap = output_overlap_s16;
-    } else {
+    } else if (st->format == GST_AUDIO_FORMAT_F32) {
       gfloat *pb = st->table_blend;
       gfloat t = (gfloat) frames_overlap;
       for (i = 0; i < frames_overlap; i++) {
@@ -309,6 +319,16 @@ reinit_buffers (GstScaletempo * st)
         }
       }
       st->output_overlap = output_overlap_float;
+    } else {
+      gdouble *pb = st->table_blend;
+      gdouble t = (gdouble) frames_overlap;
+      for (i = 0; i < frames_overlap; i++) {
+        gdouble v = i / t;
+        for (j = 0; j < st->samples_per_frame; j++) {
+          *pb++ = v;
+        }
+      }
+      st->output_overlap = output_overlap_double;
     }
   }
 
@@ -318,11 +338,12 @@ reinit_buffers (GstScaletempo * st)
   if (st->frames_search < 1) {  /* if no search */
     st->best_overlap_offset = NULL;
   } else {
-    guint bytes_pre_corr = (st->samples_overlap - st->samples_per_frame) * 4;   /* sizeof (gint32|gfloat) */
+    guint bytes_pre_corr =
+        (st->samples_overlap - st->samples_per_frame) * st->bytes_per_sample;
     st->buf_pre_corr =
         g_realloc (st->buf_pre_corr, bytes_pre_corr + UNROLL_PADDING);
     st->table_window = g_realloc (st->table_window, bytes_pre_corr);
-    if (st->use_int) {
+    if (st->format == GST_AUDIO_FORMAT_S16) {
       gint64 t = frames_overlap;
       gint32 n = 8589934588LL / (t * t);        /* 4 * (2^31 - 1) / t^2 */
       gint32 *pw;
@@ -336,7 +357,7 @@ reinit_buffers (GstScaletempo * st)
         }
       }
       st->best_overlap_offset = best_overlap_offset_s16;
-    } else {
+    } else if (st->format == GST_AUDIO_FORMAT_F32) {
       gfloat *pw = st->table_window;
       for (i = 1; i < frames_overlap; i++) {
         gfloat v = i * (frames_overlap - i);
@@ -345,6 +366,15 @@ reinit_buffers (GstScaletempo * st)
         }
       }
       st->best_overlap_offset = best_overlap_offset_float;
+    } else {
+      gdouble *pw = st->table_window;
+      for (i = 1; i < frames_overlap; i++) {
+        gdouble v = i * (frames_overlap - i);
+        for (j = 0; j < st->samples_per_frame; j++) {
+          *pw++ = v;
+        }
+      }
+      st->best_overlap_offset = best_overlap_offset_double;
     }
   }
 
@@ -386,7 +416,7 @@ reinit_buffers (GstScaletempo * st)
       (gint) (st->bytes_standing / st->bytes_per_frame),
       (gint) (st->bytes_overlap / st->bytes_per_frame), st->frames_search,
       (gint) (st->bytes_queue_max / st->bytes_per_frame),
-      (st->use_int ? "s16" : "float"));
+      gst_audio_format_to_string (st->format));
 
   st->reinit_buffers = FALSE;
 }
@@ -535,8 +565,8 @@ gst_scaletempo_set_caps (GstBaseTransform * trans,
   GstScaletempo *scaletempo = GST_SCALETEMPO (trans);
 
   gint width, bps, nch, rate;
-  gboolean use_int;
   GstAudioInfo info;
+  GstAudioFormat format;
 
   if (!gst_audio_info_from_caps (&info, incaps))
     return FALSE;
@@ -544,7 +574,7 @@ gst_scaletempo_set_caps (GstBaseTransform * trans,
   nch = GST_AUDIO_INFO_CHANNELS (&info);
   rate = GST_AUDIO_INFO_RATE (&info);
   width = GST_AUDIO_INFO_WIDTH (&info);
-  use_int = GST_AUDIO_INFO_IS_INTEGER (&info);
+  format = GST_AUDIO_INFO_FORMAT (&info);
 
   bps = width / 8;
 
@@ -552,13 +582,12 @@ gst_scaletempo_set_caps (GstBaseTransform * trans,
 
   if (rate != scaletempo->sample_rate
       || nch != scaletempo->samples_per_frame
-      || bps != scaletempo->bytes_per_sample
-      || use_int != scaletempo->use_int) {
+      || bps != scaletempo->bytes_per_sample || format != scaletempo->format) {
     scaletempo->sample_rate = rate;
     scaletempo->samples_per_frame = nch;
     scaletempo->bytes_per_sample = bps;
     scaletempo->bytes_per_frame = nch * bps;
-    scaletempo->use_int = use_int;
+    scaletempo->format = format;
     scaletempo->reinit_buffers = TRUE;
   }
 
