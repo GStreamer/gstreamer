@@ -87,22 +87,15 @@ struct _AudioConvertFmt
 };
 #endif
 
-typedef void (*AudioConvertUnpack) (gpointer src, gpointer dst, gint scale,
-    gint count);
-typedef void (*AudioConvertPack) (gpointer src, gpointer dst, gint scale,
-    gint count);
-
 typedef void (*AudioConvertMix) (AudioConvertCtx *, gpointer, gpointer, gint);
 typedef void (*AudioConvertQuantize) (AudioConvertCtx * ctx, gpointer src,
     gpointer dst, gint count);
+typedef void (*AudioConvertToF64) (gdouble *dst, const gint32 *src, gint count);
 
 struct _AudioConvertCtx
 {
   GstAudioInfo in;
   GstAudioInfo out;
-
-  AudioConvertUnpack unpack;
-  AudioConvertPack pack;
 
   /* channel conversion matrix, m[in_channels][out_channels].
    * If identity matrix, passthrough applies. */
@@ -117,16 +110,16 @@ struct _AudioConvertCtx
 
   gboolean in_default;
   gboolean mix_passthrough;
+  gboolean quant_default;
   gboolean out_default;
 
   gpointer tmpbuf;
   gint tmpbufsize;
 
-  gint in_scale;
   gint out_scale;
 
+  AudioConvertToF64 convert;
   AudioConvertMix channel_mix;
-
   AudioConvertQuantize quantize;
 
   GstAudioConvertDithering dither;

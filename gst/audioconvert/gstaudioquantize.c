@@ -35,6 +35,7 @@
 #include <string.h>
 #include <math.h>
 #include "audioconvert.h"
+#include "gstaudioconvertorc.h"
 #include "gstaudioquantize.h"
 
 #include "gstfastrandom.h"
@@ -70,12 +71,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gint32 *src,      \
       }                                                                 \
     }                                                                   \
   } else {                                                              \
-    for (;count;count--) {                                              \
-      for (chan_pos = 0; chan_pos < channels; chan_pos++) {             \
-        *dst = *src++;                                                  \
-        dst++;                                                          \
-      }                                                                 \
-    }                                                                   \
+    memcpy (dst, src, count * channels * 4);                            \
   }                                                                     \
 }
 
@@ -88,15 +84,14 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gint32 *src,      \
                              UPDATE_ERROR_FUNC)                         \
 static void                                                             \
 MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
-                                gdouble *dst, gint count)               \
+                                gint32 *dst, gint count)                \
 {                                                                       \
   gint scale = ctx->out_scale;                                          \
   gint channels = ctx->out.channels;                                    \
   gint chan_pos;                                                        \
-  gdouble factor = (1U<<(32-scale-1)) - 1;                              \
+  gdouble tmp, d, factor = (1U<<(32-scale-1));                          \
                                                                         \
   if (scale > 0) {                                                      \
-    gdouble tmp;                                                        \
     DITHER_INIT_FUNC()                                                  \
     NS_INIT_FUNC()                                                      \
                                                                         \
@@ -105,19 +100,14 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
         tmp = *src++;                                                   \
         ADD_NS_FUNC()                                                   \
         ADD_DITHER_FUNC()                                               \
-        tmp = floor(tmp * factor + 0.5);                                \
-        *dst = CLAMP (tmp, -factor - 1, factor);                        \
+        tmp = floor(tmp * factor);                                      \
+        d = CLAMP (tmp, -factor, factor - 1);                           \
         UPDATE_ERROR_FUNC()                                             \
-        dst++;                                                          \
+        *dst++ = ((gint32)d) << scale;                                  \
       }                                                                 \
     }                                                                   \
   } else {                                                              \
-    for (;count;count--) {                                              \
-      for (chan_pos = 0; chan_pos < channels; chan_pos++) {             \
-        *dst = *src++ * 2147483647.0;                                   \
-        dst++;                                                          \
-      }                                                                 \
-    }                                                                   \
+    audio_convert_orc_double_to_s32 (dst, src, count * channels);       \
   }                                                                     \
 }
 
@@ -233,7 +223,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
         tmp -= errors[chan_pos];
 
 #define UPDATE_ERROR_ERROR_FEEDBACK()                                   \
-        errors[chan_pos] += (*dst)/factor - orig;
+        errors[chan_pos] += (d)/factor - orig;
 
 /* Same as error feedback but also add 1/2 of the previous error value.
  * This moves the noise a bit more into the higher frequencies. */
@@ -249,7 +239,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
 
 #define UPDATE_ERROR_SIMPLE()                                           \
         errors[chan_pos*2 + 1] = errors[chan_pos*2];                    \
-        errors[chan_pos*2] = (*dst)/factor - orig;
+        errors[chan_pos*2] = (d)/factor - orig;
 
 
 /* Noise shaping coefficients from[1], moves most power of the
@@ -279,7 +269,7 @@ static const gdouble ns_medium_coeffs[] = {
 #define UPDATE_ERROR_MEDIUM()                                           \
         for (j = 4; j > 0; j--)                                         \
           errors[chan_pos*5 + j] = errors[chan_pos*5 + j-1];            \
-        errors[chan_pos*5] = (*dst)/factor - orig;
+        errors[chan_pos*5] = (d)/factor - orig;
 
 /* Noise shaping coefficients by David Schleef, moves most power of the
  * error noise into inaudible frequency ranges */
@@ -303,7 +293,7 @@ static const gdouble ns_high_coeffs[] = {
 #define UPDATE_ERROR_HIGH()                                             \
         for (j = 7; j > 0; j--)                                         \
           errors[chan_pos + j] = errors[chan_pos + j-1];                \
-        errors[chan_pos] = (*dst)/factor - orig;
+        errors[chan_pos] = (d)/factor - orig;
 
 
 MAKE_QUANTIZE_FUNC_I (int_none_none, NONE_FUNC, NONE_FUNC, ROUND);
@@ -314,6 +304,8 @@ MAKE_QUANTIZE_FUNC_I (int_tpdf_none, INIT_DITHER_TPDF_I, ADD_DITHER_TPDF_I,
 MAKE_QUANTIZE_FUNC_I (int_tpdf_hf_none, INIT_DITHER_TPDF_HF_I,
     ADD_DITHER_TPDF_HF_I, NONE_FUNC);
 
+MAKE_QUANTIZE_FUNC_F (float_none_none, NONE_FUNC,
+    NONE_FUNC, NONE_FUNC, NONE_FUNC, NONE_FUNC);
 MAKE_QUANTIZE_FUNC_F (float_none_error_feedback, NONE_FUNC,
     INIT_NS_ERROR_FEEDBACK, ADD_NS_ERROR_FEEDBACK, NONE_FUNC,
     UPDATE_ERROR_ERROR_FEEDBACK);
@@ -324,6 +316,8 @@ MAKE_QUANTIZE_FUNC_F (float_none_medium, NONE_FUNC, INIT_NS_MEDIUM,
 MAKE_QUANTIZE_FUNC_F (float_none_high, NONE_FUNC, INIT_NS_HIGH, ADD_NS_HIGH,
     NONE_FUNC, UPDATE_ERROR_HIGH);
 
+MAKE_QUANTIZE_FUNC_F (float_rpdf_none, INIT_DITHER_RPDF_F,
+    NONE_FUNC, NONE_FUNC, ADD_DITHER_RPDF_F, NONE_FUNC);
 MAKE_QUANTIZE_FUNC_F (float_rpdf_error_feedback, INIT_DITHER_RPDF_F,
     INIT_NS_ERROR_FEEDBACK, ADD_NS_ERROR_FEEDBACK, ADD_DITHER_RPDF_F,
     UPDATE_ERROR_ERROR_FEEDBACK);
@@ -334,6 +328,8 @@ MAKE_QUANTIZE_FUNC_F (float_rpdf_medium, INIT_DITHER_RPDF_F, INIT_NS_MEDIUM,
 MAKE_QUANTIZE_FUNC_F (float_rpdf_high, INIT_DITHER_RPDF_F, INIT_NS_HIGH,
     ADD_NS_HIGH, ADD_DITHER_RPDF_F, UPDATE_ERROR_HIGH);
 
+MAKE_QUANTIZE_FUNC_F (float_tpdf_none, INIT_DITHER_TPDF_F,
+    NONE_FUNC, NONE_FUNC, ADD_DITHER_TPDF_F, NONE_FUNC);
 MAKE_QUANTIZE_FUNC_F (float_tpdf_error_feedback, INIT_DITHER_TPDF_F,
     INIT_NS_ERROR_FEEDBACK, ADD_NS_ERROR_FEEDBACK, ADD_DITHER_TPDF_F,
     UPDATE_ERROR_ERROR_FEEDBACK);
@@ -344,6 +340,8 @@ MAKE_QUANTIZE_FUNC_F (float_tpdf_medium, INIT_DITHER_TPDF_F, INIT_NS_MEDIUM,
 MAKE_QUANTIZE_FUNC_F (float_tpdf_high, INIT_DITHER_TPDF_F, INIT_NS_HIGH,
     ADD_NS_HIGH, ADD_DITHER_TPDF_F, UPDATE_ERROR_HIGH);
 
+MAKE_QUANTIZE_FUNC_F (float_tpdf_hf_none, INIT_DITHER_TPDF_HF_F,
+    NONE_FUNC, NONE_FUNC, ADD_DITHER_TPDF_HF_F, NONE_FUNC);
 MAKE_QUANTIZE_FUNC_F (float_tpdf_hf_error_feedback, INIT_DITHER_TPDF_HF_F,
     INIT_NS_ERROR_FEEDBACK, ADD_NS_ERROR_FEEDBACK, ADD_DITHER_TPDF_HF_F,
     UPDATE_ERROR_ERROR_FEEDBACK);
@@ -359,18 +357,22 @@ static const AudioConvertQuantize quantize_funcs[] = {
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (int_rpdf_none),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (int_tpdf_none),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (int_tpdf_hf_none),
+  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_none),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_error_feedback),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_simple),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_medium),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_high),
+  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_none),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_error_feedback),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_simple),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_medium),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_high),
+  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_none),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_error_feedback),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_simple),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_medium),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_high),
+  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_none),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_error_feedback),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_simple),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_medium),
@@ -462,11 +464,12 @@ gst_audio_quantize_setup_quantize_func (AudioConvertCtx * ctx)
     return;
   }
 
-  if (ctx->ns == NOISE_SHAPING_NONE) {
+  if (ctx->ns == NOISE_SHAPING_NONE
+      && GST_AUDIO_FORMAT_INFO_IS_INTEGER (ctx->in.finfo)) {
     index += ctx->dither;
   } else {
-    index += 4 + (4 * ctx->dither);
-    index += ctx->ns - 1;
+    index += 4 + (5 * ctx->dither);
+    index += ctx->ns;
   }
 
   ctx->quantize = quantize_funcs[index];

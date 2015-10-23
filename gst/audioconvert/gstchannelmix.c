@@ -614,7 +614,7 @@ gst_channel_mix_setup_matrix_int (AudioConvertCtx * this)
 
     for (j = 0; j < this->out.channels; j++) {
       tmp = this->matrix[i][j] * factor;
-      this->matrix_int[i][j] = (gint)tmp;
+      this->matrix_int[i][j] = (gint) tmp;
     }
   }
 }
@@ -647,7 +647,7 @@ gst_channel_mix_setup_matrix (AudioConvertCtx * this)
   /* setup the matrix' internal values */
   gst_channel_mix_fill_matrix (this);
 
-  gst_channel_mix_setup_matrix_int(this);
+  gst_channel_mix_setup_matrix_int (this);
 
 #ifndef GST_DISABLE_GST_DEBUG
   /* debug */
@@ -725,7 +725,8 @@ gst_channel_mix_mix_int (AudioConvertCtx * this,
       /* convert */
       res = 0;
       for (in = 0; in < inchannels; in++) {
-        res += in_data[n * inchannels + in] * (gint64)this->matrix_int[in][out];
+        res +=
+            in_data[n * inchannels + in] * (gint64) this->matrix_int[in][out];
       }
 
       /* remove factor from int matrix */
@@ -760,7 +761,7 @@ gst_channel_mix_mix_float (AudioConvertCtx * this,
   outchannels = this->out.channels;
   backwards = outchannels > inchannels;
 
-  /* FIXME: use liboil here? */
+  /* FIXME: use orc here? */
   for (n = (backwards ? samples - 1 : 0); n < samples && n >= 0;
       backwards ? n-- : n++) {
     for (out = 0; out < outchannels; out++) {
