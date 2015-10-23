@@ -943,13 +943,8 @@ gst_segment_position_from_running_time (const GstSegment * segment,
       gst_segment_position_from_running_time_full (segment, format,
       running_time, &position);
 
-  if (res != 1) {
-    g_print
-        ("here with start %lu stop %lu base %lu rate %f offset %lu running_time %lu position %lu\n",
-        segment->start, segment->stop, segment->base, segment->rate,
-        segment->offset, running_time, position);
+  if (res != 1)
     return -1;
-  }
 
   /* before the segment boundary */
   if (G_UNLIKELY (position < segment->start)) {
