@@ -1308,23 +1308,19 @@ gst_aggregator_release_pad (GstElement * element, GstPad * pad)
   SRC_UNLOCK (self);
 }
 
-static GstPad *
-gst_aggregator_request_new_pad (GstElement * element,
+static GstAggregatorPad *
+gst_aggregator_default_create_new_pad (GstAggregator * self,
     GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
 {
-  GstAggregator *self;
   GstAggregatorPad *agg_pad;
-
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
-  GstAggregatorPrivate *priv = GST_AGGREGATOR (element)->priv;
-
-  self = GST_AGGREGATOR (element);
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (self);
+  GstAggregatorPrivate *priv = self->priv;
 
   if (templ == gst_element_class_get_pad_template (klass, "sink_%u")) {
     gint serial = 0;
     gchar *name = NULL;
 
-    GST_OBJECT_LOCK (element);
+    GST_OBJECT_LOCK (self);
     if (req_name == NULL || strlen (req_name) < 6
         || !g_str_has_prefix (req_name, "sink_")) {
       /* no name given when requesting the pad, use next available int */
@@ -1341,9 +1337,28 @@ gst_aggregator_request_new_pad (GstElement * element,
         "name", name, "direction", GST_PAD_SINK, "template", templ, NULL);
     g_free (name);
 
-    GST_OBJECT_UNLOCK (element);
+    GST_OBJECT_UNLOCK (self);
 
+    return agg_pad;
   } else {
+    return NULL;
+  }
+}
+
+static GstPad *
+gst_aggregator_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
+{
+  GstAggregator *self;
+  GstAggregatorPad *agg_pad;
+  GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (element);
+  GstAggregatorPrivate *priv = GST_AGGREGATOR (element)->priv;
+
+  self = GST_AGGREGATOR (element);
+
+  agg_pad = klass->create_new_pad (self, templ, req_name, caps);
+  if (!agg_pad) {
+    GST_ERROR_OBJECT (element, "Couldn't create new pad");
     return NULL;
   }
 
@@ -1948,6 +1963,8 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 
   klass->src_event = gst_aggregator_default_src_event;
   klass->src_query = gst_aggregator_default_src_query;
+
+  klass->create_new_pad = gst_aggregator_default_create_new_pad;
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_aggregator_request_new_pad);
