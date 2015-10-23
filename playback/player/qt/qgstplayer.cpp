@@ -626,8 +626,6 @@ gst_player_qt_video_renderer_get_property (GObject * object,
 static void
 gst_player_qt_video_renderer_finalize (GObject * object)
 {
-  GstPlayerQtVideoRenderer *self = GST_PLAYER_QT_VIDEO_RENDERER (object);
-
   G_OBJECT_CLASS
       (gst_player_qt_video_renderer_parent_class)->finalize(object);
 }
@@ -655,14 +653,14 @@ gst_player_qt_video_renderer_class_init
 }
 
 static void
-gst_player_qt_video_renderer_init (GstPlayerQtVideoRenderer * self)
+gst_player_qt_video_renderer_init (G_GNUC_UNUSED GstPlayerQtVideoRenderer * self)
 {
 
 }
 
 static GstElement *
 gst_player_qt_video_renderer_create_video_sink
-    (GstPlayerVideoRenderer * iface, GstPlayer *player)
+    (GstPlayerVideoRenderer * iface, G_GNUC_UNUSED GstPlayer *player)
 {
     GstPlayerQtVideoRenderer *self = GST_PLAYER_QT_VIDEO_RENDERER (iface);
 
@@ -713,9 +711,6 @@ static GParamSpec
 static void
 gst_player_qt_signal_dispatcher_finalize (GObject * object)
 {
-  GstPlayerQtSignalDispatcher *self =
-      GST_PLAYER_QT_SIGNAL_DISPATCHER (object);
-
   G_OBJECT_CLASS
       (gst_player_qt_signal_dispatcher_parent_class)->finalize
       (object);
@@ -780,14 +775,14 @@ static void
 
 static void
 gst_player_qt_signal_dispatcher_init
-    (GstPlayerQtSignalDispatcher * self)
+    (G_GNUC_UNUSED GstPlayerQtSignalDispatcher * self)
 {
 
 }
 
 static void
 gst_player_qt_signal_dispatcher_dispatch (GstPlayerSignalDispatcher
-    * iface, GstPlayer * player, void (*emitter) (gpointer data), gpointer data,
+    * iface, G_GNUC_UNUSED GstPlayer * player, void (*emitter) (gpointer data), gpointer data,
     GDestroyNotify destroy)
 {
   GstPlayerQtSignalDispatcher *self = GST_PLAYER_QT_SIGNAL_DISPATCHER (iface);
