@@ -121,10 +121,6 @@ enum
 G_DEFINE_TYPE (GstMXFMux, gst_mxf_mux, GST_TYPE_AGGREGATOR);
 
 static void gst_mxf_mux_finalize (GObject * object);
-static void gst_mxf_mux_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_mxf_mux_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_mxf_mux_aggregate (GstAggregator * aggregator,
     gboolean timeout);
@@ -166,8 +162,6 @@ gst_mxf_mux_class_init (GstMXFMuxClass * klass)
   gstaggregator_class = (GstAggregatorClass *) klass;
 
   gobject_class->finalize = gst_mxf_mux_finalize;
-  gobject_class->set_property = gst_mxf_mux_set_property;
-  gobject_class->get_property = gst_mxf_mux_get_property;
 
   gstaggregator_class->create_new_pad =
       GST_DEBUG_FUNCPTR (gst_mxf_mux_create_new_pad);
@@ -214,32 +208,6 @@ gst_mxf_mux_finalize (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_mxf_mux_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec)
-{
-  //GstMXFMux *mux = GST_MXF_MUX (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_mxf_mux_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec)
-{
-  //GstMXFMux *mux = GST_MXF_MUX (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static void
