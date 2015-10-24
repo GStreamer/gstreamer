@@ -55,6 +55,8 @@ static gboolean gst_audio_filter_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
 static gboolean gst_audio_filter_get_unit_size (GstBaseTransform * btrans,
     GstCaps * caps, gsize * size);
+static GstFlowReturn gst_audio_filter_submit_input_buffer (GstBaseTransform *
+    btrans, gboolean is_discont, GstBuffer * input);
 
 #define do_init G_STMT_START { \
     GST_DEBUG_CATEGORY_INIT (audiofilter_dbg, "audiofilter", 0, "audiofilter"); \
@@ -94,6 +96,7 @@ gst_audio_filter_class_init (GstAudioFilterClass * klass)
   basetrans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_filter_get_unit_size);
   basetrans_class->transform_meta = gst_audio_filter_transform_meta;
+  basetrans_class->submit_input_buffer = gst_audio_filter_submit_input_buffer;
 }
 
 static void
@@ -162,6 +165,27 @@ invalid_format:
     GST_WARNING_OBJECT (filter, "couldn't parse %" GST_PTR_FORMAT, incaps);
     return FALSE;
   }
+}
+
+static GstFlowReturn
+gst_audio_filter_submit_input_buffer (GstBaseTransform * btrans,
+    gboolean is_discont, GstBuffer * input)
+{
+  GstAudioFilter *filter = GST_AUDIO_FILTER (btrans);
+
+  if (btrans->segment.format == GST_FORMAT_TIME) {
+    input =
+        gst_audio_buffer_clip (input, &btrans->segment, filter->info.rate,
+        filter->info.bpf);
+
+    if (!input)
+      return GST_FLOW_OK;
+  }
+
+  return
+      GST_BASE_TRANSFORM_CLASS
+      (gst_audio_filter_parent_class)->submit_input_buffer (btrans, is_discont,
+      input);
 }
 
 static gboolean
