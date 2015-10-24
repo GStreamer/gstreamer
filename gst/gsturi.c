@@ -1238,7 +1238,12 @@ _remove_dot_segments (GList * path)
         out = g_list_delete_link (out, prev);
       }
       g_free (elem->data);
-      out = g_list_delete_link (out, elem);
+      if (next != NULL) {
+        out = g_list_delete_link (out, elem);
+      } else {
+        /* path ends in '/..' We need to keep the last '/' */
+        elem->data = NULL;
+      }
     }
   }
 
