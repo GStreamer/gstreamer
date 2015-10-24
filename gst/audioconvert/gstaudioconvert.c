@@ -88,6 +88,8 @@ static GstFlowReturn gst_audio_convert_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_audio_convert_transform_meta (GstBaseTransform * trans,
     GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
+static GstFlowReturn gst_audio_convert_submit_input_buffer (GstBaseTransform *
+    base, gboolean is_discont, GstBuffer * input);
 static void gst_audio_convert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_audio_convert_get_property (GObject * object, guint prop_id,
@@ -222,6 +224,8 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_convert_transform);
   basetransform_class->transform_meta =
       GST_DEBUG_FUNCPTR (gst_audio_convert_transform_meta);
+  basetransform_class->submit_input_buffer =
+      GST_DEBUG_FUNCPTR (gst_audio_convert_submit_input_buffer);
 
   basetransform_class->passthrough_on_same_caps = TRUE;
 }
@@ -884,6 +888,25 @@ gst_audio_convert_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
     return TRUE;
 
   return FALSE;
+}
+
+static GstFlowReturn
+gst_audio_convert_submit_input_buffer (GstBaseTransform * base,
+    gboolean is_discont, GstBuffer * input)
+{
+  GstAudioConvert *this = GST_AUDIO_CONVERT (base);
+
+  if (base->segment.format == GST_FORMAT_TIME) {
+    input =
+        gst_audio_buffer_clip (input, &base->segment, this->ctx.in.rate,
+        this->ctx.in.bpf);
+
+    if (!input)
+      return GST_FLOW_OK;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->submit_input_buffer (base,
+      is_discont, input);
 }
 
 static void
