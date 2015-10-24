@@ -1321,6 +1321,10 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
 
   gst_element_remove_pad (element, pad);
 
+  /* Reset the internal elements only after all request pads are released */
+  if (splitmux->contexts == NULL)
+    gst_splitmux_reset (splitmux);
+
 fail:
   GST_SPLITMUX_UNLOCK (splitmux);
 }
@@ -1554,7 +1558,9 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_SPLITMUX_LOCK (splitmux);
       splitmux->fragment_id = 0;
-      gst_splitmux_reset (splitmux);
+      /* Reset internal elements only if no pad contexts are using them */
+      if (splitmux->contexts == NULL)
+        gst_splitmux_reset (splitmux);
       GST_SPLITMUX_UNLOCK (splitmux);
       break;
     default:
