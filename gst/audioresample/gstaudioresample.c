@@ -135,6 +135,8 @@ static GstFlowReturn gst_audio_resample_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_audio_resample_transform_meta (GstBaseTransform * trans,
     GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
+static GstFlowReturn gst_audio_resample_submit_input_buffer (GstBaseTransform *
+    base, gboolean is_discont, GstBuffer * input);
 static gboolean gst_audio_resample_sink_event (GstBaseTransform * base,
     GstEvent * event);
 static gboolean gst_audio_resample_start (GstBaseTransform * base);
@@ -205,6 +207,8 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_resample_sink_event);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_meta =
       GST_DEBUG_FUNCPTR (gst_audio_resample_transform_meta);
+  GST_BASE_TRANSFORM_CLASS (klass)->submit_input_buffer =
+      GST_DEBUG_FUNCPTR (gst_audio_resample_submit_input_buffer);
 
   GST_BASE_TRANSFORM_CLASS (klass)->passthrough_on_same_caps = TRUE;
 }
@@ -1265,6 +1269,25 @@ gst_audio_resample_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
     return TRUE;
 
   return FALSE;
+}
+
+static GstFlowReturn
+gst_audio_resample_submit_input_buffer (GstBaseTransform * base,
+    gboolean is_discont, GstBuffer * input)
+{
+  GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
+
+  if (base->segment.format == GST_FORMAT_TIME) {
+    input =
+        gst_audio_buffer_clip (input, &base->segment, resample->inrate,
+        resample->channels * resample->width);
+
+    if (!input)
+      return GST_FLOW_OK;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->submit_input_buffer (base,
+      is_discont, input);
 }
 
 static gboolean
