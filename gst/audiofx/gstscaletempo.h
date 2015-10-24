@@ -41,6 +41,7 @@ struct _GstScaletempo
   GstBaseTransform element;
 
   gdouble scale;
+  gboolean reverse;
 
   /* parameters */
   guint ms_stride;
@@ -80,7 +81,7 @@ struct _GstScaletempo
   guint (*best_overlap_offset) (GstScaletempo * scaletempo);
 
   /* gstreamer */
-  gint64 segment_start;
+  GstSegment in_segment, out_segment;
   GstClockTime latency;
 
   /* threads */
