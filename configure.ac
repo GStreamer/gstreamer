@@ -1464,6 +1464,55 @@ AC_SUBST(JPEG_LIBS)
 AC_SUBST(HAVE_JPEG)
 AM_CONDITIONAL(HAVE_JPEG, test "x$HAVE_JPEG" = "xyes")
 
+dnl Vulkan
+VULKAN_CONFIG_DEFINES=""
+
+PKG_CHECK_MODULES(XCB, xcb >= 1.10, HAVE_XCB=yes, HAVE_XCB=no)
+
+AM_CONDITIONAL(USE_XCB, test "x$HAVE_XCB" = "xyes")
+if test "x$HAVE_XCB" = "xyes"; then
+  VULKAN_CONFIG_DEFINES="$VULKAN_CONFIG_DEFINES
+  #define GST_VULKAN_HAVE_WINDOW_XCB 1"
+fi
+
+AC_CONFIG_COMMANDS([ext/vulkan/vkconfig.h], [
+	outfile=vkconfig.h-tmp
+	cat > $outfile <<\_______EOF
+/* vkconfig.h
+ *
+ * This is a generated file.  Please modify `configure.ac'
+ */
+
+#ifndef __GST_VULKAN_CONFIG_H__
+#define __GST_VULKAN_CONFIG_H__
+
+#include <gst/gst.h>
+
+G_BEGIN_DECLS
+
+_______EOF
+
+	cat >>$outfile <<_______EOF
+$vulkan_config_defines
+_______EOF
+
+	cat >>$outfile <<_______EOF
+
+G_END_DECLS
+
+#endif  /* __GST_VULKAN_CONFIG_H__ */
+_______EOF
+
+
+	if cmp -s $outfile ext/vulkan/vkconfig.h; then
+          AC_MSG_NOTICE([ext/vulkan/vkconfig.h is unchanged])
+	  rm -f $outfile
+	else
+	  mv $outfile ext/vulkan/vkconfig.h
+	fi
+],[
+vulkan_config_defines='$VULKAN_CONFIG_DEFINES'
+])
 
 dnl *** sys plug-ins ***
 
@@ -2851,6 +2900,22 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
   ])
 ])
 
+dnl *** Vulkan ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_VULKAN, true)
+AG_GST_CHECK_FEATURE(VULKAN, [Vulkan elements], vulkan, [
+  HAVE_VULKAN=no
+  AC_CHECK_HEADER(vulkan/vulkan.h, [
+    AC_CHECK_LIB(vulkan, vkCreateDevice, [
+      VULKAN_LIBS="-lvulkan"
+      AC_SUBST(VULKAN_LIBS)
+      dnl TODO check platform support (x11, win32, wayland, android, etc)
+      if test "x$HAVE_XCB" = "xyes"; then
+        HAVE_VULKAN=yes
+      fi
+    ], [])
+  ], [])
+])
+
 dnl *** libvisual ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
 AG_GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization library], libvisual, [
@@ -3636,6 +3701,8 @@ ext/teletextdec/Makefile
 ext/gme/Makefile
 ext/spc/Makefile
 ext/timidity/Makefile
+ext/vulkan/Makefile
+ext/vulkan/xcb/Makefile
 ext/webp/Makefile
 ext/x265/Makefile
 ext/xvid/Makefile

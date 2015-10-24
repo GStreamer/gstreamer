@@ -406,6 +406,12 @@ else
 DTLS_DIR=
 endif
 
+if USE_VULKAN
+VULKAN_DIR=vulkan
+else
+VULKAN_DIR=
+endif
+
 SUBDIRS=\
 	$(VOAACENC_DIR) \
 	$(ASSRENDER_DIR) \
@@ -474,7 +480,8 @@ SUBDIRS=\
 	$(HLS_DIR) \
 	$(WEBP_DIR) \
 	$(X265_DIR) \
-	$(DTLS_DIR)
+	$(DTLS_DIR) \
+	$(VULKAN_DIR)
 
 DIST_SUBDIRS = \
 	assrender \
@@ -541,6 +548,7 @@ DIST_SUBDIRS = \
 	rtmp \
 	webp \
 	x265 \
-	dtls
+	dtls \
+	vulkan
 
 include $(top_srcdir)/common/parallel-subdirs.mak
