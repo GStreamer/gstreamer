@@ -60,8 +60,8 @@ ApplicationWindow {
         id: video
         objectName: "videoItem"
         anchors.centerIn: parent
-        width: 640
-        height: 480
+        width: parent.width
+        height: parent.height
     }
 
     FileDialog {
