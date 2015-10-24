@@ -159,6 +159,8 @@ GST_START_TEST (test_splitmuxsink)
   GstMessage *msg;
   GstElement *pipeline;
   GstElement *sink;
+  GstPad *splitmux_sink_pad;
+  GstPad *enc_src_pad;
   gchar *dest_pattern;
   guint count;
   gchar *in_pattern;
@@ -184,6 +186,24 @@ GST_START_TEST (test_splitmuxsink)
     dump_error (msg);
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
+
+  /* unlink manually and relase request pad to ensure that we *can* do that
+   * - https://bugzilla.gnome.org/show_bug.cgi?id=753622 */
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (sink == NULL);
+  splitmux_sink_pad = gst_element_get_static_pad (sink, "video");
+  fail_if (splitmux_sink_pad == NULL);
+  enc_src_pad = gst_pad_get_peer (splitmux_sink_pad);
+  fail_if (enc_src_pad == NULL);
+  fail_unless (gst_pad_unlink (enc_src_pad, splitmux_sink_pad));
+  gst_object_unref (enc_src_pad);
+  gst_element_release_request_pad (sink, splitmux_sink_pad);
+  gst_object_unref (splitmux_sink_pad);
+  /* at this point the pad must be releaased - try to find it again to verify */
+  splitmux_sink_pad = gst_element_get_static_pad (sink, "video");
+  fail_if (splitmux_sink_pad != NULL);
+  g_object_unref (sink);
+
   gst_object_unref (pipeline);
 
   count = count_files (tmpdir);
