@@ -64,6 +64,25 @@ ApplicationWindow {
         height: parent.height
     }
 
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        onPositionChanged: {
+            playbar.opacity = 1.0
+            hidetimer.start()
+        }
+    }
+
+    Timer {
+        id: hidetimer
+        interval: 5000
+        onTriggered: {
+            playbar.opacity = 0.0
+            settings.visible = false
+            stop()
+        }
+    }
+
     FileDialog {
         id: fileDialog
         //nameFilters: [TODO globs from mime types]
@@ -93,26 +112,6 @@ ApplicationWindow {
             width : grid.width + 20
             height: 40//childrenRect.height + 20
             radius: 5
-
-            MouseArea {
-                id: mousearea
-                anchors.fill: parent
-                hoverEnabled: true
-                onEntered: {
-                    parent.opacity = 1.0
-                    hidetimer.start()
-                }
-            }
-
-            Timer {
-                id: hidetimer
-                interval: 10000
-                onTriggered: {
-                    parent.opacity = 0.0
-                    settings.visible = false
-                    stop()
-                }
-            }
 
             Rectangle {
                 id: settings
