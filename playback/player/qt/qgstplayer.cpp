@@ -307,6 +307,13 @@ bool Player::isSubtitleEnabled() const
     return subtitleEnabled_;
 }
 
+quint32 Player::positionUpdateInterval() const
+{
+    Q_ASSERT(player_ != 0);
+
+    return gst_player_get_position_update_interval(player_);
+}
+
 void Player::setSubtitleEnabled(bool enabled)
 {
     Q_ASSERT(player_ != 0);
@@ -316,6 +323,13 @@ void Player::setSubtitleEnabled(bool enabled)
     gst_player_set_subtitle_track_enabled(player_, enabled);
 
     emit subtitleEnabledChanged(enabled);
+}
+
+void Player::setPositionUpdateInterval(quint32 interval)
+{
+    Q_ASSERT(player_ != 0);
+
+    gst_player_set_position_update_interval(player_, interval);
 }
 
 Player::Player(QObject *parent, VideoRenderer *renderer)
@@ -356,7 +370,7 @@ Player::onStateChanged(Player * player, GstPlayerState state)
 void
 Player::onPositionUpdated(Player * player, GstClockTime position)
 {
-    emit player->positionChanged(position);
+    emit player->positionUpdated(position);
 }
 
 void

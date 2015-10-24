@@ -42,6 +42,7 @@ ApplicationWindow {
         id: player
         objectName: "player"
         volume: 0.5
+        positionUpdateInterval: 100
         onStateChanged: {
             if (state === Player.STOPPED) {
                 playbutton.state = "play"
