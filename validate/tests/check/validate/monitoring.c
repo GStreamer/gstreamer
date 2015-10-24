@@ -85,8 +85,8 @@ GST_START_TEST (monitors_cleanup)
       g_object_get_data ((GObject *) src->srcpads->data, "validate-monitor");
   pmonitor2 =
       g_object_get_data ((GObject *) sink->sinkpads->data, "validate-monitor");
-  check_destroyed (monitor, pmonitor1, pmonitor2, NULL);
-  check_destroyed (pipeline, src, sink, NULL);
+  gst_check_objects_destroyed_on_unref (monitor, pmonitor1, pmonitor2, NULL);
+  gst_check_objects_destroyed_on_unref (pipeline, src, sink, NULL);
 }
 
 GST_END_TEST;
@@ -99,12 +99,9 @@ gst_validate_suite (void)
   TCase *tc_chain = tcase_create ("monitoring");
   suite_add_tcase (s, tc_chain);
 
-  gst_validate_init ();
-
   tcase_add_test (tc_chain, monitors_added);
   tcase_add_test (tc_chain, monitors_cleanup);
 
-  gst_validate_deinit ();
   return s;
 }
 

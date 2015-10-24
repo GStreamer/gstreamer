@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include "gst-validate-scenario.h"
+#include "gst-validate-monitor.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
 #define GST_CAT_DEFAULT gstvalidate_debug
@@ -43,6 +44,10 @@ void init_scenarios (void);
  * and this is done by the scenario itself now */
 GST_EXPORT gboolean _action_check_and_set_printed (GstValidateAction *action);
 GST_EXPORT gboolean gst_validate_action_is_subaction (GstValidateAction *action);
-void _priv_validate_override_registry_deinit (void);
+GST_EXPORT void _priv_validate_override_registry_deinit (void);
+
+G_GNUC_INTERNAL GstValidateMonitor * gst_validate_get_monitor (GObject *object);
+G_GNUC_INTERNAL void gst_validate_init_runner (void);
+G_GNUC_INTERNAL void gst_validate_deinit_runner (void);
 
 #endif

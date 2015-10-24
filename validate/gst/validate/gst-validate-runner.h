@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
+#include <gst/gsttracer.h>
+
 typedef struct _GstValidateRunner GstValidateRunner;
 typedef struct _GstValidateRunnerClass GstValidateRunnerClass;
 
@@ -52,7 +54,7 @@ typedef struct _GstValidateRunnerPrivate GstValidateRunnerPrivate;
  * Class that manages a Validate test run for some pipeline
  */
 struct _GstValidateRunner {
-  GObject 	 object;
+  GstTracer 	 object;
 
   /* <private> */
   GstValidateRunnerPrivate *priv;
@@ -65,7 +67,7 @@ struct _GstValidateRunner {
  * GStreamer Validate Runner object class.
  */
 struct _GstValidateRunnerClass {
-  GObjectClass	parent_class;
+  GstTracerClass	parent_class;
 };
 
 /* normal GObject stuff */

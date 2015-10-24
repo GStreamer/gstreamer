@@ -1,4 +1,4 @@
-libgstvalidate_@GST_API_VERSION@_la_SOURCES = \
+source_c = \
 	gst-validate-runner.c \
 	gst-validate-reporter.c \
 	gst-validate-monitor.c \
@@ -18,7 +18,7 @@ libgstvalidate_@GST_API_VERSION@_la_SOURCES = \
 	gst-validate-media-info.c \
     validate.c
 
-libgstvalidate_@GST_API_VERSION@include_HEADERS = \
+source_h = \
 	validate.h \
 	gst-validate-types.h \
 	gst-validate-bin-monitor.h \
@@ -45,9 +45,13 @@ noinst_HEADERS = 		\
 	gst-validate-i18n-lib.h \
 	gst-validate-internal.h
 
+# GstValidate library
 lib_LTLIBRARIES = libgstvalidate-@GST_API_VERSION@.la
+libgstvalidate_@GST_API_VERSION@_la_SOURCES = $(source_c)
+libgstvalidate_@GST_API_VERSION@include_HEADERS = $(source_h)
 libgstvalidate_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS)\
-	$(GIO_CFLAGS) $(GST_PBUTILS_CFLAGS)
+	$(GIO_CFLAGS) $(GST_PBUTILS_CFLAGS) \
+	-DGST_USE_UNSTABLE_API
 libgstvalidate_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
 	$(GST_LT_LDFLAGS) $(GIO_LDFLAGS) $(GST_PBUTILS_LDFAGS)
 libgstvalidate_@GST_API_VERSION@_la_LIBADD = \
@@ -56,6 +60,20 @@ libgstvalidate_@GST_API_VERSION@_la_LIBADD = \
 	$(GLIB_LIBS) $(LIBM)
 
 libgstvalidate_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/validate
+
+# GstValidate GStreamer plugin
+plugin_LTLIBRARIES = libgstvalidateplugin-@GST_API_VERSION@.la
+libgstvalidateplugin_@GST_API_VERSION@_la_SOURCES = $(source_c)
+libgstvalidateplugin_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS)\
+	$(GIO_CFLAGS) $(GST_PBUTILS_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	-D__GST_VALIDATE_PLUGIN
+libgstvalidateplugin_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
+	$(GST_LT_LDFLAGS) $(GIO_LDFLAGS) $(GST_PBUTILS_LDFAGS)
+libgstvalidateplugin_@GST_API_VERSION@_la_LIBADD = \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
+	$(GST_ALL_LIBS) $(GIO_LIBS) $(GST_PBUTILS_LIBS) \
+	$(GLIB_LIBS) $(LIBM)
 
 CLEANFILES =
 

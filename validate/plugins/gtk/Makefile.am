@@ -1,4 +1,4 @@
-plugin_LTLIBRARIES = libgstvalidategtk.la
+validateplugin_LTLIBRARIES = libgstvalidategtk.la
 
 libgstvalidategtk_la_SOURCES = gstvalidategtk.c
 

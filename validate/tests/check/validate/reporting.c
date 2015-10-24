@@ -21,14 +21,9 @@
 #include <gst/check/gstcheck.h>
 #include "test-utils.h"
 
-GST_START_TEST (test_report_levels)
+GST_START_TEST (test_report_levels_all)
 {
   GstValidateRunner *runner;
-  GstObject *pipeline;
-  GError *error = NULL;
-  GstElement *element;
-  GstValidateMonitor *monitor, *pipeline_monitor;
-  GstPad *pad;
 
   /* FIXME: for now the only interface to set the reporting level is through an
    * environment variable parsed at the time of the runner initialization,
@@ -42,6 +37,14 @@ GST_START_TEST (test_report_levels)
   fail_unless (gst_validate_runner_get_default_reporting_level (runner) ==
       GST_VALIDATE_SHOW_ALL);
   g_object_unref (runner);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_report_levels_2)
+{
+  GstValidateRunner *runner;
 
   /* Try to set the default reporting level to subchain, the code is supposed to
    * parse numbers as well */
@@ -50,6 +53,13 @@ GST_START_TEST (test_report_levels)
   fail_unless (gst_validate_runner_get_default_reporting_level (runner) ==
       GST_VALIDATE_SHOW_SYNTHETIC);
   g_object_unref (runner);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_report_levels_complex_parsing)
+{
+  GstValidateRunner *runner;
 
   /* Try to set the reporting level for an object */
   fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS",
@@ -63,6 +73,18 @@ GST_START_TEST (test_report_levels)
           "dummy_test_object") == GST_VALIDATE_SHOW_UNKNOWN);
 
   g_object_unref (runner);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_complex_reporting_details)
+{
+  GstPad *pad;
+  GstObject *pipeline;
+  GstElement *element;
+  GError *error = NULL;
+  GstValidateMonitor *monitor, *pipeline_monitor;
+  GstValidateRunner *runner;
 
   /* Now let's try to see if the created monitors actually understand the
    * situation they've put themselves into */
@@ -190,92 +212,40 @@ _create_issues (GstValidateRunner * runner)
   check_destroyed (sink, sinkpad, NULL);
 }
 
-GST_START_TEST (test_global_levels)
-{
-  GstValidateRunner *runner;
+#define TEST_LEVELS(name, details, num_issues) \
+GST_START_TEST (test_global_level_##name) { \
+  GstValidateRunner *runner; \
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", details, TRUE)); \
+  runner = gst_validate_runner_new (); \
+  _create_issues (runner); \
+  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), num_issues); \
+  g_object_unref (runner); \
+} GST_END_TEST
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "none", TRUE));
-  runner = gst_validate_runner_new ();
-  _create_issues (runner);
-  /* None shall pass */
-  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 0);
-  g_object_unref (runner);
+TEST_LEVELS (none, "none", 0);
+TEST_LEVELS (synthetic, "synthetic", 1);
+TEST_LEVELS (monitor, "monitor", 6);
+TEST_LEVELS (all, "all", 8);
+TEST_LEVELS (none_fakesink_synthetic, "none,fakesrc1:synthetic", 1);
+/* 5 issues because all pads will report their own issues separately, except
+* for the sink which will not report an issue */
+TEST_LEVELS (monitor_sink_none, "monitor,sink:none", 5);
+/* 3 issues because both fake sources will have subsequent subchains of
+* issues, and the sink will report its issue separately */
+TEST_LEVELS (subchain_sink_monitor, "subchain,sink:monitor", 3);
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "synthetic", TRUE));
-  runner = gst_validate_runner_new ();
-  _create_issues (runner);
-  /* Two reports of the same type */
-  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 1);
-  g_object_unref (runner);
+/* 4 issues because the fakemixer sink issues will be concatenated with the
+* fakesrc issues, the fakemixer src will report its issue separately, and the
+* sink will not find a report immediately upstream */
+TEST_LEVELS
+    (synthetic_fakesrc1_subchain_fakesrc2_subchain_fakemixer_src_monitor,
+    "synthetic,fakesrc1:subchain,fakesrc2:subchain,fakemixer*::src*:monitor",
+    4);
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "monitor", TRUE));
-  runner = gst_validate_runner_new ();
-  _create_issues (runner);
-  /* One report for each pad monitor */
-  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 6);
-  g_object_unref (runner);
+/* 2 issues repeated on the fakesink's sink */
+TEST_LEVELS (none_fakesink_all, "none,fakesink*:all", 2);
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
-  runner = gst_validate_runner_new ();
-  _create_issues (runner);
-  /* One report for each pad monitor, plus one for fakemixer src and fakesink sink */
-  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 8);
-  g_object_unref (runner);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_specific_levels)
-{
-  GstValidateRunner *runner;
-
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS",
-          "none,fakesrc1:synthetic", TRUE));
-  runner = gst_validate_runner_new ();
-  _create_issues (runner);
-  /* One issue should go through the none filter */
-  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 1);
-  g_object_unref (runner);
-
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "monitor,sink:none",
-          TRUE));
-  runner = gst_validate_runner_new ();
-  _create_issues (runner);
-  /* 5 issues because all pads will report their own issues separately, except
-   * for the sink which will not report an issue */
-  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 5);
-  g_object_unref (runner);
-
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS",
-          "subchain,sink:monitor", TRUE));
-  runner = gst_validate_runner_new ();
-  _create_issues (runner);
-  /* 3 issues because both fake sources will have subsequent subchains of
-   * issues, and the sink will report its issue separately */
-  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 3);
-  g_object_unref (runner);
-
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS",
-          "synthetic,fakesrc1:subchain,fakesrc2:subchain,fakemixer*::src*:monitor",
-          TRUE));
-  runner = gst_validate_runner_new ();
-  _create_issues (runner);
-  /* 4 issues because the fakemixer sink issues will be concatenated with the
-   * fakesrc issues, the fakemixer src will report its issue separately, and the
-   * sink will not find a report immediately upstream */
-  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 4);
-  g_object_unref (runner);
-
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "none,fakesink*:all",
-          TRUE));
-  runner = gst_validate_runner_new ();
-  _create_issues (runner);
-  /* 2 issues repeated on the fakesink's sink */
-  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 2);
-  g_object_unref (runner);
-}
-
-GST_END_TEST;
+#undef TEST_LEVELS
 
 static Suite *
 gst_validate_suite (void)
@@ -284,14 +254,24 @@ gst_validate_suite (void)
   TCase *tc_chain = tcase_create ("reporting");
   suite_add_tcase (s, tc_chain);
 
-  gst_validate_init ();
   fake_elements_register ();
 
-  tcase_add_test (tc_chain, test_report_levels);
-  tcase_add_test (tc_chain, test_global_levels);
-  tcase_add_test (tc_chain, test_specific_levels);
+  tcase_add_test (tc_chain, test_report_levels_all);
+  tcase_add_test (tc_chain, test_report_levels_2);
+  tcase_add_test (tc_chain, test_report_levels_complex_parsing);
+  tcase_add_test (tc_chain, test_complex_reporting_details);
 
-  gst_validate_deinit ();
+  tcase_add_test (tc_chain, test_global_level_none);
+  tcase_add_test (tc_chain, test_global_level_synthetic);
+  tcase_add_test (tc_chain, test_global_level_monitor);
+  tcase_add_test (tc_chain, test_global_level_all);
+  tcase_add_test (tc_chain, test_global_level_none_fakesink_synthetic);
+  tcase_add_test (tc_chain, test_global_level_monitor_sink_none);
+  tcase_add_test (tc_chain, test_global_level_subchain_sink_monitor);
+  tcase_add_test (tc_chain,
+      test_global_level_synthetic_fakesrc1_subchain_fakesrc2_subchain_fakemixer_src_monitor);
+  tcase_add_test (tc_chain, test_global_level_none_fakesink_all);
+
   return s;
 }
 

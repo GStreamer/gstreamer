@@ -261,6 +261,7 @@ gst_validate_init (void)
   validate_initialized = TRUE;
 
   gst_validate_init_plugins ();
+  gst_validate_init_runner ();
 }
 
 void
@@ -268,8 +269,9 @@ gst_validate_deinit (void)
 {
   g_mutex_lock (&_gst_validate_registry_mutex);
   _free_plugin_config (core_config);
-  gst_object_unref (_gst_validate_registry_default);
-  _gst_validate_registry_default = NULL;
+  gst_validate_deinit_runner ();
+
+  g_clear_object (&_gst_validate_registry_default);
 
   _priv_validate_override_registry_deinit ();
   core_config = NULL;

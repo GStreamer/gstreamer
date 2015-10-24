@@ -1,4 +1,4 @@
-plugin_LTLIBRARIES = libgstvalidatessim.la
+validateplugin_LTLIBRARIES = libgstvalidatessim.la
 
 libgstvalidatessim_la_SOURCES = gstvalidatessim.c
 

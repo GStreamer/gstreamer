@@ -27,17 +27,16 @@ static const gchar *some_overrides =
     "change-severity, issue-id=buffer::not-expected-one, new-severity=warning, element-factory-name=queue";
 
 static void
-_check_message_level (const gchar * factoryname, GstValidateReportLevel level,
-    const gchar * message_id)
+_check_message_level (GstValidateRunner * runner,
+    gint previous_reports, const gchar * factoryname,
+    GstValidateReportLevel level, const gchar * message_id)
 {
   GList *reports;
   GstElement *element;
-  GstValidateRunner *runner;
   GstValidateMonitor *monitor;
 
   element = gst_element_factory_make (factoryname, NULL);
   fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
-  runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT (element), runner, NULL);
 
@@ -45,8 +44,9 @@ _check_message_level (const gchar * factoryname, GstValidateReportLevel level,
       "Just some fakery");
 
   reports = gst_validate_runner_get_reports (runner);
-  fail_unless_equals_int (g_list_length (reports), 1);
-  fail_unless_equals_int (((GstValidateReport *) reports->data)->level, level);
+  fail_unless_equals_int (g_list_length (reports), previous_reports + 1);
+  fail_unless_equals_int (((GstValidateReport *) g_list_nth_data (reports,
+              previous_reports))->level, level);
   g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
   gst_object_unref (element);
   gst_object_unref (monitor);
@@ -56,6 +56,7 @@ _check_message_level (const gchar * factoryname, GstValidateReportLevel level,
 GST_START_TEST (check_text_overrides)
 {
   GstValidateIssue *issue;
+  GstValidateRunner *runner = gst_validate_runner_new ();
   gchar *override_filename =
       g_strdup_printf ("%s%c%s", g_get_tmp_dir (), G_DIR_SEPARATOR,
       "some_overrides");
@@ -76,13 +77,13 @@ GST_START_TEST (check_text_overrides)
 
   /* Check that with a queue, the level of a
    * buffer::not-expected-one is WARNING */
-  _check_message_level ("queue", GST_VALIDATE_REPORT_LEVEL_WARNING,
+  _check_message_level (runner, 0, "queue", GST_VALIDATE_REPORT_LEVEL_WARNING,
       "buffer::not-expected-one");
 
   /* Check that with an identity, the level of a
    * buffer::not-expected-one is CRITICAL */
-  _check_message_level ("identity", GST_VALIDATE_REPORT_LEVEL_CRITICAL,
-      "buffer::not-expected-one");
+  _check_message_level (runner, 1, "identity",
+      GST_VALIDATE_REPORT_LEVEL_CRITICAL, "buffer::not-expected-one");
 
   g_remove (override_filename);
   g_free (override_filename);
@@ -98,11 +99,11 @@ gst_validate_suite (void)
   TCase *tc_chain = tcase_create ("registry");
   suite_add_tcase (s, tc_chain);
 
+  g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE);
   gst_validate_init ();
-
   tcase_add_test (tc_chain, check_text_overrides);
-
   gst_validate_deinit ();
+
   return s;
 }
 

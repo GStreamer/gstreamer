@@ -214,14 +214,17 @@ AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
 AC_SUBST(GST_LICENSE)
 
 dnl define location of plugin directory
-AS_AC_EXPAND(PLUGINDIR, ${libdir}/gstreamer-$GST_API_VERSION/validate)
-AC_DEFINE_UNQUOTED(PLUGINDIR, "$PLUGINDIR",
+AS_AC_EXPAND(VALIDATEPLUGINDIR, ${libdir}/gstreamer-$GST_API_VERSION/validate)
+AC_DEFINE_UNQUOTED(VALIDATEPLUGINDIR, "$VALIDATEPLUGINDIR",
 [directory where GstValidate plugins are located])
-AC_MSG_NOTICE([Using $PLUGINDIR as the plugin install location for GstValidate])
+AC_MSG_NOTICE([Using $VALIDATEPLUGINDIR as the plugin install location for GstValidate])
 
 dnl plugin directory configure-time variable for use in Makefile.am
-plugindir="\$(libdir)/gstreamer-$GST_API_VERSION/validate"
-AC_SUBST(plugindir)
+validateplugindir="\$(libdir)/gstreamer-$GST_API_VERSION/validate"
+AC_SUBST(validateplugindir)
+
+dnl set location of plugin directory
+AG_GST_SET_PLUGINDIR
 
 # set by AG_GST_PARSE_SUBSYSTEM_DISABLES above
 dnl make sure it doesn't complain about unused variables if debugging is disabled
@@ -317,7 +320,6 @@ data/Makefile
 data/scenarios/Makefile
 gst/Makefile
 gst/validate/Makefile
-gst/preload/Makefile
 gst/overrides/Makefile
 plugins/Makefile
 plugins/fault_injection/Makefile

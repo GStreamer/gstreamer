@@ -537,6 +537,12 @@ main (int argc, gchar ** argv)
 
   g_option_context_free (ctx);
 
+  runner = gst_validate_runner_new ();
+  if (!runner) {
+    g_printerr ("Failed to setup Validate Runner\n");
+    exit (1);
+  }
+
   /* Create the pipeline */
   argvn = g_new0 (char *, argc);
   memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
@@ -546,6 +552,8 @@ main (int argc, gchar ** argv)
     g_print ("Failed to create pipeline: %s\n",
         err ? err->message : "unknown reason");
     g_clear_error (&err);
+    g_object_unref (runner);
+
     exit (1);
   }
   if (!GST_IS_PIPELINE (pipeline)) {
@@ -563,12 +571,6 @@ main (int argc, gchar ** argv)
 
   if (_is_playbin_pipeline (argc, argv + 1)) {
     _register_playbin_actions ();
-  }
-
-  runner = gst_validate_runner_new ();
-  if (!runner) {
-    g_printerr ("Failed to setup Validate Runner\n");
-    exit (1);
   }
 
   monitor = gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline),

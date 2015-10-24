@@ -411,3 +411,9 @@ gst_validate_monitor_set_media_descriptor (GstValidateMonitor * monitor,
   if (klass->set_media_descriptor)
     klass->set_media_descriptor (monitor, media_descriptor);
 }
+
+GstValidateMonitor *
+gst_validate_get_monitor (GObject * object)
+{
+  return GST_VALIDATE_MONITOR (g_object_get_data (object, "validate-monitor"));
+}

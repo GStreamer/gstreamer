@@ -925,6 +925,7 @@ main (int argc, gchar ** argv)
   }
 
   /* Create the pipeline */
+  runner = gst_validate_runner_new ();
   create_transcoding_pipeline (argv[1], argv[2]);
 
 #ifdef G_OS_UNIX
@@ -932,7 +933,6 @@ main (int argc, gchar ** argv)
       g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
 #endif
 
-  runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
       NULL);

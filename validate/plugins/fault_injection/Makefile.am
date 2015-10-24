@@ -1,4 +1,4 @@
-plugin_LTLIBRARIES = libgstvalidatefaultinjection.la
+validateplugin_LTLIBRARIES = libgstvalidatefaultinjection.la
 
 libgstvalidatefaultinjection_la_SOURCES = \
 	socket_interposer.c

@@ -1,7 +1,8 @@
 /* GStreamer
  *
- * Copyright (C) 2013 Collabora Ltd.
+ * Copyright (C) 2013-2016 Collabora Ltd.
  *  Author: Thiago Sousa Santos <thiago.sousa.santos@collabora.com>
+ *  Author: Thibault Saunier <thibault.saunier@collabora.com>
  *
  * gst-validate-runner.c - Validate Runner class
  *
@@ -28,11 +29,21 @@
 #  include "config.h"
 #endif
 
+#include "validate.h"
 #include "gst-validate-internal.h"
 #include "gst-validate-report.h"
 #include "gst-validate-monitor-factory.h"
 #include "gst-validate-override-registry.h"
 #include "gst-validate-runner.h"
+
+static gboolean element_created = FALSE;
+
+/* We create a GstValidateRunner on _init ()
+ * so that we keep backward compatibility when
+ * the user create a Runner after creating the pipeline
+ * but the runner was actually already ready to be used.
+ */
+static GstValidateRunner *first_runner = NULL;
 
 /**
  * SECTION:gst-validate-runner
@@ -68,6 +79,12 @@ struct _GstValidateRunnerPrivate
 
   /* A list of PatternLevel */
   GList *report_pattern_levels;
+
+  /* Whether the runner was create with GST_TRACERS=validate or not) */
+  gboolean user_created;
+
+  gchar *pipeline_names;
+  gchar **pipeline_names_strv;
 };
 
 /* Describes the reporting level to apply to a name pattern */
@@ -92,7 +109,7 @@ typedef struct _PatternLevel
   } G_STMT_END
 
 #define gst_validate_runner_parent_class parent_class
-G_DEFINE_TYPE (GstValidateRunner, gst_validate_runner, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GstValidateRunner, gst_validate_runner, GST_TYPE_TRACER);
 
 /* signals */
 enum
@@ -103,7 +120,62 @@ enum
   LAST_SIGNAL
 };
 
-static guint _signals[LAST_SIGNAL] = { 0 };
+enum
+{
+  PROP_0,
+  PROP_PARAMS,
+  PROP_LAST
+};
+
+static GParamSpec *properties[PROP_LAST];
+
+static guint _signals[LAST_SIGNAL] = { NULL, };
+
+static gboolean
+gst_validate_runner_should_monitor (GstValidateRunner * self,
+    GstElement * element)
+{
+  gint i;
+  GstValidateMonitor *monitor;
+
+  if (!GST_IS_PIPELINE (element)) {
+    return FALSE;
+  }
+
+  if (self->priv->user_created)
+    return FALSE;
+
+  if (!self->priv->pipeline_names_strv)
+    return TRUE;
+
+  monitor = gst_validate_get_monitor (G_OBJECT (element));
+
+  if (monitor) {
+    GST_ERROR_OBJECT (self, "Pipeline %" GST_PTR_FORMAT " is already"
+        " monitored by %" GST_PTR_FORMAT " using runner: %" GST_PTR_FORMAT
+        " NOT monitoring again.",
+        element, monitor,
+        gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor)));
+  }
+
+  for (i = 0; self->priv->pipeline_names_strv[i]; i++) {
+    if (g_pattern_match_simple (self->priv->pipeline_names_strv[i],
+            GST_OBJECT_NAME (element)))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static void
+do_element_new (GstValidateRunner * self, guint64 ts, GstElement * element)
+{
+  element_created = TRUE;
+  if (gst_validate_runner_should_monitor (self, element)) {
+    /* the reference to the monitor is lost */
+    gst_validate_monitor_factory_create (GST_OBJECT_CAST (element), self, NULL);
+  }
+}
 
 static gboolean
 _parse_reporting_level (gchar * str, GstValidateReportingDetails * level)
@@ -233,21 +305,95 @@ _unref_report_list (gpointer unused, GList * reports, gpointer unused_too)
 }
 
 static void
-gst_validate_runner_dispose (GObject * object)
+gst_validate_runner_finalize (GObject * object)
 {
   GstValidateRunner *runner = GST_VALIDATE_RUNNER_CAST (object);
 
+  if (!runner->priv->user_created)
+    gst_validate_runner_exit (runner, TRUE);
+
   g_list_free_full (runner->priv->reports,
       (GDestroyNotify) gst_validate_report_unref);
+
   g_list_free_full (runner->priv->report_pattern_levels,
       (GDestroyNotify) _free_report_pattern_level);
 
   g_mutex_clear (&runner->priv->mutex);
 
+  g_free (runner->priv->pipeline_names);
+  g_strfreev (runner->priv->pipeline_names_strv);
+
   g_hash_table_foreach (runner->priv->reports_by_type, (GHFunc)
       _unref_report_list, NULL);
   g_hash_table_destroy (runner->priv->reports_by_type);
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+
+  if (!runner->priv->user_created)
+    gst_validate_deinit ();
+}
+
+static GObject *
+gst_validate_runner_constructor (GType type, guint n_construct_params,
+    GObjectConstructParam * construct_params)
+{
+  GObject *runner = G_OBJECT_CLASS (parent_class)->constructor (type,
+      n_construct_params, construct_params);
+
+  if (!gst_validate_is_initialized ()) {
+    first_runner = GST_VALIDATE_RUNNER (runner);
+    gst_validate_init ();
+    first_runner = NULL;
+
+    return runner;
+  }
+
+  return runner;
+}
+
+
+static void
+gst_validate_runner_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstValidateRunner *runner;
+
+  runner = GST_VALIDATE_RUNNER (object);
+  switch (prop_id) {
+    case PROP_PARAMS:
+    {
+      g_value_set_string (value, runner->priv->pipeline_names);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_validate_runner_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstValidateRunner *runner;
+
+  runner = GST_VALIDATE_RUNNER (object);
+  switch (prop_id) {
+    case PROP_PARAMS:
+    {
+      g_free (runner->priv->pipeline_names);
+      g_strfreev (runner->priv->pipeline_names_strv);
+
+      runner->priv->pipeline_names = g_value_dup_string (value);
+      if (runner->priv->pipeline_names)
+        runner->priv->pipeline_names_strv =
+            g_strsplit (runner->priv->pipeline_names, ",", -1);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -257,9 +403,19 @@ gst_validate_runner_class_init (GstValidateRunnerClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->dispose = gst_validate_runner_dispose;
+  gobject_class->finalize = gst_validate_runner_finalize;
+
+  gobject_class->set_property = gst_validate_runner_set_property;
+  gobject_class->get_property = gst_validate_runner_get_property;
+  gobject_class->constructor = gst_validate_runner_constructor;
 
   g_type_class_add_private (klass, sizeof (GstValidateRunnerPrivate));
+
+  properties[PROP_PARAMS] =
+      g_param_spec_string ("params", "Params", "Extra configuration parameters",
+      NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   _signals[REPORT_ADDED_SIGNAL] =
       g_signal_new ("report-added", G_TYPE_FROM_CLASS (klass),
@@ -283,6 +439,9 @@ gst_validate_runner_init (GstValidateRunner * runner)
 
   runner->priv->default_level = GST_VALIDATE_SHOW_DEFAULT;
   _init_report_levels (runner);
+
+  gst_tracing_register_hook (GST_TRACER (runner), "element-new",
+      G_CALLBACK (do_element_new));
 }
 
 /**
@@ -295,7 +454,22 @@ gst_validate_runner_init (GstValidateRunner * runner)
 GstValidateRunner *
 gst_validate_runner_new (void)
 {
-  return g_object_new (GST_TYPE_VALIDATE_RUNNER, NULL);
+  GstValidateRunner *runner;
+
+  if (first_runner) {
+    runner = first_runner;
+    first_runner = NULL;
+  } else if (element_created) {
+    g_error ("Should never create a GstValidateRunner after a GstElement"
+        "has been created in the same process.");
+
+    return NULL;
+  } else {
+    runner = g_object_new (GST_TYPE_VALIDATE_RUNNER, NULL);
+    runner->priv->user_created = TRUE;
+  }
+
+  return runner;
 }
 
 /*
@@ -537,3 +711,33 @@ gst_validate_runner_exit (GstValidateRunner * runner, gboolean print_result)
 
   return ret;
 }
+
+void
+gst_validate_init_runner (void)
+{
+  if (!first_runner) {
+    first_runner = g_object_new (GST_TYPE_VALIDATE_RUNNER, NULL);
+    first_runner->priv->user_created = TRUE;
+  }                             /* else the first runner has been created through the GST_TRACERS system */
+}
+
+void
+gst_validate_deinit_runner (void)
+{
+  g_clear_object (&first_runner);
+}
+
+#ifdef __GST_VALIDATE_PLUGIN
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  if (!gst_tracer_register (plugin, "validate", GST_TYPE_VALIDATE_RUNNER))
+    return FALSE;
+
+  return TRUE;
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, validatetracer,
+    "GStreamer Validate tracers", plugin_init, VERSION, GST_LICENSE,
+    GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+#endif /* __GST_VALIDATE_PLUGIN */

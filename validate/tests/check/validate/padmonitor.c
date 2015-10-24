@@ -50,7 +50,7 @@ _stop_monitoring_bin (GstBin * bin, GstValidateRunner * runner)
   gst_object_unref (bin);
   ASSERT_OBJECT_REFCOUNT (monitor, "monitor", 1);
   gst_object_unref (monitor);
-  ASSERT_OBJECT_REFCOUNT (runner, "runner", 1);
+  ASSERT_OBJECT_REFCOUNT (runner, "runner", 2);
   gst_object_unref (runner);
 }
 
@@ -144,9 +144,10 @@ GST_START_TEST (buffer_before_segment)
 
   _check_reports_refcount (srcpad, 2);
   gst_object_unref (srcpad);
-  check_destroyed (src, srcpad, NULL);
-  check_destroyed (sink, NULL, NULL);
-  check_destroyed (runner, NULL, NULL);
+  gst_check_objects_destroyed_on_unref (src, srcpad, NULL);
+  gst_check_object_destroyed_on_unref (sink);
+  ASSERT_OBJECT_REFCOUNT (runner, "runner", 2);
+  gst_object_unref (runner);
 }
 
 GST_END_TEST;
@@ -338,34 +339,26 @@ _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
   gst_object_unref (demuxer);
   ASSERT_OBJECT_REFCOUNT (pmonitor, "plop", 1);
   gst_object_unref (pmonitor);
+
 }
 
-GST_START_TEST (flow_aggregation)
-{
-  /* Check the GstFlowCombiner to find the rules */
+#define FLOW_TEST(name, flow1, flow2, flow3, demux_flow, fails) \
+GST_START_TEST(flow_aggregation_##name) { \
+  _test_flow_aggregation (GST_FLOW_##flow1, GST_FLOW_##flow2, \
+      GST_FLOW_##flow3, GST_FLOW_##demux_flow, fails); \
+} GST_END_TEST
 
-  /* Failling cases: */
-  _test_flow_aggregation (GST_FLOW_OK, GST_FLOW_OK,
-      GST_FLOW_ERROR, GST_FLOW_OK, TRUE);
-  _test_flow_aggregation (GST_FLOW_EOS, GST_FLOW_EOS,
-      GST_FLOW_EOS, GST_FLOW_OK, TRUE);
-  _test_flow_aggregation (GST_FLOW_FLUSHING, GST_FLOW_OK,
-      GST_FLOW_OK, GST_FLOW_OK, TRUE);
-  _test_flow_aggregation (GST_FLOW_NOT_NEGOTIATED, GST_FLOW_OK,
-      GST_FLOW_OK, GST_FLOW_OK, TRUE);
-
-  /* Passing cases: */
-  _test_flow_aggregation (GST_FLOW_EOS, GST_FLOW_EOS,
-      GST_FLOW_EOS, GST_FLOW_EOS, FALSE);
-  _test_flow_aggregation (GST_FLOW_EOS, GST_FLOW_EOS,
-      GST_FLOW_OK, GST_FLOW_OK, FALSE);
-  _test_flow_aggregation (GST_FLOW_OK, GST_FLOW_OK,
-      GST_FLOW_OK, GST_FLOW_EOS, FALSE);
-  _test_flow_aggregation (GST_FLOW_NOT_NEGOTIATED, GST_FLOW_OK,
-      GST_FLOW_OK, GST_FLOW_NOT_NEGOTIATED, FALSE);
-}
-
-GST_END_TEST;
+FLOW_TEST (ok_ok_error_ok, OK, OK, ERROR, OK, TRUE);
+FLOW_TEST (eos_eos_eos_ok, EOS, EOS, EOS, OK, TRUE);
+FLOW_TEST (flushing_ok_ok_ok, FLUSHING, OK, OK, OK, TRUE);
+FLOW_TEST (not_neg_ok_ok_ok, NOT_NEGOTIATED, OK, OK, OK, TRUE);
+/*[> Passing cases: <]*/
+FLOW_TEST (eos_eos_eos_eos, EOS, EOS, EOS, EOS, FALSE);
+FLOW_TEST (eos_eos_ok_ok, EOS, EOS, OK, OK, FALSE);
+FLOW_TEST (ok_ok_ok_eos, OK, OK, OK, EOS, FALSE);
+FLOW_TEST (not_neg_ok_ok_not_neg, NOT_NEGOTIATED, OK, OK, NOT_NEGOTIATED,
+    FALSE);
+#undef FLOW_TEST
 
 GST_START_TEST (issue_concatenation)
 {
@@ -492,11 +485,13 @@ GST_START_TEST (issue_concatenation)
   gst_object_unref (sinkpad);
   gst_object_unref (fakemixer_sink1);
   gst_object_unref (fakemixer_sink2);
-  check_destroyed (fakemixer, fakemixer_sink1, fakemixer_sink2, NULL);
-  check_destroyed (src1, srcpad1, NULL);
-  check_destroyed (src2, srcpad2, NULL);
-  check_destroyed (sink, sinkpad, NULL);
-  check_destroyed (runner, NULL, NULL);
+  gst_check_objects_destroyed_on_unref (fakemixer, fakemixer_sink1,
+      fakemixer_sink2, NULL);
+  gst_check_objects_destroyed_on_unref (src1, srcpad1, NULL);
+  gst_check_objects_destroyed_on_unref (src2, srcpad2, NULL);
+  gst_check_objects_destroyed_on_unref (sink, sinkpad, NULL);
+  ASSERT_OBJECT_REFCOUNT (runner, "runner", 2);
+  gst_object_unref (runner);
 }
 
 GST_END_TEST;
@@ -629,18 +624,25 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
       GST_STATE_CHANGE_SUCCESS);
 
   gst_object_unref (srcpad);
-  check_destroyed (decoder, sinkpad, NULL);
-  check_destroyed (runner, NULL, NULL);
+  gst_check_objects_destroyed_on_unref (decoder, sinkpad, NULL);
+  ASSERT_OBJECT_REFCOUNT (runner, "runner", 2);
+  gst_object_unref (runner);
 }
 
-GST_START_TEST (check_media_info)
-{
-  GstSegment segment;
-
+#define MEDIA_INFO_TEST(name,segment_start,bufs) \
+GST_START_TEST(media_info_##name) { \
+  if (segment_start >= 0) { \
+    GstSegment segment; \
+    gst_segment_init (&segment, GST_FORMAT_TIME); \
+    segment.start = segment_start; \
+     _check_media_info (&segment, (bufs)); \
+  } else \
+     _check_media_info (NULL, (bufs)); \
+} GST_END_TEST
 
 /* *INDENT-OFF* */
-  _check_media_info (NULL,
-      (BufferDesc []) {
+MEDIA_INFO_TEST (1, -1,
+      ((BufferDesc []) {
       {
         .content = "buffer1",
         .pts = 0,
@@ -674,16 +676,11 @@ GST_START_TEST (check_media_info)
         .num_issues = 1
       },
       { NULL}
-    });
-/* *INDENT-ON* */
+    }));
 
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  /* Segment start is 2, the first buffer is expected (first Keyframe) */
-  segment.start = 2;
-
-/* *INDENT-OFF* */
-  _check_media_info (&segment,
-      (BufferDesc []) {
+/* Segment start is 2, the first buffer is expected (first Keyframe) */
+MEDIA_INFO_TEST (2, 2,
+      ((BufferDesc []) {
       {
         .content = "buffer2", /* Wrong checksum */
         .pts = 0,
@@ -693,16 +690,11 @@ GST_START_TEST (check_media_info)
         .num_issues = 1
       },
       { NULL}
-    });
-/* *INDENT-ON* */
+    }));
 
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  /* Segment start is 2, the first buffer is expected (first Keyframe) */
-  segment.start = 2;
-
-/* *INDENT-OFF* */
-  _check_media_info (&segment,
-      (BufferDesc []) {
+/* Segment start is 2, the first buffer is expected (first Keyframe) */
+MEDIA_INFO_TEST (3, 2,
+      ((BufferDesc []) {
       { /*  The right first buffer */
         .content = "buffer1",
         .pts = 0,
@@ -712,16 +704,11 @@ GST_START_TEST (check_media_info)
         .num_issues = 0
       },
       { NULL}
-    });
-/* *INDENT-ON* */
+    }));
 
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  /* Segment start is 6, the 4th buffer is expected (first Keyframe) */
-  segment.start = 6;
-
-/* *INDENT-OFF* */
-  _check_media_info (&segment,
-      (BufferDesc []) {
+/* Segment start is 6, the 4th buffer is expected (first Keyframe) */
+MEDIA_INFO_TEST (4, 6,
+      ((BufferDesc []) {
       { /*  The right fourth buffer */
         .content = "buffer4",
         .pts = 4,
@@ -731,16 +718,11 @@ GST_START_TEST (check_media_info)
         .num_issues = 0
       },
       { NULL}
-    });
-/* *INDENT-ON* */
+    }));
 
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  /* Segment start is 6, the 4th buffer is expected (first Keyframe) */
-  segment.start = 6;
-
-/* *INDENT-OFF* */
-  _check_media_info (&segment,
-      (BufferDesc []) {
+/* Segment start is 6, the 4th buffer is expected (first Keyframe) */
+MEDIA_INFO_TEST (5, 6,
+      ((BufferDesc []) {
       { /*  The sixth buffer... all wrong! */
         .content = "buffer6",
         .pts = 6,
@@ -750,11 +732,8 @@ GST_START_TEST (check_media_info)
         .num_issues = 1
       },
       { NULL}
-    });
+    }));
 /* *INDENT-ON* */
-}
-
-GST_END_TEST;
 
 GST_START_TEST (caps_events)
 {
@@ -1046,21 +1025,33 @@ gst_validate_suite (void)
   TCase *tc_chain = tcase_create ("padmonitor");
   suite_add_tcase (s, tc_chain);
 
-  gst_validate_init ();
   fake_elements_register ();
 
   tcase_add_test (tc_chain, buffer_before_segment);
   tcase_add_test (tc_chain, buffer_outside_segment);
   tcase_add_test (tc_chain, buffer_timestamp_out_of_received_range);
-  tcase_add_test (tc_chain, flow_aggregation);
+
+  tcase_add_test (tc_chain, media_info_1);
+  tcase_add_test (tc_chain, media_info_2);
+  tcase_add_test (tc_chain, media_info_3);
+  tcase_add_test (tc_chain, media_info_4);
+  tcase_add_test (tc_chain, media_info_5);
+
+  tcase_add_test (tc_chain, flow_aggregation_ok_ok_error_ok);
+  tcase_add_test (tc_chain, flow_aggregation_eos_eos_eos_ok);
+  tcase_add_test (tc_chain, flow_aggregation_flushing_ok_ok_ok);
+  tcase_add_test (tc_chain, flow_aggregation_not_neg_ok_ok_ok);
+  tcase_add_test (tc_chain, flow_aggregation_eos_eos_eos_eos);
+  tcase_add_test (tc_chain, flow_aggregation_eos_eos_ok_ok);
+  tcase_add_test (tc_chain, flow_aggregation_ok_ok_ok_eos);
+  tcase_add_test (tc_chain, flow_aggregation_not_neg_ok_ok_not_neg);
+
   tcase_add_test (tc_chain, issue_concatenation);
-  tcase_add_test (tc_chain, check_media_info);
   tcase_add_test (tc_chain, eos_without_segment);
   tcase_add_test (tc_chain, caps_events);
   tcase_add_test (tc_chain, flow_error_without_message);
   tcase_add_test (tc_chain, flow_error_with_message);
 
-  gst_validate_deinit ();
   return s;
 }
 
