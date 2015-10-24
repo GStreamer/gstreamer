@@ -37,6 +37,7 @@
 #include <glib.h>
 #include <gst/tag/tag.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/base/base.h>
 
 #include "mpegtsbase.h"
 #include "tsdemux.h"
@@ -46,7 +47,8 @@
 #include "pesparse.h"
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/codecparsers/gstmpegvideoparser.h>
-#include <gst/base/gstbytewriter.h>
+
+#include <math.h>
 
 /*
  * tsdemux
@@ -230,6 +232,7 @@ struct _TSDemuxStream
       "mute = (boolean) { FALSE, TRUE }; " \
     "audio/x-ac3; audio/x-eac3;" \
     "audio/x-dts;" \
+    "audio/x-opus;" \
     "audio/x-private-ts-lpcm" \
   )
 
@@ -1189,6 +1192,211 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           is_audio = TRUE;
           caps = gst_caps_new_empty_simple ("audio/x-smpte-302m");
           break;
+        case DRF_ID_OPUS:
+          desc = mpegts_get_descriptor_from_stream (bstream,
+              GST_MTS_DESC_DVB_EXTENSION);
+          if (desc != NULL && desc->tag_extension == 0x80 && desc->length >= 1) {       /* User defined (provisional Opus) */
+            guint8 channel_config_code;
+            GstByteReader br;
+
+            /* skip tag, length and tag_extension */
+            gst_byte_reader_init (&br, desc->data + 3, desc->length - 1);
+            channel_config_code = gst_byte_reader_get_uint8_unchecked (&br);
+
+            if ((channel_config_code & 0x8f) <= 8) {
+              static const guint8 coupled_stream_counts[9] = {
+                1, 0, 1, 1, 2, 2, 2, 3, 3
+              };
+              static const guint8 channel_map_a[8][8] = {
+                {0},
+                {0, 1},
+                {0, 2, 1},
+                {0, 1, 2, 3},
+                {0, 4, 1, 2, 3},
+                {0, 4, 1, 2, 3, 5},
+                {0, 4, 1, 2, 3, 5, 6},
+                {0, 6, 1, 2, 3, 4, 5, 7},
+              };
+              static const guint8 channel_map_b[8][8] = {
+                {0},
+                {0, 1},
+                {0, 1, 2},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4, 5},
+                {0, 1, 2, 3, 4, 5, 6},
+                {0, 1, 2, 3, 4, 5, 6, 7},
+              };
+
+              guint8 codecdata[22 + 256] = {
+                'O', 'p', 'u', 's',
+                'H', 'e', 'a', 'd',
+                1, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0,
+              };
+              GstBuffer *codec_data_buf;
+              guint channels;
+              GValue v_arr = G_VALUE_INIT;
+              GValue v_buf = G_VALUE_INIT;
+              GstTagList *tags;
+              gint codecdata_len = -1;
+
+              channels = channel_config_code ? (channel_config_code & 0x0f) : 2;
+              codecdata[9] = channels;
+              if (channel_config_code == 0 || channel_config_code == 0x80) {
+                /* Dual Mono */
+                codecdata[18] = 255;
+                if (channel_config_code == 0) {
+                  codecdata[19] = 1;
+                  codecdata[20] = 1;
+                } else {
+                  codecdata[19] = 2;
+                  codecdata[20] = 0;
+                }
+                memcpy (&codecdata[21], channel_map_a[1], channels);
+                codecdata_len = 24;
+              } else if (channel_config_code <= 8) {
+                codecdata[18] = (channels > 2) ? 1 : 0;
+                codecdata[19] =
+                    channel_config_code -
+                    coupled_stream_counts[channel_config_code];
+                codecdata[20] = coupled_stream_counts[channel_config_code];
+                memcpy (&codecdata[21], channel_map_a[channels - 1], channels);
+                if (codecdata[18] == 0)
+                  codecdata_len = 19;
+                else
+                  codecdata_len = 21 + channels;
+              } else if (channel_config_code >= 0x82
+                  && channel_config_code <= 0x88) {
+                codecdata[18] = 1;
+                codecdata[19] = channels;
+                codecdata[20] = 0;
+                memcpy (&codecdata[21], channel_map_b[channels - 1], channels);
+                codecdata_len = 21 + channels;
+              } else if (channel_config_code == 0x81) {
+                guint8 channel_count, mapping_family;
+
+                if (gst_byte_reader_get_remaining (&br) < 2) {
+                  GST_WARNING_OBJECT (demux,
+                      "Invalid Opus descriptor with extended channel configuration");
+                  break;
+                }
+
+                channel_count = gst_byte_reader_get_uint8_unchecked (&br);
+                mapping_family = gst_byte_reader_get_uint8_unchecked (&br);
+
+                /* Overwrite values from above */
+                if (channel_count == 0) {
+                  GST_WARNING_OBJECT (demux,
+                      "Invalid Opus descriptor with extended channel configuration");
+                  break;
+                }
+
+                channels = channel_count;
+                codecdata[9] = channels;
+                if (mapping_family == 0 && channel_count <= 2) {
+                  codecdata[18] = 0;
+                  codecdata[19] =
+                      channel_count - coupled_stream_counts[channel_count];
+                  codecdata[20] = coupled_stream_counts[channel_count];
+                  codecdata_len = 19;
+                } else {
+                  GstBitReader breader;
+                  guint8 stream_count_minus_one, coupled_stream_count;
+                  gint stream_count_minus_one_len, coupled_stream_count_len;
+                  gint channel_mapping_len, i;
+
+                  codecdata[18] = mapping_family;
+
+                  gst_bit_reader_init (&breader,
+                      gst_byte_reader_get_data_unchecked
+                      (&br, gst_byte_reader_get_remaining
+                          (&br)), gst_byte_reader_get_remaining (&br));
+
+                  stream_count_minus_one_len = ceil (log2 (channel_count));
+                  if (!gst_bit_reader_get_bits_uint8 (&breader,
+                          &stream_count_minus_one,
+                          stream_count_minus_one_len)) {
+                    GST_WARNING_OBJECT (demux,
+                        "Invalid Opus descriptor with extended channel configuration");
+                    break;
+                  }
+
+                  codecdata[19] = stream_count_minus_one + 1;
+                  coupled_stream_count_len =
+                      ceil (log2 (stream_count_minus_one_len + 2));
+
+                  if (!gst_bit_reader_get_bits_uint8 (&breader,
+                          &coupled_stream_count, coupled_stream_count_len)) {
+                    GST_WARNING_OBJECT (demux,
+                        "Invalid Opus descriptor with extended channel configuration");
+                    break;
+                  }
+
+                  codecdata[20] = coupled_stream_count;
+
+                  channel_mapping_len =
+                      ceil (log2 (stream_count_minus_one + 1 +
+                          coupled_stream_count + 1));
+                  for (i = 0; i < channel_count; i++) {
+                    if (!gst_bit_reader_get_bits_uint8 (&breader,
+                            &codecdata[21 + i], channel_mapping_len)) {
+                      GST_WARNING_OBJECT (demux,
+                          "Invalid Opus descriptor with extended channel configuration");
+                      break;
+                    }
+                  }
+
+                  /* error above */
+                  if (i != channel_count)
+                    break;
+
+                  codecdata_len = 22 + channel_count;
+                }
+              } else {
+                g_assert_not_reached ();
+              }
+
+              if (codecdata_len != -1) {
+                is_audio = TRUE;
+                template = gst_static_pad_template_get (&audio_template);
+                name = g_strdup_printf ("audio_%04x", bstream->pid);
+                caps = gst_caps_new_empty_simple ("audio/x-opus");
+
+                g_value_init (&v_arr, GST_TYPE_ARRAY);
+                g_value_init (&v_buf, GST_TYPE_BUFFER);
+                codec_data_buf =
+                    gst_buffer_new_wrapped (g_memdup (codecdata, codecdata_len),
+                    codecdata_len);
+                gst_value_take_buffer (&v_buf, codec_data_buf);
+                gst_value_array_append_and_take_value (&v_arr, &v_buf);
+
+
+                tags = gst_tag_list_new_empty ();
+                g_value_init (&v_buf, GST_TYPE_BUFFER);
+                codec_data_buf =
+                    gst_tag_list_to_vorbiscomment_buffer (tags,
+                    (const guint8 *) "OpusTags", 8, "No comments");
+                gst_tag_list_unref (tags);
+                gst_value_take_buffer (&v_buf, codec_data_buf);
+                gst_value_array_append_and_take_value (&v_arr, &v_buf);
+
+                gst_caps_set_value (caps, "streamheader", &v_arr);
+
+                g_value_unset (&v_arr);
+              }
+            } else {
+              GST_WARNING_OBJECT (demux,
+                  "unexpected channel config code 0x%02x", channel_config_code);
+            }
+          } else {
+            GST_WARNING_OBJECT (demux, "Opus, but no extension descriptor");
+          }
+          break;
         case DRF_ID_HEVC:
           is_video = TRUE;
           caps = gst_caps_new_simple ("video/x-h265",
@@ -2116,14 +2324,108 @@ gst_ts_demux_check_and_sync_streams (GstTSDemux * demux, GstClockTime time)
   }
 }
 
+static GstBufferList *
+parse_opus_access_unit (TSDemuxStream * stream)
+{
+  GstByteReader reader;
+  GstBufferList *buffer_list = NULL;
+
+  buffer_list = gst_buffer_list_new ();
+  gst_byte_reader_init (&reader, stream->data, stream->current_size);
+
+  do {
+    GstBuffer *buffer;
+    guint16 id;
+    guint au_size = 0;
+    guint8 b;
+    gboolean start_trim_flag, end_trim_flag, control_extension_flag;
+    guint16 start_trim = 0, end_trim = 0;
+    guint8 *packet_data;
+    guint packet_size;
+
+    if (!gst_byte_reader_get_uint16_be (&reader, &id))
+      goto error;
+
+    /* No control header */
+    if ((id >> 5) != 0x3ff)
+      goto error;
+
+    do {
+      if (!gst_byte_reader_get_uint8 (&reader, &b))
+        goto error;
+      au_size += b;
+    } while (b == 0xff);
+
+    start_trim_flag = (id >> 4) & 0x1;
+    end_trim_flag = (id >> 3) & 0x1;
+    control_extension_flag = (id >> 2) & 0x1;
+
+    if (start_trim_flag) {
+      if (!gst_byte_reader_get_uint16_be (&reader, &start_trim))
+        goto error;
+      start_trim >>= 3;
+    }
+
+    if (end_trim_flag) {
+      if (!gst_byte_reader_get_uint16_be (&reader, &end_trim))
+        goto error;
+      end_trim >>= 3;
+    }
+
+    if (control_extension_flag) {
+      if (!gst_byte_reader_get_uint8 (&reader, &b))
+        goto error;
+
+      if (!gst_byte_reader_skip (&reader, b))
+        goto error;
+    }
+
+    packet_size = au_size;
+
+    /* FIXME: this should be
+     *   packet_size = au_size - gst_byte_reader_get_pos (&reader);
+     * but ffmpeg and the only available sample stream from obe.tv
+     * are not including the control header size in au_size
+     */
+    if (gst_byte_reader_get_remaining (&reader) < packet_size)
+      goto error;
+    if (!gst_byte_reader_dup_data (&reader, packet_size, &packet_data))
+      goto error;
+
+    buffer = gst_buffer_new_wrapped (packet_data, packet_size);
+    gst_buffer_list_add (buffer_list, buffer);
+
+    /* FIXME: Do something with start_trim and end_trim */
+    if (start_trim != 0 || end_trim != 0)
+      GST_FIXME
+          ("Handling of Opus start_trim (%u) and end_trim (%u) not implemented",
+          start_trim, end_trim);
+  } while (gst_byte_reader_get_remaining (&reader) > 0);
+
+  g_free (stream->data);
+  stream->data = NULL;
+  stream->current_size = 0;
+
+  return buffer_list;
+
+error:
+  {
+    GST_ERROR ("Failed to parse Opus access unit");
+    g_free (stream->data);
+    stream->data = NULL;
+    stream->current_size = 0;
+    gst_buffer_list_unref (buffer_list);
+    return NULL;
+  }
+}
+
 static GstFlowReturn
 gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
 {
   GstFlowReturn res = GST_FLOW_OK;
-#ifndef GST_DISABLE_GST_DEBUG
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
-#endif
   GstBuffer *buffer = NULL;
+  GstBufferList *buffer_list = NULL;
 
   GST_DEBUG_OBJECT (stream->pad,
       "stream:%p, pid:0x%04x stream_type:%d state:%d", stream, bs->pid,
@@ -2158,7 +2460,24 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
       GST_DEBUG_OBJECT (stream->pad,
           "Got Keyframe, ready to go at %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->pts));
-      buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
+
+      if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_PRIVATE_PES_PACKETS &&
+          bs->registration_id == DRF_ID_OPUS) {
+        buffer_list = parse_opus_access_unit (stream);
+        if (!buffer_list) {
+          res = GST_FLOW_ERROR;
+          goto beach;
+        }
+
+        if (gst_buffer_list_length (buffer_list) == 1) {
+          buffer = gst_buffer_ref (gst_buffer_list_get (buffer_list, 0));
+          gst_buffer_list_unref (buffer_list);
+          buffer_list = NULL;
+        }
+      } else {
+        buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
+      }
+
       stream->seeked_pts = stream->pts;
       stream->seeked_dts = stream->dts;
       stream->needs_keyframe = FALSE;
@@ -2176,15 +2495,45 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
       goto beach;
     }
   } else {
-    buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
+    if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_PRIVATE_PES_PACKETS &&
+        bs->registration_id == DRF_ID_OPUS) {
+      buffer_list = parse_opus_access_unit (stream);
+      if (!buffer_list) {
+        res = GST_FLOW_ERROR;
+        goto beach;
+      }
+
+      if (gst_buffer_list_length (buffer_list) == 1) {
+        buffer = gst_buffer_ref (gst_buffer_list_get (buffer_list, 0));
+        gst_buffer_list_unref (buffer_list);
+        buffer_list = NULL;
+      }
+    } else {
+      buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
+    }
 
     if (G_UNLIKELY (stream->pending_ts && !check_pending_buffers (demux))) {
-      PendingBuffer *pend;
-      pend = g_slice_new0 (PendingBuffer);
-      pend->buffer = buffer;
-      pend->pts = stream->raw_pts;
-      pend->dts = stream->raw_dts;
-      stream->pending = g_list_append (stream->pending, pend);
+      if (buffer) {
+        PendingBuffer *pend;
+        pend = g_slice_new0 (PendingBuffer);
+        pend->buffer = buffer;
+        pend->pts = stream->raw_pts;
+        pend->dts = stream->raw_dts;
+        stream->pending = g_list_append (stream->pending, pend);
+      } else {
+        guint i, n;
+
+        n = gst_buffer_list_length (buffer_list);
+        for (i = 0; i < n; i++) {
+          PendingBuffer *pend;
+          pend = g_slice_new0 (PendingBuffer);
+          pend->buffer = gst_buffer_ref (gst_buffer_list_get (buffer_list, i));
+          pend->pts = i == 0 ? stream->raw_pts : -1;
+          pend->dts = i == 0 ? stream->raw_dts : -1;
+          stream->pending = g_list_append (stream->pending, pend);
+        }
+        gst_buffer_list_unref (buffer_list);
+      }
       GST_DEBUG ("Not enough information to push buffers yet, storing buffer");
       goto beach;
     }
@@ -2226,34 +2575,52 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
         "(seeked PTS: %" GST_TIME_FORMAT " DTS: %" GST_TIME_FORMAT ")",
         GST_TIME_ARGS (stream->pts), GST_TIME_ARGS (stream->dts),
         GST_TIME_ARGS (stream->seeked_pts), GST_TIME_ARGS (stream->seeked_dts));
-    gst_buffer_unref (buffer);
+    if (buffer)
+      gst_buffer_unref (buffer);
+    if (buffer_list)
+      gst_buffer_list_unref (buffer_list);
     goto beach;
   }
 
   GST_DEBUG_OBJECT (stream->pad, "stream->pts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (stream->pts));
+
+  /* Decorate buffer or first buffer of the buffer list */
+  if (buffer_list)
+    buffer = gst_buffer_list_get (buffer_list, 0);
+
   if (GST_CLOCK_TIME_IS_VALID (stream->pts))
     GST_BUFFER_PTS (buffer) = stream->pts;
   if (GST_CLOCK_TIME_IS_VALID (stream->dts))
     GST_BUFFER_DTS (buffer) = stream->dts;
 
-  GST_DEBUG_OBJECT (stream->pad,
-      "Pushing buffer with PTS: %" GST_TIME_FORMAT " , DTS: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
-      GST_TIME_ARGS (GST_BUFFER_DTS (buffer)));
-
   if (stream->discont)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
   stream->discont = FALSE;
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buffer)))
-    demux->segment.position = GST_BUFFER_DTS (buffer);
-  else if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buffer)))
-    demux->segment.position = GST_BUFFER_PTS (buffer);
+  if (buffer_list)
+    buffer = NULL;
 
-  res = gst_pad_push (stream->pad, buffer);
-  /* Record that a buffer was pushed */
-  stream->nb_out_buffers += 1;
+  GST_DEBUG_OBJECT (stream->pad,
+      "Pushing buffer%s with PTS: %" GST_TIME_FORMAT " , DTS: %"
+      GST_TIME_FORMAT, (buffer_list ? "list" : ""), GST_TIME_ARGS (stream->pts),
+      GST_TIME_ARGS (stream->dts));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream->dts))
+    demux->segment.position = stream->dts;
+  else if (GST_CLOCK_TIME_IS_VALID (stream->pts))
+    demux->segment.position = stream->pts;
+
+  if (buffer) {
+    res = gst_pad_push (stream->pad, buffer);
+    /* Record that a buffer was pushed */
+    stream->nb_out_buffers += 1;
+  } else {
+    guint n = gst_buffer_list_length (buffer_list);
+    res = gst_pad_push_list (stream->pad, buffer_list);
+    /* Record that a buffer was pushed */
+    stream->nb_out_buffers += n;
+  }
   GST_DEBUG_OBJECT (stream->pad, "Returned %s", gst_flow_get_name (res));
   res = gst_flow_combiner_update_flow (demux->flowcombiner, res);
   GST_DEBUG_OBJECT (stream->pad, "combined %s", gst_flow_get_name (res));

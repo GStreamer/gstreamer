@@ -232,5 +232,6 @@
 #define DRF_ID_ETV1       0x45545631
 #define DRF_ID_HEVC       0x48455643
 #define DRF_ID_KLVA       0x4b4c5641   /* defined in RP217 */
+#define DRF_ID_OPUS       0x4f707573
 
 #endif /* __GST_MPEG_DESC_H__ */

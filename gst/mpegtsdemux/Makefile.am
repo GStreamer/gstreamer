@@ -16,7 +16,7 @@ libgstmpegtsdemux_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-$(GST_API_VERSION).la \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) \
 	-lgstpbutils-@GST_API_VERSION@ \
-	$(GST_BASE_LIBS) $(GST_LIBS)
+	$(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 libgstmpegtsdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmpegtsdemux_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
