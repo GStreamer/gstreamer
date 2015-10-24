@@ -578,6 +578,24 @@ GST_START_TEST (test_url_joining)
   gst_uri_unref (joined);
   gst_uri_unref (rel);
 
+  /* test path ending in '../' */
+  rel = gst_uri_from_string ("one/two/../");
+  joined = gst_uri_join (base, rel);
+  l = gst_uri_to_string (joined);
+  fail_unless_equals_string (l, "http://example.com/path/to/dir/one/");
+  g_free (l);
+  gst_uri_unref (joined);
+  gst_uri_unref (rel);
+
+  /* test path ending in '..' Result should be the same as when ending in '../' */
+  rel = gst_uri_from_string ("one/two/..");
+  joined = gst_uri_join (base, rel);
+  l = gst_uri_to_string (joined);
+  fail_unless_equals_string (l, "http://example.com/path/to/dir/one/");
+  g_free (l);
+  gst_uri_unref (joined);
+  gst_uri_unref (rel);
+
   /* test replace with absolute */
   rel = gst_uri_from_string ("https://ssl.example.com/new_filename.xml");
   joined = gst_uri_join (base, rel);
