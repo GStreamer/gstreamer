@@ -76,14 +76,6 @@ ApplicationWindow {
         onTriggered: fileDialog.open()
     }
 
-    menuBar: MenuBar {
-        Menu {
-            title: "&File"
-            MenuItem { action: fileOpenAction }
-            MenuItem { text: "Quit"; onTriggered: Qt.quit() }
-        }
-    }
-
     Item {
         anchors.fill: parent
         FontLoader {
@@ -452,8 +444,10 @@ ApplicationWindow {
                     height: 38
                     Text {
                         anchors.centerIn: parent
+                        width: parent.width
                         text: player.mediaInfo.title
                         font.pointSize: 15
+                        elide: Text.ElideRight
                     }
                 }
 
