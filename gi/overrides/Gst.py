@@ -98,10 +98,11 @@ Caps = override(Caps)
 __all__.append('Caps')
 
 class Pad(Gst.Pad):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._real_chain_func = None
         self._real_event_func = None
         self._real_query_func = None
+        super(Gst.Pad, self).__init__(*args, **kwargs)
 
     def _chain_override(self, pad, parent, buf):
         return self._real_chain_func(pad, buf)
