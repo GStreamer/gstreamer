@@ -1097,15 +1097,6 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
     pad_data->dts = GST_CLOCK_STIME_NONE;
   }
 
-  buf = *outbuf;
-  if (pad_data->prepare_func) {
-    MpegTsMux *mux = (MpegTsMux *) user_data;
-
-    *outbuf = pad_data->prepare_func (buf, pad_data, mux);
-    g_assert (*outbuf);
-    gst_buffer_unref (buf);
-  }
-
 beach:
   return GST_FLOW_OK;
 }
@@ -1150,6 +1141,15 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
     goto no_program;
 
   g_assert (buf != NULL);
+
+  if (best->prepare_func) {
+    GstBuffer *tmp;
+
+    tmp = best->prepare_func (buf, best, mux);
+    g_assert (tmp);
+    gst_buffer_unref (buf);
+    buf = tmp;
+  }
 
   if (mux->force_key_unit_event != NULL && best->stream->is_video_stream) {
     GstEvent *event;
