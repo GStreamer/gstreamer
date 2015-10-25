@@ -94,6 +94,16 @@ http://example.com/hi.m3u8\n\
 #EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=65000,CODECS=\"mp4a.40.5\"\n\
 http://example.com/audio-only.m3u8";
 
+static const gchar *VARIANT_PLAYLIST_WITH_URI_MISSING = "#EXTM3U \n\
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=128000\n\
+http://example.com/low.m3u8\n\
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=256000\n\
+\n\
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=768000\n\
+http://example.com/hi.m3u8\n\
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=65000,CODECS=\"mp4a.40.5\"\n\
+http://example.com/audio-only.m3u8";
+
 static const gchar *EMPTY_LINES_VARIANT_PLAYLIST = "#EXTM3U \n\
 #EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=128000\n\n\
 http://example.com/low.m3u8\n\n\
@@ -404,6 +414,17 @@ do_test_load_main_playlist_variant (const gchar * playlist)
 GST_START_TEST (test_load_main_playlist_variant)
 {
   do_test_load_main_playlist_variant (VARIANT_PLAYLIST);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_load_main_playlist_variant_with_missing_uri)
+{
+  GstM3U8Client *client;
+
+  client = load_playlist (VARIANT_PLAYLIST_WITH_URI_MISSING);
+  assert_equals_int (g_list_length (client->main->lists), 3);
+  gst_m3u8_client_free (client);
 }
 
 GST_END_TEST;
@@ -1314,6 +1335,7 @@ hlsdemux_suite (void)
   tcase_add_test (tc_m3u8, test_load_main_playlist_invalid);
   tcase_add_test (tc_m3u8, test_load_main_playlist_rendition);
   tcase_add_test (tc_m3u8, test_load_main_playlist_variant);
+  tcase_add_test (tc_m3u8, test_load_main_playlist_variant_with_missing_uri);
   tcase_add_test (tc_m3u8, test_load_windows_line_endings_variant_playlist);
   tcase_add_test (tc_m3u8, test_load_main_playlist_with_empty_lines);
   tcase_add_test (tc_m3u8, test_load_windows_main_playlist_with_empty_lines);
