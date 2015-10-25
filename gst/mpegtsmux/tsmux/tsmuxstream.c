@@ -200,6 +200,13 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
           TSMUX_PACKET_FLAG_PES_FULL_HEADER |
           TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
       break;
+    case TSMUX_ST_PS_OPUS:
+      /* FIXME: assign sequential extended IDs? */
+      stream->id = 0xBD;
+      stream->stream_type = TSMUX_ST_PRIVATE_DATA;
+      stream->is_opus = TRUE;
+      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+      break;
     default:
       g_critical ("Stream type 0x%0x not yet implemented", stream_type);
       break;
@@ -909,6 +916,17 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream,
 
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
         break;
+      }
+      if (stream->is_opus) {
+        descriptor = gst_mpegts_descriptor_from_registration ("Opus", NULL, 0);
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
+
+        descriptor =
+            gst_mpegts_descriptor_from_custom_with_extension
+            (GST_MTS_DESC_DVB_EXTENSION, 0x80,
+            &stream->opus_channel_config_code, 1);
+
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
       }
       if (stream->is_meta) {
         descriptor = gst_mpegts_descriptor_from_registration ("KLVA", NULL, 0);

@@ -141,6 +141,7 @@ enum TsMuxStreamType {
   TSMUX_ST_PS_DVB_SUBPICTURE          = 0x8c,
   TSMUX_ST_PS_TELETEXT                = 0x8d,
   TSMUX_ST_PS_KLV                     = 0x8e,    /* only used internally */
+  TSMUX_ST_PS_OPUS                    = 0x8f,    /* only used internally */
   TSMUX_ST_PS_DVD_SUBPICTURE          = 0xff,
 
   /* Non-standard definitions */
@@ -209,6 +210,10 @@ struct TsMuxStream {
   gchar language[4];
 
   gboolean is_meta;
+
+  /* Opus */
+  gboolean is_opus;
+  guint8 opus_channel_config_code;
 };
 
 /* stream management */

@@ -5,7 +5,8 @@ SUBDIRS = tsmux
 libgstmpegtsmux_la_SOURCES = \
 	mpegtsmux.c \
 	mpegtsmux_aac.c \
-	mpegtsmux_ttxt.c
+	mpegtsmux_ttxt.c \
+	mpegtsmux_opus.c
 
 libgstmpegtsmux_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 			    $(GST_BASE_CFLAGS) $(GST_CFLAGS)
@@ -18,4 +19,5 @@ libgstmpegtsmux_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 noinst_HEADERS = \
 	mpegtsmux.h \
 	mpegtsmux_aac.h \
-	mpegtsmux_ttxt.h
+	mpegtsmux_ttxt.h \
+	mpegtsmux_opus.h
