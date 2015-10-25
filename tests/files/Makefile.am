@@ -10,5 +10,7 @@ EXTRA_DIST = \
 	pcm16sine.flv \
 	pinknoise-vorbis.mkv \
 	test-cert.pem \
-	test-key.pem
+	test-key.pem \
+	splitvideo00.ogg splitvideo01.ogg \
+	splitvideo02.ogg
 
