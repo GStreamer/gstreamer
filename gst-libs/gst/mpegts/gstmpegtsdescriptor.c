@@ -635,7 +635,6 @@ void
 _packetize_descriptor_array (GPtrArray * array, guint8 ** out_data)
 {
   guint i;
-  guint8 header_size;
   GstMpegtsDescriptor *descriptor;
 
   g_return_if_fail (out_data != NULL);
@@ -647,13 +646,8 @@ _packetize_descriptor_array (GPtrArray * array, guint8 ** out_data)
   for (i = 0; i < array->len; i++) {
     descriptor = g_ptr_array_index (array, i);
 
-    if (descriptor->tag == GST_MTS_DESC_DVB_EXTENSION)
-      header_size = 3;
-    else
-      header_size = 2;
-
-    memcpy (*out_data, descriptor->data, descriptor->length + header_size);
-    *out_data += descriptor->length + header_size;
+    memcpy (*out_data, descriptor->data, descriptor->length + 2);
+    *out_data += descriptor->length + 2;
   }
 }
 
@@ -689,15 +683,15 @@ _new_descriptor_with_extension (guint8 tag, guint8 tag_extension, guint8 length)
 
   descriptor->tag = tag;
   descriptor->tag_extension = tag_extension;
-  descriptor->length = length;
+  descriptor->length = length + 1;
 
   descriptor->data = g_malloc (length + 3);
 
   data = descriptor->data;
 
   *data++ = descriptor->tag;
-  *data++ = descriptor->tag_extension;
-  *data = descriptor->length;
+  *data++ = descriptor->length;
+  *data = descriptor->tag_extension;
 
   return descriptor;
 }
@@ -1102,6 +1096,31 @@ gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 * data,
 
   if (data && (length > 0))
     memcpy (descriptor->data + 2, data, length);
+
+  return descriptor;
+}
+
+/**
+ * gst_mpegts_descriptor_from_custom_with_extension:
+ * @tag: descriptor tag
+ * @tag_extension: descriptor tag extension
+ * @data: (transfer none): descriptor data (after tag and length field)
+ * @length: length of @data
+ *
+ * Creates a #GstMpegtsDescriptor with custom @tag, @tag_extension and @data
+ *
+ * Returns: #GstMpegtsDescriptor
+ */
+GstMpegtsDescriptor *
+gst_mpegts_descriptor_from_custom_with_extension (guint8 tag,
+    guint8 tag_extension, const guint8 * data, gsize length)
+{
+  GstMpegtsDescriptor *descriptor;
+
+  descriptor = _new_descriptor_with_extension (tag, tag_extension, length);
+
+  if (data && (length > 0))
+    memcpy (descriptor->data + 3, data, length);
 
   return descriptor;
 }
