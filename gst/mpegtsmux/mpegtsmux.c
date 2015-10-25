@@ -1117,8 +1117,11 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
 
   if (G_UNLIKELY (mux->first)) {
     ret = mpegtsmux_create_streams (mux);
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
+    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+      if (buf)
+        gst_buffer_unref (buf);
       return ret;
+    }
 
     mpegtsmux_prepare_srcpad (mux);
 
@@ -1132,6 +1135,9 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
     new_packet_m2ts (mux, NULL, -1);
     mpegtsmux_push_packets (mux, TRUE);
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
+
+    if (buf)
+      gst_buffer_unref (buf);
 
     return GST_FLOW_OK;
   }
@@ -1234,6 +1240,8 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
 
   if (best->stream->is_meta && gst_buffer_get_size (buf) > (G_MAXUINT16 - 3)) {
     GST_WARNING_OBJECT (mux, "KLV meta unit too big, splitting not supported");
+    if (buf)
+      gst_buffer_unref (buf);
     return GST_FLOW_OK;
   }
 
@@ -1273,6 +1281,8 @@ write_fail:
   }
 no_program:
   {
+    if (buf)
+      gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (mux, STREAM, MUX,
         ("Stream on pad %" GST_PTR_FORMAT
             " is not associated with any program", COLLECT_DATA_PAD (best)),
