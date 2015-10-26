@@ -94,7 +94,7 @@ static int gst_ffmpegviddec_get_buffer2 (AVCodecContext * context,
     AVFrame * picture, int flags);
 
 static GstFlowReturn gst_ffmpegviddec_finish (GstVideoDecoder * decoder);
-static void gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec);
+static GstFlowReturn gst_ffmpegviddec_drain (GstVideoDecoder * decoder);
 
 static gboolean picture_changed (GstFFMpegVidDec * ffmpegdec,
     AVFrame * picture);
@@ -249,7 +249,7 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
   viddec_class->stop = gst_ffmpegviddec_stop;
   viddec_class->flush = gst_ffmpegviddec_flush;
   viddec_class->finish = gst_ffmpegviddec_finish;
-  viddec_class->drain = gst_ffmpegviddec_finish;        /* drain and finish are the same to us */
+  viddec_class->drain = gst_ffmpegviddec_drain;
   viddec_class->decide_allocation = gst_ffmpegviddec_decide_allocation;
   viddec_class->propose_allocation = gst_ffmpegviddec_propose_allocation;
 }
@@ -441,7 +441,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   /* close old session */
   if (ffmpegdec->opened) {
     GST_OBJECT_UNLOCK (ffmpegdec);
-    gst_ffmpegviddec_drain (ffmpegdec);
+    gst_ffmpegviddec_finish (decoder);
     GST_OBJECT_LOCK (ffmpegdec);
     if (!gst_ffmpegviddec_close (ffmpegdec, TRUE)) {
       GST_OBJECT_UNLOCK (ffmpegdec);
@@ -1551,13 +1551,14 @@ no_codec:
   }
 }
 
-static void
-gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec)
+static GstFlowReturn
+gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
 {
+  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
   GstFFMpegVidDecClass *oclass;
 
   if (!ffmpegdec->opened)
-    return;
+    return GST_FLOW_OK;
 
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
@@ -1571,8 +1572,9 @@ gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec)
     do {
       len = gst_ffmpegviddec_frame (ffmpegdec, NULL, 0, &have_data, NULL, &ret);
     } while (len >= 0 && have_data == 1 && ret == GST_FLOW_OK);
-    avcodec_flush_buffers (ffmpegdec->context);
   }
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -1754,9 +1756,10 @@ gst_ffmpegviddec_stop (GstVideoDecoder * decoder)
 static GstFlowReturn
 gst_ffmpegviddec_finish (GstVideoDecoder * decoder)
 {
-  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
-
-  gst_ffmpegviddec_drain (ffmpegdec);
+  gst_ffmpegviddec_drain (decoder);
+  /* note that finish can and should clean up more drastically,
+   * but drain is also invoked on e.g. packet loss in GAP handling */
+  gst_ffmpegviddec_flush (decoder);
 
   return GST_FLOW_OK;
 }
@@ -1766,8 +1769,10 @@ gst_ffmpegviddec_flush (GstVideoDecoder * decoder)
 {
   GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
 
-  if (ffmpegdec->opened)
+  if (ffmpegdec->opened) {
+    GST_LOG_OBJECT (decoder, "flushing buffers");
     avcodec_flush_buffers (ffmpegdec->context);
+  }
 
   return TRUE;
 }
