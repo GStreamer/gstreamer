@@ -94,6 +94,14 @@ typedef struct _GstBufferPool GstBufferPool;
  */
 #define GST_BUFFER_DTS(buf)                     (GST_BUFFER_CAST(buf)->dts)
 /**
+ * GST_BUFFER_DTS_OR_PTS:
+ * @buf: a #GstBuffer.:
+ *
+ * Returns the buffer decoding timestamp (dts) if valid, else the buffer
+ * presentation time (pts)
+ */
+#define GST_BUFFER_DTS_OR_PTS(buf)              (GST_BUFFER_DTS_IS_VALID(buf) ? GST_BUFFER_DTS(buf) : GST_BUFFER_PTS (buf))
+/**
  * GST_BUFFER_DURATION:
  * @buf: a #GstBuffer.
  *
