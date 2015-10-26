@@ -51,6 +51,7 @@ struct _GstMultiQueue {
   GstElement element;
 
   gboolean sync_by_running_time;
+  gboolean use_interleave;
 
   /* number of queues */
   guint	nbqueues;
@@ -77,6 +78,9 @@ struct _GstMultiQueue {
 
   gboolean percent_changed;
   GMutex buffering_post_lock; /* assures only one posted at a time */
+
+  GstClockTime interleave;	/* Input interleave */
+  GstClockTime last_interleave_update;
 };
 
 struct _GstMultiQueueClass {
