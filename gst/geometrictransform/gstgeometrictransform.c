@@ -181,8 +181,8 @@ gst_geometric_transform_do_map (GstGeometricTransform * gt, guint8 * in_data,
       break;
 
     case GST_GT_OFF_EDGES_PIXELS_WRAP:
-      in_x = mod_float (in_x, gt->width);
-      in_y = mod_float (in_y, gt->height);
+      in_x = gst_gm_mod_float (in_x, gt->width);
+      in_y = gst_gm_mod_float (in_y, gt->height);
       if (in_x < 0)
         in_x += gt->width;
       if (in_y < 0)

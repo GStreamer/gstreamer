@@ -157,12 +157,12 @@ square_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   /* zoom at the center, smoothstep around half quadrant and get back to normal */
   norm_x *=
       (1.0 / square->zoom) * (1.0 + (square->zoom -
-          1.0) * smoothstep (square->width - 0.125, square->width + 0.125,
-          ABS (norm_x)));
+          1.0) * gst_gm_smoothstep (square->width - 0.125,
+          square->width + 0.125, ABS (norm_x)));
   norm_y *=
       (1.0 / square->zoom) * (1.0 + (square->zoom -
-          1.0) * smoothstep (square->height - 0.125, square->height + 0.125,
-          ABS (norm_y)));
+          1.0) * gst_gm_smoothstep (square->height - 0.125,
+          square->height + 0.125, ABS (norm_y)));
 
   /* unnormalize */
   *in_x = 0.5 * (norm_x + 1.0) * width;

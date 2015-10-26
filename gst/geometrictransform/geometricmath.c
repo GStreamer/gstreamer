@@ -54,7 +54,7 @@
 #define B  0x100
 #define BM 0xff
 
-struct _Noise
+struct _GstGMNoise
 {
   gdouble p[2 * B + 2];
   gdouble g2[2 * B + 2][2];
@@ -69,10 +69,10 @@ normalize_2 (gdouble * v)
   v[1] = v[1] / s;
 }
 
-Noise *
-noise_new (void)
+GstGMNoise *
+gst_gm_noise_new (void)
 {
-  Noise *noise = g_new0 (Noise, 1);
+  GstGMNoise *noise = g_new0 (GstGMNoise, 1);
   gint i, j, k;
 
   for (i = 0; i < B; i++) {
@@ -102,7 +102,7 @@ noise_new (void)
 }
 
 void
-noise_free (Noise * noise)
+gst_gm_noise_free (GstGMNoise * noise)
 {
   g_free (noise);
 }
@@ -120,7 +120,7 @@ lerp (gdouble t, gdouble a, gdouble b)
 }
 
 gdouble
-noise_2 (Noise * noise, gdouble x, gdouble y)
+gst_gm_noise_2 (GstGMNoise * noise, gdouble x, gdouble y)
 {
   gint bx0, bx1, by0, by1, b00, b10, b01, b11;
   gdouble rx0, rx1, ry0, ry1, sx, sy, a, b, t, u, v;
@@ -169,7 +169,7 @@ noise_2 (Noise * noise, gdouble x, gdouble y)
  * This differs from the % operator with respect to negative numbers
  */
 gdouble
-mod_float (gdouble a, gdouble b)
+gst_gm_mod_float (gdouble a, gdouble b)
 {
   gint n = (gint) (a / b);
 
@@ -183,9 +183,9 @@ mod_float (gdouble a, gdouble b)
  * Returns a repeating triangle shape in the range 0..1 with wavelength 1.0
  */
 gdouble
-geometric_math_triangle (gdouble x)
+gst_gm_triangle (gdouble x)
 {
-  gdouble r = mod_float (x, 1.0);
+  gdouble r = gst_gm_mod_float (x, 1.0);
 
   return 2.0 * (r < 0.5 ? r : 1 - r);
 }
@@ -194,7 +194,7 @@ geometric_math_triangle (gdouble x)
  * Hermite interpolation
  */
 gdouble
-smoothstep (gdouble edge0, gdouble edge1, gdouble x)
+gst_gm_smoothstep (gdouble edge0, gdouble edge1, gdouble x)
 {
   gdouble t = CLAMP ((x - edge0) / (edge1 - edge0), 0.0, 1.0);
   return t * t * (3.0 - 2.0 * t);

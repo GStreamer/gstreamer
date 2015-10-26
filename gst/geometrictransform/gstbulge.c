@@ -140,8 +140,8 @@ bulge_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
    * zoom is achieved dividing */
 
   scale =
-      1.0 / (bulge->zoom + ((1.0 - bulge->zoom) * smoothstep (0, cgt->radius,
-              r)));
+      1.0 / (bulge->zoom + ((1.0 - bulge->zoom) * gst_gm_smoothstep (0,
+              cgt->radius, r)));
 
   norm_x *= scale;
   norm_y *= scale;

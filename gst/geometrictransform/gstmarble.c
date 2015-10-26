@@ -158,7 +158,7 @@ gst_marble_finalize (GObject * obj)
 {
   GstMarble *marble = GST_MARBLE_CAST (obj);
 
-  noise_free (marble->noise);
+  gst_gm_noise_free (marble->noise);
   g_free (marble->sin_table);
   g_free (marble->cos_table);
 
@@ -172,7 +172,7 @@ marble_prepare (GstGeometricTransform * trans)
   gint i;
 
   if (!marble->noise) {
-    marble->noise = noise_new ();
+    marble->noise = gst_gm_noise_new ();
   }
 
   g_free (marble->sin_table);
@@ -197,7 +197,7 @@ marble_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   GstMarble *marble = GST_MARBLE_CAST (gt);
   gint displacement;
 
-  displacement = 127 * (1 + noise_2 (marble->noise, x / marble->xscale,
+  displacement = 127 * (1 + gst_gm_noise_2 (marble->noise, x / marble->xscale,
           y / marble->xscale));
   displacement = CLAMP (displacement, 0, 255);
 

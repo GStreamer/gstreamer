@@ -76,7 +76,7 @@ struct _GstMarble
   gdouble turbulence;
   gdouble amount;
 
-  Noise *noise;
+  GstGMNoise *noise;
   gdouble *sin_table;
   gdouble *cos_table;
 };

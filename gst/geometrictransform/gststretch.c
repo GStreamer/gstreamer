@@ -145,8 +145,8 @@ stretch_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   a = 1.0 + (MAX_SHRINK_AMOUNT - 1.0) * stretch->intensity;
   b = a - 1.0;
 
-  norm_x *= a - b * smoothstep (0.0, cgt->radius, r);
-  norm_y *= a - b * smoothstep (0.0, cgt->radius, r);
+  norm_x *= a - b * gst_gm_smoothstep (0.0, cgt->radius, r);
+  norm_y *= a - b * gst_gm_smoothstep (0.0, cgt->radius, r);
 
   /* unnormalize */
   *in_x = (0.5 * norm_x + cgt->x_center) * width;

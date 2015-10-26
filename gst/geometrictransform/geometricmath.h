@@ -54,16 +54,16 @@
 
 G_BEGIN_DECLS
 
-typedef struct _Noise Noise;
+typedef struct _GstGMNoise GstGMNoise;
 
-Noise * noise_new (void);
-void noise_free (Noise * noise);
-gdouble noise_2 (Noise * noise, gdouble x, gdouble y);
+GstGMNoise * gst_gm_noise_new (void);
+void gst_gm_noise_free (GstGMNoise * noise);
+gdouble gst_gm_noise_2 (GstGMNoise * noise, gdouble x, gdouble y);
 
-gdouble mod_float (gdouble a, gdouble b);
-gdouble geometric_math_triangle (gdouble x);
+gdouble gst_gm_mod_float (gdouble a, gdouble b);
+gdouble gst_gm_triangle (gdouble x);
 
-gdouble smoothstep (gdouble edge0, gdouble edge1, gdouble x);
+gdouble gst_gm_smoothstep (gdouble edge0, gdouble edge1, gdouble x);
 
 G_END_DECLS
 

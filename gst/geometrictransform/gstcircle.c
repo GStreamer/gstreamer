@@ -158,7 +158,7 @@ circle_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   distance = sqrt (dx * dx + dy * dy);
   theta = atan2 (-dy, -dx) + circle->angle;
 
-  theta = mod_float (theta, 2 * G_PI);
+  theta = gst_gm_mod_float (theta, 2 * G_PI);
 
   *in_x = gt->width * theta / (circle->spread_angle + 0.0001);
   *in_y =
