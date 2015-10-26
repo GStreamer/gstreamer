@@ -1356,9 +1356,8 @@ _init_convert (GstGLColorConvert * convert)
   if (!info->frag_prog || info->in_n_textures == 0 || info->out_n_textures == 0)
     goto unhandled_format;
 
-  /* multiple draw targets not supported on GLES2...yet */
-  if (info->out_n_textures > 1 && (!gl->DrawBuffers ||
-          USING_GLES2 (convert->context))) {
+  /* multiple draw targets not supported on GLES2... */
+  if (info->out_n_textures > 1 && !gl->DrawBuffers) {
     g_free (info->frag_prog);
     GST_ERROR ("Conversion requires output to multiple draw buffers");
     goto incompatible_api;
