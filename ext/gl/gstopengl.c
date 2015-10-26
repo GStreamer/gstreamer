@@ -199,6 +199,11 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_FILTER_APP)) {
     return FALSE;
   }
+
+  if (!gst_element_register (plugin, "glviewconvert",
+          GST_RANK_NONE, GST_TYPE_GL_VIEW_CONVERT_ELEMENT)) {
+    return FALSE;
+  }
 #if HAVE_JPEG
 #if HAVE_PNG
   if (!gst_element_register (plugin, "gloverlay",
@@ -225,11 +230,6 @@ plugin_init (GstPlugin * plugin)
 #endif
   if (!gst_element_register (plugin, "gldeinterlace",
           GST_RANK_NONE, GST_TYPE_GL_DEINTERLACE)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glviewconvert",
-          GST_RANK_NONE, GST_TYPE_GL_VIEW_CONVERT_ELEMENT)) {
     return FALSE;
   }
 

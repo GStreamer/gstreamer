@@ -1449,6 +1449,17 @@ _init_view_convert (GstGLViewConvert * viewconvert)
         "Cannot perform multiview conversion without OpenGL shaders");
     goto error;
   }
+
+  if (out_mode == GST_VIDEO_MULTIVIEW_MODE_SEPARATED
+      || out_mode == GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME) {
+    if (!gl->DrawBuffers) {
+      GST_ERROR_OBJECT (viewconvert,
+          "Separate texture output mode requested however the current "
+          "OpenGL API does not support drawing to multiple buffers");
+      goto error;
+    }
+  }
+
   if ((in_flags & GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST) ==
       (out_flags & GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST)) {
     l_index = 0;
