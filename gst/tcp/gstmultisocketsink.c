@@ -326,7 +326,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gst_multi_socket_sink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 2, G_TYPE_INT, GST_TYPE_CLIENT_STATUS);
+      G_TYPE_NONE, 2, G_TYPE_SOCKET, GST_TYPE_CLIENT_STATUS);
   /**
    * GstMultiSocketSink::client-socket-removed:
    * @gstmultisocketsink: the multisocketsink element that emitted this signal
