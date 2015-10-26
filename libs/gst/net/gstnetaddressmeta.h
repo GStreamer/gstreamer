@@ -43,15 +43,13 @@ struct _GstNetAddressMeta {
 GType gst_net_address_meta_api_get_type (void);
 #define GST_NET_ADDRESS_META_API_TYPE (gst_net_address_meta_api_get_type())
 
-#define gst_buffer_get_net_address_meta(b) \
-  ((GstNetAddressMeta*)gst_buffer_get_meta((b),GST_NET_ADDRESS_META_API_TYPE))
-
 /* implementation */
 const GstMetaInfo *gst_net_address_meta_get_info (void);
 #define GST_NET_ADDRESS_META_INFO (gst_net_address_meta_get_info())
 
 GstNetAddressMeta * gst_buffer_add_net_address_meta (GstBuffer      *buffer,
                                                      GSocketAddress *addr);
+GstNetAddressMeta * gst_buffer_get_net_address_meta (GstBuffer      *buffer);
 
 G_END_DECLS
 

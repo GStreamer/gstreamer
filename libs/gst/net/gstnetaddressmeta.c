@@ -119,3 +119,19 @@ gst_buffer_add_net_address_meta (GstBuffer * buffer, GSocketAddress * addr)
 
   return meta;
 }
+
+/**
+ * gst_buffer_get_net_address_meta:
+ * @buffer: a #GstBuffer
+ *
+ * Find the #GstNetAddressMeta on @buffer.
+ *
+ * Returns: (transfer none): the #GstNetAddressMeta or %NULL when there
+ * is no such metadata on @buffer.
+ */
+GstNetAddressMeta *
+gst_buffer_get_net_address_meta (GstBuffer * buffer)
+{
+  return (GstNetAddressMeta *)
+      gst_buffer_get_meta (buffer, GST_NET_ADDRESS_META_API_TYPE);
+}

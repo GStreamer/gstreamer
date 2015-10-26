@@ -1,6 +1,7 @@
 EXPORTS
 	gst_buffer_add_net_address_meta
 	gst_buffer_add_net_control_message_meta
+	gst_buffer_get_net_address_meta
 	gst_net_address_meta_api_get_type
 	gst_net_address_meta_get_info
 	gst_net_client_clock_get_type
