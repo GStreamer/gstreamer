@@ -290,12 +290,6 @@ gst_wayland_sink_find_display (GstWaylandSink * sink)
               ("Failed to create GstWlDisplay: '%s'", error->message));
           g_error_free (error);
           ret = FALSE;
-        } else {
-          /* inform the world about the new display */
-          context =
-              gst_wayland_display_handle_context_new (sink->display->display);
-          msg = gst_message_new_have_context (GST_OBJECT_CAST (sink), context);
-          gst_element_post_message (GST_ELEMENT_CAST (sink), msg);
         }
       }
     }
