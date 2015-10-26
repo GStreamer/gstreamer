@@ -529,7 +529,7 @@ gst_segment_to_stream_time (const GstSegment * segment, GstFormat format,
   if (gst_segment_to_stream_time_full (segment, format, position, &result) == 1)
     return result;
 
-  return 0;
+  return -1;
 }
 
 /**
