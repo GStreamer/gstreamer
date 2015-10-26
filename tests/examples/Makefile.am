@@ -40,6 +40,16 @@ else
 GTK3_DIR=
 endif
 
+if USE_WAYLAND
+if HAVE_GTK3
+WAYLAND_DIR=waylandsink
+else
+WAYLAND_DIR=
+endif
+else
+WAYLAND_DIR=
+endif
+
 noinst_PROGRAMS = playout
 
 playout_SOURCES = playout.c
@@ -47,7 +57,8 @@ playout_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 playout_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(GST_LIBS)
 
 SUBDIRS= codecparsers mpegts $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES) \
-        $(GL_DIR) $(GTK3_DIR) $(AVSAMPLE_DIR)
-DIST_SUBDIRS= codecparsers mpegts camerabin2 directfb mxf opencv uvch264 gl gtk avsamplesink
+        $(GL_DIR) $(GTK3_DIR) $(AVSAMPLE_DIR) $(WAYLAND_DIR)
+DIST_SUBDIRS= codecparsers mpegts camerabin2 directfb mxf opencv uvch264 gl gtk \
+        avsamplesink waylandsink
 
 include $(top_srcdir)/common/parallel-subdirs.mak

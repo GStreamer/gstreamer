@@ -65,6 +65,7 @@ gst*orc.h
 /tests/examples/opencv/gsthanddetect_test
 /tests/examples/opencv/gstfacedetect_test
 /tests/examples/playout
+/tests/examples/waylandsink/gtkwaylandsink
 
 Build
 *.user
