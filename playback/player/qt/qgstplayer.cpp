@@ -567,7 +567,7 @@ void Player::setPosition(qint64 pos)
 
 GstPlayerVideoRenderer *VideoRenderer::renderer()
 {
-    return renderer_;
+    return static_cast<GstPlayerVideoRenderer*> (gst_object_ref (renderer_));
 }
 
 VideoRenderer::VideoRenderer()
