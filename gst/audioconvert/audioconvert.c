@@ -77,6 +77,7 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
     GstAudioConvertNoiseShaping ns)
 {
   gint in_depth, out_depth;
+  GstChannelMixFlags flags;
 
   g_return_val_if_fail (ctx != NULL, FALSE);
   g_return_val_if_fail (in != NULL, FALSE);
@@ -117,14 +118,21 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
   if (ctx->ns > NOISE_SHAPING_ERROR_FEEDBACK && out->rate < 32000)
     ctx->ns = NOISE_SHAPING_ERROR_FEEDBACK;
 
-  gst_channel_mix_setup_matrix (ctx);
+  flags =
+      GST_AUDIO_INFO_IS_UNPOSITIONED (in) ?
+      GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN : 0;
+  flags |=
+      GST_AUDIO_INFO_IS_UNPOSITIONED (out) ?
+      GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT : 0;
+
+  ctx->mix = gst_channel_mix_new (flags, in->channels, in->position,
+      out->channels, out->position);
 
   /* if one formats is float/double or we use noise shaping use double as
    * intermediate format and switch mixing */
   if (DOUBLE_INTERMEDIATE_FORMAT (ctx)) {
     GST_INFO ("use float mixing");
-    ctx->channel_mix = (AudioConvertMix) gst_channel_mix_mix_float;
-
+    ctx->mix_format = GST_AUDIO_FORMAT_F64;
     if (ctx->in.finfo->unpack_format != GST_AUDIO_FORMAT_F64) {
       ctx->convert = audio_convert_orc_s32_to_double;
       GST_INFO ("convert input to F64");
@@ -143,7 +151,7 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
     }
   } else {
     GST_INFO ("use int mixing");
-    ctx->channel_mix = (AudioConvertMix) gst_channel_mix_mix_int;
+    ctx->mix_format = GST_AUDIO_FORMAT_S32;
     /* check if input needs to be unpacked to intermediate format */
     ctx->in_default =
         GST_AUDIO_FORMAT_INFO_FORMAT (in->finfo) == GST_AUDIO_FORMAT_S32;
@@ -155,7 +163,7 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
   GST_INFO ("unitsizes: %d -> %d", in->bpf, out->bpf);
 
   /* check if channel mixer is passthrough */
-  ctx->mix_passthrough = gst_channel_mix_passthrough (ctx);
+  ctx->mix_passthrough = gst_channel_mix_is_passthrough (ctx->mix);
   ctx->quant_default = check_default (ctx, out->finfo);
 
   GST_INFO ("in default %d, mix passthrough %d, out default %d",
@@ -184,7 +192,9 @@ audio_convert_clean_context (AudioConvertCtx * ctx)
   g_return_val_if_fail (ctx != NULL, FALSE);
 
   gst_audio_quantize_free (ctx);
-  gst_channel_mix_unset_matrix (ctx);
+  if (ctx->mix)
+    gst_channel_mix_free (ctx->mix);
+  ctx->mix = NULL;
   gst_audio_info_init (&ctx->in);
   gst_audio_info_init (&ctx->out);
   ctx->convert = NULL;
@@ -291,7 +301,8 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
       outbuf = tmpbuf;
 
     /* convert channels */
-    ctx->channel_mix (ctx, src, outbuf, samples);
+    gst_channel_mix_mix (ctx->mix, ctx->mix_format, ctx->in.layout, src, outbuf,
+        samples);
 
     src = outbuf;
   }

@@ -31,34 +31,53 @@
 
 #define INT_MATRIX_FACTOR_EXPONENT 10
 
-/*
- * Channel matrix functions.
- */
+struct _GstChannelMix
+{
+  GstChannelMixFlags flags;
 
+  gint in_channels;
+  gint out_channels;
+
+  GstAudioChannelPosition in_position[64];
+  GstAudioChannelPosition out_position[64];
+
+  /* channel conversion matrix, m[in_channels][out_channels].
+   * If identity matrix, passthrough applies. */
+  gfloat **matrix;
+
+  /* channel conversion matrix with int values, m[in_channels][out_channels].
+   * this is matrix * (2^10) as integers */
+  gint **matrix_int;
+
+  gpointer tmp;
+};
+
+/**
+ * gst_channel_mix_free:
+ * @mix: a #GstChannelMix
+ *
+ * Free memory allocated by @mix.
+ */
 void
-gst_channel_mix_unset_matrix (AudioConvertCtx * this)
+gst_channel_mix_free (GstChannelMix * mix)
 {
   gint i;
 
-  /* don't access if nothing there */
-  if (!this->matrix)
-    return;
-
   /* free */
-  for (i = 0; i < this->in.channels; i++)
-    g_free (this->matrix[i]);
-  g_free (this->matrix);
+  for (i = 0; i < mix->in_channels; i++)
+    g_free (mix->matrix[i]);
+  g_free (mix->matrix);
+  mix->matrix = NULL;
 
-  this->matrix = NULL;
+  for (i = 0; i < mix->in_channels; i++)
+    g_free (mix->matrix_int[i]);
+  g_free (mix->matrix_int);
+  mix->matrix_int = NULL;
 
-  for (i = 0; i < this->in.channels; i++)
-    g_free (this->matrix_int[i]);
-  g_free (this->matrix_int);
+  g_free (mix->tmp);
+  mix->tmp = NULL;
 
-  this->matrix_int = NULL;
-
-  g_free (this->tmp);
-  this->tmp = NULL;
+  g_slice_free (GstChannelMix, mix);
 }
 
 /*
@@ -68,18 +87,18 @@ gst_channel_mix_unset_matrix (AudioConvertCtx * this)
  */
 
 static void
-gst_channel_mix_fill_identical (AudioConvertCtx * this)
+gst_channel_mix_fill_identical (GstChannelMix * mix)
 {
   gint ci, co;
 
   /* Apart from the compatible channel assignments, we can also have
    * same channel assignments. This is much simpler, we simply copy
    * the value from source to dest! */
-  for (co = 0; co < this->out.channels; co++) {
+  for (co = 0; co < mix->out_channels; co++) {
     /* find a channel in input with same position */
-    for (ci = 0; ci < this->in.channels; ci++) {
-      if (this->in.position[ci] == this->out.position[co]) {
-        this->matrix[ci][co] = 1.0;
+    for (ci = 0; ci < mix->in_channels; ci++) {
+      if (mix->in_position[ci] == mix->out_position[co]) {
+        mix->matrix[ci][co] = 1.0;
       }
     }
   }
@@ -92,7 +111,7 @@ gst_channel_mix_fill_identical (AudioConvertCtx * this)
  */
 
 static void
-gst_channel_mix_fill_compatible (AudioConvertCtx * this)
+gst_channel_mix_fill_compatible (GstChannelMix * mix)
 {
   /* Conversions from one-channel to compatible two-channel configs */
   struct
@@ -125,20 +144,20 @@ gst_channel_mix_fill_compatible (AudioConvertCtx * this)
     gint pos2_0 = -1, pos2_1 = -1, pos2_2 = -1;
     gint n;
 
-    for (n = 0; n < this->in.channels; n++) {
-      if (this->in.position[n] == conv[c].pos1[0])
+    for (n = 0; n < mix->in_channels; n++) {
+      if (mix->in_position[n] == conv[c].pos1[0])
         pos1_0 = n;
-      else if (this->in.position[n] == conv[c].pos1[1])
+      else if (mix->in_position[n] == conv[c].pos1[1])
         pos1_1 = n;
-      else if (this->in.position[n] == conv[c].pos2[0])
+      else if (mix->in_position[n] == conv[c].pos2[0])
         pos1_2 = n;
     }
-    for (n = 0; n < this->out.channels; n++) {
-      if (this->out.position[n] == conv[c].pos1[0])
+    for (n = 0; n < mix->out_channels; n++) {
+      if (mix->out_position[n] == conv[c].pos1[0])
         pos2_0 = n;
-      else if (this->out.position[n] == conv[c].pos1[1])
+      else if (mix->out_position[n] == conv[c].pos1[1])
         pos2_1 = n;
-      else if (this->out.position[n] == conv[c].pos2[0])
+      else if (mix->out_position[n] == conv[c].pos2[0])
         pos2_2 = n;
     }
 
@@ -148,35 +167,35 @@ gst_channel_mix_fill_compatible (AudioConvertCtx * this)
 
     /* left -> center */
     if (pos1_0 != -1 && pos1_2 == -1 && pos2_0 == -1 && pos2_2 != -1)
-      this->matrix[pos1_0][pos2_2] = 1.0;
+      mix->matrix[pos1_0][pos2_2] = 1.0;
     else if (pos1_0 != -1 && pos1_2 != -1 && pos2_0 == -1 && pos2_2 != -1)
-      this->matrix[pos1_0][pos2_2] = 0.5;
+      mix->matrix[pos1_0][pos2_2] = 0.5;
     else if (pos1_0 != -1 && pos1_2 == -1 && pos2_0 != -1 && pos2_2 != -1)
-      this->matrix[pos1_0][pos2_2] = 1.0;
+      mix->matrix[pos1_0][pos2_2] = 1.0;
 
     /* right -> center */
     if (pos1_1 != -1 && pos1_2 == -1 && pos2_1 == -1 && pos2_2 != -1)
-      this->matrix[pos1_1][pos2_2] = 1.0;
+      mix->matrix[pos1_1][pos2_2] = 1.0;
     else if (pos1_1 != -1 && pos1_2 != -1 && pos2_1 == -1 && pos2_2 != -1)
-      this->matrix[pos1_1][pos2_2] = 0.5;
+      mix->matrix[pos1_1][pos2_2] = 0.5;
     else if (pos1_1 != -1 && pos1_2 == -1 && pos2_1 != -1 && pos2_2 != -1)
-      this->matrix[pos1_1][pos2_2] = 1.0;
+      mix->matrix[pos1_1][pos2_2] = 1.0;
 
     /* center -> left */
     if (pos1_2 != -1 && pos1_0 == -1 && pos2_2 == -1 && pos2_0 != -1)
-      this->matrix[pos1_2][pos2_0] = 1.0;
+      mix->matrix[pos1_2][pos2_0] = 1.0;
     else if (pos1_2 != -1 && pos1_0 != -1 && pos2_2 == -1 && pos2_0 != -1)
-      this->matrix[pos1_2][pos2_0] = 0.5;
+      mix->matrix[pos1_2][pos2_0] = 0.5;
     else if (pos1_2 != -1 && pos1_0 == -1 && pos2_2 != -1 && pos2_0 != -1)
-      this->matrix[pos1_2][pos2_0] = 1.0;
+      mix->matrix[pos1_2][pos2_0] = 1.0;
 
     /* center -> right */
     if (pos1_2 != -1 && pos1_1 == -1 && pos2_2 == -1 && pos2_1 != -1)
-      this->matrix[pos1_2][pos2_1] = 1.0;
+      mix->matrix[pos1_2][pos2_1] = 1.0;
     else if (pos1_2 != -1 && pos1_1 != -1 && pos2_2 == -1 && pos2_1 != -1)
-      this->matrix[pos1_2][pos2_1] = 0.5;
+      mix->matrix[pos1_2][pos2_1] = 0.5;
     else if (pos1_2 != -1 && pos1_1 == -1 && pos2_2 != -1 && pos2_1 != -1)
-      this->matrix[pos1_2][pos2_1] = 1.0;
+      mix->matrix[pos1_2][pos2_1] = 1.0;
   }
 }
 
@@ -190,15 +209,15 @@ gst_channel_mix_fill_compatible (AudioConvertCtx * this)
  */
 
 static void
-gst_channel_mix_detect_pos (GstAudioInfo * info,
+gst_channel_mix_detect_pos (gint channels, GstAudioChannelPosition position[64],
     gint * f, gboolean * has_f,
     gint * c, gboolean * has_c, gint * r, gboolean * has_r,
     gint * s, gboolean * has_s, gint * b, gboolean * has_b)
 {
   gint n;
 
-  for (n = 0; n < info->channels; n++) {
-    switch (info->position[n]) {
+  for (n = 0; n < channels; n++) {
+    switch (position[n]) {
       case GST_AUDIO_CHANNEL_POSITION_MONO:
         f[1] = n;
         *has_f = TRUE;
@@ -255,8 +274,7 @@ gst_channel_mix_detect_pos (GstAudioInfo * info,
 
 static void
 gst_channel_mix_fill_one_other (gfloat ** matrix,
-    GstAudioInfo * from_info, gint * from_idx,
-    GstAudioInfo * to_info, gint * to_idx, gfloat ratio)
+    gint * from_idx, gint * to_idx, gfloat ratio)
 {
 
   /* src & dst have center => passthrough */
@@ -321,7 +339,7 @@ gst_channel_mix_fill_one_other (gfloat ** matrix,
 #define RATIO_REAR_BASS (1.0 / sqrt (2.0))
 
 static void
-gst_channel_mix_fill_others (AudioConvertCtx * this)
+gst_channel_mix_fill_others (GstChannelMix * mix)
 {
   gboolean in_has_front = FALSE, out_has_front = FALSE,
       in_has_center = FALSE, out_has_center = FALSE,
@@ -346,11 +364,11 @@ gst_channel_mix_fill_others (AudioConvertCtx * this)
 
   /* First see where (if at all) the various channels from/to
    * which we want to convert are located in our matrix/array. */
-  gst_channel_mix_detect_pos (&this->in,
+  gst_channel_mix_detect_pos (mix->in_channels, mix->in_position,
       in_f, &in_has_front,
       in_c, &in_has_center, in_r, &in_has_rear,
       in_s, &in_has_side, in_b, &in_has_bass);
-  gst_channel_mix_detect_pos (&this->out,
+  gst_channel_mix_detect_pos (mix->out_channels, mix->out_position,
       out_f, &out_has_front,
       out_c, &out_has_center, out_r, &out_has_rear,
       out_s, &out_has_side, out_b, &out_has_bass);
@@ -367,150 +385,138 @@ gst_channel_mix_fill_others (AudioConvertCtx * this)
 
   /* center <-> front/side/rear */
   if (!in_has_center && in_has_front && out_has_center) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_f, &this->out, out_c, RATIO_CENTER_FRONT);
+    gst_channel_mix_fill_one_other (mix->matrix, in_f, out_c,
+        RATIO_CENTER_FRONT);
   } else if (!in_has_center && !in_has_front && in_has_side && out_has_center) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_s, &this->out, out_c, RATIO_CENTER_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_s, out_c,
+        RATIO_CENTER_SIDE);
   } else if (!in_has_center && !in_has_front && !in_has_side && in_has_rear
       && out_has_center) {
-    gst_channel_mix_fill_one_other (this->matrix, &this->in, in_r, &this->out,
-        out_c, RATIO_CENTER_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_r, out_c,
+        RATIO_CENTER_REAR);
   } else if (in_has_center && !out_has_center && out_has_front) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_c, &this->out, out_f, RATIO_CENTER_FRONT);
+    gst_channel_mix_fill_one_other (mix->matrix, in_c, out_f,
+        RATIO_CENTER_FRONT);
   } else if (in_has_center && !out_has_center && !out_has_front && out_has_side) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_c, &this->out, out_s, RATIO_CENTER_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_c, out_s,
+        RATIO_CENTER_SIDE);
   } else if (in_has_center && !out_has_center && !out_has_front && !out_has_side
       && out_has_rear) {
-    gst_channel_mix_fill_one_other (this->matrix, &this->in, in_c, &this->out,
-        out_r, RATIO_CENTER_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_c, out_r,
+        RATIO_CENTER_REAR);
   }
 
   /* front <-> center/side/rear */
   if (!in_has_front && in_has_center && !in_has_side && out_has_front) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_c, &this->out, out_f, RATIO_CENTER_FRONT);
+    gst_channel_mix_fill_one_other (mix->matrix, in_c, out_f,
+        RATIO_CENTER_FRONT);
   } else if (!in_has_front && !in_has_center && in_has_side && out_has_front) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_s, &this->out, out_f, RATIO_FRONT_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_s, out_f, RATIO_FRONT_SIDE);
   } else if (!in_has_front && in_has_center && in_has_side && out_has_front) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_c, &this->out, out_f, 0.5 * RATIO_CENTER_FRONT);
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_s, &this->out, out_f, 0.5 * RATIO_FRONT_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_c, out_f,
+        0.5 * RATIO_CENTER_FRONT);
+    gst_channel_mix_fill_one_other (mix->matrix, in_s, out_f,
+        0.5 * RATIO_FRONT_SIDE);
   } else if (!in_has_front && !in_has_center && !in_has_side && in_has_rear
       && out_has_front) {
-    gst_channel_mix_fill_one_other (this->matrix, &this->in, in_r, &this->out,
-        out_f, RATIO_FRONT_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_r, out_f, RATIO_FRONT_REAR);
   } else if (in_has_front && out_has_center && !out_has_side && !out_has_front) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_f, &this->out, out_c, RATIO_CENTER_FRONT);
+    gst_channel_mix_fill_one_other (mix->matrix,
+        in_f, out_c, RATIO_CENTER_FRONT);
   } else if (in_has_front && !out_has_center && out_has_side && !out_has_front) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_f, &this->out, out_s, RATIO_FRONT_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_f, out_s, RATIO_FRONT_SIDE);
   } else if (in_has_front && out_has_center && out_has_side && !out_has_front) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_f, &this->out, out_c, 0.5 * RATIO_CENTER_FRONT);
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_f, &this->out, out_s, 0.5 * RATIO_FRONT_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_f, out_c,
+        0.5 * RATIO_CENTER_FRONT);
+    gst_channel_mix_fill_one_other (mix->matrix, in_f, out_s,
+        0.5 * RATIO_FRONT_SIDE);
   } else if (in_has_front && !out_has_center && !out_has_side && !out_has_front
       && out_has_rear) {
-    gst_channel_mix_fill_one_other (this->matrix, &this->in, in_f, &this->out,
-        out_r, RATIO_FRONT_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_f, out_r, RATIO_FRONT_REAR);
   }
 
   /* side <-> center/front/rear */
   if (!in_has_side && in_has_front && !in_has_rear && out_has_side) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_f, &this->out, out_s, RATIO_FRONT_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_f, out_s, RATIO_FRONT_SIDE);
   } else if (!in_has_side && !in_has_front && in_has_rear && out_has_side) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_r, &this->out, out_s, RATIO_SIDE_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_r, out_s, RATIO_SIDE_REAR);
   } else if (!in_has_side && in_has_front && in_has_rear && out_has_side) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_f, &this->out, out_s, 0.5 * RATIO_FRONT_SIDE);
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_r, &this->out, out_s, 0.5 * RATIO_SIDE_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_f, out_s,
+        0.5 * RATIO_FRONT_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_r, out_s,
+        0.5 * RATIO_SIDE_REAR);
   } else if (!in_has_side && !in_has_front && !in_has_rear && in_has_center
       && out_has_side) {
-    gst_channel_mix_fill_one_other (this->matrix, &this->in, in_c, &this->out,
-        out_s, RATIO_CENTER_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_c, out_s,
+        RATIO_CENTER_SIDE);
   } else if (in_has_side && out_has_front && !out_has_rear && !out_has_side) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_s, &this->out, out_f, RATIO_FRONT_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_s, out_f, RATIO_FRONT_SIDE);
   } else if (in_has_side && !out_has_front && out_has_rear && !out_has_side) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_s, &this->out, out_r, RATIO_SIDE_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_s, out_r, RATIO_SIDE_REAR);
   } else if (in_has_side && out_has_front && out_has_rear && !out_has_side) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_s, &this->out, out_f, 0.5 * RATIO_FRONT_SIDE);
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_s, &this->out, out_r, 0.5 * RATIO_SIDE_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_s, out_f,
+        0.5 * RATIO_FRONT_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_s, out_r,
+        0.5 * RATIO_SIDE_REAR);
   } else if (in_has_side && !out_has_front && !out_has_rear && out_has_center
       && !out_has_side) {
-    gst_channel_mix_fill_one_other (this->matrix, &this->in, in_s, &this->out,
-        out_c, RATIO_CENTER_SIDE);
+    gst_channel_mix_fill_one_other (mix->matrix, in_s, out_c,
+        RATIO_CENTER_SIDE);
   }
 
   /* rear <-> center/front/side */
   if (!in_has_rear && in_has_side && out_has_rear) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_s, &this->out, out_r, RATIO_SIDE_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_s, out_r, RATIO_SIDE_REAR);
   } else if (!in_has_rear && !in_has_side && in_has_front && out_has_rear) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_f, &this->out, out_r, RATIO_FRONT_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_f, out_r, RATIO_FRONT_REAR);
   } else if (!in_has_rear && !in_has_side && !in_has_front && in_has_center
       && out_has_rear) {
-    gst_channel_mix_fill_one_other (this->matrix, &this->in, in_c, &this->out,
-        out_r, RATIO_CENTER_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_c, out_r,
+        RATIO_CENTER_REAR);
   } else if (in_has_rear && !out_has_rear && out_has_side) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_r, &this->out, out_s, RATIO_SIDE_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_r, out_s, RATIO_SIDE_REAR);
   } else if (in_has_rear && !out_has_rear && !out_has_side && out_has_front) {
-    gst_channel_mix_fill_one_other (this->matrix,
-        &this->in, in_r, &this->out, out_f, RATIO_FRONT_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_r, out_f, RATIO_FRONT_REAR);
   } else if (in_has_rear && !out_has_rear && !out_has_side && !out_has_front
       && out_has_center) {
-    gst_channel_mix_fill_one_other (this->matrix, &this->in, in_r, &this->out,
-        out_c, RATIO_CENTER_REAR);
+    gst_channel_mix_fill_one_other (mix->matrix, in_r, out_c,
+        RATIO_CENTER_REAR);
   }
 
   /* bass <-> any */
   if (in_has_bass && !out_has_bass) {
     if (out_has_center) {
-      gst_channel_mix_fill_one_other (this->matrix,
-          &this->in, in_b, &this->out, out_c, RATIO_CENTER_BASS);
+      gst_channel_mix_fill_one_other (mix->matrix, in_b, out_c,
+          RATIO_CENTER_BASS);
     }
     if (out_has_front) {
-      gst_channel_mix_fill_one_other (this->matrix,
-          &this->in, in_b, &this->out, out_f, RATIO_FRONT_BASS);
+      gst_channel_mix_fill_one_other (mix->matrix, in_b, out_f,
+          RATIO_FRONT_BASS);
     }
     if (out_has_side) {
-      gst_channel_mix_fill_one_other (this->matrix,
-          &this->in, in_b, &this->out, out_s, RATIO_SIDE_BASS);
+      gst_channel_mix_fill_one_other (mix->matrix, in_b, out_s,
+          RATIO_SIDE_BASS);
     }
     if (out_has_rear) {
-      gst_channel_mix_fill_one_other (this->matrix,
-          &this->in, in_b, &this->out, out_r, RATIO_REAR_BASS);
+      gst_channel_mix_fill_one_other (mix->matrix, in_b, out_r,
+          RATIO_REAR_BASS);
     }
   } else if (!in_has_bass && out_has_bass) {
     if (in_has_center) {
-      gst_channel_mix_fill_one_other (this->matrix,
-          &this->in, in_c, &this->out, out_b, RATIO_CENTER_BASS);
+      gst_channel_mix_fill_one_other (mix->matrix, in_c, out_b,
+          RATIO_CENTER_BASS);
     }
     if (in_has_front) {
-      gst_channel_mix_fill_one_other (this->matrix,
-          &this->in, in_f, &this->out, out_b, RATIO_FRONT_BASS);
+      gst_channel_mix_fill_one_other (mix->matrix, in_f, out_b,
+          RATIO_FRONT_BASS);
     }
     if (in_has_side) {
-      gst_channel_mix_fill_one_other (this->matrix,
-          &this->in, in_s, &this->out, out_b, RATIO_REAR_BASS);
+      gst_channel_mix_fill_one_other (mix->matrix, in_s, out_b,
+          RATIO_REAR_BASS);
     }
     if (in_has_rear) {
-      gst_channel_mix_fill_one_other (this->matrix,
-          &this->in, in_r, &this->out, out_b, RATIO_REAR_BASS);
+      gst_channel_mix_fill_one_other (mix->matrix, in_r, out_b,
+          RATIO_REAR_BASS);
     }
   }
 }
@@ -520,58 +526,56 @@ gst_channel_mix_fill_others (AudioConvertCtx * this)
  */
 
 static void
-gst_channel_mix_fill_normalize (AudioConvertCtx * this)
+gst_channel_mix_fill_normalize (GstChannelMix * mix)
 {
   gfloat sum, top = 0;
   gint i, j;
 
-  for (j = 0; j < this->out.channels; j++) {
+  for (j = 0; j < mix->out_channels; j++) {
     /* calculate sum */
     sum = 0.0;
-    for (i = 0; i < this->in.channels; i++) {
-      sum += fabs (this->matrix[i][j]);
+    for (i = 0; i < mix->in_channels; i++) {
+      sum += fabs (mix->matrix[i][j]);
     }
     if (sum > top) {
       top = sum;
     }
   }
 
-  /* normalize to this */
+  /* normalize to mix */
   if (top == 0.0)
     return;
 
-  for (j = 0; j < this->out.channels; j++) {
-    for (i = 0; i < this->in.channels; i++) {
-      this->matrix[i][j] /= top;
+  for (j = 0; j < mix->out_channels; j++) {
+    for (i = 0; i < mix->in_channels; i++) {
+      mix->matrix[i][j] /= top;
     }
   }
 }
 
 static gboolean
-gst_channel_mix_fill_special (AudioConvertCtx * this)
+gst_channel_mix_fill_special (GstChannelMix * mix)
 {
-  GstAudioInfo *in = &this->in, *out = &this->out;
-
   /* Special, standard conversions here */
 
   /* Mono<->Stereo, just a fast-path */
-  if (in->channels == 2 && out->channels == 1 &&
-      ((in->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT &&
-              in->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) ||
-          (in->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT &&
-              in->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT)) &&
-      out->position[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
-    this->matrix[0][0] = 0.5;
-    this->matrix[1][0] = 0.5;
+  if (mix->in_channels == 2 && mix->out_channels == 1 &&
+      ((mix->in_position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT &&
+              mix->in_position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) ||
+          (mix->in_position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT &&
+              mix->in_position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT)) &&
+      mix->out_position[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
+    mix->matrix[0][0] = 0.5;
+    mix->matrix[1][0] = 0.5;
     return TRUE;
-  } else if (in->channels == 1 && out->channels == 2 &&
-      ((out->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT &&
-              out->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) ||
-          (out->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT &&
-              out->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT)) &&
-      in->position[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
-    this->matrix[0][0] = 1.0;
-    this->matrix[0][1] = 1.0;
+  } else if (mix->in_channels == 1 && mix->out_channels == 2 &&
+      ((mix->out_position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT &&
+              mix->out_position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) ||
+          (mix->out_position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT &&
+              mix->out_position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT)) &&
+      mix->in_position[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
+    mix->matrix[0][0] = 1.0;
+    mix->matrix[0][1] = 1.0;
     return TRUE;
   }
 
@@ -585,69 +589,59 @@ gst_channel_mix_fill_special (AudioConvertCtx * this)
  */
 
 static void
-gst_channel_mix_fill_matrix (AudioConvertCtx * this)
+gst_channel_mix_fill_matrix (GstChannelMix * mix)
 {
-  if (gst_channel_mix_fill_special (this))
+  if (gst_channel_mix_fill_special (mix))
     return;
 
-  gst_channel_mix_fill_identical (this);
+  gst_channel_mix_fill_identical (mix);
 
-  if (!GST_AUDIO_INFO_IS_UNPOSITIONED (&this->in)) {
-    gst_channel_mix_fill_compatible (this);
-    gst_channel_mix_fill_others (this);
-    gst_channel_mix_fill_normalize (this);
+  if (!(mix->flags & GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN)) {
+    gst_channel_mix_fill_compatible (mix);
+    gst_channel_mix_fill_others (mix);
+    gst_channel_mix_fill_normalize (mix);
   }
 }
 
-/* only call this after this->matrix is fully set up and normalized */
+/* only call mix after mix->matrix is fully set up and normalized */
 static void
-gst_channel_mix_setup_matrix_int (AudioConvertCtx * this)
+gst_channel_mix_setup_matrix_int (GstChannelMix * mix)
 {
   gint i, j;
   gfloat tmp;
   gfloat factor = (1 << INT_MATRIX_FACTOR_EXPONENT);
 
-  this->matrix_int = g_new0 (gint *, this->in.channels);
+  mix->matrix_int = g_new0 (gint *, mix->in_channels);
 
-  for (i = 0; i < this->in.channels; i++) {
-    this->matrix_int[i] = g_new (gint, this->out.channels);
+  for (i = 0; i < mix->in_channels; i++) {
+    mix->matrix_int[i] = g_new (gint, mix->out_channels);
 
-    for (j = 0; j < this->out.channels; j++) {
-      tmp = this->matrix[i][j] * factor;
-      this->matrix_int[i][j] = (gint) tmp;
+    for (j = 0; j < mix->out_channels; j++) {
+      tmp = mix->matrix[i][j] * factor;
+      mix->matrix_int[i][j] = (gint) tmp;
     }
   }
 }
 
-/* only call after this->out and this->in are filled in */
-void
-gst_channel_mix_setup_matrix (AudioConvertCtx * this)
+static void
+gst_channel_mix_setup_matrix (GstChannelMix * mix)
 {
   gint i, j;
 
-  /* don't lose memory */
-  gst_channel_mix_unset_matrix (this);
-
-  /* temp storage */
-  if (GST_AUDIO_FORMAT_INFO_IS_INTEGER (this->in.finfo) ||
-      GST_AUDIO_FORMAT_INFO_IS_INTEGER (this->out.finfo)) {
-    this->tmp = (gpointer) g_new (gint32, this->out.channels);
-  } else {
-    this->tmp = (gpointer) g_new (gdouble, this->out.channels);
-  }
+  mix->tmp = (gpointer) g_new (gdouble, mix->out_channels);
 
   /* allocate */
-  this->matrix = g_new0 (gfloat *, this->in.channels);
-  for (i = 0; i < this->in.channels; i++) {
-    this->matrix[i] = g_new (gfloat, this->out.channels);
-    for (j = 0; j < this->out.channels; j++)
-      this->matrix[i][j] = 0.;
+  mix->matrix = g_new0 (gfloat *, mix->in_channels);
+  for (i = 0; i < mix->in_channels; i++) {
+    mix->matrix[i] = g_new (gfloat, mix->out_channels);
+    for (j = 0; j < mix->out_channels; j++)
+      mix->matrix[i][j] = 0.;
   }
 
   /* setup the matrix' internal values */
-  gst_channel_mix_fill_matrix (this);
+  gst_channel_mix_fill_matrix (mix);
 
-  gst_channel_mix_setup_matrix_int (this);
+  gst_channel_mix_setup_matrix_int (mix);
 
 #ifndef GST_DISABLE_GST_DEBUG
   /* debug */
@@ -655,16 +649,16 @@ gst_channel_mix_setup_matrix (AudioConvertCtx * this)
     GString *s;
     s = g_string_new ("Matrix for");
     g_string_append_printf (s, " %d -> %d: ",
-        this->in.channels, this->out.channels);
+        mix->in_channels, mix->out_channels);
     g_string_append (s, "{");
-    for (i = 0; i < this->in.channels; i++) {
+    for (i = 0; i < mix->in_channels; i++) {
       if (i != 0)
         g_string_append (s, ",");
       g_string_append (s, " {");
-      for (j = 0; j < this->out.channels; j++) {
+      for (j = 0; j < mix->out_channels; j++) {
         if (j != 0)
           g_string_append (s, ",");
-        g_string_append_printf (s, " %f", this->matrix[i][j]);
+        g_string_append_printf (s, " %f", mix->matrix[i][j]);
       }
       g_string_append (s, " }");
     }
@@ -675,47 +669,88 @@ gst_channel_mix_setup_matrix (AudioConvertCtx * this)
 #endif
 }
 
+/**
+ * gst_channel_mix_new:
+ * @flags:
+ * @in_channels:
+ * @in_position:
+ * @out_channels:
+ * @out_position:
+ *
+ * Create a new channel mixer object.
+ *
+ * Returns: a new #GstChannelMix object. Free with gst_channel_mix_free()
+ * after usage.
+ */
+GstChannelMix *
+gst_channel_mix_new (GstChannelMixFlags flags,
+    gint in_channels,
+    GstAudioChannelPosition in_position[64],
+    gint out_channels, GstAudioChannelPosition out_position[64])
+{
+  GstChannelMix *mix;
+  gint i;
+
+  mix = g_slice_new0 (GstChannelMix);
+  mix->flags = flags;
+  mix->in_channels = in_channels;
+  mix->out_channels = out_channels;
+  for (i = 0; i < 64; i++) {
+    mix->in_position[i] = in_position[i];
+    mix->out_position[i] = out_position[i];
+  }
+  gst_channel_mix_setup_matrix (mix);
+
+  return mix;
+}
+
+/**
+ * gst_channel_mix_is_passthrough:
+ * @mix: a #GstChannelMix
+ *
+ * Check if @mix is in passthrough.
+ *
+ * Returns: %TRUE is @mix is passthrough.
+ */
 gboolean
-gst_channel_mix_passthrough (AudioConvertCtx * this)
+gst_channel_mix_is_passthrough (GstChannelMix * mix)
 {
   gint i;
   guint64 in_mask, out_mask;
 
   /* only NxN matrices can be identities */
-  if (this->in.channels != this->out.channels)
+  if (mix->in_channels != mix->out_channels)
     return FALSE;
 
   /* passthrough for 1->1 channels (MONO and NONE position are the same here) */
-  if (this->in.channels == 1 && this->out.channels == 1)
+  if (mix->in_channels == 1 && mix->out_channels == 1)
     return TRUE;
 
   /* passthrough if both channel masks are the same */
   in_mask = out_mask = 0;
-  for (i = 0; i < this->in.channels; i++) {
-    in_mask |= this->in.position[i];
-    out_mask |= this->out.position[i];
+  for (i = 0; i < mix->in_channels; i++) {
+    in_mask |= mix->in_position[i];
+    out_mask |= mix->out_position[i];
   }
-
   return in_mask == out_mask;
 }
 
 /* IMPORTANT: out_data == in_data is possible, make sure to not overwrite data
  * you might need later on! */
-void
-gst_channel_mix_mix_int (AudioConvertCtx * this,
+static void
+gst_channel_mix_mix_int (GstChannelMix * mix,
     gint32 * in_data, gint32 * out_data, gint samples)
 {
   gint in, out, n;
   gint64 res;
   gboolean backwards;
   gint inchannels, outchannels;
-  gint32 *tmp = (gint32 *) this->tmp;
+  gint32 *tmp = (gint32 *) mix->tmp;
 
-  g_return_if_fail (this->matrix != NULL);
-  g_return_if_fail (this->tmp != NULL);
+  g_return_if_fail (mix->tmp != NULL);
 
-  inchannels = this->in.channels;
-  outchannels = this->out.channels;
+  inchannels = mix->in_channels;
+  outchannels = mix->out_channels;
   backwards = outchannels > inchannels;
 
   /* FIXME: use orc here? */
@@ -725,8 +760,7 @@ gst_channel_mix_mix_int (AudioConvertCtx * this,
       /* convert */
       res = 0;
       for (in = 0; in < inchannels; in++) {
-        res +=
-            in_data[n * inchannels + in] * (gint64) this->matrix_int[in][out];
+        res += in_data[n * inchannels + in] * (gint64) mix->matrix_int[in][out];
       }
 
       /* remove factor from int matrix */
@@ -739,26 +773,25 @@ gst_channel_mix_mix_int (AudioConvertCtx * this,
         res = G_MAXINT32;
       tmp[out] = res;
     }
-    memcpy (&out_data[n * outchannels], this->tmp,
+    memcpy (&out_data[n * outchannels], mix->tmp,
         sizeof (gint32) * outchannels);
   }
 }
 
-void
-gst_channel_mix_mix_float (AudioConvertCtx * this,
+static void
+gst_channel_mix_mix_double (GstChannelMix * mix,
     gdouble * in_data, gdouble * out_data, gint samples)
 {
   gint in, out, n;
   gdouble res;
   gboolean backwards;
   gint inchannels, outchannels;
-  gdouble *tmp = (gdouble *) this->tmp;
+  gdouble *tmp = (gdouble *) mix->tmp;
 
-  g_return_if_fail (this->matrix != NULL);
-  g_return_if_fail (this->tmp != NULL);
+  g_return_if_fail (mix->tmp != NULL);
 
-  inchannels = this->in.channels;
-  outchannels = this->out.channels;
+  inchannels = mix->in_channels;
+  outchannels = mix->out_channels;
   backwards = outchannels > inchannels;
 
   /* FIXME: use orc here? */
@@ -768,7 +801,7 @@ gst_channel_mix_mix_float (AudioConvertCtx * this,
       /* convert */
       res = 0.0;
       for (in = 0; in < inchannels; in++) {
-        res += in_data[n * inchannels + in] * this->matrix[in][out];
+        res += in_data[n * inchannels + in] * mix->matrix[in][out];
       }
 
       /* clip (shouldn't we use doubles instead as intermediate format?) */
@@ -778,7 +811,42 @@ gst_channel_mix_mix_float (AudioConvertCtx * this,
         res = 1.0;
       tmp[out] = res;
     }
-    memcpy (&out_data[n * outchannels], this->tmp,
+    memcpy (&out_data[n * outchannels], mix->tmp,
         sizeof (gdouble) * outchannels);
+  }
+}
+
+/**
+ * gst_channel_mix_mix:
+ * @mix:
+ * @format:
+ * @layout:
+ * @in_data:
+ * @out_data:
+ * @samples:
+ *
+ * Perform channel mixing
+ */
+void
+gst_channel_mix_mix (GstChannelMix * mix, GstAudioFormat format,
+    GstAudioLayout layout, gpointer * in_data, gpointer * out_data,
+    gint samples)
+{
+  g_return_if_fail (mix != NULL);
+  g_return_if_fail (mix->matrix != NULL);
+  g_return_if_fail (layout == GST_AUDIO_LAYOUT_INTERLEAVED);
+
+  switch (format) {
+    case GST_AUDIO_FORMAT_S32:
+      gst_channel_mix_mix_int (mix, (gint32 *) in_data, (gint32 *) out_data,
+          samples);
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      gst_channel_mix_mix_double (mix, (gdouble *) in_data,
+          (gdouble *) out_data, samples);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
 }

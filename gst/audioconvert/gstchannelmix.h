@@ -23,34 +23,44 @@
 #define __GST_CHANNEL_MIX_H__
 
 #include <gst/gst.h>
-#include "audioconvert.h"
+#include <gst/audio/audio.h>
 
-/*
- * Delete channel mixer matrix.
- */
-void            gst_channel_mix_unset_matrix    (AudioConvertCtx * this);
+typedef struct _GstChannelMix GstChannelMix;
 
-/*
- * Setup channel mixer matrix.
+/**
+ * GstChannelMixFlags:
+ * @GST_CHANNEL_MIX_FLAGS_NONE: no flag
+ * @GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN: input channels are explicitly unpositioned
+ * @GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT: output channels are explicitly unpositioned
+ *
+ * Flags passed to gst_channel_mix_new()
  */
-void            gst_channel_mix_setup_matrix    (AudioConvertCtx * this);
+typedef enum {
+  GST_CHANNEL_MIX_FLAGS_NONE             = 0,
+  GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN  = (1 << 0),
+  GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT = (1 << 1)
+} GstChannelMixFlags;
+
+GstChannelMix * gst_channel_mix_new             (GstChannelMixFlags flags,
+                                                 gint in_channels,
+                                                 GstAudioChannelPosition in_position[64],
+                                                 gint out_channels,
+                                                 GstAudioChannelPosition out_position[64]);
+void            gst_channel_mix_free            (GstChannelMix *mix);
 
 /*
  * Checks for passthrough (= identity matrix).
  */
-gboolean        gst_channel_mix_passthrough     (AudioConvertCtx * this);
+gboolean        gst_channel_mix_is_passthrough     (GstChannelMix *mix);
 
 /*
  * Do actual mixing.
  */
-void            gst_channel_mix_mix_int         (AudioConvertCtx * this,
-                                                 gint32          * in_data,
-                                                 gint32          * out_data,
-                                                 gint              samples);
-
-void            gst_channel_mix_mix_float       (AudioConvertCtx * this,
-                                                 gdouble         * in_data,
-                                                 gdouble         * out_data,
+void            gst_channel_mix_mix             (GstChannelMix   * mix,
+                                                 GstAudioFormat    format,
+                                                 GstAudioLayout    layout,
+                                                 gpointer        * in_data,
+                                                 gpointer        * out_data,
                                                  gint              samples);
 
 #endif /* __GST_CHANNEL_MIX_H__ */

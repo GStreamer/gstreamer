@@ -25,6 +25,8 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
+#include "gstchannelmix.h"
+
 GST_DEBUG_CATEGORY_EXTERN (audio_convert_debug);
 #define GST_CAT_DEFAULT (audio_convert_debug)
 
@@ -87,7 +89,6 @@ struct _AudioConvertFmt
 };
 #endif
 
-typedef void (*AudioConvertMix) (AudioConvertCtx *, gpointer, gpointer, gint);
 typedef void (*AudioConvertQuantize) (AudioConvertCtx * ctx, gpointer src,
     gpointer dst, gint count);
 typedef void (*AudioConvertToF64) (gdouble *dst, const gint32 *src, gint count);
@@ -97,16 +98,7 @@ struct _AudioConvertCtx
   GstAudioInfo in;
   GstAudioInfo out;
 
-  /* channel conversion matrix, m[in_channels][out_channels].
-   * If identity matrix, passthrough applies. */
-  gfloat **matrix;
-
-  /* channel conversion matrix with int values, m[in_channels][out_channels].
-   * this is matrix * (2^10) as integers */
-  gint **matrix_int;
-
-  /* temp storage for channelmix */
-  gpointer tmp;
+  GstChannelMix *mix;
 
   gboolean in_default;
   gboolean mix_passthrough;
@@ -117,9 +109,9 @@ struct _AudioConvertCtx
   gint tmpbufsize;
 
   gint out_scale;
+  GstAudioFormat mix_format;
 
   AudioConvertToF64 convert;
-  AudioConvertMix channel_mix;
   AudioConvertQuantize quantize;
 
   GstAudioConvertDithering dither;
