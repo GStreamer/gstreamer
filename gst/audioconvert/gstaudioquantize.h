@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ *           (C) 2015 Wim Taymans <wim.taymans@gmail.com>
  *
  * gstaudioquantize.h: quantizes audio to the target format and optionally
  *                     applies dithering and noise shaping.
@@ -21,14 +22,68 @@
  */
 
 #include <gst/gst.h>
-#include "audioconvert.h"
+
+#include <gst/audio/audio.h>
+
 
 #ifndef __GST_AUDIO_QUANTIZE_H__
 #define __GST_AUDIO_QUANTIZE_H__
 
-gboolean gst_audio_quantize_setup (AudioConvertCtx * ctx);
-void gst_audio_quantize_reset (AudioConvertCtx * ctx);
-void gst_audio_quantize_free (AudioConvertCtx * ctx);
+/**
+ * GstAudioDitherMethod:
+ * @GST_AUDIO_DITHER_NONE: No dithering
+ * @GST_AUDIO_DITHER_RPDF: Rectangular dithering
+ * @GST_AUDIO_DITHER_TPDF: Triangular dithering (default)
+ * @GST_AUDIO_DITHER_TPDF_HF: High frequency triangular dithering
+ *
+ * Set of available dithering methods.
+ */
+typedef enum
+{
+  GST_AUDIO_DITHER_NONE = 0,
+  GST_AUDIO_DITHER_RPDF,
+  GST_AUDIO_DITHER_TPDF,
+  GST_AUDIO_DITHER_TPDF_HF
+} GstAudioDitherMethod;
 
+/**
+ * GstAudioNoiseShapingMethod:
+ * @GST_AUDIO_NOISE_SHAPING_NONE: No noise shaping (default)
+ * @GST_AUDIO_NOISE_SHAPING_ERROR_FEEDBACK: Error feedback
+ * @GST_AUDIO_NOISE_SHAPING_SIMPLE: Simple 2-pole noise shaping
+ * @GST_AUDIO_NOISE_SHAPING_MEDIUM: Medium 5-pole noise shaping
+ * @GST_AUDIO_NOISE_SHAPING_HIGH: High 8-pole noise shaping
+ *
+ * Set of available noise shaping methods
+ */
+typedef enum
+{
+  GST_AUDIO_NOISE_SHAPING_NONE = 0,
+  GST_AUDIO_NOISE_SHAPING_ERROR_FEEDBACK,
+  GST_AUDIO_NOISE_SHAPING_SIMPLE,
+  GST_AUDIO_NOISE_SHAPING_MEDIUM,
+  GST_AUDIO_NOISE_SHAPING_HIGH
+} GstAudioNoiseShapingMethod;
+
+
+typedef enum
+{
+  GST_AUDIO_QUANTIZE_FLAG_NONE = 0
+} GstAudioQuantizeFlags;
+
+
+typedef struct _GstAudioQuantize GstAudioQuantize;
+
+GstAudioQuantize *  gst_audio_quantize_new      (GstAudioDitherMethod dither,
+                                                 GstAudioNoiseShapingMethod ns,
+                                                 GstAudioQuantizeFlags flags,
+                                                 GstAudioFormat format,
+                                                 guint channels,
+                                                 guint quantizer);
+
+void                gst_audio_quantize_free     (GstAudioQuantize * quant);
+
+void                gst_audio_quantize_samples  (GstAudioQuantize * quant,
+                                                 gpointer data, guint samples);
 
 #endif /* __GST_AUDIO_QUANTIZE_H__ */

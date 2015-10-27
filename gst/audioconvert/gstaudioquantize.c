@@ -34,11 +34,30 @@
 #include <gst/gst.h>
 #include <string.h>
 #include <math.h>
-#include "audioconvert.h"
 #include "gstaudioconvertorc.h"
 #include "gstaudioquantize.h"
 
 #include "gstfastrandom.h"
+
+typedef void (*QuantizeFunc) (GstAudioQuantize * quant, gpointer src,
+    gpointer dst, gint count);
+
+struct _GstAudioQuantize
+{
+  GstAudioDitherMethod dither;
+  GstAudioNoiseShapingMethod ns;
+  GstAudioQuantizeFlags flags;
+  GstAudioFormat format;
+  guint channels;
+  guint quantizer;
+
+  /* last random number generated per channel for hifreq TPDF dither */
+  gpointer last_random;
+  /* contains the past quantization errors, error[out_channels][count] */
+  gdouble *error_buf;
+
+  QuantizeFunc quantize;
+};
 
 #define MAKE_QUANTIZE_FUNC_NAME(name)                                   \
 gst_audio_quantize_quantize_##name
@@ -48,11 +67,11 @@ gst_audio_quantize_quantize_##name
 #define MAKE_QUANTIZE_FUNC_I(name, DITHER_INIT_FUNC, ADD_DITHER_FUNC,   \
                              ROUND_FUNC)                                \
 static void                                                             \
-MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gint32 *src,      \
+MAKE_QUANTIZE_FUNC_NAME (name) (GstAudioQuantize *quant, gint32 *src,   \
                                 gint32 *dst, gint count)                \
 {                                                                       \
-  gint scale = ctx->out_scale;                                          \
-  gint channels = ctx->out.channels;                                    \
+  gint scale = quant->quantizer;                                        \
+  gint channels = quant->channels;                                      \
   gint chan_pos;                                                        \
                                                                         \
   if (scale > 0) {                                                      \
@@ -83,11 +102,11 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gint32 *src,      \
                              ADD_NS_FUNC, ADD_DITHER_FUNC,              \
                              UPDATE_ERROR_FUNC)                         \
 static void                                                             \
-MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
+MAKE_QUANTIZE_FUNC_NAME (name) (GstAudioQuantize *quant, gdouble *src,  \
                                 gint32 *dst, gint count)                \
 {                                                                       \
-  gint scale = ctx->out_scale;                                          \
-  gint channels = ctx->out.channels;                                    \
+  gint scale = quant->quantizer;                                        \
+  gint channels = quant->channels;                                      \
   gint chan_pos;                                                        \
   gdouble tmp, d, factor = (1U<<(32-scale-1));                          \
                                                                         \
@@ -180,7 +199,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
 #define INIT_DITHER_TPDF_HF_I()                                         \
   gint32 rand;                                                          \
   gint32 dither = (1<<(scale-1));                                       \
-  gint32 *last_random = (gint32 *) ctx->last_random, tmp_rand;
+  gint32 *last_random = (gint32 *) quant->last_random, tmp_rand;
 
 #define ADD_DITHER_TPDF_HF_I()                                          \
         tmp_rand = RANDOM_INT_DITHER(dither);                           \
@@ -199,7 +218,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
 #define INIT_DITHER_TPDF_HF_F()                                         \
   gdouble rand;                                                         \
   gdouble dither = 1.0/(1U<<(32 - scale));                              \
-  gdouble *last_random = (gdouble *) ctx->last_random, tmp_rand;
+  gdouble *last_random = (gdouble *) quant->last_random, tmp_rand;
 
 #define ADD_DITHER_TPDF_HF_F()                                          \
         tmp_rand = gst_fast_random_double_range (- dither, dither);     \
@@ -216,7 +235,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
 
 #define INIT_NS_ERROR_FEEDBACK()                                        \
   gdouble orig;                                                         \
-  gdouble *errors = ctx->error_buf;
+  gdouble *errors = quant->error_buf;
 
 #define ADD_NS_ERROR_FEEDBACK()                                         \
         orig = tmp;                                                     \
@@ -230,7 +249,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
 
 #define INIT_NS_SIMPLE()                                                \
   gdouble orig;                                                         \
-  gdouble *errors = ctx->error_buf, cur_error;
+  gdouble *errors = quant->error_buf, cur_error;
 
 #define ADD_NS_SIMPLE()                                                 \
         cur_error = errors[chan_pos*2] - 0.5 * errors[chan_pos*2 + 1];  \
@@ -256,7 +275,7 @@ static const gdouble ns_medium_coeffs[] = {
 
 #define INIT_NS_MEDIUM()                                                \
   gdouble orig;                                                         \
-  gdouble *errors = ctx->error_buf, cur_error;                          \
+  gdouble *errors = quant->error_buf, cur_error;                        \
   int j;
 
 #define ADD_NS_MEDIUM()                                                 \
@@ -280,7 +299,7 @@ static const gdouble ns_high_coeffs[] = {
 
 #define INIT_NS_HIGH()                                                  \
   gdouble orig;                                                         \
-  gdouble *errors = ctx->error_buf, cur_error;                          \
+  gdouble *errors = quant->error_buf, cur_error;                        \
   int j;
 
 #define ADD_NS_HIGH()                                                   \
@@ -352,142 +371,149 @@ MAKE_QUANTIZE_FUNC_F (float_tpdf_hf_medium, INIT_DITHER_TPDF_HF_F,
 MAKE_QUANTIZE_FUNC_F (float_tpdf_hf_high, INIT_DITHER_TPDF_HF_F, INIT_NS_HIGH,
     ADD_NS_HIGH, ADD_DITHER_TPDF_HF_F, UPDATE_ERROR_HIGH);
 
-static const AudioConvertQuantize quantize_funcs[] = {
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (int_none_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (int_rpdf_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (int_tpdf_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (int_tpdf_hf_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_error_feedback),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_simple),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_medium),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_high),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_error_feedback),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_simple),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_medium),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_high),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_error_feedback),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_simple),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_medium),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_high),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_error_feedback),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_simple),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_medium),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_high)
+static const QuantizeFunc quantize_funcs[] = {
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (int_none_none),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (int_rpdf_none),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (int_tpdf_none),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (int_tpdf_hf_none),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_none_none),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_none_error_feedback),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_none_simple),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_none_medium),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_none_high),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_none),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_error_feedback),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_simple),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_medium),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_rpdf_high),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_none),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_error_feedback),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_simple),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_medium),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_high),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_none),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_error_feedback),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_simple),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_medium),
+  (QuantizeFunc) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_high)
 };
 
 static void
-gst_audio_quantize_setup_noise_shaping (AudioConvertCtx * ctx)
+gst_audio_quantize_setup_noise_shaping (GstAudioQuantize * quant)
 {
-  switch (ctx->ns) {
-    case NOISE_SHAPING_HIGH:{
-      ctx->error_buf = g_new0 (gdouble, ctx->out.channels * 8);
+  switch (quant->ns) {
+    case GST_AUDIO_NOISE_SHAPING_HIGH:{
+      quant->error_buf = g_new0 (gdouble, quant->channels * 8);
       break;
     }
-    case NOISE_SHAPING_MEDIUM:{
-      ctx->error_buf = g_new0 (gdouble, ctx->out.channels * 5);
+    case GST_AUDIO_NOISE_SHAPING_MEDIUM:{
+      quant->error_buf = g_new0 (gdouble, quant->channels * 5);
       break;
     }
-    case NOISE_SHAPING_SIMPLE:{
-      ctx->error_buf = g_new0 (gdouble, ctx->out.channels * 2);
+    case GST_AUDIO_NOISE_SHAPING_SIMPLE:{
+      quant->error_buf = g_new0 (gdouble, quant->channels * 2);
       break;
     }
-    case NOISE_SHAPING_ERROR_FEEDBACK:
-      ctx->error_buf = g_new0 (gdouble, ctx->out.channels);
+    case GST_AUDIO_NOISE_SHAPING_ERROR_FEEDBACK:
+      quant->error_buf = g_new0 (gdouble, quant->channels);
       break;
-    case NOISE_SHAPING_NONE:
+    case GST_AUDIO_NOISE_SHAPING_NONE:
     default:
-      ctx->error_buf = NULL;
+      quant->error_buf = NULL;
       break;
   }
   return;
 }
 
 static void
-gst_audio_quantize_free_noise_shaping (AudioConvertCtx * ctx)
+gst_audio_quantize_setup_dither (GstAudioQuantize * quant)
 {
-  switch (ctx->ns) {
-    case NOISE_SHAPING_HIGH:
-    case NOISE_SHAPING_MEDIUM:
-    case NOISE_SHAPING_SIMPLE:
-    case NOISE_SHAPING_ERROR_FEEDBACK:
-    case NOISE_SHAPING_NONE:
+  switch (quant->dither) {
+    case GST_AUDIO_DITHER_TPDF_HF:
+      quant->last_random = g_new0 (gdouble, quant->channels);
+      break;
+    case GST_AUDIO_DITHER_RPDF:
+    case GST_AUDIO_DITHER_TPDF:
+      quant->last_random = NULL;
+      break;
+    case GST_AUDIO_DITHER_NONE:
     default:
-      break;
-  }
-
-  g_free (ctx->error_buf);
-  ctx->error_buf = NULL;
-  return;
-}
-
-static void
-gst_audio_quantize_setup_dither (AudioConvertCtx * ctx)
-{
-  switch (ctx->dither) {
-    case DITHER_TPDF_HF:
-      if (GST_AUDIO_FORMAT_INFO_IS_INTEGER (ctx->out.finfo))
-        ctx->last_random = g_new0 (gint32, ctx->out.channels);
-      else
-        ctx->last_random = g_new0 (gdouble, ctx->out.channels);
-      break;
-    case DITHER_RPDF:
-    case DITHER_TPDF:
-      ctx->last_random = NULL;
-      break;
-    case DITHER_NONE:
-    default:
-      ctx->last_random = NULL;
+      quant->last_random = NULL;
       break;
   }
   return;
 }
 
 static void
-gst_audio_quantize_free_dither (AudioConvertCtx * ctx)
-{
-  g_free (ctx->last_random);
-
-  return;
-}
-
-static void
-gst_audio_quantize_setup_quantize_func (AudioConvertCtx * ctx)
+gst_audio_quantize_setup_quantize_func (GstAudioQuantize * quant)
 {
   gint index = 0;
 
-  if (!GST_AUDIO_FORMAT_INFO_IS_INTEGER (ctx->out.finfo)) {
-    ctx->quantize = NULL;
-    return;
-  }
-
-  if (ctx->ns == NOISE_SHAPING_NONE
-      && GST_AUDIO_FORMAT_INFO_IS_INTEGER (ctx->in.finfo)) {
-    index += ctx->dither;
+  if (quant->ns == GST_AUDIO_NOISE_SHAPING_NONE
+      && quant->format == GST_AUDIO_FORMAT_S32) {
+    index += quant->dither;
   } else {
-    index += 4 + (5 * ctx->dither);
-    index += ctx->ns;
-  }
+    g_assert (quant->format == GST_AUDIO_FORMAT_F64);
 
-  ctx->quantize = quantize_funcs[index];
+    index += 4 + (5 * quant->dither);
+    index += quant->ns;
+  }
+  quant->quantize = quantize_funcs[index];
 }
 
-gboolean
-gst_audio_quantize_setup (AudioConvertCtx * ctx)
+/**
+ * gst_audio_quantize_new:
+ * @dither: a #GstAudioDitherMethod
+ * @ns: a #GstAudioNoiseShapingMethod
+ * @flags: #GstAudioQuantizeFlags
+ * @format: the #GstAudioFormat of the samples
+ * @channels: the amount of channels in the samples
+ * @quantizer: the quantizer to use
+ *
+ * Create a new quantizer object with the given parameters.
+ *
+ * Returns: a new #GstAudioQuantize. Free with gst_audio_quantize_free().
+ */
+GstAudioQuantize *
+gst_audio_quantize_new (GstAudioDitherMethod dither,
+    GstAudioNoiseShapingMethod ns, GstAudioQuantizeFlags flags,
+    GstAudioFormat format, guint channels, guint quantizer)
 {
-  gst_audio_quantize_setup_dither (ctx);
-  gst_audio_quantize_setup_noise_shaping (ctx);
-  gst_audio_quantize_setup_quantize_func (ctx);
+  GstAudioQuantize *quant;
 
-  return TRUE;
+  quant = g_slice_new0 (GstAudioQuantize);
+  quant->dither = dither;
+  quant->ns = ns;
+  quant->flags = flags;
+  quant->format = format;
+  quant->channels = channels;
+  quant->quantizer = quantizer;
+
+  gst_audio_quantize_setup_dither (quant);
+  gst_audio_quantize_setup_noise_shaping (quant);
+  gst_audio_quantize_setup_quantize_func (quant);
+
+  return quant;
+}
+
+/**
+ * gst_audio_quantize_free:
+ * @quant: a #GstAudioQuantize
+ *
+ * Free a #GstAudioQuantize.
+ */
+void
+gst_audio_quantize_free (GstAudioQuantize * quant)
+{
+  g_free (quant->error_buf);
+  g_free (quant->last_random);
+
+  g_slice_free (GstAudioQuantize, quant);
 }
 
 void
-gst_audio_quantize_free (AudioConvertCtx * ctx)
+gst_audio_quantize_samples (GstAudioQuantize * quant,
+    gpointer data, guint samples)
 {
-  gst_audio_quantize_free_dither (ctx);
-  gst_audio_quantize_free_noise_shaping (ctx);
+  quant->quantize (quant, data, data, samples);
 }

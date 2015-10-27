@@ -140,11 +140,12 @@ gst_audio_convert_dithering_get_type (void)
 
   if (gtype == 0) {
     static const GEnumValue values[] = {
-      {DITHER_NONE, "No dithering",
+      {GST_AUDIO_DITHER_NONE, "No dithering",
           "none"},
-      {DITHER_RPDF, "Rectangular dithering", "rpdf"},
-      {DITHER_TPDF, "Triangular dithering (default)", "tpdf"},
-      {DITHER_TPDF_HF, "High frequency triangular dithering", "tpdf-hf"},
+      {GST_AUDIO_DITHER_RPDF, "Rectangular dithering", "rpdf"},
+      {GST_AUDIO_DITHER_TPDF, "Triangular dithering (default)", "tpdf"},
+      {GST_AUDIO_DITHER_TPDF_HF, "High frequency triangular dithering",
+          "tpdf-hf"},
       {0, NULL, NULL}
     };
 
@@ -161,12 +162,13 @@ gst_audio_convert_ns_get_type (void)
 
   if (gtype == 0) {
     static const GEnumValue values[] = {
-      {NOISE_SHAPING_NONE, "No noise shaping (default)",
+      {GST_AUDIO_NOISE_SHAPING_NONE, "No noise shaping (default)",
           "none"},
-      {NOISE_SHAPING_ERROR_FEEDBACK, "Error feedback", "error-feedback"},
-      {NOISE_SHAPING_SIMPLE, "Simple 2-pole noise shaping", "simple"},
-      {NOISE_SHAPING_MEDIUM, "Medium 5-pole noise shaping", "medium"},
-      {NOISE_SHAPING_HIGH, "High 8-pole noise shaping", "high"},
+      {GST_AUDIO_NOISE_SHAPING_ERROR_FEEDBACK, "Error feedback",
+          "error-feedback"},
+      {GST_AUDIO_NOISE_SHAPING_SIMPLE, "Simple 2-pole noise shaping", "simple"},
+      {GST_AUDIO_NOISE_SHAPING_MEDIUM, "Medium 5-pole noise shaping", "medium"},
+      {GST_AUDIO_NOISE_SHAPING_HIGH, "High 8-pole noise shaping", "high"},
       {0, NULL, NULL}
     };
 
@@ -191,13 +193,13 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
   g_object_class_install_property (gobject_class, PROP_DITHERING,
       g_param_spec_enum ("dithering", "Dithering",
           "Selects between different dithering methods.",
-          GST_TYPE_AUDIO_CONVERT_DITHERING, DITHER_TPDF,
+          GST_TYPE_AUDIO_CONVERT_DITHERING, GST_AUDIO_DITHER_TPDF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NOISE_SHAPING,
       g_param_spec_enum ("noise-shaping", "Noise shaping",
           "Selects between different noise shaping methods.",
-          GST_TYPE_AUDIO_CONVERT_NOISE_SHAPING, NOISE_SHAPING_NONE,
+          GST_TYPE_AUDIO_CONVERT_NOISE_SHAPING, GST_AUDIO_NOISE_SHAPING_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
@@ -227,8 +229,8 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
 static void
 gst_audio_convert_init (GstAudioConvert * this)
 {
-  this->dither = DITHER_TPDF;
-  this->ns = NOISE_SHAPING_NONE;
+  this->dither = GST_AUDIO_DITHER_TPDF;
+  this->ns = GST_AUDIO_NOISE_SHAPING_NONE;
   memset (&this->ctx, 0, sizeof (AudioConvertCtx));
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (this), TRUE);
