@@ -23,6 +23,7 @@
 #endif
 
 #include <locale.h>
+#include <errno.h>
 #include <string.h>
 #include "encoding-target.h"
 
@@ -988,14 +989,24 @@ gst_encoding_target_save (GstEncodingTarget * target, GError ** error)
 {
   gchar *filename;
   gchar *lfilename;
+  gchar *dirname;
 
   g_return_val_if_fail (GST_IS_ENCODING_TARGET (target), FALSE);
   g_return_val_if_fail (target->category != NULL, FALSE);
 
   lfilename = g_strdup_printf ("%s" GST_ENCODING_TARGET_SUFFIX, target->name);
-  filename =
+  dirname =
       g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
-      GST_ENCODING_TARGET_DIRECTORY, target->category, lfilename, NULL);
+      GST_ENCODING_TARGET_DIRECTORY, target->category, NULL);
+  errno = 0;
+  if (g_mkdir_with_parents (dirname, 0755)) {
+    GST_ERROR_OBJECT (target, "Could not create directory to save %s into: %s",
+        target->name, g_strerror (errno));
+
+    return FALSE;
+  }
+  filename = g_build_filename (dirname, lfilename, NULL);
+  g_free (dirname);
   g_free (lfilename);
 
   gst_encoding_target_save_to_file (target, filename, error);
