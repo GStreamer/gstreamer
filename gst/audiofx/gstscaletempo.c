@@ -401,19 +401,7 @@ reverse_buffer (GstScaletempo * st, GstBuffer * inbuf)
   outbuf = gst_buffer_new_and_alloc (imap.size);
   gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
 
-  if (st->format == GST_AUDIO_FORMAT_F64) {
-    const gint64 *ip = (const gint64 *) imap.data;
-    gint64 *op = (gint64 *) (omap.data + omap.size - 8 * st->samples_per_frame);
-    guint i, n = imap.size / (8 * st->samples_per_frame);
-    guint j, c = st->samples_per_frame;
-
-    for (i = 0; i < n; i++) {
-      for (j = 0; j < c; j++)
-        op[j] = ip[j];
-      op -= c;
-      ip += c;
-    }
-  } else {
+  {
     const gint32 *ip = (const gint32 *) imap.data;
     gint32 *op = (gint32 *) (omap.data + omap.size - 4 * st->samples_per_frame);
     guint i, n = imap.size / (4 * st->samples_per_frame);
