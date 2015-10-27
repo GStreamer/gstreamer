@@ -62,6 +62,7 @@ class Player : public QObject
 
 public:
     explicit Player(QObject *parent = 0, VideoRenderer *renderer = 0);
+    virtual ~Player();
 
     typedef GstPlayerError Error;
     enum State {

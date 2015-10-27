@@ -359,6 +359,15 @@ Player::Player(QObject *parent, VideoRenderer *renderer)
     gst_player_set_subtitle_track_enabled(player_, false);
 }
 
+Player::~Player()
+{
+    if (player_) {
+      g_signal_handlers_disconnect_by_data(player_, this);
+      gst_player_stop(player_);
+      g_object_unref(player_);
+    }
+}
+
 void
 Player::onStateChanged(Player * player, GstPlayerState state)
 {
