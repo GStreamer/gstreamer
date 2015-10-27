@@ -1503,8 +1503,6 @@ gst_mxf_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
       if ((!pad_eos || pad->have_complete_edit_unit ||
               gst_adapter_available (pad->adapter) > 0 || buffer)
           && pad->last_timestamp < next_gc_timestamp) {
-        if (best)
-          gst_object_unref (best);
         if (buffer)
           gst_buffer_unref (buffer);
         best = gst_object_ref (pad);
@@ -1513,8 +1511,6 @@ gst_mxf_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
         mux->last_gc_position++;
         mux->last_gc_timestamp = next_gc_timestamp;
         eos = FALSE;
-        if (best)
-          gst_object_unref (best);
         if (buffer)
           gst_buffer_unref (buffer);
         best = NULL;
@@ -1541,8 +1537,7 @@ gst_mxf_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
     mux->state = GST_MXF_MUX_STATE_EOS;
     return GST_FLOW_EOS;
   } else {
-    if (best)
-      gst_object_unref (best);
+    g_assert_not_reached ();
   }
 
   return GST_FLOW_OK;
