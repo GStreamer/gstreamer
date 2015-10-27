@@ -1231,8 +1231,6 @@ gst_encoding_profile_find (const gchar * targetname, const gchar * profilename,
   g_return_val_if_fail (targetname != NULL, NULL);
   g_return_val_if_fail (profilename != NULL, NULL);
 
-  /* FIXME : how do we handle profiles named the same in several
-   * categories but of which only one has the required profile ? */
   target = gst_encoding_target_load (targetname, category, NULL);
   if (target) {
     res = gst_encoding_target_get_profile (target, profilename);
@@ -1247,13 +1245,16 @@ combo_search (const gchar * pname)
 {
   GstEncodingProfile *res;
   gchar **split;
+  gint split_length;
 
   /* Splitup */
-  split = g_strsplit (pname, "/", 2);
-  if (g_strv_length (split) != 2)
+  split = g_strsplit (pname, "/", 3);
+  split_length = g_strv_length (split);
+  if (split_length != 2 && split_length != 3)
     return NULL;
 
-  res = gst_encoding_profile_find (split[0], split[1], NULL);
+  res = gst_encoding_profile_find (split[0], split[1],
+      split_length == 3 ? split[2] : NULL);
 
   g_strfreev (split);
 
