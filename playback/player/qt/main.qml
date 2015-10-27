@@ -144,12 +144,12 @@ ApplicationWindow {
                         width: 150; height: 20
                         Text {
                             text: model.name
-                            font.pointSize: 13
+                            font.pixelSize: 13
                             anchors.centerIn: parent
                         }
 
                         Text {
-                            font.pointSize: 13
+                            font.pixelSize: 13
                             font.family: "FontAwesome"
                             text: FontAwesome.Icon.ChevronRight
                             anchors.right: parent.right
@@ -205,7 +205,7 @@ ApplicationWindow {
                         width: 150; height: 20
                         Text {
                             text: model.modelData.resolution.width + 'x' + model.modelData.resolution.height
-                            font.pointSize: 13
+                            font.pixelSize: 13
                             anchors.centerIn: parent
                         }
 
@@ -255,7 +255,7 @@ ApplicationWindow {
                         width: 150; height: 20
                         Text {
                             text: model.modelData.channels + 'channels'
-                            font.pointSize: 13
+                            font.pixelSize: 13
                             anchors.centerIn: parent
                         }
 
@@ -305,7 +305,7 @@ ApplicationWindow {
                         width: 150; height: 20
                         Text {
                             text: model.modelData.language
-                            font.pointSize: 13
+                            font.pixelSize: 13
                             anchors.centerIn: parent
                         }
 
@@ -344,7 +344,7 @@ ApplicationWindow {
 
                 Text {
                     id : openmedia
-                    font.pointSize: 17
+                    font.pixelSize: 17
                     font.family: "FontAwesome"
                     text: FontAwesome.Icon.FolderOpen
 
@@ -360,7 +360,7 @@ ApplicationWindow {
 
                     Text {
                         anchors.centerIn: parent
-                        font.pointSize: 17
+                        font.pixelSize: 17
                         font.family: "FontAwesome"
                         text: FontAwesome.Icon.StepBackward
                     }
@@ -382,7 +382,7 @@ ApplicationWindow {
                                 PropertyChanges {
                                     target: playbutton
                                     text: FontAwesome.Icon.PlayCircle
-                                    font.pointSize: 25
+                                    font.pixelSize: 25
                                 }
                             },
                             State {
@@ -390,7 +390,7 @@ ApplicationWindow {
                                 PropertyChanges {
                                     target: playbutton
                                     text: FontAwesome.Icon.Pause
-                                    font.pointSize: 17
+                                    font.pixelSize: 17
                                 }
                             }
                         ]
@@ -417,7 +417,7 @@ ApplicationWindow {
 
                     Text {
                         anchors.centerIn: parent
-                        font.pointSize: 17
+                        font.pixelSize: 17
                         font.family: "FontAwesome"
                         text: FontAwesome.Icon.StepForward
                     }
@@ -429,7 +429,7 @@ ApplicationWindow {
                     Text {
                         id: timelabel
                         anchors.centerIn: parent
-                        font.pointSize: 13
+                        font.pixelSize: 13
                         color: "black"
                         text: {
                             var current = new Date(Math.floor(slider.value / 1e6));
@@ -445,7 +445,7 @@ ApplicationWindow {
                         anchors.centerIn: parent
                         width: parent.width
                         text: player.mediaInfo.title
-                        font.pointSize: 15
+                        font.pixelSize: 15
                         elide: Text.ElideRight
                     }
                 }
@@ -456,7 +456,7 @@ ApplicationWindow {
                     Text {
                         id: durationlabel
                         anchors.centerIn: parent
-                        font.pointSize: 13
+                        font.pixelSize: 13
                         color: "black"
                         text: {
                             var duration = new Date(Math.floor(player.duration / 1e6));
@@ -467,7 +467,7 @@ ApplicationWindow {
 
                 Text {
                     id: sub
-                    font.pointSize: 17
+                    font.pixelSize: 17
                     font.family: "FontAwesome"
                     text: FontAwesome.Icon.ClosedCaptions
                     color: player.subtitleEnabled ? "red" : "black"
@@ -487,7 +487,7 @@ ApplicationWindow {
                     Text {
                         id : volume
                         anchors.centerIn: parent
-                        font.pointSize: 17
+                        font.pixelSize: 17
                         font.family: "FontAwesome"
                         text: {
                             if (volumeslider.value > volumeslider.maximumValue / 2) {
@@ -585,7 +585,7 @@ ApplicationWindow {
 
                 Text {
                     id: cog
-                    font.pointSize: 17
+                    font.pixelSize: 17
                     font.family: "FontAwesome"
                     text: FontAwesome.Icon.Cog
 
@@ -604,7 +604,7 @@ ApplicationWindow {
 
                 Text {
                     id : fullscreen
-                    font.pointSize: 17
+                    font.pixelSize: 17
                     font.family: "FontAwesome"
                     text: FontAwesome.Icon.ResizeFull
 
@@ -661,7 +661,7 @@ ApplicationWindow {
                         x: sliderMouseArea.mouseX
 
                         Text {
-                            font.pointSize: 13
+                            font.pixelSize: 13
                             color: "black"
                             anchors.centerIn: parent
                             text: {
