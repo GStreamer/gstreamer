@@ -750,7 +750,7 @@ apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment,
 {
   GstClockTime duration, timestamp;
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_DTS_OR_PTS (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
   /* if no timestamp is set, assume it's continuous with the previous
@@ -780,14 +780,17 @@ static gboolean
 buffer_list_apply_time (GstBuffer ** buf, guint idx, gpointer data)
 {
   GstClockTime *timestamp = data;
+  GstClockTime btime;
 
-  GST_TRACE ("buffer %u has ts %" GST_TIME_FORMAT
+  GST_TRACE ("buffer %u has pts %" GST_TIME_FORMAT " dts %" GST_TIME_FORMAT
       " duration %" GST_TIME_FORMAT, idx,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*buf)),
+      GST_TIME_ARGS (GST_BUFFER_PTS (*buf)),
+      GST_TIME_ARGS (GST_BUFFER_DTS (*buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (*buf)));
 
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (*buf))
-    *timestamp = GST_BUFFER_TIMESTAMP (*buf);
+  btime = GST_BUFFER_DTS_OR_PTS (*buf);
+  if (GST_CLOCK_TIME_IS_VALID (btime))
+    *timestamp = btime;
 
   if (GST_BUFFER_DURATION_IS_VALID (*buf))
     *timestamp += GST_BUFFER_DURATION (*buf);
