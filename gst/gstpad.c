@@ -1365,7 +1365,7 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
   PROBE_COOKIE (hook) = (pad->priv->probe_cookie - 1);
 
   /* add the probe */
-  g_hook_prepend (&pad->probes, hook);
+  g_hook_append (&pad->probes, hook);
   pad->num_probes++;
   /* incremenent cookie so that the new hook get's called */
   pad->priv->probe_list_cookie++;
