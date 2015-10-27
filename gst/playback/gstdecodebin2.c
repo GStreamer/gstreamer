@@ -2925,11 +2925,13 @@ sink_pad_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
           }
           gst_object_unref (otherpeer);
         }
-      } else
+      } else {
         GST_DEBUG_OBJECT (pad, "No request pads, can't forward event");
+      }
     }
-  } else
+  } else {
     gst_object_unref (peer);
+  }
 
   return proberet;
 }
@@ -4920,6 +4922,39 @@ gst_decode_pad_unblock (GstDecodePad * dpad)
 }
 
 static gboolean
+gst_decode_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstDecodeBin *dbin = GST_DECODE_BIN (parent);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK && dbin && dbin->decode_chain) {
+    GstElement *demuxer = NULL;
+
+    /* For adaptive demuxers we send the seek event directly to the demuxer.
+     * See https://bugzilla.gnome.org/show_bug.cgi?id=606382
+     */
+    CHAIN_MUTEX_LOCK (dbin->decode_chain);
+    if (dbin->decode_chain->adaptive_demuxer) {
+      GstDecodeElement *delem = dbin->decode_chain->elements->data;
+      demuxer = gst_object_ref (delem->element);
+    }
+    CHAIN_MUTEX_UNLOCK (dbin->decode_chain);
+
+    if (demuxer) {
+      gboolean ret;
+
+      GST_DEBUG_OBJECT (dbin,
+          "Sending SEEK event directly to adaptive streaming demuxer %s",
+          GST_OBJECT_NAME (demuxer));
+      ret = gst_element_send_event (demuxer, event);
+      gst_object_unref (demuxer);
+      return ret;
+    }
+  }
+
+  return gst_pad_event_default (pad, parent, event);
+}
+
+static gboolean
 gst_decode_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstDecodePad *dpad = GST_DECODE_PAD (parent);
@@ -4976,6 +5011,7 @@ gst_decode_pad_new (GstDecodeBin * dbin, GstDecodeChain * chain)
 
   ppad = gst_proxy_pad_get_internal (GST_PROXY_PAD (dpad));
   gst_pad_set_query_function (GST_PAD_CAST (ppad), gst_decode_pad_query);
+  gst_pad_set_event_function (GST_PAD_CAST (dpad), gst_decode_pad_event);
   gst_object_unref (ppad);
 
   return dpad;
