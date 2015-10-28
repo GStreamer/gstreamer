@@ -98,27 +98,30 @@ static void gst_mpdparser_parse_seg_base_type_ext (GstSegmentBaseType **
 static void gst_mpdparser_parse_s_node (GQueue * queue, xmlNode * a_node);
 static void gst_mpdparser_parse_segment_timeline_node (GstSegmentTimelineNode **
     pointer, xmlNode * a_node);
-static void gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType
-    ** pointer, xmlNode * a_node, GstMultSegmentBaseType * parent);
-static void gst_mpdparser_parse_segment_list_node (GstSegmentListNode **
+static gboolean
+gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
+    xmlNode * a_node, GstMultSegmentBaseType * parent);
+static gboolean gst_mpdparser_parse_segment_list_node (GstSegmentListNode **
     pointer, xmlNode * a_node, GstSegmentListNode * parent);
 static void
 gst_mpdparser_parse_representation_base_type (GstRepresentationBaseType **
     pointer, xmlNode * a_node);
-static void gst_mpdparser_parse_representation_node (GList ** list,
+static gboolean gst_mpdparser_parse_representation_node (GList ** list,
     xmlNode * a_node, GstAdaptationSetNode * parent);
-static void gst_mpdparser_parse_adaptation_set_node (GList ** list,
+static gboolean gst_mpdparser_parse_adaptation_set_node (GList ** list,
     xmlNode * a_node, GstPeriodNode * parent);
 static void gst_mpdparser_parse_subset_node (GList ** list, xmlNode * a_node);
-static void gst_mpdparser_parse_segment_template_node (GstSegmentTemplateNode **
-    pointer, xmlNode * a_node, GstSegmentTemplateNode * parent);
-static void gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node);
+static gboolean
+gst_mpdparser_parse_segment_template_node (GstSegmentTemplateNode ** pointer,
+    xmlNode * a_node, GstSegmentTemplateNode * parent);
+static gboolean gst_mpdparser_parse_period_node (GList ** list,
+    xmlNode * a_node);
 static void gst_mpdparser_parse_program_info_node (GList ** list,
     xmlNode * a_node);
 static void gst_mpdparser_parse_metrics_range_node (GList ** list,
     xmlNode * a_node);
 static void gst_mpdparser_parse_metrics_node (GList ** list, xmlNode * a_node);
-static void gst_mpdparser_parse_root_node (GstMPDNode ** pointer,
+static gboolean gst_mpdparser_parse_root_node (GstMPDNode ** pointer,
     xmlNode * a_node);
 static void gst_mpdparser_parse_utctiming_node (GList ** list,
     xmlNode * a_node);
@@ -1427,16 +1430,17 @@ gst_mpdparser_parse_segment_timeline_node (GstSegmentTimelineNode ** pointer,
   }
 }
 
-static void
+static gboolean
 gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
     xmlNode * a_node, GstMultSegmentBaseType * parent)
 {
   xmlNode *cur_node;
   GstMultSegmentBaseType *mult_seg_base_type;
   guint intval;
+  gboolean has_timeline = FALSE, has_duration = FALSE;
 
   gst_mpdparser_free_mult_seg_base_type_ext (*pointer);
-  *pointer = mult_seg_base_type = g_slice_new0 (GstMultSegmentBaseType);
+  mult_seg_base_type = g_slice_new0 (GstMultSegmentBaseType);
 
   mult_seg_base_type->duration = 0;
   mult_seg_base_type->startNumber = 1;
@@ -1455,6 +1459,7 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
   if (gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "duration", 0,
           &intval)) {
     mult_seg_base_type->duration = intval;
+    has_duration = TRUE;
   }
 
   if (gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "startNumber", 1,
@@ -1473,6 +1478,7 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
         /* parse frees the segmenttimeline if any */
         gst_mpdparser_parse_segment_timeline_node
             (&mult_seg_base_type->SegmentTimeline, cur_node);
+        has_timeline = TRUE;
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "BitstreamSwitching") == 0) {
         /* parse frees the old url before setting the new one */
@@ -1481,9 +1487,21 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
       }
     }
   }
+
+  if (!has_duration && !has_timeline) {
+    GST_ERROR ("segment has neither duration nor timeline");
+    goto error;
+  }
+
+  *pointer = mult_seg_base_type;
+  return TRUE;
+
+error:
+  gst_mpdparser_free_mult_seg_base_type_ext (mult_seg_base_type);
+  return FALSE;
 }
 
-static void
+static gboolean
 gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer,
     xmlNode * a_node, GstSegmentListNode * parent)
 {
@@ -1492,7 +1510,7 @@ gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer,
   gchar *actuate;
 
   gst_mpdparser_free_segment_list_node (*pointer);
-  *pointer = new_segment_list = g_slice_new0 (GstSegmentListNode);
+  new_segment_list = g_slice_new0 (GstSegmentListNode);
 
   /* Inherit attribute values from parent */
   if (parent) {
@@ -1518,9 +1536,10 @@ gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer,
   }
 
   GST_LOG ("extension of SegmentList node:");
-  gst_mpdparser_parse_mult_seg_base_type_ext
+  if (!gst_mpdparser_parse_mult_seg_base_type_ext
       (&new_segment_list->MultSegBaseType, a_node,
-      (parent ? parent->MultSegBaseType : NULL));
+          (parent ? parent->MultSegBaseType : NULL)))
+    goto error;
 
   /* explore children nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -1531,6 +1550,13 @@ gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer,
       }
     }
   }
+
+  *pointer = new_segment_list;
+  return TRUE;
+
+error:
+  gst_mpdparser_free_segment_list_node (new_segment_list);
+  return FALSE;
 }
 
 static void
@@ -1591,7 +1617,7 @@ gst_mpdparser_parse_representation_base_type (GstRepresentationBaseType **
   }
 }
 
-static void
+static gboolean
 gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node,
     GstAdaptationSetNode * parent)
 {
@@ -1599,7 +1625,6 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node,
   GstRepresentationNode *new_representation;
 
   new_representation = g_slice_new0 (GstRepresentationNode);
-  *list = g_list_append (*list, new_representation);
 
   GST_LOG ("attributes of Representation node:");
   gst_mpdparser_get_xml_prop_string_no_whitespace (a_node, "id",
@@ -1624,12 +1649,14 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node,
         gst_mpdparser_parse_seg_base_type_ext (&new_representation->SegmentBase,
             cur_node, parent->SegmentBase);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentTemplate") == 0) {
-        gst_mpdparser_parse_segment_template_node
+        if (!gst_mpdparser_parse_segment_template_node
             (&new_representation->SegmentTemplate, cur_node,
-            parent->SegmentTemplate);
+                parent->SegmentTemplate))
+          goto error;
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentList") == 0) {
-        gst_mpdparser_parse_segment_list_node (&new_representation->SegmentList,
-            cur_node, parent->SegmentList);
+        if (!gst_mpdparser_parse_segment_list_node
+            (&new_representation->SegmentList, cur_node, parent->SegmentList))
+          goto error;
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "BaseURL") == 0) {
         gst_mpdparser_parse_baseURL_node (&new_representation->BaseURLs,
             cur_node);
@@ -1640,9 +1667,18 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node,
       }
     }
   }
+
+  /* some sanity checking */
+
+  *list = g_list_append (*list, new_representation);
+  return TRUE;
+
+error:
+  gst_mpdparser_free_representation_node (new_representation);
+  return FALSE;
 }
 
-static void
+static gboolean
 gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node,
     GstPeriodNode * parent)
 {
@@ -1651,7 +1687,6 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node,
   gchar *actuate;
 
   new_adap_set = g_slice_new0 (GstAdaptationSetNode);
-  *list = g_list_append (*list, new_adap_set);
 
   GST_LOG ("attributes of AdaptationSet node:");
 
@@ -1723,15 +1758,17 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node,
         gst_mpdparser_parse_seg_base_type_ext (&new_adap_set->SegmentBase,
             cur_node, parent->SegmentBase);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentList") == 0) {
-        gst_mpdparser_parse_segment_list_node (&new_adap_set->SegmentList,
-            cur_node, parent->SegmentList);
+        if (!gst_mpdparser_parse_segment_list_node (&new_adap_set->SegmentList,
+                cur_node, parent->SegmentList))
+          goto error;
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "ContentComponent") == 0) {
         gst_mpdparser_parse_content_component_node
             (&new_adap_set->ContentComponents, cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentTemplate") == 0) {
-        gst_mpdparser_parse_segment_template_node
-            (&new_adap_set->SegmentTemplate, cur_node, parent->SegmentTemplate);
+        if (!gst_mpdparser_parse_segment_template_node
+            (&new_adap_set->SegmentTemplate, cur_node, parent->SegmentTemplate))
+          goto error;
       }
     }
   }
@@ -1743,11 +1780,19 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node,
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "Representation") == 0) {
-        gst_mpdparser_parse_representation_node (&new_adap_set->Representations,
-            cur_node, new_adap_set);
+        if (!gst_mpdparser_parse_representation_node
+            (&new_adap_set->Representations, cur_node, new_adap_set))
+          goto error;
       }
     }
   }
+
+  *list = g_list_append (*list, new_adap_set);
+  return TRUE;
+
+error:
+  gst_mpdparser_free_adaptation_set_node (new_adap_set);
+  return FALSE;
 }
 
 static void
@@ -1763,7 +1808,7 @@ gst_mpdparser_parse_subset_node (GList ** list, xmlNode * a_node)
       &new_subset->contains, &new_subset->size);
 }
 
-static void
+static gboolean
 gst_mpdparser_parse_segment_template_node (GstSegmentTemplateNode ** pointer,
     xmlNode * a_node, GstSegmentTemplateNode * parent)
 {
@@ -1771,12 +1816,13 @@ gst_mpdparser_parse_segment_template_node (GstSegmentTemplateNode ** pointer,
   gchar *strval;
 
   gst_mpdparser_free_segment_template_node (*pointer);
-  *pointer = new_segment_template = g_slice_new0 (GstSegmentTemplateNode);
+  new_segment_template = g_slice_new0 (GstSegmentTemplateNode);
 
   GST_LOG ("extension of SegmentTemplate node:");
-  gst_mpdparser_parse_mult_seg_base_type_ext
+  if (!gst_mpdparser_parse_mult_seg_base_type_ext
       (&new_segment_template->MultSegBaseType, a_node,
-      (parent ? parent->MultSegBaseType : NULL));
+          (parent ? parent->MultSegBaseType : NULL)))
+    goto error;
 
   /* Inherit attribute values from parent when the value isn't found */
   GST_LOG ("attributes of SegmentTemplate node:");
@@ -1805,9 +1851,16 @@ gst_mpdparser_parse_segment_template_node (GstSegmentTemplateNode ** pointer,
     new_segment_template->bitstreamSwitching =
         xmlMemStrdup (parent->bitstreamSwitching);
   }
+
+  *pointer = new_segment_template;
+  return TRUE;
+
+error:
+  gst_mpdparser_free_segment_template_node (new_segment_template);
+  return FALSE;
 }
 
-static void
+static gboolean
 gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node)
 {
   xmlNode *cur_node;
@@ -1815,7 +1868,6 @@ gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node)
   gchar *actuate;
 
   new_period = g_slice_new0 (GstPeriodNode);
-  *list = g_list_append (*list, new_period);
 
   GST_LOG ("attributes of Period node:");
 
@@ -1843,11 +1895,13 @@ gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node)
         gst_mpdparser_parse_seg_base_type_ext (&new_period->SegmentBase,
             cur_node, NULL);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentList") == 0) {
-        gst_mpdparser_parse_segment_list_node (&new_period->SegmentList,
-            cur_node, NULL);
+        if (!gst_mpdparser_parse_segment_list_node (&new_period->SegmentList,
+                cur_node, NULL))
+          goto error;
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentTemplate") == 0) {
-        gst_mpdparser_parse_segment_template_node (&new_period->SegmentTemplate,
-            cur_node, NULL);
+        if (!gst_mpdparser_parse_segment_template_node
+            (&new_period->SegmentTemplate, cur_node, NULL))
+          goto error;
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "Subset") == 0) {
         gst_mpdparser_parse_subset_node (&new_period->Subsets, cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "BaseURL") == 0) {
@@ -1863,11 +1917,19 @@ gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node)
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "AdaptationSet") == 0) {
-        gst_mpdparser_parse_adaptation_set_node (&new_period->AdaptationSets,
-            cur_node, new_period);
+        if (!gst_mpdparser_parse_adaptation_set_node
+            (&new_period->AdaptationSets, cur_node, new_period))
+          goto error;
       }
     }
   }
+
+  *list = g_list_append (*list, new_period);
+  return TRUE;
+
+error:
+  gst_mpdparser_free_period_node (new_period);
+  return FALSE;
 }
 
 static void
@@ -1984,14 +2046,15 @@ gst_mpdparser_parse_utctiming_node (GList ** list, xmlNode * a_node)
   }
 }
 
-static void
+static gboolean
 gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node)
 {
   xmlNode *cur_node;
   GstMPDNode *new_mpd;
 
   gst_mpdparser_free_mpd_node (*pointer);
-  *pointer = new_mpd = g_slice_new0 (GstMPDNode);
+  *pointer = NULL;
+  new_mpd = g_slice_new0 (GstMPDNode);
 
   GST_LOG ("namespaces of root MPD node:");
   new_mpd->default_namespace =
@@ -2028,7 +2091,8 @@ gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node)
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "Period") == 0) {
-        gst_mpdparser_parse_period_node (&new_mpd->Periods, cur_node);
+        if (!gst_mpdparser_parse_period_node (&new_mpd->Periods, cur_node))
+          goto error;
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "ProgramInformation") == 0) {
         gst_mpdparser_parse_program_info_node (&new_mpd->ProgramInfo, cur_node);
@@ -2043,6 +2107,13 @@ gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node)
       }
     }
   }
+
+  gst_mpdparser_free_mpd_node (*pointer);
+  *pointer = new_mpd;
+  return TRUE;
+
+error:
+  return FALSE;
 }
 
 /* comparison functions */
@@ -3448,6 +3519,8 @@ syntax_error:
 gboolean
 gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
 {
+  gboolean ret = FALSE;
+
   if (data) {
     xmlDocPtr doc;
     xmlNode *root_element = NULL;
@@ -3466,7 +3539,7 @@ gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
     doc = xmlReadMemory (data, size, "noname.xml", NULL, XML_PARSE_NONET);
     if (doc == NULL) {
       GST_ERROR ("failed to parse the MPD file");
-      return FALSE;
+      ret = FALSE;
     } else {
       /* get the root element node */
       root_element = xmlDocGetRootElement (doc);
@@ -3475,23 +3548,24 @@ gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
           || xmlStrcmp (root_element->name, (xmlChar *) "MPD") != 0) {
         GST_ERROR
             ("can not find the root element MPD, failed to parse the MPD file");
+        ret = FALSE;            /* used to return TRUE before, but this seems wrong */
       } else {
         /* now we can parse the MPD root node and all children nodes, recursively */
-        gst_mpdparser_parse_root_node (&client->mpd_node, root_element);
+        ret = gst_mpdparser_parse_root_node (&client->mpd_node, root_element);
       }
       /* free the document */
       xmlFreeDoc (doc);
     }
 
-    gst_mpd_client_check_profiles (client);
+    if (ret) {
+      gst_mpd_client_check_profiles (client);
 
-    if (!gst_mpd_client_fetch_on_load_external_resources (client))
-      return FALSE;
-
-    return TRUE;
+      if (!gst_mpd_client_fetch_on_load_external_resources (client))
+        return FALSE;
+    }
   }
 
-  return FALSE;
+  return ret;
 }
 
 const gchar *

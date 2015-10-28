@@ -531,7 +531,7 @@ GST_START_TEST (dash_mpdparser_period_segmentList)
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "  <Period><SegmentList></SegmentList></Period></MPD>";
+      "  <Period><SegmentList duration=\"1\"></SegmentList></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -600,6 +600,7 @@ GST_START_TEST
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <SegmentList timescale=\"10\""
+      "                 duration=\"1\""
       "                 presentationTimeOffset=\"11\""
       "                 indexRange=\"20-21\""
       "                 indexRangeExact=\"false\">"
@@ -721,7 +722,7 @@ GST_START_TEST
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
-      "    <SegmentList>"
+      "    <SegmentList duration=\"0\">"
       "      <BitstreamSwitching sourceURL=\"TestSourceURL\""
       "                          range=\"100-200\">"
       "      </BitstreamSwitching></SegmentList></Period></MPD>";
@@ -759,7 +760,7 @@ GST_START_TEST (dash_mpdparser_period_segmentList_segmentURL)
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
-      "    <SegmentList>"
+      "    <SegmentList duration=\"1\">"
       "      <SegmentURL media=\"TestMedia\""
       "                  mediaRange=\"100-200\""
       "                  index=\"TestIndex\""
@@ -801,6 +802,7 @@ GST_START_TEST (dash_mpdparser_period_segmentTemplate)
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <SegmentTemplate media=\"TestMedia\""
+      "                     duration=\"0\""
       "                     index=\"TestIndex\""
       "                     initialization=\"TestInitialization\""
       "                     bitstreamSwitching=\"TestBitstreamSwitching\">"
@@ -877,6 +879,7 @@ GST_START_TEST
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <SegmentTemplate timescale=\"123456\""
+      "                     duration=\"1\""
       "                     presentationTimeOffset=\"123456789\""
       "                     indexRange=\"100-200\""
       "                     indexRangeExact=\"true\">"
@@ -998,7 +1001,7 @@ GST_START_TEST
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
-      "    <SegmentTemplate>"
+      "    <SegmentTemplate duration=\"1\">"
       "      <BitstreamSwitching sourceURL=\"TestSourceURL\""
       "                          range=\"100-200\">"
       "      </BitstreamSwitching></SegmentTemplate></Period></MPD>";
@@ -1897,7 +1900,7 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentList)
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <AdaptationSet>"
-      "      <SegmentList></SegmentList></AdaptationSet></Period></MPD>";
+      "      <SegmentList duration=\"1\"></SegmentList></AdaptationSet></Period></MPD>";
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
@@ -1931,6 +1934,7 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentTemplate)
       "  <Period>"
       "    <AdaptationSet>"
       "      <SegmentTemplate media=\"TestMedia\""
+      "                       duration=\"1\""
       "                       index=\"TestIndex\""
       "                       initialization=\"TestInitialization\""
       "                       bitstreamSwitching=\"TestBitstreamSwitching\">"
@@ -1971,11 +1975,12 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentTemplate_inherit)
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
-      "    <SegmentTemplate media=\"ParentMedia\" "
+      "    <SegmentTemplate media=\"ParentMedia\" duration=\"1\" "
       "                     initialization=\"ParentInitialization\">"
       "    </SegmentTemplate>"
       "    <AdaptationSet>"
       "      <SegmentTemplate media=\"TestMedia\""
+      "                       duration=\"1\""
       "                       index=\"TestIndex\""
       "                       bitstreamSwitching=\"TestBitstreamSwitching\">"
       "      </SegmentTemplate></AdaptationSet></Period></MPD>";
@@ -2277,7 +2282,7 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation_segmentList)
       "  <Period>"
       "    <AdaptationSet>"
       "      <Representation>"
-      "        <SegmentList>"
+      "        <SegmentList duration=\"1\">"
       "        </SegmentList>"
       "      </Representation></AdaptationSet></Period></MPD>";
 
@@ -2316,7 +2321,7 @@ GST_START_TEST
       "  <Period>"
       "    <AdaptationSet>"
       "      <Representation>"
-      "        <SegmentTemplate>"
+      "        <SegmentTemplate duration=\"1\">"
       "        </SegmentTemplate>"
       "      </Representation></AdaptationSet></Period></MPD>";
 
