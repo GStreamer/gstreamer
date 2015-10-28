@@ -471,8 +471,10 @@ _compile_shader (GstGLContext * context, struct compile *data)
   gl->CompileShader (priv->handle);
   /* FIXME: supported threaded GLSL compilers and don't destroy compilation
    * performance by getting the compilation result directly after compilation */
+  status = GL_FALSE;
   gl->GetShaderiv (priv->handle, GL_COMPILE_STATUS, &status);
 
+  len = 0;
   vtable->GetShaderInfoLog (priv->handle, sizeof (info_buffer) - 1, &len,
       info_buffer);
   info_buffer[len] = '\0';
