@@ -286,14 +286,14 @@ static const gdouble ns_high_coeffs[] = {
 #define ADD_NS_HIGH()                                                   \
         cur_error = 0.0;                                                \
         for (j = 0; j < 8; j++)                                         \
-          cur_error += errors[chan_pos + j] * ns_high_coeffs[j];          \
+          cur_error += errors[chan_pos*8 + j] * ns_high_coeffs[j];      \
         tmp -= cur_error;                                               \
         orig = tmp;
 
 #define UPDATE_ERROR_HIGH()                                             \
         for (j = 7; j > 0; j--)                                         \
-          errors[chan_pos + j] = errors[chan_pos + j-1];                \
-        errors[chan_pos] = (d)/factor - orig;
+          errors[chan_pos*8 + j] = errors[chan_pos*8 + j-1];            \
+        errors[chan_pos*8] = (d)/factor - orig;
 
 
 MAKE_QUANTIZE_FUNC_I (int_none_none, NONE_FUNC, NONE_FUNC, ROUND);
