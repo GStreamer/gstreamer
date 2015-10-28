@@ -268,7 +268,7 @@ gst_encoding_target_new (const gchar * name, const gchar * category,
   /* Validate name */
   if (!validate_name (name))
     goto invalid_name;
-  if (!validate_name (category))
+  if (category && !validate_name (category))
     goto invalid_category;
 
   res = (GstEncodingTarget *) g_object_new (GST_TYPE_ENCODING_TARGET, NULL);
@@ -789,10 +789,15 @@ get_matching_filenames (gchar * path, gchar * filename)
   GList *res = NULL;
   GDir *topdir;
   const gchar *subdirname;
+  gchar *tmp;
 
   topdir = g_dir_open (path, 0, NULL);
   if (G_UNLIKELY (topdir == NULL))
     return NULL;
+
+  tmp = g_build_filename (path, filename, NULL);
+  if (g_file_test (tmp, G_FILE_TEST_EXISTS))
+    res = g_list_append (res, tmp);
 
   while ((subdirname = g_dir_read_name (topdir))) {
     gchar *ltmp = g_build_filename (path, subdirname, NULL);
