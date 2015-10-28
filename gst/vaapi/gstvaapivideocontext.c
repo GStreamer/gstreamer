@@ -171,7 +171,8 @@ _gst_context_query (GstElement * element, const gchar * context_type)
   GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
       "posting `need-context' message");
   msg = gst_message_new_need_context (GST_OBJECT_CAST (element), context_type);
-  gst_element_post_message (element, msg);
+  if (!gst_element_post_message (element, msg))
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element, "No bus attached");
 
   /*
    * Whomever responds to the need-context message performs a
@@ -223,7 +224,8 @@ gst_vaapi_video_context_propagate (GstElement * element,
       "posting `have-context' (%p) message with display (%p)",
       context, display);
   msg = gst_message_new_have_context (GST_OBJECT_CAST (element), context);
-  gst_element_post_message (GST_ELEMENT_CAST (element), msg);
+  if (!gst_element_post_message (element, msg))
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element, "No bus attached");
 }
 
 gboolean
