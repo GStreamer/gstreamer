@@ -212,6 +212,7 @@ main (int argc, char **argv)
       g_strfreev (filters);
     }
   }
+  g_strfreev (args);
 
   g_print ("Probing devices...\n\n");
 
@@ -229,7 +230,7 @@ main (int argc, char **argv)
 
       device_added (device);
       gst_object_unref (device);
-      devices = g_list_remove_link (devices, devices);
+      devices = g_list_delete_link (devices, devices);
     }
   } else {
     g_print ("No devices found!\n");
