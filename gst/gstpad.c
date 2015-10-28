@@ -5364,6 +5364,8 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
 
       GST_PAD_SET_FLUSHING (pad);
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "set flush flag");
+      GST_PAD_BLOCK_BROADCAST (pad);
+      type |= GST_PAD_PROBE_TYPE_EVENT_FLUSH;
       break;
     case GST_EVENT_FLUSH_STOP:
       /* we can't accept flush-stop on inactive pads else the flushing flag
