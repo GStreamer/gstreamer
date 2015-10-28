@@ -84,10 +84,12 @@ fill_element_stats (GstStatsTracer * self, GstElement * element)
 }
 
 static void
-log_new_element_stats (GstElementStats * stats, GstElement * element)
+log_new_element_stats (GstElementStats * stats, GstElement * element,
+    GstClockTime elapsed)
 {
   gst_tracer_log_trace (gst_structure_new ("new-element",
           "thread-id", G_TYPE_UINT, GPOINTER_TO_UINT (g_thread_self ()),
+          "ts", G_TYPE_UINT64, elapsed,
           "ix", G_TYPE_UINT, stats->index,
           "parent-ix", G_TYPE_UINT, stats->parent_ix,
           "name", G_TYPE_STRING, GST_OBJECT_NAME (element),
@@ -99,6 +101,18 @@ static void
 free_element_stats (gpointer data)
 {
   g_slice_free (GstElementStats, data);
+}
+
+static GstElementStats *
+create_element_stats (GstStatsTracer * self, GstElement * element)
+{
+  GstElementStats *stats;
+
+  stats = fill_element_stats (self, element);
+  g_object_set_qdata_full ((GObject *) element, data_quark, stats,
+      free_element_stats);
+
+  return stats;
 }
 
 static inline GstElementStats *
@@ -114,9 +128,7 @@ get_element_stats (GstStatsTracer * self, GstElement * element)
 
   G_LOCK (_elem_stats);
   if (!(stats = g_object_get_qdata ((GObject *) element, data_quark))) {
-    stats = fill_element_stats (self, element);
-    g_object_set_qdata_full ((GObject *) element, data_quark, stats,
-        free_element_stats);
+    stats = create_element_stats (self, element);
     is_new = TRUE;
   }
   G_UNLOCK (_elem_stats);
@@ -128,7 +140,7 @@ get_element_stats (GstStatsTracer * self, GstElement * element)
     }
   }
   if (G_UNLIKELY (is_new)) {
-    log_new_element_stats (stats, element);
+    log_new_element_stats (stats, element, GST_CLOCK_TIME_NONE);
   }
   return stats;
 }
@@ -489,6 +501,15 @@ do_post_message_pre (GstStatsTracer * self, guint64 ts, GstElement * elem,
 }
 
 static void
+do_element_new (GstStatsTracer * self, guint64 ts, GstElement * elem)
+{
+  GstElementStats *stats;
+
+  stats = create_element_stats (self, elem);
+  log_new_element_stats (stats, elem, ts);
+}
+
+static void
 do_element_query_pre (GstStatsTracer * self, guint64 ts, GstElement * elem,
     GstQuery * qry)
 {
@@ -668,6 +689,8 @@ gst_stats_tracer_init (GstStatsTracer * self)
       G_CALLBACK (do_pull_range_post));
   gst_tracing_register_hook (tracer, "pad-push-event-pre",
       G_CALLBACK (do_push_event_pre));
+  gst_tracing_register_hook (tracer, "element-new",
+      G_CALLBACK (do_element_new));
   gst_tracing_register_hook (tracer, "element-post-message-pre",
       G_CALLBACK (do_post_message_pre));
   gst_tracing_register_hook (tracer, "element-query-pre",
