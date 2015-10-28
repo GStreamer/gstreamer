@@ -1206,7 +1206,7 @@ gst_vaapisink_get_caps_impl (GstBaseSink * base_sink)
   if (!out_caps)
     return NULL;
 
-  if (gst_vaapisink_ensure_display (sink)) {
+  if (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink)) {
     raw_caps = gst_vaapi_plugin_base_get_allowed_raw_caps (GST_VAAPI_PLUGIN_BASE (sink));
     if (raw_caps) {
       out_caps = gst_caps_make_writable (out_caps);

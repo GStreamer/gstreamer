@@ -957,7 +957,7 @@ gst_vaapidecode_ensure_allowed_caps (GstVaapiDecode * decode)
   if (decode->allowed_caps)
     return TRUE;
 
-  if (!gst_vaapidecode_ensure_display (decode))
+  if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))
     goto error_no_display;
 
   profiles =
@@ -1001,7 +1001,7 @@ gst_vaapidecode_ensure_allowed_caps (GstVaapiDecode * decode)
   /* ERRORS */
 error_no_display:
   {
-    GST_ERROR ("failed to retrieve VA display");
+    GST_INFO_OBJECT (decode, "no VA display shared yet");
     return FALSE;
   }
 error_no_profiles:
