@@ -120,6 +120,7 @@ static void gst_element_init (GstElement * element);
 static void gst_element_base_class_init (gpointer g_class);
 static void gst_element_base_class_finalize (gpointer g_class);
 
+static void gst_element_constructed (GObject * object);
 static void gst_element_dispose (GObject * object);
 static void gst_element_finalize (GObject * object);
 
@@ -232,6 +233,7 @@ gst_element_class_init (GstElementClass * klass)
 
   gobject_class->dispose = gst_element_dispose;
   gobject_class->finalize = gst_element_finalize;
+  gobject_class->constructed = gst_element_constructed;
 
   klass->change_state = GST_DEBUG_FUNCPTR (gst_element_change_state_func);
   klass->set_state = GST_DEBUG_FUNCPTR (gst_element_set_state_func);
@@ -301,6 +303,13 @@ gst_element_init (GstElement * element)
 
   g_rec_mutex_init (&element->state_lock);
   g_cond_init (&element->state_cond);
+}
+
+static void
+gst_element_constructed (GObject * object)
+{
+  GST_TRACER_ELEMENT_NEW (GST_ELEMENT_CAST (object));
+  G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
 /**
