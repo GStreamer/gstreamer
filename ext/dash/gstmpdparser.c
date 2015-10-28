@@ -3878,6 +3878,12 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
             start_time = gst_util_uint64_scale (S->t, GST_SECOND, timescale);
           }
 
+          if (!SegmentURL) {
+            GST_WARNING
+                ("SegmentTimeline does not have a matching SegmentURL, aborting...");
+            return FALSE;
+          }
+
           if (!gst_mpd_client_add_media_segment (stream, SegmentURL->data, i,
                   S->r, start, S->d, start_time, duration)) {
             return FALSE;

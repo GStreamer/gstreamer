@@ -4652,6 +4652,65 @@ GST_START_TEST (dash_mpdparser_no_profiles)
 GST_END_TEST;
 
 /*
+ * Test S node list greater than SegmentURL list
+ *
+ */
+GST_START_TEST (dash_mpdparser_unmatched_segmentTimeline_segmentURL)
+{
+  GList *adaptationSets;
+  GstAdaptationSetNode *adapt_set;
+
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      "     availabilityStartTime=\"2015-03-24T0:0:0\""
+      "     mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
+      "  <Period start=\"P0Y0M0DT0H0M10S\">"
+      "    <AdaptationSet mimeType=\"video/mp4\">"
+      "      <Representation>"
+      "        <SegmentList>"
+      "          <SegmentTimeline>"
+      "            <S t=\"3\"  d=\"2\" r=\"1\"></S>"
+      "            <S t=\"10\" d=\"3\" r=\"0\"></S>"
+      "          </SegmentTimeline>"
+      "          <SegmentURL media=\"TestMedia0\""
+      "                      index=\"TestIndex0\">"
+      "          </SegmentURL>"
+      "        </SegmentList>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  /* process the xml data */
+  ret = gst_mpd_client_setup_media_presentation (mpdclient, GST_CLOCK_TIME_NONE,
+      -1, NULL);
+  assert_equals_int (ret, TRUE);
+
+  /* get the list of adaptation sets of the first period */
+  adaptationSets = gst_mpd_client_get_adaptation_sets (mpdclient);
+  fail_if (adaptationSets == NULL);
+
+  adapt_set = (GstAdaptationSetNode *) g_list_nth_data (adaptationSets, 0);
+  fail_if (adapt_set == NULL);
+
+  /* setup streaming from the first adaptation set.
+   * Should fail because the second S node does not have a  matching
+   * SegmentURL node
+   */
+  ret = gst_mpd_client_setup_streaming (mpdclient, adapt_set);
+  assert_equals_int (ret, FALSE);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * create a test suite containing all dash testcases
  */
 static Suite *
@@ -4815,6 +4874,8 @@ dash_suite (void)
       dash_mpdparser_read_unsigned_from_negative_values);
   tcase_add_test (tc_negativeTests,
       dash_mpdparser_negative_mediaPresentationDuration);
+  tcase_add_test (tc_negativeTests,
+      dash_mpdparser_unmatched_segmentTimeline_segmentURL);
 
   tcase_add_test (tc_stringTests, dash_mpdparser_whitespace_strings);
   tcase_add_test (tc_stringTests, dash_mpdparser_rfc1738_strings);
