@@ -3465,6 +3465,179 @@ GST_START_TEST (dash_mpdparser_get_baseURL4)
 
 GST_END_TEST;
 
+/* test multiple BaseUrl entries per section */
+GST_START_TEST (dash_mpdparser_get_baseURL5)
+{
+  GstPeriodNode *periodNode;
+  GstAdaptationSetNode *adaptationSet;
+  GstRepresentationNode *representation;
+  const gchar *baseURL;
+  GstBaseURL *gstBaseURL;
+
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <BaseURL>/mpd_base_url1/</BaseURL>"
+      "  <BaseURL>/mpd_base_url2/</BaseURL>"
+      "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
+      "    <BaseURL> period_base_url1/</BaseURL>"
+      "    <BaseURL> period_base_url2/</BaseURL>"
+      "    <BaseURL> period_base_url3/</BaseURL>"
+      "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
+      "      <BaseURL>adaptation_base_url1/</BaseURL>"
+      "      <BaseURL>adaptation_base_url2/</BaseURL>"
+      "      <BaseURL>adaptation_base_url3/</BaseURL>"
+      "      <BaseURL>adaptation_base_url4/</BaseURL>"
+      "      <Representation>"
+      "        <BaseURL>representation_base_url1/</BaseURL>"
+      "        <BaseURL>representation_base_url2/</BaseURL>"
+      "        <BaseURL>representation_base_url3/</BaseURL>"
+      "        <BaseURL>representation_base_url4/</BaseURL>"
+      "        <BaseURL>representation_base_url5/</BaseURL>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  GstMpdClient *mpdclient = setup_mpd_client (xml);
+
+  assert_equals_int (g_list_length (mpdclient->mpd_node->BaseURLs), 2);
+  gstBaseURL = g_list_nth_data (mpdclient->mpd_node->BaseURLs, 0);
+  assert_equals_string (gstBaseURL->baseURL, "/mpd_base_url1/");
+  gstBaseURL = g_list_nth_data (mpdclient->mpd_node->BaseURLs, 1);
+  assert_equals_string (gstBaseURL->baseURL, "/mpd_base_url2/");
+
+  periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
+  assert_equals_int (g_list_length (periodNode->BaseURLs), 3);
+  gstBaseURL = g_list_nth_data (periodNode->BaseURLs, 0);
+  assert_equals_string (gstBaseURL->baseURL, " period_base_url1/");
+  gstBaseURL = g_list_nth_data (periodNode->BaseURLs, 1);
+  assert_equals_string (gstBaseURL->baseURL, " period_base_url2/");
+  gstBaseURL = g_list_nth_data (periodNode->BaseURLs, 2);
+  assert_equals_string (gstBaseURL->baseURL, " period_base_url3/");
+
+  adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
+  assert_equals_int (g_list_length (adaptationSet->BaseURLs), 4);
+  gstBaseURL = g_list_nth_data (adaptationSet->BaseURLs, 0);
+  assert_equals_string (gstBaseURL->baseURL, "adaptation_base_url1/");
+  gstBaseURL = g_list_nth_data (adaptationSet->BaseURLs, 1);
+  assert_equals_string (gstBaseURL->baseURL, "adaptation_base_url2/");
+  gstBaseURL = g_list_nth_data (adaptationSet->BaseURLs, 2);
+  assert_equals_string (gstBaseURL->baseURL, "adaptation_base_url3/");
+  gstBaseURL = g_list_nth_data (adaptationSet->BaseURLs, 3);
+  assert_equals_string (gstBaseURL->baseURL, "adaptation_base_url4/");
+
+  representation = (GstRepresentationNode *)
+      adaptationSet->Representations->data;
+  assert_equals_int (g_list_length (representation->BaseURLs), 5);
+  gstBaseURL = g_list_nth_data (representation->BaseURLs, 0);
+  assert_equals_string (gstBaseURL->baseURL, "representation_base_url1/");
+  gstBaseURL = g_list_nth_data (representation->BaseURLs, 1);
+  assert_equals_string (gstBaseURL->baseURL, "representation_base_url2/");
+  gstBaseURL = g_list_nth_data (representation->BaseURLs, 2);
+  assert_equals_string (gstBaseURL->baseURL, "representation_base_url3/");
+  gstBaseURL = g_list_nth_data (representation->BaseURLs, 3);
+  assert_equals_string (gstBaseURL->baseURL, "representation_base_url4/");
+  gstBaseURL = g_list_nth_data (representation->BaseURLs, 4);
+  assert_equals_string (gstBaseURL->baseURL, "representation_base_url5/");
+
+  /* test baseURL. Its value should be computed like this:
+   *  - start with xml url (null)
+   *  - set it to the value from MPD's BaseURL element: "/mpd_base_url1/"
+   *  - update the value with BaseURL element from Period. Because this
+   * is a relative url, it will update the current value. baseURL becomes
+   * "/mpd_base_url1/period_base_url1/"
+   *  - update the value with BaseURL element from AdaptationSet. Because this
+   * is a relative url, it will update the current value. baseURL becomes
+   * "/mpd_base_url1/period_base_url1/adaptation_base_url1/"
+   *  - update the value with BaseURL element from Representation. Because this
+   * is an relative url, it will update the current value."
+   */
+  baseURL = gst_mpdparser_get_baseURL (mpdclient, 0);
+  fail_if (baseURL == NULL);
+  assert_equals_string (baseURL,
+      "/mpd_base_url1/period_base_url1/adaptation_base_url1/representation_base_url1/");
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/* test no BaseURL */
+GST_START_TEST (dash_mpdparser_get_baseURL6)
+{
+  const gchar *baseURL;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
+      "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
+      "      <Representation>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  GstMpdClient *mpdclient = setup_mpd_client (xml);
+
+  baseURL = gst_mpdparser_get_baseURL (mpdclient, 0);
+  fail_if (baseURL == NULL);
+  assert_equals_string (baseURL, "");
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/* BaseURL: test that the path is made absolute (a / is prepended if needed */
+GST_START_TEST (dash_mpdparser_get_baseURL7)
+{
+  const gchar *baseURL;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <BaseURL>x/example.com/</BaseURL>"
+      "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
+      "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
+      "      <Representation>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  GstMpdClient *mpdclient;
+
+  mpdclient = setup_mpd_client (xml);
+
+  baseURL = gst_mpdparser_get_baseURL (mpdclient, 0);
+  fail_if (baseURL == NULL);
+  assert_equals_string (baseURL, "/x/example.com/");
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/* BaseURL: test that a / is not prepended if the string contains ':'
+ * This tests uris with schema present */
+GST_START_TEST (dash_mpdparser_get_baseURL8)
+{
+  const gchar *baseURL;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <BaseURL>x:y/example.com/</BaseURL>"
+      "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
+      "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
+      "      <Representation>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  GstMpdClient *mpdclient = setup_mpd_client (xml);
+
+  baseURL = gst_mpdparser_get_baseURL (mpdclient, 0);
+  fail_if (baseURL == NULL);
+  assert_equals_string (baseURL, "x:y/example.com/");
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
 /*
  * Test getting mediaPresentationDuration
  *
@@ -4933,6 +5106,10 @@ dash_suite (void)
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL2);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL3);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL4);
+  tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL5);
+  tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL6);
+  tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL7);
+  tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL8);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_mediaPresentationDuration);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_streamPresentationOffset);
   tcase_add_test (tc_complexMPD, dash_mpdparser_segments);
