@@ -58,15 +58,13 @@ static GstStaticPadTemplate gst_gl_color_convert_element_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_COLOR_CONVERT_VIDEO_CAPS ";"
-        GST_GL_COLOR_CONVERT_VIDEO_OVERLAY_COMPOSITION_CAPS));
+    GST_STATIC_CAPS (GST_GL_COLOR_CONVERT_VIDEO_CAPS));
 
 static GstStaticPadTemplate gst_gl_color_convert_element_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_COLOR_CONVERT_VIDEO_CAPS ";"
-        GST_GL_COLOR_CONVERT_VIDEO_OVERLAY_COMPOSITION_CAPS));
+    GST_STATIC_CAPS (GST_GL_COLOR_CONVERT_VIDEO_CAPS));
 
 static gboolean
 gst_gl_color_convert_element_stop (GstBaseTransform * bt)

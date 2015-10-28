@@ -143,8 +143,8 @@ GST_START_TEST (test_transfer)
 
   /* wrapped texture creation */
   mem3 = (GstMemory *) gst_gl_memory_wrapped_texture (context,
-      ((GstGLMemory *) mem)->tex_id, GL_TEXTURE_2D, &v_info, 0, NULL, NULL,
-      NULL);
+      ((GstGLMemory *) mem)->tex_id, GST_GL_TEXTURE_TARGET_2D, &v_info, 0, NULL,
+      NULL, NULL);
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem3,
           GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem3,

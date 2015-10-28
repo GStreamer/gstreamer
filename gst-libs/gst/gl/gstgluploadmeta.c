@@ -227,7 +227,7 @@ _perform_with_gl_memory (GstGLUploadMeta * upload, GstVideoGLTextureUploadMeta *
       if (!upload->priv->out_tex[i]) {
         /* the GL upload meta creates GL_TEXTURE_2D textures */
         upload->priv->out_tex[i] = gst_gl_memory_wrapped_texture (upload->context,
-            texture_id[i], GL_TEXTURE_2D, &upload->info, i, NULL, NULL, NULL);
+            texture_id[i], GST_GL_TEXTURE_TARGET_2D, &upload->info, i, NULL, NULL, NULL);
       }
 
       out_mem = upload->priv->out_tex[i];
@@ -241,7 +241,7 @@ _perform_with_gl_memory (GstGLUploadMeta * upload, GstVideoGLTextureUploadMeta *
       mem_height = gst_gl_memory_get_texture_height (out_mem);
 
       if (!(res = gst_gl_memory_copy_into_texture (in_mem, out_mem->tex_id,
-            out_mem->tex_type, mem_width, mem_height,
+            GST_GL_TEXTURE_TARGET_2D, out_mem->tex_type, mem_width, mem_height,
             GST_VIDEO_INFO_PLANE_STRIDE (&out_mem->info, out_mem->plane),
             FALSE)))
         break;
@@ -261,7 +261,7 @@ _perform_with_data_unlocked (GstGLUploadMeta * upload,
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->info); i++) {
     if (!upload->priv->in_tex[i])
       upload->priv->in_tex[i] = gst_gl_memory_wrapped (upload->context,
-          &upload->info, i, NULL, data[i], NULL, NULL);
+          GST_GL_TEXTURE_TARGET_2D, &upload->info, i, NULL, data[i], NULL, NULL);
   }
 
   return _perform_with_gl_memory (upload, meta, texture_id);
