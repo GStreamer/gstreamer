@@ -60,6 +60,9 @@
  * $GST_DATADIR/gstreamer-GST_API_VERSION/encoding-profile
  * $HOME/gstreamer-GST_API_VERSION/encoding-profile
  *
+ * There also is a GST_ENCODING_TARGET_PATH environment variable
+ * defining a list of folder containing encoding target files.
+ *
  * Naming convention
  *   $(target.category)/$(target.name).gep
  *
@@ -866,7 +869,9 @@ GstEncodingTarget *
 gst_encoding_target_load (const gchar * name, const gchar * category,
     GError ** error)
 {
-  gchar *lfilename, *tldir;
+  gint i;
+  gchar *lfilename, *tldir, **encoding_target_dirs;
+  const gchar *envvar;
   GstEncodingTarget *target = NULL;
 
   g_return_val_if_fail (name != NULL, NULL);
@@ -879,7 +884,21 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
 
   lfilename = g_strdup_printf ("%s" GST_ENCODING_TARGET_SUFFIX, name);
 
+  envvar = g_getenv ("GST_ENCODING_TARGET_PATH");
+  if (envvar) {
+    encoding_target_dirs = g_strsplit (envvar, G_SEARCHPATH_SEPARATOR_S, -1);
+    for (i = 0; encoding_target_dirs[i]; i++) {
+      target = gst_encoding_target_subload (encoding_target_dirs[i],
+          category, lfilename, error);
+      break;
+    }
+    g_strfreev (encoding_target_dirs);
+    if (target)
+      goto done;
+  }
+
   /* Try from local profiles */
+
   tldir =
       g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
       GST_ENCODING_TARGET_DIRECTORY, NULL);
@@ -895,6 +914,7 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
     g_free (tldir);
   }
 
+done:
   g_free (lfilename);
 
   return target;
