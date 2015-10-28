@@ -4195,6 +4195,10 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client,
         }
         duration = next_period_node->start * GST_MSECOND - start;
       } else if (period_node->duration != -1) {
+        if (period_node->duration <= 0) {
+          /* Invalid MPD file: duration would be negative or zero */
+          goto syntax_error;
+        }
         duration = period_node->duration * GST_MSECOND;
       } else if (client->mpd_node->type == GST_MPD_FILE_TYPE_DYNAMIC) {
         /* might be a live file, ignore unspecified duration */
