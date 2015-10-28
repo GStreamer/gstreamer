@@ -365,7 +365,6 @@ gst_v4l2_device_provider_stop (GstDeviceProvider * provider)
   g_main_context_unref (context);
 
   g_thread_join (self->thread);
-  g_thread_unref (self->thread);
   self->thread = NULL;
   self->started = FALSE;
 }
