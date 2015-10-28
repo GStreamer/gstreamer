@@ -1214,9 +1214,7 @@ gst_vaapisink_display_changed (GstVaapiPluginBase * plugin)
 static gboolean
 gst_vaapisink_start (GstBaseSink * base_sink)
 {
-  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
-
-  return gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (sink));
+  return gst_vaapisink_ensure_display (GST_VAAPISINK_CAST (base_sink));
 }
 
 static gboolean
@@ -1686,19 +1684,6 @@ gst_vaapisink_event (GstBaseSink * base_sink, GstEvent * event)
 }
 
 static void
-gst_vaapisink_set_bus (GstElement * element, GstBus * bus)
-{
-  /* Make sure to allocate a VA display in the sink element first,
-     so that upstream elements could query a display that was
-     allocated here, and that exactly matches what the user
-     requested through the "display" property */
-  if (!GST_ELEMENT_BUS (element) && bus)
-    gst_vaapisink_ensure_display (GST_VAAPISINK_CAST (element));
-
-  GST_ELEMENT_CLASS (gst_vaapisink_parent_class)->set_bus (element, bus);
-}
-
-static void
 gst_vaapisink_class_init (GstVaapiSinkClass * klass)
 {
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
@@ -1732,7 +1717,6 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
   videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_vaapisink_show_frame);
 
   element_class->set_context = gst_vaapi_base_set_context;
-  element_class->set_bus = gst_vaapisink_set_bus;
   gst_element_class_set_static_metadata (element_class,
       "VA-API sink", "Sink/Video", GST_PLUGIN_DESC,
       "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
