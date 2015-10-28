@@ -4525,6 +4525,81 @@ GST_START_TEST (dash_mpdparser_negative_period_duration)
 GST_END_TEST;
 
 /*
+ * Test parsing negative values from attributes that should be unsigned
+ *
+ */
+GST_START_TEST (dash_mpdparser_read_unsigned_from_negative_values)
+{
+  GstPeriodNode *periodNode;
+  GstSegmentBaseType *segmentBase;
+  GstAdaptationSetNode *adaptationSet;
+  GstRepresentationNode *representation;
+  GstSubRepresentationNode *subRepresentation;
+
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      "     availabilityStartTime=\"2015--1-13T12:25:37\">"
+      "  <Period start=\"-P-2015Y\" duration=\"-P-5M\">"
+      "    <SegmentBase presentationTimeOffset=\"-10\""
+      "                 timescale=\"-5\""
+      "                 indexRange=\"1--10\">"
+      "    </SegmentBase>"
+      "    <AdaptationSet par=\"-1:7\""
+      "                   minFrameRate=\" -1\""
+      "                   segmentAlignment=\"-4\">"
+      "      <Representation>"
+      "        <SubRepresentation dependencyLevel=\"1 -2 3\">"
+      "        </SubRepresentation>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
+  segmentBase = periodNode->SegmentBase;
+  adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
+  representation = (GstRepresentationNode *)
+      adaptationSet->Representations->data;
+  subRepresentation = (GstSubRepresentationNode *)
+      representation->SubRepresentations->data;
+
+  /* availabilityStartTime parsing should fail */
+  fail_if (mpdclient->mpd_node->availabilityStartTime != NULL);
+
+  /* Period start parsing should fail */
+  assert_equals_int64 (periodNode->start, -1);
+
+  /* Period duration parsing should fail */
+  assert_equals_int64 (periodNode->duration, -1);
+
+  /* expect negative value to be rejected and presentationTimeOffset to be 0 */
+  assert_equals_uint64 (segmentBase->presentationTimeOffset, 0);
+  assert_equals_uint64 (segmentBase->timescale, 1);
+  fail_if (segmentBase->indexRange != NULL);
+
+  /* par ratio parsing should fail */
+  fail_if (adaptationSet->par != NULL);
+
+  /* minFrameRate parsing should fail */
+  fail_if (adaptationSet->minFrameRate != NULL);
+
+  /* segmentAlignment parsing should fail */
+  fail_if (adaptationSet->segmentAlignment != NULL);
+
+  /* dependency level parsing should fail */
+  fail_if (subRepresentation->dependencyLevel != NULL);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * create a test suite containing all dash testcases
  */
 static Suite *
@@ -4683,6 +4758,8 @@ dash_suite (void)
   tcase_add_test (tc_negativeTests,
       dash_mpdparser_wrong_period_duration_inferred_from_next_mediaPresentationDuration);
   tcase_add_test (tc_negativeTests, dash_mpdparser_negative_period_duration);
+  tcase_add_test (tc_negativeTests,
+      dash_mpdparser_read_unsigned_from_negative_values);
 
   tcase_add_test (tc_stringTests, dash_mpdparser_whitespace_strings);
   tcase_add_test (tc_stringTests, dash_mpdparser_rfc1738_strings);

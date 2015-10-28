@@ -385,13 +385,16 @@ gst_mpdparser_get_xml_prop_unsigned_integer (xmlNode * a_node,
   *property_value = default_val;
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    if (sscanf ((gchar *) prop_string, "%u", property_value) == 1) {
+    if (sscanf ((gchar *) prop_string, "%u", property_value) == 1 &&
+        strstr ((gchar *) prop_string, "-") == NULL) {
       exists = TRUE;
       GST_LOG (" - %s: %u", property_name, *property_value);
     } else {
       GST_WARNING
           ("failed to parse unsigned integer property %s from xml string %s",
           property_name, prop_string);
+      /* sscanf might have written to *property_value. Restore to default */
+      *property_value = default_val;
     }
     xmlFree (prop_string);
   }
@@ -410,13 +413,16 @@ gst_mpdparser_get_xml_prop_unsigned_integer_64 (xmlNode * a_node,
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     if (sscanf ((gchar *) prop_string, "%" G_GUINT64_FORMAT,
-            property_value) == 1) {
+            property_value) == 1 &&
+        strstr ((gchar *) prop_string, "-") == NULL) {
       exists = TRUE;
       GST_LOG (" - %s: %" G_GUINT64_FORMAT, property_name, *property_value);
     } else {
       GST_WARNING
           ("failed to parse unsigned integer property %s from xml string %s",
           property_name, prop_string);
+      /* sscanf might have written to *property_value. Restore to default */
+      *property_value = default_val;
     }
     xmlFree (prop_string);
   }
@@ -443,12 +449,21 @@ gst_mpdparser_get_xml_prop_uint_vector_type (xmlNode * a_node,
         exists = TRUE;
         GST_LOG (" - %s:", property_name);
         for (i = 0; i < *value_size; i++) {
-          if (sscanf ((gchar *) str_vector[i], "%u", &prop_uint_vector[i]) == 1) {
+          if (sscanf ((gchar *) str_vector[i], "%u", &prop_uint_vector[i]) == 1
+              && strstr (str_vector[i], "-") == NULL) {
             GST_LOG ("    %u", prop_uint_vector[i]);
           } else {
             GST_WARNING
                 ("failed to parse uint vector type property %s from xml string %s",
                 property_name, str_vector[i]);
+            /* there is no special value to put in prop_uint_vector[i] to
+             * signal it is invalid, so we just clean everything and return
+             * FALSE
+             */
+            g_free (prop_uint_vector);
+            prop_uint_vector = NULL;
+            exists = FALSE;
+            break;
           }
         }
         *property_value = prop_uint_vector;
@@ -596,13 +611,25 @@ gst_mpdparser_get_xml_prop_range (xmlNode * a_node, const gchar * property_name,
     }
     /* read first_byte_pos */
     if (pos != 0) {
-      if (sscanf (str, "%" G_GUINT64_FORMAT, &first_byte_pos) != 1) {
+      /* replace str[pos] with '\0' to allow sscanf to not be confused by
+       * the minus sign (eg " -1" (observe the space before -) would otherwise
+       * be interpreted as range -1 to 1)
+       */
+      str[pos] = 0;
+      if (sscanf (str, "%" G_GUINT64_FORMAT, &first_byte_pos) != 1 ||
+          strstr (str, "-") != NULL) {
+        /* sscanf failed or it found a negative number */
+        /* restore the '-' sign */
+        str[pos] = '-';
         goto error;
       }
+      /* restore the '-' sign */
+      str[pos] = '-';
     }
     /* read last_byte_pos */
     if (pos < (len - 1)) {
-      if (sscanf (str + pos + 1, "%" G_GUINT64_FORMAT, &last_byte_pos) != 1) {
+      if (sscanf (str + pos + 1, "%" G_GUINT64_FORMAT, &last_byte_pos) != 1 ||
+          strstr (str + pos + 1, "-") != NULL) {
         goto error;
       }
     }
@@ -645,6 +672,10 @@ gst_mpdparser_get_xml_prop_ratio (xmlNode * a_node,
     pos = strcspn (str, ":");
     if (pos >= len) {
       GST_TRACE ("pos %d >= len %d", pos, len);
+      goto error;
+    }
+    /* search for negative sign */
+    if (strstr (str, "-") != NULL) {
       goto error;
     }
     /* read num */
@@ -692,6 +723,11 @@ gst_mpdparser_get_xml_prop_framerate (xmlNode * a_node,
     len = xmlStrlen (prop_string);
     str = (gchar *) prop_string;
     GST_TRACE ("framerate: %s, len %d", str, len);
+
+    /* search for negative sign */
+    if (strstr (str, "-") != NULL) {
+      goto error;
+    }
 
     /* read "/" if available */
     pos = strcspn (str, "/");
@@ -751,7 +787,7 @@ gst_mpdparser_get_xml_prop_cond_uint (xmlNode * a_node,
       val = 0;
     } else {
       flag = TRUE;
-      if (sscanf (str, "%u", &val) != 1)
+      if (sscanf (str, "%u", &val) != 1 || strstr (str, "-") != NULL)
         goto error;
     }
 
@@ -807,42 +843,42 @@ gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
     GST_TRACE ("dateTime: %s, len %d", str, xmlStrlen (prop_string));
     /* parse year */
     ret = sscanf (str, "%d", &year);
-    if (ret != 1)
+    if (ret != 1 || year <= 0)
       goto error;
     pos = strcspn (str, "-");
     str += (pos + 1);
     GST_TRACE (" - year %d", year);
     /* parse month */
     ret = sscanf (str, "%d", &month);
-    if (ret != 1)
+    if (ret != 1 || month <= 0)
       goto error;
     pos = strcspn (str, "-");
     str += (pos + 1);
     GST_TRACE (" - month %d", month);
     /* parse day */
     ret = sscanf (str, "%d", &day);
-    if (ret != 1)
+    if (ret != 1 || day <= 0)
       goto error;
     pos = strcspn (str, "T");
     str += (pos + 1);
     GST_TRACE (" - day %d", day);
     /* parse hour */
     ret = sscanf (str, "%d", &hour);
-    if (ret != 1)
+    if (ret != 1 || hour < 0)
       goto error;
     pos = strcspn (str, ":");
     str += (pos + 1);
     GST_TRACE (" - hour %d", hour);
     /* parse minute */
     ret = sscanf (str, "%d", &minute);
-    if (ret != 1)
+    if (ret != 1 || minute < 0)
       goto error;
     pos = strcspn (str, ":");
     str += (pos + 1);
     GST_TRACE (" - minute %d", minute);
     /* parse second */
     ret = sscanf (str, "%d", &second);
-    if (ret != 1)
+    if (ret != 1 || second < 0)
       goto error;
     GST_TRACE (" - second %d", second);
 
@@ -935,6 +971,11 @@ gst_mpdparser_get_xml_prop_duration_inner (xmlNode * a_node,
       sign = -1;
       str++;
       len--;
+      /* look for another "-" sign */
+      if (strcspn (str, "-") != len) {
+        GST_WARNING ("found a second \"-\" sign");
+        goto error;
+      }
     }
     /* read "P" for period */
     pos = strcspn (str, "P");
