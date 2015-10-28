@@ -954,12 +954,6 @@ gst_vaapidecode_ensure_allowed_caps (GstVaapiDecode * decode)
   GArray *profiles;
   guint i;
 
-  if (decode->allowed_caps)
-    return TRUE;
-
-  if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))
-    goto error_no_display;
-
   profiles =
       gst_vaapi_display_get_decode_profiles (GST_VAAPI_PLUGIN_BASE_DISPLAY
       (decode));
@@ -999,11 +993,6 @@ gst_vaapidecode_ensure_allowed_caps (GstVaapiDecode * decode)
   return TRUE;
 
   /* ERRORS */
-error_no_display:
-  {
-    GST_INFO_OBJECT (decode, "no VA display shared yet");
-    return FALSE;
-  }
 error_no_profiles:
   {
     GST_ERROR ("failed to retrieve VA decode profiles");
@@ -1022,9 +1011,19 @@ gst_vaapidecode_get_caps (GstPad * pad)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (GST_OBJECT_PARENT (pad));
 
+  if (decode->allowed_caps)
+    goto bail;
+
+  /* if we haven't a display yet, return our pad's template caps */
+  if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))
+    return gst_pad_get_pad_template_caps (pad);
+
+  /* if the allowed caps calculation fails, return an empty caps, so
+   * the auto-plug can try other decoder */
   if (!gst_vaapidecode_ensure_allowed_caps (decode))
     return gst_caps_new_empty ();
 
+bail:
   return gst_caps_ref (decode->allowed_caps);
 }
 
