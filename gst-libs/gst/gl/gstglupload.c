@@ -332,8 +332,17 @@ _egl_image_upload_transform_caps (GstGLContext * context,
   if (direction == GST_PAD_SINK) {
     ret = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   } else {
+    gint i, n;
+
     ret = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_EGL_IMAGE);
     gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
+
+    n = gst_caps_get_size (ret);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (ret, i);
+
+      gst_structure_remove_fields (s, "texture-target", NULL);
+    }
   }
 
   return ret;
@@ -408,7 +417,7 @@ _egl_image_upload_perform_gl_thread (GstGLContext * context,
 
   /* FIXME: buffer pool */
   *image->outbuf = gst_buffer_new ();
-  gst_gl_memory_setup_buffer (image->upload->context,
+  gst_gl_memory_setup_buffer (image->upload->context, GST_GL_TEXTURE_TARGET_2D,
       NULL, &image->upload->priv->out_info, NULL, *image->outbuf);
 
   n = gst_buffer_n_memory (image->buffer);
@@ -500,10 +509,19 @@ _upload_meta_upload_transform_caps (GstGLContext * context,
   if (direction == GST_PAD_SINK) {
     ret = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   } else {
+    gint i, n;
+
     ret =
         _set_caps_features (caps,
         GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
     gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
+
+    n = gst_caps_get_size (ret);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (ret, i);
+
+      gst_structure_remove_fields (s, "texture-target", NULL);
+    }
   }
 
   return ret;
@@ -616,7 +634,7 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
 
   /* FIXME: buffer pool */
   *outbuf = gst_buffer_new ();
-  gst_gl_memory_setup_buffer (upload->upload->context,
+  gst_gl_memory_setup_buffer (upload->upload->context, GST_GL_TEXTURE_TARGET_2D,
       NULL, &upload->upload->priv->in_info, NULL, *outbuf);
 
   for (i = 0; i < GST_GL_UPLOAD_MAX_PLANES; i++) {
@@ -756,7 +774,16 @@ _raw_data_upload_transform_caps (GstGLContext * context,
   if (direction == GST_PAD_SINK) {
     ret = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   } else {
+    gint i, n;
+
     ret = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+
+    n = gst_caps_get_size (ret);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (ret, i);
+
+      gst_structure_remove_fields (s, "texture-target", NULL);
+    }
   }
 
   return ret;
@@ -802,7 +829,7 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
       GST_VIDEO_MULTIVIEW_MODE_SEPARATED)
     max_planes *= GST_VIDEO_INFO_VIEWS (in_info);
 
-  gst_gl_memory_setup_wrapped (raw->upload->context,
+  gst_gl_memory_setup_wrapped (raw->upload->context, GST_GL_TEXTURE_TARGET_2D,
       &raw->upload->priv->in_info, NULL, raw->in_frame->frame.data, in_tex,
       raw->in_frame, (GDestroyNotify) _raw_upload_frame_unref);
 

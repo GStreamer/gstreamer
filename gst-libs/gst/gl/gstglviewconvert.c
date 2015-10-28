@@ -39,8 +39,11 @@
 #define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
 
 static GstStaticCaps caps_template =
-GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-    (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "RGBA"));
+GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY "), "
+    "format = (string) RGBA, "
+    "width = " GST_VIDEO_SIZE_RANGE ", "
+    "height = " GST_VIDEO_SIZE_RANGE ", "
+    "framerate = " GST_VIDEO_FPS_RANGE ", " "texture-target = (string) 2D ");
 
 #define GST_CAT_DEFAULT gst_gl_view_convert_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -1668,8 +1671,9 @@ static gboolean
 _gen_buffer (GstGLViewConvert * viewconvert, GstBuffer ** target)
 {
   *target = gst_buffer_new ();
-  if (!gst_gl_memory_setup_buffer (viewconvert->context, NULL,
-          &viewconvert->out_info, NULL, *target)) {
+  if (!gst_gl_memory_setup_buffer (viewconvert->context,
+          GST_GL_TEXTURE_TARGET_2D, NULL, &viewconvert->out_info, NULL,
+          *target)) {
     return FALSE;
   }
   gst_buffer_add_video_meta_full (*target, 0,
@@ -1792,8 +1796,8 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
        * the attachments i.e. the smallest attachment size */
       if (!priv->out_tex[j])
         priv->out_tex[j] =
-            (GstGLMemory *) gst_gl_memory_alloc (context, NULL, &temp_info, 0,
-            NULL);
+            (GstGLMemory *) gst_gl_memory_alloc (context,
+            GST_GL_TEXTURE_TARGET_2D, NULL, &temp_info, 0, NULL);
     } else {
       priv->out_tex[j] = out_tex;
     }
@@ -1845,8 +1849,9 @@ out:
         continue;
       }
       gst_gl_memory_copy_into_texture (priv->out_tex[j],
-          out_tex->tex_id, out_tex->tex_type, width, height,
-          GST_VIDEO_INFO_PLANE_STRIDE (&out_tex->info, out_tex->plane), FALSE);
+          out_tex->tex_id, GST_GL_TEXTURE_TARGET_2D, out_tex->tex_type, width,
+          height, GST_VIDEO_INFO_PLANE_STRIDE (&out_tex->info, out_tex->plane),
+          FALSE);
       gst_memory_unmap ((GstMemory *) out_tex, &to_info);
     }
 

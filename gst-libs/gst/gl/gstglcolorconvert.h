@@ -95,13 +95,20 @@ struct _GstGLColorConvertClass
  * The currently supported #GstCaps that can be converted
  */
 #define GST_GL_COLOR_CONVERT_VIDEO_CAPS \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, \
-        GST_GL_COLOR_CONVERT_FORMATS)
-
-#define GST_GL_COLOR_CONVERT_VIDEO_OVERLAY_COMPOSITION_CAPS \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY \
-        "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
-        GST_GL_COLOR_CONVERT_FORMATS)
+    "video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY "), "              \
+    "format = (string) " GST_GL_COLOR_CONVERT_FORMATS ", "              \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
+    "framerate = " GST_VIDEO_FPS_RANGE ", "                             \
+    "texture-target = (string) 2D "                                     \
+    " ; "                                                               \
+    "video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY ","                \
+    GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION "), "           \
+    "format = (string) " GST_GL_COLOR_CONVERT_FORMATS ", "              \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
+    "framerate = " GST_VIDEO_FPS_RANGE ", "                             \
+    "texture-target = (string) 2D"
 
 GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context);
 
