@@ -62,6 +62,14 @@ struct _GstAudioQuantize
 #define MAKE_QUANTIZE_FUNC_NAME(name)                                   \
 gst_audio_quantize_quantize_##name
 
+#define ADDSS(res,val) \
+        if (val > 0 && res > 0 && G_MAXINT32 - res <= val)              \
+          res = G_MAXINT32;                                             \
+        else if (val < 0 && res < 0 && G_MININT32 - res >= val)         \
+          res = G_MININT32;                                             \
+        else                                                            \
+          res += val;
+
 /* Quantize functions for gint32 as intermediate format */
 
 #define MAKE_QUANTIZE_FUNC_I(name, DITHER_INIT_FUNC, ADD_DITHER_FUNC,   \
@@ -162,12 +170,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (GstAudioQuantize *quant, gdouble *src,  \
 
 #define ADD_DITHER_RPDF_I()                                             \
         rand = bias + RANDOM_INT_DITHER(dither);                        \
-        if (rand > 0 && tmp > 0 && G_MAXINT32 - tmp <= rand)            \
-                tmp = G_MAXINT32;                                       \
-        else if (rand < 0 && tmp < 0 && G_MININT32 - tmp >= rand)       \
-                tmp = G_MININT32;                                       \
-        else                                                            \
-                tmp += rand;
+        ADDSS (tmp, rand);
 
 #define INIT_DITHER_RPDF_F()                                            \
   gdouble dither = 1.0/(1U<<(32 - scale - 1));
@@ -182,12 +185,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (GstAudioQuantize *quant, gdouble *src,  \
 #define ADD_DITHER_TPDF_I()                                             \
         rand = bias + RANDOM_INT_DITHER(dither)                         \
                     + RANDOM_INT_DITHER(dither);                        \
-        if (rand > 0 && tmp > 0 && G_MAXINT32 - tmp <= rand)            \
-                tmp = G_MAXINT32;                                       \
-        else if (rand < 0 && tmp < 0 && G_MININT32 - tmp >= rand)       \
-                tmp = G_MININT32;                                       \
-        else                                                            \
-                tmp += rand;
+        ADDSS (tmp, rand);
 
 #define INIT_DITHER_TPDF_F()                                            \
   gdouble dither = 1.0/(1U<<(32 - scale));
@@ -205,12 +203,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (GstAudioQuantize *quant, gdouble *src,  \
         tmp_rand = RANDOM_INT_DITHER(dither);                           \
         rand = bias + tmp_rand - last_random[chan_pos];                 \
         last_random[chan_pos] = tmp_rand;                               \
-        if (rand > 0 && tmp > 0 && G_MAXINT32 - tmp <= rand)            \
-                tmp = G_MAXINT32;                                       \
-        else if (rand < 0 && tmp < 0 && G_MININT32 - tmp >= rand)       \
-                tmp = G_MININT32;                                       \
-        else                                                            \
-                tmp += rand;
+        ADDSS (tmp, rand);
 
 /* Like TPDF dither but the dither noise is oriented more to the
  * higher frequencies */
