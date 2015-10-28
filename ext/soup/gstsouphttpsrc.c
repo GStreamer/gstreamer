@@ -489,6 +489,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->session = NULL;
   src->external_session = NULL;
   src->forced_external_session = FALSE;
+  src->cookie_jar = NULL;
   src->msg = NULL;
   src->timeout = DEFAULT_TIMEOUT;
   src->log_level = DEFAULT_SOUP_LOG_LEVEL;
@@ -1026,6 +1027,9 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
     GST_DEBUG_OBJECT (src, "Re-using session");
   }
 
+  src->cookie_jar = soup_cookie_jar_new ();
+  soup_session_add_feature (src->session,
+      SOUP_SESSION_FEATURE (src->cookie_jar));
   return TRUE;
 }
 
@@ -1039,6 +1043,11 @@ gst_soup_http_src_session_close (GstSoupHTTPSrc * src)
     soup_session_cancel_message (src->session, src->msg, SOUP_STATUS_CANCELLED);
     g_object_unref (src->msg);
     src->msg = NULL;
+  }
+
+  if (src->cookie_jar) {
+    g_object_unref (src->cookie_jar);
+    src->cookie_jar = NULL;
   }
 
   if (src->session) {
@@ -1493,11 +1502,12 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
   }
   if (src->cookies) {
     gchar **cookie;
+    SoupURI *uri = soup_uri_new (src->location);
 
     for (cookie = src->cookies; *cookie != NULL; cookie++) {
-      soup_message_headers_append (src->msg->request_headers, "Cookie",
-          *cookie);
+      soup_cookie_jar_set_cookie (src->cookie_jar, uri, *cookie);
     }
+    soup_uri_free (uri);
   }
 
   if (!src->compress)
@@ -2046,6 +2056,12 @@ gst_soup_http_src_query (GstBaseSrc * bsrc, GstQuery * query)
   gboolean ret;
   GstSchedulingFlags flags;
   gint minsize, maxsize, align;
+  GstContext *context;
+  GstStructure *context_structure;
+  char *cookie;
+  const gchar *cookies[2];
+  const gchar *context_type;
+  SoupURI *uri;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_URI:
@@ -2057,6 +2073,27 @@ gst_soup_http_src_query (GstBaseSrc * bsrc, GstQuery * query)
       }
       ret = TRUE;
       break;
+    case GST_QUERY_CONTEXT:
+      if (gst_query_parse_context_type (query, &context_type)
+          && !g_strcmp0 (context_type, "http-headers")) {
+        uri = soup_uri_new (src->location);
+        cookie = soup_cookie_jar_get_cookies (src->cookie_jar, uri, TRUE);
+        context = gst_context_new ("http-headers", FALSE);
+        gst_context_make_writable (context);
+        context_structure = gst_context_writable_structure (context);
+        if (cookie != NULL) {
+          cookies[0] = cookie;
+          cookies[1] = NULL;
+          gst_structure_set (context_structure, "cookies", G_TYPE_STRV, cookies,
+              NULL);
+          g_free (cookie);
+        }
+        gst_query_set_context (query, context);
+        soup_uri_free (uri);
+        ret = TRUE;
+        break;
+      }
+
     default:
       ret = FALSE;
       break;

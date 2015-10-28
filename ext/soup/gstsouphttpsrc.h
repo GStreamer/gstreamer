@@ -63,6 +63,7 @@ struct _GstSoupHTTPSrc {
   gboolean session_is_shared;
   SoupSession *external_session; /* Shared via GstContext */
   gboolean forced_external_session; /* If session was explicitly set from application */
+  SoupCookieJar *cookie_jar;   /* Volatile HTTP cookie storage */
   SoupMessage *msg;            /* Request message. */
   gint retry_count;            /* Number of retries since we received data */
   gint max_retries;            /* Maximum number of retries */
