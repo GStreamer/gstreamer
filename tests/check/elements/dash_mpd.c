@@ -4600,6 +4600,37 @@ GST_START_TEST (dash_mpdparser_read_unsigned_from_negative_values)
 GST_END_TEST;
 
 /*
+ * Test negative mediaPresentationDuration duration
+ */
+GST_START_TEST (dash_mpdparser_negative_mediaPresentationDuration)
+{
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      "     availabilityStartTime=\"2015-03-24T0:0:0\""
+      "     mediaPresentationDuration=\"-P0Y0M0DT3H3M30S\">"
+      "  <Period id=\"Period0\" start=\"P0Y0M0DT1H0M0S\"></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  /* process the xml data
+   * should fail due to negative duration of mediaPresentationDuration
+   */
+  ret = gst_mpd_client_setup_media_presentation (mpdclient, GST_CLOCK_TIME_NONE,
+      -1, NULL);
+  assert_equals_int (ret, FALSE);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * create a test suite containing all dash testcases
  */
 static Suite *
@@ -4760,6 +4791,8 @@ dash_suite (void)
   tcase_add_test (tc_negativeTests, dash_mpdparser_negative_period_duration);
   tcase_add_test (tc_negativeTests,
       dash_mpdparser_read_unsigned_from_negative_values);
+  tcase_add_test (tc_negativeTests,
+      dash_mpdparser_negative_mediaPresentationDuration);
 
   tcase_add_test (tc_stringTests, dash_mpdparser_whitespace_strings);
   tcase_add_test (tc_stringTests, dash_mpdparser_rfc1738_strings);

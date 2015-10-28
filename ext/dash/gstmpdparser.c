@@ -4136,6 +4136,13 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client,
   idx = 0;
   start = 0;
   duration = GST_CLOCK_TIME_NONE;
+
+  if (client->mpd_node->mediaPresentationDuration <= 0 &&
+      client->mpd_node->mediaPresentationDuration != -1) {
+    /* Invalid MPD file: MPD duration is negative or zero */
+    goto syntax_error;
+  }
+
   for (list = client->mpd_node->Periods; list; /* explicitly advanced below */ ) {
     GstPeriodNode *period_node = list->data;
     GstPeriodNode *next_period_node = NULL;
