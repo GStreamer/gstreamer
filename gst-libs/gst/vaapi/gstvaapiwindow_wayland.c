@@ -368,7 +368,6 @@ frame_done_callback (void *data, struct wl_callback *callback, uint32_t time)
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (frame->window);
 
   g_atomic_pointer_compare_and_exchange (&priv->last_frame, frame, NULL);
-  frame_state_free (frame);
   g_atomic_int_dec_and_test (&priv->num_frames_pending);
 }
 
@@ -380,6 +379,7 @@ static void
 frame_release_callback (void *data, struct wl_buffer *wl_buffer)
 {
   wl_buffer_destroy (wl_buffer);
+  frame_state_free (data);
 }
 
 static const struct wl_buffer_listener frame_buffer_listener = {
@@ -542,11 +542,8 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
     priv->opaque_region = NULL;
   }
 
-  /* @TODO: It is not OK to use internal event_queue here, since there
-   * may still be a WL_BUFFER_RELEASE event when we destroy the
-   * event_queue in gst_vaapi_window_wayland_destroy (). */
   wl_proxy_set_queue ((struct wl_proxy *) buffer, priv->event_queue);
-  wl_buffer_add_listener (buffer, &frame_buffer_listener, NULL);
+  wl_buffer_add_listener (buffer, &frame_buffer_listener, frame);
 
   frame->callback = wl_surface_frame (priv->surface);
   wl_callback_add_listener (frame->callback, &frame_callback_listener, frame);
