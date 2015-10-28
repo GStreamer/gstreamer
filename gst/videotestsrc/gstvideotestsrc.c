@@ -670,7 +670,7 @@ gst_video_test_src_parse_caps (const GstCaps * caps,
     } else if (g_str_equal (str, "grbg")) {
       *x_inv = 0;
       *y_inv = 1;
-    } else if (g_str_equal (str, "grbg")) {
+    } else if (g_str_equal (str, "gbrg")) {
       *x_inv = 1;
       *y_inv = 0;
     } else
