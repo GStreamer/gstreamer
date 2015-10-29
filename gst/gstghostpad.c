@@ -318,10 +318,13 @@ gst_ghost_pad_internal_activate_pull_default (GstPad * pad, GstObject * parent,
     GST_LOG_OBJECT (pad, "activating peer");
     ret = gst_pad_activate_mode (other, GST_PAD_MODE_PULL, active);
     gst_object_unref (other);
-  } else {
+  } else if (active) {
     /* this is failure, we can't activate pull if there is no peer */
     GST_LOG_OBJECT (pad, "not src and no peer, failing");
     ret = FALSE;
+  } else {
+    GST_LOG_OBJECT (pad, "deactivating pull, with no peer - allowing");
+    ret = TRUE;
   }
 
   return ret;
@@ -406,10 +409,13 @@ gst_ghost_pad_activate_pull_default (GstPad * pad, GstObject * parent,
     GST_LOG_OBJECT (pad, "activating peer");
     ret = gst_pad_activate_mode (other, GST_PAD_MODE_PULL, active);
     gst_object_unref (other);
-  } else {
-    /* no peer, we fail */
-    GST_LOG_OBJECT (pad, "pad not src and no peer, failing");
+  } else if (active) {
+    /* this is failure, we can't activate pull if there is no peer */
+    GST_LOG_OBJECT (pad, "not src and no peer, failing");
     ret = FALSE;
+  } else {
+    GST_LOG_OBJECT (pad, "deactivating pull, with no peer - allowing");
+    ret = TRUE;
   }
 
   return ret;
