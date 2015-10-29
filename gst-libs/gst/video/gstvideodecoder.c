@@ -4024,9 +4024,9 @@ gst_video_decoder_get_max_decode_time (GstVideoDecoder *
     deadline = G_MAXINT64;
 
   GST_LOG_OBJECT (decoder, "earliest %" GST_TIME_FORMAT
-      ", frame deadline %" GST_TIME_FORMAT ", deadline %" GST_TIME_FORMAT,
+      ", frame deadline %" GST_TIME_FORMAT ", deadline %" GST_STIME_FORMAT,
       GST_TIME_ARGS (earliest_time), GST_TIME_ARGS (frame->deadline),
-      GST_TIME_ARGS (deadline));
+      GST_STIME_ARGS (deadline));
 
   GST_OBJECT_UNLOCK (decoder);
 
