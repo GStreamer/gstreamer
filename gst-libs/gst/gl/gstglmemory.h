@@ -62,6 +62,11 @@ typedef enum
 #define GST_GL_TEXTURE_TARGET_RECTANGLE_STR "rectangle"
 #define GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR "external-oes"
 
+#define GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_2D "GstBufferPoolOptionGLTextureTarget2D"
+#define GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_RECTANGLE "GstBufferPoolOptionGLTextureTargetRectangle"
+#define GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_EXTERNAL_OES "GstBufferPoolOptionGLTextureTargetExternalOES"
+
+const gchar * gst_gl_texture_target_to_buffer_pool_option (GstGLTextureTarget target);
 
 /**
  * GstGLMemory:

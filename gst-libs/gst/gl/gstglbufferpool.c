@@ -52,6 +52,7 @@ struct _GstGLBufferPoolPrivate
   gint im_format;
   GstVideoInfo info;
   GstVideoAlignment valign;
+  GstGLTextureTarget tex_target;
   gboolean add_videometa;
   gboolean add_uploadmeta;
   gboolean add_glsyncmeta;
@@ -79,6 +80,8 @@ gst_gl_buffer_pool_get_options (GstBufferPool * pool)
     GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META,
     GST_BUFFER_POOL_OPTION_GL_SYNC_META,
     GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT,
+    GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_2D,
+    GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_RECTANGLE,
     NULL
   };
 
@@ -96,7 +99,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   guint max_align, n;
   GstAllocator *allocator = NULL;
   GstAllocationParams alloc_params;
-  gboolean reset = TRUE;
+  gboolean reset = TRUE, ret;
   gint p;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
@@ -192,6 +195,44 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     glpool->upload = gst_gl_upload_meta_new (glpool->context);
   }
 
+  priv->tex_target = 0;
+  {
+    GstStructure *s = gst_caps_get_structure (caps, 0);
+    const gchar *target_str = gst_structure_get_string (s, "texture-target");
+    gboolean multiple_texture_targets = FALSE;
+
+    if (target_str)
+      priv->tex_target = gst_gl_texture_target_from_string (target_str);
+
+    if (gst_buffer_pool_config_has_option (config,
+            GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_2D)) {
+      if (priv->tex_target)
+        multiple_texture_targets = TRUE;
+      priv->tex_target = GST_GL_TEXTURE_TARGET_2D;
+    }
+    if (gst_buffer_pool_config_has_option (config,
+            GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_RECTANGLE)) {
+      if (priv->tex_target)
+        multiple_texture_targets = TRUE;
+      priv->tex_target = GST_GL_TEXTURE_TARGET_RECTANGLE;
+    }
+    if (gst_buffer_pool_config_has_option (config,
+            GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_EXTERNAL_OES)) {
+      if (priv->tex_target)
+        multiple_texture_targets = TRUE;
+      priv->tex_target = GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
+    }
+
+    if (!priv->tex_target)
+      priv->tex_target = GST_GL_TEXTURE_TARGET_2D;
+
+    if (multiple_texture_targets) {
+      GST_WARNING_OBJECT (pool, "Multiple texture targets configured either "
+          "through caps or buffer pool options");
+      ret = FALSE;
+    }
+  }
+
   /* Recalulate the size and offset as we don't add padding between planes. */
   priv->info.size = 0;
   for (p = 0; p < GST_VIDEO_INFO_N_PLANES (&priv->info); p++) {
@@ -203,7 +244,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   gst_buffer_pool_config_set_params (config, caps, priv->info.size,
       min_buffers, max_buffers);
 
-  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
+  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config) && ret;
 
   /* ERRORS */
 wrong_config:
