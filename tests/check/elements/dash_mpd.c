@@ -2464,20 +2464,57 @@ GST_END_TEST;
  */
 GST_START_TEST (dash_mpdparser_template_parsing)
 {
-  const gchar *url_template;
   const gchar *id = "TestId";
   guint number = 7;
   guint bandwidth = 2500;
   guint64 time = 100;
   gchar *result;
 
-  url_template = "TestMedia$Bandwidth$$$test";
-  result =
-      gst_mpdparser_build_URL_from_template (url_template, id, number,
-      bandwidth, time);
-  assert_equals_string (result, "TestMedia2500$test");
-  g_free (result);
+  struct TestUrl
+  {
+    const gchar *urlTemplate;
+    const gchar *expectedResponse;
+  };
 
+  /* various test scenarios to attempt */
+  struct TestUrl testUrl[] = {
+    {"", NULL},                 /* empty string for template */
+    {"$$", "$"},                /* escaped $ */
+    {"Number", "Number"},       /* string similar with an identifier, but without $ */
+    {"Number$Number$", "Number7"},      /* Number identifier */
+    {"Number$Number$$$", "Number7$"},   /* Number identifier followed by $$ */
+    {"Number$Number$Number$Number$", "Number7Number7"}, /* series of "Number" string and Number identifier */
+    {"Representation$RepresentationID$", "RepresentationTestId"},       /* RepresentationID identifier */
+    {"TestMedia$Bandwidth$$$test", "TestMedia2500$test"},       /* Bandwidth identifier */
+    {"TestMedia$Time$", "TestMedia100"},        /* Time identifier */
+    {"TestMedia$Time", NULL},   /* Identifier not finished with $ */
+    {"Time$Time%0d$", "Time100"},       /* usage of format smaller than number of digits */
+    {"Time$Time%01d$", "Time100"},      /* usage of format smaller than number of digits */
+    {"Time$Time%05d$", "Time00100"},    /* usage of format bigger than number of digits */
+    {"Time$Time%05dtest$", "Time00100test"},    /* usage extra text in format */
+    {"Time$Time%0$", NULL},     /* incorrect format: no d, x or u */
+    {"Time$Time1%01d$", NULL},  /* incorrect format: does not start with % after identifier */
+    {"$Bandwidth%/init.mp4v", NULL},    /* incorrect identifier: not finished with $ */
+    {"$Number%/$Time$.mp4v", NULL},     /* incorrect number of $ separators */
+    {"$RepresentationID1$", NULL},      /* incorrect identifier */
+    {"$Bandwidth1$", NULL},     /* incorrect identifier */
+    {"$Number1$", NULL},        /* incorrect identifier */
+    {"$RepresentationID%01d$", NULL},   /* incorrect format: RepresentationID does not support formatting */
+    {"Time$Time%05u$", "Time00100"},    /* %u format */
+    {"Time$Time%05x$", "Time00064"},    /* %x format */
+    {"Time$Time%05utest$", "Time00100test"},    /* %u format followed by text */
+    {"Time$Time%05xtest$", "Time00064test"},    /* %x format followed by text */
+    {"Time$Time%05xtest%$", NULL},      /* second % character in format */
+  };
+
+  guint count = sizeof (testUrl) / sizeof (testUrl[0]);
+  for (int i = 0; i < count; i++) {
+    result =
+        gst_mpdparser_build_URL_from_template (testUrl[i].urlTemplate, id,
+        number, bandwidth, time);
+    assert_equals_string (result, testUrl[i].expectedResponse);
+    g_free (result);
+  }
 }
 
 GST_END_TEST;

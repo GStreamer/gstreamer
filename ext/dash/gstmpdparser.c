@@ -2961,12 +2961,11 @@ gst_mpdparser_get_initializationURL (GstActiveStream * stream,
 static gboolean
 validate_format (const gchar * format)
 {
-  gchar *p;
+  const gchar *p = format;
 
-  /* Check if there is a % at all */
-  p = strchr (format, '%');
-  if (!p)
-    return TRUE;
+  /* Check if it starts with % */
+  if (!p || p[0] != '%')
+    return FALSE;
   p++;
 
   /* Following the % must be a 0, or any of d, x or u.
@@ -2999,16 +2998,13 @@ validate_format (const gchar * format)
 static gchar *
 promote_format_to_uint64 (const gchar * format)
 {
-  gchar *p;
+  const gchar *p = format;
   gchar *promoted_format;
 
   /* Must be called with a validated format! */
   g_return_val_if_fail (validate_format (format), NULL);
 
-  /* Check if there is a % at all */
-  p = strchr (format, '%');
-  if (!p)
-    return g_strdup (format);
+  /* it starts with % */
   p++;
 
   /* Following the % must be a 0, or any of d, x or u.
@@ -3061,7 +3057,6 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
   gchar **tokens, *token, *ret;
   const gchar *format;
   gint i, num_tokens;
-  gboolean last_token_par = TRUE;       /* last token was a parameter */
 
   g_return_val_if_fail (url_template != NULL, NULL);
   tokens = g_strsplit_set (url_template, "$", -1);
@@ -3071,9 +3066,29 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
   }
   num_tokens = g_strv_length (tokens);
 
+  /*
+   * each identifier is guarded by 2 $, which means that we must have an odd number of tokens
+   * An even number of tokens means the string is not valid.
+   */
+  if ((num_tokens & 1) == 0) {
+    GST_ERROR ("Invalid number of tokens (%d). url_template is '%s'",
+        num_tokens, url_template);
+    g_strfreev (tokens);
+    return NULL;
+  }
+
   for (i = 0; i < num_tokens; i++) {
     token = tokens[i];
     format = default_format;
+
+    /* the tokens to replace must be provided between $ characters, eg $token$
+     * For a string like token0$token1$token2$token3$token4, only the odd number
+     * tokens (1,3,...) must be parsed.
+     *
+     * Skip even tokens
+     */
+    if ((i & 1) == 0)
+      continue;
 
     if (!g_strcmp0 (token, "RepresentationID")) {
       if (!gst_mpdparser_validate_rfc1738_url (id)) {
@@ -3083,7 +3098,6 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
       }
       tokens[i] = g_strdup_printf ("%s", id);
       g_free (token);
-      last_token_par = TRUE;
     } else if (!strncmp (token, "Number", 6)) {
       if (strlen (token) > 6) {
         format = token + 6;     /* format tag */
@@ -3093,7 +3107,6 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
 
       tokens[i] = g_strdup_printf (format, number);
       g_free (token);
-      last_token_par = TRUE;
     } else if (!strncmp (token, "Bandwidth", 9)) {
       if (strlen (token) > 9) {
         format = token + 9;     /* format tag */
@@ -3103,7 +3116,6 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
 
       tokens[i] = g_strdup_printf (format, bandwidth);
       g_free (token);
-      last_token_par = TRUE;
     } else if (!strncmp (token, "Time", 4)) {
       gchar *promoted_format;
 
@@ -3117,17 +3129,16 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
       tokens[i] = g_strdup_printf (promoted_format, time);
       g_free (promoted_format);
       g_free (token);
-      last_token_par = TRUE;
     } else if (!g_strcmp0 (token, "")) {
-      if (!last_token_par) {
-        tokens[i] = g_strdup_printf ("%s", "$");
-        g_free (token);
-        last_token_par = TRUE;
-      } else {
-        last_token_par = FALSE;
-      }
+      tokens[i] = g_strdup_printf ("%s", "$");
+      g_free (token);
     } else {
-      last_token_par = FALSE;
+      /* unexpected identifier found between $ signs
+       *
+       * "If the URL contains unescaped $ symbols which do not enclose a valid
+       * identifier then the result of URL formation is undefined"
+       */
+      goto invalid_format;
     }
   }
 
