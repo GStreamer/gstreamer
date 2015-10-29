@@ -1101,6 +1101,7 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
 
       g_mutex_lock (&stream->fragment_download_lock);
       stream->cancelled = TRUE;
+      stream->download_finished = FALSE;
       g_cond_signal (&stream->fragment_download_cond);
       g_mutex_unlock (&stream->fragment_download_lock);
     }
