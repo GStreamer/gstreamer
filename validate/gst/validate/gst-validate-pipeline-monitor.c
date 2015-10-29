@@ -184,28 +184,36 @@ static void
 gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
 {
   /* scenarios currently only make sense for pipelines */
-  const gchar *scenario_name;
+  const gchar *scenarios_names;
+  gchar **scenarios;
 
-  if ((scenario_name = g_getenv ("GST_VALIDATE_SCENARIO"))) {
-    gchar **scenario_v = g_strsplit (scenario_name, "->", 2);
+  if ((scenarios_names = g_getenv ("GST_VALIDATE_SCENARIO"))) {
+    gint i;
 
-    if (scenario_v[1] && GST_VALIDATE_MONITOR_GET_OBJECT (monitor)) {
-      if (!g_pattern_match_simple (scenario_v[1],
-              GST_OBJECT_NAME (GST_VALIDATE_MONITOR_GET_OBJECT (monitor)))) {
-        GST_INFO_OBJECT (monitor, "Not attaching to pipeline %" GST_PTR_FORMAT
-            " as not matching pattern %s",
-            GST_VALIDATE_MONITOR_GET_OBJECT (monitor), scenario_v[1]);
+    scenarios = g_strsplit (scenarios_names, G_SEARCHPATH_SEPARATOR_S, 0);
+    for (i = 0; scenarios[i]; i++) {
+      gchar **scenario_v = g_strsplit (scenarios[i], "->", 2);
 
-        g_strfreev (scenario_v);
-        return;
+      if (scenario_v[1] && GST_VALIDATE_MONITOR_GET_OBJECT (monitor)) {
+        if (!g_pattern_match_simple (scenario_v[1],
+                GST_OBJECT_NAME (GST_VALIDATE_MONITOR_GET_OBJECT (monitor)))) {
+          GST_INFO_OBJECT (monitor, "Not attaching to pipeline %" GST_PTR_FORMAT
+              " as not matching pattern %s",
+              GST_VALIDATE_MONITOR_GET_OBJECT (monitor), scenario_v[1]);
+
+          g_strfreev (scenario_v);
+          return;
+        }
       }
+      monitor->scenario =
+          gst_validate_scenario_factory_create (GST_VALIDATE_MONITOR_GET_RUNNER
+          (monitor),
+          GST_ELEMENT_CAST (GST_VALIDATE_MONITOR_GET_OBJECT (monitor)),
+          scenario_v[0]);
+      g_strfreev (scenario_v);
     }
-    monitor->scenario =
-        gst_validate_scenario_factory_create (GST_VALIDATE_MONITOR_GET_RUNNER
-        (monitor),
-        GST_ELEMENT_CAST (GST_VALIDATE_MONITOR_GET_OBJECT (monitor)),
-        scenario_v[0]);
-    g_strfreev (scenario_v);
+
+    g_strfreev (scenarios);
   }
 }
 
