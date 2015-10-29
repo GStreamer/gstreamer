@@ -128,26 +128,26 @@ GST_START_TEST (dash_mpdparser_mpd)
   assert_equals_int (gst_date_time_get_minute (availabilityEndTime), 10);
   assert_equals_int (gst_date_time_get_second (availabilityEndTime), 50);
 
-  assert_equals_int64 (mpdclient->mpd_node->mediaPresentationDuration,
-      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+  assert_equals_uint64 (mpdclient->mpd_node->mediaPresentationDuration,
+      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
-  assert_equals_int64 (mpdclient->mpd_node->minimumUpdatePeriod,
-      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+  assert_equals_uint64 (mpdclient->mpd_node->minimumUpdatePeriod,
+      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
-  assert_equals_int64 (mpdclient->mpd_node->minBufferTime,
-      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+  assert_equals_uint64 (mpdclient->mpd_node->minBufferTime,
+      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
-  assert_equals_int64 (mpdclient->mpd_node->timeShiftBufferDepth,
-      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+  assert_equals_uint64 (mpdclient->mpd_node->timeShiftBufferDepth,
+      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
-  assert_equals_int64 (mpdclient->mpd_node->suggestedPresentationDelay,
-      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+  assert_equals_uint64 (mpdclient->mpd_node->suggestedPresentationDelay,
+      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
-  assert_equals_int64 (mpdclient->mpd_node->maxSegmentDuration,
-      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+  assert_equals_uint64 (mpdclient->mpd_node->maxSegmentDuration,
+      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
-  assert_equals_int64 (mpdclient->mpd_node->maxSubsegmentDuration,
-      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+  assert_equals_uint64 (mpdclient->mpd_node->maxSubsegmentDuration,
+      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
 
   gst_mpd_client_free (mpdclient);
 }
@@ -301,10 +301,10 @@ GST_START_TEST (dash_mpdparser_metrics_range)
   metricsNode = (GstMetricsNode *) mpdclient->mpd_node->Metrics->data;
   assert_equals_pointer (metricsNode->metrics, NULL);
   metricsRangeNode = (GstMetricsRangeNode *) metricsNode->MetricsRanges->data;
-  assert_equals_int64 (metricsRangeNode->starttime,
-      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 500));
-  assert_equals_int64 (metricsRangeNode->duration,
-      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 123));
+  assert_equals_uint64 (metricsRangeNode->starttime,
+      duration_to_ms (0, 1, 2, 12, 10, 20, 500));
+  assert_equals_uint64 (metricsRangeNode->duration,
+      duration_to_ms (0, 1, 2, 12, 10, 20, 123));
 
   gst_mpd_client_free (mpdclient);
 }
@@ -362,10 +362,10 @@ GST_START_TEST (dash_mpdparser_period)
 
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   assert_equals_string (periodNode->id, "TestId");
-  assert_equals_int64 (periodNode->start,
-      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 123));
-  assert_equals_int64 (periodNode->duration,
-      (gint64) duration_to_ms (0, 1, 2, 12, 10, 20, 765));
+  assert_equals_uint64 (periodNode->start,
+      duration_to_ms (0, 1, 2, 12, 10, 20, 123));
+  assert_equals_uint64 (periodNode->duration,
+      duration_to_ms (0, 1, 2, 12, 10, 20, 765));
   assert_equals_int (periodNode->bitstreamSwitching, 1);
 
   gst_mpd_client_free (mpdclient);
@@ -2728,50 +2728,50 @@ GST_START_TEST (dash_mpdparser_various_duration_formats)
   periodNode =
       (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 0);
   assert_equals_string (periodNode->id, "Period0");
-  assert_equals_int64 (periodNode->start,
-      (gint64) duration_to_ms (0, 0, 0, 0, 0, 1, 0));
+  assert_equals_uint64 (periodNode->start,
+      duration_to_ms (0, 0, 0, 0, 0, 1, 0));
 
   periodNode =
       (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 1);
   assert_equals_string (periodNode->id, "Period1");
-  assert_equals_int64 (periodNode->start,
-      (gint64) duration_to_ms (0, 0, 0, 0, 0, 1, 500));
+  assert_equals_uint64 (periodNode->start,
+      duration_to_ms (0, 0, 0, 0, 0, 1, 500));
 
   periodNode =
       (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 2);
   assert_equals_string (periodNode->id, "Period2");
-  assert_equals_int64 (periodNode->start,
-      (gint64) duration_to_ms (0, 0, 0, 0, 0, 1, 700));
+  assert_equals_uint64 (periodNode->start,
+      duration_to_ms (0, 0, 0, 0, 0, 1, 700));
 
   periodNode =
       (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 3);
   assert_equals_string (periodNode->id, "Period3");
-  assert_equals_int64 (periodNode->start,
-      (gint64) duration_to_ms (0, 0, 0, 0, 1, 0, 0));
+  assert_equals_uint64 (periodNode->start,
+      duration_to_ms (0, 0, 0, 0, 1, 0, 0));
 
   periodNode =
       (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 4);
   assert_equals_string (periodNode->id, "Period4");
-  assert_equals_int64 (periodNode->start,
-      (gint64) duration_to_ms (0, 0, 0, 1, 0, 0, 0));
+  assert_equals_uint64 (periodNode->start,
+      duration_to_ms (0, 0, 0, 1, 0, 0, 0));
 
   periodNode =
       (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 5);
   assert_equals_string (periodNode->id, "Period5");
-  assert_equals_int64 (periodNode->start,
-      (gint64) duration_to_ms (0, 0, 1, 0, 0, 0, 0));
+  assert_equals_uint64 (periodNode->start,
+      duration_to_ms (0, 0, 1, 0, 0, 0, 0));
 
   periodNode =
       (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 6);
   assert_equals_string (periodNode->id, "Period6");
-  assert_equals_int64 (periodNode->start,
-      (gint64) duration_to_ms (0, 1, 0, 0, 0, 0, 0));
+  assert_equals_uint64 (periodNode->start,
+      duration_to_ms (0, 1, 0, 0, 0, 0, 0));
 
   periodNode =
       (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 7);
   assert_equals_string (periodNode->id, "Period7");
-  assert_equals_int64 (periodNode->start,
-      (gint64) duration_to_ms (1, 0, 0, 0, 0, 0, 0));
+  assert_equals_uint64 (periodNode->start,
+      duration_to_ms (1, 0, 0, 0, 0, 0, 0));
 
   gst_mpd_client_free (mpdclient);
 }

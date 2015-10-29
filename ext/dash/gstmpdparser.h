@@ -67,6 +67,8 @@ typedef struct _GstMultSegmentBaseType    GstMultSegmentBaseType;
 #define GST_MPD_CLIENT_LOCK(c) g_mutex_lock (&c->lock);
 #define GST_MPD_CLIENT_UNLOCK(c) g_mutex_unlock (&c->lock);
 
+#define GST_MPD_DURATION_NONE ((guint64)-1)
+
 typedef enum
 {
   GST_STREAM_UNKNOWN,
@@ -346,8 +348,8 @@ struct _GstSubsetNode
 struct _GstPeriodNode
 {
   gchar *id;
-  gint64 start;                      /* [ms] */
-  gint64 duration;                   /* [ms] */
+  guint64 start;                     /* [ms] */
+  guint64 duration;                  /* [ms] */
   gboolean bitstreamSwitching;
   /* SegmentBase node */
   GstSegmentBaseType *SegmentBase;
@@ -378,8 +380,8 @@ struct _GstProgramInformationNode
 
 struct _GstMetricsRangeNode
 {
-  gint64 starttime;                  /* [ms] */
-  gint64 duration;                   /* [ms] */
+  guint64 starttime;                 /* [ms] */
+  guint64 duration;                  /* [ms] */
 };
 
 struct _GstMetricsNode
@@ -408,13 +410,13 @@ struct _GstMPDNode
   GstMPDFileType type;
   GstDateTime *availabilityStartTime;
   GstDateTime *availabilityEndTime;
-  gint64 mediaPresentationDuration;  /* [ms] */
-  gint64 minimumUpdatePeriod;        /* [ms] */
-  gint64 minBufferTime;              /* [ms] */
-  gint64 timeShiftBufferDepth;       /* [ms] */
-  gint64 suggestedPresentationDelay; /* [ms] */
-  gint64 maxSegmentDuration;         /* [ms] */
-  gint64 maxSubsegmentDuration;      /* [ms] */
+  guint64 mediaPresentationDuration;  /* [ms] */
+  guint64 minimumUpdatePeriod;        /* [ms] */
+  guint64 minBufferTime;              /* [ms] */
+  guint64 timeShiftBufferDepth;       /* [ms] */
+  guint64 suggestedPresentationDelay; /* [ms] */
+  guint64 maxSegmentDuration;         /* [ms] */
+  guint64 maxSubsegmentDuration;      /* [ms] */
   /* list of BaseURL nodes */
   GList *BaseURLs;
   /* list of Location nodes */
@@ -452,8 +454,8 @@ struct _GstMediaSegment
   GstSegmentURLNode *SegmentURL;              /* this is NULL when using a SegmentTemplate */
   guint number;                               /* segment number */
   gint repeat;                                /* number of extra repetitions (0 = played only once) */
-  gint64 scale_start;                         /* start time in timescale units */
-  gint64 scale_duration;                      /* duration in timescale units */
+  guint64 scale_start;                        /* start time in timescale units */
+  guint64 scale_duration;                     /* duration in timescale units */
   GstClockTime start;                         /* segment start time */
   GstClockTime duration;                      /* segment duration */
 };

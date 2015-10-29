@@ -72,7 +72,8 @@ static gboolean gst_mpdparser_get_xml_prop_cond_uint (xmlNode * a_node,
 static gboolean gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
     const gchar * property_name, GstDateTime ** property_value);
 static gboolean gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
-    const gchar * property_name, gint64 default_value, gint64 * property_value);
+    const gchar * property_name, guint64 default_value,
+    guint64 * property_value);
 static gboolean gst_mpdparser_get_xml_node_content (xmlNode * a_node,
     gchar ** content);
 static gchar *gst_mpdparser_get_xml_node_namespace (xmlNode * a_node,
@@ -127,7 +128,7 @@ static void gst_mpdparser_parse_utctiming_node (GList ** list,
     xmlNode * a_node);
 
 /* Helper functions */
-static gint convert_to_millisecs (gint decimals, gint pos);
+static guint convert_to_millisecs (guint decimals, gint pos);
 static int strncmp_ext (const char *s1, const char *s2);
 static GstStreamPeriod *gst_mpdparser_get_stream_period (GstMpdClient * client);
 static GstSNode *gst_mpdparser_clone_s_node (GstSNode * pointer);
@@ -146,11 +147,12 @@ static const gchar *gst_mpdparser_get_initializationURL (GstActiveStream *
 static gchar *gst_mpdparser_build_URL_from_template (const gchar * url_template,
     const gchar * id, guint number, guint bandwidth, guint64 time);
 static gboolean gst_mpd_client_add_media_segment (GstActiveStream * stream,
-    GstSegmentURLNode * url_node, guint number, gint repeat, gint64 scale_start,
-    gint64 scale_duration, GstClockTime start, GstClockTime duration);
+    GstSegmentURLNode * url_node, guint number, gint repeat,
+    guint64 scale_start, guint64 scale_duration, GstClockTime start,
+    GstClockTime duration);
 static const gchar *gst_mpdparser_mimetype_to_caps (const gchar * mimeType);
 static GstClockTime gst_mpd_client_get_segment_duration (GstMpdClient * client,
-    GstActiveStream * stream, gint64 * scale_duration);
+    GstActiveStream * stream, guint64 * scale_duration);
 static GstDateTime *gst_mpd_client_get_availability_start_time (GstMpdClient *
     client);
 
@@ -919,10 +921,11 @@ error:
 */
 
 /* this function computes decimals * 10 ^ (3 - pos) */
-static gint
-convert_to_millisecs (gint decimals, gint pos)
+static guint
+convert_to_millisecs (guint decimals, gint pos)
 {
-  gint num = 1, den = 1, i = 3 - pos;
+  guint num = 1, den = 1;
+  gint i = 3 - pos;
 
   while (i < 0) {
     den *= 10;
@@ -937,16 +940,15 @@ convert_to_millisecs (gint decimals, gint pos)
 }
 
 static gboolean
-gst_mpdparser_get_xml_prop_duration_inner (xmlNode * a_node,
-    const gchar * property_name, gint64 default_value, gint64 * property_value,
-    gboolean allow_negative)
+gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
+    const gchar * property_name, guint64 default_value,
+    guint64 * property_value)
 {
   xmlChar *prop_string;
   gchar *str;
-  gint ret, read, len, pos, posT;
-  gint years = 0, months = 0, days = 0, hours = 0, minutes = 0, seconds =
-      0, decimals = 0;
-  gint sign = 1;
+  gint ret, len, pos, posT;
+  guint years = 0, months = 0, days = 0, hours = 0, minutes = 0, seconds =
+      0, decimals = 0, read;
   gboolean have_ms = FALSE;
   gboolean exists = FALSE;
 
@@ -956,26 +958,9 @@ gst_mpdparser_get_xml_prop_duration_inner (xmlNode * a_node,
     len = xmlStrlen (prop_string);
     str = (gchar *) prop_string;
     GST_TRACE ("duration: %s, len %d", str, len);
-    /* read "-" for sign, if present */
-    pos = strcspn (str, "-");
-    if (pos < len) {            /* found "-" */
-      if (pos != 0) {
-        GST_WARNING ("sign \"-\" non at the beginning of the string");
-        goto error;
-      }
-      GST_TRACE ("found - sign at the beginning");
-      if (!allow_negative) {
-        GST_WARNING ("sign \"-\" not allowed for property '%s'", property_name);
-        goto error;
-      }
-      sign = -1;
-      str++;
-      len--;
-      /* look for another "-" sign */
-      if (strcspn (str, "-") != len) {
-        GST_WARNING ("found a second \"-\" sign");
-        goto error;
-      }
+    if (strchr (str, '-') != NULL) {
+      GST_WARNING ("'-' sign found while parsing unsigned duration");
+      goto error;
     }
     /* read "P" for period */
     pos = strcspn (str, "P");
@@ -994,7 +979,7 @@ gst_mpdparser_get_xml_prop_duration_inner (xmlNode * a_node,
       do {
         GST_TRACE ("parsing substring %s", str);
         pos = strcspn (str, "YMD");
-        ret = sscanf (str, "%d", &read);
+        ret = sscanf (str, "%u", &read);
         if (ret != 1) {
           GST_WARNING ("can not read integer value from string %s!", str);
           goto error;
@@ -1014,12 +999,12 @@ gst_mpdparser_get_xml_prop_duration_inner (xmlNode * a_node,
             goto error;
             break;
         }
-        GST_TRACE ("read number %d type %c", read, str[pos]);
+        GST_TRACE ("read number %u type %c", read, str[pos]);
         str += (pos + 1);
         posT -= (pos + 1);
       } while (posT > 0);
 
-      GST_TRACE ("Y:M:D=%d:%d:%d", years, months, days);
+      GST_TRACE ("Y:M:D=%u:%u:%u", years, months, days);
     }
     /* read "T" for time (if present) */
     /* here T is at pos == 0 */
@@ -1032,7 +1017,7 @@ gst_mpdparser_get_xml_prop_duration_inner (xmlNode * a_node,
       do {
         GST_TRACE ("parsing substring %s", str);
         pos = strcspn (str, "HMS,.");
-        ret = sscanf (str, "%d", &read);
+        ret = sscanf (str, "%u", &read);
         if (ret != 1) {
           GST_WARNING ("can not read integer value from string %s!", str);
           goto error;
@@ -1048,7 +1033,7 @@ gst_mpdparser_get_xml_prop_duration_inner (xmlNode * a_node,
             if (have_ms) {
               /* we have read the decimal part of the seconds */
               decimals = convert_to_millisecs (read, pos);
-              GST_TRACE ("decimal number %d (%d digits) -> %d ms", read, pos,
+              GST_TRACE ("decimal number %u (%d digits) -> %d ms", read, pos,
                   decimals);
             } else {
               /* no decimals */
@@ -1066,20 +1051,20 @@ gst_mpdparser_get_xml_prop_duration_inner (xmlNode * a_node,
             goto error;
             break;
         }
-        GST_TRACE ("read number %d type %c", read, str[pos]);
+        GST_TRACE ("read number %u type %c", read, str[pos]);
         str += pos + 1;
         len -= (pos + 1);
       } while (len > 0);
 
-      GST_TRACE ("H:M:S.MS=%d:%d:%d.%03d", hours, minutes, seconds, decimals);
+      GST_TRACE ("H:M:S.MS=%u:%u:%u.%03u", hours, minutes, seconds, decimals);
     }
 
     xmlFree (prop_string);
     exists = TRUE;
     *property_value =
-        sign * ((((((gint64) years * 365 + months * 30 + days) * 24 +
-                    hours) * 60 + minutes) * 60 + seconds) * 1000 + decimals);
-    GST_LOG (" - %s: %" G_GINT64_FORMAT, property_name, *property_value);
+        (((((guint64) years * 365 + months * 30 + days) * 24 +
+                hours) * 60 + minutes) * 60 + seconds) * 1000 + decimals;
+    GST_LOG (" - %s: %" G_GUINT64_FORMAT, property_name, *property_value);
   }
 
   return exists;
@@ -1087,22 +1072,6 @@ gst_mpdparser_get_xml_prop_duration_inner (xmlNode * a_node,
 error:
   xmlFree (prop_string);
   return FALSE;
-}
-
-static gboolean
-gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
-    const gchar * property_name, gint64 default_value, gint64 * property_value)
-{
-  return gst_mpdparser_get_xml_prop_duration_inner (a_node, property_name,
-      default_value, property_value, TRUE);
-}
-
-static gboolean
-gst_mpdparser_get_xml_prop_duration_unsigned (xmlNode * a_node,
-    const gchar * property_name, gint64 default_value, gint64 * property_value)
-{
-  return gst_mpdparser_get_xml_prop_duration_inner (a_node, property_name,
-      default_value, property_value, FALSE);
 }
 
 static gboolean
@@ -1972,11 +1941,12 @@ gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node)
   }
 
   gst_mpdparser_get_xml_prop_string (a_node, "id", &new_period->id);
-  gst_mpdparser_get_xml_prop_duration (a_node, "start", -1, &new_period->start);
-  gst_mpdparser_get_xml_prop_duration (a_node, "duration", -1,
-      &new_period->duration);
-  gst_mpdparser_get_xml_prop_boolean (a_node, "bitstreamSwitching",
-      FALSE, &new_period->bitstreamSwitching);
+  gst_mpdparser_get_xml_prop_duration (a_node, "start", GST_MPD_DURATION_NONE,
+      &new_period->start);
+  gst_mpdparser_get_xml_prop_duration (a_node, "duration",
+      GST_MPD_DURATION_NONE, &new_period->duration);
+  gst_mpdparser_get_xml_prop_boolean (a_node, "bitstreamSwitching", FALSE,
+      &new_period->bitstreamSwitching);
 
   /* explore children nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -2061,10 +2031,10 @@ gst_mpdparser_parse_metrics_range_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_metrics_range);
 
   GST_LOG ("attributes of Metrics Range node:");
-  gst_mpdparser_get_xml_prop_duration (a_node, "starttime", -1,
-      &new_metrics_range->starttime);
-  gst_mpdparser_get_xml_prop_duration (a_node, "duration", -1,
-      &new_metrics_range->duration);
+  gst_mpdparser_get_xml_prop_duration (a_node, "starttime",
+      GST_MPD_DURATION_NONE, &new_metrics_range->starttime);
+  gst_mpdparser_get_xml_prop_duration (a_node, "duration",
+      GST_MPD_DURATION_NONE, &new_metrics_range->duration);
 }
 
 static void
@@ -2162,20 +2132,20 @@ gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node)
       &new_mpd->availabilityStartTime);
   gst_mpdparser_get_xml_prop_dateTime (a_node, "availabilityEndTime",
       &new_mpd->availabilityEndTime);
-  gst_mpdparser_get_xml_prop_duration (a_node, "mediaPresentationDuration", -1,
-      &new_mpd->mediaPresentationDuration);
-  gst_mpdparser_get_xml_prop_duration (a_node, "minimumUpdatePeriod", -1,
-      &new_mpd->minimumUpdatePeriod);
-  gst_mpdparser_get_xml_prop_duration (a_node, "minBufferTime", -1,
-      &new_mpd->minBufferTime);
-  gst_mpdparser_get_xml_prop_duration (a_node, "timeShiftBufferDepth", -1,
-      &new_mpd->timeShiftBufferDepth);
-  gst_mpdparser_get_xml_prop_duration_unsigned (a_node,
-      "suggestedPresentationDelay", -1, &new_mpd->suggestedPresentationDelay);
-  gst_mpdparser_get_xml_prop_duration (a_node, "maxSegmentDuration", -1,
-      &new_mpd->maxSegmentDuration);
-  gst_mpdparser_get_xml_prop_duration (a_node, "maxSubsegmentDuration", -1,
-      &new_mpd->maxSubsegmentDuration);
+  gst_mpdparser_get_xml_prop_duration (a_node, "mediaPresentationDuration",
+      GST_MPD_DURATION_NONE, &new_mpd->mediaPresentationDuration);
+  gst_mpdparser_get_xml_prop_duration (a_node, "minimumUpdatePeriod",
+      GST_MPD_DURATION_NONE, &new_mpd->minimumUpdatePeriod);
+  gst_mpdparser_get_xml_prop_duration (a_node, "minBufferTime",
+      GST_MPD_DURATION_NONE, &new_mpd->minBufferTime);
+  gst_mpdparser_get_xml_prop_duration (a_node, "timeShiftBufferDepth",
+      GST_MPD_DURATION_NONE, &new_mpd->timeShiftBufferDepth);
+  gst_mpdparser_get_xml_prop_duration (a_node, "suggestedPresentationDelay",
+      GST_MPD_DURATION_NONE, &new_mpd->suggestedPresentationDelay);
+  gst_mpdparser_get_xml_prop_duration (a_node, "maxSegmentDuration",
+      GST_MPD_DURATION_NONE, &new_mpd->maxSegmentDuration);
+  gst_mpdparser_get_xml_prop_duration (a_node, "maxSubsegmentDuration",
+      GST_MPD_DURATION_NONE, &new_mpd->maxSubsegmentDuration);
 
   /* explore children Period nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -3348,7 +3318,7 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
 
 static GstClockTime
 gst_mpd_client_get_segment_duration (GstMpdClient * client,
-    GstActiveStream * stream, gint64 * scale_dur)
+    GstActiveStream * stream, guint64 * scale_dur)
 {
   GstStreamPeriod *stream_period;
   GstMultSegmentBaseType *base = NULL;
@@ -3760,7 +3730,7 @@ gst_mpdparser_get_chunk_by_index (GstMpdClient * client, guint indexStream,
   } else {
     GstClockTime duration;
     GstStreamPeriod *stream_period;
-    gint64 scale_dur;
+    guint64 scale_dur;
 
     g_return_val_if_fail (stream->cur_seg_template->MultSegBaseType->
         SegmentTimeline == NULL, FALSE);
@@ -3789,7 +3759,7 @@ gst_mpdparser_get_chunk_by_index (GstMpdClient * client, guint indexStream,
 static gboolean
 gst_mpd_client_add_media_segment (GstActiveStream * stream,
     GstSegmentURLNode * url_node, guint number, gint repeat,
-    gint64 scale_start, gint64 scale_duration,
+    guint64 scale_start, guint64 scale_duration,
     GstClockTime start, GstClockTime duration)
 {
   GstMediaSegment *media_segment;
@@ -3932,7 +3902,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           SegmentURL = g_list_next (SegmentURL);
         }
       } else {
-        gint64 scale_dur;
+        guint64 scale_dur;
 
         duration =
             gst_mpd_client_get_segment_duration (client, stream, &scale_dur);
