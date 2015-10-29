@@ -25,13 +25,9 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
-#include <gst/gl/gstgl_fwd.h>
+#include <gst/gl/gl.h>
 
 G_BEGIN_DECLS
-
-typedef struct _GstGLBufferPool GstGLBufferPool;
-typedef struct _GstGLBufferPoolClass GstGLBufferPoolClass;
-typedef struct _GstGLBufferPoolPrivate GstGLBufferPoolPrivate;
 
 /* buffer pool functions */
 GType gst_gl_buffer_pool_get_type (void);
