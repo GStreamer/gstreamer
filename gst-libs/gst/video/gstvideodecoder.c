@@ -2697,9 +2697,9 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
   if (GST_CLOCK_TIME_IS_VALID (frame->pts)) {
     if (frame->pts != priv->base_timestamp) {
       GST_DEBUG_OBJECT (decoder,
-          "sync timestamp %" GST_TIME_FORMAT " diff %" GST_TIME_FORMAT,
+          "sync timestamp %" GST_TIME_FORMAT " diff %" GST_STIME_FORMAT,
           GST_TIME_ARGS (frame->pts),
-          GST_TIME_ARGS (frame->pts - decoder->output_segment.start));
+          GST_STIME_ARGS (frame->pts - decoder->output_segment.start));
       priv->base_timestamp = frame->pts;
       priv->base_picture_number = frame->decode_frame_number;
     }
