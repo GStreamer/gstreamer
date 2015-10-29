@@ -60,6 +60,23 @@ static void gst_gl_upload_finalize (GObject * object);
 #define GST_GL_UPLOAD_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
     GST_TYPE_GL_UPLOAD, GstGLUploadPrivate))
 
+static GstGLTextureTarget
+_caps_get_texture_target (GstCaps * caps, GstGLTextureTarget default_target)
+{
+  GstGLTextureTarget ret = 0;
+  GstStructure *s = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_has_field_typed (s, "texture-target", G_TYPE_STRING)) {
+    const gchar *target_str = gst_structure_get_string (s, "texture-target");
+    ret = gst_gl_texture_target_from_string (target_str);
+  }
+
+  if (!ret)
+    ret = default_target;
+
+  return ret;
+}
+
 /* Define the maximum number of planes we can upload - handle 2 views per buffer */
 #define GST_GL_UPLOAD_MAX_PLANES (GST_VIDEO_MAX_PLANES * 2)
 
@@ -231,6 +248,17 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_GL_SYNC_META);
+    if (upload->upload->priv->out_caps) {
+      GstGLTextureTarget target;
+      const gchar *target_pool_option_str;
+
+      target =
+          _caps_get_texture_target (upload->upload->priv->out_caps,
+          GST_GL_TEXTURE_TARGET_2D);
+      target_pool_option_str =
+          gst_gl_texture_target_to_buffer_pool_option (target);
+      gst_buffer_pool_config_add_option (config, target_pool_option_str);
+    }
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       gst_object_unref (pool);
@@ -436,8 +464,8 @@ _egl_image_upload_perform_gl_thread (GstGLContext * context,
   }
 
   if (GST_IS_GL_BUFFER_POOL (image->buffer->pool))
-    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (image->
-            buffer->pool), image->buffer);
+    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (image->buffer->
+            pool), image->buffer);
 }
 
 static GstGLUploadReturn
@@ -578,11 +606,11 @@ _upload_meta_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   gpointer handle;
 
   gl_apis =
-      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->upload->
-          context));
-  platform =
-      gst_gl_platform_to_string (gst_gl_context_get_gl_platform (upload->
+      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->
           upload->context));
+  platform =
+      gst_gl_platform_to_string (gst_gl_context_get_gl_platform
+      (upload->upload->context));
   handle = (gpointer) gst_gl_context_get_gl_context (upload->upload->context);
 
   gl_context =
