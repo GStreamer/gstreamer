@@ -2620,11 +2620,15 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
+  GST_TRACER_ELEMENT_CHANGE_STATE_PRE (element, transition);
+
   /* call the state change function so it can set the state */
   if (oclass->change_state)
     ret = (oclass->change_state) (element, transition);
   else
     ret = GST_STATE_CHANGE_FAILURE;
+
+  GST_TRACER_ELEMENT_CHANGE_STATE_POST (element, transition, ret);
 
   switch (ret) {
     case GST_STATE_CHANGE_FAILURE:

@@ -49,9 +49,10 @@ static const gchar *_quark_strings[] = {
   "pad-push-event-post", "pad-query-pre", "pad-query-post",
   "element-post-message-pre",
   "element-post-message-post", "element-query-pre", "element-query-post",
-  "element-new", "element-add-pad", "element-remove-pad", "bin-add-pre",
-  "bin-add-post", "bin-remove-pre", "bin-remove-post", "pad-link-pre",
-  "pad-link-post", "pad-unlink-pre", "pad-unlink-post"
+  "element-new", "element-add-pad", "element-remove-pad",
+  "bin-add-pre", "bin-add-post", "bin-remove-pre", "bin-remove-post",
+  "pad-link-pre", "pad-link-post", "pad-unlink-pre", "pad-unlink-post",
+  "element-change-state-pre", "element-change-state-post"
 };
 
 GQuark _priv_gst_tracer_quark_table[GST_TRACER_QUARK_MAX];

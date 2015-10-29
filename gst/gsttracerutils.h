@@ -68,6 +68,8 @@ typedef enum /*< skip >*/
   GST_TRACER_QUARK_HOOK_PAD_LINK_POST,
   GST_TRACER_QUARK_HOOK_PAD_UNLINK_PRE,
   GST_TRACER_QUARK_HOOK_PAD_UNLINK_POST,
+  GST_TRACER_QUARK_HOOK_ELEMENT_CHANGE_STATE_PRE,
+  GST_TRACER_QUARK_HOOK_ELEMENT_CHANGE_STATE_POST,
   GST_TRACER_QUARK_MAX
 } GstTracerQuarkId;
 
@@ -231,6 +233,20 @@ typedef void (*GstTracerHookElementRemovePad) (GObject *, GstClockTime,
     GstTracerHookElementRemovePad, (GST_TRACER_ARGS, element, pad)); \
 }G_STMT_END
 
+typedef void (*GstTracerHookElementChangeStatePre) (GObject *, GstClockTime,
+    GstElement *, GstStateChange);
+#define GST_TRACER_ELEMENT_CHANGE_STATE_PRE(element, transition) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_CHANGE_STATE_PRE), \
+    GstTracerHookElementChangeStatePre, (GST_TRACER_ARGS, element, transition)); \
+}G_STMT_END
+
+typedef void (*GstTracerHookElementChangeStatePost) (GObject *, GstClockTime,
+    GstElement *, GstStateChange, GstStateChangeReturn);
+#define GST_TRACER_ELEMENT_CHANGE_STATE_POST(element, transition, result) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_CHANGE_STATE_POST), \
+    GstTracerHookElementChangeStatePost, (GST_TRACER_ARGS, element, transition, result)); \
+}G_STMT_END
+
 typedef void (*GstTracerHookBinAddPre) (GObject *, GstClockTime,
     GstBin *, GstElement *);
 #define GST_TRACER_BIN_ADD_PRE(bin, element) G_STMT_START{ \
@@ -306,6 +322,8 @@ typedef void (*GstTracerHookPadUnlinkPost) (GObject *, GstClockTime,
 #define GST_TRACER_ELEMENT_NEW(element)
 #define GST_TRACER_ELEMENT_ADD_PAD(element, pad)
 #define GST_TRACER_ELEMENT_REMOVE_PAD(element, pad)
+#define GST_TRACER_ELEMENT_CHANGE_STATE_PRE(element, transition)
+#define GST_TRACER_ELEMENT_CHANGE_STATE_POST(element, transition, res)
 #define GST_TRACER_BIN_ADD_PRE(bin, element)
 #define GST_TRACER_BIN_ADD_POST(bin, element, res)
 #define GST_TRACER_BIN_REMOVE_PRE(bin, element)
