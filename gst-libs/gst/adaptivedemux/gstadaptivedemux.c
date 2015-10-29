@@ -1106,7 +1106,6 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
 
       g_mutex_lock (&stream->fragment_download_lock);
       stream->cancelled = TRUE;
-      stream->download_finished = FALSE;
       g_cond_signal (&stream->fragment_download_cond);
       g_mutex_unlock (&stream->fragment_download_lock);
     }
@@ -1491,7 +1490,6 @@ gst_adaptive_demux_start_tasks (GstAdaptiveDemux * demux)
 
     g_mutex_lock (&stream->fragment_download_lock);
     stream->cancelled = FALSE;
-    stream->download_finished = FALSE;
     g_mutex_unlock (&stream->fragment_download_lock);
 
     stream->last_ret = GST_FLOW_OK;
@@ -2254,6 +2252,13 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
       stream->download_start_time = g_get_monotonic_time ();
       stream->download_chunk_start_time = g_get_monotonic_time ();
 
+      /* src element is in state READY. Before we start it, we reset
+       * download_finished
+       */
+      g_mutex_lock (&stream->fragment_download_lock);
+      stream->download_finished = FALSE;
+      g_mutex_unlock (&stream->fragment_download_lock);
+
       GST_MANIFEST_UNLOCK (demux);
 
       gst_element_sync_state_with_parent (stream->src);
@@ -2282,15 +2287,6 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
         g_mutex_unlock (&stream->fragment_download_lock);
         return ret;
       }
-
-      /* download_finished is set to FALSE when the streams are exposed.
-       * It is set to TRUE when the download is finished or when the task
-       * must stop.
-       * After the task has waited on download_finished, it needs to reset it to
-       * FALSE before it releases the fragment_download_lock. If it releases the
-       * lock and does the reset later, it might overwrite a stop request.
-       */
-      stream->download_finished = FALSE;
       g_mutex_unlock (&stream->fragment_download_lock);
 
       ret = stream->last_ret;
