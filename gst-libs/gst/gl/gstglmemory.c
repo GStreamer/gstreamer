@@ -428,6 +428,21 @@ gst_gl_texture_target_from_gl (guint target)
   }
 }
 
+const gchar *
+gst_gl_texture_target_to_buffer_pool_option (GstGLTextureTarget target)
+{
+  switch (target) {
+    case GST_GL_TEXTURE_TARGET_2D:
+      return GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_2D;
+    case GST_GL_TEXTURE_TARGET_RECTANGLE:
+      return GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_RECTANGLE;
+    case GST_GL_TEXTURE_TARGET_EXTERNAL_OES:
+      return GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_EXTERNAL_OES;
+    default:
+      return NULL;
+  }
+}
+
 static inline guint
 _get_plane_width (GstVideoInfo * info, guint plane)
 {
