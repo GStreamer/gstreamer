@@ -193,18 +193,35 @@ gst_ivf_parse_set_framerate (GstIvfParse * ivf, guint fps_n, guint fps_d)
   }
 }
 
+static const gchar *
+fourcc_to_media_type (guint32 fourcc)
+{
+  switch (fourcc) {
+    case GST_MAKE_FOURCC ('V', 'P', '8', '0'):
+      return "video/x-vp8";
+      break;
+    case GST_MAKE_FOURCC ('V', 'P', '9', '0'):
+      return "video/x-vp9";
+    default:
+      return NULL;
+  }
+  return NULL;
+}
+
 static void
 gst_ivf_parse_update_src_caps (GstIvfParse * ivf)
 {
   GstCaps *caps;
-
+  const gchar *media_type;
   if (!ivf->update_caps &&
       G_LIKELY (gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (ivf))))
     return;
   ivf->update_caps = FALSE;
 
+  media_type = fourcc_to_media_type (ivf->fourcc);
+
   /* Create src pad caps */
-  caps = gst_caps_new_simple ("video/x-vp8", "width", G_TYPE_INT, ivf->width,
+  caps = gst_caps_new_simple (media_type, "width", G_TYPE_INT, ivf->width,
       "height", G_TYPE_INT, ivf->height, NULL);
 
   if (ivf->fps_n > 0 && ivf->fps_d > 0) {
@@ -242,11 +259,13 @@ gst_ivf_parse_handle_frame_start (GstIvfParse * ivf, GstBaseParseFrame * frame,
 
     if (magic != GST_MAKE_FOURCC ('D', 'K', 'I', 'F') ||
         version != 0 || header_size != 32 ||
-        fourcc != GST_MAKE_FOURCC ('V', 'P', '8', '0')) {
+        fourcc_to_media_type (fourcc) == NULL) {
       GST_ELEMENT_ERROR (ivf, STREAM, WRONG_TYPE, (NULL), (NULL));
       ret = GST_FLOW_ERROR;
       goto end;
     }
+
+    ivf->fourcc = fourcc;
 
     gst_ivf_parse_set_size (ivf, width, height);
     gst_ivf_parse_set_framerate (ivf, fps_n, fps_d);
