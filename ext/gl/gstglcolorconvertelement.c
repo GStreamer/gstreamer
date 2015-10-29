@@ -238,18 +238,8 @@ static GstCaps *
 gst_gl_color_convert_element_fixate_caps (GstBaseTransform *
     bt, GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
+  GstGLContext *context = GST_GL_BASE_FILTER (bt)->context;
   GstCaps *ret;
 
-  ret =
-      GST_BASE_TRANSFORM_CLASS
-      (gst_gl_color_convert_element_parent_class)->fixate_caps (bt, direction,
-      caps, othercaps);
-
-  if (direction == GST_PAD_SINK) {
-    if (gst_caps_is_subset (caps, ret)) {
-      gst_caps_replace (&ret, caps);
-    }
-  }
-
-  return ret;
+  return gst_gl_color_convert_fixate_caps (context, direction, caps, othercaps);
 }

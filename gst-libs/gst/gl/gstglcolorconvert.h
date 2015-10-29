@@ -100,7 +100,7 @@ struct _GstGLColorConvertClass
     "width = " GST_VIDEO_SIZE_RANGE ", "                                \
     "height = " GST_VIDEO_SIZE_RANGE ", "                               \
     "framerate = " GST_VIDEO_FPS_RANGE ", "                             \
-    "texture-target = (string) 2D "                                     \
+    "texture-target = (string) { 2D, rectangle, oes } "                 \
     " ; "                                                               \
     "video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY ","                \
     GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION "), "           \
@@ -108,7 +108,7 @@ struct _GstGLColorConvertClass
     "width = " GST_VIDEO_SIZE_RANGE ", "                                \
     "height = " GST_VIDEO_SIZE_RANGE ", "                               \
     "framerate = " GST_VIDEO_FPS_RANGE ", "                             \
-    "texture-target = (string) 2D"
+    "texture-target = (string) { 2D, rectangle, oes }"
 
 GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context);
 
@@ -116,6 +116,10 @@ GstCaps *   gst_gl_color_convert_transform_caps (GstGLContext * convert,
                                                  GstPadDirection direction,
                                                  GstCaps * caps,
                                                  GstCaps * filter);
+GstCaps *   gst_gl_color_convert_fixate_caps    (GstGLContext * convert,
+                                                 GstPadDirection direction,
+                                                 GstCaps * caps,
+                                                 GstCaps * other);
 gboolean    gst_gl_color_convert_set_caps    (GstGLColorConvert * convert,
                                               GstCaps           * in_caps,
                                               GstCaps           * out_caps);
