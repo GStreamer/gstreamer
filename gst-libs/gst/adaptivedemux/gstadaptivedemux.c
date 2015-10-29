@@ -479,19 +479,24 @@ gst_adaptive_demux_change_state (GstElement * element,
   GstStateChangeReturn result = GST_STATE_CHANGE_FAILURE;
 
   GST_API_LOCK (demux);
-  GST_MANIFEST_LOCK (demux);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_MANIFEST_LOCK (demux);
       gst_adaptive_demux_reset (demux);
+      GST_MANIFEST_UNLOCK (demux);
       break;
     default:
       break;
   }
 
+  /* this must be run without MANIFEST_LOCK taken.
+   * For PLAYING to PLAYING state changes, it will want to take a lock in
+   * src element and that lock is held while the streaming thread is running.
+   * The streaming thread will take the MANIFEST_LOCK, leading to a deadlock.
+   */
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  GST_MANIFEST_UNLOCK (demux);
   GST_API_UNLOCK (demux);
   return result;
 }
