@@ -2488,7 +2488,7 @@ GST_START_TEST (dash_mpdparser_template_parsing)
     {"TestMedia$Bandwidth$$$test", "TestMedia2500$test"},       /* Bandwidth identifier */
     {"TestMedia$Time$", "TestMedia100"},        /* Time identifier */
     {"TestMedia$Time", NULL},   /* Identifier not finished with $ */
-    {"Time$Time%d$", "Time100"},        /* usage of %d (no width) */
+    {"Time$Time%d$", NULL},     /* usage of %d (no width) */
     {"Time$Time%0d$", "Time100"},       /* usage of format smaller than number of digits */
     {"Time$Time%01d$", "Time100"},      /* usage of format smaller than number of digits */
     {"Time$Time%05d$", "Time00100"},    /* usage of format bigger than number of digits */
@@ -2503,10 +2503,10 @@ GST_START_TEST (dash_mpdparser_template_parsing)
     {"$Bandwidth1$", NULL},     /* incorrect identifier */
     {"$Number1$", NULL},        /* incorrect identifier */
     {"$RepresentationID%01d$", NULL},   /* incorrect format: RepresentationID does not support formatting */
-    {"Time$Time%05u$", "Time00100"},    /* %u format */
-    {"Time$Time%05x$", "Time00064"},    /* %x format */
-    {"Time$Time%05utest$", "Time00100test"},    /* %u format followed by text */
-    {"Time$Time%05xtest$", "Time00064test"},    /* %x format followed by text */
+    {"Time$Time%05u$", NULL},   /* %u format */
+    {"Time$Time%05x$", NULL},   /* %x format */
+    {"Time$Time%05utest$", NULL},       /* %u format followed by text */
+    {"Time$Time%05xtest$", NULL},       /* %x format followed by text */
     {"Time$Time%05xtest%$", NULL},      /* second % character in format */
   };
 

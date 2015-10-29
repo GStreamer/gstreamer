@@ -2968,23 +2968,19 @@ validate_format (const gchar * format)
     return FALSE;
   p++;
 
-  /* the spec mandates a format like %0[width]d
-     But we also accept %d, because it doesn't hurt us
-   */
-  /* Following the %, if we have a number, it must start with 0 */
-  if (g_ascii_isdigit (p[0]) && p[0] != '0')
+  /* the spec mandates a format like %0[width]d */
+  /* Following the %, we must have a 0 */
+  if (p[0] != '0')
     return FALSE;
 
-  /* Following the % must be a number, or any of d, x or u.
-   * x and u are not part of the spec, but don't hurt us
+  /* Following the % must be a number starting with 0
    */
   while (g_ascii_isdigit (*p))
     p++;
 
-  /* After any 0 and alphanumeric values, there must be
-   * an d, x or u.
+  /* After any 0 and alphanumeric values, there must be a d.
    */
-  if (p[0] != 'd' && p[0] != 'x' && p[0] != 'u')
+  if (p[0] != 'd')
     return FALSE;
   p++;
 
@@ -3020,10 +3016,10 @@ promote_format_to_uint64 (const gchar * format)
       p++;
   }
 
-  /* After any 0 and alphanumeric values, there must be
-   * an d, x or u. Otherwise validation would have failed
+  /* After any 0 and alphanumeric values, there must be a d.
+   * Otherwise validation would have failed
    */
-  g_assert (p[0] == 'd' || p[0] == 'x' || p[0] == 'u');
+  g_assert (p[0] == 'd');
 
   promoted_format =
       g_strdup_printf ("%.*s" G_GINT64_MODIFIER "%s", (gint) (p - format),
