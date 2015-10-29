@@ -46,6 +46,7 @@ gst_core_video_texture_cache_new (GstGLContext * ctx)
   cache->ctx = gst_object_ref (ctx);
   gst_video_info_init (&cache->input_info);
   cache->convert = gst_gl_color_convert_new (cache->ctx);
+  cache->configured = FALSE;
 
 #if !HAVE_IOS
   CGLPixelFormatObj pixelFormat =
@@ -79,6 +80,10 @@ gst_core_video_texture_cache_free (GstCoreVideoTextureCache * cache)
 #endif
   gst_object_unref (cache->convert);
   gst_object_unref (cache->ctx);
+  if (cache->in_caps)
+    gst_caps_unref (cache->in_caps);
+  if (cache->out_caps)
+    gst_caps_unref (cache->out_caps);
   g_free (cache);
 }
 
@@ -103,10 +108,13 @@ gst_core_video_texture_cache_set_format (GstCoreVideoTextureCache * cache,
   gst_caps_features_add (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   gst_video_info_from_caps (&cache->input_info, in_caps);
 
-  gst_gl_color_convert_set_caps (cache->convert, in_caps, out_caps);
-
-  gst_caps_unref (out_caps);
-  gst_caps_unref (in_caps);
+  cache->configured = FALSE;
+  if (cache->in_caps)
+    gst_caps_unref (cache->in_caps);
+  if (cache->out_caps)
+    gst_caps_unref (cache->out_caps);
+  cache->in_caps = in_caps;
+  cache->out_caps = out_caps;
 }
 
 static CVPixelBufferRef
@@ -124,17 +132,6 @@ cv_pixel_buffer_from_gst_buffer (GstBuffer * buffer)
   return cm_meta ? cm_meta->pixel_buf : cv_meta->pixbuf;
 }
 
-static GstGLTextureTarget
-_gl_target_to_gst (guint target)
-{
-    switch (target) {
-      case GL_TEXTURE_2D: return GST_GL_TEXTURE_TARGET_2D;
-      case GL_TEXTURE_RECTANGLE: return GST_GL_TEXTURE_TARGET_RECTANGLE;
-      case GL_TEXTURE_EXTERNAL_OES: return GST_GL_TEXTURE_TARGET_OES;
-      default: return 0;
-  }
-}
-
 static gboolean
 gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
         GstBuffer * buffer, GstMemory **mem1, GstMemory **mem2)
@@ -146,6 +143,7 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
   CVOpenGLESTextureRef texture = NULL;
 #endif
   CVPixelBufferRef pixel_buf = cv_pixel_buffer_from_gst_buffer (buffer);
+  GstGLTextureTarget gl_target;
 
   *mem1 = NULL;
   *mem2 = NULL;
@@ -165,9 +163,10 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
               cache->cache, pixel_buf, NULL, &texture) != kCVReturnSuccess)
           goto error;
 
+        gl_target = gst_gl_texture_target_from_gl (CVOpenGLTextureGetTarget (texture));
+
         *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
-            CVOpenGLTextureGetName (texture),
-            _gl_target_to_gst (CVOpenGLTextureGetTarget (texture)),
+            CVOpenGLTextureGetName (texture), gl_target,
             &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
         break;
 #else
@@ -180,9 +179,10 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
               GL_RGBA, GL_UNSIGNED_BYTE, 0, &texture) != kCVReturnSuccess)
           goto error;
 
+        gl_target = _gl_target_to_gst (CVOpenGLESTextureGetTarget (texture));
+
         *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
-            CVOpenGLESTextureGetName (texture),
-            _gl_target_to_gst (CVOpenGLESTextureGetTarget (texture)),
+            CVOpenGLESTextureGetName (texture), gl_target,
             &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
         break;
       case GST_VIDEO_FORMAT_NV12: {
@@ -191,6 +191,7 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
 
         textype = gst_gl_texture_type_from_format (cache->ctx, GST_VIDEO_FORMAT_NV12, 0);
         texfmt = gst_gl_format_from_gl_texture_type (textype);
+        gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
 
         /* vtdec does NV12 on iOS when doing GLMemory */
         if (CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
@@ -201,8 +202,7 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
           goto error;
 
         *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
-            CVOpenGLESTextureGetName (texture),
-            _gl_target_to_gst (CVOpenGLESTextureGetTarget (texture)),
+            CVOpenGLESTextureGetName (texture), gl_target,
             &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
 
         textype = gst_gl_texture_type_from_format (cache->ctx, GST_VIDEO_FORMAT_NV12, 1);
@@ -216,8 +216,7 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
           goto error;
 
         *mem2 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
-            CVOpenGLESTextureGetName (texture),
-            _gl_target_to_gst (CVOpenGLESTextureGetTarget (texture)),
+            CVOpenGLESTextureGetName (texture), gl_target,
             &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
         break;
       }
@@ -226,6 +225,14 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
         g_warn_if_reached ();
         ret = FALSE;
     }
+
+  if (ret && !cache->configured) {
+    const gchar *target_str = gst_gl_texture_target_to_string (gl_target);
+    gst_caps_set_simple (cache->in_caps, "texture-target", G_TYPE_STRING, target_str, NULL);
+    gst_caps_set_simple (cache->out_caps, "texture-target", G_TYPE_STRING, "2D", NULL);
+
+    ret = gst_gl_color_convert_set_caps (cache->convert, cache->in_caps, cache->out_caps);
+  }
 
   return ret;
 

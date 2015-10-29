@@ -36,6 +36,10 @@ typedef struct _GstCoreVideoTextureCache
 #endif
   GstVideoInfo input_info;
   GstVideoInfo output_info;
+
+  gboolean configured;
+  GstCaps *in_caps;
+  GstCaps *out_caps;
   GstGLColorConvert *convert;
 } GstCoreVideoTextureCache;
 
