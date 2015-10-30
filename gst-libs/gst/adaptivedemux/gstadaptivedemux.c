@@ -1854,8 +1854,8 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   if (G_UNLIKELY (stream->cancelled)) {
     g_mutex_unlock (&stream->fragment_download_lock);
     gst_buffer_unref (buffer);
-    GST_MANIFEST_UNLOCK (demux);
     ret = stream->last_ret = GST_FLOW_FLUSHING;
+    GST_MANIFEST_UNLOCK (demux);
     return ret;
   }
   g_mutex_unlock (&stream->fragment_download_lock);
