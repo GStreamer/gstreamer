@@ -1,18 +1,19 @@
 
-Release notes for GStreamer 1.6.0
+Release notes for GStreamer 1.6.1
 
 
-The GStreamer team is proud to announce a new major feature release in the
-stable 1.x API series of your favourite cross-platform multimedia framework!
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.6 release series of your favourite cross-platform multimedia framework!
 
 
-This release has been in the works for more than a year and is packed with new
-features, bug fixes and other improvements.
+
+This release only contains bugfixes and it is safe to update from 1.6.0. For a
+full list of bugfixes see Bugzilla.
 
 
-See
-http://gstreamer.freedesktop.org/releases/1.6/
-for the full list of changes.
+
+See http://gstreamer.freedesktop.org/releases/1.6/
+for the full release notes.
 
 
 
@@ -39,13 +40,14 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 753887 : queue2: " Process SEEKING query " ok, but should handle SEEK events too (regression with non-seekable sources)
-      * 755141 : inputselector: fix buffer leak
-      * 755257 : Minor documentation typo in gstpad & gstcaps APIs
-      * 755342 : element: state_change may fail because of release_request_pad (racy)
-      * 755343 : funnel: Fix racy state change
-      * 755511 : gstharness: don't crash when adding a sink-harness without h- > sinkpad
-      * 755607 : ptpclock: Fix error leak during failures
+      * 747612 : Valgrind 3.7.0 chokes on match-leak-kinds in gst.supp
+      * 756069 : Gstreamer: Fix sample memory leaks
+      * 756136 : gstreamer-1.6.0 doesn't compile on OS X 10.6: header file issue in gst-ptp-helper.c
+      * 756645 : multiqueue: Improve incoming SEGMENT handling
+      * 756810 : segment_to_stream_time and position_from_stream_time miscalculate when applied_rate < 0
+      * 756898 : pad: gst_pad_probe_info_get_buffer_list() has wrong ownership transfer
+      * 757065 : uri: incorrect behavior when merging uris ending in ..
+      * 757257 : pad: Unblock blocking pad probes when receiving FLUSH_START in send_event() too
 
 ==== Download ====
 
@@ -82,10 +84,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Eunhae Choi
-      * Havard Graff
+      * Edward Hervey
+      * Florin Apostol
       * Sebastian Dröge
-      * Stian Selnes
-      * Vikram Fugro
+      * Stefan Sauer
+      * Tim-Philipp Müller
       * Vineeth TM
+      * Vivia Nikolaidou
  

@@ -1,9 +1,200 @@
-=== release 1.6.0 ===
+=== release 1.6.1 ===
 
-2015-09-25  Sebastian Dröge <slomo@coaxion.net>
+2015-10-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.0
+	  releasing 1.6.1
+
+2015-10-30 14:09:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/cs.po:
+	* po/de.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: Update translations
+
+2015-10-28 18:04:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: Unblock blocking pad probes when receiving FLUSH_START in send_event() too
+	  Without this, flushing might not unblock the streaming thread and cause deadlocks.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757257
+
+2015-10-24 16:43:59 +0100  Florin Apostol <florin.apostol@oregan.net>
+
+	* tests/check/gst/gsturi.c:
+	  uri: tests: added unit test for streams ending in .. without following /
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757065
+
+2015-10-19 16:50:51 +0300  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* gst/gstsegment.c:
+	* tests/check/gst/gstsegment.c:
+	  segment: Correct stream_time calc for negative applied rate
+	  Updated gst_segment_position_from_stream_time and gst_segment_to_stream_time to reflect correct calculations for the case when the applied rate is negative.
+	  Pasting from design docs:
+	  ===============================
+	  Stream time is calculated using the buffer times and the preceding SEGMENT
+	  event as follows:
+	  stream_time = (B.timestamp - S.start) * ABS (S.applied_rate) + S.time
+	  For negative rates, B.timestamp will go backwards from S.stop to S.start,
+	  making the stream time go backwards.
+	  ===============================
+	  Therefore, the calculation for applied_rate < 0 should be:
+	  stream_time = (S.stop - B.timestamp) * ABS (S.applied_rate) + S.time
+	  and the reverse:
+	  B.timestamp = S.stop - (stream_time - S.time) / ABS (S.applied_rate)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756810
+
+2015-09-25 15:57:16 +0300  Vivia Nikolaidou <vivia@toolsonair.com>
+
+	* gst/gstsegment.c:
+	  segment: gst_segment_to_stream_time: Renamed 'result' to 'stream_time'
+	  Renamed the "result" variable to "stream_time" for better readability.
+
+2015-10-24 16:52:44 +0100  Florin Apostol <florin.apostol@oregan.net>
+
+	* gst/gsturi.c:
+	  uri: fix behaviour for merging uris ending in .. without following /
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757065
+
+2015-10-21 14:49:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: Fix docs/annotation of gst_pad_probe_info_get_buffer_list()
+	  It's not get_bufferlist(). Because of that it was ignored by the docs and
+	  G-I, leading to crashes because of broken ownership transfer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756898
+
+2015-10-17 22:13:08 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: Make sure to free all cached messages when going to NULL
+	  An ASYNC READY->PAUSED might have failed without the bin code noticing during
+	  the state change, in which case we will never get PAUSED->READY and would leak
+	  messages.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756611
+
+2015-10-15 16:32:42 +0200  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Improve incoming SEGMENT handling
+	  Previously this code was just blindly setting the cached flow return
+	  of downstream to GST_FLOW_OK when we get a SEGMENT.
+	  The problem is that this can not be done blindly. If downstream was
+	  not linked, the corresponding sinqlequeue source pad thread might be
+	  waiting for the next ID to be woken up upon.
+	  By blindly setting the cached return value to GST_FLOW_OK, and if that
+	  stream was the only one that was NOT_LINKED, then the next time we
+	  check (from any other thread) to see if we need to wake up a source pad
+	  thread ... we won't even try, because none of the cached flow return
+	  are equal to GST_FLOW_NOT_LINKED.
+	  This would result in that thread never being woken up
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756645
+
+2015-10-12 17:29:26 +0200  Edward Hervey <edward@centricular.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Update internal position even if not linked
+	  Our current position has nothing to do with being linked or not.
+	  Avoids having stray segment updates fired every 2s
+
+2015-10-05 21:29:49 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* tests/check/gst/gsttag.c:
+	  tests: fix the tag test
+	  The previous change (see bgo #756069) was causing us to free the same pointer
+	  multiple times. If we actually get a sample back, the test fails, no need to
+	  free anything in that case.
+
+2015-10-05 11:12:47 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* tests/check/gst/gsttag.c:
+	* tools/gst-launch.c:
+	  tests/gst-launch: Fix sample memory leak
+	  When sample is got using gst_tag_list_get_sample_index, it should
+	  be free'd.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756069
+
+2015-10-07 11:25:52 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/helpers/gst-ptp-helper.c:
+	  gst-ptp-helper: #include <sys/socket.h> to fix net/if.h include on OSX 10.6
+	  In file included from gst-ptp-helper.c:40:0:
+	  /usr/include/net/if.h:265:19: error: field 'ifru_addr' has incomplete type
+	  struct sockaddr ifru_addr;
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756136
+
+2015-09-28 16:01:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/check/gstcheck.c:
+	  check: fix 'format string is not a string literal' warning with clang
+	  Broke this when I removed the G_GNUC_PRINTF in a previous
+	  commit to fix indentation, since it was not really needed.
+	  Turns out unlike gcc clang warns though if a non-literal
+	  format string is passed then. Fix indentation differently.
+	  http://clang.llvm.org/docs/AttributeReference.html#format-gnu-format
+
+=== release 1.6.0 ===
+
+2015-09-25 23:14:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.6.0
+
+2015-09-25 22:41:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2015-09-25 10:18:07 +0900  Vineeth TM <vineeth.tm@samsung.com>
 
