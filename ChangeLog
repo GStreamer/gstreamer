@@ -1,9 +1,61 @@
-=== release 1.6.0 ===
+=== release 1.6.1 ===
 
-2015-09-25  Sebastian Dröge <slomo@coaxion.net>
+2015-10-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.0
+	  releasing 1.6.1
+
+2015-10-16 18:52:57 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Fix bufferpool config double free by taking a copy as needed
+	  Also free the config in two code paths where we leaked it before.
+
+2015-10-14 10:18:01 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n2.8.1
+
+2015-10-13 14:28:44 +0100  Luis de Bethencourt <luisbg@osg.samsung.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: only free config when pool doesn't take ownership
+	  Since gst_buffer_pool_set_config() takes ownership of the config structure,
+	  it is only necessary to free the structure before using it when the true
+	  branch of if (gst_buffer_pool_config_validate_params) hasn't run.
+	  gst_buffer_pool_set_config() always takes ownership of the structure
+	  regardless of success or failure. Which means the return, checked with
+	  if (!working_pool), has no relation to the state of the structure.
+	  CID #1320708
+
+2015-10-03 18:25:35 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Don't allocate dummy codec data anymore, it causes crashes nowadays
+	  Multithreaded encoders are going to free this dummy codec data twice, e.g.
+	  with this pipeline
+	  gst-launch-1.0 videotestsrc num-buffers=40 ! \
+	  videoconvert ! avenc_mjpeg ! fakesink
+
+2015-10-03 18:14:05 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Pass the correct user_data to gst_buffer_new_wrapped_full()
+	  Fixes crash with e.g.
+	  gst-launch-1.0 videotestsrc num-buffers=40 ! \
+	  videoconvert ! avenc_huffyuv ! fakesink
+
+=== release 1.6.0 ===
+
+2015-09-25 23:32:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.6.0
 
 === release 1.5.91 ===
 
