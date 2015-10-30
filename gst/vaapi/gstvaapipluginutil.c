@@ -235,11 +235,11 @@ gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  gst_vaapi_video_context_prepare (element);
-
-  /* Neighbour found and it updated the display */
-  if (gst_vaapi_plugin_base_has_display_type (plugin, type))
-    return TRUE;
+  if (gst_vaapi_video_context_prepare (element, &plugin->display)) {
+    /* Neighbour found and it updated the display */
+    if (gst_vaapi_plugin_base_has_display_type (plugin, type))
+      return TRUE;
+  }
 
   /* If no neighboor, or application not interested, use system default */
   if (plugin->gl_context)

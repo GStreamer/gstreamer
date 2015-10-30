@@ -178,21 +178,27 @@ found:
   gst_query_unref (query);
 }
 
-void
-gst_vaapi_video_context_prepare (GstElement * element)
+gboolean
+gst_vaapi_video_context_prepare (GstElement * element,
+    GstVaapiDisplay ** display_ptr)
 {
-  g_return_if_fail (element != NULL);
+  g_return_val_if_fail (element != NULL, FALSE);
+  g_return_val_if_fail (display_ptr != NULL, FALSE);
 
   /*  1) Check if the element already has a context of the specific
-   *     type, i.e. it was previously set via
-   *     gst_element_set_context(). */
-  /* This was already done by the caller of this function:
-   * gst_vaapi_ensure_display() */
+   *     type.
+   */
+  if (*display_ptr) {
+    GST_LOG_OBJECT (element, "already have a display (%p)", *display_ptr);
+    return TRUE;
+  }
 
   _gst_context_query (element, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME);
 
-  /* The check of an usable context is done by the caller:
-     gst_vaapi_ensure_display() */
+  if (*display_ptr)
+    GST_LOG_OBJECT (element, "found a display (%p)", *display_ptr);
+
+  return *display_ptr != NULL;
 }
 
 /* 5) Create a context by itself and post a GST_MESSAGE_HAVE_CONTEXT message
