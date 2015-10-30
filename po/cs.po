@@ -8,10 +8,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.4.1\n"
+"Project-Id-Version: gst-plugins-good-1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:54+0200\n"
-"PO-Revision-Date: 2015-02-16 10:40+0100\n"
+"POT-Creation-Date: 2015-10-30 14:27+0200\n"
+"PO-Revision-Date: 2015-10-15 20:58+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -50,7 +50,6 @@ msgstr "Nezdařilo se navázání spojení se serverem."
 msgid "Secure connection setup failed."
 msgstr "Selhalo nastavení zabezpečeného připojení."
 
-#, fuzzy
 msgid ""
 "A network error occurred, or the server closed the connection unexpectedly."
 msgstr "Došlo k chybě sítě nebo server neočekávaně ukončil spojení."
@@ -424,6 +423,3 @@ msgstr "Změna rozlišení za běhu zatím není podporována."
 
 msgid "Cannot operate without a clock"
 msgstr "Není možné fungovat bez hodin"
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Zařízení „%s“ nepodporuje zachytávání videa"

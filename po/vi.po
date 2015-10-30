@@ -1,15 +1,15 @@
 # Vietnamese Translation for GST Plugins Good.
-# Copyright © 2014 Free Software Foundation, Inc.
+# Copyright © 2015 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
-# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014, 2015.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.3.90\n"
+"Project-Id-Version: gst-plugins-good 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:54+0200\n"
-"PO-Revision-Date: 2014-06-30 09:12+0700\n"
+"POT-Creation-Date: 2015-10-30 14:27+0200\n"
+"PO-Revision-Date: 2015-10-16 08:17+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -18,10 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Language-Team-Website: <http://translationproject.org/team/vi.html>\n"
-"X-Generator: LocFactoryEditor 1.8\n"
-"X-Poedit-SourceCharset: UTF-8\n"
-"X-Poedit-Language: Vietnamese\n"
-"X-Poedit-Country: VIET NAM\n"
+"X-Generator: Gtranslator 2.91.7\n"
 
 msgid "Jack server not found"
 msgstr "Không tìm thấy máy phục vụ Jack"
@@ -44,15 +41,14 @@ msgid "Server does not support seeking."
 msgstr "Máy phục vụ không hỗ trợ di chuyển vị trí đọc."
 
 msgid "Could not resolve server name."
-msgstr "Không thể phân giải tên miền."
+msgstr "Không thể phân giải tên máy phục vụ."
 
 msgid "Could not establish connection to server."
 msgstr "Không thể thiết lập kết nối tới máy chủ."
 
 msgid "Secure connection setup failed."
-msgstr "Cài đặt kết nối an toàn gặp lỗi."
+msgstr "Gặp lỗi khi cài đặt kết nối an toàn."
 
-#, fuzzy
 msgid ""
 "A network error occurred, or the server closed the connection unexpectedly."
 msgstr "Có lỗi mạng đã xảy ra, hoặc máy chủ đóng kết nối bất ngờ."
@@ -193,7 +189,7 @@ msgid "Monitor"
 msgstr "Màn hình"
 
 msgid "Built-in Speaker"
-msgstr "Loa dựng sẵn"
+msgstr "Loa tích hợp"
 
 msgid "Headphone"
 msgstr "Tai nghe"
@@ -280,7 +276,8 @@ msgstr "Không có bể dòng dữ liệu tải về để mà nhập vào."
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
-"Lỗi lấy các cài đặt từ thiết bị điều chỉnh cộng hưởng %d trên thiết bị “%s”."
+"Gặp lỗi khi lấy các cài đặt từ thiết bị điều chỉnh cộng hưởng %d trên thiết "
+"bị “%s”."
 
 #, c-format
 msgid "Error getting capabilities for device '%s'."
@@ -336,23 +333,25 @@ msgid ""
 "it is a v4l1 driver."
 msgstr ""
 "Gặp lỗi khi lấy khả năng của thiết bị “%s”. Nó không phải là trình điều "
-"khiển phiên bản 4l2. Kiểm tra nó là trình điều khiển phiên bản 4l1 không."
+"khiển phiên bản 4l2. Kiểm tra xem nó có phải là trình điều khiển phiên bản "
+"4l1 không."
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr "Lỗi truy vấn khả năng của %d nhập trong thiết bị %s"
+msgstr "Gặp lỗi khi truy vấn các thuộc tính của đầu vào %d trong thiết bị %s"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Lỗi lấy thiết lập của thiết bị điều hưởng %d trên thiết bị “%s”."
+msgstr ""
+"Gặp lỗi khi lấy các cài đặt của bộ chỉnh cộng hưởng %d trên thiết bị “%s”."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "Lỗi truy vấn chỉ tiêu trên thiết bị “%s”."
+msgstr "Gặp lỗi khi truy vấn chỉ tiêu trên thiết bị “%s”."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Lỗi lấy các thuộc tính của bộ điều khiển trên thiết bị “%s”."
+msgstr "Gặp lỗi khi lấy các thuộc tính của bộ điều khiển trên thiết bị “%s”."
 
 #, c-format
 msgid "Cannot identify device '%s'."
@@ -368,7 +367,7 @@ msgstr "Không thể mở thiết bị “%s” để đọc và ghi."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Thiết bị “%s” không phải là thiết bị bắt hình/tiếng."
+msgstr "Thiết bị “%s” không phải là thiết bị ghi hình/tiếng."
 
 #, c-format
 msgid "Device '%s' is not a output device."
@@ -413,14 +412,14 @@ msgstr "Gặp lỗi khi đặt giá trị %d của bộ điều khiển %d trên
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Gặp lỗi khi lấy kết nhập hiện thời vào thiết bị “%s”. Có thể là thiết bị thu "
+"Gặp lỗi khi lấy đầu vào hiện thời vào thiết bị “%s”. Có thể là thiết bị thu "
 "thanh."
 
 #, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Gặp lỗi khi lấy kết nhập hiện hành trên thiết bị “%s”. Có thể là thiết bị vô "
+"Gặp lỗi khi lấy đầu vào hiện hành trên thiết bị “%s”. Có thể là thiết bị vô "
 "tuyến."
 
 #, c-format
@@ -509,13 +508,13 @@ msgstr "Không thể thao tác khi không có đồng hồ"
 #~ msgstr "Thu thanh"
 
 #~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng."
+#~ msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hòa tiếng."
 
 #~ msgid ""
 #~ "Could not open audio device for mixer control handling. This version of "
 #~ "the Open Sound System is not supported by this element."
 #~ msgstr ""
-#~ "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng. Phiên "
+#~ "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hòa tiếng. Phiên "
 #~ "bản Hệ thống Âm thanh Mở không phải được yếu tố này hỗ trợ."
 
 #~ msgid "Master"
@@ -615,13 +614,13 @@ msgstr "Không thể thao tác khi không có đồng hồ"
 #~ msgstr "Tâm / LFE"
 
 #~ msgid "Stereo Mix"
-#~ msgstr "Hoả tiếng âm lập thể"
+#~ msgstr "Hỏa tiếng âm lập thể"
 
 #~ msgid "Mono Mix"
-#~ msgstr "Hoà tiếng đơn nguồn"
+#~ msgstr "Hòa tiếng đơn nguồn"
 
 #~ msgid "Input Mix"
-#~ msgstr "Hoà tiếng đầu vào"
+#~ msgstr "Hòa tiếng đầu vào"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Máy vi âm 1"
@@ -750,16 +749,16 @@ msgstr "Không thể thao tác khi không có đồng hồ"
 #~ msgstr "Mở rộng kết xuất"
 
 #~ msgid "Downmix"
-#~ msgstr "Hạ hoà tiếng"
+#~ msgstr "Hạ hòa tiếng"
 
 #~ msgid "Virtual Mixer Input"
-#~ msgstr "Hoà tiếng ảo : Vào"
+#~ msgstr "Hòa tiếng ảo : Vào"
 
 #~ msgid "Virtual Mixer Output"
-#~ msgstr "Hoà tiếng ảo : Ra"
+#~ msgstr "Hòa tiếng ảo : Ra"
 
 #~ msgid "Virtual Mixer Channels"
-#~ msgstr "Hoà tiếng ảo : Kênh"
+#~ msgstr "Hòa tiếng ảo : Kênh"
 
 #~ msgid "%s %d Function"
 #~ msgstr "Chức năng %s %d"
