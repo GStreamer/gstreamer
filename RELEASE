@@ -1,18 +1,19 @@
 
-Release notes for GStreamer Bad Plugins 1.6.0
+Release notes for GStreamer Bad Plugins 1.6.1
 
 
-The GStreamer team is proud to announce a new major feature release in the
-stable 1.x API series of your favourite cross-platform multimedia framework!
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.6 release series of your favourite cross-platform multimedia framework!
 
 
-This release has been in the works for more than a year and is packed with new
-features, bug fixes and other improvements.
+
+This release only contains bugfixes and it is safe to update from 1.6.0. For a
+full list of bugfixes see Bugzilla.
 
 
-See
-http://gstreamer.freedesktop.org/releases/1.6/
-for the full list of changes.
+
+See http://gstreamer.freedesktop.org/releases/1.6/
+for the full release notes.
 
 
 
@@ -64,15 +65,41 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 754903 : eagl: crashes or no video display on reuse
-      * 755249 : gtkglsink: Hide and cleaned the GtkWindow we might create
-      * 755251 : gtksink: Rework threading around GtkWindow creation
-      * 755411 : mpdparser: Only check stream- > segments for a repeated last segment if we have a static list of segments
-      * 755426 : decklinkvideosrc: Can't go to PAUSED again from READY
-      * 755456 : glmemory: fix texture leak in _gl_mem_copy
-      * 755459 : gtksink: Do not show window until we reach the PAUSED state
-      * 755542 : gtk: Fix a race where we end up setting wrong VideoInfo
-      * 755618 : gstglfilter: fix error GL_INVALID_OPERATION " glBindBuffer: buffer bound to more than 1 " 
+      * 756207 : videoaggregator: Setting aspect ratio crops the frame
+      * 756567 : Wayland crash when called from gstreamer
+      * 752132 : hls/m3u8: Update current position in all cases
+      * 752230 : mpdparser: Parse xlink attributes from Period, AdaptationSet and SegmentList
+      * 754523 : mssdemux: fragment download errors during live playback
+      * 755108 : mssdemux: playback always starts at lowest bitrate
+      * 755132 : mpdparser: If no Initialization is present in the SegmentBase, assume it is before the indexRange
+      * 755134 : dashdemux: Properly handle relative and non-HTTP URIs for the headers/indices
+      * 755239 : dvdspu: render PGS subtitles with the correct color
+      * 755623 : audiomixer: Using absolute clock times results in 0..now buffers to be rendered at once, stalling the pipeline
+      * 755680 : DVD navigation not working?
+      * 755738 : GtkGst : gst_object_unref on GtkDrawingArea events if current media have no audio
+      * 755754 : videoaggregator doesn't compile with in openembedded dora (glib 2.36.4)
+      * 755759 : assrender: leaks gap events and sample in tags
+      * 755824 : dashdemux: Correctly assign earliest pts instead of overriding it with first offset
+      * 755840 : audiointerleave: make check fails with segmentation fault.
+      * 755850 : unbreak GL introspection build
+      * 755852 : missing sys/applemedia headers in gst-plugins-bad 1.6.0 tarball
+      * 755892 : dtls needs openssl > = 1.0.1
+      * 755969 : gtkglsink: Assertion in gst-inspect-1.0
+      * 755981 : dtls: fix printf format on win32
+      * 756001 : rtmpsrc: plug memory-leaks
+      * 756065 : audioaggregator: fix build error
+      * 756070 : id3tag: fix sample memory leak
+      * 756181 : hlssink: inconsistent segment duration since 1.5.2 onwards
+      * 756186 : dashdemux: cannot advance to next period
+      * 756383 : dashdemux: Incomplete configure check for libgstnet
+      * 756563 : pnmdec: causes multifilesrc to return internal data flow error (caused by a gst_pad_push() error)
+      * 756578 : amcvideodec: Implement support for COLOR_QCOM_FormatYVU420SemiPlanar32mMultiView for decoding
+      * 756592 : dtls: fixed name conflict with openssl on win32
+      * 756617 : dshowvideosink: move/resize events are not handled in 64 bit
+      * 756653 : srtpdec: buffer validations may fail if SRTP packets have padding flag set
+      * 756861 : hlsdemux: crash / memory leak on broken (master) playlist
+      * 756876 : srtp: Fix critical warning trying to retrieve SSRC from a non fb message
+      * 757251 : ivfparse: recognize the vp9 bitstream
 
 ==== Download ====
 
@@ -109,9 +136,28 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arun Raghavan
+      * Aleix Conchillo Flaqué
+      * André Draszik
+      * Antoine Jacoutot
+      * Arnaud Vrac
+      * Edward Hervey
+      * Florin Apostol
+      * George Kiagiadakis
+      * Havard Graff
+      * Jan Schmidt
+      * John Chang
       * Julien Isorce
       * Matthew Waters
+      * Miguel París Díaz
+      * Nirbheek Chauhan
+      * Paul Arzelier
+      * Philippe Normand
+      * Polochon_street
+      * Reynaldo H. Verdejo Pinochet
+      * Santiago Carot-Nemesio
       * Sebastian Dröge
-      * Thibault Saunier
+      * Sreerenj Balachandran
+      * Tim-Philipp Müller
+      * Vineeth TM
+      * plamot
  

@@ -91,6 +91,7 @@ GObject
               GstGtkGLSink
               GstGtkSink
             GstInterVideoSink
+            GstQtSink
             GstWaylandSink
         GstBaseSrc
           GstAvdtpSrc
@@ -275,6 +276,7 @@ GObject
         GstGDPDepay
         GstGDPPay
         GstGLStereoSplit
+        GstGmeDec
         GstInterlace
         GstJP2kDecimator
         GstJifMux
