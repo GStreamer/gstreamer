@@ -472,10 +472,14 @@ ges_uri_clip_create_track_element (GESClip * clip, GESTrackType type)
 GESUriClip *
 ges_uri_clip_new (gchar * uri)
 {
+  GESAsset *asset = GES_ASSET (ges_uri_clip_asset_request_sync (uri, NULL));
   GESUriClip *res = NULL;
 
-  if (gst_uri_is_valid (uri))
-    res = g_object_new (GES_TYPE_URI_CLIP, "uri", uri, NULL);
+  if (asset) {
+    res = GES_URI_CLIP (ges_asset_extract (asset, NULL));
+    gst_object_unref (asset);
+  } else
+    GST_ERROR ("Could not create asset for uri: %s", uri);
 
   return res;
 }
