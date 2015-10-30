@@ -2586,6 +2586,114 @@ GST_START_TEST (dash_mpdparser_GstDateTime)
 GST_END_TEST;
 
 /*
+ * Test bitstreamSwitching inheritance from Period to AdaptationSet
+ *
+ * Description of bistreamSwitching attribute in Period:
+ * "When set to ‘true’, this is equivalent as if the
+ * AdaptationSet@bitstreamSwitching for each Adaptation Set contained in this
+ * Period is set to 'true'. In this case, the AdaptationSet@bitstreamSwitching
+ * attribute shall not be set to 'false' for any Adaptation Set in this Period"
+ *
+ */
+GST_START_TEST (dash_mpdparser_bitstreamSwitching_inheritance)
+{
+  GList *adaptationSets;
+  GstAdaptationSetNode *adapt_set;
+  guint activeStreams;
+  GstActiveStream *activeStream;
+  GstCaps *caps;
+  GstStructure *s;
+  gboolean bitstreamSwitchingFlag;
+
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period id=\"Period0\""
+      "          duration=\"P0Y0M1DT1H1M1S\""
+      "          bitstreamSwitching=\"true\">"
+      "    <AdaptationSet id=\"1\""
+      "                   mimeType=\"video/mp4\">"
+      "      <Representation>"
+      "      </Representation>"
+      "    </AdaptationSet>"
+      "    <AdaptationSet id=\"2\""
+      "                   mimeType=\"audio\""
+      "                   bitstreamSwitching=\"false\">"
+      "      <Representation>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  /* process the xml data */
+  ret = gst_mpd_client_setup_media_presentation (mpdclient, GST_CLOCK_TIME_NONE,
+      -1, NULL);
+  assert_equals_int (ret, TRUE);
+
+  /* get the list of adaptation sets of the first period */
+  adaptationSets = gst_mpd_client_get_adaptation_sets (mpdclient);
+  fail_if (adaptationSets == NULL);
+
+  /* setup streaming from the first adaptation set */
+  adapt_set = (GstAdaptationSetNode *) g_list_nth_data (adaptationSets, 0);
+  fail_if (adapt_set == NULL);
+  ret = gst_mpd_client_setup_streaming (mpdclient, adapt_set);
+  assert_equals_int (ret, TRUE);
+
+  /* setup streaming from the second adaptation set */
+  adapt_set = (GstAdaptationSetNode *) g_list_nth_data (adaptationSets, 1);
+  fail_if (adapt_set == NULL);
+  ret = gst_mpd_client_setup_streaming (mpdclient, adapt_set);
+  assert_equals_int (ret, TRUE);
+
+  /* 2 active streams */
+  activeStreams = gst_mpdparser_get_nb_active_stream (mpdclient);
+  assert_equals_int (activeStreams, 2);
+
+  /* get details of the first active stream */
+  activeStream = gst_mpdparser_get_active_stream_by_index (mpdclient, 0);
+  fail_if (activeStream == NULL);
+
+  assert_equals_int (activeStream->mimeType, GST_STREAM_VIDEO);
+  caps = gst_mpd_client_get_stream_caps (activeStream);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  assert_equals_string (gst_structure_get_name (s), "video/quicktime");
+  gst_caps_unref (caps);
+
+  /* inherited from Period's bitstreamSwitching */
+  bitstreamSwitchingFlag =
+      gst_mpd_client_get_bitstream_switching_flag (activeStream);
+  assert_equals_int (bitstreamSwitchingFlag, TRUE);
+
+  /* get details of the second active stream */
+  activeStream = gst_mpdparser_get_active_stream_by_index (mpdclient, 1);
+  fail_if (activeStream == NULL);
+
+  assert_equals_int (activeStream->mimeType, GST_STREAM_AUDIO);
+  caps = gst_mpd_client_get_stream_caps (activeStream);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  assert_equals_string (gst_structure_get_name (s), "audio");
+  gst_caps_unref (caps);
+
+  /* set to FALSE in our example, but overwritten to TRUE by Period's
+   * bitstreamSwitching
+   */
+  bitstreamSwitchingFlag =
+      gst_mpd_client_get_bitstream_switching_flag (activeStream);
+  assert_equals_int (bitstreamSwitchingFlag, TRUE);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * Test various duration formats
  */
 GST_START_TEST (dash_mpdparser_various_duration_formats)
@@ -5074,6 +5182,8 @@ GST_START_TEST (dash_mpdparser_default_presentation_delay)
       gst_mpd_client_parse_default_presentation_delay (mpdclient,
       "not a number");
   assert_equals_int64 (value, 0);
+
+  gst_mpd_client_free (mpdclient);
 }
 
 GST_END_TEST;
@@ -5198,6 +5308,7 @@ dash_suite (void)
   tcase_add_test (tc_simpleMPD, dash_mpdparser_template_parsing);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_isoff_ondemand_profile);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_GstDateTime);
+  tcase_add_test (tc_simpleMPD, dash_mpdparser_bitstreamSwitching_inheritance);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_various_duration_formats);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_default_presentation_delay);
 

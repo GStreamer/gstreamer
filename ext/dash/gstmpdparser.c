@@ -1808,7 +1808,16 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node,
   gst_mpdparser_get_xml_prop_cond_uint (a_node, "segmentAlignment",
       &new_adap_set->segmentAlignment);
   gst_mpdparser_get_xml_prop_boolean (a_node, "bitstreamSwitching",
-      FALSE, &new_adap_set->bitstreamSwitching);
+      parent->bitstreamSwitching, &new_adap_set->bitstreamSwitching);
+  if (parent->bitstreamSwitching && !new_adap_set->bitstreamSwitching) {
+    /* according to the standard, if the Period's bitstreamSwitching attribute
+     * is true, the AdaptationSet should not have the bitstreamSwitching
+     * attribute set to false.
+     * We should return a parsing error, but we are generous and ignore the
+     * standard violation.
+     */
+    new_adap_set->bitstreamSwitching = parent->bitstreamSwitching;
+  }
   gst_mpdparser_get_xml_prop_cond_uint (a_node, "subsegmentAlignment",
       &new_adap_set->subsegmentAlignment);
   gst_mpdparser_get_xml_prop_SAP_type (a_node, "subsegmentStartsWithSAP",
