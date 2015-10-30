@@ -997,7 +997,19 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
         gst_segment_to_running_time (&sq->sink_segment, GST_FORMAT_TIME,
         sq->sink_segment.position);
 
-    if (G_UNLIKELY (sink_time != GST_CLOCK_TIME_NONE))
+    GST_DEBUG_OBJECT (mq,
+        "queue %d sink_segment.position:%" GST_TIME_FORMAT ", sink_time:%"
+        GST_TIME_FORMAT, sq->id, GST_TIME_ARGS (sq->sink_segment.position),
+        GST_TIME_ARGS (sink_time));
+
+    if (G_UNLIKELY (sq->last_time == GST_CLOCK_TIME_NONE)) {
+      /* If the single queue still doesn't have a last_time set, this means
+       * that nothing has been pushed out yet.
+       * In order for the high_time computation to be as efficient as possible,
+       * we set the last_time */
+      sq->last_time = sink_time;
+    }
+    if (G_UNLIKELY (sink_time != GST_CLOCK_TIME_NONE)) {
       /* if we have a time, we become untainted and use the time */
       sq->sink_tainted = FALSE;
   } else
@@ -1406,7 +1418,7 @@ next:
   is_buffer = GST_IS_BUFFER (object);
 
   /* Get running time of the item. Events will have GST_CLOCK_TIME_NONE */
-  next_time = get_running_time (&sq->src_segment, object, TRUE);
+  next_time = get_running_time (&sq->src_segment, object, FALSE);
 
   GST_LOG_OBJECT (mq, "SingleQueue %d : newid:%d , oldid:%d",
       sq->id, newid, sq->last_oldid);
@@ -1448,7 +1460,7 @@ next:
 
       while (((mq->sync_by_running_time && next_time != GST_CLOCK_TIME_NONE &&
                   (mq->high_time == GST_CLOCK_TIME_NONE
-                      || next_time >= mq->high_time))
+                      || next_time > mq->high_time))
               || (!mq->sync_by_running_time && newid > mq->highid))
           && sq->srcresult == GST_FLOW_NOT_LINKED) {
 
@@ -1481,8 +1493,10 @@ next:
 
       /* Re-compute the high_id in case someone else pushed */
       compute_high_id (mq);
+      compute_high_time (mq);
     } else {
       compute_high_id (mq);
+      compute_high_time (mq);
       /* Wake up all non-linked pads */
       wake_up_next_non_linked (mq);
     }
@@ -1495,12 +1509,12 @@ next:
   if (sq->flushing)
     goto out_flushing;
 
-  GST_LOG_OBJECT (mq, "BEFORE PUSHING sq->srcresult: %s",
+  GST_LOG_OBJECT (mq, "sq:%d BEFORE PUSHING sq->srcresult: %s", sq->id,
       gst_flow_get_name (sq->srcresult));
 
   /* Update time stats */
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-  next_time = get_running_time (&sq->src_segment, object, FALSE);
+  next_time = get_running_time (&sq->src_segment, object, TRUE);
   if (next_time != GST_CLOCK_TIME_NONE) {
     if (sq->last_time == GST_CLOCK_TIME_NONE || sq->last_time < next_time)
       sq->last_time = next_time;
@@ -1588,7 +1602,7 @@ next:
       && result != GST_FLOW_EOS)
     goto out_flushing;
 
-  GST_LOG_OBJECT (mq, "AFTER PUSHING sq->srcresult: %s",
+  GST_LOG_OBJECT (mq, "sq:%d AFTER PUSHING sq->srcresult: %s", sq->id,
       gst_flow_get_name (sq->srcresult));
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
@@ -2051,15 +2065,23 @@ wake_up_next_non_linked (GstMultiQueue * mq)
   if (mq->numwaiting < 1)
     return;
 
-  /* Else figure out which singlequeue(s) need waking up */
-  for (tmp = mq->queues; tmp; tmp = g_list_next (tmp)) {
-    GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
-
-    if (sq->srcresult == GST_FLOW_NOT_LINKED) {
-      if ((mq->sync_by_running_time && mq->high_time != GST_CLOCK_TIME_NONE
-              && sq->next_time != GST_CLOCK_TIME_NONE
-              && sq->next_time >= mq->high_time)
-          || (sq->nextid != 0 && sq->nextid <= mq->highid)) {
+  if (mq->sync_by_running_time && mq->high_time != GST_CLOCK_TIME_NONE) {
+    /* Else figure out which singlequeue(s) need waking up */
+    for (tmp = mq->queues; tmp; tmp = tmp->next) {
+      GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
+      if (sq->srcresult == GST_FLOW_NOT_LINKED
+          && sq->next_time != GST_CLOCK_TIME_NONE
+          && sq->next_time <= mq->high_time) {
+        GST_LOG_OBJECT (mq, "Waking up singlequeue %d", sq->id);
+        g_cond_signal (&sq->turn);
+      }
+    }
+  } else {
+    /* Else figure out which singlequeue(s) need waking up */
+    for (tmp = mq->queues; tmp; tmp = tmp->next) {
+      GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
+      if (sq->srcresult == GST_FLOW_NOT_LINKED &&
+          sq->nextid != 0 && sq->nextid <= mq->highid) {
         GST_LOG_OBJECT (mq, "Waking up singlequeue %d", sq->id);
         g_cond_signal (&sq->turn);
       }
@@ -2114,13 +2136,17 @@ compute_high_id (GstMultiQueue * mq)
 static void
 compute_high_time (GstMultiQueue * mq)
 {
-  /* The high-id is either the highest id among the linked pads, or if all
-   * pads are not-linked, it's the lowest not-linked pad */
+  /* The high-time is either the highest last time among the linked
+   * pads, or if all pads are not-linked, it's the lowest nex time of
+   * not-linked pad */
   GList *tmp;
   GstClockTime highest = GST_CLOCK_TIME_NONE;
   GstClockTime lowest = GST_CLOCK_TIME_NONE;
 
-  for (tmp = mq->queues; tmp; tmp = g_list_next (tmp)) {
+  if (!mq->sync_by_running_time)
+    return;
+
+  for (tmp = mq->queues; tmp; tmp = tmp->next) {
     GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
 
     GST_LOG_OBJECT (mq,
@@ -2138,15 +2164,23 @@ compute_high_time (GstMultiQueue * mq)
       if (lowest == GST_CLOCK_TIME_NONE || sq->next_time < lowest)
         lowest = sq->next_time;
     } else if (sq->srcresult != GST_FLOW_EOS) {
-      /* If we don't have a global highid, or the global highid is lower than
-       * this single queue's last outputted id, store the queue's one, 
-       * unless the singlequeue is at EOS (srcresult = EOS) */
-      if (highest == GST_CLOCK_TIME_NONE || sq->last_time > highest)
+      /* If we don't have a global high time, or the global high time
+       * is lower than this single queue's last outputted time, store
+       * the queue's one, unless the singlequeue is at EOS (srcresult
+       * = EOS) */
+      if (highest == GST_CLOCK_TIME_NONE
+          || (sq->last_time != GST_CLOCK_TIME_NONE && sq->last_time > highest))
         highest = sq->last_time;
     }
+    GST_LOG_OBJECT (mq,
+        "highest now %" GST_TIME_FORMAT " lowest %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (highest), GST_TIME_ARGS (lowest));
   }
 
-  mq->high_time = highest;
+  if (highest == GST_CLOCK_TIME_NONE)
+    mq->high_time = lowest;
+  else
+    mq->high_time = highest;
 
   GST_LOG_OBJECT (mq,
       "High time is now : %" GST_TIME_FORMAT ", lowest non-linked %"
