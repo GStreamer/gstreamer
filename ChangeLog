@@ -1,9 +1,96 @@
-=== release 1.6.0 ===
+=== release 1.6.1 ===
 
-2015-09-25  Thibault Saunier <tsaunier@gnome.org>
+2015-10-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.0
+	  releasing 1.6.1
+
+2015-10-07 23:57:05 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/gstframepositionner.c:
+	  videosource: Force aspect-ratio=1/1 as compositor does not properly handle different values yet
+	  Working around https://bugzilla.gnome.org/show_bug.cgi?id=756207 for 1.6
+	  Fixes T3349
+
+2015-09-27 15:15:10 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-title-source.c:
+	  title-source: Force format with alpha channels out of videotestsrc
+	  Making sure the user can set a background of the title with an alpha
+	  channel.
+	  Working around https://bugzilla.gnome.org/show_bug.cgi?id=755482 for
+	  the 1.6 branch.
+
+2015-10-07 09:57:33 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-base-xml-formatter.c:
+	  base-xml-formatter: properly handle GFile from wrong uri
+	  Summary:
+	  g_file_new_for_uri never fails so GFile always has valid pointer.
+	  And fix a bug of double unref from D303.
+	  Reviewers: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D310
+
+2015-09-30 17:26:31 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-project.c:
+	  project: don't leak GFileInfo
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755862
+
+2015-09-30 17:27:26 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-project.c:
+	  project: fix a pointer for error message
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755862
+
+2015-09-30 17:11:20 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* plugins/nle/nleoperation.c:
+	  nleoperation: don't leak srcpad
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755860
+
+2015-10-01 11:37:25 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-audio-track.c:
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-extractable.c:
+	* ges/ges-multi-file-source.c:
+	* ges/ges-video-track.c:
+	* ges/ges-xml-formatter.c:
+	  don't leaks caps and converted strings
+	  Summary:
+	  Valgrind reports trivial leakages related to handling
+	  objects and their converted strings.
+	  Reviewers: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D303
+
+2015-09-24 01:30:09 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-structured-interface.c:
+	  structured-interface: introduce TRY_GET_STRING
+	  TRY_GET uses gst_structure_get. However, if boxed or
+	  string pointer is retrieved by gst_structure_get,
+	  it should be freed properly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755480
+
+2015-09-28 13:21:11 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-structure-parser.c:
+	* ges/ges-structure-parser.h:
+	  structure-parser: define GES_STRUCTURE_PARSER macro
+	  And fix trivial leakages of internal list structure.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755716
+
+=== release 1.6.0 ===
+
+2015-09-25 12:29:40 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.6.0
 
 2015-09-24 13:21:15 +0200  Thibault Saunier <tsaunier@gnome.org>
 

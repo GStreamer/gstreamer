@@ -1,26 +1,29 @@
 
-Release notes for GStreamer Editing Services 1.6.0
+Release notes for GStreamer Editing Services 1.6.1
 
 
-The GStreamer team is pleased to announce the first release of the GStreamer
-Editing Services stable 1.6 release series. The 1.6 release series is adding
-new features on top of the 1.2 and 1.4 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.6 release series of your favourite cross-platform multimedia framework!
 
 
 
-Binaries for Android, iOS, Mac OS X and Windows are provided together
-with this release.
+This release only contains bugfixes and it is safe to update from 1.6.0. For a
+full list of bugfixes see Bugzilla.
+
+
+
+See http://gstreamer.freedesktop.org/releases/1.6/
+for the full release notes.
 
 
   
 
-Features of this release
-    
-
 Bugs fixed in this release
      
-      * 755417 : nlecomposition allocates unused UpdateCompositionData
+      * 755480 : TRY_GET leaks string pointer
+      * 755716 : structure-parser: leaks internal lists
+      * 755860 : nleoperation: leaks srcpad
+      * 755862 : ges-project: leaks internal file info
 
 ==== Download ====
 
