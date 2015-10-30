@@ -179,7 +179,7 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
               GL_RGBA, GL_UNSIGNED_BYTE, 0, &texture) != kCVReturnSuccess)
           goto error;
 
-        gl_target = _gl_target_to_gst (CVOpenGLESTextureGetTarget (texture));
+        gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
 
         *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
             CVOpenGLESTextureGetName (texture), gl_target,
