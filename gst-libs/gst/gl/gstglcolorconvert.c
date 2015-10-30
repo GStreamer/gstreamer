@@ -1390,14 +1390,14 @@ _mangle_texture_access (const gchar * str, GstGLTextureTarget from,
     from_str = "texture2D";
   if (from == GST_GL_TEXTURE_TARGET_RECTANGLE)
     from_str = "texture2DRect";
-  if (from == GST_GL_TEXTURE_TARGET_OES)
+  if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
     from_str = "texture2D";
 
   if (to == GST_GL_TEXTURE_TARGET_2D)
     to_str = "texture2D";
   if (to == GST_GL_TEXTURE_TARGET_RECTANGLE)
     to_str = "texture2DRect";
-  if (to == GST_GL_TEXTURE_TARGET_OES)
+  if (to == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
     to_str = "texture2D";
 
   /* followed by any amount of whitespace then a bracket */
@@ -1431,14 +1431,14 @@ _mangle_sampler_type (const gchar * str, GstGLTextureTarget from,
     from_str = "sampler2D";
   if (from == GST_GL_TEXTURE_TARGET_RECTANGLE)
     from_str = "sampler2DRect";
-  if (from == GST_GL_TEXTURE_TARGET_OES)
+  if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
     from_str = "samplerExternalOES";
 
   if (to == GST_GL_TEXTURE_TARGET_2D)
     to_str = "sampler2D";
   if (to == GST_GL_TEXTURE_TARGET_RECTANGLE)
     to_str = "sampler2DRect";
-  if (to == GST_GL_TEXTURE_TARGET_OES)
+  if (to == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
     to_str = "samplerExternalOES";
 
   /* followed by some whitespace  */
@@ -1524,8 +1524,8 @@ _init_convert (GstGLColorConvert * convert)
     if (info->templ->extensions)
       g_string_append (str, info->templ->extensions);
 
-    if (convert->priv->from_texture_target == GST_GL_TEXTURE_TARGET_OES
-        && info->templ->target != GST_GL_TEXTURE_TARGET_OES)
+    if (convert->priv->from_texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES
+        && info->templ->target != GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
       g_string_append (str, glsl_OES_extension_string);
 
     if (info->templ->uniforms) {
