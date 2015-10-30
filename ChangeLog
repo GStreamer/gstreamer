@@ -1,9 +1,26 @@
-=== release 1.6.0 ===
+=== release 1.6.1 ===
 
-2015-09-25  Thibault Saunier <tsaunier@gnome.org>
+2015-10-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.0
+	  releasing 1.6.1
+
+2015-10-25 21:33:46 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gi/overrides/Gst.py:
+	  overrides: chain up to base __init__ in Pad override
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=757108
+
+=== release 1.6.0 ===
+
+2015-09-25 12:01:24 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.6.0
 
 2015-06-24 17:44:44 +0200  Thibault Saunier <tsaunier@gnome.org>
 
