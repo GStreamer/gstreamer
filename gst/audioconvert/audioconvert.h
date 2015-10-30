@@ -33,28 +33,32 @@ GST_DEBUG_CATEGORY_EXTERN (audio_convert_debug);
 
 typedef struct _AudioConvertCtx AudioConvertCtx;
 
-typedef void (*AudioConvertToF64) (gdouble *dst, const gint32 *src, gint count);
+typedef void (*AudioConvertFunc) (gpointer dst, const gpointer src, gint count);
 
 struct _AudioConvertCtx
 {
   GstAudioInfo in;
   GstAudioInfo out;
 
+  gboolean in_default;
+
+  AudioConvertFunc convert_in;
+
   GstAudioFormat mix_format;
+  gboolean mix_passthrough;
   GstChannelMix *mix;
+
+  AudioConvertFunc convert_out;
+
   GstAudioQuantize *quant;
 
-  gboolean in_default;
-  gboolean mix_passthrough;
-  gboolean quant_default;
   gboolean out_default;
 
+  gboolean passthrough;
+
   gpointer tmpbuf;
+  gpointer tmpbuf2;
   gint tmpbufsize;
-
-  gint out_scale;
-
-  AudioConvertToF64 convert;
 };
 
 gboolean audio_convert_prepare_context (AudioConvertCtx * ctx,
