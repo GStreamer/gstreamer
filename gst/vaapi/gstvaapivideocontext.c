@@ -205,6 +205,7 @@ gst_vaapi_video_context_propagate (GstElement * element,
   GstMessage *msg;
 
   context = gst_vaapi_video_context_new_with_display (display, FALSE);
+  gst_element_set_context (element, context);
 
   _init_context_debug ();
   GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,

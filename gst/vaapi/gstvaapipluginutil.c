@@ -250,7 +250,6 @@ gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type)
     return FALSE;
 
   gst_vaapi_video_context_propagate (element, display);
-  GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE (plugin, display);
   gst_vaapi_display_unref (display);
   return TRUE;
 }
