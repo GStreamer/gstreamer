@@ -1,9 +1,47 @@
-=== release 1.6.0 ===
+=== release 1.6.1 ===
 
-2015-09-25  Sebastian Dröge <slomo@coaxion.net>
+2015-10-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.0
+	  releasing 1.6.1
+
+2015-10-22 09:15:21 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Always unref return value of gst_object_get_parent()
+	  Fixes a leak of a GstBin in the udp-mcast case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756968
+
+2015-09-29 13:04:53 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  common: update for new suppression
+	  Makes check-valgrind pass with glib 2.46
+
+2015-09-28 17:40:59 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Take reference to media that will be prepared
+	  default_prepare() takes a transfer-none reference GstRTSPMedia object.
+	  Later on a g_idle_source_new() is created and a pointer to the media
+	  object is passed as user data. If the media is freed before the idle
+	  source is dispatched the media object pointer is invalid, but the idle
+	  source callback expects it to still be valid. To fix this a reference to
+	  the media object is taken when registering the source callback function
+	  and a corresponding release of the reference is done when the souce is
+	  destroyed.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=755748
+
+=== release 1.6.0 ===
+
+2015-09-25 23:32:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.6.0
 
 === release 1.5.91 ===
 

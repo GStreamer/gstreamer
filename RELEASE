@@ -1,24 +1,27 @@
 
-Release notes for GStreamer RTSP Server Library 1.6.0
+Release notes for GStreamer RTSP Server Library 1.6.1
 
 
-The GStreamer team is proud to announce a new major feature release in the
-stable 1.x API series of your favourite cross-platform multimedia framework!
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.6 release series of your favourite cross-platform multimedia framework!
 
 
-This release has been in the works for more than a year and is packed with new
-features, bug fixes and other improvements.
+
+This release only contains bugfixes and it is safe to update from 1.6.0. For a
+full list of bugfixes see Bugzilla.
 
 
-See
-http://gstreamer.freedesktop.org/releases/1.6/
-for the full list of changes.
+
+See http://gstreamer.freedesktop.org/releases/1.6/
+for the full release notes.
 
 
   
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+     
+      * 755748 : gst-rtsp-server: Retain reference to rtsp-media when preparing
+      * 756968 : rtsp-stream: GstBin leak in udp-mcast case
 
 ==== Download ====
 
@@ -55,7 +58,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jan Schmidt
-      * Sebastian Dröge
+      * David Svensson Fors
+      * Sebastian Rasmussen
       * Tim-Philipp Müller
  
