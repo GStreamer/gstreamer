@@ -739,7 +739,7 @@ gst_channel_mix_is_passthrough (GstChannelMix * mix)
  * you might need later on! */
 static void
 gst_channel_mix_mix_int (GstChannelMix * mix,
-    gint32 * in_data, gint32 * out_data, gint samples)
+    const gint32 * in_data, gint32 * out_data, gint samples)
 {
   gint in, out, n;
   gint64 res;
@@ -780,7 +780,7 @@ gst_channel_mix_mix_int (GstChannelMix * mix,
 
 static void
 gst_channel_mix_mix_double (GstChannelMix * mix,
-    gdouble * in_data, gdouble * out_data, gint samples)
+    const gdouble * in_data, gdouble * out_data, gint samples)
 {
   gint in, out, n;
   gdouble res;
@@ -829,7 +829,7 @@ gst_channel_mix_mix_double (GstChannelMix * mix,
  */
 void
 gst_channel_mix_mix (GstChannelMix * mix, GstAudioFormat format,
-    GstAudioLayout layout, gpointer * in_data, gpointer * out_data,
+    GstAudioLayout layout, const gpointer in_data, gpointer out_data,
     gint samples)
 {
   g_return_if_fail (mix != NULL);
@@ -838,11 +838,11 @@ gst_channel_mix_mix (GstChannelMix * mix, GstAudioFormat format,
 
   switch (format) {
     case GST_AUDIO_FORMAT_S32:
-      gst_channel_mix_mix_int (mix, (gint32 *) in_data, (gint32 *) out_data,
-          samples);
+      gst_channel_mix_mix_int (mix, (const gint32 *) in_data,
+          (gint32 *) out_data, samples);
       break;
     case GST_AUDIO_FORMAT_F64:
-      gst_channel_mix_mix_double (mix, (gdouble *) in_data,
+      gst_channel_mix_mix_double (mix, (const gdouble *) in_data,
           (gdouble *) out_data, samples);
       break;
     default:

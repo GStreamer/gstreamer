@@ -59,8 +59,8 @@ gboolean        gst_channel_mix_is_passthrough     (GstChannelMix *mix);
 void            gst_channel_mix_mix             (GstChannelMix   * mix,
                                                  GstAudioFormat    format,
                                                  GstAudioLayout    layout,
-                                                 gpointer        * in_data,
-                                                 gpointer        * out_data,
+                                                 const gpointer    in_data,
+                                                 gpointer          out_data,
                                                  gint              samples);
 
 #endif /* __GST_CHANNEL_MIX_H__ */
