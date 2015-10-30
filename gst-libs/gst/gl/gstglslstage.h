@@ -25,10 +25,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstGLSLStage GstGLSLStage;
-typedef struct _GstGLSLStageClass GstGLSLStageClass;
-typedef struct _GstGLSLStagePrivate GstGLSLStagePrivate;
-
 #define GST_TYPE_GLSL_STAGE         (gst_glsl_stage_get_type())
 #define GST_GLSL_STAGE(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GLSL_STAGE, GstGLSLStage))
 #define GST_GLSL_STAGE_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GLSL_STAGE, GstGLSLStageClass))
