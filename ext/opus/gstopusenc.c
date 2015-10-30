@@ -412,6 +412,7 @@ gst_opus_enc_start (GstAudioEncoder * benc)
 
   GST_DEBUG_OBJECT (enc, "start");
   enc->encoded_samples = 0;
+  enc->consumed_samples = 0;
 
   return TRUE;
 }
@@ -766,6 +767,7 @@ gst_opus_enc_setup (GstOpusEnc * enc)
       lookahead);
 
   /* lookahead is samples, the Opus header wants it in 48kHz samples */
+  enc->lookahead = enc->pending_lookahead = lookahead;
   lookahead = lookahead * 48000 / enc->sample_rate;
 
   gst_opus_header_create_caps (&caps, NULL, lookahead, enc->sample_rate,
@@ -807,6 +809,7 @@ gst_opus_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
     }
     case GST_EVENT_SEGMENT:
       enc->encoded_samples = 0;
+      enc->consumed_samples = 0;
       break;
 
     default:
@@ -899,13 +902,13 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
   GstClockTime duration;
 
   guint max_payload_size;
-  gint frame_samples;
+  gint frame_samples, input_samples, output_samples;
 
   g_mutex_lock (&enc->property_lock);
 
   bytes = enc->frame_samples * enc->n_channels * 2;
   max_payload_size = enc->max_payload_size;
-  frame_samples = enc->frame_samples;
+  frame_samples = input_samples = enc->frame_samples;
 
   g_mutex_unlock (&enc->property_lock);
 
@@ -915,26 +918,44 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
     bsize = map.size;
 
     if (G_UNLIKELY (bsize % bytes)) {
+      gint64 diff;
+
       GST_DEBUG_OBJECT (enc, "draining; adding silence samples");
+      g_assert (bsize < bytes);
 
       /* If encoding part of a frame, and we have no set stop time on
        * the output segment, we update the segment stop time to reflect
        * the last sample. This will let oggmux set the last page's
        * granpos to tell a decoder the dummy samples should be clipped.
        */
+      input_samples = bsize / (enc->n_channels * 2);
       segment = &GST_AUDIO_ENCODER_OUTPUT_SEGMENT (enc);
       if (!GST_CLOCK_TIME_IS_VALID (segment->stop)) {
-        int input_samples = bsize / (enc->n_channels * 2);
         GST_DEBUG_OBJECT (enc,
             "No stop time and partial frame, updating segment");
         duration =
-            gst_util_uint64_scale (enc->encoded_samples + input_samples,
+            gst_util_uint64_scale_ceil (enc->consumed_samples + input_samples,
             GST_SECOND, enc->sample_rate);
         segment->stop = segment->start + duration;
         GST_DEBUG_OBJECT (enc, "new output segment %" GST_SEGMENT_FORMAT,
             segment);
         gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (enc),
             gst_event_new_segment (segment));
+      }
+
+      diff =
+          (enc->encoded_samples + frame_samples) - (enc->consumed_samples +
+          input_samples);
+      if (diff >= 0) {
+        GST_DEBUG_OBJECT (enc,
+            "%" G_GINT64_FORMAT " extra samples of padding in this frame",
+            diff);
+        output_samples = frame_samples - diff;
+      } else {
+        GST_DEBUG_OBJECT (enc,
+            "Need to add %" G_GINT64_FORMAT " extra samples in the next frame",
+            -diff);
+        output_samples = frame_samples;
       }
 
       size = ((bsize / bytes) + 1) * bytes;
@@ -944,10 +965,34 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
     } else {
       data = bdata;
       size = bsize;
+
+      /* Adjust for lookahead here */
+      if (enc->pending_lookahead) {
+        if (input_samples > enc->pending_lookahead) {
+          output_samples = input_samples - enc->pending_lookahead;
+          enc->pending_lookahead = 0;
+        } else {
+          enc->pending_lookahead -= input_samples;
+          output_samples = 0;
+        }
+      } else {
+        output_samples = input_samples;
+      }
     }
   } else {
-    GST_DEBUG_OBJECT (enc, "nothing to drain");
-    goto done;
+    if (enc->encoded_samples < enc->consumed_samples) {
+      data = mdata = g_malloc0 (bytes);
+      size = bytes;
+      output_samples = enc->consumed_samples - enc->encoded_samples;
+      input_samples = 0;
+      GST_DEBUG_OBJECT (enc, "draining %d samples", output_samples);
+    } else if (enc->encoded_samples == enc->consumed_samples) {
+      GST_DEBUG_OBJECT (enc, "nothing to drain");
+      goto done;
+    } else {
+      g_assert_not_reached ();
+      goto done;
+    }
   }
 
   g_assert (size == bytes);
@@ -962,9 +1007,6 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
       frame_samples, (int) bytes);
 
   gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
-
-  GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)",
-      frame_samples, (int) bytes);
 
   outsize =
       opus_multistream_encode (enc->state, (const gint16 *) data,
@@ -987,10 +1029,12 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
   GST_DEBUG_OBJECT (enc, "Output packet is %u bytes", outsize);
   gst_buffer_set_size (outbuf, outsize);
 
+
   ret =
       gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (enc), outbuf,
-      frame_samples);
-  enc->encoded_samples += frame_samples;
+      output_samples);
+  enc->encoded_samples += output_samples;
+  enc->consumed_samples += input_samples;
 
 done:
 

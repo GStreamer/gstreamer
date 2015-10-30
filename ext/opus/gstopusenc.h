@@ -79,7 +79,8 @@ struct _GstOpusEnc {
   gint                  n_channels;
   gint                  sample_rate;
 
-  guint64               encoded_samples;
+  guint64               encoded_samples, consumed_samples;
+  guint16               lookahead, pending_lookahead;
 
   guint8                channel_mapping_family;
   guint8                encoding_channel_mapping[256];
