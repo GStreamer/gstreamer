@@ -133,6 +133,11 @@ typedef struct
   guint8	par_y;
   gboolean      interlaced;
 
+  /* For reverse playback */
+  gboolean	reverse_kf_ready; /* Found complete KF payload*/
+  GArray	*payloads_rev; /* Temp queue for storing multiple payloads of packet*/
+  gint		kf_pos; /* KF position in payload queue. Payloads from this pos will be pushed */
+
   /* extended stream properties (optional) */
   AsfStreamExtProps  ext_props;
   
@@ -144,6 +149,8 @@ typedef enum {
   GST_ASF_DEMUX_STATE_DATA,
   GST_ASF_DEMUX_STATE_INDEX
 } GstASFDemuxState;
+
+#define GST_ASF_DEMUX_IS_REVERSE_PLAYBACK(seg) (seg.rate < 0.0? TRUE:FALSE)
 
 #define GST_ASF_DEMUX_NUM_VIDEO_PADS   16
 #define GST_ASF_DEMUX_NUM_AUDIO_PADS   32
@@ -225,6 +232,10 @@ struct _GstASFDemux {
   AsfSimpleIndexEntry *sidx_entries;     /* packet number for each entry   */
   
   GSList              *other_streams;    /* remember streams that are in header but have unknown type */
+
+  /* For reverse playback */
+  gboolean             seek_to_cur_pos; /* Search packets till we reach 'seek' time */
+  gboolean             multiple_payloads; /* Whether packet has multiple payloads */
 
   /* parsing 3D */
   GstASF3DMode asf_3D_mode;

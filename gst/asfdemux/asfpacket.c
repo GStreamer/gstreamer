@@ -29,6 +29,8 @@
 #include <gst/gstinfo.h>
 #include <string.h>
 
+#define GST_ASF_PAYLOAD_KF_COMPLETE(stream, payload) (stream->is_video && payload->keyframe && payload->buf_filled >= payload->mo_size)
+
 /* we are unlikely to deal with lengths > 2GB here any time soon, so just
  * return a signed int and use that for error reporting */
 static inline gint
@@ -89,31 +91,72 @@ asf_packet_create_payload_buffer (AsfPacket * packet, const guint8 ** p_data,
 }
 
 static AsfPayload *
-asf_payload_find_previous_fragment (AsfPayload * payload, AsfStream * stream)
+asf_payload_search_payloads_queue (AsfPayload * payload, GArray * payload_list)
 {
-  AsfPayload *ret;
+  AsfPayload *ret = NULL;
+  gint idx;
+  for (idx = payload_list->len - 1; idx >= 0; idx--) {
+    ret = &g_array_index (payload_list, AsfPayload, idx);
 
-  if (G_UNLIKELY (stream->payloads->len == 0)) {
-    GST_DEBUG ("No previous fragments to merge with for stream %u", stream->id);
-    return NULL;
-  }
-
-  ret =
-      &g_array_index (stream->payloads, AsfPayload, stream->payloads->len - 1);
-
-  if (G_UNLIKELY (ret->mo_size != payload->mo_size ||
-          ret->mo_number != payload->mo_number || ret->mo_offset != 0)) {
-    if (payload->mo_size != 0) {
-      GST_WARNING ("Previous fragment does not match continued fragment");
-      return NULL;
-    } else {
-      /* Warn about this case, but accept it anyway: files in the wild sometimes
-       * have continued packets where the subsequent fragments say that they're
-       * zero-sized. */
-      GST_WARNING ("Previous fragment found, but current fragment has "
-          "zero size, accepting anyway");
+    if (G_UNLIKELY (ret->mo_size == payload->mo_size &&
+            ret->mo_number == payload->mo_number)) {
+      return ret;
     }
   }
+  return NULL;
+}
+
+static AsfPayload *
+asf_payload_find_previous_fragment (GstASFDemux * demux, AsfPayload * payload,
+    AsfStream * stream)
+{
+  AsfPayload *ret = NULL;
+
+  if (GST_ASF_DEMUX_IS_REVERSE_PLAYBACK (demux->segment)) {
+
+    /* Search in queued payloads list */
+    ret = asf_payload_search_payloads_queue (payload, stream->payloads);
+    if (ret) {
+      GST_DEBUG
+          ("previous fragments found in payloads queue for reverse playback : object ID %d",
+          ret->mo_number);
+      return ret;
+    }
+
+    /* Search in payloads 'to be queued' list */
+    ret = asf_payload_search_payloads_queue (payload, stream->payloads_rev);
+    if (ret) {
+      GST_DEBUG
+          ("previous fragments found in temp payload queue for reverse playback : object ID %d",
+          ret->mo_number);
+      return ret;
+    }
+  } else {
+    if (G_UNLIKELY (stream->payloads->len == 0)) {
+      GST_DEBUG ("No previous fragments to merge with for stream %u",
+          stream->id);
+      return NULL;
+    }
+
+    ret =
+        &g_array_index (stream->payloads, AsfPayload,
+        stream->payloads->len - 1);
+
+    if (G_UNLIKELY (ret->mo_size != payload->mo_size ||
+            ret->mo_number != payload->mo_number || ret->mo_offset != 0)) {
+      if (payload->mo_size != 0) {
+        GST_WARNING ("Previous fragment does not match continued fragment");
+        return NULL;
+      } else {
+        /* Warn about this case, but accept it anyway: files in the wild sometimes
+         * have continued packets where the subsequent fragments say that they're
+         * zero-sized. */
+        GST_WARNING ("Previous fragment found, but current fragment has "
+            "zero size, accepting anyway");
+      }
+    }
+  }
+
 #if 0
   if (this_fragment->mo_offset + this_payload_len > first_fragment->mo_size) {
     GST_WARNING ("Merged fragments would be bigger than the media object");
@@ -128,8 +171,8 @@ asf_payload_find_previous_fragment (AsfPayload * payload, AsfStream * stream)
  * payload doesn't have a duration, maybe we can calculate a duration for it
  * (if the previous timestamp is smaller etc. etc.) */
 static void
-gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
-    AsfStream * stream)
+gst_asf_payload_queue_for_stream_forward (GstASFDemux * demux,
+    AsfPayload * payload, AsfStream * stream)
 {
   GST_DEBUG_OBJECT (demux, "Got payload for stream %d ts:%" GST_TIME_FORMAT,
       stream->id, GST_TIME_ARGS (payload->ts));
@@ -191,6 +234,44 @@ gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
   }
 
   g_array_append_vals (stream->payloads, payload, 1);
+}
+
+static void
+gst_asf_payload_queue_for_stream_reverse (GstASFDemux * demux,
+    AsfPayload * payload, AsfStream * stream)
+{
+  GST_DEBUG_OBJECT (demux, "Got payload for stream %d ts:%" GST_TIME_FORMAT,
+      stream->id, GST_TIME_ARGS (payload->ts));
+
+  if (demux->multiple_payloads) {
+    /* store the payload in temporary buffer, until we parse all payloads in this packet */
+    g_array_append_vals (stream->payloads_rev, payload, 1);
+  } else {
+    if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (payload->ts))) {
+      g_array_append_vals (stream->payloads, payload, 1);
+      if (GST_ASF_PAYLOAD_KF_COMPLETE (stream, payload)) {
+        stream->kf_pos = stream->payloads->len - 1;
+      }
+    } else {
+      gst_buffer_unref (payload->buf);
+    }
+  }
+}
+
+
+static void
+gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
+    AsfStream * stream)
+{
+  GST_DEBUG_OBJECT (demux, "Got payload for stream %d ts:%" GST_TIME_FORMAT,
+      stream->id, GST_TIME_ARGS (payload->ts));
+
+  if (GST_ASF_DEMUX_IS_REVERSE_PLAYBACK (demux->segment)) {
+    gst_asf_payload_queue_for_stream_reverse (demux, payload, stream);
+  } else {
+    gst_asf_payload_queue_for_stream_forward (demux, payload, stream);
+  }
+
 }
 
 static void
@@ -357,6 +438,9 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
     return TRUE;
   }
 
+  if (!stream->is_video)
+    stream->kf_pos = 0;
+
   if (G_UNLIKELY (!is_compressed)) {
     GST_LOG_OBJECT (demux, "replicated data length: %u", payload.rep_data_len);
 
@@ -396,6 +480,38 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
           payload_len);
       payload.buf_filled = payload_len;
       gst_asf_payload_queue_for_stream (demux, &payload, stream);
+    } else if (GST_ASF_DEMUX_IS_REVERSE_PLAYBACK (demux->segment)) {
+      /* Handle fragmented payloads for reverse playback */
+      AsfPayload *prev;
+      const guint8 *payload_data = *p_data;
+      prev = asf_payload_find_previous_fragment (demux, &payload, stream);
+
+      if (prev) {
+        gint idx;
+        AsfPayload *p;
+        gst_buffer_fill (prev->buf, payload.mo_offset,
+            payload_data, payload_len);
+        prev->buf_filled += payload_len;
+        if (payload.keyframe && payload.mo_offset == 0) {
+          stream->reverse_kf_ready = TRUE;
+
+          for (idx = stream->payloads->len - 1; idx >= 0; idx--) {
+            p = &g_array_index (stream->payloads, AsfPayload, idx);
+            if (p->mo_number == payload.mo_number) {
+              /* Mark position of KF for reverse play */
+              stream->kf_pos = idx;
+            }
+          }
+        }
+      } else {
+        payload.buf = gst_buffer_new_allocate (NULL, payload.mo_size, NULL);    /* can we use (mo_size - offset) for size? */
+        gst_buffer_fill (payload.buf, payload.mo_offset,
+            payload_data, payload_len);
+        payload.buf_filled = payload.mo_size - (payload.mo_offset);
+        gst_asf_payload_queue_for_stream (demux, &payload, stream);
+      }
+      *p_data += payload_len;
+      *p_size -= payload_len;
     } else {
       const guint8 *payload_data = *p_data;
 
@@ -408,7 +524,8 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
       if (payload.mo_offset != 0) {
         AsfPayload *prev;
 
-        if ((prev = asf_payload_find_previous_fragment (&payload, stream))) {
+        if ((prev =
+                asf_payload_find_previous_fragment (demux, &payload, stream))) {
           if (prev->buf == NULL || (payload.mo_size > 0
                   && payload.mo_size != prev->mo_size)
               || payload.mo_offset >= gst_buffer_get_size (prev->buf)
@@ -587,8 +704,19 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
   GST_LOG_OBJECT (demux, "padding          : %u", packet.padding);
   GST_LOG_OBJECT (demux, "send time        : %" GST_TIME_FORMAT,
       GST_TIME_ARGS (packet.send_time));
+
   GST_LOG_OBJECT (demux, "duration         : %" GST_TIME_FORMAT,
       GST_TIME_ARGS (packet.duration));
+
+  if (GST_ASF_DEMUX_IS_REVERSE_PLAYBACK (demux->segment)
+      && demux->seek_to_cur_pos == TRUE) {
+    /* For reverse playback, initially parse packets forward until we reach packet with 'seek' timestamp */
+    if (packet.send_time - demux->preroll > demux->segment.stop) {
+      demux->seek_to_cur_pos = FALSE;
+    }
+    ret = GST_ASF_DEMUX_PARSE_PACKET_ERROR_NONE;
+    goto done;
+  }
 
   if (G_UNLIKELY (packet.padding == (guint) - 1 || size < packet.padding)) {
     GST_WARNING_OBJECT (demux, "No padding, or padding bigger than buffer");
@@ -617,6 +745,7 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
 
   if (has_multiple_payloads) {
     guint i, num, lentype;
+    demux->multiple_payloads = TRUE;
 
     if (G_UNLIKELY (size < 1)) {
       GST_WARNING_OBJECT (demux, "No room more in buffer");
@@ -643,8 +772,29 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
         break;
       }
     }
+
+    if (GST_ASF_DEMUX_IS_REVERSE_PLAYBACK (demux->segment)) {
+      /* In reverse playback, we parsed the packet (with multiple payloads) and stored the payloads in temporary queue.
+         Now, add them to the stream's payload queue */
+      for (i = 0; i < demux->num_streams; i++) {
+        AsfStream *s = &demux->stream[i];
+        while (s->payloads_rev->len > 0) {
+          AsfPayload *p;
+          p = &g_array_index (s->payloads_rev, AsfPayload,
+              s->payloads_rev->len - 1);
+          g_array_append_vals (s->payloads, p, 1);
+          if (GST_ASF_PAYLOAD_KF_COMPLETE (s, p)) {
+            /* Mark position of KF for reverse play */
+            s->kf_pos = s->payloads->len - 1;
+          }
+          g_array_remove_index (s->payloads_rev, (s->payloads_rev->len - 1));
+        }
+      }
+    }
+
   } else {
     GST_LOG_OBJECT (demux, "Parsing single payload");
+    demux->multiple_payloads = FALSE;
     if (G_UNLIKELY (!gst_asf_demux_parse_payload (demux, &packet, -1, &data,
                 &size))) {
       GST_WARNING_OBJECT (demux, "Failed to parse payload");
