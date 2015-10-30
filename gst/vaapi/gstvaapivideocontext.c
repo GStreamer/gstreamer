@@ -39,6 +39,19 @@ G_DEFINE_BOXED_TYPE (GstVaapiDisplay, gst_vaapi_display,
     (GBoxedCopyFunc) gst_vaapi_display_ref,
     (GBoxedFreeFunc) gst_vaapi_display_unref);
 
+static void
+_init_context_debug (void)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
+    g_once_init_leave (&_init, 1);
+  }
+#endif
+}
+
 GstContext *
 gst_vaapi_video_context_new_with_display (GstVaapiDisplay * display,
     gboolean persistent)
@@ -79,6 +92,7 @@ context_pad_query (const GValue * item, GValue * value, gpointer user_data)
     return FALSE;
   }
 
+  _init_context_debug ();
   GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, pad, "context pad peer query failed");
   return TRUE;
 }
@@ -118,8 +132,7 @@ gst_vaapi_video_context_prepare (GstElement * element)
   GstQuery *query;
   GstMessage *msg;
 
-  if (!GST_CAT_CONTEXT)
-    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
+  _init_context_debug ();
 
   /*  1) Check if the element already has a context of the specific
    *     type, i.e. it was previously set via
@@ -170,6 +183,7 @@ gst_vaapi_video_context_propagate (GstElement * element,
 
   context = gst_vaapi_video_context_new_with_display (display, FALSE);
 
+  _init_context_debug ();
   GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
       "posting `have-context' (%p) message with display (%p)",
       context, display);
