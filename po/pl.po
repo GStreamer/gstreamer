@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.5.1\n"
+"Project-Id-Version: gstreamer 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:32+0200\n"
-"PO-Revision-Date: 2015-06-10 22:04+0200\n"
+"POT-Creation-Date: 2015-10-30 14:08+0200\n"
+"PO-Revision-Date: 2015-10-15 20:45+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -1227,9 +1227,11 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Bez wypisywania informacji o stanie określonej własności, jeśli szczegółowe "
+"wyjście jest włączone (może być użyte wielokrotnie)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "NAZWA-WŁASNOŚCI"
 
 msgid "Do not install a fault handler"
 msgstr "Nie instalowanie obsługi błędów"
@@ -1307,9 +1309,3 @@ msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Nie wypisywanie informacji o stanie tego RODZAJU"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "RODZAJ1,RODZAJ2,..."

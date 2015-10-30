@@ -1,4 +1,4 @@
-# translation of gstreamer-1.5.1.po to Dutch
+# translation of gstreamer.po to Dutch
 # Dutch translation of gstreamer
 # Copyright (C) 2003-2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
@@ -8,10 +8,10 @@
 # Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.5.1\n"
+"Project-Id-Version: gstreamer 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:32+0200\n"
-"PO-Revision-Date: 2015-06-13 18:14+0200\n"
+"POT-Creation-Date: 2015-10-30 14:08+0200\n"
+"PO-Revision-Date: 2015-10-17 12:38+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -1231,9 +1231,11 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Statusinformatie voor de gespecificeerde eigenschap niet uitvoeren als "
+"verbose-uitvoer is ingeschakeld (kan meerdere keren worden gebruikt)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "NAAM-EIGENSCHAP"
 
 msgid "Do not install a fault handler"
 msgstr "Geen foutafhandelaar installeren"

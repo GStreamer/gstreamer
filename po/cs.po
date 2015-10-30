@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.5.1\n"
+"Project-Id-Version: gstreamer 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:32+0200\n"
-"PO-Revision-Date: 2015-06-17 16:31+0200\n"
+"POT-Creation-Date: 2015-10-30 14:08+0200\n"
+"PO-Revision-Date: 2015-10-15 21:04+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -1230,9 +1230,11 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Když je zapnutý podrobný výpis, nevypisovat stavové informace pro zadanou "
+"vlastnost (může být uvedeno vícekrát)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "NÁZEV-VLASTNOSTI"
 
 msgid "Do not install a fault handler"
 msgstr "Neinstalovat obsluhu výjimek"
@@ -1317,9 +1319,3 @@ msgstr "Nastavuje se roura na PRÁZDNÁ…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Uvolňuje se roura…\n"
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Pro TYP nevypisovat stavové informace"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TYP1,TYP2,…"

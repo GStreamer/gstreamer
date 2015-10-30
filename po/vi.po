@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.5.1\n"
+"Project-Id-Version: gstreamer 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:32+0200\n"
-"PO-Revision-Date: 2015-06-11 08:35+0700\n"
+"POT-Creation-Date: 2015-10-30 14:08+0200\n"
+"PO-Revision-Date: 2015-10-16 08:03+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -133,7 +133,7 @@ msgid "Internal GStreamer error: seek problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề di chuyển vị trí đọc."
 
 msgid "Internal GStreamer error: caps problem."
-msgstr "Lỗi nội bộ GStreamer: vấn đề thư viện caps."
+msgstr "Lỗi nội bộ GStreamer: vấn đề caps."
 
 msgid "Internal GStreamer error: tag problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề thẻ."
@@ -162,7 +162,7 @@ msgid "Could not configure supporting library."
 msgstr "Không thể cấu hình thư viện hỗ trợ."
 
 msgid "Encoding error."
-msgstr "Gặp lỗi mã hóa."
+msgstr "Lỗi giải mã."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "Trình GStreamer mới gặp một lỗi tài nguyên chung."
@@ -286,13 +286,13 @@ msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "(các) người chịu trách nhiệm về bản thu, cho mục đích sắp xếp"
 
 msgid "album"
-msgstr "album"
+msgstr "tập nhạc"
 
 msgid "album containing this data"
 msgstr "tập nhạc chứa dữ liệu này"
 
 msgid "album sortname"
-msgstr "tên sắp album"
+msgstr "tên sắp xếp tập nhạc"
 
 msgid "album containing this data for sorting purposes"
 msgstr "tập nhạc chứa dữ liệu này, cho mục đích sắp xếp"
@@ -348,7 +348,7 @@ msgid "track number inside a collection"
 msgstr "số thứ tự rãnh ở trong bộ sưu tập"
 
 msgid "track count"
-msgstr "đếm rãnh"
+msgstr "số lượng rãnh"
 
 msgid "count of tracks inside collection this track belongs to"
 msgstr "số đếm rãnh ở trong bộ sưu tập"
@@ -360,10 +360,10 @@ msgid "disc number inside a collection"
 msgstr "số thứ tự đĩa ở trong bộ sưu tập"
 
 msgid "disc count"
-msgstr "đếm đĩa"
+msgstr "số đĩa"
 
 msgid "count of discs inside collection this disc belongs to"
-msgstr "số đếm đĩa ở trong bộ sưu tập"
+msgstr "số lượng đĩa ở trong bộ sưu tập"
 
 msgid "location"
 msgstr "địa điểm"
@@ -489,29 +489,29 @@ msgid "container format the data is stored in"
 msgstr "định dạng chứa dữ liệu được cất giữ"
 
 msgid "bitrate"
-msgstr "tốc độ bit"
+msgstr "tốc độ bít"
 
 msgid "exact or average bitrate in bits/s"
 msgstr ""
-"số bit dữ liệu trong mỗi giây phát, chính xác hay trung bình, theo bit/giây"
+"số bít dữ liệu trong mỗi giây phát, chính xác hay trung bình, theo bít/giây"
 
 msgid "nominal bitrate"
-msgstr "tốc độ bit không đáng kể"
+msgstr "tốc độ bít không đáng kể"
 
 msgid "nominal bitrate in bits/s"
-msgstr "số bit dữ liệu trong mỗi giây phát, không đáng kể, theo bit/giây"
+msgstr "số bít dữ liệu trong mỗi giây phát, không đáng kể, theo bít/giây"
 
 msgid "minimum bitrate"
-msgstr "tốc độ bit tối thiểu"
+msgstr "tốc độ bít tối thiểu"
 
 msgid "minimum bitrate in bits/s"
-msgstr "số bit dữ liệu trong mỗi giây phát, tối thiểu, theo bit/giây"
+msgstr "số bít dữ liệu trong mỗi giây phát, tối thiểu, theo bít/giây"
 
 msgid "maximum bitrate"
-msgstr "tốc độ bit tối đa"
+msgstr "tốc độ bít tối đa"
 
 msgid "maximum bitrate in bits/s"
-msgstr "số bit dữ liệu trong mỗi giây được phát, tối đa, theo bit/giây"
+msgstr "số bít dữ liệu trong mỗi giây được phát, tối đa, theo bít/giây"
 
 msgid "encoder"
 msgstr "mã hóa"
@@ -573,7 +573,7 @@ msgid "language name"
 msgstr "Tên ngôn ngữ"
 
 msgid "freeform name of the language this stream is in"
-msgstr "tên freeform của ngôn ngữ luồng dữ liệu này là trong"
+msgstr "tên dạng tự do của ngôn ngữ luồng dữ liệu này là trong"
 
 msgid "image"
 msgstr "ảnh"
@@ -1056,7 +1056,7 @@ msgstr[0] "%d phần bổ sung"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] "%d mục nhập bị cấm"
+msgstr[0] "%d mục tin bị cấm"
 
 #, c-format
 msgid "%d feature"
@@ -1181,7 +1181,7 @@ msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Đang chuyển hoán đệm nên đặt đường ống thành BỊ TẠM DỪNG …\n"
 
 msgid "Redistribute latency...\n"
-msgstr "Phân phối lại sự âm ỷ…\n"
+msgstr "Phân phối lại độ trễ…\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
@@ -1203,10 +1203,10 @@ msgid "Got context from element '%s': %s=%s\n"
 msgstr "Đã nhận nội dung từ phần tử “%s”: %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
-msgstr "Thể xuất (cũng được biết là siêu dữ liệu)"
+msgstr "Xuất các thẻ (cũng được biết là siêu dữ liệu)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr "TOC kết xuất (các chương và phiên bản)"
+msgstr "Xuất TOC (các chương và phiên bản)"
 
 msgid "Output status information and property notifications"
 msgstr "Xuất thông tin trạng thái và thông báo tài sản"
@@ -1221,9 +1221,11 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Đừng xuất thông tinh trạng thái cho thuộc tính đã cho nếu bật kết xuất chi "
+"tiết (có thể sử dụng nhiều lần)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "TÊN-THUỘC-TÍNH"
 
 msgid "Do not install a fault handler"
 msgstr "Không cài đặt bộ quản lý lỗi"

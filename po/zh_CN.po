@@ -2,21 +2,21 @@
 # This file is put in the public domain.
 # Funda Wang <fundawang@linux.net.cn>, 2005.
 # Ji ZhengYu <zhengyuji@gmail.com>, 2008, 2009.
-# zwpwjwtz <zwpwjwtz@126.com>, 2015.
+# Tianze Wang <zwpwjwtz@126.com>, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.5.1\n"
+"Project-Id-Version: gstreamer 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:32+0200\n"
-"PO-Revision-Date: 2015-09-05 23:18+0800\n"
-"Last-Translator: zwpwjwtz <zwpwjwtz@126.com>\n"
+"POT-Creation-Date: 2015-10-30 14:08+0200\n"
+"PO-Revision-Date: 2015-10-16 19:25+0800\n"
+"Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 1.8.4\n"
+"X-Generator: Poedit 1.8.5\n"
 
 msgid "Print the GStreamer version"
 msgstr "打印 GStreamer 版本"
@@ -1178,10 +1178,10 @@ msgstr "输出信息"
 msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
-msgstr ""
+msgstr "如果启用了详细输出模式，不输出指定属性的状态信息（可以多次使用）"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "属性名"
 
 msgid "Do not install a fault handler"
 msgstr "不安装错误的处理程序"
