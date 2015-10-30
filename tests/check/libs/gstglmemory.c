@@ -73,7 +73,9 @@ GST_START_TEST (test_basic)
     gst_video_info_set_format (&v_info, formats[i], width, height);
 
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&v_info); j++) {
-      mem = gst_gl_memory_alloc (context, NULL, &v_info, j, NULL);
+      mem =
+          gst_gl_memory_alloc (context, GST_GL_TEXTURE_TARGET_2D, NULL, &v_info,
+          j, NULL);
       fail_if (mem == NULL);
       gl_mem = (GstGLMemory *) mem;
 
@@ -124,7 +126,9 @@ GST_START_TEST (test_transfer)
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 1, 1);
 
   /* texture creation */
-  mem = (GstMemory *) gst_gl_memory_alloc (context, NULL, &v_info, 0, NULL);
+  mem =
+      (GstMemory *) gst_gl_memory_alloc (context, GST_GL_TEXTURE_TARGET_2D,
+      NULL, &v_info, 0, NULL);
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
           GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
@@ -132,8 +136,8 @@ GST_START_TEST (test_transfer)
 
   /* test wrapping raw data */
   mem2 =
-      (GstMemory *) gst_gl_memory_wrapped (context, &v_info, 0, NULL,
-      rgba_pixel, NULL, NULL);
+      (GstMemory *) gst_gl_memory_wrapped (context, GST_GL_TEXTURE_TARGET_2D,
+      &v_info, 0, NULL, rgba_pixel, NULL, NULL);
   fail_if (mem == NULL);
 
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem2,
@@ -179,8 +183,8 @@ GST_START_TEST (test_transfer)
 
   /* test texture copy */
   fail_unless (gst_gl_memory_copy_into_texture ((GstGLMemory *) mem2,
-          ((GstGLMemory *) mem)->tex_id, GST_VIDEO_GL_TEXTURE_TYPE_RGBA, 1, 1,
-          4, FALSE));
+          ((GstGLMemory *) mem)->tex_id, GST_GL_TEXTURE_TARGET_2D,
+          GST_VIDEO_GL_TEXTURE_TYPE_RGBA, 1, 1, 4, FALSE));
   GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD);
   GST_GL_MEMORY_ADD_TRANSFER (mem, GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
@@ -263,8 +267,8 @@ GST_START_TEST (test_separate_transfer)
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 1, 1);
 
   mem =
-      (GstMemory *) gst_gl_memory_wrapped (context, &v_info, 0, NULL,
-      rgba_pixel, NULL, NULL);
+      (GstMemory *) gst_gl_memory_wrapped (context, GST_GL_TEXTURE_TARGET_2D,
+      &v_info, 0, NULL, rgba_pixel, NULL, NULL);
   fail_if (mem == NULL);
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
           GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
