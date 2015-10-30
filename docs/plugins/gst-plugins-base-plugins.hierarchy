@@ -117,8 +117,6 @@ GObject
   GInputStream
   GOutputStream
   GSocket
-  GTypeModule
-    PangoModule
   GstColorBalanceChannel
   GstEncodingProfile
   PangoContext

@@ -1,9 +1,259 @@
-=== release 1.6.0 ===
+=== release 1.6.1 ===
 
-2015-09-25  Sebastian Dröge <slomo@coaxion.net>
+2015-10-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.0
+	  releasing 1.6.1
+
+2015-10-30 14:27:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/nl.po:
+	* po/zh_CN.po:
+	  po: Update translations
+
+2015-10-28 11:32:57 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/audioconvert/gstaudioquantize.c:
+	  audioquantize: fix 8-pole noise shaping
+	  Fix the 8-pole noise shaping error update. We were mixing errors from
+	  different channels.
+
+2015-10-27 15:44:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: Send SEEK events directly to adaptive streaming demuxers
+	  This makes sure that they will always get SEEK events, even if we're currently
+	  in the middle of a group switch (i.e. switching to another
+	  representation/bitrate/etc).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=606382
+
+2015-10-06 15:20:51 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: fix event leak
+	  As stated in GST_PAD_PROBE_HANDLED's documentation, we are
+	  supposed to unref the event before returning.
+	  Fixes an event leak in the validate.hls.playback.play_15s.hls_bibbop
+	  validate scenario.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754459
+
+2015-10-23 12:02:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: Send upstream events directly to playsink
+	  Send event directly to playsink instead of letting GstBin iterate
+	  over all sink elements. The latter might send the event multiple times
+	  in case the SEEK causes a reconfiguration of the pipeline, as can easily
+	  happen with adaptive streaming demuxers.
+	  What would then happen is that the iterator would be reset, we send the
+	  event again, and on the second time it will fail in the majority of cases
+	  because the pipeline is still being reconfigured
+
+2015-10-22 12:07:44 +0800  Pavel Bludov <pbludov@gmail.com>
+
+	* gst-libs/gst/video/video-overlay-composition.h:
+	  video: overlay-composition: fix rectangle and composition cast macros
+	  Closing parenthesis was missing in two cases.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756893
+
+2015-10-20 12:08:23 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	  rtp: GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING is Since 1.6.1
+
+2015-10-16 10:48:50 +1100  Matthew Waters <matthew@centricular.com>
+
+	* win32/common/libgstrtp.def:
+	  win32 update exports for new rtp symbols
+
+2015-07-22 11:31:05 +0200  Stian Selnes <stian@pexip.com>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	* tests/check/libs/rtp.c:
+	  rtpbuffer: Add map flag to skip padding
+	  Encrypted RTP buffers may contain encrypted padding, hence it's
+	  necessary to have an option to relax the validation in order to
+	  successfully map the buffer.
+	  When the flag GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING is set
+	  gst_rtp_buffer_map() will map the buffer like if padding is not
+	  present.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752705
+
+2015-09-14 15:25:11 +0900  eunhae choi <eunhae1.choi@samsung.com>
+
+	* gst-libs/gst/audio/gstaudiobasesink.c:
+	  audiobasesink: fix issue about eos handling during flushing
+	  If the flush-start is arrived during _eos_wait() in basesink,
+	  the 'eos' flag is overwritten to TRUE after exiting the _eos_wait().
+	  To resolve the overwritten issue,
+	  the subclass doing the _eos_wait() call should return the right value.
+	  If the eos flag is set to TRUE again, it will cause error(enter the eos flow)
+	  of the following state changing from PAUSED to PLAYING in basesink.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754980
+
+2015-10-17 21:47:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gsturidecodebin.c:
+	  playbin/uridecodebin: Always post async-done immediately if we're a live pipeline
+	  Not only if the base class told us, but also if one of our own elements did.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756611
+
+2015-10-17 22:25:22 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstplaysink.c:
+	* gst/playback/gstsubtitleoverlay.c:
+	  decodebin/playbin/playsink/subtitleoverlay: Post async-done on state change failures
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756611
+
+2015-10-17 22:20:31 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Immediately error out if state change fails
+	  Otherwise we chain up to the parent class' change_state function and might
+	  override the failure with SUCCESS.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756611
+
+2015-10-17 20:36:27 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/video.c:
+	  video: Add out annotations to the out parameters of gst_video_calculate_display_ratio()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754567
+
+2015-10-15 10:01:38 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Fix volume element leak
+	  In case sink implements a streamvolume interface, volume element is being got
+	  from the sink. But this is transfer full. So the memory should be freed before
+	  setting it to NULL. This was resulting in major memory leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755867
+
+2015-10-14 00:32:11 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/alsa/gstalsasink.c:
+	* ext/alsa/gstalsasrc.c:
+	  alsa: Use 8 bit pointer type for byte-based pointer arithmetic
+	  Usually these loops only run once, so there's no problem here. But sometimes
+	  they run twice, and by adding the number of bytes to a 16 bit pointer type we
+	  would advance twice as much as we should.
+	  Also use snd_pcm_frames_to_bytes() in alsasrc to calculate
+	  the number of bytes to skip, same as we do in alsasink.
+	  Thanks to Lucio A. Hernandez <lucio.a.hernandez@gmail.com> for reporting.
+
+2015-10-04 18:36:00 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/xvimage/xvimagepool.c:
+	  xvimagesink: Put error message into debug output instead of just throwing it away
+
+2015-09-29 10:12:28 +0530  Rajat Verma <rajat.verma@st.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: free hidden groups at time of switching groups
+	  hidden groups should be freed at time of switching groups to avoid memory use
+	  from balloning up.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755770
+
+2015-09-30 18:17:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/subparse/gstsubparse.c:
+	  subparse: detect closing tags even if there's a space after the slash
+	  </ i> should be handled like </i>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755875
+
+2015-09-23 11:59:22 -0400  Perry Hung <perry@leaflabs.com>
+
+	* gst-libs/gst/app/Makefile.am:
+	  app: pass PKG_CONFIG_PATH for gir files for libgstapp as well
+	  gir include search directories should respect PKG_CONFIG_PATH,
+	  just like we do everywhere else. Makes g-i pick up the right
+	  paths when using ./configure --with-pkg-config-path=
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755494
+
+=== release 1.6.0 ===
+
+2015-09-25 23:15:20 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-libs/gst/video/video-orc-dist.c:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.6.0
+
+2015-09-25 22:50:51 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2015-09-24 18:06:58 +0200  Sebastian Dröge <sebastian@centricular.com>
 

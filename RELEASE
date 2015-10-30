@@ -1,18 +1,19 @@
 
-Release notes for GStreamer Base Plugins 1.6.0
+Release notes for GStreamer Base Plugins 1.6.1
 
 
-The GStreamer team is proud to announce a new major feature release in the
-stable 1.x API series of your favourite cross-platform multimedia framework!
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.6 release series of your favourite cross-platform multimedia framework!
 
 
-This release has been in the works for more than a year and is packed with new
-features, bug fixes and other improvements.
+
+This release only contains bugfixes and it is safe to update from 1.6.0. For a
+full list of bugfixes see Bugzilla.
 
 
-See
-http://gstreamer.freedesktop.org/releases/1.6/
-for the full list of changes.
+
+See http://gstreamer.freedesktop.org/releases/1.6/
+for the full release notes.
 
 
 
@@ -62,10 +63,16 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 752148 : Drawing from paths passed to cairo does not work with PANGOCAIRO_BACKEND=coretext
-      * 754344 : libs: build rtp after audio
-      * 754833 : dmabuf & fdmemory: fix allocator_alloc documentation
-      * 755392 : video: bugs with gst_video_frame_copy and videoconvert (with test scripts)
+      * 752705 : rtpbuffer: Add map flag to skip padding
+      * 754459 : decodebin: fix event leak with validate.hls.playback.play_15s.hls_bibbop scenario
+      * 754567 : video: gst_video_calculate_display_ratio() should have out parameter
+      * 754980 : audiobasesink: audio skipping when playing it repeatedly.
+      * 755494 : gst-plugins-base fails to build with --with-pkg-config-path
+      * 755770 : decodebin: Free unlinked chains at time of switching chains
+      * 755867 : playsink: fix leak of audio sink
+      * 755875 : subparse: < / i > should be handled like < /i > 
+      * 756611 : playbin: Leak of playbin on errors from the source element
+      * 756893 : video: Missing closing parenthesis in video overlay composition cast macros
 
 ==== Download ====
 
@@ -102,6 +109,15 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aurélien Zanelli
+      * Guillaume Desmottes
+      * Matthew Waters
+      * Pavel Bludov
+      * Perry Hung
+      * Rajat Verma
       * Sebastian Dröge
+      * Stian Selnes
+      * Tim-Philipp Müller
+      * Vineeth TM
+      * Wim Taymans
+      * eunhae choi
  
