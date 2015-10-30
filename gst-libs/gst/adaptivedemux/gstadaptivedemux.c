@@ -2799,6 +2799,13 @@ download_error:
           "Download error: Couldn't download fragments, too many failures");
     }
 
+    gst_task_stop (stream->download_task);
+    if (stream->src) {
+      gst_element_set_state (stream->src, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (demux), stream->src);
+      stream->src = NULL;
+    }
+
     gst_element_post_message (GST_ELEMENT_CAST (demux), msg);
 
     goto end;
