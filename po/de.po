@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.5.1\n"
+"Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:59+0200\n"
-"PO-Revision-Date: 2015-06-11 20:57+0100\n"
+"POT-Creation-Date: 2015-10-30 14:30+0200\n"
+"PO-Revision-Date: 2015-10-21 00:15+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.7.5\n"
+"X-Generator: Poedit 1.8.5\n"
 
 msgid "format wasn't negotiated before get function"
 msgstr "das Format wurde vor der get-Funktion nicht ausgehandelt"
@@ -195,7 +195,6 @@ msgstr ""
 "Dateiort ist als NULL festgelegt. Bitte legen Sie einen gültigen Dateinamen "
 "fest"
 
-#, fuzzy
 msgid "Digitalzoom element couldn't be created"
 msgstr "Element für Digitalzoom konnte nicht angelegt werden"
 

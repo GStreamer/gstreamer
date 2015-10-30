@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.5.1\n"
+"Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:59+0200\n"
-"PO-Revision-Date: 2015-06-11 08:37+0700\n"
+"POT-Creation-Date: 2015-10-30 14:30+0200\n"
+"PO-Revision-Date: 2015-10-16 08:27+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -184,7 +184,6 @@ msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
 "Vị trí tập tin được đặt thành “NULL”. xin hãy đặt một tên tập tin hợp lệ"
 
-#, fuzzy
 msgid "Digitalzoom element couldn't be created"
 msgstr "Không thể tạo phần tử thu phóng số"
 
@@ -218,7 +217,7 @@ msgstr "Thiết bị “%s” không tồn tại."
 
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Không thể mở thiết bị giao diện (mặt tiền) “%s”."
+msgstr "Không thể mở thiết bị mặt tiền “%s”."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
