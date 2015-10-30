@@ -4163,34 +4163,9 @@ GST_START_TEST (dash_mpdparser_inherited_segmentURL)
   expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 110, 0);
   expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 0, 0);
 
-  /* the representation contains 2 segments
-   *  - one inherited from AdaptationSet (duration 100)
-   *  - the second defined in the Representation (duration 110)
-   *
-   * Both will have the duration specified in the Representation (110)
-   */
+  /* the representation contains 1 segment (the one from Representation) */
 
   /* check first segment */
-  ret = gst_mpd_client_get_next_fragment (mpdclient, 0, &fragment);
-  assert_equals_int (ret, TRUE);
-  assert_equals_string (fragment.uri, "/TestMediaAdaptation");
-  assert_equals_int64 (fragment.range_start, 10);
-  assert_equals_int64 (fragment.range_end, 20);
-  assert_equals_string (fragment.index_uri, "/TestIndexAdaptation");
-  assert_equals_int64 (fragment.index_range_start, 30);
-  assert_equals_int64 (fragment.index_range_end, 40);
-  assert_equals_uint64 (fragment.duration, expectedDuration * GST_MSECOND);
-  assert_equals_uint64 (fragment.timestamp, expectedTimestamp * GST_MSECOND);
-  gst_media_fragment_info_clear (&fragment);
-
-  /* advance to next segment */
-  flow = gst_mpd_client_advance_segment (mpdclient, activeStream, TRUE);
-  assert_equals_int (flow, GST_FLOW_OK);
-
-  /* second segment starts after first ends */
-  expectedTimestamp = expectedTimestamp + expectedDuration;
-
-  /* check second segment */
   ret = gst_mpd_client_get_next_fragment (mpdclient, 0, &fragment);
   assert_equals_int (ret, TRUE);
   assert_equals_string (fragment.uri, "/TestMediaRep");
@@ -4202,6 +4177,10 @@ GST_START_TEST (dash_mpdparser_inherited_segmentURL)
   assert_equals_uint64 (fragment.duration, expectedDuration * GST_MSECOND);
   assert_equals_uint64 (fragment.timestamp, expectedTimestamp * GST_MSECOND);
   gst_media_fragment_info_clear (&fragment);
+
+  /* try to advance to next segment. Should fail */
+  flow = gst_mpd_client_advance_segment (mpdclient, activeStream, TRUE);
+  assert_equals_int (flow, GST_FLOW_EOS);
 
   gst_mpd_client_free (mpdclient);
 }

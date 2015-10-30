@@ -1570,6 +1570,7 @@ gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer,
   xmlNode *cur_node;
   GstSegmentListNode *new_segment_list;
   gchar *actuate;
+  gboolean segment_urls_inherited_from_parent = FALSE;
 
   gst_mpdparser_free_segment_list_node (*pointer);
   new_segment_list = g_slice_new0 (GstSegmentListNode);
@@ -1584,6 +1585,7 @@ gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer,
       new_segment_list->SegmentURL =
           g_list_append (new_segment_list->SegmentURL,
           gst_mpdparser_clone_segment_url (seg_url));
+      segment_urls_inherited_from_parent = TRUE;
     }
   }
 
@@ -1607,6 +1609,23 @@ gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer,
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentURL") == 0) {
+        if (segment_urls_inherited_from_parent) {
+          /*
+           * SegmentBase, SegmentTemplate and SegmentList shall inherit
+           * attributes and elements from the same element on a higher level.
+           * If the same attribute or element is present on both levels,
+           * the one on the lower level shall take precedence over the one
+           * on the higher level.
+           */
+
+          /* Clear the list of inherited segment URLs */
+          g_list_free_full (new_segment_list->SegmentURL,
+              (GDestroyNotify) gst_mpdparser_free_segment_url_node);
+          new_segment_list->SegmentURL = NULL;
+
+          /* mark the fact that we cleared the list, so that it is not tried again */
+          segment_urls_inherited_from_parent = FALSE;
+        }
         gst_mpdparser_parse_segment_url_node (&new_segment_list->SegmentURL,
             cur_node);
       }
