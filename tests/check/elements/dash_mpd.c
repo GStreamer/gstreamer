@@ -4481,6 +4481,138 @@ GST_START_TEST (dash_mpdparser_segment_timeline)
 GST_END_TEST;
 
 /*
+ * Test SegmentList with multiple inherited segmentURLs
+ *
+ */
+GST_START_TEST (dash_mpdparser_multiple_inherited_segmentURL)
+{
+  GList *adaptationSets;
+  GstAdaptationSetNode *adapt_set;
+  GstActiveStream *activeStream;
+  GstMediaFragmentInfo fragment;
+  GstClockTime expectedDuration;
+  GstClockTime expectedTimestamp;
+  GstFlowReturn flow;
+
+  /*
+   * Period duration is 30 seconds
+   * Period start is 10 seconds. Thus, period duration is 20 seconds.
+   *
+   * There are 2 segments in the AdaptationSet segment list and 2 in the
+   * Representation's segment list.
+   * Segment duration is 5s for the Adaptation segments and 8s for
+   * Representation segments.
+   * Separately, each segment list (duration 2*5=10 or 2*8=16) fits comfortably
+   * in the Period's 20s duration.
+   *
+   * We expect the Representation segments to overwrite the AdaptationSet segments.
+   */
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      " availabilityStartTime=\"2015-03-24T0:0:0\""
+      " mediaPresentationDuration=\"P0Y0M0DT0H0M30S\">"
+      "<Period start=\"P0Y0M0DT0H0M10S\">"
+      "  <AdaptationSet mimeType=\"video/mp4\">"
+      "    <SegmentList duration=\"5\">"
+      "      <SegmentURL"
+      "         media=\"TestMedia0\" mediaRange=\"10-20\""
+      "         index=\"TestIndex0\" indexRange=\"100-200\""
+      "      ></SegmentURL>"
+      "      <SegmentURL"
+      "         media=\"TestMedia1\" mediaRange=\"20-30\""
+      "         index=\"TestIndex1\" indexRange=\"200-300\""
+      "      ></SegmentURL>"
+      "    </SegmentList>"
+      "    <Representation>"
+      "      <SegmentList duration=\"8\">"
+      "        <SegmentURL"
+      "           media=\"TestMedia2\" mediaRange=\"30-40\""
+      "           index=\"TestIndex2\" indexRange=\"300-400\""
+      "        ></SegmentURL>"
+      "        <SegmentURL"
+      "           media=\"TestMedia3\" mediaRange=\"40-50\""
+      "           index=\"TestIndex3\" indexRange=\"400-500\""
+      "        ></SegmentURL>"
+      "      </SegmentList>"
+      "    </Representation></AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  /* process the xml data */
+  ret = gst_mpd_client_setup_media_presentation (mpdclient, GST_CLOCK_TIME_NONE,
+      -1, NULL);
+  assert_equals_int (ret, TRUE);
+
+  /* get the list of adaptation sets of the first period */
+  adaptationSets = gst_mpd_client_get_adaptation_sets (mpdclient);
+  fail_if (adaptationSets == NULL);
+
+  /* setup streaming from the first adaptation set */
+  adapt_set = (GstAdaptationSetNode *) g_list_nth_data (adaptationSets, 0);
+  fail_if (adapt_set == NULL);
+  ret = gst_mpd_client_setup_streaming (mpdclient, adapt_set);
+  assert_equals_int (ret, TRUE);
+
+  activeStream = gst_mpdparser_get_active_stream_by_index (mpdclient, 0);
+  fail_if (activeStream == NULL);
+
+  expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 8, 0);
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 0, 0);
+
+  /* the representation contains 2 segments defined in the Representation
+   *
+   * Both will have the duration specified in the Representation (8)
+   */
+
+  /* check first segment */
+  ret = gst_mpd_client_get_next_fragment (mpdclient, 0, &fragment);
+  assert_equals_int (ret, TRUE);
+  assert_equals_string (fragment.uri, "/TestMedia2");
+  assert_equals_int64 (fragment.range_start, 30);
+  assert_equals_int64 (fragment.range_end, 40);
+  assert_equals_string (fragment.index_uri, "/TestIndex2");
+  assert_equals_int64 (fragment.index_range_start, 300);
+  assert_equals_int64 (fragment.index_range_end, 400);
+  assert_equals_uint64 (fragment.duration, expectedDuration * GST_MSECOND);
+  assert_equals_uint64 (fragment.timestamp, expectedTimestamp * GST_MSECOND);
+  gst_media_fragment_info_clear (&fragment);
+
+  /* advance to next segment */
+  flow = gst_mpd_client_advance_segment (mpdclient, activeStream, TRUE);
+  assert_equals_int (flow, GST_FLOW_OK);
+
+  /* second segment starts after previous ends */
+  expectedTimestamp = expectedTimestamp + expectedDuration;
+
+  /* check second segment */
+  ret = gst_mpd_client_get_next_fragment (mpdclient, 0, &fragment);
+  assert_equals_int (ret, TRUE);
+  assert_equals_string (fragment.uri, "/TestMedia3");
+  assert_equals_int64 (fragment.range_start, 40);
+  assert_equals_int64 (fragment.range_end, 50);
+  assert_equals_string (fragment.index_uri, "/TestIndex3");
+  assert_equals_int64 (fragment.index_range_start, 400);
+  assert_equals_int64 (fragment.index_range_end, 500);
+  assert_equals_uint64 (fragment.duration, expectedDuration * GST_MSECOND);
+  assert_equals_uint64 (fragment.timestamp, expectedTimestamp * GST_MSECOND);
+  gst_media_fragment_info_clear (&fragment);
+
+  /* try to advance to the next segment. There isn't any, so it should fail */
+  flow = gst_mpd_client_advance_segment (mpdclient, activeStream, TRUE);
+  assert_equals_int (flow, GST_FLOW_EOS);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * Test parsing empty xml string
  *
  */
@@ -5099,6 +5231,7 @@ dash_suite (void)
   tcase_add_test (tc_complexMPD, dash_mpdparser_segment_list);
   tcase_add_test (tc_complexMPD, dash_mpdparser_segment_template);
   tcase_add_test (tc_complexMPD, dash_mpdparser_segment_timeline);
+  tcase_add_test (tc_complexMPD, dash_mpdparser_multiple_inherited_segmentURL);
 
   /* tests checking the parsing of missing/incomplete attributes of xml */
   tcase_add_test (tc_negativeTests, dash_mpdparser_missing_xml);
