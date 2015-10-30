@@ -722,6 +722,7 @@ gst_opus_enc_setup (GstOpusEnc * enc)
   int error = OPUS_OK;
   GstCaps *caps;
   gboolean ret;
+  gint32 lookahead;
 
 #ifndef GST_DISABLE_GST_DEBUG
   GST_DEBUG_OBJECT (enc,
@@ -759,10 +760,16 @@ gst_opus_enc_setup (GstOpusEnc * enc)
   opus_multistream_encoder_ctl (enc->state,
       OPUS_SET_PACKET_LOSS_PERC (enc->packet_loss_percentage), 0);
 
-  GST_LOG_OBJECT (enc, "we have frame size %d", enc->frame_size);
+  opus_multistream_encoder_ctl (enc->state, OPUS_GET_LOOKAHEAD (&lookahead), 0);
 
-  gst_opus_header_create_caps (&caps, NULL, enc->n_channels,
-      enc->n_stereo_streams, enc->sample_rate, enc->channel_mapping_family,
+  GST_LOG_OBJECT (enc, "we have frame size %d, lookahead %d", enc->frame_size,
+      lookahead);
+
+  /* lookahead is samples, the Opus header wants it in 48kHz samples */
+  lookahead = lookahead * 48000 / enc->sample_rate;
+
+  gst_opus_header_create_caps (&caps, NULL, lookahead, enc->sample_rate,
+      enc->n_channels, enc->n_stereo_streams, enc->channel_mapping_family,
       enc->decoding_channel_mapping,
       gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc)));
 

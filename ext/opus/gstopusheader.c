@@ -27,16 +27,15 @@
 #include "gstopusheader.h"
 
 static GstBuffer *
-gst_opus_enc_create_id_buffer (gint nchannels, gint n_stereo_streams,
-    gint sample_rate, guint8 channel_mapping_family,
+gst_opus_enc_create_id_buffer (guint16 pre_skip, guint sample_rate,
+    guint8 nchannels, guint8 n_stereo_streams, guint8 channel_mapping_family,
     const guint8 * channel_mapping)
 {
   GstBuffer *buffer;
   GstByteWriter bw;
   gboolean hdl = TRUE;
 
-  g_return_val_if_fail (nchannels > 0 && nchannels < 256, NULL);
-  g_return_val_if_fail (n_stereo_streams >= 0, NULL);
+  g_return_val_if_fail (nchannels > 0, NULL);
   g_return_val_if_fail (n_stereo_streams <= nchannels - n_stereo_streams, NULL);
 
   gst_byte_writer_init (&bw);
@@ -45,7 +44,7 @@ gst_opus_enc_create_id_buffer (gint nchannels, gint n_stereo_streams,
   hdl &= gst_byte_writer_put_data (&bw, (const guint8 *) "OpusHead", 8);
   hdl &= gst_byte_writer_put_uint8 (&bw, 0x01); /* version number */
   hdl &= gst_byte_writer_put_uint8 (&bw, nchannels);
-  hdl &= gst_byte_writer_put_uint16_le (&bw, 0);        /* pre-skip */
+  hdl &= gst_byte_writer_put_uint16_le (&bw, pre_skip);
   hdl &= gst_byte_writer_put_uint32_le (&bw, sample_rate);
   hdl &= gst_byte_writer_put_uint16_le (&bw, 0);        /* output gain */
   hdl &= gst_byte_writer_put_uint8 (&bw, channel_mapping_family);
@@ -211,8 +210,9 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
 }
 
 void
-gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers, gint nchannels,
-    gint n_stereo_streams, gint sample_rate, guint8 channel_mapping_family,
+gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers,
+    guint16 pre_skip, guint sample_rate, guint8 nchannels,
+    guint8 n_stereo_streams, guint8 channel_mapping_family,
     const guint8 * channel_mapping, const GstTagList * tags)
 {
   GstBuffer *buf1, *buf2;
@@ -220,7 +220,6 @@ gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers, gint nchannels,
   g_return_if_fail (caps);
   g_return_if_fail (!headers || !*headers);
   g_return_if_fail (nchannels > 0);
-  g_return_if_fail (sample_rate >= 0);  /* 0 -> unset */
   g_return_if_fail (channel_mapping_family == 0 || channel_mapping);
 
   /* Opus streams in Ogg begin with two headers; the initial header (with
@@ -229,8 +228,8 @@ gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers, gint nchannels,
 
   /* create header buffers */
   buf1 =
-      gst_opus_enc_create_id_buffer (nchannels, n_stereo_streams, sample_rate,
-      channel_mapping_family, channel_mapping);
+      gst_opus_enc_create_id_buffer (pre_skip, sample_rate, nchannels,
+      n_stereo_streams, channel_mapping_family, channel_mapping);
   buf2 = gst_opus_enc_create_metadata_buffer (tags);
 
   gst_opus_header_create_caps_from_headers (caps, headers, buf1, buf2);
