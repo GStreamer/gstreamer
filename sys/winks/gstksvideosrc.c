@@ -98,8 +98,6 @@ struct _GstKsVideoSrcPrivate
   GstKsClock *ksclock;
   GstKsVideoDevice *device;
 
-  guint64 offset;
-  GstClockTime prev_ts;
   gboolean running;
 
   /* Worker thread */
@@ -342,10 +340,6 @@ gst_ks_video_src_reset (GstKsVideoSrc * self)
   priv->last_sampling = GST_CLOCK_TIME_NONE;
   priv->count = 0;
   priv->fps = -1;
-
-  /* Reset timestamping state */
-  priv->offset = 0;
-  priv->prev_ts = GST_CLOCK_TIME_NONE;
 
   priv->running = FALSE;
 }
@@ -813,12 +807,11 @@ gst_ks_video_src_timestamp_buffer (GstKsVideoSrc * self, GstBuffer * buf,
   GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
   GstClockTime duration;
   GstClock *clock;
-  GstClockTime timestamp;
+  GstClockTime timestamp, base_time;
 
   /* Don't timestamp muxed streams */
   if (gst_ks_video_device_stream_is_muxed (priv->device)) {
     duration = timestamp = GST_CLOCK_TIME_NONE;
-    priv->offset++;
     goto timestamp;
   }
 
@@ -828,88 +821,25 @@ gst_ks_video_src_timestamp_buffer (GstKsVideoSrc * self, GstBuffer * buf,
   clock = GST_ELEMENT_CLOCK (self);
   if (clock != NULL) {
     gst_object_ref (clock);
-    timestamp = GST_ELEMENT (self)->base_time;
-
-    if (GST_CLOCK_TIME_IS_VALID (presentation_time)) {
-      if (presentation_time > GST_ELEMENT (self)->base_time)
-        presentation_time -= GST_ELEMENT (self)->base_time;
-      else
-        presentation_time = 0;
-    }
+    base_time = GST_ELEMENT (self)->base_time;
   } else {
     timestamp = GST_CLOCK_TIME_NONE;
   }
   GST_OBJECT_UNLOCK (self);
 
   if (clock != NULL) {
-
     /* The time according to the current clock */
-    timestamp = gst_clock_get_time (clock) - timestamp;
+    timestamp = gst_clock_get_time (clock) - base_time;
     if (timestamp > duration)
       timestamp -= duration;
     else
       timestamp = 0;
 
-    if (GST_CLOCK_TIME_IS_VALID (presentation_time)) {
-      /*
-       * We don't use this for anything yet, need to ponder how to deal
-       * with pins that use an internal clock and timestamp from 0.
-       */
-      GstClockTimeDiff diff = GST_CLOCK_DIFF (presentation_time, timestamp);
-      GST_DEBUG_OBJECT (self, "diff between gst and driver timestamp: %"
-          G_GINT64_FORMAT, diff);
-    }
-
     gst_object_unref (clock);
     clock = NULL;
-
-    /* Unless it's the first frame, align the current timestamp on a multiple
-     * of duration since the previous */
-    if (GST_CLOCK_TIME_IS_VALID (priv->prev_ts)) {
-      GstClockTime delta;
-      guint delta_remainder, delta_offset;
-
-      /* REVISIT: I've seen this happen with the GstSystemClock on Windows,
-       *          scary... */
-      if (timestamp < priv->prev_ts) {
-        GST_INFO_OBJECT (self, "clock is ticking backwards");
-        return FALSE;
-      }
-
-      /* Round to a duration boundary */
-      delta = timestamp - priv->prev_ts;
-      delta_remainder = delta % duration;
-
-      if (delta_remainder < duration / 3)
-        timestamp -= delta_remainder;
-      else
-        timestamp += duration - delta_remainder;
-
-      /* How many frames are we off then? */
-      delta = timestamp - priv->prev_ts;
-      delta_offset = delta / duration;
-
-      if (delta_offset == 1)    /* perfect */
-        GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
-      else if (delta_offset > 1) {
-        guint lost = delta_offset - 1;
-        GST_INFO_OBJECT (self, "lost %d frame%s, setting discont flag",
-            lost, (lost > 1) ? "s" : "");
-        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-      } else if (delta_offset == 0) {   /* overproduction, skip this frame */
-        GST_INFO_OBJECT (self, "skipping frame");
-        return FALSE;
-      }
-
-      priv->offset += delta_offset;
-    }
-
-    priv->prev_ts = timestamp;
   }
 
 timestamp:
-  GST_BUFFER_OFFSET (buf) = priv->offset;
-  GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf) + 1;
   GST_BUFFER_PTS (buf) = timestamp;
   GST_BUFFER_DTS (buf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buf) = duration;
