@@ -3713,11 +3713,12 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
       break;
     case GST_FLOW_NOT_LINKED:
       /* not linked is not a problem, we are sticky so the event will be
-       * sent later but only for non-EOS events */
+       * rescheduled to be sent later on re-link, but only for non-EOS events */
       GST_DEBUG_OBJECT (pad, "pad was not linked, mark pending");
-      if (GST_EVENT_TYPE (event) != GST_EVENT_EOS)
+      if (GST_EVENT_TYPE (event) != GST_EVENT_EOS) {
         data->ret = GST_FLOW_OK;
-      GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+        ev->received = TRUE;
+      }
       break;
     default:
       GST_DEBUG_OBJECT (pad, "result %s, mark pending events",
