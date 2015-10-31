@@ -960,6 +960,10 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
 
       size = ((bsize / bytes) + 1) * bytes;
       mdata = g_malloc0 (size);
+      /* FIXME: Instead of silence, use LPC with the last real samples.
+       * Otherwise we will create a discontinuity here, which will distort the
+       * last few encoded samples
+       */
       memcpy (mdata, bdata, bsize);
       data = mdata;
     } else {
@@ -981,6 +985,10 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
     }
   } else {
     if (enc->encoded_samples < enc->consumed_samples) {
+      /* FIXME: Instead of silence, use LPC with the last real samples.
+       * Otherwise we will create a discontinuity here, which will distort the
+       * last few encoded samples
+       */
       data = mdata = g_malloc0 (bytes);
       size = bytes;
       output_samples = enc->consumed_samples - enc->encoded_samples;
