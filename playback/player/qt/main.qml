@@ -77,8 +77,10 @@ ApplicationWindow {
         id: hidetimer
         interval: 5000
         onTriggered: {
-            playbar.opacity = 0.0
-            settings.visible = false
+            if (!playbarMouseArea.containsMouse) {
+                playbar.opacity = 0.0
+                settings.visible = false
+            }
             stop()
         }
     }
@@ -101,6 +103,8 @@ ApplicationWindow {
             source: "fonts/fontawesome-webfont.ttf"
         }
 
+
+
         Rectangle {
             id : playbar
             color: Qt.rgba(1, 1, 1, 0.7)
@@ -112,6 +116,13 @@ ApplicationWindow {
             width : grid.width + 20
             height: 40//childrenRect.height + 20
             radius: 5
+            focus: true
+
+            MouseArea {
+                id: playbarMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+            }
 
             Rectangle {
                 id: settings
