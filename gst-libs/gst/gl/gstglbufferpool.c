@@ -99,7 +99,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   guint max_align, n;
   GstAllocator *allocator = NULL;
   GstAllocationParams alloc_params;
-  gboolean reset = TRUE, ret;
+  gboolean reset = TRUE, ret = TRUE;
   gint p;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
