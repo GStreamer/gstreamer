@@ -82,6 +82,8 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 
 void audio_convert_orc_s32_to_double (gdouble * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n);
 void audio_convert_orc_double_to_s32 (gint32 * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n);
+void audio_convert_orc_int_bias (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int p1, int p2, int n);
+void audio_convert_orc_int_dither (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, const gint32 * ORC_RESTRICT s2, int p1, int n);
 
 #ifdef __cplusplus
 }
