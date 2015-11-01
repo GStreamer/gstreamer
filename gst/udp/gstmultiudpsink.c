@@ -1052,8 +1052,10 @@ gst_multiudpsink_setup_qos_dscp (GstMultiUDPSink * sink, GSocket * socket)
       GST_ERROR_OBJECT (sink, "could not set TOS: %s", g_strerror (errno));
     }
 #ifdef IPV6_TCLASS
-    if (setsockopt (fd, IPPROTO_IPV6, IPV6_TCLASS, &tos, sizeof (tos)) < 0) {
-      GST_ERROR_OBJECT (sink, "could not set TCLASS: %s", g_strerror (errno));
+    if (g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6) {
+      if (setsockopt (fd, IPPROTO_IPV6, IPV6_TCLASS, &tos, sizeof (tos)) < 0) {
+        GST_ERROR_OBJECT (sink, "could not set TCLASS: %s", g_strerror (errno));
+      }
     }
 #endif
   }
