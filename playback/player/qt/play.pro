@@ -41,13 +41,15 @@ macx {
 HEADERS += \
     qgstplayer.h \
     player.h \
-    quickrenderer.h
+    quickrenderer.h \
+    imagesample.h
 
 SOURCES += main.cpp \
     qgstplayer.cpp \
     ../lib/gst/player/gstplayer.c \
     ../lib/gst/player/gstplayer-media-info.c \
     player.cpp \
-    quickrenderer.cpp
+    quickrenderer.cpp \
+    imagesample.cpp
 
 DISTFILES +=

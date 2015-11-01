@@ -25,6 +25,7 @@
 #include <QUrl>
 
 #include "player.h"
+#include "imagesample.h"
 
 int main(int argc, char *argv[])
 {
@@ -45,6 +46,7 @@ int main(int argc, char *argv[])
     }
 
     qmlRegisterType<Player>("Player", 1, 0, "Player");
+    qmlRegisterType<ImageSample>("ImageSample", 1, 0, "ImageSample");
 
     /* the plugin must be loaded before loading the qml file to register the
      * GstGLVideoItem qml item

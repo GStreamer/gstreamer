@@ -27,6 +27,7 @@
 //#include <QtGui/qwindowdefs.h>
 #include <QVariant>
 #include <QList>
+#include <QImage>
 #include <gst/player/player.h>
 
 namespace QGstPlayer {
@@ -174,6 +175,7 @@ class MediaInfo : public QObject
     Q_PROPERTY(QList<QObject*> videoStreams READ videoStreams CONSTANT)
     Q_PROPERTY(QList<QObject*> audioStreams READ audioStreams CONSTANT)
     Q_PROPERTY(QList<QObject*> subtitleStreams READ subtitleStreams CONSTANT)
+    Q_PROPERTY(QImage sample READ sample NOTIFY sampleChanged)
 
 public:
     explicit MediaInfo(Player *player = 0);
@@ -183,11 +185,13 @@ public:
     const QList<QObject*> &videoStreams() const;
     const QList<QObject*> &audioStreams() const;
     const QList<QObject*> &subtitleStreams() const;
+    const QImage &sample();
 
 signals:
     void uriChanged();
     void seekableChanged();
     void titleChanged();
+    void sampleChanged();
 
 public Q_SLOTS:
     void update(GstPlayerMediaInfo *info);
@@ -198,6 +202,7 @@ private:
     QList<QObject*> videoStreams_;
     QList<QObject*> audioStreams_;
     QList<QObject*> subtitleStreams_;
+    QImage sample_;
 };
 
 class StreamInfo : public QObject
@@ -267,6 +272,7 @@ private:
 
 Q_DECLARE_METATYPE(QGstPlayer::Player*)
 Q_DECLARE_METATYPE(QGstPlayer::Player::State)
+Q_DECLARE_METATYPE(QGstPlayer::MediaInfo*)
 
 extern "C" {
 

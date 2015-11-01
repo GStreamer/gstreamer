@@ -25,6 +25,7 @@ import QtQuick.Dialogs 1.2
 import QtQuick.Window 2.1
 import Player 1.0
 import org.freedesktop.gstreamer.GLVideoItem 1.0
+import ImageSample 1.0
 
 import "fontawesome.js" as FontAwesome
 
@@ -50,6 +51,7 @@ ApplicationWindow {
                 playbutton.state = "play"
             }
         }
+
         onResolutionChanged: {
             if (player.videoAvailable) {
                 window.width = resolution.width
@@ -64,6 +66,16 @@ ApplicationWindow {
         anchors.centerIn: parent
         width: parent.width
         height: parent.height
+        visible: player.videoAvailable
+    }
+
+    ImageSample {
+        id: sample
+        anchors.centerIn: parent
+        sample: player.mediaInfo.sample
+        width: parent.width
+        height: parent.height
+        visible: !player.videoAvailable
     }
 
     MouseArea {

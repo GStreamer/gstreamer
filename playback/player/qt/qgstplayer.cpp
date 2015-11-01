@@ -25,6 +25,10 @@
 #include <functional>
 #include <QThread>
 #include <QtAlgorithms>
+#include <QImage>
+
+#include <gst/gst.h>
+#include <gst/tag/tag.h>
 
 namespace QGstPlayer {
 
@@ -43,6 +47,10 @@ MediaInfo::MediaInfo(Player *player)
     , uri_()
     , title_()
     , isSeekable_(false)
+    , videoStreams_()
+    , audioStreams_()
+    , subtitleStreams_()
+    , sample_()
 {
 
 }
@@ -75,6 +83,11 @@ const QList<QObject *> &MediaInfo::audioStreams() const
 const QList<QObject*> &MediaInfo::subtitleStreams() const
 {
     return subtitleStreams_;
+}
+
+const QImage &MediaInfo::sample()
+{
+    return sample_;
 }
 
 void MediaInfo::update(GstPlayerMediaInfo *info)
@@ -146,6 +159,47 @@ void MediaInfo::update(GstPlayerMediaInfo *info)
 
         audios->append(new AudioInfo(info));
     }, &audioStreams_);
+
+    GstSample *sample;
+    GstMapInfo map_info;
+    GstBuffer *buffer;
+    const GstStructure *caps_struct;
+    GstTagImageType type = GST_TAG_IMAGE_TYPE_UNDEFINED;
+
+    /* get image sample buffer from media */
+    sample = gst_player_media_info_get_image_sample (info);
+    if (!sample)
+      return;
+
+    buffer = gst_sample_get_buffer (sample);
+    caps_struct = gst_sample_get_info (sample);
+
+    /* if sample is retrieved from preview-image tag then caps struct
+     * will not be defined. */
+    if (caps_struct)
+      gst_structure_get_enum (caps_struct, "image-type",
+          GST_TYPE_TAG_IMAGE_TYPE, reinterpret_cast<gint*>(&type));
+
+    /* FIXME: Should we check more type ?? */
+    if ((type != GST_TAG_IMAGE_TYPE_FRONT_COVER) &&
+        (type != GST_TAG_IMAGE_TYPE_UNDEFINED) &&
+        (type != GST_TAG_IMAGE_TYPE_NONE)) {
+      g_print ("unsupport type ... %d \n", type);
+      return;
+    }
+
+    if (!gst_buffer_map (buffer, &map_info, GST_MAP_READ)) {
+      g_print ("failed to map gst buffer \n");
+      return;
+    }
+
+    sample_ = QImage::fromData(map_info.data, map_info.size);
+    if (sample_.isNull())
+        qWarning() << "failed to load media info sample image";
+
+    emit sampleChanged();
+
+    gst_buffer_unmap (buffer, &map_info);
 }
 
 VideoInfo::VideoInfo(GstPlayerVideoInfo *info)
