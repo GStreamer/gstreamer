@@ -20,12 +20,29 @@
 
 #include <QApplication>
 #include <QQmlApplicationEngine>
+#include <QCommandLineParser>
+#include <QStringList>
+#include <QUrl>
 
 #include "player.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+
+    QCommandLineParser parser;
+    parser.setApplicationDescription("GstPlayer");
+    parser.addHelpOption();
+    parser.addPositionalArgument("urls",
+        QCoreApplication::translate("main", "URLs to play, optionally."), "[urls...]");
+    parser.process(app);
+
+    QList<QUrl> media_files;
+
+    const QStringList args = parser.positionalArguments();
+    foreach (const QString file, args) {
+        media_files << QUrl::fromUserInput(file);
+    }
 
     qmlRegisterType<Player>("Player", 1, 0, "Player");
 
@@ -44,9 +61,12 @@ int main(int argc, char *argv[])
     QObject *rootObject = engine.rootObjects().first();
 
     Player *player = rootObject->findChild<Player*>("player");
+
     QQuickItem *videoItem = rootObject->findChild<QQuickItem*>("videoItem");
     player->setVideoOutput(videoItem);
 
+    if (!media_files.isEmpty())
+        player->setPlaylist(media_files);
 
     return app.exec();
 }
