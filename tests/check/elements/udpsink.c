@@ -1,4 +1,4 @@
-/* GStreamer RTP payloader unit tests
+/* GStreamer udpsink unit tests
  * Copyright (C) 2009 Axis Communications <dev-gstreamer@axis.com>
  * @author Ognyan Tonchev <ognyan@axis.com>
  *
@@ -19,6 +19,7 @@
  */
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbasesink.h>
+#include <gio/gio.h>
 #include <stdlib.h>
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
@@ -204,6 +205,40 @@ GST_START_TEST (test_udpsink_client_add_remove)
 
 GST_END_TEST;
 
+GST_START_TEST (test_udpsink_dscp)
+{
+  GstElement *udpsink;
+  GError *error = NULL;
+  GSocket *sock4, *sock6;
+
+  sock4 =
+      g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM,
+      G_SOCKET_PROTOCOL_UDP, &error);
+  fail_unless (sock4 != NULL && error == NULL);
+  sock6 =
+      g_socket_new (G_SOCKET_FAMILY_IPV6, G_SOCKET_TYPE_DATAGRAM,
+      G_SOCKET_PROTOCOL_UDP, &error);
+  fail_unless (sock6 != NULL && error == NULL);
+
+  udpsink = gst_check_setup_element ("udpsink");
+  g_signal_emit_by_name (udpsink, "add", "127.0.0.1", 5554, NULL);
+  g_object_set (udpsink, "socket", sock4, NULL);
+  g_object_set (udpsink, "socket-v6", sock6, NULL);
+
+  ASSERT_SET_STATE (udpsink, GST_STATE_READY, GST_STATE_CHANGE_SUCCESS);
+
+  g_object_set (udpsink, "qos-dscp", 0, NULL);
+  g_object_set (udpsink, "qos-dscp", 63, NULL);
+
+  ASSERT_SET_STATE (udpsink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (udpsink);
+  g_object_unref (sock4);
+  g_object_unref (sock6);
+}
+
+GST_END_TEST;
+
 static Suite *
 udpsink_suite (void)
 {
@@ -215,6 +250,7 @@ udpsink_suite (void)
   tcase_add_test (tc_chain, test_udpsink);
   tcase_add_test (tc_chain, test_udpsink_bufferlist);
   tcase_add_test (tc_chain, test_udpsink_client_add_remove);
+  tcase_add_test (tc_chain, test_udpsink_dscp);
 
   return s;
 }

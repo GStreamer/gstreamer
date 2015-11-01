@@ -581,6 +581,9 @@ elements_rtpmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VERSION) $(G
 elements_souphttpsrc_CFLAGS = $(SOUP_CFLAGS) $(AM_CFLAGS)
 elements_souphttpsrc_LDADD = $(SOUP_LIBS) $(LDADD)
 
+elements_udpsink_CFLAGS = $(AM_CFLAGS) $(GIO_CFLAGS)
+elements_udpsink_LDADD = $(LDADD) $(GIO_LIBS)
+
 elements_udpsrc_CFLAGS = $(AM_CFLAGS) $(GIO_CFLAGS)
 elements_udpsrc_LDADD = $(LDADD) $(GIO_LIBS)
 
