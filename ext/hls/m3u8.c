@@ -25,10 +25,10 @@
 #include <glib.h>
 #include <string.h>
 
-#include "gstfragmented.h"
+#include "gsthls.h"
 #include "m3u8.h"
 
-#define GST_CAT_DEFAULT fragmented_debug
+#define GST_CAT_DEFAULT hls_debug
 
 static GstM3U8 *gst_m3u8_new (void);
 static void gst_m3u8_free (GstM3U8 * m3u8);

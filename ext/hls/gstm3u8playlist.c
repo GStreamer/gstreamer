@@ -21,10 +21,10 @@
 
 #include <glib.h>
 
-#include "gstfragmented.h"
+#include "gsthls.h"
 #include "gstm3u8playlist.h"
 
-#define GST_CAT_DEFAULT fragmented_debug
+#define GST_CAT_DEFAULT hls_debug
 
 enum
 {

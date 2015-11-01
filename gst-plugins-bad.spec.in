@@ -231,7 +231,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstsiren.so
 
 %{_libdir}/gstreamer-%{majorminor}/libgstdvbsuboverlay.so
-%{_libdir}/gstreamer-%{majorminor}/libgstfragmented.so
+%{_libdir}/gstreamer-%{majorminor}/libgsthls.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoparsersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4mdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiovisualizers.so

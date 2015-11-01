@@ -4,16 +4,16 @@
 
 #include <gst/gst.h>
 
-#include "gstfragmented.h"
+#include "gsthls.h"
 #include "gsthlsdemux.h"
 #include "gsthlssink.h"
 
-GST_DEBUG_CATEGORY (fragmented_debug);
+GST_DEBUG_CATEGORY (hls_debug);
 
 static gboolean
-fragmented_init (GstPlugin * plugin)
+hls_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (fragmented_debug, "fragmented", 0, "fragmented");
+  GST_DEBUG_CATEGORY_INIT (hls_debug, "hls", 0, "HTTP Live Streaming (HLS)");
 
   if (!gst_element_register (plugin, "hlsdemux", GST_RANK_PRIMARY,
           GST_TYPE_HLS_DEMUX) || FALSE)
@@ -27,6 +27,6 @@ fragmented_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    fragmented,
-    "Fragmented streaming plugins",
-    fragmented_init, VERSION, "LGPL", PACKAGE_NAME, "http://www.gstreamer.org/")
+    hls,
+    "HTTP Live Streaming (HLS)",
+    hls_init, VERSION, GST_LICENSE, PACKAGE_NAME, GST_PACKAGE_ORIGIN)
