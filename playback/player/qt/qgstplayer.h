@@ -57,6 +57,7 @@ class Player : public QObject
     Q_PROPERTY(QVariant currentSubtitle READ currentSubtitle WRITE setCurrentSubtitle)
     Q_PROPERTY(bool subtitleEnabled READ isSubtitleEnabled WRITE setSubtitleEnabled
                NOTIFY subtitleEnabledChanged)
+    Q_PROPERTY(bool autoPlay READ autoPlay WRITE setAutoPlay)
 
     Q_ENUMS(State)
 
@@ -89,12 +90,11 @@ public:
     QVariant currentSubtitle() const;
     bool isSubtitleEnabled() const;
     quint32 positionUpdateInterval() const;
-
+    bool autoPlay() const;
 
 signals:
     void stateChanged(State new_state);
     void bufferingChanged(int percent);
-    void enfOfStream();
     void positionUpdated(qint64 new_position);
     void durationChanged(qint64 duration);
     void resolutionChanged(QSize resolution);
@@ -119,6 +119,7 @@ public slots:
     void setCurrentSubtitle(QVariant track);
     void setSubtitleEnabled(bool enabled);
     void setPositionUpdateInterval(quint32 interval);
+    void setAutoPlay(bool auto_play);
 
 private:
     Q_DISABLE_COPY(Player)
@@ -137,6 +138,7 @@ private:
     MediaInfo *mediaInfo_;
     bool videoAvailable_;
     bool subtitleEnabled_;
+    bool autoPlay_;
 };
 
 class VideoRenderer

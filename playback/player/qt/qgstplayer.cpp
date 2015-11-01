@@ -340,6 +340,7 @@ Player::Player(QObject *parent, VideoRenderer *renderer)
     , mediaInfo_()
     , videoAvailable_(false)
     , subtitleEnabled_(false)
+    , autoPlay_(false)
 {
 
     player_ = gst_player_new_full(renderer ? renderer->renderer() : 0,
@@ -443,9 +444,25 @@ Player::onMediaInfoUpdated(Player *player, GstPlayerMediaInfo *media_info)
     emit player->mediaInfoChanged();
 }
 
+
+bool Player::autoPlay() const
+{
+    return autoPlay_;
+}
+
+void Player::setAutoPlay(bool auto_play)
+{
+    autoPlay_ = auto_play;
+
+    if (autoPlay_) {
+        connect(this, SIGNAL(endOfStream()), SLOT(next()));
+    }
+}
+
 QUrl Player::source() const
 {
     Q_ASSERT(player_ != 0);
+
     QString url = QString::fromLocal8Bit(gst_player_get_uri(player_));
 
     return QUrl(url);
