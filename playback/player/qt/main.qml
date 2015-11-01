@@ -644,9 +644,14 @@ ApplicationWindow {
                     maximumValue: player.duration
                     value: player.position
                     onPressedChanged: player.seek(value)
+                    onValueChanged: {
+                        if (pressed)
+                            player.seek(value)
+                    }
                     enabled: player.mediaInfo.seekable
                     anchors.bottom: parent.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
+                    updateValueWhileDragging: true
 
                     MouseArea {
                         id: sliderMouseArea
@@ -660,27 +665,6 @@ ApplicationWindow {
                         onDoubleClicked: mouse.accepted = false;
                         onPositionChanged: mouse.accepted = false;
                         onPressAndHold: mouse.accepted = false;
-                    }
-
-                    Rectangle {
-                        id: hoveredcliptime
-                        width: 40
-                        height: 17
-                        color: "lightgray"
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: sliderMouseArea.containsMouse
-                        x: sliderMouseArea.mouseX
-
-                        Text {
-                            font.pixelSize: 13
-                            color: "black"
-                            anchors.centerIn: parent
-                            text: {
-                                var value = (sliderMouseArea.mouseX - slider.x) * player.duration / (slider.width - slider.x)
-                                var date = new Date(Math.floor(value / 1e6));
-                                date.getMinutes() + ":" + ('0' + date.getSeconds()).slice(-2)
-                            }
-                        }
                     }
 
                     style: SliderStyle {
