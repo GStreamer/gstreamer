@@ -299,6 +299,8 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 
   dec->n_channels = data[9];
   dec->sample_rate = GST_READ_UINT32_LE (data + 12);
+  if (dec->sample_rate == 0)
+    dec->sample_rate = 48000;
   dec->pre_skip = GST_READ_UINT16_LE (data + 10);
   dec->r128_gain = GST_READ_UINT16_LE (data + 16);
   dec->r128_gain_volume = gst_opus_dec_get_r128_volume (dec->r128_gain);
