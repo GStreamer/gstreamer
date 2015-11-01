@@ -43,6 +43,8 @@ ApplicationWindow {
         objectName: "player"
         volume: 0.5
         positionUpdateInterval: 100
+        autoPlay: false
+
         onStateChanged: {
             if (state === Player.STOPPED) {
                 playbutton.state = "play"
@@ -375,6 +377,11 @@ ApplicationWindow {
                         font.family: "FontAwesome"
                         text: FontAwesome.Icon.StepBackward
                     }
+
+                    MouseArea {
+                       anchors.fill: parent
+                       onPressed: player.previous()
+                    }
                 }
 
                 Item {
@@ -431,6 +438,11 @@ ApplicationWindow {
                         font.pixelSize: 17
                         font.family: "FontAwesome"
                         text: FontAwesome.Icon.StepForward
+                    }
+
+                    MouseArea {
+                       anchors.fill: parent
+                       onPressed: player.next()
                     }
                 }
 

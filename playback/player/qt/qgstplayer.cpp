@@ -354,7 +354,8 @@ Player::Player(QObject *parent, VideoRenderer *renderer)
         "swapped-signal::video-dimensions-changed", G_CALLBACK (Player::onVideoDimensionsChanged), this,
         "swapped-signal::volume-changed", G_CALLBACK (Player::onVolumeChanged), this,
         "swapped-signal::mute-changed", G_CALLBACK (Player::onMuteChanged), this,
-        "swapped-signal::media-info-updated", G_CALLBACK (Player::onMediaInfoUpdated), this, NULL);
+        "swapped-signal::media-info-updated", G_CALLBACK (Player::onMediaInfoUpdated), this,
+        "swapped-signal::end-of-stream", G_CALLBACK (Player::onEndOfStreamReached), this, NULL);
 
     mediaInfo_ = new MediaInfo(this);
     gst_player_set_subtitle_track_enabled(player_, false);
@@ -444,6 +445,63 @@ Player::onMediaInfoUpdated(Player *player, GstPlayerMediaInfo *media_info)
     emit player->mediaInfoChanged();
 }
 
+void Player::onEndOfStreamReached(Player *player)
+{
+    Q_ASSERT(player != 0);
+
+    emit player->endOfStream();
+}
+
+void Player::setUri(QUrl url)
+{
+    Q_ASSERT(player_ != 0);
+    QByteArray uri = url.toString().toLocal8Bit();
+
+    gst_player_set_uri(player_, uri.data());
+
+    autoPlay_ ? play() : pause();
+
+    emit sourceChanged(url);
+}
+
+QList<QUrl> Player::playlist() const
+{
+    return playlist_;
+}
+
+void Player::setPlaylist(const QList<QUrl> &playlist)
+{
+    if (!playlist_.isEmpty()) {
+        playlist_.erase(playlist_.begin(), playlist_.end());
+    }
+
+    playlist_ = playlist;
+
+    iter_ = playlist_.begin();
+    setUri(*iter_);
+}
+
+void Player::next()
+{
+    if (playlist_.isEmpty())
+        return;
+
+    if (iter_ == playlist_.end())
+        return;
+
+    setUri(*++iter_);
+}
+
+void Player::previous()
+{
+    if (playlist_.isEmpty())
+        return;
+
+    if (iter_ == playlist_.begin())
+        return;
+
+    setUri(*--iter_);
+}
 
 bool Player::autoPlay() const
 {
@@ -554,9 +612,13 @@ void Player::seek(qint64 position)
 void Player::setSource(QUrl const& url)
 {
     Q_ASSERT(player_ != 0);
-    QByteArray uri = url.toString().toLocal8Bit();
 
-    gst_player_set_uri(player_, uri.data());
+    // discard playlist
+    if (!playlist_.isEmpty()) {
+        playlist_.erase(playlist_.begin(), playlist_.end());
+    }
+
+    setUri(url);
 
     emit sourceChanged(url);
 }
