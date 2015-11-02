@@ -314,6 +314,12 @@ gst_vaapi_decode_bin_handle_message (GstBin * bin, GstMessage * message)
   activate_vpp (vaapidecbin);
 
 bail:
+  if (display)
+    gst_vaapi_display_unref (display);
+
+  if (context)
+    gst_context_unref (context);
+
   GST_BIN_CLASS (gst_vaapi_decode_bin_parent_class)->handle_message (bin,
       message);
 }
