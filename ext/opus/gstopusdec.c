@@ -380,6 +380,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   unsigned int packet_size;
   GstBuffer *buf;
   GstMapInfo map, omap;
+  GstAudioClippingMeta *cmeta = NULL;
 
   if (dec->state == NULL) {
     /* If we did not get any headers, default to 2 channels */
@@ -534,17 +535,41 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   GST_DEBUG_OBJECT (dec, "decoded %d samples", n);
   gst_buffer_set_size (outbuf, n * 2 * dec->n_channels);
 
+  cmeta = gst_buffer_get_audio_clipping_meta (buf);
+
+  g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
+
   /* Skip any samples that need skipping */
-  if (dec->pre_skip > 0) {
-    guint scaled_pre_skip = dec->pre_skip * dec->sample_rate / 48000;
+  if (cmeta && cmeta->start) {
+    guint pre_skip = cmeta->start;
+    guint scaled_pre_skip = pre_skip * dec->sample_rate / 48000;
     guint skip = scaled_pre_skip > n ? n : scaled_pre_skip;
     guint scaled_skip = skip * 48000 / dec->sample_rate;
 
     gst_buffer_resize (outbuf, skip * 2 * dec->n_channels, -1);
-    dec->pre_skip -= scaled_skip;
+
     GST_INFO_OBJECT (dec,
-        "Skipping %u samples (%u at 48000 Hz, %u left to skip)", skip,
-        scaled_skip, dec->pre_skip);
+        "Skipping %u samples at the beginning (%u at 48000 Hz)",
+        skip, scaled_skip);
+  }
+
+  if (cmeta && cmeta->end) {
+    guint post_skip = cmeta->end;
+    guint scaled_post_skip = post_skip * dec->sample_rate / 48000;
+    guint skip = scaled_post_skip > n ? n : scaled_post_skip;
+    guint scaled_skip = skip * 48000 / dec->sample_rate;
+    guint outsize = gst_buffer_get_size (outbuf);
+    guint skip_bytes = skip * 2 * dec->n_channels;
+
+    if (outsize > skip_bytes)
+      outsize -= skip_bytes;
+    else
+      outsize = 0;
+
+    gst_buffer_resize (outbuf, 0, outsize);
+
+    GST_INFO_OBJECT (dec,
+        "Skipping %u samples at the end (%u at 48000 Hz)", skip, scaled_skip);
   }
 
   if (gst_buffer_get_size (outbuf) == 0) {
