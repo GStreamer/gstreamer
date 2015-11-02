@@ -237,8 +237,12 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
 
     def __init__(self, test_manager):
-        GstValidatePipelineTestsGenerator.__init__(
-            self, "playback", test_manager, "playbin")
+        if os.getenv("USE_PLAYBIN3") is None:
+            GstValidatePipelineTestsGenerator.__init__(
+                self, "playback", test_manager, "playbin")
+        else:
+            GstValidatePipelineTestsGenerator.__init__(
+                self, "playback", test_manager, "playbin3")
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         for uri, minfo, special_scenarios in uri_minfo_special_scenarios:
@@ -315,8 +319,12 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
                 name = ""
                 for nsource in range(self.num_sources):
                     uri, minfo = wanted_ressources[i + nsource]
-                    srcs.append(
-                        "uridecodebin uri=%s ! %s" % (uri, self.converter))
+                    if os.getenv("USE_PLAYBIN3") is None:
+                        srcs.append(
+                            "uridecodebin uri=%s ! %s" % (uri, self.converter))
+                    else:
+                        srcs.append(
+                            "uridecodebin3 uri=%s ! %s" % (uri, self.converter))
                     fname = os.path.basename(uri).replace(".", "_")
                     if not name:
                         name = fname
