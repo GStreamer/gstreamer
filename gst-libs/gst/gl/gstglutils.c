@@ -393,7 +393,8 @@ _compile_shader (GstGLContext * context, struct _compile_shader *data)
 
   if (data->vertex_src) {
     vert = gst_glsl_stage_new_with_string (context, GL_VERTEX_SHADER,
-        GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_NONE, data->vertex_src);
+        GST_GLSL_VERSION_NONE,
+        GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, data->vertex_src);
     if (!gst_glsl_stage_compile (vert, &error)) {
       GST_ERROR_OBJECT (vert, "%s", error->message);
       gst_object_unref (shader);
@@ -407,7 +408,9 @@ _compile_shader (GstGLContext * context, struct _compile_shader *data)
 
   if (data->fragment_src) {
     frag = gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
-        GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_NONE, data->fragment_src);
+        GST_GLSL_VERSION_NONE,
+        GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+        data->fragment_src);
     if (!gst_glsl_stage_compile (frag, &error)) {
       GST_ERROR_OBJECT (frag, "%s", error->message);
       gst_object_unref (shader);
