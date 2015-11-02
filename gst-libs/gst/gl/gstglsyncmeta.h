@@ -32,12 +32,19 @@ typedef struct _GstGLSyncMeta GstGLSyncMeta;
 #define GST_BUFFER_POOL_OPTION_GL_SYNC_META "GstBufferPoolOptionGLSyncMeta"
 
 struct _GstGLSyncMeta {
-  /*< private >*/
   GstMeta parent;
 
   GstGLContext *context;
 
-  GLsync        glsync;
+  gpointer      data;
+
+  void (*set_sync) (GstGLSyncMeta * sync, GstGLContext * context);
+  void (*set_sync_gl) (GstGLSyncMeta * sync, GstGLContext * context);
+  void (*wait) (GstGLSyncMeta * sync, GstGLContext * context);
+  void (*wait_gl) (GstGLSyncMeta * sync, GstGLContext * context);
+  void (*copy) (GstGLSyncMeta * src, GstBuffer * sbuffer, GstGLSyncMeta * dest, GstBuffer * dbuffer);
+  void (*free) (GstGLSyncMeta * sync, GstGLContext * context);
+  void (*free_gl) (GstGLSyncMeta * sync, GstGLContext * context);
 };
 
 GType gst_gl_sync_meta_api_get_type (void);
@@ -46,6 +53,8 @@ const GstMetaInfo * gst_gl_sync_meta_get_info (void);
 #define gst_buffer_get_gl_sync_meta(b) ((GstGLSyncMeta*)gst_buffer_get_meta((b),GST_GL_SYNC_META_API_TYPE))
 
 GstGLSyncMeta *     gst_buffer_add_gl_sync_meta         (GstGLContext * context, GstBuffer *buffer);
+GstGLSyncMeta *     gst_buffer_add_gl_sync_meta_full    (GstGLContext * context, GstBuffer * buffer,
+                                                         gpointer data);
 void                gst_gl_sync_meta_set_sync_point     (GstGLSyncMeta * sync, GstGLContext * context);
 void                gst_gl_sync_meta_wait               (GstGLSyncMeta * sync, GstGLContext * context);
 
