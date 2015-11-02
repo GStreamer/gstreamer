@@ -1191,9 +1191,9 @@ gst_deinterlace_update_qos (GstDeinterlace * self, gdouble proportion,
     GstClockTimeDiff diff, GstClockTime timestamp)
 {
   GST_DEBUG_OBJECT (self,
-      "Updating QoS: proportion %lf, diff %s%" GST_TIME_FORMAT ", timestamp %"
-      GST_TIME_FORMAT, proportion, (diff < 0) ? "-" : "",
-      GST_TIME_ARGS (ABS (diff)), GST_TIME_ARGS (timestamp));
+      "Updating QoS: proportion %lf, diff %" GST_STIME_FORMAT ", timestamp %"
+      GST_TIME_FORMAT, proportion, GST_STIME_ARGS (diff),
+      GST_TIME_ARGS (timestamp));
 
   GST_OBJECT_LOCK (self);
   self->proportion = proportion;
