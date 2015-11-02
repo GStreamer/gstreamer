@@ -1311,8 +1311,8 @@ gst_audio_base_sink_custom_slaving (GstAudioBaseSink * sink,
   if (sink->priv->custom_slaving_callback != NULL) {
     sink->priv->custom_slaving_callback (sink, etime, itime, &requested_skew,
         FALSE, sink->priv->custom_slaving_cb_data);
-    GST_DEBUG_OBJECT (sink, "custom slaving requested skew %" G_GINT64_FORMAT,
-        requested_skew);
+    GST_DEBUG_OBJECT (sink, "custom slaving requested skew %" GST_STIME_FORMAT,
+        GST_STIME_ARGS (requested_skew));
   } else {
     GST_DEBUG_OBJECT (sink,
         "no custom slaving callback set - clock drift will not be compensated");
@@ -1465,8 +1465,9 @@ gst_audio_base_sink_skew_slaving (GstAudioBaseSink * sink,
   }
 
   GST_DEBUG_OBJECT (sink, "internal %" GST_TIME_FORMAT " external %"
-      GST_TIME_FORMAT " skew %" G_GINT64_FORMAT " avg %" G_GINT64_FORMAT,
-      GST_TIME_ARGS (itime), GST_TIME_ARGS (etime), skew, sink->priv->avg_skew);
+      GST_TIME_FORMAT " skew %" GST_STIME_FORMAT " avg %" GST_STIME_FORMAT,
+      GST_TIME_ARGS (itime), GST_TIME_ARGS (etime), GST_STIME_ARGS (skew),
+      GST_STIME_ARGS (sink->priv->avg_skew));
 
   /* the max drift we allow */
   mdrift = sink->priv->drift_tolerance * 1000;
@@ -1476,8 +1477,8 @@ gst_audio_base_sink_skew_slaving (GstAudioBaseSink * sink,
   if (sink->priv->avg_skew > mdrift2) {
     /* master is running slower, move internal time forward */
     GST_WARNING_OBJECT (sink,
-        "correct clock skew %" G_GINT64_FORMAT " > %" G_GINT64_FORMAT,
-        sink->priv->avg_skew, mdrift2);
+        "correct clock skew %" GST_STIME_FORMAT " > %" GST_STIME_FORMAT,
+        GST_STIME_ARGS (sink->priv->avg_skew), GST_STIME_ARGS (mdrift2));
 
     if (sink->priv->avg_skew > (2 * mdrift)) {
       cexternal -= sink->priv->avg_skew;
@@ -1504,8 +1505,8 @@ gst_audio_base_sink_skew_slaving (GstAudioBaseSink * sink,
   } else if (sink->priv->avg_skew < -mdrift2) {
     /* master is running faster, move external time forwards */
     GST_WARNING_OBJECT (sink,
-        "correct clock skew %" G_GINT64_FORMAT " < %" G_GINT64_FORMAT,
-        sink->priv->avg_skew, -mdrift2);
+        "correct clock skew %" GST_STIME_FORMAT " < -%" GST_STIME_FORMAT,
+        GST_STIME_ARGS (sink->priv->avg_skew), GST_STIME_ARGS (mdrift2));
 
     if (sink->priv->avg_skew < (2 * -mdrift)) {
       cexternal -= sink->priv->avg_skew;
@@ -1944,9 +1945,9 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   sync_offset = ts_offset - render_delay + latency;
 
   GST_DEBUG_OBJECT (sink,
-      "sync-offset %" G_GINT64_FORMAT ", render-delay %" GST_TIME_FORMAT
-      ", ts-offset %" G_GINT64_FORMAT, sync_offset,
-      GST_TIME_ARGS (render_delay), ts_offset);
+      "sync-offset %" GST_STIME_FORMAT ", render-delay %" GST_TIME_FORMAT
+      ", ts-offset %" GST_STIME_FORMAT, GST_STIME_ARGS (sync_offset),
+      GST_TIME_ARGS (render_delay), GST_STIME_ARGS (ts_offset));
 
   /* compensate for ts-offset and device-delay when negative we need to
    * clip. */
