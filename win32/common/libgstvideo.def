@@ -1,5 +1,6 @@
 EXPORTS
 	_gst_video_decoder_error
+	gst_buffer_add_video_affine_transformation_meta
 	gst_buffer_add_video_gl_texture_upload_meta
 	gst_buffer_add_video_meta
 	gst_buffer_add_video_meta_full
@@ -51,6 +52,9 @@ EXPORTS
 	gst_navigation_send_event
 	gst_navigation_send_key_event
 	gst_navigation_send_mouse_event
+	gst_video_affine_transformation_meta_api_get_type
+	gst_video_affine_transformation_meta_apply_matrix
+	gst_video_affine_transformation_meta_get_info
 	gst_video_alignment_reset
 	gst_video_alpha_mode_get_type
 	gst_video_blend
