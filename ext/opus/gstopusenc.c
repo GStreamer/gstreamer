@@ -761,8 +761,8 @@ gst_opus_enc_setup (GstOpusEnc * enc)
       lookahead);
 
   /* lookahead is samples, the Opus header wants it in 48kHz samples */
-  enc->lookahead = enc->pending_lookahead = lookahead;
   lookahead = lookahead * 48000 / enc->sample_rate;
+  enc->lookahead = enc->pending_lookahead = lookahead;
 
   gst_opus_header_create_caps (&caps, NULL, lookahead, enc->sample_rate,
       enc->n_channels, enc->n_stereo_streams, enc->channel_mapping_family,
@@ -894,6 +894,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
   GstBuffer *outbuf;
   GstSegment *segment;
   GstClockTime duration;
+  guint64 trim_start = 0, trim_end = 0;
 
   guint max_payload_size;
   gint frame_samples, input_samples, output_samples;
@@ -945,6 +946,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
             "%" G_GINT64_FORMAT " extra samples of padding in this frame",
             diff);
         output_samples = frame_samples - diff;
+        trim_end = diff * 48000 / enc->sample_rate;
       } else {
         GST_DEBUG_OBJECT (enc,
             "Need to add %" G_GINT64_FORMAT " extra samples in the next frame",
@@ -966,11 +968,16 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
 
       /* Adjust for lookahead here */
       if (enc->pending_lookahead) {
-        if (input_samples > enc->pending_lookahead) {
-          output_samples = input_samples - enc->pending_lookahead;
+        guint scaled_lookahead =
+            enc->pending_lookahead * enc->sample_rate / 48000;
+
+        if (input_samples > scaled_lookahead) {
+          output_samples = input_samples - scaled_lookahead;
+          trim_start = enc->pending_lookahead;
           enc->pending_lookahead = 0;
         } else {
-          enc->pending_lookahead -= input_samples;
+          trim_start = input_samples * 48000 / enc->sample_rate;
+          enc->pending_lookahead -= trim_start;
           output_samples = 0;
         }
       } else {
@@ -988,6 +995,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
       output_samples = enc->consumed_samples - enc->encoded_samples;
       input_samples = 0;
       GST_DEBUG_OBJECT (enc, "draining %d samples", output_samples);
+      trim_end = (frame_samples - output_samples) * 48000 / enc->sample_rate;
     } else if (enc->encoded_samples == enc->consumed_samples) {
       GST_DEBUG_OBJECT (enc, "nothing to drain");
       goto done;
@@ -1007,6 +1015,14 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)",
       frame_samples, (int) bytes);
+
+  if (trim_start || trim_end) {
+    GST_DEBUG_OBJECT (enc,
+        "Adding trim-start %" G_GUINT64_FORMAT " trim-end %" G_GUINT64_FORMAT,
+        trim_start, trim_end);
+    gst_buffer_add_audio_clipping_meta (outbuf, GST_FORMAT_DEFAULT, trim_start,
+        trim_end);
+  }
 
   gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
 
