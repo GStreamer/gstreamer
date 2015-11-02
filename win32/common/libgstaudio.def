@@ -32,6 +32,8 @@ EXPORTS
 	gst_audio_channel_positions_to_mask
 	gst_audio_channel_positions_to_valid_order
 	gst_audio_check_valid_channel_positions
+	gst_audio_clipping_meta_api_get_type
+	gst_audio_clipping_meta_get_info
 	gst_audio_clock_adjust
 	gst_audio_clock_get_time
 	gst_audio_clock_get_type
@@ -164,6 +166,7 @@ EXPORTS
 	gst_audio_ring_buffer_stop
 	gst_audio_sink_get_type
 	gst_audio_src_get_type
+	gst_buffer_add_audio_clipping_meta
 	gst_buffer_add_audio_downmix_meta
 	gst_buffer_get_audio_downmix_meta_for_channels
 	gst_stream_volume_convert_volume

@@ -184,6 +184,7 @@ GST_FRAMES_TO_CLOCK_TIME
 GST_CLOCK_TIME_TO_FRAMES
 GST_META_TAG_AUDIO_STR
 GST_META_TAG_AUDIO_CHANNELS_STR
+GST_META_TAG_AUDIO_RATE_STR
 GST_AUDIO_NE
 GST_AUDIO_OE
 GST_AUDIO_RATE_RANGE
@@ -222,11 +223,15 @@ GstAudioDownmixMeta
 gst_buffer_add_audio_downmix_meta
 gst_buffer_get_audio_downmix_meta
 gst_buffer_get_audio_downmix_meta_for_channels
+
+GstAudioClippingMeta
+gst_buffer_add_audio_clipping_meta
+gst_buffer_get_audio_clipping_meta
 <SUBSECTION Standard>
-GST_AUDIO_DOWNMIX_META_API_TYPE
-GST_AUDIO_DOWNMIX_META_INFO
-gst_audio_downmix_meta_api_get_type
-gst_audio_downmix_meta_get_info
+GST_AUDIO_CLIPPING_META_API_TYPE
+GST_AUDIO_CLIPPING_META_INFO
+gst_audio_clipping_meta_api_get_type
+gst_audio_clipping_meta_get_info
 </SECTION>
 
 <SECTION>
