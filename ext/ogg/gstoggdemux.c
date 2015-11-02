@@ -1058,14 +1058,8 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
         if (granule >= pad->map.accumulated_granule)
           start_granule = granule - pad->map.accumulated_granule;
-        else {
-          if (pad->map.forbid_start_clamping) {
-            GST_ERROR_OBJECT (ogg, "Start of stream maps to negative time");
-            return GST_FLOW_ERROR;
-          } else {
-            start_granule = 0;
-          }
-        }
+        else
+          start_granule = 0;
 
         pad->start_time = gst_ogg_stream_granule_to_time (&pad->map,
             start_granule);
@@ -1294,6 +1288,7 @@ gst_ogg_demux_setup_first_granule (GstOggDemux * ogg, GstOggPad * pad,
       GST_DEBUG_OBJECT (pad,
           "This page completes %d packets, granule %" G_GINT64_FORMAT, packets,
           granule);
+
       if (packets > 0) {
         ogg_stream_state os;
         ogg_packet op;
