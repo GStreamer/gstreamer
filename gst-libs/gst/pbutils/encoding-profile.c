@@ -1214,7 +1214,8 @@ done:
 /**
  * gst_encoding_profile_find:
  * @targetname: (transfer none): The name of the target
- * @profilename: (transfer none): The name of the profile
+ * @profilename: (transfer none): (allow-none): The name of the profile, if %NULL
+ * provided, it will default to the encoding profile called `default`.
  * @category: (transfer none) (allow-none): The target category. Can be %NULL
  *
  * Find the #GstEncodingProfile with the specified name and category.
@@ -1229,11 +1230,12 @@ gst_encoding_profile_find (const gchar * targetname, const gchar * profilename,
   GstEncodingTarget *target;
 
   g_return_val_if_fail (targetname != NULL, NULL);
-  g_return_val_if_fail (profilename != NULL, NULL);
 
   target = gst_encoding_target_load (targetname, category, NULL);
   if (target) {
-    res = gst_encoding_target_get_profile (target, profilename);
+    res =
+        gst_encoding_target_get_profile (target,
+        profilename ? profilename : "default");
     gst_encoding_target_unref (target);
   }
 
