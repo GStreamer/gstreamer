@@ -5188,6 +5188,62 @@ GST_START_TEST (dash_mpdparser_default_presentation_delay)
 
 GST_END_TEST;
 
+GST_START_TEST (dash_mpdparser_duration)
+{
+  guint64 v;
+
+  fail_unless (gst_mpdparser_parse_duration ("", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration (" ", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("0", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("D-1", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("T", &v) == FALSE);
+
+  fail_unless (gst_mpdparser_parse_duration ("P", &v) == TRUE);
+  fail_unless (gst_mpdparser_parse_duration ("PT", &v) == TRUE);
+  fail_unless (gst_mpdparser_parse_duration ("PX", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PPT", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PTT", &v) == FALSE);
+
+  fail_unless (gst_mpdparser_parse_duration ("P1D", &v) == TRUE);
+  fail_unless (gst_mpdparser_parse_duration ("P1D1D", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("P1D1M", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("P1M1D", &v) == TRUE);
+  fail_unless (gst_mpdparser_parse_duration ("P1M1D1M", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("P1M1D1D", &v) == FALSE);
+
+  fail_unless (gst_mpdparser_parse_duration ("P0M0D", &v) == TRUE);
+  fail_unless (gst_mpdparser_parse_duration ("P-1M", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("P15M", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("P-1D", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("P35D", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("P-1Y", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PT-1H", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PT25H", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PT-1M", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PT65M", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PT-1S", &v) == FALSE);
+  /* seconds are allowed to be larger than 60 */
+  fail_unless (gst_mpdparser_parse_duration ("PT65S", &v) == TRUE);
+
+  fail_unless (gst_mpdparser_parse_duration ("PT1.1H", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PT1-1H", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PT1-H", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PT-H", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PTH", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PT0", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("PT1.1S", &v) == TRUE);
+  fail_unless (gst_mpdparser_parse_duration ("PT1.1.1S", &v) == FALSE);
+
+  fail_unless (gst_mpdparser_parse_duration ("P585Y", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("P584Y", &v) == TRUE);
+
+  fail_unless (gst_mpdparser_parse_duration (" P10DT8H", &v) == TRUE);
+  fail_unless (gst_mpdparser_parse_duration ("P10D T8H", &v) == FALSE);
+  fail_unless (gst_mpdparser_parse_duration ("P10DT8H ", &v) == TRUE);
+}
+
+GST_END_TEST;
+
 /*
  * create a test suite containing all dash testcases
  */
@@ -5199,6 +5255,7 @@ dash_suite (void)
   TCase *tc_complexMPD = tcase_create ("complexMPD");
   TCase *tc_negativeTests = tcase_create ("negativeTests");
   TCase *tc_stringTests = tcase_create ("stringTests");
+  TCase *tc_duration = tcase_create ("duration");
 
   GST_DEBUG_CATEGORY_INIT (gst_dash_demux_debug, "gst_dash_demux_debug", 0,
       "mpeg dash tests");
@@ -5365,10 +5422,13 @@ dash_suite (void)
   tcase_add_test (tc_stringTests, dash_mpdparser_whitespace_strings);
   tcase_add_test (tc_stringTests, dash_mpdparser_rfc1738_strings);
 
+  tcase_add_test (tc_duration, dash_mpdparser_duration);
+
   suite_add_tcase (s, tc_simpleMPD);
   suite_add_tcase (s, tc_complexMPD);
   suite_add_tcase (s, tc_negativeTests);
   suite_add_tcase (s, tc_stringTests);
+  suite_add_tcase (s, tc_duration);
 
   return s;
 }
