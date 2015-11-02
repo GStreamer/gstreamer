@@ -377,8 +377,6 @@ gst_opus_enc_finalize (GObject * object)
 static void
 gst_opus_enc_init (GstOpusEnc * enc)
 {
-  GstAudioEncoder *benc = GST_AUDIO_ENCODER (enc);
-
   GST_DEBUG_OBJECT (enc, "init");
 
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (enc));
@@ -399,10 +397,6 @@ gst_opus_enc_init (GstOpusEnc * enc)
   enc->packet_loss_percentage = DEFAULT_PACKET_LOSS_PERCENT;
   enc->max_payload_size = DEFAULT_MAX_PAYLOAD_SIZE;
   enc->audio_type = DEFAULT_AUDIO_TYPE;
-
-  /* arrange granulepos marking (and required perfect ts) */
-  gst_audio_encoder_set_mark_granule (benc, TRUE);
-  gst_audio_encoder_set_perfect_timestamp (benc, TRUE);
 }
 
 static gboolean
