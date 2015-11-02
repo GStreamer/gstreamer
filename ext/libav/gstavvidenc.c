@@ -626,6 +626,7 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
     GST_ERROR_OBJECT (encoder, "Failed to map input buffer");
     gst_buffer_unref (buffer_info->buffer);
     g_slice_free (BufferInfo, buffer_info);
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
 
@@ -665,7 +666,10 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
 
   /* Encoder needs more data */
   if (!have_data)
+  {
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_OK;
+  }
 
   /* save stats info if there is some as well as a stats file */
   if (ffmpegenc->file && ffmpegenc->context->stats_out)
