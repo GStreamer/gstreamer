@@ -35,6 +35,8 @@
 /* Default debug category is from the subclass */
 #define GST_CAT_DEFAULT (plugin->debug_category)
 
+static gpointer plugin_parent_class = NULL;
+
 /* GstVideoContext interface */
 static void
 plugin_set_display (GstVaapiPluginBase * plugin, GstVaapiDisplay * display)
@@ -59,10 +61,14 @@ static void
 plugin_set_context (GstElement * element, GstContext * context)
 {
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (plugin_parent_class);
   GstVaapiDisplay *display = NULL;
 
   if (gst_vaapi_video_context_get_display (context, &display))
     plugin_set_display (plugin, display);
+
+  if (element_class->set_context)
+    element_class->set_context (element, context);
 }
 
 void
@@ -176,6 +182,8 @@ gst_vaapi_plugin_base_class_init (GstVaapiPluginBaseClass * klass)
 {
   klass->has_interface = default_has_interface;
   klass->display_changed = default_display_changed;
+
+  plugin_parent_class = g_type_class_peek_parent (klass);
 
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   element_class->set_context = GST_DEBUG_FUNCPTR (plugin_set_context);
