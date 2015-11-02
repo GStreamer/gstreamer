@@ -235,7 +235,7 @@ do_seek (GtkWidget * widget, gboolean flush, gboolean segment)
 
   diff = cur_time - prev_time;
 
-  GST_DEBUG ("diff: %" GST_TIME_FORMAT, GST_TIME_ARGS (diff));
+  GST_DEBUG ("diff: %" GST_STIME_FORMAT, GST_STIME_ARGS (diff));
 
   start = prev_range * duration / RANGE_PREC;
   /* play 50 milliseconds */
