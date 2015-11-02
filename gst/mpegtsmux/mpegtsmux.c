@@ -1207,9 +1207,8 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
 
   if (GST_CLOCK_STIME_IS_VALID (best->dts)) {
     dts = GSTTIME_TO_MPEGTIME (best->dts);
-    GST_DEBUG_OBJECT (mux, "Buffer has DTS %s%" GST_TIME_FORMAT " dts %"
-        G_GINT64_FORMAT, best->dts >= 0 ? " " : "-",
-        GST_TIME_ARGS (ABS (best->dts)), dts);
+    GST_DEBUG_OBJECT (mux, "Buffer has DTS %" GST_STIME_FORMAT " dts %"
+        G_GINT64_FORMAT, GST_STIME_ARGS (best->dts), dts);
   }
 
   /* should not have a DTS without PTS */
