@@ -212,6 +212,7 @@ gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass)
   sinkcaps = gst_ffmpeg_formatid_to_caps (name);
   sinktempl = gst_pad_template_new ("sink",
       GST_PAD_SINK, GST_PAD_ALWAYS, sinkcaps);
+  g_free (name);
   videosrctempl = gst_pad_template_new ("video_%u",
       GST_PAD_SRC, GST_PAD_SOMETIMES, GST_CAPS_ANY);
   audiosrctempl = gst_pad_template_new ("audio_%u",
@@ -2116,6 +2117,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
       g_warning ("Register of type avdemux_%s failed", name);
       g_free (type_name);
       g_free (typefind_name);
+      g_free (extensions);
+      g_free (name);
       return FALSE;
     }
 
