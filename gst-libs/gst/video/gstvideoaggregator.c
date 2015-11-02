@@ -982,9 +982,9 @@ gst_videoaggregator_update_qos (GstVideoAggregator * vagg, gdouble proportion,
   gboolean live;
 
   GST_DEBUG_OBJECT (vagg,
-      "Updating QoS: proportion %lf, diff %s%" GST_TIME_FORMAT ", timestamp %"
-      GST_TIME_FORMAT, proportion, (diff < 0) ? "-" : "",
-      GST_TIME_ARGS (ABS (diff)), GST_TIME_ARGS (timestamp));
+      "Updating QoS: proportion %lf, diff %" GST_STIME_FORMAT ", timestamp %"
+      GST_TIME_FORMAT, proportion, GST_STIME_ARGS (diff),
+      GST_TIME_ARGS (timestamp));
 
   live =
       GST_CLOCK_TIME_IS_VALID (gst_aggregator_get_latency (GST_AGGREGATOR
