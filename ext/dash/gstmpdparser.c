@@ -5290,22 +5290,12 @@ gst_mpd_client_get_next_header (GstMpdClient * client, gchar ** uri,
       *range_start = 0;
       *range_end = stream->cur_segment_base->indexRange->first_byte_pos - 1;
     }
-  } else if (stream->cur_seg_template) {
-    const gchar *initialization = NULL;
-    if (stream->cur_seg_template->initialization) {
-      initialization = stream->cur_seg_template->initialization;
-    } else if (stream->cur_adapt_set->SegmentTemplate
-        && stream->cur_adapt_set->SegmentTemplate->initialization) {
-      initialization = stream->cur_adapt_set->SegmentTemplate->initialization;
-    } else if (stream_period->period->SegmentTemplate
-        && stream_period->period->SegmentTemplate->initialization) {
-      initialization = stream_period->period->SegmentTemplate->initialization;
-    }
-    if (initialization) {
-      *uri = gst_mpdparser_build_URL_from_template (initialization,
-          stream->cur_representation->id, 0,
-          stream->cur_representation->bandwidth, 0);
-    }
+  } else if (stream->cur_seg_template
+      && stream->cur_seg_template->initialization) {
+    *uri =
+        gst_mpdparser_build_URL_from_template (stream->
+        cur_seg_template->initialization, stream->cur_representation->id, 0,
+        stream->cur_representation->bandwidth, 0);
   }
 
   return *uri == NULL ? FALSE : TRUE;
@@ -5336,21 +5326,11 @@ gst_mpd_client_get_next_header_index (GstMpdClient * client, gchar ** uri,
             stream->cur_segment_base->Initialization));
     *range_start = stream->cur_segment_base->indexRange->first_byte_pos;
     *range_end = stream->cur_segment_base->indexRange->last_byte_pos;
-  } else if (stream->cur_seg_template) {
-    const gchar *initialization = NULL;
-    if (stream->cur_seg_template->index) {
-      initialization = stream->cur_seg_template->index;
-    } else if (stream->cur_adapt_set->SegmentTemplate
-        && stream->cur_adapt_set->SegmentTemplate->index) {
-      initialization = stream->cur_adapt_set->SegmentTemplate->index;
-    } else if (stream_period->period->SegmentTemplate
-        && stream_period->period->SegmentTemplate->index) {
-      initialization = stream_period->period->SegmentTemplate->index;
-    }
-    if (initialization)
-      *uri = gst_mpdparser_build_URL_from_template (initialization,
-          stream->cur_representation->id, 0,
-          stream->cur_representation->bandwidth, 0);
+  } else if (stream->cur_seg_template && stream->cur_seg_template->index) {
+    *uri =
+        gst_mpdparser_build_URL_from_template (stream->cur_seg_template->index,
+        stream->cur_representation->id, 0,
+        stream->cur_representation->bandwidth, 0);
   }
 
   return *uri == NULL ? FALSE : TRUE;
