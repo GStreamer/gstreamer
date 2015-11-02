@@ -74,13 +74,16 @@ enum
   PROP_CAN_ACTIVATE_PULL
 };
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMAT_STR "{ S16LE, S32LE, F32LE, F64LE }"
-#define DEFAULT_FORMAT_STR "S16LE"
-#else
-#define FORMAT_STR "{ S16BE, S32BE, F32BE, F64BE }"
-#define DEFAULT_FORMAT_STR "S16BE"
-#endif
+#define FORMAT_STR  " { S16LE, S16BE, U16LE, U16BE, " \
+    "S24_32LE, S24_32BE, U24_32LE, U24_32BE, " \
+    "S32LE, S32BE, U32LE, U32BE, " \
+    "S24LE, S24BE, U24LE, U24BE, " \
+    "S20LE, S20BE, U20LE, U20BE, " \
+    "S18LE, S18BE, U18LE, U18BE, " \
+    "F32LE, F32BE, F64LE, F64BE, " \
+    "S8, U8 }"
+
+#define DEFAULT_FORMAT_STR GST_AUDIO_NE ("S16")
 
 static GstStaticPadTemplate gst_audio_test_src_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -89,7 +92,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMAT_STR ", "
         "layout = (string) interleaved, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2]")
+        "rate = " GST_AUDIO_RATE_RANGE ", "
+        "channels = " GST_AUDIO_CHANNELS_RANGE)
     );
 
 #define gst_audio_test_src_parent_class parent_class
@@ -251,6 +255,9 @@ gst_audio_test_src_finalize (GObject * object)
   if (src->gen)
     g_rand_free (src->gen);
   src->gen = NULL;
+  g_free (src->tmp);
+  src->tmp = NULL;
+  src->tmpsize = 0;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -908,11 +915,12 @@ gst_audio_test_src_change_wave (GstAudioTestSrc * src)
 {
   gint idx;
 
+  src->pack_func = NULL;
+  src->process = NULL;
+
   /* not negotiated yet? */
-  if (src->info.finfo == NULL) {
-    src->process = NULL;
+  if (src->info.finfo == NULL)
     return;
-  }
 
   switch (GST_AUDIO_FORMAT_INFO_FORMAT (src->info.finfo)) {
     case GST_AUDIO_FORMAT_S16:
@@ -928,8 +936,22 @@ gst_audio_test_src_change_wave (GstAudioTestSrc * src)
       idx = 3;
       break;
     default:
-      src->process = NULL;
-      return;
+      /* special format */
+      switch (src->info.finfo->unpack_format) {
+        case GST_AUDIO_FORMAT_S32:
+          idx = 1;
+          src->pack_func = src->info.finfo->pack_func;
+          src->pack_size = sizeof (gint32);
+          break;
+        case GST_AUDIO_FORMAT_F64:
+          idx = 3;
+          src->pack_func = src->info.finfo->pack_func;
+          src->pack_size = sizeof (gdouble);
+          break;
+        default:
+          g_assert_not_reached ();
+          return;
+      }
   }
 
   switch (src->wave) {
@@ -1227,7 +1249,24 @@ gst_audio_test_src_fill (GstBaseSrc * basesrc, guint64 offset,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  src->process (src, map.data);
+  if (src->pack_func) {
+    gsize tmpsize;
+
+    tmpsize =
+        src->generate_samples_per_buffer * GST_AUDIO_INFO_CHANNELS (&src->info)
+        * src->pack_size;
+
+    if (tmpsize > src->tmpsize) {
+      src->tmp = g_realloc (src->tmp, tmpsize);
+      src->tmpsize = tmpsize;
+    }
+    src->process (src, src->tmp);
+    src->pack_func (src->info.finfo, 0, src->tmp, map.data,
+        src->generate_samples_per_buffer *
+        GST_AUDIO_INFO_CHANNELS (&src->info));
+  } else {
+    src->process (src, map.data);
+  }
   gst_buffer_unmap (buffer, &map);
 
   if (G_UNLIKELY ((src->wave == GST_AUDIO_TEST_SRC_WAVE_SILENCE)
