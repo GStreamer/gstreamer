@@ -940,177 +940,239 @@ convert_to_millisecs (guint decimals, gint pos)
 }
 
 static gboolean
+accumulate (guint64 * v, guint64 mul, guint64 add)
+{
+  guint64 tmp;
+
+  if (*v > G_MAXUINT64 / mul)
+    return FALSE;
+  tmp = *v * mul;
+  if (tmp > G_MAXUINT64 - add)
+    return FALSE;
+  *v = tmp + add;
+  return TRUE;
+}
+
+static gboolean
+gst_mpdparser_parse_duration (const char *str, guint64 * value)
+{
+  gint ret, len, pos, posT;
+  gint years = -1, months = -1, days = -1, hours = -1, minutes = -1, seconds =
+      -1, decimals = -1, read;
+  gboolean have_ms = FALSE;
+  guint64 tmp_value;
+
+  len = strlen (str);
+  GST_TRACE ("duration: %s, len %d", str, len);
+  if (strspn (str, "PT0123456789., \tHMDSY") < len) {
+    GST_WARNING ("Invalid character found: '%s'", str);
+    goto error;
+  }
+  /* skip leading/trailing whitespace */
+  while (strchr (" \t", str[0])) {
+    str++;
+    len--;
+  }
+  while (len > 0 && strchr (" \t", str[len - 1]))
+    --len;
+
+  /* read "P" for period */
+  if (str[0] != 'P') {
+    GST_WARNING ("P not found at the beginning of the string!");
+    goto error;
+  }
+  str++;
+  len--;
+
+  /* read "T" for time (if present) */
+  posT = strcspn (str, "T");
+  len -= posT;
+  if (posT > 0) {
+    /* there is some room between P and T, so there must be a period section */
+    /* read years, months, days */
+    do {
+      GST_TRACE ("parsing substring %s", str);
+      pos = strcspn (str, "YMD");
+      ret = sscanf (str, "%u", &read);
+      if (ret != 1) {
+        GST_WARNING ("can not read integer value from string %s!", str);
+        goto error;
+      }
+      switch (str[pos]) {
+        case 'Y':
+          if (years != -1 || months != -1 || days != -1) {
+            GST_WARNING ("year, month or day was already set");
+            goto error;
+          }
+          years = read;
+          break;
+        case 'M':
+          if (months != -1 || days != -1) {
+            GST_WARNING ("month or day was already set");
+            goto error;
+          }
+          months = read;
+          if (months >= 12) {
+            GST_WARNING ("Month out of range");
+            goto error;
+          }
+          break;
+        case 'D':
+          if (days != -1) {
+            GST_WARNING ("day was already set");
+            goto error;
+          }
+          days = read;
+          if (days >= 31) {
+            GST_WARNING ("Day out of range");
+            goto error;
+          }
+          break;
+        default:
+          GST_WARNING ("unexpected char %c!", str[pos]);
+          goto error;
+          break;
+      }
+      GST_TRACE ("read number %u type %c", read, str[pos]);
+      str += (pos + 1);
+      posT -= (pos + 1);
+    } while (posT > 0);
+  }
+
+  if (years == -1)
+    years = 0;
+  if (months == -1)
+    months = 0;
+  if (days == -1)
+    days = 0;
+
+  GST_TRACE ("Y:M:D=%d:%d:%d", years, months, days);
+
+  /* read "T" for time (if present) */
+  /* here T is at pos == 0 */
+  str++;
+  len--;
+  pos = 0;
+  if (pos < len) {
+    /* T found, there is a time section */
+    /* read hours, minutes, seconds, hundredths of second */
+    do {
+      GST_TRACE ("parsing substring %s", str);
+      pos = strcspn (str, "HMS,.");
+      ret = sscanf (str, "%u", &read);
+      if (ret != 1) {
+        GST_WARNING ("can not read integer value from string %s!", str);
+        goto error;
+      }
+      switch (str[pos]) {
+        case 'H':
+          if (hours != -1 || minutes != -1 || seconds != -1) {
+            GST_WARNING ("hour, minute or second was already set");
+            goto error;
+          }
+          hours = read;
+          if (hours >= 24) {
+            GST_WARNING ("Hour out of range");
+            goto error;
+          }
+          break;
+        case 'M':
+          if (minutes != -1 || seconds != -1) {
+            GST_WARNING ("minute or second was already set");
+            goto error;
+          }
+          minutes = read;
+          if (minutes >= 60) {
+            GST_WARNING ("Minute out of range");
+            goto error;
+          }
+          break;
+        case 'S':
+          if (have_ms) {
+            /* we have read the decimal part of the seconds */
+            decimals = convert_to_millisecs (read, pos);
+            GST_TRACE ("decimal number %u (%d digits) -> %d ms", read, pos,
+                decimals);
+          } else {
+            if (seconds != -1) {
+              GST_WARNING ("second was already set");
+              goto error;
+            }
+            /* no decimals */
+            seconds = read;
+          }
+          break;
+        case '.':
+        case ',':
+          /* we have read the integer part of a decimal number in seconds */
+          if (seconds != -1) {
+            GST_WARNING ("second was already set");
+            goto error;
+          }
+          seconds = read;
+          have_ms = TRUE;
+          break;
+        default:
+          GST_WARNING ("unexpected char %c!", str[pos]);
+          goto error;
+          break;
+      }
+      GST_TRACE ("read number %u type %c", read, str[pos]);
+      str += pos + 1;
+      len -= (pos + 1);
+    } while (len > 0);
+  }
+
+  if (hours == -1)
+    hours = 0;
+  if (minutes == -1)
+    minutes = 0;
+  if (seconds == -1)
+    seconds = 0;
+  if (decimals == -1)
+    decimals = 0;
+  GST_TRACE ("H:M:S.MS=%d:%d:%d.%03d", hours, minutes, seconds, decimals);
+
+  tmp_value = 0;
+  if (!accumulate (&tmp_value, 1, years)
+      || !accumulate (&tmp_value, 365, months * 30)
+      || !accumulate (&tmp_value, 1, days)
+      || !accumulate (&tmp_value, 24, hours)
+      || !accumulate (&tmp_value, 60, minutes)
+      || !accumulate (&tmp_value, 60, seconds)
+      || !accumulate (&tmp_value, 1000, decimals))
+    goto error;
+
+  /* ensure it can be converted from milliseconds to nanoseconds */
+  if (tmp_value > G_MAXUINT64 / 1000000)
+    goto error;
+
+  *value = tmp_value;
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+static gboolean
 gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
     const gchar * property_name, guint64 default_value,
     guint64 * property_value)
 {
   xmlChar *prop_string;
   gchar *str;
-  gint ret, len, pos, posT;
-  gint years = -1, months = -1, days = -1, hours = -1, minutes = -1, seconds =
-      -1, decimals = -1, read;
-  gboolean have_ms = FALSE;
   gboolean exists = FALSE;
 
   *property_value = default_value;
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    len = xmlStrlen (prop_string);
     str = (gchar *) prop_string;
-    GST_TRACE ("duration: %s, len %d", str, len);
-    if (strchr (str, '-') != NULL) {
-      GST_WARNING ("'-' sign found while parsing unsigned duration");
+    if (!gst_mpdparser_parse_duration (str, property_value))
       goto error;
-    }
-    /* read "P" for period */
-    pos = strcspn (str, "P");
-    if (pos != 0) {
-      GST_WARNING ("P not found at the beginning of the string!");
-      goto error;
-    }
-    str++;
-    len--;
-    /* read "T" for time (if present) */
-    posT = strcspn (str, "T");
-    len -= posT;
-    if (posT > 0) {
-      /* there is some room between P and T, so there must be a period section */
-      /* read years, months, days */
-      do {
-        GST_TRACE ("parsing substring %s", str);
-        pos = strcspn (str, "YMD");
-        ret = sscanf (str, "%u", &read);
-        if (ret != 1) {
-          GST_WARNING ("can not read integer value from string %s!", str);
-          goto error;
-        }
-        switch (str[pos]) {
-          case 'Y':
-            if (years != -1 || months != -1 || days != -1) {
-              GST_WARNING ("year, month or day was already set");
-              goto error;
-            }
-            years = read;
-            break;
-          case 'M':
-            if (months != -1 || days != -1) {
-              GST_WARNING ("month or day was already set");
-              goto error;
-            }
-            months = read;
-            break;
-          case 'D':
-            if (days != -1) {
-              GST_WARNING ("day was already set");
-              goto error;
-            }
-            days = read;
-            break;
-          default:
-            GST_WARNING ("unexpected char %c!", str[pos]);
-            goto error;
-            break;
-        }
-        GST_TRACE ("read number %u type %c", read, str[pos]);
-        str += (pos + 1);
-        posT -= (pos + 1);
-      } while (posT > 0);
-    }
-
-    if (years == -1)
-      years = 0;
-    if (months == -1)
-      months = 0;
-    if (days == -1)
-      days = 0;
-
-    GST_TRACE ("Y:M:D=%d:%d:%d", years, months, days);
-
-    /* read "T" for time (if present) */
-    /* here T is at pos == 0 */
-    str++;
-    len--;
-    pos = 0;
-    if (pos < len) {
-      /* T found, there is a time section */
-      /* read hours, minutes, seconds, cents of second */
-      do {
-        GST_TRACE ("parsing substring %s", str);
-        pos = strcspn (str, "HMS,.");
-        ret = sscanf (str, "%u", &read);
-        if (ret != 1) {
-          GST_WARNING ("can not read integer value from string %s!", str);
-          goto error;
-        }
-        switch (str[pos]) {
-          case 'H':
-            if (hours != -1 || minutes != -1 || seconds != -1) {
-              GST_WARNING ("hour, minute or second was already set");
-              goto error;
-            }
-            hours = read;
-            break;
-          case 'M':
-            if (minutes != -1 || seconds != -1) {
-              GST_WARNING ("minute or second was already set");
-              goto error;
-            }
-            minutes = read;
-            break;
-          case 'S':
-            if (have_ms) {
-              /* we have read the decimal part of the seconds */
-              decimals = convert_to_millisecs (read, pos);
-              GST_TRACE ("decimal number %u (%d digits) -> %d ms", read, pos,
-                  decimals);
-            } else {
-              if (seconds != -1) {
-                GST_WARNING ("second was already set");
-                goto error;
-              }
-              /* no decimals */
-              seconds = read;
-            }
-            break;
-          case '.':
-          case ',':
-            /* we have read the integer part of a decimal number in seconds */
-            if (seconds != -1) {
-              GST_WARNING ("second was already set");
-              goto error;
-            }
-            seconds = read;
-            have_ms = TRUE;
-            break;
-          default:
-            GST_WARNING ("unexpected char %c!", str[pos]);
-            goto error;
-            break;
-        }
-        GST_TRACE ("read number %u type %c", read, str[pos]);
-        str += pos + 1;
-        len -= (pos + 1);
-      } while (len > 0);
-    }
-
-    if (hours == -1)
-      hours = 0;
-    if (minutes == -1)
-      minutes = 0;
-    if (seconds == -1)
-      seconds = 0;
-    if (decimals == -1)
-      decimals = 0;
-    GST_TRACE ("H:M:S.MS=%d:%d:%d.%03d", hours, minutes, seconds, decimals);
-
+    GST_LOG (" - %s: %" G_GUINT64_FORMAT, property_name, *property_value);
     xmlFree (prop_string);
     exists = TRUE;
-    *property_value =
-        (((((guint64) years * 365 + months * 30 + days) * 24 +
-                hours) * 60 + minutes) * 60 + seconds) * 1000 + decimals;
-    GST_LOG (" - %s: %" G_GUINT64_FORMAT, property_name, *property_value);
   }
-
   return exists;
 
 error:
