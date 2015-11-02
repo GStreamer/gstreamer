@@ -59,7 +59,7 @@ struct _GstAudioDownmixMeta {
 GType gst_audio_downmix_meta_api_get_type (void);
 const GstMetaInfo * gst_audio_downmix_meta_get_info (void);
 
-#define gst_buffer_get_audio_downmix_meta(b) ((GstAudioDownmixMeta*)gst_buffer_get_meta((b),GST_AUDIO_DOWNMIX_META_INFO))
+#define gst_buffer_get_audio_downmix_meta(b) ((GstAudioDownmixMeta*)gst_buffer_get_meta((b), GST_AUDIO_DOWNMIX_META_API_TYPE))
 GstAudioDownmixMeta * gst_buffer_get_audio_downmix_meta_for_channels    (GstBuffer *buffer,
                                                                          const GstAudioChannelPosition *to_position,
                                                                          gint                           to_channels);
