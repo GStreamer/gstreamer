@@ -887,9 +887,9 @@ gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
   limit = MAX (limit, ogg_mux->max_tolerance);
 
   GST_LOG_OBJECT (pad->collect.pad, "expected granule %" G_GINT64_FORMAT " == "
-      "time %" GST_TIME_FORMAT " --> ts diff %" GST_TIME_FORMAT
+      "time %" GST_TIME_FORMAT " --> ts diff %" GST_STIME_FORMAT
       " < tolerance %" GST_TIME_FORMAT " (?)",
-      granule, GST_TIME_ARGS (next_time), GST_TIME_ARGS (ABS (diff)),
+      granule, GST_TIME_ARGS (next_time), GST_STIME_ARGS (diff),
       GST_TIME_ARGS (limit));
 
 resync:
