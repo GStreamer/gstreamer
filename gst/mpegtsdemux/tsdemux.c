@@ -38,6 +38,7 @@
 #include <gst/tag/tag.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/base/base.h>
+#include <gst/audio/audio.h>
 
 #include "mpegtsbase.h"
 #include "tsdemux.h"
@@ -2363,13 +2364,11 @@ parse_opus_access_unit (TSDemuxStream * stream)
     if (start_trim_flag) {
       if (!gst_byte_reader_get_uint16_be (&reader, &start_trim))
         goto error;
-      start_trim >>= 3;
     }
 
     if (end_trim_flag) {
       if (!gst_byte_reader_get_uint16_be (&reader, &end_trim))
         goto error;
-      end_trim >>= 3;
     }
 
     if (control_extension_flag) {
@@ -2393,13 +2392,13 @@ parse_opus_access_unit (TSDemuxStream * stream)
       goto error;
 
     buffer = gst_buffer_new_wrapped (packet_data, packet_size);
-    gst_buffer_list_add (buffer_list, buffer);
 
-    /* FIXME: Do something with start_trim and end_trim */
-    if (start_trim != 0 || end_trim != 0)
-      GST_FIXME
-          ("Handling of Opus start_trim (%u) and end_trim (%u) not implemented",
+    if (start_trim != 0 || end_trim != 0) {
+      gst_buffer_add_audio_clipping_meta (buffer, GST_FORMAT_DEFAULT,
           start_trim, end_trim);
+    }
+
+    gst_buffer_list_add (buffer_list, buffer);
   } while (gst_byte_reader_get_remaining (&reader) > 0);
 
   g_free (stream->data);

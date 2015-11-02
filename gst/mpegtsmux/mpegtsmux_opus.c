@@ -86,6 +86,7 @@
 
 #include "mpegtsmux_opus.h"
 #include <string.h>
+#include <gst/audio/audio.h>
 
 #define GST_CAT_DEFAULT mpegtsmux_debug
 
@@ -98,9 +99,15 @@ mpegtsmux_prepare_opus (GstBuffer * buf, MpegTsPadData * pad_data,
   GstBuffer *outbuf;
   GstMapInfo map;
   guint n;
+  GstAudioClippingMeta *cmeta = gst_buffer_get_audio_clipping_meta (buf);
 
-  /* TODO: Write start/end trim */
+  g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
+
   outsize = 2 + insize / 255 + 1;
+  if (cmeta && cmeta->start)
+    outsize += 2;
+  if (cmeta && cmeta->end)
+    outsize += 2;
 
   outbuf = gst_buffer_new_and_alloc (outsize);
   gst_buffer_copy_into (outbuf, buf,
@@ -108,6 +115,12 @@ mpegtsmux_prepare_opus (GstBuffer * buf, MpegTsPadData * pad_data,
   gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
   map.data[0] = 0x7f;
   map.data[1] = 0xe0;
+
+  if (cmeta && cmeta->start)
+    map.data[1] |= 0x10;
+  if (cmeta && cmeta->end)
+    map.data[1] |= 0x08;
+
   n = 2;
   do {
     g_assert (n < outsize);
@@ -119,6 +132,14 @@ mpegtsmux_prepare_opus (GstBuffer * buf, MpegTsPadData * pad_data,
     insize -= 255;
     n++;
   } while (insize >= 0);
+
+  if (cmeta && cmeta->start) {
+    GST_WRITE_UINT16_BE (&map.data[n], cmeta->start);
+    n += 2;
+  }
+
+  if (cmeta && cmeta->end)
+    GST_WRITE_UINT16_BE (&map.data[n], cmeta->end);
 
   gst_buffer_unmap (outbuf, &map);
 
