@@ -2173,6 +2173,7 @@ gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node)
   return TRUE;
 
 error:
+  gst_mpdparser_free_mpd_node (new_mpd);
   return FALSE;
 }
 
