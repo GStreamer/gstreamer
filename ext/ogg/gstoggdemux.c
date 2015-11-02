@@ -1537,8 +1537,8 @@ gst_ogg_demux_seek_back_after_push_duration_check_unlock (GstOggDemux * ogg)
 static float
 gst_ogg_demux_estimate_seek_quality (GstOggDemux * ogg)
 {
-  gint64 diff;                  /* how far from the goal we ended up */
-  gint64 dist;                  /* how far we moved this iteration */
+  GstClockTimeDiff diff;        /* how far from the goal we ended up */
+  GstClockTimeDiff dist;        /* how far we moved this iteration */
   float seek_quality;
 
   if (ogg->push_prev_seek_time == GST_CLOCK_TIME_NONE) {
@@ -1550,18 +1550,18 @@ gst_ogg_demux_estimate_seek_quality (GstOggDemux * ogg)
   /* We take a guess at how good the last seek was at guessing
      the byte target by comparing the amplitude of the last
      seek to the error */
-  diff = ogg->push_seek_time_target - ogg->push_last_seek_time;
+  diff = GST_CLOCK_DIFF (ogg->push_seek_time_target, ogg->push_last_seek_time);
   if (diff < 0)
     diff = -diff;
-  dist = ogg->push_last_seek_time - ogg->push_prev_seek_time;
+  dist = GST_CLOCK_DIFF (ogg->push_last_seek_time, ogg->push_prev_seek_time);
   if (dist < 0)
     dist = -dist;
 
   seek_quality = (dist == 0) ? 0.0f : 1.0f / (1.0f + diff / (float) dist);
 
   GST_DEBUG_OBJECT (ogg,
-      "We moved %" GST_TIME_FORMAT ", we're off by %" GST_TIME_FORMAT
-      ", seek quality %f", GST_TIME_ARGS (dist), GST_TIME_ARGS (diff),
+      "We moved %" GST_STIME_FORMAT ", we're off by %" GST_STIME_FORMAT
+      ", seek quality %f", GST_STIME_ARGS (dist), GST_STIME_ARGS (diff),
       seek_quality);
   return seek_quality;
 }
