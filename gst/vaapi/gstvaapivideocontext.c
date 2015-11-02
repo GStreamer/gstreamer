@@ -61,8 +61,8 @@ gst_vaapi_video_context_new_with_display (GstVaapiDisplay * display,
 
   context = gst_context_new (GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME, persistent);
   structure = gst_context_writable_structure (context);
-  gst_structure_set (structure, "display", GST_VAAPI_TYPE_DISPLAY,
-      display, NULL);
+  gst_structure_set (structure, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME,
+      GST_VAAPI_TYPE_DISPLAY, display, NULL);
   return context;
 }
 
@@ -77,8 +77,8 @@ gst_vaapi_video_context_get_display (GstContext * context,
           GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME) == 0, FALSE);
 
   structure = gst_context_get_structure (context);
-  return gst_structure_get (structure, "display", GST_VAAPI_TYPE_DISPLAY,
-      display_ptr, NULL);
+  return gst_structure_get (structure, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME,
+      GST_VAAPI_TYPE_DISPLAY, display_ptr, NULL);
 }
 
 static gboolean
