@@ -267,6 +267,7 @@ gst_audio_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (bsrc);
   GstStructure *structure;
+  gint channels;
 
   caps = gst_caps_make_writable (caps);
 
@@ -281,6 +282,13 @@ gst_audio_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 
   /* fixate to mono unless downstream requires stereo, for backwards compat */
   gst_structure_fixate_field_nearest_int (structure, "channels", 1);
+
+  if (gst_structure_get_int (structure, "channels", &channels) && channels > 2) {
+    if (!gst_structure_has_field_typed (structure, "channel-mask",
+            GST_TYPE_BITMASK))
+      gst_structure_set (structure, "channel-mask", GST_TYPE_BITMASK, 0ULL,
+          NULL);
+  }
 
   caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
 
