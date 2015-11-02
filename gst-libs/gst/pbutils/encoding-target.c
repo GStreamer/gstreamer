@@ -890,7 +890,9 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
     for (i = 0; encoding_target_dirs[i]; i++) {
       target = gst_encoding_target_subload (encoding_target_dirs[i],
           category, lfilename, error);
-      break;
+
+      if (target)
+        break;
     }
     g_strfreev (encoding_target_dirs);
     if (target)
