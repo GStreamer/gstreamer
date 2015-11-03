@@ -5512,13 +5512,6 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     context->stream_headers =
         gst_matroska_parse_opus_stream_headers (context->codec_priv,
         context->codec_priv_size);
-    if (context->stream_headers) {
-      /* There was a valid header. Multistream headers are more than
-       * 19 bytes, as they include an extra channel mapping table. */
-      gboolean multistream = (context->codec_priv_size > 19);
-      gst_caps_set_simple (caps, "multistream", G_TYPE_BOOLEAN, multistream,
-          NULL);
-    }
     /* FIXME: mark stream as broken and skip if there are no stream headers */
     context->send_stream_headers = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_ACM)) {
