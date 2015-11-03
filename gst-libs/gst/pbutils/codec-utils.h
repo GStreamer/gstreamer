@@ -77,6 +77,43 @@ gboolean      gst_codec_utils_mpeg4video_caps_set_level_and_profile (GstCaps    
                                                                      const guint8 * vis_obj_seq,
                                                                      guint          len);
 
+/* Opus */
+gboolean      gst_codec_utils_opus_parse_caps (GstCaps   * caps,
+                                               guint32   * rate,
+                                               guint8    * channels,
+                                               guint8    * channel_mapping_family,
+                                               guint8    * stream_count,
+                                               guint8    * coupled_count,
+                                               guint8      channel_mapping[256]);
+
+GstCaps *     gst_codec_utils_opus_create_caps (guint32        rate,
+                                                guint8         channels,
+                                                guint8         channel_mapping_family,
+                                                guint8         stream_count,
+                                                guint8         coupled_count,
+                                                const guint8 * channel_mapping);
+
+GstCaps *    gst_codec_utils_opus_create_caps_from_header (GstBuffer * header, GstBuffer * comments);
+
+GstBuffer *  gst_codec_utils_opus_create_header (guint32        rate,
+                                                 guint8         channels,
+                                                 guint8         channel_mapping_family,
+                                                 guint8         stream_count,
+                                                 guint8         coupled_count,
+                                                 const guint8 * channel_mapping,
+                                                 guint16        pre_skip,
+                                                 gint16         output_gain);
+
+gboolean  gst_codec_utils_opus_parse_header (GstBuffer * header,
+                                             guint32   * rate,
+                                             guint8    * channels,
+                                             guint8    * channel_mapping_family,
+                                             guint8    * stream_count,
+                                             guint8    * coupled_count,
+                                             guint8      channel_mapping[256],
+                                             guint16   * pre_skip,
+                                             gint16    * output_gain);
+
 G_END_DECLS
 
 #endif /* __GST_PB_UTILS_CODEC_UTILS_H__ */

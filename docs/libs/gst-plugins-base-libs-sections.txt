@@ -2180,6 +2180,12 @@ gst_codec_utils_h265_caps_set_level_tier_and_profile
 gst_codec_utils_mpeg4video_get_profile
 gst_codec_utils_mpeg4video_get_level
 gst_codec_utils_mpeg4video_caps_set_level_and_profile
+<SUBSECTION>
+gst_codec_utils_opus_create_caps
+gst_codec_utils_opus_create_caps_from_header
+gst_codec_utils_opus_parse_caps
+gst_codec_utils_opus_create_header
+gst_codec_utils_opus_parse_header
 </SECTION>
 
 <SECTION>
