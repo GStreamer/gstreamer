@@ -711,6 +711,7 @@ gst_opus_enc_setup (GstOpusEnc * enc)
   gboolean ret;
   gint32 lookahead;
   const GstTagList *tags;
+  GstTagList *empty_tags = NULL;
   GstBuffer *header, *comments;
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -763,10 +764,14 @@ gst_opus_enc_setup (GstOpusEnc * enc)
       enc->n_channels - enc->n_stereo_streams, enc->n_stereo_streams,
       enc->decoding_channel_mapping, lookahead, 0);
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc));
+  if (!tags)
+    tags = empty_tags = gst_tag_list_new_empty ();
   comments =
       gst_tag_list_to_vorbiscomment_buffer (tags, (const guint8 *) "OpusTags",
       8, "Encoded with GStreamer opusenc");
   caps = gst_codec_utils_opus_create_caps_from_header (header, comments);
+  if (empty_tags)
+    gst_tag_list_unref (empty_tags);
   gst_buffer_unref (header);
   gst_buffer_unref (comments);
 
