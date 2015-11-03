@@ -39,6 +39,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbytewriter.h>
+#include <gst/audio/audio.h>
 #include <gst/tag/tag.h>
 
 #include "gstoggmux.h"
@@ -806,6 +807,7 @@ gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
   GstClockTimeDiff diff;
   GstMapInfo map;
   ogg_packet packet;
+  gboolean end_clip = TRUE;
 
   /* ensure messing with metadata is ok */
   buf = gst_buffer_make_writable (buf);
@@ -853,20 +855,35 @@ gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
   /* The last packet may have clipped samples. We need to test against
    * the segment to ensure we do not use a granpos that encompasses those.
    */
-  end_time =
-      gst_ogg_stream_granule_to_time (&pad->map, pad->next_granule + duration);
-  if (end_time > pad->segment.stop
-      && !GST_CLOCK_TIME_IS_VALID (gst_segment_to_running_time (&pad->segment,
-              GST_FORMAT_TIME, pad->segment.start + end_time))) {
-    gint64 actual_duration =
-        gst_util_uint64_scale_round (pad->segment.stop - time,
-        pad->map.granulerate_n,
-        GST_SECOND * pad->map.granulerate_d);
-    GST_INFO_OBJECT (ogg_mux,
-        "Got clipped last packet of duration %" G_GINT64_FORMAT " (%"
-        G_GINT64_FORMAT " clipped)", actual_duration,
-        duration - actual_duration);
-    duration = actual_duration;
+  if (pad->map.audio_clipping) {
+    GstAudioClippingMeta *cmeta = gst_buffer_get_audio_clipping_meta (buf);
+
+    g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
+    if (cmeta && cmeta->end && cmeta->end < duration) {
+      GST_DEBUG_OBJECT (pad->collect.pad,
+          "Clipping %" G_GUINT64_FORMAT " samples at the end", cmeta->end);
+      duration -= cmeta->end;
+      end_clip = FALSE;
+    }
+  }
+
+  if (end_clip) {
+    end_time =
+        gst_ogg_stream_granule_to_time (&pad->map,
+        pad->next_granule + duration);
+    if (end_time > pad->segment.stop
+        && !GST_CLOCK_TIME_IS_VALID (gst_segment_to_running_time (&pad->segment,
+                GST_FORMAT_TIME, pad->segment.start + end_time))) {
+      gint64 actual_duration =
+          gst_util_uint64_scale_round (pad->segment.stop - time,
+          pad->map.granulerate_n,
+          GST_SECOND * pad->map.granulerate_d);
+      GST_INFO_OBJECT (ogg_mux,
+          "Got clipped last packet of duration %" G_GINT64_FORMAT " (%"
+          G_GINT64_FORMAT " clipped)", actual_duration,
+          duration - actual_duration);
+      duration = actual_duration;
+    }
   }
 
   GST_LOG_OBJECT (pad->collect.pad, "buffer ts %" GST_TIME_FORMAT
