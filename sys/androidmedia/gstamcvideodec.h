@@ -28,7 +28,6 @@
 
 #include "gstamc.h"
 #include "gstamcsurface.h"
-#include "gstamc2dtexturerenderer.h"
 
 G_BEGIN_DECLS
 
@@ -97,14 +96,20 @@ struct _GstAmcVideoDec
   GstGLDisplay *gl_display;
   GstGLContext *gl_context;
   GstGLContext *other_gl_context;
-  GstAmc2DTextureRenderer *renderer;
 
   gboolean downstream_supports_gl;
   GstFlowReturn downstream_flow_ret;
 
-  GMutex on_frame_available_lock;
-  GCond on_frame_available_cond;
-  gboolean on_frame_available;
+  gboolean gl_mem_attached;
+  GstGLMemory *oes_mem;
+  GError *gl_error;
+  GMutex gl_lock;
+  GCond gl_cond;
+  guint gl_last_rendered_frame;
+  guint gl_pushed_frame_count; /* n buffers pushed */
+  guint gl_ready_frame_count;  /* n buffers ready for GL access */
+  guint gl_rendered_frame_count;  /* n buffers rendered */
+  GQueue *gl_queue;
 };
 
 struct _GstAmcVideoDecClass

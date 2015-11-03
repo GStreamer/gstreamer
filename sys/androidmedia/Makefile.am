@@ -7,7 +7,6 @@ libgstandroidmedia_la_SOURCES = \
 	gstamcvideoenc.c \
 	gstamcsurface.c \
 	gstamcsurfacetexture.c \
-	gstamc2dtexturerenderer.c \
 	gstjniutils.c
 
 noinst_HEADERS = \
@@ -18,7 +17,6 @@ noinst_HEADERS = \
 	gstamcvideoenc.h \
 	gstamcsurface.h \
 	gstamcsurfacetexture.h \
-	gstamc2dtexturerenderer.h \
 	gstjniutils.h
 
 libgstandroidmedia_la_CFLAGS = \

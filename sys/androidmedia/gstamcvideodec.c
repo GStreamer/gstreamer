@@ -17,6 +17,8 @@
  * Copyright (C) 2015, Edward Hervey
  *   Author: Edward Hervey <bilboed@gmail.com>
  *
+ * Copyright (C) 2015, Matthew Waters <matthew@centricular.com>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation
@@ -40,6 +42,7 @@
 #include <gst/gst.h>
 #include <gst/gl/gl.h>
 #include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideoaffinetransformationmeta.h>
 #include <gst/video/gstvideopool.h>
 #include <string.h>
 
@@ -51,7 +54,6 @@
 
 #include "gstamcvideodec.h"
 #include "gstamc-constants.h"
-#include "gstamc2dtexturerenderer.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_amc_video_dec_debug_category);
 #define GST_CAT_DEFAULT gst_amc_video_dec_debug_category
@@ -66,9 +68,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_amc_video_dec_debug_category);
   g_clear_error (&err); \
 } G_STMT_END
 
-/* Assume the device is able to decode at 30fps by default */
-#define GST_AMC_VIDEO_DEC_ON_FRAME_AVAILABLE_DEFAULT_TIMEOUT (33 * G_TIME_SPAN_MILLISECOND)
-
 #if GLIB_SIZEOF_VOID_P == 8
 #define JLONG_TO_GST_AMC_VIDEO_DEC(value) (GstAmcVideoDec *)(value)
 #define GST_AMC_VIDEO_DEC_TO_JLONG(value) (jlong)(value)
@@ -82,6 +81,113 @@ struct _BufferIdentification
 {
   guint64 timestamp;
 };
+
+struct gl_sync_result
+{
+  gint refcount;
+  gint64 frame_available_ts;
+  gboolean updated;
+};
+
+static struct gl_sync_result *
+_gl_sync_result_ref (struct gl_sync_result *result)
+{
+  g_assert (result != NULL);
+
+  g_atomic_int_inc (&result->refcount);
+
+  GST_TRACE ("gl_sync result %p ref", result);
+
+  return result;
+}
+
+static void
+_gl_sync_result_unref (struct gl_sync_result *result)
+{
+  g_assert (result != NULL);
+
+  GST_TRACE ("gl_sync result %p unref", result);
+
+  if (g_atomic_int_dec_and_test (&result->refcount)) {
+    GST_TRACE ("freeing gl_sync result %p", result);
+    g_free (result);
+  }
+}
+
+struct gl_sync
+{
+  gint refcount;
+  GstAmcVideoDec *sink;     /* back reference for statistics, lock, cond, etc */
+  GstBuffer *buffer;        /* back reference to the buffer */
+  GstGLMemory *oes_mem;     /* where amc is rendering into. The same for every gl_sync */
+  GstAmcSurface *surface;   /* java wrapper for where amc is rendering into */
+  guint gl_frame_no;        /* effectively the frame id */
+  gint64 released_ts;       /* microseconds from g_get_monotonic_time() */
+  struct gl_sync_result *result;
+};
+
+static struct gl_sync *
+_gl_sync_ref (struct gl_sync *sync)
+{
+  g_assert (sync != NULL);
+
+  g_atomic_int_inc (&sync->refcount);
+
+  GST_TRACE ("gl_sync %p ref", sync);
+
+  return sync;
+}
+
+static void
+_gl_sync_unref (struct gl_sync *sync)
+{
+  g_assert (sync != NULL);
+
+  GST_TRACE ("gl_sync %p unref", sync);
+
+  if (g_atomic_int_dec_and_test (&sync->refcount)) {
+    GST_TRACE ("freeing gl_sync %p", sync);
+
+    _gl_sync_result_unref (sync->result);
+
+    g_object_unref (sync->surface);
+    gst_memory_unref ((GstMemory *) sync->oes_mem);
+
+    g_free (sync);
+  }
+}
+
+static void
+_attach_mem_to_context (GstGLContext * context, GstAmcVideoDec * self)
+{
+  GST_TRACE_OBJECT (self, "attaching texture %p id %u to current context",
+      self->surface->texture, self->oes_mem->tex_id);
+  if (!gst_amc_surface_texture_attach_to_gl_context (self->surface->texture,
+          self->oes_mem->tex_id, &self->gl_error)) {
+    GST_ERROR_OBJECT (self, "Failed to attach texture to the GL context");
+    GST_ELEMENT_ERROR_FROM_ERROR (self, self->gl_error);
+  } else {
+    self->gl_mem_attached = TRUE;
+  }
+}
+
+static void
+_dettach_mem_from_context (GstGLContext * context, GstAmcVideoDec * self)
+{
+  if (self->surface) {
+    guint tex_id = self->oes_mem ? self->oes_mem->tex_id : 0;
+
+    GST_TRACE_OBJECT (self, "detaching texture %p id %u from current context",
+        self->surface->texture, tex_id);
+
+    if (!gst_amc_surface_texture_detach_from_gl_context (self->surface->texture,
+            &self->gl_error)) {
+      GST_ERROR_OBJECT (self, "Failed to attach texture to the GL context");
+      GST_ELEMENT_ERROR_FROM_ERROR (self, self->gl_error);
+    }
+  }
+  self->gl_mem_attached = FALSE;
+}
 
 static BufferIdentification *
 buffer_identification_new (GstClockTime timestamp)
@@ -231,8 +337,8 @@ gst_amc_video_dec_base_init (gpointer g_class)
   gst_amc_codec_info_to_caps (codec_info, &sink_caps, &src_caps);
 
   all_src_caps =
-      gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "RGBA"));
+      gst_caps_from_string ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY
+      "), format = (string) RGBA, texture-target = (string) external-oes");
 
   if (codec_info->gl_output_only) {
     gst_caps_unref (src_caps);
@@ -298,9 +404,10 @@ gst_amc_video_dec_init (GstAmcVideoDec * self)
   g_mutex_init (&self->drain_lock);
   g_cond_init (&self->drain_cond);
 
-  g_mutex_init (&self->on_frame_available_lock);
-  g_cond_init (&self->on_frame_available_cond);
-  self->on_frame_available = FALSE;
+  g_mutex_init (&self->gl_lock);
+  g_cond_init (&self->gl_cond);
+
+  self->gl_queue = g_queue_new ();
 }
 
 static gboolean
@@ -343,8 +450,26 @@ gst_amc_video_dec_close (GstVideoDecoder * decoder)
 
     gst_amc_codec_free (self->codec);
   }
-  self->codec = NULL;
-  self->codec_config = AMC_CODEC_CONFIG_NONE;
+
+  if (self->downstream_supports_gl
+      && self->codec_config == AMC_CODEC_CONFIG_WITH_SURFACE) {
+    g_mutex_lock (&self->gl_lock);
+    GST_INFO_OBJECT (self, "shutting down gl queue pushed %u ready %u "
+        "rendered %u", self->gl_pushed_frame_count, self->gl_ready_frame_count,
+        self->gl_rendered_frame_count);
+
+    g_queue_free_full (self->gl_queue, (GDestroyNotify) _gl_sync_unref);
+    self->gl_queue = g_queue_new ();
+    g_mutex_unlock (&self->gl_lock);
+
+    if (self->gl_mem_attached)
+      gst_gl_context_thread_add (self->gl_context,
+          (GstGLContextThreadFunc) _dettach_mem_from_context, self);
+  }
+  self->gl_pushed_frame_count = 0;
+  self->gl_ready_frame_count = 0;
+  self->gl_rendered_frame_count = 0;
+  self->gl_last_rendered_frame = 0;
 
   if (self->surface) {
     gst_object_unref (self->surface);
@@ -354,6 +479,31 @@ gst_amc_video_dec_close (GstVideoDecoder * decoder)
   self->started = FALSE;
   self->flushing = TRUE;
   self->downstream_supports_gl = FALSE;
+
+  self->codec = NULL;
+  self->codec_config = AMC_CODEC_CONFIG_NONE;
+
+  GST_DEBUG_OBJECT (self, "Freeing GL context: %" GST_PTR_FORMAT,
+      self->gl_context);
+  if (self->gl_context) {
+    gst_object_unref (self->gl_context);
+    self->gl_context = NULL;
+  }
+
+  if (self->oes_mem) {
+    gst_memory_unref ((GstMemory *) self->oes_mem);
+    self->oes_mem = NULL;
+  }
+
+  if (self->gl_display) {
+    gst_object_unref (self->gl_display);
+    self->gl_display = NULL;
+  }
+
+  if (self->other_gl_context) {
+    gst_object_unref (self->other_gl_context);
+    self->other_gl_context = NULL;
+  }
 
   GST_DEBUG_OBJECT (self, "Closed decoder");
 
@@ -367,6 +517,14 @@ gst_amc_video_dec_finalize (GObject * object)
 
   g_mutex_clear (&self->drain_lock);
   g_cond_clear (&self->drain_cond);
+
+  g_mutex_clear (&self->gl_lock);
+  g_cond_clear (&self->gl_cond);
+
+  if (self->gl_queue) {
+    g_queue_free_full (self->gl_queue, (GDestroyNotify) _gl_sync_unref);
+    self->gl_queue = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -437,20 +595,6 @@ gst_amc_video_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       self->downstream_flow_ret = GST_FLOW_FLUSHING;
       self->started = FALSE;
-
-      GST_DEBUG_OBJECT (element, "Freeing GL context: %" GST_PTR_FORMAT,
-          self->gl_context);
-      if (self->gl_context) {
-        gst_object_unref (self->gl_context);
-        self->gl_context = NULL;
-      }
-
-      GST_DEBUG_OBJECT (element, "Freeing GL renderer: %p", self->renderer);
-      if (self->renderer) {
-        gst_amc_2d_texture_renderer_free (self->renderer);
-        self->renderer = NULL;
-      }
-
       break;
     default:
       break;
@@ -655,6 +799,8 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     output_state->caps = gst_video_info_to_caps (&output_state->info);
     gst_caps_set_features (output_state->caps, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
+    gst_caps_set_simple (output_state->caps, "texture-target", G_TYPE_STRING,
+        "external-oes", NULL);
   }
 
   self->format = gst_format;
@@ -701,6 +847,270 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, GstAmcBuffer * buf,
 
   gst_video_codec_state_unref (state);
   return ret;
+}
+
+static const gfloat yflip_matrix[16] = {
+  1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, -1.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 1.0f, 0.0f,
+  0.0f, 1.0f, 0.0f, 1.0f
+};
+
+static void
+_amc_gl_set_sync (GstGLSyncMeta * sync_meta, GstGLContext * context)
+{
+}
+
+/* caller should remove from the gl_queue after calling this function */
+static void
+_gl_sync_render_unlocked (struct gl_sync *sync)
+{
+  GstVideoAffineTransformationMeta *af_meta;
+  GError *error = NULL;
+  gfloat matrix[16];
+  gint64 ts = 0;
+
+  GST_TRACE ("gl_sync %p result %p render (updated:%u)", sync, sync->result,
+      sync->result->updated);
+
+  if (sync->result->updated)
+    return;
+
+  /* FIXME: if this ever starts returning valid values we should attempt
+   * to use it */
+  if (!gst_amc_surface_texture_get_timestamp (sync->surface->texture, &ts, &error)) {
+    GST_ERROR_OBJECT (sync->sink, "Failed to update texture image");
+    GST_ELEMENT_ERROR_FROM_ERROR (sync->sink, error);
+    goto out;
+  }
+  GST_TRACE ("gl_sync %p rendering timestamp before update %" G_GINT64_FORMAT, sync, ts);
+
+  GST_TRACE ("gl_sync %p update_tex_image", sync);
+  if (!gst_amc_surface_texture_update_tex_image (sync->surface->texture,
+          &error)) {
+    GST_ERROR_OBJECT (sync->sink, "Failed to update texture image");
+    GST_ELEMENT_ERROR_FROM_ERROR (sync->sink, error);
+    goto out;
+  }
+  GST_TRACE ("gl_sync result %p updated", sync->result);
+  sync->result->updated = TRUE;
+  sync->sink->gl_rendered_frame_count++;
+  sync->sink->gl_last_rendered_frame = sync->gl_frame_no;
+
+  if (!gst_amc_surface_texture_get_timestamp (sync->surface->texture, &ts, &error)) {
+    GST_ERROR_OBJECT (sync->sink, "Failed to update texture image");
+    GST_ELEMENT_ERROR_FROM_ERROR (sync->sink, error);
+    goto out;
+  }
+  GST_TRACE ("gl_sync %p rendering timestamp after update %" G_GINT64_FORMAT, sync, ts);
+
+  af_meta = gst_buffer_add_video_affine_transformation_meta (sync->buffer);
+  if (!af_meta) {
+    GST_WARNING ("Failed to retreive the transformation meta from the "
+        "gl_sync %p buffer %p", sync, sync->buffer);
+  } else if (gst_amc_surface_texture_get_transform_matrix (sync->surface->
+          texture, matrix, &error)) {
+
+    gst_video_affine_transformation_meta_apply_matrix (af_meta, matrix);
+    gst_video_affine_transformation_meta_apply_matrix (af_meta, yflip_matrix);
+  }
+
+  GST_LOG ("gl_sync %p successfully updated SurfaceTexture %p into "
+      "OES texture %u", sync, sync->surface->texture, sync->oes_mem->tex_id);
+
+out:
+  if (error) {
+    if (sync->sink->gl_error == NULL)
+      sync->sink->gl_error = error;
+    else
+      g_clear_error (&error);
+  }
+}
+
+static gboolean
+_amc_gl_possibly_wait_for_gl_sync (struct gl_sync *sync, gint64 timeout)
+{
+  gint64 end_time;
+
+  /* FIXME: remove this somehow */
+  if (timeout != -1)
+    end_time = g_get_monotonic_time () + timeout;
+
+  GST_TRACE ("gl_sync %p waiting for frame %u current %u updated %u ", sync,
+      sync->gl_frame_no, sync->sink->gl_ready_frame_count,
+      sync->result->updated);
+
+  if ((gint) (sync->sink->gl_last_rendered_frame - sync->gl_frame_no) > 0) {
+    GST_ERROR ("gl_sync %p unsuccessfully waited for frame %u. out of order "
+        "wait detected", sync, sync->gl_frame_no);
+    return FALSE;
+  }
+
+  /* The number of frame callbacks (gl_ready_frame_count) is not a direct
+   * relationship with the number of pushed buffers (gl_pushed_frame_count)
+   * as, from the frameworks/native/include/gui/ConsumerBase.h file,
+   *
+   *    "...frames that are queued while in asynchronous mode only trigger the
+   *    callback if no previous frames are pending."
+   *
+   * As a result, we need to advance the ready counter somehow ourselves when
+   * such events happen. There is no reliable way of knowing when/if the frame
+   * listener is going to fire.  The only uniqueu identifier,
+   * SurfaceTexture::get_timestamp seems to always return 0.
+   *
+   * The maximum queue size as defined in
+   * frameworks/native/include/gui/BufferQueue.h
+   * is 32 of which a maximum of 30 can be acquired at a time so we picked a
+   * number less than that to wait for before updating the ready frame count.
+   */
+
+  while (!sync->result->updated && (gint)(sync->sink->gl_ready_frame_count - sync->gl_frame_no) < 0) {
+    /* The time limit is need otherwise when amc decides to not emit the
+     * frame listener (say, on orientation changes) we don't wait foreever */
+    if (timeout == -1 || !g_cond_wait_until (&sync->sink->gl_cond,
+            &sync->sink->gl_lock, end_time)) {
+      GST_LOG ("gl_sync %p unsuccessfully waited for frame %u", sync,
+          sync->gl_frame_no);
+
+      /* Assume that the decoder<->renderer can ultimately keep up */
+      if ((gint)(sync->sink->gl_pushed_frame_count - sync->sink->gl_ready_frame_count) > 0) {
+        guint diff = sync->sink->gl_pushed_frame_count - sync->sink->gl_ready_frame_count - 1u;
+        sync->sink->gl_ready_frame_count += diff;
+        GST_LOG ("gl_sync %p possible \'on_frame_available\' listener miss "
+            "detected, attempting to work around.  Jumping forward %u "
+            "frames for frame %u", sync, diff, sync->gl_frame_no);
+      }
+      return FALSE;
+    }
+  }
+  GST_LOG ("gl_sync %p successfully waited for frame %u", sync,
+      sync->gl_frame_no);
+
+  return TRUE;
+}
+
+static gboolean
+_amc_gl_iterate_queue_unlocked (GstGLSyncMeta * sync_meta, gint64 timeout)
+{
+  struct gl_sync *sync = sync_meta->data;
+  struct gl_sync *tmp;
+  gboolean ret = TRUE;
+
+  while ((tmp = g_queue_peek_head (sync->sink->gl_queue))) {
+    /* skip frames that are ahead of the current wait frame */
+    if ((gint) (sync->gl_frame_no - tmp->gl_frame_no) < 0) {
+      GST_TRACE ("gl_sync %p frame %u is ahead of gl_sync %p frame %u", tmp,
+          tmp->gl_frame_no, sync, sync->gl_frame_no);
+      break;
+    }
+
+    /* Frames are currently pushed in order and waits need to be performed
+     * in the same order */
+
+    if (!_amc_gl_possibly_wait_for_gl_sync (tmp, timeout)) {
+      ret = FALSE;
+      break;
+    }
+
+    _gl_sync_render_unlocked (tmp);
+
+    g_queue_pop_head (sync->sink->gl_queue);
+    _gl_sync_unref (tmp);
+  }
+
+  return ret;
+}
+
+struct gl_wait
+{
+  GstGLSyncMeta *sync_meta;
+  gboolean ret;
+};
+
+static void
+_amc_gl_wait_gl (GstGLContext * context, struct gl_wait * wait)
+{
+  struct gl_sync *sync = wait->sync_meta->data;
+  gint64 current_time, wait_time;
+
+  g_mutex_lock (&sync->sink->gl_lock);
+  current_time = g_get_monotonic_time ();
+  /* Assume that the device can do 20fps.  See the comment in
+   * _amc_gl_possibly_wait_for_gl_sync() as to why this is ultimately needed
+   * even though it is ultimately a HACK */
+  wait_time = 50 * G_TIME_SPAN_MILLISECOND - (current_time - sync->released_ts);
+  if (wait_time < 0)
+    wait_time = -1;
+  wait->ret = _amc_gl_iterate_queue_unlocked (wait->sync_meta, wait_time);
+  g_mutex_unlock (&sync->sink->gl_lock);
+}
+
+static void
+_amc_gl_wait (GstGLSyncMeta * sync_meta, GstGLContext * context)
+{
+  struct gl_sync *sync = sync_meta->data;
+  struct gl_wait wait;
+
+  wait.sync_meta = sync_meta;
+  wait.ret = FALSE;
+  gst_gl_context_thread_add (context,
+      (GstGLContextThreadFunc) _amc_gl_wait_gl, &wait);
+
+  if (!wait.ret)
+    GST_WARNING ("gl_sync %p could not wait for frame, took too long", sync);
+}
+
+static void
+_amc_gl_copy (GstGLSyncMeta * src, GstBuffer * sbuffer, GstGLSyncMeta * dest,
+    GstBuffer * dbuffer)
+{
+  struct gl_sync *sync = src->data;
+  struct gl_sync *tmp;
+
+  tmp = g_new0 (struct gl_sync, 1);
+
+  GST_TRACE ("copying gl_sync %p to %p", sync, tmp);
+
+  g_mutex_lock (&sync->sink->gl_lock);
+
+  tmp->refcount = 1;
+  tmp->sink = sync->sink;
+  tmp->buffer = dbuffer;
+  tmp->oes_mem = (GstGLMemory *) gst_memory_ref ((GstMemory *) sync->oes_mem);
+  tmp->surface = g_object_ref (sync->surface);
+  tmp->gl_frame_no = sync->gl_frame_no;
+  tmp->released_ts = sync->released_ts;
+  tmp->result = sync->result;
+  _gl_sync_result_ref (tmp->result);
+  dest->data = tmp;
+
+  g_mutex_unlock (&sync->sink->gl_lock);
+}
+
+static void
+_amc_gl_render_on_free (GstGLContext * context, GstGLSyncMeta * sync_meta)
+{
+  struct gl_sync *sync = sync_meta->data;
+
+  g_mutex_lock (&sync->sink->gl_lock);
+  /* just render as many frames as we have */
+  _amc_gl_iterate_queue_unlocked (sync_meta, -1);
+  g_mutex_unlock (&sync->sink->gl_lock);
+}
+
+static void
+_amc_gl_free (GstGLSyncMeta * sync_meta, GstGLContext *context)
+{
+  struct gl_sync *sync = sync_meta->data;
+
+  /* The wait render queue inside android is not very deep so when we drop
+   * frames we need to signal that we have rendered them if we have any chance
+   * of keeping up between the decoder, the android GL queue and downstream
+   * OpenGL. If we don't do this, once we start dropping frames downstream,
+   * it is very near to impossible for the pipeline to catch up. */
+  gst_gl_context_thread_add (context,
+      (GstGLContextThreadFunc) _amc_gl_render_on_free, sync_meta);
+  _gl_sync_unref (sync);
 }
 
 static void
@@ -810,100 +1220,81 @@ retry:
     flow_ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
   } else if (self->codec_config == AMC_CODEC_CONFIG_WITH_SURFACE
       && buffer_info.size > 0) {
-    GstMemory *mem;
     GstBuffer *outbuf;
-    gint64 timeout;
-    gint64 end_time;
+    GstGLSyncMeta *sync_meta;
     GstVideoCodecState *state;
+    struct gl_sync *sync;
 
-    outbuf =
-        gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
+    outbuf = gst_buffer_new ();
 
     state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
-    if (state && state->info.fps_n > 0 && state->info.fps_d > 0) {
-      timeout =
-          gst_util_uint64_scale_int (G_TIME_SPAN_SECOND, state->info.fps_d,
-          state->info.fps_n);
-    } else {
-      timeout = GST_AMC_VIDEO_DEC_ON_FRAME_AVAILABLE_DEFAULT_TIMEOUT;
+
+    if (!self->oes_mem) {
+      self->oes_mem = (GstGLMemory *) gst_gl_memory_alloc (self->gl_context,
+          GST_GL_TEXTURE_TARGET_EXTERNAL_OES, NULL, &state->info, 0, NULL);
+
+      gst_gl_context_thread_add (self->gl_context,
+          (GstGLContextThreadFunc) _attach_mem_to_context, self);
+
+      if (self->gl_error) {
+        GST_ELEMENT_ERROR_FROM_ERROR (self, self->gl_error);
+        gst_video_codec_state_unref (state);
+        goto gl_output_error;
+      }
     }
+
+    gst_buffer_append_memory (outbuf,
+        gst_memory_ref ((GstMemory *) self->oes_mem));
+
     gst_video_codec_state_unref (state);
 
-    mem = gst_buffer_peek_memory (outbuf, 0);
-    if (gst_is_gl_memory (mem)) {
-      GstGLMemory *gl_mem = (GstGLMemory *) mem;
+    sync = g_new0 (struct gl_sync, 1);
+    sync->refcount = 1;
+    sync->sink = self;
+    sync->buffer = outbuf;
+    sync->surface = g_object_ref (self->surface);
+    sync->oes_mem =
+        (GstGLMemory *) gst_memory_ref ((GstMemory *) self->oes_mem);
+    sync->result = g_new0 (struct gl_sync_result, 1);
+    sync->result->refcount = 1;
+    sync->result->updated = FALSE;
 
-      if (!self->renderer) {
-        self->renderer =
-            gst_amc_2d_texture_renderer_new (self->gl_context,
-            self->surface->texture, self->width, self->height);
-      }
+    GST_TRACE ("new gl_sync %p result %p", sync, sync->result);
 
-      release_buffer = FALSE;
-      self->on_frame_available = FALSE;
-      g_mutex_lock (&self->on_frame_available_lock);
+    sync_meta = gst_buffer_add_gl_sync_meta_full (self->gl_context, outbuf,
+        sync);
+    sync_meta->set_sync = _amc_gl_set_sync;
+    sync_meta->wait = _amc_gl_wait;
+    sync_meta->copy = _amc_gl_copy;
+    sync_meta->free = _amc_gl_free;
 
-      /* Render the frame into the surface */
-      if (!gst_amc_codec_release_output_buffer (self->codec, idx, TRUE, &err)) {
-        gst_buffer_unref (outbuf);
-        GST_ERROR_OBJECT (self, "Failed to render buffer, index %d", idx);
-        GST_ELEMENT_ERROR_FROM_ERROR (self, err);
+    gst_buffer_add_video_affine_transformation_meta (outbuf);
 
-        goto gl_output_error;
-      }
+    g_mutex_lock (&self->gl_lock);
 
-      /* Wait for the frame to become available */
-      end_time = g_get_monotonic_time () + timeout;
-      g_cond_wait_until (&self->on_frame_available_cond,
-          &self->on_frame_available_lock, end_time);
+    self->gl_pushed_frame_count++;
+    sync->gl_frame_no = self->gl_pushed_frame_count;
+    g_queue_push_tail (self->gl_queue, _gl_sync_ref (sync));
 
-      g_mutex_unlock (&self->on_frame_available_lock);
+    GST_DEBUG_OBJECT (self, "render GL frame %u %" GST_PTR_FORMAT,
+        sync->gl_frame_no, outbuf);
 
-      /* Now that the frame is available, we can render it to a 2D texture.
-       *
-       * Calling updateTexImage seems necessary even if no frame is available
-       * otherwise it could happen that the onFrameAvailable callback is not
-       * executed anymore. */
-      if (!gst_amc_2d_texture_renderer_render (self->renderer,
-              gl_mem->tex_id, &err)) {
-        gst_buffer_unref (outbuf);
-        GST_ERROR_OBJECT (self, "Failed to render to a 2D texture");
-        GST_ELEMENT_ERROR_FROM_ERROR (self, err);
+    sync->released_ts = g_get_monotonic_time ();
+    g_mutex_unlock (&self->gl_lock);
 
-        goto gl_output_error;
-      }
-
-    } else {
-      GST_ERROR_OBJECT (self, "Wrong memory type for GL output mode");
-      goto format_error;
-    }
-
-    if (self->on_frame_available) {
-      if (frame) {
-        frame->output_buffer = outbuf;
-        flow_ret =
-            gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
-      } else {
-        /* This sometimes happens at EOS or if the input is not properly framed,
-         * let's handle it gracefully by allocating a new buffer for the current
-         * caps and filling it
-         */
-        GST_BUFFER_PTS (outbuf) =
-            gst_util_uint64_scale (buffer_info.presentation_time_us,
-            GST_USECOND, 1);
-
-        flow_ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), outbuf);
-      }
-    } else {
-      GST_WARNING_OBJECT (self, "No frame available after "
-          "%" G_GINT64_FORMAT "ms", timeout / G_TIME_SPAN_MILLISECOND);
-
-      if (frame) {
-        flow_ret =
-            gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
-      }
+    /* Render the frame into the surface */
+    if (!gst_amc_codec_release_output_buffer (self->codec, idx, TRUE, &err)) {
       gst_buffer_unref (outbuf);
+      GST_ERROR_OBJECT (self, "Failed to render buffer, index %d", idx);
+      GST_ELEMENT_ERROR_FROM_ERROR (self, err);
+
+      goto gl_output_error;
     }
+
+    frame->output_buffer = outbuf;
+    flow_ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+
+    release_buffer = FALSE;
   } else if (self->codec_config == AMC_CODEC_CONFIG_WITHOUT_SURFACE && !frame
       && buffer_info.size > 0) {
     GstBuffer *outbuf;
@@ -1993,10 +2384,6 @@ gst_amc_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
       GST_OBJECT_UNLOCK (self->gl_display);
     }
 #endif
-    if (self->renderer) {
-      gst_amc_2d_texture_renderer_free (self->renderer);
-      self->renderer = NULL;
-    }
 
     self->downstream_supports_gl = TRUE;
   }
@@ -2018,10 +2405,11 @@ static void
 gst_amc_video_dec_on_frame_available (JNIEnv * env, jobject thiz,
     long long context, jobject surfaceTexture)
 {
-  GstAmcVideoDec *dec = JLONG_TO_GST_AMC_VIDEO_DEC (context);
+  GstAmcVideoDec *self = JLONG_TO_GST_AMC_VIDEO_DEC (context);
 
-  g_mutex_lock (&dec->on_frame_available_lock);
-  dec->on_frame_available = TRUE;
-  g_cond_signal (&dec->on_frame_available_cond);
-  g_mutex_unlock (&dec->on_frame_available_lock);
+  g_mutex_lock (&self->gl_lock);
+  self->gl_ready_frame_count++;
+  GST_LOG_OBJECT (self, "frame %u available", self->gl_ready_frame_count);
+  g_cond_broadcast (&self->gl_cond);
+  g_mutex_unlock (&self->gl_lock);
 }
