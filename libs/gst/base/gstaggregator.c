@@ -290,7 +290,7 @@ struct _GstAggregatorPrivate
   gboolean peer_latency_live;   /* protected by src_lock */
   GstClockTime peer_latency_min;        /* protected by src_lock */
   GstClockTime peer_latency_max;        /* protected by src_lock */
-  gboolean has_peer_latency;
+  gboolean has_peer_latency;    /* protected by src_lock */
 
   GstClockTime sub_latency_min; /* protected by src_lock */
   GstClockTime sub_latency_max; /* protected by src_lock */
@@ -300,7 +300,7 @@ struct _GstAggregatorPrivate
   GMutex src_lock;
   GCond src_cond;
 
-  gboolean first_buffer;
+  gboolean first_buffer;        /* protected by object lock */
   GstAggregatorStartTimeSelection start_time_selection;
   GstClockTime start_time;
 
