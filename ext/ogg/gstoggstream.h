@@ -70,6 +70,7 @@ struct _GstOggStream
   gint bitrate;
   guint64 total_time;
   gboolean is_sparse;
+  gboolean audio_clipping;
 
   GstCaps *caps;
 

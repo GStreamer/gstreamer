@@ -41,6 +41,7 @@
 #include <string.h>
 #include <gst/gst-i18n-plugin.h>
 #include <gst/tag/tag.h>
+#include <gst/audio/audio.h>
 
 #include "gstoggdemux.h"
 
@@ -500,6 +501,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   guint64 out_offset, out_offset_end;
   gboolean delta_unit = FALSE;
   gboolean is_header;
+  guint64 clip_start = 0, clip_end = 0;
 
   ret = cret = GST_FLOW_OK;
   GST_DEBUG_OBJECT (pad, "Chaining %d %d %" GST_TIME_FORMAT " %d %p",
@@ -723,9 +725,29 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
                 pad->prev_granule);
           else
             out_timestamp = 0;
+
+          if (pad->map.audio_clipping
+              && pad->current_granule < pad->prev_granule + duration) {
+            clip_end = pad->prev_granule + duration - pad->current_granule;
+          }
+          if (pad->map.audio_clipping
+              && pad->current_granule - duration < -pad->map.granule_offset) {
+            if (pad->current_granule >= -pad->map.granule_offset)
+              clip_start = -pad->map.granule_offset;
+            else
+              clip_start = pad->current_granule;
+          }
         } else {
           out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
               pad->current_granule - duration);
+
+          if (pad->map.audio_clipping
+              && pad->current_granule - duration < -pad->map.granule_offset) {
+            if (pad->current_granule >= -pad->map.granule_offset)
+              clip_start = -pad->map.granule_offset;
+            else
+              clip_start = pad->current_granule;
+          }
         }
         out_duration =
             gst_ogg_stream_granule_to_time (&pad->map,
@@ -750,6 +772,14 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     goto not_added;
 
   buf = gst_buffer_new_and_alloc (packet->bytes - offset - trim);
+
+  if (pad->map.audio_clipping && (clip_start || clip_end)) {
+    GST_DEBUG_OBJECT (pad,
+        "Adding audio clipping %" G_GUINT64_FORMAT " %" G_GUINT64_FORMAT,
+        clip_start, clip_end);
+    gst_buffer_add_audio_clipping_meta (buf, GST_FORMAT_DEFAULT, clip_start,
+        clip_end);
+  }
 
   /* set delta flag for OGM content */
   if (delta_unit)
