@@ -1484,17 +1484,15 @@ rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
      * We need to apply this diff to the RTP timestamp to get the RTP timestamp
      * for the given ntpnstime. */
     diff = GST_CLOCK_DIFF (src->last_rtime, running_time);
+    GST_DEBUG ("running_time %" GST_TIME_FORMAT ", diff %" GST_STIME_FORMAT,
+        GST_TIME_ARGS (running_time), GST_STIME_ARGS (diff));
 
     /* now translate the diff to RTP time, handle positive and negative cases.
      * If there is no diff, we already set rtptime correctly above. */
     if (diff > 0) {
-      GST_DEBUG ("running_time %" GST_TIME_FORMAT ", diff %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (running_time), GST_TIME_ARGS (diff));
       t_rtp += gst_util_uint64_scale_int (diff, src->clock_rate, GST_SECOND);
     } else {
       diff = -diff;
-      GST_DEBUG ("running_time %" GST_TIME_FORMAT ", diff -%" GST_TIME_FORMAT,
-          GST_TIME_ARGS (running_time), GST_TIME_ARGS (diff));
       t_rtp -= gst_util_uint64_scale_int (diff, src->clock_rate, GST_SECOND);
     }
   } else {
