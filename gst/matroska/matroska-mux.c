@@ -1636,6 +1636,12 @@ opus_streamheader_to_codecdata (const GValue * streamheader,
   context->codec_priv = g_malloc0 (context->codec_priv_size);
   gst_buffer_extract (buf, 0, context->codec_priv, -1);
 
+  context->codec_delay =
+      GST_READ_UINT16_LE ((guint8 *) context->codec_priv + 10);
+  context->codec_delay =
+      gst_util_uint64_scale_round (context->codec_delay, GST_SECOND, 48000);
+  context->seek_preroll = 80 * GST_MSECOND;
+
   return TRUE;
 
 /* ERRORS */
@@ -2510,6 +2516,7 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
         gst_ebml_write_uint (ebml, GST_MATROSKA_ID_AUDIOBITDEPTH,
             audiocontext->bitdepth);
       }
+
       gst_ebml_write_master_finish (ebml, master);
 
       break;
@@ -2527,6 +2534,16 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
   if (context->codec_priv)
     gst_ebml_write_binary (ebml, GST_MATROSKA_ID_CODECPRIVATE,
         context->codec_priv, context->codec_priv_size);
+
+  if (context->seek_preroll) {
+    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_SEEKPREROLL,
+        context->seek_preroll);
+  }
+
+  if (context->codec_delay) {
+    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CODECDELAY,
+        context->codec_delay);
+  }
 }
 
 #if 0
@@ -3428,12 +3445,13 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   gboolean write_duration;
   gint16 relative_timestamp;
   gint64 relative_timestamp64;
-  guint64 block_duration;
+  guint64 block_duration, duration_diff = 0;
   gboolean is_video_keyframe = FALSE;
   gboolean is_video_invisible = FALSE;
   GstMatroskamuxPad *pad;
   gint flags = 0;
   GstClockTime buffer_timestamp;
+  GstAudioClippingMeta *cmeta = NULL;
 
   /* write data */
   pad = GST_MATROSKAMUX_PAD_CAST (collect_pad->collect.pad);
@@ -3467,6 +3485,17 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
         "Invalid buffer timestamp; dropping buffer");
     gst_buffer_unref (buf);
     return GST_FLOW_OK;
+  }
+
+  if (!strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_AUDIO_OPUS)
+      && collect_pad->track->codec_delay) {
+    /* All timestamps should include the codec delay */
+    if (buffer_timestamp > collect_pad->track->codec_delay) {
+      buffer_timestamp += collect_pad->track->codec_delay;
+    } else {
+      buffer_timestamp = 0;
+      duration_diff = collect_pad->track->codec_delay - buffer_timestamp;
+    }
   }
 
   /* set the timestamp for outgoing buffers */
@@ -3571,8 +3600,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   write_duration = FALSE;
   block_duration = 0;
   if (pad->frame_duration && GST_BUFFER_DURATION_IS_VALID (buf)) {
-    block_duration = gst_util_uint64_scale (GST_BUFFER_DURATION (buf),
-        1, mux->time_scale);
+    block_duration = GST_BUFFER_DURATION (buf) + duration_diff;
+    block_duration = gst_util_uint64_scale (block_duration, 1, mux->time_scale);
 
     /* small difference should be ok. */
     if (block_duration > collect_pad->default_duration_scaled + 1 ||
@@ -3601,7 +3630,16 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   if (is_video_invisible)
     flags |= 0x08;
 
-  if (mux->doctype_version > 1 && !write_duration) {
+  if (!strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_AUDIO_OPUS)) {
+    cmeta = gst_buffer_get_audio_clipping_meta (buf);
+    g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
+
+    /* Start clipping is done via header and CodecDelay */
+    if (cmeta && !cmeta->end)
+      cmeta = NULL;
+  }
+
+  if (mux->doctype_version > 1 && !write_duration && !cmeta) {
     if (is_video_keyframe)
       flags |= 0x80;
 
@@ -3626,6 +3664,17 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
         relative_timestamp, flags);
     if (write_duration)
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_BLOCKDURATION, block_duration);
+
+    if (!strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_AUDIO_OPUS)
+        && cmeta) {
+      /* Start clipping is done via header and CodecDelay */
+      if (cmeta->end) {
+        guint64 end =
+            gst_util_uint64_scale_round (cmeta->end, GST_SECOND, 48000);
+        gst_ebml_write_sint (ebml, GST_MATROSKA_ID_DISCARDPADDING, end);
+      }
+    }
+
     gst_ebml_write_buffer_header (ebml, GST_MATROSKA_ID_BLOCK,
         gst_buffer_get_size (buf) + gst_buffer_get_size (hdr));
     gst_ebml_write_buffer (ebml, hdr);

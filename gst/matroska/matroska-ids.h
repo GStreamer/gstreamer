@@ -109,6 +109,8 @@
 #define GST_MATROSKA_ID_CODECDOWNLOADURL           0x26B240
 /* semi-draft */
 #define GST_MATROSKA_ID_CODECDECODEALL             0xAA
+#define GST_MATROSKA_ID_SEEKPREROLL                0x56BB
+#define GST_MATROSKA_ID_CODECDELAY                 0x56AA
 
 /* IDs in the TrackTranslate master */
 #define GST_MATROSKA_ID_TRACKTRANSLATEEDITIONUID   0x66FC
@@ -249,6 +251,7 @@
 /* semi-draft */
 #define GST_MATROSKA_ID_CODECSTATE                 0xA4
 #define GST_MATROSKA_ID_SLICES                     0x8E
+#define GST_MATROSKA_ID_DISCARDPADDING             0x75A2
 
 /* IDs in the BlockAdditions master */
 #define GST_MATROSKA_ID_BLOCKMORE                  0xA6
@@ -530,6 +533,8 @@ struct _GstMatroskaTrackContext {
   guint64       default_duration;
   guint64       pos;
   gdouble       timecodescale;
+  guint64       seek_preroll;
+  guint64       codec_delay;
 
   gboolean      set_discont; /* TRUE = set DISCONT flag on next buffer */
 
