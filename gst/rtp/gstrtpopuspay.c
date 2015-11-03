@@ -38,7 +38,8 @@ static GstStaticPadTemplate gst_rtp_opus_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-opus, multistream = (boolean) FALSE")
+    GST_STATIC_CAPS
+    ("audio/x-opus, channels = (int) [1, 2], channel-mapping-family = (int) 0")
     );
 
 static GstStaticPadTemplate gst_rtp_opus_pay_src_template =
@@ -122,7 +123,7 @@ gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   if (gst_structure_get_int (s, "channels", &channels)) {
     if (channels > 2) {
       GST_ERROR_OBJECT (payload,
-          "More than 2 channels with multistream=FALSE is invalid");
+          "More than 2 channels with channel-mapping-family=0 is invalid");
       return FALSE;
     } else if (channels == 2) {
       sprop_stereo = "1";
