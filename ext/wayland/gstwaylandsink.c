@@ -727,6 +727,11 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
 
   g_return_if_fail (sink != NULL);
 
+  if (sink->window != NULL) {
+    GST_WARNING_OBJECT (sink, "changing window handle is not supported");
+    return;
+  }
+
   g_mutex_lock (&sink->render_lock);
 
   GST_DEBUG_OBJECT (sink, "Setting window handle %" GST_PTR_FORMAT,
