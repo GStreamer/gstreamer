@@ -1630,8 +1630,8 @@ gst_video_decoder_src_event_default (GstVideoDecoder * decoder,
       GST_OBJECT_UNLOCK (decoder);
 
       GST_DEBUG_OBJECT (decoder,
-          "got QoS %" GST_TIME_FORMAT ", %" G_GINT64_FORMAT ", %g",
-          GST_TIME_ARGS (timestamp), diff, proportion);
+          "got QoS %" GST_TIME_FORMAT ", %" GST_STIME_FORMAT ", %g",
+          GST_TIME_ARGS (timestamp), GST_STIME_ARGS (diff), proportion);
 
       res = gst_pad_push_event (decoder->sinkpad, event);
       break;
