@@ -70,10 +70,11 @@ static GstStaticPadTemplate webm_videosink_templ =
     );
 
 static GstStaticPadTemplate webm_audiosink_templ =
-GST_STATIC_PAD_TEMPLATE ("audio_%u",
+    GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("audio/x-vorbis, " COMMON_AUDIO_CAPS)
+    GST_STATIC_CAPS ("audio/x-vorbis, " COMMON_AUDIO_CAPS ";"
+        "audio/x-opus, " COMMON_AUDIO_CAPS)
     );
 
 static void

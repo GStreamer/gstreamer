@@ -125,6 +125,8 @@ static GstStaticPadTemplate videosink_templ =
         COMMON_VIDEO_CAPS "; "
         "video/x-vp8, "
         COMMON_VIDEO_CAPS "; "
+        "video/x-vp9, "
+        COMMON_VIDEO_CAPS "; "
         "video/x-raw, "
         "format = (string) { YUY2, I420, YV12, UYVY, AYUV, GRAY8, BGR, RGB }, "
         COMMON_VIDEO_CAPS "; "
