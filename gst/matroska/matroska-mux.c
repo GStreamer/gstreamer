@@ -1621,7 +1621,8 @@ opus_streamheader_to_codecdata (const GValue * streamheader,
   if (bufarr->len != 1 && bufarr->len != 2)
     goto wrong_count;
 
-  context->xiph_headers_to_skip = bufarr->len;
+  /* Opus headers are not in-band */
+  context->xiph_headers_to_skip = 0;
 
   bufval = &g_array_index (bufarr, GValue, 0);
   if (G_VALUE_TYPE (bufval) != GST_TYPE_BUFFER) {
