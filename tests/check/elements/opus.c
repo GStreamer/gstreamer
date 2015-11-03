@@ -36,11 +36,6 @@
                            "rate = (int) 48000, " \
                            "channels = (int) 1 "
 
-static const guint8 opus_ogg_id_header[19] = {
-  0x4f, 0x70, 0x75, 0x73, 0x48, 0x65, 0x61, 0x64, 0x00, 0x02, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-
 /* A lot of these taken from the vorbisdec test */
 
 /* For ease of programming we use globals to keep refs for our floating
@@ -135,40 +130,6 @@ check_buffers (guint expected)
     outbuffer = NULL;
   }
 }
-
-GST_START_TEST (test_opus_id_header)
-{
-  GstElement *opusdec;
-  GstBuffer *inbuffer;
-  GstCaps *caps;
-
-  opusdec = setup_opusdec ();
-  fail_unless (gst_element_set_state (opusdec,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
-
-  caps = gst_caps_new_empty_simple ("audio/x-opus");
-  gst_check_setup_events (mydecsrcpad, opusdec, caps, GST_FORMAT_TIME);
-  gst_caps_unref (caps);
-
-  inbuffer = gst_buffer_new_and_alloc (sizeof (opus_ogg_id_header));
-  gst_buffer_fill (inbuffer, 0, opus_ogg_id_header,
-      sizeof (opus_ogg_id_header));
-  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  gst_buffer_ref (inbuffer);
-
-  /* pushing gives away my reference ... */
-  fail_unless (gst_pad_push (mydecsrcpad, inbuffer) == GST_FLOW_OK);
-  /* ... and nothing ends up on the global buffer list */
-  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  gst_buffer_unref (inbuffer);
-  check_buffers (0);
-
-  /* cleanup */
-  cleanup_opusdec (opusdec);
-}
-
-GST_END_TEST;
 
 GST_START_TEST (test_opus_encode_nothing)
 {
@@ -365,7 +326,6 @@ opus_suite (void)
   suite_add_tcase (s, tc_chain);
 
 #define X if (0)
-  tcase_add_test (tc_chain, test_opus_id_header);
   tcase_add_test (tc_chain, test_opus_encode_nothing);
   tcase_add_test (tc_chain, test_opus_decode_nothing);
   tcase_add_test (tc_chain, test_opus_encode_samples);
