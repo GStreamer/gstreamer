@@ -2157,6 +2157,7 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
 
   for (;;) {
     SRC_LOCK (self);
+    GST_OBJECT_LOCK (self);
     PAD_LOCK (aggpad);
     if (gst_aggregator_pad_has_space (self, aggpad)
         && aggpad->priv->flow_return == GST_FLOW_OK) {
@@ -2173,10 +2174,12 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
 
     flow_return = aggpad->priv->flow_return;
     if (flow_return != GST_FLOW_OK) {
+      GST_OBJECT_UNLOCK (self);
       SRC_UNLOCK (self);
       goto flushing;
     }
     GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed");
+    GST_OBJECT_UNLOCK (self);
     SRC_UNLOCK (self);
     PAD_WAIT_EVENT (aggpad);
 
@@ -2192,6 +2195,7 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
         start_time = 0;
         break;
       case GST_AGGREGATOR_START_TIME_SELECTION_FIRST:
+        GST_OBJECT_LOCK (aggpad);
         if (aggpad->segment.format == GST_FORMAT_TIME) {
           start_time = buf_pts;
           if (start_time != -1) {
@@ -2207,6 +2211,7 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
               "as the segment is a %s segment instead of a time segment",
               gst_format_get_name (aggpad->segment.format));
         }
+        GST_OBJECT_UNLOCK (aggpad);
         break;
       case GST_AGGREGATOR_START_TIME_SELECTION_SET:
         start_time = self->priv->start_time;
@@ -2227,6 +2232,7 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
   }
 
   PAD_UNLOCK (aggpad);
+  GST_OBJECT_UNLOCK (self);
   SRC_UNLOCK (self);
 
 done:
