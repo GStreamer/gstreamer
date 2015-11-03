@@ -940,6 +940,34 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
         break;
       }
 
+        /* codec delay */
+      case GST_MATROSKA_ID_CODECDELAY:{
+        guint64 num;
+
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          break;
+
+        context->codec_delay = num;
+
+        GST_DEBUG_OBJECT (demux, "CodecDelay: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (num));
+        break;
+      }
+
+        /* codec delay */
+      case GST_MATROSKA_ID_SEEKPREROLL:{
+        guint64 num;
+
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          break;
+
+        context->seek_preroll = num;
+
+        GST_DEBUG_OBJECT (demux, "SeekPreroll: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (num));
+        break;
+      }
+
         /* name of this track */
       case GST_MATROSKA_ID_TRACKNAME:{
         gchar *text;
@@ -3162,6 +3190,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
   gboolean readblock = FALSE;
   guint32 id;
   guint64 block_duration = -1;
+  gint64 block_discardpadding = 0;
   GstBuffer *buf = NULL;
   GstMapInfo map;
   gint stream_num = -1, n, laces = 0;
@@ -3323,6 +3352,13 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         ret = gst_ebml_read_uint (ebml, &id, &block_duration);
         GST_DEBUG_OBJECT (demux, "BlockDuration: %" G_GUINT64_FORMAT,
             block_duration);
+        break;
+      }
+
+      case GST_MATROSKA_ID_DISCARDPADDING:{
+        ret = gst_ebml_read_sint (ebml, &id, &block_discardpadding);
+        GST_DEBUG_OBJECT (demux, "DiscardPadding: %" GST_STIME_FORMAT,
+            GST_STIME_ARGS (block_discardpadding));
         break;
       }
 
@@ -3702,6 +3738,40 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
          elements typically assume minimal alignment.
          Therefore, create an aligned copy if necessary. */
       sub = gst_matroska_demux_align_buffer (demux, sub, stream->alignment);
+
+      if (!strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_AUDIO_OPUS)) {
+        guint64 start_clip = 0, end_clip = 0;
+
+        /* Codec delay is part of the timestamps */
+        if (GST_BUFFER_PTS_IS_VALID (sub) && stream->codec_delay) {
+          if (GST_BUFFER_PTS (sub) > stream->codec_delay) {
+            GST_BUFFER_PTS (sub) -= stream->codec_delay;
+          } else {
+            GST_BUFFER_PTS (sub) = 0;
+            start_clip =
+                gst_util_uint64_scale_round (stream->codec_delay, 48000,
+                GST_SECOND);
+
+            if (GST_BUFFER_DURATION_IS_VALID (sub)) {
+              if (GST_BUFFER_DURATION (sub) > stream->codec_delay)
+                GST_BUFFER_DURATION (sub) -= stream->codec_delay;
+              else
+                GST_BUFFER_DURATION (sub) = 0;
+            }
+          }
+        }
+
+        if (block_discardpadding) {
+          end_clip =
+              gst_util_uint64_scale_round (block_discardpadding, 48000,
+              GST_SECOND);
+        }
+
+        if (start_clip || end_clip) {
+          gst_buffer_add_audio_clipping_meta (sub, GST_FORMAT_DEFAULT,
+              start_clip, end_clip);
+        }
+      }
 
       if (GST_BUFFER_PTS_IS_VALID (sub)) {
         stream->pos = GST_BUFFER_PTS (sub);
