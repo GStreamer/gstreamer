@@ -52,9 +52,9 @@ struct _GstOpusDec {
   GstBuffer            *streamheader;
   GstBuffer            *vorbiscomment;
 
-  int sample_rate;
-  int n_channels;
-  guint32 pre_skip;
+  guint32 sample_rate;
+  guint8 n_channels;
+  guint16 pre_skip;
   gint16 r128_gain;
 
   GstAudioChannelPosition opus_pos[64];

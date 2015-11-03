@@ -10,6 +10,7 @@ libgstopus_la_CFLAGS = \
 libgstopus_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
 	-lgsttag-$(GST_API_VERSION) -lgstrtp-$(GST_API_VERSION) \
+	-lgstpbutils-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(OPUS_LIBS)

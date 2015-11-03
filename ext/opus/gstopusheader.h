@@ -26,12 +26,6 @@
 
 G_BEGIN_DECLS
 
-extern void gst_opus_header_create_caps_from_headers (GstCaps **caps, GSList **headers,
-    GstBuffer *id_header, GstBuffer *comment_header);
-extern void gst_opus_header_create_caps (GstCaps **caps, GSList **headers,
-    guint16 pre_skip, guint sample_rate32, guint8 nchannels, guint8 n_stereo_streams,
-    guint8 channel_mapping_family, const guint8 *channel_mapping,
-    const GstTagList *tags);
 extern gboolean gst_opus_header_is_header (GstBuffer * buf,
     const char *magic, guint magic_size);
 extern gboolean gst_opus_header_is_id_header (GstBuffer * buf);
