@@ -1229,123 +1229,105 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                 {0, 1, 2, 3, 4, 5, 6, 7},
               };
 
-              guint8 codecdata[22 + 256] = {
-                'O', 'p', 'u', 's',
-                'H', 'e', 'a', 'd',
-                1, 0, 0, 0,
-                0, 0, 0, 0,
-                0, 0, 0, 0,
-                0, 0, 0, 0,
-                0, 0, 0, 0,
-                0, 0,
-              };
-              GstBuffer *codec_data_buf;
-              guint channels;
-              GValue v_arr = G_VALUE_INIT;
-              GValue v_buf = G_VALUE_INIT;
-              GstTagList *tags;
-              gint codecdata_len = -1;
+              gint channels = -1, stream_count, coupled_count, mapping_family;
+              guint8 *channel_mapping = NULL;
 
               channels = channel_config_code ? (channel_config_code & 0x0f) : 2;
-              codecdata[9] = channels;
               if (channel_config_code == 0 || channel_config_code == 0x80) {
                 /* Dual Mono */
-                codecdata[18] = 255;
+                mapping_family = 255;
                 if (channel_config_code == 0) {
-                  codecdata[19] = 1;
-                  codecdata[20] = 1;
+                  stream_count = 1;
+                  coupled_count = 1;
                 } else {
-                  codecdata[19] = 2;
-                  codecdata[20] = 0;
+                  stream_count = 2;
+                  coupled_count = 0;
                 }
-                memcpy (&codecdata[21], channel_map_a[1], channels);
-                codecdata_len = 24;
+                channel_mapping = g_new0 (guint8, channels);
+                memcpy (channel_mapping, &channel_map_a[1], channels);
               } else if (channel_config_code <= 8) {
-                codecdata[18] = (channels > 2) ? 1 : 0;
-                codecdata[19] =
+                mapping_family = (channels > 2) ? 1 : 0;
+                stream_count =
                     channel_config_code -
                     coupled_stream_counts[channel_config_code];
-                codecdata[20] = coupled_stream_counts[channel_config_code];
-                memcpy (&codecdata[21], channel_map_a[channels - 1], channels);
-                if (codecdata[18] == 0)
-                  codecdata_len = 19;
-                else
-                  codecdata_len = 21 + channels;
+                coupled_count = coupled_stream_counts[channel_config_code];
+                if (mapping_family != 0) {
+                  channel_mapping = g_new0 (guint8, channels);
+                  memcpy (channel_mapping, &channel_map_a[channels - 1],
+                      channels);
+                }
               } else if (channel_config_code >= 0x82
                   && channel_config_code <= 0x88) {
-                codecdata[18] = 1;
-                codecdata[19] = channels;
-                codecdata[20] = 0;
-                memcpy (&codecdata[21], channel_map_b[channels - 1], channels);
-                codecdata_len = 21 + channels;
+                mapping_family = 1;
+                stream_count = channels;
+                coupled_count = 0;
+                channel_mapping = g_new0 (guint8, channels);
+                memcpy (channel_mapping, &channel_map_b[channels - 1],
+                    channels);
               } else if (channel_config_code == 0x81) {
-                guint8 channel_count, mapping_family;
-
                 if (gst_byte_reader_get_remaining (&br) < 2) {
                   GST_WARNING_OBJECT (demux,
                       "Invalid Opus descriptor with extended channel configuration");
+                  channels = -1;
                   break;
                 }
 
-                channel_count = gst_byte_reader_get_uint8_unchecked (&br);
+                channels = gst_byte_reader_get_uint8_unchecked (&br);
                 mapping_family = gst_byte_reader_get_uint8_unchecked (&br);
 
                 /* Overwrite values from above */
-                if (channel_count == 0) {
+                if (channels == 0) {
                   GST_WARNING_OBJECT (demux,
                       "Invalid Opus descriptor with extended channel configuration");
+                  channels = -1;
                   break;
                 }
 
-                channels = channel_count;
-                codecdata[9] = channels;
-                if (mapping_family == 0 && channel_count <= 2) {
-                  codecdata[18] = 0;
-                  codecdata[19] =
-                      channel_count - coupled_stream_counts[channel_count];
-                  codecdata[20] = coupled_stream_counts[channel_count];
-                  codecdata_len = 19;
+                if (mapping_family == 0 && channels <= 2) {
+                  stream_count = channels - coupled_stream_counts[channels];
+                  coupled_count = coupled_stream_counts[channels];
                 } else {
                   GstBitReader breader;
                   guint8 stream_count_minus_one, coupled_stream_count;
                   gint stream_count_minus_one_len, coupled_stream_count_len;
                   gint channel_mapping_len, i;
 
-                  codecdata[18] = mapping_family;
-
                   gst_bit_reader_init (&breader,
                       gst_byte_reader_get_data_unchecked
                       (&br, gst_byte_reader_get_remaining
                           (&br)), gst_byte_reader_get_remaining (&br));
 
-                  stream_count_minus_one_len = ceil (log2 (channel_count));
+                  stream_count_minus_one_len = ceil (log2 (channels));
                   if (!gst_bit_reader_get_bits_uint8 (&breader,
                           &stream_count_minus_one,
                           stream_count_minus_one_len)) {
                     GST_WARNING_OBJECT (demux,
                         "Invalid Opus descriptor with extended channel configuration");
+                    channels = -1;
                     break;
                   }
 
-                  codecdata[19] = stream_count_minus_one + 1;
+                  stream_count = stream_count_minus_one + 1;
                   coupled_stream_count_len =
-                      ceil (log2 (stream_count_minus_one_len + 2));
+                      ceil (log2 (stream_count_minus_one + 2));
 
                   if (!gst_bit_reader_get_bits_uint8 (&breader,
                           &coupled_stream_count, coupled_stream_count_len)) {
                     GST_WARNING_OBJECT (demux,
                         "Invalid Opus descriptor with extended channel configuration");
+                    channels = -1;
                     break;
                   }
 
-                  codecdata[20] = coupled_stream_count;
+                  coupled_count = coupled_stream_count;
 
                   channel_mapping_len =
                       ceil (log2 (stream_count_minus_one + 1 +
                           coupled_stream_count + 1));
-                  for (i = 0; i < channel_count; i++) {
+                  channel_mapping = g_new0 (guint8, channels);
+                  for (i = 0; i < channels; i++) {
                     if (!gst_bit_reader_get_bits_uint8 (&breader,
-                            &codecdata[21 + i], channel_mapping_len)) {
+                            &channel_mapping[i], channel_mapping_len)) {
                       GST_WARNING_OBJECT (demux,
                           "Invalid Opus descriptor with extended channel configuration");
                       break;
@@ -1353,42 +1335,44 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                   }
 
                   /* error above */
-                  if (i != channel_count)
+                  if (i != channels) {
+                    channels = -1;
+                    g_free (channel_mapping);
+                    channel_mapping = NULL;
                     break;
-
-                  codecdata_len = 22 + channel_count;
+                  }
                 }
               } else {
                 g_assert_not_reached ();
               }
 
-              if (codecdata_len != -1) {
+              if (channels != -1) {
                 is_audio = TRUE;
                 template = gst_static_pad_template_get (&audio_template);
                 name = g_strdup_printf ("audio_%04x", bstream->pid);
-                caps = gst_caps_new_empty_simple ("audio/x-opus");
+                caps = gst_caps_new_simple ("audio/x-opus",
+                    "channels", G_TYPE_INT, channels,
+                    "channel-mapping-family", G_TYPE_INT, mapping_family,
+                    "stream-count", G_TYPE_INT, stream_count,
+                    "coupled-count", G_TYPE_INT, coupled_count, NULL);
 
-                g_value_init (&v_arr, GST_TYPE_ARRAY);
-                g_value_init (&v_buf, GST_TYPE_BUFFER);
-                codec_data_buf =
-                    gst_buffer_new_wrapped (g_memdup (codecdata, codecdata_len),
-                    codecdata_len);
-                gst_value_take_buffer (&v_buf, codec_data_buf);
-                gst_value_array_append_and_take_value (&v_arr, &v_buf);
+                if (channel_mapping) {
+                  GValue v_arr = G_VALUE_INIT;
+                  GValue v = G_VALUE_INIT;
+                  gint i;
 
+                  g_value_init (&v_arr, GST_TYPE_ARRAY);
+                  g_value_init (&v, G_TYPE_INT);
+                  for (i = 0; i < channels; i++) {
+                    g_value_set_int (&v, channel_mapping[i]);
+                    gst_value_array_append_value (&v_arr, &v);
+                  }
 
-                tags = gst_tag_list_new_empty ();
-                g_value_init (&v_buf, GST_TYPE_BUFFER);
-                codec_data_buf =
-                    gst_tag_list_to_vorbiscomment_buffer (tags,
-                    (const guint8 *) "OpusTags", 8, "No comments");
-                gst_tag_list_unref (tags);
-                gst_value_take_buffer (&v_buf, codec_data_buf);
-                gst_value_array_append_and_take_value (&v_arr, &v_buf);
-
-                gst_caps_set_value (caps, "streamheader", &v_arr);
-
-                g_value_unset (&v_arr);
+                  gst_caps_set_value (caps, "channel-mapping", &v_arr);
+                  g_value_unset (&v_arr);
+                  g_value_unset (&v);
+                  g_free (channel_mapping);
+                }
               }
             } else {
               GST_WARNING_OBJECT (demux,

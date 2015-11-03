@@ -91,6 +91,7 @@
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
 #include <gst/mpegts/mpegts.h>
+#include <gst/pbutils/pbutils.h>
 
 #include "mpegtsmux.h"
 
@@ -143,7 +144,9 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
         "mute = (boolean) { FALSE, TRUE }; "
         "audio/x-ac3, framed = (boolean) TRUE;"
         "audio/x-dts, framed = (boolean) TRUE;"
-        "audio/x-opus;"
+        "audio/x-opus, "
+        "channels = (int) [1, 8], "
+        "channel-mapping-family = (int) {0, 1};"
         "subpicture/x-dvb; application/x-teletext; meta/x-klv, parsed=true"));
 
 static GstStaticPadTemplate mpegtsmux_src_factory =
@@ -671,43 +674,22 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
     /* needs a particularly sized layout */
     ts_data->prepare_func = mpegtsmux_prepare_teletext;
   } else if (strcmp (mt, "audio/x-opus") == 0) {
-    GstBuffer *streamheader = NULL;
-    const GValue *v;
-    GstMapInfo map;
+    guint8 channels, mapping_family, stream_count, coupled_count;
+    guint8 channel_mapping[256];
 
-    v = gst_structure_get_value (s, "streamheader");
-    if (v && G_VALUE_HOLDS (v, GST_TYPE_ARRAY)
-        && gst_value_array_get_size (v) >= 1) {
-      const GValue *h = gst_value_array_get_value (v, 0);
-
-      streamheader = gst_value_get_buffer (h);
+    if (!gst_codec_utils_opus_parse_caps (caps, NULL, &channels,
+            &mapping_family, &stream_count, &coupled_count, channel_mapping)) {
+      GST_ERROR_OBJECT (pad, "Incomplete Opus caps");
+      goto not_negotiated;
     }
 
-    /* FIXME: We need to either map all values for the OpusHead header
-     * to caps, or always require/generate an OpusHead streamheader for the
-     * caps. E.g. in rtpopusdepay */
-    if (!streamheader || gst_buffer_get_size (streamheader) < 22) {
-      gint channels;
-
-      if (gst_structure_get_int (s, "channels", &channels) && channels <= 2) {
-        opus_channel_config_code = channels;
-      } else {
-        GST_FIXME_OBJECT (pad,
-            "Multichannel Opus without streamheader not handled");
-        goto not_negotiated;
-      }
-    }
-
-    gst_buffer_map (streamheader, &map, GST_MAP_READ);
-    if (map.data[9] == 2 && map.data[18] == 255 && map.data[19] == 1
-        && map.data[20] == 1) {
+    if (channels <= 2 && mapping_family == 0) {
+      opus_channel_config_code = channels;
+    } else if (channels == 2 && mapping_family == 255 && stream_count == 1
+        && coupled_count == 1) {
       /* Dual mono */
       opus_channel_config_code = 0;
-    } else if (map.data[9] >= 1 && map.data[9] <= 2 && map.data[18] == 0) {
-      /* RTP mapping */
-      opus_channel_config_code = map.data[9];
-    } else if (map.data[9] >= 2 && map.data[9] <= 8 && map.data[18] == 1
-        && map.size >= 21 + map.data[9]) {
+    } else if (channels >= 2 && channels <= 8 && mapping_family == 1) {
       static const guint8 coupled_stream_counts[9] = {
         1, 0, 1, 1, 2, 2, 2, 3, 3
       };
@@ -733,27 +715,21 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
       };
 
       /* Vorbis mapping */
-      if (map.data[19] == map.data[9] - coupled_stream_counts[map.data[9]] &&
-          map.data[20] == coupled_stream_counts[map.data[9]] &&
-          memcmp (&map.data[21], channel_map_a[map.data[9] - 1],
-              map.data[9]) == 0) {
-        opus_channel_config_code = map.data[9];
-      } else if (map.data[19] == map.data[9] &&
-          map.data[20] == 0 &&
-          memcmp (&map.data[21], channel_map_b[map.data[9] - 1],
-              map.data[9]) == 0) {
-        opus_channel_config_code = map.data[9] | 0x80;
+      if (stream_count == channels - coupled_stream_counts[channels] &&
+          coupled_count == coupled_stream_counts[channels] &&
+          memcmp (channel_mapping, channel_map_a[channels - 1],
+              channels) == 0) {
+        opus_channel_config_code = channels;
+      } else if (stream_count == channels - coupled_stream_counts[channels] &&
+          coupled_count == coupled_stream_counts[channels] &&
+          memcmp (channel_mapping, channel_map_b[channels - 1],
+              channels) == 0) {
+        opus_channel_config_code = channels | 0x80;
       } else {
-        gst_buffer_unmap (streamheader, &map);
         GST_FIXME_OBJECT (pad, "Opus channel mapping not handled");
         goto not_negotiated;
       }
-    } else {
-      gst_buffer_unmap (streamheader, &map);
-      GST_FIXME_OBJECT (pad, "Opus channel mapping not handled");
-      goto not_negotiated;
     }
-    gst_buffer_unmap (streamheader, &map);
 
     st = TSMUX_ST_PS_OPUS;
     ts_data->prepare_func = mpegtsmux_prepare_opus;
