@@ -805,8 +805,8 @@ retry:
           gst_video_decoder_get_max_decode_time (GST_VIDEO_DECODER (self),
               frame)) < 0) {
     GST_WARNING_OBJECT (self,
-        "Frame is too late, dropping (deadline %" GST_TIME_FORMAT ")",
-        GST_TIME_ARGS (-deadline));
+        "Frame is too late, dropping (deadline %" GST_STIME_FORMAT ")",
+        GST_STIME_ARGS (deadline));
     flow_ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
   } else if (self->codec_config == AMC_CODEC_CONFIG_WITH_SURFACE
       && buffer_info.size > 0) {
