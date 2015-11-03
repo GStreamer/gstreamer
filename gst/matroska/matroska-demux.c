@@ -5507,13 +5507,28 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     /* FIXME: mark stream as broken and skip if there are no stream headers */
     context->send_stream_headers = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_OPUS)) {
-    caps = gst_caps_new_empty_simple ("audio/x-opus");
-    *codec_name = g_strdup ("Opus");
-    context->stream_headers =
-        gst_matroska_parse_opus_stream_headers (context->codec_priv,
-        context->codec_priv_size);
-    /* FIXME: mark stream as broken and skip if there are no stream headers */
-    context->send_stream_headers = TRUE;
+    GstBuffer *tmp;
+
+    if (context->codec_priv_size >= 19) {
+      if (audiocontext->samplerate)
+        GST_WRITE_UINT32_LE ((guint8 *) context->codec_priv + 12,
+            audiocontext->samplerate);
+      if (context->codec_delay) {
+        guint64 delay =
+            gst_util_uint64_scale_round (context->codec_delay, 48000,
+            GST_SECOND);
+        GST_WRITE_UINT16_LE ((guint8 *) context->codec_priv + 10, delay);
+      }
+
+      tmp =
+          gst_buffer_new_wrapped (g_memdup (context->codec_priv,
+              context->codec_priv_size), context->codec_priv_size);
+      caps = gst_codec_utils_opus_create_caps_from_header (tmp, NULL);
+      gst_buffer_unref (tmp);
+      *codec_name = g_strdup ("Opus");
+    } else {
+      GST_WARNING ("Invalid Opus codec data size");
+    }
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_ACM)) {
     gst_riff_strf_auds auds;
 
