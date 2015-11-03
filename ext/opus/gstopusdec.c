@@ -47,6 +47,7 @@
 #include "gstopusheader.h"
 #include "gstopuscommon.h"
 #include "gstopusdec.h"
+#include <gst/pbutils/pbutils.h>
 
 GST_DEBUG_CATEGORY_STATIC (opusdec_debug);
 #define GST_CAT_DEFAULT opusdec_debug
@@ -225,6 +226,8 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
   GstAudioInfo info;
 
   if (caps) {
+    gint rate, channels;
+
     caps = gst_caps_truncate (caps);
     caps = gst_caps_make_writable (caps);
     s = gst_caps_get_structure (caps, 0);
@@ -233,13 +236,15 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
       gst_structure_fixate_field_nearest_int (s, "rate", dec->sample_rate);
     else
       gst_structure_set (s, "rate", G_TYPE_INT, dec->sample_rate, NULL);
-    gst_structure_get_int (s, "rate", &dec->sample_rate);
+    gst_structure_get_int (s, "rate", &rate);
+    dec->sample_rate = rate;
 
     if (gst_structure_has_field (s, "channels"))
       gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
     else
       gst_structure_set (s, "channels", G_TYPE_INT, dec->n_channels, NULL);
-    gst_structure_get_int (s, "channels", &dec->n_channels);
+    gst_structure_get_int (s, "channels", &channels);
+    dec->n_channels = channels;
 
     gst_caps_unref (caps);
   }
@@ -273,7 +278,6 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
   /* but we still need the opus order for later reordering */
   if (pos) {
     memcpy (dec->opus_pos, pos, sizeof (pos[0]) * dec->n_channels);
-    gst_audio_channel_positions_to_valid_order (dec->opus_pos, dec->n_channels);
   } else {
     dec->opus_pos[0] = GST_AUDIO_CHANNEL_POSITION_INVALID;
   }
@@ -284,78 +288,63 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
 static GstFlowReturn
 gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
-  const guint8 *data;
   GstAudioChannelPosition pos[64];
   const GstAudioChannelPosition *posn = NULL;
-  GstMapInfo map;
 
   if (!gst_opus_header_is_id_header (buf)) {
     GST_ERROR_OBJECT (dec, "Header is not an Opus ID header");
     return GST_FLOW_ERROR;
   }
 
-  gst_buffer_map (buf, &map, GST_MAP_READ);
-  data = map.data;
-
-  dec->n_channels = data[9];
-  dec->sample_rate = GST_READ_UINT32_LE (data + 12);
-  if (dec->sample_rate == 0)
-    dec->sample_rate = 48000;
-  dec->pre_skip = GST_READ_UINT16_LE (data + 10);
-  dec->r128_gain = GST_READ_UINT16_LE (data + 16);
+  if (!gst_codec_utils_opus_parse_header (buf,
+          &dec->sample_rate,
+          &dec->n_channels,
+          &dec->channel_mapping_family,
+          &dec->n_streams,
+          &dec->n_stereo_streams,
+          dec->channel_mapping, &dec->pre_skip, &dec->r128_gain)) {
+    GST_ERROR_OBJECT (dec, "Failed to parse Opus ID header");
+    return GST_FLOW_ERROR;
+  }
   dec->r128_gain_volume = gst_opus_dec_get_r128_volume (dec->r128_gain);
+
   GST_INFO_OBJECT (dec,
       "Found pre-skip of %u samples, R128 gain %d (volume %f)",
       dec->pre_skip, dec->r128_gain, dec->r128_gain_volume);
 
-  dec->channel_mapping_family = data[18];
-  if (dec->channel_mapping_family == 0) {
-    /* implicit mapping */
-    GST_INFO_OBJECT (dec, "Channel mapping family 0, implicit mapping");
-    dec->n_streams = dec->n_stereo_streams = 1;
-    dec->channel_mapping[0] = 0;
-    dec->channel_mapping[1] = 1;
-  } else {
-    dec->n_streams = data[19];
-    dec->n_stereo_streams = data[20];
-    memcpy (dec->channel_mapping, data + 21, dec->n_channels);
+  if (dec->channel_mapping_family == 1) {
+    GST_INFO_OBJECT (dec, "Channel mapping family 1, Vorbis mapping");
+    switch (dec->n_channels) {
+      case 1:
+      case 2:
+        /* nothing */
+        break;
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+        posn = gst_opus_channel_positions[dec->n_channels - 1];
+        break;
+      default:{
+        gint i;
 
-    if (dec->channel_mapping_family == 1) {
-      GST_INFO_OBJECT (dec, "Channel mapping family 1, Vorbis mapping");
-      switch (dec->n_channels) {
-        case 1:
-        case 2:
-          /* nothing */
-          break;
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-          posn = gst_opus_channel_positions[dec->n_channels - 1];
-          break;
-        default:{
-          gint i;
+        GST_ELEMENT_WARNING (GST_ELEMENT (dec), STREAM, DECODE,
+            (NULL), ("Using NONE channel layout for more than 8 channels"));
 
-          GST_ELEMENT_WARNING (GST_ELEMENT (dec), STREAM, DECODE,
-              (NULL), ("Using NONE channel layout for more than 8 channels"));
+        for (i = 0; i < dec->n_channels; i++)
+          pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
 
-          for (i = 0; i < dec->n_channels; i++)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
-
-          posn = pos;
-        }
+        posn = pos;
       }
-    } else {
-      GST_INFO_OBJECT (dec, "Channel mapping family %d",
-          dec->channel_mapping_family);
     }
+  } else {
+    GST_INFO_OBJECT (dec, "Channel mapping family %d",
+        dec->channel_mapping_family);
   }
 
   gst_opus_dec_negotiate (dec, posn);
-
-  gst_buffer_unmap (buf, &map);
 
   return GST_FLOW_OK;
 }
@@ -660,8 +649,10 @@ gst_opus_dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
     if (header && G_VALUE_HOLDS (header, GST_TYPE_BUFFER)) {
       buf = gst_value_get_buffer (header);
       res = gst_opus_dec_parse_header (dec, buf);
-      if (res != GST_FLOW_OK)
+      if (res != GST_FLOW_OK) {
+        ret = FALSE;
         goto done;
+      }
       gst_buffer_replace (&dec->streamheader, buf);
     }
 
@@ -669,26 +660,26 @@ gst_opus_dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
     if (vorbiscomment && G_VALUE_HOLDS (vorbiscomment, GST_TYPE_BUFFER)) {
       buf = gst_value_get_buffer (vorbiscomment);
       res = gst_opus_dec_parse_comments (dec, buf);
-      if (res != GST_FLOW_OK)
+      if (res != GST_FLOW_OK) {
+        ret = FALSE;
         goto done;
+      }
       gst_buffer_replace (&dec->vorbiscomment, buf);
     }
   } else {
-    /* defaults if not in the caps */
-    dec->n_channels = 2;
-    dec->sample_rate = 48000;
+    const GstAudioChannelPosition *posn = NULL;
 
-    gst_structure_get_int (s, "channels", &dec->n_channels);
-    gst_structure_get_int (s, "rate", &dec->sample_rate);
+    if (!gst_codec_utils_opus_parse_caps (caps, &dec->sample_rate,
+            &dec->n_channels, &dec->channel_mapping_family, &dec->n_streams,
+            &dec->n_stereo_streams, dec->channel_mapping)) {
+      ret = FALSE;
+      goto done;
+    }
 
-    /* default stereo mapping */
-    dec->channel_mapping_family = 0;
-    dec->channel_mapping[0] = 0;
-    dec->channel_mapping[1] = 1;
-    dec->n_streams = 1;
-    dec->n_stereo_streams = 1;
+    if (dec->channel_mapping_family == 1 && dec->n_channels <= 8)
+      posn = gst_opus_channel_positions[dec->n_channels - 1];
 
-    gst_opus_dec_negotiate (dec, NULL);
+    gst_opus_dec_negotiate (dec, posn);
   }
 
 done:
