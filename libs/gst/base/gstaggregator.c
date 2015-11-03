@@ -861,7 +861,6 @@ gst_aggregator_start (GstAggregator * self)
   GstAggregatorClass *klass;
   gboolean result;
 
-  self->priv->running = TRUE;
   self->priv->send_stream_start = TRUE;
   self->priv->send_segment = TRUE;
   self->priv->send_eos = TRUE;
