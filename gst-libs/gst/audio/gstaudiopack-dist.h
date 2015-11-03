@@ -81,11 +81,17 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #endif
 
 void audio_orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_u8_trunc (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
 void audio_orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_s8_trunc (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
 void audio_orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_u16_trunc (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
 void audio_orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_s16_trunc (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
 void audio_orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_u16_swap_trunc (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
 void audio_orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_s16_swap_trunc (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
 void audio_orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
 void audio_orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
 void audio_orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
