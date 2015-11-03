@@ -234,7 +234,8 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
     else
       outbuf = tmpbuf;
 
-    ctx->in.finfo->unpack_func (ctx->in.finfo, 0, outbuf, src,
+    ctx->in.finfo->unpack_func (ctx->in.finfo,
+        GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, outbuf, src,
         samples * ctx->in.channels);
     src = outbuf;
   }

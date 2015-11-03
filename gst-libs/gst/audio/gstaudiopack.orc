@@ -3,41 +3,71 @@
 .dest 4 d1 gint32
 .source 1 s1 guint8
 .const 4 c1 0x80000000
-.const 4 c2 24
-.temp 2 t2
 .temp 4 t3
 
-convubw t2, s1
-convuwl t3, t2
-shll t3, t3, c2
+splatbl t3, s1
 xorl d1, t3, c1
 
+.function audio_orc_unpack_u8_trunc
+.dest 4 d1 gint32
+.source 1 s1 guint8
+.const 4 c1 0x80000000
+.const 4 c2 24
+.temp 4 t3
+
+splatbl t3, s1
+shll t3, t3, c2
+xorl d1, t3, c1
 
 .function audio_orc_unpack_s8
 .dest 4 d1 gint32
 .source 1 s1 guint8
-.const 4 c1 24
+.const 4 c1 0x00808080
 .temp 2 t2
 .temp 4 t3
 
-convubw t2, s1
-convuwl t3, t2
+splatbl t3, s1
+xorl d1, t3, c1
+
+.function audio_orc_unpack_s8_trunc
+.dest 4 d1 gint32
+.source 1 s1 guint8
+.const 4 c1 24
+.temp 4 t3
+
+splatbl t3, s1
 shll d1, t3, c1
 
-
 .function audio_orc_unpack_u16
+.dest 4 d1 gint32
+.source 2 s1 guint8
+.const 4 c1 0x80000000
+.temp 4 t2
+
+mergewl t2, s1, s1
+xorl d1, t2, c1
+
+.function audio_orc_unpack_u16_trunc
 .dest 4 d1 gint32
 .source 2 s1 guint8
 .const 4 c2 16
 .const 4 c1 0x80000000
 .temp 4 t2
 
-convuwl t2, s1
+mergewl t2, s1, s1
 shll t2, t2, c2
 xorl d1, t2, c1
 
-
 .function audio_orc_unpack_s16
+.dest 4 d1 gint32
+.source 2 s1 guint8
+.const 4 c1 0x00008000
+.temp 4 t2
+
+mergewl t2, s1, s1
+xorl d1, t2, c1
+
+.function audio_orc_unpack_s16_trunc
 .dest 4 d1 gint32
 .source 2 s1 guint8
 .const 4 c1 16
@@ -46,8 +76,18 @@ xorl d1, t2, c1
 convuwl t2, s1
 shll d1, t2, c1
 
-
 .function audio_orc_unpack_u16_swap
+.dest 4 d1 gint32
+.source 2 s1 guint8
+.const 4 c1 0x80000000
+.temp 2 t1
+.temp 4 t2
+
+swapw t1, s1
+mergewl t2, t1, t1
+xorl d1, t2, c1
+
+.function audio_orc_unpack_u16_swap_trunc
 .dest 4 d1 gint32
 .source 2 s1 guint8
 .const 4 c2 16
@@ -60,8 +100,15 @@ convuwl t2, t1
 shll t2, t2, c2
 xorl d1, t2, c1
 
-
 .function audio_orc_unpack_s16_swap
+.dest 4 d1 gint32
+.source 2 s1 guint8
+.temp 2 t1
+
+swapw t1, s1
+mergewl d1, t1, t1
+
+.function audio_orc_unpack_s16_swap_trunc
 .dest 4 d1 gint32
 .source 2 s1 guint8
 .const 4 c1 16
@@ -82,14 +129,12 @@ shll d1, t2, c1
 shll t1, s1, c2
 xorl d1, t1, c1
 
-
 .function audio_orc_unpack_s24_32
 .dest 4 d1 gint32
 .source 4 s1 guint8
 .const 4 c1 8
 
 shll d1, s1, c1
-
 
 .function audio_orc_unpack_u24_32_swap
 .dest 4 d1 gint32

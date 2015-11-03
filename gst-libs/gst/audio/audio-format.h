@@ -171,12 +171,18 @@ typedef enum
 /**
  * GstAudioPackFlags:
  * @GST_AUDIO_PACK_FLAG_NONE: No flag
+ * @GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE: When the source has a smaller depth
+ *   than the target format, set the least significant bits of the target
+ *   to 0. This is likely sightly faster but less accurate. When this flag
+ *   is not specified, the most significant bits of the source are duplicated
+ *   in the least significant bits of the destination.
  *
  * The different flags that can be used when packing and unpacking.
  */
 typedef enum
 {
-  GST_AUDIO_PACK_FLAG_NONE       = 0
+  GST_AUDIO_PACK_FLAG_NONE             = 0,
+  GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE   = (1 << 0)
 } GstAudioPackFlags;
 
 /**
