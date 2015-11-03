@@ -1992,6 +1992,8 @@ extract_tags_kate (GstOggStream * pad, ogg_packet * packet)
 static gboolean
 setup_opus_mapper (GstOggStream * pad, ogg_packet * packet)
 {
+  GstBuffer *buffer;
+
   if (packet->bytes < 19)
     return FALSE;
 
@@ -2007,7 +2009,11 @@ setup_opus_mapper (GstOggStream * pad, ogg_packet * packet)
   GST_INFO ("Opus has a pre-skip of %" G_GINT64_FORMAT " samples",
       -pad->granule_offset);
 
-  pad->caps = gst_caps_new_empty_simple ("audio/x-opus");
+  buffer =
+      gst_buffer_new_wrapped (g_memdup (packet->packet, packet->bytes),
+      packet->bytes);
+  pad->caps = gst_codec_utils_opus_create_caps_from_header (buffer, NULL);
+  gst_buffer_unref (buffer);
 
   return TRUE;
 }
