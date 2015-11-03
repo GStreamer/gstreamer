@@ -25,6 +25,10 @@
 #include "config.h"
 #endif
 
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE            /* O_CLOEXEC */
+#endif
+
 #include "gst/gst-i18n-plugin.h"
 
 #include <gst/gst.h>
@@ -124,7 +128,8 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
     if (video_fd >= 0)
       close (video_fd);
 
-    video_fd = open (it->device_path, O_RDWR);
+    video_fd = open (it->device_path, O_RDWR | O_CLOEXEC);
+
     if (video_fd == -1) {
       GST_DEBUG ("Failed to open %s: %s", it->device_path, g_strerror (errno));
       continue;
