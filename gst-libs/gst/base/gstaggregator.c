@@ -1421,18 +1421,6 @@ gst_aggregator_query_latency_unlocked (GstAggregator * self, GstQuery * query)
   else
     max = GST_CLOCK_TIME_NONE;
 
-  if (live && min > max) {
-    GST_ELEMENT_WARNING (self, CORE, NEGOTIATION,
-        ("%s", "Latency too big"),
-        ("The requested latency value is too big for the current pipeline. "
-            "Limiting to %" G_GINT64_FORMAT, max));
-    min = max;
-    /* FIXME: This could in theory become negative, but in
-     * that case all is lost anyway */
-    self->priv->latency -= min - max;
-    /* FIXME: shouldn't we g_object_notify() the change here? */
-  }
-
   SRC_BROADCAST (self);
 
   GST_DEBUG_OBJECT (self, "configured latency live:%s min:%" G_GINT64_FORMAT
