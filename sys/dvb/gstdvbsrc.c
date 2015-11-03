@@ -2293,8 +2293,8 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
     if (object->tuning_timeout)
       elapsed_time = GST_CLOCK_DIFF (start, gst_util_get_timestamp ());
     GST_LOG_OBJECT (object,
-        "Tuning. Time elapsed %" G_GUINT64_FORMAT " Limit %" G_GUINT64_FORMAT,
-        elapsed_time, object->tuning_timeout);
+        "Tuning. Time elapsed %" GST_STIME_FORMAT " Limit %" G_GUINT64_FORMAT,
+        GST_STIME_ARGS (elapsed_time), object->tuning_timeout);
   }
 
   if (!(status & FE_HAS_LOCK)) {
