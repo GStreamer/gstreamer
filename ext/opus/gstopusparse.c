@@ -43,6 +43,8 @@
 #include "gstopusheader.h"
 #include "gstopusparse.h"
 
+#include <gst/audio/audio.h>
+
 GST_DEBUG_CATEGORY_STATIC (opusparse_debug);
 #define GST_CAT_DEFAULT opusparse_debug
 
@@ -101,6 +103,8 @@ static void
 gst_opus_parse_init (GstOpusParse * parse)
 {
   parse->header_sent = FALSE;
+  parse->got_headers = FALSE;
+  parse->pre_skip = 0;
 }
 
 static gboolean
@@ -109,6 +113,8 @@ gst_opus_parse_start (GstBaseParse * base)
   GstOpusParse *parse = GST_OPUS_PARSE (base);
 
   parse->header_sent = FALSE;
+  parse->got_headers = FALSE;
+  parse->pre_skip = 0;
   parse->next_ts = 0;
 
   return TRUE;
@@ -124,6 +130,8 @@ gst_opus_parse_stop (GstBaseParse * base)
   parse->headers = NULL;
 
   parse->header_sent = FALSE;
+  parse->got_headers = FALSE;
+  parse->pre_skip = 0;
 
   return TRUE;
 }
@@ -241,7 +249,7 @@ beach:
     return GST_FLOW_OK;
 
   /* FIXME some day ... should not mess with buffer itself */
-  if (!parse->header_sent) {
+  if (!parse->got_headers) {
     gst_buffer_replace (&frame->buffer,
         gst_buffer_copy_region (frame->buffer, GST_BUFFER_COPY_ALL, 0, size));
     gst_buffer_unref (frame->buffer);
@@ -322,13 +330,17 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
   GstOpusParse *parse;
   gboolean is_idheader, is_commentheader;
   GstMapInfo map;
+  GstAudioClippingMeta *cmeta =
+      gst_buffer_get_audio_clipping_meta (frame->buffer);
 
   parse = GST_OPUS_PARSE (base);
+
+  g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
 
   is_idheader = gst_opus_header_is_id_header (frame->buffer);
   is_commentheader = gst_opus_header_is_comment_header (frame->buffer);
 
-  if (!parse->header_sent) {
+  if (!parse->got_headers || !parse->header_sent) {
     GstCaps *caps;
     guint8 channels;
 
@@ -344,31 +356,60 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
       return GST_BASE_PARSE_FLOW_DROPPED;
     }
 
-    g_slist_foreach (parse->headers, (GFunc) gst_buffer_unref, NULL);
-    g_slist_free (parse->headers);
-    parse->headers = NULL;
+    parse->got_headers = TRUE;
 
-    if (parse->id_header && parse->comment_header) {
-      gst_opus_header_create_caps_from_headers (&caps, &parse->headers,
-          parse->id_header, parse->comment_header);
-    } else {
-      guint8 channel_mapping_family, channel_mapping[256];
-      GST_INFO_OBJECT (parse,
-          "No headers, blindly setting up canonical stereo");
-      channels = 2;
-      channel_mapping_family = 0;
-      channel_mapping[0] = 0;
-      channel_mapping[1] = 1;
-      gst_opus_header_create_caps (&caps, &parse->headers, 0, 48000, channels,
-          1, channel_mapping_family, channel_mapping, NULL);
+    if (cmeta && cmeta->start) {
+      parse->pre_skip += cmeta->start;
+
+      gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
+      duration = packet_duration_opus (map.data, map.size);
+      gst_buffer_unmap (frame->buffer, &map);
+
+      /* Queue frame for later once we know all initial padding */
+      if (duration == cmeta->start) {
+        frame->flags |= GST_BASE_PARSE_FRAME_FLAG_QUEUE;
+      }
     }
 
-    gst_buffer_replace (&parse->id_header, NULL);
-    gst_buffer_replace (&parse->comment_header, NULL);
+    if (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_QUEUE)) {
+      g_slist_foreach (parse->headers, (GFunc) gst_buffer_unref, NULL);
+      g_slist_free (parse->headers);
+      parse->headers = NULL;
 
-    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
-    gst_caps_unref (caps);
-    parse->header_sent = TRUE;
+      if (parse->id_header && parse->comment_header) {
+        guint16 pre_skip;
+
+        gst_buffer_map (parse->id_header, &map, GST_MAP_READWRITE);
+        pre_skip = GST_READ_UINT16_LE (map.data + 10);
+        if (pre_skip != parse->pre_skip) {
+          GST_DEBUG_OBJECT (parse,
+              "Fixing up pre-skip %u -> %" G_GUINT64_FORMAT, pre_skip,
+              parse->pre_skip);
+          GST_WRITE_UINT16_LE (map.data + 10, parse->pre_skip);
+        }
+        gst_buffer_unmap (parse->id_header, &map);
+
+        gst_opus_header_create_caps_from_headers (&caps, &parse->headers,
+            parse->id_header, parse->comment_header);
+      } else {
+        guint8 channel_mapping_family, channel_mapping[256];
+        GST_INFO_OBJECT (parse,
+            "No headers, blindly setting up canonical stereo");
+        channels = 2;
+        channel_mapping_family = 0;
+        channel_mapping[0] = 0;
+        channel_mapping[1] = 1;
+        gst_opus_header_create_caps (&caps, &parse->headers, parse->pre_skip,
+            48000, channels, 1, channel_mapping_family, channel_mapping, NULL);
+      }
+
+      gst_buffer_replace (&parse->id_header, NULL);
+      gst_buffer_replace (&parse->comment_header, NULL);
+
+      gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
+      gst_caps_unref (caps);
+      parse->header_sent = TRUE;
+    }
   }
 
   GST_BUFFER_TIMESTAMP (frame->buffer) = parse->next_ts;
