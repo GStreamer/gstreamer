@@ -1350,29 +1350,11 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                 is_audio = TRUE;
                 template = gst_static_pad_template_get (&audio_template);
                 name = g_strdup_printf ("audio_%04x", bstream->pid);
-                caps = gst_caps_new_simple ("audio/x-opus",
-                    "channels", G_TYPE_INT, channels,
-                    "channel-mapping-family", G_TYPE_INT, mapping_family,
-                    "stream-count", G_TYPE_INT, stream_count,
-                    "coupled-count", G_TYPE_INT, coupled_count, NULL);
 
-                if (channel_mapping) {
-                  GValue v_arr = G_VALUE_INIT;
-                  GValue v = G_VALUE_INIT;
-                  gint i;
-
-                  g_value_init (&v_arr, GST_TYPE_ARRAY);
-                  g_value_init (&v, G_TYPE_INT);
-                  for (i = 0; i < channels; i++) {
-                    g_value_set_int (&v, channel_mapping[i]);
-                    gst_value_array_append_value (&v_arr, &v);
-                  }
-
-                  gst_caps_set_value (caps, "channel-mapping", &v_arr);
-                  g_value_unset (&v_arr);
-                  g_value_unset (&v);
-                  g_free (channel_mapping);
-                }
+                caps =
+                    gst_codec_utils_opus_create_caps (48000, channels,
+                    mapping_family, stream_count, coupled_count,
+                    channel_mapping);
               }
             } else {
               GST_WARNING_OBJECT (demux,
