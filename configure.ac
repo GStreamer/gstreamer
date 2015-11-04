@@ -200,7 +200,7 @@ if $PKG_CONFIG --exists "gstreamer-1.0"; then
     GST_PKG_VERSION="1.0"
 fi
 if test -z "$GST_PKG_VERSION"; then
-    AC_MSG_ERROR([gstreamer-$GST_PKG_VERSION was not found])
+    AC_MSG_ERROR([gstreamer-1.0 was not found])
 fi
 AC_MSG_RESULT([$GST_API_VERSION])
 
