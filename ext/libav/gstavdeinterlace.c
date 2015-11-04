@@ -25,6 +25,9 @@
 #endif
 
 #include <libavcodec/avcodec.h>
+#include <libavfilter/avfilter.h>
+#include <libavfilter/buffersrc.h>
+#include <libavfilter/buffersink.h>
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -93,6 +96,14 @@ typedef struct _GstFFMpegDeinterlace
 
   enum PixelFormat pixfmt;
   AVPicture from_frame, to_frame;
+
+  AVFilterContext *buffersink_ctx;
+  AVFilterContext *buffersrc_ctx;
+  AVFilterGraph *filter_graph;
+  AVFrame *filter_frame;
+  int last_width, last_height;
+  enum AVPixelFormat last_pixfmt;
+
 } GstFFMpegDeinterlace;
 
 typedef struct _GstFFMpegDeinterlaceClass
@@ -135,6 +146,8 @@ G_DEFINE_TYPE (GstFFMpegDeinterlace, gst_ffmpegdeinterlace, GST_TYPE_ELEMENT);
 static GstFlowReturn gst_ffmpegdeinterlace_chain (GstPad * pad,
     GstObject * parent, GstBuffer * inbuf);
 
+static void gst_ffmpegdeinterlace_dispose (GObject * obj);
+
 static void
 gst_ffmpegdeinterlace_class_init (GstFFMpegDeinterlaceClass * klass)
 {
@@ -167,6 +180,8 @@ gst_ffmpegdeinterlace_class_init (GstFFMpegDeinterlaceClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "libav Deinterlace element", "Filter/Effect/Video/Deinterlace",
       "Deinterlace video", "Luca Ognibene <luogni@tin.it>");
+
+  gobject_class->dispose = gst_ffmpegdeinterlace_dispose;
 }
 
 static void
@@ -277,6 +292,101 @@ gst_ffmpegdeinterlace_init (GstFFMpegDeinterlace * deinterlace)
   deinterlace->reconfigure = FALSE;
   deinterlace->mode = DEFAULT_MODE;
   deinterlace->new_mode = -1;
+  deinterlace->last_width = -1;
+  deinterlace->last_height = -1;
+  deinterlace->last_pixfmt = AV_PIX_FMT_NONE;
+}
+
+static void
+delete_filter_graph (GstFFMpegDeinterlace * deinterlace)
+{
+  if (deinterlace->filter_graph) {
+    av_frame_free (&deinterlace->filter_frame);
+    avfilter_graph_free (&deinterlace->filter_graph);
+  }
+}
+
+static void
+gst_ffmpegdeinterlace_dispose (GObject * obj)
+{
+  GstFFMpegDeinterlace *deinterlace = GST_FFMPEGDEINTERLACE (obj);
+  delete_filter_graph (deinterlace);
+}
+
+static int
+init_filter_graph (GstFFMpegDeinterlace * deinterlace,
+    enum AVPixelFormat pixfmt, int width, int height)
+{
+  AVFilterInOut *inputs = NULL, *outputs = NULL;
+  char args[512];
+  int res;
+
+  delete_filter_graph (deinterlace);
+  deinterlace->filter_graph = avfilter_graph_alloc ();
+  snprintf (args, sizeof (args),
+      "buffer=video_size=%dx%d:pix_fmt=%d:time_base=1/1:pixel_aspect=0/1[in];"
+      "[in]yadif[out];" "[out]buffersink", width, height, pixfmt);
+  res =
+      avfilter_graph_parse2 (deinterlace->filter_graph, args, &inputs,
+      &outputs);
+  if (res < 0)
+    return res;
+  if (inputs || outputs)
+    return -1;
+  res = avfilter_graph_config (deinterlace->filter_graph, NULL);
+  if (res < 0)
+    return res;
+
+  deinterlace->buffersrc_ctx =
+      avfilter_graph_get_filter (deinterlace->filter_graph, "Parsed_buffer_0");
+  deinterlace->buffersink_ctx =
+      avfilter_graph_get_filter (deinterlace->filter_graph,
+      "Parsed_buffersink_2");
+  if (!deinterlace->buffersrc_ctx || !deinterlace->buffersink_ctx)
+    return -1;
+  deinterlace->filter_frame = av_frame_alloc ();
+  deinterlace->last_width = width;
+  deinterlace->last_height = height;
+  deinterlace->last_pixfmt = pixfmt;
+
+  return 0;
+}
+
+static int
+process_filter_graph (GstFFMpegDeinterlace * deinterlace, AVPicture * dst,
+    const AVPicture * src, enum AVPixelFormat pixfmt, int width, int height)
+{
+  int res;
+
+  if (!deinterlace->filter_graph || width != deinterlace->last_width ||
+      height != deinterlace->last_height
+      || pixfmt != deinterlace->last_pixfmt) {
+    res = init_filter_graph (deinterlace, pixfmt, width, height);
+    if (res < 0)
+      return res;
+  }
+
+  memcpy (deinterlace->filter_frame->data, src->data, sizeof (src->data));
+  memcpy (deinterlace->filter_frame->linesize, src->linesize,
+      sizeof (src->linesize));
+  deinterlace->filter_frame->width = width;
+  deinterlace->filter_frame->height = height;
+  deinterlace->filter_frame->format = pixfmt;
+  res =
+      av_buffersrc_add_frame (deinterlace->buffersrc_ctx,
+      deinterlace->filter_frame);
+  if (res < 0)
+    return res;
+  res =
+      av_buffersink_get_frame (deinterlace->buffersink_ctx,
+      deinterlace->filter_frame);
+  if (res < 0)
+    return res;
+  av_picture_copy (dst, (const AVPicture *) deinterlace->filter_frame, pixfmt,
+      width, height);
+  av_frame_unref (deinterlace->filter_frame);
+
+  return 0;
 }
 
 static GstFlowReturn
@@ -320,8 +430,9 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstObject * parent,
   gst_ffmpeg_avpicture_fill (&deinterlace->to_frame, to_map.data,
       deinterlace->pixfmt, deinterlace->width, deinterlace->height);
 
-  avpicture_deinterlace (&deinterlace->to_frame, &deinterlace->from_frame,
-      deinterlace->pixfmt, deinterlace->width, deinterlace->height);
+  process_filter_graph (deinterlace, &deinterlace->to_frame,
+      &deinterlace->from_frame, deinterlace->pixfmt, deinterlace->width,
+      deinterlace->height);
   gst_buffer_unmap (outbuf, &to_map);
   gst_buffer_unmap (inbuf, &from_map);
 

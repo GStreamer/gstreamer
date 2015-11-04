@@ -280,7 +280,7 @@ AC_ARG_WITH(system-libav,
             [AC_HELP_STRING([--with-system-libav], [use system Libav libraries])])
 
 if test "x$with_system_libav" = "xyes"; then
-  PKG_CHECK_MODULES(LIBAV, libavformat libavcodec libavutil)
+  PKG_CHECK_MODULES(LIBAV, libavfilter libavformat libavcodec libavutil)
   PKG_CHECK_MODULES(SWSCALE, libswscale libavutil)
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $LIBAV_CFLAGS"
@@ -313,6 +313,7 @@ else
 
   LIBAV_DEPS="\$(top_builddir)/gst-libs/ext/libav/libavformat/libavformat.a \
               \$(top_builddir)/gst-libs/ext/libav/libavcodec/libavcodec.a \
+              \$(top_builddir)/gst-libs/ext/libav/libavfilter/libavfilter.a \
               \$(top_builddir)/gst-libs/ext/libav/libswresample/libswresample.a \
               \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
   if test "x$enable_static_plugins" = xyes; then
@@ -357,7 +358,7 @@ else
   # Enable pic and static so that we get .a files, but with PIC code.
   emblibav_configure_args="$emblibav_configure_args \
         --enable-static --enable-pic \
-        --disable-avdevice --disable-postproc --disable-avfilter \
+        --disable-avdevice --disable-postproc \
         --disable-programs --disable-ffserver --disable-ffplay --disable-ffprobe --disable-ffmpeg \
         --disable-encoder=flac --disable-protocols --disable-devices \
         --disable-network --disable-hwaccels --disable-dxva2 --disable-vdpau \
