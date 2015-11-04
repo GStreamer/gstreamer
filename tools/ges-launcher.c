@@ -176,7 +176,7 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
 
   _timeline_set_user_options (self, timeline, ges_project_get_uri (project));
 
-  if (ges_project_get_uri (project)
+  if (self->priv->parsed_options.load_path && ges_project_get_uri (project)
       && ges_validate_activate (GST_PIPELINE (self->priv->pipeline),
           opts->scenario, &opts->needs_set_state) == FALSE) {
     g_error ("Could not activate scenario %s", opts->scenario);
