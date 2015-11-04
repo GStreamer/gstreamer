@@ -32,6 +32,11 @@
 #define GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME "gst.vaapi.Display"
 
 G_GNUC_INTERNAL
+void
+gst_vaapi_video_context_set_display (GstContext * context,
+    GstVaapiDisplay * display);
+
+G_GNUC_INTERNAL
 GstContext *
 gst_vaapi_video_context_new_with_display (GstVaapiDisplay * display,
     gboolean persistent);

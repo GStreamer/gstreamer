@@ -52,17 +52,27 @@ _init_context_debug (void)
 #endif
 }
 
+void
+gst_vaapi_video_context_set_display (GstContext * context,
+    GstVaapiDisplay * display)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (context != NULL);
+
+  structure = gst_context_writable_structure (context);
+  gst_structure_set (structure, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME,
+      GST_VAAPI_TYPE_DISPLAY, display, NULL);
+}
+
 GstContext *
 gst_vaapi_video_context_new_with_display (GstVaapiDisplay * display,
     gboolean persistent)
 {
   GstContext *context;
-  GstStructure *structure;
 
   context = gst_context_new (GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME, persistent);
-  structure = gst_context_writable_structure (context);
-  gst_structure_set (structure, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME,
-      GST_VAAPI_TYPE_DISPLAY, display, NULL);
+  gst_vaapi_video_context_set_display (context, display);
   return context;
 }
 
