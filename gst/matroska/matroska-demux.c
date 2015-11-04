@@ -6184,8 +6184,8 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
         *riff_audio_fmt = auds.format;
 
       /* FIXME: Handle reorder map */
-      caps = gst_riff_create_audio_caps (auds.format, NULL, &auds, NULL,
-          codec_data, codec_name, NULL);
+      caps = gst_riff_create_audio_caps (auds.format, NULL, &auds, codec_data,
+          NULL, codec_name, NULL);
       if (codec_data)
         gst_buffer_unref (codec_data);
 
