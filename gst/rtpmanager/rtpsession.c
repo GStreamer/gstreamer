@@ -704,7 +704,7 @@ rtp_session_create_sources (RTPSession * sess)
 }
 
 static void
-create_source_stats (gpointer key, RTPSource * source, GValueArray *arr)
+create_source_stats (gpointer key, RTPSource * source, GValueArray * arr)
 {
   GValue value = G_VALUE_INIT;
   GstStructure *s;
@@ -729,8 +729,7 @@ rtp_session_create_stats (RTPSession * sess)
   s = gst_structure_new ("application/x-rtp-session-stats",
       "rtx-drop-count", G_TYPE_UINT, sess->stats.nacks_dropped,
       "sent-nack-count", G_TYPE_UINT, sess->stats.nacks_sent,
-      "recv-nack-count", G_TYPE_UINT, sess->stats.nacks_received,
-      NULL);
+      "recv-nack-count", G_TYPE_UINT, sess->stats.nacks_received, NULL);
 
   size = g_hash_table_size (sess->ssrcs[sess->mask_idx]);
   source_stats = g_value_array_new (size);

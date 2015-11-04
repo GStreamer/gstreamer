@@ -466,7 +466,8 @@ on_sender_ssrc_active (RTPSession * session, RTPSource * src,
 }
 
 static void
-on_notify_stats (RTPSession * session, GParamSpec *spec, GstRtpSession *rtpsession)
+on_notify_stats (RTPSession * session, GParamSpec * spec,
+    GstRtpSession * rtpsession)
 {
   g_object_notify (G_OBJECT (rtpsession), "stats");
 }
