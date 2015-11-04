@@ -66,8 +66,8 @@ gst_vaapiencode_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
   GST_INFO_OBJECT (plugin, "query type %s", GST_QUERY_TYPE_NAME (query));
 
-  if (gst_vaapi_reply_to_query (query, plugin->display))
-    success = TRUE;
+  if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT)
+    success = gst_vaapi_handle_context_query (query, plugin->display);
   else if (GST_PAD_IS_SINK (pad))
     success = plugin->sinkpad_query (plugin->sinkpad, parent, query);
   else

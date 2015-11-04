@@ -255,13 +255,12 @@ gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type)
 }
 
 gboolean
-gst_vaapi_reply_to_query (GstQuery * query, GstVaapiDisplay * display)
+gst_vaapi_handle_context_query (GstQuery * query, GstVaapiDisplay * display)
 {
   const gchar *type = NULL;
   GstContext *context, *old_context;
 
-  if (GST_QUERY_TYPE (query) != GST_QUERY_CONTEXT)
-    return FALSE;
+  g_return_val_if_fail (query != NULL, FALSE);
 
   if (!display)
     return FALSE;

@@ -1057,11 +1057,6 @@ gst_vaapidecode_sink_query (GstVideoDecoder * vdec, GstQuery * query)
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (decode);
 
-  if (gst_vaapi_reply_to_query (query, plugin->display)) {
-    GST_DEBUG_OBJECT (decode, "sharing display %p", plugin->display);
-    return TRUE;
-  }
-
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:{
       GstCaps *caps, *filter = NULL;
@@ -1078,6 +1073,10 @@ gst_vaapidecode_sink_query (GstVideoDecoder * vdec, GstQuery * query)
 
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
+      break;
+    }
+    case GST_QUERY_CONTEXT:{
+      ret = gst_vaapi_handle_context_query (query, plugin->display);
       break;
     }
     default:{
@@ -1105,11 +1104,6 @@ gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (decode);
 
-  if (gst_vaapi_reply_to_query (query, plugin->display)) {
-    GST_DEBUG_OBJECT (decode, "sharing display %p", plugin->display);
-    return TRUE;
-  }
-
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:{
       GstCaps *caps, *filter = NULL;
@@ -1126,6 +1120,10 @@ gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
 
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
+      break;
+    }
+    case GST_QUERY_CONTEXT:{
+      ret = gst_vaapi_handle_context_query (query, plugin->display);
       break;
     }
     default:{

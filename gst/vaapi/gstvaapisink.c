@@ -1447,15 +1447,20 @@ static gboolean
 gst_vaapisink_query (GstBaseSink * base_sink, GstQuery * query)
 {
   GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (sink);
+  gboolean ret = FALSE;
 
-  GST_INFO_OBJECT (sink, "query type %s", GST_QUERY_TYPE_NAME (query));
-
-  if (gst_vaapi_reply_to_query (query, GST_VAAPI_PLUGIN_BASE_DISPLAY (sink))) {
-    GST_DEBUG ("sharing display %p", GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
-    return TRUE;
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:
+      ret = gst_vaapi_handle_context_query (query, plugin->display);
+      break;
+    default:
+      ret = GST_BASE_SINK_CLASS (gst_vaapisink_parent_class)->query (base_sink,
+          query);
+      break;
   }
-  return GST_BASE_SINK_CLASS (gst_vaapisink_parent_class)->query (base_sink,
-      query);
+
+  return ret;
 }
 
 static void
