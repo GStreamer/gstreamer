@@ -412,25 +412,25 @@ rtp_session_class_init (RTPSessionClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
       g_param_spec_double ("bandwidth", "Bandwidth",
-          "The bandwidth of the session (0 for auto-discover)",
+          "The bandwidth of the session in bits per second (0 for auto-discover)",
           0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_FRACTION,
       g_param_spec_double ("rtcp-fraction", "RTCP Fraction",
-          "The fraction of the bandwidth used for RTCP (or as a real fraction of the RTP bandwidth if < 1)",
+          "The fraction of the bandwidth used for RTCP in bits per second (or as a real fraction of the RTP bandwidth if < 1)",
           0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_RR_BANDWIDTH,
       g_param_spec_int ("rtcp-rr-bandwidth", "RTCP RR bandwidth",
-          "The RTCP bandwidth used for receivers in bytes per second (-1 = default)",
+          "The RTCP bandwidth used for receivers in bits per second (-1 = default)",
           -1, G_MAXINT, DEFAULT_RTCP_RR_BANDWIDTH,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_RS_BANDWIDTH,
       g_param_spec_int ("rtcp-rs-bandwidth", "RTCP RS bandwidth",
-          "The RTCP bandwidth used for senders in bytes per second (-1 = default)",
+          "The RTCP bandwidth used for senders in bits per second (-1 = default)",
           -1, G_MAXINT, DEFAULT_RTCP_RS_BANDWIDTH,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -1230,7 +1230,7 @@ rtp_session_set_request_time_callback (RTPSession * sess,
  * @sess: an #RTPSession
  * @bandwidth: the bandwidth allocated
  *
- * Set the session bandwidth in bytes per second.
+ * Set the session bandwidth in bits per second.
  */
 void
 rtp_session_set_bandwidth (RTPSession * sess, gdouble bandwidth)
@@ -1269,7 +1269,7 @@ rtp_session_get_bandwidth (RTPSession * sess)
  * @sess: an #RTPSession
  * @bandwidth: the RTCP bandwidth
  *
- * Set the bandwidth in bytes per second that should be used for RTCP
+ * Set the bandwidth in bits per second that should be used for RTCP
  * messages.
  */
 void
