@@ -25,8 +25,6 @@
 #ifndef GST_VAAPI_DISPLAY_GLX_H
 #define GST_VAAPI_DISPLAY_GLX_H
 
-#include <GL/gl.h>
-#include <GL/glx.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 
 G_BEGIN_DECLS

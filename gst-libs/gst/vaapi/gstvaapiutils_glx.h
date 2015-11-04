@@ -28,9 +28,7 @@
 #include "config.h"
 #include "libgstvaapi_priv_check.h"
 #include <GL/gl.h>
-#include <GL/glext.h>
 #include <GL/glx.h>
-#include <GL/glxext.h>
 #include <glib.h>
 
 #if GLX_GLXEXT_VERSION < 18
