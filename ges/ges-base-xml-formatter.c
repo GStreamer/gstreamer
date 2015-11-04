@@ -567,9 +567,12 @@ _add_track_element (GESFormatter * self, GESClip * clip,
   gst_structure_foreach (children_properties,
       (GstStructureForeachFunc) _set_child_property, trackelement);
 
-  if (properties)
+  if (properties) {
+    /* We do not serialize the priority anymore, and we should never have. */
+    gst_structure_remove_field (properties, "priority");
     gst_structure_foreach (properties,
         (GstStructureForeachFunc) set_property_foreach, trackelement);
+  }
 }
 
 static void
