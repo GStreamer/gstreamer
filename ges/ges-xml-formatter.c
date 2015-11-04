@@ -1085,7 +1085,8 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
   g_list_free_full (tracks, gst_object_unref);
 
   properties = _serialize_properties (G_OBJECT (trackelement), "start",
-      "in-point", "duration", "locked", "max-duration", "name", NULL);
+      "in-point", "duration", "locked", "max-duration", "name", "priority",
+      NULL);
   metas =
       ges_meta_container_metas_to_string (GES_META_CONTAINER (trackelement));
   extractable_id = ges_extractable_get_id (GES_EXTRACTABLE (trackelement));
@@ -1146,8 +1147,6 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
         continue;
       }
 
-      effects = ges_clip_get_top_effects (clip);
-
       /* We escape all mandatrorry properties that are handled sparetely
        * and vtype for StandarTransition as it is the asset ID */
       properties = _serialize_properties (G_OBJECT (clip),
@@ -1169,9 +1168,14 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
       g_hash_table_insert (self->priv->element_id, clip,
           GINT_TO_POINTER (priv->nbelements));
 
-      for (tmpeffect = effects; tmpeffect; tmpeffect = tmpeffect->next)
+      /* Effects must always be serialized in the right priority order.
+       * List order is guaranteed by the fact that ges_clip_get_top_effects
+       * sorts the effects. */
+      effects = ges_clip_get_top_effects (clip);
+      for (tmpeffect = effects; tmpeffect; tmpeffect = tmpeffect->next) {
         _save_effect (str, priv->nbelements,
             GES_TRACK_ELEMENT (tmpeffect->data), timeline);
+      }
 
       tracks = ges_timeline_get_tracks (timeline);
 
