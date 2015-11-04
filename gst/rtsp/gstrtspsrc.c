@@ -1193,7 +1193,7 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
     {
       guint64 timeout;
 
-      timeout = rtspsrc->tcp_timeout.tv_sec * G_USEC_PER_SEC +
+      timeout = ((guint64) rtspsrc->tcp_timeout.tv_sec) * G_USEC_PER_SEC +
           rtspsrc->tcp_timeout.tv_usec;
       g_value_set_uint64 (value, timeout);
       break;
