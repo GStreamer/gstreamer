@@ -5795,14 +5795,17 @@ gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client,
 gboolean
 gst_mpd_client_seek_to_time (GstMpdClient * client, GDateTime * time)
 {
-  GDateTime *start =
-      gst_date_time_to_g_date_time (client->mpd_node->availabilityStartTime);
+  GDateTime *start;
   GTimeSpan ts_microseconds;
   GstClockTime ts;
   gboolean ret = TRUE;
   GList *stream;
 
-  g_return_val_if_fail (gst_mpd_client_is_live (client), 0);
+  g_return_val_if_fail (gst_mpd_client_is_live (client), FALSE);
+  g_return_val_if_fail (client->mpd_node->availabilityStartTime != NULL, FALSE);
+
+  start =
+      gst_date_time_to_g_date_time (client->mpd_node->availabilityStartTime);
 
   ts_microseconds = g_date_time_difference (time, start);
   g_date_time_unref (start);
