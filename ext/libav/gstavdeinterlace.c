@@ -94,7 +94,7 @@ typedef struct _GstFFMpegDeinterlace
   gboolean reconfigure;
   GstFFMpegDeinterlaceMode new_mode;
 
-  enum PixelFormat pixfmt;
+  enum AVPixelFormat pixfmt;
   AVPicture from_frame, to_frame;
 
   AVFilterContext *buffersink_ctx;

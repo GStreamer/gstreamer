@@ -290,7 +290,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   GstCaps *allowed_caps;
   GstCaps *icaps;
   GstVideoCodecState *output_format;
-  enum PixelFormat pix_fmt;
+  enum AVPixelFormat pix_fmt;
   GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
   GstFFMpegVidEncClass *oclass =
       (GstFFMpegVidEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);

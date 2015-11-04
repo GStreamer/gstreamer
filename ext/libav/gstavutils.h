@@ -42,7 +42,7 @@ gst_ffmpeg_avpicture_get_size (int pix_fmt, int width, int height);
 int
 gst_ffmpeg_avpicture_fill (AVPicture * picture,
                            uint8_t *   ptr,
-                           enum PixelFormat pix_fmt,
+                           enum AVPixelFormat pix_fmt,
                            int         width,
                            int         height);
 

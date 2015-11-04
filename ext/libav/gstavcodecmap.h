@@ -132,8 +132,8 @@ void
 gst_ffmpeg_audioinfo_to_context (GstAudioInfo *info,
 				 AVCodecContext *context);
 
-GstVideoFormat gst_ffmpeg_pixfmt_to_videoformat (enum PixelFormat pixfmt);
-enum PixelFormat gst_ffmpeg_videoformat_to_pixfmt (GstVideoFormat format);
+GstVideoFormat gst_ffmpeg_pixfmt_to_videoformat (enum AVPixelFormat pixfmt);
+enum AVPixelFormat gst_ffmpeg_videoformat_to_pixfmt (GstVideoFormat format);
 
 GstAudioFormat gst_ffmpeg_smpfmt_to_audioformat (enum AVSampleFormat sample_fmt);
 

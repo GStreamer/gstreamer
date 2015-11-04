@@ -444,9 +444,6 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 
   /* set buffer functions */
   ffmpegdec->context->get_buffer2 = gst_ffmpegviddec_get_buffer2;
-  ffmpegdec->context->get_buffer = NULL;
-  ffmpegdec->context->reget_buffer = NULL;
-  ffmpegdec->context->release_buffer = NULL;
   ffmpegdec->context->draw_horiz_band = NULL;
 
   /* reset coded_width/_height to prevent it being reused from last time when
@@ -824,10 +821,6 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
   }
 
   picture->buf[0] = av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
-
-  /* tell ffmpeg we own this buffer, transfer the ref we have on the buffer to
-   * the opaque data. */
-  picture->type = FF_BUFFER_TYPE_USER;
 
   GST_LOG_OBJECT (ffmpegdec, "returned frame %p", dframe->buffer);
 
@@ -1355,8 +1348,6 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       (guint64) ffmpegdec->picture->pts);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: num %d",
       ffmpegdec->picture->coded_picture_number);
-  GST_DEBUG_OBJECT (ffmpegdec, "picture: ref %d",
-      ffmpegdec->picture->reference);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: display %d",
       ffmpegdec->picture->display_picture_number);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: opaque %p",

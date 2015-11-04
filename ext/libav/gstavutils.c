@@ -279,7 +279,7 @@ gst_ffmpeg_avpicture_get_size (int pix_fmt, int width, int height)
 
 int
 gst_ffmpeg_avpicture_fill (AVPicture * picture,
-    uint8_t * ptr, enum PixelFormat pix_fmt, int width, int height)
+    uint8_t * ptr, enum AVPixelFormat pix_fmt, int width, int height)
 {
   int size, w2, h2, size2;
   int stride, stride2;

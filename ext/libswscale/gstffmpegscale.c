@@ -45,7 +45,7 @@ typedef struct _GstFFMpegScale
   /* state */
   GstVideoInfo in_info, out_info;
 
-  enum PixelFormat in_pixfmt, out_pixfmt;
+  enum AVPixelFormat in_pixfmt, out_pixfmt;
   struct SwsContext *ctx;
 
   /* property */
@@ -214,8 +214,8 @@ gst_ffmpegscale_init (GstFFMpegScale * scale)
 {
   scale->method = DEFAULT_PROP_METHOD;
   scale->ctx = NULL;
-  scale->in_pixfmt = PIX_FMT_NONE;
-  scale->out_pixfmt = PIX_FMT_NONE;
+  scale->in_pixfmt = AV_PIX_FMT_NONE;
+  scale->out_pixfmt = AV_PIX_FMT_NONE;
 }
 
 static void
@@ -226,8 +226,8 @@ gst_ffmpegscale_reset (GstFFMpegScale * scale)
     scale->ctx = NULL;
   }
 
-  scale->in_pixfmt = PIX_FMT_NONE;
-  scale->out_pixfmt = PIX_FMT_NONE;
+  scale->in_pixfmt = AV_PIX_FMT_NONE;
+  scale->out_pixfmt = AV_PIX_FMT_NONE;
 }
 
 static void
@@ -442,11 +442,11 @@ gst_ffmpegscale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
 
 /* Convert a GstCaps (video/raw) to a FFMPEG PixFmt
  */
-static enum PixelFormat
+static enum AVPixelFormat
 gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps)
 {
   GstVideoInfo info;
-  enum PixelFormat pix_fmt;
+  enum AVPixelFormat pix_fmt;
 
   GST_DEBUG ("converting caps %" GST_PTR_FORMAT, caps);
 
@@ -455,52 +455,52 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps)
 
   switch (GST_VIDEO_INFO_FORMAT (&info)) {
     case GST_VIDEO_FORMAT_YUY2:
-      pix_fmt = PIX_FMT_YUYV422;
+      pix_fmt = AV_PIX_FMT_YUYV422;
       break;
     case GST_VIDEO_FORMAT_UYVY:
-      pix_fmt = PIX_FMT_UYVY422;
+      pix_fmt = AV_PIX_FMT_UYVY422;
       break;
     case GST_VIDEO_FORMAT_I420:
-      pix_fmt = PIX_FMT_YUV420P;
+      pix_fmt = AV_PIX_FMT_YUV420P;
       break;
     case GST_VIDEO_FORMAT_Y41B:
-      pix_fmt = PIX_FMT_YUV411P;
+      pix_fmt = AV_PIX_FMT_YUV411P;
       break;
     case GST_VIDEO_FORMAT_Y42B:
-      pix_fmt = PIX_FMT_YUV422P;
+      pix_fmt = AV_PIX_FMT_YUV422P;
       break;
     case GST_VIDEO_FORMAT_YUV9:
-      pix_fmt = PIX_FMT_YUV410P;
+      pix_fmt = AV_PIX_FMT_YUV410P;
       break;
     case GST_VIDEO_FORMAT_ARGB:
-      pix_fmt = PIX_FMT_ARGB;
+      pix_fmt = AV_PIX_FMT_ARGB;
       break;
     case GST_VIDEO_FORMAT_RGBA:
-      pix_fmt = PIX_FMT_RGBA;
+      pix_fmt = AV_PIX_FMT_RGBA;
       break;
     case GST_VIDEO_FORMAT_BGRA:
-      pix_fmt = PIX_FMT_BGRA;
+      pix_fmt = AV_PIX_FMT_BGRA;
       break;
     case GST_VIDEO_FORMAT_ABGR:
-      pix_fmt = PIX_FMT_ABGR;
+      pix_fmt = AV_PIX_FMT_ABGR;
       break;
     case GST_VIDEO_FORMAT_BGR:
-      pix_fmt = PIX_FMT_BGR24;
+      pix_fmt = AV_PIX_FMT_BGR24;
       break;
     case GST_VIDEO_FORMAT_RGB:
-      pix_fmt = PIX_FMT_RGB24;
+      pix_fmt = AV_PIX_FMT_RGB24;
       break;
     case GST_VIDEO_FORMAT_RGB16:
-      pix_fmt = PIX_FMT_RGB565;
+      pix_fmt = AV_PIX_FMT_RGB565;
       break;
     case GST_VIDEO_FORMAT_RGB15:
-      pix_fmt = PIX_FMT_RGB555;
+      pix_fmt = AV_PIX_FMT_RGB555;
       break;
     case GST_VIDEO_FORMAT_RGB8P:
-      pix_fmt = PIX_FMT_PAL8;
+      pix_fmt = AV_PIX_FMT_PAL8;
       break;
     default:
-      pix_fmt = PIX_FMT_NONE;
+      pix_fmt = AV_PIX_FMT_NONE;
       break;
   }
   return pix_fmt;
@@ -508,7 +508,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps)
   /* ERROR */
 invalid_caps:
   {
-    return PIX_FMT_NONE;
+    return AV_PIX_FMT_NONE;
   }
 }
 
@@ -537,8 +537,8 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   scale->in_pixfmt = gst_ffmpeg_caps_to_pixfmt (incaps);
   scale->out_pixfmt = gst_ffmpeg_caps_to_pixfmt (outcaps);
 
-  if (!ok || scale->in_pixfmt == PIX_FMT_NONE ||
-      scale->out_pixfmt == PIX_FMT_NONE ||
+  if (!ok || scale->in_pixfmt == AV_PIX_FMT_NONE ||
+      scale->out_pixfmt == AV_PIX_FMT_NONE ||
       GST_VIDEO_INFO_FORMAT (&scale->in_info) == GST_VIDEO_FORMAT_UNKNOWN ||
       GST_VIDEO_INFO_FORMAT (&scale->out_info) == GST_VIDEO_FORMAT_UNKNOWN)
     goto refuse_caps;

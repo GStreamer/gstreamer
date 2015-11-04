@@ -770,10 +770,6 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       }
       break;
 
-    case AV_CODEC_ID_MPEG2VIDEO_XVMC:
-      /* this is a special ID - don't need it in GStreamer, I think */
-      break;
-
     case AV_CODEC_ID_H263:
       if (encode) {
         caps =
@@ -2202,7 +2198,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
  */
 
 static GstCaps *
-gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
+gst_ffmpeg_pixfmt_to_caps (enum AVPixelFormat pix_fmt, AVCodecContext * context,
     enum AVCodecID codec_id)
 {
   GstCaps *caps = NULL;
@@ -2533,7 +2529,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
 typedef struct
 {
   GstVideoFormat format;
-  enum PixelFormat pixfmt;
+  enum AVPixelFormat pixfmt;
 } PixToFmt;
 
 /* FIXME : FILLME */
@@ -2625,7 +2621,7 @@ static const PixToFmt pixtofmttable[] = {
 };
 
 GstVideoFormat
-gst_ffmpeg_pixfmt_to_videoformat (enum PixelFormat pixfmt)
+gst_ffmpeg_pixfmt_to_videoformat (enum AVPixelFormat pixfmt)
 {
   guint i;
 
@@ -2637,7 +2633,7 @@ gst_ffmpeg_pixfmt_to_videoformat (enum PixelFormat pixfmt)
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
-static enum PixelFormat
+static enum AVPixelFormat
 gst_ffmpeg_videoformat_to_pixfmt_for_codec (GstVideoFormat format,
     const AVCodec * codec)
 {
@@ -2661,7 +2657,7 @@ gst_ffmpeg_videoformat_to_pixfmt_for_codec (GstVideoFormat format,
   return AV_PIX_FMT_NONE;
 }
 
-enum PixelFormat
+enum AVPixelFormat
 gst_ffmpeg_videoformat_to_pixfmt (GstVideoFormat format)
 {
   return gst_ffmpeg_videoformat_to_pixfmt_for_codec (format, NULL);

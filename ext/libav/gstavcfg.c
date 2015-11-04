@@ -173,13 +173,10 @@ gst_ffmpeg_idct_algo_get_type (void)
       {FF_IDCT_SIMPLEMMX, "Simple MMX", "simplemmx"},
       {FF_IDCT_ARM, "ARM", "arm"},
       {FF_IDCT_ALTIVEC, "Altivec", "altivec"},
-      {FF_IDCT_SH4, "SH4", "sh4"},
       {FF_IDCT_SIMPLEARM, "Simple ARM", "simplearm"},
-      {FF_IDCT_IPP, "IPP", "ipp"},
       {FF_IDCT_XVID, "XVID", "xvid"},
       {FF_IDCT_SIMPLEARMV5TE, "Simple ARMV5TE", "simplearmv5te"},
       {FF_IDCT_SIMPLEARMV6, "Simple ARMV6", "simplearmv6"},
-      {FF_IDCT_SIMPLEVIS, "Simple Vis", "simplevis"},
       {FF_IDCT_FAAN, "FAAN", "faan"},
       {FF_IDCT_SIMPLENEON, "Simple NEON", "simpleneon"},
       {0, NULL, NULL},
@@ -665,7 +662,7 @@ gst_ffmpeg_cfg_init (void)
   gst_ffmpeg_add_pspec (pspec, interlaced, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("max-bframes", "Max B-Frames",
-      "Maximum B-frames in a row", 0, FF_MAX_B_FRAMES, 0,
+      "Maximum B-frames in a row", 0, INT_MAX, 0,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.max_b_frames, FALSE, mpeg, NULL);
 
