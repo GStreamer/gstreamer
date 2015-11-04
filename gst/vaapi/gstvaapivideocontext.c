@@ -98,7 +98,8 @@ context_pad_query (const GValue * item, GValue * value, gpointer user_data)
 }
 
 static gboolean
-run_context_query (GstElement * element, GstQuery * query)
+_gst_context_run_query (GstElement * element, GstQuery * query,
+    GstPadDirection direction)
 {
   GstIteratorFoldFunction const func = context_pad_query;
   GstIterator *it;
@@ -107,17 +108,12 @@ run_context_query (GstElement * element, GstQuery * query)
   g_value_init (&res, G_TYPE_BOOLEAN);
   g_value_set_boolean (&res, FALSE);
 
-  /* Ask downstream neighbour */
-  it = gst_element_iterate_src_pads (element);
-  while (gst_iterator_fold (it, func, &res, query) == GST_ITERATOR_RESYNC)
-    gst_iterator_resync (it);
-  gst_iterator_free (it);
+  /* Ask neighbour */
+  if (direction == GST_PAD_SRC)
+    it = gst_element_iterate_src_pads (element);
+  else
+    it = gst_element_iterate_sink_pads (element);
 
-  if (g_value_get_boolean (&res))
-    return TRUE;
-
-  /* If none, ask upstream neighbour (auto-plugged case) */
-  it = gst_element_iterate_sink_pads (element);
   while (gst_iterator_fold (it, func, &res, query) == GST_ITERATOR_RESYNC)
     gst_iterator_resync (it);
   gst_iterator_free (it);
@@ -125,20 +121,30 @@ run_context_query (GstElement * element, GstQuery * query)
   return g_value_get_boolean (&res);
 }
 
-void
-gst_vaapi_video_context_prepare (GstElement * element)
+static gboolean
+_gst_context_get_from_query (GstElement * element, GstQuery * query,
+    GstPadDirection direction)
 {
-  GstContext *context;
+  GstContext *ctxt;
+
+  if (!_gst_context_run_query (element, query, direction))
+    return FALSE;
+
+  gst_query_parse_context (query, &ctxt);
+  GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+      "found context (%" GST_PTR_FORMAT ") in %s query", ctxt,
+      direction == GST_PAD_SRC ? "downstream" : "upstream");
+  gst_element_set_context (element, ctxt);
+  return TRUE;
+}
+
+static void
+_gst_context_query (GstElement * element, const gchar * context_type)
+{
   GstQuery *query;
   GstMessage *msg;
 
   _init_context_debug ();
-
-  /*  1) Check if the element already has a context of the specific
-   *     type, i.e. it was previously set via
-   *     gst_element_set_context(). */
-  /* This was already done by the caller of this function:
-   * gst_vaapi_ensure_display() */
 
   /* 2) Query downstream with GST_QUERY_CONTEXT for the context and
      check if downstream already has a context of the specific
@@ -146,30 +152,47 @@ gst_vaapi_video_context_prepare (GstElement * element)
   /* 3) Query upstream with GST_QUERY_CONTEXT for the context and
      check if upstream already has a context of the specific
      type */
-  context = NULL;
-  query = gst_query_new_context (GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME);
-  if (run_context_query (element, query)) {
-    gst_query_parse_context (query, &context);
-    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
-        "found context (%p) in query", context);
-    gst_element_set_context (element, context);
-  } else {
-    /* 4) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with
-       the required context types and afterwards check if an
-       usable context was set now as in 1). The message could
-       be handled by the parent bins of the element and the
-       application. */
-    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
-        "posting `need-context' message");
-    msg = gst_message_new_need_context (GST_OBJECT_CAST (element),
-        GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME);
-    gst_element_post_message (element, msg);
+  query = gst_query_new_context (context_type);
+  if (_gst_context_get_from_query (element, query, GST_PAD_SRC))
+    goto found;
+  if (_gst_context_get_from_query (element, query, GST_PAD_SINK))
+    goto found;
 
-    /* The check of an usable context is done by the caller:
-       gst_vaapi_ensure_display() */
-  }
+  /* 4) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with
+     the required context types and afterwards check if an
+     usable context was set now as in 1). The message could
+     be handled by the parent bins of the element and the
+     application. */
+  GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+      "posting `need-context' message");
+  msg = gst_message_new_need_context (GST_OBJECT_CAST (element), context_type);
+  gst_element_post_message (element, msg);
 
+  /*
+   * Whomever responds to the need-context message performs a
+   * GstElement::set_context() with the required context in which the
+   * element is required to update the display_ptr
+   */
+
+found:
   gst_query_unref (query);
+}
+
+void
+gst_vaapi_video_context_prepare (GstElement * element)
+{
+  g_return_if_fail (element != NULL);
+
+  /*  1) Check if the element already has a context of the specific
+   *     type, i.e. it was previously set via
+   *     gst_element_set_context(). */
+  /* This was already done by the caller of this function:
+   * gst_vaapi_ensure_display() */
+
+  _gst_context_query (element, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME);
+
+  /* The check of an usable context is done by the caller:
+     gst_vaapi_ensure_display() */
 }
 
 /* 5) Create a context by itself and post a GST_MESSAGE_HAVE_CONTEXT message
