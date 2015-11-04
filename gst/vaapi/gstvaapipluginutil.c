@@ -258,7 +258,7 @@ gboolean
 gst_vaapi_reply_to_query (GstQuery * query, GstVaapiDisplay * display)
 {
   const gchar *type = NULL;
-  GstContext *context;
+  GstContext *context, *old_context;
 
   if (GST_QUERY_TYPE (query) != GST_QUERY_CONTEXT)
     return FALSE;
@@ -272,7 +272,14 @@ gst_vaapi_reply_to_query (GstQuery * query, GstVaapiDisplay * display)
   if (g_strcmp0 (type, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME))
     return FALSE;
 
-  context = gst_vaapi_video_context_new_with_display (display, FALSE);
+  gst_query_parse_context (query, &old_context);
+  if (old_context) {
+    context = gst_context_copy (old_context);
+    gst_vaapi_video_context_set_display (context, display);
+  } else {
+    context = gst_vaapi_video_context_new_with_display (display, FALSE);
+  }
+
   gst_query_set_context (query, context);
   gst_context_unref (context);
 
