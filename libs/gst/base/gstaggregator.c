@@ -1312,34 +1312,39 @@ gst_aggregator_default_create_new_pad (GstAggregator * self,
     GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
 {
   GstAggregatorPad *agg_pad;
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (self);
   GstAggregatorPrivate *priv = self->priv;
+  gint serial = 0;
+  gchar *name = NULL;
 
-  if (templ == gst_element_class_get_pad_template (klass, "sink_%u")) {
-    gint serial = 0;
-    gchar *name = NULL;
+  if (templ->direction != GST_PAD_SINK ||
+      g_strcmp0 (templ->name_template, "sink_%u"))
+    goto not_sink;
 
-    GST_OBJECT_LOCK (self);
-    if (req_name == NULL || strlen (req_name) < 6
-        || !g_str_has_prefix (req_name, "sink_")) {
-      /* no name given when requesting the pad, use next available int */
-      priv->padcount++;
-    } else {
-      /* parse serial number from requested padname */
-      serial = g_ascii_strtoull (&req_name[5], NULL, 10);
-      if (serial >= priv->padcount)
-        priv->padcount = serial;
-    }
-
-    name = g_strdup_printf ("sink_%u", priv->padcount);
-    agg_pad = g_object_new (GST_AGGREGATOR_GET_CLASS (self)->sinkpads_type,
-        "name", name, "direction", GST_PAD_SINK, "template", templ, NULL);
-    g_free (name);
-
-    GST_OBJECT_UNLOCK (self);
-
-    return agg_pad;
+  GST_OBJECT_LOCK (self);
+  if (req_name == NULL || strlen (req_name) < 6
+      || !g_str_has_prefix (req_name, "sink_")) {
+    /* no name given when requesting the pad, use next available int */
+    priv->padcount++;
   } else {
+    /* parse serial number from requested padname */
+    serial = g_ascii_strtoull (&req_name[5], NULL, 10);
+    if (serial >= priv->padcount)
+      priv->padcount = serial;
+  }
+
+  name = g_strdup_printf ("sink_%u", priv->padcount);
+  agg_pad = g_object_new (GST_AGGREGATOR_GET_CLASS (self)->sinkpads_type,
+      "name", name, "direction", GST_PAD_SINK, "template", templ, NULL);
+  g_free (name);
+
+  GST_OBJECT_UNLOCK (self);
+
+  return agg_pad;
+
+  /* errors */
+not_sink:
+  {
+    GST_WARNING_OBJECT (self, "request new pad that is not a SINK pad\n");
     return NULL;
   }
 }
@@ -1868,7 +1873,7 @@ gst_aggregator_set_latency_property (GstAggregator * self, gint64 latency)
  * Gets the latency value. See gst_aggregator_set_latency for
  * more details.
  *
- * Returns: The time in nanoseconds to wait for data to arrive on a sink pad 
+ * Returns: The time in nanoseconds to wait for data to arrive on a sink pad
  * before a pad is deemed unresponsive. A value of -1 means an
  * unlimited time.
  */
