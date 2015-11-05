@@ -760,7 +760,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
         self->volumes_count = nsamples;
       }
 
-      if (volume_cb) {
+      if (volume_cb && self->volumes) {
         have_volumes =
             gst_control_binding_get_value_array (volume_cb, ts, interval,
             nsamples, (gpointer) self->volumes);
@@ -770,7 +770,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
         volume_orc_memset_f64 (self->volumes, self->current_volume, nsamples);
       }
 
-      if (mute_cb) {
+      if (mute_cb && self->mutes) {
         have_mutes = gst_control_binding_get_value_array (mute_cb, ts, interval,
             nsamples, (gpointer) self->mutes);
         gst_object_replace ((GstObject **) & mute_cb, NULL);
