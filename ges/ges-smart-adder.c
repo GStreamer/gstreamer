@@ -219,20 +219,39 @@ ges_smart_adder_init (GESSmartAdder * self)
       NULL, (GDestroyNotify) destroy_pad);
 }
 
+static void
+restriction_caps_cb (GESTrack * track,
+    GParamSpec * arg G_GNUC_UNUSED, GESSmartAdder * self)
+{
+  GstCaps *caps;
+
+  g_object_get (track, "restriction-caps", &caps, NULL);
+
+  if (!caps)
+    caps = gst_caps_from_string (DEFAULT_CAPS);
+
+  GST_DEBUG_OBJECT (self, "Setting adder caps to %" GST_PTR_FORMAT, caps);
+  g_object_set (self->adder, "caps", caps, NULL);
+  gst_caps_unref (caps);
+}
+
 GstElement *
 ges_smart_adder_new (GESTrack * track)
 {
   GESSmartAdder *self;
-  GstCaps *caps;
 
   self = g_object_new (GES_TYPE_SMART_ADDER, NULL);
 
   self->track = track;
 
+  if (track) {
+    restriction_caps_cb (track, NULL, self);
+
+    g_signal_connect (track, "notify::restriction-caps",
+        G_CALLBACK (restriction_caps_cb), self);
+  }
+
   /* FIXME Make adder smart and let it properly negotiate caps! */
-  caps = gst_caps_from_string (DEFAULT_CAPS);
-  g_object_set (self->adder, "caps", caps, NULL);
-  gst_caps_unref (caps);
 
   return GST_ELEMENT (self);
 }
