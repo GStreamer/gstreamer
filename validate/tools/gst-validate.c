@@ -274,9 +274,6 @@ _execute_switch_track (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
   gint index, n;
-  GstPad *srcpad;
-  GstElement *combiner;
-  GstPad *oldpad, *newpad;
   const gchar *type, *str_index;
 
   gint flags, current, tflag;
@@ -296,6 +293,10 @@ _execute_switch_track (GstValidateScenario * scenario,
   tmp = g_strdup_printf ("n-%s", type);
   g_object_get (scenario->pipeline, "flags", &flags, tmp, &n,
       current_txt, &current, NULL);
+
+  /* Don't try to use -1 */
+  if (current == -1)
+    current = 0;
 
   g_free (tmp);
 
@@ -321,6 +322,7 @@ _execute_switch_track (GstValidateScenario * scenario,
 
   if (!disabling) {
     GstState state, next;
+    GstPad *oldpad, *newpad;
     tmp = g_strdup_printf ("get-%s-pad", type);
     g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, current,
         &oldpad);
@@ -334,17 +336,27 @@ _execute_switch_track (GstValidateScenario * scenario,
 
     if (gst_element_get_state (scenario->pipeline, &state, &next, 0) &&
         state == GST_STATE_PLAYING && next == GST_STATE_VOID_PENDING) {
+      GstPad *srcpad = NULL;
+      GstElement *combiner = NULL;
+      if (newpad == oldpad) {
+        srcpad = gst_pad_get_peer (oldpad);
+      } else if (newpad) {
+        combiner = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (newpad)));
+        if (combiner) {
+          srcpad = gst_element_get_static_pad (combiner, "src");
+          gst_object_unref (combiner);
+        }
+      }
 
-      combiner = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (newpad)));
-      srcpad = gst_element_get_static_pad (combiner, "src");
-      gst_object_unref (combiner);
+      if (srcpad) {
+        gst_pad_add_probe (srcpad,
+            GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+            (GstPadProbeCallback) _check_pad_selection_done, action, NULL);
+        gst_object_unref (srcpad);
 
-      gst_pad_add_probe (srcpad,
-          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
-          (GstPadProbeCallback) _check_pad_selection_done, action, NULL);
-      gst_object_unref (srcpad);
-
-      res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+        res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+      } else
+        res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
     }
 
   } else {
