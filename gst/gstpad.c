@@ -2982,7 +2982,7 @@ static gboolean
 gst_pad_query_accept_caps_default (GstPad * pad, GstQuery * query)
 {
   /* get the caps and see if it intersects to something not empty */
-  GstCaps *caps, *allowed;
+  GstCaps *caps, *allowed = NULL;
   gboolean result;
 
   GST_DEBUG_OBJECT (pad, "query accept-caps %" GST_PTR_FORMAT, query);
@@ -2991,17 +2991,21 @@ gst_pad_query_accept_caps_default (GstPad * pad, GstQuery * query)
    * a PROXY CAPS */
   if (GST_PAD_IS_PROXY_CAPS (pad)) {
     result = gst_pad_proxy_query_accept_caps (pad, query);
-    goto done;
+    if (result)
+      allowed = gst_pad_get_pad_template_caps (pad);
+    else
+      goto done;
   }
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, pad,
-      "fallback ACCEPT_CAPS query, consider implementing a specialized version");
-
   gst_query_parse_accept_caps (query, &caps);
-  if (GST_PAD_IS_ACCEPT_TEMPLATE (pad))
-    allowed = gst_pad_get_pad_template_caps (pad);
-  else
-    allowed = gst_pad_query_caps (pad, caps);
+  if (!allowed) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, pad,
+        "fallback ACCEPT_CAPS query, consider implementing a specialized version");
+    if (GST_PAD_IS_ACCEPT_TEMPLATE (pad))
+      allowed = gst_pad_get_pad_template_caps (pad);
+    else
+      allowed = gst_pad_query_caps (pad, caps);
+  }
 
   if (allowed) {
     if (GST_PAD_IS_ACCEPT_INTERSECT (pad)) {
