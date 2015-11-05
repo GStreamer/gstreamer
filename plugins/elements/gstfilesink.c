@@ -439,22 +439,14 @@ gst_file_sink_close_file (GstFileSink * sink)
 {
   if (sink->file) {
     if (fclose (sink->file) != 0)
-      goto close_failed;
+      GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
+        (_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
 
     GST_DEBUG_OBJECT (sink, "closed file");
     sink->file = NULL;
 
     g_free (sink->buffer);
     sink->buffer = NULL;
-  }
-  return;
-
-  /* ERRORS */
-close_failed:
-  {
-    GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-        (_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
-    return;
   }
 }
 
