@@ -212,7 +212,7 @@ _is_playbin_pipeline (int argc, gchar ** argv)
   gint i;
 
   for (i = 0; i < argc; i++) {
-    if (g_strcmp0 (argv[i], "playbin") == 0) {
+    if (g_ascii_strncasecmp (argv[i], "playbin", 7) == 0) {
       return TRUE;
     }
   }
