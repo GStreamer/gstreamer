@@ -607,6 +607,7 @@ gst_pulse_device_reconfigure_element (GstDevice * device, GstElement * element)
   return TRUE;
 }
 
+/* Takes ownership of @caps and @props */
 static GstDevice *
 gst_pulse_device_new (guint device_index, const gchar * device_name,
     GstCaps * caps, const gchar * internal_name, GstPulseDeviceType type,
@@ -643,6 +644,9 @@ gst_pulse_device_new (guint device_index, const gchar * device_name,
   gstdev->type = type;
   gstdev->device_index = device_index;
   gstdev->element = element;
+
+  gst_structure_free (props);
+  gst_caps_unref (caps);
 
   return GST_DEVICE (gstdev);
 }
