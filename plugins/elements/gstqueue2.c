@@ -875,6 +875,11 @@ get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
     perc = 100;
     GST_LOG_OBJECT (queue, "we are EOS");
   } else {
+    GST_LOG_OBJECT (queue,
+        "Cur level bytes/time/buffers %u/%" GST_TIME_FORMAT "/%u",
+        queue->cur_level.bytes, GST_TIME_ARGS (queue->cur_level.time),
+        queue->cur_level.buffers);
+
     /* figure out the percent we are filled, we take the max of all formats. */
     if (!QUEUE_IS_USING_RING_BUFFER (queue)) {
       perc = GET_PERCENT (bytes, 0);
@@ -888,6 +893,10 @@ get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
     /* also apply the rate estimate when we need to */
     if (queue->use_rate_estimate)
       perc = MAX (perc, GET_PERCENT (rate_time, 0));
+
+    /* Don't get to 0% unless we're really empty */
+    if (queue->cur_level.bytes > 0)
+      perc = MAX (1, perc);
   }
 #undef GET_PERCENT
 
