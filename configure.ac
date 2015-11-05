@@ -3176,28 +3176,62 @@ AG_GST_CHECK_FEATURE(SNDIO, [sndio audio], sndio, [
   fi
 ])
 
+dnl *** hls-crypto ***
+AC_ARG_WITH([hls-crypto],
+  AS_HELP_STRING([--with-hls-crypto=auto|nettle|libgcrypt|openssl], [
+    which cryptographic library version to compile against for hls (default: auto)
+  ]), [
+    AS_CASE([$with_hls_crypto],
+      [nettle],[],
+      [libgcrypt],[],
+      [openssl],[],
+      [with_hls_crypto=auto]
+    )
+  ]
+)
+
 dnl *** hls ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_HLS, true)
 AG_GST_CHECK_FEATURE(HLS, [http live streaming plugin], hls, [
-  PKG_CHECK_MODULES(NETTLE, nettle,
-  [
-    AC_DEFINE(HAVE_NETTLE, 1, [Define if nettle is available])
-    HAVE_HLS="yes"
-  ], [
-    AM_PATH_LIBGCRYPT([1.2.0],
-    [
-      AC_DEFINE(HAVE_LIBGCRYPT, 1, [Define if libgcrypt is available])
-      HAVE_HLS="yes"
-    ], [
-      PKG_CHECK_MODULES(OPENSSL, openssl,
-      [
+  AS_CASE([$with_hls_crypto],
+    [nettle], [
+      PKG_CHECK_MODULES(NETTLE, nettle, [
+        AC_DEFINE(HAVE_NETTLE, 1, [Define if nettle is available])
+        HAVE_HLS="yes"
+      ],[AC_MSG_ERROR([Could not find nettle library])])
+    ],
+    [libgcrypt], [
+      AM_PATH_LIBGCRYPT([1.2.0], [
+        AC_DEFINE(HAVE_LIBGCRYPT, 1, [Define if libgcrypt is available])
+        HAVE_HLS="yes"
+      ],[AC_MSG_ERROR([Could not find libgcrypt library])])
+    ],
+    [openssl], [
+      PKG_CHECK_MODULES(OPENSSL, openssl, [
         AC_DEFINE(HAVE_OPENSSL, 1, [Define if openssl is available])
         HAVE_HLS="yes"
-      ], [
-        HAVE_HLS="no"
+      ],[AC_MSG_ERROR([Could not find openssl library])])
+    ],
+    [
+      dnl Try to find a valid crypto library
+      PKG_CHECK_MODULES(NETTLE, nettle, [
+        AC_DEFINE(HAVE_NETTLE, 1, [Define if nettle is available])
+        HAVE_HLS="yes"
+      ],[
+        AM_PATH_LIBGCRYPT([1.2.0], [
+          AC_DEFINE(HAVE_LIBGCRYPT, 1, [Define if libgcrypt is available])
+          HAVE_HLS="yes"
+        ],[
+          PKG_CHECK_MODULES(OPENSSL, openssl, [
+            AC_DEFINE(HAVE_OPENSSL, 1, [Define if openssl is available])
+            HAVE_HLS="yes"
+          ],[
+            HAVE_HLS="no"
+          ])
+        ])
       ])
-    ])
-  ])
+    ]
+  )
 ])
 
 dnl *** x265 (H.265/HEVC encoder) ***
