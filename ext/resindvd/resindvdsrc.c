@@ -969,9 +969,9 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       }
 
       GST_LOG_OBJECT (src, "NAV packet start TS %" GST_TIME_FORMAT
-          " end TS %" GST_TIME_FORMAT " base %" G_GINT64_FORMAT " %s",
+          " end TS %" GST_TIME_FORMAT " base %" GST_STIME_FORMAT " %s",
           GST_TIME_ARGS (new_start_ptm), GST_TIME_ARGS (new_end_ptm),
-          new_base_time, discont ? "discont" : "");
+          GST_STIME_ARGS (new_base_time), discont ? "discont" : "");
 
 #if 0
       g_print ("NAV packet start TS %" GST_TIME_FORMAT
