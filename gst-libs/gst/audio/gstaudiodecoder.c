@@ -2005,7 +2005,7 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
   /* Need to add a channel-mask if channels > 2 */
   gst_structure_get_int (structure, "channels", &channels);
   if (channels > 2 && !gst_structure_has_field (structure, "channel-mask")) {
-    channel_mask = gst_audio_channel_get_default_mask (channels);
+    channel_mask = gst_audio_channel_get_fallback_mask (channels);
     if (channel_mask != 0) {
       gst_structure_set (structure, "channel-mask",
           GST_TYPE_BITMASK, channel_mask, NULL);

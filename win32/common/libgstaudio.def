@@ -27,7 +27,7 @@ EXPORTS
 	gst_audio_cd_src_add_track
 	gst_audio_cd_src_get_type
 	gst_audio_cd_src_mode_get_type
-	gst_audio_channel_get_default_mask
+	gst_audio_channel_get_fallback_mask
 	gst_audio_channel_position_get_type
 	gst_audio_channel_positions_from_mask
 	gst_audio_channel_positions_to_mask

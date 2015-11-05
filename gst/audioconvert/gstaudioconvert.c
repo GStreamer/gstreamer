@@ -621,7 +621,7 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
    * layout based on LFE-presence in input layout, but let's save that for
    * another day) */
   if (out_chans > 0
-      && (out_mask = gst_audio_channel_get_default_mask (out_chans))) {
+      && (out_mask = gst_audio_channel_get_fallback_mask (out_chans))) {
     GST_DEBUG_OBJECT (base, "using default channel layout as fallback");
     gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK, out_mask, NULL);
   } else {

@@ -492,18 +492,21 @@ static const guint64 default_masks[] = {
 };
 
 /**
- * gst_audio_channel_get_default_mask:
+ * gst_audio_channel_get_fallback_mask:
  * @channels: the number of channels
  *
- * Get the default channel-mask for the given number of channels.
+ * Get the fallback channel-mask for the given number of channels.
  *
- * Returns: the default channel-mask for @channels or 0 when there is no default
+ * This function returns a reasonable fallback channel-mask and should be
+ * called as a last resort when the specific channel map is unknown.
+ *
+ * Returns: a fallback channel-mask for @channels or 0 when there is no
  * mask.
  *
  * Since: 1.8
  */
 guint64
-gst_audio_channel_get_default_mask (gint channels)
+gst_audio_channel_get_fallback_mask (gint channels)
 {
   g_return_val_if_fail (channels > 0, 0);
 
