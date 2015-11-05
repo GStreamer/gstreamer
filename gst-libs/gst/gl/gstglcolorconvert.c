@@ -1933,6 +1933,7 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
   gboolean res = TRUE;
   gint views, v;
   GstVideoOverlayCompositionMeta *composition_meta;
+  GstGLSyncMeta *sync_meta;
 
   convert->outbuf = NULL;
 
@@ -1940,6 +1941,10 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
     convert->priv->result = FALSE;
     return;
   }
+
+  sync_meta = gst_buffer_get_gl_sync_meta (convert->inbuf);
+  if (sync_meta)
+    gst_gl_sync_meta_wait (sync_meta, convert->context);
 
   convert->outbuf = gst_buffer_new ();
   if (!gst_gl_memory_setup_buffer (convert->context,
