@@ -58,8 +58,8 @@ G_DEFINE_ABSTRACT_TYPE (GESAudioSource, ges_audio_source, GES_TYPE_SOURCE);
 
 struct _GESAudioSourcePrivate
 {
-  /*  Dummy variable */
-  void *nothing;
+  GstElement *capsfilter;
+  GESTrack *current_track;
 };
 
 static void
@@ -89,6 +89,41 @@ _sync_element_to_layer_property_float (GESTrackElement * trksrc,
   gst_object_unref (layer);
 }
 
+static void
+restriction_caps_cb (GESTrack * track,
+    GParamSpec * arg G_GNUC_UNUSED, GESAudioSource * self)
+{
+  GstCaps *caps;
+
+  g_object_get (track, "restriction-caps", &caps, NULL);
+
+  GST_DEBUG_OBJECT (self, "Setting capsfilter caps to %" GST_PTR_FORMAT, caps);
+  g_object_set (self->priv->capsfilter, "caps", caps, NULL);
+
+  if (caps)
+    gst_caps_unref (caps);
+}
+
+static void
+_track_changed_cb (GESAudioSource * self, GParamSpec * arg G_GNUC_UNUSED,
+    gpointer udata)
+{
+  GESTrack *track = ges_track_element_get_track (GES_TRACK_ELEMENT (self));
+
+  if (self->priv->current_track) {
+    g_signal_handlers_disconnect_by_func (self->priv->current_track,
+        (GCallback) restriction_caps_cb, self);
+  }
+
+  self->priv->current_track = track;
+  if (track) {
+    restriction_caps_cb (track, NULL, self);
+
+    g_signal_connect (track, "notify::restriction-caps",
+        G_CALLBACK (restriction_caps_cb), self);
+  }
+}
+
 static GstElement *
 ges_audio_source_create_element (GESTrackElement * trksrc)
 {
@@ -97,6 +132,7 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
   GstElement *sub_element;
   GESAudioSourceClass *source_class = GES_AUDIO_SOURCE_GET_CLASS (trksrc);
   const gchar *props[] = { "volume", "mute", NULL };
+  GESAudioSource *self = GES_AUDIO_SOURCE (trksrc);
 
   if (!source_class->create_source)
     return NULL;
@@ -106,9 +142,15 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
   GST_DEBUG_OBJECT (trksrc, "Creating a bin sub_element ! volume");
   vbin =
       gst_parse_bin_from_description
-      ("audioconvert ! audioresample ! volume name=v", TRUE, NULL);
+      ("audioconvert ! audioresample ! volume name=v ! capsfilter name=audio-track-caps-filter",
+      TRUE, NULL);
   topbin = ges_source_create_topbin ("audiosrcbin", sub_element, vbin, NULL);
   volume = gst_bin_get_by_name (GST_BIN (vbin), "v");
+  self->priv->capsfilter = gst_bin_get_by_name (GST_BIN (vbin),
+      "audio-track-caps-filter");
+
+  g_signal_connect (self, "notify::track", (GCallback) _track_changed_cb, NULL);
+  _track_changed_cb (self, NULL, NULL);
 
   _sync_element_to_layer_property_float (trksrc, volume, GES_META_VOLUME,
       "volume");
