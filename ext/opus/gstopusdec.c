@@ -64,10 +64,15 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate opus_dec_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-opus")
+    GST_STATIC_CAPS ("audio/x-opus, "
+        "channel-mapping-family = (int) 0; "
+        "audio/x-opus, "
+        "channel-mapping-family = (int) [1, 255], "
+        "channels = (int) [1, 255], "
+        "stream-count = (int) [1, 255], " "coupled-count = (int) [0, 255]")
     );
 
 G_DEFINE_TYPE (GstOpusDec, gst_opus_dec, GST_TYPE_AUDIO_DECODER);
