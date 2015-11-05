@@ -290,70 +290,6 @@ struct _GstAudioDecoderPrivate
   gboolean use_default_pad_acceptcaps;
 };
 
-//* Default channel layouts taken from audioconvert */
-static const GstAudioChannelPosition default_positions[8][8] = {
-  /* 1 channel */
-  {
-        GST_AUDIO_CHANNEL_POSITION_MONO,
-      },
-  /* 2 channels */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-      },
-  /* 3 channels (2.1) */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_LFE1,
-      },
-  /* 4 channels (4.0) */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-      },
-  /* 5 channels */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-      },
-  /* 6 channels (5.1) */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE1,
-      },
-  /* 7 channels (6.1) */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE1,
-        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-      },
-  /* 8 channels (7.1) */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE1,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
-      }
-};
-
 static void gst_audio_decoder_finalize (GObject * object);
 static void gst_audio_decoder_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -2069,12 +2005,8 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
   /* Need to add a channel-mask if channels > 2 */
   gst_structure_get_int (structure, "channels", &channels);
   if (channels > 2 && !gst_structure_has_field (structure, "channel-mask")) {
-    if (channels <= 8) {
-      channel_mask = 0;
-      for (i = 0; i < channels; i++)
-        channel_mask |=
-            G_GUINT64_CONSTANT (1) << default_positions[channels - 1][i];
-
+    channel_mask = gst_audio_channel_get_default_mask (channels);
+    if (channel_mask != 0) {
       gst_structure_set (structure, "channel-mask",
           GST_TYPE_BITMASK, channel_mask, NULL);
     } else {

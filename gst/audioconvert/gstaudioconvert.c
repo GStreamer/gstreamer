@@ -346,69 +346,6 @@ gst_audio_convert_transform_caps (GstBaseTransform * btrans,
   return result;
 }
 
-static const GstAudioChannelPosition default_positions[8][8] = {
-  /* 1 channel */
-  {
-        GST_AUDIO_CHANNEL_POSITION_MONO,
-      },
-  /* 2 channels */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-      },
-  /* 3 channels (2.1) */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_LFE1,
-      },
-  /* 4 channels (4.0) */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-      },
-  /* 5 channels */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-      },
-  /* 6 channels (5.1) */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE1,
-      },
-  /* 7 channels (6.1) */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE1,
-        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-      },
-  /* 8 channels (7.1) */
-  {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE1,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
-      }
-};
-
 static gint
 n_bits_set (guint64 x)
 {
@@ -683,15 +620,9 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
    * and try to add/remove channels from the input layout, or pick a default
    * layout based on LFE-presence in input layout, but let's save that for
    * another day) */
-  if (out_chans > 0 && out_chans <= G_N_ELEMENTS (default_positions[0])) {
-    gint i;
-
+  if (out_chans > 0
+      && (out_mask = gst_audio_channel_get_default_mask (out_chans))) {
     GST_DEBUG_OBJECT (base, "using default channel layout as fallback");
-
-    out_mask = 0;
-    for (i = 0; i < out_chans; i++)
-      out_mask |= G_GUINT64_CONSTANT (1) << default_positions[out_chans - 1][i];
-
     gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK, out_mask, NULL);
   } else {
     GST_ERROR_OBJECT (base, "Have no default layout for %d channels",
