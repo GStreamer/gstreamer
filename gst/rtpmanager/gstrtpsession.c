@@ -1074,6 +1074,17 @@ get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
     *ntpnstime = ntpns;
 }
 
+/* must be called with GST_RTP_SESSION_LOCK */
+static void
+signal_waiting_rtcp_thread_unlocked (GstRtpSession * rtpsession)
+{
+  if (rtpsession->priv->wait_send) {
+    GST_LOG_OBJECT (rtpsession, "signal RTCP thread");
+    rtpsession->priv->wait_send = FALSE;
+    GST_RTP_SESSION_SIGNAL (rtpsession);
+  }
+}
+
 static void
 rtcp_thread (GstRtpSession * rtpsession)
 {
@@ -1194,8 +1205,7 @@ stop_rtcp_thread (GstRtpSession * rtpsession)
 
   GST_RTP_SESSION_LOCK (rtpsession);
   rtpsession->priv->stop_thread = TRUE;
-  rtpsession->priv->wait_send = FALSE;
-  GST_RTP_SESSION_SIGNAL (rtpsession);
+  signal_waiting_rtcp_thread_unlocked (rtpsession);
   if (rtpsession->priv->id)
     gst_clock_id_unschedule (rtpsession->priv->id);
   GST_RTP_SESSION_UNLOCK (rtpsession);
@@ -1333,11 +1343,7 @@ gst_rtp_session_send_rtp (RTPSession * sess, RTPSource * src,
   GST_RTP_SESSION_LOCK (rtpsession);
   if ((rtp_src = rtpsession->send_rtp_src))
     gst_object_ref (rtp_src);
-  if (rtpsession->priv->wait_send) {
-    GST_LOG_OBJECT (rtpsession, "signal RTCP thread");
-    rtpsession->priv->wait_send = FALSE;
-    GST_RTP_SESSION_SIGNAL (rtpsession);
-  }
+  signal_waiting_rtcp_thread_unlocked (rtpsession);
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
   if (rtp_src) {
@@ -1901,11 +1907,7 @@ gst_rtp_session_chain_recv_rtp (GstPad * pad, GstObject * parent,
   GST_LOG_OBJECT (rtpsession, "received RTP packet");
 
   GST_RTP_SESSION_LOCK (rtpsession);
-  if (rtpsession->priv->wait_send) {
-    GST_LOG_OBJECT (rtpsession, "signal RTCP thread");
-    rtpsession->priv->wait_send = FALSE;
-    GST_RTP_SESSION_SIGNAL (rtpsession);
-  }
+  signal_waiting_rtcp_thread_unlocked (rtpsession);
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
   /* get NTP time when this packet was captured, this depends on the timestamp. */
@@ -1990,11 +1992,7 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstObject * parent,
   GST_LOG_OBJECT (rtpsession, "received RTCP packet");
 
   GST_RTP_SESSION_LOCK (rtpsession);
-  if (rtpsession->priv->wait_send) {
-    GST_LOG_OBJECT (rtpsession, "signal RTCP thread");
-    rtpsession->priv->wait_send = FALSE;
-    GST_RTP_SESSION_SIGNAL (rtpsession);
-  }
+  signal_waiting_rtcp_thread_unlocked (rtpsession);
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
   current_time = gst_clock_get_time (priv->sysclock);
