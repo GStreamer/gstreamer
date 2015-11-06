@@ -27,7 +27,6 @@
 #include <math.h>
 #include <string.h>
 
-#include "gstchannelmix.h"
 #include "audioconvert.h"
 #include "gstaudioconvertorc.h"
 

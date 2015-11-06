@@ -26,8 +26,6 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
-#include "gstchannelmix.h"
-
 typedef struct _GstAudioConverter GstAudioConverter;
 
 /**

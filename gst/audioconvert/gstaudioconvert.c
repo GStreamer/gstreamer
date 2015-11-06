@@ -63,7 +63,6 @@
 #include <string.h>
 
 #include "gstaudioconvert.h"
-#include "gstchannelmix.h"
 #include "plugin.h"
 
 GST_DEBUG_CATEGORY (audio_convert_debug);

@@ -6,7 +6,6 @@ include $(top_srcdir)/common/orc.mak
 libgstaudioconvert_la_SOURCES = \
 	gstaudioconvert.c \
 	audioconvert.c \
-	gstchannelmix.c \
 	plugin.c
 nodist_libgstaudioconvert_la_SOURCES = $(ORC_NODIST_SOURCES)
 
@@ -20,5 +19,4 @@ libgstaudioconvert_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 noinst_HEADERS = \
 	gstaudioconvert.h \
 	audioconvert.h \
-	gstchannelmix.h \
 	plugin.h

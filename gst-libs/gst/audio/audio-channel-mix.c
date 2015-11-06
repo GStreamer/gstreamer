@@ -2,7 +2,7 @@
  * Copyright (C) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2008 Sebastian Dröge <slomo@circular-chaos.org>
  *
- * gstchannelmix.c: setup of channel conversion matrices
+ * audio-channel-mix.c: setup of channel conversion matrices
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -27,7 +27,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "gstchannelmix.h"
+#include "audio-channel-mix.h"
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()

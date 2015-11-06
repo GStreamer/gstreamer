@@ -2,7 +2,7 @@
  * Copyright (C) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *           (C) 2015 Wim Taymans <wim.taymans@gmail.com>
  *
- * audiochannelmix.h: setup of channel conversion matrices
+ * audio-channel-mix.h: setup of channel conversion matrices
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
