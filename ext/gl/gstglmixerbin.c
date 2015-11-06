@@ -458,7 +458,7 @@ gst_gl_mixer_bin_release_pad (GstElement * element, GstPad * pad)
     struct input_chain *chain = l->data;
     if (GST_PAD (chain->ghost_pad) == pad) {
       self->priv->input_chains =
-          g_list_remove_link (self->priv->input_chains, l);
+          g_list_delete_link (self->priv->input_chains, l);
       GST_OBJECT_UNLOCK (element);
 
       _free_input_chain (chain);
