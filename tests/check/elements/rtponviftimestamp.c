@@ -46,6 +46,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define NTP_OFFSET  ((guint64) 1245)
 #define TIMESTAMP   ((GstClockTime)42)
+#define CSEQ        0x78
 #define COMPARE     TRUE
 #define NO_COMPARE  FALSE
 
@@ -58,6 +59,17 @@ event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   myreceivedevents = g_list_append (myreceivedevents, gst_event_ref (event));
 
   return GST_PAD_PROBE_OK;
+}
+
+static GstEvent *
+create_ntp_offset_event (GstClockTime ntp_offset, gboolean discont)
+{
+  GstStructure *structure;
+
+  structure = gst_structure_new ("GstNtpOffset", "ntp-offset", G_TYPE_UINT64,
+      ntp_offset, "discont", G_TYPE_BOOLEAN, discont, NULL);
+
+  return gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, structure);
 }
 
 static GstEvent *
@@ -204,8 +216,7 @@ check_buffer_equal (GstBuffer * buf, GstBuffer * expected)
 
 /* Create a RTP buffer without the extension */
 static GstBuffer *
-create_rtp_buffer (GstClockTime timestamp, gboolean clean_point,
-    gboolean discont)
+create_rtp_buffer (GstClockTime timestamp, gboolean clean_point)
 {
   GstBuffer *buffer_in;
   GstRTPBuffer rtpbuffer_in = GST_RTP_BUFFER_INIT;
@@ -215,8 +226,6 @@ create_rtp_buffer (GstClockTime timestamp, gboolean clean_point,
 
   if (!clean_point)
     GST_BUFFER_FLAG_SET (buffer_in, GST_BUFFER_FLAG_DELTA_UNIT);
-  if (discont)
-    GST_BUFFER_FLAG_SET (buffer_in, GST_BUFFER_FLAG_DISCONT);
 
   fail_unless (gst_rtp_buffer_map (buffer_in, GST_MAP_READ, &rtpbuffer_in));
   fail_if (gst_rtp_buffer_get_extension (&rtpbuffer_in));
@@ -241,7 +250,7 @@ convert_to_ntp (GstClockTime t)
 /* Create a copy of @buffer_in having the RTP extension */
 static GstBuffer *
 create_extension_buffer (GstBuffer * buffer_in, gboolean clean_point,
-    gboolean end_contiguous, gboolean discont)
+    gboolean end_contiguous, gboolean discont, guint64 ntp_offset, guint8 cseq)
 {
   GstBuffer *buffer_out;
   GstRTPBuffer rtpbuffer_out = GST_RTP_BUFFER_INIT;
@@ -260,7 +269,8 @@ create_extension_buffer (GstBuffer * buffer_in, gboolean clean_point,
           (gpointer) & data, NULL));
 
   /* NTP timestamp */
-  GST_WRITE_UINT64_BE (data, convert_to_ntp (buffer_in->pts + NTP_OFFSET));
+  GST_WRITE_UINT64_BE (data, convert_to_ntp (GST_BUFFER_PTS (buffer_in) +
+          ntp_offset));
 
   /* C E D mbz */
   if (clean_point)
@@ -273,7 +283,7 @@ create_extension_buffer (GstBuffer * buffer_in, gboolean clean_point,
   GST_WRITE_UINT8 (data + 8, flags);
 
   /* CSeq */
-  GST_WRITE_UINT8 (data + 9, 0x78);
+  GST_WRITE_UINT8 (data + 9, cseq);
 
   memset (data + 10, 0, 4);
 
@@ -283,7 +293,7 @@ create_extension_buffer (GstBuffer * buffer_in, gboolean clean_point,
 }
 
 static void
-do_one_buffer_test_apply (gboolean clean_point, gboolean discont)
+do_one_buffer_test_apply (gboolean clean_point)
 {
   GstBuffer *buffer_in, *buffer_out;
 
@@ -292,8 +302,9 @@ do_one_buffer_test_apply (gboolean clean_point, gboolean discont)
 
   ASSERT_SET_STATE (element, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
 
-  buffer_in = create_rtp_buffer (TIMESTAMP, clean_point, discont);
-  buffer_out = create_extension_buffer (buffer_in, clean_point, FALSE, discont);
+  buffer_in = create_rtp_buffer (TIMESTAMP, clean_point);
+  buffer_out = create_extension_buffer (buffer_in, clean_point, FALSE, FALSE,
+      NTP_OFFSET, CSEQ);
 
   /* push initial events */
   gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
@@ -318,24 +329,26 @@ do_two_buffers_test_apply (gboolean end_contiguous)
 
   ASSERT_SET_STATE (element, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
 
-  buffer_in = create_rtp_buffer (TIMESTAMP, FALSE, FALSE);
+  buffer_in = create_rtp_buffer (TIMESTAMP, FALSE);
   buffer_out = create_extension_buffer (buffer_in, FALSE, end_contiguous,
-      FALSE);
+      FALSE, NTP_OFFSET, CSEQ);
 
   /* push initial events */
   gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
 
   /* Push buffer */
-  fail_unless (gst_pad_push (mysrcpad, buffer_in) == GST_FLOW_OK,
-      "failed pushing buffer");
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buffer_in), GST_FLOW_OK);
 
   /* The buffer hasn't been pushed it as the element is waiting for the next
    * buffer. */
   fail_unless_equals_int (g_list_length (buffers), 0);
 
-  /* A second buffer is pushed, it has the DISCONT flag if we want that the
-   * first one has the 'E' bit set. */
-  buffer_in = create_rtp_buffer (TIMESTAMP + 1, FALSE, end_contiguous);
+  /* push an ntp-offset event to trigger a discontinuty */
+  fail_unless (gst_pad_push_event (mysrcpad,
+          create_ntp_offset_event (NTP_OFFSET, end_contiguous)));
+
+  /* A second buffer is pushed */
+  buffer_in = create_rtp_buffer (TIMESTAMP + 1, FALSE);
 
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer_in), GST_FLOW_OK);
 
@@ -352,8 +365,9 @@ do_two_buffers_test_apply (gboolean end_contiguous)
   /* The second buffer has been pushed out */
   fail_unless_equals_int (g_list_length (buffers), 2);
 
-  /* Latest buffer always has the 'E' flag */
-  buffer_out = create_extension_buffer (buffer_in, FALSE, TRUE, end_contiguous);
+  /* Last buffer always has the 'E' flag */
+  buffer_out = create_extension_buffer (buffer_in, FALSE, TRUE, end_contiguous,
+      NTP_OFFSET, CSEQ);
   node = g_list_last (buffers);
   check_buffer_equal ((GstBuffer *) node->data, buffer_out);
   gst_buffer_unref (buffer_out);
@@ -361,23 +375,9 @@ do_two_buffers_test_apply (gboolean end_contiguous)
   ASSERT_SET_STATE (element, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
 }
 
-GST_START_TEST (test_apply_discont)
-{
-  do_one_buffer_test_apply (FALSE, TRUE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_apply_not_discont)
-{
-  do_one_buffer_test_apply (FALSE, FALSE);
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_apply_clean_point)
 {
-  do_one_buffer_test_apply (TRUE, FALSE);
+  do_one_buffer_test_apply (TRUE);
 }
 
 GST_END_TEST;
@@ -409,7 +409,7 @@ GST_START_TEST (test_flushing)
   gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
 
   /* create and push the first buffer */
-  buffer = create_rtp_buffer (TIMESTAMP, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   /* no buffers should have made it through */
@@ -423,7 +423,7 @@ GST_START_TEST (test_flushing)
   gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
 
   /* create and push a second buffer */
-  buffer = create_rtp_buffer (TIMESTAMP + 1, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP + 1, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   /* still no buffers should have made it through (the first one should have
@@ -446,15 +446,15 @@ GST_START_TEST (test_reusable_element_no_e_bit)
   gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
 
   /* create and push the first buffer */
-  buffer = create_rtp_buffer (TIMESTAMP, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   /* create and push a second buffer */
-  buffer = create_rtp_buffer (TIMESTAMP + 1, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP + 1, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   /* create and push a third buffer */
-  buffer = create_rtp_buffer (TIMESTAMP + 2, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP + 2, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   ASSERT_SET_STATE (element, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
@@ -465,15 +465,15 @@ GST_START_TEST (test_reusable_element_no_e_bit)
   gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
 
   /* create and push the first buffer */
-  buffer = create_rtp_buffer (TIMESTAMP, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   /* create and push a second buffer */
-  buffer = create_rtp_buffer (TIMESTAMP + 1, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP + 1, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   /* create and push a third buffer */
-  buffer = create_rtp_buffer (TIMESTAMP + 2, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP + 2, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   ASSERT_SET_STATE (element, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
@@ -496,15 +496,15 @@ GST_START_TEST (test_reusable_element_e_bit)
   gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
 
   /* create and push the first buffer */
-  buffer = create_rtp_buffer (TIMESTAMP, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   /* create and push a second buffer */
-  buffer = create_rtp_buffer (TIMESTAMP + 1, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP + 1, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   /* create and push a third buffer */
-  buffer = create_rtp_buffer (TIMESTAMP + 2, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP + 2, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   ASSERT_SET_STATE (element, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
@@ -515,20 +515,71 @@ GST_START_TEST (test_reusable_element_e_bit)
   gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
 
   /* create and push the first buffer */
-  buffer = create_rtp_buffer (TIMESTAMP, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   /* create and push a second buffer */
-  buffer = create_rtp_buffer (TIMESTAMP + 1, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP + 1, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   /* create and push a third buffer */
-  buffer = create_rtp_buffer (TIMESTAMP + 2, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP + 2, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
 
   ASSERT_SET_STATE (element, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
 
   fail_unless_equals_int (g_list_length (buffers), 4);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_ntp_offset_event)
+{
+  GstBuffer *buffer_in, *buffer1_out, *buffer2_out;
+  GList *node;
+
+  /* set the e-bit, so the element use caching */
+  g_object_set (element, "set-e-bit", TRUE, NULL);
+
+  ASSERT_SET_STATE (element, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+  gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
+
+  /* push an ntp-offset event */
+  fail_unless (gst_pad_push_event (mysrcpad,
+          create_ntp_offset_event (NTP_OFFSET, FALSE)));
+
+  /* create and push the first buffer */
+  buffer_in = create_rtp_buffer (TIMESTAMP, TRUE);
+  buffer1_out = create_extension_buffer (buffer_in, TRUE, TRUE, FALSE,
+      NTP_OFFSET, 0);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buffer_in), GST_FLOW_OK);
+
+  /* push a new ntp offset */
+  fail_unless (gst_pad_push_event (mysrcpad,
+          create_ntp_offset_event (2 * NTP_OFFSET, TRUE)));
+
+  /* create and push a second buffer (last) */
+  buffer_in = create_rtp_buffer (TIMESTAMP + 1, TRUE);
+  buffer2_out = create_extension_buffer (buffer_in, TRUE, TRUE, TRUE,
+      2 * NTP_OFFSET, 0);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buffer_in), GST_FLOW_OK);
+
+  /* the first buffer should have been pushed now */
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  node = g_list_last (buffers);
+  check_buffer_equal ((GstBuffer *) node->data, buffer1_out);
+  gst_buffer_unref (buffer1_out);
+
+  /* push EOS */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* the second buffer has now been pushed */
+  fail_unless_equals_int (g_list_length (buffers), 2);
+  node = g_list_last (buffers);
+  check_buffer_equal ((GstBuffer *) node->data, buffer2_out);
+  gst_buffer_unref (buffer2_out);
+
+  ASSERT_SET_STATE (element, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
 }
 
 GST_END_TEST;
@@ -552,7 +603,7 @@ GST_START_TEST (test_serialized_events)
   check_and_clear_events (1, NO_COMPARE);
 
   /* create and push the first buffer, which should be cached */
-  buffer = create_rtp_buffer (TIMESTAMP, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
   fail_unless_equals_int (g_list_length (buffers), 0);
   /* serialized events should be queued when there's a buffer cached */
@@ -564,7 +615,7 @@ GST_START_TEST (test_serialized_events)
 
   /* receiving a new buffer should let the first through, along with the
    * queued serialized events  */
-  buffer = create_rtp_buffer (TIMESTAMP, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
   fail_unless_equals_int (g_list_length (buffers), 1);
   check_and_clear_events (2, COMPARE);
@@ -601,7 +652,7 @@ GST_START_TEST (test_non_serialized_events)
   check_and_clear_events (1, COMPARE);
 
   /* create and push the first buffer, which should be cached */
-  buffer = create_rtp_buffer (TIMESTAMP, TRUE, FALSE);
+  buffer = create_rtp_buffer (TIMESTAMP, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
   fail_unless_equals_int (g_list_length (buffers), 0);
   /* non-serialized events should be forwarded regardless of whether
@@ -638,14 +689,13 @@ onviftimestamp_suite (void)
   suite_add_tcase (s, tc_general);
   tcase_add_checked_fixture (tc_general, setup, cleanup);
 
-  tcase_add_test (tc_general, test_apply_discont);
-  tcase_add_test (tc_general, test_apply_not_discont);
   tcase_add_test (tc_general, test_apply_clean_point);
   tcase_add_test (tc_general, test_apply_no_e_bit);
   tcase_add_test (tc_general, test_apply_e_bit);
   tcase_add_test (tc_general, test_flushing);
   tcase_add_test (tc_general, test_reusable_element_no_e_bit);
   tcase_add_test (tc_general, test_reusable_element_e_bit);
+  tcase_add_test (tc_general, test_ntp_offset_event);
 
   tc_events = tcase_create ("events");
   suite_add_tcase (s, tc_events);

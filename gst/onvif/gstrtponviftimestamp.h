@@ -52,7 +52,13 @@ struct _GstRtpOnvifTimestamp {
   guint prop_cseq;
   gboolean prop_set_e_bit;
 
+  /* currently used ntp-offset
+   *(can be changed runtime with a GstNtpOffset event)
+   */
   GstClockTime ntp_offset;
+  /* a GstNtpOffset event might mark the stream as discontinued */
+  gboolean set_d_bit;
+  gboolean set_e_bit;
 
   GstSegment segment;
   /* Buffer waiting to be handled, only used if prop_set_e_bit is TRUE */

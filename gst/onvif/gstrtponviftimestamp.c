@@ -30,6 +30,8 @@
 
 #include "gstrtponviftimestamp.h"
 
+#define GST_NTP_OFFSET_EVENT_NAME "GstNtpOffset"
+
 #define DEFAULT_NTP_OFFSET GST_CLOCK_TIME_NONE
 #define DEFAULT_CSEQ 0
 #define DEFAULT_SET_E_BIT FALSE
@@ -43,9 +45,9 @@ static GstFlowReturn gst_rtp_onvif_timestamp_chain_list (GstPad * pad,
     GstObject * parent, GstBufferList * list);
 
 static GstFlowReturn handle_and_push_buffer (GstRtpOnvifTimestamp * self,
-    GstBuffer * buf, gboolean end_contiguous);
+    GstBuffer * buf);
 static GstFlowReturn handle_and_push_buffer_list (GstRtpOnvifTimestamp * self,
-    GstBufferList * list, gboolean end_contiguous);
+    GstBufferList * list);
 
 static GstStaticPadTemplate sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -119,8 +121,7 @@ gst_rtp_onvif_timestamp_set_property (GObject * object,
 
 /* send cached buffer or list, and events, if present */
 static GstFlowReturn
-send_cached_buffer_and_events (GstRtpOnvifTimestamp * self,
-    gboolean end_contiguous)
+send_cached_buffer_and_events (GstRtpOnvifTimestamp * self)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -128,12 +129,12 @@ send_cached_buffer_and_events (GstRtpOnvifTimestamp * self,
 
   if (self->buffer) {
     GST_DEBUG_OBJECT (self, "pushing %" GST_PTR_FORMAT, self->buffer);
-    ret = handle_and_push_buffer (self, self->buffer, end_contiguous);
+    ret = handle_and_push_buffer (self, self->buffer);
     self->buffer = NULL;
   }
   if (self->list) {
     GST_DEBUG_OBJECT (self, "pushing %" GST_PTR_FORMAT, self->list);
-    ret = handle_and_push_buffer_list (self, self->list, end_contiguous);
+    ret = handle_and_push_buffer_list (self, self->list);
     self->list = NULL;
   }
 
@@ -200,19 +201,11 @@ gst_rtp_onvif_timestamp_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (GST_CLOCK_TIME_IS_VALID (self->prop_ntp_offset))
-        self->ntp_offset = self->prop_ntp_offset;
-      else
-        self->ntp_offset = GST_CLOCK_TIME_NONE;
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      if (!GST_CLOCK_TIME_IS_VALID (self->prop_ntp_offset) &&
-          GST_ELEMENT_CLOCK (element) == NULL) {
-        GST_ELEMENT_ERROR (element, CORE, CLOCK, ("Missing NTP offset"),
-            ("Set the \"ntp-offset\" property to,"
-                " can't guess it without a clock on the pipeline."));
-        return GST_STATE_CHANGE_FAILURE;
-      }
+      self->ntp_offset = self->prop_ntp_offset;
+      GST_DEBUG_OBJECT (self, "ntp-offset: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (self->ntp_offset));
+      self->set_d_bit = FALSE;
+      self->set_e_bit = FALSE;
       break;
     default:
       break;
@@ -282,6 +275,32 @@ gst_rtp_onvif_timestamp_class_init (GstRtpOnvifTimestampClass * klass)
 }
 
 static gboolean
+parse_event_ntp_offset (GstRtpOnvifTimestamp * self, GstEvent * event,
+    GstClockTime * offset, gboolean * discont)
+{
+  const GstStructure *structure = gst_event_get_structure (event);
+  GstClockTime event_offset;
+  gboolean event_discont;
+
+  if (!gst_structure_get_clock_time (structure, "ntp-offset", &event_offset)) {
+    GST_ERROR_OBJECT (self, "no ntp-offset in %" GST_PTR_FORMAT, event);
+    return FALSE;
+  }
+  if (!gst_structure_get_boolean (structure, "discont", &event_discont)) {
+    GST_ERROR_OBJECT (self, "no discontinue in %" GST_PTR_FORMAT, event);
+    return FALSE;
+  }
+
+  if (offset)
+    *offset = event_offset;
+
+  if (discont)
+    *discont = event_discont;
+
+  return TRUE;
+}
+
+static gboolean
 gst_rtp_onvif_timestamp_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
@@ -293,11 +312,30 @@ gst_rtp_onvif_timestamp_sink_event (GstPad * pad, GstObject * parent,
 
   /* handle serialized events, which, should not be enqueued */
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+      /* if the "set-e-bit" property is set, an offset event might mark the
+       * stream as discontinued. We need to check if the currently cached buffer
+       * needs the e-bit before it's pushed */
+      if (self->prop_set_e_bit &&
+          gst_event_has_name (event, GST_NTP_OFFSET_EVENT_NAME)) {
+        gboolean discont;
+        if (parse_event_ntp_offset (self, event, NULL, &discont)) {
+          GST_DEBUG_OBJECT (self, "stream %s discontinued",
+              (discont ? "is" : "is not"));
+          self->set_e_bit = discont;
+        } else {
+          drop = TRUE;
+          ret = FALSE;
+          goto out;
+        }
+      }
+      break;
     case GST_EVENT_EOS:
       {
         GstFlowReturn res;
         /* Push pending buffers, if any */
-        res = send_cached_buffer_and_events (self, TRUE);
+        self->set_e_bit = TRUE;
+        res = send_cached_buffer_and_events (self);
         if (res != GST_FLOW_OK) {
           drop = TRUE;
           ret = FALSE;
@@ -307,6 +345,8 @@ gst_rtp_onvif_timestamp_sink_event (GstPad * pad, GstObject * parent,
       }
     case GST_EVENT_FLUSH_STOP:
       purge_cached_buffer_and_events (self);
+      self->set_d_bit = FALSE;
+      self->set_e_bit = FALSE;
       gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
       break;
     default:
@@ -323,6 +363,25 @@ gst_rtp_onvif_timestamp_sink_event (GstPad * pad, GstObject * parent,
 
   /* handle rest of the events */
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+      /* update the ntp-offset after any cached buffer/buffer list has been
+       * pushed. the d-bit of the next buffer/buffer list should be set if
+       * the stream is discontinued */
+      if (gst_event_has_name (event, GST_NTP_OFFSET_EVENT_NAME)) {
+        GstClockTime offset;
+        gboolean discont;
+        if (parse_event_ntp_offset (self, event, &offset, &discont)) {
+          GST_DEBUG_OBJECT (self, "new ntp-offset: %" GST_TIME_FORMAT
+              ", stream %s discontinued", GST_TIME_ARGS (offset),
+              (discont ? "is" : "is not"));
+          self->ntp_offset = offset;
+          self->set_d_bit = discont;
+        } else {
+          ret = FALSE;
+        }
+        drop = TRUE;
+      }
+      break;
     case GST_EVENT_SEGMENT:
       gst_event_copy_segment (event, &self->segment);
       break;
@@ -371,8 +430,7 @@ gst_rtp_onvif_timestamp_init (GstRtpOnvifTimestamp * self)
 #define EXTENSION_SIZE 3
 
 static gboolean
-handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf,
-    gboolean end_contiguous)
+handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf)
 {
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   guint8 *data;
@@ -398,12 +456,17 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf,
 
       self->ntp_offset = real_time - running_time;
 
+      GST_DEBUG_OBJECT (self, "new ntp-offset: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (self->ntp_offset));
+
       gst_object_unref (clock);
     } else {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, ("No ntp-offset present"),
+          ("Can not guess ntp-offset with no clock."));
       /* Received a buffer in PAUSED, so we can't guess the match
        * between the running time and the NTP clock yet.
        */
-      return TRUE;
+      return FALSE;
     }
   }
 
@@ -474,15 +537,17 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf,
   }
 
   /* Set E if the next buffer has DISCONT */
-  if (end_contiguous) {
+  if (self->set_e_bit) {
     GST_DEBUG_OBJECT (self, "set E flag");
     field |= (1 << 6);
+    self->set_e_bit = FALSE;
   }
 
   /* Set D if the buffer has the DISCONT flag */
-  if (GST_BUFFER_IS_DISCONT (buf)) {
+  if (self->set_d_bit) {
     GST_DEBUG_OBJECT (self, "set D flag");
     field |= (1 << 5);
+    self->set_d_bit = FALSE;
   }
 
   GST_WRITE_UINT8 (data + 8, field);
@@ -499,10 +564,9 @@ done:
 
 /* @buf: (transfer full) */
 static GstFlowReturn
-handle_and_push_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf,
-    gboolean end_contiguous)
+handle_and_push_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf)
 {
-  if (!handle_buffer (self, buf, end_contiguous)) {
+  if (!handle_buffer (self, buf)) {
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
@@ -519,11 +583,11 @@ gst_rtp_onvif_timestamp_chain (GstPad * pad, GstObject * parent,
 
   if (!self->prop_set_e_bit) {
     /* Modify and push this buffer right away */
-    return handle_and_push_buffer (self, buf, FALSE);
+    return handle_and_push_buffer (self, buf);
   }
 
   /* send any previously cached item(s), this leaves an empty queue */
-  result = send_cached_buffer_and_events (self, GST_BUFFER_IS_DISCONT (buf));
+  result = send_cached_buffer_and_events (self);
 
   /* enqueue the new item, as the only item in the queue */
   self->buffer = buf;
@@ -532,14 +596,13 @@ gst_rtp_onvif_timestamp_chain (GstPad * pad, GstObject * parent,
 
 /* @buf: (transfer full) */
 static GstFlowReturn
-handle_and_push_buffer_list (GstRtpOnvifTimestamp * self,
-    GstBufferList * list, gboolean end_contiguous)
+handle_and_push_buffer_list (GstRtpOnvifTimestamp * self, GstBufferList * list)
 {
   GstBuffer *buf;
 
   /* Set the extension on the *first* buffer */
   buf = gst_buffer_list_get (list, 0);
-  if (!handle_buffer (self, buf, end_contiguous)) {
+  if (!handle_buffer (self, buf)) {
     gst_buffer_list_unref (list);
     return GST_FLOW_ERROR;
   }
@@ -555,16 +618,14 @@ gst_rtp_onvif_timestamp_chain_list (GstPad * pad, GstObject * parent,
     GstBufferList * list)
 {
   GstRtpOnvifTimestamp *self = GST_RTP_ONVIF_TIMESTAMP (parent);
-  GstBuffer *buf;
   GstFlowReturn result = GST_FLOW_OK;
 
   if (!self->prop_set_e_bit) {
-    return handle_and_push_buffer_list (self, list, FALSE);
+    return handle_and_push_buffer_list (self, list);
   }
 
   /* send any previously cached item(s), this leaves an empty queue */
-  buf = gst_buffer_list_get (list, 0);
-  result = send_cached_buffer_and_events (self, GST_BUFFER_IS_DISCONT (buf));
+  result = send_cached_buffer_and_events (self);
 
   /* enqueue the new item, as the only item in the queue */
   self->list = list;
