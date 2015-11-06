@@ -125,10 +125,8 @@ gst_dshow_new_pin_mediatype_from_streamcaps (IPin * pin, gint id, IAMStreamConfi
 void
 gst_dshow_free_pins_mediatypes (GList * pins_mediatypes)
 {
-  while (pins_mediatypes != NULL) {
-    gst_dshow_free_pin_mediatype (pins_mediatypes->data);
-    pins_mediatypes = g_list_remove_link (pins_mediatypes, pins_mediatypes);
-  }
+  g_list_free_full (pins_mediatypes,
+      (GDestroyNotify) gst_dshow_free_pin_mediatype);
 }
 
 gboolean
