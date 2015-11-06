@@ -29,6 +29,29 @@
 
 #include "gstchannelmix.h"
 
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    gsize cat_done;
+
+    cat_done = (gsize) _gst_debug_category_new ("audio-channel-mix", 0,
+        "audio-channel-mix object");
+
+    g_once_init_leave (&cat_gonce, cat_done);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#else
+#define ensure_debug_category() /* NOOP */
+#endif /* GST_DISABLE_GST_DEBUG */
+
+
 #define INT_MATRIX_FACTOR_EXPONENT 10
 
 typedef void (*MixFunc) (GstAudioChannelMix * mix, const gpointer src,

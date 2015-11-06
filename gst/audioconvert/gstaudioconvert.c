@@ -68,6 +68,7 @@
 
 GST_DEBUG_CATEGORY (audio_convert_debug);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
+#define GST_CAT_DEFAULT (audio_convert_debug)
 
 /*** DEFINITIONS **************************************************************/
 
