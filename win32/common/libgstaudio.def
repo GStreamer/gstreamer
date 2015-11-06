@@ -71,6 +71,7 @@ EXPORTS
 	gst_audio_decoder_set_plc_aware
 	gst_audio_decoder_set_tolerance
 	gst_audio_decoder_set_use_default_pad_acceptcaps
+	gst_audio_dither_method_get_type
 	gst_audio_downmix_meta_api_get_type
 	gst_audio_downmix_meta_get_info
 	gst_audio_encoder_allocate_output_buffer
@@ -130,7 +131,12 @@ EXPORTS
 	gst_audio_info_set_format
 	gst_audio_info_to_caps
 	gst_audio_layout_get_type
+	gst_audio_noise_shaping_method_get_type
 	gst_audio_pack_flags_get_type
+	gst_audio_quantize_flags_get_type
+	gst_audio_quantize_free
+	gst_audio_quantize_new
+	gst_audio_quantize_samples
 	gst_audio_reorder_channels
 	gst_audio_ring_buffer_acquire
 	gst_audio_ring_buffer_activate
