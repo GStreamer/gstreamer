@@ -25,8 +25,6 @@
 
 #include "plugin.h"
 
-#include "gstaudioconvertorc.h"
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
