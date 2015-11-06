@@ -16,6 +16,7 @@ curlsftpsink
 curlhttpsink
 curlsmtpsink
 dash_mpd
+dash_demux
 dataurisrc
 faac
 faad
@@ -48,6 +49,8 @@ rtponvif
 rganalysis
 rglimiter
 rgvolume
+rtponvifparse
+rtponviftimestamp
 schroenc
 shm
 spectrum
