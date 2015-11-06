@@ -5111,7 +5111,7 @@ unblock_pads (GstDecodeBin * dbin)
     }
     dpad->blocked = FALSE;
     /* make flushing, prevent NOT_LINKED */
-    GST_PAD_SET_FLUSHING (GST_PAD_CAST (dpad));
+    gst_pad_set_active (GST_PAD_CAST (dpad), FALSE);
     gst_object_unref (dpad);
     gst_object_unref (opad);
     GST_DEBUG_OBJECT (dpad, "unblocked");
