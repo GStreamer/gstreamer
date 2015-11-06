@@ -189,6 +189,8 @@ gst_faac_class_init (GstFaacClass * klass)
   gobject_class->set_property = gst_faac_set_property;
   gobject_class->get_property = gst_faac_get_property;
 
+  GST_DEBUG_CATEGORY_INIT (faac_debug, "faac", 0, "AAC encoding");
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template));
 
@@ -236,8 +238,6 @@ gst_faac_class_init (GstFaacClass * klass)
           "Block type encorcing",
           GST_TYPE_FAAC_SHORTCTL, FAAC_DEFAULT_SHORTCTL,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  GST_DEBUG_CATEGORY_INIT (faac_debug, "faac", 0, "AAC encoding");
 }
 
 static void
