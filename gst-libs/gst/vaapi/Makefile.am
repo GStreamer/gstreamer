@@ -175,6 +175,13 @@ libgstvaapi_source_h += $(libgstvaapi_hevcdec_source_h)
 libgstvaapi_source_priv_h += $(libgstvaapi_hevcdec_source_priv_h)
 endif
 
+libgstvaapi_vp9dec_source_c = gstvaapidecoder_vp9.c
+libgstvaapi_vp9dec_source_h = gstvaapidecoder_vp9.h
+if USE_VP9_DECODER
+libgstvaapi_source_c += $(libgstvaapi_vp9dec_source_c)
+libgstvaapi_source_h += $(libgstvaapi_vp9dec_source_h)
+endif
+
 libgstvaapi_enc_source_c =			\
 	gstvaapicodedbuffer.c			\
 	gstvaapicodedbufferpool.c		\
@@ -594,6 +601,8 @@ EXTRA_DIST += \
 	$(libgstvaapi_hevcdec_source_c)		\
 	$(libgstvaapi_hevcdec_source_h)		\
 	$(libgstvaapi_hevcdec_source_priv_h)	\
+	$(libgstvaapi_vp9dec_source_c)		\
+	$(libgstvaapi_vp9dec_source_h)		\
 	$(libgstvaapi_jpegenc_source_h)		\
 	$(libgstvaapi_jpegenc_source_c)		\
 	$(libgstvaapi_vp8enc_source_h)		\

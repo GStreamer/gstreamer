@@ -1,0 +1,679 @@
+/*
+ *  gstvaapidecoder_vp9.c - VP9 decoder
+ *
+ *  Copyright (C) 2014-2015 Intel Corporation
+ *    Author: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public License
+ *  as published by the Free Software Foundation; either version 2.1
+ *  of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free
+ *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ *  Boston, MA 02110-1301 USA
+ */
+
+/**
+ * SECTION:gstvaapidecoder_vp9
+ * @short_description: VP9 decoder
+ */
+
+#include "sysdeps.h"
+#include <gst/codecparsers/gstvp9parser.h>
+#include "gstvaapidecoder_vp9.h"
+#include "gstvaapidecoder_objects.h"
+#include "gstvaapidecoder_priv.h"
+#include "gstvaapidisplay_priv.h"
+#include "gstvaapiobject_priv.h"
+
+#include "gstvaapicompat.h"
+#ifdef HAVE_VA_VA_DEC_VP9_H
+#include <va/va_dec_vp9.h>
+#endif
+
+#define DEBUG 1
+#include "gstvaapidebug.h"
+
+#define GST_VAAPI_DECODER_VP9_CAST(decoder) \
+  ((GstVaapiDecoderVp9 *)(decoder))
+
+typedef struct _GstVaapiDecoderVp9Private GstVaapiDecoderVp9Private;
+typedef struct _GstVaapiDecoderVp9Class GstVaapiDecoderVp9Class;
+
+struct _GstVaapiDecoderVp9Private
+{
+  GstVaapiProfile profile;
+  guint width;
+  guint height;
+  GstVp9Parser *parser;
+  GstVp9FrameHdr frame_hdr;
+  GstVaapiPicture *current_picture;
+  GstVaapiPicture *ref_frames[GST_VP9_REF_FRAMES];      /* reference frames in ref_slots[max_ref] */
+
+  guint num_frames;             /* number of frames in a super frame */
+  guint frame_sizes[8];         /* size of frames in a super frame */
+  guint frame_cnt;              /* frame count variable for super frame */
+  guint total_idx_size;         /* super frame index size (full block size) */
+  guint had_superframe_hdr:1;   /* indicate the presense of super frame */
+
+  guint size_changed:1;
+};
+
+/**
+ * GstVaapiDecoderVp9:
+ *
+ * A decoder based on Vp9.
+ */
+struct _GstVaapiDecoderVp9
+{
+  /*< private > */
+  GstVaapiDecoder parent_instance;
+
+  GstVaapiDecoderVp9Private priv;
+};
+
+/**
+ * GstVaapiDecoderVp9Class:
+ *
+ * A decoder class based on Vp9.
+ */
+struct _GstVaapiDecoderVp9Class
+{
+  /*< private > */
+  GstVaapiDecoderClass parent_class;
+};
+
+static GstVaapiDecoderStatus
+get_status (GstVp9ParserResult result)
+{
+  GstVaapiDecoderStatus status;
+
+  switch (result) {
+    case GST_VP9_PARSER_OK:
+      status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+      break;
+    case GST_VP9_PARSER_ERROR:
+      status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+      break;
+    default:
+      status = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+      break;
+  }
+  return status;
+}
+
+static void
+gst_vaapi_decoder_vp9_close (GstVaapiDecoderVp9 * decoder)
+{
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  guint i;
+
+  for (i = 0; i < GST_VP9_REF_FRAMES; i++)
+    gst_vaapi_picture_replace (&priv->ref_frames[i], NULL);
+
+  if (priv->parser)
+    gst_vp9_parser_free (priv->parser);
+}
+
+static gboolean
+gst_vaapi_decoder_vp9_open (GstVaapiDecoderVp9 * decoder)
+{
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+
+  gst_vaapi_decoder_vp9_close (decoder);
+  priv->parser = gst_vp9_parser_new ();
+  return TRUE;
+}
+
+static void
+gst_vaapi_decoder_vp9_destroy (GstVaapiDecoder * base_decoder)
+{
+  GstVaapiDecoderVp9 *const decoder = GST_VAAPI_DECODER_VP9_CAST (base_decoder);
+
+  gst_vaapi_decoder_vp9_close (decoder);
+}
+
+static gboolean
+gst_vaapi_decoder_vp9_create (GstVaapiDecoder * base_decoder)
+{
+  GstVaapiDecoderVp9 *const decoder = GST_VAAPI_DECODER_VP9_CAST (base_decoder);
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+
+  if (!gst_vaapi_decoder_vp9_open (decoder))
+    return FALSE;
+
+  priv->profile = GST_VAAPI_PROFILE_UNKNOWN;
+  return TRUE;
+}
+
+static GstVaapiDecoderStatus
+ensure_context (GstVaapiDecoderVp9 * decoder)
+{
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  const GstVaapiProfile profile = GST_VAAPI_PROFILE_VP9;
+  const GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
+  gboolean reset_context = FALSE;
+
+  if (priv->profile != profile) {
+    if (!gst_vaapi_display_has_decoder (GST_VAAPI_DECODER_DISPLAY (decoder),
+            profile, entrypoint))
+      return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+
+    priv->profile = profile;
+    reset_context = TRUE;
+  }
+
+  if (priv->size_changed) {
+    GST_DEBUG ("size changed");
+    priv->size_changed = FALSE;
+    reset_context = TRUE;
+  }
+
+  if (reset_context) {
+    GstVaapiContextInfo info;
+
+    info.profile = priv->profile;
+    info.entrypoint = entrypoint;
+    info.chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+    info.width = priv->width;
+    info.height = priv->height;
+    info.ref_frames = 8;
+    reset_context =
+        gst_vaapi_decoder_ensure_context (GST_VAAPI_DECODER (decoder), &info);
+
+    if (!reset_context)
+      return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  }
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static void
+init_picture (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture)
+{
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  GstVp9FrameHdr *const frame_hdr = &priv->frame_hdr;
+
+  picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+  picture->type =
+      (frame_hdr->frame_type ==
+      GST_VP9_KEY_FRAME) ? GST_VAAPI_PICTURE_TYPE_I : GST_VAAPI_PICTURE_TYPE_P;
+  picture->pts = GST_VAAPI_DECODER_CODEC_FRAME (decoder)->pts;
+
+  if (!frame_hdr->show_frame)
+    GST_VAAPI_PICTURE_FLAG_SET (picture, GST_VAAPI_PICTURE_FLAG_SKIPPED);
+}
+
+static void
+vaapi_fill_ref_frames (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture,
+    GstVp9FrameHdr * frame_hdr, VADecPictureParameterBufferVP9 * pic_param)
+{
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  guint i;
+
+  if (frame_hdr->frame_type == GST_VP9_KEY_FRAME) {
+    for (i = 0; i < G_N_ELEMENTS (priv->ref_frames); i++)
+      pic_param->reference_frames[i] = picture->surface_id;
+
+  } else {
+    pic_param->pic_fields.bits.last_ref_frame =
+        frame_hdr->ref_frame_indices[GST_VP9_REF_FRAME_LAST - 1];
+    pic_param->pic_fields.bits.last_ref_frame_sign_bias =
+        frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_LAST - 1];
+
+    if (frame_hdr->ref_frame_indices[1]) {
+      pic_param->pic_fields.bits.golden_ref_frame =
+          frame_hdr->ref_frame_indices[GST_VP9_REF_FRAME_GOLDEN - 1];
+      pic_param->pic_fields.bits.golden_ref_frame_sign_bias =
+          frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_GOLDEN - 1];
+      pic_param->pic_fields.bits.alt_ref_frame =
+          frame_hdr->ref_frame_indices[GST_VP9_REF_FRAME_ALTREF - 1];
+      pic_param->pic_fields.bits.alt_ref_frame_sign_bias =
+          frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_ALTREF - 1];
+    }
+  }
+  for (i = 0; i < G_N_ELEMENTS (priv->ref_frames); i++) {
+    pic_param->reference_frames[i] =
+        priv->ref_frames[i] ? priv->
+        ref_frames[i]->surface_id : VA_INVALID_SURFACE;
+  }
+}
+
+static gboolean
+fill_picture (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture)
+{
+  GstVaapiDecoderVp9Private *priv = &decoder->priv;
+  VADecPictureParameterBufferVP9 *pic_param = picture->param;
+  GstVp9Parser *parser = priv->parser;
+  GstVp9FrameHdr *frame_hdr = &priv->frame_hdr;
+  gint i;
+
+  /* Fill in VAPictureParameterBufferVP9 */
+  pic_param->frame_width = priv->width;
+  pic_param->frame_height = priv->height;
+
+  /* Fill in ReferenceFrames */
+  vaapi_fill_ref_frames (decoder, picture, frame_hdr, pic_param);
+
+#define COPY_FIELD(s, f) \
+    pic_param->f = (s)->f
+#define COPY_BFM(a, s, f) \
+    pic_param->a.bits.f = (s)->f
+
+  COPY_BFM (pic_fields, frame_hdr, subsampling_x);
+  COPY_BFM (pic_fields, frame_hdr, subsampling_y);
+  COPY_BFM (pic_fields, frame_hdr, frame_type);
+  COPY_BFM (pic_fields, frame_hdr, show_frame);
+  COPY_BFM (pic_fields, frame_hdr, error_resilient_mode);
+  COPY_BFM (pic_fields, frame_hdr, intra_only);
+  COPY_BFM (pic_fields, frame_hdr, allow_high_precision_mv);
+  COPY_BFM (pic_fields, frame_hdr, mcomp_filter_type);
+  COPY_BFM (pic_fields, frame_hdr, frame_parallel_decoding_mode);
+  COPY_BFM (pic_fields, frame_hdr, reset_frame_context);
+  COPY_BFM (pic_fields, frame_hdr, refresh_frame_context);
+  COPY_BFM (pic_fields, frame_hdr, frame_context_idx);
+  COPY_BFM (pic_fields, parser, lossless_flag);
+
+  pic_param->pic_fields.bits.segmentation_enabled =
+      frame_hdr->segmentation.enabled;
+  pic_param->pic_fields.bits.segmentation_temporal_update =
+      frame_hdr->segmentation.temporal_update;
+  pic_param->pic_fields.bits.segmentation_update_map =
+      frame_hdr->segmentation.update_map;
+
+  COPY_FIELD (&frame_hdr->loopfilter, filter_level);
+  COPY_FIELD (&frame_hdr->loopfilter, sharpness_level);
+  COPY_FIELD (frame_hdr, log2_tile_rows);
+  COPY_FIELD (frame_hdr, log2_tile_columns);
+  COPY_FIELD (frame_hdr, frame_header_length_in_bytes);
+  COPY_FIELD (frame_hdr, first_partition_size);
+
+  g_assert (G_N_ELEMENTS (pic_param->mb_segment_tree_probs) ==
+      G_N_ELEMENTS (parser->mb_segment_tree_probs));
+  g_assert (G_N_ELEMENTS (pic_param->segment_pred_probs) ==
+      G_N_ELEMENTS (parser->segment_pred_probs));
+
+  memcpy (pic_param->mb_segment_tree_probs, parser->mb_segment_tree_probs,
+      sizeof (parser->mb_segment_tree_probs));
+  memcpy (pic_param->segment_pred_probs, parser->segment_pred_probs,
+      sizeof (parser->segment_pred_probs));
+
+  return TRUE;
+}
+
+static gboolean
+fill_slice (GstVaapiDecoderVp9 * decoder, GstVaapiSlice * slice)
+{
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  GstVp9Parser *parser = priv->parser;
+  VASliceParameterBufferVP9 *const slice_param = slice->param;
+  GstVp9FrameHdr *const frame_hdr = &priv->frame_hdr;
+  guint i;
+
+#define COPY_SEG_FIELD(s, f) \
+    seg_param->f = (s)->f
+
+  /* Fill in VASliceParameterBufferVP9 */
+  for (i = 0; i < GST_VP9_MAX_SEGMENTS; i++) {
+    VASegmentParameterVP9 *seg_param = &slice_param->seg_param[i];
+    GstVp9Segmentation *seg = &parser->segmentation[i];
+
+    memcpy (seg_param->filter_level, seg->filter_level,
+        sizeof (seg->filter_level));
+    COPY_SEG_FIELD (seg, luma_ac_quant_scale);
+    COPY_SEG_FIELD (seg, luma_dc_quant_scale);
+    COPY_SEG_FIELD (seg, chroma_ac_quant_scale);
+    COPY_SEG_FIELD (seg, chroma_dc_quant_scale);
+
+    seg_param->segment_flags.fields.segment_reference_skipped =
+        seg->reference_skip;
+    seg_param->segment_flags.fields.segment_reference_enabled =
+        seg->reference_frame_enabled;
+    seg_param->segment_flags.fields.segment_reference = seg->reference_frame;
+
+  }
+  /* Fixme: When segmentation is disabled, only seg_param[0] has valid values,
+   * all other entries should be populated with 0  ? */
+
+  return TRUE;
+}
+
+static GstVaapiDecoderStatus
+decode_slice (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture,
+    const guchar * buf, guint buf_size)
+{
+  GstVaapiSlice *slice;
+
+  slice = GST_VAAPI_SLICE_NEW (VP9, decoder, buf, buf_size);
+  if (!slice) {
+    GST_ERROR ("failed to allocate slice");
+    return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+  }
+
+  if (!fill_slice (decoder, slice)) {
+    gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (slice));
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  }
+
+  gst_vaapi_picture_add_slice (GST_VAAPI_PICTURE_CAST (picture), slice);
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static void
+update_ref_frames (GstVaapiDecoderVp9 * decoder)
+{
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  GstVaapiPicture *picture = priv->current_picture;
+  GstVp9FrameHdr *const frame_hdr = &priv->frame_hdr;
+  guint8 refresh_frame_flags, mask, i = 0;
+
+  if (frame_hdr->frame_type == GST_VP9_KEY_FRAME)
+    refresh_frame_flags = (1 << GST_VP9_REF_FRAMES) - 1;
+  else
+    refresh_frame_flags = frame_hdr->refresh_frame_flags;
+
+  for (mask = refresh_frame_flags; mask; mask >>= 1, ++i) {
+    if (mask & 1)
+      gst_vaapi_picture_replace (&priv->ref_frames[i], picture);
+  }
+}
+
+#ifdef GST_VAAPI_PICTURE_NEW
+#undef GST_VAAPI_PICTURE_NEW
+#endif
+
+#define GST_VAAPI_PICTURE_NEW(codec, decoder)                   \
+  gst_vaapi_picture_new (GST_VAAPI_DECODER_CAST (decoder),      \
+      NULL, sizeof (G_PASTE (VADecPictureParameterBuffer, codec)))
+
+static GstVaapiDecoderStatus
+decode_picture (GstVaapiDecoderVp9 * decoder, const guchar * buf,
+    guint buf_size)
+{
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  GstVaapiPicture *picture;
+  GstVaapiDecoderStatus status;
+
+  status = ensure_context (decoder);
+  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+    return status;
+
+  /* Fixme: handle show_existing_frame */
+
+  /* Create new picture */
+  picture = GST_VAAPI_PICTURE_NEW (VP9, decoder);
+  if (!picture) {
+    GST_ERROR ("failed to allocate picture");
+    return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+  }
+  gst_vaapi_picture_replace (&priv->current_picture, picture);
+  gst_vaapi_picture_unref (picture);
+
+  init_picture (decoder, picture);
+  if (!fill_picture (decoder, picture))
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+
+  return decode_slice (decoder, picture, buf, buf_size);
+}
+
+
+static GstVaapiDecoderStatus
+decode_current_picture (GstVaapiDecoderVp9 * decoder)
+{
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  GstVaapiPicture *const picture = priv->current_picture;
+  GstVp9FrameHdr *const frame_hdr = &priv->frame_hdr;
+
+  if (!picture)
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+  if (!gst_vaapi_picture_decode (picture))
+    goto error;
+
+  update_ref_frames (decoder);
+
+  if (frame_hdr->show_frame)
+    if (!gst_vaapi_picture_output (picture))
+      goto error;
+
+  gst_vaapi_picture_replace (&priv->current_picture, NULL);
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+error:
+  /* XXX: fix for cases where first field failed to be decoded */
+  gst_vaapi_picture_replace (&priv->current_picture, NULL);
+  return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+}
+
+static gboolean
+parse_super_frame (const guchar * data, guint data_size,
+    guint * frame_sizes, guint * frame_count, guint * total_idx_size)
+{
+  guint8 marker;
+  guint32 num_frames = 1, frame_size_length, total_index_size;
+  guint i, j;
+
+  if (data_size <= 0)
+    return FALSE;
+
+  marker = data[data_size - 1];
+
+  if ((marker & 0xe0) == 0xc0) {
+
+    GST_DEBUG ("Got VP9-Super Frame, size %d", data_size);
+
+    num_frames = (marker & 0x7) + 1;
+    frame_size_length = ((marker >> 3) & 0x3) + 1;
+    total_index_size = 2 + num_frames * frame_size_length;
+
+    if ((data_size >= total_index_size)
+        && (data[data_size - total_index_size] == marker)) {
+      const guint8 *x = &data[data_size - total_index_size + 1];
+
+      for (i = 0; i < num_frames; i++) {
+        guint32 cur_frame_size = 0;
+
+        for (j = 0; j < frame_size_length; j++)
+          cur_frame_size |= (*x++) << (j * 8);
+
+        frame_sizes[i] = cur_frame_size;
+      }
+
+      *frame_count = num_frames;
+      *total_idx_size = total_index_size;
+    } else {
+      GST_ERROR ("Failed to parse Super-frame");
+      return FALSE;
+    }
+  } else {
+    *frame_count = num_frames;
+    frame_sizes[0] = data_size;
+    *total_idx_size = 0;
+  }
+
+  return TRUE;
+}
+
+static GstVaapiDecoderStatus
+parse_frame_header (GstVaapiDecoderVp9 * decoder, const guchar * buf,
+    guint buf_size, GstVp9FrameHdr * frame_hdr)
+{
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  GstVp9ParserResult result;
+
+  result = gst_vp9_parser_parse_frame_header (priv->parser, frame_hdr,
+      buf, buf_size);
+  if (result != GST_VP9_PARSER_OK)
+    return get_status (result);
+
+  if ((frame_hdr->frame_type == GST_VP9_KEY_FRAME) &&
+      (frame_hdr->width != priv->width || frame_hdr->height != priv->height)) {
+    priv->width = frame_hdr->width;
+    priv->height = frame_hdr->height;
+    priv->size_changed = TRUE;
+  }
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_vp9_parse (GstVaapiDecoder * base_decoder,
+    GstAdapter * adapter, gboolean at_eos, GstVaapiDecoderUnit * unit)
+{
+  GstVaapiDecoderVp9 *const decoder = GST_VAAPI_DECODER_VP9_CAST (base_decoder);
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  guchar *buf;
+  guint buf_size, flags = 0;
+  static guint cnt = 0;
+
+  buf_size = gst_adapter_available (adapter);
+  if (!buf_size)
+    return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+  buf = (guchar *) gst_adapter_map (adapter, buf_size);
+  if (!buf)
+    return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+
+  if (!priv->had_superframe_hdr) {
+    if (!parse_super_frame (buf, buf_size, priv->frame_sizes, &priv->num_frames,
+            &priv->total_idx_size))
+      return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+
+    if (priv->num_frames > 1)
+      priv->had_superframe_hdr = TRUE;
+  }
+
+  unit->size = priv->frame_sizes[priv->frame_cnt++];
+
+  if (priv->frame_cnt == priv->num_frames) {
+    priv->num_frames = 0;
+    priv->frame_cnt = 0;
+    priv->had_superframe_hdr = FALSE;
+    unit->size += priv->total_idx_size;
+  }
+
+  /* The whole frame is available */
+  flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
+  flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
+  flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END;
+
+set_flags:
+  GST_VAAPI_DECODER_UNIT_FLAG_SET (unit, flags);
+
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+decode_buffer (GstVaapiDecoderVp9 * decoder, const guchar * buf, guint buf_size)
+{
+  GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  GstVaapiDecoderStatus status;
+  guint size = buf_size;
+
+  if (priv->total_idx_size && !priv->had_superframe_hdr) {
+    size -= priv->total_idx_size;
+    priv->total_idx_size = 0;
+  }
+
+  status = parse_frame_header (decoder, buf, size, &priv->frame_hdr);
+  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+    return status;
+
+  return decode_picture (decoder, buf, size);
+}
+
+GstVaapiDecoderStatus
+gst_vaapi_decoder_vp9_decode (GstVaapiDecoder * base_decoder,
+    GstVaapiDecoderUnit * unit)
+{
+  GstVaapiDecoderVp9 *const decoder = GST_VAAPI_DECODER_VP9_CAST (base_decoder);
+  GstVaapiDecoderStatus status;
+  GstBuffer *const buffer =
+      GST_VAAPI_DECODER_CODEC_FRAME (decoder)->input_buffer;
+  GstMapInfo map_info;
+
+  if (!gst_buffer_map (buffer, &map_info, GST_MAP_READ)) {
+    GST_ERROR ("failed to map buffer");
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  }
+
+  status = decode_buffer (decoder, map_info.data + unit->offset, unit->size);
+  gst_buffer_unmap (buffer, &map_info);
+  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+    return status;
+
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_vp9_start_frame (GstVaapiDecoder * base_decoder,
+    GstVaapiDecoderUnit * base_unit)
+{
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_vp9_end_frame (GstVaapiDecoder * base_decoder)
+{
+  GstVaapiDecoderVp9 *const decoder = GST_VAAPI_DECODER_VP9_CAST (base_decoder);
+
+  return decode_current_picture (decoder);
+}
+
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_vp9_flush (GstVaapiDecoder * base_decoder)
+{
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static void
+gst_vaapi_decoder_vp9_class_init (GstVaapiDecoderVp9Class * klass)
+{
+  GstVaapiMiniObjectClass *const object_class =
+      GST_VAAPI_MINI_OBJECT_CLASS (klass);
+  GstVaapiDecoderClass *const decoder_class = GST_VAAPI_DECODER_CLASS (klass);
+
+  object_class->size = sizeof (GstVaapiDecoderVp9);
+  object_class->finalize = (GDestroyNotify) gst_vaapi_decoder_finalize;
+
+  decoder_class->create = gst_vaapi_decoder_vp9_create;
+  decoder_class->destroy = gst_vaapi_decoder_vp9_destroy;
+  decoder_class->parse = gst_vaapi_decoder_vp9_parse;
+  decoder_class->decode = gst_vaapi_decoder_vp9_decode;
+  decoder_class->start_frame = gst_vaapi_decoder_vp9_start_frame;
+  decoder_class->end_frame = gst_vaapi_decoder_vp9_end_frame;
+  decoder_class->flush = gst_vaapi_decoder_vp9_flush;
+}
+
+static inline const GstVaapiDecoderClass *
+gst_vaapi_decoder_vp9_class (void)
+{
+  static GstVaapiDecoderVp9Class g_class;
+  static gsize g_class_init = FALSE;
+
+  if (g_once_init_enter (&g_class_init)) {
+    gst_vaapi_decoder_vp9_class_init (&g_class);
+    g_once_init_leave (&g_class_init, TRUE);
+  }
+  return GST_VAAPI_DECODER_CLASS (&g_class);
+}
+
+/**
+ * gst_vaapi_decoder_vp9_new:
+ * @display: a #GstVaapiDisplay
+ * @caps: a #GstCaps holding codec information
+ *
+ * Creates a new #GstVaapiDecoder for VP9 decoding.  The @caps can
+ * hold extra information like codec-data and pictured coded size.
+ *
+ * Return value: the newly allocated #GstVaapiDecoder object
+ */
+GstVaapiDecoder *
+gst_vaapi_decoder_vp9_new (GstVaapiDisplay * display, GstCaps * caps)
+{
+  return gst_vaapi_decoder_new (gst_vaapi_decoder_vp9_class (), display, caps);
+}
