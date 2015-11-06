@@ -419,6 +419,8 @@ struct _GstDecodeChain
   GstDecodeGroup *parent;
   GstDecodeBin *dbin;
 
+  gint refs;                    /* Number of references to this object */
+
   GMutex lock;                  /* Protects this chain and its groups */
 
   GstPad *pad;                  /* srcpad that caused creation of this chain */
@@ -459,6 +461,8 @@ struct _GstDecodeChain
   GList *old_groups;            /* Groups that should be freed later */
 };
 
+static GstDecodeChain *gst_decode_chain_ref (GstDecodeChain * chain);
+static void gst_decode_chain_unref (GstDecodeChain * chain);
 static void gst_decode_chain_free (GstDecodeChain * chain);
 static GstDecodeChain *gst_decode_chain_new (GstDecodeBin * dbin,
     GstDecodeGroup * group, GstPad * pad);
@@ -2794,6 +2798,7 @@ type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin)
 {
   GstPad *pad, *sink_pad;
+  GstDecodeChain *chain;
 
   GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
@@ -2808,13 +2813,6 @@ type_found (GstElement * typefind, guint probability,
   }
 
   EXPOSE_LOCK (decode_bin);
-  /* FIXME: we can only deal with one type, we don't yet support dynamically changing
-   * caps from the typefind element */
-  if (decode_bin->have_type || decode_bin->decode_chain)
-    goto exit;
-
-  decode_bin->have_type = TRUE;
-
   pad = gst_element_get_static_pad (typefind, "src");
   sink_pad = gst_element_get_static_pad (typefind, "sink");
 
@@ -2823,11 +2821,22 @@ type_found (GstElement * typefind, guint probability,
    * In typical cases, STREAM_LOCK is held and handles that, it need not
    * be held (if called from a proxied setcaps), so grab it anyway */
   GST_PAD_STREAM_LOCK (sink_pad);
-  decode_bin->decode_chain = gst_decode_chain_new (decode_bin, NULL, pad);
-  if (analyze_new_pad (decode_bin, typefind, pad, caps,
-          decode_bin->decode_chain, NULL))
-    expose_pad (decode_bin, typefind, decode_bin->decode_chain->current_pad,
-        pad, caps, decode_bin->decode_chain, FALSE);
+  /* FIXME: we can only deal with one type, we don't yet support dynamically changing
+   * caps from the typefind element */
+  if (decode_bin->have_type || decode_bin->decode_chain) {
+  } else {
+    decode_bin->have_type = TRUE;
+
+    decode_bin->decode_chain = gst_decode_chain_new (decode_bin, NULL, pad);
+    chain = gst_decode_chain_ref (decode_bin->decode_chain);
+
+    if (analyze_new_pad (decode_bin, typefind, pad, caps,
+            decode_bin->decode_chain, NULL))
+      expose_pad (decode_bin, typefind, decode_bin->decode_chain->current_pad,
+          pad, caps, decode_bin->decode_chain, FALSE);
+    gst_decode_chain_unref (chain);
+  }
+
   GST_PAD_STREAM_UNLOCK (sink_pad);
 
   gst_object_unref (sink_pad);
@@ -3284,6 +3293,22 @@ static void gst_decode_group_free_internal (GstDecodeGroup * group,
     gboolean hide);
 
 static void
+gst_decode_chain_unref (GstDecodeChain * chain)
+{
+  if (g_atomic_int_dec_and_test (&chain->refs)) {
+    g_mutex_clear (&chain->lock);
+    g_slice_free (GstDecodeChain, chain);
+  }
+}
+
+static GstDecodeChain *
+gst_decode_chain_ref (GstDecodeChain * chain)
+{
+  g_atomic_int_inc (&chain->refs);
+  return chain;
+}
+
+static void
 gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
 {
   GList *l, *set_to_null = NULL;
@@ -3423,10 +3448,8 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
     gst_object_unref (element);
   }
 
-  if (!hide) {
-    g_mutex_clear (&chain->lock);
-    g_slice_free (GstDecodeChain, chain);
-  }
+  if (!hide)
+    gst_decode_chain_unref (chain);
 }
 
 /* gst_decode_chain_free:
@@ -3461,6 +3484,7 @@ gst_decode_chain_new (GstDecodeBin * dbin, GstDecodeGroup * parent,
 
   chain->dbin = dbin;
   chain->parent = parent;
+  chain->refs = 1;
   g_mutex_init (&chain->lock);
   chain->pad = gst_object_ref (pad);
 
