@@ -1962,6 +1962,8 @@ gst_discoverer_start (GstDiscoverer * discoverer)
   GSource *source;
   GMainContext *ctx = NULL;
 
+  g_return_if_fail (GST_IS_DISCOVERER (discoverer));
+
   GST_DEBUG_OBJECT (discoverer, "Starting...");
 
   if (discoverer->priv->async) {
@@ -1999,6 +2001,8 @@ gst_discoverer_start (GstDiscoverer * discoverer)
 void
 gst_discoverer_stop (GstDiscoverer * discoverer)
 {
+  g_return_if_fail (GST_IS_DISCOVERER (discoverer));
+
   GST_DEBUG_OBJECT (discoverer, "Stopping...");
 
   if (!discoverer->priv->async) {
@@ -2064,6 +2068,8 @@ gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
 {
   gboolean can_run;
 
+  g_return_val_if_fail (GST_IS_DISCOVERER (discoverer), FALSE);
+
   GST_DEBUG_OBJECT (discoverer, "uri : %s", uri);
 
   DISCO_LOCK (discoverer);
@@ -2100,6 +2106,9 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
 {
   GstDiscovererResult res = 0;
   GstDiscovererInfo *info;
+
+  g_return_val_if_fail (GST_IS_DISCOVERER (discoverer), NULL);
+  g_return_val_if_fail (uri, NULL);
 
   GST_DEBUG_OBJECT (discoverer, "uri:%s", uri);
 
@@ -2193,6 +2202,8 @@ gst_discoverer_info_to_variant (GstDiscovererInfo * info,
   GVariant *variant;
   GstDiscovererStreamInfo *sinfo = gst_discoverer_info_get_stream_info (info);
   GVariant *wrapper;
+
+  g_return_val_if_fail (GST_IS_DISCOVERER_INFO (info), NULL);
 
   stream_variant = gst_discoverer_info_to_variant_recurse (sinfo, flags);
   variant =
