@@ -67,6 +67,7 @@ static const GstVaapiCodecMap gst_vaapi_codecs[] = {
     { GST_VAAPI_CODEC_JPEG,     "jpeg"  },
     { GST_VAAPI_CODEC_VP8,      "vp8"   },
     { GST_VAAPI_CODEC_H265,     "h265"  },
+    { GST_VAAPI_CODEC_VP9,      "vp9"   },
     { 0, }
 };
 
@@ -158,6 +159,11 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
     },
     { GST_VAAPI_PROFILE_H265_MAIN10, VAProfileHEVCMain10,
       "video/x-h265", "main10"
+    },
+#endif
+#if VA_CHECK_VERSION(0,38,0)
+    { GST_VAAPI_PROFILE_VP9, VAProfileVP9Profile0,
+      "video/x-vp9", NULL
     },
 #endif
     { 0, }
