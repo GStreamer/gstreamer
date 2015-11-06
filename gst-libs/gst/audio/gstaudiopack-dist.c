@@ -182,6 +182,12 @@ void audio_orc_pack_f64_swap (gdouble * ORC_RESTRICT d1,
 void audio_orc_splat_u16 (guint16 * ORC_RESTRICT d1, int p1, int n);
 void audio_orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n);
 void audio_orc_splat_u64 (guint64 * ORC_RESTRICT d1, int p1, int n);
+void audio_orc_int_bias (gint32 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int p1, int p2, int n);
+void audio_orc_int_dither (gint32 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, const gint32 * ORC_RESTRICT s2, int p1,
+    int n);
+void audio_orc_update_rand (guint32 * ORC_RESTRICT d1, int n);
 
 
 /* begin Orc C target preamble */
@@ -5748,6 +5754,410 @@ audio_orc_splat_u64 (guint64 * ORC_RESTRICT d1, int p1, int n)
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->params[ORC_VAR_P1] = p1;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* audio_orc_int_bias */
+#ifdef DISABLE_ORC
+void
+audio_orc_int_bias (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int p1, int p2, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union32 *) s1;
+
+  /* 1: loadpl */
+  var34.i = p1;
+  /* 3: loadpl */
+  var35.i = p2;
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 2: addssl */
+    var37.i = ORC_CLAMP_SL ((orc_int64) var33.i + (orc_int64) var34.i);
+    /* 4: andl */
+    var36.i = var37.i & var35.i;
+    /* 5: storel */
+    ptr0[i] = var36;
+  }
+
+}
+
+#else
+static void
+_backup_audio_orc_int_bias (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union32 *) ex->arrays[4];
+
+  /* 1: loadpl */
+  var34.i = ex->params[24];
+  /* 3: loadpl */
+  var35.i = ex->params[25];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 2: addssl */
+    var37.i = ORC_CLAMP_SL ((orc_int64) var33.i + (orc_int64) var34.i);
+    /* 4: andl */
+    var36.i = var37.i & var35.i;
+    /* 5: storel */
+    ptr0[i] = var36;
+  }
+
+}
+
+void
+audio_orc_int_bias (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int p1, int p2, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 18, 97, 117, 100, 105, 111, 95, 111, 114, 99, 95, 105, 110, 116,
+        95, 98, 105, 97, 115, 11, 4, 4, 12, 4, 4, 16, 4, 16, 4, 20,
+        4, 104, 32, 4, 24, 106, 0, 32, 25, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_audio_orc_int_bias);
+#else
+      p = orc_program_new ();
+      orc_program_set_name (p, "audio_orc_int_bias");
+      orc_program_set_backup_function (p, _backup_audio_orc_int_bias);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_source (p, 4, "s1");
+      orc_program_add_parameter (p, 4, "p1");
+      orc_program_add_parameter (p, 4, "p2");
+      orc_program_add_temporary (p, 4, "t1");
+
+      orc_program_append_2 (p, "addssl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "andl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_P2,
+          ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_P1] = p1;
+  ex->params[ORC_VAR_P2] = p2;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* audio_orc_int_dither */
+#ifdef DISABLE_ORC
+void
+audio_orc_int_dither (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    const gint32 * ORC_RESTRICT s2, int p1, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  const orc_union32 *ORC_RESTRICT ptr5;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union32 *) s1;
+  ptr5 = (orc_union32 *) s2;
+
+  /* 3: loadpl */
+  var35.i = p1;
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: loadl */
+    var34 = ptr5[i];
+    /* 2: addssl */
+    var37.i = ORC_CLAMP_SL ((orc_int64) var33.i + (orc_int64) var34.i);
+    /* 4: andl */
+    var36.i = var37.i & var35.i;
+    /* 5: storel */
+    ptr0[i] = var36;
+  }
+
+}
+
+#else
+static void
+_backup_audio_orc_int_dither (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  const orc_union32 *ORC_RESTRICT ptr5;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union32 *) ex->arrays[4];
+  ptr5 = (orc_union32 *) ex->arrays[5];
+
+  /* 3: loadpl */
+  var35.i = ex->params[24];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: loadl */
+    var34 = ptr5[i];
+    /* 2: addssl */
+    var37.i = ORC_CLAMP_SL ((orc_int64) var33.i + (orc_int64) var34.i);
+    /* 4: andl */
+    var36.i = var37.i & var35.i;
+    /* 5: storel */
+    ptr0[i] = var36;
+  }
+
+}
+
+void
+audio_orc_int_dither (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    const gint32 * ORC_RESTRICT s2, int p1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 20, 97, 117, 100, 105, 111, 95, 111, 114, 99, 95, 105, 110, 116,
+        95, 100, 105, 116, 104, 101, 114, 11, 4, 4, 12, 4, 4, 12, 4, 4,
+        16, 4, 20, 4, 104, 32, 4, 5, 106, 0, 32, 24, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_audio_orc_int_dither);
+#else
+      p = orc_program_new ();
+      orc_program_set_name (p, "audio_orc_int_dither");
+      orc_program_set_backup_function (p, _backup_audio_orc_int_dither);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_source (p, 4, "s1");
+      orc_program_add_source (p, 4, "s2");
+      orc_program_add_parameter (p, 4, "p1");
+      orc_program_add_temporary (p, 4, "t1");
+
+      orc_program_append_2 (p, "addssl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_S2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "andl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_P1,
+          ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->arrays[ORC_VAR_S2] = (void *) s2;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* audio_orc_update_rand */
+#ifdef DISABLE_ORC
+void
+audio_orc_update_rand (guint32 * ORC_RESTRICT d1, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
+  orc_union32 var34;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
+  orc_union32 var35;
+#endif
+  orc_union32 var36;
+  orc_union32 var37;
+
+  ptr0 = (orc_union32 *) d1;
+
+  /* 1: loadpl */
+  var34.i = (int) 0x41c64e6d;   /* 1103515245 or 5.45209e-315f */
+  /* 3: loadpl */
+  var35.i = (int) 0x00003039;   /* 12345 or 6.09924e-320f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr0[i];
+    /* 2: mulll */
+    var37.i = (((orc_uint32) var33.i) * ((orc_uint32) var34.i)) & 0xffffffff;
+    /* 4: addl */
+    var36.i = ((orc_uint32) var37.i) + ((orc_uint32) var35.i);
+    /* 5: storel */
+    ptr0[i] = var36;
+  }
+
+}
+
+#else
+static void
+_backup_audio_orc_update_rand (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
+  orc_union32 var34;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
+  orc_union32 var35;
+#endif
+  orc_union32 var36;
+  orc_union32 var37;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+
+  /* 1: loadpl */
+  var34.i = (int) 0x41c64e6d;   /* 1103515245 or 5.45209e-315f */
+  /* 3: loadpl */
+  var35.i = (int) 0x00003039;   /* 12345 or 6.09924e-320f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr0[i];
+    /* 2: mulll */
+    var37.i = (((orc_uint32) var33.i) * ((orc_uint32) var34.i)) & 0xffffffff;
+    /* 4: addl */
+    var36.i = ((orc_uint32) var37.i) + ((orc_uint32) var35.i);
+    /* 5: storel */
+    ptr0[i] = var36;
+  }
+
+}
+
+void
+audio_orc_update_rand (guint32 * ORC_RESTRICT d1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 21, 97, 117, 100, 105, 111, 95, 111, 114, 99, 95, 117, 112, 100,
+        97, 116, 101, 95, 114, 97, 110, 100, 11, 4, 4, 14, 4, 109, 78, 198,
+        65, 14, 4, 57, 48, 0, 0, 20, 4, 120, 32, 0, 16, 103, 0, 32,
+        17, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_audio_orc_update_rand);
+#else
+      p = orc_program_new ();
+      orc_program_set_name (p, "audio_orc_update_rand");
+      orc_program_set_backup_function (p, _backup_audio_orc_update_rand);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_constant (p, 4, 0x41c64e6d, "c1");
+      orc_program_add_constant (p, 4, 0x00003039, "c2");
+      orc_program_add_temporary (p, 4, "t1");
+
+      orc_program_append_2 (p, "mulll", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_C2,
+          ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
 
   func = c->exec;
   func (ex);
