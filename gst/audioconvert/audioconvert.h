@@ -80,10 +80,6 @@ gboolean             gst_audio_converter_set_config     (GstAudioConverter * con
 const GstStructure * gst_audio_converter_get_config     (GstAudioConverter * convert);
 
 
-gboolean             gst_audio_converter_get_sizes      (GstAudioConverter * convert,
-                                                         gint samples,
-                                                         gint * srcsize, gint * dstsize);
-
 gboolean             gst_audio_converter_samples        (GstAudioConverter * convert,
                                                          GstAudioConverterFlags flags,
                                                          gpointer src, gpointer dst,

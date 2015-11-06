@@ -198,7 +198,8 @@ gst_audio_convert_dispose (GObject * obj)
 {
   GstAudioConvert *this = GST_AUDIO_CONVERT (obj);
 
-  gst_audio_converter_free (this->convert);
+  if (this->convert)
+    gst_audio_converter_free (this->convert);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
@@ -708,9 +709,8 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
   /* get in/output sizes, to see if the buffers we got are of correct
    * sizes */
-  if (!gst_audio_converter_get_sizes (this->convert, samples, &insize,
-          &outsize))
-    goto error;
+  insize = samples * this->in_info.bpf;
+  outsize = samples * this->out_info.bpf;
 
   if (insize == 0 || outsize == 0)
     return GST_FLOW_OK;
@@ -752,12 +752,6 @@ done:
   return ret;
 
   /* ERRORS */
-error:
-  {
-    GST_ELEMENT_ERROR (this, STREAM, FORMAT,
-        (NULL), ("cannot get input/output sizes for %d samples", samples));
-    return GST_FLOW_ERROR;
-  }
 wrong_size:
   {
     GST_ELEMENT_ERROR (this, STREAM, FORMAT,

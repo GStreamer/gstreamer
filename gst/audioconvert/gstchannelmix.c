@@ -818,14 +818,15 @@ gst_channel_mix_mix_double (GstChannelMix * mix,
 
 /**
  * gst_channel_mix_mix:
- * @mix:
- * @format:
- * @layout:
- * @in_data:
- * @out_data:
- * @samples:
+ * @mix: a #GstChannelMix
+ * @format: a #GstAudioFormat
+ * @layout: a #GstAudioLayout
+ * @in_data: input samples
+ * @out_data: output samples
+ * @samples: number of samples
  *
- * Perform channel mixing
+ * Perform channel mixing on @in_data and write the result to @out_data.
+ * @in_data and @out_data need to be in @format and @layout.
  */
 void
 gst_channel_mix_mix (GstChannelMix * mix, GstAudioFormat format,

@@ -13,24 +13,3 @@ divd d1, t1, 2147483648.0L
 
 muld t1, s1, 2147483648.0L
 convdl d1, t1
-
-.function audio_convert_orc_int_bias
-.dest 4 d1 gint32
-.source 4 s1 gint32
-.param 4 bias gint32
-.param 4 mask gint32
-.temp 4 t1
-
-addssl t1, s1, bias
-andl d1, t1, mask
-
-.function audio_convert_orc_int_dither
-.dest 4 d1 gint32
-.source 4 s1 gint32
-.source 4 dither gint32
-.param 4 mask gint32
-.temp 4 t1
-
-addssl t1, s1, dither
-andl d1, t1, mask
-

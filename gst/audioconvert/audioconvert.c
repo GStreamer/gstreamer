@@ -1,7 +1,8 @@
 /* GStreamer
  * Copyright (C) 2005 Wim Taymans <wim at fluendo dot com>
+ *           (C) 2015 Wim Taymans <wim.taymans@gmail.com>
  *
- * audioconvert.c: Convert audio to different audio formats automatically
+ * audioconverter.c: Convert audio to different audio formats automatically
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,6 +30,28 @@
 #include "gstchannelmix.h"
 #include "audioconvert.h"
 #include "gstaudioconvertorc.h"
+
+/**
+ * SECTION:audioconverter
+ * @short_description: Generic audio conversion
+ *
+ * <refsect2>
+ * <para>
+ * This object is used to convert audio samples from one format to another.
+ * The object can perform conversion of:
+ * <itemizedlist>
+ *  <listitem><para>
+ *    audio format with optional dithering and noise shaping
+ *  </para></listitem>
+ *  <listitem><para>
+ *    audio samplerate
+ *  </para></listitem>
+ *  <listitem><para>
+ *    audio channels and channel layout
+ *  </para></listitem>
+ * </para>
+ * </refsect2>
+ */
 
 typedef void (*AudioConvertFunc) (gpointer dst, const gpointer src, gint count);
 
@@ -160,9 +183,19 @@ gst_audio_converter_get_config (GstAudioConverter * convert)
   return convert->config;
 }
 
-
 /**
+ * gst_audio_converter_new: (skip)
+ * @in: a source #GstAudioInfo
+ * @out: a destination #GstAudioInfo
+ * @config: (transfer full): a #GstStructure with configuration options
  *
+ * Create a new #GstAudioConverter that is able to convert between @in and @out
+ * audio formats.
+ *
+ * @config contains extra configuration options, see #GST_VIDEO_CONVERTER_OPT_*
+ * parameters for details about the options and values.
+ *
+ * Returns: a #GstAudioConverter or %NULL if conversion is not possible.
  */
 GstAudioConverter *
 gst_audio_converter_new (GstAudioInfo * in, GstAudioInfo * out,
@@ -289,6 +322,12 @@ unpositioned:
   }
 }
 
+/**
+ * gst_audio_converter_free:
+ * @convert: a #GstAudioConverter
+ *
+ * Free a previously allocated @convert instance.
+ */
 void
 gst_audio_converter_free (GstAudioConverter * convert)
 {
@@ -308,20 +347,18 @@ gst_audio_converter_free (GstAudioConverter * convert)
   g_slice_free (GstAudioConverter, convert);
 }
 
-gboolean
-gst_audio_converter_get_sizes (GstAudioConverter * convert, gint samples,
-    gint * srcsize, gint * dstsize)
-{
-  g_return_val_if_fail (convert != NULL, FALSE);
-
-  if (srcsize)
-    *srcsize = samples * convert->in.bpf;
-  if (dstsize)
-    *dstsize = samples * convert->out.bpf;
-
-  return TRUE;
-}
-
+/**
+ * gst_audio_converter_samples:
+ * @convert: a #GstAudioConverter
+ * @flags: extra #GstAudioConverterFlags
+ * @src: source samples
+ * @dst: output samples
+ * @samples: number of samples
+ *
+ * Perform the conversion @src to @dst using @convert.
+ *
+ * Returns: %TRUE is the conversion could be performed.
+ */
 gboolean
 gst_audio_converter_samples (GstAudioConverter * convert,
     GstAudioConverterFlags flags, gpointer src, gpointer dst, gint samples)
