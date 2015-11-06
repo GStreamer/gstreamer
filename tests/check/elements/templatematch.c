@@ -92,7 +92,8 @@ GST_START_TEST (test_match_blue_square)
   GstElement *element;
   GstPad *sinkpad, *srcpad;
   GstCaps *caps =
-      gst_caps_from_string (CAPS_TMPL ", width=(int)16, height=(int)16");
+      gst_caps_from_string (CAPS_TMPL
+      ", width=(int)16, height=(int)16, framerate=1/1");
   GstBus *bus;
   GstMessage *msg;
   const GstStructure *structure;
