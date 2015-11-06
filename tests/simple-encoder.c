@@ -150,7 +150,7 @@ encoder_new (GstVaapiDisplay * display)
   return encoder;
 }
 
-static GstVideoCodecState *
+static inline GstVideoCodecState *
 new_codec_state (gint width, gint height, gint fps_n, gint fps_d)
 {
   GstVideoCodecState *state;
@@ -173,28 +173,9 @@ set_format (GstVaapiEncoder * encoder, gint width, gint height, gint fps_n,
 {
   GstVideoCodecState *in_state;
   GstVaapiEncoderStatus status;
-  GstCaps *caps;
-
-  if (!g_strcmp0 (g_codec_str, "mpeg2")) {
-    caps = gst_caps_from_string ("video/mpeg");
-    gst_caps_set_simple (caps,
-        "mpegversion", G_TYPE_INT, 2,
-        "systemstream", G_TYPE_BOOLEAN, FALSE,
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
-  } else if (!g_strcmp0 (g_codec_str, "h264")) {
-    caps = gst_caps_new_empty_simple ("video/x-h264");
-    gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
-  } else {
-    return FALSE;
-  }
 
   in_state = new_codec_state (width, height, fps_n, fps_d);
   status = gst_vaapi_encoder_set_codec_state (encoder, in_state);
-  gst_caps_unref (caps);
   g_slice_free (GstVideoCodecState, in_state);
 
   return (status == GST_VAAPI_ENCODER_STATUS_SUCCESS);
