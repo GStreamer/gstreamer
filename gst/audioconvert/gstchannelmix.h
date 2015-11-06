@@ -47,9 +47,9 @@ typedef enum {
 GstAudioChannelMix * gst_audio_channel_mix_new       (GstAudioChannelMixFlags flags,
                                                       GstAudioFormat format,
                                                       gint in_channels,
-                                                      GstAudioChannelPosition in_position[64],
+                                                      GstAudioChannelPosition *in_position,
                                                       gint out_channels,
-                                                      GstAudioChannelPosition out_position[64]);
+                                                      GstAudioChannelPosition *out_position);
 void                 gst_audio_channel_mix_free      (GstAudioChannelMix *mix);
 
 /*

@@ -785,16 +785,16 @@ GstAudioChannelMix *
 gst_audio_channel_mix_new (GstAudioChannelMixFlags flags,
     GstAudioFormat format,
     gint in_channels,
-    GstAudioChannelPosition in_position[64],
-    gint out_channels, GstAudioChannelPosition out_position[64])
+    GstAudioChannelPosition * in_position,
+    gint out_channels, GstAudioChannelPosition * out_position)
 {
   GstAudioChannelMix *mix;
   gint i;
 
   g_return_val_if_fail (format == GST_AUDIO_FORMAT_S32
       || format == GST_AUDIO_FORMAT_F64, NULL);
-  g_return_val_if_fail (in_channels > 0, NULL);
-  g_return_val_if_fail (out_channels > 0, NULL);
+  g_return_val_if_fail (in_channels > 0 && in_channels < 64, NULL);
+  g_return_val_if_fail (out_channels > 0 && out_channels < 64, NULL);
 
   mix = g_slice_new0 (GstAudioChannelMix);
   mix->flags = flags;
@@ -802,10 +802,11 @@ gst_audio_channel_mix_new (GstAudioChannelMixFlags flags,
   mix->in_channels = in_channels;
   mix->out_channels = out_channels;
 
-  for (i = 0; i < 64; i++) {
+  for (i = 0; i < in_channels; i++)
     mix->in_position[i] = in_position[i];
+  for (i = 0; i < out_channels; i++)
     mix->out_position[i] = out_position[i];
-  }
+
   gst_audio_channel_mix_setup_matrix (mix);
 
   switch (mix->format) {
