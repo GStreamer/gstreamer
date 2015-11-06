@@ -420,6 +420,9 @@ count_power (guint v)
  * Output samples will be quantized to a multiple of @quantizer. Better
  * performance is achieved when @quantizer is a power of 2.
  *
+ * Dithering and noise-shaping can be performed during quantization with
+ * the @dither and @ns parameters.
+ *
  * Returns: a new #GstAudioQuantize. Free with gst_audio_quantize_free().
  */
 GstAudioQuantize *
@@ -472,6 +475,18 @@ gst_audio_quantize_free (GstAudioQuantize * quant)
   g_slice_free (GstAudioQuantize, quant);
 }
 
+/**
+ * gst_audio_quantize_samples:
+ * @quant: a #GstAudioQuantize
+ * @src: source samples
+ * @dst: output samples
+ * @samples: number of samples
+ *
+ * Perform quantization on @samples in @src and write the result to @dst.
+ *
+ * @src and @dst may point to the same memory location, in which case samples will be
+ * modified in-place.
+ */
 void
 gst_audio_quantize_samples (GstAudioQuantize * quant,
     const gpointer src, gpointer dst, guint samples)

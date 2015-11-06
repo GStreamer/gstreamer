@@ -65,10 +65,17 @@ typedef enum
   GST_AUDIO_NOISE_SHAPING_HIGH
 } GstAudioNoiseShapingMethod;
 
-
+/**
+ * GstAudioQuantizeFlags:
+ * @GST_AUDIO_QUANTIZE_FLAG_NONE: no flags
+ * @GST_AUDIO_QUANTIZE_FLAG_NON_INTERLEAVED: samples are non-interleaved
+ *
+ * Extra flags that can be passed to gst_audio_quantize_new()
+ */
 typedef enum
 {
-  GST_AUDIO_QUANTIZE_FLAG_NONE = 0
+  GST_AUDIO_QUANTIZE_FLAG_NONE            = 0,
+  GST_AUDIO_QUANTIZE_FLAG_NON_INTERLEAVED = (1 << 0)
 } GstAudioQuantizeFlags;
 
 
