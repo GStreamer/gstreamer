@@ -366,7 +366,7 @@ preset_get_keyfile (GstPreset * preset)
     guint64 version_user = G_GUINT64_CONSTANT (0);
     guint64 version = G_GUINT64_CONSTANT (0);
     gboolean merged = FALSE;
-    GKeyFile *in_user, *in_app = NULL, *in_system;
+    GKeyFile *in_user = NULL, *in_app = NULL, *in_system;
 
     const gchar *envvar;
 
