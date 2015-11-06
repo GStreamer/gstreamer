@@ -907,7 +907,7 @@ gst_m3u8_client_update_variant_playlist (GstM3U8Client * self, gchar * data,
       GList *match = g_list_find_custom (unmatched_lists, list_entry->data,
           (GCompareFunc) _find_m3u8_list_match);
       if (match)
-        unmatched_lists = g_list_remove_link (unmatched_lists, match);
+        unmatched_lists = g_list_delete_link (unmatched_lists, match);
     }
 
     if (unmatched_lists != NULL) {
