@@ -1,7 +1,8 @@
 /* GStreamer
  * Copyright (C) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ *           (C) 2015 Wim Taymans <wim.taymans@gmail.com>
  *
- * gstchannelmix.h: setup of channel conversion matrices
+ * audiochannelmix.h: setup of channel conversion matrices
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,48 +20,48 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_CHANNEL_MIX_H__
-#define __GST_CHANNEL_MIX_H__
+#ifndef __GST_AUDIO_CHANNEL_MIX_H__
+#define __GST_AUDIO_CHANNEL_MIX_H__
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
-typedef struct _GstChannelMix GstChannelMix;
+typedef struct _GstAudioChannelMix GstAudioChannelMix;
 
 /**
- * GstChannelMixFlags:
- * @GST_CHANNEL_MIX_FLAGS_NONE: no flag
- * @GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN: input channels are explicitly unpositioned
- * @GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT: output channels are explicitly unpositioned
+ * GstAudioChannelMixFlags:
+ * @GST_AUDIO_CHANNEL_MIX_FLAGS_NONE: no flag
+ * @GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN: input channels are explicitly unpositioned
+ * @GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT: output channels are explicitly unpositioned
  *
- * Flags passed to gst_channel_mix_new()
+ * Flags passed to gst_audio_channel_mix_new()
  */
 typedef enum {
-  GST_CHANNEL_MIX_FLAGS_NONE             = 0,
-  GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN  = (1 << 0),
-  GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT = (1 << 1)
-} GstChannelMixFlags;
+  GST_AUDIO_CHANNEL_MIX_FLAGS_NONE             = 0,
+  GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN  = (1 << 0),
+  GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT = (1 << 1)
+} GstAudioChannelMixFlags;
 
-GstChannelMix * gst_channel_mix_new             (GstChannelMixFlags flags,
-                                                 gint in_channels,
-                                                 GstAudioChannelPosition in_position[64],
-                                                 gint out_channels,
-                                                 GstAudioChannelPosition out_position[64]);
-void            gst_channel_mix_free            (GstChannelMix *mix);
+GstAudioChannelMix * gst_audio_channel_mix_new       (GstAudioChannelMixFlags flags,
+                                                      gint in_channels,
+                                                      GstAudioChannelPosition in_position[64],
+                                                      gint out_channels,
+                                                      GstAudioChannelPosition out_position[64]);
+void                 gst_audio_channel_mix_free      (GstAudioChannelMix *mix);
 
 /*
  * Checks for passthrough (= identity matrix).
  */
-gboolean        gst_channel_mix_is_passthrough     (GstChannelMix *mix);
+gboolean        gst_audio_channel_mix_is_passthrough  (GstAudioChannelMix *mix);
 
 /*
  * Do actual mixing.
  */
-void            gst_channel_mix_mix             (GstChannelMix   * mix,
-                                                 GstAudioFormat    format,
-                                                 GstAudioLayout    layout,
-                                                 const gpointer    in_data,
-                                                 gpointer          out_data,
-                                                 gint              samples);
+void            gst_audio_channel_mix_samples   (GstAudioChannelMix * mix,
+                                                 GstAudioFormat       format,
+                                                 GstAudioLayout       layout,
+                                                 const gpointer       in_data,
+                                                 gpointer             out_data,
+                                                 gint                 samples);
 
-#endif /* __GST_CHANNEL_MIX_H__ */
+#endif /* __GST_AUDIO_CHANNEL_MIX_H__ */

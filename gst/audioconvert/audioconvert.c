@@ -78,7 +78,7 @@ struct _GstAudioConverter
 
   GstAudioFormat mix_format;
   gboolean mix_passthrough;
-  GstChannelMix *mix;
+  GstAudioChannelMix *mix;
 
   AudioConvertFunc convert_out;
 
@@ -203,7 +203,7 @@ gst_audio_converter_new (GstAudioInfo * in, GstAudioInfo * out,
 {
   GstAudioConverter *convert;
   gint in_depth, out_depth;
-  GstChannelMixFlags flags;
+  GstAudioChannelMixFlags flags;
   gboolean in_int, out_int;
   GstAudioFormat format;
   GstAudioDitherMethod dither;
@@ -242,10 +242,10 @@ gst_audio_converter_new (GstAudioInfo * in, GstAudioInfo * out,
 
   flags =
       GST_AUDIO_INFO_IS_UNPOSITIONED (in) ?
-      GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN : 0;
+      GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN : 0;
   flags |=
       GST_AUDIO_INFO_IS_UNPOSITIONED (out) ?
-      GST_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT : 0;
+      GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT : 0;
 
 
   /* step 1, unpack */
@@ -264,9 +264,10 @@ gst_audio_converter_new (GstAudioInfo * in, GstAudioInfo * out,
 
   /* step 3, channel mix */
   convert->mix_format = format;
-  convert->mix = gst_channel_mix_new (flags, in->channels, in->position,
+  convert->mix = gst_audio_channel_mix_new (flags, in->channels, in->position,
       out->channels, out->position);
-  convert->mix_passthrough = gst_channel_mix_is_passthrough (convert->mix);
+  convert->mix_passthrough =
+      gst_audio_channel_mix_is_passthrough (convert->mix);
   GST_INFO ("mix format %s, passthrough %d, in_channels %d, out_channels %d",
       gst_audio_format_to_string (format), convert->mix_passthrough,
       in->channels, out->channels);
@@ -336,7 +337,7 @@ gst_audio_converter_free (GstAudioConverter * convert)
   if (convert->quant)
     gst_audio_quantize_free (convert->quant);
   if (convert->mix)
-    gst_channel_mix_free (convert->mix);
+    gst_audio_channel_mix_free (convert->mix);
   gst_audio_info_init (&convert->in);
   gst_audio_info_init (&convert->out);
 
@@ -426,8 +427,8 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     else
       outbuf = tmpbuf;
 
-    gst_channel_mix_mix (convert->mix, convert->mix_format, convert->in.layout,
-        src, outbuf, samples);
+    gst_audio_channel_mix_samples (convert->mix, convert->mix_format,
+        convert->in.layout, src, outbuf, samples);
     src = outbuf;
   }
   /* step 4, optional convert F64 -> S32 for quantize */
