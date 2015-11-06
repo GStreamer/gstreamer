@@ -46,10 +46,13 @@ struct _GstAudioConvert
 {
   GstBaseTransform element;
 
-  AudioConvertCtx ctx;
-
+  /* properties */
   GstAudioDitherMethod dither;
   GstAudioNoiseShapingMethod ns;
+
+  GstAudioInfo in_info;
+  GstAudioInfo out_info;
+  GstAudioConverter *convert;
 };
 
 struct _GstAudioConvertClass

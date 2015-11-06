@@ -380,3 +380,31 @@ copyl d1, p1
 
 copyq d1, p1
 
+.function audio_orc_int_bias
+.dest 4 d1 gint32
+.source 4 s1 gint32
+.param 4 bias gint32
+.param 4 mask gint32
+.temp 4 t1
+
+addssl t1, s1, bias
+andl d1, t1, mask
+
+.function audio_orc_int_dither
+.dest 4 d1 gint32
+.source 4 s1 gint32
+.source 4 dither gint32
+.param 4 mask gint32
+.temp 4 t1
+
+addssl t1, s1, dither
+andl d1, t1, mask
+
+.function audio_orc_update_rand
+.dest 4 r guint32
+.temp 4 t
+
+mulll t, r, 1103515245
+addl r, t, 12345
+
+

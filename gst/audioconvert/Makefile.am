@@ -7,7 +7,6 @@ libgstaudioconvert_la_SOURCES = \
 	gstaudioconvert.c \
 	audioconvert.c \
 	gstchannelmix.c \
-	gstaudioquantize.c \
 	plugin.c
 nodist_libgstaudioconvert_la_SOURCES = $(ORC_NODIST_SOURCES)
 
@@ -22,6 +21,4 @@ noinst_HEADERS = \
 	gstaudioconvert.h \
 	audioconvert.h \
 	gstchannelmix.h \
-	gstaudioquantize.h \
-	gstfastrandom.h \
 	plugin.h

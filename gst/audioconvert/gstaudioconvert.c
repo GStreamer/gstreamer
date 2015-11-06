@@ -64,7 +64,6 @@
 
 #include "gstaudioconvert.h"
 #include "gstchannelmix.h"
-#include "gstaudioquantize.h"
 #include "plugin.h"
 
 GST_DEBUG_CATEGORY (audio_convert_debug);
@@ -134,51 +133,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     STATIC_CAPS);
 
-#define GST_TYPE_AUDIO_CONVERT_DITHERING (gst_audio_convert_dithering_get_type ())
-static GType
-gst_audio_convert_dithering_get_type (void)
-{
-  static GType gtype = 0;
-
-  if (gtype == 0) {
-    static const GEnumValue values[] = {
-      {GST_AUDIO_DITHER_NONE, "No dithering",
-          "none"},
-      {GST_AUDIO_DITHER_RPDF, "Rectangular dithering", "rpdf"},
-      {GST_AUDIO_DITHER_TPDF, "Triangular dithering (default)", "tpdf"},
-      {GST_AUDIO_DITHER_TPDF_HF, "High frequency triangular dithering",
-          "tpdf-hf"},
-      {0, NULL, NULL}
-    };
-
-    gtype = g_enum_register_static ("GstAudioConvertDithering", values);
-  }
-  return gtype;
-}
-
-#define GST_TYPE_AUDIO_CONVERT_NOISE_SHAPING (gst_audio_convert_ns_get_type ())
-static GType
-gst_audio_convert_ns_get_type (void)
-{
-  static GType gtype = 0;
-
-  if (gtype == 0) {
-    static const GEnumValue values[] = {
-      {GST_AUDIO_NOISE_SHAPING_NONE, "No noise shaping (default)",
-          "none"},
-      {GST_AUDIO_NOISE_SHAPING_ERROR_FEEDBACK, "Error feedback",
-          "error-feedback"},
-      {GST_AUDIO_NOISE_SHAPING_SIMPLE, "Simple 2-pole noise shaping", "simple"},
-      {GST_AUDIO_NOISE_SHAPING_MEDIUM, "Medium 5-pole noise shaping", "medium"},
-      {GST_AUDIO_NOISE_SHAPING_HIGH, "High 8-pole noise shaping", "high"},
-      {0, NULL, NULL}
-    };
-
-    gtype = g_enum_register_static ("GstAudioConvertNoiseShaping", values);
-  }
-  return gtype;
-}
-
 
 /*** TYPE FUNCTIONS ***********************************************************/
 static void
@@ -195,13 +149,13 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
   g_object_class_install_property (gobject_class, PROP_DITHERING,
       g_param_spec_enum ("dithering", "Dithering",
           "Selects between different dithering methods.",
-          GST_TYPE_AUDIO_CONVERT_DITHERING, GST_AUDIO_DITHER_TPDF,
+          GST_TYPE_AUDIO_DITHER_METHOD, GST_AUDIO_DITHER_TPDF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NOISE_SHAPING,
       g_param_spec_enum ("noise-shaping", "Noise shaping",
           "Selects between different noise shaping methods.",
-          GST_TYPE_AUDIO_CONVERT_NOISE_SHAPING, GST_AUDIO_NOISE_SHAPING_NONE,
+          GST_TYPE_AUDIO_NOISE_SHAPING_METHOD, GST_AUDIO_NOISE_SHAPING_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
@@ -235,7 +189,6 @@ gst_audio_convert_init (GstAudioConvert * this)
 {
   this->dither = GST_AUDIO_DITHER_TPDF;
   this->ns = GST_AUDIO_NOISE_SHAPING_NONE;
-  memset (&this->ctx, 0, sizeof (AudioConvertCtx));
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (this), TRUE);
 }
@@ -245,7 +198,7 @@ gst_audio_convert_dispose (GObject * obj)
 {
   GstAudioConvert *this = GST_AUDIO_CONVERT (obj);
 
-  audio_convert_clean_context (&this->ctx);
+  gst_audio_converter_free (this->convert);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
@@ -694,14 +647,28 @@ gst_audio_convert_set_caps (GstBaseTransform * base, GstCaps * incaps,
   GST_DEBUG_OBJECT (base, "incaps %" GST_PTR_FORMAT ", outcaps %"
       GST_PTR_FORMAT, incaps, outcaps);
 
+  if (this->convert) {
+    gst_audio_converter_free (this->convert);
+    this->convert = NULL;
+  }
+
   if (!gst_audio_info_from_caps (&in_info, incaps))
     goto invalid_in;
   if (!gst_audio_info_from_caps (&out_info, outcaps))
     goto invalid_out;
 
-  if (!audio_convert_prepare_context (&this->ctx, &in_info, &out_info,
-          this->dither, this->ns))
+  this->convert = gst_audio_converter_new (&in_info, &out_info,
+      gst_structure_new ("GstAudioConverterConfig",
+          GST_AUDIO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_AUDIO_DITHER_METHOD,
+          this->dither,
+          GST_AUDIO_CONVERTER_OPT_NOISE_SHAPING_METHOD,
+          GST_TYPE_AUDIO_NOISE_SHAPING_METHOD, this->ns, NULL));
+
+  if (this->convert == NULL)
     goto no_converter;
+
+  this->in_info = in_info;
+  this->out_info = out_info;
 
   return TRUE;
 
@@ -718,7 +685,7 @@ invalid_out:
   }
 no_converter:
   {
-    GST_ERROR_OBJECT (base, "could not find converter");
+    GST_ERROR_OBJECT (base, "could not make converter");
     return FALSE;
   }
 }
@@ -732,15 +699,17 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   GstMapInfo srcmap, dstmap;
   gint insize, outsize;
   gboolean inbuf_writable;
+  GstAudioConverterFlags flags;
 
   gint samples;
 
   /* get amount of samples to convert. */
-  samples = gst_buffer_get_size (inbuf) / this->ctx.in.bpf;
+  samples = gst_buffer_get_size (inbuf) / this->in_info.bpf;
 
   /* get in/output sizes, to see if the buffers we got are of correct
    * sizes */
-  if (!audio_convert_get_sizes (&this->ctx, samples, &insize, &outsize))
+  if (!gst_audio_converter_get_sizes (this->convert, samples, &insize,
+          &outsize))
     goto error;
 
   if (insize == 0 || outsize == 0)
@@ -762,13 +731,17 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
     goto wrong_size;
 
   /* and convert the samples */
+  flags = 0;
+  if (inbuf_writable)
+    flags |= GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE;
+
   if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
-    if (!audio_convert_convert (&this->ctx, srcmap.data, dstmap.data,
-            samples, inbuf_writable))
+    if (!gst_audio_converter_samples (this->convert, flags, srcmap.data,
+            dstmap.data, samples))
       goto convert_error;
   } else {
     /* Create silence buffer */
-    gst_audio_format_fill_silence (this->ctx.out.finfo, dstmap.data, outsize);
+    gst_audio_format_fill_silence (this->out_info.finfo, dstmap.data, outsize);
   }
   ret = GST_FLOW_OK;
 
@@ -829,8 +802,8 @@ gst_audio_convert_submit_input_buffer (GstBaseTransform * base,
 
   if (base->segment.format == GST_FORMAT_TIME) {
     input =
-        gst_audio_buffer_clip (input, &base->segment, this->ctx.in.rate,
-        this->ctx.in.bpf);
+        gst_audio_buffer_clip (input, &base->segment, this->in_info.rate,
+        this->in_info.bpf);
 
     if (!input)
       return GST_FLOW_OK;

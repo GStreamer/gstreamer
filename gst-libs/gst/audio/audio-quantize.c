@@ -29,10 +29,9 @@
 #include <gst/gst.h>
 #include <string.h>
 #include <math.h>
-#include "gstaudioconvertorc.h"
-#include "gstaudioquantize.h"
 
-#include "gstfastrandom.h"
+#include "gstaudiopack.h"
+#include "audio-quantize.h"
 
 typedef void (*QuantizeFunc) (GstAudioQuantize * quant, const gpointer src,
     gpointer dst, gint count);
@@ -85,8 +84,24 @@ static void
 gst_audio_quantize_quantize_int_none_none (GstAudioQuantize * quant,
     const gpointer src, gpointer dst, gint samples)
 {
-  audio_convert_orc_int_bias (dst, src, quant->bias, ~quant->mask,
+  audio_orc_int_bias (dst, src, quant->bias, ~quant->mask,
       samples * quant->channels);
+}
+
+/* This is the base function, implementing a linear congruential generator
+ * and returning a pseudo random number between 0 and 2^32 - 1.
+ */
+static inline guint32
+gst_fast_random_uint32 (void)
+{
+  static guint32 state = 0xdeadbeef;
+  return (state = state * 1103515245 + 12345);
+}
+
+static inline gint32
+gst_fast_random_int32 (void)
+{
+  return (gint32) gst_fast_random_uint32 ();
 }
 
 /* Assuming dither == 2^n,
@@ -155,7 +170,7 @@ gst_audio_quantize_quantize_int_dither_none (GstAudioQuantize * quant,
 {
   setup_dither_buf (quant, samples);
 
-  audio_convert_orc_int_dither (dst, src, quant->dither_buf, ~quant->mask,
+  audio_orc_int_dither (dst, src, quant->dither_buf, ~quant->mask,
       samples * quant->channels);
 }
 

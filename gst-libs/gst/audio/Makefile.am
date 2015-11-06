@@ -7,6 +7,7 @@ glib_enum_headers= 		\
 	audio-format.h			\
 	audio-channels.h			\
 	audio-info.h			\
+	audio-quantize.h			\
 	gstaudioringbuffer.h
 
 glib_enum_define = GST_AUDIO
@@ -27,6 +28,7 @@ libgstaudio_@GST_API_VERSION@_la_SOURCES = \
 	audio-format.c \
 	audio-channels.c \
 	audio-info.c \
+	audio-quantize.c \
 	gstaudioringbuffer.c \
 	gstaudioclock.c \
 	gstaudiocdsrc.c \
@@ -50,6 +52,7 @@ libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio-format.h \
 	audio-channels.h \
 	audio-info.h \
+	audio-quantize.h \
 	gstaudioringbuffer.h \
 	gstaudioclock.h \
 	gstaudiofilter.h \

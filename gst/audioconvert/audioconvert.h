@@ -1,7 +1,8 @@
 /* GStreamer
  * Copyright (C) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ *           (C) 2015 Wim Taymans <wim.taymans@gmail.com>
  *
- * audioconvert.h: audio format conversion library
+ * audioconverter.h: audio format conversion library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,57 +20,73 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __AUDIO_CONVERT_H__
-#define __AUDIO_CONVERT_H__
+#ifndef __GST_AUDIO_CONVERTER_H__
+#define __GST_AUDIO_CONVERTER_H__
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
 #include "gstchannelmix.h"
-#include "gstaudioquantize.h"
 
-GST_DEBUG_CATEGORY_EXTERN (audio_convert_debug);
-#define GST_CAT_DEFAULT (audio_convert_debug)
+typedef struct _GstAudioConverter GstAudioConverter;
 
-typedef struct _AudioConvertCtx AudioConvertCtx;
+/**
+ * GST_AUDIO_CONVERTER_OPT_DITHER_METHOD:
+ *
+ * #GST_TYPE_AUDIO_DITHER_METHOD, The dither method to use when
+ * changing bit depth.
+ * Default is #GST_AUDIO_DITHER_NONE.
+ */
+#define GST_AUDIO_CONVERTER_OPT_DITHER_METHOD   "GstAudioConverter.dither-method"
 
-typedef void (*AudioConvertFunc) (gpointer dst, const gpointer src, gint count);
+/**
+ * GST_AUDIO_CONVERTER_OPT_NOISE_SHAPING_METHOD:
+ *
+ * #GST_TYPE_AUDIO_NOISE_SHAPING_METHOD, The noise shaping method to use
+ * to mask noise from quantization errors.
+ * Default is #GST_AUDIO_NOISE_SHAPING_NONE.
+ */
+#define GST_AUDIO_CONVERTER_OPT_NOISE_SHAPING_METHOD   "GstAudioConverter.noise-shaping-method"
 
-struct _AudioConvertCtx
-{
-  GstAudioInfo in;
-  GstAudioInfo out;
+/**
+ * GST_AUDIO_CONVERTER_OPT_QUANTIZATION:
+ *
+ * #G_TYPE_UINT, The quantization amount. Components will be
+ * quantized to multiples of this value.
+ * Default is 1
+ */
+#define GST_AUDIO_CONVERTER_OPT_QUANTIZATION   "GstAudioConverter.quantization"
 
-  gboolean in_default;
 
-  AudioConvertFunc convert_in;
+/**
+ * @GST_AUDIO_CONVERTER_FLAG_NONE: no flag
+ * @GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE: the source is writable and can be
+ *    used as temporary storage during conversion.
+ *
+ * Extra flags passed to gst_audio_converter_samples().
+ */
+typedef enum {
+  GST_AUDIO_CONVERTER_FLAG_NONE            = 0,
+  GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE = (1 << 0)
+} GstAudioConverterFlags;
 
-  GstAudioFormat mix_format;
-  gboolean mix_passthrough;
-  GstChannelMix *mix;
+GstAudioConverter *  gst_audio_converter_new            (GstAudioInfo *in_info,
+                                                         GstAudioInfo *out_info,
+                                                         GstStructure *config);
 
-  AudioConvertFunc convert_out;
+void                 gst_audio_converter_free           (GstAudioConverter * convert);
 
-  GstAudioQuantize *quant;
+gboolean             gst_audio_converter_set_config     (GstAudioConverter * convert, GstStructure *config);
+const GstStructure * gst_audio_converter_get_config     (GstAudioConverter * convert);
 
-  gboolean out_default;
 
-  gboolean passthrough;
+gboolean             gst_audio_converter_get_sizes      (GstAudioConverter * convert,
+                                                         gint samples,
+                                                         gint * srcsize, gint * dstsize);
 
-  gpointer tmpbuf;
-  gpointer tmpbuf2;
-  gint tmpbufsize;
-};
+gboolean             gst_audio_converter_samples        (GstAudioConverter * convert,
+                                                         GstAudioConverterFlags flags,
+                                                         gpointer src, gpointer dst,
+                                                         gint samples);
 
-gboolean audio_convert_prepare_context (AudioConvertCtx * ctx,
-    GstAudioInfo * in, GstAudioInfo * out,
-    GstAudioDitherMethod dither, GstAudioNoiseShapingMethod ns);
-gboolean audio_convert_get_sizes (AudioConvertCtx * ctx, gint samples,
-    gint * srcsize, gint * dstsize);
-
-gboolean audio_convert_clean_context (AudioConvertCtx * ctx);
-
-gboolean audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
-    gpointer dst, gint samples, gboolean src_writable);
-
-#endif /* __AUDIO_CONVERT_H__ */
+#endif /* __GST_AUDIO_CONVERTER_H__ */

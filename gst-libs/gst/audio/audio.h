@@ -27,6 +27,7 @@
 #include <gst/audio/audio-format.h>
 #include <gst/audio/audio-channels.h>
 #include <gst/audio/audio-info.h>
+#include <gst/audio/audio-quantize.h>
 
 G_BEGIN_DECLS
 
