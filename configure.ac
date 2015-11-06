@@ -291,6 +291,7 @@ if test "$enable_builtin_codecparsers" = "yes"; then
     ac_cv_have_gst_jpeg_parser="no"
     ac_cv_have_gst_vp8_parser="no"
     ac_cv_have_gst_h265_parser="no"
+    ac_cv_have_gst_vp9_parser="no"
 else
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
     [gstreamer-codecparsers-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
@@ -396,6 +397,26 @@ AC_CACHE_CHECK([for VP8 parser],
 AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_VP8],
     [test "$ac_cv_have_gst_vp8_parser" != "yes"])
 AM_CONDITIONAL([USE_BUILTIN_LIBVPX], [test "$enable_builtin_libvpx" = "yes"])
+
+dnl ... VP9 parser, with required extensions
+AC_CACHE_CHECK([for VP9 parser],
+    ac_cv_have_gst_vp9_parser, [
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <gst/codecparsers/gstvp9parser.h>]],
+            [[GstVp9FrameHdr frame_hdr;]])],
+        [ac_cv_have_gst_vp9_parser="yes"],
+        [ac_cv_have_gst_vp9_parser="no"]
+    )
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+])
+AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_VP9],
+    [test "$ac_cv_have_gst_vp9_parser" != "yes"])
 
 dnl ... H.265 parser, with the required extensions
 AC_CACHE_CHECK([for H.265 parser],

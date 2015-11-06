@@ -62,6 +62,11 @@ gen_source_h += dboolhuff.h
 endif
 endif
 
+if USE_LOCAL_CODEC_PARSERS_VP9
+gen_source_c += gstvp9parser.c vp9utils.c
+gen_source_h += gstvp9parser.h vp9utils.h
+endif
+
 if USE_LOCAL_CODEC_PARSERS_H265
 gen_source_c += gsth265parser.c
 gen_source_h += gsth265parser.h
