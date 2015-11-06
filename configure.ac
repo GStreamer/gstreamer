@@ -829,6 +829,39 @@ AC_CACHE_CHECK([for VP8 decoding API],
     LIBS="$saved_LIBS"
 ])
 
+dnl Check for va_dec_vp9.h header
+saved_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+AC_CHECK_HEADERS([va/va_dec_vp9.h], [], [], [#include <va/va.h>])
+CPPFLAGS="$saved_CPPFLAGS"
+
+dnl Check for VP9 decoding API (0.37+)
+USE_VP9_DECODER=0
+AC_CACHE_CHECK([for VP9 decoding API],
+    ac_cv_have_vp9_decoding_api, [
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $LIBVA_LIBS"
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <va/va.h>
+              #ifdef HAVE_VA_VA_DEC_VP9_H
+              #include <va/va_dec_vp9.h>
+              #endif
+            ]],
+            [[VADecPictureParameterBufferVP9 pic_param;
+              VASliceParameterBufferVP9 slice_param;
+              VASegmentParameterVP9 seg_param;
+              slice_param.slice_data_offset = 0;
+              slice_param.slice_data_flag = 0;]])],
+        [ac_cv_have_vp9_decoding_api="yes" USE_VP9_DECODER=1],
+        [ac_cv_have_vp9_decoding_api="no"]
+    )
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+])
+
 dnl Check for va_dec_hevc.h header
 saved_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
@@ -1038,6 +1071,10 @@ AM_CONDITIONAL(USE_JPEG_DECODER, test $USE_JPEG_DECODER -eq 1)
 AC_DEFINE_UNQUOTED(USE_VP8_DECODER, $USE_VP8_DECODER,
     [Defined to 1 if VP8 decoder is used])
 AM_CONDITIONAL(USE_VP8_DECODER, test $USE_VP8_DECODER -eq 1)
+
+AC_DEFINE_UNQUOTED(USE_VP9_DECODER, $USE_VP9_DECODER,
+    [Defined to 1 if VP9 decoder is used])
+AM_CONDITIONAL(USE_VP9_DECODER, test $USE_VP9_DECODER -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_HEVC_DECODER, $USE_HEVC_DECODER,
     [Defined to 1 if HEVC decoder is used])
