@@ -29,6 +29,7 @@
 #include <gst/audio/audio-channel-mix.h>
 #include <gst/audio/audio-info.h>
 #include <gst/audio/audio-quantize.h>
+#include <gst/audio/audio-converter.h>
 
 G_BEGIN_DECLS
 

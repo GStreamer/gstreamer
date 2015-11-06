@@ -46,6 +46,12 @@ EXPORTS
 	gst_audio_clock_invalidate
 	gst_audio_clock_new
 	gst_audio_clock_reset
+	gst_audio_converter_flags_get_type
+	gst_audio_converter_free
+	gst_audio_converter_get_config
+	gst_audio_converter_new
+	gst_audio_converter_samples
+	gst_audio_converter_set_config
 	gst_audio_decoder_allocate_output_buffer
 	gst_audio_decoder_finish_frame
 	gst_audio_decoder_get_allocator

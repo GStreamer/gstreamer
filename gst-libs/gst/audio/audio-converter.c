@@ -27,8 +27,8 @@
 #include <math.h>
 #include <string.h>
 
-#include "audioconvert.h"
-#include "gstaudioconvertorc.h"
+#include "audio-converter.h"
+#include "gstaudiopack.h"
 
 /**
  * SECTION:audioconverter
@@ -278,7 +278,7 @@ gst_audio_converter_new (GstAudioInfo * in, GstAudioInfo * out,
   /* step 2, optional convert from S32 to F64 for channel mix */
   if (in_int && !out_int) {
     GST_INFO ("convert S32 to F64");
-    convert->convert_in = (AudioConvertFunc) audio_convert_orc_s32_to_double;
+    convert->convert_in = (AudioConvertFunc) audio_orc_s32_to_double;
     format = GST_AUDIO_FORMAT_F64;
   }
 
@@ -295,7 +295,7 @@ gst_audio_converter_new (GstAudioInfo * in, GstAudioInfo * out,
   /* step 4, optional convert for quantize */
   if (!in_int && out_int) {
     GST_INFO ("convert F64 to S32");
-    convert->convert_out = (AudioConvertFunc) audio_convert_orc_double_to_s32;
+    convert->convert_out = (AudioConvertFunc) audio_orc_double_to_s32;
     format = GST_AUDIO_FORMAT_S32;
   }
   /* step 5, optional quantize */
