@@ -231,6 +231,9 @@ gst_audio_converter_new (GstAudioInfo * in, GstAudioInfo * out,
 
   g_return_val_if_fail (in != NULL, FALSE);
   g_return_val_if_fail (out != NULL, FALSE);
+  g_return_val_if_fail (in->rate == out->rate, FALSE);
+  g_return_val_if_fail (in->layout == GST_AUDIO_LAYOUT_INTERLEAVED, FALSE);
+  g_return_val_if_fail (in->layout == out->layout, FALSE);
 
   if ((GST_AUDIO_INFO_CHANNELS (in) != GST_AUDIO_INFO_CHANNELS (out)) &&
       (GST_AUDIO_INFO_IS_UNPOSITIONED (in)
