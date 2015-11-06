@@ -169,6 +169,16 @@ $GST/gstreamer/plugins\
 :$GST/gst-editing-services/plugins/nle/.libs\
 ${GST_PLUGIN_PATH:+:$GST_PLUGIN_PATH}"
 
+export GST_PRESET_PATH="\
+$GST/gst-plugins-good/gst/equalizer/\
+:$GST/gst-plugins-good/gst/equalizer\
+:$GST/gst-plugins-good/ext/vpx/\
+:$GST/gst-plugins-ugly/ext/x264\
+:$GST/gst-plugins-ugly/ext/amrnb\
+:$GST/gst-plugins-bad/gst/freeverb\
+:$GST/gst-plugins-bad/ext/voamrwbenc\
+${GST_PRESET_PATH:+:$GST_PRESET_PATH}"
+
 # don't use any system-installed plug-ins at all
 export GST_PLUGIN_SYSTEM_PATH=
 # set our registry somewhere else so we don't mess up the registry generated

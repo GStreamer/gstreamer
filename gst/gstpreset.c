@@ -42,8 +42,9 @@
  * application specific directory and in the users home directory. When getting
  * a list of presets individual presets are read and overlaid in 1) system, 
  * 2) application and 3) user order. Whenever an earlier entry is newer, the
- * later entries will be updated. 
- * 
+ * later entries will be updated. Since 1.8 you can also provide extra paths
+ * where to find presets through the GST_PRESET_PATH environment variable.
+ * Presets found in those paths will be concidered as "app presets".
  */
 /* FIXME:
  * - non racyness
@@ -367,13 +368,35 @@ preset_get_keyfile (GstPreset * preset)
     gboolean merged = FALSE;
     GKeyFile *in_user, *in_app = NULL, *in_system;
 
-    preset_get_paths (preset, &preset_user_path, &preset_app_path,
-        &preset_system_path);
+    const gchar *envvar;
 
     /* try to load the user, app and system presets, we do this to get the
      * versions of all files. */
-    in_user = preset_open_and_parse_header (preset, preset_user_path,
-        &version_user);
+    envvar = g_getenv ("GST_PRESET_PATH");
+    if (envvar) {
+      gint i;
+      gchar **preset_dirs = g_strsplit (envvar, G_SEARCHPATH_SEPARATOR_S, -1);
+
+      for (i = 0; preset_dirs[i]; i++) {
+        gchar *preset_path = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "%s.prs",
+            preset_dirs[i], G_OBJECT_TYPE_NAME (preset));
+
+        in_user = preset_open_and_parse_header (preset, preset_path,
+            &version_user);
+        g_free (preset_path);
+        if (in_user)
+          break;
+      }
+      g_strfreev (preset_dirs);
+    }
+
+    preset_get_paths (preset, &preset_user_path, &preset_app_path,
+        &preset_system_path);
+    if (!in_user) {
+      in_user = preset_open_and_parse_header (preset, preset_user_path,
+          &version_user);
+    }
+
     if (preset_app_path) {
       in_app = preset_open_and_parse_header (preset, preset_app_path,
           &version_app);
