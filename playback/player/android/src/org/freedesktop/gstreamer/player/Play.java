@@ -20,13 +20,18 @@
 
 package org.freedesktop.gstreamer.play;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
@@ -37,16 +42,13 @@ import android.widget.Toast;
 
 import org.freedesktop.gstreamer.Player;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-
-public class Play extends AppCompatActivity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
+public class Play extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
     private PowerManager.WakeLock wake_lock;
     private Player player;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
 
         try {
@@ -57,7 +59,7 @@ public class Play extends AppCompatActivity implements SurfaceHolder.Callback, O
             return;
         }
 
-        setContentView(R.layout.activity_player);
+        setContentView(R.layout.main);
 
         player = new Player();
 
@@ -86,7 +88,7 @@ public class Play extends AppCompatActivity implements SurfaceHolder.Callback, O
 
         player.setPositionUpdatedListener(new Player.PositionUpdatedListener() {
             public void positionUpdated(Player player, final long position) {
-                runOnUiThread(new Runnable() {
+                runOnUiThread (new Runnable() {
                     public void run() {
                         sb.setProgress((int) (position / 1000000));
                         updateTimeWidget();
@@ -97,7 +99,7 @@ public class Play extends AppCompatActivity implements SurfaceHolder.Callback, O
 
         player.setDurationChangedListener(new Player.DurationChangedListener() {
             public void durationChanged(Player player, final long duration) {
-                runOnUiThread(new Runnable() {
+                runOnUiThread (new Runnable() {
                     public void run() {
                         sb.setMax((int) (duration / 1000000));
                         updateTimeWidget();
@@ -107,35 +109,31 @@ public class Play extends AppCompatActivity implements SurfaceHolder.Callback, O
         });
 
         final GStreamerSurfaceView gsv = (GStreamerSurfaceView) this.findViewById(R.id.surface_video);
-
         player.setVideoDimensionsChangedListener(new Player.VideoDimensionsChangedListener() {
             public void videoDimensionsChanged(Player player, final int width, final int height) {
-                runOnUiThread(new Runnable() {
+                runOnUiThread (new Runnable() {
                     public void run() {
-                        Log.i("GStreamer", "Media size changed to " + width + "x" + height);
-                        if (width > 0 && height > 0) {
-                            gsv.media_width = width;
-                            gsv.media_height = height;
-                            runOnUiThread(new Runnable() {
-                                public void run() {
-                                    gsv.requestLayout();
-                                }
-                            });
-                        } else {
-                            Log.i("GStreamer", "Ignoring media size.");
-                        }
+                        Log.i ("GStreamer", "Media size changed to " + width + "x" + height);
+                        gsv.media_width = width;
+                        gsv.media_height = height;
+                        runOnUiThread(new Runnable() {
+                            public void run() {
+                                gsv.requestLayout();
+                            }
+                        });
                     }
                 });
             }
         });
 
-        SurfaceHolder sh = gsv.getHolder();
+        SurfaceView sv = (SurfaceView) this.findViewById(R.id.surface_video);
+        SurfaceHolder sh = sv.getHolder();
         sh.addCallback(this);
 
         String mediaUri = null;
         Intent intent = getIntent();
         android.net.Uri uri = intent.getData();
-        Log.i("GStreamer", "Received URI: " + uri);
+        Log.i ("GStreamer", "Received URI: " + uri);
         if (uri.getScheme().equals("content")) {
             android.database.Cursor cursor = getContentResolver().query(uri, null, null, null, null);
             cursor.moveToFirst();
@@ -154,7 +152,7 @@ public class Play extends AppCompatActivity implements SurfaceHolder.Callback, O
         super.onDestroy();
     }
 
-    private void updateTimeWidget() {
+    private void updateTimeWidget () {
         final TextView tv = (TextView) this.findViewById(R.id.textview_time);
         final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
         final int pos = sb.getProgress();
@@ -162,12 +160,14 @@ public class Play extends AppCompatActivity implements SurfaceHolder.Callback, O
 
         SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
-        final String message = df.format(new Date(pos)) + " / " + df.format(new Date(max));
+        final String message = df.format(new Date (pos)) + " / " + df.format(new Date (max));
         tv.setText(message);
     }
 
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        Log.d("GStreamer", "Surface changed to format " + format + " width " + width + " height " + height);
+    public void surfaceChanged(SurfaceHolder holder, int format, int width,
+            int height) {
+        Log.d("GStreamer", "Surface changed to format " + format + " width "
+                + width + " height " + height);
         player.setSurface(holder.getSurface());
     }
 

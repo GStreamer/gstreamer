@@ -25,7 +25,7 @@
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 
-#include "gst/player/player.h"
+#include "gst/player/gstplayer.h"
 
 GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GST_CAT_DEFAULT debug_category
