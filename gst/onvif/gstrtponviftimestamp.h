@@ -55,8 +55,8 @@ struct _GstRtpOnvifTimestamp {
   GstClockTime ntp_offset;
 
   GstSegment segment;
-  gboolean received_segment;
   /* Buffer waiting to be handled, only used if prop_set_e_bit is TRUE */
+  GQueue *event_queue;
   GstBuffer *buffer;
   GstBufferList *list;
 };
