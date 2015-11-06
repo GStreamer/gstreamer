@@ -403,36 +403,9 @@ gst_dvbsub_overlay_event_src (GstPad * pad, GstObject * parent,
   GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (parent);
   gboolean ret = FALSE;
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:{
-      GstSeekFlags flags;
-
-      GST_DEBUG_OBJECT (render, "seek received, driving from here");
-
-      gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
-
-      /* Flush downstream, only for flushing seek */
-      if (flags & GST_SEEK_FLAG_FLUSH)
-        gst_pad_push_event (render->srcpad, gst_event_new_flush_start ());
-
-      gst_dvbsub_overlay_flush_subtitles (render);
-
-      /* Seek on each sink pad */
-      gst_event_ref (event);
-      ret = gst_pad_push_event (render->video_sinkpad, event);
-      if (ret) {
-        ret = gst_pad_push_event (render->text_sinkpad, event);
-      } else {
-        gst_event_unref (event);
-      }
-      break;
-    }
-    default:
-      gst_event_ref (event);
-      ret = gst_pad_push_event (render->video_sinkpad, event);
-      gst_pad_push_event (render->text_sinkpad, event);
-      break;
-  }
+  gst_event_ref (event);
+  ret = gst_pad_push_event (render->video_sinkpad, event);
+  gst_pad_push_event (render->text_sinkpad, event);
 
   return ret;
 }
