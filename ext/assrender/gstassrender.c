@@ -448,54 +448,16 @@ static gboolean
 gst_ass_render_event_src (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstAssRender *render = GST_ASS_RENDER (parent);
-  gboolean ret = FALSE;
+  gboolean ret;
 
   GST_DEBUG_OBJECT (render, "received src event %" GST_PTR_FORMAT, event);
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:{
-      GstSeekFlags flags;
-
-      if (!render->track_init_ok) {
-        GST_DEBUG_OBJECT (render, "seek received, pushing upstream");
-        ret = gst_pad_push_event (render->video_sinkpad, event);
-        return ret;
-      }
-
-      GST_DEBUG_OBJECT (render, "seek received, driving from here");
-
-      gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
-
-      /* Flush downstream, only for flushing seek */
-      if (flags & GST_SEEK_FLAG_FLUSH)
-        gst_pad_push_event (render->srcpad, gst_event_new_flush_start ());
-
-      /* Mark subtitle as flushing, unblocks chains */
-      GST_ASS_RENDER_LOCK (render);
-      render->subtitle_flushing = TRUE;
-      render->video_flushing = TRUE;
-      gst_ass_render_pop_text (render);
-      GST_ASS_RENDER_UNLOCK (render);
-
-      /* Seek on each sink pad */
-      gst_event_ref (event);
-      ret = gst_pad_push_event (render->video_sinkpad, event);
-      if (ret) {
-        ret = gst_pad_push_event (render->text_sinkpad, event);
-      } else {
-        gst_event_unref (event);
-      }
-      break;
-    }
-    default:
-      if (render->track_init_ok) {
-        gst_event_ref (event);
-        ret = gst_pad_push_event (render->video_sinkpad, event);
-        gst_pad_push_event (render->text_sinkpad, event);
-      } else {
-        ret = gst_pad_push_event (render->video_sinkpad, event);
-      }
-      break;
+  /* FIXME: why not just always push it on text pad? */
+  if (render->track_init_ok) {
+    ret = gst_pad_push_event (render->video_sinkpad, gst_event_ref (event));
+    gst_pad_push_event (render->text_sinkpad, event);
+  } else {
+    ret = gst_pad_push_event (render->video_sinkpad, event);
   }
 
   return ret;
