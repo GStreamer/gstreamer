@@ -995,8 +995,7 @@ gst_ass_render_setcaps_video (GstPad * pad, GstAssRender * render,
 
   GST_ASS_RENDER_LOCK (render);
 
-  if (!render->attach_compo_to_buffer &&
-      !gst_ass_render_can_handle_caps (caps)) {
+  if (!render->attach_compo_to_buffer && !gst_ass_render_can_handle_caps (caps)) {
     GST_DEBUG_OBJECT (render, "unsupported caps %" GST_PTR_FORMAT, caps);
     ret = FALSE;
   }

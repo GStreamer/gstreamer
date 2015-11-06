@@ -976,7 +976,9 @@ gst_mss_stream_get_fragment_gst_timestamp (GstMssStream * stream)
     time = fragment->time + (fragment->duration * fragment->repetitions);
   } else {
     fragment = stream->current_fragment->data;
-    time = fragment->time + (fragment->duration * stream->fragment_repetition_index);
+    time =
+        fragment->time +
+        (fragment->duration * stream->fragment_repetition_index);
   }
 
   timescale = gst_mss_stream_get_timescale (stream);

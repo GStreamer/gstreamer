@@ -331,18 +331,18 @@ gst_rtp_onvif_timestamp_sink_event (GstPad * pad, GstObject * parent,
       }
       break;
     case GST_EVENT_EOS:
-      {
-        GstFlowReturn res;
-        /* Push pending buffers, if any */
-        self->set_e_bit = TRUE;
-        res = send_cached_buffer_and_events (self);
-        if (res != GST_FLOW_OK) {
-          drop = TRUE;
-          ret = FALSE;
-          goto out;
-        }
-        break;
+    {
+      GstFlowReturn res;
+      /* Push pending buffers, if any */
+      self->set_e_bit = TRUE;
+      res = send_cached_buffer_and_events (self);
+      if (res != GST_FLOW_OK) {
+        drop = TRUE;
+        ret = FALSE;
+        goto out;
       }
+      break;
+    }
     case GST_EVENT_FLUSH_STOP:
       purge_cached_buffer_and_events (self);
       self->set_d_bit = FALSE;
