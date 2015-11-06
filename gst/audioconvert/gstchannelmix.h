@@ -31,6 +31,7 @@ typedef struct _GstAudioChannelMix GstAudioChannelMix;
 /**
  * GstAudioChannelMixFlags:
  * @GST_AUDIO_CHANNEL_MIX_FLAGS_NONE: no flag
+ * @GST_AUDIO_CHANNEL_MIX_FLAGS_NON_INTERLEAVED: channels are not interleaved
  * @GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN: input channels are explicitly unpositioned
  * @GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT: output channels are explicitly unpositioned
  *
@@ -38,11 +39,13 @@ typedef struct _GstAudioChannelMix GstAudioChannelMix;
  */
 typedef enum {
   GST_AUDIO_CHANNEL_MIX_FLAGS_NONE             = 0,
-  GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN  = (1 << 0),
-  GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT = (1 << 1)
+  GST_AUDIO_CHANNEL_MIX_FLAGS_NON_INTERLEAVED  = (1 << 0),
+  GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN  = (1 << 1),
+  GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT = (1 << 2)
 } GstAudioChannelMixFlags;
 
 GstAudioChannelMix * gst_audio_channel_mix_new       (GstAudioChannelMixFlags flags,
+                                                      GstAudioFormat format,
                                                       gint in_channels,
                                                       GstAudioChannelPosition in_position[64],
                                                       gint out_channels,
@@ -58,8 +61,6 @@ gboolean        gst_audio_channel_mix_is_passthrough  (GstAudioChannelMix *mix);
  * Do actual mixing.
  */
 void            gst_audio_channel_mix_samples   (GstAudioChannelMix * mix,
-                                                 GstAudioFormat       format,
-                                                 GstAudioLayout       layout,
                                                  const gpointer       in_data,
                                                  gpointer             out_data,
                                                  gint                 samples);

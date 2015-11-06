@@ -31,9 +31,13 @@
 
 #define INT_MATRIX_FACTOR_EXPONENT 10
 
+typedef void (*MixFunc) (GstAudioChannelMix * mix, const gpointer src,
+    gpointer dst, gint samples);
+
 struct _GstAudioChannelMix
 {
   GstAudioChannelMixFlags flags;
+  GstAudioFormat format;
 
   gint in_channels;
   gint out_channels;
@@ -48,6 +52,8 @@ struct _GstAudioChannelMix
   /* channel conversion matrix with int values, m[in_channels][out_channels].
    * this is matrix * (2^10) as integers */
   gint **matrix_int;
+
+  MixFunc func;
 
   gpointer tmp;
 };
@@ -681,72 +687,6 @@ gst_audio_channel_mix_setup_matrix (GstAudioChannelMix * mix)
 #endif
 }
 
-/**
- * gst_audio_channel_mix_new:
- * @flags:
- * @in_channels:
- * @in_position:
- * @out_channels:
- * @out_position:
- *
- * Create a new channel mixer object.
- *
- * Returns: a new #GstAudioChannelMix object. Free with gst_audio_channel_mix_free()
- * after usage.
- */
-GstAudioChannelMix *
-gst_audio_channel_mix_new (GstAudioChannelMixFlags flags,
-    gint in_channels,
-    GstAudioChannelPosition in_position[64],
-    gint out_channels, GstAudioChannelPosition out_position[64])
-{
-  GstAudioChannelMix *mix;
-  gint i;
-
-  mix = g_slice_new0 (GstAudioChannelMix);
-  mix->flags = flags;
-  mix->in_channels = in_channels;
-  mix->out_channels = out_channels;
-  for (i = 0; i < 64; i++) {
-    mix->in_position[i] = in_position[i];
-    mix->out_position[i] = out_position[i];
-  }
-  gst_audio_channel_mix_setup_matrix (mix);
-
-  return mix;
-}
-
-/**
- * gst_audio_channel_mix_is_passthrough:
- * @mix: a #GstAudioChannelMix
- *
- * Check if @mix is in passthrough.
- *
- * Returns: %TRUE is @mix is passthrough.
- */
-gboolean
-gst_audio_channel_mix_is_passthrough (GstAudioChannelMix * mix)
-{
-  gint i;
-  guint64 in_mask, out_mask;
-
-  /* only NxN matrices can be identities */
-  if (mix->in_channels != mix->out_channels)
-    return FALSE;
-
-  /* passthrough for 1->1 channels (MONO and NONE position are the same here) */
-  if (mix->in_channels == 1 && mix->out_channels == 1)
-    return TRUE;
-
-  /* passthrough if both channel masks are the same */
-  in_mask = out_mask = 0;
-  for (i = 0; i < mix->in_channels; i++) {
-    in_mask |= mix->in_position[i];
-    out_mask |= mix->out_position[i];
-  }
-  return in_mask == out_mask;
-}
-
 /* IMPORTANT: out_data == in_data is possible, make sure to not overwrite data
  * you might need later on! */
 static void
@@ -829,6 +769,91 @@ gst_audio_channel_mix_mix_double (GstAudioChannelMix * mix,
 }
 
 /**
+ * gst_audio_channel_mix_new:
+ * @flags:
+ * @in_channels:
+ * @in_position:
+ * @out_channels:
+ * @out_position:
+ *
+ * Create a new channel mixer object.
+ *
+ * Returns: a new #GstAudioChannelMix object. Free with gst_audio_channel_mix_free()
+ * after usage.
+ */
+GstAudioChannelMix *
+gst_audio_channel_mix_new (GstAudioChannelMixFlags flags,
+    GstAudioFormat format,
+    gint in_channels,
+    GstAudioChannelPosition in_position[64],
+    gint out_channels, GstAudioChannelPosition out_position[64])
+{
+  GstAudioChannelMix *mix;
+  gint i;
+
+  g_return_val_if_fail (format == GST_AUDIO_FORMAT_S32
+      || format == GST_AUDIO_FORMAT_F64, NULL);
+  g_return_val_if_fail (in_channels > 0, NULL);
+  g_return_val_if_fail (out_channels > 0, NULL);
+
+  mix = g_slice_new0 (GstAudioChannelMix);
+  mix->flags = flags;
+  mix->format = format;
+  mix->in_channels = in_channels;
+  mix->out_channels = out_channels;
+
+  for (i = 0; i < 64; i++) {
+    mix->in_position[i] = in_position[i];
+    mix->out_position[i] = out_position[i];
+  }
+  gst_audio_channel_mix_setup_matrix (mix);
+
+  switch (mix->format) {
+    case GST_AUDIO_FORMAT_S32:
+      mix->func = (MixFunc) gst_audio_channel_mix_mix_int;
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      mix->func = (MixFunc) gst_audio_channel_mix_mix_double;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+  return mix;
+}
+
+/**
+ * gst_audio_channel_mix_is_passthrough:
+ * @mix: a #GstAudioChannelMix
+ *
+ * Check if @mix is in passthrough.
+ *
+ * Returns: %TRUE is @mix is passthrough.
+ */
+gboolean
+gst_audio_channel_mix_is_passthrough (GstAudioChannelMix * mix)
+{
+  gint i;
+  guint64 in_mask, out_mask;
+
+  /* only NxN matrices can be identities */
+  if (mix->in_channels != mix->out_channels)
+    return FALSE;
+
+  /* passthrough for 1->1 channels (MONO and NONE position are the same here) */
+  if (mix->in_channels == 1 && mix->out_channels == 1)
+    return TRUE;
+
+  /* passthrough if both channel masks are the same */
+  in_mask = out_mask = 0;
+  for (i = 0; i < mix->in_channels; i++) {
+    in_mask |= mix->in_position[i];
+    out_mask |= mix->out_position[i];
+  }
+  return in_mask == out_mask;
+}
+
+/**
  * gst_audio_channel_mix_samples:
  * @mix: a #GstAudioChannelMix
  * @format: a #GstAudioFormat
@@ -841,25 +866,11 @@ gst_audio_channel_mix_mix_double (GstAudioChannelMix * mix,
  * @in_data and @out_data need to be in @format and @layout.
  */
 void
-gst_audio_channel_mix_samples (GstAudioChannelMix * mix, GstAudioFormat format,
-    GstAudioLayout layout, const gpointer in_data, gpointer out_data,
-    gint samples)
+gst_audio_channel_mix_samples (GstAudioChannelMix * mix,
+    const gpointer in_data, gpointer out_data, gint samples)
 {
   g_return_if_fail (mix != NULL);
   g_return_if_fail (mix->matrix != NULL);
-  g_return_if_fail (layout == GST_AUDIO_LAYOUT_INTERLEAVED);
 
-  switch (format) {
-    case GST_AUDIO_FORMAT_S32:
-      gst_audio_channel_mix_mix_int (mix, (const gint32 *) in_data,
-          (gint32 *) out_data, samples);
-      break;
-    case GST_AUDIO_FORMAT_F64:
-      gst_audio_channel_mix_mix_double (mix, (const gdouble *) in_data,
-          (gdouble *) out_data, samples);
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
+  mix->func (mix, in_data, out_data, samples);
 }

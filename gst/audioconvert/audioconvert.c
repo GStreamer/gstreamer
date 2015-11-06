@@ -76,7 +76,6 @@ struct _GstAudioConverter
 
   AudioConvertFunc convert_in;
 
-  GstAudioFormat mix_format;
   gboolean mix_passthrough;
   GstAudioChannelMix *mix;
 
@@ -263,8 +262,8 @@ gst_audio_converter_new (GstAudioInfo * in, GstAudioInfo * out,
   }
 
   /* step 3, channel mix */
-  convert->mix_format = format;
-  convert->mix = gst_audio_channel_mix_new (flags, in->channels, in->position,
+  convert->mix =
+      gst_audio_channel_mix_new (flags, format, in->channels, in->position,
       out->channels, out->position);
   convert->mix_passthrough =
       gst_audio_channel_mix_is_passthrough (convert->mix);
@@ -427,8 +426,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     else
       outbuf = tmpbuf;
 
-    gst_audio_channel_mix_samples (convert->mix, convert->mix_format,
-        convert->in.layout, src, outbuf, samples);
+    gst_audio_channel_mix_samples (convert->mix, src, outbuf, samples);
     src = outbuf;
   }
   /* step 4, optional convert F64 -> S32 for quantize */
