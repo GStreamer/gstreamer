@@ -825,8 +825,7 @@ drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all)
 
     /* Free this list node and move to the next */
     p = g_list_previous (l);
-    parse->pending_buffers = g_list_remove_link (parse->pending_buffers, l);
-    g_list_free_1 (l);
+    parse->pending_buffers = g_list_delete_link (parse->pending_buffers, l);
     l = p;
   }
 

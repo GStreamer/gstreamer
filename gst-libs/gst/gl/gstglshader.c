@@ -408,9 +408,8 @@ gst_gl_shader_detach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
   shader->priv->vtable.DetachShader (shader->priv->program_handle,
       stage_handle);
 
-  shader->priv->stages = g_list_remove_link (shader->priv->stages, elem);
+  shader->priv->stages = g_list_delete_link (shader->priv->stages, elem);
   gst_object_unref (stage);
-  g_list_free_1 (elem);
 }
 
 /**
