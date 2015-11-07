@@ -82,6 +82,7 @@ enum
   ASSET_ADDED_SIGNAL,
   ASSET_REMOVED_SIGNAL,
   MISSING_URI_SIGNAL,
+  ASSET_LOADING_SIGNAL,
   LAST_SIGNAL
 };
 
@@ -434,7 +435,7 @@ ges_project_class_init (GESProjectClass * klass)
 
   /**
    * GESProject::asset-added:
-   * @formatter: the #GESProject
+   * @project: the #GESProject
    * @asset: The #GESAsset that has been added to @project
    */
   _signals[ASSET_ADDED_SIGNAL] =
@@ -443,8 +444,20 @@ ges_project_class_init (GESProjectClass * klass)
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_ASSET);
 
   /**
+   * GESProject::asset-loading:
+   * @project: the #GESProject
+   * @asset: The #GESAsset that started loading
+   *
+   * Since: 1.8
+   */
+  _signals[ASSET_LOADING_SIGNAL] =
+      g_signal_new ("asset-loading", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GESProjectClass, asset_loading),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_ASSET);
+
+  /**
    * GESProject::asset-removed:
-   * @formatter: the #GESProject
+   * @project: the #GESProject
    * @asset: The #GESAsset that has been removed from @project
    */
   _signals[ASSET_REMOVED_SIGNAL] =
@@ -657,9 +670,11 @@ ges_project_add_loading_asset (GESProject * project, GType extractable_type,
 {
   GESAsset *asset;
 
-  if ((asset = ges_asset_cache_lookup (extractable_type, id)))
-    g_hash_table_insert (project->priv->loading_assets, g_strdup (id),
-        gst_object_ref (asset));
+  if ((asset = ges_asset_cache_lookup (extractable_type, id))) {
+    if (g_hash_table_insert (project->priv->loading_assets, g_strdup (id),
+            gst_object_ref (asset)))
+      g_signal_emit (project, _signals[ASSET_LOADING_SIGNAL], 0, asset);
+  }
 }
 
 /**************************************

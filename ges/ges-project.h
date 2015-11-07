@@ -57,6 +57,8 @@ struct _GESProjectClass
   /* Signals */
   void     (*asset_added)    (GESProject * self,
                               GESAsset   * asset);
+  void     (*asset_loading)  (GESProject * self,
+                              GESAsset   * asset);
   void     (*asset_removed)  (GESProject * self,
                               GESAsset   * asset);
   gchar *  (*missing_uri)    (GESProject * self,
