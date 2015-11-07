@@ -943,6 +943,9 @@ retry:
       target_pos = MAX (target_pos, demux->client->sequence_position);
     }
 
+    GST_LOG_OBJECT (demux, "Looking for sequence position %"
+        GST_TIME_FORMAT " in updated playlist", GST_TIME_ARGS (target_pos));
+
     current_pos = 0;
     for (walk = demux->client->current->files; walk; walk = walk->next) {
       GstM3U8MediaFile *file = walk->data;
@@ -1002,7 +1005,7 @@ retry_failover_protection:
   GST_INFO_OBJECT (demux, "Client was on %dbps, max allowed is %dbps, switching"
       " to bitrate %dbps", old_bandwidth, max_bitrate, new_bandwidth);
 
-  if (gst_hls_demux_update_playlist (demux, FALSE, NULL)) {
+  if (gst_hls_demux_update_playlist (demux, TRUE, NULL)) {
     gchar *uri;
     gchar *main_uri;
     uri = gst_m3u8_client_get_current_uri (demux->client);
