@@ -815,7 +815,7 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
   /* Fill avpicture */
   if (!gst_video_frame_map (&dframe->vframe, &ffmpegdec->pool_info,
           dframe->buffer, GST_MAP_READWRITE))
-    goto invalid_frame;
+    goto map_failed;
   dframe->mapped = TRUE;
 
   for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
@@ -850,29 +850,12 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
 
   return 0;
 
-  /* fallbacks */
 no_dr:
-  {
-    GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
-    goto fallback;
-  }
-alloc_failed:
-  {
-    /* alloc default buffer when we can't get one from downstream */
-    GST_LOG_OBJECT (ffmpegdec, "alloc failed, fallback alloc");
-    goto fallback;
-  }
-invalid_frame:
-  {
-    /* alloc default buffer when we can't get one from downstream */
-    GST_LOG_OBJECT (ffmpegdec, "failed to map frame, fallback alloc");
-    gst_buffer_replace (&dframe->buffer, NULL);
-    goto fallback;
-  }
-fallback:
   {
     int c;
     int ret = avcodec_default_get_buffer2 (context, picture, flags);
+
+    GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
 
     for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
       ffmpegdec->stride[c] = picture->linesize[c];
@@ -892,6 +875,21 @@ fallback:
     }
 
     return ret;
+  }
+alloc_failed:
+  {
+    GST_ELEMENT_ERROR (ffmpegdec, RESOURCE, FAILED,
+        ("Unable to allocate memory"),
+        ("The downstream pool failed to allocated buffer."));
+    return -1;
+  }
+map_failed:
+  {
+    GST_ELEMENT_ERROR (ffmpegdec, RESOURCE, OPEN_READ_WRITE,
+        ("Cannot access memory for read and write operation."),
+        ("The video memory allocated from downstream pool could not mapped for"
+            "read and write."));
+    return -1;
   }
 duplicate_frame:
   {
@@ -1227,7 +1225,7 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
   info = &ffmpegdec->output_state->info;
   if (!gst_video_frame_map (&vframe, info, frame->output_buffer,
           GST_MAP_READ | GST_MAP_WRITE))
-    goto alloc_failed;
+    goto map_failed;
 
   for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
     if (c < GST_VIDEO_INFO_N_PLANES (info)) {
@@ -1255,7 +1253,17 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
   /* special cases */
 alloc_failed:
   {
-    GST_DEBUG_OBJECT (ffmpegdec, "allocation failed");
+    GST_ELEMENT_ERROR (ffmpegdec, RESOURCE, FAILED,
+        ("Unable to allocate memory"),
+        ("The downstream pool failed to allocated buffer."));
+    return ret;
+  }
+map_failed:
+  {
+    GST_ELEMENT_ERROR (ffmpegdec, RESOURCE, OPEN_READ_WRITE,
+        ("Cannot access memory for read and write operation."),
+        ("The video memory allocated from downstream pool could not mapped for"
+            "read and write."));
     return ret;
   }
 not_negotiated:
