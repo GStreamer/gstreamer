@@ -1039,3 +1039,20 @@ ges_list_assets (GType filter)
 
   return ret;
 }
+
+/**
+ * ges_asset_get_error:
+ * @self: The asset to retrieve the error from
+ *
+ * Returns: (transfer none): The #GError of the asset or %NULL if the asset was
+ * loaded without issue
+ *
+ * Since: 1.8
+ */
+GError *
+ges_asset_get_error (GESAsset * self)
+{
+  g_return_val_if_fail (GES_IS_ASSET (self), NULL);
+
+  return self->priv->error;
+}

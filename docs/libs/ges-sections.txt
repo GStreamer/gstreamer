@@ -1077,6 +1077,7 @@ ges_asset_request
 ges_asset_request_async
 ges_asset_request_finish
 ges_asset_extract
+ges_asset_get_error
 ges_list_assets
 <SUBSECTION Standard>
 GESAssetPrivate
