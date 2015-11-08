@@ -119,7 +119,7 @@
           VP8 as the video codec and Vorbis as the audio codec), you should use:
       </para>
       <informalexample>
-        <programlisting>video/webm:video/x-raw-yuv,width=1920,height=1080-->video/x-vp8:audio/x-vorbis</programlisting>
+        <programlisting>video/webm:video/x-raw,width=1920,height=1080-->video/x-vp8:audio/x-vorbis</programlisting>
       </informalexample>
     <refsect3>
       <title>Some serialized encoding formats examples:</title>
