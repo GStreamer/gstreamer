@@ -287,6 +287,12 @@ pygst_debug_log (PyObject * pyobject, PyObject * string, GstDebugLevel level,
 }
 
 static PyObject *
+_wrap_gst_trace (PyObject * whatever, PyObject * string)
+{
+  return pygst_debug_log (whatever, string, GST_LEVEL_TRACE, FALSE);
+}
+
+static PyObject *
 _wrap_gst_log (PyObject * whatever, PyObject * string)
 {
   return pygst_debug_log (whatever, string, GST_LEVEL_LOG, FALSE);
@@ -329,6 +335,8 @@ _wrap_gst_memdump (PyObject * whatever, PyObject * string)
 }
 
 static PyMethodDef _gi_gst_functions[] = {
+  {"trace", (PyCFunction) _wrap_gst_trace, METH_VARARGS,
+      NULL},
   {"log", (PyCFunction) _wrap_gst_log, METH_VARARGS,
       NULL},
   {"debug", (PyCFunction) _wrap_gst_debug, METH_VARARGS,

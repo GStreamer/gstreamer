@@ -330,6 +330,7 @@ _gi_gst
 
 # maybe more python and less C some day if core turns a bit more introspection
 # and binding friendly in the debug area
+Gst.trace = _gi_gst.trace
 Gst.log = _gi_gst.log
 Gst.debug = _gi_gst.debug
 Gst.info = _gi_gst.info
