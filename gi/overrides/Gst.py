@@ -118,7 +118,7 @@ class Pad(Gst.Pad):
             try:
                 res = self._real_query_func(pad, parent, query)
             except TypeError:
-                raise TypeError("Invalid query method %s, 2 or 3 arguments requiered"
+                raise TypeError("Invalid query method %s, 2 or 3 arguments required"
                                 % self._real_query_func)
         query.mini_object.refcount += 1
 
@@ -157,7 +157,7 @@ class GhostPad(Gst.GhostPad):
     def __init__(self, name, target=None, direction=None):
         if direction is None:
             if target is None:
-                raise TypeError('you must pass at least one of target'
+                raise TypeError('you must pass at least one of target '
                                 'and direction')
             direction = target.props.direction
 
