@@ -901,14 +901,13 @@ gst_rtp_h263_pay_move_window_right (GstRtpH263PayContext * context, guint n,
     return rest_bits;
 
   while (n != 0 || context->win_end == ((*data_end) + 1)) {
-    //guint8 a = *data;
+    guint8 b = context->win_end <= *data_end ? *context->win_end : 0;
     if (rest_bits == 0) {
       if (n > 8) {
-        context->window = (context->window << 8) | *context->win_end;
+        context->window = (context->window << 8) | b;
         n -= 8;
       } else {
-        context->window =
-            (context->window << n) | (*context->win_end >> (8 - n));
+        context->window = (context->window << n) | (b >> (8 - n));
         rest_bits = 8 - n;
         if (rest_bits == 0)
           context->win_end++;
@@ -916,15 +915,14 @@ gst_rtp_h263_pay_move_window_right (GstRtpH263PayContext * context, guint n,
       }
     } else {
       if (n > rest_bits) {
-        context->window =
-            (context->window << rest_bits) | (*context->
-            win_end & (((guint) pow (2.0, (double) rest_bits)) - 1));
+        context->window = (context->window << rest_bits) |
+          (b & (((guint) pow (2.0, (double) rest_bits)) - 1));
         n -= rest_bits;
         rest_bits = 0;
       } else {
-        context->window =
-            (context->window << n) | ((*context->win_end & (((guint) pow (2.0,
-                            (double) rest_bits)) - 1)) >> (rest_bits - n));
+        context->window = (context->window << n) |
+          ((b & (((guint) pow (2.0, (double) rest_bits)) - 1)) >>
+              (rest_bits - n));
         rest_bits -= n;
         if (rest_bits == 0)
           context->win_end++;
@@ -1413,7 +1411,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
 
 
     /*---------- MODE B MODE FRAGMENTATION ----------*/
-  GstRtpH263PayMB *mac = NULL;
+  GstRtpH263PayMB *mac, *mac0;
   guint max_payload_size;
   GstRtpH263PayBoundry boundry;
   guint mb;
@@ -1509,7 +1507,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
 
   // We are on MB layer
 
-  mac = gst_rtp_h263_pay_mb_new (&boundry, 0);
+  mac = mac0 = gst_rtp_h263_pay_mb_new (&boundry, 0);
   for (mb = 0; mb < format_props[context->piclayer->ptype_srcformat][1]; mb++) {
 
     GST_LOG ("================ START MB %d =================", mb);
@@ -1521,8 +1519,13 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
       GST_LOG ("Error decoding MB - sbit: %d", 8 - ebit);
       GST_ERROR ("Error decoding in GOB");
 
+      gst_rtp_h263_pay_mb_destroy (mac0);
       goto decode_error;
     }
+
+    gst_rtp_h263_pay_mb_destroy (gob->macroblocks[mb]);
+    gob->macroblocks[mb] = mac;
+
     //If mb_type == stuffing, don't increment the mb address
     if (mac->mb_type == 10) {
       mb--;
@@ -1530,8 +1533,6 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
     } else {
       gob->nmacroblocs++;
     }
-
-    gob->macroblocks[mb] = mac;
 
     if (mac->end >= gob->end) {
       GST_LOG ("No more MBs in this GOB");
@@ -1545,6 +1546,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
         mac->mba, mac->start, mac->end, mac->length, mac->sbit, mac->ebit);
     GST_LOG ("================ END MB %d =================", mb);
   }
+  gst_rtp_h263_pay_mb_destroy (mac0);
 
   mb = 0;
   first = 0;
@@ -1591,11 +1593,10 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
   }
 
     /*---------- END OF MODE B FRAGMENTATION ----------*/
-  gst_rtp_h263_pay_mb_destroy (mac);
+
   return TRUE;
 
 decode_error:
-  gst_rtp_h263_pay_mb_destroy (mac);
   return FALSE;
 }
 
