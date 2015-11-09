@@ -107,7 +107,7 @@ gst_player_gtk_video_renderer_init (GstPlayerGtkVideoRenderer * self)
   GstElement *gtk_sink = gst_element_factory_make ("gtkglsink", NULL);
 
   if (gtk_sink) {
-    GstElement *sink = sink = gst_element_factory_make ("glsinkbin", NULL);
+    GstElement *sink = gst_element_factory_make ("glsinkbin", NULL);
     g_object_set (sink, "sink", gtk_sink, NULL);
 
     self->sink = sink;
