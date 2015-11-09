@@ -1291,6 +1291,14 @@ GST_START_TEST (testDownloadError)
 
 GST_END_TEST;
 
+/* testFragmentDownloadError is disabled until we redesign the test framework
+ * to allow better control on when fakeHTTPsrc element will create data.
+ * Currently that is being done asynchronously and there is no easy way
+ * to synchronise data generation with the data processing (the test) so that
+ * we can guarantee that error generation is done during data generation and
+ * not afterwards.
+ */
+#if 0
 /* generate error message on adaptive demux pipeline */
 static gboolean
 testFragmentDownloadErrorCheckDataReceived (GstDashDemuxTestData * testData,
@@ -1401,6 +1409,8 @@ GST_START_TEST (testFragmentDownloadError)
 }
 
 GST_END_TEST;
+
+#endif
 
 /* generate queries to adaptive demux */
 static gboolean
@@ -1526,7 +1536,7 @@ dash_demux_suite (void)
   tcase_add_test (tc_basicTest, testParameters);
   tcase_add_test (tc_basicTest, testSeek);
   tcase_add_test (tc_basicTest, testDownloadError);
-  tcase_add_test (tc_basicTest, testFragmentDownloadError);
+  //tcase_add_test (tc_basicTest, testFragmentDownloadError);
   tcase_add_test (tc_basicTest, testQuery);
 
   tcase_add_unchecked_fixture (tc_basicTest, test_setup, test_teardown);
