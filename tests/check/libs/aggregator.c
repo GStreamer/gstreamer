@@ -344,7 +344,7 @@ downstream_probe_cb (GstPad * pad, GstPadProbeInfo * info, TestData * test)
       g_atomic_int_inc (&test->flush_stop_events);
   }
 
-  return GST_PAD_PROBE_DROP;
+  return GST_PAD_PROBE_HANDLED;
 }
 
 /*
@@ -723,6 +723,7 @@ GST_START_TEST (test_flushing_seek)
 
   gst_segment_init (&GST_AGGREGATOR (test.aggregator)->segment,
       GST_FORMAT_TIME);
+
   /* now do a successful flushing seek */
   event = gst_event_new_seek (1, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
       GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, 10 * GST_SECOND);
@@ -765,7 +766,7 @@ GST_START_TEST (test_flushing_seek)
   gst_pad_push_event (data2.srcpad, gst_event_new_flush_stop (TRUE));
 
   /* and the last FLUSH_STOP is forwarded downstream */
-  fail_unless_equals_int (test.flush_start_events, 1);
+  fail_unless_equals_int (test.flush_stop_events, 1);
 
   /*  Check collected */
   gst_pad_add_probe (test.srcpad, GST_PAD_PROBE_TYPE_BUFFER,
