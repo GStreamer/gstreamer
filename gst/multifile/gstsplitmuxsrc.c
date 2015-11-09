@@ -61,6 +61,14 @@ enum
   PROP_LOCATION
 };
 
+enum
+{
+  SIGNAL_FORMAT_LOCATION,
+  SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST];
+
 static GstStaticPadTemplate video_src_template =
 GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SRC,
@@ -212,6 +220,20 @@ gst_splitmux_src_class_init (GstSplitMuxSrcClass * klass)
       g_param_spec_string ("location", "File Input Pattern",
           "Glob pattern for the location of the files to read", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSplitMuxSrc::format-location:
+   * @splitmux: the #GstSplitMuxSrc
+   *
+   * Returns: A NULL-terminated sorted array of strings containing the
+   *   filenames of the input files. The array will be freed internally
+   *   using g_strfreev()
+   *
+   * Since: 1.8
+   */
+  signals[SIGNAL_FORMAT_LOCATION] =
+      g_signal_new ("format-location", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_STRV, 0);
 }
 
 static void
@@ -601,17 +623,22 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
 
   GST_DEBUG_OBJECT (splitmux, "Starting");
 
-  GST_OBJECT_LOCK (splitmux);
-  if (splitmux->location != NULL && splitmux->location[0] != '\0') {
-    basename = g_path_get_basename (splitmux->location);
-    dirname = g_path_get_dirname (splitmux->location);
+  g_signal_emit (splitmux, signals[SIGNAL_FORMAT_LOCATION], 0, &files);
+
+  if (files == NULL || *files == NULL) {
+    GST_OBJECT_LOCK (splitmux);
+    if (splitmux->location != NULL && splitmux->location[0] != '\0') {
+      basename = g_path_get_basename (splitmux->location);
+      dirname = g_path_get_dirname (splitmux->location);
+    }
+    GST_OBJECT_UNLOCK (splitmux);
+
+    g_strfreev (files);
+    files = gst_split_util_find_files (dirname, basename, &err);
+
+    if (files == NULL || *files == NULL)
+      goto no_files;
   }
-  GST_OBJECT_UNLOCK (splitmux);
-
-  files = gst_split_util_find_files (dirname, basename, &err);
-
-  if (files == NULL || *files == NULL)
-    goto no_files;
 
   SPLITMUX_SRC_LOCK (splitmux);
   splitmux->pads_complete = FALSE;
