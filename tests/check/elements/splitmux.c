@@ -154,6 +154,44 @@ GST_START_TEST (test_splitmuxsrc)
 
 GST_END_TEST;
 
+static gchar **
+src_format_location_cb (GstElement * splitmuxsrc, gpointer user_data)
+{
+  gchar **result = g_malloc0_n (4, sizeof (gchar *));
+  result[0] = g_build_filename (GST_TEST_FILES_PATH, "splitvideo00.ogg", NULL);
+  result[1] = g_build_filename (GST_TEST_FILES_PATH, "splitvideo01.ogg", NULL);
+  result[2] = g_build_filename (GST_TEST_FILES_PATH, "splitvideo02.ogg", NULL);
+  return result;
+}
+
+GST_START_TEST (test_splitmuxsrc_format_location)
+{
+  GstMessage *msg;
+  GstElement *pipeline;
+  GstElement *src;
+  GError *error = NULL;
+
+  pipeline = gst_parse_launch ("splitmuxsrc name=splitsrc ! decodebin "
+      "! fakesink", &error);
+  g_assert_no_error (error);
+  fail_if (pipeline == NULL);
+
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "splitsrc");
+  g_signal_connect (src, "format-location",
+      (GCallback) src_format_location_cb, NULL);
+  g_object_unref (src);
+
+  msg = run_pipeline (pipeline);
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_splitmuxsink)
 {
   GstMessage *msg;
@@ -257,6 +295,7 @@ splitmux_suite (void)
 
   tcase_add_checked_fixture (tc_chain, tempdir_setup, tempdir_cleanup);
   tcase_add_test (tc_chain, test_splitmuxsrc);
+  tcase_add_test (tc_chain, test_splitmuxsrc_format_location);
   tcase_add_test (tc_chain, test_splitmuxsink);
 
   return s;
