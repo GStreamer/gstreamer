@@ -37,6 +37,10 @@
 #define GST_IS_FAKE_SOUP_HTTP_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FAKE_SOUP_HTTP_SRC))
 #define GST_FAKE_SOUP_HTTP_SRC_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_FAKE_SOUP_HTTP_SRC, GstFakeSoupHTTPSrcClass))
 
+#define GST_FAKE_SOUP_HTTP_SRC_GET_LOCK(d)  (&(((GstFakeSoupHTTPSrc*)(d))->lock))
+#define GST_FAKE_SOUP_HTTP_SRC_LOCK(d)      g_mutex_lock (GST_FAKE_SOUP_HTTP_SRC_GET_LOCK (d))
+#define GST_FAKE_SOUP_HTTP_SRC_UNLOCK(d)    g_mutex_unlock (GST_FAKE_SOUP_HTTP_SRC_GET_LOCK (d))
+
 typedef struct _GstFakeSoupHTTPSrc
 {
   GstBaseSrc parent;
@@ -58,6 +62,9 @@ typedef struct _GstFakeSoupHTTPSrc
 
   /* download error code to simulate during create function */
   guint downloadErrorCode;
+
+  /* mutex to protect multithread access to this structure */
+  GMutex lock;
 } GstFakeSoupHTTPSrc;
 
 typedef struct _GstFakeSoupHTTPSrcClass
@@ -144,6 +151,7 @@ gst_fake_soup_http_src_init (GstFakeSoupHTTPSrc * src)
   src->downloadErrorCode = 0;
   gst_base_src_set_blocksize (GST_BASE_SRC (src),
       GST_FAKE_SOUP_HTTP_SRC_MAX_BUF_SIZE);
+  g_mutex_init (&src->lock);
 }
 
 static void
@@ -153,6 +161,7 @@ gst_fake_soup_http_src_finalize (GObject * object)
 
   src = GST_FAKE_SOUP_HTTP_SRC (object);
 
+  g_mutex_clear (&src->lock);
   g_free (src->uri);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -166,9 +175,12 @@ gst_fake_soup_http_src_start (GstBaseSrc * basesrc)
 
   src = GST_FAKE_SOUP_HTTP_SRC (basesrc);
 
+  GST_FAKE_SOUP_HTTP_SRC_LOCK (src);
+
   if (!src->uri) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (("No URL set.")),
         ("Missing location property"));
+    GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
     return FALSE;
   }
 
@@ -183,6 +195,7 @@ gst_fake_soup_http_src_start (GstBaseSrc * basesrc)
       src->segment_end = src->size;
       src->downloadErrorCode = 0;
       gst_base_src_set_dynamic_size (basesrc, FALSE);
+      GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
       return TRUE;
     }
   }
@@ -190,6 +203,7 @@ gst_fake_soup_http_src_start (GstBaseSrc * basesrc)
   GST_WARNING
       ("gst_fake_soup_http_src_start cannot find url '%s' in input data",
       src->uri);
+  GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
   return FALSE;
 }
 
@@ -199,9 +213,13 @@ gst_fake_soup_http_src_stop (GstBaseSrc * basesrc)
   GstFakeSoupHTTPSrc *src;
 
   src = GST_FAKE_SOUP_HTTP_SRC (basesrc);
+  GST_FAKE_SOUP_HTTP_SRC_LOCK (src);
+
   src->payload = NULL;
   src->position = 0;
   src->size = 0;
+
+  GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
   return TRUE;
 }
 
@@ -209,11 +227,18 @@ static gboolean
 gst_fake_soup_http_src_is_seekable (GstBaseSrc * basesrc)
 {
   GstFakeSoupHTTPSrc *src;
+  gboolean ret;
 
   src = GST_FAKE_SOUP_HTTP_SRC (basesrc);
 
+  GST_FAKE_SOUP_HTTP_SRC_LOCK (src);
+
   /* if size is set, we can seek */
-  return src->size > 0;
+  ret = src->size > 0;
+
+  GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
+
+  return ret;
 }
 
 static gboolean
@@ -225,6 +250,8 @@ gst_fake_soup_http_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
       segment->start);
   src = GST_FAKE_SOUP_HTTP_SRC (basesrc);
 
+  GST_FAKE_SOUP_HTTP_SRC_LOCK (src);
+
   /*
      According to RFC7233, the range is inclusive:
      The first-byte-pos value in a byte-range-spec gives the byte-offset
@@ -234,14 +261,17 @@ gst_fake_soup_http_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
    */
 
   if (!src->uri) {
+    GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
     return FALSE;
   }
 
   if (segment->start >= src->size) {
+    GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
     return FALSE;
   }
 
   if (segment->stop != -1 && segment->stop > src->size) {
+    GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
     return FALSE;
   }
 
@@ -251,6 +281,7 @@ gst_fake_soup_http_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
     src->segment_end = segment->stop;
   }
 
+  GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
   return TRUE;
 }
 
@@ -262,13 +293,17 @@ gst_fake_soup_http_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 
   src = GST_FAKE_SOUP_HTTP_SRC (basesrc);
 
+  GST_FAKE_SOUP_HTTP_SRC_LOCK (src);
+
   if (!src->uri) {
+    GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
     return FALSE;
   }
 
   /* if it was started (payload or size configured), size is set */
   if (src->payload || src->size > 0) {
     *size = src->size;
+    GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
     return TRUE;
   }
 
@@ -279,9 +314,11 @@ gst_fake_soup_http_src_get_size (GstBaseSrc * basesrc, guint64 * size)
         *size = strlen (input[i].payload);
       else
         *size = input[i].size;
+      GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
       return TRUE;
     }
   }
+  GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
   return FALSE;
 }
 
@@ -295,10 +332,13 @@ gst_fake_soup_http_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   src = GST_FAKE_SOUP_HTTP_SRC (basesrc);
 
+  GST_FAKE_SOUP_HTTP_SRC_LOCK (src);
+
   GST_DEBUG ("gst_fake_soup_http_src_create feeding from %" G_GUINT64_FORMAT,
       src->position);
   if (src->uri == NULL) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
+    GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
     return GST_FLOW_ERROR;
   }
   if (src->downloadErrorCode) {
@@ -306,12 +346,14 @@ gst_fake_soup_http_src_create (GstBaseSrc * basesrc, guint64 offset,
             "Generated requested error"), ("%s (%d), URL: %s, Redirect to: %s",
             "Generated requested error", src->downloadErrorCode, src->uri,
             GST_STR_NULL (NULL)));
+    GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
     return GST_FLOW_ERROR;
   }
 
   bytes_read = MIN ((src->segment_end - src->position),
       GST_FAKE_SOUP_HTTP_SRC_MAX_BUF_SIZE);
   if (bytes_read == 0) {
+    GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
     return GST_FLOW_EOS;
   }
 
@@ -343,9 +385,11 @@ gst_fake_soup_http_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   src->position += bytes_read;
 
+  GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
   return GST_FLOW_OK;
 }
 
+/* must be called with the lock taken */
 static gboolean
 gst_fake_soup_http_src_set_location (GstFakeSoupHTTPSrc * src,
     const gchar * uri, GError ** error)
@@ -373,7 +417,12 @@ static gchar *
 gst_fake_soup_http_src_uri_get_uri (GstURIHandler * handler)
 {
   GstFakeSoupHTTPSrc *src = GST_FAKE_SOUP_HTTP_SRC (handler);
-  return g_strdup (src->uri);
+  gchar *uri;
+
+  GST_FAKE_SOUP_HTTP_SRC_LOCK (src);
+  uri = g_strdup (src->uri);
+  GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
+  return uri;
 }
 
 static gboolean
@@ -381,8 +430,15 @@ gst_fake_soup_http_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
     GError ** err)
 {
   GstFakeSoupHTTPSrc *src = GST_FAKE_SOUP_HTTP_SRC (handler);
+  gboolean ret;
 
-  return gst_fake_soup_http_src_set_location (src, uri, err);
+  GST_FAKE_SOUP_HTTP_SRC_LOCK (src);
+
+  ret = gst_fake_soup_http_src_set_location (src, uri, err);
+
+  GST_FAKE_SOUP_HTTP_SRC_UNLOCK (src);
+
+  return ret;
 }
 
 static void
@@ -449,5 +505,7 @@ void
 gst_fake_soup_http_src_simulate_download_error (GstFakeSoupHTTPSrc *
     fakeSoupHTTPSrc, guint downloadErrorCode)
 {
+  GST_FAKE_SOUP_HTTP_SRC_LOCK (fakeSoupHTTPSrc);
   fakeSoupHTTPSrc->downloadErrorCode = downloadErrorCode;
+  GST_FAKE_SOUP_HTTP_SRC_UNLOCK (fakeSoupHTTPSrc);
 }
