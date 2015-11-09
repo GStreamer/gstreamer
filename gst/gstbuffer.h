@@ -345,10 +345,6 @@ void        gst_buffer_extract_dup         (GstBuffer *buffer, gsize offset,
  *
  * Returns: (transfer full): @buf
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstBuffer * gst_buffer_ref (GstBuffer * buf);
-#endif
-
 static inline GstBuffer *
 gst_buffer_ref (GstBuffer * buf)
 {
@@ -362,10 +358,6 @@ gst_buffer_ref (GstBuffer * buf)
  * Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
  * with the associated metadata and memory will be freed.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_buffer_unref (GstBuffer * buf);
-#endif
-
 static inline void
 gst_buffer_unref (GstBuffer * buf)
 {
@@ -385,10 +377,6 @@ gst_buffer_unref (GstBuffer * buf)
  *
  * Returns: (transfer full): a new copy of @buf.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstBuffer * gst_buffer_copy (const GstBuffer * buf);
-#endif
-
 static inline GstBuffer *
 gst_buffer_copy (const GstBuffer * buf)
 {
@@ -502,10 +490,6 @@ gboolean        gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src
  *
  * Returns: %TRUE when @obuf was different from @nbuf.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC gboolean gst_buffer_replace (GstBuffer **obuf, GstBuffer *nbuf);
-#endif
-
 static inline gboolean
 gst_buffer_replace (GstBuffer **obuf, GstBuffer *nbuf)
 {

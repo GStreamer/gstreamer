@@ -210,10 +210,6 @@ GType           gst_query_get_type             (void);
  *
  * Returns: @q
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstQuery * gst_query_ref (GstQuery * q);
-#endif
-
 static inline GstQuery *
 gst_query_ref (GstQuery * q)
 {
@@ -227,10 +223,6 @@ gst_query_ref (GstQuery * q)
  * Decreases the refcount of the query. If the refcount reaches 0, the query
  * will be freed.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_query_unref (GstQuery * q);
-#endif
-
 static inline void
 gst_query_unref (GstQuery * q)
 {
@@ -248,10 +240,6 @@ gst_query_unref (GstQuery * q)
  *
  * Returns: (transfer full): a new copy of @q.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstQuery * gst_query_copy (const GstQuery * q);
-#endif
-
 static inline GstQuery *
 gst_query_copy (const GstQuery * q)
 {
@@ -290,10 +278,6 @@ gst_query_copy (const GstQuery * q)
  *
  * Returns: %TRUE if @new_query was different from @old_query
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC gboolean gst_query_replace (GstQuery **old_query, GstQuery *new_query);
-#endif
-
 static inline gboolean
 gst_query_replace (GstQuery **old_query, GstQuery *new_query)
 {

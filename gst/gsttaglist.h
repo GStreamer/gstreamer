@@ -389,10 +389,6 @@ gboolean     gst_tag_list_get_sample_index  (const GstTagList * list,
  *
  * Returns: the same #GstTagList mini object.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstTagList * gst_tag_list_ref (GstTagList * taglist);
-#endif
-
 static inline GstTagList *
 gst_tag_list_ref (GstTagList * taglist)
 {
@@ -405,10 +401,6 @@ gst_tag_list_ref (GstTagList * taglist)
  *
  * Unref a #GstTagList, and and free all its memory when the refcount reaches 0.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_tag_list_unref (GstTagList * taglist);
-#endif
-
 static inline void
 gst_tag_list_unref (GstTagList * taglist)
 {
@@ -431,10 +423,6 @@ gst_tag_list_unref (GstTagList * taglist)
  *
  * Returns: the new #GstTagList
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstTagList * gst_tag_list_copy (const GstTagList * taglist);
-#endif
-
 static inline GstTagList *
 gst_tag_list_copy (const GstTagList * taglist)
 {

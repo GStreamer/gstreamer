@@ -323,10 +323,6 @@ gboolean       gst_memory_is_type      (GstMemory *mem, const gchar *mem_type);
  *
  * Returns: (transfer full): @memory (for convenience when doing assignments)
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstMemory * gst_memory_ref (GstMemory * memory);
-#endif
-
 static inline GstMemory *
 gst_memory_ref (GstMemory * memory)
 {
@@ -339,10 +335,6 @@ gst_memory_ref (GstMemory * memory)
  *
  * Decrease the refcount of an memory, freeing it if the refcount reaches 0.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_memory_unref (GstMemory * memory);
-#endif
-
 static inline void
 gst_memory_unref (GstMemory * memory)
 {

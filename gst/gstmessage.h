@@ -337,10 +337,6 @@ GQuark          gst_message_type_to_quark       (GstMessageType type);
  *
  * Returns: @msg (for convenience when doing assignments)
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstMessage * gst_message_ref (GstMessage * msg);
-#endif
-
 static inline GstMessage *
 gst_message_ref (GstMessage * msg)
 {
@@ -354,10 +350,6 @@ gst_message_ref (GstMessage * msg)
  * Convenience macro to decrease the reference count of the message, possibly
  * freeing it.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_message_unref (GstMessage * msg);
-#endif
-
 static inline void
 gst_message_unref (GstMessage * msg)
 {
@@ -375,10 +367,6 @@ gst_message_unref (GstMessage * msg)
  *
  * MT safe
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstMessage * gst_message_copy (const GstMessage * msg);
-#endif
-
 static inline GstMessage *
 gst_message_copy (const GstMessage * msg)
 {
@@ -421,10 +409,6 @@ gst_message_copy (const GstMessage * msg)
  *
  * Returns: %TRUE if @new_message was different from @old_message
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC gboolean gst_message_replace (GstMessage **old_message, GstMessage *new_message);
-#endif
-
 static inline gboolean
 gst_message_replace (GstMessage **old_message, GstMessage *new_message)
 {

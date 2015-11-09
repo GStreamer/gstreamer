@@ -90,11 +90,6 @@ GstBuffer *     gst_byte_writer_reset_and_get_buffer    (GstByteWriter *writer) 
  *
  * Returns: The current, initialized size of the data
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC guint     gst_byte_writer_get_pos  (const GstByteWriter *writer);
-G_INLINE_FUNC gboolean  gst_byte_writer_set_pos  (GstByteWriter *writer, guint pos);
-G_INLINE_FUNC guint     gst_byte_writer_get_size (const GstByteWriter *writer);
-#else
 static inline guint
 gst_byte_writer_get_pos (const GstByteWriter *writer)
 {
@@ -112,7 +107,6 @@ gst_byte_writer_get_size (const GstByteWriter *writer)
 {
   return gst_byte_reader_get_size ((const GstByteReader *) writer);
 }
-#endif
 
 guint           gst_byte_writer_get_remaining     (const GstByteWriter *writer);
 gboolean        gst_byte_writer_ensure_free_space (GstByteWriter *writer, guint size);

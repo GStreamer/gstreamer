@@ -54,10 +54,6 @@ GType           gst_context_get_type            (void);
  *
  * Returns: @context (for convenience when doing assignments)
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstContext * gst_context_ref (GstContext * context);
-#endif
-
 static inline GstContext *
 gst_context_ref (GstContext * context)
 {
@@ -71,10 +67,6 @@ gst_context_ref (GstContext * context)
  * Convenience macro to decrease the reference count of the context, possibly
  * freeing it.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_context_unref (GstContext * context);
-#endif
-
 static inline void
 gst_context_unref (GstContext * context)
 {
@@ -92,10 +84,6 @@ gst_context_unref (GstContext * context)
  *
  * MT safe
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstContext * gst_context_copy (const GstContext * context);
-#endif
-
 static inline GstContext *
 gst_context_copy (const GstContext * context)
 {
@@ -138,10 +126,6 @@ gst_context_copy (const GstContext * context)
  *
  * Returns: %TRUE if @new_context was different from @old_context
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC gboolean gst_context_replace (GstContext **old_context, GstContext *new_context);
-#endif
-
 static inline gboolean
 gst_context_replace (GstContext **old_context, GstContext *new_context)
 {

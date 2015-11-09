@@ -451,10 +451,6 @@ static inline guint16 __gst_slow_read16_le (const guint8 * data) {
  *
  * Returns: @in byte-swapped.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC gfloat GFLOAT_SWAP_LE_BE (gfloat in);
-#endif
-
 inline static gfloat
 GFLOAT_SWAP_LE_BE(gfloat in)
 {
@@ -477,10 +473,6 @@ GFLOAT_SWAP_LE_BE(gfloat in)
  *
  * Returns: @in byte-swapped.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC gdouble GDOUBLE_SWAP_LE_BE (gdouble in);
-#endif
-
 inline static gdouble
 GDOUBLE_SWAP_LE_BE(gdouble in)
 {
@@ -584,10 +576,6 @@ GDOUBLE_SWAP_LE_BE(gdouble in)
  *
  * Returns: The floating point value read from @data
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC gfloat GST_READ_FLOAT_LE (const guint8 *data);
-#endif
-
 inline static gfloat
 GST_READ_FLOAT_LE(const guint8 *data)
 {
@@ -609,10 +597,6 @@ GST_READ_FLOAT_LE(const guint8 *data)
  *
  * Returns: The floating point value read from @data
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC gfloat GST_READ_FLOAT_BE (const guint8 *data);
-#endif
-
 inline static gfloat
 GST_READ_FLOAT_BE(const guint8 *data)
 {
@@ -634,10 +618,6 @@ GST_READ_FLOAT_BE(const guint8 *data)
  *
  * Returns: The double-precision floating point value read from @data
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC gdouble GST_READ_DOUBLE_LE (const guint8 *data);
-#endif
-
 inline static gdouble
 GST_READ_DOUBLE_LE(const guint8 *data)
 {
@@ -659,10 +639,6 @@ GST_READ_DOUBLE_LE(const guint8 *data)
  *
  * Returns: The double-precision floating point value read from @data
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC gdouble GST_READ_DOUBLE_BE (const guint8 *data);
-#endif
-
 inline static gdouble
 GST_READ_DOUBLE_BE(const guint8 *data)
 {
@@ -683,10 +659,6 @@ GST_READ_DOUBLE_BE(const guint8 *data)
  *
  * Store a 32 bit float value in little endian format into the memory buffer.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void GST_WRITE_FLOAT_LE (guint8 *data, gfloat num);
-#endif
-
 inline static void
 GST_WRITE_FLOAT_LE(guint8 *data, gfloat num)
 {
@@ -707,10 +679,6 @@ GST_WRITE_FLOAT_LE(guint8 *data, gfloat num)
  *
  * Store a 32 bit float value in big endian format into the memory buffer.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void GST_WRITE_FLOAT_BE (guint8 *data, gfloat num);
-#endif
-
 inline static void
 GST_WRITE_FLOAT_BE(guint8 *data, gfloat num)
 {
@@ -731,10 +699,6 @@ GST_WRITE_FLOAT_BE(guint8 *data, gfloat num)
  *
  * Store a 64 bit double value in little endian format into the memory buffer.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void GST_WRITE_DOUBLE_LE (guint8 *data, gdouble num);
-#endif
-
 inline static void
 GST_WRITE_DOUBLE_LE(guint8 *data, gdouble num)
 {
@@ -755,10 +719,6 @@ GST_WRITE_DOUBLE_LE(guint8 *data, gdouble num)
  *
  * Store a 64 bit double value in big endian format into the memory buffer.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void GST_WRITE_DOUBLE_BE (guint8 *data, gdouble num);
-#endif
-
 inline static void
 GST_WRITE_DOUBLE_BE(guint8 *data, gdouble num)
 {
