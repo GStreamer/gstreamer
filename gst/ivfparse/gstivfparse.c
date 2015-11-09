@@ -331,15 +331,20 @@ gst_ivf_parse_handle_frame_data (GstIvfParse * ivf, GstBaseParseFrame * frame,
 
     /* Detect resolution changes on key frames */
     if (gst_buffer_map (frame->out_buffer, &map, GST_MAP_READ)) {
-      guint32 frame_tag, width, height;
+      guint32 width, height;
 
-      frame_tag = GST_READ_UINT24_LE (map.data);
-      if (!(frame_tag & 0x01) && map.size >= 10) {      /* key frame */
-        GST_DEBUG_OBJECT (ivf, "key frame detected");
+      if (ivf->fourcc == GST_MAKE_FOURCC ('V', 'P', '8', '0')) {
+        guint32 frame_tag;
+        frame_tag = GST_READ_UINT24_LE (map.data);
+        if (!(frame_tag & 0x01) && map.size >= 10) {    /* key frame */
+          GST_DEBUG_OBJECT (ivf, "key frame detected");
 
-        width = GST_READ_UINT16_LE (map.data + 6) & 0x3fff;
-        height = GST_READ_UINT16_LE (map.data + 8) & 0x3fff;
-        gst_ivf_parse_set_size (ivf, width, height);
+          width = GST_READ_UINT16_LE (map.data + 6) & 0x3fff;
+          height = GST_READ_UINT16_LE (map.data + 8) & 0x3fff;
+          gst_ivf_parse_set_size (ivf, width, height);
+        }
+      } else {
+        /* Fixme: Add vp9 frame header parsing? */
       }
       gst_buffer_unmap (frame->out_buffer, &map);
     }
