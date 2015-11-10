@@ -245,8 +245,8 @@ gst_context_get_structure (const GstContext * context)
  * Get a writable version of the structure.
  *
  * Returns: The structure of the context. The structure is still
- * owned by the event, which means that you should not free it and
- * that the pointer becomes invalid when you free the event.
+ * owned by the context, which means that you should not free it and
+ * that the pointer becomes invalid when you free the context.
  * This function checks if @context is writable.
  *
  * Since: 1.2
