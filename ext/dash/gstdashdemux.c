@@ -1506,20 +1506,21 @@ gst_dash_demux_stream_get_fragment_waiting_time (GstAdaptiveDemuxStream *
 {
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
-  GstDateTime *seg_end_time;
+  GstDateTime *segmentAvailability;
   GstActiveStream *active_stream = dashstream->active_stream;
 
-  seg_end_time =
-      gst_mpd_client_get_next_segment_availability_end_time (dashdemux->client,
-      active_stream);
+  segmentAvailability =
+      gst_mpd_client_get_next_segment_availability_start_time
+      (dashdemux->client, active_stream);
 
-  if (seg_end_time) {
+  if (segmentAvailability) {
     gint64 diff;
     GstDateTime *cur_time;
 
     cur_time = gst_date_time_new_now_utc ();
-    diff = gst_mpd_client_calculate_time_difference (cur_time, seg_end_time);
-    gst_date_time_unref (seg_end_time);
+    diff = gst_mpd_client_calculate_time_difference (cur_time,
+        segmentAvailability);
+    gst_date_time_unref (segmentAvailability);
     gst_date_time_unref (cur_time);
     /* subtract the server's clock drift, so that if the server's
        time is behind our idea of UTC, we need to sleep for longer

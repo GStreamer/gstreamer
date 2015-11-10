@@ -579,7 +579,7 @@ GList * gst_mpd_client_get_adaptation_sets (GstMpdClient * client);
 gboolean gst_mpd_client_has_next_segment (GstMpdClient * client, GstActiveStream * stream, gboolean forward);
 GstFlowReturn gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream, gboolean forward);
 void gst_mpd_client_seek_to_first_segment (GstMpdClient * client);
-GstDateTime *gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client, GstActiveStream * stream);
+GstDateTime *gst_mpd_client_get_next_segment_availability_start_time (GstMpdClient * client, GstActiveStream * stream);
 
 /* Get audio/video stream parameters (caps, width, height, rate, number of channels) */
 GstCaps * gst_mpd_client_get_stream_caps (GstActiveStream * stream);

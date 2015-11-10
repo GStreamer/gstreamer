@@ -5794,7 +5794,7 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient * client,
 
 
 GstDateTime *
-gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client,
+gst_mpd_client_get_next_segment_availability_start_time (GstMpdClient * client,
     GstActiveStream * stream)
 {
   GstDateTime *availability_start_time, *rv;
