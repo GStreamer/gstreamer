@@ -64,6 +64,10 @@ gboolean                gst_net_time_packet_send        (const GstNetTimePacket 
                                                          GSocketAddress         * dest_address,
                                                          GError                ** error);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstNetTimePacket, gst_net_time_packet_free)
+#endif
+
 G_END_DECLS
 
 

@@ -811,6 +811,10 @@ void                    gst_element_lost_state          (GstElement * element);
 /* factory management */
 GstElementFactory*      gst_element_get_factory         (GstElement *element);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstElement, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_ELEMENT_H__ */

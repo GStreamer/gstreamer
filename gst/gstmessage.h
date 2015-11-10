@@ -593,6 +593,10 @@ GstMessage *    gst_message_new_device_removed    (GstObject * src, GstDevice * 
 void            gst_message_parse_device_removed  (GstMessage * message, GstDevice ** device);
 
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMessage, gst_message_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_MESSAGE_H__ */

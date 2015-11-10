@@ -144,6 +144,10 @@ const gchar * gst_device_provider_class_get_metadata       (GstDeviceProviderCla
 /* factory management */
 GstDeviceProviderFactory * gst_device_provider_get_factory (GstDeviceProvider * provider);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDeviceProvider, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_DEVICE_PROVIDER_H__ */

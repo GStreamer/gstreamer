@@ -135,6 +135,10 @@ GList *         gst_timed_value_control_source_get_all        (GstTimedValueCont
 gint            gst_timed_value_control_source_get_count      (GstTimedValueControlSource * self);
 void            gst_timed_value_control_invalidate_cache      (GstTimedValueControlSource * self);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTimedValueControlSource, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_TIMED_VALUE_CONTROL_SOURCE_H__ */

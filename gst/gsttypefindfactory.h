@@ -57,6 +57,10 @@ gboolean        gst_type_find_factory_has_function      (GstTypeFindFactory *fac
 void            gst_type_find_factory_call_function     (GstTypeFindFactory *factory,
                                                          GstTypeFind *find);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTypeFindFactory, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_TYPE_FIND_FACTORY_H__ */

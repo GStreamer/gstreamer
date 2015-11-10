@@ -563,6 +563,10 @@ void            gst_event_parse_toc_select      (GstEvent *event, gchar **uid);
 GstEvent*       gst_event_new_segment_done      (GstFormat format, gint64 position) G_GNUC_MALLOC;
 void            gst_event_parse_segment_done    (GstEvent *event, GstFormat *format, gint64 *position);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEvent, gst_event_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_EVENT_H__ */

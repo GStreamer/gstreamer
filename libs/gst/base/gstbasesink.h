@@ -254,6 +254,10 @@ GstClockReturn  gst_base_sink_wait_clock        (GstBaseSink *sink, GstClockTime
 GstFlowReturn   gst_base_sink_wait              (GstBaseSink *sink, GstClockTime time,
                                                  GstClockTimeDiff *jitter);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBaseSink, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_BASE_SINK_H__ */

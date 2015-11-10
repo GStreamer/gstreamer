@@ -358,6 +358,10 @@ void                    gst_plugin_add_dependency_simple (GstPlugin   * plugin,
 
 void gst_plugin_list_free (GList *list);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstPlugin, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_PLUGIN_H__ */

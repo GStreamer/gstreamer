@@ -102,6 +102,10 @@ gboolean        gst_device_has_classes        (GstDevice * device,
                                                const gchar * classes);
 
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDevice, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_DEVICE_H__ */

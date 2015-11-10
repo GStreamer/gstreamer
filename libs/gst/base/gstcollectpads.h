@@ -410,6 +410,10 @@ gboolean        gst_collect_pads_query_default (GstCollectPads * pads, GstCollec
                                                 GstQuery * query, gboolean discard);
 
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstCollectPads, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_COLLECT_PADS_H__ */

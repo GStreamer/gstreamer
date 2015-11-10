@@ -188,6 +188,10 @@ GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
 
 void                    gst_pad_template_pad_created            (GstPadTemplate * templ, GstPad * pad);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstPadTemplate, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_PAD_TEMPLATE_H__ */

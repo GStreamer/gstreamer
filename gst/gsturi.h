@@ -298,6 +298,10 @@ gst_uri_unref (GstUri * uri)
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (uri));
 }
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstUri, gst_uri_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_URI_H__ */

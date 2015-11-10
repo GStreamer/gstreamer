@@ -84,6 +84,10 @@ struct _GstPushSrcClass {
 
 GType gst_push_src_get_type(void);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstPushSrc, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_PUSH_SRC_H__ */

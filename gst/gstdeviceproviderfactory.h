@@ -85,6 +85,10 @@ gboolean      gst_device_provider_factory_has_classes (GstDeviceProviderFactory 
 GList *       gst_device_provider_factory_list_get_device_providers (
                                                        GstRank minrank) G_GNUC_MALLOC;
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDeviceProviderFactory, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_DEVICE_PROVIDER_FACTORY_H__ */

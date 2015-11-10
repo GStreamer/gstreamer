@@ -349,6 +349,14 @@ void            gst_base_parse_merge_tags       (GstBaseParse  * parse,
                                                  GstTagList    * tags,
                                                  GstTagMergeMode mode);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBaseParseFrame, gst_base_parse_frame_free)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBaseParse, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_BASE_PARSE_H__ */

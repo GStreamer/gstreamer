@@ -68,6 +68,10 @@ GstNetTimeProvider*     gst_net_time_provider_new       (GstClock *clock,
                                                          const gchar *address,
                                                          gint port);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstNetTimeProvider, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 

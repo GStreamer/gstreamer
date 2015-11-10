@@ -272,6 +272,10 @@ void            gst_base_src_get_allocator    (GstBaseSrc *src,
                                                GstAllocationParams *params);
 
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBaseSrc, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_BASE_SRC_H__ */

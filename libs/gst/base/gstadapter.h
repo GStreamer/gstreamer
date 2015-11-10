@@ -82,6 +82,10 @@ gssize                  gst_adapter_masked_scan_uint32  (GstAdapter * adapter, g
 gssize                  gst_adapter_masked_scan_uint32_peek  (GstAdapter * adapter, guint32 mask,
                                                          guint32 pattern, gsize offset, gsize size, guint32 * value);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAdapter, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_ADAPTER_H__ */

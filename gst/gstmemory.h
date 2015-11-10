@@ -362,6 +362,14 @@ GstMemory *    gst_memory_share        (GstMemory *mem, gssize offset, gssize si
 /* span memory */
 gboolean       gst_memory_is_span      (GstMemory *mem1, GstMemory *mem2, gsize *offset);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMemory, gst_memory_unref)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAllocator, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_MEMORY_H__ */

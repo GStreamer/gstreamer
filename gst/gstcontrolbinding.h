@@ -115,6 +115,10 @@ gboolean            gst_control_binding_get_g_value_array  (GstControlBinding *b
 
 void                gst_control_binding_set_disabled       (GstControlBinding * binding, gboolean disabled);
 gboolean            gst_control_binding_is_disabled        (GstControlBinding * binding);
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstControlBinding, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_CONTROL_BINDING_H__ */

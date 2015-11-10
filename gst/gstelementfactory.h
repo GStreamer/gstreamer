@@ -205,6 +205,10 @@ GList *       gst_element_factory_list_get_elements (GstElementFactoryListType t
 GList *       gst_element_factory_list_filter       (GList *list, const GstCaps *caps,
                                                      GstPadDirection direction,
                                                      gboolean subsetonly) G_GNUC_MALLOC;
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstElementFactory, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_ELEMENT_FACTORY_H__ */

@@ -479,6 +479,10 @@ gboolean        gst_query_parse_context_type       (GstQuery * query, const gcha
 void            gst_query_set_context              (GstQuery *query, GstContext *context);
 void            gst_query_parse_context            (GstQuery *query, GstContext **context);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstQuery, gst_query_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_QUERY_H__ */

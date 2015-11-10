@@ -614,6 +614,14 @@ const GstMetaInfo *gst_parent_buffer_meta_get_info (void);
 GstParentBufferMeta *gst_buffer_add_parent_buffer_meta (GstBuffer *buffer,
     GstBuffer *ref);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBuffer, gst_buffer_unref)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBufferPool, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_BUFFER_H__ */

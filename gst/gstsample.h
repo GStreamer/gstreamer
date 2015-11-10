@@ -137,6 +137,10 @@ gst_sample_copy (const GstSample * buf)
  */
 #define         gst_value_get_sample(v)         GST_SAMPLE_CAST (g_value_get_boxed(v))
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstSample, gst_sample_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_SAMPLE_H__ */

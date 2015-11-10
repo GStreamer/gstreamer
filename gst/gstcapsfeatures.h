@@ -79,6 +79,10 @@ void              gst_caps_features_add_id ( GstCapsFeatures * features, GQuark 
 void              gst_caps_features_remove (GstCapsFeatures * features, const gchar * feature);
 void              gst_caps_features_remove_id (GstCapsFeatures * features, GQuark feature);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstCapsFeatures, gst_caps_features_free)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_CAPS_FEATURES_H__ */

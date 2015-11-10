@@ -161,6 +161,10 @@ void           gst_data_queue_get_level      (GstDataQueue * queue, GstDataQueue
 
 void           gst_data_queue_limits_changed (GstDataQueue * queue);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDataQueue, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_DATA_QUEUE_H__ */

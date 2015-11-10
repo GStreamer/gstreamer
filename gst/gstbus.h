@@ -179,6 +179,10 @@ void                    gst_bus_remove_signal_watch     (GstBus * bus);
 void                    gst_bus_enable_sync_message_emission (GstBus * bus);
 void                    gst_bus_disable_sync_message_emission (GstBus * bus);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBus, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_BUS_H__ */

@@ -91,6 +91,14 @@ GType           gst_ntp_clock_get_type	        (void);
 GstClock*	gst_ntp_clock_new	        (const gchar *name, const gchar *remote_address,
                                                  gint remote_port, GstClockTime base_time);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstNetClientClock, gst_object_unref)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstNtpClock, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_NET_CLIENT_CLOCK_H__ */

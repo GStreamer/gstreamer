@@ -119,6 +119,10 @@ GstControlBinding * gst_direct_control_binding_new (GstObject * object, const gc
 GstControlBinding * gst_direct_control_binding_new_absolute (GstObject * object, const gchar * property_name, 
                                                     GstControlSource * cs);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDirectControlBinding, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_DIRECT_CONTROL_BINDING_H__ */

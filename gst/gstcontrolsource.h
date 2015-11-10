@@ -133,6 +133,14 @@ gboolean       gst_control_source_get_value             (GstControlSource *self,
 gboolean       gst_control_source_get_value_array       (GstControlSource *self, GstClockTime timestamp,
                                                          GstClockTime interval, guint n_values,
                                                          gdouble *values);
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstControlSource, gst_object_unref)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstValueArray, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_CONTROL_SOURCE_H__ */

@@ -113,6 +113,10 @@ GstElement      * gst_parse_launchv_full (const gchar     ** argv,
                                           GstParseFlags      flags,
                                           GError          ** error) G_GNUC_MALLOC;
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstParseContext, gst_parse_context_free)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_PARSE_H__ */

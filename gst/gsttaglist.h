@@ -1078,6 +1078,10 @@ gst_tag_list_copy (const GstTagList * taglist)
  */
 #define GST_TAG_PRIVATE_DATA                         "private-data"
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTagList, gst_tag_list_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_TAGLIST_H__ */

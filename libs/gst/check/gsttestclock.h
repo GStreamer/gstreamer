@@ -114,6 +114,10 @@ guint         gst_test_clock_process_id_list (GstTestClock * test_clock,
 
 GstClockTime  gst_test_clock_id_list_get_latest_time (const GList * pending_list);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTestClock, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_TEST_CLOCK_H__ */

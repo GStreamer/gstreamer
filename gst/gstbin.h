@@ -198,6 +198,10 @@ GstIterator*	gst_bin_iterate_all_by_interface (GstBin *bin, GType iface);
 gboolean        gst_bin_recalculate_latency      (GstBin * bin);
 
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBin, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 

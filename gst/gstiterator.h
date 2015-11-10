@@ -268,6 +268,10 @@ GstIteratorResult       gst_iterator_foreach            (GstIterator *it,
 gboolean                gst_iterator_find_custom        (GstIterator *it, GCompareFunc func,
                                                          GValue *elem, gpointer user_data);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstIterator, gst_iterator_free)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_ITERATOR_H__ */

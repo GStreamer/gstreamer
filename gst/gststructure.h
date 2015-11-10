@@ -336,6 +336,10 @@ gboolean              gst_structure_can_intersect (const GstStructure * struct1,
 GstStructure *        gst_structure_intersect     (const GstStructure * struct1,
                                                    const GstStructure * struct2) G_GNUC_MALLOC;
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstStructure, gst_structure_free)
+#endif
+
 G_END_DECLS
 
 #endif

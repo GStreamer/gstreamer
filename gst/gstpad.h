@@ -1433,6 +1433,10 @@ gboolean		gst_pad_query_default			(GstPad *pad, GstObject *parent,
 gboolean		gst_pad_forward                         (GstPad *pad, GstPadForwardFunction forward,
 								 gpointer user_data);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstPad, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_PAD_H__ */

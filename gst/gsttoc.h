@@ -184,6 +184,23 @@ GstTocEntry *      gst_toc_entry_get_parent              (GstTocEntry *entry);
 
 const gchar *      gst_toc_entry_type_get_nick     (GstTocEntryType type);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+static inline void
+_gst_autoptr_toc_unref (GstToc *toc)
+{
+  gst_toc_unref (toc);
+}
+
+static inline void
+_gst_autoptr_toc_entry_unref (GstTocEntry *entry)
+{
+  gst_toc_entry_unref (entry);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstToc, _gst_autoptr_toc_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTocEntry, _gst_autoptr_toc_entry_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_TOC_H__ */
