@@ -101,6 +101,10 @@ GstFlowReturn   gst_rtp_base_audio_payload_push                   (GstRTPBaseAud
 GstFlowReturn   gst_rtp_base_audio_payload_flush                  (GstRTPBaseAudioPayload * baseaudiopayload,
                                                                    guint payload_len, GstClockTime timestamp);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTPBaseAudioPayload, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTP_BASE_AUDIO_PAYLOAD_H__ */

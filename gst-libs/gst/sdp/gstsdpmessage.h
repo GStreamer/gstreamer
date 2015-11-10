@@ -502,6 +502,10 @@ GstSDPResult            gst_sdp_media_remove_attribute      (GstSDPMedia *media,
 GstSDPResult            gst_sdp_media_add_attribute         (GstSDPMedia *media, const gchar *key,
                                                              const gchar *value);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstSDPMessage, gst_sdp_message_free)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_SDP_MESSAGE_H__ */

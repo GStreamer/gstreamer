@@ -131,6 +131,10 @@ gboolean       gst_audio_info_convert     (const GstAudioInfo * info,
 gboolean       gst_audio_info_is_equal    (const GstAudioInfo *info,
                                            const GstAudioInfo *other);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAudioInfo, gst_audio_info_free)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_INFO_H__ */

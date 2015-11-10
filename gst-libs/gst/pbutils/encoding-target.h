@@ -138,6 +138,10 @@ GstEncodingTarget *     gst_encoding_target_load_from_file      (const gchar *fi
 GList *                 gst_encoding_list_available_categories  (void);
 GList *                 gst_encoding_list_all_targets           (const gchar * categoryname);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingTarget, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif  /* __GST_PROFILE_REGISTRY_H__ */

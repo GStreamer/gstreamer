@@ -363,6 +363,10 @@ gboolean       gst_video_info_is_equal    (const GstVideoInfo *info,
 void           gst_video_info_align       (GstVideoInfo * info, GstVideoAlignment * align);
 
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoInfo, gst_video_info_free)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_INFO_H__ */

@@ -75,6 +75,10 @@ GType             gst_video_buffer_pool_get_type      (void);
 
 GstBufferPool *   gst_video_buffer_pool_new           (void);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoBufferPool, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_POOL_H__ */

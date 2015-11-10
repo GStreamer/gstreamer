@@ -333,6 +333,10 @@ void            gst_audio_ring_buffer_advance         (GstAudioRingBuffer *buf, 
 
 void            gst_audio_ring_buffer_may_start       (GstAudioRingBuffer *buf, gboolean allowed);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAudioRingBuffer, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_RING_BUFFER_H__ */

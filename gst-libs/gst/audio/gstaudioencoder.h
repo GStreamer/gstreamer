@@ -334,6 +334,10 @@ void            gst_audio_encoder_get_allocator (GstAudioEncoder * enc,
 void            gst_audio_encoder_merge_tags (GstAudioEncoder * enc,
                                               const GstTagList * tags, GstTagMergeMode mode);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAudioEncoder, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_ENCODER_H__ */

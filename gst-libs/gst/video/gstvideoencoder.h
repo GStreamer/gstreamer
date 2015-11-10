@@ -344,6 +344,10 @@ void                 gst_video_encoder_get_allocator (GstVideoEncoder *encoder,
 
 void                 gst_video_encoder_set_min_pts(GstVideoEncoder *encoder, GstClockTime min_pts);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoEncoder, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif

@@ -189,6 +189,22 @@ void     gst_encoding_video_profile_set_variableframerate (GstEncodingVideoProfi
 
 GstEncodingProfile * gst_encoding_profile_from_discoverer (GstDiscovererInfo *info);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingAudioProfile, gst_object_unref)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingContainerProfile, gst_object_unref)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingProfile, gst_object_unref)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingVideoProfile, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_PROFILE_H__ */

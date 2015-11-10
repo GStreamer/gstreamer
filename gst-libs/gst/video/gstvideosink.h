@@ -125,6 +125,10 @@ GType gst_video_sink_get_type (void);
 void gst_video_sink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
                                  GstVideoRectangle *result, gboolean scaling);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoSink, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif  /* __GST_VIDEO_SINK_H__ */

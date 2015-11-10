@@ -123,6 +123,10 @@ void            gst_app_sink_set_callbacks    (GstAppSink * appsink,
                                                gpointer user_data,
                                                GDestroyNotify notify);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAppSink, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif

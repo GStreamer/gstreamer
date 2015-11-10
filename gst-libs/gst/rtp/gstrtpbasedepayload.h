@@ -120,6 +120,10 @@ GstFlowReturn   gst_rtp_base_depayload_push       (GstRTPBaseDepayload *filter, 
 GstFlowReturn   gst_rtp_base_depayload_push_list  (GstRTPBaseDepayload *filter, GstBufferList *out_list);
 
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTPBaseDepayload, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTP_BASE_DEPAYLOAD_H__ */

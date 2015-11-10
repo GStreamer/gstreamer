@@ -80,6 +80,10 @@ struct _GstTagMuxClass {
 
 GType gst_tag_mux_get_type (void);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTagMux, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif

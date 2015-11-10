@@ -82,6 +82,10 @@ GstMemory *     gst_fd_allocator_alloc  (GstAllocator * allocator, gint fd,
 gboolean        gst_is_fd_memory        (GstMemory *mem);
 gint            gst_fd_memory_get_fd    (GstMemory *mem);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstFdAllocator, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_FD_ALLOCATOR_H__ */

@@ -98,6 +98,10 @@ gchar**            gst_rtsp_url_decode_path_components
 GstRTSPResult      gst_rtsp_url_set_port        (GstRTSPUrl *url, guint16 port);
 GstRTSPResult      gst_rtsp_url_get_port        (const GstRTSPUrl *url, guint16 *port);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPUrl, gst_rtsp_url_free)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_URL_H__ */

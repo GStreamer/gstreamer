@@ -132,6 +132,10 @@ struct _GstTagDemuxClass
 
 GType     gst_tag_demux_get_type (void);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTagDemux, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_TAG_DEMUX_H__ */

@@ -98,6 +98,10 @@ struct _GstAudioSrcClass {
 
 GType gst_audio_src_get_type(void);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAudioSrc, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_SRC_H__ */

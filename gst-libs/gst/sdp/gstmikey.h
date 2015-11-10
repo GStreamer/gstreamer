@@ -675,6 +675,14 @@ gboolean                    gst_mikey_message_add_rand_len      (GstMIKEYMessage
 /* General Extension Payload */
 
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMIKEYMessage, gst_mikey_message_unref)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMIKEYPayload, gst_mikey_payload_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_MIKEY_H__ */

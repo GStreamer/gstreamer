@@ -165,6 +165,10 @@ GstFlowReturn   gst_rtp_base_payload_push               (GstRTPBasePayload *payl
 GstFlowReturn   gst_rtp_base_payload_push_list          (GstRTPBasePayload *payload,
                                                          GstBufferList *list);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTPBasePayload, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTP_BASE_PAYLOAD_H__ */

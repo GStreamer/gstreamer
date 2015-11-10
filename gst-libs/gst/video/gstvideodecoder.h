@@ -427,6 +427,10 @@ GstCaps *        gst_video_decoder_proxy_getcaps (GstVideoDecoder * decoder,
 void             gst_video_decoder_set_use_default_pad_acceptcaps (GstVideoDecoder * decoder,
                                                                    gboolean use);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoDecoder, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif

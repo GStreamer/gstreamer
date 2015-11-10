@@ -139,6 +139,10 @@ GType    gst_audio_cd_src_mode_get_type (void);
 gboolean gst_audio_cd_src_add_track (GstAudioCdSrc      * src,
                                      GstAudioCdSrcTrack * track);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAudioCdSrc, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_CD_SRC_H__ */

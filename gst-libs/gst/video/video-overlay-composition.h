@@ -295,6 +295,14 @@ GstVideoOverlayCompositionMeta * gst_buffer_add_video_overlay_composition_meta (
 #define gst_buffer_remove_video_overlay_composition_meta(b,m) \
   gst_buffer_remove_meta((b),((GstMeta *) m))
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoOverlayComposition, gst_video_overlay_composition_unref)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoOverlayRectangle, gst_video_overlay_rectangle_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_OVERLAY_COMPOSITION_H__ */
