@@ -78,6 +78,7 @@ static gboolean vorbis_dec_stop (GstAudioDecoder * dec);
 static GstFlowReturn vorbis_dec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 static void vorbis_dec_flush (GstAudioDecoder * dec, gboolean hard);
+static gboolean vorbis_dec_set_format (GstAudioDecoder * dec, GstCaps * caps);
 
 static void
 gst_vorbis_dec_class_init (GstVorbisDecClass * klass)
@@ -102,6 +103,7 @@ gst_vorbis_dec_class_init (GstVorbisDecClass * klass)
 
   base_class->start = GST_DEBUG_FUNCPTR (vorbis_dec_start);
   base_class->stop = GST_DEBUG_FUNCPTR (vorbis_dec_stop);
+  base_class->set_format = GST_DEBUG_FUNCPTR (vorbis_dec_set_format);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (vorbis_dec_handle_frame);
   base_class->flush = GST_DEBUG_FUNCPTR (vorbis_dec_flush);
 }
@@ -631,4 +633,31 @@ vorbis_dec_flush (GstAudioDecoder * dec, gboolean hard)
 
   vorbis_synthesis_restart (&vd->vd);
 #endif
+}
+
+static gboolean
+vorbis_dec_set_format (GstAudioDecoder * dec, GstCaps * caps)
+{
+  GstVorbisDec *vd = GST_VORBIS_DEC (dec);
+
+  GST_DEBUG_OBJECT (vd, "New caps %" GST_PTR_FORMAT " - resetting", caps);
+
+  /* A set_format call implies new data with new header packets */
+  if (!vd->initialized)
+    return TRUE;
+
+  vd->initialized = FALSE;
+#ifndef USE_TREMOLO
+  vorbis_block_clear (&vd->vb);
+#endif
+  vorbis_dsp_clear (&vd->vd);
+
+  /* We need to free and re-init these,
+   * or libvorbis chokes */
+  vorbis_comment_clear (&vd->vc);
+  vorbis_info_clear (&vd->vi);
+  vorbis_info_init (&vd->vi);
+  vorbis_comment_init (&vd->vc);
+
+  return TRUE;
 }
