@@ -456,7 +456,7 @@ elements_dash_demux_LDADD = \
 	-lgstapp-$(GST_API_VERSION) \
 	$(top_builddir)/gst-libs/gst/adaptivedemux/libgstadaptivedemux-@GST_API_VERSION@.la
 
-elements_dash_demux_SOURCES = elements/fake_http_src.c elements/fake_http_src.h elements/dash_demux.c
+elements_dash_demux_SOURCES = elements/test_http_src.c elements/test_http_src.h elements/adaptive_demux_engine.c elements/adaptive_demux_engine.h elements/adaptive_demux_common.c elements/adaptive_demux_common.h elements/dash_demux.c
 
 pipelines_streamheader_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 pipelines_streamheader_LDADD = $(GIO_LIBS) $(LDADD)
