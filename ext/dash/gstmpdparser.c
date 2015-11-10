@@ -5799,9 +5799,9 @@ gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client,
 {
   GstDateTime *availability_start_time, *rv;
   gint seg_idx;
-  GstClockTime seg_duration;
-  gint64 offset;
   GstStreamPeriod *stream_period;
+  GstMediaSegment *segment;
+  GstClockTime segmentEndTime;
 
   g_return_val_if_fail (client != NULL, NULL);
   g_return_val_if_fail (stream != NULL, NULL);
@@ -5809,17 +5809,40 @@ gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client,
   stream_period = gst_mpdparser_get_stream_period (client);
 
   seg_idx = stream->segment_index;
-  seg_duration = gst_mpd_client_get_segment_duration (client, stream, NULL);
-  if (seg_duration == 0)
-    return NULL;
+
+  if (stream->segments) {
+    segment = g_ptr_array_index (stream->segments, seg_idx);
+
+    if (segment->repeat >= 0) {
+      segmentEndTime = segment->start + (stream->segment_repeat_index + 1) *
+          segment->duration;
+    } else if (seg_idx < stream->segments->len - 1) {
+      const GstMediaSegment *next_segment =
+          g_ptr_array_index (stream->segments, seg_idx + 1);
+      segmentEndTime = next_segment->start;
+    } else {
+      const GstStreamPeriod *stream_period;
+      stream_period = gst_mpdparser_get_stream_period (client);
+      segmentEndTime = stream_period->start + stream_period->duration;
+    }
+  } else {
+    GstClockTime seg_duration;
+    seg_duration = gst_mpd_client_get_segment_duration (client, stream, NULL);
+    if (seg_duration == 0)
+      return NULL;
+    segmentEndTime = (1 + seg_idx) * seg_duration;
+  }
+
   availability_start_time = gst_mpd_client_get_availability_start_time (client);
-  if (availability_start_time == NULL)
-    return (GstDateTime *) NULL;
+  if (availability_start_time == NULL) {
+    GST_WARNING_OBJECT (client, "Failed to get availability_start_time");
+    return NULL;
+  }
 
   if (stream_period && stream_period->period) {
     GstDateTime *t =
         gst_mpd_client_add_time_difference (availability_start_time,
-        stream_period->start / 1000);
+        stream_period->start / GST_USECOND);
     gst_date_time_unref (availability_start_time);
     availability_start_time = t;
 
@@ -5829,10 +5852,14 @@ gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client,
     }
   }
 
-  offset = (1 + seg_idx) * seg_duration;
   rv = gst_mpd_client_add_time_difference (availability_start_time,
-      offset / GST_USECOND);
+      segmentEndTime / GST_USECOND);
   gst_date_time_unref (availability_start_time);
+  if (rv == NULL) {
+    GST_WARNING_OBJECT (client, "Failed to offset availability_start_time");
+    return NULL;
+  }
+
   return rv;
 }
 
