@@ -76,8 +76,7 @@ ensure_debug_category (void)
 
 typedef void (*AudioConvertFunc) (gpointer dst, const gpointer src, gint count);
 
-/**
- *                           int/int    int/float  float/int float/float
+/*                           int/int    int/float  float/int float/float
  *
  *  unpack                     S32          S32         F64       F64
  *  convert                               S32->F64
@@ -377,7 +376,8 @@ gst_audio_converter_free (GstAudioConverter * convert)
  * @flags: extra #GstAudioConverterFlags
  * @src: source samples
  * @dst: output samples
- * @samples: number of samples
+ * @in_samples: number of input samples
+ * @out_samples: number of output samples
  *
  * Perform the conversion @src to @dst using @convert.
  *
@@ -385,7 +385,8 @@ gst_audio_converter_free (GstAudioConverter * convert)
  */
 gboolean
 gst_audio_converter_samples (GstAudioConverter * convert,
-    GstAudioConverterFlags flags, gpointer src, gpointer dst, gint samples)
+    GstAudioConverterFlags flags, gpointer src, gpointer dst,
+    gsize in_samples, gsize * out_samples)
 {
   guint size;
   gpointer outbuf, tmpbuf, tmpbuf2;
@@ -393,18 +394,22 @@ gst_audio_converter_samples (GstAudioConverter * convert,
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (src != NULL, FALSE);
   g_return_val_if_fail (dst != NULL, FALSE);
-  g_return_val_if_fail (samples >= 0, FALSE);
+  g_return_val_if_fail (in_samples >= 0, FALSE);
+  g_return_val_if_fail (out_samples != NULL, FALSE);
 
-  if (samples == 0)
+  if (in_samples == 0) {
+    *out_samples = 0;
     return TRUE;
+  }
 
   if (convert->passthrough) {
-    memcpy (dst, src, samples * convert->in.bpf);
+    memcpy (dst, src, in_samples * convert->in.bpf);
+    *out_samples = in_samples;
     return TRUE;
   }
 
   size =
-      sizeof (gdouble) * samples * MAX (convert->in.channels,
+      sizeof (gdouble) * in_samples * MAX (convert->in.channels,
       convert->out.channels);
 
   if (size > convert->tmpbufsize) {
@@ -425,7 +430,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
 
     convert->in.finfo->unpack_func (convert->in.finfo,
         GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, outbuf, src,
-        samples * convert->in.channels);
+        in_samples * convert->in.channels);
     src = outbuf;
   }
 
@@ -439,7 +444,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     else
       outbuf = tmpbuf;
 
-    convert->convert_in (outbuf, src, samples * convert->in.channels);
+    convert->convert_in (outbuf, src, in_samples * convert->in.channels);
     src = outbuf;
   }
 
@@ -450,7 +455,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     else
       outbuf = tmpbuf;
 
-    gst_audio_channel_mix_samples (convert->mix, src, outbuf, samples);
+    gst_audio_channel_mix_samples (convert->mix, src, outbuf, in_samples);
     src = outbuf;
   }
   /* step 4, optional convert F64 -> S32 for quantize */
@@ -460,7 +465,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     else
       outbuf = tmpbuf;
 
-    convert->convert_out (outbuf, src, samples * convert->out.channels);
+    convert->convert_out (outbuf, src, in_samples * convert->out.channels);
     src = outbuf;
   }
 
@@ -471,15 +476,16 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     else
       outbuf = tmpbuf;
 
-    gst_audio_quantize_samples (convert->quant, outbuf, src, samples);
+    gst_audio_quantize_samples (convert->quant, outbuf, src, in_samples);
     src = outbuf;
   }
 
   /* step 6, pack */
   if (!convert->out_default) {
     convert->out.finfo->pack_func (convert->out.finfo, 0, src, dst,
-        samples * convert->out.channels);
+        in_samples * convert->out.channels);
   }
+  *out_samples = in_samples;
 
   return TRUE;
 }

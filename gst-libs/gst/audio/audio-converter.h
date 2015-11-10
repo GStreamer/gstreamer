@@ -57,6 +57,7 @@ typedef struct _GstAudioConverter GstAudioConverter;
 
 
 /**
+ * GstAudioConverterFlags:
  * @GST_AUDIO_CONVERTER_FLAG_NONE: no flag
  * @GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE: the source is writable and can be
  *    used as temporary storage during conversion.
@@ -81,6 +82,6 @@ const GstStructure * gst_audio_converter_get_config     (GstAudioConverter * con
 gboolean             gst_audio_converter_samples        (GstAudioConverter * convert,
                                                          GstAudioConverterFlags flags,
                                                          gpointer src, gpointer dst,
-                                                         gint samples);
+                                                         gsize in_samples, gsize *out_samples);
 
 #endif /* __GST_AUDIO_CONVERTER_H__ */
