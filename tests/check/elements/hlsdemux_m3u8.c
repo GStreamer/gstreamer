@@ -1333,6 +1333,26 @@ GST_START_TEST (test_simulation)
 GST_END_TEST;
 #endif
 
+GST_START_TEST (test_url_with_slash_query_param)
+{
+  static const gchar *MASTER_PLAYLIST = "#EXTM3U \n"
+      "#EXT-X-VERSION:4\n"
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1, BANDWIDTH=1251135, CODECS=\"avc1.42001f, mp4a.40.2\", RESOLUTION=640x352\n"
+      "1251/media.m3u8?acl=/*1054559_h264_1500k.mp4\n";
+  GstM3U8Client *client;
+  GstM3U8 *media;
+
+  client = load_playlist (MASTER_PLAYLIST);
+
+  assert_equals_int (g_list_length (client->main->lists), 1);
+  media = g_list_nth_data (client->main->lists, 0);
+  assert_equals_string (media->uri,
+      "http://localhost/1251/media.m3u8?acl=/*1054559_h264_1500k.mp4");
+  gst_m3u8_client_free (client);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_stream_inf_tag)
 {
   static const gchar *MASTER_PLAYLIST = "#EXTM3U \n"
@@ -1396,6 +1416,7 @@ hlsdemux_suite (void)
 #endif
   tcase_add_test (tc_m3u8, test_playlist_with_doubles_duration);
   tcase_add_test (tc_m3u8, test_playlist_with_encryption);
+  tcase_add_test (tc_m3u8, test_url_with_slash_query_param);
   tcase_add_test (tc_m3u8, test_stream_inf_tag);
   return s;
 }
