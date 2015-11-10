@@ -2618,6 +2618,7 @@ _class_init (gpointer g_class, gpointer data)
 #endif
 
     class_data->hacks = gst_omx_parse_hacks (hacks);
+    g_strfreev (hacks);
   }
 }
 
