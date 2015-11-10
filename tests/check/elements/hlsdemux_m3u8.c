@@ -381,7 +381,7 @@ do_test_load_main_playlist_variant (const gchar * playlist)
   assert_equals_int (stream->bandwidth, 65000);
   assert_equals_int (stream->program_id, 1);
   assert_equals_string (stream->uri, "http://example.com/audio-only.m3u8");
-  assert_equals_string (stream->codecs, "\"mp4a.40.5\"");
+  assert_equals_string (stream->codecs, "mp4a.40.5");
 
   /* Low */
   tmp = g_list_next (tmp);
@@ -1333,6 +1333,29 @@ GST_START_TEST (test_simulation)
 GST_END_TEST;
 #endif
 
+GST_START_TEST (test_stream_inf_tag)
+{
+  static const gchar *MASTER_PLAYLIST = "#EXTM3U \n"
+      "#EXT-X-VERSION:4\n"
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1, BANDWIDTH=1251135, CODECS=\"avc1.42001f, mp4a.40.2\", RESOLUTION=640x352\n"
+      "media.m3u8\n";
+  GstM3U8Client *client;
+  GstM3U8 *media;
+
+  client = load_playlist (MASTER_PLAYLIST);
+
+  assert_equals_int (g_list_length (client->main->lists), 1);
+  media = g_list_nth_data (client->main->lists, 0);
+  assert_equals_int64 (media->program_id, 1);
+  assert_equals_int64 (media->width, 640);
+  assert_equals_int64 (media->height, 352);
+  assert_equals_int64 (media->bandwidth, 1251135);
+  assert_equals_string (media->codecs, "avc1.42001f, mp4a.40.2");
+  gst_m3u8_client_free (client);
+}
+
+GST_END_TEST;
+
 static Suite *
 hlsdemux_suite (void)
 {
@@ -1373,7 +1396,7 @@ hlsdemux_suite (void)
 #endif
   tcase_add_test (tc_m3u8, test_playlist_with_doubles_duration);
   tcase_add_test (tc_m3u8, test_playlist_with_encryption);
-
+  tcase_add_test (tc_m3u8, test_stream_inf_tag);
   return s;
 }
 

@@ -200,7 +200,7 @@ double_from_string (gchar * ptr, gchar ** endptr, gdouble * val)
 static gboolean
 parse_attributes (gchar ** ptr, gchar ** a, gchar ** v)
 {
-  gchar *end = NULL, *p;
+  gchar *end = NULL, *p, *ve;
 
   g_return_val_if_fail (ptr != NULL, FALSE);
   g_return_val_if_fail (*ptr != NULL, FALSE);
@@ -233,8 +233,20 @@ parse_attributes (gchar ** ptr, gchar ** a, gchar ** v)
 
   *v = p = g_utf8_strchr (*ptr, -1, '=');
   if (*v) {
-    *v = g_utf8_next_char (*v);
     *p = '\0';
+    *v = g_utf8_next_char (*v);
+    if (**v == '"') {
+      ve = g_utf8_next_char (*v);
+      if (ve) {
+        ve = g_utf8_strchr (ve, -1, '"');
+      }
+      if (ve) {
+        *v = g_utf8_next_char (*v);
+        *ve = '\0';
+      } else {
+        GST_WARNING ("Cannot remove quotation marks from %s", *a);
+      }
+    }
   } else {
     GST_WARNING ("missing = after attribute");
     return FALSE;
@@ -242,28 +254,6 @@ parse_attributes (gchar ** ptr, gchar ** a, gchar ** v)
 
   *ptr = end;
   return TRUE;
-}
-
-static gchar *
-unquote_string (gchar * string)
-{
-  gchar *string_ret;
-
-  string_ret = strchr (string, '"');
-  if (string_ret != NULL) {
-    /* found initialization quotation mark of string */
-    string = string_ret + 1;
-    string_ret = strchr (string, '"');
-    if (string_ret != NULL) {
-      /* found finalizing quotation mark of string */
-      string_ret[0] = '\0';
-    } else {
-      GST_WARNING
-          ("wrong string unqouting - cannot find finalizing quotation mark");
-      return NULL;
-    }
-  }
-  return string;
 }
 
 static gint
@@ -476,24 +466,13 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
             }
           } else if (iframe && g_str_equal (a, "URI")) {
             gchar *name;
-            gchar *uri = g_strdup (v);
-            gchar *urip = uri;
+            gchar *uri;
 
-            uri = unquote_string (uri);
+            uri = uri_join (self->base_uri ? self->base_uri : self->uri, v);
             if (uri) {
-              uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
-              if (uri == NULL) {
-                g_free (urip);
-                continue;
-              }
               name = g_strdup (uri);
-
               gst_m3u8_set_uri (new_list, uri, NULL, name);
-            } else {
-              GST_WARNING
-                  ("Cannot remove quotation marks from i-frame-stream URI");
             }
-            g_free (urip);
           }
         }
 
@@ -536,18 +515,8 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
         current_key = NULL;
         while (data && parse_attributes (&data, &a, &v)) {
           if (g_str_equal (a, "URI")) {
-            gchar *key = g_strdup (v);
-            gchar *keyp = key;
-
-            key = unquote_string (key);
-            if (key) {
-              current_key =
-                  uri_join (self->base_uri ? self->base_uri : self->uri, key);
-            } else {
-              GST_WARNING
-                  ("Cannot remove quotation marks from decryption key URI");
-            }
-            g_free (keyp);
+            current_key =
+                uri_join (self->base_uri ? self->base_uri : self->uri, v);
           } else if (g_str_equal (a, "IV")) {
             gchar *ivp = v;
             gint i;
