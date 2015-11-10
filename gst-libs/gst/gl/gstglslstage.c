@@ -29,29 +29,6 @@
 
 static const gchar *es2_version_header = "#version 100\n";
 
-/* *INDENT-OFF* */
-static const gchar *simple_vertex_shader_str_gles2 =
-      "attribute vec4 a_position;\n"
-      "attribute vec2 a_texcoord;\n"
-      "varying vec2 v_texcoord;\n"
-      "void main()\n"
-      "{\n"
-      "   gl_Position = a_position;\n"
-      "   v_texcoord = a_texcoord;\n"
-      "}\n";
-
-static const gchar *simple_fragment_shader_str_gles2 =
-      "#ifdef GL_ES\n"
-      "precision mediump float;\n"
-      "#endif\n"
-      "varying vec2 v_texcoord;\n"
-      "uniform sampler2D tex;\n"
-      "void main()\n"
-      "{\n"
-      "  gl_FragColor = texture2D(tex, v_texcoord);\n"
-      "}";
-/* *INDENT-ON* */
-
 GST_DEBUG_CATEGORY_STATIC (gst_glsl_stage_debug);
 #define GST_CAT_DEFAULT gst_glsl_stage_debug
 
@@ -279,7 +256,7 @@ gst_glsl_stage_new_default_vertex (GstGLContext * context)
   return gst_glsl_stage_new_with_string (context, GL_VERTEX_SHADER,
       GST_GLSL_VERSION_NONE,
       GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-      simple_vertex_shader_str_gles2);
+      gst_gl_shader_string_vertex_default);
 }
 
 /**
@@ -294,7 +271,7 @@ gst_glsl_stage_new_default_fragment (GstGLContext * context)
   return gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
       GST_GLSL_VERSION_NONE,
       GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-      simple_fragment_shader_str_gles2);
+      gst_gl_shader_string_fragment_default);
 }
 
 /**
