@@ -61,6 +61,9 @@ struct _GstGLViewConvert
   GstVideoInfo in_info;
   GstVideoInfo out_info;
 
+  GstGLTextureTarget from_texture_target;
+  GstGLTextureTarget to_texture_target;
+
   gboolean initted;
   gboolean reconfigure;
 
