@@ -42,11 +42,14 @@ static GstCaps *gst_gtk_gl_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
 
 static GstStaticPadTemplate gst_gtk_gl_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "RGBA")));
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "RGBA") "; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY ", "
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, "RGBA")));
 
 #define gst_gtk_gl_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGtkGLSink, gst_gtk_gl_sink,
