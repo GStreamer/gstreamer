@@ -1729,6 +1729,20 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream, GstTSDemux * tsdemux,
   stream->gap_ref_buffers = 0;
   stream->gap_ref_pts = GST_CLOCK_TIME_NONE;
   stream->continuity_counter = CONTINUITY_UNSET;
+
+  if (G_UNLIKELY (stream->pending)) {
+    GList *tmp;
+
+    GST_DEBUG ("clearing pending %p", stream);
+    for (tmp = stream->pending; tmp; tmp = tmp->next) {
+      PendingBuffer *pend = (PendingBuffer *) tmp->data;
+      gst_buffer_unref (pend->buffer);
+      g_slice_free (PendingBuffer, pend);
+    }
+    g_list_free (stream->pending);
+    stream->pending = NULL;
+  }
+
   if (hard) {
     stream->first_pts = GST_CLOCK_TIME_NONE;
     stream->need_newsegment = TRUE;
