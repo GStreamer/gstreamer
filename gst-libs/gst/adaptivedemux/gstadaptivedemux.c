@@ -2200,11 +2200,15 @@ gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
           "Could not link pads %s:%s to %s:%s for reason %d",
           GST_DEBUG_PAD_NAME (uri_handler_src), GST_DEBUG_PAD_NAME (queue_sink),
           pad_link_ret);
+      g_object_unref (queue_sink);
+      g_object_unref (uri_handler_src);
       gst_object_unref (stream->src);
       stream->src = NULL;
       return FALSE;
     }
 
+    g_object_unref (queue_sink);
+    g_object_unref (uri_handler_src);
     queue_src = gst_element_get_static_pad (queue, "src");
     stream->src_srcpad = gst_ghost_pad_new ("src", queue_src);
     g_object_unref (queue_src);
