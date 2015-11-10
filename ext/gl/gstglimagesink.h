@@ -64,6 +64,7 @@ struct _GstGLImageSink
 
     /* Input info before 3d stereo output conversion, if any */
     GstVideoInfo in_info;
+    GstCaps *in_caps;
 
     /* format/caps we actually hand off to the app */
     GstVideoInfo out_info;

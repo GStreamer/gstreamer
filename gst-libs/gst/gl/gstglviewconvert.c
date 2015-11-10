@@ -351,8 +351,8 @@ gst_gl_view_convert_set_context (GstGLViewConvert * viewconvert,
     gst_gl_view_convert_reset (viewconvert);
 }
 
-gboolean
-gst_gl_view_convert_set_format (GstGLViewConvert * viewconvert,
+static gboolean
+_view_convert_set_format (GstGLViewConvert * viewconvert,
     GstVideoInfo * in_info, GstVideoInfo * out_info)
 {
   g_return_val_if_fail (GST_IS_GL_VIEW_CONVERT (viewconvert), FALSE);
@@ -422,7 +422,7 @@ gst_gl_view_convert_set_caps (GstGLViewConvert * viewconvert,
   if (!gst_video_info_from_caps (&out_info, out_caps))
     return FALSE;
 
-  return gst_gl_view_convert_set_format (viewconvert, &in_info, &out_info);
+  return _view_convert_set_format (viewconvert, &in_info, &out_info);
 }
 
 /* Function that can halve the value
@@ -1586,7 +1586,6 @@ _init_view_convert (GstGLViewConvert * viewconvert)
     gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   }
 
-  gl->BindTexture (GL_TEXTURE_2D, 0);
   viewconvert->initted = TRUE;
   return TRUE;
 error:
