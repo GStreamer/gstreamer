@@ -1323,6 +1323,7 @@ prepare_next_buffer (GstGLImageSink * glimage_sink)
         goto fail;
     }
     gst_object_unref (convert_views);
+    convert_views = NULL;
 
     if (next_buffer == NULL) {
       /* Not ready to paint a buffer yet */
@@ -1385,6 +1386,8 @@ prepare_next_buffer (GstGLImageSink * glimage_sink)
   return TRUE;
 
 fail:
+  if (convert_views)
+    gst_object_unref (convert_views);
   GST_GLIMAGE_SINK_LOCK (glimage_sink);
   return FALSE;
 }
@@ -1774,7 +1777,8 @@ gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
     gl_sink->vbo_indices = 0;
   }
 
-  gst_gl_overlay_compositor_free_overlays (gl_sink->overlay_compositor);
+  if (gl_sink->overlay_compositor)
+    gst_gl_overlay_compositor_free_overlays (gl_sink->overlay_compositor);
 }
 
 /* Called with object lock held */
