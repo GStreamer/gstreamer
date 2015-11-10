@@ -790,13 +790,14 @@ gst_gl_color_convert_fixate_caps (GstGLContext * convert,
   GValue item = G_VALUE_INIT;
   const GValue *targets, *other_targets;
   guint targets_mask = 0, other_targets_mask = 0, result_mask;
-  GstStructure *s;
+  GstStructure *s, *s_other;
 
   other = gst_caps_make_writable (other);
-  s = gst_caps_get_structure (other, 0);
+  s = gst_caps_get_structure (caps, 0);
+  s_other = gst_caps_get_structure (other, 0);
 
-  other_targets = gst_structure_get_value (s, "texture-target");
   targets = gst_structure_get_value (s, "texture-target");
+  other_targets = gst_structure_get_value (s_other, "texture-target");
 
   targets_mask = _get_target_bitmask_from_g_value (targets);
   other_targets_mask = _get_target_bitmask_from_g_value (other_targets);
@@ -827,7 +828,7 @@ gst_gl_color_convert_fixate_caps (GstGLContext * convert,
     g_value_set_static_string (&item, GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR);
   }
 
-  gst_structure_set_value (s, "texture-target", &item);
+  gst_structure_set_value (s_other, "texture-target", &item);
 
   g_value_unset (&item);
 
