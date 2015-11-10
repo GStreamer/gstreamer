@@ -477,7 +477,7 @@ gst_gl_context_supports_glsl_profile_version (GstGLContext * context,
     gl_api = gst_gl_context_get_gl_api (context);
     gst_gl_context_get_gl_version (context, &maj, &min);
     glsl_version = gst_gl_version_to_glsl_version (gl_api, maj, min);
-    if (glsl_version > version)
+    if (version > glsl_version)
       return FALSE;
 
     if (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 1, 0))
