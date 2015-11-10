@@ -51,6 +51,8 @@
 
 #include <math.h>
 
+#define _gst_log2(x) (log(x)/log(2))
+
 /*
  * tsdemux
  *
@@ -1297,7 +1299,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                       (&br, gst_byte_reader_get_remaining
                           (&br)), gst_byte_reader_get_remaining (&br));
 
-                  stream_count_minus_one_len = ceil (log2 (channels));
+                  stream_count_minus_one_len = ceil (_gst_log2 (channels));
                   if (!gst_bit_reader_get_bits_uint8 (&breader,
                           &stream_count_minus_one,
                           stream_count_minus_one_len)) {
@@ -1309,7 +1311,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
 
                   stream_count = stream_count_minus_one + 1;
                   coupled_stream_count_len =
-                      ceil (log2 (stream_count_minus_one + 2));
+                      ceil (_gst_log2 (stream_count_minus_one + 2));
 
                   if (!gst_bit_reader_get_bits_uint8 (&breader,
                           &coupled_stream_count, coupled_stream_count_len)) {
@@ -1322,7 +1324,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                   coupled_count = coupled_stream_count;
 
                   channel_mapping_len =
-                      ceil (log2 (stream_count_minus_one + 1 +
+                      ceil (_gst_log2 (stream_count_minus_one + 1 +
                           coupled_stream_count + 1));
                   channel_mapping = g_new0 (guint8, channels);
                   for (i = 0; i < channels; i++) {
