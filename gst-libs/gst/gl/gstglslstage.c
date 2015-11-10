@@ -295,8 +295,13 @@ gst_glsl_stage_set_strings (GstGLSLStage * stage, GstGLSLVersion version,
   g_return_val_if_fail (str != NULL, FALSE);
 
   if (!gst_gl_context_supports_glsl_profile_version (stage->context, version,
-          profile))
+          profile)) {
+    const gchar *version_str = gst_glsl_version_to_string (version);
+    const gchar *profile_str = gst_glsl_profile_to_string (profile);
+    GST_ERROR_OBJECT (stage, "GL context does not support version %s and "
+        "profile %s", version_str, profile_str);
     return FALSE;
+  }
 
   stage->priv->version = version;
   stage->priv->profile = profile;
