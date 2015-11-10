@@ -31,6 +31,7 @@
 #endif
 
 #include "gstglviewconvert.h"
+#include <gst/video/gstvideoaffinetransformationmeta.h>
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
 #define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))
@@ -43,7 +44,8 @@ GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY "), "
     "format = (string) RGBA, "
     "width = " GST_VIDEO_SIZE_RANGE ", "
     "height = " GST_VIDEO_SIZE_RANGE ", "
-    "framerate = " GST_VIDEO_FPS_RANGE ", " "texture-target = (string) 2D ");
+    "framerate = " GST_VIDEO_FPS_RANGE ", "
+    "texture-target = (string) { 2D, rectangle, external-oes } ");
 
 #define GST_CAT_DEFAULT gst_gl_view_convert_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -143,6 +145,13 @@ static GLfloat downmix_matrices[][2][9] = {
       }
 };
 
+static gfloat identity_matrix[] = {
+  1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 1.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 1.0f, 0.0f,
+  0.0f, 0.0f, 0.0f, 1.0f,
+};
+
 /* *INDENT-OFF* */
 static const gchar *fragment_source =
   "#ifdef GL_ES\n"
@@ -227,16 +236,6 @@ static const gchar *frag_output_checkerboard =
 static const gchar *frag_output_separated =
   "gl_FragData[0] = l;\n"
   "gl_FragData[1] = r;\n";
-
-static const gchar text_vertex_shader[] =
-  "attribute vec4 a_position;   \n"
-  "attribute vec2 a_texcoord;   \n"
-  "varying vec2 v_texcoord;     \n"
-  "void main()                  \n"
-  "{                            \n"
-  "   gl_Position = a_position; \n"
-  "   v_texcoord = a_texcoord;  \n"
-  "}                            \n";
 /* *INDENT-ON* */
 
 static const GLfloat vertices[] = {
@@ -1006,12 +1005,11 @@ _intersect_with_mview_modes (GstCaps * caps, const GValue * modes)
   return result;
 }
 
-
 GstCaps *
 gst_gl_view_convert_transform_caps (GstGLViewConvert * viewconvert,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  gint i;
+  gint i, n;
   GstCaps *base_caps = gst_static_caps_get (&caps_template);
   GstCaps *out_caps, *tmp_caps;
 
@@ -1086,8 +1084,102 @@ gst_gl_view_convert_transform_caps (GstGLViewConvert * viewconvert,
 out:
   gst_caps_unref (caps);
 
+  n = gst_caps_get_size (out_caps);
+  for (i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure (out_caps, i);
+
+    gst_structure_remove_fields (s, "texture-target", NULL);
+  }
+
   GST_DEBUG_OBJECT (viewconvert, "Returning caps %" GST_PTR_FORMAT, out_caps);
   return out_caps;
+}
+
+static guint
+_get_target_bitmask_from_g_value (const GValue * targets)
+{
+  guint new_targets = 0;
+
+  if (targets == NULL) {
+    new_targets = 1 << GST_GL_TEXTURE_TARGET_2D;
+  } else if (G_TYPE_CHECK_VALUE_TYPE (targets, G_TYPE_STRING)) {
+    GstGLTextureTarget target;
+    const gchar *str;
+
+    str = g_value_get_string (targets);
+    target = gst_gl_texture_target_from_string (str);
+
+    if (target)
+      new_targets |= 1 << target;
+  } else if (G_TYPE_CHECK_VALUE_TYPE (targets, GST_TYPE_LIST)) {
+    gint j, m;
+
+    m = gst_value_list_get_size (targets);
+    for (j = 0; j < m; j++) {
+      const GValue *val = gst_value_list_get_value (targets, j);
+      GstGLTextureTarget target;
+      const gchar *str;
+
+      str = g_value_get_string (val);
+      target = gst_gl_texture_target_from_string (str);
+      if (target)
+        new_targets |= 1 << target;
+    }
+  }
+
+  return new_targets;
+}
+
+static GstCaps *
+_fixate_texture_target (GstGLViewConvert * viewconvert,
+    GstPadDirection direction, GstCaps * caps, GstCaps * other)
+{
+  GValue item = G_VALUE_INIT;
+  const GValue *targets, *other_targets;
+  guint targets_mask = 0, other_targets_mask = 0, result_mask;
+  GstStructure *s, *s_other;
+
+  other = gst_caps_make_writable (other);
+  s = gst_caps_get_structure (caps, 0);
+  s_other = gst_caps_get_structure (other, 0);
+
+  other_targets = gst_structure_get_value (s_other, "texture-target");
+  targets = gst_structure_get_value (s, "texture-target");
+
+  targets_mask = _get_target_bitmask_from_g_value (targets);
+  other_targets_mask = _get_target_bitmask_from_g_value (other_targets);
+
+  result_mask = targets_mask & other_targets_mask;
+  if (result_mask == 0) {
+    /* nothing we can do here */
+    return gst_caps_fixate (other);
+  }
+
+  if (direction == GST_PAD_SINK) {
+    result_mask &=
+        (1 << GST_GL_TEXTURE_TARGET_2D | 1 << GST_GL_TEXTURE_TARGET_RECTANGLE);
+  } else {
+    /* if the src caps has 2D support we can 'convert' to anything */
+    if (targets_mask & (1 << GST_GL_TEXTURE_TARGET_2D))
+      result_mask = -1;
+    else
+      result_mask = other_targets_mask;
+  }
+
+  g_value_init (&item, G_TYPE_STRING);
+  if (result_mask & (1 << GST_GL_TEXTURE_TARGET_2D)) {
+    g_value_set_static_string (&item, GST_GL_TEXTURE_TARGET_2D_STR);
+  } else if (result_mask & (1 << GST_GL_TEXTURE_TARGET_RECTANGLE)) {
+    g_value_set_static_string (&item, GST_GL_TEXTURE_TARGET_RECTANGLE_STR);
+  } else if (result_mask & (1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES)) {
+    g_value_set_static_string (&item, GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR);
+  }
+
+  gst_structure_set_value (s, "texture-target", &item);
+
+  g_value_unset (&item);
+
+  return gst_caps_fixate (other);
 }
 
 GstCaps *
@@ -1160,6 +1252,10 @@ gst_gl_view_convert_fixate_caps (GstGLViewConvert * viewconvert,
       othercaps = tmp;
     }
   }
+
+  tmp = _fixate_texture_target (viewconvert, direction, caps, othercaps);
+  gst_caps_unref (othercaps);
+  othercaps = tmp;
 
 done:
   GST_DEBUG_OBJECT (viewconvert, "dir %s fixated to %" GST_PTR_FORMAT
@@ -1258,6 +1354,7 @@ _init_view_convert_fbo (GstGLViewConvert * viewconvert)
   guint out_width, out_height;
   GLuint fake_texture = 0;      /* a FBO must hava texture to init */
   GLenum internal_format;
+  gboolean ret = TRUE;
 
   gl = viewconvert->context->gl_vtable;
   out_width = GST_VIDEO_INFO_WIDTH (&viewconvert->out_info);
@@ -1313,14 +1410,111 @@ _init_view_convert_fbo (GstGLViewConvert * viewconvert)
   if (!gst_gl_context_check_framebuffer_status (viewconvert->context)) {
     gst_gl_context_set_error (viewconvert->context,
         "GL framebuffer status incomplete");
-    gl->DeleteTextures (1, &fake_texture);
-    return FALSE;
+    ret = FALSE;
   }
 
   /* unbind the FBO */
+  gl->BindTexture (GL_TEXTURE_2D, 0);
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
   gl->DeleteTextures (1, &fake_texture);
-  return TRUE;
+  return ret;
+}
+
+static gchar *
+_mangle_texture_access (const gchar * str, GstGLTextureTarget from,
+    GstGLTextureTarget to)
+{
+  const gchar *from_str = NULL, *to_str = NULL;
+  gchar *ret, *tmp;
+  gchar *regex_find;
+  GRegex *regex;
+
+  if (from == GST_GL_TEXTURE_TARGET_2D)
+    from_str = "texture2D";
+  if (from == GST_GL_TEXTURE_TARGET_RECTANGLE)
+    from_str = "texture2DRect";
+  if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+    from_str = "texture2D";
+
+  if (to == GST_GL_TEXTURE_TARGET_2D)
+    to_str = "texture2D";
+  if (to == GST_GL_TEXTURE_TARGET_RECTANGLE)
+    to_str = "texture2DRect";
+  if (to == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+    to_str = "texture2D";
+
+  /* followed by any amount of whitespace then a bracket */
+  regex_find = g_strdup_printf ("%s(?=\\s*\\()", from_str);
+  regex = g_regex_new (regex_find, 0, 0, NULL);
+  tmp = g_regex_replace_literal (regex, str, -1, 0, to_str, 0, NULL);
+  g_free (regex_find);
+  g_regex_unref (regex);
+
+  if (tmp) {
+    ret = tmp;
+  } else {
+    GST_FIXME ("Couldn't mangle texture access successfully from %s to %s",
+        from_str, to_str);
+    ret = g_strdup (str);
+  }
+
+  return ret;
+}
+
+static gchar *
+_mangle_sampler_type (const gchar * str, GstGLTextureTarget from,
+    GstGLTextureTarget to)
+{
+  const gchar *from_str = NULL, *to_str = NULL;
+  gchar *ret, *tmp;
+  gchar *regex_find;
+  GRegex *regex;
+
+  if (from == GST_GL_TEXTURE_TARGET_2D)
+    from_str = "sampler2D";
+  if (from == GST_GL_TEXTURE_TARGET_RECTANGLE)
+    from_str = "sampler2DRect";
+  if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+    from_str = "samplerExternalOES";
+
+  if (to == GST_GL_TEXTURE_TARGET_2D)
+    to_str = "sampler2D";
+  if (to == GST_GL_TEXTURE_TARGET_RECTANGLE)
+    to_str = "sampler2DRect";
+  if (to == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+    to_str = "samplerExternalOES";
+
+  /* followed by some whitespace  */
+  regex_find = g_strdup_printf ("%s(?=\\s)", from_str);
+  regex = g_regex_new (regex_find, 0, 0, NULL);
+  tmp = g_regex_replace_literal (regex, str, -1, 0, to_str, 0, NULL);
+  g_free (regex_find);
+  g_regex_unref (regex);
+
+  if (tmp) {
+    ret = tmp;
+  } else {
+    GST_FIXME ("Couldn't mangle sampler type successfully from %s to %s",
+        from_str, to_str);
+    ret = g_strdup (str);
+  }
+
+  return ret;
+}
+
+static gchar *
+_mangle_extensions (const gchar * str, GstGLTextureTarget from)
+{
+  gchar *ext_str = NULL;
+
+  if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+    ext_str = "#extension GL_OES_EGL_image_external : require\n";
+
+  if (ext_str) {
+    return g_strdup_printf ("%s%s", ext_str, str);
+  } else {
+    return g_strdup (str);
+  }
 }
 
 /* free after use */
@@ -1330,6 +1524,8 @@ _get_shader_string (GstGLViewConvert * viewconvert,
 {
   const gchar *input_str, *output_str;
   gboolean mono_input = FALSE;
+  gchar *tmp, *tmp2;
+
   switch (in_mode) {
     case GST_VIDEO_MULTIVIEW_MODE_NONE:
     case GST_VIDEO_MULTIVIEW_MODE_MONO:
@@ -1380,7 +1576,17 @@ _get_shader_string (GstGLViewConvert * viewconvert,
       break;
   }
 
-  return g_strdup_printf (fragment_source, input_str, output_str);
+  tmp = g_strdup_printf (fragment_source, input_str, output_str);
+  tmp2 = _mangle_sampler_type (tmp, GST_GL_TEXTURE_TARGET_2D,
+      viewconvert->from_texture_target);
+  g_free (tmp);
+  tmp = _mangle_texture_access (tmp2, GST_GL_TEXTURE_TARGET_2D,
+      viewconvert->from_texture_target);
+  g_free (tmp2);
+  tmp2 = _mangle_extensions (tmp, viewconvert->from_texture_target);
+  g_free (tmp);
+
+  return tmp2;
 }
 
 static void
@@ -1531,8 +1737,9 @@ _init_view_convert (GstGLViewConvert * viewconvert)
       offsets[0][0], offsets[0][1], offsets[1][0], offsets[1][1]);
   fragment_source_str = _get_shader_string (viewconvert, in_mode, out_mode);
 // g_print ("%s\n", fragment_source_str);
-  res = gst_gl_context_gen_shader (viewconvert->context, text_vertex_shader,
-      fragment_source_str, &viewconvert->shader);
+  res = gst_gl_context_gen_shader (viewconvert->context,
+      gst_gl_shader_string_vertex_mat4_texture_transform, fragment_source_str,
+      &viewconvert->shader);
   g_free (fragment_source_str);
   if (!res)
     goto error;
@@ -1550,6 +1757,8 @@ _init_view_convert (GstGLViewConvert * viewconvert)
       GST_VIDEO_INFO_HEIGHT (&viewconvert->out_info));
   gst_gl_shader_set_uniform_matrix_3fv (viewconvert->shader, "downmix",
       2, FALSE, &downmix_matrices[viewconvert->downmix_mode][0][0]);
+  gst_gl_shader_set_uniform_matrix_4fv (viewconvert->shader, "u_transformation",
+      1, FALSE, identity_matrix);
   if (in_mode == GST_VIDEO_MULTIVIEW_MODE_SEPARATED ||
       in_mode == GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME) {
     gst_gl_shader_set_uniform_1i (viewconvert->shader, "tex_l", l_index);
@@ -1607,6 +1816,9 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
   };
   GstVideoMultiviewMode in_mode = priv->input_mode;
   GstVideoMultiviewMode out_mode = priv->output_mode;
+  guint from_gl_target =
+      gst_gl_texture_target_to_gl (viewconvert->from_texture_target);
+  GstVideoAffineTransformationMeta *af_meta;
 
   gl = context->gl_vtable;
   out_width = GST_VIDEO_INFO_WIDTH (&viewconvert->out_info);
@@ -1618,12 +1830,22 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
   } else {
     out_views = 1;
   }
+
+  /* FIXME: the auxillary buffer could have a different transform matrix */
+  af_meta = gst_buffer_get_video_affine_transformation_meta (priv->primary_in);
+  if (af_meta)
+    gst_gl_shader_set_uniform_matrix_4fv (viewconvert->shader,
+        "u_transformation", 1, FALSE, af_meta->matrix);
+
   /* attach the texture to the FBO to renderer to */
   for (i = 0; i < out_views; i++) {
+    guint gl_target =
+        gst_gl_texture_target_to_gl (viewconvert->to_texture_target);
+
     /* needed? */
-    gl->BindTexture (GL_TEXTURE_2D, priv->out_tex[i]->tex_id);
+    gl->BindTexture (gl_target, priv->out_tex[i]->tex_id);
     gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
-        GL_TEXTURE_2D, priv->out_tex[i]->tex_id, 0);
+        gl_target, priv->out_tex[i]->tex_id, 0);
   }
 
   if (gl->DrawBuffers)
@@ -1645,11 +1867,11 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
       return FALSE;
     }
     gl->ActiveTexture (GL_TEXTURE1);
-    gl->BindTexture (GL_TEXTURE_2D, priv->in_tex[1]->tex_id);
+    gl->BindTexture (from_gl_target, priv->in_tex[1]->tex_id);
   }
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, priv->in_tex[0]->tex_id);
+  gl->BindTexture (from_gl_target, priv->in_tex[0]->tex_id);
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);
   if (gl->BindVertexArray)
     gl->BindVertexArray (0);
@@ -1671,7 +1893,7 @@ _gen_buffer (GstGLViewConvert * viewconvert, GstBuffer ** target)
 {
   *target = gst_buffer_new ();
   if (!gst_gl_memory_setup_buffer (viewconvert->context,
-          GST_GL_TEXTURE_TARGET_2D, NULL, &viewconvert->out_info, NULL,
+          viewconvert->to_texture_target, NULL, &viewconvert->out_info, NULL,
           *target)) {
     return FALSE;
   }
@@ -1796,7 +2018,7 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
       if (!priv->out_tex[j])
         priv->out_tex[j] =
             (GstGLMemory *) gst_gl_memory_alloc (context,
-            GST_GL_TEXTURE_TARGET_2D, NULL, &temp_info, 0, NULL);
+            viewconvert->to_texture_target, NULL, &temp_info, 0, NULL);
     } else {
       priv->out_tex[j] = out_tex;
     }
@@ -1848,9 +2070,9 @@ out:
         continue;
       }
       gst_gl_memory_copy_into_texture (priv->out_tex[j],
-          out_tex->tex_id, GST_GL_TEXTURE_TARGET_2D, out_tex->tex_type, width,
-          height, GST_VIDEO_INFO_PLANE_STRIDE (&out_tex->info, out_tex->plane),
-          FALSE);
+          out_tex->tex_id, viewconvert->to_texture_target, out_tex->tex_type,
+          width, height,
+          GST_VIDEO_INFO_PLANE_STRIDE (&out_tex->info, out_tex->plane), FALSE);
       gst_memory_unmap ((GstMemory *) out_tex, &to_info);
     }
 
