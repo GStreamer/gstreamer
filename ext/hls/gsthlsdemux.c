@@ -688,6 +688,7 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
   stream->fragment.uri = next_fragment_uri;
   stream->fragment.range_start = range_start;
   stream->fragment.range_end = range_end;
+  stream->fragment.duration = duration;
   if (discont)
     stream->discont = discont;
 
