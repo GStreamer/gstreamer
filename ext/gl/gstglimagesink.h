@@ -69,6 +69,7 @@ struct _GstGLImageSink
     /* format/caps we actually hand off to the app */
     GstVideoInfo out_info;
     GstCaps *out_caps;
+    GstGLTextureTarget texture_target;
 
     GstGLDisplay *display;
     GstGLContext *context;

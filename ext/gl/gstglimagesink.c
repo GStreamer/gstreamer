@@ -89,6 +89,7 @@
 
 #include <gst/video/videooverlay.h>
 #include <gst/video/navigation.h>
+#include <gst/video/gstvideoaffinetransformationmeta.h>
 
 #include "gstglimagesink.h"
 #include "gstglsinkbin.h"
@@ -326,7 +327,7 @@ static gboolean update_output_format (GstGLImageSink * glimage_sink);
     "width = " GST_VIDEO_SIZE_RANGE ", "                                \
     "height = " GST_VIDEO_SIZE_RANGE ", "                               \
     "framerate = " GST_VIDEO_FPS_RANGE ", "                             \
-    "texture-target = (string) 2D "                                     \
+    "texture-target = (string) { 2D, external-oes } "                   \
     " ; "                                                               \
     "video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY ","                \
     GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION "), "           \
@@ -334,7 +335,7 @@ static gboolean update_output_format (GstGLImageSink * glimage_sink);
     "width = " GST_VIDEO_SIZE_RANGE ", "                                \
     "height = " GST_VIDEO_SIZE_RANGE ", "                               \
     "framerate = " GST_VIDEO_FPS_RANGE ", "                             \
-    "texture-target = (string) 2D "
+    "texture-target = (string) { 2D, external-oes } "
 
 static GstStaticPadTemplate gst_glimage_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -1178,10 +1179,14 @@ update_output_format (GstGLImageSink * glimage_sink)
   gboolean input_is_mono = FALSE;
   GstVideoMultiviewMode mv_mode;
   GstGLWindow *window = NULL;
+  GstGLTextureTarget previous_target;
+  GstStructure *s;
+  const gchar *target_str;
   GstCaps *out_caps;
   gboolean ret;
 
   *out_info = glimage_sink->in_info;
+  previous_target = glimage_sink->texture_target;
 
   mv_mode = GST_VIDEO_INFO_MULTIVIEW_MODE (&glimage_sink->in_info);
 
@@ -1222,13 +1227,27 @@ update_output_format (GstGLImageSink * glimage_sink)
         glimage_sink->display_rect.w, glimage_sink->display_rect.h);
   }
 
+  s = gst_caps_get_structure (glimage_sink->in_caps, 0);
+  target_str = gst_structure_get_string (s, "texture-target");
+
+  if (!target_str)
+    target_str = GST_GL_TEXTURE_TARGET_2D_STR;
+
+  glimage_sink->texture_target = gst_gl_texture_target_from_string (target_str);
+  if (!glimage_sink->texture_target)
+    return FALSE;
+
   out_caps = gst_video_info_to_caps (out_info);
   gst_caps_set_features (out_caps, 0,
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+  gst_caps_set_simple (out_caps, "texture-target", G_TYPE_STRING,
+      target_str, NULL);
 
   if (glimage_sink->convert_views) {
     gst_caps_set_simple (out_caps, "texture-target", G_TYPE_STRING,
         GST_GL_TEXTURE_TARGET_2D_STR, NULL);
+
+    glimage_sink->texture_target = GST_GL_TEXTURE_TARGET_2D;
 
     GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
     gst_gl_view_convert_set_caps (glimage_sink->convert_views,
@@ -1241,6 +1260,15 @@ update_output_format (GstGLImageSink * glimage_sink)
   if (glimage_sink->out_caps)
     gst_caps_unref (glimage_sink->out_caps);
   glimage_sink->out_caps = out_caps;
+
+  if (previous_target != GST_GL_TEXTURE_TARGET_NONE &&
+      glimage_sink->texture_target != previous_target) {
+    /* regenerate the shader for the changed target */
+    GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
+    gst_gl_window_send_message (window,
+        GST_GL_WINDOW_CB (gst_glimage_sink_cleanup_glthread), glimage_sink);
+    gst_object_unref (window);
+  }
 
   glimage_sink->output_mode_changed = FALSE;
 
@@ -1726,11 +1754,35 @@ gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
 {
   const GstGLFuncs *gl = gl_sink->context->gl_vtable;
   GError *error = NULL;
+  GstGLSLStage *frag_stage, *vert_stage;
+
+  if (gl_sink->texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES) {
+    vert_stage = gst_glsl_stage_new_with_string (gl_sink->context,
+        GL_VERTEX_SHADER, GST_GLSL_VERSION_NONE,
+        GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+        gst_gl_shader_string_vertex_mat4_texture_transform);
+    frag_stage = gst_glsl_stage_new_with_string (gl_sink->context,
+        GL_FRAGMENT_SHADER, GST_GLSL_VERSION_NONE,
+        GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+        gst_gl_shader_string_fragment_external_oes_default);
+  } else {
+    vert_stage = gst_glsl_stage_new_default_vertex (gl_sink->context);
+    frag_stage = gst_glsl_stage_new_default_fragment (gl_sink->context);
+  }
+  if (!vert_stage || !frag_stage) {
+    GST_ERROR_OBJECT (gl_sink, "Failed to retreive fragment shader for "
+        "texture target");
+    if (vert_stage)
+      gst_object_unref (vert_stage);
+    if (frag_stage)
+      gst_object_unref (frag_stage);
+    gst_glimage_sink_cleanup_glthread (gl_sink);
+    return;
+  }
 
   if (!(gl_sink->redisplay_shader =
           gst_gl_shader_new_link_with_stages (gl_sink->context, &error,
-              gst_glsl_stage_new_default_vertex (gl_sink->context),
-              gst_glsl_stage_new_default_fragment (gl_sink->context), NULL))) {
+              vert_stage, frag_stage, NULL))) {
     GST_ERROR_OBJECT (gl_sink, "Failed to link shader: %s", error->message);
     gst_glimage_sink_cleanup_glthread (gl_sink);
     return;
@@ -1878,6 +1930,13 @@ gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
   GST_GLIMAGE_SINK_UNLOCK (gl_sink);
 }
 
+static const gfloat identity_matrix[] = {
+  1.0f, 0.0f, 0.0, 0.0f,
+  0.0f, 1.0f, 0.0, 0.0f,
+  0.0f, 0.0f, 1.0, 0.0f,
+  0.0f, 0.0f, 0.0, 1.0f,
+};
+
 static void
 gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 {
@@ -1892,6 +1951,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
   gboolean do_redisplay = FALSE;
   GstGLSyncMeta *sync_meta = NULL;
   GstSample *sample = NULL;
+  guint gl_target = gst_gl_texture_target_to_gl (gl_sink->texture_target);
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (gl_sink));
 
@@ -1919,11 +1979,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   /* make sure that the environnement is clean */
   gst_gl_context_clear_shader (gl_sink->context);
-  gl->BindTexture (GL_TEXTURE_2D, 0);
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (gl_sink->context))
-    gl->Disable (GL_TEXTURE_2D);
-#endif
+  gl->BindTexture (gl_target, 0);
 
   sample = gst_sample_new (gl_sink->stored_buffer[0],
       gl_sink->out_caps, &GST_BASE_SINK (gl_sink)->segment, NULL);
@@ -1960,11 +2016,25 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
       _bind_buffer (gl_sink);
 
     gl->ActiveTexture (GL_TEXTURE0);
-    gl->BindTexture (GL_TEXTURE_2D, gl_sink->redisplay_texture);
+    gl->BindTexture (gl_target, gl_sink->redisplay_texture);
     gst_gl_shader_set_uniform_1i (gl_sink->redisplay_shader, "tex", 0);
+    if (gl_sink->texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES) {
+      GstVideoAffineTransformationMeta *af_meta;
+
+      af_meta =
+          gst_buffer_get_video_affine_transformation_meta
+          (gl_sink->stored_buffer[0]);
+      if (af_meta)
+        gst_gl_shader_set_uniform_matrix_4fv (gl_sink->redisplay_shader,
+            "u_transformation", 1, FALSE, af_meta->matrix);
+      else
+        gst_gl_shader_set_uniform_matrix_4fv (gl_sink->redisplay_shader,
+            "u_transformation", 1, FALSE, identity_matrix);
+    }
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
+    gl->BindTexture (gl_target, 0);
     gst_gl_context_clear_shader (gl_sink->context);
 
     if (gl->GenVertexArrays)
