@@ -105,6 +105,10 @@ struct _GstAdaptiveDemuxStreamFragment
   gchar *index_uri;
   gint64 index_range_start;
   gint64 index_range_end;
+
+  /* Nominal bitrate as provided by
+   * sub-class or calculated by base-class */
+  guint bitrate;
 };
 
 struct _GstAdaptiveDemuxStream
@@ -132,8 +136,11 @@ struct _GstAdaptiveDemuxStream
   gboolean restart_download;
   gboolean discont;
 
+  gboolean downloading_first_buffer;
   gboolean downloading_header;
   gboolean downloading_index;
+
+  gboolean bitrate_changed;
 
   /* download tooling */
   GstElement *src;

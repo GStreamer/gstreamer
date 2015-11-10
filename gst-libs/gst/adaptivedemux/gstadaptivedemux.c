@@ -1722,11 +1722,24 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
     gst_pad_push_event (stream->pad, stream->pending_segment);
     stream->pending_segment = NULL;
   }
-  if (G_UNLIKELY (stream->pending_tags)) {
+  if (G_UNLIKELY (stream->pending_tags || stream->bitrate_changed)) {
+    GstTagList *tags = stream->pending_tags;
+
+    stream->pending_tags = NULL;
+    stream->bitrate_changed = 0;
+
+    if (stream->fragment.bitrate != 0) {
+      if (tags)
+        tags = gst_tag_list_make_writable (tags);
+      else
+        tags = gst_tag_list_new_empty ();
+
+      gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
+          GST_TAG_NOMINAL_BITRATE, stream->fragment.bitrate, NULL);
+    }
     GST_DEBUG_OBJECT (stream->pad, "Sending pending tags: %" GST_PTR_FORMAT,
         stream->pending_tags);
-    gst_pad_push_event (stream->pad, gst_event_new_tag (stream->pending_tags));
-    stream->pending_tags = NULL;
+    gst_pad_push_event (stream->pad, gst_event_new_tag (tags));
   }
   while (stream->pending_events != NULL) {
     GstEvent *event = stream->pending_events->data;
@@ -1841,6 +1854,34 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
+  }
+  if (stream->downloading_first_buffer) {
+    gint64 chunk_size = 0;
+
+    stream->downloading_first_buffer = FALSE;
+
+    if (!stream->downloading_header && !stream->downloading_index) {
+      /* If this is the first buffer of a fragment (not the headers or index)
+       * and we don't have a birate from the sub-class, then see if we
+       * can work it out from the fragment size and duration */
+      if (stream->fragment.bitrate == 0 &&
+          stream->fragment.duration != 0 &&
+          gst_element_query_duration (stream->uri_handler, GST_FORMAT_BYTES,
+              &chunk_size)) {
+        guint bitrate = MIN (G_MAXUINT, gst_util_uint64_scale (chunk_size,
+                8 * GST_SECOND, stream->fragment.duration));
+        GST_LOG_OBJECT (demux,
+            "Fragment has size %" G_GUINT64_FORMAT " duration %" GST_TIME_FORMAT
+            " = bitrate %u", chunk_size,
+            GST_TIME_ARGS (stream->fragment.duration), bitrate);
+        stream->fragment.bitrate = bitrate;
+      }
+      if (stream->fragment.bitrate) {
+        stream->bitrate_changed = TRUE;
+      } else {
+        GST_WARNING_OBJECT (demux, "Bitrate for fragment not available");
+      }
+    }
   }
 
   stream->download_total_time +=
@@ -2276,6 +2317,7 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
        */
       g_mutex_lock (&stream->fragment_download_lock);
       stream->download_finished = FALSE;
+      stream->downloading_first_buffer = TRUE;
       g_mutex_unlock (&stream->fragment_download_lock);
 
       GST_MANIFEST_UNLOCK (demux);
@@ -3095,6 +3137,10 @@ gst_adaptive_demux_stream_update_fragment_info (GstAdaptiveDemux * demux,
 
   g_return_val_if_fail (klass->stream_update_fragment_info != NULL,
       GST_FLOW_ERROR);
+
+  /* Make sure the sub-class will update bitrate, or else
+   * we will later */
+  stream->fragment.bitrate = 0;
 
   return klass->stream_update_fragment_info (stream);
 }
