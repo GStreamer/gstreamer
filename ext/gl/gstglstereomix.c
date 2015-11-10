@@ -483,6 +483,7 @@ static gboolean
 _negotiated_caps (GstVideoAggregator * vagg, GstCaps * caps)
 {
   GstGLStereoMix *mix = GST_GL_STEREO_MIX (vagg);
+  GstCaps *in_caps;
 
   GST_LOG_OBJECT (mix, "Configured output caps %" GST_PTR_FORMAT, caps);
 
@@ -498,11 +499,16 @@ _negotiated_caps (GstVideoAggregator * vagg, GstCaps * caps)
   /* We can configure the view_converter now */
   gst_gl_view_convert_set_context (mix->viewconvert,
       GST_GL_BASE_MIXER (mix)->context);
-  gst_gl_view_convert_set_format (mix->viewconvert, &mix->mix_info,
-      &mix->out_info);
+
+  in_caps = gst_video_info_to_caps (&mix->mix_info);
+  gst_caps_set_features (in_caps, 0,
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+  gst_caps_set_simple (in_caps, "texture-target", G_TYPE_STRING,
+      GST_GL_TEXTURE_TARGET_2D_STR, NULL);
+
+  gst_gl_view_convert_set_caps (mix->viewconvert, in_caps, caps);
 
   return TRUE;
-
 }
 
 static gboolean

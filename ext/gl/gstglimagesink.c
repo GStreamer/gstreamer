@@ -1005,6 +1005,10 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         gst_caps_unref (glimage_sink->out_caps);
         glimage_sink->out_caps = NULL;
       }
+      if (glimage_sink->in_caps) {
+        gst_caps_unref (glimage_sink->in_caps);
+        glimage_sink->in_caps = NULL;
+      }
       break;
     }
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -1172,6 +1176,7 @@ update_output_format (GstGLImageSink * glimage_sink)
   gboolean input_is_mono = FALSE;
   GstVideoMultiviewMode mv_mode;
   GstGLWindow *window = NULL;
+  GstCaps *out_caps;
   gboolean ret;
 
   *out_info = glimage_sink->in_info;
@@ -1213,14 +1218,27 @@ update_output_format (GstGLImageSink * glimage_sink)
     glimage_sink->out_info.height = MAX (1, glimage_sink->display_rect.h);
     GST_LOG_OBJECT (glimage_sink, "Set 3D output scale to %d,%d",
         glimage_sink->display_rect.w, glimage_sink->display_rect.h);
+  }
+
+  out_caps = gst_video_info_to_caps (out_info);
+  gst_caps_set_features (out_caps, 0,
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+
+  if (glimage_sink->convert_views) {
+    gst_caps_set_simple (out_caps, "texture-target", G_TYPE_STRING,
+        GST_GL_TEXTURE_TARGET_2D_STR, NULL);
 
     GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
-    gst_gl_view_convert_set_format (glimage_sink->convert_views,
-        &glimage_sink->in_info, &glimage_sink->out_info);
+    gst_gl_view_convert_set_caps (glimage_sink->convert_views,
+        glimage_sink->in_caps, out_caps);
     g_object_set (glimage_sink->convert_views, "downmix-mode",
         glimage_sink->mview_downmix_mode, NULL);
     GST_GLIMAGE_SINK_LOCK (glimage_sink);
   }
+
+  if (glimage_sink->out_caps)
+    gst_caps_unref (glimage_sink->out_caps);
+  glimage_sink->out_caps = out_caps;
 
   glimage_sink->output_mode_changed = FALSE;
 
@@ -1230,10 +1248,6 @@ update_output_format (GstGLImageSink * glimage_sink)
     gst_gl_window_queue_resize (window);
     gst_object_unref (window);
   }
-
-  if (glimage_sink->out_caps)
-    gst_caps_unref (glimage_sink->out_caps);
-  glimage_sink->out_caps = gst_video_info_to_caps (out_info);
 
   return ret;
 }
@@ -1257,6 +1271,9 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     return FALSE;
 
   GST_GLIMAGE_SINK_LOCK (glimage_sink);
+  if (glimage_sink->in_caps)
+    gst_caps_unref (glimage_sink->in_caps);
+  glimage_sink->in_caps = gst_caps_ref (caps);
   glimage_sink->in_info = vinfo;
   ok = update_output_format (glimage_sink);
 
