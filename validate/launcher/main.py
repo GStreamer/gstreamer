@@ -192,6 +192,7 @@ class LauncherConfig(Loggable):
         self.long_limit = utils.LONG_TEST
         self.config = None
         self.valgrind = False
+        self.gdb = False
         self.no_display = False
         self.xunit_file = None
         self.main_dir = utils.DEFAULT_MAIN_DIR
@@ -229,6 +230,17 @@ class LauncherConfig(Loggable):
             self.output_dir = self.main_dir
         else:
             self.output_dir = os.path.abspath(self.output_dir)
+
+        if self.gdb:
+            self.logsdir = "stdout"
+            self.debug = True
+            self.num_jobs = 1
+            try:
+                subprocess.check_output("gdb --help", shell=True)
+            except subprocess.CalledProcessError:
+                printc("Want to use gdb, but not avalaible on the system",
+                       Colors.FAIL)
+                return False
 
         # other output directories
         if self.logsdir in ['stdout', 'stderr']:
@@ -403,6 +415,10 @@ Note that all testsuite should be inside python modules, so the directory should
     parser.add_argument("-vg", "--valgrind", dest="valgrind",
                         action="store_true",
                         help="Run the tests inside Valgrind")
+    parser.add_argument("--gdb", dest="gdb",
+                        action="store_true",
+                        help="Run the tests inside gdb (implies"
+                        " --output-dir=stdout and --jobs=1)")
     parser.add_argument("-nd", "--no-display", dest="no_display",
                         action="store_true",
                         help="Run the tests without outputting graphics"

@@ -40,7 +40,7 @@ from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
 
 # The factor by which we increase the hard timeout when running inside
 # Valgrind
-VALGRIND_TIMEOUT_FACTOR = 20
+GDB_TIMEOUT_FACTOR = VALGRIND_TIMEOUT_FACTOR = 20
 # The error reported by valgrind when detecting errors
 VALGRIND_ERROR_CODE = 20
 
@@ -186,12 +186,19 @@ class Test(Loggable):
     def set_result(self, result, message="", error=""):
         self.debug("Setting result: %s (message: %s, error: %s)" % (result,
                    message, error))
+
         if result is Result.TIMEOUT and self.options.debug is True:
-            pname = subprocess.check_output(("readlink -e /proc/%s/exe"
-                                             % self.process.pid).split(' ')).replace('\n', '')
-            raw_input("%sTimeout happened you can attach gdb doing: $gdb %s %d%s\n"
-                      "Press enter to continue" % (Colors.FAIL, pname, self.process.pid,
-                                                   Colors.ENDC))
+            if self.options.gdb:
+                printc("Timeout, you should process <ctrl>c to get into gdb",
+                       Colors.FAIL)
+                # and wait here until gdb exits
+                self.process.communicate()
+            else:
+                pname = subprocess.check_output(("readlink -e /proc/%s/exe"
+                                                 % self.process.pid).split(' ')).replace('\n', '')
+                raw_input("%sTimeout happened you can attach gdb doing: $gdb %s %d%s\n"
+                          "Press enter to continue" % (Colors.FAIL, pname, self.process.pid,
+                                                       Colors.ENDC))
 
         self.result = result
         self.message = message
@@ -307,6 +314,12 @@ class Test(Loggable):
     def get_valgrind_suppressions(self):
         return [self.get_valgrind_suppression_file('data', 'gstvalidate.supp')]
 
+    def use_gdb(self):
+        if self.hard_timeout is not None:
+            self.hard_timeout *= GDB_TIMEOUT_FACTOR
+        self.timeout *= GDB_TIMEOUT_FACTOR
+        self.command = "gdb -ex run -ex quit --args %s" % self.command
+
     def use_valgrind(self):
         vglogsfile = self.logfile + '.valgrind'
         self.extra_logfiles.append(vglogsfile)
@@ -363,6 +376,9 @@ class Test(Loggable):
         for var, value in self.extra_env_variables.items():
             self.proc_env[var] = self.proc_env.get(var, '') + os.pathsep + value
             self.add_env_variable(var, self.proc_env[var])
+
+        if self.options.gdb:
+            self.use_gdb()
 
         if self.options.valgrind:
             self.use_valgrind()
