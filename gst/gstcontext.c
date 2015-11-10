@@ -49,6 +49,12 @@
  * known context on the element that asks for it if possible. Otherwise the
  * application should provide one if it can.
  *
+ * #GstContext<!-- -->s can be persistent.
+ * A persistent #GstContext is kept in elements when they reach
+ * %GST_STATE_NULL, non-persistent ones will be removed.
+ * Also, a non-persistent context won't override a previous persistent
+ * context set to an element.
+ *
  * Since: 1.2
  */
 
