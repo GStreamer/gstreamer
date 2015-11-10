@@ -63,6 +63,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglviewconvert.h \
 	gstgloverlaycompositor.h \
 	gstgl_fwd.h \
+	gstgl_enums.h \
 	gl.h
 
 libgstgl_@GST_API_VERSION@_la_LIBADD = \
