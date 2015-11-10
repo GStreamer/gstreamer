@@ -169,8 +169,10 @@ check_curl_sftp =
 endif
 
 if USE_HLS
-check_hlsdemux = elements/hlsdemux_m3u8
+check_hlsdemux_m3u8 = elements/hlsdemux_m3u8
+check_hls_demux = elements/hls_demux
 else
+check_hlsdemux_m3u8 =
 check_hlsdemux =
 endif
 
@@ -288,7 +290,8 @@ check_PROGRAMS = \
 	$(check_orc) \
 	libs/insertbin \
 	$(check_gl) \
-	$(check_hlsdemux) \
+	$(check_hlsdemux_m3u8) \
+	$(check_hls_demux) \
 	$(EXPERIMENTAL_CHECKS)
 
 noinst_HEADERS = elements/mxfdemux.h
@@ -569,6 +572,13 @@ elements_compositor_CFLAGS = \
 elements_hlsdemux_m3u8_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS) -I$(top_srcdir)/ext/hls
 elements_hlsdemux_m3u8_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_hlsdemux_m3u8_SOURCES = elements/hlsdemux_m3u8.c
+
+elements_hls_demux_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS)
+elements_hls_demux_LDADD = $(GST_BASE_LIBS) $(LDADD) \
+	-lgsttag-$(GST_API_VERSION) \
+	-lgstapp-$(GST_API_VERSION) \
+	$(top_builddir)/gst-libs/gst/adaptivedemux/libgstadaptivedemux-@GST_API_VERSION@.la
+elements_hls_demux_SOURCES = elements/test_http_src.c elements/test_http_src.h elements/adaptive_demux_engine.c elements/adaptive_demux_engine.h elements/adaptive_demux_common.c elements/adaptive_demux_common.h elements/hls_demux.c
 
 orc_compositor_CFLAGS = $(ORC_CFLAGS)
 orc_compositor_LDADD = $(ORC_LIBS) -lorc-test-0.4

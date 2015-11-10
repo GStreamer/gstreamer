@@ -26,6 +26,7 @@ glimagesink
 h263parse
 h264parse
 hlsdemux_m3u8
+hls_demux
 id3mux
 imagecapturebin
 jifmux
