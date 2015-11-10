@@ -1380,7 +1380,7 @@ _unbind_buffer (GstGLColorConvert * convert)
 
 static gchar *
 _mangle_texture_access (const gchar * str, GstGLTextureTarget from,
-    GstGLTextureTarget to)
+    GstGLTextureTarget to, GstGLAPI gl_api)
 {
   const gchar *from_str = NULL, *to_str = NULL;
   gchar *ret, *tmp;
@@ -1394,12 +1394,16 @@ _mangle_texture_access (const gchar * str, GstGLTextureTarget from,
   if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
     from_str = "texture2D";
 
-  if (to == GST_GL_TEXTURE_TARGET_2D)
-    to_str = "texture2D";
-  if (to == GST_GL_TEXTURE_TARGET_RECTANGLE)
-    to_str = "texture2DRect";
-  if (to == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
-    to_str = "texture2D";
+  if (gl_api & GST_GL_API_OPENGL3) {
+    to_str = "texture";
+  } else {
+    if (to == GST_GL_TEXTURE_TARGET_2D)
+      to_str = "texture2D";
+    if (to == GST_GL_TEXTURE_TARGET_RECTANGLE)
+      to_str = "texture2DRect";
+    if (to == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+      to_str = "texture2D";
+  }
 
   /* followed by any amount of whitespace then a bracket */
   regex_find = g_strdup_printf ("%s(?=\\s*\\()", from_str);
@@ -1460,12 +1464,200 @@ _mangle_sampler_type (const gchar * str, GstGLTextureTarget from,
   return ret;
 }
 
+static gchar *
+_mangle_varying_attribute (const gchar * str, guint shader_type,
+    GstGLAPI gl_api)
+{
+  if (gl_api & GST_GL_API_OPENGL3) {
+    if (shader_type == GL_VERTEX_SHADER) {
+      gchar *tmp, *tmp2;
+      GRegex *regex;
+
+      /* followed by some whitespace  */
+      regex = g_regex_new ("varying(?=\\s)", 0, 0, NULL);
+      tmp = g_regex_replace_literal (regex, str, -1, 0, "out", 0, NULL);
+      g_regex_unref (regex);
+
+      /* followed by some whitespace  */
+      regex = g_regex_new ("attribute(?=\\s)", 0, 0, NULL);
+      tmp2 = g_regex_replace_literal (regex, tmp, -1, 0, "in", 0, NULL);
+      g_regex_unref (regex);
+
+      g_free (tmp);
+      return tmp2;
+    } else if (shader_type == GL_FRAGMENT_SHADER) {
+      gchar *tmp;
+      GRegex *regex;
+
+      /* followed by some whitespace  */
+      regex = g_regex_new ("varying(?=\\s)", 0, 0, NULL);
+      tmp = g_regex_replace_literal (regex, str, -1, 0, "in", 0, NULL);
+      g_regex_unref (regex);
+
+      return tmp;
+    }
+  }
+  return g_strdup (str);
+}
+
+static void
+_mangle_version_profile_from_gl_api (GstGLAPI gl_api, GstGLSLVersion * version,
+    GstGLSLProfile * profile)
+{
+  if (gl_api & GST_GL_API_OPENGL3) {
+    *version = GST_GLSL_VERSION_150;
+    *profile = GST_GLSL_PROFILE_NONE;
+  } else if (gl_api & GST_GL_API_GLES2) {
+    *version = GST_GLSL_VERSION_100;
+    *profile = GST_GLSL_PROFILE_ES;
+  } else if (gl_api & GST_GL_API_OPENGL) {
+    *version = GST_GLSL_VERSION_110;
+    *profile = GST_GLSL_PROFILE_COMPATIBILITY;
+  }
+}
+
+static gchar *
+_mangle_shader (const gchar * str, guint shader_type, GstGLTextureTarget from,
+    GstGLTextureTarget to, GstGLAPI gl_api, GstGLSLVersion * version,
+    GstGLSLProfile * profile)
+{
+  gchar *tmp, *tmp2;
+
+  tmp = _mangle_texture_access (str, from, to, gl_api);
+  tmp2 = _mangle_sampler_type (tmp, from, to);
+  g_free (tmp);
+  tmp = _mangle_varying_attribute (tmp2, shader_type, gl_api);
+  g_free (tmp2);
+  _mangle_version_profile_from_gl_api (gl_api, version, profile);
+  return tmp;
+}
+
+static GstGLShader *
+_create_shader (GstGLColorConvert * convert)
+{
+  struct ConvertInfo *info = &convert->priv->convert_info;
+  GString *str = g_string_new (NULL);
+  GstGLShader *ret = NULL;
+  GstGLSLStage *stage;
+  GstGLSLVersion version;
+  GstGLSLProfile profile;
+  gchar *version_str, *tmp;
+  const gchar *strings[2];
+  GError *error = NULL;
+  GstGLAPI gl_api;
+  int i;
+
+  gl_api = gst_gl_context_get_gl_api (convert->context);
+
+  ret = gst_gl_shader_new (convert->context);
+
+  tmp =
+      _mangle_shader (text_vertex_shader, GL_VERTEX_SHADER, info->templ->target,
+      convert->priv->from_texture_target, gl_api, &version, &profile);
+
+  version_str = g_strdup_printf ("#version %s\n",
+      gst_glsl_version_profile_to_string (version, profile));
+
+  strings[0] = version_str;
+  strings[1] = tmp;
+  if (!(stage = gst_glsl_stage_new_with_strings (convert->context,
+              GL_VERTEX_SHADER, version, profile, 2, strings))) {
+    GST_ERROR_OBJECT (convert, "Failed to create vertex stage");
+    g_free (version_str);
+    g_free (tmp);
+    gst_object_unref (ret);
+    return NULL;
+  }
+  g_free (tmp);
+
+  if (!gst_gl_shader_compile_attach_stage (ret, stage, &error)) {
+    GST_ERROR_OBJECT (convert, "Failed to compile vertex shader %s",
+        error->message);
+    g_clear_error (&error);
+    g_free (version_str);
+    gst_object_unref (stage);
+    gst_object_unref (ret);
+    return NULL;
+  }
+
+  if (info->templ->extensions)
+    g_string_append (str, info->templ->extensions);
+
+  if (convert->priv->from_texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES
+      && info->templ->target != GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+    g_string_append (str, glsl_OES_extension_string);
+
+  if (info->templ->uniforms)
+    g_string_append (str, info->templ->uniforms);
+
+  for (i = 0; i < MAX_FUNCTIONS; i++) {
+    if (info->templ->functions[i] == NULL)
+      break;
+
+    g_string_append_c (str, '\n');
+    g_string_append (str, info->templ->functions[i]);
+    g_string_append_c (str, '\n');
+  }
+
+  g_string_append (str, "\nvarying vec2 v_texcoord;\nvoid main (void) {\n");
+  if (info->frag_body) {
+    g_string_append (str, "vec2 texcoord;\n");
+    if (convert->priv->from_texture_target == GST_GL_TEXTURE_TARGET_RECTANGLE
+        && info->templ->target != GST_GL_TEXTURE_TARGET_RECTANGLE) {
+      g_string_append (str, "texcoord = v_texcoord * vec2 (width, height);\n");
+    } else {
+      g_string_append (str, "texcoord = v_texcoord;\n");
+    }
+
+    g_string_append (str, info->frag_body);
+  }
+  g_string_append (str, "\n}");
+  tmp = g_string_free (str, FALSE);
+  info->frag_prog = _mangle_shader (tmp, GL_FRAGMENT_SHADER,
+      info->templ->target, convert->priv->from_texture_target, gl_api,
+      &version, &profile);
+  g_free (tmp);
+
+  strings[1] = info->frag_prog;
+  if (!(stage = gst_glsl_stage_new_with_strings (convert->context,
+              GL_FRAGMENT_SHADER, version, profile, 2, strings))) {
+    GST_ERROR_OBJECT (convert, "Failed to create fragment stage");
+    g_free (info->frag_prog);
+    info->frag_prog = NULL;
+    g_free (version_str);
+    gst_object_unref (ret);
+    return NULL;
+  }
+  g_free (version_str);
+  if (!gst_gl_shader_compile_attach_stage (ret, stage, &error)) {
+    GST_ERROR_OBJECT (convert, "Failed to compile fragment shader %s",
+        error->message);
+    g_clear_error (&error);
+    g_free (info->frag_prog);
+    info->frag_prog = NULL;
+    g_free (version_str);
+    gst_object_unref (stage);
+    gst_object_unref (ret);
+    return NULL;
+  }
+
+  if (!gst_gl_shader_link (ret, &error)) {
+    GST_ERROR_OBJECT (convert, "Failed to link shader %s", error->message);
+    g_clear_error (&error);
+    g_free (info->frag_prog);
+    info->frag_prog = NULL;
+    gst_object_unref (ret);
+    return NULL;
+  }
+
+  return ret;
+}
+
 /* Called in the gl thread */
 static gboolean
 _init_convert (GstGLColorConvert * convert)
 {
   GstGLFuncs *gl;
-  gboolean res;
   struct ConvertInfo *info = &convert->priv->convert_info;
   gint i;
 
@@ -1517,70 +1709,8 @@ _init_convert (GstGLColorConvert * convert)
   if (!info->frag_body || info->in_n_textures == 0 || info->out_n_textures == 0)
     goto unhandled_format;
 
-  /* XXX: poor mans shader templating */
-  {
-    GString *str = g_string_new (NULL);
-    int i;
-
-    if (info->templ->extensions)
-      g_string_append (str, info->templ->extensions);
-
-    if (convert->priv->from_texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES
-        && info->templ->target != GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
-      g_string_append (str, glsl_OES_extension_string);
-
-    if (info->templ->uniforms) {
-      gchar *uniforms =
-          _mangle_sampler_type (info->templ->uniforms, info->templ->target,
-          convert->priv->from_texture_target);
-      g_string_append (str, uniforms);
-      g_free (uniforms);
-    }
-
-    for (i = 0; i < MAX_FUNCTIONS; i++) {
-      gchar *function;
-
-      if (info->templ->functions[i] == NULL)
-        break;
-
-      function =
-          _mangle_texture_access (info->templ->functions[i],
-          info->templ->target, convert->priv->from_texture_target);
-      g_string_append_c (str, '\n');
-      g_string_append (str, function);
-      g_string_append_c (str, '\n');
-      g_free (function);
-    }
-
-    g_string_append (str, "\nvarying vec2 v_texcoord;\nvoid main (void) {\n");
-    if (info->frag_body) {
-      gchar *body;
-
-      g_string_append (str, "vec2 texcoord;\n");
-      if (convert->priv->from_texture_target == GST_GL_TEXTURE_TARGET_RECTANGLE
-          && info->templ->target != GST_GL_TEXTURE_TARGET_RECTANGLE) {
-        g_string_append (str,
-            "texcoord = v_texcoord * vec2 (width, height);\n");
-      } else {
-        g_string_append (str, "texcoord = v_texcoord;\n");
-      }
-
-      body =
-          _mangle_texture_access (info->frag_body, info->templ->target,
-          convert->priv->from_texture_target);
-      g_string_append (str, body);
-      g_free (body);
-    }
-    g_string_append (str, "\n}");
-    info->frag_prog = g_string_free (str, FALSE);
-  }
-
-  if (!info->frag_prog)
-    goto unhandled_format;
-
   /* multiple draw targets not supported on GLES2... */
   if (info->out_n_textures > 1 && !gl->DrawBuffers) {
-    g_free (info->frag_prog);
     GST_ERROR ("Conversion requires output to multiple draw buffers");
     goto incompatible_api;
   }
@@ -1590,16 +1720,11 @@ _init_convert (GstGLColorConvert * convert)
       (GST_VIDEO_INFO_FORMAT (&convert->out_info) == GST_VIDEO_FORMAT_YUY2 ||
           GST_VIDEO_INFO_FORMAT (&convert->out_info) ==
           GST_VIDEO_FORMAT_UYVY)) {
-    g_free (info->frag_prog);
     GST_ERROR ("Conversion requires reading with an unsupported format");
     goto incompatible_api;
   }
 
-  res =
-      gst_gl_context_gen_shader (convert->context, text_vertex_shader,
-      info->frag_prog, &convert->shader);
-  g_free (info->frag_prog);
-  if (!res)
+  if (!(convert->shader = _create_shader (convert)))
     goto error;
 
   convert->priv->attr_position =
