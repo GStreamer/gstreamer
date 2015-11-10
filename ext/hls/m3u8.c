@@ -1345,6 +1345,7 @@ gst_m3u8_client_get_seek_range (GstM3U8Client * client, gint64 * start,
   GList *walk;
   GstM3U8MediaFile *file;
   guint count;
+  guint min_distance = 0;
 
   g_return_val_if_fail (client != NULL, FALSE);
 
@@ -1355,13 +1356,16 @@ gst_m3u8_client_get_seek_range (GstM3U8Client * client, gint64 * start,
     return FALSE;
   }
 
+  if (GST_M3U8_CLIENT_IS_LIVE (client)) {
+    /* min_distance is used to make sure the seek range is never closer than
+       GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE fragments from the end of a live
+       playlist - see 6.3.3. "Playing the Playlist file" of the HLS draft */
+    min_distance = GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE;
+  }
   count = g_list_length (client->current->files);
 
-  /* count is used to make sure the seek range is never closer than
-     GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE fragments from the end of the
-     playlist - see 6.3.3. "Playing the Playlist file" of the HLS draft */
   for (walk = client->current->files;
-      walk && count >= GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE; walk = walk->next) {
+      walk && count >= min_distance; walk = walk->next) {
     file = walk->data;
     --count;
     duration += file->duration;

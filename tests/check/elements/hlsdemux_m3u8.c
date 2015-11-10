@@ -511,6 +511,8 @@ GST_START_TEST (test_live_playlist)
   GstM3U8Client *client;
   GstM3U8 *pl;
   GstM3U8MediaFile *file;
+  gint64 start = -1;
+  gint64 stop = -1;
 
   client = load_playlist (LIVE_PLAYLIST);
 
@@ -530,6 +532,9 @@ GST_START_TEST (test_live_playlist)
   assert_equals_string (file->uri,
       "https://priv.example.com/fileSequence2683.ts");
   assert_equals_int (file->sequence, 2683);
+  fail_unless (gst_m3u8_client_get_seek_range (client, &start, &stop));
+  assert_equals_int64 (start, 0);
+  assert_equals_float (stop / (double) GST_SECOND, 16.0);
 
   gst_m3u8_client_free (client);
 }
@@ -573,6 +578,8 @@ GST_START_TEST (test_playlist_with_doubles_duration)
   GstM3U8Client *client;
   GstM3U8 *pl;
   GstM3U8MediaFile *file;
+  gint64 start = -1;
+  gint64 stop = -1;
 
   client = load_playlist (DOUBLES_PLAYLIST);
 
@@ -586,6 +593,10 @@ GST_START_TEST (test_playlist_with_doubles_duration)
   assert_equals_float (file->duration / (double) GST_SECOND, 10.2344);
   file = GST_M3U8_MEDIA_FILE (g_list_nth_data (pl->files, 3));
   assert_equals_float (file->duration / (double) GST_SECOND, 9.92);
+  fail_unless (gst_m3u8_client_get_seek_range (client, &start, &stop));
+  assert_equals_int64 (start, 0);
+  assert_equals_float (stop / (double) GST_SECOND,
+      10.321 + 9.6789 + 10.2344 + 9.92);
   gst_m3u8_client_free (client);
 }
 
