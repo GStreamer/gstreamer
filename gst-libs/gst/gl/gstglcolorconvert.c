@@ -790,6 +790,7 @@ gst_gl_color_convert_fixate_caps (GstGLContext * convert,
   GValue item = G_VALUE_INIT;
   const GValue *targets, *other_targets;
   guint targets_mask = 0, other_targets_mask = 0, result_mask;
+  GstVideoInfo info, other_info;
   GstStructure *s, *s_other;
 
   other = gst_caps_make_writable (other);
@@ -802,21 +803,36 @@ gst_gl_color_convert_fixate_caps (GstGLContext * convert,
   targets_mask = _get_target_bitmask_from_g_value (targets);
   other_targets_mask = _get_target_bitmask_from_g_value (other_targets);
 
+  /* XXX: attempt to fixate the format/colorimetry/etc */
+  other = gst_caps_fixate (other);
+
   result_mask = targets_mask & other_targets_mask;
   if (result_mask == 0) {
     /* nothing we can do here */
-    return gst_caps_fixate (other);
+    return other;
   }
 
-  if (direction == GST_PAD_SINK) {
-    result_mask &=
-        (1 << GST_GL_TEXTURE_TARGET_2D | 1 << GST_GL_TEXTURE_TARGET_RECTANGLE);
-  } else {
-    /* if the src caps has 2D support we can 'convert' to anything */
-    if (targets_mask & (1 << GST_GL_TEXTURE_TARGET_2D))
-      result_mask = -1;
-    else
-      result_mask = other_targets_mask;
+  caps = gst_caps_copy (caps);
+  caps = gst_caps_fixate (caps);
+
+  gst_video_info_from_caps (&info, caps);
+  gst_video_info_from_caps (&other_info, other);
+
+  if (!_gst_gl_color_convert_can_passthrough_info (&info, &other_info)) {
+    if (direction == GST_PAD_SINK) {
+      /* this effectively limits us to 2D | RECTANGLE for case where we
+       * have to convert */
+      result_mask &=
+          (1 << GST_GL_TEXTURE_TARGET_2D | 1 <<
+          GST_GL_TEXTURE_TARGET_RECTANGLE);
+    } else {
+      /* if the src caps has 2D support we can 'convert' to anything */
+      if (targets_mask & (1 << GST_GL_TEXTURE_TARGET_2D | 1 <<
+              GST_GL_TEXTURE_TARGET_RECTANGLE))
+        result_mask = -1;
+      else
+        result_mask = other_targets_mask;
+    }
   }
 
   g_value_init (&item, G_TYPE_STRING);
@@ -831,8 +847,7 @@ gst_gl_color_convert_fixate_caps (GstGLContext * convert,
   gst_structure_set_value (s_other, "texture-target", &item);
 
   g_value_unset (&item);
-
-  other = gst_caps_fixate (other);
+  gst_caps_unref (caps);
 
   return other;
 }
