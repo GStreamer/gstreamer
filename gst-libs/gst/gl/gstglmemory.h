@@ -50,14 +50,6 @@ typedef enum _GstGLMemoryTransfer
 
 #define GST_GL_MEMORY_ADD_TRANSFER(mem,state) ((GstGLMemory *)mem)->transfer_state |= state
 
-typedef enum
-{
-  GST_GL_TEXTURE_TARGET_NONE,
-  GST_GL_TEXTURE_TARGET_2D,
-  GST_GL_TEXTURE_TARGET_RECTANGLE,
-  GST_GL_TEXTURE_TARGET_EXTERNAL_OES,
-} GstGLTextureTarget;
-
 #define GST_GL_TEXTURE_TARGET_2D_STR "2D"
 #define GST_GL_TEXTURE_TARGET_RECTANGLE_STR "rectangle"
 #define GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR "external-oes"

@@ -27,6 +27,7 @@
 #endif
 
 #include <gst/gl/gstgl_fwd.h>
+#include <gst/gl/gstgl_enums.h>
 #include <gst/gl/gstglconfig.h>
 #include <gst/gl/gstglapi.h>
 #include <gst/gl/gstgldisplay.h>
