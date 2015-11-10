@@ -142,6 +142,10 @@ GList *                gst_rtsp_session_filter           (GstRTSPSession *sess,
                                                           gpointer user_data);
 
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPSession, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_SESSION_H__ */

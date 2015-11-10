@@ -177,6 +177,14 @@ GstRTSPAddressPoolResult  gst_rtsp_address_pool_reserve_address (GstRTSPAddressP
 
 gboolean               gst_rtsp_address_pool_has_unicast_addresses (GstRTSPAddressPool * pool);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPAddress, gst_rtsp_address_free)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPAddressPool, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_ADDRESS_POOL_H__ */

@@ -174,6 +174,14 @@ GstRTSPThread *     gst_rtsp_thread_pool_get_thread      (GstRTSPThreadPool *poo
                                                           GstRTSPThreadType type,
                                                           GstRTSPContext *ctx);
 void                gst_rtsp_thread_pool_cleanup         (void);
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPThread, gst_rtsp_thread_unref)
+#endif
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPThreadPool, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_THREAD_POOL_H__ */

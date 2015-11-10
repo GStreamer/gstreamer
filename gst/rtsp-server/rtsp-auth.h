@@ -178,6 +178,10 @@ gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const g
  */
 #define GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT   "media.factory.construct"
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPAuth, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_AUTH_H__ */

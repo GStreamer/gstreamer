@@ -86,6 +86,10 @@ void                  gst_rtsp_mount_points_add_factory    (GstRTSPMountPoints *
 void                  gst_rtsp_mount_points_remove_factory (GstRTSPMountPoints *mounts,
                                                             const gchar *path);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPMountPoints, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_MOUNT_POINTS_H__ */

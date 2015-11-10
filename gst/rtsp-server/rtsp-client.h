@@ -197,6 +197,10 @@ GList *                gst_rtsp_client_session_filter    (GstRTSPClient *client,
 
 
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPClient, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_CLIENT_H__ */

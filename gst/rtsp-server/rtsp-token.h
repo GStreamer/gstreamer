@@ -92,6 +92,10 @@ const gchar *        gst_rtsp_token_get_string         (GstRTSPToken *token,
                                                         const gchar *field);
 gboolean             gst_rtsp_token_is_allowed         (GstRTSPToken *token,
                                                         const gchar *field);
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPToken, gst_rtsp_token_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_TOKEN_H__ */

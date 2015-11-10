@@ -96,6 +96,10 @@ const GstStructure *  gst_rtsp_permissions_get_role        (GstRTSPPermissions *
 gboolean              gst_rtsp_permissions_is_allowed      (GstRTSPPermissions *permissions,
                                                             const gchar *role, const gchar *permission);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPPermissions, gst_rtsp_permissions_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_PERMISSIONS_H__ */

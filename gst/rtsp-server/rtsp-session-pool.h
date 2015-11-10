@@ -138,6 +138,10 @@ GList *               gst_rtsp_session_pool_filter            (GstRTSPSessionPoo
 guint                 gst_rtsp_session_pool_cleanup           (GstRTSPSessionPool *pool);
 GSource *             gst_rtsp_session_pool_create_watch      (GstRTSPSessionPool *pool);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPSessionPool, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_SESSION_POOL_H__ */

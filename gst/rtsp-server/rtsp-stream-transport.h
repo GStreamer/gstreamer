@@ -131,6 +131,10 @@ gboolean                 gst_rtsp_stream_transport_send_rtcp     (GstRTSPStreamT
 GstFlowReturn            gst_rtsp_stream_transport_recv_data     (GstRTSPStreamTransport *trans,
                                                                   guint channel, GstBuffer *buffer);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPStreamTransport, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_STREAM_TRANSPORT_H__ */

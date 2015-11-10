@@ -164,6 +164,10 @@ GstRTSPMedia *        gst_rtsp_media_factory_construct        (GstRTSPMediaFacto
 GstElement *          gst_rtsp_media_factory_create_element   (GstRTSPMediaFactory *factory,
                                                                const GstRTSPUrl *url);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPMediaFactory, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_MEDIA_FACTORY_H__ */
