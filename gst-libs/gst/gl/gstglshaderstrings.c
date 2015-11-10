@@ -63,7 +63,7 @@ const gchar *gst_gl_shader_string_fragment_external_oes_default =
     "precision mediump float;\n"
     "#endif\n"
     "varying vec2 v_texcoord;\n"
-    "uniform sampler2DExternalOES tex;\n"
+    "uniform samplerExternalOES tex;\n"
     "void main()\n"
     "{\n"
     "  gl_FragColor = texture2D(tex, v_texcoord);\n"
