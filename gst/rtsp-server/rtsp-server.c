@@ -1191,9 +1191,11 @@ gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
     manage_client (server, client);
   } else {
     GST_WARNING_OBJECT (server, "received unknown event %08x", condition);
+    goto exit_no_ctx;
   }
 exit:
   gst_rtsp_context_pop_current (&ctx);
+exit_no_ctx:
 
   return G_SOURCE_CONTINUE;
 
@@ -1204,7 +1206,8 @@ accept_failed:
     GST_ERROR_OBJECT (server, "Could not accept client on socket %p: %s",
         socket, str);
     g_free (str);
-    goto exit;
+    /* We haven't pushed the context yet, so just return */
+    goto exit_no_ctx;
   }
 connection_refused:
   {
