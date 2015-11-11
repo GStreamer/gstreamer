@@ -745,7 +745,8 @@ gst_adaptive_demux_handle_message (GstBin * bin, GstMessage * msg)
 
       for (iter = demux->streams; iter; iter = g_list_next (iter)) {
         stream = iter->data;
-        if (GST_OBJECT_CAST (stream->src) == GST_MESSAGE_SRC (msg)) {
+        if (gst_object_has_as_ancestor (GST_MESSAGE_SRC (msg),
+                GST_OBJECT_CAST (stream->src))) {
           gst_message_parse_error (msg, &err, &debug);
 
           GST_WARNING_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (stream),
