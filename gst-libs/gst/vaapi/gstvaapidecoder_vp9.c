@@ -252,7 +252,6 @@ fill_picture (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture)
   VADecPictureParameterBufferVP9 *pic_param = picture->param;
   GstVp9Parser *parser = priv->parser;
   GstVp9FrameHdr *frame_hdr = &priv->frame_hdr;
-  gint i;
 
   /* Fill in VAPictureParameterBufferVP9 */
   pic_param->frame_width = priv->width;
@@ -313,7 +312,6 @@ fill_slice (GstVaapiDecoderVp9 * decoder, GstVaapiSlice * slice)
   GstVaapiDecoderVp9Private *const priv = &decoder->priv;
   GstVp9Parser *parser = priv->parser;
   VASliceParameterBufferVP9 *const slice_param = slice->param;
-  GstVp9FrameHdr *const frame_hdr = &priv->frame_hdr;
   guint i;
 
 #define COPY_SEG_FIELD(s, f) \
@@ -529,7 +527,6 @@ gst_vaapi_decoder_vp9_parse (GstVaapiDecoder * base_decoder,
   GstVaapiDecoderVp9Private *const priv = &decoder->priv;
   guchar *buf;
   guint buf_size, flags = 0;
-  static guint cnt = 0;
 
   buf_size = gst_adapter_available (adapter);
   if (!buf_size)
@@ -561,7 +558,6 @@ gst_vaapi_decoder_vp9_parse (GstVaapiDecoder * base_decoder,
   flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
   flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END;
 
-set_flags:
   GST_VAAPI_DECODER_UNIT_FLAG_SET (unit, flags);
 
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
