@@ -5517,7 +5517,9 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     /* FIXME: Channel mask and reordering */
     caps = gst_caps_new_simple ("audio/x-raw",
         "format", G_TYPE_STRING, gst_audio_format_to_string (format),
-        "layout", G_TYPE_STRING, "interleaved", NULL);
+        "layout", G_TYPE_STRING, "interleaved",
+        "channel-mask", GST_TYPE_BITMASK,
+        gst_audio_channel_get_fallback_mask (audiocontext->channels), NULL);
 
     *codec_name = g_strdup_printf ("Raw %d-bit PCM audio",
         audiocontext->bitdepth);
@@ -5532,7 +5534,9 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     /* FIXME: Channel mask and reordering */
     caps = gst_caps_new_simple ("audio/x-raw",
         "format", G_TYPE_STRING, format,
-        "layout", G_TYPE_STRING, "interleaved", NULL);
+        "layout", G_TYPE_STRING, "interleaved",
+        "channel-mask", GST_TYPE_BITMASK,
+        gst_audio_channel_get_fallback_mask (audiocontext->channels), NULL);
     *codec_name = g_strdup_printf ("Raw %d-bit floating-point audio",
         audiocontext->bitdepth);
     context->alignment = audiocontext->bitdepth / 8;
