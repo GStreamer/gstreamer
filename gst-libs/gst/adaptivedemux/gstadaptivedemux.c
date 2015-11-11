@@ -2427,24 +2427,11 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
     ret = GST_FLOW_CUSTOM_ERROR;
   }
 
-  /* flush the proxypads so that the EOS state is reset */
-  gst_pad_push_event (stream->src_srcpad, gst_event_new_flush_start ());
-
-  /* sending flush stop event will serialiase on stream->src_srcpad.
-   * But the _src_chain function will first get the pad lock and then the
-   * manifest lock, so we cannot hold the manifest lock here while
-   * we will try to get the pad lock (taking locks in reversing order
-   * will lead to deadlock)
-   *
-   * In conclusion, we need to release the manifest lock before flushing
-   */
-  GST_MANIFEST_UNLOCK (demux);
-
-  gst_pad_push_event (stream->src_srcpad, gst_event_new_flush_stop (TRUE));
-
   /* changing src element state might try to join the streaming thread, so
    * we must not hold the manifest lock.
    */
+  GST_MANIFEST_UNLOCK (demux);
+
   gst_element_set_state (stream->src, GST_STATE_READY);
 
   GST_MANIFEST_LOCK (demux);
