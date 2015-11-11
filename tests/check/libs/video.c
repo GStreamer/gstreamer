@@ -2666,6 +2666,8 @@ GST_START_TEST (test_overlay_composition_over_transparency)
   comp1 = gst_video_overlay_composition_new (rect1);
   fail_unless (gst_video_overlay_composition_blend (comp1, &video_frame));
   gst_video_overlay_composition_unref (comp1);
+  gst_video_overlay_rectangle_unref (rect1);
+  gst_buffer_unref (pix2);
 
   data = GST_VIDEO_FRAME_PLANE_DATA (&video_frame, 0);
 
