@@ -124,15 +124,16 @@ post_missing_element_message (GstVaapiDecodeBin * vaapidecbin,
 static gboolean
 activate_vpp (GstVaapiDecodeBin * vaapidecbin)
 {
-  GstElement *src;
+  GstPad *queue_srcpad, *srcpad, *vpp_sinkpad, *vpp_srcpad;
+  gboolean res;
 
-  if (vaapidecbin->ghost_pad_src || vaapidecbin->postproc)
+  if (vaapidecbin->postproc)
     return TRUE;
 
-  if (vaapidecbin->has_vpp != HAS_VPP_YES || vaapidecbin->disable_vpp) {
-    src = vaapidecbin->queue;
-    goto connect_src_ghost_pad;
-  }
+  if (vaapidecbin->has_vpp != HAS_VPP_YES || vaapidecbin->disable_vpp)
+    return TRUE;
+
+  GST_DEBUG_OBJECT (vaapidecbin, "Enabling VPP");
 
   /* create the postproc */
   vaapidecbin->postproc =
@@ -144,35 +145,47 @@ activate_vpp (GstVaapiDecodeBin * vaapidecbin)
       vaapidecbin->deinterlace_method, NULL);
 
   gst_bin_add (GST_BIN (vaapidecbin), vaapidecbin->postproc);
-  if (!gst_element_link_pads_full (vaapidecbin->queue, "src",
-          vaapidecbin->postproc, "sink", GST_PAD_LINK_CHECK_NOTHING))
+
+  if (!gst_element_sync_state_with_parent (vaapidecbin->postproc))
+    goto error_sync_state;
+
+  srcpad = gst_element_get_static_pad (GST_ELEMENT_CAST (vaapidecbin), "src");
+  if (!gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (srcpad), NULL))
     goto error_link_pad;
 
-  GST_DEBUG_OBJECT (vaapidecbin, "Enabling VPP");
-  src = vaapidecbin->postproc;
+  queue_srcpad = gst_element_get_static_pad (vaapidecbin->queue, "src");
+  vpp_sinkpad = gst_element_get_static_pad (vaapidecbin->postproc, "sink");
+  res = (gst_pad_link (queue_srcpad, vpp_sinkpad) == GST_PAD_LINK_OK);
+  gst_object_unref (vpp_sinkpad);
+  gst_object_unref (queue_srcpad);
+  if (!res)
+    goto error_link_pad;
 
-  goto connect_src_ghost_pad;
+  vpp_srcpad = gst_element_get_static_pad (vaapidecbin->postproc, "src");
+  res = gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (srcpad), vpp_srcpad);
+  gst_object_unref (vpp_srcpad);
+  if (!res)
+    goto error_link_pad;
+
+  gst_object_unref (srcpad);
+
+  return TRUE;
 
 error_element_missing:
   {
     post_missing_element_message (vaapidecbin, "vaapipostproc");
     return FALSE;
   }
-error_link_pad:
+error_sync_state:
   {
-    GST_ERROR_OBJECT (vaapidecbin, "Failed to link the child elements");
+    GST_ERROR_OBJECT (vaapidecbin, "Failed to sync VPP state");
     return FALSE;
   }
-connect_src_ghost_pad:
+error_link_pad:
   {
-    GstPad *srcpad, *ghostpad;
-
-    srcpad = gst_element_get_static_pad (src, "src");
-    ghostpad = gst_ghost_pad_new ("src", srcpad);
-    vaapidecbin->ghost_pad_src = ghostpad;
     gst_object_unref (srcpad);
-    gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghostpad);
-    return TRUE;
+    GST_ERROR_OBJECT (vaapidecbin, "Failed to link the child elements");
+    return FALSE;
   }
 }
 
@@ -184,7 +197,7 @@ ensure_vpp (GstVaapiDecodeBin * vaapidecbin)
   if (vaapidecbin->has_vpp != HAS_VPP_UNKNOWN)
     return TRUE;
 
-  GST_DEBUG_OBJECT (vaapidecbin, "Creating a dummy display to test for vpp");
+  GST_INFO_OBJECT (vaapidecbin, "Creating a dummy display to test for vpp");
   display = gst_vaapi_create_test_display ();
   if (!display)
     return FALSE;
@@ -420,6 +433,8 @@ static gboolean
 gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
 {
   gchar *missing_factory = NULL;
+  GstPad *pad, *ghostpad;
+  GstPadTemplate *tmpl;
 
   /* create the decoder */
   vaapidecbin->decoder =
@@ -440,12 +455,28 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
       "max-size-buffers", vaapidecbin->max_size_buffers,
       "max-size-time", vaapidecbin->max_size_time, NULL);
 
-  gst_bin_add_many (GST_BIN (vaapidecbin),
-      vaapidecbin->decoder, vaapidecbin->queue, NULL);
+  gst_bin_add_many (GST_BIN (vaapidecbin), vaapidecbin->decoder,
+      vaapidecbin->queue, NULL);
 
-  if (!gst_element_link_pads_full (vaapidecbin->decoder, "src",
-          vaapidecbin->queue, "sink", GST_PAD_LINK_CHECK_NOTHING))
+  if (!gst_element_link_many (vaapidecbin->decoder, vaapidecbin->queue, NULL))
     goto error_link_pad;
+
+  /* create ghost pad sink */
+  pad = gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->decoder), "sink");
+  ghostpad = gst_ghost_pad_new_from_template ("sink", pad,
+      GST_PAD_PAD_TEMPLATE (pad));
+  gst_object_unref (pad);
+  if (!gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghostpad))
+    goto error_adding_pad;
+
+  /* create ghost pad src */
+  pad = gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->queue), "src");
+  tmpl = gst_static_pad_template_get (&gst_vaapi_decode_bin_src_factory);
+  ghostpad = gst_ghost_pad_new_from_template ("src", pad, tmpl);
+  gst_object_unref (pad);
+  gst_object_unref (tmpl);
+  if (!gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghostpad))
+    goto error_adding_pad;
 
   return TRUE;
 
@@ -456,8 +487,14 @@ error_element_missing:
   }
 error_link_pad:
   {
-    GST_ELEMENT_ERROR (vaapidecbin, CORE, PAD,
-        (NULL), ("Failed to configure the vaapidecodebin."));
+    GST_ELEMENT_ERROR (vaapidecbin, CORE, PAD, (NULL),
+        ("Failed to configure the vaapidecodebin."));
+    return FALSE;
+  }
+error_adding_pad:
+  {
+    GST_ELEMENT_ERROR (vaapidecbin, CORE, PAD, (NULL),
+        ("Failed to adding pads."));
     return FALSE;
   }
 }
@@ -465,20 +502,8 @@ error_link_pad:
 static void
 gst_vaapi_decode_bin_init (GstVaapiDecodeBin * vaapidecbin)
 {
-  GstPad *element_pad, *ghost_pad;
-
   vaapidecbin->has_vpp = HAS_VPP_UNKNOWN;
   vaapidecbin->deinterlace_method = DEFAULT_DEINTERLACE_METHOD;
 
-  if (!gst_vaapi_decode_bin_configure (vaapidecbin))
-    return;
-
-  /* create ghost pad sink */
-  element_pad =
-      gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->decoder), "sink");
-  ghost_pad =
-      gst_ghost_pad_new_from_template ("sink", element_pad,
-      GST_PAD_PAD_TEMPLATE (element_pad));
-  gst_object_unref (element_pad);
-  gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghost_pad);
+  gst_vaapi_decode_bin_configure (vaapidecbin);
 }
