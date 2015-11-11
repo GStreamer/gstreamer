@@ -676,6 +676,7 @@ splitmux_part_reader_finalize (GObject * object)
 {
   GstSplitMuxPartReader *reader = (GstSplitMuxPartReader *) object;
 
+  g_cond_clear (&reader->inactive_cond);
   g_mutex_clear (&reader->lock);
   g_mutex_clear (&reader->type_lock);
 
