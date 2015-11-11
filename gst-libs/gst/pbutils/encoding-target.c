@@ -801,6 +801,8 @@ get_matching_filenames (gchar * path, gchar * filename)
   tmp = g_build_filename (path, filename, NULL);
   if (g_file_test (tmp, G_FILE_TEST_EXISTS))
     res = g_list_append (res, tmp);
+  else
+    g_free (tmp);
 
   while ((subdirname = g_dir_read_name (topdir))) {
     gchar *ltmp = g_build_filename (path, subdirname, NULL);
