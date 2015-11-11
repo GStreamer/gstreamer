@@ -35,11 +35,16 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_log_debug);
 #define GST_CAT_DEFAULT gst_log_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_BIN);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_BUFFER);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_BUFFER_LIST);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_EVENT);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_MESSAGE);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_QUERY);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_STATES);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PADS);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_ELEMENT_PADS);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_ELEMENT_FACTORY);
 
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_log_debug, "log", 0, "log tracer"); \
@@ -47,7 +52,12 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_QUERY);
     GST_DEBUG_CATEGORY_GET (GST_CAT_BUFFER_LIST, "GST_BUFFER_LIST"); \
     GST_DEBUG_CATEGORY_GET (GST_CAT_EVENT, "GST_EVENT"); \
     GST_DEBUG_CATEGORY_GET (GST_CAT_MESSAGE, "GST_MESSAGE"); \
-    GST_DEBUG_CATEGORY_GET (GST_CAT_QUERY, "query");
+    GST_DEBUG_CATEGORY_GET (GST_CAT_STATES, "GST_STATES"); \
+    GST_DEBUG_CATEGORY_GET (GST_CAT_PADS, "GST_PADS"); \
+    GST_DEBUG_CATEGORY_GET (GST_CAT_ELEMENT_PADS, "GST_ELEMENT_PADS"); \
+    GST_DEBUG_CATEGORY_GET (GST_CAT_ELEMENT_FACTORY, "GST_ELEMENT_FACTORY"); \
+    GST_DEBUG_CATEGORY_GET (GST_CAT_QUERY, "query"); \
+    GST_DEBUG_CATEGORY_GET (GST_CAT_BIN, "bin");
 #define gst_log_tracer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstLogTracer, gst_log_tracer, GST_TYPE_TRACER,
     _do_init);
@@ -166,6 +176,118 @@ do_query_post (GstTracer * self, guint64 ts, GstElement * elem, gboolean res)
       GST_TIME_ARGS (ts), elem, res);
 }
 
+static void
+do_element_new (GstTracer * self, guint64 ts, GstElement * elem)
+{
+  do_log (GST_CAT_ELEMENT_FACTORY,
+      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT,
+      GST_TIME_ARGS (ts), elem);
+}
+
+static void
+do_element_add_pad (GstTracer * self, guint64 ts, GstElement * elem,
+    GstPad * pad)
+{
+  do_log (GST_CAT_ELEMENT_PADS,
+      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", pad=%" GST_PTR_FORMAT,
+      GST_TIME_ARGS (ts), elem, pad);
+}
+
+static void
+do_element_remove_pad (GstTracer * self, guint64 ts, GstElement * elem,
+    GstPad * pad)
+{
+  do_log (GST_CAT_ELEMENT_PADS,
+      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", pad=%" GST_PTR_FORMAT,
+      GST_TIME_ARGS (ts), elem, pad);
+}
+
+static void
+do_element_change_state_pre (GstTracer * self, guint64 ts, GstElement * elem,
+    GstStateChange change)
+{
+  do_log (GST_CAT_STATES,
+      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", change=%d",
+      GST_TIME_ARGS (ts), elem, (gint) change);
+}
+
+static void
+do_element_change_state_post (GstTracer * self, guint64 ts, GstElement * elem,
+    GstStateChange change, GstStateChangeReturn res)
+{
+  do_log (GST_CAT_STATES,
+      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", change=%d, res=%d",
+      GST_TIME_ARGS (ts), elem, (gint) change, (gint) res);
+}
+
+static void
+do_bin_add_pre (GstTracer * self, guint64 ts, GstBin * bin, GstElement * elem)
+{
+  do_log (GST_CAT_BIN,
+      "%" GST_TIME_FORMAT ", bin=%" GST_PTR_FORMAT ", element=%" GST_PTR_FORMAT,
+      GST_TIME_ARGS (ts), bin, elem);
+}
+
+static void
+do_bin_add_post (GstTracer * self, guint64 ts, GstBin * bin, GstElement * elem,
+    gboolean res)
+{
+  do_log (GST_CAT_BIN,
+      "%" GST_TIME_FORMAT ", bin=%" GST_PTR_FORMAT ", element=%" GST_PTR_FORMAT
+      ", res=%d", GST_TIME_ARGS (ts), bin, elem, res);
+}
+
+static void
+do_bin_remove_pre (GstTracer * self, guint64 ts, GstBin * bin,
+    GstElement * elem)
+{
+  do_log (GST_CAT_BIN,
+      "%" GST_TIME_FORMAT ", bin=%" GST_PTR_FORMAT ", element=%" GST_PTR_FORMAT,
+      GST_TIME_ARGS (ts), bin, elem);
+}
+
+static void
+do_bin_remove_post (GstTracer * self, guint64 ts, GstBin * bin, gboolean res)
+{
+  do_log (GST_CAT_BIN,
+      "%" GST_TIME_FORMAT ", bin=%" GST_PTR_FORMAT ", res=%d",
+      GST_TIME_ARGS (ts), bin, res);
+}
+
+static void
+do_pad_link_pre (GstTracer * self, guint64 ts, GstPad * src, GstElement * sink)
+{
+  do_log (GST_CAT_PADS,
+      "%" GST_TIME_FORMAT ", src=%" GST_PTR_FORMAT ", sink=%" GST_PTR_FORMAT,
+      GST_TIME_ARGS (ts), src, sink);
+}
+
+static void
+do_pad_link_post (GstTracer * self, guint64 ts, GstPad * src, GstElement * sink,
+    GstPadLinkReturn res)
+{
+  do_log (GST_CAT_PADS,
+      "%" GST_TIME_FORMAT ", src=%" GST_PTR_FORMAT ", sink=%" GST_PTR_FORMAT
+      ", res=%d", GST_TIME_ARGS (ts), src, sink, (gint) res);
+}
+
+static void
+do_pad_unlink_pre (GstTracer * self, guint64 ts, GstPad * src,
+    GstElement * sink)
+{
+  do_log (GST_CAT_PADS,
+      "%" GST_TIME_FORMAT ", src=%" GST_PTR_FORMAT ", sink=%" GST_PTR_FORMAT,
+      GST_TIME_ARGS (ts), src, sink);
+}
+
+static void
+do_pad_unlink_post (GstTracer * self, guint64 ts, GstPad * src,
+    GstElement * sink, gboolean res)
+{
+  do_log (GST_CAT_PADS,
+      "%" GST_TIME_FORMAT ", src=%" GST_PTR_FORMAT ", sink=%" GST_PTR_FORMAT
+      ", res=%d", GST_TIME_ARGS (ts), src, sink, (gint) res);
+}
 
 /* tracer class */
 
@@ -195,6 +317,10 @@ gst_log_tracer_init (GstLogTracer * self)
       G_CALLBACK (do_push_event_pre));
   gst_tracing_register_hook (tracer, "pad-push-event-post",
       G_CALLBACK (do_push_event_post));
+  gst_tracing_register_hook (tracer, "pad-query-pre",
+      G_CALLBACK (do_query_pre));
+  gst_tracing_register_hook (tracer, "pad-query-post",
+      G_CALLBACK (do_query_post));
   gst_tracing_register_hook (tracer, "element-post-message-pre",
       G_CALLBACK (do_post_message_pre));
   gst_tracing_register_hook (tracer, "element-post-message-post",
@@ -203,4 +329,30 @@ gst_log_tracer_init (GstLogTracer * self)
       G_CALLBACK (do_query_pre));
   gst_tracing_register_hook (tracer, "element-query-post",
       G_CALLBACK (do_query_post));
+  gst_tracing_register_hook (tracer, "element-new",
+      G_CALLBACK (do_element_new));
+  gst_tracing_register_hook (tracer, "element-add-pad",
+      G_CALLBACK (do_element_add_pad));
+  gst_tracing_register_hook (tracer, "element-remove-pad",
+      G_CALLBACK (do_element_remove_pad));
+  gst_tracing_register_hook (tracer, "element-change-state-pre",
+      G_CALLBACK (do_element_change_state_pre));
+  gst_tracing_register_hook (tracer, "element-change-state-post",
+      G_CALLBACK (do_element_change_state_post));
+  gst_tracing_register_hook (tracer, "bin-add-pre",
+      G_CALLBACK (do_bin_add_pre));
+  gst_tracing_register_hook (tracer, "bin-add-post",
+      G_CALLBACK (do_bin_add_post));
+  gst_tracing_register_hook (tracer, "bin-remove-pre",
+      G_CALLBACK (do_bin_remove_pre));
+  gst_tracing_register_hook (tracer, "bin-remove-post",
+      G_CALLBACK (do_bin_remove_post));
+  gst_tracing_register_hook (tracer, "pad-link-pre",
+      G_CALLBACK (do_pad_link_pre));
+  gst_tracing_register_hook (tracer, "pad-link-post",
+      G_CALLBACK (do_pad_link_post));
+  gst_tracing_register_hook (tracer, "pad-unlink-pre",
+      G_CALLBACK (do_pad_unlink_pre));
+  gst_tracing_register_hook (tracer, "pad-unlink-post",
+      G_CALLBACK (do_pad_unlink_post));
 }
