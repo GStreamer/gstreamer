@@ -471,6 +471,7 @@ gst_audio_quantize_free (GstAudioQuantize * quant)
   g_free (quant->error_buf);
   g_free (quant->coeffs);
   g_free (quant->last_random);
+  g_free (quant->dither_buf);
 
   g_slice_free (GstAudioQuantize, quant);
 }
