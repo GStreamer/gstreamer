@@ -3138,7 +3138,7 @@ gst_mpdparser_validate_rfc1738_url (const char *s)
 {
   while (*s) {
     if (!strchr
-        (";:@&=aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789$-_.+!*'(),%",
+        (";:@&=aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789$-_.+!*'(),%/",
             *s))
       return FALSE;
     if (*s == '%') {
@@ -3195,11 +3195,9 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
       continue;
 
     if (!g_strcmp0 (token, "RepresentationID")) {
-      if (!gst_mpdparser_validate_rfc1738_url (id)) {
-        GST_WARNING ("String '%s' has characters invalid in an RFC 1738 URL",
-            id);
-        goto invalid_format;
-      }
+      if (!gst_mpdparser_validate_rfc1738_url (id))
+        goto invalid_representation_id;
+
       tokens[i] = g_strdup_printf ("%s", id);
       g_free (token);
     } else if (!strncmp (token, "Number", 6)) {
@@ -3255,6 +3253,16 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
 invalid_format:
   {
     GST_ERROR ("Invalid format '%s' in '%s'", format, token);
+
+    g_strfreev (tokens);
+
+    return NULL;
+  }
+invalid_representation_id:
+  {
+    GST_ERROR
+        ("Representation ID string '%s' has characters invalid in an RFC 1738 URL",
+        id);
 
     g_strfreev (tokens);
 

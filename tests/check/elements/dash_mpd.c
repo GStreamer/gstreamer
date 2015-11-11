@@ -4912,7 +4912,7 @@ GST_END_TEST;
 
 GST_START_TEST (dash_mpdparser_rfc1738_strings)
 {
-  fail_unless (gst_mpdparser_validate_rfc1738_url ("/") == FALSE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url ("/") == TRUE);
   fail_unless (gst_mpdparser_validate_rfc1738_url (" ") == FALSE);
   fail_unless (gst_mpdparser_validate_rfc1738_url ("aaaaaaaa ") == FALSE);
 
@@ -4920,6 +4920,9 @@ GST_START_TEST (dash_mpdparser_rfc1738_strings)
   fail_unless (gst_mpdparser_validate_rfc1738_url ("a") == TRUE);
   fail_unless (gst_mpdparser_validate_rfc1738_url
       (";:@&=aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789$-_.+!*'(),%AA")
+      == TRUE);
+  fail_unless (gst_mpdparser_validate_rfc1738_url
+      (";:@&=aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789$-_.+!*'(),/%AA")
       == TRUE);
   fail_unless (gst_mpdparser_validate_rfc1738_url
       (";:@&=aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789$-_.+!*'(),% ")
