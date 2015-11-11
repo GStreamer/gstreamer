@@ -194,10 +194,16 @@ ensure_vpp (GstVaapiDecodeBin * vaapidecbin)
 
   gst_vaapi_display_unref (display);
 
-  if (!activate_vpp (vaapidecbin))
+  return TRUE;
+}
+
+static gboolean
+gst_vaapi_decode_bin_reconfigure (GstVaapiDecodeBin* vaapidecbin)
+{
+  if (!ensure_vpp (vaapidecbin))
     return FALSE;
 
-  return TRUE;
+  return activate_vpp (vaapidecbin);
 }
 
 static void
@@ -311,8 +317,6 @@ gst_vaapi_decode_bin_handle_message (GstBin * bin, GstMessage * message)
     }
   }
 
-  activate_vpp (vaapidecbin);
-
 bail:
   if (display)
     gst_vaapi_display_unref (display);
@@ -343,7 +347,7 @@ gst_vaapi_decode_bin_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!ensure_vpp (vaapidecbin))
+      if (!gst_vaapi_decode_bin_reconfigure (vaapidecbin))
         return GST_STATE_CHANGE_FAILURE;
       break;
     default:
