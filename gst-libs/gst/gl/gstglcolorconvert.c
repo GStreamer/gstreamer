@@ -1515,6 +1515,19 @@ _mangle_varying_attribute (const gchar * str, guint shader_type,
   return g_strdup (str);
 }
 
+static gchar *
+_mangle_frag_color (const gchar * str)
+{
+  GRegex *regex;
+  gchar *ret;
+
+  regex = g_regex_new ("gl_FragColor", 0, 0, NULL);
+  ret = g_regex_replace_literal (regex, str, -1, 0, "fragColor", 0, NULL);
+  g_regex_unref (regex);
+
+  return ret;
+}
+
 static void
 _mangle_version_profile_from_gl_api (GstGLAPI gl_api, GstGLSLVersion * version,
     GstGLSLProfile * profile)
@@ -1543,6 +1556,11 @@ _mangle_shader (const gchar * str, guint shader_type, GstGLTextureTarget from,
   g_free (tmp);
   tmp = _mangle_varying_attribute (tmp2, shader_type, gl_api);
   g_free (tmp2);
+  if (shader_type == GL_FRAGMENT_SHADER && gl_api & GST_GL_API_OPENGL3) {
+    tmp2 = _mangle_frag_color (tmp);
+    g_free (tmp);
+    tmp = tmp2;
+  }
   _mangle_version_profile_from_gl_api (gl_api, version, profile);
   return tmp;
 }
@@ -1604,6 +1622,11 @@ _create_shader (GstGLColorConvert * convert)
 
   if (info->templ->uniforms)
     g_string_append (str, info->templ->uniforms);
+
+  if (gl_api & GST_GL_API_OPENGL3) {
+    g_string_append_c (str, '\n');
+    g_string_append (str, "out vec4 fragColor;\n");
+  }
 
   for (i = 0; i < MAX_FUNCTIONS; i++) {
     if (info->templ->functions[i] == NULL)
