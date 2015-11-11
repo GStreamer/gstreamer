@@ -436,6 +436,7 @@ _compile_shader (GstGLContext * context, struct compile *data)
   if (!_ensure_shader (data->stage)) {
     g_set_error (data->error, GST_GLSL_ERROR, GST_GLSL_ERROR_COMPILE,
         "Failed to create shader object");
+    data->result = FALSE;
     return;
   }
 
