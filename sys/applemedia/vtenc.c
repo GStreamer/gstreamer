@@ -505,6 +505,7 @@ gst_vtenc_stop (GstVideoEncoder * enc)
 
   if (self->profile_level)
     CFRelease (self->profile_level);
+  self->profile_level = NULL;
 
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
