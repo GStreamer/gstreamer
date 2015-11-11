@@ -197,6 +197,7 @@ _new_with_stages_va_list (GstGLContext * context, GError ** error,
 {
   GstGLShader *shader;
   GstGLSLStage *stage;
+  gboolean to_unref_and_out = FALSE;
 
   g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
 
@@ -204,16 +205,27 @@ _new_with_stages_va_list (GstGLContext * context, GError ** error,
   shader->context = gst_object_ref (context);
 
   while ((stage = va_arg (varargs, GstGLSLStage *))) {
+    if (to_unref_and_out) {
+      gst_object_unref (stage);
+      continue;
+    }
+
     if (!gst_glsl_stage_compile (stage, error)) {
-      gst_object_unref (shader);
-      return NULL;
+      gst_object_unref (stage);
+      to_unref_and_out = TRUE;
+      continue;
     }
     if (!gst_gl_shader_attach (shader, stage)) {
       g_set_error (error, GST_GLSL_ERROR, GST_GLSL_ERROR_PROGRAM,
           "Failed to attach stage to program");
-      gst_object_unref (shader);
-      return NULL;
+      to_unref_and_out = TRUE;
+      continue;
     }
+  }
+
+  if (to_unref_and_out) {
+    gst_object_unref (shader);
+    return NULL;
   }
 
   return shader;
