@@ -1762,6 +1762,56 @@ GST_START_TEST (test_pad_probe_flush_events)
 
 GST_END_TEST;
 
+#define NUM_PROBES 4
+static guint count;
+
+static GstPadProbeReturn
+order_others_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  *(guint *) (user_data) = ++count;
+
+  return GST_PAD_PROBE_REMOVE;
+}
+
+GST_START_TEST (test_pad_probe_call_order)
+{
+  GstFlowReturn flow;
+  GstPad *src, *sink;
+  guint counters[NUM_PROBES];
+  guint i;
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_active (src, TRUE);
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+  gst_pad_set_active (sink, TRUE);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
+  fail_unless_equals_int (gst_pad_link (src, sink), GST_PAD_LINK_OK);
+
+  for (i = 0; i < NUM_PROBES; i++) {
+    gst_pad_add_probe (src,
+        GST_PAD_PROBE_TYPE_BUFFER, order_others_probe_cb, &(counters[i]), NULL);
+  }
+
+  /* push a buffer so the events are propagated downstream */
+  flow = gst_pad_push (src, gst_buffer_new ());
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+
+  for (i = 0; i < NUM_PROBES; i++) {
+    fail_unless (counters[i] == i + 1);
+  }
+
+  gst_object_unref (src);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
 static gboolean got_notify;
 
 static void
@@ -2672,6 +2722,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_pad_probe_block_add_remove);
   tcase_add_test (tc_chain, test_pad_probe_block_and_drop_buffer);
   tcase_add_test (tc_chain, test_pad_probe_flush_events);
+  tcase_add_test (tc_chain, test_pad_probe_call_order);
   tcase_add_test (tc_chain, test_events_query_unlinked);
   tcase_add_test (tc_chain, test_queue_src_caps_notify_linked);
   tcase_add_test (tc_chain, test_queue_src_caps_notify_not_linked);
