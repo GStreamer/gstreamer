@@ -203,6 +203,7 @@ check_conversion (TestFrame * frames, guint size)
         }
       }
 
+      gst_caps_unref (out_caps);
       gst_video_frame_unmap (&out_frame);
       gst_buffer_unref (outbuf);
     }
