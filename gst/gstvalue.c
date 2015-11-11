@@ -28,6 +28,9 @@
  * undefined behaviour.
  */
 
+/* Suppress warnings for GValueAraray */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -232,6 +235,70 @@ gst_value_transform_any_list_string (const GValue * src_value,
   g_string_append (s, begin);
   for (i = 0; i < alen; i++) {
     list_value = &g_array_index (array, GValue, i);
+
+    if (i != 0) {
+      g_string_append_len (s, ", ", 2);
+    }
+    list_s = g_strdup_value_contents (list_value);
+    g_string_append (s, list_s);
+    g_free (list_s);
+  }
+  g_string_append (s, end);
+
+  dest_value->data[0].v_pointer = g_string_free (s, FALSE);
+}
+
+static gchar *
+_gst_value_serialize_g_value_array (const GValue * value, const gchar * begin,
+    const gchar * end)
+{
+  guint i;
+  GValueArray *array = value->data[0].v_pointer;
+  GString *s;
+  GValue *v;
+  gchar *s_val;
+  guint alen = array->n_values;
+
+  /* estimate minimum string length to minimise re-allocs in GString */
+  s = g_string_sized_new (2 + (6 * alen) + 2);
+  g_string_append (s, begin);
+  for (i = 0; i < alen; i++) {
+    v = g_value_array_get_nth (array, i);
+    s_val = gst_value_serialize (v);
+    if (s_val != NULL) {
+      g_string_append (s, s_val);
+      g_free (s_val);
+      if (i < alen - 1) {
+        g_string_append_len (s, ", ", 2);
+      }
+    } else {
+      GST_WARNING ("Could not serialize list/array value of type '%s'",
+          G_VALUE_TYPE_NAME (v));
+    }
+  }
+  g_string_append (s, end);
+  return g_string_free (s, FALSE);
+}
+
+static void
+_gst_value_transform_g_value_array_string (const GValue * src_value,
+    GValue * dest_value, const gchar * begin, const gchar * end)
+{
+  GValue *list_value;
+  GValueArray *array;
+  GString *s;
+  guint i;
+  gchar *list_s;
+  guint alen;
+
+  array = src_value->data[0].v_pointer;
+  alen = array->n_values;
+
+  /* estimate minimum string length to minimise re-allocs in GString */
+  s = g_string_sized_new (2 + (10 * alen) + 2);
+  g_string_append (s, begin);
+  for (i = 0; i < alen; i++) {
+    list_value = g_value_array_get_nth (array, i);
 
     if (i != 0) {
       g_string_append_len (s, ", ", 2);
@@ -844,6 +911,12 @@ gst_value_transform_array_string (const GValue * src_value, GValue * dest_value)
   gst_value_transform_any_list_string (src_value, dest_value, "< ", " >");
 }
 
+static void
+gst_value_transform_g_value_array_string (const GValue * src_value, GValue * dest_value)
+{
+  _gst_value_transform_g_value_array_string (src_value, dest_value, "< ", " >");
+}
+
 /* Do an unordered compare of the contents of a list */
 static gint
 gst_value_compare_value_list (const GValue * value1, const GValue * value2)
@@ -923,6 +996,29 @@ gst_value_compare_value_array (const GValue * value1, const GValue * value2)
   return GST_VALUE_EQUAL;
 }
 
+static gint
+gst_value_compare_g_value_array (const GValue * value1, const GValue * value2)
+{
+  guint i;
+  GValueArray *array1 = value1->data[0].v_pointer;
+  GValueArray *array2 = value2->data[0].v_pointer;
+  guint len = array1->n_values;
+  GValue *v1;
+  GValue *v2;
+
+  if (len != array2->n_values)
+    return GST_VALUE_UNORDERED;
+
+  for (i = 0; i < len; i++) {
+    v1 = g_value_array_get_nth (array1, i);
+    v2 = g_value_array_get_nth (array2, i);
+    if (gst_value_compare (v1, v2) != GST_VALUE_EQUAL)
+      return GST_VALUE_UNORDERED;
+  }
+
+  return GST_VALUE_EQUAL;
+}
+
 static gchar *
 gst_value_serialize_value_list (const GValue * value)
 {
@@ -946,6 +1042,19 @@ static gboolean
 gst_value_deserialize_value_array (GValue * dest, const gchar * s)
 {
   g_warning ("gst_value_deserialize_array: unimplemented");
+  return FALSE;
+}
+
+static gchar *
+gst_value_serialize_g_value_array (const GValue * value)
+{
+  return _gst_value_serialize_g_value_array (value, "< ", " >");
+}
+
+static gboolean
+gst_value_deserialize_g_value_array (GValue * dest, const gchar * s)
+{
+  g_warning ("gst_value_deserialize_g_value_array: unimplemented");
   return FALSE;
 }
 
@@ -6649,6 +6758,7 @@ _priv_gst_value_initialize (void)
   REGISTER_SERIALIZATION (gst_fraction_range_get_type (), fraction_range);
   REGISTER_SERIALIZATION (gst_value_list_get_type (), value_list);
   REGISTER_SERIALIZATION (gst_value_array_get_type (), value_array);
+  REGISTER_SERIALIZATION (g_value_array_get_type (), g_value_array);
   REGISTER_SERIALIZATION (gst_buffer_get_type (), buffer);
   REGISTER_SERIALIZATION (gst_sample_get_type (), sample);
   REGISTER_SERIALIZATION (gst_fraction_get_type (), fraction);
@@ -6700,6 +6810,8 @@ _priv_gst_value_initialize (void)
       gst_value_transform_list_string);
   g_value_register_transform_func (GST_TYPE_ARRAY, G_TYPE_STRING,
       gst_value_transform_array_string);
+  g_value_register_transform_func (G_TYPE_VALUE_ARRAY, G_TYPE_STRING,
+      gst_value_transform_g_value_array_string);
   g_value_register_transform_func (GST_TYPE_FRACTION, G_TYPE_STRING,
       gst_value_transform_fraction_string);
   g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_FRACTION,
