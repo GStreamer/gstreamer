@@ -951,9 +951,6 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      glimage_sink->overlay_compositor =
-          gst_gl_overlay_compositor_new (glimage_sink->context);
-
       g_atomic_int_set (&glimage_sink->to_quit, 0);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -1011,6 +1008,11 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     }
     case GST_STATE_CHANGE_READY_TO_NULL:
+      if (glimage_sink->overlay_compositor) {
+        gst_object_unref (glimage_sink->overlay_compositor);
+        glimage_sink->overlay_compositor = NULL;
+      }
+
       if (glimage_sink->context) {
         GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
 
@@ -1027,9 +1029,6 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         if (glimage_sink->mouse_sig_id)
           g_signal_handler_disconnect (window, glimage_sink->mouse_sig_id);
         glimage_sink->mouse_sig_id = 0;
-
-        gst_object_unref (glimage_sink->overlay_compositor);
-        glimage_sink->overlay_compositor = NULL;
 
         gst_object_unref (window);
         gst_object_unref (glimage_sink->context);
@@ -1333,6 +1332,14 @@ prepare_next_buffer (GstGLImageSink * glimage_sink)
   } else {
     next_buffer = in_buffer;
     info = &glimage_sink->in_info;
+  }
+
+  if (!glimage_sink->overlay_compositor) {
+    if (!(glimage_sink->overlay_compositor =
+            gst_gl_overlay_compositor_new (glimage_sink->context))) {
+      gst_buffer_unref (next_buffer);
+      goto fail;
+    }
   }
 
   gst_gl_overlay_compositor_upload_overlays (glimage_sink->overlay_compositor,
