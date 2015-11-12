@@ -1007,7 +1007,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
           trim_start = enc->pending_lookahead;
           enc->pending_lookahead = 0;
         } else {
-          trim_start = input_samples * 48000 / enc->sample_rate;
+          trim_start = ((guint64) input_samples) * 48000 / enc->sample_rate;
           enc->pending_lookahead -= trim_start;
           output_samples = 0;
         }
@@ -1026,7 +1026,8 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
       output_samples = enc->consumed_samples - enc->encoded_samples;
       input_samples = 0;
       GST_DEBUG_OBJECT (enc, "draining %d samples", output_samples);
-      trim_end = (frame_samples - output_samples) * 48000 / enc->sample_rate;
+      trim_end =
+          ((guint64) frame_samples - output_samples) * 48000 / enc->sample_rate;
     } else if (enc->encoded_samples == enc->consumed_samples) {
       GST_DEBUG_OBJECT (enc, "nothing to drain");
       goto done;
