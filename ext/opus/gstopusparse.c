@@ -386,7 +386,7 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
             parse->comment_header);
       } else {
         GstCaps *sink_caps;
-        guint32 sample_rate;
+        guint32 sample_rate = 48000;
         guint8 n_channels, n_streams, n_stereo_streams, channel_mapping_family;
         guint8 channel_mapping[256];
         GstBuffer *id_header;
