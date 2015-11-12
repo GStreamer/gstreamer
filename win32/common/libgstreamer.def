@@ -895,6 +895,7 @@ EXPORTS
 	gst_pad_set_chain_function_full
 	gst_pad_set_chain_list_function_full
 	gst_pad_set_element_private
+	gst_pad_set_event_full_function_full
 	gst_pad_set_event_function_full
 	gst_pad_set_getrange_function_full
 	gst_pad_set_iterate_internal_links_function_full

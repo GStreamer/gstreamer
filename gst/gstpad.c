@@ -1826,6 +1826,51 @@ gst_pad_set_event_function_full (GstPad * pad, GstPadEventFunction event,
       GST_DEBUG_FUNCPTR_NAME (event));
 }
 
+static gboolean
+event_wrap (GstPad * pad, GstObject * object, GstEvent * event)
+{
+  GstFlowReturn ret;
+
+  ret = GST_PAD_EVENTFULLFUNC (pad) (pad, object, event);
+  if (ret == GST_FLOW_OK)
+    return TRUE;
+  return FALSE;
+}
+
+/**
+ * gst_pad_set_event_full_function:
+ * @p: a #GstPad of either direction.
+ * @f: the #GstPadEventFullFunction to set.
+ *
+ * Calls gst_pad_set_event_full_function_full() with %NULL for the user_data and
+ * notify.
+ */
+/**
+ * gst_pad_set_event_full_function_full:
+ * @pad: a #GstPad of either direction.
+ * @event: the #GstPadEventFullFunction to set.
+ * @user_data: user_data passed to @notify
+ * @notify: notify called when @event will not be used anymore.
+ *
+ * Sets the given event handler for the pad.
+ */
+void
+gst_pad_set_event_full_function_full (GstPad * pad,
+    GstPadEventFullFunction event, gpointer user_data, GDestroyNotify notify)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  if (pad->eventnotify)
+    pad->eventnotify (pad->eventdata);
+  GST_PAD_EVENTFULLFUNC (pad) = event;
+  GST_PAD_EVENTFUNC (pad) = event_wrap;
+  pad->eventdata = user_data;
+  pad->eventnotify = notify;
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "eventfullfunc for set to %s",
+      GST_DEBUG_FUNCPTR_NAME (event));
+}
+
 /**
  * gst_pad_set_query_function:
  * @p: a #GstPad of either direction.
@@ -5389,6 +5434,7 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
   GstEventType event_type;
   gboolean serialized, need_unlock = FALSE, sticky;
   GstPadEventFunction eventfunc;
+  GstPadEventFullFunction eventfullfunc = NULL;
   GstObject *parent;
 
   GST_OBJECT_LOCK (pad);
@@ -5486,7 +5532,9 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
 
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
 
-  if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
+  eventfullfunc = GST_PAD_EVENTFULLFUNC (pad);
+  eventfunc = GST_PAD_EVENTFUNC (pad);
+  if (G_UNLIKELY (eventfunc == NULL && eventfullfunc == NULL))
     goto no_function;
 
   ACQUIRE_PARENT (pad, parent, no_parent);
@@ -5499,7 +5547,9 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
   if (sticky)
     gst_event_ref (event);
 
-  if (eventfunc (pad, parent, event)) {
+  if (eventfullfunc) {
+    ret = eventfullfunc (pad, parent, event);
+  } else if (eventfunc (pad, parent, event)) {
     ret = GST_FLOW_OK;
   } else {
     /* something went wrong */

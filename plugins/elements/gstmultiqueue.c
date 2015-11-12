@@ -1941,14 +1941,15 @@ gst_multi_queue_sink_activate_mode (GstPad * pad, GstObject * parent,
   return res;
 }
 
-static gboolean
+static GstFlowReturn
 gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstSingleQueue *sq;
   GstMultiQueue *mq;
   guint32 curid;
   GstMultiQueueItem *item;
-  gboolean res;
+  gboolean res = TRUE;
+  GstFlowReturn flowret = GST_FLOW_OK;
   GstEventType type;
   GstEvent *sref = NULL;
 
@@ -2088,8 +2089,17 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     default:
       break;
   }
+
 done:
-  return res;
+  if (res == FALSE) {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS)
+      flowret = GST_FLOW_NOT_NEGOTIATED;
+    else
+      flowret = GST_FLOW_ERROR;
+  }
+  GST_DEBUG_OBJECT (mq, "SingleQueue %d : returning %s", sq->id,
+      gst_flow_get_name (flowret));
+  return flowret;
 
 flushing:
   {
@@ -2098,14 +2108,14 @@ flushing:
     if (sref)
       gst_event_unref (sref);
     gst_multi_queue_item_destroy (item);
-    goto done;
+    return sq->srcresult;
   }
 was_eos:
   {
-    GST_DEBUG_OBJECT (mq, "we are EOS, dropping event, return FALSE");
+    GST_DEBUG_OBJECT (mq, "we are EOS, dropping event, return GST_FLOW_EOS");
     gst_event_unref (event);
     res = FALSE;
-    goto done;
+    return GST_FLOW_EOS;
   }
 }
 
@@ -2676,7 +2686,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
       GST_DEBUG_FUNCPTR (gst_multi_queue_chain));
   gst_pad_set_activatemode_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_sink_activate_mode));
-  gst_pad_set_event_function (sq->sinkpad,
+  gst_pad_set_event_full_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_sink_event));
   gst_pad_set_query_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_sink_query));

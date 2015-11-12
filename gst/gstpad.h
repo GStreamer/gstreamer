@@ -362,6 +362,26 @@ typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, GstObject *parent
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstObject *parent,
                                                                  GstEvent *event);
 
+/**
+ * GstPadEventFullFunction:
+ * @pad: the #GstPad to handle the event.
+ * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
+ *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
+ *          during the execution of this function.
+ * @event: (transfer full): the #GstEvent to handle.
+ *
+ * Function signature to handle an event for the pad.
+ *
+ * This variant is for specific elements that will take into account the
+ * last downstream flow return (from a pad push), in which case they can
+ * return it.
+ *
+ * Returns: %GST_FLOW_OK if the event was handled properly, or any other
+ * #GstFlowReturn dependent on downstream state.
+ */
+typedef GstFlowReturn		(*GstPadEventFullFunction)	(GstPad *pad, GstObject *parent,
+                                                                 GstEvent *event);
+
 
 /* internal links */
 /**
@@ -756,6 +776,7 @@ struct _GstPad {
     gpointer _gst_reserved[GST_PADDING];
     struct {
       GstFlowReturn last_flowret;
+      GstPadEventFullFunction eventfullfunc;
     } abi;
   } ABI;
 };
@@ -880,6 +901,17 @@ struct _GstPadClass {
  * class, use the base class's virtual functions instead.
  */
 #define GST_PAD_EVENTFUNC(pad)		(GST_PAD_CAST(pad)->eventfunc)
+/**
+ * GST_PAD_EVENTFULLFUNC:
+ * @pad: a #GstPad
+ *
+ * Get the #GstPadEventFullFunction from the given @pad, which
+ * is the function that handles events on the pad. You can
+ * use this to set your own event handling function on a pad
+ * after you create it.  If your element derives from a base
+ * class, use the base class's virtual functions instead.
+ */
+#define GST_PAD_EVENTFULLFUNC(pad)	(GST_PAD_CAST(pad)->ABI.abi.eventfullfunc)
 /**
  * GST_PAD_QUERYFUNC:
  * @pad: a #GstPad
@@ -1306,6 +1338,10 @@ void			gst_pad_set_event_function_full		(GstPad *pad,
                                                                  GstPadEventFunction event,
                                                                  gpointer user_data,
                                                                  GDestroyNotify notify);
+void			gst_pad_set_event_full_function_full	(GstPad *pad,
+                                                                 GstPadEventFullFunction event,
+                                                                 gpointer user_data,
+                                                                 GDestroyNotify notify);
 
 #define gst_pad_set_activate_function(p,f)      gst_pad_set_activate_function_full((p),(f),NULL,NULL)
 #define gst_pad_set_activatemode_function(p,f)  gst_pad_set_activatemode_function_full((p),(f),NULL,NULL)
@@ -1313,6 +1349,7 @@ void			gst_pad_set_event_function_full		(GstPad *pad,
 #define gst_pad_set_chain_list_function(p,f)    gst_pad_set_chain_list_function_full((p),(f),NULL,NULL)
 #define gst_pad_set_getrange_function(p,f)      gst_pad_set_getrange_function_full((p),(f),NULL,NULL)
 #define gst_pad_set_event_function(p,f)         gst_pad_set_event_function_full((p),(f),NULL,NULL)
+#define gst_pad_set_event_full_function(p,f)    gst_pad_set_event_full_function_full((p),(f),NULL,NULL)
 
 /* pad links */
 void			gst_pad_set_link_function_full		(GstPad *pad,

@@ -200,8 +200,8 @@ static GstFlowReturn gst_queue_chain_list (GstPad * pad, GstObject * parent,
 static GstFlowReturn gst_queue_push_one (GstQueue * queue);
 static void gst_queue_loop (GstPad * pad);
 
-static gboolean gst_queue_handle_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event);
+static GstFlowReturn gst_queue_handle_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
 static gboolean gst_queue_handle_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
@@ -431,7 +431,7 @@ gst_queue_init (GstQueue * queue)
   gst_pad_set_chain_list_function (queue->sinkpad, gst_queue_chain_list);
   gst_pad_set_activatemode_function (queue->sinkpad,
       gst_queue_sink_activate_mode);
-  gst_pad_set_event_function (queue->sinkpad, gst_queue_handle_sink_event);
+  gst_pad_set_event_full_function (queue->sinkpad, gst_queue_handle_sink_event);
   gst_pad_set_query_function (queue->sinkpad, gst_queue_handle_sink_query);
   GST_PAD_SET_PROXY_CAPS (queue->sinkpad);
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
@@ -897,7 +897,7 @@ no_item:
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret = TRUE;
@@ -985,7 +985,12 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       break;
   }
-  return ret;
+  if (ret == FALSE) {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS)
+      return GST_FLOW_NOT_NEGOTIATED;
+    return GST_FLOW_ERROR;
+  }
+  return GST_FLOW_OK;
 
   /* ERRORS */
 out_eos:
@@ -993,7 +998,7 @@ out_eos:
     GST_CAT_LOG_OBJECT (queue_dataflow, queue, "refusing event, we are EOS");
     GST_QUEUE_MUTEX_UNLOCK (queue);
     gst_event_unref (event);
-    return FALSE;
+    return GST_FLOW_EOS;
   }
 out_flow_error:
   {
@@ -1001,7 +1006,7 @@ out_flow_error:
         "refusing event, we have a downstream flow error: %s",
         gst_flow_get_name (queue->srcresult));
     gst_event_unref (event);
-    return FALSE;
+    return queue->srcresult;
   }
 }
 
