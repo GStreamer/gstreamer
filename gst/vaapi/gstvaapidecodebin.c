@@ -3,6 +3,7 @@
  *
  *  Copyright (C) 2015 Intel Corporation
  *    Author: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+ *    Author: Victor Jaquez <victorx.jaquez@intel.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
@@ -401,7 +402,8 @@ gst_vaapi_decode_bin_class_init (GstVaapiDecodeBinClass * klass)
       "VA-API Decode Bin",
       "Codec/Decoder/Video",
       GST_PLUGIN_DESC,
-      "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
+      "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, "
+      "Victor Jaquez <victorx.jaquez@intel.com>");
 
   properties[PROP_MAX_SIZE_BYTES] = g_param_spec_uint ("max-size-bytes",
       "Max. size (kB)", "Max. amount of data in the queue (bytes, 0=disable)",
