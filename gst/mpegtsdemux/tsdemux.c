@@ -1357,6 +1357,8 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                     gst_codec_utils_opus_create_caps (48000, channels,
                     mapping_family, stream_count, coupled_count,
                     channel_mapping);
+
+                g_free (channel_mapping);
               }
             } else {
               GST_WARNING_OBJECT (demux,
