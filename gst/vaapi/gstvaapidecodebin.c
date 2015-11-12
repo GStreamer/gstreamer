@@ -28,6 +28,7 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapidecodebin.h"
 #include "gstvaapivideocontext.h"
+#include "gstvaapipluginbase.h"
 
 #define GST_PLUGIN_NAME "vaapidecodebin"
 #define GST_PLUGIN_DESC "A Bin of VA-API elements: vaapidecode ! queue ! vaapipostproc"
@@ -197,8 +198,14 @@ ensure_vpp (GstVaapiDecodeBin * vaapidecbin)
   if (vaapidecbin->has_vpp != HAS_VPP_UNKNOWN)
     return TRUE;
 
-  GST_INFO_OBJECT (vaapidecbin, "Creating a dummy display to test for vpp");
-  display = gst_vaapi_create_test_display ();
+  display = GST_VAAPI_PLUGIN_BASE_DISPLAY (vaapidecbin->decoder);
+  if (display) {
+    GST_INFO_OBJECT (vaapidecbin, "Got display from vaapidecode");
+    gst_vaapi_display_ref (display);
+  } else {
+    GST_INFO_OBJECT (vaapidecbin, "Creating a dummy display to test for vpp");
+    display = gst_vaapi_create_test_display ();
+  }
   if (!display)
     return FALSE;
 
