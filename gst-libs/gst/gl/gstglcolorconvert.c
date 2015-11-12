@@ -1682,7 +1682,6 @@ _create_shader (GstGLColorConvert * convert)
     g_clear_error (&error);
     g_free (info->frag_prog);
     info->frag_prog = NULL;
-    g_free (version_str);
     gst_object_unref (stage);
     gst_object_unref (ret);
     return NULL;
