@@ -1582,7 +1582,7 @@ _create_shader (GstGLColorConvert * convert)
   GstGLSLStage *stage;
   GstGLSLVersion version;
   GstGLSLProfile profile;
-  gchar *version_str, *tmp;
+  gchar *version_str, *tmp, *tmp1;
   const gchar *strings[2];
   GError *error = NULL;
   GstGLAPI gl_api;
@@ -1596,8 +1596,9 @@ _create_shader (GstGLColorConvert * convert)
       _mangle_shader (text_vertex_shader, GL_VERTEX_SHADER, info->templ->target,
       convert->priv->from_texture_target, gl_api, &version, &profile);
 
-  version_str = g_strdup_printf ("#version %s\n",
-      gst_glsl_version_profile_to_string (version, profile));
+  tmp1 = gst_glsl_version_profile_to_string (version, profile);
+  version_str = g_strdup_printf ("#version %s\n", tmp1);
+  g_free (tmp1);
 
   strings[0] = version_str;
   strings[1] = tmp;
