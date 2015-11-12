@@ -867,7 +867,7 @@ gst_vaapipostproc_update_sink_caps (GstVaapiPostproc * postproc, GstCaps * caps,
   if (!gst_video_info_from_caps (&vi, caps))
     return FALSE;
 
-  if (video_info_changed (&vi, &postproc->sinkpad_info))
+  if (video_info_changed (&postproc->sinkpad_info, &vi))
     postproc->sinkpad_info = vi, *caps_changed_ptr = TRUE;
 
   deinterlace = is_deinterlace_enabled (postproc, &vi);
@@ -892,7 +892,7 @@ gst_vaapipostproc_update_src_caps (GstVaapiPostproc * postproc, GstCaps * caps,
   if (!gst_video_info_from_caps (&vi, caps))
     return FALSE;
 
-  if (video_info_changed (&vi, &postproc->srcpad_info))
+  if (video_info_changed (&postproc->srcpad_info, &vi))
     postproc->srcpad_info = vi, *caps_changed_ptr = TRUE;
 
   if (postproc->format != GST_VIDEO_INFO_FORMAT (&postproc->sinkpad_info) &&
@@ -1217,7 +1217,7 @@ ensure_srcpad_buffer_pool (GstVaapiPostproc * postproc, GstCaps * caps)
       GST_VIDEO_INFO_WIDTH (&vi), GST_VIDEO_INFO_HEIGHT (&vi));
 
   if (postproc->filter_pool
-      && !video_info_changed (&vi, &postproc->filter_pool_info))
+      && !video_info_changed (&postproc->filter_pool_info, &vi))
     return TRUE;
   postproc->filter_pool_info = vi;
 
