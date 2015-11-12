@@ -55,6 +55,10 @@
 #  endif
 #endif /* G_OS_WIN32 */
 
+#ifdef __APPLE__
+#include <mach/mach_time.h>
+#endif
+
 #define GET_ENTRY_STATUS(e)          ((GstClockReturn) g_atomic_int_get(&GST_CLOCK_ENTRY_STATUS(e)))
 #define SET_ENTRY_STATUS(e,val)      (g_atomic_int_set(&GST_CLOCK_ENTRY_STATUS(e),(val)))
 #define CAS_ENTRY_STATUS(e,old,val)  (g_atomic_int_compare_and_exchange(\
@@ -85,6 +89,9 @@ struct _GstSystemClockPrivate
   LARGE_INTEGER start;
   LARGE_INTEGER frequency;
 #endif                          /* G_OS_WIN32 */
+#ifdef __APPLE__
+  struct mach_timebase_info mach_timebase;
+#endif
 };
 
 #define GST_SYSTEM_CLOCK_GET_PRIVATE(obj)  \
@@ -194,6 +201,10 @@ gst_system_clock_init (GstSystemClock * clock)
     /* we take a base time so that time starts from 0 to ease debugging */
     QueryPerformanceCounter (&priv->start);
 #endif /* G_OS_WIN32 */
+
+#ifdef __APPLE__
+  mach_timebase_info (&priv->mach_timebase);
+#endif
 
 #if 0
   /* Uncomment this to start the async clock thread straight away */
@@ -547,6 +558,12 @@ clock_type_to_posix_id (GstClockType clock_type)
 static GstClockTime
 gst_system_clock_get_internal_time (GstClock * clock)
 {
+#if defined __APPLE__
+  GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
+  uint64_t mach_t = mach_absolute_time ();
+  return gst_util_uint64_scale (mach_t, sysclock->priv->mach_timebase.numer,
+      sysclock->priv->mach_timebase.denom);
+#else
 #ifdef G_OS_WIN32
   GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
 
@@ -582,11 +599,17 @@ gst_system_clock_get_internal_time (GstClock * clock)
     return GST_TIMESPEC_TO_TIME (ts);
   }
 #endif
+#endif /* __APPLE__ */
 }
 
 static guint64
 gst_system_clock_get_resolution (GstClock * clock)
 {
+#if defined __APPLE__
+  GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
+  return gst_util_uint64_scale (GST_NSECOND,
+      sysclock->priv->mach_timebase.numer, sysclock->priv->mach_timebase.denom);
+#else
 #ifdef G_OS_WIN32
   GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
 
@@ -612,6 +635,7 @@ gst_system_clock_get_resolution (GstClock * clock)
     return 1 * GST_USECOND;
   }
 #endif
+#endif /* __APPLE__ */
 }
 
 /* synchronously wait on the given GstClockEntry.
