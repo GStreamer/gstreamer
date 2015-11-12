@@ -394,7 +394,6 @@ gst_audio_converter_samples (GstAudioConverter * convert,
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (src != NULL, FALSE);
   g_return_val_if_fail (dst != NULL, FALSE);
-  g_return_val_if_fail (in_samples >= 0, FALSE);
   g_return_val_if_fail (out_samples != NULL, FALSE);
 
   if (in_samples == 0) {
