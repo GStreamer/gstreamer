@@ -1695,7 +1695,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         return self.media_xml.attrib["protocol"]
 
     def is_seekable(self):
-        return self.media_xml.attrib["seekable"]
+        return self.media_xml.attrib["seekable"].lower() == "true"
 
     def can_play_reverse(self):
         return True
