@@ -670,6 +670,36 @@ GST_START_TEST (test_async_full)
 
 GST_END_TEST;
 
+GST_START_TEST (test_resolution)
+{
+  GstClock *clock;
+  GstClockTime now_t, prev_t, resolution;
+  int i;
+
+  now_t = prev_t = GST_CLOCK_TIME_NONE;
+  clock = gst_system_clock_obtain ();
+  fail_unless (clock != NULL, "Could not create default system clock");
+  resolution = gst_clock_get_resolution (clock);
+  fail_unless (resolution != GST_CLOCK_TIME_NONE);
+
+  for (i = 0; i < 100000; ++i) {
+    now_t = gst_clock_get_internal_time (clock);
+    fail_unless (now_t != GST_CLOCK_TIME_NONE);
+    if (prev_t != GST_CLOCK_TIME_NONE) {
+      GstClockTime diff;
+      fail_unless (now_t >= prev_t);
+      diff = now_t - prev_t;
+      fail_unless (diff == 0 || diff >= resolution);
+    }
+    prev_t = now_t;
+    g_thread_yield ();
+  }
+  g_object_unref (clock);
+  clock = NULL;
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_systemclock_suite (void)
 {
@@ -688,6 +718,7 @@ gst_systemclock_suite (void)
   tcase_add_test (tc_chain, test_mixed);
   tcase_add_test (tc_chain, test_async_full);
   tcase_add_test (tc_chain, test_set_default);
+  tcase_add_test (tc_chain, test_resolution);
 
   return s;
 }
