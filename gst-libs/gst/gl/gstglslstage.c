@@ -452,6 +452,7 @@ _compile_shader (GstGLContext * context, struct compile *data)
   gl->ShaderSource (priv->handle, n_vertex_sources,
       (const gchar **) vertex_sources, NULL);
   gl->CompileShader (priv->handle);
+  g_free (vertex_sources);
   /* FIXME: supported threaded GLSL compilers and don't destroy compilation
    * performance by getting the compilation result directly after compilation */
   status = GL_FALSE;
