@@ -186,12 +186,12 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
   gst_video_frame_map (&src_frame, src, src_buffer, GST_MAP_READ);
   gst_video_frame_map (&dest_frame, dest, *dest_buffer, GST_MAP_WRITE);
 
-  if (dest_height == 1)
+  if (dest_height == 1 || src->height == 1)
     y_increment = 0;
   else
     y_increment = ((src->height - 1) << 16) / (dest_height - 1) - 1;
 
-  if (dest_width == 1)
+  if (dest_width == 1 || src->width == 1)
     x_increment = 0;
   else
     x_increment = ((src->width - 1) << 16) / (dest_width - 1) - 1;
