@@ -1271,7 +1271,7 @@ gst_codec_utils_opus_create_caps (guint32 rate,
         "coupled-count", G_TYPE_INT, coupled_count, NULL);
   }
 
-  g_return_val_if_fail (channels > 0 && channels < 256, NULL);
+  g_return_val_if_fail (channels > 0, NULL);
   g_return_val_if_fail (stream_count > 0, NULL);
   g_return_val_if_fail (coupled_count <= stream_count, NULL);
   g_return_val_if_fail (channel_mapping != NULL, NULL);
@@ -1456,7 +1456,7 @@ gst_codec_utils_opus_create_header (guint32 rate,
 
     channel_mapping = NULL;
   } else {
-    g_return_val_if_fail (channels > 0 && channels < 256, NULL);
+    g_return_val_if_fail (channels > 0, NULL);
     g_return_val_if_fail (stream_count > 0, NULL);
     g_return_val_if_fail (coupled_count <= stream_count, NULL);
     g_return_val_if_fail (channel_mapping != NULL, NULL);
