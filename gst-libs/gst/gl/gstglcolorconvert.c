@@ -529,6 +529,14 @@ gst_gl_color_convert_reset (GstGLColorConvert * convert)
   convert->priv->convert_info.chroma_sampling[0] = 1.0f;
   convert->priv->convert_info.chroma_sampling[1] = 1.0f;
 
+  if (convert->priv->convert_info.frag_prog) {
+    g_free (convert->priv->convert_info.frag_prog);
+    convert->priv->convert_info.frag_prog = NULL;
+  }
+  if (convert->priv->convert_info.frag_body) {
+    g_free (convert->priv->convert_info.frag_body);
+    convert->priv->convert_info.frag_body = NULL;
+  }
   if (convert->shader) {
     gst_object_unref (convert->shader);
     convert->shader = NULL;
