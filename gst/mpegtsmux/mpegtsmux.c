@@ -1308,8 +1308,8 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
 
   if (best->stream->is_meta && gst_buffer_get_size (buf) > (G_MAXUINT16 - 3)) {
     GST_WARNING_OBJECT (mux, "KLV meta unit too big, splitting not supported");
-    if (buf)
-      gst_buffer_unref (buf);
+
+    gst_buffer_unref (buf);
     return GST_FLOW_OK;
   }
 
