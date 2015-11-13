@@ -254,8 +254,8 @@ fill_picture (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture)
   GstVp9FrameHdr *frame_hdr = &priv->frame_hdr;
 
   /* Fill in VAPictureParameterBufferVP9 */
-  pic_param->frame_width = priv->width;
-  pic_param->frame_height = priv->height;
+  pic_param->frame_width = frame_hdr->width;
+  pic_param->frame_height = frame_hdr->height;
 
   /* Fill in ReferenceFrames */
   vaapi_fill_ref_frames (decoder, picture, frame_hdr, pic_param);
