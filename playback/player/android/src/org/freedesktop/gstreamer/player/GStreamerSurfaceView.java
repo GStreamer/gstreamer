@@ -50,6 +50,11 @@ public class GStreamerSurfaceView extends SurfaceView {
     // we are given the freedom to do so.
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        if (media_width == 0 || media_height == 0) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            return;
+        }
+
         int width = 0, height = 0;
         int wmode = View.MeasureSpec.getMode(widthMeasureSpec);
         int hmode = View.MeasureSpec.getMode(heightMeasureSpec);
