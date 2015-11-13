@@ -440,7 +440,7 @@ priv_gst_plugin_loading_get_whitelist_hash (void)
     gchar **w;
 
     for (w = _plugin_loading_whitelist; *w != NULL; ++w)
-      hash = (hash << 1) ^ g_str_hash (*w);
+      hash ^= g_str_hash (*w);
   }
 
   return hash;
@@ -1575,7 +1575,7 @@ gst_plugin_ext_dep_scan_dir_and_match_names (GstPlugin * plugin,
       continue;
     }
 
-    hash = (hash + fhash) << 1;
+    hash = hash + fhash;
     g_free (full_path);
   }
 
@@ -1617,7 +1617,7 @@ gst_plugin_ext_dep_scan_path_with_filenames (GstPlugin * plugin,
         fhash = gst_plugin_ext_dep_get_hash_from_stat_entry (&s);
         GST_LOG_OBJECT (plugin, "stat: %s (result: %08x)", full_path, fhash);
       }
-      hash = (hash + fhash) << 1;
+      hash += fhash;
       g_free (full_path);
     }
   } else {
@@ -1661,7 +1661,6 @@ gst_plugin_ext_dep_get_stat_hash (GstPlugin * plugin, GstPluginDep * dep)
   while ((path = g_queue_pop_head (&scan_paths))) {
     scan_hash += gst_plugin_ext_dep_scan_path_with_filenames (plugin, path,
         (const gchar **) dep->names, dep->flags);
-    scan_hash = scan_hash << 1;
     g_free (path);
   }
 
