@@ -555,6 +555,17 @@ if test x$HAVE_GST_V4L2 = xyes; then
   fi
 fi
 
+dnl Allow enabling v4l2 device probing
+AC_ARG_ENABLE(
+  v4l2-probe,
+  AC_HELP_STRING(
+    [--enable-v4l2-probe],
+    [enable V4L2 plugin to probe devices @<:@default=no@:>@]))
+if test "x$enable_v4l2_probe" = xyes; then
+  AC_DEFINE(GST_V4L2_ENABLE_PROBE, 1,
+    [Define if Video4Linux probe shall be run at plugin load])
+fi
+
 dnl Check for X11
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
