@@ -208,6 +208,7 @@ GST_START_TEST (test_serialization)
         && version == glsl_version_profiles[i].version, "%s != %s %s",
         glsl_version_profiles[i].name, gst_glsl_version_to_string (version),
         gst_glsl_profile_to_string (profile));
+    g_free (version_profile_s);
   }
 
   /* failures */
