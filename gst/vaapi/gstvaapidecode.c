@@ -217,9 +217,9 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   switch (feature) {
 #if (USE_GLX || USE_EGL)
     case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
-        features =
-            gst_caps_features_new
-            (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
+      features =
+          gst_caps_features_new
+          (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
       break;
 #endif
 #if GST_CHECK_VERSION(1,3,1)
@@ -420,6 +420,10 @@ gst_vaapidecode_push_all_decoded_frames (GstVaapiDecode * decode)
           return ret;
         break;
       case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
+        /* Delayed the pool re-negotiation untill we push all decoded (and queued)
+         * frames downstream. Otherwise for the multi-resolution videos, the
+         * GstVideoVideoMemory will be having wrong resolution.
+         * commit 6eba201f3252eba6a99ab7da7a4c662091a3e884 */
         if (!gst_vaapidecode_negotiate (decode))
           return GST_FLOW_ERROR;
         return GST_FLOW_OK;
@@ -585,9 +589,9 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
 #if (USE_GLX || USE_EGL)
   decode->has_texture_upload_meta =
       gst_query_find_allocation_meta (query,
-          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL) &&
+      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL) &&
       gst_vaapi_caps_feature_contains (caps,
-          GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META);
+      GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META);
 #endif
 
   return gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (vdec),
