@@ -277,7 +277,7 @@ fill_picture (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture)
   COPY_BFM (pic_fields, frame_hdr, reset_frame_context);
   COPY_BFM (pic_fields, frame_hdr, refresh_frame_context);
   COPY_BFM (pic_fields, frame_hdr, frame_context_idx);
-  COPY_BFM (pic_fields, parser, lossless_flag);
+  COPY_BFM (pic_fields, frame_hdr, lossless_flag);
 
   pic_param->pic_fields.bits.segmentation_enabled =
       frame_hdr->segmentation.enabled;
