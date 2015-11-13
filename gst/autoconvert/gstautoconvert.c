@@ -1243,7 +1243,31 @@ gst_auto_convert_internal_sink_query (GstPad * pad, GstObject * parent,
       GST_AUTO_CONVERT (g_object_get_qdata (G_OBJECT (pad),
           parent_quark));
 
-  return gst_pad_peer_query (autoconvert->srcpad, query);
+  if (!gst_pad_peer_query (autoconvert->srcpad, query)) {
+    switch (GST_QUERY_TYPE (query)) {
+      case GST_QUERY_CAPS:
+      {
+        GstCaps *filter;
+
+        gst_query_parse_caps (query, &filter);
+        if (filter) {
+          gst_query_set_caps_result (query, filter);
+        } else {
+          filter = gst_caps_new_any ();
+          gst_query_set_caps_result (query, filter);
+          gst_caps_unref (filter);
+        }
+        return TRUE;
+      }
+      case GST_QUERY_ACCEPT_CAPS:
+        gst_query_set_accept_caps_result (query, TRUE);
+        return TRUE;
+      default:
+        return FALSE;
+    }
+  }
+
+  return TRUE;
 }
 
 static gboolean
