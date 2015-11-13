@@ -504,14 +504,28 @@ parse_frame_header (GstVaapiDecoderVp9 * decoder, const guchar * buf,
 {
   GstVaapiDecoderVp9Private *const priv = &decoder->priv;
   GstVp9ParserResult result;
+  guint width, height;
 
   result = gst_vp9_parser_parse_frame_header (priv->parser, frame_hdr,
       buf, buf_size);
   if (result != GST_VP9_PARSER_OK)
     return get_status (result);
 
-  if ((frame_hdr->frame_type == GST_VP9_KEY_FRAME) &&
-      (frame_hdr->width != priv->width || frame_hdr->height != priv->height)) {
+  /* Unlike other decoders, vp9 decoder doesn't need to reset the
+   * whole context and surfaces for each resolution change. context
+   * reset only needed if resolution of any frame is greater than
+   * what actullay configured. There are streams where a bigger
+   * resolution set in ivf header or webm header but actual resolution
+   * of all frames are less. Also it is possible to have inter-prediction
+   * between these multi resolution frames */
+  width = GST_VAAPI_DECODER_WIDTH (decoder);
+  height = GST_VAAPI_DECODER_HEIGHT (decoder);
+  if (priv->width < width || priv->height < height) {
+    priv->width = GST_VAAPI_DECODER_WIDTH (decoder);
+    priv->height = GST_VAAPI_DECODER_HEIGHT (decoder);
+    priv->size_changed = TRUE;
+  }
+  if ((frame_hdr->width > priv->width || frame_hdr->height > priv->height)) {
     priv->width = frame_hdr->width;
     priv->height = frame_hdr->height;
     priv->size_changed = TRUE;
