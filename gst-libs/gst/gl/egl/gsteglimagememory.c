@@ -27,6 +27,23 @@
 #include "gsteglimagememory.h"
 #include <string.h>
 
+#if GST_GL_HAVE_DMABUF
+#include <gst/allocators/gstdmabuf.h>
+#include <libdrm/drm_fourcc.h>
+
+#ifndef DRM_FORMAT_R8
+#define DRM_FORMAT_R8 fourcc_code('R', '8', ' ', ' ')
+#endif
+
+#ifndef DRM_FORMAT_RG88
+#define DRM_FORMAT_RG88 fourcc_code('R', 'G', '8', '8')
+#endif
+
+#ifndef DRM_FORMAT_GR88
+#define DRM_FORMAT_GR88 fourcc_code('G', 'R', '8', '8')
+#endif
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_EGL_IMAGE_MEMORY);
 #define GST_CAT_DEFAULT GST_CAT_EGL_IMAGE_MEMORY
 
@@ -311,8 +328,123 @@ gst_eglimage_to_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
     gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (meta->
             buffer->pool), meta->buffer);
 
+
   return TRUE;
 }
+
+#if GST_GL_HAVE_DMABUF
+/*
+ * GStreamer format descriptions differ from DRM formats as the representation
+ * is relative to a register, hence in native endianness. To reduce the driver
+ * requirement, we only import with a subset of texture formats and use
+ * shaders to convert. This way we avoid having to use external texture
+ * target.
+ */
+static int
+_drm_fourcc_from_info (GstVideoInfo * info, int plane)
+{
+  GstVideoFormat format = GST_VIDEO_INFO_FORMAT (info);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  const gint rgba_fourcc = DRM_FORMAT_ABGR8888;
+  const gint rg_fourcc = DRM_FORMAT_GR88;
+#else
+  const gint rgba_fourcc = DRM_FORMAT_RGBA8888;
+  const gint rg_fourcc = DRM_FORMAT_RG88;
+#endif
+
+  GST_DEBUG ("Getting DRM fourcc for %s plane %i",
+      gst_video_format_to_string (format), plane);
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGB16:
+      return DRM_FORMAT_RGB565;
+
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_xRGB:
+      return rgba_fourcc;
+
+    case GST_VIDEO_FORMAT_GRAY8:
+      return DRM_FORMAT_R8;
+
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+      return rg_fourcc;
+
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      return plane == 0 ? DRM_FORMAT_R8 : rg_fourcc;
+
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_YV12:
+      return DRM_FORMAT_R8;
+
+    default:
+      GST_ERROR ("Unsupported format for DMABuf.");
+      return -1;
+  }
+}
+
+GstMemory *
+gst_egl_image_memory_from_dmabuf (GstGLContext * context,
+    gint dmabuf, GstVideoInfo * in_info, gint plane, gsize offset)
+{
+  GstGLContextEGL *ctx_egl = GST_GL_CONTEXT_EGL (context);
+  GstEGLImageAllocator *allocator;
+  gint fourcc;
+  gint atti = 0;
+  EGLint attribs[13];
+  EGLImageKHR img = EGL_NO_IMAGE_KHR;
+
+  allocator = gst_egl_image_allocator_obtain ();
+  fourcc = _drm_fourcc_from_info (in_info, plane);
+
+  GST_DEBUG ("fourcc %.4s (%d) plane %d (%dx%d)",
+      (char *) &fourcc, fourcc, plane,
+      GST_VIDEO_INFO_COMP_WIDTH (in_info, plane),
+      GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane));
+
+  attribs[atti++] = EGL_WIDTH;
+  attribs[atti++] = GST_VIDEO_INFO_COMP_WIDTH (in_info, plane);
+  attribs[atti++] = EGL_HEIGHT;
+  attribs[atti++] = GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane);
+
+  attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
+  attribs[atti++] = fourcc;
+
+  attribs[atti++] = EGL_DMA_BUF_PLANE0_FD_EXT;
+  attribs[atti++] = dmabuf;
+
+  attribs[atti++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
+  attribs[atti++] = offset;
+  attribs[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
+  attribs[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, plane);
+
+  attribs[atti] = EGL_NONE;
+
+  for (int i = 0; i < atti; i++)
+    GST_LOG ("attr %i: %08X", i, attribs[i]);
+
+  g_assert (atti == 12);
+
+  img = ctx_egl->eglCreateImage (ctx_egl->egl_display, EGL_NO_CONTEXT,
+      EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
+
+  if (!img) {
+    GST_WARNING_OBJECT (allocator, "eglCreateImage failed: %s",
+        gst_gl_context_egl_get_error_string ());
+    return NULL;
+  }
+
+  return gst_egl_image_allocator_wrap (allocator, ctx_egl, img, 0, 0,
+      in_info->size, NULL, NULL);
+}
+#endif /* GST_GL_HAVE_DMABUF */
 
 gboolean
 gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,

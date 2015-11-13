@@ -64,6 +64,11 @@ GstVideoGLTextureOrientation gst_egl_image_memory_get_orientation (GstMemory * m
 void gst_egl_image_memory_set_orientation (GstMemory * mem,
     GstVideoGLTextureOrientation orientation);
 
+#if GST_GL_HAVE_DMABUF
+GstMemory * gst_egl_image_memory_from_dmabuf (GstGLContext * context,
+    gint dmabuf, GstVideoInfo * in_info, gint plane, gsize offset);
+#endif
+
 G_END_DECLS
 
 #endif /* _GST_GL_MEMORY_H_ */
