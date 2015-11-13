@@ -395,8 +395,10 @@ decode_picture (GstVaapiDecoderVp9 * decoder, const guchar * buf,
     guint buf_size)
 {
   GstVaapiDecoderVp9Private *const priv = &decoder->priv;
+  GstVp9FrameHdr *frame_hdr = &priv->frame_hdr;
   GstVaapiPicture *picture;
   GstVaapiDecoderStatus status;
+  guint crop_width = 0, crop_height = 0;
 
   status = ensure_context (decoder);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
@@ -412,6 +414,23 @@ decode_picture (GstVaapiDecoderVp9 * decoder, const guchar * buf,
   }
   gst_vaapi_picture_replace (&priv->current_picture, picture);
   gst_vaapi_picture_unref (picture);
+
+  if (frame_hdr->display_size_enabled) {
+    crop_width = frame_hdr->display_width;
+    crop_height = frame_hdr->display_height;
+  } else if (priv->width > frame_hdr->width
+      || priv->height > frame_hdr->height) {
+    crop_width = frame_hdr->width;
+    crop_height = frame_hdr->height;
+  }
+  if (crop_width || crop_height) {
+    GstVaapiRectangle crop_rect;
+    crop_rect.x = 0;
+    crop_rect.y = 0;
+    crop_rect.width = crop_width;
+    crop_rect.height = crop_height;
+    gst_vaapi_picture_set_crop_rect (picture, &crop_rect);
+  }
 
   init_picture (decoder, picture);
   if (!fill_picture (decoder, picture))
