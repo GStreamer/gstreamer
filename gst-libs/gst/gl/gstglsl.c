@@ -245,8 +245,8 @@ gst_glsl_version_profile_from_string (const gchar * string,
     GstGLSLVersion * version_ret, GstGLSLProfile * profile_ret)
 {
   gchar *str, *version_s, *profile_s;
-  GstGLSLVersion version;
-  GstGLSLProfile profile;
+  GstGLSLVersion version = GST_GLSL_VERSION_NONE;
+  GstGLSLProfile profile = GST_GLSL_PROFILE_NONE;
   gint i;
 
   if (!string)
@@ -275,12 +275,14 @@ gst_glsl_version_profile_from_string (const gchar * string,
     goto error;
   }
 
-  version_s[i] = '\0';
-  i++;
-  profile_s = &version_s[i];
-  profile_s = g_strstrip (profile_s);
+  if (version_s[i] != 0) {
+    version_s[i] = '\0';
+    i++;
+    profile_s = &version_s[i];
+    profile_s = g_strstrip (profile_s);
 
-  profile = gst_glsl_profile_from_string (profile_s);
+    profile = gst_glsl_profile_from_string (profile_s);
+  }
   version = gst_glsl_version_from_string (version_s);
   g_free (str);
 
