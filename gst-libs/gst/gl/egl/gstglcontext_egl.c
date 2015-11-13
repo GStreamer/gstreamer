@@ -107,7 +107,7 @@ gst_gl_context_egl_new (GstGLDisplay * display)
   return g_object_new (GST_GL_TYPE_CONTEXT_EGL, NULL);
 }
 
-static const gchar *
+const gchar *
 gst_gl_context_egl_get_error_string (void)
 {
   EGLint nErr = eglGetError ();

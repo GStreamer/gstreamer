@@ -64,6 +64,9 @@ GstGLContextEGL *   gst_gl_context_egl_new                  (GstGLDisplay * disp
 guintptr            gst_gl_context_egl_get_current_context  (void);
 gpointer            gst_gl_context_egl_get_proc_address     (GstGLAPI gl_api, const gchar * name);
 
+const gchar * gst_gl_context_egl_get_error_string (void);
+
+
 /* TODO:
  * add support for EGL_NO_CONTEXT
  * add gst_gl_context_egl_new_gl_no_context that only manages the display
