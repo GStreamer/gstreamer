@@ -258,8 +258,10 @@ gst_glsl_version_profile_from_string (const gchar * string,
   /* skip possible #version prefix */
   if (str[0] == '#') {
     if (!(version_s =
-            (gchar *) _check_valid_version_preprocessor_string (version_s)))
+            (gchar *) _check_valid_version_preprocessor_string (version_s))) {
+      g_free (str);
       goto error;
+    }
   }
 
   version_s = g_strstrip (version_s);
