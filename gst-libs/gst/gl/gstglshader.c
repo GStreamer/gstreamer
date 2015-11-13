@@ -668,10 +668,12 @@ gst_gl_shader_release_unlocked (GstGLShader * shader)
 
   priv = shader->priv;
 
-  for (elem = shader->priv->stages; elem; elem = elem->next) {
+  for (elem = shader->priv->stages; elem;) {
     GstGLSLStage *stage = elem->data;
+    GList *next = elem->next;
 
     gst_gl_shader_detach_unlocked (shader, stage);
+    elem = next;
   }
 
   g_list_free_full (shader->priv->stages, (GDestroyNotify) gst_object_unref);
