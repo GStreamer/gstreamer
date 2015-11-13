@@ -1407,6 +1407,7 @@ prepare_next_buffer (GstGLImageSink * glimage_sink)
   if (!gst_video_frame_map (&gl_frame, info, next_buffer,
           GST_MAP_READ | GST_MAP_GL)) {
     gst_buffer_unref (next_buffer);
+    GST_ERROR ("Failed to map video frame.");
     goto fail;
   }
 
