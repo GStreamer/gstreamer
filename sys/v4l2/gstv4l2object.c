@@ -108,6 +108,11 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {V4L2_PIX_FMT_NV12MT, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV21, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV21M, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_NV16, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_NV16M, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_NV61, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_NV61M, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_NV24, TRUE, GST_V4L2_RAW},
 
   /*  The following formats are not defined in the V4L2 specification */
   {V4L2_PIX_FMT_YUV410, TRUE, GST_V4L2_RAW},
@@ -929,6 +934,11 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
     case V4L2_PIX_FMT_NV21M:   /* Same as NV21      */
     case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
     case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
+    case V4L2_PIX_FMT_NV16:    /* 16  Y/CbCr 4:2:2  */
+    case V4L2_PIX_FMT_NV16M:   /* Same as NV16      */
+    case V4L2_PIX_FMT_NV61:    /* 16  Y/CrCb 4:2:2  */
+    case V4L2_PIX_FMT_NV61M:   /* Same as NV61      */
+    case V4L2_PIX_FMT_NV24:    /* 24  Y/CrCb 4:4:4  */
       rank = YUV_ODD_BASE_RANK;
       break;
 
@@ -1194,6 +1204,17 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
     case V4L2_PIX_FMT_YVYU:
       format = GST_VIDEO_FORMAT_YVYU;
       break;
+    case V4L2_PIX_FMT_NV16:
+    case V4L2_PIX_FMT_NV16M:
+      format = GST_VIDEO_FORMAT_NV16;
+      break;
+    case V4L2_PIX_FMT_NV61:
+    case V4L2_PIX_FMT_NV61M:
+      format = GST_VIDEO_FORMAT_NV61;
+      break;
+    case V4L2_PIX_FMT_NV24:
+      format = GST_VIDEO_FORMAT_NV24;
+      break;
     default:
       format = GST_VIDEO_FORMAT_UNKNOWN;
       break;
@@ -1259,6 +1280,11 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
     case V4L2_PIX_FMT_NV12MT:
     case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
     case V4L2_PIX_FMT_NV21M:
+    case V4L2_PIX_FMT_NV16:    /* 16  Y/CbCr 4:2:2  */
+    case V4L2_PIX_FMT_NV16M:
+    case V4L2_PIX_FMT_NV61:    /* 16  Y/CrCb 4:2:2  */
+    case V4L2_PIX_FMT_NV61M:
+    case V4L2_PIX_FMT_NV24:    /* 24  Y/CrCb 4:4:4  */
     case V4L2_PIX_FMT_YVU410:
     case V4L2_PIX_FMT_YUV410:
     case V4L2_PIX_FMT_YUV420:  /* I420/IYUV */
@@ -1485,6 +1511,17 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
       case GST_VIDEO_FORMAT_NV21:
         fourcc = V4L2_PIX_FMT_NV21;
         fourcc_nc = V4L2_PIX_FMT_NV21M;
+        break;
+      case GST_VIDEO_FORMAT_NV16:
+        fourcc = V4L2_PIX_FMT_NV16;
+        fourcc_nc = V4L2_PIX_FMT_NV16M;
+        break;
+      case GST_VIDEO_FORMAT_NV61:
+        fourcc = V4L2_PIX_FMT_NV61;
+        fourcc_nc = V4L2_PIX_FMT_NV61M;
+        break;
+      case GST_VIDEO_FORMAT_NV24:
+        fourcc = V4L2_PIX_FMT_NV24;
         break;
       case GST_VIDEO_FORMAT_YVYU:
         fourcc = V4L2_PIX_FMT_YVYU;
@@ -2788,6 +2825,7 @@ gst_v4l2_object_extrapolate_stride (const GstVideoFormatInfo * finfo,
     case GST_VIDEO_FORMAT_NV12_64Z32:
     case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV61:
     case GST_VIDEO_FORMAT_NV24:
       estride = (plane == 0 ? 1 : 2) *
           GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
