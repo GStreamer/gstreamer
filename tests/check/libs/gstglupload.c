@@ -185,6 +185,8 @@ GST_START_TEST (test_upload_data)
     i++;
   }
 
+  gst_caps_unref (in_caps);
+  gst_caps_unref (out_caps);
   gst_buffer_unref (inbuf);
   gst_buffer_unref (outbuf);
 }
@@ -239,6 +241,8 @@ GST_START_TEST (test_upload_buffer)
     i++;
   }
 
+  gst_caps_unref (in_caps);
+  gst_caps_unref (out_caps);
   gst_buffer_unref (buffer);
   gst_buffer_unref (outbuf);
 }
