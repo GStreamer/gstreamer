@@ -127,6 +127,10 @@ struct _GstAudioConverter
   GstAudioChannelMixer *mix;
   AudioChain *mix_chain;
 
+  /* resample */
+  GstAudioResampler *resampler;
+  AudioChain *resample_chain;
+
   /* convert out */
   AudioConvertFunc convert_out;
   AudioChain *convert_out_chain;
@@ -213,16 +217,19 @@ audio_chain_free (AudioChain * chain)
 }
 
 static gpointer *
-audio_chain_alloc_samples (AudioChain * chain, gsize num_samples)
+audio_chain_alloc_samples (AudioChain * chain, gsize num_samples, gsize * avail)
 {
-  return chain->alloc_func (chain, num_samples, chain->alloc_data);
+  return chain->alloc_func (chain, num_samples, avail, chain->alloc_data);
 }
 
 static void
 audio_chain_set_samples (AudioChain * chain, gpointer * samples,
     gsize num_samples)
 {
-  GST_LOG ("set samples %p %" G_GSIZE_FORMAT, samples, num_samples);
+  if (num_samples == 0)
+    return;
+
+  GST_LOG ("set samples %" G_GSIZE_FORMAT, num_samples);
 
   chain->samples = samples;
   chain->num_samples = num_samples;
@@ -264,10 +271,14 @@ get_opt_enum (GstAudioConverter * convert, const gchar * opt, GType type,
   return res;
 }
 
+#define DEFAULT_OPT_RESAMPLER_METHOD GST_AUDIO_RESAMPLER_METHOD_BLACKMAN_NUTTALL
 #define DEFAULT_OPT_DITHER_METHOD GST_AUDIO_DITHER_NONE
 #define DEFAULT_OPT_NOISE_SHAPING_METHOD GST_AUDIO_NOISE_SHAPING_NONE
 #define DEFAULT_OPT_QUANTIZATION 1
 
+#define GET_OPT_RESAMPLER_METHOD(c) get_opt_enum(c, \
+    GST_AUDIO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_AUDIO_RESAMPLER_METHOD, \
+    DEFAULT_OPT_RESAMPLER_METHOD)
 #define GET_OPT_DITHER_METHOD(c) get_opt_enum(c, \
     GST_AUDIO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_AUDIO_DITHER_METHOD, \
     DEFAULT_OPT_DITHER_METHOD)
@@ -448,6 +459,7 @@ do_unpack (AudioChain * chain, gpointer user_data)
     }
   } else {
     tmp = convert->in_data;
+    num_samples = convert->in_samples;
     GST_LOG ("get in samples %p", tmp);
   }
   audio_chain_set_samples (chain, tmp, num_samples);
@@ -489,6 +501,32 @@ do_mix (AudioChain * chain, gpointer user_data)
   gst_audio_channel_mixer_samples (convert->mix, in, out, num_samples);
 
   audio_chain_set_samples (chain, out, num_samples);
+
+  return TRUE;
+}
+
+static gboolean
+do_resample (AudioChain * chain, gpointer user_data)
+{
+  GstAudioConverter *convert = user_data;
+  gpointer *in, *out;
+  gsize in_frames, out_frames, produced, consumed;
+
+  in = audio_chain_get_samples (chain->prev, &in_frames);
+
+  out_frames =
+      gst_audio_resampler_get_out_frames (convert->resampler, in_frames);
+  out =
+      (chain->allow_ip ? in : audio_chain_alloc_samples (chain, out_frames,
+          &out_frames));
+
+  GST_LOG ("resample %p %p,%" G_GSIZE_FORMAT " %" G_GSIZE_FORMAT, in, out,
+      in_frames, out_frames);
+
+  gst_audio_resampler_resample (convert->resampler, in, in_frames, out,
+      out_frames, &produced, &consumed);
+
+  audio_chain_set_samples (chain, out, produced);
 
   return TRUE;
 }
@@ -627,6 +665,35 @@ chain_mix (GstAudioConverter * convert, AudioChain * prev)
     prev->allow_ip = FALSE;
     prev->pass_alloc = FALSE;
     audio_chain_set_make_func (prev, do_mix, convert, NULL);
+  }
+  return prev;
+}
+
+static AudioChain *
+chain_resample (GstAudioConverter * convert, AudioChain * prev)
+{
+  GstAudioInfo *in = &convert->in;
+  GstAudioInfo *out = &convert->out;
+  GstAudioResamplerMethod method;
+  GstAudioResamplerFlags flags;
+  GstAudioFormat format = convert->current_format;
+  gint channels = convert->current_channels;
+
+  if (in->rate != out->rate) {
+    method = GET_OPT_RESAMPLER_METHOD (convert);
+
+    flags = 0;
+    if (convert->current_layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED)
+      flags |= GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED;
+
+    convert->resampler =
+        gst_audio_resampler_new (method, flags, format, channels, in->rate,
+        out->rate, convert->config);
+
+    prev = convert->resample_chain = audio_chain_new (prev, convert);
+    prev->allow_ip = FALSE;
+    prev->pass_alloc = FALSE;
+    audio_chain_set_make_func (prev, do_resample, convert, NULL);
   }
   return prev;
 }
@@ -840,7 +907,6 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
 
   g_return_val_if_fail (in_info != NULL, FALSE);
   g_return_val_if_fail (out_info != NULL, FALSE);
-  g_return_val_if_fail (in_info->rate == out_info->rate, FALSE);
   g_return_val_if_fail (in_info->layout == GST_AUDIO_LAYOUT_INTERLEAVED, FALSE);
   g_return_val_if_fail (in_info->layout == out_info->layout, FALSE);
 
@@ -868,11 +934,13 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
   prev = chain_convert_in (convert, prev);
   /* step 3, channel mix */
   prev = chain_mix (convert, prev);
-  /* step 4, optional convert for quantize */
+  /* step 4, resample */
+  prev = chain_resample (convert, prev);
+  /* step 5, optional convert for quantize */
   prev = chain_convert_out (convert, prev);
-  /* step 5, optional quantize */
+  /* step 6, optional quantize */
   prev = chain_quantize (convert, prev);
-  /* step 6, pack */
+  /* step 7, pack */
   convert->pack_chain = chain_pack (convert, prev);
 
   /* optimize */

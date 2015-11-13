@@ -8,10 +8,9 @@ ORC_TEST_LIBS =
 endif
 
 libgstaudioresample_la_SOURCES = \
-	gstaudioresample.c \
-	speex_resampler_int.c \
-	speex_resampler_float.c \
-	speex_resampler_double.c
+	gstaudioresample.c 
+
+nodist_libgstaudioresample_la_SOURCES = $(BUILT_SOURCES)
 
 libgstaudioresample_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -30,15 +29,4 @@ libgstaudioresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaudioresample_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
-	arch.h \
-	fixed_arm4.h \
-	fixed_arm5e.h \
-	fixed_bfin.h \
-	fixed_debug.h \
-	fixed_generic.h \
-	gstaudioresample.h \
-	resample.c \
-	resample_sse.h \
-	resample_neon.h \
-	speex_resampler.h \
-	speex_resampler_wrapper.h
+	gstaudioresample.h

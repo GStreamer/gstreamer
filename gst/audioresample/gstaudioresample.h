@@ -26,8 +26,6 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/audio/audio.h>
 
-#include "speex_resampler_wrapper.h"
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_AUDIO_RESAMPLE \
@@ -60,31 +58,20 @@ struct _GstAudioResample {
   guint64 out_offset0;
   guint64 samples_in;
   guint64 samples_out;
-  
+
   guint64 num_gap_samples;
   guint64 num_nongap_samples;
 
   /* properties */
+  GstAudioResamplerMethod method;
   gint quality;
-
-  /* state */
-  gboolean fp;
-  gint width;
-  gint channels;
-  gint inrate;
-  gint outrate;
-
-  SpeexResamplerSincFilterMode sinc_filter_mode;
+  GstAudioResamplerFilterMode sinc_filter_mode;
   guint32 sinc_filter_auto_threshold;
 
-  guint8 *tmp_in;
-  guint tmp_in_size;
-
-  guint8 *tmp_out;
-  guint tmp_out_size;
-
-  SpeexResamplerState *state;
-  const SpeexResampleFuncs *funcs;
+  /* state */
+  GstAudioInfo in;
+  GstAudioInfo out;
+  GstAudioResampler *resamp;
 };
 
 struct _GstAudioResampleClass {
