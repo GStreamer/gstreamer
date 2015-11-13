@@ -1513,6 +1513,9 @@ gst_plugin_ext_dep_direntry_matches (GstPlugin * plugin, const gchar * entry,
     if (((flags & GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX)) &&
         g_str_has_suffix (entry, *filenames)) {
       return TRUE;
+    } else if (((flags & GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX)) &&
+        g_str_has_prefix (entry, *filenames)) {
+      return TRUE;
       /* else it's an exact match that's needed */
     } else if (strcmp (entry, *filenames) == 0) {
       return TRUE;
@@ -1589,7 +1592,7 @@ gst_plugin_ext_dep_scan_path_with_filenames (GstPlugin * plugin,
     GstPluginDependencyFlags flags)
 {
   const gchar *empty_filenames[] = { "", NULL };
-  gboolean recurse_into_dirs, partial_names;
+  gboolean recurse_into_dirs, partial_names = FALSE;
   guint i, hash = 0;
 
   /* to avoid special-casing below (FIXME?) */
@@ -1597,7 +1600,10 @@ gst_plugin_ext_dep_scan_path_with_filenames (GstPlugin * plugin,
     filenames = empty_filenames;
 
   recurse_into_dirs = ! !(flags & GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
-  partial_names = ! !(flags & GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX);
+
+  if ((flags & GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX) ||
+      (flags & GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX))
+    partial_names = TRUE;
 
   /* if we can construct the exact paths to check with the data we have, just
    * stat them one by one; this is more efficient than opening the directory
