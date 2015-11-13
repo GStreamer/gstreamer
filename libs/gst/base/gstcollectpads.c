@@ -505,47 +505,52 @@ gst_collect_pads_clip_running_time (GstCollectPads * pads,
     GstCollectData * cdata, GstBuffer * buf, GstBuffer ** outbuf,
     gpointer user_data)
 {
-  GstClockTime time;
-
   *outbuf = buf;
-  time = GST_BUFFER_PTS (buf);
 
   /* invalid left alone and passed */
-  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
-    time = gst_segment_to_running_time (&cdata->segment, GST_FORMAT_TIME, time);
-    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
-      GST_DEBUG_OBJECT (cdata->pad, "clipping buffer on pad outside segment %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
-      gst_buffer_unref (buf);
-      *outbuf = NULL;
-    } else {
-      GstClockTime buf_dts, abs_dts;
-      gint dts_sign;
+  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buf))
+          || GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf)))) {
+    GstClockTime time;
+    GstClockTime buf_dts, abs_dts;
+    gint dts_sign;
 
-      GST_LOG_OBJECT (cdata->pad, "buffer pts %" GST_TIME_FORMAT " -> %"
-          GST_TIME_FORMAT " running time",
-          GST_TIME_ARGS (GST_BUFFER_PTS (buf)), GST_TIME_ARGS (time));
-      *outbuf = gst_buffer_make_writable (buf);
-      GST_BUFFER_PTS (*outbuf) = time;
+    time = GST_BUFFER_PTS (buf);
 
-      dts_sign = gst_segment_to_running_time_full (&cdata->segment,
-          GST_FORMAT_TIME, GST_BUFFER_DTS (*outbuf), &abs_dts);
-      buf_dts = GST_BUFFER_DTS (*outbuf);
-      if (dts_sign > 0) {
-        GST_BUFFER_DTS (*outbuf) = abs_dts;
-        GST_COLLECT_PADS_DTS (cdata) = abs_dts;
-      } else if (dts_sign < 0) {
-        GST_BUFFER_DTS (*outbuf) = GST_CLOCK_TIME_NONE;
-        GST_COLLECT_PADS_DTS (cdata) = -((gint64) abs_dts);
-      } else {
-        GST_BUFFER_DTS (*outbuf) = GST_CLOCK_TIME_NONE;
-        GST_COLLECT_PADS_DTS (cdata) = GST_CLOCK_STIME_NONE;
+    if (GST_CLOCK_TIME_IS_VALID (time)) {
+      time =
+          gst_segment_to_running_time (&cdata->segment, GST_FORMAT_TIME, time);
+      if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
+        GST_DEBUG_OBJECT (cdata->pad, "clipping buffer on pad outside segment %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
+        gst_buffer_unref (buf);
+        *outbuf = NULL;
+        return GST_FLOW_OK;
       }
-
-      GST_LOG_OBJECT (cdata->pad, "buffer dts %" GST_TIME_FORMAT " -> %"
-          GST_STIME_FORMAT " running time", GST_TIME_ARGS (buf_dts),
-          GST_STIME_ARGS (GST_COLLECT_PADS_DTS (cdata)));
     }
+
+    GST_LOG_OBJECT (cdata->pad, "buffer pts %" GST_TIME_FORMAT " -> %"
+        GST_TIME_FORMAT " running time",
+        GST_TIME_ARGS (GST_BUFFER_PTS (buf)), GST_TIME_ARGS (time));
+    *outbuf = gst_buffer_make_writable (buf);
+    GST_BUFFER_PTS (*outbuf) = time;
+
+    dts_sign = gst_segment_to_running_time_full (&cdata->segment,
+        GST_FORMAT_TIME, GST_BUFFER_DTS (*outbuf), &abs_dts);
+    buf_dts = GST_BUFFER_DTS (*outbuf);
+    if (dts_sign > 0) {
+      GST_BUFFER_DTS (*outbuf) = abs_dts;
+      GST_COLLECT_PADS_DTS (cdata) = abs_dts;
+    } else if (dts_sign < 0) {
+      GST_BUFFER_DTS (*outbuf) = GST_CLOCK_TIME_NONE;
+      GST_COLLECT_PADS_DTS (cdata) = -((gint64) abs_dts);
+    } else {
+      GST_BUFFER_DTS (*outbuf) = GST_CLOCK_TIME_NONE;
+      GST_COLLECT_PADS_DTS (cdata) = GST_CLOCK_STIME_NONE;
+    }
+
+    GST_LOG_OBJECT (cdata->pad, "buffer dts %" GST_TIME_FORMAT " -> %"
+        GST_STIME_FORMAT " running time", GST_TIME_ARGS (buf_dts),
+        GST_STIME_ARGS (GST_COLLECT_PADS_DTS (cdata)));
   }
 
   return GST_FLOW_OK;
