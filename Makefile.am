@@ -10,7 +10,7 @@ DIST_SUBDIRS = $(SUBDIRS)
 EXTRA_DIST = \
 	gst-editing-services.spec depcomp \
 	AUTHORS COPYING NEWS README RELEASE \
-	ChangeLog autogen.sh
+	ChangeLog autogen.sh gst-editing-services.doap
 
 DISTCLEANFILES = _stdint.h
 
