@@ -186,7 +186,6 @@ struct _GstAdaptiveDemux
   gchar *manifest_base_uri;
 
   /* Properties */
-  guint num_lookback_fragments;
   gfloat bitrate_limit;         /* limit of the available bitrate to use */
   guint connection_speed;
 

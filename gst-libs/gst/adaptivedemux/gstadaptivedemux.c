@@ -132,7 +132,6 @@ GST_DEBUG_CATEGORY (adaptivedemux_debug);
 
 #define MAX_DOWNLOAD_ERROR_COUNT 3
 #define DEFAULT_FAILED_COUNT 3
-#define DEFAULT_LOOKBACK_FRAGMENTS 3
 #define DEFAULT_CONNECTION_SPEED 0
 #define DEFAULT_BITRATE_LIMIT 0.8
 #define SRC_QUEUE_MAX_BYTES 20 * 1024 * 1024    /* For safety. Large enough to hold a segment. */
@@ -148,7 +147,6 @@ GST_DEBUG_CATEGORY (adaptivedemux_debug);
 enum
 {
   PROP_0,
-  PROP_LOOKBACK_FRAGMENTS,
   PROP_CONNECTION_SPEED,
   PROP_BITRATE_LIMIT,
   PROP_LAST
@@ -301,9 +299,6 @@ gst_adaptive_demux_set_property (GObject * object, guint prop_id,
   GST_MANIFEST_LOCK (demux);
 
   switch (prop_id) {
-    case PROP_LOOKBACK_FRAGMENTS:
-      demux->num_lookback_fragments = g_value_get_uint (value);
-      break;
     case PROP_CONNECTION_SPEED:
       demux->connection_speed = g_value_get_uint (value) * 1000;
       GST_DEBUG_OBJECT (demux, "Connection speed set to %u",
@@ -330,9 +325,6 @@ gst_adaptive_demux_get_property (GObject * object, guint prop_id,
   GST_MANIFEST_LOCK (demux);
 
   switch (prop_id) {
-    case PROP_LOOKBACK_FRAGMENTS:
-      g_value_set_uint (value, demux->num_lookback_fragments);
-      break;
     case PROP_CONNECTION_SPEED:
       g_value_set_uint (value, demux->connection_speed / 1000);
       break;
@@ -367,13 +359,6 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
   gobject_class->set_property = gst_adaptive_demux_set_property;
   gobject_class->get_property = gst_adaptive_demux_get_property;
   gobject_class->finalize = gst_adaptive_demux_finalize;
-
-  g_object_class_install_property (gobject_class, PROP_LOOKBACK_FRAGMENTS,
-      g_param_spec_uint ("num-lookback-fragments",
-          "Number of fragments to look back",
-          "The number of fragments the demuxer will look back to calculate an average bitrate",
-          1, G_MAXUINT, DEFAULT_LOOKBACK_FRAGMENTS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
       g_param_spec_uint ("connection-speed", "Connection Speed",
@@ -442,7 +427,6 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
       GST_DEBUG_FUNCPTR (gst_adaptive_demux_sink_chain));
 
   /* Properties */
-  demux->num_lookback_fragments = DEFAULT_LOOKBACK_FRAGMENTS;
   demux->bitrate_limit = DEFAULT_BITRATE_LIMIT;
   demux->connection_speed = DEFAULT_CONNECTION_SPEED;
 

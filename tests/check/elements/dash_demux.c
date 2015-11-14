@@ -913,9 +913,6 @@ setAndTestDashParams (GstDashDemuxTestData * testData)
 {
   GstElement *dashdemux = testData->scratchData->dashdemux;
 
-  /* num-lookback-fragments can only be set at construction */
-  test_invalid_int_prop (G_OBJECT (dashdemux), "num-lookback-fragments", 10);
-
   test_int_prop (G_OBJECT (dashdemux), "connection-speed", 1000);
   test_invalid_int_prop (G_OBJECT (dashdemux), "connection-speed", 4294967 + 1);
 
