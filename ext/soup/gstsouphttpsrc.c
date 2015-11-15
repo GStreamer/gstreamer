@@ -520,9 +520,7 @@ gst_soup_http_src_finalize (GObject * gobject)
   g_mutex_clear (&src->mutex);
   g_cond_clear (&src->request_finished_cond);
   g_free (src->location);
-  if (src->redirection_uri) {
-    g_free (src->redirection_uri);
-  }
+  g_free (src->redirection_uri);
   g_free (src->user_agent);
   if (src->proxy != NULL) {
     soup_uri_free (src->proxy);
@@ -571,8 +569,7 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
       break;
     }
     case PROP_USER_AGENT:
-      if (src->user_agent)
-        g_free (src->user_agent);
+      g_free (src->user_agent);
       src->user_agent = g_value_dup_string (value);
       break;
     case PROP_IRADIO_MODE:
@@ -600,23 +597,19 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
       gst_base_src_set_live (GST_BASE_SRC (src), g_value_get_boolean (value));
       break;
     case PROP_USER_ID:
-      if (src->user_id)
-        g_free (src->user_id);
+      g_free (src->user_id);
       src->user_id = g_value_dup_string (value);
       break;
     case PROP_USER_PW:
-      if (src->user_pw)
-        g_free (src->user_pw);
+      g_free (src->user_pw);
       src->user_pw = g_value_dup_string (value);
       break;
     case PROP_PROXY_ID:
-      if (src->proxy_id)
-        g_free (src->proxy_id);
+      g_free (src->proxy_id);
       src->proxy_id = g_value_dup_string (value);
       break;
     case PROP_PROXY_PW:
-      if (src->proxy_pw)
-        g_free (src->proxy_pw);
+      g_free (src->proxy_pw);
       src->proxy_pw = g_value_dup_string (value);
       break;
     case PROP_TIMEOUT:
@@ -644,8 +637,7 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
       src->ssl_strict = g_value_get_boolean (value);
       break;
     case PROP_SSL_CA_FILE:
-      if (src->ssl_ca_file)
-        g_free (src->ssl_ca_file);
+      g_free (src->ssl_ca_file);
       src->ssl_ca_file = g_value_dup_string (value);
       break;
     case PROP_SSL_USE_SYSTEM_CA_FILE:
