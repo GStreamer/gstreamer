@@ -177,8 +177,7 @@ gst_sunaudiosrc_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE:
-      if (sunaudiosrc->device)
-        g_free (sunaudiosrc->device);
+      g_free (sunaudiosrc->device);
       sunaudiosrc->device = g_value_dup_string (value);
       break;
     default:
