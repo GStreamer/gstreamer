@@ -815,8 +815,7 @@ gst_matroska_read_common_parse_metadata_targets (GstMatroskaReadCommon * common,
 
       case GST_MATROSKA_ID_TARGETTYPE:
         if ((ret = gst_ebml_read_ascii (ebml, &id, &str)) == GST_FLOW_OK) {
-          if (*target_type != NULL)
-            g_free (*target_type);
+          g_free (*target_type);
           *target_type = str;
         }
         break;
@@ -1258,8 +1257,7 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
         GST_DEBUG_OBJECT (common->sinkpad, "EbmlDocType: %s",
             GST_STR_NULL (text));
 
-        if (doctype)
-          g_free (doctype);
+        g_free (doctype);
         doctype = text;
         break;
       }
