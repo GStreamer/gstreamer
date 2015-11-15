@@ -2965,9 +2965,7 @@ atom_trak_tx3g_update_dimension (AtomTRAK * trak, guint32 width, guint32 height)
 static void
 atom_tag_data_alloc_data (AtomTagData * data, guint size)
 {
-  if (data->data != NULL) {
-    g_free (data->data);
-  }
+  g_free (data->data);
   data->data = g_new0 (guint8, size);
   data->datalen = size;
 }
@@ -3185,8 +3183,7 @@ atom_hdlr_set_type (AtomHDLR * hdlr, AtomsContext * context, guint32 comp_type,
 static void
 atom_hdlr_set_name (AtomHDLR * hdlr, const char *name)
 {
-  if (hdlr->name)
-    g_free (hdlr->name);
+  g_free (hdlr->name);
   hdlr->name = g_strdup (name);
 }
 
