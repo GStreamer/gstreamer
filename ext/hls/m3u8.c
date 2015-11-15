@@ -152,7 +152,6 @@ _m3u8_copy (const GstM3U8 * self)
   dup->iframe_lists =
       g_list_copy_deep (self->iframe_lists, (GCopyFunc) _m3u8_copy, NULL);
   /* NOTE: current_variant will get set in gst_m3u8_copy () */
-  dup->mediasequence = self->mediasequence;
   return dup;
 }
 
@@ -374,6 +373,7 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
   gboolean have_iv = FALSE;
   guint8 iv[16] = { 0, };
   gint64 size = -1, offset = -1;
+  gint64 mediasequence;
 
   g_return_val_if_fail (self != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
@@ -408,7 +408,7 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
     self->files = NULL;
   }
   client->duration = GST_CLOCK_TIME_NONE;
-  self->mediasequence = 0;
+  mediasequence = 0;
 
   /* By default, allow caching */
   self->allowcache = TRUE;
@@ -452,9 +452,7 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
         list = NULL;
       } else {
         GstM3U8MediaFile *file;
-        file =
-            gst_m3u8_media_file_new (data, title, duration,
-            self->mediasequence++);
+        file = gst_m3u8_media_file_new (data, title, duration, mediasequence++);
 
         /* set encryption params */
         file->key = current_key ? g_strdup (current_key) : NULL;
@@ -595,7 +593,7 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
           self->targetduration = val * GST_SECOND;
       } else if (g_str_has_prefix (data_ext_x, "MEDIA-SEQUENCE:")) {
         if (int_from_string (data + 22, &data, &val))
-          self->mediasequence = val;
+          mediasequence = val;
       } else if (g_str_has_prefix (data_ext_x, "DISCONTINUITY")) {
         discontinuity = TRUE;
       } else if (g_str_has_prefix (data_ext_x, "PROGRAM-DATE-TIME:")) {
