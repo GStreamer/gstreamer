@@ -156,8 +156,7 @@ gst_rtp_vorbis_pay_cleanup (GstRtpVorbisPay * rtpvorbispay)
   gst_rtp_vorbis_pay_clear_packet (rtpvorbispay);
   g_list_free_full (rtpvorbispay->headers, (GDestroyNotify) gst_buffer_unref);
   rtpvorbispay->headers = NULL;
-  if (rtpvorbispay->config_data)
-    g_free (rtpvorbispay->config_data);
+  g_free (rtpvorbispay->config_data);
   rtpvorbispay->config_data = NULL;
   rtpvorbispay->last_config = GST_CLOCK_TIME_NONE;
 }
@@ -508,8 +507,7 @@ gst_rtp_vorbis_pay_finish_headers (GstRTPBasePayload * basepayload)
   configuration = g_base64_encode (config, configlen);
 
   /* store for later re-sending */
-  if (rtpvorbispay->config_data)
-    g_free (rtpvorbispay->config_data);
+  g_free (rtpvorbispay->config_data);
   rtpvorbispay->config_size = configlen - 4 - 3 - 2;
   rtpvorbispay->config_data = g_malloc (rtpvorbispay->config_size);
   rtpvorbispay->config_extra_len = extralen;
