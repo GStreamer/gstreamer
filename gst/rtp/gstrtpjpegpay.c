@@ -359,10 +359,8 @@ gst_rtp_jpeg_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
     res = gst_rtp_base_payload_set_outcaps (basepayload, NULL);
   }
 
-  if (dim != NULL)
-    g_free (dim);
-  if (rate != NULL)
-    g_free (rate);
+  g_free (dim);
+  g_free (rate);
 
   return res;
 
