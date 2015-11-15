@@ -215,12 +215,10 @@ gst_shagadelictv_finalize (GObject * object)
 {
   GstShagadelicTV *filter = GST_SHAGADELICTV (object);
 
-  if (filter->ripple)
-    g_free (filter->ripple);
+  g_free (filter->ripple);
   filter->ripple = NULL;
 
-  if (filter->spiral)
-    g_free (filter->spiral);
+  g_free (filter->spiral);
   filter->spiral = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
