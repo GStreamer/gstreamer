@@ -465,11 +465,9 @@ gst_v4l2_object_destroy (GstV4l2Object * v4l2object)
 {
   g_return_if_fail (v4l2object != NULL);
 
-  if (v4l2object->videodev)
-    g_free (v4l2object->videodev);
+  g_free (v4l2object->videodev);
 
-  if (v4l2object->channel)
-    g_free (v4l2object->channel);
+  g_free (v4l2object->channel);
 
   if (v4l2object->formats) {
     gst_v4l2_object_clear_format_list (v4l2object);
