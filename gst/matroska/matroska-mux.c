@@ -490,8 +490,7 @@ gst_matroska_mux_finalize (GObject * object)
 
   gst_object_unref (mux->collect);
   gst_object_unref (mux->ebml_write);
-  if (mux->writing_app)
-    g_free (mux->writing_app);
+  g_free (mux->writing_app);
 
   g_array_free (mux->used_uids, TRUE);
 
@@ -908,8 +907,7 @@ gst_matroska_mux_set_codec_id (GstMatroskaTrackContext * context,
     const char *id)
 {
   g_assert (context && id);
-  if (context->codec_id)
-    g_free (context->codec_id);
+  g_free (context->codec_id);
   context->codec_id = g_strdup (id);
 }
 
