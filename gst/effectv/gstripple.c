@@ -460,24 +460,20 @@ gst_rippletv_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
 
   /* we over allocate the buffers, as the render code does not handle clipping
    * very well */
-  if (filter->map)
-    g_free (filter->map);
+  g_free (filter->map);
   filter->map = g_new0 (gint, (1 + filter->map_h) * filter->map_w * 3);
 
   filter->map1 = filter->map;
   filter->map2 = filter->map + filter->map_w * filter->map_h;
   filter->map3 = filter->map + filter->map_w * filter->map_h * 2;
 
-  if (filter->vtable)
-    g_free (filter->vtable);
+  g_free (filter->vtable);
   filter->vtable = g_new0 (gint8, (1 + filter->map_h) * filter->map_w * 2);
 
-  if (filter->background)
-    g_free (filter->background);
+  g_free (filter->background);
   filter->background = g_new0 (gint16, width * (height + 1));
 
-  if (filter->diff)
-    g_free (filter->diff);
+  g_free (filter->diff);
   filter->diff = g_new0 (guint8, width * (height + 1));
   GST_OBJECT_UNLOCK (filter);
 
@@ -507,20 +503,16 @@ gst_rippletv_finalize (GObject * object)
 {
   GstRippleTV *filter = GST_RIPPLETV (object);
 
-  if (filter->map)
-    g_free (filter->map);
+  g_free (filter->map);
   filter->map = NULL;
 
-  if (filter->vtable)
-    g_free (filter->vtable);
+  g_free (filter->vtable);
   filter->vtable = NULL;
 
-  if (filter->background)
-    g_free (filter->background);
+  g_free (filter->background);
   filter->background = NULL;
 
-  if (filter->diff)
-    g_free (filter->diff);
+  g_free (filter->diff);
   filter->diff = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
