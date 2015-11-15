@@ -1082,26 +1082,22 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       gst_rtspsrc_set_proxy (rtspsrc, g_value_get_string (value));
       break;
     case PROP_PROXY_ID:
-      if (rtspsrc->prop_proxy_id)
-        g_free (rtspsrc->prop_proxy_id);
+      g_free (rtspsrc->prop_proxy_id);
       rtspsrc->prop_proxy_id = g_value_dup_string (value);
       break;
     case PROP_PROXY_PW:
-      if (rtspsrc->prop_proxy_pw)
-        g_free (rtspsrc->prop_proxy_pw);
+      g_free (rtspsrc->prop_proxy_pw);
       rtspsrc->prop_proxy_pw = g_value_dup_string (value);
       break;
     case PROP_RTP_BLOCKSIZE:
       rtspsrc->rtp_blocksize = g_value_get_uint (value);
       break;
     case PROP_USER_ID:
-      if (rtspsrc->user_id)
-        g_free (rtspsrc->user_id);
+      g_free (rtspsrc->user_id);
       rtspsrc->user_id = g_value_dup_string (value);
       break;
     case PROP_USER_PW:
-      if (rtspsrc->user_pw)
-        g_free (rtspsrc->user_pw);
+      g_free (rtspsrc->user_pw);
       rtspsrc->user_pw = g_value_dup_string (value);
       break;
     case PROP_BUFFER_MODE:
@@ -4510,8 +4506,7 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
     if ((res = gst_rtsp_connection_create (info->url, &info->connection)) < 0)
       goto could_not_create;
 
-    if (info->url_str)
-      g_free (info->url_str);
+    g_free (info->url_str);
     info->url_str = gst_rtsp_url_get_request_uri (info->url);
 
     GST_DEBUG_OBJECT (src, "sanitized uri %s", info->url_str);
