@@ -275,14 +275,12 @@ gst_optv_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
   height = GST_VIDEO_INFO_HEIGHT (in_info);
 
   for (i = 0; i < 4; i++) {
-    if (filter->opmap[i])
-      g_free (filter->opmap[i]);
+    g_free (filter->opmap[i]);
     filter->opmap[i] = g_new (gint8, width * height);
   }
   setOpmap (filter->opmap, width, height);
 
-  if (filter->diff)
-    g_free (filter->diff);
+  g_free (filter->diff);
   filter->diff = g_new (guint8, width * height);
 
   return TRUE;
@@ -307,14 +305,12 @@ gst_optv_finalize (GObject * object)
     gint i;
 
     for (i = 0; i < 4; i++) {
-      if (filter->opmap[i])
-        g_free (filter->opmap[i]);
+      g_free (filter->opmap[i]);
       filter->opmap[i] = NULL;
     }
   }
 
-  if (filter->diff)
-    g_free (filter->diff);
+  g_free (filter->diff);
   filter->diff = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
