@@ -911,8 +911,7 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       global = TRUE;
       break;
     case PROP_MULTIPASS_CACHE_FILE:
-      if (gst_vp8_enc->multipass_cache_prefix)
-        g_free (gst_vp8_enc->multipass_cache_prefix);
+      g_free (gst_vp8_enc->multipass_cache_prefix);
       gst_vp8_enc->multipass_cache_prefix = g_value_dup_string (value);
       break;
     case PROP_TS_NUMBER_LAYERS:
