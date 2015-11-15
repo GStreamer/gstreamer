@@ -1691,10 +1691,8 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   /* ERROR */
 exit:
   {
-    if (codec_name)
-      g_free (codec_name);
-    if (header)
-      g_free (header);
+    g_free (codec_name);
+    g_free (header);
     if (caps)
       gst_caps_unref (caps);
     return res;
