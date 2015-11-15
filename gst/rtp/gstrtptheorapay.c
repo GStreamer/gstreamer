@@ -164,8 +164,7 @@ gst_rtp_theora_pay_cleanup (GstRtpTheoraPay * rtptheorapay)
   gst_rtp_theora_pay_clear_packet (rtptheorapay);
   g_list_free_full (rtptheorapay->headers, (GDestroyNotify) gst_buffer_unref);
   rtptheorapay->headers = NULL;
-  if (rtptheorapay->config_data)
-    g_free (rtptheorapay->config_data);
+  g_free (rtptheorapay->config_data);
   rtptheorapay->config_data = NULL;
   rtptheorapay->last_config = GST_CLOCK_TIME_NONE;
 }
@@ -516,8 +515,7 @@ gst_rtp_theora_pay_finish_headers (GstRTPBasePayload * basepayload)
   configuration = g_base64_encode (config, configlen);
 
   /* store for later re-sending */
-  if (rtptheorapay->config_data)
-    g_free (rtptheorapay->config_data);
+  g_free (rtptheorapay->config_data);
   rtptheorapay->config_size = configlen - 4 - 3 - 2;
   rtptheorapay->config_data = g_malloc (rtptheorapay->config_size);
   rtptheorapay->config_extra_len = extralen;
