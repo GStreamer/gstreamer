@@ -171,8 +171,7 @@ gst_rtp_gst_pay_reset (GstRtpGSTPay * rtpgstpay, gboolean full)
     if (rtpgstpay->taglist)
       gst_tag_list_unref (rtpgstpay->taglist);
     rtpgstpay->taglist = NULL;
-    if (rtpgstpay->stream_id)
-      g_free (rtpgstpay->stream_id);
+    g_free (rtpgstpay->stream_id);
     rtpgstpay->stream_id = NULL;
     rtpgstpay->current_CV = 0;
     rtpgstpay->next_CV = 0;
@@ -545,8 +544,7 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 
       gst_event_parse_stream_start (event, &stream_id);
       if (stream_id) {
-        if (rtpgstpay->stream_id)
-          g_free (rtpgstpay->stream_id);
+        g_free (rtpgstpay->stream_id);
         rtpgstpay->stream_id = g_strdup (stream_id);
       }
       etype = 4;
