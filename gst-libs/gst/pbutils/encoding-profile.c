@@ -292,18 +292,14 @@ static void
 gst_encoding_profile_finalize (GObject * object)
 {
   GstEncodingProfile *prof = (GstEncodingProfile *) object;
-  if (prof->name)
-    g_free (prof->name);
+  g_free (prof->name);
   if (prof->format)
     gst_caps_unref (prof->format);
-  if (prof->preset)
-    g_free (prof->preset);
-  if (prof->description)
-    g_free (prof->description);
+  g_free (prof->preset);
+  g_free (prof->description);
   if (prof->restriction)
     gst_caps_unref (prof->restriction);
-  if (prof->preset_name)
-    g_free (prof->preset_name);
+  g_free (prof->preset_name);
 }
 
 static void
@@ -443,8 +439,7 @@ gst_encoding_profile_get_restriction (GstEncodingProfile * profile)
 void
 gst_encoding_profile_set_name (GstEncodingProfile * profile, const gchar * name)
 {
-  if (profile->name)
-    g_free (profile->name);
+  g_free (profile->name);
   profile->name = g_strdup (name);
 }
 
@@ -460,8 +455,7 @@ void
 gst_encoding_profile_set_description (GstEncodingProfile * profile,
     const gchar * description)
 {
-  if (profile->description)
-    g_free (profile->description);
+  g_free (profile->description);
   profile->description = g_strdup (description);
 }
 
@@ -522,8 +516,7 @@ void
 gst_encoding_profile_set_preset (GstEncodingProfile * profile,
     const gchar * preset)
 {
-  if (profile->preset)
-    g_free (profile->preset);
+  g_free (profile->preset);
   profile->preset = g_strdup (preset);
 }
 
@@ -538,8 +531,7 @@ void
 gst_encoding_profile_set_preset_name (GstEncodingProfile * profile,
     const gchar * preset_name)
 {
-  if (profile->preset_name)
-    g_free (profile->preset_name);
+  g_free (profile->preset_name);
   profile->preset_name = g_strdup (preset_name);
 }
 

@@ -863,8 +863,7 @@ gst_rtsp_message_take_body (GstRTSPMessage * msg, guint8 * data, guint size)
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (data != NULL || size == 0, GST_RTSP_EINVAL);
 
-  if (msg->body)
-    g_free (msg->body);
+  g_free (msg->body);
 
   msg->body = data;
   msg->body_size = size;

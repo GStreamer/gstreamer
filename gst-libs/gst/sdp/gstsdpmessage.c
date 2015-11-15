@@ -3016,8 +3016,7 @@ gst_sdp_message_parse_buffer (const guint8 * data, guint size,
 #undef SIZE_CHECK_GUARD
 
 out:
-  if (buffer)
-    g_free (buffer);
+  g_free (buffer);
 
   return GST_SDP_OK;
 }

@@ -104,12 +104,9 @@ gst_encoding_target_finalize (GObject * object)
 
   GST_DEBUG ("Finalizing");
 
-  if (target->name)
-    g_free (target->name);
-  if (target->category)
-    g_free (target->category);
-  if (target->description)
-    g_free (target->description);
+  g_free (target->name);
+  g_free (target->category);
+  g_free (target->description);
 
   g_list_foreach (target->profiles, (GFunc) g_object_unref, NULL);
   g_list_free (target->profiles);
@@ -655,14 +652,10 @@ parse_encoding_profile (GKeyFile * in, gchar * parentprofilename,
   if (formatcaps)
     gst_caps_unref (formatcaps);
 
-  if (pname)
-    g_free (pname);
-  if (description)
-    g_free (description);
-  if (preset)
-    g_free (preset);
-  if (proftype)
-    g_free (proftype);
+  g_free (pname);
+  g_free (description);
+  g_free (preset);
+  g_free (proftype);
 
   return sprof;
 }
@@ -690,12 +683,9 @@ parse_keyfile (GKeyFile * in, gchar * targetname, gchar * categoryname,
 
   g_strfreev (groups);
 
-  if (targetname)
-    g_free (targetname);
-  if (categoryname)
-    g_free (categoryname);
-  if (description)
-    g_free (description);
+  g_free (targetname);
+  g_free (categoryname);
+  g_free (description);
 
   return res;
 }

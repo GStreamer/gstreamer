@@ -55,8 +55,7 @@ list_codecs (void)
     desc = gst_pb_utils_get_codec_description (caps);
     g_print ("  %s - %s\n", desc, tmpstr);
     g_free (tmpstr);
-    if (desc)
-      g_free (desc);
+    g_free (desc);
     gst_caps_remove_structure (caps, 0);
   }
   g_print ("\n");
@@ -73,8 +72,7 @@ list_codecs (void)
     desc = gst_pb_utils_get_codec_description (caps);
     g_print ("  %s - %s\n", desc, tmpstr);
     g_free (tmpstr);
-    if (desc)
-      g_free (desc);
+    g_free (desc);
     gst_caps_remove_structure (caps, 0);
   }
   g_print ("\n");
@@ -91,8 +89,7 @@ list_codecs (void)
     desc = gst_pb_utils_get_codec_description (caps);
     g_print ("  %s - %s\n", desc, tmpstr);
     g_free (tmpstr);
-    if (desc)
-      g_free (desc);
+    g_free (desc);
     gst_caps_remove_structure (caps, 0);
   }
   g_print ("\n");
