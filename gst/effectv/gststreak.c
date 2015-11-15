@@ -151,8 +151,7 @@ gst_streaktv_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
   width = GST_VIDEO_INFO_WIDTH (in_info);
   height = GST_VIDEO_INFO_HEIGHT (in_info);
 
-  if (filter->planebuffer)
-    g_free (filter->planebuffer);
+  g_free (filter->planebuffer);
 
   filter->planebuffer = g_new0 (guint32, width * height * 4 * PLANES);
 
