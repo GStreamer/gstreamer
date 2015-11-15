@@ -439,28 +439,22 @@ gst_radioactv_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
   filter->buf_margin_right =
       height - filter->buf_width - filter->buf_margin_left;
 
-  if (filter->blurzoombuf)
-    g_free (filter->blurzoombuf);
+  g_free (filter->blurzoombuf);
   filter->blurzoombuf = g_new0 (guint8, filter->buf_area * 2);
 
-  if (filter->blurzoomx)
-    g_free (filter->blurzoomx);
+  g_free (filter->blurzoomx);
   filter->blurzoomx = g_new0 (gint, filter->buf_width);
 
-  if (filter->blurzoomy)
-    g_free (filter->blurzoomy);
+  g_free (filter->blurzoomy);
   filter->blurzoomy = g_new0 (gint, filter->buf_height);
 
-  if (filter->snapframe)
-    g_free (filter->snapframe);
+  g_free (filter->snapframe);
   filter->snapframe = g_new (guint32, width * height);
 
-  if (filter->diff)
-    g_free (filter->diff);
+  g_free (filter->diff);
   filter->diff = g_new (guint8, width * height);
 
-  if (filter->background)
-    g_free (filter->background);
+  g_free (filter->background);
   filter->background = g_new0 (gint16, width * height);
 
   setTable (filter);
@@ -490,28 +484,22 @@ gst_radioactv_finalize (GObject * object)
 {
   GstRadioacTV *filter = GST_RADIOACTV (object);
 
-  if (filter->snapframe)
-    g_free (filter->snapframe);
+  g_free (filter->snapframe);
   filter->snapframe = NULL;
 
-  if (filter->blurzoombuf)
-    g_free (filter->blurzoombuf);
+  g_free (filter->blurzoombuf);
   filter->blurzoombuf = NULL;
 
-  if (filter->diff)
-    g_free (filter->diff);
+  g_free (filter->diff);
   filter->diff = NULL;
 
-  if (filter->background)
-    g_free (filter->background);
+  g_free (filter->background);
   filter->background = NULL;
 
-  if (filter->blurzoomx)
-    g_free (filter->blurzoomx);
+  g_free (filter->blurzoomx);
   filter->blurzoomx = NULL;
 
-  if (filter->blurzoomy)
-    g_free (filter->blurzoomy);
+  g_free (filter->blurzoomy);
   filter->blurzoomy = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
