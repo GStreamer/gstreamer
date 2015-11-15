@@ -181,8 +181,7 @@ gst_oss_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE:
-      if (src->device)
-        g_free (src->device);
+      g_free (src->device);
       src->device = g_value_dup_string (value);
       break;
     default:
