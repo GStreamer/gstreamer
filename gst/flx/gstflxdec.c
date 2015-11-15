@@ -596,8 +596,7 @@ gst_flxdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
           break;
       }
 
-      if (chunk)
-        g_free (chunk);
+      g_free (chunk);
 
       avail = gst_adapter_available (flxdec->adapter);
     }
