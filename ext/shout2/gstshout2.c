@@ -688,52 +688,44 @@ gst_shout2send_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
 
     case ARG_IP:
-      if (shout2send->ip)
-        g_free (shout2send->ip);
+      g_free (shout2send->ip);
       shout2send->ip = g_strdup (g_value_get_string (value));
       break;
     case ARG_PORT:
       shout2send->port = g_value_get_int (value);
       break;
     case ARG_PASSWORD:
-      if (shout2send->password)
-        g_free (shout2send->password);
+      g_free (shout2send->password);
       shout2send->password = g_strdup (g_value_get_string (value));
       break;
     case ARG_USERNAME:
-      if (shout2send->username)
-        g_free (shout2send->username);
+      g_free (shout2send->username);
       shout2send->username = g_strdup (g_value_get_string (value));
       break;
     case ARG_PUBLIC:
       shout2send->ispublic = g_value_get_boolean (value);
       break;
     case ARG_STREAMNAME:       /* Name of the stream */
-      if (shout2send->streamname)
-        g_free (shout2send->streamname);
+      g_free (shout2send->streamname);
       shout2send->streamname = g_strdup (g_value_get_string (value));
       break;
     case ARG_DESCRIPTION:      /* Description of the stream */
-      if (shout2send->description)
-        g_free (shout2send->description);
+      g_free (shout2send->description);
       shout2send->description = g_strdup (g_value_get_string (value));
       break;
     case ARG_GENRE:            /* Genre of the stream */
-      if (shout2send->genre)
-        g_free (shout2send->genre);
+      g_free (shout2send->genre);
       shout2send->genre = g_strdup (g_value_get_string (value));
       break;
     case ARG_PROTOCOL:         /* protocol to connect with */
       shout2send->protocol = g_value_get_enum (value);
       break;
     case ARG_MOUNT:            /* mountpoint of stream (icecast only) */
-      if (shout2send->mount)
-        g_free (shout2send->mount);
+      g_free (shout2send->mount);
       shout2send->mount = g_strdup (g_value_get_string (value));
       break;
     case ARG_URL:              /* the stream's homepage URL */
-      if (shout2send->url)
-        g_free (shout2send->url);
+      g_free (shout2send->url);
       shout2send->url = g_strdup (g_value_get_string (value));
       break;
     default:
