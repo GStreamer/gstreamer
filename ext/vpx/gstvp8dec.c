@@ -58,7 +58,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vp8dec_debug);
 #define DEFAULT_POST_PROCESSING_FLAGS (VP8_DEBLOCK | VP8_DEMACROBLOCK | VP8_MFQE)
 #define DEFAULT_DEBLOCKING_LEVEL 4
 #define DEFAULT_NOISE_LEVEL 0
-#define DEFAULT_THREADS 1
+#define DEFAULT_THREADS 0
 
 enum
 {
@@ -168,8 +168,8 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_THREADS,
       g_param_spec_uint ("threads", "Max Threads",
-          "Maximum number of decoding threads",
-          1, 16, DEFAULT_THREADS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Maximum number of decoding threads (0 = automatic)",
+          0, 16, DEFAULT_THREADS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vp8_dec_src_template));
@@ -456,7 +456,11 @@ open_codec (GstVP8Dec * dec, GstVideoCodecFrame * frame)
 
   cfg.w = stream_info.w;
   cfg.h = stream_info.h;
-  cfg.threads = dec->threads;
+
+  if (dec->threads > 0)
+    cfg.threads = dec->threads;
+  else
+    cfg.threads = g_get_num_processors ();
 
   caps = vpx_codec_get_caps (&vpx_codec_vp8_dx_algo);
 
