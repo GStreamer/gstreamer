@@ -855,6 +855,32 @@ video_info_changed (GstVideoInfo * old_vip, GstVideoInfo * new_vip)
   return FALSE;
 }
 
+static inline gboolean
+video_info_is_filled (GstVideoInfo * info)
+{
+  return (GST_VIDEO_INFO_FORMAT (info) > GST_VIDEO_FORMAT_UNKNOWN
+          && GST_VIDEO_INFO_WIDTH (info) > 0
+          && GST_VIDEO_INFO_HEIGHT (info) > 0);
+}
+
+static gboolean
+video_info_update (GstCaps * caps, GstVideoInfo * info,
+    gboolean * caps_changed_ptr)
+{
+  GstVideoInfo vi;
+
+  if (!gst_video_info_from_caps (&vi, caps))
+    return FALSE;
+
+  *caps_changed_ptr = FALSE;
+  if (video_info_changed (info, &vi)) {
+    *caps_changed_ptr = video_info_is_filled (info);
+    *info = vi;
+  }
+
+  return TRUE;
+}
+
 static gboolean
 gst_vaapipostproc_update_sink_caps (GstVaapiPostproc * postproc, GstCaps * caps,
     gboolean * caps_changed_ptr)
@@ -864,12 +890,10 @@ gst_vaapipostproc_update_sink_caps (GstVaapiPostproc * postproc, GstCaps * caps,
 
   GST_INFO_OBJECT (postproc, "new sink caps = %" GST_PTR_FORMAT, caps);
 
-  if (!gst_video_info_from_caps (&vi, caps))
+  if (!video_info_update (caps, &postproc->sinkpad_info, caps_changed_ptr))
     return FALSE;
 
-  if (video_info_changed (&postproc->sinkpad_info, &vi))
-    postproc->sinkpad_info = vi, *caps_changed_ptr = TRUE;
-
+  vi = postproc->sinkpad_info;
   deinterlace = is_deinterlace_enabled (postproc, &vi);
   if (deinterlace)
     postproc->flags |= GST_VAAPI_POSTPROC_FLAG_DEINTERLACE;
@@ -885,15 +909,10 @@ static gboolean
 gst_vaapipostproc_update_src_caps (GstVaapiPostproc * postproc, GstCaps * caps,
     gboolean * caps_changed_ptr)
 {
-  GstVideoInfo vi;
-
   GST_INFO_OBJECT (postproc, "new src caps = %" GST_PTR_FORMAT, caps);
 
-  if (!gst_video_info_from_caps (&vi, caps))
+  if (!video_info_update (caps, &postproc->srcpad_info, caps_changed_ptr))
     return FALSE;
-
-  if (video_info_changed (&postproc->srcpad_info, &vi))
-    postproc->srcpad_info = vi, *caps_changed_ptr = TRUE;
 
   if (postproc->format != GST_VIDEO_INFO_FORMAT (&postproc->sinkpad_info) &&
       postproc->format != DEFAULT_FORMAT)
