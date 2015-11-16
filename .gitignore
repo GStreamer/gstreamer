@@ -62,6 +62,7 @@ stamp-h.in
 /tests/check/gst/stream
 /tests/check/gst/threadpool
 /tests/check/gst/token
+/tests/check/gst/rtspclientsink
 /tests/check/test-registry.reg
 /tests/test-reuse
 

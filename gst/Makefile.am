@@ -1,1 +1,1 @@
-SUBDIRS = rtsp-server
+SUBDIRS = rtsp-server rtsp-sink

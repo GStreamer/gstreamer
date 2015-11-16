@@ -170,6 +170,8 @@ AC_MSG_NOTICE(Using GStreamer Core Plugins in $GST_PLUGINS_DIR)
 
 AG_GST_CHECK_GST_BASE($GST_API_VERSION, [$GST_REQ], [yes])
 
+AG_GST_CHECK_GST_NET($GST_API_VERSION, [$GST_REQ], yes)
+
 AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GSTPB_REQ], [yes])
 GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_API_VERSION --variable pluginsdir`
 AC_SUBST(GSTPB_PLUGINS_DIR)
@@ -217,6 +219,31 @@ dnl set release date/time (and check that release version is in doap file)
 AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
   ["${srcdir}/gst-rtsp-server.doap"],
   [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
+
+dnl build static plugins or not
+AC_MSG_CHECKING([whether to build static plugins or not])
+AC_ARG_ENABLE(
+  static-plugins,
+  AC_HELP_STRING(
+    [--enable-static-plugins],
+    [build static plugins @<:@default=no@:>@]),
+  [AS_CASE(
+    [$enableval], [no], [], [yes], [],
+    [AC_MSG_ERROR([bad value "$enableval" for --enable-static-plugins])])],
+  [enable_static_plugins=no])
+AC_MSG_RESULT([$enable_static_plugins])
+if test "x$enable_static_plugins" = xyes; then
+  AC_DEFINE(GST_PLUGIN_BUILD_STATIC, 1,
+    [Define if static plugins should be built])
+  GST_PLUGIN_LIBTOOLFLAGS=""
+else
+  GST_PLUGIN_LIBTOOLFLAGS="--tag=disable-static"
+fi
+AC_SUBST(GST_PLUGIN_LIBTOOLFLAGS)
+AM_CONDITIONAL(GST_PLUGIN_BUILD_STATIC, test "x$enable_static_plugins" = "xyes")
+
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_.*' $GST_ALL_LDFLAGS"
+AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 # set by AG_GST_PARSE_SUBSYSTEM_DISABLES above
 dnl make sure it doesn't complain about unused variables if debugging is disabled
@@ -324,6 +351,7 @@ common/Makefile
 common/m4/Makefile
 gst/Makefile
 gst/rtsp-server/Makefile
+gst/rtsp-sink/Makefile
 examples/Makefile
 tests/Makefile
 tests/check/Makefile
