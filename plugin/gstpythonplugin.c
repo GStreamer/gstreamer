@@ -239,7 +239,7 @@ plugin_init (GstPlugin * plugin)
         g_module_open (PY_LIB_LOC "/libpython" PYTHON_VERSION PY_ABI_FLAGS
         "." PY_LIB_SUFFIX, 0);
     if (!libpython) {
-      GST_WARNING ("Couldn't g_module_open libpython. Reason: %s",
+      g_critical ("Couldn't g_module_open libpython. Reason: %s",
           g_module_error ());
       return FALSE;
     }
@@ -257,19 +257,24 @@ plugin_init (GstPlugin * plugin)
 
   GST_LOG ("initializing pygobject");
   if (!pygobject_init (3, 0, 0)) {
-    GST_WARNING ("pygobject initialization failed");
+    g_critical ("pygobject initialization failed");
     return FALSE;
   }
 
   gst = PyImport_ImportModule ("gi.repository.Gst");
+  if (!gst) {
+    g_critical ("can't find gi.repository.Gst");
+    return FALSE;
+  }
+
   if (we_initialized) {
     PyObject *tmp;
 
     dict = PyModule_GetDict (gst);
     if (!dict) {
-      GST_ERROR ("no dict?!");
+      g_critical ("gi.repository.Gst is no dict");
+      return FALSE;
     }
-
 
     tmp =
         PyObject_GetAttr (PyMapping_GetItemString (dict,
@@ -278,13 +283,15 @@ plugin_init (GstPlugin * plugin)
     _PyGstElement_Type = PyMapping_GetItemString (tmp, "Element");
 
     if (!_PyGstElement_Type) {
-      g_error ("Could not get Gst.Element");
-      Py_DECREF (pyplugin);
+      g_critical ("Could not get Gst.Element");
+      return FALSE;
     }
+
     pyplugin = pygobject_new (G_OBJECT (plugin));
     if (!pyplugin || PyModule_AddObject (gst, "__plugin__", pyplugin) != 0) {
-      g_warning ("Couldn't set plugin");
+      g_critical ("Couldn't set __plugin__ attribute");
       Py_DECREF (pyplugin);
+      return FALSE;
     }
   }
 
