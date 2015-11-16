@@ -507,10 +507,9 @@ Note that all testsuite should be inside python modules, so the directory should
         if not download_assets(options):
             exit(1)
 
-    tests_launcher.set_settings(options, [])
-
     # Ensure that the scenario manager singleton is ready to be used
     ScenarioManager().config = options
+    tests_launcher.set_settings(options, [])
     tests_launcher.list_tests()
 
     if options.list_tests:
