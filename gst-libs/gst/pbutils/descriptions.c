@@ -289,6 +289,7 @@ static const FormatInfo formats[] = {
   {"subtitle/x-kate", N_("Kate subtitle format"), FLAG_SUB, ""},
   {"subpicture/x-dvb", "DVB subtitles", FLAG_SUB, ""},
   {"subpicture/x-pgs", "PGS subtitles", FLAG_SUB, ""},
+  {"subpicture/x-xsub", "XSUB subtitles", FLAG_SUB, ""},
 
   /* non-audio/video/container formats */
   {"hdv/aux-v", "HDV AUX-V", 0, ""},
