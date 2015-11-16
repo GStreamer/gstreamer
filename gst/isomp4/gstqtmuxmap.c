@@ -132,6 +132,12 @@
   "audio/x-alac, " \
   COMMON_AUDIO_CAPS(2, MAX)
 
+#define OPUS_CAPS \
+  "audio/x-opus, " \
+  "channel-mapping-family = (int) [0, 255], " \
+  COMMON_AUDIO_CAPS(8, MAX)
+
+
 #define TEXT_UTF8 \
   "text/x-raw, " \
   "format=(string)utf8"
@@ -184,7 +190,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS ("video/quicktime, variant = (string) iso"),
         GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";"
             "video/x-mp4-part," COMMON_VIDEO_CAPS),
-        GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS " ; " AC3_CAPS " ; " ALAC_CAPS),
+        GST_STATIC_CAPS (MP3_CAPS "; "
+            AAC_CAPS " ; " AC3_CAPS " ; " ALAC_CAPS " ; " OPUS_CAPS),
       GST_STATIC_CAPS (TEXT_UTF8)}
   ,
   /* Microsoft Smooth Streaming fmp4/isml */

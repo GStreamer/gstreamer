@@ -122,6 +122,7 @@
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
 #include <gst/tag/tag.h>
+#include <gst/pbutils/pbutils.h>
 
 #include <sys/types.h>
 #ifdef G_OS_WIN32
@@ -3665,6 +3666,49 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
      * the stream itself. Abuse the prepare_buf_func so we parse a frame
      * and get the needed data */
     qtpad->prepare_buf_func = gst_qt_mux_prepare_parse_ac3_frame;
+  } else if (strcmp (mimetype, "audio/x-opus") == 0) {
+    /* Based on the specification defined in:
+     * https://www.opus-codec.org/docs/opus_in_isobmff.html */
+    guint8 channels, mapping_family, stream_count, coupled_count;
+    guint16 pre_skip;
+    gint16 output_gain;
+    guint32 rate;
+    guint8 channel_mapping[256];
+    const GValue *streamheader;
+    const GValue *first_element;
+    GstBuffer *header;
+
+    entry.fourcc = FOURCC_opus;
+    entry.sample_size = 16;
+
+    streamheader = gst_structure_get_value (structure, "streamheader");
+    if (streamheader && GST_VALUE_HOLDS_ARRAY (streamheader) &&
+        gst_value_array_get_size (streamheader) != 0) {
+      first_element = gst_value_array_get_value (streamheader, 0);
+      header = gst_value_get_buffer (first_element);
+      if (!gst_codec_utils_opus_parse_header (header, &rate, &channels,
+              &mapping_family, &stream_count, &coupled_count, channel_mapping,
+              &pre_skip, &output_gain)) {
+        GST_ERROR_OBJECT (qtmux, "Incomplete OpusHead");
+        goto refuse_caps;
+      }
+    } else {
+      GST_WARNING_OBJECT (qtmux,
+          "no streamheader field in caps %" GST_PTR_FORMAT, caps);
+
+      if (!gst_codec_utils_opus_parse_caps (caps, &rate, &channels,
+              &mapping_family, &stream_count, &coupled_count,
+              channel_mapping)) {
+        GST_ERROR_OBJECT (qtmux, "Incomplete Opus caps");
+        goto refuse_caps;
+      }
+      pre_skip = 0;
+      output_gain = 0;
+    }
+
+    entry.channels = channels;
+    ext_atom = build_opus_extension (rate, channels, mapping_family,
+        stream_count, coupled_count, channel_mapping, pre_skip, output_gain);
   }
 
   if (!entry.fourcc)

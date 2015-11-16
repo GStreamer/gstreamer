@@ -964,6 +964,11 @@ AtomInfo *   build_fiel_extension        (gint fields);
 AtomInfo *   build_ac3_extension         (guint8 fscod, guint8 bsid,
                                           guint8 bsmod, guint8 acmod,
                                           guint8 lfe_on, guint8 bitrate_code);
+AtomInfo *   build_opus_extension        (guint32 rate, guint8 channels, guint8 mapping_family,
+                                          guint8 stream_count, guint8 coupled_count,
+                                          guint8 channel_mapping[256], guint16 pre_skip,
+                                          guint16 output_gain);
+
 AtomInfo *   build_amr_extension         (void);
 AtomInfo *   build_h263_extension        (void);
 AtomInfo *   build_gama_atom             (gdouble gamma);

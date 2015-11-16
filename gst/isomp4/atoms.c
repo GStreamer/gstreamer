@@ -4728,6 +4728,44 @@ build_ac3_extension (guint8 fscod, guint8 bsid, guint8 bsmod, guint8 acmod,
 }
 
 AtomInfo *
+build_opus_extension (guint32 rate, guint8 channels, guint8 mapping_family,
+    guint8 stream_count, guint8 coupled_count, guint8 channel_mapping[256],
+    guint16 pre_skip, guint16 output_gain)
+{
+  AtomData *atom_data;
+  guint8 *data_block;
+  GstByteWriter bw;
+  gboolean hdl = TRUE;
+  guint data_block_len;
+
+  gst_byte_writer_init (&bw);
+  hdl &= gst_byte_writer_put_uint8 (&bw, 0x00); /* version number */
+  hdl &= gst_byte_writer_put_uint8 (&bw, channels);
+  hdl &= gst_byte_writer_put_uint16_le (&bw, pre_skip);
+  hdl &= gst_byte_writer_put_uint32_le (&bw, rate);
+  hdl &= gst_byte_writer_put_uint16_le (&bw, output_gain);
+  hdl &= gst_byte_writer_put_uint8 (&bw, mapping_family);
+  if (mapping_family > 0) {
+    hdl &= gst_byte_writer_put_uint8 (&bw, stream_count);
+    hdl &= gst_byte_writer_put_uint8 (&bw, coupled_count);
+    hdl &= gst_byte_writer_put_data (&bw, channel_mapping, channels);
+  }
+
+  if (!hdl) {
+    GST_WARNING ("Error creating header");
+    return NULL;
+  }
+
+  data_block_len = gst_byte_writer_get_size (&bw);
+  data_block = gst_byte_writer_reset_and_get_data (&bw);
+  atom_data = atom_data_new_from_data (FOURCC_dops, data_block, data_block_len);
+  g_free (data_block);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
+AtomInfo *
 build_uuid_xmp_atom (GstBuffer * xmp_data)
 {
   AtomUUID *uuid;
