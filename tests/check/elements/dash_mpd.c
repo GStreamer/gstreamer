@@ -4389,6 +4389,7 @@ GST_START_TEST (dash_mpdparser_segment_template)
   GstClockTime expectedTimestamp;
   GstClockTime periodStartTime;
   GstClockTime offset;
+  GstClockTime lastFragmentTimestampEnd;
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
@@ -4463,6 +4464,17 @@ GST_START_TEST (dash_mpdparser_segment_template)
   assert_equals_uint64 (offset, 15 * GST_SECOND);
 
   gst_media_fragment_info_clear (&fragment);
+
+  /*
+   * Period starts at 10s.
+   * MPD has a duration of 3h3m30s, so period duration is 3h3m20s.
+   * We expect the last fragment to end at period start + period duration: 3h3m30s
+   */
+  expectedTimestamp = duration_to_ms (0, 0, 0, 3, 3, 30, 0);
+  gst_mpd_client_get_last_fragment_timestamp_end (mpdclient, 0,
+      &lastFragmentTimestampEnd);
+  assert_equals_uint64 (lastFragmentTimestampEnd,
+      expectedTimestamp * GST_MSECOND);
 
   gst_mpd_client_free (mpdclient);
 }
