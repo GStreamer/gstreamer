@@ -5801,9 +5801,13 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
 
             demux->got_moov = TRUE;
             gst_qtdemux_check_send_pending_segment (demux);
-            for (n = 0; n < demux->n_streams; n++) {
-              gst_qtdemux_stream_send_initial_gap_segments (demux,
-                  demux->streams[n]);
+
+            /* fragmented streams headers shouldn't contain edts atoms */
+            if (!demux->fragmented) {
+              for (n = 0; n < demux->n_streams; n++) {
+                gst_qtdemux_stream_send_initial_gap_segments (demux,
+                    demux->streams[n]);
+              }
             }
 
             g_node_destroy (demux->moov_node);
