@@ -485,9 +485,8 @@ decode_current_picture (GstVaapiDecoderVp9 * decoder)
   update_ref_frames (decoder);
 
 ret:
-  if (frame_hdr->show_frame)
-    if (!gst_vaapi_picture_output (picture))
-      goto error;
+  if (!gst_vaapi_picture_output (picture))
+    goto error;
 
   gst_vaapi_picture_replace (&priv->current_picture, NULL);
 
