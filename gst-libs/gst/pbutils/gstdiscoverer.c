@@ -527,7 +527,7 @@ _event_probe (GstPad * pad, GstPadProbeInfo * info, PrivateStream * ps)
 static GstStaticCaps subtitle_caps = GST_STATIC_CAPS ("text/x-raw; "
     "subpicture/x-pgs; subpicture/x-dvb; subpicture/x-dvd; "
     "application/x-subtitle-unknown; application/x-ssa; application/x-ass; "
-    "subtitle/x-kate; application/x-kate");
+    "subtitle/x-kate; application/x-kate; subpicture/x-xsub");
 
 static gboolean
 is_subtitle_caps (const GstCaps * caps)
