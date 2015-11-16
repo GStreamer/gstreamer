@@ -399,27 +399,49 @@ decode_picture (GstVaapiDecoderVp9 * decoder, const guchar * buf,
   GstVaapiPicture *picture;
   GstVaapiDecoderStatus status;
   guint crop_width = 0, crop_height = 0;
+  gboolean is_clone_pic = FALSE;
 
   status = ensure_context (decoder);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
     return status;
 
-  /* Fixme: handle show_existing_frame */
+  /* if show_exising_frame flag is true, we just need to return
+   * the existing frame in ref frame array, so creating a clone
+   * of already decoded frame */
+  if (frame_hdr->show_existing_frame) {
+    GstVaapiPicture *existing_frame =
+        priv->ref_frames[frame_hdr->frame_to_show];
 
-  /* Create new picture */
-  picture = GST_VAAPI_PICTURE_NEW (VP9, decoder);
-  if (!picture) {
-    GST_ERROR ("failed to allocate picture");
-    return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    if (!existing_frame) {
+      GST_ERROR ("Failed to get the existing frame from dpb");
+      return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    }
+
+    picture = gst_vaapi_picture_new_clone (existing_frame);
+    if (!picture) {
+      GST_ERROR ("Failed to create clone picture");
+      return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
+
+    is_clone_pic = TRUE;
+  } else {
+    /* Create new picture */
+    picture = GST_VAAPI_PICTURE_NEW (VP9, decoder);
+    if (!picture) {
+      GST_ERROR ("failed to allocate picture");
+      return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
   }
   gst_vaapi_picture_replace (&priv->current_picture, picture);
   gst_vaapi_picture_unref (picture);
 
+  if (is_clone_pic)
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
   if (frame_hdr->display_size_enabled) {
     crop_width = frame_hdr->display_width;
     crop_height = frame_hdr->display_height;
-  } else if (priv->width > frame_hdr->width
-      || priv->height > frame_hdr->height) {
+  } else if (priv->width > frame_hdr->width || priv->height > frame_hdr->height) {
     crop_width = frame_hdr->width;
     crop_height = frame_hdr->height;
   }
