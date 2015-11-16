@@ -1035,10 +1035,10 @@ _amc_gl_wait_gl (GstGLContext * context, struct gl_wait * wait)
 
   g_mutex_lock (&sync->sink->gl_lock);
   current_time = g_get_monotonic_time ();
-  /* Assume that the device can do 20fps.  See the comment in
+  /* Assume that the device can do 30fps.  See the comment in
    * _amc_gl_possibly_wait_for_gl_sync() as to why this is ultimately needed
    * even though it is ultimately a HACK */
-  wait_time = 50 * G_TIME_SPAN_MILLISECOND - (current_time - sync->released_ts);
+  wait_time = 33 * G_TIME_SPAN_MILLISECOND - (current_time - sync->released_ts);
   if (wait_time < 0)
     wait_time = -1;
   wait->ret = _amc_gl_iterate_queue_unlocked (wait->sync_meta, wait_time);
