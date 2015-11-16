@@ -21,7 +21,7 @@
 
 #include <rtsp-client.h>
 
-static gchar * session_id;
+static gchar *session_id;
 static gint cseq;
 static guint expected_session_timeout = 60;
 static const gchar *expected_unsupported_header;
@@ -128,7 +128,7 @@ test_response_551 (GstRTSPClient * client, GstRTSPMessage * response,
   fail_unless (code == GST_RTSP_STS_OPTION_NOT_SUPPORTED);
   fail_unless (g_str_equal (reason, "Option not supported"));
   fail_unless (gst_rtsp_message_get_header (response, GST_RTSP_HDR_UNSUPPORTED,
-      &options, 0) == GST_RTSP_OK);
+          &options, 0) == GST_RTSP_OK);
   fail_unless (!g_strcmp0 (expected_unsupported_header, options));
   fail_unless (version == GST_RTSP_VERSION_1_0);
 
@@ -177,7 +177,7 @@ teardown_client (GstRTSPClient * client)
   g_object_unref (client);
 }
 
-static gchar*
+static gchar *
 check_requirements_cb (GstRTSPClient * client, GstRTSPContext * ctx,
     gchar ** req, gpointer user_data)
 {
@@ -193,7 +193,7 @@ check_requirements_cb (GstRTSPClient * client, GstRTSPContext * ctx,
     index++;
   }
 
-  return  g_string_free (result, FALSE);
+  return g_string_free (result, FALSE);
 }
 
 GST_START_TEST (test_require)
@@ -393,9 +393,11 @@ test_option_response_200 (GstRTSPClient * client, GstRTSPMessage * response,
   methods = gst_rtsp_options_from_text (str);
   fail_if (methods == 0);
   fail_unless (methods == (GST_RTSP_DESCRIBE |
+          GST_RTSP_ANNOUNCE |
           GST_RTSP_OPTIONS |
           GST_RTSP_PAUSE |
           GST_RTSP_PLAY |
+          GST_RTSP_RECORD |
           GST_RTSP_SETUP |
           GST_RTSP_GET_PARAMETER | GST_RTSP_SET_PARAMETER | GST_RTSP_TEARDOWN));
 
@@ -572,8 +574,7 @@ send_teardown (GstRTSPClient * client)
           "rtsp://localhost/test") == GST_RTSP_OK);
   str = g_strdup_printf ("%d", cseq);
   gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
-  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SESSION,
-      session_id);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SESSION, session_id);
   gst_rtsp_client_set_send_func (client, test_teardown_response_200,
       NULL, NULL);
   fail_unless (gst_rtsp_client_handle_message (client,

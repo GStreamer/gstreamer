@@ -2557,6 +2557,7 @@ handle_options_request (GstRTSPClient * client, GstRTSPContext * ctx)
       GST_RTSP_OPTIONS |
       GST_RTSP_PAUSE |
       GST_RTSP_PLAY |
+      GST_RTSP_RECORD | GST_RTSP_ANNOUNCE |
       GST_RTSP_SETUP |
       GST_RTSP_GET_PARAMETER | GST_RTSP_SET_PARAMETER | GST_RTSP_TEARDOWN;
 
