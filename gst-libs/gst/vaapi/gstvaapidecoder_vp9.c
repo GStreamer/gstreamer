@@ -422,8 +422,12 @@ decode_picture (GstVaapiDecoderVp9 * decoder, const guchar * buf,
       GST_ERROR ("Failed to create clone picture");
       return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
-
     is_clone_pic = TRUE;
+
+    /* for cloned picture we should always unset the skip flag since
+     * the previously decoded frame might be decode-only but repeat-frame
+     * should make it ready for display */
+    GST_VAAPI_PICTURE_FLAG_UNSET (picture, GST_VAAPI_PICTURE_FLAG_SKIPPED);
   } else {
     /* Create new picture */
     picture = GST_VAAPI_PICTURE_NEW (VP9, decoder);
@@ -472,16 +476,21 @@ decode_current_picture (GstVaapiDecoderVp9 * decoder)
   if (!picture)
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
+  if (frame_hdr->show_existing_frame)
+    goto ret;
+
   if (!gst_vaapi_picture_decode (picture))
     goto error;
 
   update_ref_frames (decoder);
 
+ret:
   if (frame_hdr->show_frame)
     if (!gst_vaapi_picture_output (picture))
       goto error;
 
   gst_vaapi_picture_replace (&priv->current_picture, NULL);
+
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
 error:
