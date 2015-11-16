@@ -428,6 +428,9 @@ decode_picture (GstVaapiDecoderVp9 * decoder, const guchar * buf,
      * the previously decoded frame might be decode-only but repeat-frame
      * should make it ready for display */
     GST_VAAPI_PICTURE_FLAG_UNSET (picture, GST_VAAPI_PICTURE_FLAG_SKIPPED);
+
+    /* reset picture pts with whatever set in VideoCodecFrame */
+    picture->pts = GST_VAAPI_DECODER_CODEC_FRAME (decoder)->pts;
   } else {
     /* Create new picture */
     picture = GST_VAAPI_PICTURE_NEW (VP9, decoder);
