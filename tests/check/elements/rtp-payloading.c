@@ -38,6 +38,7 @@ typedef struct
   const guint8 *frame_data;
   int frame_data_size;
   int frame_count;
+  GstEvent *custom_event;
 } rtp_pipeline;
 
 /*
@@ -167,6 +168,7 @@ rtp_pipeline_create (const guint8 * frame_data, int frame_data_size,
   p->frame_data = frame_data;
   p->frame_data_size = frame_data_size;
   p->frame_count = frame_count;
+  p->custom_event = NULL;
 
   /* Create elements. */
   pipeline_name = g_strdup_printf ("%s-%s-pipeline", pay, depay);
@@ -231,6 +233,41 @@ rtp_pipeline_destroy (rtp_pipeline * p)
   free (p);
 }
 
+static GstPadProbeReturn
+pay_event_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  rtp_pipeline *p = (rtp_pipeline *) user_data;
+  GstEvent *event = GST_PAD_PROBE_INFO_DATA (info);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM) {
+    const GstStructure *s0 = gst_event_get_structure (p->custom_event);
+    const GstStructure *s1 = gst_event_get_structure (event);
+    if (gst_structure_is_equal (s0, s1)) {
+      return GST_PAD_PROBE_DROP;
+    }
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
+static GstPadProbeReturn
+depay_event_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  rtp_pipeline *p = (rtp_pipeline *) user_data;
+  GstEvent *event = GST_PAD_PROBE_INFO_DATA (info);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM) {
+    const GstStructure *s0 = gst_event_get_structure (p->custom_event);
+    const GstStructure *s1 = gst_event_get_structure (event);
+    if (gst_structure_is_equal (s0, s1)) {
+      gst_event_unref (p->custom_event);
+      p->custom_event = NULL;
+    }
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
 /*
  * Runs the RTP pipeline.
  * @param p Pointer to the RTP pipeline.
@@ -263,6 +300,25 @@ rtp_pipeline_run (rtp_pipeline * p)
   /* Set pipeline to PLAYING. */
   gst_element_set_state (p->pipeline, GST_STATE_PLAYING);
 
+  /* Push custom event into the pipeline */
+  if (p->custom_event) {
+    GstPad *srcpad;
+
+    /* Install a probe to drop the event after it being serialized */
+    srcpad = gst_element_get_static_pad (p->rtppay, "src");
+    gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        pay_event_probe_cb, p, NULL);
+    gst_object_unref (srcpad);
+
+    /* Install a probe to trace the deserialized event after depayloading */
+    srcpad = gst_element_get_static_pad (p->rtpdepay, "src");
+    gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        depay_event_probe_cb, p, NULL);
+    gst_object_unref (srcpad);
+    /* Send the event */
+    gst_element_send_event (p->appsrc, gst_event_ref (p->custom_event));
+  }
+
   /* Push data into the pipeline */
   for (i = 0; i < LOOP_COUNT; i++) {
     const guint8 *data = p->frame_data;
@@ -293,6 +349,8 @@ rtp_pipeline_run (rtp_pipeline * p)
 
   /* Release mainloop. */
   g_main_loop_unref (mainloop);
+
+  fail_if (p->custom_event);
 }
 
 /*
@@ -984,6 +1042,40 @@ GST_START_TEST (rtp_g729)
 
 GST_END_TEST;
 
+static const guint8 rtp_gst_frame_data[] =
+    { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static int rtp_gst_frame_data_size = 22;
+
+static int rtp_gst_frame_count = 1;
+
+GST_START_TEST (rtp_gst_custom_event)
+{
+  /* Create RTP pipeline. */
+  rtp_pipeline *p =
+      rtp_pipeline_create (rtp_gst_frame_data, rtp_gst_frame_data_size,
+      rtp_gst_frame_count, "application/x-test",
+      "rtpgstpay", "rtpgstdepay");
+
+  if (p == NULL) {
+    return;
+  }
+
+  p->custom_event =
+      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+      gst_structure_new ("test", "foo", G_TYPE_INT, 1, NULL));
+
+  /* Run RTP pipeline. */
+  rtp_pipeline_run (p);
+
+  /* Destroy RTP pipeline. */
+  rtp_pipeline_destroy (p);
+}
+
+GST_END_TEST;
+
 /*
  * Creates the test suite.
  *
@@ -1033,6 +1125,7 @@ rtp_payloading_suite (void)
   tcase_add_test (tc_chain, rtp_jpeg_list_height_greater_than_2040);
   tcase_add_test (tc_chain, rtp_jpeg_list_width_and_height_greater_than_2040);
   tcase_add_test (tc_chain, rtp_g729);
+  tcase_add_test (tc_chain, rtp_gst_custom_event);
   return s;
 }
 
