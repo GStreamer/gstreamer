@@ -4833,20 +4833,25 @@ gst_mpd_client_get_last_fragment_timestamp_end (GstMpdClient * client,
   stream = g_list_nth_data (client->active_streams, stream_idx);
   g_return_val_if_fail (stream != NULL, 0);
 
-  segment_idx = gst_mpd_client_get_segments_counts (client, stream) - 1;
-  currentChunk = g_ptr_array_index (stream->segments, segment_idx);
-
-  if (currentChunk->repeat >= 0) {
-    *ts =
-        currentChunk->start + (currentChunk->duration * (1 +
-            currentChunk->repeat));
-  } else {
-    /* 5.3.9.6.1: negative repeat means repeat till the end of the
-     * period, or the next update of the MPD (which I think is
-     * implicit, as this will all get deleted/recreated), or the
-     * start of the next segment, if any. */
+  if (!stream->segments) {
     stream_period = gst_mpdparser_get_stream_period (client);
     *ts = stream_period->start + stream_period->duration;
+  } else {
+    segment_idx = gst_mpd_client_get_segments_counts (client, stream) - 1;
+    currentChunk = g_ptr_array_index (stream->segments, segment_idx);
+
+    if (currentChunk->repeat >= 0) {
+      *ts =
+          currentChunk->start + (currentChunk->duration * (1 +
+              currentChunk->repeat));
+    } else {
+      /* 5.3.9.6.1: negative repeat means repeat till the end of the
+       * period, or the next update of the MPD (which I think is
+       * implicit, as this will all get deleted/recreated), or the
+       * start of the next segment, if any. */
+      stream_period = gst_mpdparser_get_stream_period (client);
+      *ts = stream_period->start + stream_period->duration;
+    }
   }
 
   return TRUE;
