@@ -102,6 +102,10 @@ main (int argc, char *argv[])
   gst_rtsp_media_factory_add_role (factory, "admin2",
       GST_RTSP_PERM_MEDIA_FACTORY_ACCESS, G_TYPE_BOOLEAN, TRUE,
       GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT, G_TYPE_BOOLEAN, FALSE, NULL);
+  /* Anonymous user can do the same things as admin2 on this resource */
+  gst_rtsp_media_factory_add_role (factory, "anonymous",
+      GST_RTSP_PERM_MEDIA_FACTORY_ACCESS, G_TYPE_BOOLEAN, TRUE,
+      GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT, G_TYPE_BOOLEAN, FALSE, NULL);
 
   /* make another factory */
   factory = gst_rtsp_media_factory_new ();
@@ -124,10 +128,10 @@ main (int argc, char *argv[])
   /* make a new authentication manager */
   auth = gst_rtsp_auth_new ();
 
-  /* make default token, it has the same permissions as admin2 */
+  /* make default token, it has no permissions */
   token =
       gst_rtsp_token_new (GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
-      "admin2", NULL);
+      "anonymous", NULL);
   gst_rtsp_auth_set_default_token (auth, token);
   gst_rtsp_token_unref (token);
 
