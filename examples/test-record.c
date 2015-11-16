@@ -65,6 +65,8 @@ main (int argc, char *argv[])
   /* create a server instance */
   server = gst_rtsp_server_new ();
 
+  g_object_set (server, "service", port, NULL);
+
   /* get the mount points for this server, every server has a default object
    * that be used to map uri mount points to media factories */
   mounts = gst_rtsp_server_get_mount_points (server);
