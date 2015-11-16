@@ -112,6 +112,9 @@ gboolean          gst_rtsp_stream_set_blocked      (GstRTSPStream * stream,
                                                     gboolean blocked);
 gboolean          gst_rtsp_stream_is_blocking      (GstRTSPStream * stream);
 
+void              gst_rtsp_stream_set_client_side (GstRTSPStream *stream, gboolean client_side);
+gboolean          gst_rtsp_stream_is_client_side (GstRTSPStream *stream);
+
 void              gst_rtsp_stream_get_server_port  (GstRTSPStream *stream,
                                                     GstRTSPRange *server_port,
                                                     GSocketFamily family);

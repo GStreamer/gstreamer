@@ -80,6 +80,10 @@ struct _GstRTSPStreamPrivate
   GstElement *payloader;
   guint buffer_size;
   gboolean is_joined;
+
+  /* TRUE if this stream is running on
+   * the client side of an RTSP link (for RECORD) */
+  gboolean client_side;
   gchar *control;
 
   GstRTSPProfile profiles;
@@ -1289,6 +1293,54 @@ alloc_ports (GstRTSPStream * stream)
 }
 
 /**
+ * gst_rtsp_stream_set_client_side:
+ * @stream: a #GstRTSPStream
+ * @client_side: TRUE if this #GstRTSPStream is running on the 'client' side of
+ * an RTSP connection.
+ *
+ * Sets the #GstRTSPStream as a 'client side' stream - used for sending
+ * streams to an RTSP server via RECORD. This has the practical effect
+ * of changing which UDP port numbers are used when setting up the local
+ * side of the stream sending to be either the 'server' or 'client' pair
+ * of a configured UDP transport.
+ */
+void
+gst_rtsp_stream_set_client_side (GstRTSPStream * stream, gboolean client_side)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  priv->client_side = client_side;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_stream_set_client_side:
+ * @stream: a #GstRTSPStream
+ *
+ * See gst_rtsp_stream_set_client_side()
+ *
+ * Returns: TRUE if this #GstRTSPStream is client-side.
+ */
+gboolean
+gst_rtsp_stream_is_client_side (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  ret = priv->client_side;
+  g_mutex_unlock (&priv->lock);
+
+  return ret;
+}
+
+/**
  * gst_rtsp_stream_get_server_port:
  * @stream: a #GstRTSPStream
  * @server_port: (out): result server port
@@ -1562,8 +1614,15 @@ find_transport (GstRTSPStream * stream, const gchar * rtcp_from)
 
     tr = gst_rtsp_stream_transport_get_transport (trans);
 
-    min = tr->client_port.min;
-    max = tr->client_port.max;
+    if (priv->client_side) {
+      /* In client side mode the 'destination' is the RTSP server, so send
+       * to those ports */
+      min = tr->server_port.min;
+      max = tr->server_port.max;
+    } else {
+      min = tr->client_port.min;
+      max = tr->client_port.max;
+    }
 
     if ((strcmp (tr->destination, dest) == 0) && (min == port || max == port)) {
       result = trans;
@@ -3001,6 +3060,11 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         min = tr->port.min;
         max = tr->port.max;
         ttl = tr->ttl;
+      } else if (priv->client_side) {
+        /* In client side mode the 'destination' is the RTSP server, so send
+         * to those ports */
+        min = tr->server_port.min;
+        max = tr->server_port.max;
       } else {
         min = tr->client_port.min;
         max = tr->client_port.max;
