@@ -48,6 +48,13 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vtdec_debug_category);
 #define GST_CAT_DEFAULT gst_vtdec_debug_category
 
+enum
+{
+  /* leave some headroom for new GstVideoCodecFrameFlags flags */
+  VTDEC_FRAME_FLAG_SKIP = (1 << 10),
+  VTDEC_FRAME_FLAG_DROP = (1 << 11),
+};
+
 static void gst_vtdec_finalize (GObject * object);
 
 static gboolean gst_vtdec_start (GstVideoDecoder * decoder);
@@ -706,8 +713,11 @@ sort_frames_by_pts (gconstpointer f1, gconstpointer f2, gpointer user_data)
 
   frame1 = (GstVideoCodecFrame *) f1;
   frame2 = (GstVideoCodecFrame *) f2;
-  pts1 = GST_BUFFER_PTS (frame1->output_buffer);
-  pts2 = GST_BUFFER_PTS (frame2->output_buffer);
+  pts1 = pts2 = GST_CLOCK_TIME_NONE;
+  if (frame1->output_buffer)
+    pts1 = GST_BUFFER_PTS (frame1->output_buffer);
+  if (frame2->output_buffer)
+    pts2 = GST_BUFFER_PTS (frame2->output_buffer);
 
   if (!GST_CLOCK_TIME_IS_VALID (pts1) || !GST_CLOCK_TIME_IS_VALID (pts2))
     return 0;
@@ -727,58 +737,47 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
 {
   GstVtdec *vtdec = (GstVtdec *) decompression_output_ref_con;
   GstVideoCodecFrame *frame = (GstVideoCodecFrame *) source_frame_ref_con;
-  GstBuffer *buf;
   GstVideoCodecState *state;
 
   GST_LOG_OBJECT (vtdec, "got output frame %p %d and VT buffer %p", frame,
       frame->decode_frame_number, image_buffer);
 
+  frame->output_buffer = NULL;
+
   if (status != noErr) {
     GST_ERROR_OBJECT (vtdec, "Error decoding frame %d", (int) status);
-    goto drop;
   }
 
-  if (image_buffer == NULL) {
-    if (info_flags & kVTDecodeInfo_FrameDropped)
-      GST_DEBUG_OBJECT (vtdec, "Frame dropped by video toolbox");
-    else
+  if (image_buffer) {
+    GstBuffer *buf = NULL;
+
+    /* FIXME: use gst_video_decoder_allocate_output_buffer */
+    state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
+    if (state == NULL) {
+      GST_WARNING_OBJECT (vtdec, "Output state not configured, release buffer");
+      frame->flags &= VTDEC_FRAME_FLAG_SKIP;
+    } else {
+      buf =
+          gst_core_video_buffer_new (image_buffer, &state->info,
+          vtdec->texture_cache == NULL);
+      gst_video_codec_state_unref (state);
+      GST_BUFFER_PTS (buf) = pts.value;
+      GST_BUFFER_DURATION (buf) = duration.value;
+      frame->output_buffer = buf;
+    }
+  } else {
+    if (info_flags & kVTDecodeInfo_FrameDropped) {
+      GST_DEBUG_OBJECT (vtdec, "Frame dropped by video toolbox %p %d",
+          frame, frame->decode_frame_number);
+      frame->flags &= VTDEC_FRAME_FLAG_DROP;
+    } else {
       GST_DEBUG_OBJECT (vtdec, "Decoded frame is NULL");
-    goto drop;
+      frame->flags &= VTDEC_FRAME_FLAG_SKIP;
+    }
   }
 
-  /* FIXME: use gst_video_decoder_allocate_output_buffer */
-  state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
-  if (state == NULL) {
-    GST_WARNING_OBJECT (vtdec, "Output state not configured, release buffer");
-    /* release as this usually means that the baseclass isn't ready to do
-     * the QoS that _drop requires and will lead to an assertion with the
-     * segment.format being undefined */
-    goto release;
-  }
-  buf =
-      gst_core_video_buffer_new (image_buffer, &state->info,
-      vtdec->texture_cache == NULL);
-  gst_video_codec_state_unref (state);
-
-  GST_BUFFER_PTS (buf) = pts.value;
-  GST_BUFFER_DURATION (buf) = duration.value;
-  frame->output_buffer = buf;
   g_async_queue_push_sorted (vtdec->reorder_queue, frame,
       sort_frames_by_pts, NULL);
-
-  return;
-
-drop:
-  GST_WARNING_OBJECT (vtdec, "Frame dropped %p %d", frame,
-      frame->decode_frame_number);
-  gst_video_decoder_drop_frame (GST_VIDEO_DECODER (vtdec), frame);
-  return;
-
-release:
-  GST_WARNING_OBJECT (vtdec, "Frame released %p %d", frame,
-      frame->decode_frame_number);
-  gst_video_decoder_release_frame (GST_VIDEO_DECODER (vtdec), frame);
-  return;
 }
 
 static GstFlowReturn
@@ -806,7 +805,7 @@ gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
   while ((g_async_queue_length (vtdec->reorder_queue) >=
           vtdec->reorder_queue_length) || drain || flush) {
     frame = (GstVideoCodecFrame *) g_async_queue_try_pop (vtdec->reorder_queue);
-    if (frame && vtdec->texture_cache != NULL) {
+    if (frame && frame->output_buffer && vtdec->texture_cache != NULL) {
       frame->output_buffer =
           gst_core_video_texture_cache_get_gl_buffer (vtdec->texture_cache,
           frame->output_buffer);
@@ -818,7 +817,9 @@ gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
      * example) or we're draining/flushing
      */
     if (frame) {
-      if (flush)
+      if (flush || frame->flags & VTDEC_FRAME_FLAG_SKIP)
+        gst_video_decoder_release_frame (decoder, frame);
+      else if (frame->flags & VTDEC_FRAME_FLAG_DROP)
         gst_video_decoder_drop_frame (decoder, frame);
       else
         ret = gst_video_decoder_finish_frame (decoder, frame);
