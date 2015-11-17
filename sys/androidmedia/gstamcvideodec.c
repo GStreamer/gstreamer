@@ -117,12 +117,12 @@ _gl_sync_result_unref (struct gl_sync_result *result)
 struct gl_sync
 {
   gint refcount;
-  GstAmcVideoDec *sink;     /* back reference for statistics, lock, cond, etc */
-  GstBuffer *buffer;        /* back reference to the buffer */
-  GstGLMemory *oes_mem;     /* where amc is rendering into. The same for every gl_sync */
-  GstAmcSurface *surface;   /* java wrapper for where amc is rendering into */
-  guint gl_frame_no;        /* effectively the frame id */
-  gint64 released_ts;       /* microseconds from g_get_monotonic_time() */
+  GstAmcVideoDec *sink;         /* back reference for statistics, lock, cond, etc */
+  GstBuffer *buffer;            /* back reference to the buffer */
+  GstGLMemory *oes_mem;         /* where amc is rendering into. The same for every gl_sync */
+  GstAmcSurface *surface;       /* java wrapper for where amc is rendering into */
+  guint gl_frame_no;            /* effectively the frame id */
+  gint64 released_ts;           /* microseconds from g_get_monotonic_time() */
   struct gl_sync_result *result;
 };
 
@@ -878,12 +878,14 @@ _gl_sync_render_unlocked (struct gl_sync *sync)
 
   /* FIXME: if this ever starts returning valid values we should attempt
    * to use it */
-  if (!gst_amc_surface_texture_get_timestamp (sync->surface->texture, &ts, &error)) {
+  if (!gst_amc_surface_texture_get_timestamp (sync->surface->texture, &ts,
+          &error)) {
     GST_ERROR_OBJECT (sync->sink, "Failed to update texture image");
     GST_ELEMENT_ERROR_FROM_ERROR (sync->sink, error);
     goto out;
   }
-  GST_TRACE ("gl_sync %p rendering timestamp before update %" G_GINT64_FORMAT, sync, ts);
+  GST_TRACE ("gl_sync %p rendering timestamp before update %" G_GINT64_FORMAT,
+      sync, ts);
 
   GST_TRACE ("gl_sync %p update_tex_image", sync);
   if (!gst_amc_surface_texture_update_tex_image (sync->surface->texture,
@@ -897,12 +899,14 @@ _gl_sync_render_unlocked (struct gl_sync *sync)
   sync->sink->gl_rendered_frame_count++;
   sync->sink->gl_last_rendered_frame = sync->gl_frame_no;
 
-  if (!gst_amc_surface_texture_get_timestamp (sync->surface->texture, &ts, &error)) {
+  if (!gst_amc_surface_texture_get_timestamp (sync->surface->texture, &ts,
+          &error)) {
     GST_ERROR_OBJECT (sync->sink, "Failed to update texture image");
     GST_ELEMENT_ERROR_FROM_ERROR (sync->sink, error);
     goto out;
   }
-  GST_TRACE ("gl_sync %p rendering timestamp after update %" G_GINT64_FORMAT, sync, ts);
+  GST_TRACE ("gl_sync %p rendering timestamp after update %" G_GINT64_FORMAT,
+      sync, ts);
 
   af_meta = gst_buffer_add_video_affine_transformation_meta (sync->buffer);
   if (!af_meta) {
@@ -964,7 +968,8 @@ _amc_gl_possibly_wait_for_gl_sync (struct gl_sync *sync, gint64 timeout)
    * number less than that to wait for before updating the ready frame count.
    */
 
-  while (!sync->result->updated && (gint)(sync->sink->gl_ready_frame_count - sync->gl_frame_no) < 0) {
+  while (!sync->result->updated
+      && (gint) (sync->sink->gl_ready_frame_count - sync->gl_frame_no) < 0) {
     /* The time limit is need otherwise when amc decides to not emit the
      * frame listener (say, on orientation changes) we don't wait foreever */
     if (timeout == -1 || !g_cond_wait_until (&sync->sink->gl_cond,
@@ -973,8 +978,11 @@ _amc_gl_possibly_wait_for_gl_sync (struct gl_sync *sync, gint64 timeout)
           sync->gl_frame_no);
 
       /* Assume that the decoder<->renderer can ultimately keep up */
-      if ((gint)(sync->sink->gl_pushed_frame_count - sync->sink->gl_ready_frame_count) > 0) {
-        guint diff = sync->sink->gl_pushed_frame_count - sync->sink->gl_ready_frame_count - 1u;
+      if ((gint) (sync->sink->gl_pushed_frame_count -
+              sync->sink->gl_ready_frame_count) > 0) {
+        guint diff =
+            sync->sink->gl_pushed_frame_count -
+            sync->sink->gl_ready_frame_count - 1u;
         sync->sink->gl_ready_frame_count += diff;
         GST_LOG ("gl_sync %p possible \'on_frame_available\' listener miss "
             "detected, attempting to work around.  Jumping forward %u "
@@ -1028,7 +1036,7 @@ struct gl_wait
 };
 
 static void
-_amc_gl_wait_gl (GstGLContext * context, struct gl_wait * wait)
+_amc_gl_wait_gl (GstGLContext * context, struct gl_wait *wait)
 {
   struct gl_sync *sync = wait->sync_meta->data;
   gint64 current_time, wait_time;
@@ -1099,7 +1107,7 @@ _amc_gl_render_on_free (GstGLContext * context, GstGLSyncMeta * sync_meta)
 }
 
 static void
-_amc_gl_free (GstGLSyncMeta * sync_meta, GstGLContext *context)
+_amc_gl_free (GstGLSyncMeta * sync_meta, GstGLContext * context)
 {
   struct gl_sync *sync = sync_meta->data;
 
