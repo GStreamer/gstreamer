@@ -106,6 +106,8 @@ static GstCaps *gst_auto_convert_getcaps (GstAutoConvert * autoconvert,
     GstCaps * filter, GstPadDirection dir);
 static GstFlowReturn gst_auto_convert_sink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
+static GstFlowReturn gst_auto_convert_sink_chain_list (GstPad * pad,
+    GstObject * parent, GstBufferList * list);
 static gboolean gst_auto_convert_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_auto_convert_sink_query (GstPad * pad, GstObject * parent,
@@ -118,6 +120,8 @@ static gboolean gst_auto_convert_src_query (GstPad * pad, GstObject * parent,
 
 static GstFlowReturn gst_auto_convert_internal_sink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
+static GstFlowReturn gst_auto_convert_internal_sink_chain_list (GstPad * pad,
+    GstObject * parent, GstBufferList * list);
 static gboolean gst_auto_convert_internal_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 static gboolean gst_auto_convert_internal_sink_query (GstPad * pad,
@@ -188,6 +192,8 @@ gst_auto_convert_init (GstAutoConvert * autoconvert)
 
   gst_pad_set_chain_function (autoconvert->sinkpad,
       GST_DEBUG_FUNCPTR (gst_auto_convert_sink_chain));
+  gst_pad_set_chain_list_function (autoconvert->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_auto_convert_sink_chain_list));
   gst_pad_set_event_function (autoconvert->sinkpad,
       GST_DEBUG_FUNCPTR (gst_auto_convert_sink_event));
   gst_pad_set_query_function (autoconvert->sinkpad,
@@ -479,6 +485,8 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
 
   gst_pad_set_chain_function (internal_sinkpad,
       GST_DEBUG_FUNCPTR (gst_auto_convert_internal_sink_chain));
+  gst_pad_set_chain_list_function (internal_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_auto_convert_internal_sink_chain_list));
   gst_pad_set_event_function (internal_sinkpad,
       GST_DEBUG_FUNCPTR (gst_auto_convert_internal_sink_event));
   gst_pad_set_query_function (internal_sinkpad,
@@ -921,6 +929,27 @@ gst_auto_convert_sink_chain (GstPad * pad, GstObject * parent,
   return ret;
 }
 
+static GstFlowReturn
+gst_auto_convert_sink_chain_list (GstPad * pad, GstObject * parent,
+    GstBufferList * list)
+{
+  GstFlowReturn ret = GST_FLOW_NOT_NEGOTIATED;
+  GstAutoConvert *autoconvert = GST_AUTO_CONVERT (parent);
+
+  if (autoconvert->current_internal_srcpad) {
+    ret = gst_pad_push_list (autoconvert->current_internal_srcpad, list);
+    if (ret != GST_FLOW_OK)
+      GST_DEBUG_OBJECT (autoconvert,
+          "Child element %" GST_PTR_FORMAT "returned flow %s",
+          autoconvert->current_subelement, gst_flow_get_name (ret));
+  } else {
+    GST_ERROR_OBJECT (autoconvert, "Got buffer without an negotiated element,"
+        " returning not-negotiated");
+  }
+
+  return ret;
+}
+
 static gboolean
 gst_auto_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -1210,6 +1239,17 @@ gst_auto_convert_internal_sink_chain (GstPad * pad, GstObject * parent,
           parent_quark));
 
   return gst_pad_push (autoconvert->srcpad, buffer);
+}
+
+static GstFlowReturn
+gst_auto_convert_internal_sink_chain_list (GstPad * pad, GstObject * parent,
+    GstBufferList * list)
+{
+  GstAutoConvert *autoconvert =
+      GST_AUTO_CONVERT (g_object_get_qdata (G_OBJECT (pad),
+          parent_quark));
+
+  return gst_pad_push_list (autoconvert->srcpad, list);
 }
 
 static gboolean
