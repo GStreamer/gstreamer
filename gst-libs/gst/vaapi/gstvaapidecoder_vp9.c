@@ -226,17 +226,14 @@ vaapi_fill_ref_frames (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture,
         frame_hdr->ref_frame_indices[GST_VP9_REF_FRAME_LAST - 1];
     pic_param->pic_fields.bits.last_ref_frame_sign_bias =
         frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_LAST - 1];
-
-    if (frame_hdr->ref_frame_indices[1]) {
-      pic_param->pic_fields.bits.golden_ref_frame =
-          frame_hdr->ref_frame_indices[GST_VP9_REF_FRAME_GOLDEN - 1];
-      pic_param->pic_fields.bits.golden_ref_frame_sign_bias =
-          frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_GOLDEN - 1];
-      pic_param->pic_fields.bits.alt_ref_frame =
-          frame_hdr->ref_frame_indices[GST_VP9_REF_FRAME_ALTREF - 1];
-      pic_param->pic_fields.bits.alt_ref_frame_sign_bias =
-          frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_ALTREF - 1];
-    }
+    pic_param->pic_fields.bits.golden_ref_frame =
+        frame_hdr->ref_frame_indices[GST_VP9_REF_FRAME_GOLDEN - 1];
+    pic_param->pic_fields.bits.golden_ref_frame_sign_bias =
+        frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_GOLDEN - 1];
+    pic_param->pic_fields.bits.alt_ref_frame =
+        frame_hdr->ref_frame_indices[GST_VP9_REF_FRAME_ALTREF - 1];
+    pic_param->pic_fields.bits.alt_ref_frame_sign_bias =
+        frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_ALTREF - 1];
   }
   for (i = 0; i < G_N_ELEMENTS (priv->ref_frames); i++) {
     pic_param->reference_frames[i] =
