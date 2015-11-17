@@ -4131,8 +4131,6 @@ eos:
  * This will push out a NEWSEGMENT event with the right values and
  * position the stream index to the first decodable sample before
  * @offset.
- *
- * PULL-BASED
  */
 static gboolean
 gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
@@ -4263,6 +4261,10 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     stream->to_sample = G_MAXUINT32;
     return TRUE;
   }
+
+  /* We don't need to look for a sample in push-based */
+  if (!qtdemux->pullbased)
+    return TRUE;
 
   /* and move to the keyframe before the indicated media time of the
    * segment */
@@ -5529,6 +5531,62 @@ gst_qtdemux_drop_data (GstQTDemux * demux, gint bytes)
   demux->todrop -= bytes;
 }
 
+static void
+gst_qtdemux_check_send_pending_segment (GstQTDemux * demux)
+{
+  if (G_UNLIKELY (demux->pending_newsegment)) {
+    gint i;
+
+    gst_qtdemux_push_pending_newsegment (demux);
+    /* clear to send tags on all streams */
+    for (i = 0; i < demux->n_streams; i++) {
+      QtDemuxStream *stream;
+      stream = demux->streams[i];
+      gst_qtdemux_push_tags (demux, stream);
+      if (stream->sparse) {
+        GST_INFO_OBJECT (demux, "Sending gap event on stream %d", i);
+        gst_pad_push_event (stream->pad,
+            gst_event_new_gap (stream->segment.position, GST_CLOCK_TIME_NONE));
+      }
+    }
+  }
+}
+
+static void
+gst_qtdemux_stream_send_initial_gap_segments (GstQTDemux * demux,
+    QtDemuxStream * stream)
+{
+  gint i;
+
+  /* Push any initial gap segments before proceeding to the
+   * 'real' data */
+  for (i = 0; i < stream->n_segments; i++) {
+    gst_qtdemux_activate_segment (demux, stream, i, stream->time_position);
+
+    if (QTSEGMENT_IS_EMPTY (&stream->segments[i])) {
+      GstClockTime ts, dur;
+      GstEvent *gap;
+
+      ts = stream->time_position;
+      dur =
+          stream->segments[i].duration - (stream->time_position -
+          stream->segments[i].time);
+      gap = gst_event_new_gap (ts, dur);
+      stream->time_position += dur;
+
+      GST_DEBUG_OBJECT (stream->pad, "Pushing gap for empty "
+          "segment: %" GST_PTR_FORMAT, gap);
+      gst_pad_push_event (stream->pad, gap);
+    } else {
+      /* Only support empty segment at the beginning followed by
+       * one non-empty segment, this was checked when parsing the
+       * edts atom, arriving here is unexpected */
+      g_assert (i + 1 == stream->n_segments);
+      break;
+    }
+  }
+}
+
 static GstFlowReturn
 gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
 {
@@ -5698,6 +5756,8 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         extract_initial_length_and_fourcc (data, demux->neededbytes, NULL,
             &fourcc);
         if (fourcc == FOURCC_moov) {
+          gint n;
+
           /* in usual fragmented setup we could try to scan for more
            * and end up at the the moov (after mdat) again */
           if (demux->got_moov && demux->n_streams > 0 &&
@@ -5731,7 +5791,6 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             if (!demux->got_moov)
               qtdemux_expose_streams (demux);
             else {
-              gint n;
 
               for (n = 0; n < demux->n_streams; n++) {
                 QtDemuxStream *stream = demux->streams[n];
@@ -5741,6 +5800,11 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             }
 
             demux->got_moov = TRUE;
+            gst_qtdemux_check_send_pending_segment (demux);
+            for (n = 0; n < demux->n_streams; n++) {
+              gst_qtdemux_stream_send_initial_gap_segments (demux,
+                  demux->streams[n]);
+            }
 
             g_node_destroy (demux->moov_node);
             demux->moov_node = NULL;
@@ -5966,20 +6030,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         /* first buffer? */
         /* initial newsegment sent here after having added pads,
          * possible others in sink_event */
-        if (G_UNLIKELY (demux->pending_newsegment)) {
-          gst_qtdemux_push_pending_newsegment (demux);
-          /* clear to send tags on all streams */
-          for (i = 0; i < demux->n_streams; i++) {
-            stream = demux->streams[i];
-            gst_qtdemux_push_tags (demux, stream);
-            if (stream->sparse) {
-              GST_INFO_OBJECT (demux, "Sending gap event on stream %d", i);
-              gst_pad_push_event (stream->pad,
-                  gst_event_new_gap (stream->segment.position,
-                      GST_CLOCK_TIME_NONE));
-            }
-          }
-        }
+        gst_qtdemux_check_send_pending_segment (demux);
 
         /* Figure out which stream this packet belongs to */
         for (i = 0; i < demux->n_streams; i++) {
@@ -7876,6 +7927,10 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
     GNode * trak)
 {
   GNode *edts;
+  /* accept edts if they contain gaps at start and there is only
+   * one media segment */
+  gboolean allow_pushbased_edts = TRUE;
+  gint media_segments_count = 0;
 
   /* parse and prepare segment info from the edit list */
   GST_DEBUG_OBJECT (qtdemux, "looking for edit list container");
@@ -7928,6 +7983,7 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
       if (media_time != G_MAXUINT32) {
         segment->media_start = QTSTREAMTIME_TO_GSTTIME (stream, media_time);
         segment->media_stop = segment->media_start + segment->duration;
+        media_segments_count++;
       } else {
         segment->media_start = GST_CLOCK_TIME_NONE;
         segment->media_stop = GST_CLOCK_TIME_NONE;
@@ -7965,12 +8021,14 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
     GST_DEBUG_OBJECT (qtdemux, "found %d segments", count);
     stream->n_segments = count;
+    if (media_segments_count != 1)
+      allow_pushbased_edts = FALSE;
   }
 done:
 
   /* push based does not handle segments, so act accordingly here,
    * and warn if applicable */
-  if (!qtdemux->pullbased) {
+  if (!qtdemux->pullbased && !allow_pushbased_edts) {
     GST_WARNING_OBJECT (qtdemux, "streaming; discarding edit list segments");
     /* remove and use default one below, we stream like it anyway */
     g_free (stream->segments);
