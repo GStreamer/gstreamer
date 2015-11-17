@@ -1226,8 +1226,7 @@ retry:
         "Frame is too late, dropping (deadline %" GST_STIME_FORMAT ")",
         GST_STIME_ARGS (deadline));
     flow_ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
-  } else if (self->codec_config == AMC_CODEC_CONFIG_WITH_SURFACE
-      && buffer_info.size > 0) {
+  } else if (self->codec_config == AMC_CODEC_CONFIG_WITH_SURFACE) {
     GstBuffer *outbuf;
     GstGLSyncMeta *sync_meta;
     GstVideoCodecState *state;
