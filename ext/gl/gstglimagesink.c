@@ -1956,7 +1956,6 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
   const GstGLFuncs *gl = NULL;
   GstGLWindow *window = NULL;
   gboolean do_redisplay = FALSE;
-  GstGLSyncMeta *sync_meta = NULL;
   GstSample *sample = NULL;
   guint gl_target = gst_gl_texture_target_to_gl (gl_sink->texture_target);
 
