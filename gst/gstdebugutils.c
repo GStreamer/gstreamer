@@ -244,6 +244,7 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
         (param_name ? param_name : ""), style_name);
   }
 
+  g_free (param_name);
   g_free (pad_name);
 }
 
