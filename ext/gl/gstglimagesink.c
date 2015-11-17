@@ -405,8 +405,10 @@ gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
   guint width, height;
   gdouble x, y;
 
-  if (!sink->context)
+  if (!sink->context) {
+    gst_structure_free (structure);
     return;
+  }
 
   window = gst_gl_context_get_window (sink->context);
   g_return_if_fail (GST_GL_IS_WINDOW (window));
