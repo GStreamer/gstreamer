@@ -2825,6 +2825,7 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
           source->udpsrc[i] =
               gst_element_make_from_uri (GST_URI_SRC, host, NULL, NULL);
           g_free (host);
+          g_object_set (source->udpsrc[i], "loop", FALSE, NULL);
 
           if (priv->srcpad) {
             /* we set and keep these to playing so that they don't cause NO_PREROLL return
