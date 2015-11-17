@@ -41,6 +41,7 @@ typedef struct _GstVtdecClass GstVtdecClass;
 struct _GstVtdec
 {
   GstVideoDecoder base_vtdec;
+  GstVideoCodecState *input_state;
   GstVideoInfo video_info;
   CMFormatDescriptionRef format_description;
   VTDecompressionSessionRef session;
