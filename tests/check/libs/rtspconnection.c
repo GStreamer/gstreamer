@@ -603,6 +603,69 @@ GST_START_TEST (test_rtspconnection_send_receive)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtspconnection_send_receive_check_headers)
+{
+  GSocketConnection *input_conn = NULL;
+  GSocketConnection *output_conn = NULL;
+  GSocket *input_sock;
+  GSocket *output_sock;
+  GstRTSPConnection *rtsp_output_conn;
+  GstRTSPConnection *rtsp_input_conn;
+  GstRTSPMessage *msg;
+  gchar *header_val;
+
+  create_connection (&input_conn, &output_conn);
+  input_sock = g_socket_connection_get_socket (input_conn);
+  fail_unless (input_sock != NULL);
+  output_sock = g_socket_connection_get_socket (output_conn);
+  fail_unless (output_sock != NULL);
+
+  fail_unless (gst_rtsp_connection_create_from_socket (input_sock, "127.0.0.1",
+          4444, NULL, &rtsp_input_conn) == GST_RTSP_OK);
+  fail_unless (rtsp_input_conn != NULL);
+
+  fail_unless (gst_rtsp_connection_create_from_socket (output_sock, "127.0.0.1",
+          4444, NULL, &rtsp_output_conn) == GST_RTSP_OK);
+  fail_unless (rtsp_output_conn != NULL);
+
+  /* send request message */
+  fail_unless (gst_rtsp_message_new_request (&msg, GST_RTSP_SETUP,
+          "rtsp://example.com/") == GST_RTSP_OK);
+  fail_unless (gst_rtsp_message_add_header (msg, GST_RTSP_HDR_BLOCKSIZE,
+          "1024") == GST_RTSP_OK);
+  fail_unless (gst_rtsp_message_add_header_by_name (msg, "Custom-Header",
+          "lol") == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_send (rtsp_output_conn, msg,
+          NULL) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_message_free (msg) == GST_RTSP_OK);
+  msg = NULL;
+
+  /* receive request message and make sure it is correct */
+  fail_unless (gst_rtsp_message_new (&msg) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_receive (rtsp_input_conn, msg, NULL) ==
+      GST_RTSP_OK);
+  fail_unless (gst_rtsp_message_get_type (msg) == GST_RTSP_MESSAGE_REQUEST);
+  /* check headers */
+  fail_unless (gst_rtsp_message_get_header (msg, GST_RTSP_HDR_BLOCKSIZE,
+          &header_val, 0) == GST_RTSP_OK);
+  fail_unless (!g_strcmp0 (header_val, "1024"));
+  fail_unless (gst_rtsp_message_get_header_by_name (msg, "Custom-Header",
+          &header_val, 0) == GST_RTSP_OK);
+  fail_unless (!g_strcmp0 (header_val, "lol"));
+  fail_unless (gst_rtsp_message_free (msg) == GST_RTSP_OK);
+  msg = NULL;
+
+  fail_unless (gst_rtsp_connection_close (rtsp_input_conn) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_free (rtsp_input_conn) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_close (rtsp_output_conn) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_free (rtsp_output_conn) == GST_RTSP_OK);
+
+  g_object_unref (input_conn);
+  g_object_unref (output_conn);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_rtspconnection_connect)
 {
   ServiceData *data;
@@ -809,6 +872,7 @@ rtspconnection_suite (void)
   tcase_add_test (tc_chain, test_rtspconnection_tunnel_setup);
   tcase_add_test (tc_chain, test_rtspconnection_tunnel_setup_post_first);
   tcase_add_test (tc_chain, test_rtspconnection_send_receive);
+  tcase_add_test (tc_chain, test_rtspconnection_send_receive_check_headers);
   tcase_add_test (tc_chain, test_rtspconnection_connect);
   tcase_add_test (tc_chain, test_rtspconnection_poll);
   tcase_add_test (tc_chain, test_rtspconnection_backlog);

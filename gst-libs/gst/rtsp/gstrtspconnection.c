@@ -1758,6 +1758,7 @@ parse_line (guint8 * buffer, GstRTSPMessage * msg)
 {
   GstRTSPHeaderField field;
   gchar *line = (gchar *) buffer;
+  gchar *field_name = NULL;
   gchar *value;
 
   if ((value = strchr (line, ':')) == NULL || value == line)
@@ -1772,8 +1773,9 @@ parse_line (guint8 * buffer, GstRTSPMessage * msg)
 
   /* find the header */
   field = gst_rtsp_find_header_field (line);
+  /* custom header not present in the list of pre-defined headers */
   if (field == GST_RTSP_HDR_INVALID)
-    goto done;
+    field_name = line;
 
   /* split up the value in multiple key:value pairs if it contains comma(s) */
   while (*value != '\0') {
@@ -1861,13 +1863,16 @@ parse_line (guint8 * buffer, GstRTSPMessage * msg)
       *next_value++ = '\0';
 
     /* add the key:value pair */
-    if (*value != '\0')
-      gst_rtsp_message_add_header (msg, field, value);
+    if (*value != '\0') {
+      if (field != GST_RTSP_HDR_INVALID)
+        gst_rtsp_message_add_header (msg, field, value);
+      else
+        gst_rtsp_message_add_header_by_name (msg, field_name, value);
+    }
 
     value = next_value;
   }
 
-done:
   return GST_RTSP_OK;
 
   /* ERRORS */
