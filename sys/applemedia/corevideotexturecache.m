@@ -235,6 +235,7 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
     gst_caps_set_simple (cache->out_caps, "texture-target", G_TYPE_STRING, "2D", NULL);
 
     ret = gst_gl_color_convert_set_caps (cache->convert, cache->in_caps, cache->out_caps);
+    cache->configured = ret;
   }
 
   return ret;
