@@ -1541,6 +1541,7 @@ gst_x_image_sink_navigation_send_event (GstNavigation * navigation,
 
   if (!ximagesink->xwindow) {
     g_mutex_unlock (&ximagesink->flow_lock);
+    gst_structure_free (structure);
     return;
   }
 
