@@ -309,6 +309,8 @@ struct _RTPSessionClass {
   void (*on_sender_timeout) (RTPSession *sess, RTPSource *source);
   gboolean (*on_sending_rtcp) (RTPSession *sess, GstBuffer *buffer,
       gboolean early);
+  void (*on_app_rtcp)       (RTPSession *sess, guint subtype, guint ssrc,
+      const gchar *name, GstBuffer *data);
   void (*on_feedback_rtcp)  (RTPSession *sess, guint type, guint fbtype,
       guint sender_ssrc, guint media_ssrc, GstBuffer *fci);
   gboolean (*send_rtcp)     (RTPSession *sess, GstClockTime max_delay);

@@ -47,6 +47,7 @@ enum
   SIGNAL_ON_TIMEOUT,
   SIGNAL_ON_SENDER_TIMEOUT,
   SIGNAL_ON_SENDING_RTCP,
+  SIGNAL_ON_APP_RTCP,
   SIGNAL_ON_FEEDBACK_RTCP,
   SIGNAL_SEND_RTCP,
   SIGNAL_SEND_RTCP_FULL,
@@ -295,6 +296,23 @@ rtp_session_class_init (RTPSessionClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sending_rtcp),
       accumulate_trues, NULL, g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 2,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, G_TYPE_BOOLEAN);
+
+  /**
+   * RTPSession::on-app-rtcp:
+   * @session: the object which received the signal
+   * @subtype: The subtype of the packet
+   * @ssrc: The SSRC/CSRC of the packet
+   * @name: The name of the packet
+   * @data: a #GstBuffer with the application-dependant data or %NULL if
+   * there was no data
+   *
+   * Notify that a RTCP APP packet has been received
+   */
+  rtp_session_signals[SIGNAL_ON_APP_RTCP] =
+      g_signal_new ("on-app-rtcp", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_app_rtcp),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 4,
+      G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING, GST_TYPE_BUFFER);
 
   /**
    * RTPSession::on-feedback-rtcp:
@@ -2517,6 +2535,33 @@ rtp_session_process_app (RTPSession * sess, GstRTCPPacket * packet,
     RTPPacketInfo * pinfo)
 {
   GST_DEBUG ("received APP");
+
+  if (g_signal_has_handler_pending (sess,
+          rtp_session_signals[SIGNAL_ON_APP_RTCP], 0, TRUE)) {
+    GstBuffer *data_buffer = NULL;
+    guint16 data_length;
+    gchar name[5];
+
+    data_length = gst_rtcp_packet_app_get_data_length (packet) * 4;
+    if (data_length > 0) {
+      guint8 *data = gst_rtcp_packet_app_get_data (packet);
+      data_buffer = gst_buffer_copy_region (packet->rtcp->buffer,
+          GST_BUFFER_COPY_MEMORY, data - packet->rtcp->map.data, data_length);
+      GST_BUFFER_PTS (data_buffer) = pinfo->running_time;
+    }
+
+    memcpy (name, gst_rtcp_packet_app_get_name (packet), 4);
+    name[4] = '\0';
+
+    RTP_SESSION_UNLOCK (sess);
+    g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_APP_RTCP], 0,
+        gst_rtcp_packet_app_get_subtype (packet),
+        gst_rtcp_packet_app_get_ssrc (packet), name, data_buffer);
+    RTP_SESSION_LOCK (sess);
+
+    if (data_buffer)
+      gst_buffer_unref (data_buffer);
+  }
 }
 
 static gboolean

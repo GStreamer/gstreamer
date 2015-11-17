@@ -21,6 +21,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <gst/check/gstharness.h>
 #include <gst/check/gstcheck.h>
 #include <gst/check/gsttestclock.h>
 
@@ -576,6 +577,87 @@ GST_START_TEST (test_internal_sources_timeout)
 
 GST_END_TEST;
 
+typedef struct
+{
+  guint8 subtype;
+  guint32 ssrc;
+  gchar *name;
+  GstBuffer *data;
+} RTCPAppResult;
+
+static void
+on_app_rtcp_cb (GObject * session, guint subtype, guint ssrc,
+    const gchar * name, GstBuffer * data, RTCPAppResult * result)
+{
+  result->subtype = subtype;
+  result->ssrc = ssrc;
+  result->name = g_strdup (name);
+  result->data = data ? gst_buffer_ref (data) : NULL;
+}
+
+GST_START_TEST (test_receive_rtcp_app_packet)
+{
+  GstHarness *h;
+  GstBuffer *buffer;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket packet;
+  RTCPAppResult result = { 0 };
+  GstElement *internal_session;
+  guint8 data[] = { 0x11, 0x22, 0x33, 0x44 };
+
+  h = gst_harness_new_with_padnames ("rtpsession", "recv_rtcp_sink", NULL);
+  g_object_get (h->element, "internal-session", &internal_session, NULL);
+
+  g_signal_connect (internal_session, "on-app-rtcp",
+      G_CALLBACK (on_app_rtcp_cb), &result);
+
+  /* Push APP buffer with no data */
+  buffer = gst_rtcp_buffer_new (1000);
+  fail_unless (gst_rtcp_buffer_map (buffer, GST_MAP_READWRITE, &rtcp));
+  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_APP, &packet));
+  gst_rtcp_packet_app_set_subtype (&packet, 21);
+  gst_rtcp_packet_app_set_ssrc (&packet, 0x11111111);
+  gst_rtcp_packet_app_set_name (&packet, "Test");
+  gst_rtcp_buffer_unmap (&rtcp);
+
+  gst_harness_set_src_caps_str (h, "application/x-rtcp");
+  fail_unless_equals_int (gst_harness_push (h, buffer), GST_FLOW_OK);
+
+  fail_unless_equals_int (result.subtype, 21);
+  fail_unless_equals_int (result.ssrc, 0x11111111);
+  fail_unless_equals_string (result.name, "Test");
+  fail_unless_equals_pointer (result.data, NULL);
+
+  g_free (result.name);
+
+  /* Push APP buffer with data */
+  memset (&result, 0, sizeof (result));
+  buffer = gst_rtcp_buffer_new (1000);
+  fail_unless (gst_rtcp_buffer_map (buffer, GST_MAP_READWRITE, &rtcp));
+  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_APP, &packet));
+  gst_rtcp_packet_app_set_subtype (&packet, 22);
+  gst_rtcp_packet_app_set_ssrc (&packet, 0x22222222);
+  gst_rtcp_packet_app_set_name (&packet, "Test");
+  gst_rtcp_packet_app_set_data_length (&packet, sizeof (data) / 4);
+  memcpy (gst_rtcp_packet_app_get_data (&packet), data, sizeof (data));
+  gst_rtcp_buffer_unmap (&rtcp);
+
+  fail_unless_equals_int (gst_harness_push (h, buffer), GST_FLOW_OK);
+
+  fail_unless_equals_int (result.subtype, 22);
+  fail_unless_equals_int (result.ssrc, 0x22222222);
+  fail_unless_equals_string (result.name, "Test");
+  fail_unless (gst_buffer_memcmp (result.data, 0, data, sizeof (data)) == 0);
+
+  g_free (result.name);
+  gst_buffer_unref (result.data);
+
+  gst_object_unref (internal_session);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpsession_suite (void)
 {
@@ -586,6 +668,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_multiple_ssrc_rr);
   tcase_add_test (tc_chain, test_multiple_senders_roundrobin_rbs);
   tcase_add_test (tc_chain, test_internal_sources_timeout);
+  tcase_add_test (tc_chain, test_receive_rtcp_app_packet);
 
   return s;
 }
