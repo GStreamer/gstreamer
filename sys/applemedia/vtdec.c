@@ -237,13 +237,13 @@ static void
 setup_texture_cache (GstVtdec * vtdec, GstGLContext * context)
 {
   GstVideoFormat internal_format;
-  GstVideoCodecState *output_state =
-      gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
+  GstVideoCodecState *output_state;
 
-  GST_INFO_OBJECT (vtdec, "pushing textures. GL context %p", context);
-  if (vtdec->texture_cache)
-    gst_core_video_texture_cache_free (vtdec->texture_cache);
+  g_return_if_fail (vtdec->texture_cache == NULL);
 
+  GST_INFO_OBJECT (vtdec, "Setting up texture cache. GL context %p", context);
+
+  output_state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
 #ifdef HAVE_IOS
   internal_format = GST_VIDEO_FORMAT_NV12;
 #else
@@ -294,26 +294,36 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
       vtdec->input_state);
   output_state->caps = gst_video_info_to_caps (&output_state->info);
   if (output_state->info.finfo->format == GST_VIDEO_FORMAT_RGBA) {
-    setup_texture_cache (vtdec, context);
     gst_caps_set_features (output_state->caps, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
   }
-  if (context)
-    gst_object_unref (context);
-
-  GST_INFO_OBJECT (vtdec, "negotiated output format %" GST_PTR_FORMAT,
-      output_state->caps);
 
   prevcaps = gst_pad_get_current_caps (decoder->srcpad);
   if (!prevcaps || !gst_caps_is_equal (prevcaps, output_state->caps)) {
+    GST_INFO_OBJECT (vtdec, "negotiated output format %" GST_PTR_FORMAT,
+        output_state->caps);
+
     if (vtdec->session) {
       gst_vtdec_push_frames_if_needed (vtdec, TRUE, FALSE);
       gst_vtdec_invalidate_session (vtdec);
     }
+
     ret = gst_vtdec_create_session (vtdec, format);
+    if (ret) {
+      if (vtdec->texture_cache) {
+        gst_core_video_texture_cache_free (vtdec->texture_cache);
+        vtdec->texture_cache = NULL;
+      }
+
+      if (output_state->info.finfo->format == GST_VIDEO_FORMAT_RGBA)
+        setup_texture_cache (vtdec, context);
+    }
   }
+
   if (prevcaps)
     gst_caps_unref (prevcaps);
+  if (context)
+    gst_object_unref (context);
 
   if (!ret)
     return ret;
