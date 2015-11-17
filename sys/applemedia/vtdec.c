@@ -444,7 +444,7 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format)
   VTDecompressionOutputCallbackRecord callback;
   CFMutableDictionaryRef videoDecoderSpecification;
   OSStatus status;
-  guint32 cv_format;
+  guint32 cv_format = 0;
 
   switch (format) {
     case GST_VIDEO_FORMAT_NV12:
