@@ -60,6 +60,7 @@ struct _GstUDPSrc {
   gboolean   close_socket;
   gboolean   auto_multicast;
   gboolean   reuse;
+  gboolean   loop;
 
   /* stats */
   guint      max_size;
