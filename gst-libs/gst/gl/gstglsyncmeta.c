@@ -128,6 +128,8 @@ gst_buffer_add_gl_sync_meta (GstGLContext * context, GstBuffer * buffer)
   ret->wait_gl = _default_wait_gl;
   ret->copy = _default_copy;
   ret->free_gl = _default_free_gl;
+
+  return ret;
 }
 
 static void
