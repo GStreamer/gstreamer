@@ -776,10 +776,10 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
     if (info_flags & kVTDecodeInfo_FrameDropped) {
       GST_DEBUG_OBJECT (vtdec, "Frame dropped by video toolbox %p %d",
           frame, frame->decode_frame_number);
-      frame->flags &= VTDEC_FRAME_FLAG_DROP;
+      frame->flags |= VTDEC_FRAME_FLAG_DROP;
     } else {
       GST_DEBUG_OBJECT (vtdec, "Decoded frame is NULL");
-      frame->flags &= VTDEC_FRAME_FLAG_SKIP;
+      frame->flags |= VTDEC_FRAME_FLAG_SKIP;
     }
   }
 
