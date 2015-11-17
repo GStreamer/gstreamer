@@ -1505,7 +1505,7 @@ _mangle_sampler_type (const gchar * str, GstGLTextureTarget from,
 static gchar *
 _mangle_extensions (const gchar * str, GstGLTextureTarget from)
 {
-  gchar *ext_str = NULL;
+  const gchar *ext_str = NULL;
 
   if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
     ext_str = "#extension GL_OES_EGL_image_external : require\n";
