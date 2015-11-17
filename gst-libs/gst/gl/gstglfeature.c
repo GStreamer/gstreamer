@@ -189,8 +189,7 @@ _gst_gl_feature_check (GstGLContext * context,
   for (func_num = 0; data->functions[func_num].name; func_num++) {
     void *func;
 
-    if (full_function_name)
-      g_free (full_function_name);
+    g_free (full_function_name);
 
     full_function_name = g_strconcat ("gl", data->functions[func_num].name,
         suffix, NULL);

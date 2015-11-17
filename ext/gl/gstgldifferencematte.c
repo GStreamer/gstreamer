@@ -236,8 +236,7 @@ gst_gl_differencematte_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOCATION:
-      if (differencematte->location != NULL)
-        g_free (differencematte->location);
+      g_free (differencematte->location);
       differencematte->bg_has_changed = TRUE;
       differencematte->location = g_value_dup_string (value);
       break;
