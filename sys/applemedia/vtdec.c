@@ -267,7 +267,7 @@ static gboolean
 gst_vtdec_negotiate (GstVideoDecoder * decoder)
 {
   GstVideoCodecState *output_state = NULL;
-  GstCaps *caps = NULL, *prevcaps = NULL;
+  GstCaps *caps = NULL, *templcaps = NULL, *prevcaps = NULL;
   GstVideoFormat format;
   GstStructure *structure;
   const gchar *s;
@@ -276,9 +276,12 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   gboolean ret = TRUE;
 
   vtdec = GST_VTDEC (decoder);
+  templcaps =
+      gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD (decoder));
   caps =
-      gst_caps_make_writable (gst_pad_query_caps (GST_VIDEO_DECODER_SRC_PAD
-          (vtdec), NULL));
+      gst_caps_make_writable (gst_pad_peer_query_caps (GST_VIDEO_DECODER_SRC_PAD
+          (vtdec), templcaps));
+  gst_caps_unref (templcaps);
   context = query_gl_context (vtdec);
   if (!context)
     gst_caps_filter_and_map_in_place (caps, caps_filter_out_gl_memory, NULL);
