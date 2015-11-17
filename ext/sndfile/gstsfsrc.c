@@ -146,8 +146,7 @@ gst_sf_src_set_location (GstSFSrc * this, const gchar * location)
   if (this->file)
     goto was_open;
 
-  if (this->location)
-    g_free (this->location);
+  g_free (this->location);
 
   this->location = location ? g_strdup (location) : NULL;
 

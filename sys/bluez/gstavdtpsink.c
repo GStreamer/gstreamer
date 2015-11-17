@@ -451,8 +451,7 @@ gst_avdtp_sink_get_link_mtu (GstAvdtpSink * sink)
 void
 gst_avdtp_sink_set_device (GstAvdtpSink * self, const gchar * dev)
 {
-  if (self->conn.device != NULL)
-    g_free (self->conn.device);
+  g_free (self->conn.device);
 
   GST_LOG_OBJECT (self, "Setting device: %s", dev);
   self->conn.device = g_strdup (dev);
@@ -461,8 +460,7 @@ gst_avdtp_sink_set_device (GstAvdtpSink * self, const gchar * dev)
 void
 gst_avdtp_sink_set_transport (GstAvdtpSink * self, const gchar * trans)
 {
-  if (self->conn.transport != NULL)
-    g_free (self->conn.transport);
+  g_free (self->conn.transport);
 
   GST_LOG_OBJECT (self, "Setting transport: %s", trans);
   self->conn.transport = g_strdup (trans);

@@ -1579,8 +1579,7 @@ done:
     gst_pad_set_event_function (pad, gst_ts_demux_srcpad_event);
   }
 
-  if (name)
-    g_free (name);
+  g_free (name);
   if (template)
     gst_object_unref (template);
   if (caps)
@@ -1714,8 +1713,7 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream, GstTSDemux * tsdemux,
 {
   GST_DEBUG ("flushing stream %p", stream);
 
-  if (stream->data)
-    g_free (stream->data);
+  g_free (stream->data);
   stream->data = NULL;
   stream->state = PENDING_PACKET_EMPTY;
   stream->expected_size = 0;

@@ -597,8 +597,7 @@ dvb_base_bin_set_program_numbers (DvbBaseBin * dvbbasebin, const gchar * pn)
 
   /* FIXME : Deactivate programs no longer selected */
 
-  if (dvbbasebin->program_numbers)
-    g_free (dvbbasebin->program_numbers);
+  g_free (dvbbasebin->program_numbers);
   dvbbasebin->program_numbers = g_strdup (pn);
 
   if (0)

@@ -271,14 +271,12 @@ gst_dshow_find_filter (CLSID input_majortype, CLSID input_subtype,
       filter_temp->Release ();
     }
 
-    if (friendly_name)
-      g_free (friendly_name);
+    g_free (friendly_name);
     moniker->Release ();
   }
 
 clean:
-  if (prefered_filter_upper)
-    g_free (prefered_filter_upper);
+  g_free (prefered_filter_upper);
   if (enum_moniker)
     enum_moniker->Release ();
   if (mapper)

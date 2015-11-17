@@ -3366,8 +3366,7 @@ combine_urls (GstUri * base, GList * list, gchar ** query, guint idx)
     gst_uri_unref (base);
 
     if (ret && query) {
-      if (*query)
-        g_free (*query);
+      g_free (*query);
       *query = gst_uri_get_query_string (ret);
       if (*query) {
         ret = gst_uri_make_writable (ret);

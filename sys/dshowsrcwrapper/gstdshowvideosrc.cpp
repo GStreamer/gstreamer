@@ -396,9 +396,7 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
     }
   }
 
-  if (unidevice) {
-    g_free (unidevice);
-  }
+  g_free (unidevice);
 
   if (src->caps) {
     GstCaps *caps;

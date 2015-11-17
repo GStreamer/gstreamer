@@ -371,11 +371,9 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
         }
 
         /* update properties */
-        if (decoder->language)
-          g_free (decoder->language);
+        g_free (decoder->language);
         decoder->language = g_strdup (decoder->k.ki->language);
-        if (decoder->category)
-          g_free (decoder->category);
+        g_free (decoder->category);
         decoder->category = g_strdup (decoder->k.ki->category);
         decoder->original_canvas_width = decoder->k.ki->original_canvas_width;
         decoder->original_canvas_height = decoder->k.ki->original_canvas_height;

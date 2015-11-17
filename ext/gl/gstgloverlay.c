@@ -277,8 +277,7 @@ gst_gl_overlay_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOCATION:
-      if (overlay->location != NULL)
-        g_free (overlay->location);
+      g_free (overlay->location);
       overlay->location_has_changed = TRUE;
       overlay->location = g_value_dup_string (value);
       break;

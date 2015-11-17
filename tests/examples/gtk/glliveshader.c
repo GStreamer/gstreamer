@@ -233,8 +233,7 @@ _on_text_changed (GtkTextBuffer * text, struct text_view_state *state)
   GtkTextIter start, end;
 
   gtk_text_buffer_get_bounds (text, &start, &end);
-  if (state->str)
-    g_free (state->str);
+  g_free (state->str);
   state->str = gtk_text_buffer_get_text (text, &start, &end, FALSE);
   g_object_set (state->state->shader, "update-shader", TRUE, NULL);
 }

@@ -845,8 +845,7 @@ end:
   if (caps_out)
     gst_caps_unref (caps_out);
   gst_object_unref (vdec);
-  if (input_vheader)
-    g_free (input_vheader);
+  g_free (input_vheader);
   if (srcfilter)
     srcfilter->Release();
   if (sinkfilter)

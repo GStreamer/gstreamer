@@ -148,8 +148,7 @@ gst_sf_sink_set_location (GstSFSink * this, const gchar * location)
   if (this->file)
     goto was_open;
 
-  if (this->location)
-    g_free (this->location);
+  g_free (this->location);
 
   this->location = location ? g_strdup (location) : NULL;
 

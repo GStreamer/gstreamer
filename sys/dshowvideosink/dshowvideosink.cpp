@@ -285,8 +285,7 @@ gst_dshowvideosink_finalize (GObject * gobject)
 {
   GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (gobject);
 
-  if (sink->preferredrenderer)
-    g_free (sink->preferredrenderer);
+  g_free (sink->preferredrenderer);
 
   /* signal the COM thread that it sould uninitialize COM */
   if (sink->comInitialized) {
@@ -315,9 +314,7 @@ gst_dshowvideosink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_RENDERER:
-      if (sink->preferredrenderer)
-        g_free (sink->preferredrenderer);
-
+      g_free (sink->preferredrenderer);
       sink->preferredrenderer = g_value_dup_string (value);
       break;
     case PROP_KEEP_ASPECT_RATIO:

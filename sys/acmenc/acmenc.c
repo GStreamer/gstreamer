@@ -261,10 +261,8 @@ acmenc_teardown (ACMEnc * enc)
     gst_caps_unref (enc->output_caps);
     enc->output_caps = NULL;
   }
-  if (enc->header.pbSrc)
-    g_free (enc->header.pbSrc);
-  if (enc->header.pbDst)
-    g_free (enc->header.pbDst);
+  g_free (enc->header.pbSrc);
+  g_free (enc->header.pbDst);
   memset (&enc->header, 0, sizeof (enc->header));
   if (enc->stream) {
     acmStreamClose (enc->stream, 0);

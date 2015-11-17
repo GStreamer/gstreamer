@@ -328,20 +328,13 @@ spc_tag_get_info (guchar * data, guint length, spc_tag_info * info)
 void
 spc_tag_free (spc_tag_info * info)
 {
-  if (info->title)
-    g_free (info->title);
-  if (info->game)
-    g_free (info->game);
-  if (info->artist)
-    g_free (info->artist);
-  if (info->album)
-    g_free (info->album);
-  if (info->publisher)
-    g_free (info->publisher);
-  if (info->comment)
-    g_free (info->comment);
-  if (info->dumper)
-    g_free (info->dumper);
+  g_free (info->title);
+  g_free (info->game);
+  g_free (info->artist);
+  g_free (info->album);
+  g_free (info->publisher);
+  g_free (info->comment);
+  g_free (info->dumper);
   if (info->dump_date)
     g_date_free (info->dump_date);
 }

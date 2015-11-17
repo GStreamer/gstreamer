@@ -208,9 +208,7 @@ gst_avf_asset_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_URI:
-      if (self->uri) {
-        g_free (self->uri);
-      }
+      g_free (self->uri);
       self->uri = g_value_dup_string (value);
       break;
     default:
@@ -820,9 +818,7 @@ gst_avf_asset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri, GErro
 
   if (asset.playable) {
     ret = TRUE;
-    if (self->uri) {
-      g_free (self->uri);
-    }
+    g_free (self->uri);
     self->uri = g_strdup (uri);
   } else {
     g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,

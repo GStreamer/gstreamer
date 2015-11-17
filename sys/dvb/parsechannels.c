@@ -180,8 +180,7 @@ no_channels:
 static gboolean
 remove_channel_from_hash (gpointer key, gpointer value, gpointer user_data)
 {
-  if (key)
-    g_free (key);
+  g_free (key);
   if (value)
     g_hash_table_destroy ((GHashTable *) value);
   return TRUE;

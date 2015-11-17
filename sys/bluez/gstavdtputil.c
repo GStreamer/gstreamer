@@ -213,8 +213,7 @@ gst_avdtp_connection_reset (GstAvdtpConnection * conn)
 void
 gst_avdtp_connection_set_device (GstAvdtpConnection * conn, const char *device)
 {
-  if (conn->device)
-    g_free (conn->device);
+  g_free (conn->device);
 
   conn->device = g_strdup (device);
 }
@@ -223,8 +222,7 @@ void
 gst_avdtp_connection_set_transport (GstAvdtpConnection * conn,
     const char *transport)
 {
-  if (conn->transport)
-    g_free (conn->transport);
+  g_free (conn->transport);
 
   conn->transport = g_strdup (transport);
 }

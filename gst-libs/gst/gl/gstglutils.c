@@ -461,8 +461,7 @@ gst_gl_context_set_error (GstGLContext * context, const char *format, ...)
 {
   va_list args;
 
-  if (error_message)
-    g_free (error_message);
+  g_free (error_message);
 
   va_start (args, format);
   error_message = g_strdup_vprintf (format, args);

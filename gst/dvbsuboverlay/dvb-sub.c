@@ -277,8 +277,7 @@ delete_state (DvbSub * dvb_sub)
     dvb_sub->region_list = region->next;
 
     delete_region_display_list (dvb_sub, region);
-    if (region->pbuf)
-      g_free (region->pbuf);
+    g_free (region->pbuf);
 
     g_slice_free (DVBSubRegion, region);
   }
@@ -472,8 +471,7 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
   buf += 2;
 
   if (region->width * region->height != region->buf_size) {     /* FIXME: Read closer from spec what happens when dimensions change */
-    if (region->pbuf)
-      g_free (region->pbuf);
+    g_free (region->pbuf);
 
     region->buf_size = region->width * region->height;
 

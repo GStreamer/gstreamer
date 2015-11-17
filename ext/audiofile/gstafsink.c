@@ -217,8 +217,7 @@ gst_afsink_set_property (GObject * object, guint prop_id, const GValue * value,
       /* the element must be stopped or paused in order to do this */
       g_return_if_fail ((GST_STATE (sink) < GST_STATE_PLAYING)
           || (GST_STATE (sink) == GST_STATE_PAUSED));
-      if (sink->filename)
-        g_free (sink->filename);
+      g_free (sink->filename);
       sink->filename = g_strdup (g_value_get_string (value));
       if ((GST_STATE (sink) == GST_STATE_PAUSED)
           && (sink->filename != NULL)) {

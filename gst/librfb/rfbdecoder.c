@@ -89,8 +89,7 @@ rfb_decoder_free (RfbDecoder * decoder)
 
   g_clear_error (&decoder->error);
 
-  if (decoder->data)
-    g_free (decoder->data);
+  g_free (decoder->data);
 
   g_free (decoder);
 }
@@ -234,8 +233,7 @@ rfb_decoder_read (RfbDecoder * decoder, guint32 len)
   g_return_val_if_fail (len > 0, NULL);
 
   if (G_UNLIKELY (len > decoder->data_len)) {
-    if (decoder->data)
-      g_free (decoder->data);
+    g_free (decoder->data);
     decoder->data = g_malloc (len);
     decoder->data_len = len;
   }

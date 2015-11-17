@@ -296,8 +296,7 @@ gst_uvc_h264_mjpg_demux_dispose (GObject * object)
   if (self->priv->nv12_caps)
     gst_caps_unref (self->priv->nv12_caps);
   self->priv->nv12_caps = NULL;
-  if (self->priv->clock_samples)
-    g_free (self->priv->clock_samples);
+  g_free (self->priv->clock_samples);
   self->priv->clock_samples = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);

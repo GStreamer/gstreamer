@@ -157,8 +157,7 @@ gst_a2dp_sink_set_property (GObject * object, guint prop_id,
       if (self->sink != NULL)
         gst_avdtp_sink_set_device (self->sink, g_value_get_string (value));
 
-      if (self->device != NULL)
-        g_free (self->device);
+      g_free (self->device);
       self->device = g_value_dup_string (value);
       break;
 
@@ -166,8 +165,7 @@ gst_a2dp_sink_set_property (GObject * object, guint prop_id,
       if (self->sink != NULL)
         gst_avdtp_sink_set_transport (self->sink, g_value_get_string (value));
 
-      if (self->transport != NULL)
-        g_free (self->transport);
+      g_free (self->transport);
       self->transport = g_value_dup_string (value);
       break;
 

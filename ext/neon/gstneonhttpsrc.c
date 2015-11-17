@@ -321,8 +321,7 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
       break;
     }
     case PROP_USER_AGENT:
-      if (src->user_agent)
-        g_free (src->user_agent);
+      g_free (src->user_agent);
       src->user_agent = g_strdup (g_value_get_string (value));
       break;
     case PROP_COOKIES:

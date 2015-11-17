@@ -212,8 +212,7 @@ mpegts_packetizer_clear_section (MpegTSPacketizerStream * stream)
   stream->section_length = 0;
   stream->section_offset = 0;
   stream->table_id = TABLE_ID_UNSET;
-  if (stream->section_data)
-    g_free (stream->section_data);
+  g_free (stream->section_data);
   stream->section_data = NULL;
 }
 

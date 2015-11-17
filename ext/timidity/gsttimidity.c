@@ -588,8 +588,7 @@ gst_timidity_loop (GstPad * sinkpad)
       goto paused;
     }
 
-    if (timidity->mididata)
-      g_free (timidity->mididata);
+    g_free (timidity->mididata);
 
     timidity->mididata = g_malloc (timidity->mididata_size);
     timidity->mididata_offset = 0;

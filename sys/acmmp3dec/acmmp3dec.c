@@ -201,10 +201,8 @@ acmmp3dec_teardown (ACMMP3Dec * dec)
 
   if (dec->header.fdwStatus & ACMSTREAMHEADER_STATUSF_PREPARED)
     acmStreamUnprepareHeader (dec->stream, &dec->header, 0);
-  if (dec->header.pbSrc)
-    g_free (dec->header.pbSrc);
-  if (dec->header.pbDst)
-    g_free (dec->header.pbDst);
+  g_free (dec->header.pbSrc);
+  g_free (dec->header.pbDst);
   memset (&dec->header, 0, sizeof (dec->header));
 
   if (dec->stream) {

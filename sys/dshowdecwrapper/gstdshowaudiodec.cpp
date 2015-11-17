@@ -854,8 +854,7 @@ dshowaudiodec_set_output_format (GstDshowAudioDec *adec)
 static void
 dshowadec_free_mediatype (AM_MEDIA_TYPE *mediatype)
 {
-  if (mediatype->pbFormat)
-    g_free (mediatype->pbFormat);
+  g_free (mediatype->pbFormat);
   g_free (mediatype);
 }
 

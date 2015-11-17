@@ -176,8 +176,7 @@ gst_wave_scope_setup (GstAudioVisualizer * bscope)
 {
   GstWaveScope *scope = GST_WAVE_SCOPE (bscope);
 
-  if (scope->flt)
-    g_free (scope->flt);
+  g_free (scope->flt);
 
   scope->flt = g_new0 (gdouble, 6 * GST_AUDIO_INFO_CHANNELS (&bscope->ainfo));
 

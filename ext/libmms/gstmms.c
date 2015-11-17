@@ -609,8 +609,7 @@ gst_mms_uri_set_uri (GstURIHandler * handler, const gchar * uri,
   }
 
   GST_OBJECT_LOCK (src);
-  if (src->uri_name)
-    g_free (src->uri_name);
+  g_free (src->uri_name);
   src->uri_name = fixed_uri;
   GST_OBJECT_UNLOCK (src);
 

@@ -201,8 +201,7 @@ insert_tag_on_tree (const GstTagList * list, const gchar * tag,
   gtk_tree_store_append (tree_store, &iter, NULL);
   gtk_tree_store_set (tree_store, &iter, COL_TAG, tag, COL_VALUE, str, -1);
 
-  if (str)
-    g_free (str);
+  g_free (str);
 
 }
 

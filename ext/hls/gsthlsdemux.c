@@ -674,11 +674,9 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
     stream->fragment.timestamp = GST_CLOCK_TIME_NONE;
   }
 
-  if (hlsdemux->current_key)
-    g_free (hlsdemux->current_key);
+  g_free (hlsdemux->current_key);
   hlsdemux->current_key = key;
-  if (hlsdemux->current_iv)
-    g_free (hlsdemux->current_iv);
+  g_free (hlsdemux->current_iv);
   hlsdemux->current_iv = iv;
   g_free (stream->fragment.uri);
   stream->fragment.uri = next_fragment_uri;

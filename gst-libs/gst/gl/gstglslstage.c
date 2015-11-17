@@ -312,8 +312,7 @@ gst_glsl_stage_set_strings (GstGLSLStage * stage, GstGLSLVersion version,
 
   if (stage->priv->n_strings < n_strings) {
     /* only realloc if we need more space */
-    if (stage->priv->strings)
-      g_free (stage->priv->strings);
+    g_free (stage->priv->strings);
     stage->priv->strings = g_new0 (gchar *, n_strings);
   }
 

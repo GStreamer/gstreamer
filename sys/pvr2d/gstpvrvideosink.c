@@ -1316,11 +1316,8 @@ gst_pvrvideosink_dcontext_free (GstDrawContext * dcontext)
 {
   GST_DEBUG ("Freeing dcontext %p", dcontext);
 
-  if (dcontext->p_blt_info)
-    g_free (dcontext->p_blt_info);
-
-  if (dcontext->p_blt2d_info)
-    g_free (dcontext->p_blt2d_info);
+  g_free (dcontext->p_blt_info);
+  g_free (dcontext->p_blt2d_info);
 
   if (dcontext->x_lock)
     g_mutex_lock (dcontext->x_lock);

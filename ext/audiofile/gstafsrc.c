@@ -250,8 +250,7 @@ gst_afsrc_set_property (GObject * object, guint prop_id, const GValue * value,
 
   switch (prop_id) {
     case ARG_LOCATION:
-      if (src->filename)
-        g_free (src->filename);
+      g_free (src->filename);
       src->filename = g_strdup (g_value_get_string (value));
       break;
     default:

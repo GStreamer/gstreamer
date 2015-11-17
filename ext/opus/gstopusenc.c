@@ -1091,8 +1091,7 @@ done:
   if (bdata)
     gst_buffer_unmap (buf, &map);
 
-  if (mdata)
-    g_free (mdata);
+  g_free (mdata);
 
   return ret;
 }
