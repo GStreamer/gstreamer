@@ -108,7 +108,7 @@ struct _GstAmcVideoDec
   guint gl_last_rendered_frame;
   guint gl_pushed_frame_count; /* n buffers pushed */
   guint gl_ready_frame_count;  /* n buffers ready for GL access */
-  guint gl_rendered_frame_count;  /* n buffers rendered */
+  guint gl_released_frame_count;  /* n buffers released */
   GQueue *gl_queue;
 };
 

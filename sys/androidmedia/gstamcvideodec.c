@@ -86,7 +86,9 @@ struct gl_sync_result
 {
   gint refcount;
   gint64 frame_available_ts;
-  gboolean updated;
+  gboolean updated;             /* only every call update_tex_image once */
+  gboolean released;            /* only every call release_output_buffer once */
+  gboolean rendered;            /* whether the release resulted in a render */
 };
 
 static struct gl_sync_result *
@@ -118,6 +120,7 @@ struct gl_sync
 {
   gint refcount;
   GstAmcVideoDec *sink;         /* back reference for statistics, lock, cond, etc */
+  gint buffer_idx;              /* idx of the AMC buffer we should render */
   GstBuffer *buffer;            /* back reference to the buffer */
   GstGLMemory *oes_mem;         /* where amc is rendering into. The same for every gl_sync */
   GstAmcSurface *surface;       /* java wrapper for where amc is rendering into */
@@ -155,6 +158,22 @@ _gl_sync_unref (struct gl_sync *sync)
 
     g_free (sync);
   }
+}
+
+static gint
+_queue_compare_gl_sync (gconstpointer a, gconstpointer b)
+{
+  const struct gl_sync *sync = a;
+  guint frame = GPOINTER_TO_INT (b);
+
+  return sync->gl_frame_no - frame;
+}
+
+static GList *
+_find_gl_sync_for_frame (GstAmcVideoDec * dec, guint frame)
+{
+  return g_queue_find_custom (dec->gl_queue, GINT_TO_POINTER (frame),
+      (GCompareFunc) _queue_compare_gl_sync);
 }
 
 static void
@@ -441,22 +460,12 @@ gst_amc_video_dec_close (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Closing decoder");
 
-  if (self->codec) {
-    GError *err = NULL;
-
-    gst_amc_codec_release (self->codec, &err);
-    if (err)
-      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
-
-    gst_amc_codec_free (self->codec);
-  }
-
   if (self->downstream_supports_gl
       && self->codec_config == AMC_CODEC_CONFIG_WITH_SURFACE) {
     g_mutex_lock (&self->gl_lock);
     GST_INFO_OBJECT (self, "shutting down gl queue pushed %u ready %u "
-        "rendered %u", self->gl_pushed_frame_count, self->gl_ready_frame_count,
-        self->gl_rendered_frame_count);
+        "released %u", self->gl_pushed_frame_count, self->gl_ready_frame_count,
+        self->gl_released_frame_count);
 
     g_queue_free_full (self->gl_queue, (GDestroyNotify) _gl_sync_unref);
     self->gl_queue = g_queue_new ();
@@ -468,12 +477,22 @@ gst_amc_video_dec_close (GstVideoDecoder * decoder)
   }
   self->gl_pushed_frame_count = 0;
   self->gl_ready_frame_count = 0;
-  self->gl_rendered_frame_count = 0;
+  self->gl_released_frame_count = 0;
   self->gl_last_rendered_frame = 0;
 
   if (self->surface) {
     gst_object_unref (self->surface);
     self->surface = NULL;
+  }
+
+  if (self->codec) {
+    GError *err = NULL;
+
+    gst_amc_codec_release (self->codec, &err);
+    if (err)
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+
+    gst_amc_codec_free (self->codec);
   }
 
   self->started = FALSE;
@@ -861,7 +880,66 @@ _amc_gl_set_sync (GstGLSyncMeta * sync_meta, GstGLContext * context)
 {
 }
 
-/* caller should remove from the gl_queue after calling this function */
+static void
+_gl_sync_release_buffer (struct gl_sync *sync, gboolean render)
+{
+  GError *error = NULL;
+
+  if (!sync->result->released) {
+    sync->released_ts = g_get_monotonic_time ();
+
+    if ((gint) (sync->sink->gl_released_frame_count -
+            sync->sink->gl_ready_frame_count) > 0) {
+      guint diff =
+          sync->sink->gl_released_frame_count -
+          sync->sink->gl_ready_frame_count - 1u;
+      sync->sink->gl_ready_frame_count += diff;
+      GST_LOG ("gl_sync %p possible \'on_frame_available\' listener miss "
+          "detected, attempting to work around.  Jumping forward %u "
+          "frames for frame %u", sync, diff, sync->gl_frame_no);
+    }
+
+    GST_TRACE ("gl_sync %p release_output_buffer idx %u frame %u", sync,
+        sync->buffer_idx, sync->gl_frame_no);
+
+    /* Release the frame into the surface */
+    sync->sink->gl_released_frame_count++;
+    if (!gst_amc_codec_release_output_buffer (sync->sink->codec,
+            sync->buffer_idx, render, &error)) {
+      GST_ERROR_OBJECT (sync->sink,
+          "gl_sync %p Failed to render buffer, index %d frame %u", sync,
+          sync->buffer_idx, sync->gl_frame_no);
+      goto out;
+    }
+    sync->result->released = TRUE;
+    sync->result->rendered = render;
+  }
+
+out:
+  if (error) {
+    if (sync->sink->gl_error == NULL)
+      sync->sink->gl_error = error;
+    else
+      g_clear_error (&error);
+  }
+}
+
+static void
+_gl_sync_release_next_buffer (struct gl_sync *sync, gboolean render)
+{
+  GList *l;
+
+  if ((l = _find_gl_sync_for_frame (sync->sink, sync->gl_frame_no + 1))) {
+    struct gl_sync *next = l->data;
+
+    _gl_sync_release_buffer (next, render);
+  } else {
+    GST_TRACE ("gl_sync %p no next frame available", sync);
+  }
+}
+
+/* caller should remove from the gl_queue after calling this function.
+ * _gl_sync_release_buffer must be called before this function */
 static void
 _gl_sync_render_unlocked (struct gl_sync *sync)
 {
@@ -873,7 +951,7 @@ _gl_sync_render_unlocked (struct gl_sync *sync)
   GST_TRACE ("gl_sync %p result %p render (updated:%u)", sync, sync->result,
       sync->result->updated);
 
-  if (sync->result->updated)
+  if (sync->result->updated || !sync->result->rendered)
     return;
 
   /* FIXME: if this ever starts returning valid values we should attempt
@@ -896,7 +974,6 @@ _gl_sync_render_unlocked (struct gl_sync *sync)
   }
   GST_TRACE ("gl_sync result %p updated", sync->result);
   sync->result->updated = TRUE;
-  sync->sink->gl_rendered_frame_count++;
   sync->sink->gl_last_rendered_frame = sync->gl_frame_no;
 
   if (!gst_amc_surface_texture_get_timestamp (sync->surface->texture, &ts,
@@ -912,8 +989,8 @@ _gl_sync_render_unlocked (struct gl_sync *sync)
   if (!af_meta) {
     GST_WARNING ("Failed to retreive the transformation meta from the "
         "gl_sync %p buffer %p", sync, sync->buffer);
-  } else if (gst_amc_surface_texture_get_transform_matrix (sync->surface->
-          texture, matrix, &error)) {
+  } else if (gst_amc_surface_texture_get_transform_matrix (sync->
+          surface->texture, matrix, &error)) {
 
     gst_video_affine_transformation_meta_apply_matrix (af_meta, matrix);
     gst_video_affine_transformation_meta_apply_matrix (af_meta, yflip_matrix);
@@ -929,17 +1006,13 @@ out:
     else
       g_clear_error (&error);
   }
+
+  _gl_sync_release_next_buffer (sync, TRUE);
 }
 
 static gboolean
-_amc_gl_possibly_wait_for_gl_sync (struct gl_sync *sync, gint64 timeout)
+_amc_gl_possibly_wait_for_gl_sync (struct gl_sync *sync, gint64 end_time)
 {
-  gint64 end_time;
-
-  /* FIXME: remove this somehow */
-  if (timeout != -1)
-    end_time = g_get_monotonic_time () + timeout;
-
   GST_TRACE ("gl_sync %p waiting for frame %u current %u updated %u ", sync,
       sync->gl_frame_no, sync->sink->gl_ready_frame_count,
       sync->result->updated);
@@ -952,6 +1025,7 @@ _amc_gl_possibly_wait_for_gl_sync (struct gl_sync *sync, gint64 timeout)
 
   /* The number of frame callbacks (gl_ready_frame_count) is not a direct
    * relationship with the number of pushed buffers (gl_pushed_frame_count)
+   * or even, the number of released buffers (gl_released_frame_count)
    * as, from the frameworks/native/include/gui/ConsumerBase.h file,
    *
    *    "...frames that are queued while in asynchronous mode only trigger the
@@ -972,22 +1046,10 @@ _amc_gl_possibly_wait_for_gl_sync (struct gl_sync *sync, gint64 timeout)
       && (gint) (sync->sink->gl_ready_frame_count - sync->gl_frame_no) < 0) {
     /* The time limit is need otherwise when amc decides to not emit the
      * frame listener (say, on orientation changes) we don't wait foreever */
-    if (timeout == -1 || !g_cond_wait_until (&sync->sink->gl_cond,
+    if (end_time == -1 || !g_cond_wait_until (&sync->sink->gl_cond,
             &sync->sink->gl_lock, end_time)) {
       GST_LOG ("gl_sync %p unsuccessfully waited for frame %u", sync,
           sync->gl_frame_no);
-
-      /* Assume that the decoder<->renderer can ultimately keep up */
-      if ((gint) (sync->sink->gl_pushed_frame_count -
-              sync->sink->gl_ready_frame_count) > 0) {
-        guint diff =
-            sync->sink->gl_pushed_frame_count -
-            sync->sink->gl_ready_frame_count - 1u;
-        sync->sink->gl_ready_frame_count += diff;
-        GST_LOG ("gl_sync %p possible \'on_frame_available\' listener miss "
-            "detected, attempting to work around.  Jumping forward %u "
-            "frames for frame %u", sync, diff, sync->gl_frame_no);
-      }
       return FALSE;
     }
   }
@@ -998,11 +1060,12 @@ _amc_gl_possibly_wait_for_gl_sync (struct gl_sync *sync, gint64 timeout)
 }
 
 static gboolean
-_amc_gl_iterate_queue_unlocked (GstGLSyncMeta * sync_meta, gint64 timeout)
+_amc_gl_iterate_queue_unlocked (GstGLSyncMeta * sync_meta, gboolean wait)
 {
   struct gl_sync *sync = sync_meta->data;
   struct gl_sync *tmp;
   gboolean ret = TRUE;
+  gint64 end_time;
 
   while ((tmp = g_queue_peek_head (sync->sink->gl_queue))) {
     /* skip frames that are ahead of the current wait frame */
@@ -1012,17 +1075,18 @@ _amc_gl_iterate_queue_unlocked (GstGLSyncMeta * sync_meta, gint64 timeout)
       break;
     }
 
+    _gl_sync_release_buffer (tmp, wait);
+
     /* Frames are currently pushed in order and waits need to be performed
      * in the same order */
 
-    if (!_amc_gl_possibly_wait_for_gl_sync (tmp, timeout)) {
+    end_time = 30 * G_TIME_SPAN_MILLISECOND + tmp->released_ts;
+    if (!_amc_gl_possibly_wait_for_gl_sync (tmp, end_time))
       ret = FALSE;
-      break;
-    }
 
     _gl_sync_render_unlocked (tmp);
 
-    g_queue_pop_head (sync->sink->gl_queue);
+    g_queue_pop_head (tmp->sink->gl_queue);
     _gl_sync_unref (tmp);
   }
 
@@ -1039,17 +1103,9 @@ static void
 _amc_gl_wait_gl (GstGLContext * context, struct gl_wait *wait)
 {
   struct gl_sync *sync = wait->sync_meta->data;
-  gint64 current_time, wait_time;
 
   g_mutex_lock (&sync->sink->gl_lock);
-  current_time = g_get_monotonic_time ();
-  /* Assume that the device can do 30fps.  See the comment in
-   * _amc_gl_possibly_wait_for_gl_sync() as to why this is ultimately needed
-   * even though it is ultimately a HACK */
-  wait_time = 33 * G_TIME_SPAN_MILLISECOND - (current_time - sync->released_ts);
-  if (wait_time < 0)
-    wait_time = -1;
-  wait->ret = _amc_gl_iterate_queue_unlocked (wait->sync_meta, wait_time);
+  wait->ret = _amc_gl_iterate_queue_unlocked (wait->sync_meta, TRUE);
   g_mutex_unlock (&sync->sink->gl_lock);
 }
 
@@ -1102,7 +1158,7 @@ _amc_gl_render_on_free (GstGLContext * context, GstGLSyncMeta * sync_meta)
 
   g_mutex_lock (&sync->sink->gl_lock);
   /* just render as many frames as we have */
-  _amc_gl_iterate_queue_unlocked (sync_meta, -1);
+  _amc_gl_iterate_queue_unlocked (sync_meta, FALSE);
   g_mutex_unlock (&sync->sink->gl_lock);
 }
 
@@ -1231,6 +1287,15 @@ retry:
     GstGLSyncMeta *sync_meta;
     GstVideoCodecState *state;
     struct gl_sync *sync;
+    gboolean first_buffer = FALSE;
+
+    g_mutex_lock (&self->gl_lock);
+    if (self->gl_error) {
+      GST_ELEMENT_ERROR_FROM_ERROR (self, self->gl_error);
+      g_mutex_unlock (&self->gl_lock);
+      goto gl_output_error;
+    }
+    g_mutex_unlock (&self->gl_lock);
 
     outbuf = gst_buffer_new ();
 
@@ -1243,17 +1308,13 @@ retry:
       gst_gl_context_thread_add (self->gl_context,
           (GstGLContextThreadFunc) _attach_mem_to_context, self);
 
-      if (self->gl_error) {
-        GST_ELEMENT_ERROR_FROM_ERROR (self, self->gl_error);
-        gst_video_codec_state_unref (state);
-        goto gl_output_error;
-      }
+      first_buffer = TRUE;
     }
+
+    gst_video_codec_state_unref (state);
 
     gst_buffer_append_memory (outbuf,
         gst_memory_ref ((GstMemory *) self->oes_mem));
-
-    gst_video_codec_state_unref (state);
 
     sync = g_new0 (struct gl_sync, 1);
     sync->refcount = 1;
@@ -1262,6 +1323,7 @@ retry:
     sync->surface = g_object_ref (self->surface);
     sync->oes_mem =
         (GstGLMemory *) gst_memory_ref ((GstMemory *) self->oes_mem);
+    sync->buffer_idx = idx;
     sync->result = g_new0 (struct gl_sync_result, 1);
     sync->result->refcount = 1;
     sync->result->updated = FALSE;
@@ -1283,21 +1345,17 @@ retry:
     sync->gl_frame_no = self->gl_pushed_frame_count;
     g_queue_push_tail (self->gl_queue, _gl_sync_ref (sync));
 
-    GST_DEBUG_OBJECT (self, "render GL frame %u %" GST_PTR_FORMAT,
-        sync->gl_frame_no, outbuf);
-
-    sync->released_ts = g_get_monotonic_time ();
+    if (first_buffer) {
+      _gl_sync_release_buffer (sync, TRUE);
+      if (self->gl_error) {
+        gst_buffer_unref (outbuf);
+        g_mutex_unlock (&self->gl_lock);
+        goto gl_output_error;
+      }
+    }
     g_mutex_unlock (&self->gl_lock);
 
-    /* Render the frame into the surface */
-    if (!gst_amc_codec_release_output_buffer (self->codec, idx, TRUE, &err)) {
-      gst_buffer_unref (outbuf);
-      GST_ERROR_OBJECT (self, "Failed to render buffer, index %d", idx);
-      GST_ELEMENT_ERROR_FROM_ERROR (self, err);
-
-      goto gl_output_error;
-    }
-
+    GST_DEBUG_OBJECT (self, "push GL frame %u", sync->gl_frame_no);
     frame->output_buffer = outbuf;
     flow_ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
 
