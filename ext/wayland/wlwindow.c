@@ -238,12 +238,15 @@ static void
 gst_wl_window_resize_video_surface (GstWlWindow * window, gboolean commit)
 {
   GstVideoRectangle src = { 0, };
+  GstVideoRectangle dst = { 0, };
   GstVideoRectangle res;
 
   /* center the video_subsurface inside area_subsurface */
   src.w = window->video_width;
   src.h = window->video_height;
-  gst_video_sink_center_rect (src, window->render_rectangle, &res, TRUE);
+  dst.w = window->render_rectangle.w;
+  dst.h = window->render_rectangle.h;
+  gst_video_sink_center_rect (src, dst, &res, TRUE);
 
   wl_subsurface_set_position (window->video_subsurface, res.x, res.y);
   wl_viewport_set_destination (window->video_viewport, res.w, res.h);
