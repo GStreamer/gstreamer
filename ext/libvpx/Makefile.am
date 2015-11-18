@@ -116,18 +116,24 @@ vpx_sources = \
 	$(vpx_srcdir)/CHANGELOG \
 	$(vpx_srcdir)/LICENSE \
 	$(vpx_srcdir)/PATENTS \
-	$(vpx_srcdir)/build/make/Makefile \
-	$(vpx_srcdir)/build/make/ads2gas.pl \
+	$(vpx_srcdir)/build/make/ads2armasm_ms.pl \
 	$(vpx_srcdir)/build/make/ads2gas_apple.pl \
+	$(vpx_srcdir)/build/make/ads2gas.pl \
+	$(vpx_srcdir)/build/make/Android.mk \
+	$(vpx_srcdir)/build/make/armlink_adapter.sh \
 	$(vpx_srcdir)/build/make/configure.sh \
 	$(vpx_srcdir)/build/make/gen_asm_deps.sh \
-	$(vpx_srcdir)/build/make/obj_int_extract.c \
-	$(vpx_srcdir)/build/make/rtcd.sh \
+	$(vpx_srcdir)/build/make/gen_msvs_def.sh \
+	$(vpx_srcdir)/build/make/gen_msvs_proj.sh \
+	$(vpx_srcdir)/build/make/gen_msvs_sln.sh \
+	$(vpx_srcdir)/build/make/gen_msvs_vcxproj.sh \
+	$(vpx_srcdir)/build/make/iosbuild.sh \
+	$(vpx_srcdir)/build/make/Makefile \
+	$(vpx_srcdir)/build/make/msvs_common.sh \
+	$(vpx_srcdir)/build/make/rtcd.pl \
+	$(vpx_srcdir)/build/make/thumb.pm \
 	$(vpx_srcdir)/build/make/version.sh \
 	$(vpx_srcdir)/configure \
-	$(vpx_srcdir)/vp8/common/rtcd_defs.sh \
-	$(vpx_srcdir)/vp9/common/vp9_rtcd_defs.sh \
-	$(vpx_srcdir)/vpx_scale/vpx_scale_rtcd.sh \
 	$(vpx_source_mak:%.mk=$(vpx_srcdir)/%.mk) \
 	$(vpx_source_c:%.c=$(vpx_srcdir)/%.c) \
 	$(vpx_source_h:%.h=$(vpx_srcdir)/%.h) \
