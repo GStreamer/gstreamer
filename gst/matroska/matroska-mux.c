@@ -130,6 +130,8 @@ static GstStaticPadTemplate videosink_templ =
         "video/x-raw, "
         "format = (string) { YUY2, I420, YV12, UYVY, AYUV, GRAY8, BGR, RGB }, "
         COMMON_VIDEO_CAPS "; "
+        "video/x-prores, "
+        COMMON_VIDEO_CAPS "; "
         "video/x-wmv, " "wmvversion = (int) [ 1, 3 ], " COMMON_VIDEO_CAPS)
     );
 
@@ -1249,6 +1251,30 @@ skip_details:
       context->codec_priv = priv_data;
       context->codec_priv_size = priv_data_size;
     }
+  } else if (strcmp (mimetype, "video/x-prores") == 0) {
+    const gchar *variant;
+
+    gst_matroska_mux_free_codec_priv (context);
+
+    variant = gst_structure_get_string (structure, "format");
+    if (!variant || !g_strcmp0 (variant, "standard"))
+      context->codec_priv = g_strdup ("apcn");
+    else if (!g_strcmp0 (variant, "hq"))
+      context->codec_priv = g_strdup ("apch");
+    else if (!g_strcmp0 (variant, "lt"))
+      context->codec_priv = g_strdup ("apcs");
+    else if (!g_strcmp0 (variant, "proxy"))
+      context->codec_priv = g_strdup ("apco");
+    else if (!g_strcmp0 (variant, "4444"))
+      context->codec_priv = g_strdup ("ap4h");
+    else {
+      GST_WARNING_OBJECT (mux, "Unhandled prores format: %s", variant);
+
+      goto refuse_caps;
+    }
+
+    context->codec_priv_size = sizeof (guint32);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_PRORES);
   }
 
   return TRUE;
@@ -3469,6 +3495,11 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     buf = gst_matroska_mux_handle_dirac_packet (mux, collect_pad, buf);
     if (!buf)
       return GST_FLOW_OK;
+  } else if (strcmp (collect_pad->track->codec_id,
+          GST_MATROSKA_CODEC_ID_VIDEO_PRORES) == 0) {
+    /* Remove the 'Frame container atom' header' */
+    buf = gst_buffer_make_writable (buf);
+    gst_buffer_resize (buf, 8, gst_buffer_get_size (buf) - 8);
   }
 
   buffer_timestamp =
