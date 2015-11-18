@@ -1393,6 +1393,7 @@ static gboolean
 handle_message (GstDiscoverer * dc, GstMessage * msg)
 {
   gboolean done = FALSE;
+  const gchar *dump_name = NULL;
 
   GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "got a %s message",
       GST_MESSAGE_TYPE_NAME (msg));
@@ -1410,6 +1411,7 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
 
       /* We need to stop */
       done = TRUE;
+      dump_name = "gst-discoverer-error";
 
       /* Don't override missing plugin result code for missing plugin errors */
       if (dc->priv->current_info->result != GST_DISCOVERER_MISSING_PLUGINS ||
@@ -1423,9 +1425,23 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
     }
       break;
 
+    case GST_MESSAGE_WARNING:{
+      GError *err;
+      gchar *debug = NULL;
+
+      gst_message_parse_warning (msg, &err, &debug);
+      GST_WARNING_OBJECT (GST_MESSAGE_SRC (msg),
+          "Got a warning [debug:%s], [message:%s]", debug, err->message);
+      g_clear_error (&err);
+      g_free (debug);
+      dump_name = "gst-discoverer-warning";
+      break;
+    }
+
     case GST_MESSAGE_EOS:
       GST_DEBUG ("Got EOS !");
       done = TRUE;
+      dump_name = "gst-discoverer-eos";
       break;
 
     case GST_MESSAGE_APPLICATION:{
@@ -1436,8 +1452,10 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       DISCO_LOCK (dc);
       async_done = dc->priv->async_done;
       DISCO_UNLOCK (dc);
-      if (g_str_equal (name, "DiscovererDone") && async_done)
-        return TRUE;
+      if (g_str_equal (name, "DiscovererDone") && async_done) {
+        done = TRUE;
+        dump_name = "gst-discoverer-async-done-subtitle";
+      }
       break;
     }
 
@@ -1447,6 +1465,7 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
         DISCO_LOCK (dc);
         if (dc->priv->pending_subtitle_pads == 0) {
           done = TRUE;
+          dump_name = "gst-discoverer-async-done";
         } else {
           /* Remember that ASYNC_DONE has been received, wait for subtitles */
           dc->priv->async_done = TRUE;
@@ -1522,6 +1541,11 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       break;
   }
 
+  if (dump_name != NULL) {
+    /* dump graph when done or for warnings */
+    GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (dc->priv->pipeline),
+        GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
+  }
   return done;
 }
 
