@@ -2175,10 +2175,11 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
   /* ERRORS */
 unexpected_event:
   {
-    g_warning
-        ("Unexpected event of kind %s can't be added in temp file of queue %s ",
-        gst_event_type_get_name (GST_EVENT_TYPE (item)),
-        GST_OBJECT_NAME (queue));
+    gboolean is_custom = GST_EVENT_TYPE (item) < GST_EVENT_CUSTOM_UPSTREAM;
+
+    GST_WARNING_OBJECT (queue, "%s%s event can't be added to temp file: "
+        "%" GST_PTR_FORMAT, is_custom ? "Unexpected " : "",
+        GST_EVENT_TYPE_NAME (item), GST_EVENT_CAST (item));
     gst_event_unref (GST_EVENT_CAST (item));
     return;
   }
