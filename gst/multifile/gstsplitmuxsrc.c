@@ -1509,6 +1509,32 @@ splitmux_src_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
       break;
     }
+    case GST_QUERY_SEGMENT:{
+      GstFormat format;
+      gint64 start, stop;
+
+      SPLITMUX_SRC_LOCK (splitmux);
+      format = splitmux->play_segment.format;
+
+      start =
+          gst_segment_to_stream_time (&splitmux->play_segment, format,
+          splitmux->play_segment.start);
+      if (splitmux->play_segment.stop == GST_CLOCK_TIME_NONE) {
+        if (splitmux->play_segment.duration == GST_CLOCK_TIME_NONE)
+          stop = GST_CLOCK_TIME_NONE;
+        else
+          stop = start + splitmux->play_segment.duration;
+      } else {
+        stop = gst_segment_to_stream_time (&splitmux->play_segment, format,
+            splitmux->play_segment.stop);
+      }
+
+      gst_query_set_segment (query, splitmux->play_segment.rate, format, start,
+          stop);
+      ret = TRUE;
+
+      SPLITMUX_SRC_UNLOCK (splitmux);
+    }
     default:
       break;
   }
