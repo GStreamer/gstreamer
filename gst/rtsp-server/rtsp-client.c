@@ -1823,6 +1823,9 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (sessmedia == NULL) {
     /* get a handle to the configuration of the media in the session */
     media = find_media (client, ctx, path, &matched);
+    /* need to suspend the media, if the protocol has changed */
+    if (media != NULL)
+      gst_rtsp_media_suspend (media);
   } else {
     if ((media = gst_rtsp_session_media_get_media (sessmedia)))
       g_object_ref (media);
