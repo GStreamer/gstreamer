@@ -562,9 +562,16 @@ gst_soup_http_client_sink_start (GstBaseSink * sink)
 
     g_mutex_lock (&souphttpsink->mutex);
 
-    /* FIXME: error handling */
     souphttpsink->thread = g_thread_try_new ("souphttpclientsink-thread",
         thread_func, souphttpsink, &error);
+
+    if (error != NULL) {
+      GST_DEBUG_OBJECT (souphttpsink, "failed to start thread, %s",
+          error->message);
+      g_error_free (error);
+      g_mutex_unlock (&souphttpsink->mutex);
+      return FALSE;
+    }
 
     GST_LOG_OBJECT (souphttpsink, "waiting for main loop thread to start up");
     g_cond_wait (&souphttpsink->cond, &souphttpsink->mutex);
