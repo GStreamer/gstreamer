@@ -2971,6 +2971,33 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
   return GST_FLOW_OK;
 }
 
+static GstFlowReturn
+gst_matroska_demux_add_prores_header (GstElement * element,
+    GstMatroskaTrackContext * stream, GstBuffer ** buf)
+{
+  GstBuffer *newbuf = gst_buffer_new_allocate (NULL, 8, NULL);
+  GstMapInfo map;
+  guint32 frame_size;
+
+  if (!gst_buffer_map (newbuf, &map, GST_MAP_WRITE)) {
+    GST_ERROR ("Failed to map newly allocated buffer");
+    return GST_FLOW_ERROR;
+  }
+
+  frame_size = gst_buffer_get_size (*buf);
+
+  GST_WRITE_UINT32_BE (map.data, frame_size);
+  map.data[4] = 'i';
+  map.data[5] = 'c';
+  map.data[6] = 'p';
+  map.data[7] = 'f';
+
+  gst_buffer_unmap (newbuf, &map);
+  *buf = gst_buffer_append (newbuf, *buf);
+
+  return GST_FLOW_OK;
+}
+
 /* @text must be null-terminated */
 static gboolean
 gst_matroska_demux_subtitle_chunk_has_tag (GstElement * element,
@@ -5228,6 +5255,48 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP9)) {
     caps = gst_caps_new_empty_simple ("video/x-vp9");
     *codec_name = g_strdup_printf ("On2 VP9");
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_PRORES)) {
+    guint32 fourcc;
+    const gchar *variant, *variant_descr = "";
+
+    /* Expect a fourcc in the codec private data */
+    if (size < 4) {
+      GST_WARNING ("Too small PRORESS fourcc (%d bytes)", size);
+      return NULL;
+    }
+
+    fourcc = GST_STR_FOURCC (data);
+    switch (fourcc) {
+      case GST_MAKE_FOURCC ('a', 'p', 'c', 's'):
+        variant_descr = " 4:2:2 LT";
+        variant = "lt";
+        break;
+      case GST_MAKE_FOURCC ('a', 'p', 'c', 'h'):
+        variant = "hq";
+        variant_descr = " 4:2:2 HQ";
+        break;
+      case GST_MAKE_FOURCC ('a', 'p', '4', 'h'):
+        variant = "4444";
+        variant_descr = " 4:4:4:4";
+        break;
+      case GST_MAKE_FOURCC ('a', 'p', 'c', 'o'):
+        variant = "proxy";
+        variant_descr = " 4:2:2 Proxy";
+        break;
+      case GST_MAKE_FOURCC ('a', 'p', 'c', 'n'):
+      default:
+        variant = "standard";
+        variant_descr = " 4:2:2 SD";
+        break;
+    }
+
+    GST_LOG ("Prores video, codec fourcc %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (fourcc));
+
+    caps = gst_caps_new_simple ("video/x-prores",
+        "format", G_TYPE_STRING, variant, NULL);
+    *codec_name = g_strdup_printf ("Apple ProRes%s", variant_descr);
+    context->postprocess_frame = gst_matroska_demux_add_prores_header;
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps", codec_id);
     return NULL;
