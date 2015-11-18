@@ -1616,9 +1616,7 @@ opus_streamheader_to_codecdata (const GValue * streamheader,
     goto wrong_type;
 
   bufarr = g_value_peek_pointer (streamheader);
-  if (bufarr->len <= 0 || bufarr->len > 255)    /* one header, and count stored in a byte */
-    goto wrong_count;
-  if (bufarr->len != 1 && bufarr->len != 2)
+  if (bufarr->len != 1 && bufarr->len != 2)     /* one header, and count stored in a byte */
     goto wrong_count;
 
   /* Opus headers are not in-band */
