@@ -830,6 +830,13 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
 done:
 
   gst_omx_component_handle_messages (comp);
+
+  if (err != OMX_ErrorNone && comp->last_error == OMX_ErrorNone) {
+    GST_ERROR_OBJECT (comp->parent,
+        "Last operation returned an error. Setting last_error manually.");
+    comp->last_error = err;
+  }
+
   g_mutex_unlock (&comp->lock);
 
   if (err != OMX_ErrorNone) {
