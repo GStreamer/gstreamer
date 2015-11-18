@@ -4316,9 +4316,9 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     /* moving forwards check if we move past a keyframe */
     if (kf_index > stream->sample_index) {
       GST_DEBUG_OBJECT (stream->pad,
-	   "moving forwards to keyframe at %u (pts %" GST_TIME_FORMAT " dts %"GST_TIME_FORMAT" )", kf_index,
-	   GST_TIME_ARGS (QTSAMPLE_PTS(stream, &stream->samples[kf_index])),
-	   GST_TIME_ARGS (QTSAMPLE_DTS(stream, &stream->samples[kf_index])));
+           "moving forwards to keyframe at %u (pts %" GST_TIME_FORMAT " dts %"GST_TIME_FORMAT" )", kf_index,
+           GST_TIME_ARGS (QTSAMPLE_PTS(stream, &stream->samples[kf_index])),
+           GST_TIME_ARGS (QTSAMPLE_DTS(stream, &stream->samples[kf_index])));
       gst_qtdemux_move_stream (qtdemux, stream, kf_index);
     } else {
       GST_DEBUG_OBJECT (stream->pad,
