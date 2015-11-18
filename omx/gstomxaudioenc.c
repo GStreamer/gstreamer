@@ -491,9 +491,15 @@ component_error:
 flushing:
   {
     GST_DEBUG_OBJECT (self, "Flushing -- stopping task");
+    g_mutex_lock (&self->drain_lock);
+    if (self->draining) {
+      self->draining = FALSE;
+      g_cond_broadcast (&self->drain_cond);
+    }
     gst_pad_pause_task (GST_AUDIO_ENCODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_FLUSHING;
     self->started = FALSE;
+    g_mutex_unlock (&self->drain_lock);
     return;
   }
 eos:
@@ -541,8 +547,14 @@ flow_error:
       self->started = FALSE;
     } else if (flow_ret == GST_FLOW_FLUSHING) {
       GST_DEBUG_OBJECT (self, "Flushing -- stopping task");
+      g_mutex_lock (&self->drain_lock);
+      if (self->draining) {
+        self->draining = FALSE;
+        g_cond_broadcast (&self->drain_cond);
+      }
       gst_pad_pause_task (GST_AUDIO_ENCODER_SRC_PAD (self));
       self->started = FALSE;
+      g_mutex_unlock (&self->drain_lock);
     }
     GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
     return;
