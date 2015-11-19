@@ -73,8 +73,8 @@ gst_v4l2_transform_set_property (GObject * object,
           pspec);
       break;
     case PROP_CAPTURE_IO_MODE:
-      gst_v4l2_object_set_property_helper (self->v4l2capture, PROP_IO_MODE,
-          value, pspec);
+      gst_v4l2_object_set_property_helper (self->v4l2capture, prop_id, value,
+          pspec);
       break;
 
       /* By default, only set on output */
