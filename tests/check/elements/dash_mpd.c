@@ -3839,7 +3839,6 @@ GST_START_TEST (dash_mpdparser_segments)
   gboolean hasNextSegment;
   GstActiveStream *activeStream;
   GstFlowReturn flow;
-  GstMediaSegment segment;
   GstDateTime *segmentEndTime;
   GstDateTime *gst_time;
   GDateTime *g_time;
@@ -3931,11 +3930,6 @@ GST_START_TEST (dash_mpdparser_segments)
   hasNextSegment =
       gst_mpd_client_has_next_segment (mpdclient, activeStream, TRUE);
   assert_equals_int (hasNextSegment, 0);
-
-  /* get chunk 0. segment_index will not change */
-  ret = gst_mpdparser_get_chunk_by_index (mpdclient, 0, 0, &segment);
-  assert_equals_int (ret, 1);
-  assert_equals_int (segment.number, 1);
 
   /* segment index is still 1 */
   hasNextSegment =
