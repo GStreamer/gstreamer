@@ -980,21 +980,19 @@ static GstFlowReturn
 gst_base_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstBuffer *buffer = frame->buffer;
+  gboolean is_header = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER);
 
-  /* Avoid updating timestamps of header buffers */
-  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER)) {
-    if (!GST_BUFFER_PTS_IS_VALID (buffer) &&
-        GST_CLOCK_TIME_IS_VALID (parse->priv->next_pts)) {
-      GST_BUFFER_PTS (buffer) = parse->priv->next_pts;
-    }
-    if (!GST_BUFFER_DTS_IS_VALID (buffer) &&
-        GST_CLOCK_TIME_IS_VALID (parse->priv->next_dts)) {
-      GST_BUFFER_DTS (buffer) = parse->priv->next_dts;
-    }
-    if (!GST_BUFFER_DURATION_IS_VALID (buffer) &&
-        GST_CLOCK_TIME_IS_VALID (parse->priv->frame_duration)) {
-      GST_BUFFER_DURATION (buffer) = parse->priv->frame_duration;
-    }
+  if (!GST_BUFFER_PTS_IS_VALID (buffer) && !is_header &&
+      GST_CLOCK_TIME_IS_VALID (parse->priv->next_pts)) {
+    GST_BUFFER_PTS (buffer) = parse->priv->next_pts;
+  }
+  if (!GST_BUFFER_DTS_IS_VALID (buffer) && !is_header &&
+      GST_CLOCK_TIME_IS_VALID (parse->priv->next_dts)) {
+    GST_BUFFER_DTS (buffer) = parse->priv->next_dts;
+  }
+  if (!GST_BUFFER_DURATION_IS_VALID (buffer) && !is_header &&
+      GST_CLOCK_TIME_IS_VALID (parse->priv->frame_duration)) {
+    GST_BUFFER_DURATION (buffer) = parse->priv->frame_duration;
   }
   return GST_FLOW_OK;
 }
