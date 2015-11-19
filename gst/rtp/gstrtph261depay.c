@@ -105,9 +105,9 @@ gst_rtp_h261_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
   marker = gst_rtp_buffer_get_marker (rtp);
 
-  if (payload_len < 4) {
-    GST_WARNING_OBJECT (depay,
-        "Dropping packet with payload length invalid length");
+  if (payload_len < header_len + 1) {
+    /* Must have at least one byte payload */
+    GST_WARNING_OBJECT (depay, "Dropping packet with invalid payload length");
     return NULL;
   }
 
