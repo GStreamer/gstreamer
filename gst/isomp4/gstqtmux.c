@@ -4001,15 +4001,15 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     switch (version) {
       case 25:
         if (pal)
-          entry.fourcc = GST_MAKE_FOURCC ('d', 'v', 'c', 'p');
+          entry.fourcc = FOURCC_dvcp;
         else
-          entry.fourcc = GST_MAKE_FOURCC ('d', 'v', 'c', ' ');
+          entry.fourcc = FOURCC_dvc_;
         break;
       case 50:
         if (pal)
-          entry.fourcc = GST_MAKE_FOURCC ('d', 'v', '5', 'p');
+          entry.fourcc = FOURCC_dv5p;
         else
-          entry.fourcc = GST_MAKE_FOURCC ('d', 'v', '5', 'n');
+          entry.fourcc = FOURCC_dv5n;
         break;
       default:
         GST_WARNING_OBJECT (qtmux, "unrecognized dv version");
@@ -4077,13 +4077,13 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
 
     variant = gst_structure_get_string (structure, "format");
     if (!variant || !g_strcmp0 (variant, "standard"))
-      entry.fourcc = GST_MAKE_FOURCC ('a', 'p', 'c', 'n');
+      entry.fourcc = FOURCC_apcn;
     else if (!g_strcmp0 (variant, "lt"))
-      entry.fourcc = GST_MAKE_FOURCC ('a', 'p', 'c', 's');
+      entry.fourcc = FOURCC_apcs;
     else if (!g_strcmp0 (variant, "hq"))
-      entry.fourcc = GST_MAKE_FOURCC ('a', 'p', 'c', 'h');
+      entry.fourcc = FOURCC_apch;
     else if (!g_strcmp0 (variant, "proxy"))
-      entry.fourcc = GST_MAKE_FOURCC ('a', 'p', '4', 'h');
+      entry.fourcc = FOURCC_ap4h;
   }
 
   if (!entry.fourcc)

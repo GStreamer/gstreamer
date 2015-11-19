@@ -4362,8 +4362,7 @@ build_fiel_extension (gint fields)
     return NULL;
   }
 
-  atom_data =
-      atom_data_new_from_data (GST_MAKE_FOURCC ('f', 'i', 'e', 'l'), &f, 1);
+  atom_data = atom_data_new_from_data (FOURCC_fiel, &f, 1);
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);
@@ -4378,9 +4377,7 @@ build_jp2x_extension (const GstBuffer * prefix)
     return NULL;
   }
 
-  atom_data =
-      atom_data_new_from_gst_buffer (GST_MAKE_FOURCC ('j', 'p', '2', 'x'),
-      prefix);
+  atom_data = atom_data_new_from_gst_buffer (FOURCC_jp2x, prefix);
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);
@@ -4436,8 +4433,7 @@ build_jp2h_extension (AtomTRAK * trak, gint width, gint height,
 
   /* ihdr = image header box */
   gst_byte_writer_put_uint32_be_unchecked (&writer, 22);
-  gst_byte_writer_put_uint32_le_unchecked (&writer, GST_MAKE_FOURCC ('i', 'h',
-          'd', 'r'));
+  gst_byte_writer_put_uint32_le_unchecked (&writer, FOURCC_ihdr);
   gst_byte_writer_put_uint32_be_unchecked (&writer, height);
   gst_byte_writer_put_uint32_be_unchecked (&writer, width);
   gst_byte_writer_put_uint16_be_unchecked (&writer, ncomp);
@@ -4452,8 +4448,7 @@ build_jp2h_extension (AtomTRAK * trak, gint width, gint height,
 
   /* colour specification box */
   gst_byte_writer_put_uint32_be_unchecked (&writer, 15);
-  gst_byte_writer_put_uint32_le_unchecked (&writer, GST_MAKE_FOURCC ('c', 'o',
-          'l', 'r'));
+  gst_byte_writer_put_uint32_le_unchecked (&writer, FOURCC_colr);
 
   /* specification method: enumerated */
   gst_byte_writer_put_uint8_unchecked (&writer, 0x1);
@@ -4466,8 +4461,7 @@ build_jp2h_extension (AtomTRAK * trak, gint width, gint height,
 
   if (cmap_array) {
     gst_byte_writer_put_uint32_be_unchecked (&writer, cmap_size);
-    gst_byte_writer_put_uint32_le_unchecked (&writer,
-        GST_MAKE_FOURCC ('c', 'm', 'a', 'p'));
+    gst_byte_writer_put_uint32_le_unchecked (&writer, FOURCC_cmap);
     for (i = 0; i < cmap_array_size; i++) {
       const GValue *item;
       gint value;
@@ -4494,8 +4488,7 @@ build_jp2h_extension (AtomTRAK * trak, gint width, gint height,
 
   if (cdef_array) {
     gst_byte_writer_put_uint32_be_unchecked (&writer, cdef_size);
-    gst_byte_writer_put_uint32_le_unchecked (&writer,
-        GST_MAKE_FOURCC ('c', 'd', 'e', 'f'));
+    gst_byte_writer_put_uint32_le_unchecked (&writer, FOURCC_cdef);
     gst_byte_writer_put_uint16_be_unchecked (&writer, cdef_array_size);
     for (i = 0; i < cdef_array_size; i++) {
       const GValue *item;
@@ -4561,7 +4554,7 @@ build_amr_extension (void)
   GST_WRITE_UINT8 (ext + 8, 1);
 
   buf = GST_BUFFER_NEW_READONLY (ext, sizeof (ext));
-  res = build_codec_data_extension (GST_MAKE_FOURCC ('d', 'a', 'm', 'r'), buf);
+  res = build_codec_data_extension (FOURCC_damr, buf);
   gst_buffer_unref (buf);
   return res;
 }
@@ -4583,7 +4576,7 @@ build_h263_extension (void)
   GST_WRITE_UINT8 (ext + 6, 0);
 
   buf = GST_BUFFER_NEW_READONLY (ext, sizeof (ext));
-  res = build_codec_data_extension (GST_MAKE_FOURCC ('d', '2', '6', '3'), buf);
+  res = build_codec_data_extension (FOURCC_d263, buf);
   gst_buffer_unref (buf);
   return res;
 }
