@@ -2112,132 +2112,26 @@ on_npt_stop (GstElement * rtpbin, guint session, guint ssrc,
   gst_pad_send_event (stream->priv->sinkpad, gst_event_new_eos ());
 }
 
-/**
- * gst_rtsp_stream_join_bin:
- * @stream: a #GstRTSPStream
- * @bin: (transfer none): a #GstBin to join
- * @rtpbin: (transfer none): a rtpbin element in @bin
- * @state: the target state of the new elements
- *
- * Join the #GstBin @bin that contains the element @rtpbin.
- *
- * @stream will link to @rtpbin, which must be inside @bin. The elements
- * added to @bin will be set to the state given in @state.
- *
- * Returns: %TRUE on success.
- */
-gboolean
-gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
-    GstElement * rtpbin, GstState state)
+
+/* must be called with lock */
+static void
+create_sender_part (GstRTSPStream * stream, GstBin * bin,
+    GstState state)
 {
   GstRTSPStreamPrivate *priv;
-  gint i;
-  guint idx;
-  gchar *name;
-  GstPad *pad, *sinkpad = NULL, *selpad;
-  GstPadLinkReturn ret;
+  GstPad *pad, *sinkpad = NULL;
   gboolean is_tcp = FALSE, is_udp = FALSE;
-
-  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
-  g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT (rtpbin), FALSE);
+  gint i;
 
   priv = stream->priv;
 
-  g_mutex_lock (&priv->lock);
-  if (priv->is_joined)
-    goto was_joined;
-
-  /* create a session with the same index as the stream */
-  idx = priv->idx;
-
-  GST_INFO ("stream %p joining bin as session %u", stream, idx);
-
   is_tcp = priv->protocols & GST_RTSP_LOWER_TRANS_TCP;
-
   is_udp = ((priv->protocols & GST_RTSP_LOWER_TRANS_UDP) ||
       (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST));
 
-  if (is_udp && !alloc_ports (stream))
-    goto no_ports;
-
-  /* update the dscp qos field in the sinks */
-  update_dscp_qos (stream);
-
-  if (priv->profiles & GST_RTSP_PROFILE_SAVP
-      || priv->profiles & GST_RTSP_PROFILE_SAVPF) {
-    /* For SRTP */
-    g_signal_connect (rtpbin, "request-rtp-encoder",
-        (GCallback) request_rtp_encoder, stream);
-    g_signal_connect (rtpbin, "request-rtcp-encoder",
-        (GCallback) request_rtcp_encoder, stream);
-    g_signal_connect (rtpbin, "request-rtp-decoder",
-        (GCallback) request_rtp_rtcp_decoder, stream);
-    g_signal_connect (rtpbin, "request-rtcp-decoder",
-        (GCallback) request_rtp_rtcp_decoder, stream);
-  }
-
-  if (priv->sinkpad) {
-    g_signal_connect (rtpbin, "request-pt-map",
-        (GCallback) request_pt_map, stream);
-  }
-
-  /* get pads from the RTP session element for sending and receiving
-   * RTP/RTCP*/
-  if (priv->srcpad) {
-    /* get a pad for sending RTP */
-    name = g_strdup_printf ("send_rtp_sink_%u", idx);
-    priv->send_rtp_sink = gst_element_get_request_pad (rtpbin, name);
-    g_free (name);
-
-    /* link the RTP pad to the session manager, it should not really fail unless
-     * this is not really an RTP pad */
-    ret = gst_pad_link (priv->srcpad, priv->send_rtp_sink);
-    if (ret != GST_PAD_LINK_OK)
-      goto link_failed;
-
-    name = g_strdup_printf ("send_rtp_src_%u", idx);
-    priv->send_src[0] = gst_element_get_static_pad (rtpbin, name);
-    g_free (name);
-  } else {
-    /* Need to connect our sinkpad from here */
-    g_signal_connect (rtpbin, "pad-added", (GCallback) pad_added, stream);
-    /* EOS */
-    g_signal_connect (rtpbin, "on-npt-stop", (GCallback) on_npt_stop, stream);
-
-    name = g_strdup_printf ("recv_rtp_sink_%u", idx);
-    priv->recv_sink[0] = gst_element_get_request_pad (rtpbin, name);
-    g_free (name);
-  }
-
-  name = g_strdup_printf ("send_rtcp_src_%u", idx);
-  priv->send_src[1] = gst_element_get_request_pad (rtpbin, name);
-  g_free (name);
-  name = g_strdup_printf ("recv_rtcp_sink_%u", idx);
-  priv->recv_sink[1] = gst_element_get_request_pad (rtpbin, name);
-  g_free (name);
-
-  /* get the session */
-  g_signal_emit_by_name (rtpbin, "get-internal-session", idx, &priv->session);
-
-  g_signal_connect (priv->session, "on-new-ssrc", (GCallback) on_new_ssrc,
-      stream);
-  g_signal_connect (priv->session, "on-ssrc-sdes", (GCallback) on_ssrc_sdes,
-      stream);
-  g_signal_connect (priv->session, "on-ssrc-active",
-      (GCallback) on_ssrc_active, stream);
-  g_signal_connect (priv->session, "on-bye-ssrc", (GCallback) on_bye_ssrc,
-      stream);
-  g_signal_connect (priv->session, "on-bye-timeout",
-      (GCallback) on_bye_timeout, stream);
-  g_signal_connect (priv->session, "on-timeout", (GCallback) on_timeout,
-      stream);
-
-  /* signal for sender ssrc */
-  g_signal_connect (priv->session, "on-new-sender-ssrc",
-      (GCallback) on_new_sender_ssrc, stream);
-  g_signal_connect (priv->session, "on-sender-ssrc-active",
-      (GCallback) on_sender_ssrc_active, stream);
+  if (is_udp)
+    /* update the dscp qos field in the sinks */
+    update_dscp_qos (stream);
 
   for (i = 0; i < 2; i++) {
     GstPad *teepad, *queuepad;
@@ -2261,7 +2155,6 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
      * and link the udpsink (for UDP) or appsink (for TCP) directly to
      * the session.
      */
-
     /* Only link the RTP send src if we're going to send RTP, link
      * the RTCP send src always */
     if (priv->srcpad || i == 1) {
@@ -2347,6 +2240,37 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
       }
     }
 
+    /* check if we need to set to a special state */
+    if (state != GST_STATE_NULL) {
+      if (priv->udpsink[i] && (priv->srcpad || i == 1))
+        gst_element_set_state (priv->udpsink[i], state);
+      if (priv->appsink[i] && (priv->srcpad || i == 1))
+        gst_element_set_state (priv->appsink[i], state);
+      if (priv->appqueue[i] && (priv->srcpad || i == 1))
+        gst_element_set_state (priv->appqueue[i], state);
+      if (priv->udpqueue[i] && (priv->srcpad || i == 1))
+        gst_element_set_state (priv->udpqueue[i], state);
+      if (priv->tee[i] && (priv->srcpad || i == 1))
+        gst_element_set_state (priv->tee[i], state);
+    }
+  }
+}
+
+/* must be called with lock */
+static void
+create_receiver_part (GstRTSPStream * stream, GstBin * bin,
+    GstState state)
+{
+  GstRTSPStreamPrivate *priv;
+  GstPad *pad, *selpad;
+  gboolean is_tcp;
+  gint i;
+
+  priv = stream->priv;
+
+  is_tcp = priv->protocols & GST_RTSP_LOWER_TRANS_TCP;
+
+  for (i = 0; i < 2; i++) {
     /* Only connect recv RTP sink if we expect to receive RTP. Connect recv
      * RTCP sink always */
     if (priv->sinkpad || i == 1) {
@@ -2421,22 +2345,137 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
 
     /* check if we need to set to a special state */
     if (state != GST_STATE_NULL) {
-      if (priv->udpsink[i] && (priv->srcpad || i == 1))
-        gst_element_set_state (priv->udpsink[i], state);
-      if (priv->appsink[i] && (priv->srcpad || i == 1))
-        gst_element_set_state (priv->appsink[i], state);
-      if (priv->appqueue[i] && (priv->srcpad || i == 1))
-        gst_element_set_state (priv->appqueue[i], state);
-      if (priv->udpqueue[i] && (priv->srcpad || i == 1))
-        gst_element_set_state (priv->udpqueue[i], state);
-      if (priv->tee[i] && (priv->srcpad || i == 1))
-        gst_element_set_state (priv->tee[i], state);
       if (priv->funnel[i] && (priv->sinkpad || i == 1))
         gst_element_set_state (priv->funnel[i], state);
       if (priv->appsrc[i] && (priv->sinkpad || i == 1))
         gst_element_set_state (priv->appsrc[i], state);
     }
   }
+}
+
+/**
+ * gst_rtsp_stream_join_bin:
+ * @stream: a #GstRTSPStream
+ * @bin: (transfer none): a #GstBin to join
+ * @rtpbin: (transfer none): a rtpbin element in @bin
+ * @state: the target state of the new elements
+ *
+ * Join the #GstBin @bin that contains the element @rtpbin.
+ *
+ * @stream will link to @rtpbin, which must be inside @bin. The elements
+ * added to @bin will be set to the state given in @state.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
+    GstElement * rtpbin, GstState state)
+{
+  GstRTSPStreamPrivate *priv;
+  guint idx;
+  gchar *name;
+  GstPadLinkReturn ret;
+  gboolean is_udp;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+  g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (rtpbin), FALSE);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (priv->is_joined)
+    goto was_joined;
+
+  /* create a session with the same index as the stream */
+  idx = priv->idx;
+
+  GST_INFO ("stream %p joining bin as session %u", stream, idx);
+
+  is_udp = ((priv->protocols & GST_RTSP_LOWER_TRANS_UDP) ||
+      (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST));
+
+  if (is_udp && !alloc_ports (stream))
+    goto no_ports;
+
+  if (priv->profiles & GST_RTSP_PROFILE_SAVP
+      || priv->profiles & GST_RTSP_PROFILE_SAVPF) {
+    /* For SRTP */
+    g_signal_connect (rtpbin, "request-rtp-encoder",
+        (GCallback) request_rtp_encoder, stream);
+    g_signal_connect (rtpbin, "request-rtcp-encoder",
+        (GCallback) request_rtcp_encoder, stream);
+    g_signal_connect (rtpbin, "request-rtp-decoder",
+        (GCallback) request_rtp_rtcp_decoder, stream);
+    g_signal_connect (rtpbin, "request-rtcp-decoder",
+        (GCallback) request_rtp_rtcp_decoder, stream);
+  }
+
+  if (priv->sinkpad) {
+    g_signal_connect (rtpbin, "request-pt-map",
+        (GCallback) request_pt_map, stream);
+  }
+
+  /* get pads from the RTP session element for sending and receiving
+   * RTP/RTCP*/
+  if (priv->srcpad) {
+    /* get a pad for sending RTP */
+    name = g_strdup_printf ("send_rtp_sink_%u", idx);
+    priv->send_rtp_sink = gst_element_get_request_pad (rtpbin, name);
+    g_free (name);
+
+    /* link the RTP pad to the session manager, it should not really fail unless
+     * this is not really an RTP pad */
+    ret = gst_pad_link (priv->srcpad, priv->send_rtp_sink);
+    if (ret != GST_PAD_LINK_OK)
+      goto link_failed;
+
+    name = g_strdup_printf ("send_rtp_src_%u", idx);
+    priv->send_src[0] = gst_element_get_static_pad (rtpbin, name);
+    g_free (name);
+  } else {
+    /* Need to connect our sinkpad from here */
+    g_signal_connect (rtpbin, "pad-added", (GCallback) pad_added, stream);
+    /* EOS */
+    g_signal_connect (rtpbin, "on-npt-stop", (GCallback) on_npt_stop, stream);
+
+    name = g_strdup_printf ("recv_rtp_sink_%u", idx);
+    priv->recv_sink[0] = gst_element_get_request_pad (rtpbin, name);
+    g_free (name);
+  }
+
+  name = g_strdup_printf ("send_rtcp_src_%u", idx);
+  priv->send_src[1] = gst_element_get_request_pad (rtpbin, name);
+  g_free (name);
+  name = g_strdup_printf ("recv_rtcp_sink_%u", idx);
+  priv->recv_sink[1] = gst_element_get_request_pad (rtpbin, name);
+  g_free (name);
+
+  /* get the session */
+  g_signal_emit_by_name (rtpbin, "get-internal-session", idx, &priv->session);
+
+  g_signal_connect (priv->session, "on-new-ssrc", (GCallback) on_new_ssrc,
+      stream);
+  g_signal_connect (priv->session, "on-ssrc-sdes", (GCallback) on_ssrc_sdes,
+      stream);
+  g_signal_connect (priv->session, "on-ssrc-active",
+      (GCallback) on_ssrc_active, stream);
+  g_signal_connect (priv->session, "on-bye-ssrc", (GCallback) on_bye_ssrc,
+      stream);
+  g_signal_connect (priv->session, "on-bye-timeout",
+      (GCallback) on_bye_timeout, stream);
+  g_signal_connect (priv->session, "on-timeout", (GCallback) on_timeout,
+      stream);
+
+  /* signal for sender ssrc */
+  g_signal_connect (priv->session, "on-new-sender-ssrc",
+      (GCallback) on_new_sender_ssrc, stream);
+  g_signal_connect (priv->session, "on-sender-ssrc-active",
+      (GCallback) on_sender_ssrc_active, stream);
+
+  create_sender_part (stream, bin, state);
+
+  create_receiver_part (stream, bin, state);
 
   if (priv->srcpad) {
     /* be notified of caps changes */
