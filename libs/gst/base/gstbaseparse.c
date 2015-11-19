@@ -980,17 +980,16 @@ static GstFlowReturn
 gst_base_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstBuffer *buffer = frame->buffer;
-  gboolean is_header = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER);
 
-  if (!GST_BUFFER_PTS_IS_VALID (buffer) && !is_header &&
+  if (!GST_BUFFER_PTS_IS_VALID (buffer) &&
       GST_CLOCK_TIME_IS_VALID (parse->priv->next_pts)) {
     GST_BUFFER_PTS (buffer) = parse->priv->next_pts;
   }
-  if (!GST_BUFFER_DTS_IS_VALID (buffer) && !is_header &&
+  if (!GST_BUFFER_DTS_IS_VALID (buffer) &&
       GST_CLOCK_TIME_IS_VALID (parse->priv->next_dts)) {
     GST_BUFFER_DTS (buffer) = parse->priv->next_dts;
   }
-  if (!GST_BUFFER_DURATION_IS_VALID (buffer) && !is_header &&
+  if (!GST_BUFFER_DURATION_IS_VALID (buffer) &&
       GST_CLOCK_TIME_IS_VALID (parse->priv->frame_duration)) {
     GST_BUFFER_DURATION (buffer) = parse->priv->frame_duration;
   }
@@ -2879,13 +2878,10 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gint skip = -1;
   guint min_size, av;
   GstClockTime pts, dts;
-  gboolean is_header;
 
   parse = GST_BASE_PARSE (parent);
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
   GST_DEBUG_OBJECT (parent, "chain");
-
-  is_header = buffer && GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER);
 
   /* early out for speed, if we need to skip */
   if (buffer && GST_BUFFER_IS_DISCONT (buffer))
@@ -3082,7 +3078,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     /* already inform subclass what timestamps we have planned,
      * at least if provided by time-based upstream */
-    if (parse->priv->upstream_format == GST_FORMAT_TIME && !is_header) {
+    if (parse->priv->upstream_format == GST_FORMAT_TIME) {
       tmpbuf = gst_buffer_make_writable (tmpbuf);
       GST_BUFFER_PTS (tmpbuf) = parse->priv->next_pts;
       GST_BUFFER_DTS (tmpbuf) = parse->priv->next_dts;
