@@ -168,6 +168,13 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
         gst_v4l2_probe_template_caps (it->device_path, video_fd,
             V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE));
 
+    /* Skip devices without any supported formats */
+    if (gst_caps_is_empty (sink_caps) || gst_caps_is_empty (src_caps)) {
+      gst_caps_unref (sink_caps);
+      gst_caps_unref (src_caps);
+      continue;
+    }
+
     basename = g_path_get_basename (it->device_path);
 
     if (gst_v4l2_is_video_dec (sink_caps, src_caps))
