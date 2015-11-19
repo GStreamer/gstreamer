@@ -23,7 +23,7 @@
 #include <gst/check/gstcheck.h>
 
 /* sine wave encoded in ogg/vorbis, created with:
- *   gst-launch-0.10 audiotestsrc num-buffers=110 ! audioconvert ! \
+ *   gst-launch-1.0 audiotestsrc num-buffers=110 ! audioconvert ! \
  *                   audio/x-raw,channels=1 ! vorbisenc ! oggmux ! \
  *                   filesink location=sine.ogg
  * and then encoded to base64 */

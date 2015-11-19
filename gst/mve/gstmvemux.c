@@ -18,7 +18,7 @@
  */
 
 /*
-gst-launch-0.10 filesrc location=movie.mve ! mvedemux name=d !
+gst-launch-1.0 filesrc location=movie.mve ! mvedemux name=d !
     video/x-raw-rgb ! mvemux quick=true name=m !
     filesink location=test.mve d. ! audio/x-raw-int ! m.
 */

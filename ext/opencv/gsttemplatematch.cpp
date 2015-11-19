@@ -52,7 +52,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-0.10 videotestsrc ! decodebin ! videoconvert ! templatematch template=/path/to/file.jpg ! videoconvert ! xvimagesink
+ * gst-launch-1.0 videotestsrc ! decodebin ! videoconvert ! templatematch template=/path/to/file.jpg ! videoconvert ! xvimagesink
  * ]|
  * </refsect2>
  */

@@ -34,7 +34,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch-0.10 videotestsrc num-buffers=1000 ! mpeg2enc ! filesink location=videotestsrc.m1v
+ * gst-launch-1.0 videotestsrc num-buffers=1000 ! mpeg2enc ! filesink location=videotestsrc.m1v
  * ]| This example pipeline will encode a test video source to a an MPEG1
  * elementary stream (with Generic MPEG1 profile).
  * <para>
@@ -47,7 +47,7 @@
  * in the example above) allow most parameters to be adjusted.
  * </para>
  * |[
- * gst-launch-0.10 videotestsrc num-buffers=1000 ! videoscale ! mpeg2enc format=1 norm=p ! filesink location=videotestsrc.m1v
+ * gst-launch-1.0 videotestsrc num-buffers=1000 ! videoscale ! mpeg2enc format=1 norm=p ! filesink location=videotestsrc.m1v
  * ]| This will produce an MPEG1 profile stream according to VCD2.0 specifications
  * for PAL #GstMpeg2enc:norm (as the image height is dependent on video norm).
  * </refsect2>

@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch-0.10 filesrc location=h264crasher.pcap ! pcapparse ! rtph264depay
+ * gst-launch-1.0 filesrc location=h264crasher.pcap ! pcapparse ! rtph264depay
  * ! ffdec_h264 ! fakesink
  * ]| Read from a pcap dump file using filesrc, extract the raw UDP packets,
  * depayload and decode them.

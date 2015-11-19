@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-0.10 filesrc location=h264crasher.pcap ! pcapparse ! irtspparse
+ * gst-launch-1.0 filesrc location=h264crasher.pcap ! pcapparse ! irtspparse
  * ! rtph264depay ! ffdec_h264 ! fakesink
  * ]| Read from a pcap dump file using filesrc, extract the raw TCP packets,
  * depayload and decode them.
