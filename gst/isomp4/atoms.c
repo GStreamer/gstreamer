@@ -4285,8 +4285,8 @@ build_btrt_extension (guint32 buffer_size_db, guint32 avg_bitrate,
 }
 
 static AtomInfo *
-build_mov_wave_extension (AtomTRAK * trak, guint32 fourcc, AtomInfo * atom1,
-    AtomInfo * atom2, gboolean terminator)
+build_mov_wave_extension (guint32 fourcc, AtomInfo * atom1, AtomInfo * atom2,
+    gboolean terminator)
 {
   AtomWAVE *wave;
   AtomFRMA *frma;
@@ -4339,7 +4339,7 @@ build_mov_aac_extension (AtomTRAK * trak, const GstBuffer * codec_data,
   mp4a = build_codec_data_extension (FOURCC_mp4a, buf);
   gst_buffer_unref (buf);
 
-  return build_mov_wave_extension (trak, FOURCC_mp4a, mp4a, esds, TRUE);
+  return build_mov_wave_extension (FOURCC_mp4a, mp4a, esds, TRUE);
 }
 
 AtomInfo *
@@ -4349,7 +4349,7 @@ build_mov_alac_extension (AtomTRAK * trak, const GstBuffer * codec_data)
 
   alac = build_codec_data_extension (FOURCC_alac, codec_data);
 
-  return build_mov_wave_extension (trak, FOURCC_alac, NULL, alac, TRUE);
+  return build_mov_wave_extension (FOURCC_alac, NULL, alac, TRUE);
 }
 
 AtomInfo *
