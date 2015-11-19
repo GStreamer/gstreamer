@@ -412,7 +412,11 @@ void
 QtGLVideoItem::handleWindowChanged(QQuickWindow *win)
 {
   if (win) {
-    connect(win, SIGNAL(sceneGraphInitialized()), this, SLOT(onSceneGraphInitialized()), Qt::DirectConnection);
+    if (win->isSceneGraphInitialized())
+      onSceneGraphInitialized();
+    else
+	  connect(win, SIGNAL(sceneGraphInitialized()), this, SLOT(onSceneGraphInitialized()), Qt::DirectConnection);
+
     connect(win, SIGNAL(sceneGraphInvalidated()), this, SLOT(onSceneGraphInvalidated()), Qt::DirectConnection);
   } else {
     this->priv->qt_context = NULL;
