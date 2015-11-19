@@ -2347,8 +2347,7 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
           encoder->sync_lookahead);
       break;
     case ARG_MULTIPASS_CACHE_FILE:
-      if (encoder->mp_cache_file)
-        g_free (encoder->mp_cache_file);
+      g_free (encoder->mp_cache_file);
       encoder->mp_cache_file = g_value_dup_string (value);
       g_string_append_printf (encoder->option_string, ":stats=%s",
           encoder->mp_cache_file);
