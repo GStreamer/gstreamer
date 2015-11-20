@@ -600,7 +600,7 @@ static const MXFUL sound_essence_compression_mpeg1_layer1 = { {
     0x03, 0x02, 0x04, 0x00}
 };
 
-static const MXFUL sound_essence_compression_mpeg1_layer12 = { {
+static const MXFUL sound_essence_compression_mpeg1_layer23 = { {
         0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x02, 0x02, 0x02,
     0x03, 0x02, 0x05, 0x00}
 };
@@ -732,7 +732,7 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
           "layer", G_TYPE_INT, 1, NULL);
       codec_name = "MPEG-1 Layer 1 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
-            &sound_essence_compression_mpeg1_layer12)) {
+            &sound_essence_compression_mpeg1_layer23)) {
       caps =
           gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
           NULL);
@@ -979,9 +979,9 @@ mxf_mpeg_audio_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
       if (mpegaudioversion == 1 && layer == 1)
         memcpy (&ret->sound_essence_compression,
             &sound_essence_compression_mpeg1_layer1, 16);
-      else if (mpegaudioversion == 1 && layer == 2)
+      else if (mpegaudioversion == 1 && (layer == 2 || layer == 3))
         memcpy (&ret->sound_essence_compression,
-            &sound_essence_compression_mpeg1_layer12, 16);
+            &sound_essence_compression_mpeg1_layer23, 16);
       else if (mpegaudioversion == 2 && layer == 1)
         memcpy (&ret->sound_essence_compression,
             &sound_essence_compression_mpeg2_layer1, 16);
