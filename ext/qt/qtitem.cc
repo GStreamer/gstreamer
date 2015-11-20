@@ -183,14 +183,12 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
   if (!texNode) {
     texNode = new QSGSimpleTextureNode ();
     texNode->setOwnsTexture (true);
-  } else {
-    tex = static_cast<GstQSGTexture *> (texNode->texture());
+    texNode->setTexture (new GstQSGTexture ());
   }
 
-  tex = new GstQSGTexture ();
+  tex = static_cast<GstQSGTexture *> (texNode->texture());
   tex->setCaps (this->priv->caps);
   tex->setBuffer (this->priv->buffer);
-  texNode->setTexture (tex);
 
   if (this->priv->force_aspect_ratio) {
     src.w = this->priv->display_width;
