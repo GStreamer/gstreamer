@@ -87,7 +87,7 @@ GST_START_TEST (dash_mpdparser_mpd)
       "     id=\"testId\""
       "     type=\"static\""
       "     availabilityStartTime=\"2015-03-24T1:10:50\""
-      "     availabilityEndTime=\"2015-03-24T1:10:50\""
+      "     availabilityEndTime=\"2015-03-24T1:10:50.123456\""
       "     mediaPresentationDuration=\"P0Y1M2DT12H10M20.5S\""
       "     minimumUpdatePeriod=\"P0Y1M2DT12H10M20.5S\""
       "     minBufferTime=\"P0Y1M2DT12H10M20.5S\""
@@ -119,6 +119,7 @@ GST_START_TEST (dash_mpdparser_mpd)
   assert_equals_int (gst_date_time_get_hour (availabilityStartTime), 1);
   assert_equals_int (gst_date_time_get_minute (availabilityStartTime), 10);
   assert_equals_int (gst_date_time_get_second (availabilityStartTime), 50);
+  assert_equals_int (gst_date_time_get_microsecond (availabilityStartTime), 0);
 
   availabilityEndTime = mpdclient->mpd_node->availabilityEndTime;
   assert_equals_int (gst_date_time_get_year (availabilityEndTime), 2015);
@@ -127,6 +128,8 @@ GST_START_TEST (dash_mpdparser_mpd)
   assert_equals_int (gst_date_time_get_hour (availabilityEndTime), 1);
   assert_equals_int (gst_date_time_get_minute (availabilityEndTime), 10);
   assert_equals_int (gst_date_time_get_second (availabilityEndTime), 50);
+  assert_equals_int (gst_date_time_get_microsecond (availabilityEndTime),
+      123456);
 
   assert_equals_uint64 (mpdclient->mpd_node->mediaPresentationDuration,
       duration_to_ms (0, 1, 2, 12, 10, 20, 500));
