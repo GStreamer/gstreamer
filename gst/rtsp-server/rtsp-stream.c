@@ -1020,16 +1020,89 @@ different_address:
   }
 }
 
+/* must be called with lock */
 static gboolean
-alloc_ports_one_family (GstRTSPStream * stream, GstRTSPAddressPool * pool,
-    gint buffer_size, GSocketFamily family, GstElement * udpsrc_out[2],
-    GstElement * udpsink_out[2], GstRTSPRange * server_port_out,
+create_and_configure_udpsinks (GstRTSPStream * stream, GSocket * rtp_socket,
+    GSocket * rtcp_socket, GSocketFamily family)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GstElement *udpsink0, *udpsink1;
+  const gchar *multisink_socket;
+
+  if (family == G_SOCKET_FAMILY_IPV6)
+    multisink_socket = "socket-v6";
+  else
+    multisink_socket = "socket";
+
+  udpsink0 = NULL;
+  udpsink1 = NULL;
+
+  if (priv->udpsink[0])
+    udpsink0 = priv->udpsink[0];
+  else
+    udpsink0 = gst_element_factory_make ("multiudpsink", NULL);
+
+  if (!udpsink0)
+    goto no_udp_protocol;
+
+  if (priv->udpsink[1])
+    udpsink1 = priv->udpsink[1];
+  else
+    udpsink1 = gst_element_factory_make ("multiudpsink", NULL);
+
+  if (!udpsink1)
+    goto no_udp_protocol;
+
+  /* configure sinks */
+
+  g_object_set (G_OBJECT (udpsink0), "close-socket", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink1), "close-socket", FALSE, NULL);
+
+  g_object_set (G_OBJECT (udpsink0), "send-duplicates", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink1), "send-duplicates", FALSE, NULL);
+
+  g_object_set (G_OBJECT (udpsink0), "buffer-size", priv->buffer_size, NULL);
+
+  g_object_set (G_OBJECT (udpsink1), "sync", FALSE, NULL);
+  /* Needs to be async for RECORD streams, otherwise we will never go to
+   * PLAYING because the sinks will wait for data while the udpsrc can't
+   * provide data with timestamps in PAUSED. */
+  if (priv->sinkpad)
+    g_object_set (G_OBJECT (udpsink0), "async", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink1), "async", FALSE, NULL);
+
+  g_object_set (G_OBJECT (udpsink0), "auto-multicast", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink1), "auto-multicast", FALSE, NULL);
+
+  g_object_set (G_OBJECT (udpsink0), "loop", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink1), "loop", FALSE, NULL);
+
+  g_object_set (G_OBJECT (udpsink0), multisink_socket, rtp_socket, NULL);
+  g_object_set (G_OBJECT (udpsink1), multisink_socket, rtcp_socket, NULL);
+
+  /* update the dscp qos field in the sinks */
+  update_dscp_qos (stream);
+
+  priv->udpsink[0] = udpsink0;
+  priv->udpsink[1] = udpsink1;
+
+  return TRUE;
+
+  /* ERRORS */
+no_udp_protocol:
+  {
+    return FALSE;
+  }
+}
+
+static gboolean
+alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
+    GstElement * udpsrc_out[2], GstRTSPRange * server_port_out,
     GstRTSPAddress ** server_addr_out)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
   GstStateChangeReturn ret;
   GstElement *udpsrc0, *udpsrc1;
-  GstElement *udpsink0, *udpsink1;
   GSocket *rtp_socket = NULL;
   GSocket *rtcp_socket;
   gint tmp_rtp, tmp_rtcp;
@@ -1040,17 +1113,11 @@ alloc_ports_one_family (GstRTSPStream * stream, GstRTSPAddressPool * pool,
   GInetAddress *inetaddr = NULL;
   GSocketAddress *rtp_sockaddr = NULL;
   GSocketAddress *rtcp_sockaddr = NULL;
-  const gchar *multisink_socket;
+  GstRTSPAddressPool * pool;
 
-  if (family == G_SOCKET_FAMILY_IPV6)
-    multisink_socket = "socket-v6";
-  else
-    multisink_socket = "socket";
-
+  pool = priv->pool;
   udpsrc0 = NULL;
   udpsrc1 = NULL;
-  udpsink0 = NULL;
-  udpsink1 = NULL;
   count = 0;
 
   /* Start with random port */
@@ -1169,49 +1236,14 @@ again:
   if (rtpport != tmp_rtp || rtcpport != tmp_rtcp)
     goto port_error;
 
-  if (udpsink_out[0])
-    udpsink0 = udpsink_out[0];
-  else
-    udpsink0 = gst_element_factory_make ("multiudpsink", NULL);
-
-  if (!udpsink0)
+  if (!create_and_configure_udpsinks (stream, rtp_socket, rtcp_socket,
+        family))
     goto no_udp_protocol;
-
-  g_object_set (G_OBJECT (udpsink0), "close-socket", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink0), multisink_socket, rtp_socket, NULL);
-
-  if (udpsink_out[1])
-    udpsink1 = udpsink_out[1];
-  else
-    udpsink1 = gst_element_factory_make ("multiudpsink", NULL);
-
-  if (!udpsink1)
-    goto no_udp_protocol;
-
-  g_object_set (G_OBJECT (udpsink0), "send-duplicates", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink1), "send-duplicates", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink0), "buffer-size", buffer_size, NULL);
-
-  g_object_set (G_OBJECT (udpsink1), "close-socket", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink1), multisink_socket, rtcp_socket, NULL);
-  g_object_set (G_OBJECT (udpsink1), "sync", FALSE, NULL);
-  /* Needs to be async for RECORD streams, otherwise we will never go to
-   * PLAYING because the sinks will wait for data while the udpsrc can't
-   * provide data with timestamps in PAUSED. */
-  if (priv->sinkpad)
-    g_object_set (G_OBJECT (udpsink0), "async", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink1), "async", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink0), "auto-multicast", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink0), "loop", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink1), "auto-multicast", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink1), "loop", FALSE, NULL);
 
   /* we keep these elements, we will further configure them when the
    * client told us to really use the UDP ports. */
   udpsrc_out[0] = udpsrc0;
   udpsrc_out[1] = udpsrc1;
-  udpsink_out[0] = udpsink0;
-  udpsink_out[1] = udpsink1;
 
   server_port_out->min = rtpport;
   server_port_out->max = rtcpport;
@@ -1255,10 +1287,6 @@ cleanup:
       gst_element_set_state (udpsrc1, GST_STATE_NULL);
       gst_object_unref (udpsrc1);
     }
-    if (udpsink0) {
-      gst_element_set_state (udpsink0, GST_STATE_NULL);
-      gst_object_unref (udpsink0);
-    }
     if (inetaddr)
       g_object_unref (inetaddr);
     g_list_free_full (rejected_addresses,
@@ -1280,14 +1308,12 @@ alloc_ports (GstRTSPStream * stream)
   GstRTSPStreamPrivate *priv = stream->priv;
 
   priv->have_ipv4 =
-      alloc_ports_one_family (stream, priv->pool, priv->buffer_size,
-      G_SOCKET_FAMILY_IPV4, priv->udpsrc_v4, priv->udpsink,
-      &priv->server_port_v4, &priv->server_addr_v4);
+      alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4, priv->udpsrc_v4,
+          &priv->server_port_v4, &priv->server_addr_v4);
 
   priv->have_ipv6 =
-      alloc_ports_one_family (stream, priv->pool, priv->buffer_size,
-      G_SOCKET_FAMILY_IPV6, priv->udpsrc_v6, priv->udpsink,
-      &priv->server_port_v6, &priv->server_addr_v6);
+      alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV6, priv->udpsrc_v6,
+          &priv->server_port_v6, &priv->server_addr_v6);
 
   return priv->have_ipv4 || priv->have_ipv6;
 }
@@ -2112,7 +2138,6 @@ on_npt_stop (GstElement * rtpbin, guint session, guint ssrc,
   gst_pad_send_event (stream->priv->sinkpad, gst_event_new_eos ());
 }
 
-
 /* must be called with lock */
 static void
 create_sender_part (GstRTSPStream * stream, GstBin * bin,
@@ -2128,10 +2153,6 @@ create_sender_part (GstRTSPStream * stream, GstBin * bin,
   is_tcp = priv->protocols & GST_RTSP_LOWER_TRANS_TCP;
   is_udp = ((priv->protocols & GST_RTSP_LOWER_TRANS_UDP) ||
       (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST));
-
-  if (is_udp)
-    /* update the dscp qos field in the sinks */
-    update_dscp_qos (stream);
 
   for (i = 0; i < 2; i++) {
     GstPad *teepad, *queuepad;
