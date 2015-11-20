@@ -3819,6 +3819,34 @@ gst_mpd_client_add_media_segment (GstActiveStream * stream,
   return TRUE;
 }
 
+static void
+gst_mpd_client_stream_update_presentation_time_offset (GstMpdClient * client,
+    GstActiveStream * stream)
+{
+  GstSegmentBaseType *segbase = NULL;
+
+  /* Find the used segbase */
+  if (stream->cur_segment_list) {
+    segbase = stream->cur_segment_list->MultSegBaseType->SegBaseType;
+  } else if (stream->cur_seg_template) {
+    segbase = stream->cur_seg_template->MultSegBaseType->SegBaseType;
+  } else if (stream->cur_segment_base) {
+    segbase = stream->cur_segment_base;
+  }
+
+  if (segbase) {
+    /* Avoid overflows */
+    stream->presentationTimeOffset =
+        gst_util_uint64_scale (segbase->presentationTimeOffset, GST_SECOND,
+        segbase->timescale);
+  } else {
+    stream->presentationTimeOffset = 0;
+  }
+
+  GST_LOG ("Setting stream's presentation time offset to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (stream->presentationTimeOffset));
+}
+
 gboolean
 gst_mpd_client_setup_representation (GstMpdClient * client,
     GstActiveStream * stream, GstRepresentationNode * representation)
@@ -3984,13 +4012,6 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
       GST_LOG ("Building media segment list using this template: %s",
           stream->cur_seg_template->media);
 
-      /* Avoid overflows */
-      stream->presentationTimeOffset =
-          gst_util_uint64_scale (mult_seg->SegBaseType->presentationTimeOffset,
-          GST_SECOND, mult_seg->SegBaseType->timescale);
-      GST_LOG ("Setting stream's presentation time offset to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (stream->presentationTimeOffset));
-
       if (mult_seg->SegmentTimeline) {
         GstSegmentTimelineNode *timeline;
         GstSNode *S;
@@ -4045,6 +4066,8 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
   g_free (stream->queryURL);
   stream->baseURL =
       gst_mpdparser_parse_baseURL (client, stream, &stream->queryURL);
+
+  gst_mpd_client_stream_update_presentation_time_offset (client, stream);
 
   return TRUE;
 }
