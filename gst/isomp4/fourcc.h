@@ -231,6 +231,7 @@ G_BEGIN_DECLS
 #define FOURCC_url_     GST_MAKE_FOURCC('u','r','l',' ')
 #define FOURCC_uuid     GST_MAKE_FOURCC('u','u','i','d')
 #define FOURCC_v210     GST_MAKE_FOURCC('v','2','1','0')
+#define FOURCC_vc_1     GST_MAKE_FOURCC('v','c','-','1')
 #define FOURCC_vide     GST_MAKE_FOURCC('v','i','d','e')
 #define FOURCC_vmhd     GST_MAKE_FOURCC('v','m','h','d')
 #define FOURCC_wave     GST_MAKE_FOURCC('w','a','v','e')
@@ -252,6 +253,7 @@ G_BEGIN_DECLS
 #define FOURCC_3gp4     GST_MAKE_FOURCC('3','g','p','4')
 #define FOURCC_3gp6     GST_MAKE_FOURCC('3','g','p','6')
 #define FOURCC_3gr6     GST_MAKE_FOURCC('3','g','r','6')
+#define FOURCC_3g__     GST_MAKE_FOURCC('3','g',0,0)
 #define FOURCC_isml     GST_MAKE_FOURCC('i','s','m','l')
 #define FOURCC_iso2     GST_MAKE_FOURCC('i','s','o','2')
 #define FOURCC_isom     GST_MAKE_FOURCC('i','s','o','m')
@@ -307,6 +309,7 @@ G_BEGIN_DECLS
 #define FOURCC_traf     GST_MAKE_FOURCC('t','r','a','f')
 #define FOURCC_trex     GST_MAKE_FOURCC('t','r','e','x')
 #define FOURCC_trun     GST_MAKE_FOURCC('t','r','u','n')
+#define FOURCC_wma_     GST_MAKE_FOURCC('w','m','a',' ')
 
 /* MPEG DASH */
 #define FOURCC_tfdt     GST_MAKE_FOURCC('t','f','d','t')

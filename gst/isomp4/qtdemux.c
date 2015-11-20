@@ -9429,7 +9429,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           gst_buffer_unref (buf);
           break;
         }
-        case GST_MAKE_FOURCC ('v', 'c', '-', '1'):
+        case FOURCC_vc_1:
         {
           gint len = QT_UINT32 (stsd_data) - 0x66;
           const guint8 *vc1_data = stsd_data + 0x66;
@@ -9724,7 +9724,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         break;
       }
-      case GST_MAKE_FOURCC ('w', 'm', 'a', ' '):
+      case FOURCC_wma_:
       {
         gint len = QT_UINT32 (stsd_data) - offset;
         const guint8 *wfex_data = stsd_data + offset;
@@ -10502,7 +10502,7 @@ qtdemux_is_brand_3gp (GstQTDemux * qtdemux, gboolean major)
 {
   if (major) {
     return ((qtdemux->major_brand & GST_MAKE_FOURCC (255, 255, 0, 0)) ==
-        GST_MAKE_FOURCC ('3', 'g', 0, 0));
+        FOURCC_3g__);
   } else if (qtdemux->comp_brands != NULL) {
     GstMapInfo map;
     guint8 *data;
@@ -10514,7 +10514,7 @@ qtdemux_is_brand_3gp (GstQTDemux * qtdemux, gboolean major)
     size = map.size;
     while (size >= 4) {
       res = res || ((QT_FOURCC (data) & GST_MAKE_FOURCC (255, 255, 0, 0)) ==
-          GST_MAKE_FOURCC ('3', 'g', 0, 0));
+          FOURCC_3g__);
       data += 4;
       size -= 4;
     }
@@ -11636,7 +11636,7 @@ qtdemux_add_container_format (GstQTDemux * qtdemux, GstTagList * tags)
 
   if (qtdemux->major_brand == FOURCC_mjp2)
     fmt = "Motion JPEG 2000";
-  else if ((qtdemux->major_brand & 0xffff) == GST_MAKE_FOURCC ('3', 'g', 0, 0))
+  else if ((qtdemux->major_brand & 0xffff) == FOURCC_3g__)
     fmt = "3GP";
   else if (qtdemux->major_brand == FOURCC_qt__)
     fmt = "Quicktime";
@@ -12465,7 +12465,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           gst_caps_new_simple ("video/x-prores", "variant", G_TYPE_STRING,
           "4444", NULL);
       break;
-    case GST_MAKE_FOURCC ('v', 'c', '-', '1'):
+    case FOURCC_vc_1:
     case FOURCC_ovc1:
       _codec ("VC-1");
       caps = gst_caps_new_simple ("video/x-wmv",
@@ -12700,7 +12700,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("QualComm PureVoice");
       caps = gst_caps_from_string ("audio/qcelp");
       break;
-    case GST_MAKE_FOURCC ('w', 'm', 'a', ' '):
+    case FOURCC_wma_:
     case FOURCC_owma:
       _codec ("WMA");
       caps = gst_caps_new_empty_simple ("audio/x-wma");
