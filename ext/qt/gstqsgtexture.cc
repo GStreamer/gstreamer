@@ -87,14 +87,16 @@ GstQSGTexture::bind ()
   GstMemory *mem;
   guint tex_id;
 
+  gst_gl_context_activate (this->qt_context_, TRUE);
+
   if (!this->buffer_)
-    return;
+    goto out;
   if (GST_VIDEO_INFO_FORMAT (&this->v_info) == GST_VIDEO_FORMAT_UNKNOWN)
-    return;
+    goto out;
 
   this->mem_ = gst_buffer_peek_memory (this->buffer_, 0);
   if (!this->mem_)
-    return;
+    goto out;
 
   g_assert (this->qt_context_);
   gl = this->qt_context_->gl_vtable;
@@ -103,7 +105,7 @@ GstQSGTexture::bind ()
   if (!gst_video_frame_map (&this->v_frame, &this->v_info, this->buffer_,
         (GstMapFlags) (GST_MAP_READ | GST_MAP_GL))) {
     g_assert_not_reached ();
-    return;
+    goto out;
   }
 
   mem = gst_buffer_peek_memory (this->buffer_, 0);
@@ -125,6 +127,9 @@ GstQSGTexture::bind ()
   gl->BindTexture (GL_TEXTURE_2D, tex_id);
 
   gst_video_frame_unmap (&this->v_frame);
+
+out:
+  gst_gl_context_activate (this->qt_context_, FALSE);
 }
 
 /* can be called from any thread */
