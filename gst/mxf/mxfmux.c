@@ -1438,6 +1438,13 @@ gst_mxf_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
   GList *l;
   gboolean eos = TRUE;
 
+  if (timeout) {
+    GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+        ("Live mixing and got a timeout. This is not supported yet"));
+    ret = GST_FLOW_ERROR;
+    goto error;
+  }
+
   if (mux->state == GST_MXF_MUX_STATE_ERROR) {
     GST_ERROR_OBJECT (mux, "Had an error before -- returning");
     return GST_FLOW_ERROR;
