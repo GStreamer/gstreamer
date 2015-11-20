@@ -836,7 +836,8 @@ gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
   xmlChar *prop_string;
   gchar *str;
   gint ret, pos;
-  gint year, month, day, hour, minute, second;
+  gint year, month, day, hour, minute;
+  gdouble second;
   gboolean exists = FALSE;
 
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
@@ -879,12 +880,12 @@ gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
     str += (pos + 1);
     GST_TRACE (" - minute %d", minute);
     /* parse second */
-    ret = sscanf (str, "%d", &second);
+    ret = sscanf (str, "%lf", &second);
     if (ret != 1 || second < 0)
       goto error;
-    GST_TRACE (" - second %d", second);
+    GST_TRACE (" - second %lf", second);
 
-    GST_LOG (" - %s: %4d/%02d/%02d %02d:%02d:%02d", property_name,
+    GST_LOG (" - %s: %4d/%02d/%02d %02d:%02d:%09.6lf", property_name,
         year, month, day, hour, minute, second);
 
     exists = TRUE;
