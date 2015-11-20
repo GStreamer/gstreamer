@@ -1104,14 +1104,51 @@ no_udp_protocol:
   }
 }
 
+/* must be called with lock */
+static gboolean
+create_and_configure_udpsources_one_family (GstElement * udpsrc_out[2],
+    GSocket * rtp_socket, GSocket * rtcp_socket, GSocketFamily family)
+{
+  GstStateChangeReturn ret;
+
+  /* we keep these elements, we will further configure them when the
+   * client told us to really use the UDP ports. */
+  udpsrc_out[0] = gst_element_factory_make ("udpsrc", NULL);
+  udpsrc_out[1] = gst_element_factory_make ("udpsrc", NULL);
+
+  if (udpsrc_out[0] == NULL || udpsrc_out[1] == NULL)
+    goto error;
+
+  g_object_set (G_OBJECT (udpsrc_out[0]), "socket", rtp_socket, NULL);
+  g_object_set (G_OBJECT (udpsrc_out[1]), "socket", rtcp_socket, NULL);
+
+  ret = gst_element_set_state (udpsrc_out[0], GST_STATE_READY);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto error;
+  ret = gst_element_set_state (udpsrc_out[1], GST_STATE_READY);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto error;
+
+  return TRUE;
+  return TRUE;
+
+  /* ERRORS */
+error:
+  {
+    if (udpsrc_out[0])
+      gst_object_unref (udpsrc_out[0]);
+    if (udpsrc_out[1])
+      gst_object_unref (udpsrc_out[1]);
+    return FALSE;
+  }
+}
+
 static gboolean
 alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
     GstElement * udpsrc_out[2], GstRTSPRange * server_port_out,
     GstRTSPAddress ** server_addr_out)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
-  GstStateChangeReturn ret;
-  GstElement *udpsrc0, *udpsrc1;
   GSocket *rtp_socket = NULL;
   GSocket *rtcp_socket;
   gint tmp_rtp, tmp_rtcp;
@@ -1125,8 +1162,6 @@ alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
   GstRTSPAddressPool * pool;
 
   pool = priv->pool;
-  udpsrc0 = NULL;
-  udpsrc1 = NULL;
   count = 0;
 
   /* Start with random port */
@@ -1221,25 +1256,12 @@ again:
 
   g_clear_object (&inetaddr);
 
-  udpsrc0 = gst_element_factory_make ("udpsrc", NULL);
-  udpsrc1 = gst_element_factory_make ("udpsrc", NULL);
-
-  if (udpsrc0 == NULL || udpsrc1 == NULL)
+  if (!create_and_configure_udpsources_one_family (udpsrc_out, rtp_socket,
+        rtcp_socket, family))
     goto no_udp_protocol;
 
-  g_object_set (G_OBJECT (udpsrc0), "socket", rtp_socket, NULL);
-  g_object_set (G_OBJECT (udpsrc1), "socket", rtcp_socket, NULL);
-
-  ret = gst_element_set_state (udpsrc0, GST_STATE_READY);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    goto element_error;
-  ret = gst_element_set_state (udpsrc1, GST_STATE_READY);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    goto element_error;
-
-  /* all fine, do port check */
-  g_object_get (G_OBJECT (udpsrc0), "port", &rtpport, NULL);
-  g_object_get (G_OBJECT (udpsrc1), "port", &rtcpport, NULL);
+  g_object_get (G_OBJECT (udpsrc_out[0]), "port", &rtpport, NULL);
+  g_object_get (G_OBJECT (udpsrc_out[1]), "port", &rtcpport, NULL);
 
   /* this should not happen... */
   if (rtpport != tmp_rtp || rtcpport != tmp_rtcp)
@@ -1250,11 +1272,6 @@ again:
 
   /* set RTP and RTCP sockets */
   set_sockets_for_udpsinks (stream, rtp_socket, rtcp_socket, family);
-
-  /* we keep these elements, we will further configure them when the
-   * client told us to really use the UDP ports. */
-  udpsrc_out[0] = udpsrc0;
-  udpsrc_out[1] = udpsrc1;
 
   server_port_out->min = rtpport;
   server_port_out->max = rtcpport;
@@ -1284,20 +1301,8 @@ socket_error:
   {
     goto cleanup;
   }
-element_error:
-  {
-    goto cleanup;
-  }
 cleanup:
   {
-    if (udpsrc0) {
-      gst_element_set_state (udpsrc0, GST_STATE_NULL);
-      gst_object_unref (udpsrc0);
-    }
-    if (udpsrc1) {
-      gst_element_set_state (udpsrc1, GST_STATE_NULL);
-      gst_object_unref (udpsrc1);
-    }
     if (inetaddr)
       g_object_unref (inetaddr);
     g_list_free_full (rejected_addresses,
