@@ -595,7 +595,7 @@ ges_project_try_updating_id (GESProject * project, GESAsset * asset,
 
   if (new_id) {
     GST_DEBUG_OBJECT (project, "new id found: %s", new_id);
-    if (!ges_asset_set_proxy (asset, new_id)) {
+    if (!ges_asset_try_proxy (asset, new_id)) {
       g_free (new_id);
       new_id = NULL;
     }
@@ -633,6 +633,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
     return;
   }
 
+  ges_asset_set_proxy (NULL, asset);
   ges_project_add_asset (project, asset);
   if (asset)
     gst_object_unref (asset);
@@ -766,6 +767,10 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
     if (asset) {
       retry = FALSE;
 
+      if ((!g_hash_table_lookup (project->priv->assets,
+                  ges_asset_get_id (asset))))
+        g_signal_emit (project, _signals[ASSET_LOADING_SIGNAL], 0, asset);
+
       if (possible_id) {
         g_free (possible_id);
         ges_uri_assets_validate_uri (id);
@@ -776,6 +781,9 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
       GESAsset *tmpasset;
 
       tmpasset = ges_asset_cache_lookup (extractable_type, id);
+      g_signal_emit (project, _signals[ASSET_LOADING_SIGNAL], 0, tmpasset);
+      g_signal_emit (project, _signals[ERROR_LOADING_ASSET], 0, *error, id,
+          extractable_type);
       possible_id = ges_project_try_updating_id (project, tmpasset, *error);
 
       if (possible_id == NULL)
@@ -787,6 +795,9 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
       id = possible_id;
     }
   }
+
+  if (!ges_asset_get_proxy_target (asset))
+    ges_asset_set_proxy (NULL, asset);
 
   ges_project_add_asset (project, asset);
 

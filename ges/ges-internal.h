@@ -143,7 +143,7 @@ GESAsset*
 ges_asset_cache_lookup(GType extractable_type, const gchar * id);
 
 gboolean
-ges_asset_set_proxy (GESAsset *asset, const gchar *new_id);
+ges_asset_try_proxy (GESAsset *asset, const gchar *new_id);
 
 G_GNUC_INTERNAL gboolean
 ges_asset_request_id_update (GESAsset *asset, gchar **proposed_id,
@@ -224,6 +224,7 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_asset        (GESBaseXmlFormatte
                                                                  GType extractable_type,
                                                                  GstStructure *properties,
                                                                  const gchar *metadatas,
+                                                                 const gchar *proxy_id,
                                                                  GError **error);
 G_GNUC_INTERNAL void ges_base_xml_formatter_add_layer           (GESBaseXmlFormatter *self,
                                                                  GType extractable_type,

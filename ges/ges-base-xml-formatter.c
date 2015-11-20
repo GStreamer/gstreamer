@@ -100,6 +100,7 @@ typedef struct PendingAsset
   GESFormatter *formatter;
   gchar *metadatas;
   GstStructure *properties;
+  gchar *proxy_id;
 } PendingAsset;
 
 struct _GESBaseXmlFormatterPrivate
@@ -467,6 +468,7 @@ _add_all_groups (GESFormatter * self)
 static void
 _loading_done (GESFormatter * self)
 {
+  GList *assets, *tmp;
   GESBaseXmlFormatterPrivate *priv = GES_BASE_XML_FORMATTER (self)->priv;
 
   _add_all_groups (self);
@@ -477,6 +479,13 @@ _loading_done (GESFormatter * self)
 
   ges_timeline_set_auto_transition (self->timeline,
       priv->timeline_auto_transition);
+
+  /* Go over all assets and make sure that all proxies we were 'trying' to set are finally
+   * properly set */
+  assets = ges_project_list_assets (self->project, GES_TYPE_EXTRACTABLE);
+  for (tmp = assets; tmp; tmp = tmp->next) {
+    ges_asset_set_proxy (NULL, tmp->data);
+  }
 
   g_hash_table_foreach (priv->layers, (GHFunc) _set_auto_transition, NULL);
   ges_project_set_loaded (self->project, self);
@@ -623,8 +632,8 @@ _free_pending_clip (GESBaseXmlFormatterPrivate * priv, PendingClip * pend)
 static void
 _free_pending_asset (GESBaseXmlFormatterPrivate * priv, PendingAsset * passet)
 {
-  if (passet->metadatas)
-    g_free (passet->metadatas);
+  g_free (passet->metadatas);
+  g_free (passet->proxy_id);
   if (passet->properties)
     gst_structure_free (passet->properties);
 
@@ -720,6 +729,13 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
       pendings = NULL;
     }
     goto done;
+  }
+
+  if (passet->proxy_id) {
+    /* We set the URI to be used as a proxy,
+     * this will finally be set as the proxy when we
+     * are done loading all assets */
+    ges_asset_try_proxy (asset, passet->proxy_id);
   }
 
   /* now that we have the GESAsset, we create the GESClips */
@@ -825,7 +841,7 @@ _create_profile (GESBaseXmlFormatter * self,
 void
 ges_base_xml_formatter_add_asset (GESBaseXmlFormatter * self,
     const gchar * id, GType extractable_type, GstStructure * properties,
-    const gchar * metadatas, GError ** error)
+    const gchar * metadatas, const gchar * proxy_id, GError ** error)
 {
   PendingAsset *passet;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
@@ -835,6 +851,7 @@ ges_base_xml_formatter_add_asset (GESBaseXmlFormatter * self,
 
   passet = g_slice_new0 (PendingAsset);
   passet->metadatas = g_strdup (metadatas);
+  passet->proxy_id = g_strdup (proxy_id);
   passet->formatter = gst_object_ref (self);
   if (properties)
     passet->properties = gst_structure_copy (properties);

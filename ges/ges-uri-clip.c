@@ -37,6 +37,7 @@
 #include "ges-image-source.h"
 #include "ges-audio-test-source.h"
 #include "ges-multi-file-source.h"
+#include "ges-layer.h"
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 
@@ -260,13 +261,19 @@ extractable_get_id (GESExtractable * self)
   return g_strdup (GES_URI_CLIP (self)->priv->uri);
 }
 
-static void
+static gboolean
 extractable_set_asset (GESExtractable * self, GESAsset * asset)
 {
+  gboolean res = TRUE;
   GESUriClip *uriclip = GES_URI_CLIP (self);
-  GESUriClipAsset *filesource_asset = GES_URI_CLIP_ASSET (asset);
+  GESUriClipAsset *filesource_asset;
   GESClip *clip = GES_CLIP (self);
+  GESLayer *layer = ges_clip_get_layer (clip);
+  GList *tmp;
 
+  g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (asset), FALSE);
+
+  filesource_asset = GES_URI_CLIP_ASSET (asset);
   if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT_DURATION (clip)) == FALSE)
     _set_duration0 (GES_TIMELINE_ELEMENT (uriclip),
         ges_uri_clip_asset_get_duration (filesource_asset));
@@ -277,13 +284,35 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
       ges_uri_clip_asset_is_image (filesource_asset));
 
   if (ges_clip_get_supported_formats (clip) == GES_TRACK_TYPE_UNKNOWN) {
-
     ges_clip_set_supported_formats (clip,
-        ges_clip_asset_get_supported_formats
-        (GES_CLIP_ASSET (filesource_asset)));
+        ges_clip_asset_get_supported_formats (GES_CLIP_ASSET
+            (filesource_asset)));
   }
 
   GES_TIMELINE_ELEMENT (uriclip)->asset = asset;
+
+  if (layer) {
+    for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
+      if (GES_IS_SOURCE (tmp->data)) {
+        GESTrack *track = ges_track_element_get_track (tmp->data);
+
+        ges_track_remove_element (track, tmp->data);
+      }
+    }
+
+    gst_object_ref (clip);
+    ges_layer_remove_clip (layer, clip);
+    res = ges_layer_add_clip (layer, clip);
+    gst_object_unref (clip);
+    gst_object_unref (layer);
+  }
+
+  if (res) {
+    g_free (uriclip->priv->uri);
+    uriclip->priv->uri = g_strdup (ges_asset_get_id (asset));
+  }
+
+  return res;
 }
 
 static void
@@ -293,7 +322,9 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
   iface->check_id = (GESExtractableCheckId) extractable_check_id;
   iface->get_parameters_from_id = extractable_get_parameters_from_id;
   iface->get_id = extractable_get_id;
-  iface->set_asset = extractable_set_asset;
+  iface->get_id = extractable_get_id;
+  iface->can_update_asset = TRUE;
+  iface->set_asset_full = extractable_set_asset;
 }
 
 static void

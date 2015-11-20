@@ -1,6 +1,7 @@
 /* GStreamer Editing Services
  *
  * Copyright (C) 2012 Volodymyr Rudyi <vladimir.rudoy@gmail.com>
+ * Copyright (C) 2015 Thibault Saunier <tsaunier@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,8 +19,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "../../../ges/ges-internal.h"
+#include "test-utils.h"
 #undef GST_CAT_DEFAULT
+#include "../../../ges/ges-internal.h"
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
@@ -53,7 +55,7 @@ GST_START_TEST (test_basic)
 
 GST_END_TEST;
 
-GST_START_TEST (test_change_asset)
+GST_START_TEST (test_transition_change_asset)
 {
   gchar *id;
   GESAsset *a;
@@ -96,6 +98,43 @@ GST_START_TEST (test_change_asset)
 
 GST_END_TEST;
 
+GST_START_TEST (test_uri_clip_change_asset)
+{
+  GESAsset *asset, *asset1;
+  GESExtractable *extractable;
+  GESLayer *layer = ges_layer_new ();
+  gchar *uri = ges_test_file_uri ("audio_video.ogg");
+  gchar *uri1 = ges_test_file_uri ("audio_only.ogg");
+  GESTimeline *timeline = ges_timeline_new_audio_video ();
+
+  ges_timeline_add_layer (timeline, layer);
+
+  gst_init (NULL, NULL);
+  ges_init ();
+
+  asset = GES_ASSET (ges_uri_clip_asset_request_sync (uri, NULL));
+
+  fail_unless (GES_IS_ASSET (asset));
+  fail_unless_equals_string (ges_asset_get_id (asset), uri);
+
+  extractable = GES_EXTRACTABLE (ges_layer_add_asset (layer,
+          asset, 0, 0, GST_CLOCK_TIME_NONE, GES_TRACK_TYPE_UNKNOWN));
+  fail_unless (ges_extractable_get_asset (extractable) == asset);
+  gst_object_unref (asset);
+
+  /* Now try to set the a and see if the vtype is properly updated */
+  asset1 = GES_ASSET (ges_uri_clip_asset_request_sync (uri1, NULL));
+  fail_unless_equals_int (g_list_length (GES_CONTAINER_CHILDREN (extractable)),
+      2);
+  fail_unless (ges_extractable_set_asset (extractable, asset1));
+  fail_unless_equals_int (g_list_length (GES_CONTAINER_CHILDREN (extractable)),
+      1);
+
+  gst_object_unref (extractable);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_list_asset)
 {
   GList *assets;
@@ -128,7 +167,8 @@ GST_START_TEST (test_proxy_asset)
   nothing = ges_asset_cache_lookup (GES_TYPE_EFFECT, "nothing");
   fail_unless (nothing != NULL);
 
-  fail_unless (ges_asset_set_proxy (nothing, "identity"));
+  fail_unless (ges_asset_try_proxy (nothing, "identity"));
+  fail_unless (ges_asset_set_proxy (NULL, identity));
 
   nothing_at_all = ges_asset_request (GES_TYPE_EFFECT, "nothing_at_all", NULL);
   fail_if (nothing_at_all);
@@ -137,7 +177,13 @@ GST_START_TEST (test_proxy_asset)
   fail_unless (nothing_at_all != NULL);
 
   /* Now we proxy nothing_at_all to nothing which is itself proxied to identity */
-  fail_unless (ges_asset_set_proxy (nothing_at_all, "nothing"));
+  fail_unless (ges_asset_try_proxy (nothing_at_all, "nothing"));
+  fail_unless (ges_asset_set_proxy (NULL, nothing));
+  fail_unless_equals_int (g_list_length (ges_asset_list_proxies
+          (nothing_at_all)), 1);
+
+  fail_unless_equals_pointer (ges_asset_get_proxy_target (nothing),
+      nothing_at_all);
 
   /* If we request nothing_at_all we should get the good proxied identity */
   nothing_at_all = ges_asset_request (GES_TYPE_EFFECT, "nothing_at_all", NULL);
@@ -161,7 +207,8 @@ ges_suite (void)
   /* Must be first until we implement deinit */
   tcase_add_test (tc_chain, test_list_asset);
   tcase_add_test (tc_chain, test_basic);
-  tcase_add_test (tc_chain, test_change_asset);
+  tcase_add_test (tc_chain, test_transition_change_asset);
+  tcase_add_test (tc_chain, test_uri_clip_change_asset);
   tcase_add_test (tc_chain, test_proxy_asset);
 
   return s;

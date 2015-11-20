@@ -32,8 +32,8 @@
 G_DEFINE_TYPE (GESXmlFormatter, ges_xml_formatter, GES_TYPE_BASE_XML_FORMATTER);
 
 #define API_VERSION 0
-#define MINOR_VERSION 2
-#define VERSION 0.2
+#define MINOR_VERSION 3
+#define VERSION 0.3
 
 #define COLLECT_STR_OPT (G_MARKUP_COLLECT_STRING | G_MARKUP_COLLECT_OPTIONAL)
 
@@ -272,14 +272,15 @@ _parse_asset (GMarkupParseContext * context, const gchar * element_name,
 {
   GType extractable_type;
   const gchar *id, *extractable_type_name, *metadatas = NULL, *properties =
-      NULL;
+      NULL, *proxy_id = NULL;
 
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error, G_MARKUP_COLLECT_STRING, "id", &id,
           G_MARKUP_COLLECT_STRING, "extractable-type-name",
           &extractable_type_name,
           COLLECT_STR_OPT, "properties", &properties,
-          COLLECT_STR_OPT, "metadatas", &metadatas, G_MARKUP_COLLECT_INVALID))
+          COLLECT_STR_OPT, "metadatas", &metadatas,
+          COLLECT_STR_OPT, "proxy-id", &proxy_id, G_MARKUP_COLLECT_INVALID))
     return;
 
   extractable_type = g_type_from_name (extractable_type_name);
@@ -299,7 +300,7 @@ _parse_asset (GMarkupParseContext * context, const gchar * element_name,
       props = gst_structure_from_string (properties, NULL);
 
     ges_base_xml_formatter_add_asset (GES_BASE_XML_FORMATTER (self), id,
-        extractable_type, props, metadatas, error);
+        extractable_type, props, metadatas, proxy_id, error);
     if (props)
       gst_structure_free (props);
   }
@@ -910,10 +911,10 @@ _serialize_properties (GObject * object, const gchar * fieldname, ...)
 }
 
 static inline void
-_save_assets (GString * str, GESProject * project)
+_save_assets (GESXmlFormatter * self, GString * str, GESProject * project)
 {
   char *properties, *metas;
-  GESAsset *asset;
+  GESAsset *asset, *proxy;
   GList *assets, *tmp;
 
   assets = ges_project_list_assets (project, GES_TYPE_EXTRACTABLE);
@@ -923,10 +924,27 @@ _save_assets (GString * str, GESProject * project)
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (asset));
     append_escaped (str,
         g_markup_printf_escaped
-        ("      <asset id='%s' extractable-type-name='%s' properties='%s' metadatas='%s' />\n",
+        ("      <asset id='%s' extractable-type-name='%s' properties='%s' metadatas='%s' ",
             ges_asset_get_id (asset),
             g_type_name (ges_asset_get_extractable_type (asset)), properties,
             metas));
+
+    /*TODO Save the whole list of proxies */
+    proxy = ges_asset_get_proxy (asset);
+    if (proxy) {
+      append_escaped (str, g_markup_printf_escaped (" proxy-id='%s' ",
+              ges_asset_get_id (proxy)));
+
+      if (!g_list_find (assets, proxy)) {
+        assets = g_list_append (assets, gst_object_ref (proxy));
+
+        if (!tmp->next)
+          tmp->next = g_list_last (assets);
+      }
+
+      self->priv->min_version = MAX (self->priv->min_version, 3);
+    }
+    g_string_append (str, "/>\n");
     g_free (properties);
     g_free (metas);
   }
@@ -1433,6 +1451,7 @@ _save (GESFormatter * formatter, GESTimeline * timeline, GError ** error)
 
   gchar *projstr = NULL, *version;
   gchar *properties = NULL, *metas = NULL;
+  GESXmlFormatter *self = GES_XML_FORMATTER (formatter);
   GESXmlFormatterPrivate *priv;
 
 
@@ -1455,10 +1474,10 @@ _save (GESFormatter * formatter, GESTimeline * timeline, GError ** error)
   g_string_append (str, "    </encoding-profiles>\n");
 
   g_string_append (str, "    <ressources>\n");
-  _save_assets (str, project);
+  _save_assets (self, str, project);
   g_string_append (str, "    </ressources>\n");
 
-  _save_timeline (GES_XML_FORMATTER (formatter), str, timeline);
+  _save_timeline (self, str, timeline);
   g_string_append (str, "</project>\n</ges>");
 
   projstr = g_strdup_printf ("<ges version='%i.%i'>\n", API_VERSION,

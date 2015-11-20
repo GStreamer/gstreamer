@@ -74,6 +74,10 @@ struct _GESAssetClass
   /* Let subclasses know that we proxied an asset */
   void                     (*inform_proxy)      (GESAsset *self,
                                                  const gchar *proxy_id);
+
+  void                     (*proxied)      (GESAsset *self,
+                                            GESAsset *proxy);
+
   /* Ask subclasses for a new ID for @self when the asset failed loading
    * This function returns %FALSE when the ID could be updated or %TRUE
    * otherwize */
@@ -99,6 +103,12 @@ GError * ges_asset_get_error         (GESAsset * self);
 GESExtractable * ges_asset_extract   (GESAsset * self,
                                       GError **error);
 GList * ges_list_assets              (GType filter);
+
+
+gboolean ges_asset_set_proxy         (GESAsset *asset, GESAsset *proxy);
+GList * ges_asset_list_proxies       (GESAsset *asset);
+GESAsset * ges_asset_get_proxy_target(GESAsset *proxy);
+GESAsset * ges_asset_get_proxy       (GESAsset *asset);
 
 G_END_DECLS
 #endif /* _GES_ASSET */
