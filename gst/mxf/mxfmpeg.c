@@ -1308,6 +1308,7 @@ mxf_mpeg_video_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
     *mapping_data = g_new0 (MXFMPEGEssenceType, 1);
     memcpy (*mapping_data, &type, sizeof (MXFMPEGEssenceType));
     ret->parent.parent.picture_essence_coding.u[13] = 0x30;
+    ret->parent.parent.parent.essence_container.u[13] = 0x10;
   } else {
     g_assert_not_reached ();
   }
