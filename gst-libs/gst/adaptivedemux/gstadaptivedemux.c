@@ -1524,6 +1524,11 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
         if (can_seek) {
           if (gst_adaptive_demux_is_live (demux)) {
             ret = gst_adaptive_demux_get_live_seek_range (demux, &start, &stop);
+            if (!ret) {
+              GST_MANIFEST_UNLOCK (demux);
+              GST_INFO_OBJECT (demux, "can't answer seeking query");
+              return FALSE;
+            }
           } else {
             duration = demux_class->get_duration (demux);
             if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0)

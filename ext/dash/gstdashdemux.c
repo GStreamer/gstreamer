@@ -310,18 +310,33 @@ gst_dash_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
     gint64 * stop)
 {
   GstDashDemux *self = GST_DASH_DEMUX (demux);
-  GDateTime *now = gst_dash_demux_get_server_now_utc (self);
-  GDateTime *mstart =
-      gst_date_time_to_g_date_time (self->client->mpd_node->
-      availabilityStartTime);
+  GDateTime *now;
+  GDateTime *mstart;
   GTimeSpan stream_now;
 
+  if (self->client->mpd_node->availabilityStartTime == NULL)
+    return FALSE;
+
+  now = gst_dash_demux_get_server_now_utc (self);
+  mstart =
+      gst_date_time_to_g_date_time (self->client->
+      mpd_node->availabilityStartTime);
   stream_now = g_date_time_difference (now, mstart);
   g_date_time_unref (now);
   g_date_time_unref (mstart);
-  *stop = stream_now * GST_USECOND;
 
-  *start = *stop - (self->client->mpd_node->timeShiftBufferDepth * GST_MSECOND);
+  if (stream_now <= 0)
+    return FALSE;
+
+  *stop = stream_now * GST_USECOND;
+  if (self->client->mpd_node->timeShiftBufferDepth == GST_MPD_DURATION_NONE) {
+    *start = 0;
+  } else {
+    *start =
+        *stop - (self->client->mpd_node->timeShiftBufferDepth * GST_MSECOND);
+    if (*start < 0)
+      *start = 0;
+  }
   return TRUE;
 }
 
