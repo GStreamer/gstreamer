@@ -1021,18 +1021,30 @@ different_address:
 }
 
 /* must be called with lock */
-static gboolean
-create_and_configure_udpsinks (GstRTSPStream * stream, GSocket * rtp_socket,
+static void
+set_sockets_for_udpsinks (GstRTSPStream * stream, GSocket * rtp_socket,
     GSocket * rtcp_socket, GSocketFamily family)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
-  GstElement *udpsink0, *udpsink1;
   const gchar *multisink_socket;
 
   if (family == G_SOCKET_FAMILY_IPV6)
     multisink_socket = "socket-v6";
   else
     multisink_socket = "socket";
+
+  g_object_set (G_OBJECT (priv->udpsink[0]), multisink_socket, rtp_socket,
+      NULL);
+  g_object_set (G_OBJECT (priv->udpsink[1]), multisink_socket, rtcp_socket,
+      NULL);
+}
+
+/* must be called with lock */
+static gboolean
+create_and_configure_udpsinks (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GstElement *udpsink0, *udpsink1;
 
   udpsink0 = NULL;
   udpsink1 = NULL;
@@ -1076,9 +1088,6 @@ create_and_configure_udpsinks (GstRTSPStream * stream, GSocket * rtp_socket,
 
   g_object_set (G_OBJECT (udpsink0), "loop", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "loop", FALSE, NULL);
-
-  g_object_set (G_OBJECT (udpsink0), multisink_socket, rtp_socket, NULL);
-  g_object_set (G_OBJECT (udpsink1), multisink_socket, rtcp_socket, NULL);
 
   /* update the dscp qos field in the sinks */
   update_dscp_qos (stream);
@@ -1236,9 +1245,11 @@ again:
   if (rtpport != tmp_rtp || rtcpport != tmp_rtcp)
     goto port_error;
 
-  if (!create_and_configure_udpsinks (stream, rtp_socket, rtcp_socket,
-        family))
+  if (!create_and_configure_udpsinks (stream))
     goto no_udp_protocol;
+
+  /* set RTP and RTCP sockets */
+  set_sockets_for_udpsinks (stream, rtp_socket, rtcp_socket, family);
 
   /* we keep these elements, we will further configure them when the
    * client told us to really use the UDP ports. */
