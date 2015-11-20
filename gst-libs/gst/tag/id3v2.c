@@ -195,6 +195,8 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
   guint8 flags;
   guint16 version;
 
+  gst_tag_register_musicbrainz_tags ();
+
   read_size = gst_tag_get_id3v2_tag_size (buffer);
 
   /* Ignore tag if it has no frames attached, but skip the header then */
