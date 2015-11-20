@@ -465,8 +465,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
     goto bad_input_fmt;
 
   /* second pass stats buffer no longer needed */
-  if (ffmpegenc->context->stats_in)
-    g_free (ffmpegenc->context->stats_in);
+  g_free (ffmpegenc->context->stats_in);
 
   /* Store input state and set output state */
   if (ffmpegenc->input_state)
@@ -556,8 +555,7 @@ close_codec:
   }
 cleanup_stats_in:
   {
-    if (ffmpegenc->context->stats_in)
-      g_free (ffmpegenc->context->stats_in);
+    g_free (ffmpegenc->context->stats_in);
     return FALSE;
   }
 }
@@ -665,8 +663,7 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
     goto encode_fail;
 
   /* Encoder needs more data */
-  if (!have_data)
-  {
+  if (!have_data) {
     gst_video_codec_frame_unref (frame);
     return GST_FLOW_OK;
   }
