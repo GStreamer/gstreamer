@@ -56,8 +56,9 @@ typedef struct _GstInterpolationControlSourcePrivate GstInterpolationControlSour
  * @GST_INTERPOLATION_MODE_LINEAR: linear interpolation
  * @GST_INTERPOLATION_MODE_CUBIC: cubic interpolation (natural), may overshoot
  *   the min or max values set by the control point, but is more 'curvy'
- * @GST_INTERPOLATION_MODE_CUBIC_MONO: (Since 1.8) monotonic cubic interpolation, will not
+ * @GST_INTERPOLATION_MODE_CUBIC_MONO: monotonic cubic interpolation, will not
  *   produce any values outside of the min-max range set by the control points
+ *   (Since 1.8)
  *
  * The various interpolation modes available.
  */
