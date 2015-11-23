@@ -257,15 +257,13 @@ _execute_set_subtitles (GstValidateScenario * scenario,
 }
 
 static GstPadProbeReturn
-_check_pad_selection_done (GstPad * pad, GstPadProbeInfo * info,
+_check_pad_event_selection_done (GstPad * pad, GstPadProbeInfo * info,
     GstValidateAction * action)
 {
-  if (GST_BUFFER_FLAG_IS_SET (info->data, GST_BUFFER_FLAG_DISCONT)) {
+  if (GST_EVENT_TYPE (info->data) == GST_EVENT_STREAM_START) {
     gst_validate_action_set_done (action);
-
     return GST_PAD_PROBE_REMOVE;
   }
-
   return GST_PAD_PROBE_OK;
 }
 
@@ -350,8 +348,9 @@ _execute_switch_track (GstValidateScenario * scenario,
 
       if (srcpad) {
         gst_pad_add_probe (srcpad,
-            GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
-            (GstPadProbeCallback) _check_pad_selection_done, action, NULL);
+            GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+            (GstPadProbeCallback) _check_pad_event_selection_done, action,
+            NULL);
         gst_object_unref (srcpad);
 
         res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
