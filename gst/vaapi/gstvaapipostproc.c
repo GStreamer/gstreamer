@@ -855,14 +855,6 @@ video_info_changed (GstVideoInfo * old_vip, GstVideoInfo * new_vip)
   return FALSE;
 }
 
-static inline gboolean
-video_info_is_filled (GstVideoInfo * info)
-{
-  return (GST_VIDEO_INFO_FORMAT (info) > GST_VIDEO_FORMAT_UNKNOWN
-          && GST_VIDEO_INFO_WIDTH (info) > 0
-          && GST_VIDEO_INFO_HEIGHT (info) > 0);
-}
-
 static gboolean
 video_info_update (GstCaps * caps, GstVideoInfo * info,
     gboolean * caps_changed_ptr)
@@ -874,7 +866,7 @@ video_info_update (GstCaps * caps, GstVideoInfo * info,
 
   *caps_changed_ptr = FALSE;
   if (video_info_changed (info, &vi)) {
-    *caps_changed_ptr = video_info_is_filled (info);
+    *caps_changed_ptr = TRUE;
     *info = vi;
   }
 
