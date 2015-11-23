@@ -31,8 +31,8 @@
  * Possible configurations (see #GST_VALIDATE_CONFIG):
  *  * scenario-action-execution-interval: Sets the interval in
  *    milliseconds (1/1000ths of a second), between which actions
- *    will be executed, setting it to 0 means "execute in idle"
- *    (which is the default).
+ *    will be executed, setting it to 0 means "execute in idle".
+ *    The default value is 10ms.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -2513,6 +2513,7 @@ gst_validate_scenario_init (GstValidateScenario * scenario)
   priv->seek_pos_tol = DEFAULT_SEEK_TOLERANCE;
   priv->segment_start = 0;
   priv->segment_stop = GST_CLOCK_TIME_NONE;
+  priv->action_execution_interval = 10;
 
   g_mutex_init (&priv->lock);
 }
