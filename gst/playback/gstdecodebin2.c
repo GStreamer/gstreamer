@@ -4497,15 +4497,10 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   }
 
   /* Caps that resulted in this chain */
-  caps = gst_pad_get_current_caps (chain->pad);
-  if (!caps) {
-    caps = get_pad_caps (chain->pad);
-    if (G_UNLIKELY (!gst_caps_is_fixed (caps))) {
-      GST_ERROR_OBJECT (chain->pad,
-          "Couldn't get fixed caps, got %" GST_PTR_FORMAT, caps);
-      gst_caps_unref (caps);
-      caps = NULL;
-    }
+  caps = get_pad_caps (chain->pad);
+  if (G_UNLIKELY (!caps)) {
+    GST_WARNING_OBJECT (chain->pad, "Couldn't get the caps of decode chain");
+    return u;
   }
   gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, caps, NULL);
   gst_structure_id_set (u, topology_element_srcpad, GST_TYPE_PAD, chain->pad,
@@ -4523,6 +4518,8 @@ gst_decode_bin_post_topology_message (GstDecodeBin * dbin)
 
   s = gst_decode_chain_get_topology (dbin->decode_chain);
 
+  if (G_UNLIKELY (s == NULL))
+    return;
   msg = gst_message_new_element (GST_OBJECT (dbin), s);
   gst_element_post_message (GST_ELEMENT (dbin), msg);
 }
