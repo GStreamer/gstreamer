@@ -1849,7 +1849,7 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
         config_copy);
 
     /* FIXME validate and retry */
-    if (gst_buffer_pool_set_config (pool, gst_structure_copy (config_copy))) {
+    if (gst_buffer_pool_set_config (pool, config_copy)) {
       GstFlowReturn ret;
       GstBuffer *tmp;
 
