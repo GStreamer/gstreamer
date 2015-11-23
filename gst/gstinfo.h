@@ -250,10 +250,10 @@ struct _GstDebugCategory {
  * function signature in C++ code.
  */
 #ifndef GST_FUNCTION
-#if defined (__GNUC__) || (defined (_MSC_VER) && _MSC_VER >= 1300)
-#  define GST_FUNCTION     ((const char*) (__FUNCTION__))
-#elif defined (__STDC__) && defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#if defined (__STDC__) && defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #  define GST_FUNCTION     ((const char*) (__func__))
+#elif defined (__GNUC__) || (defined (_MSC_VER) && _MSC_VER >= 1300)
+#  define GST_FUNCTION     ((const char*) (__FUNCTION__))
 #else
 #  define GST_FUNCTION     ((const char*) ("???"))
 #endif
