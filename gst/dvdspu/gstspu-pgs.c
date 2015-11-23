@@ -318,6 +318,8 @@ pgs_presentation_segment_set_object_count (PgsPresentationSegment * ps,
     guint8 n_objects)
 {
   if (ps->objects == NULL) {
+    if (n_objects == 0)
+      return;
     ps->objects =
         g_array_sized_new (FALSE, TRUE, sizeof (PgsCompositionObject),
         n_objects);
