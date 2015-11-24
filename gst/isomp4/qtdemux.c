@@ -1995,6 +1995,9 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       qtdemux->streams[n]->time_position = 0;
       qtdemux->streams[n]->accumulated_base = 0;
     }
+    if (!qtdemux->pending_newsegment) {
+      qtdemux->pending_newsegment = gst_event_new_segment (&qtdemux->segment);
+    }
   }
 }
 
