@@ -378,6 +378,7 @@ vpx_source_h = \
 	ivfenc.h \
 	md5_utils.h \
 	rate_hist.h \
+	vp8_rtcd.h \
 	test/acm_random.h \
 	test/clear_system_state.h \
 	test/codec_factory.h \
