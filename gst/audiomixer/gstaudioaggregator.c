@@ -175,6 +175,8 @@ static GstFlowReturn gst_audio_aggregator_do_clip (GstAggregator * agg,
     GstAggregatorPad * bpad, GstBuffer * buffer, GstBuffer ** outbuf);
 static GstFlowReturn gst_audio_aggregator_aggregate (GstAggregator * agg,
     gboolean timeout);
+static gboolean sync_pad_values (GstAudioAggregator * aagg,
+    GstAudioAggregatorPad * pad);
 
 #define DEFAULT_OUTPUT_BUFFER_DURATION (10 * GST_MSECOND)
 #define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
@@ -239,6 +241,8 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
   gstaggregator_class->get_next_time = gst_audio_aggregator_get_next_time;
 
   klass->create_output_buffer = gst_audio_aggregator_create_output_buffer;
+
+  GST_DEBUG_REGISTER_FUNCPTR (sync_pad_values);
 
   GST_DEBUG_CATEGORY_INIT (audio_aggregator_debug, "audioaggregator",
       GST_DEBUG_FG_MAGENTA, "GstAudioAggregator");
@@ -1089,7 +1093,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
   /* Sync pad properties to the stream time */
   gst_aggregator_iterate_sinkpads (agg,
-      (GstAggregatorPadForeachFunc) GST_DEBUG_FUNCPTR (sync_pad_values), NULL);
+      (GstAggregatorPadForeachFunc) sync_pad_values, NULL);
 
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (agg);
