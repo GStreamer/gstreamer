@@ -546,7 +546,6 @@ gboolean gst_mpd_client_get_next_header_index (GstMpdClient *client, gchar **uri
 gboolean gst_mpd_client_is_live (GstMpdClient * client);
 gboolean gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream, GstClockTime ts);
 gboolean gst_mpd_client_seek_to_time (GstMpdClient * client, GDateTime * time);
-gint gst_mpd_client_check_time_position (GstMpdClient * client, GstActiveStream * stream, GstClockTime ts, gint64 * diff);
 GstClockTime gst_mpd_parser_get_stream_presentation_offset (GstMpdClient *client, guint stream_idx);
 gchar** gst_mpd_client_get_utc_timing_sources (GstMpdClient *client, guint methods, GstMPDUTCTimingType *selected_method);
 GstClockTime gst_mpd_parser_get_period_start_time (GstMpdClient *client);

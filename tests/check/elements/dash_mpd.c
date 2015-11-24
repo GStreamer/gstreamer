@@ -3845,8 +3845,6 @@ GST_START_TEST (dash_mpdparser_segments)
   GstDateTime *segmentEndTime;
   GstDateTime *gst_time;
   GDateTime *g_time;
-  GstClockTime ts;
-  gint64 diff;
 
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
@@ -3967,15 +3965,6 @@ GST_START_TEST (dash_mpdparser_segments)
   hasNextSegment =
       gst_mpd_client_has_next_segment (mpdclient, activeStream, TRUE);
   assert_equals_int (hasNextSegment, 1);
-
-  /* check if stream at moment ts is available.
-   * timeShiftBufferDepth was not set, so it is considered infinite.
-   * All segments from the past must be available
-   */
-  ts = 30 * GST_SECOND;
-  ret = gst_mpd_client_check_time_position (mpdclient, activeStream, ts, &diff);
-  assert_equals_int (ret, 0);
-  assert_equals_int64 (diff, 0);
 
   gst_mpd_client_free (mpdclient);
 }
