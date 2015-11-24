@@ -700,11 +700,13 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
   gchar *audiotag = (gchar *) xmlGetProp (node, (xmlChar *) "AudioTag");
   gchar *channels_str = (gchar *) xmlGetProp (node, (xmlChar *) "Channels");
   gchar *rate_str = (gchar *) xmlGetProp (node, (xmlChar *) "SamplingRate");
+  gchar *depth_str = (gchar *) xmlGetProp (node, (xmlChar *) "BitsPerSample");
   gchar *block_align_str =
       (gchar *) xmlGetProp (node, (xmlChar *) "PacketSize");
   gchar *codec_data_str =
       (gchar *) xmlGetProp (node, (xmlChar *) "CodecPrivateData");
   GstBuffer *codec_data = NULL;
+  gint depth = 0;
   gint block_align = 0;
   gint rate = 0;
   gint channels = 0;
@@ -732,6 +734,8 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
     rate = (gint) g_ascii_strtoull (rate_str, NULL, 10);
   if (channels_str)
     channels = (int) g_ascii_strtoull (channels_str, NULL, 10);
+  if (depth_str)
+    depth = (gint) g_ascii_strtoull (depth_str, NULL, 10);
   if (block_align_str)
     block_align = (int) g_ascii_strtoull (block_align_str, NULL, 10);
 
@@ -757,6 +761,9 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
         }
         if (!block_align) {
           block_align = GST_READ_UINT16_LE (mapinfo.data + 12);
+        }
+        if (!depth) {
+          depth = GST_READ_UINT16_LE (mapinfo.data + 14);
         }
         gst_buffer_unmap (codec_data, &mapinfo);
 
@@ -784,6 +791,9 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
   if (rate)
     gst_structure_set (structure, "rate", G_TYPE_INT, rate, NULL);
 
+  if (depth)
+    gst_structure_set (structure, "depth", G_TYPE_INT, depth, NULL);
+
   if (q->bitrate)
     gst_structure_set (structure, "bitrate", G_TYPE_INT, (int) q->bitrate,
         NULL);
@@ -799,6 +809,7 @@ end:
   xmlFree (audiotag);
   xmlFree (channels_str);
   xmlFree (rate_str);
+  xmlFree (depth_str);
   xmlFree (block_align_str);
   xmlFree (codec_data_str);
 
