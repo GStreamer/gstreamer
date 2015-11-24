@@ -271,6 +271,20 @@ if test "x$with_system_libav" = "xyes"; then
   AC_DEFINE([LIBAV_SOURCE], ["system install"], [Describes where the Libav libraries come from.])
   HAVE_LIBAV_UNINSTALLED=0
   AC_MSG_NOTICE([Using system-installed libav code])
+  AC_MSG_CHECKING([whether libav is provided by FFmpeg])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    #include <libavcodec/avcodec.h>
+    ]],[[
+        #if LIBAVCODEC_VERSION_MICRO >= 100
+        /* FFmpeg uses 100+ as its micro version */
+        #else
+        #error libav provider should be FFmpeg
+        #endif
+    ]])], [is_ffmpeg=yes], [is_ffmpeg=no])
+  AC_MSG_RESULT([$is_ffmpeg])
+  if test "$is_ffmpeg" = no; then
+    AC_MSG_ERROR([Uncompatible libavcodec found])
+  fi
 else
   AC_MSG_NOTICE([Using local Libav snapshot])
   
