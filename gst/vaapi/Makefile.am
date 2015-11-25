@@ -230,6 +230,10 @@ videoparsers_patches_dir = \
 include $(videoparsers_patches_dir)/series.frag
 videoparsers_patches = \
 	$(videoparsers_patches_base:%=$(top_srcdir)/patches/videoparsers/%)
+if USE_GST_API_1_4p
+videoparsers_patches += \
+	$(videoparsers_patches_1_4p:%=$(top_srcdir)/patches/videoparsers/%)
+endif
 videoparsers_orig_sources = \
 	$(libgstvaapi_parse_gen_sources:%=$(videoparsers_sources_dir)/%)
 
