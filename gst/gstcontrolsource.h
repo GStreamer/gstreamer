@@ -66,7 +66,7 @@ struct _GstTimedValue
  * GstControlSourceGetValue:
  * @self: the #GstControlSource instance
  * @timestamp: timestamp for which a value should be calculated
- * @value: a #GValue which will be set to the result. It must be initialized to the correct type.
+ * @value: a value which will be set to the result.
  *
  * Function for returning a value for a given timestamp.
  *
@@ -95,7 +95,7 @@ typedef gboolean (* GstControlSourceGetValueArray) (GstControlSource *self,
 /**
  * GstControlSource:
  * @get_value: Function for returning a value for a given timestamp
- * @get_value_array: Function for returning a #GstValueArray for a given timestamp
+ * @get_value_array: Function for returning a values array for a given timestamp
  *
  * The instance structure of #GstControlSource.
  */
