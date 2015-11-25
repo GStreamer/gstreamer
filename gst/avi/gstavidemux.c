@@ -2017,6 +2017,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   GstEvent *event;
   gchar *stream_id;
   GstMapInfo map;
+  gboolean sparse = FALSE;
 
   element = GST_ELEMENT_CAST (avi);
 
@@ -2284,7 +2285,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           stream->strf.vids, stream->extradata, stream->initdata, &codec_name);
 
       /* DXSB is XSUB, and it is placed inside a vids */
-      if (!caps || fourcc != GST_MAKE_FOURCC ('D', 'X', 'S', 'B')) {
+      if (!caps || (fourcc != GST_MAKE_FOURCC ('D', 'X', 'S', 'B') &&
+              fourcc != GST_MAKE_FOURCC ('D', 'X', 'S', 'A'))) {
         padname = g_strdup_printf ("video_%u", avi->num_v_streams);
         templ = gst_element_class_get_pad_template (klass, "video_%u");
         if (!caps) {
@@ -2314,6 +2316,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
         templ = gst_element_class_get_pad_template (klass, "subpicture_%u");
         tag_name = NULL;
         avi->num_sp_streams++;
+        sparse = TRUE;
       }
       break;
     }
@@ -2353,6 +2356,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
       caps = gst_caps_new_empty_simple ("application/x-subtitle-avi");
       tag_name = NULL;
       avi->num_t_streams++;
+      sparse = TRUE;
       break;
     }
     default:
@@ -2431,6 +2435,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   event = gst_event_new_stream_start (stream_id);
   if (avi->have_group_id)
     gst_event_set_group_id (event, avi->group_id);
+  if (sparse)
+    gst_event_set_stream_flags (event, GST_STREAM_FLAG_SPARSE);
 
   gst_pad_push_event (pad, event);
   g_free (stream_id);
