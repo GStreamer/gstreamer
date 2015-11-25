@@ -299,6 +299,7 @@ gst_validate_init (void)
       "Validation library");
 
   _priv_start_time = gst_util_get_timestamp ();
+  _Q_VALIDATE_MONITOR = g_quark_from_static_string ("validate-monitor");
 
   /* init the report system (can be called multiple times) */
   gst_validate_report_init ();
