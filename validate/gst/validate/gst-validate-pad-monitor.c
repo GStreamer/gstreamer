@@ -2440,17 +2440,6 @@ gst_validate_pad_monitor_activatemode_func (GstPad * pad, GstObject * parent,
   return ret;
 }
 
-static GstFlowReturn
-gst_validate_pad_get_range_func (GstPad * pad, GstObject * parent,
-    guint64 offset, guint size, GstBuffer ** buffer)
-{
-  GstValidatePadMonitor *pad_monitor = _GET_PAD_MONITOR (pad);
-  GstFlowReturn ret;
-
-  ret = pad_monitor->getrange_func (pad, parent, offset, size, buffer);
-  return ret;
-}
-
 static gboolean
 gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
     gpointer udata, gboolean pull_mode)
@@ -2798,10 +2787,6 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
       gst_pad_set_event_function (pad,
           gst_validate_pad_monitor_sink_event_func);
   } else {
-    pad_monitor->getrange_func = GST_PAD_GETRANGEFUNC (pad);
-    if (pad_monitor->getrange_func)
-      gst_pad_set_getrange_function (pad, gst_validate_pad_get_range_func);
-
     gst_pad_set_event_function (pad, gst_validate_pad_monitor_src_event_func);
 
     /* add buffer/event probes */
