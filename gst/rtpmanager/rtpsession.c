@@ -4026,7 +4026,7 @@ done:
 
   /* push out the RTCP packets */
   while ((output = g_queue_pop_head (&data.output))) {
-    gboolean do_not_suppress;
+    gboolean do_not_suppress, empty_buffer;
     GstBuffer *buffer = output->buffer;
     RTPSource *source = output->source;
 
@@ -4034,7 +4034,10 @@ done:
     g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SENDING_RTCP], 0,
         buffer, data.is_early, &do_not_suppress);
 
-    if (sess->callbacks.send_rtcp && (do_not_suppress || !data.may_suppress)) {
+    empty_buffer = gst_buffer_get_size (buffer) == 0;
+
+    if (sess->callbacks.send_rtcp &&
+        !empty_buffer && (do_not_suppress || !data.may_suppress)) {
       guint packet_size;
 
       packet_size = gst_buffer_get_size (buffer) + sess->header_len;
@@ -4052,9 +4055,11 @@ done:
       RTP_SESSION_UNLOCK (sess);
     } else {
       GST_DEBUG ("freeing packet callback: %p"
+          " empty_buffer: %d, "
           " do_not_suppress: %d may_suppress: %d", sess->callbacks.send_rtcp,
-          do_not_suppress, data.may_suppress);
-      sess->stats.nacks_dropped += data.nacked_seqnums;
+          empty_buffer, do_not_suppress, data.may_suppress);
+      if (!empty_buffer)
+        sess->stats.nacks_dropped += data.nacked_seqnums;
       gst_buffer_unref (buffer);
     }
     g_object_unref (source);
