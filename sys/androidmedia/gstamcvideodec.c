@@ -985,7 +985,7 @@ _gl_sync_render_unlocked (struct gl_sync *sync)
   GST_TRACE ("gl_sync %p rendering timestamp after update %" G_GINT64_FORMAT,
       sync, ts);
 
-  af_meta = gst_buffer_add_video_affine_transformation_meta (sync->buffer);
+  af_meta = gst_buffer_get_video_affine_transformation_meta (sync->buffer);
   if (!af_meta) {
     GST_WARNING ("Failed to retreive the transformation meta from the "
         "gl_sync %p buffer %p", sync, sync->buffer);
@@ -1337,6 +1337,9 @@ retry:
     sync_meta->copy = _amc_gl_copy;
     sync_meta->free = _amc_gl_free;
 
+    /* The meta needs to be created now:
+     * Later (in _gl_sync_render_unlocked) the buffer will be locked.
+     */
     gst_buffer_add_video_affine_transformation_meta (outbuf);
 
     g_mutex_lock (&self->gl_lock);
