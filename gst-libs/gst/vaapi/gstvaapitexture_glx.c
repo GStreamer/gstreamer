@@ -235,6 +235,21 @@ gst_vaapi_texture_glx_new (GstVaapiDisplay * display, guint target,
       format, width, height);
 }
 
+/* Can we assume that the vsink/app context API won't change ever? */
+GstVaapiGLApi
+gl_get_curent_api_once ()
+{
+  static GstVaapiGLApi cur_api = GST_VAAPI_GL_API_NONE;
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    cur_api = gl_get_current_api (NULL, NULL);
+    g_once_init_leave (&_init, 1);
+  }
+
+  return cur_api;
+}
+
 /**
  * gst_vaapi_texture_glx_new_wrapped:
  * @display: a #GstVaapiDisplay
@@ -258,23 +273,33 @@ GstVaapiTexture *
 gst_vaapi_texture_glx_new_wrapped (GstVaapiDisplay * display,
     guint texture_id, guint target, guint format)
 {
-  guint width, height, border_width;
-  GLTextureState ts;
+  guint width, height, border_width = 0;
+  GLTextureState ts = { 0, };
   gboolean success;
+  GstVaapiGLApi gl_api;
 
   g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_GLX (display), NULL);
   g_return_val_if_fail (texture_id != GL_NONE, NULL);
   g_return_val_if_fail (target == GL_TEXTURE_2D, NULL);
   g_return_val_if_fail (format == GL_RGBA || format == GL_BGRA, NULL);
 
+  gl_api = gl_get_curent_api_once ();
+  if (gl_api != GST_VAAPI_GL_API_OPENGL && gl_api != GST_VAAPI_GL_API_OPENGL3)
+    return NULL;
+
   /* Check texture dimensions */
   GST_VAAPI_DISPLAY_LOCK (display);
-  success = gl_bind_texture (&ts, target, texture_id);
+  if (gl_api == GST_VAAPI_GL_API_OPENGL)
+    success = gl_bind_texture (&ts, target, texture_id);
+  else
+    success = gl3_bind_texture_2d (&ts, target, texture_id);
+
   if (success) {
     if (!gl_get_texture_param (target, GL_TEXTURE_WIDTH, &width) ||
-        !gl_get_texture_param (target, GL_TEXTURE_HEIGHT, &height) ||
-        !gl_get_texture_param (target, GL_TEXTURE_BORDER, &border_width))
+        !gl_get_texture_param (target, GL_TEXTURE_HEIGHT, &height))
       success = FALSE;
+    if (success && gl_api == GST_VAAPI_GL_API_OPENGL)
+      success = gl_get_texture_param (target, GL_TEXTURE_BORDER, &border_width);
     gl_unbind_texture (&ts);
   }
   GST_VAAPI_DISPLAY_UNLOCK (display);
