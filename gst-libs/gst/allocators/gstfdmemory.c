@@ -37,6 +37,9 @@
 #include <unistd.h>
 #endif
 
+GST_DEBUG_CATEGORY_STATIC (gst_fdmemory_debug);
+#define GST_CAT_DEFAULT gst_fdmemory_debug
+
 typedef struct
 {
   GstMemory mem;
@@ -197,6 +200,8 @@ gst_fd_allocator_class_init (GstFdAllocatorClass * klass)
   allocator_class->alloc = NULL;
   allocator_class->free = gst_fd_mem_free;
 
+  GST_DEBUG_CATEGORY_INIT (gst_fdmemory_debug, "fdmemory", 0,
+    "GstFdMemory and GstFdAllocator");
 }
 
 static void
