@@ -383,13 +383,15 @@ pad_added_cb (GstElement * decodebin, GstPad * pad,
   gst_pad_sticky_events_foreach (pad,
       (GstPadStickyEventsForeachFunction) _find_stream_id, writer);
 
-  for (tmp = ((GstMediaDescriptor *) writer)->filenode->streams; tmp;
-      tmp = tmp->next) {
-    snode = tmp->data;
-    if (snode->pad == pad && srcpad != pad) {
-      gst_object_unref (pad);
-      snode->pad = gst_object_ref (srcpad);
-      break;
+  if (srcpad != pad) {
+    for (tmp = ((GstMediaDescriptor *) writer)->filenode->streams; tmp;
+        tmp = tmp->next) {
+      snode = tmp->data;
+      if (snode->pad == pad) {
+        gst_object_unref (pad);
+        snode->pad = gst_object_ref (srcpad);
+        break;
+      }
     }
   }
 
