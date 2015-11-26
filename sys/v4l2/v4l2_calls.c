@@ -923,9 +923,9 @@ gst_v4l2_get_attribute (GstV4l2Object * v4l2object,
   /* ERRORS */
 ctrl_failed:
   {
-    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to get value for control %d on device '%s'."),
-            attribute_num, v4l2object->videodev), GST_ERROR_SYSTEM);
+    GST_WARNING_OBJECT (v4l2object,
+        _("Failed to get value for control %d on device '%s'."),
+        attribute_num, v4l2object->videodev);
     return FALSE;
   }
 }
@@ -958,9 +958,9 @@ gst_v4l2_set_attribute (GstV4l2Object * v4l2object,
   /* ERRORS */
 ctrl_failed:
   {
-    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to set value %d for control %d on device '%s'."),
-            value, attribute_num, v4l2object->videodev), GST_ERROR_SYSTEM);
+    GST_WARNING_OBJECT (v4l2object,
+        _("Failed to set value %d for control %d on device '%s'."),
+        value, attribute_num, v4l2object->videodev);
     return FALSE;
   }
 }
