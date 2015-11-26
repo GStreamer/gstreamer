@@ -217,10 +217,6 @@ gst_vaapi_display_type_is_compatible (GstVaapiDisplayType type1,
       if (type2 == GST_VAAPI_DISPLAY_TYPE_X11)
         return TRUE;
       break;
-    case GST_VAAPI_DISPLAY_TYPE_X11:
-      if (type2 == GST_VAAPI_DISPLAY_TYPE_EGL)
-        return TRUE;
-      break;
     default:
       break;
   }
