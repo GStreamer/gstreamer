@@ -264,8 +264,8 @@ gst_vaapi_texture_glx_new_wrapped (GstVaapiDisplay * display,
 
   g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_GLX (display), NULL);
   g_return_val_if_fail (texture_id != GL_NONE, NULL);
-  g_return_val_if_fail (target != GL_NONE, NULL);
-  g_return_val_if_fail (format != GL_NONE, NULL);
+  g_return_val_if_fail (target == GL_TEXTURE_2D, NULL);
+  g_return_val_if_fail (format == GL_RGBA || format == GL_BGRA, NULL);
 
   /* Check texture dimensions */
   GST_VAAPI_DISPLAY_LOCK (display);
