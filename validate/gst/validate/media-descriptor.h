@@ -85,6 +85,7 @@ typedef struct
 
   /* Attributes */
   GstCaps *caps;
+  GstSegment segment;
   gchar *id;
   gchar *padname;
 
@@ -104,6 +105,7 @@ typedef struct
   guint64 offset_end;
   GstClockTime duration;
   GstClockTime pts, dts;
+  GstClockTime running_time;
   gboolean is_keyframe;
 
   GstBuffer *buf;

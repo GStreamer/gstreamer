@@ -293,7 +293,31 @@ static GstPadProbeReturn
 _uridecodebin_probe (GstPad * pad, GstPadProbeInfo * info,
     GstMediaDescriptorWriter * writer)
 {
-  gst_media_descriptor_writer_add_frame (writer, pad, info->data);
+  if (GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_BUFFER) {
+    gst_media_descriptor_writer_add_frame (writer, pad, info->data);
+  } else if (GST_PAD_PROBE_INFO_TYPE (info) &
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) {
+    GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_SEGMENT:{
+        const GstSegment *segment;
+        StreamNode *streamnode;
+
+        streamnode =
+            gst_media_descriptor_find_stream_node_by_pad ((GstMediaDescriptor *)
+            writer, pad);
+        if (streamnode) {
+          gst_event_parse_segment (event, &segment);
+          gst_segment_copy_into (segment, &streamnode->segment);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  } else {
+    g_assert_not_reached ();
+  }
 
   return GST_PAD_PROBE_OK;
 }
@@ -409,7 +433,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad,
     }
   }
 
-  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BUFFER,
+  gst_pad_add_probe (srcpad,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       (GstPadProbeCallback) _uridecodebin_probe, writer, NULL);
 }
 
@@ -817,16 +842,21 @@ gst_media_descriptor_writer_add_frame (GstMediaDescriptorWriter
   fnode->duration = GST_BUFFER_DURATION (buf);
   fnode->pts = GST_BUFFER_PTS (buf);
   fnode->dts = GST_BUFFER_DTS (buf);
-  fnode->is_keyframe = (GST_BUFFER_FLAG_IS_SET (buf,
-          GST_BUFFER_FLAG_DELTA_UNIT) == FALSE);
+  fnode->running_time =
+      gst_segment_to_running_time (&streamnode->segment, GST_FORMAT_TIME,
+      GST_BUFFER_PTS (buf));
+  fnode->is_keyframe =
+      (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) == FALSE);
 
   fnode->str_open =
       g_markup_printf_escaped (" <frame duration=\"%" G_GUINT64_FORMAT
       "\" id=\"%i\" is-keyframe=\"%s\" offset=\"%" G_GUINT64_FORMAT
       "\" offset-end=\"%" G_GUINT64_FORMAT "\" pts=\"%" G_GUINT64_FORMAT
-      "\"  dts=\"%" G_GUINT64_FORMAT "\" checksum=\"%s\"/>",
+      "\"  dts=\"%" G_GUINT64_FORMAT "\" running-time=\"%" G_GUINT64_FORMAT
+      "\" checksum=\"%s\"/>",
       fnode->duration, id, fnode->is_keyframe ? "true" : "false",
-      fnode->offset, fnode->offset_end, fnode->pts, fnode->dts, checksum);
+      fnode->offset, fnode->offset_end, fnode->pts, fnode->dts,
+      fnode->running_time, checksum);
 
   fnode->str_close = NULL;
 

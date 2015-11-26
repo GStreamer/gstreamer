@@ -135,6 +135,8 @@ deserialize_framenode (const gchar ** names, const gchar ** values)
       framenode->pts = g_ascii_strtoull (values[i], NULL, 0);
     else if (g_strcmp0 (names[i], "dts") == 0)
       framenode->dts = g_ascii_strtoull (values[i], NULL, 0);
+    else if (g_strcmp0 (names[i], "running-time") == 0)
+      framenode->running_time = g_ascii_strtoull (values[i], NULL, 0);
     else if (g_strcmp0 (names[i], "checksum") == 0)
       framenode->checksum = g_strdup (values[i]);
     else if (g_strcmp0 (names[i], "is-keyframe") == 0) {
