@@ -210,4 +210,18 @@ G_GNUC_INTERNAL
 gboolean
 gl_unbind_framebuffer_object (GLFramebufferObject * fbo);
 
+typedef enum {
+  GST_VAAPI_GL_API_NONE = 0,
+  GST_VAAPI_GL_API_OPENGL = (1 << 0),
+  GST_VAAPI_GL_API_OPENGL3 = (1 << 1),
+  GST_VAAPI_GL_API_GLES1 = (1 << 15),
+  GST_VAAPI_GL_API_GLES2 = (1 << 16),
+
+  GST_VAAPI_GL_API_ANY = G_MAXUINT32
+} GstVaapiGLApi;
+
+G_GNUC_INTERNAL
+GstVaapiGLApi
+gl_get_current_api (guint * major, guint * minor);
+
 #endif /* GST_VAAPI_UTILS_GLX_H */

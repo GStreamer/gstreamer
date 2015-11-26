@@ -1087,3 +1087,92 @@ gl_unbind_framebuffer_object (GLFramebufferObject * fbo)
   fbo->is_bound = FALSE;
   return TRUE;
 }
+
+/**
+ * gl_get_current_api:
+ * @major: (out): (allow-none): the GL major version
+ * @minor: (out): (allow-none): the GL minor version
+ *
+ * If an error occurs, @major and @minor aren't modified and
+ * %GST_VAAPI_GL_API_NONE is returned.
+ *
+ * This is an adaptation of gst_gl_context_get_current_gl_api() from GstGL.
+ *
+ * Returns: The version supported by the OpenGL context current in the calling
+ *          thread or %GST_VAAPI_GL_API_NONE
+ */
+GstVaapiGLApi
+gl_get_current_api (guint * major, guint * minor)
+{
+  const gchar *version;
+  gint maj, min, n;
+  GstVaapiGLApi ret = (1 << 31);
+
+  while (ret != GST_VAAPI_GL_API_NONE) {
+    version = (const gchar *) glGetString (GL_VERSION);
+    if (!version)
+      goto next;
+
+    /* strlen (x.x) == 3 */
+    n = strlen (version);
+    if (n < 3)
+      goto next;
+
+    if (g_strstr_len (version, 9, "OpenGL ES")) {
+      /* strlen (OpenGL ES x.x) == 13 */
+      if (n < 13)
+        goto next;
+
+      sscanf (&version[10], "%d.%d", &maj, &min);
+
+      if (maj <= 0 || min < 0)
+        goto next;
+
+      if (maj == 1) {
+        ret = GST_VAAPI_GL_API_GLES1;
+        break;
+      } else if (maj == 2 || maj == 3) {
+        ret = GST_VAAPI_GL_API_GLES2;
+        break;
+      }
+
+      goto next;
+    } else {
+      sscanf (version, "%d.%d", &maj, &min);
+
+      if (maj <= 0 || min < 0)
+        goto next;
+
+      if (maj > 3 || (maj == 3 && min > 1)) {
+        GLuint context_flags = 0;
+
+        ret = GST_VAAPI_GL_API_NONE;
+        if (!gl_get_param (GL_CONTEXT_PROFILE_MASK, &context_flags))
+          break;
+
+        if (context_flags & GL_CONTEXT_CORE_PROFILE_BIT)
+          ret |= GST_VAAPI_GL_API_OPENGL3;
+        if (context_flags & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT)
+          ret |= GST_VAAPI_GL_API_OPENGL;
+        break;
+      }
+
+      ret = GST_VAAPI_GL_API_OPENGL;
+      break;
+    }
+
+  next:
+    /* iterate through the apis */
+    ret >>= 1;
+  }
+
+  if (ret == GST_VAAPI_GL_API_NONE)
+    return GST_VAAPI_GL_API_NONE;
+
+  if (major)
+    *major = maj;
+  if (minor)
+    *minor = min;
+
+  return ret;
+}
