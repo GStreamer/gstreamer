@@ -121,6 +121,10 @@ gboolean
 gl_bind_texture (GLTextureState * ts, GLenum target, GLuint texture);
 
 G_GNUC_INTERNAL
+gboolean
+gl3_bind_texture_2d (GLTextureState * ts, GLenum target, GLuint texture);
+
+G_GNUC_INTERNAL
 void
 gl_unbind_texture (GLTextureState * ts);
 

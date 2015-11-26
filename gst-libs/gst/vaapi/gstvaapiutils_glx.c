@@ -465,6 +465,41 @@ gl_swap_buffers (GLContextState * cs)
   cs->swapped_buffers = TRUE;
 }
 
+static inline gboolean
+_init_texture_state (GLTextureState * ts, GLenum target, GLuint texture,
+    gboolean enabled)
+{
+  GLenum binding;
+
+  ts->target = target;
+
+  if (enabled) {
+    binding = gl_get_texture_binding (target);
+    if (!binding)
+      return FALSE;
+    if (!gl_get_param (binding, &ts->old_texture))
+      return FALSE;
+    ts->was_enabled = TRUE;
+    ts->was_bound = texture == ts->old_texture;
+  } else {
+    ts->old_texture = 0;
+    ts->was_enabled = FALSE;
+    ts->was_bound = FALSE;
+  }
+
+  return TRUE;
+}
+
+static inline gboolean
+_bind_enabled_texture (GLenum target, GLuint texture)
+{
+  gl_purge_errors ();
+  glBindTexture (target, texture);
+  if (gl_check_error ())
+    return FALSE;
+  return TRUE;
+}
+
 /**
  * gl_bind_texture:
  * @ts: a #GLTextureState
@@ -479,32 +514,44 @@ gl_swap_buffers (GLContextState * cs)
 gboolean
 gl_bind_texture (GLTextureState * ts, GLenum target, GLuint texture)
 {
-  GLenum binding;
+  gboolean enabled;
 
-  ts->target = target;
-
-  if (glIsEnabled (target)) {
-    binding = gl_get_texture_binding (target);
-    if (!binding)
-      return FALSE;
-    if (!gl_get_param (binding, &ts->old_texture))
-      return FALSE;
-    ts->was_enabled = TRUE;
-    ts->was_bound = texture == ts->old_texture;
-    if (ts->was_bound)
-      return TRUE;
-  } else {
-    glEnable (target);
-    ts->old_texture = 0;
-    ts->was_enabled = FALSE;
-    ts->was_bound = FALSE;
-  }
-
-  gl_purge_errors ();
-  glBindTexture (target, texture);
-  if (gl_check_error ())
+  enabled = (gboolean) glIsEnabled (target);
+  if (!_init_texture_state (ts, target, texture, enabled))
     return FALSE;
-  return TRUE;
+  if (ts->was_bound)
+    return TRUE;
+  if (!enabled)
+    glEnable (target);
+
+  return _bind_enabled_texture (target, texture);
+}
+
+/**
+ * gl3_bind_texture_2d:
+ * @ts: a #GLTextureState
+ * @target: the target to which the texture is bound
+ * @texture: the name of a texture
+ *
+ * Binds @texture to the specified @target, while recording the
+ * previous state in @ts.
+ *
+ * This function is for OpenGL3 API and for targets type GL_TEXTURE_2D.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gl3_bind_texture_2d (GLTextureState * ts, GLenum target, GLuint texture)
+{
+  if (target != GL_TEXTURE_2D)
+    return FALSE;
+
+  if (!_init_texture_state (ts, target, texture, TRUE))
+    return FALSE;
+  if (ts->was_bound)
+    return TRUE;
+
+  return _bind_enabled_texture (target, texture);
 }
 
 /**
