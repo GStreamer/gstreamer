@@ -101,6 +101,8 @@ static GstFlowReturn gst_vp9_enc_handle_invisible_frame_buffer (GstVPXEnc * enc,
 static void gst_vp9_enc_set_frame_user_data (GstVPXEnc * enc,
     GstVideoCodecFrame * frame, vpx_image_t * image);
 
+#define DEFAULT_BITS_PER_PIXEL 0.0289
+
 static void
 gst_vp9_enc_class_init (GstVP9EncClass * klass)
 {
@@ -152,6 +154,7 @@ gst_vp9_enc_init (GstVP9Enc * gst_vp9_enc)
   } else {
     gst_vpx_enc->have_default_config = TRUE;
   }
+  gst_vpx_enc->bits_per_pixel = DEFAULT_BITS_PER_PIXEL;
 }
 
 static vpx_codec_iface_t *

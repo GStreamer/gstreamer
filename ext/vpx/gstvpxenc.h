@@ -68,7 +68,7 @@ struct _GstVPXEnc
   /* properties */
   vpx_codec_enc_cfg_t cfg;
   gboolean have_default_config;
-  gboolean rc_target_bitrate_set;
+  gboolean rc_target_bitrate_auto;
   gint n_ts_target_bitrate;
   gint n_ts_rate_decimator;
   gint n_ts_layer_id;
@@ -99,6 +99,9 @@ struct _GstVPXEnc
   /* Timebase - a value of 0 will use the framerate */
   unsigned int timebase_n;
   unsigned int timebase_d;
+
+  /* Bits per Pixel */
+  gfloat bits_per_pixel;
 
   /* state */
   gboolean inited;

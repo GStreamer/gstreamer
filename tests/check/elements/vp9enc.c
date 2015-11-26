@@ -21,6 +21,21 @@
 #include <gst/check/gstcheck.h>
 #include <gst/video/video.h>
 
+#define gst_caps_new_i420(w, h) gst_caps_new_i420_full (w, h, 30, 1, 1, 1)
+static GstCaps *
+gst_caps_new_i420_full (gint width, gint height, gint fps_n, gint fps_d,
+    gint par_n, gint par_d)
+{
+  GstVideoInfo info;
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_I420, width, height);
+  GST_VIDEO_INFO_FPS_N (&info) = fps_n;
+  GST_VIDEO_INFO_FPS_D (&info) = fps_d;
+  GST_VIDEO_INFO_PAR_N (&info) = par_n;
+  GST_VIDEO_INFO_PAR_D (&info) = par_d;
+  return gst_video_info_to_caps (&info);
+}
+
 GST_START_TEST (test_encode_lag_in_frames)
 {
   GstHarness *h = gst_harness_new_parse ("vp9enc lag-in-frames=5 cpu-used=8 "
@@ -62,6 +77,36 @@ GST_START_TEST (test_encode_lag_in_frames)
 GST_END_TEST;
 
 
+GST_START_TEST (test_autobitrate_changes_with_caps)
+{
+  gint bitrate = 0;
+  GstHarness *h = gst_harness_new ("vp9enc");
+  gst_harness_set_src_caps (h, gst_caps_new_i420_full (1280, 720, 30, 1, 1, 1));
+
+  /* Default settings for 720p @ 30fps ~0.8Mbps */
+  g_object_get (h->element, "target-bitrate", &bitrate, NULL);
+  fail_unless_equals_int (bitrate, 799000);
+
+  /* Change bits-per-pixel 0.036 to give us ~1Mbps */
+  g_object_set (h->element, "bits-per-pixel", 0.037, NULL);
+  g_object_get (h->element, "target-bitrate", &bitrate, NULL);
+  fail_unless_equals_int (bitrate, 1022000);
+
+  /* Halving the framerate should halve the auto bitrate */
+  gst_harness_set_src_caps (h, gst_caps_new_i420_full (1280, 720, 15, 1, 1, 1));
+  g_object_get (h->element, "target-bitrate", &bitrate, NULL);
+  fail_unless_equals_int (bitrate, 511000);
+
+  /* Halving the resolution should quarter the auto bitrate */
+  gst_harness_set_src_caps (h, gst_caps_new_i420_full (640, 360, 15, 1, 1, 1));
+  g_object_get (h->element, "target-bitrate", &bitrate, NULL);
+  fail_unless_equals_int (bitrate, 127000);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 vp9enc_suite (void)
 {
@@ -71,6 +116,7 @@ vp9enc_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_encode_lag_in_frames);
+  tcase_add_test (tc_chain, test_autobitrate_changes_with_caps);
 
   return s;
 }
