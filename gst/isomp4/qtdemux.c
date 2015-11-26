@@ -9834,6 +9834,38 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         break;
       }
+      case FOURCC_opus:
+      {
+        GNode *opus;
+        const guint8 *opus_data;
+        guint8 *channel_mapping = NULL;
+        guint32 rate;
+        guint8 channels;
+        guint8 channel_mapping_family;
+        guint8 stream_count;
+        guint8 coupled_count;
+        guint8 i;
+
+        opus = qtdemux_tree_get_child_by_type (stsd, FOURCC_opus);
+        opus_data = opus->data;
+
+        channels = GST_READ_UINT8 (opus_data + 45);
+        rate = GST_READ_UINT32_LE (opus_data + 48);
+        channel_mapping_family = GST_READ_UINT8 (opus_data + 54);
+        stream_count = GST_READ_UINT8 (opus_data + 55);
+        coupled_count = GST_READ_UINT8 (opus_data + 56);
+
+        if (channels > 0) {
+          channel_mapping = g_malloc (channels * sizeof (guint8));
+          for (i = 0; i < channels; i++)
+            channel_mapping[i] = GST_READ_UINT8 (opus_data + i + 57);
+        }
+
+        stream->caps = gst_codec_utils_opus_create_caps (rate, channels,
+            channel_mapping_family, stream_count, coupled_count,
+            channel_mapping);
+        break;
+      }
       default:
         break;
     }
@@ -12706,6 +12738,10 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case FOURCC_owma:
       _codec ("WMA");
       caps = gst_caps_new_empty_simple ("audio/x-wma");
+      break;
+    case FOURCC_opus:
+      _codec ("Opus");
+      caps = gst_caps_new_empty_simple ("audio/x-opus");
       break;
     case GST_MAKE_FOURCC ('l', 'p', 'c', 'm'):
     {
