@@ -30,60 +30,92 @@
 
 #define GST_CAT_DEFAULT hls_debug
 
-static GstM3U8 *gst_m3u8_new (void);
-static void gst_m3u8_free (GstM3U8 * m3u8);
-static gboolean gst_m3u8_update (GstM3U8Client * client, GstM3U8 * m3u8,
-    gchar * data, gboolean * updated);
 static GstM3U8MediaFile *gst_m3u8_media_file_new (gchar * uri,
     gchar * title, GstClockTime duration, guint sequence);
-static void gst_m3u8_media_file_free (GstM3U8MediaFile * self);
 gchar *uri_join (const gchar * uri, const gchar * path);
+static gboolean gst_m3u8_update_master_playlist (GstM3U8 * self, gchar * data);
 
-static GstM3U8 *
+GstM3U8 *
 gst_m3u8_new (void)
 {
   GstM3U8 *m3u8;
 
   m3u8 = g_new0 (GstM3U8, 1);
 
+  m3u8->current_file = NULL;
+  m3u8->current_file_duration = GST_CLOCK_TIME_NONE;
+  m3u8->sequence = -1;
+  m3u8->sequence_position = 0;
+  m3u8->highest_sequence_number = -1;
+  m3u8->duration = GST_CLOCK_TIME_NONE;
+
+  g_mutex_init (&m3u8->lock);
+  m3u8->ref_count = 1;
+
   return m3u8;
 }
 
+/* call with M3U8_LOCK held */
 static void
-gst_m3u8_set_uri (GstM3U8 * self, gchar * uri, gchar * base_uri, gchar * name)
+gst_m3u8_take_uri (GstM3U8 * self, gchar * uri, gchar * base_uri, gchar * name)
 {
   g_return_if_fail (self != NULL);
 
-  g_free (self->uri);
-  self->uri = uri;
-
-  g_free (self->base_uri);
-  self->base_uri = base_uri;
-
-  g_free (self->name);
-  self->name = name;
+  if (self->uri != uri) {
+    g_free (self->uri);
+    self->uri = uri;
+  }
+  if (self->base_uri != base_uri) {
+    g_free (self->base_uri);
+    self->base_uri = base_uri;
+  }
+  if (self->name != name) {
+    g_free (self->name);
+    self->name = name;
+  }
 }
 
-static void
-gst_m3u8_free (GstM3U8 * self)
+void
+gst_m3u8_set_uri (GstM3U8 * m3u8, const gchar * uri, const gchar * base_uri,
+    const gchar * name)
 {
-  g_return_if_fail (self != NULL);
+  GST_M3U8_LOCK (m3u8);
+  gst_m3u8_take_uri (m3u8, g_strdup (uri), g_strdup (base_uri),
+      g_strdup (name));
+  GST_M3U8_UNLOCK (m3u8);
+}
 
-  g_free (self->uri);
-  g_free (self->base_uri);
-  g_free (self->name);
-  g_free (self->codecs);
+GstM3U8 *
+gst_m3u8_ref (GstM3U8 * m3u8)
+{
+  g_assert (m3u8 != NULL && m3u8->ref_count > 0);
 
-  g_list_foreach (self->files, (GFunc) gst_m3u8_media_file_free, NULL);
-  g_list_free (self->files);
+  g_atomic_int_add (&m3u8->ref_count, 1);
+  return m3u8;
+}
 
-  g_free (self->last_data);
-  g_list_foreach (self->lists, (GFunc) gst_m3u8_free, NULL);
-  g_list_free (self->lists);
-  g_list_foreach (self->iframe_lists, (GFunc) gst_m3u8_free, NULL);
-  g_list_free (self->iframe_lists);
+void
+gst_m3u8_unref (GstM3U8 * self)
+{
+  g_return_if_fail (self != NULL && self->ref_count > 0);
 
-  g_free (self);
+  if (g_atomic_int_dec_and_test (&self->ref_count)) {
+    g_free (self->uri);
+    g_free (self->base_uri);
+    g_free (self->name);
+    g_free (self->codecs);
+
+    g_list_foreach (self->files, (GFunc) gst_m3u8_media_file_unref, NULL);
+    g_list_free (self->files);
+
+    g_free (self->last_data);
+    g_list_foreach (self->lists, (GFunc) gst_m3u8_unref, NULL);
+    g_list_free (self->lists);
+    g_list_foreach (self->iframe_lists, (GFunc) gst_m3u8_unref, NULL);
+    g_list_free (self->iframe_lists);
+
+    g_free (self);
+  }
 }
 
 static GstM3U8MediaFile *
@@ -97,19 +129,31 @@ gst_m3u8_media_file_new (gchar * uri, gchar * title, GstClockTime duration,
   file->title = title;
   file->duration = duration;
   file->sequence = sequence;
+  file->ref_count = 1;
 
   return file;
 }
 
-static void
-gst_m3u8_media_file_free (GstM3U8MediaFile * self)
+GstM3U8MediaFile *
+gst_m3u8_media_file_ref (GstM3U8MediaFile * mfile)
 {
-  g_return_if_fail (self != NULL);
+  g_assert (mfile != NULL && mfile->ref_count > 0);
 
-  g_free (self->title);
-  g_free (self->uri);
-  g_free (self->key);
-  g_free (self);
+  g_atomic_int_add (&mfile->ref_count, 1);
+  return mfile;
+}
+
+void
+gst_m3u8_media_file_unref (GstM3U8MediaFile * self)
+{
+  g_return_if_fail (self != NULL && self->ref_count > 0);
+
+  if (g_atomic_int_dec_and_test (&self->ref_count)) {
+    g_free (self->title);
+    g_free (self->uri);
+    g_free (self->key);
+    g_free (self);
+  }
 }
 
 static gboolean
@@ -274,15 +318,13 @@ gst_m3u8_compare_playlist_by_bitrate (gconstpointer a, gconstpointer b)
 /*
  * @data: a m3u8 playlist text data, taking ownership
  */
-static gboolean
-gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
-    gboolean * updated)
+gboolean
+gst_m3u8_update (GstM3U8 * self, gchar * data)
 {
   gint val;
   GstClockTime duration;
   gchar *title, *end;
   gboolean discontinuity = FALSE;
-  GstM3U8 *list;
   gchar *current_key = NULL;
   gboolean have_iv = FALSE;
   guint8 iv[16] = { 0, };
@@ -291,23 +333,28 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
 
   g_return_val_if_fail (self != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
-  g_return_val_if_fail (updated != NULL, FALSE);
 
-  *updated = TRUE;
+  GST_M3U8_LOCK (self);
 
   /* check if the data changed since last update */
   if (self->last_data && g_str_equal (self->last_data, data)) {
     GST_DEBUG ("Playlist is the same as previous one");
-    *updated = FALSE;
     g_free (data);
+    GST_M3U8_UNLOCK (self);
     return TRUE;
   }
 
   if (!g_str_has_prefix (data, "#EXTM3U")) {
     GST_WARNING ("Data doesn't start with #EXTM3U");
-    *updated = FALSE;
     g_free (data);
+    GST_M3U8_UNLOCK (self);
     return FALSE;
+  }
+
+  if (g_strrstr (data, "\n#EXT-X-STREAM-INF:") != NULL) {
+    GST_DEBUG ("Not a media playlist, but a master playlist!");
+    GST_M3U8_UNLOCK (self);
+    return gst_m3u8_update_master_playlist (self, data);
   }
 
   GST_TRACE ("data:\n%s", data);
@@ -315,19 +362,18 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
   g_free (self->last_data);
   self->last_data = data;
 
-  client->current_file = NULL;
+  self->current_file = NULL;
   if (self->files) {
-    g_list_foreach (self->files, (GFunc) gst_m3u8_media_file_free, NULL);
+    g_list_foreach (self->files, (GFunc) gst_m3u8_media_file_unref, NULL);
     g_list_free (self->files);
     self->files = NULL;
   }
-  client->duration = GST_CLOCK_TIME_NONE;
+  self->duration = GST_CLOCK_TIME_NONE;
   mediasequence = 0;
 
   /* By default, allow caching */
   self->allowcache = TRUE;
 
-  list = NULL;
   duration = 0;
   title = NULL;
   data += 7;
@@ -343,28 +389,13 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
       *r = '\0';
 
     if (data[0] != '#' && data[0] != '\0') {
-      gchar *name = data;
-      if (duration <= 0 && list == NULL) {
-        GST_LOG ("%s: got line without EXTINF or EXTSTREAMINF, dropping", data);
+      if (duration <= 0) {
+        GST_LOG ("%s: got line without EXTINF, dropping", data);
         goto next_line;
       }
 
       data = uri_join (self->base_uri ? self->base_uri : self->uri, data);
-      if (data == NULL)
-        goto next_line;
-
-      if (list != NULL) {
-        if (g_list_find_custom (self->lists, data,
-                (GCompareFunc) _m3u8_compare_uri)) {
-          GST_DEBUG ("Already have a list with this URI");
-          gst_m3u8_free (list);
-          g_free (data);
-        } else {
-          gst_m3u8_set_uri (list, data, NULL, g_strdup (name));
-          self->lists = g_list_append (self->lists, list);
-        }
-        list = NULL;
-      } else {
+      if (data != NULL) {
         GstM3U8MediaFile *file;
         file = gst_m3u8_media_file_new (data, title, duration, mediasequence++);
 
@@ -435,62 +466,6 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
       } else if (g_str_has_prefix (data_ext_x, "VERSION:")) {
         if (int_from_string (data + 15, &data, &val))
           self->version = val;
-      } else if (g_str_has_prefix (data_ext_x, "STREAM-INF:") ||
-          g_str_has_prefix (data_ext_x, "I-FRAME-STREAM-INF:")) {
-        gchar *v, *a;
-        gboolean iframe = g_str_has_prefix (data_ext_x, "I-FRAME-STREAM-INF:");
-        GstM3U8 *new_list;
-
-        new_list = gst_m3u8_new ();
-        new_list->iframe = iframe;
-        data = data + (iframe ? 26 : 18);
-        while (data && parse_attributes (&data, &a, &v)) {
-          if (g_str_equal (a, "BANDWIDTH")) {
-            if (!int_from_string (v, NULL, &new_list->bandwidth))
-              GST_WARNING ("Error while reading BANDWIDTH");
-          } else if (g_str_equal (a, "PROGRAM-ID")) {
-            if (!int_from_string (v, NULL, &new_list->program_id))
-              GST_WARNING ("Error while reading PROGRAM-ID");
-          } else if (g_str_equal (a, "CODECS")) {
-            g_free (new_list->codecs);
-            new_list->codecs = g_strdup (v);
-          } else if (g_str_equal (a, "RESOLUTION")) {
-            if (!int_from_string (v, &v, &new_list->width))
-              GST_WARNING ("Error while reading RESOLUTION width");
-            if (!v || *v != 'x') {
-              GST_WARNING ("Missing height");
-            } else {
-              v = g_utf8_next_char (v);
-              if (!int_from_string (v, NULL, &new_list->height))
-                GST_WARNING ("Error while reading RESOLUTION height");
-            }
-          } else if (iframe && g_str_equal (a, "URI")) {
-            gchar *name;
-            gchar *uri;
-
-            uri = uri_join (self->base_uri ? self->base_uri : self->uri, v);
-            if (uri) {
-              name = g_strdup (uri);
-              gst_m3u8_set_uri (new_list, uri, NULL, name);
-            }
-          }
-        }
-
-        if (iframe) {
-          if (g_list_find_custom (self->iframe_lists, new_list->uri,
-                  (GCompareFunc) _m3u8_compare_uri)) {
-            GST_DEBUG ("Already have a list with this URI");
-            gst_m3u8_free (new_list);
-          } else {
-            self->iframe_lists = g_list_append (self->iframe_lists, new_list);
-          }
-        } else {
-          if (list != NULL) {
-            GST_WARNING ("Found a list without a uri..., dropping");
-            gst_m3u8_free (list);
-          }
-          list = new_list;
-        }
       } else if (g_str_has_prefix (data_ext_x, "TARGETDURATION:")) {
         if (int_from_string (data + 22, &data, &val))
           self->targetduration = val * GST_SECOND;
@@ -579,38 +554,16 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
   g_free (current_key);
   current_key = NULL;
 
+  if (self->files == NULL) {
+    GST_ERROR ("Invalid media playlist, it does not contain any media files");
+    GST_M3U8_UNLOCK (self);
+    return FALSE;
+  }
+
   self->files = g_list_reverse (self->files);
 
-  /* reorder playlists by bitrate */
-  if (self->lists) {
-    gchar *top_variant_uri = NULL;
-    gboolean iframe = FALSE;
-
-    if (!self->current_variant) {
-      top_variant_uri = GST_M3U8 (self->lists->data)->uri;
-    } else {
-      top_variant_uri = GST_M3U8 (self->current_variant->data)->uri;
-      iframe = GST_M3U8 (self->current_variant->data)->iframe;
-    }
-
-    self->lists =
-        g_list_sort (self->lists,
-        (GCompareFunc) gst_m3u8_compare_playlist_by_bitrate);
-
-    self->iframe_lists =
-        g_list_sort (self->iframe_lists,
-        (GCompareFunc) gst_m3u8_compare_playlist_by_bitrate);
-
-    if (iframe)
-      self->current_variant =
-          g_list_find_custom (self->iframe_lists, top_variant_uri,
-          (GCompareFunc) _m3u8_compare_uri);
-    else
-      self->current_variant = g_list_find_custom (self->lists, top_variant_uri,
-          (GCompareFunc) _m3u8_compare_uri);
-  }
   /* calculate the start and end times of this media playlist. */
-  if (self->files) {
+  {
     GList *walk;
     GstM3U8MediaFile *file;
     GstClockTime duration = 0;
@@ -618,231 +571,72 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
     for (walk = self->files; walk; walk = walk->next) {
       file = walk->data;
       duration += file->duration;
-      if (file->sequence > client->highest_sequence_number) {
-        if (client->highest_sequence_number >= 0) {
+      if (file->sequence > self->highest_sequence_number) {
+        if (self->highest_sequence_number >= 0) {
           /* if an update of the media playlist has been missed, there
              will be a gap between self->highest_sequence_number and the
              first sequence number in this media playlist. In this situation
              assume that the missing fragments had a duration of
              targetduration each */
-          client->last_file_end +=
-              (file->sequence - client->highest_sequence_number -
+          self->last_file_end +=
+              (file->sequence - self->highest_sequence_number -
               1) * self->targetduration;
         }
-        client->last_file_end += file->duration;
-        client->highest_sequence_number = file->sequence;
+        self->last_file_end += file->duration;
+        self->highest_sequence_number = file->sequence;
       }
     }
-    if (GST_M3U8_CLIENT_IS_LIVE (client)) {
-      client->first_file_start = client->last_file_end - duration;
+    if (GST_M3U8_IS_LIVE (self)) {
+      self->first_file_start = self->last_file_end - duration;
       GST_DEBUG ("Live playlist range %" GST_TIME_FORMAT " -> %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (client->first_file_start),
-          GST_TIME_ARGS (client->last_file_end));
+          GST_TIME_FORMAT, GST_TIME_ARGS (self->first_file_start),
+          GST_TIME_ARGS (self->last_file_end));
     }
-    client->duration = duration;
+    self->duration = duration;
   }
+
+  /* first-time setup */
+  if (self->files && self->sequence == -1) {
+    GList *file;
+
+    if (GST_M3U8_IS_LIVE (self)) {
+      gint i;
+
+      file = g_list_last (self->files);
+
+      /* for live streams, start GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE from
+       * the end of the playlist. See section 6.3.3 of HLS draft */
+      for (i = 0; i < GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE && file->prev; ++i)
+        file = file->prev;
+    } else {
+      file = g_list_first (self->files);
+    }
+    self->current_file = file;
+    self->sequence = GST_M3U8_MEDIA_FILE (file->data)->sequence;
+    self->sequence_position = 0;
+    GST_DEBUG ("first sequence: %u", (guint) self->sequence);
+  }
+
+  GST_LOG ("processed media playlist %s, %u fragments", self->name,
+      g_list_length (self->files));
+
+  GST_M3U8_UNLOCK (self);
 
   return TRUE;
 }
 
-GstM3U8Client *
-gst_m3u8_client_new (const gchar * uri, const gchar * base_uri)
-{
-  GstM3U8Client *client;
-
-  g_return_val_if_fail (uri != NULL, NULL);
-
-  client = g_new0 (GstM3U8Client, 1);
-  client->main = gst_m3u8_new ();
-  client->current = NULL;
-  client->current_file = NULL;
-  client->current_file_duration = GST_CLOCK_TIME_NONE;
-  client->sequence = -1;
-  client->sequence_position = 0;
-  client->highest_sequence_number = -1;
-  client->duration = GST_CLOCK_TIME_NONE;
-  g_mutex_init (&client->lock);
-  gst_m3u8_set_uri (client->main, g_strdup (uri), g_strdup (base_uri), NULL);
-
-  return client;
-}
-
-void
-gst_m3u8_client_free (GstM3U8Client * self)
-{
-  g_return_if_fail (self != NULL);
-
-  gst_m3u8_free (self->main);
-  g_mutex_clear (&self->lock);
-  g_free (self);
-}
-
-void
-gst_m3u8_client_set_current (GstM3U8Client * self, GstM3U8 * m3u8)
-{
-  g_return_if_fail (self != NULL);
-
-  GST_M3U8_CLIENT_LOCK (self);
-  if (m3u8 != self->current) {
-    self->current = m3u8;
-    self->duration = GST_CLOCK_TIME_NONE;
-    self->current_file = NULL;
-  }
-  GST_M3U8_CLIENT_UNLOCK (self);
-}
-
-gboolean
-gst_m3u8_client_update (GstM3U8Client * self, gchar * data)
-{
-  GstM3U8 *m3u8;
-  gboolean updated = FALSE;
-  gboolean ret = FALSE;
-
-  g_return_val_if_fail (self != NULL, FALSE);
-
-  GST_M3U8_CLIENT_LOCK (self);
-  m3u8 = self->current ? self->current : self->main;
-
-  if (!gst_m3u8_update (self, m3u8, data, &updated))
-    goto out;
-
-  if (!updated)
-    goto out;
-
-  if (self->current && !self->current->files) {
-    GST_ERROR ("Invalid media playlist, it does not contain any media files");
-    goto out;
-  }
-
-  /* select the first playlist, for now */
-  if (!self->current) {
-    if (self->main->lists) {
-      self->current = self->main->current_variant->data;
-    } else {
-      self->current = self->main;
-    }
-  }
-
-  if (m3u8->files && self->sequence == -1) {
-    if (GST_M3U8_CLIENT_IS_LIVE (self)) {
-      /* for live streams, start GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE from
-         the end of the playlist. See section 6.3.3 of HLS draft */
-      gint pos =
-          g_list_length (m3u8->files) - GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE;
-      self->current_file = g_list_nth (m3u8->files, pos >= 0 ? pos : 0);
-    } else {
-      self->current_file = g_list_first (m3u8->files);
-    }
-    self->sequence = GST_M3U8_MEDIA_FILE (self->current_file->data)->sequence;
-    self->sequence_position = 0;
-    GST_DEBUG ("Setting first sequence at %u", (guint) self->sequence);
-  }
-
-  ret = TRUE;
-out:
-  GST_M3U8_CLIENT_UNLOCK (self);
-  return ret;
-}
-
-static gint
-_find_m3u8_list_match (const GstM3U8 * a, const GstM3U8 * b)
-{
-  if (g_strcmp0 (a->name, b->name) == 0 &&
-      a->bandwidth == b->bandwidth &&
-      a->program_id == b->program_id &&
-      g_strcmp0 (a->codecs, b->codecs) == 0 &&
-      a->width == b->width &&
-      a->height == b->height && a->iframe == b->iframe) {
-    return 0;
-  }
-
-  return 1;
-}
-
-gboolean
-gst_m3u8_client_update_variant_playlist (GstM3U8Client * self, gchar * data,
-    const gchar * uri, const gchar * base_uri)
-{
-  gboolean ret = FALSE;
-  GList *list_entry, *unmatched_lists;
-  GstM3U8Client *new_client;
-  GstM3U8 *old;
-
-  g_return_val_if_fail (self != NULL, FALSE);
-
-  new_client = gst_m3u8_client_new (uri, base_uri);
-  if (gst_m3u8_client_update (new_client, data)) {
-    if (!new_client->main->lists) {
-      GST_ERROR
-          ("Cannot update variant playlist: New playlist is not a variant playlist");
-      gst_m3u8_client_free (new_client);
-      return FALSE;
-    }
-
-    GST_M3U8_CLIENT_LOCK (self);
-
-    if (!self->main->lists) {
-      GST_ERROR
-          ("Cannot update variant playlist: Current playlist is not a variant playlist");
-      goto out;
-    }
-
-    /* Now see if the variant playlist still has the same lists */
-    unmatched_lists = g_list_copy (self->main->lists);
-    for (list_entry = new_client->main->lists; list_entry;
-        list_entry = list_entry->next) {
-      GList *match = g_list_find_custom (unmatched_lists, list_entry->data,
-          (GCompareFunc) _find_m3u8_list_match);
-      if (match)
-        unmatched_lists = g_list_delete_link (unmatched_lists, match);
-    }
-
-    if (unmatched_lists != NULL) {
-      GST_WARNING ("Unable to match all playlists");
-
-      for (list_entry = unmatched_lists; list_entry;
-          list_entry = list_entry->next) {
-        if (list_entry->data == self->current) {
-          GST_WARNING ("Unable to match current playlist");
-        }
-      }
-
-      g_list_free (unmatched_lists);
-    }
-
-    /* Switch out the variant playlist, steal it from new_client */
-    old = self->main;
-
-    self->main = new_client->main;
-    new_client->main = gst_m3u8_new ();
-
-    if (self->main->lists)
-      self->current = self->main->current_variant->data;
-    else
-      self->current = self->main;
-
-    gst_m3u8_free (old);
-
-    ret = TRUE;
-
-  out:
-    GST_M3U8_CLIENT_UNLOCK (self);
-  }
-
-  gst_m3u8_client_free (new_client);
-  return ret;
-}
-
+/* call with M3U8_LOCK held */
 static GList *
-find_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
+m3u8_find_next_fragment (GstM3U8 * m3u8, gboolean forward)
 {
   GstM3U8MediaFile *file;
+  GList *l = m3u8->files;
 
   if (forward) {
     while (l) {
       file = l->data;
 
-      if (file->sequence >= client->sequence)
+      if (file->sequence >= m3u8->sequence)
         break;
 
       l = l->next;
@@ -853,7 +647,7 @@ find_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
     while (l) {
       file = l->data;
 
-      if (file->sequence <= client->sequence)
+      if (file->sequence <= m3u8->sequence)
         break;
 
       l = l->prev;
@@ -863,102 +657,76 @@ find_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
   return l;
 }
 
-static gboolean
-has_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
+GstM3U8MediaFile *
+gst_m3u8_get_next_fragment (GstM3U8 * m3u8, gboolean forward,
+    GstClockTime * sequence_position, gboolean * discont)
 {
-  l = find_next_fragment (client, l, forward);
+  GstM3U8MediaFile *file = NULL;
 
-  if (l) {
-    return (forward && l->next) || (!forward && l->prev);
-  }
+  g_return_val_if_fail (m3u8 != NULL, NULL);
 
-  return FALSE;
+  GST_M3U8_LOCK (m3u8);
+
+  GST_DEBUG ("Looking for fragment %" G_GINT64_FORMAT, m3u8->sequence);
+
+  if (m3u8->sequence < 0)       /* can't happen really */
+    goto out;
+
+  if (m3u8->current_file == NULL)
+    m3u8->current_file = m3u8_find_next_fragment (m3u8, forward);
+
+  if (m3u8->current_file == NULL)
+    goto out;
+
+  file = gst_m3u8_media_file_ref (m3u8->current_file->data);
+
+  GST_DEBUG ("Got fragment with sequence %u (current sequence %u)",
+      (guint) file->sequence, (guint) m3u8->sequence);
+
+  *sequence_position = m3u8->sequence_position;
+  *discont = file->discont || (m3u8->sequence != file->sequence);
+
+  m3u8->current_file_duration = file->duration;
+  m3u8->sequence = file->sequence;
+
+out:
+
+  GST_M3U8_UNLOCK (m3u8);
+
+  return file;
 }
 
 gboolean
-gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
-    gboolean * discontinuity, gchar ** uri, GstClockTime * duration,
-    GstClockTime * timestamp, gint64 * range_start, gint64 * range_end,
-    gchar ** key, guint8 ** iv, gboolean forward)
+gst_m3u8_has_next_fragment (GstM3U8 * m3u8, gboolean forward)
 {
-  GstM3U8MediaFile *file;
+  gboolean have_next;
+  GList *cur;
 
-  g_return_val_if_fail (client != NULL, FALSE);
-  g_return_val_if_fail (client->current != NULL, FALSE);
+  g_return_val_if_fail (m3u8 != NULL, FALSE);
 
-  GST_M3U8_CLIENT_LOCK (client);
-  GST_DEBUG ("Looking for fragment %" G_GINT64_FORMAT, client->sequence);
-  if (client->sequence < 0) {
-    GST_M3U8_CLIENT_UNLOCK (client);
-    return FALSE;
-  }
-  if (!client->current_file) {
-    client->current_file =
-        find_next_fragment (client, client->current->files, forward);
-  }
+  GST_M3U8_LOCK (m3u8);
 
-  if (!client->current_file) {
-    GST_M3U8_CLIENT_UNLOCK (client);
-    return FALSE;
-  }
+  GST_DEBUG ("Checking next fragment %" G_GINT64_FORMAT,
+      m3u8->sequence + (forward ? 1 : -1));
 
-  file = GST_M3U8_MEDIA_FILE (client->current_file->data);
-  GST_DEBUG ("Got fragment with sequence %u (client sequence %u)",
-      (guint) file->sequence, (guint) client->sequence);
-
-  client->current_file_duration = file->duration;
-  if (timestamp)
-    *timestamp = client->sequence_position;
-
-  if (discontinuity)
-    *discontinuity = client->sequence != file->sequence || file->discont;
-  if (uri)
-    *uri = g_strdup (file->uri);
-  if (duration)
-    *duration = file->duration;
-  if (range_start)
-    *range_start = file->offset;
-  if (range_end)
-    *range_end = file->size != -1 ? file->offset + file->size - 1 : -1;
-  if (key)
-    *key = g_strdup (file->key);
-  if (iv) {
-    *iv = g_new (guint8, sizeof (file->iv));
-    memcpy (*iv, file->iv, sizeof (file->iv));
-  }
-
-  client->sequence = file->sequence;
-
-  GST_M3U8_CLIENT_UNLOCK (client);
-  return TRUE;
-}
-
-gboolean
-gst_m3u8_client_has_next_fragment (GstM3U8Client * client, gboolean forward)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (client != NULL, FALSE);
-  g_return_val_if_fail (client->current != NULL, FALSE);
-
-  GST_M3U8_CLIENT_LOCK (client);
-  GST_DEBUG ("Checking if has next fragment %" G_GINT64_FORMAT,
-      client->sequence + (forward ? 1 : -1));
-  if (client->current_file) {
-    ret =
-        (forward ? client->current_file->next : client->current_file->prev) !=
-        NULL;
+  if (m3u8->current_file) {
+    cur = m3u8->current_file;
   } else {
-    ret = has_next_fragment (client, client->current->files, forward);
+    cur = m3u8_find_next_fragment (m3u8, forward);
   }
-  GST_M3U8_CLIENT_UNLOCK (client);
-  return ret;
+
+  have_next = (forward && cur->next) || (!forward && cur->prev);
+
+  GST_M3U8_UNLOCK (m3u8);
+
+  return have_next;
 }
 
+/* call with M3U8_LOCK held */
 static void
-alternate_advance (GstM3U8Client * client, gboolean forward)
+m3u8_alternate_advance (GstM3U8 * m3u8, gboolean forward)
 {
-  gint targetnum = client->sequence;
+  gint targetnum = m3u8->sequence;
   GList *tmp;
   GstM3U8MediaFile *mf;
 
@@ -968,7 +736,7 @@ alternate_advance (GstM3U8Client * client, gboolean forward)
   else
     targetnum -= 1;
 
-  for (tmp = client->current->files; tmp; tmp = tmp->next) {
+  for (tmp = m3u8->files; tmp; tmp = tmp->next) {
     mf = (GstM3U8MediaFile *) tmp->data;
     if (mf->sequence == targetnum)
       break;
@@ -977,200 +745,183 @@ alternate_advance (GstM3U8Client * client, gboolean forward)
     GST_WARNING ("Can't find next fragment");
     return;
   }
-  client->current_file = tmp;
-  client->sequence = targetnum;
-  client->current_file_duration =
-      GST_M3U8_MEDIA_FILE (client->current_file->data)->duration;
+  m3u8->current_file = tmp;
+  m3u8->sequence = targetnum;
+  m3u8->current_file_duration = GST_M3U8_MEDIA_FILE (tmp->data)->duration;
 }
 
 void
-gst_m3u8_client_advance_fragment (GstM3U8Client * client, gboolean forward)
+gst_m3u8_advance_fragment (GstM3U8 * m3u8, gboolean forward)
 {
   GstM3U8MediaFile *file;
 
-  g_return_if_fail (client != NULL);
-  g_return_if_fail (client->current != NULL);
+  g_return_if_fail (m3u8 != NULL);
 
-  GST_M3U8_CLIENT_LOCK (client);
+  GST_M3U8_LOCK (m3u8);
+
   GST_DEBUG ("Sequence position was %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (client->sequence_position));
-  if (GST_CLOCK_TIME_IS_VALID (client->current_file_duration)) {
+      GST_TIME_ARGS (m3u8->sequence_position));
+  if (GST_CLOCK_TIME_IS_VALID (m3u8->current_file_duration)) {
     /* Advance our position based on the previous fragment we played */
     if (forward)
-      client->sequence_position += client->current_file_duration;
-    else if (client->current_file_duration < client->sequence_position)
-      client->sequence_position -= client->current_file_duration;
+      m3u8->sequence_position += m3u8->current_file_duration;
+    else if (m3u8->current_file_duration < m3u8->sequence_position)
+      m3u8->sequence_position -= m3u8->current_file_duration;
     else
-      client->sequence_position = 0;
-    client->current_file_duration = GST_CLOCK_TIME_NONE;
+      m3u8->sequence_position = 0;
+    m3u8->current_file_duration = GST_CLOCK_TIME_NONE;
     GST_DEBUG ("Sequence position now %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (client->sequence_position));
+        GST_TIME_ARGS (m3u8->sequence_position));
   }
-  if (!client->current_file) {
+  if (!m3u8->current_file) {
     GList *l;
 
-    GST_DEBUG ("Looking for fragment %" G_GINT64_FORMAT, client->sequence);
-    for (l = client->current->files; l != NULL; l = l->next) {
-      if (GST_M3U8_MEDIA_FILE (l->data)->sequence == client->sequence) {
-        client->current_file = l;
+    GST_DEBUG ("Looking for fragment %" G_GINT64_FORMAT, m3u8->sequence);
+    for (l = m3u8->files; l != NULL; l = l->next) {
+      if (GST_M3U8_MEDIA_FILE (l->data)->sequence == m3u8->sequence) {
+        m3u8->current_file = l;
         break;
       }
     }
-    if (client->current_file == NULL) {
+    if (m3u8->current_file == NULL) {
       GST_DEBUG
           ("Could not find current fragment, trying next fragment directly");
-      alternate_advance (client, forward);
+      m3u8_alternate_advance (m3u8, forward);
 
       /* Resync sequence number if the above has failed for live streams */
-      if (client->current_file == NULL && GST_M3U8_CLIENT_IS_LIVE (client)) {
+      if (m3u8->current_file == NULL && GST_M3U8_IS_LIVE (m3u8)) {
         /* for live streams, start GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE from
            the end of the playlist. See section 6.3.3 of HLS draft */
         gint pos =
-            g_list_length (client->current->files) -
-            GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE;
-        client->current_file =
-            g_list_nth (client->current->files, pos >= 0 ? pos : 0);
-        client->current_file_duration =
-            GST_M3U8_MEDIA_FILE (client->current_file->data)->duration;
+            g_list_length (m3u8->files) - GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE;
+        m3u8->current_file = g_list_nth (m3u8->files, pos >= 0 ? pos : 0);
+        m3u8->current_file_duration =
+            GST_M3U8_MEDIA_FILE (m3u8->current_file->data)->duration;
 
         GST_WARNING ("Resyncing live playlist");
       }
-      GST_M3U8_CLIENT_UNLOCK (client);
-      return;
+      goto out;
     }
   }
 
-  file = GST_M3U8_MEDIA_FILE (client->current_file->data);
+  file = GST_M3U8_MEDIA_FILE (m3u8->current_file->data);
   GST_DEBUG ("Advancing from sequence %u", (guint) file->sequence);
   if (forward) {
-    client->current_file = client->current_file->next;
-    if (client->current_file) {
-      client->sequence =
-          GST_M3U8_MEDIA_FILE (client->current_file->data)->sequence;
+    m3u8->current_file = m3u8->current_file->next;
+    if (m3u8->current_file) {
+      m3u8->sequence = GST_M3U8_MEDIA_FILE (m3u8->current_file->data)->sequence;
     } else {
-      client->sequence = file->sequence + 1;
+      m3u8->sequence = file->sequence + 1;
     }
   } else {
-    client->current_file = client->current_file->prev;
-    if (client->current_file) {
-      client->sequence =
-          GST_M3U8_MEDIA_FILE (client->current_file->data)->sequence;
+    m3u8->current_file = m3u8->current_file->prev;
+    if (m3u8->current_file) {
+      m3u8->sequence = GST_M3U8_MEDIA_FILE (m3u8->current_file->data)->sequence;
     } else {
-      client->sequence = file->sequence - 1;
+      m3u8->sequence = file->sequence - 1;
     }
   }
-  if (client->current_file) {
+  if (m3u8->current_file) {
     /* Store duration of the fragment we're using to update the position 
      * the next time we advance */
-    client->current_file_duration =
-        GST_M3U8_MEDIA_FILE (client->current_file->data)->duration;
+    m3u8->current_file_duration =
+        GST_M3U8_MEDIA_FILE (m3u8->current_file->data)->duration;
   }
-  GST_M3U8_CLIENT_UNLOCK (client);
-}
 
-static void
-_sum_duration (GstM3U8MediaFile * self, GstClockTime * duration)
-{
-  *duration += self->duration;
+out:
+
+  GST_M3U8_UNLOCK (m3u8);
 }
 
 GstClockTime
-gst_m3u8_client_get_duration (GstM3U8Client * client)
+gst_m3u8_get_duration (GstM3U8 * m3u8)
 {
   GstClockTime duration = GST_CLOCK_TIME_NONE;
 
-  g_return_val_if_fail (client != NULL, GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (m3u8 != NULL, GST_CLOCK_TIME_NONE);
 
-  GST_M3U8_CLIENT_LOCK (client);
+  GST_M3U8_LOCK (m3u8);
+
   /* We can only get the duration for on-demand streams */
-  if (!client->current || !client->current->endlist) {
-    GST_M3U8_CLIENT_UNLOCK (client);
-    return GST_CLOCK_TIME_NONE;
-  }
+  if (!m3u8->endlist)
+    goto out;
 
-  if (!GST_CLOCK_TIME_IS_VALID (client->duration) && client->current->files) {
-    client->duration = 0;
-    g_list_foreach (client->current->files, (GFunc) _sum_duration,
-        &client->duration);
+  if (!GST_CLOCK_TIME_IS_VALID (m3u8->duration) && m3u8->files != NULL) {
+    GList *f;
+
+    m3u8->duration = 0;
+    for (f = m3u8->files; f != NULL; f = f->next)
+      m3u8->duration += GST_M3U8_MEDIA_FILE (f)->duration;
   }
-  duration = client->duration;
-  GST_M3U8_CLIENT_UNLOCK (client);
+  duration = m3u8->duration;
+
+out:
+
+  GST_M3U8_UNLOCK (m3u8);
 
   return duration;
 }
 
 GstClockTime
-gst_m3u8_client_get_target_duration (GstM3U8Client * client)
+gst_m3u8_get_target_duration (GstM3U8 * m3u8)
 {
-  GstClockTime duration = 0;
+  GstClockTime target_duration;
 
-  g_return_val_if_fail (client != NULL, GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (m3u8 != NULL, GST_CLOCK_TIME_NONE);
 
-  GST_M3U8_CLIENT_LOCK (client);
-  duration = client->current->targetduration;
-  GST_M3U8_CLIENT_UNLOCK (client);
-  return duration;
+  GST_M3U8_LOCK (m3u8);
+  target_duration = m3u8->targetduration;
+  GST_M3U8_UNLOCK (m3u8);
+
+  return target_duration;
 }
 
 gchar *
-gst_m3u8_client_get_uri (GstM3U8Client * client)
+gst_m3u8_get_uri (GstM3U8 * m3u8)
 {
   gchar *uri;
 
-  g_return_val_if_fail (client != NULL, NULL);
+  GST_M3U8_LOCK (m3u8);
+  uri = g_strdup (m3u8->uri);
+  GST_M3U8_UNLOCK (m3u8);
 
-  GST_M3U8_CLIENT_LOCK (client);
-  uri = client->main ? g_strdup (client->main->uri) : NULL;
-  GST_M3U8_CLIENT_UNLOCK (client);
-  return uri;
-}
-
-gchar *
-gst_m3u8_client_get_current_uri (GstM3U8Client * client)
-{
-  gchar *uri;
-
-  g_return_val_if_fail (client != NULL, NULL);
-
-  GST_M3U8_CLIENT_LOCK (client);
-  uri = g_strdup (client->current->uri);
-  GST_M3U8_CLIENT_UNLOCK (client);
   return uri;
 }
 
 gboolean
-gst_m3u8_client_has_variant_playlist (GstM3U8Client * client)
+gst_m3u8_has_variant_playlist (GstM3U8 * m3u8)
 {
   gboolean ret;
 
-  g_return_val_if_fail (client != NULL, FALSE);
+  g_return_val_if_fail (m3u8 != NULL, FALSE);
 
-  GST_M3U8_CLIENT_LOCK (client);
-  ret = (client->main->lists != NULL);
-  GST_M3U8_CLIENT_UNLOCK (client);
+  GST_M3U8_LOCK (m3u8);
+  ret = (m3u8->lists != NULL);
+  GST_M3U8_UNLOCK (m3u8);
   return ret;
 }
 
 gboolean
-gst_m3u8_client_is_live (GstM3U8Client * client)
+gst_m3u8_is_live (GstM3U8 * m3u8)
 {
-  gboolean ret;
+  gboolean is_live;
 
-  g_return_val_if_fail (client != NULL, FALSE);
+  g_return_val_if_fail (m3u8 != NULL, FALSE);
 
-  GST_M3U8_CLIENT_LOCK (client);
-  ret = GST_M3U8_CLIENT_IS_LIVE (client);
-  GST_M3U8_CLIENT_UNLOCK (client);
-  return ret;
+  GST_M3U8_LOCK (m3u8);
+  is_live = GST_M3U8_IS_LIVE (m3u8);
+  GST_M3U8_UNLOCK (m3u8);
+
+  return is_live;
 }
 
 GList *
-gst_m3u8_client_get_playlist_for_bitrate (GstM3U8Client * client, guint bitrate)
+gst_m3u8_get_playlist_for_bitrate (GstM3U8 * main, guint bitrate)
 {
   GList *list, *current_variant;
 
-  GST_M3U8_CLIENT_LOCK (client);
-  current_variant = client->main->current_variant;
+  GST_M3U8_LOCK (main);
+  current_variant = main->current_variant;
 
   /*  Go to the highest possible bandwidth allowed */
   while (GST_M3U8 (current_variant->data)->bandwidth <= bitrate) {
@@ -1186,7 +937,7 @@ gst_m3u8_client_get_playlist_for_bitrate (GstM3U8Client * client, guint bitrate)
       break;
     current_variant = list;
   }
-  GST_M3U8_CLIENT_UNLOCK (client);
+  GST_M3U8_UNLOCK (main);
 
   return current_variant;
 }
@@ -1248,8 +999,7 @@ out:
 }
 
 gboolean
-gst_m3u8_client_get_seek_range (GstM3U8Client * client, gint64 * start,
-    gint64 * stop)
+gst_m3u8_get_seek_range (GstM3U8 * m3u8, gint64 * start, gint64 * stop)
 {
   GstClockTime duration = 0;
   GList *walk;
@@ -1257,36 +1007,234 @@ gst_m3u8_client_get_seek_range (GstM3U8Client * client, gint64 * start,
   guint count;
   guint min_distance = 0;
 
-  g_return_val_if_fail (client != NULL, FALSE);
+  g_return_val_if_fail (m3u8 != NULL, FALSE);
 
-  GST_M3U8_CLIENT_LOCK (client);
+  GST_M3U8_LOCK (m3u8);
 
-  if (client->current == NULL || client->current->files == NULL) {
-    GST_M3U8_CLIENT_UNLOCK (client);
-    return FALSE;
-  }
+  if (m3u8->files == NULL)
+    goto out;
 
-  if (GST_M3U8_CLIENT_IS_LIVE (client)) {
+  if (GST_M3U8_IS_LIVE (m3u8)) {
     /* min_distance is used to make sure the seek range is never closer than
        GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE fragments from the end of a live
        playlist - see 6.3.3. "Playing the Playlist file" of the HLS draft */
     min_distance = GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE;
   }
-  count = g_list_length (client->current->files);
+  count = g_list_length (m3u8->files);
 
-  for (walk = client->current->files;
-      walk && count >= min_distance; walk = walk->next) {
+  for (walk = m3u8->files; walk && count >= min_distance; walk = walk->next) {
     file = walk->data;
     --count;
     duration += file->duration;
   }
 
-  if (duration <= 0) {
-    GST_M3U8_CLIENT_UNLOCK (client);
+  if (duration <= 0)
+    goto out;
+
+  *start = m3u8->first_file_start;
+  *stop = *start + duration;
+
+out:
+
+  GST_M3U8_UNLOCK (m3u8);
+  return (duration > 0);
+}
+
+static gboolean
+gst_m3u8_update_master_playlist (GstM3U8 * self, gchar * data)
+{
+  GstM3U8 *list;
+  gchar *end;
+  gint val;
+
+  g_return_val_if_fail (self != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+
+  GST_M3U8_LOCK (self);
+
+  /* check if the data changed since last update */
+  if (self->last_data && g_str_equal (self->last_data, data)) {
+    GST_DEBUG ("Playlist is the same as previous one");
+    g_free (data);
+    GST_M3U8_UNLOCK (self);
+    return TRUE;
+  }
+
+  if (!g_str_has_prefix (data, "#EXTM3U")) {
+    GST_WARNING ("Data doesn't start with #EXTM3U");
+    g_free (data);
+    GST_M3U8_UNLOCK (self);
     return FALSE;
   }
-  *start = client->first_file_start;
-  *stop = *start + duration;
-  GST_M3U8_CLIENT_UNLOCK (client);
+
+  if (strstr (data, "\n#EXTINF:") != NULL) {
+    GST_WARNING ("This is a media playlist, not a master playlist!");
+    g_free (data);
+    GST_M3U8_UNLOCK (self);
+    return FALSE;
+  }
+
+  GST_TRACE ("data:\n%s", data);
+
+  g_free (self->last_data);
+  self->last_data = data;
+
+  self->duration = GST_CLOCK_TIME_NONE;
+
+  list = NULL;
+  data += 7;
+  while (TRUE) {
+    gchar *r;
+
+    end = g_utf8_strchr (data, -1, '\n');
+    if (end)
+      *end = '\0';
+
+    r = g_utf8_strchr (data, -1, '\r');
+    if (r)
+      *r = '\0';
+
+    if (data[0] != '#' && data[0] != '\0') {
+      gchar *name = data;
+
+      if (list == NULL) {
+        GST_LOG ("%s: got line without EXT-STREAM-INF, dropping", data);
+        goto next_line;
+      }
+
+      data = uri_join (self->base_uri ? self->base_uri : self->uri, data);
+      if (data == NULL)
+        goto next_line;
+
+      if (g_list_find_custom (self->lists, data,
+              (GCompareFunc) _m3u8_compare_uri)) {
+        GST_DEBUG ("Already have a list with this URI");
+        gst_m3u8_unref (list);
+        g_free (data);
+      } else {
+        gst_m3u8_take_uri (list, data, NULL, g_strdup (name));
+        self->lists = g_list_append (self->lists, list);
+      }
+      list = NULL;
+    } else if (g_str_has_prefix (data, "#EXT-X-VERSION:")) {
+      if (int_from_string (data + 15, &data, &val))
+        self->version = val;
+    } else if (g_str_has_prefix (data, "#EXT-X-STREAM-INF:") ||
+        g_str_has_prefix (data, "#EXT-X-I-FRAME-STREAM-INF:")) {
+      gboolean iframe = g_str_has_prefix (data + 7, "I-FRAME");
+      GstM3U8 *new_list;
+      gchar *v, *a;
+
+      new_list = gst_m3u8_new ();
+      new_list->iframe = iframe;
+      data = data + (iframe ? 26 : 18);
+      while (data && parse_attributes (&data, &a, &v)) {
+        if (g_str_equal (a, "BANDWIDTH")) {
+          if (!int_from_string (v, NULL, &new_list->bandwidth))
+            GST_WARNING ("Error while reading BANDWIDTH");
+        } else if (g_str_equal (a, "PROGRAM-ID")) {
+          if (!int_from_string (v, NULL, &new_list->program_id))
+            GST_WARNING ("Error while reading PROGRAM-ID");
+        } else if (g_str_equal (a, "CODECS")) {
+          g_free (new_list->codecs);
+          new_list->codecs = g_strdup (v);
+        } else if (g_str_equal (a, "RESOLUTION")) {
+          if (!int_from_string (v, &v, &new_list->width))
+            GST_WARNING ("Error while reading RESOLUTION width");
+          if (!v || *v != 'x') {
+            GST_WARNING ("Missing height");
+          } else {
+            v = g_utf8_next_char (v);
+            if (!int_from_string (v, NULL, &new_list->height))
+              GST_WARNING ("Error while reading RESOLUTION height");
+          }
+        } else if (iframe && g_str_equal (a, "URI")) {
+          gchar *name;
+          gchar *uri = g_strdup (v);
+          gchar *urip = uri;
+
+          uri = unquote_string (uri);
+          if (uri) {
+            uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
+            if (uri == NULL) {
+              g_free (urip);
+              continue;
+            }
+            name = g_strdup (uri);
+
+            gst_m3u8_take_uri (new_list, uri, NULL, name);
+          } else {
+            GST_WARNING
+                ("Cannot remove quotation marks from i-frame-stream URI");
+          }
+          g_free (urip);
+        }
+      }
+
+      if (iframe) {
+        if (g_list_find_custom (self->iframe_lists, new_list->uri,
+                (GCompareFunc) _m3u8_compare_uri)) {
+          GST_DEBUG ("Already have a list with this URI");
+          gst_m3u8_unref (new_list);
+        } else {
+          self->iframe_lists = g_list_append (self->iframe_lists, new_list);
+        }
+      } else {
+        if (list != NULL) {
+          GST_WARNING ("Found a list without a uri..., dropping");
+          gst_m3u8_unref (list);
+        }
+        list = new_list;
+      }
+    } else if (*data != '\0') {
+      GST_LOG ("Ignored line: %s", data);
+    }
+
+  next_line:
+    if (!end)
+      break;
+    data = g_utf8_next_char (end);      /* skip \n */
+  }
+
+  /* reorder playlists by bitrate */
+  if (self->lists) {
+    gchar *top_variant_uri = NULL;
+    gboolean iframe = FALSE;
+
+    if (!self->current_variant) {
+      top_variant_uri = GST_M3U8 (self->lists->data)->uri;
+    } else {
+      top_variant_uri = GST_M3U8 (self->current_variant->data)->uri;
+      iframe = GST_M3U8 (self->current_variant->data)->iframe;
+    }
+
+    self->lists =
+        g_list_sort (self->lists,
+        (GCompareFunc) gst_m3u8_compare_playlist_by_bitrate);
+
+    self->iframe_lists =
+        g_list_sort (self->iframe_lists,
+        (GCompareFunc) gst_m3u8_compare_playlist_by_bitrate);
+
+    if (iframe)
+      self->current_variant =
+          g_list_find_custom (self->iframe_lists, top_variant_uri,
+          (GCompareFunc) _m3u8_compare_uri);
+    else
+      self->current_variant = g_list_find_custom (self->lists, top_variant_uri,
+          (GCompareFunc) _m3u8_compare_uri);
+  }
+
+  if (self->lists == NULL) {
+    GST_ERROR ("Invalid master playlist, it does not contain any streams");
+    GST_M3U8_UNLOCK (self);
+    return FALSE;
+  }
+
+  GST_DEBUG ("parsed master playlist with %d streams and %d I-frame streams",
+      g_list_length (self->lists), g_list_length (self->iframe_lists));
+
+  GST_M3U8_UNLOCK (self);
+
   return TRUE;
 }

@@ -106,12 +106,14 @@ struct _GstHLSDemux
 
   gint srcpad_counter;
 
-  gchar *uri;                   /* Original playlist URI */
-  GstM3U8Client *client;        /* M3U8 client */
-
   /* Decryption key cache: url => GstHLSKey */
   GHashTable *keys;
   GMutex      keys_lock;
+
+  /* FIXME: check locking, protected automatically by manifest_lock already? */
+  /* playlists */
+  GstM3U8 *main;                /* main playlist */
+  GstM3U8 *current;
 };
 
 struct _GstHLSDemuxClass
