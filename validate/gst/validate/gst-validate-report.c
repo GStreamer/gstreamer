@@ -299,6 +299,8 @@ gst_validate_report_load_issues (void)
       _("resulting file stream profiles didn't match expected values"), NULL);
   REGISTER_VALIDATE_ISSUE (ISSUE, FILE_TAG_DETECTION_INCORRECT,
       _("detected tags are different than expected ones"), NULL);
+  REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_FRAMES_INCORRECT,
+      _("resulting file frames are not as expected"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_NO_STREAM_INFO,
       _("the discoverer could not determine the stream info"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_NO_STREAM_ID,

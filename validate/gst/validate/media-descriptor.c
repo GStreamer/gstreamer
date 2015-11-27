@@ -337,6 +337,69 @@ stream_id_is_equal (const gchar * uri, const gchar * rid, const gchar * cid)
   return FALSE;
 }
 
+static gboolean
+compare_frames (GstMediaDescriptor * ref, StreamNode * rstream,
+    FrameNode * rframe, FrameNode * cframe)
+{
+  if (rframe->id != cframe->id) {
+    GST_VALIDATE_REPORT (ref, FILE_FRAMES_INCORRECT,
+        "Stream frame %s ids mismatch: %" G_GUINT64_FORMAT " != %"
+        G_GUINT64_FORMAT, rstream->id, rframe->id, cframe->id);
+    return FALSE;
+  }
+#define CHECK_FRAME_FIELD(fieldname, format) \
+  if (rframe->fieldname != cframe->fieldname) { \
+    GST_VALIDATE_REPORT (ref, FILE_FRAMES_INCORRECT, \
+        "Stream %s frames with id %" G_GUINT64_FORMAT " have " #fieldname \
+        " mismatch. Expected " format ", got " format, rstream->id, \
+        rframe->id, rframe->fieldname, cframe->fieldname); \
+    return FALSE; \
+  }
+
+  CHECK_FRAME_FIELD (pts, "%" G_GUINT64_FORMAT);
+  CHECK_FRAME_FIELD (dts, "%" G_GUINT64_FORMAT);
+  CHECK_FRAME_FIELD (duration, "%" G_GUINT64_FORMAT);
+  CHECK_FRAME_FIELD (offset, "%" G_GUINT64_FORMAT);
+  CHECK_FRAME_FIELD (offset_end, "%" G_GUINT64_FORMAT);
+  CHECK_FRAME_FIELD (is_keyframe, "%d");
+
+  return TRUE;
+}
+
+static gboolean
+compare_frames_list (GstMediaDescriptor * ref, StreamNode * rstream,
+    StreamNode * cstream)
+{
+  GList *rframes, *cframes;
+
+  if (g_list_length (rstream->frames) != g_list_length (cstream->frames)) {
+    GST_VALIDATE_REPORT (ref, FILE_FRAMES_INCORRECT,
+        "Stream reference has %i frames, compared one has %i frames",
+        g_list_length (rstream->frames), g_list_length (cstream->frames));
+    return FALSE;
+  }
+
+  for (rframes = rstream->frames, cframes = cstream->frames; rframes;
+      rframes = g_list_next (rframes), cframes = g_list_next (cframes)) {
+    FrameNode *rframe, *cframe;
+
+    if (cframes == NULL) {
+      /* The list was checked to be of the same size */
+      g_assert_not_reached ();
+      return FALSE;
+    }
+
+    rframe = rframes->data;
+    cframe = cframes->data;
+
+    if (!compare_frames (ref, rstream, rframe, cframe)) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
 /*  Return -1 if not found 1 if OK 0 if an error occured */
 static gint
 compare_streams (GstMediaDescriptor * ref, StreamNode * rstream,
@@ -358,7 +421,9 @@ compare_streams (GstMediaDescriptor * ref, StreamNode * rstream,
     /* We ignore the return value on purpose as this is not critical */
     compare_tags (ref, rstream, cstream);
 
-    return 1;
+    if (compare_frames_list (ref, rstream, cstream))
+      return 1;
+    return 0;
   }
 
   return -1;
