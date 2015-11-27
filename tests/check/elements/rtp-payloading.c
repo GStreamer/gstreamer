@@ -615,6 +615,31 @@ GST_START_TEST (rtp_h264)
       rtp_h264_frame_count,
       "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal",
       "rtph264pay", "rtph264depay", 0, 0, FALSE);
+
+  /* config-interval property used to be of uint type, was changed to int,
+   * make sure old GValue stuff still works */
+  {
+    GValue val = G_VALUE_INIT;
+    GstElement *rtph264pay;
+    GParamSpec *pspec;
+
+
+    rtph264pay = gst_element_factory_make ("rtph264pay", NULL);
+    pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (rtph264pay),
+        "config-interval");
+    fail_unless (pspec->value_type == G_TYPE_INT);
+    g_value_init (&val, G_TYPE_UINT);
+    g_value_set_uint (&val, 10);
+    g_object_set_property (G_OBJECT (rtph264pay), "config-interval", &val);
+    g_value_set_uint (&val, 0);
+    g_object_get_property (G_OBJECT (rtph264pay), "config-interval", &val);
+    fail_unless_equals_int (10, g_value_get_uint (&val));
+    g_object_set (G_OBJECT (rtph264pay), "config-interval", -1, NULL);
+    g_object_get_property (G_OBJECT (rtph264pay), "config-interval", &val);
+    fail_unless (g_value_get_uint (&val) == G_MAXUINT);
+    g_value_unset (&val);
+    gst_object_unref (rtph264pay);
+  }
 }
 
 GST_END_TEST;

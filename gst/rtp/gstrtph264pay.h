@@ -71,7 +71,7 @@ struct _GstRtpH264Pay
 
   GstAdapter *adapter;
 
-  guint spspps_interval;
+  gint spspps_interval;
   gboolean send_spspps;
   GstClockTime last_spspps;
 
