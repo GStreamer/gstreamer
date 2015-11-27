@@ -766,7 +766,6 @@ gst_m3u8_client_new (const gchar * uri, const gchar * base_uri)
   client->current_file_duration = GST_CLOCK_TIME_NONE;
   client->sequence = -1;
   client->sequence_position = 0;
-  client->update_failed_count = 0;
   client->highest_sequence_number = -1;
   client->duration = GST_CLOCK_TIME_NONE;
   g_mutex_init (&client->lock);
@@ -793,7 +792,6 @@ gst_m3u8_client_set_current (GstM3U8Client * self, GstM3U8 * m3u8)
   GST_M3U8_CLIENT_LOCK (self);
   if (m3u8 != self->current) {
     self->current = m3u8;
-    self->update_failed_count = 0;
     self->duration = GST_CLOCK_TIME_NONE;
     self->current_file = NULL;
   }
@@ -815,10 +813,8 @@ gst_m3u8_client_update (GstM3U8Client * self, gchar * data)
   if (!gst_m3u8_update (self, m3u8, data, &updated))
     goto out;
 
-  if (!updated) {
-    self->update_failed_count++;
+  if (!updated)
     goto out;
-  }
 
   if (self->current && !self->current->files) {
     GST_ERROR ("Invalid media playlist, it does not contain any media files");
