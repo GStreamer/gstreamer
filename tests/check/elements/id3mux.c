@@ -45,6 +45,8 @@ static const guint8 mp3_dummyhdr[] = { 0xff, 0xfb, 0xb0, 0x44, 0x00, 0x00,
   0x08, 0x00, 0x4b, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00
 };
 
+static const guint8 privatedata[] = { 0x99, 0x66, 0x33, 0x11, 0x22, 0x44 };
+
 #define MP3_FRAME_SIZE 626
 
 /* the peak and gain values are stored pretty roughly, so check that they're
@@ -122,6 +124,20 @@ test_taglib_id3mux_create_tags (guint32 mask)
         GST_TAG_BEATS_PER_MINUTE, TEST_BPM, NULL);
   }
   if (mask & (1 << 13)) {
+    GstSample *sample;
+    GstBuffer *buf;
+
+    buf = gst_buffer_new_and_alloc (sizeof (privatedata));
+    gst_buffer_fill (buf, 0, privatedata, sizeof (privatedata));
+    sample = gst_sample_new (buf, NULL, NULL,
+        gst_structure_new ("ID3PrivateFrame",
+            "owner", G_TYPE_STRING, "me", NULL));
+    gst_buffer_unref (buf);
+    gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
+        GST_TAG_PRIVATE_DATA, sample, NULL);
+    gst_sample_unref (sample);
+  }
+  if (mask & (1 << 14)) {
   }
   return tags;
 }
@@ -270,6 +286,20 @@ test_taglib_id3mux_check_tags (GstTagList * tags, guint32 mask, int v2version)
     fail_unless_sorta_equals_float (bpm, TEST_BPM);
   }
   if (mask & (1 << 13)) {
+    GstSample *sample = NULL;
+    const GstStructure *info;
+    GstBuffer *buf;
+
+    fail_unless (gst_tag_list_get_sample (tags, GST_TAG_PRIVATE_DATA, &sample));
+    fail_unless (sample != NULL);
+    buf = gst_sample_get_buffer (sample);
+    fail_if (gst_buffer_memcmp (buf, 0, privatedata, sizeof (privatedata)));
+    info = gst_sample_get_info (sample);
+    fail_unless (gst_structure_has_name (info, "ID3PrivateFrame"));
+    fail_unless_equals_string (gst_structure_get_string (info, "owner"), "me");
+    gst_sample_unref (sample);
+  }
+  if (mask & (1 << 14)) {
   }
 }
 
