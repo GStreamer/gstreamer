@@ -81,6 +81,8 @@ struct _GstMultiQueue {
 
   GstClockTime interleave;	/* Input interleave */
   GstClockTime last_interleave_update;
+
+  GstClockTime unlinked_cache_time;
 };
 
 struct _GstMultiQueueClass {

@@ -256,6 +256,7 @@ enum
 #define DEFAULT_HIGH_PERCENT  99
 #define DEFAULT_SYNC_BY_RUNNING_TIME FALSE
 #define DEFAULT_USE_INTERLEAVE FALSE
+#define DEFAULT_UNLINKED_CACHE_TIME 250 * GST_MSECOND
 
 enum
 {
@@ -271,6 +272,7 @@ enum
   PROP_HIGH_PERCENT,
   PROP_SYNC_BY_RUNNING_TIME,
   PROP_USE_INTERLEAVE,
+  PROP_UNLINKED_CACHE_TIME,
   PROP_LAST
 };
 
@@ -442,6 +444,14 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
           "Adjust time limits based on input interleave",
           DEFAULT_USE_INTERLEAVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_UNLINKED_CACHE_TIME,
+      g_param_spec_uint64 ("unlinked-cache-time", "Unlinked cache time (ns)",
+          "Extra buffering in time for unlinked streams (if 'sync-by-running-time')",
+          0, G_MAXUINT64, DEFAULT_UNLINKED_CACHE_TIME,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+
+
   gobject_class->finalize = gst_multi_queue_finalize;
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -480,6 +490,7 @@ gst_multi_queue_init (GstMultiQueue * mqueue)
 
   mqueue->sync_by_running_time = DEFAULT_SYNC_BY_RUNNING_TIME;
   mqueue->use_interleave = DEFAULT_USE_INTERLEAVE;
+  mqueue->unlinked_cache_time = DEFAULT_UNLINKED_CACHE_TIME;
 
   mqueue->counter = 1;
   mqueue->highid = -1;
@@ -623,6 +634,11 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_INTERLEAVE:
       mq->use_interleave = g_value_get_boolean (value);
+    case PROP_UNLINKED_CACHE_TIME:
+      GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+      mq->unlinked_cache_time = g_value_get_uint64 (value);
+      GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+      gst_multi_queue_post_buffering (mq);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -671,6 +687,8 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_INTERLEAVE:
       g_value_set_boolean (value, mq->use_interleave);
+    case PROP_UNLINKED_CACHE_TIME:
+      g_value_set_uint64 (value, mq->unlinked_cache_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1546,6 +1564,9 @@ next:
 
     /* Update the nextid so other threads know when to wake us up */
     sq->nextid = newid;
+    /* Take into account the extra cache time since we're unlinked */
+    if (GST_CLOCK_TIME_IS_VALID (next_time))
+      next_time += mq->unlinked_cache_time;
     sq->next_time = next_time;
 
     /* Update the oldid (the last ID we output) for highid tracking */
@@ -2490,8 +2511,16 @@ single_queue_check_full (GstDataQueue * dataq, guint visible, guint bytes,
   res = IS_FILLED (sq, bytes, bytes);
   /* We only care about limits in time if we're not a sparse stream or
    * we're not syncing by running time */
-  if (!sq->is_sparse || !mq->sync_by_running_time)
-    res |= IS_FILLED (sq, time, sq->cur_time);
+  if (!sq->is_sparse || !mq->sync_by_running_time) {
+    /* If unlinked, take into account the extra unlinked cache time */
+    if (mq->sync_by_running_time && sq->srcresult == GST_FLOW_NOT_LINKED) {
+      if (sq->cur_time > mq->unlinked_cache_time)
+        res |= IS_FILLED (sq, time, sq->cur_time - mq->unlinked_cache_time);
+      else
+        res = FALSE;
+    } else
+      res |= IS_FILLED (sq, time, sq->cur_time);
+  }
 
   return res;
 }
