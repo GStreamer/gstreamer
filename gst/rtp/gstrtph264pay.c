@@ -127,7 +127,8 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
       g_param_spec_int ("config-interval",
           "SPS PPS Send Interval",
           "Send SPS and PPS Insertion Interval in seconds (sprop parameter sets "
-          "will be multiplexed in the data stream when detected.) (0 = disabled)",
+          "will be multiplexed in the data stream when detected.) "
+          "(0 = disabled, -1 = send with every IDR frame)",
           -1, 3600, DEFAULT_CONFIG_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
@@ -829,6 +830,10 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
       GST_DEBUG_OBJECT (rtph264pay, "no previous SPS/PPS time, send now");
       send_spspps = TRUE;
     }
+  } else if (nalType == IDR_TYPE_ID && rtph264pay->spspps_interval == -1) {
+    GST_DEBUG_OBJECT (rtph264pay, "sending SPS/PPS before current IDR frame");
+    /* send SPS/PPS before every IDR frame */
+    send_spspps = TRUE;
   }
 
   if (send_spspps || rtph264pay->send_spspps) {
