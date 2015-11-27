@@ -462,7 +462,58 @@ add_text_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
   g_free (strings);
 }
 
-/* FIXME: id3v2-private frames need to be extracted as samples */
+static void
+add_private_data_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * frame_id)
+{
+  gint n;
+
+  for (n = 0; n < num_tags; ++n) {
+    GstId3v2Frame frame;
+    GstSample *sample = NULL;
+    const GstStructure *structure = NULL;
+    GstBuffer *binary = NULL;
+    GstBuffer *priv_frame = NULL;
+    const gchar *owner_str = NULL;
+    guint owner_len = 0;
+    GstMapInfo mapinfo;
+
+    if (!gst_tag_list_get_sample_index (list, tag, n, &sample))
+      continue;
+
+    structure = gst_sample_get_info (sample);
+    if (structure != NULL
+        && !strcmp (gst_structure_get_name (structure), "ID3PrivateFrame")) {
+      owner_str = gst_structure_get_string (structure, "owner");
+
+      if (owner_str != NULL) {
+        owner_len = strlen (owner_str) + 1;
+        priv_frame = gst_buffer_new_and_alloc (owner_len);
+        gst_buffer_fill (priv_frame, 0, owner_str, owner_len);
+
+        binary = gst_buffer_ref (gst_sample_get_buffer (sample));
+        priv_frame = gst_buffer_append (priv_frame, binary);
+
+        id3v2_frame_init (&frame, frame_id, 0);
+
+        if (gst_buffer_map (priv_frame, &mapinfo, GST_MAP_READ)) {
+          id3v2_frame_write_bytes (&frame, mapinfo.data, mapinfo.size);
+          g_array_append_val (id3v2tag->frames, frame);
+          gst_buffer_unmap (priv_frame, &mapinfo);
+        } else {
+          GST_WARNING ("Couldn't map priv frame tag buffer");
+          id3v2_frame_unset (&frame);
+        }
+
+        gst_buffer_unref (priv_frame);
+        gst_sample_unref (sample);
+      }
+    } else {
+      GST_WARNING ("Couldn't find ID3PrivateFrame structure");
+    }
+  }
+}
+
 static void
 add_id3v2frame_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     const gchar * tag, guint num_tags, const gchar * unused)
@@ -1095,6 +1146,7 @@ static const struct
   GST_TAG_MUSICAL_KEY, add_text_tag, "TKEY"}, {
 
     /* Private frames */
+  GST_TAG_PRIVATE_DATA, add_private_data_tag, "PRIV"}, {
   GST_ID3_DEMUX_TAG_ID3V2_FRAME, add_id3v2frame_tag, NULL}, {
 
     /* Track and album numbers */
