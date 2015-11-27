@@ -331,10 +331,6 @@ gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec, gboolean reset)
     av_free (ffmpegdec->context->extradata);
     ffmpegdec->context->extradata = NULL;
   }
-  if (ffmpegdec->context->slice_offset) {
-    g_free (ffmpegdec->context->slice_offset);
-    ffmpegdec->context->slice_offset = NULL;
-  }
   if (reset) {
     if (avcodec_get_context_defaults3 (ffmpegdec->context,
             oclass->in_plugin) < 0) {
@@ -362,22 +358,9 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
     ffmpegdec->stride[i] = -1;
 
   ffmpegdec->opened = TRUE;
-  ffmpegdec->is_realvideo = FALSE;
 
   GST_LOG_OBJECT (ffmpegdec, "Opened libav codec %s, id %d",
       oclass->in_plugin->name, oclass->in_plugin->id);
-
-  switch (oclass->in_plugin->id) {
-    case AV_CODEC_ID_RV10:
-    case AV_CODEC_ID_RV30:
-    case AV_CODEC_ID_RV20:
-    case AV_CODEC_ID_RV40:
-      ffmpegdec->is_realvideo = TRUE;
-      break;
-    default:
-      GST_LOG_OBJECT (ffmpegdec, "Parser deactivated for format");
-      break;
-  }
 
   gst_ffmpegviddec_context_set_flags (ffmpegdec->context,
       CODEC_FLAG_OUTPUT_CORRUPT, ffmpegdec->output_corrupt);
@@ -1313,24 +1296,6 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   /* run QoS code, we don't stop decoding the frame when we are late because
    * else we might skip a reference frame */
   gst_ffmpegviddec_do_qos (ffmpegdec, frame, &mode_switch);
-
-  if (ffmpegdec->is_realvideo && data != NULL) {
-    gint slice_count;
-    gint i;
-
-    /* setup the slice table for realvideo */
-    if (ffmpegdec->context->slice_offset == NULL)
-      ffmpegdec->context->slice_offset = g_malloc (sizeof (guint32) * 1000);
-
-    slice_count = (*data++) + 1;
-    ffmpegdec->context->slice_count = slice_count;
-
-    for (i = 0; i < slice_count; i++) {
-      data += 4;
-      ffmpegdec->context->slice_offset[i] = GST_READ_UINT32_LE (data);
-      data += 4;
-    }
-  }
 
   if (frame) {
     /* save reference to the timing info */
