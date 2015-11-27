@@ -64,8 +64,6 @@ struct _GstFFMpegVidDec
   int max_threads;
   gboolean output_corrupt;
 
-  gboolean is_realvideo;
-
   GstCaps *last_caps;
 
   /* Internally used for direct rendering */
