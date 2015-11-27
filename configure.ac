@@ -24,6 +24,9 @@ m4_define([gst_vaapi_lt_age],           [0])
 # glib version number
 m4_define([glib_version], [2.32])
 
+# gmodule version number
+m4_define([gmodule_version], [2.32])
+
 # gstreamer version number
 m4_define([gst_api_version],            [autodetect])
 m4_define([gst12_version],              [1.1.90])
@@ -709,6 +712,11 @@ if test "$enable_egl" = "yes" -a $GLES_VERSION_MASK -ne 0; then
     AC_CHECK_LIB([EGL], [eglGetDisplay], [:], [USE_EGL=0])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
+
+    dnl Check for GMODULE
+    GMODULE_VERSION_REQUIRED=gmodule_version
+    PKG_CHECK_MODULES([GMODULE], [gmodule-2.0 >= $GMODULE_VERSION_REQUIRED])
+    AC_SUBST(GMODULE_VERSION_REQUIRED)
 fi
 
 dnl Check for Wayland

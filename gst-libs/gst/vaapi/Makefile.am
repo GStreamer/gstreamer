@@ -501,6 +501,7 @@ libgstvaapi_egl_@GST_API_VERSION@_la_CFLAGS =	\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
+	$(GMODULE_CFLAGS)			\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_VIDEO_CFLAGS)			\
 	$(LIBVA_CFLAGS)				\
@@ -509,6 +510,7 @@ libgstvaapi_egl_@GST_API_VERSION@_la_CFLAGS =	\
 
 libgstvaapi_egl_@GST_API_VERSION@_la_LIBADD =	\
 	$(GLIB_LIBS)				\
+	$(GMODULE_LIBS)				\
 	$(GST_LIBS)				\
 	$(GST_BASE_LIBS)			\
 	$(GST_VIDEO_LIBS)			\
