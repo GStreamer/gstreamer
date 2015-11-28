@@ -1353,29 +1353,6 @@ out:
   return ret;
 }
 
-guint64
-gst_m3u8_client_get_current_fragment_duration (GstM3U8Client * client)
-{
-  guint64 dur = GST_CLOCK_TIME_NONE;
-  GList *l;
-
-  g_return_val_if_fail (client != NULL, 0);
-
-  GST_M3U8_CLIENT_LOCK (client);
-
-  for (l = client->current->files; l != NULL; l = l->next) {
-    GstM3U8MediaFile *file = l->data;
-
-    if (file->sequence == client->sequence) {
-      dur = file->duration;
-      break;
-    }
-  }
-
-  GST_M3U8_CLIENT_UNLOCK (client);
-  return dur;
-}
-
 gboolean
 gst_m3u8_client_get_seek_range (GstM3U8Client * client, gint64 * start,
     gint64 * stop)
