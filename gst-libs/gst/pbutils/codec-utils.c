@@ -1519,7 +1519,7 @@ gst_codec_utils_opus_parse_header (GstBuffer * header,
   GstByteReader br;
   GstMapInfo map;
   gboolean ret = TRUE;
-  guint8 c, f;
+  guint8 c, f, version;
 
   g_return_val_if_fail (GST_IS_BUFFER (header), FALSE);
   g_return_val_if_fail (gst_buffer_get_size (header) >= 19, FALSE);
@@ -1532,7 +1532,10 @@ gst_codec_utils_opus_parse_header (GstBuffer * header,
     ret = FALSE;
     goto done;
   }
-  if (gst_byte_reader_get_uint8_unchecked (&br) != 0x01) {
+  version = gst_byte_reader_get_uint8_unchecked (&br);
+  if (version == 0x00)
+    GST_ERROR ("Opus Header version is wrong, should be 0x01 and not 0x00");
+  else if (version != 0x01) {
     ret = FALSE;
     goto done;
   }
