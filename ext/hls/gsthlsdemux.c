@@ -477,9 +477,12 @@ gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
   return TRUE;
 
 key_failed:
-  /* TODO Raise this error to the user */
-  GST_WARNING_OBJECT (demux, "Failed to decrypt data");
-  return FALSE;
+  {
+    GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
+        ("Couldn't retrieve key for decryption"), (NULL));
+    GST_WARNING_OBJECT (demux, "Failed to decrypt data");
+    return FALSE;
+  }
 }
 
 static GstFlowReturn

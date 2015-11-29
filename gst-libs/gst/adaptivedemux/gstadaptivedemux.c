@@ -1815,7 +1815,10 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     stream->starting_fragment = FALSE;
     if (klass->start_fragment) {
-      klass->start_fragment (demux, stream);
+      if (!klass->start_fragment (demux, stream)) {
+        ret = GST_FLOW_ERROR;
+        goto error;
+      }
     }
 
     GST_BUFFER_PTS (buffer) = stream->fragment.timestamp;
@@ -1880,6 +1883,8 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (ret == (GstFlowReturn) GST_ADAPTIVE_DEMUX_FLOW_SWITCH)
       ret = GST_FLOW_EOS;       /* return EOS to make the source stop */
   }
+
+error:
 
   GST_MANIFEST_UNLOCK (demux);
 
