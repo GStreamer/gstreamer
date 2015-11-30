@@ -437,12 +437,12 @@ _check_scenario_is_done (GstValidateScenario * scenario)
  *            for a parameter of an action
  * @action: The action from which to retrieve the time for @name
  *          parameter.
- * @name: The name of the parameter for which to retrive a time
+ * @name: The name of the parameter for which to retrieve a time
  * @retval: (out): The return value for the wanted time
  *
  *
  * Get a time value for the @name parameter of an action. This
- * method should be called to retrived and compute a timed value of a given
+ * method should be called to retrieved and compute a timed value of a given
  * action. It will first try to retrieve the value as a double,
  * then get it as a string and execute any formula taking into account
  * the 'position' and 'duration' variables. And it will always convert that
@@ -3004,8 +3004,8 @@ gst_validate_action_get_scenario (GstValidateAction * action)
  * gst_validate_register_action_type:
  * @type_name: The name of the new action type to add
  * @implementer_namespace: The namespace of the implementer of the action type.
- *                         That  should always be the name of the GstPlugin as
- *                         retrived with #gst_plugin_get_name when the action type
+ *                         That should always be the name of the GstPlugin as
+ *                         retrieved with #gst_plugin_get_name when the action type
  *                         is register inside a plugin.
  * @function: (scope notified): The function to be called to execute the action
  * @parameters: (allow-none) (array zero-terminated=1) (element-type GstValidate.ActionParameter): The #GstValidateActionParameter usable as parameter of the type

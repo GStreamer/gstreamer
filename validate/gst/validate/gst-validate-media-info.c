@@ -1111,7 +1111,7 @@ gst_validate_media_info_compare (GstValidateMediaInfo * expected,
   }
 
   if (extracted->stream_info == NULL || expected->stream_info == NULL) {
-    g_print ("Stream infos could not be retrived, an error occured\n");
+    g_print ("Stream infos could not be retrieved, an error occured\n");
     ret = FALSE;
   } else if (expected->stream_info
       && !gst_caps_is_equal_fixed (expected->stream_info->caps,
