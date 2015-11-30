@@ -337,6 +337,9 @@ gst_gl_window_finalize (GObject * object)
     while (window->nav_alive) {
       g_cond_wait (&window->nav_destroy_cond, &window->nav_lock);
     }
+    /* release resource hold by navigation thread */
+    g_thread_join(window->priv->navigation_thread);
+    window->priv->navigation_thread = NULL;
     g_mutex_unlock (&window->nav_lock);
   }
 
