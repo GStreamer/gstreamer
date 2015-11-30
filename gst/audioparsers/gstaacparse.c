@@ -1302,7 +1302,10 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
       /* This is pretty normal when skipping data at the start of
        * random stream (MPEG-TS capture for example) */
       GST_DEBUG_OBJECT (aacparse, "Error reading LOAS config. Skipping.");
-      *skipsize = map.size;
+      /* Since we don't fully parse the LOAS config, we don't know for sure
+       * how much to skip. Just skip 1 to end up to the next marker and
+       * resume parsing from there */
+      *skipsize = 1;
       goto exit;
     }
 
