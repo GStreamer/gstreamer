@@ -151,6 +151,7 @@ gboolean gst_media_descriptors_compare (GstMediaDescriptor *ref,
 gboolean gst_media_descriptor_detects_frames (GstMediaDescriptor * self);
 gboolean gst_media_descriptor_get_buffers (GstMediaDescriptor * self,
     GstPad * pad, GCompareFunc compare_func, GList ** bufs);
+gboolean gst_media_descriptor_has_frame_info (GstMediaDescriptor * self);
 GstClockTime gst_media_descriptor_get_duration (GstMediaDescriptor * self);
 gboolean gst_media_descriptor_get_seekable (GstMediaDescriptor * self);
 GList * gst_media_descriptor_get_pads (GstMediaDescriptor * self);

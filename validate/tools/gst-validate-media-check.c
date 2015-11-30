@@ -97,6 +97,21 @@ main (int argc, gchar ** argv)
   g_option_context_free (ctx);
 
   runner = gst_validate_runner_new ();
+
+  if (expected_file) {
+    reference = gst_media_descriptor_parser_new (runner, expected_file, NULL);
+
+    if (reference == NULL) {
+      g_print ("Could not parse file: %s\n", expected_file);
+      ret = 1;
+      goto out;
+    }
+
+    if (!full && gst_media_descriptor_has_frame_info ((GstMediaDescriptor *)
+            reference))
+      full = TRUE;              /* Reference has frame info, activate to do comparison */
+  }
+
   writer =
       gst_media_descriptor_writer_new_discover (runner, argv[1], full, TRUE,
       NULL);
@@ -113,15 +128,7 @@ main (int argc, gchar ** argv)
     }
   }
 
-  if (expected_file) {
-    reference = gst_media_descriptor_parser_new (runner, expected_file, NULL);
-
-    if (reference == NULL) {
-      g_print ("Could not parse file: %s\n", expected_file);
-      ret = 1;
-      goto out;
-    }
-
+  if (reference) {
     if (!gst_media_descriptors_compare (GST_MEDIA_DESCRIPTOR (reference),
             GST_MEDIA_DESCRIPTOR (writer))) {
       ret = 1;

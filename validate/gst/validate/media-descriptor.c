@@ -547,6 +547,22 @@ done:
   return ret;
 }
 
+gboolean
+gst_media_descriptor_has_frame_info (GstMediaDescriptor * self)
+{
+  GList *tmpstream;
+
+  for (tmpstream = self->filenode->streams;
+      tmpstream; tmpstream = tmpstream->next) {
+    StreamNode *streamnode = (StreamNode *) tmpstream->data;
+
+    if (g_list_length (streamnode->frames))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 GstClockTime
 gst_media_descriptor_get_duration (GstMediaDescriptor * self)
 {
