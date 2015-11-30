@@ -1393,6 +1393,9 @@ d3d_resize_swap_chain (GstD3DVideoSink * sink)
   gboolean ret = FALSE;
   HRESULT hr;
   gboolean need_new = FALSE;
+  int clip_ret;
+  HDC handle_hdc;
+  RECT clip_rectangle;
 
   g_return_val_if_fail (sink != NULL, FALSE);
   klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
@@ -1410,6 +1413,16 @@ d3d_resize_swap_chain (GstD3DVideoSink * sink)
   CHECK_WINDOW_HANDLE (sink, end, FALSE);
   CHECK_D3D_DEVICE (klass, sink, end);
   CHECK_D3D_SWAPCHAIN (sink, end);
+
+  handle_hdc = GetDC (sink->d3d.window_handle);
+  clip_ret = GetClipBox (handle_hdc, &clip_rectangle);
+  ReleaseDC (sink->d3d.window_handle, handle_hdc);
+  if (clip_ret == NULLREGION) {
+    GST_DEBUG_OBJECT (sink, "Window is hidden, not resizing swapchain");
+    UNLOCK_CLASS (sink, klass);
+    UNLOCK_SINK (sink);
+    return TRUE;
+  }
 
   d3d_get_hwnd_window_size (sink->d3d.window_handle, &w, &h);
   ZeroMemory (&d3d_pp, sizeof (d3d_pp));
@@ -2004,7 +2017,12 @@ d3d_wnd_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SIZE:{
       if (proc)
         ret = CallWindowProc (proc, hWnd, message, wParam, lParam);
-      d3d_resize_swap_chain (sink);
+
+      /* Don't resize if the window is being minimized. Recreating the
+       * swap chain will fail if the window is minimized
+       */
+      if (wParam != SIZE_MINIMIZED)
+        d3d_resize_swap_chain (sink);
       goto end;
     }
     case WM_KEYDOWN:
