@@ -800,8 +800,7 @@ retry:
   g_free (main_uri);
   if (download == NULL) {
     if (update && !main_checked
-        && gst_m3u8_client_has_variant_playlist (demux->client)
-        && gst_m3u8_client_has_main (demux->client)) {
+        && gst_m3u8_client_has_variant_playlist (demux->client)) {
       GError *err2 = NULL;
       main_uri = gst_m3u8_client_get_uri (demux->client);
       GST_INFO_OBJECT (demux,

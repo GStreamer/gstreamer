@@ -140,8 +140,6 @@ gchar *         gst_m3u8_client_get_uri             (GstM3U8Client * client);
 
 gchar *         gst_m3u8_client_get_current_uri     (GstM3U8Client * client);
 
-gboolean        gst_m3u8_client_has_main            (GstM3U8Client * client);
-
 gboolean        gst_m3u8_client_has_variant_playlist (GstM3U8Client * client);
 
 gboolean        gst_m3u8_client_is_live             (GstM3U8Client * client);

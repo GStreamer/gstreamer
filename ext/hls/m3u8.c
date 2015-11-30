@@ -1229,22 +1229,6 @@ gst_m3u8_client_get_current_uri (GstM3U8Client * client)
 }
 
 gboolean
-gst_m3u8_client_has_main (GstM3U8Client * client)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (client != NULL, FALSE);
-
-  GST_M3U8_CLIENT_LOCK (client);
-  if (client->main)
-    ret = TRUE;
-  else
-    ret = FALSE;
-  GST_M3U8_CLIENT_UNLOCK (client);
-  return ret;
-}
-
-gboolean
 gst_m3u8_client_has_variant_playlist (GstM3U8Client * client)
 {
   gboolean ret;
