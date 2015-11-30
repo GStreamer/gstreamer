@@ -89,7 +89,7 @@ gst_control_source_constructor (GType type, guint n_construct_params,
 }
 
 /**
- * gst_control_source_get_value:
+ * gst_control_source_get_value: (method)
  * @self: the #GstControlSource object
  * @timestamp: the time for which the value should be returned
  * @value: (out): the value
@@ -113,7 +113,7 @@ gst_control_source_get_value (GstControlSource * self, GstClockTime timestamp,
 }
 
 /**
- * gst_control_source_get_value_array:
+ * gst_control_source_get_value_array: (method)
  * @self: the #GstControlSource object
  * @timestamp: the first timestamp
  * @interval: the time steps
