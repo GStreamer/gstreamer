@@ -209,16 +209,24 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     GstQuery * query)
 {
   struct GLMemoryUpload *upload = impl;
-  GstAllocationParams params;
-  GstAllocator *allocator;
   GstBufferPool *pool = NULL;
   guint n_pools, i;
+  GstCaps *caps;
+  GstCapsFeatures *features;
 
-  gst_allocation_params_init (&params);
+  gst_query_parse_allocation (query, &caps, NULL);
+  features = gst_caps_get_features (caps, 0);
 
-  allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
-  gst_query_add_allocation_param (query, allocator, &params);
-  gst_object_unref (allocator);
+  /* Only offer our custom allocator if that type of memory was negotiated. */
+  if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+    GstAllocator *allocator;
+    GstAllocationParams params;
+    gst_allocation_params_init (&params);
+
+    allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
+    gst_query_add_allocation_param (query, allocator, &params);
+    gst_object_unref (allocator);
+  }
 
   n_pools = gst_query_get_n_allocation_pools (query);
   for (i = 0; i < n_pools; i++) {
@@ -232,10 +240,8 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   if (!pool) {
     GstStructure *config;
     GstVideoInfo info;
-    GstCaps *caps;
     gsize size;
 
-    gst_query_parse_allocation (query, &caps, NULL);
 
     if (!gst_video_info_from_caps (&info, caps))
       goto invalid_caps;
@@ -424,13 +430,22 @@ _egl_image_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     GstQuery * query)
 {
   struct EGLImageUpload *image = impl;
-  GstAllocationParams params;
-  GstAllocator *allocator;
+  GstCaps *caps;
+  GstCapsFeatures *features;
 
-  gst_allocation_params_init (&params);
+  gst_query_parse_allocation (query, &caps, NULL);
+  features = gst_caps_get_features (caps, 0);
 
-  if (gst_gl_context_check_feature (image->upload->context,
+  /* Only offer our custom allocator if that type of memory was negotiated. */
+  if (gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_EGL_IMAGE) &&
+      gst_gl_context_check_feature (image->upload->context,
           "EGL_KHR_image_base")) {
+    GstAllocationParams params;
+    GstAllocator *allocator;
+
+    gst_allocation_params_init (&params);
+
     allocator = gst_allocator_find (GST_EGL_IMAGE_MEMORY_TYPE);
     gst_query_add_allocation_param (query, allocator, &params);
     gst_object_unref (allocator);
