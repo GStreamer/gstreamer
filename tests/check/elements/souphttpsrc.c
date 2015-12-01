@@ -387,8 +387,9 @@ GST_START_TEST (test_icy_stream)
   gst_bin_add (GST_BIN (pipe), sink);
   fail_unless (gst_element_link (src, sink));
 
-  /* Virgin Radio 32kbps mp3 shoutcast stream */
-  g_object_set (src, "location", "http://mp3-vr-32.smgradio.com:80/", NULL);
+  /* Radionomy Hot40Music shoutcast stream */
+  g_object_set (src, "location",
+      "http://streaming.radionomy.com:80/Hot40Music", NULL);
 
   /* EOS after the first buffer */
   g_object_set (src, "num-buffers", 1, NULL);
