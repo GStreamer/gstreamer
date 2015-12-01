@@ -1085,7 +1085,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   gboolean gotdata = FALSE;
   GstCaps *caps = NULL;
   gchar *codec_name = NULL;
-  GstEvent **event_p;
   gint64 upstream_size = 0;
   GstStructure *s;
 
@@ -1679,8 +1678,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
    * the right newsegment event downstream. */
   gst_wavparse_perform_seek (wav, wav->seek_event);
   /* remove pending event */
-  event_p = &wav->seek_event;
-  gst_event_replace (event_p, NULL);
+  gst_event_replace (&wav->seek_event, NULL);
 
   /* we just started, we are discont */
   wav->discont = TRUE;
@@ -1818,7 +1816,6 @@ gst_wavparse_send_event (GstElement * element, GstEvent * event)
 {
   GstWavParse *wav = GST_WAVPARSE (element);
   gboolean res = FALSE;
-  GstEvent **event_p;
 
   GST_DEBUG_OBJECT (wav, "received event %s", GST_EVENT_TYPE_NAME (event));
 
@@ -1830,8 +1827,7 @@ gst_wavparse_send_event (GstElement * element, GstEvent * event)
       } else {
         GST_DEBUG_OBJECT (wav, "queuing seek for later");
 
-        event_p = &wav->seek_event;
-        gst_event_replace (event_p, event);
+        gst_event_replace (&wav->seek_event, event);
 
         /* we always return true */
         res = TRUE;
