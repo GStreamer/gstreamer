@@ -67,6 +67,13 @@ struct _GstVulkanSwapper
   PFN_vkGetSwapchainImagesKHR GetSwapchainImagesKHR;
   PFN_vkAcquireNextImageKHR AcquireNextImageKHR;
   PFN_vkQueuePresentKHR QueuePresentKHR;
+
+  /* <private> */
+  /* runtime variables */
+  gint to_quit;
+
+  /* signal handlers */
+  gulong close_id;
 };
 
 struct _GstVulkanSwapperClass

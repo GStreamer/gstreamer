@@ -74,8 +74,38 @@ static GstVulkanWindow
 
 struct _GstVulkanDisplayPrivate
 {
-  gint dummy;
+  GThread *event_thread;
+
+  GMutex thread_lock;
+  GCond thread_cond;
 };
+
+static gpointer
+_event_thread_main (GstVulkanDisplay * display)
+{
+  g_mutex_lock (&display->priv->thread_lock);
+
+  display->main_context = g_main_context_new ();
+  display->main_loop = g_main_loop_new (display->main_context, FALSE);
+
+  g_cond_broadcast (&display->priv->thread_cond);
+  g_mutex_unlock (&display->priv->thread_lock);
+
+  g_main_loop_run (display->main_loop);
+
+  g_mutex_lock (&display->priv->thread_lock);
+
+  g_main_loop_unref (display->main_loop);
+  g_main_context_unref (display->main_context);
+
+  display->main_loop = NULL;
+  display->main_context = NULL;
+
+  g_cond_broadcast (&display->priv->thread_cond);
+  g_mutex_unlock (&display->priv->thread_lock);
+
+  return NULL;
+}
 
 static void
 gst_vulkan_display_class_init (GstVulkanDisplayClass * klass)
@@ -94,11 +124,42 @@ gst_vulkan_display_init (GstVulkanDisplay * display)
 {
   display->priv = GST_VULKAN_DISPLAY_GET_PRIVATE (display);
   display->type = GST_VULKAN_DISPLAY_TYPE_ANY;
+
+  g_mutex_init (&display->priv->thread_lock);
+  g_cond_init (&display->priv->thread_cond);
+
+  display->priv->event_thread = g_thread_new ("vkdisplay-event",
+      (GThreadFunc) _event_thread_main, display);
+
+  g_mutex_lock (&display->priv->thread_lock);
+  while (!display->main_loop)
+    g_cond_wait (&display->priv->thread_cond, &display->priv->thread_lock);
+  g_mutex_unlock (&display->priv->thread_lock);
 }
 
 static void
 gst_vulkan_display_finalize (GObject * object)
 {
+  GstVulkanDisplay *display = GST_VULKAN_DISPLAY (object);
+
+  g_mutex_lock (&display->priv->thread_lock);
+  if (display->main_context && display->event_source) {
+    g_source_destroy (display->event_source);
+    g_source_unref (display->event_source);
+  }
+  display->event_source = NULL;
+
+  if (display->main_loop)
+    g_main_loop_quit (display->main_loop);
+
+  while (display->main_loop)
+    g_cond_wait (&display->priv->thread_cond, &display->priv->thread_lock);
+
+  if (display->priv->event_thread)
+    g_thread_unref (display->priv->event_thread);
+  display->priv->event_thread = NULL;
+  g_mutex_unlock (&display->priv->thread_lock);
+
   G_OBJECT_CLASS (gst_vulkan_display_parent_class)->finalize (object);
 }
 
@@ -136,7 +197,7 @@ gst_vulkan_display_new (void)
         "(platform: %s), creating dummy",
         GST_STR_NULL (user_choice), GST_STR_NULL (platform_choice));
 
-    return g_object_new (GST_TYPE_VULKAN_DISPLAY, NULL);
+    display = g_object_new (GST_TYPE_VULKAN_DISPLAY, NULL);
   }
 
   return display;
@@ -243,4 +304,22 @@ static GstVulkanWindow *
 gst_vulkan_display_default_create_window (GstVulkanDisplay * display)
 {
   return gst_vulkan_window_new (display);
+}
+
+gboolean
+gst_vulkan_display_remove_window (GstVulkanDisplay * display,
+    GstVulkanWindow * window)
+{
+  gboolean ret = FALSE;
+  GList *l;
+
+  GST_OBJECT_LOCK (display);
+  l = g_list_find (display->windows, window);
+  if (l) {
+    display->windows = g_list_delete_link (display->windows, l);
+    ret = TRUE;
+  }
+  GST_OBJECT_UNLOCK (display);
+
+  return ret;
 }

@@ -78,10 +78,23 @@ GstVulkanDummyWindow *gst_vulkan_dummy_window_new (void);
 enum
 {
   SIGNAL_0,
+  SIGNAL_CLOSE,
   LAST_SIGNAL
 };
 
-/* static guint gst_vulkan_window_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_vulkan_window_signals[LAST_SIGNAL] = { 0 };
+
+static gboolean
+_accum_logical_and (GSignalInvocationHint * ihint, GValue * return_accu,
+    const GValue * handler_return, gpointer data)
+{
+  gboolean val = g_value_get_boolean (handler_return);
+  gboolean val2 = g_value_get_boolean (return_accu);
+
+  g_value_set_boolean (return_accu, val && val2);
+
+  return TRUE;
+}
 
 GQuark
 gst_vulkan_window_error_quark (void)
@@ -115,6 +128,9 @@ _init_debug (void)
 static void
 gst_vulkan_window_init (GstVulkanWindow * window)
 {
+  window->priv =
+      G_TYPE_INSTANCE_GET_PRIVATE (window, GST_TYPE_VULKAN_WINDOW,
+      GstVulkanWindowPrivate);
 }
 
 static void
@@ -124,6 +140,10 @@ gst_vulkan_window_class_init (GstVulkanWindowClass * klass)
 
   klass->open = GST_DEBUG_FUNCPTR (gst_vulkan_window_default_open);
   klass->close = GST_DEBUG_FUNCPTR (gst_vulkan_window_default_close);
+
+  gst_vulkan_window_signals[SIGNAL_CLOSE] =
+      g_signal_new ("close", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0,
+      (GSignalAccumulator) _accum_logical_and, NULL, NULL, G_TYPE_BOOLEAN, 0);
 
   G_OBJECT_CLASS (klass)->finalize = gst_vulkan_window_finalize;
 
@@ -136,7 +156,7 @@ gst_vulkan_window_class_init (GstVulkanWindowClass * klass)
  *
  * Returns: (transfer full): a new #GstVulkanWindow using @display's connection
  *
- * Since: 1.4
+ * Since: 1.10
  */
 GstVulkanWindow *
 gst_vulkan_window_new (GstVulkanDisplay * display)
@@ -217,12 +237,27 @@ void
 gst_vulkan_window_close (GstVulkanWindow * window)
 {
   GstVulkanWindowClass *klass;
+  gboolean to_close;
 
   g_return_if_fail (GST_IS_VULKAN_WINDOW (window));
   klass = GST_VULKAN_WINDOW_GET_CLASS (window);
   g_return_if_fail (klass->close != NULL);
 
-  return klass->close (window);
+  g_signal_emit (window, gst_vulkan_window_signals[SIGNAL_CLOSE], 0, &to_close);
+
+  if (to_close)
+    klass->close (window);
+}
+
+void
+gst_vulkan_window_resize (GstVulkanWindow * window, gint width, gint height)
+{
+  g_return_if_fail (GST_IS_VULKAN_WINDOW (window));
+
+  window->priv->surface_width = width;
+  window->priv->surface_height = height;
+
+  /* XXX: possibly queue a resize/redraw */
 }
 
 GType gst_vulkan_dummy_window_get_type (void);

@@ -61,17 +61,11 @@ gst_vulkan_display_xcb_finalize (GObject * object)
 {
   GstVulkanDisplayXCB *display_xcb = GST_VULKAN_DISPLAY_XCB (object);
 
+  G_OBJECT_CLASS (gst_vulkan_display_xcb_parent_class)->finalize (object);
+
   if (!display_xcb->foreign_display && display_xcb->platform_handle.connection)
     xcb_disconnect (display_xcb->platform_handle.connection);
   display_xcb->platform_handle.connection = NULL;
-
-  if (display_xcb->event_source) {
-    g_source_destroy (display_xcb->event_source);
-    g_source_unref (display_xcb->event_source);
-  }
-  display_xcb->event_source = NULL;
-
-  G_OBJECT_CLASS (gst_vulkan_display_xcb_parent_class)->finalize (object);
 }
 
 static xcb_screen_t *
@@ -106,25 +100,23 @@ gst_vulkan_display_xcb_new (const gchar * name)
 
   GST_DEBUG_CATEGORY_GET (gst_vulkan_display_debug, "gldisplay");
 
-  ret = g_object_new (GST_TYPE_VULKAN_DISPLAY_XCB, NULL);
-
-  ret->platform_handle.connection = connection = xcb_connect (NULL, &screen_no);
+  connection = xcb_connect (NULL, &screen_no);
   if (connection == NULL || xcb_connection_has_error (connection)) {
-    GST_ERROR_OBJECT (ret,
-        "Failed to open XCB display connection with name, \'%s\'", name);
-    gst_object_unref (ret);
+    GST_ERROR ("Failed to open XCB display connection with name, \'%s\'", name);
     return NULL;
   }
 
-  ret->screen = _get_screen_from_connection (connection, screen_no);
-  ret->platform_handle.root = ret->screen->root;
-  ret->event_source = xcb_event_source_new (ret);
+  ret = gst_vulkan_display_xcb_new_with_connection (connection, screen_no);
+  GST_VULKAN_DISPLAY (ret)->event_source = xcb_event_source_new (ret);
+  g_source_attach (GST_VULKAN_DISPLAY (ret)->event_source,
+      GST_VULKAN_DISPLAY (ret)->main_context);
+  ret->foreign_display = FALSE;
 
   return ret;
 }
 
 /**
- * gst_vulkan_display_xcb_new_with_display:
+ * gst_vulkan_display_xcb_new_with_connection:
  * @display: an existing, xcb display
  *
  * Creates a new display connection from a XCB Display.

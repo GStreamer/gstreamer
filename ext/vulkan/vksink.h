@@ -56,9 +56,6 @@ struct _GstVulkanSink
 
   /* stream configuration */
   GstVideoInfo v_info;
-
-  /* runtime variables */
-  gint to_quit;
 };
 
 struct _GstVulkanSinkClass

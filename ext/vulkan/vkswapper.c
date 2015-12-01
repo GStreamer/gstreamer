@@ -40,11 +40,16 @@ _get_function_table (GstVulkanSwapper * swapper)
   GstVulkanDevice *device = swapper->device;
   GstVulkanInstance *instance = gst_vulkan_device_get_instance (device);
 
+  if (!instance) {
+    GST_ERROR_OBJECT (swapper, "Failed to get instance from the device");
+    return FALSE;
+  }
 #define GET_PROC_ADDRESS_REQUIRED(obj, type, name) \
   G_STMT_START { \
     obj->G_PASTE (, name) = G_PASTE(G_PASTE(gst_vulkan_, type), _get_proc_address) (type, "vk" G_STRINGIFY(name)); \
     if (!obj->G_PASTE(, name)) { \
       GST_ERROR_OBJECT (obj, "Failed to find required function vk" G_STRINGIFY(name)); \
+      gst_object_unref (instance); \
       return FALSE; \
     } \
   } G_STMT_END
@@ -59,6 +64,8 @@ _get_function_table (GstVulkanSwapper * swapper)
   GET_PROC_ADDRESS_REQUIRED (swapper, device, GetSwapchainImagesKHR);
   GET_PROC_ADDRESS_REQUIRED (swapper, device, AcquireNextImageKHR);
   GET_PROC_ADDRESS_REQUIRED (swapper, device, QueuePresentKHR);
+
+  gst_object_unref (instance);
 
   return TRUE;
 
@@ -102,6 +109,7 @@ _get_window_surface_description (GstVulkanSwapper * swapper,
   desc->platform = _gst_display_type_to_vk_platform (dtype);
   if (desc->platform == -1) {
     GST_ERROR_OBJECT (swapper, "Failed to retrieve platform from display");
+    gst_object_unref (display);
     return FALSE;
   }
 
@@ -202,8 +210,8 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
 
     swapper->GetPhysicalDeviceSurfaceSupportKHR (gpu, i,
         (VkSurfaceDescriptionKHR *) & surface_desc, &supports_present);
-    if ((swapper->device->
-            queue_family_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
+    if ((swapper->device->queue_family_props[i].
+            queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
       if (supports_present) {
         /* found one that supports both */
         graphics_queue = present_queue = i;
@@ -270,6 +278,14 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
   return TRUE;
 }
 
+static gboolean
+_on_window_close (GstVulkanWindow * window, GstVulkanSwapper * swapper)
+{
+  g_atomic_int_set (&swapper->to_quit, 1);
+
+  return TRUE;
+}
+
 static void
 gst_vulkan_swapper_finalize (GObject * object)
 {
@@ -296,6 +312,9 @@ gst_vulkan_swapper_finalize (GObject * object)
   if (swapper->device)
     gst_object_unref (swapper->device);
   swapper->device = NULL;
+
+  g_signal_handler_disconnect (swapper->window, swapper->close_id);
+  swapper->close_id = 0;
 
   if (swapper->window)
     gst_object_unref (swapper->window);
@@ -334,6 +353,9 @@ gst_vulkan_swapper_new (GstVulkanDevice * device, GstVulkanWindow * window)
     gst_object_unref (swapper);
     return NULL;
   }
+
+  swapper->close_id = g_signal_connect (swapper->window, "close",
+      (GCallback) _on_window_close, swapper);
 
   return swapper;
 }
@@ -491,6 +513,19 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
   VkResult err;
   guint32 i;
 
+  if (!_get_window_surface_description (swapper, &surface_desc)) {
+    g_set_error (error, GST_VULKAN_ERROR,
+        GST_VULKAN_ERROR_INITIALIZATION_FAILED,
+        "Failed to retrieve platform description");
+    return FALSE;
+  }
+
+  err =
+      swapper->GetSurfacePropertiesKHR (swapper->device->device,
+      (VkSurfaceDescriptionKHR *) & surface_desc, &swapper->surf_props);
+  if (gst_vulkan_error_to_g_error (err, error, "vkGetSurfacePropertiesKHR") < 0)
+    return FALSE;
+
   /* width and height are either both -1, or both not -1. */
   if (swapper->surf_props.currentExtent.width == -1) {
     /* If the surface size is undefined, the size is set to
@@ -528,18 +563,11 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     n_images_wanted = swapper->surf_props.maxImageCount;
   }
 
-  if (swapper->surf_props.
-      supportedTransforms & VK_SURFACE_TRANSFORM_NONE_BIT_KHR) {
+  if (swapper->
+      surf_props.supportedTransforms & VK_SURFACE_TRANSFORM_NONE_BIT_KHR) {
     preTransform = VK_SURFACE_TRANSFORM_NONE_KHR;
   } else {
     preTransform = swapper->surf_props.currentTransform;
-  }
-
-  if (!_get_window_surface_description (swapper, &surface_desc)) {
-    g_set_error (error, GST_VULKAN_ERROR,
-        GST_VULKAN_ERROR_INITIALIZATION_FAILED,
-        "Failed to retrieve platform description");
-    return FALSE;
   }
 
   format =
@@ -555,8 +583,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
-  if ((swapper->
-          surf_props.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+  if ((swapper->surf_props.
+          supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
       != 0) {
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   } else {
@@ -887,6 +915,12 @@ gst_vulkan_swapper_render_buffer (GstVulkanSwapper * swapper,
   guint32 swap_idx;
   VkResult err;
 
+  if (g_atomic_int_get (&swapper->to_quit)) {
+    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_DEVICE_LOST,
+        "Output window was closed");
+    return FALSE;
+  }
+
 reacquire:
   err = vkCreateSemaphore (swapper->device->device, &semaphore_info,
       &semaphore);
@@ -898,6 +932,8 @@ reacquire:
       swapper->swap_chain, -1, semaphore, &swap_idx);
   /* TODO: Deal with the VK_SUBOPTIMAL_KHR and VK_ERROR_OUT_OF_DATE_KHR */
   if (err == VK_ERROR_OUT_OF_DATE_KHR) {
+    GST_DEBUG_OBJECT (swapper, "out of date frame acquired");
+
     vkDestroySemaphore (swapper->device->device, semaphore);
     if (!_swapchain_resize (swapper, error))
       return FALSE;
@@ -920,11 +956,24 @@ reacquire:
 
   err = swapper->QueuePresentKHR (swapper->queue->queue, &present);
   if (err == VK_ERROR_OUT_OF_DATE_KHR) {
+    GST_DEBUG_OBJECT (swapper, "out of date frame submitted");
+
     vkDestroySemaphore (swapper->device->device, semaphore);
+
     if (!_swapchain_resize (swapper, error))
       return FALSE;
-    /* FIXME: correct? */
-    return TRUE;
+
+    if (cmd_data.cmd)
+      vkDestroyCommandBuffer (swapper->device->device, cmd_data.cmd);
+    cmd_data.cmd = NULL;
+    if (cmd_data.fence.handle)
+      vkDestroyFence (swapper->device->device, cmd_data.fence);
+    cmd_data.fence.handle = 0;
+    if (cmd_data.notify)
+      cmd_data.notify (cmd_data.data);
+    cmd_data.notify = NULL;
+
+    goto reacquire;
   } else if (gst_vulkan_error_to_g_error (err, error, "vkQueuePresentKHR") < 0)
     goto error;
 

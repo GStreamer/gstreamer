@@ -82,29 +82,38 @@ _xcb_handle_event (GstVulkanDisplayXCB * display_xcb)
 
           window_xcb =
               _find_window_from_xcb_window (display_xcb, client_event->window);
-          /* TODO: actually quit */
-          ret = FALSE;
-#if 0
-          if (display->close)
-            display->close (display->close_data);
-#endif
-          gst_object_unref (window_xcb);
+
+          if (window_xcb) {
+            GST_INFO_OBJECT (window_xcb, "Close requested");
+
+            gst_vulkan_window_close (GST_VULKAN_WINDOW (window_xcb));
+            gst_vulkan_display_remove_window (GST_VULKAN_DISPLAY (display_xcb),
+                GST_VULKAN_WINDOW (window_xcb));
+            gst_object_unref (window_xcb);
+          }
         }
 
         g_free (reply);
         break;
       }
-#if 0
-      case CreateNotify:
-      case ConfigureNotify:
-#if 0
-        gst_vulkan_window_resize (window, event.xconfigure.width,
-            event.xconfigure.height);
-#endif
-        break;
-      case DestroyNotify:
-        break;
+      case XCB_CONFIGURE_NOTIFY:{
+        xcb_configure_notify_event_t *configure_event;
+        GstVulkanWindowXCB *window_xcb;
 
+        configure_event = (xcb_configure_notify_event_t *) event;
+        window_xcb =
+            _find_window_from_xcb_window (display_xcb, configure_event->window);
+
+        if (window_xcb) {
+          gst_vulkan_window_resize (GST_VULKAN_WINDOW (window_xcb),
+              configure_event->width, configure_event->height);
+
+          gst_object_unref (window_xcb);
+        }
+        break;
+      }
+
+#if 0
       case Expose:
         /* non-zero means that other Expose follows
          * so just wait for the last one
@@ -180,6 +189,8 @@ _xcb_handle_event (GstVulkanDisplayXCB * display_xcb)
         GST_DEBUG ("unhandled XCB type: %u", event_code);
         break;
     }
+
+    g_free (event);
   }
 
   return ret;

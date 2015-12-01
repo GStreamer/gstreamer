@@ -95,6 +95,8 @@ gpointer           gst_vulkan_window_get_platform_handle    (GstVulkanWindow *wi
 gboolean           gst_vulkan_window_open                   (GstVulkanWindow * window, GError ** error);
 void               gst_vulkan_window_close                  (GstVulkanWindow * window);
 
+void               gst_vulkan_window_resize                 (GstVulkanWindow * window, gint width, gint height);
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_WINDOW_H__ */

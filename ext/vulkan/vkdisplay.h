@@ -66,7 +66,11 @@ struct _GstVulkanDisplay
 
   /* <protected> */
   GList                    *windows;        /* OBJECT lock */
+  GMainContext             *main_context;
+  GMainLoop                *main_loop;
+  GSource                  *event_source;
 
+  /* <private> */
   GstVulkanDisplayPrivate  *priv;
 };
 
@@ -85,6 +89,9 @@ gpointer             gst_vulkan_display_get_handle             (GstVulkanDisplay
 GstVulkanDisplayType gst_vulkan_display_get_handle_type        (GstVulkanDisplay * display);
 gpointer             gst_vulkan_display_get_platform_handle    (GstVulkanDisplay * display);
 GstVulkanWindow *    gst_vulkan_display_create_window          (GstVulkanDisplay * display);
+
+/* GstVulkanWindow usage only */
+gboolean             gst_vulkan_display_remove_window          (GstVulkanDisplay * display, GstVulkanWindow * window);
 
 G_END_DECLS
 
