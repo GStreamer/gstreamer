@@ -583,6 +583,9 @@ gst_audio_base_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   g_object_notify (G_OBJECT (src), "actual-buffer-time");
   g_object_notify (G_OBJECT (src), "actual-latency-time");
 
+  gst_element_post_message (GST_ELEMENT_CAST (bsrc),
+      gst_message_new_latency (GST_OBJECT (bsrc)));
+
   return TRUE;
 
   /* ERRORS */
