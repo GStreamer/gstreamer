@@ -667,6 +667,9 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
     return GST_FLOW_EOS;
   }
 
+  if (stream->discont)
+    discont = TRUE;
+
   /* set up our source for download */
   if (hlsdemux->reset_pts || discont) {
     stream->fragment.timestamp = timestamp;
@@ -996,7 +999,6 @@ retry_failover_protection:
 
   GST_INFO_OBJECT (demux, "Client was on %dbps, max allowed is %dbps, switching"
       " to bitrate %dbps", old_bandwidth, max_bitrate, new_bandwidth);
-  stream->discont = TRUE;
 
   if (gst_hls_demux_update_playlist (demux, FALSE, NULL)) {
     gchar *uri;
@@ -1013,6 +1015,7 @@ retry_failover_protection:
     g_free (main_uri);
     if (changed)
       *changed = TRUE;
+    stream->discont = TRUE;
   } else {
     GList *failover = NULL;
 
