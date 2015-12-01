@@ -930,7 +930,7 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream,
       }
       if (stream->is_meta) {
         descriptor = gst_mpegts_descriptor_from_registration ("KLVA", NULL, 0);
-        GST_ERROR ("adding KLVA registration descriptor!");
+        GST_DEBUG ("adding KLVA registration descriptor");
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
       }
     default:
