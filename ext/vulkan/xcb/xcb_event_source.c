@@ -112,32 +112,26 @@ _xcb_handle_event (GstVulkanDisplayXCB * display_xcb)
         }
         break;
       }
+      case XCB_EXPOSE:{
+        xcb_expose_event_t *expose_event = (xcb_expose_event_t *) event;
+        GstVulkanWindowXCB *window_xcb;
 
-#if 0
-      case Expose:
         /* non-zero means that other Expose follows
          * so just wait for the last one
          * in theory we should not receive non-zero because
          * we have no sub areas here but just in case */
-        if (event.xexpose.count != 0) {
+        if (expose_event->count != 0)
           break;
-        }
-#if 0
-        /* We need to redraw on expose */
-        if (window->draw) {
-          context = gst_vulkan_window_get_context (window);
-          context_class = GST_VULKAN_CONTEXT_GET_CLASS (context);
 
-          window->draw (window->draw_data);
-          context_class->swap_buffers (context);
+        window_xcb =
+            _find_window_from_xcb_window (display_xcb, expose_event->window);
 
-          gst_object_unref (context);
+        if (window_xcb) {
+          gst_vulkan_window_redraw (GST_VULKAN_WINDOW (window_xcb));
+          gst_object_unref (window_xcb);
         }
-#endif
         break;
-      case VisibilityNotify:
-        /* actually nothing to do here */
-        break;
+      }
 #if 0
       case KeyPress:
       case KeyRelease:
@@ -183,7 +177,6 @@ _xcb_handle_event (GstVulkanDisplayXCB * display_xcb)
         g_main_context_invoke (window->navigation_context, (GSourceFunc)
             gst_vulkan_window_mouse_event_cb, mouse_data);
         break;
-#endif
 #endif
       default:
         GST_DEBUG ("unhandled XCB type: %u", event_code);

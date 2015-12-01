@@ -79,6 +79,7 @@ enum
 {
   SIGNAL_0,
   SIGNAL_CLOSE,
+  SIGNAL_DRAW,
   LAST_SIGNAL
 };
 
@@ -144,6 +145,10 @@ gst_vulkan_window_class_init (GstVulkanWindowClass * klass)
   gst_vulkan_window_signals[SIGNAL_CLOSE] =
       g_signal_new ("close", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0,
       (GSignalAccumulator) _accum_logical_and, NULL, NULL, G_TYPE_BOOLEAN, 0);
+
+  gst_vulkan_window_signals[SIGNAL_DRAW] =
+      g_signal_new ("draw", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0,
+      NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   G_OBJECT_CLASS (klass)->finalize = gst_vulkan_window_finalize;
 
@@ -258,6 +263,14 @@ gst_vulkan_window_resize (GstVulkanWindow * window, gint width, gint height)
   window->priv->surface_height = height;
 
   /* XXX: possibly queue a resize/redraw */
+}
+
+void
+gst_vulkan_window_redraw (GstVulkanWindow * window)
+{
+  g_return_if_fail (GST_IS_VULKAN_WINDOW (window));
+
+  g_signal_emit (window, gst_vulkan_window_signals[SIGNAL_DRAW], 0);
 }
 
 GType gst_vulkan_dummy_window_get_type (void);

@@ -34,6 +34,18 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanSwapper, gst_vulkan_swapper,
     GST_TYPE_OBJECT, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
         "vulkanswapper", 0, "Vulkan Swapper"));
 
+#define RENDER_GET_LOCK(o) &(GST_VULKAN_SWAPPER (o)->priv->render_lock)
+#define RENDER_LOCK(o) g_mutex_lock (RENDER_GET_LOCK(o));
+#define RENDER_UNLOCK(o) g_mutex_unlock (RENDER_GET_LOCK(o));
+
+struct _GstVulkanSwapperPrivate
+{
+  GMutex render_lock;
+};
+
+static void _on_window_draw (GstVulkanWindow * window,
+    GstVulkanSwapper * swapper);
+
 static gboolean
 _get_function_table (GstVulkanSwapper * swapper)
 {
@@ -210,8 +222,8 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
 
     swapper->GetPhysicalDeviceSurfaceSupportKHR (gpu, i,
         (VkSurfaceDescriptionKHR *) & surface_desc, &supports_present);
-    if ((swapper->device->queue_family_props[i].
-            queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
+    if ((swapper->device->
+            queue_family_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
       if (supports_present) {
         /* found one that supports both */
         graphics_queue = present_queue = i;
@@ -313,6 +325,9 @@ gst_vulkan_swapper_finalize (GObject * object)
     gst_object_unref (swapper->device);
   swapper->device = NULL;
 
+  g_signal_handler_disconnect (swapper->window, swapper->draw_id);
+  swapper->draw_id = 0;
+
   g_signal_handler_disconnect (swapper->window, swapper->close_id);
   swapper->close_id = 0;
 
@@ -326,17 +341,27 @@ gst_vulkan_swapper_finalize (GObject * object)
   g_free (swapper->surf_formats);
   swapper->surf_formats = NULL;
 
+  gst_buffer_replace (&swapper->current_buffer, NULL);
   gst_caps_replace (&swapper->caps, NULL);
+
+  g_mutex_clear (&swapper->priv->render_lock);
 }
 
 static void
 gst_vulkan_swapper_init (GstVulkanSwapper * swapper)
 {
+  swapper->priv =
+      G_TYPE_INSTANCE_GET_PRIVATE (swapper, GST_TYPE_VULKAN_SWAPPER,
+      GstVulkanSwapperPrivate);
+
+  g_mutex_init (&swapper->priv->render_lock);
 }
 
 static void
 gst_vulkan_swapper_class_init (GstVulkanSwapperClass * klass)
 {
+  g_type_class_add_private (klass, sizeof (GstVulkanSwapperPrivate));
+
   G_OBJECT_CLASS (klass)->finalize = gst_vulkan_swapper_finalize;
 }
 
@@ -356,6 +381,8 @@ gst_vulkan_swapper_new (GstVulkanDevice * device, GstVulkanWindow * window)
 
   swapper->close_id = g_signal_connect (swapper->window, "close",
       (GCallback) _on_window_close, swapper);
+  swapper->draw_id = g_signal_connect (swapper->window, "draw",
+      (GCallback) _on_window_draw, swapper);
 
   return swapper;
 }
@@ -563,8 +590,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     n_images_wanted = swapper->surf_props.maxImageCount;
   }
 
-  if (swapper->
-      surf_props.supportedTransforms & VK_SURFACE_TRANSFORM_NONE_BIT_KHR) {
+  if (swapper->surf_props.
+      supportedTransforms & VK_SURFACE_TRANSFORM_NONE_BIT_KHR) {
     preTransform = VK_SURFACE_TRANSFORM_NONE_KHR;
   } else {
     preTransform = swapper->surf_props.currentTransform;
@@ -583,8 +610,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
-  if ((swapper->surf_props.
-          supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+  if ((swapper->
+          surf_props.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
       != 0) {
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   } else {
@@ -900,8 +927,8 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   return TRUE;
 }
 
-gboolean
-gst_vulkan_swapper_render_buffer (GstVulkanSwapper * swapper,
+static gboolean
+_render_buffer_unlocked (GstVulkanSwapper * swapper,
     GstBuffer * buffer, GError ** error)
 {
   VkSemaphore semaphore = { 0, };
@@ -915,11 +942,19 @@ gst_vulkan_swapper_render_buffer (GstVulkanSwapper * swapper,
   guint32 swap_idx;
   VkResult err;
 
+  if (!buffer) {
+    g_set_error (error, GST_VULKAN_ERROR,
+        GST_VULKAN_ERROR_INITIALIZATION_FAILED, "Invalid buffer");
+    goto error;
+  }
+
   if (g_atomic_int_get (&swapper->to_quit)) {
     g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_DEVICE_LOST,
         "Output window was closed");
-    return FALSE;
+    goto error;
   }
+
+  gst_buffer_replace (&swapper->current_buffer, buffer);
 
 reacquire:
   err = vkCreateSemaphore (swapper->device->device, &semaphore_info,
@@ -936,7 +971,7 @@ reacquire:
 
     vkDestroySemaphore (swapper->device->device, semaphore);
     if (!_swapchain_resize (swapper, error))
-      return FALSE;
+      goto error;
     goto reacquire;
   } else if (gst_vulkan_error_to_g_error (err, error,
           "vkAcquireNextImageKHR") < 0) {
@@ -958,11 +993,10 @@ reacquire:
   if (err == VK_ERROR_OUT_OF_DATE_KHR) {
     GST_DEBUG_OBJECT (swapper, "out of date frame submitted");
 
-    vkDestroySemaphore (swapper->device->device, semaphore);
-
     if (!_swapchain_resize (swapper, error))
-      return FALSE;
+      goto error;
 
+    vkDestroySemaphore (swapper->device->device, semaphore);
     if (cmd_data.cmd)
       vkDestroyCommandBuffer (swapper->device->device, cmd_data.cmd);
     cmd_data.cmd = NULL;
@@ -1003,4 +1037,33 @@ error:
       cmd_data.notify (cmd_data.data);
     return FALSE;
   }
+}
+
+gboolean
+gst_vulkan_swapper_render_buffer (GstVulkanSwapper * swapper,
+    GstBuffer * buffer, GError ** error)
+{
+  gboolean ret;
+
+  RENDER_LOCK (swapper);
+  ret = _render_buffer_unlocked (swapper, buffer, error);
+  RENDER_UNLOCK (swapper);
+
+  return ret;
+}
+
+static void
+_on_window_draw (GstVulkanWindow * window, GstVulkanSwapper * swapper)
+{
+  GError *error = NULL;
+
+  RENDER_LOCK (swapper);
+  if (!swapper->current_buffer)
+    return;
+
+  /* TODO: perform some rate limiting of the number of redraw events */
+  if (!_render_buffer_unlocked (swapper, swapper->current_buffer, &error))
+    GST_ERROR_OBJECT (swapper, "Failed to redraw buffer %p %s",
+        swapper->current_buffer, error->message);
+  RENDER_UNLOCK (swapper);
 }

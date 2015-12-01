@@ -96,6 +96,7 @@ gboolean           gst_vulkan_window_open                   (GstVulkanWindow * w
 void               gst_vulkan_window_close                  (GstVulkanWindow * window);
 
 void               gst_vulkan_window_resize                 (GstVulkanWindow * window, gint width, gint height);
+void               gst_vulkan_window_redraw                 (GstVulkanWindow * window);
 
 G_END_DECLS
 

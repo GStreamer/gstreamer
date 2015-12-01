@@ -71,9 +71,13 @@ struct _GstVulkanSwapper
   /* <private> */
   /* runtime variables */
   gint to_quit;
+  GstBuffer *current_buffer;
 
   /* signal handlers */
   gulong close_id;
+  gulong draw_id;
+
+  GstVulkanSwapperPrivate *priv;
 };
 
 struct _GstVulkanSwapperClass

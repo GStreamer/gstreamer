@@ -44,6 +44,7 @@ typedef struct _GstVulkanWindowPrivate GstVulkanWindowPrivate;
 
 typedef struct _GstVulkanSwapper GstVulkanSwapper;
 typedef struct _GstVulkanSwapperClass GstVulkanSwapperClass;
+typedef struct _GstVulkanSwapperPrivate GstVulkanSwapperPrivate;
 
 typedef struct _GstVulkanMemory GstVulkanMemory;
 typedef struct _GstVulkanMemoryAllocator GstVulkanMemoryAllocator;
