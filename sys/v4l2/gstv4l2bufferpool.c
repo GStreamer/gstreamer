@@ -676,7 +676,8 @@ gst_v4l2_buffer_pool_resurect_buffer (GstV4l2BufferPool * pool)
   GST_DEBUG_OBJECT (pool, "A buffer was lost, reallocating it");
 
   params.flags =
-      (GstBufferPoolAcquireFlags) GST_V4L2_BUFFER_POOL_ACQUIRE_FLAG_RESURRECT;
+      (GstBufferPoolAcquireFlags) GST_V4L2_BUFFER_POOL_ACQUIRE_FLAG_RESURRECT |
+      GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
   ret =
       gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (pool), &buffer, &params);
 
@@ -1765,6 +1766,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
               *buf = copy;
             }
 
+            ret = GST_FLOW_OK;
             /* nothing, data was inside the buffer when we did _acquire() */
             goto done;
           }
