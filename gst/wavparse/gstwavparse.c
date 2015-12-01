@@ -465,6 +465,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
    * blocking in preroll). */
   if (flush) {
     GST_DEBUG_OBJECT (wav, "sending flush start");
+    gst_pad_push_event (wav->sinkpad, gst_event_new_flush_start ());
     gst_pad_push_event (wav->srcpad, gst_event_new_flush_start ());
   } else {
     gst_pad_pause_task (wav->sinkpad);
@@ -546,6 +547,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   if (flush) {
     /* if we sent a FLUSH_START, we now send a FLUSH_STOP */
     GST_DEBUG_OBJECT (wav, "sending flush stop");
+    gst_pad_push_event (wav->sinkpad, gst_event_new_flush_stop (TRUE));
     gst_pad_push_event (wav->srcpad, gst_event_new_flush_stop (TRUE));
   }
 
