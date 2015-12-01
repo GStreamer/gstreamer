@@ -96,6 +96,10 @@ enum
   PROP_PREVIEW,
   PROP_PREVIEW_ENCODED,
   PROP_PREVIEW_OPACITY,
+  PROP_PREVIEW_X,
+  PROP_PREVIEW_Y,
+  PROP_PREVIEW_W,
+  PROP_PREVIEW_H,
   PROP_FULLSCREEN,
   PROP_SHARPNESS,
   PROP_CONTRAST,
@@ -297,6 +301,22 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PREVIEW_OPACITY,
       g_param_spec_int ("preview-opacity", "Preview Opacity",
           "Opacity to use for the preview window", 0, 255, 255,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PREVIEW_X,
+      g_param_spec_int ("preview-x", "Preview window X position",
+          "Start X coordinate of the preview window (in pixels)", 0, 2048, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PREVIEW_Y,
+      g_param_spec_int ("preview-y", "Preview window Y position",
+          "Start Y coordinate of the preview window (in pixels)", 0, 2048, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PREVIEW_W,
+      g_param_spec_int ("preview-w", "Preview window width",
+          "Width of the preview window (in pixels)", 0, 2048, 1024,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PREVIEW_H,
+      g_param_spec_int ("preview-h", "Preview window height",
+          "Height of the preview window (in pixels)", 0, 2048, 768,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SHARPNESS,
       g_param_spec_int ("sharpness", "Sharpness", "Image capture sharpness",
@@ -710,6 +730,22 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PREVIEW_OPACITY:
       src->capture_config.preview_parameters.opacity = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
+      break;
+    case PROP_PREVIEW_X:
+      src->capture_config.preview_parameters.previewWindow.x = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
+      break;
+    case PROP_PREVIEW_Y:
+      src->capture_config.preview_parameters.previewWindow.y = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
+      break;
+    case PROP_PREVIEW_W:
+      src->capture_config.preview_parameters.previewWindow.width = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
+      break;
+    case PROP_PREVIEW_H:
+      src->capture_config.preview_parameters.previewWindow.height = g_value_get_int (value);
       src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
       break;
     case PROP_SHARPNESS:
