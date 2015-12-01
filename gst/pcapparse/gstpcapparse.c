@@ -624,7 +624,8 @@ gst_pcap_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       gst_pcap_parse_reset (self);
-      break;
+      /* Push event down the pipeline so that other elements stop flushing */
+      /* fall through */
     default:
       ret = gst_pad_push_event (self->src_pad, event);
       break;
