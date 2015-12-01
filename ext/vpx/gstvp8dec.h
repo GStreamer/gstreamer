@@ -76,6 +76,11 @@ struct _GstVP8Dec
 
   GstVideoCodecState *input_state;
   GstVideoCodecState *output_state;
+
+  /* allocation */
+  gboolean have_video_meta;
+  GstBufferPool *pool;
+  gsize buf_size;
 };
 
 struct _GstVP8DecClass

@@ -306,6 +306,13 @@ gst_vp9_dec_stop (GstVideoDecoder * base_video_decoder)
     vpx_codec_destroy (&gst_vp9_dec->decoder);
   gst_vp9_dec->decoder_inited = FALSE;
 
+  if (gst_vp9_dec->pool) {
+    gst_buffer_pool_set_active (gst_vp9_dec->pool, FALSE);
+    gst_object_unref (gst_vp9_dec->pool);
+    gst_vp9_dec->pool = NULL;
+    gst_vp9_dec->buf_size = 0;
+  }
+
   return TRUE;
 }
 
@@ -365,6 +372,138 @@ gst_vp9_dec_send_tags (GstVP9Dec * dec)
   gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (dec),
       gst_event_new_tag (list));
 }
+
+#ifdef HAVE_VPX_1_4
+struct Frame
+{
+  GstMapInfo info;
+  GstBuffer *buffer;
+};
+
+static GstBuffer *
+gst_vp9_dec_prepare_image (GstVP9Dec * dec, const vpx_image_t * img)
+{
+  gint comp;
+  GstVideoMeta *vmeta;
+  GstBuffer *buffer;
+  struct Frame *frame = img->fb_priv;
+  GstVideoInfo *info = &dec->output_state->info;
+
+  buffer = gst_buffer_ref (frame->buffer);
+
+  vmeta = gst_buffer_get_video_meta (buffer);
+  vmeta->format = GST_VIDEO_INFO_FORMAT (info);
+  vmeta->width = GST_VIDEO_INFO_WIDTH (info);
+  vmeta->height = GST_VIDEO_INFO_HEIGHT (info);
+  vmeta->n_planes = GST_VIDEO_INFO_N_PLANES (info);
+
+  for (comp = 0; comp < 4; comp++) {
+    vmeta->stride[comp] = img->stride[comp];
+    vmeta->offset[comp] =
+        img->planes[comp] ? img->planes[comp] - frame->info.data : 0;
+  }
+
+  /* FIXME This is a READ/WRITE mapped buffer see bug #754826 */
+
+  return buffer;
+}
+
+static int
+gst_vp9_dec_get_buffer_cb (gpointer priv, gsize min_size,
+    vpx_codec_frame_buffer_t * fb)
+{
+  GstVP9Dec *dec = priv;
+  GstBuffer *buffer;
+  struct Frame *frame;
+  GstFlowReturn ret;
+
+  if (!dec->pool || dec->buf_size != min_size) {
+    GstBufferPool *pool;
+    GstStructure *config;
+    GstCaps *caps;
+    GstAllocator *allocator;
+    GstAllocationParams params;
+
+    if (dec->pool) {
+      gst_buffer_pool_set_active (dec->pool, FALSE);
+      gst_object_unref (dec->pool);
+      dec->pool = NULL;
+      dec->buf_size = 0;
+    }
+
+    gst_video_decoder_get_allocator (GST_VIDEO_DECODER (dec), &allocator,
+        &params);
+
+    if (allocator &&
+        GST_OBJECT_FLAG_IS_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC)) {
+      gst_object_unref (allocator);
+      allocator = NULL;
+    }
+
+    pool = gst_buffer_pool_new ();
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_allocator (config, allocator, &params);
+    caps = gst_caps_from_string ("video/internal");
+    gst_buffer_pool_config_set_params (config, caps, min_size, 2, 0);
+    gst_caps_unref (caps);
+    gst_buffer_pool_set_config (pool, config);
+
+    if (allocator)
+      gst_object_unref (allocator);
+
+    if (!gst_buffer_pool_set_active (pool, TRUE)) {
+      GST_WARNING ("Failed to create internal pool");
+      gst_object_unref (pool);
+      return -1;
+    }
+
+    dec->pool = pool;
+    dec->buf_size = min_size;
+  }
+
+  ret = gst_buffer_pool_acquire_buffer (dec->pool, &buffer, NULL);
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING ("Failed to acquire buffer from internal pool.");
+    return -1;
+  }
+
+  /* Add it now, while the buffer is writable */
+  gst_buffer_add_video_meta (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_FORMAT_ENCODED, 0, 0);
+
+  frame = g_new0 (struct Frame, 1);
+  if (!gst_buffer_map (buffer, &frame->info, GST_MAP_READWRITE)) {
+    gst_buffer_unref (buffer);
+    g_free (frame);
+    GST_WARNING ("Failed to map buffer from internal pool.");
+    return -1;
+  }
+
+  fb->size = frame->info.size;
+  fb->data = frame->info.data;
+  frame->buffer = buffer;
+  fb->priv = frame;
+
+  GST_TRACE_OBJECT (priv, "Allocated buffer %p", frame->buffer);
+
+  return 0;
+}
+
+static int
+gst_vp9_dec_release_buffer_cb (gpointer priv, vpx_codec_frame_buffer_t * fb)
+{
+  struct Frame *frame = fb->priv;
+
+  GST_TRACE_OBJECT (priv, "Release buffer %p", frame->buffer);
+
+  g_assert (frame);
+  gst_buffer_unmap (frame->buffer, &frame->info);
+  gst_buffer_unref (frame->buffer);
+  g_free (frame);
+
+  return 0;
+}
+#endif
 
 static void
 gst_vp9_dec_image_to_buffer (GstVP9Dec * dec, const vpx_image_t * img,
@@ -487,6 +626,10 @@ open_codec (GstVP9Dec * dec, GstVideoCodecFrame * frame)
           gst_vpx_error_name (status));
     }
   }
+#ifdef HAVE_VPX_1_4
+  vpx_codec_set_frame_buffer_functions (&dec->decoder,
+      gst_vp9_dec_get_buffer_cb, gst_vp9_dec_release_buffer_cb, dec);
+#endif
 
   dec->decoder_inited = TRUE;
 
@@ -590,13 +733,21 @@ gst_vp9_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
           (double) -deadline / GST_SECOND);
       gst_video_decoder_drop_frame (decoder, frame);
     } else {
-      ret = gst_video_decoder_allocate_output_frame (decoder, frame);
-
-      if (ret == GST_FLOW_OK) {
-        gst_vp9_dec_image_to_buffer (dec, img, frame->output_buffer);
+#ifdef HAVE_VPX_1_4
+      if (img->fb_priv && dec->have_video_meta) {
+        frame->output_buffer = gst_vp9_dec_prepare_image (dec, img);
         ret = gst_video_decoder_finish_frame (decoder, frame);
-      } else {
-        gst_video_decoder_drop_frame (decoder, frame);
+      } else
+#endif
+      {
+        ret = gst_video_decoder_allocate_output_frame (decoder, frame);
+
+        if (ret == GST_FLOW_OK) {
+          gst_vp9_dec_image_to_buffer (dec, img, frame->output_buffer);
+          ret = gst_video_decoder_finish_frame (decoder, frame);
+        } else {
+          gst_video_decoder_drop_frame (decoder, frame);
+        }
       }
     }
 
@@ -618,6 +769,7 @@ gst_vp9_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 static gboolean
 gst_vp9_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
 {
+  GstVP9Dec *dec = GST_VP9_DEC (bdec);
   GstBufferPool *pool;
   GstStructure *config;
 
@@ -632,6 +784,7 @@ gst_vp9_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
+    dec->have_video_meta = TRUE;
   }
   gst_buffer_pool_set_config (pool, config);
   gst_object_unref (pool);
