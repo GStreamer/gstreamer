@@ -163,7 +163,7 @@ run_test (const char *format, ...)
       rc = 302;
     GST_INFO ("debug: %s", debug);
     /* should not've gotten any output in case of a 40x error. Wait a bit
-     * to give streaming thread a chance to push out a buffer and triggering
+     * to give the streaming thread a chance to push out a buffer and trigger
      * our callback before shutting down the pipeline */
     g_usleep (G_USEC_PER_SEC / 2);
     fail_unless (buf == NULL);
