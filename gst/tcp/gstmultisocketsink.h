@@ -54,6 +54,7 @@ typedef struct {
   GstMultiHandleClient client;
 
   GSource *source;
+  GIOCondition condition;
 } GstSocketClient;
 
 /**
