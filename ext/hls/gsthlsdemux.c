@@ -396,6 +396,9 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
     } else {
       GList *tmp = gst_m3u8_client_get_playlist_for_bitrate (hlsdemux->client,
           demux->connection_speed);
+      GST_M3U8_CLIENT_LOCK (hlsdemux->client);
+      hlsdemux->client->main->current_variant = tmp;
+      GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 
       child = GST_M3U8 (tmp->data);
     }
