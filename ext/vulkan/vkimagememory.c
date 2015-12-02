@@ -131,8 +131,8 @@ _find_memory_type_index_with_type_properties (GstVulkanDevice * device,
   for (i = 0; i < 32; i++) {
     if ((typeBits & 1) == 1) {
       /* Type is available, does it match user properties? */
-      if ((device->memory_properties.memoryTypes[i].
-              propertyFlags & properties) == properties) {
+      if ((device->memory_properties.
+              memoryTypes[i].propertyFlags & properties) == properties) {
         *typeIndex = i;
         return TRUE;
       }
@@ -195,8 +195,8 @@ _vk_image_mem_init (GstVulkanImageMemory * mem, GstAllocator * allocator,
 
   g_mutex_init (&mem->lock);
 
-  GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY, "new GL buffer memory:%p size:%"
-      G_GSIZE_FORMAT, mem, maxsize);
+  GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY,
+      "new Vulkan Image memory:%p size:%" G_GSIZE_FORMAT, mem, maxsize);
 }
 
 static GstVulkanImageMemory *

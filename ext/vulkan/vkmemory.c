@@ -40,6 +40,49 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFUALT);
 
 static GstAllocator *_vulkan_memory_allocator;
 
+static gchar *
+_memory_properties_to_string (VkMemoryPropertyFlags prop_bits)
+{
+  GString *s;
+  gboolean first = TRUE;
+
+#define STR_APPEND(s,str) \
+  G_STMT_START { \
+    if (!first) \
+      g_string_append (s, "|"); \
+    g_string_append (s, str); \
+    first = FALSE; \
+  } G_STMT_END
+
+  s = g_string_new (NULL);
+  if (prop_bits & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
+    STR_APPEND (s, "host-visible");
+    if (prop_bits & VK_MEMORY_PROPERTY_HOST_NON_COHERENT_BIT) {
+      STR_APPEND (s, "host-incoherent");
+    } else {
+      STR_APPEND (s, "host-coherent");
+    }
+    if (prop_bits & VK_MEMORY_PROPERTY_HOST_UNCACHED_BIT) {
+      STR_APPEND (s, "host-uncached");
+    } else {
+      STR_APPEND (s, "host-cached");
+    }
+    if (prop_bits & VK_MEMORY_PROPERTY_HOST_WRITE_COMBINED_BIT) {
+      STR_APPEND (s, "host-write-combined");
+    } else {
+      STR_APPEND (s, "host-write-uncombined");
+    }
+  } else {
+    STR_APPEND (s, "device-only");
+  }
+
+  if (prop_bits & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT) {
+    STR_APPEND (s, "lazily-allocated");
+  }
+
+  return g_string_free (s, FALSE);
+}
+
 static void
 _vk_mem_init (GstVulkanMemory * mem, GstAllocator * allocator,
     GstMemory * parent, GstVulkanDevice * device, guint32 memory_type_index,
@@ -49,6 +92,7 @@ _vk_mem_init (GstVulkanMemory * mem, GstAllocator * allocator,
 {
   gsize align = gst_memory_alignment, offset = 0, maxsize = size;
   GstMemoryFlags flags = 0;
+  gchar *props_str;
 
   if (params) {
     flags = params->flags;
@@ -73,8 +117,12 @@ _vk_mem_init (GstVulkanMemory * mem, GstAllocator * allocator,
 
   g_mutex_init (&mem->lock);
 
-  GST_CAT_DEBUG (GST_CAT_VULKAN_MEMORY, "new GL buffer memory:%p size:%"
-      G_GSIZE_FORMAT, mem, maxsize);
+  props_str = _memory_properties_to_string (mem_prop_flags);
+
+  GST_CAT_DEBUG (GST_CAT_VULKAN_MEMORY, "new Vulkan memory:%p size:%"
+      G_GSIZE_FORMAT " properties:%s", mem, maxsize, props_str);
+
+  g_free (props_str);
 }
 
 static GstVulkanMemory *
