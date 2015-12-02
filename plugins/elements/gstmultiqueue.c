@@ -651,6 +651,7 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_INTERLEAVE:
       mq->use_interleave = g_value_get_boolean (value);
+      break;
     case PROP_UNLINKED_CACHE_TIME:
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       mq->unlinked_cache_time = g_value_get_uint64 (value);
@@ -704,6 +705,7 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_INTERLEAVE:
       g_value_set_boolean (value, mq->use_interleave);
+      break;
     case PROP_UNLINKED_CACHE_TIME:
       g_value_set_uint64 (value, mq->unlinked_cache_time);
       break;
