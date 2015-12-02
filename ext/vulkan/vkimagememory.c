@@ -366,16 +366,19 @@ static gpointer
 _vk_image_mem_map_full (GstVulkanImageMemory * mem, GstMapInfo * info,
     gsize size)
 {
-  GstMapInfo *vk_map_info = g_new0 (GstMapInfo, 1);
-  info->user_data[0] = vk_map_info;
+  GstMapInfo *vk_map_info;
 
   /* FIXME: possible layout transformation needed */
 
   if (!mem->vk_mem)
     return NULL;
 
-  if (!gst_memory_map ((GstMemory *) mem->vk_mem, vk_map_info, info->flags))
+  vk_map_info = g_new0 (GstMapInfo, 1);
+  info->user_data[0] = vk_map_info;
+  if (!gst_memory_map ((GstMemory *) mem->vk_mem, vk_map_info, info->flags)) {
+    g_free (vk_map_info);
     return NULL;
+  }
 
   return vk_map_info->data;
 }
