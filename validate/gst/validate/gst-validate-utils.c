@@ -679,6 +679,18 @@ done:
   return result;
 }
 
+/**
+ * gst_validate_utils_get_clocktime:
+ * @structure: A #GstStructure to retrieve @name as a GstClockTime.
+ * @name: The name of the field containing a #GstClockTime
+ * @retval: (out): The clocktime contained in @structure
+ *
+ * Get @name from @structure as a #GstClockTime, it handles various types
+ * for the value, if it is a double, it conciders the value to be in second
+ * it can be a gint, gint64 a guint, a gint64.
+ *
+ * Return: %TRUE in case of success, %FALSE otherwize.
+ */
 gboolean
 gst_validate_utils_get_clocktime (GstStructure * structure, const gchar * name,
     GstClockTime * retval)
