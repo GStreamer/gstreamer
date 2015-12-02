@@ -38,6 +38,23 @@ GST_DEBUG_CATEGORY (ffmpeg_debug);
 
 static GMutex gst_avcodec_mutex;
 
+/*
+ * Check for FFmpeg-provided libavcodec/format
+ */
+static inline gboolean
+gst_ffmpeg_avcodec_is_ffmpeg (void)
+{
+  guint av_version = avutil_version ();
+
+  GST_DEBUG ("Using libavcodec version %d.%d.%d",
+      av_version >> 16, (av_version & 0x00ff00) >> 8, av_version & 0xff);
+
+  /* FFmpeg *_MICRO versions start at 100 and Libav's at 0 */
+  if ((av_version & 0xff) < 100)
+    return FALSE;
+
+  return TRUE;
+}
 
 int
 gst_ffmpeg_avcodec_open (AVCodecContext * avctx, AVCodec * codec)
@@ -118,8 +135,14 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (ffmpeg_debug, "libav", 0, "libav elements");
-#ifndef GST_DISABLE_GST_DEBUG
 
+  /* Bail if not FFmpeg. We can no longer ensure operation with Libav */
+  if (!gst_ffmpeg_avcodec_is_ffmpeg ()) {
+    GST_ERROR_OBJECT (plugin,
+        "Incompatible, non-FFmpeg libavcodec/format found");
+    return FALSE;
+  }
+#ifndef GST_DISABLE_GST_DEBUG
   av_log_set_callback (gst_ffmpeg_log_callback);
 #endif
 
