@@ -222,8 +222,8 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
 
     swapper->GetPhysicalDeviceSurfaceSupportKHR (gpu, i,
         (VkSurfaceDescriptionKHR *) & surface_desc, &supports_present);
-    if ((swapper->device->
-            queue_family_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
+    if ((swapper->device->queue_family_props[i].
+            queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
       if (supports_present) {
         /* found one that supports both */
         graphics_queue = present_queue = i;
@@ -486,17 +486,16 @@ _swapper_set_image_layout (GstVulkanSwapper * swapper,
     return FALSE;
 
   {
-    VkCmdBufferBeginInfo cmd_buf_info = {
-      .sType = VK_STRUCTURE_TYPE_CMD_BUFFER_BEGIN_INFO,
-      .pNext = NULL,
-      .flags = VK_CMD_BUFFER_OPTIMIZE_SMALL_BATCH_BIT |
-          VK_CMD_BUFFER_OPTIMIZE_ONE_TIME_SUBMIT_BIT,
-      .renderPass = {VK_NULL_HANDLE}
-      ,
-      .subpass = 0,
-      .framebuffer = {VK_NULL_HANDLE}
-      ,
-    };
+    VkCmdBufferBeginInfo cmd_buf_info = { 0, };
+
+    cmd_buf_info.sType = VK_STRUCTURE_TYPE_CMD_BUFFER_BEGIN_INFO;
+    cmd_buf_info.pNext = NULL;
+    cmd_buf_info.flags = VK_CMD_BUFFER_OPTIMIZE_SMALL_BATCH_BIT |
+        VK_CMD_BUFFER_OPTIMIZE_ONE_TIME_SUBMIT_BIT;
+    cmd_buf_info.renderPass.handle = VK_NULL_HANDLE;
+    cmd_buf_info.subpass = 0;
+    cmd_buf_info.framebuffer.handle = VK_NULL_HANDLE;
+
     err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
     if (gst_vulkan_error_to_g_error (err, error, "vkBeginCommandBuffer") < 0)
       return FALSE;
@@ -569,7 +568,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
    * and is fastest (though it tears).  If not, fall back to FIFO which is
    * always available. */
   present_mode = VK_PRESENT_MODE_FIFO_KHR;
-  for (size_t i = 0; i < swapper->n_surf_present_modes; i++) {
+  for (gsize i = 0; i < swapper->n_surf_present_modes; i++) {
     if (swapper->surf_present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
       present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
       break;
@@ -590,8 +589,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     n_images_wanted = swapper->surf_props.maxImageCount;
   }
 
-  if (swapper->surf_props.
-      supportedTransforms & VK_SURFACE_TRANSFORM_NONE_BIT_KHR) {
+  if (swapper->
+      surf_props.supportedTransforms & VK_SURFACE_TRANSFORM_NONE_BIT_KHR) {
     preTransform = VK_SURFACE_TRANSFORM_NONE_KHR;
   } else {
     preTransform = swapper->surf_props.currentTransform;
@@ -610,8 +609,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
-  if ((swapper->
-          surf_props.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+  if ((swapper->surf_props.
+          supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
       != 0) {
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   } else {
@@ -622,27 +621,25 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
   }
 
   {
-    const VkSwapchainCreateInfoKHR swap_chain_info = {
-      .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-      .pNext = NULL,
-      .pSurfaceDescription = (const VkSurfaceDescriptionKHR *) &surface_desc,
-      .minImageCount = n_images_wanted,
-      .imageFormat = format,
-      .imageColorSpace = color_space,
-      .imageExtent = {
-            .width = swapchain_dims.width,
-            .height = swapchain_dims.height,
-          },
-      .imageUsageFlags = usage,
-      .preTransform = preTransform,
-      .imageArraySize = 1,
-      .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-      .queueFamilyCount = 0,
-      .pQueueFamilyIndices = NULL,
-      .presentMode = present_mode,
-      .oldSwapchain = swapper->swap_chain,
-      .clipped = TRUE,
-    };
+    VkSwapchainCreateInfoKHR swap_chain_info = { 0, };
+
+    swap_chain_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    swap_chain_info.pNext = NULL;
+    swap_chain_info.pSurfaceDescription =
+        (const VkSurfaceDescriptionKHR *) &surface_desc;
+    swap_chain_info.minImageCount = n_images_wanted;
+    swap_chain_info.imageFormat = format;
+    swap_chain_info.imageColorSpace = color_space;
+    swap_chain_info.imageExtent = swapchain_dims;
+    swap_chain_info.imageUsageFlags = usage;
+    swap_chain_info.preTransform = preTransform;
+    swap_chain_info.imageArraySize = 1;
+    swap_chain_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    swap_chain_info.queueFamilyCount = 0;
+    swap_chain_info.pQueueFamilyIndices = NULL;
+    swap_chain_info.presentMode = present_mode;
+    swap_chain_info.oldSwapchain = swapper->swap_chain;
+    swap_chain_info.clipped = TRUE;
 
     err =
         swapper->CreateSwapchainKHR (swapper->device->device, &swap_chain_info,
@@ -735,11 +732,13 @@ static gboolean
 _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     GstBuffer * buffer, struct cmd_data *cmd_data, GError ** error)
 {
-  const VkImageSubresource subres = {
-    .aspect = VK_IMAGE_ASPECT_COLOR,
-    .mipLevel = 0,
-    .arrayLayer = 0,
-  };
+#define IMAGE_SUBRESOURCE(sub,a,m,l) \
+    G_STMT_START { \
+      sub.aspect = a; \
+      sub.mipLevel = m; \
+      sub.arrayLayer = l; \
+    } G_STMT_END
+  VkImageSubresource subres = { 0, };
   GstVulkanImageMemory *swap_mem, *staging;
   GstMapInfo staging_map_info;
   VkSubresourceLayout layout;
@@ -749,6 +748,8 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   guint32 wt, ht;
   VkResult err;
   gsize h;
+
+  IMAGE_SUBRESOURCE (subres, VK_IMAGE_ASPECT_COLOR, 0, 0);
 
   g_return_val_if_fail (swap_idx < swapper->n_swap_chain_images, FALSE);
   swap_mem = swapper->swap_chain_images[swap_idx];
@@ -808,17 +809,16 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   gst_memory_unmap ((GstMemory *) staging, &staging_map_info);
 
   {
-    VkCmdBufferBeginInfo cmd_buf_info = {
-      .sType = VK_STRUCTURE_TYPE_CMD_BUFFER_BEGIN_INFO,
-      .pNext = NULL,
-      .flags = VK_CMD_BUFFER_OPTIMIZE_SMALL_BATCH_BIT |
-          VK_CMD_BUFFER_OPTIMIZE_ONE_TIME_SUBMIT_BIT,
-      .renderPass = {VK_NULL_HANDLE}
-      ,
-      .subpass = 0,
-      .framebuffer = {VK_NULL_HANDLE}
-      ,
-    };
+    VkCmdBufferBeginInfo cmd_buf_info = { 0, };
+
+    cmd_buf_info.sType = VK_STRUCTURE_TYPE_CMD_BUFFER_BEGIN_INFO;
+    cmd_buf_info.pNext = NULL;
+    cmd_buf_info.flags = VK_CMD_BUFFER_OPTIMIZE_SMALL_BATCH_BIT |
+        VK_CMD_BUFFER_OPTIMIZE_ONE_TIME_SUBMIT_BIT;
+    cmd_buf_info.renderPass.handle = VK_NULL_HANDLE;
+    cmd_buf_info.subpass = 0;
+    cmd_buf_info.framebuffer.handle = VK_NULL_HANDLE;
+
     err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
     if (gst_vulkan_error_to_g_error (err, error, "vkBeginCommandBuffer") < 0)
       return FALSE;
@@ -932,15 +932,15 @@ _render_buffer_unlocked (GstVulkanSwapper * swapper,
     GstBuffer * buffer, GError ** error)
 {
   VkSemaphore semaphore = { 0, };
-  VkSemaphoreCreateInfo semaphore_info = {
-    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
-    .pNext = NULL,
-    .flags = VK_FENCE_CREATE_SIGNALED_BIT,
-  };
+  VkSemaphoreCreateInfo semaphore_info = { 0, };
   VkPresentInfoKHR present;
   struct cmd_data cmd_data = { 0, };
   guint32 swap_idx;
   VkResult err;
+
+  semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+  semaphore_info.pNext = NULL;
+  semaphore_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
   if (!buffer) {
     g_set_error (error, GST_VULKAN_ERROR,

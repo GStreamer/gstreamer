@@ -269,35 +269,37 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   device->n_queues = 1;
 
   {
-    const VkDeviceQueueCreateInfo queue_info = {
-      .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-      .pNext = NULL,
-      .queueFamilyIndex = device->queue_family_id,
-      .queueCount = device->n_queues,
-    };
-    VkDeviceCreateInfo device_info = {
-      .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-      .pNext = NULL,
-      .queueRecordCount = 1,
-      .pRequestedQueues = &queue_info,
-      .layerCount = enabled_layer_count,
-      .ppEnabledLayerNames = (const char *const *) device_validation_layers,
-      .extensionCount = enabled_extension_count,
-      .ppEnabledExtensionNames = (const char *const *) extension_names,
-      .pEnabledFeatures = NULL, // If specific features are required, pass them in here
-    };
+    VkDeviceQueueCreateInfo queue_info = { 0, };
+    VkDeviceCreateInfo device_info = { 0, };
+
+    queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queue_info.pNext = NULL;
+    queue_info.queueFamilyIndex = device->queue_family_id;
+    queue_info.queueCount = device->n_queues;
+
+    device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    device_info.pNext = NULL;
+    device_info.queueRecordCount = 1;
+    device_info.pRequestedQueues = &queue_info;
+    device_info.layerCount = enabled_layer_count;
+    device_info.ppEnabledLayerNames =
+        (const char *const *) device_validation_layers;
+    device_info.extensionCount = enabled_extension_count;
+    device_info.ppEnabledExtensionNames = (const char *const *) extension_names;
+    device_info.pEnabledFeatures = NULL;
 
     err = vkCreateDevice (gpu, &device_info, &device->device);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateDevice") < 0)
       return FALSE;
   }
   {
-    const VkCmdPoolCreateInfo cmd_pool_info = {
-      .sType = VK_STRUCTURE_TYPE_CMD_POOL_CREATE_INFO,
-      .pNext = NULL,
-      .queueFamilyIndex = device->queue_family_id,
-      .flags = 0,
-    };
+    VkCmdPoolCreateInfo cmd_pool_info = { 0, };
+
+    cmd_pool_info.sType = VK_STRUCTURE_TYPE_CMD_POOL_CREATE_INFO;
+    cmd_pool_info.pNext = NULL;
+    cmd_pool_info.queueFamilyIndex = device->queue_family_id;
+    cmd_pool_info.flags = 0;
+
     err =
         vkCreateCommandPool (device->device, &cmd_pool_info, &device->cmd_pool);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateCommandPool") < 0)
@@ -373,14 +375,13 @@ gst_vulkan_device_create_cmd_buffer (GstVulkanDevice * device,
     VkCmdBuffer * cmd, GError ** error)
 {
   VkResult err;
+  VkCmdBufferCreateInfo cmd_info = { 0, };
 
-  const VkCmdBufferCreateInfo cmd_info = {
-    .sType = VK_STRUCTURE_TYPE_CMD_BUFFER_CREATE_INFO,
-    .pNext = NULL,
-    .cmdPool = device->cmd_pool,
-    .level = VK_CMD_BUFFER_LEVEL_PRIMARY,
-    .flags = 0,
-  };
+  cmd_info.sType = VK_STRUCTURE_TYPE_CMD_BUFFER_CREATE_INFO;
+  cmd_info.pNext = NULL;
+  cmd_info.cmdPool = device->cmd_pool;
+  cmd_info.level = VK_CMD_BUFFER_LEVEL_PRIMARY;
+  cmd_info.flags = 0;
 
   err = vkCreateCommandBuffer (device->device, &cmd_info, cmd);
   if (gst_vulkan_error_to_g_error (err, error, "vkCreateCommandBuffer") < 0)

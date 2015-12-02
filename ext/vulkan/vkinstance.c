@@ -30,8 +30,6 @@
 #define APP_SHORT_NAME "GStreamer"
 
 static const char *instance_validation_layers[] = {
-  /* FIXME: until the loader stops segfaulting/hanging we don't have any
-   * validation layers for the instance */
   "Threading",
   "MemTracker",
   "ObjectTracker",
@@ -207,25 +205,26 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   }
 
   {
-    const VkApplicationInfo app = {
-      .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-      .pNext = NULL,
-      .pAppName = APP_SHORT_NAME,
-      .appVersion = 0,
-      .pEngineName = APP_SHORT_NAME,
-      .engineVersion = 0,
-      .apiVersion = VK_API_VERSION,
-    };
-    VkInstanceCreateInfo inst_info = {
-      .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-      .pNext = NULL,
-      .pAppInfo = &app,
-      .pAllocCb = NULL,
-      .layerCount = enabled_layer_count,
-      .ppEnabledLayerNames = (const char *const *) instance_validation_layers,
-      .extensionCount = enabled_extension_count,
-      .ppEnabledExtensionNames = (const char *const *) extension_names,
-    };
+    VkApplicationInfo app = { 0, };
+    VkInstanceCreateInfo inst_info = { 0, };
+
+    app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    app.pNext = NULL;
+    app.pAppName = APP_SHORT_NAME;
+    app.appVersion = 0;
+    app.pEngineName = APP_SHORT_NAME;
+    app.engineVersion = 0;
+    app.apiVersion = VK_API_VERSION;
+
+    inst_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    inst_info.pNext = NULL;
+    inst_info.pAppInfo = &app;
+    inst_info.pAllocCb = NULL;
+    inst_info.layerCount = enabled_layer_count;
+    inst_info.ppEnabledLayerNames =
+        (const char *const *) instance_validation_layers;
+    inst_info.extensionCount = enabled_extension_count;
+    inst_info.ppEnabledExtensionNames = (const char *const *) extension_names;
 
     err = vkCreateInstance (&inst_info, &instance->instance);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateInstance") < 0) {
