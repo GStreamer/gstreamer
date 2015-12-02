@@ -123,6 +123,8 @@ _parse_reporting_level (gchar * str, GstValidateReportingDetails * level)
     } else {
       return FALSE;
     }
+  } else if (g_ascii_strcasecmp (str, "smart") == 0) {
+    *level = GST_VALIDATE_SHOW_SMART;
   } else if (g_ascii_strcasecmp (str, "none") == 0) {
     *level = GST_VALIDATE_SHOW_NONE;
   } else if (g_ascii_strcasecmp (str, "synthetic") == 0) {
@@ -361,6 +363,11 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
         runner->priv->default_level);
     switch (runner->priv->default_level) {
       case GST_VALIDATE_SHOW_NONE:
+        return;
+      case GST_VALIDATE_SHOW_SMART:
+        if (!gst_validate_report_check_abort (report) &&
+            report->level != GST_VALIDATE_REPORT_LEVEL_CRITICAL)
+          synthesize_reports (runner, report);
         return;
       case GST_VALIDATE_SHOW_SYNTHETIC:
         synthesize_reports (runner, report);

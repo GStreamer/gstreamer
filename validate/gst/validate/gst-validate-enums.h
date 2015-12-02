@@ -26,6 +26,8 @@
  * GstValidateReportingDetails:
  * @GST_VALIDATE_SHOW_NONE: No debugging level specified or desired. Used to deactivate
  *  debugging output.
+ * @GST_VALIDATE_SHOW_SMART: Sythetic for not fatal issues and detailed for
+ * others
  * @GST_VALIDATE_SHOW_SYNTHETIC: Summary of the issues found, with no
  *  details.
  * @GST_VALIDATE_SHOW_SUBCHAIN: If set as the default level, similar
@@ -62,6 +64,7 @@ typedef enum {
   GST_VALIDATE_SHOW_SUBCHAIN = 3,
   GST_VALIDATE_SHOW_MONITOR = 4,
   GST_VALIDATE_SHOW_ALL = 5,
+  GST_VALIDATE_SHOW_SMART = 6,
   GST_VALIDATE_SHOW_COUNT
 } GstValidateReportingDetails;
 
@@ -75,7 +78,7 @@ typedef enum {
  * override that though.
  */
 #ifndef GST_VALIDATE_SHOW_DEFAULT
-#define GST_VALIDATE_SHOW_DEFAULT GST_VALIDATE_SHOW_SYNTHETIC
+#define GST_VALIDATE_SHOW_DEFAULT GST_VALIDATE_SHOW_SMART
 #endif
 
 #endif /* __GST_VALIDATE_RUNNER_H__ */
