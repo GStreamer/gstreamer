@@ -326,7 +326,7 @@ typedef enum {
   GST_RTSP_HDR_HOST,                /* Host */
   GST_RTSP_HDR_PRAGMA,              /* Pragma */
   GST_RTSP_HDR_X_SERVER_IP_ADDRESS, /* X-Server-IP-Address */
-  GST_RTSP_HDR_X_SESSIONCOOKIE,     /* X-Sessioncookie */
+  GST_RTSP_HDR_X_SESSIONCOOKIE,     /* x-sessioncookie */
 
   GST_RTSP_HDR_RTCP_INTERVAL,       /* RTCP-Interval */
 
