@@ -41,7 +41,8 @@ GstController-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstcontroller-@
 		$(INTROSPECTION_SCANNER) -v --namespace GstController \
 		--nsversion=@GST_API_VERSION@ \
 		--warn-all \
-		--strip-prefix=Gst \
+		--identifier-prefix=Gst \
+		--symbol-prefix=gst \
 		-I$(top_srcdir) \
 		-I$(top_srcdir)/libs \
 		-I$(top_builddir) \

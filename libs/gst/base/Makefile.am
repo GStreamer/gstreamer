@@ -69,7 +69,8 @@ GstBase-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_API_VERS
 		$(INTROSPECTION_SCANNER) -v --namespace GstBase \
 		--nsversion=@GST_API_VERSION@ \
 		--warn-all \
-		--strip-prefix=Gst \
+		--identifier-prefix=Gst \
+		--symbol-prefix=gst \
 		-I$(top_srcdir) \
 		-I$(top_srcdir)/libs \
 		-I$(top_builddir) \
