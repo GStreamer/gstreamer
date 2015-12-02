@@ -186,6 +186,7 @@ struct _GstDecodeBin
   GList *filtered_errors;       /* filtered error messages */
 
   GList *buffering_status;      /* element currently buffering messages */
+  GMutex buffering_lock;
 };
 
 struct _GstDecodeBinClass
@@ -315,6 +316,8 @@ static GstPad *find_sink_pad (GstElement * element);
 static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_decode_bin_handle_message (GstBin * bin, GstMessage * message);
+static gboolean gst_decode_bin_remove_element (GstBin * bin,
+    GstElement * element);
 
 static gboolean check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad);
 
@@ -369,6 +372,23 @@ static GstCaps *get_pad_caps (GstPad * pad);
 		    "subtitle unlocking from thread %p",		\
 		    g_thread_self ());					\
     g_mutex_unlock (&GST_DECODE_BIN_CAST(dbin)->subtitle_lock);		\
+} G_STMT_END
+
+#define BUFFERING_LOCK(dbin) G_STMT_START {				\
+    GST_LOG_OBJECT (dbin,						\
+		    "buffering locking from thread %p",			\
+		    g_thread_self ());					\
+    g_mutex_lock (&GST_DECODE_BIN_CAST(dbin)->buffering_lock);		\
+    GST_LOG_OBJECT (dbin,						\
+		    "buffering lock from thread %p",			\
+		    g_thread_self ());					\
+} G_STMT_END
+
+#define BUFFERING_UNLOCK(dbin) G_STMT_START {				\
+    GST_LOG_OBJECT (dbin,						\
+		    "buffering unlocking from thread %p",		\
+		    g_thread_self ());					\
+    g_mutex_unlock (&GST_DECODE_BIN_CAST(dbin)->buffering_lock);		\
 } G_STMT_END
 
 struct _GstPendingPad
@@ -992,6 +1012,9 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_decode_bin_handle_message);
 
+  gstbin_klass->remove_element =
+      GST_DEBUG_FUNCPTR (gst_decode_bin_remove_element);
+
   g_type_class_ref (GST_TYPE_DECODE_PAD);
 }
 
@@ -1086,6 +1109,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   decode_bin->blocked_pads = NULL;
 
   g_mutex_init (&decode_bin->subtitle_lock);
+  g_mutex_init (&decode_bin->buffering_lock);
 
   decode_bin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
   decode_bin->caps = gst_static_caps_get (&default_raw_caps);
@@ -1139,6 +1163,7 @@ gst_decode_bin_finalize (GObject * object)
   g_mutex_clear (&decode_bin->expose_lock);
   g_mutex_clear (&decode_bin->dyn_lock);
   g_mutex_clear (&decode_bin->subtitle_lock);
+  g_mutex_clear (&decode_bin->buffering_lock);
   g_mutex_clear (&decode_bin->factories_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -5266,7 +5291,7 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
      *    on the list to this new value
      */
 
-    GST_OBJECT_LOCK (dbin);
+    BUFFERING_LOCK (dbin);
     gst_message_parse_buffering (msg, &msg_perc);
 
     /*
@@ -5320,13 +5345,47 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
     } else {
       gst_message_replace (&msg, smaller);
     }
-    GST_OBJECT_UNLOCK (dbin);
+    BUFFERING_UNLOCK (dbin);
   }
 
   if (drop)
     gst_message_unref (msg);
   else
     GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
+}
+
+static gboolean
+gst_decode_bin_remove_element (GstBin * bin, GstElement * element)
+{
+  GstDecodeBin *dbin = GST_DECODE_BIN (bin);
+  gboolean removed = FALSE, post = FALSE;
+  GList *iter;
+
+  BUFFERING_LOCK (bin);
+  for (iter = dbin->buffering_status; iter; iter = iter->next) {
+    GstMessage *bufstats = iter->data;
+
+    if (GST_MESSAGE_SRC (bufstats) == GST_OBJECT_CAST (element) ||
+        gst_object_has_as_ancestor (GST_MESSAGE_SRC (bufstats),
+            GST_OBJECT_CAST (element))) {
+      gst_message_unref (bufstats);
+      dbin->buffering_status =
+          g_list_delete_link (dbin->buffering_status, iter);
+      removed = TRUE;
+      break;
+    }
+  }
+
+  if (removed && dbin->buffering_status == NULL)
+    post = TRUE;
+  BUFFERING_UNLOCK (bin);
+
+  if (post) {
+    gst_element_post_message (GST_ELEMENT_CAST (bin),
+        gst_message_new_buffering (GST_OBJECT_CAST (dbin), 100));
+  }
+
+  return GST_BIN_CLASS (parent_class)->remove_element (bin, element);
 }
 
 gboolean
