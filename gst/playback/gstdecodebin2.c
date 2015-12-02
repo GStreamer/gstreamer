@@ -2867,8 +2867,9 @@ type_found (GstElement * typefind, guint probability,
   gst_object_unref (sink_pad);
   gst_object_unref (pad);
 
-exit:
   EXPOSE_UNLOCK (decode_bin);
+
+exit:
   return;
 }
 
