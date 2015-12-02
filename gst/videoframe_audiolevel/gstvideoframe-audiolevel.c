@@ -688,8 +688,9 @@ gst_videoframe_audiolevel_asink_chain (GstPad * pad, GstObject * parent,
       if (bytes == 0) {
         cur_time = *vt0;
       } else {
-        GST_DEBUG_OBJECT (self, "Flushed %ld out of %ld bytes", bytes,
-            available_bytes);
+        GST_DEBUG_OBJECT (self,
+            "Flushed %" G_GSIZE_FORMAT " out of %" G_GSIZE_FORMAT " bytes",
+            bytes, available_bytes);
         gst_adapter_flush (self->adapter, MIN (bytes, available_bytes));
         self->total_frames += num_frames;
         if (available_bytes <= bytes) {
@@ -709,7 +710,8 @@ gst_videoframe_audiolevel_asink_chain (GstPad * pad, GstObject * parent,
       bytes = 0;                /* We just need to discard vt0 */
     }
     available_bytes = gst_adapter_available (self->adapter);
-    GST_DEBUG_OBJECT (self, "Adapter contains %ld out of %ld bytes",
+    GST_DEBUG_OBJECT (self,
+        "Adapter contains %" G_GSIZE_FORMAT " out of %" G_GSIZE_FORMAT " bytes",
         available_bytes, bytes);
 
     if (available_bytes < bytes) {
@@ -779,7 +781,7 @@ gst_videoframe_audiolevel_plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    videoframe - audiolevel,
+    videoframe_audiolevel,
     "Video frame-synchronized audio level",
     gst_videoframe_audiolevel_plugin_init, VERSION, GST_LICENSE,
     GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
