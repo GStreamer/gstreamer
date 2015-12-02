@@ -145,7 +145,8 @@ GstGL-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstgl-@GST_API_VERSION@
 		GST_PLUGIN_SYSTEM_PATH_1_0="" GST_PLUGIN_PATH_1_0="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstGL \
 		--nsversion=@GST_API_VERSION@ \
-		--strip-prefix=Gst \
+		--identifier-prefix=Gst \
+		--symbol-prefix=gst \
 		--warn-all \
 		--c-include "gst/gl/gl.h" \
 		-I$(top_srcdir)/gst-libs \
