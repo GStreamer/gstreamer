@@ -147,10 +147,15 @@ check_functions = [
   ['HAVE_GMTIME_R', 'gmtime_r'],
   ['HAVE_MMAP', 'mmap'],
   ['HAVE_PIPE2', 'pipe2'],
+  ['HAVE_GETRUSAGE', 'getrusage', '#include<sys/resource.h>'],
 ]
 
 foreach f : check_functions
-  if cc.has_function(f.get(1))
+  prefix = ''
+  if f.length() == 3
+    prefix = f.get(2)
+  endif
+  if cc.has_function(f.get(1), prefix: prefix)
     cdata.set(f.get(0), 1)
   endif
 endforeach
@@ -427,6 +432,8 @@ subdir('gst')
 subdir('sys')
 subdir('ext')
 subdir('tests')
+subdir('data')
+subdir('tools')
 subdir('pkgconfig')
 
 # xgettext is optional (on Windows for instance)
