@@ -1609,6 +1609,8 @@ GST_START_TEST (test_deadline_ts_offset)
       jb_latency_ms * GST_MSECOND);
   test_id = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (test_id == id);
+  gst_clock_id_unref (id);
+  gst_clock_id_unref (test_id);
 
   /* wait_next_timeout() syncs on the new deadline timer */
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
@@ -1620,11 +1622,12 @@ GST_START_TEST (test_deadline_ts_offset)
       (20 + jb_latency_ms) * GST_MSECOND);
   test_id = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
   g_assert (test_id == id);
-
-  gst_clock_id_unref (test_id);
   gst_clock_id_unref (id);
+  gst_clock_id_unref (test_id);
+
   out_buf = g_async_queue_pop (data.buf_queue);
   g_assert (out_buf != NULL);
+  gst_buffer_unref (out_buf);
 
   destroy_testharness (&data);
 }
