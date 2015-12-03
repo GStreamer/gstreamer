@@ -1317,21 +1317,35 @@ gst_flv_mux_write_header (GstFlvMux * mux)
   /* push the header buffer, the metadata and the codec info, if any */
   ret = gst_flv_mux_push (mux, header);
   if (ret != GST_FLOW_OK)
-    return ret;
+    goto failure_header;
   ret = gst_flv_mux_push (mux, metadata);
   if (ret != GST_FLOW_OK)
-    return ret;
+    goto failure_metadata;
   if (video_codec_data != NULL) {
     ret = gst_flv_mux_push (mux, video_codec_data);
     if (ret != GST_FLOW_OK)
-      return ret;
+      goto failure_video_codec_data;
   }
   if (audio_codec_data != NULL) {
     ret = gst_flv_mux_push (mux, audio_codec_data);
     if (ret != GST_FLOW_OK)
-      return ret;
+      goto failure_audio_codec_data;
   }
   return GST_FLOW_OK;
+
+failure_header:
+    gst_buffer_unref (metadata);
+
+failure_metadata:
+    if (video_codec_data != NULL)
+      gst_buffer_unref (video_codec_data);
+
+failure_video_codec_data:
+    if (audio_codec_data != NULL)
+      gst_buffer_unref (audio_codec_data);
+
+failure_audio_codec_data:
+    return ret;
 }
 
 static void
@@ -1581,8 +1595,10 @@ gst_flv_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
     }
 
     ret = gst_flv_mux_write_header (mux);
-    if (ret != GST_FLOW_OK)
-      return ret;
+    if (ret != GST_FLOW_OK) {
+       gst_buffer_unref (buffer);
+       return ret;
+    }
     mux->state = GST_FLV_MUX_STATE_DATA;
 
     if (GST_COLLECT_PADS_DTS_IS_VALID (cdata))
