@@ -1688,6 +1688,9 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
         demux->segment.position =
             stream->segment.position - offset + period_start;
     }
+    GST_LOG_OBJECT (stream->pad,
+        "Going to push buffer with PTS %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
   }
