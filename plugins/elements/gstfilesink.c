@@ -70,6 +70,13 @@
 #include <unistd.h>
 #endif
 
+#ifdef __BIONIC__               /* Android */
+#undef lseek
+#define lseek lseek64
+#undef off_t
+#define off_t guint64
+#endif
+
 #include "gstelements_private.h"
 #include "gstfilesink.h"
 
