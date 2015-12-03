@@ -1051,6 +1051,21 @@ gst_m3u8_client_advance_fragment (GstM3U8Client * client, gboolean forward)
       GST_DEBUG
           ("Could not find current fragment, trying next fragment directly");
       alternate_advance (client, forward);
+
+      /* Resync sequence number if the above has failed for live streams */
+      if (client->current_file == NULL && GST_M3U8_CLIENT_IS_LIVE (client)) {
+        /* for live streams, start GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE from
+           the end of the playlist. See section 6.3.3 of HLS draft */
+        gint pos =
+            g_list_length (client->current->files) -
+            GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE;
+        client->current_file =
+            g_list_nth (client->current->files, pos >= 0 ? pos : 0);
+        client->current_file_duration =
+            GST_M3U8_MEDIA_FILE (client->current_file->data)->duration;
+
+        GST_WARNING ("Resyncing live playlist");
+      }
       GST_M3U8_CLIENT_UNLOCK (client);
       return;
     }
