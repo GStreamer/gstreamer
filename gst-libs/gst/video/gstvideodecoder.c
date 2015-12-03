@@ -3128,16 +3128,16 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
     stop = start + duration;
   } else if (GST_CLOCK_TIME_IS_VALID (start)
       && !GST_CLOCK_TIME_IS_VALID (duration)) {
-    /* 2 second frame duration is rather unlikely... but if we don't clip
-     * away buffers that far before the segment we can cause the pipeline to
-     * lockup. This can happen if audio is properly clipped, and thus the
-     * audio sink does not preroll yet but the video sink prerolls because
-     * we already outputted a buffer here... and then queues run full.
+    /* If we don't clip away buffers that far before the segment we
+     * can cause the pipeline to lockup. This can happen if audio is
+     * properly clipped, and thus the audio sink does not preroll yet
+     * but the video sink prerolls because we already outputted a
+     * buffer here... and then queues run full.
      *
      * In the worst case we will clip one buffer too many here now if no
      * framerate is given, no buffer duration is given and the actual
-     * framerate is less than 0.5fps */
-    stop = start + 2 * GST_SECOND;
+     * framerate is lower than 25fps */
+    stop = start + 40 * GST_MSECOND;
   }
 
   segment = &decoder->output_segment;
