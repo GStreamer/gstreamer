@@ -219,7 +219,7 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
 
   /**
    * GstFileSink:append
-   * 
+   *
    * Append to an already existing file.
    */
   g_object_class_install_property (gobject_class, PROP_APPEND,
@@ -440,7 +440,7 @@ gst_file_sink_close_file (GstFileSink * sink)
   if (sink->file) {
     if (fclose (sink->file) != 0)
       GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-        (_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
+          (_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
 
     GST_DEBUG_OBJECT (sink, "closed file");
     sink->file = NULL;
