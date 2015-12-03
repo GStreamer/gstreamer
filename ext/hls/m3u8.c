@@ -112,82 +112,6 @@ gst_m3u8_media_file_free (GstM3U8MediaFile * self)
   g_free (self);
 }
 
-static GstM3U8MediaFile *
-gst_m3u8_media_file_copy (const GstM3U8MediaFile * self, gpointer user_data)
-{
-  g_return_val_if_fail (self != NULL, NULL);
-
-  return gst_m3u8_media_file_new (g_strdup (self->uri), g_strdup (self->title),
-      self->duration, self->sequence);
-}
-
-static GstM3U8 *
-_m3u8_copy (const GstM3U8 * self)
-{
-  GstM3U8 *dup;
-
-  g_return_val_if_fail (self != NULL, NULL);
-
-  dup = gst_m3u8_new ();
-  dup->uri = g_strdup (self->uri);
-  dup->base_uri = g_strdup (self->base_uri);
-  dup->name = g_strdup (self->name);
-  dup->endlist = self->endlist;
-  dup->version = self->version;
-  dup->targetduration = self->targetduration;
-  dup->allowcache = self->allowcache;
-  dup->bandwidth = self->bandwidth;
-  dup->program_id = self->program_id;
-  dup->codecs = g_strdup (self->codecs);
-  dup->width = self->width;
-  dup->height = self->height;
-  dup->iframe = self->iframe;
-  dup->files =
-      g_list_copy_deep (self->files, (GCopyFunc) gst_m3u8_media_file_copy,
-      NULL);
-
-  /* private */
-  dup->last_data = g_strdup (self->last_data);
-  dup->lists = g_list_copy_deep (self->lists, (GCopyFunc) _m3u8_copy, NULL);
-  dup->iframe_lists =
-      g_list_copy_deep (self->iframe_lists, (GCopyFunc) _m3u8_copy, NULL);
-  /* NOTE: current_variant will get set in gst_m3u8_copy () */
-  return dup;
-}
-
-static GstM3U8 *
-gst_m3u8_copy (const GstM3U8 * self)
-{
-  GList *entry;
-  guint n;
-
-  GstM3U8 *dup = _m3u8_copy (self);
-
-  if (self->current_variant != NULL) {
-    for (n = 0, entry = self->lists; entry; entry = entry->next, n++) {
-      if (entry == self->current_variant) {
-        dup->current_variant = g_list_nth (dup->lists, n);
-        break;
-      }
-    }
-
-    if (!dup->current_variant) {
-      for (n = 0, entry = self->iframe_lists; entry; entry = entry->next, n++) {
-        if (entry == self->current_variant) {
-          dup->current_variant = g_list_nth (dup->iframe_lists, n);
-          break;
-        }
-      }
-
-      if (!dup->current_variant) {
-        GST_ERROR ("Failed to determine current playlist");
-      }
-    }
-  }
-
-  return dup;
-}
-
 static gboolean
 int_from_string (gchar * ptr, gchar ** endptr, gint * val)
 {
@@ -917,10 +841,12 @@ gst_m3u8_client_update_variant_playlist (GstM3U8Client * self, gchar * data,
       g_list_free (unmatched_lists);
     }
 
-    /* Switch out the variant playlist */
+    /* Switch out the variant playlist, steal it from new_client */
     old = self->main;
 
-    self->main = gst_m3u8_copy (new_client->main);
+    self->main = new_client->main;
+    new_client->main = gst_m3u8_new ();
+
     if (self->main->lists)
       self->current = self->main->current_variant->data;
     else
