@@ -3145,10 +3145,11 @@ gst_flv_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_object_unref (index);
       }
 
-      if (!demux->audio_pad && !demux->video_pad)
+      if (!demux->audio_pad && !demux->video_pad) {
         GST_ELEMENT_ERROR (demux, STREAM, FAILED,
             ("Internal data stream error."), ("Got EOS before any data"));
-      else {
+        gst_event_unref (event);
+      } else {
         if (!demux->no_more_pads) {
           gst_element_no_more_pads (GST_ELEMENT (demux));
           demux->no_more_pads = TRUE;
