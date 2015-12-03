@@ -237,6 +237,7 @@ static gboolean gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment);
 static gboolean gst_app_src_is_seekable (GstBaseSrc * src);
 static gboolean gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size);
 static gboolean gst_app_src_query (GstBaseSrc * src, GstQuery * query);
+static gboolean gst_app_src_event (GstBaseSrc * src, GstEvent * event);
 
 static GstFlowReturn gst_app_src_push_buffer_action (GstAppSrc * appsrc,
     GstBuffer * buffer);
@@ -528,6 +529,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   basesrc_class->is_seekable = gst_app_src_is_seekable;
   basesrc_class->get_size = gst_app_src_do_get_size;
   basesrc_class->query = gst_app_src_query;
+  basesrc_class->event = gst_app_src_event;
 
   klass->push_buffer = gst_app_src_push_buffer_action;
   klass->push_sample = gst_app_src_push_sample_action;
@@ -1903,4 +1905,23 @@ gst_app_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_protocols = gst_app_src_uri_get_protocols;
   iface->get_uri = gst_app_src_uri_get_uri;
   iface->set_uri = gst_app_src_uri_set_uri;
+}
+
+static gboolean
+gst_app_src_event (GstBaseSrc * src, GstEvent * event)
+{
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (src);
+  GstAppSrcPrivate *priv = appsrc->priv;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      g_mutex_lock (&priv->mutex);
+      priv->is_eos = FALSE;
+      g_mutex_unlock (&priv->mutex);
+      break;
+    default:
+      break;
+  }
+
+  return GST_BASE_SRC_CLASS (parent_class)->event (src, event);
 }
