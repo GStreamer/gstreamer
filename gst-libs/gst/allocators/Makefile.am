@@ -29,7 +29,8 @@ GstAllocators-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstallocators-@
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstAllocators \
 		--nsversion=@GST_API_VERSION@ \
-		--strip-prefix=Gst \
+		--identifier-prefix=Gst \
+		--symbol-prefix=gst \
 		--warn-all \
 		--c-include "gst/allocators/allocators.h" \
 		-I$(top_srcdir)/gst-libs \

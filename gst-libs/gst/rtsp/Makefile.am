@@ -60,7 +60,8 @@ GstRtsp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_API_VERS
 		GST_PLUGIN_SYSTEM_PATH_1_0="" GST_PLUGIN_PATH_1_0="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstRtsp \
 		--nsversion=@GST_API_VERSION@ \
-		--strip-prefix=Gst \
+		--identifier-prefix=Gst \
+		--symbol-prefix=gst \
 		--warn-all \
 		--c-include "gst/rtsp/rtsp.h" \
 		-I$(top_builddir)/gst-libs \

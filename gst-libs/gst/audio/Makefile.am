@@ -101,7 +101,8 @@ GstAudio-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_API_VE
 		$(INTROSPECTION_SCANNER) -v --namespace GstAudio \
 		--nsversion=@GST_API_VERSION@ \
 		--warn-all \
-		--strip-prefix=Gst \
+		--identifier-prefix=Gst \
+		--symbol-prefix=gst \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		--c-include "gst/audio/audio.h" \

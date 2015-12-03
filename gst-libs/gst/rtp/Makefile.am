@@ -54,7 +54,8 @@ GstRtp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtp-@GST_API_VERSIO
 		GST_PLUGIN_SYSTEM_PATH_1_0="" GST_PLUGIN_PATH_1_0="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstRtp \
 		--nsversion=@GST_API_VERSION@ \
-		--strip-prefix=Gst \
+		--identifier-prefix=Gst \
+		--symbol-prefix=gst \
 		--warn-all \
 		--c-include "gst/rtp/rtp.h" \
 		-I$(top_builddir)/gst-libs \
