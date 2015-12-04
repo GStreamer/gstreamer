@@ -190,6 +190,9 @@ static gboolean gst_multi_socket_sink_socket_condition (GstMultiSinkHandle
 static gboolean gst_multi_socket_sink_unlock (GstBaseSink * bsink);
 static gboolean gst_multi_socket_sink_unlock_stop (GstBaseSink * bsink);
 
+static gboolean gst_multi_socket_sink_propose_allocation (GstBaseSink * bsink,
+    GstQuery * query);
+
 static void gst_multi_socket_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_multi_socket_sink_get_property (GObject * object, guint prop_id,
@@ -357,6 +360,8 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_unlock);
   gstbasesink_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_multi_socket_sink_unlock_stop);
+  gstbasesink_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_multi_socket_sink_propose_allocation);
 
   klass->add = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_add);
   klass->add_full = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_add_full);
@@ -1189,6 +1194,16 @@ gst_multi_socket_sink_unlock_stop (GstBaseSink * bsink)
   GST_DEBUG_OBJECT (sink, "unset flushing");
   g_object_unref (sink->cancellable);
   sink->cancellable = g_cancellable_new ();
+
+  return TRUE;
+}
+
+static gboolean
+gst_multi_socket_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+{
+  /* we support some meta */
+  gst_query_add_allocation_meta (query, GST_NET_CONTROL_MESSAGE_META_API_TYPE,
+      NULL);
 
   return TRUE;
 }
