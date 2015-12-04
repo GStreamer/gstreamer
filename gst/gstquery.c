@@ -1820,7 +1820,7 @@ gst_query_get_n_allocation_metas (GstQuery * query)
  * gst_query_parse_nth_allocation_meta:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @index: position in the metadata API array to read
- * @params: (out) (transfer none) (allow-none): API specific flags
+ * @params: (out) (transfer none) (allow-none): API specific parameters
  *
  * Parse an available query and get the metadata API
  * at @index of the metadata API array.
@@ -1884,8 +1884,8 @@ gst_query_remove_nth_allocation_meta (GstQuery * query, guint index)
  * @index: (out) (transfer none) (allow-none): the index
  *
  * Check if @query has metadata @api set. When this function returns %TRUE,
- * @index will contain the index where the requested API and the flags can be
- * found.
+ * @index will contain the index where the requested API and the parameters
+ * can be found.
  *
  * Returns: %TRUE when @api is in the list of metadata.
  */
