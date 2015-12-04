@@ -1113,6 +1113,7 @@ main (int argc, char *argv[])
 
       tfthen = gst_util_get_timestamp ();
       caught_error = event_loop (pipeline, TRUE, FALSE, GST_STATE_PLAYING);
+      res = caught_error;
       if (eos_on_shutdown && caught_error != ELR_NO_ERROR) {
         gboolean ignore_errors;
 
