@@ -1027,8 +1027,6 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
   }
 
   buf = gst_pad_probe_info_get_buffer (info);
-  ctx->in_running_time = gst_segment_to_running_time (&ctx->in_segment,
-      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf));
   buf_info = mq_stream_buf_new ();
 
   if (GST_BUFFER_PTS_IS_VALID (buf))
