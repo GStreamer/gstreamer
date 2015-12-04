@@ -1172,6 +1172,8 @@ main (int argc, char *argv[])
     gst_element_set_state (pipeline, GST_STATE_READY);
     gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
 
+    res = caught_error;
+
 #if 0
     if (check_index) {
       print_index_stats (index_stats);
