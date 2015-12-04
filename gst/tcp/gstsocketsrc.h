@@ -50,6 +50,7 @@ struct _GstSocketSrc {
  /*< private >*/
   GstCaps *caps;
   GSocket *socket;
+  gboolean send_messages;
   GCancellable *cancellable;
 };
 
