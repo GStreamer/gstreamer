@@ -1118,9 +1118,8 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
 {
   GstBuffer *buf = gst_aggregator_pad_get_buffer (GST_AGGREGATOR_PAD (pad));
   GstBuffer *outbuf = NULL;
-  GstBuffer *packet;
   GstMapInfo map;
-  GstMapInfo readmap;
+  gsize buf_size;
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 slen, ber[9];
   gboolean flush = gst_aggregator_pad_is_eos (GST_AGGREGATOR_PAD (pad))
@@ -1170,24 +1169,21 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
   if (buf == NULL)
     return ret;
 
-  gst_buffer_map (buf, &readmap, GST_MAP_READ);
-  slen = mxf_ber_encode_size (readmap.size, ber);
-  packet = gst_buffer_new_and_alloc (16 + slen + readmap.size);
-  gst_buffer_map (packet, &map, GST_MAP_WRITE);
+  buf_size = gst_buffer_get_size (buf);
+  slen = mxf_ber_encode_size (buf_size, ber);
+  outbuf = gst_buffer_new_and_alloc (16 + slen);
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
   memcpy (map.data, _gc_essence_element_ul, 16);
   GST_WRITE_UINT32_BE (map.data + 12, pad->source_track->parent.track_number);
   memcpy (map.data + 16, ber, slen);
-  memcpy (map.data + 16 + slen, readmap.data, readmap.size);
-  gst_buffer_unmap (buf, &readmap);
-
-  gst_buffer_unref (buf);
+  gst_buffer_unmap (outbuf, &map);
+  outbuf = gst_buffer_append (outbuf, buf);
 
   GST_DEBUG_OBJECT (pad,
-      "Pushing buffer of size %" G_GSIZE_FORMAT " for track %u", map.size,
-      pad->source_track->parent.track_id);
-  gst_buffer_unmap (packet, &map);
+      "Pushing buffer of size %" G_GSIZE_FORMAT " for track %u",
+      gst_buffer_get_size (outbuf), pad->source_track->parent.track_id);
 
-  if ((ret = gst_mxf_mux_push (mux, packet)) != GST_FLOW_OK) {
+  if ((ret = gst_mxf_mux_push (mux, outbuf)) != GST_FLOW_OK) {
     GST_ERROR_OBJECT (pad,
         "Failed pushing buffer for track %u, reason %s",
         pad->source_track->parent.track_id, gst_flow_get_name (ret));
