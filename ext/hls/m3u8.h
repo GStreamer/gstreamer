@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 2010 Marc-Andre Lureau <marcandre.lureau@gmail.com>
  * Copyright (C) 2010 Andoni Morales Alastruey <ylatuya@gmail.com>
+ * Copyright (C) 2015 Tim-Philipp Müller <tim@centricular.com>
  *
  * m3u8.h:
  *
@@ -29,7 +30,10 @@ G_BEGIN_DECLS
 
 typedef struct _GstM3U8 GstM3U8;
 typedef struct _GstM3U8MediaFile GstM3U8MediaFile;
+typedef struct _GstHLSMedia GstHLSMedia;
 typedef struct _GstM3U8Client GstM3U8Client;
+typedef struct _GstHLSVariantStream GstHLSVariantStream;
+typedef struct _GstHLSMasterPlaylist GstHLSMasterPlaylist;
 
 #define GST_M3U8(m) ((GstM3U8*)m)
 #define GST_M3U8_MEDIA_FILE(f) ((GstM3U8MediaFile*)f)
@@ -59,12 +63,6 @@ struct _GstM3U8
   GstClockTime targetduration;  /* last EXT-X-TARGETDURATION */
   gboolean allowcache;          /* last EXT-X-ALLOWCACHE */
 
-  gint bandwidth;
-  gint program_id;
-  gchar *codecs;
-  gint width;
-  gint height;
-  gboolean iframe;
   GList *files;
 
   /* state */
@@ -79,9 +77,6 @@ struct _GstM3U8
 
   /*< private > */
   gchar *last_data;
-  GList *lists;                 /* list of GstM3U8 from the main playlist */
-  GList *iframe_lists;          /* I-frame lists from the main playlist */
-  GList *current_variant;       /* Current variant playlist used */
   GMutex lock;
 
   gint ref_count;               /* ATOMIC */
@@ -136,16 +131,97 @@ GstClockTime       gst_m3u8_get_target_duration  (GstM3U8 * m3u8);
 
 gchar *            gst_m3u8_get_uri              (GstM3U8 * m3u8);
 
-gboolean           gst_m3u8_has_variant_playlist (GstM3U8 * m3u8);
-
 gboolean           gst_m3u8_is_live              (GstM3U8 * m3u8);
 
 gboolean           gst_m3u8_get_seek_range       (GstM3U8 * m3u8,
                                                   gint64  * start,
                                                   gint64  * stop);
 
-GList *            gst_m3u8_get_playlist_for_bitrate (GstM3U8 * main,
-                                                      guint     bitrate);
+typedef enum
+{
+  GST_HLS_MEDIA_TYPE_INVALID = -1,
+  GST_HLS_MEDIA_TYPE_AUDIO,
+  GST_HLS_MEDIA_TYPE_VIDEO,
+  GST_HLS_MEDIA_TYPE_SUBTITLES,
+  GST_HLS_MEDIA_TYPE_CLOSED_CAPTIONS,
+  GST_HLS_N_MEDIA_TYPES
+} GstHLSMediaType;
+
+struct _GstHLSMedia {
+  GstHLSMediaType mtype;
+  gchar *group_id;
+  gchar *name;
+  gchar *lang;
+  gchar *uri;
+  gboolean is_default;
+  gboolean autoselect;
+  gboolean forced;
+
+  GstM3U8 *playlist;            /* media playlist */
+
+  gint ref_count;               /* ATOMIC */
+};
+
+GstHLSMedia * gst_hls_media_ref   (GstHLSMedia * media);
+
+void          gst_hls_media_unref (GstHLSMedia * media);
+
+
+struct _GstHLSVariantStream {
+  gchar *name;         /* This will be the "name" of the playlist, the original
+                        * relative/absolute uri in a variant playlist */
+  gchar *uri;
+  gchar *codecs;
+  gint bandwidth;
+  gint program_id;
+  gint width;
+  gint height;
+  gboolean iframe;
+
+  gint refcount;       /* ATOMIC */
+
+  GstM3U8 *m3u8;       /* media playlist */
+
+  /* alternative renditions */
+  gchar *media_groups[GST_HLS_N_MEDIA_TYPES];
+  GList *media[GST_HLS_N_MEDIA_TYPES];
+};
+
+GstHLSVariantStream * gst_hls_variant_stream_ref (GstHLSVariantStream * stream);
+
+void                  gst_hls_variant_stream_unref (GstHLSVariantStream * stream);
+
+gboolean              gst_hls_variant_stream_is_live (GstHLSVariantStream * stream);
+
+
+struct _GstHLSMasterPlaylist
+{
+  /* Available variant streams, sorted by bitrate (low -> high) */
+  GList    *variants;
+  GList    *iframe_variants;
+
+  GstHLSVariantStream *default_variant;  /* first in the list */
+
+  gint      version;                     /* EXT-X-VERSION */
+
+  gint      refcount;                    /* ATOMIC */
+
+  gboolean  is_simple;                   /* TRUE if simple main media playlist,
+                                          * FALSE if variant playlist (either
+                                          * way the variants list will be set) */
+
+  /*< private > */
+  gchar   *last_data;
+};
+
+GstHLSMasterPlaylist * gst_hls_master_playlist_new_from_data (gchar       * data,
+                                                              const gchar * base_uri);
+
+GstHLSVariantStream *  gst_hls_master_playlist_get_variant_for_bitrate (GstHLSMasterPlaylist * playlist,
+                                                                        GstHLSVariantStream  * current_variant,
+                                                                        guint                  bitrate);
+
+void                   gst_hls_master_playlist_unref (GstHLSMasterPlaylist * playlist);
 
 G_END_DECLS
 

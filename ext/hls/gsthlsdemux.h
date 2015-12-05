@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 2010 Marc-Andre Lureau <marcandre.lureau@gmail.com>
  * Copyright (C) 2010 Andoni Morales Alastruey <ylatuya@gmail.com>
+ * Copyright (C) 2015 Tim-Philipp Müller <tim@centricular.com>
  *
  * gsthlsdemux.h:
  *
@@ -111,9 +112,10 @@ struct _GstHLSDemux
   GMutex      keys_lock;
 
   /* FIXME: check locking, protected automatically by manifest_lock already? */
-  /* playlists */
-  GstM3U8 *main;                /* main playlist */
-  GstM3U8 *current;
+  /* The master playlist with the available variant streams */
+  GstHLSMasterPlaylist *master;
+
+  GstHLSVariantStream  *current_variant;
 };
 
 struct _GstHLSDemuxClass

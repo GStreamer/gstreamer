@@ -5,6 +5,7 @@
  *  Author: Youness Alaoui <youness.alaoui@collabora.co.uk>, Collabora Ltd.
  *  Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
  * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
+ * Copyright (C) 2015 Tim-Philipp Müller <tim@centricular.com>
  *
  * Gsthlsdemux.c:
  *
@@ -108,6 +109,9 @@ static gboolean gst_hls_demux_select_bitrate (GstAdaptiveDemuxStream * stream,
 static void gst_hls_demux_reset (GstAdaptiveDemux * demux);
 static gboolean gst_hls_demux_get_live_seek_range (GstAdaptiveDemux * demux,
     gint64 * start, gint64 * stop);
+static GstM3U8 *gst_hls_demux_stream_get_m3u8 (GstHLSDemuxStream * hls_stream);
+static void gst_hls_demux_set_current_variant (GstHLSDemux * hlsdemux,
+    GstHLSVariantStream * variant);
 
 #define gst_hls_demux_parent_class parent_class
 G_DEFINE_TYPE (GstHLSDemux, gst_hls_demux, GST_TYPE_ADAPTIVE_DEMUX);
@@ -260,6 +264,7 @@ gst_hls_demux_clear_all_pending_data (GstHLSDemux * hlsdemux)
   }
 }
 
+#if 0
 static void
 gst_hls_demux_set_current (GstHLSDemux * self, GstM3U8 * m3u8)
 {
@@ -282,6 +287,7 @@ gst_hls_demux_set_current (GstHLSDemux * self, GstM3U8 * m3u8)
   }
   GST_M3U8_CLIENT_UNLOCK (self);
 }
+#endif
 
 static gboolean
 gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
@@ -291,7 +297,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   GstSeekFlags flags;
   GstSeekType start_type, stop_type;
   gint64 start, stop;
-  gdouble rate;
+  gdouble rate, old_rate;
   GList *walk, *current_file = NULL;
   GstClockTime current_pos, target_pos;
   gint64 current_sequence;
@@ -299,6 +305,8 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   guint64 bitrate;
   gboolean snap_before, snap_after, snap_nearest, keyunit;
   gboolean reverse;
+
+  old_rate = demux->segment.rate;
 
   gst_event_parse_seek (seek, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
@@ -311,15 +319,13 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   }
 
   /* Use I-frame variants for trick modes */
-  if (hlsdemux->main->iframe_lists && rate < -1.0
-      && demux->segment.rate >= -1.0 && demux->segment.rate <= 1.0) {
+  if (hlsdemux->master->iframe_variants != NULL
+      && rate < -1.0 && old_rate >= -1.0 && old_rate <= 1.0) {
     GError *err = NULL;
 
-    GST_M3U8_CLIENT_LOCK (hlsdemux->client);
     /* Switch to I-frame variant */
-    hlsdemux->main->current_variant = hlsdemux->main->iframe_lists;
-    GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
-    gst_hls_demux_set_current (hlsdemux, hlsdemux->main->iframe_lists->data);
+    gst_hls_demux_set_current_variant (hlsdemux,
+        hlsdemux->master->iframe_variants->data);
     gst_uri_downloader_reset (demux->downloader);
     if (!gst_hls_demux_update_playlist (hlsdemux, FALSE, &err)) {
       GST_ELEMENT_ERROR_FROM_ERROR (hlsdemux, "Could not switch playlist", err);
@@ -328,14 +334,11 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     //hlsdemux->discont = TRUE;
 
     gst_hls_demux_change_playlist (hlsdemux, bitrate / ABS (rate), NULL);
-  } else if (rate > -1.0 && rate <= 1.0 && (demux->segment.rate < -1.0
-          || demux->segment.rate > 1.0)) {
+  } else if (rate > -1.0 && rate <= 1.0 && (old_rate < -1.0 || old_rate > 1.0)) {
     GError *err = NULL;
-    GST_M3U8_CLIENT_LOCK (hlsdemux->client);
     /* Switch to normal variant */
-    hlsdemux->main->current_variant = hlsdemux->main->lists;
-    GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
-    gst_hls_demux_set_current (hlsdemux, hlsdemux->main->lists->data);
+    gst_hls_demux_set_current_variant (hlsdemux,
+        hlsdemux->master->variants->data);
     gst_uri_downloader_reset (demux->downloader);
     if (!gst_hls_demux_update_playlist (hlsdemux, FALSE, &err)) {
       GST_ELEMENT_ERROR_FROM_ERROR (hlsdemux, "Could not switch playlist", err);
@@ -346,7 +349,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     gst_hls_demux_change_playlist (hlsdemux, bitrate, NULL);
   }
   GST_M3U8_CLIENT_LOCK (hlsdemux->client);
-  file = GST_M3U8_MEDIA_FILE (hlsdemux->current->files->data);
+  file = GST_M3U8_MEDIA_FILE (hlsdemux->current_variant->m3u8->files->data);
   current_sequence = file->sequence;
   current_pos = 0;
   reverse = rate < 0;
@@ -360,7 +363,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   snap_after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
 
   /* FIXME: Here we need proper discont handling */
-  for (walk = hlsdemux->current->files; walk; walk = walk->next) {
+  for (walk = hlsdemux->current_variant->m3u8->files; walk; walk = walk->next) {
     file = walk->data;
 
     current_sequence = file->sequence;
@@ -393,10 +396,10 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   GST_DEBUG_OBJECT (demux, "seeking to sequence %u", (guint) current_sequence);
   for (walk = demux->streams; walk != NULL; walk = walk->next)
     GST_HLS_DEMUX_STREAM_CAST (walk->data)->reset_pts = TRUE;
-  hlsdemux->current->sequence = current_sequence;
-  hlsdemux->current->current_file =
-      current_file ? current_file : hlsdemux->current->files;
-  hlsdemux->current->sequence_position = current_pos;
+  hlsdemux->current_variant->m3u8->sequence = current_sequence;
+  hlsdemux->current_variant->m3u8->current_file =
+      current_file ? current_file : hlsdemux->current_variant->m3u8->files;
+  hlsdemux->current_variant->m3u8->sequence_position = current_pos;
   GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 
   /* Play from the end of the current selected segment */
@@ -445,63 +448,90 @@ gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
   return TRUE;
 }
 
+static const gchar *
+gst_adaptive_demux_get_manifest_ref_uri (GstAdaptiveDemux * d)
+{
+  return d->manifest_base_uri ? d->manifest_base_uri : d->manifest_uri;
+}
+
+static void
+gst_hls_demux_set_current_variant (GstHLSDemux * hlsdemux,
+    GstHLSVariantStream * variant)
+{
+  if (hlsdemux->current_variant == variant || variant == NULL)
+    return;
+
+  if (hlsdemux->current_variant != NULL) {
+    //#warning FIXME: Synching fragments across variants
+    //  should be done based on media timestamps, and
+    //  discont-sequence-numbers not sequence numbers.
+    variant->m3u8->sequence_position =
+        hlsdemux->current_variant->m3u8->sequence_position;
+    variant->m3u8->sequence = hlsdemux->current_variant->m3u8->sequence;
+    variant->m3u8->highest_sequence_number =
+        hlsdemux->current_variant->m3u8->highest_sequence_number;
+
+    GST_DEBUG_OBJECT (hlsdemux,
+        "Switching Variant. Copying over sequence %" G_GINT64_FORMAT
+        " and sequence_pos %" GST_TIME_FORMAT, variant->m3u8->sequence,
+        GST_TIME_ARGS (variant->m3u8->sequence_position));
+
+    gst_hls_variant_stream_unref (hlsdemux->current_variant);
+  }
+
+  hlsdemux->current_variant = gst_hls_variant_stream_ref (variant);
+
+}
 
 static gboolean
 gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
 {
+  GstHLSVariantStream *variant;
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   gchar *playlist = NULL;
 
-  hlsdemux->main = gst_m3u8_new ();
-  gst_m3u8_set_uri (hlsdemux->main, demux->manifest_uri,
-      demux->manifest_base_uri, NULL);
-  hlsdemux->current = NULL;
-
-  GST_INFO_OBJECT (demux, "Changed location: %s (base uri: %s)",
-      demux->manifest_uri, GST_STR_NULL (demux->manifest_base_uri));
+  GST_INFO_OBJECT (demux, "Initial playlist location: %s (base uri: %s)",
+      demux->manifest_uri, demux->manifest_base_uri);
 
   playlist = gst_hls_src_buf_to_utf8_playlist (buf);
   if (playlist == NULL) {
-    GST_WARNING_OBJECT (demux, "Error validating first playlist.");
+    GST_WARNING_OBJECT (demux, "Error validating initial playlist");
     return FALSE;
   }
 
-  if (!gst_m3u8_update (hlsdemux->main, playlist)) {
+  hlsdemux->master = gst_hls_master_playlist_new_from_data (playlist,
+      gst_adaptive_demux_get_manifest_ref_uri (demux));
+
+  if (hlsdemux->master == NULL || hlsdemux->master->variants == NULL) {
     /* In most cases, this will happen if we set a wrong url in the
      * source element and we have received the 404 HTML response instead of
      * the playlist */
-    GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Invalid playlist."), (NULL));
+    GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Invalid playlist."),
+        ("Could not parse playlist. Check if the URL is correct."));
     return FALSE;
   }
 
-  /* If this playlist is a variant playlist, select the first one
-   * and update it */
-  if (gst_m3u8_has_variant_playlist (hlsdemux->main)) {
-    GstM3U8 *child = NULL;
+  /* select the initial variant stream */
+  if (demux->connection_speed == 0) {
+    variant = hlsdemux->master->variants->data;
+  } else {
+    variant =
+        gst_hls_master_playlist_get_variant_for_bitrate (hlsdemux->master,
+        NULL, demux->connection_speed);
+  }
+
+  GST_INFO_OBJECT (hlsdemux, "selected %s", variant->name);
+  gst_hls_demux_set_current_variant (hlsdemux, variant);        // FIXME: inline?
+
+  /* get the selected media playlist (unless the inital list was one already) */
+  if (!hlsdemux->master->is_simple) {
     GError *err = NULL;
 
-    if (demux->connection_speed == 0) {
-      GST_M3U8_CLIENT_LOCK (hlsdemux->client);
-      child = hlsdemux->main->current_variant->data;
-      GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
-    } else {
-      GList *tmp = gst_m3u8_get_playlist_for_bitrate (hlsdemux->main,
-          demux->connection_speed);
-      GST_M3U8_CLIENT_LOCK (hlsdemux->client);
-      hlsdemux->main->current_variant = tmp;
-      GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
-
-      child = GST_M3U8 (tmp->data);
-    }
-
-    gst_hls_demux_set_current (hlsdemux, child);
     if (!gst_hls_demux_update_playlist (hlsdemux, FALSE, &err)) {
-      GST_ELEMENT_ERROR_FROM_ERROR (demux, "Could not fetch the child playlist",
+      GST_ELEMENT_ERROR_FROM_ERROR (demux, "Could not fetch media playlist",
           err);
       return FALSE;
     }
-  } else {
-    gst_hls_demux_set_current (hlsdemux, hlsdemux->main);
   }
 
   return gst_hls_demux_setup_streams (demux);
@@ -513,8 +543,8 @@ gst_hls_demux_get_duration (GstAdaptiveDemux * demux)
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   GstClockTime duration = GST_CLOCK_TIME_NONE;
 
-  if (hlsdemux->current != NULL)
-    duration = gst_m3u8_get_duration (hlsdemux->current);
+  if (hlsdemux->current_variant != NULL)
+    duration = gst_m3u8_get_duration (hlsdemux->current_variant->m3u8);
 
   return duration;
 }
@@ -525,8 +555,8 @@ gst_hls_demux_is_live (GstAdaptiveDemux * demux)
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   gboolean is_live = FALSE;
 
-  if (hlsdemux->current)
-    is_live = gst_m3u8_is_live (hlsdemux->current);
+  if (hlsdemux->current_variant)
+    is_live = gst_hls_variant_stream_is_live (hlsdemux->current_variant);
 
   return is_live;
 }
@@ -592,6 +622,7 @@ gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   const GstHLSKey *key;
+  GstM3U8 *m3u8;
 
   gst_hls_demux_stream_clear_pending_data (hls_stream);
 
@@ -599,9 +630,10 @@ gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
   if (hls_stream->current_key == NULL)
     return TRUE;
 
+  m3u8 = gst_hls_demux_stream_get_m3u8 (hls_stream);
+
   key = gst_hls_demux_get_key (hlsdemux, hls_stream->current_key,
-      hlsdemux->main ? hlsdemux->main->uri : NULL,
-      hlsdemux->current ? hlsdemux->current->allowcache : TRUE);
+      m3u8->uri, m3u8->allowcache);
 
   if (key == NULL)
     goto key_failed;
@@ -795,14 +827,31 @@ gst_hls_demux_stream_free (GstAdaptiveDemuxStream * stream)
   gst_hls_demux_stream_decrypt_end (hls_stream);
 }
 
+static GstM3U8 *
+gst_hls_demux_stream_get_m3u8 (GstHLSDemuxStream * hlsdemux_stream)
+{
+  GstAdaptiveDemuxStream *stream = (GstAdaptiveDemuxStream *) hlsdemux_stream;
+  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
+  GstM3U8 *m3u8;
+
+  g_assert (hlsdemux->current_variant != NULL);
+
+  // FIXME: what about locking? should always be called with lock
+  // that makes sure playlist aren't changed while we do things
+  m3u8 = hlsdemux->current_variant->m3u8;
+
+  return m3u8;
+}
+
 static gboolean
 gst_hls_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream)
 {
-  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
   gboolean has_next;
+  GstM3U8 *m3u8;
 
-  has_next = gst_m3u8_has_next_fragment (hlsdemux->current,
-      stream->demux->segment.rate > 0);
+  m3u8 = gst_hls_demux_stream_get_m3u8 (GST_HLS_DEMUX_STREAM_CAST (stream));
+
+  has_next = gst_m3u8_has_next_fragment (m3u8, stream->demux->segment.rate > 0);
 
   return has_next;
 }
@@ -811,11 +860,13 @@ static GstFlowReturn
 gst_hls_demux_advance_fragment (GstAdaptiveDemuxStream * stream)
 {
   GstHLSDemuxStream *hlsdemux_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
-  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
+  GstM3U8 *m3u8;
 
-  gst_m3u8_advance_fragment (hlsdemux->current,
-      stream->demux->segment.rate > 0);
+  m3u8 = gst_hls_demux_stream_get_m3u8 (hlsdemux_stream);
+
+  gst_m3u8_advance_fragment (m3u8, stream->demux->segment.rate > 0);
   hlsdemux_stream->reset_pts = FALSE;
+
   return GST_FLOW_OK;
 }
 
@@ -826,10 +877,13 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
   GstM3U8MediaFile *file;
   GstClockTime sequence_pos;
-  gboolean discont;
+  gboolean discont, forward;
+  GstM3U8 *m3u8;
 
-  file = gst_m3u8_get_next_fragment (hlsdemux->current,
-      stream->demux->segment.rate > 0, &sequence_pos, &discont);
+  m3u8 = gst_hls_demux_stream_get_m3u8 (hlsdemux_stream);
+
+  forward = (stream->demux->segment.rate > 0);
+  file = gst_m3u8_get_next_fragment (m3u8, forward, &sequence_pos, &discont);
 
   if (file == NULL) {
     GST_INFO_OBJECT (hlsdemux, "This playlist doesn't contain more fragments");
@@ -876,15 +930,13 @@ gst_hls_demux_select_bitrate (GstAdaptiveDemuxStream * stream, guint64 bitrate)
   gboolean changed = FALSE;
 
   GST_M3U8_CLIENT_LOCK (hlsdemux->client);
-  if (!hlsdemux->main->lists) {
+  if (hlsdemux->master->is_simple) {
     GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
     return FALSE;
   }
   GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 
-  /* FIXME: Currently several issues have be found when letting bitrate adaptation
-   * happen using trick modes (such as 'All streams finished without buffers') and
-   * the adaptive algorithm does not properly behave. */
+  /* Bitrate adaptation during trick modes does not work well */
   if (demux->segment.rate != 1.0)
     return FALSE;
 
@@ -899,11 +951,14 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
 {
   GstHLSDemux *demux = GST_HLS_DEMUX_CAST (ademux);
 
-  if (demux->main) {
-    gst_m3u8_unref (demux->main);
-    demux->main = NULL;
+  if (demux->master) {
+    gst_hls_master_playlist_unref (demux->master);
+    demux->master = NULL;
   }
-  demux->current = NULL;
+  if (demux->current_variant != NULL) {
+    gst_hls_variant_stream_unref (demux->current_variant);
+    demux->current_variant = NULL;
+  }
   demux->srcpad_counter = 0;
 
   gst_hls_demux_clear_all_pending_data (demux);
@@ -935,7 +990,8 @@ map_error:
 }
 
 static gint
-gst_hls_demux_find_m3u8_list_match (const GstM3U8 * a, const GstM3U8 * b)
+gst_hls_demux_find_variant_match (const GstHLSVariantStream * a,
+    const GstHLSVariantStream * b)
 {
   if (g_strcmp0 (a->name, b->name) == 0 &&
       a->bandwidth == b->bandwidth &&
@@ -953,33 +1009,35 @@ static gboolean
 gst_hls_demux_update_variant_playlist (GstHLSDemux * hlsdemux, gchar * data,
     const gchar * uri, const gchar * base_uri)
 {
-  GstM3U8 *new_main, *old;
+  GstHLSMasterPlaylist *new_master, *old;
   gboolean ret = FALSE;
   GList *l, *unmatched_lists;
 
-  new_main = gst_m3u8_new ();
-  gst_m3u8_set_uri (new_main, uri, base_uri, NULL);
-  if (gst_m3u8_update (new_main, data)) {
-    if (!new_main->lists) {
+  new_master = gst_hls_master_playlist_new_from_data (data, base_uri ? base_uri : uri); // FIXME: check which uri to use here
+
+  if (new_master != NULL) {
+    if (new_master->is_simple) {
+      // FIXME: we should be able to support this though, in the unlikely
+      // case that it changed?
       GST_ERROR
           ("Cannot update variant playlist: New playlist is not a variant playlist");
-      gst_m3u8_unref (new_main);
+      gst_hls_master_playlist_unref (new_master);
       return FALSE;
     }
 
     GST_M3U8_CLIENT_LOCK (self);
 
-    if (!hlsdemux->main->lists) {
+    if (hlsdemux->master->is_simple) {
       GST_ERROR
           ("Cannot update variant playlist: Current playlist is not a variant playlist");
       goto out;
     }
 
     /* Now see if the variant playlist still has the same lists */
-    unmatched_lists = g_list_copy (hlsdemux->main->lists);
-    for (l = new_main->lists; l != NULL; l = l->next) {
+    unmatched_lists = g_list_copy (hlsdemux->master->variants);
+    for (l = new_master->variants; l != NULL; l = l->next) {
       GList *match = g_list_find_custom (unmatched_lists, l->data,
-          (GCompareFunc) gst_hls_demux_find_m3u8_list_match);
+          (GCompareFunc) gst_hls_demux_find_variant_match);
       if (match) {
         unmatched_lists = g_list_delete_link (unmatched_lists, match);
         // FIXME: copy over state variables of playlist, or keep old instance
@@ -991,7 +1049,7 @@ gst_hls_demux_update_variant_playlist (GstHLSDemux * hlsdemux, gchar * data,
       GST_WARNING ("Unable to match all playlists");
 
       for (l = unmatched_lists; l != NULL; l = l->next) {
-        if (l->data == hlsdemux->current) {
+        if (l->data == hlsdemux->current_variant) {
           GST_WARNING ("Unable to match current playlist");
         }
       }
@@ -1000,16 +1058,14 @@ gst_hls_demux_update_variant_playlist (GstHLSDemux * hlsdemux, gchar * data,
     }
 
     /* Switch out the variant playlist, steal it from new_client */
-    old = hlsdemux->main;
+    old = hlsdemux->master;
 
-    hlsdemux->main = new_main;
+    // FIXME: check all this and also switch of variants, if anything needs updating
+    hlsdemux->master = new_master;
 
-    if (hlsdemux->main->lists)
-      hlsdemux->current = hlsdemux->main->current_variant->data;
-    else
-      hlsdemux->current = hlsdemux->main;
+    hlsdemux->current_variant = hlsdemux->master->default_variant;
 
-    gst_m3u8_unref (old);
+    gst_hls_master_playlist_unref (old);
 
     ret = TRUE;
 
@@ -1029,31 +1085,30 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
   GstBuffer *buf;
   gchar *playlist;
   gboolean main_checked = FALSE;
-  gchar *uri, *main_uri;
+  const gchar *main_uri;
+  GstM3U8 *m3u8;
+  gchar *uri;
 
 retry:
-  uri = gst_m3u8_get_uri (demux->current);
-  main_uri = gst_m3u8_get_uri (demux->main);
+  uri = gst_m3u8_get_uri (demux->current_variant->m3u8);
+  main_uri = gst_adaptive_demux_get_manifest_ref_uri (adaptive_demux);
   download =
       gst_uri_downloader_fetch_uri (adaptive_demux->downloader, uri, main_uri,
       TRUE, TRUE, TRUE, err);
-  g_free (main_uri);
   if (download == NULL) {
     gchar *base_uri;
 
-    if (!update || main_checked || !gst_m3u8_has_variant_playlist (demux->main)) {
+    if (!update || main_checked || demux->master->is_simple) {
       g_free (uri);
       return FALSE;
     }
     g_clear_error (err);
-    main_uri = gst_m3u8_get_uri (demux->main);
     GST_INFO_OBJECT (demux,
         "Updating playlist %s failed, attempt to refresh variant playlist %s",
         uri, main_uri);
     download =
         gst_uri_downloader_fetch_uri (adaptive_demux->downloader,
         main_uri, NULL, TRUE, TRUE, TRUE, err);
-    g_free (main_uri);
     if (download == NULL) {
       g_free (uri);
       return FALSE;
@@ -1097,18 +1152,16 @@ retry:
   }
   g_free (uri);
 
+  m3u8 = demux->current_variant->m3u8;
+
   /* Set the base URI of the playlist to the redirect target if any */
-  GST_M3U8_CLIENT_LOCK (demux->client);
-  g_free (demux->current->uri);
-  g_free (demux->current->base_uri);
   if (download->redirect_permanent && download->redirect_uri) {
-    demux->current->uri = g_strdup (download->redirect_uri);
-    demux->current->base_uri = NULL;
+    gst_m3u8_set_uri (m3u8, download->redirect_uri, NULL,
+        demux->current_variant->name);
   } else {
-    demux->current->uri = g_strdup (download->uri);
-    demux->current->base_uri = g_strdup (download->redirect_uri);
+    gst_m3u8_set_uri (m3u8, download->uri, download->redirect_uri,
+        demux->current_variant->name);
   }
-  GST_M3U8_CLIENT_UNLOCK (demux->client);
 
   buf = gst_fragment_get_buffer (download);
   playlist = gst_hls_src_buf_to_utf8_playlist (buf);
@@ -1122,7 +1175,7 @@ retry:
     return FALSE;
   }
 
-  if (!gst_m3u8_update (demux->current, playlist)) {
+  if (!gst_m3u8_update (m3u8, playlist)) {
     GST_WARNING_OBJECT (demux, "Couldn't update playlist");
     g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
         "Couldn't update playlist");
@@ -1131,30 +1184,29 @@ retry:
 
   /* If it's a live source, do not let the sequence number go beyond
    * three fragments before the end of the list */
-  if (update == FALSE && demux->current && gst_m3u8_is_live (demux->current)) {
+  if (update == FALSE && gst_m3u8_is_live (m3u8)) {
     gint64 last_sequence, first_sequence;
 
     GST_M3U8_CLIENT_LOCK (demux->client);
     last_sequence =
-        GST_M3U8_MEDIA_FILE (g_list_last (demux->current->files)->
-        data)->sequence;
+        GST_M3U8_MEDIA_FILE (g_list_last (m3u8->files)->data)->sequence;
     first_sequence =
-        GST_M3U8_MEDIA_FILE (demux->current->files->data)->sequence;
+        GST_M3U8_MEDIA_FILE (g_list_first (m3u8->files)->data)->sequence;
 
     GST_DEBUG_OBJECT (demux,
         "sequence:%" G_GINT64_FORMAT " , first_sequence:%" G_GINT64_FORMAT
-        " , last_sequence:%" G_GINT64_FORMAT, demux->current->sequence,
+        " , last_sequence:%" G_GINT64_FORMAT, m3u8->sequence,
         first_sequence, last_sequence);
-    if (demux->current->sequence >= last_sequence - 3) {
+    if (m3u8->sequence >= last_sequence - 3) {
       //demux->need_segment = TRUE;
       /* Make sure we never go below the minimum sequence number */
-      demux->current->sequence = MAX (first_sequence, last_sequence - 3);
+      m3u8->sequence = MAX (first_sequence, last_sequence - 3);
       GST_DEBUG_OBJECT (demux,
           "Sequence is beyond playlist. Moving back to %" G_GINT64_FORMAT,
-          demux->current->sequence);
+          m3u8->sequence);
     }
     GST_M3U8_CLIENT_UNLOCK (demux->client);
-  } else if (demux->current && !gst_m3u8_is_live (demux->current)) {
+  } else if (!gst_m3u8_is_live (m3u8)) {
     GstClockTime current_pos, target_pos;
     guint sequence = 0;
     GList *walk;
@@ -1173,15 +1225,15 @@ retry:
     } else {
       target_pos = 0;
     }
-    if (GST_CLOCK_TIME_IS_VALID (demux->current->sequence_position)) {
-      target_pos = MAX (target_pos, demux->current->sequence_position);
+    if (GST_CLOCK_TIME_IS_VALID (m3u8->sequence_position)) {
+      target_pos = MAX (target_pos, m3u8->sequence_position);
     }
 
     GST_LOG_OBJECT (demux, "Looking for sequence position %"
         GST_TIME_FORMAT " in updated playlist", GST_TIME_ARGS (target_pos));
 
     current_pos = 0;
-    for (walk = demux->current->files; walk; walk = walk->next) {
+    for (walk = m3u8->files; walk; walk = walk->next) {
       GstM3U8MediaFile *file = walk->data;
 
       sequence = file->sequence;
@@ -1194,8 +1246,8 @@ retry:
     /* End of playlist */
     if (!walk)
       sequence++;
-    demux->current->sequence = sequence;
-    demux->current->sequence_position = current_pos;
+    m3u8->sequence = sequence;
+    m3u8->sequence_position = current_pos;
     GST_M3U8_CLIENT_UNLOCK (demux->client);
   }
 
@@ -1206,7 +1258,8 @@ static gboolean
 gst_hls_demux_change_playlist (GstHLSDemux * demux, guint max_bitrate,
     gboolean * changed)
 {
-  GList *previous_variant, *current_variant;
+  GstHLSVariantStream *lowest_variant, *lowest_ivariant;
+  GstHLSVariantStream *previous_variant, *new_variant;
   gint old_bandwidth, new_bandwidth;
   GstAdaptiveDemux *adaptive_demux = GST_ADAPTIVE_DEMUX_CAST (demux);
   GstAdaptiveDemuxStream *stream;
@@ -1215,15 +1268,16 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, guint max_bitrate,
 
   stream = adaptive_demux->streams->data;
 
-  previous_variant = demux->main->current_variant;
-  current_variant =
-      gst_m3u8_get_playlist_for_bitrate (demux->main, max_bitrate);
+  previous_variant = demux->current_variant;
+  new_variant =
+      gst_hls_master_playlist_get_variant_for_bitrate (demux->master,
+      demux->current_variant, max_bitrate);
 
   GST_M3U8_CLIENT_LOCK (demux->client);
 
 retry_failover_protection:
-  old_bandwidth = GST_M3U8 (previous_variant->data)->bandwidth;
-  new_bandwidth = GST_M3U8 (current_variant->data)->bandwidth;
+  old_bandwidth = previous_variant->bandwidth;
+  new_bandwidth = new_variant->bandwidth;
 
   /* Don't do anything else if the playlist is the same */
   if (new_bandwidth == old_bandwidth) {
@@ -1231,19 +1285,19 @@ retry_failover_protection:
     return TRUE;
   }
 
-  demux->main->current_variant = current_variant;
   GST_M3U8_CLIENT_UNLOCK (demux->client);
 
-  gst_hls_demux_set_current (demux, current_variant->data);
+  gst_hls_demux_set_current_variant (demux, new_variant);
 
   GST_INFO_OBJECT (demux, "Client was on %dbps, max allowed is %dbps, switching"
       " to bitrate %dbps", old_bandwidth, max_bitrate, new_bandwidth);
 
   if (gst_hls_demux_update_playlist (demux, TRUE, NULL)) {
+    const gchar *main_uri;
     gchar *uri;
-    gchar *main_uri;
-    uri = gst_m3u8_get_uri (demux->current);
-    main_uri = gst_m3u8_get_uri (demux->main);
+
+    uri = gst_m3u8_get_uri (new_variant->m3u8);
+    main_uri = gst_adaptive_demux_get_manifest_ref_uri (adaptive_demux);
     gst_element_post_message (GST_ELEMENT_CAST (demux),
         gst_message_new_element (GST_OBJECT_CAST (demux),
             gst_structure_new (GST_ADAPTIVE_DEMUX_STATISTICS_MESSAGE_NAME,
@@ -1251,31 +1305,37 @@ retry_failover_protection:
                 main_uri, "uri", G_TYPE_STRING,
                 uri, "bitrate", G_TYPE_INT, new_bandwidth, NULL)));
     g_free (uri);
-    g_free (main_uri);
     if (changed)
       *changed = TRUE;
     stream->discont = TRUE;
   } else {
-    GList *failover = NULL;
+    GstHLSVariantStream *failover_variant = NULL;
+    GList *failover;
 
     GST_INFO_OBJECT (demux, "Unable to update playlist. Switching back");
     GST_M3U8_CLIENT_LOCK (demux->client);
 
-    failover = g_list_previous (current_variant);
-    if (failover && new_bandwidth == GST_M3U8 (failover->data)->bandwidth) {
-      current_variant = failover;
+    /* we find variants by bitrate by going from highest to lowest, so it's
+     * possible that there's another variant with the same bitrate before the
+     * one selected which we can use as failover */
+    failover = g_list_find (demux->master->variants, new_variant);
+    if (failover != NULL)
+      failover = failover->prev;
+    if (failover != NULL)
+      failover_variant = failover->data;
+    if (failover_variant && new_bandwidth == failover_variant->bandwidth) {
+      new_variant = failover_variant;
       goto retry_failover_protection;
     }
 
-    demux->main->current_variant = previous_variant;
     GST_M3U8_CLIENT_UNLOCK (demux->client);
-    gst_hls_demux_set_current (demux, previous_variant->data);
+    gst_hls_demux_set_current_variant (demux, previous_variant);
     /*  Try a lower bitrate (or stop if we just tried the lowest) */
-    if (GST_M3U8 (previous_variant->data)->iframe && new_bandwidth ==
-        GST_M3U8 (g_list_first (demux->main->iframe_lists)->data)->bandwidth)
+    lowest_variant = demux->master->variants->data;
+    lowest_ivariant = demux->master->iframe_variants->data;
+    if (previous_variant->iframe && new_bandwidth == lowest_ivariant->bandwidth)
       return FALSE;
-    else if (!GST_M3U8 (previous_variant->data)->iframe && new_bandwidth ==
-        GST_M3U8 (g_list_first (demux->main->lists)->data)->bandwidth)
+    if (!previous_variant->iframe && new_bandwidth == lowest_variant->bandwidth)
       return FALSE;
     else
       return gst_hls_demux_change_playlist (demux, new_bandwidth - 1, changed);
@@ -1447,7 +1507,12 @@ gst_hls_demux_get_manifest_update_interval (GstAdaptiveDemux * demux)
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   GstClockTime target_duration;
 
-  target_duration = gst_m3u8_get_target_duration (hlsdemux->current);
+  if (hlsdemux->current_variant) {
+    target_duration =
+        gst_m3u8_get_target_duration (hlsdemux->current_variant->m3u8);
+  } else {
+    target_duration = 5 * GST_SECOND;
+  }
 
   return gst_util_uint64_scale (target_duration, G_USEC_PER_SEC, GST_SECOND);
 }
@@ -1459,8 +1524,10 @@ gst_hls_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   gboolean ret = FALSE;
 
-  if (hlsdemux->current)
-    ret = gst_m3u8_get_seek_range (hlsdemux->current, start, stop);
+  if (hlsdemux->current_variant) {
+    ret =
+        gst_m3u8_get_seek_range (hlsdemux->current_variant->m3u8, start, stop);
+  }
 
   return ret;
 }
