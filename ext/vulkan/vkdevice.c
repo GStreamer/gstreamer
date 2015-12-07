@@ -23,7 +23,7 @@
 #endif
 
 #include "vkdevice.h"
-#include "vkutils.h"
+#include "vkutils_private.h"
 
 #include <string.h>
 

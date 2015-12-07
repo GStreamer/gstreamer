@@ -17,23 +17,16 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#ifndef _VK_UTILS_H_
-#define _VK_UTILS_H_
+#ifndef _VK_UTILS_PRIVATE_H_
+#define _VK_UTILS_PRIVATE_H_
 
 #include <gst/gst.h>
-#include <vk.h>
+#include "vk.h"
 
 G_BEGIN_DECLS
 
-gboolean gst_vulkan_ensure_element_data (gpointer element,
-    GstVulkanDisplay **display_ptr, GstVulkanInstance ** instance_ptr);
-gboolean gst_vulkan_handle_set_context (GstElement * element, GstContext * context,
-    GstVulkanDisplay ** display, GstVulkanInstance ** instance);
-gboolean gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
-    GstVulkanDisplay ** display, GstVulkanInstance ** instance);
-
-gboolean gst_vulkan_run_query (GstElement * element,
-    GstQuery * query, GstPadDirection direction);
+gboolean _check_for_all_layers (uint32_t check_count, const char ** check_names,
+    uint32_t layer_count, VkLayerProperties * layers);
 
 G_END_DECLS
 

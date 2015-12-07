@@ -23,7 +23,7 @@
 #endif
 
 #include "vkinstance.h"
-#include "vkutils.h"
+#include "vkutils_private.h"
 
 #include <string.h>
 
@@ -44,13 +44,15 @@ static const char *instance_validation_layers[] = {
 #define GST_CAT_DEFAULT gst_vulkan_instance_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GST_DEBUG_CATEGORY (GST_VULKAN_DEBUG_CAT);
+GST_DEBUG_CATEGORY (GST_CAT_CONTEXT);
 
 #define gst_vulkan_instance_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanInstance, gst_vulkan_instance,
     GST_TYPE_OBJECT, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
         "vulkaninstance", 0, "Vulkan Instance");
     GST_DEBUG_CATEGORY_INIT (GST_VULKAN_DEBUG_CAT,
-        "vulkandebug", 0, "Vulkan Debug"));
+        "vulkandebug", 0, "Vulkan Debug");
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT"));
 
 static void gst_vulkan_instance_finalize (GObject * object);
 
@@ -331,4 +333,61 @@ gst_vulkan_instance_get_proc_address (GstVulkanInstance * instance,
   GST_TRACE_OBJECT (instance, "%s", name);
 
   return vkGetInstanceProcAddr (instance->instance, name);
+}
+
+/**
+ * gst_context_set_vulkan_instance:
+ * @context: a #GstContext
+ * @instance: a #GstVulkanInstance
+ *
+ * Sets @instance on @context
+ *
+ * Since: 1.10
+ */
+void
+gst_context_set_vulkan_instance (GstContext * context,
+    GstVulkanInstance * instance)
+{
+  GstStructure *s;
+
+  g_return_if_fail (context != NULL);
+  g_return_if_fail (gst_context_is_writable (context));
+
+  if (instance)
+    GST_CAT_LOG (GST_CAT_CONTEXT,
+        "setting GstVulkanInstance(%" GST_PTR_FORMAT ") on context(%"
+        GST_PTR_FORMAT ")", instance, context);
+
+  s = gst_context_writable_structure (context);
+  gst_structure_set (s, GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR,
+      GST_TYPE_VULKAN_INSTANCE, instance, NULL);
+}
+
+/**
+ * gst_context_get_vulkan_instance:
+ * @context: a #GstContext
+ * @instance: resulting #GstVulkanInstance
+ *
+ * Returns: Whether @instance was in @context
+ *
+ * Since: 1.10
+ */
+gboolean
+gst_context_get_vulkan_instance (GstContext * context,
+    GstVulkanInstance ** instance)
+{
+  const GstStructure *s;
+  gboolean ret;
+
+  g_return_val_if_fail (instance != NULL, FALSE);
+  g_return_val_if_fail (context != NULL, FALSE);
+
+  s = gst_context_get_structure (context);
+  ret = gst_structure_get (s, GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR,
+      GST_TYPE_VULKAN_INSTANCE, instance, NULL);
+
+  GST_CAT_LOG (GST_CAT_CONTEXT, "got GstVulkanInstance(%" GST_PTR_FORMAT
+      ") from context(%" GST_PTR_FORMAT ")", *instance, context);
+
+  return ret;
 }

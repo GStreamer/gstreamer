@@ -34,6 +34,7 @@
 #include "xcb/vkdisplay_xcb.h"
 #endif
 
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 #define GST_CAT_DEFAULT gst_vulkan_display_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -45,6 +46,7 @@ _init_debug (void)
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkandisplay", 0,
         "Vulkan display");
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
     g_once_init_leave (&_init, 1);
   }
 }
@@ -320,6 +322,63 @@ gst_vulkan_display_remove_window (GstVulkanDisplay * display,
     ret = TRUE;
   }
   GST_OBJECT_UNLOCK (display);
+
+  return ret;
+}
+
+/**
+ * gst_context_set_vulkan_display:
+ * @context: a #GstContext
+ * @display: a #GstVulkanDisplay
+ *
+ * Sets @display on @context
+ *
+ * Since: 1.10
+ */
+void
+gst_context_set_vulkan_display (GstContext * context,
+    GstVulkanDisplay * display)
+{
+  GstStructure *s;
+
+  g_return_if_fail (context != NULL);
+  g_return_if_fail (gst_context_is_writable (context));
+
+  if (display)
+    GST_CAT_LOG (GST_CAT_CONTEXT,
+        "setting GstVulkanDisplay(%" GST_PTR_FORMAT ") on context(%"
+        GST_PTR_FORMAT ")", display, context);
+
+  s = gst_context_writable_structure (context);
+  gst_structure_set (s, GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR,
+      GST_TYPE_VULKAN_DISPLAY, display, NULL);
+}
+
+/**
+ * gst_context_get_vulkan_display:
+ * @context: a #GstContext
+ * @display: resulting #GstVulkanDisplay
+ *
+ * Returns: Whether @display was in @context
+ *
+ * Since: 1.10
+ */
+gboolean
+gst_context_get_vulkan_display (GstContext * context,
+    GstVulkanDisplay ** display)
+{
+  const GstStructure *s;
+  gboolean ret;
+
+  g_return_val_if_fail (display != NULL, FALSE);
+  g_return_val_if_fail (context != NULL, FALSE);
+
+  s = gst_context_get_structure (context);
+  ret = gst_structure_get (s, GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR,
+      GST_TYPE_VULKAN_DISPLAY, display, NULL);
+
+  GST_CAT_LOG (GST_CAT_CONTEXT, "got GstVulkanDisplay(%" GST_PTR_FORMAT
+      ") from context(%" GST_PTR_FORMAT ")", *display, context);
 
   return ret;
 }

@@ -202,22 +202,32 @@ gst_vulkan_sink_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_vulkan_sink_query (GstBaseSink * bsink, GstQuery * query)
 {
-//  GstVulkanSink *vk_sink = GST_VULKAN_SINK (bsink);
+  GstVulkanSink *vk_sink = GST_VULKAN_SINK (bsink);
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:{
+      res = gst_vulkan_handle_context_query (GST_ELEMENT (vk_sink), query,
+          &vk_sink->display, &vk_sink->instance);
+
+      if (res)
+        return res;
+      break;
+    }
     default:
-      res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
   }
 
-  return res;
+  return GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
 }
 
 static void
 gst_vulkan_sink_set_context (GstElement * element, GstContext * context)
 {
-//  GstVulkanSink *vk_sink = GST_VULKAN_SINK (element);
+  GstVulkanSink *vk_sink = GST_VULKAN_SINK (element);
+
+  gst_vulkan_handle_set_context (element, context, &vk_sink->display,
+      &vk_sink->instance);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -235,22 +245,23 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      vk_sink->instance = gst_vulkan_instance_new ();
+      if (!gst_vulkan_ensure_element_data (element, &vk_sink->display,
+              &vk_sink->instance)) {
+        GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
+            ("Failed to retreive vulkan instance/display"), (NULL));
+        return GST_STATE_CHANGE_FAILURE;
+      }
+
       if (!gst_vulkan_instance_open (vk_sink->instance, &error)) {
         GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
             ("Failed to create vulkan instance"), ("%s", error->message));
         return GST_STATE_CHANGE_FAILURE;
       }
+
       vk_sink->device = gst_vulkan_device_new (vk_sink->instance);
       if (!gst_vulkan_device_open (vk_sink->device, &error)) {
         GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
             ("Failed to create vulkan device"), ("%s", error->message));
-        return GST_STATE_CHANGE_FAILURE;
-      }
-
-      if (!(vk_sink->display = gst_vulkan_display_new ())) {
-        GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
-            ("Failed to connect to the window sysytem"), (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
 

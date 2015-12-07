@@ -41,5 +41,6 @@
 #include "vkswapper.h"
 #include "vkmemory.h"
 #include "vkimagememory.h"
+#include "vkutils.h"
 
 #endif /* _VK_H_ */

@@ -33,6 +33,8 @@ G_BEGIN_DECLS
 #define GST_VULKAN_INSTANCE_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VULKAN_INSTANCE, GstVulkanInstanceClass))
 GType gst_vulkan_instance_get_type       (void);
 
+#define GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR "gst.vulkan.instance"
+
 struct _GstVulkanInstance
 {
   GstObject parent;
@@ -60,6 +62,11 @@ gboolean            gst_vulkan_instance_open                (GstVulkanInstance *
 
 gpointer            gst_vulkan_instance_get_proc_address    (GstVulkanInstance * instance,
                                                              const gchar * name);
+
+void                gst_context_set_vulkan_instance         (GstContext * context,
+                                                             GstVulkanInstance * instance);
+gboolean            gst_context_get_vulkan_instance         (GstContext * context,
+                                                             GstVulkanInstance ** instance);
 
 G_END_DECLS
 

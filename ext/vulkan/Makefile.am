@@ -31,6 +31,7 @@ noinst_HEADERS = \
 	vksink.h \
 	vkswapper.h \
 	vkutils.h \
+	vkutils_private.h \
 	vkwindow.h
 
 libgstvulkan_la_CFLAGS = \

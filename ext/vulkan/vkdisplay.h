@@ -39,6 +39,8 @@ G_BEGIN_DECLS
 #define GST_VULKAN_DISPLAY_GET_CLASS(o)     (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VULKAN_DISPLAY, GstVulkanDisplayClass))
 GType gst_vulkan_display_get_type (void);
 
+#define GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR "gst.vulkan.display"
+
 typedef enum
 {
   GST_VULKAN_DISPLAY_TYPE_NONE = 0,
@@ -83,15 +85,21 @@ struct _GstVulkanDisplayClass
   GstVulkanWindow * (*create_window)        (GstVulkanDisplay * display);
 };
 
-GstVulkanDisplay *gst_vulkan_display_new (void);
+GstVulkanDisplay *      gst_vulkan_display_new (void);
 
-gpointer             gst_vulkan_display_get_handle             (GstVulkanDisplay * display);
-GstVulkanDisplayType gst_vulkan_display_get_handle_type        (GstVulkanDisplay * display);
-gpointer             gst_vulkan_display_get_platform_handle    (GstVulkanDisplay * display);
-GstVulkanWindow *    gst_vulkan_display_create_window          (GstVulkanDisplay * display);
+gpointer                gst_vulkan_display_get_handle               (GstVulkanDisplay * display);
+GstVulkanDisplayType    gst_vulkan_display_get_handle_type          (GstVulkanDisplay * display);
+gpointer                gst_vulkan_display_get_platform_handle      (GstVulkanDisplay * display);
+GstVulkanWindow *       gst_vulkan_display_create_window            (GstVulkanDisplay * display);
+
+gboolean                gst_context_get_vulkan_display              (GstContext * context,
+                                                                     GstVulkanDisplay ** display);
+void                    gst_context_set_vulkan_display              (GstContext * context,
+                                                                     GstVulkanDisplay * display);
 
 /* GstVulkanWindow usage only */
-gboolean             gst_vulkan_display_remove_window          (GstVulkanDisplay * display, GstVulkanWindow * window);
+gboolean                gst_vulkan_display_remove_window            (GstVulkanDisplay * display, GstVulkanWindow * window);
+
 
 G_END_DECLS
 
