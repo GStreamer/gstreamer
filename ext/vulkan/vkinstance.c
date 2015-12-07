@@ -54,6 +54,11 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanInstance, gst_vulkan_instance,
 
 static void gst_vulkan_instance_finalize (GObject * object);
 
+struct _GstVulkanInstancePrivate
+{
+  gboolean opened;
+};
+
 GstVulkanInstance *
 gst_vulkan_instance_new (void)
 {
@@ -63,6 +68,8 @@ gst_vulkan_instance_new (void)
 static void
 gst_vulkan_instance_init (GstVulkanInstance * instance)
 {
+  instance->priv = G_TYPE_INSTANCE_GET_PRIVATE ((instance),
+      GST_TYPE_VULKAN_INSTANCE, GstVulkanInstancePrivate);
 }
 
 static void
@@ -71,6 +78,8 @@ gst_vulkan_instance_class_init (GstVulkanInstanceClass * instance_class)
   gst_vulkan_memory_init_once ();
   gst_vulkan_image_memory_init_once ();
 
+  g_type_class_add_private (instance_class, sizeof (GstVulkanInstancePrivate));
+
   G_OBJECT_CLASS (instance_class)->finalize = gst_vulkan_instance_finalize;
 }
 
@@ -78,6 +87,15 @@ static void
 gst_vulkan_instance_finalize (GObject * object)
 {
   GstVulkanInstance *instance = GST_VULKAN_INSTANCE (object);
+
+  if (instance->priv->opened) {
+    if (instance->dbgDestroyMsgCallback)
+      instance->dbgDestroyMsgCallback (instance->instance,
+          instance->msg_callback);
+
+    g_free (instance->physical_devices);
+  }
+  instance->priv->opened = FALSE;
 
   if (instance->instance)
     vkDestroyInstance (instance->instance);
@@ -132,11 +150,17 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   gboolean have_swapchain_ext = FALSE;
   VkResult err;
 
+  GST_OBJECT_LOCK (instance);
+  if (instance->priv->opened) {
+    GST_OBJECT_UNLOCK (instance);
+    return TRUE;
+  }
+
   /* Look for validation layers */
   err = vkEnumerateInstanceLayerProperties (&instance_layer_count, NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "vKEnumerateInstanceLayerProperties") < 0)
-    return FALSE;
+    goto error;
 
   instance_layers = g_new0 (VkLayerProperties, instance_layer_count);
   err =
@@ -145,7 +169,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   if (gst_vulkan_error_to_g_error (err, error,
           "vKEnumerateInstanceLayerProperties") < 0) {
     g_free (instance_layers);
-    return FALSE;
+    goto error;
   }
 
   /* TODO: allow outside selection */
@@ -166,7 +190,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateInstanceExtensionProperties") < 0) {
     g_free (instance_layers);
-    return FALSE;
+    goto error;
   }
 
   memset (extension_names, 0, sizeof (extension_names));
@@ -179,7 +203,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
           "vkEnumerateInstanceExtensionProperties") < 0) {
     g_free (instance_layers);
     g_free (instance_extensions);
-    return FALSE;
+    goto error;
   }
 
   /* TODO: allow outside selection */
@@ -230,7 +254,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateInstance") < 0) {
       g_free (instance_layers);
       g_free (instance_extensions);
-      return FALSE;
+      goto error;
     }
   }
 
@@ -242,7 +266,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       &instance->n_physical_devices, NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumeratePhysicalDevices") < 0)
-    return FALSE;
+    goto error;
   g_assert (instance->n_physical_devices > 0);
   instance->physical_devices =
       g_new0 (VkPhysicalDevice, instance->n_physical_devices);
@@ -251,14 +275,14 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       &instance->n_physical_devices, instance->physical_devices);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumeratePhysicalDevices") < 0)
-    return FALSE;
+    goto error;
 
   instance->dbgCreateMsgCallback = (PFN_vkDbgCreateMsgCallback)
       gst_vulkan_instance_get_proc_address (instance, "vkDbgCreateMsgCallback");
   if (!instance->dbgCreateMsgCallback) {
     g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_FAILED,
         "Failed to retreive vkDbgCreateMsgCallback");
-    return FALSE;
+    goto error;
   }
   instance->dbgDestroyMsgCallback = (PFN_vkDbgDestroyMsgCallback)
       gst_vulkan_instance_get_proc_address (instance,
@@ -266,7 +290,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   if (!instance->dbgDestroyMsgCallback) {
     g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_FAILED,
         "Failed to retreive vkDbgDestroyMsgCallback");
-    return FALSE;
+    goto error;
   }
   instance->dbgBreakCallback =
       (PFN_vkDbgMsgCallback) gst_vulkan_instance_get_proc_address (instance,
@@ -274,7 +298,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   if (!instance->dbgBreakCallback) {
     g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_FAILED,
         "Failed to retreive vkDbgBreakCallback");
-    return FALSE;
+    goto error;
   }
 
   err = instance->dbgCreateMsgCallback (instance->instance,
@@ -282,9 +306,18 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       | VK_DBG_REPORT_DEBUG_BIT | VK_DBG_REPORT_PERF_WARN_BIT,
       _gst_vk_debug_callback, NULL, &instance->msg_callback);
   if (gst_vulkan_error_to_g_error (err, error, "vkDbgCreateMsgCallback") < 0)
-    return FALSE;
+    goto error;
+
+  instance->priv->opened = TRUE;
+  GST_OBJECT_UNLOCK (instance);
 
   return TRUE;
+
+error:
+  {
+    GST_OBJECT_UNLOCK (instance);
+    return FALSE;
+  }
 }
 
 gpointer
@@ -298,17 +331,4 @@ gst_vulkan_instance_get_proc_address (GstVulkanInstance * instance,
   GST_TRACE_OBJECT (instance, "%s", name);
 
   return vkGetInstanceProcAddr (instance->instance, name);
-}
-
-void
-gst_vulkan_instance_close (GstVulkanInstance * instance)
-{
-  g_return_if_fail (GST_IS_VULKAN_INSTANCE (instance));
-  g_return_if_fail (instance->instance != NULL);
-
-  if (instance->dbgDestroyMsgCallback)
-    instance->dbgDestroyMsgCallback (instance->instance,
-        instance->msg_callback);
-
-  g_free (instance->physical_devices);
 }

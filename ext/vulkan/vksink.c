@@ -302,7 +302,6 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
       gst_vulkan_device_close (vk_sink->device);
       gst_object_unref (vk_sink->device);
       vk_sink->device = NULL;
-      gst_vulkan_instance_close (vk_sink->instance);
       gst_object_unref (vk_sink->instance);
       vk_sink->instance = NULL;
       break;

@@ -45,6 +45,8 @@ struct _GstVulkanInstance
   PFN_vkDbgCreateMsgCallback dbgCreateMsgCallback;
   PFN_vkDbgDestroyMsgCallback dbgDestroyMsgCallback;
   PFN_vkDbgMsgCallback dbgBreakCallback;
+
+  GstVulkanInstancePrivate *priv;
 };
 
 struct _GstVulkanInstanceClass
@@ -55,7 +57,6 @@ struct _GstVulkanInstanceClass
 GstVulkanInstance * gst_vulkan_instance_new                 (void);
 gboolean            gst_vulkan_instance_open                (GstVulkanInstance * instance,
                                                              GError ** error);
-void                gst_vulkan_instance_close               (GstVulkanInstance * instance);
 
 gpointer            gst_vulkan_instance_get_proc_address    (GstVulkanInstance * instance,
                                                              const gchar * name);

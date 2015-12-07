@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstVulkanInstance GstVulkanInstance;
 typedef struct _GstVulkanInstanceClass GstVulkanInstanceClass;
+typedef struct _GstVulkanInstancePrivate GstVulkanInstancePrivate;
 
 typedef struct _GstVulkanDevice GstVulkanDevice;
 typedef struct _GstVulkanDeviceClass GstVulkanDeviceClass;
