@@ -45,7 +45,7 @@ Features
 --------
 
   * VA-API support from 0.29 to 0.38
-  * JPEG, MPEG-2, MPEG-4, H.264 AVC, H.264 MVC, VP8, VC-1 and HEVC ad-hoc decoders
+  * JPEG, MPEG-2, MPEG-4, H.264 AVC, H.264 MVC, VP8, VC-1, HEVC and VP9 ad-hoc decoders
   * MPEG-2, H.264 AVC,H.264 MVC, JPEG, VP8 and HEVC ad-hoc encoders
   * OpenGL rendering through VA/GLX or GLX texture-from-pixmap + FBO
   * Support for EGL backend
@@ -65,11 +65,11 @@ Requirements
 
 Software requirements
 
-  * GStreamer 1.2.x (up to including GStreamer 1.6):
+  * GStreamer 1.4.x (up to including GStreamer 1.6):
       libglib2.0-dev (>= 2.32)
-      libgstreamer1.0-dev (>= 1.2.0)
-      libgstreamer-plugins-base1.0-dev (>= 1.2.0)
-      libgstreamer-plugins-bad1.0-dev (>= 1.2.0)
+      libgstreamer1.0-dev (>= 1.4.0)
+      libgstreamer-plugins-base1.0-dev (>= 1.4.0)
+      libgstreamer-plugins-bad1.0-dev (>= 1.4.0)
 
   * Renderers:
       DRM: libva-dev (>= 1.1.0), libdrm-dev, libudev-dev
