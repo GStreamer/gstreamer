@@ -1058,8 +1058,10 @@ _on_window_draw (GstVulkanWindow * window, GstVulkanSwapper * swapper)
   GError *error = NULL;
 
   RENDER_LOCK (swapper);
-  if (!swapper->current_buffer)
+  if (!swapper->current_buffer) {
+    RENDER_UNLOCK (swapper);
     return;
+  }
 
   /* TODO: perform some rate limiting of the number of redraw events */
   if (!_render_buffer_unlocked (swapper, swapper->current_buffer, &error))
