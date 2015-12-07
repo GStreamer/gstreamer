@@ -26,7 +26,6 @@ else
             submodule_init="yes"
         fi
     done
-    [ -f ext/libvpx/upstream/configure ] || submodule_init="yes"
     if test "$submodule_init" = "yes"; then
         $GIT submodule init
     fi

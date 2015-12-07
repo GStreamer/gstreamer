@@ -113,11 +113,6 @@ AC_ARG_ENABLE(builtin_codecparsers,
                    [enable built-in codecparsers @<:@default=yes@:>@]),
     [], [enable_builtin_codecparsers="yes"])
 
-AC_ARG_ENABLE(builtin_libvpx,
-    AS_HELP_STRING([--enable-builtin-libvpx],
-                   [enable built-in libvpx @<:@default=yes@:>@]),
-    [], [enable_builtin_libvpx="yes"])
-
 AC_ARG_ENABLE([encoders],
     AS_HELP_STRING([--enable-encoders],
                    [enable video encoders @<:@default=yes@:>@]),
@@ -152,14 +147,6 @@ AC_ARG_WITH([glapi],
     AS_HELP_STRING([--with-glapi=APIs],
         [build with the specified OpenGL APIs @<:@default=default_glapi@:>@]),
     [GLAPI="$with_glapi"], [GLAPI=default_glapi])
-
-
-dnl Check fr YASM
-AC_ARG_VAR([YASM], [Path to yasm program, if any])
-AC_PATH_PROG([YASM], [yasm])
-if test -z "$YASM" -a "$enable_builtin_libvpx" = "yes"; then
-    AC_MSG_ERROR([yasm is needed to build libvpx sources])
-fi
 
 dnl Check for PATCH
 AC_ARG_VAR([PATCH], [Path to patch program, if any])
@@ -378,9 +365,6 @@ AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_JPEG],
     [test "$ac_cv_have_gst_jpeg_parser" != "yes"])
 
 dnl ... VP8 parser, not upstream yet
-if test "$enable_builtin_libvpx" = "yes"; then
-    ac_cv_have_gst_vp8_parser="no"
-fi
 AC_CACHE_CHECK([for VP8 parser],
     ac_cv_have_gst_vp8_parser, [
     saved_CPPFLAGS="$CPPFLAGS"
@@ -399,7 +383,6 @@ AC_CACHE_CHECK([for VP8 parser],
 ])
 AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_VP8],
     [test "$ac_cv_have_gst_vp8_parser" != "yes"])
-AM_CONDITIONAL([USE_BUILTIN_LIBVPX], [test "$enable_builtin_libvpx" = "yes"])
 
 dnl ... VP9 parser, with required extensions
 AC_CACHE_CHECK([for VP9 parser],
@@ -1142,7 +1125,6 @@ debian.upstream/libgstvaapi-x11.install.in
     docs/reference/plugins/Makefile
     docs/reference/plugins/plugins-docs.xml
     ext/Makefile
-    ext/libvpx/Makefile
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/base/Makefile

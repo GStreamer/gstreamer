@@ -1,6 +1,3 @@
 [submodule "ext/codecparsers"]
 	path = ext/codecparsers
 	url = https://github.com/01org/gstreamer-codecparsers.git
-[submodule "ext/libvpx/upstream"]
-	path = ext/libvpx/upstream
-	url = https://chromium.googlesource.com/webm/libvpx

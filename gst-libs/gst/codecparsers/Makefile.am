@@ -43,23 +43,8 @@ gen_source_h += gsth264parser.h
 endif
 
 if USE_LOCAL_CODEC_PARSERS_VP8
-gen_source_c += gstvp8parser.c
-gen_source_h += gstvp8parser.h gstvp8rangedecoder.h vp8utils.h
-
-if USE_BUILTIN_LIBVPX
-add_source_c += gstvaapilibvpx.c
-
-libgstvaapi_codecparsers_cflags += \
-	-I$(top_srcdir)/ext/libvpx \
-	-I$(top_srcdir)/ext/libvpx/upstream \
-	-I$(top_builddir)/ext/libvpx/upstream
-
-libgstvaapi_codecparsers_libs += \
-	$(top_builddir)/ext/libvpx/libgstcodecparsers_vpx.la
-else
-gen_source_c += dboolhuff.c gstvp8rangedecoder.c vp8utils.c
-gen_source_h += dboolhuff.h
-endif
+gen_source_c += gstvp8parser.c dboolhuff.c gstvp8rangedecoder.c vp8utils.c
+gen_source_h += gstvp8parser.h gstvp8rangedecoder.h vp8utils.h dboolhuff.h
 endif
 
 if USE_LOCAL_CODEC_PARSERS_VP9
@@ -105,10 +90,6 @@ $(gen_source_c): %.c: $(local_codecparsers_srcdir)/%.c $(gen_source_h)
 	$(LN_S) -f $< $@
 $(gen_source_h): %.h: $(local_codecparsers_srcdir)/%.h
 	$(LN_S) -f $< $@
-$(top_builddir)/ext/libvpx/libgstcodecparsers_vpx.la:
-	$(MAKE) -C $(top_builddir)/ext/libvpx
-
-EXTRA_DIST = gstvaapilibvpx.c
 
 DISTCLEANFILES = $(GENFILES) .timestamp.symlinks
 

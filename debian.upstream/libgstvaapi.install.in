@@ -1,2 +1,1 @@
-debian/tmp/usr/lib/libgstcodecparsers_vpx.so.*
 debian/tmp/usr/lib/libgstvaapi-@GST_API_VERSION@.so.*
