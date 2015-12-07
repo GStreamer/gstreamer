@@ -257,6 +257,7 @@ GstBuffer * mxf_random_index_pack_to_buffer (const GArray *array);
 
 gboolean mxf_index_table_segment_parse (const MXFUL *ul, MXFIndexTableSegment *segment, const guint8 *data, guint size);
 void mxf_index_table_segment_reset (MXFIndexTableSegment *segment);
+GstBuffer * mxf_index_table_segment_to_buffer (const MXFIndexTableSegment *segment);
 
 gboolean mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,
     guint16 * tag_size, const guint8 ** tag_data);
