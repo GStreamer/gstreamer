@@ -917,7 +917,6 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     return FALSE;
   }
 
-  /* FIXME: staging frame is leaked */
   err =
       vkQueueSubmit (swapper->queue->queue, 1, &cmd_data->cmd, cmd_data->fence);
   if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0) {
