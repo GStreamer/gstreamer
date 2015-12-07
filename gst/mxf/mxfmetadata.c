@@ -1718,7 +1718,7 @@ mxf_metadata_essence_container_data_write_tags (MXFMetadataBase * m,
     t->data = g_slice_alloc (4);
     t->g_slice = TRUE;
     GST_WRITE_UINT32_BE (t->data, self->index_sid);
-    mxf_primer_pack_add_mapping (primer, 0x3f07, &t->ul);
+    mxf_primer_pack_add_mapping (primer, 0x3f06, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
