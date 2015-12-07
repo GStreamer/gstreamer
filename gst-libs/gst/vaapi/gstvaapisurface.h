@@ -65,6 +65,7 @@ G_BEGIN_DECLS
  * @GST_VAAPI_CHROMA_TYPE_YUV400: YUV 4:0:0 chroma format (grayscale)
  * @GST_VAAPI_CHROMA_TYPE_RGB32: 32-bit RGB chroma format
  * @GST_VAAPI_CHROMA_TYPE_RGB16: 16-bit RGB chroma format
+ * @GST_VAAPI_CHROMA_TYPE_YUV420_10BPP: YUV 4:2:0 chroma format, more than 8 bits per channel
  *
  * The set of all chroma types for #GstVaapiSurface.
  */
@@ -77,7 +78,8 @@ typedef enum
   GST_VAAPI_CHROMA_TYPE_YUV410,
   GST_VAAPI_CHROMA_TYPE_YUV400,
   GST_VAAPI_CHROMA_TYPE_RGB32,
-  GST_VAAPI_CHROMA_TYPE_RGB16
+  GST_VAAPI_CHROMA_TYPE_RGB16,
+  GST_VAAPI_CHROMA_TYPE_YUV420_10BPP
 } GstVaapiChromaType;
 
 /**

@@ -231,6 +231,9 @@ string_of_va_chroma_format (guint chroma_format)
       MAP (RGB32);
       MAP (RGBP);
 #endif
+#if VA_CHECK_VERSION(0,38,1)
+      MAP (YUV420_10BPP);
+#endif
 #undef MAP
     default:
       break;
@@ -298,6 +301,11 @@ from_GstVaapiChromaType (guint chroma_type)
       break;
     case GST_VAAPI_CHROMA_TYPE_RGB16:
       format = VA_RT_FORMAT_RGB16;
+      break;
+#endif
+#if VA_CHECK_VERSION(0,38,1)
+    case GST_VAAPI_CHROMA_TYPE_YUV420_10BPP:
+      format = VA_RT_FORMAT_YUV420_10BPP;
       break;
 #endif
     default:
