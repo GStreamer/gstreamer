@@ -1,7 +1,46 @@
-gst-vaapi NEWS -- summary of changes.  2015-07-15
+gst-vaapi NEWS -- summary of changes.  2015-12-07
 Copyright (C) 2010-2011 Splitted-Desktop Systems
-Copyright (C) 2011-2013 Intel Corporation
+Copyright (C) 2011-2015 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.7 - 07.Dec.2015
+* Add VP9 Decoder
+* Improvements to HEVC(H265) decoder
+  + Fix the decoding of dependent slice segment
+  + Fix decoding of stream when it has temporal sublayers
+  + Added Workaround to recognize wrongly encoded main profile streams
+  + Add SEI Header parsing
+  + Fix the value assigning for delta_chroma_log2_weight_denom
+  + Fix default value assignment of pred_weight_table
+  + Fix ChromaOffsetL0/ChromaOffsetL1 calculation
+  + Add calculation of WpOffsetHalfRangeC
+  + Fix the scaling list scan order
+  + Fix the picture addition in dpb() based on spec H265 v3 (04/2015)
+  + Fix the dpb_add() based on C.5.2.3
+  + Fix flushing of dpb for EOS/EOB nal
+* Added infrastructure for handling corrupted pictures in h264 decoder [#703921, #751434]
+* Add number of fixes and optimizations to GstContext sharing [#757598]
+* Add API for dynamic detection of OpenGL API in use [#753099]
+* Make vaapidecode + glimagesink combination work with opengl3 [#753099]
+* Fix segfault in vaapipostproc [#752558]
+* Fix seeking while using GLTextureUpload for rendering [#752929]
+* Ported JPEG decoder to new API/ABI changes in codecparser
+* Removed gstvaapiuploader [#752777]
+* Fix 0/1 frame-rate handling in encoder [#744042]
+* Validate chroma sampling according to the VA's RT format in Encoder [#744042]
+* Number of improvements in vaapi video memory handling [#744042]
+* Stabilization of vaapidecodebin [#749554, #757957]
+* Wayland fixes: Don't return GST_FLOW_ERROR on flushing [#753598]
+* Add yasm as build dependency
+* Remvoved custom(non-official) debian parallel compilation option
+* Fix multi-resolution video handling in vaapidecode [#753914]
+* Adding stereoscopic/multiview upstream API support [#750835]
+* Fixed fps calculation for for forced latency framerate [#755040]
+* Fix build issues while disabling built-in codecparsers [#754845]
+* Mark support for GStreamer 1.2 as obsolete
+* Update libvpx submodule to 1.4.0
+* Fix caps negotiation for meta:GstVideoGLTextureUploadMeta [#756686]
+* Fixed leaked display instance in vaapidecodebin [#757595]
 
 Version 0.6 - 15.Jul.2015
 * Add HEVC(H265) Decoder
