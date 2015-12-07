@@ -48,6 +48,11 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanDevice, gst_vulkan_device, GST_TYPE_OBJECT,
 
 static void gst_vulkan_device_finalize (GObject * object);
 
+struct _GstVulkanDevicePrivate
+{
+  gboolean opened;
+};
+
 GstVulkanDevice *
 gst_vulkan_device_new (GstVulkanInstance * instance)
 {
@@ -63,12 +68,16 @@ gst_vulkan_device_new (GstVulkanInstance * instance)
 static void
 gst_vulkan_device_init (GstVulkanDevice * device)
 {
+  device->priv = G_TYPE_INSTANCE_GET_PRIVATE ((device),
+      GST_TYPE_VULKAN_DEVICE, GstVulkanDevicePrivate);
 }
 
 static void
 gst_vulkan_device_class_init (GstVulkanDeviceClass * device_class)
 {
   GObjectClass *gobject_class = (GObjectClass *) device_class;
+
+  g_type_class_add_private (device_class, sizeof (GstVulkanDevicePrivate));
 
   gobject_class->finalize = gst_vulkan_device_finalize;
 }
@@ -77,6 +86,9 @@ static void
 gst_vulkan_device_finalize (GObject * object)
 {
   GstVulkanDevice *device = GST_VULKAN_DEVICE (object);
+
+  g_free (device->queue_family_props);
+  device->queue_family_props = NULL;
 
   if (device->cmd_pool.handle)
     vkDestroyCommandPool (device->device, device->cmd_pool);
@@ -118,6 +130,12 @@ _physical_device_info (GstVulkanDevice * device, GError ** error)
   VkResult err;
 
   gpu = gst_vulkan_device_get_physical_device (device);
+  if (!gpu) {
+    g_set_error (error, GST_VULKAN_ERROR,
+        GST_VULKAN_ERROR_INITIALIZATION_FAILED,
+        "Failed to retrieve physical device");
+    return FALSE;
+  }
 
   err = vkGetPhysicalDeviceProperties (gpu, &props);
   if (gst_vulkan_error_to_g_error (err, error,
@@ -150,8 +168,15 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
 
   g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), FALSE);
 
+  GST_OBJECT_LOCK (device);
+
+  if (device->priv->opened) {
+    GST_OBJECT_UNLOCK (device);
+    return TRUE;
+  }
+
   if (!_physical_device_info (device, error))
-    return FALSE;
+    goto error;
 
   gpu = gst_vulkan_device_get_physical_device (device);
 
@@ -159,7 +184,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   err = vkEnumerateDeviceLayerProperties (gpu, &device_layer_count, NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateDeviceLayerProperties") < 0)
-    return FALSE;
+    goto error;
 
   device_layers = g_new0 (VkLayerProperties, device_layer_count);
   err =
@@ -168,7 +193,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateDeviceLayerProperties") < 0) {
     g_free (device_layers);
-    return FALSE;
+    goto error;
   }
 
   validation_found =
@@ -181,7 +206,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
         "a required validation layer.\n\n"
         "Please look at the Getting Started guide for additional "
         "information.\nvkCreateDevice Failure");
-    return FALSE;
+    goto error;
   }
   enabled_layer_count = G_N_ELEMENTS (device_validation_layers);
 
@@ -190,7 +215,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
       &device_extension_count, NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateDeviceExtensionProperties") < 0)
-    return FALSE;
+    goto error;
 
   have_swapchain_ext = 0;
   enabled_extension_count = 0;
@@ -201,7 +226,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateDeviceExtensionProperties") < 0) {
     g_free (device_extensions);
-    return FALSE;
+    goto error;
   }
 
   for (uint32_t i = 0; i < device_extension_count; i++) {
@@ -224,17 +249,17 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   err = vkGetPhysicalDeviceProperties (gpu, &device->gpu_props);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkGetPhysicalDeviceProperties") < 0)
-    return FALSE;
+    goto error;
 
   err = vkGetPhysicalDeviceMemoryProperties (gpu, &device->memory_properties);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkGetPhysicalDeviceProperties") < 0)
-    return FALSE;
+    goto error;
 
   err = vkGetPhysicalDeviceFeatures (gpu, &device->gpu_features);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkGetPhysicalDeviceFeatures") < 0)
-    return FALSE;
+    goto error;
 
   /* Call with NULL data to get count */
   err =
@@ -242,7 +267,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
       NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkGetPhysicalDeviceQueueFamilyProperties") < 0)
-    return FALSE;
+    goto error;
   g_assert (device->n_queue_families >= 1);
 
   device->queue_family_props =
@@ -252,7 +277,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
       device->queue_family_props);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkGetPhysicalDeviceQueueFamilyProperties") < 0)
-    return FALSE;
+    goto error;
 
   /* FIXME: allow overriding/selecting */
   for (i = 0; i < device->n_queue_families; i++) {
@@ -263,7 +288,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
     g_set_error (error, GST_VULKAN_ERROR,
         GST_VULKAN_ERROR_INITIALIZATION_FAILED,
         "Failed to find a compatible queue family");
-    return FALSE;
+    goto error;
   }
   device->queue_family_id = i;
   device->n_queues = 1;
@@ -290,7 +315,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
 
     err = vkCreateDevice (gpu, &device_info, &device->device);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateDevice") < 0)
-      return FALSE;
+      goto error;
   }
   {
     VkCmdPoolCreateInfo cmd_pool_info = { 0, };
@@ -303,10 +328,17 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
     err =
         vkCreateCommandPool (device->device, &cmd_pool_info, &device->cmd_pool);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateCommandPool") < 0)
-      return FALSE;
+      goto error;
   }
 
+  GST_OBJECT_UNLOCK (device);
   return TRUE;
+
+error:
+  {
+    GST_OBJECT_UNLOCK (device);
+    return FALSE;
+  }
 }
 
 GstVulkanQueue *
@@ -390,13 +422,4 @@ gst_vulkan_device_create_cmd_buffer (GstVulkanDevice * device,
   GST_LOG_OBJECT (device, "created cmd buffer %p", cmd);
 
   return TRUE;
-}
-
-void
-gst_vulkan_device_close (GstVulkanDevice * device)
-{
-  g_return_if_fail (GST_IS_VULKAN_DEVICE (device));
-  g_return_if_fail (device->device != NULL);
-
-  g_free (device->queue_family_props);
 }

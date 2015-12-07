@@ -53,6 +53,8 @@ struct _GstVulkanDevice
   guint32 n_queues;
 
   VkCmdPool cmd_pool;
+
+  GstVulkanDevicePrivate *priv;
 };
 
 struct _GstVulkanDeviceClass
@@ -64,7 +66,6 @@ GstVulkanDevice *   gst_vulkan_device_new                   (GstVulkanInstance *
 GstVulkanInstance * gst_vulkan_device_get_instance           (GstVulkanDevice * device);
 gboolean            gst_vulkan_device_open                  (GstVulkanDevice * device,
                                                              GError ** error);
-void                gst_vulkan_device_close                 (GstVulkanDevice * device);
 
 gpointer            gst_vulkan_device_get_proc_address      (GstVulkanDevice * device,
                                                              const gchar * name);

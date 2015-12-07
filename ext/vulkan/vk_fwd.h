@@ -31,6 +31,7 @@ typedef struct _GstVulkanInstancePrivate GstVulkanInstancePrivate;
 
 typedef struct _GstVulkanDevice GstVulkanDevice;
 typedef struct _GstVulkanDeviceClass GstVulkanDeviceClass;
+typedef struct _GstVulkanDevicePrivate GstVulkanDevicePrivate;
 
 typedef struct _GstVulkanQueue GstVulkanQueue;
 typedef struct _GstVulkanQueueClass GstVulkanQueueClass;
