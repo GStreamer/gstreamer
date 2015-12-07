@@ -178,6 +178,7 @@ static gboolean gst_teletextdec_extract_data_units (GstTeletextDec *
 
 static void gst_teletextdec_zvbi_init (GstTeletextDec * teletext);
 static void gst_teletextdec_zvbi_clear (GstTeletextDec * teletext);
+static void gst_teletextdec_reset_frame (GstTeletextDec * teletext);
 
 /* initialize the gstteletext's class */
 static void
@@ -273,10 +274,7 @@ gst_teletextdec_init (GstTeletextDec * teletext)
   teletext->queue = NULL;
   g_mutex_init (&teletext->queue_lock);
 
-  teletext->frame = g_new0 (GstTeletextFrame, 1);
-  teletext->frame->sliced_begin = g_new (vbi_sliced, MAX_SLICES);
-  teletext->frame->current_slice = teletext->frame->sliced_begin;
-  teletext->frame->sliced_end = teletext->frame->sliced_begin + MAX_SLICES;
+  gst_teletextdec_reset_frame (teletext);
 
   teletext->last_ts = 0;
 
@@ -326,6 +324,8 @@ gst_teletextdec_zvbi_clear (GstTeletextDec * teletext)
     teletext->decoder = NULL;
   }
   if (teletext->frame != NULL) {
+    if (teletext->frame->sliced_begin)
+      g_free (teletext->frame->sliced_begin);
     g_free (teletext->frame);
     teletext->frame = NULL;
   }
@@ -500,6 +500,10 @@ gst_teletextdec_change_state (GstElement * element, GstStateChange transition)
 static void
 gst_teletextdec_reset_frame (GstTeletextDec * teletext)
 {
+  if (teletext->frame == NULL)
+    teletext->frame = g_new0 (GstTeletextFrame, 1);
+  if (teletext->frame->sliced_begin == NULL)
+    teletext->frame->sliced_begin = g_new (vbi_sliced, MAX_SLICES);
   teletext->frame->current_slice = teletext->frame->sliced_begin;
   teletext->frame->sliced_end = teletext->frame->sliced_begin + MAX_SLICES;
   teletext->frame->last_field = 0;
@@ -518,9 +522,8 @@ gst_teletextdec_process_telx_buffer (GstTeletextDec * teletext, GstBuffer * buf)
   teletext->in_timestamp = GST_BUFFER_TIMESTAMP (buf);
   teletext->in_duration = GST_BUFFER_DURATION (buf);
 
-  if (teletext->frame == NULL) {
+  if (teletext->frame == NULL)
     gst_teletextdec_reset_frame (teletext);
-  }
 
   while (offset < buf_map.size) {
     res =
@@ -818,13 +821,6 @@ fetch_page_failed:
   {
     GST_ELEMENT_ERROR (teletext, RESOURCE, READ, (NULL), (NULL));
     return GST_FLOW_ERROR;
-  }
-
-alloc_failed:
-  {
-    GST_ERROR_OBJECT (teletext, "Error allocating output buffer, reason %s",
-        gst_flow_get_name (ret));
-    return ret;
   }
 
 push_failed:
