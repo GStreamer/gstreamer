@@ -2668,14 +2668,18 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
   switch (next) {
     case GST_STATE_PLAYING:
     {
-      gboolean toplevel;
+      gboolean toplevel, asynchandling;
 
       GST_OBJECT_LOCK (bin);
       toplevel = BIN_IS_TOPLEVEL (bin);
+      asynchandling = bin->priv->asynchandling;
       GST_OBJECT_UNLOCK (bin);
 
       if (toplevel)
         gst_bin_recalculate_latency (bin);
+      if (asynchandling)
+        gst_element_post_message (element,
+            gst_message_new_latency (GST_OBJECT_CAST (element)));
       break;
     }
     case GST_STATE_PAUSED:
