@@ -672,7 +672,7 @@ gst_teletextdec_negotiate_caps (GstTeletextDec * teletext, guint width,
   peercaps = gst_caps_make_writable (peercaps);
   caps_size = gst_caps_get_size (peercaps);
 
-  for (i = 0; i < caps_size; ++i) {
+  for (i = 0; i < caps_size; i++) {
     GstStructure *caps_struct = gst_caps_get_structure (peercaps, i);
     const gchar *caps_name = gst_structure_get_name (caps_struct);
     const gchar *caps_fmt = gst_structure_get_string (caps_struct, "format");
@@ -801,9 +801,6 @@ gst_teletextdec_push_page (GstTeletextDec * teletext)
 
   teletext->export_func (teletext, &page, &buf);
   vbi_unref_page (&page);
-
-  if (ret != GST_FLOW_OK)
-    goto alloc_failed;
 
   GST_BUFFER_TIMESTAMP (buf) = teletext->in_timestamp;
   GST_BUFFER_DURATION (buf) = teletext->in_duration;
