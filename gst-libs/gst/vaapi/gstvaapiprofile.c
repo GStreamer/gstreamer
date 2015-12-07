@@ -158,7 +158,7 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
       "video/x-h265", "main"
     },
     { GST_VAAPI_PROFILE_H265_MAIN10, VAProfileHEVCMain10,
-      "video/x-h265", "main10"
+      "video/x-h265", "main-10"
     },
 #endif
 #if VA_CHECK_VERSION(0,38,0)
