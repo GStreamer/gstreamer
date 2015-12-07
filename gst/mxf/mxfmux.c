@@ -1240,16 +1240,10 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
           gst_util_uint64_scale ((mux->last_gc_position + 1) * GST_SECOND,
           mux->min_edit_rate.d, mux->min_edit_rate.n);
 
-      if (best)
-        gst_object_unref (best);
-      best = NULL;
-
       if (pad->have_complete_edit_unit ||
           gst_adapter_available (pad->adapter) > 0 || buffer) {
         have_data = TRUE;
         if (pad->last_timestamp < next_gc_timestamp) {
-          if (best)
-            gst_object_unref (best);
           best = gst_object_ref (pad);
           if (buffer)
             gst_buffer_unref (buffer);
@@ -1262,9 +1256,6 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
       if (have_data && !l->next) {
         mux->last_gc_position++;
         mux->last_gc_timestamp = next_gc_timestamp;
-        if (best)
-          gst_object_unref (best);
-        best = NULL;
         break;
       }
     }
