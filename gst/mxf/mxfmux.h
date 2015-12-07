@@ -68,6 +68,8 @@ typedef struct _GstMXFMux {
   GstClockTime last_gc_timestamp;
 
   gchar *application;
+
+  GArray *index_table;
 } GstMXFMux;
 
 typedef struct _GstMXFMuxClass {

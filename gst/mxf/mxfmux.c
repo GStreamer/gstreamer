@@ -190,6 +190,7 @@ gst_mxf_mux_class_init (GstMXFMuxClass * klass)
 static void
 gst_mxf_mux_init (GstMXFMux * mux)
 {
+  mux->index_table = g_array_new (FALSE, FALSE, sizeof (MXFIndexTableSegment));
   gst_mxf_mux_reset (mux);
 }
 
@@ -205,6 +206,11 @@ gst_mxf_mux_finalize (GObject * object)
     mux->metadata = NULL;
     g_list_free (mux->metadata_list);
     mux->metadata_list = NULL;
+  }
+
+  if (mux->index_table) {
+    g_array_free (mux->index_table, TRUE);
+    mux->index_table = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -244,6 +250,8 @@ gst_mxf_mux_reset (GstMXFMux * mux)
   mux->last_gc_timestamp = 0;
   mux->last_gc_position = 0;
   mux->offset = 0;
+
+  g_array_set_size (mux->index_table, 0);
 }
 
 static gboolean
@@ -958,7 +966,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
 
     cstorage->essence_container_data[0]->linked_package =
         MXF_METADATA_SOURCE_PACKAGE (cstorage->packages[1]);
-    cstorage->essence_container_data[0]->index_sid = 0;
+    cstorage->essence_container_data[0]->index_sid = 1;
     cstorage->essence_container_data[0]->body_sid = 1;
   }
 
@@ -1124,6 +1132,8 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
   guint8 slen, ber[9];
   gboolean flush = gst_aggregator_pad_is_eos (GST_AGGREGATOR_PAD (pad))
       && !pad->have_complete_edit_unit && buf == NULL;
+  gboolean is_keyframe =
+      !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   if (pad->have_complete_edit_unit) {
     GST_DEBUG_OBJECT (pad,
@@ -1169,6 +1179,50 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
   if (buf == NULL)
     return ret;
 
+  /* We currently only index the first essence stream */
+  if (pad == (GstMXFMuxPad *) GST_ELEMENT_CAST (mux)->sinkpads->data) {
+    MXFIndexTableSegment *segment;
+    const gint max_segment_size = G_MAXUINT16 / 11;
+
+    if (mux->index_table->len == 0 ||
+        g_array_index (mux->index_table, MXFIndexTableSegment,
+            mux->index_table->len - 1).index_duration >= max_segment_size) {
+      MXFIndexTableSegment s;
+
+      memset (&segment, 0, sizeof (segment));
+
+      mxf_uuid_init (&s.instance_id, mux->metadata);
+      memcpy (&s.index_edit_rate, &pad->source_track->edit_rate,
+          sizeof (s.index_edit_rate));
+      s.index_start_position = pad->pos;
+      s.index_duration = 0;
+      s.edit_unit_byte_count = 0;
+      s.index_sid =
+          mux->preface->content_storage->essence_container_data[0]->index_sid;
+      s.body_sid =
+          mux->preface->content_storage->essence_container_data[0]->body_sid;
+      s.slice_count = 0;
+      s.pos_table_count = 0;
+      s.n_delta_entries = 0;
+      s.delta_entries = NULL;
+      s.n_index_entries = 0;
+      s.index_entries = g_new0 (MXFIndexEntry, max_segment_size);
+      g_array_append_val (mux->index_table, s);
+    }
+    segment =
+        &g_array_index (mux->index_table, MXFIndexTableSegment,
+        mux->index_table->len - 1);
+
+    segment->index_entries[segment->n_index_entries].temporal_offset = 0;
+    segment->index_entries[segment->n_index_entries].key_frame_offset = 0;
+    segment->index_entries[segment->n_index_entries].flags = is_keyframe ? 0x80 : 0x20; /* FIXME: Need to distinguish all the cases */
+    segment->index_entries[segment->n_index_entries].stream_offset =
+        mux->partition.body_offset;
+
+    segment->n_index_entries++;
+    segment->index_duration++;
+  }
+
   buf_size = gst_buffer_get_size (buf);
   slen = mxf_ber_encode_size (buf_size, ber);
   outbuf = gst_buffer_new_and_alloc (16 + slen);
@@ -1183,6 +1237,7 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
       "Pushing buffer of size %" G_GSIZE_FORMAT " for track %u",
       gst_buffer_get_size (outbuf), pad->source_track->parent.track_id);
 
+  mux->partition.body_offset += gst_buffer_get_size (outbuf);
   if ((ret = gst_mxf_mux_push (mux, outbuf)) != GST_FLOW_OK) {
     GST_ERROR_OBJECT (pad,
         "Failed pushing buffer for track %u, reason %s",
@@ -1327,6 +1382,18 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
     GstFlowReturn ret;
     GstSegment segment;
     MXFRandomIndexPackEntry entry;
+    GList *index_entries = NULL, *l;
+    guint index_byte_count = 0;
+    guint i;
+
+    for (i = 0; i < mux->index_table->len; i++) {
+      MXFIndexTableSegment *segment =
+          &g_array_index (mux->index_table, MXFIndexTableSegment, i);
+      GstBuffer *segment_buffer = mxf_index_table_segment_to_buffer (segment);
+
+      index_byte_count += gst_buffer_get_size (segment_buffer);
+      index_entries = g_list_prepend (index_entries, segment_buffer);
+    }
 
     mux->partition.type = MXF_PARTITION_PACK_FOOTER;
     mux->partition.closed = TRUE;
@@ -1335,12 +1402,21 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
     mux->partition.prev_partition = body_partition;
     mux->partition.footer_partition = mux->offset;
     mux->partition.header_byte_count = 0;
-    mux->partition.index_byte_count = 0;
-    mux->partition.index_sid = 0;
+    mux->partition.index_byte_count = index_byte_count;
+    mux->partition.index_sid =
+        mux->preface->content_storage->essence_container_data[0]->index_sid;
     mux->partition.body_offset = 0;
     mux->partition.body_sid = 0;
 
     gst_mxf_mux_write_header_metadata (mux);
+
+    index_entries = g_list_reverse (index_entries);
+    for (l = index_entries; l; l = l->next) {
+      if ((ret = gst_mxf_mux_push (mux, l->data)) != GST_FLOW_OK) {
+        GST_ERROR_OBJECT (mux, "Failed pushing index table segment");
+      }
+    }
+    g_list_free (index_entries);
 
     rip = g_array_sized_new (FALSE, FALSE, sizeof (MXFRandomIndexPackEntry), 3);
     entry.offset = 0;
