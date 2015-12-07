@@ -219,6 +219,9 @@
 #define MIN_FRAMES_TO_POST_BITRATE 10
 #define TARGET_DIFFERENCE          (20 * GST_SECOND)
 #define MAX_INDEX_ENTRIES          4096
+#define UPDATE_THRESHOLD           2
+
+#define ABSDIFF(a,b) (((a) > (b)) ? ((a) - (b)) : ((b) - (a)))
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_parse_debug);
 #define GST_CAT_DEFAULT gst_base_parse_debug
@@ -1691,11 +1694,8 @@ gst_base_parse_update_duration (GstBaseParse * parse)
 static void
 gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
-  /* Only update the tag on a 10 kbps delta */
-  static const gint update_threshold = 10000;
-
   guint64 data_len, frame_dur;
-  gint overhead, frame_bitrate, old_avg_bitrate;
+  gint overhead, frame_bitrate;
   GstBuffer *buffer = frame->buffer;
 
   overhead = frame->overhead;
@@ -1755,11 +1755,14 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
         parse->priv->tags_changed = TRUE;
     }
 
-    old_avg_bitrate = parse->priv->posted_avg_bitrate;
-    if (((gint) (old_avg_bitrate - parse->priv->avg_bitrate) > update_threshold
-            || (gint) (parse->priv->avg_bitrate - old_avg_bitrate) >
-            update_threshold) && parse->priv->post_avg_bitrate)
-      parse->priv->tags_changed = TRUE;
+    /* Only update the tag on a 2% change */
+    if (parse->priv->post_avg_bitrate && parse->priv->avg_bitrate) {
+      guint64 diffprev = gst_util_uint64_scale_int (100,
+          ABSDIFF (parse->priv->avg_bitrate, parse->priv->posted_avg_bitrate),
+          parse->priv->avg_bitrate);
+      if (diffprev >= UPDATE_THRESHOLD)
+        parse->priv->tags_changed = TRUE;
+    }
   }
 }
 
