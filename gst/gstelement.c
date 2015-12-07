@@ -647,7 +647,7 @@ gboolean
 gst_element_add_pad (GstElement * element, GstPad * pad)
 {
   gchar *pad_name;
-  gboolean flushing;
+  gboolean active;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -657,7 +657,7 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   pad_name = g_strdup (GST_PAD_NAME (pad));
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "adding pad '%s'",
       GST_STR_NULL (pad_name));
-  flushing = GST_PAD_IS_FLUSHING (pad);
+  active = GST_PAD_IS_ACTIVE (pad);
   GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_PARENT);
   GST_OBJECT_UNLOCK (pad);
 
@@ -671,16 +671,13 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
               GST_OBJECT_CAST (element))))
     goto had_parent;
 
-  /* check for flushing pads */
-  if (flushing && (GST_STATE (element) > GST_STATE_READY ||
+  /* check for active pads */
+  if (!active && (GST_STATE (element) > GST_STATE_READY ||
           GST_STATE_NEXT (element) == GST_STATE_PAUSED)) {
-    g_warning ("adding flushing pad '%s' to running element '%s', you need to "
+    g_warning ("adding inactive pad '%s' to running element '%s', you need to "
         "use gst_pad_set_active(pad,TRUE) before adding it.",
         GST_STR_NULL (pad_name), GST_ELEMENT_NAME (element));
-    /* unset flushing */
-    GST_OBJECT_LOCK (pad);
-    GST_PAD_UNSET_FLUSHING (pad);
-    GST_OBJECT_UNLOCK (pad);
+    gst_pad_set_active (pad, TRUE);
   }
 
   g_free (pad_name);
