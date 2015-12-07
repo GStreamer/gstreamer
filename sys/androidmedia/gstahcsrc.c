@@ -2255,7 +2255,7 @@ gst_ahc_src_on_preview_frame (jbyteArray array, gpointer user_data)
   GstClockTime timestamp = GST_CLOCK_TIME_NONE;
   GstClockTime duration = 0;
   GstClock *clock;
-
+  gboolean queued = FALSE;
 
   g_mutex_lock (&self->mutex);
 
@@ -2315,14 +2315,16 @@ gst_ahc_src_on_preview_frame (jbyteArray array, gpointer user_data)
   GST_DEBUG_OBJECT (self, "wrapping jni array %p->%p %p->%p", item,
       item->object, malloc_data, malloc_data->array);
 
-  if (!gst_data_queue_push (self->queue, item)) {
-    GST_INFO_OBJECT (self, "can't add buffer to queue");
-    /* Can't add buffer to queue. Must be flushing. */
-    _data_queue_item_free (item);
-  }
+  queued = gst_data_queue_push (self->queue, item);
 
 done:
   g_mutex_unlock (&self->mutex);
+
+  if (item && !queued) {
+    GST_INFO_OBJECT (self, "could not add buffer to queue");
+    /* Can't add buffer to queue. Must be flushing. */
+    _data_queue_item_free (item);
+  }
 }
 
 static void
