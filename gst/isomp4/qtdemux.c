@@ -6112,6 +6112,8 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
 
           /* combine flows */
           ret = gst_qtdemux_combine_flows (demux, stream, ret);
+          if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
+            goto non_ok_unlinked_flow;
         } else {
           /* skip this data, stream is EOS */
           gst_adapter_flush (demux->adapter, demux->neededbytes);
@@ -6155,6 +6157,12 @@ done:
   return ret;
 
   /* ERRORS */
+non_ok_unlinked_flow:
+  {
+    GST_DEBUG_OBJECT (demux, "Stopping, combined return flow %s",
+        gst_flow_get_name (ret));
+    return ret;
+  }
 unknown_stream:
   {
     GST_ELEMENT_ERROR (demux, STREAM, FAILED, (NULL), ("unknown stream found"));
