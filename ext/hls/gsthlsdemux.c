@@ -247,6 +247,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   gint64 current_sequence;
   GstM3U8MediaFile *file;
   guint64 bitrate;
+  gboolean snap_before, snap_after, snap_nearest;
 
   gst_event_parse_seek (seek, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
@@ -304,13 +305,29 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   current_sequence = file->sequence;
   current_pos = 0;
   target_pos = rate > 0 ? start : stop;
+
+  /* Snap to segment boundary. Improves seek performance on slow machines. */
+  snap_before = snap_after = snap_nearest = FALSE;
+  if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST)
+    snap_nearest = TRUE;
+  else if (flags & GST_SEEK_FLAG_SNAP_BEFORE)
+    snap_before = TRUE;
+  else if (flags & GST_SEEK_FLAG_SNAP_AFTER)
+    snap_after = TRUE;
+
   /* FIXME: Here we need proper discont handling */
   for (walk = hlsdemux->client->current->files; walk; walk = walk->next) {
     file = walk->data;
 
     current_sequence = file->sequence;
     current_file = walk;
-    if (current_pos <= target_pos && target_pos < current_pos + file->duration) {
+    if (snap_after || snap_nearest) {
+      if (current_pos >= target_pos)
+        break;
+      if (snap_nearest && target_pos - current_pos < file->duration / 2)
+        break;
+    } else if (current_pos <= target_pos
+        && target_pos < current_pos + file->duration) {
       break;
     }
     current_pos += file->duration;
@@ -328,6 +345,10 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
       current_file ? current_file : hlsdemux->client->current->files;
   hlsdemux->client->sequence_position = current_pos;
   GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
+
+  if (snap_before || snap_after || snap_nearest)
+    gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
+        current_pos, stop_type, stop, NULL);
 
   return TRUE;
 }
