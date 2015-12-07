@@ -1061,8 +1061,7 @@ mxf_random_index_pack_to_buffer (const GArray * array)
 /* SMPTE 377M 10.2.3 */
 gboolean
 mxf_index_table_segment_parse (const MXFUL * ul,
-    MXFIndexTableSegment * segment, const MXFPrimerPack * primer,
-    const guint8 * data, guint size)
+    MXFIndexTableSegment * segment, const guint8 * data, guint size)
 {
 #ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
@@ -1072,7 +1071,6 @@ mxf_index_table_segment_parse (const MXFUL * ul,
 
   g_return_val_if_fail (ul != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
-  g_return_val_if_fail (primer != NULL, FALSE);
 
   memset (segment, 0, sizeof (MXFIndexTableSegment));
 
@@ -1265,12 +1263,9 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         break;
       }
       default:
-        if (!primer->mappings) {
-          GST_WARNING ("No valid primer pack for this partition");
-        } else if (!mxf_local_tag_add_to_hash_table (primer, tag, tag_data,
-                tag_size, &segment->other_tags)) {
-          goto error;
-        }
+        GST_WARNING
+            ("Unknown local tag 0x%04x of size %d in index table segment", tag,
+            tag_size);
         break;
     }
 
@@ -1300,9 +1295,6 @@ mxf_index_table_segment_reset (MXFIndexTableSegment * segment)
 
   g_free (segment->index_entries);
   g_free (segment->delta_entries);
-
-  if (segment->other_tags)
-    g_hash_table_destroy (segment->other_tags);
 
   memset (segment, 0, sizeof (MXFIndexTableSegment));
 }

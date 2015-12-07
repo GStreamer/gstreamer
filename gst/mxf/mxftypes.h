@@ -170,7 +170,8 @@ typedef struct {
   guint32 n_index_entries;
   MXFIndexEntry *index_entries;
 
-  GHashTable *other_tags;
+  /* FIXME: The stream_offset is only used by mxfdemux
+   * and not part of the standard, and used wrong */
   guint64 stream_offset;
 } MXFIndexTableSegment;
 
@@ -254,7 +255,7 @@ GstBuffer * mxf_primer_pack_to_buffer (const MXFPrimerPack *pack);
 gboolean mxf_random_index_pack_parse (const MXFUL *ul, const guint8 *data, guint size, GArray **array);
 GstBuffer * mxf_random_index_pack_to_buffer (const GArray *array);
 
-gboolean mxf_index_table_segment_parse (const MXFUL *ul, MXFIndexTableSegment *segment, const MXFPrimerPack *primer, const guint8 *data, guint size);
+gboolean mxf_index_table_segment_parse (const MXFUL *ul, MXFIndexTableSegment *segment, const guint8 *data, guint size);
 void mxf_index_table_segment_reset (MXFIndexTableSegment *segment);
 
 gboolean mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,

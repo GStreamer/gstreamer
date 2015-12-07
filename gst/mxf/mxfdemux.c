@@ -2034,8 +2034,7 @@ gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux,
   segment = g_new0 (MXFIndexTableSegment, 1);
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
-  ret = mxf_index_table_segment_parse (key, segment,
-      &demux->current_partition->primer, map.data, map.size);
+  ret = mxf_index_table_segment_parse (key, segment, map.data, map.size);
   gst_buffer_unmap (buffer, &map);
 
   if (!ret) {
