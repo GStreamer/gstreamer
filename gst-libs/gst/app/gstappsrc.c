@@ -926,6 +926,18 @@ gst_app_src_query (GstBaseSrc * src, GstQuery * query)
       res = TRUE;
       break;
     }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+      gst_query_parse_duration (query, &format, NULL);
+      if (format == GST_FORMAT_BYTES) {
+        gst_query_set_duration (query, format, priv->size);
+        res = TRUE;
+      } else {
+        res = FALSE;
+      }
+      break;
+    }
     default:
       res = GST_BASE_SRC_CLASS (parent_class)->query (src, query);
       break;
