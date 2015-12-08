@@ -1662,6 +1662,9 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
   GstAdaptiveDemux *demux = stream->demux;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean discont = FALSE;
+  /* Pending events */
+  GstEvent *pending_caps = NULL, *pending_segment = NULL, *pending_tags = NULL;
+  GList *pending_events = NULL;
 
   if (stream->first_fragment_buffer) {
     GstClockTime offset =
@@ -1711,18 +1714,13 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
 
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
-
   if (G_UNLIKELY (stream->pending_caps)) {
-    GST_DEBUG_OBJECT (stream->pad, "Setting pending caps: %" GST_PTR_FORMAT,
-        stream->pending_caps);
-    gst_pad_set_caps (stream->pad, stream->pending_caps);
+    pending_caps = gst_event_new_caps (stream->pending_caps);
     gst_caps_unref (stream->pending_caps);
     stream->pending_caps = NULL;
   }
   if (G_UNLIKELY (stream->pending_segment)) {
-    GST_DEBUG_OBJECT (stream->pad, "Sending pending seg: %" GST_PTR_FORMAT,
-        stream->pending_segment);
-    gst_pad_push_event (stream->pad, stream->pending_segment);
+    pending_segment = stream->pending_segment;
     stream->pending_segment = NULL;
   }
   if (G_UNLIKELY (stream->pending_tags || stream->bitrate_changed)) {
@@ -1740,21 +1738,39 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
       gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
           GST_TAG_NOMINAL_BITRATE, stream->fragment.bitrate, NULL);
     }
-    GST_DEBUG_OBJECT (stream->pad, "Sending pending tags: %" GST_PTR_FORMAT,
-        stream->pending_tags);
-    gst_pad_push_event (stream->pad, gst_event_new_tag (tags));
+    pending_tags = gst_event_new_tag (tags);
   }
-  while (stream->pending_events != NULL) {
-    GstEvent *event = stream->pending_events->data;
+  if (G_UNLIKELY (stream->pending_events)) {
+    pending_events = stream->pending_events;
+    stream->pending_events = NULL;
+  }
+
+  GST_MANIFEST_UNLOCK (demux);
+
+  /* Do not push events or buffers holding the manifest lock */
+  if (G_UNLIKELY (pending_caps)) {
+    GST_DEBUG_OBJECT (stream->pad, "Setting pending caps: %" GST_PTR_FORMAT,
+        pending_caps);
+    gst_pad_push_event (stream->pad, pending_caps);
+  }
+  if (G_UNLIKELY (pending_segment)) {
+    GST_DEBUG_OBJECT (stream->pad, "Sending pending seg: %" GST_PTR_FORMAT,
+        pending_segment);
+    gst_pad_push_event (stream->pad, pending_segment);
+  }
+  if (G_UNLIKELY (pending_tags)) {
+    GST_DEBUG_OBJECT (stream->pad, "Sending pending tags: %" GST_PTR_FORMAT,
+        pending_tags);
+    gst_pad_push_event (stream->pad, pending_tags);
+  }
+  while (pending_events != NULL) {
+    GstEvent *event = pending_events->data;
 
     if (!gst_pad_push_event (stream->pad, event))
       GST_ERROR_OBJECT (stream->pad, "Failed to send pending event");
 
-    stream->pending_events =
-        g_list_delete_link (stream->pending_events, stream->pending_events);
+    pending_events = g_list_delete_link (pending_events, pending_events);
   }
-
-  GST_MANIFEST_UNLOCK (demux);
 
   ret = gst_pad_push (stream->pad, buffer);
 
