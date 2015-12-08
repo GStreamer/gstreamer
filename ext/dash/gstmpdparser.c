@@ -1736,6 +1736,10 @@ gst_mpdparser_parse_representation_base_type (GstRepresentationBaseType **
   gst_mpdparser_get_xml_prop_ratio (a_node, "sar", &representation_base->sar);
   gst_mpdparser_get_xml_prop_framerate (a_node, "frameRate",
       &representation_base->frameRate);
+  gst_mpdparser_get_xml_prop_framerate (a_node, "minFrameRate",
+      &representation_base->minFrameRate);
+  gst_mpdparser_get_xml_prop_framerate (a_node, "maxFrameRate",
+      &representation_base->maxFrameRate);
   gst_mpdparser_get_xml_prop_string (a_node, "audioSamplingRate",
       &representation_base->audioSamplingRate);
   gst_mpdparser_get_xml_prop_string (a_node, "mimeType",
@@ -1877,10 +1881,6 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node,
       &new_adap_set->minHeight);
   gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "maxHeight", 0,
       &new_adap_set->maxHeight);
-  gst_mpdparser_get_xml_prop_framerate (a_node, "minFrameRate",
-      &new_adap_set->minFrameRate);
-  gst_mpdparser_get_xml_prop_framerate (a_node, "maxFrameRate",
-      &new_adap_set->maxFrameRate);
   gst_mpdparser_get_xml_prop_cond_uint (a_node, "segmentAlignment",
       &new_adap_set->segmentAlignment);
   gst_mpdparser_get_xml_prop_boolean (a_node, "bitstreamSwitching",
@@ -2743,6 +2743,8 @@ gst_mpdparser_free_representation_base_type (GstRepresentationBaseType *
       xmlFree (representation_base->profiles);
     g_slice_free (GstRatio, representation_base->sar);
     g_slice_free (GstFrameRate, representation_base->frameRate);
+    g_slice_free (GstFrameRate, representation_base->minFrameRate);
+    g_slice_free (GstFrameRate, representation_base->maxFrameRate);
     if (representation_base->audioSamplingRate)
       xmlFree (representation_base->audioSamplingRate);
     if (representation_base->mimeType)
@@ -2773,8 +2775,6 @@ gst_mpdparser_free_adaptation_set_node (GstAdaptationSetNode *
     if (adaptation_set_node->contentType)
       xmlFree (adaptation_set_node->contentType);
     g_slice_free (GstRatio, adaptation_set_node->par);
-    g_slice_free (GstFrameRate, adaptation_set_node->minFrameRate);
-    g_slice_free (GstFrameRate, adaptation_set_node->maxFrameRate);
     g_slice_free (GstConditionalUintType,
         adaptation_set_node->segmentAlignment);
     g_slice_free (GstConditionalUintType,

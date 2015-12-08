@@ -221,6 +221,8 @@ struct _GstRepresentationBaseType
   guint width;
   guint height;
   GstRatio *sar;
+  GstFrameRate *minFrameRate;
+  GstFrameRate *maxFrameRate;
   GstFrameRate *frameRate;
   gchar *audioSamplingRate;
   gchar *mimeType;
@@ -306,8 +308,6 @@ struct _GstAdaptationSetNode
   guint maxWidth;
   guint minHeight;
   guint maxHeight;
-  GstFrameRate *minFrameRate;
-  GstFrameRate *maxFrameRate;
   GstConditionalUintType *segmentAlignment;
   GstConditionalUintType *subsegmentAlignment;
   GstSAPType subsegmentStartsWithSAP;
