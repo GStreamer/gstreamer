@@ -65,6 +65,15 @@
 #  include <unistd.h>
 #endif
 
+#ifdef __BIONIC__               /* Android */
+#undef lseek
+#define lseek lseek64
+#undef fstat
+#define fstat fstat64
+#undef off_t
+#define off_t guint64
+#endif
+
 #include <errno.h>
 #include <string.h>
 
@@ -111,6 +120,8 @@ gst_open (const gchar * filename, int flags, int mode)
 
   errno = save_errno;
   return retval;
+#elif defined (__BIONIC__)
+  return open (filename, flags | O_LARGEFILE, mode);
 #else
   return open (filename, flags, mode);
 #endif
