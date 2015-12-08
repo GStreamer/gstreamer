@@ -1136,8 +1136,8 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
   guint8 slen, ber[9];
   gboolean flush = gst_aggregator_pad_is_eos (GST_AGGREGATOR_PAD (pad))
       && !pad->have_complete_edit_unit && buf == NULL;
-  gboolean is_keyframe =
-      !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  gboolean is_keyframe = buf ?
+      !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) : TRUE;
 
   if (pad->have_complete_edit_unit) {
     GST_DEBUG_OBJECT (pad,
