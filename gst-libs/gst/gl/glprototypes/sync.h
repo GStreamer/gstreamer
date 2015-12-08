@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2014 Matthew Waters <matthew@centricular.com>
+ * Copyright (C) 2014-2015 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,8 +22,8 @@ GST_GL_EXT_BEGIN (sync,
                   GST_GL_API_OPENGL3,
                   3, 2,
                   3, 0,
-                  "",
-                  "")
+                  "APPLE",
+                  "sync")
 GST_GL_EXT_FUNCTION (GLsync, FenceSync,
                      (GLenum condition,
                       GLbitfield flags))
