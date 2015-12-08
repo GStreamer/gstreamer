@@ -681,6 +681,10 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               pad->writer->get_track_number_template (pad->descriptor,
               caps, pad->mapping_data);
 
+          /* FIXME: All tracks in a source package must have the same edit
+           * rate! This means that if we have different edit rates, we need to
+           * make them different source packages and essence containers with
+           * a different BodySID */
           pad->writer->get_edit_rate (pad->descriptor,
               caps, pad->mapping_data, buffer, p, track, &track->edit_rate);
           if (buffer)
