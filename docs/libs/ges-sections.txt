@@ -1083,6 +1083,7 @@ ges_asset_set_proxy
 ges_asset_list_proxies
 ges_asset_get_proxy_target
 ges_asset_get_proxy
+ges_asset_needs_reload
 <SUBSECTION Standard>
 GESAssetPrivate
 GES_ASSET

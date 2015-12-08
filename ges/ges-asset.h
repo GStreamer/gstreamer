@@ -109,6 +109,8 @@ gboolean ges_asset_set_proxy         (GESAsset *asset, GESAsset *proxy);
 GList * ges_asset_list_proxies       (GESAsset *asset);
 GESAsset * ges_asset_get_proxy_target(GESAsset *proxy);
 GESAsset * ges_asset_get_proxy       (GESAsset *asset);
+gboolean ges_asset_needs_reload 	 (GType extractable_type,
+									  const gchar * id);
 
 G_END_DECLS
 #endif /* _GES_ASSET */

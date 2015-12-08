@@ -1,6 +1,6 @@
 /* GStreamer Editing Services
  *
- * Copyright (C) 2012 Thibault Saunier <thibault.saunier@collabora.com>
+ * Copyright (C) 2012-2015 Thibault Saunier <thibault.saunier@collabora.com>
  * Copyright (C) 2012 Volodymyr Rudyi <vladimir.rudoy@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -106,6 +106,7 @@ typedef enum
   ASSET_NOT_INITIALIZED,
   ASSET_INITIALIZING, ASSET_INITIALIZED_WITH_ERROR,
   ASSET_PROXIED,
+  ASSET_NEEDS_RELOAD,
   ASSET_INITIALIZED
 } GESAssetState;
 
@@ -200,19 +201,20 @@ _check_and_update_parameters (GType * extractable_type, const gchar * id,
 }
 
 static gboolean
+start_loading (GESAsset * asset)
+{
+  ges_asset_cache_put (gst_object_ref (asset), NULL);
+  return ges_asset_cache_set_loaded (asset->priv->extractable_type,
+      asset->priv->id, NULL);
+}
+
+static gboolean
 initable_init (GInitable * initable, GCancellable * cancellable,
     GError ** error)
 {
-  gboolean ret;
-  GESAsset *asset = GES_ASSET (initable);
-
-  ges_asset_cache_put (gst_object_ref (asset), NULL);
-  ret = ges_asset_cache_set_loaded (asset->priv->extractable_type,
-      asset->priv->id, NULL);
-
   g_clear_error (error);
 
-  return ret;
+  return start_loading (GES_ASSET (initable));
 }
 
 static void
@@ -937,6 +939,11 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
             asset = ges_asset_get_proxy (asset);
 
           break;
+        case ASSET_NEEDS_RELOAD:
+          GST_DEBUG_OBJECT (asset, "Asset in cache and needs reload");
+          start_loading (asset);
+
+          goto done;
         case ASSET_INITIALIZED_WITH_ERROR:
           GST_WARNING_OBJECT (asset, "Initialized with error, not returning");
           if (asset->priv->error && error)
@@ -1078,6 +1085,12 @@ ges_asset_request_async (GType extractable_type,
             goto done;
           }
           break;
+        case ASSET_NEEDS_RELOAD:
+          GST_DEBUG_OBJECT (asset, "Asset in cache and needs reload");
+          ges_asset_cache_append_task (extractable_type, real_id, task);
+          GES_ASSET_GET_CLASS (asset)->start_loading (asset, &error);
+
+          goto done;
         case ASSET_INITIALIZED_WITH_ERROR:
           g_task_return_error (task,
               error ? error : g_error_copy (asset->priv->error));
@@ -1096,6 +1109,55 @@ ges_asset_request_async (GType extractable_type,
 done:
   if (real_id)
     g_free (real_id);
+}
+
+/**
+ * ges_asset_needs_reload
+ * @extractable_type: The #GType of the object that can be extracted from the
+ *  asset to be reloaded.
+ * @id: The identifier of the asset to mark as needing reload
+ *
+ * Sets an asset from the internal cache as needing reload. An asset needs reload
+ * in the case where, for example, we were missing a GstPlugin to use it and that
+ * plugin has been installed, or, that particular asset content as changed
+ * meanwhile (in the case of the usage of proxies).
+ *
+ * Once an asset has been set as "needs reload", requesting that asset again
+ * will lead to it being re discovered, and reloaded as if it was not in the
+ * cache before.
+ *
+ * Returns: %TRUE if the asset was in the cache and could be set as needing reload,
+ * %FALSE otherwise.
+ */
+gboolean
+ges_asset_needs_reload (GType extractable_type, const gchar * id)
+{
+  gchar *real_id;
+  GESAsset *asset;
+  GError *error = NULL;
+
+  real_id = _check_and_update_parameters (&extractable_type, id, &error);
+  if (error) {
+    _unsure_material_for_wrong_id (id, extractable_type, error);
+    real_id = g_strdup (id);
+  }
+
+  asset = ges_asset_cache_lookup (extractable_type, real_id);
+
+  if (real_id) {
+    g_free (real_id);
+  }
+
+  if (asset) {
+    GST_DEBUG_OBJECT (asset,
+        "Asset with id %s switch state to ASSET_NEEDS_RELOAD",
+        ges_asset_get_id (asset));
+    asset->priv->state = ASSET_NEEDS_RELOAD;
+    return TRUE;
+  }
+
+  GST_DEBUG ("Asset with id %s not found in cache", id);
+  return FALSE;
 }
 
 /**
