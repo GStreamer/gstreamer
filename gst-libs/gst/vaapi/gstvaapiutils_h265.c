@@ -281,16 +281,19 @@ gst_vaapi_utils_h265_get_level_limits_table (guint * out_length_ptr)
 
 /** Returns GstVaapiChromaType from H.265 chroma_format_idc value */
 GstVaapiChromaType
-gst_vaapi_utils_h265_get_chroma_type (guint chroma_format_idc)
+gst_vaapi_utils_h265_get_chroma_type (guint chroma_format_idc, guint luma_bit_depth)
 {
-  GstVaapiChromaType chroma_type;
+  GstVaapiChromaType chroma_type = (GstVaapiChromaType) 0;
 
   switch (chroma_format_idc) {
     case 0:
       chroma_type = GST_VAAPI_CHROMA_TYPE_YUV400;
       break;
     case 1:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+      if (luma_bit_depth == 8)
+        chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+      else if (luma_bit_depth > 8)
+        chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
       break;
     case 2:
       chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422;
@@ -317,6 +320,7 @@ gst_vaapi_utils_h265_get_chroma_format_idc (GstVaapiChromaType chroma_type)
       chroma_format_idc = 0;
       break;
     case GST_VAAPI_CHROMA_TYPE_YUV420:
+    case GST_VAAPI_CHROMA_TYPE_YUV420_10BPP:
       chroma_format_idc = 1;
       break;
     case GST_VAAPI_CHROMA_TYPE_YUV422:
