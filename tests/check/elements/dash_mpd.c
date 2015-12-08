@@ -1080,10 +1080,14 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet)
   assert_equals_uint64 (adaptationSet->maxWidth, 2000);
   assert_equals_uint64 (adaptationSet->minHeight, 1100);
   assert_equals_uint64 (adaptationSet->maxHeight, 2100);
-  assert_equals_uint64 (adaptationSet->minFrameRate->num, 25);
-  assert_equals_uint64 (adaptationSet->minFrameRate->den, 123);
-  assert_equals_uint64 (adaptationSet->maxFrameRate->num, 26);
-  assert_equals_uint64 (adaptationSet->maxFrameRate->den, 1);
+  assert_equals_uint64 (adaptationSet->RepresentationBase->minFrameRate->num,
+      25);
+  assert_equals_uint64 (adaptationSet->RepresentationBase->minFrameRate->den,
+      123);
+  assert_equals_uint64 (adaptationSet->RepresentationBase->maxFrameRate->num,
+      26);
+  assert_equals_uint64 (adaptationSet->RepresentationBase->maxFrameRate->den,
+      1);
   assert_equals_int (adaptationSet->segmentAlignment->flag, 1);
   assert_equals_uint64 (adaptationSet->segmentAlignment->value, 2);
   assert_equals_int (adaptationSet->subsegmentAlignment->flag, 0);
@@ -5020,7 +5024,7 @@ GST_START_TEST (dash_mpdparser_read_unsigned_from_negative_values)
   fail_if (adaptationSet->par != NULL);
 
   /* minFrameRate parsing should fail */
-  fail_if (adaptationSet->minFrameRate != NULL);
+  fail_if (adaptationSet->RepresentationBase->minFrameRate != NULL);
 
   /* segmentAlignment parsing should fail */
   fail_if (adaptationSet->segmentAlignment != NULL);
