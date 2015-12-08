@@ -1672,6 +1672,38 @@ GST_START_TEST (test_dts_gap_larger_than_latency)
 
 GST_END_TEST;
 
+GST_START_TEST (test_push_big_gap)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  const gint num_consecutive = 5;
+  gint i;
+
+  gst_harness_use_testclock (h);
+  gst_harness_set_src_caps (h, generate_caps ());
+
+  for (i = 0; i < num_consecutive; i++)
+    gst_harness_push (h, generate_test_buffer (1000 + i));
+  gst_harness_crank_single_clock_wait (h);
+  for (i = 0; i < num_consecutive; i++)
+    gst_buffer_unref (gst_harness_pull (h));
+
+  /* Push more packets from a different sequence number domain
+   * to trigger "big gap" logic. */
+  for (i = 0; i < num_consecutive; i++)
+    gst_harness_push (h, generate_test_buffer (20000 + i));
+  gst_harness_crank_single_clock_wait (h);
+  for (i = 0; i < num_consecutive; i++)
+    gst_buffer_unref (gst_harness_pull (h));
+
+  /* Final buffer should be pushed straight through */
+  gst_harness_push (h, generate_test_buffer (20000 + num_consecutive));
+  gst_buffer_unref (gst_harness_pull (h));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpjitterbuffer_suite (void)
 {
@@ -1694,6 +1726,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_gap_exceeds_latency);
   tcase_add_test (tc_chain, test_deadline_ts_offset);
   tcase_add_test (tc_chain, test_dts_gap_larger_than_latency);
+  tcase_add_test (tc_chain, test_push_big_gap);
 
   return s;
 }
