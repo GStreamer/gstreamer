@@ -65,6 +65,7 @@ typedef struct
 typedef struct
 {
   guint32 body_sid;
+  guint32 index_sid;
   guint32 track_number;
 
   guint32 track_id;
@@ -86,6 +87,13 @@ typedef struct
 
   GstCaps *caps;
 } GstMXFDemuxEssenceTrack;
+
+typedef struct
+{
+  guint32 body_sid;
+  guint32 index_sid;
+  GArray *offsets;
+} GstMXFDemuxIndexTable;
 
 struct _GstMXFDemuxPad
 {
@@ -153,8 +161,9 @@ struct _GstMXFDemux
   GstMXFDemuxPartition *current_partition;
 
   GArray *essence_tracks;
-  GList *pending_index_table_segments;
 
+  GList *pending_index_table_segments;
+  GList *index_tables; /* one per BodySID / IndexSID */
   gboolean index_table_segments_collected;
 
   GArray *random_index_pack;

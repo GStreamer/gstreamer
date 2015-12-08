@@ -148,7 +148,7 @@ typedef struct {
 
   guint8 flags;
   guint64 stream_offset;
-  
+
   guint32 *slice_offset;
   MXFFraction *pos_table;
 } MXFIndexEntry;
@@ -169,10 +169,6 @@ typedef struct {
 
   guint32 n_index_entries;
   MXFIndexEntry *index_entries;
-
-  /* FIXME: The stream_offset is only used by mxfdemux
-   * and not part of the standard, and used wrong */
-  guint64 stream_offset;
 } MXFIndexTableSegment;
 
 #define GST_TAG_MXF_UMID "mxf-umid"
