@@ -2413,18 +2413,31 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
       gst_element_set_state (priv->funnel[i], GST_STATE_NULL);
     if (priv->appsrc[i])
       gst_element_set_state (priv->appsrc[i], GST_STATE_NULL);
-    if (priv->udpsrc_v4[i] && (priv->sinkpad || i == 1)) {
-      /* and set udpsrc to NULL now before removing */
-      gst_element_set_locked_state (priv->udpsrc_v4[i], FALSE);
-      gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_NULL);
-      /* removing them should also nicely release the request
-       * pads when they finalize */
-      gst_bin_remove (bin, priv->udpsrc_v4[i]);
+
+    if (priv->udpsrc_v4[i]) {
+      if (priv->sinkpad || i == 1) {
+        /* and set udpsrc to NULL now before removing */
+        gst_element_set_locked_state (priv->udpsrc_v4[i], FALSE);
+        gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_NULL);
+        /* removing them should also nicely release the request
+         * pads when they finalize */
+        gst_bin_remove (bin, priv->udpsrc_v4[i]);
+      } else  {
+        /* we need to set the state to NULL before unref */
+        gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_NULL);
+        gst_object_unref (priv->udpsrc_v4[i]);
+      }
     }
-    if (priv->udpsrc_v6[i] && (priv->sinkpad || i == 1)) {
-      gst_element_set_locked_state (priv->udpsrc_v6[i], FALSE);
-      gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_NULL);
-      gst_bin_remove (bin, priv->udpsrc_v6[i]);
+
+    if (priv->udpsrc_v6[i]) {
+      if (priv->sinkpad || i == 1) {
+        gst_element_set_locked_state (priv->udpsrc_v6[i], FALSE);
+        gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_NULL);
+        gst_bin_remove (bin, priv->udpsrc_v6[i]);
+      } else {
+        gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_NULL);
+        gst_object_unref (priv->udpsrc_v6[i]);
+      }
     }
 
     for (l = priv->transport_sources; l; l = l->next) {
