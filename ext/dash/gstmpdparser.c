@@ -5635,6 +5635,46 @@ gst_mpd_client_get_video_stream_height (GstActiveStream * stream)
   return height;
 }
 
+gboolean
+gst_mpd_client_get_video_stream_framerate (GstActiveStream * stream,
+    gint * fps_num, gint * fps_den)
+{
+  if (stream == NULL)
+    return FALSE;
+
+  if (stream->cur_adapt_set &&
+      stream->cur_adapt_set->RepresentationBase->frameRate != NULL) {
+    *fps_num = stream->cur_adapt_set->RepresentationBase->frameRate->num;
+    *fps_den = stream->cur_adapt_set->RepresentationBase->frameRate->den;
+    return TRUE;
+  }
+
+  if (stream->cur_adapt_set &&
+      stream->cur_adapt_set->RepresentationBase->maxFrameRate != NULL) {
+    *fps_num = stream->cur_adapt_set->RepresentationBase->maxFrameRate->num;
+    *fps_den = stream->cur_adapt_set->RepresentationBase->maxFrameRate->den;
+    return TRUE;
+  }
+
+  if (stream->cur_representation &&
+      stream->cur_representation->RepresentationBase->frameRate != NULL) {
+    *fps_num = stream->cur_representation->RepresentationBase->frameRate->num;
+    *fps_den = stream->cur_representation->RepresentationBase->frameRate->den;
+    return TRUE;
+  }
+
+  if (stream->cur_representation &&
+      stream->cur_representation->RepresentationBase->maxFrameRate != NULL) {
+    *fps_num =
+        stream->cur_representation->RepresentationBase->maxFrameRate->num;
+    *fps_den =
+        stream->cur_representation->RepresentationBase->maxFrameRate->den;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 guint
 gst_mpd_client_get_audio_stream_rate (GstActiveStream * stream)
 {

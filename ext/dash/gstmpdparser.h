@@ -586,6 +586,7 @@ GstCaps * gst_mpd_client_get_stream_caps (GstActiveStream * stream);
 gboolean gst_mpd_client_get_bitstream_switching_flag (GstActiveStream * stream);
 guint gst_mpd_client_get_video_stream_width (GstActiveStream * stream);
 guint gst_mpd_client_get_video_stream_height (GstActiveStream * stream);
+gboolean gst_mpd_client_get_video_stream_framerate (GstActiveStream * stream, gint * fps_num, gint * fps_den);
 guint gst_mpd_client_get_audio_stream_rate (GstActiveStream * stream);
 guint gst_mpd_client_get_audio_stream_num_channels (GstActiveStream * stream);
 

@@ -866,6 +866,8 @@ gst_dash_demux_get_video_input_caps (GstDashDemux * demux,
     GstActiveStream * stream)
 {
   guint width = 0, height = 0;
+  gint fps_num = 0, fps_den = 1;
+  gboolean have_fps = FALSE;
   GstCaps *caps = NULL;
 
   if (stream == NULL)
@@ -875,6 +877,8 @@ gst_dash_demux_get_video_input_caps (GstDashDemux * demux,
   if (!gst_mpd_client_get_bitstream_switching_flag (stream)) {
     width = gst_mpd_client_get_video_stream_width (stream);
     height = gst_mpd_client_get_video_stream_height (stream);
+    have_fps =
+        gst_mpd_client_get_video_stream_framerate (stream, &fps_num, &fps_den);
   }
   caps = gst_mpd_client_get_stream_caps (stream);
   if (caps == NULL)
@@ -883,6 +887,11 @@ gst_dash_demux_get_video_input_caps (GstDashDemux * demux,
   if (width > 0 && height > 0) {
     gst_caps_set_simple (caps, "width", G_TYPE_INT, width, "height",
         G_TYPE_INT, height, NULL);
+  }
+
+  if (have_fps) {
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, fps_num,
+        fps_den, NULL);
   }
 
   return caps;
