@@ -1081,8 +1081,11 @@ mxf_index_table_segment_parse (const MXFUL * ul,
   GST_DEBUG ("Parsing index table segment:");
 
   while (mxf_local_tag_parse (data, size, &tag, &tag_size, &tag_data)) {
+    data += 4 + tag_size;
+    size -= 4 + tag_size;
+
     if (tag_size == 0 || tag == 0x0000)
-      goto next;
+      continue;
 
     switch (tag) {
       case 0x3c0a:
@@ -1153,7 +1156,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         segment->n_delta_entries = len;
         GST_DEBUG ("  number of delta entries = %u", segment->n_delta_entries);
         if (len == 0)
-          goto next;
+          continue;
         tag_data += 4;
         tag_size -= 4;
 
@@ -1201,7 +1204,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         segment->n_index_entries = len;
         GST_DEBUG ("  number of index entries = %u", segment->n_index_entries);
         if (len == 0)
-          goto next;
+          continue;
         tag_data += 4;
         tag_size -= 4;
 
@@ -1269,10 +1272,6 @@ mxf_index_table_segment_parse (const MXFUL * ul,
             tag_size);
         break;
     }
-
-  next:
-    data += 4 + tag_size;
-    size -= 4 + tag_size;
   }
   return TRUE;
 
