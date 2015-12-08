@@ -152,7 +152,7 @@ const gchar *fisheye_fragment_source_gles2 =
   "  vec2 normcoord;"
   "  normcoord = texturecoord - 0.5;"
   "  float r = length (normcoord);"
-  "  normcoord *= r * sqrt(2);"
+  "  normcoord *= r * 1.41421;" /* sqrt (2) */
   "  texturecoord = normcoord + 0.5;"
   "  gl_FragColor = texture2D (tex, texturecoord);"
   "}";
