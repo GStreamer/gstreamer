@@ -20,9 +20,6 @@ if USE_WAYLAND
 lib_LTLIBRARIES += libgstvaapi-wayland-@GST_API_VERSION@.la
 endif
 
-libgstvaapi_includedir = \
-	$(includedir)/gstreamer-$(GST_PKG_VERSION)/gst/vaapi
-
 libgstvaapi_cflags =				\
 	-DIN_LIBGSTVAAPI			\
 	-DIN_LIBGSTVAAPI_CORE			\
@@ -342,14 +339,8 @@ libgstvaapi_wayland_source_priv_h =		\
 libgstvaapi_@GST_API_VERSION@_la_SOURCES =	\
 	$(libgstvaapi_source_c)			\
 	$(libgstvaapi_source_priv_h)		\
-	$(NULL)
-
-libgstvaapi_@GST_API_VERSION@include_HEADERS =	\
 	$(libgstvaapi_source_h)			\
 	$(NULL)
-
-libgstvaapi_@GST_API_VERSION@includedir =	\
-	$(libgstvaapi_includedir)
 
 libgstvaapi_@GST_API_VERSION@_la_CFLAGS =	\
 	$(libgstvaapi_cflags)			\
@@ -368,14 +359,8 @@ libgstvaapi_@GST_API_VERSION@_la_LDFLAGS =	\
 libgstvaapi_drm_@GST_API_VERSION@_la_SOURCES =	\
 	$(libgstvaapi_drm_source_c)		\
 	$(libgstvaapi_drm_source_priv_h)	\
-	$(NULL)
-
-libgstvaapi_drm_@GST_API_VERSION@include_HEADERS = \
 	$(libgstvaapi_drm_source_h)		\
 	$(NULL)
-
-libgstvaapi_drm_@GST_API_VERSION@includedir =	\
-	$(libgstvaapi_includedir)
 
 libgstvaapi_drm_@GST_API_VERSION@_la_CFLAGS =	\
 	-DIN_LIBGSTVAAPI			\
@@ -406,14 +391,8 @@ libgstvaapi_drm_@GST_API_VERSION@_la_LDFLAGS =	\
 libgstvaapi_x11_@GST_API_VERSION@_la_SOURCES =	\
 	$(libgstvaapi_x11_source_c)		\
 	$(libgstvaapi_x11_source_priv_h)	\
-	$(NULL)
-
-libgstvaapi_x11_@GST_API_VERSION@include_HEADERS = \
 	$(libgstvaapi_x11_source_h)		\
 	$(NULL)
-
-libgstvaapi_x11_@GST_API_VERSION@includedir =	\
-	$(libgstvaapi_includedir)
 
 libgstvaapi_x11_@GST_API_VERSION@_la_CFLAGS =	\
 	-DIN_LIBGSTVAAPI			\
@@ -446,14 +425,8 @@ libgstvaapi_x11_@GST_API_VERSION@_la_LDFLAGS =	\
 libgstvaapi_glx_@GST_API_VERSION@_la_SOURCES =	\
 	$(libgstvaapi_glx_source_c)		\
 	$(libgstvaapi_glx_source_priv_h)	\
-	$(NULL)
-
-libgstvaapi_glx_@GST_API_VERSION@include_HEADERS = \
 	$(libgstvaapi_glx_source_h)		\
 	$(NULL)
-
-libgstvaapi_glx_@GST_API_VERSION@includedir =	\
-	$(libgstvaapi_includedir)
 
 libgstvaapi_glx_@GST_API_VERSION@_la_CFLAGS =	\
 	-DIN_LIBGSTVAAPI			\
@@ -487,14 +460,8 @@ libgstvaapi_glx_@GST_API_VERSION@_la_LDFLAGS =	\
 libgstvaapi_egl_@GST_API_VERSION@_la_SOURCES =	\
 	$(libgstvaapi_egl_source_c)		\
 	$(libgstvaapi_egl_source_priv_h)	\
-	$(NULL)
-
-libgstvaapi_egl_@GST_API_VERSION@include_HEADERS = \
 	$(libgstvaapi_egl_source_h)		\
 	$(NULL)
-
-libgstvaapi_egl_@GST_API_VERSION@includedir =	\
-	$(libgstvaapi_includedir)
 
 libgstvaapi_egl_@GST_API_VERSION@_la_CFLAGS =	\
 	-DIN_LIBGSTVAAPI			\
@@ -527,14 +494,8 @@ libgstvaapi_egl_@GST_API_VERSION@_la_LDFLAGS =	\
 libgstvaapi_wayland_@GST_API_VERSION@_la_SOURCES = \
 	$(libgstvaapi_wayland_source_c)		\
 	$(libgstvaapi_wayland_source_priv_h)	\
-	$(NULL)
-
-libgstvaapi_wayland_@GST_API_VERSION@include_HEADERS = \
 	$(libgstvaapi_wayland_source_h)		\
 	$(NULL)
-
-libgstvaapi_wayland_@GST_API_VERSION@includedir = \
-	$(libgstvaapi_includedir)
 
 libgstvaapi_wayland_@GST_API_VERSION@_la_CFLAGS = \
 	-DIN_LIBGSTVAAPI			\

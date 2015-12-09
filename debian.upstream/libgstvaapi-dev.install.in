@@ -1,2 +1,1 @@
 debian/tmp/usr/lib/libgstvaapi*.so
-debian/tmp/usr/include/gstreamer-@GST_PKG_VERSION@/gst/vaapi/*.h
