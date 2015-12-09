@@ -2546,7 +2546,17 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         remove_all_timers (jitterbuffer);
         priv->discont = TRUE;
         priv->last_popped_seqnum = -1;
-        priv->next_seqnum = seqnum;
+
+        if (priv->gap_packets.head) {
+          GstBuffer *gap_buffer = priv->gap_packets.head->data;
+          GstRTPBuffer gap_rtp = GST_RTP_BUFFER_INIT;
+
+          gst_rtp_buffer_map (gap_buffer, GST_MAP_READ, &gap_rtp);
+          priv->next_seqnum = gst_rtp_buffer_get_seq (&gap_rtp);
+          gst_rtp_buffer_unmap (&gap_rtp);
+        } else {
+          priv->next_seqnum = seqnum;
+        }
 
         priv->last_in_dts = -1;
         priv->next_in_seqnum = -1;
