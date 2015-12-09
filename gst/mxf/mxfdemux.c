@@ -1743,7 +1743,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       }
     }
 
-    if (index_table) {
+    if (index_table && index_table->offsets->len > etrack->position) {
       GstMXFDemuxIndex *index =
           &g_array_index (index_table->offsets, GstMXFDemuxIndex,
           etrack->position);
