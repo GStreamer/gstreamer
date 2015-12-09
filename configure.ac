@@ -1108,17 +1108,6 @@ debian.upstream/libgstvaapi-x11.install.in
     gst/vaapi/Makefile
     patches/Makefile
     patches/videoparsers/Makefile
-    pkgconfig/Makefile
-    pkgconfig/gstreamer-vaapi-$GST_PKG_VERSION.pc:\
-pkgconfig/gstreamer-vaapi.pc.in
-    pkgconfig/gstreamer-vaapi-drm-$GST_PKG_VERSION.pc:\
-pkgconfig/gstreamer-vaapi-drm.pc.in
-    pkgconfig/gstreamer-vaapi-glx-$GST_PKG_VERSION.pc:\
-pkgconfig/gstreamer-vaapi-glx.pc.in
-    pkgconfig/gstreamer-vaapi-wayland-$GST_PKG_VERSION.pc:\
-pkgconfig/gstreamer-vaapi-wayland.pc.in
-    pkgconfig/gstreamer-vaapi-x11-$GST_PKG_VERSION.pc:\
-pkgconfig/gstreamer-vaapi-x11.pc.in
     tests/Makefile
 ])
 AC_OUTPUT
