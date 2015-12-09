@@ -440,6 +440,7 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
   demux->priv = GST_ADAPTIVE_DEMUX_GET_PRIVATE (demux);
   demux->priv->input_adapter = gst_adapter_new ();
   demux->downloader = gst_uri_downloader_new ();
+  gst_uri_downloader_set_parent (demux->downloader, GST_ELEMENT_CAST (demux));
   demux->stream_struct_size = sizeof (GstAdaptiveDemuxStream);
   demux->priv->segment_seqnum = gst_util_seqnum_next ();
   demux->have_group_id = FALSE;
