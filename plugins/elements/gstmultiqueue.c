@@ -1068,6 +1068,12 @@ apply_segment (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
   }
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
+  /* Make sure we have a valid initial segment position (and not garbage
+   * from upstream) */
+  if (segment->rate > 0.0)
+    segment->position = segment->start;
+  else
+    segment->position = segment->stop;
   if (segment == &sq->sink_segment)
     sq->sink_tainted = TRUE;
   else {
