@@ -104,14 +104,14 @@ INCLUDES = \
 GTKDOC_LIBS = \
 	$(GLIB_LIBS) \
 	$(GST_LIBS) \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_API_VERSION).la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi.la
 
 GTKDOC_LIBS += \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_API_VERSION).la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11.la
 
 if USE_GLX
 GTKDOC_LIBS += \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_API_VERSION).la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx.la
 endif
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.

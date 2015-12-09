@@ -1,23 +1,23 @@
-noinst_LTLIBRARIES = libgstvaapi-@GST_API_VERSION@.la
+noinst_LTLIBRARIES = libgstvaapi.la
 
 if USE_DRM
-noinst_LTLIBRARIES += libgstvaapi-drm-@GST_API_VERSION@.la
+noinst_LTLIBRARIES += libgstvaapi-drm.la
 endif
 
 if USE_X11
-noinst_LTLIBRARIES += libgstvaapi-x11-@GST_API_VERSION@.la
+noinst_LTLIBRARIES += libgstvaapi-x11.la
 endif
 
 if USE_GLX
-noinst_LTLIBRARIES += libgstvaapi-glx-@GST_API_VERSION@.la
+noinst_LTLIBRARIES += libgstvaapi-glx.la
 endif
 
 if USE_EGL
-noinst_LTLIBRARIES += libgstvaapi-egl-@GST_API_VERSION@.la
+noinst_LTLIBRARIES += libgstvaapi-egl.la
 endif
 
 if USE_WAYLAND
-noinst_LTLIBRARIES += libgstvaapi-wayland-@GST_API_VERSION@.la
+noinst_LTLIBRARIES += libgstvaapi-wayland.la
 endif
 
 libgstvaapi_cflags =				\
@@ -327,31 +327,31 @@ libgstvaapi_wayland_source_priv_h =		\
 	gstvaapidisplay_wayland_priv.h		\
 	$(NULL)
 
-libgstvaapi_@GST_API_VERSION@_la_SOURCES =	\
+libgstvaapi_la_SOURCES =			\
 	$(libgstvaapi_source_c)			\
 	$(libgstvaapi_source_priv_h)		\
 	$(libgstvaapi_source_h)			\
 	$(NULL)
 
-libgstvaapi_@GST_API_VERSION@_la_CFLAGS =	\
+libgstvaapi_la_CFLAGS =				\
 	$(libgstvaapi_cflags)			\
 	$(NULL)
 
-libgstvaapi_@GST_API_VERSION@_la_LIBADD =	\
+libgstvaapi_la_LIBADD =				\
 	$(libgstvaapi_libs)			\
 	$(NULL)
 
-libgstvaapi_@GST_API_VERSION@_la_LDFLAGS =	\
+libgstvaapi_la_LDFLAGS =			\
 	$(GST_ALL_LDFLAGS)			\
 	$(NULL)
 
-libgstvaapi_drm_@GST_API_VERSION@_la_SOURCES =	\
+libgstvaapi_drm_la_SOURCES =			\
 	$(libgstvaapi_drm_source_c)		\
 	$(libgstvaapi_drm_source_priv_h)	\
 	$(libgstvaapi_drm_source_h)		\
 	$(NULL)
 
-libgstvaapi_drm_@GST_API_VERSION@_la_CFLAGS =	\
+libgstvaapi_drm_la_CFLAGS =			\
 	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
@@ -363,7 +363,7 @@ libgstvaapi_drm_@GST_API_VERSION@_la_CFLAGS =	\
 	$(LIBVA_DRM_CFLAGS)			\
 	$(NULL)
 
-libgstvaapi_drm_@GST_API_VERSION@_la_LIBADD =	\
+libgstvaapi_drm_la_LIBADD =			\
 	$(GLIB_LIBS)				\
 	$(GST_LIBS)				\
 	$(UDEV_LIBS)				\
@@ -371,17 +371,17 @@ libgstvaapi_drm_@GST_API_VERSION@_la_LIBADD =	\
 	$(LIBVA_DRM_LIBS)			\
 	$(NULL)
 
-libgstvaapi_drm_@GST_API_VERSION@_la_LDFLAGS =	\
+libgstvaapi_drm_la_LDFLAGS =			\
 	$(GST_ALL_LDFLAGS)			\
 	$(NULL)
 
-libgstvaapi_x11_@GST_API_VERSION@_la_SOURCES =	\
+libgstvaapi_x11_la_SOURCES =			\
 	$(libgstvaapi_x11_source_c)		\
 	$(libgstvaapi_x11_source_priv_h)	\
 	$(libgstvaapi_x11_source_h)		\
 	$(NULL)
 
-libgstvaapi_x11_@GST_API_VERSION@_la_CFLAGS =	\
+libgstvaapi_x11_la_CFLAGS =			\
 	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
@@ -394,7 +394,7 @@ libgstvaapi_x11_@GST_API_VERSION@_la_CFLAGS =	\
 	$(LIBVA_X11_CFLAGS)			\
 	$(NULL)
 
-libgstvaapi_x11_@GST_API_VERSION@_la_LIBADD =	\
+libgstvaapi_x11_la_LIBADD =			\
 	$(GLIB_LIBS)				\
 	$(GST_LIBS)				\
 	$(X11_LIBS)				\
@@ -403,17 +403,17 @@ libgstvaapi_x11_@GST_API_VERSION@_la_LIBADD =	\
 	$(LIBVA_X11_LIBS)			\
 	$(NULL)
 
-libgstvaapi_x11_@GST_API_VERSION@_la_LDFLAGS =	\
+libgstvaapi_x11_la_LDFLAGS =			\
 	$(GST_ALL_LDFLAGS)			\
 	$(NULL)
 
-libgstvaapi_glx_@GST_API_VERSION@_la_SOURCES =	\
+libgstvaapi_glx_la_SOURCES =			\
 	$(libgstvaapi_glx_source_c)		\
 	$(libgstvaapi_glx_source_priv_h)	\
 	$(libgstvaapi_glx_source_h)		\
 	$(NULL)
 
-libgstvaapi_glx_@GST_API_VERSION@_la_CFLAGS =	\
+libgstvaapi_glx_la_CFLAGS =			\
 	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
@@ -424,7 +424,7 @@ libgstvaapi_glx_@GST_API_VERSION@_la_CFLAGS =	\
 	$(LIBVA_X11_CFLAGS)			\
 	$(NULL)
 
-libgstvaapi_glx_@GST_API_VERSION@_la_LIBADD =	\
+libgstvaapi_glx_la_LIBADD =			\
 	$(GLIB_LIBS)				\
 	$(GST_LIBS)				\
 	$(GST_BASE_LIBS)			\
@@ -435,17 +435,17 @@ libgstvaapi_glx_@GST_API_VERSION@_la_LIBADD =	\
 	$(DLOPEN_LIBS)				\
 	$(NULL)
 
-libgstvaapi_glx_@GST_API_VERSION@_la_LDFLAGS =	\
+libgstvaapi_glx_la_LDFLAGS =			\
 	$(GST_ALL_LDFLAGS)			\
 	$(NULL)
 
-libgstvaapi_egl_@GST_API_VERSION@_la_SOURCES =	\
+libgstvaapi_egl_la_SOURCES =			\
 	$(libgstvaapi_egl_source_c)		\
 	$(libgstvaapi_egl_source_priv_h)	\
 	$(libgstvaapi_egl_source_h)		\
 	$(NULL)
 
-libgstvaapi_egl_@GST_API_VERSION@_la_CFLAGS =	\
+libgstvaapi_egl_la_CFLAGS =			\
 	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
@@ -457,7 +457,7 @@ libgstvaapi_egl_@GST_API_VERSION@_la_CFLAGS =	\
 	$(EGL_CFLAGS)				\
 	$(NULL)
 
-libgstvaapi_egl_@GST_API_VERSION@_la_LIBADD =	\
+libgstvaapi_egl_la_LIBADD =			\
 	$(GLIB_LIBS)				\
 	$(GMODULE_LIBS)				\
 	$(GST_LIBS)				\
@@ -467,17 +467,17 @@ libgstvaapi_egl_@GST_API_VERSION@_la_LIBADD =	\
 	$(DLOPEN_LIBS)				\
 	$(NULL)
 
-libgstvaapi_egl_@GST_API_VERSION@_la_LDFLAGS =	\
+libgstvaapi_egl_la_LDFLAGS =			\
 	$(GST_ALL_LDFLAGS)			\
 	$(NULL)
 
-libgstvaapi_wayland_@GST_API_VERSION@_la_SOURCES = \
+libgstvaapi_wayland_la_SOURCES = 		\
 	$(libgstvaapi_wayland_source_c)		\
 	$(libgstvaapi_wayland_source_priv_h)	\
 	$(libgstvaapi_wayland_source_h)		\
 	$(NULL)
 
-libgstvaapi_wayland_@GST_API_VERSION@_la_CFLAGS = \
+libgstvaapi_wayland_la_CFLAGS = 		\
 	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
@@ -488,7 +488,7 @@ libgstvaapi_wayland_@GST_API_VERSION@_la_CFLAGS = \
 	$(LIBVA_WAYLAND_CFLAGS)			\
 	$(NULL)
 
-libgstvaapi_wayland_@GST_API_VERSION@_la_LIBADD = \
+libgstvaapi_wayland_la_LIBADD = 		\
 	$(GLIB_LIBS)				\
 	$(GST_LIBS)				\
 	$(GST_VIDEO_LIBS)			\
@@ -496,7 +496,7 @@ libgstvaapi_wayland_@GST_API_VERSION@_la_LIBADD = \
 	$(LIBVA_WAYLAND_LIBS)			\
 	$(NULL)
 
-libgstvaapi_wayland_@GST_API_VERSION@_la_LDFLAGS = \
+libgstvaapi_wayland_la_LDFLAGS = 		\
 	$(GST_ALL_LDFLAGS)			\
 	$(NULL)
 

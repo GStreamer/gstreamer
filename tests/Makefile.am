@@ -29,20 +29,20 @@ TEST_CFLAGS = \
 	$(GST_VIDEO_CFLAGS)		\
 	$(NULL)
 
-GST_VAAPI_LIBS = $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_API_VERSION).la
+GST_VAAPI_LIBS = $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi.la
 TEST_LIBS = \
 	$(LIBVA_LIBS)			\
 	$(GST_LIBS)			\
 	$(NULL)
 
 if USE_DRM
-GST_VAAPI_LIBS  += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-drm-$(GST_API_VERSION).la
+GST_VAAPI_LIBS  += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-drm.la
 TEST_CFLAGS	+= $(LIBVA_DRM_CFLAGS)
 TEST_LIBS	+= $(LIBVA_DRM_LIBS)
 endif
 
 if USE_X11
-GST_VAAPI_LIBS  += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_API_VERSION).la
+GST_VAAPI_LIBS  += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11.la
 TEST_CFLAGS	+= $(X11_CFLAGS)
 TEST_LIBS	+= \
 	$(LIBVA_X11_LIBS)		\
@@ -51,7 +51,7 @@ TEST_LIBS	+= \
 endif
 
 if USE_GLX
-GST_VAAPI_LIBS  += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_API_VERSION).la
+GST_VAAPI_LIBS  += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx.la
 TEST_CFLAGS	+= $(X11_CFLAGS) $(GL_CFLAGS)
 TEST_LIBS	+= \
 	$(LIBVA_GLX_LIBS)		\
@@ -61,7 +61,7 @@ TEST_LIBS	+= \
 endif
 
 if USE_EGL
-GST_VAAPI_LIBS  += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-egl-$(GST_API_VERSION).la
+GST_VAAPI_LIBS  += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-egl.la
 TEST_CFLAGS	+= $(EGL_CFLAGS)
 TEST_LIBS	+= \
 	$(LIBVA_EGL_LIBS)		\
@@ -70,7 +70,7 @@ TEST_LIBS	+= \
 endif
 
 if USE_WAYLAND
-GST_VAAPI_LIBS  += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland-$(GST_API_VERSION).la
+GST_VAAPI_LIBS  += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland.la
 TEST_CFLAGS	+= $(WAYLAND_CFLAGS)
 TEST_LIBS	+= \
 	$(LIBVA_WAYLAND_LIBS)		\

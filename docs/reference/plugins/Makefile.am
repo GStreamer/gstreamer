@@ -88,12 +88,12 @@ INCLUDES = \
 	$(NULL)
 
 gtkdoc_vaapi_libs = \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_API_VERSION).la \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi.la \
 	$(NULL)
 
 if USE_X11
 gtkdoc_vaapi_libs += \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_API_VERSION).la \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11.la \
 	$(NULL)
 endif
 

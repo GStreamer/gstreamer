@@ -7,28 +7,24 @@ libgstvaapi_CFLAGS = \
 	-I$(top_builddir)/gst-libs	\
 	$(NULL)
 
-libgstvaapi_LIBS = \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_API_VERSION).la
+libgstvaapi_LIBS = $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi.la
 
 if USE_DRM
-libgstvaapi_LIBS += \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-drm-$(GST_API_VERSION).la
+libgstvaapi_LIBS +=$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-drm.la
 endif
 
 if USE_X11
 libgstvaapi_LIBS += \
 	$(X11_LIBS) \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_API_VERSION).la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11.la
 endif
 
 if USE_GLX
-libgstvaapi_LIBS += \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_API_VERSION).la
+libgstvaapi_LIBS += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx.la
 endif
 
 if USE_EGL
-libgstvaapi_LIBS += \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-egl-$(GST_API_VERSION).la
+libgstvaapi_LIBS += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-egl.la
 endif
 
 if USE_WAYLAND
@@ -36,8 +32,7 @@ libgstvaapi_CFLAGS += \
 	$(WAYLAND_CFLAGS)	\
 	$(NULL)
 
-libgstvaapi_LIBS += \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland-$(GST_API_VERSION).la
+libgstvaapi_LIBS += $(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland.la
 endif
 
 if USE_GST_GL_HELPERS
