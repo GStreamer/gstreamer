@@ -78,6 +78,8 @@ static GstFlowReturn
 gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux,
     const MXFUL * key, GstBuffer * buffer, guint64 offset);
 
+static void collect_index_table_segments (GstMXFDemux * demux);
+
 GType gst_mxf_demux_pad_get_type (void);
 G_DEFINE_TYPE (GstMXFDemuxPad, gst_mxf_demux_pad, GST_TYPE_PAD);
 
@@ -2191,6 +2193,7 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
   guint64 old_offset = demux->offset;
   MXFUL key;
   GstMapInfo map;
+  GstFlowReturn flow_ret;
 
   if (!gst_pad_peer_query_duration (demux->sinkpad, fmt, &filesize) ||
       fmt != GST_FORMAT_BYTES || filesize == -1) {
@@ -2244,9 +2247,14 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
     return;
   }
 
-  gst_mxf_demux_handle_random_index_pack (demux, &key, buffer);
+  flow_ret = gst_mxf_demux_handle_random_index_pack (demux, &key, buffer);
   gst_buffer_unref (buffer);
   demux->offset = old_offset;
+
+  if (flow_ret == GST_FLOW_OK && !demux->index_table_segments_collected) {
+    collect_index_table_segments (demux);
+    demux->index_table_segments_collected = TRUE;
+  }
 }
 
 static void
@@ -2486,6 +2494,11 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
         buffer, peek);
   } else if (mxf_is_random_index_pack (key)) {
     ret = gst_mxf_demux_handle_random_index_pack (demux, key, buffer);
+
+    if (ret == GST_FLOW_OK && !demux->index_table_segments_collected) {
+      collect_index_table_segments (demux);
+      demux->index_table_segments_collected = TRUE;
+    }
   } else if (mxf_is_index_table_segment (key)) {
     ret =
         gst_mxf_demux_handle_index_table_segment (demux, key, buffer,
