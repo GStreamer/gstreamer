@@ -9,6 +9,20 @@ LOCAL_SHARED_LIBRARIES := gstreamer_android
 LOCAL_LDLIBS := -llog -landroid
 include $(BUILD_SHARED_LIBRARY)
 
+ifeq ($(TARGET_ARCH_ABI),armeabi)
+GSTREAMER_ROOT        := $(GSTREAMER_ROOT_ARM)
+else ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+GSTREAMER_ROOT        := $(GSTREAMER_ROOT_ARMV7)
+else ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
+GSTREAMER_ROOT        := $(GSTREAMER_ROOT_ARM64)
+else ifeq ($(TARGET_ARCH_ABI),x86)
+GSTREAMER_ROOT        := $(GSTREAMER_ROOT_X86)
+else ifeq ($(TARGET_ARCH_ABI),x86_64)
+GSTREAMER_ROOT        := $(GSTREAMER_ROOT_X86_64)
+else
+$(error Target arch ABI not supported)
+endif
+
 ifndef GSTREAMER_ROOT
 ifndef GSTREAMER_ROOT_ANDROID
 $(error GSTREAMER_ROOT_ANDROID is not defined!)
