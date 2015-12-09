@@ -1074,18 +1074,6 @@ AC_CONFIG_FILES([
 debian.upstream/gstreamer-vaapi-doc.install.in
     debian.upstream/gstreamer$GST_API_VERSION-vaapi.install:\
 debian.upstream/gstreamer-vaapi.install.in
-    debian.upstream/libgstvaapi$GST_PKG_VERSION-dev.install:\
-debian.upstream/libgstvaapi-dev.install.in
-    debian.upstream/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:\
-debian.upstream/libgstvaapi.install.in
-    debian.upstream/libgstvaapi-drm-$GST_VAAPI_MAJOR_VERSION.install:\
-debian.upstream/libgstvaapi-drm.install.in
-    debian.upstream/libgstvaapi-glx-$GST_VAAPI_MAJOR_VERSION.install:\
-debian.upstream/libgstvaapi-glx.install.in
-    debian.upstream/libgstvaapi-wayland-$GST_VAAPI_MAJOR_VERSION.install:\
-debian.upstream/libgstvaapi-wayland.install.in
-    debian.upstream/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:\
-debian.upstream/libgstvaapi-x11.install.in
     docs/Makefile
     docs/reference/Makefile
     docs/reference/libs/Makefile

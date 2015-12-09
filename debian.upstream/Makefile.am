@@ -12,12 +12,6 @@ DEBIANFILES = \
 	copyright						\
 	gstreamer-vaapi-doc.install.in				\
 	gstreamer-vaapi.install.in				\
-	libgstvaapi-dev.install.in				\
-	libgstvaapi-drm.install.in				\
-	libgstvaapi-glx.install.in				\
-	libgstvaapi-wayland.install.in				\
-	libgstvaapi-x11.install.in				\
-	libgstvaapi.install.in					\
 	rules							\
 	$(NULL)
 
@@ -26,12 +20,6 @@ DEBIANGENFILES = \
 	control							\
 	gstreamer$(GST_API_VERSION)-vaapi-doc.install		\
 	gstreamer$(GST_API_VERSION)-vaapi.install		\
-	libgstvaapi$(GST_PKG_VERSION)-dev.install		\
-	libgstvaapi$(GST_VAAPI_MAJOR_VERSION).install		\
-	libgstvaapi-drm-$(GST_VAAPI_MAJOR_VERSION).install	\
-	libgstvaapi-glx-$(GST_VAAPI_MAJOR_VERSION).install	\
-	libgstvaapi-wayland-$(GST_VAAPI_MAJOR_VERSION).install	\
-	libgstvaapi-x11-$(GST_VAAPI_MAJOR_VERSION).install	\
 	$(NULL)
 
 EXTRA_DIST = $(DEBIANFILES)

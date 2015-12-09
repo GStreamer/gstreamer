@@ -1,23 +1,23 @@
-lib_LTLIBRARIES = libgstvaapi-@GST_API_VERSION@.la
+noinst_LTLIBRARIES = libgstvaapi-@GST_API_VERSION@.la
 
 if USE_DRM
-lib_LTLIBRARIES += libgstvaapi-drm-@GST_API_VERSION@.la
+noinst_LTLIBRARIES += libgstvaapi-drm-@GST_API_VERSION@.la
 endif
 
 if USE_X11
-lib_LTLIBRARIES += libgstvaapi-x11-@GST_API_VERSION@.la
+noinst_LTLIBRARIES += libgstvaapi-x11-@GST_API_VERSION@.la
 endif
 
 if USE_GLX
-lib_LTLIBRARIES += libgstvaapi-glx-@GST_API_VERSION@.la
+noinst_LTLIBRARIES += libgstvaapi-glx-@GST_API_VERSION@.la
 endif
 
 if USE_EGL
-lib_LTLIBRARIES += libgstvaapi-egl-@GST_API_VERSION@.la
+noinst_LTLIBRARIES += libgstvaapi-egl-@GST_API_VERSION@.la
 endif
 
 if USE_WAYLAND
-lib_LTLIBRARIES += libgstvaapi-wayland-@GST_API_VERSION@.la
+noinst_LTLIBRARIES += libgstvaapi-wayland-@GST_API_VERSION@.la
 endif
 
 libgstvaapi_cflags =				\
@@ -236,7 +236,6 @@ endif
 libgstvaapi_drm_source_c =			\
 	gstvaapidisplay_drm.c			\
 	gstvaapiwindow_drm.c			\
-	gstvaapiutils.c				\
 	$(NULL)
 
 libgstvaapi_drm_source_h =			\
@@ -247,13 +246,11 @@ libgstvaapi_drm_source_h =			\
 libgstvaapi_drm_source_priv_h =			\
 	gstvaapicompat.h			\
 	gstvaapidisplay_drm_priv.h		\
-	gstvaapiutils.h				\
 	$(NULL)
 
 libgstvaapi_x11_source_c =			\
 	gstvaapidisplay_x11.c			\
 	gstvaapipixmap_x11.c			\
-	gstvaapiutils.c				\
 	gstvaapiutils_x11.c			\
 	gstvaapiwindow_x11.c			\
 	$(NULL)
@@ -267,7 +264,6 @@ libgstvaapi_x11_source_h =			\
 libgstvaapi_x11_source_priv_h =			\
 	gstvaapicompat.h			\
 	gstvaapidisplay_x11_priv.h		\
-	gstvaapiutils.h				\
 	gstvaapiutils_x11.h			\
 	gstvaapiwindow_x11_priv.h		\
 	$(NULL)
@@ -275,9 +271,7 @@ libgstvaapi_x11_source_priv_h =			\
 libgstvaapi_glx_source_c =			\
 	gstvaapidisplay_glx.c			\
 	gstvaapitexture_glx.c			\
-	gstvaapiutils.c				\
 	gstvaapiutils_glx.c			\
-	gstvaapiutils_x11.c			\
 	gstvaapiwindow_glx.c			\
 	$(NULL)
 
@@ -293,7 +287,6 @@ libgstvaapi_glx_source_priv_h =			\
 	gstvaapidisplay_glx_priv.h		\
 	gstvaapiutils.h				\
 	gstvaapiutils_glx.h			\
-	gstvaapiutils_x11.h			\
 	$(NULL)
 
 libgstvaapi_egl_source_c =			\
@@ -321,7 +314,6 @@ libgstvaapi_egl_source_priv_h =			\
 
 libgstvaapi_wayland_source_c =			\
 	gstvaapidisplay_wayland.c		\
-	gstvaapiutils.c				\
 	gstvaapiwindow_wayland.c		\
 	$(NULL)
 
@@ -333,7 +325,6 @@ libgstvaapi_wayland_source_h =			\
 libgstvaapi_wayland_source_priv_h =		\
 	gstvaapicompat.h			\
 	gstvaapidisplay_wayland_priv.h		\
-	gstvaapiutils.h				\
 	$(NULL)
 
 libgstvaapi_@GST_API_VERSION@_la_SOURCES =	\
@@ -352,8 +343,6 @@ libgstvaapi_@GST_API_VERSION@_la_LIBADD =	\
 
 libgstvaapi_@GST_API_VERSION@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
-	$(GST_VAAPI_LT_LDFLAGS)			\
-	-export-symbols-regex "^gst_.*vaapi.*"	\
 	$(NULL)
 
 libgstvaapi_drm_@GST_API_VERSION@_la_SOURCES =	\
@@ -380,12 +369,10 @@ libgstvaapi_drm_@GST_API_VERSION@_la_LIBADD =	\
 	$(UDEV_LIBS)				\
 	$(DRM_LIBS)				\
 	$(LIBVA_DRM_LIBS)			\
-	libgstvaapi-$(GST_API_VERSION).la	\
 	$(NULL)
 
 libgstvaapi_drm_@GST_API_VERSION@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
-	$(GST_VAAPI_LT_LDFLAGS)			\
 	$(NULL)
 
 libgstvaapi_x11_@GST_API_VERSION@_la_SOURCES =	\
@@ -414,12 +401,10 @@ libgstvaapi_x11_@GST_API_VERSION@_la_LIBADD =	\
 	$(XRANDR_LIBS)				\
 	$(XRENDER_LIBS)				\
 	$(LIBVA_X11_LIBS)			\
-	libgstvaapi-$(GST_API_VERSION).la	\
 	$(NULL)
 
 libgstvaapi_x11_@GST_API_VERSION@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
-	$(GST_VAAPI_LT_LDFLAGS)			\
 	$(NULL)
 
 libgstvaapi_glx_@GST_API_VERSION@_la_SOURCES =	\
@@ -447,14 +432,11 @@ libgstvaapi_glx_@GST_API_VERSION@_la_LIBADD =	\
 	$(X11_LIBS)				\
 	$(GL_LIBS)				\
 	$(LIBVA_X11_LIBS)			\
-	libgstvaapi-x11-$(GST_API_VERSION).la	\
-	libgstvaapi-$(GST_API_VERSION).la	\
 	$(DLOPEN_LIBS)				\
 	$(NULL)
 
 libgstvaapi_glx_@GST_API_VERSION@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
-	$(GST_VAAPI_LT_LDFLAGS)			\
 	$(NULL)
 
 libgstvaapi_egl_@GST_API_VERSION@_la_SOURCES =	\
@@ -481,14 +463,12 @@ libgstvaapi_egl_@GST_API_VERSION@_la_LIBADD =	\
 	$(GST_LIBS)				\
 	$(GST_BASE_LIBS)			\
 	$(GST_VIDEO_LIBS)			\
-	libgstvaapi-$(GST_API_VERSION).la	\
 	$(EGL_LIBS)				\
 	$(DLOPEN_LIBS)				\
 	$(NULL)
 
 libgstvaapi_egl_@GST_API_VERSION@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
-	$(GST_VAAPI_LT_LDFLAGS)			\
 	$(NULL)
 
 libgstvaapi_wayland_@GST_API_VERSION@_la_SOURCES = \
@@ -514,12 +494,10 @@ libgstvaapi_wayland_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_VIDEO_LIBS)			\
 	$(WAYLAND_LIBS)				\
 	$(LIBVA_WAYLAND_LIBS)			\
-	libgstvaapi-$(GST_API_VERSION).la	\
 	$(NULL)
 
 libgstvaapi_wayland_@GST_API_VERSION@_la_LDFLAGS = \
 	$(GST_ALL_LDFLAGS)			\
-	$(GST_VAAPI_LT_LDFLAGS)			\
 	$(NULL)
 
 VERSION_FILE		= .VERSION
