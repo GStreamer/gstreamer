@@ -1728,6 +1728,36 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   if (outbuf)
     keyframe = !GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
+  /* Prefer keyframe information from index tables over everything else */
+  if (demux->index_tables && outbuf) {
+    GList *l;
+    GstMXFDemuxIndexTable *index_table = NULL;
+
+    for (l = demux->index_tables; l; l = l->next) {
+      GstMXFDemuxIndexTable *tmp = l->data;
+
+      if (tmp->body_sid == etrack->body_sid
+          && tmp->index_sid == etrack->index_sid) {
+        index_table = tmp;
+        break;
+      }
+    }
+
+    if (index_table) {
+      GstMXFDemuxIndex *index =
+          &g_array_index (index_table->offsets, GstMXFDemuxIndex,
+          etrack->position);
+      if (index->offset != 0) {
+        keyframe = index->keyframe;
+
+        if (keyframe)
+          GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+        else
+          GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+      }
+    }
+  }
+
   if (!etrack->offsets)
     etrack->offsets = g_array_new (FALSE, TRUE, sizeof (GstMXFDemuxIndex));
 
@@ -2495,7 +2525,8 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
   } else if (mxf_is_random_index_pack (key)) {
     ret = gst_mxf_demux_handle_random_index_pack (demux, key, buffer);
 
-    if (ret == GST_FLOW_OK && !demux->index_table_segments_collected) {
+    if (ret == GST_FLOW_OK && demux->random_access
+        && !demux->index_table_segments_collected) {
       collect_index_table_segments (demux);
       demux->index_table_segments_collected = TRUE;
     }
