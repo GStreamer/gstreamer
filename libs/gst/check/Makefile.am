@@ -96,7 +96,9 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_consistency_checker_new \
 	gst_consistency_checker_reset \
 	gst_consistency_checker_free \
+	gst_harness_add_element_full \
 	gst_harness_add_element_src_pad \
+	gst_harness_add_parse \
 	gst_harness_add_probe \
 	gst_harness_add_sink \
 	gst_harness_add_sink_harness \
@@ -118,6 +120,7 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_harness_get_last_pushed_timestamp \
 	gst_harness_get_testclock \
 	gst_harness_new \
+	gst_harness_new_empty \
 	gst_harness_new_full \
 	gst_harness_new_parse \
 	gst_harness_new_with_element \

@@ -1215,12 +1215,15 @@ gst_consistency_checker_add_pad
 <INCLUDE>gst/check/check.h</INCLUDE>
 GstHarness
 
+gst_harness_new_empty
 gst_harness_new_full
 gst_harness_new_with_element
 gst_harness_new_with_padnames
 gst_harness_new_with_templates
 gst_harness_new
 gst_harness_new_parse
+gst_harness_add_element_full
+gst_harness_add_parse
 gst_harness_teardown
 
 gst_harness_add_element_src_pad
