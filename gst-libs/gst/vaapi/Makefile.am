@@ -45,7 +45,7 @@ libgstvaapi_libs =				\
 	$(GST_CODEC_PARSERS_LIBS)		\
 	$(LIBVA_LIBS)				\
 	$(top_builddir)/gst-libs/gst/base/libgstvaapi-baseutils.la \
-	$(top_builddir)/gst-libs/gst/codecparsers/libgstvaapi-codecparsers.la
+	$(NULL)
 
 libgstvaapi_source_c =				\
 	gstvaapibufferproxy.c			\

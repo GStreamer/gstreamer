@@ -1,3 +1,0 @@
-[submodule "ext/codecparsers"]
-	path = ext/codecparsers
-	url = https://github.com/01org/gstreamer-codecparsers.git

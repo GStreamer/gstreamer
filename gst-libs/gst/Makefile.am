@@ -1,3 +1,3 @@
-SUBDIRS = base codecparsers vaapi
+SUBDIRS = base vaapi
 
 -include $(top_srcdir)/git.mk
