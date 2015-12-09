@@ -70,8 +70,6 @@ struct _GstInterleave
 
   GstEvent *pending_segment;
 
-  GstPadEventFunction collect_event;
-
   GstInterleaveFunc func;
 
   GstPad *src;
