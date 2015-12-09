@@ -526,7 +526,7 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 dnl Check for the GStreamer plugins directory
 AC_ARG_VAR([GST_PLUGIN_PATH_1_0], [installation path for gstreamer-vaapi plugin elements for GStreamer 1.0])
 AC_MSG_CHECKING([for GStreamer plugins directory])
-if test -d "$GST_PLUGIN_PATH_1_0"; then
+if test -n "$GST_PLUGIN_PATH_1_0"; then
     GST_PLUGINS_DIR="$GST_PLUGIN_PATH_1_0"
 else
     GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_PKG_VERSION --variable pluginsdir`
