@@ -374,36 +374,48 @@ gst_audio_converter_free (GstAudioConverter * convert)
  * gst_audio_converter_samples:
  * @convert: a #GstAudioConverter
  * @flags: extra #GstAudioConverterFlags
- * @src: source samples
- * @dst: output samples
+ * @in: input samples
  * @in_samples: number of input samples
+ * @out: output samples
  * @out_samples: number of output samples
+ * @in_consumed: number of input samples consumed
+ * @out_produced: number of output samples produced
  *
- * Perform the conversion @src to @dst using @convert.
+ * Perform the conversion with @in_samples in @in to @out_samples in @out
+ * using @convert.
+ *
+ * The actual number of samples used from @in is returned in @in_consumed and
+ * can be less than @in_samples. The actual number of samples produced is
+ * returned in @out_produced and can be less than @out_samples.
  *
  * Returns: %TRUE is the conversion could be performed.
  */
 gboolean
 gst_audio_converter_samples (GstAudioConverter * convert,
-    GstAudioConverterFlags flags, gpointer src, gpointer dst,
-    gsize in_samples, gsize * out_samples)
+    GstAudioConverterFlags flags, gpointer in, gsize in_samples,
+    gpointer out, gsize out_samples, gsize * in_consumed, gsize * out_produced)
 {
   guint size;
   gpointer outbuf, tmpbuf, tmpbuf2;
 
   g_return_val_if_fail (convert != NULL, FALSE);
-  g_return_val_if_fail (src != NULL, FALSE);
-  g_return_val_if_fail (dst != NULL, FALSE);
-  g_return_val_if_fail (out_samples != NULL, FALSE);
+  g_return_val_if_fail (in != NULL, FALSE);
+  g_return_val_if_fail (out != NULL, FALSE);
+  g_return_val_if_fail (in_consumed != NULL, FALSE);
+  g_return_val_if_fail (out_produced != NULL, FALSE);
+
+  in_samples = MIN (in_samples, out_samples);
 
   if (in_samples == 0) {
-    *out_samples = 0;
+    *in_consumed = 0;
+    *out_produced = 0;
     return TRUE;
   }
 
   if (convert->passthrough) {
-    memcpy (dst, src, in_samples * convert->in.bpf);
-    *out_samples = in_samples;
+    memcpy (out, in, in_samples * convert->in.bpf);
+    *out_produced = in_samples;
+    *in_consumed = in_samples;
     return TRUE;
   }
 
@@ -423,68 +435,69 @@ gst_audio_converter_samples (GstAudioConverter * convert,
   if (!convert->in_default) {
     if (!convert->convert_in && convert->mix_passthrough
         && !convert->convert_out && !convert->quant && convert->out_default)
-      outbuf = dst;
+      outbuf = out;
     else
       outbuf = tmpbuf;
 
     convert->in.finfo->unpack_func (convert->in.finfo,
-        GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, outbuf, src,
+        GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, outbuf, in,
         in_samples * convert->in.channels);
-    src = outbuf;
+    in = outbuf;
   }
 
   /* 2. optionally convert for mixing */
   if (convert->convert_in) {
     if (convert->mix_passthrough && !convert->convert_out && !convert->quant
         && convert->out_default)
-      outbuf = dst;
-    else if (src == tmpbuf)
+      outbuf = out;
+    else if (in == tmpbuf)
       outbuf = tmpbuf2;
     else
       outbuf = tmpbuf;
 
-    convert->convert_in (outbuf, src, in_samples * convert->in.channels);
-    src = outbuf;
+    convert->convert_in (outbuf, in, in_samples * convert->in.channels);
+    in = outbuf;
   }
 
   /* step 3, channel mix if not passthrough */
   if (!convert->mix_passthrough) {
     if (!convert->convert_out && !convert->quant && convert->out_default)
-      outbuf = dst;
+      outbuf = out;
     else
       outbuf = tmpbuf;
 
-    gst_audio_channel_mix_samples (convert->mix, src, outbuf, in_samples);
-    src = outbuf;
+    gst_audio_channel_mix_samples (convert->mix, in, outbuf, in_samples);
+    in = outbuf;
   }
   /* step 4, optional convert F64 -> S32 for quantize */
   if (convert->convert_out) {
     if (!convert->quant && convert->out_default)
-      outbuf = dst;
+      outbuf = out;
     else
       outbuf = tmpbuf;
 
-    convert->convert_out (outbuf, src, in_samples * convert->out.channels);
-    src = outbuf;
+    convert->convert_out (outbuf, in, in_samples * convert->out.channels);
+    in = outbuf;
   }
 
   /* step 5, optional quantize */
   if (convert->quant) {
     if (convert->out_default)
-      outbuf = dst;
+      outbuf = out;
     else
       outbuf = tmpbuf;
 
-    gst_audio_quantize_samples (convert->quant, outbuf, src, in_samples);
-    src = outbuf;
+    gst_audio_quantize_samples (convert->quant, outbuf, in, in_samples);
+    in = outbuf;
   }
 
   /* step 6, pack */
   if (!convert->out_default) {
-    convert->out.finfo->pack_func (convert->out.finfo, 0, src, dst,
+    convert->out.finfo->pack_func (convert->out.finfo, 0, in, out,
         in_samples * convert->out.channels);
   }
-  *out_samples = in_samples;
+  *out_produced = in_samples;
+  *in_consumed = in_samples;
 
   return TRUE;
 }

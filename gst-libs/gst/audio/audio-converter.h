@@ -81,7 +81,8 @@ const GstStructure * gst_audio_converter_get_config     (GstAudioConverter * con
 
 gboolean             gst_audio_converter_samples        (GstAudioConverter * convert,
                                                          GstAudioConverterFlags flags,
-                                                         gpointer src, gpointer dst,
-                                                         gsize in_samples, gsize *out_samples);
+                                                         gpointer in, gsize in_samples,
+                                                         gpointer out, gsize out_samples,
+                                                         gsize *in_consumed, gsize *out_produced);
 
 #endif /* __GST_AUDIO_CONVERTER_H__ */

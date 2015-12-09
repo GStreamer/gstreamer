@@ -701,7 +701,7 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   gint insize, outsize;
   gboolean inbuf_writable;
   GstAudioConverterFlags flags;
-  gsize samples, out;
+  gsize samples, consumed, produced;
 
   /* get amount of samples to convert. */
   samples = gst_buffer_get_size (inbuf) / this->in_info.bpf;
@@ -736,7 +736,7 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
   if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
     if (!gst_audio_converter_samples (this->convert, flags, srcmap.data,
-            dstmap.data, samples, &out))
+            samples, dstmap.data, samples, &consumed, &produced))
       goto convert_error;
   } else {
     /* Create silence buffer */
