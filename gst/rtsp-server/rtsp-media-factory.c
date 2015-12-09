@@ -60,6 +60,7 @@ struct _GstRTSPMediaFactoryPrivate
   guint buffer_size;
   GstRTSPAddressPool *pool;
   GstRTSPTransportMode transport_mode;
+  gboolean stop_on_disconnect;
 
   GstClockTime rtx_time;
   guint latency;
@@ -80,6 +81,7 @@ struct _GstRTSPMediaFactoryPrivate
 #define DEFAULT_BUFFER_SIZE     0x80000
 #define DEFAULT_LATENCY         200
 #define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
+#define DEFAULT_STOP_ON_DISCONNECT TRUE
 
 enum
 {
@@ -93,6 +95,7 @@ enum
   PROP_BUFFER_SIZE,
   PROP_LATENCY,
   PROP_TRANSPORT_MODE,
+  PROP_STOP_ON_DISCONNECT,
   PROP_LAST
 };
 
@@ -202,6 +205,13 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           GST_TYPE_RTSP_TRANSPORT_MODE, DEFAULT_TRANSPORT_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_STOP_ON_DISCONNECT,
+      g_param_spec_boolean ("stop-on-disconnect", "Stop On Disconnect",
+          "If media from this factory should be stopped "
+          "when a client disconnects without TEARDOWN",
+          DEFAULT_STOP_ON_DISCONNECT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED] =
       g_signal_new ("media-constructed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
@@ -240,6 +250,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   priv->buffer_size = DEFAULT_BUFFER_SIZE;
   priv->latency = DEFAULT_LATENCY;
   priv->transport_mode = DEFAULT_TRANSPORT_MODE;
+  priv->stop_on_disconnect = DEFAULT_STOP_ON_DISCONNECT;
 
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->medias_lock);
@@ -304,6 +315,10 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
       g_value_set_flags (value,
           gst_rtsp_media_factory_get_transport_mode (factory));
       break;
+    case PROP_STOP_ON_DISCONNECT:
+      g_value_set_boolean (value,
+          gst_rtsp_media_factory_is_stop_on_disonnect (factory));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -346,6 +361,10 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_TRANSPORT_MODE:
       gst_rtsp_media_factory_set_transport_mode (factory,
           g_value_get_flags (value));
+      break;
+    case PROP_STOP_ON_DISCONNECT:
+      gst_rtsp_media_factory_set_stop_on_disconnect (factory,
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -863,6 +882,56 @@ gst_rtsp_media_factory_get_protocols (GstRTSPMediaFactory * factory)
 }
 
 /**
+ * gst_rtsp_media_factory_set_stop_on_disconnect:
+ * @factory: a #GstRTSPMediaFactory
+ * @stop_on_disconnect: the new value
+ *
+ * Configure if media created from this factory should be stopped
+ * when a client disconnects without sending TEARDOWN.
+ */
+void
+gst_rtsp_media_factory_set_stop_on_disconnect (GstRTSPMediaFactory * factory,
+    gboolean stop_on_disconnect)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv->stop_on_disconnect = stop_on_disconnect;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_is_stop_on_disconnect:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get if media created from this factory should be stopped when a client
+ * disconnects without sending TEARDOWN.
+ *
+ * Returns: %TRUE if the media will be stopped when a client disconnects
+ *     without sending TEARDOWN.
+ */
+gboolean
+gst_rtsp_media_factory_is_stop_on_disonnect (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), TRUE);
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  result = priv->stop_on_disconnect;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return result;
+}
+
+/**
  * gst_rtsp_media_factory_set_retransmission_time:
  * @factory: a #GstRTSPMediaFactory
  * @time: a #GstClockTime
@@ -1270,7 +1339,7 @@ static void
 default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
 {
   GstRTSPMediaFactoryPrivate *priv = factory->priv;
-  gboolean shared, eos_shutdown;
+  gboolean shared, eos_shutdown, stop_on_disconnect;
   guint size;
   GstRTSPSuspendMode suspend_mode;
   GstRTSPProfile profiles;
@@ -1292,6 +1361,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   rtx_time = priv->rtx_time;
   latency = priv->latency;
   transport_mode = priv->transport_mode;
+  stop_on_disconnect = priv->stop_on_disconnect;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   gst_rtsp_media_set_suspend_mode (media, suspend_mode);
@@ -1303,6 +1373,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_retransmission_time (media, rtx_time);
   gst_rtsp_media_set_latency (media, latency);
   gst_rtsp_media_set_transport_mode (media, transport_mode);
+  gst_rtsp_media_set_stop_on_disconnect (media, stop_on_disconnect);
 
   if ((pool = gst_rtsp_media_factory_get_address_pool (factory))) {
     gst_rtsp_media_set_address_pool (media, pool);

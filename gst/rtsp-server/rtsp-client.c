@@ -332,9 +332,38 @@ static GstRTSPFilterResult
 filter_session_media (GstRTSPSession * sess, GstRTSPSessionMedia * sessmedia,
     gpointer user_data)
 {
-  gst_rtsp_session_media_set_state (sessmedia, GST_STATE_NULL);
+  gboolean *closed = user_data;
+  GstRTSPMedia *media;
+  guint i, n_streams;
+  gboolean is_all_udp = TRUE;
 
-  return GST_RTSP_FILTER_REMOVE;
+  media = gst_rtsp_session_media_get_media (sessmedia);
+  n_streams = gst_rtsp_media_n_streams (media);
+
+  for (i = 0; i < n_streams; i++) {
+    GstRTSPStreamTransport *transport =
+        gst_rtsp_session_media_get_transport (sessmedia, i);
+    const GstRTSPTransport *rtsp_transport;
+
+    if (!transport)
+      continue;
+
+    rtsp_transport = gst_rtsp_stream_transport_get_transport (transport);
+    if (rtsp_transport
+        && rtsp_transport->lower_transport != GST_RTSP_LOWER_TRANS_UDP
+        && rtsp_transport->lower_transport != GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+      is_all_udp = FALSE;
+      break;
+    }
+  }
+
+  if (!is_all_udp || gst_rtsp_media_is_stop_on_disconnect (media)) {
+    gst_rtsp_session_media_set_state (sessmedia, GST_STATE_NULL);
+    return GST_RTSP_FILTER_REMOVE;
+  } else {
+    *closed = FALSE;
+    return GST_RTSP_FILTER_KEEP;
+  }
 }
 
 static void
@@ -395,11 +424,16 @@ static GstRTSPFilterResult
 cleanup_session (GstRTSPClient * client, GstRTSPSession * sess,
     gpointer user_data)
 {
+  gboolean *closed = user_data;
+
   /* unlink all media managed in this session. This needs to happen
    * without the client lock, so we really want to do it here. */
-  gst_rtsp_session_filter (sess, filter_session_media, client);
+  gst_rtsp_session_filter (sess, filter_session_media, user_data);
 
-  return GST_RTSP_FILTER_REMOVE;
+  if (*closed)
+    return GST_RTSP_FILTER_REMOVE;
+  else
+    return GST_RTSP_FILTER_KEEP;
 }
 
 static void
@@ -3784,12 +3818,14 @@ static void
 client_watch_notify (GstRTSPClient * client)
 {
   GstRTSPClientPrivate *priv = client->priv;
+  gboolean closed = TRUE;
 
   GST_INFO ("client %p: watch destroyed", client);
   priv->watch = NULL;
-  /* remove all sessions and so drop the extra client ref */
-  gst_rtsp_client_session_filter (client, cleanup_session, NULL);
-  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
+  /* remove all sessions if the media says so and so drop the extra client ref */
+  gst_rtsp_client_session_filter (client, cleanup_session, &closed);
+  if (closed)
+    g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
   g_object_unref (client);
 }
 

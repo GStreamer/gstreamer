@@ -186,6 +186,9 @@ GstRTSPPermissions *  gst_rtsp_media_get_permissions  (GstRTSPMedia *media);
 void                  gst_rtsp_media_set_shared       (GstRTSPMedia *media, gboolean shared);
 gboolean              gst_rtsp_media_is_shared        (GstRTSPMedia *media);
 
+void                  gst_rtsp_media_set_stop_on_disconnect (GstRTSPMedia *media, gboolean stop_on_disconnect);
+gboolean              gst_rtsp_media_is_stop_on_disconnect  (GstRTSPMedia *media);
+
 void                  gst_rtsp_media_set_transport_mode  (GstRTSPMedia *media, GstRTSPTransportMode mode);
 GstRTSPTransportMode  gst_rtsp_media_get_transport_mode  (GstRTSPMedia *media);
 

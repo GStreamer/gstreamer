@@ -118,6 +118,10 @@ void                  gst_rtsp_media_factory_set_shared       (GstRTSPMediaFacto
                                                                gboolean shared);
 gboolean              gst_rtsp_media_factory_is_shared        (GstRTSPMediaFactory *factory);
 
+void                  gst_rtsp_media_factory_set_stop_on_disconnect       (GstRTSPMediaFactory *factory,
+                                                                           gboolean stop_on_disconnect);
+gboolean              gst_rtsp_media_factory_is_stop_on_disonnect        (GstRTSPMediaFactory *factory);
+
 void                  gst_rtsp_media_factory_set_suspend_mode (GstRTSPMediaFactory *factory,
                                                                GstRTSPSuspendMode mode);
 GstRTSPSuspendMode    gst_rtsp_media_factory_get_suspend_mode (GstRTSPMediaFactory *factory);

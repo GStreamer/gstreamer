@@ -102,6 +102,7 @@ struct _GstRTSPMediaPrivate
   GstRTSPAddressPool *pool;
   gboolean blocked;
   GstRTSPTransportMode transport_mode;
+  gboolean stop_on_disconnect;
 
   GstElement *element;
   GRecMutex state_lock;         /* locking order: state lock, lock */
@@ -151,6 +152,7 @@ struct _GstRTSPMediaPrivate
 #define DEFAULT_TIME_PROVIDER   FALSE
 #define DEFAULT_LATENCY         200
 #define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
+#define DEFAULT_STOP_ON_DISCONNECT TRUE
 
 /* define to dump received RTCP packets */
 #undef DUMP_STATS
@@ -169,6 +171,7 @@ enum
   PROP_TIME_PROVIDER,
   PROP_LATENCY,
   PROP_TRANSPORT_MODE,
+  PROP_STOP_ON_DISCONNECT,
   PROP_LAST
 };
 
@@ -329,6 +332,13 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           GST_TYPE_RTSP_TRANSPORT_MODE, DEFAULT_TRANSPORT_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_STOP_ON_DISCONNECT,
+      g_param_spec_boolean ("stop-on-disconnect", "Stop On Disconnect",
+          "If this media pipeline should be stopped "
+          "when a client disconnects without TEARDOWN",
+          DEFAULT_STOP_ON_DISCONNECT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_NEW_STREAM] =
       g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, new_stream), NULL, NULL,
@@ -396,6 +406,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->buffer_size = DEFAULT_BUFFER_SIZE;
   priv->time_provider = DEFAULT_TIME_PROVIDER;
   priv->transport_mode = DEFAULT_TRANSPORT_MODE;
+  priv->stop_on_disconnect = DEFAULT_STOP_ON_DISCONNECT;
 }
 
 static void
@@ -472,6 +483,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_TRANSPORT_MODE:
       g_value_set_flags (value, gst_rtsp_media_get_transport_mode (media));
       break;
+    case PROP_STOP_ON_DISCONNECT:
+      g_value_set_boolean (value, gst_rtsp_media_is_stop_on_disconnect (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -517,6 +531,10 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_TRANSPORT_MODE:
       gst_rtsp_media_set_transport_mode (media, g_value_get_flags (value));
+      break;
+    case PROP_STOP_ON_DISCONNECT:
+      gst_rtsp_media_set_stop_on_disconnect (media,
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1162,6 +1180,56 @@ gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
 
   g_mutex_lock (&priv->lock);
   res = priv->buffer_size;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
+}
+
+/**
+ * gst_rtsp_media_set_stop_on_disconnect:
+ * @media: a #GstRTSPMedia
+ * @stop_on_disconnect: the new value
+ *
+ * Set or unset if the pipeline for @media should be stopped when a
+ * client disconnects without sending TEARDOWN.
+ */
+void
+gst_rtsp_media_set_stop_on_disconnect (GstRTSPMedia * media,
+    gboolean stop_on_disconnect)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->stop_on_disconnect = stop_on_disconnect;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_is_stop_on_disconnect:
+ * @media: a #GstRTSPMedia
+ *
+ * Check if the pipeline for @media will be stopped when a client disconnects
+ * without sending TEARDOWN.
+ *
+ * Returns: %TRUE if the media will be stopped when a client disconnects
+ *     without sending TEARDOWN.
+ */
+gboolean
+gst_rtsp_media_is_stop_on_disconnect (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), TRUE);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->stop_on_disconnect;
   g_mutex_unlock (&priv->lock);
 
   return res;
@@ -2604,7 +2672,7 @@ default_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   /* do remainder in context */
   source = g_idle_source_new ();
   g_source_set_callback (source, (GSourceFunc) start_prepare,
-    g_object_ref (media), (GDestroyNotify) g_object_unref);
+      g_object_ref (media), (GDestroyNotify) g_object_unref);
   g_source_attach (source, context);
   g_source_unref (source);
 
