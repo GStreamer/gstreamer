@@ -367,7 +367,7 @@ AC_CACHE_CHECK([for JPEG parser],
     AC_COMPILE_IFELSE(
         [AC_LANG_PROGRAM(
             [[#include <gst/codecparsers/gstjpegparser.h>]],
-            [[GstJpegImage jpeg_image;]])],
+            [[GstJpegFrameHdr frame_hdr;]])],
         [ac_cv_have_gst_jpeg_parser="yes"],
         [ac_cv_have_gst_jpeg_parser="no"]
     )
