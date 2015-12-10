@@ -632,6 +632,18 @@ _calculate_unpack_length (GstGLMemory * gl_mem, GstGLContext * context)
       }
     }
   }
+
+  if (gl_mem->tex_target == GST_GL_TEXTURE_TARGET_RECTANGLE) {
+    guint w_sub =
+        GST_VIDEO_FORMAT_INFO_W_SUB (gl_mem->info.finfo, gl_mem->plane);
+    guint h_sub =
+        GST_VIDEO_FORMAT_INFO_H_SUB (gl_mem->info.finfo, gl_mem->plane);
+
+    if (w_sub)
+      gl_mem->tex_scaling[0] /= (1 << w_sub);
+    if (h_sub)
+      gl_mem->tex_scaling[1] /= (1 << h_sub);
+  }
 }
 
 static guint
