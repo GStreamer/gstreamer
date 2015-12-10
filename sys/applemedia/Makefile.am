@@ -5,7 +5,7 @@ libgstapplemedia_la_SOURCES =			\
 	vtutil.c				\
 	corevideobuffer.c			\
 	coremediabuffer.c			\
-	corevideotexturecache.m 		\
+	videotexturecache.m 		\
 	atdec.c
 
 libgstapplemedia_la_CPPFLAGS =			\
@@ -62,7 +62,7 @@ noinst_HEADERS =				\
 	vtutil.h				\
 	corevideobuffer.h			\
 	coremediabuffer.h			\
-	corevideotexturecache.h			\
+	videotexturecache.h			\
 	atdec.h 				\
 	iosassetsrc.h				\
 	avfassetsrc.h

@@ -30,7 +30,7 @@
 #include <gst/video/video.h>
 #include <gst/gl/gstglcontext.h>
 #include "coremediabuffer.h"
-#include "corevideotexturecache.h"
+#include "videotexturecache.h"
 
 #define DEFAULT_DEVICE_INDEX  -1
 #define DEFAULT_DO_STATS      FALSE
@@ -107,7 +107,7 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
   BOOL captureScreenMouseClicks;
 
   BOOL useVideoMeta;
-  GstCoreVideoTextureCache *textureCache;
+  GstVideoTextureCache *textureCache;
 }
 
 - (id)init;
@@ -765,7 +765,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   bufQueue = nil;
 
   if (textureCache)
-      gst_core_video_texture_cache_free (textureCache);
+      gst_video_texture_cache_free (textureCache);
   textureCache = NULL;
 
   return YES;
@@ -820,8 +820,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     if (glContext) {
       GST_INFO_OBJECT (element, "pushing textures. Internal format %s, context %p",
           gst_video_format_to_string (internalFormat), glContext);
-      textureCache = gst_core_video_texture_cache_new (glContext);
-      gst_core_video_texture_cache_set_format (textureCache, internalFormat, caps);
+      textureCache = gst_video_texture_cache_new (glContext);
+      gst_video_texture_cache_set_format (textureCache, internalFormat, caps);
       gst_object_unref (glContext);
     } else {
       GST_WARNING_OBJECT (element, "got memory:GLMemory caps but not GL context from downstream element");
@@ -959,7 +959,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   CFRelease (sbuf);
 
   if (textureCache != NULL) {
-    *buf = gst_core_video_texture_cache_get_gl_buffer (textureCache, *buf);
+    *buf = gst_video_texture_cache_get_gl_buffer (textureCache, *buf);
     if (*buf == NULL)
       return GST_FLOW_ERROR;
   }

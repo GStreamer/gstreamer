@@ -200,7 +200,7 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
     gst_vtdec_invalidate_session (vtdec);
 
   if (vtdec->texture_cache)
-    gst_core_video_texture_cache_free (vtdec->texture_cache);
+    gst_video_texture_cache_free (vtdec->texture_cache);
   vtdec->texture_cache = NULL;
 
   GST_DEBUG_OBJECT (vtdec, "stop");
@@ -244,8 +244,8 @@ setup_texture_cache (GstVtdec * vtdec, GstGLContext * context)
 #else
   internal_format = GST_VIDEO_FORMAT_UYVY;
 #endif
-  vtdec->texture_cache = gst_core_video_texture_cache_new (context);
-  gst_core_video_texture_cache_set_format (vtdec->texture_cache,
+  vtdec->texture_cache = gst_video_texture_cache_new (context);
+  gst_video_texture_cache_set_format (vtdec->texture_cache,
       internal_format, output_state->caps);
   gst_video_codec_state_unref (output_state);
 }
@@ -309,7 +309,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
     ret = gst_vtdec_create_session (vtdec, format);
     if (ret) {
       if (vtdec->texture_cache) {
-        gst_core_video_texture_cache_free (vtdec->texture_cache);
+        gst_video_texture_cache_free (vtdec->texture_cache);
         vtdec->texture_cache = NULL;
       }
 
@@ -823,7 +823,7 @@ gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
     frame = (GstVideoCodecFrame *) g_async_queue_try_pop (vtdec->reorder_queue);
     if (frame && frame->output_buffer && vtdec->texture_cache != NULL) {
       frame->output_buffer =
-          gst_core_video_texture_cache_get_gl_buffer (vtdec->texture_cache,
+          gst_video_texture_cache_get_gl_buffer (vtdec->texture_cache,
           frame->output_buffer);
       if (!frame->output_buffer)
         GST_ERROR_OBJECT (vtdec, "couldn't get textures from buffer");

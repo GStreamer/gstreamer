@@ -25,24 +25,24 @@
 #import <AppKit/AppKit.h>
 #include <gst/gl/cocoa/gstglcontext_cocoa.h>
 #endif
-#include "corevideotexturecache.h"
+#include "videotexturecache.h"
 #include "coremediabuffer.h"
 #include "corevideobuffer.h"
 #include "vtutil.h"
 
 typedef struct _ContextThreadData
 {
-  GstCoreVideoTextureCache *cache;
+  GstVideoTextureCache *cache;
   GstBuffer *input_buffer;
   GstBuffer *output_buffer;
 } ContextThreadData;
 
-GstCoreVideoTextureCache *
-gst_core_video_texture_cache_new (GstGLContext * ctx)
+GstVideoTextureCache *
+gst_video_texture_cache_new (GstGLContext * ctx)
 {
   g_return_val_if_fail (ctx != NULL, NULL);
 
-  GstCoreVideoTextureCache *cache = g_new0 (GstCoreVideoTextureCache, 1);
+  GstVideoTextureCache *cache = g_new0 (GstVideoTextureCache, 1);
   cache->ctx = gst_object_ref (ctx);
   gst_video_info_init (&cache->input_info);
   cache->convert = gst_gl_color_convert_new (cache->ctx);
@@ -69,7 +69,7 @@ gst_core_video_texture_cache_new (GstGLContext * ctx)
 }
 
 void
-gst_core_video_texture_cache_free (GstCoreVideoTextureCache * cache)
+gst_video_texture_cache_free (GstVideoTextureCache * cache)
 {
   g_return_if_fail (cache != NULL);
 
@@ -88,7 +88,7 @@ gst_core_video_texture_cache_free (GstCoreVideoTextureCache * cache)
 }
 
 void
-gst_core_video_texture_cache_set_format (GstCoreVideoTextureCache * cache,
+gst_video_texture_cache_set_format (GstVideoTextureCache * cache,
     GstVideoFormat in_format, GstCaps * out_caps)
 {
   GstCaps *in_caps;
@@ -133,7 +133,7 @@ cv_pixel_buffer_from_gst_buffer (GstBuffer * buffer)
 }
 
 static gboolean
-gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
+gl_mem_from_buffer (GstVideoTextureCache * cache,
         GstBuffer * buffer, GstMemory **mem1, GstMemory **mem2)
 {
   gboolean ret = TRUE;
@@ -255,7 +255,7 @@ static void
 _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
 {
   GstMemory *mem1 = NULL, *mem2 = NULL;
-  GstCoreVideoTextureCache *cache = data->cache;
+  GstVideoTextureCache *cache = data->cache;
   GstBuffer *buffer = data->input_buffer;
 
   if (!gl_mem_from_buffer (cache, buffer, &mem1, &mem2)) {
@@ -273,7 +273,7 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
 }
 
 GstBuffer *
-gst_core_video_texture_cache_get_gl_buffer (GstCoreVideoTextureCache * cache,
+gst_video_texture_cache_get_gl_buffer (GstVideoTextureCache * cache,
         GstBuffer * cv_buffer)
 {
   ContextThreadData data = {cache, cv_buffer, NULL};

@@ -22,11 +22,11 @@
 
 #include <gst/video/gstvideometa.h>
 #include <gst/gl/gstglcontext.h>
-#include "CoreVideo/CoreVideo.h"
+#include <CoreVideo/CoreVideo.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstCoreVideoTextureCache
+typedef struct _GstVideoTextureCache
 {
   GstGLContext *ctx;
 #if !HAVE_IOS
@@ -41,14 +41,14 @@ typedef struct _GstCoreVideoTextureCache
   GstCaps *in_caps;
   GstCaps *out_caps;
   GstGLColorConvert *convert;
-} GstCoreVideoTextureCache;
+} GstVideoTextureCache;
 
-GstCoreVideoTextureCache *gst_core_video_texture_cache_new (GstGLContext * ctx);
-void gst_core_video_texture_cache_free (GstCoreVideoTextureCache * cache);
-void gst_core_video_texture_cache_set_format (GstCoreVideoTextureCache * cache,
+GstVideoTextureCache *gst_video_texture_cache_new (GstGLContext * ctx);
+void gst_video_texture_cache_free (GstVideoTextureCache * cache);
+void gst_video_texture_cache_set_format (GstVideoTextureCache * cache,
     GstVideoFormat in_format, GstCaps * out_caps);
-gboolean gst_core_video_texture_cache_upload (GstVideoGLTextureUploadMeta * meta, guint texture_id[4]);
-GstBuffer * gst_core_video_texture_cache_get_gl_buffer (GstCoreVideoTextureCache * cache,
+gboolean gst_video_texture_cache_upload (GstVideoGLTextureUploadMeta * meta, guint texture_id[4]);
+GstBuffer * gst_video_texture_cache_get_gl_buffer (GstVideoTextureCache * cache,
         GstBuffer * cv_buffer);
 
 G_END_DECLS

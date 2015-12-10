@@ -25,7 +25,7 @@
 #include <gst/video/gstvideodecoder.h>
 #include <CoreMedia/CoreMedia.h>
 #include <VideoToolbox/VideoToolbox.h>
-#include "corevideotexturecache.h"
+#include "videotexturecache.h"
 
 G_BEGIN_DECLS
 
@@ -47,7 +47,7 @@ struct _GstVtdec
   VTDecompressionSessionRef session;
   GAsyncQueue *reorder_queue;
   gint reorder_queue_length;
-  GstCoreVideoTextureCache *texture_cache;
+  GstVideoTextureCache *texture_cache;
 
   gboolean require_hardware;
 };
