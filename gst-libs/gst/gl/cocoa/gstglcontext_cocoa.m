@@ -90,7 +90,6 @@ struct pixel_attr
 static struct pixel_attr pixel_attrs[] = {
   {kCGLPFAAllRenderers, "All Renderers"},
   {kCGLPFADoubleBuffer, "Double Buffered"},
-  {kCGLPFAStereo, "Stereo"},
   {kCGLPFAAuxBuffers, "Aux Buffers"},
   {kCGLPFAColorSize, "Color Size"},
   {kCGLPFAAlphaSize, "Alpha Size"},
@@ -115,20 +114,23 @@ static struct pixel_attr pixel_attrs[] = {
   {kCGLPFAAcceleratedCompute, "Accelerated Compute"},
   {kCGLPFAOpenGLProfile, "OpenGL Profile"},
   {kCGLPFAVirtualScreenCount, "Virtual Screen Count"},
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_11
+  {kCGLPFAStereo, "Stereo"},
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_9
   {kCGLPFACompliant, "Compliant"},
   {kCGLPFARemotePBuffer, "Remote PBuffer"},
   {kCGLPFASingleRenderer, "Single Renderer"},
   {kCGLPFAWindow, "Window"},
 #endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
 //  {kCGLPFAOffScreen, "Off Screen"},
 //  {kCGLPFAPBuffer, "PBuffer"},
 #endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_6
 //  {kCGLPFAFullScreen, "Full Screen"},
 #endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_5
 //  {kCGLPFAMPSafe, "MP Safe"},
 //  {kCGLPFAMultiScreen, "Multi Screen"},
 //  {kCGLPFARobust, "Robust"},
