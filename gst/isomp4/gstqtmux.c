@@ -2462,10 +2462,8 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
       guint32 lateness = 0;
       guint32 duration = qtpad->trak->tkhd.duration;
       gboolean has_gap;
-      gboolean has_shift;
 
       has_gap = (qtpad->first_ts > (qtmux->first_ts + qtpad->dts_adjustment));
-      has_shift = (qtpad->dts_adjustment > 0);
 
       if (has_gap) {
         GstClockTime diff;
@@ -2481,7 +2479,8 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
             (guint32) (1 * 65536.0));
       }
 
-      if (has_gap || has_shift) {
+      /* has shift */
+      if (has_gap || (qtpad->dts_adjustment > 0)) {
         GstClockTime ctts;
         guint32 media_start;
 
