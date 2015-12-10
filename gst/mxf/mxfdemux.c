@@ -2762,8 +2762,7 @@ from_index:
       GstMXFDemuxEssenceTrack *t =
           &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
 
-      if (index_start_position != -1 && t->body_sid == etrack->body_sid
-          && t->index_sid == etrack->index_sid)
+      if (index_start_position != -1 && t == etrack)
         t->position = index_start_position;
       else
         t->position = (demux->offset == demux->run_in) ? 0 : -1;
