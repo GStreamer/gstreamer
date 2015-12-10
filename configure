@@ -1,0 +1,84 @@
+#!/bin/sh
+
+# TODO be marter about per component flags if needed.
+
+HELP="Helper configure script to build gst-devtools
+
+You might also want to go to specific module directory and
+build from there.
+
+Options:
+--------
+
+  -v,  --validate:      Build GstValidate
+  -c,  --codecanalyzer: Build codecanalyzer
+  -m,  --mediainfo:     Build mediainfo
+"
+FLAGS=''
+for i in "$@"
+do
+  case $i in
+    -v|--validate)
+    VALIDATE=validate
+    shift
+    ;;
+    -c|--codecanalyzer)
+    CODECANALYZER=codecanalyzer
+    shift
+    ;;
+    -m|--mediainfo)
+    MEDIAINFO=mediainfo
+    shift
+    ;;
+    -h|--help)
+    echo "$HELP"
+    exit
+    ;;
+
+    *) # unknown option
+    FLAGS="$FLAGS $i"
+    ;;
+  esac
+done
+
+
+if [ -z "$VALIDATE"  ] && [ -z "$CODECANALYZER" ] && [ -z $MEDIAINFO ]
+then
+  echo "No compoonent specified, building everything"
+  VALIDATE=validate
+  CODECANALYZER=codecanalyzer
+  MEDIAINFO=mediainfo
+fi
+
+BUILDDIR="$( cd "$( dirname "$(readlink -f ${BASH_SOURCE[0]})" )" && pwd )"
+
+cd $BUILDDIR
+echo "all:" > Makefile
+for i in $VALIDATE $CODECANALYZER $MEDIAINFO
+do
+  echo "Configuring $i with flags '$FLAGS'"
+  echo "	cd $BUILDDIR/$i/ && make; cd $BUILDDIR" >> Makefile
+  cd "$BUILDDIR/$i/" && ./autogen.sh $FLAGS
+  cd $BUILDDIR
+done
+
+echo "" >> Makefile
+echo "install:" >> Makefile
+for i in $VALIDATE $CODECANALYZER $MEDIAINFO
+do
+  echo "	cd $BUILDDIR/$i/ && make install; cd $BUILDDIR" >> Makefile
+done
+
+echo "" >> Makefile
+echo "clean:" >> Makefile
+for i in $VALIDATE $CODECANALYZER $MEDIAINFO
+do
+  echo "	cd $BUILDDIR/$i/ && make clean; cd $BUILDDIR" >> Makefile
+done
+
+echo "" >> Makefile
+echo "distclean:" >> Makefile
+for i in $VALIDATE $CODECANALYZER $MEDIAINFO
+do
+  echo "	cd $BUILDDIR/$i/ && make distclean; cd $BUILDDIR" >> Makefile
+done
