@@ -3644,7 +3644,7 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       GST_WARNING_OBJECT (qtmux, "unexpected codec-data size, possibly broken");
     }
     if (format == GST_QT_MUX_FORMAT_QT)
-      ext_atom = build_mov_alac_extension (qtpad->trak, codec_config);
+      ext_atom = build_mov_alac_extension (codec_config);
     else
       ext_atom = build_codec_data_extension (FOURCC_alac, codec_config);
     /* set some more info */
@@ -4041,8 +4041,8 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     colorspace = gst_structure_get_string (structure, "colorspace");
     if (colorspace &&
         (ext_atom =
-            build_jp2h_extension (qtpad->trak, width, height, colorspace, ncomp,
-                cmap_array, cdef_array)) != NULL) {
+            build_jp2h_extension (width, height, colorspace, ncomp, cmap_array,
+                cdef_array)) != NULL) {
       ext_atom_list = g_list_append (ext_atom_list, ext_atom);
 
       ext_atom = build_fiel_extension (fields);

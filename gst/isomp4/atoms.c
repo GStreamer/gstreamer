@@ -3468,7 +3468,7 @@ atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
 }
 
 static AtomInfo *
-build_pasp_extension (AtomTRAK * trak, gint par_width, gint par_height)
+build_pasp_extension (gint par_width, gint par_height)
 {
   AtomData *atom_data = atom_data_new (FOURCC_pasp);
   guint8 *data;
@@ -3531,7 +3531,7 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
   /* QT spec has a pasp extension atom in stsd that can hold PAR */
   if (par_n && (context->flavor == ATOMS_TREE_FLAVOR_MOV)) {
     ste->extension_atoms = g_list_append (ste->extension_atoms,
-        build_pasp_extension (trak, par_n, par_d));
+        build_pasp_extension (par_n, par_d));
   }
 
   return ste;
@@ -4343,7 +4343,7 @@ build_mov_aac_extension (AtomTRAK * trak, const GstBuffer * codec_data,
 }
 
 AtomInfo *
-build_mov_alac_extension (AtomTRAK * trak, const GstBuffer * codec_data)
+build_mov_alac_extension (const GstBuffer * codec_data)
 {
   AtomInfo *alac;
 
@@ -4384,9 +4384,8 @@ build_jp2x_extension (const GstBuffer * prefix)
 }
 
 AtomInfo *
-build_jp2h_extension (AtomTRAK * trak, gint width, gint height,
-    const gchar * colorspace, gint ncomp, const GValue * cmap_array,
-    const GValue * cdef_array)
+build_jp2h_extension (gint width, gint height, const gchar * colorspace,
+    gint ncomp, const GValue * cmap_array, const GValue * cdef_array)
 {
   AtomData *atom_data;
   GstBuffer *buf;
