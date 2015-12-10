@@ -221,6 +221,10 @@ _priv_gst_tag_initialize (void)
       _("composer"),
       _("person(s) who composed the recording"),
       gst_tag_merge_strings_with_comma);
+  gst_tag_register_static (GST_TAG_CONDUCTOR, GST_TAG_FLAG_META,
+      G_TYPE_STRING,
+      _("conductor"),
+      _("conductor/performer refinement"), gst_tag_merge_strings_with_comma);
   gst_tag_register_static (GST_TAG_DURATION, GST_TAG_FLAG_DECODED,
       G_TYPE_UINT64,
       _("duration"), _("length in GStreamer time units (nanoseconds)"), NULL);

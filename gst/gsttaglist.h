@@ -530,6 +530,14 @@ gst_tag_list_copy (const GstTagList * taglist)
  */
 #define GST_TAG_COMPOSER               "composer"
 /**
+ * GST_TAG_CONDUCTOR:
+ *
+ * conductor/performer refinement (string)
+ *
+ * Since: 1.8
+ */
+#define GST_TAG_CONDUCTOR               "conductor"
+/**
  * GST_TAG_DATE:
  *
  * date the data was created (#GDate structure)
