@@ -61,8 +61,8 @@ gboolean        gst_audio_channel_mix_is_passthrough  (GstAudioChannelMix *mix);
  * Do actual mixing.
  */
 void            gst_audio_channel_mix_samples   (GstAudioChannelMix * mix,
-                                                 const gpointer       in_data,
-                                                 gpointer             out_data,
+                                                 const gpointer       in[],
+                                                 gpointer             out[],
                                                  gint                 samples);
 
 #endif /* __GST_AUDIO_CHANNEL_MIX_H__ */

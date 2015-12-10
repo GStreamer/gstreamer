@@ -882,19 +882,25 @@ gst_audio_channel_mix_is_passthrough (GstAudioChannelMix * mix)
  * @mix: a #GstAudioChannelMix
  * @format: a #GstAudioFormat
  * @layout: a #GstAudioLayout
- * @in_data: input samples
- * @out_data: output samples
+ * @in: input samples
+ * @out: output samples
  * @samples: number of samples
+ *
+ * In case the samples are interleaved, @in and @out must point to an
+ * array with a single element pointing to a block of interleaved samples.
+ *
+ * If non-interleaved samples are used, @in and @out must point to an
+ * array with pointers to memory blocks, one for each channel.
  *
  * Perform channel mixing on @in_data and write the result to @out_data.
  * @in_data and @out_data need to be in @format and @layout.
  */
 void
 gst_audio_channel_mix_samples (GstAudioChannelMix * mix,
-    const gpointer in_data, gpointer out_data, gint samples)
+    const gpointer in[], gpointer out[], gint samples)
 {
   g_return_if_fail (mix != NULL);
   g_return_if_fail (mix->matrix != NULL);
 
-  mix->func (mix, in_data, out_data, samples);
+  mix->func (mix, in[0], out[0], samples);
 }

@@ -476,7 +476,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     else
       outbuf = tmpbuf;
 
-    gst_audio_channel_mix_samples (convert->mix, inp, outbuf, in_samples);
+    gst_audio_channel_mix_samples (convert->mix, &inp, &outbuf, in_samples);
     inp = outbuf;
   }
   /* step 4, optional convert F64 -> S32 for quantize */
@@ -497,7 +497,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     else
       outbuf = tmpbuf;
 
-    gst_audio_quantize_samples (convert->quant, outbuf, inp, in_samples);
+    gst_audio_quantize_samples (convert->quant, &inp, &outbuf, in_samples);
     inp = outbuf;
   }
 

@@ -735,8 +735,9 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
     flags |= GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE;
 
   if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
-    if (!gst_audio_converter_samples (this->convert, flags, srcmap.data,
-            samples, dstmap.data, samples, &consumed, &produced))
+    if (!gst_audio_converter_samples (this->convert, flags,
+            (gpointer *) & srcmap.data, samples, (gpointer *) & dstmap.data,
+            samples, &consumed, &produced))
       goto convert_error;
   } else {
     /* Create silence buffer */

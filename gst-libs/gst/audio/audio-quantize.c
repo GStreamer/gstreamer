@@ -42,15 +42,16 @@ struct _GstAudioQuantize
   GstAudioNoiseShapingMethod ns;
   GstAudioQuantizeFlags flags;
   GstAudioFormat format;
-  guint channels;
   guint quantizer;
+  guint stride;
+  guint blocks;
 
   guint shift;
   guint32 mask, bias;
 
   /* last random number generated per channel for hifreq TPDF dither */
   gpointer last_random;
-  /* contains the past quantization errors, error[out_channels][count] */
+  /* contains the past quantization errors, error[channels][count] */
   guint error_size;
   gpointer error_buf;
   /* buffer with dither values */
@@ -76,7 +77,7 @@ gst_audio_quantize_quantize_memcpy (GstAudioQuantize * quant,
     const gpointer src, gpointer dst, gint samples)
 {
   if (src != dst)
-    memcpy (dst, src, samples * sizeof (gint32) * quant->channels);
+    memcpy (dst, src, samples * sizeof (gint32) * quant->stride);
 }
 
 /* Quantize functions for gint32 as intermediate format */
@@ -85,7 +86,7 @@ gst_audio_quantize_quantize_int_none_none (GstAudioQuantize * quant,
     const gpointer src, gpointer dst, gint samples)
 {
   audio_orc_int_bias (dst, src, quant->bias, ~quant->mask,
-      samples * quant->channels);
+      samples * quant->stride);
 }
 
 /* This is the base function, implementing a linear congruential generator
@@ -114,8 +115,8 @@ static void
 setup_dither_buf (GstAudioQuantize * quant, gint samples)
 {
   gboolean need_init = FALSE;
-  gint channels = quant->channels;
-  gint i, len = samples * channels;
+  gint stride = quant->stride;
+  gint i, len = samples * stride;
   guint shift = quant->shift;
   guint32 bias;
   gint32 dither, *d;
@@ -156,8 +157,8 @@ setup_dither_buf (GstAudioQuantize * quant, gint samples)
       dither = 1 << (shift - 1);
       for (i = 0; i < len; i++) {
         tmp = RANDOM_INT_DITHER (dither);
-        d[i] = bias + tmp - last_random[i % channels];
-        last_random[i % channels] = tmp;
+        d[i] = bias + tmp - last_random[i % stride];
+        last_random[i % stride] = tmp;
       }
       break;
     }
@@ -171,20 +172,20 @@ gst_audio_quantize_quantize_int_dither_none (GstAudioQuantize * quant,
   setup_dither_buf (quant, samples);
 
   audio_orc_int_dither (dst, src, quant->dither_buf, ~quant->mask,
-      samples * quant->channels);
+      samples * quant->stride);
 }
 
 static void
 setup_error_buf (GstAudioQuantize * quant, gint samples)
 {
-  gint channels = quant->channels;
-  gint len = (samples + quant->n_coeffs) * channels;
+  gint stride = quant->stride;
+  gint len = (samples + quant->n_coeffs) * stride;
 
   if (quant->error_size < len) {
     quant->error_buf = g_realloc (quant->error_buf, len * sizeof (gint32));
     if (quant->error_size == 0)
       memset ((gint32 *) quant->error_buf, 0,
-          channels * quant->n_coeffs * sizeof (gint32));
+          stride * quant->n_coeffs * sizeof (gint32));
     quant->error_size = len;
   }
 }
@@ -194,15 +195,15 @@ gst_audio_quantize_quantize_int_dither_feedback (GstAudioQuantize * quant,
     const gpointer src, gpointer dst, gint samples)
 {
   guint32 mask;
-  gint i, len, channels;
+  gint i, len, stride;
   const gint32 *s = src;
   gint32 *dith, *d = dst, v, o, *e, err;
 
   setup_dither_buf (quant, samples);
   setup_error_buf (quant, samples);
 
-  channels = quant->channels;
-  len = samples * channels;
+  stride = quant->stride;
+  len = samples * stride;
   dith = quant->dither_buf;
   e = quant->error_buf;
   mask = ~quant->mask;
@@ -216,11 +217,11 @@ gst_audio_quantize_quantize_int_dither_feedback (GstAudioQuantize * quant,
     ADDSS (v, err);
     v &= mask;
     /* store new error */
-    e[i + channels] = e[i] + (v - o);
+    e[i + stride] = e[i] + (v - o);
     /* store result */
     d[i] = v;
   }
-  memmove (e, &e[len], sizeof (gint32) * channels);
+  memmove (e, &e[len], sizeof (gint32) * stride);
 }
 
 #define SHIFT 10
@@ -234,15 +235,15 @@ gst_audio_quantize_quantize_int_dither_noise_shape (GstAudioQuantize * quant,
     const gpointer src, gpointer dst, gint samples)
 {
   guint32 mask;
-  gint i, j, k, len, channels, nc;
+  gint i, j, k, len, stride, nc;
   const gint32 *s = src;
   gint32 *c, *dith, *d = dst, v, o, *e, err;
 
   setup_dither_buf (quant, samples);
   setup_error_buf (quant, samples);
 
-  channels = quant->channels;
-  len = samples * channels;
+  stride = quant->stride;
+  len = samples * stride;
   dith = quant->dither_buf;
   e = quant->error_buf;
   c = quant->coeffs;
@@ -253,7 +254,7 @@ gst_audio_quantize_quantize_int_dither_noise_shape (GstAudioQuantize * quant,
     v = s[i];
     /* combine and remove error */
     err = 0;
-    for (j = 0, k = i; j < nc; j++, k += channels)
+    for (j = 0, k = i; j < nc; j++, k += stride)
       err -= e[k] * c[j];
     err = (err + SROUND) >> (SREDUCE);
     ADDSS (v, err);
@@ -268,7 +269,7 @@ gst_audio_quantize_quantize_int_dither_noise_shape (GstAudioQuantize * quant,
     /* store result */
     d[i] = v;
   }
-  memmove (e, &e[len], sizeof (gint32) * channels * nc);
+  memmove (e, &e[len], sizeof (gint32) * stride * nc);
 }
 
 #define MAKE_QUANTIZE_FUNC_NAME(name)                                   \
@@ -355,7 +356,7 @@ gst_audio_quantize_setup_noise_shaping (GstAudioQuantize * quant)
 
   if (n_coeffs) {
     quant->n_coeffs = n_coeffs;
-    q = quant->coeffs = g_new0 (gint32, quant->channels * n_coeffs);
+    q = quant->coeffs = g_new0 (gint32, n_coeffs);
     for (i = 0; i < n_coeffs; i++)
       q[i] = floor (coeffs[i] * (1 << SHIFT) + 0.5);
   }
@@ -367,7 +368,7 @@ gst_audio_quantize_setup_dither (GstAudioQuantize * quant)
 {
   switch (quant->dither) {
     case GST_AUDIO_DITHER_TPDF_HF:
-      quant->last_random = g_new0 (gint32, quant->channels);
+      quant->last_random = g_new0 (gint32, quant->stride);
       break;
     case GST_AUDIO_DITHER_RPDF:
     case GST_AUDIO_DITHER_TPDF:
@@ -440,7 +441,13 @@ gst_audio_quantize_new (GstAudioDitherMethod dither,
   quant->ns = ns;
   quant->flags = flags;
   quant->format = format;
-  quant->channels = channels;
+  if (flags & GST_AUDIO_QUANTIZE_FLAG_NON_INTERLEAVED) {
+    quant->stride = 1;
+    quant->blocks = channels;
+  } else {
+    quant->stride = channels;
+    quant->blocks = 1;
+  }
   quant->quantizer = quantizer;
 
   quant->shift = count_power (quantizer);
@@ -479,22 +486,31 @@ gst_audio_quantize_free (GstAudioQuantize * quant)
 /**
  * gst_audio_quantize_samples:
  * @quant: a #GstAudioQuantize
- * @src: source samples
- * @dst: output samples
+ * @in: input samples
+ * @out: output samples
  * @samples: number of samples
  *
- * Perform quantization on @samples in @src and write the result to @dst.
+ * Perform quantization on @samples in @in and write the result to @out.
  *
- * @src and @dst may point to the same memory location, in which case samples will be
+ * In case the samples are interleaved, @in and @out must point to an
+ * array with a single element pointing to a block of interleaved samples.
+ *
+ * If non-interleaved samples are used, @in and @out must point to an
+ * array with pointers to memory blocks, one for each channel.
+ *
+ * @in and @out may point to the same memory location, in which case samples will be
  * modified in-place.
  */
 void
 gst_audio_quantize_samples (GstAudioQuantize * quant,
-    const gpointer src, gpointer dst, guint samples)
+    const gpointer in[], gpointer out[], guint samples)
 {
-  g_return_if_fail (quant != NULL);
-  g_return_if_fail (dst != NULL || samples == 0);
-  g_return_if_fail (src != NULL || samples == 0);
+  guint i;
 
-  quant->quantize (quant, dst, src, samples);
+  g_return_if_fail (quant != NULL);
+  g_return_if_fail (out != NULL || samples == 0);
+  g_return_if_fail (in != NULL || samples == 0);
+
+  for (i = 0; i < quant->blocks; i++)
+    quant->quantize (quant, in[i], out[i], samples);
 }
