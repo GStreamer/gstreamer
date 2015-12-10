@@ -384,6 +384,12 @@ gst_audio_converter_free (GstAudioConverter * convert)
  * Perform the conversion with @in_samples in @in to @out_samples in @out
  * using @convert.
  *
+ * In case the samples are interleaved, @in and @out must point to an
+ * array with a single element pointing to a block of interleaved samples.
+ *
+ * If non-interleaved samples are used, @in and @out must point to an
+ * array with pointers to memory blocks, one for each channel.
+ *
  * The actual number of samples used from @in is returned in @in_consumed and
  * can be less than @in_samples. The actual number of samples produced is
  * returned in @out_produced and can be less than @out_samples.
@@ -392,11 +398,12 @@ gst_audio_converter_free (GstAudioConverter * convert)
  */
 gboolean
 gst_audio_converter_samples (GstAudioConverter * convert,
-    GstAudioConverterFlags flags, gpointer in, gsize in_samples,
-    gpointer out, gsize out_samples, gsize * in_consumed, gsize * out_produced)
+    GstAudioConverterFlags flags, gpointer in[], gsize in_samples,
+    gpointer out[], gsize out_samples, gsize * in_consumed,
+    gsize * out_produced)
 {
   guint size;
-  gpointer outbuf, tmpbuf, tmpbuf2;
+  gpointer outbuf, tmpbuf, tmpbuf2, inp, outp;
 
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (in != NULL, FALSE);
@@ -412,8 +419,11 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     return TRUE;
   }
 
+  inp = in[0];
+  outp = out[0];
+
   if (convert->passthrough) {
-    memcpy (out, in, in_samples * convert->in.bpf);
+    memcpy (outp, inp, in_samples * convert->in.bpf);
     *out_produced = in_samples;
     *in_consumed = in_samples;
     return TRUE;
@@ -435,65 +445,65 @@ gst_audio_converter_samples (GstAudioConverter * convert,
   if (!convert->in_default) {
     if (!convert->convert_in && convert->mix_passthrough
         && !convert->convert_out && !convert->quant && convert->out_default)
-      outbuf = out;
+      outbuf = outp;
     else
       outbuf = tmpbuf;
 
     convert->in.finfo->unpack_func (convert->in.finfo,
-        GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, outbuf, in,
+        GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, outbuf, inp,
         in_samples * convert->in.channels);
-    in = outbuf;
+    inp = outbuf;
   }
 
   /* 2. optionally convert for mixing */
   if (convert->convert_in) {
     if (convert->mix_passthrough && !convert->convert_out && !convert->quant
         && convert->out_default)
-      outbuf = out;
-    else if (in == tmpbuf)
+      outbuf = outp;
+    else if (inp == tmpbuf)
       outbuf = tmpbuf2;
     else
       outbuf = tmpbuf;
 
-    convert->convert_in (outbuf, in, in_samples * convert->in.channels);
-    in = outbuf;
+    convert->convert_in (outbuf, inp, in_samples * convert->in.channels);
+    inp = outbuf;
   }
 
   /* step 3, channel mix if not passthrough */
   if (!convert->mix_passthrough) {
     if (!convert->convert_out && !convert->quant && convert->out_default)
-      outbuf = out;
+      outbuf = outp;
     else
       outbuf = tmpbuf;
 
-    gst_audio_channel_mix_samples (convert->mix, in, outbuf, in_samples);
-    in = outbuf;
+    gst_audio_channel_mix_samples (convert->mix, inp, outbuf, in_samples);
+    inp = outbuf;
   }
   /* step 4, optional convert F64 -> S32 for quantize */
   if (convert->convert_out) {
     if (!convert->quant && convert->out_default)
-      outbuf = out;
+      outbuf = outp;
     else
       outbuf = tmpbuf;
 
-    convert->convert_out (outbuf, in, in_samples * convert->out.channels);
-    in = outbuf;
+    convert->convert_out (outbuf, inp, in_samples * convert->out.channels);
+    inp = outbuf;
   }
 
   /* step 5, optional quantize */
   if (convert->quant) {
     if (convert->out_default)
-      outbuf = out;
+      outbuf = outp;
     else
       outbuf = tmpbuf;
 
-    gst_audio_quantize_samples (convert->quant, outbuf, in, in_samples);
-    in = outbuf;
+    gst_audio_quantize_samples (convert->quant, outbuf, inp, in_samples);
+    inp = outbuf;
   }
 
   /* step 6, pack */
   if (!convert->out_default) {
-    convert->out.finfo->pack_func (convert->out.finfo, 0, in, out,
+    convert->out.finfo->pack_func (convert->out.finfo, 0, inp, outp,
         in_samples * convert->out.channels);
   }
   *out_produced = in_samples;
