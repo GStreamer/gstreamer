@@ -68,6 +68,7 @@ struct _GstMultiSocketSink {
   /*< private >*/
   GMainContext *main_context;
   GCancellable *cancellable;
+  gboolean send_dispatched;
 };
 
 struct _GstMultiSocketSinkClass {

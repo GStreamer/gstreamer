@@ -136,10 +136,12 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_SEND_DISPATCHED FALSE
+
 enum
 {
   PROP_0,
-
+  PROP_SEND_DISPATCHED,
   PROP_LAST
 };
 
@@ -221,6 +223,10 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gobject_class->get_property = gst_multi_socket_sink_get_property;
   gobject_class->finalize = gst_multi_socket_sink_finalize;
 
+  g_object_class_install_property (gobject_class, PROP_SEND_DISPATCHED,
+      g_param_spec_boolean ("send-dispatched", "Send Dispatched",
+          "If GstNetworkMessageDispatched events should be pushed",
+          DEFAULT_SEND_DISPATCHED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstMultiSocketSink::add:
    * @gstmultisocketsink: the multisocketsink element to emit this signal on
@@ -409,6 +415,7 @@ gst_multi_socket_sink_init (GstMultiSocketSink * this)
   mhsink->handle_hash = g_hash_table_new (g_direct_hash, g_int_equal);
 
   this->cancellable = g_cancellable_new ();
+  this->send_dispatched = DEFAULT_SEND_DISPATCHED;
 }
 
 static void
@@ -862,6 +869,13 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
               mhclient->handle.socket, wrote);
           mhclient->bufoffset += wrote;
         } else {
+          if (sink->send_dispatched) {
+            gst_pad_push_event (GST_BASE_SINK_PAD (mhsink),
+                gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+                    gst_structure_new ("GstNetworkMessageDispatched",
+                        "object", G_TYPE_OBJECT, mhclient->handle.socket,
+                        "buffer", GST_TYPE_BUFFER, head, NULL)));
+          }
           /* complete buffer was written, we can proceed to the next one */
           mhclient->sending = g_slist_remove (mhclient->sending, head);
           gst_buffer_unref (head);
@@ -1094,8 +1108,12 @@ static void
 gst_multi_socket_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  switch (prop_id) {
+  GstMultiSocketSink *sink = GST_MULTI_SOCKET_SINK (object);
 
+  switch (prop_id) {
+    case PROP_SEND_DISPATCHED:
+      sink->send_dispatched = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1106,7 +1124,12 @@ static void
 gst_multi_socket_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstMultiSocketSink *sink = GST_MULTI_SOCKET_SINK (object);
+
   switch (prop_id) {
+    case PROP_SEND_DISPATCHED:
+      g_value_set_boolean (value, sink->send_dispatched);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
