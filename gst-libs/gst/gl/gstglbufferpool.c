@@ -206,19 +206,21 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
     if (gst_buffer_pool_config_has_option (config,
             GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_2D)) {
-      if (priv->tex_target)
+      if (priv->tex_target && priv->tex_target != GST_GL_TEXTURE_TARGET_2D)
         multiple_texture_targets = TRUE;
       priv->tex_target = GST_GL_TEXTURE_TARGET_2D;
     }
     if (gst_buffer_pool_config_has_option (config,
             GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_RECTANGLE)) {
-      if (priv->tex_target)
+      if (priv->tex_target
+          && priv->tex_target != GST_GL_TEXTURE_TARGET_RECTANGLE)
         multiple_texture_targets = TRUE;
       priv->tex_target = GST_GL_TEXTURE_TARGET_RECTANGLE;
     }
     if (gst_buffer_pool_config_has_option (config,
             GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_EXTERNAL_OES)) {
-      if (priv->tex_target)
+      if (priv->tex_target
+          && priv->tex_target != GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
         multiple_texture_targets = TRUE;
       priv->tex_target = GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
     }
