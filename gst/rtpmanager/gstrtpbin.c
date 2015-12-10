@@ -249,6 +249,7 @@ enum
   SIGNAL_PAYLOAD_TYPE_CHANGE,
   SIGNAL_CLEAR_PT_MAP,
   SIGNAL_RESET_SYNC,
+  SIGNAL_GET_SESSION,
   SIGNAL_GET_INTERNAL_SESSION,
 
   SIGNAL_ON_NEW_SSRC,
@@ -933,6 +934,23 @@ gst_rtp_bin_clear_pt_map (GstRtpBin * bin)
 
   /* reset sync too */
   gst_rtp_bin_reset_sync (bin);
+}
+
+static GstElement *
+gst_rtp_bin_get_session (GstRtpBin * bin, guint session_id)
+{
+  GstRtpBinSession *session;
+  GstElement *ret = NULL;
+
+  GST_RTP_BIN_LOCK (bin);
+  GST_DEBUG_OBJECT (bin, "retrieving GstRtpSession, index: %d", session_id);
+  session = find_session_by_id (bin, (gint) session_id);
+  if (session) {
+    ret = gst_object_ref (session->session);
+  }
+  GST_RTP_BIN_UNLOCK (bin);
+
+  return ret;
 }
 
 static RTPSession *
@@ -1847,6 +1865,21 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       0, G_TYPE_NONE);
 
   /**
+   * GstRtpBin::get-session:
+   * @rtpbin: the object which received the signal
+   * @id: the session id
+   *
+   * Request the related GstRtpSession as #GstElement related with session @id.
+   *
+   * Since: 1.8
+   */
+  gst_rtp_bin_signals[SIGNAL_GET_SESSION] =
+      g_signal_new ("get-session", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
+          get_session), NULL, NULL, g_cclosure_marshal_generic,
+      GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+
+  /**
    * GstRtpBin::get-internal-session:
    * @rtpbin: the object which received the signal
    * @id: the session id
@@ -2311,6 +2344,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
 
   klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_bin_clear_pt_map);
   klass->reset_sync = GST_DEBUG_FUNCPTR (gst_rtp_bin_reset_sync);
+  klass->get_session = GST_DEBUG_FUNCPTR (gst_rtp_bin_get_session);
   klass->get_internal_session =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_get_internal_session);
   klass->request_rtp_encoder = GST_DEBUG_FUNCPTR (gst_rtp_bin_request_encoder);
