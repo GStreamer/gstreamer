@@ -50,7 +50,6 @@ struct _GstGLStereoMix
   GPtrArray *frames;
 
   GLuint out_tex_id;
-  GstGLDownload *download;
 
   GstGLViewConvert *viewconvert;
   GstGLStereoDownmix downmix_mode;
