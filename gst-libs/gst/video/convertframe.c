@@ -110,11 +110,22 @@ fail:
 static GstElement *
 build_convert_frame_pipeline (GstElement ** src_element,
     GstElement ** sink_element, const GstCaps * from_caps,
-    const GstCaps * to_caps, GError ** err)
+    GstVideoCropMeta * cmeta, const GstCaps * to_caps, GError ** err)
 {
-  GstElement *src = NULL, *csp = NULL, *vscale = NULL;
-  GstElement *sink = NULL, *encoder = NULL, *pipeline;
+  GstElement *vcrop = NULL, *csp = NULL, *csp2 = NULL, *vscale = NULL;
+  GstElement *src = NULL, *sink = NULL, *encoder = NULL, *pipeline;
+  GstVideoInfo info;
   GError *error = NULL;
+
+  if (cmeta) {
+    if (!create_element ("videocrop", &vcrop, &error)) {
+      g_warning
+          ("build_convert_frame_pipeline: Buffer has crop metadata but videocrop element is not found. Cropping will be disabled");
+    } else {
+      if (!create_element ("videoconvert", &csp2, &error))
+        goto no_elements;
+    }
+  }
 
   /* videoscale is here to correct for the pixel-aspect-ratio for us */
   GST_DEBUG ("creating elements");
@@ -133,15 +144,42 @@ build_convert_frame_pipeline (GstElement ** src_element,
 
   GST_DEBUG ("adding elements");
   gst_bin_add_many (GST_BIN (pipeline), src, csp, vscale, sink, NULL);
+  if (vcrop)
+    gst_bin_add_many (GST_BIN (pipeline), vcrop, csp2, NULL);
 
   /* set caps */
   g_object_set (src, "caps", from_caps, NULL);
+  if (vcrop) {
+    gst_video_info_from_caps (&info, from_caps);
+    g_object_set (vcrop, "left", cmeta->x, NULL);
+    g_object_set (vcrop, "top", cmeta->y, NULL);
+    g_object_set (vcrop, "right", GST_VIDEO_INFO_WIDTH (&info) - cmeta->width,
+        NULL);
+    g_object_set (vcrop, "bottom",
+        GST_VIDEO_INFO_HEIGHT (&info) - cmeta->height, NULL);
+    GST_DEBUG ("crop meta [x,y,width,height]: %d %d %d %d", cmeta->x, cmeta->y,
+        cmeta->width, cmeta->height);
+  }
   g_object_set (sink, "caps", to_caps, NULL);
 
   /* FIXME: linking is still way too expensive, profile this properly */
-  GST_DEBUG ("linking src->csp");
-  if (!gst_element_link_pads (src, "src", csp, "sink"))
-    goto link_failed;
+  if (vcrop) {
+    GST_DEBUG ("linking src->csp2");
+    if (!gst_element_link_pads (src, "src", csp2, "sink"))
+      goto link_failed;
+
+    GST_DEBUG ("linking csp2->vcrop");
+    if (!gst_element_link_pads (csp2, "src", vcrop, "sink"))
+      goto link_failed;
+
+    GST_DEBUG ("linking vcrop->csp");
+    if (!gst_element_link_pads (vcrop, "src", csp, "sink"))
+      goto link_failed;
+  } else {
+    GST_DEBUG ("linking src->csp");
+    if (!gst_element_link_pads (src, "src", csp, "sink"))
+      goto link_failed;
+  }
 
   GST_DEBUG ("linking csp->vscale");
   if (!gst_element_link_pads_full (csp, "src", vscale, "sink",
@@ -193,8 +231,12 @@ no_elements:
   {
     if (src)
       gst_object_unref (src);
+    if (vcrop)
+      gst_object_unref (vcrop);
     if (csp)
       gst_object_unref (csp);
+    if (csp2)
+      gst_object_unref (csp2);
     if (vscale)
       gst_object_unref (vscale);
     if (sink)
@@ -209,7 +251,11 @@ no_elements:
 no_pipeline:
   {
     gst_object_unref (src);
+    if (vcrop)
+      gst_object_unref (vcrop);
     gst_object_unref (csp);
+    if (csp2)
+      gst_object_unref (csp2);
     gst_object_unref (vscale);
     gst_object_unref (sink);
 
@@ -282,7 +328,8 @@ gst_video_convert_sample (GstSample * sample, const GstCaps * to_caps,
   }
 
   pipeline =
-      build_convert_frame_pipeline (&src, &sink, from_caps, to_caps_copy, &err);
+      build_convert_frame_pipeline (&src, &sink, from_caps,
+      gst_buffer_get_video_crop_meta (buf), to_caps_copy, &err);
   if (!pipeline)
     goto no_pipeline;
 
@@ -646,8 +693,8 @@ gst_video_convert_sample_async (GstSample * sample,
   }
 
   pipeline =
-      build_convert_frame_pipeline (&src, &sink, from_caps, to_caps_copy,
-      &error);
+      build_convert_frame_pipeline (&src, &sink, from_caps,
+      gst_buffer_get_video_crop_meta (buf), to_caps_copy, &error);
   if (!pipeline)
     goto no_pipeline;
 
