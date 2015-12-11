@@ -49,6 +49,90 @@
  * to) file using the #GstEncodingTarget API.
  * </para>
  * </refsect2>
+ *
+ * <refsect2 id="gst-validate-transcoding--encoding-profile">
+ *    <title>The encoding profile serialization format</title>
+ *    <para>This is the serialization format of a <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link>.</para>
+ *    <para>
+ *      Internally the transcoding application uses <link linkend="GstEncodeBin"><type>GstEncodeBin</type></link>. <command>gst-validate-transcoding-&GST_API_VERSION;</command> uses its own
+ *      serialization format to describe the <link linkend="GstEncodeBin--profile"><type>GstEncodeBin.profile</type></link>
+ *     property of the encodebin.
+ *    </para>
+ *
+ *    <para>
+ *        The simplest serialized profile looks like:
+ *    </para>
+ *    <informalexample>
+ *      <programlisting>muxer_source_caps:videoencoder_source_caps:audioencoder_source_caps</programlisting>
+ *    </informalexample>
+ *
+ *     <para>
+ *         For example to encode a stream into a WebM container, with an OGG audio stream and a VP8 video stream,
+ *         the serialized <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link> will look like:
+ *     </para>
+ *     <informalexample>
+ *       <programlisting>video/webm:video/x-vp8:audio/x-vorbis</programlisting>
+ *     </informalexample>
+ *
+ *    <para>
+ *        You can also set the preset name of the encoding profile using the caps+preset_name syntax as in:
+ *    </para>
+ *    <informalexample>
+ *      <programlisting>video/webm:video/x-vp8+youtube-preset:audio/x-vorbis</programlisting>
+ *    </informalexample>
+ *
+ *    <para>
+ *        Moreover, you can set the <link linkend="gst-encoding-profile-set-presence">presence</link> property of an
+ *        encoding profile using the <code>|presence</code> syntax as in:
+ *    </para>
+ *    <informalexample>
+ *       <programlisting>video/webm:video/x-vp8|1:audio/x-vorbis</programlisting>
+ *    </informalexample>
+ *
+ *    <para>
+ *      This field allows you to specify how many times maximum a <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link> can be used inside an encodebin.
+ *    </para>
+ *    <para>
+ *      You can also use the <code>restriction_caps->encoded_format_caps</code> syntax to specify the
+ *      <link linked="gst-encoding-profile-get-restriction">restriction caps</link>
+ *      to be set on a <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link>. It corresponds to the
+ *      restriction <link linkend="GstCaps"><type>GstCaps</type></link> to apply before
+ *      the encoder that will be used in the profile. The fields present in restriction
+ *      caps are properties of the raw stream (that is, before encoding), such as height
+ *      and width for video and depth and sampling rate for audio. This property does not
+ *      make sense for muxers.
+ *    </para>
+ *    <para>
+ *        To force a video stream to be encoded with a Full HD resolution (using WebM as the container format,
+ *        VP8 as the video codec and Vorbis as the audio codec), you should use:
+ *    </para>
+ *    <informalexample>
+ *      <programlisting>video/webm:video/x-raw,width=1920,height=1080->video/x-vp8:audio/x-vorbis</programlisting>
+ *    </informalexample>
+ *  <refsect3>
+ *    <title>Some serialized encoding formats examples:</title>
+ *    <para>
+ *      MP3 audio and H264 in MP4:
+ *    </para>
+ *    <informalexample>
+ *      <programlisting>video/quicktime,variant=iso:video/x-h264:audio/mpeg,mpegversion=1,layer=3</programlisting>
+ *    </informalexample>
+ *
+ *    <para>
+ *      Vorbis and theora in OGG:
+ *    </para>
+ *    <informalexample>
+ *      <programlisting>application/ogg:video/x-theora:audio/x-vorbis</programlisting>
+ *    </informalexample>
+ *
+ *     <para>
+ *      AC3 and H264 in MPEG-TS:
+ *    </para>
+ *    <informalexample>
+ *      <programlisting>video/mpegts:video/x-h264:audio/x-ac3</programlisting>
+ *    </informalexample>
+ *  </refsect3>
+ * </refsect2>
  * <refsect2>
  * <title>Example: Creating a profile</title>
  * <para>
@@ -1255,6 +1339,131 @@ combo_search (const gchar * pname)
   return res;
 }
 
+static GstEncodingProfile *
+parse_encoding_profile (const gchar * value)
+{
+  GstCaps *caps;
+  GstEncodingProfile *res;
+  char *preset_name = NULL;
+  gchar **restriction_format, **preset_v;
+
+  guint i, presence = 0;
+  GstCaps *restrictioncaps = NULL;
+  gchar **strpresence_v, **strcaps_v = g_strsplit (value, ":", 0);
+
+  if (strcaps_v[0] && *strcaps_v[0]) {
+    caps = gst_caps_from_string (strcaps_v[0]);
+    if (caps == NULL) {
+      GST_ERROR ("Could not parse caps %s", strcaps_v[0]);
+      return NULL;
+    }
+    res =
+        GST_ENCODING_PROFILE (gst_encoding_container_profile_new
+        ("User profile", "User profile", caps, NULL));
+    gst_caps_unref (caps);
+  } else {
+    res = NULL;
+  }
+
+  for (i = 1; strcaps_v[i] && *strcaps_v[i]; i++) {
+    GstEncodingProfile *profile = NULL;
+    gchar *strcaps, *strpresence;
+
+    restriction_format = g_strsplit (strcaps_v[i], "->", 0);
+    if (restriction_format[1]) {
+      restrictioncaps = gst_caps_from_string (restriction_format[0]);
+      strcaps = g_strdup (restriction_format[1]);
+    } else {
+      restrictioncaps = NULL;
+      strcaps = g_strdup (restriction_format[0]);
+    }
+    g_strfreev (restriction_format);
+
+    preset_v = g_strsplit (strcaps, "+", 0);
+    if (preset_v[1]) {
+      strpresence = preset_v[1];
+      g_free (strcaps);
+      strcaps = g_strdup (preset_v[0]);
+    } else {
+      strpresence = preset_v[0];
+    }
+
+    strpresence_v = g_strsplit (strpresence, "|", 0);
+    if (strpresence_v[1]) {     /* We have a presence */
+      gchar *endptr;
+
+      if (preset_v[1]) {        /* We have preset and presence */
+        preset_name = g_strdup (strpresence_v[0]);
+      } else {                  /* We have a presence but no preset */
+        g_free (strcaps);
+        strcaps = g_strdup (strpresence_v[0]);
+      }
+
+      presence = g_ascii_strtoll (strpresence_v[1], &endptr, 10);
+      if (endptr == strpresence_v[1]) {
+        g_printerr ("Wrong presence %s\n", strpresence_v[1]);
+
+        return NULL;
+      }
+    } else {                    /* We have no presence */
+      if (preset_v[1]) {        /* Not presence but preset */
+        preset_name = g_strdup (preset_v[1]);
+        g_free (strcaps);
+        strcaps = g_strdup (preset_v[0]);
+      }                         /* Else we have no presence nor preset */
+    }
+    g_strfreev (strpresence_v);
+    g_strfreev (preset_v);
+
+    GST_DEBUG ("Creating preset with restrictions: %" GST_PTR_FORMAT
+        ", caps: %s, preset %s, presence %d", restrictioncaps, strcaps,
+        preset_name ? preset_name : "none", presence);
+
+    caps = gst_caps_from_string (strcaps);
+    g_free (strcaps);
+    if (caps == NULL) {
+      g_warning ("Could not create caps for %s", strcaps_v[i]);
+
+      return NULL;
+    }
+
+    if (g_str_has_prefix (strcaps_v[i], "audio/")) {
+      profile = GST_ENCODING_PROFILE (gst_encoding_audio_profile_new (caps,
+              preset_name, restrictioncaps, presence));
+    } else if (g_str_has_prefix (strcaps_v[i], "video/") ||
+        g_str_has_prefix (strcaps_v[i], "image/")) {
+      profile = GST_ENCODING_PROFILE (gst_encoding_video_profile_new (caps,
+              preset_name, restrictioncaps, presence));
+    }
+
+    g_free (preset_name);
+    gst_caps_unref (caps);
+    if (restrictioncaps)
+      gst_caps_unref (restrictioncaps);
+
+    if (profile == NULL) {
+      g_warning ("No way to create a preset for caps: %s", strcaps_v[i]);
+
+      return NULL;
+    }
+
+    if (res) {
+      if (gst_encoding_container_profile_add_profile
+          (GST_ENCODING_CONTAINER_PROFILE (res),
+              profile) == FALSE) {
+        g_warning ("Can not create a preset for caps: %s", strcaps_v[i]);
+
+        return NULL;
+      }
+    } else {
+      res = profile;
+    }
+  }
+  g_strfreev (strcaps_v);
+
+  return res;
+}
+
 /* GValue transform function */
 static void
 string_to_profile_transform (const GValue * src_value, GValue * dest_value)
@@ -1276,6 +1485,9 @@ gst_encoding_profile_deserialize_valfunc (GValue * value, const gchar * s)
   GstEncodingProfile *profile;
 
   profile = combo_search (s);
+
+  if (!profile)
+    profile = parse_encoding_profile (s);
 
   if (profile) {
     g_value_take_object (value, (GObject *) profile);
