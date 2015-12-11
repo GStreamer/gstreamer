@@ -55,10 +55,6 @@ typedef struct _GstGLShader        GstGLShader;
 typedef struct _GstGLShaderPrivate GstGLShaderPrivate;
 typedef struct _GstGLShaderClass   GstGLShaderClass;
 
-typedef struct _GstGLDownload GstGLDownload;
-typedef struct _GstGLDownloadClass GstGLDownloadClass;
-typedef struct _GstGLDownloadPrivate GstGLDownloadPrivate;
-
 typedef struct _GstGLUpload GstGLUpload;
 typedef struct _GstGLUploadClass GstGLUploadClass;
 typedef struct _GstGLUploadPrivate GstGLUploadPrivate;

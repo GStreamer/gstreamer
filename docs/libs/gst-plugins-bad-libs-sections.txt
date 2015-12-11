@@ -992,26 +992,6 @@ gst_gl_display_get_type
 </SECTION>
 
 <SECTION>
-<FILE>gstgldownload</FILE>
-<TITLE>GstGLDownload</TITLE>
-GstGLDownload
-gst_gl_download_new
-gst_gl_download_set_format
-gst_gl_download_transform_caps
-gst_gl_download_perform_with_data
-<SUBSECTION Standard>
-GST_GL_DOWNLOAD
-GST_GL_DOWNLOAD_CAST
-GST_GL_DOWNLOAD_CLASS
-GST_GL_DOWNLOAD_GET_CLASS
-gst_gl_download_get_type
-GST_IS_GL_DOWNLOAD
-GST_IS_GL_DOWNLOAD_CLASS
-GST_TYPE_GL_DOWNLOAD
-GstGLDownloadPrivate
-</SECTION>
-
-<SECTION>
 <FILE>gstglbasefilter</FILE>
 <TITLE>GstGLBaseFilter</TITLE>
 GstGLBaseFilter
