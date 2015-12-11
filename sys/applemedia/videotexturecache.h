@@ -29,10 +29,10 @@ G_BEGIN_DECLS
 typedef struct _GstVideoTextureCache
 {
   GstGLContext *ctx;
-#if !HAVE_IOS
-  CVOpenGLTextureCacheRef cache;
-#else
+#if HAVE_IOS
   CVOpenGLESTextureCacheRef cache;
+#else
+  GstBufferPool *pool;
 #endif
   GstVideoInfo input_info;
   GstVideoInfo output_info;

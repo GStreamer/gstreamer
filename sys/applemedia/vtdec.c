@@ -108,11 +108,7 @@ const CFStringRef
 CFSTR ("RequireHardwareAcceleratedVideoDecoder");
 #endif
 
-#ifdef HAVE_IOS
 #define GST_VTDEC_VIDEO_FORMAT_STR "NV12"
-#else
-#define GST_VTDEC_VIDEO_FORMAT_STR "UYVY"
-#endif
 
 #define VIDEO_SRC_CAPS \
     "video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY "), "              \
@@ -231,7 +227,6 @@ query_gl_context (GstVtdec * vtdec)
 static void
 setup_texture_cache (GstVtdec * vtdec, GstGLContext * context)
 {
-  GstVideoFormat internal_format;
   GstVideoCodecState *output_state;
 
   g_return_if_fail (vtdec->texture_cache == NULL);
@@ -239,14 +234,9 @@ setup_texture_cache (GstVtdec * vtdec, GstGLContext * context)
   GST_INFO_OBJECT (vtdec, "Setting up texture cache. GL context %p", context);
 
   output_state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
-#ifdef HAVE_IOS
-  internal_format = GST_VIDEO_FORMAT_NV12;
-#else
-  internal_format = GST_VIDEO_FORMAT_UYVY;
-#endif
   vtdec->texture_cache = gst_video_texture_cache_new (context);
   gst_video_texture_cache_set_format (vtdec->texture_cache,
-      internal_format, output_state->caps);
+      GST_VIDEO_FORMAT_NV12, output_state->caps);
   gst_video_codec_state_unref (output_state);
 }
 
@@ -486,11 +476,7 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format)
       cv_format = kCVPixelFormatType_422YpCbCr8;
       break;
     case GST_VIDEO_FORMAT_RGBA:
-#ifdef HAVE_IOS
       cv_format = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
-#else
-      cv_format = kCVPixelFormatType_422YpCbCr8;
-#endif
       break;
     default:
       g_warn_if_reached ();
