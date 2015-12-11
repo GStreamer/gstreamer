@@ -249,62 +249,6 @@ GST_START_TEST (test_upload_buffer)
 
 GST_END_TEST;
 
-GST_START_TEST (test_upload_meta_producer)
-{
-  GstBuffer *buffer;
-  GstGLMemory *gl_mem;
-  GstVideoInfo in_info;
-  GstVideoGLTextureUploadMeta *gl_upload_meta;
-  guint tex_ids[] = { 0, 0, 0, 0 };
-  GstGLUploadMeta *upload_meta;
-  gboolean res;
-  gint i = 0;
-
-  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_RGBA, WIDTH, HEIGHT);
-
-  /* create GL buffer */
-  buffer = gst_buffer_new ();
-  gl_mem =
-      gst_gl_memory_wrapped (context, GST_GL_TEXTURE_TARGET_2D, &in_info, 0,
-      NULL, rgba_data, NULL, NULL);
-  gst_buffer_append_memory (buffer, (GstMemory *) gl_mem);
-
-  gst_gl_context_gen_texture (context, &tex_ids[0], GST_VIDEO_FORMAT_RGBA,
-      WIDTH, HEIGHT);
-
-  upload_meta = gst_gl_upload_meta_new (context);
-  gst_gl_upload_meta_set_format (upload_meta, &in_info);
-
-  gst_buffer_add_video_meta_full (buffer, 0, GST_VIDEO_FORMAT_RGBA, WIDTH,
-      HEIGHT, 1, in_info.offset, in_info.stride);
-  gst_gl_upload_meta_add_to_buffer (upload_meta, buffer);
-
-  gl_upload_meta = gst_buffer_get_video_gl_texture_upload_meta (buffer);
-  fail_if (gl_upload_meta == NULL, "Failed to add GstVideoGLTextureUploadMeta"
-      " to buffer\n");
-
-  res = gst_video_gl_texture_upload_meta_upload (gl_upload_meta, tex_ids);
-  fail_if (res == FALSE, "Failed to upload GstVideoGLTextureUploadMeta\n");
-
-  tex_id = tex_ids[0];
-
-  gst_gl_window_set_preferred_size (window, WIDTH, HEIGHT);
-  gst_gl_window_draw (window);
-  gst_gl_window_send_message (window, GST_GL_WINDOW_CB (init), context);
-
-  while (i < 2) {
-    gst_gl_window_send_message (window, GST_GL_WINDOW_CB (draw_render),
-        context);
-    i++;
-  }
-
-  gst_object_unref (upload_meta);
-  gst_gl_context_del_texture (context, &tex_ids[0]);
-  gst_buffer_unref (buffer);
-}
-
-GST_END_TEST;
-
 
 static Suite *
 gst_gl_upload_suite (void)
@@ -316,7 +260,6 @@ gst_gl_upload_suite (void)
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_upload_data);
   tcase_add_test (tc_chain, test_upload_buffer);
-  tcase_add_test (tc_chain, test_upload_meta_producer);
 
   return s;
 }

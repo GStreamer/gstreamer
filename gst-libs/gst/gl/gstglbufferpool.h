@@ -46,7 +46,6 @@ struct _GstGLBufferPool
   GstBufferPool bufferpool;
 
   GstGLContext *context;
-  GstGLUploadMeta *upload;
 
   GstGLBufferPoolPrivate *priv;
 };

@@ -36,6 +36,5 @@ gst_gl_filter_get_type
 gst_gl_framebuffer_get_type
 gst_gl_shader_get_type
 gst_gl_upload_get_type
-gst_gl_upload_meta_get_type
 gst_gl_window_get_type
 

@@ -54,7 +54,6 @@ struct _GstGLBufferPoolPrivate
   GstVideoAlignment valign;
   GstGLTextureTarget tex_target;
   gboolean add_videometa;
-  gboolean add_uploadmeta;
   gboolean add_glsyncmeta;
   gboolean want_eglimage;
   GstBuffer *last_buffer;
@@ -77,7 +76,6 @@ static const gchar **
 gst_gl_buffer_pool_get_options (GstBufferPool * pool)
 {
   static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
-    GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META,
     GST_BUFFER_POOL_OPTION_GL_SYNC_META,
     GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT,
     GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_2D,
@@ -99,7 +97,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   guint max_align, n;
   GstAllocator *allocator = NULL;
   GstAllocationParams alloc_params;
-  gboolean reset = TRUE, ret = TRUE;
+  gboolean ret = TRUE;
   gint p;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
@@ -135,16 +133,11 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (priv->im_format == -1)
     goto unknown_format;
 
-  if (priv->caps)
-    reset = !gst_caps_is_equal (priv->caps, caps);
-
   gst_caps_replace (&priv->caps, caps);
   priv->info = info;
 
   priv->add_videometa = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
-  priv->add_uploadmeta = gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
   priv->add_glsyncmeta = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_GL_SYNC_META);
 
@@ -186,13 +179,6 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     alloc_params.align = max_align;
     gst_buffer_pool_config_set_allocator (config, allocator, &alloc_params);
     priv->params = alloc_params;
-  }
-
-  if (reset) {
-    if (glpool->upload)
-      gst_object_unref (glpool->upload);
-
-    glpool->upload = gst_gl_upload_meta_new (glpool->context);
   }
 
   priv->tex_target = 0;
@@ -280,11 +266,6 @@ unknown_format:
 static gboolean
 gst_gl_buffer_pool_start (GstBufferPool * pool)
 {
-  GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
-  GstGLBufferPoolPrivate *priv = glpool->priv;
-
-  gst_gl_upload_meta_set_format (glpool->upload, &priv->info);
-
   return GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
 }
 
@@ -321,9 +302,6 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   if (!gst_gl_memory_setup_buffer (glpool->context, priv->tex_target,
           &priv->params, info, valign, buf))
     goto mem_create_failed;
-
-  if (priv->add_uploadmeta)
-    gst_gl_upload_meta_add_to_buffer (glpool->upload, buf);
 
   if (priv->add_glsyncmeta)
     gst_buffer_add_gl_sync_meta (glpool->context, buf);
@@ -474,9 +452,6 @@ gst_gl_buffer_pool_finalize (GObject * object)
 
   if (priv->caps)
     gst_caps_unref (priv->caps);
-
-  if (pool->upload)
-    gst_object_unref (pool->upload);
 
   G_OBJECT_CLASS (gst_gl_buffer_pool_parent_class)->finalize (object);
 

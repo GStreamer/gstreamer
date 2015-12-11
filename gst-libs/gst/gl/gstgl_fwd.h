@@ -59,10 +59,6 @@ typedef struct _GstGLUpload GstGLUpload;
 typedef struct _GstGLUploadClass GstGLUploadClass;
 typedef struct _GstGLUploadPrivate GstGLUploadPrivate;
 
-typedef struct _GstGLUploadMeta GstGLUploadMeta;
-typedef struct _GstGLUploadMetaClass GstGLUploadMetaClass;
-typedef struct _GstGLUploadMetaPrivate GstGLUploadMetaPrivate;
-
 typedef struct _GstGLBufferPool GstGLBufferPool;
 typedef struct _GstGLBufferPoolClass GstGLBufferPoolClass;
 typedef struct _GstGLBufferPoolPrivate GstGLBufferPoolPrivate;
