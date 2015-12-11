@@ -440,7 +440,7 @@ ges_project_class_init (GESProjectClass * klass)
    */
   _signals[ASSET_ADDED_SIGNAL] =
       g_signal_new ("asset-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESProjectClass, asset_added),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GESProjectClass, asset_added),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_ASSET);
 
   /**
