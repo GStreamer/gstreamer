@@ -326,6 +326,7 @@ push_rtp_buffer_full (State * state, GstFlowReturn expected,
   GstBuffer *buf = gst_rtp_buffer_new_allocate (0, 0, 0);
   GstRTPBuffer rtp = { NULL };
   gboolean mapped = FALSE;
+  gboolean extra_ref = FALSE;
   va_list var_args;
 
   va_start (var_args, field);
@@ -360,6 +361,8 @@ push_rtp_buffer_full (State * state, GstFlowReturn expected,
       } else if (!g_strcmp0 (field, "ssrc")) {
         guint32 ssrc = va_arg (var_args, guint);
         gst_rtp_buffer_set_ssrc (&rtp, ssrc);
+      } else if (!g_strcmp0 (field, "extra-ref")) {
+        extra_ref = va_arg (var_args, gboolean);
       } else {
         fail ("test cannot set unknown buffer field '%s'", field);
       }
@@ -372,7 +375,13 @@ push_rtp_buffer_full (State * state, GstFlowReturn expected,
     gst_rtp_buffer_unmap (&rtp);
   }
 
+  if (extra_ref)
+    gst_buffer_ref (buf);
+
   fail_unless_equals_int (gst_pad_push (state->srcpad, buf), expected);
+
+  if (extra_ref)
+    gst_buffer_unref (buf);
 }
 
 #define push_buffer(state, field, ...) \
@@ -845,6 +854,41 @@ GST_START_TEST (rtp_base_depayload_packet_lost_test)
 }
 
 GST_END_TEST
+/* rtp base depayloader should set DISCONT flag on buffer in case of a large
+ * sequence number gap, and it's not set already by upstream. This tests a
+ * certain code path where the buffer needs to be made writable to set the
+ * DISCONT flag.
+ */
+GST_START_TEST (rtp_base_depayload_seq_discont_test)
+{
+  State *state;
+
+  state = create_depayloader ("application/x-rtp", NULL);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_rtp_buffer (state,
+      "pts", 0 * GST_SECOND,
+      "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 1, NULL);
+
+  push_rtp_buffer (state,
+      "extra-ref", TRUE,
+      "pts", 2 * GST_SECOND,
+      "rtptime", G_GUINT64_CONSTANT (0x1234) + DEFAULT_CLOCK_RATE / 2,
+      "seq", 33333, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (2);
+
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
+
+  validate_buffer (1, "pts", 2 * GST_SECOND, "discont", TRUE, NULL);
+
+  destroy_depayloader (state);
+}
+
+GST_END_TEST
 /* a depayloader that receives identical caps events simply ignores the latter
  * events without propagating them downstream.
  */
@@ -1125,8 +1169,7 @@ GST_START_TEST (rtp_base_depayload_clock_base_test)
   validate_event (3, "caps",
       "media-type", "application/x-rtp",
       "npt-start", G_GUINT64_CONSTANT (1234),
-      "npt-stop", G_GUINT64_CONSTANT (4321),
-      "clock-base", 1234, NULL);
+      "npt-stop", G_GUINT64_CONSTANT (4321), "clock-base", 1234, NULL);
 
   validate_event (4, "flush-start", NULL);
 
@@ -1160,6 +1203,7 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_depayload_without_negotiation_test);
 
   tcase_add_test (tc_chain, rtp_base_depayload_packet_lost_test);
+  tcase_add_test (tc_chain, rtp_base_depayload_seq_discont_test);
 
   tcase_add_test (tc_chain, rtp_base_depayload_repeated_caps_test);
   tcase_add_test (tc_chain, rtp_base_depayload_npt_test);
