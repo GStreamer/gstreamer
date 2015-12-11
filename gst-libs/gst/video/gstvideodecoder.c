@@ -2125,6 +2125,8 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
     priv->base_picture_number = 0;
 
     if (priv->pool) {
+      GST_DEBUG_OBJECT (decoder, "deactivate pool %" GST_PTR_FORMAT,
+          priv->pool);
       gst_buffer_pool_set_active (priv->pool, FALSE);
       gst_object_unref (priv->pool);
       priv->pool = NULL;
@@ -3623,6 +3625,9 @@ gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
   gst_buffer_pool_config_set_allocator (config, allocator, &params);
 
+  GST_DEBUG_OBJECT (decoder,
+      "setting config %" GST_PTR_FORMAT " in pool %" GST_PTR_FORMAT, config,
+      pool);
   if (!gst_buffer_pool_set_config (pool, config)) {
     config = gst_buffer_pool_get_config (pool);
 
@@ -3690,6 +3695,8 @@ gst_video_decoder_negotiate_pool (GstVideoDecoder * decoder, GstCaps * caps)
 
   query = gst_query_new_allocation (caps, TRUE);
 
+  GST_DEBUG_OBJECT (decoder, "do query ALLOCATION");
+
   if (!gst_pad_peer_query (decoder->srcpad, query)) {
     GST_DEBUG_OBJECT (decoder, "didn't get downstream ALLOCATION hints");
   }
@@ -3733,11 +3740,14 @@ gst_video_decoder_negotiate_pool (GstVideoDecoder * decoder, GstCaps * caps)
      * same bufferpool and deactivating it will make it fail.
      * Happens when a downstream element changes from passthrough to
      * non-passthrough and gets this same bufferpool to use */
+    GST_DEBUG_OBJECT (decoder, "unref pool %" GST_PTR_FORMAT,
+        decoder->priv->pool);
     gst_object_unref (decoder->priv->pool);
   }
   decoder->priv->pool = pool;
 
   /* and activate */
+  GST_DEBUG_OBJECT (decoder, "activate pool %" GST_PTR_FORMAT, pool);
   gst_buffer_pool_set_active (pool, TRUE);
 
 done:
@@ -3809,10 +3819,16 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
   }
 
   prevcaps = gst_pad_get_current_caps (decoder->srcpad);
-  if (!prevcaps || !gst_caps_is_equal (prevcaps, state->caps))
+  if (!prevcaps || !gst_caps_is_equal (prevcaps, state->caps)) {
+    if (!prevcaps) {
+      GST_DEBUG_OBJECT (decoder, "decoder src pad has currently NULL caps");
+    }
     ret = gst_pad_set_caps (decoder->srcpad, state->caps);
-  else
+  } else {
     ret = TRUE;
+    GST_DEBUG_OBJECT (decoder,
+        "current src pad and output state caps are the same");
+  }
   if (prevcaps)
     gst_caps_unref (prevcaps);
 
