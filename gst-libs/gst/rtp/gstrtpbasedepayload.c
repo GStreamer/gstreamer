@@ -345,6 +345,7 @@ caps_not_changed:
   }
 }
 
+/* takes ownership of the input buffer */
 static GstFlowReturn
 gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
     GstRTPBaseDepayloadClass * bclass, GstBuffer * in)
@@ -455,6 +456,8 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
     ret = gst_rtp_base_depayload_push (filter, out_buf);
   }
 
+  gst_buffer_unref (in);
+
   return ret;
 
   /* ERRORS */
@@ -469,6 +472,7 @@ not_negotiated:
             "element before the depayloader and setting the 'caps' property "
             "on that. Also see http://cgit.freedesktop.org/gstreamer/"
             "gst-plugins-good/tree/gst/rtp/README"));
+    gst_buffer_unref (in);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 invalid_buffer:
@@ -476,12 +480,14 @@ invalid_buffer:
     /* this is not fatal but should be filtered earlier */
     GST_ELEMENT_WARNING (filter, STREAM, DECODE, (NULL),
         ("Received invalid RTP payload, dropping"));
+    gst_buffer_unref (in);
     return GST_FLOW_OK;
   }
 dropping:
   {
     gst_rtp_buffer_unmap (&rtp);
     GST_WARNING_OBJECT (filter, "%d <= 100, dropping old packet", gap);
+    gst_buffer_unref (in);
     return GST_FLOW_OK;
   }
 no_process:
@@ -490,6 +496,7 @@ no_process:
     /* this is not fatal but should be filtered earlier */
     GST_ELEMENT_ERROR (filter, STREAM, NOT_IMPLEMENTED, (NULL),
         ("The subclass does not have a process or process_rtp_packet method"));
+    gst_buffer_unref (in);
     return GST_FLOW_ERROR;
   }
 }
@@ -506,8 +513,6 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (basedepay);
 
   flow_ret = gst_rtp_base_depayload_handle_buffer (basedepay, bclass, in);
-
-  gst_buffer_unref (in);
 
   return flow_ret;
 }
@@ -536,6 +541,10 @@ gst_rtp_base_depayload_chain_list (GstPad * pad, GstObject * parent,
 
   for (i = 0; i < len; i++) {
     buffer = gst_buffer_list_get (list, i);
+
+    /* handle_buffer takes ownership of input buffer */
+    /* FIXME: add a way to steal buffers from list as we will unref it anyway */
+    gst_buffer_ref (buffer);
 
     /* Should we fix up any missing timestamps for list buffers here
      * (e.g. set to first or previous timestamp in list) or just assume
