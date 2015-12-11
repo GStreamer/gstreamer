@@ -426,11 +426,21 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
   if (G_UNLIKELY (discont)) {
     priv->discont = TRUE;
     if (!buf_discont) {
+      gpointer old_inbuf = in;
+
       /* we detected a seqnum discont but the buffer was not flagged with a discont,
        * set the discont flag so that the subclass can throw away old data. */
       GST_LOG_OBJECT (filter, "mark DISCONT on input buffer");
       in = gst_buffer_make_writable (in);
       GST_BUFFER_FLAG_SET (in, GST_BUFFER_FLAG_DISCONT);
+      /* depayloaders will check flag on rtpbuffer->buffer, so if the input
+       * buffer was not writable already we need to remap to make our
+       * newly-flagged buffer current on the rtpbuffer */
+      if (in != old_inbuf) {
+        gst_rtp_buffer_unmap (&rtp);
+        if (G_UNLIKELY (!gst_rtp_buffer_map (in, GST_MAP_READ, &rtp)))
+          goto invalid_buffer;
+      }
     }
   }
 
