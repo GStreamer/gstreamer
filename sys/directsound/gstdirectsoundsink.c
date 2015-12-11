@@ -589,8 +589,8 @@ static gint
 gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
 {
   GstDirectSoundSink *dsoundsink;
-  DWORD dwStatus;
-  HRESULT hRes;
+  DWORD dwStatus = 0;
+  HRESULT hRes, hRes2;
   LPVOID pLockedBuffer1 = NULL, pLockedBuffer2 = NULL;
   DWORD dwSizeBuffer1, dwSizeBuffer2;
   DWORD dwCurrentPlayCursor;
@@ -603,10 +603,10 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
   hRes = IDirectSoundBuffer_GetStatus (dsoundsink->pDSBSecondary, &dwStatus);
 
   /* get current play cursor position */
-  hRes = IDirectSoundBuffer_GetCurrentPosition (dsoundsink->pDSBSecondary,
+  hRes2 = IDirectSoundBuffer_GetCurrentPosition (dsoundsink->pDSBSecondary,
       &dwCurrentPlayCursor, NULL);
 
-  if (SUCCEEDED (hRes) && (dwStatus & DSBSTATUS_PLAYING)) {
+  if (SUCCEEDED (hRes) && SUCCEEDED (hRes2) && (dwStatus & DSBSTATUS_PLAYING)) {
     DWORD dwFreeBufferSize;
 
   calculate_freesize:
@@ -624,14 +624,19 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
       hRes = IDirectSoundBuffer_GetCurrentPosition (dsoundsink->pDSBSecondary,
           &dwCurrentPlayCursor, NULL);
 
-      hRes =
+      hRes2 =
           IDirectSoundBuffer_GetStatus (dsoundsink->pDSBSecondary, &dwStatus);
-      if (SUCCEEDED (hRes) && (dwStatus & DSBSTATUS_PLAYING))
+      if (SUCCEEDED (hRes) && SUCCEEDED (hRes2)
+          && (dwStatus & DSBSTATUS_PLAYING))
         goto calculate_freesize;
       else {
         dsoundsink->first_buffer_after_reset = FALSE;
         GST_DSOUND_UNLOCK (dsoundsink);
-        return 0;
+        GST_ELEMENT_ERROR (dsoundsink, RESOURCE, OPEN_WRITE,
+            ("gst_directsound_sink_write: IDirectSoundBuffer_GetStatus %s, IDirectSoundBuffer_GetCurrentPosition: %s, dwStatus: %lu",
+                DXGetErrorString9 (hRes2), DXGetErrorString9 (hRes), dwStatus),
+            (NULL));
+        return -1;
       }
     }
   }
@@ -690,7 +695,7 @@ gst_directsound_sink_delay (GstAudioSink * asink)
   /* get current buffer status */
   hRes = IDirectSoundBuffer_GetStatus (dsoundsink->pDSBSecondary, &dwStatus);
 
-  if (dwStatus & DSBSTATUS_PLAYING) {
+  if (SUCCEEDED (hRes) && (dwStatus & DSBSTATUS_PLAYING)) {
     /*evaluate the number of samples in queue in the circular buffer */
     hRes = IDirectSoundBuffer_GetCurrentPosition (dsoundsink->pDSBSecondary,
         &dwCurrentPlayCursor, NULL);
