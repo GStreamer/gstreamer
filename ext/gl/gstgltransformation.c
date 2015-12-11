@@ -597,7 +597,7 @@ gst_gl_transformation_callback (gpointer stuff)
   gst_gl_context_clear_shader (GST_GL_BASE_FILTER (filter)->context);
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
-  gl->ClearColor (0.f, 0.f, 0.f, 1.f);
+  gl->ClearColor (0.f, 0.f, 0.f, 0.f);
   gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   gst_gl_shader_use (transformation->shader);
