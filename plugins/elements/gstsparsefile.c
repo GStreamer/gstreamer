@@ -145,7 +145,7 @@ get_read_range (GstSparseFile * file, gsize offset, gsize count)
 /**
  * gst_sparse_file_new:
  *
- * Make a new #GstSparseFile backed by the file represented with @fd.
+ * Make a new #GstSparseFile
  *
  * Returns: a new #GstSparseFile, gst_sparse_file_free() after usage.
  *
@@ -243,7 +243,7 @@ gst_sparse_file_free (GstSparseFile * file)
  * If @available is not %NULL, it will be updated with the amount of
  * data already available after the last written byte.
  *
- * Returns: The number of bytes written of 0 on error.
+ * Returns: The number of bytes written or 0 on error.
  *
  * Since: 1.4
  */
