@@ -4,6 +4,7 @@
 <FILE>gstdmabuf</FILE>
 <TITLE>dmabuf</TITLE>
 <INCLUDE>gst/allocators/gstdmabuf.h</INCLUDE>
+GST_CAPS_FEATURE_MEMORY_DMABUF
 gst_dmabuf_allocator_new
 gst_dmabuf_allocator_alloc
 gst_dmabuf_memory_get_fd
