@@ -545,12 +545,14 @@ gst_directsound_src_unprepare (GstAudioSrc * asrc)
 
   dsoundsrc = GST_DIRECTSOUND_SRC (asrc);
 
+  GST_DSOUND_LOCK (dsoundsrc);
+
   /* Stop capturing */
   IDirectSoundCaptureBuffer_Stop (dsoundsrc->pDSBSecondary);
 
   /* Release buffer  */
   IDirectSoundCaptureBuffer_Release (dsoundsrc->pDSBSecondary);
-
+  GST_DSOUND_UNLOCK (dsoundsrc);
   return TRUE;
 }
 
@@ -583,6 +585,11 @@ gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length,
   hRes = IDirectSoundCaptureBuffer_GetStatus (dsoundsrc->pDSBSecondary,
       &dwStatus);
 
+  if (FAILED (hRes)) {
+    GST_DSOUND_UNLOCK (dsoundsrc);
+    return -1;
+  }
+
   /* Starting capturing if not already */
   if (!(dwStatus & DSCBSTATUS_CAPTURING)) {
     hRes = IDirectSoundCaptureBuffer_Start (dsoundsrc->pDSBSecondary,
@@ -597,6 +604,11 @@ gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length,
     hRes =
         IDirectSoundCaptureBuffer_GetCurrentPosition (dsoundsrc->pDSBSecondary,
         &dwCurrentCaptureCursor, NULL);
+
+    if (FAILED (hRes)) {
+      GST_DSOUND_UNLOCK (dsoundsrc);
+      return -1;
+    }
 
     /* calculate the buffer */
     if (dwCurrentCaptureCursor < dsoundsrc->current_circular_offset) {
