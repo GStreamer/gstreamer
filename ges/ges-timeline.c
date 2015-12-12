@@ -186,6 +186,8 @@ struct _GESTimelinePrivate
    * probably through a ges_layer_get_track_elements () method */
   GHashTable *by_layer;         /* {layer: GSequence of TrackElement by start/priorities} */
 
+  /* Avoid sorting layers when we are actually resyncing them ourself */
+  gboolean resyncing_layers;
   GList *auto_transitions;
 
   MoveContext movecontext;
@@ -732,6 +734,22 @@ sort_layers (gpointer a, gpointer b)
     return -1;
 
   return 0;
+}
+
+static void
+_resync_layers (GESTimeline * timeline)
+{
+  GList *tmp;
+  gint i = 0;
+
+  timeline->priv->resyncing_layers = TRUE;
+  for (tmp = timeline->layers; tmp; tmp = tmp->next) {
+    GST_ERROR_OBJECT (tmp->data, "New index: %d", i);
+    ges_layer_set_priority (tmp->data, i);
+
+    i++;
+  }
+  timeline->priv->resyncing_layers = FALSE;
 }
 
 static void
@@ -3786,4 +3804,44 @@ ges_timeline_paste_element (GESTimeline * timeline,
   g_clear_object (&copied_from);
 
   return g_object_ref (res);
+}
+
+/**
+ * ges_timeline_move_layer:
+ * @timeline: The timeline in which @layer must be
+ * @layer: The layer to move at @new_layer_priority
+ * @new_layer_priority: The index at which @layer should land
+ *
+ * Moves @layer at @new_layer_priority meaning that @layer
+ * we land at that position in the stack of layers inside
+ * the timeline. If @new_layer_priority is superior than the number
+ * of layers present in the time, it will move to the end of the
+ * stack of layers.
+ */
+gboolean
+ges_timeline_move_layer (GESTimeline * timeline, GESLayer * layer,
+    guint new_layer_priority)
+{
+  gint current_priority;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
+  g_return_val_if_fail (ges_layer_get_timeline (layer) == timeline, FALSE);
+
+  current_priority = ges_layer_get_priority (layer);
+
+  if (new_layer_priority == current_priority) {
+    GST_DEBUG_OBJECT (timeline,
+        "Nothing to do for %" GST_PTR_FORMAT ", same priorities", layer);
+
+    return TRUE;
+  }
+
+  timeline->layers = g_list_remove (timeline->layers, layer);
+  timeline->layers = g_list_insert (timeline->layers, layer,
+      (gint) new_layer_priority);
+
+  _resync_layers (timeline);
+
+  return TRUE;
 }

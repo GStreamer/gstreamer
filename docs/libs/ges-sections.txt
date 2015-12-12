@@ -378,6 +378,7 @@ ges_timeline_enable_update
 ges_timeline_is_updating
 ges_timeline_commit
 ges_timeline_commit_sync
+ges_timeline_move_layer
 <SUBSECTION usage>
 ges_timeline_get_tracks
 ges_timeline_get_layer

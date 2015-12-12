@@ -161,6 +161,8 @@ gboolean ges_timeline_is_empty (GESTimeline * timeline);
 GES_API
 GESTimelineElement * ges_timeline_paste_element (GESTimeline * timeline,
   GESTimelineElement * element, GstClockTime position, gint layer_priority);
+GES_API
+gboolean ges_timeline_move_layer (GESTimeline *timeline, GESLayer *layer, guint new_layer_priority);
 
 G_END_DECLS
 
