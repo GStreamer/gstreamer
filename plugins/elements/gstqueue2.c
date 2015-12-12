@@ -734,7 +734,7 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
   /* now configure the values, we use these to track timestamps on the
    * sinkpad. */
   if (segment->format != GST_FORMAT_TIME) {
-    /* non-time format, pretent the current time segment is closed with a
+    /* non-time format, pretend the current time segment is closed with a
      * 0 start and unknown stop time. */
     segment->format = GST_FORMAT_TIME;
     segment->start = 0;
@@ -1543,7 +1543,7 @@ gst_queue2_open_temp_location_file (GstQueue2 * queue)
 
   GST_DEBUG_OBJECT (queue, "opening temp file %s", queue->temp_template);
 
-  /* If temp_template was set, allocate a filename and open that filen */
+  /* If temp_template was set, allocate a filename and open that file */
 
   /* nothing to do */
   if (queue->temp_template == NULL)
