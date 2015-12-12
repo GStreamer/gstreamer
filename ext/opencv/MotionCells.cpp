@@ -49,10 +49,7 @@
 //#endif
 #endif
 
-#include <cstdlib>
 #include <errno.h>
-#include <math.h>
-#include <gst/gst.h>
 #include "MotionCells.h"
 #include <opencv2/imgproc/imgproc_c.h>
 
