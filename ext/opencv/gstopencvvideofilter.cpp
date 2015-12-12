@@ -47,8 +47,6 @@
 #  include <config.h>
 #endif
 
-#include <gst/gst.h>
-
 #include "gstopencvvideofilter.h"
 #include "gstopencvutils.h"
 

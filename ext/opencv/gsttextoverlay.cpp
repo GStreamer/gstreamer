@@ -60,9 +60,6 @@
 #  include <config.h>
 #endif
 
-#include <gst/gst.h>
-
-#include "gstopencvutils.h"
 #include "gsttextoverlay.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_opencv_text_overlay_debug);

@@ -45,6 +45,7 @@
 #define __GST_DISPARITY_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 #include <opencv2/legacy/legacy.hpp>
 

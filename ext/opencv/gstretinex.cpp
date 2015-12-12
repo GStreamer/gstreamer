@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2013 Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -46,8 +46,8 @@
  *
  * Basic and multiscale retinex for colour image enhancement, see article:
  *
- * Rahman, Zia-ur, Daniel J. Jobson, and Glenn A. Woodell. "Multi-scale retinex for 
- * color image enhancement." Image Processing, 1996. Proceedings., International 
+ * Rahman, Zia-ur, Daniel J. Jobson, and Glenn A. Woodell. "Multi-scale retinex for
+ * color image enhancement." Image Processing, 1996. Proceedings., International
  * Conference on. Vol. 3. IEEE, 1996.
  *
  * <refsect2>
@@ -62,7 +62,6 @@
 #include <config.h>
 #endif
 
-#include <gst/gst.h>
 #include "gstretinex.h"
 #include <opencv2/imgproc/imgproc_c.h>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -304,7 +303,7 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
 
   /* Basic retinex restoration.  The image and a filtered image are converted
      to the log domain and subtracted.
-     O = Log(I) - Log(H(I))   
+     O = Log(I) - Log(H(I))
      where O is the output, H is a gaussian 2d filter and I is the input image. */
   if (METHOD_BASIC == retinex->method) {
     /*  Compute log image */

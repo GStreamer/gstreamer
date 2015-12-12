@@ -62,7 +62,6 @@
 
 /* element header */
 #include "gsthanddetect.h"
-#include "gstopencvutils.h"
 #include <opencv2/imgproc/imgproc_c.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_handdetect_debug);

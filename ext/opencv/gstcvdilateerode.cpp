@@ -50,8 +50,6 @@
 #  include <config.h>
 #endif
 
-#include <gst/gst.h>
-
 #include "gstopencvutils.h"
 #include "gstcvdilateerode.h"
 

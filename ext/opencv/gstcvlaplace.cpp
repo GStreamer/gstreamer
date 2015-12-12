@@ -45,9 +45,6 @@
 #  include <config.h>
 #endif
 
-#include <gst/gst.h>
-
-#include "gstopencvutils.h"
 #include "gstcvlaplace.h"
 #include <opencv2/imgproc/imgproc_c.h>
 

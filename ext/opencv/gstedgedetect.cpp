@@ -3,7 +3,7 @@
  * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2008 Michael Sheldon <mike@mikeasoft.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -60,9 +60,6 @@
 #  include <config.h>
 #endif
 
-#include <gst/gst.h>
-
-#include "gstopencvutils.h"
 #include "gstedgedetect.h"
 #include <opencv2/imgproc/imgproc_c.h>
 

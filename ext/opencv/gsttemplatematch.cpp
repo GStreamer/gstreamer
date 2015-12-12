@@ -61,10 +61,7 @@
 #  include <config.h>
 #endif
 
-#include <gst/gst.h>
-
 #include "../../gst-libs/gst/gst-i18n-plugin.h"
-#include "gstopencvutils.h"
 #include "gsttemplatematch.h"
 #include <opencv2/imgproc/imgproc_c.h>
 

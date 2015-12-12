@@ -53,32 +53,32 @@
  * run prefiltering stages to normalize brightness between the inputs, and to maximize texture.
  *
  * Note that in general is hard to find correspondences between soft textures, for instance a
- * block of gloss blue colour. The output is a gray image with values close to white meaning 
+ * block of gloss blue colour. The output is a gray image with values close to white meaning
  * closer to the cameras and darker far away. Black means that the pixels were not matched
  * correctly (not found). The resulting depth map can be transformed into real world coordinates
  * by means of OpenCV function (reprojectImageTo3D) but for this the camera matrixes need to
  * be fully known.
  *
  * Algorithm 1 is the OpenCV Stereo Block Matching, similar to the one developed by Kurt Konolige
- * [A] and that works by using small Sum-of-absolute-differenc (SAD) windows to find matching 
+ * [A] and that works by using small Sum-of-absolute-differenc (SAD) windows to find matching
  * points between the left and right rectified images. This algorithm finds only strongly matching
  * points between both images, this means normally strong textures. In soft textures, such as a
  * single coloured wall (as opposed to, f.i. a hairy rug), not all pixels might have correspondence.
  *
  * Algorithm 2 is the Semi Global Matching (SGM) algorithm [B] which models the scene structure
- * with a point-wise matching cost and an associated smoothness term. The energy minimization 
- * is then computed in a multitude of 1D lines. For each point, the disparity corresponding to 
- * the minimum aggregated cost is selected. In [B] the author proposes to use 8 or 16 different 
- * independent paths. The SGM approach works well near depth discontinuities, but produces less 
- * accurate results. Despite its relatively large memory footprint, this method is very fast and 
+ * with a point-wise matching cost and an associated smoothness term. The energy minimization
+ * is then computed in a multitude of 1D lines. For each point, the disparity corresponding to
+ * the minimum aggregated cost is selected. In [B] the author proposes to use 8 or 16 different
+ * independent paths. The SGM approach works well near depth discontinuities, but produces less
+ * accurate results. Despite its relatively large memory footprint, this method is very fast and
  * potentially robust to complicated textured regions.
  *
- * Algorithm 3 is the OpenCV implementation of a modification of the variational stereo 
+ * Algorithm 3 is the OpenCV implementation of a modification of the variational stereo
  * correspondence algorithm, described in [C].
  *
- * Algorithm 4 is the Graph Cut stereo vision algorithm (GC) introduced in [D]; it is a global 
+ * Algorithm 4 is the Graph Cut stereo vision algorithm (GC) introduced in [D]; it is a global
  * stereo vision method. It calculates depth discontinuities by minimizing an energy function
- * combingin a point-wise matching cost and a smoothness term. The energy function is passed 
+ * combingin a point-wise matching cost and a smoothness term. The energy function is passed
  * to graph and Graph Cut is used to find a lowest-energy cut. GC is computationally intensive due
  * to its global nature and uses loads of memory, but it can deal with textureless regions and
  * reflections better than other methods.
@@ -86,15 +86,15 @@
  *
  * Some test images can be found here: http://vision.stanford.edu/~birch/p2p/
  *
- * [A] K. Konolige. Small vision system. hardware and implementation. In Proc. International 
+ * [A] K. Konolige. Small vision system. hardware and implementation. In Proc. International
  * Symposium on Robotics Research, pages 111--116, Hayama, Japan, 1997.
- * [B] H. Hirschmüller, “Accurate and efficient stereo processing by semi-global matching and 
- * mutual information,” in Proceedings of the IEEE Conference on Computer Vision and Pattern 
+ * [B] H. Hirschmüller, “Accurate and efficient stereo processing by semi-global matching and
+ * mutual information,” in Proceedings of the IEEE Conference on Computer Vision and Pattern
  * Recognition, 2005, pp. 807–814.
  * [C] S. Kosov, T. Thormaehlen, H.-P. Seidel "Accurate Real-Time Disparity Estimation with
- * Variational Methods" Proceedings of the 5th International Symposium on Visual Computing, 
+ * Variational Methods" Proceedings of the 5th International Symposium on Visual Computing,
  * Vegas, USA
- * [D] Scharstein, D. & Szeliski, R. (2001). A taxonomy and evaluation of dense two-frame stereo 
+ * [D] Scharstein, D. & Szeliski, R. (2001). A taxonomy and evaluation of dense two-frame stereo
  * correspondence algorithms, International Journal of Computer Vision 47: 7–42.
  *
  * <refsect2>
@@ -103,7 +103,7 @@
  * gst-launch-1.0       videotestsrc ! video/x-raw,width=320,height=240 ! disp0.sink_right      videotestsrc ! video/x-raw,width=320,height=240 ! disp0.sink_left      disparity name=disp0 ! videoconvert ! ximagesink
  * ]|
  * Another example, with two png files representing a classical stereo matching,
- * downloadable from http://vision.middlebury.edu/stereo/submit/tsukuba/im4.png and 
+ * downloadable from http://vision.middlebury.edu/stereo/submit/tsukuba/im4.png and
  * im3.png. Note here they are downloaded in ~ (home).
  * |[
 gst-launch-1.0    multifilesrc  location=~/im3.png ! pngdec ! videoconvert  ! disp0.sink_right     multifilesrc  location=~/im4.png ! pngdec ! videoconvert ! disp0.sink_left disparity   name=disp0 method=sbm     disp0.src ! videoconvert ! ximagesink
@@ -119,8 +119,6 @@ gst-launch-1.0    multifilesrc  location=~/im3.png ! pngdec ! videoconvert  ! di
 #include <config.h>
 #endif
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
 #include <opencv2/contrib/contrib.hpp>
 #include "gstdisparity.h"
 
@@ -548,19 +546,19 @@ gst_disparity_chain_right (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       fs->width, fs->height, fs->actualChannels);
 
   /* Stereo corresponding using semi-global block matching. According to OpenCV:
-     "" The class implements modified H. Hirschmuller algorithm HH08 . The main 
+     "" The class implements modified H. Hirschmuller algorithm HH08 . The main
      differences between the implemented algorithm and the original one are:
 
-     - by default the algorithm is single-pass, i.e. instead of 8 directions we 
+     - by default the algorithm is single-pass, i.e. instead of 8 directions we
      only consider 5. Set fullDP=true to run the full variant of the algorithm
      (which could consume a lot of memory)
      - the algorithm matches blocks, not individual pixels (though, by setting
      SADWindowSize=1 the blocks are reduced to single pixels)
      - mutual information cost function is not implemented. Instead, we use a
-     simpler Birchfield-Tomasi sub-pixel metric from BT96 , though the color 
+     simpler Birchfield-Tomasi sub-pixel metric from BT96 , though the color
      images are supported as well.
-     - we include some pre- and post- processing steps from K. Konolige 
-     algorithm FindStereoCorrespondenceBM , such as pre-filtering 
+     - we include some pre- and post- processing steps from K. Konolige
+     algorithm FindStereoCorrespondenceBM , such as pre-filtering
      ( CV_STEREO_BM_XSOBEL type) and post-filtering (uniqueness check, quadratic
      interpolation and speckle filtering) ""
    */
@@ -572,7 +570,7 @@ gst_disparity_chain_right (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         CV_MINMAX, NULL);
     cvCvtColor (fs->cvGray_depth_map2, fs->cvRGB_right, CV_GRAY2RGB);
   }
-  /* Algorithm 1 is the OpenCV Stereo Block Matching, similar to the one 
+  /* Algorithm 1 is the OpenCV Stereo Block Matching, similar to the one
      developed by Kurt Konolige [A] and that works by using small Sum-of-absolute-
      differences (SAD) window. See the comments on top of the file.
    */
@@ -593,9 +591,9 @@ gst_disparity_chain_right (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     run_svar_iteration (fs);
     cvCvtColor (fs->cvGray_depth_map2, fs->cvRGB_right, CV_GRAY2RGB);
   }
-  /* The Graph Cut stereo vision algorithm (GC) introduced in [D] is a global 
-     stereo vision method. It calculates depth discontinuities by minimizing an 
-     energy function combingin a point-wise matching cost and a smoothness term. 
+  /* The Graph Cut stereo vision algorithm (GC) introduced in [D] is a global
+     stereo vision method. It calculates depth discontinuities by minimizing an
+     energy function combingin a point-wise matching cost and a smoothness term.
      See the comments on top of the file.
    */
   else if (METHOD_GC == fs->method) {

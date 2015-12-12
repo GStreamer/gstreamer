@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2013 Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -58,9 +58,6 @@
 #include <config.h>
 #endif
 
-#include <gst/gst.h>
-
-#include "gstopencvutils.h"
 #include "gstskindetect.h"
 #include <opencv2/imgproc/imgproc_c.h>
 #include <opencv2/legacy/compat.hpp>
@@ -327,7 +324,7 @@ gst_skin_detect_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
     cvCvtColor (filter->cvRGB, filter->cvHSV, CV_RGB2HSV);
     cvCvtPixToPlane (filter->cvHSV, filter->cvH, filter->cvS, filter->cvV, 0);  /*  Extract the 3 color components. */
 
-    /*  Detect which pixels in each of the H, S and V channels are probably skin pixels. 
+    /*  Detect which pixels in each of the H, S and V channels are probably skin pixels.
        Assume that skin has a Hue between 0 to 18 (out of 180), and Saturation above 50, and Brightness above 80. */
     cvThreshold (filter->cvH, filter->cvH2, 10, UCHAR_MAX, CV_THRESH_BINARY);   /* (hue > 10) */
     cvThreshold (filter->cvH, filter->cvH, 20, UCHAR_MAX, CV_THRESH_BINARY_INV);        /* (hue < 20) */
@@ -337,7 +334,7 @@ gst_skin_detect_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
     /*  erode the HUE to get rid of noise. */
     cvErode (filter->cvH, filter->cvH, NULL, 1);
 
-    /*  Combine all 3 thresholded color components, so that an output pixel will only 
+    /*  Combine all 3 thresholded color components, so that an output pixel will only
        be white (255) if the H, S and V pixels were also white.
        imageSkin = (hue > 10) ^ (hue < 20) ^ (sat > 48) ^ (val > 80), where   ^ mean pixels-wise AND */
     cvAnd (filter->cvH, filter->cvS, filter->cvSkinPixels1, NULL);
@@ -375,7 +372,7 @@ gst_skin_detect_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
     cvCvtColor (filter->cvdraft, filter->cvRGB, CV_GRAY2RGB);
   }
 
-  /* After this we have a RGB Black and white image with the skin, in 
+  /* After this we have a RGB Black and white image with the skin, in
      filter->cvRGB. We can postprocess by applying 1 erode-dilate and 1
      dilate-erode, or alternatively 1 opening-closing all together, with
      the goal of removing small (spurious) skin spots and creating large

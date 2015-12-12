@@ -76,11 +76,8 @@
 #  include <config.h>
 #endif
 
-#include <gst/gst.h>
-#include <gst/video/gstvideometa.h>
 #include <vector>
 
-#include "gstopencvutils.h"
 #include "gstfacedetect.h"
 #include <opencv2/imgproc/imgproc_c.h>
 
@@ -573,7 +570,7 @@ gst_face_detect_run_detector (GstFaceDetect * filter,
   }
 }
 
-/* 
+/*
  * Performs the face detection
  */
 static GstFlowReturn

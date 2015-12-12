@@ -45,10 +45,6 @@
 #ifndef __GST_HANDDETECT_H__
 #define __GST_HANDDETECT_H__
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/video/navigation.h>
-
 #include <cv.h>
 
 #include "gstopencvvideofilter.h"

@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2013 Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -44,9 +44,6 @@
 #ifndef __GST_RETINEX_H__
 #define __GST_RETINEX_H__
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
 #include <opencv2/core/core_c.h>
 
 #include <gstopencvvideofilter.h>

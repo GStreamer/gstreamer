@@ -60,9 +60,6 @@
 #  include <config.h>
 #endif
 
-#include <gst/gst.h>
-
-#include "gstopencvutils.h"
 #include "gstpyramidsegment.h"
 
 #define BLOCK_SIZE 1000

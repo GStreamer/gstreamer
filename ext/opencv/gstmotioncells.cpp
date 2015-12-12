@@ -59,15 +59,7 @@
 #  include <config.h>
 #endif
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/time.h>
-#include <time.h>
-#include <limits.h>
-
-#include <glib.h>
 #include "gstmotioncells.h"
-#include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_motion_cells_debug);
 #define GST_CAT_DEFAULT gst_motion_cells_debug

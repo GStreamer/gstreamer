@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -44,8 +44,6 @@
 #ifndef __GST_CV_LAPLACE_H__
 #define __GST_CV_LAPLACE_H__
 
-#include <gst/gst.h>
-
 #include <gstopencvvideofilter.h>
 
 G_BEGIN_DECLS
@@ -76,7 +74,7 @@ struct _GstCvLaplace
   IplImage *intermediary_img;
 };
 
-struct _GstCvLaplaceClass 
+struct _GstCvLaplaceClass
 {
   GstOpencvVideoFilterClass parent_class;
 };

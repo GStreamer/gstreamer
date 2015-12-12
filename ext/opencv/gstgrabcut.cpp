@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2013 Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -48,23 +48,23 @@
  * This element is a wrapper around OpenCV grabcut implementation. GrabCut is an
  * image segmentation method based on graph cuts technique. It can be seen as a
  * way of fine-grain segmenting the image from some FG and BG "seed" areas. The
- * OpenCV implementation follows the article [1]. 
+ * OpenCV implementation follows the article [1].
  * The "seed" areas are taken in this element from either an input bounding box
  * coming from a face detection, or from alpha channel values. The input box is
- * taken from a "face" event such as the one generated from the 'facedetect' 
- * element. The Alpha channel values should be one of the following (cv.hpp): 
- * enum{  
+ * taken from a "face" event such as the one generated from the 'facedetect'
+ * element. The Alpha channel values should be one of the following (cv.hpp):
+ * enum{
  *  GC_BGD    = 0,  //!< background
  *  GC_FGD    = 1,  //!< foreground
  *  GC_PR_BGD = 2,  //!< most probably background
  *  GC_PR_FGD = 3   //!< most probably foreground
  * };
  * with values over GC_PR_FGD interpreted as GC_PR_FGD. IN CASE OF no alpha mask
- * input (all 0's or all 1's), the 'GstOpenCvFaceDetect-face' downstream event 
+ * input (all 0's or all 1's), the 'GstOpenCvFaceDetect-face' downstream event
  * is used to create a bbox of PR_FG elements. If both foreground alpha
  * is not specified and there is no face detection, nothing is done.
  *
- * [1] C. Rother, V. Kolmogorov, and A. Blake, "GrabCut: Interactive foreground 
+ * [1] C. Rother, V. Kolmogorov, and A. Blake, "GrabCut: Interactive foreground
  * extraction using iterated graph cuts, ACM Trans. Graph., vol. 23, pp. 309–314,
  * 2004.
  *
@@ -84,11 +84,9 @@
 #include <config.h>
 #endif
 
-#include <gst/gst.h>
 #include "gstgrabcut.h"
 extern "C"
 {
-#include <gst/video/gstvideometa.h>
 #include <opencv2/imgproc/imgproc_c.h>
 }
 #include <opencv2/imgproc/imgproc.hpp>
@@ -326,8 +324,8 @@ gst_grabcut_transform_ip (GstVideoFilter * btrans, GstVideoFrame * frame)
   cvCvtColor (gc->cvRGBAin, gc->cvRGBin, CV_BGRA2BGR);
   compose_matrix_from_image (gc->grabcut_mask, gc->cvD);
 
-  /*  Pass cvD to grabcut_mask for the graphcut stuff but that only if 
-     really there is something in the mask! otherwise -->input bbox is 
+  /*  Pass cvD to grabcut_mask for the graphcut stuff but that only if
+     really there is something in the mask! otherwise -->input bbox is
      what we use */
   alphapixels = cvCountNonZero (gc->cvD);
   if ((0 < alphapixels) && (alphapixels < (gc->width * gc->height))) {
