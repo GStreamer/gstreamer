@@ -73,6 +73,14 @@
 #include <unistd.h>
 #endif
 
+#ifdef __BIONIC__               /* Android */
+#undef lseek
+#define lseek lseek64
+#undef off_t
+#define off_t guint64
+#include <fcntl.h>
+#endif
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -1500,7 +1508,13 @@ gst_queue2_open_temp_location_file (GstQueue2 * queue)
 
   /* make copy of the template, we don't want to change this */
   name = g_strdup (queue->temp_template);
+
+#ifdef __BIONIC__
+  fd = g_mkstemp_full (name, O_RDWR | O_LARGEFILE, S_IRUSR | S_IWUSR);
+#else
   fd = g_mkstemp (name);
+#endif
+
   if (fd == -1)
     goto mkstemp_failed;
 
