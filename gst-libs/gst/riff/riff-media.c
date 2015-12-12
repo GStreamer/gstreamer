@@ -115,6 +115,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_RIFF_I420:
+    case GST_RIFF_i420:
+    case GST_RIFF_IYUV:
       caps = gst_caps_new_simple ("video/x-raw",
           "format", G_TYPE_STRING, "I420", NULL);
       if (codec_name)
@@ -122,7 +124,9 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_RIFF_YUY2:
+    case GST_RIFF_yuy2:
     case GST_MAKE_FOURCC ('Y', 'U', 'N', 'V'):
+    case GST_MAKE_FOURCC ('Y', 'U', 'Y', 'V'):
       caps = gst_caps_new_simple ("video/x-raw",
           "format", G_TYPE_STRING, "YUY2", NULL);
       if (codec_name)
@@ -138,6 +142,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
     case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
     case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):
+    case GST_MAKE_FOURCC ('H', 'D', 'Y', 'C'):
       caps = gst_caps_new_simple ("video/x-raw",
           "format", G_TYPE_STRING, "UYVY", NULL);
       if (codec_name)
@@ -145,6 +150,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_RIFF_YV12:
+    case GST_RIFF_yv12:
       caps = gst_caps_new_simple ("video/x-raw",
           "format", G_TYPE_STRING, "YV12", NULL);
       if (codec_name)
@@ -158,9 +164,11 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_RIFF_MJPG:        /* YUY2 MJPEG */
+    case GST_RIFF_mJPG:
     case GST_MAKE_FOURCC ('A', 'V', 'R', 'n'):
     case GST_RIFF_IJPG:
     case GST_MAKE_FOURCC ('i', 'j', 'p', 'g'):
+    case GST_RIFF_DMB1:
     case GST_RIFF_dmb1:
     case GST_MAKE_FOURCC ('A', 'C', 'D', 'V'):
     case GST_MAKE_FOURCC ('Q', 'I', 'V', 'G'):
@@ -170,6 +178,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_RIFF_JPEG:        /* generic (mostly RGB) MJPEG */
+    case GST_RIFF_jpeg:
     case GST_MAKE_FOURCC ('j', 'p', 'e', 'g'): /* generic (mostly RGB) MJPEG */
       caps = gst_caps_new_empty_simple ("image/jpeg");
       if (codec_name)
@@ -178,6 +187,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
     case GST_MAKE_FOURCC ('P', 'I', 'X', 'L'): /* Miro/Pinnacle fourccs */
     case GST_RIFF_VIXL:        /* Miro/Pinnacle fourccs */
+    case GST_RIFF_vixl:
       caps = gst_caps_new_empty_simple ("image/jpeg");
       if (codec_name)
         *codec_name = g_strdup ("Miro/Pinnacle Motion JPEG");
@@ -578,6 +588,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_RIFF_cvid:
+    case GST_RIFF_CVID:
       caps = gst_caps_new_empty_simple ("video/x-cinepak");
       if (codec_name)
         *codec_name = g_strdup ("Cinepak video");
@@ -633,6 +644,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_RIFF_RT21:
+    case GST_RIFF_rt21:
       caps = gst_caps_new_simple ("video/x-indeo",
           "indeoversion", G_TYPE_INT, 2, NULL);
       if (codec_name)
@@ -716,6 +728,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_RIFF_ULTI:
+    case GST_RIFF_ulti:
       caps = gst_caps_new_empty_simple ("video/x-ultimotion");
       if (codec_name)
         *codec_name = g_strdup ("IBM UltiMotion");
