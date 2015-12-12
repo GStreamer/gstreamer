@@ -30,7 +30,7 @@
  * With max-size-bytes and max-size-time you can configure the buffering limits.
  * The downloadbuffer element will try to read-ahead these amounts of data. When
  * the amount of read-ahead data drops below low-percent of the configured max,
- * the element will start emiting BUFFERING messages until high-percent of max is
+ * the element will start emitting BUFFERING messages until high-percent of max is
  * reached again.
  *
  * The downloadbuffer provides push and pull based scheduling on its source pad
@@ -874,7 +874,7 @@ gst_download_buffer_open_temp_location_file (GstDownloadBuffer * dlbuf)
 
   GST_DEBUG_OBJECT (dlbuf, "opening temp file %s", dlbuf->temp_template);
 
-  /* If temp_template was set, allocate a filename and open that filen */
+  /* If temp_template was set, allocate a filename and open that file */
 
   /* nothing to do */
   if (dlbuf->temp_template == NULL)
