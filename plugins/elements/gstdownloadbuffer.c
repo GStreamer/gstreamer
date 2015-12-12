@@ -76,6 +76,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef __BIONIC__
+#include <fcntl.h>
+#endif
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -878,7 +882,11 @@ gst_download_buffer_open_temp_location_file (GstDownloadBuffer * dlbuf)
 
   /* make copy of the template, we don't want to change this */
   name = g_strdup (dlbuf->temp_template);
+#ifdef __BIONIC__
+  fd = g_mkstemp_full (name, O_RDWR | O_LARGEFILE, S_IRUSR | S_IWUSR);
+#else
   fd = g_mkstemp (name);
+#endif
   if (fd == -1)
     goto mkstemp_failed;
 
