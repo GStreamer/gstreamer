@@ -70,8 +70,6 @@
 #include <io.h>                 /* lseek, open, close, read */
 #undef lseek
 #define lseek _lseeki64
-#undef off_t
-#define off_t guint64
 #else
 #include <unistd.h>
 #endif
