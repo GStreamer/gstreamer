@@ -59,10 +59,10 @@ gst_riff_create_video_caps (guint32 codec_fcc,
   GST_DEBUG ("video fourcc %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (codec_fcc));
 
   switch (codec_fcc) {
-    case GST_MAKE_FOURCC ('D', 'I', 'B', ' '): /* uncompressed RGB */
-    case GST_MAKE_FOURCC (0x00, 0x00, 0x00, 0x00):
-    case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
-    case GST_MAKE_FOURCC ('R', 'A', 'W', ' '):
+    case GST_RIFF_DIB:         /* uncompressed RGB */
+    case GST_RIFF_rgb:
+    case GST_RIFF_RGB:
+    case GST_RIFF_RAW:
     {
       gint bpp = (strf && strf->bit_cnt != 0) ? strf->bit_cnt : 8;
 
@@ -114,14 +114,14 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Uncompressed packed RGB 10-bit 4:4:4");
       break;
 
-    case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+    case GST_RIFF_I420:
       caps = gst_caps_new_simple ("video/x-raw",
           "format", G_TYPE_STRING, "I420", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Uncompressed planar YUV 4:2:0");
       break;
 
-    case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+    case GST_RIFF_YUY2:
     case GST_MAKE_FOURCC ('Y', 'U', 'N', 'V'):
       caps = gst_caps_new_simple ("video/x-raw",
           "format", G_TYPE_STRING, "YUY2", NULL);
@@ -129,7 +129,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Uncompressed packed YUV 4:2:2");
       break;
 
-    case GST_MAKE_FOURCC ('Y', 'V', 'U', '9'):
+    case GST_RIFF_YVU9:
       caps = gst_caps_new_simple ("video/x-raw",
           "format", G_TYPE_STRING, "YVU9", NULL);
       if (codec_name)
@@ -144,7 +144,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Uncompressed packed YUV 4:2:2");
       break;
 
-    case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+    case GST_RIFF_YV12:
       caps = gst_caps_new_simple ("video/x-raw",
           "format", G_TYPE_STRING, "YV12", NULL);
       if (codec_name)
@@ -157,11 +157,11 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Uncompressed packed 10-bit YUV 4:2:2");
       break;
 
-    case GST_MAKE_FOURCC ('M', 'J', 'P', 'G'): /* YUY2 MJPEG */
+    case GST_RIFF_MJPG:        /* YUY2 MJPEG */
     case GST_MAKE_FOURCC ('A', 'V', 'R', 'n'):
-    case GST_MAKE_FOURCC ('I', 'J', 'P', 'G'):
+    case GST_RIFF_IJPG:
     case GST_MAKE_FOURCC ('i', 'j', 'p', 'g'):
-    case GST_MAKE_FOURCC ('d', 'm', 'b', '1'):
+    case GST_RIFF_dmb1:
     case GST_MAKE_FOURCC ('A', 'C', 'D', 'V'):
     case GST_MAKE_FOURCC ('Q', 'I', 'V', 'G'):
       caps = gst_caps_new_empty_simple ("image/jpeg");
@@ -169,7 +169,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Motion JPEG");
       break;
 
-    case GST_MAKE_FOURCC ('J', 'P', 'E', 'G'): /* generic (mostly RGB) MJPEG */
+    case GST_RIFF_JPEG:        /* generic (mostly RGB) MJPEG */
     case GST_MAKE_FOURCC ('j', 'p', 'e', 'g'): /* generic (mostly RGB) MJPEG */
       caps = gst_caps_new_empty_simple ("image/jpeg");
       if (codec_name)
@@ -177,7 +177,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_MAKE_FOURCC ('P', 'I', 'X', 'L'): /* Miro/Pinnacle fourccs */
-    case GST_MAKE_FOURCC ('V', 'I', 'X', 'L'): /* Miro/Pinnacle fourccs */
+    case GST_RIFF_VIXL:        /* Miro/Pinnacle fourccs */
       caps = gst_caps_new_empty_simple ("image/jpeg");
       if (codec_name)
         *codec_name = g_strdup ("Miro/Pinnacle Motion JPEG");
@@ -267,9 +267,9 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Lead MPEG-2 video");
       break;
 
-    case GST_MAKE_FOURCC ('H', '2', '6', '3'):
-    case GST_MAKE_FOURCC ('h', '2', '6', '3'):
-    case GST_MAKE_FOURCC ('i', '2', '6', '3'):
+    case GST_RIFF_H263:
+    case GST_RIFF_h263:
+    case GST_RIFF_i263:
     case GST_MAKE_FOURCC ('U', '2', '6', '3'):
     case GST_MAKE_FOURCC ('v', 'i', 'v', '1'):
     case GST_MAKE_FOURCC ('T', '2', '6', '3'):
@@ -279,7 +279,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("ITU H.26n");
       break;
 
-    case GST_MAKE_FOURCC ('L', '2', '6', '3'):
+    case GST_RIFF_L263:
       /* http://www.leadcodecs.com/Codecs/LEAD-H263.htm */
       caps = gst_caps_new_simple ("video/x-h263",
           "variant", G_TYPE_STRING, "lead", NULL);
@@ -287,15 +287,15 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Lead H.263");
       break;
 
-    case GST_MAKE_FOURCC ('M', '2', '6', '3'):
-    case GST_MAKE_FOURCC ('m', '2', '6', '3'):
+    case GST_RIFF_M263:
+    case GST_RIFF_m263:
       caps = gst_caps_new_simple ("video/x-h263",
           "variant", G_TYPE_STRING, "microsoft", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Microsoft H.263");
       break;
 
-    case GST_MAKE_FOURCC ('V', 'D', 'O', 'W'):
+    case GST_RIFF_VDOW:
       caps = gst_caps_new_simple ("video/x-h263",
           "variant", G_TYPE_STRING, "vdolive", NULL);
       if (codec_name)
@@ -309,7 +309,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Vivo H.263");
       break;
 
-    case GST_MAKE_FOURCC ('x', '2', '6', '3'):
+    case GST_RIFF_x263:
       caps = gst_caps_new_simple ("video/x-h263",
           "variant", G_TYPE_STRING, "xirlink", NULL);
       if (codec_name)
@@ -343,7 +343,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("ITU H.264");
       break;
 
-    case GST_MAKE_FOURCC ('V', 'S', 'S', 'H'):
+    case GST_RIFF_VSSH:
       caps = gst_caps_new_simple ("video/x-h264",
           "variant", G_TYPE_STRING, "videosoft", NULL);
       if (codec_name)
@@ -374,7 +374,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Divio MPEG-4");
       break;
 
-    case GST_MAKE_FOURCC ('D', 'I', 'V', '3'):
+    case GST_RIFF_DIV3:
     case GST_MAKE_FOURCC ('d', 'i', 'v', '3'):
     case GST_MAKE_FOURCC ('D', 'V', 'X', '3'):
     case GST_MAKE_FOURCC ('d', 'v', 'x', '3'):
@@ -577,18 +577,18 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Microsoft Windows Media VC-1");
       break;
 
-    case GST_MAKE_FOURCC ('c', 'v', 'i', 'd'):
+    case GST_RIFF_cvid:
       caps = gst_caps_new_empty_simple ("video/x-cinepak");
       if (codec_name)
         *codec_name = g_strdup ("Cinepak video");
       break;
 
-    case GST_MAKE_FOURCC ('M', 'S', 'V', 'C'):
-    case GST_MAKE_FOURCC ('m', 's', 'v', 'c'):
-    case GST_MAKE_FOURCC ('C', 'R', 'A', 'M'):
-    case GST_MAKE_FOURCC ('c', 'r', 'a', 'm'):
-    case GST_MAKE_FOURCC ('W', 'H', 'A', 'M'):
-    case GST_MAKE_FOURCC ('w', 'h', 'a', 'm'):
+    case GST_RIFF_FCCH_MSVC:
+    case GST_RIFF_FCCH_msvc:
+    case GST_RIFF_CRAM:
+    case GST_RIFF_cram:
+    case GST_RIFF_WHAM:
+    case GST_RIFF_wham:
       caps = gst_caps_new_simple ("video/x-msvideocodec",
           "msvideoversion", G_TYPE_INT, 1, NULL);
       if (strf) {
@@ -601,7 +601,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       strf_data = NULL;
       break;
 
-    case GST_MAKE_FOURCC ('R', 'L', 'E', ' '):
+    case GST_RIFF_FCCH_RLE:
     case GST_MAKE_FOURCC ('m', 'r', 'l', 'e'):
     case GST_MAKE_FOURCC (0x1, 0x0, 0x0, 0x0): /* why, why, why? */
     case GST_MAKE_FOURCC (0x2, 0x0, 0x0, 0x0): /* why, why, why? */
@@ -632,32 +632,32 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Xan Wing Commander 4");
       break;
 
-    case GST_MAKE_FOURCC ('R', 'T', '2', '1'):
+    case GST_RIFF_RT21:
       caps = gst_caps_new_simple ("video/x-indeo",
           "indeoversion", G_TYPE_INT, 2, NULL);
       if (codec_name)
         *codec_name = g_strdup ("Intel Video 2");
       break;
 
-    case GST_MAKE_FOURCC ('I', 'V', '3', '1'):
-    case GST_MAKE_FOURCC ('I', 'V', '3', '2'):
-    case GST_MAKE_FOURCC ('i', 'v', '3', '1'):
-    case GST_MAKE_FOURCC ('i', 'v', '3', '2'):
+    case GST_RIFF_IV31:
+    case GST_RIFF_IV32:
+    case GST_RIFF_iv31:
+    case GST_RIFF_iv32:
       caps = gst_caps_new_simple ("video/x-indeo",
           "indeoversion", G_TYPE_INT, 3, NULL);
       if (codec_name)
         *codec_name = g_strdup ("Intel Video 3");
       break;
 
-    case GST_MAKE_FOURCC ('I', 'V', '4', '1'):
-    case GST_MAKE_FOURCC ('i', 'v', '4', '1'):
+    case GST_RIFF_IV41:
+    case GST_RIFF_iv41:
       caps = gst_caps_new_simple ("video/x-indeo",
           "indeoversion", G_TYPE_INT, 4, NULL);
       if (codec_name)
         *codec_name = g_strdup ("Intel Video 4");
       break;
 
-    case GST_MAKE_FOURCC ('I', 'V', '5', '0'):
+    case GST_RIFF_IV50:
       caps = gst_caps_new_simple ("video/x-indeo",
           "indeoversion", G_TYPE_INT, 5, NULL);
       if (codec_name)
@@ -683,8 +683,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Cirrus Logipak AccuPak");
       break;
 
-    case GST_MAKE_FOURCC ('C', 'Y', 'U', 'V'):
-    case GST_MAKE_FOURCC ('c', 'y', 'u', 'v'):
+    case GST_RIFF_CYUV:
+    case GST_RIFF_cyuv:
       caps = gst_caps_new_empty_simple ("video/x-compressed-yuv");
       if (codec_name)
         *codec_name = g_strdup ("CYUV Lossless");
@@ -715,7 +715,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("VP3");
       break;
 
-    case GST_MAKE_FOURCC ('U', 'L', 'T', 'I'):
+    case GST_RIFF_ULTI:
       caps = gst_caps_new_empty_simple ("video/x-ultimotion");
       if (codec_name)
         *codec_name = g_strdup ("IBM UltiMotion");
