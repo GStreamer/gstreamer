@@ -68,6 +68,15 @@
 #define off_t guint64
 #endif
 
+#ifdef __BIONIC__               /* Android */
+#undef lseek
+#define lseek lseek64
+#undef fstat
+#define fstat fstat64
+#undef off_t
+#define off_t guint64
+#endif
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
