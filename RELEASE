@@ -1,21 +1,14 @@
+Release notes for GStreamer 1.6.2
 
-Release notes for GStreamer 1.6.1
 
-
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.6 release series of your favourite cross-platform multimedia framework!
 
-
-
-This release only contains bugfixes and it is safe to update from 1.6.0. For a
+This release only contains bugfixes and it is safe to update from 1.6.0 and 1.6.1. For a
 full list of bugfixes see Bugzilla.
-
-
 
 See http://gstreamer.freedesktop.org/releases/1.6/
 for the full release notes.
-
-
 
 This module, gstreamer, only contains core functionality.
 For actual media playback, you will need other modules.
@@ -35,19 +28,12 @@ gst-libav
 contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 
-
-  
-
 Bugs fixed in this release
      
-      * 747612 : Valgrind 3.7.0 chokes on match-leak-kinds in gst.supp
-      * 756069 : Gstreamer: Fix sample memory leaks
-      * 756136 : gstreamer-1.6.0 doesn't compile on OS X 10.6: header file issue in gst-ptp-helper.c
-      * 756645 : multiqueue: Improve incoming SEGMENT handling
-      * 756810 : segment_to_stream_time and position_from_stream_time miscalculate when applied_rate < 0
-      * 756898 : pad: gst_pad_probe_info_get_buffer_list() has wrong ownership transfer
-      * 757065 : uri: incorrect behavior when merging uris ending in ..
-      * 757257 : pad: Unblock blocking pad probes when receiving FLUSH_START in send_event() too
+      * 756950 : Error raised when calling get_value method
+      * 758029 : Install race in helpers
+      * 758276 : queue2: custom http-headers event sent by souphttpsrc causes g_warning in ring-buffer mode
+      * 759019 : gst-launch-1.0 returns 0 exit code on async error during playback
 
 ==== Download ====
 
@@ -84,11 +70,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
-      * Florin Apostol
+      * Jan Schmidt
+      * Nicolas Dufresne
+      * Reynaldo H. Verdejo Pinochet
+      * Ross Burton
       * Sebastian Dröge
-      * Stefan Sauer
+      * Thiago Santos
+      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vineeth TM
-      * Vivia Nikolaidou
  

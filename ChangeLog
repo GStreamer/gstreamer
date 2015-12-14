@@ -1,9 +1,218 @@
-=== release 1.6.1 ===
+=== release 1.6.2 ===
 
-2015-10-30  Sebastian Dröge <slomo@coaxion.net>
+2015-12-14  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.1
+	  releasing 1.6.2
+
+2015-12-14 18:59:00 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/hu.po:
+	* po/sv.po:
+	  po: Update translations
+
+2015-12-12 01:06:43 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* plugins/elements/gstfdsrc.c:
+	  fdsrc: enable large file support in Android
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758980
+
+2015-12-11 22:14:32 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* plugins/elements/gstfdsink.c:
+	  fdsink: enable large file support in Android
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758980
+
+2015-12-11 20:42:05 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: enable large file support on Android
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758980
+
+2015-12-11 18:59:32 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* plugins/elements/gstdownloadbuffer.c:
+	  downloadbuffer: enable large file support on Android
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758980
+
+2015-12-11 14:07:27 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* plugins/elements/gstsparsefile.c:
+	  sparsefile: enable large file support on Android
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758980
+
+2015-12-03 15:04:32 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* plugins/elements/gstfilesink.c:
+	  filesink: enable large file support on Android
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758980
+
+2015-12-07 20:27:45 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* plugins/elements/gstfilesrc.c:
+	  filesrc: enable large file support in Android
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758980
+
+2015-12-04 14:39:29 +0000  Ross Burton <ross.burton@intel.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  helpers: really fix install race
+	  My previous fix for #758029 wasn't quite right and simply made the race rarer.
+	  Some of the files are installed by install-exec and others by install-exec, so
+	  the hooks need to be split too.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758029
+
+2015-12-04 10:22:56 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* tools/gst-launch.c:
+	  gst-launch: Fix process return value on error
+	  In case of a run-time error message, the process return value was left
+	  unset. This would lead to error not being caught at shell level.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759019
+
+2015-11-30 23:08:50 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst/gstcontrolsource.c:
+	  controlsource: Annotate get_value[_array] as (method)
+	  As the names clash with gst_object_get_value[_array]
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756950
+
+2015-11-19 00:51:44 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  Revert "baseparse: do not overwrite header buffer timestamps"
+	  This reverts commit 2c475a035543efc0202ecdc52070295a421ed4b4.
+	  This causes issues with h264parse. It breaks timestamps as
+	  there are headers in the middle of the stream and this patch
+	  makes the timestamps for those differ from the ones that
+	  are adjusted, creating a discontinuity and leading to sync
+	  issues.
+
+2015-11-19 00:51:30 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  Revert "baseparse: simplify code a bit"
+	  This reverts commit 921816400bf3ad65f8978a50569a7d87ef05c806.
+
+2015-11-18 11:46:45 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: don't print criticals when receiving custom events in ring buffer mode
+	  Downgrade from g_warning to GST_WARNING log message.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758276
+
+2015-11-18 09:21:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/helpers/gst-ptp-helper.c:
+	  ptp-helper: Disable multicast loopback
+	  We're not really interested in our own packets and ignore them anyway.
+
+2015-11-16 08:22:14 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: simplify code a bit
+	  Avoid repeated checks for testing if a buffer is a header
+
+2015-11-13 20:44:57 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: handle buffer with dts-only when mapping to running time
+	  Otherwise the buffer was left with the original values and later would
+	  be compared with other buffers that were converted to runninn time,
+	  leading to bad interleaving of multiple streams.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757961
+
+2015-11-13 16:31:06 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: do not overwrite header buffer timestamps
+	  baseparse tries to preserve timestamps from upstream if
+	  it is running on a time segment and write that to
+	  output buffers. It assumes the first DTS is going to be
+	  segment.start and sets that to the first buffers. In case
+	  the buffer is a header buffer, it had no timestamps and
+	  will have only the DTS set due to this mechanism.
+	  This patch prevents this by skipping this behavior for
+	  header buffers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757961
+
+2015-11-12 19:46:44 +0000  Ross Burton <ross.burton@intel.com>
+
+	* libs/gst/helpers/Makefile.am:
+	  helpers: fix install race
+	  The install hook needs to be a install-data-hook not an install-exec-hook as the
+	  helpers are installed into helperdir which is considered data (only path
+	  variables with "exec" in are considered executables).
+	  The explicit dependency on install-helpersPROGRAMS was an attempt at solving
+	  this, but this causes occasional races where install-helpersPROGRAMS can run
+	  twice in parallel (once via install-all, once via the hook's dependency).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758029
+
+2015-11-01 00:04:27 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: Mark sticky events as sent on not-linked
+	  Instead of re-sending sticky events over and over to a not-linked
+	  pad, mark them as sent the first time. If the not-linked came from
+	  downstream, it already received the events. If the pad is actually
+	  not-linked, the sticky events will be rescheduled when the
+	  pad is linked anyway.
+
+2015-10-29 18:53:29 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstghostpad.c:
+	  ghostpad: Allow deactivation with no peer.
+	  Allow deactivation in pull-mode, since that implies we
+	  had a peer, activated in pull mode, then the peer disa-peer-ed ;)
+
+=== release 1.6.1 ===
+
+2015-10-30 16:38:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.6.1
+
+2015-10-30 16:18:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/da.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2015-10-30 14:09:00 +0200  Sebastian Dröge <sebastian@centricular.com>
 
