@@ -902,10 +902,11 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret = TRUE;
   GstQueue *queue;
+  GstEventType event_type = GST_EVENT_TYPE (event);
 
   queue = GST_QUEUE (parent);
 
-  switch (GST_EVENT_TYPE (event)) {
+  switch (event_type) {
     case GST_EVENT_FLUSH_START:
       STATUS (queue, pad, "received flush start event");
       /* forward event */
@@ -960,7 +961,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           if (!GST_EVENT_IS_STICKY (event)) {
             GST_QUEUE_MUTEX_UNLOCK (queue);
             goto out_flow_error;
-          } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+          } else if (event_type == GST_EVENT_EOS) {
             if (queue->srcresult == GST_FLOW_NOT_LINKED
                 || queue->srcresult < GST_FLOW_EOS) {
               GST_QUEUE_MUTEX_UNLOCK (queue);
@@ -986,7 +987,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
   }
   if (ret == FALSE) {
-    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS)
+    if (event_type == GST_EVENT_CAPS)
       return GST_FLOW_NOT_NEGOTIATED;
     return GST_FLOW_ERROR;
   }
