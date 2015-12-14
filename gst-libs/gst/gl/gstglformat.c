@@ -47,6 +47,13 @@
 #define GL_RG8 0x822B
 #endif
 
+#ifndef GL_TEXTURE_RECTANGLE
+#define GL_TEXTURE_RECTANGLE 0x84F5
+#endif
+#ifndef GL_TEXTURE_EXTERNAL_OES
+#define GL_TEXTURE_EXTERNAL_OES 0x8D65
+#endif
+
 static inline guint
 _gl_format_n_components (guint format)
 {
