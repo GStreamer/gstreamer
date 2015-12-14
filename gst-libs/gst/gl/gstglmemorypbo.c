@@ -317,22 +317,32 @@ _pbo_download_transfer (GstGLMemoryPBO * gl_mem, GstMapInfo * info, gsize size)
 {
   GstMapInfo *pbo_info;
 
+  gl_mem->pbo->target = GL_PIXEL_PACK_BUFFER;
   /* texture -> pbo */
   if (info->flags & GST_MAP_READ
       && GST_MEMORY_FLAG_IS_SET (gl_mem,
           GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD)) {
+    GstMapInfo info;
+
     GST_CAT_TRACE (GST_CAT_GL_MEMORY,
         "attempting download of texture %u " "using pbo %u", gl_mem->mem.tex_id,
         gl_mem->pbo->id);
 
+    if (!gst_memory_map (GST_MEMORY_CAST (gl_mem->pbo), &info,
+            GST_MAP_WRITE | GST_MAP_GL)) {
+      GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Failed to write to PBO");
+      return NULL;
+    }
+
     if (!_read_pixels_to_pbo (gl_mem))
       return NULL;
+
+    gst_memory_unmap (GST_MEMORY_CAST (gl_mem->pbo), &info);
   }
 
   pbo_info = g_new0 (GstMapInfo, 1);
 
   /* pbo -> data */
-  gl_mem->pbo->target = GL_PIXEL_PACK_BUFFER;
   /* get a cpu accessible mapping from the pbo */
   if (!gst_memory_map (GST_MEMORY_CAST (gl_mem->pbo), pbo_info, info->flags)) {
     GST_CAT_ERROR (GST_CAT_GL_MEMORY, "Failed to map pbo");
