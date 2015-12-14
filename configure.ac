@@ -671,13 +671,22 @@ case $host in
   ;;
   *)
     if test "x$NEED_GL" != "xno"; then
-      AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,, GL/gl.h)
+      AG_GST_PKG_CHECK_MODULES(GL, gl)
+      if test "x$HAVE_GL" != "xyes"; then
+        AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,, GL/gl.h)
+      fi
     fi
     if test "x$NEED_GLES2" != "xno"; then
-      AG_GST_CHECK_LIBHEADER(GLES2, GLESv2, glTexImage2D,, GLES2/gl2.h)
+      AG_GST_PKG_CHECK_MODULES(GLES2, glesv2)
+      if test "x$HAVE_GLES2" != "xyes"; then
+        AG_GST_CHECK_LIBHEADER(GLES2, GLESv2, glTexImage2D,, GLES2/gl2.h)
+      fi
     fi
     if test "x$NEED_EGL" != "xno"; then
-      AG_GST_CHECK_LIBHEADER(EGL, EGL, eglGetError,, EGL/egl.h)
+      AG_GST_PKG_CHECK_MODULES(EGL, egl)
+      if test "x$HAVE_EGL" != "xyes"; then
+        AG_GST_CHECK_LIBHEADER(EGL, EGL, eglGetError,, EGL/egl.h)
+      fi
     fi
 
     old_LIBS=$LIBS
