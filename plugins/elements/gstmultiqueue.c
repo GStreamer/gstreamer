@@ -2049,7 +2049,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       "SingleQueue %d : Enqueuing event %p of type %s with id %d",
       sq->id, event, GST_EVENT_TYPE_NAME (event), curid);
 
-  if (!(res = gst_data_queue_push (sq->queue, (GstDataQueueItem *) item)))
+  if (!gst_data_queue_push (sq->queue, (GstDataQueueItem *) item))
     goto flushing;
 
   /* mark EOS when we received one, we must do that after putting the
@@ -2099,12 +2099,8 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   }
 
 done:
-  if (res == FALSE) {
-    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS)
-      flowret = GST_FLOW_NOT_NEGOTIATED;
-    else
-      flowret = GST_FLOW_ERROR;
-  }
+  if (res == FALSE)
+    flowret = GST_FLOW_ERROR;
   GST_DEBUG_OBJECT (mq, "SingleQueue %d : returning %s", sq->id,
       gst_flow_get_name (flowret));
   return flowret;
@@ -2122,7 +2118,6 @@ was_eos:
   {
     GST_DEBUG_OBJECT (mq, "we are EOS, dropping event, return GST_FLOW_EOS");
     gst_event_unref (event);
-    res = FALSE;
     return GST_FLOW_EOS;
   }
 }

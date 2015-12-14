@@ -985,11 +985,8 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       break;
   }
-  if (ret == FALSE) {
-    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS)
-      return GST_FLOW_NOT_NEGOTIATED;
+  if (ret == FALSE)
     return GST_FLOW_ERROR;
-  }
   return GST_FLOW_OK;
 
   /* ERRORS */
