@@ -33,6 +33,7 @@
 #include <gst/gl/gstglcontext.h>
 #include <gst/gl/gstgldebug.h>
 #include <gst/gl/gstglfeature.h>
+#include <gst/gl/gstglformat.h>
 #include <gst/gl/gstglutils.h>
 #include <gst/gl/gstglwindow.h>
 #include <gst/gl/gstglslstage.h>
@@ -44,6 +45,7 @@
 #include <gst/gl/gstglbasememory.h>
 #include <gst/gl/gstglbuffer.h>
 #include <gst/gl/gstglmemory.h>
+#include <gst/gl/gstglmemorypbo.h>
 #include <gst/gl/gstglbufferpool.h>
 #include <gst/gl/gstglframebuffer.h>
 #include <gst/gl/gstglbasefilter.h>

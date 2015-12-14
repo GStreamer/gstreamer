@@ -347,9 +347,9 @@ gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
     gst_gl_composition_overlay_add_transformation (overlay, buf);
 
     comp_gl_memory =
-        gst_gl_memory_wrapped (overlay->context, GST_GL_TEXTURE_TARGET_2D,
-        &comp_frame->info, 0, NULL, comp_frame->data[0], comp_frame,
-        _video_frame_unmap_and_free);
+        (GstGLMemory *) gst_gl_memory_pbo_wrapped (overlay->context,
+        GST_GL_TEXTURE_TARGET_2D, &comp_frame->info, 0, NULL,
+        comp_frame->data[0], comp_frame, _video_frame_unmap_and_free);
 
     overlay_buffer = gst_buffer_new ();
     gst_buffer_append_memory (overlay_buffer, (GstMemory *) comp_gl_memory);

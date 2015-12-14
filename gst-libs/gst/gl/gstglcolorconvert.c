@@ -2013,7 +2013,7 @@ _do_convert_one_view (GstGLContext * context, GstGLColorConvert * convert,
 
       if (!convert->priv->out_tex[j])
         convert->priv->out_tex[j] =
-            (GstGLMemory *) gst_gl_memory_alloc (context,
+            (GstGLMemory *) gst_gl_memory_pbo_alloc (context,
             convert->priv->to_texture_target, NULL, &temp_info, 0, NULL);
     } else {
       convert->priv->out_tex[j] = out_tex;
@@ -2069,10 +2069,9 @@ out:
         res = FALSE;
         continue;
       }
-      gst_gl_memory_copy_into_texture (convert->priv->out_tex[j],
+      gst_gl_memory_copy_into (convert->priv->out_tex[j],
           out_tex->tex_id, convert->priv->to_texture_target, out_tex->tex_type,
-          mem_width, mem_height, GST_VIDEO_INFO_PLANE_STRIDE (&out_tex->info,
-              out_tex->plane), FALSE);
+          mem_width, mem_height);
       gst_memory_unmap ((GstMemory *) convert->priv->out_tex[j], &from_info);
       gst_memory_unmap ((GstMemory *) out_tex, &to_info);
     } else {
@@ -2120,7 +2119,7 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
     gst_gl_sync_meta_wait (sync_meta, convert->context);
 
   convert->outbuf = gst_buffer_new ();
-  if (!gst_gl_memory_setup_buffer (convert->context,
+  if (!gst_gl_memory_pbo_setup_buffer (convert->context,
           convert->priv->to_texture_target, NULL, &convert->out_info, NULL,
           convert->outbuf)) {
     convert->priv->result = FALSE;
