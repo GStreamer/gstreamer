@@ -131,7 +131,7 @@ gst_gl_buffer_cpu_access (GstGLBuffer * mem, GstMapInfo * info, gsize size)
 
   /* The extra data pointer indirection/memcpy is needed for coherent across
    * concurrent map()'s in both GL and CPU */
-  if (GST_MEMORY_FLAG_IS_SET (mem, GST_GL_BUFFER_FLAG_NEED_DOWNLOAD)
+  if (GST_MEMORY_FLAG_IS_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD)
       && (info->flags & GST_MAP_GL) == 0 && (info->flags & GST_MAP_READ) != 0) {
     gl->BindBuffer (mem->target, mem->id);
 
@@ -175,7 +175,7 @@ gst_gl_buffer_upload_cpu_write (GstGLBuffer * mem, GstMapInfo * info,
    * concurrent map()'s in both GL and CPU */
   /* FIXME: uploading potentially half-written data for libav pushing READWRITE
    * mapped buffers */
-  if (GST_MEMORY_FLAG_IS_SET (mem, GST_GL_BUFFER_FLAG_NEED_UPLOAD)
+  if (GST_MEMORY_FLAG_IS_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD)
       || (mem->mem.map_flags & GST_MAP_WRITE) != 0) {
     gl->BindBuffer (mem->target, mem->id);
 

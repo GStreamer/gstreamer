@@ -39,24 +39,6 @@ GType gst_gl_buffer_allocator_get_type(void);
 #define GST_GL_BUFFER_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GL_BUFFER_ALLOCATOR, GstGLBufferAllocatorClass))
 #define GST_GL_BUFFER_ALLOCATOR_CAST(obj)            ((GstGLBufferAllocator *)(obj))
 
-
-typedef enum
-{
-  GST_GL_BUFFER_FLAG_NEED_DOWNLOAD   = (GST_MEMORY_FLAG_LAST << 0),
-  GST_GL_BUFFER_FLAG_NEED_UPLOAD     = (GST_MEMORY_FLAG_LAST << 1)
-} GstGLBufferFlags;
-
-/**
- * GST_MAP_GL:
- *
- * Flag indicating that we should map the GL object instead of to system memory.
- *
- * Combining #GST_MAP_GL with #GST_MAP_WRITE has the same semantics as though
- * you are writing to OpenGL. Conversely, combining #GST_MAP_GL with
- * #GST_MAP_READ has the same semantics as though you are reading from OpenGL.
- */
-#define GST_MAP_GL (GST_MAP_FLAG_LAST << 1)
-
 /**
  * GstGLBuffer:
  * @mem: the parent object
