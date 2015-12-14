@@ -165,7 +165,7 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
 
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLTextureGetTarget (texture));
 
-        *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
+        *mem1 = (GstMemory *) gst_gl_memory_pbo_wrapped_texture (cache->ctx,
             CVOpenGLTextureGetName (texture), gl_target,
             &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
         break;
@@ -181,7 +181,7 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
 
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
 
-        *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
+        *mem1 = (GstMemory *) gst_gl_memory_pbo_wrapped_texture (cache->ctx,
             CVOpenGLESTextureGetName (texture), gl_target,
             &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
         break;
@@ -202,7 +202,7 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
           goto error;
 
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
-        *mem1 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
+        *mem1 = (GstMemory *) gst_gl_memory_pbo_wrapped_texture (cache->ctx,
             CVOpenGLESTextureGetName (texture), gl_target,
             &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
 
@@ -218,7 +218,7 @@ gl_mem_from_buffer (GstCoreVideoTextureCache * cache,
           goto error;
 
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
-        *mem2 = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx,
+        *mem2 = (GstMemory *) gst_gl_memory_pbo_wrapped_texture (cache->ctx,
             CVOpenGLESTextureGetName (texture), gl_target,
             &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
         break;
