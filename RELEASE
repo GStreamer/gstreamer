@@ -1,13 +1,13 @@
 
-Release notes for GStreamer Base Plugins 1.6.1
+Release notes for GStreamer Base Plugins 1.6.2
 
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.6 release series of your favourite cross-platform multimedia framework!
 
 
 
-This release only contains bugfixes and it is safe to update from 1.6.0. For a
+This release only contains bugfixes and it is safe to update from 1.6.0 and 1.6.1. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -63,16 +63,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 752705 : rtpbuffer: Add map flag to skip padding
-      * 754459 : decodebin: fix event leak with validate.hls.playback.play_15s.hls_bibbop scenario
-      * 754567 : video: gst_video_calculate_display_ratio() should have out parameter
-      * 754980 : audiobasesink: audio skipping when playing it repeatedly.
-      * 755494 : gst-plugins-base fails to build with --with-pkg-config-path
-      * 755770 : decodebin: Free unlinked chains at time of switching chains
-      * 755867 : playsink: fix leak of audio sink
-      * 755875 : subparse: < / i > should be handled like < /i > 
-      * 756611 : playbin: Leak of playbin on errors from the source element
-      * 756893 : video: Missing closing parenthesis in video overlay composition cast macros
+      * 757155 : multisocketsink: " client-removed " signal emission broken on 64-bit and with bindings
+      * 757264 : videotestsrc: Bayer format 'gbrg' not handled properly
+      * 758204 : xvimagesink/ximagesink: Fix structure memory leak
+      * 758921 : rtspsrc should use lowercase X-Sessioncookie header for compatibility with strict servers
 
 ==== Download ====
 
@@ -109,15 +103,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Guillaume Desmottes
-      * Matthew Waters
-      * Pavel Bludov
-      * Perry Hung
-      * Rajat Verma
+      * Csaba Toth
+      * Edward Hervey
+      * Evan Callaway
+      * Joan Pau Beltran
       * Sebastian Dröge
-      * Stian Selnes
+      * Thibault Saunier
       * Tim-Philipp Müller
       * Vineeth TM
-      * Wim Taymans
-      * eunhae choi
  
