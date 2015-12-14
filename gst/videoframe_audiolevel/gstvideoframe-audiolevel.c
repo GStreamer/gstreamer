@@ -495,9 +495,11 @@ update_rms_from_buffer (GstVideoFrameAudioLevel * self, GstBuffer * inbuf)
   g_value_init (&v, G_TYPE_DOUBLE);
   g_value_init (&va, G_TYPE_VALUE_ARRAY);
   for (i = 0; i < channels; i++) {
-    gdouble rms = sqrt (self->CS[i] / frames);
-    if (frames == 0 && self->CS[i] == 0) {
+    gdouble rms;
+    if (frames == 0 || self->CS[i] == 0) {
       rms = 0;                  /* empty buffer */
+    } else {
+      rms = sqrt (self->CS[i] / frames);
     }
     self->CS[i] = 0.0;
     g_value_set_double (&v, rms);
