@@ -27,7 +27,6 @@
 #endif
 
 #include <gst/gl/gstgl_fwd.h>
-#include <gst/gl/gstgl_enums.h>
 #include <gst/gl/gstglconfig.h>
 #include <gst/gl/gstglapi.h>
 #include <gst/gl/gstgldisplay.h>
@@ -42,6 +41,7 @@
 #include <gst/gl/gstglcolorconvert.h>
 #include <gst/gl/gstglupload.h>
 #include <gst/gl/gstglbasebuffer.h>
+#include <gst/gl/gstglbasememory.h>
 #include <gst/gl/gstglmemory.h>
 #include <gst/gl/gstglbufferpool.h>
 #include <gst/gl/gstglframebuffer.h>
