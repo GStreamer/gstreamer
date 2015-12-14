@@ -42,6 +42,7 @@
 #include <gst/gl/gstglupload.h>
 #include <gst/gl/gstglbasebuffer.h>
 #include <gst/gl/gstglbasememory.h>
+#include <gst/gl/gstglbuffer.h>
 #include <gst/gl/gstglmemory.h>
 #include <gst/gl/gstglbufferpool.h>
 #include <gst/gl/gstglframebuffer.h>
