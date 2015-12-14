@@ -290,7 +290,8 @@ plugin_init (GstPlugin * plugin)
     pyplugin = pygobject_new (G_OBJECT (plugin));
     if (!pyplugin || PyModule_AddObject (gst, "__plugin__", pyplugin) != 0) {
       g_critical ("Couldn't set __plugin__ attribute");
-      Py_DECREF (pyplugin);
+      if (pyplugin)
+        Py_DECREF (pyplugin);
       return FALSE;
     }
   }
