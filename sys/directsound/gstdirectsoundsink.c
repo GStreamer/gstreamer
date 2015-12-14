@@ -548,6 +548,7 @@ gst_directsound_sink_prepare (GstAudioSink * asink,
   }
 
   gst_directsound_sink_set_volume (dsoundsink, dsoundsink->volume, FALSE);
+  gst_directsound_sink_set_mute (dsoundsink, dsoundsink->mute);
 
   return TRUE;
 }
@@ -896,10 +897,10 @@ gst_directsound_sink_set_volume (GstDirectSoundSink * dsoundsink,
      * here, so remap.
      */
     long dsVolume;
-    if (dsoundsink->volume == 0)
+    if (volume == 0)
       dsVolume = -10000;
     else
-      dsVolume = 100 * (long) (20 * log10 ((double) dsoundsink->volume / 100.));
+      dsVolume = 100 * (long) (20 * log10 ((double) volume / 100.));
     dsVolume = CLAMP (dsVolume, -10000, 0);
 
     GST_DEBUG_OBJECT (dsoundsink,
@@ -918,16 +919,20 @@ gst_directsound_sink_get_volume (GstDirectSoundSink * dsoundsink)
 static void
 gst_directsound_sink_set_mute (GstDirectSoundSink * dsoundsink, gboolean mute)
 {
-  if (mute)
+  if (mute) {
     gst_directsound_sink_set_volume (dsoundsink, 0, FALSE);
-  else
+    dsoundsink->mute = TRUE;
+  } else {
     gst_directsound_sink_set_volume (dsoundsink, dsoundsink->volume, FALSE);
+    dsoundsink->mute = FALSE;
+  }
+
 }
 
 static gboolean
 gst_directsound_sink_get_mute (GstDirectSoundSink * dsoundsink)
 {
-  return FALSE;
+  return dsoundsink->mute;
 }
 
 static const gchar *
