@@ -3,7 +3,7 @@
   <description>OPUS plugin library</description>
   <filename>../../ext/opus/.libs/libgstopus.so</filename>
   <basename>libgstopus.so</basename>
-  <version>1.6.1</version>
+  <version>1.6.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 8000, 12000, 16000, 24000, 48000 }, channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)48000, channels=(int)[ 1, 2 ]; audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 8000, 12000, 16000, 24000 }, channels=(int)[ 1, 2 ]</details>
         </caps>
         <caps>
           <name>src</name>

@@ -1,13 +1,13 @@
 
-Release notes for GStreamer Bad Plugins 1.6.1
+Release notes for GStreamer Bad Plugins 1.6.2
 
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.6 release series of your favourite cross-platform multimedia framework!
 
 
 
-This release only contains bugfixes and it is safe to update from 1.6.0. For a
+This release only contains bugfixes and it is safe to update from 1.6.0 and 1.6.1. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -65,41 +65,20 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 756207 : videoaggregator: Setting aspect ratio crops the frame
-      * 756567 : Wayland crash when called from gstreamer
-      * 752132 : hls/m3u8: Update current position in all cases
-      * 752230 : mpdparser: Parse xlink attributes from Period, AdaptationSet and SegmentList
-      * 754523 : mssdemux: fragment download errors during live playback
-      * 755108 : mssdemux: playback always starts at lowest bitrate
-      * 755132 : mpdparser: If no Initialization is present in the SegmentBase, assume it is before the indexRange
-      * 755134 : dashdemux: Properly handle relative and non-HTTP URIs for the headers/indices
-      * 755239 : dvdspu: render PGS subtitles with the correct color
-      * 755623 : audiomixer: Using absolute clock times results in 0..now buffers to be rendered at once, stalling the pipeline
-      * 755680 : DVD navigation not working?
-      * 755738 : GtkGst : gst_object_unref on GtkDrawingArea events if current media have no audio
-      * 755754 : videoaggregator doesn't compile with in openembedded dora (glib 2.36.4)
-      * 755759 : assrender: leaks gap events and sample in tags
-      * 755824 : dashdemux: Correctly assign earliest pts instead of overriding it with first offset
-      * 755840 : audiointerleave: make check fails with segmentation fault.
-      * 755850 : unbreak GL introspection build
-      * 755852 : missing sys/applemedia headers in gst-plugins-bad 1.6.0 tarball
-      * 755892 : dtls needs openssl > = 1.0.1
-      * 755969 : gtkglsink: Assertion in gst-inspect-1.0
-      * 755981 : dtls: fix printf format on win32
-      * 756001 : rtmpsrc: plug memory-leaks
-      * 756065 : audioaggregator: fix build error
-      * 756070 : id3tag: fix sample memory leak
-      * 756181 : hlssink: inconsistent segment duration since 1.5.2 onwards
-      * 756186 : dashdemux: cannot advance to next period
-      * 756383 : dashdemux: Incomplete configure check for libgstnet
-      * 756563 : pnmdec: causes multifilesrc to return internal data flow error (caused by a gst_pad_push() error)
-      * 756578 : amcvideodec: Implement support for COLOR_QCOM_FormatYVU420SemiPlanar32mMultiView for decoding
-      * 756592 : dtls: fixed name conflict with openssl on win32
-      * 756617 : dshowvideosink: move/resize events are not handled in 64 bit
-      * 756653 : srtpdec: buffer validations may fail if SRTP packets have padding flag set
-      * 756861 : hlsdemux: crash / memory leak on broken (master) playlist
-      * 756876 : srtp: Fix critical warning trying to retrieve SSRC from a non fb message
-      * 757251 : ivfparse: recognize the vp9 bitstream
+      * 757610 : compositor: negotation failure when mixing alpha and non alpha branches
+      * 738292 : directsoundsrc: hRes unckecked, which may cause a endless loop
+      * 741608 : d3dvideosink: Pipeline crash after assigned Window minimized
+      * 753823 : assrender: do not handle seek events
+      * 756951 : vtenc: Outputting frames without having input frames at EOS
+      * 757854 : gl: Recent texture target changes break negotiation in glcolorconvert and gtkglsink
+      * 757873 : tsdemux: fix unadded pad leak
+      * 757895 : tsdemux: pending buffers leak when flushing
+      * 757929 : tests:glcolorconvert: Fix caps memory leak
+      * 757935 : vtenc double-releases CFString 'profile_level' on restart
+      * 758205 : glimagesink: Fix structure memory leak
+      * 758286 : qtitem: GstQSGTexture leaks in updatePaintNode
+      * 758337 : qtglwidget qtitem: missing opengl context initialization
+      * 758913 : pcapparse: Does not forward FLUSH_STOP events
 
 ==== Download ====
 
@@ -136,28 +115,16 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * André Draszik
-      * Antoine Jacoutot
-      * Arnaud Vrac
+      * Alessandro Decina
       * Edward Hervey
-      * Florin Apostol
-      * George Kiagiadakis
-      * Havard Graff
-      * Jan Schmidt
-      * John Chang
-      * Julien Isorce
+      * Etienne Peron
+      * Heinrich Fink
       * Matthew Waters
-      * Miguel París Díaz
-      * Nirbheek Chauhan
-      * Paul Arzelier
-      * Philippe Normand
-      * Polochon_street
-      * Reynaldo H. Verdejo Pinochet
-      * Santiago Carot-Nemesio
+      * Nicolas Huet
+      * Paolo Pettinato
+      * Roman Nowicki
       * Sebastian Dröge
-      * Sreerenj Balachandran
+      * Thomas Roos
       * Tim-Philipp Müller
       * Vineeth TM
-      * plamot
  

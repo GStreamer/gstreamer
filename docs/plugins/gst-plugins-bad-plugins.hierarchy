@@ -70,7 +70,6 @@ GObject
             GstAudioSink
               GstOpenALSink
             GstDecklinkAudioSink
-          GstAvdtpSink
           GstChecksumSink
           GstCurlBaseSink
             GstCurlFileSink
@@ -94,7 +93,6 @@ GObject
             GstQtSink
             GstWaylandSink
         GstBaseSrc
-          GstAvdtpSrc
           GstDataURISrc
           GstFliteTestSrc
           GstInterAudioSrc
@@ -112,6 +110,7 @@ GObject
             GstDvbSrc
             GstGLTestSrc
             GstMMS
+            GstNeonhttpSrc
             GstRTMPSrc
             GstRfbSrc
             GstShmSrc
@@ -226,13 +225,11 @@ GObject
             GstSolarize
             GstVideoAnalyse
             GstVideoDiff
-            GstZBar
             GstZebraStripe
           GstWatchdog
           GstYadif
         GstBin
           DvbBaseBin
-          GstA2dpSink
           GstAdaptiveDemux
             GstDashDemux
             GstHLSDemux
@@ -326,6 +323,7 @@ GObject
           GstLibde265Dec
           GstOpenEXRDec
           GstOpenJPEGDec
+          GstOpenh264Dec
           GstPnmdec
           GstRsvgDec
           GstSchroDec
@@ -333,6 +331,7 @@ GObject
           GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
+          GstOpenh264Enc
           GstPnmenc
           GstSchroEnc
           GstWebpEnc
