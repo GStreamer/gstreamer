@@ -1,30 +1,37 @@
-This is GStreamer 1.6.1
+This is GStreamer 1.6.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.6 release series of your favourite cross-platform multimedia framework!
 
-This release only contains bugfixes and it is safe to update from 1.6.0. For a
-full list of bugfixes see Bugzilla:
-  https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&limit=0&list_id=73005&order=bug_id&product=GStreamer&resolution=FIXED&target_milestone=1.6.1
+This release only contains bugfixes and it is safe to update from 1.6.0 and
+1.6.1. For a full list of bugfixes see Bugzilla:
+  https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&limit=0&list_id=83309&order=bug_id&product=GStreamer&resolution=FIXED&target_milestone=1.6.2
 
 See http://gstreamer.freedesktop.org/releases/1.6/ for the latest version of this document.
 
 Major bugfixes
 
-- Crashes in the gst-libav encoders were fixed
-- More DASH-IF test streams are working now
-- Live DASH, HLS and MS SmoothStreaming streams work more reliable and other
-  fixes for the adaptive streaming protocols
-- Reverse playback works with scaletempo to keep the audio pitch
-- Correct stream-time is reported for negative applied_rate
-- SRTP packet validation during decoding does not reject valid packets anymore
-- Fixes for audioaggregator and aggregator to start producing output at the
-  right time, and e.g. not outputting lots of silence in the beginning
-- gst-libav's internal ffmpeg snapshot was updated to 2.8.1
-- cerbero has support for Mac OS X 10.11 (El Capitan)
-- Various memory leaks were fixed, including major leaks in playbin, playsink
-  and decodebin
-- Various GObject-Introspection annotation fixes for bindings
-- and many, many more: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&limit=0&list_id=73005&order=bug_id&product=GStreamer&resolution=FIXED&target_milestone=1.6.1
+- Crashes in gst-libav with sinks that did not provide a buffer pool
+  but supported video metadata were fixed. This affected d3dvideosink
+  and some 3rd party sinks. Also related fixes for crashes when a downstream
+  buffer pool failed allocation.
+- Big GL performance improvement on iOS by a factor of 2 by using Apple's sync
+  extension.
+- Deadlocks in the DirectSound elements on Windows, and the behaviour of its
+  mute property were fixed.
+- The Direct3D video sink does not crash anymore when minimizing the window
+- The library soname generation on Android >= 6.0 was fixed, which previously
+  caused GStreamer to fail to load there.
+- File related elements have large-file (>2GB) support on Android now.
+- gst-libav was updated to ffmpeg 2.8.3.
+- Deserialization of custom events in the GDP depayloader was fixed.
+- Missing OpenGL context initialization in the Qt/QML video sink was fixed in
+  certain situations.
+- Interoperability with some broken RTSP servers using HTTP tunnel was
+  improved.
+- Various compilation fixes for Windows.
+- Various smaller memory leak and other fixes in different places.
+- and many, many more:
+  https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&limit=0&list_id=83309&order=bug_id&product=GStreamer&resolution=FIXED&target_milestone=1.6.2
 
 

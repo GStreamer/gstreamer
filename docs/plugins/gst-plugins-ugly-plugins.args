@@ -821,7 +821,7 @@
 <ARG>
 <NAME>GstX264Enc::bitrate</NAME>
 <TYPE>guint</TYPE>
-<RANGE>[1,102400]</RANGE>
+<RANGE>[1,2048000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bitrate</NICK>
 <BLURB>Bitrate in kbit/sec.</BLURB>

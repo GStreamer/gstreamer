@@ -1,13 +1,13 @@
 
-Release notes for GStreamer Ugly Plugins 1.6.1
+Release notes for GStreamer Ugly Plugins 1.6.2
 
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.6 release series of your favourite cross-platform multimedia framework!
 
 
 
-This release only contains bugfixes and it is safe to update from 1.6.0. For a
+This release only contains bugfixes and it is safe to update from 1.6.0 and 1.6.1. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -60,8 +60,9 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+     
+      * 758620 : x264enc: allow bitrates higher than 100Mbps
 
 ==== Download ====
 
@@ -98,5 +99,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Arjen Veenhuizen
       * Sebastian Dröge
  
