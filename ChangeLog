@@ -1,9 +1,29 @@
-=== release 1.6.1 ===
+=== release 1.6.2 ===
 
-2015-10-30  Sebastian Dröge <slomo@coaxion.net>
+2015-12-14  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.1
+	  releasing 1.6.2
+
+2015-11-11 14:58:33 +0100  Marcus Prebble <prebble@axis.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  rtsp-server: Change the logic so we don't pop a NULL context
+	  When doing a port scan (e.g. with nmap) the call to GST_RTSP_CHECK()
+	  will sometimes fail. This call is made before any context is pushed
+	  resulting in an attempt to pop a NULL context.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757949
+
+=== release 1.6.1 ===
+
+2015-10-30 17:04:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.6.1
 
 2015-10-22 09:15:21 +0200  David Svensson Fors <davidsf@axis.com>
 
