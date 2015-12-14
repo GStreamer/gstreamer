@@ -1,13 +1,13 @@
 
-Release notes for GStreamer Good Plugins 1.6.1
+Release notes for GStreamer Good Plugins 1.6.2
 
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.6 release series of your favourite cross-platform multimedia framework!
 
 
 
-This release only contains bugfixes and it is safe to update from 1.6.0. For a
+This release only contains bugfixes and it is safe to update from 1.6.0 and 1.6.1. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -60,25 +60,14 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 750108 : splitmuxsink: post messages when fragments are being opened and closed
-      * 753617 : splitmuxsink: allow non-video streams to serve as reference
-      * 753622 : splitmuxsink: do not destroy the multiqueue & muxer when going to NULL
-      * 753624 : splitmuxsink: initialize mux_start_time properly
-      * 754212 : cutter: Fix buffer leak
-      * 755611 : aacparse: wrong LOAS config reading
-      * 755708 : matroskademux: assertion failed: (stream- > alignment < = G_MEM_ALIGN)
-      * 755773 : gdkpixbufoverlay memleak
-      * 756068 : qtmux: fix sample memory leak
-      * 756154 : qtmux: doesn't compile on OS X 10.6: strnlen not available
-      * 756171 : qtmux: fix date memory leak
-      * 756387 : qtmux: Allow negotiating to S8 as a raw format but stop making it best choice
-      * 756388 : qtmux: Add ProRes support
-      * 756544 : qtdemux: Fix taglist leak
-      * 756561 : qtdemux: fix caps leak
-      * 756799 : auparse: fix event leak
-      * 756967 : matroskamux: drops JPEG input buffers with just PTS and no DTS set on them
-      * 757033 : scaletempo: Does not work properly with negative rates playback
-      * 757087 : splitmux: unit test fails due to missing files
+      * 757961 : baseparse: do not overwrite header buffer timestamps
+      * 734098 : directsoundsink: gst_element_set_state blocked when plugout a usb audio device
+      * 755106 : directsoundsink: mute property doesn't work
+      * 755614 : qtdemux: support for cenc auxiliary info parsing outside of moof box
+      * 757924 : splitmuxpartreader: Fix GCond leak
+      * 758151 : rtpgstdepay does not deserialize custom events
+      * 758861 : wavparse: deadlock under some conditions
+      * 758912 : avimux: don't crash if we never got audio caps before  stopping
 
 ==== Download ====
 
@@ -115,17 +104,16 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * George Kiagiadakis
-      * Guillaume Desmottes
-      * Guillaume Marquebielle
-      * Jan Schmidt
-      * Nicola Murino
+      * Arun Raghavan
+      * Havard Graff
+      * Josep Torra
+      * Michael Olbrich
       * Nirbheek Chauhan
-      * Ramiro Polla
-      * Ryan Hendrickson
+      * Philippe Normand
       * Sebastian Dröge
       * Thiago Santos
-      * Thibault Saunier
+      * Thomas Roos
       * Tim-Philipp Müller
       * Vineeth TM
+      * Wim Taymans
  
