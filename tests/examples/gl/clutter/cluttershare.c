@@ -36,7 +36,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
-#include <gst/gl/gstglmemory.h>
+#include <gst/gl/gl.h>
 
 /* This example shows how to use textures that come from a
  * gst-plugins-gl pipeline, into the clutter framework
