@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch videotestsrc ! glupload ! gldeinterlace ! glimagesink
+ * gst-launch-1.0 videotestsrc ! glupload ! gldeinterlace ! glimagesink
  * ]|
  * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
  * </refsect2>
