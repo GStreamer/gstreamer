@@ -4,13 +4,13 @@
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
 # Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2010, 2012, 2014.
-# Balázs Úr <urbalazs@gmail.com>, 2014.
+# Balázs Úr <urbalazs@gmail.com>, 2014, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.3.90\n"
+"Project-Id-Version: gst-plugins-good 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-10-30 14:27+0200\n"
-"PO-Revision-Date: 2014-06-29 12:56+0200\n"
+"POT-Creation-Date: 2015-09-25 22:54+0200\n"
+"PO-Revision-Date: 2015-11-20 23:48+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
@@ -18,418 +18,489 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Rosetta-Export-Date: 2007-07-27 19:18:15+0000\n"
-"X-Generator: Lokalize 1.5\n"
+"X-Generator: Lokalize 1.2\n"
 "X-Rosetta-Export-Date: 2007-07-27 19:18:15+0000\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
+#: ext/jack/gstjackaudiosink.c:356 ext/jack/gstjackaudiosrc.c:364
 msgid "Jack server not found"
 msgstr "Jack kiszolgáló nem található"
 
+#: ext/jpeg/gstjpegdec.c:925 ext/jpeg/gstjpegdec.c:1178
+#: ext/jpeg/gstjpegdec.c:1190 ext/jpeg/gstjpegdec.c:1219
+#: ext/jpeg/gstjpegdec.c:1228 ext/jpeg/gstjpegdec.c:1237
+#: ext/jpeg/gstjpegdec.c:1245
 msgid "Failed to decode JPEG image"
 msgstr "A JPEG kép visszafejtése meghiúsult"
 
 #. TRANSLATORS: 'song title' by 'artist name'
+#: ext/pulse/pulsesink.c:3133
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "„%s” ettől: „%s”"
 
+#: ext/shout2/gstshout2.c:567
 msgid "Could not connect to server"
 msgstr "Nem sikerült csatlakozni a kiszolgálóhoz"
 
+#: ext/soup/gstsouphttpsrc.c:911
 msgid "No URL set."
 msgstr "Nincs beállítva URL."
 
+#: ext/soup/gstsouphttpsrc.c:1270
 msgid "Server does not support seeking."
 msgstr "A kiszolgáló nem támogatja a tekerést."
 
+#: ext/soup/gstsouphttpsrc.c:1545
 msgid "Could not resolve server name."
 msgstr "Nem sikerült feloldani a kiszolgáló nevét."
 
+#: ext/soup/gstsouphttpsrc.c:1551
 msgid "Could not establish connection to server."
 msgstr "Nem hozható létre kapcsolat a kiszolgálóhoz."
 
+#: ext/soup/gstsouphttpsrc.c:1556
 msgid "Secure connection setup failed."
 msgstr "A biztonságos kapcsolat kialakítása meghiúsult."
 
-#, fuzzy
-msgid ""
-"A network error occurred, or the server closed the connection unexpectedly."
-msgstr ""
-"Hálózati hiba történt, vagy a kiszolgáló váratlanul lezárta a kapcsolatot."
+#: ext/soup/gstsouphttpsrc.c:1566
+msgid "A network error occurred, or the server closed the connection unexpectedly."
+msgstr "Hálózati hiba történt, vagy a kiszolgáló váratlanul lezárta a kapcsolatot."
 
+#: ext/soup/gstsouphttpsrc.c:1573
 msgid "Server sent bad data."
 msgstr "A kiszolgáló hibás adatokat küldött."
 
+#: gst/avi/gstavidemux.c:5679
 msgid "Internal data stream error."
 msgstr "Belső adatfolyam-hiba."
 
+#: gst/avi/gstavimux.c:1819
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nincs vagy érvénytelen bemeneti hang, az AVI-folyam sérült lesz."
 
+#: gst/isomp4/qtdemux.c:635 gst/isomp4/qtdemux.c:639
 msgid "This file contains no playable streams."
 msgstr "A fájl nem tartalmaz lejátszható adatfolyamokat."
 
+#: gst/isomp4/qtdemux.c:685 gst/isomp4/qtdemux.c:5572
+#: gst/isomp4/qtdemux.c:5639 gst/isomp4/qtdemux.c:5878
 msgid "This file is invalid and cannot be played."
 msgstr "A fájl nem érvényes és nem játszható le."
 
+#: gst/isomp4/qtdemux.c:2433
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
-msgstr ""
-"Nem lehet lejátszani a folyamot, mert PlayReady DRM titkosítás van rajta."
+msgstr "Nem lehet lejátszani a folyamot, mert PlayReady DRM titkosítás van rajta."
 
+#: gst/isomp4/qtdemux.c:3498 gst/isomp4/qtdemux.c:6595
+#: gst/isomp4/qtdemux.c:6602 gst/isomp4/qtdemux.c:7376
+#: gst/isomp4/qtdemux.c:7805 gst/isomp4/qtdemux.c:7812
+#: gst/isomp4/qtdemux.c:10091
 msgid "This file is corrupt and cannot be played."
 msgstr "A fájl sérült és nem játszható le."
 
+#: gst/isomp4/qtdemux.c:3740
 msgid "Invalid atom size."
 msgstr "Érvénytelen atom méret."
 
+#: gst/isomp4/qtdemux.c:3818
 msgid "This file is incomplete and cannot be played."
 msgstr "A fájl nem teljes és nem játszható le."
 
+#: gst/isomp4/qtdemux.c:8735
 msgid "The video in this file might not play correctly."
 msgstr "A fájlban található videó lehet, hogy nem játszható le megfelelően."
 
+#: gst/isomp4/qtdemux.c:10132
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr ""
-"A fájl túl sok adatfolyamot tartalmaz. Csak az első %d kerül lejátszásra."
+msgstr "A fájl túl sok adatfolyamot tartalmaz. Csak az első %d kerül lejátszásra."
 
+#: gst/multifile/gstsplitmuxsrc.c:532 gst/wavparse/gstwavparse.c:2248
 msgid "Internal data flow error."
 msgstr "Belső adatfolyam-hiba."
 
-msgid ""
-"No supported stream was found. You might need to install a GStreamer RTSP "
-"extension plugin for Real media streams."
-msgstr ""
-"Nem található támogatott adatfolyam. Telepítse a GStreamer RTSP bővítményt a "
-"Real media adatfolyamokhoz."
+#: gst/rtsp/gstrtspsrc.c:6894
+msgid "No supported stream was found. You might need to install a GStreamer RTSP extension plugin for Real media streams."
+msgstr "Nem található támogatott adatfolyam. Telepítse a GStreamer RTSP bővítményt a Real media adatfolyamokhoz."
 
-msgid ""
-"No supported stream was found. You might need to allow more transport "
-"protocols or may otherwise be missing the right GStreamer RTSP extension "
-"plugin."
-msgstr ""
-"Nem található támogatott adatfolyam. Lehet, hogy több átviteli protokollt "
-"kell engedélyezni, vagy hiányzik a megfelelő GStreamer RTSP bővítmény."
+#: gst/rtsp/gstrtspsrc.c:6899
+msgid "No supported stream was found. You might need to allow more transport protocols or may otherwise be missing the right GStreamer RTSP extension plugin."
+msgstr "Nem található támogatott adatfolyam. Lehet, hogy több átviteli protokollt kell engedélyezni, vagy hiányzik a megfelelő GStreamer RTSP bővítmény."
 
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Nem nyitható meg hangeszköz a lejátszáshoz. Az eszközt másik alkalmazás "
-"használja."
+#: sys/oss4/oss4-sink.c:493 sys/oss4/oss4-source.c:358
+#: sys/oss/gstosssink.c:384
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Nem nyitható meg hangeszköz a lejátszáshoz. Az eszközt másik alkalmazás használja."
 
-msgid ""
-"Could not open audio device for playback. You don't have permission to open "
-"the device."
-msgstr ""
-"Nem nyitható meg hangeszköz a lejátszáshoz. Nincs jogosultsága az eszköz "
-"megnyitására."
+#: sys/oss4/oss4-sink.c:503 sys/oss4/oss4-source.c:368
+#: sys/oss/gstosssink.c:391
+msgid "Could not open audio device for playback. You don't have permission to open the device."
+msgstr "Nem nyitható meg hangeszköz a lejátszáshoz. Nincs jogosultsága az eszköz megnyitására."
 
+#: sys/oss4/oss4-sink.c:514 sys/oss4/oss4-source.c:379
+#: sys/oss/gstosssink.c:399
 msgid "Could not open audio device for playback."
 msgstr "Nem nyitható meg hangeszköz a lejátszáshoz."
 
-msgid ""
-"Could not open audio device for playback. This version of the Open Sound "
-"System is not supported by this element."
-msgstr ""
-"Nem nyitható meg hangeszköz a lejátszáshoz. Az Open Sound System ezen "
-"verzióját az elem nem támogatja."
+#: sys/oss4/oss4-sink.c:523 sys/oss4/oss4-source.c:389
+msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+msgstr "Nem nyitható meg hangeszköz a lejátszáshoz. Az Open Sound System ezen verzióját az elem nem támogatja."
 
+#: sys/oss4/oss4-sink.c:646
 msgid "Playback is not supported by this audio device."
 msgstr "Ez a hangeszköz nem támogatja a lejátszást."
 
+#: sys/oss4/oss4-sink.c:653
 msgid "Audio playback error."
 msgstr "Hanglejátszási hiba."
 
+#: sys/oss4/oss4-source.c:503
 msgid "Recording is not supported by this audio device."
 msgstr "Ez a hangeszköz nem támogatja a felvételt."
 
+#: sys/oss4/oss4-source.c:510
 msgid "Error recording from audio device."
 msgstr "Hiba a hangeszközről való felvételkor."
 
-msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"Nem nyitható meg hangeszköz a felvételhez. Nincs jogosultsága az eszköz "
-"megnyitására."
+#: sys/oss/gstosssrc.c:377
+msgid "Could not open audio device for recording. You don't have permission to open the device."
+msgstr "Nem nyitható meg hangeszköz a felvételhez. Nincs jogosultsága az eszköz megnyitására."
 
+#: sys/oss/gstosssrc.c:385
 msgid "Could not open audio device for recording."
 msgstr "Nem nyitható meg hangeszköz a felvételhez."
 
+#: sys/sunaudio/gstsunaudiomixeroptions.c:109
 msgid "Record Source"
 msgstr "Felvétel forrása"
 
+#: sys/sunaudio/gstsunaudiomixeroptions.c:120
 msgid "Microphone"
 msgstr "Mikrofon"
 
+#: sys/sunaudio/gstsunaudiomixeroptions.c:121
 msgid "Line In"
 msgstr "Vonalbemenet"
 
+#: sys/sunaudio/gstsunaudiomixeroptions.c:122
 msgid "Internal CD"
 msgstr "Belső CD"
 
+#: sys/sunaudio/gstsunaudiomixeroptions.c:123
 msgid "SPDIF In"
 msgstr "SPDIF be"
 
+#: sys/sunaudio/gstsunaudiomixeroptions.c:124
 msgid "AUX 1 In"
 msgstr "1. AUX be"
 
+#: sys/sunaudio/gstsunaudiomixeroptions.c:125
 msgid "AUX 2 In"
 msgstr "2. AUX be"
 
+#: sys/sunaudio/gstsunaudiomixeroptions.c:126
 msgid "Codec Loopback"
 msgstr "Kodek visszacsatolás"
 
+#: sys/sunaudio/gstsunaudiomixeroptions.c:127
 msgid "SunVTS Loopback"
 msgstr "SunVTS visszacsatolás"
 
+#: sys/sunaudio/gstsunaudiomixertrack.c:69
 msgid "Volume"
 msgstr "Hangerő"
 
+#: sys/sunaudio/gstsunaudiomixertrack.c:70
 msgid "Gain"
 msgstr "Erősítés"
 
+#: sys/sunaudio/gstsunaudiomixertrack.c:71
 msgid "Monitor"
 msgstr "Monitor"
 
+#: sys/sunaudio/gstsunaudiomixertrack.c:72
 msgid "Built-in Speaker"
 msgstr "Beépített hangszóró"
 
+#: sys/sunaudio/gstsunaudiomixertrack.c:73
 msgid "Headphone"
 msgstr "Fejhallgató"
 
+#: sys/sunaudio/gstsunaudiomixertrack.c:74
 msgid "Line Out"
 msgstr "Vonalkimenet"
 
+#: sys/sunaudio/gstsunaudiomixertrack.c:75
 msgid "SPDIF Out"
 msgstr "SPDIF ki"
 
+#: sys/sunaudio/gstsunaudiomixertrack.c:76
 msgid "AUX 1 Out"
 msgstr "1. AUX ki"
 
+#: sys/sunaudio/gstsunaudiomixertrack.c:77
 msgid "AUX 2 Out"
 msgstr "2. AUX ki"
 
+#: sys/v4l2/gstv4l2bufferpool.c:1672
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Hiba %d bájt olvasásakor a következő eszközről: „%s”."
 
+#: sys/v4l2/gstv4l2object.c:1085
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr ""
-"A(z) „%s” eszköz által kezelhető lehetséges videoformátumok felsorolása "
-"sikertelen"
+msgstr "A(z) „%s” eszköz által kezelhető lehetséges videoformátumok felsorolása sikertelen"
 
+#: sys/v4l2/gstv4l2object.c:2577
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Nem képezhetők le a(z) „%s” eszköz pufferei"
 
+#: sys/v4l2/gstv4l2object.c:2585
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
 msgstr "A(z) „%s” eszköz illesztőprogramja nem támogatja a(z) %d. IO módot"
 
+#: sys/v4l2/gstv4l2object.c:2592
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr ""
-"A(z) „%s” eszköz illesztőprogramja nem támogat egyetlen ismert IO módot sem."
+msgstr "A(z) „%s” eszköz illesztőprogramja nem támogat egyetlen ismert IO módot sem."
 
+#: sys/v4l2/gstv4l2object.c:3214 sys/v4l2/gstv4l2object.c:3225
 #, c-format
 msgid "Device '%s' is busy"
 msgstr "A(z) „%s” eszköz foglalt"
 
+#: sys/v4l2/gstv4l2object.c:3231 sys/v4l2/gstv4l2object.c:3243
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "A(z) „%s” eszköz nem képes felvenni %dx%d felbontásban"
 
+#: sys/v4l2/gstv4l2object.c:3254
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "A(z) „%s” eszköz nem képes felvenni a megadott formátumban"
 
+#: sys/v4l2/gstv4l2object.c:3267
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "A(z) „%s” eszköz nem támogatja a nem szomszédos síkokat"
 
+#: sys/v4l2/gstv4l2object.c:3278
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Nem kérhetők le a(z) „%s” eszköz paraméterei"
 
+#: sys/v4l2/gstv4l2object.c:3286
 msgid "Video device did not accept new frame rate setting."
 msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
 
+#: sys/v4l2/gstv4l2object.c:3391
 msgid "Video device did not provide output format."
 msgstr "A videoeszköz nem szolgáltatott kimeneti formátumot."
 
+#: sys/v4l2/gstv4l2object.c:3397
 msgid "Video device returned invalid dimensions."
 msgstr "A videoeszköz érvénytelen dimenziókkal tért vissza."
 
+#: sys/v4l2/gstv4l2object.c:3405
 msgid "Video devices uses an unsupported interlacing method."
 msgstr "A videoeszközök nem támogatott váltottsoros módot használnak."
 
+#: sys/v4l2/gstv4l2object.c:3412
 msgid "Video devices uses an unsupported pixel format."
 msgstr "A videoeszközök nem támogatott képpontformátumot használnak."
 
+#: sys/v4l2/gstv4l2object.c:3824
 msgid "Failed to configure internal buffer pool."
 msgstr "Nem sikerült beállítani a belső puffertárolót."
 
+#: sys/v4l2/gstv4l2object.c:3830
 msgid "Video device did not suggest any buffer size."
 msgstr "A videoeszköz nem javasolt semmilyen pufferméretet."
 
+#: sys/v4l2/gstv4l2object.c:3845
 msgid "No downstream pool to import from."
 msgstr "Nincs importálási forrásként használható alárendelt tároló."
 
+#: sys/v4l2/gstv4l2radio.c:138
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "A(z) %d. tuner beállításának lekérése a(z) „%s” eszközön meghiúsult."
 
+#: sys/v4l2/gstv4l2radio.c:145
 #, c-format
 msgid "Error getting capabilities for device '%s'."
 msgstr "Hiba a(z) „%s” eszköz képességeinek lekérésekor."
 
+#: sys/v4l2/gstv4l2radio.c:152
 #, c-format
 msgid "Device '%s' is not a tuner."
 msgstr "A(z) „%s” eszköz nem tuner."
 
+#: sys/v4l2/gstv4l2radio.c:179
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
 msgstr "A rádióbemenet lekérése meghiúsult a(z) „%s” eszközön."
 
+#: sys/v4l2/gstv4l2radio.c:202 sys/v4l2/v4l2_calls.c:1067
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "A(z) %d. bemenet beállítása meghiúsult a(z) „%s” eszközön."
 
+#: sys/v4l2/gstv4l2radio.c:236
 #, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "A némítási állapot módosítása meghiúsult a(z) „%s” eszközön."
 
+#: sys/v4l2/gstv4l2sink.c:615
 msgid "Failed to allocated required memory."
 msgstr "Nem sikerült lefoglalni a szükséges memóriát."
 
+#: sys/v4l2/gstv4l2src.c:510 sys/v4l2/gstv4l2videodec.c:581
 msgid "Failed to allocate required memory."
 msgstr "Nem sikerült lefoglalni a szükséges memóriát."
 
+#: sys/v4l2/gstv4l2transform.c:143
 #, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "A(z) %s eszközön lévő átalakítónak nincs támogatott bemeneti formátuma"
 
+#: sys/v4l2/gstv4l2transform.c:150
 #, c-format
 msgid "Converter on device %s has no supported output format"
 msgstr "A(z) %s eszközön lévő átalakítónak nincs támogatott kimeneti formátuma"
 
+#: sys/v4l2/gstv4l2videodec.c:141
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "A(z) %s eszközön lévő kódolónak nincs támogatott bemeneti formátuma"
 
+#: sys/v4l2/gstv4l2videodec.c:148
 #, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "A(z) %s eszközön lévő kódolónak nincs támogatott kimeneti formátuma"
 
+#: sys/v4l2/gstv4l2videodec.c:595
 msgid "Failed to start decoding thread."
 msgstr "Nem sikerült elindítani a dekódolási szálat."
 
+#: sys/v4l2/gstv4l2videodec.c:603
 msgid "Failed to process frame."
 msgstr "Nem sikerült feldolgozni a keretet."
 
+#: sys/v4l2/v4l2_calls.c:89
 #, c-format
-msgid ""
-"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
-"it is a v4l1 driver."
-msgstr ""
-"Hiba a(z) „%s” eszköz képességeinek lekérésekor. Ez nem egy v4l2 meghajtó. "
-"Ellenőrizze, hogy nem v4l1 meghajtó-e."
+msgid "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if it is a v4l1 driver."
+msgstr "Hiba a(z) „%s” eszköz képességeinek lekérésekor. Ez nem egy v4l2 meghajtó. Ellenőrizze, hogy nem v4l1 meghajtó-e."
 
+#: sys/v4l2/v4l2_calls.c:153
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr "A(z) %d bemenet attribútumainak lekérése meghiúsult a(z) %s eszközön"
 
+#: sys/v4l2/v4l2_calls.c:184
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "A(z) %d. tuner beállításának lekérése a(z) „%s” eszközön meghiúsult."
 
+#: sys/v4l2/v4l2_calls.c:232
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr "A norma lekérdezése meghiúsult a(z) „%s” eszköztől."
 
+#: sys/v4l2/v4l2_calls.c:411
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "A vezérlőattribútumok lekérése meghiúsult a(z) „%s” eszközön."
 
+#: sys/v4l2/v4l2_calls.c:605
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Nem azonosítható a(z) „%s” eszköz."
 
+#: sys/v4l2/v4l2_calls.c:612
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Ez nem egy eszköz: „%s”."
 
+#: sys/v4l2/v4l2_calls.c:619
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Nem sikerült olvasásra és írásra megnyitni a(z) „%s” eszközt."
 
+#: sys/v4l2/v4l2_calls.c:626
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "A(z) „%s” eszköz nem rögzítőeszköz."
 
+#: sys/v4l2/v4l2_calls.c:634
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "A(z) „%s” eszköz nem kimeneti eszköz."
 
+#: sys/v4l2/v4l2_calls.c:642
 #, c-format
 msgid "Device '%s' is not a M2M device."
 msgstr "A(z) „%s” eszköz nem M2M eszköz."
 
+#: sys/v4l2/v4l2_calls.c:693
 #, c-format
 msgid "Could not dup device '%s' for reading and writing."
 msgstr "Nem sikerült duplikálni a(z) „%s” eszközt olvasásra és írásra."
 
+#: sys/v4l2/v4l2_calls.c:777
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "A norma beállítása meghiúsult a(z) „%s” eszközön."
 
+#: sys/v4l2/v4l2_calls.c:815
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr ""
-"A tuner aktuális frekvenciájának lekérdezése meghiúsult a(z) „%s” eszköztől."
+msgstr "A tuner aktuális frekvenciájának lekérdezése meghiúsult a(z) „%s” eszköztől."
 
+#: sys/v4l2/v4l2_calls.c:857
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
-msgstr ""
-"A tuner aktuális frekvenciájának beállítása meghiúsult a(z) „%s” eszközön "
-"%lu Hz-re."
+msgstr "A tuner aktuális frekvenciájának beállítása meghiúsult a(z) „%s” eszközön %lu Hz-re."
 
+#: sys/v4l2/v4l2_calls.c:891
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "A jelerősség lekérdezése meghiúsult a(z) „%s” eszközön."
 
+#: sys/v4l2/v4l2_calls.c:927
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "A(z) %d. vezérlőelem értékének lekérése meghiúsult a(z) „%s” eszközön."
 
+#: sys/v4l2/v4l2_calls.c:962
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr ""
-"A(z) $%2d érték beállítása $%1d vezérlőelemhez meghiúsult a(z) „%s” eszközön."
+msgstr "A(z) $%2d érték beállítása $%1d vezérlőelemhez meghiúsult a(z) „%s” eszközön."
 
+#: sys/v4l2/v4l2_calls.c:1042
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
-msgstr ""
-"Az aktuális bemenet lekérése meghiúsult a(z) „%s” eszközről. Lehet, hogy ez "
-"egy rádióeszköz."
+msgstr "Az aktuális bemenet lekérése meghiúsult a(z) „%s” eszközről. Lehet, hogy ez egy rádióeszköz."
 
+#: sys/v4l2/v4l2_calls.c:1099
 #, c-format
-msgid ""
-"Failed to get current output on device '%s'. May be it is a radio device"
-msgstr ""
-"Az aktuális kimenet lekérése meghiúsult a(z) „%s” eszközről. Lehet, hogy ez "
-"egy rádióeszköz."
+msgid "Failed to get current output on device '%s'. May be it is a radio device"
+msgstr "Az aktuális kimenet lekérése meghiúsult a(z) „%s” eszközről. Lehet, hogy ez egy rádióeszköz."
 
+#: sys/v4l2/v4l2_calls.c:1124
 #, c-format
 msgid "Failed to set output %d on device %s."
 msgstr "A(z) %d. kimenet beállítása meghiúsult a(z) „%s” eszközön."
 
+#: sys/ximage/gstximagesrc.c:828
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "A felbontás módosítása futás közben még nem támogatott."
 
+#: sys/ximage/gstximagesrc.c:842
 msgid "Cannot operate without a clock"
 msgstr "Óra nélkül lehetetlen a működés"
 
@@ -511,12 +582,8 @@ msgstr "Óra nélkül lehetetlen a működés"
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "Nem nyitható meg hangeszköz a keverővezérlő kezeléséhez."
 
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Nem nyitható meg hangeszköz a keverővezérlő kezeléséhez. Az Open Sound "
-#~ "System ezen verzióját az elem nem támogatja."
+#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
+#~ msgstr "Nem nyitható meg hangeszköz a keverővezérlő kezeléséhez. Az Open Sound System ezen verzióját az elem nem támogatja."
 
 #~ msgid "Master"
 #~ msgstr "Fő hangerő"
