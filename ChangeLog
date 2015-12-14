@@ -1,9 +1,45 @@
-=== release 1.6.1 ===
+=== release 1.6.2 ===
 
-2015-10-30  Sebastian Dröge <slomo@coaxion.net>
+2015-12-14  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.1
+	  releasing 1.6.2
+
+2015-11-08 11:56:20 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gi/overrides/Gst.py:
+	  overrides: fix a few typos in exception messages
+
+2015-12-14 13:03:24 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugin/gstpythonplugin.c:
+	  python: Check return value of g_module_symbol()
+	  CID 1320702
+
+2015-12-14 13:01:25 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugin/gstpythonplugin.c:
+	  python: Don't call Py_DECREF() on NULL
+	  CID 1320703
+
+2015-11-16 10:12:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugin/gstpythonplugin.c:
+	  pythonplugin: Clean up error handling a bit
+	  Don't g_error() but only g_critical() when things go wrong and return FALSE.
+	  g_error() would kill the application immediately.
+	  Also check if we can actually get gi.repository.Gst before using it.
+
+=== release 1.6.1 ===
+
+2015-10-30 17:10:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.6.1
 
 2015-10-25 21:33:46 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
 
