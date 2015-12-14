@@ -25,7 +25,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch filesrc location=music.mp3 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! autoaudiosink
+ * gst-launch-1.0 filesrc location=music.mp3 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! autoaudiosink
  * ]| Decode and play the mp3 file
  * </refsect2>
  */
