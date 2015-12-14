@@ -229,9 +229,8 @@ plugin_init (GstPlugin * plugin)
       GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
   GST_LOG ("Checking to see if libpython is already loaded");
-  g_module_symbol (g_module_open (NULL, G_MODULE_BIND_LOCAL), "_Py_NoneStruct",
-      &has_python);
-  if (has_python) {
+  if (g_module_symbol (g_module_open (NULL, G_MODULE_BIND_LOCAL),
+          "_Py_NoneStruct", &has_python) && has_python) {
     GST_LOG ("libpython is already loaded");
   } else {
     GST_LOG ("loading libpython");
