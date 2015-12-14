@@ -1,9 +1,80 @@
-=== release 1.6.1 ===
+=== release 1.6.2 ===
 
-2015-10-30  Sebastian Dröge <slomo@coaxion.net>
+2015-12-14  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.1
+	  releasing 1.6.2
+
+2015-11-26 23:11:36 +0530  Sebastian Dröge <sebastian@centricular.com>
+
+	* Makefile.am:
+	  bash-completion: Disable during "make distcheck" as this requires installing files outside the prefix
+	  automake requires all files to be installed inside the prefix. bash-completion
+	  requires the files to be in a specific directory given by a pkg-config file.
+	  As such those two are having incompatible requirements and we just disable
+	  bash-completion installation for the time being when running "make distcheck".
+	  Nonetheless things like "make install" with e.g. a DESTDIR or a private
+	  installation into a user's directory will fail as in both cases the
+	  bash-completion data would be tried to be installed system-wide.
+
+2015-11-26 22:42:45 +0530  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Revert "build: fix make distcheck."
+	  This reverts commit 462727d6d825b6e67119e6b8ea47d9e18cc22bdf.
+	  This "fix" broke the build on Windows, where both prefix and datadir are
+	  absolute paths and as such we would concatenate two absolute paths and fail.
+
+2015-11-21 00:23:02 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	* tests/check/Makefile.am:
+	  tests: Properly setup GST_PLUGIN_PATH in test environement
+
+2015-11-15 00:31:21 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* Makefile.am:
+	  Dist gst-editing-services.doap
+
+2015-11-05 11:16:31 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* .arcconfig:
+	* ges/ges-audio-source.c:
+	* ges/ges-smart-adder.c:
+	  ges: Set restriction caps in the audio source caps filter
+	  Otherwise we could have not negotiated errors in audiomixer when
+	  the channel/channel-mask do not match
+	  Differential Revision: https://phabricator.freedesktop.org/D493
+
+2015-11-04 20:20:10 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-xml-formatter.c:
+	  formatter: Do not serialize top effect priorities
+	  We just need to make sure they are always serialized in the right
+	  order (which is the case) and de serializing them will lead to the
+	  right behaviour.
+	  We should not serialize the priority as the priority of the source
+	  itself depends on the action having been done on the parent clip,
+	  and we do not serialize the source priorities (and should not, GES
+	  should just do the right thing).
+	  Differential Revision: https://phabricator.freedesktop.org/D491
+
+2015-11-04 18:37:34 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launcher.c:
+	  launcher: Make sure to not activate validate twice when simply loading a scenario
+
+=== release 1.6.1 ===
+
+2015-10-30 17:11:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.6.1
 
 2015-10-07 23:57:05 +0200  Thibault Saunier <tsaunier@gnome.org>
 
