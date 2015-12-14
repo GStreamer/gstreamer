@@ -33,7 +33,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=opus.ogg ! oggdemux ! opusdec ! audioconvert ! audioresample ! alsasink
+ * gst-launch-1.0 -v filesrc location=opus.ogg ! oggdemux ! opusdec ! audioconvert ! audioresample ! alsasink
  * ]| Decode an Ogg/Opus file. To create an Ogg/Opus file refer to the documentation of opusenc.
  * </refsect2>
  */
