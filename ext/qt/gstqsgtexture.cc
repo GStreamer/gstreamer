@@ -111,7 +111,7 @@ GstQSGTexture::bind ()
   mem = gst_buffer_peek_memory (this->buffer_, 0);
   g_assert (gst_is_gl_memory (mem));
 
-  context = ((GstGLBaseBuffer *)mem)->context;
+  context = ((GstGLBaseMemory *)mem)->context;
 
   sync_meta = gst_buffer_get_gl_sync_meta (this->sync_buffer_);
   if (!sync_meta)

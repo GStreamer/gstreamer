@@ -120,10 +120,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (priv->allocator)
     gst_object_unref (priv->allocator);
 
-  if (!allocator) {
-    gst_gl_memory_init ();
-    priv->allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
-  } else {
+  if (allocator) {
     priv->allocator = gst_object_ref (allocator);
   }
 
@@ -142,12 +139,14 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       GST_BUFFER_POOL_OPTION_GL_SYNC_META);
 
 #if GST_GL_HAVE_PLATFORM_EGL
-  g_assert (priv->allocator != NULL);
-  priv->want_eglimage =
-      (g_strcmp0 (priv->allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
-#else
-  priv->want_eglimage = FALSE;
+  if (priv->allocator) {
+    priv->want_eglimage =
+        (g_strcmp0 (priv->allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
+  } else
 #endif
+  {
+    priv->want_eglimage = FALSE;
+  }
 
   max_align = alloc_params.align;
 
@@ -299,7 +298,7 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   }
 #endif
 
-  if (!gst_gl_memory_setup_buffer (glpool->context, priv->tex_target,
+  if (!gst_gl_memory_pbo_setup_buffer (glpool->context, priv->tex_target,
           &priv->params, info, valign, buf))
     goto mem_create_failed;
 

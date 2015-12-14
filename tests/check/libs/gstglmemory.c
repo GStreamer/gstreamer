@@ -39,7 +39,7 @@ setup (void)
   display = gst_gl_display_new ();
   context = gst_gl_context_new (display);
   gst_gl_context_create (context, 0, NULL);
-  gst_gl_memory_init ();
+  gst_gl_memory_init_once ();
 }
 
 static void
@@ -60,7 +60,7 @@ GST_START_TEST (test_basic)
     GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_I420
   };
 
-  gl_allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
+  gl_allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
   fail_if (gl_allocator == NULL);
 
   /* test allocator creation */
@@ -74,8 +74,8 @@ GST_START_TEST (test_basic)
 
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&v_info); j++) {
       mem =
-          gst_gl_memory_alloc (context, GST_GL_TEXTURE_TARGET_2D, NULL, &v_info,
-          j, NULL);
+          gst_gl_memory_pbo_alloc (context, GST_GL_TEXTURE_TARGET_2D, NULL,
+          &v_info, j, NULL);
       fail_if (mem == NULL);
       gl_mem = (GstGLMemory *) mem;
 
@@ -120,47 +120,47 @@ GST_START_TEST (test_transfer)
   GstMemory *mem, *mem2, *mem3;
   GstMapInfo map_info;
 
-  gl_allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
+  gl_allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
   fail_if (gl_allocator == NULL);
 
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 1, 1);
 
   /* texture creation */
   mem =
-      (GstMemory *) gst_gl_memory_alloc (context, GST_GL_TEXTURE_TARGET_2D,
+      (GstMemory *) gst_gl_memory_pbo_alloc (context, GST_GL_TEXTURE_TARGET_2D,
       NULL, &v_info, 0, NULL);
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
-          GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   /* test wrapping raw data */
   mem2 =
-      (GstMemory *) gst_gl_memory_wrapped (context, GST_GL_TEXTURE_TARGET_2D,
-      &v_info, 0, NULL, rgba_pixel, NULL, NULL);
+      (GstMemory *) gst_gl_memory_pbo_wrapped (context,
+      GST_GL_TEXTURE_TARGET_2D, &v_info, 0, NULL, rgba_pixel, NULL, NULL);
   fail_if (mem == NULL);
 
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem2,
-          GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem2,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   /* wrapped texture creation */
-  mem3 = (GstMemory *) gst_gl_memory_wrapped_texture (context,
+  mem3 = (GstMemory *) gst_gl_memory_pbo_wrapped_texture (context,
       ((GstGLMemory *) mem)->tex_id, GST_GL_TEXTURE_TARGET_2D, &v_info, 0, NULL,
       NULL, NULL);
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem3,
-          GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem3,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   /* check data/flags are correct */
   fail_unless (gst_memory_map (mem2, &map_info, GST_MAP_READ));
 
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem2,
-          GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem2,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   fail_unless (((gchar *) map_info.data)[0] == rgba_pixel[0]);
   fail_unless (((gchar *) map_info.data)[1] == rgba_pixel[1]);
@@ -170,32 +170,31 @@ GST_START_TEST (test_transfer)
   gst_memory_unmap (mem2, &map_info);
 
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem2,
-          GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem2,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   fail_unless (gst_memory_map (mem2, &map_info, GST_MAP_READ | GST_MAP_GL));
 
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem2,
-          GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem2,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   /* test texture copy */
-  fail_unless (gst_gl_memory_copy_into_texture ((GstGLMemory *) mem2,
+  fail_unless (gst_gl_memory_copy_into ((GstGLMemory *) mem2,
           ((GstGLMemory *) mem)->tex_id, GST_GL_TEXTURE_TARGET_2D,
-          GST_VIDEO_GL_TEXTURE_TYPE_RGBA, 1, 1, 4, FALSE));
-  GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD);
-  GST_GL_MEMORY_ADD_TRANSFER (mem, GST_GL_MEMORY_TRANSFER_NEED_DOWNLOAD);
+          GST_VIDEO_GL_TEXTURE_TYPE_RGBA, 1, 1));
+  GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem2,
-          GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem2,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
-          GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   gst_memory_unmap (mem2, &map_info);
 
@@ -213,9 +212,9 @@ GST_START_TEST (test_transfer)
   fail_unless (gst_memory_map (mem3, &map_info, GST_MAP_READ));
 
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
-          GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   fail_unless (((gchar *) map_info.data)[0] == rgba_pixel[0]);
   fail_unless (((gchar *) map_info.data)[1] == rgba_pixel[1]);
@@ -229,18 +228,18 @@ GST_START_TEST (test_transfer)
   gst_memory_unmap (mem3, &map_info);
 
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem3,
-          GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem3,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   /* test download flag */
   fail_unless (gst_memory_map (mem3, &map_info, GST_MAP_WRITE | GST_MAP_GL));
   gst_memory_unmap (mem3, &map_info);
 
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem3,
-          GST_GL_BASE_BUFFER_FLAG_NEED_UPLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem3,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   if (gst_gl_context_get_error ())
     printf ("%s\n", gst_gl_context_get_error ());
@@ -261,22 +260,22 @@ GST_START_TEST (test_separate_transfer)
   GstMemory *mem;
   GstMapInfo info;
 
-  gl_allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
+  gl_allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
   fail_if (gl_allocator == NULL);
 
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 1, 1);
 
   mem =
-      (GstMemory *) gst_gl_memory_wrapped (context, GST_GL_TEXTURE_TARGET_2D,
-      &v_info, 0, NULL, rgba_pixel, NULL, NULL);
+      (GstMemory *) gst_gl_memory_pbo_wrapped (context,
+      GST_GL_TEXTURE_TARGET_2D, &v_info, 0, NULL, rgba_pixel, NULL, NULL);
   fail_if (mem == NULL);
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
-  gst_gl_memory_upload_transfer ((GstGLMemory *) mem);
+  gst_gl_memory_pbo_upload_transfer ((GstGLMemoryPBO *) mem);
 
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
-          GST_GL_BASE_BUFFER_FLAG_NEED_DOWNLOAD));
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
 

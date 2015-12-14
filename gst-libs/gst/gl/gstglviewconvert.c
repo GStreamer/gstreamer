@@ -1892,7 +1892,7 @@ static gboolean
 _gen_buffer (GstGLViewConvert * viewconvert, GstBuffer ** target)
 {
   *target = gst_buffer_new ();
-  if (!gst_gl_memory_setup_buffer (viewconvert->context,
+  if (!gst_gl_memory_pbo_setup_buffer (viewconvert->context,
           viewconvert->to_texture_target, NULL, &viewconvert->out_info, NULL,
           *target)) {
     return FALSE;
@@ -2017,7 +2017,7 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
        * the attachments i.e. the smallest attachment size */
       if (!priv->out_tex[j])
         priv->out_tex[j] =
-            (GstGLMemory *) gst_gl_memory_alloc (context,
+            (GstGLMemory *) gst_gl_memory_pbo_alloc (context,
             viewconvert->to_texture_target, NULL, &temp_info, 0, NULL);
     } else {
       priv->out_tex[j] = out_tex;
@@ -2069,10 +2069,8 @@ out:
         res = FALSE;
         continue;
       }
-      gst_gl_memory_copy_into_texture (priv->out_tex[j],
-          out_tex->tex_id, viewconvert->to_texture_target, out_tex->tex_type,
-          width, height,
-          GST_VIDEO_INFO_PLANE_STRIDE (&out_tex->info, out_tex->plane), FALSE);
+      gst_gl_memory_copy_into (priv->out_tex[j], out_tex->tex_id,
+          viewconvert->to_texture_target, out_tex->tex_type, width, height);
       gst_memory_unmap ((GstMemory *) out_tex, &to_info);
     }
 

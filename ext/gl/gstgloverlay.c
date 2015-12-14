@@ -696,7 +696,7 @@ gst_gl_overlay_load_jpeg (GstGLOverlay * overlay, FILE * fp)
   gst_video_info_align (&v_info, &v_align);
 
   overlay->image_memory = (GstGLMemory *)
-      gst_gl_memory_alloc (GST_GL_BASE_FILTER (overlay)->context,
+      gst_gl_memory_pbo_alloc (GST_GL_BASE_FILTER (overlay)->context,
       GST_GL_TEXTURE_TARGET_2D, NULL, &v_info, 0, &v_align);
 
   if (!gst_memory_map ((GstMemory *) overlay->image_memory, &map_info,
@@ -801,7 +801,7 @@ gst_gl_overlay_load_png (GstGLOverlay * overlay, FILE * fp)
 
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, width, height);
   overlay->image_memory = (GstGLMemory *)
-      gst_gl_memory_alloc (GST_GL_BASE_FILTER (overlay)->context,
+      gst_gl_memory_pbo_alloc (GST_GL_BASE_FILTER (overlay)->context,
       GST_GL_TEXTURE_TARGET_2D, NULL, &v_info, 0, NULL);
 
   if (!gst_memory_map ((GstMemory *) overlay->image_memory, &map_info,
