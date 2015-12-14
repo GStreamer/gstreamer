@@ -1570,6 +1570,8 @@ gst_element_send_event (GstElement * element, GstEvent * event)
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "send %s event on element %s",
         GST_EVENT_TYPE_NAME (event), GST_ELEMENT_NAME (element));
     result = oclass->send_event (element, event);
+  } else {
+    gst_event_unref (event);
   }
 
   return result;
