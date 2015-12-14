@@ -106,6 +106,8 @@ gboolean gst_gl_run_query (GstElement * element,
     GstQuery * query, GstPadDirection direction);
 gsize gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
     guint plane);
+gsize gst_gl_get_plane_start (GstVideoInfo * info, GstVideoAlignment * valign,
+    guint plane);
 GstCaps * gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
     const gchar * feature_name);
 
