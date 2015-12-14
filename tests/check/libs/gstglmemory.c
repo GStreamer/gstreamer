@@ -26,7 +26,7 @@
 
 #include <gst/check/gstcheck.h>
 
-#include <gst/gl/gstglmemory.h>
+#include <gst/gl/gl.h>
 
 #include <stdio.h>
 
