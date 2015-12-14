@@ -108,17 +108,11 @@ const CFStringRef
 CFSTR ("RequireHardwareAcceleratedVideoDecoder");
 #endif
 
-#define GST_VTDEC_VIDEO_FORMAT_STR "NV12"
-
 #define VIDEO_SRC_CAPS \
-    "video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY "), "              \
-    "format = (string) RGBA, "                                          \
-    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
-    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
-    "framerate = " GST_VIDEO_FPS_RANGE ", "                             \
-    "texture-target = (string) 2D "                                     \
-    " ; "                                                               \
-    GST_VIDEO_CAPS_MAKE(GST_VTDEC_VIDEO_FORMAT_STR) ";"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_GL_MEMORY,\
+        "NV12") ", "                                                    \
+    "texture-target = (string) rectangle;"                              \
+    GST_VIDEO_CAPS_MAKE("NV12") ";"
 
 G_DEFINE_TYPE (GstVtdec, gst_vtdec, GST_TYPE_VIDEO_DECODER);
 
@@ -290,6 +284,10 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
     output_textures =
         gst_caps_features_contains (features,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+    if (output_textures)
+      gst_caps_set_simple (output_state->caps,
+          "texture-target", G_TYPE_STRING, GST_GL_TEXTURE_TARGET_RECTANGLE_STR,
+          NULL);
   }
   gst_caps_unref (caps);
 

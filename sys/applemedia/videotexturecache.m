@@ -48,8 +48,6 @@ gst_video_texture_cache_new (GstGLContext * ctx)
 
   cache->ctx = gst_object_ref (ctx);
   gst_video_info_init (&cache->input_info);
-  cache->convert = gst_gl_color_convert_new (cache->ctx);
-  cache->configured = FALSE;
 
 #if HAVE_IOS
   CFMutableDictionaryRef cache_attrs =
@@ -82,7 +80,6 @@ gst_video_texture_cache_free (GstVideoTextureCache * cache)
   gst_object_unref (cache->pool);
 #endif
 #endif
-  gst_object_unref (cache->convert);
   gst_object_unref (cache->ctx);
   if (cache->in_caps)
     gst_caps_unref (cache->in_caps);
@@ -112,7 +109,6 @@ gst_video_texture_cache_set_format (GstVideoTextureCache * cache,
   gst_caps_features_add (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   gst_video_info_from_caps (&cache->input_info, in_caps);
 
-  cache->configured = FALSE;
   if (cache->in_caps)
     gst_caps_unref (cache->in_caps);
   if (cache->out_caps)
@@ -271,34 +267,11 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
     return;
   }
 
-  if (!cache->configured) {
-    cache->in_caps = gst_caps_make_writable (cache->in_caps);
-#if HAVE_IOS
-    gst_caps_set_simple (cache->in_caps, "texture-target", G_TYPE_STRING, GST_GL_TEXTURE_TARGET_2D_STR, NULL);
-#else
-    gst_caps_set_simple (cache->in_caps, "texture-target", G_TYPE_STRING, GST_GL_TEXTURE_TARGET_RECTANGLE_STR, NULL);
-#endif
-    gst_caps_set_simple (cache->out_caps, "texture-target", G_TYPE_STRING, "2D", NULL);
-
-    if (!gst_gl_color_convert_set_caps (cache->convert, cache->in_caps, cache->out_caps)) {
-      if (mem1)
-        gst_memory_unref (mem1);
-      if (mem2)
-        gst_memory_unref (mem2);
-      gst_buffer_unref (buffer);
-
-      return;
-    }
-
-    cache->configured = TRUE;
-  }
-
   gst_buffer_append_memory (buffer, mem1);
   if (mem2)
     gst_buffer_append_memory (buffer, mem2);
 
-  data->output_buffer = gst_gl_color_convert_perform (cache->convert, buffer);
-  gst_buffer_unref (buffer);
+  data->output_buffer = buffer;
 }
 
 GstBuffer *

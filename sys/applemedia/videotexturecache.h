@@ -40,7 +40,6 @@ typedef struct _GstVideoTextureCache
   gboolean configured;
   GstCaps *in_caps;
   GstCaps *out_caps;
-  GstGLColorConvert *convert;
 } GstVideoTextureCache;
 
 GstVideoTextureCache *gst_video_texture_cache_new (GstGLContext * ctx);
