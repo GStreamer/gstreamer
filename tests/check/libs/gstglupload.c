@@ -209,8 +209,8 @@ GST_START_TEST (test_upload_buffer)
   /* create GL buffer */
   buffer = gst_buffer_new ();
   gl_mem =
-      gst_gl_memory_wrapped (context, GST_GL_TEXTURE_TARGET_2D, &in_info, 0,
-      NULL, rgba_data, NULL, NULL);
+      (GstGLMemory *) gst_gl_memory_pbo_wrapped (context,
+      GST_GL_TEXTURE_TARGET_2D, &in_info, 0, NULL, rgba_data, NULL, NULL);
 
   res =
       gst_memory_map ((GstMemory *) gl_mem, &map_info,
