@@ -698,9 +698,14 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
   GError *error = NULL;
   GSocketConnection *connection;
   GSocket *socket;
-  gchar *luri = NULL;
+  gchar *connection_uri = NULL;
+  gchar *request_uri = NULL;
+  gchar *host = NULL;
 
   url = conn->url;
+
+  gst_rtsp_url_get_port (url, &url_port);
+  host = g_strdup_printf ("%s:%d", url->host, url_port);
 
   /* create a random sessionid */
   for (i = 0; i < TUNNELID_LEN; i++)
@@ -718,6 +723,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
       "application/x-rtsp-tunnelled");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CACHE_CONTROL, "no-cache");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_PRAGMA, "no-cache");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_HOST, host);
   add_auth_header (conn, msg);
 
   /* we need to temporarily set conn->tunneled to FALSE to prevent the HTTP
@@ -749,17 +755,20 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
     conn->remote_ip = g_strdup (value);
   }
 
-  gst_rtsp_url_get_port (url, &url_port);
-  luri = g_strdup_printf ("http://%s:%d%s%s%s", url->host, url_port,
+  connection_uri = g_strdup_printf ("http://%s:%d%s%s%s", url->host, url_port,
       url->abspath, url->query ? "?" : "", url->query ? url->query : "");
 
   /* connect to the host/port */
   if (conn->proxy_host) {
     connection = g_socket_client_connect_to_host (conn->client,
         conn->proxy_host, conn->proxy_port, conn->cancellable, &error);
+    request_uri = g_strdup (connection_uri);
   } else {
     connection = g_socket_client_connect_to_uri (conn->client,
-        luri, 0, conn->cancellable, &error);
+        connection_uri, 0, conn->cancellable, &error);
+    request_uri =
+        g_strdup_printf ("%s%s%s", url->abspath,
+        url->query ? "?" : "", url->query ? url->query : "");
   }
   if (connection == NULL)
     goto connect_failed;
@@ -781,8 +790,8 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
   conn->control_stream = NULL;
 
   /* create the POST request for the write connection */
-  GST_RTSP_CHECK (gst_rtsp_message_new_request (&msg, GST_RTSP_POST, luri),
-      no_message);
+  GST_RTSP_CHECK (gst_rtsp_message_new_request (&msg, GST_RTSP_POST,
+          request_uri), no_message);
   msg->type = GST_RTSP_MESSAGE_HTTP_REQUEST;
 
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_X_SESSIONCOOKIE,
@@ -794,6 +803,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_EXPIRES,
       "Sun, 9 Jan 1972 00:00:00 GMT");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CONTENT_LENGTH, "32767");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_HOST, host);
   add_auth_header (conn, msg);
 
   /* we need to temporarily set conn->tunneled to FALSE to prevent the HTTP
@@ -804,7 +814,9 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
   conn->tunneled = TRUE;
 
 exit:
-  g_free (luri);
+  g_free (connection_uri);
+  g_free (request_uri);
+  g_free (host);
 
   return res;
 
@@ -876,7 +888,7 @@ gst_rtsp_connection_connect_with_response (GstRTSPConnection * conn,
   GSocketConnection *connection;
   GSocket *socket;
   GError *error = NULL;
-  gchar *uri, *remote_ip;
+  gchar *connection_uri, *request_uri, *remote_ip;
   GstClockTime to;
   guint16 url_port;
   GstRTSPUrl *url;
@@ -894,18 +906,23 @@ gst_rtsp_connection_connect_with_response (GstRTSPConnection * conn,
   gst_rtsp_url_get_port (url, &url_port);
 
   if (conn->tunneled) {
-    uri = g_strdup_printf ("http://%s:%d%s%s%s", url->host, url_port,
+    connection_uri = g_strdup_printf ("http://%s:%d%s%s%s", url->host, url_port,
         url->abspath, url->query ? "?" : "", url->query ? url->query : "");
   } else {
-    uri = gst_rtsp_url_get_request_uri (url);
+    connection_uri = gst_rtsp_url_get_request_uri (url);
   }
 
   if (conn->proxy_host) {
     connection = g_socket_client_connect_to_host (conn->client,
         conn->proxy_host, conn->proxy_port, conn->cancellable, &error);
+    request_uri = g_strdup (connection_uri);
   } else {
     connection = g_socket_client_connect_to_uri (conn->client,
-        uri, url_port, conn->cancellable, &error);
+        connection_uri, url_port, conn->cancellable, &error);
+
+    /* use the relative component of the uri for non-proxy connections */
+    request_uri = g_strdup_printf ("%s%s%s", url->abspath,
+        url->query ? "?" : "", url->query ? url->query : "");
   }
   if (connection == NULL)
     goto connect_failed;
@@ -928,11 +945,12 @@ gst_rtsp_connection_connect_with_response (GstRTSPConnection * conn,
   conn->control_stream = NULL;
 
   if (conn->tunneled) {
-    res = setup_tunneling (conn, timeout, uri, response);
+    res = setup_tunneling (conn, timeout, request_uri, response);
     if (res != GST_RTSP_OK)
       goto tunneling_failed;
   }
-  g_free (uri);
+  g_free (connection_uri);
+  g_free (request_uri);
 
   return GST_RTSP_OK;
 
@@ -941,7 +959,8 @@ connect_failed:
   {
     GST_ERROR ("failed to connect: %s", error->message);
     g_clear_error (&error);
-    g_free (uri);
+    g_free (connection_uri);
+    g_free (request_uri);
     return GST_RTSP_ERROR;
   }
 remote_address_failed:
@@ -949,13 +968,15 @@ remote_address_failed:
     GST_ERROR ("failed to connect: %s", error->message);
     g_object_unref (connection);
     g_clear_error (&error);
-    g_free (uri);
+    g_free (connection_uri);
+    g_free (request_uri);
     return GST_RTSP_ERROR;
   }
 tunneling_failed:
   {
     GST_ERROR ("failed to setup tunneling");
-    g_free (uri);
+    g_free (connection_uri);
+    g_free (request_uri);
     return res;
   }
 }
