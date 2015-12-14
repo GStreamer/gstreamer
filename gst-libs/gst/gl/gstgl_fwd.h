@@ -43,6 +43,10 @@ typedef struct _GstGLBaseBuffer GstGLBaseBuffer;
 typedef struct _GstGLBaseBufferAllocator GstGLBaseBufferAllocator;
 typedef struct _GstGLBaseBufferAllocatorClass GstGLBaseBufferAllocatorClass;
 
+typedef struct _GstGLBaseMemory GstGLBaseMemory;
+typedef struct _GstGLBaseMemoryAllocator GstGLBaseMemoryAllocator;
+typedef struct _GstGLBaseMemoryAllocatorClass GstGLBaseMemoryAllocatorClass;
+
 typedef struct _GstGLMemory GstGLMemory;
 typedef struct _GstGLAllocator GstGLAllocator;
 typedef struct _GstGLAllocatorClass GstGLAllocatorClass;
@@ -80,6 +84,8 @@ typedef struct _GstGLViewConvertPrivate GstGLViewConvertPrivate;
 
 typedef struct _GstGLOverlayCompositor GstGLOverlayCompositor;
 typedef struct _GstGLOverlayCompositorClass GstGLOverlayCompositorClass;
+
+#include <gst/gl/gstgl_enums.h>
 
 G_END_DECLS
 
