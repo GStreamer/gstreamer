@@ -430,8 +430,15 @@ gst_directsound_sink_open (GstAudioSink * asink)
 
   dsoundsink = GST_DIRECTSOUND_SINK (asink);
 
-  if (dsoundsink->device_id)
+  if (dsoundsink->device_id) {
     lpGuid = string_to_guid (dsoundsink->device_id);
+    if (lpGuid == NULL) {
+      GST_ELEMENT_ERROR (dsoundsink, RESOURCE, OPEN_READ,
+          ("gst_directsound_sink_open: device set, but guid not found: %s",
+              dsoundsink->device_id), (NULL));
+      return FALSE;
+    }
+  }
 
   /* create and initialize a DirecSound object */
   if (FAILED (hRes = DirectSoundCreate (lpGuid, &dsoundsink->pDS, NULL))) {
