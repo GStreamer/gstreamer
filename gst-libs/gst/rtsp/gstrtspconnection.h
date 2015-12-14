@@ -67,10 +67,12 @@ GstRTSPResult      gst_rtsp_connection_create_from_socket (GSocket * socket,
                                                        guint16 port,
                                                        const gchar * initial_buffer,
                                                        GstRTSPConnection ** conn);
-GstRTSPResult      gst_rtsp_connection_accept         (GSocket *socket, GstRTSPConnection **conn, GCancellable *cancellable);
-GstRTSPResult      gst_rtsp_connection_connect        (GstRTSPConnection *conn, GTimeVal *timeout);
-GstRTSPResult      gst_rtsp_connection_close          (GstRTSPConnection *conn);
-GstRTSPResult      gst_rtsp_connection_free           (GstRTSPConnection *conn);
+
+GstRTSPResult      gst_rtsp_connection_accept                 (GSocket * socket, GstRTSPConnection ** conn, GCancellable * cancellable);
+GstRTSPResult      gst_rtsp_connection_connect                (GstRTSPConnection * conn, GTimeVal * timeout);
+GstRTSPResult      gst_rtsp_connection_connect_with_response  (GstRTSPConnection * conn, GTimeVal * timeout, GstRTSPMessage * response);
+GstRTSPResult      gst_rtsp_connection_close                  (GstRTSPConnection *conn);
+GstRTSPResult      gst_rtsp_connection_free                   (GstRTSPConnection *conn);
 
 /* TLS connections */
 GTlsConnection *     gst_rtsp_connection_get_tls                  (GstRTSPConnection * conn, GError ** error);
