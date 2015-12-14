@@ -52,6 +52,7 @@ gst*orc.h
 /ext/gsettings/org.freedesktop.gstreamer-0.10.default-elements.gschema.xml
 
 /tests/check/orc
+/tests/check/elements/videoframe-audiolevel
 /tests/examples/codecparsers/parse-jpeg
 /tests/examples/codecparsers/parse-vp8
 /tests/examples/gtk/gtkglsink
