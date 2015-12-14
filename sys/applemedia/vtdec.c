@@ -259,6 +259,8 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   GstGLContext *context;
   GstVtdec *vtdec;
   gboolean ret = TRUE;
+  GstCapsFeatures *features = NULL;
+  gboolean output_textures;
 
   vtdec = GST_VTDEC (decoder);
   templcaps =
@@ -275,16 +277,21 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   structure = gst_caps_get_structure (caps, 0);
   s = gst_structure_get_string (structure, "format");
   format = gst_video_format_from_string (s);
-  gst_caps_unref (caps);
+  features = gst_caps_get_features (caps, 0);
+  if (features)
+    features = gst_caps_features_copy (features);
 
   output_state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (vtdec),
       format, vtdec->video_info.width, vtdec->video_info.height,
       vtdec->input_state);
   output_state->caps = gst_video_info_to_caps (&output_state->info);
-  if (output_state->info.finfo->format == GST_VIDEO_FORMAT_RGBA) {
-    gst_caps_set_features (output_state->caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
+  if (features) {
+    gst_caps_set_features (output_state->caps, 0, features);
+    output_textures =
+        gst_caps_features_contains (features,
+        GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   }
+  gst_caps_unref (caps);
 
   prevcaps = gst_pad_get_current_caps (decoder->srcpad);
   if (!prevcaps || !gst_caps_is_equal (prevcaps, output_state->caps)) {
@@ -303,7 +310,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
         vtdec->texture_cache = NULL;
       }
 
-      if (output_state->info.finfo->format == GST_VIDEO_FORMAT_RGBA)
+      if (output_textures)
         setup_texture_cache (vtdec, context);
     }
   }
