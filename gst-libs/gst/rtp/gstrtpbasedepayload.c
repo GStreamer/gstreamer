@@ -864,8 +864,12 @@ gst_rtp_base_depayload_packet_lost (GstRTPBaseDepayload * filter,
   timestamp = -1;
   duration = -1;
 
-  gst_structure_get_clock_time (s, "timestamp", &timestamp);
-  gst_structure_get_clock_time (s, "duration", &duration);
+  if (!gst_structure_get_clock_time (s, "timestamp", &timestamp) ||
+      !gst_structure_get_clock_time (s, "duration", &duration)) {
+    GST_ERROR_OBJECT (filter,
+        "Packet loss event without timestamp or duration");
+    return FALSE;
+  }
 
   /* send GAP event */
   sevent = gst_event_new_gap (timestamp, duration);
