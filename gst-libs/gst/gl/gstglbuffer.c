@@ -201,10 +201,13 @@ gst_gl_buffer_upload_cpu_write (GstGLBuffer * mem, GstMapInfo * info,
 static gpointer
 _gl_buffer_map (GstGLBuffer * mem, GstMapInfo * info, gsize size)
 {
+  const GstGLFuncs *gl = mem->mem.context->gl_vtable;
+
   if ((info->flags & GST_MAP_GL) != 0) {
     if (info->flags & GST_MAP_READ) {
       gst_gl_buffer_upload_cpu_write (mem, info, size);
     }
+    gl->BindBuffer (mem->target, mem->id);
     return &mem->id;
   } else {
     return gst_gl_buffer_cpu_access (mem, info, size);
@@ -216,6 +219,11 @@ _gl_buffer_map (GstGLBuffer * mem, GstMapInfo * info, gsize size)
 static void
 _gl_buffer_unmap (GstGLBuffer * mem, GstMapInfo * info)
 {
+  const GstGLFuncs *gl = mem->mem.context->gl_vtable;
+
+  if ((info->flags & GST_MAP_GL) != 0) {
+    gl->BindBuffer (mem->target, 0);
+  }
   /* XXX: optimistically transfer data */
 }
 
