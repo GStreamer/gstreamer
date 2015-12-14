@@ -2209,11 +2209,13 @@ gst_gl_view_convert_get_output (GstGLViewConvert * viewconvert,
   }
 
   outbuf = priv->primary_out;
-  gst_buffer_copy_into (outbuf, priv->primary_in,
-      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
-  GST_BUFFER_FLAG_SET (outbuf,
-      GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE |
-      GST_VIDEO_BUFFER_FLAG_MULTIPLE_VIEW);
+  if (outbuf) {
+    gst_buffer_copy_into (outbuf, priv->primary_in,
+        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+    GST_BUFFER_FLAG_SET (outbuf,
+        GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE |
+        GST_VIDEO_BUFFER_FLAG_MULTIPLE_VIEW);
+  }
 
   if (priv->auxilliary_out) {
     gst_buffer_copy_into (priv->auxilliary_out,
