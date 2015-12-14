@@ -142,9 +142,9 @@ check_conversion (TestFrame * frames, guint size)
     /* create GL buffer */
     ref_count += GST_VIDEO_INFO_N_PLANES (&in_info);
     inbuf = gst_buffer_new ();
-    fail_unless (gst_gl_memory_setup_wrapped (context, GST_GL_TEXTURE_TARGET_2D,
-            &in_info, NULL, (gpointer *) in_data, in_mem, &ref_count,
-            _frame_unref));
+    fail_unless (gst_gl_memory_pbo_setup_wrapped (context,
+            GST_GL_TEXTURE_TARGET_2D, &in_info, NULL, (gpointer *) in_data,
+            (GstGLMemoryPBO **) in_mem, &ref_count, _frame_unref));
 
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&in_info); j++) {
       gst_buffer_append_memory (inbuf, (GstMemory *) in_mem[j]);
