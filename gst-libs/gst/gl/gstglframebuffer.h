@@ -64,6 +64,10 @@ gboolean gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_w
 
 void gst_gl_framebuffer_delete (GstGLFramebuffer *frame, guint fbo, guint depth);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLFramebuffer, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif
