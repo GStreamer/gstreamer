@@ -61,14 +61,14 @@
  * <para>
  * This explicitely decodes a Kate stream:
  * <programlisting>
- * gst-launch filesrc location=test.ogg ! oggdemux ! katedec ! fakesink silent=TRUE
+ * gst-launch-1.0 filesrc location=test.ogg ! oggdemux ! katedec ! fakesink silent=TRUE
  * </programlisting>
  * </para>
  * <para>
  * This will automatically detect and use any Kate streams multiplexed
  * in an Ogg stream:
  * <programlisting>
- * gst-launch playbin uri=file:///tmp/test.ogg
+ * gst-launch-1.0 playbin uri=file:///tmp/test.ogg
  * </programlisting>
  * </para>
  * </refsect2>

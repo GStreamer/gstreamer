@@ -26,10 +26,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v audiotestsrc ! queue ! interaudiosink
+ * gst-launch-1.0 -v audiotestsrc ! queue ! interaudiosink
  * ]|
  *
- * The interaudiosink element cannot be used effectively with gst-launch,
+ * The interaudiosink element cannot be used effectively with gst-launch-1.0,
  * as it requires a second pipeline in the application to receive the
  * audio.
  * See the gstintertest.c example in the gst-plugins-bad source code for

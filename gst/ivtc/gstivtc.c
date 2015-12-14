@@ -27,8 +27,8 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc pattern=ball ! video/x-raw,framerate=24/1 !
- *     interlace field-pattern=3:2 !
+ * gst-launch-1.0 -v videotestsrc pattern=ball ! video/x-raw,framerate=24/1 !
+ *     interlace !
  *     ivtc ! video/x-raw,framerate=24/1 ! fakesink
  * ]|
  *

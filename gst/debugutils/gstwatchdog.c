@@ -35,7 +35,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v fakesrc ! watchdog ! fakesink
+ * gst-launch-1.0 -v fakesrc ! watchdog ! fakesink
  * ]|
  * </refsect2>
  */

@@ -63,7 +63,7 @@
  * This pipeline renders a Kate stream on top of a Theora video multiplexed
  * in the same stream:
  * <programlisting>
- * gst-launch \
+ * gst-launch-1.0 \
  *   filesrc location=video.ogg ! oggdemux name=demux \
  *   demux. ! queue ! theoradec ! videoconvert ! tiger name=tiger \
  *   demux. ! queue ! kateparse ! tiger. \

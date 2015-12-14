@@ -25,10 +25,10 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch videotestsrc ! fpsdisplaysink
- * gst-launch videotestsrc ! fpsdisplaysink text-overlay=false
- * gst-launch filesrc location=video.avi ! decodebin name=d ! queue ! fpsdisplaysink d. ! queue ! fakesink sync=true
- * gst-launch playbin uri=file:///path/to/video.avi video-sink="fpsdisplaysink" audio-sink=fakesink
+ * gst-launch-1.0 videotestsrc ! fpsdisplaysink
+ * gst-launch-1.0 videotestsrc ! fpsdisplaysink text-overlay=false
+ * gst-launch-1.0 filesrc location=video.avi ! decodebin name=d ! queue ! fpsdisplaysink d. ! queue ! fakesink sync=true
+ * gst-launch-1.0 playbin uri=file:///path/to/video.avi video-sink="fpsdisplaysink" audio-sink=fakesink
  * ]|
  * </refsect2>
  */

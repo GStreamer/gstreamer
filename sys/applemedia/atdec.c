@@ -24,7 +24,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v filesrc location=file.mov ! qtdemux ! queue ! aacparse ! atdec ! autoaudiosink
+ * gst-launch-1.0 -v filesrc location=file.mov ! qtdemux ! queue ! aacparse ! atdec ! autoaudiosink
  * ]|
  * Decode aac audio from a mov file
  * </refsect2>

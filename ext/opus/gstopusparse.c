@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=opusdata ! opusparse ! opusdec ! audioconvert ! audioresample ! alsasink
+ * gst-launch-1.0 -v filesrc location=opusdata ! opusparse ! opusdec ! audioconvert ! audioresample ! alsasink
  * ]| Decode and plays an unmuxed Opus file.
  * </refsect2>
  */

@@ -30,11 +30,11 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch dx9screencapsrc ! ffmpegcolorspace ! dshowvideosink
+ * gst-launch-1.0 dx9screencapsrc ! videoconvert ! dshowvideosink
  * ]| Capture the desktop and display it.
  * |[
- * gst-launch dx9screencapsrc x=100 y=100 width=320 height=240 !
- * ffmpegcolorspace ! dshowvideosink
+ * gst-launch-1.0 dx9screencapsrc x=100 y=100 width=320 height=240 !
+ * videoconvert ! dshowvideosink
  * ]| Capture a portion of the desktop and display it.
  * </refsect2>
  */

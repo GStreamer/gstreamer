@@ -27,10 +27,10 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch filesrc location=example.mp4 ! qtdemux ! faad ! audioconvert ! audioresample ! autoaudiosink
+ * gst-launch-1.0 filesrc location=example.mp4 ! qtdemux ! faad ! audioconvert ! audioresample ! autoaudiosink
  * ]| Play aac from mp4 file.
  * |[
- * gst-launch filesrc location=example.adts ! faad ! audioconvert ! audioresample ! autoaudiosink
+ * gst-launch-1.0 filesrc location=example.adts ! faad ! audioconvert ! audioresample ! autoaudiosink
  * ]| Play standalone aac bitstream.
  * </refsect2>
  */

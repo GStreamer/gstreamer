@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line (upload a JPEG file to an HTTP server)</title>
  * |[
- * gst-launch filesrc location=image.jpg ! jpegparse ! curlsink  \
+ * gst-launch-1.0 filesrc location=image.jpg ! jpegparse ! curlsink  \
  *     file-name=image.jpg  \
  *     location=http://192.168.0.1:8080/cgi-bin/patupload.cgi/  \
  *     user=test passwd=test  \

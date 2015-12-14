@@ -36,8 +36,8 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc wave=saw ! freeverb ! autoaudiosink
- * gst-launch filesrc location="melo1.ogg" ! decodebin ! audioconvert ! freeverb ! autoaudiosink
+ * gst-launch-1.0 audiotestsrc wave=saw ! freeverb ! autoaudiosink
+ * gst-launch-1.0 filesrc location="melo1.ogg" ! decodebin ! audioconvert ! freeverb ! autoaudiosink
  * ]|
  * </refsect2>
  */

@@ -32,7 +32,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! opusenc ! oggmux ! filesink location=sine.ogg
+ * gst-launch-1.0 -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! opusenc ! oggmux ! filesink location=sine.ogg
  * ]| Encode a test sine signal to Ogg/OPUS.
  * </refsect2>
  */

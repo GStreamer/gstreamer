@@ -32,7 +32,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -m uridecodebin uri=file:///path/to/song.ogg ! audioconvert ! chromaprint ! fakesink
+ * gst-launch-1.0 -m uridecodebin uri=file:///path/to/song.ogg ! audioconvert ! chromaprint ! fakesink
  * ]|
  * </refsect2>
  */

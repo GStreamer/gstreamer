@@ -35,7 +35,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v filesrc location=some_file.ogv ! decodebin ! 
+ * gst-launch-1.0 -v filesrc location=some_file.ogv ! decodebin !
  *   scenechange ! theoraenc ! fakesink
  * ]|
  * </refsect2>

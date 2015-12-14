@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -m videotestsrc ! debugspy ! fakesink
+ * gst-launch-1.0 -m videotestsrc ! debugspy ! fakesink
  * ]|
  * </refsect2>
  */

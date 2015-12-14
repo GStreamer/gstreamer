@@ -29,7 +29,7 @@
  *
  * Sample pipeline:
  * |[
- * gst-launch videotestsrc pattern=smpte75 ! \
+ * gst-launch-1.0 videotestsrc pattern=smpte75 ! \
  *   chromahold target-r=0 target-g=0 target-b=255 ! \
  *   videoconvert ! autovideosink     \
  * ]| This pipeline only keeps the red color.

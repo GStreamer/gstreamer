@@ -33,7 +33,7 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch -v gltestsrc pattern=smpte ! glimagesink
+ * gst-launch-1.0 -v gltestsrc pattern=smpte ! glimagesink
  * </programlisting>
  * Shows original SMPTE color bars in a window.
  * </para>

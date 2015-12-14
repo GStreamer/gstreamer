@@ -35,7 +35,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v videotestsrc num-buffers=1000 ! mpeg2enc ! mplex ! filesink location=videotestsrc.mpg
+ * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! mpeg2enc ! mplex ! filesink location=videotestsrc.mpg
  * ]| This example pipeline will encode a test video source to an
  * MPEG1 elementary stream and multiplexes this to an MPEG system stream.
  * <para>

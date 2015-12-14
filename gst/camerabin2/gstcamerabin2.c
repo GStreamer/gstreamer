@@ -121,11 +121,11 @@
  * <refsect2>
  * <title>Example launch line</title>
  * <para>
- * Unfortunately, camerabin can't be really used from gst-launch, as you need
+ * Unfortunately, camerabin can't be really used from gst-launch-1.0, as you need
  * to send signals to control it. The following pipeline might be able
  * to show the viewfinder using all the default elements.
  * |[
- * gst-launch -v -m camerabin
+ * gst-launch-1.0 -v -m camerabin
  * ]|
  * </para>
  * </refsect2>

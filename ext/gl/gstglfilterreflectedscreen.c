@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch videotestsrc ! glupload ! glfilterreflectedscreen ! glimagesink
+ * gst-launch-1.0 videotestsrc ! glupload ! glfilterreflectedscreen ! glimagesink
  * ]|
  * </refsect2>
  */

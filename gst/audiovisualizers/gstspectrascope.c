@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc ! audioconvert ! spectrascope ! ximagesink
+ * gst-launch-1.0 audiotestsrc ! audioconvert ! spectrascope ! ximagesink
  * ]|
  * </refsect2>
  */

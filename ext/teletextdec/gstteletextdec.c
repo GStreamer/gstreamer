@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m filesrc location=recording.mpeg ! tsdemux ! teletextdec ! videoconvert ! ximagesink
+ * gst-launch-1.0 -v -m filesrc location=recording.mpeg ! tsdemux ! teletextdec ! videoconvert ! ximagesink
  * ]|
  * </refsect2>
  */

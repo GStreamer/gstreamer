@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v openslessrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=recorded.ogg
+ * gst-launch-1.0 -v openslessrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=recorded.ogg
  * ]| Record from default audio input and encode to Ogg/Vorbis.
  * </refsect2>
  *

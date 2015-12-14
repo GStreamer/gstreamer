@@ -24,7 +24,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * FIXME: gst-launch ...
+ * FIXME: gst-launch-1.0 ...
  * ]| FIXME: description for the sample launch pipeline
  * </refsect2>
  */

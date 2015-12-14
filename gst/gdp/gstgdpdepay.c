@@ -26,7 +26,7 @@
  *
  * <refsect2>
  * |[
- * gst-launch -v -m filesrc location=test.gdp ! gdpdepay ! xvimagesink
+ * gst-launch-1.0 -v -m filesrc location=test.gdp ! gdpdepay ! xvimagesink
  * ]| This pipeline plays back a serialized video stream as created in the
  * example for gdppay.
  * </refsect2>

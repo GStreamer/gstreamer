@@ -34,7 +34,7 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch -v rtmpsrc location=rtmp://somehost/someurl ! fakesink
+ * gst-launch-1.0 -v rtmpsrc location=rtmp://somehost/someurl ! fakesink
  * ]| Open an RTMP location and pass its content to fakesink.
  * </refsect2>
  */

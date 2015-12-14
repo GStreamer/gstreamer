@@ -35,11 +35,11 @@
  * <title>Example launch lines</title>
  * <para>(write everything in one line, without the backslash characters)</para>
  * |[
- * gst-launch videotestsrc num-buffers=250 \
- * ! "video/x-raw,format=(string)I420,framerate=(fraction)25/1" ! ffenc_wmv2 \
+ * gst-launch-1.0 videotestsrc num-buffers=250 \
+ * ! "video/x-raw,format=(string)I420,framerate=(fraction)25/1" ! avenc_wmv2 \
  * ! asfmux name=mux ! filesink location=test.asf \
  * audiotestsrc num-buffers=440 ! audioconvert \
- * ! "audio/x-raw,rate=44100" ! ffenc_wmav2 ! mux.
+ * ! "audio/x-raw,rate=44100" ! avenc_wmav2 ! mux.
  * ]| This creates an ASF file containing an WMV video stream
  * with a test picture and WMA audio stream of a test sound.
  *
@@ -54,13 +54,13 @@
  * <para>(write everything in one line, without the backslash characters)</para>
  * Server (sender)
  * |[
- * gst-launch -ve videotestsrc ! ffenc_wmv2 ! asfmux name=mux streamable=true \
+ * gst-launch-1.0 -ve videotestsrc ! avenc_wmv2 ! asfmux name=mux streamable=true \
  * ! rtpasfpay ! udpsink host=127.0.0.1 port=3333 \
- * audiotestsrc ! ffenc_wmav2 ! mux.
+ * audiotestsrc ! avenc_wmav2 ! mux.
  * ]|
  * Client (receiver)
  * |[
- * gst-launch udpsrc port=3333 ! "caps_from_rtpasfpay_at_sender" \
+ * gst-launch-1.0 udpsrc port=3333 ! "caps_from_rtpasfpay_at_sender" \
  * ! rtpasfdepay ! decodebin name=d ! queue \
  * ! videoconvert ! autovideosink \
  * d. ! queue ! audioconvert ! autoaudiosink

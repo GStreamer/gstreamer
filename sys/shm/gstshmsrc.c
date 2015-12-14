@@ -26,9 +26,9 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch shmsrc socket-path=/tmp/blah ! \
- * "video/x-raw-yuv, format=(fourcc)YUY2, color-matrix=(string)sdtv, \
- * chroma-site=(string)mpeg2, width=(int)320, height=(int)240, framerate=(fraction)30/1" ! autovideosink
+ * gst-launch-1.0 shmsrc socket-path=/tmp/blah ! \
+ * "video/x-yuv, format=YUY2, color-matrix=sdtv, \
+ * chroma-site=mpeg2, width=(int)320, height=(int)240, framerate=(fraction)30/1" ! autovideosink
  * ]| Render video from shm buffers.
  * </refsect2>
  */

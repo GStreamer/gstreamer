@@ -33,7 +33,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! daaladec ! xvimagesink
+ * gst-launch-1.0 -v filesrc location=videotestsrc.ogg ! oggdemux ! daaladec ! xvimagesink
  * ]| This example pipeline will decode an ogg stream and decodes the daala video. Refer to
  * the daalaenc example to create the ogg file.
  * </refsect2>

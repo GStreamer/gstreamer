@@ -56,7 +56,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v directsoundsrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=dsound.ogg
+ * gst-launch-1.0 -v directsoundsrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=dsound.ogg
  * ]| Record from DirectSound and encode to Ogg/Vorbis.
  * </refsect2>
  */

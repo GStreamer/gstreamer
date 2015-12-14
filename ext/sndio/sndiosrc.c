@@ -25,7 +25,7 @@
  * <para>
  * Simple example pipeline that records an Ogg/Vorbis file via sndio:
  * <programlisting>
- * gst-launch -v sndiosrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=foo.ogg 
+ * gst-launch-1.0 -v sndiosrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=foo.ogg
  * </programlisting>
  * </para>
  * </refsect2>

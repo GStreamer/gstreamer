@@ -87,7 +87,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc ! simplevideomarkdetect ! videoconvert ! ximagesink
+ * gst-launch-1.0 videotestsrc ! simplevideomarkdetect ! videoconvert ! ximagesink
  * ]|
  * </refsect2>
  */

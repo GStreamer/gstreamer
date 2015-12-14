@@ -32,11 +32,11 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch gdiscreencapsrc ! ffmpegcolorspace ! dshowvideosink
+ * gst-launch-1.0 gdiscreencapsrc ! videoconvert ! dshowvideosink
  * ]| Capture the desktop and display it.
  * |[
- * gst-launch gdiscreencapsrc x=100 y=100 width=320 height=240 cursor=TRUE
- * ! ffmpegcolorspace ! dshowvideosink
+ * gst-launch-1.0 gdiscreencapsrc x=100 y=100 width=320 height=240 cursor=TRUE
+ * ! videoconvert ! dshowvideosink
  * ]| Capture a portion of the desktop, including the mouse cursor, and
  * display it.
  * </refsect2>

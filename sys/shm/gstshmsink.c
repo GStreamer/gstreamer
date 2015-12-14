@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch -v videotestsrc !  shmsink socket-path=/tmp/blah shm-size=1000000
+ * gst-launch-1.0 -v videotestsrc !  shmsink socket-path=/tmp/blah shm-size=1000000
  * ]| Send video to shm buffers.
  * </refsect2>
  */

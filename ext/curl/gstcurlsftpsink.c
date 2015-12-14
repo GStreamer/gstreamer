@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line (upload a file to /home/john/sftp_tests/)</title>
  * |[
- * gst-launch filesrc location=/home/jdoe/some.file ! curlsftpsink  \
+ * gst-launch-1.0 filesrc location=/home/jdoe/some.file ! curlsftpsink  \
  *     file-name=some.file.backup  \
  *     user=john location=sftp://192.168.0.1/~/sftp_tests/  \
  *     ssh-auth-type=1 ssh-key-passphrase=blabla  \

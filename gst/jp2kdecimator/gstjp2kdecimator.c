@@ -25,7 +25,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc num-buffers=1 ! jp2kenc ! \
+ * gst-launch-1.0 -v videotestsrc num-buffers=1 ! jp2kenc ! \
  *   gstjp2kdecimator max-decomposition-levels=2 ! jp2kdec ! \
  *   videoconvert ! autovideosink
  * ]|

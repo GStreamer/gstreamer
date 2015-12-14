@@ -62,7 +62,7 @@
  * <para>
  * This encodes a DVD SPU track to a Kate stream:
  * <programlisting>
- * gst-launch dvdreadsrc ! dvddemux ! dvdsubparse ! kateenc category=spu-subtitles ! oggmux ! filesink location=test.ogg
+ * gst-launch-1.0 dvdreadsrc ! dvddemux ! dvdsubparse ! kateenc category=spu-subtitles ! oggmux ! filesink location=test.ogg
  * </programlisting>
  * </para>
  * </refsect2>

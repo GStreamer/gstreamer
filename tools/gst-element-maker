@@ -116,7 +116,7 @@ cat <<-EOF
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v fakesrc ! $replace ! FIXME ! fakesink
+ * gst-launch-1.0 -v fakesrc ! $replace ! FIXME ! fakesink
  * ]|
  * FIXME Describe what the pipeline does.
  * </refsect2>

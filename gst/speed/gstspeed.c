@@ -31,7 +31,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=test.ogg ! decodebin ! audioconvert ! speed speed=1.5 ! audioconvert ! audioresample ! autoaudiosink
+ * gst-launch-1.0 filesrc location=test.ogg ! decodebin ! audioconvert ! speed speed=1.5 ! audioconvert ! audioresample ! autoaudiosink
  * ]| Plays an .ogg file at 1.5x speed.
  * </refsect2>
  */

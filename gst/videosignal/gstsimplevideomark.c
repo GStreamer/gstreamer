@@ -36,7 +36,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc ! simplevideomark ! ximagesink
+ * gst-launch-1.0 videotestsrc ! simplevideomark ! videoconvert ! ximagesink
  * ]| Add the default black/white squares at the bottom left of the video frames.
  * </refsect2>
  */

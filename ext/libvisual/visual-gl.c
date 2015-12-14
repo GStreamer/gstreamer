@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v audiotestsrc ! libvisual_gl_lv_flower ! glimagesink
+ * gst-launch-1.0 -v audiotestsrc ! libvisual_gl_lv_flower ! glimagesink
  * ]|
  * </refsect2>
  */

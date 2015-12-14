@@ -52,7 +52,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! burn ! videoconvert ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! burn ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of burn on a test stream
  * </refsect2>
  */

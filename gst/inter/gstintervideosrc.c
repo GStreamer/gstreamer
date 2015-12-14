@@ -26,10 +26,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v intervideosrc ! queue ! xvimagesink
+ * gst-launch-1.0 -v intervideosrc ! queue ! xvimagesink
  * ]|
  * 
- * The intersubsrc element cannot be used effectively with gst-launch,
+ * The intersubsrc element cannot be used effectively with gst-launch-1.0,
  * as it requires a second pipeline in the application to send subtitles.
  * </refsect2>
  */

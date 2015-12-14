@@ -29,7 +29,7 @@
  *   <para>
  *   Standalone: this mode will take complete control of the monitor forcing
  *   <ulink url="http://www.directfb.org/">DirectFB</ulink> to fullscreen layout.
- *   This is convenient to test using the  gst-launch command line tool or
+ *   This is convenient to test using the  gst-launch-1.0 command line tool or
  *   other simple applications. It is possible to interrupt playback while
  *   being in this mode by pressing the Escape key.
  *   </para>
@@ -77,7 +77,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v videotestsrc ! dfbvideosink hue=20000 saturation=40000 brightness=25000
+ * gst-launch-1.0 -v videotestsrc ! dfbvideosink hue=20000 saturation=40000 brightness=25000
  * ]| test the colorbalance interface implementation in dfbvideosink
  * </refsect2>
  */

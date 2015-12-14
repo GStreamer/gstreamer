@@ -35,7 +35,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch gnomevfssrc location=http://some.server/session.sdp ! sdpdemux ! fakesink
+ * gst-launch-1.0 souphttpsrc location=http://some.server/session.sdp ! sdpdemux ! fakesink
  * ]| Establish a connection to an HTTP server that contains an SDP session description
  * that gets parsed by sdpdemux and send the raw RTP packets to a fakesink.
  * </refsect2>

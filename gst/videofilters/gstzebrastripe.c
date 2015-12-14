@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! zebrastripe ! xvimagesink
+ * gst-launch-1.0 -v videotestsrc ! zebrastripe ! xvimagesink
  * ]|
  * Marks overexposed areas of the video with zebra stripes.
  *

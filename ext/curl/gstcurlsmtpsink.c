@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line (upload a JPEG file to an SMTP server)</title>
  * |[
- * gst-launch filesrc location=image.jpg ! jpegparse ! curlsmtpsink  \
+ * gst-launch-1.0 filesrc location=image.jpg ! jpegparse ! curlsmtpsink  \
  *     file-name=image.jpg  \
  *     location=smtp://smtp.gmail.com:507 \
  *     user=test passwd=test  \

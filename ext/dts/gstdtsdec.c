@@ -26,10 +26,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch dvdreadsrc title=1 ! mpegpsdemux ! dtsdec ! audioresample ! audioconvert ! alsasink
+ * gst-launch-1.0 dvdreadsrc title=1 ! mpegpsdemux ! dtsdec ! audioresample ! audioconvert ! alsasink
  * ]| Play a DTS audio track from a dvd.
  * |[
- * gst-launch filesrc location=abc.dts ! dtsdec ! audioresample ! audioconvert ! alsasink
+ * gst-launch-1.0 filesrc location=abc.dts ! dtsdec ! audioresample ! audioconvert ! alsasink
  * ]| Decode a standalone file and play it.
  * </refsect2>
  */

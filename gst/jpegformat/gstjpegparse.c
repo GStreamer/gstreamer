@@ -33,7 +33,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v souphttpsrc location=... ! jpegparse ! matroskamux ! filesink location=...
+ * gst-launch-1.0 -v souphttpsrc location=... ! jpegparse ! matroskamux ! filesink location=...
  * ]|
  * The above pipeline fetches a motion JPEG stream from an IP camera over
  * HTTP and stores it in a matroska file.

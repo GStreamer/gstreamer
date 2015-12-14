@@ -41,14 +41,14 @@
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
- * gst-launch -v filesrc location=kate.ogg ! oggdemux ! kateparse ! fakesink
+ * gst-launch-1.0 -v filesrc location=kate.ogg ! oggdemux ! kateparse ! fakesink
  * </programlisting>
  * This pipeline shows that the streamheader is set in the caps, and that each
  * buffer has the timestamp, duration, offset, and offset_end set.
  * </para>
  * <para>
  * <programlisting>
- * gst-launch filesrc location=kate.ogg ! oggdemux ! kateparse \
+ * gst-launch-1.0 filesrc location=kate.ogg ! oggdemux ! kateparse \
  *            ! oggmux ! filesink location=kate-remuxed.ogg
  * </programlisting>
  * This pipeline shows remuxing. kate-remuxed.ogg might not be exactly the same

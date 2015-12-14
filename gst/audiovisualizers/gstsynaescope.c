@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc ! audioconvert ! synaescope ! ximagesink
+ * gst-launch-1.0 audiotestsrc ! audioconvert ! synaescope ! ximagesink
  * ]|
  * </refsect2>
  */

@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc pattern=ball ! interlace ! yadif ! xvimagesink
+ * gst-launch-1.0 -v videotestsrc pattern=ball ! interlace ! yadif ! xvimagesink
  * ]|
  * This pipeline creates an interlaced test pattern, and then deinterlaces
  * it using the yadif filter.

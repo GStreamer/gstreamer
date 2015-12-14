@@ -31,7 +31,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc num-buffers=1 ! jpegenc ! jifmux ! filesink location=...
+ * gst-launch-1.0 -v videotestsrc num-buffers=1 ! jpegenc ! jifmux ! filesink location=...
  * ]|
  * The above pipeline renders a frame, encodes to jpeg, adds metadata and writes
  * it to disk.
@@ -46,8 +46,8 @@ scan header : {DAC,DHT},DRI,SOS
 file trailer: EOI
 
 tests:
-gst-launch videotestsrc num-buffers=1 ! jpegenc ! jifmux ! filesink location=test1.jpeg
-gst-launch videotestsrc num-buffers=1 ! jpegenc ! taginject tags="comment=\"test image\"" ! jifmux ! filesink location=test2.jpeg
+gst-launch-1.0 videotestsrc num-buffers=1 ! jpegenc ! jifmux ! filesink location=test1.jpeg
+gst-launch-1.0 videotestsrc num-buffers=1 ! jpegenc ! taginject tags="comment=test image" ! jifmux ! filesink location=test2.jpeg
 */
 
 #ifdef HAVE_CONFIG_H

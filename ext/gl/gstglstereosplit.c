@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch videotestsrc ! glstereosplit name=s ! queue ! glimagesink s. ! queue ! glimagesink
+ * gst-launch-1.0 videotestsrc ! glstereosplit name=s ! queue ! glimagesink s. ! queue ! glimagesink
  * ]|
  * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
  * </refsect2>

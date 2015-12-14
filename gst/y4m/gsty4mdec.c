@@ -24,7 +24,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v filesrc location=file.y4m ! y4mdec ! xvimagesink
+ * gst-launch-1.0 -v filesrc location=file.y4m ! y4mdec ! xvimagesink
  * ]|
  * </refsect2>
  */

@@ -27,7 +27,7 @@
  * <refsect>
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc num_buffers=1 ! videoconvert ! "video/x-raw,format=GRAY8" ! pnmenc ascii=true ! filesink location=test.pnm
+ * gst-launch-1.0 videotestsrc num_buffers=1 ! videoconvert ! "video/x-raw,format=GRAY8" ! pnmenc ascii=true ! filesink location=test.pnm
  * ]| The above pipeline writes a test pnm file (ASCII encoding).
  * </refsect2>
  */

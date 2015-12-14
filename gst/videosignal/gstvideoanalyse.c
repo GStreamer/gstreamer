@@ -72,7 +72,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -m videotestsrc ! videoanalyse ! videoconvert ! ximagesink
+ * gst-launch-1.0 -m videotestsrc ! videoanalyse ! videoconvert ! ximagesink
  * ]| This pipeline emits messages to the console for each frame that has been analysed. 
  * </refsect2>
  */

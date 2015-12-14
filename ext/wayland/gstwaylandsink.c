@@ -32,7 +32,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v videotestsrc ! waylandsink
+ * gst-launch-1.0 -v videotestsrc ! waylandsink
  * ]| test the video rendering in wayland
  * </refsect2>
  */

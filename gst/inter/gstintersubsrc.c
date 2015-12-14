@@ -26,10 +26,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v intersubsrc ! kateenc ! oggmux ! filesink location=out.ogv
+ * gst-launch-1.0 -v intersubsrc ! kateenc ! oggmux ! filesink location=out.ogv
  * ]|
  * 
- * The intersubsrc element cannot be used effectively with gst-launch,
+ * The intersubsrc element cannot be used effectively with gst-launch-1.0,
  * as it requires a second pipeline in the application to send subtitles.
  * See the gstintertest.c example in the gst-plugins-bad source code for
  * more details.

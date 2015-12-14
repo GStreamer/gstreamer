@@ -24,7 +24,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v fakesrc ! videodiff ! FIXME ! fakesink
+ * gst-launch-1.0 -v fakesrc ! videodiff ! FIXME ! fakesink
  * ]|
  * FIXME Describe what the pipeline does.
  * </refsect2>

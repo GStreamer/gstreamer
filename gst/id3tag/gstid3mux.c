@@ -37,12 +37,12 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=foo.ogg ! decodebin ! audioconvert ! lame ! id3mux ! filesink location=foo.mp3
+ * gst-launch-1.0 -v filesrc location=foo.ogg ! decodebin ! audioconvert ! id3mux ! filesink location=foo.mp3
  * ]| A pipeline that transcodes a file from Ogg/Vorbis to mp3 format with
  * ID3 tags that contain the same metadata as the the Ogg/Vorbis file.
  * Make sure the Ogg/Vorbis file actually has comments to preserve.
  * |[
- * gst-launch -m filesrc location=foo.mp3 ! id3demux ! fakesink silent=TRUE 2&gt; /dev/null | grep taglist
+ * gst-launch-1.0 -m filesrc location=foo.mp3 ! id3demux ! fakesink silent=TRUE
  * ]| Verify that tags have been written.
  * </refsect2>
  */

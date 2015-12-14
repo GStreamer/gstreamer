@@ -71,7 +71,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * echo 'Hello G-Streamer!' | gst-launch fdsrc fd=0 ! festival ! wavparse ! audioconvert ! alsasink
+ * echo 'Hello G-Streamer!' | gst-launch-1.0 fdsrc fd=0 ! festival ! wavparse ! audioconvert ! alsasink
  * ]|
  * </refsect2>
  */

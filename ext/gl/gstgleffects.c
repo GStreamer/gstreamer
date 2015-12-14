@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch videotestsrc ! glupload ! gleffects effect=5 ! glimagesink
+ * gst-launch-1.0 videotestsrc ! glupload ! gleffects effect=5 ! glimagesink
  * ]|
  * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
  * </refsect2>

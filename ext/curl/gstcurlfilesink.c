@@ -29,7 +29,7 @@
  * <title>Example launch line (upload a JPEG file to /home/test/images
  * directory)</title>
  * |[
- * gst-launch filesrc location=image.jpg ! jpegparse ! curlfilesink  \
+ * gst-launch-1.0 filesrc location=image.jpg ! jpegparse ! curlfilesink  \
  *     file-name=image.jpg  \
  *     location=file:///home/test/images/
  * ]|

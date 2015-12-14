@@ -33,7 +33,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v videotestsrc num-buffers=1000 ! daalaenc ! oggmux ! filesink location=videotestsrc.ogg
+ * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! daalaenc ! oggmux ! filesink location=videotestsrc.ogg
  * ]| This example pipeline will encode a test video source to daala muxed in an
  * ogg container. Refer to the daaladec documentation to decode the create
  * stream.

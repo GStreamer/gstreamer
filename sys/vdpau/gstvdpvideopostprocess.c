@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m fakesrc ! vdpauvideopostprocess ! fakesink silent=TRUE
+ * gst-launch-1.0 -v -m fakesrc ! vdpauvideopostprocess ! fakesink silent=TRUE
  * ]|
  * </refsect2>
  */

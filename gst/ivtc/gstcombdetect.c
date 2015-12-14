@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v filesrc location=file.mov ! decodebin ! combdetect !
+ * gst-launch-1.0 -v filesrc location=file.mov ! decodebin ! combdetect !
  *     xvimagesink
  * ]|
  * </refsect2>

@@ -35,14 +35,14 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch filesrc location=sine.aiff ! aiffparse ! audioconvert ! alsasink
+ * gst-launch-1.0 filesrc location=sine.aiff ! aiffparse ! audioconvert ! alsasink
  * </programlisting>
  * Read a aiff file and output to the soundcard using the ALSA element. The
  * aiff file is assumed to contain raw uncompressed samples.
  * </para>
  * <para>
  * <programlisting>
- * gst-launch souphhtpsrc location=http://www.example.org/sine.aiff ! queue ! aiffparse ! audioconvert ! alsasink
+ * gst-launch-1.0 souphttpsrc location=http://www.example.org/sine.aiff ! queue ! aiffparse ! audioconvert ! alsasink
  * </programlisting>
  * Stream data from a network url.
  * </para>

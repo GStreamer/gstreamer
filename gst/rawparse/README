@@ -9,7 +9,7 @@ data.
 Creating example data
 =====================
 
-gst-launch videotestsrc num_buffers=300 ! \
+gst-launch-1.0 videotestsrc num_buffers=300 ! \
   video/x-raw,format=\(string\)I420,width=320,height=240 ! \
   filesink location=raw
 
@@ -17,7 +17,7 @@ gst-launch videotestsrc num_buffers=300 ! \
 Reading example data
 ====================
 
-gst-launch filesrc location=raw ! \
+gst-launch-1.0 filesrc location=raw ! \
   videoparse format=I420 width=320 height=240 framerate=30/1 ! \
   xvimagesink
 

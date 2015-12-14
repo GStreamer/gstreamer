@@ -26,11 +26,11 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v ksvideosrc do-stats=TRUE ! ffmpegcolorspace ! dshowvideosink
+ * gst-launch-1.0 -v ksvideosrc do-stats=TRUE ! videoconvert ! dshowvideosink
  * ]| Capture from a camera and render using dshowvideosink.
  * |[
- * gst-launch -v ksvideosrc do-stats=TRUE ! image/jpeg, width=640, height=480
- * ! jpegdec ! ffmpegcolorspace ! dshowvideosink
+ * gst-launch-1.0 -v ksvideosrc do-stats=TRUE ! image/jpeg, width=640, height=480
+ * ! jpegdec ! videoconvert ! dshowvideosink
  * ]| Capture from an MJPEG camera and render using dshowvideosink.
  * </refsect2>
  */

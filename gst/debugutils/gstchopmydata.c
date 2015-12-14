@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v audiotestsrc num-buffers=10 ! gstchopmydata min-size=100
+ * gst-launch-1.0 -v audiotestsrc num-buffers=10 ! chopmydata min-size=100
  * max-size=200 step-size=2 ! fakesink -v
  * ]|
  * 

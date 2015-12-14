@@ -37,9 +37,9 @@
  * |[
  * (padsp) listplugins
  * (padsp) analyseplugin cmt.so amp_mono
- * gst-launch -e filesrc location="$myfile" ! decodebin ! audioconvert ! audioresample ! "audio/x-raw,format=S16LE,rate=48000,channels=1" ! wavenc ! filesink location="testin.wav"
+ * gst-launch-1.0 -e filesrc location="$myfile" ! decodebin ! audioconvert ! audioresample ! "audio/x-raw,format=S16LE,rate=48000,channels=1" ! wavenc ! filesink location="testin.wav"
  * (padsp) applyplugin testin.wav testout.wav cmt.so amp_mono 2 
- * gst-launch playbin uri=file://"$PWD"/testout.wav
+ * gst-launch-1.0 playbin uri=file://"$PWD"/testout.wav
  * ]| Decode any audio file into wav with the format expected for the specific ladspa plugin to be applied, apply the ladspa filter and play it.
  * </refsect2>
  *
@@ -48,7 +48,7 @@
  * <refsect2>
  * <title>Example LADSPA line with this plugins</title>
  * |[
- * gst-launch autoaudiosrc ! ladspa-cmt-so-amp-mono gain=2 ! ladspa-caps-so-plate ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! tee name=myT myT. ! queue ! autoaudiosink myT. ! queue ! audioconvert ! goom ! videoconvert ! xvimagesink pixel-aspect-ratio=3/4
+ * gst-launch-1.0 autoaudiosrc ! ladspa-cmt-so-amp-mono gain=2 ! ladspa-caps-so-plate ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! tee name=myT myT. ! queue ! autoaudiosink myT. ! queue ! audioconvert ! goom ! videoconvert ! xvimagesink pixel-aspect-ratio=3/4
  * ]| Get audio input, filter it through CAPS Plate and TAP Stereo Echo, play it and show a visualization (recommended hearphones).
  * </refsect2>
  *
@@ -82,7 +82,7 @@
  * <refsect2>
  * <title>Example Filter/Effect/Audio/LADSPA line with this plugins</title>
  * |[
- * gst-launch filesrc location="$myfile" ! decodebin ! audioconvert ! audioresample ! ladspa-calf-so-reverb decay-time=15 high-frq-damp=20000 room-size=5 diffusion=1 wet-amount=2 dry-amount=2 pre-delay=50 bass-cut=20000 treble-cut=20000 ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! autoaudiosink
+ * gst-launch-1.0 filesrc location="$myfile" ! decodebin ! audioconvert ! audioresample ! ladspa-calf-so-reverb decay-time=15 high-frq-damp=20000 room-size=5 diffusion=1 wet-amount=2 dry-amount=2 pre-delay=50 bass-cut=20000 treble-cut=20000 ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! autoaudiosink
  * ]| Decode any audio file, filter it through Calf Reverb LADSPA then TAP Stereo Echo, and play it.
  * </refsect2>
  * </listitem>
@@ -90,19 +90,19 @@
  * <refsect2>
  * <title>Example Source/Audio/LADSPA line with this plugins</title>
  * |[
- * gst-launch ladspasrc-sine-so-sine-fcac frequency=220 amplitude=100 ! audioconvert ! autoaudiosink
+ * gst-launch-1.0 ladspasrc-sine-so-sine-fcac frequency=220 amplitude=100 ! audioconvert ! autoaudiosink
  * ]| Generate a sine wave with Sine Oscillator (Freq:control, Amp:control) and play it.
  * </refsect2>
  * <refsect2>
  * <title>Example Source/Audio/LADSPA line with this plugins</title>
  * |[
- * gst-launch ladspasrc-caps-so-click bpm=240 volume=1 ! autoaudiosink
+ * gst-launch-1.0 ladspasrc-caps-so-click bpm=240 volume=1 ! autoaudiosink
  * ]| Generate clicks with CAPS Click - Metronome at 240 beats per minute and play it.
  * </refsect2>
  * <refsect2>
  * <title>Example Source/Audio/LADSPA line with this plugins</title>
  * |[
- * gst-launch ladspasrc-random-1661-so-random-fcsc-oa ! ladspa-cmt-so-amp-mono gain=1.5 ! ladspa-caps-so-plate ! tee name=myT myT. ! queue ! autoaudiosink myT. ! queue ! audioconvert ! wavescope ! videoconvert ! autovideosink
+ * gst-launch-1.0 ladspasrc-random-1661-so-random-fcsc-oa ! ladspa-cmt-so-amp-mono gain=1.5 ! ladspa-caps-so-plate ! tee name=myT myT. ! queue ! autoaudiosink myT. ! queue ! audioconvert ! wavescope ! videoconvert ! autovideosink
  * ]| Generate random wave, filter it trhough Mono Amplifier and Versatile Plate Reverb, and play, while showing, it.
  * </refsect2>
  * </listitem>
@@ -110,7 +110,7 @@
  * <refsect2>
  * <title>Example Sink/Audio/LADSPA line with this plugins</title>
  * |[
- * gst-launch autoaudiosrc ! ladspa-cmt-so-amp-mono gain=2 ! ladspa-caps-so-plate ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! tee name=myT myT. ! audioconvert ! audioresample ! queue ! ladspasink-cmt-so-null-ai myT. ! audioconvert ! audioresample ! queue ! goom ! videoconvert ! xvimagesink pixel-aspect-ratio=3/4
+ * gst-launch-1.0 autoaudiosrc ! ladspa-cmt-so-amp-mono gain=2 ! ladspa-caps-so-plate ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! tee name=myT myT. ! audioconvert ! audioresample ! queue ! ladspasink-cmt-so-null-ai myT. ! audioconvert ! audioresample ! queue ! goom ! videoconvert ! xvimagesink pixel-aspect-ratio=3/4
  * ]| Get audio input, filter it trhough Mono Amplifier, CAPS Plate LADSPA and TAP Stereo Echo, explicitily anulate audio with Null (Audio Output), and play a visualization (recommended hearphones).
  * </refsect2>
  * </listitem>

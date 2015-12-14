@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m avfassetsrc uri="file://movie.mp4" ! autovideosink
+ * gst-launch-1.0 -v -m avfassetsrc uri="file://movie.mp4" ! autovideosink
  * ]|
  * </refsect2>
  */

@@ -25,7 +25,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v filesrc location=/path/to/mxf ! mxfdemux ! audioconvert ! autoaudiosink
+ * gst-launch-1.0 -v filesrc location=/path/to/mxf ! mxfdemux ! audioconvert ! autoaudiosink
  * ]| This pipeline demuxes an MXF file and outputs one of the contained raw audio streams.
  * </refsect2>
  */

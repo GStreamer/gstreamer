@@ -44,20 +44,20 @@
  * </para>
  * <title>Example pipelines</title>
  * <para>
- * This element is only useful with gst-launch for modifying the language
+ * This element is only useful with gst-launch-1.0 for modifying the language
  * and/or category (which are properties of the stream located in the kate
  * beginning of stream header), because it does not support setting the tags
  * on a #GstTagSetter interface. Conceptually, the element will usually be
  * used like:
  * <programlisting>
- * gst-launch -v filesrc location=foo.ogg ! oggdemux ! katetag ! oggmux ! filesink location=bar.ogg
+ * gst-launch-1.0 -v filesrc location=foo.ogg ! oggdemux ! katetag ! oggmux ! filesink location=bar.ogg
  * </programlisting>
  * </para>
  * <para>
  * This pipeline will set the language and category of the stream to the
  * given values:
  * <programlisting>
- * gst-launch -v filesrc location=foo.ogg ! oggdemux ! katetag language=pt_BR category=subtitles ! oggmux ! filesink location=bar.ogg
+ * gst-launch-1.0 -v filesrc location=foo.ogg ! oggdemux ! katetag language=pt_BR category=subtitles ! oggmux ! filesink location=bar.ogg
  * </programlisting>
  * </para>
  * </refsect2>

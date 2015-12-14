@@ -24,7 +24,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! viewfinderbin
+ * gst-launch-1.0 -v videotestsrc ! viewfinderbin
  * ]|
  * Feeds the viewfinderbin with video test data.
  * </refsect2>

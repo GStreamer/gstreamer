@@ -28,23 +28,23 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc pattern=ball ! interlace ! xvimagesink
+ * gst-launch-1.0 -v videotestsrc pattern=ball ! interlace ! xvimagesink
  * ]|
  * This pipeline illustrates the combing effects caused by displaying
  * two interlaced fields as one progressive frame.
  * |[
- * gst-launch -v filesrc location=/path/to/file ! decodebin ! videorate !
+ * gst-launch-1.0 -v filesrc location=/path/to/file ! decodebin ! videorate !
  *   videoscale ! video/x-raw,format=\(string\)I420,width=720,height=480,
  *   framerate=60000/1001,pixel-aspect-ratio=11/10 ! 
- *   interlace top-field-first=false ! ...
+ *   interlace top-field-first=false ! autovideosink
  * ]|
  * This pipeline converts a progressive video stream into an interlaced
  * stream suitable for standard definition NTSC.
  * |[
- * gst-launch -v videotestsrc pattern=ball ! video/x-raw,
+ * gst-launch-1.0 -v videotestsrc pattern=ball ! video/x-raw,
  *   format=\(string\)I420,width=720,height=480,framerate=24000/1001,
- *   pixel-aspect-ratio=11/10 ! interlace pattern=2:3 !
- *   ...
+ *   pixel-aspect-ratio=11/10 ! interlace !
+ *   autovideosink
  * ]|
  * This pipeline converts a 24 frames per second progressive film stream into a
  * 30000/1001 2:3:2:3... pattern telecined stream suitable for displaying film

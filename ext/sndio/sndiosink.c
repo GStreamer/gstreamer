@@ -25,7 +25,7 @@
  * <para>
  * Simple example pipeline that plays an Ogg/Vorbis file via sndio:
  * <programlisting>
- * gst-launch -v filesrc location=foo.ogg ! decodebin ! audioconvert ! audioresample ! sndiosink
+ * gst-launch-1.0 -v filesrc location=foo.ogg ! decodebin ! audioconvert ! audioresample ! sndiosink
  * </programlisting>
  * </para>
  * </refsect2>

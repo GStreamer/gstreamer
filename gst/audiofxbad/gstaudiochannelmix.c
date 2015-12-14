@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v audiotestsrc ! audiochannelmix ! autoaudiosink
+ * gst-launch-1.0 -v audiotestsrc ! audiochannelmix ! autoaudiosink
  * ]|
  * </refsect2>
  */

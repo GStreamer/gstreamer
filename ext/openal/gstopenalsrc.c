@@ -57,10 +57,10 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v openalsrc ! audioconvert ! wavenc ! filesink location=stream.wav
+ * gst-launch-1.0 -v openalsrc ! audioconvert ! wavenc ! filesink location=stream.wav
  * ]| * will capture sound through OpenAL and encode it to a wav file.
  * |[
- * gst-launch openalsrc ! "audio/x-raw,format=S16LE,rate=44100" ! audioconvert ! volume volume=0.25 ! openalsink
+ * gst-launch-1.0 openalsrc ! "audio/x-raw,format=S16LE,rate=44100" ! audioconvert ! volume volume=0.25 ! openalsink
  * ]| will capture and play audio through OpenAL.
  * </refsect2>
  */
