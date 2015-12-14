@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:54+0200\n"
+"POT-Creation-Date: 2015-12-14 19:16+0100\n"
 "PO-Revision-Date: 2015-11-13 21:55+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -19,485 +19,424 @@ msgstr ""
 "X-Generator: Lokalize 1.5\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: ext/jack/gstjackaudiosink.c:356 ext/jack/gstjackaudiosrc.c:364
 msgid "Jack server not found"
 msgstr "Не знайдено сервера Jack"
 
-#: ext/jpeg/gstjpegdec.c:925 ext/jpeg/gstjpegdec.c:1178
-#: ext/jpeg/gstjpegdec.c:1190 ext/jpeg/gstjpegdec.c:1219
-#: ext/jpeg/gstjpegdec.c:1228 ext/jpeg/gstjpegdec.c:1237
-#: ext/jpeg/gstjpegdec.c:1245
 msgid "Failed to decode JPEG image"
 msgstr "Помилка при декодуванні зображення JPEG"
 
 #. TRANSLATORS: 'song title' by 'artist name'
-#: ext/pulse/pulsesink.c:3133
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "«%s», %s"
 
-#: ext/shout2/gstshout2.c:567
 msgid "Could not connect to server"
 msgstr "Не вдалося з'єднатись з сервером"
 
-#: ext/soup/gstsouphttpsrc.c:911
 msgid "No URL set."
 msgstr "Не вказано адресу"
 
-#: ext/soup/gstsouphttpsrc.c:1270
 msgid "Server does not support seeking."
 msgstr "Сервером не підтримується позиціювання."
 
-#: ext/soup/gstsouphttpsrc.c:1545
 msgid "Could not resolve server name."
 msgstr "Не вдалося визначити адресу сервера за назвою."
 
-#: ext/soup/gstsouphttpsrc.c:1551
 msgid "Could not establish connection to server."
 msgstr "Не вдалося встановити з'єднання з сервером."
 
-#: ext/soup/gstsouphttpsrc.c:1556
 msgid "Secure connection setup failed."
 msgstr "Помилка під час спроби налаштування безпечного з’єднання."
 
-#: ext/soup/gstsouphttpsrc.c:1566
-msgid "A network error occurred, or the server closed the connection unexpectedly."
-msgstr "Сталася помилка роботи з мережею або з’єднання було несподівано розірвано з боку сервера."
+msgid ""
+"A network error occurred, or the server closed the connection unexpectedly."
+msgstr ""
+"Сталася помилка роботи з мережею або з’єднання було несподівано розірвано з "
+"боку сервера."
 
-#: ext/soup/gstsouphttpsrc.c:1573
 msgid "Server sent bad data."
 msgstr "Сервером надіслано помилкові дані."
 
-#: gst/avi/gstavidemux.c:5679
 msgid "Internal data stream error."
 msgstr "Внутрішня помилка потоку даних."
 
-#: gst/avi/gstavimux.c:1819
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Не вказано або вказано некоректний вхід звукових даних, AVI-потік буде пошкоджено."
+msgstr ""
+"Не вказано або вказано некоректний вхід звукових даних, AVI-потік буде "
+"пошкоджено."
 
-#: gst/isomp4/qtdemux.c:635 gst/isomp4/qtdemux.c:639
 msgid "This file contains no playable streams."
 msgstr "Файл не містить потоків, які можна відтворити."
 
-#: gst/isomp4/qtdemux.c:685 gst/isomp4/qtdemux.c:5572
-#: gst/isomp4/qtdemux.c:5639 gst/isomp4/qtdemux.c:5878
 msgid "This file is invalid and cannot be played."
 msgstr "Файл є некоректним, його не можна відтворити."
 
-#: gst/isomp4/qtdemux.c:2433
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
-msgstr "Відтворення потоку даних неможливе, оскільки дані зашифровано за допомогою PlayReady DRM."
+msgstr ""
+"Відтворення потоку даних неможливе, оскільки дані зашифровано за допомогою "
+"PlayReady DRM."
 
-#: gst/isomp4/qtdemux.c:3498 gst/isomp4/qtdemux.c:6595
-#: gst/isomp4/qtdemux.c:6602 gst/isomp4/qtdemux.c:7376
-#: gst/isomp4/qtdemux.c:7805 gst/isomp4/qtdemux.c:7812
-#: gst/isomp4/qtdemux.c:10091
 msgid "This file is corrupt and cannot be played."
 msgstr "Файл пошкоджено, його не можна відтворити."
 
-#: gst/isomp4/qtdemux.c:3740
 msgid "Invalid atom size."
 msgstr "Некоректний розмір елементарного фрагмента."
 
-#: gst/isomp4/qtdemux.c:3818
 msgid "This file is incomplete and cannot be played."
 msgstr "Файл неповний, його не можна відтворити."
 
-#: gst/isomp4/qtdemux.c:8735
 msgid "The video in this file might not play correctly."
-msgstr "Ймовірно, відеодані цього файла не можна буде відтворити належним чином."
+msgstr ""
+"Ймовірно, відеодані цього файла не можна буде відтворити належним чином."
 
-#: gst/isomp4/qtdemux.c:10132
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Файл містить надто багато потоків. Відтворюються лише перші %d"
 
-#: gst/multifile/gstsplitmuxsrc.c:532 gst/wavparse/gstwavparse.c:2248
 msgid "Internal data flow error."
 msgstr "Помилка внутрішнього перенесення даних."
 
-#: gst/rtsp/gstrtspsrc.c:6894
-msgid "No supported stream was found. You might need to install a GStreamer RTSP extension plugin for Real media streams."
-msgstr "Не знайдено підтримуваних потоків. Ймовірно, вам слід встановити модуль RTSP GStreamer для відтворення потоків Real media."
+msgid ""
+"No supported stream was found. You might need to install a GStreamer RTSP "
+"extension plugin for Real media streams."
+msgstr ""
+"Не знайдено підтримуваних потоків. Ймовірно, вам слід встановити модуль RTSP "
+"GStreamer для відтворення потоків Real media."
 
-#: gst/rtsp/gstrtspsrc.c:6899
-msgid "No supported stream was found. You might need to allow more transport protocols or may otherwise be missing the right GStreamer RTSP extension plugin."
-msgstr "Не знайдено підтримуваних потоків. Ймовірно, вам слід увімкнути додаткові протоколи передавання даних або встановити додатковий модуль RTSP GStreamer."
+msgid ""
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
+msgstr ""
+"Не знайдено підтримуваних потоків. Ймовірно, вам слід увімкнути додаткові "
+"протоколи передавання даних або встановити додатковий модуль RTSP GStreamer."
 
-#: sys/oss4/oss4-sink.c:493 sys/oss4/oss4-source.c:358
-#: sys/oss/gstosssink.c:384
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Не вдалося відкрити пристрій для відтворення. Пристрій використовується сторонньою програмою."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Не вдалося відкрити пристрій для відтворення. Пристрій використовується "
+"сторонньою програмою."
 
-#: sys/oss4/oss4-sink.c:503 sys/oss4/oss4-source.c:368
-#: sys/oss/gstosssink.c:391
-msgid "Could not open audio device for playback. You don't have permission to open the device."
-msgstr "Не вдалося відкрити пристрій для відтворення. У вас недостатньо прав для відкриття пристрою."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Не вдалося відкрити пристрій для відтворення. У вас недостатньо прав для "
+"відкриття пристрою."
 
-#: sys/oss4/oss4-sink.c:514 sys/oss4/oss4-source.c:379
-#: sys/oss/gstosssink.c:399
 msgid "Could not open audio device for playback."
 msgstr "Не вдалося відкрити пристрій для відтворення."
 
-#: sys/oss4/oss4-sink.c:523 sys/oss4/oss4-source.c:389
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Не вдалося відкрити пристрій для відтворення. Ця версія Open Sound System не підтримується цим елементом."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Не вдалося відкрити пристрій для відтворення. Ця версія Open Sound System не "
+"підтримується цим елементом."
 
-#: sys/oss4/oss4-sink.c:646
 msgid "Playback is not supported by this audio device."
 msgstr "Відтворення не підтримується цим звуковим пристроєм."
 
-#: sys/oss4/oss4-sink.c:653
 msgid "Audio playback error."
 msgstr "Помилка відтворення звуку."
 
-#: sys/oss4/oss4-source.c:503
 msgid "Recording is not supported by this audio device."
 msgstr "Запис не підтримується цим звуковим пристроєм."
 
-#: sys/oss4/oss4-source.c:510
 msgid "Error recording from audio device."
 msgstr "Помилка записування зі звукового пристрою."
 
-#: sys/oss/gstosssrc.c:377
-msgid "Could not open audio device for recording. You don't have permission to open the device."
-msgstr "Не вдалося відкрити пристрій для запису. У вас недостатньо прав для відкриття пристрою."
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Не вдалося відкрити пристрій для запису. У вас недостатньо прав для "
+"відкриття пристрою."
 
-#: sys/oss/gstosssrc.c:385
 msgid "Could not open audio device for recording."
 msgstr "Не вдалося відкрити пристрій для запису."
 
-#: sys/sunaudio/gstsunaudiomixeroptions.c:109
 msgid "Record Source"
 msgstr "Запис джерела"
 
-#: sys/sunaudio/gstsunaudiomixeroptions.c:120
 msgid "Microphone"
 msgstr "Мікрофон"
 
-#: sys/sunaudio/gstsunaudiomixeroptions.c:121
 msgid "Line In"
 msgstr "Лінійний вхід"
 
-#: sys/sunaudio/gstsunaudiomixeroptions.c:122
 msgid "Internal CD"
 msgstr "Вбудований КД"
 
-#: sys/sunaudio/gstsunaudiomixeroptions.c:123
 msgid "SPDIF In"
 msgstr "Вхід SPDIF"
 
-#: sys/sunaudio/gstsunaudiomixeroptions.c:124
 msgid "AUX 1 In"
 msgstr "Вхід AUX 1"
 
-#: sys/sunaudio/gstsunaudiomixeroptions.c:125
 msgid "AUX 2 In"
 msgstr "Вхід AUX 2"
 
-#: sys/sunaudio/gstsunaudiomixeroptions.c:126
 msgid "Codec Loopback"
 msgstr "Петля кодека"
 
-#: sys/sunaudio/gstsunaudiomixeroptions.c:127
 msgid "SunVTS Loopback"
 msgstr "Петля SunVTS"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:69
 msgid "Volume"
 msgstr "Гучність"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:70
 msgid "Gain"
 msgstr "Підсилення"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:71
 msgid "Monitor"
 msgstr "Монітор"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:72
 msgid "Built-in Speaker"
 msgstr "Вбудований динамік"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:73
 msgid "Headphone"
 msgstr "Навушники"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:74
 msgid "Line Out"
 msgstr "Лінійний вихід"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:75
 msgid "SPDIF Out"
 msgstr "Вихід SPDIF"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:76
 msgid "AUX 1 Out"
 msgstr "Вихід AUX 1"
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:77
 msgid "AUX 2 Out"
 msgstr "Вихід AUX 2"
 
-#: sys/v4l2/gstv4l2bufferpool.c:1672
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Помилка під час спроби читання %d байтів з пристрою «%s»."
 
-#: sys/v4l2/gstv4l2object.c:1085
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr "Не вдається отримати список усіх можливих відеоформатів, які підтримує пристрій \"%s\""
+msgstr ""
+"Не вдається отримати список усіх можливих відеоформатів, які підтримує "
+"пристрій \"%s\""
 
-#: sys/v4l2/gstv4l2object.c:2577
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Не вдалося пов’язати буфери з пристрою «%s»."
 
-#: sys/v4l2/gstv4l2object.c:2585
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
 msgstr "Драйвер пристрою «%s» не підтримує метод введення-виведення даних %d"
 
-#: sys/v4l2/gstv4l2object.c:2592
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr "Драйвер пристрою «%s» не підтримує жоден відомий метод введення-виведення даних."
+msgstr ""
+"Драйвер пристрою «%s» не підтримує жоден відомий метод введення-виведення "
+"даних."
 
-#: sys/v4l2/gstv4l2object.c:3214 sys/v4l2/gstv4l2object.c:3225
 #, c-format
 msgid "Device '%s' is busy"
 msgstr "Пристрій «%s» зайнято"
 
-#: sys/v4l2/gstv4l2object.c:3231 sys/v4l2/gstv4l2object.c:3243
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Пристрій \"%s\" не здатний захоплювати відео у форматі %dx%d"
 
-#: sys/v4l2/gstv4l2object.c:3254
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Пристрій \"%s\" не здатний захоплювати відео у вказаному форматі"
 
-#: sys/v4l2/gstv4l2object.c:3267
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "У пристрої «%s» не передбачено можливості використання розривних площин"
+msgstr ""
+"У пристрої «%s» не передбачено можливості використання розривних площин"
 
-#: sys/v4l2/gstv4l2object.c:3278
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Не вдалося отримати параметри пристрою «%s»."
 
-#: sys/v4l2/gstv4l2object.c:3286
 msgid "Video device did not accept new frame rate setting."
-msgstr "Відеопристроєм не підтримується нове значення параметра частоти кадрів."
+msgstr ""
+"Відеопристроєм не підтримується нове значення параметра частоти кадрів."
 
-#: sys/v4l2/gstv4l2object.c:3391
 msgid "Video device did not provide output format."
 msgstr "Відеопристроєм не надано даних щодо формату виведення."
 
-#: sys/v4l2/gstv4l2object.c:3397
 msgid "Video device returned invalid dimensions."
 msgstr "Відеопристроєм повернуто некоректні розмірності."
 
-#: sys/v4l2/gstv4l2object.c:3405
 msgid "Video devices uses an unsupported interlacing method."
 msgstr "Драйвер пристрою «%s» не підтримує метод черезрядкового виведення."
 
-#: sys/v4l2/gstv4l2object.c:3412
 msgid "Video devices uses an unsupported pixel format."
 msgstr "Відеопристрій використовує непідтримуваний формат пікселів."
 
-#: sys/v4l2/gstv4l2object.c:3824
 msgid "Failed to configure internal buffer pool."
 msgstr "Не вдалося налаштувати вбудований буфер."
 
-#: sys/v4l2/gstv4l2object.c:3830
 msgid "Video device did not suggest any buffer size."
 msgstr "Відеопристроєм не запропоновано жодного розміру буфера."
 
-#: sys/v4l2/gstv4l2object.c:3845
 msgid "No downstream pool to import from."
 msgstr "Немає підлеглого буфера для імпортування даних."
 
-#: sys/v4l2/gstv4l2radio.c:138
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Помилка під час спроби отримання даних щодо приймача %d пристрою «%s»."
 
-#: sys/v4l2/gstv4l2radio.c:145
 #, c-format
 msgid "Error getting capabilities for device '%s'."
 msgstr "Помилка під час спроби отримання даних щодо можливостей пристрою «%s»."
 
-#: sys/v4l2/gstv4l2radio.c:152
 #, c-format
 msgid "Device '%s' is not a tuner."
 msgstr "Пристрій «%s» не є приймачем."
 
-#: sys/v4l2/gstv4l2radio.c:179
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
 msgstr "Не вдалося отримати прийняті радіодані з пристрою «%s»."
 
-#: sys/v4l2/gstv4l2radio.c:202 sys/v4l2/v4l2_calls.c:1067
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Не вдалося встановити ввід %d пристрою «%s»."
 
-#: sys/v4l2/gstv4l2radio.c:236
 #, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Не вдалося змінити стан вимикання звуку на пристрої «%s»."
 
-#: sys/v4l2/gstv4l2sink.c:615
 msgid "Failed to allocated required memory."
 msgstr "Не вдалося отримати потрібний обсяг пам’яті."
 
-#: sys/v4l2/gstv4l2src.c:510 sys/v4l2/gstv4l2videodec.c:581
 msgid "Failed to allocate required memory."
 msgstr "Не вдалося отримати потрібний обсяг пам’яті."
 
-#: sys/v4l2/gstv4l2transform.c:143
 #, c-format
 msgid "Converter on device %s has no supported input format"
-msgstr "Засіб перетворення на пристрої %s не може отримувати дані у підтримуваному форматі"
+msgstr ""
+"Засіб перетворення на пристрої %s не може отримувати дані у підтримуваному "
+"форматі"
 
-#: sys/v4l2/gstv4l2transform.c:150
 #, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr "Засіб перетворення на пристрої %s не може виводити дані у підтримуваному форматі"
+msgstr ""
+"Засіб перетворення на пристрої %s не може виводити дані у підтримуваному "
+"форматі"
 
-#: sys/v4l2/gstv4l2videodec.c:141
 #, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr "Засіб кодування на пристрої %s не може отримувати дані у підтримуваному форматі"
+msgstr ""
+"Засіб кодування на пристрої %s не може отримувати дані у підтримуваному "
+"форматі"
 
-#: sys/v4l2/gstv4l2videodec.c:148
 #, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr "Засіб кодування на пристрої %s не може виводити дані у підтримуваному форматі"
+msgstr ""
+"Засіб кодування на пристрої %s не може виводити дані у підтримуваному форматі"
 
-#: sys/v4l2/gstv4l2videodec.c:595
 msgid "Failed to start decoding thread."
 msgstr "Не вдалося започаткувати потік декодування."
 
-#: sys/v4l2/gstv4l2videodec.c:603
 msgid "Failed to process frame."
 msgstr "Не вдалося обробити кадр."
 
-#: sys/v4l2/v4l2_calls.c:89
 #, c-format
-msgid "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if it is a v4l1 driver."
-msgstr "Помилка при отриманні можливостей пристрою «%s»: драйвер не є драйвером для v4l2. Перевірте, може це драйвер типу v4l1."
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+"Помилка при отриманні можливостей пристрою «%s»: драйвер не є драйвером для "
+"v4l2. Перевірте, може це драйвер типу v4l1."
 
-#: sys/v4l2/v4l2_calls.c:153
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr "Помилка при запиті атрибутів вводу %d пристрою %s"
 
-#: sys/v4l2/v4l2_calls.c:184
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "Помилка при встановленні приймача %d пристрою «%s»."
 
-#: sys/v4l2/v4l2_calls.c:232
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr "Помилка при запиті норми пристрою «%s»."
 
-#: sys/v4l2/v4l2_calls.c:411
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Не вдалося отримати атрибути регуляторів керування пристрою «%s»."
 
-#: sys/v4l2/v4l2_calls.c:605
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Не вдалося ідентифікувати пристрій «%s»."
 
-#: sys/v4l2/v4l2_calls.c:612
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Це не пристрій «%s»."
 
-#: sys/v4l2/v4l2_calls.c:619
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Не вдалося відкрити пристрій «%s» для читання та запису."
 
-#: sys/v4l2/v4l2_calls.c:626
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Пристрій «%s» не є пристроєм захоплення."
 
-#: sys/v4l2/v4l2_calls.c:634
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Пристрій «%s» не є пристроєм виведення даних."
 
-#: sys/v4l2/v4l2_calls.c:642
 #, c-format
 msgid "Device '%s' is not a M2M device."
 msgstr "Пристрій «%s» не є пристроєм M2M."
 
-#: sys/v4l2/v4l2_calls.c:693
 #, c-format
 msgid "Could not dup device '%s' for reading and writing."
 msgstr "Не вдалося здублювати пристрій «%s» для читання та запису."
 
-#: sys/v4l2/v4l2_calls.c:777
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Не вдалося встановити норму пристрою «%s»."
 
-#: sys/v4l2/v4l2_calls.c:815
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr "Не вдалося отримати поточну частоту приймача пристрою «%s»."
 
-#: sys/v4l2/v4l2_calls.c:857
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr "Не вдалося встановити поточну частоту приймача пристрою «%s» у %lu Гц."
 
-#: sys/v4l2/v4l2_calls.c:891
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Помилка при отриманні сили сигналу пристрою «%s»."
 
-#: sys/v4l2/v4l2_calls.c:927
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Не вдалося отримати значення від органу керування %d пристрою «%s»."
 
-#: sys/v4l2/v4l2_calls.c:962
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr "Не вдалося встановити значення %d для органу керування %d пристрою «%s»."
+msgstr ""
+"Не вдалося встановити значення %d для органу керування %d пристрою «%s»."
 
-#: sys/v4l2/v4l2_calls.c:1042
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
-msgstr "Не вдалося отримати поточний ввід пристрою «%s». Можливо цей пристрій — радіо."
+msgstr ""
+"Не вдалося отримати поточний ввід пристрою «%s». Можливо цей пристрій — "
+"радіо."
 
-#: sys/v4l2/v4l2_calls.c:1099
 #, c-format
-msgid "Failed to get current output on device '%s'. May be it is a radio device"
-msgstr "Не вдалося отримати поточний вихід пристрою «%s». Можливо цей пристрій — радіо."
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Не вдалося отримати поточний вихід пристрою «%s». Можливо цей пристрій — "
+"радіо."
 
-#: sys/v4l2/v4l2_calls.c:1124
 #, c-format
 msgid "Failed to set output %d on device %s."
 msgstr "Не вдалося встановити вихід %d пристрою «%s»."
 
-#: sys/ximage/gstximagesrc.c:828
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Зміна роздільної здатності при відтворенні ще не підтримується."
 
-#: sys/ximage/gstximagesrc.c:842
 msgid "Cannot operate without a clock"
 msgstr "Робота без годинника неможлива"
 
@@ -579,8 +518,12 @@ msgstr "Робота без годинника неможлива"
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "Не вдалося відкрити пристрій для керування регуляторами мікшера."
 
-#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Не вдалося відкрити пристрій для керування регуляторами мікшера. Ця версія Open Sound System не підтримується цим елементом."
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Не вдалося відкрити пристрій для керування регуляторами мікшера. Ця "
+#~ "версія Open Sound System не підтримується цим елементом."
 
 #~ msgid "Master"
 #~ msgstr "Основний"
@@ -858,14 +801,24 @@ msgstr "Робота без годинника неможлива"
 #~ msgid "Failed getting controls attributes on device '%s.'"
 #~ msgstr "Не вдається отримати атрибути органів керування пристрою \"%s\"."
 
-#~ msgid "The buffer type is not supported, or the index is out of bounds, or no buffers have been allocated yet, or the userptr or length are invalid. device %s"
-#~ msgstr "Буфер цього типу не підтримується, або індекс поза межами діапазону, або буфери ще не були виділені, або неправильні параметри userptr чи довжина. Пристрій %s"
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "Буфер цього типу не підтримується, або індекс поза межами діапазону, або "
+#~ "буфери ще не були виділені, або неправильні параметри userptr чи довжина. "
+#~ "Пристрій %s"
 
-#~ msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr "Не вдається отримати відеокадри з пристрою \"%s\". Недостатньо пам'яті."
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr ""
+#~ "Не вдається отримати відеокадри з пристрою \"%s\". Недостатньо пам'яті."
 
 #~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr "Недостатньо пам'яті для вставляння у чергу вказівника на буфер користувача. Пристрій %s."
+#~ msgstr ""
+#~ "Недостатньо пам'яті для вставляння у чергу вказівника на буфер "
+#~ "користувача. Пристрій %s."
 
 #~ msgid "Could not exchange data with device '%s'."
 #~ msgstr "Помилка при обміні даними з пристроєм \"%s\"."
