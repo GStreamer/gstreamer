@@ -904,6 +904,25 @@ gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
   return plane_size;
 }
 
+/* find the difference between the start of the plane and where the video
+ * data starts in the plane */
+gsize
+gst_gl_get_plane_start (GstVideoInfo * info, GstVideoAlignment * valign,
+    guint plane)
+{
+  gsize plane_start;
+  gint i;
+
+  /* find the start of the plane data including padding */
+  plane_start = 0;
+  for (i = 0; i < plane; i++) {
+    plane_start += gst_gl_get_plane_data_size (info, valign, i);
+  }
+
+  /* offset between the plane data start and where the video frame starts */
+  return (GST_VIDEO_INFO_PLANE_OFFSET (info, plane)) - plane_start;
+}
+
 GstCaps *
 gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
     const gchar * feature_name)
