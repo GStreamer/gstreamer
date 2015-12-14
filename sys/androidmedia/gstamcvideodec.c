@@ -1302,7 +1302,7 @@ retry:
     state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
 
     if (!self->oes_mem) {
-      self->oes_mem = (GstGLMemory *) gst_gl_memory_alloc (self->gl_context,
+      self->oes_mem = (GstGLMemory *) gst_gl_memory_pbo_alloc (self->gl_context,
           GST_GL_TEXTURE_TARGET_EXTERNAL_OES, NULL, &state->info, 0, NULL);
 
       gst_gl_context_thread_add (self->gl_context,
