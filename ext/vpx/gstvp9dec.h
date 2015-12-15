@@ -31,6 +31,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstvideodecoder.h>
+#include <gstvpxdec.h>
 
 /* FIXME: Undef HAVE_CONFIG_H because vpx_codec.h uses it,
  * which causes compilation failures */
@@ -59,33 +60,12 @@ typedef struct _GstVP9DecClass GstVP9DecClass;
 
 struct _GstVP9Dec
 {
-  GstVideoDecoder base_video_decoder;
-
-  /* < private > */
-  vpx_codec_ctx_t decoder;
-
-  /* state */
-  gboolean decoder_inited;
-
-  /* properties */
-  gboolean post_processing;
-  enum vp8_postproc_level post_processing_flags;
-  gint deblocking_level;
-  gint noise_level;
-  gint threads;
-
-  GstVideoCodecState *input_state;
-  GstVideoCodecState *output_state;
-
-  /* allocation */
-  gboolean have_video_meta;
-  GstBufferPool *pool;
-  gsize buf_size;
+  GstVPXDec base_vpx_decoder;
 };
 
 struct _GstVP9DecClass
 {
-  GstVideoDecoderClass base_video_decoder_class;
+  GstVPXDecClass base_vpx_class;
 };
 
 GType gst_vp9_dec_get_type (void);

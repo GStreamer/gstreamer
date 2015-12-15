@@ -54,63 +54,15 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vp9dec_debug);
 #define GST_CAT_DEFAULT gst_vp9dec_debug
 
-#define DEFAULT_POST_PROCESSING FALSE
-#define DEFAULT_POST_PROCESSING_FLAGS (VP8_DEBLOCK | VP8_DEMACROBLOCK)
-#define DEFAULT_DEBLOCKING_LEVEL 4
-#define DEFAULT_NOISE_LEVEL 0
-#define DEFAULT_THREADS 0
+#define VP9_DECODER_VIDEO_TAG "VP9 video"
 
-enum
-{
-  PROP_0,
-  PROP_POST_PROCESSING,
-  PROP_POST_PROCESSING_FLAGS,
-  PROP_DEBLOCKING_LEVEL,
-  PROP_NOISE_LEVEL,
-  PROP_THREADS
-};
-
-#define C_FLAGS(v) ((guint) v)
-#define GST_VP9_DEC_TYPE_POST_PROCESSING_FLAGS (gst_vp9_dec_post_processing_flags_get_type())
-static GType
-gst_vp9_dec_post_processing_flags_get_type (void)
-{
-  static const GFlagsValue values[] = {
-    {C_FLAGS (VP8_DEBLOCK), "Deblock", "deblock"},
-    {C_FLAGS (VP8_DEMACROBLOCK), "Demacroblock", "demacroblock"},
-    {C_FLAGS (VP8_ADDNOISE), "Add noise", "addnoise"},
-    {C_FLAGS (VP8_MFQE), "Multi-frame quality enhancement", "mfqe"},
-    {0, NULL, NULL}
-  };
-  static volatile GType id = 0;
-
-  if (g_once_init_enter ((gsize *) & id)) {
-    GType _id;
-
-    _id = g_flags_register_static ("GstVP9DecPostProcessingFlags", values);
-
-    g_once_init_leave ((gsize *) & id, _id);
-  }
-
-  return id;
-}
-
-#undef C_FLAGS
-
-static void gst_vp9_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_vp9_dec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
-static gboolean gst_vp9_dec_start (GstVideoDecoder * decoder);
-static gboolean gst_vp9_dec_stop (GstVideoDecoder * decoder);
-static gboolean gst_vp9_dec_set_format (GstVideoDecoder * decoder,
-    GstVideoCodecState * state);
-static gboolean gst_vp9_dec_flush (GstVideoDecoder * decoder);
-static GstFlowReturn gst_vp9_dec_handle_frame (GstVideoDecoder * decoder,
-    GstVideoCodecFrame * frame);
-static gboolean gst_vp9_dec_decide_allocation (GstVideoDecoder * decoder,
-    GstQuery * query);
+static void gst_vp9_dec_set_stream_info (GstVPXDec * dec,
+    vpx_codec_stream_info_t * stream_info);
+static gboolean gst_vp9_dec_get_valid_format (GstVPXDec * dec,
+    vpx_image_t * img, GstVideoFormat * fmt);
+static void gst_vp9_dec_handle_resolution_change (GstVPXDec * dec,
+    vpx_image_t * img, GstVideoFormat fmt);
+static void gst_vp9_dec_add_video_meta (GstVPXDec * dec, GstBuffer * buffer);
 
 static GstStaticPadTemplate gst_vp9_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -127,49 +79,16 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define parent_class gst_vp9_dec_parent_class
-G_DEFINE_TYPE (GstVP9Dec, gst_vp9_dec, GST_TYPE_VIDEO_DECODER);
+G_DEFINE_TYPE (GstVP9Dec, gst_vp9_dec, GST_TYPE_VPX_DEC);
 
 static void
 gst_vp9_dec_class_init (GstVP9DecClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *element_class;
-  GstVideoDecoderClass *base_video_decoder_class;
+  GstVPXDecClass *vpx_class;
 
-  gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
-  base_video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
-
-  gobject_class->set_property = gst_vp9_dec_set_property;
-  gobject_class->get_property = gst_vp9_dec_get_property;
-
-  g_object_class_install_property (gobject_class, PROP_POST_PROCESSING,
-      g_param_spec_boolean ("post-processing", "Post Processing",
-          "Enable post processing", DEFAULT_POST_PROCESSING,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_POST_PROCESSING_FLAGS,
-      g_param_spec_flags ("post-processing-flags", "Post Processing Flags",
-          "Flags to control post processing",
-          GST_VP9_DEC_TYPE_POST_PROCESSING_FLAGS, DEFAULT_POST_PROCESSING_FLAGS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_DEBLOCKING_LEVEL,
-      g_param_spec_uint ("deblocking-level", "Deblocking Level",
-          "Deblocking level",
-          0, 16, DEFAULT_DEBLOCKING_LEVEL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_NOISE_LEVEL,
-      g_param_spec_uint ("noise-level", "Noise Level",
-          "Noise level",
-          0, 16, DEFAULT_NOISE_LEVEL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_THREADS,
-      g_param_spec_uint ("threads", "Max Threads",
-          "Maximum number of decoding threads (0 = automatic)",
-          0, 16, DEFAULT_THREADS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  vpx_class = GST_VPX_DEC_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vp9_dec_src_template));
@@ -182,14 +101,14 @@ gst_vp9_dec_class_init (GstVP9DecClass * klass)
       "Decode VP9 video streams", "David Schleef <ds@entropywave.com>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  base_video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_vp9_dec_start);
-  base_video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vp9_dec_stop);
-  base_video_decoder_class->flush = GST_DEBUG_FUNCPTR (gst_vp9_dec_flush);
-  base_video_decoder_class->set_format =
-      GST_DEBUG_FUNCPTR (gst_vp9_dec_set_format);
-  base_video_decoder_class->handle_frame =
-      GST_DEBUG_FUNCPTR (gst_vp9_dec_handle_frame);
-  base_video_decoder_class->decide_allocation = gst_vp9_dec_decide_allocation;
+  vpx_class->video_codec_tag = VP9_DECODER_VIDEO_TAG;
+  vpx_class->codec_algo = &vpx_codec_vp9_dx_algo;
+  vpx_class->set_stream_info = GST_DEBUG_FUNCPTR (gst_vp9_dec_set_stream_info);
+  vpx_class->get_frame_format =
+      GST_DEBUG_FUNCPTR (gst_vp9_dec_get_valid_format);
+  vpx_class->handle_resolution_change =
+      GST_DEBUG_FUNCPTR (gst_vp9_dec_handle_resolution_change);
+  vpx_class->add_video_meta = GST_DEBUG_FUNCPTR (gst_vp9_dec_add_video_meta);
 
   GST_DEBUG_CATEGORY_INIT (gst_vp9dec_debug, "vp9dec", 0, "VP9 Decoder");
 }
@@ -197,599 +116,74 @@ gst_vp9_dec_class_init (GstVP9DecClass * klass)
 static void
 gst_vp9_dec_init (GstVP9Dec * gst_vp9_dec)
 {
-  GstVideoDecoder *decoder = (GstVideoDecoder *) gst_vp9_dec;
-
   GST_DEBUG_OBJECT (gst_vp9_dec, "gst_vp9_dec_init");
-  gst_video_decoder_set_packetized (decoder, TRUE);
-  gst_vp9_dec->post_processing = DEFAULT_POST_PROCESSING;
-  gst_vp9_dec->post_processing_flags = DEFAULT_POST_PROCESSING_FLAGS;
-  gst_vp9_dec->deblocking_level = DEFAULT_DEBLOCKING_LEVEL;
-  gst_vp9_dec->noise_level = DEFAULT_NOISE_LEVEL;
-
-  gst_video_decoder_set_needs_format (decoder, TRUE);
-  gst_video_decoder_set_use_default_pad_acceptcaps (decoder, TRUE);
-  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (decoder));
 }
 
 static void
-gst_vp9_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
+gst_vp9_dec_set_stream_info (GstVPXDec * dec,
+    vpx_codec_stream_info_t * stream_info)
 {
-  GstVP9Dec *dec;
+  /* FIXME: peek_stream_info() does not return valid values, take input caps */
+  stream_info->w = dec->input_state->info.width;
+  stream_info->h = dec->input_state->info.height;
+  return;
+}
 
-  g_return_if_fail (GST_IS_VP9_DEC (object));
-  dec = GST_VP9_DEC (object);
+static gboolean
+gst_vp9_dec_get_valid_format (GstVPXDec * dec, vpx_image_t * img,
+    GstVideoFormat * fmt)
+{
+  switch (img->fmt) {
+    case VPX_IMG_FMT_I420:
+      *fmt = GST_VIDEO_FORMAT_I420;
+      return TRUE;
 
-  GST_DEBUG_OBJECT (object, "gst_vp9_dec_set_property");
-  switch (prop_id) {
-    case PROP_POST_PROCESSING:
-      dec->post_processing = g_value_get_boolean (value);
-      break;
-    case PROP_POST_PROCESSING_FLAGS:
-      dec->post_processing_flags = g_value_get_flags (value);
-      break;
-    case PROP_DEBLOCKING_LEVEL:
-      dec->deblocking_level = g_value_get_uint (value);
-      break;
-    case PROP_NOISE_LEVEL:
-      dec->noise_level = g_value_get_uint (value);
-      break;
-    case PROP_THREADS:
-      dec->threads = g_value_get_uint (value);
-      break;
+    case VPX_IMG_FMT_YV12:
+      *fmt = GST_VIDEO_FORMAT_YV12;
+      return TRUE;
+
+    case VPX_IMG_FMT_I422:
+      *fmt = GST_VIDEO_FORMAT_Y42B;
+      return TRUE;
+
+    case VPX_IMG_FMT_I444:
+      *fmt = GST_VIDEO_FORMAT_Y444;
+      return TRUE;
+
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+      return FALSE;
   }
 }
 
 static void
-gst_vp9_dec_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
+gst_vp9_dec_handle_resolution_change (GstVPXDec * dec, vpx_image_t * img,
+    GstVideoFormat fmt)
 {
-  GstVP9Dec *dec;
+  GstVPXDecClass *vpxclass = GST_VPX_DEC_GET_CLASS (dec);
 
-  g_return_if_fail (GST_IS_VP9_DEC (object));
-  dec = GST_VP9_DEC (object);
+  if (!dec->output_state || dec->output_state->info.finfo->format != fmt ||
+      dec->output_state->info.width != img->d_w ||
+      dec->output_state->info.height != img->d_h) {
+    gboolean send_tags = !dec->output_state;
 
-  switch (prop_id) {
-    case PROP_POST_PROCESSING:
-      g_value_set_boolean (value, dec->post_processing);
-      break;
-    case PROP_POST_PROCESSING_FLAGS:
-      g_value_set_flags (value, dec->post_processing_flags);
-      break;
-    case PROP_DEBLOCKING_LEVEL:
-      g_value_set_uint (value, dec->deblocking_level);
-      break;
-    case PROP_NOISE_LEVEL:
-      g_value_set_uint (value, dec->noise_level);
-      break;
-    case PROP_THREADS:
-      g_value_set_uint (value, dec->threads);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+    if (dec->output_state)
+      gst_video_codec_state_unref (dec->output_state);
+
+    dec->output_state =
+        gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec),
+        fmt, img->d_w, img->d_h, dec->input_state);
+    gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
+
+    if (send_tags)
+      vpxclass->send_tags (dec);
   }
-}
-
-static gboolean
-gst_vp9_dec_start (GstVideoDecoder * decoder)
-{
-  GstVP9Dec *gst_vp9_dec = GST_VP9_DEC (decoder);
-
-  GST_DEBUG_OBJECT (gst_vp9_dec, "start");
-  gst_vp9_dec->decoder_inited = FALSE;
-
-  return TRUE;
-}
-
-static gboolean
-gst_vp9_dec_stop (GstVideoDecoder * base_video_decoder)
-{
-  GstVP9Dec *gst_vp9_dec = GST_VP9_DEC (base_video_decoder);
-
-  GST_DEBUG_OBJECT (gst_vp9_dec, "stop");
-
-  if (gst_vp9_dec->output_state) {
-    gst_video_codec_state_unref (gst_vp9_dec->output_state);
-    gst_vp9_dec->output_state = NULL;
-  }
-
-  if (gst_vp9_dec->input_state) {
-    gst_video_codec_state_unref (gst_vp9_dec->input_state);
-    gst_vp9_dec->input_state = NULL;
-  }
-
-  if (gst_vp9_dec->decoder_inited)
-    vpx_codec_destroy (&gst_vp9_dec->decoder);
-  gst_vp9_dec->decoder_inited = FALSE;
-
-  if (gst_vp9_dec->pool) {
-    gst_buffer_pool_set_active (gst_vp9_dec->pool, FALSE);
-    gst_object_unref (gst_vp9_dec->pool);
-    gst_vp9_dec->pool = NULL;
-    gst_vp9_dec->buf_size = 0;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-gst_vp9_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
-{
-  GstVP9Dec *gst_vp9_dec = GST_VP9_DEC (decoder);
-
-  GST_DEBUG_OBJECT (gst_vp9_dec, "set_format");
-
-  if (gst_vp9_dec->decoder_inited)
-    vpx_codec_destroy (&gst_vp9_dec->decoder);
-  gst_vp9_dec->decoder_inited = FALSE;
-
-  if (gst_vp9_dec->output_state) {
-    gst_video_codec_state_unref (gst_vp9_dec->output_state);
-    gst_vp9_dec->output_state = NULL;
-  }
-
-  if (gst_vp9_dec->input_state)
-    gst_video_codec_state_unref (gst_vp9_dec->input_state);
-  gst_vp9_dec->input_state = gst_video_codec_state_ref (state);
-
-  return TRUE;
-}
-
-static gboolean
-gst_vp9_dec_flush (GstVideoDecoder * base_video_decoder)
-{
-  GstVP9Dec *decoder;
-
-  GST_DEBUG_OBJECT (base_video_decoder, "flush");
-
-  decoder = GST_VP9_DEC (base_video_decoder);
-
-  if (decoder->output_state) {
-    gst_video_codec_state_unref (decoder->output_state);
-    decoder->output_state = NULL;
-  }
-
-  if (decoder->decoder_inited)
-    vpx_codec_destroy (&decoder->decoder);
-  decoder->decoder_inited = FALSE;
-
-  return TRUE;
 }
 
 static void
-gst_vp9_dec_send_tags (GstVP9Dec * dec)
+gst_vp9_dec_add_video_meta (GstVPXDec * dec, GstBuffer * buffer)
 {
-  GstTagList *list;
-
-  list = gst_tag_list_new_empty ();
-  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-      GST_TAG_VIDEO_CODEC, "VP9 video", NULL);
-
-  gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (dec),
-      gst_event_new_tag (list));
-}
-
-#ifdef HAVE_VPX_1_4
-struct Frame
-{
-  GstMapInfo info;
-  GstBuffer *buffer;
-};
-
-static GstBuffer *
-gst_vp9_dec_prepare_image (GstVP9Dec * dec, const vpx_image_t * img)
-{
-  gint comp;
-  GstVideoMeta *vmeta;
-  GstBuffer *buffer;
-  struct Frame *frame = img->fb_priv;
-  GstVideoInfo *info = &dec->output_state->info;
-
-  buffer = gst_buffer_ref (frame->buffer);
-
-  vmeta = gst_buffer_get_video_meta (buffer);
-  vmeta->format = GST_VIDEO_INFO_FORMAT (info);
-  vmeta->width = GST_VIDEO_INFO_WIDTH (info);
-  vmeta->height = GST_VIDEO_INFO_HEIGHT (info);
-  vmeta->n_planes = GST_VIDEO_INFO_N_PLANES (info);
-
-  for (comp = 0; comp < 4; comp++) {
-    vmeta->stride[comp] = img->stride[comp];
-    vmeta->offset[comp] =
-        img->planes[comp] ? img->planes[comp] - frame->info.data : 0;
-  }
-
-  /* FIXME This is a READ/WRITE mapped buffer see bug #754826 */
-
-  return buffer;
-}
-
-static int
-gst_vp9_dec_get_buffer_cb (gpointer priv, gsize min_size,
-    vpx_codec_frame_buffer_t * fb)
-{
-  GstVP9Dec *dec = priv;
-  GstBuffer *buffer;
-  struct Frame *frame;
-  GstFlowReturn ret;
-
-  if (!dec->pool || dec->buf_size != min_size) {
-    GstBufferPool *pool;
-    GstStructure *config;
-    GstCaps *caps;
-    GstAllocator *allocator;
-    GstAllocationParams params;
-
-    if (dec->pool) {
-      gst_buffer_pool_set_active (dec->pool, FALSE);
-      gst_object_unref (dec->pool);
-      dec->pool = NULL;
-      dec->buf_size = 0;
-    }
-
-    gst_video_decoder_get_allocator (GST_VIDEO_DECODER (dec), &allocator,
-        &params);
-
-    if (allocator &&
-        GST_OBJECT_FLAG_IS_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC)) {
-      gst_object_unref (allocator);
-      allocator = NULL;
-    }
-
-    pool = gst_buffer_pool_new ();
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set_allocator (config, allocator, &params);
-    caps = gst_caps_from_string ("video/internal");
-    gst_buffer_pool_config_set_params (config, caps, min_size, 2, 0);
-    gst_caps_unref (caps);
-    gst_buffer_pool_set_config (pool, config);
-
-    if (allocator)
-      gst_object_unref (allocator);
-
-    if (!gst_buffer_pool_set_active (pool, TRUE)) {
-      GST_WARNING ("Failed to create internal pool");
-      gst_object_unref (pool);
-      return -1;
-    }
-
-    dec->pool = pool;
-    dec->buf_size = min_size;
-  }
-
-  ret = gst_buffer_pool_acquire_buffer (dec->pool, &buffer, NULL);
-  if (ret != GST_FLOW_OK) {
-    GST_WARNING ("Failed to acquire buffer from internal pool.");
-    return -1;
-  }
-
-  /* Add it now, while the buffer is writable */
   gst_buffer_add_video_meta (buffer, GST_VIDEO_FRAME_FLAG_NONE,
       GST_VIDEO_FORMAT_ENCODED, 0, 0);
-
-  frame = g_new0 (struct Frame, 1);
-  if (!gst_buffer_map (buffer, &frame->info, GST_MAP_READWRITE)) {
-    gst_buffer_unref (buffer);
-    g_free (frame);
-    GST_WARNING ("Failed to map buffer from internal pool.");
-    return -1;
-  }
-
-  fb->size = frame->info.size;
-  fb->data = frame->info.data;
-  frame->buffer = buffer;
-  fb->priv = frame;
-
-  GST_TRACE_OBJECT (priv, "Allocated buffer %p", frame->buffer);
-
-  return 0;
-}
-
-static int
-gst_vp9_dec_release_buffer_cb (gpointer priv, vpx_codec_frame_buffer_t * fb)
-{
-  struct Frame *frame = fb->priv;
-
-  GST_TRACE_OBJECT (priv, "Release buffer %p", frame->buffer);
-
-  g_assert (frame);
-  gst_buffer_unmap (frame->buffer, &frame->info);
-  gst_buffer_unref (frame->buffer);
-  g_free (frame);
-
-  return 0;
-}
-#endif
-
-static void
-gst_vp9_dec_image_to_buffer (GstVP9Dec * dec, const vpx_image_t * img,
-    GstBuffer * buffer)
-{
-  int deststride, srcstride, height, width, line, comp;
-  guint8 *dest, *src;
-  GstVideoFrame frame;
-  GstVideoInfo *info = &dec->output_state->info;
-
-  if (!gst_video_frame_map (&frame, info, buffer, GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (dec, "Could not map video buffer");
-    return;
-  }
-
-  for (comp = 0; comp < 3; comp++) {
-    dest = GST_VIDEO_FRAME_COMP_DATA (&frame, comp);
-    src = img->planes[comp];
-    width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, comp)
-        * GST_VIDEO_FRAME_COMP_PSTRIDE (&frame, comp);
-    height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, comp);
-    deststride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, comp);
-    srcstride = img->stride[comp];
-
-    if (srcstride == deststride) {
-      GST_TRACE_OBJECT (dec, "Stride matches. Comp %d: %d, copying full plane",
-          comp, srcstride);
-      memcpy (dest, src, srcstride * height);
-    } else {
-      GST_TRACE_OBJECT (dec, "Stride mismatch. Comp %d: %d != %d, copying "
-          "line by line.", comp, srcstride, deststride);
-      for (line = 0; line < height; line++) {
-        memcpy (dest, src, width);
-        dest += deststride;
-        src += srcstride;
-      }
-    }
-  }
-
-  gst_video_frame_unmap (&frame);
-}
-
-static GstFlowReturn
-open_codec (GstVP9Dec * dec, GstVideoCodecFrame * frame)
-{
-  int flags = 0;
-  vpx_codec_stream_info_t stream_info;
-  vpx_codec_caps_t caps;
-  vpx_codec_dec_cfg_t cfg;
-  vpx_codec_err_t status;
-  GstMapInfo minfo;
-
-  memset (&stream_info, 0, sizeof (stream_info));
-  memset (&cfg, 0, sizeof (cfg));
-  stream_info.sz = sizeof (stream_info);
-
-  if (!gst_buffer_map (frame->input_buffer, &minfo, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (dec, "Failed to map input buffer");
-    return GST_FLOW_ERROR;
-  }
-
-  status = vpx_codec_peek_stream_info (&vpx_codec_vp9_dx_algo,
-      minfo.data, minfo.size, &stream_info);
-
-  gst_buffer_unmap (frame->input_buffer, &minfo);
-
-  if (status != VPX_CODEC_OK) {
-    GST_WARNING_OBJECT (dec, "VPX preprocessing error: %s",
-        gst_vpx_error_name (status));
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (dec), frame);
-    return GST_FLOW_CUSTOM_SUCCESS_1;
-  }
-  if (!stream_info.is_kf) {
-    GST_WARNING_OBJECT (dec, "No keyframe, skipping");
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (dec), frame);
-    return GST_FLOW_CUSTOM_SUCCESS_1;
-  }
-
-  /* FIXME: peek_stream_info() does not return valid values, take input caps */
-  stream_info.w = dec->input_state->info.width;
-  stream_info.h = dec->input_state->info.height;
-
-  cfg.w = stream_info.w;
-  cfg.h = stream_info.h;
-
-  if (dec->threads > 0)
-    cfg.threads = dec->threads;
-  else
-    cfg.threads = g_get_num_processors ();
-
-  caps = vpx_codec_get_caps (&vpx_codec_vp9_dx_algo);
-
-  if (dec->post_processing) {
-    if (!(caps & VPX_CODEC_CAP_POSTPROC)) {
-      GST_WARNING_OBJECT (dec, "Decoder does not support post processing");
-    } else {
-      flags |= VPX_CODEC_USE_POSTPROC;
-    }
-  }
-
-  status =
-      vpx_codec_dec_init (&dec->decoder, &vpx_codec_vp9_dx_algo, &cfg, flags);
-  if (status != VPX_CODEC_OK) {
-    GST_ELEMENT_ERROR (dec, LIBRARY, INIT,
-        ("Failed to initialize VP9 decoder"), ("%s",
-            gst_vpx_error_name (status)));
-    return GST_FLOW_ERROR;
-  }
-
-  if ((caps & VPX_CODEC_CAP_POSTPROC) && dec->post_processing) {
-    vp8_postproc_cfg_t pp_cfg = { 0, };
-
-    pp_cfg.post_proc_flag = dec->post_processing_flags;
-    pp_cfg.deblocking_level = dec->deblocking_level;
-    pp_cfg.noise_level = dec->noise_level;
-
-    status = vpx_codec_control (&dec->decoder, VP8_SET_POSTPROC, &pp_cfg);
-    if (status != VPX_CODEC_OK) {
-      GST_WARNING_OBJECT (dec, "Couldn't set postprocessing settings: %s",
-          gst_vpx_error_name (status));
-    }
-  }
-#ifdef HAVE_VPX_1_4
-  vpx_codec_set_frame_buffer_functions (&dec->decoder,
-      gst_vp9_dec_get_buffer_cb, gst_vp9_dec_release_buffer_cb, dec);
-#endif
-
-  dec->decoder_inited = TRUE;
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_vp9_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
-{
-  GstVP9Dec *dec;
-  GstFlowReturn ret = GST_FLOW_OK;
-  vpx_codec_err_t status;
-  vpx_codec_iter_t iter = NULL;
-  vpx_image_t *img;
-  long decoder_deadline = 0;
-  GstClockTimeDiff deadline;
-  GstMapInfo minfo;
-
-  GST_DEBUG_OBJECT (decoder, "handle_frame");
-
-  dec = GST_VP9_DEC (decoder);
-
-  if (!dec->decoder_inited) {
-    ret = open_codec (dec, frame);
-    if (ret == GST_FLOW_CUSTOM_SUCCESS_1)
-      return GST_FLOW_OK;
-    else if (ret != GST_FLOW_OK)
-      return ret;
-  }
-
-  deadline = gst_video_decoder_get_max_decode_time (decoder, frame);
-  if (deadline < 0) {
-    decoder_deadline = 1;
-  } else if (deadline == G_MAXINT64) {
-    decoder_deadline = 0;
-  } else {
-    decoder_deadline = MAX (1, deadline / GST_MSECOND);
-  }
-
-  if (!gst_buffer_map (frame->input_buffer, &minfo, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (dec, "Failed to map input buffer");
-    return GST_FLOW_ERROR;
-  }
-
-  status = vpx_codec_decode (&dec->decoder,
-      minfo.data, minfo.size, NULL, decoder_deadline);
-
-  gst_buffer_unmap (frame->input_buffer, &minfo);
-
-  if (status) {
-    GST_VIDEO_DECODER_ERROR (decoder, 1, LIBRARY, ENCODE,
-        ("Failed to decode frame"), ("%s", gst_vpx_error_name (status)), ret);
-    return ret;
-  }
-
-  img = vpx_codec_get_frame (&dec->decoder, &iter);
-  if (img) {
-    GstVideoFormat fmt;
-
-    switch (img->fmt) {
-      case VPX_IMG_FMT_I420:
-        fmt = GST_VIDEO_FORMAT_I420;
-        break;
-      case VPX_IMG_FMT_YV12:
-        fmt = GST_VIDEO_FORMAT_YV12;
-        break;
-      case VPX_IMG_FMT_I422:
-        fmt = GST_VIDEO_FORMAT_Y42B;
-        break;
-      case VPX_IMG_FMT_I444:
-        fmt = GST_VIDEO_FORMAT_Y444;
-        break;
-      default:
-        vpx_img_free (img);
-        GST_ELEMENT_ERROR (decoder, LIBRARY, ENCODE,
-            ("Failed to decode frame"), ("Unsupported color format %d",
-                img->fmt));
-        return GST_FLOW_ERROR;
-        break;
-    }
-
-    if (!dec->output_state || dec->output_state->info.finfo->format != fmt ||
-        dec->output_state->info.width != img->d_w ||
-        dec->output_state->info.height != img->d_h) {
-      gboolean send_tags = !dec->output_state;
-
-      if (dec->output_state)
-        gst_video_codec_state_unref (dec->output_state);
-
-      dec->output_state =
-          gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec),
-          fmt, img->d_w, img->d_h, dec->input_state);
-      gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
-
-      if (send_tags)
-        gst_vp9_dec_send_tags (dec);
-    }
-
-    if (deadline < 0) {
-      GST_LOG_OBJECT (dec, "Skipping late frame (%f s past deadline)",
-          (double) -deadline / GST_SECOND);
-      gst_video_decoder_drop_frame (decoder, frame);
-    } else {
-#ifdef HAVE_VPX_1_4
-      if (img->fb_priv && dec->have_video_meta) {
-        frame->output_buffer = gst_vp9_dec_prepare_image (dec, img);
-        ret = gst_video_decoder_finish_frame (decoder, frame);
-      } else
-#endif
-      {
-        ret = gst_video_decoder_allocate_output_frame (decoder, frame);
-
-        if (ret == GST_FLOW_OK) {
-          gst_vp9_dec_image_to_buffer (dec, img, frame->output_buffer);
-          ret = gst_video_decoder_finish_frame (decoder, frame);
-        } else {
-          gst_video_decoder_drop_frame (decoder, frame);
-        }
-      }
-    }
-
-    vpx_img_free (img);
-
-    while ((img = vpx_codec_get_frame (&dec->decoder, &iter))) {
-      GST_WARNING_OBJECT (decoder, "Multiple decoded frames... dropping");
-      vpx_img_free (img);
-    }
-  } else {
-    /* Invisible frame */
-    GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
-    gst_video_decoder_finish_frame (decoder, frame);
-  }
-
-  return ret;
-}
-
-static gboolean
-gst_vp9_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
-{
-  GstVP9Dec *dec = GST_VP9_DEC (bdec);
-  GstBufferPool *pool;
-  GstStructure *config;
-
-  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (bdec, query))
-    return FALSE;
-
-  g_assert (gst_query_get_n_allocation_pools (query) > 0);
-  gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
-  g_assert (pool != NULL);
-
-  config = gst_buffer_pool_get_config (pool);
-  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-    dec->have_video_meta = TRUE;
-  }
-  gst_buffer_pool_set_config (pool, config);
-  gst_object_unref (pool);
-
-  return TRUE;
 }
 
 #endif /* HAVE_VP9_DECODER */

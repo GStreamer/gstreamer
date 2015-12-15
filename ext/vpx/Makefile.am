@@ -2,6 +2,7 @@ plugin_LTLIBRARIES = \
 	libgstvpx.la
 
 libgstvpx_la_SOURCES = \
+        gstvpxdec.c \
 	gstvp8dec.c \
 	gstvp8enc.c \
 	gstvp8utils.c \
