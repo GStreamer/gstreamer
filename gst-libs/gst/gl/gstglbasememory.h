@@ -91,6 +91,7 @@ struct _GstGLBaseMemory
   gpointer              data;
 
   /* <private> */
+  gsize                 alloc_size;     /* because maxsize is used for mapping */
   gpointer              alloc_data;
 
   GDestroyNotify        notify;
