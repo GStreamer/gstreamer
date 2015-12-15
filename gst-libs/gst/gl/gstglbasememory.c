@@ -109,15 +109,39 @@ gst_gl_base_memory_init (GstGLBaseMemory * mem, GstAllocator * allocator,
     GstMemory * parent, GstGLContext * context, GstAllocationParams * params,
     gsize size, gpointer user_data, GDestroyNotify notify)
 {
-  gsize align = gst_memory_alignment, offset = 0, maxsize = size;
+  gsize align = gst_memory_alignment, offset = 0, maxsize;
   GstMemoryFlags flags = 0;
   struct create_data data;
 
+  /* A note on sizes.
+   * gl_mem->alloc_size: the size to allocate when we control the allocation.
+   *                     Size of the unaligned allocation.
+   * mem->maxsize: the size that is used by GstMemory for mapping, to map the
+   *               entire memory. The size of the aligned allocation
+   * mem->size: represents the size of the valid data. Can be reduced with
+   *            gst_memory_resize()
+   *
+   * It holds that:
+   * mem->size + mem->offset <= mem->maxsize
+   * and
+   * mem->maxsize + alignment offset <= gl_mem->alloc_size
+   *
+   * We need to add the alignment mask to the allocated size in order to have
+   * the freedom to align the gl_mem->data pointer correctly which may be offset
+   * by at most align bytes in the alloc_data pointer.
+   *
+   * maxsize is not suitable for this as it is used by GstMemory as the size
+   * to map with.
+   */
+  mem->alloc_size = maxsize = size;
   if (params) {
     flags = params->flags;
     align |= params->align;
     offset = params->prefix;
-    maxsize += params->prefix + params->padding + align;
+    maxsize += params->prefix + params->padding;
+
+    /* deals with any alignment */
+    mem->alloc_size = maxsize + align;
   }
 
   gst_memory_init (GST_MEMORY_CAST (mem), flags, allocator, parent, maxsize,
@@ -168,8 +192,8 @@ gst_gl_base_memory_alloc_data (GstGLBaseMemory * gl_mem)
     return TRUE;
 
   GST_CAT_LOG (GST_CAT_GL_BASE_MEMORY, "%p attempting allocation of data "
-      "pointer of size %" G_GSIZE_FORMAT, gl_mem, mem->maxsize);
-  gl_mem->alloc_data = g_try_malloc (mem->maxsize);
+      "pointer of size %" G_GSIZE_FORMAT, gl_mem, gl_mem->alloc_size);
+  gl_mem->alloc_data = g_try_malloc (gl_mem->alloc_size);
 
   if (gl_mem->alloc_data == NULL)
     return FALSE;
