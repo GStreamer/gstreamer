@@ -41,6 +41,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-cvlaplace
+ *
+ * Applies cvLaplace OpenCV function to the image.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 videotestsrc ! cvlaplace ! videoconvert ! autovideosink
+ * ]|
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

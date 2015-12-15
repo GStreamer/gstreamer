@@ -41,6 +41,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-cverode
+ *
+ * Erodes the image with the cvErode OpenCV function.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 videotestsrc ! cverode ! videoconvert ! autovideosink
+ * ]|
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

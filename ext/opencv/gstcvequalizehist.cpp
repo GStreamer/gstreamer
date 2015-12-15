@@ -41,6 +41,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-cvequalizehist
+ *
+ * Equalizes the histogram of a grayscale image with the cvEqualizeHist OpenCV
+ * function.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 videotestsrc pattern=23 ! cvequalizehist ! videoconvert ! autovideosink
+ * ]|
+ * </refsect2>
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

@@ -41,6 +41,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-cvsmooth
+ *
+ * Smooths the image using thes cvSmooth OpenCV function.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 videotestsrc ! cvsmooth ! videoconvert ! autovideosink
+ * ]|
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
