@@ -109,10 +109,6 @@ static gboolean gst_vpx_dec_default_frame_format (GstVPXDec * dec,
     vpx_image_t * img, GstVideoFormat * fmt);
 static void gst_vpx_dec_handle_resolution_change (GstVPXDec * dec,
     vpx_image_t * img, GstVideoFormat fmt);
-#ifdef HAVE_VPX_1_4
-static void gst_vpx_dec_default_add_video_meta (GstVPXDec * dec,
-    GstBuffer * buffer);
-#endif //HAVE_VPX_1_4
 
 #define parent_class gst_vpx_dec_parent_class
 G_DEFINE_TYPE (GstVPXDec, gst_vpx_dec, GST_TYPE_VIDEO_DECODER);
@@ -176,7 +172,6 @@ gst_vpx_dec_class_init (GstVPXDecClass * klass)
   klass->handle_resolution_change = NULL;
   klass->get_frame_format =
       GST_DEBUG_FUNCPTR (gst_vpx_dec_default_frame_format);
-  klass->add_video_meta = NULL;
 
   GST_DEBUG_CATEGORY_INIT (gst_vpxdec_debug, "vpxdec", 0, "VPX Decoder");
 }
@@ -460,7 +455,9 @@ gst_vpx_dec_get_buffer_cb (gpointer priv, gsize min_size,
     return -1;
   }
 
-  gst_vpx_dec_default_add_video_meta (dec, buffer);
+  /* Add it now, while the buffer is writable */
+  gst_buffer_add_video_meta (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_FORMAT_ENCODED, 0, 0);
 
   frame = g_new0 (struct Frame, 1);
   if (!gst_buffer_map (buffer, &frame->info, GST_MAP_READWRITE)) {
@@ -727,10 +724,10 @@ gst_vpx_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   return ret;
 }
 
-
 static gboolean
 gst_vpx_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
 {
+  GstVPXDec *dec = GST_VPX_DEC (bdec);
   GstBufferPool *pool;
   GstStructure *config;
 
@@ -745,6 +742,7 @@ gst_vpx_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
+    dec->have_video_meta = TRUE;
   }
   gst_buffer_pool_set_config (pool, config);
   gst_object_unref (pool);
@@ -795,14 +793,4 @@ gst_vpx_dec_handle_resolution_change (GstVPXDec * dec, vpx_image_t * img,
   }
 }
 
-#ifdef HAVE_VPX_1_4
-static void
-gst_vpx_dec_default_add_video_meta (GstVPXDec * dec, GstBuffer * buffer)
-{
-  GstVPXDecClass *vpxclass = GST_VPX_DEC_GET_CLASS (dec);
-  if (vpxclass->add_video_meta != NULL) {
-    vpxclass->add_video_meta (dec, buffer);
-  }
-}
-#endif //HAVE_VPX_1_4
 #endif /* HAVE_VP8_DECODER ||  HAVE_VP9_DECODER */

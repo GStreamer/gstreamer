@@ -62,7 +62,6 @@ static gboolean gst_vp9_dec_get_valid_format (GstVPXDec * dec,
     vpx_image_t * img, GstVideoFormat * fmt);
 static void gst_vp9_dec_handle_resolution_change (GstVPXDec * dec,
     vpx_image_t * img, GstVideoFormat fmt);
-static void gst_vp9_dec_add_video_meta (GstVPXDec * dec, GstBuffer * buffer);
 
 static GstStaticPadTemplate gst_vp9_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -108,7 +107,6 @@ gst_vp9_dec_class_init (GstVP9DecClass * klass)
       GST_DEBUG_FUNCPTR (gst_vp9_dec_get_valid_format);
   vpx_class->handle_resolution_change =
       GST_DEBUG_FUNCPTR (gst_vp9_dec_handle_resolution_change);
-  vpx_class->add_video_meta = GST_DEBUG_FUNCPTR (gst_vp9_dec_add_video_meta);
 
   GST_DEBUG_CATEGORY_INIT (gst_vp9dec_debug, "vp9dec", 0, "VP9 Decoder");
 }
@@ -177,13 +175,6 @@ gst_vp9_dec_handle_resolution_change (GstVPXDec * dec, vpx_image_t * img,
     if (send_tags)
       vpxclass->send_tags (dec);
   }
-}
-
-static void
-gst_vp9_dec_add_video_meta (GstVPXDec * dec, GstBuffer * buffer)
-{
-  gst_buffer_add_video_meta (buffer, GST_VIDEO_FRAME_FLAG_NONE,
-      GST_VIDEO_FORMAT_ENCODED, 0, 0);
 }
 
 #endif /* HAVE_VP9_DECODER */

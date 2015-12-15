@@ -102,8 +102,6 @@ struct _GstVPXDecClass
   void (*handle_resolution_change) (GstVPXDec *dec, vpx_image_t *img, GstVideoFormat fmt);
   /*virtual function to check valid format*/
   gboolean (*get_frame_format)(GstVPXDec *dec, vpx_image_t *img, GstVideoFormat* fmt);
-  /*virtual function to write video meta data to buffer*/
-  void (*add_video_meta)(GstVPXDec *dec, GstBuffer* buffer);
 };
 
 GType gst_vpx_dec_get_type (void);
