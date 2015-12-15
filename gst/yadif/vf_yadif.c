@@ -56,12 +56,15 @@
         int temporal_diff2 =(FFABS(next[mrefs] - c) + FFABS(next[prefs] - e) )>>1; \
         int diff = FFMAX3(temporal_diff0 >> 1, temporal_diff1, temporal_diff2); \
         int spatial_pred = (c+e) >> 1; \
-        int spatial_score = FFABS(cur[mrefs - 1] - cur[prefs - 1]) + FFABS(c-e) \
-                          + FFABS(cur[mrefs + 1] - cur[prefs + 1]) - 1; \
+        int spatial_score = -1; \
  \
-        CHECK(-1) CHECK(-2) }} }} \
-        CHECK( 1) CHECK( 2) }} }} \
+        if (mrefs > 0 && prefs > 0) { \
+            spatial_score = FFABS(cur[mrefs - 1] - cur[prefs - 1]) + FFABS(c-e) \
+                            + FFABS(cur[mrefs + 1] - cur[prefs + 1]) - 1; \
  \
+            CHECK(-1) CHECK(-2) }} }} \
+            CHECK( 1) CHECK( 2) }} }} \
+        } \
         if (mode < 2) { \
             int b = (prev2[2 * mrefs] + next2[2 * mrefs])>>1; \
             int f = (prev2[2 * prefs] + next2[2 * prefs])>>1; \
