@@ -51,7 +51,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m fakesrc ! pyramidsegment ! fakesink silent=TRUE
+ * gst-launch-1.0 -v videotestsrc ! pyramidsegment ! videoconvert ! autovideosink
  * ]|
  * </refsect2>
  */
