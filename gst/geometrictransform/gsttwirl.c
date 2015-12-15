@@ -47,6 +47,19 @@
  * his code.
  */
 
+/**
+ * SECTION:element-twirl
+ * @see_also: geometrictransform
+ *
+ * The twirl element twists the image from the center out.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! twirl ! videoconvert ! autovideosink
+ * ]|
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>

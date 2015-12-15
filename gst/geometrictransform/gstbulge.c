@@ -41,6 +41,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-bulge
+ * @see_also: geometrictransform
+ *
+ * Bugle is a geometric image transform element. It adds a protuberance in the
+ * center point.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! bulge ! videoconvert ! autovideosink
+ * ]|
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

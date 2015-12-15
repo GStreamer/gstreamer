@@ -47,6 +47,20 @@
  * his code.
  */
 
+/**
+ * SECTION:element-marble
+ * @see_also: geometrictransform
+ *
+ * Marble is a geometric image transform element. It applies a marbling effect
+ * to the image.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! marble ! videoconvert ! autovideosink
+ * ]|
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>

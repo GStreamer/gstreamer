@@ -47,6 +47,19 @@
  * his code.
  */
 
+/**
+ * SECTION:element-rotate
+ * @see_also: geometrictransform
+ *
+ * The rotate element transforms the image by rotating it by a specified angle.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! rotate angle=0.78 ! videoconvert ! autovideosink
+ * ]|
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>

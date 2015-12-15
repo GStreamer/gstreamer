@@ -41,6 +41,20 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-stretch
+ * @see_also: geometrictransform
+ *
+ * The stretch element stretches the image in a circle around the center point.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! stretch ! videoconvert ! autovideosink
+ * ]|
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

@@ -47,6 +47,20 @@
  * http://docs.oracle.com/cd/E17802_01/products/products/java-media/jai/forDevelopers/jai-apidocs/javax/media/jai/PerspectiveTransform.html
  */
 
+/**
+ * SECTION:element-perspective
+ * @see_also: geometrictransform
+ *
+ * The perspective element applies a 2D perspective transform.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! perspective ! videoconvert ! autovideosink
+ * ]|
+ * </refsect2>
+ */
+
 /* FIXME: suppress warnings for deprecated API such as GValueArray
  * with newer GLib versions (>= 2.31.0)
  *

@@ -47,6 +47,20 @@
  * his code.
  */
 
+/**
+ * SECTION:element-diffuse
+ * @see_also: geometrictransform
+ *
+ * Diffuse is a geometric image transform element. It diffuses the image by
+ * moving its pixels in random directions.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! diffuse ! videoconvert ! autovideosink
+ * ]|
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
