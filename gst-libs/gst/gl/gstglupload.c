@@ -223,7 +223,7 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     GstAllocationParams params;
     gst_allocation_params_init (&params);
 
-    allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR_NAME);
+    allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
     gst_query_add_allocation_param (query, allocator, &params);
     gst_object_unref (allocator);
   }
