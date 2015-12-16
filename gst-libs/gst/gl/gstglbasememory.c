@@ -505,3 +505,139 @@ gst_gl_base_memory_memcpy (GstGLBaseMemory * src, GstGLBaseMemory * dest,
 
   return TRUE;
 }
+
+/**
+ * gst_gl_allocation_params_init:
+ * @params: the #GstGLAllocationParams to initialize
+ * @struct_size: the struct size of the implementation
+ * @alloc: some alloc flags
+ * @copy: a copy function
+ * @free: a free function
+ * @context: (transfer none): a #GstGLContext
+ * @alloc_size: the number of bytes to allocate.
+ * @alloc_params: (transfer none) (allow-none): a #GstAllocationParams to apply
+ * @notify: (allow-none): a #GDestroyNotify
+ * @user_data: (transfer none) (allow-none): user data to call @notify with
+ * @wrapped_data: (transfer none) (allow-none): a sysmem data pointer to initialize the allocation with
+ * @gl_handle: (transfer none): a GL handle to initialize the allocation with
+ *
+ * @notify will be called once for each allocated memory using these @params
+ * when freeing the memory.
+ *
+ * Returns: whether the paramaters could be initialized
+ */
+gboolean
+gst_gl_allocation_params_init (GstGLAllocationParams * params,
+    gsize struct_size, guint alloc_flags, GstGLAllocationParamsCopyFunc copy,
+    GstGLAllocationParamsFreeFunc free, GstGLContext * context,
+    gsize alloc_size, GstAllocationParams * alloc_params,
+    GDestroyNotify notify, gpointer user_data, gpointer wrapped_data,
+    guint gl_handle)
+{
+  memset (params, 0, sizeof (*params));
+
+  g_return_val_if_fail (struct_size > 0, FALSE);
+  g_return_val_if_fail (copy != NULL, FALSE);
+  g_return_val_if_fail (free != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
+
+  params->struct_size = struct_size;
+  params->alloc_size = alloc_size;
+  params->copy = copy;
+  params->free = free;
+  params->alloc_flags = alloc_flags;
+  params->context = gst_object_ref (context);
+  if (alloc_params)
+    params->alloc_params = gst_allocation_params_copy (alloc_params);
+  params->notify = notify;
+  params->user_data = user_data;
+  params->wrapped_data = wrapped_data;
+  params->gl_handle = gl_handle;
+
+  return TRUE;
+}
+
+/**
+ * gst_gl_allocation_params_copy:
+ * @src: the #GstGLAllocationParams to initialize
+ *
+ * Returns: a copy of the #GstGLAllocationParams specified by @src or %NULL on
+ *          failure
+ */
+GstGLAllocationParams *
+gst_gl_allocation_params_copy (GstGLAllocationParams * src)
+{
+  GstGLAllocationParams *dest;
+
+  g_return_val_if_fail (src != NULL, NULL);
+
+  dest = g_malloc0 (src->struct_size);
+
+  if (src->copy)
+    src->copy (src, dest);
+
+  return dest;
+}
+
+/**
+ * gst_gl_allocation_params_free:
+ * @params: the #GstGLAllocationParams to initialize
+ *
+ * Frees the #GstGLAllocationParams and all associated data.
+ */
+void
+gst_gl_allocation_params_free (GstGLAllocationParams * params)
+{
+  if (params->free)
+    params->free (params);
+
+  g_free (params);
+}
+
+void
+gst_gl_allocation_params_free_data (GstGLAllocationParams * params)
+{
+  if (params->context)
+    gst_object_unref (params->context);
+  if (params->alloc_params)
+    gst_allocation_params_free (params->alloc_params);
+}
+
+void
+gst_gl_allocation_params_copy_data (GstGLAllocationParams * src,
+    GstGLAllocationParams * dest)
+{
+  gst_gl_allocation_params_init (dest, src->struct_size, src->alloc_flags,
+      src->copy, src->free, NULL, src->alloc_size, NULL, src->notify,
+      src->user_data, src->wrapped_data, src->gl_handle);
+
+  if (src->context)
+    dest->context = gst_object_ref (src->context);
+  if (src->alloc_params)
+    dest->alloc_params = gst_allocation_params_copy (src->alloc_params);
+}
+
+G_DEFINE_BOXED_TYPE (GstGLAllocationParams, gst_gl_allocation_params,
+    (GBoxedCopyFunc) gst_gl_allocation_params_copy,
+    (GBoxedFreeFunc) gst_gl_allocation_params_free);
+
+/**
+ * gst_gl_base_memory_alloc:
+ * @allocator: a #GstGLBaseMemoryAllocator
+ * @params: the #GstGLAllocationParams to allocate the memory with
+ *
+ * Returns: a new #GstGLBaseMemory from @allocator with the requested @params.
+ */
+GstGLBaseMemory *
+gst_gl_base_memory_alloc (GstGLBaseMemoryAllocator * allocator,
+    GstGLAllocationParams * params)
+{
+  GstGLBaseMemoryAllocatorClass *alloc_class;
+
+  alloc_class = GST_GL_BASE_MEMORY_ALLOCATOR_GET_CLASS (allocator);
+
+  g_return_val_if_fail (alloc_class != NULL, NULL);
+  g_return_val_if_fail (alloc_class->alloc != NULL, NULL);
+
+  return alloc_class->alloc (allocator, params);
+}
