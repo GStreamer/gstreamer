@@ -23,6 +23,13 @@
 
 #include <gst/gl/gstglconfig.h>
 
+/* This mimic GCC behaviour with system headers files even if GL headers may
+ * not be in the system header path. */
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#endif
+
 /* OpenGL 2.0 for Embedded Systems */
 #if GST_GL_HAVE_GLES2
 #ifndef GL_GLEXT_PROTOTYPES
@@ -55,6 +62,10 @@
 #   include <GL/glext.h>
 #  endif
 # endif
+#endif
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
 #endif
 
 #ifdef WINAPI

@@ -816,6 +816,10 @@ fi
 dnl check if we can include both GL and GLES2 at the same time
 if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
   GL_INCLUDES="
+#ifdef __GNUC__
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored \"-Wredundant-decls\"
+#endif
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
 #endif
@@ -839,11 +843,12 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
 #   include <GL/glext.h>
 #  endif
 # endif
+int main (int argc, char **argv) { return 0; }
 "
   AC_MSG_CHECKING([whether it is possible to include both GL and GLES2 headers])
-  save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$CPPFLAGS $ERROR_CFLAGS"
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[$GL_INCLUDES]], [[
+  save_CFLAGS="$CFLAGS"
+  CFLAGS="$CFLAGS $GL_CFLAGS $GLES2_CFLAGS $WARNING_CFLAGS $ERROR_CFLAGS"
+  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[$GL_INCLUDES]], [[
     #if !defined(GL_FALSE)
     #error Failed to include GL headers
     #endif
@@ -861,7 +866,7 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
       HAVE_GLES2=no
     fi
   ])
-  CPPFLAGS="$save_CPPFLAGS"
+  CFLAGS="$save_CFLAGS"
 fi
 
 #dnl Check for OpenGL
