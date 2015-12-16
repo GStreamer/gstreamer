@@ -163,8 +163,6 @@ typedef struct
   GList *paths, *current_path;
   GList *sub_paths, *current_sub_path;
 
-  gchar *audiosink_str, *videosink_str;
-
   /* Internal state */
   gint64 position, duration;
 
@@ -3370,9 +3368,6 @@ set_defaults (PlaybackApp * app)
 static void
 reset_app (PlaybackApp * app)
 {
-  g_free (app->audiosink_str);
-  g_free (app->videosink_str);
-
   g_list_free (app->formats);
 
   g_mutex_clear (&app->state_mutex);
