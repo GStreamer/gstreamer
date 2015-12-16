@@ -99,7 +99,6 @@ gst_cv_smooth_type_get_type (void)
   static GType cv_smooth_type_type = 0;
 
   static const GEnumValue smooth_types[] = {
-/*    {CV_BLUR_NO_SCALE, "CV Blur No Scale", "blur-no-scale"}, */
     {CV_BLUR, "CV Blur", "blur"},
     {CV_GAUSSIAN, "CV Gaussian", "gaussian"},
     {CV_MEDIAN, "CV Median", "median"},
@@ -156,11 +155,13 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
           "type",
           "Smooth Type",
           GST_TYPE_CV_SMOOTH_TYPE,
-          DEFAULT_CV_SMOOTH_TYPE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
+          DEFAULT_CV_SMOOTH_TYPE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
       );
   g_object_class_install_property (gobject_class, PROP_WIDTH,
       g_param_spec_int ("width", "width (kernel width)",
-          "The gaussian kernel width (must be positive and odd).",
+          "The gaussian kernel width (must be positive and odd)."
+          "If type is median, this means the aperture linear size.",
           1, G_MAXINT, DEFAULT_WIDTH,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
@@ -310,8 +311,17 @@ gst_cv_smooth_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
 {
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
 
-  GaussianBlur (Mat (img), Mat (outimg), Size (filter->width, filter->height),
-      filter->colorsigma, filter->colorsigma);
+  switch (filter->type) {
+    case CV_GAUSSIAN:
+      GaussianBlur (Mat (img), Mat (outimg), Size (filter->width,
+              filter->height), filter->colorsigma, filter->colorsigma);
+      break;
+    case CV_MEDIAN:
+      medianBlur (Mat (img), Mat (outimg), filter->width);
+      break;
+    default:
+      break;
+  }
 
   return GST_FLOW_OK;
 }
@@ -322,8 +332,17 @@ gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
 {
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
 
-  GaussianBlur (Mat (img), Mat (img), Size (filter->width, filter->height),
-      filter->colorsigma, filter->colorsigma);
+  switch (filter->type) {
+    case CV_GAUSSIAN:
+      GaussianBlur (Mat (img), Mat (img), Size (filter->width, filter->height),
+          filter->colorsigma, filter->colorsigma);
+      break;
+    case CV_MEDIAN:
+      medianBlur (Mat (img), Mat (img), filter->width);
+      break;
+    default:
+      break;
+  }
 
   return GST_FLOW_OK;
 }
