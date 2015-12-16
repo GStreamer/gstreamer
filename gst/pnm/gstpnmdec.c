@@ -138,6 +138,10 @@ gst_pnmdec_stop (GstVideoDecoder * decoder)
     pnmdec->input_state = NULL;
   }
 
+  if (pnmdec->buf) {
+    gst_buffer_unref (pnmdec->buf);
+    pnmdec->buf = NULL;
+  }
   return TRUE;
 }
 
