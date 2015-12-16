@@ -84,7 +84,8 @@ libgstapplemedia_la_SOURCES +=			\
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,Cocoa		\
-	-Wl,-framework -Wl,QTKit
+	-Wl,-framework -Wl,QTKit		\
+	-Wl,-framework -Wl,IOKit
 
 endif
 
