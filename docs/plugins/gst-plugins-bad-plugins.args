@@ -23952,10 +23952,10 @@
 <NAME>GstLiveAdder::latency</NAME>
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Buffering latency</NICK>
-<BLURB>Amount of data to buffer (in milliseconds).</BLURB>
-<DEFAULT>60</DEFAULT>
+<FLAGS>rwx</FLAGS>
+<NICK>Buffer latency</NICK>
+<BLURB>Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in milliseconds).</BLURB>
+<DEFAULT>30</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59959,6 +59959,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstDashDemux::presentation-delay</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Presentation delay</NICK>
+<BLURB>Default presentation delay (in seconds, milliseconds or fragments) (e.g. 12s, 2500ms, 3f).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSkinDetect::method</NAME>
 <TYPE>GstSkindetectMethod</TYPE>
 <RANGE></RANGE>
@@ -67083,6 +67093,56 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstGLFilterShader::fragment</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fragment Source</NICK>
+<BLURB>GLSL fragment source.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLFilterShader::shader</NAME>
+<TYPE>GstGLShader*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Shader object</NICK>
+<BLURB>GstGLShader to use.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLFilterShader::uniforms</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GLSL Uniforms</NICK>
+<BLURB>GLSL Uniforms.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLFilterShader::update-shader</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Update Shader</NICK>
+<BLURB>Emit the 'create-shader' signal for the next frame.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLFilterShader::vertex</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Vertex Source</NICK>
+<BLURB>GLSL vertex source.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGLOverlay::angle-png</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[-90,90]</RANGE>
@@ -68958,5 +69018,55 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Replay window size</NICK>
 <BLURB>Size of the replay protection window.</BLURB>
 <DEFAULT>128</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTeletextDec::font-description</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pango font description</NICK>
+<BLURB>Font description used for the pango output.</BLURB>
+<DEFAULT>"verdana 12"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTeletextDec::page</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[100,999]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Page number</NICK>
+<BLURB>Number of page that should displayed.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTeletextDec::subpage</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,153]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sub-page number</NICK>
+<BLURB>Number of sub-page that should displayed (-1 for all).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTeletextDec::subtitles-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Enable subtitles mode</NICK>
+<BLURB>Enables subtitles mode for text output stripping the blank lines and the teletext state lines.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTeletextDec::subtitles-template</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subtitles output template</NICK>
+<BLURB>Output template used to print each one of the subtitles lines.</BLURB>
+<DEFAULT>"%s\\n"</DEFAULT>
 </ARG>
 

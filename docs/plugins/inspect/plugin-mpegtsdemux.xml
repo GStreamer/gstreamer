@@ -27,7 +27,7 @@ Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
           <name>audio_%04x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>audio/mpeg, mpegversion=(int)1; audio/mpeg, mpegversion=(int)2, stream-format=(string)adts; audio/mpeg, mpegversion=(int)4, stream-format=(string)loas; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-eac3; audio/x-dts; audio/x-private-ts-lpcm</details>
+          <details>audio/mpeg, mpegversion=(int)1; audio/mpeg, mpegversion=(int)2, stream-format=(string)adts; audio/mpeg, mpegversion=(int)4, stream-format=(string)loas; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-eac3; audio/x-dts; audio/x-opus; audio/x-private-ts-lpcm</details>
         </caps>
         <caps>
           <name>private_%04x</name>
@@ -39,7 +39,7 @@ Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
           <name>subpicture_%04x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>subpicture/x-pgs; subpicture/x-dvd</details>
+          <details>subpicture/x-pgs; subpicture/x-dvd; subpicture/x-dvb</details>
         </caps>
         <caps>
           <name>video_%04x</name>

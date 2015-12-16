@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-opus</details>
+          <details>audio/x-opus, channel-mapping-family=(int)0; audio/x-opus, channel-mapping-family=(int)[ 1, 255 ], channels=(int)[ 1, 255 ], stream-count=(int)[ 1, 255 ], coupled-count=(int)[ 0, 255 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 8000, 12000, 16000, 24000, 48000 }, channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)48000, channels=(int)[ 1, 8 ]; audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 8000, 12000, 16000, 24000 }, channels=(int)[ 1, 8 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -89,7 +89,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-opus, multistream=(boolean)false</details>
+          <details>audio/x-opus, channel-mapping-family=(int)0</details>
         </caps>
       </pads>
     </element>
@@ -104,7 +104,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-opus, multistream=(boolean)false</details>
+          <details>audio/x-opus, channels=(int)[ 1, 2 ], channel-mapping-family=(int)0</details>
         </caps>
         <caps>
           <name>src</name>

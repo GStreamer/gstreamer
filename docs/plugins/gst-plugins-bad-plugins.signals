@@ -750,3 +750,10 @@ GstDtlsEnc *gstdtlsenc
 GstDtlsDec *gstdtlsdec
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstGLFilterShader::create-shader</NAME>
+<RETURNS>GstGLShader*</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLFilterShader *gstglfiltershader
+</SIGNAL>
+

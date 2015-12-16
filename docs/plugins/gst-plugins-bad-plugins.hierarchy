@@ -3,8 +3,8 @@ GObject
     GstObject
       GstAllocator
         GstAllocatorSysmem
-        GstVdpVideoAllocator
-        GstWlShmAllocator
+        GstFdAllocator
+          GstWlShmAllocator
       GstAudioRingBuffer
         GstAudioSinkRingBuffer
         GstAudioSrcRingBuffer
@@ -20,6 +20,7 @@ GObject
             GstAudioInterleave
             GstAudioMixer
               GstLiveAdder
+          GstMXFMux
           GstVideoAggregator
             GstCompositor
             GstGLBaseMixer
@@ -42,7 +43,6 @@ GObject
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
-          GstFaac
           GstGSMEnc
           GstOpusEnc
           GstSbcEnc
@@ -73,12 +73,9 @@ GObject
             GstAudioSink
               GstOpenALSink
             GstDecklinkAudioSink
-          GstAvdtpSink
           GstChecksumSink
           GstCurlBaseSink
             GstCurlFileSink
-            GstCurlSshSink
-              GstCurlSftpSink
             GstCurlTlsSink
               GstCurlFtpSink
               GstCurlHttpSink
@@ -89,15 +86,16 @@ GObject
           GstRTMPSink
           GstShmSink
           GstVideoSink
+            GstDfbVideoSink
             GstFBDEVSink
             GstGLImageSink
             GstGtkBaseSink
               GstGtkGLSink
               GstGtkSink
             GstInterVideoSink
+            GstQtSink
             GstWaylandSink
         GstBaseSrc
-          GstAvdtpSrc
           GstDataURISrc
           GstFliteTestSrc
           GstInterAudioSrc
@@ -139,6 +137,7 @@ GObject
             GstStereo
           GstBayer2RGB
           GstDebugSpy
+          GstDtmfDetect
           GstFreeverb
           GstGLBaseFilter
             GstGLColorConvertElement
@@ -229,13 +228,11 @@ GObject
             GstSolarize
             GstVideoAnalyse
             GstVideoDiff
-            GstZBar
             GstZebraStripe
           GstWatchdog
           GstYadif
         GstBin
           DvbBaseBin
-          GstA2dpSink
           GstAdaptiveDemux
             GstDashDemux
             GstHLSDemux
@@ -315,31 +312,34 @@ GObject
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
+        GstSpanPlc
         GstSpeed
         GstSrtEnc
         GstSrtpDec
         GstSrtpEnc
         GstTagMux
           GstId3Mux
+        GstTeletextDec
         GstTemplateMatch
         GstUvcH264MjpgDemux
         GstVideoDecoder
           GstLibde265Dec
           GstOpenEXRDec
           GstOpenJPEGDec
+          GstOpenh264Dec
           GstPnmdec
           GstRsvgDec
           GstSchroDec
           GstVMncDec
-          GstVdpDecoder
-            GstVdpMpegDec
           GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
+          GstOpenh264Enc
           GstPnmenc
           GstSchroEnc
           GstWebpEnc
           GstX265Enc
+        GstVideoFrameAudioLevel
         GstWebvttEnc
         GstWildmidi
         GstY4mDec
@@ -349,11 +349,13 @@ GObject
           MpegTSParse2
         MpegTsMux
       GstGLContext
+      GstGLShader
       GstPad
         GstAggregatorPad
           GstAudioAggregatorPad
             GstAudioInterleavePad
             GstAudioMixerPad
+          GstMXFMuxPad
           GstVideoAggregatorPad
             GstCompositorPad
             GstGLBaseMixerPad
@@ -370,8 +372,8 @@ GObject
       GstTask
       GstTaskPool
     GtkWidget
+  GstColorBalanceChannel
   GstEncodingProfile
-  GstVdpDevice
   MXFMetadataBase
     MXFDescriptiveMetadata
       MXFDMS1
@@ -449,6 +451,7 @@ GInterface
   AtkImplementorIface
   GTypePlugin
   GstChildProxy
+  GstColorBalance
   GstNavigation
   GstPreset
   GstTagSetter
