@@ -69,20 +69,27 @@ typedef enum {
   GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE = (1 << 0)
 } GstAudioConverterFlags;
 
-GstAudioConverter *  gst_audio_converter_new            (GstAudioInfo *in_info,
-                                                         GstAudioInfo *out_info,
-                                                         GstStructure *config);
+GstAudioConverter *  gst_audio_converter_new             (GstAudioInfo *in_info,
+                                                          GstAudioInfo *out_info,
+                                                          GstStructure *config);
 
-void                 gst_audio_converter_free           (GstAudioConverter * convert);
+void                 gst_audio_converter_free            (GstAudioConverter * convert);
 
-gboolean             gst_audio_converter_set_config     (GstAudioConverter * convert, GstStructure *config);
-const GstStructure * gst_audio_converter_get_config     (GstAudioConverter * convert);
+gboolean             gst_audio_converter_set_config      (GstAudioConverter * convert, GstStructure *config);
+const GstStructure * gst_audio_converter_get_config      (GstAudioConverter * convert);
+
+gsize                gst_audio_converter_get_out_frames  (GstAudioConverter *convert,
+                                                          gsize in_frames);
+gsize                gst_audio_converter_get_in_frames   (GstAudioConverter *convert,
+                                                          gsize out_frames);
+
+gsize                gst_audio_converter_get_max_latency (GstAudioConverter *convert);
 
 
-gboolean             gst_audio_converter_samples        (GstAudioConverter * convert,
-                                                         GstAudioConverterFlags flags,
-                                                         gpointer in[], gsize in_samples,
-                                                         gpointer out[], gsize out_samples,
-                                                         gsize *in_consumed, gsize *out_produced);
+gboolean             gst_audio_converter_samples         (GstAudioConverter * convert,
+                                                          GstAudioConverterFlags flags,
+                                                          gpointer in[], gsize in_samples,
+                                                          gpointer out[], gsize out_samples,
+                                                          gsize *in_consumed, gsize *out_produced);
 
 #endif /* __GST_AUDIO_CONVERTER_H__ */
