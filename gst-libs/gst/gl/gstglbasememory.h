@@ -97,11 +97,77 @@ struct _GstGLBaseMemory
   gpointer              user_data;
 };
 
-typedef gboolean          (*GstGLBaseMemoryAllocatorCreateFunction)     (GstGLBaseMemory * mem, GError ** error);
-typedef gpointer          (*GstGLBaseMemoryAllocatorMapFunction)        (GstGLBaseMemory * mem, GstMapInfo * info, gsize maxsize);
-typedef void              (*GstGLBaseMemoryAllocatorUnmapFunction)      (GstGLBaseMemory * mem, GstMapInfo * info);
-typedef GstGLBaseMemory * (*GstGLBaseMemoryAllocatorCopyFunction)       (GstGLBaseMemory * mem, gssize offset, gssize size);
-typedef void              (*GstGLBaseMemoryAllocatorDestroyFunction)    (GstGLBaseMemory * mem);
+typedef struct _GstGLAllocationParams GstGLAllocationParams;
+/* subclass has to compose with the parent class */
+typedef void    (*GstGLAllocationParamsCopyFunc)    (GstGLAllocationParams * src, GstGLAllocationParams * dest);
+/* subclass has to compose with the parent class */
+typedef void    (*GstGLAllocationParamsFreeFunc)    (gpointer params);
+
+#define GST_TYPE_GL_ALLOCATION_PARAMS (gst_gl_allocation_params_get_type())
+GType gst_gl_allocation_params_get_type (void);
+
+#define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_ALLOC (1 << 0)
+#define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM (1 << 1)
+#define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE (1 << 2)
+#define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_USER (1 << 16)
+
+/* Because GstAllocationParams is not subclassable, start our own subclass
+ * chain.  FIXME: 2.0 make GstAllocationParams subclassable */
+struct _GstGLAllocationParams
+{
+  gsize                             struct_size;
+  GstGLAllocationParamsCopyFunc     copy;
+  GstGLAllocationParamsFreeFunc     free;
+
+  guint                             alloc_flags;
+  gsize                             alloc_size;
+  GstAllocationParams              *alloc_params;
+  GstGLContext                     *context;
+  GDestroyNotify                    notify;
+  gpointer                          user_data;
+
+  /* GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM only */
+  gpointer                          wrapped_data;
+  /* GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE only */
+  guint                             gl_handle;
+};
+
+gboolean                gst_gl_allocation_params_init       (GstGLAllocationParams * params,
+                                                             gsize struct_size,
+                                                             guint alloc_flags,
+                                                             GstGLAllocationParamsCopyFunc copy,
+                                                             GstGLAllocationParamsFreeFunc free,
+                                                             GstGLContext * context,
+                                                             gsize alloc_size,
+                                                             GstAllocationParams * alloc_params,
+                                                             GDestroyNotify notify,
+                                                             gpointer user_data,
+                                                             gpointer wrapped_data,
+                                                             guint gl_handle);
+
+/* free with gst_gl_allocation_params_free */
+GstGLAllocationParams * gst_gl_allocation_params_copy       (GstGLAllocationParams * src);
+void                    gst_gl_allocation_params_free       (GstGLAllocationParams * params);
+
+/* subclass usage */
+void                    gst_gl_allocation_params_free_data  (GstGLAllocationParams * params);
+/* subclass usage */
+void                    gst_gl_allocation_params_copy_data  (GstGLAllocationParams * src,
+                                                             GstGLAllocationParams * dest);
+
+typedef GstGLBaseMemory *   (*GstGLBaseMemoryAllocatorAllocFunction)        (GstGLBaseMemoryAllocator * allocator,
+                                                                             GstGLAllocationParams * params);
+typedef gboolean            (*GstGLBaseMemoryAllocatorCreateFunction)       (GstGLBaseMemory * mem,
+                                                                             GError ** error);
+typedef gpointer            (*GstGLBaseMemoryAllocatorMapFunction)          (GstGLBaseMemory * mem,
+                                                                             GstMapInfo * info,
+                                                                             gsize maxsize);
+typedef void                (*GstGLBaseMemoryAllocatorUnmapFunction)        (GstGLBaseMemory * mem,
+                                                                             GstMapInfo * info);
+typedef GstGLBaseMemory *   (*GstGLBaseMemoryAllocatorCopyFunction)         (GstGLBaseMemory * mem,
+                                                                             gssize offset,
+                                                                             gssize size);
+typedef void                (*GstGLBaseMemoryAllocatorDestroyFunction)      (GstGLBaseMemory * mem);
 
 /**
  * GstGLBaseMemoryAllocator
@@ -122,6 +188,8 @@ struct _GstGLBaseMemoryAllocator
 struct _GstGLBaseMemoryAllocatorClass
 {
   GstAllocatorClass parent_class;
+
+  GstGLBaseMemoryAllocatorAllocFunction         alloc;
 
   GstGLBaseMemoryAllocatorCreateFunction        create;
   GstGLBaseMemoryAllocatorMapFunction           map;
@@ -160,6 +228,9 @@ gboolean      gst_gl_base_memory_memcpy     (GstGLBaseMemory * src,
                                              GstGLBaseMemory * dest,
                                              gssize offset,
                                              gssize size);
+
+GstGLBaseMemory *   gst_gl_base_memory_alloc    (GstGLBaseMemoryAllocator * allocator,
+                                                 GstGLAllocationParams * params);
 
 G_END_DECLS
 
