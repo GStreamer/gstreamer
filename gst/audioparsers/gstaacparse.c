@@ -1016,6 +1016,10 @@ gst_aac_parse_get_audio_profile_object_type (GstAacParse * aacparse)
   guint8 ret;
 
   srccaps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (aacparse));
+  if (G_UNLIKELY (srccaps == NULL)) {
+    return G_MAXUINT8;
+  }
+
   srcstruct = gst_caps_get_structure (srccaps, 0);
   profile = gst_structure_get_string (srcstruct, "profile");
   if (G_UNLIKELY (profile == NULL)) {
