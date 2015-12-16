@@ -33,9 +33,8 @@ GObject
           GstMuLawEnc
           GstSpeexEnc
           GstWavpackEnc
-        GstAudioVisualizer-ExtGoom
+        GstAudioVisualizer-BaseExtLibvisual
           GstGoom
-        GstAudioVisualizer-ExtGoom2k1
           GstGoom2k1
         GstAviDemux
         GstAviMux
@@ -288,13 +287,15 @@ GObject
         GstVideoDecoder
           GstJpegDec
           GstPngDec
-          GstVP8Dec
-          GstVP9Dec
+          GstVPXDec
+            GstVP8Dec
+            GstVP9Dec
         GstVideoEncoder
           GstJpegEnc
           GstPngEnc
-          GstVP8Enc
-          GstVP9Enc
+          GstVPXEnc
+            GstVP8Enc
+            GstVP9Enc
           GstY4mEncode
         GstVideoMixer2
         GstWavEnc
@@ -307,6 +308,7 @@ GObject
       GstPluginFeature
         GstDeviceProviderFactory
         GstElementFactory
+        GstTracerFactory
         GstTypeFindFactory
       GstRegistry
       GstTask
@@ -314,8 +316,6 @@ GObject
   GSocket
   GTlsDatabase
   GTlsInteraction
-  GUdevClient
-  GUdevDevice
   GdkPixbuf
   GstColorBalanceChannel
   GstTunerChannel

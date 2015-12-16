@@ -609,6 +609,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstUDPSrc::loop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multicast Loopback</NICK>
+<BLURB>Used for setting the multicast loop parameter. TRUE = enable, FALSE = disable.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSMPTE::border</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -995,7 +1005,17 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.6.0"</DEFAULT>
+<DEFAULT>"GStreamer/1.7.0.1"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::max-rtcp-rtp-time-diff</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max RTCP RTP Time Diff</NICK>
+<BLURB>Maximum amount of time in ms that the RTP time in RTCP SRs is allowed to be ahead (-1 disabled).</BLURB>
+<DEFAULT>1000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3569,6 +3589,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstSoupHTTPSrc::tls-interaction</NAME>
+<TYPE>GTlsInteraction*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TLS interaction</NICK>
+<BLURB>A GTlsInteraction object to be used when the connection or certificate database need to interact with the user.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDVPay::mode</NAME>
 <TYPE>GstDVPayMode</TYPE>
 <RANGE></RANGE>
@@ -3590,11 +3620,11 @@
 
 <ARG>
 <NAME>GstRtpH264Pay::config-interval</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 3600</RANGE>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,3600]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SPS PPS Send Interval</NICK>
-<BLURB>Send SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<BLURB>Send SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled, -1 = send with every IDR frame).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -20449,6 +20479,46 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpBin::max-dropout-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max dropout time</NICK>
+<BLURB>The maximum time (milliseconds) of missing packets tolerated.</BLURB>
+<DEFAULT>60000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::max-misorder-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max misorder time</NICK>
+<BLURB>The maximum time (milliseconds) of misordered packets tolerated.</BLURB>
+<DEFAULT>2000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::max-rtcp-rtp-time-diff</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max RTCP RTP Time Diff</NICK>
+<BLURB>Maximum amount of time in ms that the RTP time in RTCP SRs is allowed to be ahead (-1 disabled).</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::rtcp-sync-send-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTCP Sync Send Time</NICK>
+<BLURB>Use send time or capture time for RTCP sync (TRUE = send time, FALSE = capture time).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpJitterBuffer::do-lost</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -20609,6 +20679,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpJitterBuffer::max-dropout-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max dropout time</NICK>
+<BLURB>The maximum time (milliseconds) of missing packets tolerated.</BLURB>
+<DEFAULT>60000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::max-misorder-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max misorder time</NICK>
+<BLURB>The maximum time (milliseconds) of misordered packets tolerated.</BLURB>
+<DEFAULT>2000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::max-rtcp-rtp-time-diff</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max RTCP RTP Time Diff</NICK>
+<BLURB>Maximum amount of time in ms that the RTP time in RTCP SRs is allowed to be ahead (-1 disabled).</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpSession::bandwidth</NAME>
 <TYPE>gdouble</TYPE>
 <RANGE>>= 0</RANGE>
@@ -20746,6 +20846,36 @@
 <NICK>NTP Time Source</NICK>
 <BLURB>NTP time source for RTCP packets.</BLURB>
 <DEFAULT>NTP time based on realtime clock</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::max-dropout-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max dropout time</NICK>
+<BLURB>The maximum time (milliseconds) of missing packets tolerated.</BLURB>
+<DEFAULT>60000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::max-misorder-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max misorder time</NICK>
+<BLURB>The maximum time (milliseconds) of misordered packets tolerated.</BLURB>
+<DEFAULT>2000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::rtcp-sync-send-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTCP Sync Send Time</NICK>
+<BLURB>Use send time or capture time for RTCP sync (TRUE = send time, FALSE = capture time).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22169,6 +22299,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstSoupHttpClientSink::retries</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Retries</NICK>
+<BLURB>Maximum number of retries, zero to disable, -1 to retry forever.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHttpClientSink::retry-delay</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Retry Delay</NICK>
+<BLURB>Delay in seconds between retries after a failure.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstWavParse::ignore-length</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -22854,7 +23004,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>SSRC</NICK>
-<BLURB>The SSRC of the packets (-1 == random).</BLURB>
+<BLURB>The SSRC of the packets (default == random).</BLURB>
 <DEFAULT>4294967295</DEFAULT>
 </ARG>
 
