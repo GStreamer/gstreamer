@@ -285,8 +285,12 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
         gst_caps_features_contains (features,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
     if (output_textures)
-      gst_caps_set_simple (output_state->caps,
-          "texture-target", G_TYPE_STRING, GST_GL_TEXTURE_TARGET_RECTANGLE_STR,
+      gst_caps_set_simple (output_state->caps, "texture-target", G_TYPE_STRING,
+#if !HAVE_IOS
+          GST_GL_TEXTURE_TARGET_RECTANGLE_STR,
+#else
+          GST_GL_TEXTURE_TARGET_2D_STR,
+#endif
           NULL);
   }
   gst_caps_unref (caps);
