@@ -198,8 +198,10 @@ gst_audio_convert_dispose (GObject * obj)
 {
   GstAudioConvert *this = GST_AUDIO_CONVERT (obj);
 
-  if (this->convert)
+  if (this->convert) {
     gst_audio_converter_free (this->convert);
+    this->convert = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
