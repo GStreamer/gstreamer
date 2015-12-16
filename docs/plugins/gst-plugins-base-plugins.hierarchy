@@ -111,6 +111,7 @@ GObject
       GstPluginFeature
         GstDeviceProviderFactory
         GstElementFactory
+        GstTracerFactory
         GstTypeFindFactory
       GstRegistry
       GstTask
@@ -118,8 +119,6 @@ GObject
   GInputStream
   GOutputStream
   GSocket
-  GTypeModule
-    PangoModule
   GstColorBalanceChannel
   GstEncodingProfile
   PangoContext

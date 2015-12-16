@@ -396,7 +396,7 @@ GObject *arg1
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
 GstMultiSocketSink *gstmultisocketsink
-gint  arg1
+GSocket *arg1
 GstMultiHandleSinkClientStatus  arg2
 </SIGNAL>
 

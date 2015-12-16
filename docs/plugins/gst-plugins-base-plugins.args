@@ -1121,10 +1121,10 @@
 <ARG>
 <NAME>GstAudioTestSrc::freq</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,20000]</RANGE>
+<RANGE>[0,5.36871e+08]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Frequency</NICK>
-<BLURB>Frequency of test signal.</BLURB>
+<BLURB>Frequency of test signal. The sample rate needs to be at least 4 times higher.</BLURB>
 <DEFAULT>440</DEFAULT>
 </ARG>
 
@@ -1650,22 +1650,22 @@
 
 <ARG>
 <NAME>GstAudioConvert::dithering</NAME>
-<TYPE>GstAudioConvertDithering</TYPE>
+<TYPE>GstAudioDitherMethod</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Dithering</NICK>
 <BLURB>Selects between different dithering methods.</BLURB>
-<DEFAULT>Triangular dithering (default)</DEFAULT>
+<DEFAULT>GST_AUDIO_DITHER_TPDF</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstAudioConvert::noise-shaping</NAME>
-<TYPE>GstAudioConvertNoiseShaping</TYPE>
+<TYPE>GstAudioNoiseShapingMethod</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Noise shaping</NICK>
 <BLURB>Selects between different noise shaping methods.</BLURB>
-<DEFAULT>No noise shaping (default)</DEFAULT>
+<DEFAULT>GST_AUDIO_NOISE_SHAPING_NONE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2539,6 +2539,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstSocketSrc::send-messages</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Send Messages</NICK>
+<BLURB>If GstNetworkMessage events should be handled.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstTimeOverlay::time-mode</NAME>
 <TYPE>GstTimeOverlayTimeLine</TYPE>
 <RANGE></RANGE>
@@ -2556,5 +2566,25 @@
 <NICK>Ports</NICK>
 <BLURB>Comma separated list of sequencer ports (e.g. client:port,...).</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiSocketSink::send-dispatched</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Send Dispatched</NICK>
+<BLURB>If GstNetworkMessageDispatched events should be pushed.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiSocketSink::send-messages</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Send Messages</NICK>
+<BLURB>If GstNetworkMessage events should be pushed.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
