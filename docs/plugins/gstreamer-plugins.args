@@ -249,6 +249,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstQueue2::avg-in-rate</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Input data rate (bytes/s)</NICK>
+<BLURB>Average input data rate (bytes/s).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQueue::current-level-buffers</NAME>
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
@@ -499,6 +509,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiQueue::unlinked-cache-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Unlinked cache time (ns)</NICK>
+<BLURB>Extra buffering in time for unlinked streams (if 'sync-by-running-time').</BLURB>
+<DEFAULT>250000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiQueue::use-interleave</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use interleave</NICK>
+<BLURB>Adjust time limits based on input interleave.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstInputSelector::active-pad</NAME>
 <TYPE>GstPad*</TYPE>
 <RANGE></RANGE>
@@ -666,6 +696,16 @@
 <NICK>Synchronize</NICK>
 <BLURB>Synchronize to pipeline clock.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::drop-buffer-flags</NAME>
+<TYPE>GstBufferFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Check flags to drop buffers</NICK>
+<BLURB>Drop buffers with the given flags.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>

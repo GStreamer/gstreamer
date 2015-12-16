@@ -84,3 +84,10 @@ GstBuffer *arg1
 GstPad *arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstQueue2::overrun</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
+GstQueue2 *gstqueue2
+</SIGNAL>
+

@@ -40,10 +40,16 @@ GObject
       GstPluginFeature
         GstDeviceProviderFactory
         GstElementFactory
+        GstTracerFactory
         GstTypeFindFactory
       GstRegistry
       GstTask
       GstTaskPool
+      GstTracer
+        GstLatencyTracer
+        GstLogTracer
+        GstRUsageTracer
+        GstStatsTracer
 GInterface
   GTypePlugin
   GstChildProxy
