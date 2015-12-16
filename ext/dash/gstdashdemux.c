@@ -210,11 +210,9 @@ struct _GstDashDemuxClockDrift
   GMutex clock_lock;            /* used to protect access to struct */
   guint selected_url;
   gint64 next_update;
-  GCond clock_cond;             /* used for waiting until got_clock==TRUE */
   /* @clock_compensation: amount (in usecs) to add to client's idea of
      now to map it to the server's idea of now */
   GTimeSpan clock_compensation;
-  gboolean got_clock;           /* indicates time source has returned a valid clock at least once */
   GstClock *ntp_clock;
 };
 
@@ -1658,7 +1656,6 @@ gst_dash_demux_clock_drift_new (void)
 
   clock_drift = g_slice_new0 (GstDashDemuxClockDrift);
   g_mutex_init (&clock_drift->clock_lock);
-  g_cond_init (&clock_drift->clock_cond);
   clock_drift->next_update = g_get_monotonic_time ();
   return clock_drift;
 }
@@ -1670,7 +1667,6 @@ gst_dash_demux_clock_drift_free (GstDashDemuxClockDrift * clock_drift)
     g_mutex_lock (&clock_drift->clock_lock);
     if (clock_drift->ntp_clock)
       g_object_unref (clock_drift->ntp_clock);
-    g_cond_clear (&clock_drift->clock_cond);
     g_mutex_unlock (&clock_drift->clock_lock);
     g_mutex_clear (&clock_drift->clock_lock);
     g_slice_free (GstDashDemuxClockDrift, clock_drift);
@@ -2030,8 +2026,6 @@ gst_dash_demux_poll_clock_drift (GstDashDemux * demux)
       g_mutex_lock (&clock_drift->clock_lock);
       clock_drift->clock_compensation =
           g_date_time_difference (server_now, client_now);
-      clock_drift->got_clock = TRUE;
-      g_cond_broadcast (&clock_drift->clock_cond);
       g_mutex_unlock (&clock_drift->clock_lock);
       GST_DEBUG_OBJECT (demux,
           "Difference between client and server clocks is %lfs",
