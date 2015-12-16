@@ -153,8 +153,8 @@ gst_comb_detect_transform_caps (GstBaseTransform * trans,
       GstStructure *structure = gst_caps_get_structure (othercaps, i);
       gst_structure_set_value (structure, "interlace-mode", &value);
     }
-    g_value_reset (&value);
-    g_value_reset (&v);
+    g_value_unset (&value);
+    g_value_unset (&v);
   } else {
     for (i = 0; i < gst_caps_get_size (othercaps); i++) {
       GstStructure *structure = gst_caps_get_structure (othercaps, i);
