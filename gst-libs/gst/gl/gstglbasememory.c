@@ -91,6 +91,19 @@ _mem_create_gl (GstGLContext * context, struct create_data *transfer)
   g_clear_error (&error);
 }
 
+/**
+ * gst_gl_base_memory_init:
+ * @mem: the #GstGLBaseMemory to initialize
+ * @allocator: the #GstAllocator to initialize with
+ * @parent: (allow-none): the parent #GstMemory to initialize with
+ * @context: the #GstGLContext to initialize with
+ * @params: (allow-none): the @GstAllocationParams to initialize with
+ * @size: the number of bytes to be allocated
+ * @notify: (allow-none): a #GDestroyNotify
+ * @user_data: (allow-none): user data to call @notify with
+ *
+ * Initializes @mem with the required parameters
+ */
 void
 gst_gl_base_memory_init (GstGLBaseMemory * mem, GstAllocator * allocator,
     GstMemory * parent, GstGLContext * context, GstAllocationParams * params,
@@ -407,7 +420,12 @@ _mem_free (GstAllocator * allocator, GstMemory * memory)
   gst_object_unref (mem->context);
 }
 
-
+/**
+ * gst_gl_base_memory_init_once:
+ *
+ * Initializes the GL Base Memory allocator. It is safe to call this function
+ * multiple times.  This must be called before any other GstGLBaseMemory operation.
+ */
 void
 gst_gl_base_memory_init_once (void)
 {
@@ -467,6 +485,15 @@ gst_is_gl_base_memory (GstMemory * mem)
       GST_TYPE_GL_BASE_MEMORY_ALLOCATOR);
 }
 
+/**
+ * gst_gl_base_memory_memcpy:
+ * @src: the source #GstGLBaseMemory
+ * @dest: the destination #GstGLBaseMemory
+ * @offset: the offset to start at
+ * @size: the number of bytes to copy
+ *
+ * Returns: whether the copy suceeded.
+ */
 gboolean
 gst_gl_base_memory_memcpy (GstGLBaseMemory * src, GstGLBaseMemory * dest,
     gssize offset, gssize size)
