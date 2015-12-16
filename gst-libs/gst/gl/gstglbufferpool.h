@@ -64,6 +64,10 @@ GstBufferPool *gst_gl_buffer_pool_new (GstGLContext * context);
 void gst_gl_buffer_pool_replace_last_buffer (GstGLBufferPool * pool,
     GstBuffer * buffer);
 
+GstGLAllocationParams * gst_buffer_pool_config_get_gl_allocation_params    (GstStructure * config);
+void                    gst_buffer_pool_config_set_gl_allocation_params    (GstStructure * config,
+                                                                            GstGLAllocationParams * params);
+
 G_END_DECLS
 
 #endif /* _GST_GL_BUFFER_POOL_H_ */
