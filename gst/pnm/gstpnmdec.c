@@ -190,6 +190,7 @@ gst_pnmdec_parse_ascii (GstPnmdec * s, const guint8 * b, guint bs)
       case G_TOKEN_INT:
         if (i == target) {
           GST_DEBUG_OBJECT (s, "PNM file contains too much data.");
+          g_scanner_destroy (scanner);
           goto drop_error;
         }
         outdata[i++] = scanner->value.v_int;
