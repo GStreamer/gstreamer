@@ -55,7 +55,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #else
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "BGRA")
+            "BGRA") ", "
         "texture-target = " GST_GL_TEXTURE_TARGET_2D_STR "; "
 #endif
         "video/x-raw, "
@@ -149,6 +149,7 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 - (BOOL)query:(GstQuery *)query;
 - (GstStateChangeReturn)changeState:(GstStateChange)transition;
 - (GstFlowReturn)create:(GstBuffer **)buf;
+- (GstCaps *)fixate:(GstCaps *)caps;
 - (void)updateStatistics;
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
@@ -747,6 +748,22 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     if (caps)
       gst_caps_unref (caps);
     caps = gst_caps_copy (new_caps);
+
+    if (textureCache)
+      gst_video_texture_cache_free (textureCache);
+    textureCache = NULL;
+
+    GstCapsFeatures *features = gst_caps_get_features (caps, 0);
+    if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+      GstGLContext *context = query_gl_context (GST_BASE_SRC_PAD (baseSrc));
+      textureCache = gst_video_texture_cache_new (context);
+      gst_video_texture_cache_set_format (textureCache, format, caps);
+      gst_object_unref (context);
+    }
+
+    GST_INFO_OBJECT (element, "configured caps %"GST_PTR_FORMAT
+        ", pushing textures %d", caps, textureCache != NULL);
+
     [session startRunning];
 
     /* Unlock device configuration only after session is started so the session
@@ -811,42 +828,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   }
 
   return result;
-}
-
-- (BOOL)decideAllocation:(GstQuery *)query
-{
-  useVideoMeta = gst_query_find_allocation_meta (query,
-      GST_VIDEO_META_API_TYPE, NULL);
-
-  /* determine whether we can pass GL textures to downstream element */
-  GstCapsFeatures *features = gst_caps_get_features (caps, 0);
-  if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
-    GstGLContext *glContext = NULL;
-
-    /* get GL context from downstream element */
-    GstQuery *query = gst_query_new_context ("gst.gl.local_context");
-    if (gst_pad_peer_query (GST_BASE_SRC_PAD (element), query)) {
-      GstContext *context;
-      gst_query_parse_context (query, &context);
-      if (context) {
-        const GstStructure *s = gst_context_get_structure (context);
-        gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &glContext,
-            NULL);
-      }
-    }
-    gst_query_unref (query);
-
-    if (glContext) {
-      GST_INFO_OBJECT (element, "pushing textures, context %p", glContext);
-      textureCache = gst_video_texture_cache_new (glContext);
-      gst_video_texture_cache_set_format (textureCache, format, caps);
-      gst_object_unref (glContext);
-    } else {
-      GST_WARNING_OBJECT (element, "got memory:GLMemory caps but not GL context from downstream element");
-    }
-  }
-
-  return YES;
 }
 
 - (BOOL)unlock
@@ -983,6 +964,50 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   return GST_FLOW_OK;
 }
 
+static GstGLContext *
+query_gl_context (GstPad *srcpad)
+{
+  GstGLContext *gl_context = NULL;
+  GstContext *context = NULL;
+  GstQuery *query;
+
+  query = gst_query_new_context ("gst.gl.local_context");
+  if (gst_pad_peer_query (srcpad, query)) {
+    gst_query_parse_context (query, &context);
+    if (context) {
+      const GstStructure *s = gst_context_get_structure (context);
+      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &gl_context, NULL);
+    }
+  }
+  gst_query_unref (query);
+
+  return gl_context;
+}
+
+static gboolean
+caps_filter_out_gl_memory (GstCapsFeatures * features, GstStructure * structure,
+    gpointer user_data)
+{
+  return !gst_caps_features_contains (features,
+      GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+}
+
+
+- (GstCaps *)fixate:(GstCaps *)new_caps
+{
+  GstGLContext *context;
+
+  new_caps = gst_caps_make_writable (new_caps);
+
+  context = query_gl_context (GST_BASE_SRC_PAD (baseSrc));
+  if (!context)
+    gst_caps_filter_and_map_in_place (new_caps, caps_filter_out_gl_memory, NULL);
+  else
+    gst_object_unref (context);
+
+  return gst_caps_fixate (new_caps);
+}
+
 - (void)getSampleBuffer:(CMSampleBufferRef)sbuf
               timestamp:(GstClockTime *)outTimestamp
                duration:(GstClockTime *)outDuration
@@ -1107,8 +1132,6 @@ static gboolean gst_avf_video_src_start (GstBaseSrc * basesrc);
 static gboolean gst_avf_video_src_stop (GstBaseSrc * basesrc);
 static gboolean gst_avf_video_src_query (GstBaseSrc * basesrc,
     GstQuery * query);
-static gboolean gst_avf_video_src_decide_allocation (GstBaseSrc * basesrc,
-    GstQuery * query);
 static gboolean gst_avf_video_src_unlock (GstBaseSrc * basesrc);
 static gboolean gst_avf_video_src_unlock_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_avf_video_src_create (GstPushSrc * pushsrc,
@@ -1137,7 +1160,6 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
   gstbasesrc_class->query = gst_avf_video_src_query;
   gstbasesrc_class->unlock = gst_avf_video_src_unlock;
   gstbasesrc_class->unlock_stop = gst_avf_video_src_unlock_stop;
-  gstbasesrc_class->decide_allocation = gst_avf_video_src_decide_allocation;
   gstbasesrc_class->negotiate = gst_avf_video_src_negotiate;
 
   gstpushsrc_class->create = gst_avf_video_src_create;
@@ -1346,18 +1368,6 @@ gst_avf_video_src_query (GstBaseSrc * basesrc, GstQuery * query)
 }
 
 static gboolean
-gst_avf_video_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
-{
-  gboolean ret;
-
-  OBJC_CALLOUT_BEGIN ();
-  ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) decideAllocation:query];
-  OBJC_CALLOUT_END ();
-
-  return ret;
-}
-
-static gboolean
 gst_avf_video_src_unlock (GstBaseSrc * basesrc)
 {
   gboolean ret;
@@ -1403,3 +1413,15 @@ gst_avf_video_src_negotiate (GstBaseSrc * basesrc)
   return GST_BASE_SRC_CLASS (parent_class)->negotiate (basesrc);
 }
 
+
+static GstCaps *
+gst_base_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
+{
+  GstCaps *ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_AVF_VIDEO_SRC_IMPL (bsrc) fixate:caps];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
