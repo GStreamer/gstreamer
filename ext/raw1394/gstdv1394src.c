@@ -790,8 +790,12 @@ gst_dv1394src_start (GstBaseSrc * bsrc)
   READ_SOCKET (src) = control_sock[0];
   WRITE_SOCKET (src) = control_sock[1];
 
-  fcntl (READ_SOCKET (src), F_SETFL, O_NONBLOCK);
-  fcntl (WRITE_SOCKET (src), F_SETFL, O_NONBLOCK);
+  if (fcntl (READ_SOCKET (src), F_SETFL, O_NONBLOCK) < 0)
+    GST_ERROR_OBJECT (src, "failed to make read socket non-blocking: %s",
+        g_strerror (errno));
+  if (fcntl (WRITE_SOCKET (src), F_SETFL, O_NONBLOCK) < 0)
+    GST_ERROR_OBJECT (src, "failed to make write socket non-blocking: %s",
+        g_strerror (errno));
 
   src->handle = raw1394_new_handle ();
 
