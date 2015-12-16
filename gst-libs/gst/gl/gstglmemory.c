@@ -260,6 +260,19 @@ _gl_tex_create (GstGLMemory * gl_mem, GError ** error)
   return TRUE;
 }
 
+/**
+ * gst_gl_memory_init:
+ * @mem: the #GstGLBaseMemory to initialize
+ * @allocator: the #GstAllocator to initialize with
+ * @parent: (allow-none): the parent #GstMemory to initialize with
+ * @context: the #GstGLContext to initialize with
+ * @params: (allow-none): the @GstAllocationParams to initialize with
+ * @size: the number of bytes to be allocated
+ * @notify: (allow-none): a #GDestroyNotify
+ * @user_data: (allow-none): user data to call @notify with
+ *
+ * Initializes @mem with the required parameters
+ */
 void
 gst_gl_memory_init (GstGLMemory * mem, GstAllocator * allocator,
     GstMemory * parent, GstGLContext * context, GstGLTextureTarget target,
@@ -704,7 +717,7 @@ static GstMemory *
 _gl_tex_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params)
 {
-  g_warning ("Subclass needs to override GstAllocatorClass::alloc");
+  g_warning ("Use gst_gl_base_memory_alloc to allocate from this allocator");
 
   return NULL;
 }
