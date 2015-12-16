@@ -202,10 +202,10 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 
   if (pnmenc->info.encoding == GST_PNM_ENCODING_ASCII) {
     /* Per component 4 bytes are used in case of ASCII encoding */
-    size = size * 4;
+    size = size * 4 + size / 20;
     size += strlen (header);
     frame->output_buffer =
-        gst_video_encoder_allocate_output_buffer (encoder, (size + size / 20));
+        gst_video_encoder_allocate_output_buffer (encoder, (size));
   } else {
     size += strlen (header);
     frame->output_buffer =
