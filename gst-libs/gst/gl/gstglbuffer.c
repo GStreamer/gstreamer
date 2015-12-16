@@ -97,7 +97,7 @@ _gl_buffer_init (GstGLBuffer * mem, GstAllocator * allocator,
   mem->usage_hints = gl_usage;
 
   gst_gl_base_memory_init ((GstGLBaseMemory *) mem, allocator, parent, context,
-      params, size, NULL, NULL);
+      NULL, size, NULL, NULL);
 
   GST_CAT_DEBUG (GST_CAT_GL_BUFFER, "new GL buffer memory:%p size:%"
       G_GSIZE_FORMAT, mem, mem->mem.mem.maxsize);
