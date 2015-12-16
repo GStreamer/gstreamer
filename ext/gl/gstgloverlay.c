@@ -668,6 +668,8 @@ user_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 static gboolean
 gst_gl_overlay_load_jpeg (GstGLOverlay * overlay, FILE * fp)
 {
+  GstGLBaseMemoryAllocator *mem_allocator;
+  GstGLVideoAllocationParams *params;
   GstVideoInfo v_info;
   GstVideoAlignment v_align;
   GstMapInfo map_info;
@@ -695,9 +697,17 @@ gst_gl_overlay_load_jpeg (GstGLOverlay * overlay, FILE * fp)
   v_align.stride_align[0] = 32 - 1;
   gst_video_info_align (&v_info, &v_align);
 
+  mem_allocator =
+      GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find
+      (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
+  params =
+      gst_gl_video_allocation_params_new (GST_GL_BASE_FILTER (overlay)->context,
+      NULL, &v_info, 0, &v_align, GST_GL_TEXTURE_TARGET_2D);
   overlay->image_memory = (GstGLMemory *)
-      gst_gl_memory_pbo_alloc (GST_GL_BASE_FILTER (overlay)->context,
-      GST_GL_TEXTURE_TARGET_2D, NULL, &v_info, 0, &v_align);
+      gst_gl_base_memory_alloc (mem_allocator,
+      (GstGLAllocationParams *) params);
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+  gst_object_unref (mem_allocator);
 
   if (!gst_memory_map ((GstMemory *) overlay->image_memory, &map_info,
           GST_MAP_WRITE)) {
@@ -720,6 +730,8 @@ gst_gl_overlay_load_jpeg (GstGLOverlay * overlay, FILE * fp)
 static gboolean
 gst_gl_overlay_load_png (GstGLOverlay * overlay, FILE * fp)
 {
+  GstGLBaseMemoryAllocator *mem_allocator;
+  GstGLVideoAllocationParams *params;
   GstVideoInfo v_info;
   GstMapInfo map_info;
 
@@ -800,9 +812,17 @@ gst_gl_overlay_load_png (GstGLOverlay * overlay, FILE * fp)
   overlay->image_height = height;
 
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, width, height);
+  mem_allocator =
+      GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find
+      (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
+  params =
+      gst_gl_video_allocation_params_new (GST_GL_BASE_FILTER (overlay)->context,
+      NULL, &v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D);
   overlay->image_memory = (GstGLMemory *)
-      gst_gl_memory_pbo_alloc (GST_GL_BASE_FILTER (overlay)->context,
-      GST_GL_TEXTURE_TARGET_2D, NULL, &v_info, 0, NULL);
+      gst_gl_base_memory_alloc (mem_allocator,
+      (GstGLAllocationParams *) params);
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+  gst_object_unref (mem_allocator);
 
   if (!gst_memory_map ((GstMemory *) overlay->image_memory, &map_info,
           GST_MAP_WRITE)) {

@@ -54,14 +54,16 @@ GST_START_TEST (test_basic)
   GstMemory *mem, *mem2;
   GstGLMemory *gl_mem, *gl_mem2;
   GstAllocator *gl_allocator;
+  GstGLBaseMemoryAllocator *base_mem_alloc;
   gint i, j;
   static GstVideoFormat formats[] = {
     GST_VIDEO_FORMAT_RGBA, GST_VIDEO_FORMAT_RGB,
     GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_I420
   };
 
-  gl_allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+  gl_allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR_NAME);
   fail_if (gl_allocator == NULL);
+  base_mem_alloc = GST_GL_BASE_MEMORY_ALLOCATOR (gl_allocator);
 
   /* test allocator creation */
   ASSERT_WARNING (mem = gst_allocator_alloc (gl_allocator, 0, NULL));
@@ -73,9 +75,13 @@ GST_START_TEST (test_basic)
     gst_video_info_set_format (&v_info, formats[i], width, height);
 
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&v_info); j++) {
-      mem =
-          gst_gl_memory_pbo_alloc (context, GST_GL_TEXTURE_TARGET_2D, NULL,
-          &v_info, j, NULL);
+      GstGLVideoAllocationParams *params;
+
+      params = gst_gl_video_allocation_params_new (context, NULL, &v_info, j,
+          NULL, GST_GL_TEXTURE_TARGET_2D);
+
+      mem = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
+          (GstGLAllocationParams *) params);
       fail_if (mem == NULL);
       gl_mem = (GstGLMemory *) mem;
 
@@ -98,6 +104,7 @@ GST_START_TEST (test_basic)
         printf ("%s\n", gst_gl_context_get_error ());
       fail_if (gst_gl_context_get_error () != NULL);
 
+      gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
       gst_memory_unref (mem);
       gst_memory_unref (mem2);
     }
@@ -113,31 +120,41 @@ static gchar rgba_pixel[] = {
   0xff, 0x00, 0x00, 0xff,
 };
 
-GST_START_TEST (test_transfer)
+static void
+test_transfer_allocator (const gchar * allocator_name)
 {
   GstAllocator *gl_allocator;
+  GstGLBaseMemoryAllocator *base_mem_alloc;
   GstVideoInfo v_info;
   GstMemory *mem, *mem2, *mem3;
   GstMapInfo map_info;
+  GstGLVideoAllocationParams *params;
 
-  gl_allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+  gl_allocator = gst_allocator_find (allocator_name);
   fail_if (gl_allocator == NULL);
+  base_mem_alloc = GST_GL_BASE_MEMORY_ALLOCATOR (gl_allocator);
 
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 1, 1);
 
+  params = gst_gl_video_allocation_params_new (context, NULL, &v_info, 0,
+      NULL, GST_GL_TEXTURE_TARGET_2D);
+
   /* texture creation */
-  mem =
-      (GstMemory *) gst_gl_memory_pbo_alloc (context, GST_GL_TEXTURE_TARGET_2D,
-      NULL, &v_info, 0, NULL);
+  mem = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
+      (GstGLAllocationParams *) params);
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
           GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
           GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   /* test wrapping raw data */
+  params = gst_gl_video_allocation_params_new_wrapped_data (context, NULL,
+      &v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, rgba_pixel, NULL, NULL);
   mem2 =
-      (GstMemory *) gst_gl_memory_pbo_wrapped (context,
-      GST_GL_TEXTURE_TARGET_2D, &v_info, 0, NULL, rgba_pixel, NULL, NULL);
+      (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
+      (GstGLAllocationParams *) params);
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
   fail_if (mem == NULL);
 
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem2,
@@ -146,9 +163,13 @@ GST_START_TEST (test_transfer)
           GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
   /* wrapped texture creation */
-  mem3 = (GstMemory *) gst_gl_memory_pbo_wrapped_texture (context,
-      ((GstGLMemory *) mem)->tex_id, GST_GL_TEXTURE_TARGET_2D, &v_info, 0, NULL,
+  params = gst_gl_video_allocation_params_new_wrapped_texture (context, NULL,
+      &v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, ((GstGLMemory *) mem)->tex_id,
       NULL, NULL);
+  mem3 =
+      (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
+      (GstGLAllocationParams *) params);
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem3,
           GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem3,
@@ -251,10 +272,19 @@ GST_START_TEST (test_transfer)
   gst_object_unref (gl_allocator);
 }
 
+
+GST_START_TEST (test_transfer)
+{
+  test_transfer_allocator (GST_GL_MEMORY_ALLOCATOR_NAME);
+  test_transfer_allocator (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+}
+
 GST_END_TEST;
 
 GST_START_TEST (test_separate_transfer)
 {
+  GstGLBaseMemoryAllocator *base_mem_alloc;
+  GstGLVideoAllocationParams *params;
   GstAllocator *gl_allocator;
   GstVideoInfo v_info;
   GstMemory *mem;
@@ -262,12 +292,16 @@ GST_START_TEST (test_separate_transfer)
 
   gl_allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
   fail_if (gl_allocator == NULL);
+  base_mem_alloc = GST_GL_BASE_MEMORY_ALLOCATOR (gl_allocator);
 
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 1, 1);
 
+  params = gst_gl_video_allocation_params_new_wrapped_data (context, NULL,
+      &v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, rgba_pixel, NULL, NULL);
   mem =
-      (GstMemory *) gst_gl_memory_pbo_wrapped (context,
-      GST_GL_TEXTURE_TARGET_2D, &v_info, 0, NULL, rgba_pixel, NULL, NULL);
+      (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
+      (GstGLAllocationParams *) params);
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
   fail_if (mem == NULL);
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
           GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));

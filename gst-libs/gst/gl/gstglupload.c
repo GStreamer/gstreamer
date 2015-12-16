@@ -346,6 +346,7 @@ struct EGLImageUpload
   GstGLUpload *upload;
   GstBuffer *buffer;
   GstBuffer **outbuf;
+  GstGLVideoAllocationParams *params;
 };
 
 static gpointer
@@ -403,6 +404,14 @@ _egl_image_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   if (!ret)
     return FALSE;
 
+  if (image->params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) image->params);
+  if (!(image->params =
+          gst_gl_video_allocation_params_new (image->upload->context, NULL,
+              &image->upload->priv->in_info, -1, NULL,
+              GST_GL_TEXTURE_TARGET_2D)))
+    return FALSE;
+
   if (buffer) {
     GstVideoInfo *in_info = &image->upload->priv->in_info;
     guint expected_memories = GST_VIDEO_INFO_N_PLANES (in_info);
@@ -457,13 +466,17 @@ static void
 _egl_image_upload_perform_gl_thread (GstGLContext * context,
     struct EGLImageUpload *image)
 {
+  GstGLMemoryAllocator *allocator;
   guint i, n;
+
+  allocator =
+      GST_GL_MEMORY_ALLOCATOR (gst_allocator_find
+      (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
 
   /* FIXME: buffer pool */
   *image->outbuf = gst_buffer_new ();
-  gst_gl_memory_pbo_setup_buffer (image->upload->context,
-      GST_GL_TEXTURE_TARGET_2D, NULL, &image->upload->priv->out_info, NULL,
-      *image->outbuf);
+  gst_gl_memory_setup_buffer (allocator, *image->outbuf, image->params);
+  gst_object_unref (allocator);
 
   n = gst_buffer_n_memory (image->buffer);
   for (i = 0; i < n; i++) {
@@ -481,8 +494,8 @@ _egl_image_upload_perform_gl_thread (GstGLContext * context,
   }
 
   if (GST_IS_GL_BUFFER_POOL (image->buffer->pool))
-    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (image->
-            buffer->pool), image->buffer);
+    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (image->buffer->
+            pool), image->buffer);
 }
 
 static GstGLUploadReturn
@@ -506,6 +519,11 @@ _egl_image_upload_perform (gpointer impl, GstBuffer * buffer,
 static void
 _egl_image_upload_free (gpointer impl)
 {
+  struct EGLImageUpload *image = impl;
+
+  if (image->params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) image->params);
+
   g_free (impl);
 }
 
@@ -533,6 +551,7 @@ struct GLUploadMeta
   gboolean result;
   GstVideoGLTextureUploadMeta *meta;
   guint texture_ids[GST_GL_UPLOAD_MAX_PLANES];
+  GstGLVideoAllocationParams *params;
 };
 
 static gpointer
@@ -594,6 +613,14 @@ _upload_meta_upload_accept (gpointer impl, GstBuffer * buffer,
   if (!ret)
     return ret;
 
+  if (upload->params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) upload->params);
+  if (!(upload->params =
+          gst_gl_video_allocation_params_new (upload->upload->context, NULL,
+              &upload->upload->priv->in_info, -1, NULL,
+              GST_GL_TEXTURE_TARGET_2D)))
+    return FALSE;
+
   if (buffer) {
     if ((meta = gst_buffer_get_video_gl_texture_upload_meta (buffer)) == NULL)
       return FALSE;
@@ -623,11 +650,11 @@ _upload_meta_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   gpointer handle;
 
   gl_apis =
-      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->upload->
-          context));
-  platform =
-      gst_gl_platform_to_string (gst_gl_context_get_gl_platform (upload->
+      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->
           upload->context));
+  platform =
+      gst_gl_platform_to_string (gst_gl_context_get_gl_platform
+      (upload->upload->context));
   handle = (gpointer) gst_gl_context_get_gl_context (upload->upload->context);
 
   gl_context =
@@ -667,6 +694,11 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
   int i;
   GstVideoInfo *in_info = &upload->upload->priv->in_info;
   guint max_planes = GST_VIDEO_INFO_N_PLANES (in_info);
+  GstGLMemoryAllocator *allocator;
+
+  allocator =
+      GST_GL_MEMORY_ALLOCATOR (gst_allocator_find
+      (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
 
   /* Support stereo views for separated multiview mode */
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) ==
@@ -679,9 +711,8 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
 
   /* FIXME: buffer pool */
   *outbuf = gst_buffer_new ();
-  gst_gl_memory_pbo_setup_buffer (upload->upload->context,
-      GST_GL_TEXTURE_TARGET_2D, NULL, &upload->upload->priv->in_info, NULL,
-      *outbuf);
+  gst_gl_memory_setup_buffer (allocator, *outbuf, upload->params);
+  gst_object_unref (allocator);
 
   for (i = 0; i < GST_GL_UPLOAD_MAX_PLANES; i++) {
     guint tex_id = 0;
@@ -723,6 +754,10 @@ _upload_meta_upload_free (gpointer impl)
       gst_gl_context_del_texture (upload->upload->context,
           &upload->texture_ids[i]);
   }
+
+  if (upload->params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) upload->params);
+
   g_free (upload);
 }
 
@@ -752,6 +787,7 @@ struct RawUpload
 {
   GstGLUpload *upload;
   struct RawUploadFrame *in_frame;
+  GstGLVideoAllocationParams *params;
 };
 
 static struct RawUploadFrame *
@@ -850,6 +886,15 @@ _raw_data_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     _raw_upload_frame_unref (raw->in_frame);
   raw->in_frame = _raw_upload_frame_new (raw, buffer);
 
+  if (raw->params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) raw->params);
+  if (!(raw->params =
+          gst_gl_video_allocation_params_new_wrapped_data (raw->upload->context,
+              NULL, &raw->upload->priv->in_info, -1, NULL,
+              GST_GL_TEXTURE_TARGET_2D, NULL,
+              (GDestroyNotify) _raw_upload_frame_unref, raw->in_frame)))
+    return FALSE;
+
   return (raw->in_frame != NULL);
 }
 
@@ -864,28 +909,39 @@ static GstGLUploadReturn
 _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
     GstBuffer ** outbuf)
 {
-  GstGLMemory *in_tex[GST_GL_UPLOAD_MAX_PLANES] = { 0, };
+  GstGLBaseMemoryAllocator *allocator;
   struct RawUpload *raw = impl;
   int i;
   GstVideoInfo *in_info = &raw->upload->priv->in_info;
-  guint max_planes = GST_VIDEO_INFO_N_PLANES (in_info);
+  guint n_mem = GST_VIDEO_INFO_N_PLANES (in_info);
 
-  /* Support stereo views for separated multiview mode */
-  if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) ==
-      GST_VIDEO_MULTIVIEW_MODE_SEPARATED)
-    max_planes *= GST_VIDEO_INFO_VIEWS (in_info);
-
-  gst_gl_memory_pbo_setup_wrapped (raw->upload->context,
-      GST_GL_TEXTURE_TARGET_2D, &raw->upload->priv->in_info, NULL,
-      raw->in_frame->frame.data, (GstGLMemoryPBO **) in_tex, raw->in_frame,
-      (GDestroyNotify) _raw_upload_frame_unref);
+  allocator =
+      GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find
+      (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
 
   /* FIXME Use a buffer pool to cache the generated textures */
+  /* FIXME: multiview support with separated left/right frames? */
   *outbuf = gst_buffer_new ();
-  for (i = 0; i < max_planes; i++) {
+  for (i = 0; i < n_mem; i++) {
+    GstGLBaseMemory *tex;
+
+    raw->params->parent.wrapped_data = raw->in_frame->frame.data[i];
+    raw->params->plane = i;
+
+    tex =
+        gst_gl_base_memory_alloc (allocator,
+        (GstGLAllocationParams *) raw->params);
+    if (!tex) {
+      gst_buffer_unref (*outbuf);
+      *outbuf = NULL;
+      GST_ERROR_OBJECT (raw->upload, "Failed to allocate wrapped texture");
+      return GST_GL_UPLOAD_ERROR;
+    }
+
     _raw_upload_frame_ref (raw->in_frame);
-    gst_buffer_append_memory (*outbuf, (GstMemory *) in_tex[i]);
+    gst_buffer_append_memory (*outbuf, (GstMemory *) tex);
   }
+  gst_object_unref (allocator);
 
   _raw_upload_frame_unref (raw->in_frame);
   raw->in_frame = NULL;
@@ -896,6 +952,9 @@ static void
 _raw_data_upload_free (gpointer impl)
 {
   struct RawUpload *raw = impl;
+
+  if (raw->params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) raw->params);
 
   g_free (raw);
 }

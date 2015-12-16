@@ -2006,15 +2006,27 @@ _do_convert_one_view (GstGLContext * context, GstGLColorConvert * convert,
       /* Luminance formats are not color renderable */
       /* renderering to a framebuffer only renders the intersection of all
        * the attachments i.e. the smallest attachment size */
-      GstVideoInfo temp_info;
+      if (!convert->priv->out_tex[j]) {
+        GstGLVideoAllocationParams *params;
+        GstGLBaseMemoryAllocator *base_mem_allocator;
+        GstAllocator *allocator;
+        GstVideoInfo temp_info;
 
-      gst_video_info_set_format (&temp_info, GST_VIDEO_FORMAT_RGBA, out_width,
-          out_height);
+        gst_video_info_set_format (&temp_info, GST_VIDEO_FORMAT_RGBA, out_width,
+            out_height);
 
-      if (!convert->priv->out_tex[j])
+        allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR_NAME);
+        base_mem_allocator = GST_GL_BASE_MEMORY_ALLOCATOR (allocator);
+        params = gst_gl_video_allocation_params_new (context, NULL, &temp_info,
+            0, NULL, convert->priv->to_texture_target);
+
         convert->priv->out_tex[j] =
-            (GstGLMemory *) gst_gl_memory_pbo_alloc (context,
-            convert->priv->to_texture_target, NULL, &temp_info, 0, NULL);
+            (GstGLMemory *) gst_gl_base_memory_alloc (base_mem_allocator,
+            (GstGLAllocationParams *) params);
+
+        gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+        gst_object_unref (allocator);
+      }
     } else {
       convert->priv->out_tex[j] = out_tex;
     }
@@ -2106,6 +2118,9 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
   gint views, v;
   GstVideoOverlayCompositionMeta *composition_meta;
   GstGLSyncMeta *sync_meta;
+  GstGLVideoAllocationParams *params;
+  GstGLMemoryAllocator *mem_allocator;
+  GstAllocator *allocator;
 
   convert->outbuf = NULL;
 
@@ -2119,12 +2134,21 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
     gst_gl_sync_meta_wait (sync_meta, convert->context);
 
   convert->outbuf = gst_buffer_new ();
-  if (!gst_gl_memory_pbo_setup_buffer (convert->context,
-          convert->priv->to_texture_target, NULL, &convert->out_info, NULL,
-          convert->outbuf)) {
+
+  allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR_NAME);
+  mem_allocator = GST_GL_MEMORY_ALLOCATOR (allocator);
+  params =
+      gst_gl_video_allocation_params_new (context, NULL, &convert->out_info, 0,
+      NULL, convert->priv->to_texture_target);
+
+  if (!gst_gl_memory_setup_buffer (mem_allocator, convert->outbuf, params)) {
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+    gst_object_unref (allocator);
     convert->priv->result = FALSE;
     return;
   }
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+  gst_object_unref (allocator);
 
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) ==
       GST_VIDEO_MULTIVIEW_MODE_SEPARATED)

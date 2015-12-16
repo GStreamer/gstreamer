@@ -64,29 +64,6 @@ struct _GstGLMemoryPBO
 void          gst_gl_memory_pbo_init_once               (void);
 gboolean      gst_is_gl_memory_pbo                      (GstMemory * mem);
 
-GstMemory *         gst_gl_memory_pbo_alloc             (GstGLContext * context,
-                                                         GstGLTextureTarget target,
-                                                         GstAllocationParams *params,
-                                                         GstVideoInfo * info,
-                                                         guint plane,
-                                                         GstVideoAlignment *valign);
-GstGLMemoryPBO *    gst_gl_memory_pbo_wrapped           (GstGLContext * context,
-                                                         GstGLTextureTarget target,
-                                                         GstVideoInfo * info,
-                                                         guint plane,
-                                                         GstVideoAlignment *valign,
-                                                         gpointer data,
-                                                         gpointer user_data,
-                                                         GDestroyNotify notify);
-GstGLMemoryPBO *    gst_gl_memory_pbo_wrapped_texture   (GstGLContext * context,
-                                                         guint texture_id,
-                                                         GstGLTextureTarget target,
-                                                         GstVideoInfo * info,
-                                                         guint plane,
-                                                         GstVideoAlignment *valign,
-                                                         gpointer user_data,
-                                                         GDestroyNotify notify);
-
 void          gst_gl_memory_pbo_download_transfer       (GstGLMemoryPBO * gl_mem);
 void          gst_gl_memory_pbo_upload_transfer         (GstGLMemoryPBO * gl_mem);
 
@@ -98,21 +75,6 @@ gboolean      gst_gl_memory_pbo_copy_into_texture       (GstGLMemoryPBO *gl_mem,
                                                          gint height,
                                                          gint stride,
                                                          gboolean respecify);
-
-gboolean      gst_gl_memory_pbo_setup_buffer            (GstGLContext * context,
-                                                         GstGLTextureTarget target,
-                                                         GstAllocationParams * params,
-                                                         GstVideoInfo * info,
-                                                         GstVideoAlignment *valign,
-                                                         GstBuffer * buffer);
-gboolean      gst_gl_memory_pbo_setup_wrapped           (GstGLContext * context,
-                                                         GstGLTextureTarget target,
-                                                         GstVideoInfo * info,
-                                                         GstVideoAlignment *valign,
-                                                         gpointer data[GST_VIDEO_MAX_PLANES],
-                                                         GstGLMemoryPBO *textures[GST_VIDEO_MAX_PLANES],
-                                                         gpointer user_data,
-                                                         GDestroyNotify notify);
 
 /**
  * GstGLAllocator
