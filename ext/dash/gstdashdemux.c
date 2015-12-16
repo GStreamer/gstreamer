@@ -1477,7 +1477,8 @@ gst_dash_demux_stream_get_fragment_waiting_time (GstAdaptiveDemuxStream *
     /* subtract the server's clock drift, so that if the server's
        time is behind our idea of UTC, we need to sleep for longer
        before requesting a fragment */
-    return diff - gst_dash_demux_get_clock_compensation (dashdemux);
+    return diff -
+        gst_dash_demux_get_clock_compensation (dashdemux) * GST_USECOND;
   }
   return 0;
 }
