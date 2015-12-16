@@ -152,6 +152,10 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
   CVOpenGLESTextureRef texture = NULL;
   CVPixelBufferRef pixel_buf = cv_pixel_buffer_from_gst_buffer (buffer);
   GstGLTextureTarget gl_target;
+  GstGLBaseMemoryAllocator *base_mem_alloc;
+  GstGLVideoAllocationParams *params;
+
+  base_memory_alloc = GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
 
   *mem1 = NULL;
   *mem2 = NULL;
@@ -169,10 +173,14 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
           goto error;
 
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
+        params = gst_gl_video_allocation_params_new_wrapped_texture (cache->ctx,
+            NULL, &cache->input_info, 0, NULL, gl_target,
+            CVOpenGLTextureGetName (texture), (GDestroyNotify) CFRelease,
+            texture);
 
-        *mem1 = (GstMemory *) gst_gl_memory_pbo_wrapped_texture (cache->ctx,
-            CVOpenGLESTextureGetName (texture), gl_target,
-            &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
+        *mem1 = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
+            (GstGLAllocationParams *) params);
+        gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
         break;
       case GST_VIDEO_FORMAT_NV12: {
         GstVideoGLTextureType textype;
@@ -191,9 +199,14 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
           goto error;
 
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
-        *mem1 = (GstMemory *) gst_gl_memory_pbo_wrapped_texture (cache->ctx,
-            CVOpenGLESTextureGetName (texture), gl_target,
-            &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
+        params = gst_gl_video_allocation_paramc_new_wrapped_texture (cache->ctx,
+            NULL, &cache->input_info, 0, NULL, gl_target,
+            CVOpenGLTextureGetName (texture), (GDestroyNotify) CFRelease,
+            texture);
+
+        *mem1 = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
+            (GstGLAllocationParams *) params);
+        gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
 
         textype = gst_gl_texture_type_from_format (cache->ctx, GST_VIDEO_FORMAT_NV12, 1);
         texifmt = gst_gl_format_from_gl_texture_type (textype);
@@ -207,9 +220,14 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
           goto error;
 
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
-        *mem2 = (GstMemory *) gst_gl_memory_pbo_wrapped_texture (cache->ctx,
-            CVOpenGLESTextureGetName (texture), gl_target,
-            &cache->input_info, 0, NULL, texture, (GDestroyNotify) CFRelease);
+        params = gst_gl_video_allocation_params_new_wrapped_texture (cache->ctx,
+            NULL, &cache->input_info, 1, NULL, gl_target,
+            CVOpenGLTextureGetName (texture), (GDestroyNotify) CFRelease,
+            texture);
+
+        *mem1 = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
+            (GstGLAllocationParams *) params);
+        gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
         break;
       }
     default:
@@ -217,15 +235,10 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
       goto error;
   }
 
-  return TRUE;
+  gst_object_unref (base_mem_alloc);
 
 error:
-  if (*mem1)
-      gst_memory_unref (*mem1);
-  if (*mem2)
-      gst_memory_unref (*mem2);
-
-  return FALSE;
+  return ret;
 }
 #else /* !HAVE_IOS */
 

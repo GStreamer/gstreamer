@@ -116,8 +116,13 @@ _frame_unref (gpointer user_data)
 static void
 check_conversion (TestFrame * frames, guint size)
 {
+  GstGLBaseMemoryAllocator *base_mem_alloc;
   gint i, j, k, l;
   gint ref_count = 0;
+
+  base_mem_alloc =
+      GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find
+      (GST_GL_MEMORY_ALLOCATOR_NAME));
 
   for (i = 0; i < size; i++) {
     GstBuffer *inbuf;
@@ -125,8 +130,6 @@ check_conversion (TestFrame * frames, guint size)
     gint in_width = frames[i].width;
     gint in_height = frames[i].height;
     GstVideoFormat in_v_format = frames[i].v_format;
-    gchar *in_data[GST_VIDEO_MAX_PLANES] = { 0 };
-    GstGLMemory *in_mem[GST_VIDEO_MAX_PLANES] = { 0 };
     GstVideoFrame in_frame;
     GstCaps *in_caps;
 
@@ -135,19 +138,22 @@ check_conversion (TestFrame * frames, guint size)
     gst_caps_set_features (in_caps, 0,
         gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
 
-    for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&in_info); j++) {
-      in_data[j] = frames[i].data[j];
-    }
-
     /* create GL buffer */
-    ref_count += GST_VIDEO_INFO_N_PLANES (&in_info);
     inbuf = gst_buffer_new ();
-    fail_unless (gst_gl_memory_pbo_setup_wrapped (context,
-            GST_GL_TEXTURE_TARGET_2D, &in_info, NULL, (gpointer *) in_data,
-            (GstGLMemoryPBO **) in_mem, &ref_count, _frame_unref));
-
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&in_info); j++) {
-      gst_buffer_append_memory (inbuf, (GstMemory *) in_mem[j]);
+      GstGLVideoAllocationParams *params;
+      GstGLBaseMemory *mem;
+
+      ref_count++;
+      params = gst_gl_video_allocation_params_new_wrapped_data (context, NULL,
+          &in_info, j, NULL, GST_GL_TEXTURE_TARGET_2D, frames[i].data[j],
+          _frame_unref, &ref_count);
+
+      mem = gst_gl_base_memory_alloc (base_mem_alloc,
+          (GstGLAllocationParams *) params);
+      gst_buffer_append_memory (inbuf, GST_MEMORY_CAST (mem));
+
+      gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
     }
 
     fail_unless (gst_video_frame_map (&in_frame, &in_info, inbuf,
@@ -156,8 +162,8 @@ check_conversion (TestFrame * frames, guint size)
     /* sanity check that the correct values were wrapped */
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&in_info); j++) {
       for (k = 0; k < _video_info_plane_size (&in_info, j); k++) {
-        if (in_data[j][k] != IGNORE_MAGIC)
-          fail_unless (((gchar *) in_frame.data[j])[k] == in_data[j][k]);
+        if (frames[i].data[j][k] != IGNORE_MAGIC)
+          fail_unless (((gchar *) in_frame.data[j])[k] == frames[i].data[j][k]);
       }
     }
 
@@ -215,6 +221,8 @@ check_conversion (TestFrame * frames, guint size)
 
     fail_unless_equals_int (ref_count, 0);
   }
+
+  gst_object_unref (base_mem_alloc);
 }
 
 GST_START_TEST (test_reorder_buffer)

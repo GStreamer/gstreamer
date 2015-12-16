@@ -1891,12 +1891,25 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
 static gboolean
 _gen_buffer (GstGLViewConvert * viewconvert, GstBuffer ** target)
 {
+  GstGLVideoAllocationParams *params;
+  GstGLMemoryAllocator *mem_allocator;
+  GstAllocator *allocator;
+
   *target = gst_buffer_new ();
-  if (!gst_gl_memory_pbo_setup_buffer (viewconvert->context,
-          viewconvert->to_texture_target, NULL, &viewconvert->out_info, NULL,
-          *target)) {
+
+  allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+  mem_allocator = GST_GL_MEMORY_ALLOCATOR (allocator);
+  params = gst_gl_video_allocation_params_new (viewconvert->context, NULL,
+      &viewconvert->out_info, 0, NULL, viewconvert->to_texture_target);
+
+  if (!gst_gl_memory_setup_buffer (mem_allocator, *target, params)) {
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+    gst_object_unref (allocator);
     return FALSE;
   }
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+  gst_object_unref (allocator);
+
   gst_buffer_add_video_meta_full (*target, 0,
       GST_VIDEO_INFO_FORMAT (&viewconvert->out_info),
       GST_VIDEO_INFO_WIDTH (&viewconvert->out_info),
@@ -2015,10 +2028,27 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
       /* Luminance formats are not color renderable */
       /* renderering to a framebuffer only renders the intersection of all
        * the attachments i.e. the smallest attachment size */
-      if (!priv->out_tex[j])
+      if (!priv->out_tex[j]) {
+        GstGLVideoAllocationParams *params;
+        GstGLBaseMemoryAllocator *base_mem_allocator;
+        GstAllocator *allocator;
+        GstVideoInfo temp_info;
+
+        gst_video_info_set_format (&temp_info, GST_VIDEO_FORMAT_RGBA, out_width,
+            out_height);
+
+        allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+        base_mem_allocator = GST_GL_BASE_MEMORY_ALLOCATOR (allocator);
+        params = gst_gl_video_allocation_params_new (context, NULL, &temp_info,
+            0, NULL, viewconvert->to_texture_target);
+
         priv->out_tex[j] =
-            (GstGLMemory *) gst_gl_memory_pbo_alloc (context,
-            viewconvert->to_texture_target, NULL, &temp_info, 0, NULL);
+            (GstGLMemory *) gst_gl_base_memory_alloc (base_mem_allocator,
+            (GstGLAllocationParams *) params);
+
+        gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+        gst_object_unref (allocator);
+      }
     } else {
       priv->out_tex[j] = out_tex;
     }

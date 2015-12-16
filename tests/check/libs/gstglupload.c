@@ -195,6 +195,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_upload_buffer)
 {
+  GstGLBaseMemoryAllocator *base_mem_alloc;
+  GstGLVideoAllocationParams *params;
   GstBuffer *buffer, *outbuf;
   GstGLMemory *gl_mem;
   GstCaps *in_caps, *out_caps;
@@ -203,14 +205,20 @@ GST_START_TEST (test_upload_buffer)
   gint i = 0;
   gboolean res;
 
+  base_mem_alloc =
+      GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find
+      (GST_GL_MEMORY_ALLOCATOR_NAME));
+
   in_caps = gst_caps_from_string ("video/x-raw,format=RGBA,width=10,height=10");
   gst_video_info_from_caps (&in_info, in_caps);
 
   /* create GL buffer */
   buffer = gst_buffer_new ();
-  gl_mem =
-      (GstGLMemory *) gst_gl_memory_pbo_wrapped (context,
-      GST_GL_TEXTURE_TARGET_2D, &in_info, 0, NULL, rgba_data, NULL, NULL);
+  params = gst_gl_video_allocation_params_new_wrapped_data (context, NULL,
+      &in_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, rgba_data, NULL, NULL);
+  gl_mem = (GstGLMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
+      (GstGLAllocationParams *) params);
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
 
   res =
       gst_memory_map ((GstMemory *) gl_mem, &map_info,
@@ -245,6 +253,7 @@ GST_START_TEST (test_upload_buffer)
   gst_caps_unref (out_caps);
   gst_buffer_unref (buffer);
   gst_buffer_unref (outbuf);
+  gst_object_unref (base_mem_alloc);
 }
 
 GST_END_TEST;
