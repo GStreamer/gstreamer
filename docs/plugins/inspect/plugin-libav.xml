@@ -3,7 +3,7 @@
   <description>All libav codecs and formats (local snapshot)</description>
   <filename>../../ext/libav/.libs/libgstlibav.so</filename>
   <basename>libgstlibav.so</basename>
-  <version>1.6.0</version>
+  <version>1.7.0.1</version>
   <license>LGPL</license>
   <source>gst-libav</source>
   <package>libav</package>
@@ -3317,7 +3317,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>unknown/unknown</details>
+          <details>image/x-j2c; image/x-jpc; image/jp2</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8507,7 +8507,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>unknown/unknown</details>
+          <details>image/x-j2c</details>
         </caps>
       </pads>
     </element>
