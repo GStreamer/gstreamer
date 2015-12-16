@@ -830,6 +830,7 @@ tags:
 
   if (mux->have_video) {
     GstPad *video_pad = NULL;
+    GstCaps *caps = NULL;
     GstFlvPad *cpad;
     GSList *l = mux->collect->data;
 
@@ -841,8 +842,11 @@ tags:
       }
     }
 
-    if (video_pad && gst_pad_has_current_caps (video_pad)) {
-      GstCaps *caps;
+    if (video_pad) {
+      caps = gst_pad_get_current_caps (video_pad);
+    }
+
+    if (caps != NULL) {
       GstStructure *s;
       gint size;
       gint num, den;
@@ -855,7 +859,6 @@ tags:
       script_tag = gst_buffer_append (script_tag, tmp);
       tags_written++;
 
-      caps = gst_pad_get_current_caps (video_pad);
       s = gst_caps_get_structure (caps, 0);
       gst_caps_unref (caps);
 

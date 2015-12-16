@@ -267,6 +267,7 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
 {
   gboolean res;
   GstCaps *srccaps;
+  GstCaps *old_caps;
 
   if (!rtph264depay->byte_stream &&
       (!rtph264depay->new_codec_data ||
@@ -397,10 +398,10 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
   }
 
 
-  if (gst_pad_has_current_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph264depay))) {
-    GstCaps *old_caps =
-        gst_pad_get_current_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph264depay));
+  old_caps =
+      gst_pad_get_current_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph264depay));
 
+  if (old_caps != NULL) {
     /* Only update the caps if they are not equal. For
      * AVC we don't update caps if only the codec_data
      * changes. This is the same behaviour as in h264parse

@@ -766,9 +766,8 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
 
   pad = GST_AUDIO_ENCODER_SINK_PAD (enc);
 
-  if (gst_pad_has_current_caps (pad)) {
-    ret = gst_pad_get_current_caps (pad);
-  } else {
+  ret = gst_pad_get_current_caps (pad);
+  if (ret == NULL) {
     ret = gst_pad_get_pad_template_caps (pad);
   }
 
@@ -1281,9 +1280,8 @@ gst_flac_enc_sink_query (GstAudioEncoder * enc, GstQuery * query)
     case GST_QUERY_ACCEPT_CAPS:{
       GstCaps *acceptable, *caps;
 
-      if (gst_pad_has_current_caps (pad)) {
-        acceptable = gst_pad_get_current_caps (pad);
-      } else {
+      acceptable = gst_pad_get_current_caps (pad);
+      if (acceptable == NULL) {
         acceptable = gst_pad_get_pad_template_caps (pad);
       }
 

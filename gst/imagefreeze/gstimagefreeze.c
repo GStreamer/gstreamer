@@ -265,8 +265,8 @@ gst_image_freeze_sink_getcaps (GstImageFreeze * self, GstCaps * filter)
   GstPad *pad;
 
   pad = self->sinkpad;
-  if (gst_pad_has_current_caps (pad)) {
-    ret = gst_pad_get_current_caps (pad);
+  ret = gst_pad_get_current_caps (pad);
+  if (ret != NULL) {
     goto done;
   }
 
