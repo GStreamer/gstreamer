@@ -72,7 +72,6 @@ struct _GstCvSmooth
   gint width;
   gint height;
   gdouble colorsigma;
-  gdouble spatialsigma;
 };
 
 struct _GstCvSmoothClass

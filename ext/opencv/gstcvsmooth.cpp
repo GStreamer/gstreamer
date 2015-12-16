@@ -60,11 +60,13 @@
 
 #include "gstopencvutils.h"
 #include "gstcvsmooth.h"
-#include <opencv2/imgproc/imgproc_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
+
 
 GST_DEBUG_CATEGORY_STATIC (gst_cv_smooth_debug);
 #define GST_CAT_DEFAULT gst_cv_smooth_debug
 
+using namespace cv;
 /* Filter signals and args */
 enum
 {
@@ -114,7 +116,7 @@ gst_cv_smooth_type_get_type (void)
 
 #define DEFAULT_CV_SMOOTH_TYPE CV_GAUSSIAN
 #define DEFAULT_WIDTH 3
-#define DEFAULT_HEIGHT 0
+#define DEFAULT_HEIGHT 3
 #define DEFAULT_COLORSIGMA 0.0
 #define DEFAULT_SPATIALSIGMA 0.0
 
@@ -157,33 +159,24 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
           DEFAULT_CV_SMOOTH_TYPE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
       );
   g_object_class_install_property (gobject_class, PROP_WIDTH,
-      g_param_spec_int ("width", "width (aperture width)",
-          "The aperture width (Must be positive and odd)."
-          "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
-          "/documentation/image_filtering.html#cvSmooth", 1, G_MAXINT,
-          DEFAULT_WIDTH, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+      g_param_spec_int ("width", "width (kernel width)",
+          "The gaussian kernel width (must be positive and odd).",
+          1, G_MAXINT, DEFAULT_WIDTH,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
-      g_param_spec_int ("height", "height (aperture height)",
-          "The aperture height, if zero, the width is used."
-          "(Must be positive and odd or zero, unuset in median and bilateral "
-          "types). Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
-          "/documentation/image_filtering.html#cvSmooth", 0, G_MAXINT,
-          DEFAULT_HEIGHT, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+      g_param_spec_int ("height", "height (kernel height)",
+          "The gaussian kernel height (must be positive and odd).",
+          0, G_MAXINT, DEFAULT_HEIGHT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_COLORSIGMA,
       g_param_spec_double ("color", "color (gaussian standard deviation or "
           "color sigma",
-          "If type is gaussian, this means the standard deviation."
-          "If type is bilateral, this means the color-sigma. If zero, "
-          "Default values are used."
-          "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
-          "/documentation/image_filtering.html#cvSmooth",
+          "Gaussian kernel standard deviation in X and Y direction",
           0, G_MAXDOUBLE, DEFAULT_COLORSIGMA,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_SPATIALSIGMA,
       g_param_spec_double ("spatial", "spatial (spatial sigma, bilateral only)",
-          "Only used in bilateral type, means the spatial-sigma."
-          "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
-          "/documentation/image_filtering.html#cvSmooth",
+          "(DEPRECATED: value not used anymore)",
           0, G_MAXDOUBLE, DEFAULT_SPATIALSIGMA,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -215,7 +208,6 @@ gst_cv_smooth_init (GstCvSmooth * filter)
   filter->width = DEFAULT_WIDTH;
   filter->height = DEFAULT_HEIGHT;
   filter->colorsigma = DEFAULT_COLORSIGMA;
-  filter->spatialsigma = DEFAULT_SPATIALSIGMA;
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
       FALSE);
@@ -266,7 +258,7 @@ gst_cv_smooth_set_property (GObject * object, guint prop_id,
     case PROP_HEIGHT:{
       gint prop = g_value_get_int (value);
 
-      if (prop % 2 == 1 || prop == 0) {
+      if (prop % 2 == 1) {
         filter->height = prop;
       } else {
         GST_WARNING_OBJECT (filter, "Ignoring value for height, not odd"
@@ -278,7 +270,6 @@ gst_cv_smooth_set_property (GObject * object, guint prop_id,
       filter->colorsigma = g_value_get_double (value);
       break;
     case PROP_SPATIALSIGMA:
-      filter->spatialsigma = g_value_get_double (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -306,7 +297,6 @@ gst_cv_smooth_get_property (GObject * object, guint prop_id,
       g_value_set_double (value, filter->colorsigma);
       break;
     case PROP_SPATIALSIGMA:
-      g_value_set_double (value, filter->spatialsigma);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -320,8 +310,8 @@ gst_cv_smooth_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
 {
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
 
-  cvSmooth (img, outimg, filter->type, filter->width, filter->height,
-      filter->colorsigma, filter->spatialsigma);
+  GaussianBlur (Mat (img), Mat (outimg), Size (filter->width, filter->height),
+      filter->colorsigma, filter->colorsigma);
 
   return GST_FLOW_OK;
 }
@@ -332,8 +322,8 @@ gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
 {
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
 
-  cvSmooth (img, img, filter->type, filter->width, filter->height,
-      filter->colorsigma, filter->spatialsigma);
+  GaussianBlur (Mat (img), Mat (img), Size (filter->width, filter->height),
+      filter->colorsigma, filter->colorsigma);
 
   return GST_FLOW_OK;
 }
