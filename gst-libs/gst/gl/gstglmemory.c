@@ -60,6 +60,8 @@
 #define GL_MEM_HEIGHT(gl_mem) _get_plane_height (&gl_mem->info, gl_mem->plane)
 #define GL_MEM_STRIDE(gl_mem) GST_VIDEO_INFO_PLANE_STRIDE (&gl_mem->info, gl_mem->plane)
 
+static GstAllocator *_gl_memory_allocator;
+
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 #define GST_CAT_DEFAULT GST_CAT_GL_MEMORY
 
@@ -75,7 +77,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 #define GL_TEXTURE_EXTERNAL_OES 0x8D65
 #endif
 
-G_DEFINE_ABSTRACT_TYPE (GstGLMemoryAllocator, gst_gl_memory_allocator,
+G_DEFINE_TYPE (GstGLMemoryAllocator, gst_gl_memory_allocator,
     GST_TYPE_GL_BASE_MEMORY_ALLOCATOR);
 
 typedef struct
@@ -661,6 +663,41 @@ _gl_tex_destroy (GstGLMemory * gl_mem)
     gl->DeleteTextures (1, &gl_mem->tex_id);
 }
 
+static GstGLMemory *
+_default_gl_tex_alloc (GstGLMemoryAllocator * allocator,
+    GstGLVideoAllocationParams * params)
+{
+  GstGLMemory *mem;
+
+  g_return_val_if_fail (params->parent.
+      alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO, NULL);
+
+  mem = g_new0 (GstGLMemory, 1);
+
+  if (params->parent.
+      alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
+    mem->tex_id = params->parent.gl_handle;
+    mem->texture_wrapped = TRUE;
+  }
+
+  gst_gl_memory_init (mem, GST_ALLOCATOR_CAST (allocator), NULL,
+      params->parent.context, params->target, params->parent.alloc_params,
+      params->v_info, params->plane, params->valign, params->parent.notify,
+      params->parent.user_data);
+
+  if (params->parent.
+      alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD);
+  }
+  if (params->parent.
+      alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM) {
+    mem->mem.data = params->parent.wrapped_data;
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);
+  }
+
+  return mem;
+}
+
 static void
 gst_gl_memory_allocator_class_init (GstGLMemoryAllocatorClass * klass)
 {
@@ -674,6 +711,8 @@ gst_gl_memory_allocator_class_init (GstGLMemoryAllocatorClass * klass)
   klass->unmap = (GstGLBaseMemoryAllocatorUnmapFunction) _default_gl_tex_unmap;
   klass->copy = (GstGLBaseMemoryAllocatorCopyFunction) _default_gl_tex_copy;
 
+  gl_base->alloc =
+      (GstGLBaseMemoryAllocatorAllocFunction) _default_gl_tex_alloc;
   gl_base->create = (GstGLBaseMemoryAllocatorCreateFunction) _gl_tex_create;
   gl_base->map = (GstGLBaseMemoryAllocatorMapFunction) _gl_tex_map;
   gl_base->unmap = (GstGLBaseMemoryAllocatorUnmapFunction) _gl_tex_unmap;
@@ -794,6 +833,11 @@ gst_gl_memory_init_once (void)
 
     GST_DEBUG_CATEGORY_INIT (GST_CAT_GL_MEMORY, "glbasetexture", 0,
         "OpenGL Base Texture Memory");
+
+    _gl_memory_allocator = g_object_new (GST_TYPE_GL_MEMORY_ALLOCATOR, NULL);
+
+    gst_allocator_register (GST_GL_MEMORY_ALLOCATOR_NAME, _gl_memory_allocator);
+
     g_once_init_leave (&_init, 1);
   }
 }
@@ -810,4 +854,254 @@ gst_is_gl_memory (GstMemory * mem)
   return mem != NULL && mem->allocator != NULL
       && g_type_is_a (G_OBJECT_TYPE (mem->allocator),
       GST_TYPE_GL_MEMORY_ALLOCATOR);
+}
+
+static void
+_gst_gl_video_allocation_params_set_video_alignment (GstGLVideoAllocationParams
+    * params, GstVideoAlignment * valign)
+{
+  g_return_if_fail (params != NULL);
+
+  if (!params->valign)
+    params->valign = g_new0 (GstVideoAlignment, 1);
+
+  if (valign) {
+    *params->valign = *valign;
+  } else {
+    gst_video_alignment_reset (params->valign);
+  }
+}
+
+gboolean
+gst_gl_video_allocation_params_init_full (GstGLVideoAllocationParams * params,
+    gsize struct_size, guint alloc_flags, GstGLAllocationParamsCopyFunc copy,
+    GstGLAllocationParamsFreeFunc free, GstGLContext * context,
+    GstAllocationParams * alloc_params, GstVideoInfo * v_info,
+    guint plane, GstVideoAlignment * valign, GstGLTextureTarget target,
+    gpointer wrapped_data, guint gl_handle, GDestroyNotify notify,
+    gpointer user_data)
+{
+  guint i;
+
+  g_return_val_if_fail (params != NULL, FALSE);
+  g_return_val_if_fail (copy != NULL, FALSE);
+  g_return_val_if_fail (free != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
+  g_return_val_if_fail (v_info != NULL, FALSE);
+
+  memset (params, 0, sizeof (*params));
+
+  if (!gst_gl_allocation_params_init ((GstGLAllocationParams *) params,
+          struct_size, alloc_flags, copy, free, context, 0, alloc_params,
+          notify, user_data, wrapped_data, gl_handle))
+    return FALSE;
+
+  params->v_info = g_new0 (GstVideoInfo, 1);
+  *params->v_info = *v_info;
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    params->v_info->offset[i] = v_info->offset[i];
+    params->v_info->stride[i] = v_info->stride[i];
+  }
+  _gst_gl_video_allocation_params_set_video_alignment (params, valign);
+  params->target = target;
+  params->plane = plane;
+
+  return TRUE;
+}
+
+/**
+ * gst_gl_video_allocation_params_new:
+ * @context: a #GstGLContext
+ * @alloc_params: (allow-none): the #GstAllocationParams for @wrapped_data
+ * @v_info: the #GstVideoInfo for @wrapped_data
+ * @plane: the video plane @wrapped_data represents
+ * @valign: (allow-none): any #GstVideoAlignment applied to symem mappings of @wrapped_data
+ * @target: the #GstGLTextureTarget for @wrapped_data
+ *
+ * Returns: a new #GstGLVideoAllocationParams for allocating #GstGLMemory's
+ */
+GstGLVideoAllocationParams *
+gst_gl_video_allocation_params_new (GstGLContext * context,
+    GstAllocationParams * alloc_params, GstVideoInfo * v_info, guint plane,
+    GstVideoAlignment * valign, GstGLTextureTarget target)
+{
+  GstGLVideoAllocationParams *params = g_new0 (GstGLVideoAllocationParams, 1);
+
+  if (!gst_gl_video_allocation_params_init_full (params,
+          sizeof (GstGLVideoAllocationParams),
+          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_ALLOC |
+          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO,
+          (GstGLAllocationParamsCopyFunc)
+          gst_gl_video_allocation_params_copy_data,
+          (GstGLAllocationParamsFreeFunc)
+          gst_gl_video_allocation_params_free_data, context, alloc_params,
+          v_info, plane, valign, target, NULL, 0, NULL, NULL)) {
+    g_free (params);
+    return NULL;
+  }
+
+  return params;
+}
+
+/**
+ * gst_gl_video_allocation_params_new_wrapped_data:
+ * @context: a #GstGLContext
+ * @alloc_params: (allow-none): the #GstAllocationParams for @wrapped_data
+ * @v_info: the #GstVideoInfo for @wrapped_data
+ * @plane: the video plane @wrapped_data represents
+ * @valign: (allow-none): any #GstVideoAlignment applied to symem mappings of @wrapped_data
+ * @target: the #GstGLTextureTarget for @wrapped_data
+ * @wrapped_data: the data pointer to wrap
+ * @notify: (allow-none): a #GDestroyNotify
+ * @user_data: (allow-none): user data to call @notify with
+ *
+ * Returns: a new #GstGLVideoAllocationParams for wrapping @wrapped_data
+ */
+GstGLVideoAllocationParams *
+gst_gl_video_allocation_params_new_wrapped_data (GstGLContext * context,
+    GstAllocationParams * alloc_params, GstVideoInfo * v_info, guint plane,
+    GstVideoAlignment * valign, GstGLTextureTarget target,
+    gpointer wrapped_data, GDestroyNotify notify, gpointer user_data)
+{
+  GstGLVideoAllocationParams *params = g_new0 (GstGLVideoAllocationParams, 1);
+
+  if (!gst_gl_video_allocation_params_init_full (params,
+          sizeof (GstGLVideoAllocationParams),
+          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM |
+          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO,
+          (GstGLAllocationParamsCopyFunc)
+          gst_gl_video_allocation_params_copy_data,
+          (GstGLAllocationParamsFreeFunc)
+          gst_gl_video_allocation_params_free_data, context, alloc_params,
+          v_info, plane, valign, target, wrapped_data, 0, notify, user_data)) {
+    g_free (params);
+    return NULL;
+  }
+
+  return params;
+}
+
+/**
+ * gst_gl_video_allocation_params_new_wrapped_texture:
+ * @context: a #GstGLContext
+ * @alloc_params: (allow-none): the #GstAllocationParams for @tex_id
+ * @v_info: the #GstVideoInfo for @tex_id
+ * @plane: the video plane @tex_id represents
+ * @valign: (allow-none): any #GstVideoAlignment applied to symem mappings of @tex_id
+ * @target: the #GstGLTextureTarget for @tex_id
+ * @tex_id: the GL texture to wrap
+ * @notify: (allow-none): a #GDestroyNotify
+ * @user_data: (allow-none): user data to call @notify with
+ *
+ * Returns: a new #GstGLVideoAllocationParams for wrapping @tex_id
+ */
+GstGLVideoAllocationParams *
+gst_gl_video_allocation_params_new_wrapped_texture (GstGLContext * context,
+    GstAllocationParams * alloc_params, GstVideoInfo * v_info, guint plane,
+    GstVideoAlignment * valign, GstGLTextureTarget target,
+    guint tex_id, GDestroyNotify notify, gpointer user_data)
+{
+  GstGLVideoAllocationParams *params = g_new0 (GstGLVideoAllocationParams, 1);
+
+  if (!gst_gl_video_allocation_params_init_full (params,
+          sizeof (GstGLVideoAllocationParams),
+          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE |
+          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO,
+          (GstGLAllocationParamsCopyFunc)
+          gst_gl_video_allocation_params_copy_data,
+          (GstGLAllocationParamsFreeFunc)
+          gst_gl_video_allocation_params_free_data, context, alloc_params,
+          v_info, plane, valign, target, NULL, tex_id, notify, user_data)) {
+    g_free (params);
+    return NULL;
+  }
+
+  return params;
+}
+
+void
+gst_gl_video_allocation_params_free_data (GstGLVideoAllocationParams * params)
+{
+  g_free (params->v_info);
+  g_free (params->valign);
+
+  gst_gl_allocation_params_free_data (&params->parent);
+}
+
+void
+gst_gl_video_allocation_params_copy_data (GstGLVideoAllocationParams * src_vid,
+    GstGLVideoAllocationParams * dest_vid)
+{
+  GstGLAllocationParams *src = (GstGLAllocationParams *) src_vid;
+  GstGLAllocationParams *dest = (GstGLAllocationParams *) dest_vid;
+  guint i;
+
+  gst_gl_allocation_params_copy_data (src, dest);
+
+  dest_vid->v_info = g_new0 (GstVideoInfo, 1);
+  *dest_vid->v_info = *src_vid->v_info;
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    dest_vid->v_info->offset[i] = src_vid->v_info->offset[i];
+    dest_vid->v_info->stride[i] = src_vid->v_info->stride[i];
+  }
+  _gst_gl_video_allocation_params_set_video_alignment (dest_vid,
+      src_vid->valign);
+  dest_vid->target = src_vid->target;
+  dest_vid->plane = src_vid->plane;
+}
+
+/**
+ * gst_gl_memory_setup_buffer:
+ * @allocator: the @GstGLMemoryAllocator to allocate from
+ * @buffer: a #GstBuffer to setup
+ * @params: the #GstGLVideoAllocationParams to allocate with
+ *
+ * Returns: whether the buffer was correctly setup
+ */
+gboolean
+gst_gl_memory_setup_buffer (GstGLMemoryAllocator * allocator,
+    GstBuffer * buffer, GstGLVideoAllocationParams * params)
+{
+  GstGLBaseMemoryAllocator *base_allocator;
+  guint n_mem, i, v, views;
+
+  g_return_val_if_fail (params != NULL, FALSE);
+  g_return_val_if_fail ((params->parent.
+          alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM)
+      == 0, FALSE);
+  g_return_val_if_fail ((params->parent.alloc_flags &
+          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) == 0, FALSE);
+  g_return_val_if_fail (params->parent.
+      alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO, FALSE);
+
+  base_allocator = GST_GL_BASE_MEMORY_ALLOCATOR (allocator);
+  n_mem = GST_VIDEO_INFO_N_PLANES (params->v_info);
+
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (params->v_info) ==
+      GST_VIDEO_MULTIVIEW_MODE_SEPARATED)
+    views = params->v_info->views;
+  else
+    views = 1;
+
+  for (v = 0; v < views; v++) {
+    for (i = 0; i < n_mem; i++) {
+      GstGLMemory *gl_mem;
+
+      params->plane = i;
+
+      if (!(gl_mem = (GstGLMemory *) gst_gl_base_memory_alloc (base_allocator,
+                  (GstGLAllocationParams *) params)))
+        return FALSE;
+
+      gst_buffer_append_memory (buffer, (GstMemory *) gl_mem);
+    }
+
+    gst_buffer_add_video_meta_full (buffer, v,
+        GST_VIDEO_INFO_FORMAT (params->v_info),
+        GST_VIDEO_INFO_WIDTH (params->v_info),
+        GST_VIDEO_INFO_HEIGHT (params->v_info), n_mem, params->v_info->offset,
+        params->v_info->stride);
+  }
+
+  return TRUE;
 }

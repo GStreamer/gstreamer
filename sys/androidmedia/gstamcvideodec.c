@@ -989,8 +989,8 @@ _gl_sync_render_unlocked (struct gl_sync *sync)
   if (!af_meta) {
     GST_WARNING ("Failed to retreive the transformation meta from the "
         "gl_sync %p buffer %p", sync, sync->buffer);
-  } else if (gst_amc_surface_texture_get_transform_matrix (sync->
-          surface->texture, matrix, &error)) {
+  } else if (gst_amc_surface_texture_get_transform_matrix (sync->surface->
+          texture, matrix, &error)) {
 
     gst_video_affine_transformation_meta_apply_matrix (af_meta, matrix);
     gst_video_affine_transformation_meta_apply_matrix (af_meta, yflip_matrix);
@@ -1302,8 +1302,20 @@ retry:
     state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
 
     if (!self->oes_mem) {
-      self->oes_mem = (GstGLMemory *) gst_gl_memory_pbo_alloc (self->gl_context,
-          GST_GL_TEXTURE_TARGET_EXTERNAL_OES, NULL, &state->info, 0, NULL);
+      GstGLBaseMemoryAllocator *base_mem_alloc;
+      GstGLVideoAllocationParams *params;
+
+      base_mem_alloc =
+          GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find
+          (GST_GL_MEMORY_ALLOCATOR_NAME));
+
+      params = gst_gl_video_allocation_params_new (self->gl_context, NULL,
+          &state->info, 0, NULL, GST_GL_TEXTURE_TARGET_EXTERNAL_OES);
+
+      self->oes_mem = (GstGLMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
+          (GstGLAllocationParams *) params);
+      gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+      gst_object_unref (base_mem_alloc);
 
       gst_gl_context_thread_add (self->gl_context,
           (GstGLContextThreadFunc) _attach_mem_to_context, self);
