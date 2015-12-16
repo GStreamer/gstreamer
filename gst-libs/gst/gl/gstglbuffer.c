@@ -442,11 +442,3 @@ gst_is_gl_buffer (GstMemory * mem)
       g_type_is_a (G_OBJECT_TYPE (mem->allocator),
       GST_TYPE_GL_BUFFER_ALLOCATOR);
 }
-
-GstGLBuffer *
-gst_gl_buffer_alloc (GstGLContext * context, guint gl_target, guint gl_usage,
-    GstAllocationParams * params, gsize maxsize)
-{
-  return _gl_buffer_new (_gl_buffer_allocator, NULL, context, gl_target,
-      gl_usage, params, maxsize);
-}

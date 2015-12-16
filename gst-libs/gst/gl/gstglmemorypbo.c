@@ -234,12 +234,27 @@ _gl_mem_create (GstGLMemoryPBO * gl_mem, GError ** error)
 
   if (USING_OPENGL (context) || USING_OPENGL3 (context)
       || USING_GLES3 (context)) {
-    GstAllocationParams params = { 0, GST_MEMORY_CAST (gl_mem)->align, 0, 0 };
+    GstAllocationParams alloc_params =
+        { 0, GST_MEMORY_CAST (gl_mem)->align, 0, 0 };
+    GstGLBaseMemoryAllocator *buf_allocator;
+    GstGLBufferAllocationParams *params;
+
+    buf_allocator =
+        GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find
+        (GST_GL_BUFFER_ALLOCATOR_NAME));
+    params =
+        gst_gl_buffer_allocation_params_new (context,
+        GST_MEMORY_CAST (gl_mem)->size, &alloc_params, GL_PIXEL_UNPACK_BUFFER,
+        GL_STREAM_DRAW);
 
     /* FIXME: lazy init this for resource constrained platforms
      * Will need to fix pbo detection based on the existence of the mem.id then */
-    gl_mem->pbo = gst_gl_buffer_alloc (context, GL_PIXEL_UNPACK_BUFFER,
-        GL_STREAM_DRAW, &params, GST_MEMORY_CAST (gl_mem)->size);
+    gl_mem->pbo = (GstGLBuffer *) gst_gl_base_memory_alloc (buf_allocator,
+        (GstGLAllocationParams *) params);
+
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+    gst_object_unref (buf_allocator);
+
     GST_CAT_LOG (GST_CAT_GL_MEMORY, "generated pbo %u", gl_mem->pbo->id);
   }
 
