@@ -57,6 +57,24 @@ struct _GstGLBuffer
   guint                 usage_hints;     /* XXX: put this in the allocator? */
 };
 
+typedef struct _GstGLBufferAllocationParams GstGLBufferAllocationParams;
+
+#define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_BUFFER (1 << 4)
+
+struct _GstGLBufferAllocationParams
+{
+  GstGLAllocationParams     parent;
+
+  guint                     gl_target;
+  guint                     gl_usage;
+};
+
+GstGLBufferAllocationParams *   gst_gl_buffer_allocation_params_new     (GstGLContext * context,
+                                                                         gsize alloc_size,
+                                                                         GstAllocationParams * alloc_params,
+                                                                         guint gl_target,
+                                                                         guint gl_usage);
+
 /**
  * GstGLBufferAllocator
  *

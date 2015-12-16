@@ -299,7 +299,7 @@ static GstMemory *
 _gl_buffer_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params)
 {
-  g_critical ("Need to use gst_gl_buffer_alloc() to allocate from "
+  g_critical ("Need to use gst_gl_base_memory_alloc() to allocate from "
       "this allocator");
 
   return NULL;
@@ -313,6 +313,70 @@ _gl_buffer_destroy (GstGLBuffer * mem)
   gl->DeleteBuffers (1, &mem->id);
 }
 
+static void
+_gst_gl_buffer_allocation_params_copy_data (GstGLBufferAllocationParams * src,
+    GstGLBufferAllocationParams * dest)
+{
+  memset (dest, 0, sizeof (*dest));
+
+  gst_gl_allocation_params_copy_data (&src->parent, &dest->parent);
+
+  dest->gl_target = src->gl_target;
+  dest->gl_usage = src->gl_usage;
+}
+
+static void
+_gst_gl_buffer_allocation_params_free_data (GstGLBufferAllocationParams *
+    params)
+{
+  gst_gl_allocation_params_free_data (&params->parent);
+}
+
+GstGLBufferAllocationParams *
+gst_gl_buffer_allocation_params_new (GstGLContext * context, gsize alloc_size,
+    GstAllocationParams * alloc_params, guint gl_target, guint gl_usage)
+{
+  GstGLBufferAllocationParams *params;
+
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
+  g_return_val_if_fail (alloc_size > 0, NULL);
+
+  params = g_new0 (GstGLBufferAllocationParams, 1);
+
+  if (!gst_gl_allocation_params_init (&params->parent, sizeof (*params),
+          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_BUFFER |
+          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_ALLOC,
+          (GstGLAllocationParamsCopyFunc)
+          _gst_gl_buffer_allocation_params_copy_data,
+          (GstGLAllocationParamsFreeFunc)
+          _gst_gl_buffer_allocation_params_free_data, context, alloc_size,
+          alloc_params, NULL, NULL, NULL, 0)) {
+    g_free (params);
+    return NULL;
+  }
+
+  params->gl_target = gl_target;
+  params->gl_usage = gl_usage;
+
+  return params;
+}
+
+static GstGLBuffer *
+_gl_buffer_alloc_mem (GstGLBufferAllocator * allocator,
+    GstGLBufferAllocationParams * params)
+{
+  guint alloc_flags = params->parent.alloc_flags;
+
+  g_return_val_if_fail (alloc_flags &
+      GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_BUFFER, NULL);
+  g_return_val_if_fail (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_ALLOC,
+      NULL);
+
+  return _gl_buffer_new (GST_ALLOCATOR (allocator), NULL,
+      params->parent.context, params->gl_target, params->gl_usage,
+      params->parent.alloc_params, params->parent.alloc_size);
+}
+
 G_DEFINE_TYPE (GstGLBufferAllocator, gst_gl_buffer_allocator,
     GST_TYPE_GL_BASE_MEMORY_ALLOCATOR);
 
@@ -324,6 +388,7 @@ gst_gl_buffer_allocator_class_init (GstGLBufferAllocatorClass * klass)
 
   gl_base = (GstGLBaseMemoryAllocatorClass *) klass;
 
+  gl_base->alloc = (GstGLBaseMemoryAllocatorAllocFunction) _gl_buffer_alloc_mem;
   gl_base->create = (GstGLBaseMemoryAllocatorCreateFunction) _gl_buffer_create;
   gl_base->map = (GstGLBaseMemoryAllocatorMapFunction) _gl_buffer_map;
   gl_base->unmap = (GstGLBaseMemoryAllocatorUnmapFunction) _gl_buffer_unmap;
