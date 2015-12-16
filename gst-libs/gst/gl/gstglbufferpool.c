@@ -47,12 +47,8 @@
 struct _GstGLBufferPoolPrivate
 {
   GstAllocator *allocator;
-  GstAllocationParams params;
+  GstGLVideoAllocationParams *gl_params;
   GstCaps *caps;
-  gint im_format;
-  GstVideoInfo info;
-  GstVideoAlignment valign;
-  GstGLTextureTarget tex_target;
   gboolean add_videometa;
   gboolean add_glsyncmeta;
   gboolean want_eglimage;
@@ -97,6 +93,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   guint max_align, n;
   GstAllocator *allocator = NULL;
   GstAllocationParams alloc_params;
+  GstGLTextureTarget tex_target;
   gboolean ret = TRUE;
   gint p;
 
@@ -117,21 +114,17 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, &alloc_params))
     goto wrong_config;
 
+  gst_caps_replace (&priv->caps, caps);
+
   if (priv->allocator)
     gst_object_unref (priv->allocator);
 
-  if (allocator) {
+  if (allocator /* && GST_IS_GL_MEMORY_ALLOCATOR (allocator) FIXME EGLImage */ ) {
     priv->allocator = gst_object_ref (allocator);
+  } else {
+    priv->allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+    g_assert (priv->allocator);
   }
-
-  priv->params = alloc_params;
-
-  priv->im_format = GST_VIDEO_INFO_FORMAT (&info);
-  if (priv->im_format == -1)
-    goto unknown_format;
-
-  gst_caps_replace (&priv->caps, caps);
-  priv->info = info;
 
   priv->add_videometa = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -148,26 +141,33 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     priv->want_eglimage = FALSE;
   }
 
+  if (priv->gl_params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) priv->gl_params);
+  priv->gl_params = (GstGLVideoAllocationParams *)
+      gst_buffer_pool_config_get_gl_allocation_params (config);
+  if (!priv->gl_params)
+    priv->gl_params = gst_gl_video_allocation_params_new (glpool->context,
+        &alloc_params, &info, -1, NULL, 0);
+
   max_align = alloc_params.align;
 
   if (gst_buffer_pool_config_has_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
-
     priv->add_videometa = TRUE;
 
-    gst_buffer_pool_config_get_video_alignment (config, &priv->valign);
+    gst_buffer_pool_config_get_video_alignment (config,
+        priv->gl_params->valign);
 
     for (n = 0; n < GST_VIDEO_MAX_PLANES; ++n)
-      max_align |= priv->valign.stride_align[n];
+      max_align |= priv->gl_params->valign->stride_align[n];
 
     for (n = 0; n < GST_VIDEO_MAX_PLANES; ++n)
-      priv->valign.stride_align[n] = max_align;
+      priv->gl_params->valign->stride_align[n] = max_align;
 
-    gst_video_info_align (&priv->info, &priv->valign);
+    gst_video_info_align (priv->gl_params->v_info, priv->gl_params->valign);
 
-    gst_buffer_pool_config_set_video_alignment (config, &priv->valign);
-  } else {
-    gst_video_alignment_reset (&priv->valign);
+    gst_buffer_pool_config_set_video_alignment (config,
+        priv->gl_params->valign);
   }
 
   if (alloc_params.align < max_align) {
@@ -177,59 +177,63 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
     alloc_params.align = max_align;
     gst_buffer_pool_config_set_allocator (config, allocator, &alloc_params);
-    priv->params = alloc_params;
+    if (priv->gl_params->parent.alloc_params)
+      gst_allocation_params_free (priv->gl_params->parent.alloc_params);
+    priv->gl_params->parent.alloc_params =
+        gst_allocation_params_copy (&alloc_params);
   }
 
-  priv->tex_target = 0;
   {
     GstStructure *s = gst_caps_get_structure (caps, 0);
     const gchar *target_str = gst_structure_get_string (s, "texture-target");
     gboolean multiple_texture_targets = FALSE;
 
+    tex_target = priv->gl_params->target;
     if (target_str)
-      priv->tex_target = gst_gl_texture_target_from_string (target_str);
+      tex_target = gst_gl_texture_target_from_string (target_str);
 
     if (gst_buffer_pool_config_has_option (config,
             GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_2D)) {
-      if (priv->tex_target && priv->tex_target != GST_GL_TEXTURE_TARGET_2D)
+      if (tex_target && tex_target != GST_GL_TEXTURE_TARGET_2D)
         multiple_texture_targets = TRUE;
-      priv->tex_target = GST_GL_TEXTURE_TARGET_2D;
+      tex_target = GST_GL_TEXTURE_TARGET_2D;
     }
     if (gst_buffer_pool_config_has_option (config,
             GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_RECTANGLE)) {
-      if (priv->tex_target
-          && priv->tex_target != GST_GL_TEXTURE_TARGET_RECTANGLE)
+      if (tex_target && tex_target != GST_GL_TEXTURE_TARGET_RECTANGLE)
         multiple_texture_targets = TRUE;
-      priv->tex_target = GST_GL_TEXTURE_TARGET_RECTANGLE;
+      tex_target = GST_GL_TEXTURE_TARGET_RECTANGLE;
     }
     if (gst_buffer_pool_config_has_option (config,
             GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_EXTERNAL_OES)) {
-      if (priv->tex_target
-          && priv->tex_target != GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+      if (tex_target && tex_target != GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
         multiple_texture_targets = TRUE;
-      priv->tex_target = GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
+      tex_target = GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
     }
 
-    if (!priv->tex_target)
-      priv->tex_target = GST_GL_TEXTURE_TARGET_2D;
+    if (!tex_target)
+      tex_target = GST_GL_TEXTURE_TARGET_2D;
 
     if (multiple_texture_targets) {
       GST_WARNING_OBJECT (pool, "Multiple texture targets configured either "
           "through caps or buffer pool options");
       ret = FALSE;
     }
+
+    priv->gl_params->target = tex_target;
   }
 
   /* Recalulate the size and offset as we don't add padding between planes. */
-  priv->info.size = 0;
-  for (p = 0; p < GST_VIDEO_INFO_N_PLANES (&priv->info); p++) {
-    priv->info.offset[p] = priv->info.size;
-    priv->info.size +=
-        gst_gl_get_plane_data_size (&priv->info, &priv->valign, p);
+  priv->gl_params->v_info->size = 0;
+  for (p = 0; p < GST_VIDEO_INFO_N_PLANES (priv->gl_params->v_info); p++) {
+    priv->gl_params->v_info->offset[p] = priv->gl_params->v_info->size;
+    priv->gl_params->v_info->size +=
+        gst_gl_get_plane_data_size (priv->gl_params->v_info,
+        priv->gl_params->valign, p);
   }
 
-  gst_buffer_pool_config_set_params (config, caps, priv->info.size,
-      min_buffers, max_buffers);
+  gst_buffer_pool_config_set_params (config, caps,
+      priv->gl_params->v_info->size, min_buffers, max_buffers);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config) && ret;
 
@@ -250,16 +254,6 @@ wrong_caps:
         "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
-unknown_format:
-  {
-    GST_WARNING_OBJECT (glpool, "failed to get format from caps %"
-        GST_PTR_FORMAT, caps);
-    GST_ELEMENT_ERROR (glpool, RESOURCE, WRITE,
-        ("Failed to create output image buffer of %dx%d pixels",
-            priv->info.width, priv->info.height),
-        ("Invalid input caps %" GST_PTR_FORMAT, caps));
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -273,14 +267,13 @@ static GstFlowReturn
 gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     GstBufferPoolAcquireParams * params)
 {
+  GstGLMemoryAllocator *alloc;
   GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
   GstGLBufferPoolPrivate *priv = glpool->priv;
   GstVideoInfo *info;
-  GstVideoAlignment *valign;
   GstBuffer *buf;
 
-  info = &priv->info;
-  valign = &priv->valign;
+  info = priv->gl_params->v_info;
 
   if (!(buf = gst_buffer_new ())) {
     goto no_buffer;
@@ -298,8 +291,8 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   }
 #endif
 
-  if (!gst_gl_memory_pbo_setup_buffer (glpool->context, priv->tex_target,
-          &priv->params, info, valign, buf))
+  alloc = GST_GL_MEMORY_ALLOCATOR (priv->allocator);
+  if (!gst_gl_memory_setup_buffer (alloc, buf, priv->gl_params))
     goto mem_create_failed;
 
   if (priv->add_glsyncmeta)
@@ -429,14 +422,10 @@ gst_gl_buffer_pool_init (GstGLBufferPool * pool)
 
   priv->allocator = NULL;
   priv->caps = NULL;
-  priv->im_format = GST_VIDEO_FORMAT_UNKNOWN;
   priv->add_videometa = TRUE;
   priv->add_glsyncmeta = FALSE;
   priv->want_eglimage = FALSE;
   priv->last_buffer = FALSE;
-
-  gst_video_info_init (&priv->info);
-  gst_allocation_params_init (&priv->params);
 }
 
 static void
@@ -464,4 +453,31 @@ gst_gl_buffer_pool_finalize (GObject * object)
     gst_object_unref (priv->allocator);
     priv->allocator = NULL;
   }
+
+  if (priv->gl_params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) priv->gl_params);
+  priv->gl_params = NULL;
+}
+
+GstGLAllocationParams *
+gst_buffer_pool_config_get_gl_allocation_params (GstStructure * config)
+{
+  GstGLAllocationParams *ret;
+
+  if (!gst_structure_get (config, "gl-allocation-params",
+          GST_TYPE_GL_ALLOCATION_PARAMS, &ret, NULL))
+    ret = NULL;
+
+  return ret;
+}
+
+void
+gst_buffer_pool_config_set_gl_allocation_params (GstStructure * config,
+    GstGLAllocationParams * params)
+{
+  g_return_if_fail (config != NULL);
+  g_return_if_fail (params != NULL);
+
+  gst_structure_set (config, "gl-allocation-params",
+      GST_TYPE_GL_ALLOCATION_PARAMS, params, NULL);
 }
