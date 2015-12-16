@@ -29,7 +29,8 @@ libgstqtsink_la_CXXFLAGS = \
 	$(GST_CXXFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
-	$(QT_CFLAGS)
+	$(QT_CFLAGS) \
+	$(GL_CFLAGS)
 
 libgstqtsink_la_LIBADD = \
 	$(GST_BASE_LIBS) \
