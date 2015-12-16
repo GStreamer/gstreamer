@@ -174,7 +174,7 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   GstPnmenc *pnmenc;
   guint size, pixels;
   GstMapInfo omap, imap;
-  gchar *header;
+  gchar *header = NULL;
   GstVideoInfo *info;
   GstFlowReturn ret = GST_FLOW_OK;
   guint i_rowstride, o_rowstride;
@@ -284,6 +284,7 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
     goto done;
 
 done:
+  g_free (header);
   return ret;
 }
 
