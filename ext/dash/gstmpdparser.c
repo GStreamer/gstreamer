@@ -2207,6 +2207,11 @@ gst_mpdparser_parse_utctiming_node (GList ** list, xmlNode * a_node)
     }
     new_timing->urls = g_strsplit (value, " ", max_tokens);
     xmlFree (value);
+  }
+
+  /* append to list only if both method and urls were set */
+  if (new_timing->method != 0 && new_timing->urls != NULL &&
+      g_strv_length (new_timing->urls) != 0) {
     *list = g_list_append (*list, new_timing);
   } else {
     gst_mpdparser_free_utctiming_node (new_timing);

@@ -2433,6 +2433,48 @@ GST_START_TEST (dash_mpdparser_utctiming)
       &selected_method);
   fail_if (urls == NULL);
   assert_equals_int (selected_method, GST_MPD_UTCTIMING_TYPE_HTTP_XSDATE);
+  urls =
+      gst_mpd_client_get_utc_timing_sources (mpdclient,
+      GST_MPD_UTCTIMING_TYPE_NTP, &selected_method);
+  fail_if (urls == NULL);
+  assert_equals_int (selected_method, GST_MPD_UTCTIMING_TYPE_NTP);
+  assert_equals_int (g_strv_length (urls), 4);
+  assert_equals_string (urls[0], "0.europe.pool.ntp.org");
+  assert_equals_string (urls[1], "1.europe.pool.ntp.org");
+  assert_equals_string (urls[2], "2.europe.pool.ntp.org");
+  assert_equals_string (urls[3], "3.europe.pool.ntp.org");
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
+ * Test parsing invalid UTCTiming values:
+ * - elements with no schemeIdUri property should be rejected
+ * - elements with no value property should be rejected
+ * - elements with unrecognised UTCTiming scheme should be rejected
+ * - elements with empty values should be rejected
+ *
+ */
+GST_START_TEST (dash_mpdparser_utctiming_invalid_value)
+{
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "<UTCTiming invalid_schemeIdUri=\"dummy.uri.scheme\" value=\"dummy value\"/>"
+      "<UTCTiming schemeIdUri=\"urn:mpeg:dash:utc:ntp:2014\" invalid_value=\"dummy value\"/>"
+      "<UTCTiming schemeIdUri=\"dummy.uri.scheme\" value=\"dummy value\"/>"
+      "<UTCTiming schemeIdUri=\"urn:mpeg:dash:utc:ntp:2014\" value=\"\"/>"
+      "</MPD>";
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+
+  assert_equals_int (ret, TRUE);
+  fail_if (mpdclient->mpd_node == NULL);
+  fail_if (mpdclient->mpd_node->UTCTiming != NULL);
   gst_mpd_client_free (mpdclient);
 }
 
@@ -5364,6 +5406,7 @@ dash_suite (void)
       dash_mpdparser_period_adaptationSet_representation_segmentTemplate);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_period_subset);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_utctiming);
+  tcase_add_test (tc_simpleMPD, dash_mpdparser_utctiming_invalid_value);
 
   /* tests checking other possible values for attributes */
   tcase_add_test (tc_simpleMPD, dash_mpdparser_type_dynamic);
