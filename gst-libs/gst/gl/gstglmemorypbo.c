@@ -250,8 +250,8 @@ static void
 _gl_mem_init (GstGLMemoryPBO * mem, GstAllocator * allocator,
     GstMemory * parent, GstGLContext * context, GstGLTextureTarget target,
     GstAllocationParams * params, GstVideoInfo * info,
-    GstVideoAlignment * valign, guint plane, gpointer user_data,
-    GDestroyNotify notify)
+    guint plane, GstVideoAlignment * valign, GDestroyNotify notify,
+    gpointer user_data)
 {
   gst_gl_memory_init ((GstGLMemory *) mem, allocator, parent,
       context, target, params, info, plane, valign, notify, user_data);
@@ -261,15 +261,15 @@ static GstGLMemoryPBO *
 _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
     GstGLContext * context, GstGLTextureTarget target,
     GstAllocationParams * params, GstVideoInfo * info,
-    GstVideoAlignment * valign, guint plane, gpointer user_data,
-    GDestroyNotify notify)
+    guint plane, GstVideoAlignment * valign, GDestroyNotify notify,
+    gpointer user_data)
 {
   GstGLMemoryPBO *mem;
   mem = g_slice_new0 (GstGLMemoryPBO);
   mem->mem.texture_wrapped = FALSE;
 
-  _gl_mem_init (mem, allocator, parent, context, target, params, info, valign,
-      plane, user_data, notify);
+  _gl_mem_init (mem, allocator, parent, context, target, params, info, plane,
+      valign, notify, user_data);
 
   return mem;
 }
@@ -629,8 +629,8 @@ _gl_mem_copy (GstGLMemoryPBO * src, gssize offset, gssize size)
   }
 
   dest = (GstMemory *) _gl_mem_new (allocator, NULL, src->mem.mem.context,
-      src->mem.tex_target, &params, &src->mem.info, &src->mem.valign,
-      src->mem.plane, NULL, NULL);
+      src->mem.tex_target, &params, &src->mem.info, src->mem.plane,
+      &src->mem.valign, NULL, NULL);
 
   if (GST_MEMORY_FLAG_IS_SET (src, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD)) {
     if (!gst_gl_base_memory_memcpy ((GstGLBaseMemory *) src,
@@ -669,7 +669,7 @@ static GstMemory *
 _gl_mem_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params)
 {
-  g_warning ("use gst_gl_memory_pbo_alloc () to allocate from this "
+  g_warning ("Use gst_gl_base_memory_alloc () to allocate from this "
       "GstGLMemoryPBO allocator");
 
   return NULL;
@@ -692,6 +692,46 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
   GST_ALLOCATOR_CLASS (parent_class)->free (allocator, mem);
 }
 
+static GstGLMemoryPBO *
+_gl_mem_pbo_alloc (GstGLBaseMemoryAllocator * allocator,
+    GstGLVideoAllocationParams * params)
+{
+  GstGLMemoryPBO *mem;
+
+  g_return_val_if_fail (params->
+      parent.alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO, NULL);
+
+  mem = g_new0 (GstGLMemoryPBO, 1);
+
+  if (params->
+      parent.alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE)
+  {
+    mem->mem.tex_id = params->parent.gl_handle;
+    mem->mem.texture_wrapped = TRUE;
+  }
+
+  _gl_mem_init (mem, GST_ALLOCATOR_CAST (allocator), NULL,
+      params->parent.context, params->target, params->parent.alloc_params,
+      params->v_info, params->plane, params->valign, params->parent.notify,
+      params->parent.user_data);
+
+  if (params->
+      parent.alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE)
+  {
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD);
+  }
+  if (params->
+      parent.alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM) {
+    mem->pbo->mem.data = params->parent.wrapped_data;
+
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);
+    GST_MINI_OBJECT_FLAG_SET (mem->pbo,
+        GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);
+  }
+
+  return mem;
+}
+
 static void
 gst_gl_memory_pbo_allocator_class_init (GstGLMemoryPBOAllocatorClass * klass)
 {
@@ -703,6 +743,7 @@ gst_gl_memory_pbo_allocator_class_init (GstGLMemoryPBOAllocatorClass * klass)
   gl_base = (GstGLBaseMemoryAllocatorClass *) klass;
   allocator_class = (GstAllocatorClass *) klass;
 
+  gl_base->alloc = (GstGLBaseMemoryAllocatorAllocFunction) _gl_mem_pbo_alloc;
   gl_base->create = (GstGLBaseMemoryAllocatorCreateFunction) _gl_mem_create;
   gl_tex->map = (GstGLBaseMemoryAllocatorMapFunction) _gl_mem_map;
   gl_tex->unmap = (GstGLBaseMemoryAllocatorUnmapFunction) _gl_mem_unmap;

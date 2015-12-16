@@ -61,8 +61,8 @@ struct _GstGLMemoryPBO
  */
 #define GST_GL_MEMORY_PBO_ALLOCATOR_NAME   "GLMemoryPBO"
 
-void                gst_gl_memory_pbo_init_once (void);
-gboolean            gst_is_gl_memory_pbo (GstMemory * mem);
+void          gst_gl_memory_pbo_init_once               (void);
+gboolean      gst_is_gl_memory_pbo                      (GstMemory * mem);
 
 GstMemory *         gst_gl_memory_pbo_alloc             (GstGLContext * context,
                                                          GstGLTextureTarget target,
