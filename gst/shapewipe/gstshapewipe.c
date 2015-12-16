@@ -329,8 +329,9 @@ gst_shape_wipe_video_sink_getcaps (GstShapeWipe * self, GstPad * pad,
 {
   GstCaps *templ, *ret, *tmp;
 
-  if (gst_pad_has_current_caps (pad))
-    return gst_pad_get_current_caps (pad);
+  ret = gst_pad_get_current_caps (pad);
+  if (ret != NULL)
+    return ret;
 
   templ = gst_pad_get_pad_template_caps (pad);
   tmp = gst_pad_peer_query_caps (self->srcpad, NULL);
@@ -451,8 +452,9 @@ gst_shape_wipe_mask_sink_getcaps (GstShapeWipe * self, GstPad * pad,
   GstCaps *ret, *tmp, *tcaps;
   guint i, n;
 
-  if (gst_pad_has_current_caps (pad))
-    return gst_pad_get_current_caps (pad);
+  ret = gst_pad_get_current_caps (pad);
+  if (ret != NULL)
+    return ret;
 
   tcaps = gst_pad_get_pad_template_caps (self->video_sinkpad);
   tmp = gst_pad_peer_query_caps (self->video_sinkpad, NULL);
@@ -535,10 +537,13 @@ gst_shape_wipe_src_getcaps (GstPad * pad, GstCaps * filter)
   GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
   GstCaps *templ, *ret, *tmp;
 
-  if (gst_pad_has_current_caps (pad))
-    return gst_pad_get_current_caps (pad);
-  else if (gst_pad_has_current_caps (self->video_sinkpad))
-    return gst_pad_get_current_caps (self->video_sinkpad);
+  ret = gst_pad_get_current_caps (pad);
+  if (ret != NULL)
+    return ret;
+
+  ret = gst_pad_get_current_caps (self->video_sinkpad);
+  if (ret != NULL)
+    return ret;
 
   templ = gst_pad_get_pad_template_caps (self->video_sinkpad);
   tmp = gst_pad_peer_query_caps (self->video_sinkpad, NULL);

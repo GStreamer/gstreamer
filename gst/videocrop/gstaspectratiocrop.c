@@ -464,8 +464,10 @@ gst_aspect_ratio_crop_set_property (GObject * object, guint prop_id,
 
   if (recheck) {
     GstCaps *caps = gst_pad_get_current_caps (aspect_ratio_crop->sink);
-    gst_aspect_ratio_crop_set_caps (aspect_ratio_crop, caps);
-    gst_caps_unref (caps);
+    if (caps != NULL) {
+      gst_aspect_ratio_crop_set_caps (aspect_ratio_crop, caps);
+      gst_caps_unref (caps);
+    }
   }
 }
 
