@@ -625,7 +625,62 @@ _gl_tex_copy_thread (GstGLContext * context, gpointer data)
 static GstMemory *
 _default_gl_tex_copy (GstGLMemory * src, gssize offset, gssize size)
 {
-  return NULL;
+  GstAllocationParams params = { 0, GST_MEMORY_CAST (src)->align, 0, 0 };
+  GstGLBaseMemoryAllocator *base_mem_allocator;
+  GstAllocator *allocator;
+  GstGLMemory *dest = NULL;
+
+  allocator = GST_MEMORY_CAST (src)->allocator;
+  base_mem_allocator = (GstGLBaseMemoryAllocator *) allocator;
+
+  if (src->tex_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES) {
+    GST_CAT_ERROR (GST_CAT_GL_MEMORY, "Cannot copy External OES textures");
+    return NULL;
+  }
+
+  /* If not doing a full copy, then copy to sysmem, the 2D represention of the
+   * texture would become wrong */
+  if (offset > 0 || size < GST_MEMORY_CAST (src)->size) {
+    return base_mem_allocator->fallback_mem_copy (GST_MEMORY_CAST (src), offset,
+        size);
+  }
+
+  dest = g_new0 (GstGLMemory, 1);
+
+  gst_gl_memory_init (dest, allocator, NULL, src->mem.context, src->tex_target,
+      &params, &src->info, src->plane, &src->valign, NULL, NULL);
+
+  if (GST_MEMORY_FLAG_IS_SET (src, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD)) {
+    if (!gst_gl_base_memory_memcpy ((GstGLBaseMemory *) src,
+            (GstGLBaseMemory *) dest, offset, size)) {
+      GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
+      gst_memory_unref (GST_MEMORY_CAST (dest));
+      return NULL;
+    }
+  } else {
+    GstMapInfo dinfo;
+
+    if (!gst_memory_map (GST_MEMORY_CAST (dest), &dinfo,
+            GST_MAP_WRITE | GST_MAP_GL)) {
+      GST_CAT_WARNING (GST_CAT_GL_MEMORY,
+          "Failed not map destination " "for writing");
+      gst_memory_unref (GST_MEMORY_CAST (dest));
+      return NULL;
+    }
+
+    if (!gst_gl_memory_copy_into ((GstGLMemory *) src,
+            ((GstGLMemory *) dest)->tex_id, src->tex_target,
+            src->tex_type, src->tex_width, GL_MEM_HEIGHT (src))) {
+      GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
+      gst_memory_unmap (GST_MEMORY_CAST (dest), &dinfo);
+      gst_memory_unref (GST_MEMORY_CAST (dest));
+      return NULL;
+    }
+
+    gst_memory_unmap (GST_MEMORY_CAST (dest), &dinfo);
+  }
+
+  return (GstMemory *) dest;
 }
 
 static GstMemory *
