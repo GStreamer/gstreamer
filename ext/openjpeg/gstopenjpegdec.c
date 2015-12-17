@@ -1050,6 +1050,15 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
     goto decode_error;
 #endif
 
+  {
+    gint i;
+
+    for (i = 0; i < image->numcomps; i++) {
+      if (image->comps[i].data == NULL)
+        goto decode_error;
+    }
+  }
+
   gst_buffer_unmap (frame->input_buffer, &map);
 
   ret = gst_openjpeg_dec_negotiate (self, image);
