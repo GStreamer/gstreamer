@@ -704,12 +704,6 @@ AG_GST_CHECK_FEATURE(VORBIS, [Xiph Vorbis audio codec], vorbis, [
   AG_GST_PKG_CHECK_MODULES(VORBIS, vorbis >= 1.0 vorbisenc >= 1.0)
 ])
 
-dnl *** gio-unix-2.0 for tests/check/pipelines/tcp.c ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_GIO_UNIX_2_0, true)
-AG_GST_CHECK_FEATURE(GIO_UNIX_2_0, [glib GIO unix], gio-unix-2.0, [
-  AG_GST_PKG_CHECK_MODULES(GIO_UNIX_2_0, gio-unix-2.0 >= 2.24)
-])
-
 if test "x$HAVE_VORBIS" = "xyes"; then
   ac_cflags_save="$CFLAGS"
   AC_COMPILE_IFELSE([
@@ -750,6 +744,12 @@ dnl make the HAVE_FT2 variable available to automake and Makefile.am
 AM_CONDITIONAL(HAVE_FT2, test "x$HAVE_FT2" = "xyes")
 AC_SUBST(FT2_CFLAGS)
 AC_SUBST(FT2_LIBS)
+
+dnl *** gio-unix-2.0 for tests/check/pipelines/tcp.c ***
+PKG_CHECK_MODULES(GIO_UNIX_2_0, gio-unix-2.0 >= 2.24,
+    HAVE_GIO_UNIX_2_0="yes",
+    HAVE_GIO_UNIX_2_0="no")
+AM_CONDITIONAL(USE_GIO_UNIX_2_0, test "x$HAVE_GIO_UNIX_2_0" = "xyes")
 
 dnl *** finalize CFLAGS, LDFLAGS, LIBS
 
