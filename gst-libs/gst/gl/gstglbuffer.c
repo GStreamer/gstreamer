@@ -402,6 +402,11 @@ gst_gl_buffer_allocator_class_init (GstGLBufferAllocatorClass * klass)
 static void
 gst_gl_buffer_allocator_init (GstGLBufferAllocator * allocator)
 {
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+
+  alloc->mem_type = GST_GL_BUFFER_ALLOCATOR_NAME;
+
+  GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
 /**
