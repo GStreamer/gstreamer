@@ -161,7 +161,9 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
   g_object_class_install_property (gobject_class, PROP_WIDTH,
       g_param_spec_int ("width", "width (kernel width)",
           "The gaussian kernel width (must be positive and odd)."
-          "If type is median, this means the aperture linear size.",
+          "If type is median, this means the aperture linear size."
+          "Check OpenCV docs: http://docs.opencv.org"
+          "/2.4/modules/imgproc/doc/filtering.htm",
           1, G_MAXINT, DEFAULT_WIDTH,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
@@ -172,12 +174,14 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
   g_object_class_install_property (gobject_class, PROP_COLORSIGMA,
       g_param_spec_double ("color", "color (gaussian standard deviation or "
           "color sigma",
-          "Gaussian kernel standard deviation in X and Y direction",
+          "If type is gaussian, this means the standard deviation."
+          "If type is bilateral, this means the color-sigma. If zero, "
+          "Default values are used.",
           0, G_MAXDOUBLE, DEFAULT_COLORSIGMA,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_SPATIALSIGMA,
       g_param_spec_double ("spatial", "spatial (spatial sigma, bilateral only)",
-          "(DEPRECATED: value not used anymore)",
+          "Only used in bilateral type, means the spatial-sigma.",
           0, G_MAXDOUBLE, DEFAULT_SPATIALSIGMA,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -209,6 +213,7 @@ gst_cv_smooth_init (GstCvSmooth * filter)
   filter->width = DEFAULT_WIDTH;
   filter->height = DEFAULT_HEIGHT;
   filter->colorsigma = DEFAULT_COLORSIGMA;
+  filter->spatialsigma = DEFAULT_SPATIALSIGMA;
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
       FALSE);
@@ -271,6 +276,7 @@ gst_cv_smooth_set_property (GObject * object, guint prop_id,
       filter->colorsigma = g_value_get_double (value);
       break;
     case PROP_SPATIALSIGMA:
+      filter->spatialsigma = g_value_get_double (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -298,6 +304,7 @@ gst_cv_smooth_get_property (GObject * object, guint prop_id,
       g_value_set_double (value, filter->colorsigma);
       break;
     case PROP_SPATIALSIGMA:
+      g_value_set_double (value, filter->spatialsigma);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -312,12 +319,19 @@ gst_cv_smooth_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
 
   switch (filter->type) {
+    case CV_BLUR:
+      blur (Mat (img), Mat (outimg), Size (filter->width, filter->height),
+          Point (-1, -1));
+      break;
     case CV_GAUSSIAN:
       GaussianBlur (Mat (img), Mat (outimg), Size (filter->width,
               filter->height), filter->colorsigma, filter->colorsigma);
       break;
     case CV_MEDIAN:
       medianBlur (Mat (img), Mat (outimg), filter->width);
+      break;
+    case CV_BILATERAL:
+      bilateralFilter (Mat (img), Mat (outimg), -1, filter->colorsigma, 0.0);
       break;
     default:
       break;
@@ -333,12 +347,19 @@ gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
 
   switch (filter->type) {
+    case CV_BLUR:
+      blur (Mat (img), Mat (img), Size (filter->width, filter->height),
+          Point (-1, -1));
+      break;
     case CV_GAUSSIAN:
       GaussianBlur (Mat (img), Mat (img), Size (filter->width, filter->height),
           filter->colorsigma, filter->colorsigma);
       break;
     case CV_MEDIAN:
       medianBlur (Mat (img), Mat (img), filter->width);
+      break;
+    case CV_BILATERAL:
+      bilateralFilter (Mat (img), Mat (img), -1, filter->colorsigma, 0.0);
       break;
     default:
       break;
