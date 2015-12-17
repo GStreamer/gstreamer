@@ -192,4 +192,6 @@ GstClock *          gst_decklink_output_get_audio_clock (GstDecklinkOutput * out
 GstDecklinkInput *  gst_decklink_acquire_nth_input (gint n, GstElement * src, gboolean is_audio);
 void                gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio);
 
+const GstDecklinkMode * gst_decklink_find_mode_for_caps (GstCaps * caps);
+
 #endif

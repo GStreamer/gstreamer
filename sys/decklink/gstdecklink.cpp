@@ -358,6 +358,24 @@ gst_decklink_mode_get_template_caps (void)
   return caps;
 }
 
+const GstDecklinkMode *
+gst_decklink_find_mode_for_caps (GstCaps * caps)
+{
+  int i;
+  GstCaps *mode_caps;
+
+  for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
+    mode_caps = gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i);
+    if (gst_caps_can_intersect (caps, mode_caps)) {
+      gst_caps_unref (mode_caps);
+      return gst_decklink_get_mode ((GstDecklinkModeEnum) i);
+    }
+    gst_caps_unref (mode_caps);
+  }
+
+  return NULL;
+}
+
 #define GST_TYPE_DECKLINK_CLOCK \
   (gst_decklink_clock_get_type())
 #define GST_DECKLINK_CLOCK(obj) \

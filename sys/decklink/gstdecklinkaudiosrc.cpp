@@ -688,8 +688,7 @@ gst_decklink_audio_src_stop (GstDecklinkAudioSrc * self)
 {
   GST_DEBUG_OBJECT (self, "Stopping");
 
-  g_queue_foreach (&self->current_packets, (GFunc) capture_packet_free,
-      NULL);
+  g_queue_foreach (&self->current_packets, (GFunc) capture_packet_free, NULL);
   g_queue_clear (&self->current_packets);
 
   if (self->input && self->input->audio_enabled) {

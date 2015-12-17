@@ -292,8 +292,17 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   self->output->output->SetScheduledFrameCompletionCallback (new
       GStreamerVideoOutputCallback (self));
 
-  mode = gst_decklink_get_mode (self->mode);
-  g_assert (mode != NULL);
+  if (self->mode == GST_DECKLINK_MODE_AUTO) {
+    mode = gst_decklink_find_mode_for_caps (caps);
+    if (mode == NULL) {
+      GST_WARNING_OBJECT (self,
+          "Failed to find compatible mode for caps  %" GST_PTR_FORMAT, caps);
+      return FALSE;
+    }
+  } else {
+    mode = gst_decklink_get_mode (self->mode);
+    g_assert (mode != NULL);
+  };
 
   ret = self->output->output->EnableVideoOutput (mode->mode,
       bmdVideoOutputFlagDefault);
@@ -318,7 +327,10 @@ gst_decklink_video_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (bsink);
   GstCaps *mode_caps, *caps;
 
-  mode_caps = gst_decklink_mode_get_caps (self->mode);
+  if (self->mode == GST_DECKLINK_MODE_AUTO)
+    mode_caps = gst_decklink_mode_get_template_caps ();
+  else
+    mode_caps = gst_decklink_mode_get_caps (self->mode);
   mode_caps = gst_caps_make_writable (mode_caps);
   /* For output we support any framerate and only really care about timestamps */
   gst_caps_map_in_place (mode_caps, reset_framerate, NULL);
