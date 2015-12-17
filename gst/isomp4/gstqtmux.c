@@ -2481,10 +2481,12 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
 
       /* has shift */
       if (has_gap || (qtpad->dts_adjustment > 0)) {
-        GstClockTime ctts;
+        GstClockTime ctts = 0;
         guint32 media_start;
 
-        ctts = qtpad->first_ts - qtpad->first_dts;
+        if (qtpad->first_ts > qtpad->first_dts)
+          ctts = qtpad->first_ts - qtpad->first_dts;
+
         media_start = gst_util_uint64_scale_round (ctts,
             atom_trak_get_timescale (qtpad->trak), GST_SECOND);
 
