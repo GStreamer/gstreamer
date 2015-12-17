@@ -374,16 +374,13 @@ gst_rtp_j2k_depay_flush_frame (GstRTPBaseDepayload * depayload)
     goto done;
 
   if (avail > 2) {
-    GList *list, *walk;
-    GstBufferList *buflist;
+    GstBuffer *outbuf;
 
     /* take the last bytes of the JPEG 2000 data to see if there is an EOC
      * marker */
     gst_adapter_copy (rtpj2kdepay->f_adapter, end, avail - 2, 2);
 
     if (end[0] != 0xff && end[1] != 0xd9) {
-      GstBuffer *outbuf;
-
       end[0] = 0xff;
       end[1] = 0xd9;
 
@@ -397,21 +394,11 @@ gst_rtp_j2k_depay_flush_frame (GstRTPBaseDepayload * depayload)
       avail += 2;
     }
 
-    GST_DEBUG_OBJECT (rtpj2kdepay, "pushing buffer list of %u bytes", avail);
-    list = gst_adapter_take_list (rtpj2kdepay->f_adapter, avail);
-
-    buflist = gst_buffer_list_new ();
-
-    for (walk = list; walk; walk = g_list_next (walk)) {
-      gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload),
-          GST_BUFFER_CAST (walk->data),
-          g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
-      gst_buffer_list_add (buflist, GST_BUFFER_CAST (walk->data));
-    }
-
-    g_list_free (list);
-
-    ret = gst_rtp_base_depayload_push_list (depayload, buflist);
+    GST_DEBUG_OBJECT (rtpj2kdepay, "pushing buffer of %u bytes", avail);
+    outbuf = gst_adapter_take_buffer (rtpj2kdepay->f_adapter, avail);
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload),
+        outbuf, g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+    ret = gst_rtp_base_depayload_push (depayload, outbuf);
   } else {
     GST_WARNING_OBJECT (rtpj2kdepay, "empty packet");
     gst_adapter_clear (rtpj2kdepay->f_adapter);
