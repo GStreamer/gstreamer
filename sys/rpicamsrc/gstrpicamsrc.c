@@ -928,6 +928,18 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
     case PROP_PREVIEW_OPACITY:
       g_value_set_int (value, src->capture_config.preview_parameters.opacity);
       break;
+    case PROP_PREVIEW_X:
+      g_value_set_int (value, src->capture_config.preview_parameters.previewWindow.x);
+      break;
+    case PROP_PREVIEW_Y:
+      g_value_set_int (value, src->capture_config.preview_parameters.previewWindow.y);
+      break;
+    case PROP_PREVIEW_W:
+      g_value_set_int (value, src->capture_config.preview_parameters.previewWindow.width);
+      break;
+    case PROP_PREVIEW_H:
+      g_value_set_int (value, src->capture_config.preview_parameters.previewWindow.height);
+      break;
     case PROP_SHARPNESS:
       g_value_set_int (value, src->capture_config.camera_parameters.sharpness);
       break;
