@@ -147,7 +147,7 @@ check_conversion (TestFrame * frames, guint size)
       ref_count++;
       params = gst_gl_video_allocation_params_new_wrapped_data (context, NULL,
           &in_info, j, NULL, GST_GL_TEXTURE_TARGET_2D, frames[i].data[j],
-          _frame_unref, &ref_count);
+          &ref_count, _frame_unref);
 
       mem = gst_gl_base_memory_alloc (base_mem_alloc,
           (GstGLAllocationParams *) params);

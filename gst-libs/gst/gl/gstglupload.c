@@ -891,8 +891,8 @@ _raw_data_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   if (!(raw->params =
           gst_gl_video_allocation_params_new_wrapped_data (raw->upload->context,
               NULL, &raw->upload->priv->in_info, -1, NULL,
-              GST_GL_TEXTURE_TARGET_2D, NULL,
-              (GDestroyNotify) _raw_upload_frame_unref, raw->in_frame)))
+              GST_GL_TEXTURE_TARGET_2D, NULL, raw->in_frame,
+              (GDestroyNotify) _raw_upload_frame_unref)))
     return FALSE;
 
   return (raw->in_frame != NULL);

@@ -265,26 +265,26 @@ static void
 _gl_mem_init (GstGLMemoryPBO * mem, GstAllocator * allocator,
     GstMemory * parent, GstGLContext * context, GstGLTextureTarget target,
     GstAllocationParams * params, GstVideoInfo * info,
-    guint plane, GstVideoAlignment * valign, GDestroyNotify notify,
-    gpointer user_data)
+    guint plane, GstVideoAlignment * valign, gpointer user_data,
+    GDestroyNotify notify)
 {
   gst_gl_memory_init ((GstGLMemory *) mem, allocator, parent,
-      context, target, params, info, plane, valign, notify, user_data);
+      context, target, params, info, plane, valign, user_data, notify);
 }
 
 static GstGLMemoryPBO *
 _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
     GstGLContext * context, GstGLTextureTarget target,
     GstAllocationParams * params, GstVideoInfo * info,
-    guint plane, GstVideoAlignment * valign, GDestroyNotify notify,
-    gpointer user_data)
+    guint plane, GstVideoAlignment * valign, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstGLMemoryPBO *mem;
   mem = g_slice_new0 (GstGLMemoryPBO);
   mem->mem.texture_wrapped = FALSE;
 
   _gl_mem_init (mem, allocator, parent, context, target, params, info, plane,
-      valign, notify, user_data);
+      valign, user_data, notify);
 
   return mem;
 }
@@ -727,8 +727,8 @@ _gl_mem_pbo_alloc (GstGLBaseMemoryAllocator * allocator,
 
   _gl_mem_init (mem, GST_ALLOCATOR_CAST (allocator), NULL,
       params->parent.context, params->target, params->parent.alloc_params,
-      params->v_info, params->plane, params->valign, params->parent.notify,
-      params->parent.user_data);
+      params->v_info, params->plane, params->valign, params->parent.user_data,
+      params->parent.notify);
 
   if (params->
       parent.alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE)
