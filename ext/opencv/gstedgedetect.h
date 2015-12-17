@@ -46,8 +46,7 @@
 #ifndef __GST_EDGE_DETECT_H__
 #define __GST_EDGE_DETECT_H__
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
+#include <gstopencvvideofilter.h>
 #include <opencv2/core/core_c.h>
 
 G_BEGIN_DECLS
@@ -62,25 +61,24 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EDGE_DETECT))
 #define GST_IS_EDGE_DETECT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EDGE_DETECT))
+
 typedef struct _GstEdgeDetect GstEdgeDetect;
 typedef struct _GstEdgeDetectClass GstEdgeDetectClass;
 
 struct _GstEdgeDetect
 {
-  GstElement element;
-
-  GstPad *sinkpad, *srcpad;
+  GstOpencvVideoFilter element;
 
   gboolean mask;
 
   int threshold1, threshold2, aperture;
 
-  IplImage *cvEdge, *cvGray, *cvImage, *cvCEdge;
+  IplImage *cvEdge, *cvGray, *cvCEdge;
 };
 
 struct _GstEdgeDetectClass
 {
-  GstElementClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_edge_detect_get_type (void);
