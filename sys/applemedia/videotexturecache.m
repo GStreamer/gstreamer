@@ -175,8 +175,8 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
         params = gst_gl_video_allocation_params_new_wrapped_texture (cache->ctx,
             NULL, &cache->input_info, 0, NULL, gl_target,
-            CVOpenGLESTextureGetName (texture), (GDestroyNotify) CFRelease,
-            texture);
+            CVOpenGLESTextureGetName (texture), texture,
+            (GDestroyNotify) CFRelease);
 
         *mem1 = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
             (GstGLAllocationParams *) params);
@@ -201,8 +201,8 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
         params = gst_gl_video_allocation_params_new_wrapped_texture (cache->ctx,
             NULL, &cache->input_info, 0, NULL, gl_target,
-            CVOpenGLESTextureGetName (texture), (GDestroyNotify) CFRelease,
-            texture);
+            CVOpenGLESTextureGetName (texture), texture,
+            (GDestroyNotify) CFRelease);
 
         *mem1 = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
             (GstGLAllocationParams *) params);
@@ -222,8 +222,8 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
         params = gst_gl_video_allocation_params_new_wrapped_texture (cache->ctx,
             NULL, &cache->input_info, 1, NULL, gl_target,
-            CVOpenGLESTextureGetName (texture), (GDestroyNotify) CFRelease,
-            texture);
+            CVOpenGLESTextureGetName (texture), texture,
+            (GDestroyNotify) CFRelease);
 
         *mem2 = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
             (GstGLAllocationParams *) params);

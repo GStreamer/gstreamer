@@ -140,10 +140,10 @@ gboolean                gst_gl_allocation_params_init       (GstGLAllocationPara
                                                              GstGLContext * context,
                                                              gsize alloc_size,
                                                              GstAllocationParams * alloc_params,
-                                                             GDestroyNotify notify,
-                                                             gpointer user_data,
                                                              gpointer wrapped_data,
-                                                             guint gl_handle);
+                                                             guint gl_handle,
+                                                             gpointer user_data,
+                                                             GDestroyNotify notify);
 
 /* free with gst_gl_allocation_params_free */
 GstGLAllocationParams * gst_gl_allocation_params_copy       (GstGLAllocationParams * src);
@@ -220,8 +220,8 @@ void          gst_gl_base_memory_init      (GstGLBaseMemory * mem,
                                             GstGLContext * context,
                                             GstAllocationParams * params,
                                             gsize maxsize,
-                                            GDestroyNotify notify,
-                                            gpointer user_data);
+                                            gpointer user_data,
+                                            GDestroyNotify notify);
 
 gboolean      gst_gl_base_memory_alloc_data (GstGLBaseMemory * gl_mem);
 gboolean      gst_gl_base_memory_memcpy     (GstGLBaseMemory * src,

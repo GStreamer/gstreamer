@@ -99,15 +99,15 @@ _mem_create_gl (GstGLContext * context, struct create_data *transfer)
  * @context: the #GstGLContext to initialize with
  * @params: (allow-none): the @GstAllocationParams to initialize with
  * @size: the number of bytes to be allocated
- * @notify: (allow-none): a #GDestroyNotify
  * @user_data: (allow-none): user data to call @notify with
+ * @notify: (allow-none): a #GDestroyNotify
  *
  * Initializes @mem with the required parameters
  */
 void
 gst_gl_base_memory_init (GstGLBaseMemory * mem, GstAllocator * allocator,
     GstMemory * parent, GstGLContext * context, GstAllocationParams * params,
-    gsize size, GDestroyNotify notify, gpointer user_data)
+    gsize size, gpointer user_data, GDestroyNotify notify)
 {
   gsize align = gst_memory_alignment, offset = 0, maxsize = size;
   GstMemoryFlags flags = 0;
@@ -543,10 +543,10 @@ gst_gl_base_memory_memcpy (GstGLBaseMemory * src, GstGLBaseMemory * dest,
  * @context: (transfer none): a #GstGLContext
  * @alloc_size: the number of bytes to allocate.
  * @alloc_params: (transfer none) (allow-none): a #GstAllocationParams to apply
- * @notify: (allow-none): a #GDestroyNotify
- * @user_data: (transfer none) (allow-none): user data to call @notify with
  * @wrapped_data: (transfer none) (allow-none): a sysmem data pointer to initialize the allocation with
  * @gl_handle: (transfer none): a GL handle to initialize the allocation with
+ * @user_data: (transfer none) (allow-none): user data to call @notify with
+ * @notify: (allow-none): a #GDestroyNotify
  *
  * @notify will be called once for each allocated memory using these @params
  * when freeing the memory.
@@ -558,8 +558,8 @@ gst_gl_allocation_params_init (GstGLAllocationParams * params,
     gsize struct_size, guint alloc_flags, GstGLAllocationParamsCopyFunc copy,
     GstGLAllocationParamsFreeFunc free, GstGLContext * context,
     gsize alloc_size, GstAllocationParams * alloc_params,
-    GDestroyNotify notify, gpointer user_data, gpointer wrapped_data,
-    guint gl_handle)
+    gpointer wrapped_data, guint gl_handle, gpointer user_data,
+    GDestroyNotify notify)
 {
   memset (params, 0, sizeof (*params));
 
@@ -635,8 +635,8 @@ gst_gl_allocation_params_copy_data (GstGLAllocationParams * src,
     GstGLAllocationParams * dest)
 {
   gst_gl_allocation_params_init (dest, src->struct_size, src->alloc_flags,
-      src->copy, src->free, NULL, src->alloc_size, NULL, src->notify,
-      src->user_data, src->wrapped_data, src->gl_handle);
+      src->copy, src->free, NULL, src->alloc_size, NULL, src->wrapped_data,
+      src->gl_handle, src->user_data, src->notify);
 
   if (src->context)
     dest->context = gst_object_ref (src->context);

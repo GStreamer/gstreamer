@@ -355,7 +355,7 @@ gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
 
     params = gst_gl_video_allocation_params_new_wrapped_data (overlay->context,
         NULL, &comp_frame->info, 0, NULL, GST_GL_TEXTURE_TARGET_2D,
-        comp_frame->data[0], _video_frame_unmap_and_free, comp_frame);
+        comp_frame->data[0], comp_frame, _video_frame_unmap_and_free);
 
     comp_gl_memory =
         (GstGLMemory *) gst_gl_base_memory_alloc (mem_allocator,

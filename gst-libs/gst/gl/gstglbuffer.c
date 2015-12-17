@@ -350,7 +350,7 @@ gst_gl_buffer_allocation_params_new (GstGLContext * context, gsize alloc_size,
           _gst_gl_buffer_allocation_params_copy_data,
           (GstGLAllocationParamsFreeFunc)
           _gst_gl_buffer_allocation_params_free_data, context, alloc_size,
-          alloc_params, NULL, NULL, NULL, 0)) {
+          alloc_params, NULL, 0, NULL, NULL)) {
     g_free (params);
     return NULL;
   }
