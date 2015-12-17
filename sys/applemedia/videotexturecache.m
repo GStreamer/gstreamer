@@ -155,7 +155,7 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
   GstGLBaseMemoryAllocator *base_mem_alloc;
   GstGLVideoAllocationParams *params;
 
-  base_memory_alloc = GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
+  base_mem_alloc = GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
 
   *mem1 = NULL;
   *mem2 = NULL;
@@ -175,7 +175,7 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
         params = gst_gl_video_allocation_params_new_wrapped_texture (cache->ctx,
             NULL, &cache->input_info, 0, NULL, gl_target,
-            CVOpenGLTextureGetName (texture), (GDestroyNotify) CFRelease,
+            CVOpenGLESTextureGetName (texture), (GDestroyNotify) CFRelease,
             texture);
 
         *mem1 = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
@@ -199,9 +199,9 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
           goto error;
 
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
-        params = gst_gl_video_allocation_paramc_new_wrapped_texture (cache->ctx,
+        params = gst_gl_video_allocation_params_new_wrapped_texture (cache->ctx,
             NULL, &cache->input_info, 0, NULL, gl_target,
-            CVOpenGLTextureGetName (texture), (GDestroyNotify) CFRelease,
+            CVOpenGLESTextureGetName (texture), (GDestroyNotify) CFRelease,
             texture);
 
         *mem1 = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
@@ -222,10 +222,10 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
         params = gst_gl_video_allocation_params_new_wrapped_texture (cache->ctx,
             NULL, &cache->input_info, 1, NULL, gl_target,
-            CVOpenGLTextureGetName (texture), (GDestroyNotify) CFRelease,
+            CVOpenGLESTextureGetName (texture), (GDestroyNotify) CFRelease,
             texture);
 
-        *mem1 = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
+        *mem2 = (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
             (GstGLAllocationParams *) params);
         gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
         break;
@@ -237,8 +237,10 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
 
   gst_object_unref (base_mem_alloc);
 
+  return TRUE;
+
 error:
-  return ret;
+  return FALSE;
 }
 #else /* !HAVE_IOS */
 
