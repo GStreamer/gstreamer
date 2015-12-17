@@ -1137,6 +1137,8 @@ static gboolean gst_avf_video_src_unlock_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_avf_video_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buf);
 static gboolean gst_avf_video_src_negotiate (GstBaseSrc * basesrc);
+static GstCaps * gst_avf_video_src_fixate (GstBaseSrc * bsrc,
+    GstCaps * caps);
 
 
 static void
@@ -1160,6 +1162,7 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
   gstbasesrc_class->query = gst_avf_video_src_query;
   gstbasesrc_class->unlock = gst_avf_video_src_unlock;
   gstbasesrc_class->unlock_stop = gst_avf_video_src_unlock_stop;
+  gstbasesrc_class->fixate = gst_avf_video_src_fixate;
   gstbasesrc_class->negotiate = gst_avf_video_src_negotiate;
 
   gstpushsrc_class->create = gst_avf_video_src_create;
@@ -1415,7 +1418,7 @@ gst_avf_video_src_negotiate (GstBaseSrc * basesrc)
 
 
 static GstCaps *
-gst_base_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
+gst_avf_video_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstCaps *ret;
 
