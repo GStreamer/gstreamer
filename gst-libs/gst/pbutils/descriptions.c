@@ -287,6 +287,7 @@ static const FormatInfo formats[] = {
   {"application/x-teletext", "Teletext", 0, ""},
   {"application/x-kate", "Kate", 0, ""},
   {"subtitle/x-kate", N_("Kate subtitle format"), FLAG_SUB, ""},
+  {"application/x-subtitle-vtt", N_("WebVTT subtitle format"), FLAG_SUB, ""},
   {"subpicture/x-dvb", "DVB subtitles", FLAG_SUB, ""},
   {"subpicture/x-pgs", "PGS subtitles", FLAG_SUB, ""},
   {"subpicture/x-xsub", "XSUB subtitles", FLAG_SUB, ""},
