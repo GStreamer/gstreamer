@@ -1897,7 +1897,9 @@ _gen_buffer (GstGLViewConvert * viewconvert, GstBuffer ** target)
 
   *target = gst_buffer_new ();
 
-  allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+  allocator =
+      GST_ALLOCATOR (gst_gl_memory_allocator_get_default
+      (viewconvert->context));
   mem_allocator = GST_GL_MEMORY_ALLOCATOR (allocator);
   params = gst_gl_video_allocation_params_new (viewconvert->context, NULL,
       &viewconvert->out_info, 0, NULL, viewconvert->to_texture_target);
@@ -2037,7 +2039,8 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
         gst_video_info_set_format (&temp_info, GST_VIDEO_FORMAT_RGBA, out_width,
             out_height);
 
-        allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+        allocator =
+            GST_ALLOCATOR (gst_gl_memory_allocator_get_default (context));
         base_mem_allocator = GST_GL_BASE_MEMORY_ALLOCATOR (allocator);
         params = gst_gl_video_allocation_params_new (context, NULL, &temp_info,
             0, NULL, viewconvert->to_texture_target);
