@@ -45,7 +45,7 @@
  */
 
 /*
-  TODO: add device selection and check rate etc.
+  TODO: add mixer device init for selection by device-guid
 */
 
 /**
@@ -87,6 +87,7 @@ enum
 {
   PROP_0,
   PROP_DEVICE_NAME,
+  PROP_DEVICE,
   PROP_VOLUME,
   PROP_MUTE
 };
@@ -130,6 +131,11 @@ static gboolean gst_directsound_src_get_mute (GstDirectSoundSrc * dsoundsrc);
 static void gst_directsound_src_set_mute (GstDirectSoundSrc * dsoundsrc,
     gboolean mute);
 
+static const gchar *gst_directsound_src_get_device (GstDirectSoundSrc *
+    dsoundsrc);
+static void gst_directsound_src_set_device (GstDirectSoundSrc * dsoundsrc,
+    const gchar * device_id);
+
 static GstStaticPadTemplate directsound_src_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -158,6 +164,9 @@ gst_directsound_src_finalize (GObject * object)
   g_mutex_clear (&dsoundsrc->dsound_lock);
 
   g_free (dsoundsrc->device_name);
+
+  g_free (dsoundsrc->device_id);
+
   g_free (dsoundsrc->device_guid);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -212,6 +221,12 @@ gst_directsound_src_class_init (GstDirectSoundSrcClass * klass)
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the sound device", NULL, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class,
+      PROP_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "DirectSound playback device as a GUID string (volume and mute will not work!)",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property
       (gobject_class, PROP_VOLUME,
       g_param_spec_double ("volume", "Volume",
@@ -251,13 +266,15 @@ gst_directsound_src_set_property (GObject * object, guint prop_id,
       if (g_value_get_string (value)) {
         src->device_name = g_strdup (g_value_get_string (value));
       }
-
       break;
     case PROP_VOLUME:
       gst_directsound_src_set_volume (src, g_value_get_double (value));
       break;
     case PROP_MUTE:
       gst_directsound_src_set_mute (src, g_value_get_boolean (value));
+      break;
+    case PROP_DEVICE:
+      gst_directsound_src_set_device (src, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -276,6 +293,9 @@ gst_directsound_src_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DEVICE_NAME:
       g_value_set_string (value, src->device_name);
+      break;
+    case PROP_DEVICE:
+      g_value_set_string (value, gst_directsound_src_get_device (src));
       break;
     case PROP_VOLUME:
       g_value_set_double (value, gst_directsound_src_get_volume (src));
@@ -301,6 +321,7 @@ gst_directsound_src_init (GstDirectSoundSrc * src)
   GST_DEBUG_OBJECT (src, "initializing directsoundsrc");
   g_mutex_init (&src->dsound_lock);
   src->device_guid = NULL;
+  src->device_id = NULL;
   src->device_name = NULL;
   src->mixer = NULL;
   src->control_id_mute = -1;
@@ -335,6 +356,28 @@ gst_directsound_enum_callback (GUID * pGUID, TCHAR * strDesc,
   return TRUE;
 }
 
+static LPGUID
+string_to_guid (const gchar * str)
+{
+  HRESULT ret;
+  gunichar2 *wstr;
+  LPGUID out;
+
+  wstr = g_utf8_to_utf16 (str, -1, NULL, NULL, NULL);
+  if (!wstr)
+    return NULL;
+
+  out = g_new (GUID, 1);
+  ret = CLSIDFromString ((LPOLESTR) wstr, out);
+  g_free (wstr);
+  if (ret != NOERROR) {
+    g_free (out);
+    return NULL;
+  }
+
+  return out;
+}
+
 static gboolean
 gst_directsound_src_open (GstAudioSrc * asrc)
 {
@@ -361,19 +404,37 @@ gst_directsound_src_open (GstAudioSrc * asrc)
     goto capture_function;
   }
 
-  hRes = DirectSoundCaptureEnumerate ((LPDSENUMCALLBACK)
-      gst_directsound_enum_callback, (VOID *) dsoundsrc);
-  if (FAILED (hRes)) {
-    goto capture_enumerate;
-  }
+  if (dsoundsrc->device_id) {
+    GST_DEBUG_OBJECT (asrc, "device id set to: %s ", dsoundsrc->device_id);
+    dsoundsrc->device_guid = string_to_guid (dsoundsrc->device_id);
+    if (dsoundsrc->device_guid == NULL) {
+      GST_ELEMENT_ERROR (dsoundsrc, RESOURCE, OPEN_READ,
+          ("gst_directsound_src_open: device set, but guid not found: %s",
+              dsoundsrc->device_id), (NULL));
+      g_free (dsoundsrc->device_guid);
+      return FALSE;
+    }
+  } else {
 
+    hRes = DirectSoundCaptureEnumerate ((LPDSENUMCALLBACK)
+        gst_directsound_enum_callback, (VOID *) dsoundsrc);
+
+    if (FAILED (hRes)) {
+      goto capture_enumerate;
+    }
+  }
   /* Create capture object */
   hRes = pDSoundCaptureCreate (dsoundsrc->device_guid, &dsoundsrc->pDSC, NULL);
+
+
   if (FAILED (hRes)) {
     goto capture_object;
   }
+  // mixer is only supported when device-id is not set
+  if (!dsoundsrc->device_id) {
+    gst_directsound_src_mixer_init (dsoundsrc);
+  }
 
-  gst_directsound_src_mixer_init (dsoundsrc);
   return TRUE;
 
 capture_function:
@@ -935,4 +996,18 @@ gst_directsound_src_set_mute (GstDirectSoundSrc * dsoundsrc, gboolean mute)
     GST_WARNING ("Failed to set mute");
   else
     dsoundsrc->mute = mute;
+}
+
+static const gchar *
+gst_directsound_src_get_device (GstDirectSoundSrc * dsoundsrc)
+{
+  return dsoundsrc->device_id;
+}
+
+static void
+gst_directsound_src_set_device (GstDirectSoundSrc * dsoundsrc,
+    const gchar * device_id)
+{
+  g_free (dsoundsrc->device_id);
+  dsoundsrc->device_id = g_strdup (device_id);
 }

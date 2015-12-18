@@ -103,7 +103,9 @@ struct _GstDirectSoundSrc
   gboolean mute;
 
   GUID *device_guid;
+
   char *device_name;
+  char *device_id;
 
   GMutex dsound_lock;
 
