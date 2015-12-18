@@ -46,8 +46,7 @@
 #ifndef __GST_TEMPLATE_MATCH_H__
 #define __GST_TEMPLATE_MATCH_H__
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
+#include <gstopencvvideofilter.h>
 
 #ifdef HAVE_HIGHGUI_H
 #include <highgui.h>            // includes highGUI definitions
@@ -73,21 +72,19 @@ typedef struct _GstTemplateMatchClass GstTemplateMatchClass;
 
 struct _GstTemplateMatch
 {
-  GstElement element;
-
-  GstPad *sinkpad, *srcpad;
+  GstOpencvVideoFilter element;
 
   gint method;
   gboolean display;
 
   gchar *templ;
 
-  IplImage *cvImage, *cvGray, *cvTemplateImage, *cvDistImage;
+  IplImage *cvGray, *cvTemplateImage, *cvDistImage;
 };
 
 struct _GstTemplateMatchClass
 {
-  GstElementClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_template_match_get_type (void);

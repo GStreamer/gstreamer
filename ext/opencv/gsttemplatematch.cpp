@@ -99,7 +99,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGR"))
     );
 
-G_DEFINE_TYPE (GstTemplateMatch, gst_template_match, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstTemplateMatch, gst_template_match,
+    GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_template_match_finalize (GObject * object);
 static void gst_template_match_set_property (GObject * object, guint prop_id,
@@ -109,26 +110,31 @@ static void gst_template_match_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_template_match_handle_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
-static GstFlowReturn gst_template_match_chain (GstPad * pad, GstObject * parent,
-    GstBuffer * buf);
+static GstFlowReturn gst_template_match_transform_ip (GstOpencvVideoFilter *
+    filter, GstBuffer * buf, IplImage * img);
 
 /* initialize the templatematch's class */
 static void
 gst_template_match_class_init (GstTemplateMatchClass * klass)
 {
   GObjectClass *gobject_class;
+  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class = (GObjectClass *) klass;
+  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   gobject_class->finalize = gst_template_match_finalize;
   gobject_class->set_property = gst_template_match_set_property;
   gobject_class->get_property = gst_template_match_get_property;
 
+  gstopencvbasefilter_class->cv_trans_ip_func = gst_template_match_transform_ip;
+
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_int ("method", "Method",
           "Specifies the way the template must be compared with image regions. 0=SQDIFF, 1=SQDIFF_NORMED, 2=CCOR, 3=CCOR_NORMED, 4=CCOEFF, 5=CCOEFF_NORMED.",
-          0, 5, DEFAULT_METHOD, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          0, 5, DEFAULT_METHOD,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_TEMPLATE,
       g_param_spec_string ("template", "Template", "Filename of template image",
           NULL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
@@ -157,24 +163,17 @@ gst_template_match_class_init (GstTemplateMatchClass * klass)
 static void
 gst_template_match_init (GstTemplateMatch * filter)
 {
-  filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_event_function (filter->sinkpad,
+  gst_pad_set_event_function (GST_BASE_TRANSFORM_SINK_PAD (filter),
       GST_DEBUG_FUNCPTR (gst_template_match_handle_sink_event));
-  gst_pad_set_chain_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_template_match_chain));
-  GST_PAD_SET_PROXY_CAPS (filter->sinkpad);
 
-  filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  GST_PAD_SET_PROXY_CAPS (filter->srcpad);
-
-  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   filter->templ = NULL;
   filter->display = TRUE;
   filter->cvTemplateImage = NULL;
   filter->cvDistImage = NULL;
-  filter->cvImage = NULL;
   filter->method = DEFAULT_METHOD;
+
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
+      TRUE);
 }
 
 /* We take ownership of template here */
@@ -287,24 +286,15 @@ static gboolean
 gst_template_match_handle_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
-  GstTemplateMatch *filter;
   GstVideoInfo info;
   gboolean res = TRUE;
 
-  filter = GST_TEMPLATE_MATCH (parent);
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
       gst_event_parse_caps (event, &caps);
       gst_video_info_from_caps (&info, caps);
-
-      if (filter->cvImage) {
-        cvReleaseImageHeader (&filter->cvImage);
-      }
-      filter->cvImage =
-          cvCreateImageHeader (cvSize (info.width, info.height), IPL_DEPTH_8U,
-          3);
       break;
     }
     default:
@@ -314,8 +304,6 @@ gst_template_match_handle_sink_event (GstPad * pad, GstObject * parent,
   res = gst_pad_event_default (pad, parent, event);
 
   return res;
-
-
 }
 
 static void
@@ -325,9 +313,7 @@ gst_template_match_finalize (GObject * object)
   filter = GST_TEMPLATE_MATCH (object);
 
   g_free (filter->templ);
-  if (filter->cvImage) {
-    cvReleaseImageHeader (&filter->cvImage);
-  }
+
   if (filter->cvDistImage) {
     cvReleaseImage (&filter->cvDistImage);
   }
@@ -362,41 +348,33 @@ gst_template_match_match (IplImage * input, IplImage * templ,
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_template_match_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
+gst_template_match_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
+    IplImage * img)
 {
   GstTemplateMatch *filter;
   CvPoint best_pos;
   double best_res;
-  GstMapInfo info;
   GstMessage *m = NULL;
 
-  filter = GST_TEMPLATE_MATCH (parent);
+  filter = GST_TEMPLATE_MATCH (base);
 
-  if ((!filter) || (!buf)) {
-    return GST_FLOW_OK;
-  }
   GST_LOG_OBJECT (filter, "Buffer size %u", (guint) gst_buffer_get_size (buf));
-
-  buf = gst_buffer_make_writable (buf);
-  gst_buffer_map (buf, &info, (GstMapFlags) (GST_MAP_READWRITE));
-  filter->cvImage->imageData = (char *) info.data;
 
   GST_OBJECT_LOCK (filter);
   if (filter->cvTemplateImage && !filter->cvDistImage) {
-    if (filter->cvTemplateImage->width > filter->cvImage->width) {
+    if (filter->cvTemplateImage->width > img->width) {
       GST_WARNING ("Template Image is wider than input image");
-    } else if (filter->cvTemplateImage->height > filter->cvImage->height) {
+    } else if (filter->cvTemplateImage->height > img->height) {
       GST_WARNING ("Template Image is taller than input image");
     } else {
 
       GST_DEBUG_OBJECT (filter, "cvCreateImage (Size(%d-%d+1,%d) %d, %d)",
-          filter->cvImage->width, filter->cvTemplateImage->width,
-          filter->cvImage->height - filter->cvTemplateImage->height + 1,
-          IPL_DEPTH_32F, 1);
+          img->width, filter->cvTemplateImage->width,
+          img->height - filter->cvTemplateImage->height + 1, IPL_DEPTH_32F, 1);
       filter->cvDistImage =
-          cvCreateImage (cvSize (filter->cvImage->width -
+          cvCreateImage (cvSize (img->width -
               filter->cvTemplateImage->width + 1,
-              filter->cvImage->height - filter->cvTemplateImage->height + 1),
+              img->height - filter->cvTemplateImage->height + 1),
           IPL_DEPTH_32F, 1);
       if (!filter->cvDistImage) {
         GST_WARNING ("Couldn't create dist image.");
@@ -406,7 +384,7 @@ gst_template_match_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (filter->cvTemplateImage && filter->cvDistImage) {
     GstStructure *s;
 
-    gst_template_match_match (filter->cvImage, filter->cvTemplateImage,
+    gst_template_match_match (img, filter->cvTemplateImage,
         filter->cvDistImage, &best_res, &best_pos, filter->method);
 
     s = gst_structure_new ("template_match",
@@ -436,7 +414,7 @@ gst_template_match_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
       corner.x += filter->cvTemplateImage->width;
       corner.y += filter->cvTemplateImage->height;
-      cvRectangle (filter->cvImage, best_pos, corner, color, 3, 8, 0);
+      cvRectangle (img, best_pos, corner, color, 3, 8, 0);
     }
 
   }
@@ -445,7 +423,7 @@ gst_template_match_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (m) {
     gst_element_post_message (GST_ELEMENT (filter), m);
   }
-  return gst_pad_push (filter->srcpad, buf);
+  return GST_FLOW_OK;
 }
 
 /* entry point to initialize the plug-in
