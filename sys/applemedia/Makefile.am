@@ -22,10 +22,18 @@ libgstapplemedia_la_CFLAGS =			\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_PLUGINS_BASE_CFLAGS)
 
+if HAVE_IOS
+GST_OBJCFLAGS_WITH_VERSION = $(GST_OBJCFLAGS)
+else
+# Add min version in front so the user or cerbero can override it since it
+# always picks the last occurence when passing several -mmacosx-version-min.
+GST_OBJCFLAGS_WITH_VERSION = -mmacosx-version-min=10.8 $(GST_OBJCFLAGS)
+endif
+
 libgstapplemedia_la_OBJCFLAGS =			\
 	-I$(top_srcdir)/gst-libs                \
 	-I$(top_builddir)/gst-libs              \
-	$(GST_OBJCFLAGS)			\
+	$(GST_OBJCFLAGS_WITH_VERSION)		\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_PLUGINS_BASE_CFLAGS)
 
