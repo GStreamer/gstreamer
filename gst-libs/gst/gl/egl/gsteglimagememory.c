@@ -346,9 +346,11 @@ _drm_fourcc_from_info (GstVideoInfo * info, int plane)
   GstVideoFormat format = GST_VIDEO_INFO_FORMAT (info);
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   const gint rgba_fourcc = DRM_FORMAT_ABGR8888;
+  const gint rgb_fourcc = DRM_FORMAT_BGR888;
   const gint rg_fourcc = DRM_FORMAT_GR88;
 #else
   const gint rgba_fourcc = DRM_FORMAT_RGBA8888;
+  const gint rgb_fourcc = DRM_FORMAT_RGB888;
   const gint rg_fourcc = DRM_FORMAT_RG88;
 #endif
 
@@ -358,6 +360,10 @@ _drm_fourcc_from_info (GstVideoInfo * info, int plane)
   switch (format) {
     case GST_VIDEO_FORMAT_RGB16:
       return DRM_FORMAT_RGB565;
+
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+      return rgb_fourcc;
 
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_RGBx:
