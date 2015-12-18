@@ -1466,6 +1466,10 @@ gst_glimage_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
   if (!_ensure_gl_setup (glimage_sink))
     return GST_FLOW_NOT_NEGOTIATED;
 
+  sync_meta = gst_buffer_get_gl_sync_meta (buf);
+  if (sync_meta)
+    gst_gl_sync_meta_wait (sync_meta, glimage_sink->context);
+
   GST_GLIMAGE_SINK_LOCK (glimage_sink);
   target = &glimage_sink->input_buffer;
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (&glimage_sink->in_info) ==
@@ -1478,10 +1482,6 @@ gst_glimage_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
 
   if (glimage_sink->output_mode_changed)
     update_output_format (glimage_sink);
-
-  sync_meta = gst_buffer_get_gl_sync_meta (buf);
-  if (sync_meta)
-    gst_gl_sync_meta_wait (sync_meta, glimage_sink->context);
 
   if (!prepare_next_buffer (glimage_sink)) {
     GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
