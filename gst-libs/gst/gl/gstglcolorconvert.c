@@ -186,7 +186,7 @@ static const struct shader_templ templ_COMPOSE =
     { NULL, },
     "vec4 rgba;\n"
     "vec4 t = texture2D(tex, texcoord * tex_scale0);\n"
-    "rgba.rgb = dot(t.%c%c, compose_weight);"
+    "rgba.rgb = vec3 (dot(t.%c%c, compose_weight));"
     "rgba.a = 1.0;\n"
     "gl_FragColor = vec4(rgba.%c, rgba.%c, rgba.%c, rgba.%c);\n",
     GST_GL_TEXTURE_TARGET_2D
