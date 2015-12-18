@@ -83,29 +83,73 @@ typedef struct
 } GstV4L2FormatDesc;
 
 static const GstV4L2FormatDesc gst_v4l2_formats[] = {
-  /* from Linux 2.6.15 videodev2.h */
+  /* RGB formats */
   {V4L2_PIX_FMT_RGB332, TRUE, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_RGB555, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_ARGB555, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_XRGB555, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_ARGB555X, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_XRGB555X, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_RGB565, TRUE, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_RGB555X, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_RGB565X, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_BGR666, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_BGR24, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_RGB24, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_ABGR32, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_XBGR32, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_ARGB32, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_XRGB32, TRUE, GST_V4L2_RAW},
+
+  /* Deprecated Packed RGB Image Formats (alpha ambiguity) */
+  {V4L2_PIX_FMT_RGB444, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_RGB555, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_RGB555X, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_BGR32, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_RGB32, TRUE, GST_V4L2_RAW},
+
+  /* Grey formats */
   {V4L2_PIX_FMT_GREY, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_Y4, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_Y6, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_Y10, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_Y12, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_Y16, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_Y16_BE, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_Y10BPACK, TRUE, GST_V4L2_RAW},
+
+  /* Palette formats */
+  {V4L2_PIX_FMT_PAL8, TRUE, GST_V4L2_RAW},
+
+  /* Chrominance formats */
+  {V4L2_PIX_FMT_UV8, TRUE, GST_V4L2_RAW},
+
+  /* Luminance+Chrominance formats */
   {V4L2_PIX_FMT_YVU410, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_YVU420, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YVU420M, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_YUYV, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YYUV, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YVYU, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_UYVY, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_VYUY, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_YUV422P, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_YUV411P, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_Y41P, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUV444, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUV555, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUV565, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUV32, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUV410, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUV420, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUV420M, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_HI240, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_HM12, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_M420, TRUE, GST_V4L2_RAW},
 
   /* two planes -- one Y, one Cr + Cb interleaved  */
   {V4L2_PIX_FMT_NV12, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV12M, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV12MT, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_NV12MT_16X16, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV21, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV21M, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV16, TRUE, GST_V4L2_RAW},
@@ -113,14 +157,9 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {V4L2_PIX_FMT_NV61, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV61M, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV24, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_NV42, TRUE, GST_V4L2_RAW},
 
-  /*  The following formats are not defined in the V4L2 specification */
-  {V4L2_PIX_FMT_YUV410, TRUE, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUV420, TRUE, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YYUV, TRUE, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_HI240, TRUE, GST_V4L2_RAW},
-
-  /* see http://www.siliconimaging.com/RGB%20Bayer.htm */
+  /* Bayer formats - see http://www.siliconimaging.com/RGB%20Bayer.htm */
   {V4L2_PIX_FMT_SBGGR8, TRUE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_SGBRG8, TRUE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_SGRBG8, TRUE, GST_V4L2_CODEC},
@@ -132,12 +171,16 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {V4L2_PIX_FMT_PJPG, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_DV, FALSE, GST_V4L2_TRANSPORT},
   {V4L2_PIX_FMT_MPEG, FALSE, GST_V4L2_TRANSPORT},
+  {V4L2_PIX_FMT_H264, FALSE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_H264_NO_SC, FALSE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_H264_MVC, FALSE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_H263, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_MPEG1, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_MPEG2, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_MPEG4, FALSE, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_H263, FALSE, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_H264, FALSE, GST_V4L2_CODEC},
-  /* VP8 not parseable */
+  {V4L2_PIX_FMT_XVID, FALSE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_VC1_ANNEX_G, FALSE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_VC1_ANNEX_L, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_VP8, FALSE, GST_V4L2_CODEC | GST_V4L2_NO_PARSE},
 
   /*  Vendor-specific formats   */
@@ -145,7 +188,6 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {V4L2_PIX_FMT_SN9C10X, TRUE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_PWC1, TRUE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_PWC2, TRUE, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_YVYU, TRUE, GST_V4L2_RAW},
 };
 
 #define GST_V4L2_FORMAT_COUNT (G_N_ELEMENTS (gst_v4l2_formats))
@@ -904,10 +946,27 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
       break;
 
     case V4L2_PIX_FMT_RGB332:
+    case V4L2_PIX_FMT_ARGB555:
+    case V4L2_PIX_FMT_XRGB555:
     case V4L2_PIX_FMT_RGB555:
+    case V4L2_PIX_FMT_ARGB555X:
+    case V4L2_PIX_FMT_XRGB555X:
     case V4L2_PIX_FMT_RGB555X:
+    case V4L2_PIX_FMT_BGR666:
     case V4L2_PIX_FMT_RGB565:
     case V4L2_PIX_FMT_RGB565X:
+    case V4L2_PIX_FMT_RGB444:
+    case V4L2_PIX_FMT_Y4:
+    case V4L2_PIX_FMT_Y6:
+    case V4L2_PIX_FMT_Y10:
+    case V4L2_PIX_FMT_Y12:
+    case V4L2_PIX_FMT_Y10BPACK:
+    case V4L2_PIX_FMT_YUV555:
+    case V4L2_PIX_FMT_YUV565:
+    case V4L2_PIX_FMT_YUV32:
+    case V4L2_PIX_FMT_NV12MT_16X16:
+    case V4L2_PIX_FMT_NV42:
+    case V4L2_PIX_FMT_H264_MVC:
       rank = RGB_ODD_BASE_RANK;
       break;
 
@@ -918,6 +977,10 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
 
     case V4L2_PIX_FMT_RGB32:
     case V4L2_PIX_FMT_BGR32:
+    case V4L2_PIX_FMT_ABGR32:
+    case V4L2_PIX_FMT_XBGR32:
+    case V4L2_PIX_FMT_ARGB32:
+    case V4L2_PIX_FMT_XRGB32:
       rank = RGB_BASE_RANK;
       break;
 
@@ -947,6 +1010,7 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
       rank = YUV_BASE_RANK + 2;
       break;
     case V4L2_PIX_FMT_YUV420:  /* I420, 12 bits per pixel */
+    case V4L2_PIX_FMT_YUV420M:
       rank = YUV_BASE_RANK + 7;
       break;
     case V4L2_PIX_FMT_YUYV:    /* YUY2, 16 bits per pixel */
@@ -957,6 +1021,9 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
       break;
     case V4L2_PIX_FMT_UYVY:    /* UYVY, 16 bits per pixel */
       rank = YUV_BASE_RANK + 9;
+      break;
+    case V4L2_PIX_FMT_YUV444:
+      rank = YUV_BASE_RANK + 6;
       break;
     case V4L2_PIX_FMT_Y41P:    /* Y41P, 12 bits per pixel */
       rank = YUV_BASE_RANK + 5;
@@ -1141,8 +1208,19 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
     case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
       format = GST_VIDEO_FORMAT_GRAY8;
       break;
+    case V4L2_PIX_FMT_Y16:
+      format = GST_VIDEO_FORMAT_GRAY16_LE;
+      break;
+    case V4L2_PIX_FMT_Y16_BE:
+      format = GST_VIDEO_FORMAT_GRAY16_BE;
+      break;
+    case V4L2_PIX_FMT_XRGB555:
     case V4L2_PIX_FMT_RGB555:
       format = GST_VIDEO_FORMAT_RGB15;
+      break;
+    case V4L2_PIX_FMT_XRGB555X:
+    case V4L2_PIX_FMT_RGB555X:
+      format = GST_VIDEO_FORMAT_BGR15;
       break;
     case V4L2_PIX_FMT_RGB565:
       format = GST_VIDEO_FORMAT_RGB16;
@@ -1153,11 +1231,19 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
     case V4L2_PIX_FMT_BGR24:
       format = GST_VIDEO_FORMAT_BGR;
       break;
+    case V4L2_PIX_FMT_XRGB32:
     case V4L2_PIX_FMT_RGB32:
       format = GST_VIDEO_FORMAT_xRGB;
       break;
+    case V4L2_PIX_FMT_XBGR32:
     case V4L2_PIX_FMT_BGR32:
       format = GST_VIDEO_FORMAT_BGRx;
+      break;
+    case V4L2_PIX_FMT_ABGR32:
+      format = GST_VIDEO_FORMAT_BGRA;
+      break;
+    case V4L2_PIX_FMT_ARGB32:
+      format = GST_VIDEO_FORMAT_ARGB;
       break;
     case V4L2_PIX_FMT_NV12:
     case V4L2_PIX_FMT_NV12M:
@@ -1177,6 +1263,7 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
       format = GST_VIDEO_FORMAT_YUV9;
       break;
     case V4L2_PIX_FMT_YUV420:
+    case V4L2_PIX_FMT_YUV420M:
       format = GST_VIDEO_FORMAT_I420;
       break;
     case V4L2_PIX_FMT_YUYV:
@@ -1188,11 +1275,6 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
     case V4L2_PIX_FMT_UYVY:
       format = GST_VIDEO_FORMAT_UYVY;
       break;
-#if 0
-    case V4L2_PIX_FMT_Y41P:
-      format = GST_VIDEO_FORMAT_Y41P;
-      break;
-#endif
     case V4L2_PIX_FMT_YUV411P:
       format = GST_VIDEO_FORMAT_Y41B;
       break;
@@ -1232,10 +1314,6 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
     case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
       structure = gst_structure_new_empty ("image/jpeg");
       break;
-    case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
-    case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
-      /* FIXME: get correct fourccs here */
-      break;
     case V4L2_PIX_FMT_MPEG1:
       structure = gst_structure_new ("video/mpeg",
           "mpegversion", G_TYPE_INT, 2, NULL);
@@ -1245,6 +1323,7 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
           "mpegversion", G_TYPE_INT, 2, NULL);
       break;
     case V4L2_PIX_FMT_MPEG4:
+    case V4L2_PIX_FMT_XVID:
       structure = gst_structure_new ("video/mpeg",
           "mpegversion", G_TYPE_INT, 4, "systemstream",
           G_TYPE_BOOLEAN, FALSE, NULL);
@@ -1258,21 +1337,35 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
           "stream-format", G_TYPE_STRING, "byte-stream", "alignment",
           G_TYPE_STRING, "au", NULL);
       break;
+    case V4L2_PIX_FMT_H264_NO_SC:
+      structure = gst_structure_new ("video/x-h264",
+          "stream-format", G_TYPE_STRING, "avc", "alignment",
+          G_TYPE_STRING, "au", NULL);
+      break;
+    case V4L2_PIX_FMT_VC1_ANNEX_G:
+    case V4L2_PIX_FMT_VC1_ANNEX_L:
+      structure = gst_structure_new ("video/x-wmv",
+          "wmvversion", G_TYPE_INT, 3, "format", G_TYPE_STRING, "WVC1", NULL);
+      break;
     case V4L2_PIX_FMT_VP8:
       structure = gst_structure_new_empty ("video/x-vp8");
       break;
-    case V4L2_PIX_FMT_RGB332:
-    case V4L2_PIX_FMT_RGB555X:
-    case V4L2_PIX_FMT_RGB565X:
-      /* FIXME: get correct fourccs here */
-      break;
     case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
+    case V4L2_PIX_FMT_Y16:
+    case V4L2_PIX_FMT_Y16_BE:
+    case V4L2_PIX_FMT_XRGB555:
     case V4L2_PIX_FMT_RGB555:
+    case V4L2_PIX_FMT_XRGB555X:
+    case V4L2_PIX_FMT_RGB555X:
     case V4L2_PIX_FMT_RGB565:
     case V4L2_PIX_FMT_RGB24:
     case V4L2_PIX_FMT_BGR24:
     case V4L2_PIX_FMT_RGB32:
+    case V4L2_PIX_FMT_XRGB32:
+    case V4L2_PIX_FMT_ARGB32:
     case V4L2_PIX_FMT_BGR32:
+    case V4L2_PIX_FMT_XBGR32:
+    case V4L2_PIX_FMT_ABGR32:
     case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
     case V4L2_PIX_FMT_NV12M:
     case V4L2_PIX_FMT_NV12MT:
@@ -1286,12 +1379,10 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
     case V4L2_PIX_FMT_YVU410:
     case V4L2_PIX_FMT_YUV410:
     case V4L2_PIX_FMT_YUV420:  /* I420/IYUV */
+    case V4L2_PIX_FMT_YUV420M:
     case V4L2_PIX_FMT_YUYV:
     case V4L2_PIX_FMT_YVU420:
     case V4L2_PIX_FMT_UYVY:
-#if 0
-    case V4L2_PIX_FMT_Y41P:
-#endif
     case V4L2_PIX_FMT_YUV422P:
     case V4L2_PIX_FMT_YVYU:
     case V4L2_PIX_FMT_YUV411P:{
@@ -1332,8 +1423,28 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
     case V4L2_PIX_FMT_PWC2:
       structure = gst_structure_new_empty ("video/x-pwc2");
       break;
+    case V4L2_PIX_FMT_RGB332:
+    case V4L2_PIX_FMT_BGR666:
+    case V4L2_PIX_FMT_ARGB555X:
+    case V4L2_PIX_FMT_RGB565X:
+    case V4L2_PIX_FMT_RGB444:
+    case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
+    case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
+    case V4L2_PIX_FMT_Y4:
+    case V4L2_PIX_FMT_Y6:
+    case V4L2_PIX_FMT_Y10:
+    case V4L2_PIX_FMT_Y12:
+    case V4L2_PIX_FMT_Y10BPACK:
+    case V4L2_PIX_FMT_YUV444:
+    case V4L2_PIX_FMT_YUV555:
+    case V4L2_PIX_FMT_YUV565:
+    case V4L2_PIX_FMT_Y41P:
+    case V4L2_PIX_FMT_YUV32:
+    case V4L2_PIX_FMT_NV12MT_16X16:
+    case V4L2_PIX_FMT_NV42:
+    case V4L2_PIX_FMT_H264_MVC:
     default:
-      GST_DEBUG ("Unknown fourcc 0x%08x %" GST_FOURCC_FORMAT,
+      GST_DEBUG ("Unsupported fourcc 0x%08x %" GST_FOURCC_FORMAT,
           fourcc, GST_FOURCC_ARGS (fourcc));
       break;
   }
@@ -1478,15 +1589,11 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     switch (GST_VIDEO_INFO_FORMAT (info)) {
       case GST_VIDEO_FORMAT_I420:
         fourcc = V4L2_PIX_FMT_YUV420;
+        fourcc_nc = V4L2_PIX_FMT_YUV420M;
         break;
       case GST_VIDEO_FORMAT_YUY2:
         fourcc = V4L2_PIX_FMT_YUYV;
         break;
-#if 0
-      case GST_VIDEO_FORMAT_Y41P:
-        fourcc = V4L2_PIX_FMT_Y41P;
-        break;
-#endif
       case GST_VIDEO_FORMAT_UYVY:
         fourcc = V4L2_PIX_FMT_UYVY;
         break;
@@ -1537,15 +1644,30 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
         fourcc = V4L2_PIX_FMT_BGR24;
         break;
       case GST_VIDEO_FORMAT_xRGB:
+        fourcc = V4L2_PIX_FMT_RGB32;
+        fourcc_nc = V4L2_PIX_FMT_XRGB32;
+        break;
       case GST_VIDEO_FORMAT_ARGB:
         fourcc = V4L2_PIX_FMT_RGB32;
+        fourcc_nc = V4L2_PIX_FMT_ARGB32;
         break;
       case GST_VIDEO_FORMAT_BGRx:
+        fourcc = V4L2_PIX_FMT_BGR32;
+        fourcc_nc = V4L2_PIX_FMT_XBGR32;
+        break;
       case GST_VIDEO_FORMAT_BGRA:
         fourcc = V4L2_PIX_FMT_BGR32;
+        fourcc_nc = V4L2_PIX_FMT_ABGR32;
         break;
       case GST_VIDEO_FORMAT_GRAY8:
         fourcc = V4L2_PIX_FMT_GREY;
+        break;
+      case GST_VIDEO_FORMAT_GRAY16_LE:
+        fourcc = V4L2_PIX_FMT_Y16;
+        break;
+      case GST_VIDEO_FORMAT_GRAY16_BE:
+        fourcc = V4L2_PIX_FMT_Y16_BE;
+        break;
       default:
         break;
     }
@@ -1568,6 +1690,7 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
             break;
           case 4:
             fourcc = V4L2_PIX_FMT_MPEG4;
+            fourcc_nc = V4L2_PIX_FMT_XVID;
             break;
           default:
             break;
@@ -1576,7 +1699,12 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     } else if (g_str_equal (mimetype, "video/x-h263")) {
       fourcc = V4L2_PIX_FMT_H263;
     } else if (g_str_equal (mimetype, "video/x-h264")) {
-      fourcc = V4L2_PIX_FMT_H264;
+      const gchar *stream_format =
+          gst_structure_get_string (structure, "stream-format");
+      if (g_str_equal (stream_format, "avc"))
+        fourcc = V4L2_PIX_FMT_H264_NO_SC;
+      else
+        fourcc = V4L2_PIX_FMT_H264;
     } else if (g_str_equal (mimetype, "video/x-vp8")) {
       fourcc = V4L2_PIX_FMT_VP8;
     } else if (g_str_equal (mimetype, "video/x-bayer")) {
@@ -3576,8 +3704,7 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 
     format = (struct v4l2_fmtdesc *) walk->data;
 
-    template =
-        gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat);
+    template = gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat);
 
     if (template) {
       GstCaps *tmp;
