@@ -359,6 +359,7 @@ _drm_fourcc_from_info (GstVideoInfo * info, int plane)
 
   switch (format) {
     case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_BGR16:
       return DRM_FORMAT_RGB565;
 
     case GST_VIDEO_FORMAT_RGB:
@@ -371,6 +372,9 @@ _drm_fourcc_from_info (GstVideoInfo * info, int plane)
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_AYUV:
       return rgba_fourcc;
 
     case GST_VIDEO_FORMAT_GRAY8:
@@ -378,6 +382,8 @@ _drm_fourcc_from_info (GstVideoInfo * info, int plane)
 
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
       return rg_fourcc;
 
     case GST_VIDEO_FORMAT_NV12:
@@ -385,9 +391,10 @@ _drm_fourcc_from_info (GstVideoInfo * info, int plane)
       return plane == 0 ? DRM_FORMAT_R8 : rg_fourcc;
 
     case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y444:
       return DRM_FORMAT_R8;
 
     default:
