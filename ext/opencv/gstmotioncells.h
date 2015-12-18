@@ -45,8 +45,7 @@
 #ifndef __GST_MOTIONCELLS_H__
 #define __GST_MOTIONCELLS_H__
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
+#include <gstopencvvideofilter.h>
 #include <opencv2/core/core_c.h>
 #include "motioncells_wrapper.h"
 
@@ -67,8 +66,7 @@ typedef struct _GstMotioncellsClass GstMotioncellsClass;
 
 struct _GstMotioncells
 {
-  GstElement element;
-  GstPad *sinkpad, *srcpad;
+  GstOpencvVideoFilter element;
   GstState state;
   gboolean display, calculate_motion, firstgridx, firstgridy, changed_gridx,
       changed_gridy, changed_startime;
@@ -78,7 +76,6 @@ struct _GstMotioncells
   gchar *prev_datafile, *cur_datafile, *basename_datafile, *datafile_extension;
   gint prevgridx, gridx, prevgridy, gridy, id;
   gdouble sensitivity, threshold;
-  IplImage *cvImage;
   motionmaskcoordrect *motionmaskcoords;
   cellscolor *motioncellscolor;
   motioncellidx *motioncellsidx, *motionmaskcellsidx;
@@ -97,7 +94,7 @@ struct _GstMotioncells
 
 struct _GstMotioncellsClass
 {
-  GstElementClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_motion_cells_get_type (void);
