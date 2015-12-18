@@ -252,6 +252,9 @@ gst_progress_report_do_query (GstProgressReport * filter, GstFormat format,
       cur = gst_segment_to_stream_time (&base->segment, format,
           GST_BUFFER_TIMESTAMP (buf));
       total = base->segment.duration;
+    } else if (format == GST_FORMAT_BUFFERS) {
+      cur = filter->buffer_count;
+      total = -1;
     } else {
       return FALSE;
     }
@@ -411,6 +414,7 @@ gst_progress_report_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GST_OBJECT_LOCK (filter);
   need_update =
       ((cur_time.tv_sec - filter->last_report.tv_sec) >= filter->update_freq);
+  filter->buffer_count++;
   GST_OBJECT_UNLOCK (filter);
 
   if (need_update) {
@@ -432,6 +436,7 @@ gst_progress_report_start (GstBaseTransform * trans)
 
   g_get_current_time (&filter->last_report);
   filter->start_time = filter->last_report;
+  filter->buffer_count = 0;
 
   return TRUE;
 }

@@ -50,6 +50,7 @@ struct _GstProgressReport
   gboolean do_query;
   GTimeVal start_time;
   GTimeVal last_report;
+  gint64 buffer_count;
 
   /* Format used for querying. Using a string here because the
    * format might not be registered yet when the property is set */
