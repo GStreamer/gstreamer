@@ -108,8 +108,6 @@ static void gst_template_match_set_property (GObject * object, guint prop_id,
 static void gst_template_match_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_template_match_handle_sink_event (GstPad * pad,
-    GstObject * parent, GstEvent * event);
 static GstFlowReturn gst_template_match_transform_ip (GstOpencvVideoFilter *
     filter, GstBuffer * buf, IplImage * img);
 
@@ -163,9 +161,6 @@ gst_template_match_class_init (GstTemplateMatchClass * klass)
 static void
 gst_template_match_init (GstTemplateMatch * filter)
 {
-  gst_pad_set_event_function (GST_BASE_TRANSFORM_SINK_PAD (filter),
-      GST_DEBUG_FUNCPTR (gst_template_match_handle_sink_event));
-
   filter->templ = NULL;
   filter->display = TRUE;
   filter->cvTemplateImage = NULL;
@@ -280,31 +275,6 @@ gst_template_match_get_property (GObject * object, guint prop_id,
 }
 
 /* GstElement vmethod implementations */
-
-/* this function handles the link with other elements */
-static gboolean
-gst_template_match_handle_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
-{
-  GstVideoInfo info;
-  gboolean res = TRUE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-      gst_event_parse_caps (event, &caps);
-      gst_video_info_from_caps (&info, caps);
-      break;
-    }
-    default:
-      break;
-  }
-
-  res = gst_pad_event_default (pad, parent, event);
-
-  return res;
-}
 
 static void
 gst_template_match_finalize (GObject * object)
