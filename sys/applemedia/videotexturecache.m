@@ -155,7 +155,7 @@ gl_mem_from_buffer (GstVideoTextureCache * cache,
   GstGLBaseMemoryAllocator *base_mem_alloc;
   GstGLVideoAllocationParams *params;
 
-  base_mem_alloc = GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
+  base_mem_alloc = GST_GL_BASE_MEMORY_ALLOCATOR (gst_gl_memory_allocator_get_default (cache->ctx));
 
   *mem1 = NULL;
   *mem2 = NULL;

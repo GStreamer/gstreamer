@@ -348,7 +348,8 @@ gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
     GstGLBaseMemoryAllocator *mem_allocator;
     GstAllocator *allocator;
 
-    allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+    allocator =
+        GST_ALLOCATOR (gst_gl_memory_allocator_get_default (overlay->context));
     mem_allocator = GST_GL_BASE_MEMORY_ALLOCATOR (allocator);
 
     gst_gl_composition_overlay_add_transformation (overlay, buf);

@@ -216,6 +216,9 @@ gboolean                gst_gl_memory_setup_buffer          (GstGLMemoryAllocato
                                                              GstBuffer * buffer,
                                                              GstGLVideoAllocationParams * params);
 
+
+GstGLMemoryAllocator *  gst_gl_memory_allocator_get_default (GstGLContext *context);
+
 G_END_DECLS
 
 #endif /* _GST_GL_MEMORY_H_ */

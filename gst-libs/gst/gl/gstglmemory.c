@@ -1173,3 +1173,22 @@ gst_gl_memory_setup_buffer (GstGLMemoryAllocator * allocator,
 
   return TRUE;
 }
+
+GstGLMemoryAllocator *
+gst_gl_memory_allocator_get_default (GstGLContext * context)
+{
+  GstGLMemoryAllocator *allocator = NULL;
+
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
+
+  if (USING_OPENGL (context) || USING_OPENGL3 (context)
+      || USING_GLES3 (context)) {
+    allocator = (GstGLMemoryAllocator *)
+        gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+  } else {
+    allocator = (GstGLMemoryAllocator *)
+        gst_allocator_find (GST_GL_MEMORY_ALLOCATOR_NAME);
+  }
+
+  return allocator;
+}

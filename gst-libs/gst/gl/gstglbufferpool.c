@@ -122,7 +122,8 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (allocator /* && GST_IS_GL_MEMORY_ALLOCATOR (allocator) FIXME EGLImage */ ) {
     priv->allocator = gst_object_ref (allocator);
   } else {
-    priv->allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+    priv->allocator =
+        GST_ALLOCATOR (gst_gl_memory_allocator_get_default (glpool->context));
     g_assert (priv->allocator);
   }
 

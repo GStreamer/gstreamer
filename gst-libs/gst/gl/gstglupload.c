@@ -223,7 +223,9 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     GstAllocationParams params;
     gst_allocation_params_init (&params);
 
-    allocator = gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
+    allocator =
+        GST_ALLOCATOR (gst_gl_memory_allocator_get_default (upload->
+            upload->context));
     gst_query_add_allocation_param (query, allocator, &params);
     gst_object_unref (allocator);
   }
@@ -696,9 +698,7 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
   guint max_planes = GST_VIDEO_INFO_N_PLANES (in_info);
   GstGLMemoryAllocator *allocator;
 
-  allocator =
-      GST_GL_MEMORY_ALLOCATOR (gst_allocator_find
-      (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
+  allocator = gst_gl_memory_allocator_get_default (upload->upload->context);
 
   /* Support stereo views for separated multiview mode */
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) ==
@@ -916,8 +916,8 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
   guint n_mem = GST_VIDEO_INFO_N_PLANES (in_info);
 
   allocator =
-      GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find
-      (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
+      GST_GL_BASE_MEMORY_ALLOCATOR (gst_gl_memory_allocator_get_default
+      (raw->upload->context));
 
   /* FIXME Use a buffer pool to cache the generated textures */
   /* FIXME: multiview support with separated left/right frames? */
