@@ -112,7 +112,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-G_DEFINE_TYPE (GstOpencvTextOverlay, gst_opencv_text_overlay, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstOpencvTextOverlay, gst_opencv_text_overlay,
+    GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_opencv_text_overlay_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -121,18 +122,14 @@ static void gst_opencv_text_overlay_get_property (GObject * object,
 
 static gboolean gst_opencv_text_overlay_handle_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
-static GstFlowReturn gst_opencv_text_overlay_chain (GstPad * pad,
-    GstObject * parent, GstBuffer * buf);
+static GstFlowReturn gst_opencv_text_overlay_transform_ip (GstOpencvVideoFilter
+    * filter, GstBuffer * buf, IplImage * img);
 
 /* Clean up */
 static void
 gst_opencv_text_overlay_finalize (GObject * obj)
 {
   GstOpencvTextOverlay *filter = GST_OPENCV_TEXT_OVERLAY (obj);
-
-  if (filter->cvImage) {
-    cvReleaseImage (&filter->cvImage);
-  }
 
   g_free (filter->textbuf);
 
@@ -144,12 +141,16 @@ static void
 gst_opencv_text_overlay_class_init (GstOpencvTextOverlayClass * klass)
 {
   GObjectClass *gobject_class;
-
+  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  gobject_class = (GObjectClass *) klass;
 
+  gobject_class = (GObjectClass *) klass;
   gobject_class->finalize =
       GST_DEBUG_FUNCPTR (gst_opencv_text_overlay_finalize);
+  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
+
+  gstopencvbasefilter_class->cv_trans_ip_func =
+      gst_opencv_text_overlay_transform_ip;
 
   gobject_class->set_property = gst_opencv_text_overlay_set_property;
   gobject_class->get_property = gst_opencv_text_overlay_get_property;
@@ -227,19 +228,8 @@ gst_opencv_text_overlay_class_init (GstOpencvTextOverlayClass * klass)
 static void
 gst_opencv_text_overlay_init (GstOpencvTextOverlay * filter)
 {
-  filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  GST_PAD_SET_PROXY_CAPS (filter->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
-
-  gst_pad_set_event_function (filter->sinkpad,
+  gst_pad_set_event_function (GST_BASE_TRANSFORM_SINK_PAD (filter),
       GST_DEBUG_FUNCPTR (gst_opencv_text_overlay_handle_sink_event));
-
-  gst_pad_set_chain_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_opencv_text_overlay_chain));
-
-  filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  GST_PAD_SET_PROXY_CAPS (filter->srcpad);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->textbuf = g_strdup (DEFAULT_PROP_TEXT);
   filter->width = DEFAULT_PROP_WIDTH;
@@ -250,6 +240,9 @@ gst_opencv_text_overlay_init (GstOpencvTextOverlay * filter)
   filter->colorR = DEFAULT_PROP_COLOR;
   filter->colorG = DEFAULT_PROP_COLOR;
   filter->colorB = DEFAULT_PROP_COLOR;
+
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
+      TRUE);
 }
 
 static void
@@ -339,12 +332,9 @@ static gboolean
 gst_opencv_text_overlay_handle_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
-  GstOpencvTextOverlay *filter;
   gint width, height;
   GstStructure *structure;
   gboolean res = TRUE;
-
-  filter = GST_OPENCV_TEXT_OVERLAY (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -355,11 +345,6 @@ gst_opencv_text_overlay_handle_sink_event (GstPad * pad, GstObject * parent,
       structure = gst_caps_get_structure (caps, 0);
       gst_structure_get_int (structure, "width", &width);
       gst_structure_get_int (structure, "height", &height);
-
-      if (filter->cvImage) {
-        cvReleaseImage (&filter->cvImage);
-      }
-      filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
 
       break;
     }
@@ -376,30 +361,18 @@ gst_opencv_text_overlay_handle_sink_event (GstPad * pad, GstObject * parent,
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_opencv_text_overlay_chain (GstPad * pad, GstObject * parent,
-    GstBuffer * buf)
+gst_opencv_text_overlay_transform_ip (GstOpencvVideoFilter * base,
+    GstBuffer * buf, IplImage * img)
 {
-  GstOpencvTextOverlay *filter;
-  GstMapInfo map_info;
-  guint8 *data;
-
-  filter = GST_OPENCV_TEXT_OVERLAY (parent);
-
-  gst_buffer_map (buf, &map_info, GST_MAP_READ);
-  data = map_info.data;
-
-  filter->cvImage->imageData = (char *) data;
+  GstOpencvTextOverlay *filter = GST_OPENCV_TEXT_OVERLAY (base);
 
   cvInitFont (&(filter->font), CV_FONT_VECTOR0, filter->width, filter->height,
       0, filter->thickness, 0);
-
-  buf = gst_buffer_make_writable (buf);
-  cvPutText (filter->cvImage, filter->textbuf, cvPoint (filter->xpos,
+  cvPutText (img, filter->textbuf, cvPoint (filter->xpos,
           filter->ypos), &(filter->font), cvScalar (filter->colorR,
           filter->colorG, filter->colorB, 0));
 
-  gst_buffer_unmap (buf, &map_info);
-  return gst_pad_push (filter->srcpad, buf);
+  return GST_FLOW_OK;
 }
 
 

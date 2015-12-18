@@ -46,8 +46,7 @@
 #ifndef __GST_OPENCV_TEXT_OVERLAY_H__
 #define __GST_OPENCV_TEXT_OVERLAY_H__
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
+#include <gstopencvvideofilter.h>
 #include <opencv2/core/core_c.h>
 G_BEGIN_DECLS
 
@@ -68,11 +67,8 @@ typedef struct _GstOpencvTextOverlayClass GstOpencvTextOverlayClass;
 
 struct _GstOpencvTextOverlay
 {
-  GstElement element;
+  GstOpencvVideoFilter element;
 
-  GstPad *sinkpad, *srcpad;
-
-  IplImage *cvImage;
   CvFont font;
 
   gint xpos;
@@ -87,7 +83,7 @@ struct _GstOpencvTextOverlay
 
 struct _GstOpencvTextOverlayClass
 {
-  GstElementClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_opencv_text_overlay_get_type (void);
