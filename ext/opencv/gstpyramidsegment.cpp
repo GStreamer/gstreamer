@@ -100,7 +100,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-G_DEFINE_TYPE (GstPyramidSegment, gst_pyramid_segment, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstPyramidSegment, gst_pyramid_segment,
+    GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_pyramid_segment_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -109,18 +110,14 @@ static void gst_pyramid_segment_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_pyramid_segment_handle_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
-static GstFlowReturn gst_pyramid_segment_chain (GstPad * pad,
-    GstObject * parent, GstBuffer * buf);
+static GstFlowReturn gst_pyramid_segment_transform (GstOpencvVideoFilter * base,
+    GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
 /* Clean up */
 static void
 gst_pyramid_segment_finalize (GObject * obj)
 {
   GstPyramidSegment *filter = GST_PYRAMID_SEGMENT (obj);
-
-  if (filter->cvImage != NULL) {
-    cvReleaseImage (&filter->cvImage);
-  }
 
   cvReleaseMemStorage (&filter->storage);
 
@@ -132,13 +129,17 @@ static void
 gst_pyramid_segment_class_init (GstPyramidSegmentClass * klass)
 {
   GObjectClass *gobject_class;
+  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   gobject_class = (GObjectClass *) klass;
+  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pyramid_segment_finalize);
   gobject_class->set_property = gst_pyramid_segment_set_property;
   gobject_class->get_property = gst_pyramid_segment_get_property;
+
+  gstopencvbasefilter_class->cv_trans_func = gst_pyramid_segment_transform;
 
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
@@ -179,19 +180,9 @@ gst_pyramid_segment_class_init (GstPyramidSegmentClass * klass)
 static void
 gst_pyramid_segment_init (GstPyramidSegment * filter)
 {
-  filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  GST_PAD_SET_PROXY_CAPS (filter->sinkpad);
-
-  gst_pad_set_event_function (filter->sinkpad,
+  gst_pad_set_event_function (GST_BASE_TRANSFORM_SINK_PAD (filter),
       GST_DEBUG_FUNCPTR (gst_pyramid_segment_handle_sink_event));
-  gst_pad_set_chain_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pyramid_segment_chain));
 
-  filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  GST_PAD_SET_PROXY_CAPS (filter->srcpad);
-
-  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   filter->storage = cvCreateMemStorage (BLOCK_SIZE);
   filter->comp =
       cvCreateSeq (0, sizeof (CvSeq), sizeof (CvPoint), filter->storage);
@@ -199,6 +190,9 @@ gst_pyramid_segment_init (GstPyramidSegment * filter)
   filter->threshold1 = 50.0;
   filter->threshold2 = 60.0;
   filter->level = 4;
+
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
+      FALSE);
 }
 
 static void
@@ -258,10 +252,8 @@ static gboolean
 gst_pyramid_segment_handle_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
-  GstPyramidSegment *filter;
   GstVideoInfo info;
   gboolean res = TRUE;
-  filter = GST_PYRAMID_SEGMENT (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -269,12 +261,6 @@ gst_pyramid_segment_handle_sink_event (GstPad * pad, GstObject * parent,
       GstCaps *caps;
       gst_event_parse_caps (event, &caps);
       gst_video_info_from_caps (&info, caps);
-
-      if (filter->cvImage != NULL) {
-        cvReleaseImage (&filter->cvImage);
-      }
-      filter->cvImage =
-          cvCreateImage (cvSize (info.width, info.height), IPL_DEPTH_8U, 3);
       break;
     }
     default:
@@ -290,40 +276,28 @@ gst_pyramid_segment_handle_sink_event (GstPad * pad, GstObject * parent,
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_pyramid_segment_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
+gst_pyramid_segment_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
+    IplImage * img, GstBuffer * outbuf, IplImage * outimg)
 {
-  GstPyramidSegment *filter;
-  GstBuffer *outbuf;
-  GstMapInfo info;
+  GstPyramidSegment *filter = GST_PYRAMID_SEGMENT (base);
   GstMapInfo outinfo;
 
-  filter = GST_PYRAMID_SEGMENT (GST_OBJECT_PARENT (pad));
+  filter->cvSegmentedImage = cvCloneImage (img);
 
-  buf = gst_buffer_make_writable (buf);
-  gst_buffer_map (buf, &info, (GstMapFlags) GST_MAP_READWRITE);
-  filter->cvImage->imageData = (char *) info.data;
-  filter->cvSegmentedImage = cvCloneImage (filter->cvImage);
-
-  cvPyrSegmentation (filter->cvImage, filter->cvSegmentedImage, filter->storage,
+  cvPyrSegmentation (img, filter->cvSegmentedImage, filter->storage,
       &(filter->comp), filter->level, filter->threshold1, filter->threshold2);
 
   /* TODO look if there is a way in opencv to reuse the image data and
    * delete only the struct headers. Would avoid a memcpy here */
 
-  outbuf = gst_buffer_new_and_alloc (filter->cvSegmentedImage->imageSize);
-  gst_buffer_copy_into (outbuf, buf,
-      (GstBufferCopyFlags) GST_BUFFER_COPY_METADATA, 0, -1);
   gst_buffer_map (outbuf, &outinfo, GST_MAP_WRITE);
   memcpy (outinfo.data, filter->cvSegmentedImage->imageData,
       gst_buffer_get_size (outbuf));
 
-  gst_buffer_unmap (buf, &info);
-  gst_buffer_unref (buf);
   cvReleaseImage (&filter->cvSegmentedImage);
   g_assert (filter->cvSegmentedImage == NULL);
 
-  gst_buffer_unmap (outbuf, &outinfo);
-  return gst_pad_push (filter->srcpad, outbuf);
+  return GST_FLOW_OK;
 }
 
 
