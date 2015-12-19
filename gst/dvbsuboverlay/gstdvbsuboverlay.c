@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[ FIXME
- * gst-launch-1.0 -v filesrc location=/path/to/ts ! mpegtsdemux name=d ! queue ! mp3parse ! mad ! audioconvert ! autoaudiosink \
+ * gst-launch-1.0 -v filesrc location=/path/to/ts ! mpegtsdemux name=d ! queue ! mpegaudioparse ! mad ! audioconvert ! autoaudiosink \
  *     d. ! queue ! mpeg2dec ! videoconvert ! r. \
  *     d. ! queue ! "subpicture/x-dvb" ! dvbsuboverlay name=r ! videoconvert ! autovideosink
  * ]| This pipeline demuxes a MPEG-TS file with MPEG2 video, MP3 audio and embedded DVB subtitles and renders the subtitles on top of the video.
