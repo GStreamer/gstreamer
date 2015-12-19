@@ -827,18 +827,17 @@ retry:
       TRUE, TRUE, TRUE, err);
   g_free (main_uri);
   if (download == NULL) {
+    g_clear_error (err);
     if (update && !main_checked
         && gst_m3u8_client_has_variant_playlist (demux->client)) {
-      GError *err2 = NULL;
       main_uri = gst_m3u8_client_get_uri (demux->client);
       GST_INFO_OBJECT (demux,
           "Updating playlist %s failed, attempt to refresh variant playlist %s",
           uri, main_uri);
       download =
           gst_uri_downloader_fetch_uri (adaptive_demux->downloader,
-          main_uri, NULL, TRUE, TRUE, TRUE, &err2);
+          main_uri, NULL, TRUE, TRUE, TRUE, NULL);
       g_free (main_uri);
-      g_clear_error (&err2);
       if (download != NULL) {
         gchar *base_uri;
 
@@ -872,7 +871,6 @@ retry:
 
         g_object_unref (download);
 
-        g_clear_error (err);
         main_checked = TRUE;
         goto retry;
       } else {
