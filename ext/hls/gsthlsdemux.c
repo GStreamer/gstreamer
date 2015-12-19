@@ -827,60 +827,60 @@ retry:
       TRUE, TRUE, TRUE, err);
   g_free (main_uri);
   if (download == NULL) {
+    gchar *base_uri;
+
     g_clear_error (err);
-    if (update && !main_checked
-        && gst_m3u8_client_has_variant_playlist (demux->client)) {
-      main_uri = gst_m3u8_client_get_uri (demux->client);
-      GST_INFO_OBJECT (demux,
-          "Updating playlist %s failed, attempt to refresh variant playlist %s",
-          uri, main_uri);
-      download =
-          gst_uri_downloader_fetch_uri (adaptive_demux->downloader,
-          main_uri, NULL, TRUE, TRUE, TRUE, NULL);
-      g_free (main_uri);
-      if (download != NULL) {
-        gchar *base_uri;
-
-        buf = gst_fragment_get_buffer (download);
-        playlist = gst_hls_src_buf_to_utf8_playlist (buf);
-        gst_buffer_unref (buf);
-
-        if (playlist == NULL) {
-          GST_WARNING_OBJECT (demux,
-              "Failed to validate variant playlist encoding");
-          g_free (uri);
-          g_object_unref (download);
-          return FALSE;
-        }
-
-        g_free (uri);
-        if (download->redirect_permanent && download->redirect_uri) {
-          uri = download->redirect_uri;
-          base_uri = NULL;
-        } else {
-          uri = download->uri;
-          base_uri = download->redirect_uri;
-        }
-
-        if (!gst_m3u8_client_update_variant_playlist (demux->client, playlist,
-                uri, base_uri)) {
-          GST_WARNING_OBJECT (demux, "Failed to update the variant playlist");
-          g_object_unref (download);
-          return FALSE;
-        }
-
-        g_object_unref (download);
-
-        main_checked = TRUE;
-        goto retry;
-      } else {
-        g_free (uri);
-        return FALSE;
-      }
-    } else {
+    if (!update || main_checked
+        || !gst_m3u8_client_has_variant_playlist (demux->client)) {
       g_free (uri);
       return FALSE;
     }
+
+    main_uri = gst_m3u8_client_get_uri (demux->client);
+    GST_INFO_OBJECT (demux,
+        "Updating playlist %s failed, attempt to refresh variant playlist %s",
+        uri, main_uri);
+    download =
+        gst_uri_downloader_fetch_uri (adaptive_demux->downloader,
+        main_uri, NULL, TRUE, TRUE, TRUE, NULL);
+    g_free (main_uri);
+    if (download == NULL) {
+      g_free (uri);
+      return FALSE;
+    }
+
+    buf = gst_fragment_get_buffer (download);
+    playlist = gst_hls_src_buf_to_utf8_playlist (buf);
+    gst_buffer_unref (buf);
+
+    if (playlist == NULL) {
+      GST_WARNING_OBJECT (demux,
+          "Failed to validate variant playlist encoding");
+      g_free (uri);
+      g_object_unref (download);
+      return FALSE;
+    }
+
+    g_free (uri);
+    if (download->redirect_permanent && download->redirect_uri) {
+      uri = download->redirect_uri;
+      base_uri = NULL;
+    } else {
+      uri = download->uri;
+      base_uri = download->redirect_uri;
+    }
+
+    if (!gst_m3u8_client_update_variant_playlist (demux->client, playlist,
+            uri, base_uri)) {
+      GST_WARNING_OBJECT (demux, "Failed to update the variant playlist");
+      g_object_unref (download);
+      return FALSE;
+    }
+
+    g_object_unref (download);
+
+    main_checked = TRUE;
+    goto retry;
   }
   g_free (uri);
 
