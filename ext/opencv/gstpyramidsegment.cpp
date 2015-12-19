@@ -108,8 +108,6 @@ static void gst_pyramid_segment_set_property (GObject * object, guint prop_id,
 static void gst_pyramid_segment_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_pyramid_segment_handle_sink_event (GstPad * pad,
-    GstObject * parent, GstEvent * event);
 static GstFlowReturn gst_pyramid_segment_transform (GstOpencvVideoFilter * base,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
@@ -180,9 +178,6 @@ gst_pyramid_segment_class_init (GstPyramidSegmentClass * klass)
 static void
 gst_pyramid_segment_init (GstPyramidSegment * filter)
 {
-  gst_pad_set_event_function (GST_BASE_TRANSFORM_SINK_PAD (filter),
-      GST_DEBUG_FUNCPTR (gst_pyramid_segment_handle_sink_event));
-
   filter->storage = cvCreateMemStorage (BLOCK_SIZE);
   filter->comp =
       cvCreateSeq (0, sizeof (CvSeq), sizeof (CvPoint), filter->storage);
@@ -245,34 +240,7 @@ gst_pyramid_segment_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* GstElement vmethod implementations */
-
-/* this function handles the link with other elements */
-static gboolean
-gst_pyramid_segment_handle_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
-{
-  GstVideoInfo info;
-  gboolean res = TRUE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-      gst_event_parse_caps (event, &caps);
-      gst_video_info_from_caps (&info, caps);
-      break;
-    }
-    default:
-      break;
-  }
-
-  res = gst_pad_event_default (pad, parent, event);
-
-  return res;
-}
-
-/* chain function
+/* transform function
  * this function does the actual processing
  */
 static GstFlowReturn
