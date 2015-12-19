@@ -120,8 +120,6 @@ static void gst_opencv_text_overlay_set_property (GObject * object,
 static void gst_opencv_text_overlay_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_opencv_text_overlay_handle_sink_event (GstPad * pad,
-    GstObject * parent, GstEvent * event);
 static GstFlowReturn gst_opencv_text_overlay_transform_ip (GstOpencvVideoFilter
     * filter, GstBuffer * buf, IplImage * img);
 
@@ -228,9 +226,6 @@ gst_opencv_text_overlay_class_init (GstOpencvTextOverlayClass * klass)
 static void
 gst_opencv_text_overlay_init (GstOpencvTextOverlay * filter)
 {
-  gst_pad_set_event_function (GST_BASE_TRANSFORM_SINK_PAD (filter),
-      GST_DEBUG_FUNCPTR (gst_opencv_text_overlay_handle_sink_event));
-
   filter->textbuf = g_strdup (DEFAULT_PROP_TEXT);
   filter->width = DEFAULT_PROP_WIDTH;
   filter->height = DEFAULT_PROP_HEIGHT;
@@ -327,35 +322,6 @@ gst_opencv_text_overlay_get_property (GObject * object, guint prop_id,
       break;
   }
 }
-
-static gboolean
-gst_opencv_text_overlay_handle_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
-{
-  gint width, height;
-  GstStructure *structure;
-  gboolean res = TRUE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-      gst_event_parse_caps (event, &caps);
-
-      structure = gst_caps_get_structure (caps, 0);
-      gst_structure_get_int (structure, "width", &width);
-      gst_structure_get_int (structure, "height", &height);
-
-      break;
-    }
-    default:
-      break;
-  }
-
-  res = gst_pad_event_default (pad, parent, event);
-  return res;
-}
-
 
 /* chain function
  * this function does the actual processing
