@@ -2562,6 +2562,7 @@ _relink_single_node (NleComposition * comp, GNode * node,
 {
   NleObject *newobj;
   NleObject *newparent;
+  GNode *node_it;
   GstPad *srcpad = NULL, *sinkpad = NULL;
   GstEvent *translated_seek;
 
@@ -2573,6 +2574,12 @@ _relink_single_node (NleComposition * comp, GNode * node,
 
   GST_DEBUG_OBJECT (comp, "newobj:%s",
       GST_ELEMENT_NAME ((GstElement *) newobj));
+
+  newobj->recursive_media_duration_factor = 1.0f;
+  for (node_it = node; node_it != NULL; node_it = node_it->parent) {
+    NleObject *object = (NleObject *) node_it->data;
+    newobj->recursive_media_duration_factor *= object->media_duration_factor;
+  }
 
   srcpad = NLE_OBJECT_SRC (newobj);
 

@@ -77,6 +77,7 @@ enum
   PROP_ACTIVE,
   PROP_CAPS,
   PROP_EXPANDABLE,
+  PROP_MEDIA_DURATION_FACTOR,
   PROP_LAST
 };
 
@@ -246,6 +247,21 @@ nle_object_class_init (NleObjectClass * klass)
       properties[PROP_EXPANDABLE]);
 
   /**
+   * NleObject:media-duration-factor
+   *
+   * Indicates the relative rate caused by this object, in other words, the
+   * relation between the rate of media entering and leaving this object. I.e.
+   * if object pulls data at twice the speed it sends it (e.g. `pitch
+   * tempo=2.0`), this value is set to 2.0.
+   */
+  properties[PROP_MEDIA_DURATION_FACTOR] =
+      g_param_spec_double ("media-duration-factor", "Media duration factor",
+      "The relative rate caused by this object", 0.01, G_MAXDOUBLE,
+      1.0, G_PARAM_READWRITE);
+  g_object_class_install_property (gobject_class, PROP_MEDIA_DURATION_FACTOR,
+      properties[PROP_MEDIA_DURATION_FACTOR]);
+
+  /**
    * NleObject::commit
    * @object: a #NleObject
    * @recurse: Whether to commit recursiverly into (NleComposition) children of
@@ -281,6 +297,8 @@ nle_object_init (NleObject * object, NleObjectClass * klass)
   object->segment_rate = 1.0;
   object->segment_start = -1;
   object->segment_stop = -1;
+  object->media_duration_factor = 1.0;
+  object->recursive_media_duration_factor = 1.0;
 
   object->srcpad = nle_object_ghost_pad_no_target (object,
       "src", GST_PAD_SRC,
@@ -342,17 +360,23 @@ nle_object_to_media_time (NleObject * object, GstClockTime otime,
   if (G_UNLIKELY ((otime >= object->stop))) {
     GST_DEBUG_OBJECT (object, "ObjectTime is after stop");
     if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (object->inpoint)))
-      *mtime = object->inpoint + object->duration;
+      *mtime =
+          object->inpoint +
+          object->duration * object->recursive_media_duration_factor;
     else
-      *mtime = object->stop - object->start;
+      *mtime =
+          (object->stop -
+          object->start) * object->recursive_media_duration_factor;
     return FALSE;
   }
 
   if (G_UNLIKELY (object->inpoint == GST_CLOCK_TIME_NONE)) {
     /* no time shifting, for live sources ? */
-    *mtime = otime - object->start;
+    *mtime = (otime - object->start) * object->recursive_media_duration_factor;
   } else {
-    *mtime = otime - object->start + object->inpoint;
+    *mtime =
+        (otime - object->start) * object->recursive_media_duration_factor +
+        object->inpoint;
   }
 
   GST_DEBUG_OBJECT (object, "Returning MediaTime : %" GST_TIME_FORMAT,
@@ -543,6 +567,9 @@ nle_object_set_property (GObject * object, guint prop_id,
       else
         GST_OBJECT_FLAG_UNSET (nleobject, NLE_OBJECT_EXPANDABLE);
       break;
+    case PROP_MEDIA_DURATION_FACTOR:
+      nleobject->media_duration_factor = g_value_get_double (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -580,6 +607,9 @@ nle_object_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EXPANDABLE:
       g_value_set_boolean (value, NLE_OBJECT_IS_EXPANDABLE (object));
+      break;
+    case PROP_MEDIA_DURATION_FACTOR:
+      g_value_set_double (value, nleobject->media_duration_factor);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

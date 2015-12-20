@@ -1246,13 +1246,24 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
 /**
  * ges_clip_split:
  * @clip: the #GESClip to split
- * @position: a #GstClockTime representing the position at which to split
+ * @position: a #GstClockTime representing the timeline position at which to split
  *
- * The function modifies @clip, and creates another #GESClip so
- * we have two clips at the end, splitted at the time specified by @position.
- * The newly created clip will be added to the same layer as @clip is in.
- * This implies that @clip must be in a #GESLayer for the operation to
- * be possible.
+ * The function modifies @clip, and creates another #GESClip so we have two
+ * clips at the end, splitted at the time specified by @position, as a position
+ * in the timeline (not in the clip to be split). For example, if
+ * ges_clip_split is called on a 4-second clip playing from 0:01.00 until
+ * 0:05.00, with a split position of 0:02.00, this will result in one clip of 1
+ * second and one clip of 3 seconds, not in two clips of 2 seconds.
+ *
+ * The newly created clip will be added to the same layer as @clip is in. This
+ * implies that @clip must be in a #GESLayer for the operation to be possible.
+ *
+ * This method supports clips playing at a different tempo than one second per
+ * second. For example, splitting a clip with a #GESEffect 'pitch tempo=1.5'
+ * four seconds after it starts, will set the inpoint of the new clip to six
+ * seconds after that of the clip to split. For this, the rate-changing
+ * property must be registered using @ges_effect_class_register_rate_property;
+ * for the 'pitch' plugin, this is already done.
  *
  * Returns: (transfer none): The newly created #GESClip resulting from the
  * splitting
@@ -1262,7 +1273,8 @@ ges_clip_split (GESClip * clip, guint64 position)
 {
   GList *tmp;
   GESClip *new_object;
-  GstClockTime start, inpoint, duration;
+  GstClockTime start, inpoint, duration, old_duration, new_duration;
+  gdouble media_duration_factor;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
   g_return_val_if_fail (clip->priv->layer, NULL);
@@ -1287,11 +1299,15 @@ ges_clip_split (GESClip * clip, guint64 position)
 
   GST_DEBUG_OBJECT (new_object, "New 'splitted' clip");
   /* Set new timing properties on the Clip */
+  media_duration_factor =
+      ges_timeline_element_get_media_duration_factor (GES_TIMELINE_ELEMENT
+      (clip));
+  new_duration = duration + start - position;
+  old_duration = position - start;
   _set_start0 (GES_TIMELINE_ELEMENT (new_object), position);
   _set_inpoint0 (GES_TIMELINE_ELEMENT (new_object),
-      _INPOINT (clip) + duration - (duration + start - position));
-  _set_duration0 (GES_TIMELINE_ELEMENT (new_object),
-      duration + start - position);
+      inpoint + old_duration * media_duration_factor);
+  _set_duration0 (GES_TIMELINE_ELEMENT (new_object), new_duration);
 
   /* We do not want the timeline to create again TrackElement-s */
   ges_clip_set_moving_from_layer (new_object, TRUE);
@@ -1313,9 +1329,8 @@ ges_clip_split (GESClip * clip, guint64 position)
     /* Set 'new' track element timing propeties */
     _set_start0 (GES_TIMELINE_ELEMENT (new_trackelement), position);
     _set_inpoint0 (GES_TIMELINE_ELEMENT (new_trackelement),
-        inpoint + duration - (duration + start - position));
-    _set_duration0 (GES_TIMELINE_ELEMENT (new_trackelement),
-        duration + start - position);
+        inpoint + old_duration * media_duration_factor);
+    _set_duration0 (GES_TIMELINE_ELEMENT (new_trackelement), new_duration);
 
     ges_container_add (GES_CONTAINER (new_object),
         GES_TIMELINE_ELEMENT (new_trackelement));
@@ -1326,7 +1341,7 @@ ges_clip_split (GESClip * clip, guint64 position)
         position - start + inpoint);
   }
 
-  _set_duration0 (GES_TIMELINE_ELEMENT (clip), position - _START (clip));
+  _set_duration0 (GES_TIMELINE_ELEMENT (clip), old_duration);
 
   return new_object;
 }

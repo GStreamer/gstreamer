@@ -159,6 +159,10 @@ ges_effect_class_init (GESEffectClass * klass)
 
   obj_bg_class->create_element = ges_effect_create_element;
 
+  klass->rate_properties = NULL;
+  ges_effect_class_register_rate_property (klass, "pitch", "tempo");
+  ges_effect_class_register_rate_property (klass, "pitch", "rate");
+
   /**
    * GESEffect:bin-description:
    *
@@ -269,4 +273,101 @@ ges_effect_new (const gchar * bin_description)
   gst_object_unref (asset);
 
   return effect;
+}
+
+static int
+property_name_compare (gconstpointer s1, gconstpointer s2)
+{
+  return g_strcmp0 ((const gchar *) s1, (const gchar *) s2);
+}
+
+/**
+ * ges_effect_class_register_rate_property:
+ * @klass: Instance of the GESEffectClass
+ * @element_name: Name of the GstElement that changes the rate
+ * @property_name: Name of the property that changes the rate
+ *
+ * Register an element that can change the rate at which media is playing. The
+ * property type must be float or double, and must be a factor of the rate,
+ * i.e. a value of 2.0 must mean that the media plays twice as fast. For
+ * example, this is true for the properties 'rate' and 'tempo' of the element
+ * 'pitch', which is already registered by default. By registering the element,
+ * timeline duration can be correctly converted into media duration, allowing
+ * the right segment seeks to be sent to the sources.
+ *
+ * A reference to the GESEffectClass can be obtained as follows:
+ *   GES_EFFECT_CLASS (g_type_class_ref (GES_TYPE_EFFECT));
+ *
+ * Returns: whether the rate property was succesfully registered. When this
+ * method returns false, a warning is emitted with more information.
+ */
+gboolean
+ges_effect_class_register_rate_property (GESEffectClass * klass,
+    const gchar * element_name, const gchar * property_name)
+{
+  GstElementFactory *element_factory = NULL;
+  GstElement *element = NULL;
+  GParamSpec *pspec = NULL;
+  gchar *full_property_name = NULL;
+  GType param_type;
+  gboolean res = FALSE;
+
+  element_factory = gst_element_factory_find (element_name);
+  if (element_factory == NULL) {
+    GST_WARNING
+        ("Did not add rate property '%s' for element '%s': the element factory could not be found",
+        property_name, element_name);
+    goto fail;
+  }
+
+  element = gst_element_factory_create (element_factory, NULL);
+  if (element == NULL) {
+    GST_WARNING
+        ("Did not add rate property '%s' for element '%s': the element could not be constructed",
+        property_name, element_name);
+    goto fail;
+  }
+
+  pspec =
+      g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+      property_name);
+  if (pspec == NULL) {
+    GST_WARNING
+        ("Did not add rate property '%s' for element '%s': the element did not have the property name specified",
+        property_name, element_name);
+    goto fail;
+  }
+
+  param_type = G_PARAM_SPEC_VALUE_TYPE (pspec);
+  if (param_type != G_TYPE_FLOAT && param_type != G_TYPE_DOUBLE) {
+    GST_WARNING
+        ("Did not add rate property '%s' for element '%s': the property is not of float or double type",
+        property_name, element_name);
+    goto fail;
+  }
+
+  full_property_name = g_strdup_printf ("%s::%s",
+      g_type_name (gst_element_factory_get_element_type (element_factory)),
+      property_name);
+
+  if (g_list_find_custom (klass->rate_properties, full_property_name,
+          property_name_compare) == NULL) {
+    klass->rate_properties =
+        g_list_append (klass->rate_properties, full_property_name);
+    GST_DEBUG ("Added rate property %s", full_property_name);
+  } else {
+    g_free (full_property_name);
+  }
+
+  res = TRUE;
+
+fail:
+  if (element_factory != NULL)
+    gst_object_unref (element_factory);
+  if (element != NULL)
+    gst_object_unref (element);
+  if (pspec != NULL)
+    g_param_spec_unref (pspec);
+
+  return res;
 }

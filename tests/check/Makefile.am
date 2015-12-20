@@ -51,10 +51,12 @@ check_PROGRAMS = \
 	ges/group\
 	ges/project\
 	ges/track\
+	ges/tempochange	\
 	nle/simple	\
 	nle/complex	\
 	nle/nleoperation	\
-	nle/nlecomposition
+	nle/nlecomposition	\
+	nle/tempochange
 
 # We do not support sources outside composition
 #	nle/nlesource

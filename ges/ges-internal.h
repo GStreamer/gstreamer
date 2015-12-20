@@ -364,6 +364,11 @@ G_GNUC_INTERNAL GESImageSource     * ges_image_source_new      (gchar *uri);
 G_GNUC_INTERNAL GESTitleSource     * ges_title_source_new      (void);
 G_GNUC_INTERNAL GESVideoTestSource * ges_video_test_source_new (void);
 
+/****************************************************
+ *              GESTimelineElement                  *
+ ****************************************************/
+G_GNUC_INTERNAL gdouble ges_timeline_element_get_media_duration_factor(GESTimelineElement *self);
+
 /******************************
  *  GESMultiFile internal API *
  ******************************/

@@ -194,6 +194,7 @@ ges_track_element_constructed (GObject * gobject)
 {
   GESTrackElementClass *class;
   GstElement *nleobject;
+  gdouble media_duration_factor;
   gchar *tmp;
   GESTrackElement *object = GES_TRACK_ELEMENT (gobject);
 
@@ -227,6 +228,12 @@ ges_track_element_constructed (GObject * gobject)
       "duration", GES_TIMELINE_ELEMENT_DURATION (object),
       "priority", GES_TIMELINE_ELEMENT_PRIORITY (object),
       "active", object->active, NULL);
+
+  media_duration_factor =
+      ges_timeline_element_get_media_duration_factor (GES_TIMELINE_ELEMENT
+      (object));
+  g_object_set (object->priv->nleobject,
+      "media-duration-factor", media_duration_factor, NULL);
 
   G_OBJECT_CLASS (ges_track_element_parent_class)->constructed (gobject);
 }

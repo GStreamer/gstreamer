@@ -126,6 +126,12 @@ struct _NleObject
   gint64 segment_start;
   gint64 segment_stop;
 
+  /* the rate at which this object speeds up or slows down media */
+  gdouble media_duration_factor;
+  /* the rate at which this object and all of its children speed up or slow
+   * down media */
+  gdouble recursive_media_duration_factor;
+
   gboolean in_composition;
 };
 

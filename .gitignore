@@ -68,6 +68,7 @@ log
 /tests/check/ges/mixers
 /tests/check/ges/timelineedition
 /tests/check/ges/timelinegroup
+/tests/check/ges/tempochange
 /tests/check/ges/uriclip
 /tests/check/integration
 /tests/benchmarks/timeline
@@ -78,6 +79,7 @@ log
 /tests/check/nle/nlecomposition
 /tests/check/nle/nleoperation
 /tests/check/nle/nlesource
+/tests/check/nle/tempochange
 
 /tools/ges-launch-1.0
 /tests/check/ges/project
