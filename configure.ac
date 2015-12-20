@@ -208,17 +208,17 @@ AM_CONDITIONAL(HAVE_THEORA, test "x$HAVE_THEORA" = "xyes")
 dnl Check for -Bsymbolic-functions linker flag used to avoid
 dnl intra-library PLT jumps, if available.
 AC_ARG_ENABLE(Bsymbolic,
-              [AC_HELP_STRING([--disable-Bsymbolic],
-                              [avoid linking with -Bsymbolic])],,
-              [SAVED_LDFLAGS="${LDFLAGS}"
+              [AS_HELP_STRING([--disable-Bsymbolic],[avoid linking with -Bsymbolic])],,
+              [SAVED_LDFLAGS="${LDFLAGS}" SAVED_LIBS="${LIBS}"
                AC_MSG_CHECKING([for -Bsymbolic-functions linker flag])
                LDFLAGS=-Wl,-Bsymbolic-functions
-               AC_TRY_LINK([], [int main (void) { return 0; }],
+               LIBS=
+               AC_TRY_LINK([], [return 0],
                            AC_MSG_RESULT(yes)
                            enable_Bsymbolic=yes,
                            AC_MSG_RESULT(no)
                            enable_Bsymbolic=no)
-               LDFLAGS="${SAVED_LDFLAGS}"])
+               LDFLAGS="${SAVED_LDFLAGS}" LIBS="${SAVED_LIBS}"])
 
 AC_ARG_WITH([omx-target],
         AS_HELP_STRING([--with-omx-target],[Use this OpenMAX IL target (generic, bellagio, rpi)]),
