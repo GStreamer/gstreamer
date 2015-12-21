@@ -2127,6 +2127,14 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       res = TRUE;
       goto drop;
     }
+    case GST_EVENT_FLUSH_START:
+    {
+      if (gst_event_get_seqnum (event) == demux->offset_seek_seqnum) {
+        gst_event_unref (event);
+        goto drop;
+      }
+      break;
+    }
     case GST_EVENT_FLUSH_STOP:
     {
       guint64 dur;
@@ -2134,6 +2142,11 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       dur = demux->segment.duration;
       gst_qtdemux_reset (demux, FALSE);
       demux->segment.duration = dur;
+
+      if (gst_event_get_seqnum (event) == demux->offset_seek_seqnum) {
+        gst_event_unref (event);
+        goto drop;
+      }
       break;
     }
     case GST_EVENT_EOS:
@@ -5478,7 +5491,10 @@ qtdemux_seek_offset (GstQTDemux * demux, guint64 offset)
       GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, offset,
       GST_SEEK_TYPE_NONE, -1);
 
+  /* store seqnum to drop flush events, they don't need to reach downstream */
+  demux->offset_seek_seqnum = gst_event_get_seqnum (event);
   res = gst_pad_push_event (demux->sinkpad, event);
+  demux->offset_seek_seqnum = 0;
 
   return res;
 }
