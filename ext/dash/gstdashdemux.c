@@ -1748,16 +1748,16 @@ gst_dash_demux_poll_ntp_server (GstDashDemuxClockDrift * clock_drift,
   return gst_date_time_new_from_g_date_time (dt2);
 }
 
-struct Rfc822TimeZone
+struct Rfc5322TimeZone
 {
   const gchar *name;
   gfloat tzoffset;
 };
 
 /*
- Parse an RFC822 (section 5) date-time from the Date: field in the
+ Parse an RFC5322 (section 3.3) date-time from the Date: field in the
  HTTP response. 
- See https://tools.ietf.org/html/rfc822#section-5
+ See https://tools.ietf.org/html/rfc5322#section-3.3
 */
 static GstDateTime *
 gst_dash_demux_parse_http_head (GstDashDemuxClockDrift * clock_drift,
@@ -1767,7 +1767,7 @@ gst_dash_demux_parse_http_head (GstDashDemuxClockDrift * clock_drift,
     "May", "Jun", "Jul", "Aug",
     "Sep", "Oct", "Nov", "Dec", NULL
   };
-  static const struct Rfc822TimeZone timezones[] = {
+  static const struct Rfc5322TimeZone timezones[] = {
     {"Z", 0},
     {"UT", 0},
     {"GMT", 0},
@@ -1855,6 +1855,9 @@ gst_dash_demux_parse_http_head (GstDashDemuxClockDrift * clock_drift,
         }
       }
     }
+    /* Accept year in both 2 digit or 4 digit format */
+    if (year < 100)
+      year += 2000;
   }
   if (month > 0 && parsed_tz) {
     value = gst_date_time_new (tzoffset,
