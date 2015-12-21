@@ -615,7 +615,8 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
       &dwCurrentPlayCursor, NULL);
 
   if (SUCCEEDED (hRes) && SUCCEEDED (hRes2) && (dwStatus & DSBSTATUS_PLAYING)) {
-    DWORD dwFreeBufferSize;
+    DWORD dwFreeBufferSize = 0;
+    DWORD sleepTime = 0;
 
   calculate_freesize:
     /* calculate the free size of the circular buffer */
@@ -628,7 +629,17 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
           dwCurrentPlayCursor - dsoundsink->current_circular_offset;
 
     if (length >= dwFreeBufferSize) {
-      Sleep (100);
+      sleepTime =
+          ((length -
+              dwFreeBufferSize) * 1000) / (dsoundsink->bytes_per_sample *
+          GST_AUDIO_BASE_SINK (asink)->ringbuffer->spec.info.rate);
+      if (sleepTime > 0) {
+        GST_DEBUG_OBJECT (dsoundsink,
+            "gst_directsound_sink_write: length:%i, FreeBufSiz: %ld, sleepTime: %ld, bps: %i, rate: %i",
+            length, dwFreeBufferSize, sleepTime, dsoundsink->bytes_per_sample,
+            GST_AUDIO_BASE_SINK (asink)->ringbuffer->spec.info.rate);
+        Sleep (sleepTime);
+      }
       hRes = IDirectSoundBuffer_GetCurrentPosition (dsoundsink->pDSBSecondary,
           &dwCurrentPlayCursor, NULL);
 
