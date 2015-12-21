@@ -241,7 +241,7 @@ GST_END_TEST;
 static Suite *
 gst_gl_color_convert_suite (void)
 {
-  Suite *s = suite_create ("GstGLUpload");
+  Suite *s = suite_create ("GstGLColorConvert");
   TCase *tc_chain = tcase_create ("upload");
 
   suite_add_tcase (s, tc_chain);
