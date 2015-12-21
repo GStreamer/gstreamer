@@ -842,7 +842,7 @@ gst_teletextdec_vbi_page_to_text_lines (guint start, guint stop, vbi_page *
 
   /* allocate a new NULL-terminated array of strings */
   lines = (gchar **) g_malloc (sizeof (gchar *) * (lines_count + 1));
-  lines[lines_count] = g_strdup ('\0');
+  lines[lines_count] = NULL;
 
   /* export each line in the range of the teletext page in text format */
   for (i = start; i <= stop; i++) {
@@ -945,7 +945,7 @@ gst_teletextdec_export_pango_page (GstTeletextDec * teletext, vbi_page * page,
   gint i, j;
 
   colors = (gchar **) g_malloc (sizeof (gchar *) * (rows + 1));
-  colors[rows] = g_strdup ('\0');
+  colors[rows] = NULL;
 
   /* parse all the lines and approximate it's foreground color using the first
    * non null character */
