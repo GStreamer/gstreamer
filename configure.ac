@@ -311,6 +311,21 @@ fi
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_X11, test "x$HAVE_GTK_X11" = "xyes")
 
+dnl Check for -Bsymbolic-functions linker flag used to avoid
+dnl intra-library PLT jumps, if available.
+AC_ARG_ENABLE(Bsymbolic,
+              [AS_HELP_STRING([--disable-Bsymbolic],[avoid linking with -Bsymbolic])],,
+              [SAVED_LDFLAGS="${LDFLAGS}" SAVED_LIBS="${LIBS}"
+               AC_MSG_CHECKING([for -Bsymbolic-functions linker flag])
+               LDFLAGS=-Wl,-Bsymbolic-functions
+               LIBS=
+               AC_TRY_LINK([], [return 0],
+                           AC_MSG_RESULT(yes)
+                           enable_Bsymbolic=yes,
+                           AC_MSG_RESULT(no)
+                           enable_Bsymbolic=no)
+               LDFLAGS="${SAVED_LDFLAGS}" LIBS="${SAVED_LIBS}"])
+
 dnl building of benchmarks
 AC_ARG_ENABLE(benchmarks,
   AS_HELP_STRING([--disable-benchmarks],[disable building benchmarks apps]),
@@ -392,6 +407,9 @@ AC_SUBST(GST_LIBS)
 dnl LDFLAGS really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"
+if test "x${enable_Bsymbolic}" = "xyes"; then
+  GST_ALL_LDFLAGS="$GST_ALL_LDFLAGS -Wl,-Bsymbolic-functions"
+fi
 AC_SUBST(GST_ALL_LDFLAGS)
 
 dnl GST_LIB_LDFLAGS
