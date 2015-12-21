@@ -189,7 +189,6 @@ struct _GstGLContextPrivate
   /* conditions */
   GMutex render_lock;
   GCond create_cond;
-  GCond destroy_cond;
 
   gboolean created;
   gboolean alive;
@@ -261,7 +260,6 @@ gst_gl_context_init (GstGLContext * context)
   g_mutex_init (&context->priv->render_lock);
 
   g_cond_init (&context->priv->create_cond);
-  g_cond_init (&context->priv->destroy_cond);
   context->priv->created = FALSE;
 
   g_weak_ref_init (&context->priv->other_context_ref, NULL);
@@ -627,25 +625,16 @@ gst_gl_context_finalize (GObject * object)
     gst_gl_window_set_draw_callback (context->window, NULL, NULL, NULL);
 
     if (context->priv->alive) {
-      g_mutex_lock (&context->priv->render_lock);
       GST_INFO_OBJECT (context, "send quit gl window loop");
       gst_gl_window_quit (context->window);
-      while (context->priv->alive) {
-        g_cond_wait (&context->priv->destroy_cond, &context->priv->render_lock);
-      }
-      g_mutex_unlock (&context->priv->render_lock);
-    }
 
-    gst_gl_window_set_close_callback (context->window, NULL, NULL, NULL);
-
-    if (context->priv->gl_thread) {
-      gpointer ret = g_thread_join (context->priv->gl_thread);
+      GST_INFO_OBJECT (context, "joining gl thread");
+      g_thread_join (context->priv->gl_thread);
       GST_INFO_OBJECT (context, "gl thread joined");
-      if (ret != NULL)
-        GST_ERROR_OBJECT (context, "gl thread returned a non-null pointer");
       context->priv->gl_thread = NULL;
     }
 
+    gst_gl_window_set_close_callback (context->window, NULL, NULL, NULL);
     gst_object_unref (context->window);
   }
 
@@ -658,7 +647,6 @@ gst_gl_context_finalize (GObject * object)
 
   g_mutex_clear (&context->priv->render_lock);
 
-  g_cond_clear (&context->priv->destroy_cond);
   g_cond_clear (&context->priv->create_cond);
 
   g_free (context->priv->gl_exts);
@@ -948,9 +936,8 @@ gst_gl_context_create (GstGLContext * context,
     context->priv->gl_thread = g_thread_new ("gstglcontext",
         (GThreadFunc) gst_gl_context_create_thread, context);
 
-    g_cond_wait (&context->priv->create_cond, &context->priv->render_lock);
-
-    context->priv->created = TRUE;
+    while (!context->priv->created)
+      g_cond_wait (&context->priv->create_cond, &context->priv->render_lock);
 
     GST_INFO_OBJECT (context, "gl thread created");
   }
@@ -1045,6 +1032,8 @@ _compiled_api (void)
 static void
 _unlock_create_thread (GstGLContext * context)
 {
+  context->priv->created = TRUE;
+  g_cond_signal (&context->priv->create_cond);
   g_mutex_unlock (&context->priv->render_lock);
 }
 
@@ -1215,9 +1204,8 @@ gst_gl_context_create_thread (GstGLContext * context)
     gst_object_unref (other_context);
   }
 
-  g_cond_signal (&context->priv->create_cond);
-
-//  g_mutex_unlock (&context->priv->render_lock);
+  /* unlocking of the render_lock happens when the
+   * context's loop is running from inside that loop */
   gst_gl_window_send_message_async (context->window,
       (GstGLWindowCB) _unlock_create_thread, context, NULL);
 
@@ -1226,7 +1214,6 @@ gst_gl_context_create_thread (GstGLContext * context)
   GST_INFO_OBJECT (context, "loop exited");
 
   g_mutex_lock (&context->priv->render_lock);
-
   context->priv->alive = FALSE;
 
   gst_gl_context_activate (context, FALSE);
@@ -1242,8 +1229,7 @@ gst_gl_context_create_thread (GstGLContext * context)
     window_class->close (context->window);
   }
 
-  g_cond_signal (&context->priv->destroy_cond);
-
+  context->priv->created = FALSE;
   g_mutex_unlock (&context->priv->render_lock);
 
   return NULL;
@@ -1253,6 +1239,9 @@ failure:
     if (other_context)
       gst_object_unref (other_context);
 
+    /* A context that fails to be created is considered created but not alive
+     * and will never be able to be alive as creation can't happen */
+    context->priv->created = TRUE;
     g_cond_signal (&context->priv->create_cond);
     g_mutex_unlock (&context->priv->render_lock);
     return NULL;
