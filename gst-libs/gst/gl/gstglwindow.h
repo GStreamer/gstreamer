@@ -88,9 +88,6 @@ struct _GstGLWindow {
   gboolean              queue_resize;
 
   /*< private >*/
-  GMainContext *navigation_context;
-  GMainLoop *navigation_loop;
-
   GstGLWindowPrivate *priv;
 
   gpointer _reserved[GST_PADDING];
@@ -143,22 +140,6 @@ struct _GstGLWindowClass {
   gpointer _reserved[GST_PADDING];
 };
 
-struct key_event
-{
-  GstGLWindow *window;
-  const char *event_type;
-  const char *key_str;
-};
-
-struct mouse_event
-{
-  GstGLWindow *window;
-  const char *event_type;
-  int button;
-  double posx;
-  double posy;
-};
-
 GQuark gst_gl_window_error_quark (void);
 GType gst_gl_window_get_type     (void);
 
@@ -196,12 +177,19 @@ void     gst_gl_window_send_message_async   (GstGLWindow *window,
 /* navigation */
 void     gst_gl_window_handle_events        (GstGLWindow * window,
                                              gboolean handle_events);
-gboolean gst_gl_window_key_event_cb         (gpointer data);
-gboolean gst_gl_window_mouse_event_cb       (gpointer data);
+
 void     gst_gl_window_send_key_event       (GstGLWindow * window,
                                              const char * event_type,
                                              const char * key_str);
+void     gst_gl_window_send_key_event_async (GstGLWindow * window,
+                                             const char * event_type,
+                                             const char * key_str);
 void     gst_gl_window_send_mouse_event     (GstGLWindow * window,
+                                             const char * event_type,
+                                             int button,
+                                             double posx,
+                                             double posy);
+void     gst_gl_window_send_mouse_event_async (GstGLWindow * window,
                                              const char * event_type,
                                              int button,
                                              double posx,
