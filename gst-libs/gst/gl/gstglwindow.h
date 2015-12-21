@@ -67,11 +67,6 @@ struct _GstGLWindow {
   GstObject parent;
 
   GMutex        lock;
-  GMutex        nav_lock;
-  GCond         nav_create_cond;
-  GCond         nav_destroy_cond;
-  gboolean      nav_created;
-  gboolean      nav_alive;
 
   GstGLDisplay *display;
   GWeakRef      context_ref;
