@@ -515,10 +515,6 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
   GstGLContextClass *context_class;
   GstGLWindow *window;
   gboolean ret = TRUE;
-  const char *key_str = NULL;
-  KeySym keysym;
-  struct mouse_event *mouse_data;
-  struct key_event *key_data;
 
   window = GST_GL_WINDOW (window_x11);
 
@@ -591,47 +587,39 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
         break;
       case KeyPress:
       case KeyRelease:
+      {
+        const char *key_str = NULL, *key_type = NULL;
+        KeySym keysym;
+
         keysym = XkbKeycodeToKeysym (window_x11->device,
             event.xkey.keycode, 0, 0);
         key_str = XKeysymToString (keysym);
-        key_data = g_slice_new (struct key_event);
-        key_data->window = window;
-        key_data->key_str = XKeysymToString (keysym);
-        key_data->event_type =
-            event.type == KeyPress ? "key-press" : "key-release";
-        GST_DEBUG ("input event key %d pressed over window at %d,%d (%s)",
-            event.xkey.keycode, event.xkey.x, event.xkey.y, key_str);
-        g_main_context_invoke (window->navigation_context,
-            (GSourceFunc) gst_gl_window_key_event_cb, key_data);
+        key_type = event.type == KeyPress ? "key-press" : "key-release";
+        GST_DEBUG ("input event key %d %s over window at %d,%d (%s)",
+            event.xkey.keycode, key_type, event.xkey.x, event.xkey.y, key_str);
+        gst_gl_window_send_key_event_async (window, key_type, key_str);
         break;
+      }
       case ButtonPress:
-      case ButtonRelease:
-        GST_DEBUG ("input event mouse button %d pressed over window at %d,%d",
-            event.xbutton.button, event.xbutton.x, event.xbutton.y);
-        mouse_data = g_slice_new (struct mouse_event);
-        mouse_data->window = window;
-        mouse_data->event_type =
-            event.type ==
-            ButtonPress ? "mouse-button-press" : "mouse-button-release";
-        mouse_data->button = event.xbutton.button;
-        mouse_data->posx = (double) event.xbutton.x;
-        mouse_data->posy = (double) event.xbutton.y;
+      case ButtonRelease:{
+        const char *mouse_type = NULL;
 
-        g_main_context_invoke (window->navigation_context,
-            (GSourceFunc) gst_gl_window_mouse_event_cb, mouse_data);
+        mouse_type = event.type ==
+            ButtonPress ? "mouse-button-press" : "mouse-button-release";
+
+        GST_DEBUG ("input event mouse button %d %s over window at %d,%d",
+            event.xbutton.button, mouse_type, event.xbutton.x, event.xbutton.y);
+
+        gst_gl_window_send_mouse_event_async (window, mouse_type,
+            event.xbutton.button, event.xbutton.x, event.xbutton.y);
         break;
+      }
       case MotionNotify:
         GST_DEBUG ("input event pointer moved over window at %d,%d",
             event.xmotion.x, event.xmotion.y);
-        mouse_data = g_slice_new (struct mouse_event);
-        mouse_data->window = window;
-        mouse_data->event_type = "mouse-move";
-        mouse_data->button = 0;
-        mouse_data->posx = (double) event.xbutton.x;
-        mouse_data->posy = (double) event.xbutton.y;
 
-        g_main_context_invoke (window->navigation_context, (GSourceFunc)
-            gst_gl_window_mouse_event_cb, mouse_data);
+        gst_gl_window_send_mouse_event_async (window, "mouse-move", 0,
+            event.xbutton.x, event.xbutton.y);
         break;
       default:
         GST_DEBUG ("unknown XEvent type: %u", event.type);
