@@ -70,6 +70,11 @@ enum
   PROP_DEVICE_ID,
 };
 
+/* This lock is needed to prevent the situation where multiple encoders are
+ * initialised at the same time which appears to cause excessive CPU usage over
+ * some period of time. */
+G_LOCK_DEFINE_STATIC (initialization_lock);
+
 #if HAVE_NVENC_GST_GL
 struct gl_input_resource
 {
@@ -878,10 +883,14 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   NVENCSTATUS nv_ret;
 
   g_assert (nvenc_class->initialize_encoder);
+
+  G_LOCK (initialization_lock);
   if (!nvenc_class->initialize_encoder (nvenc, old_state, state)) {
     GST_ERROR_OBJECT (enc, "Subclass failed to reconfigure encoder");
+    G_UNLOCK (initialization_lock);
     return FALSE;
   }
+  G_UNLOCK (initialization_lock);
 
   if (!nvenc->max_encode_width && !nvenc->max_encode_height) {
     gst_nv_base_enc_set_max_encode_size (nvenc, GST_VIDEO_INFO_WIDTH (info),
@@ -1020,7 +1029,10 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
       cout_buf.size = 1024 * 1024;
       cout_buf.memoryHeap = NV_ENC_MEMORY_HEAP_SYSMEM_CACHED;
 
+      G_LOCK (initialization_lock);
       nv_ret = NvEncCreateBitstreamBuffer (nvenc->encoder, &cout_buf);
+      G_UNLOCK (initialization_lock);
+
       if (nv_ret != NV_ENC_SUCCESS) {
         GST_WARNING_OBJECT (enc, "Failed to allocate input buffer: %d", nv_ret);
         /* FIXME: clean up */
