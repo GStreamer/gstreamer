@@ -36,7 +36,11 @@ HFILE_GLOB=$(top_srcdir)/gst-libs/gst/*/*.h
 CFILE_GLOB=$(top_srcdir)/gst-libs/gst/*/*.c
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = $(top_srcdir)/gst-libs/gst/mpegts/gstmpegts-private.h
+IGNORE_HFILES = \
+	$(top_srcdir)/gst-libs/gst/mpegts/gstmpegts-private.h \
+	$(top_srcdir)/gst-libs/gst/player/gstplayer-signal-dispatcher-private.h \
+	$(top_srcdir)/gst-libs/gst/player/gstplayer-video-renderer-private.h \
+	$(top_srcdir)/gst-libs/gst/player/gstplayer-media-info-private.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =
@@ -55,6 +59,7 @@ GTKDOC_LIBS = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/insertbin/libgstinsertbin-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/mpegts/libgstmpegts-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/player/libgstplayer-@GST_API_VERSION@.la \
   $(GST_BASE_LIBS)
 
 # If you need to override some of the declarations, place them in this file

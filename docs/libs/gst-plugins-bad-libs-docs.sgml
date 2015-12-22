@@ -100,6 +100,15 @@
       <xi:include href="xml/gstglwindowx11.xml"/>
     </chapter>
 
+    <chapter id="player">
+      <title>Player Library</title>
+      <xi:include href="xml/gstplayer.xml"/>
+      <xi:include href="xml/gstplayer-mediainfo.xml"/>
+      <xi:include href="xml/gstplayer-gmaincontextsignaldispatcher.xml"/>
+      <xi:include href="xml/gstplayer-videooverlayvideorenderer.xml"/>
+      <xi:include href="xml/gstplayer-visualization.xml"/>
+    </chapter>
+
     <chapter>
       <title>Interfaces</title>
       <xi:include href="xml/gstphotography.xml" />

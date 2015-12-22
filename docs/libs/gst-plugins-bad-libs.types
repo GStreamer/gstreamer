@@ -5,6 +5,7 @@
 #include <gst/insertbin/gstinsertbin.h>
 #include <gst/mpegts/mpegts.h>
 #include <gst/gl/gl.h>
+#include <gst/player/player.h>
 
 gst_mpegts_section_get_type
 gst_mpegts_section_type_get_type
@@ -38,4 +39,19 @@ gst_gl_framebuffer_get_type
 gst_gl_shader_get_type
 gst_gl_upload_get_type
 gst_gl_window_get_type
+
+gst_player_audio_info_get_type
+gst_player_color_balance_type_get_type
+gst_player_error_get_type
+gst_player_g_main_context_signal_dispatcher_get_type
+gst_player_get_type
+gst_player_media_info_get_type
+gst_player_signal_dispatcher_get_type
+gst_player_state_get_type
+gst_player_stream_info_get_type
+gst_player_subtitle_info_get_type
+gst_player_video_info_get_type
+gst_player_video_overlay_video_renderer_get_type
+gst_player_video_renderer_get_type
+gst_player_visualization_get_type
 
