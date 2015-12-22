@@ -234,7 +234,7 @@ _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
   gboolean res = FALSE;
 
   gint new_layer_priority = -1;
-  GESEditMode edge = GES_EDGE_NONE;
+  GESEdge edge = GES_EDGE_NONE;
   GESEditMode mode = GES_EDIT_MODE_NORMAL;
 
   const gchar *edit_mode_str = NULL, *edge_str = NULL;
