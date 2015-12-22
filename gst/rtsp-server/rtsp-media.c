@@ -2487,6 +2487,10 @@ start_prepare (GstRTSPMedia * media)
   guint i;
   GList *walk;
 
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARING)
+    goto no_longer_preparing;
+
   /* link streams we already have, other streams might appear when we have
    * dynamic elements */
   for (i = 0; i < priv->streams->len; i++) {
@@ -2535,18 +2539,28 @@ start_prepare (GstRTSPMedia * media)
   if (!start_preroll (media))
     goto preroll_failed;
 
+  g_rec_mutex_unlock (&priv->state_lock);
+
   return FALSE;
 
+no_longer_preparing:
+  {
+    GST_INFO ("media is no longer preparing");
+    g_rec_mutex_unlock (&priv->state_lock);
+    return FALSE;
+  }
 join_bin_failed:
   {
     GST_WARNING ("failed to join bin element");
     gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
+    g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }
 preroll_failed:
   {
     GST_WARNING ("failed to preroll pipeline");
     gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
+    g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }
 }
