@@ -1824,9 +1824,6 @@ gst_dash_demux_parse_http_head (GstDashDemuxClockDrift * clock_drift,
         break;
       }
     }
-    while (*z == ' ') {
-      ++z;
-    }
     for (int i = 0; timezones[i].name && !parsed_tz; ++i) {
       if (g_ascii_strncasecmp (timezones[i].name, z,
               strlen (timezones[i].name)) == 0) {
