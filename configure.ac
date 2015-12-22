@@ -3550,6 +3550,7 @@ gst-libs/gst/mpegts/Makefile
 gst-libs/gst/uridownloader/Makefile
 gst-libs/gst/wayland/Makefile
 gst-libs/gst/base/Makefile
+gst-libs/gst/player/Makefile
 gst-libs/gst/video/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
