@@ -122,3 +122,13 @@ coverage-report:
 	  perl $(top_srcdir)/common/coverage/coverage-report-entry.pl   \
 	    $(top_builddir)/$$file > coverage/$$file.html; 		\
 	done
+
+check:
+if HAVE_NOSETESTS
+if WITH_PYTHON
+	${NOSETESTS} --verbose $(top_srcdir)/tests/check/python/test_*.py
+
+check-python:
+	${NOSETESTS} --verbose $(top_srcdir)/tests/check/python/test_*.py
+endif
+endif

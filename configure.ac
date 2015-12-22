@@ -125,27 +125,8 @@ GTK_DOC_CHECK([1.3])
 AS_PATH_PYTHON([2.1])
 AG_GST_PLUGIN_DOCS([1.3],[2.1])
 
-dnl check for python
-AM_PATH_PYTHON
-AC_MSG_CHECKING(for python >= 2.3)
-prog="
-import sys, string
-minver = (2,3,0,'final',0)
-if sys.version_info < minver:
-  sys.exit(1)
-sys.exit(0)"
-
-if $PYTHON -c "$prog" 1>&AC_FD_CC 2>&AC_FD_CC
-then
-  HAVE_PYTHON=yes
-  AC_MSG_RESULT(okay)
-else
-  HAVE_PYTHON=no
-  AC_MSG_RESULT(no python)
-fi
-
 dnl check for pygobject
-AC_SUBST(PYGOBJECT_REQ, 4.22)
+AC_SUBST(PYGOBJECT_REQ, 3.0)
 PKG_CHECK_MODULES(PYGOBJECT, pygobject-3.0 >= $PYGOBJECT_REQ,
   [
     HAVE_PYGOBJECT=yes
@@ -153,7 +134,7 @@ PKG_CHECK_MODULES(PYGOBJECT, pygobject-3.0 >= $PYGOBJECT_REQ,
 
 AM_CONDITIONAL(WITH_PYTHON, [test "x$HAVE_PYGOBJECT" = "xyes"])
 
-dnl check for pygobject
+dnl check for gst-validate
 PKG_CHECK_MODULES(GST_VALIDATE, gst-validate-1.0 >= 1.5.90,
   [
     HAVE_GST_VALIDATE=yes
@@ -202,6 +183,21 @@ AM_CONDITIONAL(HAVE_UNISTD_H, test "x$HAVE_UNISTD_H" = "xyes")
 if test "x$HAVE_UNISTD_H" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/festival//`
 fi
+
+dnl *** checks for nosetests ***
+
+AC_MSG_CHECKING(for nosetests)
+NOSETESTS=nosetests
+if $NOSETESTS 1>&AC_FD_CC 2>&AC_FD_CC
+then
+  HAVE_NOSETESTS=yes
+  AC_MSG_RESULT(yes)
+else
+  HAVE_NOSETESTS=no
+  AC_MSG_RESULT(no nosetests)
+fi
+AC_SUBST([NOSETESTS])
+AM_CONDITIONAL(HAVE_NOSETESTS, test "x$HAVE_NOSETESTS" = "xyes")
 
 dnl *** checks for types/defines ***
 
