@@ -829,20 +829,20 @@ retry:
   if (download == NULL) {
     gchar *base_uri;
 
-    g_clear_error (err);
     if (!update || main_checked
         || !gst_m3u8_client_has_variant_playlist (demux->client)) {
       g_free (uri);
       return FALSE;
     }
 
+    g_clear_error (err);
     main_uri = gst_m3u8_client_get_uri (demux->client);
     GST_INFO_OBJECT (demux,
         "Updating playlist %s failed, attempt to refresh variant playlist %s",
         uri, main_uri);
     download =
         gst_uri_downloader_fetch_uri (adaptive_demux->downloader,
-        main_uri, NULL, TRUE, TRUE, TRUE, NULL);
+        main_uri, NULL, TRUE, TRUE, TRUE, err);
     g_free (main_uri);
     if (download == NULL) {
       g_free (uri);
@@ -858,6 +858,8 @@ retry:
           "Failed to validate variant playlist encoding");
       g_free (uri);
       g_object_unref (download);
+      g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_WRONG_TYPE,
+          "Couldn't validate playlist encoding");
       return FALSE;
     }
 
@@ -874,6 +876,8 @@ retry:
             uri, base_uri)) {
       GST_WARNING_OBJECT (demux, "Failed to update the variant playlist");
       g_object_unref (download);
+      g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
+          "Couldn't update playlist");
       return FALSE;
     }
 
