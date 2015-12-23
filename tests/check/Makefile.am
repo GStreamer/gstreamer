@@ -170,7 +170,7 @@ endif
 
 if USE_HLS
 check_hlsdemux_m3u8 = elements/hlsdemux_m3u8
-check_hls_demux = elements/hls_demux
+check_hlsdemux = elements/hls_demux
 else
 check_hlsdemux_m3u8 =
 check_hlsdemux =
