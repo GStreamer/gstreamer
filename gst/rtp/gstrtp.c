@@ -101,6 +101,8 @@
 #include "gstrtpvorbispay.h"
 #include "gstrtpvp8depay.h"
 #include "gstrtpvp8pay.h"
+#include "gstrtpvp9depay.h"
+#include "gstrtpvp9pay.h"
 #include "gstrtpvrawdepay.h"
 #include "gstrtpvrawpay.h"
 #include "gstrtpstreampay.h"
@@ -343,6 +345,12 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_vp8_pay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_vp9_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_vp9_pay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_vraw_depay_plugin_init (plugin))
