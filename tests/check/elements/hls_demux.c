@@ -374,7 +374,15 @@ GST_START_TEST (testSeek)
 
   http_src_callbacks.src_start = gst_hlsdemux_test_src_start;
   http_src_callbacks.src_create = gst_hlsdemux_test_src_create;
+  /* seek to 5ms.
+   * Because there is only one fragment, we expect the whole file to be
+   * downloaded again
+   */
   engineTestData->threshold_for_seek = 20 * TS_PACKET_LEN;
+  engineTestData->seek_event =
+      gst_event_new_seek (1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, GST_SEEK_TYPE_SET,
+      5 * GST_MSECOND, GST_SEEK_TYPE_NONE, 0);
 
   gst_test_http_src_install_callbacks (&http_src_callbacks, &hlsTestCase);
   gst_adaptive_demux_test_seek (DEMUX_ELEMENT_NAME,

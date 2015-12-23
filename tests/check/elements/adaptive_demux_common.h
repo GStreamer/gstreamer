@@ -105,6 +105,7 @@ typedef struct _GstAdaptiveDemuxTestCase
    * demux  to AppSink before triggering a seek request
    */
   guint64 threshold_for_seek;
+  GstEvent *seek_event;
 
   gpointer signal_context;
 } GstAdaptiveDemuxTestCase;

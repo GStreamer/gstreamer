@@ -77,6 +77,7 @@ gst_adaptive_demux_test_case_clear (GstAdaptiveDemuxTestCase * testData)
   testData->signal_context = NULL;
   testData->test_task_state = TEST_TASK_STATE_NOT_STARTED;
   testData->threshold_for_seek = 0;
+  gst_event_replace (&testData->seek_event, NULL);
   testData->signal_context = NULL;
 }
 
@@ -251,6 +252,7 @@ typedef struct _SeekTaskContext
 {
   GstElement *pipeline;
   GstTask *task;
+  GstEvent *seek_event;
 } SeekTaskContext;
 
 /* function to generate a seek event. Will be run in a separate thread */
@@ -262,15 +264,12 @@ testSeekTaskDoSeek (gpointer user_data)
 
   GST_DEBUG ("testSeekTaskDoSeek calling seek");
 
-  /* seek to 5ms.
-   * Because there is only one fragment, we expect the whole file to be
-   * downloaded again
-   */
-  if (!gst_element_seek_simple (GST_ELEMENT (context->pipeline),
-          GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
-          5 * GST_MSECOND)) {
+  fail_unless (GST_IS_EVENT (context->seek_event));
+  fail_unless (GST_EVENT_TYPE (context->seek_event) == GST_EVENT_SEEK);
+
+  if (!gst_element_send_event (GST_ELEMENT (context->pipeline),
+          context->seek_event))
     fail ("Seek failed!\n");
-  }
   GST_DEBUG ("seek ok");
   task = context->task;
   g_slice_free (SeekTaskContext, context);
@@ -317,6 +316,7 @@ testSeekAdaptiveDemuxSendsData (GstAdaptiveDemuxTestEngine * engine,
 
     seekContext = g_slice_new (SeekTaskContext);
     seekContext->pipeline = engine->pipeline;
+    seekContext->seek_event = gst_event_ref (testData->seek_event);
     testData->test_task = seekContext->task =
         gst_task_new ((GstTaskFunction) testSeekTaskDoSeek, seekContext, NULL);
     gst_task_set_lock (testData->test_task, &testData->test_task_lock);

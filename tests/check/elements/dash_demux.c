@@ -486,6 +486,15 @@ GST_START_TEST (testSeek)
    */
   testData->threshold_for_seek = 4687 + 1;
 
+  /* seek to 5ms.
+   * Because there is only one fragment, we expect the whole file to be
+   * downloaded again
+   */
+  testData->seek_event =
+      gst_event_new_seek (1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, GST_SEEK_TYPE_SET,
+      5 * GST_MSECOND, GST_SEEK_TYPE_NONE, 0);
+
   gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
   gst_adaptive_demux_test_seek (DEMUX_ELEMENT_NAME,
       "http://unit.test/test.mpd", testData);
