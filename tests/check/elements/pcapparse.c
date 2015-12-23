@@ -1,5 +1,6 @@
 #include "parser.h"
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -67,6 +68,51 @@ GST_START_TEST (test_parse_frames_with_eth_padding)
   gst_parser_test_split (pcap_frame_with_eth_padding,
       sizeof (pcap_frame_with_eth_padding));
 }
+
+GST_END_TEST;
+
+static const guint8 zerosize_data[] = {
+  0xd4, 0xc3, 0xb2, 0xa1, 0x02, 0x00, 0x04, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00,
+  0xd3, 0xff, 0x7a, 0x56, 0xbb, 0xd8, 0x0e, 0x00,
+  0x2a, 0x00, 0x00, 0x00, 0x2a, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x45, 0x00,
+  0x00, 0x1c, 0x06, 0xe7, 0x40, 0x00, 0x40, 0x11,
+  0x35, 0xe8, 0x7f, 0x00, 0x00, 0x01, 0x7f, 0x00,
+  0x00, 0x01, 0xd2, 0xa3, 0x13, 0x8c, 0x00, 0x08,
+  0xfe, 0x1b
+};
+
+GST_START_TEST (test_parse_zerosize_frames)
+{
+  GstBuffer *in_buf, *out_buf;
+  GstHarness *h;
+  gsize data_size;
+
+  h = gst_harness_new ("pcapparse");
+
+  gst_harness_set_src_caps_str (h, "raw/x-pcap");
+
+  data_size = sizeof (zerosize_data);
+
+  in_buf = gst_buffer_new_wrapped (g_memdup (zerosize_data, data_size),
+      data_size);
+
+  gst_harness_push (h, in_buf);
+  gst_harness_play (h);
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  /* check that a buffer comes out and that it is 0 bytes in size */
+  out_buf = gst_harness_pull (h);
+
+  fail_unless (gst_buffer_get_size (out_buf) == 0);
+
+  gst_buffer_unref (out_buf);
+  gst_harness_teardown (h);
+}
+
 GST_END_TEST;
 
 static Suite *
@@ -86,6 +132,7 @@ pcapparse_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_parse_frames_with_eth_padding);
+  tcase_add_test (tc_chain, test_parse_zerosize_frames);
 
   return s;
 }
