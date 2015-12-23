@@ -63,8 +63,7 @@ GST_START_TEST (test_properties)
       "epsv-mode", &res_epsv_mode,
       "create-dirs", &res_create_dirs,
       "create-tmp-file", &res_create_tmpfile,
-      "temp-file-name", &res_tmp_file_name,
-      NULL);
+      "temp-file-name", &res_tmp_file_name, NULL);
 
   fail_unless (strncmp (res_location, "mylocation", strlen ("mylocation"))
       == 0);
@@ -72,12 +71,13 @@ GST_START_TEST (test_properties)
       == 0);
   fail_unless (strncmp (res_ftp_port, "1.2.3.4:0", strlen ("1.2.3.4:0"))
       == 0);
-  fail_unless (strncmp (res_tmp_file_name, "test_tmp_file_", strlen ("test_tmp_file_"))
+  fail_unless (strncmp (res_tmp_file_name, "test_tmp_file_",
+          strlen ("test_tmp_file_"))
       == 0);
   fail_unless (res_epsv_mode == FALSE);
   fail_unless (res_create_dirs == FALSE);
   fail_unless (res_create_tmpfile == FALSE);
-  
+
   g_free (res_location);
   g_free (res_file_name);
   g_free (res_ftp_port);
@@ -99,8 +99,7 @@ GST_START_TEST (test_properties)
       "epsv-mode", &res_epsv_mode,
       "create-dirs", &res_create_dirs,
       "create-tmp-file", &res_create_tmpfile,
-      "temp-file-name", &res_tmp_file_name,
-      NULL);
+      "temp-file-name", &res_tmp_file_name, NULL);
 
   fail_unless (strncmp (res_location, "newlocation", strlen ("newlocation"))
       == 0);
@@ -108,13 +107,14 @@ GST_START_TEST (test_properties)
       == 0);
   fail_unless (strncmp (res_ftp_port, "", strlen (""))
       == 0);
-  fail_unless (strncmp (res_tmp_file_name, "test_tmp_file_", strlen ("test_tmp_file_"))
+  fail_unless (strncmp (res_tmp_file_name, "test_tmp_file_",
+          strlen ("test_tmp_file_"))
       == 0);
   fail_unless (res_epsv_mode == TRUE);
   fail_unless (res_create_dirs == TRUE);
   fail_unless (res_create_dirs == TRUE);
   fail_unless (res_create_tmpfile == TRUE);
-  
+
   g_free (res_location);
   g_free (res_file_name);
   g_free (res_ftp_port);
@@ -122,6 +122,7 @@ GST_START_TEST (test_properties)
 
   cleanup_curlftpsink (sink);
 }
+
 GST_END_TEST;
 
 static Suite *

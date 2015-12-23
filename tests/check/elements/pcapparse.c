@@ -37,7 +37,7 @@ verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
   if (vdata->data_to_verify == pcap_frame_with_eth_padding) {
     offset = pcap_frame_with_eth_padding_offset;
     size = sizeof (pcap_frame_with_eth_padding) -
-      pcap_frame_with_eth_padding_offset - 2;
+        pcap_frame_with_eth_padding_offset - 2;
   }
 
   fail_unless_equals_int (gst_buffer_get_size (buffer), size);
@@ -51,7 +51,7 @@ static GstElement *
 setup_element (const gchar * desc)
 {
   GstElement *element;
-  GstCaps * caps;
+  GstCaps *caps;
 
   (void) desc;
 

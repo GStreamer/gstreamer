@@ -55,7 +55,7 @@ event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
 
-  GST_INFO ("got %" GST_PTR_FORMAT,  event);
+  GST_INFO ("got %" GST_PTR_FORMAT, event);
   myreceivedevents = g_list_append (myreceivedevents, gst_event_ref (event));
 
   return GST_PAD_PROBE_OK;
@@ -78,22 +78,22 @@ create_event (GstEventType type)
   GstEvent *event = NULL;
 
   switch (type) {
-   case GST_EVENT_CUSTOM_DOWNSTREAM:
-    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-        gst_structure_new ("x-app/test", "test-field", G_TYPE_STRING,
-            "test-value", NULL));
-    break;
-   case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
-    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB,
-        gst_structure_new ("x-app/test", "test-field", G_TYPE_STRING,
-            "test-value", NULL));
-    break;
-   case GST_EVENT_EOS:
-    event = gst_event_new_eos ();
-    break;
-   default:
-    g_assert_not_reached ();
-    break;
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+      event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+          gst_structure_new ("x-app/test", "test-field", G_TYPE_STRING,
+              "test-value", NULL));
+      break;
+    case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
+      event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB,
+          gst_structure_new ("x-app/test", "test-field", G_TYPE_STRING,
+              "test-value", NULL));
+      break;
+    case GST_EVENT_EOS:
+      event = gst_event_new_eos ();
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
 
   return event;
@@ -131,7 +131,7 @@ check_and_clear_events (gint expected, gboolean compare)
     }
   }
 
-  g_list_free_full (myreceivedevents, (GDestroyNotify)gst_event_unref);
+  g_list_free_full (myreceivedevents, (GDestroyNotify) gst_event_unref);
   myreceivedevents = NULL;
   g_list_free (mypushedevents);
   mypushedevents = NULL;
@@ -699,7 +699,7 @@ do_ntp_time (GstClockTime buffer_time, gint segment_start, gint segment_base)
 
   expected_ntp_time = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME,
       buffer_time);
-    expected_ntp_time += NTP_OFFSET;
+  expected_ntp_time += NTP_OFFSET;
   expected_ntp_time = gst_util_uint64_scale (expected_ntp_time,
       (G_GINT64_CONSTANT (1) << 32), GST_SECOND);
 
