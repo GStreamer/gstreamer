@@ -396,6 +396,17 @@ fi
 AC_SUBST(GST_PLUGIN_LIBTOOLFLAGS)
 AM_CONDITIONAL(GST_PLUGIN_BUILD_STATIC, test "x$enable_static_plugins" = "xyes")
 
+AC_ARG_WITH([player-tests],
+  AS_HELP_STRING([--with-player-tests],[Enable GstPlayer tests that need network access (default: no)]))
+if test x$with_player_tests = xyes; then
+  AC_PATH_PROG([WGET], [wget], no)
+  if test x$WGET = xno; then
+    AC_MSG_WARN([wget required for GstPlayer tests but not found - disabling])
+    with_player_tests=no
+  fi
+fi
+AM_CONDITIONAL(WITH_GST_PLAYER_TESTS, test "x$with_player_tests" = "xyes")
+
 # set by AG_GST_PARSE_SUBSYSTEM_DISABLES above
 dnl make sure it doesn't complain about unused variables if debugging is disabled
 NO_WARNINGS=""
