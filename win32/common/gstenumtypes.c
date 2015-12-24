@@ -1437,6 +1437,9 @@ gst_plugin_dependency_flags_get_type (void)
     {C_FLAGS (GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX),
           "GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX",
         "file-name-is-suffix"},
+    {C_FLAGS (GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX),
+          "GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX",
+        "file-name-is-prefix"},
     {0, NULL, NULL}
   };
 

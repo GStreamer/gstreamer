@@ -40,6 +40,36 @@ hierarchy, and a set of media-agnostic core elements.
 
  <release>
   <Version>
+   <revision>1.7.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2015-12-24</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.7.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.6.2</revision>
+   <branch>1.6</branch>
+   <name></name>
+   <created>2015-12-14</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.6.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.6.1</revision>
+   <branch>1.6</branch>
+   <name></name>
+   <created>2015-10-30</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.6.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.6.0</revision>
    <branch>1.6</branch>
    <name></name>
