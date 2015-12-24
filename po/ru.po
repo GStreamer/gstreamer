@@ -6,242 +6,267 @@
 # Yuri Kozlov <yuray@komyakino.ru>, 2011, 2013, 2014, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.5.1\n"
+"Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2015-09-25 22:59+0200\n"
-"PO-Revision-Date: 2015-06-13 12:00+0300\n"
+"PO-Revision-Date: 2015-10-18 13:40+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
-"Language-Team: Russian <gnu@mx.ru>\n"
+"Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Lokalize 1.5\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
+#: ext/gl/gstgltestsrc.c:673
 msgid "format wasn't negotiated before get function"
 msgstr "перед функцией получения не был согласован формат"
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:5
 msgid "default GStreamer sound events audiosink"
 msgstr "GStreamer audiosink по умолчанию для звуковых событий"
 
-msgid ""
-"GStreamer can play audio using any number of output elements. Some possible "
-"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
-"pipeline instead of just one element."
-msgstr ""
-"GStreamer может воспроизводить аудио через любое количество выходных "
-"элементов. Некоторые варианты: osssink, pulsesink и alsasink. Audiosink "
-"может быть конвейером, а не одиночным элементом."
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:6
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:19
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:32
+msgid "GStreamer can play audio using any number of output elements. Some possible choices are osssink, pulsesink and alsasink. The audiosink can be a partial pipeline instead of just one element."
+msgstr "GStreamer может воспроизводить аудио через любое количество выходных элементов. Некоторые варианты: osssink, pulsesink и alsasink. Audiosink может быть конвейером, а не одиночным элементом."
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:13
 msgid "description for default GStreamer sound events audiosink"
 msgstr "описание GStreamer audiosink по умолчанию для звуковых событий"
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:14
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:27
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:40
 msgid "Describes the selected audiosink element."
 msgstr "Описывает выбранный элемент audiosink."
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:18
 msgid "default GStreamer audiosink for Audio/Video Conferencing"
 msgstr "GStreamer audiosink по умолчанию для аудио-видео конференций"
 
-msgid ""
-"description for default GStreamer audiosink for Audio/Video Conferencing"
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:26
+msgid "description for default GStreamer audiosink for Audio/Video Conferencing"
 msgstr "описание GStreamer audiosink по умолчанию для аудио-видео конференций"
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:31
 msgid "default GStreamer audiosink for Music and Movies"
 msgstr "GStreamer audiosink по умолчанию для музыки и фильмов"
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:39
 msgid "description for default GStreamer audiosink for Music and Movies"
 msgstr "описание GStreamer audiosink по умолчанию для музыки и фильмов"
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:44
 msgid "default GStreamer videosink"
 msgstr "GStreamer videosink по умолчанию"
 
-msgid ""
-"GStreamer can play video using any number of output elements. Some possible "
-"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
-"can be a partial pipeline instead of just one element."
-msgstr ""
-"GStreamer может воспроизводить видео через любой выходной элемент. Некоторые "
-"варианты: xvimagesink, ximagesink, sdlvideosink и aasink. Videosink может "
-"быть конвейером, а не одиночным элементом."
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:45
+msgid "GStreamer can play video using any number of output elements. Some possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink can be a partial pipeline instead of just one element."
+msgstr "GStreamer может воспроизводить видео через любой выходной элемент. Некоторые варианты: xvimagesink, ximagesink, sdlvideosink и aasink. Videosink может быть конвейером, а не одиночным элементом."
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:52
 msgid "description for default GStreamer videosink"
 msgstr "описание GStreamer videosink по умолчанию"
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:53
 msgid "Describes the selected videosink element."
 msgstr "Описывает выбранный элемент videosink."
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:57
 msgid "default GStreamer audiosrc"
 msgstr "GStreamer audiosrc по умолчанию"
 
-msgid ""
-"GStreamer can record audio using any number of input elements. Some possible "
-"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
-"pipeline instead of just one element."
-msgstr ""
-"GStreamer может записывать аудио с любого входного элемента. Некоторые "
-"варианты: osssrc, pulsesrc и alsasrc. Источником аудио может быть конвейер, "
-"а не одиночный элемент."
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:58
+msgid "GStreamer can record audio using any number of input elements. Some possible choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial pipeline instead of just one element."
+msgstr "GStreamer может записывать аудио с любого входного элемента. Некоторые варианты: osssrc, pulsesrc и alsasrc. Источником аудио может быть конвейер, а не одиночный элемент."
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:65
 msgid "description for default GStreamer audiosrc"
 msgstr "описание GStreamer audiosrc по умолчанию"
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:66
 msgid "Describes the selected audiosrc element."
 msgstr "Описывает выбранный элемент audiosrc."
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:70
 msgid "default GStreamer videosrc"
 msgstr "GStreamer videosrc по умолчанию"
 
-msgid ""
-"GStreamer can record video from any number of input elements. Some possible "
-"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
-"partial pipeline instead of just one element."
-msgstr ""
-"GStreamer может записывать видео с любого входного элемента. Некоторые "
-"варианты: v4lsrc, v4l2src и videotestsrc. Источником видео может быть "
-"конвейер, а не одиночный элемент."
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:71
+msgid "GStreamer can record video from any number of input elements. Some possible choices are v4lsrc, v4l2src and videotestsrc. The video source can be a partial pipeline instead of just one element."
+msgstr "GStreamer может записывать видео с любого входного элемента. Некоторые варианты: v4lsrc, v4l2src и videotestsrc. Источником видео может быть конвейер, а не одиночный элемент."
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:77
 msgid "description for default GStreamer videosrc"
 msgstr "описание GStreamer videosrc по умолчанию"
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:78
 msgid "Describes the selected videosrc element."
 msgstr "Описывает выбранный элемент videosrc."
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:82
 msgid "default GStreamer visualization"
 msgstr "GStreamer visualization по умолчанию"
 
-msgid ""
-"GStreamer can put visualization plugins in a pipeline to transform audio "
-"streams in video frames. Some possible choices are goom, goom2k1 and "
-"synaesthesia. The visualization plugin can be a partial pipeline instead of "
-"just one element."
-msgstr ""
-"GStreamer может помещать модули визуализации для преобразования аудио "
-"потоков видео фрагментов. Некоторые варианты: goom, goom2k1 и synaesthesia. "
-"Модуль визуализации может быть конвейером, а не одиночным элементом."
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:83
+msgid "GStreamer can put visualization plugins in a pipeline to transform audio streams in video frames. Some possible choices are goom, goom2k1 and synaesthesia. The visualization plugin can be a partial pipeline instead of just one element."
+msgstr "GStreamer может помещать модули визуализации для преобразования аудио потоков видео фрагментов. Некоторые варианты: goom, goom2k1 и synaesthesia. Модуль визуализации может быть конвейером, а не одиночным элементом."
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:90
 msgid "description for default GStreamer visualization"
 msgstr "описание GStreamer visualization по умолчанию"
 
+#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:91
 msgid "Describes the selected visualization element."
 msgstr "Описывает выбранный элемент visualization."
 
+#: ext/opencv/gsttemplatematch.c:442
 msgid "OpenCV failed to load template image"
 msgstr "Ошибка OpenCV при загрузке шаблона изображения"
 
+#: ext/resindvd/resindvdsrc.c:362
 msgid "Could not read title information for DVD."
 msgstr "Не удалось прочитать информацию о структуре DVD."
 
+#: ext/resindvd/resindvdsrc.c:368
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Не удалось открыть DVD-устройство «%s»."
 
+#: ext/resindvd/resindvdsrc.c:374
 msgid "Failed to set PGC based seeking."
 msgstr "Не удалось включить PGC-позиционирование."
 
-msgid ""
-"Could not read DVD. This may be because the DVD is encrypted and a DVD "
-"decryption library is not installed."
-msgstr ""
-"Не удалось прочитать DVD. Это могло произойти из-за того, что DVD "
-"закодирован и не установлена библиотека декодирования DVD."
+#: ext/resindvd/resindvdsrc.c:1166
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "Не удалось прочитать DVD. Это могло произойти из-за того, что DVD закодирован и не установлена библиотека декодирования DVD."
 
+#: ext/resindvd/resindvdsrc.c:1171 ext/resindvd/resindvdsrc.c:1180
 msgid "Could not read DVD."
 msgstr "Не удалось прочитать DVD."
 
+#: ext/smoothstreaming/gstmssdemux.c:380
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:525
 msgid "This file contains no playable streams."
 msgstr "Файл не содержит воспроизводимых потоков."
 
+#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Не удалось открыть поток sndfile для чтения."
 
+#: ext/sndio/sndiosink.c:324 ext/sndio/sndiosrc.c:321
 msgid "Could not establish connection to sndio"
 msgstr "Не удалось установить соединение с sndio"
 
+#: ext/sndio/sndiosink.c:331 ext/sndio/sndiosrc.c:328
 msgid "Failed to query sndio capabilities"
 msgstr "Ошибка при запросе возможностей sndio"
 
+#: ext/sndio/sndiosink.c:424 ext/sndio/sndiosrc.c:422
 msgid "Could not configure sndio"
 msgstr "Не удалось настроить sndio"
 
+#: ext/sndio/sndiosink.c:430 ext/sndio/sndiosrc.c:428
 msgid "Could not start sndio"
 msgstr "Не удалось запустить sndio"
 
+#: gst/aiff/aiffparse.c:1458
 msgid "Internal data flow error."
 msgstr "Внутренняя ошибка передачи данных."
 
+#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr ""
-"В сгенерированном файле время предпуска (preroll) больше чем длительность "
-"его потоков"
+msgstr "В сгенерированном файле время предпуска (preroll) больше чем длительность его потоков"
 
+#: gst/camerabin2/camerabingeneral.c:166 gst/camerabin2/gstcamerabin2.c:1876
+#: gst/camerabin2/gstdigitalzoom.c:282 gst/camerabin2/gstviewfinderbin.c:271
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Отсутствует элемент «%s» — проверьте правильность установки GStreamer."
 
+#: gst/camerabin2/gstcamerabin2.c:364
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr "Расположение файла равно NULL, укажите правильное имя файла"
 
-#, fuzzy
+#: gst/camerabin2/gstwrappercamerabinsrc.c:584
 msgid "Digitalzoom element couldn't be created"
 msgstr "Невозможно создать элемент Digitalzoom"
 
+#: gst/dvdspu/gstdvdspu.c:1040
 msgid "Subpicture format was not configured before data flow"
 msgstr "Не настроен формат субграфики (subpicture) до потока данных"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2081
 msgid "Failed to get fragment URL."
 msgstr "Ошибка при получении URL фрагмента."
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2282
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2446
+#: gst/mpegtsdemux/mpegtsbase.c:1342 gst/mpegtsdemux/mpegtsbase.c:1346
+#: gst/nuvdemux/gstnuvdemux.c:736
 msgid "Internal data stream error."
 msgstr "Внутренняя ошибка потока данных."
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2383
 msgid "Couldn't download fragments"
 msgstr "Не удалось скачать фрагменты"
 
+#: gst/videomeasure/gstvideomeasure_collector.c:294
 msgid "No file name specified for writing."
 msgstr "Не указано имя файла для записи."
 
+#: gst/videomeasure/gstvideomeasure_collector.c:300
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-"Указанное имя файла «%s» невозможно преобразовать в имя файла с локальной "
-"кодировкой."
+msgstr "Указанное имя файла «%s» невозможно преобразовать в имя файла с локальной кодировкой."
 
+#: gst/videomeasure/gstvideomeasure_collector.c:307
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Не удалось открыть для записи файл «%s»."
 
+#: sys/dvb/gstdvbsrc.c:1565 sys/dvb/gstdvbsrc.c:1754
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Устройство «%s» не существует."
 
+#: sys/dvb/gstdvbsrc.c:1569
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Не удалось открыть клиентское устройство «%s»."
 
+#: sys/dvb/gstdvbsrc.c:1583
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Не удалось получить параметры клиентского устройства «%s»."
 
+#: sys/dvb/gstdvbsrc.c:1600
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Не удалось пронумеровать системы доставки клиентского устройства «%s»."
 
+#: sys/dvb/gstdvbsrc.c:1758
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не удалось открыть для чтения файл «%s»."
 
+#: sys/dvb/parsechannels.c:168
 msgid "Couldn't find DVB channel configuration file"
 msgstr "Не удалось найти файл настройки каналов DVB"
 
+#: sys/dvb/parsechannels.c:171
 #, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr "Не удалось загрузить файл настройки каналов DVB: %s"
 
+#: sys/dvb/parsechannels.c:180
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "Файл настройки каналов DVB не содержит каналов"
 
+#: sys/dvb/parsechannels.c:456
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Не удалось найти настройки DVB-канала %s"
@@ -256,26 +281,16 @@ msgstr "Не удалось найти настройки DVB-канала %s"
 #~ msgstr "Внутренняя ошибка синхронизации."
 
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Не удалось настроить кодировщик TwoLAME. Проверьте параметры сжатия."
+#~ msgstr "Не удалось настроить кодировщик TwoLAME. Проверьте параметры сжатия."
 
-#~ msgid ""
-#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-#~ "bitrate was changed to %d kbit/s."
-#~ msgstr ""
-#~ "Запрашиваемый битрейт %d кбит/с недопустим для свойства «%s». Битрейт "
-#~ "изменён на %d кбит/с."
+#~ msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+#~ msgstr "Запрашиваемый битрейт %d кбит/с недопустим для свойства «%s». Битрейт изменён на %d кбит/с."
 
 #~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr ""
-#~ "Не удалось открыть аудио-устройство для обработки параметров микшера."
+#~ msgstr "Не удалось открыть аудио-устройство для обработки параметров микшера."
 
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Не удалось открыть аудио-устройство для обработки параметров микшера. "
-#~ "Данная версия Open Sound System не поддерживается этим элементом."
+#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
+#~ msgstr "Не удалось открыть аудио-устройство для обработки параметров микшера. Данная версия Open Sound System не поддерживается этим элементом."
 
 #~ msgid "Fast"
 #~ msgstr "Скорость"
@@ -472,29 +487,17 @@ msgstr "Не удалось найти настройки DVB-канала %s"
 #~ msgid "Virtual mixer output"
 #~ msgstr "Виртуальный выход микшера"
 
-#~ msgid ""
-#~ "Could not open audio device for playback. Device is being used by another "
-#~ "application."
-#~ msgstr ""
-#~ "Не удалось открыть аудио-устройство для воспроизведения. Устройство "
-#~ "используется другим приложением."
+#~ msgid "Could not open audio device for playback. Device is being used by another application."
+#~ msgstr "Не удалось открыть аудио-устройство для воспроизведения. Устройство используется другим приложением."
 
-#~ msgid ""
-#~ "Could not open audio device for playback. You don't have permission to "
-#~ "open the device."
-#~ msgstr ""
-#~ "Не удалось открыть аудио-устройство для воспроизведения. Отсутствуют "
-#~ "права доступа к устройству."
+#~ msgid "Could not open audio device for playback. You don't have permission to open the device."
+#~ msgstr "Не удалось открыть аудио-устройство для воспроизведения. Отсутствуют права доступа к устройству."
 
 #~ msgid "Could not open audio device for playback."
 #~ msgstr "Не удалось открыть аудио-устройство для воспроизведения."
 
-#~ msgid ""
-#~ "Could not open audio device for playback. This version of the Open Sound "
-#~ "System is not supported by this element."
-#~ msgstr ""
-#~ "Не удалось открыть аудио-устройство для воспроизведения. Данная версия "
-#~ "Open Sound System не поддерживается этим элементом."
+#~ msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+#~ msgstr "Не удалось открыть аудио-устройство для воспроизведения. Данная версия Open Sound System не поддерживается этим элементом."
 
 #~ msgid "Playback is not supported by this audio device."
 #~ msgstr "Воспроизведение не поддерживается данным аудио-устройством."
