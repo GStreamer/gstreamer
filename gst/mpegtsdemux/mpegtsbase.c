@@ -1438,6 +1438,11 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
     return ret == GST_FLOW_OK;
   }
 
+  if (rate <= 0.0) {
+    GST_WARNING ("Negative rate not supported");
+    return FALSE;
+  }
+
   GST_DEBUG ("seek event, rate: %f start: %" GST_TIME_FORMAT
       " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
       GST_TIME_ARGS (stop));
