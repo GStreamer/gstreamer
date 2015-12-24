@@ -214,10 +214,15 @@ GObject
               GstCvLaplace
               GstCvSmooth
               GstCvSobel
+              GstEdgeDetect
               GstFaceBlur
               GstFaceDetect
               GstHanddetect
+              GstMotioncells
+              GstOpencvTextOverlay
+              GstPyramidSegment
               GstSkinDetect
+              GstTemplateMatch
             GstRetinex
             GstRsvgOverlay
             GstSceneChange
@@ -268,7 +273,6 @@ GObject
         GstDtlsDec
         GstDtlsEnc
         GstDtlsSrtpDemux
-        GstEdgeDetect
         GstErrorIgnore
         GstFestival
         GstFieldAnalysis
@@ -289,14 +293,11 @@ GObject
         GstMimDec
         GstMimEnc
         GstModPlug
-        GstMotioncells
         GstMpeg2enc
         GstMpegPSDemux
         GstMplex
-        GstOpencvTextOverlay
         GstPcapParse
         GstPitch
-        GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
           GstRtpH265Depay
@@ -320,7 +321,6 @@ GObject
         GstTagMux
           GstId3Mux
         GstTeletextDec
-        GstTemplateMatch
         GstUvcH264MjpgDemux
         GstVideoDecoder
           GstLibde265Dec

@@ -47134,7 +47134,7 @@
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>color (gaussian standard deviation or color sigma</NICK>
-<BLURB>If type is gaussian, this means the standard deviation.If type is bilateral, this means the color-sigma. If zero, Default values are used.Check cvSmooth OpenCV docs: http://opencv.willowgarage.com/documentation/image_filtering.html#cvSmooth.</BLURB>
+<BLURB>If type is gaussian, this means the standard deviation.If type is bilateral, this means the color-sigma. If zero, Default values are used.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -47143,9 +47143,9 @@
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>height (aperture height)</NICK>
-<BLURB>The aperture height, if zero, the width is used.(Must be positive and odd or zero, unuset in median and bilateral types). Check cvSmooth OpenCV docs: http://opencv.willowgarage.com/documentation/image_filtering.html#cvSmooth.</BLURB>
-<DEFAULT>0</DEFAULT>
+<NICK>height (kernel height)</NICK>
+<BLURB>The gaussian kernel height (must be positive and odd).</BLURB>
+<DEFAULT>3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -47154,7 +47154,7 @@
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>spatial (spatial sigma, bilateral only)</NICK>
-<BLURB>Only used in bilateral type, means the spatial-sigma.Check cvSmooth OpenCV docs: http://opencv.willowgarage.com/documentation/image_filtering.html#cvSmooth.</BLURB>
+<BLURB>Only used in bilateral type, means the spatial-sigma.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -47163,8 +47163,8 @@
 <TYPE>gint</TYPE>
 <RANGE>>= 1</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>width (aperture width)</NICK>
-<BLURB>The aperture width (Must be positive and odd).Check cvSmooth OpenCV docs: http://opencv.willowgarage.com/documentation/image_filtering.html#cvSmooth.</BLURB>
+<NICK>width (kernel width)</NICK>
+<BLURB>The gaussian kernel width (must be positive and odd).If type is median, this means the aperture linear size.Check OpenCV docs: http://docs.opencv.org/2.4/modules/imgproc/doc/filtering.htm.</BLURB>
 <DEFAULT>3</DEFAULT>
 </ARG>
 
