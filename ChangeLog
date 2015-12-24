@@ -1,9 +1,68 @@
-=== release 1.6.0 ===
+=== release 1.7.1 ===
 
-2015-09-25  Thibault Saunier <tsaunier@gnome.org>
+2015-12-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.0
+	  releasing 1.7.1
+
+2015-12-14 13:03:24 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugin/gstpythonplugin.c:
+	  python: Check return value of g_module_symbol()
+	  CID 1320702
+
+2015-12-14 13:01:25 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugin/gstpythonplugin.c:
+	  python: Don't call Py_DECREF() on NULL
+	  CID 1320703
+
+2015-11-16 10:12:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugin/gstpythonplugin.c:
+	  pythonplugin: Clean up error handling a bit
+	  Don't g_error() but only g_critical() when things go wrong and return FALSE.
+	  g_error() would kill the application immediately.
+	  Also check if we can actually get gi.repository.Gst before using it.
+
+2015-11-08 11:56:28 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/gstmodule.c:
+	  overrides: also provide wrapper for trace level debug logging
+
+2015-11-08 11:56:20 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gi/overrides/Gst.py:
+	  overrides: fix a few typos in exception messages
+
+2015-10-27 22:19:19 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* examples/plugins/python/sinkelement.py:
+	  examples: Port the sink example to GstBaseSink
+	  Also we now need to explicitly call Gst.init() from python bindings.
+
+2015-10-25 21:33:46 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gi/overrides/Gst.py:
+	  overrides: chain up to base __init__ in Pad override
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=757108
+
+2015-09-25 12:03:45 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.6.0 ===
+
+2015-09-25 12:01:24 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.6.0
 
 2015-06-24 17:44:44 +0200  Thibault Saunier <tsaunier@gnome.org>
 

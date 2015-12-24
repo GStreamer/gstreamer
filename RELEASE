@@ -1,10 +1,20 @@
-Release notes for GStreamer Python bindings 1.6.0
 
-The GStreamer team is pleased to announce the first release of
-the stable 1.4 release series.
+Release notes for GStreamer Python bindings 1.7.1
 
-There were no bugs fixed in this release
 
+The GStreamer team is pleased to announce the first release of the unstable
+1.7 release series. The 1.7 release series is adding new features on top of
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.7 release series
+will lead to the stable 1.8 release series in the next weeks. Any newly added
+API can still change until that point.
+
+
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately
+during the unstable 1.7 release series.
+
+
+  
 
 ==== Download ====
 
@@ -38,10 +48,10 @@ from there (see link above).
 Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
 
-
-Applications
-
+        
 Contributors to this release
-
+    
+      * Mark Nauwelaerts
+      * Sebastian Dröge
       * Thibault Saunier
  
