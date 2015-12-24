@@ -3,6 +3,9 @@
  * Copyright (C) 2012, Cisco Systems, Inc.
  *   Author: Youness Alaoui <youness.alaoui@collabora.co.uk>
  *
+ * Copyright (C) 2015, Collabora Ltd.
+ *   Author: Justin Kim <justin.kim@collabora.com>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation

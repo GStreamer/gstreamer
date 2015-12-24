@@ -3,6 +3,9 @@
  * Copyright (C) 2012, Cisco Systems, Inc.
  *   Author: Youness Alaoui <youness.alaoui@collabora.co.uk>
  *
+ * Copyright (C) 2015, Collabora Ltd.
+ *   Author: Justin Kim <justin.kim@collabora.com>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation
@@ -23,11 +26,33 @@
 #include "config.h"
 #endif
 
-#include <gst/dvm/gstdvm.h>
+#include "gstjniutils.h"
 
-#include "gstahccallback.h"
 #include "gst-android-hardware-camera.h"
 #include "stdio.h"
+
+GST_DEBUG_CATEGORY_STATIC (ahc_debug);
+#define GST_CAT_DEFAULT ahc_debug
+
+#define GST_DVM_STATIC_CALL(error_statement, type, k, method, ...)      \
+  (*env)->CallStatic##type##Method (env, k.klass, k.method, ## __VA_ARGS__); \
+  if ((*env)->ExceptionCheck (env)) {                                   \
+    GST_ERROR ("Failed to call Java method");                           \
+    (*env)->ExceptionDescribe (env);                                    \
+    (*env)->ExceptionClear (env);                                       \
+    error_statement;                                                    \
+  }
+
+#define GST_DVM_CALL(error_statement, obj, type, k, method, ...)        \
+  (*env)->Call##type##Method (env, obj, k.method, ## __VA_ARGS__);      \
+  if ((*env)->ExceptionCheck (env)) {                                   \
+    GST_ERROR ("Failed to call Java method");                           \
+    (*env)->ExceptionDescribe (env);                                    \
+    (*env)->ExceptionClear (env);                                       \
+    error_statement;                                                    \
+  }
+
+
 
 static struct
 {
@@ -260,7 +285,7 @@ static struct
 {
   jclass klass;
   jmethodID constructor;
-} com_gstreamer_gstahccallback = {
+} org_freedesktop_gstreamer_androidmedia_gstahccallback = {
 0};
 
 static void
@@ -300,163 +325,332 @@ static JNINativeMethod native_methods[] = {
   {(gchar *) "gst_ah_camera_on_error",
         (gchar *) "(ILandroid/hardware/Camera;JJ)V",
       (void *) gst_ah_camera_on_error},
-  {(gchar *) "gst_ah_camera_on_auto_focus",
-        (gchar *) "(ZLandroid/hardware/Camera;JJ)V",
-      (void *) gst_ah_camera_on_auto_focus}
+//  {(gchar *) "gst_ah_camera_on_auto_focus",
+//        (gchar *) "(ZLandroid/hardware/Camera;JJ)V",
+//      (void *) gst_ah_camera_on_auto_focus}
 };
 
 static gboolean
 _init_classes (void)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env;
+  GError *err;
+
+  jclass klass;
+  jfieldID fieldID;
+
+  env = gst_amc_jni_get_env ();
 
   /* android.hardware.Camera */
-  GST_DVM_GET_CLASS (android_hardware_camera, "android/hardware/Camera");
-  GST_DVM_GET_METHOD (android_hardware_camera, addCallbackBuffer, "([B)V");
-  GST_DVM_GET_METHOD (android_hardware_camera, autoFocus,
-      "(Landroid/hardware/Camera$AutoFocusCallback;)V");
-  GST_DVM_GET_METHOD (android_hardware_camera, cancelAutoFocus, "()V");
-  GST_DVM_GET_STATIC_METHOD (android_hardware_camera, getCameraInfo,
-      "(ILandroid/hardware/Camera$CameraInfo;)V");
-  GST_DVM_GET_STATIC_METHOD (android_hardware_camera, getNumberOfCameras,
-      "()I");
-  GST_DVM_GET_METHOD (android_hardware_camera, getParameters,
-      "()Landroid/hardware/Camera$Parameters;");
-  GST_DVM_GET_METHOD (android_hardware_camera, lock, "()V");
-  GST_DVM_GET_STATIC_METHOD (android_hardware_camera, open,
-      "(I)Landroid/hardware/Camera;");
-  GST_DVM_GET_METHOD (android_hardware_camera, reconnect, "()V");
-  GST_DVM_GET_METHOD (android_hardware_camera, release, "()V");
-  GST_DVM_GET_METHOD (android_hardware_camera, setErrorCallback,
+  klass = android_hardware_camera.klass =
+      gst_amc_jni_get_class (env, &err, "android/hardware/Camera");
+  if (!klass)
+    goto failed;
+
+  android_hardware_camera.addCallbackBuffer =
+      gst_amc_jni_get_method_id (env, &err, klass,
+      "addCallbackBuffer", "([B)V");
+
+  android_hardware_camera.autoFocus =
+      gst_amc_jni_get_method_id (env, &err, klass,
+      "autoFocus", "(Landroid/hardware/Camera$AutoFocusCallback;)V");
+
+  android_hardware_camera.cancelAutoFocus =
+      gst_amc_jni_get_method_id (env, &err, klass, "cancelAutoFocus", "()V");
+
+  android_hardware_camera.getCameraInfo =
+      gst_amc_jni_get_static_method_id (env, &err, klass,
+      "getCameraInfo", "(ILandroid/hardware/Camera$CameraInfo;)V");
+
+  android_hardware_camera.getNumberOfCameras =
+      gst_amc_jni_get_static_method_id (env, &err, klass,
+      "getNumberOfCameras", "()I");
+
+  android_hardware_camera.getParameters =
+      gst_amc_jni_get_method_id (env, &err, klass,
+      "getParameters", "()Landroid/hardware/Camera$Parameters;");
+
+  android_hardware_camera.lock =
+      gst_amc_jni_get_method_id (env, &err, klass, "lock", "()V");
+
+  android_hardware_camera.open =
+      gst_amc_jni_get_static_method_id (env, &err, klass,
+      "open", "(I)Landroid/hardware/Camera;");
+
+  android_hardware_camera.reconnect =
+      gst_amc_jni_get_method_id (env, &err, klass, "reconnect", "()V");
+
+  android_hardware_camera.release =
+      gst_amc_jni_get_method_id (env, &err, klass, "release", "()V");
+
+  android_hardware_camera.setErrorCallback =
+      gst_amc_jni_get_method_id (env, &err, klass, "setErrorCallback",
       "(Landroid/hardware/Camera$ErrorCallback;)V");
-  GST_DVM_GET_METHOD (android_hardware_camera, setParameters,
+
+  android_hardware_camera.setParameters =
+      gst_amc_jni_get_method_id (env, &err, klass, "setParameters",
       "(Landroid/hardware/Camera$Parameters;)V");
-  GST_DVM_GET_METHOD (android_hardware_camera, setPreviewCallbackWithBuffer,
+
+  android_hardware_camera.setPreviewCallbackWithBuffer =
+      gst_amc_jni_get_method_id (env, &err, klass,
+      "setPreviewCallbackWithBuffer",
       "(Landroid/hardware/Camera$PreviewCallback;)V");
-  GST_DVM_GET_METHOD (android_hardware_camera, setPreviewTexture,
-      "(Landroid/graphics/SurfaceTexture;)V");
-  GST_DVM_GET_METHOD (android_hardware_camera, startPreview, "()V");
-  GST_DVM_GET_METHOD (android_hardware_camera, startSmoothZoom, "(I)V");
-  GST_DVM_GET_METHOD (android_hardware_camera, stopPreview, "()V");
-  GST_DVM_GET_METHOD (android_hardware_camera, stopSmoothZoom, "()V");
-  GST_DVM_GET_METHOD (android_hardware_camera, unlock, "()V");
+
+  android_hardware_camera.setPreviewTexture =
+      gst_amc_jni_get_method_id (env, &err, klass,
+      "setPreviewTexture", "(Landroid/graphics/SurfaceTexture;)V");
+
+  android_hardware_camera.startPreview =
+      gst_amc_jni_get_method_id (env, &err, klass, "startPreview", "()V");
+
+  android_hardware_camera.startSmoothZoom =
+      gst_amc_jni_get_method_id (env, &err, klass, "startSmoothZoom", "(I)V");
+
+  android_hardware_camera.stopPreview =
+      gst_amc_jni_get_method_id (env, &err, klass, "stopPreview", "()V");
+
+  android_hardware_camera.stopPreview =
+      gst_amc_jni_get_method_id (env, &err, klass, "stopPreview", "()V");
+
+  android_hardware_camera.unlock =
+      gst_amc_jni_get_method_id (env, &err, klass, "unlock", "()V");
 
   /* android.hardware.Camera.CameraInfo */
-  GST_DVM_GET_CLASS (android_hardware_camera_camerainfo,
-      "android/hardware/Camera$CameraInfo");
-  GST_DVM_GET_CONSTRUCTOR (android_hardware_camera_camerainfo,
-      constructor, "()V");
-  GST_DVM_GET_FIELD (android_hardware_camera_camerainfo, facing, "I");
-  GST_DVM_GET_FIELD (android_hardware_camera_camerainfo, orientation, "I");
-  GST_DVM_GET_CONSTANT (android_hardware_camera_camerainfo, CAMERA_FACING_BACK,
-      Int, "I");
+  klass = android_hardware_camera_camerainfo.klass =
+      gst_amc_jni_get_class (env, &err, "android/hardware/Camera$CameraInfo");
+  if (!klass)
+    goto failed;
+
+  android_hardware_camera_camerainfo.constructor =
+      gst_amc_jni_get_method_id (env, &err, klass, "<init>", "()V");
+
+  android_hardware_camera_camerainfo.facing =
+      gst_amc_jni_get_field_id (env, &err, klass, "facing", "I");
+
+  android_hardware_camera_camerainfo.orientation =
+      gst_amc_jni_get_field_id (env, &err, klass, "orientation", "I");
+
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "CAMERA_FACING_BACK",
+      "I");
+  if (!gst_amc_jni_get_static_int_field (env, &err, klass, fieldID,
+          &android_hardware_camera_camerainfo.CAMERA_FACING_BACK))
+    goto failed;
   CameraInfo_CAMERA_FACING_BACK =
       android_hardware_camera_camerainfo.CAMERA_FACING_BACK;
-  GST_DVM_GET_CONSTANT (android_hardware_camera_camerainfo, CAMERA_FACING_FRONT,
-      Int, "I");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "CAMERA_FACING_FRONT",
+      "I");
+  if (!gst_amc_jni_get_static_int_field (env, &err, klass, fieldID,
+          &android_hardware_camera_camerainfo.CAMERA_FACING_FRONT))
+    goto failed;
   CameraInfo_CAMERA_FACING_FRONT =
       android_hardware_camera_camerainfo.CAMERA_FACING_FRONT;
 
   /* android.hardware.Camera.Size */
-  GST_DVM_GET_CLASS (android_hardware_camera_size,
-      "android/hardware/Camera$Size");
-  GST_DVM_GET_FIELD (android_hardware_camera_size, width, "I");
-  GST_DVM_GET_FIELD (android_hardware_camera_size, height, "I");
+  klass = android_hardware_camera_size.klass =
+      gst_amc_jni_get_class (env, &err, "android/hardware/Camera$Size");
+  if (!klass)
+    goto failed;
+
+  android_hardware_camera_size.width =
+      gst_amc_jni_get_field_id (env, &err, klass, "width", "I");
+  android_hardware_camera_size.height =
+      gst_amc_jni_get_field_id (env, &err, klass, "height", "I");
 
   /* android.hardware.Camera.Parameters */
-  GST_DVM_GET_CLASS (android_hardware_camera_parameters,
-      "android/hardware/Camera$Parameters");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, flatten,
+  klass = android_hardware_camera_parameters.klass =
+      gst_amc_jni_get_class (env, &err, "android/hardware/Camera$Parameters");
+  if (!klass)
+    goto failed;
+
+  android_hardware_camera_parameters.flatten =
+      gst_amc_jni_get_method_id (env, &err, klass, "flatten",
       "()Ljava/lang/String;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getAntibanding,
+
+  android_hardware_camera_parameters.getAntibanding =
+      gst_amc_jni_get_method_id (env, &err, klass, "getAntibanding",
       "()Ljava/lang/String;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getColorEffect,
+
+  android_hardware_camera_parameters.getColorEffect =
+      gst_amc_jni_get_method_id (env, &err, klass, "getColorEffect",
       "()Ljava/lang/String;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getExposureCompensation, "()I");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getExposureCompensationStep, "()F");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getFlashMode,
-      "()Ljava/lang/String;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getFocalLength,
-      "()F");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getFocusMode,
-      "()Ljava/lang/String;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getHorizontalViewAngle, "()F");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getMaxExposureCompensation, "()I");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getMaxZoom, "()I");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getMinExposureCompensation, "()I");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getPreviewFormat,
+
+  android_hardware_camera_parameters.getExposureCompensation =
+      gst_amc_jni_get_method_id (env, &err, klass, "getExposureCompensation",
       "()I");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getPreviewFpsRange,
-      "([I)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getPreviewSize,
-      "()Landroid/hardware/Camera$Size;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getSceneMode,
+
+  android_hardware_camera_parameters.getExposureCompensationStep =
+      gst_amc_jni_get_method_id (env, &err, klass,
+      "getExposureCompensationStep", "()F");
+
+  android_hardware_camera_parameters.getFlashMode =
+      gst_amc_jni_get_method_id (env, &err, klass, "getFlashMode",
       "()Ljava/lang/String;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getSupportedAntibanding, "()Ljava/util/List;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getSupportedColorEffects, "()Ljava/util/List;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getSupportedFlashModes, "()Ljava/util/List;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getSupportedFocusModes, "()Ljava/util/List;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getSupportedPreviewFormats, "()Ljava/util/List;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getSupportedPreviewFpsRange, "()Ljava/util/List;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getSupportedPreviewSizes, "()Ljava/util/List;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getSupportedSceneModes, "()Ljava/util/List;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      getSupportedWhiteBalance, "()Ljava/util/List;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getVerticalViewAngle,
+
+  android_hardware_camera_parameters.getFocalLength =
+      gst_amc_jni_get_method_id (env, &err, klass, "getFocalLength", "()F");
+
+  android_hardware_camera_parameters.getFocusMode =
+      gst_amc_jni_get_method_id (env, &err, klass, "getFocusMode",
+      "()Ljava/lang/String;");
+
+  android_hardware_camera_parameters.getHorizontalViewAngle =
+      gst_amc_jni_get_method_id (env, &err, klass, "getHorizontalViewAngle",
       "()F");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getVideoStabilization,
-      "()Z");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getWhiteBalance,
+
+  android_hardware_camera_parameters.getMaxExposureCompensation =
+      gst_amc_jni_get_method_id (env, &err, klass, "getMaxExposureCompensation",
+      "()I");
+
+  android_hardware_camera_parameters.getMaxZoom =
+      gst_amc_jni_get_method_id (env, &err, klass, "getMaxZoom", "()I");
+
+  android_hardware_camera_parameters.getMinExposureCompensation =
+      gst_amc_jni_get_method_id (env, &err, klass, "getMinExposureCompensation",
+      "()I");
+
+  android_hardware_camera_parameters.getPreviewFormat =
+      gst_amc_jni_get_method_id (env, &err, klass, "getPreviewFormat", "()I");
+
+  android_hardware_camera_parameters.getPreviewFpsRange =
+      gst_amc_jni_get_method_id (env, &err, klass, "getPreviewFpsRange",
+      "([I)V");
+
+  android_hardware_camera_parameters.getPreviewSize =
+      gst_amc_jni_get_method_id (env, &err, klass, "getPreviewSize",
+      "()Landroid/hardware/Camera$Size;");
+
+  android_hardware_camera_parameters.getSceneMode =
+      gst_amc_jni_get_method_id (env, &err, klass, "getSceneMode",
       "()Ljava/lang/String;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getZoom, "()I");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getZoomRatios,
+
+  android_hardware_camera_parameters.getSupportedAntibanding =
+      gst_amc_jni_get_method_id (env, &err, klass, "getSupportedAntibanding",
       "()Ljava/util/List;");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, isSmoothZoomSupported,
+
+  android_hardware_camera_parameters.getSupportedColorEffects =
+      gst_amc_jni_get_method_id (env, &err, klass, "getSupportedColorEffects",
+      "()Ljava/util/List;");
+
+  android_hardware_camera_parameters.getSupportedFlashModes =
+      gst_amc_jni_get_method_id (env, &err, klass, "getSupportedFlashModes",
+      "()Ljava/util/List;");
+
+  android_hardware_camera_parameters.getSupportedFocusModes =
+      gst_amc_jni_get_method_id (env, &err, klass, "getSupportedFocusModes",
+      "()Ljava/util/List;");
+
+  android_hardware_camera_parameters.getSupportedPreviewFormats =
+      gst_amc_jni_get_method_id (env, &err, klass, "getSupportedPreviewFormats",
+      "()Ljava/util/List;");
+
+  android_hardware_camera_parameters.getSupportedPreviewFpsRange =
+      gst_amc_jni_get_method_id (env, &err, klass,
+      "getSupportedPreviewFpsRange", "()Ljava/util/List;");
+
+  android_hardware_camera_parameters.getSupportedPreviewSizes =
+      gst_amc_jni_get_method_id (env, &err, klass, "getSupportedPreviewSizes",
+      "()Ljava/util/List;");
+
+  android_hardware_camera_parameters.getSupportedSceneModes =
+      gst_amc_jni_get_method_id (env, &err, klass, "getSupportedSceneModes",
+      "()Ljava/util/List;");
+
+  android_hardware_camera_parameters.getSupportedWhiteBalance =
+      gst_amc_jni_get_method_id (env, &err, klass, "getSupportedWhiteBalance",
+      "()Ljava/util/List;");
+
+  android_hardware_camera_parameters.getVerticalViewAngle =
+      gst_amc_jni_get_method_id (env, &err, klass, "getVerticalViewAngle",
+      "()F");
+
+  android_hardware_camera_parameters.getVideoStabilization =
+      gst_amc_jni_get_method_id (env, &err, klass, "getVideoStabilization",
       "()Z");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      isVideoStabilizationSupported, "()Z");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, isZoomSupported,
+
+  android_hardware_camera_parameters.getWhiteBalance =
+      gst_amc_jni_get_method_id (env, &err, klass, "getWhiteBalance",
+      "()Ljava/lang/String;");
+
+  android_hardware_camera_parameters.getZoom =
+      gst_amc_jni_get_method_id (env, &err, klass, "getZoom", "()I");
+
+  android_hardware_camera_parameters.getZoomRatios =
+      gst_amc_jni_get_method_id (env, &err, klass, "getZoomRatios",
+      "()Ljava/util/List;");
+
+  android_hardware_camera_parameters.isSmoothZoomSupported =
+      gst_amc_jni_get_method_id (env, &err, klass, "isSmoothZoomSupported",
       "()Z");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setAntibanding,
+
+  android_hardware_camera_parameters.isVideoStabilizationSupported =
+      gst_amc_jni_get_method_id (env, &err, klass,
+      "isVideoStabilizationSupported", "()Z");
+
+  android_hardware_camera_parameters.isZoomSupported =
+      gst_amc_jni_get_method_id (env, &err, klass, "isZoomSupported", "()Z");
+
+  android_hardware_camera_parameters.setAntibanding =
+      gst_amc_jni_get_method_id (env, &err, klass, "setAntibanding",
       "(Ljava/lang/String;)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setColorEffect,
+
+  android_hardware_camera_parameters.setColorEffect =
+      gst_amc_jni_get_method_id (env, &err, klass, "setColorEffect",
       "(Ljava/lang/String;)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
-      setExposureCompensation, "(I)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setFlashMode,
-      "(Ljava/lang/String;)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setFocusMode,
-      "(Ljava/lang/String;)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setPreviewFormat,
+
+  android_hardware_camera_parameters.setExposureCompensation =
+      gst_amc_jni_get_method_id (env, &err, klass, "setExposureCompensation",
       "(I)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setPreviewFpsRange,
-      "(II)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setPreviewSize,
-      "(II)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setSceneMode,
+
+  android_hardware_camera_parameters.setFlashMode =
+      gst_amc_jni_get_method_id (env, &err, klass, "setFlashMode",
       "(Ljava/lang/String;)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setWhiteBalance,
+
+  android_hardware_camera_parameters.setFocusMode =
+      gst_amc_jni_get_method_id (env, &err, klass, "setFocusMode",
       "(Ljava/lang/String;)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setVideoStabilization,
+
+  android_hardware_camera_parameters.setPreviewFormat =
+      gst_amc_jni_get_method_id (env, &err, klass, "setPreviewFormat", "(I)V");
+
+  android_hardware_camera_parameters.setPreviewFpsRange =
+      gst_amc_jni_get_method_id (env, &err, klass, "setPreviewFpsRange",
+      "(II)V");
+
+  android_hardware_camera_parameters.setPreviewSize =
+      gst_amc_jni_get_method_id (env, &err, klass, "setPreviewSize", "(II)V");
+
+  android_hardware_camera_parameters.setSceneMode =
+      gst_amc_jni_get_method_id (env, &err, klass, "setSceneMode",
+      "(Ljava/lang/String;)V");
+
+  android_hardware_camera_parameters.setWhiteBalance =
+      gst_amc_jni_get_method_id (env, &err, klass, "setWhiteBalance",
+      "(Ljava/lang/String;)V");
+
+  android_hardware_camera_parameters.setVideoStabilization =
+      gst_amc_jni_get_method_id (env, &err, klass, "setVideoStabilization",
       "(Z)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setZoom, "(I)V");
-  GST_DVM_GET_METHOD (android_hardware_camera_parameters, unflatten,
+
+  android_hardware_camera_parameters.setZoom =
+      gst_amc_jni_get_method_id (env, &err, klass, "setZoom", "(I)V");
+
+  android_hardware_camera_parameters.unflatten =
+      gst_amc_jni_get_method_id (env, &err, klass, "unflatten",
       "(Ljava/lang/String;)V");
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, WHITE_BALANCE_AUTO,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "WHITE_BALANCE_AUTO",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.WHITE_BALANCE_AUTO))
+    goto failed;
+
   Parameters_WHITE_BALANCE_AUTO =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.WHITE_BALANCE_AUTO, NULL);
@@ -467,8 +661,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      WHITE_BALANCE_INCANDESCENT, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass,
+      "WHITE_BALANCE_INCANDESCENT", "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.WHITE_BALANCE_INCANDESCENT))
+    goto failed;
+
   Parameters_WHITE_BALANCE_INCANDESCENT =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.WHITE_BALANCE_INCANDESCENT, NULL);
@@ -480,8 +682,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      WHITE_BALANCE_FLUORESCENT, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass,
+      "WHITE_BALANCE_FLUORESCENT", "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.WHITE_BALANCE_FLUORESCENT))
+    goto failed;
+
   Parameters_WHITE_BALANCE_FLUORESCENT =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.WHITE_BALANCE_FLUORESCENT, NULL);
@@ -493,8 +703,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      WHITE_BALANCE_WARM_FLUORESCENT, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass,
+      "WHITE_BALANCE_WARM_FLUORESCENT", "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.WHITE_BALANCE_WARM_FLUORESCENT))
+    goto failed;
+
   Parameters_WHITE_BALANCE_WARM_FLUORESCENT =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.WHITE_BALANCE_WARM_FLUORESCENT, NULL);
@@ -506,8 +724,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      WHITE_BALANCE_DAYLIGHT, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass,
+      "WHITE_BALANCE_DAYLIGHT", "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.WHITE_BALANCE_DAYLIGHT))
+    goto failed;
+
   Parameters_WHITE_BALANCE_DAYLIGHT =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.WHITE_BALANCE_DAYLIGHT, NULL);
@@ -518,8 +744,15 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      WHITE_BALANCE_CLOUDY_DAYLIGHT, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass,
+      "WHITE_BALANCE_CLOUDY_DAYLIGHT", "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.WHITE_BALANCE_CLOUDY_DAYLIGHT))
+    goto failed;
   Parameters_WHITE_BALANCE_CLOUDY_DAYLIGHT =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.WHITE_BALANCE_CLOUDY_DAYLIGHT, NULL);
@@ -531,8 +764,15 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      WHITE_BALANCE_TWILIGHT, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass,
+      "WHITE_BALANCE_TWILIGHT", "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.WHITE_BALANCE_TWILIGHT))
+    goto failed;
   Parameters_WHITE_BALANCE_TWILIGHT =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.WHITE_BALANCE_TWILIGHT, NULL);
@@ -543,8 +783,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, WHITE_BALANCE_SHADE,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "WHITE_BALANCE_SHADE",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.WHITE_BALANCE_SHADE))
+    goto failed;
+
   Parameters_WHITE_BALANCE_SHADE =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.WHITE_BALANCE_SHADE, NULL);
@@ -555,8 +803,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, EFFECT_NONE, Object,
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "EFFECT_NONE",
       "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.EFFECT_NONE))
+    goto failed;
+
   Parameters_EFFECT_NONE =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.EFFECT_NONE, NULL);
@@ -567,8 +823,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, EFFECT_MONO, Object,
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "EFFECT_MONO",
       "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.EFFECT_MONO))
+    goto failed;
+
   Parameters_EFFECT_MONO =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.EFFECT_MONO, NULL);
@@ -579,8 +843,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, EFFECT_NEGATIVE,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "EFFECT_NEGATIVE",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.EFFECT_NEGATIVE))
+    goto failed;
+
   Parameters_EFFECT_NEGATIVE =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.EFFECT_NEGATIVE, NULL);
@@ -591,8 +863,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, EFFECT_SOLARIZE,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "EFFECT_SOLARIZE",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.EFFECT_SOLARIZE))
+    goto failed;
+
   Parameters_EFFECT_SOLARIZE =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.EFFECT_SOLARIZE, NULL);
@@ -603,8 +883,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, EFFECT_SEPIA,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "EFFECT_SEPIA",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.EFFECT_SEPIA))
+    goto failed;
+
   Parameters_EFFECT_SEPIA =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.EFFECT_SEPIA, NULL);
@@ -615,8 +903,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, EFFECT_POSTERIZE,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "EFFECT_POSTERIZE",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.EFFECT_POSTERIZE))
+    goto failed;
+
   Parameters_EFFECT_POSTERIZE =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.EFFECT_POSTERIZE, NULL);
@@ -627,8 +923,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, EFFECT_WHITEBOARD,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "EFFECT_WHITEBOARD",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.EFFECT_WHITEBOARD))
+    goto failed;
+
   Parameters_EFFECT_WHITEBOARD =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.EFFECT_WHITEBOARD, NULL);
@@ -639,8 +943,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, EFFECT_BLACKBOARD,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "EFFECT_BLACKBOARD",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.EFFECT_BLACKBOARD))
+    goto failed;
+
   Parameters_EFFECT_BLACKBOARD =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.EFFECT_BLACKBOARD, NULL);
@@ -651,8 +963,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, EFFECT_AQUA, Object,
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "EFFECT_AQUA",
       "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.EFFECT_AQUA))
+    goto failed;
+
   Parameters_EFFECT_AQUA =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.EFFECT_AQUA, NULL);
@@ -663,8 +983,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, ANTIBANDING_AUTO,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "ANTIBANDING_AUTO",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.ANTIBANDING_AUTO))
+    goto failed;
+
   Parameters_ANTIBANDING_AUTO =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.ANTIBANDING_AUTO, NULL);
@@ -675,8 +1003,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, ANTIBANDING_50HZ,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "ANTIBANDING_50HZ",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.ANTIBANDING_50HZ))
+    goto failed;
+
   Parameters_ANTIBANDING_50HZ =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.ANTIBANDING_50HZ, NULL);
@@ -687,8 +1023,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, ANTIBANDING_60HZ,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "ANTIBANDING_60HZ",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.ANTIBANDING_60HZ))
+    goto failed;
+
   Parameters_ANTIBANDING_60HZ =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.ANTIBANDING_60HZ, NULL);
@@ -699,8 +1043,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, ANTIBANDING_OFF,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "ANTIBANDING_OFF",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.ANTIBANDING_OFF))
+    goto failed;
+
   Parameters_ANTIBANDING_OFF =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.ANTIBANDING_OFF, NULL);
@@ -711,8 +1063,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, FLASH_MODE_OFF,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "FLASH_MODE_OFF",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FLASH_MODE_OFF))
+    goto failed;
+
   Parameters_FLASH_MODE_OFF =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FLASH_MODE_OFF, NULL);
@@ -723,8 +1083,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, FLASH_MODE_AUTO,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "FLASH_MODE_AUTO",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FLASH_MODE_AUTO))
+    goto failed;
+
   Parameters_FLASH_MODE_AUTO =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FLASH_MODE_AUTO, NULL);
@@ -735,8 +1103,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, FLASH_MODE_ON,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "FLASH_MODE_ON",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FLASH_MODE_ON))
+    goto failed;
+
   Parameters_FLASH_MODE_ON =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FLASH_MODE_ON, NULL);
@@ -747,8 +1123,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, FLASH_MODE_RED_EYE,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "FLASH_MODE_RED_EYE",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FLASH_MODE_RED_EYE))
+    goto failed;
+
   Parameters_FLASH_MODE_RED_EYE =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FLASH_MODE_RED_EYE, NULL);
@@ -759,8 +1143,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, FLASH_MODE_TORCH,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "FLASH_MODE_TORCH",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FLASH_MODE_TORCH))
+    goto failed;
+
   Parameters_FLASH_MODE_TORCH =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FLASH_MODE_TORCH, NULL);
@@ -771,8 +1163,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, SCENE_MODE_AUTO,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_AUTO",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_AUTO))
+    goto failed;
+
   Parameters_SCENE_MODE_AUTO =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_AUTO, NULL);
@@ -783,8 +1183,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, SCENE_MODE_ACTION,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_ACTION",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_ACTION))
+    goto failed;
+
   Parameters_SCENE_MODE_ACTION =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_ACTION, NULL);
@@ -795,8 +1203,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, SCENE_MODE_PORTRAIT,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_PORTRAIT",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_PORTRAIT))
+    goto failed;
+
   Parameters_SCENE_MODE_PORTRAIT =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_PORTRAIT, NULL);
@@ -807,8 +1223,15 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      SCENE_MODE_LANDSCAPE, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_LANDSCAPE",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_LANDSCAPE))
+    goto failed;
   Parameters_SCENE_MODE_LANDSCAPE =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_LANDSCAPE, NULL);
@@ -819,8 +1242,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, SCENE_MODE_NIGHT,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_NIGHT",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_NIGHT))
+    goto failed;
+
   Parameters_SCENE_MODE_NIGHT =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_NIGHT, NULL);
@@ -831,8 +1262,15 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      SCENE_MODE_NIGHT_PORTRAIT, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass,
+      "SCENE_MODE_NIGHT_PORTRAIT", "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_NIGHT_PORTRAIT))
+    goto failed;
   Parameters_SCENE_MODE_NIGHT_PORTRAIT =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_NIGHT_PORTRAIT, NULL);
@@ -844,8 +1282,15 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, SCENE_MODE_THEATRE,
-      Object, "Ljava/lang/String;");
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_THEATRE",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_THEATRE))
+    goto failed;
+
   Parameters_SCENE_MODE_THEATRE =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_THEATRE, NULL);
@@ -856,8 +1301,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, SCENE_MODE_BEACH,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_BEACH",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_BEACH))
+    goto failed;
+
   Parameters_SCENE_MODE_BEACH =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_BEACH, NULL);
@@ -868,8 +1321,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, SCENE_MODE_SNOW,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_SNOW",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_SNOW))
+    goto failed;
+
   Parameters_SCENE_MODE_SNOW =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_SNOW, NULL);
@@ -880,8 +1341,17 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, SCENE_MODE_SUNSET,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_SUNSET",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_SUNSET))
+    goto failed;
+
+
   Parameters_SCENE_MODE_SUNSET =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_SUNSET, NULL);
@@ -892,8 +1362,17 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      SCENE_MODE_STEADYPHOTO, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass,
+      "SCENE_MODE_STEADYPHOTO", "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_STEADYPHOTO))
+    goto failed;
+
+
   Parameters_SCENE_MODE_STEADYPHOTO =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_STEADYPHOTO, NULL);
@@ -904,8 +1383,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      SCENE_MODE_FIREWORKS, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_FIREWORKS",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_FIREWORKS))
+    goto failed;
+
   Parameters_SCENE_MODE_FIREWORKS =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_FIREWORKS, NULL);
@@ -916,8 +1403,17 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, SCENE_MODE_SPORTS,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_SPORTS",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_SPORTS))
+    goto failed;
+
+
   Parameters_SCENE_MODE_SPORTS =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_SPORTS, NULL);
@@ -928,8 +1424,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, SCENE_MODE_PARTY,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_PARTY",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_PARTY))
+    goto failed;
+
   Parameters_SCENE_MODE_PARTY =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_PARTY, NULL);
@@ -940,8 +1444,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      SCENE_MODE_CANDLELIGHT, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass,
+      "SCENE_MODE_CANDLELIGHT", "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_CANDLELIGHT))
+    goto failed;
+
   Parameters_SCENE_MODE_CANDLELIGHT =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_CANDLELIGHT, NULL);
@@ -952,8 +1464,17 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, SCENE_MODE_BARCODE,
-      Object, "Ljava/lang/String;");
+
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_BARCODE",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.SCENE_MODE_BARCODE))
+    goto failed;
+
   Parameters_SCENE_MODE_BARCODE =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.SCENE_MODE_BARCODE, NULL);
@@ -964,8 +1485,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, FOCUS_MODE_AUTO,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "FOCUS_MODE_AUTO",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FOCUS_MODE_AUTO))
+    goto failed;
+
   Parameters_FOCUS_MODE_AUTO =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FOCUS_MODE_AUTO, NULL);
@@ -976,8 +1505,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, FOCUS_MODE_INFINITY,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "FOCUS_MODE_INFINITY",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FOCUS_MODE_INFINITY))
+    goto failed;
+
   Parameters_FOCUS_MODE_INFINITY =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FOCUS_MODE_INFINITY, NULL);
@@ -988,8 +1525,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, FOCUS_MODE_MACRO,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "FOCUS_MODE_MACRO",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FOCUS_MODE_MACRO))
+    goto failed;
+
   Parameters_FOCUS_MODE_MACRO =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FOCUS_MODE_MACRO, NULL);
@@ -1000,8 +1545,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, FOCUS_MODE_FIXED,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "FOCUS_MODE_FIXED",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FOCUS_MODE_FIXED))
+    goto failed;
+
   Parameters_FOCUS_MODE_FIXED =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FOCUS_MODE_FIXED, NULL);
@@ -1012,8 +1565,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters, FOCUS_MODE_EDOF,
-      Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass, "FOCUS_MODE_EDOF",
+      "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FOCUS_MODE_EDOF))
+    goto failed;
+
   Parameters_FOCUS_MODE_EDOF =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FOCUS_MODE_EDOF, NULL);
@@ -1024,8 +1585,16 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      FOCUS_MODE_CONTINUOUS_VIDEO, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass,
+      "FOCUS_MODE_CONTINUOUS_VIDEO", "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
+    goto failed;
+
   Parameters_FOCUS_MODE_CONTINUOUS_VIDEO =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_VIDEO, NULL);
@@ -1037,8 +1606,17 @@ _init_classes (void)
         (*env)->NewGlobalRef (env, local);
     (*env)->DeleteLocalRef (env, local);
   }
-  GST_DVM_GET_CONSTANT (android_hardware_camera_parameters,
-      FOCUS_MODE_CONTINUOUS_PICTURE, Object, "Ljava/lang/String;");
+
+  fieldID =
+      gst_amc_jni_get_static_field_id (env, &err, klass,
+      "FOCUS_MODE_CONTINUOUS_PICTURE", "Ljava/lang/String;");
+  if (!fieldID)
+    goto failed;
+  if (!gst_amc_jni_get_static_object_field (env, &err, klass, fieldID,
+          &android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_PICTURE))
+    goto failed;
+
+
   Parameters_FOCUS_MODE_CONTINUOUS_PICTURE =
       (*env)->GetStringUTFChars (env,
       android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_PICTURE, NULL);
@@ -1052,137 +1630,65 @@ _init_classes (void)
   }
 
   /* java.lang.String */
-  GST_DVM_GET_CLASS (java_lang_string, "java/lang/String");
-  GST_DVM_GET_METHOD (java_lang_string, equals, "(Ljava/lang/Object;)Z");
+  klass = java_lang_string.klass =
+      gst_amc_jni_get_class (env, &err, "java/lang/String");
+  java_lang_string.equals =
+      gst_amc_jni_get_method_id (env, &err, klass, "equals",
+      "(Ljava/lang/Object;)Z");
 
   /* java.util.List */
-  GST_DVM_GET_CLASS (java_util_list, "java/util/List");
-  GST_DVM_GET_METHOD (java_util_list, iterator, "()Ljava/util/Iterator;");
+  klass = java_util_list.klass =
+      gst_amc_jni_get_class (env, &err, "java/util/List");
+  java_util_list.iterator =
+      gst_amc_jni_get_method_id (env, &err, klass, "iterator",
+      "()Ljava/util/Iterator;");
 
   /* java.util.Iterator */
-  GST_DVM_GET_CLASS (java_util_iterator, "java/util/Iterator");
-  GST_DVM_GET_METHOD (java_util_iterator, hasNext, "()Z");
-  GST_DVM_GET_METHOD (java_util_iterator, next, "()Ljava/lang/Object;");
+  klass = java_util_iterator.klass =
+      gst_amc_jni_get_class (env, &err, "java/util/Iterator");
+  java_util_iterator.hasNext =
+      gst_amc_jni_get_method_id (env, &err, klass, "hasNext", "()Z");
+  java_util_iterator.next =
+      gst_amc_jni_get_method_id (env, &err, klass, "next",
+      "()Ljava/lang/Object;");
 
   /* java.lang.Integer */
-  GST_DVM_GET_CLASS (java_lang_integer, "java/lang/Integer");
-  GST_DVM_GET_METHOD (java_lang_integer, intValue, "()I");
+  klass = java_lang_integer.klass =
+      gst_amc_jni_get_class (env, &err, "java/lang/Integer");
+  java_lang_integer.intValue =
+      gst_amc_jni_get_method_id (env, &err, klass, "intValue", "()I");
 
-  /* com.gstreamer.GstAhcCallback */
-  if (gst_ahc_callback_jar && g_getenv ("TMP")) {
-    jclass dex_loader = NULL;
-    gchar *path = g_strdup_printf ("%s/GstAhcCallback.jar", g_getenv ("TMP"));
-    FILE *fd = fopen (path, "wb");
-
-    GST_DEBUG ("Found embedded GstAhcCallback.jar, trying to load dynamically"
-        "from %s", path);
-    if (fd) {
-      if (fwrite (gst_ahc_callback_jar, gst_ahc_callback_jar_size, 1, fd) == 1) {
-        dex_loader = (*env)->FindClass (env, "dalvik/system/DexClassLoader");
-        (*env)->ExceptionClear (env);
-      }
-      fclose (fd);
-    }
-
-    if (dex_loader) {
-      jmethodID constructor;
-      jmethodID load_class;
-
-      constructor = (*env)->GetMethodID (env, dex_loader, "<init>",
-          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;"
-          "Ljava/lang/ClassLoader;)V");
-      load_class = (*env)->GetMethodID (env, dex_loader, "loadClass",
-          "(Ljava/lang/String;)Ljava/lang/Class;");
-      (*env)->ExceptionClear (env);
-      if (constructor && load_class) {
-        jstring dex_path = NULL;
-        jstring optimized_directory = NULL;
-
-        dex_path = (*env)->NewStringUTF (env, path);
-        if (g_getenv ("DEX"))
-          optimized_directory = (*env)->NewStringUTF (env, g_getenv ("DEX"));
-        else
-          optimized_directory = (*env)->NewStringUTF (env, g_getenv ("TMP"));
-        (*env)->ExceptionClear (env);
-        if (dex_path && optimized_directory) {
-          jobject loader;
-          jobject parent = NULL;
-          jclass klass;
-
-          klass = (*env)->FindClass (env, "java/lang/Class");
-          (*env)->ExceptionClear (env);
-          if (klass) {
-            jmethodID get_class_loader;
-
-            get_class_loader = (*env)->GetMethodID (env, klass,
-                "getClassLoader", "()Ljava/lang/ClassLoader;");
-            (*env)->ExceptionClear (env);
-            if (get_class_loader) {
-              parent = (*env)->CallObjectMethod (env, klass, get_class_loader);
-              (*env)->ExceptionClear (env);
-            }
-            (*env)->DeleteLocalRef (env, klass);
-          }
-          loader = (*env)->NewObject (env, dex_loader, constructor, dex_path,
-              optimized_directory, NULL, parent);
-          (*env)->ExceptionClear (env);
-          if (loader) {
-            jstring class_name = NULL;
-
-            class_name = (*env)->NewStringUTF (env,
-                "com/gstreamer/GstAhcCallback");
-            (*env)->ExceptionClear (env);
-            if (class_name) {
-              jclass temp;
-
-              temp = (*env)->CallObjectMethod (env, loader, load_class,
-                  class_name);
-              (*env)->ExceptionClear (env);
-              if (temp) {
-
-                GST_DEBUG ("Successfully loaded embedded GstAhcCallback");
-                com_gstreamer_gstahccallback.klass = (*env)->NewGlobalRef (env,
-                    temp);
-                (*env)->DeleteLocalRef (env, temp);
-              }
-              (*env)->DeleteLocalRef (env, class_name);
-            }
-            (*env)->DeleteLocalRef (env, loader);
-          }
-          if (parent)
-            (*env)->DeleteLocalRef (env, parent);
-        }
-        if (dex_path)
-          (*env)->DeleteLocalRef (env, dex_path);
-        if (optimized_directory)
-          (*env)->DeleteLocalRef (env, optimized_directory);
-      }
-      (*env)->DeleteLocalRef (env, dex_loader);
-      g_free (path);
-    }
-  } else {
-    GST_WARNING ("Did not find embedded GstAhcCallback.jar, fallback to"
-        " FindClass");
+  if (!org_freedesktop_gstreamer_androidmedia_gstahccallback.klass) {
+    org_freedesktop_gstreamer_androidmedia_gstahccallback.klass =
+        gst_amc_jni_get_class (env, &err, "org/freedesktop/gstreamer/androidmedia/GstAhcCallback");
   }
-  if (!com_gstreamer_gstahccallback.klass) {
-    GST_DVM_GET_CLASS (com_gstreamer_gstahccallback,
-        "com/gstreamer/GstAhcCallback");
-  }
-  GST_DVM_GET_CONSTRUCTOR (com_gstreamer_gstahccallback, constructor, "(JJ)V");
+  org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor =
+      gst_amc_jni_get_method_id (env, &err, org_freedesktop_gstreamer_androidmedia_gstahccallback.klass,
+      "<init>", "(JJ)V");
 
-  if ((*env)->RegisterNatives (env, com_gstreamer_gstahccallback.klass,
+  if ((*env)->RegisterNatives (env, org_freedesktop_gstreamer_androidmedia_gstahccallback.klass,
           native_methods, G_N_ELEMENTS (native_methods))) {
     GST_ERROR ("Failed to register native methods for GstAhcCallback");
     return FALSE;
   }
 
   return TRUE;
+
+failed:
+  if (err) {
+    GST_ERROR ("Failed to get android.hardware.Camera class: %s", err->message);
+    g_clear_error (&err);
+  }
+
+  return FALSE;
+
 }
 
 
 gboolean
 gst_android_hardware_camera_init (void)
 {
+  GST_DEBUG_CATEGORY_INIT (ahc_debug, "ahc", 0, "Android Gstreamer Hardware Camera");
   if (!_init_classes ()) {
     gst_android_hardware_camera_deinit ();
     return FALSE;
@@ -1194,7 +1700,7 @@ gst_android_hardware_camera_init (void)
 void
 gst_android_hardware_camera_deinit (void)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   if (android_hardware_camera.klass)
     (*env)->DeleteGlobalRef (env, android_hardware_camera.klass);
@@ -1666,11 +2172,11 @@ gst_android_hardware_camera_deinit (void)
     (*env)->DeleteGlobalRef (env, java_lang_integer.klass);
   java_lang_integer.klass = NULL;
 
-  if (com_gstreamer_gstahccallback.klass) {
-    (*env)->UnregisterNatives (env, com_gstreamer_gstahccallback.klass);
-    (*env)->DeleteGlobalRef (env, com_gstreamer_gstahccallback.klass);
+  if (org_freedesktop_gstreamer_androidmedia_gstahccallback.klass) {
+    (*env)->UnregisterNatives (env, org_freedesktop_gstreamer_androidmedia_gstahccallback.klass);
+    (*env)->DeleteGlobalRef (env, org_freedesktop_gstreamer_androidmedia_gstahccallback.klass);
   }
-  com_gstreamer_gstahccallback.klass = NULL;
+  org_freedesktop_gstreamer_androidmedia_gstahccallback.klass = NULL;
 }
 
 /* android.hardware.Camera */
@@ -1684,7 +2190,9 @@ gst_android_hardware_camera_deinit (void)
 void
 gst_ah_camera_add_callback_buffer (GstAHCamera * self, jbyteArray buffer)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
+
+  GST_DEBUG ("add callback_buffer %p", buffer);
 
   AHC_CALL (, Void, addCallbackBuffer, buffer);
 }
@@ -1693,14 +2201,14 @@ gboolean
 gst_ah_camera_auto_focus (GstAHCamera * self,
     GstAHCAutoFocusCallback cb, gpointer user_data)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject object = NULL;
   gboolean ret = FALSE;
 
   if (cb) {
     object = (*env)->NewObject (env,
-        com_gstreamer_gstahccallback.klass,
-        com_gstreamer_gstahccallback.constructor,
+        org_freedesktop_gstreamer_androidmedia_gstahccallback.klass,
+        org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor,
         *((jlong *) & cb), *((jlong *) & user_data));
     if (!object) {
       GST_ERROR ("Failed to create callback object");
@@ -1722,7 +2230,7 @@ done:
 gboolean
 gst_ah_camera_cancel_auto_focus (GstAHCamera * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHC_CALL (return FALSE, Void, cancelAutoFocus);
 
@@ -1732,7 +2240,7 @@ gst_ah_camera_cancel_auto_focus (GstAHCamera * self)
 gboolean
 gst_ah_camera_get_camera_info (gint camera_id, GstAHCCameraInfo * camera_info)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject jcamera_info = NULL;
   gboolean ret = FALSE;
 
@@ -1774,7 +2282,7 @@ done:
 gint
 gst_ah_camera_get_number_of_cameras (void)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gint num_cameras;
 
   num_cameras = AHC_STATIC_CALL (return -1, Int, getNumberOfCameras);
@@ -1785,7 +2293,7 @@ gst_ah_camera_get_number_of_cameras (void)
 GstAHCParameters *
 gst_ah_camera_get_parameters (GstAHCamera * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject object = NULL;
   GstAHCParameters *params = NULL;
 
@@ -1802,13 +2310,15 @@ gst_ah_camera_get_parameters (GstAHCamera * self)
     }
   }
 
+  GST_DEBUG ("return parameters %p", params->object);
+
   return params;
 }
 
 gboolean
 gst_ah_camera_lock (GstAHCamera * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHC_CALL (return FALSE, Void, lock);
 
@@ -1818,7 +2328,7 @@ gst_ah_camera_lock (GstAHCamera * self)
 GstAHCamera *
 gst_ah_camera_open (gint camera_id)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject object = NULL;
   GstAHCamera *camera = NULL;
 
@@ -1842,7 +2352,7 @@ done:
 gboolean
 gst_ah_camera_reconnect (GstAHCamera * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHC_CALL (return FALSE, Void, reconnect);
 
@@ -1852,15 +2362,15 @@ gst_ah_camera_reconnect (GstAHCamera * self)
 void
 gst_ah_camera_release (GstAHCamera * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHC_CALL (, Void, release);
 }
 
 void
-gst_ah_camera_release (GstAHCamera * self)
+gst_ah_camera_free (GstAHCamera * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   (*env)->DeleteGlobalRef (env, self->object);
   g_slice_free (GstAHCamera, self);
@@ -1870,7 +2380,7 @@ gst_ah_camera_release (GstAHCamera * self)
 gboolean
 gst_ah_camera_set_parameters (GstAHCamera * self, GstAHCParameters * params)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHC_CALL (return FALSE, Void, setParameters, params->object);
 
@@ -1881,14 +2391,14 @@ gboolean
 gst_ah_camera_set_error_callback (GstAHCamera * self, GstAHCErrorCallback cb,
     gpointer user_data)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject object = NULL;
   gboolean ret = FALSE;
 
   if (cb) {
     object = (*env)->NewObject (env,
-        com_gstreamer_gstahccallback.klass,
-        com_gstreamer_gstahccallback.constructor,
+        org_freedesktop_gstreamer_androidmedia_gstahccallback.klass,
+        org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor,
         *((jlong *) & cb), *((jlong *) & user_data));
     if (!object) {
       GST_ERROR ("Failed to create callback object");
@@ -1911,14 +2421,14 @@ gboolean
 gst_ah_camera_set_preview_callback_with_buffer (GstAHCamera * self,
     GstAHCPreviewCallback cb, gpointer user_data)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject object = NULL;
   gboolean ret = FALSE;
 
   if (cb) {
     object = (*env)->NewObject (env,
-        com_gstreamer_gstahccallback.klass,
-        com_gstreamer_gstahccallback.constructor,
+        org_freedesktop_gstreamer_androidmedia_gstahccallback.klass,
+        org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor,
         *((jlong *) & cb), *((jlong *) & user_data));
     if (!object) {
       GST_ERROR ("Failed to create callback object");
@@ -1941,7 +2451,7 @@ void
 gst_ah_camera_set_preview_texture (GstAHCamera * self,
     GstAGSurfaceTexture * surfaceTexture)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHC_CALL (, Void, setPreviewTexture, surfaceTexture->object);
 }
@@ -1949,7 +2459,7 @@ gst_ah_camera_set_preview_texture (GstAHCamera * self,
 gboolean
 gst_ah_camera_start_preview (GstAHCamera * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHC_CALL (return FALSE, Void, startPreview);
 
@@ -1959,7 +2469,7 @@ gst_ah_camera_start_preview (GstAHCamera * self)
 gboolean
 gst_ah_camera_start_smooth_zoom (GstAHCamera * self, gint value)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHC_CALL (return FALSE, Void, startSmoothZoom, value);
 
@@ -1969,7 +2479,7 @@ gst_ah_camera_start_smooth_zoom (GstAHCamera * self, gint value)
 gboolean
 gst_ah_camera_stop_preview (GstAHCamera * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHC_CALL (return FALSE, Void, stopPreview);
 
@@ -1979,7 +2489,7 @@ gst_ah_camera_stop_preview (GstAHCamera * self)
 gboolean
 gst_ah_camera_stop_smooth_zoom (GstAHCamera * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHC_CALL (return FALSE, Void, stopSmoothZoom);
 
@@ -1989,7 +2499,7 @@ gst_ah_camera_stop_smooth_zoom (GstAHCamera * self)
 gboolean
 gst_ah_camera_unlock (GstAHCamera * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHC_CALL (return FALSE, Void, unlock);
 
@@ -2051,10 +2561,12 @@ java_lang_integer_int_value (JNIEnv * env, jobject obj)
   return (*env)->CallIntMethod (env, obj, java_lang_integer.intValue);
 }
 
+
 /* android.hardware.Camera.Parameters */
 #define AHCP_CALL(error_statement, type, method, ...)                   \
   GST_DVM_CALL (error_statement, self->object, type,                    \
       android_hardware_camera_parameters, method, ## __VA_ARGS__);
+
 #define AHCP_STATIC_CALL(error_statement, type, method, ...)            \
   GST_DVM_STATIC_CALL (error_statement, type,                           \
       android_hardware_camera_parameters, method, ## __VA_ARGS__);
@@ -2428,7 +2940,7 @@ _focus_mode_to_jstring (const gchar * focus_mode)
 gchar *
 gst_ahc_parameters_flatten (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jstring v_str = NULL;
   const gchar *v = NULL;
   gchar *ret = NULL;
@@ -2454,7 +2966,7 @@ done:
 const gchar *
 gst_ahc_parameters_get_antibanding (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   const gchar *ret = NULL;
   jstring antibanding;
 
@@ -2471,7 +2983,7 @@ gst_ahc_parameters_get_antibanding (GstAHCParameters * self)
 const gchar *
 gst_ahc_parameters_get_color_effect (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   const gchar *ret = NULL;
   jstring color_effect;
 
@@ -2488,7 +3000,7 @@ gst_ahc_parameters_get_color_effect (GstAHCParameters * self)
 gint
 gst_ahc_parameters_get_exposure_compensation (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gint ev;
 
   ev = AHCP_CALL (return -1, Int, getExposureCompensation);
@@ -2499,7 +3011,7 @@ gst_ahc_parameters_get_exposure_compensation (GstAHCParameters * self)
 gfloat
 gst_ahc_parameters_get_exposure_compensation_step (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gfloat step;
 
   step = AHCP_CALL (return 0.0, Float, getExposureCompensationStep);
@@ -2510,7 +3022,7 @@ gst_ahc_parameters_get_exposure_compensation_step (GstAHCParameters * self)
 const gchar *
 gst_ahc_parameters_get_flash_mode (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   const gchar *ret = NULL;
   jstring flash_mode;
 
@@ -2527,7 +3039,7 @@ gst_ahc_parameters_get_flash_mode (GstAHCParameters * self)
 gfloat
 gst_ahc_parameters_get_focal_length (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gfloat length;
 
   length = AHCP_CALL (return 0.0, Float, getFocalLength);
@@ -2538,7 +3050,7 @@ gst_ahc_parameters_get_focal_length (GstAHCParameters * self)
 const gchar *
 gst_ahc_parameters_get_focus_mode (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   const gchar *ret = NULL;
   jstring focus_mode;
 
@@ -2555,7 +3067,7 @@ gst_ahc_parameters_get_focus_mode (GstAHCParameters * self)
 gfloat
 gst_ahc_parameters_get_horizontal_view_angle (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gfloat angle;
 
   angle = AHCP_CALL (return 0.0, Float, getHorizontalViewAngle);
@@ -2566,7 +3078,7 @@ gst_ahc_parameters_get_horizontal_view_angle (GstAHCParameters * self)
 gint
 gst_ahc_parameters_get_max_exposure_compensation (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gint max;
 
   max = AHCP_CALL (return 0, Int, getMaxExposureCompensation);
@@ -2577,7 +3089,7 @@ gst_ahc_parameters_get_max_exposure_compensation (GstAHCParameters * self)
 gint
 gst_ahc_parameters_get_max_zoom (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gint max;
 
   max = AHCP_CALL (return -1, Int, getMaxZoom);
@@ -2588,7 +3100,7 @@ gst_ahc_parameters_get_max_zoom (GstAHCParameters * self)
 gint
 gst_ahc_parameters_get_min_exposure_compensation (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gint min;
 
   min = AHCP_CALL (return 0, Int, getMinExposureCompensation);
@@ -2599,7 +3111,7 @@ gst_ahc_parameters_get_min_exposure_compensation (GstAHCParameters * self)
 gint
 gst_ahc_parameters_get_preview_format (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gint format;
 
   format = AHCP_CALL (return 0, Int, getPreviewFormat);
@@ -2611,7 +3123,7 @@ gboolean
 gst_ahc_parameters_get_preview_fps_range (GstAHCParameters * self,
     gint * min, gint * max)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gboolean ret = FALSE;
   jintArray range = NULL;
   jint *fps = NULL;
@@ -2649,7 +3161,7 @@ done:
 GstAHCSize *
 gst_ahc_parameters_get_preview_size (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject jsize = NULL;
   GstAHCSize *size = NULL;
 
@@ -2687,7 +3199,7 @@ done:
 const gchar *
 gst_ahc_parameters_get_scene_mode (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   const gchar *ret = NULL;
   jstring scene_mode;
 
@@ -2704,7 +3216,7 @@ gst_ahc_parameters_get_scene_mode (GstAHCParameters * self)
 GList *
 gst_ahc_parameters_get_supported_antibanding (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject list = NULL;
   GList *ret = NULL;
 
@@ -2742,7 +3254,7 @@ gst_ahc_parameters_supported_antibanding_free (GList * list)
 GList *
 gst_ahc_parameters_get_supported_color_effects (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject list = NULL;
   GList *ret = NULL;
 
@@ -2780,7 +3292,7 @@ gst_ahc_parameters_supported_color_effects_free (GList * list)
 GList *
 gst_ahc_parameters_get_supported_flash_modes (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject list = NULL;
   GList *ret = NULL;
 
@@ -2818,7 +3330,7 @@ gst_ahc_parameters_supported_flash_modes_free (GList * list)
 GList *
 gst_ahc_parameters_get_supported_focus_modes (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject list = NULL;
   GList *ret = NULL;
 
@@ -2856,7 +3368,7 @@ gst_ahc_parameters_supported_focus_modes_free (GList * list)
 GList *
 gst_ahc_parameters_get_supported_preview_formats (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject list = NULL;
   GList *ret = NULL;
 
@@ -2894,7 +3406,7 @@ gst_ahc_parameters_supported_preview_formats_free (GList * list)
 GList *
 gst_ahc_parameters_get_supported_preview_fps_range (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject list = NULL;
   GList *ret = NULL;
 
@@ -2934,7 +3446,7 @@ gst_ahc_parameters_supported_preview_fps_range_free (GList * list)
 GList *
 gst_ahc_parameters_get_supported_preview_sizes (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject list = NULL;
   GList *ret = NULL;
 
@@ -2978,7 +3490,7 @@ gst_ahc_parameters_supported_preview_sizes_free (GList * list)
 GList *
 gst_ahc_parameters_get_supported_scene_modes (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject list = NULL;
   GList *ret = NULL;
 
@@ -3016,7 +3528,7 @@ gst_ahc_parameters_supported_scene_modes_free (GList * list)
 GList *
 gst_ahc_parameters_get_supported_white_balance (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject list = NULL;
   GList *ret = NULL;
 
@@ -3054,7 +3566,7 @@ gst_ahc_parameters_supported_white_balance_free (GList * list)
 gfloat
 gst_ahc_parameters_get_vertical_view_angle (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gfloat angle;
 
   angle = AHCP_CALL (return 0.0, Float, getVerticalViewAngle);
@@ -3065,7 +3577,7 @@ gst_ahc_parameters_get_vertical_view_angle (GstAHCParameters * self)
 gboolean
 gst_ahc_parameters_get_video_stabilization (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gboolean ret;
 
   ret = AHCP_CALL (return FALSE, Boolean, getVideoStabilization);
@@ -3076,7 +3588,7 @@ gst_ahc_parameters_get_video_stabilization (GstAHCParameters * self)
 const gchar *
 gst_ahc_parameters_get_white_balance (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   const gchar *ret = NULL;
   jstring white_balance;
 
@@ -3093,7 +3605,7 @@ gst_ahc_parameters_get_white_balance (GstAHCParameters * self)
 gint
 gst_ahc_parameters_get_zoom (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gint zoom;
 
   zoom = AHCP_CALL (return -1, Int, getZoom);
@@ -3104,7 +3616,7 @@ gst_ahc_parameters_get_zoom (GstAHCParameters * self)
 GList *
 gst_ahc_parameters_get_zoom_ratios (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject list = NULL;
   GList *ret = NULL;
 
@@ -3142,7 +3654,7 @@ gst_ahc_parameters_zoom_ratios_free (GList * list)
 gboolean
 gst_ahc_parameters_is_smooth_zoom_supported (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gboolean supported;
 
   supported = AHCP_CALL (return FALSE, Boolean, isSmoothZoomSupported);
@@ -3153,7 +3665,7 @@ gst_ahc_parameters_is_smooth_zoom_supported (GstAHCParameters * self)
 gboolean
 gst_ahc_parameters_is_video_stabilization_supported (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gboolean supported;
 
   supported = AHCP_CALL (return FALSE, Boolean, isVideoStabilizationSupported);
@@ -3164,7 +3676,7 @@ gst_ahc_parameters_is_video_stabilization_supported (GstAHCParameters * self)
 gboolean
 gst_ahc_parameters_is_zoom_supported (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   gboolean supported;
 
   supported = AHCP_CALL (return FALSE, Boolean, isZoomSupported);
@@ -3176,7 +3688,7 @@ gboolean
 gst_ahc_parameters_set_antibanding (GstAHCParameters * self,
     const gchar * value)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jstring antibanding;
 
   antibanding = _antibanding_to_jstring (value);
@@ -3192,7 +3704,7 @@ gboolean
 gst_ahc_parameters_set_color_effect (GstAHCParameters * self,
     const gchar * value)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jstring color_effect;
 
   color_effect = _color_effect_to_jstring (value);
@@ -3208,7 +3720,7 @@ gboolean
 gst_ahc_parameters_set_exposure_compensation (GstAHCParameters * self,
     gint value)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHCP_CALL (return FALSE, Void, setExposureCompensation, value);
 
@@ -3218,7 +3730,7 @@ gst_ahc_parameters_set_exposure_compensation (GstAHCParameters * self,
 gboolean
 gst_ahc_parameters_set_flash_mode (GstAHCParameters * self, const gchar * value)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jstring flash_mode;
 
   flash_mode = _flash_mode_to_jstring (value);
@@ -3233,7 +3745,7 @@ gst_ahc_parameters_set_flash_mode (GstAHCParameters * self, const gchar * value)
 gboolean
 gst_ahc_parameters_set_focus_mode (GstAHCParameters * self, const gchar * value)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jstring focus_mode;
 
   focus_mode = _focus_mode_to_jstring (value);
@@ -3248,7 +3760,7 @@ gst_ahc_parameters_set_focus_mode (GstAHCParameters * self, const gchar * value)
 gboolean
 gst_ahc_parameters_set_preview_format (GstAHCParameters * self, gint format)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHCP_CALL (return FALSE, Void, setPreviewFormat, format);
 
@@ -3259,7 +3771,7 @@ gboolean
 gst_ahc_parameters_set_preview_fps_range (GstAHCParameters * self,
     gint min, gint max)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHCP_CALL (return FALSE, Void, setPreviewFpsRange, min, max);
 
@@ -3270,7 +3782,7 @@ gboolean
 gst_ahc_parameters_set_preview_size (GstAHCParameters * self,
     gint width, gint height)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHCP_CALL (return FALSE, Void, setPreviewSize, width, height);
 
@@ -3280,7 +3792,7 @@ gst_ahc_parameters_set_preview_size (GstAHCParameters * self,
 gboolean
 gst_ahc_parameters_set_scene_mode (GstAHCParameters * self, const gchar * value)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jstring scene_mode;
 
   scene_mode = _scene_mode_to_jstring (value);
@@ -3297,7 +3809,7 @@ gboolean
 gst_ahc_parameters_set_video_stabilization (GstAHCParameters * self,
     gboolean toggle)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHCP_CALL (return FALSE, Void, setVideoStabilization, toggle);
 
@@ -3308,7 +3820,7 @@ gboolean
 gst_ahc_parameters_set_white_balance (GstAHCParameters * self,
     const gchar * value)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jstring white_balance;
 
   white_balance = _white_balance_to_jstring (value);
@@ -3323,7 +3835,7 @@ gst_ahc_parameters_set_white_balance (GstAHCParameters * self,
 gboolean
 gst_ahc_parameters_set_zoom (GstAHCParameters * self, gint value)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   AHCP_CALL (return FALSE, Void, setZoom, value);
 
@@ -3333,7 +3845,7 @@ gst_ahc_parameters_set_zoom (GstAHCParameters * self, gint value)
 gboolean
 gst_ahc_parameters_unflatten (GstAHCParameters * self, const gchar * flattened)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jstring v_str = NULL;
   gboolean ret = TRUE;
 
@@ -3351,7 +3863,12 @@ gst_ahc_parameters_unflatten (GstAHCParameters * self, const gchar * flattened)
 void
 gst_ahc_parameters_free (GstAHCParameters * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
+
+  g_return_if_fail (self != NULL);
+  g_return_if_fail (self->object != NULL);
+
+  GST_DEBUG ("freeing parameters %p", self->object);
 
   (*env)->DeleteGlobalRef (env, self->object);
   g_slice_free (GstAHCParameters, self);

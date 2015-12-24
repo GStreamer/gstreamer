@@ -3,6 +3,9 @@
  * Copyright (C) 2012, Cisco Systems, Inc.
  *   Author: Youness Alaoui <youness.alaoui@collabora.co.uk>
  *
+ * Copyright (C) 2015, Collabora Ltd.
+ *   Author: Justin Kim <justin.kim@collabora.com>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation
@@ -23,7 +26,7 @@
 #include "config.h"
 #endif
 
-#include <gst/dvm/gstdvm.h>
+#include "gstjniutils.h"
 
 #include "gst-android-graphics-imageformat.h"
 
@@ -31,7 +34,7 @@
 static struct
 {
   jclass klass;
-  jmethodID getBitsPerPixel;
+  jmethodID get_bits_per_pixel;
   jint JPEG;
   jint NV16;
   jint NV21;
@@ -53,30 +56,95 @@ gint ImageFormat_YV12;
 static gboolean
 _init_classes (void)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env;
+
+  jfieldID fieldID;
+  jclass klass;
+
+  GError *err = NULL;
+
+  env = gst_amc_jni_get_env ();
 
   /* android.graphics.ImageFormat */
-  GST_DVM_GET_CLASS (android_graphics_imageformat,
-      "android/graphics/ImageFormat");
-  GST_DVM_GET_STATIC_METHOD (android_graphics_imageformat, getBitsPerPixel,
-      "(I)I");
+  klass = android_graphics_imageformat.klass =
+      gst_amc_jni_get_class (env, &err, "android/graphics/ImageFormat");
 
-  GST_DVM_GET_CONSTANT (android_graphics_imageformat, JPEG, Int, "I");
+  if (err)
+    goto failed;
+
+  android_graphics_imageformat.get_bits_per_pixel =
+      gst_amc_jni_get_static_method_id (env, &err, klass,
+      "getBitsPerPixel", "(I)I");
+
+  if (err)
+    goto failed;
+
+  fieldID = gst_amc_jni_get_static_field_id (env, &err, klass, "JPEG", "I");
+  if (err)
+    goto failed;
+  if (!gst_amc_jni_get_static_int_field (env, &err, klass, fieldID,
+          &android_graphics_imageformat.JPEG))
+    goto failed;
   ImageFormat_JPEG = android_graphics_imageformat.JPEG;
-  GST_DVM_GET_CONSTANT (android_graphics_imageformat, NV16, Int, "I");
+
+  fieldID = gst_amc_jni_get_static_field_id (env, &err, klass, "NV16", "I");
+  if (err)
+    goto failed;
+  if (!gst_amc_jni_get_static_int_field (env, &err, klass, fieldID,
+          &android_graphics_imageformat.NV16))
+    goto failed;
   ImageFormat_NV16 = android_graphics_imageformat.NV16;
-  GST_DVM_GET_CONSTANT (android_graphics_imageformat, NV21, Int, "I");
+
+  fieldID = gst_amc_jni_get_static_field_id (env, &err, klass, "NV21", "I");
+  if (err)
+    goto failed;
+  if (!gst_amc_jni_get_static_int_field (env, &err, klass, fieldID,
+          &android_graphics_imageformat.NV21))
+    goto failed;
   ImageFormat_NV21 = android_graphics_imageformat.NV21;
-  GST_DVM_GET_CONSTANT (android_graphics_imageformat, RGB_565, Int, "I");
+
+  fieldID = gst_amc_jni_get_static_field_id (env, &err, klass, "RGB_565", "I");
+  if (err)
+    goto failed;
+  if (!gst_amc_jni_get_static_int_field (env, &err, klass, fieldID,
+          &android_graphics_imageformat.RGB_565))
+    goto failed;
   ImageFormat_RGB_565 = android_graphics_imageformat.RGB_565;
-  GST_DVM_GET_CONSTANT (android_graphics_imageformat, UNKNOWN, Int, "I");
+
+  fieldID = gst_amc_jni_get_static_field_id (env, &err, klass, "UNKNOWN", "I");
+  if (err)
+    goto failed;
+  if (!gst_amc_jni_get_static_int_field (env, &err, klass, fieldID,
+          &android_graphics_imageformat.UNKNOWN))
+    goto failed;
   ImageFormat_UNKNOWN = android_graphics_imageformat.UNKNOWN;
-  GST_DVM_GET_CONSTANT (android_graphics_imageformat, YUY2, Int, "I");
+
+  fieldID = gst_amc_jni_get_static_field_id (env, &err, klass, "YUY2", "I");
+  if (err)
+    goto failed;
+  if (!gst_amc_jni_get_static_int_field (env, &err, klass, fieldID,
+          &android_graphics_imageformat.YUY2))
+    goto failed;
   ImageFormat_YUY2 = android_graphics_imageformat.YUY2;
-  GST_DVM_GET_CONSTANT (android_graphics_imageformat, YV12, Int, "I");
+
+  fieldID = gst_amc_jni_get_static_field_id (env, &err, klass, "YV12", "I");
+  if (err)
+    goto failed;
+  if (!gst_amc_jni_get_static_int_field (env, &err, klass, fieldID,
+          &android_graphics_imageformat.YV12))
+    goto failed;
   ImageFormat_YV12 = android_graphics_imageformat.YV12;
 
   return TRUE;
+
+failed:
+  if (err) {
+    GST_ERROR ("Failed to get android.graphics.ImageFormat class: %s",
+        err->message);
+    g_clear_error (&err);
+  }
+
+  return FALSE;
 }
 
 gboolean
@@ -93,7 +161,7 @@ gst_android_graphics_imageformat_init (void)
 void
 gst_android_graphics_imageformat_deinit (void)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   if (android_graphics_imageformat.klass)
     (*env)->DeleteGlobalRef (env, android_graphics_imageformat.klass);
@@ -104,11 +172,21 @@ gst_android_graphics_imageformat_deinit (void)
 gint
 gst_ag_imageformat_get_bits_per_pixel (gint format)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env;
+  GError *err = NULL;
+
+  jclass klass = android_graphics_imageformat.klass;
+
   jint bpp = 0;
 
-  bpp = GST_DVM_STATIC_CALL (return -1, Int,
-      android_graphics_imageformat, getBitsPerPixel, format);
+  env = gst_amc_jni_get_env ();
+
+  if (!gst_amc_jni_call_static_int_method (env, &err,
+          klass, android_graphics_imageformat.get_bits_per_pixel, &bpp, format)) {
+    GST_ERROR ("Failed to get android.graphics.ImageFormat class: %s",
+        err->message);
+    g_clear_error (&err);
+  }
 
   return bpp;
 }

@@ -3,6 +3,9 @@
  * Copyright (C) 2012, Cisco Systems, Inc.
  *   Author: Youness Alaoui <youness.alaoui@collabora.co.uk>
  *
+ * Copyright (C) 2015, Collabora Ltd.
+ *   Author: Justin Kim <justin.kim@collabora.com>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation
@@ -23,10 +26,9 @@
 #include "config.h"
 #endif
 
-#include <gst/dvm/gstdvm.h>
+#include "gstjniutils.h"
 
 #include "gst-android-graphics-surfacetexture.h"
-
 
 static struct
 {
@@ -39,14 +41,28 @@ static struct
 static gboolean
 _init_classes (void)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env;
+  GError *err = NULL;
+
+  env = gst_amc_jni_get_env ();
 
   /* android.graphics.SurfaceTexture */
-  GST_DVM_GET_CLASS (android_graphics_surfacetexture,
-      "android/graphics/SurfaceTexture");
-  GST_DVM_GET_CONSTRUCTOR (android_graphics_surfacetexture, constructor,
-      "(I)V");
-  GST_DVM_GET_METHOD (android_graphics_surfacetexture, release, "()V");
+  android_graphics_surfacetexture.klass =
+      gst_amc_jni_get_class (env, &err, "android/graphics/SurfaceTexture");
+
+  if (!android_graphics_surfacetexture.klass) {
+    GST_ERROR ("Failed to get android.graphics.SurfaceTexture class: %s",
+        err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  android_graphics_surfacetexture.constructor =
+      gst_amc_jni_get_method_id (env, &err,
+      android_graphics_surfacetexture.klass, "<init>", "(I)V");
+  android_graphics_surfacetexture.release =
+      gst_amc_jni_get_method_id (env, &err,
+      android_graphics_surfacetexture.klass, "release", "()V");
 
   return TRUE;
 }
@@ -65,7 +81,7 @@ gst_android_graphics_surfacetexture_init (void)
 void
 gst_android_graphics_surfacetexture_deinit (void)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   if (android_graphics_surfacetexture.klass)
     (*env)->DeleteGlobalRef (env, android_graphics_surfacetexture.klass);
@@ -76,7 +92,7 @@ gst_android_graphics_surfacetexture_deinit (void)
 GstAGSurfaceTexture *
 gst_ag_surfacetexture_new (gint texture_id)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
   jobject object = NULL;
   GstAGSurfaceTexture *tex = NULL;
 
@@ -105,15 +121,23 @@ gst_ag_surfacetexture_new (gint texture_id)
 void
 gst_ag_surfacetexture_release (GstAGSurfaceTexture * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env;
+  GError *err = NULL;
 
-  GST_DVM_CALL (, self->object, Void, android_graphics_surfacetexture, release);
+  env = gst_amc_jni_get_env ();
+
+  if (!gst_amc_jni_call_void_method (env, &err, self->object,
+          android_graphics_surfacetexture.release)) {
+    GST_ERROR ("Failed to call release: %s", err->message);
+    g_clear_error (&err);
+  }
+
 }
 
 void
 gst_ag_surfacetexture_free (GstAGSurfaceTexture * self)
 {
-  JNIEnv *env = gst_dvm_get_env ();
+  JNIEnv *env = gst_amc_jni_get_env ();
 
   (*env)->DeleteGlobalRef (env, self->object);
   g_slice_free (GstAGSurfaceTexture, self);
