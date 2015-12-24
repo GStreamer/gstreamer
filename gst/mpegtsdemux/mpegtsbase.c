@@ -1433,9 +1433,16 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
         }
         base->mode = BASE_MODE_PUSHING;
       }
+    } else {
+      GST_WARNING ("subclass has no seek implementation");
     }
 
     return ret == GST_FLOW_OK;
+  }
+
+  if (!klass->seek) {
+    GST_WARNING ("subclass has no seek implementation");
+    return FALSE;
   }
 
   if (rate <= 0.0) {
@@ -1484,16 +1491,11 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
 
 
   /* If the subclass can seek, do that */
-  if (klass->seek) {
-    ret = klass->seek (base, event);
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
-      GST_WARNING ("seeking failed %s", gst_flow_get_name (ret));
-    else
-      base->last_seek_seqnum = GST_EVENT_SEQNUM (event);
-  } else {
-    /* FIXME : Check this before so we don't do seeks we can't handle ? */
-    GST_WARNING ("subclass has no seek implementation");
-  }
+  ret = klass->seek (base, event);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    GST_WARNING ("seeking failed %s", gst_flow_get_name (ret));
+  else
+    base->last_seek_seqnum = GST_EVENT_SEQNUM (event);
 
   if (flush_event) {
     /* if we sent a FLUSH_START, we now send a FLUSH_STOP */
