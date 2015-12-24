@@ -72,6 +72,9 @@ typedef struct _GstAdaptiveDemuxTestExpectedOutput
   guint64 expected_size;
   /* the expected data on this stream (optional) */
   const guint8* expected_data;
+
+  GstSegment post_seek_segment;
+  gboolean segment_verification_needed;
 } GstAdaptiveDemuxTestExpectedOutput;
 
 typedef struct _GstAdaptiveDemuxTestCaseClass GstAdaptiveDemuxTestCaseClass;
@@ -102,7 +105,7 @@ typedef struct _GstAdaptiveDemuxTestCase
   GCond test_task_state_cond;
 
   /* seek test will wait for this amount of bytes to be sent by 
-   * demux  to AppSink before triggering a seek request
+   * demux to AppSink before triggering a seek request
    */
   guint64 threshold_for_seek;
   GstEvent *seek_event;

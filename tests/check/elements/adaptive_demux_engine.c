@@ -142,6 +142,30 @@ on_appSinkEOS (GstAppSink * appsink, gpointer user_data)
   GST_TEST_UNLOCK (priv);
 }
 
+static GstPadProbeReturn
+on_appsink_event (GstPad * pad, GstPadProbeInfo * info, gpointer data)
+{
+  GstAdaptiveDemuxTestEnginePrivate *priv =
+      (GstAdaptiveDemuxTestEnginePrivate *) data;
+  GstAdaptiveDemuxTestOutputStream *stream = NULL;
+  GstEvent *event;
+
+  event = GST_PAD_PROBE_INFO_EVENT (info);
+  GST_DEBUG ("Received event %" GST_PTR_FORMAT " on pad %" GST_PTR_FORMAT,
+      event, pad);
+
+  if (priv->callbacks->appsink_event) {
+    GST_TEST_LOCK (priv);
+    stream = getTestOutputDataByPad (priv, pad, TRUE);
+    GST_TEST_UNLOCK (priv);
+    priv->callbacks->appsink_event (&priv->engine, stream, event,
+        priv->user_data);
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
+
 /* callback called when demux sends data to AppSink */
 static GstPadProbeReturn
 on_demux_sent_data (GstPad * pad, GstPadProbeInfo * info, gpointer data)
@@ -155,13 +179,13 @@ on_demux_sent_data (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 
   GST_TEST_LOCK (priv);
   stream = getTestOutputDataByPad (priv, pad, TRUE);
+  GST_TEST_UNLOCK (priv);
 
   if (priv->callbacks->demux_sent_data) {
     (*priv->callbacks->demux_sent_data) (&priv->engine,
         stream, buffer, priv->user_data);
   }
 
-  GST_TEST_UNLOCK (priv);
   return GST_PAD_PROBE_OK;
 }
 
@@ -215,7 +239,7 @@ on_demuxNewPad (GstElement * demux, GstPad * pad, gpointer user_data)
   GstElement *sink;
   gboolean ret;
   gchar *name;
-  GstPad *internal_pad;
+  GstPad *internal_pad, *appsink_pad;
   GstAppSinkCallbacks appSinkCallbacks;
   GstAdaptiveDemuxTestOutputStream *stream;
   GObjectClass *gobject_class;
@@ -242,6 +266,12 @@ on_demuxNewPad (GstElement * demux, GstPad * pad, gpointer user_data)
 
   gst_app_sink_set_callbacks (GST_APP_SINK (sink), &appSinkCallbacks, priv,
       NULL);
+  appsink_pad = gst_element_get_static_pad (sink, "sink");
+  gst_pad_add_probe (pad,
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH,
+      (GstPadProbeCallback) on_appsink_event, priv, NULL);
+  gst_object_unref (appsink_pad);
+
 
   gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) on_demux_sent_data, priv, NULL);

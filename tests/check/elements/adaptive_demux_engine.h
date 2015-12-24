@@ -92,6 +92,19 @@ typedef struct _GstAdaptiveDemuxTestCallbacks
       GstAdaptiveDemuxTestOutputStream * stream, gpointer user_data);
 
   /**
+   * appsink_event: called when an event is received by appsink
+   * @engine: #GstAdaptiveDemuxTestEngine
+   * @stream: #GstAdaptiveDemuxTestOutputStream
+   * @event: the #GstEvent that was pushed in the demuxer pad
+   * @user_data: the user_data passed to gst_adaptive_demux_test_run()
+   *
+   * Can be used by a test to do some checks on the events
+   */
+  void (*appsink_event) (GstAdaptiveDemuxTestEngine *engine,
+      GstAdaptiveDemuxTestOutputStream * stream,
+      GstEvent * event, gpointer user_data);
+
+  /**
    * demux_pad_added: called each time the demux creates a new pad
    * @engine: #GstAdaptiveDemuxTestEngine
    * @stream: the #GstAdaptiveDemuxTestOutputStream that has been created

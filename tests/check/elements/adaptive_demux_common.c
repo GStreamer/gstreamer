@@ -346,6 +346,44 @@ testSeekAdaptiveDemuxSendsData (GstAdaptiveDemuxTestEngine * engine,
   return TRUE;
 }
 
+static void
+testSeekAdaptiveAppSinkEvent (GstAdaptiveDemuxTestEngine * engine,
+    GstAdaptiveDemuxTestOutputStream * stream,
+    GstEvent * event, gpointer user_data)
+{
+  GstAdaptiveDemuxTestCase *testData = GST_ADAPTIVE_DEMUX_TEST_CASE (user_data);
+  GstAdaptiveDemuxTestExpectedOutput *testOutputStreamData;
+  guint index = 0;
+
+  testOutputStreamData =
+      gst_adaptive_demux_test_find_test_data_by_stream (testData, stream,
+      &index);
+  fail_unless (testOutputStreamData != NULL);
+
+  if (testData->seek_event && GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT
+      && testOutputStreamData->post_seek_segment.format != GST_FORMAT_UNDEFINED
+      && gst_event_get_seqnum (event) ==
+      gst_event_get_seqnum (testData->seek_event)) {
+    const GstSegment *seek_segment;
+
+    gst_event_parse_segment (event, &seek_segment);
+    fail_unless (seek_segment->format ==
+        testOutputStreamData->post_seek_segment.format);
+    fail_unless (seek_segment->rate ==
+        testOutputStreamData->post_seek_segment.rate);
+    fail_unless (seek_segment->start ==
+        testOutputStreamData->post_seek_segment.start);
+    fail_unless (seek_segment->stop ==
+        testOutputStreamData->post_seek_segment.stop);
+    fail_unless (seek_segment->base ==
+        testOutputStreamData->post_seek_segment.base);
+    fail_unless (seek_segment->time ==
+        testOutputStreamData->post_seek_segment.time);
+
+    testOutputStreamData->segment_verification_needed = FALSE;
+  }
+}
+
 /* callback called when main_loop detects a state changed event */
 static void
 testSeekOnStateChanged (GstBus * bus, GstMessage * msg, gpointer user_data)
@@ -392,6 +430,18 @@ testSeekPreTestCallback (GstAdaptiveDemuxTestEngine * engine,
       G_CALLBACK (testSeekOnStateChanged), testData);
 }
 
+static void
+testSeekPostTestCallback (GstAdaptiveDemuxTestEngine * engine,
+    gpointer user_data)
+{
+  GstAdaptiveDemuxTestCase *testData = GST_ADAPTIVE_DEMUX_TEST_CASE (user_data);
+  for (GList * walk = testData->output_streams; walk; walk = g_list_next (walk)) {
+    GstAdaptiveDemuxTestExpectedOutput *td = walk->data;
+
+    fail_if (td->segment_verification_needed);
+  }
+}
+
 /* function to check total size of data received by AppSink
  * will be called when AppSink receives eos.
  */
@@ -429,7 +479,9 @@ gst_adaptive_demux_test_seek (const gchar * element_name,
   GstAdaptiveDemuxTestCallbacks cb = { 0 };
   cb.appsink_received_data = gst_adaptive_demux_test_check_received_data;
   cb.appsink_eos = gst_adaptive_demux_test_check_size_of_received_data;
+  cb.appsink_event = testSeekAdaptiveAppSinkEvent;
   cb.pre_test = testSeekPreTestCallback;
+  cb.post_test = testSeekPostTestCallback;
   cb.demux_sent_data = testSeekAdaptiveDemuxSendsData;
   gst_adaptive_demux_test_run (element_name, manifest_uri, &cb, testData);
   /* the call to g_object_unref of testData will clean up the seek task */
