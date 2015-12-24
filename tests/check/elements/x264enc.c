@@ -143,10 +143,6 @@ test_video_profile (const gchar * profile, gint profile_id,
 {
   GstElement *x264enc;
   GstBuffer *inbuffer, *outbuffer;
-  GstCaps *caps;
-  GstMapInfo map;
-  guint8 *data;
-  gsize size;
   int i, num_buffers;
 
   x264enc = setup_x264enc (profile, "avc", input_format);
@@ -161,6 +157,8 @@ test_video_profile (const gchar * profile, gint profile_id,
     inbuffer = gst_buffer_new_and_alloc (384 * 288 * 2);
   else if (!strcmp (input_format, "Y444"))
     inbuffer = gst_buffer_new_and_alloc (384 * 288 * 3);
+  else
+    g_assert_not_reached ();
 
   /* makes valgrind's memcheck happier */
   gst_buffer_memset (inbuffer, 0, 0, -1);
