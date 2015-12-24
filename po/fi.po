@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:32+0200\n"
+"POT-Creation-Date: 2015-12-24 12:45+0100\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -824,6 +824,12 @@ msgid "midi-base-note"
 msgstr ""
 
 msgid "Midi note number of the audio track."
+msgstr ""
+
+msgid "private-data"
+msgstr ""
+
+msgid "Private data"
 msgstr ""
 
 msgid ", "
