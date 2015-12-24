@@ -1,18 +1,17 @@
 
-Release notes for GStreamer Ugly Plugins 1.6.0
+Release notes for GStreamer Ugly Plugins 1.7.1
 
 
-The GStreamer team is proud to announce a new major feature release in the
-stable 1.x API series of your favourite cross-platform multimedia framework!
+The GStreamer team is pleased to announce the first release of the unstable
+1.7 release series. The 1.7 release series is adding new features on top of
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.7 release series
+will lead to the stable 1.8 release series in the next weeks. Any newly added
+API can still change until that point.
 
 
-This release has been in the works for more than a year and is packed with new
-features, bug fixes and other improvements.
-
-
-See
-http://gstreamer.freedesktop.org/releases/1.6/
-for the full list of changes.
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately
+during the unstable 1.7 release series.
 
 
 
@@ -59,8 +58,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+     
+      * 753920 : dvdlpcmdec: factor out common code to set output format into new function
+      * 755469 : asfdemux: Non-flushing seeks don't work, broken segment seek handling and other seeking related issues
 
 ==== Download ====
 
@@ -97,7 +98,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jan Schmidt
+      * Arjen Veenhuizen
+      * HoonHee Lee
+      * Nicolas Dufresne
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
       * Tim-Philipp Müller
  

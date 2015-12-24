@@ -1,9 +1,233 @@
-=== release 1.6.0 ===
+=== release 1.7.1 ===
 
-2015-09-25  Sebastian Dröge <slomo@coaxion.net>
+2015-12-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.0
+	  releasing 1.7.1
+
+2015-12-24 12:23:27 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/id.po:
+	* po/sv.po:
+	  po: Update translations
+
+2015-12-21 12:32:32 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Use -Bsymbolic-functions if available
+	  While this is more useful for libraries, some of our plugins with multiple
+	  files and some internal API can also benefit from this.
+
+2015-12-16 09:36:08 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  docs: update to git
+
+2015-12-07 09:08:18 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From b319909 to 86e4663
+
+2015-11-26 15:49:47 +0000  Arjen Veenhuizen <arjen.veenhuizen@tno.nl>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: increase bitrate limit from 100Mbps to 2Gbps
+	  Don't artificially limit the bitrate, x264enc allows much
+	  higher bitrates, and for intra-only 4k AVC they are needed.
+	  x264 clips to 2Gbps internally, so use that as limit for now.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758620
+
+2015-11-18 23:20:59 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: drop unnecessary NULL check before g_free
+
+2015-10-21 14:35:17 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b99800a to b319909
+
+2015-10-20 17:29:42 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Use new GST_ENABLE_EXTRA_CHECKS #define
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756870
+
+2015-10-21 14:26:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 9aed1d7 to b99800a
+
+2015-10-02 22:24:46 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Update GLib dependency to 2.40.0
+
+2015-09-29 14:16:07 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* ext/dvdread/README:
+	  dvdread: remove broken link
+	  Removing instead of updating as previously pointed-to page
+	  (now http://dvd.sourceforge.net/dvdinfo/) is already linked
+	  from dvd.sourceforge.net's homepage as: "Collection of
+	  information on file formats/data structures relating to DVD
+	  navigation/SPUs."
+
+2015-09-26 09:23:05 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	  dvdlpcmdec: fix invalid read beyond channel position array
+	  We would always copy sizeof(sorted_position) bytes, which is
+	  for 8 channels, but if we have less than 8 channels the
+	  position array we copy from will only have allocated space
+	  for channel channels, so we would read beyond the input
+	  array in some cases.
+
+2015-08-25 10:08:46 +0900  HoonHee Lee <hoonhee.lee@lge.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	  dvdlpcmdec: factor out common code to set output format into new function
+	  When caps event is recieved and header is changed, reordering channel
+	  and setting the default output format for audio are processed. These 2 of
+	  code are same. Thus, It is better to make a new function for these common
+	  code in terms of removing duplicated code, maintenance and expansion.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753920
+
+2015-09-23 20:45:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Don't push any data on pads after the segment.stop
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755469
+
+2015-09-23 20:30:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Only change segment start to a keyframe for KEYUNIT seeks
+	  Not for accurate seeks, which should accurately start at the requested
+	  position.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755469
+
+2015-09-23 20:23:40 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Update segment.position when pushing buffers
+	  Without this, non-flushing seeks are not going to work well.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755469
+
+2015-09-23 19:37:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Only push EOS event if we're not doing a segment seek
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755469
+
+2015-09-23 16:31:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: If pushing buffers returned EOS, go into the EOS and not failure code path
+	  We don't want to unconditionally send an EOS event downstream, but might want
+	  to send a SEGMENT_DONE message/event instead if a segment seek was done
+	  before.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755469
+
+2015-09-25 23:51:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.6.0 ===
+
+2015-09-25 23:32:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.6.0
+
+2015-09-25 23:04:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 === release 1.5.91 ===
 
