@@ -57,7 +57,6 @@ setup_amrnbenc (void)
   GstElement *amrnbenc;
   GstCaps *caps;
   GstBus *bus;
-  guint64 granulerate_n, granulerate_d;
 
   GST_DEBUG ("setup_amrnbenc");
 
