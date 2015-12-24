@@ -1,24 +1,31 @@
 
-Release notes for GStreamer RTSP Server Library 1.6.0
+Release notes for GStreamer RTSP Server Library 1.7.1
 
 
-The GStreamer team is proud to announce a new major feature release in the
-stable 1.x API series of your favourite cross-platform multimedia framework!
+The GStreamer team is pleased to announce the first release of the unstable
+1.7 release series. The 1.7 release series is adding new features on top of
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.7 release series
+will lead to the stable 1.8 release series in the next weeks. Any newly added
+API can still change until that point.
 
 
-This release has been in the works for more than a year and is packed with new
-features, bug fixes and other improvements.
-
-
-See
-http://gstreamer.freedesktop.org/releases/1.6/
-for the full list of changes.
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately
+during the unstable 1.7 release series.
 
 
   
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+     
+      * 753863 : rtsp-server: examples: Fix memory leaks when context parse fails
+      * 756969 : rtsp-server unit tests don't test udp-mcast transport
+      * 757949 : gst_rtsp_server_io_func() pops a context that has not been pushed
+      * 758179 : GstRTSPStream : Create pipeline based on enabled transport type
+      * 758268 : handle_setup_request() expect the media to be suspended
+      * 758319 : rtsp-server: Seeking often hangs forever, waiting for prerolling to happen again
+      * 758364 : rtsp-session-pool: Avoid dollar sign ($) in session ids
+      * 759010 : Valgrind test are faling for rtsp-server for master
 
 ==== Download ====
 
@@ -55,7 +62,17 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * David Svensson Fors
+      * Hyunjun Ko
       * Jan Schmidt
+      * Koop Mast
+      * Marcus Prebble
+      * Nicolas Dufresne
+      * Olivier Crête
       * Sebastian Dröge
+      * Sebastian Rasmussen
+      * Srimanta Panda
       * Tim-Philipp Müller
+      * Vineeth TM
+      * Xavier Claessens
  
