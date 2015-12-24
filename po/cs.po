@@ -5,12 +5,13 @@
 # Miloslav Trmac <mitr@volny.cz>, 2004, 2005, 2007, 2008.
 # Marek Černocký <marek@manet.cz>, 2011, 2013, 2015.
 #
+#: gst/parse/grammar.y:217 gst/parse/grammar.y:222
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.5.1\n"
+"Project-Id-Version: gstreamer 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2015-09-25 22:32+0200\n"
-"PO-Revision-Date: 2015-06-17 16:31+0200\n"
+"PO-Revision-Date: 2015-10-15 21:04+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -20,818 +21,972 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Gtranslator 2.91.7\n"
 
+#: gst/gst.c:242
 msgid "Print the GStreamer version"
 msgstr "Vypsat verzi systému GStreamer"
 
+#: gst/gst.c:244
 msgid "Make all warnings fatal"
 msgstr "Chápat všechna varování jako fatální"
 
+#: gst/gst.c:248
 msgid "Print available debug categories and exit"
 msgstr "Vypsat dostupné kategorie ladění a skončit"
 
-msgid ""
-"Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
-msgstr ""
-"Výchozí úroveň ladění od 1 (jen chyby) do 9 (vše) nebo 0 pro žádný výstup"
+#: gst/gst.c:252
+msgid "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
+msgstr "Výchozí úroveň ladění od 1 (jen chyby) do 9 (vše) nebo 0 pro žádný výstup"
 
+#: gst/gst.c:254
 msgid "LEVEL"
 msgstr "ÚROVEŇ"
 
-msgid ""
-"Comma-separated list of category_name:level pairs to set specific levels for "
-"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr ""
-"Čárkami oddělovaný seznam dvojic název_kategorie:úroveň pro nastavení "
-"konkrétních úrovní pro jednotlivé kategorie. Příklad: GST_AUTOPLUG:5,"
-"GST_ELEMENT_*:3"
+#: gst/gst.c:256
+msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr "Čárkami oddělovaný seznam dvojic název_kategorie:úroveň pro nastavení konkrétních úrovní pro jednotlivé kategorie. Příklad: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
+#: gst/gst.c:259
 msgid "LIST"
 msgstr "SEZNAM"
 
+#: gst/gst.c:261
 msgid "Disable colored debugging output"
 msgstr "Zakázat obarvený ladicí výstup"
 
-msgid ""
-"Changes coloring mode of the debug log. Possible modes: off, on, disable, "
-"auto, unix"
-msgstr ""
-"Změnit režim obarvení ladicího záznamu. Možné režimy: off, on, disable, "
-"auto, unix"
+#: gst/gst.c:265
+msgid "Changes coloring mode of the debug log. Possible modes: off, on, disable, auto, unix"
+msgstr "Změnit režim obarvení ladicího záznamu. Možné režimy: off, on, disable, auto, unix"
 
+#: gst/gst.c:269
 msgid "Disable debugging"
 msgstr "Zakázat ladění"
 
+#: gst/gst.c:273
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Povolit podrobnou diagnostiku načítání zásuvných modulů"
 
+#: gst/gst.c:277
 msgid "Colon-separated paths containing plugins"
 msgstr "Dvojtečkou oddělované cesty obsahující zásuvné moduly"
 
+#: gst/gst.c:277
 msgid "PATHS"
 msgstr "CESTY"
 
-msgid ""
-"Comma-separated list of plugins to preload in addition to the list stored in "
-"environment variable GST_PLUGIN_PATH"
-msgstr ""
-"Čárkami oddělovaný seznam zásuvných modulů, které se mají načíst dopředu, "
-"navíc k seznamu uloženému v proměnné prostředí GST_PLUGIN_PATH"
+#: gst/gst.c:280
+msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
+msgstr "Čárkami oddělovaný seznam zásuvných modulů, které se mají načíst dopředu, navíc k seznamu uloženému v proměnné prostředí GST_PLUGIN_PATH"
 
+#: gst/gst.c:282
 msgid "PLUGINS"
 msgstr "ZÁSUVNÉ_MODULY"
 
+#: gst/gst.c:285
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Zakázat zachytávání porušení segmentace při načítání zásuvných modulů"
 
+#: gst/gst.c:290
 msgid "Disable updating the registry"
 msgstr "Zakázat aktualizaci registru"
 
+#: gst/gst.c:295
 msgid "Disable spawning a helper process while scanning the registry"
 msgstr "Zakázat větvení pomocných procesů při prohledávání registru"
 
+#: gst/gst.c:300
 msgid "GStreamer Options"
 msgstr "Přepínače GStreamer"
 
+#: gst/gst.c:301
 msgid "Show GStreamer Options"
 msgstr "Zobrazit přepínače GStreamer"
 
+#: gst/gst.c:884
 msgid "Unknown option"
 msgstr "Neznámý přepínač"
 
+#: gst/gsterror.c:130
 msgid "GStreamer encountered a general core library error."
 msgstr "V systému GStreamer došlo k obecné chybě základní knihovny."
 
-msgid ""
-"GStreamer developers were too lazy to assign an error code to this error."
-msgstr ""
-"Vývojáři systému GStreamer byli příliš líní na to, aby této chybě přiřadili "
-"kód."
+#: gst/gsterror.c:132 gst/gsterror.c:174 gst/gsterror.c:198 gst/gsterror.c:240
+msgid "GStreamer developers were too lazy to assign an error code to this error."
+msgstr "Vývojáři systému GStreamer byli příliš líní na to, aby této chybě přiřadili kód."
 
+#: gst/gsterror.c:135
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Interní chyba systému GStreamer: kód neimplementován."
 
-msgid ""
-"GStreamer error: state change failed and some element failed to post a "
-"proper error message with the reason for the failure."
-msgstr ""
-"Chyba systému GStreamer: selhala změna stavu a některý element selhal při "
-"posílání příslušné chybové zprávy s důvodem selhání."
+#: gst/gsterror.c:137
+msgid "GStreamer error: state change failed and some element failed to post a proper error message with the reason for the failure."
+msgstr "Chyba systému GStreamer: selhala změna stavu a některý element selhal při posílání příslušné chybové zprávy s důvodem selhání."
 
+#: gst/gsterror.c:140
 msgid "Internal GStreamer error: pad problem."
 msgstr "Interní chyba systému GStreamer: problém přípojného bodu."
 
+#: gst/gsterror.c:142
 msgid "Internal GStreamer error: thread problem."
 msgstr "Interní chyba systému GStreamer: problém s vlákny."
 
+#: gst/gsterror.c:144
 msgid "GStreamer error: negotiation problem."
 msgstr "Chyba systému GStreamer: problém při vyjednávání."
 
+#: gst/gsterror.c:146
 msgid "Internal GStreamer error: event problem."
 msgstr "Interní chyba systému GStreamer: problém s událostmi."
 
+#: gst/gsterror.c:148
 msgid "Internal GStreamer error: seek problem."
 msgstr "Interní chyba systému GStreamer: problém s posunem."
 
+#: gst/gsterror.c:150
 msgid "Internal GStreamer error: caps problem."
 msgstr "Interní chyba systému GStreamer: problém se schopnostmi."
 
+#: gst/gsterror.c:152
 msgid "Internal GStreamer error: tag problem."
 msgstr "Interní chyba systému GStreamer: problém se štítky."
 
+#: gst/gsterror.c:154
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Vaší instalaci systému GStreamer schází zásuvný modul."
 
+#: gst/gsterror.c:156
 msgid "GStreamer error: clock problem."
 msgstr "Chyba systému GStreamer: problém s hodinami."
 
-msgid ""
-"This application is trying to use GStreamer functionality that has been "
-"disabled."
-msgstr ""
-"Tato aplikace se pokouší používat funkce systému GStreamer, které byly "
-"zakázány."
+#: gst/gsterror.c:158
+msgid "This application is trying to use GStreamer functionality that has been disabled."
+msgstr "Tato aplikace se pokouší používat funkce systému GStreamer, které byly zakázány."
 
+#: gst/gsterror.c:172
 msgid "GStreamer encountered a general supporting library error."
 msgstr "V systému GStreamer došlo k chybě obecné podpůrné knihovny."
 
+#: gst/gsterror.c:177
 msgid "Could not initialize supporting library."
 msgstr "Nelze inicializovat podpůrnou knihovnu."
 
+#: gst/gsterror.c:179
 msgid "Could not close supporting library."
 msgstr "Nelze zavřít podpůrnou knihovnu."
 
+#: gst/gsterror.c:181
 msgid "Could not configure supporting library."
 msgstr "Nelze nastavit podpůrnou knihovnu."
 
+#: gst/gsterror.c:183
 msgid "Encoding error."
 msgstr "Chyba při kódování."
 
+#: gst/gsterror.c:196
 msgid "GStreamer encountered a general resource error."
 msgstr "V systému GStreamer došlo k obecné chybě prostředků."
 
+#: gst/gsterror.c:201
 msgid "Resource not found."
 msgstr "Prostředek nebyl nalezen."
 
+#: gst/gsterror.c:203
 msgid "Resource busy or not available."
 msgstr "Prostředek se právě používá nebo není k dispozici."
 
+#: gst/gsterror.c:205
 msgid "Could not open resource for reading."
 msgstr "Nelze otevřít prostředek pro čtení."
 
+#: gst/gsterror.c:207
 msgid "Could not open resource for writing."
 msgstr "Nelze otevřít prostředek pro zápis."
 
+#: gst/gsterror.c:209
 msgid "Could not open resource for reading and writing."
 msgstr "Nelze otevřít prostředek pro čtení a zápis."
 
+#: gst/gsterror.c:211
 msgid "Could not close resource."
 msgstr "Nelze zavřít prostředek."
 
+#: gst/gsterror.c:213
 msgid "Could not read from resource."
 msgstr "Nelze číst z prostředku."
 
+#: gst/gsterror.c:215
 msgid "Could not write to resource."
 msgstr "Nelze zapisovat do prostředku."
 
+#: gst/gsterror.c:217
 msgid "Could not perform seek on resource."
 msgstr "Nelze se posouvat v prostředku."
 
+#: gst/gsterror.c:219
 msgid "Could not synchronize on resource."
 msgstr "Nelze se synchronizovat s prostředkem."
 
+#: gst/gsterror.c:221
 msgid "Could not get/set settings from/on resource."
 msgstr "Nelze získat/změnit nastavení prostředku."
 
+#: gst/gsterror.c:223
 msgid "No space left on the resource."
 msgstr "V prostředku nezbývá místo."
 
+#: gst/gsterror.c:225
 msgid "Not authorized to access resource."
 msgstr "Není autorizováno pro přístup k prostředku."
 
+#: gst/gsterror.c:238
 msgid "GStreamer encountered a general stream error."
 msgstr "V systému GStreamer došlo k obecné chybě proudu."
 
+#: gst/gsterror.c:243
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr ""
-"Element neimplementuje obsluhu tohoto proudu. Nahlaste to prosím jako chybu."
+msgstr "Element neimplementuje obsluhu tohoto proudu. Nahlaste to prosím jako chybu."
 
+#: gst/gsterror.c:246
 msgid "Could not determine type of stream."
 msgstr "Nelze zjistit typ proudu."
 
+#: gst/gsterror.c:248
 msgid "The stream is of a different type than handled by this element."
 msgstr "Proud je jiného typu, než jaký tento element obsluhuje."
 
+#: gst/gsterror.c:251
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Není přítomen žádný kodek, který umí obsloužit typ tohoto proudu."
 
+#: gst/gsterror.c:253
 msgid "Could not decode stream."
 msgstr "Nelze dekódovat proud."
 
+#: gst/gsterror.c:255
 msgid "Could not encode stream."
 msgstr "Nelze zakódovat proud."
 
+#: gst/gsterror.c:257
 msgid "Could not demultiplex stream."
 msgstr "Nelze demultiplexovat proud."
 
+#: gst/gsterror.c:259
 msgid "Could not multiplex stream."
 msgstr "Nelze multiplexovat proud."
 
+#: gst/gsterror.c:261
 msgid "The stream is in the wrong format."
 msgstr "Proud je v nesprávném formátu."
 
+#: gst/gsterror.c:263
 msgid "The stream is encrypted and decryption is not supported."
 msgstr "Proud je zašifrován a dešifrování není podporováno."
 
-msgid ""
-"The stream is encrypted and can't be decrypted because no suitable key has "
-"been supplied."
-msgstr ""
-"Proud je zašifrován a nelze jej dešifrovat, protože nebyl poskytnut vhodný "
-"klíč."
+#: gst/gsterror.c:265
+msgid "The stream is encrypted and can't be decrypted because no suitable key has been supplied."
+msgstr "Proud je zašifrován a nelze jej dešifrovat, protože nebyl poskytnut vhodný klíč."
 
+#: gst/gsterror.c:305
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Pro doménu %s není žádná zpráva o chybě."
 
+#: gst/gsterror.c:313
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Pro doménu %s a kód %d není žádná standardní zpráva o chybě."
 
+#: gst/gstpipeline.c:549
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Vybrané hodiny nelze použít v rouře."
 
+#: gst/gstregistry.c:1694
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Chyba při zápisu mezipaměti registru do %s: %s"
 
+#: gst/gsttaglist.c:107
 msgid "title"
 msgstr "název"
 
+#: gst/gsttaglist.c:107
 msgid "commonly used title"
 msgstr "Obecně používaný název"
 
+#: gst/gsttaglist.c:110
 msgid "title sortname"
 msgstr "název pro účel řazení"
 
+#: gst/gsttaglist.c:110
 msgid "commonly used title for sorting purposes"
 msgstr "Obecně používaný název; pro účel řazení"
 
+#: gst/gsttaglist.c:113
 msgid "artist"
 msgstr "umělec"
 
+#: gst/gsttaglist.c:114
 msgid "person(s) responsible for the recording"
 msgstr "Osoba čí osoby odpovědné za nahrávku"
 
+#: gst/gsttaglist.c:118
 msgid "artist sortname"
 msgstr "umělec pro účel řazení"
 
+#: gst/gsttaglist.c:119
 msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "Osoba či osoby odpovědné za nahrávku; pro účel řazení"
 
+#: gst/gsttaglist.c:122
 msgid "album"
 msgstr "album"
 
+#: gst/gsttaglist.c:123
 msgid "album containing this data"
 msgstr "Album obsahující tato data"
 
+#: gst/gsttaglist.c:126
 msgid "album sortname"
 msgstr "album pro účel řazení"
 
+#: gst/gsttaglist.c:127
 msgid "album containing this data for sorting purposes"
 msgstr "Album obsahující tato data; pro účel řazení"
 
+#: gst/gsttaglist.c:130
 msgid "album artist"
 msgstr "umělec alba"
 
+#: gst/gsttaglist.c:131
 msgid "The artist of the entire album, as it should be displayed"
 msgstr "Umělec daného alba v podobě, jak se má zobrazovat"
 
+#: gst/gsttaglist.c:135
 msgid "album artist sortname"
 msgstr "umělec alba pro účel řazení"
 
+#: gst/gsttaglist.c:136
 msgid "The artist of the entire album, as it should be sorted"
 msgstr "Umělec alba v podobě, podle které se má řadit"
 
+#: gst/gsttaglist.c:138
 msgid "date"
 msgstr "datum"
 
+#: gst/gsttaglist.c:138
 msgid "date the data was created (as a GDate structure)"
 msgstr "Datum, kdy byla data vytvořena (jako struktura GDate)"
 
+#: gst/gsttaglist.c:140
 msgid "datetime"
 msgstr "datum a čas"
 
+#: gst/gsttaglist.c:141
 msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "Datum a čas, kdy byla data vytvořena (jako struktura GstDateTime)"
 
+#: gst/gsttaglist.c:145
 msgid "genre"
 msgstr "žánr"
 
+#: gst/gsttaglist.c:146
 msgid "genre this data belongs to"
 msgstr "Žánr, do kterého tato data patří"
 
+#: gst/gsttaglist.c:149
 msgid "comment"
 msgstr "poznámka"
 
+#: gst/gsttaglist.c:150
 msgid "free text commenting the data"
 msgstr "Volný text komentující data"
 
+#: gst/gsttaglist.c:153
 msgid "extended comment"
 msgstr "rozšířená poznámka"
 
+#: gst/gsttaglist.c:154
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr ""
-"Volný text komentující data ve tvaru klíč=hodnota nebo klíč[cs]=poznámka"
+msgstr "Volný text komentující data ve tvaru klíč=hodnota nebo klíč[cs]=poznámka"
 
+#: gst/gsttaglist.c:158
 msgid "track number"
 msgstr "číslo stopy"
 
+#: gst/gsttaglist.c:159
 msgid "track number inside a collection"
 msgstr "Číslo stopy v rámci sbírky"
 
+#: gst/gsttaglist.c:162
 msgid "track count"
 msgstr "počet stop"
 
+#: gst/gsttaglist.c:163
 msgid "count of tracks inside collection this track belongs to"
 msgstr "Počet stop v rámci sbírky, do kterého tato stopa patří"
 
+#: gst/gsttaglist.c:167
 msgid "disc number"
 msgstr "číslo disku"
 
+#: gst/gsttaglist.c:168
 msgid "disc number inside a collection"
 msgstr "Číslo disku v rámci sbírky"
 
+#: gst/gsttaglist.c:171
 msgid "disc count"
 msgstr "počet disků"
 
+#: gst/gsttaglist.c:172
 msgid "count of discs inside collection this disc belongs to"
 msgstr "Počet disků v rámci sbírky, do kterého tento disk patří"
 
+#: gst/gsttaglist.c:176
 msgid "location"
 msgstr "umístění"
 
-msgid ""
-"Origin of media as a URI (location, where the original of the file or stream "
-"is hosted)"
-msgstr ""
-"Původ média jako URI (umístění, kde je nabízen originál souboru nebo proudu)"
+#: gst/gsttaglist.c:176
+msgid "Origin of media as a URI (location, where the original of the file or stream is hosted)"
+msgstr "Původ média jako URI (umístění, kde je nabízen originál souboru nebo proudu)"
 
+#: gst/gsttaglist.c:181
 msgid "homepage"
 msgstr "domovská stránka"
 
+#: gst/gsttaglist.c:182
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
-"Domovská stránka tohoto média (např. domovská stránka umělce nebo filmu)"
+msgstr "Domovská stránka tohoto média (např. domovská stránka umělce nebo filmu)"
 
+#: gst/gsttaglist.c:185
 msgid "description"
 msgstr "popis"
 
+#: gst/gsttaglist.c:186
 msgid "short text describing the content of the data"
 msgstr "Krátký text popisující obsah dat"
 
+#: gst/gsttaglist.c:189
 msgid "version"
 msgstr "verze"
 
+#: gst/gsttaglist.c:189
 msgid "version of this data"
 msgstr "Verze těchto dat"
 
+#: gst/gsttaglist.c:191
 msgid "ISRC"
 msgstr "ISRC"
 
+#: gst/gsttaglist.c:193
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr ""
-"International Standard Recording Code – http://www.intergram.cz/cs/isrc/"
+msgstr "International Standard Recording Code – http://www.intergram.cz/cs/isrc/"
 
+#: gst/gsttaglist.c:197
 msgid "organization"
 msgstr "organizace"
 
+#: gst/gsttaglist.c:200
 msgid "copyright"
 msgstr "copyright"
 
+#: gst/gsttaglist.c:200
 msgid "copyright notice of the data"
 msgstr "Oznámení o autorských právech k datům"
 
+#: gst/gsttaglist.c:202
 msgid "copyright uri"
 msgstr "uri copyrightu"
 
+#: gst/gsttaglist.c:203
 msgid "URI to the copyright notice of the data"
 msgstr "Adresa URI oznámení o autorských právech k datům"
 
+#: gst/gsttaglist.c:205
 msgid "encoded by"
 msgstr "zakódoval"
 
+#: gst/gsttaglist.c:205
 msgid "name of the encoding person or organization"
 msgstr "Jméno osoby nebo název organizace odpovědných za kódování"
 
+#: gst/gsttaglist.c:209
 msgid "contact"
 msgstr "kontakt"
 
+#: gst/gsttaglist.c:209
 msgid "contact information"
 msgstr "Kontaktní informace"
 
+#: gst/gsttaglist.c:211
 msgid "license"
 msgstr "licence"
 
+#: gst/gsttaglist.c:211
 msgid "license of data"
 msgstr "Licence dat"
 
+#: gst/gsttaglist.c:213
 msgid "license uri"
 msgstr "uri licence"
 
+#: gst/gsttaglist.c:214
 msgid "URI to the license of the data"
 msgstr "Adresa URI licence k datům"
 
+#: gst/gsttaglist.c:217
 msgid "performer"
 msgstr "výkonný umělec"
 
+#: gst/gsttaglist.c:218
 msgid "person(s) performing"
 msgstr "Vystupující osoba či osoby"
 
+#: gst/gsttaglist.c:221
 msgid "composer"
 msgstr "skladatel"
 
+#: gst/gsttaglist.c:222
 msgid "person(s) who composed the recording"
 msgstr "Osoby či osoby, které nahrávku složily"
 
+#: gst/gsttaglist.c:226
 msgid "duration"
 msgstr "trvání"
 
+#: gst/gsttaglist.c:226
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "Délka v jednotkách času GStreamer (nanosekundách)"
 
+#: gst/gsttaglist.c:229
 msgid "codec"
 msgstr "kodek"
 
+#: gst/gsttaglist.c:230
 msgid "codec the data is stored in"
 msgstr "Kodek, ve kterém jsou data uchována"
 
+#: gst/gsttaglist.c:233
 msgid "video codec"
 msgstr "kodek videa"
 
+#: gst/gsttaglist.c:233
 msgid "codec the video data is stored in"
 msgstr "Kodek, ve kterém jsou uchována data videa"
 
+#: gst/gsttaglist.c:236
 msgid "audio codec"
 msgstr "kodek zvuku"
 
+#: gst/gsttaglist.c:236
 msgid "codec the audio data is stored in"
 msgstr "Kodek, ve kterém jsou uchována data zvuku"
 
+#: gst/gsttaglist.c:239
 msgid "subtitle codec"
 msgstr "kodek titulků"
 
+#: gst/gsttaglist.c:239
 msgid "codec the subtitle data is stored in"
 msgstr "Kodek, ve kterém jsou uchována data titulků"
 
+#: gst/gsttaglist.c:241
 msgid "container format"
 msgstr "formát kontejneru"
 
+#: gst/gsttaglist.c:242
 msgid "container format the data is stored in"
 msgstr "Formát kontejneru, ve kterém jdou uchována data"
 
+#: gst/gsttaglist.c:244
 msgid "bitrate"
 msgstr "datový tok"
 
+#: gst/gsttaglist.c:244
 msgid "exact or average bitrate in bits/s"
 msgstr "Přesný nebo průměrný datový tok v bitech/s"
 
+#: gst/gsttaglist.c:246
 msgid "nominal bitrate"
 msgstr "nominální datový tok"
 
+#: gst/gsttaglist.c:246
 msgid "nominal bitrate in bits/s"
 msgstr "Nominální datový tok v bitech/s"
 
+#: gst/gsttaglist.c:248
 msgid "minimum bitrate"
 msgstr "minimální datový tok"
 
+#: gst/gsttaglist.c:248
 msgid "minimum bitrate in bits/s"
 msgstr "Minimální datový tok v bitech/s"
 
+#: gst/gsttaglist.c:250
 msgid "maximum bitrate"
 msgstr "maximální datový tok"
 
+#: gst/gsttaglist.c:250
 msgid "maximum bitrate in bits/s"
 msgstr "Maximální datový tok v bitech/s"
 
+#: gst/gsttaglist.c:253
 msgid "encoder"
 msgstr "kodér"
 
+#: gst/gsttaglist.c:253
 msgid "encoder used to encode this stream"
 msgstr "Kodér používaný pro kódování tohoto proudu"
 
+#: gst/gsttaglist.c:256
 msgid "encoder version"
 msgstr "verze kodéru"
 
+#: gst/gsttaglist.c:257
 msgid "version of the encoder used to encode this stream"
 msgstr "Verze kodéru používaného pro kódování tohoto proudu"
 
+#: gst/gsttaglist.c:259
 msgid "serial"
 msgstr "sériové číslo"
 
+#: gst/gsttaglist.c:259
 msgid "serial number of track"
 msgstr "Sériové číslo stopy"
 
+#: gst/gsttaglist.c:261
 msgid "replaygain track gain"
 msgstr "hlasitost přehrávání stopy"
 
+#: gst/gsttaglist.c:261
 msgid "track gain in db"
 msgstr "Zesílení stopy v db"
 
+#: gst/gsttaglist.c:263
 msgid "replaygain track peak"
 msgstr "špičková hlasitost přehrávání stopy"
 
+#: gst/gsttaglist.c:263
 msgid "peak of the track"
 msgstr "Špičkové zesílení stopy"
 
+#: gst/gsttaglist.c:265
 msgid "replaygain album gain"
 msgstr "hlasitost přehrávání alba"
 
+#: gst/gsttaglist.c:265
 msgid "album gain in db"
 msgstr "Zesílení alba v db"
 
+#: gst/gsttaglist.c:267
 msgid "replaygain album peak"
 msgstr "špičková hlasitost přehrávání alba"
 
+#: gst/gsttaglist.c:267
 msgid "peak of the album"
 msgstr "Špičkové zesílení alba"
 
+#: gst/gsttaglist.c:269
 msgid "replaygain reference level"
 msgstr "referenční úroveň hlasitosti"
 
+#: gst/gsttaglist.c:270
 msgid "reference level of track and album gain values"
 msgstr "Hodnota referenční úrovně zesílení stopy a alba"
 
+#: gst/gsttaglist.c:272
 msgid "language code"
 msgstr "kód jazyka"
 
+#: gst/gsttaglist.c:273
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
 msgstr "Kód jazyka pro tento proud, ve shodě s ISO-639-1 nebo ISO-639-2"
 
+#: gst/gsttaglist.c:276
 msgid "language name"
 msgstr "název jazyka"
 
+#: gst/gsttaglist.c:277
 msgid "freeform name of the language this stream is in"
 msgstr "název jazyka (ve volném tvaru), ve kterém je tento proud"
 
+#: gst/gsttaglist.c:279
 msgid "image"
 msgstr "obrázek"
 
+#: gst/gsttaglist.c:279
 msgid "image related to this stream"
 msgstr "Obrázek související s tímto proudem"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
+#: gst/gsttaglist.c:283
 msgid "preview image"
 msgstr "obrázek s náhledem"
 
+#: gst/gsttaglist.c:283
 msgid "preview image related to this stream"
 msgstr "Obrázek s náhledem související s tímto proudem"
 
+#: gst/gsttaglist.c:285
 msgid "attachment"
 msgstr "příloha"
 
+#: gst/gsttaglist.c:285
 msgid "file attached to this stream"
 msgstr "Soubor připojený k tomuto proudu"
 
+#: gst/gsttaglist.c:288
 msgid "beats per minute"
 msgstr "tempo"
 
+#: gst/gsttaglist.c:289
 msgid "number of beats per minute in audio"
 msgstr "Tempo (v počtech úderů za minutu) zvuku"
 
+#: gst/gsttaglist.c:291
 msgid "keywords"
 msgstr "klíčová slova"
 
+#: gst/gsttaglist.c:291
 msgid "comma separated keywords describing the content"
 msgstr "Čárkami oddělovaná klíčová slova popisující obsah"
 
+#: gst/gsttaglist.c:294
 msgid "geo location name"
 msgstr "název místa"
 
-msgid ""
-"human readable descriptive location of where the media has been recorded or "
-"produced"
-msgstr ""
-"Popisné místo v člověkem čitelné podobě, kde bylo médium nahráno nebo "
-"vytvořeno"
+#: gst/gsttaglist.c:295
+msgid "human readable descriptive location of where the media has been recorded or produced"
+msgstr "Popisné místo v člověkem čitelné podobě, kde bylo médium nahráno nebo vytvořeno"
 
+#: gst/gsttaglist.c:298
 msgid "geo location latitude"
 msgstr "zeměpisná šířka místa"
 
-msgid ""
-"geo latitude location of where the media has been recorded or produced in "
-"degrees according to WGS84 (zero at the equator, negative values for "
-"southern latitudes)"
-msgstr ""
-"Zeměpisná šířka místa, kde bylo médium nahráno nebo vytvořeno, ve stupních "
-"podle WGS84 (nula na rovníku, záporné hodnoty pro jižní polokouli)"
+#: gst/gsttaglist.c:299
+msgid "geo latitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the equator, negative values for southern latitudes)"
+msgstr "Zeměpisná šířka místa, kde bylo médium nahráno nebo vytvořeno, ve stupních podle WGS84 (nula na rovníku, záporné hodnoty pro jižní polokouli)"
 
+#: gst/gsttaglist.c:303
 msgid "geo location longitude"
 msgstr "zeměpisná délka místa"
 
-msgid ""
-"geo longitude location of where the media has been recorded or produced in "
-"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
-"negative values for western longitudes)"
-msgstr ""
-"Zeměpisná délka místa, kde bylo médium nahráno nebo vytvořeno, ve stupních "
-"podle WGS84 (nula na hlavním poledníku v Greenwichi, záporné hodnoty pro "
-"západní polokouli)"
+#: gst/gsttaglist.c:304
+msgid "geo longitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  negative values for western longitudes)"
+msgstr "Zeměpisná délka místa, kde bylo médium nahráno nebo vytvořeno, ve stupních podle WGS84 (nula na hlavním poledníku v Greenwichi, záporné hodnoty pro západní polokouli)"
 
+#: gst/gsttaglist.c:308
 msgid "geo location elevation"
 msgstr "zeměpisná výška místa"
 
-msgid ""
-"geo elevation of where the media has been recorded or produced in meters "
-"according to WGS84 (zero is average sea level)"
-msgstr ""
-"Zeměpisná výška místa, kde bylo médium nahráno nebo vytvořeno, v metrech "
-"podle WGS84 (nula je průměrná hladina moře)"
+#: gst/gsttaglist.c:309
+msgid "geo elevation of where the media has been recorded or produced in meters according to WGS84 (zero is average sea level)"
+msgstr "Zeměpisná výška místa, kde bylo médium nahráno nebo vytvořeno, v metrech podle WGS84 (nula je průměrná hladina moře)"
 
+#: gst/gsttaglist.c:312
 msgid "geo location country"
 msgstr "země"
 
+#: gst/gsttaglist.c:313
 msgid "country (english name) where the media has been recorded or produced"
 msgstr "Anglický název země, kde bylo médium nahráno nebo vytvořeno"
 
+#: gst/gsttaglist.c:316
 msgid "geo location city"
 msgstr "město"
 
+#: gst/gsttaglist.c:317
 msgid "city (english name) where the media has been recorded or produced"
 msgstr "Anglický název města, kde bylo médium nahráno nebo vytvořeno"
 
+#: gst/gsttaglist.c:320
 msgid "geo location sublocation"
 msgstr "upřesnění místa"
 
-msgid ""
-"a location within a city where the media has been produced or created (e.g. "
-"the neighborhood)"
+#: gst/gsttaglist.c:321
+msgid "a location within a city where the media has been produced or created (e.g. the neighborhood)"
 msgstr "Místo v rámci města, kde bylo médium nahráno nebo vytvořeno"
 
+#: gst/gsttaglist.c:324
 msgid "geo location horizontal error"
 msgstr "vodorovná chyba místa"
 
+#: gst/gsttaglist.c:325
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
-"Předpokládaná chyba v udání polohy místa ve vodorovném směru (v metrech)"
+msgstr "Předpokládaná chyba v udání polohy místa ve vodorovném směru (v metrech)"
 
+#: gst/gsttaglist.c:328
 msgid "geo location movement speed"
 msgstr "rychlost pohybu"
 
-msgid ""
-"movement speed of the capturing device while performing the capture in m/s"
-msgstr ""
-"Rychlost pohybu zachytávacího zařízení, které mění svoji polohu (v m/s)"
+#: gst/gsttaglist.c:329
+msgid "movement speed of the capturing device while performing the capture in m/s"
+msgstr "Rychlost pohybu zachytávacího zařízení, které mění svoji polohu (v m/s)"
 
+#: gst/gsttaglist.c:332
 msgid "geo location movement direction"
 msgstr "směr pohybu"
 
-msgid ""
-"indicates the movement direction of the device performing the capture of a "
-"media. It is represented as degrees in floating point representation, 0 "
-"means the geographic north, and increases clockwise"
-msgstr ""
-"Určuje směr pohybu zařízení provádějícího zachytávání média. Je prezentováno "
-"jako stupně v podobě desetinného čísla, kdy 0 značí zeměpisný sever a jde se "
-"po směru hodinových ručiček"
+#: gst/gsttaglist.c:333
+msgid "indicates the movement direction of the device performing the capture of a media. It is represented as degrees in floating point representation, 0 means the geographic north, and increases clockwise"
+msgstr "Určuje směr pohybu zařízení provádějícího zachytávání média. Je prezentováno jako stupně v podobě desetinného čísla, kdy 0 značí zeměpisný sever a jde se po směru hodinových ručiček"
 
+#: gst/gsttaglist.c:338
 msgid "geo location capture direction"
 msgstr "směr zachytávání"
 
-msgid ""
-"indicates the direction the device is pointing to when capturing  a media. "
-"It is represented as degrees in floating point  representation, 0 means the "
-"geographic north, and increases clockwise"
-msgstr ""
-"Určuje směr, kterým je zařízení nasměrováno během zachytávání média. Je "
-"prezentováno jako stupně v podobě desetinného čísla, kdy 0 značí zeměpisný "
-"sever a jde se po směru hodinových ručiček"
+#: gst/gsttaglist.c:339
+msgid "indicates the direction the device is pointing to when capturing  a media. It is represented as degrees in floating point  representation, 0 means the geographic north, and increases clockwise"
+msgstr "Určuje směr, kterým je zařízení nasměrováno během zachytávání média. Je prezentováno jako stupně v podobě desetinného čísla, kdy 0 značí zeměpisný sever a jde se po směru hodinových ručiček"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
+#: gst/gsttaglist.c:345
 msgid "show name"
 msgstr "název pořadu"
 
+#: gst/gsttaglist.c:346
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
-"Název pořadu (televizního, podcastového apod.), ze kterého médium pochází"
+msgstr "Název pořadu (televizního, podcastového apod.), ze kterého médium pochází"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
+#: gst/gsttaglist.c:351
 msgid "show sortname"
 msgstr "pořad pro účely řazení"
 
-msgid ""
-"Name of the tv/podcast/series show the media is from, for sorting purposes"
-msgstr ""
-"Název pořadu (televizního, podcastového apod.), ze kterého médium pochází; "
-"pro účely řazení"
+#: gst/gsttaglist.c:352
+msgid "Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr "Název pořadu (televizního, podcastového apod.), ze kterého médium pochází; pro účely řazení"
 
+#: gst/gsttaglist.c:355
 msgid "episode number"
 msgstr "číslo epizody"
 
+#: gst/gsttaglist.c:356
 msgid "The episode number in the season the media is part of"
 msgstr "Číslo epizody v rámci řady, které je médium součástí"
 
+#: gst/gsttaglist.c:359
 msgid "season number"
 msgstr "číslo řady"
 
+#: gst/gsttaglist.c:360
 msgid "The season number of the show the media is part of"
 msgstr "Číslo řady v rámci pořadu, jehož je médium součástí"
 
+#: gst/gsttaglist.c:363
 msgid "lyrics"
 msgstr "text"
 
+#: gst/gsttaglist.c:363
 msgid "The lyrics of the media, commonly used for songs"
 msgstr "Text k médiu, obvykle text hudební skladby"
 
+#: gst/gsttaglist.c:366
 msgid "composer sortname"
 msgstr "skladatel pro účely řazení"
 
+#: gst/gsttaglist.c:367
 msgid "person(s) who composed the recording, for sorting purposes"
 msgstr "Osoba či osoby, které záznam složily; pro účely řazení"
 
+#: gst/gsttaglist.c:369
 msgid "grouping"
 msgstr "seskupování"
 
-msgid ""
-"Groups related media that spans multiple tracks, like the different pieces "
-"of a concerto. It is a higher level than a track, but lower than an album"
-msgstr ""
-"Skupiny vztahující se k médiu, které je rozloženo do více stop, třeba části "
-"koncertu. Jde o vyšší úroveň členění než jsou stopy, ale nižší než je album"
+#: gst/gsttaglist.c:370
+msgid "Groups related media that spans multiple tracks, like the different pieces of a concerto. It is a higher level than a track, but lower than an album"
+msgstr "Skupiny vztahující se k médiu, které je rozloženo do více stop, třeba části koncertu. Jde o vyšší úroveň členění než jsou stopy, ale nižší než je album"
 
+#: gst/gsttaglist.c:374
 msgid "user rating"
 msgstr "uživatelské hodnocení"
 
-msgid ""
-"Rating attributed by a user. The higher the rank, the more the user likes "
-"this media"
-msgstr ""
-"Hodnocení přidělené uživatelem. Čím vyšší hodnocení, tím se uživateli médium "
-"víc líbí"
+#: gst/gsttaglist.c:375
+msgid "Rating attributed by a user. The higher the rank, the more the user likes this media"
+msgstr "Hodnocení přidělené uživatelem. Čím vyšší hodnocení, tím se uživateli médium víc líbí"
 
+#: gst/gsttaglist.c:378
 msgid "device manufacturer"
 msgstr "výrobce zařízení"
 
+#: gst/gsttaglist.c:379
 msgid "Manufacturer of the device used to create this media"
 msgstr "Výrobce zařízení použitého k vytvoření tohoto média"
 
+#: gst/gsttaglist.c:381
 msgid "device model"
 msgstr "model zařízení"
 
+#: gst/gsttaglist.c:382
 msgid "Model of the device used to create this media"
 msgstr "Model zařízení použitého k vytvoření tohoto média"
 
+#: gst/gsttaglist.c:384
 msgid "application name"
 msgstr "název aplikace"
 
+#: gst/gsttaglist.c:385
 msgid "Application used to create the media"
 msgstr "Aplikace použitá k vytvoření média"
 
+#: gst/gsttaglist.c:387
 msgid "application data"
 msgstr "data aplikace"
 
+#: gst/gsttaglist.c:388
 msgid "Arbitrary application data to be serialized into the media"
 msgstr "Libovolná aplikační data, která jsou serializována do média"
 
+#: gst/gsttaglist.c:390
 msgid "image orientation"
 msgstr "natočení obrázku"
 
+#: gst/gsttaglist.c:391
 msgid "How the image should be rotated or flipped before display"
 msgstr "Jak by měl být obrázek před zobrazením otočen nebo překlopen"
 
+#: gst/gsttaglist.c:394
 msgid "publisher"
 msgstr "vydavatel"
 
+#: gst/gsttaglist.c:395
 msgid "Name of the label or publisher"
 msgstr "Název vydavatelství nebo vydavatel"
 
+#: gst/gsttaglist.c:398
 msgid "interpreted-by"
 msgstr "ztvárnil"
 
+#: gst/gsttaglist.c:399
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr ""
-"Informace o lidech stojících za mixováním a dalším podobným zpracováním"
+msgstr "Informace o lidech stojících za mixováním a dalším podobným zpracováním"
 
+#: gst/gsttaglist.c:403
 msgid "midi-base-note"
 msgstr "základní nota MIDI"
 
+#: gst/gsttaglist.c:403
 msgid "Midi note number of the audio track."
 msgstr "Číslo noty MIDI pro zvukovou stopu."
 
+#: gst/gsttaglist.c:442
 msgid ", "
 msgstr "; "
 
+#: gst/gsturi.c:674
 #, c-format
 msgid "No URI handler for the %s protocol found"
 msgstr "Nebyla nalezena žádná adresa URI ovladače pro protokol %s"
 
+#: gst/gsturi.c:849
 #, c-format
 msgid "URI scheme '%s' not supported"
 msgstr "Schéma URI „%s“ není podporováno"
 
+#: gst/gstutils.c:2424 tools/gst-launch.c:324
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "CHYBA: od elementu %s: %s\n"
 
+#: gst/gstutils.c:2426 tools/gst-launch.c:326 tools/gst-launch.c:669
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -840,203 +995,263 @@ msgstr ""
 "Dodatečné ladicí informace:\n"
 "%s\n"
 
+#: gst/parse/grammar.y:216
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "připojení nemá žádný zdroj [sink=%s@%p]"
 
+#: gst/parse/grammar.y:221
 #, c-format
 msgid "link has no sink [source=%s@%p]"
 msgstr "připojení nemá žádný cíl [source=%s@%p]"
 
+#: gst/parse/grammar.y:412
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "v elementu „%2$s“ není žádná vlastnost „%1$s“"
 
+#: gst/parse/grammar.y:453
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "nelze nastavit vlastnost „%s“ v elementu „%s“ na „%s“"
 
+#: gst/parse/grammar.y:616
 #, c-format
 msgid "could not link %s to %s"
 msgstr "nelze připojit element „%s“ k elementu „%s“"
 
+#: gst/parse/grammar.y:691
 #, c-format
 msgid "no element \"%s\""
 msgstr "element „%s“ neexistuje"
 
+#: gst/parse/grammar.y:752
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
 msgstr "neočekávaný odkaz „%s“ – ignoruje se"
 
+#: gst/parse/grammar.y:758
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
 msgstr "neočekávaný odkaz přípojného bodu „%s“ – ignoruje se"
 
+#: gst/parse/grammar.y:797
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "nelze zpracovat schopnosti „%s“"
 
+#: gst/parse/grammar.y:825
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "neexistuje žádný cílový element pro adresu URI „%s“"
 
+#: gst/parse/grammar.y:844
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "neexistuje žádný zdrojový element pro adresu URI „%s“"
 
+#: gst/parse/grammar.y:934
 msgid "syntax error"
 msgstr "syntaktická chyba"
 
+#: gst/parse/grammar.y:948
 msgid "bin"
 msgstr "zásobník"
 
+#: gst/parse/grammar.y:957
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "zadán prázdný zásobník „%s“, to není dovoleno"
 
+#: gst/parse/grammar.y:967
 #, c-format
 msgid "no bin \"%s\", unpacking elements"
 msgstr "zásobník „%s“ rozbaluje se element"
 
+#: gst/parse/grammar.y:998
 msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
 
+#: libs/gst/base/gstbasesink.c:2845
 msgid "A lot of buffers are being dropped."
 msgstr "Většina vyrovnávacích pamětí je vyřazena."
 
+#: libs/gst/base/gstbasesink.c:3373
 msgid "Internal data flow problem."
 msgstr "Interní problém toku dat."
 
+#: libs/gst/base/gstbasesink.c:4086
 msgid "Internal data stream error."
 msgstr "Interní chyba proudu dat."
 
+#: libs/gst/base/gstbasesink.c:4096 libs/gst/base/gstbasesrc.c:2942
+#: libs/gst/base/gstbasesrc.c:2951 plugins/elements/gstdownloadbuffer.c:1345
+#: plugins/elements/gstqueue.c:966 plugins/elements/gstqueue.c:1513
+#: plugins/elements/gstqueue2.c:2353 plugins/elements/gstqueue2.c:2829
 msgid "Internal data flow error."
 msgstr "Interní chyba toku dat."
 
+#: libs/gst/base/gstbasesrc.c:2541
 msgid "Internal clock error."
 msgstr "Interní chyba hodin."
 
+#: libs/gst/base/gstbasesrc.c:2569
 msgid "Failed to map buffer."
 msgstr "Selhalo namapování vyrovnávací paměti."
 
+#: plugins/elements/gstcapsfilter.c:128
 msgid "Filter caps"
 msgstr "Filtrovat schopnosti"
 
-msgid ""
-"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
-"property takes a reference to the supplied GstCaps object."
-msgstr ""
-"Omezit povolené schopnosti (NULL znamená VŠECHNY). Nastavení této vlastnosti "
-"přebírá odkaz na zadaný objekt GstCaps."
+#: plugins/elements/gstcapsfilter.c:129
+msgid "Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object."
+msgstr "Omezit povolené schopnosti (NULL znamená VŠECHNY). Nastavení této vlastnosti přebírá odkaz na zadaný objekt GstCaps."
 
+#: plugins/elements/gstcapsfilter.c:136
 msgid "Caps Change Mode"
 msgstr "Režim změny schopností"
 
+#: plugins/elements/gstcapsfilter.c:137
 msgid "Filter caps change behaviour"
 msgstr "Filtrovat chování změny schopností"
 
+#: plugins/elements/gstdownloadbuffer.c:916 plugins/elements/gstqueue2.c:1536
 msgid "No Temp directory specified."
 msgstr "Není určena složka pro dočasné soubory."
 
+#: plugins/elements/gstdownloadbuffer.c:922 plugins/elements/gstqueue2.c:1542
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Nelze vytvořit dočasný soubor „%s“."
 
+#: plugins/elements/gstdownloadbuffer.c:930 plugins/elements/gstfilesrc.c:518
+#: plugins/elements/gstqueue2.c:1550
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nelze otevřít soubor „%s“ pro čtení."
 
+#: plugins/elements/gstdownloadbuffer.c:1254 plugins/elements/gstqueue2.c:1956
 msgid "Error while writing to download file."
 msgstr "Chyba při zápisu do stahovaného souboru."
 
+#: plugins/elements/gstfilesink.c:425
 msgid "No file name specified for writing."
 msgstr "Není zadán název souboru pro zápis."
 
+#: plugins/elements/gstfilesink.c:431
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Nelze otevřít soubor „%s“ pro zápis."
 
+#: plugins/elements/gstfilesink.c:456
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Chyba při zavírání souboru „%s“."
 
+#: plugins/elements/gstfilesink.c:620
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Chyba při posunu v souboru „%s“."
 
+#: plugins/elements/gstfilesink.c:628 plugins/elements/gstfilesink.c:705
+#: plugins/elements/gstfilesink.c:740
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Chyba při zápisu do souboru „%s“."
 
+#: plugins/elements/gstfilesrc.c:506
 msgid "No file name specified for reading."
 msgstr "Není zadán název souboru pro čtení."
 
+#: plugins/elements/gstfilesrc.c:527
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Nelze získat informace o „%s“."
 
+#: plugins/elements/gstfilesrc.c:533
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "„%s“ je složka."
 
+#: plugins/elements/gstfilesrc.c:539
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Soubor „%s“ je soket."
 
+#: plugins/elements/gstidentity.c:641
 msgid "Failed after iterations as requested."
 msgstr "Selhání po iteracích podle požadavku."
 
+#: plugins/elements/gsttypefindelement.c:200
 msgid "caps"
 msgstr "schopnosti"
 
+#: plugins/elements/gsttypefindelement.c:201
 msgid "detected capabilities in stream"
 msgstr "detekované schopnosti v proudu"
 
+#: plugins/elements/gsttypefindelement.c:204
 msgid "minimum"
 msgstr "minimum"
 
+#: plugins/elements/gsttypefindelement.c:209
 msgid "force caps"
 msgstr "vynutit schopnosti"
 
+#: plugins/elements/gsttypefindelement.c:210
 msgid "force caps without doing a typefind"
 msgstr "vynutit schopnosti bez hledání typu"
 
+#: plugins/elements/gsttypefindelement.c:932
+#: plugins/elements/gsttypefindelement.c:953
 msgid "Stream contains not enough data."
 msgstr "Proud neobsahuje dostatek dat."
 
+#: plugins/elements/gsttypefindelement.c:1072
 msgid "Stream contains no data."
 msgstr "Proud neobsahuje žádná data."
 
+#: tools/gst-inspect.c:195
 msgid "Implemented Interfaces:\n"
 msgstr "Implementovaná rozhraní:\n"
 
+#: tools/gst-inspect.c:281
 msgid "readable"
 msgstr "lze číst"
 
+#: tools/gst-inspect.c:290
 msgid "writable"
 msgstr "lze zapisovat"
 
+#: tools/gst-inspect.c:294
 msgid "deprecated"
 msgstr "zavržené"
 
+#: tools/gst-inspect.c:298
 msgid "controllable"
 msgstr "lze ovládat"
 
+#: tools/gst-inspect.c:302
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "lze změnit ve stavu PRÁZDNÉ, PŘIPRAVENO, POZASTAVENO nebo PŘEHRÁVÁ"
 
+#: tools/gst-inspect.c:304
 msgid "changeable only in NULL, READY or PAUSED state"
 msgstr "lze měnit jen ve stavu PRÁZDNÉ, PŘIPRAVENO nebo POZASTAVENO"
 
+#: tools/gst-inspect.c:306
 msgid "changeable only in NULL or READY state"
 msgstr "lze měnit jen ve stavu PRÁZDNÉ nebo PŘIPRAVENO"
 
+#: tools/gst-inspect.c:910
 msgid "Blacklisted files:"
 msgstr "Soubory na černé listině:"
 
+#: tools/gst-inspect.c:922 tools/gst-inspect.c:1011
 msgid "Total count: "
 msgstr "Celkový počet: "
 
+#: tools/gst-inspect.c:923
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
@@ -1044,6 +1259,7 @@ msgstr[0] "%d soubor na černé listině"
 msgstr[1] "%d soubory na černé listině"
 msgstr[2] "%d souborů na černé listině"
 
+#: tools/gst-inspect.c:1012
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
@@ -1051,6 +1267,7 @@ msgstr[0] "%d zásuvný modul"
 msgstr[1] "%d zásuvné moduly"
 msgstr[2] "%d zásuvných modulů"
 
+#: tools/gst-inspect.c:1015
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
@@ -1058,6 +1275,7 @@ msgstr[0] "%d záznam na černé listině"
 msgstr[1] "%d záznamy na černé listině"
 msgstr[2] "%d záznamů na černé listině"
 
+#: tools/gst-inspect.c:1020
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
@@ -1065,100 +1283,115 @@ msgstr[0] "%d funkce"
 msgstr[1] "%d funkce"
 msgstr[2] "%d funkcí"
 
+#: tools/gst-inspect.c:1456
 msgid "Print all elements"
 msgstr "Vypsat všechny elementy"
 
+#: tools/gst-inspect.c:1458
 msgid "Print list of blacklisted files"
 msgstr "Vypsat seznam souborů na černé listině"
 
+#: tools/gst-inspect.c:1460
 msgid ""
-"Print a machine-parsable list of features the specified plugin or all "
-"plugins provide.\n"
-"                                       Useful in connection with external "
-"automatic plugin installation mechanisms"
+"Print a machine-parsable list of features the specified plugin or all plugins provide.\n"
+"                                       Useful in connection with external automatic plugin installation mechanisms"
 msgstr ""
-"Vypsat strojem zpracovatelný seznam funkcí, které poskytuje zadaný nebo "
-"všechny zásuvné moduly.\n"
-"                                       Užitečné spolu s externími mechanismy "
-"pro automatickou instalaci zásuvných modulů"
+"Vypsat strojem zpracovatelný seznam funkcí, které poskytuje zadaný nebo všechny zásuvné moduly.\n"
+"                                       Užitečné spolu s externími mechanismy pro automatickou instalaci zásuvných modulů"
 
+#: tools/gst-inspect.c:1465
 msgid "List the plugin contents"
 msgstr "Vypsat obsah zásuvných modulů"
 
+#: tools/gst-inspect.c:1467
 msgid "Check if the specified element or plugin exists"
 msgstr "Zkontrolovat, zda zadaný element nebo zásuvný modul existuje"
 
-msgid ""
-"When checking if an element or plugin exists, also check that its version is "
-"at least the version specified"
-msgstr ""
-"Při kontrole existence elementu nebo zásuvného modulu rovněž zkontrolovat, "
-"zda je jeho verze stejná nebo novější než zadaná"
+#: tools/gst-inspect.c:1470
+msgid "When checking if an element or plugin exists, also check that its version is at least the version specified"
+msgstr "Při kontrole existence elementu nebo zásuvného modulu rovněž zkontrolovat, zda je jeho verze stejná nebo novější než zadaná"
 
+#: tools/gst-inspect.c:1474
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Vypsat podporovaná schémata URI, včetně elementů, které implementují"
 
+#: tools/gst-inspect.c:1617
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Nelze načíst soubor se zásuvným modulem: %s\n"
 
+#: tools/gst-inspect.c:1622
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Element nebo zásuvný modul „%s“ neexistuje\n"
 
+#: tools/gst-launch.c:251
 msgid "Index statistics"
 msgstr "Přehledové statistiky"
 
+#: tools/gst-launch.c:550
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Obdržena zpráva čís. %u od elementu „%s“ (%s): "
 
+#: tools/gst-launch.c:554
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
 msgstr "Obdržena zpráva čís. %u od přípojného bodu „%s:%s“ (%s): "
 
+#: tools/gst-launch.c:558
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
 msgstr "Obdržena zpráva čís. %u od objektu „%s“ (%s): "
 
+#: tools/gst-launch.c:562
 #, c-format
 msgid "Got message #%u (%s): "
 msgstr "Obdržena zpráva čís. %u (%s): "
 
+#: tools/gst-launch.c:594
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Obdržen konec proudu od elementu „%s“.\n"
 
+#: tools/gst-launch.c:603
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr ""
 "NALEZEN ŠTÍTEK: nalezen elementem „%s“.\n"
 "\n"
 
+#: tools/gst-launch.c:606
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
 msgstr "NALEZEN ŠTÍTEK: nalezen přípojným bodem „%s:%s“.\n"
 
+#: tools/gst-launch.c:609
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
 msgstr "NALEZEN ŠTÍTEK: nalezen objektem „%s“.\n"
 
+#: tools/gst-launch.c:612
 msgid "FOUND TAG\n"
 msgstr "NALEZEN ŠTÍTEK\n"
 
+#: tools/gst-launch.c:627
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
 msgstr ""
 "NALEZENA TABULKA S OBSAHEM: nalezena elementem „%s“.\n"
 "\n"
 
+#: tools/gst-launch.c:630
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
 msgstr "NALEZENA TABULKA S OBSAHEM: nalezena objektem „%s“.\n"
 
+#: tools/gst-launch.c:633
 msgid "FOUND TOC\n"
 msgstr "NALEZENA TABULKA S OBSAHEM\n"
 
+#: tools/gst-launch.c:650
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1167,159 +1400,188 @@ msgstr ""
 "INFORMACE:\n"
 "%s\n"
 
+#: tools/gst-launch.c:667
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "VAROVÁNÍ: od elementu %s: %s\n"
 
+#: tools/gst-launch.c:702
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr ""
-"Video vložené před začátek, čeká se na dokončení ulokládání do vyrovnávací "
-"paměti…\n"
+msgstr "Video vložené před začátek, čeká se na dokončení ulokládání do vyrovnávací paměti…\n"
 
+#: tools/gst-launch.c:706
 msgid "Prerolled, waiting for progress to finish...\n"
 msgstr "Video vložené před začátek, čeká se na dokončení průběhu…\n"
 
+#: tools/gst-launch.c:718
 msgid "buffering..."
 msgstr "ukládá se do vyrovnávací paměti…"
 
+#: tools/gst-launch.c:729
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr ""
-"Ukládání do vyrovnávací paměti hotovo, nastavuje se roura na PŘEHRÁVÁ…\n"
+msgstr "Ukládání do vyrovnávací paměti hotovo, nastavuje se roura na PŘEHRÁVÁ…\n"
 
+#: tools/gst-launch.c:737
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Ukládá se do vyrovnávací paměti, nastavuje se roura na POZASTAVENA…\n"
 
+#: tools/gst-launch.c:746
 msgid "Redistribute latency...\n"
 msgstr "Šíří se zpoždění…\n"
 
+#: tools/gst-launch.c:757
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Nastavuje se stav na %s na základě požadavku od %s…\n"
 
+#: tools/gst-launch.c:773
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Přerušení: Zastavuje se roura…\n"
 
+#: tools/gst-launch.c:802
 #, c-format
 msgid "Progress: (%s) %s\n"
 msgstr "Průběh: (%s) %s\n"
 
+#: tools/gst-launch.c:815
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "Schází element: %s\n"
 
+#: tools/gst-launch.c:829
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Obdržen kontext od elementu „%s“: %s=%s\n"
 
+#: tools/gst-launch.c:919
 msgid "Output tags (also known as metadata)"
 msgstr "Vypsat štítky (známé také jako metadata)"
 
+#: tools/gst-launch.c:921
 msgid "Output TOC (chapters and editions)"
 msgstr "Vypsat tabulku s obsahem (kapitoly nebo vydání)"
 
+#: tools/gst-launch.c:923
 msgid "Output status information and property notifications"
 msgstr "Vypsat informace o stavu a upozornění na vlastnosti"
 
+#: tools/gst-launch.c:925
 msgid "Do not print any progress information"
 msgstr "Nevypisovat žádné informace o průběhu"
 
+#: tools/gst-launch.c:927
 msgid "Output messages"
 msgstr "Zprávy výstupu"
 
-msgid ""
-"Do not output status information for the specified property if verbose "
-"output is enabled (can be used multiple times)"
-msgstr ""
+#: tools/gst-launch.c:929
+msgid "Do not output status information for the specified property if verbose output is enabled (can be used multiple times)"
+msgstr "Když je zapnutý podrobný výpis, nevypisovat stavové informace pro zadanou vlastnost (může být uvedeno vícekrát)"
 
+#: tools/gst-launch.c:931
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "NÁZEV-VLASTNOSTI"
 
+#: tools/gst-launch.c:933
 msgid "Do not install a fault handler"
 msgstr "Neinstalovat obsluhu výjimek"
 
+#: tools/gst-launch.c:935
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Vynucuje se zakončení proudu (EOS) před vypnutím roury"
 
+#: tools/gst-launch.c:938
 msgid "Gather and print index statistics"
 msgstr "Sesbírat a vypsat přehledové statistiky"
 
+#: tools/gst-launch.c:1001
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "CHYBA: nelze sestavit rouru: %s.\n"
 
+#: tools/gst-launch.c:1005
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "CHYBA: nelze sestavit rouru.\n"
 
+#: tools/gst-launch.c:1009
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VAROVÁNÍ: chybná roura: %s\n"
 
+#: tools/gst-launch.c:1025
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "CHYBA: element „pipeline“ nebyl nalezen.\n"
 
+#: tools/gst-launch.c:1056 tools/gst-launch.c:1156
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Nastavuje se rouru na POZASTAVENA…\n"
 
 # On strike?
+#: tools/gst-launch.c:1061
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "CHYBA: Roura se nechce pozastavit.\n"
 
+#: tools/gst-launch.c:1066
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Roura žije a nepotřebuje PŘEDVINUTÍ…\n"
 
+#: tools/gst-launch.c:1070
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Roura se PŘEDVINUJE…\n"
 
 # On strike?
+#: tools/gst-launch.c:1073 tools/gst-launch.c:1087
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "CHYBA: roura se nechce předvinout.\n"
 
+#: tools/gst-launch.c:1080
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Roura je PŘEDVINUTA…\n"
 
+#: tools/gst-launch.c:1093
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Nastavuje se roura na PŘEHRÁVÁNÍ…\n"
 
 # On strike?
+#: tools/gst-launch.c:1100
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "CHYBA: roura nechce přehrávat.\n"
 
+#: tools/gst-launch.c:1118
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-"Zakončení proudu (EOS) při vypnutí povoleno -- Vynucuje se zakončení proudu "
-"v rouře\n"
+msgstr "Zakončení proudu (EOS) při vypnutí povoleno -- Vynucuje se zakončení proudu v rouře\n"
 
+#: tools/gst-launch.c:1122
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-"Zakončení proudu (EOS) při vypnutí povoleno -- Čeká se na značku EOS po "
-"výskytu chyby\n"
+msgstr "Zakončení proudu (EOS) při vypnutí povoleno -- Čeká se na značku EOS po výskytu chyby\n"
 
+#: tools/gst-launch.c:1125
 msgid "Waiting for EOS...\n"
 msgstr "Čeká se na konec proudu (EOS)…\n"
 
+#: tools/gst-launch.c:1132
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Obdržen konec proudu (EOS) – zastavuje se roura…\n"
 
+#: tools/gst-launch.c:1136
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
 msgstr "Přerušení při čekání na konec proudu – zastavuje se roura…\n"
 
+#: tools/gst-launch.c:1141
 msgid "An error happened while waiting for EOS\n"
 msgstr "Nastala chyba při čekání na konec proudu (EOS)\n"
 
+#: tools/gst-launch.c:1152
 msgid "Execution ended after %"
 msgstr "Provádění skončilo po %"
 
+#: tools/gst-launch.c:1168
 msgid "Setting pipeline to READY ...\n"
 msgstr "Nastavuje se roura na PŘIPRAVENA…\n"
 
+#: tools/gst-launch.c:1180
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Nastavuje se roura na PRÁZDNÁ…\n"
 
+#: tools/gst-launch.c:1184
 msgid "Freeing pipeline ...\n"
 msgstr "Uvolňuje se roura…\n"
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Pro TYP nevypisovat stavové informace"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TYP1,TYP2,…"
