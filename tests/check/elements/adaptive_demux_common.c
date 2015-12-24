@@ -365,16 +365,25 @@ testSeekAdaptiveAppSinkEvent (GstAdaptiveDemuxTestEngine * engine,
       && gst_event_get_seqnum (event) ==
       gst_event_get_seqnum (testData->seek_event)) {
     const GstSegment *seek_segment;
+    GstSeekType start_type, stop_type;
+
+    gst_event_parse_seek (testData->seek_event, NULL, NULL, NULL, &start_type,
+        NULL, &stop_type, NULL);
 
     gst_event_parse_segment (event, &seek_segment);
     fail_unless (seek_segment->format ==
         testOutputStreamData->post_seek_segment.format);
     fail_unless (seek_segment->rate ==
         testOutputStreamData->post_seek_segment.rate);
-    fail_unless (seek_segment->start ==
-        testOutputStreamData->post_seek_segment.start);
-    fail_unless (seek_segment->stop ==
-        testOutputStreamData->post_seek_segment.stop);
+    if (start_type != GST_SEEK_TYPE_NONE) {
+      fail_unless (seek_segment->start ==
+          testOutputStreamData->post_seek_segment.start);
+    }
+    if (stop_type != GST_SEEK_TYPE_NONE) {
+      fail_unless (seek_segment->stop ==
+          testOutputStreamData->post_seek_segment.stop);
+    }
+
     fail_unless (seek_segment->base ==
         testOutputStreamData->post_seek_segment.base);
     fail_unless (seek_segment->time ==

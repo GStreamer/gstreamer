@@ -394,6 +394,108 @@ GST_START_TEST (testSeek)
 GST_END_TEST;
 
 static void
+run_seek_position_test (gdouble rate, guint64 seek_start, GstSeekType stop_type,
+    guint64 seek_stop, GstSeekFlags flags, guint64 segment_start,
+    guint64 segment_stop, gint segments)
+{
+  const guint segment_size = 60 * TS_PACKET_LEN;
+  const gchar *manifest =
+      "#EXTM3U \n"
+      "#EXT-X-TARGETDURATION:1\n"
+      "#EXTINF:1,Test\n" "001.ts\n"
+      "#EXTINF:1,Test\n" "002.ts\n"
+      "#EXTINF:1,Test\n" "003.ts\n"
+      "#EXTINF:1,Test\n" "004.ts\n" "#EXT-X-ENDLIST\n";
+  GstHlsDemuxTestInputData inputTestData[] = {
+    {"http://unit.test/media.m3u8", (guint8 *) manifest, 0},
+    {"http://unit.test/001.ts", NULL, segment_size},
+    {"http://unit.test/002.ts", NULL, segment_size},
+    {"http://unit.test/003.ts", NULL, segment_size},
+    {"http://unit.test/004.ts", NULL, segment_size},
+    {NULL, NULL, 0},
+  };
+  GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
+    {"src_0", segment_size * segments, NULL},
+    {NULL, 0, NULL}
+  };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstAdaptiveDemuxTestCase *engineTestData;
+  GstHlsDemuxTestCase hlsTestCase = { 0 };
+  GByteArray *mpeg_ts = NULL;
+
+  engineTestData = gst_adaptive_demux_test_case_new ();
+  mpeg_ts = setup_test_variables (inputTestData, outputTestData,
+      &hlsTestCase, engineTestData, segment_size);
+
+  http_src_callbacks.src_start = gst_hlsdemux_test_src_start;
+  http_src_callbacks.src_create = gst_hlsdemux_test_src_create;
+
+  /* FIXME hack to avoid having a 0 seqnum */
+  gst_util_seqnum_next ();
+
+  /* Seek to 1.5s, expect it to start from 1s */
+  engineTestData->threshold_for_seek = 20 * TS_PACKET_LEN;
+  engineTestData->seek_event =
+      gst_event_new_seek (rate, GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET,
+      seek_start, stop_type, seek_stop);
+  gst_segment_init (&outputTestData[0].post_seek_segment, GST_FORMAT_TIME);
+  outputTestData[0].post_seek_segment.rate = rate;
+  outputTestData[0].post_seek_segment.start = segment_start;
+  outputTestData[0].post_seek_segment.time = segment_start;
+  outputTestData[0].post_seek_segment.stop = segment_stop;
+  outputTestData[0].segment_verification_needed = TRUE;
+
+  gst_test_http_src_install_callbacks (&http_src_callbacks, &hlsTestCase);
+  gst_adaptive_demux_test_seek (DEMUX_ELEMENT_NAME,
+      inputTestData[0].uri, engineTestData);
+
+  TESTCASE_UNREF_BOILERPLATE;
+}
+
+
+GST_START_TEST (testSeekKeyUnitPosition)
+{
+  /* Seek to 1.5s with key unit, it should go back to 1.0s. 3 segments will be
+   * pushed */
+  run_seek_position_test (1.0, 1500 * GST_MSECOND, GST_SEEK_TYPE_NONE, 0,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, 1000 * GST_MSECOND, -1, 3);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (testSeekPosition)
+{
+  /* Seek to 1.5s without key unit, it should keep the 1.5s, but still push
+   * from the 1st segment, so 3 segments will be
+   * pushed */
+  run_seek_position_test (1.0, 1500 * GST_MSECOND, GST_SEEK_TYPE_NONE, 0,
+      GST_SEEK_FLAG_FLUSH, 1500 * GST_MSECOND, -1, 3);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (testSeekSnapBeforePosition)
+{
+  /* Seek to 1.5s, snap before, it go to 1s */
+  run_seek_position_test (1.0, 1500 * GST_MSECOND, GST_SEEK_TYPE_NONE, 0,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_BEFORE, 1000 * GST_MSECOND, -1,
+      3);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (testSeekSnapAfterPosition)
+{
+  /* Seek to 1.5s with snap after, it should move to 2s */
+  run_seek_position_test (1.0, 1500 * GST_MSECOND, GST_SEEK_TYPE_NONE, 0,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_AFTER, 2000 * GST_MSECOND, -1,
+      2);
+}
+
+GST_END_TEST;
+
+static void
 testDownloadErrorMessageCallback (GstAdaptiveDemuxTestEngine * engine,
     GstMessage * msg, gpointer user_data)
 {
@@ -590,6 +692,10 @@ hls_demux_suite (void)
   tcase_add_test (tc_basicTest, testFragmentNotFound);
   tcase_add_test (tc_basicTest, testFragmentDownloadError);
   tcase_add_test (tc_basicTest, testSeek);
+  tcase_add_test (tc_basicTest, testSeekKeyUnitPosition);
+  tcase_add_test (tc_basicTest, testSeekPosition);
+  tcase_add_test (tc_basicTest, testSeekSnapBeforePosition);
+  tcase_add_test (tc_basicTest, testSeekSnapAfterPosition);
 
   tcase_add_unchecked_fixture (tc_basicTest, gst_adaptive_demux_test_setup,
       gst_adaptive_demux_test_teardown);
