@@ -1,18 +1,17 @@
 
-Release notes for GStreamer Good Plugins 1.6.0
+Release notes for GStreamer Good Plugins 1.7.1
 
 
-The GStreamer team is proud to announce a new major feature release in the
-stable 1.x API series of your favourite cross-platform multimedia framework!
+The GStreamer team is pleased to announce the first release of the unstable
+1.7 release series. The 1.7 release series is adding new features on top of
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.7 release series
+will lead to the stable 1.8 release series in the next weeks. Any newly added
+API can still change until that point.
 
 
-This release has been in the works for more than a year and is packed with new
-features, bug fixes and other improvements.
-
-
-See
-http://gstreamer.freedesktop.org/releases/1.6/
-for the full list of changes.
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately
+during the unstable 1.7 release series.
 
 
 
@@ -59,14 +58,56 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 705991 : Adding support for DASH common encryption to qtdemux and dashdemux
-      * 750731 : rtpsession test fails sometimes
-      * 751393 : aacparse: LOAS config never retrieved
-      * 755265 : rtp{vorbis,theora}pay: Store headers in the packet buffers lists, not a NULL buffer
-      * 755277 : rtptheoradepay: Memory leaks
-      * 755463 : spectrum: Sending magnitude instead of phase in message for Phase info
-      * 755471 : qtdemux: Segment seeks broken again
-      * 755621 : smptealpha: Do not set width/height before comparing with old values
+      * 727305 : matroskademux: complete support for A_OPUS (SeekPreRoll, CodecDelay and DiscardPadding)
+      * 729950 : matroskamux: support video/x-vp9. webmmux: support audio/x-opus
+      * 734659 : qtdemux: Does not properly update base time for non-flushing seeks
+      * 745372 : vpxdec: Should try to avoid copies at output
+      * 746747 : rtpsession: Also report internal sources in on-new-ssrc and on-ssrc-active
+      * 748680 : directsoundsink: fix sleep for buffer-time lower than 200000
+      * 750456 : rtpsession: Implement sending of reduced size RTCP packets
+      * 750709 : souphttpsrc: add tls-interaction property
+      * 751311 : rtp: Dynamic dropout / reorder limits
+      * 752669 : rtpsession: Expose RTPSource stats through stats property
+      * 752694 : rtpmux: allow the ssrc-property to decide ssrc on outgoing  buffers
+      * 752818 : qtdemux: add support for XML timed-text subtitles
+      * 753087 : jpegdec: fix output state memory leak
+      * 753484 : qtdemux: support edit lists partially in push-mode
+      * 753853 : gstreamer: good: Fix memory leaks when context parse fails.
+      * 754435 : flvmux: use time segment and copy timestamps when streamable
+      * 754548 : rtpsource: In case of sender, doesn't need to think about probation and rtp gap.
+      * 754555 : smpte: Memory leak
+      * 754558 : smpte: Use video info data instead of macro
+      * 754864 : qtdemux: check multi trex to find track id in mp4 (DASH) stream.
+      * 755094 : avidemux: Reverse playback does not consider segment.start
+      * 755125 : rtp: RTCP mapping between NTP and RTP time could be capture or send time based
+      * 755326 : souphttpclientsink: Fix memory leaks and segfault crash
+      * 755478 : flvdemux: output speex vorbiscomment as a GstTagList
+      * 755479 : flvdemux: speex is also always 16KHz
+      * 755510 : vpx: create base class for vpx encoders and decoders
+      * 756219 : gdkpixbufdec: Fix pixbuf_loader leak during failures
+      * 756226 : qtdemux: fix memory leak for corrupted file
+      * 756231 : mpegaudioparse: Fix buffer memory leak
+      * 756234 : audiofx: Remove unused variable
+      * 756318 : souphttpclientsink: Add " retry " for request failures
+      * 756905 : audiofx: remove unused variable
+      * 757340 : audiochebband: Fix typo in example pipeline
+      * 757892 : rtph264pay: add config-interval option to send PPS/SPS before every key frame
+      * 758058 : v4l2object: add support of NV16, NV61 and NV24 formats
+      * 758085 : v4l2: Track /dev/video* to triggered required probe
+      * 758161 : qtdemux: Fix string memory leak
+      * 758171 : qtdemux: Seeking in dashdemux broken since edit list changes
+      * 758195 : vpxdec: Use more threads by default
+      * 758258 : matroska: Missing support for prores video
+      * 758260 : souphttpclientsink: Fix error leak and handle error
+      * 758390 : multifilesink: fix spelling on multi_file_sink_next_type variable
+      * 758826 : aacparse: Avoid over-skipping when checking LOAS config
+      * 758928 : qtdemux: letting flushes pass downstream on upstream offset seeks
+      * 759226 : interleave: Remove unsed field
+      * 759452 : directsoundsink: check device property, don't use default if a specific device is set
+      * 759614 : dvdec: Remove unused fields
+      * 759615 : DTS > PTS creates invalid mp4 files
+      * 759635 : progressreport: Add support for using format=buffers with do-query=false
+      * 758114 : tests: souphttpsrc test_icy_stream:0: Assertion 'caps != NULL' failed
 
 ==== Download ====
 
@@ -103,9 +144,50 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Alessandro Decina
+      * Anton Bondarenko
+      * Arun Raghavan
+      * Aurélien Zanelli
+      * Chris Bass
+      * Dave Craig
+      * Edward Hervey
+      * Evan Callaway
+      * George Kiagiadakis
+      * Graham Leggett
+      * Guillaume Desmottes
+      * Guillaume Marquebielle
+      * Havard Graff
+      * Hyunjun Ko
       * Jan Schmidt
+      * Josep Torra
+      * Julien Isorce
+      * Luis de Bethencourt
+      * Manasa Athreya
+      * Michael Olbrich
+      * Miguel París Díaz
+      * Mischa Spiegelmock
+      * Nicola Murino
+      * Nicolas Dufresne
+      * Nirbheek Chauhan
+      * Olivier Crête
+      * Philipp Zabel
+      * Philippe Normand
+      * Prashant Gotarne
+      * Ramiro Polla
+      * Ravi Kiran K N
+      * Reynaldo H. Verdejo Pinochet
+      * Ryan Hendrickson
       * Sebastian Dröge
-      * Sebastian Rasmussen
+      * Stavros Vagionitis
+      * Stian Selnes
+      * Thiago Santos
       * Thibault Saunier
-      * Vikram Fugro
+      * Thomas Roos
+      * Tim-Philipp Müller
+      * Vincent Dehors
+      * Vineeth T M
+      * Vineeth TM
+      * William Manley
+      * Wim Taymans
+      * Xavier Claessens
  

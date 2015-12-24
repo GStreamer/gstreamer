@@ -45,6 +45,9 @@
 /* GStreamer API Version */
 #define GST_API_VERSION "1.0"
 
+/* Define if extra runtime checks should be enabled */
+#undef GST_ENABLE_EXTRA_CHECKS
+
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
 #undef GST_GCOV_ENABLED
 
@@ -61,10 +64,13 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2015-09-25"
+#define GST_PACKAGE_RELEASE_DATETIME "2015-12-24"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
+
+/* Define if Video4Linux probe shall be run at plugin load */
+#undef GST_V4L2_ENABLE_PROBE
 
 /* Define to enable aalib ASCII Art library (used by aasink). */
 #undef HAVE_AALIB
@@ -346,6 +352,9 @@
 /* Define to enable VPX decoder (used by vpx). */
 #undef HAVE_VPX
 
+/* Defined if the VPX library version is 1.4 or bigger */
+#undef HAVE_VPX_1_4
+
 /* Define to enable Win32 WaveForm (used by waveformsink). */
 #undef HAVE_WAVEFORM
 
@@ -387,7 +396,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 1.6.0"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 1.7.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -396,7 +405,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.6.0"
+#define PACKAGE_VERSION "1.7.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -427,7 +436,7 @@
 #undef TARGET_CPU
 
 /* Version number of package */
-#define VERSION "1.6.0"
+#define VERSION "1.7.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
