@@ -99,6 +99,9 @@ gst_ffmpeg_channel_positions_to_layout (GstAudioChannelPosition * pos,
   if (!pos)
     return 0;
 
+  if (channels == 1 && pos[0] == GST_AUDIO_CHANNEL_POSITION_MONO)
+    return AV_CH_LAYOUT_MONO;
+
   for (i = 0; i < channels; i++) {
     for (j = 0; j < G_N_ELEMENTS (_ff_to_gst_layout); j++) {
       if (_ff_to_gst_layout[j].gst == pos[i]) {
@@ -126,6 +129,15 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
     none_layout = TRUE;
   } else {
     guint i, j;
+
+    /* Special path for mono, as AV_CH_LAYOUT_MONO is the same
+     * as FRONT_CENTER but we distinguish between the two in
+     * GStreamer
+     */
+    if (channels == 1 && channel_layout == AV_CH_LAYOUT_MONO) {
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+      return TRUE;
+    }
 
     for (i = 0; i < 64; i++) {
       if ((channel_layout & (G_GUINT64_CONSTANT (1) << i)) != 0) {
